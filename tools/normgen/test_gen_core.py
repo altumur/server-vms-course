@@ -5,7 +5,9 @@ Get — пустое хранилище (этап launch остаётся зак
 1.3 — 503 «not in this stage»; тесты этапов идут и красные без паники; над каждым методом главы 1.1 — путь Н3 и
 якоря req; правка ядра не перетирается пересборкой; часть core без door или stagetests и устаревший выход — отказ.
 Только Linux (CT 103), Go 1.22."""
+import json
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -142,6 +144,29 @@ class Core(unittest.TestCase):
         kit = (Path(self.tmp.name) / "KIT.md").read_text(encoding="utf-8")
         self.assertIn("**Context — the identity of the call: what to check.**", kit)
 
+    def test_anchors_over_stubs(self):
+        """Над заглушками глав 1.2/1.3 — места норм (STUBS) и строки refusals.tsv двери; тело — notInStage."""
+        texts = {}
+        for name, refs in gen_core.STUBS.items():
+            m = re.search(rf"((?://.*\n)+)func \(s \*Store\) {name}\(", self.core)
+            self.assertTrue(m, name)
+            doc = m[1]
+            for path, anchor, sel in refs:
+                self.assertIn(f"req: {anchor} — ", doc, name)
+                texts.setdefault(path, path.read_text(encoding="utf-8"))
+                self.assertIn(f"<!-- req: {anchor} -->", texts[path])
+                if sel and sel.startswith("door:"):
+                    self.assertIn(f"{anchor} — {sel[5:]}: ", doc, name)
+            for r in gen_core.STUB_REFUSALS[name]:
+                self.assertIn(f" {r} — ", doc, name)
+            self.assertIn("Identity first", doc)
+        rights = re.search(r"((?://.*\n)+)func \(s \*Store\) Rights\(", self.core)[1]
+        for want in ("`404 badrequest`", "Access is checked by the identity admin", "refusals.RightsNotAdmin"):
+            self.assertIn(want, rights)
+        leave = re.search(r"((?://.*\n)+)func \(s \*Store\) Leave\(", self.core)[1]
+        self.assertIn("«the last voter»", leave)
+        self.assertIn("identity (403) → body and membership (400, 409)", leave)
+
     def test_manifest_and_doc(self):
         m = __import__("json").loads((Path(self.tmp.name) / "kit.manifest.json").read_text(encoding="utf-8"))
         own = {f["path"] for f in m["files"] if f.get("editable")}
@@ -184,6 +209,37 @@ class Kit(unittest.TestCase):
             self.assertTrue((pkg / "write.go").read_text(encoding="utf-8").endswith("// mine\n"))
             self.assertEqual({p.name: p.read_bytes() for p in pkg.glob("*.go") if p.name != "write.go"}, before)
             done = subprocess.run(["go", "vet", "./internal/coreadapter/"], cwd=store, capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, done.stderr)
+
+    def test_seed(self):
+        """--seed: код модели посева (правленый editable, перенесённый метод) в пакет не идёт; нетронутая заглушка
+        прежнего пакета обновляется; посев с пакетом поверх (как копирует цикл) собирается."""
+        with tempfile.TemporaryDirectory() as t:
+            seed = build(Path(t) / "seed").parent
+            pkg = seed / "01-store/internal/coreadapter"
+            (pkg / "core.go").write_text((pkg / "core.go").read_text(encoding="utf-8") + "\n// mine\n", encoding="utf-8")
+            status = (pkg / "status.go").read_text(encoding="utf-8").split('/internal/apidoor"\n', 1)[1]
+            (pkg / "status.go").unlink()
+            (pkg / "get.go").write_text((pkg / "get.go").read_text(encoding="utf-8") + status, encoding="utf-8")
+            old = (pkg / "rights.go").read_bytes()
+            (pkg / "rights.go").write_bytes(old.replace(b"By the norms:", b"By the norms (old kit):"))
+            m = json.loads((seed / "kit.manifest.json").read_text(encoding="utf-8"))
+            for f in m["files"]:
+                if f["path"].endswith("coreadapter/rights.go"):
+                    f["sha256"] = build_kit.sha256((pkg / "rights.go").read_bytes())
+            (seed / "kit.manifest.json").write_text(json.dumps(m), encoding="utf-8")
+            kit = Path(t) / "kit"
+            m = build_kit.build(kit, MOD, PARTS, seed=seed)
+            rel = "01-store/internal/coreadapter/"
+            self.assertEqual(m["seed"]["kept"], [rel + "core.go", rel + "get.go", rel + "status.go"])
+            self.assertIn(rel + "rights.go", m["seed"]["refreshed"])
+            self.assertIn(rel + "join.go", m["seed"]["refreshed"])
+            for n in ("core.go", "get.go", "status.go"):
+                self.assertFalse((kit / rel / n).exists(), n)
+            self.assertEqual((kit / rel / "rights.go").read_bytes(), old)
+            shutil.copytree(kit, seed, dirs_exist_ok=True)
+            self.assertTrue((pkg / "core.go").read_text(encoding="utf-8").endswith("// mine\n"))
+            done = subprocess.run(["go", "vet", "./..."], cwd=seed / "01-store", capture_output=True, text=True)
             self.assertEqual(done.returncode, 0, done.stderr)
 
     def test_legacy_core_file(self):
