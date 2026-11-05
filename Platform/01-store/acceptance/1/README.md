@@ -21,8 +21,8 @@ The format is the dictionary of directives and doors of the common acceptance RE
 ## `seams.tsv` — scenarios over the seams of the process (ADR-0125 addendum (4) item 7)
 
 [`seams.tsv`](seams.tsv) — six scenarios of the properties of the core that the checklist checks «by reading»: the `id`
-memory does not forget by time alone (P/01.1-11), the equality boundary of the admission time (P/01.1-25), the admission
-time does not decrease and survives a restart (P/01.1-26), concurrent CAS of one row (P/01.1-15), a batch whole after a
+memory does not forget by time alone (P/01.1-11), equality and both sides of fractional admission-time bounds for put, delete and batch
+(P/01.1-25), the admission time retains its fraction when clocks go back and after a restart (P/01.1-26), concurrent CAS of one row (P/01.1-15), a batch whole after a
 restart (P/01.1-31). They run only through the adapter of kit B (the directives `@clock`, `@reopen`, `@parallel` — the
 header of the file); the runner does not read the file. The stages — `store_core` (`@clock`, `@parallel`) and `durable` (`@reopen`) of `forms/stages.tsv`, by `tests:1.1:<scenarios>:seams` in their `gate`.
 
