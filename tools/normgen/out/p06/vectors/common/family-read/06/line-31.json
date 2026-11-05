@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-0030",
+ "variant": "",
+ "cells": {
+  "family": "<sub>/policy",
+  "key": "testsub/policy",
+  "kind": "row",
+  "mode": "reader",
+  "who": "[\"<s>controller\", \"console\"]",
+  "text": "{\"servers\":\" 1\"}"
+ },
+ "files": {}
+}

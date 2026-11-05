@@ -5,8 +5,8 @@ package vectoradapter
 
 // Pool — common/pool cases.tsv (vectors):
 //
-//	the pool of a manifest: {pool, keepers, idle_by_policy, placeable, load, count[, capacity]} (fates — the
-//	controller's, not compared)
+//	Native input and output: Platform/common/vectors/pool/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Pool(table string, cells map[string]string, files map[string][]byte) Answer {

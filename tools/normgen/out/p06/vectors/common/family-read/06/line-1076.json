@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "a94_revision.021",
+ "variant": "",
+ "cells": {
+  "family": "platform/drain",
+  "key": "platform/drain",
+  "kind": "row",
+  "mode": "writer",
+  "who": "[\"console\"]",
+  "text": "{\"server\":\"\",\"at\":\"1\",\"revision\":\"1\"}"
+ },
+ "files": {}
+}

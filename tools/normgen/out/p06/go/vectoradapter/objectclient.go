@@ -5,8 +5,8 @@ package vectoradapter
 
 // ObjectClient — common/object-client address.tsv (vectors), common/object-client read.tsv (vectors):
 //
-//	the object client contract: address.tsv → {kind, dir[, door][, resource]} or code 2; read.tsv → "object" |
-//	"absent" | "unknown" | "refused"
+//	Native input and output: Platform/common/vectors/object-client/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func ObjectClient(table string, cells map[string]string, files map[string][]byte) Answer {

@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-0931",
+ "variant": "",
+ "cells": {
+  "family": "platform/schema",
+  "key": "platform/schema",
+  "kind": "row",
+  "mode": "writer",
+  "who": "[\"console\"]",
+  "text": "{\"version\":100.00000000000000001,\"at\":\"1\"}"
+ },
+ "files": {}
+}

@@ -5,8 +5,8 @@ package vectoradapter
 
 // RowCheck — common/row-check cases.tsv (vectors), common/row-check state.tsv (vectors):
 //
-//	the preparation and check of a row (all units of the console door): {result: ok, row} | {result: refused,
-//	word[, field]}
+//	Native input and output: Platform/common/vectors/row-check/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func RowCheck(table string, cells map[string]string, files map[string][]byte) Answer {

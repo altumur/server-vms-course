@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-rights-8134",
+ "variant": "",
+ "cells": {
+  "family": "<sub>/opbusy/<корень>",
+  "key": "testsub/opbusy/testsub.c1",
+  "kind": "row",
+  "mode": "reader",
+  "who": "[\"console\"]",
+  "text": "{\"operation\":\"o1\"}"
+ },
+ "files": {}
+}

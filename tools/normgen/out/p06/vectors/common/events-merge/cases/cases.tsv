@@ -1,19 +1,17 @@
-# Inputs of the vector command for common/events-merge cases.tsv (gen_vectors.py); compare events.
-# source Platform/common/vectors/events-merge/cases.tsv sha256 c080d3ee8c6d60274e1aef0aaa77df6452fa167939a93949493501afa540a9f8
 case	input	exit	stdout
-line-5	line-5.json	0	{"events":[{"id":"e2","epoch_is":"current","fenced":false},{"id":"e3","epoch_is":"current","fenced":false},{"id":"e1","epoch_is":"current","fenced":false}],"state":"live","truncated":3,"complete":true,"incomplete":{}}
-line-6	line-6.json	0	{"events":[{"id":"e2","epoch_is":"current","fenced":false},{"id":"e1","epoch_is":"fenced","fenced":true}],"complete":true}
-line-7	line-7.json	0	{"events":[{"id":"e1","epoch_is":"earlier-run","fenced":false}]}
-line-8	line-8.json	0	{"events":[{"id":"e1","epoch_is":"current","fenced":false}],"complete":true}
-line-9	line-9.json	0	{"events":[{"id":"e1","epoch_is":"current","fenced":false}],"state":"live; srv-b unreachable","complete":false,"incomplete":{"srv-b":"did not answer"}}
-line-10	line-10.json	0	{"state":"live; srv-b unreachable","complete":false,"incomplete":{"srv-b":"silent"}}
-line-11	line-11.json	0	{"state":"live; srv-b unreachable","complete":false,"incomplete":{"srv-b":"said restoring"}}
-line-12	line-12.json	0	{"events":[{"id":"e1","epoch_is":"@absent","fenced":false}],"complete":false,"incomplete":{"testsub/epoch":"did not answer"}}
-line-17	line-17.json	0	{"events":[{"id":"e2","epoch_is":"current","fenced":false},{"id":"e3","epoch_is":"current","fenced":false}],"truncated":5}
-line-18	line-18.json	0	{"events":[{"id":"ea","epoch_is":"current","fenced":false},{"id":"eb","epoch_is":"current","fenced":false}]}
-line-19	line-19.json	0	{"partial":true,"lines_garbled":3,"complete":true}
-line-23	line-23.json	0	{"events":[{"id":"e2","epoch_is":"current","fenced":false}],"withheld":["testsub/c1"],"complete":true}
-line-24	line-24.json	0	{"events":[{"id":"e1","epoch_is":"current","fenced":false}],"withheld":"@absent"}
-line-25	line-25.json	0	{"events":[{"id":"e1","epoch_is":"current","fenced":false}],"withheld":"@absent"}
-line-26	line-26.json	0	{"events":[{"id":"e9","epoch_is":"current","fenced":false}],"withheld":"@absent"}
-line-27	line-27.json	0	{"events":[],"withheld":"@absent"}
+line-5	line-5.json	0	{"events": [{"id": "e2", "epoch_is": "current", "fenced": false}, {"id": "e3", "epoch_is": "current", "fenced": false}, {"id": "e1", "epoch_is": "current", "fenced": false}], "state": "live", "truncated": 3, "complete": true, "incomplete": {}}
+line-6	line-6.json	0	{"events": [{"id": "e2", "epoch_is": "current", "fenced": false}, {"id": "e1", "epoch_is": "fenced", "fenced": true}], "complete": true}
+line-7	line-7.json	0	{"events": [{"id": "e1", "epoch_is": "earlier-run", "fenced": false}]}
+line-8	line-8.json	0	{"events": [{"id": "e1", "epoch_is": "current", "fenced": false}], "complete": true}
+line-9	line-9.json	0	{"events": [{"id": "e1", "epoch_is": "current", "fenced": false}], "state": "live; srv-b unreachable", "complete": false, "incomplete": {"srv-b": "did not answer"}}
+line-10	line-10.json	0	{"state": "live; srv-b unreachable", "complete": false, "incomplete": {"srv-b": "silent"}}
+line-11	line-11.json	0	{"state": "live; srv-b unreachable", "complete": false, "incomplete": {"srv-b": "said restoring"}}
+line-12	line-12.json	0	{"events": [{"id": "e1", "epoch_is": "@absent", "fenced": false}], "complete": false, "incomplete": {"testsub/epoch": "did not answer"}}
+line-17	line-17.json	0	{"events": [{"id": "e2", "epoch_is": "current", "fenced": false}, {"id": "e3", "epoch_is": "current", "fenced": false}], "truncated": 5}
+line-18	line-18.json	0	{"events": [{"id": "ea", "epoch_is": "current", "fenced": false}, {"id": "eb", "epoch_is": "current", "fenced": false}]}
+line-19	line-19.json	0	{"partial": true, "lines_garbled": 3, "complete": true}
+line-23	line-23.json	0	{"events": [{"id": "e2", "epoch_is": "current", "fenced": false}], "withheld": ["testsub/c1"], "complete": true}
+line-24	line-24.json	0	{"events": [{"id": "e1", "epoch_is": "current", "fenced": false}], "withheld": "@absent"}
+line-25	line-25.json	0	{"events": [{"id": "e1", "epoch_is": "current", "fenced": false}], "withheld": "@absent"}
+line-26	line-26.json	0	{"events": [{"id": "e9", "epoch_is": "current", "fenced": false}], "withheld": "@absent"}
+line-27	line-27.json	0	{"events": [], "withheld": "@absent"}

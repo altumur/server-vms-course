@@ -48,7 +48,8 @@ class KitLessons(unittest.TestCase):
                         or ("/vectoradapter/" in f["path"] and not f["path"].endswith("vectoradapter.go"))
                     self.assertEqual(bool(f.get("editable")), own, f["path"])
                 kit_md = (dst / "KIT.md").read_text()
-                titles = ((("Part `vectors`", "draft (tools/normgen/wire_draft.py)") if "vectors" in parts else ())
+                titles = ((("Part `vectors`", "P/06 uses the published canonical wire form" if lesson == "06-console"
+                            else "draft (tools/normgen/wire_draft.py)") if "vectors" in parts else ())
                           + ((("Part `door`: the routes of the lesson's OpenAPI by x-route-priority",) if lesson == "05-resource"
                               else ("Part `door` (3a)",)) if "door" in parts else ())
                           + (("Part `flags`: the process inputs",

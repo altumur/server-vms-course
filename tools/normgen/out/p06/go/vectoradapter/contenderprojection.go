@@ -5,7 +5,8 @@ package vectoradapter
 
 // ContenderProjection — 06-console/contender-projection cases.tsv (vectors):
 //
-//	the contender projection: {name_conflict, name_conflicts[, name_conflict_unreadable]}
+//	Native input and output: Platform/06-console/vectors/contender-projection/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func ContenderProjection(table string, cells map[string]string, files map[string][]byte) Answer {

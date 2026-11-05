@@ -3,9 +3,9 @@
 Запуск: python3 tools/normgen/gen_vectors.py --lesson 02-installer [<out>]
 
 Состав — свои пакеты урока (stages.tsv: gate vectors:<пакет>) и общие по Platform/common/vectors/consumers.tsv.
-P/02: входы, фикстуры, ожидания и сравнения — Platform/common/vectors/wire.tsv через wire.py; wire_vectors.py
-задаёт только сигнатуры Go адаптеров. Тесты проверяют полный native ответ по форме, затем сравнения и assert.
-Прочие уроки ждут полной формы и используют wire_draft.py. journal/modes.tsv — layout, не исполняется.
+P/02 и P/06: входы, фикстуры, ожидания и сравнения — Platform/common/vectors/wire.tsv через wire.py;
+wire_vectors.py и wire_api_p06.py задают сигнатуры Go адаптеров. Тесты проверяют полный native ответ по форме,
+затем сравнения и assert. Прочие уроки используют wire_draft.py. journal/modes.tsv — layout, не исполняется.
 
 Провод двух видов: единая команда `bin/vectors {input}` (кадр {format, package, table, case, variant, cells, files} →
 {exit_code, stdout_b64, stderr_b64}) и команда стенда `bin/vectors stand <ключ> {input}` (свой код выхода, stdout —
@@ -118,6 +118,12 @@ def read_table(root, decl):
 
 def plan(root=ROOT):
     """→ ([объявление], [(пакет, таблица) общих из common_vectors]) урока; пакет состава без объявления — GenError."""
+    if L.key == "06-console":
+        import wire_api_p06
+        try:
+            return wire_api_p06.declarations(root), common_vectors.composition(L.key, root, known_only=True)
+        except wire_api_p06.WireError as exc:
+            raise GenError(str(exc)) from None
     if L.key == "02-installer":
         import wire_vectors
         try:
@@ -1368,6 +1374,12 @@ def lesson_consumers(root):
 
 def build(root=ROOT):
     """→ ({путь от out: байты}, опись [(пакет таблица строка, статус)])."""
+    if L.key == "06-console":
+        import wire_vectors
+        try:
+            return wire_vectors.build(root, sys.modules[__name__], decls=plan(root)[0], lesson=L.key)
+        except wire_vectors.wire.WireError as exc:
+            raise GenError(str(exc)) from None
     if L.key == "02-installer":
         import wire_vectors
         try:
@@ -1542,6 +1554,17 @@ def provenance():
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()}
     decls, known = plan(ROOT)
+    if L.key == "06-console":
+        import wire
+        runs, _ = wire.expand(ROOT, L.key)
+        paths = {package_dir(ROOT, r.binding.package) / r.binding.table for r in runs}
+        forms = sorted(paths | {ROOT / wire.FORM, ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS})
+        return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()),
+                "handwritten": [entry(HERE / p) for p in ("wire_api_p06.py", "wire.py", "wire_vectors.py",
+                    "vector_consumers.py", "common_vectors.py", "wirert/full/go/check.go", "doorrt2/go/schema.go")],
+                "judge": entry(HERE / "test_wire_api_p06.py"),
+                "judges": [entry(HERE / p) for p in ("test_gen_vectors_lessons.py", "test_wire_full.py",
+                    "test_wire_vectors.py", "test_contracts.py", "wire_fakes.py")]}
     if L.key == "02-installer":
         import wire_vectors
         runs, _ = wire_vectors.wire.expand(ROOT, L.key)
@@ -1587,12 +1610,24 @@ KIT_MD_P02 = KIT_MD
 
 def lesson_kit_md():
     """Справка части урока: у P/02 — прежний текст; у прочих — пакеты единой команды и ключи стенда из объявлений."""
-    if L.key == "02-installer" or L.key not in WIRE:
+    if L.key == "02-installer" or (L.key != "06-console" and L.key not in WIRE):
         return KIT_MD_P02
     decls, known = plan(ROOT)
     unified = sorted({d["package"] for d in decls if d["surface"] == "vectors"} | {f"common/{n}" for n, _ in known})
     stands = sorted({d["surface"].split(":", 1)[1] for d in decls if d["surface"] != "vectors"})
     head = KIT_MD_P02.split("Build `go build")[0]
+    if L.key == "06-console":
+        return head + (
+            "Build `go build -o bin/vectors ./cmd/vectors`. P/06 uses the published canonical wire form\n"
+            "`Platform/common/vectors/wire.tsv`: its active rows supply inputs, fixtures, native schemas, comparisons\n"
+            "and assertions. The Go API is declared in `tools/normgen/wire_api_p06.py`. The profile maps\n"
+            "`vectors: <package>: 'bin/vectors {input}'` (" + ", ".join(unified) + ") and\n"
+            "`stand: <key>: 'bin/vectors stand <key> {input}'` (" + ", ".join(stands) + ").\n"
+            "Each adapter returns `Answer{Code, Value, Raw}`. GroupOf receives the exact UTF-8 bytes of the sole raw\n"
+            "cell; stand adapters receive the argument file bytes. Native output is validated before comparisons\n"
+            "and assertion ignores. Native refusals retain their published exit codes; a panic or an unimplemented\n"
+            "adapter is an execution error. `common/family-read` uses the kit's `families`. Layouts and inactive\n"
+            "surfaces are listed as excluded, with their reasons, in `vectortests/inventory.tsv`.\n")
     return head + (
         "Build `go build -o bin/vectors ./cmd/vectors`. The profile maps each package of the lesson:\n"
         "`vectors: <package>: 'bin/vectors {input}'` (the unified command: " + ", ".join(unified) + ") and the stand keys\n"

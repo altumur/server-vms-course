@@ -5,7 +5,8 @@ package vectoradapter
 
 // Metrics — 06-console/metrics cases.tsv (vectors):
 //
-//	the metrics lines: {lines, garbled}
+//	Native input and output: Platform/06-console/vectors/metrics/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Metrics(table string, cells map[string]string, files map[string][]byte) Answer {

@@ -1,5 +1,3 @@
-# Inputs of the vector command for common/labels cases.tsv (gen_vectors.py); compare setarrays.
-# source Platform/common/vectors/labels/cases.tsv sha256 847e90b01f390c3192883244f05400408aead4ec9c66dba96b884a9af10d53e6
 case	input	exit	stdout
 line-3	line-3.json	0	"ok"
 line-4	line-4.json	0	"ok"
@@ -22,10 +20,10 @@ line-20	line-20.json	0	"gpu"
 line-21	line-21.json	0	""
 line-22	line-22.json	0	"@refuse"
 line-23	line-23.json	0	"A,a"
-line-24	line-24.json	0	["a","b"]
+line-24	line-24.json	0	["a", "b"]
 line-25	line-25.json	0	[]
-line-26	line-26.json	0	["a","b"]
-line-27	line-27.json	0	["a","b"]
+line-26	line-26.json	0	["a", "b"]
+line-27	line-27.json	0	["a", "b"]
 line-28	line-28.json	0	"@refuse"
 line-29	line-29.json	0	"@refuse"
 line-30	line-30.json	0	"@refuse"

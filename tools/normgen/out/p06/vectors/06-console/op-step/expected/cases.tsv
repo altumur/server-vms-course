@@ -1,13 +1,11 @@
-# Inputs of the vector command for 06-console/op-step expected.tsv (gen_vectors.py); compare value.
-# source Platform/06-console/vectors/op-step/expected.tsv sha256 6e8502a3cbfd2f87c28475e0d1d4b6a1d37d0c443e0680308c69dae9b9bb8645
 case	input	exit	stdout
-line-2	line-2.json	0	{"a":"1"}
-line-3	line-3.json	0	{"a":"2"}
-line-4	line-4.json	0	{"a":"1"}
-line-5	line-5.json	0	{"a":"2"}
-line-6	line-6.json	0	{"a":"3"}
-line-7	line-7.json	0	{"b":"5"}
-line-8	line-8.json	0	{"cam":"2","det":"4"}
-line-9	line-9.json	0	{"a":"1"}
-line-10	line-10.json	0	{"a":"1"}
-line-11	line-11.json	0	{"a":"3"}
+line-2	line-2.json	0	{"a": "1"}
+line-3	line-3.json	0	{"a": "2"}
+line-4	line-4.json	0	{"a": "1"}
+line-5	line-5.json	0	{"a": "2"}
+line-6	line-6.json	0	{"a": "3"}
+line-7	line-7.json	0	{"b": "5"}
+line-8	line-8.json	0	{"cam": "2", "det": "4"}
+line-9	line-9.json	0	{"a": "1"}
+line-10	line-10.json	0	{"a": "1"}
+line-11	line-11.json	0	{"a": "3"}

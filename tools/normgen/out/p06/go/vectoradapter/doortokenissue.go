@@ -5,7 +5,8 @@ package vectoradapter
 
 // DoorTokenIssue — common/door-token issue.tsv (vectors):
 //
-//	the issue of a door token: exactly {claims_jcs, token} (object and LF)
+//	Native input and output: Platform/common/vectors/door-token/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func DoorTokenIssue(table string, cells map[string]string, files map[string][]byte) Answer {

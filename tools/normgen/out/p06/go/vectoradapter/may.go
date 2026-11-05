@@ -5,8 +5,8 @@ package vectoradapter
 
 // May — common/may cases.tsv (vectors), common/may covers.tsv (vectors):
 //
-//	the right check: {result: allow} | {result: deny, reason} | {result: unavailable} (subset); covers.tsv —
-//	true | false; code 2 — out of form
+//	Native input and output: Platform/common/vectors/may/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func May(table string, cells map[string]string, files map[string][]byte) Answer {

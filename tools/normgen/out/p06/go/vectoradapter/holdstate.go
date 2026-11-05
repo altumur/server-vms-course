@@ -5,7 +5,8 @@ package vectoradapter
 
 // HoldState — common/hold-state cases.tsv (vectors):
 //
-//	the state of a hold: {active: bool}
+//	Native input and output: Platform/common/vectors/hold-state/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func HoldState(table string, cells map[string]string, files map[string][]byte) Answer {

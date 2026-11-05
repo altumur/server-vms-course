@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-rights-8049",
+ "variant": "",
+ "cells": {
+  "family": "<sub>/operations/<id>",
+  "key": "testsub/operations/0123456789abcdef0123456789abcdef",
+  "kind": "row",
+  "mode": "writer",
+  "who": "[\"console\"]",
+  "text": "{\"by\":\"ann\",\"jti\":\"j1\",\"kid\":\"k1\",\"exp\":\"1760700000\",\"created_at\":\"1760690000\",\"state\":\"paused\",\"paused\":\"false\",\"expired\":\"false\",\"cancel\":\"false\",\"total\":\"2\",\"iat\":\"1760700000\"}"
+ },
+ "files": {}
+}

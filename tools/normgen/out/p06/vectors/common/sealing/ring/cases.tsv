@@ -1,5 +1,3 @@
-# Inputs of the vector command for common/sealing ring.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/sealing/ring.tsv sha256 6def60b66200d22caaefa8f42c7933e28874b3dc6ea85abc1bf8643028818cf5
 case	input	exit	stdout
 line-3	line-3.json	0	"current k1; keys k1"
 line-4	line-4.json	0	"current k2; keys k2, k1"

@@ -5,7 +5,8 @@ package vectoradapter
 
 // JCS — 01-store/jcs canonical_json.tsv (vectors):
 //
-//	Native wire: Platform/01-store/vectors/jcs/README.md#vector-wire.
+//	Native input and output: Platform/01-store/vectors/jcs/README.md#vector-wire; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func JCS(table string, cells map[string]string, files map[string][]byte) Answer {

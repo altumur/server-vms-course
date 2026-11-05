@@ -5,7 +5,8 @@ package vectoradapter
 
 // AgentSig — common/agent-sig cases.tsv (vectors):
 //
-//	the agent signature check: {result: ok} | {result: refused, reason} (subset)
+//	Native input and output: Platform/common/vectors/agent-sig/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func AgentSig(table string, cells map[string]string, files map[string][]byte) Answer {

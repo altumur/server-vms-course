@@ -5,7 +5,8 @@ package vectoradapter
 
 // HeartbeatRead — common/heartbeat-read cases.tsv (vectors), common/heartbeat-read worker.tsv (vectors):
 //
-//	the reading of a heartbeat: cases.tsv → {readable[, fields]}; worker.tsv → {rows, others, fields}
+//	Native input and output: Platform/common/vectors/heartbeat-read/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func HeartbeatRead(table string, cells map[string]string, files map[string][]byte) Answer {

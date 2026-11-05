@@ -36,6 +36,8 @@ def lesson_mods():
 
 
 def tests_calling(mod, fn):
+    if mod.parent.name == "p06":
+        return p06_tests_calling(mod, fn)
     names = []
     for f in (mod / "vectortests").glob("*_test.go"):
         for chunk in f.read_text().split("\nfunc ")[1:]:
@@ -53,6 +55,29 @@ def tests_calling(mod, fn):
             if direct or via_wire:
                 names.append(m[1])
     return names
+
+
+def p06_tests_calling(mod, fn):
+    """Canonical P/06: vectors and stand siblings have separate API functions and test prefixes."""
+    import common_vectors
+    import wire
+    from wire_api_p06 import API_P06
+    runs, _ = wire.expand(HERE.parent.parent, "06-console")
+    active = {r.binding.key for r in runs}
+    prefixes = []
+    for package, table, surface, name, _ in API_P06:
+        if name != fn or (package, table, surface) not in active:
+            continue
+        prefix = "Test" + common_vectors.camel(package.split("/", 1)[1]) + "_" + common_vectors.camel(table[:-4])
+        if surface.startswith("stand:") and (package, table, "vectors") in active:
+            prefix += "_Stand"
+        prefixes.extend((prefix + "_Line", prefix + "_Lists"))
+    for name, d in common_vectors.DECLS.items():
+        if d["go"] == fn:
+            prefixes.append("TestCommon" + common_vectors.camel(name) + "_")
+    return [name for f in (mod / "vectortests").glob("*_test.go")
+            for name in re.findall(r"^func (Test\w+)\(t \*testing\.T\)", f.read_text(), re.M)
+            if any(name.startswith(prefix) for prefix in prefixes)]
 
 
 def build(mod, fn, adapter, contracts_src, tmp):

@@ -5,7 +5,8 @@ package vectoradapter
 
 // Record — common/record shared.tsv (vectors):
 //
-//	the shared record check: {result[, term][, reason]} (subset)
+//	Native input and output: Platform/common/vectors/record/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Record(table string, cells map[string]string, files map[string][]byte) Answer {

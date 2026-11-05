@@ -1,5 +1,3 @@
-# Inputs of the vector command for common/journal append.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/journal/append.tsv sha256 98b4b1afefd4cba637bdaf9a7a1610984aa8163cfbc383a77d5fac1de4fc6447
 case	input	exit	stdout
 line-3	line-3.json	0	"{\"t\":1,\"kind\":\"a\",\"id\":\"e1-61-63-1-77-1\"}\n{\"t\":3,\"kind\":\"b\",\"id\":\"e1-61-63-1-77-3\"}\n"
 line-4	line-4.json	0	"{\"t\":1,\"kind\":\"a\",\"id\":\"e1-61-63-1-77-1\"}\n{\"t\":2,\"ki\n{\"t\":3,\"kind\":\"b\",\"id\":\"e1-61-63-1-77-3\"}\n"

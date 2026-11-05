@@ -1,438 +1,436 @@
-# Inputs of the vector command for common/secret-in cases.tsv (gen_vectors.py); compare secret.
-# source Platform/common/vectors/secret-in/cases.tsv sha256 965873a55cddcf00998c63340e5118e57e49a397dbe40f25dc4f7c973b511ca3
 case	input	exit	stdout
-line-26	line-26.json	0	{"masked":"http://10.0.0.5/videostream.cgi?usr=admin&pwd=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-27	line-27.json	0	{"masked":"http://10.0.0.5/snap.jpg?user=admin&password=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-28	line-28.json	0	{"masked":"rtsp://10.0.0.5/live?channel=1&token=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-29	line-29.json	0	{"masked":"http://10.0.0.5/ISAPI/stream?auth=***","fault":"cred_secret","hidden":["SHVudGVyMg=="]}
-line-30	line-30.json	0	{"masked":"https://cam.example/v1/live?api_key=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-31	line-31.json	0	{"masked":"http://10.0.0.5/mjpg?loginuse=admin&loginpas=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-32	line-32.json	0	{"masked":"rtsp://10.0.0.5/live;password=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-33	line-33.json	0	{"masked":"http://10.0.0.5/live?P%77D=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-34	line-34.json	0	{"masked":"http://10.0.0.5/live?access-key=***&sig=***","fault":"cred_secret","hidden":["Hunter2","Hunter2"]}
-line-35	line-35.json	0	{"masked":"rtsp://10.0.0.9:554/user=admin_password=***_channel=1_stream=0.sdp?real_stream","fault":"cred_secret","hidden":["Hunter2"]}
-line-36	line-36.json	0	{"masked":"rtsp://10.0.0.9:554/user=admin&password=***&channel=1&stream=0.sdp","fault":"cred_secret","hidden":["Hunter2"]}
-line-37	line-37.json	0	{"masked":"rtsp://10.0.0.9:554/password=***&user=admin&channel=1&stream=0.sdp","fault":"cred_secret","hidden":["Hunter2"]}
-line-38	line-38.json	0	{"masked":"rtsp://10.0.0.9:554/user=admin_password=***_channel=1_stream=0.sdp","fault":"cred_secret","hidden":["Hun_ter2"]}
-line-39	line-39.json	0	{"masked":"rtsp://10.0.0.9:554/USER=admin_PASSWORD=***_CHANNEL=1","fault":"cred_secret","hidden":["Hunter2"]}
-line-40	line-40.json	0	{"masked":"rtsp://10.0.0.9/live;user=admin;pwd=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-41	line-41.json	0	{"masked":"rtsp://10.0.0.9/live;user=admin;password=***/ch1","fault":"cred_secret","hidden":["Hunter2"]}
-line-42	line-42.json	0	{"masked":"http://10.0.0.5/cgi-bin/snapshot.cgi?usr=admin&pwd=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-43	line-43.json	0	{"masked":"http://10.0.0.5/cgi-bin/snapshot.cgi?loginuse=admin&loginpas=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-44	line-44.json	0	{"masked":"http://10.0.0.5/videostream.cgi?USR=admin&PWD=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-45	line-45.json	0	{"masked":"http://10.0.0.5/videostream.cgi?Usr=admin&PassWord=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-46	line-46.json	0	{"masked":"http://10.0.0.5/x.cgi?p%77d=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-47	line-47.json	0	{"masked":"http://10.0.0.5/x.cgi?%2570wd=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-48	line-48.json	0	{"masked":"http://10.0.0.5/x.cgi?pass%5Fword=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-49	line-49.json	0	{"masked":"http://10.0.0.5/x.cgi?pwd+=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-50	line-50.json	0	{"masked":"http://10.0.0.5/user/admin/password/***/snap.jpg","fault":"cred_secret","hidden":["Hunter2"]}
-line-51	line-51.json	0	{"masked":"http://10.0.0.5/snap.cgi?pw=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-52	line-52.json	0	{"masked":"http://10.0.0.5/snap.cgi?psd=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-53	line-53.json	0	{"masked":"http://10.0.0.5/snap.cgi?passwd=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-54	line-54.json	0	{"masked":"http://10.0.0.5/snap.cgi?user_id=admin&pwd=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-55	line-55.json	0	{"masked":"http://10.0.0.5/x?pwd=***","fault":"cred_secret","hidden":["ab#Hunter2"]}
-line-56	line-56.json	0	{"masked":"http://10.0.0.5/x#pwd=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-57	line-57.json	0	{"masked":"http://10.0.0.5/x?token=***","fault":"cred_secret","hidden":["SHVudGVyMg=="]}
-line-58	line-58.json	0	{"masked":"https://s3.example.com/b/o?X-Amz-Credential=***&X-Amz-Signature=***","fault":"cred_secret","hidden":["AKIA%2F20261004","Hunter2"]}
-line-59	line-59.json	0	{"masked":"https://s3.example.com/b/o?X-Amz-Signature=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-60	line-60.json	0	{"masked":"https://s3.example.com/b/o?AWSAccessKeyId=AKIA&Signature=***&Expires=1","fault":"cred_secret","hidden":["Hunter2"]}
-line-61	line-61.json	0	{"masked":"https://s3.example.com/b/o?aws_secret_access_key=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-62	line-62.json	0	{"masked":"https://h/x?secret=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-63	line-63.json	0	{"masked":"https://h/x?access_key=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-64	line-64.json	0	{"masked":"https://h/x?access_token=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-65	line-65.json	0	{"masked":"rtsp://admin:***@10.0.0.5/s","fault":"cred_secret","hidden":["Hunter2"]}
-line-66	line-66.json	0	{"masked":"rtsp://:***@10.0.0.5/s","fault":"cred_secret","hidden":["Hunter2"]}
-line-67	line-67.json	0	{"masked":"rtsp://admin:***/s","fault":"cred_secret","hidden":["Hunter2%40cam"]}
-line-68	line-68.json	0	{"masked":"rtsp://admin:***@10.0.0.5/s","fault":"cred_secret","hidden":["Hun/ter2"]}
-line-69	line-69.json	0	{"masked":"rtsp://admin:***@10.0.0.5/s","fault":"cred_secret","hidden":["Hun?ter2"]}
-line-70	line-70.json	0	{"masked":"rtsp://admin:***@10.0.0.5/s","fault":"cred_secret","hidden":["Hun#ter2"]}
-line-71	line-71.json	0	{"masked":"rtsp://admin:***@10.0.0.5/s","fault":"cred_secret","hidden":["Hun+ter2="]}
-line-72	line-72.json	0	{"masked":"rtsp://admin:***@10.0.0.5/s","fault":"cred_secret","hidden":["12/ter2"]}
-line-73	line-73.json	0	{"masked":"rtsp://admin:***/s","fault":"cred_secret","hidden":["Hunter2＠cam"]}
-line-74	line-74.json	0	{"masked":"driverpack://acme/admin:***@10.0.0.5/ch/1","fault":"cred_secret","hidden":["Hunter2"]}
-line-75	line-75.json	0	{"masked":"driverpack://acme/10.0.0.5;password=***/ch/1","fault":"cred_secret","hidden":["Hunter2"]}
-line-76	line-76.json	0	{"masked":"driverpack://acme/10.0.0.5/ch/1?pwd=***","fault":"cred_secret","hidden":["Hunter2"]}
-line-77	line-77.json	0	{"masked":"http://proxy/relay?src=***","fault":"cred_secret","hidden":["rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs"]}
-line-78	line-78.json	0	{"masked":"http://proxy/relay?src=***","fault":"cred_secret","hidden":["rtsp://admin:Hunter2@cam/s"]}
-line-79	line-79.json	0	{"masked":"http://proxy/relay?src=***","fault":"cred_secret","hidden":["http%3A%2F%2Fcam%2Fx.cgi%3Fusr%3Dadmin%26pwd%3DHunter2"]}
-line-80	line-80.json	0	{"masked":"http://proxy/relay?src=***","fault":"cred_secret","hidden":["http%253A%252F%252Fp2%252F%253Fsrc%253Drtsp%25253A%25252F%25252Fadmin%25253AHunter2%252540cam"]}
-line-81	line-81.json	0	{"masked":"http://proxy/***","fault":"cred_secret","hidden":["rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs"]}
-line-82	line-82.json	0	{"masked":"http://proxy/***","fault":"cred_secret","hidden":["x;src=rtsp%3A%2F%2Fcam%2Fs%3Fuser%3Dadmin_password%3DHunter2"]}
-line-83	line-83.json	0	{"masked":"driverpack://acme/admin:***%4010.0.0.5/ch/1","fault":"cred_secret","hidden":["Hunter2"]}
-line-84	line-84.json	0	{"masked":"driverpack://acme/10.0.0.5:***/ch/1","fault":"cred_secret","hidden":["Hunter2"]}
-line-85	line-85.json	0	{"masked":"driverpack://acme/admin:***/ch/1","fault":"cred_secret","hidden":["Hunter2"]}
-line-86	line-86.json	0	{"masked":"driverpack://acme:***/10.0.0.5/ch/1","fault":"cred_secret","hidden":["Hunter2"]}
-line-87	line-87.json	0	{"masked":"driverpack://acme/10.0.0.5&password=***/ch/1","fault":"cred_secret","hidden":["Hunter2"]}
-line-88	line-88.json	0	{"masked":"driverpack://acme/10.0.0.5_pwd=***/ch/1","fault":"cred_secret","hidden":["Hunter2"]}
-line-89	line-89.json	0	{"masked":"driverpack://acme;pwd=***/10.0.0.5/ch/1","fault":"cred_secret","hidden":["Hunter2"]}
-line-90	line-90.json	0	{"masked":"driverpack://acme/pwd=***/ch/1","fault":"cred_secret","hidden":["Hunter2"]}
-line-91	line-91.json	0	{"masked":"rtsp://10.0.0.5/Streaming/Channels/101","fault":"","hidden":[]}
-line-92	line-92.json	0	{"masked":"rtsp://10.0.0.5/streaming/channels/101","fault":"","hidden":[]}
-line-93	line-93.json	0	{"masked":"rtsp://10.0.0.5:554/cam/realmonitor?channel=1&subtype=0","fault":"","hidden":[]}
-line-94	line-94.json	0	{"masked":"rtsp://10.0.0.5/h264/ch1/main/av_stream","fault":"","hidden":[]}
-line-95	line-95.json	0	{"masked":"rtsp://10.0.0.5/live?token_bucket=10","fault":"","hidden":[]}
-line-96	line-96.json	0	{"masked":"http://10.0.0.5/keypad/snapshot.jpg","fault":"","hidden":[]}
-line-97	line-97.json	0	{"masked":"http://10.0.0.5/passage/cam1.mjpg","fault":"","hidden":[]}
-line-98	line-98.json	0	{"masked":"http://10.0.0.5/authority/live.sdp","fault":"","hidden":[]}
-line-99	line-99.json	0	{"masked":"rtsp://10.0.0.5/passage=north_channel=1","fault":"","hidden":[]}
-line-100	line-100.json	0	{"masked":"rtsp://10.0.0.5/live?passage=north","fault":"","hidden":[]}
-line-101	line-101.json	0	{"masked":"rtsp://10.0.0.5/live?authmode=digest","fault":"","hidden":[]}
-line-102	line-102.json	0	{"masked":"rtsp://10.0.0.5/live?bypass=1","fault":"","hidden":[]}
-line-103	line-103.json	0	{"masked":"http://10.0.0.5/axis-cgi/mjpg/video.cgi?resolution=640x480&compression=30","fault":"","hidden":[]}
-line-104	line-104.json	0	{"masked":"rtsp://10.0.0.5/onvif1","fault":"","hidden":[]}
-line-105	line-105.json	0	{"masked":"rtsp://10.0.0.5:554/11","fault":"","hidden":[]}
-line-106	line-106.json	0	{"masked":"rtsp://10.0.0.5/MediaInput/h264/stream_1","fault":"","hidden":[]}
-line-107	line-107.json	0	{"masked":"rtsp://10.0.0.5/Streaming/Channels/101?transportmode=multicast&profile=Profile_1","fault":"","hidden":[]}
-line-108	line-108.json	0	{"masked":"http://10.0.0.5/cgi-bin/mjpg/video.cgi?channel=1&subtype=1","fault":"","hidden":[]}
-line-109	line-109.json	0	{"masked":"rtsp://10.0.0.5/user_stream=1","fault":"","hidden":[]}
-line-110	line-110.json	0	{"masked":"rtsp://10.0.0.5/live/ch00_0","fault":"","hidden":[]}
-line-111	line-111.json	0	{"masked":"rtsp://10.0.0.5/0/video1","fault":"","hidden":[]}
-line-112	line-112.json	0	{"masked":"rtsp://10.0.0.5/stream1?keyframe=1","fault":"","hidden":[]}
-line-113	line-113.json	0	{"masked":"rtsp://10.0.0.5/stream1?keyint=25","fault":"","hidden":[]}
-line-114	line-114.json	0	{"masked":"rtsp://10.0.0.5/stream1?sessiontimeout=60","fault":"","hidden":[]}
-line-115	line-115.json	0	{"masked":"rtsp://10.0.0.5/stream1?accountless=1","fault":"","hidden":[]}
-line-116	line-116.json	0	{"masked":"rtsp://10.0.0.5/videoMain?usrname_hint=0","fault":"","hidden":[]}
-line-117	line-117.json	0	{"masked":"rtsp://10.0.0.5/live/pass/stream","fault":"","hidden":[]}
-line-118	line-118.json	0	{"masked":"rtsp://10.0.0.5/pw/1","fault":"","hidden":[]}
-line-119	line-119.json	0	{"masked":"rtsp://10.0.0.5/live.sdp?compass=1","fault":"","hidden":[]}
-line-120	line-120.json	0	{"masked":"http://10.0.0.5/snapshot.cgi?chn=1&u=1","fault":"","hidden":[]}
-line-121	line-121.json	0	{"masked":"rtsp://10.0.0.5/av0_0","fault":"","hidden":[]}
-line-122	line-122.json	0	{"masked":"rtsp://10.0.0.5/ch01.264?dev=1","fault":"","hidden":[]}
-line-123	line-123.json	0	{"masked":"rtsp://10.0.0.5/tcp/av0_0","fault":"","hidden":[]}
-line-124	line-124.json	0	{"masked":"rtsp://10.0.0.5/cam1/h264?key_frame_interval=2","fault":"","hidden":[]}
-line-125	line-125.json	0	{"masked":"rtsp://10.0.0.5/stream?apikey_required=false","fault":"","hidden":[]}
-line-126	line-126.json	0	{"masked":"rtsp://10.0.0.5/live?sid_hint=1","fault":"","hidden":[]}
-line-127	line-127.json	0	{"masked":"http://10.0.0.5/webcapture.jpg?command=snap&channel=1","fault":"","hidden":[]}
-line-128	line-128.json	0	{"masked":"driverpack://acme/10.0.0.50/ch/17","fault":"","hidden":[]}
-line-129	line-129.json	0	{"masked":"rtsp://10.0.0.5/live?monkey=1","fault":"","hidden":[]}
-line-130	line-130.json	0	{"masked":"rtsp://10.0.0.5/live?hotkey=F1","fault":"","hidden":[]}
-line-131	line-131.json	0	{"masked":"http://proxy/relay?src=rtsp%3A%2F%2Fcam%2Fs","fault":"","hidden":[]}
-line-132	line-132.json	0	{"masked":"rtsp://10.0.0.5/Streaming/Channels/101?transportmode=unicast","fault":"","hidden":[]}
-line-133	line-133.json	0	{"masked":"rtsp://10.0.0.5/onvif-media/media.amp?profile=profile_1_h264&sessiontimeout=60&streamtype=unicast","fault":"","hidden":[]}
-line-134	line-134.json	0	{"masked":"rtsp://10.0.0.5/axis-media/media.amp?videocodec=h264&resolution=640x480","fault":"","hidden":[]}
-line-135	line-135.json	0	{"masked":"rtsp://10.0.0.9:554/channel=1_stream=0.sdp?real_stream","fault":"","hidden":[]}
-line-136	line-136.json	0	{"masked":"http://10.0.0.5/cgi-bin/auth/snapshot.jpg","fault":"","hidden":[]}
-line-137	line-137.json	0	{"masked":"rtsp://[fe80::1]:554/live","fault":"","hidden":[]}
-line-138	line-138.json	0	{"masked":"rtsp://10.0.0.9:554/channel=1_user=admin_password=***_stream=0.sdp","fault":"cred_secret","hidden":["Hunter2"]}
-line-139	line-139.json	0	{"masked":"http://10.0.0.5/x.cgi?usr=admin","fault":"cred_username","hidden":[]}
-line-140	line-140.json	0	{"masked":"http://10.0.0.5/x.cgi?user_id=admin&channel=1","fault":"cred_username","hidden":[]}
-line-141	line-141.json	0	{"masked":"driverpack://acme/admin@10.0.0.5/ch/1","fault":"cred_username","hidden":[]}
-line-142	line-142.json	0	{"masked":"driverpack://acme/admin%4010.0.0.5/ch/1","fault":"cred_username","hidden":[]}
-line-143	line-143.json	0	{"masked":"rtsp://10.0.0.9/live?user=admin_password=***_channel=1","fault":"cred_secret","hidden":["Hunter2"]}
-line-144	line-144.json	0	{"masked":"http://10.0.0.5/x.cgi?user=***","fault":"cred_secret","hidden":["admin%26pwd%3DHunter2"]}
-line-145	line-145.json	0	{"masked":"http://10.0.0.9:1984/api/stream.mp4?src=***","fault":"cred_secret","hidden":["ffmpeg:rtsp://admin:Hunter2@cam/live"]}
-line-146	line-146.json	0	{"masked":"http://10.0.0.9/proxy?url=***","fault":"cred_secret","hidden":["rtsp%3A%2F%2Fcam%2Flive%3Fpwd%3DHunter2"]}
-line-147	line-147.json	0	{"masked":"rtsp://10.0.0.9/p%2561ssword/***/live","fault":"cred_secret","hidden":["Hunter2"]}
-line-148	line-148.json	0	{"masked":"driverpack://acme/10.0.0.5%3A***/ch/1","fault":"cred_secret","hidden":["Hunter2"]}
-line-149	line-149.json	0	{"masked":"rtsp://10.0.0.9/host:word/live","fault":"","hidden":[]}
-line-150	line-150.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&pwd=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-151	line-151.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&password=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-152	line-152.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&pass=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-153	line-153.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&passwd=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-154	line-154.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&Password=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-155	line-155.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&dev.adminPassword=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-156	line-156.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&src.passphrase=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-157	line-157.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&loginpas=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-158	line-158.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&adminpass=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-159	line-159.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&psw=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-160	line-160.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&pw=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-161	line-161.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&token=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-162	line-162.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&access_token=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-163	line-163.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&authtoken=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-164	line-164.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&auth=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-165	line-165.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&Authorization=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-166	line-166.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&oauth=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-167	line-167.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&key=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-168	line-168.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&apikey=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-169	line-169.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&api_key=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-170	line-170.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&streamkey=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-171	line-171.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&opt.licenseKey=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-172	line-172.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&secret=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-173	line-173.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&client_secret=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-174	line-174.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&credentials=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-175	line-175.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&sig=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-176	line-176.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&signature=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-177	line-177.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&X-Amz-Signature=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-178	line-178.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&X-Amz-Credential=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-179	line-179.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&pass_word=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-180	line-180.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&pass-word=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-181	line-181.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&p%77d=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-182	line-182.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&p%61ss=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-183	line-183.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&p%2577d=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-184	line-184.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&%2570wd=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-185	line-185.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&pass%2577ord=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-186	line-186.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&psd=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-187	line-187.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&adminpsd=hunter2xyz","fault":"","hidden":[]}
-line-188	line-188.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&p=hunter2xyz","fault":"","hidden":[]}
-line-189	line-189.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&pin=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-190	line-190.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&cred=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-191	line-191.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&creds=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-192	line-192.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&userpass=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-193	line-193.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&rootpass=hunter2xyz","fault":"","hidden":[]}
-line-194	line-194.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&passkey=hunter2xyz","fault":"","hidden":[]}
-line-195	line-195.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&apiKey2=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-196	line-196.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&api_key_2=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-197	line-197.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&accessToken=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-198	line-198.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&bucket_token=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-199	line-199.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&X-Amz-Security-Token=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-200	line-200.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&sessiontoken=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-201	line-201.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&privatekey=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-202	line-202.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&PassWord=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-203	line-203.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&api-key=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-204	line-204.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&apiKey=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-205	line-205.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&x-api-key=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-206	line-206.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&x-auth-token=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-207	line-207.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&privkey=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-208	line-208.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&psk=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-209	line-209.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&wpa_psk=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-210	line-210.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&ｐａｓｓｗｏｒｄ=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-211	line-211.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&ＡｐｉＫｅｙ=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-212	line-212.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&%EF%BD%90%EF%BD%97%EF%BD%84=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-213	line-213.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&paſſword=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-214	line-214.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&pass%E2%80%8Bword=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-215	line-215.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&𝐩𝐚𝐬𝐬𝐰𝐨𝐫𝐝=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-216	line-216.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&ⓟⓦⓓ=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-217	line-217.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&passcode=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-218	line-218.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&usr=hunter2xyz","fault":"cred_username","hidden":[]}
-line-219	line-219.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&user=hunter2xyz","fault":"cred_username","hidden":[]}
-line-220	line-220.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&username=hunter2xyz","fault":"cred_username","hidden":[]}
-line-221	line-221.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&user_name=hunter2xyz","fault":"cred_username","hidden":[]}
-line-222	line-222.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&user-name=hunter2xyz","fault":"cred_username","hidden":[]}
-line-223	line-223.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&login=hunter2xyz","fault":"cred_username","hidden":[]}
-line-224	line-224.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&loginuse=hunter2xyz","fault":"cred_username","hidden":[]}
-line-225	line-225.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&uname=hunter2xyz","fault":"cred_username","hidden":[]}
-line-226	line-226.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&opt.username=hunter2xyz","fault":"cred_username","hidden":[]}
-line-227	line-227.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&adminUsername=hunter2xyz","fault":"cred_username","hidden":[]}
-line-228	line-228.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&channel=hunter2xyz","fault":"","hidden":[]}
-line-229	line-229.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&stream=hunter2xyz","fault":"","hidden":[]}
-line-230	line-230.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&subtype=hunter2xyz","fault":"","hidden":[]}
-line-231	line-231.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&resolution=hunter2xyz","fault":"","hidden":[]}
-line-232	line-232.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&profile=hunter2xyz","fault":"","hidden":[]}
-line-233	line-233.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&source=hunter2xyz","fault":"","hidden":[]}
-line-234	line-234.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&driver=hunter2xyz","fault":"","hidden":[]}
-line-235	line-235.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&src.folder=hunter2xyz","fault":"","hidden":[]}
-line-236	line-236.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&opt.useMedia1=hunter2xyz","fault":"","hidden":[]}
-line-237	line-237.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&opt.separateStreams=hunter2xyz","fault":"","hidden":[]}
-line-238	line-238.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&dev.overrideRTSPPort=hunter2xyz","fault":"","hidden":[]}
-line-239	line-239.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&src.transportProtocol=hunter2xyz","fault":"","hidden":[]}
-line-240	line-240.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&transportmode=hunter2xyz","fault":"","hidden":[]}
-line-241	line-241.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&keyframe=hunter2xyz","fault":"","hidden":[]}
-line-242	line-242.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&keyint=hunter2xyz","fault":"","hidden":[]}
-line-243	line-243.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&authmode=hunter2xyz","fault":"","hidden":[]}
-line-244	line-244.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&authtype=hunter2xyz","fault":"","hidden":[]}
-line-245	line-245.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&author=hunter2xyz","fault":"","hidden":[]}
-line-246	line-246.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&passive=hunter2xyz","fault":"","hidden":[]}
-line-247	line-247.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&bypass_cache=hunter2xyz","fault":"","hidden":[]}
-line-248	line-248.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&passthrough=hunter2xyz","fault":"","hidden":[]}
-line-249	line-249.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&compass=hunter2xyz","fault":"","hidden":[]}
-line-250	line-250.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&passage=hunter2xyz","fault":"","hidden":[]}
-line-251	line-251.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&token_bucket=hunter2xyz","fault":"","hidden":[]}
-line-252	line-252.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&monkey=hunter2xyz","fault":"","hidden":[]}
-line-253	line-253.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&hotkey=hunter2xyz","fault":"","hidden":[]}
-line-254	line-254.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&turkey=hunter2xyz","fault":"","hidden":[]}
-line-255	line-255.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&accessKeyId=hunter2xyz","fault":"cred_username","hidden":[]}
-line-256	line-256.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&ping=hunter2xyz","fault":"","hidden":[]}
-line-257	line-257.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&pipeline=hunter2xyz","fault":"","hidden":[]}
-line-258	line-258.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&spin=hunter2xyz","fault":"","hidden":[]}
-line-259	line-259.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&u=hunter2xyz","fault":"","hidden":[]}
-line-260	line-260.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&pid=hunter2xyz","fault":"","hidden":[]}
-line-261	line-261.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&users=hunter2xyz","fault":"","hidden":[]}
-line-262	line-262.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&userid=hunter2xyz","fault":"cred_username","hidden":[]}
-line-263	line-263.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&account=hunter2xyz","fault":"cred_username","hidden":[]}
-line-264	line-264.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&x-auth=hunter2xyz","fault":"","hidden":[]}
-line-265	line-265.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&rtsp_auth=hunter2xyz","fault":"","hidden":[]}
-line-266	line-266.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&proﬁle=hunter2xyz","fault":"","hidden":[]}
-line-267	line-267.json	0	{"masked":"http://10.0.0.5/videostream.cgi?channel=1&ｃｈａｎｎｅｌ=hunter2xyz","fault":"","hidden":[]}
-line-268	line-268.json	0	{"masked":"rtsp://10.0.0.9:554/user=admin_password=***_channel=1_stream=0.sdp?real_stream","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-269	line-269.json	0	{"masked":"rtsp://10.0.0.9:554/user=admin_pwd=***_channel=1","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-270	line-270.json	0	{"masked":"rtsp://10.0.0.9:554/user=admin&password=***&channel=1&stream=0.sdp","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-271	line-271.json	0	{"masked":"rtsp://10.0.0.9/user=admin;password=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-272	line-272.json	0	{"masked":"rtsp://10.0.0.9:554/user/admin/password/***/channel/1","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-273	line-273.json	0	{"masked":"rtsp://10.0.0.9/pwd/***/live","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-274	line-274.json	0	{"masked":"http://10.0.0.9/videostream.cgi?usr=admin&pwd=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-275	line-275.json	0	{"masked":"http://10.0.0.9/videostream.cgi?user=admin&psd=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-276	line-276.json	0	{"masked":"http://10.0.0.9/snap.cgi?u=admin&p=hunter2xyz","fault":"","hidden":[]}
-line-277	line-277.json	0	{"masked":"http://10.0.0.9/snap.cgi?pass_word=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-278	line-278.json	0	{"masked":"http://10.0.0.9/snap.cgi?pass-word=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-279	line-279.json	0	{"masked":"http://10.0.0.9/snap.cgi?pin=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-280	line-280.json	0	{"masked":"http://10.0.0.9/snap.cgi?cred=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-281	line-281.json	0	{"masked":"http://10.0.0.9/snap.cgi?creds=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-282	line-282.json	0	{"masked":"rtsp://10.0.0.9/live?channel=1_pwd=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-283	line-283.json	0	{"masked":"http://10.0.0.9/snap.cgi?p%77d=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-284	line-284.json	0	{"masked":"http://10.0.0.9/snap.cgi?p%61ss=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-285	line-285.json	0	{"masked":"http://10.0.0.9/snap.cgi?p%2577d=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-286	line-286.json	0	{"masked":"http://10.0.0.9/snap.cgi?%2570wd=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-287	line-287.json	0	{"masked":"rtsp://10.0.0.9/p%2561ssword/***/live","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-288	line-288.json	0	{"masked":"http://10.0.0.9/proxy?src=***","fault":"cred_secret","hidden":["rtsp%3A%2F%2Fadmin%3Ahunter2xyz%40cam%2Flive"]}
-line-289	line-289.json	0	{"masked":"http://10.0.0.9/proxy?src=***","fault":"cred_secret","hidden":["rtsp%253A%252F%252Fadmin%253Ahunter2xyz%2540cam"]}
-line-290	line-290.json	0	{"masked":"http://10.0.0.9/x?a=***","fault":"cred_secret","hidden":["1%26pwd%3Dhunter2xyz"]}
-line-291	line-291.json	0	{"masked":"http://10.0.0.9:1984/api/stream.mp4?src=***","fault":"cred_secret","hidden":["rtsp%25253A%25252F%25252Fadmin%25253Ahunter2xyz%252540cam"]}
-line-292	line-292.json	0	{"masked":"http://10.0.0.9:1984/api/stream.mp4?src=***","fault":"cred_secret","hidden":["http%3A%2F%2Fproxy%2Fx%3Fsrc%3Drtsp%253A%252F%252Fadmin%253Ahunter2xyz%2540cam"]}
-line-293	line-293.json	0	{"masked":"http://10.0.0.9:1984/api/stream.mp4?src=***","fault":"cred_secret","hidden":["rtsp%3A%2F%2Fcam%2Flive%3Fpwd%3Dhunter2xyz"]}
-line-294	line-294.json	0	{"masked":"http://10.0.0.9:1984/api/stream.mp4?src=***","fault":"cred_secret","hidden":["ffmpeg:rtsp%3A%2F%2Fadmin%3Ahunter2xyz%40cam"]}
-line-295	line-295.json	0	{"masked":"http://10.0.0.9/proxy/***/live","fault":"cred_secret","hidden":["rtsp%3A%2F%2Fadmin%3Ahunter2xyz%40cam"]}
-line-296	line-296.json	0	{"masked":"http://10.0.0.9/proxy/***","fault":"cred_secret","hidden":["rtsp%253A%252F%252Fadmin%253Ahunter2xyz%2540cam"]}
-line-297	line-297.json	0	{"masked":"http://10.0.0.9/x?ｐａｓｓｗｏｒｄ=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-298	line-298.json	0	{"masked":"http://10.0.0.9/x?%EF%BD%90%EF%BD%97%EF%BD%84=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-299	line-299.json	0	{"masked":"http://10.0.0.9/snap.cgi?pw=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-300	line-300.json	0	{"masked":"http://10.0.0.9/snap.cgi?password=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-301	line-301.json	0	{"masked":"http://10.0.0.9/snap.cgi?Password=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-302	line-302.json	0	{"masked":"http://10.0.0.9/snap.cgi?PWD=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-303	line-303.json	0	{"masked":"http://10.0.0.9/snap.cgi?pass=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-304	line-304.json	0	{"masked":"http://10.0.0.9/snap.cgi?passwd=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-305	line-305.json	0	{"masked":"http://10.0.0.9/snap.cgi?psw=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-306	line-306.json	0	{"masked":"http://10.0.0.9/snap.cgi?loginuse=admin&loginpas=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-307	line-307.json	0	{"masked":"ipint://10.0.0.9/Acme/N8?dev.adminPassword=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-308	line-308.json	0	{"masked":"http://10.0.0.9/ISAPI/Streaming/channels/101/picture?auth=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-309	line-309.json	0	{"masked":"http://10.0.0.9/snap.jpg?key=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-310	line-310.json	0	{"masked":"http://10.0.0.9/snap.jpg?apikey=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-311	line-311.json	0	{"masked":"http://10.0.0.9/snap.jpg?token=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-312	line-312.json	0	{"masked":"http://10.0.0.9/x?access_token=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-313	line-313.json	0	{"masked":"http://10.0.0.9/x?secret=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-314	line-314.json	0	{"masked":"http://10.0.0.9/x?client_secret=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-315	line-315.json	0	{"masked":"http://10.0.0.9/x?sig=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-316	line-316.json	0	{"masked":"rtsp://10.0.0.9/live#pwd=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-317	line-317.json	0	{"masked":"rtsp://10.0.0.9/live?channel=1;token=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-318	line-318.json	0	{"masked":"https://bucket.s3.example.com/a.mp4?X-Amz-Signature=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-319	line-319.json	0	{"masked":"https://bucket.s3.example.com/a.mp4?X-Amz-Credential=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-320	line-320.json	0	{"masked":"rtsp://admin:***@10.0.0.9/","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-321	line-321.json	0	{"masked":"rtsp://admin:***@10.0.0.9/","fault":"cred_secret","hidden":["hunter2xyz/a"]}
-line-322	line-322.json	0	{"masked":"rtsp://admin:***@10.0.0.9/","fault":"cred_secret","hidden":["hunter2xyz?a"]}
-line-323	line-323.json	0	{"masked":"rtsp://admin:***@10.0.0.9/","fault":"cred_secret","hidden":["hunter2xyz#a"]}
-line-324	line-324.json	0	{"masked":"rtsp://admin:***@10.0.0.9/","fault":"cred_secret","hidden":["p@hunter2xyz"]}
-line-325	line-325.json	0	{"masked":"s3://https://AKIA:***@s3.example.com/eu/bucket","fault":"cred_secret","hidden":["hunter2xyz/a+b"]}
-line-326	line-326.json	0	{"masked":"s3://https://AKIA:***@s3.example.com/eu/bucket","fault":"cred_secret","hidden":["hunter2xyz+a=b"]}
-line-327	line-327.json	0	{"masked":"s3://https://AKIA:***@s3.example.com/eu/bucket","fault":"cred_secret","hidden":["hunter2xyz/a=b?c#d"]}
-line-328	line-328.json	0	{"masked":"rtsp://10.0.0.9/proxy?src=***","fault":"cred_secret","hidden":["rtsp://admin:hunter2xyz@cam/live"]}
-line-329	line-329.json	0	{"masked":"http://10.0.0.9:1984/api/stream.mp4?src=***","fault":"cred_secret","hidden":["rtsp://admin:hunter2xyz@cam/live"]}
-line-330	line-330.json	0	{"masked":"http://10.0.0.9:1984/api/stream.mp4?src=***","fault":"cred_secret","hidden":["ffmpeg:rtsp://admin:hunter2xyz@cam/live#video=copy"]}
-line-331	line-331.json	0	{"masked":"rtsp://10.0.0.9:***/","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-332	line-332.json	0	{"masked":"rtsp://10.0.0.9:***/live?channel=1","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-333	line-333.json	0	{"masked":"rtsp://admin@10.0.0.9:***/live","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-334	line-334.json	0	{"masked":"rtsp://[fe80::1]:***/","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-335	line-335.json	0	{"masked":"rtsp://10.0.0.9:***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-336	line-336.json	0	{"masked":"s3://https://s3.example.com:***/eu/bucket","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-337	line-337.json	0	{"masked":"driverpack://acme/admin:***@10.0.0.5/ch/1","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-338	line-338.json	0	{"masked":"driverpack://acme/admin:***%4010.0.0.5/ch/1","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-339	line-339.json	0	{"masked":"driverpack://acme/admin%3A***%4010.0.0.5/ch/1","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-340	line-340.json	0	{"masked":"driverpack://acme/10.0.0.5:***/ch/1","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-341	line-341.json	0	{"masked":"driverpack://acme/10.0.0.5%3A***/ch/1","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-342	line-342.json	0	{"masked":"driverpack://acme/admin@10.0.0.5:***/ch/1","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-343	line-343.json	0	{"masked":"driverpack://acme/admin:***@10.0.0.5/ch/1","fault":"cred_secret","hidden":["hunter2xyz/a"]}
-line-344	line-344.json	0	{"masked":"driverpack://acme/admin:***%254010.0.0.5:8080/ch/1","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-345	line-345.json	0	{"masked":"driverpack://acme/admin%253A***%254010.0.0.5/ch/1","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-346	line-346.json	0	{"masked":"azure://https://acc:***@acc.blob.core.windows.net/container","fault":"cred_secret","hidden":["/hunter2xyz+K1SZ=="]}
-line-347	line-347.json	0	{"masked":"azure://https://acc:***@acc.blob.core.windows.net/container","fault":"cred_secret","hidden":["hunter2xyz/K1SZ+abc=="]}
-line-348	line-348.json	0	{"masked":"https://acc.blob.core.windows.net/container?sv=2021-06-08&ss=b&sig=***","fault":"cred_secret","hidden":["hunter2xyz%2B%3D"]}
-line-349	line-349.json	0	{"masked":"azure://DefaultEndpointsProtocol=https;AccountName=acc;AccountKey=***;EndpointSuffix=core.windows.net","fault":"cred_secret","hidden":["hunter2xyz/a+b=="]}
-line-350	line-350.json	0	{"masked":"rtsp://10.0.0.9:554/user=admin_channel=1_stream=0.sdp","fault":"cred_username","hidden":[]}
-line-351	line-351.json	0	{"masked":"http://10.0.0.9/x?usr=admin","fault":"cred_username","hidden":[]}
-line-352	line-352.json	0	{"masked":"http://10.0.0.9/x?user-name=admin","fault":"cred_username","hidden":[]}
-line-353	line-353.json	0	{"masked":"rtsp://10.0.0.5/Streaming/Channels/101?transportmode=unicast&profile=Profile_1","fault":"","hidden":[]}
-line-354	line-354.json	0	{"masked":"ipint://10.0.0.5:8000/Acme/N8?source=1&stream=0&opt.useMedia1=1&src.folder=/media/c++","fault":"","hidden":[]}
-line-355	line-355.json	0	{"masked":"http://10.0.0.5/axis-cgi/mjpg/video.cgi?resolution=640x480&keyframe=1","fault":"","hidden":[]}
-line-356	line-356.json	0	{"masked":"rtsp://10.0.0.5:554/h264/ch1/main/av_stream","fault":"","hidden":[]}
-line-357	line-357.json	0	{"masked":"rtsp://10.0.0.5:554/live/ch00_0","fault":"","hidden":[]}
-line-358	line-358.json	0	{"masked":"rtsp://10.0.0.5/live?passive=1","fault":"","hidden":[]}
-line-359	line-359.json	0	{"masked":"http://10.0.0.5/x?bypass_cache=1&passthrough=1","fault":"","hidden":[]}
-line-360	line-360.json	0	{"masked":"http://10.0.0.5/x?authmode=digest&authtype=basic","fault":"","hidden":[]}
-line-361	line-361.json	0	{"masked":"rtsp://10.0.0.5/key/live","fault":"","hidden":[]}
-line-362	line-362.json	0	{"masked":"rtsp://10.0.0.5/auth/live","fault":"","hidden":[]}
-line-363	line-363.json	0	{"masked":"http://10.0.0.5/x?ping=1&pipeline=2&spin=3","fault":"","hidden":[]}
-line-364	line-364.json	0	{"masked":"rtsp://10.0.0.5:554/Streaming/tracks/101?starttime=20240101T000000Z","fault":"","hidden":[]}
-line-365	line-365.json	0	{"masked":"rtsp://10.0.0.5/live","fault":"","hidden":[]}
-line-366	line-366.json	0	{"masked":"http://10.0.0.5/x?token_bucket=5&passage=north","fault":"","hidden":[]}
-line-367	line-367.json	0	{"masked":"http://10.0.0.5/x?monkey=1&hotkey=2","fault":"","hidden":[]}
-line-368	line-368.json	0	{"masked":"http://10.0.0.5/x?rtsp_auth=digest&enable_auth=1","fault":"","hidden":[]}
-line-369	line-369.json	0	{"masked":"http://10.0.0.9:1984/api/stream.mp4?src=rtsp%3A%2F%2F10.0.0.5%2Flive","fault":"","hidden":[]}
-line-370	line-370.json	0	{"masked":"http://10.0.0.9/proxy/rtsp%3A%2F%2F10.0.0.5%2Flive/x","fault":"","hidden":[]}
-line-371	line-371.json	0	{"masked":"driverpack://acme/10.0.0.5:8080/ch/1","fault":"","hidden":[]}
-line-372	line-372.json	0	{"masked":"driverpack://acme/10.0.0.5:8080/ch/1?mail=a@b","fault":"cred_username","hidden":[]}
-line-373	line-373.json	0	{"masked":"driverpack://file/media/c++/C%23/a.mp4?keyframe=1","fault":"","hidden":[]}
-line-374	line-374.json	0	{"masked":"http://10.0.0.5/x?title=Gate%20%231&folder=%2Fmedia%2Fc%2B%2B&q=a%3Db","fault":"","hidden":[]}
-line-375	line-375.json	0	{"masked":"http://10.0.0.5/videostream.cgi?usr=admin&pwd=***","fault":"cred_secret","hidden":[]}
-line-376	line-376.json	0	{"masked":"ipint://10.0.0.5/Acme/N8?dev.adminPassword=***","fault":"cred_secret","hidden":[]}
-line-377	line-377.json	0	{"masked":"http://10.0.0.5/ISAPI/Streaming/channels/101/picture?auth=***","fault":"cred_secret","hidden":[]}
-line-378	line-378.json	0	{"masked":"rtsp://10.0.0.5/live#pwd=***","fault":"cred_secret","hidden":[]}
-line-379	line-379.json	0	{"masked":"rtsp://10.0.0.5:554/user=admin&password=***&channel=1&stream=0.sdp","fault":"cred_secret","hidden":[]}
-line-380	line-380.json	0	{"masked":"rtsp://10.0.0.5/live?channel=1;token=***","fault":"cred_secret","hidden":[]}
-line-381	line-381.json	0	{"masked":"rtsp://10.0.0.5/live?p%61ss=***","fault":"cred_secret","hidden":[]}
-line-382	line-382.json	0	{"masked":"http://10.0.0.5/videostream.cgi?usr=admin&pwd=***","fault":"cred_secret","hidden":["hunter2"]}
-line-383	line-383.json	0	{"masked":"rtsp://root:***@10.0.0.5/live?auth=***&ch=1","fault":"cred_secret","hidden":["hunter2","YWRtaW4="]}
-line-384	line-384.json	0	{"masked":"rtsp://h:554/user=admin&password=***&channel=1&stream=0.sdp","fault":"cred_secret","hidden":[]}
-line-385	line-385.json	0	{"masked":"rtsp://h/live#token=***","fault":"cred_secret","hidden":[]}
-line-386	line-386.json	0	{"masked":"ipint://h/A/B?keyframe=1&src.folder=/x/y","fault":"","hidden":[]}
-line-387	line-387.json	0	{"masked":"rtsp://h:554/user=admin_password=***_channel=1&x=1","fault":"cred_secret","hidden":["hunter2"]}
-line-388	line-388.json	0	{"masked":"rtsp://h/user/admin/password/***/channel/1","fault":"cred_secret","hidden":["hunter2"]}
-line-389	line-389.json	0	{"masked":"rtsp://admin:***@10.0.0.1/live","fault":"cred_secret","hidden":["pa/ss?x"]}
-line-390	line-390.json	0	{"masked":"s3://https://AKIA:***@s3.example.com/eu/b","fault":"cred_secret","hidden":["ab/cd+ef"]}
-line-391	line-391.json	0	{"masked":"rtsp://cam:***/live","fault":"cred_secret","hidden":["hunter2"]}
-line-392	line-392.json	0	{"masked":"rtsp://admin@cam:***/live?channel=1","fault":"cred_secret","hidden":["hunter2"]}
-line-393	line-393.json	0	{"masked":"rtsp://[fe80::1]:***/","fault":"cred_secret","hidden":["hunter2"]}
-line-394	line-394.json	0	{"masked":"s3://https://s3.example.com:***/eu/b","fault":"cred_secret","hidden":["hunter2"]}
-line-395	line-395.json	0	{"masked":"http://10.0.0.5/x?token_bucket=5","fault":"","hidden":[]}
-line-396	line-396.json	0	{"masked":"http://10.0.0.5/x?passage=north","fault":"","hidden":[]}
-line-397	line-397.json	0	{"masked":"http://10.0.0.5/x?monkey=1","fault":"","hidden":[]}
-line-398	line-398.json	0	{"masked":"http://10.0.0.5/x?hotkey=2","fault":"","hidden":[]}
-line-399	line-399.json	0	{"masked":"http://10.0.0.5/x?accessKeyId=AKIA","fault":"cred_username","hidden":[]}
-line-400	line-400.json	0	{"masked":"http://10.0.0.5/x?bucket_token=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-401	line-401.json	0	{"masked":"http://10.0.0.5/x?hot_key=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-402	line-402.json	0	{"masked":"http://10.0.0.5/x?streamKey=***","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-403	line-403.json	0	{"masked":"http://10.0.0.5/x?rtmpstreamkey=hunter2xyz","fault":"","hidden":[]}
-line-404	line-404.json	0	{"masked":"http://10.0.0.5/x?superadminpass=hunter2xyz","fault":"","hidden":[]}
-line-405	line-405.json	0	{"masked":"DriverPack://acme/[fe80::1]:***/x","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-406	line-406.json	0	{"masked":"driverpack://acme/admin:***@10.0.0.5/ch/1","fault":"cred_secret","hidden":["12345/x"]}
-line-407	line-407.json	0	{"masked":"driverpack://acme/[fe80::1]:80/ch/1","fault":"","hidden":[]}
-line-408	line-408.json	0	{"masked":"driverpack://file/media/a.mp4","fault":"","hidden":[]}
-line-409	line-409.json	0	{"masked":"driverpack://acme","fault":"","hidden":[]}
-line-410	line-410.json	0	{"masked":"rtsp://10.0.0.5/admin:***@y","fault":"cred_secret","hidden":[]}
-line-411	line-411.json	0	{"masked":"http://10.0.0.9:1984/api/stream.mp4?src=***","fault":"cred_secret","hidden":["driverpack%3A%2F%2Facme%2Fadmin%3Ahunter2xyz%2540h%2Fch%2F1"]}
-line-412	line-412.json	0	{"masked":"http://10.0.0.9:1984/api/stream.mp4?src=***","fault":"cred_secret","hidden":["ffmpeg:driverpack://acme/admin:hunter2xyz%40h/ch/1"]}
-line-413	line-413.json	0	{"masked":"http://10.0.0.9:1984/api/stream.mp4?src=***","fault":"cred_secret","hidden":["http://a/x?src=http://b/y?src=http://c/z?src=http://d/w"]}
-line-414	line-414.json	0	{"masked":"http://10.0.0.9:1984/api/stream.mp4?src=http://a/x?src=http://b/y?src=http://c/z","fault":"","hidden":[]}
-line-415	line-415.json	0	{"masked":"http://10.0.0.9:1984/api/stream.mp4?src=***","fault":"cred_secret","hidden":["rtsp%3A%2F%2Fh%2Fuser%3Dadmin_password%3Dhunter2xyz"]}
-line-416	line-416.json	0	{"masked":"rtsp://10.0.0.9:554/a=1_p=hunter2xyz_channel=1","fault":"","hidden":[]}
-line-417	line-417.json	0	{"masked":"rtsp://10.0.0.9:554/channel=1_user=admin","fault":"cred_username","hidden":[]}
-line-418	line-418.json	0	{"masked":"http://10.0.0.9/x?channel=1_auth=hunter2xyz","fault":"","hidden":[]}
-line-419	line-419.json	0	{"masked":"http://10.0.0.9/x?enable_auth=1&gpio_pin=4&rtsp_auth=digest","fault":"","hidden":[]}
-line-420	line-420.json	0	{"masked":"rtsp://10.0.0.9/live?a=1&b=2&c=hunter2_token=x","fault":"","hidden":[]}
-line-423	line-423.json	0	{"masked":"https://acc.blob.core.windows.net/container?sv=2021-06-08&ss=b&sig=***","fault":"access_secret","hidden":["hunter2xyz%2B%3D"]}
-line-424	line-424.json	0	{"masked":"azure://https://acc.blob.core.windows.net/container?sv=2021-06-08&sig=***","fault":"access_secret","hidden":["hunter2xyz"]}
-line-425	line-425.json	0	{"masked":"azure://BlobEndpoint=https://acc.blob.core.windows.net;SharedAccessSignature=***&sig=***","fault":"access_secret","hidden":["sv=2021-06-08","hunter2xyz"]}
-line-426	line-426.json	0	{"masked":"azure://DefaultEndpointsProtocol=https;AccountName=acc;AccountKey=***;EndpointSuffix=core.windows.net","fault":"access_secret","hidden":["hunter2xyz/a+b=="]}
-line-427	line-427.json	0	{"masked":"https://bucket.s3.example.com/a.mp4?X-Amz-Signature=***","fault":"access_secret","hidden":["hunter2xyz"]}
-line-428	line-428.json	0	{"masked":"https://nas.example/share?password=***","fault":"access_secret","hidden":["hunter2xyz"]}
-line-429	line-429.json	0	{"masked":"https://nas.example/share?api_token=***","fault":"access_secret","hidden":["hunter2xyz"]}
-line-430	line-430.json	0	{"masked":"https://nas.example/share?session=abc","fault":"","hidden":[]}
-line-431	line-431.json	0	{"masked":"s3://https://AKIA:***@s3.example.com/eu/bucket","fault":"access_secret","hidden":["hunter2xyz/a+b"]}
-line-432	line-432.json	0	{"masked":"http://proxy/relay?src=***","fault":"access_secret","hidden":["rtsp://admin:hunter2xyz@cam/s"]}
-line-433	line-433.json	0	{"masked":"file:///mnt/archive","fault":"","hidden":[]}
-line-434	line-434.json	0	{"masked":"/mnt/archive","fault":"","hidden":[]}
-line-435	line-435.json	0	{"masked":"http://proxy/***","fault":"access_secret","hidden":["x;src=rtsp%3A%2F%2Fcam%2Fs%3Fuser%3Dadmin_password%3DHunter2"]}
-line-438	line-438.json	0	{"masked":"AKIA:***@s3.example.com/eu/bucket","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-439	line-439.json	0	{"masked":"s3:AKIA:***@s3.example.com/eu/bucket","fault":"cred_secret","hidden":["hunter2xyz/a+b"]}
-line-440	line-440.json	0	{"masked":"/mnt/a@b","fault":"cred_username","hidden":[]}
-line-441	line-441.json	0	{"masked":"/mnt/a%40b","fault":"","hidden":[]}
-line-442	line-442.json	0	{"masked":"AKIA:***@s3.example.com/eu/bucket","fault":"access_secret","hidden":["hunter2xyz"]}
-line-443	line-443.json	0	{"masked":"s3:AKIA:***@s3.example.com/eu/bucket","fault":"access_secret","hidden":["hunter2xyz/a+b"]}
-line-444	line-444.json	0	{"masked":"/mnt/a@b","fault":"access_key","hidden":[]}
-line-445	line-445.json	0	{"masked":"/mnt/a%40b","fault":"","hidden":[]}
-line-446	line-446.json	0	{"masked":"AKIA:***@https://s3.example.com/eu/bucket","fault":"cred_secret","hidden":["hunter2xyz"]}
-line-447	line-447.json	0	{"masked":"/mnt/a@https://h/x","fault":"cred_username","hidden":[]}
-line-448	line-448.json	0	{"masked":"AKIA:***@https://s3.example.com/eu/bucket","fault":"access_secret","hidden":["hunter2xyz"]}
-line-449	line-449.json	0	{"masked":"/mnt/a@https://h/x","fault":"access_key","hidden":[]}
-line-451	line-451.json	0	{"masked":"http://h/x?a=1#pwd=***","fault":"cred_secret","hidden":["hunter2"]}
-line-452	line-452.json	0	{"masked":"/mnt/x?pwd=***","fault":"cred_secret","hidden":["hunter2"]}
-line-453	line-453.json	0	{"masked":"/mnt/x?pwd=***","fault":"access_secret","hidden":["hunter2"]}
-line-454	line-454.json	0	{"masked":"https://hub.ex'ample/x?token=***","fault":"cred_secret","hidden":["hunter2"]}
-line-455	line-455.json	0	{"masked":"http://10.0.0.5/x?pwd=***","fault":"cred_secret","hidden":["Hun<ter2"]}
-line-456	line-456.json	0	{"masked":"http://h/x?a=<b>","fault":"access_secret","hidden":[]}
-line-458	line-458.json	0	{"masked":"http://10.0.0.5/videostream.cgi?usr=admin&pwd=","fault":"cred_secret","hidden":[]}
-line-459	line-459.json	0	{"masked":"rtsp://10.0.0.5/live?***","fault":"cred_secret","hidden":["pass%3Dhunter2xyz=1"]}
-line-460	line-460.json	0	{"masked":"rtsp://10.0.0.5/***","fault":"cred_secret","hidden":["x%3A//admin%3Ahunter2xyz%40h/s"]}
-line-461	line-461.json	0	{"masked":"rtsp://10.0.0.5/live?pwd=***","fault":"cred_secret","hidden":["ab%zz"]}
-line-462	line-462.json	0	{"masked":"rtsp://10.0.0.5/live?p%FFwd=x","fault":"","hidden":[]}
-line-463	line-463.json	0	{"masked":"cfw://local","fault":"","hidden":[]}
-line-464	line-464.json	0	{"masked":"driverpack://file","fault":"","hidden":[]}
-line-465	line-465.json	0	{"masked":"rtsp://10.0.0.5:99999/live","fault":"","hidden":[]}
-line-466	line-466.json	0	{"masked":"cfw://local:80","fault":"","hidden":[]}
+line-26	line-26.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?usr=admin&pwd=***"}
+line-27	line-27.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/snap.jpg?user=admin&password=***"}
+line-28	line-28.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.5/live?channel=1&token=***"}
+line-29	line-29.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/ISAPI/stream?auth=***"}
+line-30	line-30.json	0	{"fault": "cred_secret", "masked": "https://cam.example/v1/live?api_key=***"}
+line-31	line-31.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/mjpg?loginuse=admin&loginpas=***"}
+line-32	line-32.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.5/live;password=***"}
+line-33	line-33.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/live?P%77D=***"}
+line-34	line-34.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/live?access-key=***&sig=***"}
+line-35	line-35.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9:554/user=admin_password=***_channel=1_stream=0.sdp?real_stream"}
+line-36	line-36.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9:554/user=admin&password=***&channel=1&stream=0.sdp"}
+line-37	line-37.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9:554/password=***&user=admin&channel=1&stream=0.sdp"}
+line-38	line-38.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9:554/user=admin_password=***_channel=1_stream=0.sdp"}
+line-39	line-39.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9:554/USER=admin_PASSWORD=***_CHANNEL=1"}
+line-40	line-40.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9/live;user=admin;pwd=***"}
+line-41	line-41.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9/live;user=admin;password=***/ch1"}
+line-42	line-42.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/cgi-bin/snapshot.cgi?usr=admin&pwd=***"}
+line-43	line-43.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/cgi-bin/snapshot.cgi?loginuse=admin&loginpas=***"}
+line-44	line-44.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?USR=admin&PWD=***"}
+line-45	line-45.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?Usr=admin&PassWord=***"}
+line-46	line-46.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/x.cgi?p%77d=***"}
+line-47	line-47.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/x.cgi?%2570wd=***"}
+line-48	line-48.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/x.cgi?pass%5Fword=***"}
+line-49	line-49.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/x.cgi?pwd+=***"}
+line-50	line-50.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/user/admin/password/***/snap.jpg"}
+line-51	line-51.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/snap.cgi?pw=***"}
+line-52	line-52.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/snap.cgi?psd=***"}
+line-53	line-53.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/snap.cgi?passwd=***"}
+line-54	line-54.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/snap.cgi?user_id=admin&pwd=***"}
+line-55	line-55.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/x?pwd=***"}
+line-56	line-56.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/x#pwd=***"}
+line-57	line-57.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/x?token=***"}
+line-58	line-58.json	0	{"fault": "cred_secret", "masked": "https://s3.example.com/b/o?X-Amz-Credential=***&X-Amz-Signature=***"}
+line-59	line-59.json	0	{"fault": "cred_secret", "masked": "https://s3.example.com/b/o?X-Amz-Signature=***"}
+line-60	line-60.json	0	{"fault": "cred_secret", "masked": "https://s3.example.com/b/o?AWSAccessKeyId=AKIA&Signature=***&Expires=1"}
+line-61	line-61.json	0	{"fault": "cred_secret", "masked": "https://s3.example.com/b/o?aws_secret_access_key=***"}
+line-62	line-62.json	0	{"fault": "cred_secret", "masked": "https://h/x?secret=***"}
+line-63	line-63.json	0	{"fault": "cred_secret", "masked": "https://h/x?access_key=***"}
+line-64	line-64.json	0	{"fault": "cred_secret", "masked": "https://h/x?access_token=***"}
+line-65	line-65.json	0	{"fault": "cred_secret", "masked": "rtsp://admin:***@10.0.0.5/s"}
+line-66	line-66.json	0	{"fault": "cred_secret", "masked": "rtsp://:***@10.0.0.5/s"}
+line-67	line-67.json	0	{"fault": "cred_secret", "masked": "rtsp://admin:***/s"}
+line-68	line-68.json	0	{"fault": "cred_secret", "masked": "rtsp://admin:***@10.0.0.5/s"}
+line-69	line-69.json	0	{"fault": "cred_secret", "masked": "rtsp://admin:***@10.0.0.5/s"}
+line-70	line-70.json	0	{"fault": "cred_secret", "masked": "rtsp://admin:***@10.0.0.5/s"}
+line-71	line-71.json	0	{"fault": "cred_secret", "masked": "rtsp://admin:***@10.0.0.5/s"}
+line-72	line-72.json	0	{"fault": "cred_secret", "masked": "rtsp://admin:***@10.0.0.5/s"}
+line-73	line-73.json	0	{"fault": "cred_secret", "masked": "rtsp://admin:***/s"}
+line-74	line-74.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/admin:***@10.0.0.5/ch/1"}
+line-75	line-75.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/10.0.0.5;password=***/ch/1"}
+line-76	line-76.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/10.0.0.5/ch/1?pwd=***"}
+line-77	line-77.json	0	{"fault": "cred_secret", "masked": "http://proxy/relay?src=***"}
+line-78	line-78.json	0	{"fault": "cred_secret", "masked": "http://proxy/relay?src=***"}
+line-79	line-79.json	0	{"fault": "cred_secret", "masked": "http://proxy/relay?src=***"}
+line-80	line-80.json	0	{"fault": "cred_secret", "masked": "http://proxy/relay?src=***"}
+line-81	line-81.json	0	{"fault": "cred_secret", "masked": "http://proxy/***"}
+line-82	line-82.json	0	{"fault": "cred_secret", "masked": "http://proxy/***"}
+line-83	line-83.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/admin:***%4010.0.0.5/ch/1"}
+line-84	line-84.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/10.0.0.5:***/ch/1"}
+line-85	line-85.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/admin:***/ch/1"}
+line-86	line-86.json	0	{"fault": "cred_secret", "masked": "driverpack://acme:***/10.0.0.5/ch/1"}
+line-87	line-87.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/10.0.0.5&password=***/ch/1"}
+line-88	line-88.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/10.0.0.5_pwd=***/ch/1"}
+line-89	line-89.json	0	{"fault": "cred_secret", "masked": "driverpack://acme;pwd=***/10.0.0.5/ch/1"}
+line-90	line-90.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/pwd=***/ch/1"}
+line-91	line-91.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/Streaming/Channels/101"}
+line-92	line-92.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/streaming/channels/101"}
+line-93	line-93.json	0	{"fault": "", "masked": "rtsp://10.0.0.5:554/cam/realmonitor?channel=1&subtype=0"}
+line-94	line-94.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/h264/ch1/main/av_stream"}
+line-95	line-95.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/live?token_bucket=10"}
+line-96	line-96.json	0	{"fault": "", "masked": "http://10.0.0.5/keypad/snapshot.jpg"}
+line-97	line-97.json	0	{"fault": "", "masked": "http://10.0.0.5/passage/cam1.mjpg"}
+line-98	line-98.json	0	{"fault": "", "masked": "http://10.0.0.5/authority/live.sdp"}
+line-99	line-99.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/passage=north_channel=1"}
+line-100	line-100.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/live?passage=north"}
+line-101	line-101.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/live?authmode=digest"}
+line-102	line-102.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/live?bypass=1"}
+line-103	line-103.json	0	{"fault": "", "masked": "http://10.0.0.5/axis-cgi/mjpg/video.cgi?resolution=640x480&compression=30"}
+line-104	line-104.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/onvif1"}
+line-105	line-105.json	0	{"fault": "", "masked": "rtsp://10.0.0.5:554/11"}
+line-106	line-106.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/MediaInput/h264/stream_1"}
+line-107	line-107.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/Streaming/Channels/101?transportmode=multicast&profile=Profile_1"}
+line-108	line-108.json	0	{"fault": "", "masked": "http://10.0.0.5/cgi-bin/mjpg/video.cgi?channel=1&subtype=1"}
+line-109	line-109.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/user_stream=1"}
+line-110	line-110.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/live/ch00_0"}
+line-111	line-111.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/0/video1"}
+line-112	line-112.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/stream1?keyframe=1"}
+line-113	line-113.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/stream1?keyint=25"}
+line-114	line-114.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/stream1?sessiontimeout=60"}
+line-115	line-115.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/stream1?accountless=1"}
+line-116	line-116.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/videoMain?usrname_hint=0"}
+line-117	line-117.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/live/pass/stream"}
+line-118	line-118.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/pw/1"}
+line-119	line-119.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/live.sdp?compass=1"}
+line-120	line-120.json	0	{"fault": "", "masked": "http://10.0.0.5/snapshot.cgi?chn=1&u=1"}
+line-121	line-121.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/av0_0"}
+line-122	line-122.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/ch01.264?dev=1"}
+line-123	line-123.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/tcp/av0_0"}
+line-124	line-124.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/cam1/h264?key_frame_interval=2"}
+line-125	line-125.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/stream?apikey_required=false"}
+line-126	line-126.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/live?sid_hint=1"}
+line-127	line-127.json	0	{"fault": "", "masked": "http://10.0.0.5/webcapture.jpg?command=snap&channel=1"}
+line-128	line-128.json	0	{"fault": "", "masked": "driverpack://acme/10.0.0.50/ch/17"}
+line-129	line-129.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/live?monkey=1"}
+line-130	line-130.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/live?hotkey=F1"}
+line-131	line-131.json	0	{"fault": "", "masked": "http://proxy/relay?src=rtsp%3A%2F%2Fcam%2Fs"}
+line-132	line-132.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/Streaming/Channels/101?transportmode=unicast"}
+line-133	line-133.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/onvif-media/media.amp?profile=profile_1_h264&sessiontimeout=60&streamtype=unicast"}
+line-134	line-134.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/axis-media/media.amp?videocodec=h264&resolution=640x480"}
+line-135	line-135.json	0	{"fault": "", "masked": "rtsp://10.0.0.9:554/channel=1_stream=0.sdp?real_stream"}
+line-136	line-136.json	0	{"fault": "", "masked": "http://10.0.0.5/cgi-bin/auth/snapshot.jpg"}
+line-137	line-137.json	0	{"fault": "", "masked": "rtsp://[fe80::1]:554/live"}
+line-138	line-138.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9:554/channel=1_user=admin_password=***_stream=0.sdp"}
+line-139	line-139.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/x.cgi?usr=admin"}
+line-140	line-140.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/x.cgi?user_id=admin&channel=1"}
+line-141	line-141.json	0	{"fault": "cred_username", "masked": "driverpack://acme/admin@10.0.0.5/ch/1"}
+line-142	line-142.json	0	{"fault": "cred_username", "masked": "driverpack://acme/admin%4010.0.0.5/ch/1"}
+line-143	line-143.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9/live?user=admin_password=***_channel=1"}
+line-144	line-144.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/x.cgi?user=***"}
+line-145	line-145.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9:1984/api/stream.mp4?src=***"}
+line-146	line-146.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/proxy?url=***"}
+line-147	line-147.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9/p%2561ssword/***/live"}
+line-148	line-148.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/10.0.0.5%3A***/ch/1"}
+line-149	line-149.json	0	{"fault": "", "masked": "rtsp://10.0.0.9/host:word/live"}
+line-150	line-150.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&pwd=***"}
+line-151	line-151.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&password=***"}
+line-152	line-152.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&pass=***"}
+line-153	line-153.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&passwd=***"}
+line-154	line-154.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&Password=***"}
+line-155	line-155.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&dev.adminPassword=***"}
+line-156	line-156.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&src.passphrase=***"}
+line-157	line-157.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&loginpas=***"}
+line-158	line-158.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&adminpass=***"}
+line-159	line-159.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&psw=***"}
+line-160	line-160.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&pw=***"}
+line-161	line-161.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&token=***"}
+line-162	line-162.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&access_token=***"}
+line-163	line-163.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&authtoken=***"}
+line-164	line-164.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&auth=***"}
+line-165	line-165.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&Authorization=***"}
+line-166	line-166.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&oauth=***"}
+line-167	line-167.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&key=***"}
+line-168	line-168.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&apikey=***"}
+line-169	line-169.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&api_key=***"}
+line-170	line-170.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&streamkey=***"}
+line-171	line-171.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&opt.licenseKey=***"}
+line-172	line-172.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&secret=***"}
+line-173	line-173.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&client_secret=***"}
+line-174	line-174.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&credentials=***"}
+line-175	line-175.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&sig=***"}
+line-176	line-176.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&signature=***"}
+line-177	line-177.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&X-Amz-Signature=***"}
+line-178	line-178.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&X-Amz-Credential=***"}
+line-179	line-179.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&pass_word=***"}
+line-180	line-180.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&pass-word=***"}
+line-181	line-181.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&p%77d=***"}
+line-182	line-182.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&p%61ss=***"}
+line-183	line-183.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&p%2577d=***"}
+line-184	line-184.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&%2570wd=***"}
+line-185	line-185.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&pass%2577ord=***"}
+line-186	line-186.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&psd=***"}
+line-187	line-187.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&adminpsd=hunter2xyz"}
+line-188	line-188.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&p=hunter2xyz"}
+line-189	line-189.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&pin=***"}
+line-190	line-190.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&cred=***"}
+line-191	line-191.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&creds=***"}
+line-192	line-192.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&userpass=***"}
+line-193	line-193.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&rootpass=hunter2xyz"}
+line-194	line-194.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&passkey=hunter2xyz"}
+line-195	line-195.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&apiKey2=***"}
+line-196	line-196.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&api_key_2=***"}
+line-197	line-197.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&accessToken=***"}
+line-198	line-198.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&bucket_token=***"}
+line-199	line-199.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&X-Amz-Security-Token=***"}
+line-200	line-200.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&sessiontoken=***"}
+line-201	line-201.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&privatekey=***"}
+line-202	line-202.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&PassWord=***"}
+line-203	line-203.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&api-key=***"}
+line-204	line-204.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&apiKey=***"}
+line-205	line-205.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&x-api-key=***"}
+line-206	line-206.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&x-auth-token=***"}
+line-207	line-207.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&privkey=***"}
+line-208	line-208.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&psk=***"}
+line-209	line-209.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&wpa_psk=***"}
+line-210	line-210.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&ｐａｓｓｗｏｒｄ=***"}
+line-211	line-211.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&ＡｐｉＫｅｙ=***"}
+line-212	line-212.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&%EF%BD%90%EF%BD%97%EF%BD%84=***"}
+line-213	line-213.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&paſſword=***"}
+line-214	line-214.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&pass%E2%80%8Bword=***"}
+line-215	line-215.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&𝐩𝐚𝐬𝐬𝐰𝐨𝐫𝐝=***"}
+line-216	line-216.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&ⓟⓦⓓ=***"}
+line-217	line-217.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?channel=1&passcode=***"}
+line-218	line-218.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/videostream.cgi?channel=1&usr=hunter2xyz"}
+line-219	line-219.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/videostream.cgi?channel=1&user=hunter2xyz"}
+line-220	line-220.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/videostream.cgi?channel=1&username=hunter2xyz"}
+line-221	line-221.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/videostream.cgi?channel=1&user_name=hunter2xyz"}
+line-222	line-222.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/videostream.cgi?channel=1&user-name=hunter2xyz"}
+line-223	line-223.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/videostream.cgi?channel=1&login=hunter2xyz"}
+line-224	line-224.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/videostream.cgi?channel=1&loginuse=hunter2xyz"}
+line-225	line-225.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/videostream.cgi?channel=1&uname=hunter2xyz"}
+line-226	line-226.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/videostream.cgi?channel=1&opt.username=hunter2xyz"}
+line-227	line-227.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/videostream.cgi?channel=1&adminUsername=hunter2xyz"}
+line-228	line-228.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&channel=hunter2xyz"}
+line-229	line-229.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&stream=hunter2xyz"}
+line-230	line-230.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&subtype=hunter2xyz"}
+line-231	line-231.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&resolution=hunter2xyz"}
+line-232	line-232.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&profile=hunter2xyz"}
+line-233	line-233.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&source=hunter2xyz"}
+line-234	line-234.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&driver=hunter2xyz"}
+line-235	line-235.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&src.folder=hunter2xyz"}
+line-236	line-236.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&opt.useMedia1=hunter2xyz"}
+line-237	line-237.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&opt.separateStreams=hunter2xyz"}
+line-238	line-238.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&dev.overrideRTSPPort=hunter2xyz"}
+line-239	line-239.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&src.transportProtocol=hunter2xyz"}
+line-240	line-240.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&transportmode=hunter2xyz"}
+line-241	line-241.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&keyframe=hunter2xyz"}
+line-242	line-242.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&keyint=hunter2xyz"}
+line-243	line-243.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&authmode=hunter2xyz"}
+line-244	line-244.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&authtype=hunter2xyz"}
+line-245	line-245.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&author=hunter2xyz"}
+line-246	line-246.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&passive=hunter2xyz"}
+line-247	line-247.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&bypass_cache=hunter2xyz"}
+line-248	line-248.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&passthrough=hunter2xyz"}
+line-249	line-249.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&compass=hunter2xyz"}
+line-250	line-250.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&passage=hunter2xyz"}
+line-251	line-251.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&token_bucket=hunter2xyz"}
+line-252	line-252.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&monkey=hunter2xyz"}
+line-253	line-253.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&hotkey=hunter2xyz"}
+line-254	line-254.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&turkey=hunter2xyz"}
+line-255	line-255.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/videostream.cgi?channel=1&accessKeyId=hunter2xyz"}
+line-256	line-256.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&ping=hunter2xyz"}
+line-257	line-257.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&pipeline=hunter2xyz"}
+line-258	line-258.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&spin=hunter2xyz"}
+line-259	line-259.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&u=hunter2xyz"}
+line-260	line-260.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&pid=hunter2xyz"}
+line-261	line-261.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&users=hunter2xyz"}
+line-262	line-262.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/videostream.cgi?channel=1&userid=hunter2xyz"}
+line-263	line-263.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/videostream.cgi?channel=1&account=hunter2xyz"}
+line-264	line-264.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&x-auth=hunter2xyz"}
+line-265	line-265.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&rtsp_auth=hunter2xyz"}
+line-266	line-266.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&proﬁle=hunter2xyz"}
+line-267	line-267.json	0	{"fault": "", "masked": "http://10.0.0.5/videostream.cgi?channel=1&ｃｈａｎｎｅｌ=hunter2xyz"}
+line-268	line-268.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9:554/user=admin_password=***_channel=1_stream=0.sdp?real_stream"}
+line-269	line-269.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9:554/user=admin_pwd=***_channel=1"}
+line-270	line-270.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9:554/user=admin&password=***&channel=1&stream=0.sdp"}
+line-271	line-271.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9/user=admin;password=***"}
+line-272	line-272.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9:554/user/admin/password/***/channel/1"}
+line-273	line-273.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9/pwd/***/live"}
+line-274	line-274.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/videostream.cgi?usr=admin&pwd=***"}
+line-275	line-275.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/videostream.cgi?user=admin&psd=***"}
+line-276	line-276.json	0	{"fault": "", "masked": "http://10.0.0.9/snap.cgi?u=admin&p=hunter2xyz"}
+line-277	line-277.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?pass_word=***"}
+line-278	line-278.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?pass-word=***"}
+line-279	line-279.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?pin=***"}
+line-280	line-280.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?cred=***"}
+line-281	line-281.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?creds=***"}
+line-282	line-282.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9/live?channel=1_pwd=***"}
+line-283	line-283.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?p%77d=***"}
+line-284	line-284.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?p%61ss=***"}
+line-285	line-285.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?p%2577d=***"}
+line-286	line-286.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?%2570wd=***"}
+line-287	line-287.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9/p%2561ssword/***/live"}
+line-288	line-288.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/proxy?src=***"}
+line-289	line-289.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/proxy?src=***"}
+line-290	line-290.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/x?a=***"}
+line-291	line-291.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9:1984/api/stream.mp4?src=***"}
+line-292	line-292.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9:1984/api/stream.mp4?src=***"}
+line-293	line-293.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9:1984/api/stream.mp4?src=***"}
+line-294	line-294.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9:1984/api/stream.mp4?src=***"}
+line-295	line-295.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/proxy/***/live"}
+line-296	line-296.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/proxy/***"}
+line-297	line-297.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/x?ｐａｓｓｗｏｒｄ=***"}
+line-298	line-298.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/x?%EF%BD%90%EF%BD%97%EF%BD%84=***"}
+line-299	line-299.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?pw=***"}
+line-300	line-300.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?password=***"}
+line-301	line-301.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?Password=***"}
+line-302	line-302.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?PWD=***"}
+line-303	line-303.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?pass=***"}
+line-304	line-304.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?passwd=***"}
+line-305	line-305.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?psw=***"}
+line-306	line-306.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.cgi?loginuse=admin&loginpas=***"}
+line-307	line-307.json	0	{"fault": "cred_secret", "masked": "ipint://10.0.0.9/Acme/N8?dev.adminPassword=***"}
+line-308	line-308.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/ISAPI/Streaming/channels/101/picture?auth=***"}
+line-309	line-309.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.jpg?key=***"}
+line-310	line-310.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.jpg?apikey=***"}
+line-311	line-311.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/snap.jpg?token=***"}
+line-312	line-312.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/x?access_token=***"}
+line-313	line-313.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/x?secret=***"}
+line-314	line-314.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/x?client_secret=***"}
+line-315	line-315.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9/x?sig=***"}
+line-316	line-316.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9/live#pwd=***"}
+line-317	line-317.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9/live?channel=1;token=***"}
+line-318	line-318.json	0	{"fault": "cred_secret", "masked": "https://bucket.s3.example.com/a.mp4?X-Amz-Signature=***"}
+line-319	line-319.json	0	{"fault": "cred_secret", "masked": "https://bucket.s3.example.com/a.mp4?X-Amz-Credential=***"}
+line-320	line-320.json	0	{"fault": "cred_secret", "masked": "rtsp://admin:***@10.0.0.9/"}
+line-321	line-321.json	0	{"fault": "cred_secret", "masked": "rtsp://admin:***@10.0.0.9/"}
+line-322	line-322.json	0	{"fault": "cred_secret", "masked": "rtsp://admin:***@10.0.0.9/"}
+line-323	line-323.json	0	{"fault": "cred_secret", "masked": "rtsp://admin:***@10.0.0.9/"}
+line-324	line-324.json	0	{"fault": "cred_secret", "masked": "rtsp://admin:***@10.0.0.9/"}
+line-325	line-325.json	0	{"fault": "cred_secret", "masked": "s3://https://AKIA:***@s3.example.com/eu/bucket"}
+line-326	line-326.json	0	{"fault": "cred_secret", "masked": "s3://https://AKIA:***@s3.example.com/eu/bucket"}
+line-327	line-327.json	0	{"fault": "cred_secret", "masked": "s3://https://AKIA:***@s3.example.com/eu/bucket"}
+line-328	line-328.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9/proxy?src=***"}
+line-329	line-329.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9:1984/api/stream.mp4?src=***"}
+line-330	line-330.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9:1984/api/stream.mp4?src=***"}
+line-331	line-331.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9:***/"}
+line-332	line-332.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9:***/live?channel=1"}
+line-333	line-333.json	0	{"fault": "cred_secret", "masked": "rtsp://admin@10.0.0.9:***/live"}
+line-334	line-334.json	0	{"fault": "cred_secret", "masked": "rtsp://[fe80::1]:***/"}
+line-335	line-335.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.9:***"}
+line-336	line-336.json	0	{"fault": "cred_secret", "masked": "s3://https://s3.example.com:***/eu/bucket"}
+line-337	line-337.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/admin:***@10.0.0.5/ch/1"}
+line-338	line-338.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/admin:***%4010.0.0.5/ch/1"}
+line-339	line-339.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/admin%3A***%4010.0.0.5/ch/1"}
+line-340	line-340.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/10.0.0.5:***/ch/1"}
+line-341	line-341.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/10.0.0.5%3A***/ch/1"}
+line-342	line-342.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/admin@10.0.0.5:***/ch/1"}
+line-343	line-343.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/admin:***@10.0.0.5/ch/1"}
+line-344	line-344.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/admin:***%254010.0.0.5:8080/ch/1"}
+line-345	line-345.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/admin%253A***%254010.0.0.5/ch/1"}
+line-346	line-346.json	0	{"fault": "cred_secret", "masked": "azure://https://acc:***@acc.blob.core.windows.net/container"}
+line-347	line-347.json	0	{"fault": "cred_secret", "masked": "azure://https://acc:***@acc.blob.core.windows.net/container"}
+line-348	line-348.json	0	{"fault": "cred_secret", "masked": "https://acc.blob.core.windows.net/container?sv=2021-06-08&ss=b&sig=***"}
+line-349	line-349.json	0	{"fault": "cred_secret", "masked": "azure://DefaultEndpointsProtocol=https;AccountName=acc;AccountKey=***;EndpointSuffix=core.windows.net"}
+line-350	line-350.json	0	{"fault": "cred_username", "masked": "rtsp://10.0.0.9:554/user=admin_channel=1_stream=0.sdp"}
+line-351	line-351.json	0	{"fault": "cred_username", "masked": "http://10.0.0.9/x?usr=admin"}
+line-352	line-352.json	0	{"fault": "cred_username", "masked": "http://10.0.0.9/x?user-name=admin"}
+line-353	line-353.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/Streaming/Channels/101?transportmode=unicast&profile=Profile_1"}
+line-354	line-354.json	0	{"fault": "", "masked": "ipint://10.0.0.5:8000/Acme/N8?source=1&stream=0&opt.useMedia1=1&src.folder=/media/c++"}
+line-355	line-355.json	0	{"fault": "", "masked": "http://10.0.0.5/axis-cgi/mjpg/video.cgi?resolution=640x480&keyframe=1"}
+line-356	line-356.json	0	{"fault": "", "masked": "rtsp://10.0.0.5:554/h264/ch1/main/av_stream"}
+line-357	line-357.json	0	{"fault": "", "masked": "rtsp://10.0.0.5:554/live/ch00_0"}
+line-358	line-358.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/live?passive=1"}
+line-359	line-359.json	0	{"fault": "", "masked": "http://10.0.0.5/x?bypass_cache=1&passthrough=1"}
+line-360	line-360.json	0	{"fault": "", "masked": "http://10.0.0.5/x?authmode=digest&authtype=basic"}
+line-361	line-361.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/key/live"}
+line-362	line-362.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/auth/live"}
+line-363	line-363.json	0	{"fault": "", "masked": "http://10.0.0.5/x?ping=1&pipeline=2&spin=3"}
+line-364	line-364.json	0	{"fault": "", "masked": "rtsp://10.0.0.5:554/Streaming/tracks/101?starttime=20240101T000000Z"}
+line-365	line-365.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/live"}
+line-366	line-366.json	0	{"fault": "", "masked": "http://10.0.0.5/x?token_bucket=5&passage=north"}
+line-367	line-367.json	0	{"fault": "", "masked": "http://10.0.0.5/x?monkey=1&hotkey=2"}
+line-368	line-368.json	0	{"fault": "", "masked": "http://10.0.0.5/x?rtsp_auth=digest&enable_auth=1"}
+line-369	line-369.json	0	{"fault": "", "masked": "http://10.0.0.9:1984/api/stream.mp4?src=rtsp%3A%2F%2F10.0.0.5%2Flive"}
+line-370	line-370.json	0	{"fault": "", "masked": "http://10.0.0.9/proxy/rtsp%3A%2F%2F10.0.0.5%2Flive/x"}
+line-371	line-371.json	0	{"fault": "", "masked": "driverpack://acme/10.0.0.5:8080/ch/1"}
+line-372	line-372.json	0	{"fault": "cred_username", "masked": "driverpack://acme/10.0.0.5:8080/ch/1?mail=a@b"}
+line-373	line-373.json	0	{"fault": "", "masked": "driverpack://file/media/c++/C%23/a.mp4?keyframe=1"}
+line-374	line-374.json	0	{"fault": "", "masked": "http://10.0.0.5/x?title=Gate%20%231&folder=%2Fmedia%2Fc%2B%2B&q=a%3Db"}
+line-375	line-375.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?usr=admin&pwd=***"}
+line-376	line-376.json	0	{"fault": "cred_secret", "masked": "ipint://10.0.0.5/Acme/N8?dev.adminPassword=***"}
+line-377	line-377.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/ISAPI/Streaming/channels/101/picture?auth=***"}
+line-378	line-378.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.5/live#pwd=***"}
+line-379	line-379.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.5:554/user=admin&password=***&channel=1&stream=0.sdp"}
+line-380	line-380.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.5/live?channel=1;token=***"}
+line-381	line-381.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.5/live?p%61ss=***"}
+line-382	line-382.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?usr=admin&pwd=***"}
+line-383	line-383.json	0	{"fault": "cred_secret", "masked": "rtsp://root:***@10.0.0.5/live?auth=***&ch=1"}
+line-384	line-384.json	0	{"fault": "cred_secret", "masked": "rtsp://h:554/user=admin&password=***&channel=1&stream=0.sdp"}
+line-385	line-385.json	0	{"fault": "cred_secret", "masked": "rtsp://h/live#token=***"}
+line-386	line-386.json	0	{"fault": "", "masked": "ipint://h/A/B?keyframe=1&src.folder=/x/y"}
+line-387	line-387.json	0	{"fault": "cred_secret", "masked": "rtsp://h:554/user=admin_password=***_channel=1&x=1"}
+line-388	line-388.json	0	{"fault": "cred_secret", "masked": "rtsp://h/user/admin/password/***/channel/1"}
+line-389	line-389.json	0	{"fault": "cred_secret", "masked": "rtsp://admin:***@10.0.0.1/live"}
+line-390	line-390.json	0	{"fault": "cred_secret", "masked": "s3://https://AKIA:***@s3.example.com/eu/b"}
+line-391	line-391.json	0	{"fault": "cred_secret", "masked": "rtsp://cam:***/live"}
+line-392	line-392.json	0	{"fault": "cred_secret", "masked": "rtsp://admin@cam:***/live?channel=1"}
+line-393	line-393.json	0	{"fault": "cred_secret", "masked": "rtsp://[fe80::1]:***/"}
+line-394	line-394.json	0	{"fault": "cred_secret", "masked": "s3://https://s3.example.com:***/eu/b"}
+line-395	line-395.json	0	{"fault": "", "masked": "http://10.0.0.5/x?token_bucket=5"}
+line-396	line-396.json	0	{"fault": "", "masked": "http://10.0.0.5/x?passage=north"}
+line-397	line-397.json	0	{"fault": "", "masked": "http://10.0.0.5/x?monkey=1"}
+line-398	line-398.json	0	{"fault": "", "masked": "http://10.0.0.5/x?hotkey=2"}
+line-399	line-399.json	0	{"fault": "cred_username", "masked": "http://10.0.0.5/x?accessKeyId=AKIA"}
+line-400	line-400.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/x?bucket_token=***"}
+line-401	line-401.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/x?hot_key=***"}
+line-402	line-402.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/x?streamKey=***"}
+line-403	line-403.json	0	{"fault": "", "masked": "http://10.0.0.5/x?rtmpstreamkey=hunter2xyz"}
+line-404	line-404.json	0	{"fault": "", "masked": "http://10.0.0.5/x?superadminpass=hunter2xyz"}
+line-405	line-405.json	0	{"fault": "cred_secret", "masked": "DriverPack://acme/[fe80::1]:***/x"}
+line-406	line-406.json	0	{"fault": "cred_secret", "masked": "driverpack://acme/admin:***@10.0.0.5/ch/1"}
+line-407	line-407.json	0	{"fault": "", "masked": "driverpack://acme/[fe80::1]:80/ch/1"}
+line-408	line-408.json	0	{"fault": "", "masked": "driverpack://file/media/a.mp4"}
+line-409	line-409.json	0	{"fault": "", "masked": "driverpack://acme"}
+line-410	line-410.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.5/admin:***@y"}
+line-411	line-411.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9:1984/api/stream.mp4?src=***"}
+line-412	line-412.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9:1984/api/stream.mp4?src=***"}
+line-413	line-413.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9:1984/api/stream.mp4?src=***"}
+line-414	line-414.json	0	{"fault": "", "masked": "http://10.0.0.9:1984/api/stream.mp4?src=http://a/x?src=http://b/y?src=http://c/z"}
+line-415	line-415.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.9:1984/api/stream.mp4?src=***"}
+line-416	line-416.json	0	{"fault": "", "masked": "rtsp://10.0.0.9:554/a=1_p=hunter2xyz_channel=1"}
+line-417	line-417.json	0	{"fault": "cred_username", "masked": "rtsp://10.0.0.9:554/channel=1_user=admin"}
+line-418	line-418.json	0	{"fault": "", "masked": "http://10.0.0.9/x?channel=1_auth=hunter2xyz"}
+line-419	line-419.json	0	{"fault": "", "masked": "http://10.0.0.9/x?enable_auth=1&gpio_pin=4&rtsp_auth=digest"}
+line-420	line-420.json	0	{"fault": "", "masked": "rtsp://10.0.0.9/live?a=1&b=2&c=hunter2_token=x"}
+line-423	line-423.json	0	{"fault": "access_secret", "masked": "https://acc.blob.core.windows.net/container?sv=2021-06-08&ss=b&sig=***"}
+line-424	line-424.json	0	{"fault": "access_secret", "masked": "azure://https://acc.blob.core.windows.net/container?sv=2021-06-08&sig=***"}
+line-425	line-425.json	0	{"fault": "access_secret", "masked": "azure://BlobEndpoint=https://acc.blob.core.windows.net;SharedAccessSignature=***&sig=***"}
+line-426	line-426.json	0	{"fault": "access_secret", "masked": "azure://DefaultEndpointsProtocol=https;AccountName=acc;AccountKey=***;EndpointSuffix=core.windows.net"}
+line-427	line-427.json	0	{"fault": "access_secret", "masked": "https://bucket.s3.example.com/a.mp4?X-Amz-Signature=***"}
+line-428	line-428.json	0	{"fault": "access_secret", "masked": "https://nas.example/share?password=***"}
+line-429	line-429.json	0	{"fault": "access_secret", "masked": "https://nas.example/share?api_token=***"}
+line-430	line-430.json	0	{"fault": "", "masked": "https://nas.example/share?session=abc"}
+line-431	line-431.json	0	{"fault": "access_secret", "masked": "s3://https://AKIA:***@s3.example.com/eu/bucket"}
+line-432	line-432.json	0	{"fault": "access_secret", "masked": "http://proxy/relay?src=***"}
+line-433	line-433.json	0	{"fault": "", "masked": "file:///mnt/archive"}
+line-434	line-434.json	0	{"fault": "", "masked": "/mnt/archive"}
+line-435	line-435.json	0	{"fault": "access_secret", "masked": "http://proxy/***"}
+line-438	line-438.json	0	{"fault": "cred_secret", "masked": "AKIA:***@s3.example.com/eu/bucket"}
+line-439	line-439.json	0	{"fault": "cred_secret", "masked": "s3:AKIA:***@s3.example.com/eu/bucket"}
+line-440	line-440.json	0	{"fault": "cred_username", "masked": "/mnt/a@b"}
+line-441	line-441.json	0	{"fault": "", "masked": "/mnt/a%40b"}
+line-442	line-442.json	0	{"fault": "access_secret", "masked": "AKIA:***@s3.example.com/eu/bucket"}
+line-443	line-443.json	0	{"fault": "access_secret", "masked": "s3:AKIA:***@s3.example.com/eu/bucket"}
+line-444	line-444.json	0	{"fault": "access_key", "masked": "/mnt/a@b"}
+line-445	line-445.json	0	{"fault": "", "masked": "/mnt/a%40b"}
+line-446	line-446.json	0	{"fault": "cred_secret", "masked": "AKIA:***@https://s3.example.com/eu/bucket"}
+line-447	line-447.json	0	{"fault": "cred_username", "masked": "/mnt/a@https://h/x"}
+line-448	line-448.json	0	{"fault": "access_secret", "masked": "AKIA:***@https://s3.example.com/eu/bucket"}
+line-449	line-449.json	0	{"fault": "access_key", "masked": "/mnt/a@https://h/x"}
+line-451	line-451.json	0	{"fault": "cred_secret", "masked": "http://h/x?a=1#pwd=***"}
+line-452	line-452.json	0	{"fault": "cred_secret", "masked": "/mnt/x?pwd=***"}
+line-453	line-453.json	0	{"fault": "access_secret", "masked": "/mnt/x?pwd=***"}
+line-454	line-454.json	0	{"fault": "cred_secret", "masked": "https://hub.ex'ample/x?token=***"}
+line-455	line-455.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/x?pwd=***"}
+line-456	line-456.json	0	{"fault": "access_secret", "masked": "http://h/x?a=<b>"}
+line-458	line-458.json	0	{"fault": "cred_secret", "masked": "http://10.0.0.5/videostream.cgi?usr=admin&pwd="}
+line-459	line-459.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.5/live?***"}
+line-460	line-460.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.5/***"}
+line-461	line-461.json	0	{"fault": "cred_secret", "masked": "rtsp://10.0.0.5/live?pwd=***"}
+line-462	line-462.json	0	{"fault": "", "masked": "rtsp://10.0.0.5/live?p%FFwd=x"}
+line-463	line-463.json	0	{"fault": "", "masked": "cfw://local"}
+line-464	line-464.json	0	{"fault": "", "masked": "driverpack://file"}
+line-465	line-465.json	0	{"fault": "", "masked": "rtsp://10.0.0.5:99999/live"}
+line-466	line-466.json	0	{"fault": "", "masked": "cfw://local:80"}

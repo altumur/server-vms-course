@@ -5,7 +5,8 @@ package vectoradapter
 
 // ContenderFresh — common/contender-fresh fresh.tsv (vectors):
 //
-//	the freshness of a contender: true | false
+//	Native input and output: Platform/common/vectors/contender-fresh/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func ContenderFresh(table string, cells map[string]string, files map[string][]byte) Answer {

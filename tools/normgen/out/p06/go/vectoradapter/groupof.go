@@ -5,9 +5,10 @@ package vectoradapter
 
 // GroupOf — common/group-of cases.tsv (vectors):
 //
-//	the group of a source address: {group, fault} ("" — none; fault bad_url or "")
+//	Native input and output: Platform/common/vectors/group-of/README.md#who-performs; transport:
+//	Platform/common/vectors/wire.tsv.
 //
-// cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
-func GroupOf(table string, cells map[string]string, files map[string][]byte) Answer {
+// input — the bytes of the {input} file of the stand command (the cell as written).
+func GroupOf(input []byte) Answer {
 	return NotImplemented("GroupOf")
 }

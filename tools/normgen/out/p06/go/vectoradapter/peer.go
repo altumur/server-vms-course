@@ -5,7 +5,8 @@ package vectoradapter
 
 // Peer — common/peer cases.tsv (vectors):
 //
-//	the peer certificate check: {result: ok} | {result: refused, reason} (subset)
+//	Native input and output: Platform/common/vectors/peer/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Peer(table string, cells map[string]string, files map[string][]byte) Answer {

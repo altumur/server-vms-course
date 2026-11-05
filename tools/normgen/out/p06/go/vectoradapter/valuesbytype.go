@@ -5,8 +5,8 @@ package vectoradapter
 
 // ValuesByType — common/values-by-type cases.tsv (vectors):
 //
-//	values by type, one frame per half of a row: write {type, json} → {status: ok, row} | {status: absent} |
-//	{status: refused[, fault]}; read {type, row} → {status: ok, value} | {status: absent} | {status: unreadable}
+//	Native input and output: Platform/common/vectors/values-by-type/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // variant — the half of the row (write | read); cells — the input columns of that half as written.
 func ValuesByType(table, variant string, cells map[string]string, files map[string][]byte) Answer {

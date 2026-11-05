@@ -5,7 +5,8 @@ package vectoradapter
 
 // Rid — 06-console/rid rid.tsv (stand:rid):
 //
-//	the request id check: {status: ok | refused} (object and LF); stand {input} — {rid}
+//	Native input and output: Platform/06-console/vectors/rid/README.md; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // input — the bytes of the {input} file of the stand command (the cell as written).
 func Rid(input []byte) Answer {

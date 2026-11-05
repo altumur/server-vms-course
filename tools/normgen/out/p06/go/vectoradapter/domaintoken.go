@@ -5,7 +5,8 @@ package vectoradapter
 
 // DomainToken — common/domain-token cases.tsv (vectors):
 //
-//	the domain token check: {result: ok, payload} | {result: refused, reason} (subset), code 2 — out of form
+//	Native input and output: Platform/common/vectors/domain-token/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func DomainToken(table string, cells map[string]string, files map[string][]byte) Answer {

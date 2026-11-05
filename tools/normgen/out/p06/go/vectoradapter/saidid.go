@@ -5,7 +5,8 @@ package vectoradapter
 
 // SaidID — common/said-id said.tsv (stand:said-id):
 //
-//	said-id (stand said-id): the SaidID as a JSON string; read.tsv (stand said-read): true | false
+//	Native input and output: Platform/common/vectors/said-id/README.md#stand-commands; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // input — the bytes of the {input} file of the stand command (the cell as written).
 func SaidID(input []byte) Answer {

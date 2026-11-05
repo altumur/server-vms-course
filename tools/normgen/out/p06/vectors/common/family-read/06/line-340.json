@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-0339",
+ "variant": "",
+ "cells": {
+  "family": "<sub>/requests/<rid>",
+  "key": "testsub/requests/r-0123456789abcdef",
+  "kind": "row",
+  "mode": "writer",
+  "who": "[\"console\", \"<s>worker\"]",
+  "text": "{\"unit\":\"a\",\"digest\":\"0000000000000000000000000000000000000000000000000000000000000000\"}"
+ },
+ "files": {}
+}

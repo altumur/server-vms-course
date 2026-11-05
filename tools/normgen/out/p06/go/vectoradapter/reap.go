@@ -5,7 +5,8 @@ package vectoradapter
 
 // Reap — 06-console/reap cases.tsv (vectors):
 //
-//	the reaping of a request: {write_mark, remove_row}
+//	Native input and output: Platform/06-console/vectors/reap/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Reap(table string, cells map[string]string, files map[string][]byte) Answer {

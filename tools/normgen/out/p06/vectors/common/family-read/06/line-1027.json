@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-1026",
+ "variant": "",
+ "cells": {
+  "family": "<sub>/sweep",
+  "key": "testsub/sweep",
+  "kind": "row",
+  "mode": "reader",
+  "who": "[\"console\"]",
+  "text": "{\"digests\":\"sha256-0000000000000000000000000000000000000000000000000000000000000000\",\"at\":\"\"}"
+ },
+ "files": {}
+}

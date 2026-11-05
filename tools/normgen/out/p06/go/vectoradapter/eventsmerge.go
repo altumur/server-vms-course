@@ -5,8 +5,8 @@ package vectoradapter
 
 // EventsMerge — common/events-merge cases.tsv (vectors):
 //
-//	the merge of the console's events: {events, state, truncated, …, withheld}; expect is a subset, events by
-//	their listed fields
+//	Native input and output: Platform/common/vectors/events-merge/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func EventsMerge(table string, cells map[string]string, files map[string][]byte) Answer {

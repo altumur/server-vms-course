@@ -5,7 +5,8 @@ package vectoradapter
 
 // Deadline — common/deadline cases.tsv (vectors):
 //
-//	the deadline of a request: {written} | {status: 400, error: "bad deadline"}
+//	Native input and output: Platform/common/vectors/deadline/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Deadline(table string, cells map[string]string, files map[string][]byte) Answer {

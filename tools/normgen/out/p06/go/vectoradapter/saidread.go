@@ -5,7 +5,8 @@ package vectoradapter
 
 // SaidRead — common/said-id read.tsv (stand:said-read):
 //
-//	the said-read check (stand said-read): {input} — {fetched, rid}; true | false
+//	Native input and output: Platform/common/vectors/said-id/README.md#stand-commands; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // input — the bytes of the {input} file of the stand command (the cell as written).
 func SaidRead(input []byte) Answer {

@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-0584",
+ "variant": "",
+ "cells": {
+  "family": "<sub>/asked/<sha16(имя)>",
+  "key": "testsub/asked/0123456789abcdef",
+  "kind": "row",
+  "mode": "reader",
+  "who": "[\"console\"]",
+  "text": "{\"rids\":\"a\",\"by\":\"True\",\"at\":\"1\"}"
+ },
+ "files": {}
+}

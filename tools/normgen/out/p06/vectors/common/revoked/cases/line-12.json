@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/revoked",
+ "table": "cases.tsv",
+ "case": "bad-0x",
+ "variant": "",
+ "cells": {
+  "file": "\"0xab\\n\""
+ },
+ "files": {}
+}

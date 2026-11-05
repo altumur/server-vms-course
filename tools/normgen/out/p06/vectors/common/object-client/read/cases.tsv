@@ -1,5 +1,3 @@
-# Inputs of the vector command for common/object-client read.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/object-client/read.tsv sha256 b5d0be9834be77a74f1567fa35fa0bdf1b9e3878dbe9dbee29be441e93794872
 case	input	exit	stdout
 line-3	line-3.json	0	"object"
 line-4	line-4.json	0	"absent"

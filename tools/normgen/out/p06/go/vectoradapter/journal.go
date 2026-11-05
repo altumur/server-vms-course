@@ -5,8 +5,8 @@ package vectoradapter
 
 // Journal — common/journal append.tsv (vectors), common/journal names.tsv (vectors), common/journal years.tsv (vectors):
 //
-//	the journal contract by table: append.tsv → the bucket text after the write or "@refuse"; names.tsv → the
-//	component, "@skip", or the words write/keep/refuse; years.tsv → the bucket name or "@refuse"
+//	Native input and output: Platform/common/vectors/journal/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Journal(table string, cells map[string]string, files map[string][]byte) Answer {

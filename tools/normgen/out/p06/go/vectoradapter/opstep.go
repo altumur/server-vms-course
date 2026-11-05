@@ -3,9 +3,10 @@
 
 package vectoradapter
 
-// OpStep — 06-console/op-step key.tsv (vectors), 06-console/op-step expected.tsv (vectors):
+// OpStep — 06-console/op-step expected.tsv (vectors), 06-console/op-step key.tsv (vectors):
 //
-//	op-step: key.tsv — the key (64 hex) as a JSON string; expected.tsv — the expected object
+//	Native input and output: Platform/06-console/vectors/op-step/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func OpStep(table string, cells map[string]string, files map[string][]byte) Answer {

@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-k0031",
+ "variant": "",
+ "cells": {
+  "family": "platform/folders/<id>",
+  "key": "platform/folders/",
+  "kind": "row",
+  "mode": "writer",
+  "who": "[\"console\", \"domainagent\"]",
+  "text": "{\"name\":\"Подъезд\",\"parent\":\"\",\"members\":\"testsub/counters/c1\"}"
+ },
+ "files": {}
+}

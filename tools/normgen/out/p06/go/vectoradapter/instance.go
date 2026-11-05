@@ -5,8 +5,8 @@ package vectoradapter
 
 // Instance — common/instance box.tsv (vectors), common/instance cases.tsv (vectors):
 //
-//	the instance contract: box.tsv → {box, source} or "@refuse"; cases.tsv → {instance} or "@refuse" (code 0,
-//	not 2 — README «Native outcome»)
+//	Native input and output: Platform/common/vectors/instance/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Instance(table string, cells map[string]string, files map[string][]byte) Answer {

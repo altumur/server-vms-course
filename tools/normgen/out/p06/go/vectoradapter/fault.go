@@ -5,7 +5,8 @@ package vectoradapter
 
 // Fault — common/fault fault.tsv (vectors):
 //
-//	the fault words of the console doors: one call for the table, {<word>: <HTTP status>} of exactly its words
+//	Native input and output: Platform/common/vectors/fault/README.md; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Fault(table string, cells map[string]string, files map[string][]byte) Answer {

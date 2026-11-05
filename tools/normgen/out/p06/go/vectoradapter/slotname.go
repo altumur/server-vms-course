@@ -5,8 +5,8 @@ package vectoradapter
 
 // SlotName — common/slot-name cases.tsv (vectors):
 //
-//	the slot name contract by op: order → the names in order; next → the next name; role → {server, n} |
-//	"not_role"
+//	Native input and output: Platform/common/vectors/slot-name/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func SlotName(table string, cells map[string]string, files map[string][]byte) Answer {

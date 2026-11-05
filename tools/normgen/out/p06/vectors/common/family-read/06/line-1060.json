@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "a94_revision.005",
+ "variant": "",
+ "cells": {
+  "family": "<sub>/policy",
+  "key": "testsub/policy",
+  "kind": "row",
+  "mode": "writer",
+  "who": "[\"console\"]",
+  "text": "{\"servers\":\"shared\",\"revision\":\"0\"}"
+ },
+ "files": {}
+}

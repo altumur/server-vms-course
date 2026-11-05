@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-k0064",
+ "variant": "",
+ "cells": {
+  "family": "<sub>/operations-turn",
+  "key": "/operations-turn",
+  "kind": "row",
+  "mode": "reader",
+  "who": "[\"console\"]",
+  "text": "{\"holder\":\"box-a:42:0a1b2c-1\"}"
+ },
+ "files": {}
+}

@@ -5,7 +5,8 @@ package vectoradapter
 
 // RequestDigestCells — 06-console/request-digest digest.tsv (vectors):
 //
-//	the digest of a request through the unified command (cells sender, input): {canonical, sha256}
+//	Native input and output: Platform/06-console/vectors/request-digest/README.md; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func RequestDigestCells(table string, cells map[string]string, files map[string][]byte) Answer {

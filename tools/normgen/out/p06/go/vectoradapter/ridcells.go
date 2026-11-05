@@ -5,8 +5,8 @@ package vectoradapter
 
 // RidCells — 06-console/rid rid.tsv (vectors), 06-console/rid template.tsv (vectors):
 //
-//	the request id check through the unified command (cells rid; rid.tsv), template.tsv (cells key, body): the
-//	object of expect
+//	Native input and output: Platform/06-console/vectors/rid/README.md; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func RidCells(table string, cells map[string]string, files map[string][]byte) Answer {

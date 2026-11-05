@@ -5,7 +5,8 @@ package vectoradapter
 
 // RequestDigest — 06-console/request-digest digest.tsv (stand:request-digest):
 //
-//	the digest of a request: exactly {canonical, sha256} (object and LF); stand {input} — {sender, input}
+//	Native input and output: Platform/06-console/vectors/request-digest/README.md; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // input — the bytes of the {input} file of the stand command (the cell as written).
 func RequestDigest(input []byte) Answer {

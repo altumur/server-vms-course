@@ -1,5 +1,3 @@
-# Inputs of the vector command for common/resource-state cases.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/resource-state/cases.tsv sha256 1f98fa8bbc3532a0795e4e0c1957a279c5285566700be4c20231a448e3b13d9b
 case	input	exit	stdout
 line-3	line-3.json	0	"live"
 line-4	line-4.json	0	"live"

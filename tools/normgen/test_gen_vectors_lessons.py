@@ -120,9 +120,15 @@ def fake_go(g, mut=None):
                     ans = mut(d, no, variant, compare, ans)
                 if d["surface"] == "vectors":
                     cells = fcells if fcells is not None else {c: r[c] for c in d["inputs"]}
-                    k = d["table"] + "|" + variant + "|" + "\x00".join(sorted(f"{a}={b}" for a, b in cells.items()))
+                    if g.L.key == "06-console" and d["args"] == "input":
+                        k, = cells.values()
+                    else:
+                        k = d["table"] + "|" + variant + "|" + "\x00".join(sorted(f"{a}={b}" for a, b in cells.items()))
                 else:
-                    data = d["input"](r) if callable(d["input"]) else r[d["input"]].encode("utf-8")
+                    if d.get("_form"):
+                        data = run.arg
+                    else:
+                        data = d["input"](r) if callable(d["input"]) else r[d["input"]].encode("utf-8")
                     k = data.decode("utf-8")
                 entries.append((k, ans))
         uniq = {}
@@ -325,8 +331,13 @@ class VectorsLessons(unittest.TestCase):
                 self.assertEqual(len(fails), 1, f"{name}: red {fails}")
 
         # без fates (pool P/06): поле fates не судится — зелёное
-        fates = first("common/pool", "cases.tsv", set_value(lambda v: dict(v, fates="mutant") if "fates" in v else None))
+        fates_applied = []
+        def change_fates(value):
+            fates_applied.append(True)
+            return dict(value, fates="mutant")
+        fates = first("common/pool", "cases.tsv", set_value(change_fates))
         self.assertEqual(self.mutant("06-console", "without-fates", fates), [])
+        self.assertTrue(fates_applied, "the ignored-field control must actually change a native answer")
         # поле вне списка fields:state (takeable у slot P/04) — правило не шире README: зелёное
         unlisted = first("common/slot", "cases.tsv", set_value(lambda v: dict(v, takeable="mutant") if "takeable" in v else None))
         self.assertEqual(self.mutant("04-controller", "fields-unlisted", unlisted), [])

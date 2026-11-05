@@ -5,7 +5,8 @@ package vectoradapter
 
 // Keys — common/keys cases.tsv (vectors):
 //
-//	the keyset take: {result: took|holding, rev} | {result: refused, reason[, rev]}
+//	Native input and output: Platform/common/vectors/keys/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Keys(table string, cells map[string]string, files map[string][]byte) Answer {

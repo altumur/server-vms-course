@@ -5,8 +5,8 @@ package vectoradapter
 
 // Labels — common/labels cases.tsv (vectors):
 //
-//	the label contract by op: label → "ok" | "@refuse"; set_write → the text; text_read, env_labels → the list
-//	of labels (compared as a set)
+//	Native input and output: Platform/common/vectors/labels/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Labels(table string, cells map[string]string, files map[string][]byte) Answer {

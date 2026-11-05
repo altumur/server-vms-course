@@ -1,5 +1,3 @@
-# Inputs of the vector command for common/may covers.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/may/covers.tsv sha256 7e29e880a1e67d3cdb8a1dcfcb3fda6a1db5fe02d057494513f7025efff137d5
 case	input	exit	stdout
 line-3	line-3.json	0	true
 line-4	line-4.json	0	false
@@ -9,7 +7,7 @@ line-7	line-7.json	0	true
 line-8	line-8.json	0	true
 line-9	line-9.json	0	true
 line-10	line-10.json	0	false
-line-11	line-11.json	2	
+line-11	line-11.json	2	null
 line-12	line-12.json	0	true
 line-13	line-13.json	0	true
 line-14	line-14.json	0	true
@@ -19,4 +17,4 @@ line-17	line-17.json	0	false
 line-18	line-18.json	0	false
 line-19	line-19.json	0	false
 line-20	line-20.json	0	false
-line-21	line-21.json	2	
+line-21	line-21.json	2	null

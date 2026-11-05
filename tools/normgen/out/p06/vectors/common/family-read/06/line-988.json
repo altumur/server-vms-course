@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-0987",
+ "variant": "",
+ "cells": {
+  "family": "<sub>/sweep",
+  "key": "testsub/sweep",
+  "kind": "row",
+  "mode": "writer",
+  "who": "[\"console\"]",
+  "text": "null"
+ },
+ "files": {}
+}

@@ -5,7 +5,8 @@ package vectoradapter
 
 // ResourceState — common/resource-state cases.tsv (vectors):
 //
-//	the state of a resource at a moment: "live" | "unreachable" | "unknown" | "silent"
+//	Native input and output: Platform/common/vectors/resource-state/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func ResourceState(table string, cells map[string]string, files map[string][]byte) Answer {
