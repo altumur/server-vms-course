@@ -1377,9 +1377,38 @@ def route_lessons(root):
     out = []
     for api in sorted(Path(root).glob("Platform/*/spec/*.api.openapi.yaml")):
         text = api.read_text(encoding="utf-8")
-        if "x-route-priority" in text or "x-path-" in text:
+        if "x-route-priority" in text or "x-path-" in text or "x-query-lexeme" in text:
             out.append(api)
     return out
+
+
+LEXEME_TYPE = {"number": "number", "integer": "integer", "uint64": "string"}   # parse → schema.type (P/05 x-query-lexeme)
+
+
+def query_lexeme_errors(pw, p):
+    """x-query-lexeme у параметра запроса (P/05, forms/README «Numeric query lexemes»): pattern — полный якорный regex,
+    parse number|integer|uint64, strip — только "_" и только при number; schema.type согласован с parse."""
+    q = p["x-query-lexeme"]
+    if p.get("in") != "query":
+        return [f"{pw}: x-query-lexeme only on query parameters"]
+    if not isinstance(q, dict) or not {"pattern", "parse"} <= set(q) or set(q) - {"pattern", "parse", "strip"}:
+        return [f"{pw}: x-query-lexeme takes pattern, parse and optional strip"]
+    errs = []
+    pat = q["pattern"]
+    if not (isinstance(pat, str) and pat.startswith("^") and pat.endswith("$")):
+        errs.append(f"{pw}: x-query-lexeme pattern is not an anchored ^…$ regex")
+    else:
+        try:
+            re.compile(pat)
+        except re.error as exc:
+            errs.append(f"{pw}: x-query-lexeme pattern does not compile: {exc}")
+    if q["parse"] not in LEXEME_TYPE:
+        errs.append(f"{pw}: x-query-lexeme parse {q['parse']!r} is not number, integer or uint64")
+    elif ((p.get("schema") or {}).get("type")) != LEXEME_TYPE[q["parse"]]:
+        errs.append(f"{pw}: parse {q['parse']} needs schema.type {LEXEME_TYPE[q['parse']]}")
+    if "strip" in q and (q["strip"] != "_" or q["parse"] != "number"):
+        errs.append(f"{pw}: strip is only \"_\" and only with parse number")
+    return errs
 
 
 def check_openapi_routing(api):
@@ -1418,6 +1447,9 @@ def check_openapi_routing(api):
         for op in ops.values():
             params += [resolve(p) for p in op.get("parameters") or []]
         for p in params:
+            if "x-query-lexeme" in p:
+                n += 1
+                errors += query_lexeme_errors(f"{where}: parameter {p.get('name')}", p)
             x = {k for k in p if k.startswith("x-path-")}
             if not x:
                 continue

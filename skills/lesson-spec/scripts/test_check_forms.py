@@ -456,3 +456,20 @@ components: {schemas: {ResourceError: {type: object}}}
         two = self.BASE.replace("/v1/objects/{key}:", "/v1/objects/{key}/{part}:").replace(
             "        - {name: key", "        - {name: part, in: path, required: true, schema: {type: string}, x-path-capture: segment}\n        - {name: key")
         self.assertTrue(self.run_on(two))                                         # remainder не последний
+
+
+class QueryLexeme(unittest.TestCase):                   # P/05 x-query-lexeme
+    def errs(self, schema_type, lex, where="query"):
+        return check_forms.query_lexeme_errors("t", {"in": where, "name": "from", "schema": {"type": schema_type}, "x-query-lexeme": lex})
+
+    def test_rules(self):
+        num = {"pattern": "^(?:-?[0-9](?:_?[0-9])*)$", "parse": "number", "strip": "_"}
+        self.assertEqual(self.errs("number", num), [])
+        self.assertEqual(self.errs("integer", {"pattern": "^[0-9]+$", "parse": "integer"}), [])
+        self.assertEqual(self.errs("string", {"pattern": "^(?:0|[1-9][0-9]*)$", "parse": "uint64"}), [])
+        bad = [("number", dict(num, pattern="[0-9]+")), ("number", dict(num, pattern="^([0-9]$")), ("number", dict(num, parse="float")),
+               ("integer", num), ("number", dict(num, strip="-")), ("integer", {"pattern": "^[0-9]+$", "parse": "integer", "strip": "_"}),
+               ("string", {"pattern": "^[0-9]+$", "parse": "integer"}), ("number", {"parse": "number"}), ("number", dict(num, extra=1))]
+        for st, lex in bad:
+            self.assertTrue(self.errs(st, lex), (st, lex))
+        self.assertTrue(self.errs("number", num, where="path"))
