@@ -272,7 +272,7 @@ class Connect(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="nlc-") as t:
             dst = Path(t)
             mod = "example.com/w2c/store"
-            parts = ["door", "flags", "refusals", "vectors", "stagetests", "launch"]
+            parts = ["door", "flags", "refusals", "families", "vectors", "stagetests", "launch"]
             build_kit.build(dst, mod, parts)
             store = dst / "01-store"
             (store / "go.mod").write_text(f"module {mod}\n\ngo 1.22\n", encoding="utf-8")

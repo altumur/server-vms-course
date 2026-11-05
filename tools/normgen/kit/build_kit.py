@@ -1,7 +1,7 @@
 """Сборка пакета Б для P/01 (ADR-0083 доп. (86) п. 2): проверки Н2.1 и строгий разборщик JSON — в каталог попытки.
 
 Запуск: python tools/normgen/kit/build_kit.py <dst> --module <путь импорта каталога <dst>/01-store> [--part vectors] [--part stagetests] [--part door]
-       [--part flags] [--part refusals]
+       [--part flags] [--part refusals] [--part families]
 
 Кладёт в <dst>/01-store/internal/:
 - checks/ — пакет, сгенерированный tools/normgen/gen_checks.py из Platform/01-store/forms/write-checks.tsv (берётся
@@ -12,6 +12,8 @@
 (заменяется целиком), паспорт формы, генератора и судьи — в provenance манифеста.
 Часть `refusals` (--part refusals; генератор № 4 ADR-0125 tools/normgen/gen_refusals.py, судья refusal_judge.py):
 refusals/ (заменяется целиком), паспорт — в provenance.
+Часть `families` (--part families; генератор № 5 ADR-0125 tools/normgen/gen_families.py, судья family_judge.py):
+families/ (заменяется целиком) — families.go из схем семей P/01 и ручная среда runtime.go; паспорт — в provenance.
 Часть `vectors` (--part vectors; ADR-0126 доп. (7) п. 4, генератор № 6 ADR-0125 tools/normgen/gen_tests.py): vectortests/,
 vectorcmd/, cmd/vectors (заменяются целиком) и заглушки адаптера vectoradapter/ (canonical.go, rights.go — по файлу на функцию) — их реализация правит; заглушка кладётся, только если её файла нет и её имя не объявлено в пакете.
 Часть `stagetests` (--part stagetests, нужна часть door; ADR-0125 доп. (3), (4), ADR-0126 доп. (7), gen_stagetests.py, судья
@@ -43,6 +45,7 @@ import gen_checks  # noqa: E402 — свежесть writecheck
 import gen_door  # noqa: E402 — свежесть door
 import gen_launch  # noqa: E402 — часть launch
 import gen_core  # noqa: E402 — часть core
+import gen_families  # noqa: E402 — часть families
 TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"
 GENERATED = ROOT / "tools/normgen/out/p01-1/go/checks"
 HANDWRITTEN = HERE / "go"
@@ -117,11 +120,11 @@ def git_head():
         return None
 
 
-PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
+PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core", "families")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
 
 
 EXAMPLES = HERE / "examples"                # пример подключения на часть: Go-файл, его собирает kit/test_kit.py
-EXAMPLE_ORDER = ("writecheck", "door", "flags", "refusals", "vectors", "stagetests", "launch")
+EXAMPLE_ORDER = ("writecheck", "door", "flags", "refusals", "families", "vectors", "stagetests", "launch")
 
 
 def connect_md(parts, module):
@@ -186,8 +189,9 @@ def provenance(parts, files, judged):
     }
     out = {}
     for part in parts:
-        if part in ("flags", "refusals", "launch", "core"):
-            mod = {"flags": gen_flags, "refusals": gen_refusals, "launch": gen_launch, "core": gen_core}[part]
+        if part in ("flags", "refusals", "launch", "core", "families"):
+            mod = {"flags": gen_flags, "refusals": gen_refusals, "launch": gen_launch, "core": gen_core,
+                   "families": gen_families}[part]
             out[part] = {**mod.provenance(), "output": output(part)}
         else:
             component, t = table[part]
@@ -247,8 +251,9 @@ def build(dst, module, parts=(), judged=None):
         refusal_files = gen_refusals.kit_files() if "refusals" in parts else []
         launch_files = gen_launch.kit_files(module) if "launch" in parts else []
         core_files = gen_core.kit_files(module) if "core" in parts else []
+        family_files = gen_families.kit_files() if "families" in parts else []
     except (gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError, gen_launch.GenError,
-            gen_core.GenError) as exc:
+            gen_core.GenError, gen_families.GenError) as exc:
         raise KitError(str(exc)) from None
     openapi_sha = sha256(OPENAPI.read_bytes()) if "door" in parts else None
     if openapi_sha:
@@ -265,7 +270,8 @@ def build(dst, module, parts=(), judged=None):
 
     for sub in ("checks", "jsonstrict", "writecheck") + sum((gen_tests.PART_DIRS[p] for p in ("vectors", "stagetests") if p in parts), ()) + \
             (("apidoor",) if openapi_sha else ()) + (gen_flags.KIT_DIRS if flag_files else ()) + \
-            (gen_refusals.KIT_DIRS if refusal_files else ()) + (("launch",) if launch_files else ()):
+            (gen_refusals.KIT_DIRS if refusal_files else ()) + (("launch",) if launch_files else ()) + \
+            (gen_families.KIT_DIRS if family_files else ()):
         if Path(os.path.normpath(internal / sub)).exists():
             shutil.rmtree(os.path.normpath(internal / sub))
     for name, origin, source in CHECKS_FILES:
@@ -293,6 +299,8 @@ def build(dst, module, parts=(), judged=None):
         put(sub, name, data, origin, "flags", source)
     for sub, name, data, origin, source in refusal_files:
         put(sub, name, data, origin, "refusals", source)
+    for sub, name, data, origin, source in family_files:
+        put(sub, name, data, origin, "families", source)
     for sub, name, data, origin, source, own in launch_files:
         if own and own_taken(Path(os.path.normpath(internal / sub / name)), data):
             continue                    # main.go и рамка реализации не трогаются
@@ -307,6 +315,7 @@ def build(dst, module, parts=(), judged=None):
     doc = (KIT_MD + (gen_tests.KIT_MD if "vectors" in parts else "")
            + (gen_tests.KIT_MD_STAGETESTS if "stagetests" in parts else "") + (KIT_DOOR_MD if openapi_sha else "")
            + (gen_flags.KIT_MD if flag_files else "") + (gen_refusals.KIT_MD if refusal_files else "")
+           + (gen_families.KIT_MD if family_files else "")
            + (gen_launch.KIT_MD if launch_files else "") + (gen_core.KIT_MD if core_files else "")).replace("{module}", module)
     doc = (doc + connect_md(kit_parts, module) + exported_md(internal, dst, module)).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)

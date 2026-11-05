@@ -9,6 +9,7 @@
 | 2 | `gen_door.py` | `spec/01-store.api.openapi.yaml` | `door/` | `door` | раннер P/01.1 на заглушке `kit/build_stub.py` → `door_judge.py` |
 | 3 | `gen_flags.py` | `forms/daemon-flags.tsv` | `flags/` | `flags` | `flag_judge.py` — пробы запуска демона |
 | 4 | `gen_refusals.py` | `forms/refusals.tsv` | `refusals/` | `refusals` | `refusal_judge.py` — приёмка и `door.Refuse` |
+| 5 | `gen_families.py` | `common/data/catalog.tsv`, `01-store/data/<семья>.schema.json` (+ `layers.tsv` — сверка со схемой, `outcomes.tsv` — только путь, читатель, приоритет, единица), плейсхолдеры `common/data/README.md` | `families/` (`families.go`; ручная среда `famrt/go/runtime.go` — проход стека В7) | `families` | `family_judge.py` — векторы `common/vectors/family-read/01.tsv` и `--v7` свои экземпляры против стека В7 курса; `check_spec` — векторы против В7 |
 | 6 | `gen_tests.py` | `vectors/jcs`, `vectors/rights-evaluator`, `forms/stages.tsv` | `vectortests/`, `vectorcmd/`, `vectoradapter/` (`canonical.go`, `rights.go` — заглушки реализации по файлу на функцию) | `tests` | `vector_judge.py` |
 | 2 + 3 | `gen_launch.py` | `forms/daemon-flags.tsv`, OpenAPI (через части `flags`, `door`) | `launch/`, `frame/` (рамка HTTP — **реализации**, временная на net/http, якоря Н2.1 в шапке), `cmd/configstore/` | `launch` (нужны `door`, `flags`, `stagetests`) | раннер P/01.1 на пакете как есть (пустое ядро `launch.Empty` на заглушке `coreadapter.Open`) → `launch_judge.py` (этап `launch`: `01-absent`) |
 | 2 + Н3 | `gen_core.py` | `apidoor.Handler` (выход `gen_door`), `spec/01.1-store.norms.md` (якоря req разделов Н3, Н2.1) | `out/p01-1/core/coreadapter/` (`core.go`, `open.go` и по файлу на метод `apidoor.Handler` — **реализации**, кладутся один раз; заглушка не кладётся, если её имя уже объявлено в пакете) | `core` (нужны `door`, `stagetests`) | `test_gen_core.py` (сборка, заглушки, тесты этапов красные без паники) и раннер на пакете (этап `launch` остаётся закрытым: `Get` заглушки — пустое хранилище) |
@@ -36,7 +37,7 @@ KIT.md — справка подключения (ADR-0083 доп. (95) п. 2): 
 
 - Python с `cel_expr_python` (оракул CEL для `test_gen_checks.py` и `flag_judge.py`) — `/opt/check-env/lesson-spec/bin/python`.
 - Набор: `test_gen_checks.py`, `test_gen_tests.py`, `test_gen_door.py`, `test_gen_flags.py`, `test_gen_refusals.py`,
-  `test_gen_stagetests.py`, `test_gate.py`, `test_judges.py`, `test_gen_launch.py`, `test_gen_core.py`, `kit/test_kit.py`; затем `skills/lesson-spec/scripts/check_spec.py`.
+  `test_gen_stagetests.py`, `test_gate.py`, `test_judges.py`, `test_gen_launch.py`, `test_gen_core.py`, `test_gen_families.py`, `kit/test_kit.py`; затем `skills/lesson-spec/scripts/check_spec.py`.
 - `gate.py` — общий разбор списка `gate` формы stages.tsv для генераторов (грамматика шапки формы, как у `check_forms`).
 - Судьи: отсутствие исполнения — отрицательный исход. Ожидаемый набор шагов — из сценариев и проекции, не из отчёта;
   шаг без исхода, пустой или обрезанный отчёт, незавершённый `go test` — провал. Запуск демона у `flag_judge.py` —
