@@ -352,7 +352,7 @@ def gate_errors(lesson, stage, check):
     return [f"stages.tsv: {stage}: scenarios {missing} are not in {file.relative_to(lesson)}"] if missing else []
 
 
-DIRECTIVE = re.compile(r"@clock [+-][0-9]+|@reopen|@parallel [2-9]|@parallel [1-9][0-9]+")
+DIRECTIVE = re.compile(r"@clock [+-][0-9]+(?:\.[0-9]+)?|@reopen|@parallel [2-9]|@parallel [1-9][0-9]+")
 OUTCOMES = re.compile(r"each \S.*|one \S.*; rest \S.*")
 
 
@@ -362,7 +362,7 @@ def seam_files(root):
 
 def check_seams(path):
     """ADR-0126 доп. (7) п. 1: сценарии над швами процесса — колонки `scenarios.tsv`, шаги подряд с 1, директивы закрыты
-    (`@clock ±N`, `@reopen`, `@parallel K`, ожидание директивы — `ok`), шаг после `@parallel` ждёт `each …` или
+    (`@clock ±N`, N — секунды, целые или с десятичной дробью, `@reopen`, `@parallel K`, ожидание директивы — `ok`), шаг после `@parallel` ждёт `each …` или
     `one …; rest …`, прочие шаги — нет; имена сценариев не повторяют `scenarios.tsv` главы."""
     path = Path(path)
     lines = path.read_text(encoding="utf-8").splitlines()
@@ -389,7 +389,7 @@ def check_seams(path):
         last[name] = int(step) if step.isdigit() else last.get(name, 0) + 1
         if request.startswith("@"):
             if not DIRECTIVE.fullmatch(request):
-                errors.append(f"{path.name}: line {no}: directive {request!r} is not @clock ±N, @reopen or @parallel K")
+                errors.append(f"{path.name}: line {no}: directive {request!r} is not @clock ±N (N — seconds, decimal fraction allowed), @reopen or @parallel K")
             if expect != "ok":
                 errors.append(f"{path.name}: line {no}: a directive expects ok")
             if parallel:

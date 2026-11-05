@@ -70,7 +70,7 @@ class Forms(unittest.TestCase):
         self.assertTrue(check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0])
 
     def test_stage_depends(self):                       # depends — только прежние этапы; launch — часть пакета
-        self.edit("forms/stages.tsv", "\t-\tlaunch\t1\t", "\t-\tlaunch\t4\t")
+        self.edit("forms/stages.tsv", "\tlaunch\tlaunch\t1\t", "\tlaunch\tlaunch\t4\t")   # launch — этап 2 (bf64f4058)
         self.assertTrue(any("depends" in e for e in check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0]))
 
     def test_stage_gate(self):                          # gate списком, tests:<глава>:<сценарии>[:seams]
@@ -95,7 +95,13 @@ class Forms(unittest.TestCase):
         self.assertEqual(check_forms.check_seams(path)[0], [])
         self.edit("acceptance/1/seams.tsv", "@clock +600", "@clock 600s")
         self.assertTrue(check_forms.check_seams(path)[0])
-        self.edit("acceptance/1/seams.tsv", "@clock 600s", "@clock +600")
+        self.edit("acceptance/1/seams.tsv", "@clock 600s", "@clock +0.25")       # доли секунды (P/01.1 Н3, spec103)
+        self.assertEqual(check_forms.check_seams(path)[0], [])
+        for bad in ("@clock +.25", "@clock +0.", "@clock +1e3"):
+            self.edit("acceptance/1/seams.tsv", "@clock +0.25", bad)
+            self.assertTrue(check_forms.check_seams(path)[0], bad)
+            self.edit("acceptance/1/seams.tsv", bad, "@clock +0.25")
+        self.edit("acceptance/1/seams.tsv", "@clock +0.25", "@clock +600")
         self.edit("acceptance/1/seams.tsv", "one 200 {", "200 {")
         self.assertTrue(any("after @parallel" in e for e in check_forms.check_seams(path)[0]))
 
