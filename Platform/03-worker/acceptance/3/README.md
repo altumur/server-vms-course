@@ -81,3 +81,5 @@ Waiting for an event is `@until`. The remaining sleeps are a check of absence or
 |---|---|---|
 | 02/10 | 12 s | absence: an edit of the row does not raise the epoch; the worker would see a new revision within LEASE_EVERY ≈ 8.3 s and the pass POLL ~2 s |
 | 06/9 | 12 s | time before an action: the worker must see the empty assignment (the lease step ≈ 8.3 s and a pass) before `c6` is created again; its heartbeat is an object, the stand of the chapter does not read it |
+
+SDK tests at the seams are in [seams.tsv](seams.tsv); their adapter contract is [forms/README.md](../../forms/README.md). They supplement the process scenarios and do not change the counts above or replace a reading witness they do not execute.

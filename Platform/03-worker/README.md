@@ -17,3 +17,5 @@ acceptance/<K>/                  acceptance of chapter K (2, 3, 4, 6: README.md,
 journal/corrections-<K>.tsv      the log of AI corrections of chapter K — history, not an input; not in the export
 ru/                              for people, not in the export — the lecture ru/03-worker.md, translations of the English text by the same path
 ```
+
+The kit forms are [forms/README.md](forms/README.md): process inputs, the refusal catalogue, the slot capture machine and a stage plan. SDK seams in `acceptance/K/seams.tsv` supplement the process scenarios; their normalized CALL ports are not an implementation API.

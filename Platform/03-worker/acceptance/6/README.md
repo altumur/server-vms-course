@@ -201,3 +201,5 @@ the stand cannot be set: a far deadline runs into `most_valid`, a passed one —
 `most_valid` before the closing of a foreign `begun`, then the deadline, as the witness: Н3 «holder's look», C03-REQUEST-CHECK-ORDER-01,
 the Architect's decision of 2026-10-30, P/03 item 2); a refusal of an order by a `fixed` field of its own row (the norm: its own row is extended
 only by the fields `until`, `made.at`, `made.keep` — `of` from F is not written, the outcome would be `extended`, not `refused`).
+
+SDK tests at the seams are in [seams.tsv](seams.tsv); their adapter contract is [forms/README.md](../../forms/README.md). They supplement the process scenarios and do not change the counts above or replace a reading witness they do not execute.

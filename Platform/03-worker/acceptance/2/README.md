@@ -349,3 +349,5 @@ Waiting for an event is `@until`: sc. 01 step 4 waits for the first renewal afte
 | 27/9, 31/6, 32/4 | 12 s | absence: there is no epoch row — the worker sees the assignment within LEASE_EVERY ≈ 8.3 s and the pass POLL ~2 s (as 18/10); there is no slot — the capture at the start and the repeat of the search (CONTEND_EVERY 10 s) would have passed (as 21/4) |
 | 34/5 | 12 s | absence: the worker would have taken a free place at the first lease step after the capture of the slot (≈ 8.3 s; Н3 «lease_step()» step 6) |
 | 34/7 | 50 s | absence: the foreign place is free, having stood without changes 45 + HOLD_SKEW = 50 s by the clock of the taker; together with 34/5 — 62 s: and the torn one is not taken after this deadline either |
+
+SDK tests at the seams are in [seams.tsv](seams.tsv); their adapter contract is [forms/README.md](../../forms/README.md). They supplement the process scenarios and do not change the counts above or replace a reading witness they do not execute.

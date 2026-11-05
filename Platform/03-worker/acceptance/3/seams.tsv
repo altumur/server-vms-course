@@ -1,0 +1,8 @@
+# SDK seams of P/03.3 (ADR-0125 addendum (4) item 7, addendum (5)).
+# These are kit stagetests, not process-runner scenarios. CALL adapter contract is ../../forms/README.md.
+# Each scenario starts a fresh SDK instance; clock/store/subsystem effects are scripted inputs. The adapter invokes real SDK code and records effects.
+# scenario	step	request	expect
+s1-revision-same-epoch	1	CALL worker-reconcile {"current":{"id":"u1","born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":1,"epoch":8},"desired":{"id":"u1","born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":2},"lease":"confirmed","assignment_confirmed":true}	{"epoch_issues":0,"stop_restarting":[true],"start_epochs":[8],"observed_revision":2}
+s2-born-new-epoch	1	CALL worker-reconcile {"current":{"id":"u1","born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":1,"epoch":8},"desired":{"id":"u1","born":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","revision":1},"lease":"confirmed","assignment_confirmed":true}	{"epoch_issues":1,"stop_restarting":[false],"start_epochs":[9]}
+s3-silent-revision-waits	1	CALL worker-reconcile {"current":{"id":"u1","born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":1,"epoch":8},"desired":{"id":"u1","born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":2},"lease":"silent","may_write":true,"may_act":false,"assignment_confirmed":true}	{"epoch_issues":0,"start_epochs":[],"stop_calls":0,"lease":"silent","observed_revision":1}
+s4-backoff-confirmed-absence	1	CALL worker-retry {"unit":"u1","failure_count":10,"at_max":true,"events":["assignment-unavailable","move","fence","name-change","assignment-absent-confirmed"]}	{"counts_before_absence":[10,10,10,10],"failure_count":0,"stalled":false}

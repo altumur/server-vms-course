@@ -1,0 +1,9 @@
+# SDK seams of P/03.6 (ADR-0125 addendum (4) item 7, addendum (5)).
+# These are kit stagetests, not process-runner scenarios. CALL adapter contract is ../../forms/README.md.
+# Each scenario starts a fresh SDK instance; clock/store/subsystem effects are scripted inputs. The adapter invokes real SDK code and records effects.
+# scenario	step	request	expect
+s1-begun-unknown-no-call	1	CALL worker-holder-look {"request":{"unit":"u1","valid_until":200},"mark":null,"now":100,"put_new_reply":"unavailable"}	{"action_calls":0,"outcome_writes":0}
+s2-own-begun-no-repeat	1	CALL worker-holder-look {"request":{"unit":"u1","valid_until":200},"mark":{"instance":"self","outcome":null},"now":100}	{"action_calls":0,"outcome_writes":0}
+s3-foreign-begun-before-expiry	1	CALL worker-holder-look {"request":{"unit":"u1","valid_until":90},"mark":{"instance":"other","at":95,"outcome":null},"now":100}	{"action_calls":0,"outcome_writes":0}
+s4-group-busy-after-timeout	1	CALL worker-holder-group {"group":"g1","events":["begin:r1","timeout:r1","observe:r2","look","return:r1","look"]}	{"calls_before_return":["r1"],"calls_after_return":["r2"],"max_unfinished":1}
+s5-state-start-born	1	CALL worker-state-write {"start":{"id":"u1","born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":3,"epoch":8,"epoch_index":"e8"},"reread_row":{"born":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","revision":4},"name":"result","value":{"state":"open"},"may_write":true}	{"items":{"born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":"3","epoch":"8","value":"{\"state\":\"open\"}"},"guard":{"key":"testsub/epoch/u1","index":"e8"}}

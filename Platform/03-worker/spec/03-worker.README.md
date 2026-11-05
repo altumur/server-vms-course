@@ -148,3 +148,5 @@ The stand confirms only the rows it observes, the changes of generations/epochs 
 Separately attached are the results of reading or of stands for the heartbeat, the stand-in, the memory budget
 and the actual stop of the work of a unit, silence, places, another box, opening a secret by the worker, the holder's view
 and the late layer. The success of the TSV parser does not mean the success of these checks.
+
+The optional implementation plan for the generated kit is [forms/stages.tsv](../forms/stages.tsv). The inputs and test normalization are described by [forms/README.md](../forms/README.md). The plan does not replace any norm, vector, reading witness or process acceptance, including the external dependencies named above.

@@ -1,0 +1,6 @@
+# SDK seams of P/03.1 (ADR-0125 addendum (4) item 7, addendum (5)).
+# These are kit stagetests, not process-runner scenarios. CALL adapter contract is ../../forms/README.md.
+# Each scenario starts a fresh SDK instance; clock/store/subsystem effects are scripted inputs. The adapter invokes real SDK code and records effects.
+# scenario	step	request	expect
+s1-stop-order	1	CALL worker-stop {"signal":"SIGTERM","units":["u1","u2"],"place":"p1","hooks":{"before_stop_all":"error","after_stop":"error"}}	{"order":[["stop-stand-in","before_stop_all"],["stop-polling","before_stop_all"],["before_stop_all","stop_unit:u1"],["before_stop_all","stop_unit:u2"],["stop_unit:u1","close-place-writers"],["stop_unit:u2","close-place-writers"],["close-place-writers","heartbeat"],["heartbeat","let-go-place"],["let-go-place","release-slot"],["release-slot","after_stop"]],"stopped":["u1","u2"],"exit":0,"hook_errors":["before_stop_all","after_stop"]}
+s2-crash-no-hooks	1	CALL worker-stop {"signal":"SIGKILL","units":["u1"],"place":"p1"}	{"calls":[],"writes":[]}
