@@ -75,6 +75,89 @@ def expectations():
     return out
 
 
+PLAIN_HARNESS = '''// Harness of refusal_judge.py for a catalogue without an HTTP door: refusals.All as one JSON.
+package main
+
+import (
+	"encoding/json"
+	"os"
+
+	"%s/refusals"
+)
+
+func main() { _ = json.NewEncoder(os.Stdout).Encode(refusals.All) }
+'''
+RUN_EXIT = re.compile(r"^exit (0|[1-9][0-9]*)(;|$)")
+
+
+def plain(a):
+    """Каталог урока без двери (P/02): закрытые колонки таблицы, прочитанной здесь заново, против пакета; каждое
+    ожидание `exit N` шага RUN швов приёмки (N ≠ 0) находит строку с этим кодом или «exit !0» (независимый вход)."""
+    lines = [x for x in TABLE.read_text(encoding="utf-8").splitlines() if x and not x.startswith("#")]
+    cols = lines[0].split("\t")
+    rows = [dict(zip(cols, x.split("\t"))) for x in lines[1:]]
+    with tempfile.TemporaryDirectory(prefix="refusal-judge-") as work:
+        hdir = Path(work) / "harness"
+        hdir.mkdir()
+        (hdir / "main.go").write_text(PLAIN_HARNESS % L.go_module, encoding="utf-8")
+        (hdir / "go.mod").write_text(f"module normgen/refusalharness\n\ngo 1.22\n\nrequire {L.go_module} v0.0.0\n\n"
+                                     f"replace {L.go_module} => {Path(a.module_dir).resolve()}\n", encoding="utf-8")
+        done = subprocess.run(["go", "run", "."], cwd=hdir, capture_output=True, text=True, timeout=300)
+        if done.returncode:
+            raise SystemExit(f"refusal_judge: the harness: {done.stderr.strip()}")
+        got = json.loads(done.stdout)
+    results = []
+
+    def check(name, why):
+        results.append({"name": name, "ok": why is None, "why": why})
+        if why:
+            print(f"FAIL {name}: {why}", flush=True)
+
+    check("catalogue: the same names in order", None if [g["Name"] for g in got] == [r["name"] for r in rows]
+          else "the names differ from the table")
+    by = {g["Name"]: g for g in got}
+    for r in rows:
+        g = by.get(r["name"])
+        if not g:
+            continue
+        code = r["code"]
+        exit_, anyc, status = -1, code == "exit !0", 0
+        if code.startswith("exit ") and code[5:].isdigit():
+            exit_ = int(code[5:])
+        elif code.isdigit():
+            status = int(code)
+        logs = [] if r["log"] == "-" else [x.strip() for x in re.findall(r"«[^«»]*»|[^,«»]+", r["log"]) if x.strip()]
+        names = [x for x in logs if not x.startswith("«")]
+        words = [x[1:-1] for x in logs if x.startswith("«")]
+        diffs = [k for k, ok in (("chapter", g["Chapter"] == r["chapter"]), ("row", g["Row"] == int(r["row"])),
+                                 ("surface", g["Surface"] == r["surface"]), ("exit", g["Exit"] == exit_),
+                                 ("any", g["AnyNonZero"] == anyc), ("status", g["Status"] == status),
+                                 ("word", g["Word"] == ("" if r["word"] == "-" else r["word"])),
+                                 ("log", (g["Log"] or []) == names), ("words", (g["Words"] or []) == words),
+                                 ("norm", g["Norm"] == r["norm"])) if not ok]
+        check(f"catalogue {r['name']}", f"differs from the table in {diffs}" if diffs else None)
+    codes = {g["Exit"] for g in got if g["Exit"] > 0}
+    anyc = any(g["AnyNonZero"] for g in got)
+    for seams in sorted(ACCEPTANCE.glob("*/seams.tsv")):
+        for line in seams.read_text(encoding="utf-8").splitlines():
+            cells = line.split("\t")
+            if line.startswith("#") or len(cells) != 4 or not cells[2].startswith("RUN "):
+                continue
+            m = RUN_EXIT.match(cells[3])
+            if not m or m[1] == "0":
+                continue
+            n = int(m[1])
+            check(f"acceptance {seams.parent.name} {cells[0]} step {cells[1]}",
+                  None if n in codes or anyc else f"exit {n}: no row of the catalogue with this code or «exit !0»")
+    passed = sum(r["ok"] for r in results)
+    verdict = "PASS" if passed == len(results) else "FAIL"
+    print(f"refusals: {L.code} {passed}/{len(results)} {verdict}")
+    if a.json:
+        Path(a.json).write_text(json.dumps({"passed": passed, "total": len(results), "verdict": verdict,
+                                            "results": results}, ensure_ascii=False, indent=1), encoding="utf-8")
+    return 0 if verdict == "PASS" else 1
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--module-dir", default=str(L.out / "go"))
@@ -83,6 +166,9 @@ def main(argv=None):
     if not shutil.which("go"):
         print("refusal_judge: go is not in PATH", file=sys.stderr)
         return 2
+    head = next(x for x in TABLE.read_text(encoding="utf-8").splitlines() if x and not x.startswith("#"))
+    if "word" in head.split("\t"):                         # каталог урока без двери (P/02)
+        return plain(a)
     rows = read_table()
     with tempfile.TemporaryDirectory(prefix="refusal-judge-") as work:
         got = harness(a.module_dir, work)
