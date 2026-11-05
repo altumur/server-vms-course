@@ -17,3 +17,5 @@ acceptance/                      acceptance (README.md, scenarios.tsv)
 journal/corrections.tsv          the log of AI corrections — history, not an input; not in the export
 ru/                              for people, not in the export — the lecture ru/04-controller.md, translations of the English text by the same path
 ```
+
+The generated-kit forms and controller test ports are [forms/README.md](forms/README.md); the optional stage plan is [forms/stages.tsv](forms/stages.tsv). The process scenarios and the reading checklist remain required.

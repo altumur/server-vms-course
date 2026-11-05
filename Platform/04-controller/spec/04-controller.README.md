@@ -105,3 +105,5 @@ Reconcile the norm and the scenario on one exact input. Record the places, the i
 the intervention and the expected/actual result; if the sources diverge, pass the question to the Specification
 with a recommendation and do not carry the behaviour of the implementation into the canon silently. A correction of a norm affects
 the acceptance; a repeatable error of the acceptance is to be written into `journal/corrections.tsv`.
+
+The optional kit plan is [forms/stages.tsv](../forms/stages.tsv), with [forms/README.md](../forms/README.md) describing inputs, machines and test normalization. Kit seams supplement the reading witnesses and runner acceptance; they do not replace them.

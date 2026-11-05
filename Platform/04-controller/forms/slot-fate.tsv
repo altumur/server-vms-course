@@ -1,0 +1,36 @@
+# P/04 slot fate, N3 fate. Machine part slot-fate; core calls it.
+# states: judge,alive,wait,hung,hung_moved,unsure,unsure_moved,move,release. Initial judge, all others terminal.
+# A release action delegates CAS to slot-release; it does not grant permission from a mere selection. The two closing rules remain as in the source.
+# Same machine grammar as P/03 slot-capture: literal TAB; first matching row for the current state wins; no match waits without an effect.
+# Inputs are derived from complete reads by the source contracts. A non-answer/badkey is not absence and is not invented positive knowledge.
+#var age double — seconds this judge has observed the SAME slot version; first sight/restart is zero, version change resets it. Never derive it from until or fates.since.
+#var slot_readable bool — by the slot family; readable gen alone does not make a torn row readable.
+#var worker_fresh bool — worker heartbeat version changed within the last LOST_AFTER, inclusive boundary.
+#var resource string — live|unreachable|silent|unknown, by common/contracts/observation.md Resource state.
+#var presence string — runs|gone|unlisted|unknown; use only from a live resource. An absent workers/running/unknown field is the empty list.
+#var assigned bool — the slot's assignment has units.
+#var server_known bool — server from heartbeat, otherwise Slot.server; neither available is false.
+#var gen_readable bool — existing gen reads; never substitute zero to give a name or release.
+#var version string — the exact slot version used in this judgement, not a later re-read.
+#var HUNG_MOVE_AFTER double — effective controller setting, default 900 s; all hung/unsure/wait limits count age from the same first observation.
+#const SLOT_TERM double = 45.0 — common/contracts/slot.md Terms.
+#const LOST_AFTER double = 45.0 — common/contracts/observation.md Freshness.
+#action result(string,string) — return fate and permission version; empty version means no names_given entry. The wrapper publishes no permission after a refused write.
+# action=- — YOURS at norm, must run before accepting the next event; never noop.
+n	state	condition	action	next	norm
+1	judge	slot_readable && age < SLOT_TERM	result("alive", "")	alive	P/04-R040
+2	judge	resource == "live" && presence == "gone" && !assigned	-	release	P/04-R041
+3	judge	resource == "live" && presence == "gone"	result("move", gen_readable ? version : "")	move	P/04-R040
+4	judge	age < SLOT_TERM + LOST_AFTER	result("alive", "")	alive	P/04-R040
+5	judge	worker_fresh	result("alive", "")	alive	P/04-R040
+6	judge	resource == "live" && presence == "runs" && age >= HUNG_MOVE_AFTER	result("hung_moved", gen_readable ? version : "")	hung_moved	P/04-R040
+7	judge	resource == "live" && presence == "runs"	result("hung", "")	hung	P/04-R040
+8	judge	resource == "live" && presence == "unlisted"	result("wait", gen_readable && age >= HUNG_MOVE_AFTER ? version : "")	wait	P/04-R040
+9	judge	resource == "live" && presence == "unknown" && age >= HUNG_MOVE_AFTER	result("unsure_moved", gen_readable ? version : "")	unsure_moved	P/04-R040
+10	judge	resource == "live" && presence == "unknown"	result("unsure", "")	unsure	P/04-R040
+11	judge	resource == "unreachable" && age >= HUNG_MOVE_AFTER	result("unsure_moved", gen_readable ? version : "")	unsure_moved	P/04-R040
+12	judge	resource == "unreachable"	result("unsure", "")	unsure	P/04-R040
+13	judge	resource == "silent" && !worker_fresh	result("move", gen_readable ? version : "")	move	P/04-R040
+14	judge	!server_known	result("move", gen_readable ? version : "")	move	P/04-R040
+15	judge	assigned	result("move", gen_readable ? version : "")	move	P/04-R040
+16	judge	true	-	release	P/04-R041
