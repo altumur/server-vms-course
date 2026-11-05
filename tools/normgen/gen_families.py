@@ -49,7 +49,7 @@ CODECS = {"integer", "time", "string", "boolean", "number"}
 DOC_WORDS = {"$schema", "$defs", "$ref", "description", "type", "enum", "const", "pattern", "minLength", "maxLength",
              "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "minItems", "maxItems", "uniqueItems", "items",
              "minProperties", "maxProperties", "properties", "patternProperties", "additionalProperties", "propertyNames",
-             "required", "anyOf", "allOf", "not", "if", "then", "else", "x-codec", "x-encoding", "x-whole", "x-time",
+             "required", "anyOf", "allOf", "oneOf", "not", "if", "then", "else", "x-codec", "x-encoding", "x-whole", "x-time",
              "x-integer", "x-max-bytes", "x-max-names", "x-opaque"}     # слова, которые исполняет famrt2
 GO_TYPE = {"integer": "int64", "time": "float64", "string": "string", "boolean": "bool", "number": "float64"}
 INT64 = (-(2 ** 63), 2 ** 63 - 1)
@@ -99,7 +99,7 @@ def placeholders():
 
 def template(key, grammar):
     """Шаблон ключа каталога → [(литерал, плейсхолдер, грамматика)]."""
-    if "*" in key:
+    if "*" in key and not DOC_MODE:         # режим схемы данными: «*» — литерал (spec.KeyTemplate экранирует литералы)
         raise GenError(f"{key}: «*» in a key template is outside the generator")
     segs = []
     for part in re.split(r"(<[^<>]+>)", key):
@@ -118,8 +118,16 @@ def go_name(words):
     return "".join(w[:1].upper() + w[1:] for w in re.split(r"[/_\-.]+", words) if w)
 
 
-def family_name(key):
-    k = re.sub(r"<[^<>]+>", "", key)
+def family_name(key, full=False):
+    """Имя Go семьи: слова ключа без заполнителей; сегмент «*» — All. full — с заполнителями (только при совпадении
+    коротких имён двух семей урока): <a:b> → b, <a> → a, без букв ASCII → Part."""
+    k = re.sub(r"(^|/)\*(?=/|$)", r"\1all", key)
+    if full:
+        def word(m):
+            w = re.sub(r"[^A-Za-z0-9]+", "-", m[1].split(":")[-1]).strip("-")
+            return w or "part"
+        k = re.sub(r"<([^<>]+)>", word, k)
+    k = re.sub(r"<[^<>]+>", "", k)
     k = k[len("platform/"):] if k.startswith("platform/") else k
     name = go_name(k)
     if not re.fullmatch(r"[A-Z][A-Za-z0-9]*", name):
@@ -143,6 +151,19 @@ class Schema:
                 return None
             n = n[s]
         return n
+
+    def root(self):
+        """Корень схемы по цепочке локальных $ref (корень `{"$ref": "#/$defs/…"}` — узел, на который он указывает)."""
+        node, seen = self.doc, set()
+        while isinstance(node, dict) and isinstance(node.get("$ref"), str) and node["$ref"].startswith("#/"):
+            ref = node["$ref"]
+            if ref in seen:
+                raise GenError(f"{rel(self.path)}: $ref cycle {ref!r}")
+            seen.add(ref)
+            node = self.at(ref[1:])
+            if node is None:
+                raise GenError(f"{rel(self.path)}: $ref {ref!r} does not resolve")
+        return node
 
     def chain(self, node, where):
         """[узлы] по цепочке $ref (место первым: его слова важнее)."""
@@ -257,6 +278,64 @@ def load_family(row, grammar):
             "sources": [schema_path, layers if layers.is_file() else None, outcomes_path], "layers": n_layers}
 
 
+def place(doc, pointer):
+    """Место схемы по пути исходов (правило В7, DIALECT § 9): → {номер сегмента «*»: имена properties того места} или
+    None — места нет. Цепочка места — само место, цель $ref и ветви allOf (then при if); «*» — любое имя автора
+    (additionalProperties, кроме объявленных properties) или любой элемент списка (items); x-opaque — любое имя."""
+    def resolve(x, seen=()):
+        out = []
+        if not isinstance(x, dict):
+            return out
+        out.append(x)
+        r = x.get("$ref")
+        if isinstance(r, str) and r.startswith("#/") and r not in seen:
+            at = doc
+            for seg in unpointer(r[1:]):
+                at = at.get(seg, {}) if isinstance(at, dict) else {}
+            out += resolve(at, seen + (r,))
+        for e in x.get("allOf", []):
+            if isinstance(e, dict):
+                out += resolve(e.get("then", {}) if "if" in e else e, seen)
+        return out
+
+    def child(chain, seg, i):
+        if any(x.get("x-opaque") for x in chain):
+            return [{}]
+        if seg == "*":
+            for x in chain:
+                ap = x.get("additionalProperties")
+                if isinstance(ap, dict) or ap is True:
+                    wild[i] = sorted(x.get("properties") or ())
+                    return resolve(ap if isinstance(ap, dict) else {})
+            for x in chain:
+                if isinstance(x.get("items"), dict):
+                    wild[i] = []
+                    return resolve(x["items"])
+            return None
+        for x in chain:
+            if seg in (x.get("properties") or {}):
+                return resolve(x["properties"][seg])
+        if re.fullmatch(r"0|[1-9][0-9]*", seg):
+            for x in chain:
+                if isinstance(x.get("items"), dict):
+                    return resolve(x["items"])
+        for x in chain:
+            for pat, ps in (x.get("patternProperties") or {}).items():
+                if re.search(pat, seg):
+                    return resolve(ps)
+            ap = x.get("additionalProperties")
+            if isinstance(ap, dict) or ap is True:
+                return resolve(ap if isinstance(ap, dict) else {})
+        return None
+
+    wild, chain = {}, resolve(doc)
+    for i, seg in enumerate(unpointer(pointer) if pointer else []):
+        chain = child(chain, seg, i)
+        if not chain:
+            return None
+    return wild
+
+
 def load_family_doc(row, grammar):
     """Режим схемы данными: семья row со схемой как есть — её исполняет famrt2 (закрытый набор слов JSON Schema и
     слои В7); генератор проверяет форму (корень — объект, layers.tsv — копия слов x-*, пути исходов — поля строки)."""
@@ -271,7 +350,8 @@ def load_family_doc(row, grammar):
     out_base = base[:-len(kind) - 1] if kind != "file" and base.endswith("." + kind) else base
     out_base += f".{word_}" if word_ else ""
     schema = Schema(schema_path)
-    if kind == "row" and schema.doc.get("type") != "object":
+    root = schema.root()
+    if kind == "row" and (not isinstance(root, dict) or root.get("type") != "object"):
         raise GenError(f"{rel(schema_path)}: the root of a row family is an object")
     words = set()
 
@@ -297,13 +377,14 @@ def load_family_doc(row, grammar):
     outcomes = []
     for r in tsv(outcomes_path, OUTCOME_COLUMNS):
         p = r["path"]
-        if p and (not p.startswith("/") or (kind == "row" and ("*" in unpointer(p)
-                                                               or schema.at("/properties" + p) is None))):
-            raise GenError(f"{rel(outcomes_path)}: path {p!r} — \"\" or a field of the row (no «*»); object, file — "
-                           f"a JSON Pointer")
+        wild = place(schema.doc, p) if p.startswith("/") else None
+        if p and (not p.startswith("/") or (kind == "row" and wild is None)):
+            raise GenError(f"{rel(outcomes_path)}: path {p!r} — \"\" or a place of the row schema (В7: «*» — a name "
+                           f"or an item); object, file — a JSON Pointer")
         if not re.fullmatch(r"0|[1-9][0-9]*", r["priority"]) or r["unit"] not in UNITS:
             raise GenError(f"{rel(outcomes_path)}: priority — an integer ≥ 0, unit — one of {UNITS}")
-        outcomes.append({"path": p, "reader": r["reader"], "priority": int(r["priority"]), "unit": r["unit"]})
+        outcomes.append({"path": p, "reader": r["reader"], "priority": int(r["priority"]), "unit": r["unit"],
+                         "wild": wild or {}})
     if not any(o["path"] == "" for o in outcomes):
         raise GenError(f"{rel(outcomes_path)}: no row of the empty path (the readers)")
     return {"key": key, "kind": kind, "schema": row["schema"], "norm": row["norm"], "name": family_name(key),
@@ -314,8 +395,13 @@ def load_family_doc(row, grammar):
 def go_family_doc(f):
     n = f["name"]
     segs = ", ".join(f"{{Lit: {go_str(a)}, Placeholder: {go_str(b)}, Grammar: {go_str(c)}}}" for a, b, c in f["template"])
+    def wild(o):
+        if not o.get("wild"):
+            return ""
+        return ", Wild: map[int][]string{" + ", ".join(
+            f"{i}: {{{', '.join(go_str(x) for x in names)}}}" for i, names in sorted(o["wild"].items())) + "}"
     outs = ", ".join(f"{{Path: {go_str(o['path'])}, Reader: {go_str(o['reader'])}, Priority: {o['priority']}, "
-                     f"Unit: {go_str(o['unit'])}}}" for o in f["outcomes"])
+                     f"Unit: {go_str(o['unit'])}{wild(o)}}}" for o in f["outcomes"])
     readers = []
     for o in f["outcomes"]:
         if o["path"] == "" and o["reader"] not in readers:
@@ -334,8 +420,13 @@ def families(lesson=DEFAULT_LESSON):
     if not rows:
         raise GenError(f"{rel(CATALOG)}: no family of P/{lesson} with a schema")
     out = [(load_family_doc if DOC_MODE else load_family)(r, grammar) for r in rows]
-    if len({f["name"] for f in out}) != len(out):
-        raise GenError("two families with one Go name")
+    short = [f["name"] for f in out]
+    for f in out:
+        if short.count(f["name"]) > 1:
+            f["name"] = family_name(f["key"], full=True)
+    names = [f["name"] for f in out]
+    if len(set(names)) != len(out):
+        raise GenError("two families with one Go name: " + ", ".join(sorted({n for n in names if names.count(n) > 1})))
     return out
 
 

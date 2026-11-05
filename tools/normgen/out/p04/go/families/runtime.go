@@ -88,6 +88,9 @@ type Outcome struct {
 	Reader   string
 	Priority int
 	Unit     string
+	// Wild — the segments «*» of Path (V7, DIALECT § 9): number of the segment → the names of properties of that
+	// place; «*» matches any one segment except these names (an author name or any item of a list).
+	Wild map[int][]string
 }
 
 // Seg — a segment of the key template: a literal, or a placeholder with its grammar.
@@ -194,7 +197,7 @@ func (f *Family) OutcomesFor(paths []string, reader string) []string {
 		var cov []int
 		deep := 0
 		for i, o := range own {
-			if covers(o.Path, q) {
+			if coversWild(o, q) {
 				cov = append(cov, i)
 				if n := len(unpointer(o.Path)); n > deep {
 					deep = n
@@ -232,6 +235,29 @@ func (f *Family) OutcomesFor(paths []string, reader string) []string {
 		}
 	}
 	return out
+}
+
+func coversWild(o Outcome, q string) bool {
+	if len(o.Wild) == 0 {
+		return covers(o.Path, q)
+	}
+	if !strings.HasPrefix(q, "/") {
+		return false
+	}
+	ps, qs := unpointer(o.Path), unpointer(q)
+	if len(qs) < len(ps) {
+		return false
+	}
+	for i, s := range ps {
+		if names, ok := o.Wild[i]; ok {
+			if contains(names, qs[i]) {
+				return false
+			}
+		} else if qs[i] != s {
+			return false
+		}
+	}
+	return true
 }
 
 func covers(path, q string) bool {
@@ -873,6 +899,16 @@ func (s *schema) records(n node, v any, path []any, inNames bool) []rec {
 			}
 			if !ok {
 				add("anyOf", nil)
+			}
+		case "oneOf":
+			n := 0
+			for _, x := range w.([]any) {
+				if xn, isN := x.(node); isN && s.valid(xn, v) {
+					n++
+				}
+			}
+			if n != 1 {
+				add("oneOf", nil) // python-jsonschema: none valid or more than one — one error at the place
 			}
 		case "not":
 			if xn, ok := w.(node); ok && s.valid(xn, v) {
