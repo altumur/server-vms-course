@@ -2,10 +2,10 @@
 // Package coreadapter — versioned-door metadata for the ordinary P/08 core.
 // Platform/08-domain/forms/versioned-doors.tsv sha256 764e08e3e162d6265dfe51c90cf2ed5b2cfa9ab9a15306541259e66b921a38ed
 // Platform/08-domain/spec/08-domain.api.openapi.yaml sha256 147e2e5fb01cb17896ff950f43e8e0f91df1e3095edc17d42643e3ac3b07526b
-// Platform/08-domain/spec/08.0-domain.norms.md sha256 17b0d3c46981d51b0acdfa53290ae821e867b78f86b20f4dd1ab2f8dd65897c3
+// Platform/08-domain/spec/08.0-domain.norms.md sha256 c563c54e50ca4d74f464c0d51ccc510117bfe4327695960f327644834cc6dd3f
 // Platform/08-domain/spec/08.1-domain.norms.md sha256 db7467e1bbbbd1e09944b13cecc5341c8e9fddc6b1eb749e075278e64d596736
 // Platform/08-domain/spec/08.10-domain.norms.md sha256 ff1d82d2be922d6925eef9cdc310e1d08846a1d1beee2f83b5091d45c33b68aa
-// Platform/08-domain/spec/08.2-domain.norms.md sha256 dd8105f83feb590b8e33df83b29dd658cf1395ab50cf9f9bf68a0a492c8166cb
+// Platform/08-domain/spec/08.2-domain.norms.md sha256 0b81dbfd588e2aa51ff4deb9da4d28afac6f78006011cb74595705092a17dd62
 // Platform/08-domain/spec/08.3-domain.norms.md sha256 48917e5c15014f559f8a1286a0b19319810aa91d5f9b74a7e934003c4cdef5fa
 // Platform/08-domain/spec/08.4-domain.norms.md sha256 8b27bfbc19d305c563ef29172bd6bbd05368e2f8513d721fae2621166a637b4b
 // Platform/08-domain/spec/08.5-domain.norms.md sha256 24414579e66b4725019778eb6e5925151615eb5abb25580588de103804b6687a
