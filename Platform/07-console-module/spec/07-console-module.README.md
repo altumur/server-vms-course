@@ -13,6 +13,8 @@ of the console does not write it, the owner of the specification keeps its bytes
 by rewriting (P/06.5 Н1.1 `module`: a check of the completeness of the contract, not a way to implement). The norms of the lesson are
 P/07-01…08.
 
+For a generation line, the completion criterion is packaging of the published bytes unchanged plus scenario 01 of acceptance 6.5 (`?v=1`). The line does not rewrite JavaScript and has no separate executable module profile. The three module tests and readiness items P/07-07 and P/07-08 are an explicit debt of the owner of the published common module bytes, neither PASS nor FAIL of the line (the Architect's decision of 2026-11-05 under ADR-0112 and ADR-0119).
+
 ## Inputs and their priority
 
 The canon is the [norms](07-console-module.norms.md). The doors the module calls are the [contract of lesson
@@ -23,6 +25,8 @@ contradiction, record the place and a counterexample and pass it to the Specific
 functions and structure of the module remain the choice of its owner.
 
 ## What to create
+
+The following behaviour is the responsibility of the owner of the common module bytes; a generation line packages the published files.
 
 - Calls of the module only from the closed list of Н1.4, in the order `order`; the doors of the holders — only to the shell through `where()`.
 - The contract with the shell, Н1.5: `version`, `objects`, `api`, `may`, `events`, `where`, `words`, `adds`, `cards`, `commands`.
@@ -58,7 +62,7 @@ polling. The parts of the list that the domain introduces are checked in the mod
 
 ## Done when
 
-For every id (`P/07-01…08`) a concrete piece of evidence is given: a jsdom test by the subjects of Н5 or a reading with a reason; for P/07-07, P/07-08 — the acceptance tests of the module of implementations, not jsdom on the witness (the limit of the witness, ADR-0112 addendum (23)).
+The owner of the common module records concrete evidence for every id (`P/07-01…08`): a jsdom test by the subjects of Н5 or a reading with a reason. P/07-07 and P/07-08 remain this owner's open debt until `module-unplaceable-all`, `module-subsystems-none` and `module-writes-via` pass on the published module. A generation line records the debt explicitly; its completion evidence is the packaging check from Task, not a separate implementation of these JavaScript branches.
 The compatibility of the common console module is a separate comparison of bytes (sc. 01 of the acceptance of chapter 6.5) and a reading by the norms Н1.4, Н1.5.
 
 On a discrepancy — compare the norm, the answer form and the scenario. Record the exact input and outcome; do not carry a difference of an implementation
