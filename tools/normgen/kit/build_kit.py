@@ -22,6 +22,10 @@ scenario_judge.py): stagetests/ (заменяется целиком) и coreada
 Platform/01-store/spec/01-store.api.openapi.yaml (tools/normgen/out/p01-1/go/apidoor → internal/apidoor, пакет apidoor — не затирает internal/door реализации; sha256 OpenAPI в шапке door.go
 должен совпасть с OpenAPI сейчас).
 Пишет <dst>/KIT.md (API для модели, английский) и <dst>/kit.manifest.json (пути, sha256, строки, происхождение).
+--export <sha> [--specs <git cammeta-specs>] (Архитектор 2026-11-05): входы — Platform/ выгрузки на этом коммите (git
+archive из cammeta-specs), код генераторов и ручной пакет — tools/normgen чистого HEAD курса (git archive; правки в
+tools/normgen — отказ); во временном каталоге генераторы перегоняют out на входах выгрузки, сборка — там же; дерево
+курса не меняется. В манифесте commit (курс) и export (выгрузка), без -dirty; <dst>/SOURCE.txt — оба sha и команда.
 Каталоги checks, jsonstrict, writecheck в <dst>/01-store/internal заменяются целиком; прочее в <dst> не трогается.
 """
 import argparse
@@ -329,7 +333,8 @@ def build(dst, module, parts=(), judged=None):
         "kit": "P/01 pack B (ADR-0083 amendment 86): Н2.1 write checks and strict JSON body parser, Go",
         "module": module,
         "parts": kit_parts,
-        "commit": git_head(),
+        "commit": os.environ.get(COURSE_ENV) or git_head(),
+        "export": os.environ.get(EXPORT_ENV) or None,
         "table": {"path": str(TABLE.relative_to(ROOT)), "sha256": table_sha},
         "files": files,
         "provenance": provenance(parts_set, files, judged or {}),
@@ -491,6 +496,63 @@ the body limit, the identity and the rights, the store.
 """
 
 
+COURSE_ENV, EXPORT_ENV = "NORMGEN_KIT_COURSE", "NORMGEN_KIT_EXPORT"
+SPECS = Path(os.environ.get("CAMMETA_SPECS", Path.home() / "cammeta-specs"))
+# Порядок перегона out во временном каталоге: дверь и флаги — до core и launch (они читают их выход).
+REGEN = ("gen_checks.py", "gen_door.py", "gen_flags.py", "gen_refusals.py", "gen_tests.py", "gen_stagetests.py",
+         "gen_core.py", "gen_launch.py", "gen_families.py")
+
+
+def git(*args, cwd):
+    done = subprocess.run(["git", *args], cwd=cwd, capture_output=True)
+    if done.returncode:
+        raise KitError(f"git {' '.join(args)} in {cwd}: {done.stderr.decode(errors='replace').strip()}")
+    return done.stdout
+
+
+def unpack(repo, rev, path, into):
+    """git archive rev path из repo → into (байты коммита, без рабочего дерева)."""
+    tar = git("archive", "--format=tar", rev, "--", path, cwd=repo)
+    done = subprocess.run(["tar", "-x", "-C", str(into)], input=tar, capture_output=True)
+    if done.returncode:
+        raise KitError(f"tar: {done.stderr.decode(errors='replace').strip()}")
+
+
+def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT):
+    """Пакет из чистого HEAD курса на входах выгрузки export. → манифест."""
+    dst = Path(dst).resolve()
+    if git("status", "--porcelain", "--", "tools/normgen", cwd=root).strip():
+        raise KitError("tools/normgen has uncommitted changes: a kit is built only from a clean commit of the course")
+    course = git("rev-parse", "HEAD", cwd=root).decode().strip()
+    try:
+        sha = git("rev-parse", "--verify", f"{export}^{{commit}}", cwd=specs).decode().strip()
+    except KitError as exc:
+        raise KitError(f"--export {export}: not a commit of {specs}: {exc}") from None
+    with tempfile.TemporaryDirectory(prefix="kit-export-") as t:
+        stage = Path(t)
+        unpack(root, course, "tools/normgen", stage)
+        unpack(specs, sha, "Platform", stage)
+        gens = stage / "tools/normgen"
+        for g in REGEN:
+            done = subprocess.run([sys.executable, g], cwd=gens, capture_output=True, text=True)
+            if done.returncode:
+                raise KitError(f"{g} on the export {sha[:9]}: {(done.stderr or done.stdout).strip()[-2000:]}")
+        cmd = [sys.executable, str(gens / "kit/build_kit.py"), str(dst), "--module", module]
+        cmd += sum((["--part", p] for p in parts), []) + sum((["--judged", f"{k}={v}"] for k, v in judged.items()), [])
+        env = dict(os.environ, **{COURSE_ENV: course, EXPORT_ENV: sha})
+        done = subprocess.run(cmd, cwd=stage, capture_output=True, text=True, env=env)
+        if done.returncode:
+            raise KitError((done.stderr or done.stdout).strip())
+    manifest = json.loads((dst / "kit.manifest.json").read_text(encoding="utf-8"))
+    built = " ".join(["python3 tools/normgen/kit/build_kit.py <kit> --module", module]
+                     + [f"--part {p}" for p in parts] + [f"--export {sha}"])
+    (dst / "SOURCE.txt").write_text(
+        f"export {sha} (cammeta-specs): the inputs — Platform/ of the export, byte for byte (git archive)\n"
+        f"course {course} (clean): tools/normgen — the generators, the hand-written kit code; out regenerated on the "
+        f"export inputs\nmodule {module}\nparts: {' '.join(manifest['parts'])}\nbuilt: {built}\n", encoding="utf-8")
+    return manifest
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("dst", help="the attempt directory (the kit goes to <dst>/01-store/internal)")
@@ -498,6 +560,9 @@ def main(argv=None):
     ap.add_argument("--part", action="append", default=[], choices=PARTS, help="an extra part of the kit")
     ap.add_argument("--judged", action="append", default=[], metavar="PART=REF",
                     help="the judge result of this output of a part (a queue id, a report path) — into provenance")
+    ap.add_argument("--export", metavar="SHA", help="the inputs from this commit of cammeta-specs (Platform/), the code "
+                    "from the clean HEAD of the course")
+    ap.add_argument("--specs", default=str(SPECS), help="the git repository of the exports (default ~/cammeta-specs)")
     args = ap.parse_args(argv)
     judged = {}
     for j in args.judged:
@@ -507,7 +572,8 @@ def main(argv=None):
             return 1
         judged[part] = ref
     try:
-        manifest = build(args.dst, args.module, args.part, judged)
+        manifest = (build_from_export(args.dst, args.module, args.part, judged, args.export, Path(args.specs))
+                    if args.export else build(args.dst, args.module, args.part, judged))
     except KitError as exc:
         print(f"build_kit: {exc}", file=sys.stderr)
         return 1
