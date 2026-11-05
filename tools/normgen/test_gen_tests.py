@@ -443,7 +443,8 @@ class GenTests(unittest.TestCase):
         self.assertEqual(done.returncode, 0, done.stderr)
         for f in tests:
             self.assertEqual(f["origin"], "generated")
-            self.assertEqual(f.get("editable", False), "/vectoradapter/" in f["path"] or f["path"].endswith("/coreadapter/open.go"))
+            self.assertEqual(f.get("editable", False), "/vectoradapter/" in f["path"] or
+                             f["path"].endswith(("/coreadapter/open.go", "/coreadapter/seams.go")))
             self.assertNotIn(b"normgen/p01-1", (dst / f["path"]).read_bytes())
         self.assertIn("TestRightsEval_Line", (dst / "KIT.md").read_text(encoding="utf-8"))
         adapter = store / "internal/vectoradapter"
