@@ -1,4 +1,5 @@
 """Мутации форм ADR-0125 P/01: каждая порча формы, прозы или OpenAPI даёт отказ check_forms."""
+import re
 import shutil
 import tempfile
 import unittest
@@ -275,23 +276,32 @@ class Wire(unittest.TestCase):                     # провод векторо
         shutil.rmtree(self.tmp)
 
     def errors(self):
-        return check_forms.check_wire(self.path)[0]
+        """Ошибки сверх ошибок настоящей формы (номер строки снят: мутация может сдвинуть строки)."""
+        if not hasattr(self, "base"):
+            self.base = {self.norm(e) for e in check_forms.check_wire(self.path)[0]} if self.path.read_text(
+                encoding="utf-8") == self.good else set()
+        return [e for e in check_forms.check_wire(self.path)[0] if self.norm(e) not in self.base]
+
+    @staticmethod
+    def norm(message):
+        return re.sub(r"^wire\.tsv: row [0-9]+ ", "wire.tsv: ", message)
 
     def row(self, package, table, surface):
         return next(x for x in self.good.split("\n") if x.startswith(f"{package}\t{table}\t{surface}\t"))
 
     def mutate(self, old, new, row=None):
+        if not hasattr(self, "base"):
+            self.errors()
         base = row or self.good
         self.assertEqual(base.count(old), 1, old)
         text = self.good.replace(row, row.replace(old, new)) if row else self.good.replace(old, new)
         self.path.write_text(text, encoding="utf-8")
         return self.errors()
 
-    def test_real_form_clean(self):
+    def test_real_form_clean(self):                  # настоящая форма — без ошибок; красный здесь — дефект данных формы
         errors, stats = check_forms.check_wire(ROOT / "Platform/common/vectors/wire.tsv")
         self.assertEqual(errors, [])
         self.assertGreaterEqual(stats["wire_bindings"], 27)        # форма растёт по урокам (P/05 +2)
-        self.assertEqual(self.errors(), [])
 
     def test_lf_only_lines(self):                   # U+2028 в ячейке — байт ячейки, не конец строки (JCS P/01)
         jcs = self.tmp / "Platform/01-store/vectors/jcs/canonical_json.tsv"
@@ -368,9 +378,14 @@ class Wire(unittest.TestCase):                     # провод векторо
         row = self.row("02-installer/platform-lists", "cases.tsv", "vectors")
         self.assertTrue(self.mutate('"case":"list"', '"case":"word"', row))
 
-    def test_foreign_owner(self):
+    def test_foreign_owner(self):                    # общий пакет — только потребители consumers.tsv
+        crl = self.row("common/store-client", "cases.tsv", "vectors")
+        self.assertTrue(any("consumers.tsv" in e for e in self.mutate('"when":"true","cells"', '"when":"owner == \\"07-console-module\\"","cells"', crl)))
+
+    def test_lesson_package_owner(self):             # пакет урока: owner — каталог урока; другой урок — по README пакета
         row = self.row("01-store/rights-evaluator", "expect.tsv", "vectors")
-        self.assertTrue(self.mutate('owner == \\"01-store\\"', 'owner == \\"03-worker\\"', row))
+        self.assertEqual(self.mutate('owner == \\"01-store\\"', 'owner == \\"03-worker\\"', row), [])
+        self.assertTrue(any("lesson directory" in e for e in self.mutate('owner == \\"01-store\\"', 'owner == \\"99-nope\\"', row)))
 
     def test_assert_tests(self):                  # test: prefix | absent | no-leak (min_bytes ≥ 1 только у no-leak)
         row = self.row("common/family-read", "01.tsv", "vectors")
@@ -396,10 +411,8 @@ class Wire(unittest.TestCase):                     # провод векторо
         layout = "\t".join(["common/crl", "cases.tsv", "layout", "case,input,expect,note", "[]", "{}", "[]", "-", "[]", "-",
                             "common/vectors/crl/README.md"])
         self.assertEqual(self.mutate(crl, crl + "\n" + layout), [])
-        fault = "\t".join(["common/fault", "fault.tsv", "layout", "-,word,code", "[]", "{}", "[]", "-", "[]", "-",
-                           "common/vectors/fault/README.md"])     # таблица без шапки, без потребителя провода (P/03)
-        self.assertEqual(self.mutate(crl, crl + "\n" + fault), [])
-        self.assertTrue(self.mutate(crl, crl + "\n" + fault.replace("-,word,code", "-,word")))
+        fault = self.row("common/fault", "fault.tsv", "layout")   # настоящая привязка: таблица без шапки (P/03, P/06)
+        self.assertTrue(self.mutate("\t-,word,status\t", "\t-,word\t", fault))
         self.assertTrue(self.mutate(crl, crl + "\n" + layout.replace("\t[]\t-\tcommon", "\t[]\tvalue\tcommon")))
 
 
@@ -499,9 +512,7 @@ class RuntimeConstants(unittest.TestCase):              # P/06 runtime-constants
 
 class WireP06(unittest.TestCase):                  # расширения провода P/06 (wire.md «P/06 transport constructors»)
     setUp, tearDown, errors, row, mutate = Wire.setUp, Wire.tearDown, Wire.errors, Wire.row, Wire.mutate
-
-    def test_real_form_clean(self):
-        self.assertEqual(self.errors(), [])
+    norm = staticmethod(Wire.norm)
 
     def test_arg_file_json(self):
         rid = self.row("06-console/rid", "rid.tsv", "stand:rid")
@@ -551,6 +562,10 @@ class WireP06(unittest.TestCase):                  # расширения про
         for bad in ('[""]', '[]', '["/fates","/fates"]', '["/fates","/fates/0"]', '["fates"]', '"/fates"'):
             self.assertTrue(self.mutate('"ignore":["/fates"]', f'"ignore":{bad}', pool), bad)
         self.assertTrue(any("console pool" in e for e in self.mutate('"ignore":["/fates"]', '"ignore":["/other"]', pool)))
+        self.assertTrue(any("console pool" in e for e in self.mutate(',"ignore":["/fates"]', '', pool)))   # у 06-console — обязателен
+        self.assertEqual(self.mutate('"owner == \\"04-controller\\"","code":0,"value":{"column":"expect","decode":"json"}}',
+                                     '"owner == \\"04-controller\\"","code":0,"value":{"column":"expect","decode":"json"},'
+                                     '"ignore":["/load"]}', pool), [])                                  # 04-controller — правило не его
         fr = self.row("common/family-read", "01.tsv", "vectors")
         old = '{"pointer":"/paths","compare":"set","value":{"column":"paths","decode":"json"}},{"pointer":"/outcome","compare":"value"'
         self.assertEqual(self.mutate(old, '{"pointer":"/a","value":{"literal":{}},"ignore":["/x","/xy"]},' + old, fr), [])
@@ -564,19 +579,19 @@ class WireP06(unittest.TestCase):                  # расширения про
         self.assertTrue(any("non-JSON" in e for e in self.mutate('json(row[\\"input\\"])', 'json(row[\\"case\\"])', ph)))
 
     def test_at(self):                               # at: {"at":{"value":column|literal,"pointer":"/…"},"decode":"json"?}
-        pool = self.row("common/pool", "cases.tsv", "vectors")
+        pool = self.row("02-installer/workers-script", "cases.tsv", "stand:workers-script")
         col = '{"column":"expect","decode":"json"}'
-        at = '{"at":{"value":' + col + ',"pointer":"/pool"}}'
+        at = '{"at":{"value":' + col + ',"pointer":"/start"}}'
         self.assertEqual(self.mutate(col, at, pool), [])                                     # проходящий случай
         self.assertEqual(self.mutate(col, '{"at":{"value":{"literal":{"a":"[1]"}},"pointer":"/a"},"decode":"json"}', pool), [])
-        for bad in (at.replace(col, '{"at":{"value":' + col + ',"pointer":"/pool"}}'),     # вложенный at
+        for bad in (at.replace(col, '{"at":{"value":' + col + ',"pointer":"/start"}}'),    # вложенный at
                     at.replace(col, '{"object":{"x":' + col + '}}'),                          # не column и не literal
-                    at.replace('"/pool"', '""'), at.replace('"/pool"', '"pool"'), at.replace('"/pool"', '"/a~2"'),
+                    at.replace('"/start"', '""'), at.replace('"/start"', '"start"'), at.replace('"/start"', '"/a~2"'),
                     at[:-1] + ',"decode":"text"}',                                            # внешний decode ≠ json
                     at[:-1] + ',"decode":"json"}',                                            # выбрано не строка
-                    at.replace('"/pool"', '"/nope"'),                                          # указателя нет в строках
+                    at.replace('"/start"', '"/nope"'),                                         # указателя нет в строках
                     '{"at":{"value":{"literal":{"a":1}},"pointer":"/b"}}',
-                    '{"at":{"value":' + col + ',"pointer":"/pool","extra":1}}'):
+                    '{"at":{"value":' + col + ',"pointer":"/start","extra":1}}'):
             self.assertTrue(self.mutate(col, bad, pool), bad)
         rid = self.row("06-console/rid", "rid.tsv", "stand:rid")                              # at во входе — отказ
         self.assertTrue(self.mutate('{"column":"rid","decode":"raw-json"}',

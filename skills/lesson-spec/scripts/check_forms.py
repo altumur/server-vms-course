@@ -1038,6 +1038,16 @@ def _native_shape(d, err, what, in_array):
             err.add(f"{what}: schema is not Draft 2020-12: {str(exc)[:100]}")
 
 
+def short(text, n=100):
+    """Длинная ячейка в сообщении — началом и длиной."""
+    return repr(text) if len(text) <= n else repr(text[:n]) + f"… ({len(text)} chars)"
+
+
+def lesson_dirs(root):
+    """Каталоги уроков `Platform/lessons.tsv` (вторая колонка строк без `#`)."""
+    return {ln.split("\t")[1] for ln in lf_lines(Path(root) / "Platform/lessons.tsv") if ln and not ln.startswith("#")}
+
+
 def consumers(root):
     """`consumers.tsv` → {(package, table): [lesson, …]}."""
     out = {}
@@ -1159,7 +1169,7 @@ def _check_binding(r, root, platform, env, cel, owners_of, seen, err, stats):
                     raise ValueError(f"type {prog.return_type()}, not bool")
                 whens[w] = prog
             except Exception as exc:                       # noqa: BLE001 — the message names the cell
-                err.add(f"{what}: when {w!r} does not compile to a bool CEL: {str(exc)[:120]}")
+                err.add(f"{what}: when {short(w)} does not compile to a bool CEL: {str(exc).splitlines()[0][:160]}")
                 whens[w] = None
         return w if whens[w] else None
 
@@ -1309,18 +1319,22 @@ def _check_binding(r, root, platform, env, cel, owners_of, seen, err, stats):
     for v in grouped_variants:
         if any("group_by" not in d for _, d, _ in decls if d["variant"] == v):
             err.add(f"variant {v!r}: group, groups or map requires group_by on its input declarations")
-    if r["package"] == "common/pool" and (any(e.get("ignore") != ["/fates"] for e, _ in exps)
-                                          or set(compares.values()) != {"value"}):
-        err.add('console pool: ignore is exactly ["/fates"] with compare value (wire.md «P/06 transport»)')
-    owner_set = owners_of.get((r["package"], r["table"]), []) if r["package"].startswith("common/") \
-        else [r["package"].split("/")[0]]
-    if not owner_set:
-        err.add("no consumer of the table in consumers.tsv")
-        return
-    for w in whens:
-        for a, b in OWNER_WORD.findall(w):
-            if (a or b) not in owner_set:
-                err.add(f"when {w!r} names {a or b!r}, not a consumer of the table")
+    named = sorted({a or b for w in whens for a, b in OWNER_WORD.findall(w)})
+    if r["package"].startswith("common/"):
+        owner_set = owners_of.get((r["package"], r["table"]), [])
+        if not owner_set:
+            err.add("no consumer of the table in consumers.tsv")
+            return
+        for name in named:
+            if name not in owner_set:
+                err.add(f"when names {name!r}, not a consumer of the table in consumers.tsv")
+    else:
+        # пакет урока: consumers.tsv его не назначает — потребители урок пакета и уроки, названные в when (README
+        # пакета, например rid и request-digest P/06 у 03-worker); owner — каталог урока (wire.md)
+        owner_set = [r["package"].split("/")[0]] + [n for n in named if n != r["package"].split("/")[0]]
+        for name in named:
+            if name not in lesson_dirs(root):
+                err.add(f"when names {name!r}, not a lesson directory of Platform/lessons.tsv")
     if err.lines:                                          # строки судятся только по годной форме привязки
         return
     _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whens, owner_set, pkg, root, err, stats)
@@ -1333,7 +1347,7 @@ def _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whe
             return None
         val = whens[w].eval(data={"row": row, "owner": owner}).value()
         if not isinstance(val, bool):
-            err.add(f"when {w!r} does not evaluate to a bool on the row (json() of a non-JSON cell is a data error): {str(val)[:80]}", line)
+            err.add(f"when {short(w)} does not evaluate to a bool on the row (json() of a non-JSON cell is a data error): {str(val)[:80]}", line)
             return None
         return val
 
@@ -1478,6 +1492,9 @@ def _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whe
                 [ev(w, row, owner, no) for no, row in group], "native", line)]
             if len(nat) != 1:
                 err.add(f"owner {owner}: variant {v!r} has {len(nat)} native descriptors, not exactly one", line)
+            if r["package"] == "common/pool" and owner == "06-console" and len(hit) == 1 and \
+                    (hit[0].get("ignore") != ["/fates"] or compares.get(v) != "value"):
+                err.add('console pool: ignore is exactly ["/fates"] with compare value (wire.md «P/06 transport»)', line)
             if v not in compares:
                 continue
             found = []
