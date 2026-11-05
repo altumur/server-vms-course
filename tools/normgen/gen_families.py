@@ -31,7 +31,10 @@ L = lesson.CURRENT
 CATALOG = ROOT / "Platform/common/data/catalog.tsv"
 KEYS_README = ROOT / "Platform/common/data/README.md"
 PLATFORM = ROOT / "Platform"
-RUNTIME = HERE / "famrt/go/runtime.go"
+RUNTIME_FLAT = HERE / "famrt/go/runtime.go"
+RUNTIME_DOC = HERE / "famrt2/go/runtime.go"     # режим схемы данными (уроки кроме P/01; ADR-0125 доп. (5))
+DOC_MODE = L.key != lesson.DEFAULT                # P/01 — плоский режим байт в байт
+RUNTIME = RUNTIME_DOC if DOC_MODE else RUNTIME_FLAT
 JUDGE = HERE / "family_judge.py"
 DEFAULT_OUT = L.out
 DEFAULT_LESSON = L.nn
@@ -43,6 +46,11 @@ ROOT_WORDS = {"$schema", "type", "properties", "additionalProperties", "required
 PLACE_WORDS = {"$ref", "description", "type", "x-codec", "x-whole", "x-time", "x-integer", "minimum", "maximum",
                "x-max-bytes", "enum"}
 CODECS = {"integer", "time", "string", "boolean", "number"}
+DOC_WORDS = {"$schema", "$defs", "$ref", "description", "type", "enum", "const", "pattern", "minLength", "maxLength",
+             "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "minItems", "maxItems", "uniqueItems", "items",
+             "minProperties", "maxProperties", "properties", "patternProperties", "additionalProperties", "propertyNames",
+             "required", "anyOf", "allOf", "not", "if", "then", "else", "x-codec", "x-encoding", "x-whole", "x-time",
+             "x-integer", "x-max-bytes", "x-max-names", "x-opaque"}     # слова, которые исполняет famrt2
 GO_TYPE = {"integer": "int64", "time": "float64", "string": "string", "boolean": "bool", "number": "float64"}
 INT64 = (-(2 ** 63), 2 ** 63 - 1)
 
@@ -249,13 +257,78 @@ def load_family(row, grammar):
             "sources": [schema_path, layers if layers.is_file() else None, outcomes_path], "layers": n_layers}
 
 
+def load_family_doc(row, grammar):
+    """Режим схемы данными: семья row со схемой как есть — её исполняет famrt2 (закрытый набор слов JSON Schema и
+    слои В7); генератор проверяет форму (корень — объект, layers.tsv — копия слов x-*, пути исходов — поля строки)."""
+    key, kind = row["key"], row["kind"]
+    if kind != "row":
+        raise GenError(f"{key}: kind {kind!r} — the schema mode reads row families (object, file — not yet)")
+    schema_path = PLATFORM / row["schema"]
+    if not schema_path.name.endswith(".schema.json") or not schema_path.is_file():
+        raise GenError(f"{key}: schema {row['schema']!r} is not a file")
+    base = schema_path.name[:-len(".schema.json")]
+    schema = Schema(schema_path)
+    if schema.doc.get("type") != "object":
+        raise GenError(f"{rel(schema_path)}: the root of a row family is an object")
+    words = set()
+
+    def walk(x):
+        if isinstance(x, dict):
+            for k, v in x.items():
+                if k in ("properties", "$defs", "patternProperties"):
+                    for vv in v.values():
+                        walk(vv)
+                else:
+                    words.add(k)
+                    walk(v)
+        elif isinstance(x, list):
+            for e in x:
+                walk(e)
+    walk(schema.doc)
+    extra = words - DOC_WORDS
+    if extra:
+        raise GenError(f"{rel(schema_path)}: words {sorted(extra)} are outside famrt2 (supported: {sorted(DOC_WORDS)})")
+    layers = schema_path.with_name(base + ".layers.tsv")
+    n_layers = check_layers(schema, layers) if layers.is_file() else 0
+    outcomes_path = schema_path.with_name(base + ".outcomes.tsv")
+    outcomes = []
+    for r in tsv(outcomes_path, OUTCOME_COLUMNS):
+        p = r["path"]
+        if p and (not p.startswith("/") or "*" in unpointer(p) or schema.at("/properties" + p) is None):
+            raise GenError(f"{rel(outcomes_path)}: path {p!r} — \"\" or a field of the row (no «*»)")
+        if not re.fullmatch(r"0|[1-9][0-9]*", r["priority"]) or r["unit"] not in UNITS:
+            raise GenError(f"{rel(outcomes_path)}: priority — an integer ≥ 0, unit — one of {UNITS}")
+        outcomes.append({"path": p, "reader": r["reader"], "priority": int(r["priority"]), "unit": r["unit"]})
+    if not any(o["path"] == "" for o in outcomes):
+        raise GenError(f"{rel(outcomes_path)}: no row of the empty path (the readers)")
+    return {"key": key, "kind": kind, "schema": row["schema"], "norm": row["norm"], "name": family_name(key),
+            "template": template(key, grammar), "doc": schema_path.read_text(encoding="utf-8"), "outcomes": outcomes,
+            "sources": [schema_path, layers if layers.is_file() else None, outcomes_path], "layers": n_layers}
+
+
+def go_family_doc(f):
+    n = f["name"]
+    segs = ", ".join(f"{{Lit: {go_str(a)}, Placeholder: {go_str(b)}, Grammar: {go_str(c)}}}" for a, b, c in f["template"])
+    outs = ", ".join(f"{{Path: {go_str(o['path'])}, Reader: {go_str(o['reader'])}, Priority: {o['priority']}, "
+                     f"Unit: {go_str(o['unit'])}}}" for o in f["outcomes"])
+    readers = []
+    for o in f["outcomes"]:
+        if o["path"] == "" and o["reader"] not in readers:
+            readers.append(o["reader"])
+    return (f"// {n} — the family {f['key']} ({f['kind']}; {f['schema']}; {f['norm']}).\n"
+            f"// Readers (the rows of the empty path of the outcomes): {', '.join(readers)}.\n"
+            f"var {n} = &Family{{Key: {go_str(f['key'])}, Kind: {go_str(f['kind'])}, Schema: {go_str(f['schema'])}, "
+            f"Norm: {go_str(f['norm'])},\nTemplate: []Seg{{{segs}}},\nOutcomes: []Outcome{{{outs}}},\n"
+            f"Doc: {go_str(f['doc'])}}}")
+
+
 def families(lesson=DEFAULT_LESSON):
     grammar = placeholders()
     rows = [r for r in tsv(CATALOG, CATALOG_COLUMNS)
             if r["owner"].startswith(f"P/{lesson}") and r["schema"].endswith(".schema.json")]
     if not rows:
         raise GenError(f"{rel(CATALOG)}: no family of P/{lesson} with a schema")
-    out = [load_family(r, grammar) for r in rows]
+    out = [(load_family_doc if DOC_MODE else load_family)(r, grammar) for r in rows]
     if len({f["name"] for f in out}) != len(out):
         raise GenError("two families with one Go name")
     return out
@@ -329,7 +402,7 @@ def go_family(f):
 
 
 def go_module(fams, lesson):
-    uses_bool = any(p["codec"][0] == "boolean" for f in fams for p in f["props"])
+    uses_bool = not DOC_MODE and any(p["codec"][0] == "boolean" for f in fams for p in f["props"])
     head = (f"// Code generated by tools/normgen/gen_families.py from {rel(CATALOG)} and the schemas of P/{lesson}; "
             f"DO NOT EDIT.\n")
     for f in fams:
@@ -341,7 +414,7 @@ def go_module(fams, lesson):
              "// (Judge, Matches, OutcomesFor, Readers), the typed row Read<Family> and Items, the key. What an outcome does is\n"
              "// the prose of the norm (the column outcome of <family>.outcomes.tsv) — not here.\n"
              "package families\n" + ('\nimport "strconv"\n' if uses_bool else ""))
-    parts = [head] + [go_family(f) for f in fams]
+    parts = [head] + [(go_family_doc if DOC_MODE else go_family)(f) for f in fams]
     parts.append("// All — the families in the order of the catalog.\nvar All = []*Family{" +
                  ", ".join(f["name"] for f in fams) + "}")
     parts.append("// ByKey — the family of a catalog key template; nil — none.\nfunc ByKey(key string) *Family {\n"
@@ -418,6 +491,32 @@ func (f *Family) Readers() []string
   not generated): e.g. an unreadable door row does not count as a visible door; a refused floor refuses the issue.
 - The package reads and judges a row; when to read or write it, and the store operations, are yours.
 """
+
+KIT_MD_DOC = """
+## Part `families`: reading the data families (generated; the schemas are data)
+
+| Package | Import path | Origin |
+|---|---|---|
+| `families` | `{module}/internal/families` | `families.go` — one `*Family` per row family of the lesson with a schema, the schema text as data (`Platform/common/data/catalog.tsv`, `data/<family>.schema.json`, `outcomes.tsv`); `runtime.go` — the hand-written executor of the schemas; closed |
+
+```go
+f := families.ByKey("platform/manifest/<sub>")            // the family of a catalog key template; families.All
+r := f.Judge(key, families.ItemsOf(items), families.Reader) // r.Verdict "ok" | "refused", r.Paths — JSON Pointers
+outcome := f.OutcomesFor(r.Paths, "admin")                   // the rows of <family>.outcomes.tsv that act at this reader
+w := f.JudgeItems(families.ItemsOf(items), families.Writer)  // before a write: the writer's strict notation
+```
+
+The reading is that of the V7 stack of the course: the codec of the items (`x-encoding` json|jcs, `x-codec`), layer 3
+(`x-time`, `x-integer`, `x-whole`, `x-max-bytes`, `x-max-names`, `$defs.writer`), then JSON Schema 2020-12 with the
+refusal places of the dialect. There is no typed row here: read the values yourself from a readable row. What an
+outcome does is the prose of the norm (the column outcome of `<family>.outcomes.tsv`).
+"""
+
+
+def kit_md():
+    """Справка части: режим схемы данными (уроки кроме P/01) — KIT_MD_DOC; P/01 — KIT_MD."""
+    return KIT_MD_DOC if DOC_MODE else KIT_MD
+
 
 
 def main(argv):
