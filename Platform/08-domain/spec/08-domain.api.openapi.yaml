@@ -2488,6 +2488,10 @@ components:
         - type: object
           required: [age]
           properties:
+            cursor:
+              type: string
+              minLength: 1
+              description: Opaque next-page continuation of GET /domain (P/10 Н1.2а); may resume within a part and is absent at the end. The encoding is implementation-chosen, not a public (part,last_member) grammar.
             age: {type: number, minimum: 0, description: 'field of the door of lesson P/10: seconds since as_of by the wall clock of the domain console, one digit after the point (P/10 Н1.2а; review analysis of stage B 8–10, № 22: М-7)'}
             trust: {description: 'P/08.1 Н1.2а: {rev, root, book_seal}; fingerprint — chapter 8.2 Н1.1'}
             knocking_count: {type: integer, minimum: 0, description: 'P/08.1 Н1.4б.'}
@@ -2917,7 +2921,7 @@ components:
             properties:
               rev: {type: integer, minimum: 1}
               term: {type: integer, minimum: 1}
-              index: {type: integer, minimum: 0}
+              index: {type: string, minLength: 1, description: 'Exact store Row.index of the read row; opaque string, never converted to a number.'}
         count:
           type: object
           required: [servers, cameras]

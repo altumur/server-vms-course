@@ -31,3 +31,129 @@ func TestLateDomain_S04BookCallbackExactTail(t *testing.T) {
 		{n: 1, line: 6, kind: "call", name: "console-callback", input: "{\"ticket\":\"valid_person_ticket\",\"calls\":[\"GET domain/testsub/books/book\"],\"method\":\"GET\",\"path\":\"/domain/testsub/books/book/x\"}", expects: []expect{expect{call: "{\"status\":401,\"handler_calls\":0,\"forward_calls\":0}"}}},
 	})
 }
+
+// TestLateDomain_Fc1SameSession — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc1SameSession(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 7, kind: "call", name: "console-forward-credentials", input: "{\"transition\":1,\"credential\":\"cookie\",\"guard\":\"ok\"}", expects: []expect{expect{call: "{\"refused\":false,\"forward_calls\":1,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":true,\"status\":200,\"session_token_equal\":true}"}}},
+	})
+}
+
+// TestLateDomain_Fc1AuthorizationUnchanged — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc1AuthorizationUnchanged(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 8, kind: "call", name: "console-forward-credentials", input: "{\"transition\":1,\"credential\":\"authorization-and-cookie\",\"guard\":\"ok\"}", expects: []expect{expect{call: "{\"refused\":false,\"forward_calls\":1,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":false,\"status\":200,\"authorization_unchanged\":true}"}}},
+	})
+}
+
+// TestLateDomain_Fc1CsrfOriginal — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc1CsrfOriginal(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 9, kind: "call", name: "console-forward-credentials", input: "{\"transition\":1,\"credential\":\"cookie\",\"guard\":\"csrf\"}", expects: []expect{expect{call: "{\"refused\":true,\"forward_calls\":0,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":false,\"writer_calls\":0}"}}},
+	})
+}
+
+// TestLateDomain_Fc1NeedRefused — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc1NeedRefused(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 10, kind: "call", name: "console-forward-credentials", input: "{\"transition\":1,\"credential\":\"cookie\",\"guard\":\"need\"}", expects: []expect{expect{call: "{\"refused\":true,\"forward_calls\":0,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":false,\"writer_calls\":0}"}}},
+	})
+}
+
+// TestLateDomain_Fc1MayRefused — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc1MayRefused(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 11, kind: "call", name: "console-forward-credentials", input: "{\"transition\":1,\"credential\":\"cookie\",\"guard\":\"may\"}", expects: []expect{expect{call: "{\"refused\":true,\"forward_calls\":0,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":false,\"writer_calls\":0}"}}},
+	})
+}
+
+// TestLateDomain_Fc1BadCookie — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc1BadCookie(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 12, kind: "call", name: "console-forward-credentials", input: "{\"transition\":1,\"credential\":\"bad-cookie\",\"guard\":\"ok\"}", expects: []expect{expect{call: "{\"refused\":true,\"forward_calls\":0,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":false,\"writer_calls\":0}"}}},
+	})
+}
+
+// TestLateDomain_Fc1BadHeaderNoFallback — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc1BadHeaderNoFallback(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 13, kind: "call", name: "console-forward-credentials", input: "{\"transition\":1,\"credential\":\"bad-authorization-and-cookie\",\"guard\":\"ok\"}", expects: []expect{expect{call: "{\"refused\":true,\"forward_calls\":0,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":false,\"writer_calls\":0}"}}},
+	})
+}
+
+// TestLateDomain_Fc1OtherSessionNotUsed — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc1OtherSessionNotUsed(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 14, kind: "call", name: "console-forward-credentials", input: "{\"transition\":1,\"credential\":\"cookie\",\"guard\":\"ok\",\"unrelated_session\":\"b\"}", expects: []expect{expect{call: "{\"refused\":false,\"forward_calls\":1,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":true,\"status\":200,\"session_token_equal\":true,\"other_session_used\":false}"}}},
+	})
+}
+
+// TestLateDomain_Fc1DebugIndependentWriter — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc1DebugIndependentWriter(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 15, kind: "call", name: "console-forward-credentials", input: "{\"transition\":1,\"credential\":\"debug\",\"guard\":\"ok\"}", expects: []expect{expect{call: "{\"refused\":true,\"forward_calls\":1,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":false,\"status\":401,\"writer_calls\":1}"}}},
+	})
+}
+
+// TestLateDomain_Fc2SameSession — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc2SameSession(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 16, kind: "call", name: "console-forward-credentials", input: "{\"transition\":2,\"credential\":\"cookie\",\"guard\":\"ok\"}", expects: []expect{expect{call: "{\"refused\":false,\"forward_calls\":1,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":true,\"status\":200,\"session_token_equal\":true}"}}},
+	})
+}
+
+// TestLateDomain_Fc2AuthorizationUnchanged — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc2AuthorizationUnchanged(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 17, kind: "call", name: "console-forward-credentials", input: "{\"transition\":2,\"credential\":\"authorization-and-cookie\",\"guard\":\"ok\"}", expects: []expect{expect{call: "{\"refused\":false,\"forward_calls\":1,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":false,\"status\":200,\"authorization_unchanged\":true}"}}},
+	})
+}
+
+// TestLateDomain_Fc2CsrfOriginal — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc2CsrfOriginal(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 18, kind: "call", name: "console-forward-credentials", input: "{\"transition\":2,\"credential\":\"cookie\",\"guard\":\"csrf\"}", expects: []expect{expect{call: "{\"refused\":true,\"forward_calls\":0,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":false,\"writer_calls\":0}"}}},
+	})
+}
+
+// TestLateDomain_Fc2NeedRefused — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc2NeedRefused(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 19, kind: "call", name: "console-forward-credentials", input: "{\"transition\":2,\"credential\":\"cookie\",\"guard\":\"need\"}", expects: []expect{expect{call: "{\"refused\":true,\"forward_calls\":0,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":false,\"writer_calls\":0}"}}},
+	})
+}
+
+// TestLateDomain_Fc2MayRefused — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc2MayRefused(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 20, kind: "call", name: "console-forward-credentials", input: "{\"transition\":2,\"credential\":\"cookie\",\"guard\":\"may\"}", expects: []expect{expect{call: "{\"refused\":true,\"forward_calls\":0,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":false,\"writer_calls\":0}"}}},
+	})
+}
+
+// TestLateDomain_Fc2BadCookie — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc2BadCookie(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 21, kind: "call", name: "console-forward-credentials", input: "{\"transition\":2,\"credential\":\"bad-cookie\",\"guard\":\"ok\"}", expects: []expect{expect{call: "{\"refused\":true,\"forward_calls\":0,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":false,\"writer_calls\":0}"}}},
+	})
+}
+
+// TestLateDomain_Fc2BadHeaderNoFallback — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc2BadHeaderNoFallback(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 22, kind: "call", name: "console-forward-credentials", input: "{\"transition\":2,\"credential\":\"bad-authorization-and-cookie\",\"guard\":\"ok\"}", expects: []expect{expect{call: "{\"refused\":true,\"forward_calls\":0,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":false,\"writer_calls\":0}"}}},
+	})
+}
+
+// TestLateDomain_Fc2OtherSessionNotUsed — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc2OtherSessionNotUsed(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 23, kind: "call", name: "console-forward-credentials", input: "{\"transition\":2,\"credential\":\"cookie\",\"guard\":\"ok\",\"unrelated_session\":\"b\"}", expects: []expect{expect{call: "{\"refused\":false,\"forward_calls\":1,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":true,\"status\":200,\"session_token_equal\":true,\"other_session_used\":false}"}}},
+	})
+}
+
+// TestLateDomain_Fc2DebugIndependentWriter — chapter 6.7, seams.tsv.
+func TestLateDomain_Fc2DebugIndependentWriter(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 24, kind: "call", name: "console-forward-credentials", input: "{\"transition\":2,\"credential\":\"debug\",\"guard\":\"ok\"}", expects: []expect{expect{call: "{\"refused\":true,\"forward_calls\":1,\"cookie_out\":false,\"x_user_out\":false,\"ticket_out\":false,\"bearer_set\":false,\"status\":401,\"writer_calls\":1}"}}},
+	})
+}

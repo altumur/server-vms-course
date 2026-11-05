@@ -1,0 +1,9 @@
+# Placeholder labels of the specification (ADR-0121 addendum (3) items 1 and 4): one concept — one label. The source writes
+# the label of the column en, its translation `ru/…` — the label of the column ru; en_mirror reads a label of a pair by this
+# table, not byte for byte. A label stands in angle brackets `<…>` (`<name>`), the word of a variant in `⟨… N⟩`.
+ru	en
+имя	name
+корень	root
+т	t
+имена unit.fields в порядке автора	names of unit.fields in the author's order
+вариант	variant

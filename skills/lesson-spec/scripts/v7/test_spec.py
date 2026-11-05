@@ -483,7 +483,9 @@ class TestTree(unittest.TestCase):
             a = rows(git("show", "%s:%s" % (tag, f)))
             if not a:
                 continue
-            b = rows((TREE / f).read_text(encoding="utf-8"))
+            parts = Path(f).parts             # ADR-0121 доп. (3) п. 1: русский блок — у перевода `ru/…` урока ADR-0124
+            ru = TREE / parts[0] / parts[1] / "ru" / Path(*parts[2:])
+            b = rows((ru if ru.is_file() else TREE / f).read_text(encoding="utf-8"))
             for k, v in a.items():
                 w = b.get(k)
                 if w is None:
