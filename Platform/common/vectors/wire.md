@@ -70,11 +70,11 @@ The closed `compare` list is `value|subset|raw|set|object-sets|lines-value|lines
 ```text
 {"pointer":"/row","test":"prefix","value":{"literal":"enc:v2:"}}
 {"pointer":"/plaintext","test":"absent"}
-{"pointer":"/text","test":"no-leak","value":{"array":[{"literal":"fixture-password"}]},"min_bytes":4}
+{"pointer":"/text","test":"no-leak","value":{"array":[{"literal":"fixture-password"}]},"min_bytes":4,"whole":true}
 {"pointer":"/row","decode":"json","compare":"value","value":<ValueExpr>}
 ```
 
-`assert` is an array over the native response. Pointer is JSON Pointer. The closed `test` list is `prefix|absent|no-leak`. Prefix requires a string with the exact prefix; absent requires the pointer not to exist. Without test, compare the pointer value by the given compare, defaulting to the binding comparison without lines modes. Optional decode json parses JSON inside a string field, not the wire frame. A missing pointer fails except for absent. Assertions do not enter the SUT input. The Architect’s no-leak assertion has `pointer`, `test` set to no-leak, `value` (a string or array of secret strings) and `min_bytes` (an integer at least 1). The UTF-8 text at the pointer must contain no substring of any secret whose length is at least min_bytes bytes. Its purpose is the refusal-text check of secret-in; it is an output assertion, never a secret input to the implementation.
+`assert` is an array over the native response. Pointer is JSON Pointer. The closed `test` list is `prefix|absent|no-leak`. Prefix requires a string with the exact prefix; absent requires the pointer not to exist. Without test, compare the pointer value by the given compare, defaulting to the binding comparison without lines modes. Optional decode json parses JSON inside a string field, not the wire frame. A missing pointer fails except for absent. Assertions do not enter the SUT input. The Architect’s no-leak assertion has `pointer`, `test` set to no-leak, `value` (a string or array of secret strings) and `min_bytes` (an integer at least 1). The UTF-8 text at the pointer must contain no substring of any secret whose length is at least min_bytes bytes. An optional boolean `whole` (default false) is allowed only for no-leak: false forbids any such fragment; true forbids an occurrence of the whole secret only when its full UTF-8 length is at least min_bytes (shorter secrets are not judged). Secret-in P/03 and P/06 use whole true under their README Run item 3. This is an output assertion, never a secret input to the implementation.
 
 ## Markers and native framing
 
