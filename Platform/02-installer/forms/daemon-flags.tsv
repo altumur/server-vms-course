@@ -1,0 +1,19 @@
+# Command options of P/02, ADR-0125 addendum (5). The installer has no daemon or HTTP door of its own.
+# Same columns as P/01: commands are the command ids in operator-commands.tsv, not HTTP routes or daemon roles.
+# This table is the source of the option names, value types, defaults and conditions. Positional arguments are in operator-commands.tsv.
+# type: string (a string), number (a finite decimal number), file (a file path), bool (no value).
+# required and bad are CEL over f: map<string,dyn>, cmd: string; f contains supplied options, numbers as numbers, bool as true.
+# - means no default. There is no implicit CLI spelling rule or universal exit code inherited from P/01.
+# high/low and retention options carry the numeric values of their owner rows; the readers' unreadable-value rules are not new CLI refusals.
+flag	type	default	default_text	required	commands	bad	norm
+-deployment	string	-	-	true	rights		P/02.5 Н2
+--check	file	-	-	false	rights		P/02.5 Н2; Н3 install
+-rights	bool	false	off	false	manifest-status		P/02.4 Н1.9; P/02.5
+--sha256	string	-	-	true	manifest-get	"!f[""--sha256""].matches(""^[0-9a-f]{64}$"")"	P/02.4 Н1.9 manifest get
+-allow-downtime	bool	false	off	false	rollout		P/02.4 Н1.9 rollout pre
+-last	bool	false	off	false	rollout		P/02.4 Н1.9 rollout leader
+-high	number	-	-	"!(""-off"" in f)"	space		P/02.4 Н1.9 platform/space; P/05 Н1.4 space
+-low	number	-	-	"!(""-off"" in f)"	space		P/02.4 Н1.9 platform/space; P/05 Н1.4 space
+-off	bool	false	off	false	space	"""-high"" in f || ""-low"" in f"	P/02.4 Н1.9 platform/space
+-days	number	-	-	false	retention		P/02.4 Н1.9 retention; P/05 Н1.3 retention
+-alarms	number	-	-	false	retention		P/02.4 Н1.9 alarms_retention; P/05 Н1.3 retention
