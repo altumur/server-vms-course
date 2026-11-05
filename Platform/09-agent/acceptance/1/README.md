@@ -254,3 +254,22 @@ Then — the rows of the move of this chapter and of the history of the sources.
 ## Kit assistance seams
 
 [seams.tsv](seams.tsv) provides 38 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
+
+## Anywhere copy hash (G09-ANYWHERE-HASH-01)
+
+The four fixture vectors in [`inputs/anywhere-hash/cases.tsv`](inputs/anywhere-hash/cases.tsv) specify the complete-body
+digest of P/08.4 Н1.3 carry and the check before the copy of Н1.4 member_anywhere. The input column names a JSON file
+next to the table; expect is a JSON subset of the observations, not an input to the implementation.
+
+Each input has an initial stored copy with its exact index and last confirmed taken_sha256 marker, and a list of attempts.
+Every attempt starts independently from that initial state: its trusted carry advertisement is advertised, its real
+200 body from `GET /api/anywhere/{member}` is the UTF-8 text body. The fixture calls the ordinary agent copy code with
+the body and mark, and records the store operations and marker changes. received_at is the receipt time and domain_age is the answer age; each case prepares a valid trusted carry for server m1 and its active agent guard. It reports arrays in attempt order:
+computed_sha256, copy_writes, marker_confirmed; for a refusal also related_edits (the writes belonging to this copy),
+copy_items, copy_index and taken_sha256. The digest observation comes from the normal code path that judges the body;
+it is not computed by the fixture instead of that path. The two positive vectors must reach the actual copy write.
+
+The existing agent-carry IO seam can carry these inputs: these files do not declare a new native command. A fixture
+that only calculates the expected digest does not check the negative cases: they require the former copy, exact index
+and marker to stay unchanged and zero copy writes and related edits. The four cases cover as_of in the digest, JCS
+instead of wire formatting, a refused digest of doc alone and a refused mismatching whole-body digest.

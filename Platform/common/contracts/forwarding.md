@@ -65,7 +65,7 @@ From М11/8 Н1.4:
 request:      the method, the path and the query as they came; the path segments are decoded once, %2F creates no route level, the accepted
               encoded path and query are passed as they came (guess of stage C FW-G03, the Architect's decision of 2026-10-23); the body ≤ the body limit of the console ([gate-and-pass contract](../gate-and-pass.md) «The gate» `body`, 1 MiB): larger — 413, chunked —
               400, slow — 408 (P/06.5 Н4); the body is never cut
-pass:         Authorization, Content-Type, Idempotency-Key, If-Match — as they came (If-Match — ADR-0094 B4: the condition reaches the edit door of P/08.0 Н1.9)
+pass:         Authorization, Content-Type, Idempotency-Key, If-Match — as they came, with the sole credential exception «First cookie transition to the domain» below (If-Match — ADR-0094 B4: the condition reaches the edit door of P/08.0 Н1.9)
 set:          X-Operator: console — on every forwarding: transition 1 and transition 2 (ADR-0083 addendum (19) item 2; analysis of review of
               ADR-0090, № 20); X-W2C-Via: <CLUSTER> — only to the console of another cluster (transition 1, Н1.3);
               X-W2C-Via-Worker: <sub>/<instance> — on forwarding by ticket (P/06.3 Н1.9 «Domain doors»)
@@ -100,6 +100,20 @@ journal:      domain.forwarded {cluster, path, user, status} at the forwarding c
               user — the name proven by the gate (before lesson 9 — operator), not X-User; status — the code of the answer or of the refusal (a handshake refusal of
               the role door — 502, as the network)
 ```
+
+### First cookie transition to the domain
+
+G10-FORWARD-CREDENTIALS-01, the Architect's decision under ADR-0083. At the **first console transition toward the domain**, transition 1, 2 or 3 according to where the external request entered, the console sets `Authorization: Bearer <token>` only when all of these hold:
+
+1. The ordinary `identity`, `need` and `may` checks of this request have succeeded.
+2. The original request has passed its cookie-CSRF check under the gate-and-pass contract. Converting the credential does not turn an unchecked cookie request into a non-cookie request.
+3. There is no incoming `Authorization` header, and the identity used for this request was proved by its person cookie session `w2c_token`.
+
+The token is byte for byte the token proved by **that same cookie session**. A token of another session, a cache, another step, debug or break-glass is not a source. `Cookie` is never forwarded. An incoming `Authorization` is passed unchanged and is never supplemented or replaced from a cookie; an invalid presented credential is refused by the ordinary identity rule. A failed guard returns its ordinary refusal, without a forwarding call, a replacement credential or a fallback path. Later receivers verify the token independently; after the first conversion they receive an ordinary Bearer request and do not recreate a cookie session.
+
+Debug does not create a JWT, `X-User` or a callback ticket. Its own read/worker doors keep their existing admission rules. A writer that independently requires a person token still requires it: a credential-free debug request cannot bypass that check. Its earlier standby/deposed/frozen and other operation guards retain their original order. This exception does not expand C06-PASS-COOKIE-01 (`door.pass` of the first kind to a worker), second-kind tickets or their callback rules.
+
+The mandatory vectors are CALL seams in [P/06.7](../../06-console/acceptance/7/seams.tsv) for **both first transitions 1 and 2**, and in [P/10](../../10-domain-console/acceptance/seams.tsv) for first transition 3. They execute the ordinary gate and forwarding path and inspect actual outgoing requests; the fixture and observations are specified in [the forwarding seam protocol](../../10-domain-console/acceptance/README.md#forwarding-credential-seams). A P/10-only run does not cover the first-hop cluster-console obligation of P/06.7.
 
 ### Accept by a console
 
