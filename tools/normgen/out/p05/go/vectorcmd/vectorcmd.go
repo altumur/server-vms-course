@@ -150,6 +150,8 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 	}
 	pkg := *in.Package + " " + *in.Table
 	want := map[string][2]string{
+		"common/events-merge resource.tsv": {"input", ""},
+		"common/fresh-age fresh.tsv":       {"age", ""},
 		"common/holds cases.tsv":           {"bucket,holds,row,types", ""},
 		"common/instance box.tsv":          {"input", ""},
 		"common/instance cases.tsv":        {"input", ""},
@@ -205,6 +207,18 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 	}()
 	var value any
 	switch pkg {
+	case "common/events-merge resource.tsv":
+		a := vectoradapter.EventsMerge(*in.Table, cellmap, files)
+		if c, o, e, done := answerOf(a); done {
+			return c, o, e, nil
+		}
+		value = a.Value
+	case "common/fresh-age fresh.tsv":
+		a := vectoradapter.FreshAge(*in.Table, cellmap, files)
+		if c, o, e, done := answerOf(a); done {
+			return c, o, e, nil
+		}
+		value = a.Value
 	case "common/holds cases.tsv":
 		a := vectoradapter.Holds(*in.Table, cellmap, files)
 		if c, o, e, done := answerOf(a); done {

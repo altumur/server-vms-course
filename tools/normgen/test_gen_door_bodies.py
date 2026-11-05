@@ -412,8 +412,10 @@ class DoorBodiesBase:
                         continue
                     sch = prm.get("schema", {})
                     for raw in ("1", "0", "-3", "1.5", "1e3", "abc", "true", "", "local", "cluster", "newest", "t",
-                                "bytes=0-9", "sha256-" + "0" * 64, "x" * 200):
-                        cases.append((op, prm["in"], prm["name"], raw, sch, Path(base).resolve(), bool(prm.get("required"))))
+                                "bytes=0-9", "sha256-" + "0" * 64, "x" * 200, "1_000", "1__0", "1e400", "1e-400", ".5", "5.",
+                                "007", "18446744073709551615", "18446744073709551616", "-0", "+1", "30", "30.1", "0.0"):
+                        cases.append((op, prm["in"], prm["name"], raw, sch, Path(base).resolve(), bool(prm.get("required")),
+                                      prm.get("x-query-lexeme")))
         if not cases:
             self.skipTest("no query/header parameters")
 
@@ -427,11 +429,30 @@ class DoorBodiesBase:
             return sch
 
         def want(c):
-            op, place, name, raw, sch, base, req = c
+            op, place, name, raw, sch, base, req, lex = c
             t = node(sch, base).get("type") if isinstance(node(sch, base), dict) else None
             v = raw
-            if t in ("number", "integer") and re.fullmatch(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?", raw):
-                v = float(raw) if any(ch in raw for ch in ".eE") else int(raw)
+            if lex:                                       # x-query-lexeme: своя модель судьи (forms/README P/05)
+                if not re.fullmatch(lex["pattern"], raw):
+                    return False
+                text = raw.replace(lex.get("strip", "") or "\x00", "") if lex.get("strip") else raw
+                if lex["parse"] == "number":
+                    f = float(text)
+                    if f in (float("inf"), float("-inf")):
+                        return False
+                    v = f
+                elif lex["parse"] == "integer":
+                    v = int(text)
+                else:
+                    n = int(text)
+                    if not 0 <= n <= 2 ** 64 - 1:
+                        return False
+                    v = raw
+            elif t in ("number", "integer") and re.fullmatch(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?", raw):
+                from decimal import Decimal              # точно, как big.Rat у Go (1e-400 — не целое)
+                v = Decimal(raw) if any(ch in raw for ch in ".eE") else int(raw)
+                if isinstance(v, Decimal) and v == v.to_integral_value():
+                    v = int(v)                           # математически целое (1e3) — integer, как 2020-12
             elif t == "boolean" and raw in ("true", "false"):
                 v = raw == "true"
             ok = Draft202012Validator({"$ref": f"{Path(base).as_uri()}#" + ("" if "$ref" in sch else "")} if False else

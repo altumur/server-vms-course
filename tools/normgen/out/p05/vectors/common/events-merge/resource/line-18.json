@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/events-merge",
+ "table": "resource.tsv",
+ "case": "resource-window-left-closed-right-open",
+ "variant": "",
+ "cells": {
+  "input": "{\"events\":[{\"id\":\"a\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"epoch\":1,\"t\":10,\"kind\":\"tick\",\"server\":\"srv-a\",\"bucket\":\"testsub/c1/e1/19700101T000000Z.events.jsonl\",\"class\":\"observation\"},{\"id\":\"b\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"epoch\":1,\"t\":20,\"kind\":\"tick\",\"server\":\"srv-a\",\"bucket\":\"testsub/c1/e1/19700101T000000Z.events.jsonl\",\"class\":\"observation\"},{\"id\":\"c\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"epoch\":1,\"t\":30,\"kind\":\"tick\",\"server\":\"srv-a\",\"bucket\":\"testsub/c1/e1/19700101T000000Z.events.jsonl\",\"class\":\"observation\"}],\"query\":{\"from\":10,\"to\":30}}"
+ },
+ "files": {}
+}
