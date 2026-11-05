@@ -1,0 +1,38 @@
+# Process inputs of the worker SDK, P/03; not a new executable or CLI. UTF-8, LF, literal TAB, no CSV quoting.
+# Names: $NAME is an environment value, <name> is the optional ordinary worker slot-name argument. commands: worker,domainworker.
+# Types are the P/01 vocabulary plus string (Architect d20d4a30a; Generators accepted 2026-11-05).
+# default holds only a literal default. With default=- and default_text!=- the default is a rule of the linked norm, to be resolved by the adapter, not a literal word.
+# No row makes the optional library argument compulsory. A manifest-defined slot.name_env is dynamic: the adapter reads that declared name only when <name> is absent.
+# The adapter resolves external/default inputs and validates the referenced contracts: instance/box, label-list, store/object address, capacity, role, manifest rev, paths.
+# An empty bad cell adds no CEL check; it does NOT remove the checks of norm or grant permission to accept a malformed input.
+# W2C_ROLE is mandatory for the launcher route and equals <sub>worker/<sub>domain; direct SDK start is not a new w2c-run route.
+# The launcher parses environment files (P/02.4); the SDK consumes its resulting environment. W2C_ENV/W2C_SUB_ENV are not read recursively.
+# f contains values as given, before alias defaults: aliases both given with unequal bytes refuse; resolve one value before applying the default.
+#var f map<string,dyn> — the process inputs keyed by their exact name; all rows here have string values
+#var cmd string — worker or domainworker
+flag	type	default	default_text	required	commands	bad	norm
+<name>	string	-	-	false	worker		P/03.2 Н3 start steps 2a,2c,3; P/03.2 Н1.4
+$BOX_ID	string	-	/etc/machine-id, otherwise hostname; empty is unset	false	worker,domainworker		common/contracts/instance.md: sources, box; P/03.2 Н3 start step 2
+$SERVER_NAME	string	-	short hostname	false	worker,domainworker	!f["$SERVER_NAME"].matches("^[a-z0-9]+(-[a-z0-9]+)*$")	common/contracts/env-file.md: Environment variables
+$LABELS	string	-	no labels	false	worker,domainworker		common/contracts/labels.md: Label list env; P/03.2 Н3 start step 2
+$INSTANCE_ID	string	-	<box>:<pid>:<6hex>; empty is unset	false	worker,domainworker		common/contracts/instance.md: forms, sources; P/03.2 Н3 start step 2
+$PLATFORM_DIR	dir	/data/platform	/data/platform	false	worker,domainworker		common/contracts/env-file.md: Environment variables
+$PLATFORM_STORE	string	-	file://<PLATFORM_DIR>/config	false	worker,domainworker		common/contracts/env-file.md: Environment variables; common/contracts/store-client.md
+$OBJECTS	string	-	file://; cluster:// with configstore	false	worker,domainworker	"$PLATFORM_OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md: Two names of one setting; common/contracts/object-client.md: parse
+$PLATFORM_OBJECTS	string	-	file://; cluster:// with configstore	false	worker,domainworker	"$OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md: Two names of one setting; common/contracts/object-client.md: parse
+$RESOURCE_ROOT	dir	-	<PLATFORM_DIR>/events	false	worker,domainworker	"$EVENTS" in f && f["$RESOURCE_ROOT"] != f["$EVENTS"]	common/contracts/env-file.md: Two names of one setting
+$EVENTS	dir	-	<PLATFORM_DIR>/events	false	worker,domainworker	"$RESOURCE_ROOT" in f && f["$EVENTS"] != f["$RESOURCE_ROOT"]	common/contracts/env-file.md: Two names of one setting
+$SECRETS_KEY	file	-	unset: development mode; unit: <PLATFORM_DIR>/etc/secrets/platform.key	false	worker,domainworker		P/03.5 Н1.2; common/contracts/sealing.md: Ring file
+$W2C_ROLE	string	-	unit: <sub>worker or <sub>domain, matching worker/domainworker	false	worker,domainworker		common/contracts/env-file.md: Files and reading order; P/03.7 Н1.6
+$W2C_TLS_DIR	dir	-	Linux /etc/w2c/tls; macOS <W2C_BOX>/tls	false	worker,domainworker		common/contracts/env-file.md: Environment variables; P/02.4 Н1.6
+$AGENT_TOKEN_DIR	dir	/run/w2c/domainagent	/run/w2c/domainagent	false	worker,domainworker		P/03.7 Н1.5; common/contracts/local-token-door.md: The role socket
+$CAPACITY	string	-	capacity.default of the manifest when absent	false	worker,domainworker		P/03.4 Н1.2 memory; common/contracts/pool.md: capacity
+$WORKER_MEMORY_MB	string	-	-	false	worker,domainworker		P/03.4 Н1.2 memory; P/02.4 Н1.5
+$BUILD	string	dev	dev	false	worker,domainworker		P/03.4 Н1.1; common/contracts/schema.md
+$W2C_MANIFEST_REV	string	-	-	false	worker,domainworker		P/03.2 Н3 start step 1; P/02.3 Н3 Process start
+$W2C_ENV	file	/etc/w2c/w2c.env	/etc/w2c/w2c.env	false	worker,domainworker		common/contracts/env-file.md: Files and reading order
+$W2C_SUB_ENV	file	-	unit: /etc/<sub>/<sub>.env	false	worker,domainworker		common/contracts/env-file.md: Files and reading order
+$W2C_BOX	dir	/opt/w2c	/opt/w2c	false	worker,domainworker		common/contracts/env-file.md: Environment variables
+$CONSOLE_ORIGINS	string	-	empty: no CORS	false	worker,domainworker		P/03.4 Н1.7 cors; common/contracts/env-file.md: Environment variables
+$TIMEZONE	string	UTC	UTC	false	worker,domainworker	!f["$TIMEZONE"].matches("^[A-Za-z][A-Za-z0-9_+-]*(/[A-Za-z][A-Za-z0-9_+-]*)*$")	common/contracts/env-file.md: Environment variables
+$NOTIFY_SOCKET	string	-	-	false	worker,domainworker		P/03.3 Н1.2 watchdog; P/02.4 Н1.1 notify

@@ -89,3 +89,5 @@ and does not observe this branch.
 Sc. 03 does not read the heartbeat object and does not prove its period (Н1.1 of the chapter).
 
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
+
+SDK tests at the seams are in [seams.tsv](seams.tsv); their adapter contract is [forms/README.md](../../forms/README.md). They supplement the process scenarios and do not change the counts above or replace a reading witness they do not execute.
