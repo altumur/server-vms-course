@@ -1,7 +1,69 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "$ref": "#/$defs/common.domain_placement",
- "description": "the copy of the placement record at the member — elements as at the holder (Н1.5 member)",
+ "description": "the copy of the placement record at the member — elements as at the holder (Н1.5 member); only at has the exact-copy JSON-number exception G09-PLACEMENT-AT-COPY-01.",
+ "type": "object",
+ "properties": {
+  "cluster": {
+   "$ref": "#/$defs/common.domain_member",
+   "description": "the executor member; required; \"\" — not by the form (the form of the door — 400, P/08.6 Н1.1 form)",
+   "x-codec": [
+    "string"
+   ]
+  },
+  "origin": {
+   "description": "the member owning the source; \"\" — none; origin — not an executor (P/08.6 Н1.1 executors)",
+   "type": "string",
+   "pattern": "^(?:([a-z0-9-]{1,64})?)$",
+   "x-codec": [
+    "string"
+   ]
+  },
+  "copies": {
+   "description": "the JCS text of an array of other executors, ascending, without repeats, without cluster; \"[]\" — none (the order and «without cluster» — rules of the lesson, not of the form)",
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/common.domain_member",
+    "description": "another executor"
+   },
+   "uniqueItems": true,
+   "x-encoding": "jcs",
+   "x-codec": [
+    "array"
+   ]
+  },
+  "reason": {
+   "description": "the operator's words; \"\" — none",
+   "type": "string",
+   "x-codec": [
+    "string"
+   ]
+  },
+  "at": {
+   "type": "number",
+   "description": "Exact JSON-number lexeme copied byte for byte from carry.placement.records.at at the holder, including exponent notation and more than three fractional digits; no normalization, rounding or truncation. This exception is only for placed.at of P/09.1 N1.5, not other time writers (G09-PLACEMENT-AT-COPY-01).",
+   "x-codec": [
+    "any"
+   ],
+   "x-encoding": "json"
+  },
+  "rev": {
+   "description": "the value of the counter domain/placement of this record, as decimal text (P/08.6 Н1.1 rev)",
+   "type": "string",
+   "pattern": "^(?:[1-9][0-9]*)$",
+   "x-codec": [
+    "string"
+   ]
+  }
+ },
+ "additionalProperties": false,
+ "required": [
+  "cluster",
+  "origin",
+  "copies",
+  "reason",
+  "at",
+  "rev"
+ ],
  "$defs": {
   "common.book_missing": {
    "description": "who is missing in the book — [{member, why}] class server first, within by member in UTF-8 bytes, one per book (P/08.5 Н1.3 missing); the order and «one per member» — a rule of the lesson, not the form",
