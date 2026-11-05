@@ -507,7 +507,6 @@ class WireP06(unittest.TestCase):                  # расширения про
         rid = self.row("06-console/rid", "rid.tsv", "stand:rid")
         self.assertTrue(self.mutate('"decode":"raw-json"', '"decode":"yaml"', rid))
         self.assertEqual(self.mutate('"decode":"raw-json"', '"decode":"text"', rid), [])
-        self.assertTrue(any("expectation columns" in e for e in self.mutate('"column":"rid"', '"column":"verdict"', rid)))
         self.assertTrue(self.mutate('{"column":"rid","decode":"raw-json"}',
                                     '{"file":{"base":"package","path":"rid.tsv"},"decode":"text"}', rid))
         crl = self.row("common/crl", "cases.tsv", "vectors")                       # json — только у stand
@@ -530,9 +529,21 @@ class WireP06(unittest.TestCase):                  # расширения про
         self.assertTrue(self.mutate('{"column":"expect","decode":"cell"}',
                                     '{"map":{"key":"case","value":{"column":"expect","decode":"cell"}}}', crl))
 
-    def test_cells_empty(self):                      # cells {} — один вызов на таблицу: group_by []
-        fault = self.row("common/fault", "fault.tsv", "vectors")
-        self.assertTrue(any("group_by must be []" in e for e in self.mutate('"group_by":[]', '"group_by":["word"]', fault)))
+    def test_input_roles_from_readme(self):          # роли колонок задаёт README: вход может читать колонку ожидания
+        digest = self.row("06-console/request-digest", "digest.tsv", "stand:request-digest")
+        self.assertEqual(self.mutate('"input":{"column":"input","decode":"text"}', '"input":{"column":"canonical","decode":"text"}',
+                                     digest), [])
+        crl = self.row("common/crl", "cases.tsv", "vectors")                # cells {} без group_by — вызов на строку
+        self.assertEqual(self.mutate('"cells":{"input":{"column":"input"}}', '"cells":{}', crl), [])
+
+    def test_marker_ignore(self):                    # marker.ignore — отказ; assert маркера без test — ignore годен
+        ex = self.row("02-installer/exec", "cases.tsv", "stand:exec")
+        old = '"value":{"object":{"result":{"literal":"refused"}}}}]'
+        self.assertTrue(self.mutate(old, old[:-2] + ',"ignore":["/argv"]}]', ex))
+        self.assertEqual(self.mutate(old, old[:-2] + ',"assert":[{"pointer":"/result","value":{"literal":"refused"},'
+                                                     '"ignore":["/x"]}]}]', ex), [])
+        self.assertTrue(self.mutate(old, old[:-2] + ',"assert":[{"pointer":"/result","test":"prefix","value":{"literal":"r"},'
+                                                    '"ignore":["/x"]}]}]', ex))
 
     def test_ignore(self):
         pool = self.row("common/pool", "cases.tsv", "vectors")

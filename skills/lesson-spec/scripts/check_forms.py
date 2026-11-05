@@ -817,26 +817,6 @@ def _keys(obj, allowed, required, what, err):
     return True
 
 
-def value_columns(expr):
-    """Колонки источника, которые читает ValueExpr (column, group, groups, map, file path_column и {подстановки})."""
-    out = set()
-    if isinstance(expr, dict):
-        for kind, body in expr.items():
-            if kind == "column" and isinstance(body, str):
-                out.add(body)
-            elif kind in ("group", "groups", "map", "file") and isinstance(body, dict):
-                out |= {body[k] for k in ("column", "by", "key", "path_column") if isinstance(body.get(k), str)}
-                out |= set(PLACE.findall(body["path"])) if isinstance(body.get("path"), str) else set()
-                out |= value_columns(body.get("value"))
-            elif kind == "object" and isinstance(body, dict):
-                for sub in body.values():
-                    out |= value_columns(sub)
-            elif kind == "array" and isinstance(body, list):
-                for sub in body:
-                    out |= value_columns(sub)
-    return out
-
-
 def _pointer_tokens(p):
     return [t.replace("~1", "/").replace("~0", "~") for t in p.split("/")[1:]]
 
@@ -1019,14 +999,6 @@ def consumers(root):
     return out
 
 
-def input_columns(d):
-    """Колонки источника, которые входят во вход объявления: cells, arg_file (column, path_column, json)."""
-    out = {src["column"] for src in (d.get("cells") or {}).values() if isinstance(src, dict) and "column" in src}
-    a = d.get("arg_file") or {}
-    out |= {a[k] for k in ("column", "path_column") if k in a}
-    return out | value_columns(a.get("json"))
-
-
 def _decoded(text, decode, err, what, line):
     if decode in ("json", "raw-json"):
         try:
@@ -1192,8 +1164,6 @@ def _check_binding(r, root, platform, env, cel, owners_of, seen, err, stats):
                                      and len(set(d["group_by"])) == len(d["group_by"])):
             err.add(f"{what}: group_by is not an array of header columns")
             ok = False
-        if ok and not input_columns(d) and d.get("group_by") != []:
-            err.add(f"{what}: an input without column sources is one call of the table: group_by must be []")
         w = when_of(d, what)
         if ok and w:
             decls.append((i, d, w))
@@ -1289,16 +1259,6 @@ def _check_binding(r, root, platform, env, cel, owners_of, seen, err, stats):
     for v in grouped_variants:
         if any("group_by" not in d for _, d, _ in decls if d["variant"] == v):
             err.add(f"variant {v!r}: group, groups or map requires group_by on its input declarations")
-    expected = {mk["column"] for mk in marks}            # колонки ожиданий — не во входной файл (P/06 arg_file)
-    for e, _ in exps:
-        expected |= value_columns(e["value"]) | {c for a in e.get("assert", []) if isinstance(a, dict)
-                                                 for c in value_columns(a.get("value"))}
-    for mk in marks:
-        expected |= value_columns(mk.get("value")) | {c for a in mk.get("assert", []) if isinstance(a, dict)
-                                                      for c in value_columns(a.get("value"))}
-    for i, d, _ in decls:
-        if "arg_file" in d and input_columns(d) & expected:
-            err.add(f"inputs[{i}]: expectation columns {sorted(input_columns(d) & expected)} enter the argument file")
     if r["package"] == "common/pool" and (any(e.get("ignore") != ["/fates"] for e, _ in exps)
                                           or set(compares.values()) != {"value"}):
         err.add('console pool: ignore is exactly ["/fates"] with compare value (wire.md «P/06 transport»)')
