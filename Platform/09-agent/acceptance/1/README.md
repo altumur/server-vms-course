@@ -253,4 +253,4 @@ Then — the rows of the move of this chapter and of the history of the sources.
 
 ## Kit assistance seams
 
-[seams.tsv](seams.tsv) provides 34 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
+[seams.tsv](seams.tsv) provides 38 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
