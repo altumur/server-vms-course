@@ -57,6 +57,7 @@ Optional `group_by` is an array of column names: absent means per row, `["list"]
 {"groups":{"by":"list","column":"word","decode":"text|json|cell"}}
 {"suffix":true,"decode":"text|json|cell"}
 {"omit":true}
+{"at":{"value":<column or literal ValueExpr>,"pointer":"/tags"},"decode":"json"}
 ```
 
 `text` preserves the cell as a string. `json` requires exactly one strict JSON value. `cell` reads strict JSON when it is JSON, otherwise the original string. Text is required for string domains such as hex keys, seeds or unquoted names that can look like JSON. Mixed JSON and raw words are allowed only by the published native form and checked against native type/schema, not guessed as a universal conversion.
@@ -99,7 +100,7 @@ The actual rows are executable declarations: log-mask preserves masked text as a
 
 These extensions are the Architect's decision under ADR-0125 addendum (5). The argument/file and ValueExpr lists above are extended only as declared here; all other keys and constructors remain closed.
 
-For stand, `arg_file` also permits exactly `{"json": <ValueExpr>}`. Evaluate the expression as a JSON value and write one JSON document to the argument file. Existing object/array/literal/text constructors apply. Inside this constructor alone, a source-input column may use `decode: "raw-json"`: validate one strict JSON document and insert its original JSON lexeme as a fragment, without normalization or decode/re-encode. This checks JSON syntax, not the native function's accepted form: a non-string rid still reaches that function. No expectation column may enter an argument file. The ordinary decode json remains a decoded value; raw-json is not allowed elsewhere, including expectations and fixtures.
+For stand, `arg_file` also permits exactly `{"json": <ValueExpr>}`. Evaluate the expression as a JSON value and write one JSON document to the argument file. In this constructor, ValueExpr permits only column (text/json/raw-json), literal, object and array; file/group/groups/map/suffix/omit/at are forbidden. Inside this constructor alone, a source-input column may use `decode: "raw-json"`: validate one strict JSON document and insert its original JSON lexeme as a fragment, without normalization or decode/re-encode. This checks JSON syntax, not the native function's accepted form: a non-string rid still reaches that function. No expectation column may enter an argument file. The ordinary decode json remains a decoded value; raw-json is not allowed elsewhere, including expectations and fixtures.
 
 ```text
 {"json":{"object":{"rid":{"column":"rid","decode":"raw-json"}}}}
@@ -107,10 +108,18 @@ For stand, `arg_file` also permits exactly `{"json": <ValueExpr>}`. Evaluate the
 {"map":{"key":"word","value":{"column":"status","decode":"json"}}}
 ```
 
+ValueExpr `at` has exactly value and pointer inside at, plus optional outer decode. Value is only a column or literal ValueExpr under its existing decoding rules; nested at and all other constructors are forbidden. Pointer is a nonempty RFC 6901 JSON Pointer starting with `/`; invalid escapes and a missing selected path are form-data errors. Select that value from the decoded source, then optionally apply the outer `decode: "json"`, which requires the selected value to be a string and parses exactly one strict JSON document. No other outer decode is allowed. This constructor is allowed only in expectations, assertions and markers, never in input cells or arg_file.json. When value is a column, static form checking also resolves the pointer against the actual table rows. For example, a row-check expectation can select the JSON string at `/tags` from its row column without copying a second golden array:
+
+```text
+{"at":{"value":{"column":"row","decode":"json"},"pointer":"/tags"},"decode":"json"}
+```
+
 ValueExpr `map` has exactly key (a source column) and value (a ValueExpr), and requires group_by. On each row of the current group, use the raw key cell as the object key and evaluate value on that row. A repeated key is a data error even for equal values. Object order is not significant; the constructor does not run an implementation algorithm.
 
-An expectation and an assertion without test may declare `ignore: [<JSON Pointer>…]`. Ignore applies to both expected and actual values before their chosen comparison; native schema checks the complete actual value first. An absent ignored path is allowed. Empty/root, repeated or overlapping pointers are form errors; no assertion with test accepts ignore. Paths are resolved against each original value, so removing an array element does not shift the interpretation of another pointer. For console pool, ignore is exactly ["/fates"], compare value; all other keys remain strict.
+An expectation and an assertion without test may declare `ignore: [<JSON Pointer>…]` (a nonempty array). Ignore applies to both expected and actual values before their chosen comparison; native schema checks the complete actual value first. An absent ignored path is allowed. Empty/root, repeated or overlapping pointers are form errors; assertions with test and a direct marker.ignore property are forbidden; an assertion without test inside a marker follows the ordinary ignore rule. Paths are resolved against each original value, so removing an array element does not shift the interpretation of another pointer. For console pool, ignore is exactly ["/fates"], compare value; all other keys remain strict.
 
 CEL when alone also provides `json(string) -> dyn`, one strict JSON document: no BOM, duplicates, NaN or Infinity. Parse failure is a form-data error, never false or a silently omitted test. This selector chooses the consumer operation by input fields, not by an implementation result, and cells still contain the exact source strings. Group when must still agree on every row. Example: `owner == "06-console" && !("salt" in json(row["input"]))`.
 
 The console requests-body binding remains surface layout: it is excluded from native/function generation, not discharged. The separately published and installed C target `P/06/vectors-requests-body` must run the actual store+console HTTP stand over all 77 rows and all 21 accepted-json round trips, by the package README. A worker's 52 native rows do not cover it; no pure native console command or fictional HTTP surface is introduced.
+
+An input column may also be read by an expectation: for example json is the original write input and the expected plaintext after actually opening a sealed envelope, or the read expectation in another variant. Golden output data may not become an algorithm argument; shared references do not make an input golden output. Roles come from the package norm and selected variant, not a union of expectation columns. Neither literal nor cells {} infers grouping: absent group_by still means one call per row. For fault, explicit group_by [] gives one call per whole table. Form validation does not prove that an external HTTP target ran.
