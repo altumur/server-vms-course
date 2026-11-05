@@ -38,3 +38,10 @@ func TestRequestsStateOrders_S5StateStartBorn(t *testing.T) {
 		{n: 1, line: 9, kind: "call", name: "worker-state-write", input: "{\"start\":{\"id\":\"u1\",\"born\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"revision\":3,\"epoch\":8,\"epoch_index\":\"e8\"},\"reread_row\":{\"born\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":4},\"name\":\"result\",\"value\":{\"state\":\"open\"},\"may_write\":true}", expects: []expect{expect{call: "{\"items\":{\"born\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"revision\":\"3\",\"epoch\":\"8\",\"value\":\"{\\\"state\\\":\\\"open\\\"}\"},\"guard\":{\"key\":\"testsub/epoch/u1\",\"index\":\"e8\"}}"}}},
 	})
 }
+
+// TestRequestsStateOrders_S6TwoHoldersLateReturn — chapter 3.6, seams.tsv.
+func TestRequestsStateOrders_S6TwoHoldersLateReturn(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 10, kind: "call", name: "worker-holder-takeover", input: "{\"fixture\":\"late_return_two_holders\",\"group\":\"g1\",\"old_epoch\":1,\"new_epoch\":2,\"old_begin_at\":0.2,\"takeover_at\":1,\"new_eligible_at\":11.2,\"old_return_at\":30.2}", expects: []expect{expect{call: "{\"old_call_unfinished_after_wait\":true,\"cross_holder_exclusion_proven_by_wait\":false,\"witness\":\"overlap_possible_marked\"}"}}},
+	})
+}
