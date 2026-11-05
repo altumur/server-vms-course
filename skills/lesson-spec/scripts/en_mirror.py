@@ -265,10 +265,8 @@ STEP = re.compile(r"^[ \t>]*(?:[-*] )?[0-9]+[a-zа-яё]?[.)][ \t]", re.M)   # �
 # Переводы с прежним псевдокодом, ещё не пересобранные по источнику (ADR-0121 доп. (3) М (3)): сверка шагов у них
 # отложена до пересборки — P/02 после веток ревью урока, VMS — «Спецификация VMS». Список только сокращается.
 STEPS_PENDING = {
-    "Platform/01-store/spec/01.1-store.norms.md", "Platform/01-store/spec/01.2-store.norms.md",
     "Platform/02-installer/spec/02.1-installer.norms.md", "Platform/02-installer/spec/02.2-installer.norms.md",
     "Platform/02-installer/spec/02.3-installer.norms.md", "Platform/02-installer/spec/02.5-installer.norms.md",
-    "Platform/03-worker/spec/03.6-worker.norms.md", "Platform/06-console/spec/06.9-console.norms.md",
     "VMS/02-rec/spec/02.4-rec.norms.md", "VMS/05-detjob/spec/05.3-detjob.norms.md", "VMS/05-detjob/spec/05.4-detjob.norms.md",
     "VMS/06-detedge/spec/06.2-detedge.norms.md", "VMS/07-auto/spec/07.3-auto.norms.md",
     "VMS/11-backend/spec/11.2-backend.norms.md", "VMS/12-psim/spec/12.3-psim.norms.md",
