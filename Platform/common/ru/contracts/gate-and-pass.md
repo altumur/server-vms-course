@@ -601,7 +601,7 @@ match:    <путь> совпадает с началом пути запрос�
 rule:     как у вида первого (метод, путь без префикса, query как пришёл, тело ≤ 1 МиБ, живой воркер с дверью), кроме строк ниже
 to_worker: заголовки ровно: Content-Type, Idempotency-Key, If-Match, Last-Event-ID — как пришли; X-W2C-Pass-Ticket — билет;
           X-W2C-Supervision — по ролям человека билета (раздел «Надзор»);
-          X-W2C-Pass-Console — слушатель обратного вызова выдавшего экземпляра, https://<SERVER_NAME>:<CONSOLE_CALL_PORT>, только с комплектом (без него воркер зовёт сокет роли);
+          X-W2C-Pass-Console — у консоли кластера слушатель обратного вызова выдавшего экземпляра, https://<SERVER_NAME>:<CONSOLE_CALL_PORT>, только с комплектом (без него воркер зовёт сокет роли); у консоли домена — исключение P/10 Н1.6;
           X-W2C-Loopback: 1 — только если адрес TCP-соединения клиента с консолью 127.0.0.1 или ::1 (заголовки адреса не читаются).
           Authorization, куки, X-Operator, X-User и прочие не уходят; пришедшие извне X-W2C-Loopback, X-W2C-Pass-Console и X-W2C-Supervision консоль снимает всегда
 to_client: от воркера — статус, тело и заголовки ровно Content-Type, ETag, Cache-Control (ADR-0112 доп. (3) п. 5, доп. (4) п. 5); консоль добавляет X-Content-Type-Options: nosniff и
