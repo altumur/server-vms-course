@@ -734,6 +734,30 @@ WIRE["10-domain-console"] = [
                  "complete, sentence} (subset)", "10-domain-console/vectors/alarms/README.md:19-44; acceptance/README.md:452"),
 ]
 
+WIRE["05-resource"] = [
+    value_pkg("common/holds", "Holds", "whether a row holds a bucket: {hold}", "holds/README.md:31-45",
+              inputs=("holds", "types", "row", "bucket")),
+    instance("box.tsv"), instance("cases.tsv"),
+    journal("append.tsv", ["file", "line"]),
+    {**journal("bucket.tsv", ["file"]), "doc": "the journal contract: bucket.tsv → {ids, torn, garbled, duplicate}; "
+     "append.tsv, names.tsv, years.tsv as for the other readers/writers", "src": "journal/README.md:12-69 (bucket.tsv — "
+     "the reader of buckets, the resource)"},
+    journal("names.tsv", ["input"]), journal("years.tsv", ["t"]),
+    LOOPBACK,
+    object_client("address.tsv"), object_client("read.tsv"),
+    value_pkg("common/presence-room", "PresenceRoom", "the room and the live slots of a server: {room, live}",
+              "presence-room/README.md:6-19 (the resource counts; the controller reads)"),
+    SCHEMA,
+    {"package": "common/tombstone", "table": "cases.tsv", "surface": "vectors", "fn": "Tombstone", "args": "cells",
+     "inputs": ["op", "input"], "select": by_col("op", ("ack", "remove"), "peers: 06-console"),
+     "compare": "setarrays", "expect": value(),
+     "doc": "the tombstone of the resource: ack → the acknowledgements; remove → the removal decision (arrays as sets)",
+     "src": "tombstone/README.md:1-24 (the resource: ack and remove, P/05 Н1.1)"},
+    value_pkg("05-resource/relieve", "Relieve", "the relieve step of the resource pass: cases.tsv → {action, free}; "
+              "short.tsv → the heartbeat field short", "05-resource/vectors/relieve/README.md:5-30"),
+    value_pkg("05-resource/relieve", "Relieve", "", "05-resource/vectors/relieve/README.md:20", table="short.tsv"),
+]
+
 # Таблицы состава урока, которые пакет не исполняет (опись: excluded с причиной).
 _FAULT_LAYOUT = ("layout (as 03): the process speaks no fault.tsv word of its own refusals (fault README «Who performs "
                  "it»; no word in the lesson's norms); no native fault command")

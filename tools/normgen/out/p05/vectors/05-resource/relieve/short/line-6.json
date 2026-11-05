@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "05-resource/relieve",
+ "table": "short.tsv",
+ "case": "space-disabled",
+ "variant": "",
+ "cells": {
+  "input": "{\"space\":{\"enabled\":false,\"high\":0.85,\"low\":0.75},\"server\":\"srv-a\",\"volumes\":[{\"name\":\"events\",\"used\":900,\"total\":1000},{\"name\":\"data\",\"used\":1800,\"total\":2000}],\"subs\":[\"rec\",\"cam\"],\"heartbeats\":[]}"
+ },
+ "files": {}
+}

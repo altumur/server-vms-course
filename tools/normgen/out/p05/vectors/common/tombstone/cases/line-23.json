@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/tombstone",
+ "table": "cases.tsv",
+ "case": "remove-garbled",
+ "variant": "",
+ "cells": {
+  "op": "remove",
+  "input": "{\"tombstone\":\"@garbled\",\"now\":3000000,\"rewritten\":false}"
+ },
+ "files": {}
+}

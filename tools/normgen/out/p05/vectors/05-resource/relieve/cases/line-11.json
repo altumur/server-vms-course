@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "05-resource/relieve",
+ "table": "cases.tsv",
+ "case": "below-high",
+ "variant": "",
+ "cells": {
+  "input": "{\"space\":{\"enabled\":true,\"high\":0.85,\"low\":0.75},\"volume\":{\"name\":\"events\",\"used\":850,\"total\":1000},\"sub\":\"rec\",\"server\":\"srv-a\",\"heartbeats\":[{\"sub\":\"rec\",\"server\":\"srv-a\",\"live\":true,\"freeing\":{\"events\":0}}]}"
+ },
+ "files": {}
+}

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/presence-room",
+ "table": "cases.tsv",
+ "case": "n-100",
+ "variant": "",
+ "cells": {
+  "input": "{\"prefix\":\"w\",\"server\":\"srv-a\",\"HOST_MEMORY_MB\":4096,\"WORKER_MEMORY_MB\":256,\"locks\":[\"w-srv-a-1\",\"w-srv-a-2\",\"w-srv-a-100\"]}"
+ },
+ "files": {}
+}

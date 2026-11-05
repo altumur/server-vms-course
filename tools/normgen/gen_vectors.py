@@ -551,6 +551,8 @@ def go_vectorcmd(decls, known):
         cases.append(branch)
     body = VECTORCMD % {"imports": "\n".join(imports) + "\n", "want": "".join(want), "cases": "".join(cases),
                         "stand": "".join(stand), "extra": common_vectors.FAMILY_READ_GO if fam else ""}
+    if not stand:                                      # урок без стендов (P/05): data стенда не читается ни одной ветвью
+        body = body.replace("\tdata, err := os.ReadFile(path)\n", "\tdata, err := os.ReadFile(path)\n\t_ = data\n", 1)
     if variants:                                       # пакеты с половинами строки (values-by-type: write | read)
         old = '\tif *in.Variant != "" {\n\t\treturn 0, nil, nil, fmt.Errorf("variant %q, want \\"\\"", *in.Variant)\n\t}\n'
         if old not in body:

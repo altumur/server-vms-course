@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/journal",
+ "table": "bucket.tsv",
+ "case": "dup-id",
+ "variant": "",
+ "cells": {
+  "file": "\"{\\\"t\\\":1792713600,\\\"kind\\\":\\\"unit.started\\\",\\\"id\\\":\\\"e1-61-63-1-77-1\\\"}\\n{\\\"t\\\":1792713700,\\\"kind\\\":\\\"unit.started\\\",\\\"id\\\":\\\"e1-61-63-1-77-1\\\"}\\n{\\\"t\\\":1792713601,\\\"kind\\\":\\\"unit.stopped\\\",\\\"id\\\":\\\"e1-61-63-1-77-2\\\"}\\n\""
+ },
+ "files": {}
+}

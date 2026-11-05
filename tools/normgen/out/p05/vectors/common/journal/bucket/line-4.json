@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/journal",
+ "table": "bucket.tsv",
+ "case": "empty",
+ "variant": "",
+ "cells": {
+  "file": "\"\""
+ },
+ "files": {}
+}

@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/tombstone",
+ "table": "cases.tsv",
+ "case": "ack-keeps-acked",
+ "variant": "",
+ "cells": {
+  "op": "ack",
+  "input": "{\"peers\":[\"srv-b\",\"srv-c\"],\"acked\":[\"srv-b\"],\"answers\":{\"srv-c\":404}}"
+ },
+ "files": {}
+}

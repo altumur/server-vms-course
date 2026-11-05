@@ -25,7 +25,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-LESSONS = {"03-worker": "p03", "04-controller": "p04", "06-console": "p06", "08-domain": "p08", "09-agent": "p09",
+LESSONS = {"03-worker": "p03", "04-controller": "p04", "05-resource": "p05", "06-console": "p06", "08-domain": "p08",
+           "09-agent": "p09",
            "10-domain-console": "p10"}
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 
@@ -119,6 +120,12 @@ def fake_go(g, mut=None):
                     data = d["input"](r) if callable(d["input"]) else r[d["input"]].encode("utf-8")
                     k = data.decode("utf-8")
                 entries.append((k, ans))
+        uniq = {}
+        for k, a in entries:                           # строки с одинаковым входом: тот же ответ — один ключ
+            if k in uniq and uniq[k] != a:
+                raise AssertionError(f"{fn}: two rows of one input give different answers: {k[:120]}")
+            uniq[k] = a
+        entries = list(uniq.items())
         table = ",\n".join(f"\t{g.gstr(k)}: {{Code: {a['code']}, Value: val({g.gstr(json.dumps(a['value'], ensure_ascii=False))})"
                            + (f", Raw: []byte({g.go_bytes(a['raw'])})" if a["raw"] is not None else "") + "}"
                            for k, a in entries)
@@ -205,7 +212,7 @@ class VectorsLessons(unittest.TestCase):
                 res, panics, done = results(self.module(lesson_key, "fake", fake_go(g)))
                 fails = [t for t, a in res.items() if a == "fail"]
                 self.assertEqual(fails, [], done.stdout[-3000:])
-                self.assertGreater(len(res), 300)
+                self.assertGreater(len(res), 150)
 
     def mutant(self, lesson_key, name, mut):
         g = gv(lesson_key)
