@@ -29,6 +29,7 @@
     "domain/keys",
     "domain/member",
     "domain/member-list/*",
+    "domain/member-want/*",
     "domain/revoked",
     "domain/roles",
     "domain/root",
@@ -38,6 +39,9 @@
     "platform/*",
     "platform/decommission/*",
     "platform/drain",
+    "platform/folders/*",
+    "platform/memberof-gone/*",
+    "platform/memberof/*",
     "platform/schema",
     "platform/servers/*",
     "va/*",
@@ -186,7 +190,10 @@
     "!va/asked/*",
     "!va/idem/*",
     "*",
-    "domain/*"
+    "domain/*",
+    "platform/folders/*",
+    "platform/memberof-gone/*",
+    "platform/memberof/*"
    ],
    "write": [
     "!domain/alarm-history",
