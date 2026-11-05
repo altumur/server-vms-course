@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/op-step/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/06.9 ([norms](../../spec/06.9-console.norms.md) Н1.4, Н2 «Пакет шага»; ADR-0095). The participants are the console leader (the expected version in the step call) and the subsystem (the step package key). The bytes are written by the Specification; the values were computed by the text of the norm, not by the code of implementations.
+The owner is chapter P/06.9 ([norms](../../spec/06.9-console.norms.md) N1.4, N2 «Пакет шага»; ADR-0095). The participants are the console leader (the expected version in the step call) and the subsystem (the step package key). The bytes are written by the Specification; the values were computed by the text of the norm, not by the code of implementations.
 There is no dry run by an implementation.
 
 ## `key.tsv`
@@ -13,7 +13,7 @@ UTF-8, LF, fields separated by TAB; the first row is the header `case<TAB>id<TAB
 |---|---|
 | `id` | the operation id, a string |
 | `i` | the step number, decimal |
-| `expect` | `step_key(id, i)`: hex SHA-256 of `UTF-8(id) ‖ 0x00 ‖ UTF-8(десятичная запись i)`, 64 lowercase characters |
+| `expect` | `step_key(id, i)`: hex SHA-256 of `UTF-8(id) ‖ 0x00 ‖ UTF-8(decimal notation of i)`, 64 lowercase characters |
 
 6 rows. The separator `0x00` keeps a pair `(id, i)` from coinciding with another pair when concatenated.
 
@@ -29,7 +29,7 @@ UTF-8, LF, fields separated by TAB; the first row is the header `case<TAB>input<
 | `done` | the outcomes by step number, the key is a decimal string: `{state, versions?}` |
 | `i` | the step number for which the value is needed |
 
-**Output** — the JSON value `ожидаемое(i)` of Н1.4, in `expect` of the table as JSON text: `versions` of the outcome `ok` with the greatest number less than `i` and the same `root`, otherwise `expected` of step `i`. The comparison is JSON by value. 10 rows: without earlier steps, `ok`, `fail`, `cancel`, `ok → fail → set`, two `ok`, a foreign root, two objects of one root, an outcome after `i`, a copy of the step `retry-failed`.
+**Output** — the JSON value `expected(i)` of N1.4, in `expect` of the table as JSON text: `versions` of the outcome `ok` with the greatest number less than `i` and the same `root`, otherwise `expected` of step `i`. The comparison is JSON by value. 10 rows: without earlier steps, `ok`, `fail`, `cancel`, `ok → fail → set`, two `ok`, a foreign root, two objects of one root, an outcome after `i`, a copy of the step `retry-failed`.
 
 ## Run
 

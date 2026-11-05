@@ -2,9 +2,9 @@
 
 This English text is the source; the Russian translation `ru/vectors/near-of/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson P/04 ([norms](../../spec/04-controller.norms.md) Н1.3 `near`; ADR-0091 item 10). The participant is
-`<s>controller` (the preference when choosing a worker, Н3 «choose»). The bytes are written by the Specification. The vector checks only
-the choice of the neighbour; that the worker holding it is preferable, and that without a holder there is no preference, — Н3 «choose», by reading.
+The owner is lesson P/04 ([norms](../../spec/04-controller.norms.md) N1.3 `near`; ADR-0091 item 10). The participant is
+`<s>controller` (the preference when choosing a worker, N3 «choose»). The bytes are written by the Specification. The vector checks only
+the choice of the neighbour; that the worker holding it is preferable, and that without a holder there is no preference, — N3 «choose», by reading.
 
 ## `cases.tsv`
 
@@ -17,16 +17,16 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; 
 | `expect` | the id of the chosen neighbour; `""` — there is no neighbour |
 | `note` | the rule of the norm |
 
-The values of the fields are the text of a store row (P/06.1 Н1.2 `values_by_type`); the values of `prefer` are compared in the same
-writing: `0` in `prefer` equals `"0"` of the row. An absent field is equal to nothing. The value of a field of `prefer` is a scalar (equality) or a list of scalars (OR over the list), as `affinity.strict` of P/04 Н1.3 (C04-NEAR-PREFER-SCALAR-01).
+The values of the fields are the text of a store row (P/06.1 N1.2 `values_by_type`); the values of `prefer` are compared in the same
+writing: `0` in `prefer` equals `"0"` of the row. An absent field is equal to nothing. The value of a field of `prefer` is a scalar (equality) or a list of scalars (OR over the list), as `affinity.strict` of P/04 N1.3 (C04-NEAR-PREFER-SCALAR-01).
 
 ## Run
 
-The side builds from `input` the choice of Н1.3 `near` with its own code, without a store: my value is the field `by` (without `by` — my `id`),
+The side builds from `input` the choice of N1.3 `near` with its own code, without a store: my value is the field `by` (without `by` — my `id`),
 the value of the neighbour is the field `of` (without `of` — its `id`); the neighbours are the rows with an equal value; first those matching `prefer`
 (AND over the fields, OR over the list; a segment of the path through `.` is a step by the reference field of the neighbour to a row of `rows`); among equals — by
 `id` in UTF-8 bytes. The result is compared with `expect` byte for byte.
-Who executes it is the controller (`04-controller`: the neighbour by `near`, P/04 Н1.3, the rank of the preference in Н3 «choose») — all the rows. The installer (`02-installer`) only checks the fields `near` in the catalogue (P/02.1 Н3) and does not choose a neighbour; the worker (`03-worker`) gives the input by the phase `running` (P/03.4 Н1.1) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who executes it is the controller (`04-controller`: the neighbour by `near`, P/04 N1.3, the rank of the preference in N3 «choose») — all the rows. The installer (`02-installer`) only checks the fields `near` in the catalogue (P/02.1 N3) and does not choose a neighbour; the worker (`03-worker`) gives the input by the phase `running` (P/03.4 N1.1) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Stand command
 

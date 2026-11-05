@@ -4,9 +4,9 @@
 
 Векторы функции `resolve(field, unit, domain)` консоли кластера — значение общего поля для единицы при чтении: единица →
 домен → `inherit` манифеста; поле-документ и поле группировки — только из домена. Владелец — урок P/06, глава 6.7 позднего
-слоя ([P/06.7](../../spec/06.7-console.norms.md) Н1.14, Н3 `resolve`, Н5 `resolve`); исполняет консоль кластера у двери
-`GET /domain/shared/<sub>`. Объявление `domain.shared` и `merge` — [P/02.1 Н1.2б](../../../../02-installer/ru/spec/02.1-installer.norms.md),
-общий документ — [P/08.9](../../../../08-domain/ru/spec/08.9-domain.norms.md) Н1.2. Байты пишет «Спецификация» (ADR-0083);
+слоя ([P/06.7](../../spec/06.7-console.norms.md) N1.14, N3 `resolve`, N5 `resolve`); исполняет консоль кластера у двери
+`GET /domain/shared/<sub>`. Объявление `domain.shared` и `merge` — [P/02.1 N1.2b](../../../../02-installer/ru/spec/02.1-installer.norms.md),
+общий документ — [P/08.9](../../../../08-domain/ru/spec/08.9-domain.norms.md) N1.2. Байты пишет «Спецификация» (ADR-0083);
 соответствие продукта — его приёмкой по этой таблице (ADR-0080 доп. 16).
 
 Строки переложены из входов команды `resolve` приёмки М11/11 (`inputs/resolve-*.json`, сц. 03) без изменения байтов: сняты
@@ -17,12 +17,12 @@
 ## Прогон
 
 Без стенда: функция реализации получает вход (колонка `input`) и даёт вывод; `expect` — подмножество полей вывода или
-`@exit 2` (вход не по форме P/06.7 Н5 `exit`: у `resolve` `term`, `rev` не целые 1 … 2^53 − 1, пустое `field.name`, неизвестный
+`@exit 2` (вход не по форме P/06.7 N5 `exit`: у `resolve` `term`, `rev` не целые 1 … 2^53 − 1, пустое `field.name`, неизвестный
 `field.type` или `merge`, при `merge: union` любое из трёх значений не список строк, значение `group_by` не список, нет `domain`
 или `domain` без `value`, `unit` или `domain.value` `null` при `union`, лишнее поле, поле без `inherit`, не `document` и
 не `group_by` (C06-RESOLVE-ABSENT-INHERIT-91-01) — полный перечень там; разбор ревью
 стадии B 8–10, № 22: M-18). Строк `@exit 2` в таблице четыре
-(`resolve-11-term-zero`, `resolve-12-no-inherit`, `resolve-13-union-not-string`, `resolve-14-rev-over`; C06-RESOLVE-UNION-FORM-01); прочие случаи кода 2 — чтением (Н5). Коды выхода — по принципу «Стенда домена» общего README
+(`resolve-11-term-zero`, `resolve-12-no-inherit`, `resolve-13-union-not-string`, `resolve-14-rev-over`; C06-RESOLVE-UNION-FORM-01); прочие случаи кода 2 — чтением (N5). Коды выхода — по принципу «Стенда домена» общего README
 приёмки («Коды выхода команд-векторов М11»: `field` и `domain` — доверенный вход вызывающего, код 2).
 
 ## Файлы

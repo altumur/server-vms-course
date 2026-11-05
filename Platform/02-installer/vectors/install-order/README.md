@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/install-order/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter [P/02.4](../../spec/02.4-installer.norms.md) of the installer (Н1.7 `install` `steps`, `order`; guess of stage C
+The owner is chapter [P/02.4](../../spec/02.4-installer.norms.md) of the installer (N1.7 `install` `steps`, `order`; guess of stage C
 I02-INSTALL-ORDER, the Architect's decision of 2026-10-23). The participant is the installer (`install.sh`, the step `manifest put`). The bytes are written by
 the Specification.
 
@@ -24,7 +24,7 @@ The command’s native form and rule-refusal mapping are in the wire form below.
 ## Run
 
 The side computes the order with its own code of the installer without a store and compares it with `expect`. The edge of the domain token kind
-(the declarer of `domain.tokens` before the subsystem whose `door.routes[].domain` names it; P/02.4 Н1.7 `order`,
+(the declarer of `domain.tokens` before the subsystem whose `door.routes[].domain` names it; P/02.4 N1.7 `order`,
 C02-KIND-ORDER-33) is not expressed by the input — the form of the input is not extended: rows without kinds do not set it, the rule — by reading and
 `puts.tsv` of chapter 2.3 (`door_domain_kind_other`, `door_domain_kind_missing`).
 
@@ -32,7 +32,7 @@ The order is set only by `requests` (and by the kind, not expressed by the input
 (ADR-0091 addendum (26) item 1, addendum (27) item 4): `cycle` — a cycle by `requests`; `requests-near-pair` — `requests` and `near`
 towards each other — the order by `requests`, not a cycle; `near-only` — only `near`, no order (by name). Nine rows: eight
 orders, one `@exit 2`.
-Who executes — the installer (`02-installer`: the order of `manifest put` and the refusal on a cycle, P/02.4 Н1.7 `order`, `refuse`); there are no other executors (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who executes — the installer (`02-installer`: the order of `manifest put` and the refusal on a cycle, P/02.4 N1.7 `order`, `refuse`); there are no other executors (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Vector wire
 

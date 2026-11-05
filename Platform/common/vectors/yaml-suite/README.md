@@ -10,8 +10,8 @@ The acceptance runs without a network: the inputs are in the package, `inputs/<i
 `expect.tsv`: `id<TAB>suite<TAB>layer1<TAB>rule`:
 - `id` — the path of the test directory in the archive, the input — `inputs/<id>.yaml`;
 - `suite` — the expectation of the suite: `error` (the input is outside YAML 1.2.2) or `ok`;
-- `layer1` — the outcome of layer 1 of the manifest (the YAML 1.2.2 parser and the thin check of Н1.1): `ok` or `refused`; `refused` at
-  `suite` = `ok` — a narrowing of YAML 1.2.2 by the norm (a rule of the thin check or an input outside the subset of Н1.1), approved
+- `layer1` — the outcome of layer 1 of the manifest (the YAML 1.2.2 parser and the thin check of N1.1): `ok` or `refused`; `refused` at
+  `suite` = `ok` — a narrowing of YAML 1.2.2 by the norm (a rule of the thin check or an input outside the subset of N1.1), approved
   by set «Б»;
 - `rule` — the rule of the thin check that refused first (`parser` — a refusal of the parser; `-` — at `ok`); a hint, not a norm.
 The answer of an implementation to a row is the JSON `{"layer1": "ok"|"refused"}`, optionally with `"rule"`: only

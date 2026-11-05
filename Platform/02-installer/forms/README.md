@@ -23,7 +23,7 @@ chapter row name surface code kind fields headers log norm word cause outcome di
 ```
 
 The separator is a literal TAB. Lines starting with `#` are comments; the first other line is the header. Every row has 15 cells.
-`name` is unique snake_case; `chapter` is `2.K`; `row` is the original 1-based row of that chapter’s Н4 catalogue, not a new normative id.
+`name` is unique snake_case; `chapter` is `2.K`; `row` is the original 1-based row of that chapter’s N4 catalogue, not a new normative id.
 `surface` is one of `call` (a pure procedure), `cli`, `start`, `process` (a running process), `peer` (a check whose owner is another lesson).
 `code` is a three-digit HTTP status for a `peer` outcome, `exit N` with a decimal integer N >= 0, `exit !0` (any nonzero code, including 2), or `-` (no numeric code prescribed here).
 `kind`, `fields`, `headers` are `-`: P/02 has no HTTP response body schema. In particular, a `peer` row does not invent a P/02 HTTP door.
@@ -31,7 +31,7 @@ The separator is a literal TAB. Lines starting with `#` are comments; the first 
 `«…»`; `-` means no requirement here. Neither `word` nor `log` defines an otherwise unspecified stdout/stderr representation.
 
 The four last cells retain the former normative prose table, whole: condition, outcome, diagnostic rule, caller action. Generators use the
-closed columns; they MUST NOT infer branches, fields or additional validation from these four prose cells. The Н4 text links to this form
+closed columns; they MUST NOT infer branches, fields or additional validation from these four prose cells. The N4 text links to this form
 and does not keep a second catalogue. No OpenAPI lookup is required for a lesson without HTTP. Validation checks that every chapter links
 this catalogue, `(chapter,row)` addresses are consecutive in their chapter, names are unique, and the closed cells agree with their
 preserved source cells. A specified code/word cannot be broadened merely because the source cell uses prose.

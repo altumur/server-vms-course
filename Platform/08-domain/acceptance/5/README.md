@@ -5,7 +5,7 @@ This English text is the source; the Russian translation `ru/acceptance/5/README
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
 the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly — the М11 dictionary of the acceptance README of
 М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
-[`08.5-domain.norms.md`](../../spec/08.5-domain.norms.md) Н5. The scenarios were moved from the acceptances of М11/05 (01, 03, 05) and
+[`08.5-domain.norms.md`](../../spec/08.5-domain.norms.md) N5. The scenarios were moved from the acceptances of М11/05 (01, 03, 05) and
 М11/09 (05 → 11) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones, except the scenario of М11/09:
 the number 05 is taken by a scenario of М11/05, it got the number 11 — the next one after the largest number of the sources of the chapter (М11/09
 sc. 10; the Architect's decision 2026-10-20, ADR-0083 addendum (14) item 14; the row of `journal/corrections-5.tsv`). In total 7 scenarios / 72 steps (sc. 14 — ADR-0097 §4, there is no dry run by an implementation; the delivery of a key with the `sub` of a book and the key `role:` — by reading: the stand does not give a row with `sub` when the book is already assembled) (sc. 13 — the coverage audit of P/08, the second pass of Gemini).
@@ -20,7 +20,7 @@ The refusals of the declaration of a book and of the index of names are the case
 As the preparation of the stand of chapter 8.3 ([the acceptance of chapter 8.3](../3/README.md); before the move — the acceptance README of
 М11/03, «Подготовка каждого сценария 01–09») with
 differences: the catalogue of each cluster is `testsub` and `testsub2` (the order — the «Stand» of the common acceptance README); on each cluster
-there run the controllers of both, the worker `w-1` of the manifest `testsub`, the worker `t-1` of the manifest `testsub2` (with the training writer of contributions, Н5
+there run the controllers of both, the worker `w-1` of the manifest `testsub`, the worker `t-1` of the manifest `testsub2` (with the training writer of contributions, N5
 of the chapter) and the resource of its own server `srv-<cluster>`; before the steps the store of each cluster has the counter `testsub` `c1-<cluster>`
 (its own ref at each: a common `c1` would be contested, and `@domain` would not wait for `complete: true`) and the shelf `testsub2` `sh1`
 `{zone: z1, server: srv-<cluster>}`. `console2` at `member` is the prefix `/testsub2`.
@@ -35,25 +35,25 @@ Sc. 11 has people too (the former stand of the acceptance of М11/09):
 
 The format is the dictionary of the «Stand» and the domain dictionary; the expectation is a subset of fields. In sc. 01 the rows of the book at the member and at the holder
 are checked for the ring envelope (`~enc:v2:`) and for the absence of the value of the secret (`!contains`); the log — by reading
-([P/06.2](../../../06-console/spec/06.2-console.norms.md) Н1.4).
+([P/06.2](../../../06-console/spec/06.2-console.norms.md) N1.4).
 
 - Sc. 01 step 18 — the name of the book in the path is not decoded (`%72olls` is not `rolls`; the М11 reconciliation 05–08, B6).
-- Sc. 01 steps 11–15 (`seal_reuse`, [chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.2 `seal_reuse`) compare not the generation number of `m1`, but the envelope
+- Sc. 01 steps 11–15 (`seal_reuse`, [chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) N1.2 `seal_reuse`) compare not the generation number of `m1`, but the envelope
   `note_secret` of the contribution `t1` in two generations 12 s apart: the same envelope. A new generation in this time is possible — from
   `domain/backup-taken` of the backup copy of chapter 8.8 (`m1` is a keeper), — and the step does not depend on the moment of the copy.
 - Sc. 01 steps 3–5, 10, 18 read the book door of the cluster console (the OpenAPI of lesson 6, chapter P/06.7) — a neighbour on the
-  stand; steps 16–17 — the leaving of a member (chapter 8.3; the door of the domain console — lesson P/10) and the removal of the row of the former member (Н1.3 `write`).
+  stand; steps 16–17 — the leaving of a member (chapter 8.3; the door of the domain console — lesson P/10) and the removal of the row of the former member (N1.3 `write`).
 - Sc. 11 — the index of names of the book `notes` of `testsub2`: the contribution `t7` from `m1` with the recipient `m2`. The silence of `m1` (`@stop agent`,
   longer than `LOST_AFTER`) makes the index unknown: the creation of a person and a new grant row — 503, the removal of a row — not.
-- Sc. 12 — a subject without a name (the neighbour chapter 8.4, Н3 «сверка»; C08-GRANTS-ORPHAN-01): the grant `t7` (`view`) at `m2`, then the contribution `t7`
+- Sc. 12 — a subject without a name (the neighbour chapter 8.4, N3 «сверка»; C08-GRANTS-ORPHAN-01): the grant `t7` (`view`) at `m2`, then the contribution `t7`
   is deleted (`DELETE /tallies/t7` on `m1`) — the index is known even without `t7`; the holder's reconciliation removes the row `t7`
   (step 7), and the person `t7` is created without the grants of the former subject (steps 8–9).
 - Sc. 13 (the coverage audit of P/08, the second pass of Gemini, the draft G05 `e32df6f8b`) — the index is known (step 4): a new grant row with the subject `zed`, who
-  is neither among the people nor in the indexes, — 400 `unknown subject` (Н1.7 `checks`). The contribution `alice` in `notes` with the person `alice`
-  (the reverse rule, Н1.7 `reverse`): the key is in `view.books.testsub2/notes.person_names` and is not delivered to `m2`, although
+  is neither among the people nor in the indexes, — 400 `unknown subject` (N1.7 `checks`). The contribution `alice` in `notes` with the person `alice`
+  (the reverse rule, N1.7 `reverse`): the key is in `view.books.testsub2/notes.person_names` and is not delivered to `m2`, although
   `alice` has the grant `view` there (the delivery condition is met). Step 9 waits for the delivery of `t7` — `m2` has the book; step 11 — two
   agent passes after it `alice` is absent. The silence of `m1` (steps 12–13) makes the index unknown, but a new row of a person
-  (`alice` `edit`) does not wait for the index, and the former row `t7` is not checked — 200 (Н1.7 `checks`; the М11 reconciliation, P5, P6).
+  (`alice` `edit`) does not wait for the index, and the former row `t7` is not checked — 200 (N1.7 `checks`; the М11 reconciliation, P5, P6).
 
 ## `journal/corrections-5.tsv`
 

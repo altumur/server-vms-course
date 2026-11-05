@@ -2,7 +2,7 @@
 
 Текст производный от `vectors/contender-projection/README.md`, руками не правится: источник — английский [`vectors/contender-projection/README.md`](../../../vectors/contender-projection/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
-Владелец — глава P/06.5 ([нормы](../../spec/06.5-console.norms.md) Н3 «/servers» «Соперники»; догадка стадии C
+Владелец — глава P/06.5 ([нормы](../../spec/06.5-console.norms.md) N3 «/servers» «Соперники»; догадка стадии C
 C06-CONTENDER-PROJECTION-33-01, решение «Архитектора» 2026-10-25). Участник — консоль кластера (`/servers`
 `WorkerRow.name_conflict`, ряд `<sub>_name_conflicts` `/metrics`). Свежесть метки — [договор наблюдения](../../../../common/ru/contracts/observation.md)
 «Свежесть метки соперника» (граница — пакет [`contender-fresh`](../../../../common/ru/vectors/contender-fresh/README.md)). Байты
@@ -27,7 +27,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 ## Прогон
 
 Без стенда: сторона подаёт вход своему расчёту `name_conflict` и `name_conflicts` (чтения меток и часы подменены входом).
-Кто исполняет — консоль (`06-console`: `WorkerRow.name_conflict` и ряд `<sub>_name_conflicts`, P/06.5 Н3 «/servers» «Соперники»). Контроллер (`04-controller`) не исполняет: меток соперников не читает, поле `name_conflicts` его отчёта прохода — свой счёт и в ряд консоли не входит (P/06.5 Н3 «/metrics — текст»); метки пишет воркер (`03-worker`, P/03.2 Н1.4а) (ACC-VECTORS-CONNECT-03: строку исполняет роль, чья норма вызывает её функцию; решение «Архитектора» 2026-10-27).
+Кто исполняет — консоль (`06-console`: `WorkerRow.name_conflict` и ряд `<sub>_name_conflicts`, P/06.5 N3 «/servers» «Соперники»). Контроллер (`04-controller`) не исполняет: меток соперников не читает, поле `name_conflicts` его отчёта прохода — свой счёт и в ряд консоли не входит (P/06.5 N3 «/metrics — текст»); метки пишет воркер (`03-worker`, P/03.2 N1.4a) (ACC-VECTORS-CONNECT-03: строку исполняет роль, чья норма вызывает её функцию; решение «Архитектора» 2026-10-27).
 
 ## Провод векторов
 

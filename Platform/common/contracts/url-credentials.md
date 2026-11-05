@@ -4,12 +4,12 @@ This English text is the source; the Russian translation `ru/contracts/url-crede
 
 A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
 in the chapters; guess of stage C W03-E07, the Architect's decision of 2026-10-23). The owner is chapter
-[P/06.2](../../06-console/spec/06.2-console.norms.md) of the console (Н1.1 `url_field`, Н1.1а, Н3 «read_address»). Participants:
+[P/06.2](../../06-console/spec/06.2-console.norms.md) of the console (N1.1 `url_field`, N1.1a, N3 «read_address»). Participants:
 [the common row check](row-check.md) — the door of units and tables of the console ([P/06.1](../../06-console/spec/06.1-console.norms.md))
-and the customer library ([P/03.6](../../03-worker/spec/03.6-worker.norms.md) Н1.6); the display of an address in answers (P/06.2 Н1.4) and
+and the customer library ([P/03.6](../../03-worker/spec/03.6-worker.norms.md) N1.6); the display of an address in answers (P/06.2 N1.4) and
 [the log mask](log-mask.md) of all processes (free text as a whole is that contract; C06-LOG-MASK-33-01); the declarations `credentials` and `secret_in` of a field `type: url` — the loader
-[P/02.1](../../02-installer/spec/02.1-installer.norms.md) Н1.2а; the refusal `bad_url` of a group source — P/04 Н1.3 `group_by`.
-Moved from P/06.2 Н1.1 (`url_field` without `bound_to`, `common_words`, `normalisation`), Н1.1а and Н3 «read_address» without
+[P/02.1](../../02-installer/spec/02.1-installer.norms.md) N1.2a; the refusal `bad_url` of a group source — P/04 N1.3 `group_by`.
+Moved from P/06.2 N1.1 (`url_field` without `bound_to`, `common_words`, `normalisation`), N1.1a and N3 «read_address» without
 a change of behaviour; the address rules A1–A15 are kept.
 
 Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
@@ -17,7 +17,7 @@ Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-С�
 ## The field rule and the common vocabulary
 
 ```yaml
-url_field:                                   # at a field with type: url (the form — Platform/02-installer/spec/02.1-installer.schema.json, P/02.1 Н1.2а)
+url_field:                                   # at a field with type: url (the form — Platform/02-installer/spec/02.1-installer.schema.json, P/02.1 N1.2a)
   credentials: {login: <a row field, not url and not a secret>, secret: <a *_secret field>}
   secret_in:                                 # a list, each element of one of three kinds; read by A1–A15 below
     - {param: [<name>…], login: [<name>…]}     # the name pattern — A5; login ⊆ param: the names from login are a login
@@ -32,12 +32,12 @@ normalisation: A4 — only the name of a pair, for recognition; the value of a s
                the mask replaces the value in the written text
 ```
 
-The display mask is `***` (P/06.2 Н1.1 `mask`).
+The display mask is `***` (P/06.2 N1.1 `mask`).
 
 ## Schemes (`schemes`)
 
 The rule of a field `type: url` names the admissible schemes: `schemes` — a scheme name `[a-z][a-z0-9+.-]*` → `{host?, fragment?,
-none?}` (the declaration in the manifest — [P/02.1](../../02-installer/spec/02.1-installer.norms.md) Н1.3 `<schemes>`; the meaning — here;
+none?}` (the declaration in the manifest — [P/02.1](../../02-installer/spec/02.1-installer.norms.md) N1.3 `<schemes>`; the meaning — here;
 guess of stage C URLC-HOST-01, the Architect's decision of 2026-10-23). A scheme of the value not from `schemes` — the refusal `bad_url`.
 
 ```yaml
@@ -56,7 +56,7 @@ host:      authority (the default) — the host is the host of authority (after 
            `mirror://hub/` — bad_url
 fragment:  none — `#` is an ordinary character, not the start of a fragment (A2); without the key — `#` starts a fragment
 none:      [<value>…] — the exact values of the authority node that mean «no host» (`mirror://local/…` — its own copy, whatever
-           the path); the check «no host» is not applied to such a link, group_by P/04 Н1.3 does not take it into a group
+           the path); the check «no host» is not applied to such a link, group_by P/04 N1.3 does not take it into a group
 path:      the path is required only at host: path, including with a node from none: `mirror://local`, `driverpack://file` without
            a path — bad_url; `mirror://local/x` and `mirror://local/` at none: [local] — accepted; `mirror://local:80/` — a node with
            a port is not none, the first segment is empty — no host, bad_url; at host: authority the path is not required, also with a node from
@@ -103,9 +103,9 @@ A value of a field `type: url` with `://` is one address as a whole: these chara
 admits nowhere — a space and control characters, `"`, `<`, `>`, `\`, `^`, `` ` ``, `{`, `|`, `}` — makes the url
 unparsable: the refusal `bad_url` before storing (A15). Non-ASCII characters are admissible: A4 reads them. `'` is a character of the grammar
 (sub-delims): in `https://hub.ex'ample/x?token=…` the address does not end at `'`, and `token` in it is a password (reconciliation of python and go М10/6–11, S4).
-For a scheme with `fragment: none` (P/02.1 Н1.2а `schemes`) the character `#` is an ordinary character, not the start of a fragment.
+For a scheme with `fragment: none` (P/02.1 N1.2a `schemes`) the character `#` is an ordinary character, not the start of a fragment.
 
-**A3. Pairs.** A pair is `имя=значение` inside a part of the value. The name is the text of the part before its first `=`,
+**A3. Pairs.** A pair is `name=value` inside a part of the value. The name is the text of the part before its first `=`,
 the value is the rest of the part.
 
 | where | how it is cut into parts |
@@ -140,10 +140,10 @@ one pair `user` with the value `admin_password=…`. Chains through `_` are read
 
 | pattern | matches when | matches (table) | does not match |
 |---|---|---|---|
-| `слово` | the whole name equals the word or the head equals the word | `pass_word`, `hot_key`, `bucket_token`, `apiKey2`, `X-Amz-Credential` | `token_bucket`, `hotkey`, `monkey`, `passkey`, `rootpass`, `rtmpstreamkey` |
-| `=слово` | the whole name equals the word | `auth`, `pin`, `accessKeyId` (`=accesskeyid`) | `rtsp_auth`, `enable_auth`, `x-auth`, `gpio_pin`, `ping` |
-| `слово*` | some word starts with the word | `pwd_md5`, `passwordHash` | — |
-| `*слово` | the head ends with the word | `sessiontoken`, `adminPassword`, `userpwd` | `token_bucket` |
+| `word` | the whole name equals the word or the head equals the word | `pass_word`, `hot_key`, `bucket_token`, `apiKey2`, `X-Amz-Credential` | `token_bucket`, `hotkey`, `monkey`, `passkey`, `rootpass`, `rtmpstreamkey` |
+| `=word` | the whole name equals the word | `auth`, `pin`, `accessKeyId` (`=accesskeyid`) | `rtsp_auth`, `enable_auth`, `x-auth`, `gpio_pin`, `ping` |
+| `word*` | some word starts with the word | `pwd_md5`, `passwordHash` | — |
+| `*word` | the head ends with the word | `sessiontoken`, `adminPassword`, `userpwd` | `token_bucket` |
 
 A secret — the name matched a pattern of the common vocabulary or a pattern of `param` of the field that is not in `login`.
 A login — the name is not a secret and matched a pattern of `login`. Otherwise the pair carries nothing. A secret is checked before
@@ -239,7 +239,7 @@ empty. A nested address with a login only is not masked. The reason for this ord
 would stretch the userinfo of the outer address over the nested one.
 
 **A15. The refusal.** The field in the refusal is chosen by all findings together, not by the first one found.
-- A password by A6–A13, a url that does not parse (P/02.1 Н1.2а; including a character outside the grammar, A2), and nesting deeper than 3
+- A password by A6–A13, a url that does not parse (P/02.1 N1.2a; including a character outside the grammar, A2), and nesting deeper than 3
   give a refusal with the field `credentials.secret`. If there is a login next to it, the refusal also names `credentials.login`.
 - There is only a login: the refusal names `credentials.login` and does not name the secret field.
 - Nothing is found: the value is accepted.
@@ -249,7 +249,7 @@ would stretch the userinfo of the outer address over the nested one.
 the step url of [the row check](row-check.md) (guess of stage C URLC-VECTORS-02, clarification, the Architect's decision of 2026-10-23).
 
 The order of the checks affects only the text of the reason and is left to the implementation. The value and its parts are not repeated
-in the reason (P/06.2 Н4). The reason: a login found first does not make the password next to it safe —
+in the reason (P/06.2 N4). The reason: a login found first does not make the password next to it safe —
 `?usr=admin&pwd=…` is refused with the password field.
 
 ## read_address(value, field rule, catalogue) → display | refusal(field)
@@ -278,13 +278,13 @@ refusal(value):
 2. all findings of find(value, field rule, 0) together:
    a password → credentials.secret (and credentials.login if there is a login);
    only a login → credentials.login; nothing → accept                  (A15)
-3. 400 fault: bad_url; error without the value and its parts, with the names of the credentials fields (P/06.2 Н4)
+3. 400 fault: bad_url; error without the value and its parts, with the names of the credentials fields (P/06.2 N4)
 ```
 
 **Races** of reading an address. None: it is a function of the value, the field rule and the catalogue loaded in the process. A manifest loaded
 later changes only the reading of nested addresses in the following writes.
 
-The refusal is the word `bad_url` and the names of the `credentials` fields (A15): at a door — 400 `fault: bad_url` (P/06.2 Н4, P/06.1 Н4), at
+The refusal is the word `bad_url` and the names of the `credentials` fields (A15): at a door — 400 `fault: bad_url` (P/06.2 N4, P/06.1 N4), at
 the customer library — the outcome `refused` ([the row check contract](row-check.md) «Refusals»).
 
 ## Vectors

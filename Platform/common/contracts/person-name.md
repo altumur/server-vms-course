@@ -5,12 +5,12 @@ This English text is the source; the Russian translation `ru/contracts/person-na
 A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): the form of a person's name is checked by the process `domain`, the gates
 of the consoles, the token recipient, the function `may`, and the set of white-space characters is also read by the log mask and the secret mask — a contract,
 not copies in chapters; layout audit A-20, the Architect's decision of 2026-10-25). The owner is chapter
-[P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.1 (`name` of a person row). Participants: the process `domain` (P/08.4 Н1.1–Н1.2:
+[P/08.4](../../08-domain/spec/08.4-domain.norms.md) N1.1 (`name` of a person row). Participants: the process `domain` (P/08.4 N1.1–N1.2:
 the editing of people, the login), the checker of a person token — the gates of the cluster console and the domain console ([the domain token
 contract](domain-token.md) `person`), the right function ([the right contract](may.md), `subject`), the log mask ([the log mask
 contract](log-mask.md) `space`, `mask_in`).
 
-Moved from P/08.4 Н1.1 `name` without a change of behaviour; P/08.4 and the participant contracts refer here.
+Moved from P/08.4 N1.1 `name` without a change of behaviour; P/08.4 and the participant contracts refer here.
 
 Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
@@ -33,8 +33,8 @@ white_space:   white-space characters — the property White_Space of Unicode 15
 ```yaml
 name:          a person's name — 1–64 characters without white-space ones (white_space above), control ones (U+0000–U+001F, U+007F) and
                : | ( ) " /; not exactly break-glass (the name of an emergency session is break-glass(<who>), the brackets are forbidden anyway);
-               not a subject of the name index (chapter P/08.5 Н1.7)
-refusal:       what a reader does with a name out of form is the reader's: the process domain — 400 bad name (P/08.4 Н1.1);
+               not a subject of the name index (chapter P/08.5 N1.7)
+refusal:       what a reader does with a name out of form is the reader's: the process domain — 400 bad name (P/08.4 N1.1);
                a gate — 401 (the domain token contract person); the function may — the input is out of form, code 2 (the right contract)
 ```
 
@@ -46,5 +46,5 @@ a participant there (`subject` by this form; CM-RECORD-VECTORS-128, the Architec
 
 ## Correspondence to former lessons
 
-From P/08.4 Н1.1 `name` (the norm P/08.4 — by `note` of [id-map](../id-map.tsv)); P/08.4, the domain token contract `person`, the right
+From P/08.4 N1.1 `name` (the norm P/08.4 — by `note` of [id-map](../id-map.tsv)); P/08.4, the domain token contract `person`, the right
 contract `subject`, the log mask contract `space` and `mask_in` refer here (layout audit A-20).

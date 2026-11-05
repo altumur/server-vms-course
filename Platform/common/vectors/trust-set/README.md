@@ -26,4 +26,4 @@ Entry.ca not of the form), 3 `check` (its own centre, a member's centre, a forei
 ## Run
 
 Without a stand: a side gives the input to its trust set function (the reads of the rows are replaced by the input) and to the leaf check.
-Who performs it — the domain console (`10-domain-console`: the role door computes the trust set and checks the leaf, P/10 Н1.4 `server.role`). The cluster console (`06-console`) is only a client of this door and does not compute the set (P/06.7 Н1.4 `holds`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
+Who performs it — the domain console (`10-domain-console`: the role door computes the trust set and checks the leaf, P/10 N1.4 `server.role`). The cluster console (`06-console`) is only a client of this door and does not compute the set (P/06.7 N1.4 `holds`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).

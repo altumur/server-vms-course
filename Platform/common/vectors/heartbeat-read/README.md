@@ -26,17 +26,17 @@ the integer 100, `100.00000000000000001` is not an integer by the exact decimal 
 ## `worker.tsv`
 
 Reading the heartbeat of a worker `<sub>/heartbeats/<name>` by the form `Platform/03-worker/data/heartbeats.schema.json` and the outcomes
-`Platform/03-worker/data/heartbeats.outcomes.tsv` (lesson P/03.4 Н1.1; C08-HEARTBEAT-READER-99-VECTORS, the Architect's decision 2026-10-26). The readers are the console (`GET /{rows}`, `/servers`,
+`Platform/03-worker/data/heartbeats.outcomes.tsv` (lesson P/03.4 N1.1; C08-HEARTBEAT-READER-99-VECTORS, the Architect's decision 2026-10-26). The readers are the console (`GET /{rows}`, `/servers`,
 `/metrics`, `/where`, door.pass, `/schema`), the controller, the drain, the shadow report of the domain. The same file rules; the fields `case`,
 `key` (the key of the object), `object`, `expect`, `note`.
 
 | `expect` | Meaning |
 |---|---|
-| `rows` | the reader `GET /{rows}` (P/06.1 Н2 «rows»): `"unreadable"` — the heartbeat as a whole is unreadable, the elements do not read; `{"skip": [<index>…]}` — the elements of `status[]` not of the form are skipped, the rest go into rows |
+| `rows` | the reader `GET /{rows}` (P/06.1 N2 «rows»): `"unreadable"` — the heartbeat as a whole is unreadable, the elements do not read; `{"skip": [<index>…]}` — the elements of `status[]` not of the form are skipped, the rest go into rows |
 | `others` | the other readers (`/servers`, `/metrics`, `/where`, the controller, the drain): `"unreadable"` — there is no heartbeat (the worker is not shown, the heartbeat is in `<sub>_heartbeats_garbled`); at an element of `status[]` not of the form — also `"unreadable"` (the outcome `/status`); `"readable"` — readable |
 | `fields` | at `others: "readable"` — the fields with a field outcome in the order of the rows of `outcomes.tsv` (`build` — `""`, `schema` — `null` in processes, `pending_writes` — not stated); otherwise `[]` |
 
-19 rows: of the form; not an object, no `instance`, `status` not a list, `worker` ≠ the name in the key (the prose rule of P/03.4 Н1.1, the outcome
+19 rows: of the form; not an object, no `instance`, `status` not a list, `worker` ≠ the name in the key (the prose rule of P/03.4 N1.1, the outcome
 «объект целиком») — unreadable; an element without `phase`, with a non-integer `epoch`, `sealed` with `epoch`, `id` not by the grammar — a skip at
 `GET /{rows}`, unreadable to the others; `unreadable` with `why` — of the form; the field outcomes `build`, `schema`, `pending_writes`; the path `""`
 before `/status` — unreadable to all. The expectations — by the judge of the family schemas of the skill (the reader mode), the rule `worker` — by the prose.

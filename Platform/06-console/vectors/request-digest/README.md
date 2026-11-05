@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/request-digest/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) Н1.5 `digest`, Н3 «file a request» step 1). The participants:
+The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) N1.5 `digest`, N3 «file a request» step 1). The participants:
 - `console` — a request filed through the door;
 - `<s>worker` — a request that the worker writes itself (`worker.requests`).
 
@@ -10,7 +10,7 @@ The bytes of the table are written by the Specification (ADR-0083, stage A). The
 (ADR-0080 addendum 16).
 
 The bytes of the table did not change in the move of lesson 6 (stage B, ADR-0083 addendum (1)), including
-the header comment (its «М10/8 Н1.5», «lesson-owner М10/8» are the former address of the norm, now [the contract of the request and its mark](../../../common/contracts/request-mark.md) (review analysis of stage B 6–7, № 24); the product copy
+the header comment (its «М10/8 N1.5», «lesson-owner М10/8» are the former address of the norm, now [the contract of the request and its mark](../../../common/contracts/request-mark.md) (review analysis of stage B 6–7, № 24); the product copy
 is checked against these bytes).
 
 ## `digest.tsv`
@@ -48,8 +48,8 @@ only for repeats of one client by `Idempotency-Key` at a target without `request
 ## The stand command `request-digest`
 
 The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../common/acceptance/README.md));
-a template with `{input}` — the path of a file with one JSON object `{"sender": "client" | "worker", "input": <исходный текст ячейки input
-строкой JSON>}`: the text of the cell is escaped only for the outer string — the number lexemes, the order of fields and the characters are preserved,
+a template with `{input}` — the path of a file with one JSON object `{"sender": "client" | "worker", "input": <the source text of the cell input
+as a JSON string>}`: the text of the cell is escaped only for the outer string — the number lexemes, the order of fields and the characters are preserved,
 the runner does not parse the cell and does not re-serialize it. The answer is `{"canonical": <JCS text>, "sha256": <64 lowercase hex>}`: `canonical`
 is compared with the column `canonical` by UTF-8 bytes, `sha256` — with the column `sha256`. An input not in form: not an object, a repeated or
 unknown field, `sender` not one of the two words, `input` not a string, its text not a JSON object, for `worker` a value of the object not a string.
@@ -62,7 +62,7 @@ form — code 2, stdout empty (stage C guess C06-F2-IO-01, the Architect's decis
 The side reads each row and checks two steps:
 1. from `input`, by its kind, it obtains `canonical`, byte for byte;
 2. SHA-256 of `canonical` equals `sha256`.
-Who executes it is by `sender`: `client` — the console requests door (`06-console`, P/06.4 Н3 «file a request» step 1); `worker` — the same door at a target with `requests.key` (same place, the third rule) and the filing worker (`03-worker`, P/03.6 Н1.5 `worker.requests`). The holder and the reaper only read the ready result: they copy `digest` of the row into the mark (the contract of the request and its mark, `begun`, `no_begun`) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who executes it is by `sender`: `client` — the console requests door (`06-console`, P/06.4 N3 «file a request» step 1); `worker` — the same door at a target with `requests.key` (same place, the third rule) and the filing worker (`03-worker`, P/03.6 N1.5 `worker.requests`). The holder and the reaper only read the ready result: they copy `digest` of the row into the mark (the contract of the request and its mark, `begun`, `no_begun`) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Vector wire
 

@@ -16,12 +16,12 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | Поле | Значение |
 |---|---|
 | `participant` | `"console"` или `{"worker": [<sub>…]}` — подсистемы, чьи строки эпох объявлены в `worker.reads` |
-| `query` | `{limit?, keep?}` — как у запроса P/05 Н1.3 (умолчания 1000, `newest`); нет — умолчания |
+| `query` | `{limit?, keep?}` — как у запроса P/05 N1.3 (умолчания 1000, `newest`); нет — умолчания |
 | `policies` | `{<sub>: fenced \| earlier-run}` — `older_epochs` манифеста; нет — `fenced` |
 | `epochs` | `{<sub>: {<id единицы>: <эпоха>} \| "did not answer"}` — что участник прочёл в `<sub>/epoch/*`; у воркера — только объявленные |
 | `grant` | области `view` вызывающего консоли — `*`, `unit:<sub>/<id>`, `labels:<метка>[,…]` (договор `may` шаг 7); нет — `["*"]` |
 | `units` | `{<sub>/<id>: [<метка>…] \| "@unreadable"}` — метки строк единиц, как прочитаны (поле `labels`, объявленное в `unit.fields`; `"@unreadable"` — строка нечитаема или чтение не подтверждено); единицы нет — меток нет (`[]`) |
-| `resources` | `{<сервер>: <ответ ресурса> \| "did not answer" \| "silent" \| {"said": <state>}}` — живые ресурсы и их исходы; ответ — `{events, state, truncated, partial?, lines_garbled?}` P/05 Н1.3 |
+| `resources` | `{<сервер>: <ответ ресурса> \| "did not answer" \| "silent" \| {"said": <state>}}` — живые ресурсы и их исходы; ответ — `{events, state, truncated, partial?, lines_garbled?}` P/05 N1.3 |
 
 **Выход** — ответ договора `{events, state, truncated, partial?, lines_garbled?, complete, incomplete, withheld?}`. `expect` — подмножество:
 `events` — массив строк в порядке выдачи, у каждой сравниваются перечисленные поля (`id`, `epoch_is`, `fenced`; `"@absent"` —

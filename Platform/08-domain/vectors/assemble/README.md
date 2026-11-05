@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/assemble/RE
 
 The vectors of the function `assemble` of [chapter P/08.5](../../spec/08.5-domain.norms.md): the assembly of one book at the holder without
 a store, a network and a stand — the input is the copies of the members of the list and their view state, the output is the book rows of each member before the ring
-(secrets opened) and a view report `{conflicts, dropped, undelivered}` (Н1.3, Н1.5, Н3 «assembly of a book»; Н5 «`assemble`»).
+(secrets opened) and a view report `{conflicts, dropped, undelivered}` (N1.3, N1.5, N3 «assembly of a book»; N5 «`assemble`»).
 The owner is lesson P/08, chapter 8.5; the function is performed by the process `domain` (the holder's pass once per `VIEW_EVERY`). The bytes are written by
 «Спецификация» (ADR-0083); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
@@ -20,18 +20,18 @@ its inputs were removed by the move of lesson 8 (the row of `corrections.tsv` of
 Without a stand: the command `assemble` of an implementation gets the input (the column `input`) and prints the JSON `{rows, report}`; `expect` is
 a subset of the fields of the output by the dictionary of the «Stand» ([the common acceptance README](../../../common/acceptance/README.md), `<code>
 <JSON>`: the named fields exist and are equal, `"@absent"` — there is no field, an array — by length, order and elements) or `@exit 2` (an input
-not of the form of Н5: the keys of `copies` are not exactly `members`; `grants` without `now`). Each row is a separate run.
+not of the form of N5: the keys of `copies` are not exactly `members`; `grants` without `now`). Each row is a separate run.
 
 ## Inputs, keys and manifests
 
-The input is Н5 of the chapter: `book` is `testsub2/notes` (`pick: unique`, the names index `notes/` with `grant: view`) or `testsub2/rolls`
+The input is N5 of the chapter: `book` is `testsub2/notes` (`pick: unique`, the names index `notes/` with `grant: view`) or `testsub2/rolls`
 (`pick: all`), `members` is the list of members, `book_seal_seed` is the `seed_secret` of the book acceptance key (`book seal 1`,
 [the README of the package `domain-token`](../../../common/vectors/domain-token/README.md#keys) «Keys»), `copies` is the state and the objects of the copy
-of each member (`null` — there is no copy), `grants` and `now` are the grant rows of the receivers for the rule Н1.3 `grant`. The secrets of the
+of each member (`null` — there is no copy), `grants` and `now` are the grant rows of the receivers for the rule N1.3 `grant`. The secrets of the
 inputs are envelopes `x25519:v1` to `book seal 1` (in case 07 — to `book seal 2`: it does not open), `eph 1`, `nonce` 0…11
-([the domain envelopes contract](../../../common/contracts/domain-envelopes.md) «Конверт `x25519:v1`», the AAD is `[член, ключ строки,
+([the domain envelopes contract](../../../common/contracts/domain-envelopes.md) «Конверт `x25519:v1`», the AAD is `[member, row key,
 item]` and the JSON Pointer of the secret). Case 12 is a secret in the member's ring envelope `enc:v2:`: the member did not open it, and the agent carried it as
-it is ([chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.2) — the assembly gives `secret_unopened`.
+it is ([chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) N1.2) — the assembly gives `secret_unopened`.
 
 The expectations depend on the bytes of the catalog manifests (the review analysis of stage A 8–10, № 37): `domain.books` (`from`, `key`, `pick`, `to`) and
 `domain.names` of the manifest `testsub2` from the specification data:
@@ -65,7 +65,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | `to-all`, `star-in-plain-book`, `to-servers` (ADR-0113 addendum (8) item 4, (11) item 1) | a book with `to: "*"` — the head and the row of the key's section, the field `to` of the input is not read; `"*"` in the input of an ordinary book — the cost of a row per member is not returned; `to` `servers` — a camera receives nothing |
 | `13-missing-shown` (the analysis of stage 8) | `missing_count` — all, `missing` — the first 500, the class `server` first |
 
-The vectors are checked by an oracle against the text of the norms (Н1.3, Н3 «assembly of a book», Н5; the opening of a secret — by reference X25519, HKDF-SHA256
+The vectors are checked by an oracle against the text of the norms (N1.3, N3 «assembly of a book», N5; the opening of a secret — by reference X25519, HKDF-SHA256
 and AES-256-GCM by the domain envelopes contract; the acting grant row — [the right contract](../../../common/contracts/may.md)
 step 5), not against the code of implementations: the output of the oracle contains the expectation of each row. On a divergence the text of the norm is right, the vector
 is corrected by «Спецификация».

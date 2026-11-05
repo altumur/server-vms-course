@@ -4,10 +4,10 @@ This English text is the source; the Russian translation `ru/contracts/domain-ba
 
 A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
 in chapters; the stage C guess I02-BACKUP-HMAC, the Architect's decision of 2026-10-23). The owner is lesson P/08, chapter
-[8.8](../../08-domain/spec/08.8-domain.norms.md) Н1.5 (the backup copy of the holder: the secret envelopes, `kid`, reading).
-Participants: the installer — the command «domain installation» ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н3 step 8)
+[8.8](../../08-domain/spec/08.8-domain.norms.md) N1.5 (the backup copy of the holder: the secret envelopes, `kid`, reading).
+Participants: the installer — the command «domain installation» ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) N3 step 8)
 derives the key with `backup_key_rev` 1 and writes it into `domain/signer`; the process `domain` of the holder — seals the backup
-copy and derives the key on reading a copy by its `backup_key_rev`. Moved from P/08.8 Н1.5 (the line `backup_key`) without
+copy and derives the key on reading a copy by its `backup_key_rev`. Moved from P/08.8 N1.5 (the line `backup_key`) without
 a change of behaviour.
 
 Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
@@ -23,7 +23,7 @@ root_key:        the input of the function is exactly 64 ASCII hex characters, w
 ```
 
 Where the key is kept at the holder (`domain/signer.backup_key_secret`), the envelope `enc:v2` with this key, the `kid` `b<backup_key_rev>` and
-the reading of a copy are P/08.8 Н1.5.
+the reading of a copy are P/08.8 N1.5.
 
 ## Form
 

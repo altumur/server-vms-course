@@ -2,10 +2,10 @@
 
 This English text is the source; the Russian translation `ru/vectors/turn/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the writer turn contract](../../contracts/turn.md) (lesson P/04 Н1.5, Н3; C08-TURN-SELF-99, the Architect's decision
+The owner is [the writer turn contract](../../contracts/turn.md) (lesson P/04 N1.5, N3; C08-TURN-SELF-99, the Architect's decision
 2026-10-26). The participants are the controller (`<sub>/controller/placement_turn`, P/04) and the process `domain` of the holder
-(`domain/signer-turn`, [P/08.10](../../../08-domain/spec/08.10-domain.norms.md) Н1.7, Н3). The bytes are written by «Спецификация»; the rows are
-by the text of the contract and P/08.10 Н3 «the turn of the domain process», the norms do not change.
+(`domain/signer-turn`, [P/08.10](../../../08-domain/spec/08.10-domain.norms.md) N1.7, N3). The bytes are written by «Спецификация»; the rows are
+by the text of the contract and P/08.10 N3 «the turn of the domain process», the norms do not change.
 
 ## `cases.tsv`
 
@@ -13,7 +13,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 A row is one sequence of events of one side; `expect` is the array of its actions, one per event, in order.
 
 **Input** — `{kind, turn, me, steps}`: `kind` — `placement` (the turn of a subsystem) or `signer` (the turn of the process `domain`; the turn of the agent of a member `domain/agent-turn` —
-by the same rule, its cases are the `signer` rows, P/09.1 Н1.13);
+by the same rule, its cases are the `signer` rows, P/09.1 N1.13);
 `turn` — the key of the turn row (the guard key); `me` — its own: the `manifest_rev` of the controller or `holder` — the instance of the process
 `domain` ([the instance contract](../../contracts/instance.md)); `steps` — the events:
 
@@ -24,7 +24,7 @@ by the same rule, its cases are the `signer` rows, P/09.1 Н1.13);
 | `{renew: true}` | the term `TURN_RENEW`: renew (step 4) |
 | `{target: true, age}` | a changing write of the participant; `age` — the age of its own confirmed turn request, s |
 | `{target_reply: "412"}` / `{target_reply: "none"}` | the guard refused / a changing write without an answer |
-| `{end: true}` | the end of the pass (`placement`, step 6) or `SIGTERM` at the active one (`signer`, P/08.10 Н1.7 `release`) |
+| `{end: true}` | the end of the pass (`placement`, step 6) or `SIGTERM` at the active one (`signer`, P/08.10 N1.7 `release`) |
 
 **Actions**: `{write, cas}` — write the turn row `write` by `cas` (`""` — there is no row, otherwise the version); in `write` at
 `placement` `holder` is `"@new"` (a new unique mark of this attempt, not equal to the former ones) or `"@same"` (the mark of its own
@@ -50,4 +50,4 @@ of «Архитектора» 2026-10-26).
 Without a stand: a side gives the events to its turn algorithm (the store and the clock are replaced by the events) and reconciles the actions;
 `"@new"` — any new mark not equal to the former marks of this side, `"@same"` — the mark of its current attempt. The lexemes `"@new"`, `"@same"` are written only in the table (`expect` and `read` of the input); in the input the side substitutes its current mark, and in the output it writes the real marks, and the judge reconciles them by this rule. A lexeme given as a string is judged as a mark: `"@same"` after `"@new"` is another mark, red (C04-TURN-LABEL-LEXEME-01, the decision of the Specification). The races of two
 contenders and the late writes of an old holder — the acceptance scenarios of P/04, P/08.10 and reading.
-Who performs it — by `kind`: `placement` — the controller (`04-controller`, P/04 Н3 «get and hold the placement turn», the row `placement_turn`); `signer` — the process `domain` of the holder (`08-domain`, P/08.10 Н1.7, Н3 «the turn of the domain process») and the agent of a member (`09-agent`, P/09.1 Н1.13, Н3 «the agent turn» — `domain/agent-turn` by the same rule). The console (`06-console`) only names the key `placement_turn` in the layout (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
+Who performs it — by `kind`: `placement` — the controller (`04-controller`, P/04 N3 «get and hold the placement turn», the row `placement_turn`); `signer` — the process `domain` of the holder (`08-domain`, P/08.10 N1.7, N3 «the turn of the domain process») and the agent of a member (`09-agent`, P/09.1 N1.13, N3 «the agent turn» — `domain/agent-turn` by the same rule). The console (`06-console`) only names the key `placement_turn` in the layout (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).

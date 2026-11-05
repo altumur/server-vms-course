@@ -18,7 +18,7 @@ in any notation without a zone), `"ip"` (another IP literal by step 1 of `peer`,
 `0.0.0.0`, `::`) or `"name"` (otherwise: `localhost`, `127.1`, a notation with leading zeros); or `@exit 2` — an input not of the form (not
 an object, no `url`, `url` not a string or not a URL with a scheme and a non-empty host). Code 2 is the outcome of the function on an input not of the form;
 at a client such a URL is the `bad_url` of the contract: from the environment — a refusal of start, code 2; from a store row — as if there were no field
-(the review of the norms of ADR-0075 Kimi 80ee2b775, Н6).
+(the review of the norms of ADR-0075 Kimi 80ee2b775, N6).
 
 31 rows: a v4 loopback (including the boundary and the scheme `http`), leading zeros, three parts, a part outside 0–255, a hexadecimal
 notation — a name; an IP outside the loopback, `0.0.0.0`; v6 `::1` in three notations — a loopback; with a zone, `::ffff:127.0.0.1`, `::`, another v6 — `ip`;

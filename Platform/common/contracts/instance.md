@@ -4,16 +4,16 @@ This English text is the source; the Russian translation `ru/contracts/instance.
 
 A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): several processes write the process instance into the rows of the slot, the turn, the presence
 lock and into event ids — a contract, not copies in chapters; layout audit A-06, the Architect's decision of
-2026-10-25). The owner is chapter [P/03.2](../../03-worker/spec/03.2-worker.norms.md) (Н1.4 `holder`, Н3 «start()» step 2).
+2026-10-25). The owner is chapter [P/03.2](../../03-worker/spec/03.2-worker.norms.md) (N1.4 `holder`, N3 «start()» step 2).
 Participants: the worker (the slot, the contender mark, the heartbeat — P/03.2, P/03.4), the resource — the field `instance` of the presence lock
-([P/05](../../05-resource/spec/05-resource.norms.md) Н1.4; [the presence lock contract](presence-lock.md)), the process `domain` —
-`holder` of the row `domain/signer-turn` ([P/08.10](../../08-domain/spec/08.10-domain.norms.md) Н1.7), the writers of the event journal
+([P/05](../../05-resource/spec/05-resource.norms.md) N1.4; [the presence lock contract](presence-lock.md)), the process `domain` —
+`holder` of the row `domain/signer-turn` ([P/08.10](../../08-domain/spec/08.10-domain.norms.md) N1.7), the writers of the event journal
 (the instance in an event id — [the event journal contract](event-journal.md) «The event id and the writer instance»), the installer —
 the variable `INSTANCE_ID` ([the environment file contract](env-file.md) «Environment variables»).
 
-Moved from P/03.2 Н1.4 (`holder`: the grammar of the instance) and Н3 «start()» step 2 (the computation) without a change of behaviour;
+Moved from P/03.2 N1.4 (`holder`: the grammar of the instance) and N3 «start()» step 2 (the computation) without a change of behaviour;
 P/03.2 and the readers refer here. The profile of the instance as a path component (forbidden characters, representability in file names)
-stays in the event journal contract; what a process does on a refusal is with its lesson (the worker — P/03.2 Н3 «start()», Н4).
+stays in the event journal contract; what a process does on a refusal is with its lesson (the worker — P/03.2 N3 «start()», N4).
 
 Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
@@ -55,5 +55,5 @@ acceptance).
 
 ## Correspondence to former lessons
 
-From P/03.2 Н1.4 (the comment of the field `holder`) and Н3 «start()» step 2 (the first phrase — the computation); they, P/05, P/08.10 and
+From P/03.2 N1.4 (the comment of the field `holder`) and N3 «start()» step 2 (the first phrase — the computation); they, P/05, P/08.10 and
 P/02.4 refer here (layout audit A-06).

@@ -1,4 +1,4 @@
-# Н4 refusal class for selected verdicts.tsv cases (cammeta-python/cammeta-go reconciliation, 2026-10-18): case<TAB>class.
+# N4 refusal class for selected verdicts.tsv cases (cammeta-python/cammeta-go reconciliation, 2026-10-18): case<TAB>class.
 # case	class
 dup_top_key_name	text
 unknown_depth4	form

@@ -2,9 +2,9 @@
 
 This English text is the source; the Russian translation `ru/vectors/creates-key/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/03.6 ([norms](../../spec/03.6-worker.norms.md) Н1.6 `id`, `key`; ADR-0091 item 1). The participant is
+The owner is chapter P/03.6 ([norms](../../spec/03.6-worker.norms.md) N1.6 `id`, `key`; ADR-0091 item 1). The participant is
 `<s>worker` of the orderer (the worker library). The writing of values by types is [P/06.1](../../../06-console/spec/06.1-console.norms.md)
-Н1.2 `values_by_type` (the vectors [`values-by-type`](../../../common/vectors/values-by-type/README.md)). The bytes are written by the Specification.
+N1.2 `values_by_type` (the vectors [`values-by-type`](../../../common/vectors/values-by-type/README.md)). The bytes are written by the Specification.
 
 ## `cases.tsv`
 
@@ -19,11 +19,11 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; 
 
 ## Run
 
-The side builds the id with its own library code, without a store: each `{поле}` of the template is the writing of the value by `values_by_type`
+The side builds the id with its own library code, without a store: each `{field}` of the template is the writing of the value by `values_by_type`
 (the row check contract `values_by_type`; `float` — its choice rule), then each UTF-8 byte outside `A–Z a–z 0–9 _ . ~` is `%XX` with hex digits
 in upper case; between the substitutions — the `-` of the template; in front — `<customer>-`. The result is compared with `expect`.
 Pairs of rows with the same `pair` in `note` check that different values give different ids.
-Who executes it is the orderer worker (`03-worker`: the library builds the id, P/03.6 Н1.6 `id`, `key`, Н3 «order»). The console (`06-console`) does not build the id: the door checks only the prefix of the orderer and the invariance of the `key` fields of a ready row (P/06.1 Н1.6 `made_prefix`, `made_key`) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who executes it is the orderer worker (`03-worker`: the library builds the id, P/03.6 N1.6 `id`, `key`, N3 «order»). The console (`06-console`) does not build the id: the door checks only the prefix of the orderer and the invariance of the `key` fields of a ready row (P/06.1 N1.6 `made_prefix`, `made_key`) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Stand command
 

@@ -4,8 +4,8 @@
 
 Векторы функции `issue` [главы P/08.7](../../spec/08.7-domain.norms.md): выдача токена держателем без хранилища, сети и
 стенда — вход — объявление вида, роль и член-заявитель, тело просьбы, назначения, топология, единицы членов, общий
-документ и `now`; вывод — утверждения токена без `jti` или отказ `{status, reason}` (Н1.1 `computed`, Н1.3 `body`, Н1.4,
-Н3 «выдать» шаги 2–7; Н5 «`issue`»). Шаги 0–1 (смещённый процесс, подпись агента) вход не несёт. Владелец — урок P/08,
+документ и `now`; вывод — утверждения токена без `jti` или отказ `{status, reason}` (N1.1 `computed`, N1.3 `body`, N1.4,
+N3 «выдать» шаги 2–7; N5 «`issue`»). Шаги 0–1 (смещённый процесс, подпись агента) вход не несёт. Владелец — урок P/08,
 глава 8.7; функцию исполняет процесс `domain` на двери `POST /api/tokens/<член>/<sub>/<вид>`. Байты пишет «Спецификация»
 (ADR-0083); соответствие продукта — его приёмкой по этой таблице (ADR-0080 доп. 16).
 
@@ -21,13 +21,13 @@
 
 Без стенда: команда `issue` реализации получает вход (колонка `input`) и печатает JSON; `expect` — подмножество полей
 вывода по словарю «Стенда» ([общий README приёмки](../../../../common/ru/acceptance/README.md), `<код> <JSON>`: названные поля
-есть и равны, массив — по длине, порядку и элементам, число — по значению) или `@exit 2` (вход не по форме Н5, в том числе
-`decl` не по форме загрузки [P/02.1 Н1.2б](../../../../02-installer/ru/spec/02.1-installer.norms.md)). Строки `@exit 2` — три
+есть и равны, массив — по длине, порядку и элементам, число — по значению) или `@exit 2` (вход не по форме N5, в том числе
+`decl` не по форме загрузки [P/02.1 N1.2b](../../../../02-installer/ru/spec/02.1-installer.norms.md)). Строки `@exit 2` — три
 (`issue-37`, `issue-38`, `issue-keep-too-long`); прочие 37 входов — по форме. `iat`, `exp` — от `now` входа, не от часов процесса.
 
 ## Входы
 
-Вход — Н5 главы: `decl` — объявление вида (`null` — вида нет), `role` — роль, которую удостоверил агент, `member` —
+Вход — N5 главы: `decl` — объявление вида (`null` — вида нет), `role` — роль, которую удостоверил агент, `member` —
 член-заявитель, `body` — тело `{request_id, ref, by?}`, `members`, `holder`, `placements` (`"garbled"` — запись нечитаема,
 запись без `copies` — тоже нечитаема), `topology` (`centre?`, `star`, `via`), `units` — владельцы единиц по ref, `shared` —
 общий документ, `now` — 1760000000. Домен — `acme`; члены — `hold`, `m1`, `m2`, `relay`. Объявления видов во входах — виды
@@ -35,7 +35,7 @@
 ([`testsub`](../../../../../Source/tests/testdata/testsub.subsystem.yaml),
 [`testsub2`](../../../../../Source/tests/testdata/testsub2.subsystem.yaml)) — входы несут их целиком и от байтов манифестов не
 зависят. Строки `issue-31`…`issue-35` несут объявление `tally` с изменённой областью `placement` (`target_fields`
-`[cluster, star_centre]` или `[cluster, origin]`, `caller: copies`) — по форме загрузки P/02.1 Н1.2б (оба свидетеля его
+`[cluster, star_centre]` или `[cluster, origin]`, `caller: copies`) — по форме загрузки P/02.1 N1.2b (оба свидетеля его
 принимают), не байты манифеста.
 
 ## Файлы
@@ -44,7 +44,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](../../../vectors/issue/cases.tsv), 40 строк: 13 `ok`, 24 `refused`, 3 `@exit 2` | `input` — вход `issue` текстом JSON → `expect`: `{"result":"ok","claims":…}` (утверждения Н1.4: `iss`, `sub`, `kind`, `iat`, `exp`, утверждение ref и аудитории из области, давшей аудиторию, у `scenario` — `by`, `acts` по JCS, `up`) или `{"result":"refused","status":…,"reason":<слово>}`: `bad_request`, `by_misplaced` (400); `not_granted`, `outside_scope`, `no_assignment`, `assignment_unreadable`, `unit_not_unique`, `not_poll_home`, `trigger_not_reported`, `no_shared_doc`, `no_item`, `no_home`, `no_audience` (403); `no_centre` (409) |
+| [`cases.tsv`](../../../vectors/issue/cases.tsv), 40 строк: 13 `ok`, 24 `refused`, 3 `@exit 2` | `input` — вход `issue` текстом JSON → `expect`: `{"result":"ok","claims":…}` (утверждения N1.4: `iss`, `sub`, `kind`, `iat`, `exp`, утверждение ref и аудитории из области, давшей аудиторию, у `scenario` — `by`, `acts` по JCS, `up`) или `{"result":"refused","status":…,"reason":<слово>}`: `bad_request`, `by_misplaced` (400); `not_granted`, `outside_scope`, `no_assignment`, `assignment_unreadable`, `unit_not_unique`, `not_poll_home`, `trigger_not_reported`, `no_shared_doc`, `no_item`, `no_home`, `no_audience` (403); `no_centre` (409) |
 
 | Случаи | Что проверяет |
 |---|---|
@@ -53,11 +53,11 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | 10–12 | `unit` `self`: владелец — этот член; не владелец, два владельца — `unit_not_unique` |
 | 13–15, 27 | `placement` без записи падает на `unit` (`poll_home`): ретранслятор — ближайшая дверь владельца; не она — `not_poll_home`; `centre` без центра — `no_centre`; `poll_home` через `centre`, не держатель |
 | 16–21, 23, 25, 26, 28, 29 | `scenario`: прямо, за ретранслятором (`up`), подъём ретранслятора, дом по назначению; нет элемента, `by` чужой, нет документа, имя дважды — `no_item`; `acts` по JCS; дом нечитаем — `no_home`; дом не член — `no_audience` |
-| 31–36 (аудит покрытия P/08, второй проход) | `star_centre` (Н1.1 `computed`): `cluster` записи в `star` — `centre` в аудитории, без `centre` — `no_centre`, вне `star` — ничего; `origin` `""` при `caller: origin` — `outside_scope`, в `target_fields` — не в аудитории; `scenario` за ретранслятором ≠ дом без `centre` — `no_centre` |
+| 31–36 (аудит покрытия P/08, второй проход) | `star_centre` (N1.1 `computed`): `cluster` записи в `star` — `centre` в аудитории, без `centre` — `no_centre`, вне `star` — ничего; `origin` `""` при `caller: origin` — `outside_scope`, в `target_fields` — не в аудитории; `scenario` за ретранслятором ≠ дом без `centre` — `no_centre` |
 | 37, 38 (аудит покрытия P/08, второй проход) | вход не по форме — `@exit 2`: `decl` не по форме загрузки (`lifetime` 0, сверка М11, T4), `now` строкой |
 | `keep-too-long`, `keep-ok` (ADR-0110 доп. (10) п. 2) | `decl` с `keep` и `lifetime` больше `KEEP_OLD` — `@exit 2`; `keep` — утверждения те же, `jti` не судится |
 
-Векторы проверены оракулом по тексту норм (Н1.1 `computed`, Н1.3 `body`, Н1.4, Н3 «выдать»), не по коду реализаций: вывод
+Векторы проверены оракулом по тексту норм (N1.1 `computed`, N1.3 `body`, N1.4, N3 «выдать»), не по коду реализаций: вывод
 оракула содержит ожидание каждой строки. Строки `issue-31`…`issue-38` (аудит покрытия P/08, второй проход Gemini, черновик
 G07 `e32df6f8b`, переписан во вход `issue` этой таблицы; входы — `issue-01` и `issue-17` с названной правкой) — ожидание
 каждой строки — подмножество вывода команды `issue` обеих реализаций-свидетелей `cammeta-python` и `cammeta-go` (выгрузка

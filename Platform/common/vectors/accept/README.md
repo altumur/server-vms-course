@@ -23,7 +23,7 @@ value. The form of the input and the output, the meaning of the fields (`catalog
 `sha256` is of the JCS of `stored`, except `accept-05-rebase-stored-not-mark` and `accept-20-whole-over-broken-stored` of lesson 3: there
 `stored` is deliberately not with `mark.sha256` (the review analysis of stage B 8–10, № 22, Claude `M-18`).
 
-The inputs depend on the bytes of the catalogue manifest (P/08.3 Н5; the review analysis of stage A 8–10, № 37; the review analysis of stage B 8–10, № 22,
+The inputs depend on the bytes of the catalogue manifest (P/08.3 N5; the review analysis of stage A 8–10, № 37; the review analysis of stage B 8–10, № 22,
 Kimi SB810-06): at the rows of lessons 3 and 4 `catalog` is `["testsub"]`, the keys of the objects are `testsub/*`; at the rows of the families `reports`,
 witnesses and contributions (`accept-36`…`accept-39`) — `["testsub", "testsub2"]` (`domain.reports`, `domain.witness`,
 `domain.books` with `from` exist only at `testsub2`); the `domain.ref` of the manifest decides steps 4 (`member_objects`) and 5 (`not_ready`):
@@ -36,7 +36,7 @@ witnesses and contributions (`accept-36`…`accept-39`) — `["testsub", "testsu
 The bytes of `testsub2` changed on 2026-11-04 (the roadmap 4.5): the token kind `vault` with `keep: true` was added to `domain.tokens`, then the comments of the header were rewritten without the names of test files; the fields on which the expectations of this table depend were not touched — a recheck by the oracle is not needed.
 
 A change of these bytes is a reason to recheck the table.
-Who performs is the holder (`08-domain`, the process `domain`: P/08.3 Н3 «accept» on `POST /api/member/<member>` and the relay batch with `via`) and the relay (`09-agent`, the door over its own memory, P/09.2 Н2) — all rows. They only read the result: the member's agent (the side of P/09.1 — the answer `carry` and 409 of the holder, Н3 «the agent pass») and the domain console (`10-domain-console` — the mark `reported`, P/10 Н3 `alarms`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who performs is the holder (`08-domain`, the process `domain`: P/08.3 N3 «accept» on `POST /api/member/<member>` and the relay batch with `via`) and the relay (`09-agent`, the door over its own memory, P/09.2 N2) — all rows. They only read the result: the member's agent (the side of P/09.1 — the answer `carry` and 409 of the holder, N3 «the agent pass») and the domain console (`10-domain-console` — the mark `reported`, P/10 N3 `alarms`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Files
 
@@ -61,7 +61,7 @@ The Architect's decision of 2026-10-23 (ADR-0083 addendum (33) item 8: an error 
   `9007199254740992`, `1e20` — not of the form, the report is accepted;
 - `accept-52`…`accept-55` (ACC-FORM172, ACC-TIME172; a coverage gap, the norms are the former ones) — the form of the mark at the input: `sign_failures`
   {} — not of the form (`member-reported.schema.json` and OpenAPI: at least one name), `@exit 2`; `received_at` as a string of the canon of
-  P/01.1 Н0 (`"1700000000.5"`) — is read, the output is as for `accept-09`; negative and with an exponent — not of the form, `@exit 2`.
+  P/01.1 N0 (`"1700000000.5"`) — is read, the output is as for `accept-09`; negative and with an exponent — not of the form, `@exit 2`.
 
 `accept-56-mark-no-stale` (the coverage audit of P/08, the second pass of Gemini): the input of `accept-03` without the field `stale` of the mark — `@exit 2` (the contract «The form of the function»:
 `stale` is always present). The expectation is the output of both witnesses `cammeta-python` and `cammeta-go`: for them `accept-03` is `rebase`, without
@@ -85,5 +85,5 @@ The review analysis of stage B 8–10, № 6 (Claude `P-2`):
 
 The vectors of lessons 3 and 4 are inputs of an acceptance that passed at two witness implementations; the rows of stage C were composed by the contract;
 they were not checked by a reference rebuild (the generation and the mark
-rest on the sections of the contract «Generation, mark, limits» and «The member's publication»; the owners of the text are P/08.3 Н1.3,
-[P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.2). On a divergence the contract is right, the vector is corrected by «Спецификация».
+rest on the sections of the contract «Generation, mark, limits» and «The member's publication»; the owners of the text are P/08.3 N1.3,
+[P/09.1](../../../09-agent/spec/09.1-agent.norms.md) N1.2). On a divergence the contract is right, the vector is corrected by «Спецификация».

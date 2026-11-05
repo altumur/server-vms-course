@@ -4,18 +4,18 @@ This English text is the source; the Russian translation `ru/vectors/fresh-age/R
 
 The owner is [the observation contract](../../contracts/observation.md) «Freshness: `LOST_AFTER`» (a common contract of the module
 «Platform»). The participants are all observers that judge «changed within the last LOST_AFTER»: the controller — a live worker of the pool,
-the fate of a slot, `resource_state` ([P/04](../../../04-controller/spec/04-controller.norms.md) Н3); the console — `worker_state`
-and `WorkerRow.state` ([chapter 6.1](../../../06-console/spec/06.1-console.norms.md) Н2,
+the fate of a slot, `resource_state` ([P/04](../../../04-controller/spec/04-controller.norms.md) N3); the console — `worker_state`
+and `WorkerRow.state` ([chapter 6.1](../../../06-console/spec/06.1-console.norms.md) N2,
 [chapter 6.5](../../../06-console/spec/06.5-console.norms.md)), `w2c_resources_live` (chapter 6.5), the live resources of the merge of
-`/events` ([chapter 6.4](../../../06-console/spec/06.4-console.norms.md) Н3 «merge»), `live` of `/schema`, «live» of the schema
-raise and «heard» of the server output ([chapter 6.6](../../../06-console/spec/06.6-console.norms.md)); the resource — the neighbours of the mirror ([P/05](../../../05-resource/spec/05-resource.norms.md) Н1.4 `mirror`). The package replaces «a step
+`/events` ([chapter 6.4](../../../06-console/spec/06.4-console.norms.md) N3 «merge»), `live` of `/schema`, «live» of the schema
+raise and «heard» of the server output ([chapter 6.6](../../../06-console/spec/06.6-console.norms.md)); the resource — the neighbours of the mirror ([P/05](../../../05-resource/spec/05-resource.norms.md) N1.4 `mirror`). The package replaces «a step
 of the acceptance at the boundary», which a stand without a controlled clock does not do (the Architect's decision on the review analysis of stage B 6–7,
 № 20; the boundary `≤` — the review analysis of stage A 6–7, № 1). The bytes are written by «Спецификация» (ADR-0083); the conformance of the product is by its
 acceptance against this table (ADR-0080 addendum 16).
 
 ## Rule (the observation contract «Свежесть»)
 
-- `LOST_AFTER` = 45 s (the value is the observation contract «Свежесть»; the role in the terms of the judge is [P/04](../../../04-controller/spec/04-controller.norms.md) Н1.4);
+- `LOST_AFTER` = 45 s (the value is the observation contract «Свежесть»; the role in the terms of the judge is [P/04](../../../04-controller/spec/04-controller.norms.md) N1.4);
 - **fresh** — the age of the observed version ≤ `LOST_AFTER`; **not fresh** — the age > `LOST_AFTER`. The relation is one for all
   observers and outputs.
 
@@ -50,9 +50,9 @@ writes the cell `age` byte for byte (a JSON number); stdout — `true` or `false
 
 A side implements the judgement of freshness by its own function (the one that stands behind all the places above) and checks each row:
 fresh(`age`) equals `fresh`. The comparison is over the number of the age as it is, without rounding: the output of `age` with one digit after
-the point (chapter 6.1 Н2) is a display, not an input of the judgement. The vectors are derived from the contract; on a divergence the contract is right, the vector
+the point (chapter 6.1 N2) is a display, not an input of the judgement. The vectors are derived from the contract; on a divergence the contract is right, the vector
 is corrected by «Спецификация».
-Who performs is every observer whose norm judges «changed within the last LOST_AFTER» by its own code: the controller (`04-controller`, P/04 Н3 «fate», «choose», `resource_state`), the resource (`05-resource`, P/05-R026 mirror neighbours by their door row), the console (`06-console`, P/06.1 Н2 `worker_state`, P/06.4 Н3 «merge», P/06.5 Н1.8, Н2 `WorkerRow.state`, `w2c_resources_live`, P/06.6 `/schema`, «heard»), the agent (`09-agent`, P/09.1 Н1.2 `fresh` — the heartbeats in `stale`) and the domain console (`10-domain-console`, the worker heartbeat at the domain: P/03.7 Н1.6, P/10 Н1.6 `absent`). They only read the result: the process `domain` (`08-domain`, `stale` of the member mark, P/08.1 Н1.3 `unit_state`) and the console module (`07-console-module`, `WorkerRow.state` from `/servers`); The worker only declares the term as a writer; the resource also reads and judges the door versions of its mirror neighbours. The freshness of a domain member (`member_state`, P/08.1, P/10) is its own section of the observation contract and its own vectors of chapter 8.1, not this package (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who performs is every observer whose norm judges «changed within the last LOST_AFTER» by its own code: the controller (`04-controller`, P/04 N3 «fate», «choose», `resource_state`), the resource (`05-resource`, P/05-R026 mirror neighbours by their door row), the console (`06-console`, P/06.1 N2 `worker_state`, P/06.4 N3 «merge», P/06.5 N1.8, N2 `WorkerRow.state`, `w2c_resources_live`, P/06.6 `/schema`, «heard»), the agent (`09-agent`, P/09.1 N1.2 `fresh` — the heartbeats in `stale`) and the domain console (`10-domain-console`, the worker heartbeat at the domain: P/03.7 N1.6, P/10 N1.6 `absent`). They only read the result: the process `domain` (`08-domain`, `stale` of the member mark, P/08.1 N1.3 `unit_state`) and the console module (`07-console-module`, `WorkerRow.state` from `/servers`); The worker only declares the term as a writer; the resource also reads and judges the door versions of its mirror neighbours. The freshness of a domain member (`member_state`, P/08.1, P/10) is its own section of the observation contract and its own vectors of chapter 8.1, not this package (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Vector wire
 

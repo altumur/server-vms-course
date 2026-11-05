@@ -4,9 +4,9 @@ This English text is the source; the Russian translation `ru/vectors/resolve/REA
 
 Vectors of the function `resolve(field, unit, domain)` of the cluster console — the value of a shared field for a unit on read: the unit →
 the domain → `inherit` of the manifest; a document field and a grouping field come only from the domain. The owner is lesson P/06, chapter 6.7 of the late
-layer ([P/06.7](../../spec/06.7-console.norms.md) Н1.14, Н3 `resolve`, Н5 `resolve`); it is executed by the cluster console at the door
-`GET /domain/shared/<sub>`. The declaration `domain.shared` and `merge` are [P/02.1 Н1.2б](../../../02-installer/spec/02.1-installer.norms.md),
-the shared document is [P/08.9](../../../08-domain/spec/08.9-domain.norms.md) Н1.2. The bytes are written by the Specification (ADR-0083);
+layer ([P/06.7](../../spec/06.7-console.norms.md) N1.14, N3 `resolve`, N5 `resolve`); it is executed by the cluster console at the door
+`GET /domain/shared/<sub>`. The declaration `domain.shared` and `merge` are [P/02.1 N1.2b](../../../02-installer/spec/02.1-installer.norms.md),
+the shared document is [P/08.9](../../../08-domain/spec/08.9-domain.norms.md) N1.2. The bytes are written by the Specification (ADR-0083);
 the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
 The rows were transferred from the inputs of the command `resolve` of the acceptance М11/11 (`inputs/resolve-*.json`, sc. 03) without a change of bytes: only
@@ -17,12 +17,12 @@ its inputs were removed by the move of lesson 10: the table is the only source o
 ## Run
 
 Without a stand: the function of the implementation receives the input (the column `input`) and gives the output; `expect` is a subset of the fields of the output or
-`@exit 2` (an input not in form, P/06.7 Н5 `exit`: for `resolve` `term`, `rev` not integers 1 … 2^53 − 1, an empty `field.name`, an unknown
+`@exit 2` (an input not in form, P/06.7 N5 `exit`: for `resolve` `term`, `rev` not integers 1 … 2^53 − 1, an empty `field.name`, an unknown
 `field.type` or `merge`, with `merge: union` any of the three values not a list of strings, the value `group_by` not a list, no `domain`
 or `domain` without `value`, `unit` or `domain.value` `null` with `union`, an extra field, a field without `inherit`, not `document` and
 not `group_by` (C06-RESOLVE-ABSENT-INHERIT-91-01) — the full list is there; review analysis of
 stage B 8–10, № 22: M-18). There are four rows `@exit 2` in the table
-(`resolve-11-term-zero`, `resolve-12-no-inherit`, `resolve-13-union-not-string`, `resolve-14-rev-over`; C06-RESOLVE-UNION-FORM-01); the other cases of code 2 are by reading (Н5). The exit codes follow the principle of the «Стенда домена» of the common acceptance
+(`resolve-11-term-zero`, `resolve-12-no-inherit`, `resolve-13-union-not-string`, `resolve-14-rev-over`; C06-RESOLVE-UNION-FORM-01); the other cases of code 2 are by reading (N5). The exit codes follow the principle of the «Стенда домена» of the common acceptance
 README («Коды выхода команд-векторов М11»: `field` and `domain` are the trusted input of the caller, code 2).
 
 ## Files

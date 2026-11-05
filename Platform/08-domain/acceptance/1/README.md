@@ -5,20 +5,20 @@ This English text is the source; the Russian translation `ru/acceptance/1/README
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
 the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly — the М11 dictionary of the acceptance README of
 М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
-[`08.1-domain.norms.md`](../../spec/08.1-domain.norms.md) Н5. The scenarios were moved from the acceptance of М11/03 (04, 06–09) and
+[`08.1-domain.norms.md`](../../spec/08.1-domain.norms.md) N5. The scenarios were moved from the acceptance of М11/03 (04, 06–09) and
 М11/06 (06 → 15) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones, except the scenario of М11/06:
 the number 06 is taken by a scenario of М11/03, it got the number 15 — the next one after the largest number of the sources of the chapter (М11/03 sc. 14;
 the Architect's decision 2026-10-20, ADR-0083 addendum (14) item 14; the row of `journal/corrections-1.tsv`). In total 6 scenarios / 39 steps.
 
 The same views without a stand are the vectors [`view`](../../vectors/view/README.md) (28 rows, the former sc. 01–16 of the acceptance of М11/01).
 The doors `GET /domain`, `/domain/<sub>/<rows>`, `/domain/shadow`, through which the stand reads the view and the report, are doors of the domain
-console (lesson P/10, [Н1.2а](../../../10-domain-console/spec/10-domain-console.norms.md)); the chapter sets the norm for their content.
+console (lesson P/10, [N1.2a](../../../10-domain-console/spec/10-domain-console.norms.md)); the chapter sets the norm for their content.
 
 ## Preparation
 
 As the acceptance README of [chapter 8.3](../3/README.md) («Stand», «Preparation of each scenario»;
 formerly — the acceptance README of М11/03): the runner brings up three clusters on one machine — `hold`, `m1`, `m2`; each has its own empty store,
-its own `{data}`, its own role sockets and ports of the console and the resource, its own ring (P/06.2 Н1.2), the manifest catalogue — only `testsub`
+its own `{data}`, its own role sockets and ports of the console and the resource, its own ring (P/06.2 N1.2), the manifest catalogue — only `testsub`
 (`domain.ref: name`); the console, the controller and the worker `w-1` of `testsub`, the resource of its own server (`srv-hold`, `srv-m1`, `srv-m2`).
 There are no units. There is no domain: the directive `@domain` of the first step of each scenario sets it up. The domain name is `acme`; the recovery
 file is `{recovery}` in the instance directory.
