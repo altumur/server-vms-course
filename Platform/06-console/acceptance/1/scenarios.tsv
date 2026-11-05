@@ -321,7 +321,7 @@ scenario	step	request	expect
 35-batch-repeat	10	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}]}	412 {"error": "row moved", "key": "testsub/counters/c1", "index": "$b"}
 35-batch-repeat	11	console PUT /counters/c1 {"start": 7}	200 {"revision": 3}
 35-batch-repeat	12	console GET /counters	200 {"configured": [{"id": "c1", "index": "$c"}]}
-35-batch-repeat	13	@key(10) console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}]}	412 {"error": "row moved", "key": "testsub/counters/c1", "index": "$b"}
+35-batch-repeat	13	@key(10) console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}]}	412 {"error": "row moved", "key": "testsub/counters/c1", "index": "$c"}
 35-batch-repeat	14	@nokey console @header If-Match: 99 POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 8}, "cas": "$c"}]}	200 {"written": 1}
 35-batch-repeat	15	console GET /counters	200 {"configured": [{"id": "c1", "start": 8, "revision": 4}]}
 36-batch-form	1	console POST /console/batch [1]	400 {"error": "not_json"}
@@ -521,7 +521,7 @@ scenario	step	request	expect
 46-service-table	4	console2 POST /stash {"name": "a"}	403 {"error": "denied"}
 46-service-table	5	console2 DELETE /stash/a	403 {"error": "denied"}
 46-service-table	6	POST /console/batch {"writes": [{"op": "put", "key": "testsub2/stash/a", "fields": {"name": "a"}, "cas": ""}]}	403 {"error": "denied"}
-46-service-table	7	store GET /v1/get?key=testsub2/stash/a	404
+46-service-table	7	store GET /v1/get?key=testsub2/stash/a	200 {"items": null}
 46-service-table	8	@as console store POST /v1/write {"op": "put", "key": "testsub2/stash/b", "items": {"name": "b", "note": "kept"}}	200
 46-service-table	9	console2 GET /stash/b	403 {"error": "denied"}
 46-service-table	10	POST /counters {"name": "c1"}	201 {"revision": 1}

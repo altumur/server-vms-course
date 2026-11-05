@@ -156,6 +156,9 @@ index:
   query:    the query rules that the merge needs (parameters, defaults, by) — the event log merge contract «The resource query and answer»
             (moved there, EM-READ-33-01); the grammar of the parameters and the refusals — below this block
   row:      {id, subsystem, unit, of, epoch, t, kind, server, bucket, class, epoch_is, fenced, …fields}
+            # server — the owner of the bucket; a line with its own field server (a line about a server: drain.*,
+            # server.decommission_*, workers.no_server) keeps it — in such a row server is the server the line is about, the index
+            # does not overwrite it, as class (G06-AUDIT-SERVER-01, the Specification's decision of 2026-11-05)
             # epoch_is and fenced are set by the merger — the console or the worker by the event log merge contract; at the resource the lines
             # are without them (the decision of the Architect, review of stage A; ADR-0091 addendum (27) item 7)
   epoch_is: current | fenced | earlier-run | unknown   # by current_epochs from <sub>/epoch/* and the policy of the manifest; unknown — only
