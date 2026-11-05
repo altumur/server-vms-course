@@ -371,7 +371,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
         files[-1]["editable"] = True
     doc = (KIT_MD + (gen_tests.kit_md() if "vectors" in parts else "")
            + (gen_tests.KIT_MD_STAGETESTS if "stagetests" in parts else "") + (KIT_DOOR_MD if openapi_sha else "")
-           + (gen_flags.KIT_MD if flag_files else "") + (gen_refusals.KIT_MD if refusal_files else "")
+           + (gen_flags.kit_md() if flag_files else "") + (gen_refusals.KIT_MD if refusal_files else "")
            + (gen_families.KIT_MD if family_files else "") + (gen_admin.kit_md() if admin_files else "")
            + (gen_launch.KIT_MD if launch_files else "") + (gen_core.KIT_MD if core_files else "")).replace("{module}", module)
     doc = (doc + connect_md(kit_parts, module) + exported_md(internal, dst, module)).encode("utf-8")
