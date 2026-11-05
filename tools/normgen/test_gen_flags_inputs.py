@@ -265,6 +265,8 @@ class InputFlags(unittest.TestCase):
                  ("console", [], {"INSTANCE_ID": "узел:00042:AbCdEf"}),
                  ("cleanup-window", ["--writers-stopped"], {"INSTANCE_ID": given}),
                  ("console", ["--instance-id=" + given], {})]
+        cases = [(cmd, args, dict(env, CONSOLE_ROOT="/tmp/p06-ui") if cmd == "console" else env)
+                 for cmd, args, env in cases]
         got = run_driver(self.mods["06-console"], cases)
         self.assertEqual(len(got), len(cases))
         for i in range(5):
