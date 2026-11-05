@@ -391,7 +391,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
         for f in sorted((CONTRACTS / "go").glob("*.go")):
             put("contracts", f.name, f.read_bytes(), "handwritten", "contracts", str(f.relative_to(ROOT)))
         for f in sorted((CONTRACTS / "adapters").glob("*.go")):
-            fn = re.search(r"^func ([A-Z]\w*)\((?:table string|input \[\]byte)", f.read_text(), re.M)[1]
+            fn = re.search(r"^func ([A-Z]\w*)\((?:table string|input \[\]byte|file \[\]byte|raw string)", f.read_text(), re.M)[1]
             contract_adapters[f"{fn.lower()}.go"] = f
     for (sub, name, data, origin, source, own), component in tests:
         if sub == "vectoradapter" and name in contract_adapters:   # заглушка → адаптер над contracts (свой у реализации)
@@ -592,7 +592,8 @@ KIT_CONTRACTS_MD = """
 | `contracts` | `{module}/internal/contracts` | the kit's implementation of `Platform/common/contracts/*.md` — closed; use it in your code |
 
 The functions are the pure computations of their contracts (the instance and the box, the slot names, the labels, the
-event journal: names, buckets, lines…); reading files, the environment and the clock is yours. With the part
+event journal: names, buckets, lines…; the outcome of a store answer for its client; the revocation files revoked and
+crl.pem by the centers); reading files, the environment and the clock is yours. With the part
 `vectors`, the adapters of the tables they cover (`vectoradapter/<package>.go`) call this package — yours to change
 like any adapter. `tools/normgen/test_contracts.py` runs the common vectors of every lesson against them.
 """
