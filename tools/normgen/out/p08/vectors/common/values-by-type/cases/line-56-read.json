@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "l-read-empty-item-spaced",
+ "variant": "read",
+ "cells": {
+  "type": "list",
+  "row": "\"[\\\"a\\\", \\\"\\\"]\""
+ },
+ "files": {}
+}

@@ -1,0 +1,4 @@
+# Inputs of the vector command for common/domain-founding claim.tsv (gen_vectors.py); compare value.
+# source Platform/common/vectors/domain-founding/claim.tsv sha256 6f6002ebd2459ac906e850dc5533f463269d80b285f13f9a50a751505f6016fd
+case	input	exit	stdout
+line-3	line-3.json	0	{"doc":"{\"at\":1792713600,\"domain\":\"d1\",\"holder\":\"hold\",\"issuer\":\"6a833e68f507d3ec426c9c06dcd0a204b7f424837e8758f8a80e96df8efceddd\",\"kid\":\"6a833e68f507d3ec\",\"sig\":\"nqmg7c7rHNHt0EEPY13DMNUiw_8dri6BiPMDIERGWXUv1tthJd9AblLJ_kCN_sdXZdn5WXvIygAiqZgXQbyUCQ\",\"term\":1,\"url\":\"http://localhost:8445\"}"}

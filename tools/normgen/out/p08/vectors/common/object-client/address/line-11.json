@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/object-client",
+ "table": "address.tsv",
+ "case": "resource-percent",
+ "variant": "",
+ "cells": {
+  "input": "{\"OBJECTS\":\"cluster://?resource=http%3A%2F%2Fh%3A1\",\"PLATFORM_DIR\":\"/data/platform\"}"
+ },
+ "files": {}
+}

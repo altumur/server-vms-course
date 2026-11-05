@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "in-value",
+ "variant": "read",
+ "cells": {
+  "type": "int:inherit",
+  "row": "\"2\""
+ },
+ "files": {}
+}

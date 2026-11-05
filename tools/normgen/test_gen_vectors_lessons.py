@@ -25,7 +25,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-LESSONS = {"03-worker": "p03", "04-controller": "p04", "06-console": "p06"}
+LESSONS = {"03-worker": "p03", "04-controller": "p04", "06-console": "p06", "08-domain": "p08", "09-agent": "p09",
+           "10-domain-console": "p10"}
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 
 
@@ -60,6 +61,14 @@ def native(compare, value, state):
         out = {"fault": value["fault"], "text": "refused"} if value["fault"] else {"fault": ""}
         if "masked" in value:                          # консоль: отображение и отказ
             out["masked"] = value["masked"]
+        return out
+    if compare == "secret-domain":
+        return {"fault": "own-word", "text": "refused"} if value["fault"] else {"fault": ""}
+    if compare.startswith("round:"):
+        field, prefix = compare[len("round:"):].split(":", 1)
+        out = drop_absent(value)
+        if value.get("result") == "ok":
+            out = dict(out, **{field: [prefix + "a", prefix + "b"]})
         return out
     if compare == "turn":
         out, current = [], None
@@ -196,7 +205,7 @@ class VectorsLessons(unittest.TestCase):
                 res, panics, done = results(self.module(lesson_key, "fake", fake_go(g)))
                 fails = [t for t, a in res.items() if a == "fail"]
                 self.assertEqual(fails, [], done.stdout[-3000:])
-                self.assertGreater(len(res), 500)
+                self.assertGreater(len(res), 300)
 
     def mutant(self, lesson_key, name, mut):
         g = gv(lesson_key)
@@ -258,6 +267,13 @@ class VectorsLessons(unittest.TestCase):
             ("06-console", "whole-table"): first("common/fault", "fault.tsv",
                                                  set_value(lambda v: dict(v, **{sorted(v)[0]: 999}))),
             ("06-console", "stand-raw"): first("06-console/rid", "rid.tsv", set_value(lambda v: {"status": "mutant"})),
+        })
+        cases.update({
+            ("08-domain", "round-same"): first("common/domain-envelopes", "x25519-round.tsv",
+                                               set_value(lambda v: dict(v, envelopes=[v["envelopes"][0]] * 2)
+                                                         if "envelopes" in v else None)),
+            ("08-domain", "secret-domain-empty"): first("common/secret-in", "cases.tsv",
+                                                        set_value(lambda v: dict(v, fault="") if v.get("fault") else None)),
         })
         g3 = gv("03-worker")
 

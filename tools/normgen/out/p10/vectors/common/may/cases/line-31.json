@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/may",
+ "table": "cases.tsv",
+ "case": "may-25-empty-subject",
+ "variant": "",
+ "cells": {
+  "input": "{\"grants\":{\"lines\":[{\"subject\":\"\",\"cap\":\"admin\",\"scope\":\"*\",\"until\":0,\"by\":\"root\"}]},\"as_of\":1759999990,\"disabled\":[],\"user\":\"\",\"glass\":false,\"cap\":\"view\",\"unit\":\"*\",\"now\":1760000000}"
+ },
+ "files": {}
+}

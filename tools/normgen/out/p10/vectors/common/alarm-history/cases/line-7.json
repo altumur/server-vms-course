@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/alarm-history",
+ "table": "cases.tsv",
+ "case": "same-subsystem",
+ "variant": "",
+ "cells": {
+  "op": "same",
+  "input": "{\"a\":{\"id\":\"e1-1\",\"class\":\"alarm\",\"kind\":\"door.forced\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"t\":1000.0,\"t_src\":990.0},\"b\":{\"id\":\"e1-2\",\"class\":\"alarm\",\"kind\":\"door.forced\",\"subsystem\":\"testsub2\",\"unit\":\"testsub/c1\",\"t\":1000.0,\"t_src\":990.0}}"
+ },
+ "files": {}
+}

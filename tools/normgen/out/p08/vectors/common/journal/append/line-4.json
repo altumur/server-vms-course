@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/journal",
+ "table": "append.tsv",
+ "case": "no-final-lf",
+ "variant": "",
+ "cells": {
+  "file": "\"{\\\"t\\\":1,\\\"kind\\\":\\\"a\\\",\\\"id\\\":\\\"e1-61-63-1-77-1\\\"}\\n{\\\"t\\\":2,\\\"ki\"",
+  "line": "\"{\\\"t\\\":3,\\\"kind\\\":\\\"b\\\",\\\"id\\\":\\\"e1-61-63-1-77-3\\\"}\""
+ },
+ "files": {}
+}

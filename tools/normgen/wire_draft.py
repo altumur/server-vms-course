@@ -535,10 +535,215 @@ WIRE["06-console"] = [
      "src": "06-console/vectors/rid/README.md:37-57; runner c_request_vectors.py:31-62"},
 ]
 
+
+# --- P/08, P/09, P/10 (процесс домена, агент, консоль домена): черновик по README, сверка с раннером 37b733b ---
+
+def env_open(r, d):
+    """x25519-open / m1-open: ячейка в кавычках — {result: ok, plain}; слово — {result: refused, reason}."""
+    if r["expect"].startswith('"'):
+        return (0, {"result": "ok", "plain": json.loads(r["expect"])}, None)
+    return (0, {"result": "refused", "reason": r["expect"]}, None)
+
+
+def env_round(r, d):
+    """x25519-round / m1-round: ok — {result: ok, opened: [plain, plain], distinct: true}; иначе отказ со словом."""
+    if r["expect"] == "ok":
+        p = json.loads(r["plain"])
+        return (0, {"result": "ok", "opened": [p, p], "distinct": True}, None)
+    return (0, {"result": "refused", "reason": r["expect"]}, None)
+
+
+def secret_domain():
+    return {"package": "common/secret-in", "table": "cases.tsv", "surface": "vectors", "fn": "SecretIn", "args": "cells",
+            "header": None, "fields": ["field", "raw", "masked", "fault", "note"], "inputs": ["field", "raw"],
+            "files": {"fields.yaml": "fields.yaml"}, "compare": "secret-domain",
+            "expect": lambda r, d: (0, {"fault": r["fault"], "hidden": secret_hidden(r["raw"], r["masked"])}, None),
+            "doc": "the refusal of an address by its credentials (item 2): {fault[, text]} — fault judged only as empty or "
+                   "not (its word is yours), text never repeats a hidden part of the row",
+            "src": "secret-in/README.md:46-63 (the process domain)"}
+
+
+def stand_subset(pkg, key, fn, doc, src):
+    return {"package": pkg, "table": "cases.tsv", "surface": f"stand:{key}", "fn": fn, "args": "input", "input": "input",
+            "compare": "subset", "expect": or_exit2, "doc": doc, "src": src}
+
+
+ACCEPT = {"package": "common/accept", "table": "cases.tsv", "surface": "vectors", "fn": "Accept", "args": "cells",
+          "inputs": ["input"], "compare": "subset", "expect": or_exit2,
+          "files": {"testsub.subsystem.yaml": "@root/Source/tests/testdata/testsub.subsystem.yaml",
+                    "testsub2.subsystem.yaml": "@root/Source/tests/testdata/testsub2.subsystem.yaml"},
+          "doc": "the acceptance of a member request: the object of expect (subset; @absent — no key, @any — any value)",
+          "src": "accept/README.md:19-47; runner c_vector_packages.py:170-178, c_domain_packages.py:89-99"}
+
+
+def turn_signer():
+    return {"package": "common/turn", "table": "cases.tsv", "surface": "vectors", "fn": "Turn", "args": "cells",
+            "inputs": ["input"], "select": by_input("kind", ("signer",)), "compare": "value", "expect": value(),
+            "doc": "the signer turn: the actions one per event (no @new/@same in the signer rows)",
+            "src": "turn/README.md:53; runner c_state_vectors.py:73-85"}
+
+
+def alarm_history(ops):
+    return {"package": "common/alarm-history", "table": "cases.tsv", "surface": "vectors", "fn": "AlarmHistory",
+            "args": "cells", "inputs": ["op", "input"], "select": by_col("op", ops), "compare": "value",
+            "expect": value(),
+            "doc": "the alarm history by op: same → bool; page → the ids; write → {ids, cut_before, written}",
+            "src": "alarm-history/README.md:9-30; runner c_domain_packages.py:44-45,61-99"}
+
+
+FRESH_VECTORS = {"package": "common/fresh-age", "table": "fresh.tsv", "surface": "vectors", "fn": "FreshAge",
+                 "args": "cells", "inputs": ["age"], "compare": "value", "expect": value("fresh"),
+                 "doc": "the freshness of an age through the unified command (no stand key for this lesson): true | false",
+                 "src": "fresh-age/README.md:42-55 (09, 10 — no stand key in their profiles)"}
+
+
+def record_09(r):
+    inp = json.loads(r["input"])
+    doc = (inp.get("row") or {}).get("doc") if isinstance(inp.get("row"), dict) else None
+    try:
+        tag = json.loads(doc) if isinstance(doc, str) else {}
+    except ValueError:
+        tag = {}
+    return "the grant document: only 08 (record README «Who performs it»)" if isinstance(tag, dict) and "grant" in tag else True
+
+
+WIRE["08-domain"] = [
+    ACCEPT,
+    subset_pkg("common/agent-sig", "AgentSig", "the agent signature check: {result: ok} | {result: refused[, reason]} "
+               "(subset); batch-knock.tsv — the batch knock", "agent-sig/README.md:16-22", markers=False),
+    subset_pkg("common/agent-sig", "AgentSig", "", "agent-sig/README.md:22; runner c_vector_packages.py:179-182",
+               markers=False, table="batch-knock.tsv"),
+    alarm_history(("same", "write")),
+    {**subset_pkg("common/ask-sig", "AskSig", "the ask signature check (move, prepare): {result: ok} | {result: refused, "
+                  "reason} (subset); code 2 — out of form", "ask-sig/README.md:18-36; runner c_domain_packages.py:40-41"),
+     "select": lambda r: True if json.loads(r["input"]).get("ask") in ("move", "prepare") else "ask backup: 06-console"},
+    {"package": "common/domain-backup-key", "table": "cases.tsv", "surface": "vectors", "fn": "DomainBackupKey",
+     "args": "cells", "inputs": ["root_key", "backup_key_rev"], "compare": "value",
+     "expect": lambda r, d: (0, r["expect"], None),
+     "doc": "the domain backup copy key (HMAC-SHA256 of root_key and backup_key_rev): \"<64 hex>\" or \"@refuse\"",
+     "src": "domain-backup-key/README.md (as P/02); runner c_domain_vectors.py:72"},
+    {"package": "common/domain-envelopes", "table": "x25519-open.tsv", "surface": "vectors", "fn": "DomainEnvelopes",
+     "args": "cells", "inputs": ["seed_hex", "envelope", "member", "source_path", "item", "pointer"], "compare": "subset",
+     "expect": env_open,
+     "doc": "the domain envelopes by table: *-open → {result: ok, plain} | {result: refused, reason}; *-round → {result: "
+            "ok, opened: [plain, plain], distinct: true, envelopes|sealed: [two distinct]} | refused",
+     "src": "domain-envelopes/README.md:21-37; runner c_domain_packages.py:16-21,46-48,76-148"},
+    {"package": "common/domain-envelopes", "table": "x25519-round.tsv", "surface": "vectors", "fn": "DomainEnvelopes",
+     "args": "cells", "inputs": ["book_seal_hex", "seed_hex", "plain", "member", "source_path", "item", "pointer"],
+     "compare": "round:envelopes:x25519:v1:", "expect": env_round},
+    {"package": "common/domain-envelopes", "table": "m1-round.tsv", "surface": "vectors", "fn": "DomainEnvelopes",
+     "args": "cells", "inputs": ["key_hex", "seed_hex", "plain"], "compare": "round:sealed:m1:", "expect": env_round},
+    value_pkg("common/domain-founding", "DomainFoundingClaim", "the founding claim of a domain: {doc}",
+              "domain-founding/README.md:17-26; runner c_domain_vectors.py:39-42", table="claim.tsv"),
+    {"package": "common/domain-token", "table": "cases.tsv", "surface": "vectors", "fn": "DomainToken", "args": "cells",
+     "inputs": ["input"], "compare": "subset", "expect": or_exit2,
+     "doc": "the domain token check: {result: ok, payload} | {result: refused, reason} (subset), code 2 — out of form",
+     "src": "domain-token/README.md:21-24"},
+    {**HEARTBEAT_CASES, "table": "worker.tsv", "inputs": ["key", "object"], "compare": "fields:others,fields"},
+    instance("box.tsv"), instance("cases.tsv"),
+    journal("append.tsv", ["file", "line"]), journal("names.tsv", ["input"]), journal("years.tsv", ["t"]),
+    subset_pkg("common/keys", "Keys", "the keyset take: {result: took|holding, rev} | {result: refused, reason[, rev]}",
+               "keys/README.md:16-20", markers=False),
+    {**labels(("label",)), "compare": "value"},
+    LOOPBACK,
+    subset_pkg("common/may", "May", "the right check: {result: allow|deny|unavailable[, reason]} (subset); code 2 — out "
+               "of form", "may/README.md:77-95"),
+    object_client("address.tsv"), object_client("read.tsv"),
+    {"package": "common/password-hash", "table": "cases.tsv", "surface": "stand:password-hash", "fn": "PasswordHash",
+     "args": "input", "input": "input", "compare": "value", "expect": value(),
+     "doc": "the password hash and check (stand password-hash; 08 also hashes with salt): the JSON value of expect",
+     "src": "password-hash/README.md:17-28; runner c_targets.py:111, c_sdk_json.py:236-247"},
+    subset_pkg("common/peer", "Peer", "the peer certificate check: {result: ok} | {result: refused, reason} (subset)",
+               "peer/README.md:17-38"),
+    subset_pkg("common/record", "Record", "the record check: the object of expect (subset); code 2 — out of form",
+               "record/README.md:16-42"),
+    SCHEMA,
+    secret_domain(),
+    *[dict(x) for x in SEALING],
+    {"package": "common/sealing", "table": "envelope.tsv", "surface": "vectors", "fn": "Sealing", "args": "cells",
+     "inputs": ["key_hex", "kid", "nonce_b64url", "row_key", "pointer", "plaintext"], "compare": "value",
+     "expect": lambda r, d: (0, r["envelope"], None)},
+    turn_signer(),
+    values_by_type(("read",)),
+    stand_subset("08-domain/assemble", "assemble", "Assemble", "the assembly of the domain view (stand assemble): "
+                 "{rows, report} (subset)", "08-domain/vectors/assemble/README.md:20-42; acceptance/README.md:451"),
+    stand_subset("08-domain/issue", "issue", "Issue", "the token issue (stand issue): {result: ok, claims} | {result: "
+                 "refused, status, reason} (subset)", "08-domain/vectors/issue/README.md:22-47; acceptance/README.md:451"),
+    stand_subset("08-domain/view", "view", "View", "the view of a member (stand view): {view, shadow} (subset; as_of "
+                 "not compared)", "08-domain/vectors/view/README.md:23-45; acceptance/README.md:447"),
+]
+
+WIRE["09-agent"] = [
+    ACCEPT,
+    subset_pkg("common/agent-sig", "AgentSig", "the agent signature check: {result: ok} | {result: refused, reason}",
+               "agent-sig/README.md:20", markers=False),
+    {"package": "common/domain-envelopes", "table": "m1-open.tsv", "surface": "vectors", "fn": "DomainEnvelopes",
+     "args": "cells", "inputs": ["seed_hex", "sealed"], "compare": "subset", "expect": env_open,
+     "doc": "the domain envelopes: m1-open → {result: ok, plain} | {result: refused, reason}; x25519-round → the round",
+     "src": "domain-envelopes/README.md:21-37; runner c_domain_packages.py:19,79-85"},
+    {"package": "common/domain-envelopes", "table": "x25519-round.tsv", "surface": "vectors", "fn": "DomainEnvelopes",
+     "args": "cells", "inputs": ["book_seal_hex", "seed_hex", "plain", "member", "source_path", "item", "pointer"],
+     "compare": "round:envelopes:x25519:v1:", "expect": env_round},
+    FRESH_VECTORS,
+    instance("box.tsv"), instance("cases.tsv"),
+    journal("append.tsv", ["file", "line"]), journal("names.tsv", ["input"]), journal("years.tsv", ["t"]),
+    subset_pkg("common/keys", "Keys", "the keyset: cases.tsv — the take (subset); revoked.tsv — the jtis text (value)",
+               "keys/README.md:16-36", markers=False),
+    {**value_pkg("common/keys", "Keys", "", "keys/README.md:20,36; runner c_domain_packages.py:98", table="revoked.tsv")},
+    LOOPBACK,
+    object_client("address.tsv"), object_client("read.tsv"),
+    subset_pkg("common/peer", "Peer", "the peer certificate check: {result: ok} | {result: refused, reason} (subset)",
+               "peer/README.md:21"),
+    {**subset_pkg("common/record", "Record", "the record check: cases.tsv, shared.tsv, take.tsv — the object of expect "
+                  "(subset); code 2 — out of form", "record/README.md:16-42; runner c_domain_packages.py:29-39"),
+     "select": record_09},
+    subset_pkg("common/record", "Record", "", "record/README.md:23-24", markers=False, table="shared.tsv"),
+    subset_pkg("common/record", "Record", "", "record/README.md:18,21 (no runner target)", markers=False, table="take.tsv"),
+    SCHEMA,
+    *[dict(x) for x in SEALING],
+    {"package": "common/sealing", "table": "envelope.tsv", "surface": "vectors", "fn": "Sealing", "args": "cells",
+     "inputs": ["key_hex", "kid", "nonce_b64url", "row_key", "pointer", "plaintext"], "compare": "value",
+     "expect": lambda r, d: (0, r["envelope"], None)},
+    turn_signer(),
+    values_by_type(("read",)),
+    stand_subset("09-agent/follow", "follow", "Follow", "the follow decision of the agent (stand follow): {result: "
+                 "follow|stay[, term]} (subset)", "09-agent/vectors/follow/README.md:18-21; 09.1-agent.norms.md:1597-1643"),
+]
+
+WIRE["10-domain-console"] = [
+    alarm_history(("same", "page")),
+    {"package": "common/domain-token", "table": "cases.tsv", "surface": "vectors", "fn": "DomainToken", "args": "cells",
+     "inputs": ["input"], "compare": "subset", "expect": or_exit2,
+     "doc": "the domain token check: {result: ok, payload} | {result: refused, reason} (subset), code 2 — out of form",
+     "src": "domain-token/README.md:24"},
+    FRESH_VECTORS,
+    instance("box.tsv"), instance("cases.tsv"),
+    journal("append.tsv", ["file", "line"]), journal("names.tsv", ["input"]), journal("years.tsv", ["t"]),
+    LOOPBACK,
+    subset_pkg("common/may", "May", "the right check (subset); covers.tsv — true | false", "may/README.md:77-95"),
+    {**subset_pkg("common/may", "May", "", "may/README.md:93-95", table="covers.tsv"), "compare": "value"},
+    object_client("address.tsv"), object_client("read.tsv"),
+    {**subset_pkg("common/peer", "Peer", "the peer certificate check (the role rows): {result: refused, reason} (subset)",
+                  "peer/README.md:21-23; runner c_domain_packages.py:42-43"),
+     "select": lambda r: True if r["expect"] != "@exit 2" and json.loads(r["expect"]).get("reason") in
+     ("no_role", "wrong_role") else "not a role row: 06, 08, 09"},
+    SCHEMA,
+    value_pkg("common/trust-set", "TrustSet", "the trust set by op: set → the sorted fingerprints; check → trusted | refused",
+              "trust-set/README.md:13-29; runner c_domain_packages.py:61,91", inputs=("op", "input")),
+    stand_subset("10-domain-console/alarms", "alarms", "Alarms", "the alarm view (stand alarms): {events, members, "
+                 "complete, sentence} (subset)", "10-domain-console/vectors/alarms/README.md:19-44; acceptance/README.md:452"),
+]
+
 # Таблицы состава урока, которые пакет не исполняет (опись: excluded с причиной).
+_FAULT_LAYOUT = ("layout (as 03): the process speaks no fault.tsv word of its own refusals (fault README «Who performs "
+                 "it»; no word in the lesson's norms); no native fault command")
 SKIP_LESSON = {
-    "06-console": {("06-console/requests-body", "requests_body.tsv"): "an HTTP stand of the README «Stand» (POST of a "
-                   "fresh stand), not a vector function — open question of the draft (the runner has no c_* target)"},
+    "08-domain": {("common/fault", "fault.tsv"): _FAULT_LAYOUT},
+    "09-agent": {("common/fault", "fault.tsv"): _FAULT_LAYOUT},
+    "10-domain-console": {("common/fault", "fault.tsv"): _FAULT_LAYOUT},
+    "06-console": {("06-console/requests-body", "requests_body.tsv"): "layout (Architect, wire P/06 item 5): an unperformed "
+                   "duty of the real HTTP stand of the README «Stand» (POST and round trip on a fresh stand) — the runner "
+                   "checks the publication; no vector function, not a PASS"},
     "03-worker": {("common/fault", "fault.tsv"): "layout (Architect, ADR-0125 add. (1) item 5): bad_url of the customer "
                   "library is judged by the norm and the lesson acceptance through the real group-of and row-check; 03 "
                   "has no native fault command"},

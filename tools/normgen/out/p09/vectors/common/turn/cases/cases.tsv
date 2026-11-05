@@ -1,0 +1,16 @@
+# Inputs of the vector command for common/turn cases.tsv (gen_vectors.py); compare value.
+# source Platform/common/vectors/turn/cases.tsv sha256 3b01fa9210443cc0dd3d21566e1eae79f22ba625128d4849450ba49d3b96a4be
+case	input	exit	stdout
+line-19	line-19.json	0	[{"write":{"holder":"box-a:4242:a1b2c3"},"cas":""},"held"]
+line-20	line-20.json	0	[{"write":{"holder":"box-a:4242:a1b2c3"},"cas":5},"held"]
+line-21	line-21.json	0	[{"write":{"holder":"box-a:4242:a1b2c3"},"cas":5},"not_held"]
+line-22	line-22.json	0	["busy"]
+line-23	line-23.json	0	[{"write":{"holder":"box-a:4242:a1b2c3"},"cas":5},"held"]
+line-24	line-24.json	0	[{"write":{"holder":"box-a:4242:a1b2c3"},"cas":5},"held"]
+line-25	line-25.json	0	["refused"]
+line-26	line-26.json	0	[{"write":{"holder":"box-a:4242:a1b2c3"},"cas":""},"held",{"guard":{"key":"domain/signer-turn","index":1}}]
+line-27	line-27.json	0	[{"write":{"holder":"box-a:4242:a1b2c3"},"cas":""},"held",{"write":{"holder":"box-a:4242:a1b2c3"},"cas":1},"held"]
+line-28	line-28.json	0	[{"write":{"holder":"box-a:4242:a1b2c3"},"cas":""},"held",{"write":{"holder":""},"cas":1}]
+line-29	line-29.json	0	[{"write":{"holder":"box-a:4242:a1b2c3"},"cas":""},"reread",{"write":{"holder":"box-a:4242:a1b2c3"},"cas":1},"held"]
+line-30	line-30.json	0	[{"write":{"holder":"box-a:4242:a1b2c3"},"cas":""},"held",{"guard":{"key":"domain/signer-turn","index":1}},"reread",{"write":{"holder":"box-a:4242:a1b2c3"},"cas":1},"held"]
+line-35	line-35.json	0	[{"write":{"holder":"box-a:4242:a1b2c3"},"cas":""},"reread","not_held"]

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/instance",
+ "table": "cases.tsv",
+ "case": "given-hex-short",
+ "variant": "",
+ "cells": {
+  "input": "{\"INSTANCE_ID\":\"w:7:abcde\"}"
+ },
+ "files": {}
+}

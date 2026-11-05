@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/sealing",
+ "table": "ring.tsv",
+ "case": "upper_hex",
+ "variant": "",
+ "cells": {
+  "file": "\"k1 29DD2B4A883861ADF8AE1964E2FE81FEF69656092AA8EEC807A182C06FEDC4EA\\n\""
+ },
+ "files": {}
+}

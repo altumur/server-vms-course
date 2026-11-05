@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/may",
+ "table": "cases.tsv",
+ "case": "may-94-admin-star",
+ "variant": "",
+ "cells": {
+  "input": "{\"grants\":{\"lines\":[]},\"as_of\":1759999990,\"disabled\":[],\"user\":\"ann\",\"glass\":false,\"cap\":\"admin\",\"unit\":\"*\",\"now\":1760000000,\"sub\":\"platform\",\"roles\":{\"ann\":[{\"role\":\"admin\",\"until\":0,\"at\":1759000000}]},\"iat\":1759999990}"
+ },
+ "files": {}
+}

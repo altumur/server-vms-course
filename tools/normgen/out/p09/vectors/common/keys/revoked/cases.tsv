@@ -1,0 +1,10 @@
+# Inputs of the vector command for common/keys revoked.tsv (gen_vectors.py); compare value.
+# source Platform/common/vectors/keys/revoked.tsv sha256 f1dc899d418e049836187f2d1f8e4f6bedcaad456d22cb747a6038a55d04dfe3
+case	input	exit	stdout
+line-3	line-3.json	0	"x:200"
+line-4	line-4.json	0	"x:200"
+line-5	line-5.json	0	"a:300,b:400"
+line-6	line-6.json	0	"a:300,b:400,c:500"
+line-7	line-7.json	0	"a:100"
+line-8	line-8.json	0	""
+line-9	line-9.json	0	"a:500,b:500"

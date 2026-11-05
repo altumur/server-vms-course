@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/alarm-history",
+ "table": "cases.tsv",
+ "case": "write-create",
+ "variant": "",
+ "cells": {
+  "op": "write",
+  "input": "{\"now\":1000000.0,\"history\":null,\"lines\":[{\"id\":\"e1-1\",\"class\":\"alarm\",\"kind\":\"door.forced\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"t\":999000.0,\"t_src\":998990.0},{\"id\":\"e1-2\",\"class\":\"alarm\",\"kind\":\"door.held\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"t\":999001.0,\"t_src\":998991.0}]}"
+ },
+ "files": {}
+}

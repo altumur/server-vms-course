@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/may",
+ "table": "cases.tsv",
+ "case": "may-55-roles-unreadable-role-line",
+ "variant": "",
+ "cells": {
+  "input": "{\"grants\":{\"lines\":[{\"subject\":\"role:ops\",\"cap\":\"edit\",\"scope\":\"*\",\"until\":0,\"by\":\"root\"}]},\"as_of\":1759999990,\"disabled\":[],\"user\":\"ann\",\"glass\":false,\"cap\":\"edit\",\"unit\":{\"sub\":\"testsub\",\"id\":\"c1\",\"labels\":[]},\"now\":1760000000,\"roles\":\"unreadable\"}"
+ },
+ "files": {}
+}

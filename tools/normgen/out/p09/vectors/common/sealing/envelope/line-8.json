@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/sealing",
+ "table": "envelope.tsv",
+ "case": "kid_hash_inside",
+ "variant": "",
+ "cells": {
+  "key_hex": "29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea",
+  "kid": "k#1",
+  "nonce_b64url": "p588JkjN9BNB4tE4",
+  "row_key": "testsub2/tallies/t1",
+  "pointer": "/feed_secret",
+  "plaintext": "\"x\""
+ },
+ "files": {}
+}

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/record",
+ "table": "take.tsv",
+ "case": "take-older-term",
+ "variant": "",
+ "cells": {
+  "input": "{\"have\":{\"doc\":\"{\\\"domain\\\":\\\"acme\\\",\\\"issuer\\\":\\\"b7478a6313d3d9ca57bd1df746e4ff90811a250846de6e81490b31837f61b41a\\\",\\\"kid\\\":\\\"b7478a6313d3d9ca\\\",\\\"members\\\":{\\\"m1\\\":{\\\"how\\\":\\\"admitted\\\",\\\"since\\\":1}},\\\"part\\\":\\\"3232\\\",\\\"rev\\\":1,\\\"sig\\\":\\\"k8CQL4Q0DUTZr9j0SaOYnC91UqTuXrph3PJvIRJkM4xqCztZujwNaND_Yf63uMAabdhX_x21pJ5C4RmLVAkgDA\\\",\\\"term\\\":2}\"},\"keys\":{\"book_seal\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"current\":\"t1\",\"domain\":\"acme\",\"issuing\":[\"b7478a6313d3d9ca\"],\"keys\":{\"t1\":\"dc8561d3f7f3a8f7fd68636f4762ed842dfbceb256c56f0707ed3b1ee41b9d8f\"},\"kid\":\"root\",\"rev\":2,\"revoked_issuing\":[\"d5d409043df34a75\"],\"root\":\"34dc3424ca1fc497170b49eef38222db60fbcaa887852645d7c73bedcc9f7684\",\"sig\":\"EuYmRdATWoCHtZP-Ol7UImD2_yiBY08d8z9tJujhNwGGu4htCjYwj5yf9Fk4ey3pdDFOf1LAeazlJS-uytxuDg\"},\"part\":\"3232\",\"row\":{\"doc\":\"{\\\"domain\\\":\\\"acme\\\",\\\"issuer\\\":\\\"b7478a6313d3d9ca57bd1df746e4ff90811a250846de6e81490b31837f61b41a\\\",\\\"kid\\\":\\\"b7478a6313d3d9ca\\\",\\\"members\\\":{\\\"m1\\\":{\\\"how\\\":\\\"admitted\\\",\\\"since\\\":1}},\\\"part\\\":\\\"3232\\\",\\\"rev\\\":9,\\\"sig\\\":\\\"v1sP4WyrDQ8IXwBU_GrAjW2DyJWgabHTnhkYEpMV0Du45hfVJkl0PWT1Wb_PbzuKwlq_HCCpStdMtwimjXvkCA\\\",\\\"term\\\":1}\"}}"
+ },
+ "files": {}
+}

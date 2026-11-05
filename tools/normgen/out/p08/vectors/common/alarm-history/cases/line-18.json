@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/alarm-history",
+ "table": "cases.tsv",
+ "case": "write-old-line-not-kept",
+ "variant": "",
+ "cells": {
+  "op": "write",
+  "input": "{\"now\":1000000.0,\"history\":{\"events\":[{\"id\":\"e1-2\",\"class\":\"alarm\",\"kind\":\"door.held\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"t\":999000.0,\"t_src\":998990.0}],\"cut_before\":0},\"lines\":[{\"id\":\"e1-1\",\"class\":\"alarm\",\"kind\":\"door.forced\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"t\":395199.0,\"t_src\":395189.0}]}"
+ },
+ "files": {}
+}

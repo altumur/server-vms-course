@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/domain-envelopes",
+ "table": "m1-open.tsv",
+ "case": "seal-member-11-product-form",
+ "variant": "",
+ "cells": {
+  "seed_hex": "c27e2aa35b5905de643148195bc7c476e5c8dabaf63a2e9bb2dd17ac6d5cac39",
+  "sealed": "m1.0000000000000000000000000000000000000000000000000000000000000000.LunirZ9_HDhNkRX82xtQbhzEyUTctUuKZvxiFkJD2V6vh2QJFfqkP2re2cxK"
+ },
+ "files": {}
+}

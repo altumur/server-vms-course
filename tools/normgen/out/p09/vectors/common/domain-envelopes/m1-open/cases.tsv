@@ -1,0 +1,14 @@
+# Inputs of the vector command for common/domain-envelopes m1-open.tsv (gen_vectors.py); compare subset.
+# source Platform/common/vectors/domain-envelopes/m1-open.tsv sha256 d7a4242320e2258c1e46d40dc49da9968c5201a3f757ceadd105dffc3fbf69aa
+case	input	exit	stdout
+line-6	line-6.json	0	{"result":"ok","plain":"{\"grants\":{\"alice\":[\"view\"]}}"}
+line-7	line-7.json	0	{"result":"ok","plain":""}
+line-8	line-8.json	0	{"result":"refused","reason":"does_not_open"}
+line-9	line-9.json	0	{"result":"refused","reason":"does_not_open"}
+line-10	line-10.json	0	{"result":"refused","reason":"not_m1"}
+line-11	line-11.json	0	{"result":"refused","reason":"not_an_envelope"}
+line-12	line-12.json	0	{"result":"refused","reason":"not_an_envelope"}
+line-13	line-13.json	0	{"result":"refused","reason":"not_an_envelope"}
+line-14	line-14.json	0	{"result":"refused","reason":"does_not_open"}
+line-15	line-15.json	0	{"result":"refused","reason":"not_an_envelope"}
+line-16	line-16.json	0	{"result":"refused","reason":"not_m1"}

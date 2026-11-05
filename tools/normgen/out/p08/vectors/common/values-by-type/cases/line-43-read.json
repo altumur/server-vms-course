@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "f-garbled",
+ "variant": "read",
+ "cells": {
+  "type": "float",
+  "row": "\"x\""
+ },
+ "files": {}
+}

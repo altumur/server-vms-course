@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "i-max",
+ "variant": "read",
+ "cells": {
+  "type": "int",
+  "row": "\"9007199254740991\""
+ },
+ "files": {}
+}

@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/heartbeat-read",
+ "table": "worker.tsv",
+ "case": "worker-not-key",
+ "variant": "",
+ "cells": {
+  "key": "testsub/heartbeats/w-1",
+  "object": "{\"worker\":\"w-2\",\"ts\":100,\"status\":[{\"id\":\"c1\",\"phase\":\"running\",\"epoch\":1,\"revision\":1,\"observed_revision\":1}],\"server\":\"srv-a\",\"instance\":\"box-a:1:aaaaaa\"}"
+ },
+ "files": {}
+}

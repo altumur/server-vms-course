@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/turn",
+ "table": "cases.tsv",
+ "case": "signer-renew",
+ "variant": "",
+ "cells": {
+  "input": "{\"kind\":\"signer\",\"turn\":\"domain/signer-turn\",\"me\":{\"holder\":\"box-a:4242:a1b2c3\"},\"steps\":[{\"read\":null,\"seen\":0},{\"reply\":\"ok\",\"version\":1},{\"renew\":true},{\"reply\":\"ok\",\"version\":2}]}"
+ },
+ "files": {}
+}

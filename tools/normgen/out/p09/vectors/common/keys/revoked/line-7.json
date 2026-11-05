@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/keys",
+ "table": "revoked.tsv",
+ "case": "prune-boundary-kept",
+ "variant": "",
+ "cells": {
+  "input": "{\"own\":\"a:100\",\"answer\":null,\"now\":160}"
+ },
+ "files": {}
+}

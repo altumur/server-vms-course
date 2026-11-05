@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/may",
+ "table": "cases.tsv",
+ "case": "may-31-sub-platform-line",
+ "variant": "",
+ "cells": {
+  "input": "{\"grants\":{\"lines\":[{\"subject\":\"ann\",\"cap\":\"admin\",\"sub\":\"platform\",\"scope\":\"*\",\"until\":0,\"by\":\"root\"}]},\"as_of\":1759999990,\"disabled\":[],\"user\":\"ann\",\"glass\":false,\"cap\":\"admin\",\"unit\":\"*\",\"now\":1760000000,\"sub\":\"platform\"}"
+ },
+ "files": {}
+}

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/keys",
+ "table": "revoked.tsv",
+ "case": "merge-greater",
+ "variant": "",
+ "cells": {
+  "input": "{\"own\":\"a:300\",\"answer\":\"a:250,b:400\",\"now\":0}"
+ },
+ "files": {}
+}

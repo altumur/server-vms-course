@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/may",
+ "table": "covers.tsv",
+ "case": "covers-folder-object-unit",
+ "variant": "",
+ "cells": {
+  "input": "{\"scope\":\"unit:platform/0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c\",\"ref\":{\"sub\":\"platform\",\"id\":\"0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c\"},\"row\":{\"labels\":[],\"chains\":[[\"0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c\",\"0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a\"]]}}"
+ },
+ "files": {}
+}

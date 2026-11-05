@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/turn",
+ "table": "cases.tsv",
+ "case": "signer-guard",
+ "variant": "",
+ "cells": {
+  "input": "{\"kind\":\"signer\",\"turn\":\"domain/signer-turn\",\"me\":{\"holder\":\"box-a:4242:a1b2c3\"},\"steps\":[{\"read\":null,\"seen\":0},{\"reply\":\"ok\",\"version\":1},{\"target\":true,\"age\":1}]}"
+ },
+ "files": {}
+}

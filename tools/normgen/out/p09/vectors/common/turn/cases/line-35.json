@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/turn",
+ "table": "cases.tsv",
+ "case": "signer-unknown-take-foreign",
+ "variant": "",
+ "cells": {
+  "input": "{\"kind\":\"signer\",\"turn\":\"domain/signer-turn\",\"me\":{\"holder\":\"box-a:4242:a1b2c3\"},\"steps\":[{\"read\":null,\"seen\":0},{\"reply\":\"none\"},{\"read\":{\"holder\":\"box-b:77:ffffff\"},\"seen\":0,\"version\":1}]}"
+ },
+ "files": {}
+}

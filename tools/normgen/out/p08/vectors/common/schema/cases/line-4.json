@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/schema",
+ "table": "cases.tsv",
+ "case": "version-schema",
+ "variant": "",
+ "cells": {
+  "input": "{\"SCHEMA\":3,\"row\":{\"version\":\"3\",\"at\":\"1700000000\"}}"
+ },
+ "files": {}
+}
