@@ -231,13 +231,142 @@ def go_module(table, rel):
     return "\n\n".join(parts) + "\n"
 
 
+# ---------------------------------------------------------------- каталог без HTTP (P/02: 15 колонок)
+
+PLAIN_COLUMNS = ["chapter", "row", "name", "surface", "code", "kind", "fields", "headers", "log", "norm", "word",
+                 "cause", "outcome", "diagnostic", "caller"]
+PLAIN_SURFACES = ("call", "cli", "start", "process", "peer")
+
+
+class PlainTable:
+    """refusals.tsv урока без своей двери (P/02 forms README «Refusal catalogue»): генератор читает только закрытые
+    колонки (chapter, row, name, surface, code, word, log, norm); kind, fields, headers — «-»; четыре последние —
+    проза нормы, из неё ничего не выводится."""
+
+    def __init__(self, text, name="refusals.tsv"):
+        self.name = name
+        self.sha256 = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        body = [line for line in text.splitlines() if line and not line.startswith("#")]
+        if not body or body[0].split("\t") != PLAIN_COLUMNS:
+            raise GenError(f"{name}: columns must be {PLAIN_COLUMNS}")
+        self.rows, seen = [], set()
+        for k, line in enumerate(body[1:], 2):
+            cells = line.split("\t")
+            if len(cells) != len(PLAIN_COLUMNS):
+                raise GenError(f"{name}: line {k}: {len(cells)} cells, expected {len(PLAIN_COLUMNS)}")
+            r = dict(zip(PLAIN_COLUMNS, cells))
+            where = f"{name}: {r['name']}"
+            if not re.fullmatch(r"[a-z][a-z0-9_]*", r["name"]) or r["name"] in seen:
+                raise GenError(f"{where}: name — snake_case, unique")
+            seen.add(r["name"])
+            if not re.fullmatch(r"[0-9]+\.[0-9]+", r["chapter"]) or not re.fullmatch(r"[1-9][0-9]*", r["row"]):
+                raise GenError(f"{where}: chapter {r['chapter']!r} / row {r['row']!r}")
+            r["row"] = int(r["row"])
+            if r["surface"] not in PLAIN_SURFACES:
+                raise GenError(f"{where}: surface {r['surface']!r} — one of {PLAIN_SURFACES}")
+            if r["kind"] != "-" or r["fields"] != "-" or r["headers"] != "-":
+                raise GenError(f"{where}: kind, fields, headers are - (no HTTP body of the lesson)")
+            code = r["code"]
+            r["status"], r["exit"], r["any"] = 0, -1, False
+            if code == "-":
+                pass
+            elif m := re.fullmatch(r"exit (0|[1-9][0-9]*)", code):
+                r["exit"] = int(m[1])
+            elif code == "exit !0":
+                r["any"] = True
+            elif re.fullmatch(r"[1-5][0-9]{2}", code):
+                if r["surface"] != "peer":
+                    raise GenError(f"{where}: an HTTP status only at the surface peer")
+                r["status"] = int(code)
+            else:
+                raise GenError(f"{where}: code {code!r} — exit N, exit !0, NNN (peer) or -")
+            if r["surface"] == "peer" and (r["exit"] >= 0 or r["any"]):
+                raise GenError(f"{where}: a peer row has no exit code")
+            if r["word"] != "-" and not re.fullmatch(r"\S+", r["word"]):
+                raise GenError(f"{where}: word {r['word']!r} — one token or -")
+            r["log_names"], r["log_words"] = [], []
+            if r["log"] != "-":
+                items = re.findall(r"\s*(«[^«»]*»|[^,«»]+?)\s*(?:,|$)", r["log"])  # запятая внутри «…» — часть фрагмента
+                for item in items:
+                    if m := re.fullmatch(r"«([^«»]+)»", item):
+                        r["log_words"].append(m[1])
+                    elif item:
+                        r["log_names"].append(item)
+                    else:
+                        raise GenError(f"{where}: an empty log item")
+            r["var"] = camel(r["name"])
+            self.rows.append(r)
+
+
+PLAIN_API = """
+// Spec — a row of the refusal catalogue of the lesson (forms/refusals.tsv; the closed columns only — the prose
+// columns cause, outcome, diagnostic, caller stay in the norm).
+type Spec struct {
+	Chapter string   // the chapter of the lesson: 2.1 … 2.5
+	Row     int      // the row of the Н4 catalogue of the chapter (two outcomes of one prose row — two Specs)
+	Name    string   // the condition
+	Surface string   // call (a pure procedure), cli (an operator command), start, process (a running process), peer
+	Exit    int      // cli, start, process: the exit code fixed by the form; -1 — none fixed (see AnyNonZero)
+	AnyNonZero bool  // «exit !0»: any nonzero exit code (2 included) — the code is yours, never 0
+	Status  int      // peer: the HTTP status of the peer's door (its owner is another lesson); 0 — none
+	Word    string   // a fixed refusal/diagnostic token; "" — none
+	Log     []string // the subjects the diagnostic must name; it fixes no stdout/stderr format
+	Words   []string // the fixed fragments «…» the diagnostic must carry
+	Norm    string
+}
+
+// ByName — the row by its name; nil — none.
+func ByName(name string) *Spec { return byName[name] }
+
+// ExitCode — the exit code of the refusal: the fixed one, or 1 for «exit !0» (the kit's choice of a nonzero code —
+// any nonzero code is the norm); ok false — the form fixes no exit code (call, peer, a «-» code).
+func (s *Spec) ExitCode() (code int, ok bool) {
+	switch {
+	case s.Exit >= 0:
+		return s.Exit, true
+	case s.AnyNonZero:
+		return 1, true
+	}
+	return 0, false
+}
+"""
+
+
+def go_spec_plain(r):
+    lst = lambda xs: "[]string{" + ", ".join(go_str(x) for x in xs) + "}" if xs else "nil"  # noqa: E731
+    return (f"// {r['var']} — {r['chapter']} row {r['row']}: {r['surface']} {r['code']}"
+            f"{' ' + r['word'] if r['word'] != '-' else ''}; {r['norm']}\n"
+            f"var {r['var']} = &Spec{{Chapter: {go_str(r['chapter'])}, Row: {r['row']}, Name: {go_str(r['name'])}, "
+            f"Surface: {go_str(r['surface'])}, Exit: {r['exit']}, AnyNonZero: {'true' if r['any'] else 'false'}, "
+            f"Status: {r['status']}, Word: {go_str('' if r['word'] == '-' else r['word'])}, "
+            f"Log: {lst(r['log_names'])}, Words: {lst(r['log_words'])}, Norm: {go_str(r['norm'])}}}")
+
+
+def go_module_plain(table, rel):
+    parts = [f"// Code generated by tools/normgen/gen_refusals.py from {rel}; DO NOT EDIT.\n"
+             f"// Таблица sha256 {table.sha256}.\n\n"
+             f"// Package refusals — the refusal catalogue of {L.code} (ADR-0125 № 4, addendum (5)): no HTTP body of the lesson.\n"
+             "package refusals",
+             PLAIN_API.strip("\n")]
+    parts += [go_spec_plain(r) for r in table.rows]
+    parts.append("// All — the rows of the catalogue in the order of the table.\nvar All = []*Spec{" +
+                 ", ".join(r["var"] for r in table.rows) + "}")
+    parts.append("var byName = map[string]*Spec{" + ", ".join(f"{go_str(r['name'])}: {r['var']}"
+                                                              for r in table.rows) + "}")
+    return "\n\n".join(parts) + "\n"
+
+
 def render(table_path=DEFAULT_TABLE):
     table_path = Path(table_path).resolve()
     try:
         rel = table_path.relative_to(ROOT).as_posix()
     except ValueError:
         rel = table_path.name
-    table = Table(table_path.read_text(encoding="utf-8"), table_path.name)
+    text = table_path.read_text(encoding="utf-8")
+    head = next((ln for ln in text.splitlines() if ln and not ln.startswith("#")), "")
+    if head.split("\t") == PLAIN_COLUMNS:                    # урок без своей двери (P/02)
+        return {"refusals.go": gofmt(go_module_plain(PlainTable(text, table_path.name), rel))}
+    table = Table(text, table_path.name)
     return {"refusals.go": gofmt(go_module(table, rel))}
 
 
@@ -246,6 +375,9 @@ def generate(table_path=DEFAULT_TABLE, out=DEFAULT_OUT):
     gdir.mkdir(parents=True, exist_ok=True)
     for name, text in render(table_path).items():
         (gdir / name).write_text(text, encoding="utf-8")
+    mod = Path(out) / "go/go.mod"                     # модуль выхода урока (у P/01 его пишет gen_tests)
+    if not mod.exists():
+        mod.write_text(f"module {L.go_module}\n\ngo 1.22\n", encoding="utf-8")
     return gdir
 
 
@@ -306,6 +438,38 @@ func (s *Spec) Exit(logf func(string), values map[string]string) int // logs Log
 
 
 KIT_MD = KIT_MD.replace("Platform/01-store/", L.rel + "/")      # пути урока; прочий текст — урока P/01
+
+KIT_MD_PLAIN = """
+## Part `refusals`: the refusal catalogue (generated from `forms/refusals.tsv`; the lesson has no HTTP door)
+
+| Package | Import path | Origin |
+|---|---|---|
+| `refusals` | `{module}/internal/refusals` | generated from the closed columns of `forms/refusals.tsv`; closed |
+
+```go
+type Spec struct {
+    Chapter, Name, Surface string // surface: call | cli | start | process | peer
+    Row        int
+    Exit       int      // the exit code the form fixes; -1 — none
+    AnyNonZero bool     // «exit !0»: any nonzero code (yours), never 0
+    Status     int      // peer: the HTTP status of the other lesson's door
+    Word       string   // a fixed refusal/diagnostic token, "" — none
+    Log, Words []string // the subjects and «fragments» the diagnostic names; no stdout/stderr format
+    Norm       string
+}
+var All []*Spec; func ByName(name string) *Spec
+func (s *Spec) ExitCode() (code int, ok bool) // the fixed code, 1 for «exit !0» (the kit's choice), ok false — none fixed
+```
+
+The prose of a row (its cause, outcome, diagnostic and caller action) stays in the norm (`norm`): read it there; the
+package carries only what the form fixes.
+"""
+
+
+def kit_md():
+    """Справка части: каталог без двери (15 колонок, P/02) — KIT_MD_PLAIN; иначе каталог P/01 с HTTP."""
+    head = next((x for x in DEFAULT_TABLE.read_text(encoding="utf-8").splitlines() if x and not x.startswith("#")), "")
+    return KIT_MD_PLAIN if head.split("\t") == PLAIN_COLUMNS else KIT_MD
 
 
 def main(argv):
