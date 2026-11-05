@@ -49,6 +49,8 @@ The mandatory behaviour is set by the norms of the chapters. The internal interf
 
 The stages of the implementation are the table [`forms/stages.tsv`](../forms/stages.tsv) (ADR-0126): the goal, the norms, the gate (own tests, vectors, scenarios of acceptance), the weight and the dependencies of each stage. It is one possible order, a plan and not a norm: the split into functions, the internal interfaces and the chosen kinds of store may be arranged otherwise, keeping the behaviour of the canon. Below is the advice to the stages by chapter; the checklists are in «Done when».
 
+The one-box daemon work is split into `daemon_doors` (the service doors and status), then `daemon_copy` (copies). The table gives their gates, weights and dependencies.
+
 ### Chapter 1.1 — the store doors
 
 1. The data model of Н1: the checks of `key`, `items`, `cas`, `guard`, `id` as separate pure functions. These are the first tests (the stage `model`).
