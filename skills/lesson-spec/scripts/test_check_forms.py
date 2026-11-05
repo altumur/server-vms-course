@@ -371,3 +371,26 @@ class Wire(unittest.TestCase):                     # провод векторо
     def test_foreign_owner(self):
         row = self.row("01-store/rights-evaluator", "expect.tsv", "vectors")
         self.assertTrue(self.mutate('owner == \\"01-store\\"', 'owner == \\"03-worker\\"', row))
+
+    def test_assert_tests(self):                  # test: prefix | absent | no-leak (min_bytes ≥ 1 только у no-leak)
+        row = self.row("common/family-read", "01.tsv", "vectors")
+        old = '{"pointer":"/paths","compare":"set","value":{"column":"paths","decode":"json"}},{"pointer":"/outcome","compare":"value"'
+        leak = '{"pointer":"/text","test":"no-leak","value":{"column":"key","decode":"text"},"min_bytes":4},'
+        self.assertEqual(self.mutate(old, leak + old, row), [])
+        self.assertEqual(self.mutate(old, leak.replace('{"column":"key","decode":"text"}', '{"literal":["s1","s2"]}') + old, row), [])
+        self.assertTrue(self.mutate(old, leak.replace('"no-leak"', '"contains"') + old, row))       # test вне списка
+        self.assertTrue(self.mutate(old, leak.replace(',"min_bytes":4', '') + old, row))            # no-leak без min_bytes
+        self.assertTrue(self.mutate(old, leak.replace('"min_bytes":4', '"min_bytes":0') + old, row))
+        self.assertTrue(self.mutate(old, leak.replace('{"column":"key","decode":"text"}', '{"literal":7}') + old, row))
+        self.assertTrue(self.mutate(old, '{"pointer":"/text","test":"absent","min_bytes":4},' + old, row))
+
+    def test_layout_any_table(self):              # layout допустим для любой таблицы, правило пустых ячеек прежнее
+        crl = self.row("common/crl", "cases.tsv", "vectors")
+        layout = "\t".join(["common/crl", "cases.tsv", "layout", "case,input,expect,note", "[]", "{}", "[]", "-", "[]", "-",
+                            "common/vectors/crl/README.md"])
+        self.assertEqual(self.mutate(crl, crl + "\n" + layout), [])
+        fault = "\t".join(["common/fault", "fault.tsv", "layout", "-,word,code", "[]", "{}", "[]", "-", "[]", "-",
+                           "common/vectors/fault/README.md"])     # таблица без шапки, без потребителя провода (P/03)
+        self.assertEqual(self.mutate(crl, crl + "\n" + fault), [])
+        self.assertTrue(self.mutate(crl, crl + "\n" + fault.replace("-,word,code", "-,word")))
+        self.assertTrue(self.mutate(crl, crl + "\n" + layout.replace("\t[]\t-\tcommon", "\t[]\tvalue\tcommon")))

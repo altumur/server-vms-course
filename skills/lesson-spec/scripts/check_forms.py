@@ -684,6 +684,7 @@ def check_door_roles(path):
 WIRE_COLUMNS = ["package", "table", "surface", "header", "inputs", "files", "expect", "compare", "markers", "native", "norm"]
 WIRE_COMPARES = ("value", "subset", "raw", "set", "object-sets", "lines-value", "lines-subset")
 ASSERT_COMPARES = ("value", "subset", "raw", "set", "object-sets")          # без test — без lines (wire.md «assert»)
+ASSERT_TESTS = ("prefix", "absent", "no-leak")      # no-leak — решение «Архитектора» 2026-11-05 поверх wire.md
 NATIVE_WORDS = ("object", "array", "string", "number", "boolean", "null", "value", "bytes")
 JSON_TYPES = ("object", "array", "string", "number", "boolean", "null")
 FRAMES = ("json", "json-lf", "raw")
@@ -882,13 +883,23 @@ def _assert_shape(items, cols, err, what, suffix=False):
         return False
     for i, a in enumerate(items):
         w = f"{what}.assert[{i}]"
-        if not _keys(a, {"pointer", "test", "value", "decode", "compare"}, {"pointer"}, w, err):
+        if not _keys(a, {"pointer", "test", "value", "decode", "compare", "min_bytes"}, {"pointer"}, w, err):
             continue
         if not isinstance(a["pointer"], str) or not re.fullmatch(r"(/([^~/]|~[01])*)*", a["pointer"]):
             err.add(f"{w}: pointer {a['pointer']!r} is not a JSON Pointer")
         test = a.get("test")
-        if test is not None and test not in ("prefix", "absent"):
-            err.add(f"{w}: test {test!r} is not prefix|absent")
+        if test is not None and test not in ASSERT_TESTS:
+            err.add(f"{w}: test {test!r} is not {'|'.join(ASSERT_TESTS)}")
+        if test == "no-leak":                              # только грамматика: утечку исполняет судья, не форма
+            if set(a) != {"pointer", "test", "value", "min_bytes"}:
+                err.add(f"{w}: no-leak takes exactly pointer, value and min_bytes")
+            if "min_bytes" in a and (type(a["min_bytes"]) is not int or a["min_bytes"] < 1):
+                err.add(f"{w}: min_bytes is not an integer ≥ 1")
+            lit = a.get("value", {}).get("literal", "") if isinstance(a.get("value"), dict) and "literal" in a["value"] else ""
+            if not (isinstance(lit, str) or (isinstance(lit, list) and all(isinstance(x, str) for x in lit))):
+                err.add(f"{w}: no-leak value is not a string or an array of strings")
+        elif "min_bytes" in a:
+            err.add(f"{w}: min_bytes is only of no-leak")
         if test == "absent" and set(a) != {"pointer", "test"}:
             err.add(f"{w}: absent takes only pointer")
         if test == "prefix" and ("value" not in a or "compare" in a):
