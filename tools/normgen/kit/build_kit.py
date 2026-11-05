@@ -58,6 +58,7 @@ import gen_families  # noqa: E402 — часть families
 import gen_admin  # noqa: E402 — часть admin
 import gen_cmdtests  # noqa: E402 — stagetests урока без HTTP (P/02)
 import gen_rollout  # noqa: E402 — часть rollout-poll (P/02)
+import gen_machine  # noqa: E402 — части машин (slot-capture P/03, slot-fate и slot-release P/04)
 import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2): --lesson, по умолчанию 01-store
 L = lesson.CURRENT
 TABLE = L.form("write-checks.tsv")
@@ -134,7 +135,8 @@ def git_head():
         return None
 
 
-PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core", "families", "admin", "rollout-poll")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
+MACHINES = ("slot-capture", "slot-fate", "slot-release")    # gen_machine.py: часть — форма машины урока forms/<часть>.tsv
+PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core", "families", "admin", "rollout-poll") + MACHINES       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
 
 
 EXAMPLES = HERE / "examples"                # пример подключения на часть: Go-файл, его собирает kit/test_kit.py
@@ -205,6 +207,8 @@ def provenance(parts, files, judged):
     for part in parts:
         if part == "stagetests" and not L.openapi.is_file():
             out[part] = {**gen_cmdtests.provenance(), "output": output("stagetests")}
+        elif part in MACHINES:
+            out[part] = {**gen_machine.provenance(part), "output": output(part)}
         elif part in ("flags", "refusals", "launch", "core", "families", "admin", "rollout-poll"):
             mod = {"flags": gen_flags, "refusals": gen_refusals, "launch": gen_launch, "core": gen_core,
                    "families": gen_families, "admin": gen_admin, "rollout-poll": gen_rollout}[part]
@@ -314,7 +318,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
         core_files = gen_core.kit_files(module) if "core" in parts else []
         family_files = gen_families.kit_files() if "families" in parts else []
         admin_files = gen_admin.kit_files(module) if "admin" in parts else []
-    except (gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError, gen_launch.GenError,
+        machine_files = [(p, f) for p in sorted(set(parts) & set(MACHINES)) for f in gen_machine.kit_files(p, module)]
+    except (gen_machine.GenError, gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError, gen_launch.GenError,
             gen_core.GenError, gen_families.GenError, gen_admin.GenError, gen_cmdtests.GenError,
             gen_rollout.GenError) as exc:
         raise KitError(str(exc)) from None
@@ -336,7 +341,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
             (gen_rollout.KIT_DIRS if rollout_files else ()) + sum((gen_tests.PART_DIRS[p] for p in ("vectors", "stagetests") if p in parts), ()) + \
             (("apidoor",) if openapi_sha else ()) + (gen_flags.KIT_DIRS if flag_files else ()) + \
             (gen_refusals.KIT_DIRS if refusal_files else ()) + (("launch",) if launch_files else ()) + \
-            (gen_families.KIT_DIRS if family_files else ()):
+            (gen_families.KIT_DIRS if family_files else ()) + \
+            sum((gen_machine.kit_dirs(p) for p in sorted(set(parts) & set(MACHINES))), ()):
         if Path(os.path.normpath(internal / sub)).exists():
             shutil.rmtree(os.path.normpath(internal / sub))
     for name, origin, source in CHECKS_FILES if has_wc else ():
@@ -368,6 +374,12 @@ def build(dst, module, parts=(), judged=None, seed=None):
         put(sub, name, data, origin, "families", source)
     for sub, name, data, origin, source in rollout_files:
         put(sub, name, data, origin, "rollout-poll", source)
+    for part, (sub, name, data, origin, source, own) in machine_files:
+        if own and taken(Path(os.path.normpath(internal / sub / name)), data):
+            continue                    # действия и процедуры машины — у реализации
+        put(sub, name, data, origin, part, source)
+        if own:
+            files[-1]["editable"] = True
     for sub, name, data, origin, source, own in admin_files:
         if own and taken(Path(os.path.normpath(internal / sub / name)), data):
             continue                    # подкоманды реализации не трогаются
@@ -391,7 +403,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
            + stagetests_md + (gen_rollout.KIT_MD if rollout_files else "") + (KIT_DOOR_MD if openapi_sha else "")
            + (gen_flags.kit_md() if flag_files else "") + (gen_refusals.kit_md() if refusal_files else "")
            + (gen_families.kit_md() if family_files else "") + (gen_admin.kit_md() if admin_files else "")
-           + (gen_launch.KIT_MD if launch_files else "") + (gen_core.KIT_MD if core_files else "")).replace("{module}", module)
+           + (gen_launch.KIT_MD if launch_files else "") + (gen_core.KIT_MD if core_files else "")
+           + "".join(gen_machine.kit_md(p) for p in sorted(set(parts) & set(MACHINES)))).replace("{module}", module)
     connect = connect_md(kit_parts, module) if L.key == lesson.DEFAULT else ""   # примеры частей — кодом P/01
     doc = (doc + connect + exported_md(internal, dst, module)).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)
@@ -578,7 +591,8 @@ REGEN = ("gen_checks.py", "gen_door.py", "gen_flags.py", "gen_refusals.py", "gen
          "gen_core.py", "gen_admin.py", "gen_launch.py", "gen_families.py")
 # Урок без своей двери (P/02): перегон по частям пакета — генераторы, объявленные для P/01, на нём отказывают.
 PART_GENS = {"flags": ("gen_flags.py",), "refusals": ("gen_refusals.py",), "stagetests": ("gen_cmdtests.py",),
-             "rollout-poll": ("gen_rollout.py",), "families": ("gen_families.py",)}
+             "rollout-poll": ("gen_rollout.py",), "families": ("gen_families.py",),
+             **{m: ("gen_machine.py",) for m in MACHINES}}
 
 
 def regen(parts):
