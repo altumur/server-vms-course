@@ -45,7 +45,7 @@ func eventQuery(v any) (EventQuery, bool) {
 	}{{"from", &q.From}, {"to", &q.To}, {"late", &q.Late}} {
 		if v, has := m[field.name]; has {
 			n, ok := finiteNumber(v)
-			if !ok || n < 0 {
+			if !ok || field.name == "late" && n < 0 {
 				return q, false
 			}
 			*field.dst = n

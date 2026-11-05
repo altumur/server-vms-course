@@ -361,6 +361,12 @@ func TestEventsEdges(t *testing.T) {
     resource:=`{"events":[`+row+`],"query":{"by":"occurred","from":1,"to":5,"late":5}}`
     cut,err:=FilterResourceEvents([]byte(resource))
     if err!=nil || len(cut["events"].([]map[string]any))!=1 { t.Fatalf("late equality: %#v %v",cut,err) }
+    negativeFrom:=`{"events":[`+row+`],"query":{"from":-1,"to":20}}`
+    cut,err=FilterResourceEvents([]byte(negativeFrom))
+    if err!=nil || len(cut["events"].([]map[string]any))!=1 { t.Fatalf("negative from (P/05-R022): %#v %v",cut,err) }
+    negativeWindow:=`{"events":[`+row+`],"query":{"from":-10,"to":-1}}`
+    cut,err=FilterResourceEvents([]byte(negativeWindow))
+    if err!=nil || len(cut["events"].([]map[string]any))!=0 { t.Fatalf("negative to (P/05-R022): %#v %v",cut,err) }
     fractionalLate:=`{"events":[],"query":{"by":"occurred","late":100.00000000000000001}}`
     if _,err:=FilterResourceEvents([]byte(fractionalLate)); err==nil { t.Fatal("fractional late rounded into an integer") }
     hidden:=`{"participant":"console","grant":[],"epochs":{"testsub":"did not answer"},"resources":{"srv-a":{"events":[`+row+`],"state":"live","truncated":0}}}`
