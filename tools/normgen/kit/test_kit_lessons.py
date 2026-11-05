@@ -53,7 +53,9 @@ class KitLessons(unittest.TestCase):
                               else ("Part `door` (3a)",)) if "door" in parts else ())
                           + (("Part `flags`: the process inputs",
                               "Part `stagetests`: the stage tests of the lesson over CALL ports",
-                              "Part `refusals`") if "flags" in parts else ()))
+                              "Part `refusals`") if "flags" in parts else ())
+                          + (("flags/constants.go", "the flags of its commands (`--name`, P/06)")
+                             if lesson == "06-console" else ()))
                 for title in titles:
                     self.assertIn(title, kit_md)
                 mod = dst / lesson
