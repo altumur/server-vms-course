@@ -13,9 +13,7 @@ analysis of stage B 3–5, В5); the bytes of the table are as before.
 
 No header; three fields separated by TAB: `raw` — a JSON text as it may arrive; `canonical` — its RFC 8785 form; `sha256` —
 the sha256 of the UTF-8 of this form (hex). The implementation reads each input, brings it to the canon and compares both columns. Lines with `#` are
-notes (including the mandatory cases of ADR-0072). The input of the single command `vectors` is `cells: {raw}`; the native outcome is code 0
-and an object `{canonical, sha256}` with JSON strings, compared by value (the common rule «Vectors» of the common acceptance README;
-inventory C04/C06-NEXT-167, the Architect's decision of 2026-10-27).
+notes (including the mandatory cases of ADR-0072). The command binding is the wire form below (inventory C04/C06-NEXT-167, the Architect's decision of 2026-10-27).
 
 ## Who executes
 
@@ -25,3 +23,7 @@ P/02.2 Н1.1); the worker (`03-worker`: `value` of the state, P/03.6); the clust
 body, P/06.4 Н1.5; the claims of the door token, P/06.5 Н3 and the door token contract); the process `domain` (`08-domain`: signatures and
 documents of the domain, generations, the Entry limit, P/08.2, P/08.3, P/08.10); the agent (`09-agent`: signatures and documents of the domain,
 a change of object, P/09.1). All rows — for each of these roles.
+
+## Vector wire
+
+The wire of `canonical_json.tsv` is set by the `01-store/jcs` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

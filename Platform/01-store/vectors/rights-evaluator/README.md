@@ -32,3 +32,7 @@ cammeta-go, lesson 6 № 2.
 ## Who executes
 
 Who executes — the store (`01-store`: the evaluator of P/01.2 Н1.3, and in the store in the process too, P/01.1-22) — all rows, through the door of its role sockets. Do not execute: the agent in the process (`09-agent`, P/09.1 Н1.11 `rights`) — the rights of its components are checked by the store in the process; the installer's rights generator (`02-installer`, P/02.5 Н3 «generate_rights» step 4) — its own rule of covering the patterns of secret rows, not an evaluator of actions; the console (`06-console`, P/06.3) only refers to P/01.2 (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+
+## Vector wire
+
+The wire of `expect.tsv` is set by the `01-store/rights-evaluator` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

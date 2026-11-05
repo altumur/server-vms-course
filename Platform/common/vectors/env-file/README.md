@@ -38,9 +38,8 @@ of the files is its own (the contract «Files and reading order»); `cases.tsv` 
 P/02.4 Н1.5 step 4) — the profile `02-installer`; the role processes get the variables from the runner and do not parse files
 (lifecycle P/03–P/10: «окружение собирает раннер») (ACC-VECTORS-CONNECT-02, -04, the Architect's decisions 2026-10-26).
 
-## Stand command `env-line`
+A native input outside the form (not a JSON string) exits with code 2 and empty stdout. Computed line outcomes and whole-file start refusal remain distinct; the wire of each table is in the form below.
 
-The key `stand` of the profile `02-installer` (the section «Layout by processes» of [the common acceptance README](../../acceptance/README.md)),
-by the common rule of the vector commands: a template with `{input}` — the path of a file into which the runner writes the cell `line` byte for byte (a JSON
-string); stdout — a JSON value and LF, compared with `expect` by value; code 0 — computed, 2 — an input not of the form (not a JSON
-string). The table has no other profiles: the role processes do not parse environment files (ACC-VECTORS-CONNECT-04).
+## Vector wire
+
+The wire of `cases.tsv`, `files.tsv` is set by the `common/env-file` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

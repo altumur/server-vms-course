@@ -17,3 +17,7 @@ The acceptance runs without a network: the inputs are in the package, `inputs/<i
 The answer of an implementation to a row is the JSON `{"layer1": "ok"|"refused"}`, optionally with `"rule"`: only
 `layer1` is compared strictly (anything else is red, ADR-0092 item 2); `rule` is a hint, like the `diagnostics.tsv` of the corpus: into the report, without a failure
 (the rule names of an implementation are its own; the list of the rules of the thin check is `common/LAYERS.md`).
+
+## Vector wire
+
+The wire of `expect.tsv` is set by the `common/yaml-suite` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

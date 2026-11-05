@@ -26,7 +26,6 @@ of the file with `@bad`. A serial is reconciled only with the CRL of the issuer 
 is not revoked.
 Who performs it — every role whose door or client checks revocation (`revoke` of the role certificate contract): the doors — the store (`01-store`, P/01.3 Н1.6), the worker (`03-worker`, the process door P/03.4 Н1.7 and the door on the domain P/03.7 Н1.6), the resource (`05-resource`, the admission to the doors of P/05), the process `domain` (`08-domain`, the listener `SIGNER_URL`, P/08.0 Н1.6), the domain console (`10-domain-console`, the role door P/10 Н1.4); the clients of its own cluster (`own_client`: peer, then revocation) — the installer (`02-installer`, the workers script P/02.4 Н1.6), the controller (`04-controller`, a client of the resource door — the object client contract, as at the package `loopback`), the resource (`05-resource`, the doors of the neighbours), the console (`06-console`, P/06.7 Н1.4, Н1.8; a client of the resource door), the agent (`09-agent`, P/09.1), the domain console (`10-domain-console`, P/10 Н1.3) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
 
-## Native outcome
+## Vector wire
 
-The package has no separate command contract — the common rule «Vectors» of [the common acceptance README](../../acceptance/README.md)
-(ACC-VECTORS-CONNECT-04, the Architect's decision 2026-10-26): the function answers with code 0 and one JSON value. The object `{ca, ca_next, …}` by the form of `expect` or the JSON string `"@bad"` — the file is wrong.
+The wire of `cases.tsv` is set by the `common/crl` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

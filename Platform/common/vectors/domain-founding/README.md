@@ -19,8 +19,8 @@ the process `domain` of the holder (`08-domain`): only it writes the term record
 
 A side computes by its own code and compares: `recovery.tsv` and `claim.tsv` — JSON by value (`doc` — byte for byte), `book-seal.tsv` — the string.
 
-## Native outcome
+## Vector wire
 
-The package has no separate command contract — the general rule «Vectors» of [the common acceptance README](../../acceptance/README.md)
-(ACC-VECTORS-CONNECT-04, the Architect's decision of 2026-10-26): the function answers with code 0 and one JSON value. `recovery.tsv` — the object `{domain, root_pub, fingerprint}` or the JSON string `"@refuse"`; `book-seal.tsv` — a JSON string with
-the hex `book_seal`; `claim.tsv` — the object of the row `domain/holder`.
+The wire of `book-seal.tsv`, `recovery.tsv` is set by the `common/domain-founding` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+
+`claim.tsv` is outside this form slice: its native outcome remains the object of the `domain/holder` row under the common Vectors contract.

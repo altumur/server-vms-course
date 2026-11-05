@@ -28,13 +28,6 @@ the console, the process `domain` (the book at the holder), the agent (the membe
 `reseal.tsv` — the console (resealing at start) and the installer (`w2cctl secrets seal`); the rows `rotate*` —
 the installer (`w2cctl secrets rotate`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-26).
 
-## Native outcome
+## Vector wire
 
-By the common rule «Vectors» of [the common acceptance README](../../acceptance/README.md) (the Architect's decision 2026-10-27); the expectation columns:
-`aad.tsv` — `pointer`, `aad_hex`: the object `{"pointer": …, "aad_hex": …}` (the input — `row_key`, `path`); `envelope.tsv` —
-`envelope`: the JSON string of the envelope (the input — `key_hex`, `kid`, `nonce_b64url`, `row_key`, `pointer`, `plaintext`; the opening of the same
-envelope — `open.tsv` by its own function); `open.tsv`, `reseal.tsv`, `ring.tsv` — `expect`: a JSON value, a word (`sealed`,
-`unreadable`, the string `current …`) — as a JSON string. `ring.tsv`: the input of the single command `vectors` — `cells` «имя → строка»: at the rows
-`rotate*` (by the row name) `{"file": <ячейка>, "rotate": "true"}` (`"true"` is a string, not a JSON boolean), at the others
-exactly `{"file": <ячейка>}`; the outcome — code 0 and a JSON string as `expect`; the rows `rotate*` are performed
-only by the installer (`02-installer`) (ACC-SEALING-RING-ROTATE-01, the Architect's decision 2026-10-27).
+The wire of `aad.tsv`, `envelope.tsv`, `open.tsv`, `reseal.tsv`, `ring.tsv` is set by the `common/sealing` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

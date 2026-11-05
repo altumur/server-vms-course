@@ -35,3 +35,7 @@ compares the word with `expect`; DNS is not asked. Who performs is every client 
 that read the objects of the cluster by `RESOURCE_URL`: `03-worker`, `04-controller`, `06-console`, `08-domain`, `09-agent`; and the
 resource `05-resource` itself — a client of the doors of the neighbours by the url of their door row: the bodies, buckets and tombstones of the neighbours; the Architect's
 decision of 2026-10-27) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/loopback` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
