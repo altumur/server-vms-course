@@ -9,3 +9,4 @@ tree-dir	<PLATFORM_DIR>/events/testsub	dir	2770	-	w2c-events	the tree's director
 unit-dir	<PLATFORM_DIR>/events/testsub/c1	dir	2770	-	w2c-events	the unit's directory — the writer creates, the resource deletes
 bucket-one-writer	<PLATFORM_DIR>/events/testsub/c1/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	0640	<пользователь воркера>	w2c-events	the unit's bucket — one writer
 audit-bucket	<PLATFORM_DIR>/events/audit/console/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	0640	w2c	w2c-events	the role's journal — the processes of one user
+audit-resource-bucket	<PLATFORM_DIR>/events/audit/resource/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	0640	w2c	w2c-events	the resource journal bucket; processes of this role share one writing user

@@ -46,6 +46,7 @@ common/env-file	cases.tsv	02-installer	common/vectors/env-file/README.md: Who pe
 common/env-file	files.tsv	02-installer	common/vectors/env-file/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/events-merge	cases.tsv	03-worker	common/vectors/events-merge/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/events-merge	cases.tsv	06-console	common/vectors/events-merge/README.md: Who performs; ACC-VECTORS-CONNECT-03
+common/events-merge	resource.tsv	05-resource	common/vectors/events-merge/README.md: resource obligation; ACC-VECTORS-CONNECT-03
 common/family-read	01.tsv	01-store	common/vectors/family-read/README.md: table 01.tsv, owner P/01; ADR-0092
 common/family-read	02.tsv	02-installer	common/vectors/family-read/README.md: table 02.tsv, owner P/02; ADR-0092
 common/family-read	03.tsv	03-worker	common/vectors/family-read/README.md: table 03.tsv, owner P/03; ADR-0092
@@ -60,6 +61,7 @@ common/fault	fault.tsv	08-domain	common/vectors/fault/README.md: Who performs; A
 common/fault	fault.tsv	09-agent	common/vectors/fault/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/fault	fault.tsv	10-domain-console	common/vectors/fault/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/fresh-age	fresh.tsv	04-controller	common/vectors/fresh-age/README.md: Who performs; ACC-VECTORS-CONNECT-03
+common/fresh-age	fresh.tsv	05-resource	common/vectors/fresh-age/README.md: resource obligation; ACC-VECTORS-CONNECT-03
 common/fresh-age	fresh.tsv	06-console	common/vectors/fresh-age/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/fresh-age	fresh.tsv	09-agent	common/vectors/fresh-age/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/fresh-age	fresh.tsv	10-domain-console	common/vectors/fresh-age/README.md: Who performs; ACC-VECTORS-CONNECT-03
@@ -97,6 +99,7 @@ common/journal	append.tsv	10-domain-console	common/vectors/journal/README.md: Wh
 common/journal	bucket.tsv	05-resource	common/vectors/journal/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/journal	modes.tsv	02-installer	common/vectors/journal/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/journal	modes.tsv	03-worker	common/vectors/journal/README.md: Who performs; ACC-VECTORS-CONNECT-03
+common/journal	modes.tsv	05-resource	common/vectors/journal/README.md: resource obligation; ACC-VECTORS-CONNECT-03
 common/journal	modes.tsv	06-console	common/vectors/journal/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/journal	names.tsv	03-worker	common/vectors/journal/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/journal	names.tsv	04-controller	common/vectors/journal/README.md: Who performs; ACC-VECTORS-CONNECT-03
