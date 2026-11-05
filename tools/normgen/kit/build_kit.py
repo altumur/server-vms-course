@@ -1,7 +1,7 @@
 """Сборка пакета Б для P/01 (ADR-0083 доп. (86) п. 2): проверки Н2.1 и строгий разборщик JSON — в каталог попытки.
 
 Запуск: python tools/normgen/kit/build_kit.py <dst> --module <путь импорта каталога <dst>/01-store> [--part vectors] [--part stagetests] [--part door]
-       [--part flags] [--part refusals] [--part families] [--part admin]
+       [--part flags] [--part refusals] [--part families] [--part admin] [--part box]
 
 Кладёт в <dst>/01-store/internal/:
 - checks/ — пакет, сгенерированный tools/normgen/gen_checks.py из Platform/01-store/forms/write-checks.tsv (берётся
@@ -14,6 +14,9 @@
 refusals/ (заменяется целиком), паспорт — в provenance.
 Часть `families` (--part families; генератор № 5 ADR-0125 tools/normgen/gen_families.py, судья family_judge.py):
 families/ (заменяется целиком) — families.go из схем семей P/01 и ручная среда runtime.go; паспорт — в provenance.
+Часть `box` (--part box, нужны части door, flags, refusals и writecheck; tools/normgen/gen_box.py, судья
+test_gen_box.py): box/box.go и box/copy.go — закрыты (DO NOT EDIT): Status, Metrics, Join, Leave, Admit, Recover,
+StartRefusal box P/01.3 Н1.3 и формат копии (EncodeCopy, DecodeCopy, Upper, Floor, BackupTarget, ImportRepeated).
 Часть `admin` (--part admin, нужна часть flags; её требует launch; tools/normgen/gen_admin.py, судья admin_judge.py):
 admin/admin.go (закрыт: Env, Run, NotInStage) и по YOURS-файлу на подкоманду admin_ops и own.go (кладутся один раз).
 Часть `vectors` (--part vectors; ADR-0126 доп. (7) п. 4, генератор № 6 ADR-0125 tools/normgen/gen_tests.py): vectortests/,
@@ -56,6 +59,7 @@ import gen_launch  # noqa: E402 — часть launch
 import gen_core  # noqa: E402 — часть core
 import gen_families  # noqa: E402 — часть families
 import gen_admin  # noqa: E402 — часть admin
+import gen_box  # noqa: E402 — часть box
 import gen_cmdtests  # noqa: E402 — stagetests урока без HTTP (P/02)
 import gen_rollout  # noqa: E402 — часть rollout-poll (P/02)
 import gen_door_lesson  # noqa: E402 — дверь уроков после P/01 (P/06, часть 3а)
@@ -138,7 +142,7 @@ def git_head():
 
 
 MACHINES = ("slot-capture", "slot-fate", "slot-release")    # gen_machine.py: часть — форма машины урока forms/<часть>.tsv
-PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core", "families", "admin", "rollout-poll") + MACHINES       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
+PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core", "families", "admin", "box", "rollout-poll") + MACHINES       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
 
 
 EXAMPLES = HERE / "examples"                # пример подключения на часть: Go-файл, его собирает kit/test_kit.py
@@ -215,9 +219,9 @@ def provenance(parts, files, judged):
             out[part] = {**gen_cmdtests.provenance(), "output": output("stagetests")}
         elif part in MACHINES:
             out[part] = {**gen_machine.provenance(part), "output": output(part)}
-        elif part in ("flags", "refusals", "launch", "core", "families", "admin", "rollout-poll"):
+        elif part in ("flags", "refusals", "launch", "core", "families", "admin", "box", "rollout-poll"):
             mod = {"flags": gen_flags, "refusals": gen_refusals, "launch": gen_launch, "core": gen_core,
-                   "families": gen_families, "admin": gen_admin, "rollout-poll": gen_rollout}[part]
+                   "families": gen_families, "admin": gen_admin, "box": gen_box, "rollout-poll": gen_rollout}[part]
             out[part] = {**mod.provenance(), "output": output(part)}
         else:
             component, t = table[part]
@@ -301,6 +305,9 @@ def build(dst, module, parts=(), judged=None, seed=None):
                        "kit's families (ADR-0125 addendum (5) item 5)")
     if "admin" in parts and "flags" not in parts:
         raise KitError("--part admin needs --part flags: the subcommands get *flags.Flags of the form")
+    if "box" in parts and not ({"door", "flags", "refusals"} <= set(parts) and has_wc):
+        raise KitError("--part box needs --part door, --part flags, --part refusals and the writecheck part: box answers "
+                       "by apidoor, reads *flags.Flags, refuses by refusals and parses by jsonstrict")
     if "launch" in parts and "admin" not in parts:
         raise KitError("--part launch needs --part admin: launch.Main gives the subcommands of admin_ops to admin.Run "
                        "(Architect 2026-11-05)")
@@ -325,9 +332,10 @@ def build(dst, module, parts=(), judged=None, seed=None):
         core_files = gen_core.kit_files(module) if "core" in parts else []
         family_files = gen_families.kit_files() if "families" in parts else []
         admin_files = gen_admin.kit_files(module) if "admin" in parts else []
+        box_files = gen_box.kit_files(module) if "box" in parts else []
         machine_files = [(p, f) for p in sorted(set(parts) & set(MACHINES)) for f in gen_machine.kit_files(p, module)]
     except (gen_machine.GenError, gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError, gen_launch.GenError,
-            gen_core.GenError, gen_families.GenError, gen_admin.GenError, gen_cmdtests.GenError,
+            gen_core.GenError, gen_families.GenError, gen_admin.GenError, gen_box.GenError, gen_cmdtests.GenError,
             gen_rollout.GenError, gen_vectors.GenError) as exc:
         raise KitError(str(exc)) from None
     door_lesson = "door" in parts and L.key != lesson.DEFAULT
@@ -400,6 +408,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
         put(sub, name, data, origin, "admin", source)
         if own:
             files[-1]["editable"] = True
+    for sub, name, data, origin, source, own in box_files:
+        put(sub, name, data, origin, "box", source)          # закрыт целиком: заменяется
     for sub, name, data, origin, source, own in launch_files:
         if own and taken(Path(os.path.normpath(internal / sub / name)), data):
             continue                    # main.go и рамка реализации не трогаются
@@ -418,6 +428,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
            + (gen_door_lesson.kit_md() if door_lesson else "")
            + (gen_flags.kit_md() if flag_files else "") + (gen_refusals.kit_md() if refusal_files else "")
            + (gen_families.kit_md() if family_files else "") + (gen_admin.kit_md() if admin_files else "")
+           + (gen_box.kit_md() if box_files else "")
            + (gen_launch.KIT_MD if launch_files else "") + (gen_core.KIT_MD if core_files else "")
            + "".join(gen_machine.kit_md(p) for p in sorted(set(parts) & set(MACHINES)))).replace("{module}", module)
     connect = connect_md(kit_parts, module) if L.key == lesson.DEFAULT else ""   # примеры частей — кодом P/01
@@ -603,7 +614,7 @@ COURSE_ENV, EXPORT_ENV = "NORMGEN_KIT_COURSE", "NORMGEN_KIT_EXPORT"
 SPECS = Path(os.environ.get("CAMMETA_SPECS", Path.home() / "cammeta-specs"))
 # Порядок перегона out во временном каталоге: дверь и флаги — до core и launch (они читают их выход).
 REGEN = ("gen_checks.py", "gen_door.py", "gen_flags.py", "gen_refusals.py", "gen_tests.py", "gen_stagetests.py",
-         "gen_core.py", "gen_admin.py", "gen_launch.py", "gen_families.py")
+         "gen_core.py", "gen_admin.py", "gen_box.py", "gen_launch.py", "gen_families.py")
 # Урок без своей двери (P/02): перегон по частям пакета — генераторы, объявленные для P/01, на нём отказывают.
 PART_GENS = {"flags": ("gen_flags.py",), "refusals": ("gen_refusals.py",), "stagetests": ("gen_cmdtests.py",),
              "rollout-poll": ("gen_rollout.py",), "families": ("gen_families.py",),
