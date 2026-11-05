@@ -2,17 +2,17 @@
 // Package coreadapter — versioned-door metadata for the ordinary P/08 core.
 // Platform/08-domain/forms/versioned-doors.tsv sha256 764e08e3e162d6265dfe51c90cf2ed5b2cfa9ab9a15306541259e66b921a38ed
 // Platform/08-domain/spec/08-domain.api.openapi.yaml sha256 cc1606cbeedab73f69326d453ee59084abc83eb60bf29153559492dc84502066
-// Platform/08-domain/spec/08.0-domain.norms.md sha256 c563c54e50ca4d74f464c0d51ccc510117bfe4327695960f327644834cc6dd3f
-// Platform/08-domain/spec/08.1-domain.norms.md sha256 db7467e1bbbbd1e09944b13cecc5341c8e9fddc6b1eb749e075278e64d596736
-// Platform/08-domain/spec/08.10-domain.norms.md sha256 ff1d82d2be922d6925eef9cdc310e1d08846a1d1beee2f83b5091d45c33b68aa
-// Platform/08-domain/spec/08.2-domain.norms.md sha256 0b81dbfd588e2aa51ff4deb9da4d28afac6f78006011cb74595705092a17dd62
-// Platform/08-domain/spec/08.3-domain.norms.md sha256 a072e926917e9370945b40eb6c83de7ed065d00e788bd33836427bee3980bb7b
-// Platform/08-domain/spec/08.4-domain.norms.md sha256 8b27bfbc19d305c563ef29172bd6bbd05368e2f8513d721fae2621166a637b4b
-// Platform/08-domain/spec/08.5-domain.norms.md sha256 24414579e66b4725019778eb6e5925151615eb5abb25580588de103804b6687a
-// Platform/08-domain/spec/08.6-domain.norms.md sha256 515eb3caefab730268358db1b9a5ec8233030302a5360d7c04c4a62f0955f448
+// Platform/08-domain/spec/08.0-domain.norms.md sha256 becd1169c7b3c0327b448933d3f35e38efd55f40357b8954b6a4ba37839a7959
+// Platform/08-domain/spec/08.1-domain.norms.md sha256 8892861ab437491173033d28ff59b7f62e4a511eadfe6b0a16a57782643ac40c
+// Platform/08-domain/spec/08.10-domain.norms.md sha256 72d6e6aa84ec99b89212398062ee0fbce0422a221eb560ea12b75410a5d73a9f
+// Platform/08-domain/spec/08.2-domain.norms.md sha256 47b6258ff491025125a9ca20754d5393d2fb6d2bf53eeb15ab3a7084cd668755
+// Platform/08-domain/spec/08.3-domain.norms.md sha256 90e1afebd7009f4852caf5d6235fb0a57a231fe91d4a9c07ca566909f2dd35e7
+// Platform/08-domain/spec/08.4-domain.norms.md sha256 211e7b01e55195da3f8ec497832e6c14820c4a796f5d84fbade3530b442ddbc2
+// Platform/08-domain/spec/08.5-domain.norms.md sha256 2993f88f9b3fd1eed7f5826a8e9093853d87cdec93cc3cb76654b6a5a40f1f55
+// Platform/08-domain/spec/08.6-domain.norms.md sha256 de346b8ca39caa172df809d17bbd1058b245500e2b0cdb444a9e4a686460d37f
 // Platform/08-domain/spec/08.7-domain.norms.md sha256 1cd69756d84f88072d7face32a456f7ed515dca5ee29ce895c9cfcdc77fe9130
-// Platform/08-domain/spec/08.8-domain.norms.md sha256 bfd9ff6c7e2de974085d07aef74ded380a61bbf1d01d374cedc9252828bc3c99
-// Platform/08-domain/spec/08.9-domain.norms.md sha256 287fe757af77597e4bdcd56af41bd4e0aaef4a1c49e798f1d2750a34e1ad2be9
+// Platform/08-domain/spec/08.8-domain.norms.md sha256 d5db6d028bb74c00e93a5530066093ccee59d043d5dcfdcf024f668ec4f16213
+// Platform/08-domain/spec/08.9-domain.norms.md sha256 3bc46e2bbbdefe13d3900959f80134c508c2f01e3dd3c2be13335a18ebfa6ae4
 package coreadapter
 
 // VersionRowKind keeps creation, a selected row and the individual writes of a batch distinct.
