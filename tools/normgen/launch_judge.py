@@ -28,7 +28,7 @@ import build_kit  # noqa: E402
 
 MODULE = "p01store/01-store"
 GATE = ("01-absent",)                      # forms/stages.tsv: launch — accept:1.1:01-absent
-PARTS = ("door", "flags", "stagetests", "launch")
+PARTS = ("door", "flags", "stagetests", "launch", "admin")
 
 PROFILE = """# Судья части launch (tools/normgen/launch_judge.py, ADR-0083 доп. (95) п. 3): пакет как есть, пустое ядро каркаса.
 format: 2

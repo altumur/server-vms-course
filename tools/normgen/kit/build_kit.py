@@ -1,7 +1,7 @@
 """Сборка пакета Б для P/01 (ADR-0083 доп. (86) п. 2): проверки Н2.1 и строгий разборщик JSON — в каталог попытки.
 
 Запуск: python tools/normgen/kit/build_kit.py <dst> --module <путь импорта каталога <dst>/01-store> [--part vectors] [--part stagetests] [--part door]
-       [--part flags] [--part refusals] [--part families]
+       [--part flags] [--part refusals] [--part families] [--part admin]
 
 Кладёт в <dst>/01-store/internal/:
 - checks/ — пакет, сгенерированный tools/normgen/gen_checks.py из Platform/01-store/forms/write-checks.tsv (берётся
@@ -14,6 +14,8 @@
 refusals/ (заменяется целиком), паспорт — в provenance.
 Часть `families` (--part families; генератор № 5 ADR-0125 tools/normgen/gen_families.py, судья family_judge.py):
 families/ (заменяется целиком) — families.go из схем семей P/01 и ручная среда runtime.go; паспорт — в provenance.
+Часть `admin` (--part admin, нужна часть flags; её требует launch; tools/normgen/gen_admin.py, судья admin_judge.py):
+admin/admin.go (закрыт: Env, Run, NotInStage) и по YOURS-файлу на подкоманду admin_ops и own.go (кладутся один раз).
 Часть `vectors` (--part vectors; ADR-0126 доп. (7) п. 4, генератор № 6 ADR-0125 tools/normgen/gen_tests.py): vectortests/,
 vectorcmd/, cmd/vectors (заменяются целиком) и заглушки адаптера vectoradapter/ (canonical.go, rights.go — по файлу на функцию) — их реализация правит; заглушка кладётся, только если её файла нет и её имя не объявлено в пакете.
 Часть `stagetests` (--part stagetests, нужна часть door; ADR-0125 доп. (3), (4), ADR-0126 доп. (7), gen_stagetests.py, судья
@@ -53,6 +55,7 @@ import gen_door  # noqa: E402 — свежесть door
 import gen_launch  # noqa: E402 — часть launch
 import gen_core  # noqa: E402 — часть core
 import gen_families  # noqa: E402 — часть families
+import gen_admin  # noqa: E402 — часть admin
 TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"
 GENERATED = ROOT / "tools/normgen/out/p01-1/go/checks"
 HANDWRITTEN = HERE / "go"
@@ -127,11 +130,11 @@ def git_head():
         return None
 
 
-PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core", "families")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
+PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core", "families", "admin")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
 
 
 EXAMPLES = HERE / "examples"                # пример подключения на часть: Go-файл, его собирает kit/test_kit.py
-EXAMPLE_ORDER = ("writecheck", "door", "flags", "refusals", "families", "vectors", "stagetests", "launch")
+EXAMPLE_ORDER = ("writecheck", "door", "flags", "refusals", "families", "vectors", "stagetests", "launch", "admin")
 
 
 def connect_md(parts, module):
@@ -196,9 +199,9 @@ def provenance(parts, files, judged):
     }
     out = {}
     for part in parts:
-        if part in ("flags", "refusals", "launch", "core", "families"):
+        if part in ("flags", "refusals", "launch", "core", "families", "admin"):
             mod = {"flags": gen_flags, "refusals": gen_refusals, "launch": gen_launch, "core": gen_core,
-                   "families": gen_families}[part]
+                   "families": gen_families, "admin": gen_admin}[part]
             out[part] = {**mod.provenance(), "output": output(part)}
         else:
             component, t = table[part]
@@ -272,6 +275,11 @@ def build(dst, module, parts=(), judged=None, seed=None):
     if "stagetests" in parts and "door" not in parts:
         raise KitError("--part stagetests needs --part door: the stage tests go through coreadapter over apidoor "
                        "(ADR-0126 addendum (7) item 5)")
+    if "admin" in parts and "flags" not in parts:
+        raise KitError("--part admin needs --part flags: the subcommands get *flags.Flags of the form")
+    if "launch" in parts and "admin" not in parts:
+        raise KitError("--part launch needs --part admin: launch.Main gives the subcommands of admin_ops to admin.Run "
+                       "(Architect 2026-11-05)")
     if "launch" in parts and not {"door", "flags", "stagetests"} <= set(parts):
         raise KitError("--part launch needs --part door, --part flags and --part stagetests: the frame parses by flags "
                        "and serves coreadapter.Handle over apidoor (ADR-0083 addendum (95) item 3)")
@@ -288,8 +296,9 @@ def build(dst, module, parts=(), judged=None, seed=None):
         launch_files = gen_launch.kit_files(module) if "launch" in parts else []
         core_files = gen_core.kit_files(module) if "core" in parts else []
         family_files = gen_families.kit_files() if "families" in parts else []
+        admin_files = gen_admin.kit_files(module) if "admin" in parts else []
     except (gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError, gen_launch.GenError,
-            gen_core.GenError, gen_families.GenError) as exc:
+            gen_core.GenError, gen_families.GenError, gen_admin.GenError) as exc:
         raise KitError(str(exc)) from None
     openapi_sha = sha256(OPENAPI.read_bytes()) if "door" in parts else None
     if openapi_sha:
@@ -338,6 +347,12 @@ def build(dst, module, parts=(), judged=None, seed=None):
         put(sub, name, data, origin, "refusals", source)
     for sub, name, data, origin, source in family_files:
         put(sub, name, data, origin, "families", source)
+    for sub, name, data, origin, source, own in admin_files:
+        if own and taken(Path(os.path.normpath(internal / sub / name)), data):
+            continue                    # подкоманды реализации не трогаются
+        put(sub, name, data, origin, "admin", source)
+        if own:
+            files[-1]["editable"] = True
     for sub, name, data, origin, source, own in launch_files:
         if own and taken(Path(os.path.normpath(internal / sub / name)), data):
             continue                    # main.go и рамка реализации не трогаются
@@ -352,7 +367,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
     doc = (KIT_MD + (gen_tests.KIT_MD if "vectors" in parts else "")
            + (gen_tests.KIT_MD_STAGETESTS if "stagetests" in parts else "") + (KIT_DOOR_MD if openapi_sha else "")
            + (gen_flags.KIT_MD if flag_files else "") + (gen_refusals.KIT_MD if refusal_files else "")
-           + (gen_families.KIT_MD if family_files else "")
+           + (gen_families.KIT_MD if family_files else "") + (gen_admin.kit_md() if admin_files else "")
            + (gen_launch.KIT_MD if launch_files else "") + (gen_core.KIT_MD if core_files else "")).replace("{module}", module)
     doc = (doc + connect_md(kit_parts, module) + exported_md(internal, dst, module)).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)
@@ -535,7 +550,7 @@ COURSE_ENV, EXPORT_ENV = "NORMGEN_KIT_COURSE", "NORMGEN_KIT_EXPORT"
 SPECS = Path(os.environ.get("CAMMETA_SPECS", Path.home() / "cammeta-specs"))
 # Порядок перегона out во временном каталоге: дверь и флаги — до core и launch (они читают их выход).
 REGEN = ("gen_checks.py", "gen_door.py", "gen_flags.py", "gen_refusals.py", "gen_tests.py", "gen_stagetests.py",
-         "gen_core.py", "gen_launch.py", "gen_families.py")
+         "gen_core.py", "gen_admin.py", "gen_launch.py", "gen_families.py")
 
 
 def git(*args, cwd):

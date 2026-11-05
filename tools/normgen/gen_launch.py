@@ -187,7 +187,7 @@ type App struct {
     Frame func(c coreadapter.Core, cfg coreadapter.Config, sock string) Frame // your frame: frame.New (nil → exit 1)
     Raft  bool                                                       // false: -group-size 3|5, -join, -door → exit 2
     Start func(f *flags.Flags, c coreadapter.Core) (stop func(), err error) // optional: an -api door, the group…
-    Admin func(f *flags.Flags) int                                   // optional: admin_ops subcommands (nil → exit 1)
+    Admin func(f *flags.Flags) int                                   // optional: overrides admin_ops (nil → admin.Run, part admin)
     Log   io.Writer                                                  // nil → stderr
 }
 func Main(args []string, getenv func(string) string, app App) int   // os.Exit(launch.Main(os.Args[1:], os.Getenv, app))
