@@ -200,7 +200,7 @@ From М11/9 Н4: the words of `may`: `disabled`, `stale`, `no_grant`. The outcom
 
 ## Vectors
 
-The package [`may`](../vectors/may/README.md): 120 lines (`may-role-*` — the input `as_role`, ADR-0105 item 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, roles, tiers, step 4а); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); of the first 26: 24 are inputs of the command `may` of the acceptance of М11/9 (sc. 07) without a change of values, except `labels: []` at the unit of
+The package [`may`](../vectors/may/README.md): 126 lines (`may-role-*` — the input `as_role`, ADR-0105 item 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, roles, tiers, step 4а); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); of the first 26: 24 are inputs of the command `may` of the acceptance of М11/9 (sc. 07) without a change of values, except `labels: []` at the unit of
 `may-24` (the Architect's decision of 2026-10-20; the README of the package);
 one of them, `may-24`, is an input out of form (`@exit 2`; analysis of review of stage B 8–10, № 22); `may-25` — `subject` "" (`@exit 2`, MAY-G03); `may-26` — `until` does not fit in binary64 (`@exit 2`, MAY-UNTIL-D8-01). The scenario and the inputs were removed by the move of lesson 8 — the table is the only
 source of these cases. There is also `covers.tsv` — 19 lines of the function `covers(scope, ref, row)` of the gate ([the gate

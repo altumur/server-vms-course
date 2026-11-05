@@ -3083,9 +3083,9 @@ components:
         index: {type: string}
     MayInput:
       type: object
-      description: 'Not HTTP: input of the function may (may contract Platform/common/contracts/may.md; P/08.4 Н1.4; vectors common/vectors/may).'
+      description: 'Not HTTP: input of the function may (may contract Platform/common/contracts/may.md; P/08.4 Н1.4; vectors common/vectors/may). Extra top-level fields are not read, not refused; known and nested forms are validated in full before glass/disabled. HTTP request forms are separate (G08-MAY-EXTRA-01).'
       required: [grants, as_of, disabled, user, glass, cap, unit, now]
-      additionalProperties: false
+      additionalProperties: true
       properties:
         grants:
           unevaluatedProperties: false
@@ -3097,7 +3097,18 @@ components:
               properties:
                 lines:
                   type: array
-                  items: {$ref: '#/components/schemas/Line'}
+                  items:
+                    allOf:
+                    - $ref: '#/components/schemas/Line'
+                    - if:
+                        required: [subject]
+                        properties:
+                          subject: {type: string, pattern: '^(?:role:[\s\S]*)$'}
+                      then:
+                        properties:
+                          scope:
+                            not: {pattern: '^(?:labels:[\s\S]*)$'}
+                    description: 'Trusted native input: a role line cannot use a labels scope, also for unit any; complete form before evaluation (G08-MAY-ANY-ROLE-LABELS-01).'
         anywhere:
           type: object
           additionalProperties: {type: number, minimum: 0}

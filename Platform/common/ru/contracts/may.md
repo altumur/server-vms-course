@@ -200,7 +200,7 @@ reads:     worker.reads: [domain/grants, platform/folders/, platform/memberof/] 
 
 ## Векторы
 
-Пакет [`may`](../vectors/may/README.md): 120 строк (`may-role-*` — вход `as_role`, ADR-0105 п. 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, роли, ярусы, шаг 4а); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); из первых 26: 24 — входы команды `may` приёмки М11/9 (сц. 07) без изменения значений, кроме `labels: []` у единицы
+Пакет [`may`](../vectors/may/README.md): 126 строк (`may-role-*` — вход `as_role`, ADR-0105 п. 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, роли, ярусы, шаг 4а); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); из первых 26: 24 — входы команды `may` приёмки М11/9 (сц. 07) без изменения значений, кроме `labels: []` у единицы
 `may-24` (решение «Архитектора» 2026-10-20; README пакета);
 одна из них, `may-24`, — вход не по форме (`@exit 2`; разбор ревью стадии B 8–10, № 22); `may-25` — `subject` "" (`@exit 2`, MAY-G03); `may-26` — `until` не помещается в binary64 (`@exit 2`, MAY-UNTIL-D8-01). Сценарий и входы сняты переносом урока 8 — таблица единственный
 источник этих случаев. Там же `covers.tsv` — 19 строк функции `covers(scope, ref, row)` сторожевой ([договор
