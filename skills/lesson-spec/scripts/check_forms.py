@@ -209,18 +209,23 @@ def check_refusals(path):
         if start is None:
             errors.append(f"{path.name}: chapter {chapter}: {norms[0].name} has no Н4")
             continue
-        prose = prose_table(text, start)
+        end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+        prose = prose_table("\n".join(lines[:end]), start)      # таблица только своего раздела Н4, не Н5
         mine = [r for r in rows if r["chapter"] == chapter]
         own = not prose                                  # форма — сама норма: код выхода и kind — её ячейки, не слова прозы
         if not prose:
             # Н4 — ссылка на форму (ADR-0125 доп. (1) п. 5, доп. (5)): ячейки нормы — колонки формы
-            section = "\n".join(lines[start:next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))])
+            section = "\n".join(lines[start:end])
             if f"forms/{path.name}" not in section or "outcome" not in (rows[0] if rows else {}):
                 errors.append(f"{path.name}: chapter {chapter}: Н4 of {norms[0].name} has no table and no reference to "
                               f"forms/{path.name} with the columns {REF_EXTRA}")
                 continue
-            prose = [["", r["outcome"], " ".join(r.get(k, "") for k in ("word", "cause", "diagnostic", "caller"))]
-                     for r in sorted(mine, key=lambda x: int(x["row"]) if x["row"].isdigit() else 0)]
+            first = {}                                      # строка Н4 может стать несколькими строками формы (один row)
+            for r in mine:
+                if r["row"].isdigit():
+                    first.setdefault(int(r["row"]), r)
+            prose = [["", first[n]["outcome"], " ".join(first[n].get(k, "") for k in ("word", "cause", "diagnostic", "caller"))]
+                     for n in sorted(first)]
         numbers = sorted({int(r["row"]) for r in mine})
         if numbers != list(range(1, len(prose) + 1)):
             errors.append(f"{path.name}: chapter {chapter}: rows {numbers[:3]}…{numbers[-3:]} do not cover the {len(prose)} "
@@ -512,7 +517,12 @@ def check_seams(path):
         if step != str(last.get(name, 0) + 1):
             errors.append(f"{path.name}: line {no}: step {step} of {name}, expected {last.get(name, 0) + 1}")
         last[name] = int(step) if step.isdigit() else last.get(name, 0) + 1
-        process = process_step_errors(request, expect)
+        process = None
+        if parallel and OUTCOMES.fullmatch(expect) and request.startswith(("RUN ", "CALL ")):
+            subs = [expect[5:]] if expect.startswith("each ") else expect[4:].split("; rest ", 1)
+            process = [e for sub in subs for e in process_step_errors(request, sub)]
+        elif not parallel:
+            process = process_step_errors(request, expect)
         if process is not None:
             errors += [f"{path.name}: line {no}: {e}" for e in process]
             if request.startswith("@file "):
@@ -533,3 +543,60 @@ def check_seams(path):
         parallel = False
     return errors, {"seam_steps": steps}
 
+
+
+OPS_COLUMNS = ["command", "process", "prefix", "positionals", "norm"]
+
+
+def operator_forms(root):
+    return sorted(Path(root).glob("Platform/*/forms/operator-commands.tsv"))
+
+
+def check_operator_commands(path):
+    """ADR-0125 доп. (5): грамматика команд оператора урока (P/02) — форма-норма. command уникален и [a-z][a-z-]*;
+    (process, prefix) уникальны; prefix — JSON-массив непустых слов; positionals — схема JSON Schema 2020-12 массива строк
+    с целыми minItems ≤ maxItems ≥ 0; norm не пуст; каждая команда `commands` формы флагов урока (кроме daemon) — здесь.
+    Семантику argv и ОС форма не доказывает."""
+    import jsonschema
+    path = Path(path)
+    errors, rows = read(path, OPS_COLUMNS)
+    seen, pairs = set(), set()
+    for r in rows:
+        where = f"{path.name}: {r['command']}"
+        if not COMMAND.fullmatch(r["command"]) or r["command"] in seen:
+            errors.append(f"{where}: command is not [a-z][a-z-]* or repeats")
+        seen.add(r["command"])
+        try:
+            prefix = json.loads(r["prefix"])
+        except ValueError:
+            prefix = None
+        if not (isinstance(prefix, list) and all(isinstance(w, str) and w and " " not in w for w in prefix)):
+            errors.append(f"{where}: prefix is not a JSON array of non-empty words")
+            prefix = []
+        key = (r["process"], tuple(prefix))
+        if not re.fullmatch(r"[a-z][a-z0-9._-]*", r["process"]) or key in pairs:
+            errors.append(f"{where}: process {r['process']!r} with prefix repeats or is not a process name")
+        pairs.add(key)
+        try:
+            schema = json.loads(r["positionals"])
+            jsonschema.Draft202012Validator.check_schema(schema)
+        except (ValueError, jsonschema.SchemaError) as exc:
+            errors.append(f"{where}: positionals is not JSON Schema 2020-12: {str(exc)[:120]}")
+            schema = None
+        if isinstance(schema, dict):
+            lo, hi = schema.get("minItems", 0), schema.get("maxItems")
+            items = schema.get("items")
+            if schema.get("type") != "array" or not (isinstance(items, dict) and items.get("type") == "string"):
+                errors.append(f"{where}: positionals is not an array of strings")
+            if not (type(lo) is int and lo >= 0 and (hi is None or (type(hi) is int and hi >= lo))):
+                errors.append(f"{where}: minItems/maxItems are not integers 0 ≤ min ≤ max")
+        if not r["norm"].strip():
+            errors.append(f"{where}: no norm")
+    flags = path.parent / "daemon-flags.tsv"
+    if flags.is_file():
+        _, frows = read(flags, FLAG_COLUMNS)
+        used = {c for fr in frows for c in fr["commands"].split(",") if c != "daemon"}
+        missing = sorted(used - seen)
+        if missing:
+            errors.append(f"{path.name}: commands of daemon-flags.tsv not declared here: {missing}")
+    return errors, {"operator_commands": len(rows)}

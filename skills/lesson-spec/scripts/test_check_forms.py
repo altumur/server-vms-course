@@ -189,3 +189,25 @@ class FormsAllLessons(unittest.TestCase):         # ADR-0125 доп. (5): гра
         for request, expect in bad:
             path.write_text("\n".join(good[:2] + [f"s1-put\t1\t{request}\t{expect}"]) + "\n", encoding="utf-8")
             self.assertTrue(check_forms.check_seams(path)[0], (request, expect))
+
+    def test_parallel_process_and_operator_commands(self):
+        path = self.lesson / "acceptance/1/seams.tsv"
+        path.write_text("# t\n# scenario\tstep\trequest\texpect\n"
+                        's2\t1\t@parallel 2\tok\n'
+                        's2\t2\tCALL parse-manifest {}\teach {"verdict":"ok"}\n'
+                        's2\t3\t@parallel 2\tok\n'
+                        's2\t4\tRUN w2cctl show\tone exit 0; stdout {"a":1}; rest exit 2; stderr ~"busy"\n', encoding="utf-8")
+        self.assertEqual(check_forms.check_seams(path)[0], [])
+        forms = self.lesson / "forms"
+        forms.mkdir()
+        head = "command\tprocess\tprefix\tpositionals\tnorm\n"
+        good = 'manifest-put\tw2cctl\t["manifest","put"]\t{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}\tP/02.3 Н3\n'
+        (forms / "operator-commands.tsv").write_text(head + good, encoding="utf-8")
+        self.assertEqual(check_forms.check_operator_commands(forms / "operator-commands.tsv")[0], [])
+        for bad in (good + good,                                                     # повтор
+                    good.replace('["manifest","put"]', '"manifest put"'),            # prefix не массив
+                    good.replace('"minItems":1,"maxItems":1', '"minItems":2,"maxItems":1'),
+                    good.replace('{"type":"string"}', '{"type":"integer"}'),
+                    good.replace("P/02.3 Н3", " ")):
+            (forms / "operator-commands.tsv").write_text(head + bad, encoding="utf-8")
+            self.assertTrue(check_forms.check_operator_commands(forms / "operator-commands.tsv")[0], bad)

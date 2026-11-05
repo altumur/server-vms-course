@@ -2145,6 +2145,11 @@ class Check:
             for message in errors:
                 self.error(path, message)
             self.stats["seam_steps"] = self.stats.get("seam_steps", 0) + stats["seam_steps"]
+        for path in check_forms.operator_forms(self.root):
+            errors, stats = check_forms.check_operator_commands(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
         for path in check_forms.stage_forms(self.root):
             errors, stats = check_forms.check_stage_parts(path)
             for message in errors:
@@ -2445,6 +2450,8 @@ class Check:
             self.error(acceptance, "cases/ without verdicts.tsv")
         if puts and (acceptance / "puts.tsv").is_file():
             formats += 1                            # checked with the vectors of the chapter (canonical_chapter)
+        if (acceptance / "seams.tsv").is_file():
+            formats += 1                            # швы процесса — check_forms.check_seams (ADR-0125 доп. (5))
         if (key, entry) == VARIANTS_CHAPTER and (acceptance / "variants").is_dir():
             self.variants(acceptance / "variants")  # README of the chapter checks the meaning; the form is checked here
         if not formats and not own_format:
