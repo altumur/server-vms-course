@@ -33,7 +33,8 @@ The meaning step (ADR-0124 addendum (1) item 3), by the class of the linking fil
   lecture or a journal becomes text wherever its source has text (the pair stays one to one);
 - lecture (`ru/NN-<имя>.md`: Russian, for people, without a pair) — into translations; links stay links;
 - history (`decisions/**`, root `РЕВЬЮ-*.md`, `ХОД-*.md`, `windows/**`) — only links to paths that are no more, by the
-  table;
+  table, and (addendum (2)) links to a canonical path with a Russian anchor: they meant the Russian text, now in the
+  mirror — into `ru/…` with the same Russian anchor; a link without an anchor or with an anchor of the source stays;
 - any other text (lectures and Russian sources of other lessons, notes, rules) — as a source, but links stay links.
 """
 import argparse
@@ -53,7 +54,7 @@ HEADER = "# lesson\told\tnew\tkind"
 OLD_MARK = "производный от en, руками не правится"
 FORM = re.compile(r"data/([^/]+-checks(?:\.probes)?\.tsv|[^/]+\.machine\.yaml|[^/]+\.traces\.tsv)")
 MACHINE_MD = re.compile(r"(?:^|/)harness/")
-HISTORY = re.compile(r"^(?:decisions/|windows/|РЕВЬЮ-[^/]*\.md$|ХОД-[^/]*\.md$)")
+HISTORY = L.HISTORY
 LIVE_TABLES = ("decisions/adr-norms.tsv", "decisions/adr-pipeline.tsv")
 NOTE = {"en": "for people, not in the export", "ru": "для человека, в выгрузку не входит"}
 JOURNAL_NOTE = {"en": "a log, not in the export", "ru": "журнал, в выгрузку не входит"}
@@ -144,22 +145,9 @@ def prune_empty(home):
 
 # ---- classes of files ---------------------------------------------------------------------------------------------
 
-MODULES = ("Platform", "VMS")
+MODULES = L.MODULES
 SHALLOW = (".", *MODULES)                               # homes of their own files only: the root, a module directory
-
-
-def home_of(path):
-    """The home of a file: a lesson (or `common`) `Platform/<x>`, `VMS/<x>`; a module `Platform`, `VMS` for the files of
-    the module directory itself and of its `en/`, `ru/`; the root `.` for the files of the root and of its `en/`, `ru/`;
-    otherwise None."""
-    parts = Path(os.path.normpath(path)).parts
-    if not parts or parts == (".",):
-        return None
-    if parts[0] in MODULES:
-        if len(parts) >= 3 and parts[1] not in ("en", "ru"):
-            return "/".join(parts[:2])
-        return parts[0] if len(parts) >= 2 else None
-    return "." if len(parts) == 1 or parts[0] in ("en", "ru") else None
+home_of = L.home_of
 
 
 def under(home, rest):
@@ -268,10 +256,10 @@ class Rewriter:
 
     def meaning_step(self, cls, path, target, anchor, where):
         """→ (target, anchor, how): how — 'link' or 'text'."""
-        if target in self.gone:                         # a path that is no more (history: only this)
+        if target in self.gone:                         # a path that is no more
             target = self.gone[target]
-        if cls == "history":
-            return target, anchor, "link"
+        if cls == "history":                            # addendum (2): a Russian anchor meant the Russian text
+            return L.history_ru(self.root, target, anchor) or target, anchor, "link"
         home = home_of(target)
         if home not in self.homes:
             return target, anchor, "link"
@@ -314,7 +302,7 @@ class Rewriter:
             p = unquote(p)
             target = self.table_step(path, old_path, p) if table else os.path.normpath(os.path.join(os.path.dirname(path), p))
             if cls == "history" and target == os.path.normpath(os.path.join(os.path.dirname(path), p)) \
-                    and target not in self.gone:
+                    and target not in self.gone and not L.history_ru(self.root, target, anchor):
                 continue
             target, new_anchor, how = self.meaning_step(cls, path, target, anchor, where)
             if how == "text":

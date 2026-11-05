@@ -8,7 +8,9 @@ Two readers on purpose:
 - `judged()` — the judge's reader, independent: markdown-it (CommonMark) tokens, reference links resolved.
 `missed()` names a local destination the judge sees and the rewriter does not: a syntax the migration cannot rewrite —
 the migration stops on it. The check of a tree judges every local link of every `*.md`: the target exists, an anchor
-`#…` names a heading of the target Markdown file (anchors as GitHub builds them). With `--base` it prints only broken
+`#…` names a heading of the target Markdown file (anchors as GitHub builds them). A link of history (`decisions/**`,
+root `РЕВЬЮ-*.md`, `ХОД-*.md`, `windows/**`) to a canonical path with a Russian anchor — a heading of the mirror `ru/…`,
+not of the English source — is broken «history: Russian anchor, into ru/…» (ADR-0124 addendum (2)). With `--base` it prints only broken
 links that are not in the former result (a file of «file<TAB>target<TAB>why» lines, as `--tsv` prints). Exit 1 if any.
 """
 import os
@@ -26,6 +28,49 @@ TITLE = r"""(?:[ \t\n]+(?:"[^"\n]*"|'[^'\n]*'|\([^()\n]*\)))?"""
 INLINE = re.compile(r"(!?)\[" + TEXT + r"\]\([ \t]*" + DEST + TITLE + r"[ \t]*\)")
 DEFINITION = re.compile(r"^ {0,3}\[([^\]\n]+)\]:[ \t]*" + DEST + TITLE + r"[ \t]*$", re.M)
 SCHEME = re.compile(r"[a-zA-Z][a-zA-Z0-9+.-]*:")
+HISTORY = re.compile(r"^(?:decisions/|windows/|РЕВЬЮ-[^/]*\.md$|ХОД-[^/]*\.md$)")
+MODULES = ("Platform", "VMS")
+
+
+def home_of(path):
+    """The home of a file: a lesson (or `common`) `Platform/<x>`, `VMS/<x>`; a module `Platform`, `VMS` for the files of
+    the module directory itself and of its `en/`, `ru/`; the root `.` for the files of the root and of its `en/`, `ru/`;
+    otherwise None."""
+    parts = Path(os.path.normpath(path)).parts
+    if not parts or parts == (".",):
+        return None
+    if parts[0] in MODULES:
+        if len(parts) >= 3 and parts[1] not in ("en", "ru"):
+            return "/".join(parts[:2])
+        return parts[0] if len(parts) >= 2 else None
+    return "." if len(parts) == 1 or parts[0] in ("en", "ru") else None
+
+
+def mirror(path):
+    """The Russian mirror `<home>/ru/<rest>` of a canonical path (from the root of the course), or None for a path that
+    is already under `ru/` or has no home."""
+    home = home_of(path)
+    if home is None:
+        return None
+    rest = path if home == "." else path[len(home) + 1:]
+    if rest.startswith(("ru/", "en/")):
+        return None
+    return f"ru/{rest}" if home == "." else f"{home}/ru/{rest}"
+
+
+def history_ru(root, target, anchor):
+    """ADR-0124 addendum (2): a link of history to the canonical path `target` (from the root) with a Russian anchor
+    meant the Russian text, now in the mirror → the mirror path, or None (no anchor, an anchor of the source, no
+    mirror, or the mirror has no such heading either)."""
+    if not anchor or not target.endswith(".md"):
+        return None
+    ru = mirror(target)
+    root = Path(root)
+    if ru is None or not (root / target).is_file() or not (root / ru).is_file():
+        return None
+    if anchor in anchors(root / target) or anchor not in anchors(root / ru):
+        return None
+    return ru
 
 
 class Target:
@@ -147,14 +192,22 @@ def forget():
     _ANCHORS.clear()
 
 
-def broken(source, href):
-    """Why a local href of the file `source` is broken, or None."""
+def broken(source, href, root=None):
+    """Why a local href of the file `source` is broken, or None. With `root` (the root of the course) a link of history
+    is judged by ADR-0124 addendum (2) too."""
     path, _, anchor = href.partition("#")
     if href.startswith("/"):
         return "absolute link"
     whole = Path(os.path.normpath(Path(source).parent / path)) if path else Path(source)
     if not whole.exists():
         return "no target"
+    if root is not None and path and anchor:
+        rel = Path(source).relative_to(root).as_posix()
+        if HISTORY.search(rel):
+            target = os.path.relpath(os.path.normpath(Path(source).parent / path), root)
+            ru = history_ru(root, Path(target).as_posix(), anchor)
+            if ru:
+                return f"history: Russian anchor, into {ru}"
     if "#" in href and anchor and whole.suffix == ".md" and whole.is_file() and anchor not in anchors(whole):
         return "no anchor"
     return None
@@ -167,7 +220,7 @@ def check_tree(root, only=None):
     for md in sorted((root / only if only else root).rglob("*.md")):
         for href in judged(md.read_text(encoding="utf-8")):
             total += 1
-            why = broken(md, href)
+            why = broken(md, href, root)
             if why:
                 out.append((md.relative_to(root).as_posix(), href, why))
     return out, total
