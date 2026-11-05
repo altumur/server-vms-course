@@ -77,3 +77,7 @@ sc. 08 steps 4, 9, 11 (standby, the taking of the queue, standby after the thaw)
 | Sc./step | Sleep | Reason |
 |---|---|---|
 | 08/7 | 20 s | absence: the frozen copy holds the queue while its version is younger than `TURN_TERM` by the clock of the second — the second does not take the queue earlier (step 8 — 503 `standby`); 20 s is less than `TURN_TERM` − `TURN_RENEW` (35 s) with a margin for the steps |
+
+## Kit seams
+
+[5 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

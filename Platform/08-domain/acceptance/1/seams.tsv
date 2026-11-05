@@ -1,0 +1,5 @@
+# P/08 kit seams; ordinary code and controlled I/O, protocol in forms/README.md.
+# scenario	step	request	expect
+s01-server-fresh-observer	1	CALL domain-view-round {"class":"server","observer":"new","marks":"unchanged","passes":[100,101]}	{"state":"unseen"}
+s02-camera-receipt-age	1	CALL domain-view-round {"class":"camera","received_at":100,"silent_after":300,"marks":"unchanged","passes":[100,146]}	{"state":"ok"}
+s03-unconfirmed-part	1	CALL domain-view-round {"member_part":"read_unconfirmed"}	{"complete":false,"part_is_absent":false}

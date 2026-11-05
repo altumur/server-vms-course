@@ -1,0 +1,6 @@
+# P/08 kit seams; ordinary code and controlled I/O, protocol in forms/README.md.
+# scenario	step	request	expect
+s01-first-admin-existing-unreadable-user	1	CALL domain-first-admin {"users":"one_unreadable_person","stdin":"valid_utf8_password"}	{"exit_nonzero":true,"user_writes":0,"grant_writes":0}
+s02-first-admin-invalid-utf8	1	CALL domain-first-admin {"users":"confirmed_empty","stdin":"invalid_utf8"}	{"exit_nonzero":true,"user_writes":0,"grant_writes":0}
+s03-legacy-revision-roles	1	CALL domain-role-version {"family":"roles","revision":"unreadable","payload":"valid"}	{"read_revision":0,"write_revision":1,"payload_preserved":true}
+s04-legacy-revision-groups	1	CALL domain-role-version {"family":"groups","revision":"unreadable","payload":"valid"}	{"read_revision":0,"write_revision":1,"payload_preserved":true}
