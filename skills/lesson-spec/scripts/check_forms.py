@@ -895,8 +895,11 @@ def _assert_shape(items, cols, err, what, suffix=False):
                 err.add(f"{w}: no-leak takes exactly pointer, value and min_bytes")
             if "min_bytes" in a and (type(a["min_bytes"]) is not int or a["min_bytes"] < 1):
                 err.add(f"{w}: min_bytes is not an integer ≥ 1")
-            lit = a.get("value", {}).get("literal", "") if isinstance(a.get("value"), dict) and "literal" in a["value"] else ""
-            if not (isinstance(lit, str) or (isinstance(lit, list) and all(isinstance(x, str) for x in lit))):
+            v = a.get("value") if isinstance(a.get("value"), dict) else {}
+            lits = [v["literal"]] if "literal" in v else \
+                [x["literal"] for x in v["array"] if isinstance(x, dict) and "literal" in x] if isinstance(v.get("array"), list) else []
+            if not all(isinstance(x, str) or ("literal" in v and isinstance(x, list) and all(isinstance(y, str) for y in x))
+                       for x in lits):
                 err.add(f"{w}: no-leak value is not a string or an array of strings")
         elif "min_bytes" in a:
             err.add(f"{w}: min_bytes is only of no-leak")
