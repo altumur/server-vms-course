@@ -485,3 +485,68 @@ func TestRolloutPoll_Trace_TwoVotersRefused(t *testing.T) {
 		{step: 6, upto: 6, state: "refused", result: &result{code: 2, word: "not enough live voters"}},
 	})
 }
+
+// TestRolloutPoll_Trace_TwoVotersLastRefused — the trace two-voters-last-refused: 2 observed states.
+func TestRolloutPoll_Trace_TwoVotersLastRefused(t *testing.T) {
+	runTrace(t, "two-voters-last-refused", "{\"last\": true, \"self\": \"a\", \"voters\": [\"a\", \"b\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\"}, \"const\": {\"ROLLOUT_WAIT\": 3}}", []event{
+		{0.1, "self 0 {\"state\": \"Leader\", \"leader\": \"h-a\", \"leader_id\": \"a\", \"applied\": 10, \"voters\": [\"a\", \"b\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\"}, \"commit\": 10}"},
+		{0.2, "status 0 b {\"state\": \"Follower\", \"leader\": \"h-a\", \"leader_id\": \"a\", \"applied\": 10, \"commit\": 10, \"voters\": [\"a\", \"b\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\"}}"},
+		{0.5, "commit 1 10"},
+		{1.1, "self 1 {\"state\": \"Leader\", \"leader\": \"h-a\", \"leader_id\": \"a\", \"applied\": 10, \"voters\": [\"a\", \"b\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\"}, \"commit\": 10}"},
+		{1.2, "status 1 b {\"state\": \"Follower\", \"leader\": \"h-a\", \"leader_id\": \"a\", \"applied\": 10, \"commit\": 10, \"voters\": [\"a\", \"b\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\"}}"},
+		{2, "advance"},
+		{2.1, "self 2 {\"state\": \"Leader\", \"leader\": \"h-a\", \"leader_id\": \"a\", \"applied\": 10, \"voters\": [\"a\", \"b\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\"}, \"commit\": 10}"},
+		{2.2, "status 2 b {\"state\": \"Follower\", \"leader\": \"h-a\", \"leader_id\": \"a\", \"applied\": 10, \"commit\": 10, \"voters\": [\"a\", \"b\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\"}}"},
+		{3, "advance"},
+	}, []observe{
+		{step: 6, upto: 6, state: "polling", result: nil},
+		{step: 9, upto: 9, state: "refused", result: &result{code: 2, word: "not enough live voters"}},
+	})
+}
+
+// TestRolloutPoll_Trace_TwoVotersLastDowntimePasses — the trace two-voters-last-downtime-passes: 1 observed states.
+func TestRolloutPoll_Trace_TwoVotersLastDowntimePasses(t *testing.T) {
+	runTrace(t, "two-voters-last-downtime-passes", "{\"last\": true, \"allow_downtime\": true, \"self\": \"a\", \"voters\": [\"a\", \"b\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\"}, \"const\": {\"ROLLOUT_WAIT\": 3}}", []event{
+		{0, "advance"},
+	}, []observe{
+		{step: 1, upto: 1, state: "passed", result: nil},
+	})
+}
+
+// TestRolloutPoll_Trace_TwoVotersDowntimePasses — the trace two-voters-downtime-passes: 1 observed states.
+func TestRolloutPoll_Trace_TwoVotersDowntimePasses(t *testing.T) {
+	runTrace(t, "two-voters-downtime-passes", "{\"last\": false, \"allow_downtime\": true, \"self\": \"a\", \"voters\": [\"a\", \"b\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\"}, \"const\": {\"ROLLOUT_WAIT\": 3}}", []event{
+		{0, "advance"},
+	}, []observe{
+		{step: 1, upto: 1, state: "passed", result: nil},
+	})
+}
+
+// TestRolloutPoll_Trace_DowntimeThreeVotersPolls — the trace downtime-three-voters-polls: 2 observed states.
+func TestRolloutPoll_Trace_DowntimeThreeVotersPolls(t *testing.T) {
+	runTrace(t, "downtime-three-voters-polls", "{\"last\": false, \"allow_downtime\": true, \"self\": \"a\", \"voters\": [\"a\", \"b\", \"c\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\", \"c\": \"h-c\"}, \"const\": {\"ROLLOUT_WAIT\": 3}}", []event{
+		{0, "advance"},
+		{0.1, "self 0 {\"state\": \"Follower\", \"leader\": \"h-b\", \"leader_id\": \"b\", \"applied\": 10, \"voters\": [\"a\", \"b\", \"c\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\", \"c\": \"h-c\"}, \"commit\": 10}"},
+		{3, "advance"},
+	}, []observe{
+		{step: 1, upto: 1, state: "polling", result: nil},
+		{step: 3, upto: 3, state: "refused", result: &result{code: 2, word: "not enough live voters"}},
+	})
+}
+
+// TestRolloutPoll_Trace_VoterWithoutAddress — the trace voter-without-address: 2 observed states.
+func TestRolloutPoll_Trace_VoterWithoutAddress(t *testing.T) {
+	runTrace(t, "voter-without-address", "{\"last\": false, \"self\": \"a\", \"voters\": [\"a\", \"b\", \"c\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\"}, \"const\": {\"ROLLOUT_WAIT\": 3}}", []event{
+		{0.1, "self 0 {\"state\": \"Follower\", \"leader\": \"h-b\", \"leader_id\": \"b\", \"applied\": 10, \"voters\": [\"a\", \"b\", \"c\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\"}, \"commit\": 10}"},
+		{0.2, "status 0 b {\"state\": \"Leader\", \"leader\": \"h-b\", \"leader_id\": \"b\", \"applied\": 10, \"commit\": 10, \"voters\": [\"a\", \"b\", \"c\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\"}}"},
+		{1, "advance"},
+		{1.3, "commit 1 10"},
+		{1.4, "self 1 {\"state\": \"Follower\", \"leader\": \"h-b\", \"leader_id\": \"b\", \"applied\": 10, \"voters\": [\"a\", \"b\", \"c\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\"}, \"commit\": 10}"},
+		{1.5, "status 1 b {\"state\": \"Leader\", \"leader\": \"h-b\", \"leader_id\": \"b\", \"applied\": 10, \"commit\": 10, \"voters\": [\"a\", \"b\", \"c\"], \"members\": {\"a\": \"h-a\", \"b\": \"h-b\"}}"},
+		{2, "advance"},
+		{3, "advance"},
+	}, []observe{
+		{step: 7, upto: 7, state: "polling", result: nil},
+		{step: 8, upto: 8, state: "refused", result: &result{code: 2, word: "not enough live voters"}},
+	})
+}
