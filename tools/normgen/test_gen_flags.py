@@ -90,6 +90,7 @@ class GenFlags(unittest.TestCase):
                 exe = build_stub(mod, Path(self.tmp.name) / f"mut{k}-work")
                 code, out = judge(exe)
                 self.assertEqual(code, 1, f"the judge passed the mutant {new!r}")
+                self.assertIn("FAIL", out, "a broken probe builder is not a killed mutant")
 
     def test_table_out_of_form(self):
         cases = [
