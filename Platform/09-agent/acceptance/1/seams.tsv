@@ -29,3 +29,8 @@ s26-shared-cleanup	1	CALL agent-shared {"fixture":"current_pointer_not_older_tha
 s27-shared-unknown	1	CALL agent-shared {"fixture":"own_pointer_unconfirmed","new_document":false}	{"refusal_deletes":0,"object_preserved":true,"pointer_preserved":true}
 s28-alarm-retain	1	CALL agent-alarms {"fixture":"window_503_with_prior_page","base":7}	{"prior_page_carried":true,"alarm_in_deleted":false,"urgent_reports":0}
 s29-alarm-no-prior	1	CALL agent-alarms {"fixture":"window_503_without_prior_page","base":0}	{"whole_withheld":false,"alarm_in_objects":false,"urgent_reports":0}
+s30-placed-at-exponent	1	CALL agent-carry {"fixture":"placed_at_lexeme","at_lexeme":"1e-8"}	{"item_at_bytes":"1e-8","copy_writes":1,"marker_confirmed":true}
+s31-placed-at-digits	1	CALL agent-carry {"fixture":"placed_at_lexeme","at_lexeme":"1.2345"}	{"item_at_bytes":"1.2345","copy_writes":1,"marker_confirmed":true}
+s32-placed-at-upper-exponent	1	CALL agent-carry {"fixture":"placed_at_lexeme","at_lexeme":"12E+3"}	{"item_at_bytes":"12E+3","copy_writes":1,"marker_confirmed":true}
+s33-placed-at-trailing-zero	1	CALL agent-carry {"fixture":"placed_at_lexeme","at_lexeme":"1.2340"}	{"item_at_bytes":"1.2340","copy_writes":1,"marker_confirmed":true}
+s34-placed-at-nonnumeric	1	CALL agent-carry {"fixture":"placed_at_lexeme","at_lexeme":"\"soon\""}	{"copy_writes":0,"marker_confirmed":false}
