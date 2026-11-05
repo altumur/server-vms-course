@@ -143,7 +143,8 @@ def git_head():
 
 
 MACHINES = ("slot-capture", "slot-fate", "slot-release")    # gen_machine.py: часть — форма машины урока forms/<часть>.tsv
-PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core", "families", "admin", "box", "loader", "rollout-poll") + MACHINES       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
+PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core", "families", "admin", "box", "loader", "rollout-poll") + MACHINES + ("contracts",)       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
+CONTRACTS = NORMGEN / "contracts"                    # общий пакет договоров (ручная среда; судья test_contracts.py)
 
 
 EXAMPLES = HERE / "examples"                # пример подключения на часть: Go-файл, его собирает kit/test_kit.py
@@ -212,7 +213,10 @@ def provenance(parts, files, judged):
     }
     out = {}
     for part in parts:
-        if part == "door" and L.key != lesson.DEFAULT:
+        if part == "contracts":
+            out[part] = {"form": [], "generator": None, "judge": entry(NORMGEN / "test_contracts.py"),
+                         "handwritten": [entry(f) for f in sorted(CONTRACTS.rglob("*.go"))], "output": output("contracts")}
+        elif part == "door" and L.key != lesson.DEFAULT:
             out[part] = {**gen_door_lesson.provenance(), "output": output("door")}
         elif part == "vectors" and L.key != lesson.DEFAULT:    # векторы прочих уроков — gen_vectors (P/06 с дверью тоже)
             out[part] = {**gen_vectors.provenance(), "output": output("vectors")}
@@ -382,7 +386,18 @@ def build(dst, module, parts=(), judged=None, seed=None):
             raise KitError(f"{sub}/{name}: no import {PLACEHOLDER}… to rewrite")
         put(sub, name, data, "handwritten", "kit", str((HANDWRITTEN / sub / name).relative_to(ROOT)))
 
+    contract_adapters = {}
+    if "contracts" in parts:                           # общий пакет договоров: пакет и адаптеры векторов над ним
+        for f in sorted((CONTRACTS / "go").glob("*.go")):
+            put("contracts", f.name, f.read_bytes(), "handwritten", "contracts", str(f.relative_to(ROOT)))
+        for f in sorted((CONTRACTS / "adapters").glob("*.go")):
+            fn = re.search(r"^func ([A-Z]\w*)\((?:table string|input \[\]byte)", f.read_text(), re.M)[1]
+            contract_adapters[f"{fn.lower()}.go"] = f
     for (sub, name, data, origin, source, own), component in tests:
+        if sub == "vectoradapter" and name in contract_adapters:   # заглушка → адаптер над contracts (свой у реализации)
+            f = contract_adapters[name]
+            data = f.read_bytes().replace(PLACEHOLDER.encode(), f'"{module}/internal/'.encode())
+            origin, source = "handwritten", str(f.relative_to(ROOT))
         if core_files and (sub, name) == ("coreadapter", "open.go"):
             continue                    # open.go — у части core: Open уже возвращает её ядро
         if (sub, name) in loader_wired:
@@ -452,7 +467,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
            + (gen_box.kit_md() if box_files else "")
            + (gen_manifest.kit_md() if loader_files else "")
            + (gen_launch.KIT_MD if launch_files else "") + (gen_core.KIT_MD if core_files else "")
-           + "".join(gen_machine.kit_md(p) for p in sorted(set(parts) & set(MACHINES)))).replace("{module}", module)
+           + "".join(gen_machine.kit_md(p) for p in sorted(set(parts) & set(MACHINES)))
+           + (KIT_CONTRACTS_MD if "contracts" in parts else "")).replace("{module}", module)
     connect = connect_md(kit_parts, module) if L.key == lesson.DEFAULT else ""   # примеры частей — кодом P/01
     doc = (doc + connect + exported_md(internal, dst, module)).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)
@@ -567,6 +583,19 @@ type checks.Input struct { Body any; Sock string; Lone []string; Lim map[string]
 ```
 """
 
+
+KIT_CONTRACTS_MD = """
+## Part `contracts`: the common contracts of the platform (handwritten once, judged by the common vectors)
+
+| Package | Import path | Origin |
+|---|---|---|
+| `contracts` | `{module}/internal/contracts` | the kit's implementation of `Platform/common/contracts/*.md` — closed; use it in your code |
+
+The functions are the pure computations of their contracts (the instance and the box, the slot names, the labels, the
+event journal: names, buckets, lines…); reading files, the environment and the clock is yours. With the part
+`vectors`, the adapters of the tables they cover (`vectoradapter/<package>.go`) call this package — yours to change
+like any adapter. `tools/normgen/test_contracts.py` runs the common vectors of every lesson against them.
+"""
 
 KIT_DOOR_MD = """
 ## Part `door`: package `apidoor` — the doors of the store from the OpenAPI (generated)
