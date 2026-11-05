@@ -47,9 +47,16 @@ def go(args, cwd, env=None):
     return subprocess.run(["go", *args], cwd=cwd, env=dict(GOENV, **(env or {})), capture_output=True, text=True)
 
 
+def own(res):
+    """Тесты jcs и rights_eval (без общих пакетов TestCommon…: их заглушки красные)."""
+    return {n: a for n, a in res.items() if not n.startswith("TestCommon")}
+
+
 def copy_root(dst):
     """Минимальный корень курса для генератора: векторы P/01 и форма этапов."""
-    for rel in ("Platform/01-store/vectors", "Platform/01-store/forms", "Platform/01-store/acceptance/1"):
+    for rel in ("Platform/01-store/vectors", "Platform/01-store/forms", "Platform/01-store/acceptance/1",
+                *(f"Platform/common/vectors/{n}" for n in ("crl", "revoked", "log-mask", "store-client", "family-read",
+                                                         "secret-in"))):
         shutil.copytree(ROOT / rel, Path(dst) / rel)
     return Path(dst)
 
@@ -146,6 +153,7 @@ class GenTests(unittest.TestCase):
         (cls.mod / "cmd/vec").mkdir(parents=True)
         (cls.mod / "go.mod").write_text("module normgen/p01-1\n\ngo 1.22\n", encoding="utf-8")
         cls.write_parts(cls.mod, cls.files)
+        shutil.copytree(OUT / "go/families", cls.mod / "families")   # common/family-read — часть families (доп. (5) п. 5)
         for stub in ("canonical.go", "rights.go"):                 # заглушки по файлу на функцию — вместо них подставной
             (cls.mod / "vectoradapter" / stub).unlink()
         (cls.mod / "vectoradapter/vectoradapter.go").write_text(fake_adapter(), encoding="utf-8")
@@ -309,17 +317,25 @@ class GenTests(unittest.TestCase):
         (mod / "cmd/vec").mkdir(parents=True)
         (mod / "go.mod").write_text("module normgen/p01-1\n\ngo 1.22\n", encoding="utf-8")
         self.write_parts(mod, self.files)
+        shutil.copytree(OUT / "go/families", mod / "families")
         (mod / "cmd/vec/main.go").write_text(VEC_MAIN, encoding="utf-8")
         done = go(["vet", "./..."], mod)
         self.assertEqual(done.returncode, 0, done.stderr)
         res = self.run_tests(mod)
+        common = {n: a for n, a in res.items() if n.startswith("TestCommon")}
+        res = own(res)
         self.assertEqual(len(res), len(self.jcs) + len(self.rights))
         self.assertEqual(set(res.values()), {"fail"})
+        # общие пакеты (доп. (5) п. 5): family-read исполняет пакет (families) — зелёный на заглушке; прочие — заглушки
+        self.assertEqual({a for n, a in common.items() if n.startswith("TestCommonFamilyRead_")}, {"pass"})
+        self.assertEqual({a for n, a in common.items() if not n.startswith("TestCommonFamilyRead_")}, {"fail"})
+        self.assertEqual({n.split("_")[0] for n in common}, {"TestCommonCrl", "TestCommonRevoked", "TestCommonLogMask",
+                                                             "TestCommonStoreClient", "TestCommonFamilyRead"})
         gofmt = subprocess.run(["gofmt", "-l", "."], cwd=mod, capture_output=True, text=True).stdout
         self.assertEqual(gofmt, "")
 
     def test_go_fake_adapter_green(self):
-        res = self.run_tests(self.mod)
+        res = own(self.run_tests(self.mod))
         self.assertEqual(len(res), len(self.jcs) + len(self.rights))
         self.assertEqual({n for n, a in res.items() if a != "pass"}, set())
         # судья gate tests: по имени этапа видит только свои тесты
@@ -334,7 +350,7 @@ class GenTests(unittest.TestCase):
                 mod = Path(d) / "mod"
                 shutil.copytree(self.mod, mod)
                 self.write_parts(mod, gen_tests.render(root), only_tests=True)
-                res = self.run_tests(mod)
+                res = own(self.run_tests(mod))
                 self.assertEqual({n for n, a in res.items() if a != "pass"}, {test})
 
     def test_go_adapter_mutants(self):
@@ -411,7 +427,7 @@ class GenTests(unittest.TestCase):
         import build_kit
         module = "example.com/w2c/store"
         dst = Path(self.tmp.name) / "kit"
-        m = build_kit.build(dst, module, ["door", "vectors", "stagetests"])
+        m = build_kit.build(dst, module, ["door", "vectors", "stagetests", "families"])
         store = dst / "01-store"
         (store / "go.mod").write_text(f"module {module}\n\ngo 1.22\n", encoding="utf-8")
         (store / "cmd/store").mkdir(parents=True)
@@ -419,7 +435,7 @@ class GenTests(unittest.TestCase):
                                                  encoding="utf-8")
         done = go(["vet", "./..."], store)
         self.assertEqual(done.returncode, 0, done.stderr)
-        self.assertEqual(m["parts"], ["writecheck", "door", "stagetests", "vectors"])
+        self.assertEqual(m["parts"], ["writecheck", "door", "families", "stagetests", "vectors"])
         tests = [f for f in m["files"] if f["component"] in ("vectors", "stagetests")]
         self.assertEqual(sorted({f["path"].split("/")[2] for f in tests if f["component"] == "vectors"}),
                          ["vectoradapter", "vectorcmd", "vectors", "vectortests"])
@@ -434,7 +450,7 @@ class GenTests(unittest.TestCase):
             self.assertNotIn(b"normgen/p01-1", (dst / f["path"]).read_bytes())
         self.assertIn("TestRightsEval_Line", (dst / "KIT.md").read_text(encoding="utf-8"))
         adapter = store / "internal/vectoradapter"
-        self.assertEqual(sorted(p.name for p in adapter.glob("*.go")), ["canonical.go", "rights.go"])
+        self.assertEqual(sorted(p.name for p in adapter.glob("*.go")), ["canonical.go", "crl.go", "logmask.go", "revoked.go", "rights.go", "storeclient.go"])
         for name, fn in (("canonical.go", "Canonical"), ("rights.go", "LoadRights")):
             text = (adapter / name).read_text(encoding="utf-8")
             self.assertIn(f"func {fn}(", text)
@@ -443,7 +459,7 @@ class GenTests(unittest.TestCase):
         own = adapter / "canonical.go"           # правка Canonical целиком файлом — LoadRights не задет
         own.write_text('package vectoradapter\n\nfunc Canonical(raw []byte) ([]byte, error) { return raw, nil }\n'
                        '\n// mine\n', encoding="utf-8")
-        m = build_kit.build(dst, module, ["door", "vectors", "stagetests"])
+        m = build_kit.build(dst, module, ["door", "vectors", "stagetests", "families"])
         self.assertTrue(own.read_text(encoding="utf-8").endswith("// mine\n"))
         self.assertEqual((adapter / "rights.go").read_bytes(), rights)
         done = go(["vet", "./internal/vectoradapter/", "./internal/vectortests/"], store)
@@ -455,8 +471,8 @@ class GenTests(unittest.TestCase):
             encoding="utf-8")
         own.unlink()
         (adapter / "rights.go").unlink()
-        m = build_kit.build(dst, module, ["door", "vectors", "stagetests"])
-        self.assertEqual(sorted(p.name for p in adapter.glob("*.go")), ["vectoradapter.go"])
+        m = build_kit.build(dst, module, ["door", "vectors", "stagetests", "families"])
+        self.assertEqual(sorted(p.name for p in adapter.glob("*.go")), ["crl.go", "logmask.go", "revoked.go", "storeclient.go", "vectoradapter.go"])  # общие — не объявлены
         self.assertNotIn("internal/vectoradapter", [f["path"].rsplit("/", 1)[0][len("01-store/"):] for f in m["files"]])
         other = Path(self.tmp.name) / "kit-plain"
         m = build_kit.build(other, module)

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/store-client",
+ "table": "cases.tsv",
+ "case": "line-21",
+ "variant": "",
+ "cells": {
+  "input": "{\"op\":\"write\",\"reply\":{\"status\":503,\"body\":{\"kind\":\"ambiguous\",\"error\":\"x\"}}}"
+ },
+ "files": {}
+}

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/store-client",
+ "table": "cases.tsv",
+ "case": "line-23",
+ "variant": "",
+ "cells": {
+  "input": "{\"op\":\"get\",\"reply\":{\"status\":403,\"body\":{\"kind\":\"forbidden\",\"error\":\"x\"}}}"
+ },
+ "files": {}
+}

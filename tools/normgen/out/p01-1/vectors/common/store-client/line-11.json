@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/store-client",
+ "table": "cases.tsv",
+ "case": "line-11",
+ "variant": "",
+ "cells": {
+  "input": "{\"op\":\"list\",\"reply\":{\"status\":200,\"body\":{\"keys\":{\"a/b\":\"03\"}}}}"
+ },
+ "files": {}
+}

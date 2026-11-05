@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/store-client",
+ "table": "cases.tsv",
+ "case": "line-8",
+ "variant": "",
+ "cells": {
+  "input": "{\"op\":\"get\",\"reply\":\"@none\"}"
+ },
+ "files": {}
+}

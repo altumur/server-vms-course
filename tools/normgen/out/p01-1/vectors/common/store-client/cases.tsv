@@ -1,0 +1,25 @@
+# Inputs of the vector command for common/store-client cases.tsv (tools/normgen/gen_tests.py, ADR-0125 № 6).
+# Native outcome: code 0, one JSON string: the outcome of the store client contract; stdout is compared as one JSON value by value (tools/normgen/vector_judge.py).
+# source Platform/common/vectors/store-client/cases.tsv sha256 caad5e3b4c550afce371da0c9d265cce2a9f0373f895f5a9f4aff026c20d3422
+case	input	exit	stdout
+line-4	line-4.json	0	"row"
+line-5	line-5.json	0	"absent"
+line-6	line-6.json	0	"unreadable"
+line-7	line-7.json	0	"unavailable"
+line-8	line-8.json	0	"unavailable"
+line-9	line-9.json	0	"unavailable"
+line-10	line-10.json	0	"listing"
+line-11	line-11.json	0	"unavailable"
+line-12	line-12.json	0	"written"
+line-13	line-13.json	0	"written"
+line-14	line-14.json	0	"ambiguous"
+line-15	line-15.json	0	"ambiguous"
+line-16	line-16.json	0	"ambiguous"
+line-17	line-17.json	0	"ambiguous"
+line-18	line-18.json	0	"conflict"
+line-19	line-19.json	0	"conflict"
+line-20	line-20.json	0	"guard"
+line-21	line-21.json	0	"ambiguous"
+line-22	line-22.json	0	"toolarge"
+line-23	line-23.json	0	"forbidden"
+line-24	line-24.json	0	"unavailable"

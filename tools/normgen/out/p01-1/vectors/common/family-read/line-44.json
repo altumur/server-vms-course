@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "01.tsv",
+ "case": "line-44",
+ "variant": "",
+ "cells": {
+  "family": "platform/epoch_floor",
+  "key": "platform/epoch_floor",
+  "kind": "row",
+  "mode": "writer",
+  "who": "[\"proc:01-store\"]",
+  "text": "{\"floor\":\"1e0\",\"generation_at\":\"1\"}"
+ },
+ "files": {}
+}

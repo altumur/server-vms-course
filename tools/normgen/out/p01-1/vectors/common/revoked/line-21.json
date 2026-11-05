@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/revoked",
+ "table": "cases.tsv",
+ "case": "line-21",
+ "variant": "",
+ "cells": {
+  "file": "{\"revoked\":\"@absent\",\"crl\":[\"cd\"]}"
+ },
+ "files": {}
+}
