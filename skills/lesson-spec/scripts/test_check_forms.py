@@ -225,3 +225,32 @@ class FormsAllLessons(unittest.TestCase):         # ADR-0125 доп. (5): гра
         errs = check_forms.check_req_anchors(one)[0]
         self.assertEqual(len(errs), 1, errs)                   # P/04.1-R002 не этого файла; P/04-R001 — годен
         self.assertTrue({"slot-capture", "slot-fate", "slot-release"} <= check_forms.KIT_PARTS)
+
+    def test_http_without_kind(self):                  # P/05: тело http без kind — по названной схеме OpenAPI
+        lesson = self.tmp / "Platform/05-resource"
+        (lesson / "spec").mkdir(parents=True)
+        (lesson / "forms").mkdir()
+        (lesson / "spec/05-resource.api.openapi.yaml").write_text(
+            "openapi: 3.1.0\ncomponents:\n  schemas:\n    ResourceDenied:\n      type: object\n      required: [detail, error]\n"
+            "      properties: {detail: {type: string}, error: {const: refused}, role: {type: string}}\n", encoding="utf-8")
+        (lesson / "spec/05.1-resource.norms.md").write_text("## Н4 Refusals\n\nThe catalogue is forms/refusals.tsv.\n", encoding="utf-8")
+        head = "\t".join(check_forms.REF_COLUMNS + ["word", "response_schema", "cause", "outcome", "diagnostic", "caller"])
+        def row(fields, schema):
+            return "\t".join(["5.1", "1", "resource_role", "http", "403", "-", fields, "-", "-", "P/05.1 Н4",
+                              "refused", schema, "c", "403 refused", "d", "client"])
+        path = lesson / "forms/refusals.tsv"
+        for fields, schema, ok in (("detail,error,role?", "ResourceDenied", True), ("detail,error", "ResourceDenied", True),
+                                   ("detail", "ResourceDenied", False), ("detail,error,x", "ResourceDenied", False),
+                                   ("detail,error", "NoSuch", False), ("-", "-", True), ("error", "-", False)):
+            path.write_text(head + "\n" + row(fields, schema) + "\n", encoding="utf-8")
+            errs = check_forms.check_refusals(path)[0]
+            self.assertEqual(not errs, ok, (fields, schema, errs))
+
+        dr = lesson / "forms/door-roles.tsv"
+        (lesson / "spec/05-resource.api.openapi.yaml").write_text(
+            "openapi: 3.1.0\npaths:\n  /v1/units:\n    get: {}\n    post: {}\ncomponents: {schemas: {}}\n", encoding="utf-8")
+        for body, ok in (("GET\t/v1/units\tconsole,<sub>worker\tP/05.1 Н2", True), ("GET\t/v1/units\t*\tP/05.1 Н2", True),
+                         ("PUT\t/v1/units\tconsole\tP/05.1 Н2", False), ("GET\t/v1/nope\tconsole\tx", False),
+                         ("GET\t/v1/units\tConsole\tx", False), ("GET\t/v1/units\tconsole\t ", False)):
+            dr.write_text("method\tpath\troles\tnorm\n" + body + "\n", encoding="utf-8")
+            self.assertEqual(not check_forms.check_door_roles(dr)[0], ok, body)

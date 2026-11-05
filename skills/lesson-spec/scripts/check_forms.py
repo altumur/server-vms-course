@@ -17,7 +17,7 @@ import yaml
 
 FLAG_COLUMNS = ["flag", "type", "default", "default_text", "required", "commands", "bad", "norm"]
 REF_COLUMNS = ["chapter", "row", "name", "surface", "code", "kind", "fields", "headers", "log", "norm"]
-REF_EXTRA = ["word", "cause", "outcome", "diagnostic", "caller"]   # ячейки Н4, когда форма — сама норма (ADR-0125 доп. (5))
+REF_EXTRA = ["word", "response_schema", "cause", "outcome", "diagnostic", "caller"]   # response_schema — тело http без kind (P/05)   # ячейки Н4, когда форма — сама норма (ADR-0125 доп. (5))
 SURFACES = ("http", "start", "cli", "call", "process", "peer")
 TYPE = re.compile(r"(path|dir|file|addr|id|bool|string|number|duration|bytes:>0|int:[0-9]+\.\.[0-9]*|enum:[^|\s]+(?:\|[^|\s]+)+"
                   r"|list:id@addr(?:/addr)?)")
@@ -177,6 +177,14 @@ def fault_kinds(lesson):
     return out
 
 
+def openapi_schemas(lesson):
+    """Имя компонента → схема OpenAPI урока (все *.api.openapi.yaml)."""
+    out = {}
+    for api in (lesson / "spec").glob("*.api.openapi.yaml"):
+        out.update((yaml.safe_load(api.read_text(encoding="utf-8")) or {}).get("components", {}).get("schemas", {}) or {})
+    return out
+
+
 def check_refusals(path):
     path = Path(path)
     lesson = path.parent.parent
@@ -192,8 +200,9 @@ def check_refusals(path):
             errors.append(f"{where}: surface {r['surface']!r}")
         if not re.fullmatch(r"[1-5][0-9]{2}|exit [0-9]+|exit !0|-", r["code"]):
             errors.append(f"{where}: code {r['code']!r}")
-        if r["surface"] == "http" and not re.fullmatch(r"[a-z]+", r["kind"]):
-            errors.append(f"{where}: an http refusal needs a kind")
+        if r["surface"] == "http" and not re.fullmatch(r"[a-z]+", r["kind"]) and \
+                not (r["kind"] == "-" and r.get("response_schema")):
+            errors.append(f"{where}: an http refusal needs a kind or a response_schema")
         if r["surface"] != "http" and r["kind"] != "-":
             errors.append(f"{where}: kind of a {r['surface']} refusal is -")
     number = re.match(r"([0-9]{2})-", lesson.name)[1].lstrip("0") if re.match(r"[0-9]{2}-", lesson.name) else ""
@@ -261,10 +270,30 @@ def check_refusals(path):
                 if missing:
                     errors.append(f"{where}: fields {missing} not in the prose cell")
     kinds = fault_kinds(lesson)
+    schemas = openapi_schemas(lesson)
     for r in rows:
         if r["surface"] != "http":
             continue
         where = f"{path.name}: {r['chapter']} row {r['row']} {r['name']}"
+        if r["kind"] == "-":                             # тело без kind — по названной схеме OpenAPI (ADR-0125 доп. (5))
+            name = r.get("response_schema", "")
+            fields = [f.rstrip("?") for f in r["fields"].split(",")] if r["fields"] != "-" else []
+            if name == "-":
+                if fields:
+                    errors.append(f"{where}: response_schema - (no body), but fields {r['fields']!r}")
+                continue
+            sch = schemas.get(name)
+            if not isinstance(sch, dict):
+                errors.append(f"{where}: response_schema {name!r} — no such component schema in the lesson OpenAPI")
+                continue
+            props = set((sch.get("properties") or {}))
+            missing = [f for f in fields if f not in props]
+            if missing:
+                errors.append(f"{where}: fields {missing} not in the properties of {name}")
+            must = [f for f in (sch.get("required") or []) if f not in [x for x in r["fields"].split(",") if not x.endswith("?")]]
+            if must:
+                errors.append(f"{where}: required properties {must} of {name} are not named in fields")
+            continue
         if r["kind"] not in kinds:
             errors.append(f"{where}: kind {r['kind']} — no OpenAPI schema of the lesson carries it")
         elif r["fields"] != "-":
@@ -611,3 +640,41 @@ def check_operator_commands(path):
         if missing:
             errors.append(f"{path.name}: commands of daemon-flags.tsv not declared here: {missing}")
     return errors, {"operator_commands": len(rows)}
+
+
+DOOR_ROLE_COLUMNS = ["method", "path", "roles", "norm"]
+ROLE = re.compile(r"\*|<sub>worker|[a-z][a-z0-9-]*")
+
+
+def door_role_forms(root):
+    return sorted(Path(root).glob("Platform/*/forms/door-roles.tsv"))
+
+
+def check_door_roles(path):
+    """ADR-0125 доп. (5): роли дверей урока (P/05) — method, path, roles, norm. Метод HTTP, путь — из OpenAPI урока, пара
+    (method, path) — операция OpenAPI и не повторяется; roles — через запятую: имя роли, `<sub>worker` (воркер
+    загруженного каталога) или `*` (любой аутентифицированный роль пакета); norm не пуст."""
+    path = Path(path)
+    lesson = path.parent.parent
+    errors, rows = read(path, DOOR_ROLE_COLUMNS)
+    ops = set()
+    for api in (lesson / "spec").glob("*.api.openapi.yaml"):
+        for p, item in ((yaml.safe_load(api.read_text(encoding="utf-8")) or {}).get("paths") or {}).items():
+            for m in (item or {}):
+                if m in ("get", "put", "post", "delete", "patch", "head"):
+                    ops.add((m.upper(), p))
+    seen = set()
+    for r in rows:
+        where = f"{path.name}: {r['method']} {r['path']}"
+        key = (r["method"], r["path"])
+        if key not in ops:
+            errors.append(f"{where}: not an operation of the lesson OpenAPI")
+        if key in seen:
+            errors.append(f"{where}: repeats")
+        seen.add(key)
+        roles = r["roles"].split(",")
+        if not roles or not all(ROLE.fullmatch(x) for x in roles) or len(roles) != len(set(roles)):
+            errors.append(f"{where}: roles {r['roles']!r} — not a list of role names, <sub>worker or *")
+        if not r["norm"].strip():
+            errors.append(f"{where}: no norm")
+    return errors, {"door_roles": len(rows)}
