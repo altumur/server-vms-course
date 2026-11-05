@@ -1,0 +1,22 @@
+# P/04 release transition machine, N3 Transitions of release. Machine part slot-release, called for the selected fate, never before slot-fate priority checks.
+# states: consider,writing,released,refused,move,wait,hung. Initial consider; writing awaits the current CAS result, all others terminal.
+#var fate string — release|move|wait|hung from slot-fate. Other fates need no release transition and are returned by that machine.
+#var gen_readable bool — from the existing row, no replacement with zero.
+#var age double — same-version age of this judge.
+#var HUNG_MOVE_AFTER double — effective setting, default 900 s.
+#var version string — version of the judgement, used as CAS, never refreshed silently.
+#var release_version string — version from the confirmed CAS reply, never the old judgement version.
+#var reply string — pending|ok|conflict|badkey|error|blocked|unconfirmed; a non-answer is never ok/conflict.
+#action result(string,string) — return fate/outcome and names_given version or empty string.
+# action=- — YOURS at norm: reject unreadable gen with no write/no permission; for a readable row keep holder/until/gen/server; for a torn row write released:true,holder:"",until:0,gen as read,server if readable else ""; CAS by version.
+# On unreadable gen the YOURS action feeds blocked without a write or permission. On definite error/badkey record the step failure; unconfirmed waits by store-client rules, no permission before confirmation.
+# A CAS refusal caused by renewal leaves the slot untouched; the next pass observes the changed version and judges alive. No blind repeat by a newer CAS.
+n	state	condition	action	next	norm
+1	consider	fate == "release"	-	writing	P/04-R041
+2	writing	reply == "conflict"	result("not_released", "")	refused	P/04-R041
+3	writing	reply == "blocked"	result("not_released", "")	refused	P/04-R041
+4	writing	reply == "badkey" || reply == "error"	result("not_released", "")	refused	P/04-R041
+5	writing	reply == "ok" && gen_readable	result("release", release_version)	released	P/04-R041
+6	consider	fate == "move"	result("move", gen_readable ? version : "")	move	P/04-R041
+7	consider	fate == "wait"	result("wait", gen_readable && age >= HUNG_MOVE_AFTER ? version : "")	wait	P/04-R041
+8	consider	fate == "hung"	result("hung", "")	hung	P/04-R041

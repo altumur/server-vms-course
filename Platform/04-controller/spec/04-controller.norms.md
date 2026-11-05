@@ -20,16 +20,24 @@ an address is a former lesson (the history of the move). Norm ids are
 
 ## Н0 Vocabulary
 
+<!-- req: P/04-R001 -->
+
 Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 Н0](../../01-store/spec/01.1-store.norms.md#н0-vocabulary).
 
 ## Н1 Form
 
+<!-- req: P/04-R002 -->
+
 **Time.** The time fields of the rows and objects of the lesson are time by [the canon of Н0 of P/01.1](../../01-store/spec/01.1-store.norms.md#time-in-a-row): `<sub>/placement/<id>` — `at`; `platform/doors/<сервер>` — `since`, `at`; `platform/drain` — `at`; `platform/decommission/<сервер>` — `at`; `<sub>/decommissioned/<сервер>` — `asked_at`, `at`; `<sub>/controller/placement_intent` — `at`; `<sub>/want/<сервер>` — `at`; the object `<sub>/controller/pass` — `at`, `last_success`; the object `<sub>/snapshot/<воркер>` — `ts`.
+
+<!-- req: P/04-R003 -->
 
 **Data** ([catalogue](../../common/data/catalog.tsv)):
 - owns: `<sub>/placement/<id>`, `<sub>/workers/<имя>`, `<sub>/want/<сервер>`, `<sub>/decommissioned/<сервер>`, `<sub>/controller/placement_turn`, `<sub>/controller/placement_intent`, `<sub>/controller/pass`, `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced`, `<sub>/snapshot-tables/<таблица>`;
 - writes: `<sub>/slots/<имя>` (cas), `<sub>/<manifest:unit.rows>/<id>` (delete), `<sub>/<manifest:domain.books.from>/<слот>` (delete), `<sub>/state/<имя>/<id>` (delete), `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append), `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append), `<корень событий или объектов>/<путь>/%h<sha256>.name` (create), `<корень объектов>/<каталог>/~lock` (create);
 - reads: `platform/manifest/<sub>`, `platform/manifest/<sub>/rev`, `<sub>/heartbeats/<имя>`, `<sub>/slots/<имя>`, `<sub>/holds/<место>`, `<sub>/<manifest:unit.rows>/<id>`, `<sub>/state/<имя>/<id>`, `platform/schema`, `platform/resources/<server>/heartbeat`, `<sub>/policy`, `platform/servers/<сервер>`, `platform/doors/<сервер>`, `platform/drain`, `platform/decommission/<сервер>`, `<sub>/<manifest:tables>/<имя>`, `/etc/w2c/tls/<роль>/server.key`.
+
+<!-- req: P/04-R004 -->
 
 The tables of places and links (`places.table`, `places.wanted`, `affinity.table`, Н1.3) and the tables `domain.view_tables` (Н1.3б) the controller reads as rows `<sub>/<manifest:tables>/<имя>`;
 the journal `unit.unplaced_deleted` (Н3 «pass()», step 8) and the alarms (`workers.raise_failed` — Н1.4, hung/unsure — step 3) it writes to
@@ -37,11 +45,15 @@ the journal `unit.unplaced_deleted` (Н3 «pass()», step 8) and the alarms (`wo
 contract](../../common/contracts/event-journal.md) (`journal`, `writer`, «Имена файлов»); the key of its own kit is for
 the resource doors over HTTPS ([P/02.4 Н1.6](../../02-installer/spec/02.4-installer.norms.md) `roles`) (review of stage B 3–5, № 10).
 
+<!-- req: P/04-R005 -->
+
 The rows `<sub>/policy`, `platform/servers/<сервер>`, `platform/drain`, `platform/decommission/<сервер>` (written by the console, P/06.6) and
 `platform/doors/<сервер>` (written by the resource, P/05) are given in Н1.1 in the form that the controller reads; the owner of the row is
 the writer process (catalogue).
 
 ### Н1.1 Controller rows
+
+<!-- req: P/04-R006 -->
 
 ```yaml
 <sub>/placement/<id>:                     # a decision; the writer is the controller
@@ -82,7 +94,11 @@ platform/decommission/<сервер>:           # the writer is the console
 
 ### Н1.2 Pass report
 
+<!-- req: P/04-R007 -->
+
 The object `<sub>/controller/pass` is written at the end of every pass; it is read by the console (the series `<sub>_reconcile_last_pass_age_seconds`, `<sub>_reconcile_pass_seconds`, `<sub>_reconcile_failures`, `<sub>_units_unplaced`, `<sub>_units_diverged` — P/06.5 Н3 «/metrics — text») and by the workers (`names_given`, `hung_move_after` — P/03.2). The pass report MUST contain the fields below; an implementation MAY add its own counters.
+
+<!-- req: P/04-R008 -->
 
 ```yaml
 pass:
@@ -132,7 +148,11 @@ pass:
 
 ### Н1.3 Placement keys and their meaning
 
+<!-- req: P/04-R009 -->
+
 The form of the keys is P/02.1 (Н1.2). Here — what each of them means for the controller, and the default.
+
+<!-- req: P/04-R010 -->
 
 | Key | Meaning | Default |
 |---|---|---|
@@ -157,6 +177,8 @@ The form of the keys is P/02.1 (Н1.2). Here — what each of them means for the
 | `unplaced: {delete_after}` | a unit row that nobody holds for longer than N s by the clock of the controller is deleted by the controller (ADR-0067); one removed by `retire_when` too: nobody holds it. For a table with `fixed` fields (except the field that is the source of the id) or with `about` not by id, only the rows with `made` are physically deleted (the name is held by the template `key` of the customer, P/03.6 Н1.6) — likewise by `retire_when.delete_after` and `ends`; the deadline does not delete the manual rows of such a table: `ends` removes them and does not place them, `delete_after` does not delete them, the counter `expired_kept` of the pass report (amendment of ADR-0067 addendum 2026-10-10, ADR-0091 item 1); the operator deletes them through a door. The worker of the subsystem MAY also delete its own unit rows by the key `worker.deletes` — a delete with `cas` without the write right (ADR-0067 addendum 2026-10-17; there is no training consumer yet — a debt in «ХОД-Спецификация») | without the key — never |
 
 ### Н1.3а Snapshot
+
+<!-- req: P/04-R011 -->
 
 ```yaml
 <sub>/snapshot/<воркер> | <sub>/snapshot/unplaced:     # objects; the writer is the controller; the worker name unplaced is a refusal
@@ -190,7 +212,11 @@ ceiling:  before the write the controller judges L = 64 MiB of the resource door
 
 ### Н1.3б Table snapshot
 
+<!-- req: P/04-R012 -->
+
 The domain view shows the units with `domain.ref`; the other unit rows and the console tables of a foreign cluster are not visible to the domain without this object (ADR-0110, step 2 of the analysis). A manifest without `domain.ref` and a unit without a value of `ref` are visible here.
+
+<!-- req: P/04-R013 -->
 
 ```yaml
 <sub>/snapshot-tables/<таблица>:  # an object; the writer is the controller; <таблица> — a key of domain.view_tables of the manifest (P/02.1, P/08.1 Н1.4а):
@@ -220,6 +246,8 @@ reader:   only the domain agent (P/09.1 Н1.2); the cluster console reads its ow
 ```
 
 ### Н1.4 Terms and states of the judge
+
+<!-- req: P/04-R014 -->
 
 ```yaml
 constants:
@@ -256,11 +284,15 @@ NAME_FATES:         [move, hung_moved, unsure_moved, release]   # + wait beyond 
 MOVED_FATES:        [move, hung_moved, unsure_moved]
 ```
 
+<!-- req: P/04-R015 -->
+
 The observation of a version, the freshness `LOST_AFTER` («within the last LOST_AFTER» — one relation `≤`) and `resource_state` are
 [the observation contract](../../common/contracts/observation.md) (review of stage A 6–7, № 1, № 2); here — what they
 mean for the judge and the pool of the controller (Н3 «choose», «fate»).
 
 ### Н1.4а Server failure: the move
+
+<!-- req: P/04-R016 -->
 
 ```yaml
 power_pull:
@@ -279,15 +311,21 @@ power_pull:
 fresh_controller: what is seen for the first time has just changed; it moves nothing for the first 45 s (Н3 «pass()», step 0)
 ```
 
+<!-- req: P/04-R017 -->
+
 `stays`, `lost`, `store`, `return` and the procedure «pull the power» (Н3) are the remainder of М10/11 Н1.4, Н3, moved here with lesson 6
 (stage B; the plan of the move of lesson 6, item 5: no norms remain in М10/11).
 
 ### Н1.5 Placement admission between controllers
 
+<!-- req: P/04-R018 -->
+
 A subsystem has one controller changing the placement at each moment. The right is set by a row,
 not by the presence of a process: late writes of the former holder are cut off by the store guard.
 The new service rows belong to the controller role; the placement readers also read them.
 The store doors and the vocabulary of operations remain P/01.1.
+
+<!-- req: P/04-R019 -->
 
 ```yaml
 <sub>/controller/placement_turn:         # a row; the writer is the controller
@@ -305,6 +343,8 @@ constants:
   TURN_TERM, TURN_RENEW: the writer turn contract «Сроки» (moved there without a change; layout audit А-03, the decision of the Architect 2026-10-25)
 ```
 
+<!-- req: P/04-R020 -->
+
 An unreadable turn/intent row is a refusal of the placement change with failures, not an empty row. An intent row out of form
 (`state` is not `active`/`idle`; an active one has no `members`, `target`, `reason`, `at`, or they are not in the form above) is unreadable:
 the controller — a refusal with failures, the readers (`/where`, `/unplaceable`, label forecasts) — 503 `unavailable`, not idle
@@ -313,11 +353,15 @@ Their initial absence is admissible; after creation neither row is deleted. Turn
 the lower bound of manifest_rev, idle is kept so that the version of intent does not return to
 the version of absence between two reads; the readers below need this.
 
+<!-- req: P/04-R021 -->
+
 An active intent is an accepted common decision for members while the individual placement and workers
 are being brought to it. For each of its ids the target/reason/at/manifest_rev of the intent decide; the other ids
 are decided by their own placement. A reader (/where, unplaceable, forecasts and the controller) reads the decision by
 [the observation contract](../../common/contracts/observation.md) «Reading the decision: intent → placement → intent» (review
 of stage A 6–7, № 2). With idle, all rows of the completed decision have already been brought to it.
+
+<!-- req: P/04-R022 -->
 
 For admission the load of a target is counted conservatively: the sum of the weights of the unique ids already assigned
 to it **or** directed there by the effective decision. Double counting of one id at one worker
@@ -325,6 +369,8 @@ is excluded; an old assignment not yet removed keeps the room at the former work
 is counted for spread_by. An active intent reserves all members at target even before workers.
 The indicators of the actual assignment are still counted by workers; the reserve is a condition of admission,
 not a statement that the unit already runs. Before a new admission an unfinished intent is completed.
+
+<!-- req: P/04-R023 -->
 
 A group is admitted by one intent with all its members from a fresh look and one common target;
 the preferences are chosen by the first id in UTF-8 order, the constraints and the weight — by all members.
@@ -668,6 +714,8 @@ target by the next decision. A fully placed group is not reconsidered without a 
 
 ## Н2 Doors
 
+<!-- req: P/04-R024 -->
+
 The lesson has no HTTP doors of its own (`P/04 no-openapi`). The console doors through which the operator talks to the controller
 (`/policy`, `/drain`, `/servers/{server}/labels`, `/servers/{server}/decommission`, `/unplaceable`, `/where/{id}`), their
 procedures and refusals are [P/06.6](../../06-console/spec/06.6-console.norms.md) Н2 (`/where` — [chapter 6.5](../../06-console/spec/06.5-console.norms.md) Н2); the controller executes their writes as the rows of Н1.1 on its pass
@@ -677,9 +725,13 @@ procedures and refusals are [P/06.6](../../06-console/spec/06.6-console.norms.md
 
 ## Н3 Procedures
 
+<!-- req: P/04-R025 -->
+
 delete_after applies only to a named id: numeric together with this key is rejected by the loader of P/02.1. The controller does not replace a physical delete with a tombstone and does not destroy the history of numeric issues.
 
 ### get and hold the placement turn
+
+<!-- req: P/04-R026 -->
 
 Steps 1–6, the barrier and «Races» are [the writer turn contract](../../common/contracts/turn.md) «Get and hold the turn»,
 «Barrier» (moved there without a change of behaviour; layout audit А-03, the Architect's decision of 2026-10-25). The turn row of the controller is `<sub>/controller/placement_turn`
@@ -688,6 +740,8 @@ placement/*, workers/* and placement_intent, and also the delete of a unit row b
 (step 6 of the contract).
 
 ### accept and complete a decision(members, target, reason)
+
+<!-- req: P/04-R027 -->
 
 ```
 0. the turn is mine; an active intent → first complete it, do not accept new decisions yet;
@@ -713,6 +767,8 @@ placement/*, workers/* and placement_intent, and also the delete of a unit row b
 6. only after the confirmation of 3–5 write the intent {state: idle, manifest_rev} with cas + guard turn
 ```
 
+<!-- req: P/04-R028 -->
+
 Each group occupies one intent write; it is not split for the sake of the ceiling of a row or of an assignment.
 The weight of both future rows (the intent and the full assignment of the target) is checked before step 2; an excess is
 a refusal of the step with a reason and failures, without a partial placement. Before step 2 it is likewise checked that
@@ -727,6 +783,8 @@ for its members are forbidden until completion. The composition, the target and 
 changes of the inputs after its acceptance are processed by the next decision after the recovery.
 After completion all new calculations take a fresh look, so the reserve of the previous decision is already visible.
 
+<!-- req: P/04-R029 -->
+
 **Races.** Two admissions of different units do not use one remainder: B gets the turn after A and sees
 the decision/assignment of A or its active intent, which B is obliged to complete first. With capacity=1
 the second weight 1 does not pass; with spread_by the occupied value is already visible. Two different first members of
@@ -737,6 +795,8 @@ assignment of members. This is a guarantee of rows/assignments, while stopping t
 is ensured by their reconciliation and leases (P/03.3, P/03.2), not by one change of the placement map.
 
 ### pass() — every 5 s
+
+<!-- req: P/04-R030 -->
 
 ```
 0. observation: update the memory of the seen heartbeats, slots and resources on the own clock; the objects of the cluster (heartbeats of workers
@@ -791,12 +851,16 @@ is ensured by their reconciliation and leases (P/03.3, P/03.2), not by one chang
 each step — in its own attempt: an error of a step — failures + 1, the other steps go on
 ```
 
+<!-- req: P/04-R031 -->
+
 A definite badkey of a full store key is an error of the corresponding step, not the absence
 of a row; the data of such a read are not replaced with empty ones. If the error does not allow completing
 an active intent, a new decision is not accepted: the recovery rule of Н1.5/Н3 applies.
 The pass checks the placement and the assignments; `unique`/`ref`/`must_match` of the unit fields are checked
 in advance by the units door of P/06.1. This pass does not guarantee a background audit and journaling of a violation of these constraints after
 a race of separate writes (P/06.1 Н3).
+
+<!-- req: P/04-R032 -->
 
 **Races.** The target of placement/assignment changes only under the turn and through an intent; one cas of a unit row
 does not replace the common admission. A break of the turn/store stops the whole changing pass,
@@ -805,6 +869,8 @@ The next holder first repairs the unfinished decision, then accepts its own.
 A stamp of manifest_rev without a change of the target is a separate write with cas and guard turn, it needs no intent.
 
 ### choose(unit) → worker | none
+
+<!-- req: P/04-R033 -->
 
 ```
 placed (worker ≠ "")                                               → as is; do not reconsider
@@ -826,11 +892,17 @@ found → accept and complete a decision for the unit or the whole group by Н3 
 none  → the row is not written (or reason, why), the unit is in unplaced; heavier than any — into unplaceable with words
 ```
 
+<!-- req: P/04-R034 -->
+
 If the decommission mark `<sub>/decommissioned/<s>` of the subsystem named by `about.sub`, `near.sub` or `ref` of the unit being placed
 does not read, then the server `s` is not confirmed for this placement: it is not a candidate, an error of the step (failures + 1), the reason goes into the journal;
 it is counted neither as decommissioned nor as not decommissioned (В7 item 3, the Architect's decision of 2026-10-28, on a proposal; line 7 of the list).
 
+<!-- req: P/04-R035 -->
+
 **Reason** (for a human; it MUST be non-empty; it SHOULD follow the grammar): `most free capacity (<свободно>) among <n> worker(s)` — `<n>` is the number of the eligible (after the filters), not of all live ones + `; weight <w>` — only for a manifest with `placement.weight` + ` reaching <метки>` + `; on <сервер>` + `, whose resource is <state>` + a mark of the choice by the rank of the chosen worker: the home rank — `, at home on <s>`, with `home: near` — `, beside <их id> holding it`; the neighbour rank — `, beside <их id> holding it`, and if a home is declared but its rank is empty — also ` (home <s> has no room)`; the rank «all» with `near` whose server is not chosen — `, away from <их id> on <сервер соседа> (no room there)`, and with a declared `home`, except `home: near`, outside the home — also `; away from home <s>`; `<s>` of the home marks is what the home is named by: the place of the holder or the server. Leaving: `slot <имя> released`, `slot <имя> capture did not finish`, `resource on <s> silent`, `server <s> draining`, `server <s> decommissioned`, `<w> holds no <place_by> now`, `<w>'s <place_by> <место> admits no unit` (`<place_by>` is the name of the field `placement.place_by`, `<место>` is the id of the place of the worker: `w-1 holds no shard now`, `w-1's shard s3 admits no unit`; C04-LEAVING-PLACE-WORD-01). Reachability: `<s> no longer reaches <метка>; …` / `; nothing live reaches it`. Group: `with <id>, one <group_by>: <why>; on <s>`. Deleted: `deleted`.
+
+<!-- req: P/04-R036 -->
 
 **Materialization and sync.** They use the same intent and turn. Even if the correct decision
 already exists, the repair first fixes it for the unit/group, removes the former assignments and completes
@@ -839,6 +911,8 @@ write is the turn version; the stability of the decision is ensured by the exclu
 the fresh check and the intent that is unchangeable until completion. This replaces the former guard of a separate placement.
 
 ### move(unit, from, to) → ok | already moved
+
+<!-- req: P/04-R037 -->
 
 ```
 1. the turn of the current pass is mine and confirmed; outside a pass first get it;
@@ -849,11 +923,15 @@ the fresh check and the intent that is unchangeable until completion. This repla
    accept an intent for the whole unit/group and complete it by steps 2–6 above
 ```
 
+<!-- req: P/04-R038 -->
+
 **Races.** A was delayed after the decision w-2, B got the turn and completed it, then moved the unit to w-3.
 Each late write of A has an old guard turn and is refused. It can neither add to w-2
 nor remove from the already new w-3. If A managed to add before the capture by B, B sees the assignment at the fresh
 removal. One unit never gets two assignments; for a group all old assignments are removed before the addition of the new target.
 A moment without an assignment and a lag of directory remain admissible.
+
+<!-- req: P/04-R039 -->
 
 In all branches hung/unsure/wait, HUNG_MOVE_AFTER is counted from the first observation
 by this judge of an unchanged slot version (age 0), not from until, the end of SLOT_TERM or the entry
@@ -861,22 +939,13 @@ into the fate. The diagnostic fates.since does not carry this term. A new judge 
 
 ### fate(slot) → fate — by the clock of the controller
 
+<!-- req: P/04-R040 -->
+
+The ordered decision machine is [forms/slot-fate.tsv](../forms/slot-fate.tsv). Its typed inputs are the observations of this judge, not the writer's `until`. The first matching rule wins. It returns the fate and, when allowed, the exact judgement version for `names_given`. The release branch calls [forms/slot-release.tsv](../forms/slot-release.tsv): only its confirmed CAS answer can publish the post-release version. A `-` action is YOURS at its anchor; it must not be skipped. The write, abandoned-capture cleanup and permission rules remain below.
+
+<!-- req: P/04-R041 -->
+
 ```
-a readable slot has not changed < SLOT_TERM on the clock of this judge           → alive
-resource live ∧ presence gone ∧ no assigned units                                → release (without a margin; the write — below)
-resource live ∧ presence gone (the process is dead, the server is alive)         → move  (without a margin)
-the same slot version is observed < SLOT_TERM + LOST_AFTER                       → alive (margin)
-the heartbeat changed within the last LOST_AFTER (the observation contract; № 1) → alive
-resource live ∧ process runs (carries units or holds the presence lock)          → hung;   ≥ HUNG_MOVE_AFTER passed → hung_moved
-resource live ∧ nothing about the worker (no fields ∨ unlisted)                  → wait;   give the name through names_given — only
-                                                                                   after HUNG_MOVE_AFTER
-resource live ∧ the presence did not read (unknown)                              → unsure; ≥ HUNG_MOVE_AFTER passed → unsure_moved
-resource unreachable (resource_state Н1.4)                                       → unsure; ≥ HUNG_MOVE_AFTER passed → unsure_moved
-resource silent (heartbeat and at not fresh or no row) ∧ the worker is silent    → move   (two silences, ADR-0045);
-                                                                                   the server — from the heartbeat, otherwise from Slot.server
-the server is unknown at all                                                     → move   (two silences)
-units are assigned ∧ none of the above                                           → move     (closing row)
-no assigned units ∧ none of the above                                            → release  (closing row)
 write release: write the slot released (cas),
                                                                                    keep holder/until/gen/server; a torn one —
                                                                                    wholly released and nobody's, keeping a readable gen;
@@ -893,38 +962,50 @@ names_given[name] = the version of the slot row at which the name is taken: for 
                    of this write): the released slot is taken by it, and as a «free» one it is also a candidate (P/03.2 Н3 «capture» step 2c)
 ```
 
+<!-- req: P/04-R042 -->
+
 An unreadable gen of an existing slot is not replaced with zero on release;
 such a row is kept and is not included in names_given until the generation is recovered. A reassignment
 of units by fate does not mean a permission to rewrite a damaged generation of the slot.
+
+<!-- req: P/04-R043 -->
 
 **Transitions of `release` (ADR-0080 addendum 12).** The branch `release` is reachable by the row «gone without assigned units»:
 a live resource tells about a process with one of `runs`, `gone`, `unlisted`, `unknown` (P/05 Н1.4; `silent` is a state of the resource,
 not a presence), and each word, except this case, is intercepted by a row above. The two closing rows make
 the table complete and are not reached under the definitions of Н1.
 
-| Participant and state | Event and condition | Action | New state or result |
-|---|---|---|---|
-| the judge, the slot has not changed ≥ SLOT_TERM, no assigned units | resource live, presence `gone` | write `released` with `cas` of the read version | the slot is released; `names_given` — by the version after the write |
-| the judge, the same | the holder renewed the slot between the read and the write | `cas` refused | the slot does not change; on the next pass — `alive` |
-| the judge, the slot has not changed ≥ SLOT_TERM, units are assigned | resource live, presence `gone` | write nothing | `move` without a margin; `names_given` — by the version of the judgement |
-| the judge, no assigned units | resource live, presence `unlisted` or no fields | write nothing | `wait` (ADR-0048): the name stays with the holder until HUNG_MOVE_AFTER |
-| the judge, no assigned units | resource live, presence `runs` | write nothing | `hung` |
+<!-- req: P/04-R044 -->
+
+The transition selector is [forms/slot-release.tsv](../forms/slot-release.tsv). It receives the fate selected above; the CAS action is YOURS, then a confirmed reply or conflict is delivered to the machine. The five original witnesses remain covered: gone without units, a competing renewal, gone with units, unlisted without units and runs without units. A competing renewal refuses the release, and the next pass judges the changed version as `alive`.
+
+<!-- req: P/04-R045 -->
 
 The order of the rules is normative: more definite knowledge before less definite; the margin before the judgements. The controller does not write the slot at any outcome except `release` and the server decommission, and it removes the rows under an abandoned capture (above; ADR-0113 addendum (50)).
+
+<!-- req: P/04-R046 -->
 
 **Races.** The holder renewed the slot between the judgement and the capture of the name by a new process: `names_given` is bound to the version, a capture with `cas` by it will not pass — the name stays. Two controllers can have different observation histories and therefore different judgements (ADR-0049); each uses its own version age by P/03.2 Н1.4. The `release` writes go with `cas` of the read version, so two decisions do not overwrite a renewal or someone else's capture. A shift of the writer clock with the same observation history does not change the fate.
 
 ### leaving(worker) → reason | none
 
+<!-- req: P/04-R047 -->
+
 The first of: the slot is released (released = true — at once); an abandoned capture (released = taking, the version unchanged for SLOT_TERM on the clock of the controller — the capturer died between the writes; earlier — not leaving, the capture will finish; added by the Quint pilot, F2); the resource of the server is silent — only with `requires: resource` and a live worker (the pool contract): it works, but its units need a resource that is absent; it does not hold a place (`distinct`); the place does not admit; the server is draining; the server is decommissioned; an outcome from MOVED_FATES — its `why`. The units of a leaving worker — a move (step 6) by the rules of the choice; a group whole, or it stays with the alarm `units.left_on_leaving`; the placement row is not cleared until a new place is found, except for a released slot and an abandoned capture: their units that nobody can take are removed by the write `worker: ""`, the reason `slot <w> released; nothing live can take it` (`slot <w> capture did not finish; nothing live can take it`) (the worker has gone forever, a row with its name would say «placed»; acceptance P/03.4, sc. 03). A silence of the store moves nothing. Without `requires: resource` a silence of the resource does not count as leaving, and a worker silent together with the resource leaves only by fate: the units are carried by its outcome `move`, about 90 s of observation of an unchanged slot version (Н3 «fate», [P/03.2-08](../../03-worker/spec/03.2-worker.norms.md); the Architect's decision of 2026-10-31, stage 2 of the plan of the group scenarios).
+
+<!-- req: P/04-R048 -->
 
 **Races.** Leaving and a revived worker: the decision is by the snapshot of the pass; a worker that returned after the move reads an assignment without the unit and stops it (P/03.3 Н3 «loop()», step 2: the carried one is not in the assignment → `stop_unit`); the move is not rolled back.
 
 ### shortage(), order(), withdraw the order, shrink() — with grows: true
 
+<!-- req: P/04-R049 -->
+
 The role grows on demand: the controller orders the number of processes of the role on a specific server with the row
 `<sub>/want/<сервер>`, the server script brings the number of processes to it (P/02.4 Н1.5); the controller does not start processes
 (ADR-0021, ADR-0084 and addendum (1)).
+
+<!-- req: P/04-R050 -->
 
 ```
 order row:    on every server where the role is installed (the door row has room.<sub>, Н1.1) — the row
@@ -1019,6 +1100,8 @@ number above want: a live role process of the server s (the name and the number 
                  (P/02.4 Н1.5 rules 3); the controller does not raise want(s) (ADR-0084 addendum (4) Р28 instead of Р25)
 ```
 
+<!-- req: P/04-R051 -->
+
 ```
 shrink (step 9а):
   condition: the set has had no shortage for longer than SHRINK_AFTER (from the first pass without a shortage, Н1.4 terms), there is no in flight (by
@@ -1050,6 +1133,8 @@ drain:       a server in platform/drain gets no new orders; its additional proce
 decommission: step 2 — delete the order row of the server with cas and guard turn; the server gets no new orders (Р7)
 ```
 
+<!-- req: P/04-R052 -->
+
 **Races.** Two controllers write one order row: cas by the version and the guard `placement_turn` let one pass, the second
 re-reads and recomputes from the absolute target. The order has no separate kind of record in `placement_intent`: the absolute
 target under cas with the guard `placement_turn` and the capacity in flight close a repeat of the growth — a repeated pass and a new
@@ -1061,6 +1146,8 @@ the move and does not choose a new victim. The door against the heartbeats: the 
 a process with a number greater than want, raised after the door mark, for no longer than the mark period (ALIVE_EVERY): it is caught by the memory check
 of the workers script (P/02.4 Н1.5, the ceiling by memory) (ADR-0084 addendum (3) Р14′).
 
+<!-- req: P/04-R053 -->
+
 **The probe process with `distinct` (Р16‴).** A worker without a place carries no units and does not leave for another server: a place on its
 server is freed only by the leaving of the keeper (Р8 does not change), until then it stays idle. A new process, until its first heartbeat
 with a taken place, carries the place `""` and in this window is a live one without a place: its server is not a candidate in this window; while it is ordered and not
@@ -1068,6 +1155,8 @@ raised — too (a probe in flight); a delayed start does not give the server a s
 one probe process per pass (ADR-0084 addendum (3) Р16′, addendum (5) Р16‴; review of stage A 3–5, № 13).
 
 ### decommission_server(s) — a console request, executed by the controller
+
+<!-- req: P/04-R054 -->
 
 ```
 console: the decommission request and its refusals, the row platform/decommission/<s>, the delete of platform/doors/<s> on its pass
@@ -1102,13 +1191,19 @@ withdrawal: the request row removed by the console → the controller removes th
          does not return the removed contributions: the worker writes them anew at start or at a capture with cleanup (P/03.7 Н1.2 claim)
 ```
 
+<!-- req: P/04-R055 -->
+
 The console side (the refusal 409 `server answers` by [the observation contract](../../common/contracts/observation.md), the write of
 the request, the delete of the door row, the withdrawal) is [chapter P/06.6](../../06-console/spec/06.6-console.norms.md) Н3
 «decommission_server(s) — the console side» (review of stage A 6–7, № 2); here — the execution by the controller.
 
+<!-- req: P/04-R056 -->
+
 **Races.** The decommission of a server and the return of its workers: `decommissioned/*` is written with `cas`; a worker of this server checks the decommission at the capture (P/03.2 Н3 «start()», step 3: `platform/decommission/<s>` or `<sub>/decommissioned/<s>`) and does not take the name; the console request and the pass of the controller are separated by a row — a repeat of the request is idempotent.
 
 ### manifest_rev — the rule guard
+
+<!-- req: P/04-R057 -->
 
 ```
 before every write of a placement row (place, move, remove): row.manifest_rev > my revision
@@ -1119,18 +1214,30 @@ manifest_behind (Н1.2): the number of rows of this pass whose write is postpone
 
 ---
 
+<!-- req: P/04-R058 -->
+
 **Races.** A change of the manifest during a pass: `rev` is read once per pass, the decisions are written with this `manifest_rev`; the controller sees a change of `rev` by the mark check (P/02.3) and stops with code 0; a new instance with the new `rev` re-reads everything; a row with a former `manifest_rev` is a snapshot of a decision, not a rule.
 
 ### controller start — schema check
 
+<!-- req: P/04-R059 -->
+
+The environment and the launcher argument are inventoried in [forms/daemon-flags.tsv](../forms/daemon-flags.tsv). Derived defaults and imported checks remain the linked contract rules; no CLI flags are added.
+
+<!-- req: P/04-R060 -->
+
 The controller side of the common block of [P/06.6](../../06-console/spec/06.6-console.norms.md) Н3 «старт консоли — проверка схемы» (part of М10/10-01
 by `note` of id-map; the row `platform/schema`, `SCHEMA` and the raise are P/06.6 Н1.1а, Н3 «raise_schema»).
+
+<!-- req: P/04-R061 -->
 
 ```
 start: the schema contract «Check at start» ([the schema contract](../../../common/contracts/schema.md); moved there without a change; layout audit А-02, the Architect's decision of 2026-10-25)
 ```
 
 ### table snapshot — after the unit snapshot
+
+<!-- req: P/04-R062 -->
 
 ```
 for each table from domain.view_tables of the manifest: the rows of the table → rows by Н1.3б, the order — key;
@@ -1141,6 +1248,8 @@ an error reading a table — do not write the object, a log line once per series
 ```
 
 ### snapshot — after the pass
+
+<!-- req: P/04-R063 -->
 
 ```
 per worker: the unit rows of its assignment → [{id, revision, the fields of snapshot (address mask), worker, server}];
@@ -1156,9 +1265,13 @@ TooLarge before the write keeps the former shard and its time; an unknown outcom
 On any error do not publish an empty shard instead of unchecked data
 ```
 
+<!-- req: P/04-R064 -->
+
 **Races.** On one server there is one controller of a manifest; different servers can publish different local copies of one logical shard key. A choice by written does not create a common moment of reading. Rows and shards are published separately: a snapshot is an observed configuration, not a consistent backup. An error reading the rows/list does not allow publishing an empty shard; an error of one write does not roll back the ones already published. A consumer checks revision and does not infer absence from an incomplete set.
 
 ### pull the power (do nothing) — a drill
+
+<!-- req: P/04-R065 -->
 
 ```
 t = 0      the server is off; its daemon — minus a vote; its heartbeats and its door stop changing
@@ -1169,34 +1282,22 @@ return     the daemon restarts with the saved member.json (does not repeat join)
            slots — by the word of the controller; nothing moves back, except a declared `home` (Н3 «pass()», step 7, HOME_BUDGET)
 ```
 
+<!-- req: P/04-R066 -->
+
 **Races.** The failure coincides with a renewal, a write and mirroring; the boundaries are this lesson, [P/03.2](../../03-worker/spec/03.2-worker.norms.md), [P/05](../../05-resource/spec/05-resource.norms.md). The absence of operator actions does not turn an observation into a snapshot. The terms given are the profile of the drill, not a guarantee for an arbitrary failure (from М10/11 Н3, the move of lesson 6).
 
 ---
 
 ## Н4 Refusals
 
+<!-- req: P/04-R067 -->
+
 The refusals of the console doors (the policy, the drain, the labels, the server decommission, `/where`, the common codes of the console) are [P/06.6](../../06-console/spec/06.6-console.norms.md) Н4 and [P/06.5](../../06-console/spec/06.5-console.norms.md) Н4.
 The row «an intent row out of the form of Н1.5» is given here whole: 503 at the reader doors of the console, failures at the controller.
 
-| Reason | Code / outcome | Body / write | What the caller does |
-|---|---|---|---|
-| an intent row out of the form of Н1.5 | 503 at the readers; failures at the controller | `{detail, error: unavailable}` | restore the service row |
-| a unit heavier than any capacity; a group without room; nobody reaches the labels | — | into `unplaceable` with `why`; the placement row is not written | give a worker with the labels or the capacity |
-| the full key `<sub>/placement/<id>` of a member is longer than the key limit of the store | — | into `unplaceable` with `why`; the intent and the placement row are not written; the other decisions of the pass go on | shorten the id: re-create the unit |
-| move: the placement row is no longer from `от` (from) | — | `Moved`, nothing is written | another controller did it |
-| a placement row decided by a newer manifest | — | do not touch; `manifest_behind` | a restart of the controller with the new manifest |
-| turn is busy; its version is younger than TURN_TERM | — | no changing pass, this is not failures | a retry on the next pass |
-| turn/intent does not read; the prepared intent/assignment exceed the ceiling | — | failures and the reason; without a new admission | restore the service row or reduce the group/load; do not split the decision |
-| guard turn refused, the placement write is unknown or a conflict arose | — | stop the current plan; do not accept new decisions | confirm the barrier of the own version of turn and recover the intent; if holder is someone else's — wait |
-| grows: no positive capacity of a worker and capacity.default = 0 | — | short with the shortage, withheld: no positive capacity estimate; no order | name a positive capacity/default; there is no division by zero |
-| grows: no candidate server (labels, drain, decommission, no base, no room, the numbers ran out) | — | withheld with words; the alarm `workers.no_server` | raise the base, free memory or numbers, give labels |
-| grows: servers: distinct, the place from the heartbeat — there is no free place, on each server a live suitable one without a place or a probe in flight, or the probe process of this pass is already ordered (Н3 «shortage()», Р16‴) | — | the growth is no more than one probe process per pass; the remainder — withheld, the units — in `unplaceable` with `why` `no free <place_by>` | give a place (a row of the table of places) on a server of the role (ADR-0084 addendum (3) Р16′; review of stage A 3–5, № 12) |
-| grows: the server did not raise the order within WANT_GRACE | — | want(s) := 1 + \|live numbers ∩ {2…want(s)}\| (Н3 «withdraw on deadline», Р27; review of stage B 6–7, № 43), `raise_failed`, the alarm `workers.raise_failed`; the order — on the next candidate | check the server script (P/02.4 Н1.5) |
-| 10 conflicts in a row on one write | — | an error of the step, `failures + 1` | the next pass |
-| a heartbeat/slot/assignment does not read | — | the worker is not in the pool; the slot — by fate; not counted in `garbled` of the report (there are only unit rows there, Н1.2), the heartbeat is counted by `<sub>_heartbeats_garbled` of P/06.5 | — |
-| start: the store is on a schema above the build; the row is not a number | do not start | log | update the build / repair the row |
-| the server did not return (Н1.4а; from М10/11 Н4) | the units moved; the archive is unavailable | — | decommission the server ([P/06.6](../../06-console/spec/06.6-console.norms.md) Н3 «вывести_сервер», Н3 «decommission_server» below) |
-| snapshot: the bytes of a shard are more than L = 64 MiB by Н1.3а (before the write) or `TooLarge` of the store on put (its max_bytes) | the shard is not written; the former shard is kept | `TooLarge` with the number of units, the bytes and L (for the store — its own words); a log once per series | reduce the composition/number of units of the shard; raising max_bytes helps only up to 64 MiB |
+<!-- req: P/04-R068 -->
+
+The closed catalogue is [forms/refusals.tsv](../forms/refusals.tsv), `chapter = 4`. Columns `cause`, `outcome`, `diagnostic`, `caller` preserve the four original cells in source order; fixed machine codes supplement them. `peer` refers to the console contract, not a controller HTTP API.
 
 ---
 

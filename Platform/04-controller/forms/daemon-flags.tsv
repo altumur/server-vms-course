@@ -1,0 +1,31 @@
+# Process inputs of the controller, P/04. Literal TAB; no CSV quoting. No CLI options are introduced.
+# $NAME is environment, <sub> is the runner route's subsystem argument. The launcher selects that subsystem's controller program.
+# Eight P/01 columns, with string and number accepted by the Architect/Generators. f keys retain $ and angle brackets.
+# default is a literal or -; default_text may preserve an external/default rule, resolved by the linked norm, never copied as a literal.
+# No additional lexical/range refusal is inferred for a numeric setting whose norm only names its meaning/default.
+# Environment files are parsed by the launcher, not again by the controller. Shared paired names are checked before applying defaults.
+# Empty bad adds no CEL check and does not erase contract checks of box/instance, server, addresses, role or subsystem.
+#var f map<string,dyn> — supplied process inputs; number typed values are finite numbers, others strings
+#var cmd string — controller
+flag	type	default	default_text	required	commands	bad	norm
+$W2C_ROLE	string	-	unit: <sub>controller, matching the controller launcher route	false	controller		common/contracts/env-file.md; P/04 lifecycle Environment
+$PLATFORM_STORE	string	-	file://<PLATFORM_DIR>/config	false	controller		common/contracts/env-file.md; P/04 lifecycle Environment
+$PLATFORM_DIR	dir	/data/platform	/data/platform	false	controller		common/contracts/env-file.md; P/04 lifecycle Environment
+$OBJECTS	string	-	file://; cluster:// with configstore	false	controller	"$PLATFORM_OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md; P/04 lifecycle Environment
+$PLATFORM_OBJECTS	string	-	file://; cluster:// with configstore	false	controller	"$OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md; P/04 lifecycle Environment
+$RESOURCE_ROOT	dir	-	<PLATFORM_DIR>/events	false	controller	"$EVENTS" in f && f["$RESOURCE_ROOT"] != f["$EVENTS"]	common/contracts/env-file.md; P/04 lifecycle Environment
+$EVENTS	dir	-	<PLATFORM_DIR>/events	false	controller	"$RESOURCE_ROOT" in f && f["$EVENTS"] != f["$RESOURCE_ROOT"]	common/contracts/env-file.md; P/04 lifecycle Environment
+$SERVER_NAME	string	-	short hostname	false	controller	!f["$SERVER_NAME"].matches("^[a-z0-9]+(-[a-z0-9]+)*$")	common/contracts/env-file.md; P/04 lifecycle Environment
+$BOX_ID	string	-	/etc/machine-id, otherwise hostname; empty is unset	false	controller		common/contracts/env-file.md; P/04 lifecycle Environment
+$INSTANCE_ID	string	-	<box>:<pid>:<6hex>; empty is unset	false	controller		common/contracts/instance.md; common/contracts/event-journal.md: The event id and the writer instance
+$W2C_TLS_DIR	dir	-	Linux /etc/w2c/tls; macOS <W2C_BOX>/tls	false	controller		common/contracts/env-file.md; P/04 lifecycle Environment
+$W2C_ENV	file	/etc/w2c/w2c.env	/etc/w2c/w2c.env	false	controller		common/contracts/env-file.md; P/04 lifecycle Environment
+$W2C_SUB_ENV	file	-	without a value: not included	false	controller		common/contracts/env-file.md; P/04 lifecycle Environment
+$W2C_BOX	dir	/opt/w2c	/opt/w2c	false	controller		common/contracts/env-file.md; P/04 lifecycle Environment
+$W2C_MANIFEST_REV	string	-	-	false	controller		common/contracts/env-file.md; P/04 lifecycle Environment
+$NOTIFY_SOCKET	string	-	-	false	controller		common/contracts/env-file.md; P/04 lifecycle Environment
+<sub>	string	-	-	true	controller		P/04 lifecycle Flags; P/02.4 Н1.9 controller
+$HUNG_MOVE_AFTER	number	900	900	false	controller		P/04 Н1.4; common/contracts/env-file.md: Constants and units
+$REACH_BUDGET	number	10	10	false	controller		P/04 Н1.4; common/contracts/env-file.md: Constants and units
+$W2C_SHRINK_AFTER	number	-	unset; SHRINK_AFTER is 300; stand-only override	false	controller		P/04 Н1.4; common/contracts/env-file.md: Constants and units
+$CLUSTER	string	local	local	false	controller		P/04 Н1.3а; common/contracts/env-file.md: Environment variables

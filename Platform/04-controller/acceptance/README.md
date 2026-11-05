@@ -354,3 +354,5 @@ A return home is allowed only in a declared pass with HOME_BUDGET.
 
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models
 of the author are not a performed stand test.
+
+[seams.tsv](seams.tsv) adds kit witnesses at controller function seams; [forms/README.md](../forms/README.md) defines their normalization. They do not change the process scenario/step counts above and do not close a witness they do not execute.
