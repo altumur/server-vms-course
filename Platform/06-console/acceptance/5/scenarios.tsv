@@ -319,7 +319,8 @@ scenario	step	request	expect
 32-pass-second-kind	9	GET /counters/c1	404 {"error": "no such unit"}
 32-pass-second-kind	10	@header X-W2C-Pass-Ticket: 00112233445566778899aabbccddeeff GET /metrics	200 ~testsub_workers_live
 32-pass-second-kind	11	GET /probe-x/metrics	200 ~probe_x_passed_calls_total 0
-32-pass-second-kind	12	GET /metrics	200 !contains passed_calls_total
+32-pass-second-kind	12	GET /metrics	200 ~probe_x_passed_calls_total 0
+32-pass-second-kind	13	GET /metrics	200 !contains testsub_passed_calls_total
 # 33-writes-via (ADR-0119 доп. (10), (11); P/06.1 Н1.1а): манифест probe-w — строки единицы items и таблицы log пишет только probe-x по билету; сеанс — 403 writes via у создания, правки, удаления, таблицы и строки пакета (весь пакет, ничего не записано); проверка до чтения строки — PUT и DELETE отсутствующей строки 403, не 404; таблица free без слова открыта; чтение не меняется. Половина по билету — стенд передачи, до него чтением (P/06.1-35)
 33-writes-via	1	@start resource	ok
 33-writes-via	2	POST /probe-w/items {"name": "a"}	403 {"error": "writes via"}

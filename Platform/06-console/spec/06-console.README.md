@@ -326,7 +326,7 @@ The chapter is done after the ticket and the second kind of pass of ADR-0094 B1.
 ### The whole lesson
 
 Run the acceptance scenarios separately, with the preparation named by the acceptance README of the chapter: in all the lesson has
-141 scenarios / 1528 steps — chapter 6.1 (`acceptance/1/`: 01–46), chapter 6.2 (`acceptance/2/`: 01–11), chapter 6.3
+141 scenarios / 1529 steps — chapter 6.1 (`acceptance/1/`: 01–46), chapter 6.2 (`acceptance/2/`: 01–11), chapter 6.3
 (`acceptance/3/`: 03), chapter 6.4 (`acceptance/4/`: 03, 04, 06–12), chapter 6.5 (`acceptance/5/`: 01–33), chapter 6.6
 (`acceptance/6/`: 01–17), chapter 6.7 (`acceptance/7/`: 01–03, 06, 13–18; the domain stand), chapter 6.8 (`acceptance/8/`: 01–12), chapter 6.9 (`acceptance/9/`: 01–02). Fill the checklists of the chapters
 with the evidence from Н5 of the chapters.
