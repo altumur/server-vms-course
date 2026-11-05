@@ -7,9 +7,10 @@
 рядом); `<!-- families:begin -->` — «Семьи данных» главы по каталогу; `<!-- canonical:begin -->` — «Форма
 канонического вида» P/02.2 (`02.2-installer.view.schema.json` рядом). Текст между маркерами заменяется построенным.
 
-Урок в раскладке ADR-0124 (с `ru/`): нормы `spec/X` — английский источник, `ru/spec/X` — перевод. Блок один и тот же, его
-получают оба файла (ADR-0121 доп. (1) п. 2: источник несёт блок как построен), ссылки — от каждого файла своей глубины;
-файлы формы берутся рядом с источником. Можно назвать любой из двух.
+Урок в раскладке ADR-0124 (с `ru/`): нормы `spec/X` — английский источник, `ru/spec/X` — перевод. Блок строится для
+каждого файла на его языке (ADR-0121 доп. (3) п. 1): источник получает английский, перевод — русский; значения (ключи,
+роли, исходы, числа) у них общие, ссылки — от каждого файла своей глубины; файлы формы берутся рядом с источником.
+Урок прежней раскладки — русский блок. Можно назвать любой из двух файлов пары.
 """
 import json
 import re
@@ -56,20 +57,22 @@ def pair_of(norms, root):
 
 
 def built(kind, norms, root, at=None):
-    """The block of a kind for the norms `norms` (files of the form next to it); links of the families — from `at`."""
+    """The block of a kind for the norms `norms` (files of the form next to it); links of the families — from `at`, the
+    language — that of `at` (section.lang_of: the source — English, `ru/…` — Russian)."""
     at = norms if at is None else at
+    lang = section.lang_of(at, root)
     base = Path(norms).parent / Path(norms).name[:-len(".norms.md")]
     if kind == "form":
         sch = json.loads(Path(str(base) + ".schema.json").read_text(encoding="utf-8"))
         rel = json.loads(Path(str(base) + ".relations.json").read_text(encoding="utf-8"))
-        return section.build_form_section(sch, rel, textv7.load_scalars(Path(str(base) + ".scalars.tsv")))
+        return section.build_form_section(sch, rel, textv7.load_scalars(Path(str(base) + ".scalars.tsv")), lang=lang)
     if kind == "families":
         fams = chapter_families(root, chapter_prefix(norms))
         if not fams:
             raise spec.SpecError("%s: the chapter owns no family with a schema in the catalog" % Path(norms).name)
-        return section.build_families_section(Path(at).resolve(), Path(root).resolve(), fams)
+        return section.build_families_section(Path(at).resolve(), Path(root).resolve(), fams, lang=lang)
     doc = json.loads((Path(norms).parent / "02.2-installer.view.schema.json").read_text(encoding="utf-8"))
-    return view.build_view_section(doc)
+    return view.build_view_section(doc, lang=lang)
 
 
 def rewrite(norms, root):

@@ -796,7 +796,8 @@ def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manif
                            % (section.FORM_BEGIN, section.FORM_END)))
         else:
             said = "\n".join(lines[b[0] + 1:e[0]]) + "\n"
-            built = section.build_form_section(sch, rel, textv7.load_scalars(files[".scalars.tsv"]))
+            built = section.build_form_section(sch, rel, textv7.load_scalars(files[".scalars.tsv"]),
+                                               lang=section.lang_of(norms, root))
             if said != built:
                 old, new = said.splitlines(), built.splitlines()
                 at = next((i for i, (x, y) in enumerate(zip(old, new)) if x != y), min(len(old), len(new)))
@@ -917,7 +918,8 @@ def families_check(root, norms, text, prefix, catalog):
     if len(built) != len(rows):
         return errors, stats
     said = "\n".join(lines[b[0] + 1:e[0]]) + "\n"
-    new = section.build_families_section(Path(norms).resolve(), Path(root).resolve(), built)
+    new = section.build_families_section(Path(norms).resolve(), Path(root).resolve(), built,
+                                         lang=section.lang_of(norms, root))
     if said != new:
         o, n = said.splitlines(), new.splitlines()
         at = next((i for i, (x, y) in enumerate(zip(o, n)) if x != y), min(len(o), len(n)))

@@ -385,329 +385,329 @@ it is first removed whole by an intent with target ""; it waits or chooses a new
 target by the next decision. A fully placed group is not reconsidered without a reason to leave.
 
 <!-- families:begin -->
-### Семьи данных (построены из стандартных файлов)
+### Data families (built from the standard files)
 
-Форма строк и объектов, которыми глава владеет по [каталогу](../../common/data/catalog.tsv), — JSON Schema 2020-12 семьи (ADR-0092). Экземпляр строки — `{key, row}`, объекта — `{key, object}`; ключ — грамматика колонки `key` каталога. Поля `row` — значения `items` после [кодека](../../common/data/codec.tsv): писатель проверяет схему и её `$defs.writer`, читатель — схему (слой 3 — слова `x-*` схемы). Нечитаемо — строка не раскодировалась или не прошла схему в режиме читателя; исход — по таблице исходов семьи: путь — префикс пути отказа (пустой — строка целиком), при нескольких путях отказа действует исход с наименьшим приоритетом.
+The form of the rows and objects that the chapter owns by the [catalog](../../common/data/catalog.tsv) is the JSON Schema 2020-12 of the family (ADR-0092). An instance of a row is `{key, row}`, of an object `{key, object}`; the key is the grammar of the column `key` of the catalog. The fields of `row` are the values of `items` after the [codec](../../common/data/codec.tsv): the writer checks the schema and its `$defs.writer`, the reader the schema (layer 3 — the words `x-*` of the schema). Unreadable — the row did not decode or did not pass the schema in the reader's mode; the outcome is by the table of outcomes of the family: the path is a prefix of the path of the refusal (empty — the whole row); with several paths of refusal the outcome of the least priority applies.
 
-#### `<sub>/placement/<id>` — строка
+#### `<sub>/placement/<id>` — row
 
-Схема — [`placement.schema.json`](../data/placement.schema.json), исходы — [`placement.outcomes.tsv`](../data/placement.outcomes.tsv); версия формы 1; норма — P/04 Н1.1, Н1.5.
+Schema — [`placement.schema.json`](../data/placement.schema.json), outcomes — [`placement.outcomes.tsv`](../data/placement.outcomes.tsv); form version 1; norm — P/04 Н1.1, Н1.5.
 
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+| Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `worker` | строка; целиком `([a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)?` | обязателен |  | the worker name — a slot name, P/03.2 Н1.4 (`<prefix>-<суффикс>`; prefix of its own manifest — a check of the lesson, not of the form); "" — not placed |
-| `reason` | строка | обязателен |  | a reason for a human; non-empty (Н3 «Причина», P/04-18) |
-| `at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the controller's wall-clock seconds at the moment of the decision |
-| `rev` | строка; целиком `[1-9][0-9]*` | обязателен |  | a decimal integer ≥ 1; +1 for each write of the row |
-| `manifest_rev` | строка; целиком `[1-9][0-9]*` | необязателен |  | the manifest revision (P/02.3 Н1.5 rev) under which the decision was made; MUST for an implementation that keeps the manifest in the row; rows without it are stamped by the pass (Н3 «pass()» step 1) |
+| `worker` | string; matching `([a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)?` in full | required |  | the worker name — a slot name, P/03.2 Н1.4 (`<prefix>-<суффикс>`; prefix of its own manifest — a check of the lesson, not of the form); "" — not placed |
+| `reason` | string | required |  | a reason for a human; non-empty (Н3 «Причина», P/04-18) |
+| `at` | time (P/01.1 Н0 «Time in a row») | required |  | the controller's wall-clock seconds at the moment of the decision |
+| `rev` | string; matching `[1-9][0-9]*` in full | required |  | a decimal integer ≥ 1; +1 for each write of the row |
+| `manifest_rev` | string; matching `[1-9][0-9]*` in full | optional |  | the manifest revision (P/02.3 Н1.5 rev) under which the decision was made; MUST for an implementation that keeps the manifest in the row; rows without it are stamped by the pass (Н3 «pass()» step 1) |
 
-Только у писателя (`$defs.writer`):
+Only at the writer (`$defs.writer`):
 
-| Ключ | Ещё и |
+| Key | Also |
 |---|---|
-| `reason` | не из: `""` |
+| `reason` | not one of: `""` |
 
-Исходы нечитаемой строки (читатель — роль; `*` — все читатели семьи):
+Outcomes of an unreadable row (the reader is a role; `*` — all readers of the family):
 
-| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
+| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| строка целиком | `<s>controller` | the whole row is unreadable: the controller — an error of a pass step (failures + 1), the unreadable is not replaced by absence and is not rewritten as unplaced (Н3 «pass()»: «data from such a read are not replaced by empty ones»); the cause goes to the log (layout audit, Г-04; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/04 Н3 «pass()» |
-| строка целиком | `console` | the whole row is unreadable: the effective placement (/where, /unplaceable, label forecasts) — an unconfirmed read, not «not placed» (layout audit, Г-04) | 0 | строка | P/04 Н1.5 |
+| the whole row | `<s>controller` | the whole row is unreadable: the controller — an error of a pass step (failures + 1), the unreadable is not replaced by absence and is not rewritten as unplaced (Н3 «pass()»: «data from such a read are not replaced by empty ones»); the cause goes to the log (layout audit, Г-04; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | row | P/04 Н3 «pass()» |
+| the whole row | `console` | the whole row is unreadable: the effective placement (/where, /unplaceable, label forecasts) — an unconfirmed read, not «not placed» (layout audit, Г-04) | 0 | row | P/04 Н1.5 |
 
-#### `<sub>/workers/<имя>` — строка
+#### `<sub>/workers/<имя>` — row
 
-Схема — [`workers.schema.json`](../data/workers.schema.json), исходы — [`workers.outcomes.tsv`](../data/workers.outcomes.tsv); версия формы 1; норма — P/04 Н1.1.
+Schema — [`workers.schema.json`](../data/workers.schema.json), outcomes — [`workers.outcomes.tsv`](../data/workers.outcomes.tsv); form version 1; norm — P/04 Н1.1.
 
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+| Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `units` | список, без повторов, элемент — строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` | обязателен |  | ids of the assigned units by the list rule of P/06.1 Н1.2 (comma-separated, otherwise a JSON array; codec array), sorted; "" — none |
-| `units[]` | строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` | необязателен |  | the unit id (P/06.1 Н1.3); a numeric id — also by this grammar |
-| `rev` | строка; целиком `[1-9][0-9]*` | обязателен |  | a decimal integer ≥ 1; +1 only when the list changes |
+| `units` | list, without repeats, element — string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full | required |  | ids of the assigned units by the list rule of P/06.1 Н1.2 (comma-separated, otherwise a JSON array; codec array), sorted; "" — none |
+| `units[]` | string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full | optional |  | the unit id (P/06.1 Н1.3); a numeric id — also by this grammar |
+| `rev` | string; matching `[1-9][0-9]*` in full | required |  | a decimal integer ≥ 1; +1 only when the list changes |
 
-Исходы нечитаемой строки (читатель — роль; `*` — все читатели семьи):
+Outcomes of an unreadable row (the reader is a role; `*` — all readers of the family):
 
-| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
+| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| строка целиком | `<s>controller` | the whole row is unreadable: the worker is not in the pool, does not enter garbled of the pass report (Н4 «пульс/слот/назначение не читается»; the Architect's answer of 2026-10-25 to the questions of stage 3, Г-08) | 0 | строка | P/04 Н4 |
-| строка целиком | `<s>worker` | the whole row is unreadable: the worker reading its own assignment does not change its set of units (takes no new ones, does not give away the ones held by this row), the log (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-08) | 0 | строка | P/03.3 Н3 «цикл()» шаг 2 |
-| строка целиком | `console` | the whole row is unreadable: drain — `GET /drain` 503 `unavailable` (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-08) | 0 | строка | P/06.6 Н1.2 |
+| the whole row | `<s>controller` | the whole row is unreadable: the worker is not in the pool, does not enter garbled of the pass report (Н4 «пульс/слот/назначение не читается»; the Architect's answer of 2026-10-25 to the questions of stage 3, Г-08) | 0 | row | P/04 Н4 |
+| the whole row | `<s>worker` | the whole row is unreadable: the worker reading its own assignment does not change its set of units (takes no new ones, does not give away the ones held by this row), the log (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-08) | 0 | row | P/03.3 Н3 «цикл()» шаг 2 |
+| the whole row | `console` | the whole row is unreadable: drain — `GET /drain` 503 `unavailable` (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-08) | 0 | row | P/06.6 Н1.2 |
 
-#### `<sub>/want/<сервер>` — строка
+#### `<sub>/want/<сервер>` — row
 
-Схема — [`want.schema.json`](../data/want.schema.json), исходы — [`want.outcomes.tsv`](../data/want.outcomes.tsv); версия формы 1; норма — P/04 Н1.1.
+Schema — [`want.schema.json`](../data/want.schema.json), outcomes — [`want.outcomes.tsv`](../data/want.outcomes.tsv); form version 1; norm — P/04 Н1.1.
 
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+| Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `want` | целое; ≥ 1; ≤ 99 | обязателен |  | the absolute target of the number of processes of the role on the server, the base `<prefix>-<сервер>-1` is included |
-| `at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of the write; diagnostics — the terms go by the observation of the row version (Н1.4 terms) |
-| `by` | строка | обязателен |  | the controller instance; diagnostics — the authority is given by cas and the guard placement_turn |
-| `why` | строка | обязателен |  | a non-empty reason; the grammar of Н3 «нехватка(), заказать()…» |
-| `retiring` | строка; целиком `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` | необязателен |  | the worker chosen for shrinking (Н3 «сократить»); a slot name, P/03.2 Н1.4 |
+| `want` | integer; ≥ 1; ≤ 99 | required |  | the absolute target of the number of processes of the role on the server, the base `<prefix>-<сервер>-1` is included |
+| `at` | time (P/01.1 Н0 «Time in a row») | required |  | the moment of the write; diagnostics — the terms go by the observation of the row version (Н1.4 terms) |
+| `by` | string | required |  | the controller instance; diagnostics — the authority is given by cas and the guard placement_turn |
+| `why` | string | required |  | a non-empty reason; the grammar of Н3 «нехватка(), заказать()…» |
+| `retiring` | string; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | optional |  | the worker chosen for shrinking (Н3 «сократить»); a slot name, P/03.2 Н1.4 |
 
-Только у писателя (`$defs.writer`):
+Only at the writer (`$defs.writer`):
 
-| Ключ | Ещё и |
+| Key | Also |
 |---|---|
-| `why` | не из: `""` |
+| `why` | not one of: `""` |
 
-Исходы нечитаемой строки (читатель — роль; `*` — все читатели семьи):
+Outcomes of an unreadable row (the reader is a role; `*` — all readers of the family):
 
-| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
+| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| строка целиком | `<s>controller` | the whole row is unreadable: the unreadable is not replaced by absence and is not rewritten: an error of step 9 (failures + 1), the order rules (retiring, «number above want») are not applied to the processes of the server (the pool contract want_rule), the cause goes to the pass log (layout audit, Г-07; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/04 Н3 «pass()»; договор пула want_rule |
-| строка целиком | `console` | the whole row is unreadable: there is no series workers_wanted{server} of this server, the server's script starts and stops nothing by it (P/02.4 Н1.5; layout audit, Г-07) | 0 | строка | P/06.5 Н3 «/metrics — text» |
+| the whole row | `<s>controller` | the whole row is unreadable: the unreadable is not replaced by absence and is not rewritten: an error of step 9 (failures + 1), the order rules (retiring, «number above want») are not applied to the processes of the server (the pool contract want_rule), the cause goes to the pass log (layout audit, Г-07; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | row | P/04 Н3 «pass()»; договор пула want_rule |
+| the whole row | `console` | the whole row is unreadable: there is no series workers_wanted{server} of this server, the server's script starts and stops nothing by it (P/02.4 Н1.5; layout audit, Г-07) | 0 | row | P/06.5 Н3 «/metrics — text» |
 
-#### `<sub>/decommissioned/<сервер>` — строка
+#### `<sub>/decommissioned/<сервер>` — row
 
-Схема — [`decommissioned.schema.json`](../data/decommissioned.schema.json), исходы — [`decommissioned.outcomes.tsv`](../data/decommissioned.outcomes.tsv); версия формы 1; норма — P/04 Н1.1.
+Schema — [`decommissioned.schema.json`](../data/decommissioned.schema.json), outcomes — [`decommissioned.outcomes.tsv`](../data/decommissioned.outcomes.tsv); form version 1; norm — P/04 Н1.1.
 
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+| Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `asked_at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | wall-clock seconds of the console request (`platform/decommission/<сервер>` at) |
-| `at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | wall-clock seconds of the controller's mark |
-| `slots` | список, элемент — строка; целиком `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` | обязателен |  | names of the given-away slots by the list rule of P/06.1 Н1.2; "" — none; names, not a number (Д7) |
-| `slots[]` | строка; целиком `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` | необязателен |  | the name of the given-away slot, P/03.2 Н1.4 |
-| `units` | список, элемент — строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` | обязателен |  | ids of the removed units by the list rule of P/06.1 Н1.2; "" — none |
-| `units[]` | строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` | необязателен |  | the id of the removed unit, P/06.1 Н1.3 |
-| `holds` | список, элемент — строка | обязателен |  | the hold places by the list rule of P/06.1 Н1.2; "" — none |
-| `holds[]` | строка | необязателен |  | the name of the hold place, P/03.2 Н1.3 (`<sub>/holds/<место>`) |
+| `asked_at` | time (P/01.1 Н0 «Time in a row») | required |  | wall-clock seconds of the console request (`platform/decommission/<сервер>` at) |
+| `at` | time (P/01.1 Н0 «Time in a row») | required |  | wall-clock seconds of the controller's mark |
+| `slots` | list, element — string; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | required |  | names of the given-away slots by the list rule of P/06.1 Н1.2; "" — none; names, not a number (Д7) |
+| `slots[]` | string; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | optional |  | the name of the given-away slot, P/03.2 Н1.4 |
+| `units` | list, element — string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full | required |  | ids of the removed units by the list rule of P/06.1 Н1.2; "" — none |
+| `units[]` | string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full | optional |  | the id of the removed unit, P/06.1 Н1.3 |
+| `holds` | list, element — string | required |  | the hold places by the list rule of P/06.1 Н1.2; "" — none |
+| `holds[]` | string | optional |  | the name of the hold place, P/03.2 Н1.3 (`<sub>/holds/<место>`) |
 
-Исходы нечитаемой строки (читатель — роль; `*` — все читатели семьи):
+Outcomes of an unreadable row (the reader is a role; `*` — all readers of the family):
 
-| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
+| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| строка целиком | `<s>controller` | the whole row is unreadable: the controller does not remove or rewrite the mark at revocation, the cause goes to the pass log (layout audit, Г-03; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25); the mark of the subsystem about.sub, near.sub or ref of the unit being placed is unreadable — the server is not confirmed for this placement: not a candidate, a step error (failures + 1), the cause goes to the log; it counts neither as decommissioned nor as not decommissioned (П1; В7 item 3, row 7) | 0 | строка | P/04 Н3 «выбрать(единица)»; P/04 Н1.1 |
-| строка целиком | `<s>domain` | the decommission row of its own server is unreadable: at the start it does not take a name until it reads, the cause goes to the log without the value (П1; В7 item 3, row 6) | 0 | строка | P/03.7 Н1.6 start; P/03.2 Н3 «старт()» шаг 3 |
-| строка целиком | `<s>worker` | the decommission row of its own server is unreadable: at the start it does not take a name until it reads, the cause goes to the log without the value (П1; В7 item 3, row 6) | 0 | строка | P/03.2 Н3 «старт()» шаг 3 |
-| строка целиком | `console` | the whole row is unreadable: `/servers` — `decommissioned: null` (the general rule of output: a field with an unreadable source — null, if required) (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-03) | 0 | строка | P/06.6 Н2.1; P/04 Н3 «decommission_server» |
+| the whole row | `<s>controller` | the whole row is unreadable: the controller does not remove or rewrite the mark at revocation, the cause goes to the pass log (layout audit, Г-03; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25); the mark of the subsystem about.sub, near.sub or ref of the unit being placed is unreadable — the server is not confirmed for this placement: not a candidate, a step error (failures + 1), the cause goes to the log; it counts neither as decommissioned nor as not decommissioned (П1; В7 item 3, row 7) | 0 | row | P/04 Н3 «выбрать(единица)»; P/04 Н1.1 |
+| the whole row | `<s>domain` | the decommission row of its own server is unreadable: at the start it does not take a name until it reads, the cause goes to the log without the value (П1; В7 item 3, row 6) | 0 | row | P/03.7 Н1.6 start; P/03.2 Н3 «старт()» шаг 3 |
+| the whole row | `<s>worker` | the decommission row of its own server is unreadable: at the start it does not take a name until it reads, the cause goes to the log without the value (П1; В7 item 3, row 6) | 0 | row | P/03.2 Н3 «старт()» шаг 3 |
+| the whole row | `console` | the whole row is unreadable: `/servers` — `decommissioned: null` (the general rule of output: a field with an unreadable source — null, if required) (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-03) | 0 | row | P/06.6 Н2.1; P/04 Н3 «decommission_server» |
 
-#### `<sub>/controller/placement_turn` — строка
+#### `<sub>/controller/placement_turn` — row
 
-Схема — [`placement-turn.schema.json`](../data/placement-turn.schema.json), исходы — [`placement-turn.outcomes.tsv`](../data/placement-turn.outcomes.tsv); версия формы 1; норма — P/04 Н1.5.
+Schema — [`placement-turn.schema.json`](../data/placement-turn.schema.json), outcomes — [`placement-turn.outcomes.tsv`](../data/placement-turn.outcomes.tsv); form version 1; norm — P/04 Н1.5.
 
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+| Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `holder` | строка | обязателен |  | a unique mark of the capture attempt or "" — the turn is free; a new attempt does not repeat the mark of the previous one |
-| `manifest_rev` | строка; целиком `[1-9][0-9]*` | обязателен |  | the manifest revision (P/02.3 Н1.5 rev); does not decrease — an old controller does not capture a new revision |
+| `holder` | string | required |  | a unique mark of the capture attempt or "" — the turn is free; a new attempt does not repeat the mark of the previous one |
+| `manifest_rev` | string; matching `[1-9][0-9]*` in full | required |  | the manifest revision (P/02.3 Н1.5 rev); does not decrease — an old controller does not capture a new revision |
 
-Исходы нечитаемой строки (читатель — роль; `*` — все читатели семьи):
+Outcomes of an unreadable row (the reader is a role; `*` — all readers of the family):
 
-| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
+| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| строка целиком | `<s>controller` | the whole row is unreadable: a refusal of the placement change with failures and a cause, not an empty row; without a new admission; restore the service row | 0 | строка | P/04 Н1.5, Н3 «get and hold the placement turn» шаг 1, Н4 |
+| the whole row | `<s>controller` | the whole row is unreadable: a refusal of the placement change with failures and a cause, not an empty row; without a new admission; restore the service row | 0 | row | P/04 Н1.5, Н3 «get and hold the placement turn» шаг 1, Н4 |
 
-#### `<sub>/controller/placement_intent` — строка
+#### `<sub>/controller/placement_intent` — row
 
-Схема — [`placement-intent.schema.json`](../data/placement-intent.schema.json), исходы — [`placement-intent.outcomes.tsv`](../data/placement-intent.outcomes.tsv); версия формы 1; норма — P/04 Н1.5.
+Schema — [`placement-intent.schema.json`](../data/placement-intent.schema.json), outcomes — [`placement-intent.outcomes.tsv`](../data/placement-intent.outcomes.tsv); form version 1; norm — P/04 Н1.5.
 
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+| Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `state` | строка; одно из: `active`, `idle` | обязателен |  | active — the decision is still being carried through; idle — all rows of the completed decision have been carried through |
-| `manifest_rev` | строка; целиком `[1-9][0-9]*` | обязателен |  | the manifest revision of the decision made |
-| `members` | список, без повторов, элемент — строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+`; в `items` — текст JSON (x-encoding: json) | необязателен |  | a JSON array of all ids of the decision; unique, sorted (the order is a rule of the lesson, not of the form); only when active |
-| `members[]` | строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` | необязателен |  | the id of a unit of the decision (P/06.1 Н1.3) |
-| `target` | строка; целиком `([a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)?` | необязателен |  | one target of the whole group — a worker name (slot, P/03.2 Н1.4); "" — remove the placement; only when active |
-| `reason` | строка | необязателен |  | a non-empty reason — the duty of the writer (the controller); the reader accepts "" (C06-WHERE-EMPTY-168-04, as C06-WHERE-EMPTY-33-01); only when active |
-| `at` | время (P/01.1 Н0 «Время в строке») | необязателен |  | wall-clock seconds of making the decision; only when active |
+| `state` | string; one of: `active`, `idle` | required |  | active — the decision is still being carried through; idle — all rows of the completed decision have been carried through |
+| `manifest_rev` | string; matching `[1-9][0-9]*` in full | required |  | the manifest revision of the decision made |
+| `members` | list, without repeats, element — string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full; in `items` — a JSON text (x-encoding: json) | optional |  | a JSON array of all ids of the decision; unique, sorted (the order is a rule of the lesson, not of the form); only when active |
+| `members[]` | string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full | optional |  | the id of a unit of the decision (P/06.1 Н1.3) |
+| `target` | string; matching `([a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)?` in full | optional |  | one target of the whole group — a worker name (slot, P/03.2 Н1.4); "" — remove the placement; only when active |
+| `reason` | string | optional |  | a non-empty reason — the duty of the writer (the controller); the reader accepts "" (C06-WHERE-EMPTY-168-04, as C06-WHERE-EMPTY-33-01); only when active |
+| `at` | time (P/01.1 Н0 «Time in a row») | optional |  | wall-clock seconds of making the decision; only when active |
 
-Правила:
+Rules:
 
-- `<корень>`: если `state` — `active`: обязательны `members`, `target`, `reason`, `at` (путь — недостающий ключ).
+- `<root>`: if `state` — `active`: required `members`, `target`, `reason`, `at` (the path is the missing key).
 
-Только у писателя (`$defs.writer`):
+Only at the writer (`$defs.writer`):
 
-| Ключ | Ещё и |
+| Key | Also |
 |---|---|
-| `reason` | не из: `""` |
+| `reason` | not one of: `""` |
 
-Исходы нечитаемой строки (читатель — роль; `*` — все читатели семьи):
+Outcomes of an unreadable row (the reader is a role; `*` — all readers of the family):
 
-| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
+| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| строка целиком | `<s>controller` | the whole row is unreadable (including state not active/idle; active without members, target, reason, at or with them out of form): the controller — a refusal of the placement change with failures, not an empty row and not idle | 0 | строка | P/04 Н1.5, Н4 «строка intent не по форме Н1.5» |
-| строка целиком | `console` | the whole row is unreadable (including state not active/idle; active without members, target, reason, at or with them out of form): /where, /unplaceable, label forecasts — 503 unavailable, not idle | 0 | строка | P/04 Н1.5 |
+| the whole row | `<s>controller` | the whole row is unreadable (including state not active/idle; active without members, target, reason, at or with them out of form): the controller — a refusal of the placement change with failures, not an empty row and not idle | 0 | row | P/04 Н1.5, Н4 «строка intent не по форме Н1.5» |
+| the whole row | `console` | the whole row is unreadable (including state not active/idle; active without members, target, reason, at or with them out of form): /where, /unplaceable, label forecasts — 503 unavailable, not idle | 0 | row | P/04 Н1.5 |
 
-#### `<sub>/controller/pass` — объект
+#### `<sub>/controller/pass` — object
 
-Схема — [`controller-pass.schema.json`](../data/controller-pass.schema.json), исходы — [`controller-pass.outcomes.tsv`](../data/controller-pass.outcomes.tsv); версия формы 1; норма — P/04 Н1.2.
+Schema — [`controller-pass.schema.json`](../data/controller-pass.schema.json), outcomes — [`controller-pass.outcomes.tsv`](../data/controller-pass.outcomes.tsv); form version 1; norm — P/04 Н1.2.
 
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+| Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of the end of the pass |
-| `ok` | bool | обязателен |  | true — the pass reached the end, all inputs were read and no write was refused; otherwise false |
-| `error` | строка | обязателен |  | the text of the last error or an empty string |
-| `failures` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `last_success` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of the end of the last successful pass |
-| `seconds` | число; ≥ 0 | обязателен |  | the duration of the pass |
-| `manifest_rev` | строка или целое | обязателен |  | the manifest revision of the controller |
-| `manifest_behind` | по определению `count` | обязателен |  | rows of this pass whose write was postponed because of a lagging manifest; a row — once per pass |
-| `names_given` | отображение имена автора: имя — по определению `slot_name`, значение — строка; не из: `""` | обязателен |  | names given away by the fate; the worker reads them at capture (P/03.2 Н3 «capture») |
-| `names_given.<имя>` | строка; не из: `""` | необязателен |  | the version of the slot row (index P/01.1 Н1, an opaque string) at which the name was given away (Н3 «fate» names_given) |
-| `hung_move_after` | число; ≥ 0 | обязателен |  | seconds of the hang limit in force at this controller (Н1.4 HUNG_MOVE_AFTER); the worker reads it |
-| `fates` | отображение имена автора: имя — по определению `slot_name`, значение — отображение `{fate, server, why, rev, since}` | обязателен |  | only taken slots not given away (holder non-empty, released false) |
-| `fates.<имя>` | отображение `{fate, server, why, rev, since}` | необязателен |  |  |
-| `fates.<имя>.fate` | строка; одно из: `alive`, `wait`, `hung`, `hung_moved`, `unsure`, `unsure_moved`, `move`, `release` | обязателен |  |  |
-| `fates.<имя>.server` | строка | обязателен |  |  |
-| `fates.<имя>.why` | строка | обязателен |  |  |
-| `fates.<имя>.rev` | строка или целое | обязателен |  | the version of the judgment about the slot |
-| `fates.<имя>.since` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment the slot entered this fate by the controller's clock |
-| `diverged` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `unplaced` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `garbled` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `snapshot_tables_refused` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `snapshot_rows_garbled` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `reach_moves_total` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `slots_released_total` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `unplaced_deleted_total` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `servers_decommissioned_total` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `workers_hung` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `workers_hung_moved_total` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `workers_unsure_moved_total` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `name_conflicts` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `unplaceable` | отображение имена автора: имя — строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+`, значение — строка; не из: `""` | обязателен |  |  |
-| `unplaceable.<имя>` | строка; не из: `""` | необязателен |  | a non-empty reason — why of /unplaceable and reason of 404 `/where/<id>` |
-| `short` | список, элемент — отображение `{labels, units, workers, groups, ordered, withheld?}` | необязателен |  | only when placement.grows true |
-| `short[]` | отображение `{labels, units, workers, groups, ordered, withheld?}` | необязателен |  |  |
-| `short[].labels` | список, элемент — строка | обязателен |  | the label set — the canonical notation in ascending order (Н3 «порядок наборов») |
-| `short[].labels[]` | строка | необязателен |  |  |
-| `short[].units` | по определению `count` | обязателен |  | waiting units of weight |
-| `short[].workers` | по определению `count` | обязателен |  | processes needed beyond the live ones and the capacity in flight |
-| `short[].groups` | по определению `count` | обязателен |  | waiting groups; always, 0 too (analysis of review of stage B 3–5, № 13) |
-| `short[].ordered` | по определению `count` | обязателен |  | ordered by this pass |
-| `short[].withheld` | строка | необязателен |  | words for why it was not ordered |
-| `wants` | отображение имена автора: имя — по определению `server_name`, значение — отображение `{want, live, pending, retiring?, why, state}` | необязателен |  | only when placement.grows true |
-| `wants.<имя>` | отображение `{want, live, pending, retiring?, why, state}` | необязателен |  |  |
-| `wants.<имя>.want` | целое; ≥ 1; ≤ 99 | обязателен |  |  |
-| `wants.<имя>.live` | по определению `count` | обязателен |  | live processes of the role of the server |
-| `wants.<имя>.pending` | по определению `count` | обязателен |  | capacity in flight |
-| `wants.<имя>.retiring` | по определению `slot_name` | необязателен |  | a slot name, P/03.2 Н1.4 |
-| `wants.<имя>.why` | строка | обязателен |  |  |
-| `wants.<имя>.state` | строка; одно из: `ok`, `raising`, `raise_failed`, `no_base` | обязателен |  |  |
-| `raise_failed` | отображение имена автора: имя — по определению `server_name`, значение — отображение `{since, times}` | обязателен |  |  |
-| `raise_failed.<имя>` | отображение `{since, times}` | необязателен |  |  |
-| `raise_failed.<имя>.since` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment the order was removed |
-| `raise_failed.<имя>.times` | по определению `count` | обязателен |  | refusals in a row |
-| `near_waiting` | список, не короче 1, без повторов, элемент — строка; целиком `[a-z][a-z0-9_-]{0,31}` | необязателен |  | the subsystems of placement.near.sub that are not in the manifest catalog of this pass: the affinity waits for their installation (Н1.3 near; ADR-0091 addendum (27) item 6); otherwise there is no field |
-| `near_waiting[]` | строка; целиком `[a-z][a-z0-9_-]{0,31}` | необязателен |  |  |
-| `.<имя>` | любое значение | необязателен |  | the implementation's own counters (Н1.2 — MAY add) |
+| `at` | time (P/01.1 Н0 «Time in a row») | required |  | the moment of the end of the pass |
+| `ok` | bool | required |  | true — the pass reached the end, all inputs were read and no write was refused; otherwise false |
+| `error` | string | required |  | the text of the last error or an empty string |
+| `failures` | by the definition `count` | required |  | a counter ≥ 0 |
+| `last_success` | time (P/01.1 Н0 «Time in a row») | required |  | the moment of the end of the last successful pass |
+| `seconds` | number; ≥ 0 | required |  | the duration of the pass |
+| `manifest_rev` | string or integer | required |  | the manifest revision of the controller |
+| `manifest_behind` | by the definition `count` | required |  | rows of this pass whose write was postponed because of a lagging manifest; a row — once per pass |
+| `names_given` | map author names: name — by the definition `slot_name`, value — string; not one of: `""` | required |  | names given away by the fate; the worker reads them at capture (P/03.2 Н3 «capture») |
+| `names_given.<name>` | string; not one of: `""` | optional |  | the version of the slot row (index P/01.1 Н1, an opaque string) at which the name was given away (Н3 «fate» names_given) |
+| `hung_move_after` | number; ≥ 0 | required |  | seconds of the hang limit in force at this controller (Н1.4 HUNG_MOVE_AFTER); the worker reads it |
+| `fates` | map author names: name — by the definition `slot_name`, value — map `{fate, server, why, rev, since}` | required |  | only taken slots not given away (holder non-empty, released false) |
+| `fates.<name>` | map `{fate, server, why, rev, since}` | optional |  |  |
+| `fates.<name>.fate` | string; one of: `alive`, `wait`, `hung`, `hung_moved`, `unsure`, `unsure_moved`, `move`, `release` | required |  |  |
+| `fates.<name>.server` | string | required |  |  |
+| `fates.<name>.why` | string | required |  |  |
+| `fates.<name>.rev` | string or integer | required |  | the version of the judgment about the slot |
+| `fates.<name>.since` | time (P/01.1 Н0 «Time in a row») | required |  | the moment the slot entered this fate by the controller's clock |
+| `diverged` | by the definition `count` | required |  | a counter ≥ 0 |
+| `unplaced` | by the definition `count` | required |  | a counter ≥ 0 |
+| `garbled` | by the definition `count` | required |  | a counter ≥ 0 |
+| `snapshot_tables_refused` | by the definition `count` | required |  | a counter ≥ 0 |
+| `snapshot_rows_garbled` | by the definition `count` | required |  | a counter ≥ 0 |
+| `reach_moves_total` | by the definition `count` | required |  | a counter ≥ 0 |
+| `slots_released_total` | by the definition `count` | required |  | a counter ≥ 0 |
+| `unplaced_deleted_total` | by the definition `count` | required |  | a counter ≥ 0 |
+| `servers_decommissioned_total` | by the definition `count` | required |  | a counter ≥ 0 |
+| `workers_hung` | by the definition `count` | required |  | a counter ≥ 0 |
+| `workers_hung_moved_total` | by the definition `count` | required |  | a counter ≥ 0 |
+| `workers_unsure_moved_total` | by the definition `count` | required |  | a counter ≥ 0 |
+| `name_conflicts` | by the definition `count` | required |  | a counter ≥ 0 |
+| `unplaceable` | map author names: name — string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full, value — string; not one of: `""` | required |  |  |
+| `unplaceable.<name>` | string; not one of: `""` | optional |  | a non-empty reason — why of /unplaceable and reason of 404 `/where/<id>` |
+| `short` | list, element — map `{labels, units, workers, groups, ordered, withheld?}` | optional |  | only when placement.grows true |
+| `short[]` | map `{labels, units, workers, groups, ordered, withheld?}` | optional |  |  |
+| `short[].labels` | list, element — string | required |  | the label set — the canonical notation in ascending order (Н3 «порядок наборов») |
+| `short[].labels[]` | string | optional |  |  |
+| `short[].units` | by the definition `count` | required |  | waiting units of weight |
+| `short[].workers` | by the definition `count` | required |  | processes needed beyond the live ones and the capacity in flight |
+| `short[].groups` | by the definition `count` | required |  | waiting groups; always, 0 too (analysis of review of stage B 3–5, № 13) |
+| `short[].ordered` | by the definition `count` | required |  | ordered by this pass |
+| `short[].withheld` | string | optional |  | words for why it was not ordered |
+| `wants` | map author names: name — by the definition `server_name`, value — map `{want, live, pending, retiring?, why, state}` | optional |  | only when placement.grows true |
+| `wants.<name>` | map `{want, live, pending, retiring?, why, state}` | optional |  |  |
+| `wants.<name>.want` | integer; ≥ 1; ≤ 99 | required |  |  |
+| `wants.<name>.live` | by the definition `count` | required |  | live processes of the role of the server |
+| `wants.<name>.pending` | by the definition `count` | required |  | capacity in flight |
+| `wants.<name>.retiring` | by the definition `slot_name` | optional |  | a slot name, P/03.2 Н1.4 |
+| `wants.<name>.why` | string | required |  |  |
+| `wants.<name>.state` | string; one of: `ok`, `raising`, `raise_failed`, `no_base` | required |  |  |
+| `raise_failed` | map author names: name — by the definition `server_name`, value — map `{since, times}` | required |  |  |
+| `raise_failed.<name>` | map `{since, times}` | optional |  |  |
+| `raise_failed.<name>.since` | time (P/01.1 Н0 «Time in a row») | required |  | the moment the order was removed |
+| `raise_failed.<name>.times` | by the definition `count` | required |  | refusals in a row |
+| `near_waiting` | list, at least 1 items, without repeats, element — string; matching `[a-z][a-z0-9_-]{0,31}` in full | optional |  | the subsystems of placement.near.sub that are not in the manifest catalog of this pass: the affinity waits for their installation (Н1.3 near; ADR-0091 addendum (27) item 6); otherwise there is no field |
+| `near_waiting[]` | string; matching `[a-z][a-z0-9_-]{0,31}` in full | optional |  |  |
+| `.<name>` | any value | optional |  | the implementation's own counters (Н1.2 — MAY add) |
 
 **`count`** — a counter ≥ 0
 
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+| Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `<count>` | целое; ≥ 0; ≤ 9007199254740991 |  |  |  |
+| `<count>` | integer; ≥ 0; ≤ 9007199254740991 |  |  |  |
 
 **`server_name`** — the server name — the grammar of SERVER_NAME (P/02.4 Н1.2)
 
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+| Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `<server_name>` | строка; целиком `[a-z0-9]+(-[a-z0-9]+)*` |  |  |  |
+| `<server_name>` | string; matching `[a-z0-9]+(-[a-z0-9]+)*` in full |  |  |  |
 
 **`slot_name`** — a slot name, P/03.2 Н1.4
 
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+| Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `<slot_name>` | строка; целиком `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` |  |  |  |
+| `<slot_name>` | string; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full |  |  |  |
 
-Исходы нечитаемого объекта (читатель — роль; `*` — все читатели семьи):
+Outcomes of an unreadable object (the reader is a role; `*` — all readers of the family):
 
-| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
+| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| `/names_given` | * | the worker at capture (P/03.2 Н3 «capture» step 1): without a readable names_given there is no permission by it — the name is taken only when released or free, the cause goes to the log (layout audit, Г-01; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | поле | P/04 Н1.2; P/03.2 Н3 «захватить» |
-| `/short` | * | short out of form (an element without a required field of Н1.2, including groups): the console does not give the series units_short, workers_withheld and groups_waiting of this pass (C06-GROUPS-WAITING-33-01), /metrics — 200 (P/01.1 Н0 «Stability of output»); the rest of the report is read (analysis of review of stage B 3–5, № 13) | 1 | поле | P/04 Н1.2; P/06.5 Н3 «/metrics — text» (разбор ревью стадии B 6–7, № 24) |
-| `/hung_move_after` | * | the worker (P/03.2): keeps the previous hang limit (the last one read); if none was read — does not judge itself hung by the limit of the report; the cause goes to the log once per pass (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-02) | 1 | поле | P/04 Н1.2 |
-| объект целиком | `<s>worker` | the whole object is unreadable: the worker at capture — as /names_given: there is no permission by it, the name is taken only when released or free, the cause goes to the log; the hang limit — as /hung_move_after: the previous one read, without one read it does not judge itself hung by the limit of the report | 2 | строка | P/04 Н1.2; P/03.2 Н3 «захватить» |
-| объект целиком | `console` | the whole object is unreadable: the console removes the series from the pass report rather than dropping the /metrics answer (P/01.1 Н0 «Stability of output»); /where of an unplaced one — reason without why: «not placed: no worker holds it» | 2 | строка | P/06.5 Н3 «/metrics — text»; P/06.6 Н2.2 |
+| `/names_given` | * | the worker at capture (P/03.2 Н3 «capture» step 1): without a readable names_given there is no permission by it — the name is taken only when released or free, the cause goes to the log (layout audit, Г-01; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | field | P/04 Н1.2; P/03.2 Н3 «захватить» |
+| `/short` | * | short out of form (an element without a required field of Н1.2, including groups): the console does not give the series units_short, workers_withheld and groups_waiting of this pass (C06-GROUPS-WAITING-33-01), /metrics — 200 (P/01.1 Н0 «Stability of output»); the rest of the report is read (analysis of review of stage B 3–5, № 13) | 1 | field | P/04 Н1.2; P/06.5 Н3 «/metrics — text» (разбор ревью стадии B 6–7, № 24) |
+| `/hung_move_after` | * | the worker (P/03.2): keeps the previous hang limit (the last one read); if none was read — does not judge itself hung by the limit of the report; the cause goes to the log once per pass (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-02) | 1 | field | P/04 Н1.2 |
+| the whole object | `<s>worker` | the whole object is unreadable: the worker at capture — as /names_given: there is no permission by it, the name is taken only when released or free, the cause goes to the log; the hang limit — as /hung_move_after: the previous one read, without one read it does not judge itself hung by the limit of the report | 2 | row | P/04 Н1.2; P/03.2 Н3 «захватить» |
+| the whole object | `console` | the whole object is unreadable: the console removes the series from the pass report rather than dropping the /metrics answer (P/01.1 Н0 «Stability of output»); /where of an unplaced one — reason without why: «not placed: no worker holds it» | 2 | row | P/06.5 Н3 «/metrics — text»; P/06.6 Н2.2 |
 
-#### `<sub>/snapshot/<воркер>` — объект
+#### `<sub>/snapshot/<воркер>` — object
 
-Схема — [`snapshot.schema.json`](../data/snapshot.schema.json), исходы — [`snapshot.outcomes.tsv`](../data/snapshot.outcomes.tsv); версия формы 1; норма — P/04 Н1.3а.
+Schema — [`snapshot.schema.json`](../data/snapshot.schema.json), outcomes — [`snapshot.outcomes.tsv`](../data/snapshot.outcomes.tsv); form version 1; norm — P/04 Н1.3а.
 
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+| Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `cluster` | строка | обязателен |  | the installation name — CLUSTER of the environment (P/02.4 Н1.2), not set — local |
-| `worker` | строка или null; целиком `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` | обязателен |  | the worker name of the shard (slot, P/03.2 Н1.4); for the shard of a gone worker — null |
-| `ts` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of publication |
-| `.<имя>` | список, элемент — отображение `{id, revision, worker, server}` и прочие имена автора: имя — строка, значение — любое значение | необязателен |  | имя: unit.rows of the manifest (P/06.1 Н1.1; not cluster/worker/ts — P/02.1) |
-| `.<имя>[]` | отображение `{id, revision, worker, server}` и прочие имена автора: имя — строка, значение — любое значение | необязателен |  |  |
-| `.<имя>[].id` | строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` | обязателен |  | the unit id (P/06.1 Н1.3) |
-| `.<имя>[].revision` | строка или целое | обязателен |  | revision of the unit row |
-| `.<имя>[].worker` | строка или null | обязателен |  | the worker of the assignment; unplaced has none |
-| `.<имя>[].server` | строка или null | обязателен |  | the worker's server |
-| `.<имя>[].<имя>` | любое значение | необязателен |  | a field from snapshot of the manifest (P/02.1), addresses — with the mask of P/06.2 Н1.1а |
+| `cluster` | string | required |  | the installation name — CLUSTER of the environment (P/02.4 Н1.2), not set — local |
+| `worker` | string or null; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | required |  | the worker name of the shard (slot, P/03.2 Н1.4); for the shard of a gone worker — null |
+| `ts` | time (P/01.1 Н0 «Time in a row») | required |  | the moment of publication |
+| `.<name>` | list, element — map `{id, revision, worker, server}` and other author names: name — string, value — any value | optional |  | name: unit.rows of the manifest (P/06.1 Н1.1; not cluster/worker/ts — P/02.1) |
+| `.<name>[]` | map `{id, revision, worker, server}` and other author names: name — string, value — any value | optional |  |  |
+| `.<name>[].id` | string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full | required |  | the unit id (P/06.1 Н1.3) |
+| `.<name>[].revision` | string or integer | required |  | revision of the unit row |
+| `.<name>[].worker` | string or null | required |  | the worker of the assignment; unplaced has none |
+| `.<name>[].server` | string or null | required |  | the worker's server |
+| `.<name>[].<name>` | any value | optional |  | a field from snapshot of the manifest (P/02.1), addresses — with the mask of P/06.2 Н1.1а |
 
-Только у писателя (`$defs.writer`):
+Only at the writer (`$defs.writer`):
 
-| Ключ | Ещё и |
+| Key | Also |
 |---|---|
-| `<корень>` | не больше 1 имён (x-max-names) |
+| `<root>` | at most 1 names (x-max-names) |
 
-Исходы нечитаемого объекта (читатель — роль; `*` — все читатели семьи):
+Outcomes of an unreadable object (the reader is a role; `*` — all readers of the family):
 
-| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
+| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| объект целиком | `console` | the whole shard is unreadable (not JSON or not a shard object): on /metrics — skipped and counted in `<sub>_snapshot_garbled_shards`, /metrics — 200 with the rest, not 503; a read error does not update the age (P/01.1 Н0 «Stability of output»; the Architect's answer of 2026-10-25 to the questions of stage 3, Г-05) | 0 | строка | P/06.5 Н1.3 age, metrics |
-| объект целиком | `domainagent` | the whole shard is unreadable (not JSON or not a shard object): it does not enter the publication and does not get into deleted, the previous copy at the holder stays, the log (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-06) | 0 | строка | P/09.1 Н1.2 |
+| the whole object | `console` | the whole shard is unreadable (not JSON or not a shard object): on /metrics — skipped and counted in `<sub>_snapshot_garbled_shards`, /metrics — 200 with the rest, not 503; a read error does not update the age (P/01.1 Н0 «Stability of output»; the Architect's answer of 2026-10-25 to the questions of stage 3, Г-05) | 0 | row | P/06.5 Н1.3 age, metrics |
+| the whole object | `domainagent` | the whole shard is unreadable (not JSON or not a shard object): it does not enter the publication and does not get into deleted, the previous copy at the holder stays, the log (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-06) | 0 | row | P/09.1 Н1.2 |
 
-#### `<sub>/snapshot/unplaced` — объект
+#### `<sub>/snapshot/unplaced` — object
 
-Схема — [`snapshot-unplaced.schema.json`](../data/snapshot-unplaced.schema.json), исходы — [`snapshot-unplaced.outcomes.tsv`](../data/snapshot-unplaced.outcomes.tsv); версия формы 1; норма — P/04 Н1.3а.
+Schema — [`snapshot-unplaced.schema.json`](../data/snapshot-unplaced.schema.json), outcomes — [`snapshot-unplaced.outcomes.tsv`](../data/snapshot-unplaced.outcomes.tsv); form version 1; norm — P/04 Н1.3а.
 
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+| Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `cluster` | строка | обязателен |  | the installation name — CLUSTER of the environment (P/02.4 Н1.2), not set — local |
-| `worker` | null | обязателен |  | for the shard of the unplaced — null |
-| `ts` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of publication |
-| `.<имя>` | список, элемент — отображение `{id, revision, worker, server}` и прочие имена автора: имя — строка, значение — любое значение | необязателен |  | имя: unit.rows of the manifest (P/06.1 Н1.1; not cluster/worker/ts — P/02.1) |
-| `.<имя>[]` | отображение `{id, revision, worker, server}` и прочие имена автора: имя — строка, значение — любое значение | необязателен |  |  |
-| `.<имя>[].id` | строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` | обязателен |  | the unit id (P/06.1 Н1.3) |
-| `.<имя>[].revision` | строка или целое | обязателен |  | revision of the unit row |
-| `.<имя>[].worker` | строка или null | обязателен |  | an unplaced one has no worker |
-| `.<имя>[].server` | строка или null | обязателен |  | the worker's server; an unplaced one has none |
-| `.<имя>[].<имя>` | любое значение | необязателен |  | a field from snapshot of the manifest (P/02.1), addresses — with the mask of P/06.2 Н1.1а |
+| `cluster` | string | required |  | the installation name — CLUSTER of the environment (P/02.4 Н1.2), not set — local |
+| `worker` | null | required |  | for the shard of the unplaced — null |
+| `ts` | time (P/01.1 Н0 «Time in a row») | required |  | the moment of publication |
+| `.<name>` | list, element — map `{id, revision, worker, server}` and other author names: name — string, value — any value | optional |  | name: unit.rows of the manifest (P/06.1 Н1.1; not cluster/worker/ts — P/02.1) |
+| `.<name>[]` | map `{id, revision, worker, server}` and other author names: name — string, value — any value | optional |  |  |
+| `.<name>[].id` | string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full | required |  | the unit id (P/06.1 Н1.3) |
+| `.<name>[].revision` | string or integer | required |  | revision of the unit row |
+| `.<name>[].worker` | string or null | required |  | an unplaced one has no worker |
+| `.<name>[].server` | string or null | required |  | the worker's server; an unplaced one has none |
+| `.<name>[].<name>` | any value | optional |  | a field from snapshot of the manifest (P/02.1), addresses — with the mask of P/06.2 Н1.1а |
 
-Только у писателя (`$defs.writer`):
+Only at the writer (`$defs.writer`):
 
-| Ключ | Ещё и |
+| Key | Also |
 |---|---|
-| `<корень>` | не больше 1 имён (x-max-names) |
+| `<root>` | at most 1 names (x-max-names) |
 
-Исходы нечитаемого объекта (читатель — роль; `*` — все читатели семьи):
+Outcomes of an unreadable object (the reader is a role; `*` — all readers of the family):
 
-| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
+| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| объект целиком | `console` | the whole shard is unreadable (not JSON or not a shard object): on /metrics — skipped and counted in `<sub>_snapshot_garbled_shards`, /metrics — 200 with the rest, not 503; a read error does not update the age (P/01.1 Н0 «Stability of output»; the Architect's answer of 2026-10-25 to the questions of stage 3, Г-05) | 0 | строка | P/06.5 Н1.3 age, metrics |
-| объект целиком | `domainagent` | the whole shard is unreadable (not JSON or not a shard object): it does not enter the publication and does not get into deleted, the previous copy at the holder stays, the log (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-06) | 0 | строка | P/09.1 Н1.2 |
+| the whole object | `console` | the whole shard is unreadable (not JSON or not a shard object): on /metrics — skipped and counted in `<sub>_snapshot_garbled_shards`, /metrics — 200 with the rest, not 503; a read error does not update the age (P/01.1 Н0 «Stability of output»; the Architect's answer of 2026-10-25 to the questions of stage 3, Г-05) | 0 | row | P/06.5 Н1.3 age, metrics |
+| the whole object | `domainagent` | the whole shard is unreadable (not JSON or not a shard object): it does not enter the publication and does not get into deleted, the previous copy at the holder stays, the log (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-06) | 0 | row | P/09.1 Н1.2 |
 
-#### `<sub>/snapshot-tables/<таблица>` — объект
+#### `<sub>/snapshot-tables/<таблица>` — object
 
-Схема — [`snapshot-tables.schema.json`](../data/snapshot-tables.schema.json), исходы — [`snapshot-tables.outcomes.tsv`](../data/snapshot-tables.outcomes.tsv); версия формы 1; норма — P/04 Н1.3б.
+Schema — [`snapshot-tables.schema.json`](../data/snapshot-tables.schema.json), outcomes — [`snapshot-tables.outcomes.tsv`](../data/snapshot-tables.outcomes.tsv); form version 1; norm — P/04 Н1.3б.
 
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+| Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `cluster` | строка | обязателен |  | the installation name — CLUSTER of the environment (P/02.4 Н1.2), not set — local |
-| `ts` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of the write of the object; rows did not change — the previous one |
-| `refused` | строка; одно из: `too_large`, `whole_too_large` | необязателен |  | a stub instead of rows: the table did not fit (P/04 Н1.3б ceiling, P/09.1 Н1.2 tables_budget) |
-| `rows` | список, элемент — отображение `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?}` | обязателен |  | the rows of the table by key in UTF-8 bytes (the order is a rule of the lesson, not the form) |
-| `rows[]` | отображение `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?}` | необязателен |  |  |
-| `rows[].key` | строка; не из: `""` | обязателен |  | the row name (P/06.1 Н1.6) |
-| `rows[].revision` | целое; ≥ 1; ≤ 9007199254740991 | обязателен |  | the row version |
-| `rows[].fields` | отображение, opaque | обязателен |  | fields of the list domain.view_tables of the manifest; values of their own type; no secrets |
-| `rows[].secrets` | список, элемент — строка | необязателен |  | names of the set *_secret fields; no values |
-| `rows[].secrets[]` | строка | необязателен |  |  |
-| `rows[].worker` | строка | необязателен |  | for unit rows — from the assignment |
-| `rows[].server` | строка | необязателен |  | for unit rows — from the assignment |
-| `rows[].phase` | строка | необязателен |  | for unit rows — from the heartbeat |
-| `rows[].status` | отображение, opaque | необязателен |  | fields of domain.view_status from the element of status[] of the heartbeat |
-| `rows[].labels` | список, элемент — строка | необязателен |  | for unit rows — the field labels |
-| `rows[].labels[]` | строка | необязателен |  |  |
-| `rows[].about` | строка | необязателен |  | for unit rows — the id of the about unit |
+| `cluster` | string | required |  | the installation name — CLUSTER of the environment (P/02.4 Н1.2), not set — local |
+| `ts` | time (P/01.1 Н0 «Time in a row») | required |  | the moment of the write of the object; rows did not change — the previous one |
+| `refused` | string; one of: `too_large`, `whole_too_large` | optional |  | a stub instead of rows: the table did not fit (P/04 Н1.3б ceiling, P/09.1 Н1.2 tables_budget) |
+| `rows` | list, element — map `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?}` | required |  | the rows of the table by key in UTF-8 bytes (the order is a rule of the lesson, not the form) |
+| `rows[]` | map `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?}` | optional |  |  |
+| `rows[].key` | string; not one of: `""` | required |  | the row name (P/06.1 Н1.6) |
+| `rows[].revision` | integer; ≥ 1; ≤ 9007199254740991 | required |  | the row version |
+| `rows[].fields` | map, opaque | required |  | fields of the list domain.view_tables of the manifest; values of their own type; no secrets |
+| `rows[].secrets` | list, element — string | optional |  | names of the set *_secret fields; no values |
+| `rows[].secrets[]` | string | optional |  |  |
+| `rows[].worker` | string | optional |  | for unit rows — from the assignment |
+| `rows[].server` | string | optional |  | for unit rows — from the assignment |
+| `rows[].phase` | string | optional |  | for unit rows — from the heartbeat |
+| `rows[].status` | map, opaque | optional |  | fields of domain.view_status from the element of status[] of the heartbeat |
+| `rows[].labels` | list, element — string | optional |  | for unit rows — the field labels |
+| `rows[].labels[]` | string | optional |  |  |
+| `rows[].about` | string | optional |  | for unit rows — the id of the about unit |
 
-Исходы нечитаемого объекта (читатель — роль; `*` — все читатели семьи):
+Outcomes of an unreadable object (the reader is a role; `*` — all readers of the family):
 
-| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
+| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| объект целиком | `domainagent` | the whole object is unreadable (not JSON or not an object of the family): it does not enter the publication and does not get into deleted, the previous copy at the holder stays, the log (P/09.1 Н1.2) | 1 | строка | P/09.1 Н1.2 |
+| the whole object | `domainagent` | the whole object is unreadable (not JSON or not an object of the family): it does not enter the publication and does not get into deleted, the previous copy at the holder stays, the log (P/09.1 Н1.2) | 1 | row | P/09.1 Н1.2 |
 <!-- families:end -->
 
 ---

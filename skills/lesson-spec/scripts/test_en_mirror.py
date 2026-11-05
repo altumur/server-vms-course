@@ -162,12 +162,28 @@ class Layouts(unittest.TestCase):
         self.assertEqual(en_mirror.home_of(ROOT / "Platform/README.md", ROOT), (ROOT / "Platform", Path("README.md")))   # модуль с ru/
         self.assertIsNone(en_mirror.home_of(ROOT / "Platform/module-design.md", ROOT))   # записка без перевода — не источник
 
-    def test_built_block_by_targets(self):              # блок источника и перевода — тот же, глубина путей разная
+    def test_built_block_by_targets(self):              # блок источника и перевода — построчно, глубина путей разная
         ru = RU3.read_text(encoding="utf-8")
         self.assertIn("](../../data/epoch_floor.schema.json)", ru)
         self.assertIn("](../data/epoch_floor.schema.json)", EN3.read_text(encoding="utf-8"))
         errors = self.compare3(ru=ru.replace("](../../data/epoch_floor.schema.json)", "](../../data/epoch_floor.outcomes.tsv)"))
-        self.assertTrue(any("built blocks differ" in e for e in errors), errors)
+        self.assertTrue(any("built block «families»" in e and "links" in e for e in errors), errors)
+
+    def test_built_block_languages(self):               # ADR-0121 доп. (3) п. 1: источник — английский блок, перевод — русский
+        ru, en = RU3.read_text(encoding="utf-8"), EN3.read_text(encoding="utf-8")
+        self.assertIn("| Путь отказа | Читатель | Исход |", ru)
+        self.assertIn("| Path of refusal | Reader | Outcome |", en)
+        self.assertEqual(self.compare3(), [])
+        errors = self.compare3(ru=ru.replace("| Путь отказа | Читатель | Исход |", "| Путь отказа | Исход |", 1))
+        self.assertTrue(any("built block «families»" in e and "cells" in e for e in errors), errors)
+        row = next(ln for ln in ru.splitlines() if ln.startswith("| `/floor`"))
+        errors = self.compare3(ru=ru.replace(row, row.replace("| 0 |", "| 7 |", 1)))
+        self.assertTrue(any("built block «families»" in e and "numbers" in e for e in errors), errors)
+
+    def test_labels_by_dictionary(self):                # метка пары — по словарю Platform/common/placeholders.tsv
+        self.assertEqual(en_mirror.as_english_labels("domain/users/<имя> ⟨вариант 2⟩", ROOT), "domain/users/<name> ⟨variant 2⟩")
+        self.assertEqual(en_mirror.as_english_labels(".<имя> (имя)", ROOT), ".<name> (name)")
+        self.assertEqual(en_mirror.as_english_labels("<неизвестная>", ROOT), "<неизвестная>")
 
 
 if __name__ == "__main__":
