@@ -7018,7 +7018,8 @@ components:
     SettingsRevision:
       type: integer
       minimum: 0
-      description: The revision of the settings row; 0 — there is no row or the field does not read (chapter 6.6 Н2.1 «Версия строки»).
+      maximum: 9007199254740991
+      description: The revision of the settings row; 0 — there is no row or the field does not read (chapter 6.6 Н2.1 «Версия строки»); the ceiling is that of the field revision of the row (chapter 6.6 Н1).
     StoreIndex:
       type: string
       pattern: ^(?:0|[1-9][0-9]{0,19})$
