@@ -282,6 +282,9 @@ func BackupTarget(file, dir string) error {
 	if err != nil {
 		return err
 	}
+	if d == string(filepath.Separator) { // the filesystem root has no outside target
+		return &InsideDir{File: f, Dir: d}
+	}
 	if f == d || strings.HasPrefix(f, d+string(filepath.Separator)) {
 		return &InsideDir{File: f, Dir: d}
 	}
