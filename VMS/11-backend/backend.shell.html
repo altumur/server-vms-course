@@ -9,10 +9,10 @@
 <meta name="consolem-assist-public" content="https://cammeta-checks.taile99433.ts.net">
 <title>Конфигуратор</title>
 <!-- ONE PSIM: мост по ONE.PSIM.PrototypeKit, подключён после стилей прототипа -->
-<link rel="stylesheet" href="app.css?v=c7d903057bd0">
-<script src="i18n-en.js?v=ecd4dc13c8fa"></script>
-<script src="openapi.js?v=26f15a309ad7"></script>
-<script src="client.js?v=b7eb438a1ee6"></script>
+<link rel="stylesheet" href="app.css?v=c5043734d3e5">
+<script src="i18n-en.js?v=2ddcaa65d386"></script>
+<script src="openapi.js?v=9271affe6aea"></script>
+<script src="client.js?v=3124abf37ef1"></script>
 <script src="whep-stub.js?v=c1e5524fbef4"></script>
 </head>
 <body>
@@ -53,15 +53,28 @@
       data-on-input='[["goInput",{"$on":"value"}]]' data-on-focus='[["goSearch",{"$on":"value"}]]' data-on-click='[["goClick",{"$on":"value"}]]' data-on-keydown='[["goKey",{"$on":"event"}]]'>
     <button type="button" class="gojump-clear hide" id="goClear" data-i18n-title="Очистить" title="Очистить" aria-label="Очистить" data-on-click='[["clearTreeQ",{"$on":"event"}]]'><svg class="ic-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     <span class="gojump-hint" aria-hidden="true">Ctrl K</span>
-    <div class="gopop" id="gopop"><div id="goAskTop"></div><div id="asstBlock" hidden></div><div id="goList"></div></div>
+    <div class="gopop" id="gopop"><div id="goList"></div></div>
   </div>
   <button type="button" class="hd-plan" id="hdPlan" hidden data-on-click='[["planHeadOpen"]]'></button>
   <div class="hd-status" id="hdStatus" hidden></div>
+  <button type="button" class="hd-asst" id="hdAsst" data-needs="feature:assist" aria-expanded="false" aria-controls="asstDock" title="Ассистент (Ctrl+I)" data-on-click='[["asstToggle"]]'></button>
+  <span class="asst-sr" id="asstLive" role="status"></span>
   <button type="button" class="hd-theme" id="hdTheme" data-i18n-title="Сменить тему" title="Сменить тему" aria-label="Сменить тему" data-on-click='[["toggleTheme"]]'><svg class="ic-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v2"/><path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715"/><path d="M16 12a4 4 0 0 0-4-4"/><path d="m19 5-1.256 1.256"/><path d="M20 12h2"/></svg></button>
   <div class="hd-bell" id="hdBell" data-needs="listRulePrompts" hidden></div>
 </header>
 <main id="main"></main></div>
 </div>
+<aside class="asst-dock" id="asstDock" aria-label="Ассистент" tabindex="-1" hidden>
+  <div class="asst-grip" id="asstGrip" role="separator" aria-orientation="vertical" aria-label="Ширина панели" data-i18n-title="Ширина панели: тяните край или нажимайте стрелки" title="Ширина панели: тяните край или нажимайте стрелки" tabindex="0"></div>
+  <div class="asst-head" id="asstHead"></div>
+  <div id="asstBlock"></div>
+  <div class="asst-foot" id="asstFoot">
+    <input type="file" id="asstFilePick" multiple hidden data-on-change='[["asstFilePicked",{"$on":"event"}]]'>
+    <div class="asst-files" id="asstFiles"></div>
+    <textarea id="asstText" class="asst-ta" data-on-input='[["asstInput",{"$on":"value"}]]' data-on-keydown='[["asstKey",{"$on":"event"}]]'></textarea>
+    <div id="asstActs"></div>
+  </div>
+</aside>
 <div id="domainMenuHost"></div>
 <div class="jump" id="jump" data-on-click='[[".self"],["closeJump"]]'>
   <div class="jbox" data-on-click='[[".stop"]]'>
@@ -69,12 +82,12 @@
     <div class="jlist" id="jlist"></div>
   </div>
 </div>
-<div class="mask" id="wiz" data-on-click='[[".self"],["closeWizard"]]'>
-  <div class="dr" id="wizDr" data-on-click='[[".stop"]]'>
-    <div class="dh"><b id="wizT">Добавить сервер</b><button class="btn s btn-icon" aria-label="Закрыть" title="Закрыть" data-on-click='[["closeWizard"]]'><svg class="ic-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
-    <div class="st" id="wst"></div>
+<div class="mask wz-mask" id="wiz">
+  <div class="dr wz-win wz-m" id="wizDr" data-on-click='[[".stop"]]'>
+    <div class="dh"><b id="wizT">Добавить сервер</b><span id="wizTools" class="wz-tools"></span></div>
+    <div class="st wz-bar" id="wst"></div>
     <div class="db" id="wbd"></div>
-    <div class="df"><div id="wizFoot"></div><button class="btn" id="wb" data-on-click='[["wizBack"]]'>Назад</button><button class="btn pri" id="wn" data-on-click='[["wnx"]]'>Далее</button></div>
+    <div class="df"><button type="button" class="btn" id="wc" data-i18n="Отмена" data-on-click='[["wizCancel"]]'>Отмена</button><span class="tfoot-gap"></span><div id="wizFoot"></div><button class="btn" id="wb" data-on-click='[["wizBack"]]'>Назад</button><span id="wizFootR"></span><button class="btn pri" id="wn" data-on-click='[["wnx"]]'>Далее</button></div>
   </div>
 </div>
 <div class="confirm" id="confirm" data-on-click='[[".self"],["closeConfirm"]]'>
@@ -87,7 +100,7 @@
     </div>
   </div>
 </div>
-<div class="confirm" id="bmodal" data-on-click='[[".self"],["closeBulkModal"]]'>
+<div class="confirm" id="bmodal" data-on-click='[[".self"],["bmBackdrop"]]'>
   <div class="cbox bbox" data-on-click='[[".stop"]]'>
     <div class="chead" id="bmTitle"></div>
     <div class="cbody" id="bmBody"></div>
@@ -101,7 +114,7 @@
     <div class="cfoot" id="schdlgF"></div>
   </div>
 </div>
-<div class="tctx" id="tctx" role="menu"></div>
-<script src="app.js?v=932147de7952"></script>
+<div class="tctx" id="tctx" role="menu" data-on-mousedown='[["rcMenuDown",{"$on":"event"}]]'></div>
+<script src="app.js?v=4638b77f8ef7"></script>
 </body>
 </html>
