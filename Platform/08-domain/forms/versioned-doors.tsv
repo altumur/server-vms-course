@@ -1,0 +1,26 @@
+# Proposed P/08.0 version-table projection under ADR-0125; not READY before checker/README adoption.
+# row is the pre-edit version row template; - means no pre-existing version row, writes[] means each batch write.
+# <part> is the member-list shard selected by the ordinary member algorithm, not an extra URL or environment input.
+# revision is doc.rev|revision|rev. etag is true|false for the success header.
+# if_match is optional|ignored|base-rev: the latter is optional If-Match with the existing mandatory base_rev fallback, P/08.0-R006.
+# source is the exact four-cell English source table row as a strict JSON array. Multiple operation projections may share it.
+method	path	row	revision	etag	if_match	source	norm
+POST	/domain/members	domain/member-rows/<part>	doc.rev	true	optional	["`POST /domain/members`, `DELETE /domain/members/<член>`, `POST /domain/members/<член>/ca`","`domain/member-rows/<раздел>`","`doc.rev`","yes"]	P/08.0-R005
+DELETE	/domain/members/{name}	domain/member-rows/<part>	doc.rev	true	optional	["`POST /domain/members`, `DELETE /domain/members/<член>`, `POST /domain/members/<член>/ca`","`domain/member-rows/<раздел>`","`doc.rev`","yes"]	P/08.0-R005
+POST	/domain/members/{member}/ca	domain/member-rows/<part>	doc.rev	true	optional	["`POST /domain/members`, `DELETE /domain/members/<член>`, `POST /domain/members/<член>/ca`","`domain/member-rows/<раздел>`","`doc.rev`","yes"]	P/08.0-R005
+PUT	/domain/topology	domain/topology	doc.rev	true	base-rev	["`PUT /domain/topology`","`domain/topology`","`doc.rev`; no row — 0","yes"]	P/08.0-R005
+POST	/domain/users	-	revision	true	ignored	["`POST /domain/users`","—","the field `revision` of the new row","yes"]	P/08.0-R005
+PUT	/domain/users/{name}	domain/users/<name>	revision	true	optional	["`PUT /domain/users/<имя>`","`domain/users/<имя>`","the field `revision`","yes"]	P/08.0-R005
+DELETE	/domain/users/{name}	domain/users/<name>	revision	false	optional	["`DELETE /domain/users/<имя>`","`domain/users/<имя>`","the field `revision`","no: the row is gone"]	P/08.0-R005
+PUT	/domain/grants/{cluster}	domain/grants/<cluster>	revision	true	optional	["`PUT /domain/grants/<кластер>`","`domain/grants/<кластер>`","the field `revision`","yes"]	P/08.0-R005
+PUT	/domain/break-glass/{cluster}	domain/break-glass/<cluster>	revision	true	optional	["`PUT /domain/break-glass/<кластер>`","`domain/break-glass/<кластер>`","the field `revision`","yes"]	P/08.0-R005
+POST	/domain/groups	-	revision	true	ignored	["`POST /domain/groups`, `POST /domain/roles`","—","the field `revision` of the new row","yes"]	P/08.0-R005
+POST	/domain/roles	-	revision	true	ignored	["`POST /domain/groups`, `POST /domain/roles`","—","the field `revision` of the new row","yes"]	P/08.0-R005
+PUT	/domain/groups/{name}	domain/groups/<name>	revision	true	optional	["`PUT /domain/groups/<имя>`","`domain/groups/<имя>`","the field `revision`","yes"]	P/08.0-R005
+DELETE	/domain/groups/{name}	domain/groups/<name>	revision	false	optional	["`DELETE /domain/groups/<имя>`","`domain/groups/<имя>`","the field `revision`","no: the row is gone"]	P/08.0-R005
+PUT	/domain/roles/{name}	domain/roles/<name>	revision	true	optional	["`PUT /domain/roles/<имя>`","`domain/roles/<имя>`","the field `revision`","yes"]	P/08.0-R005
+DELETE	/domain/roles/{name}	domain/roles/<name>	revision	false	optional	["`DELETE /domain/roles/<имя>`","`domain/roles/<имя>`","the field `revision`","no: the row is gone"]	P/08.0-R005
+POST	/domain/batch	writes[]	revision	false	ignored	["`POST /domain/batch`","the rows `writes`: the condition is the `cas` of each, `If-Match` is not read","the field `revision` of each row","no: there are many rows"]	P/08.0-R005
+PUT	/domain/placement/{sub}/{ref}	domain/placement/<sub>/<ref>	rev	true	optional	["`PUT /domain/placement/<sub>/<ref>`","`domain/placement/<sub>/<ref>`","`rev`","yes"]	P/08.0-R005
+DELETE	/domain/placement/{sub}/{ref}	domain/placement/<sub>/<ref>	rev	false	optional	["`DELETE /domain/placement/<sub>/<ref>`","`domain/placement/<sub>/<ref>`","`rev`","no: the row is gone"]	P/08.0-R005
+PUT	/domain/shared	domain/shared	doc.rev	true	base-rev	["`PUT /domain/shared`","`domain/shared`","`doc.rev` of the pointer; no row — 0","yes"]	P/08.0-R005
