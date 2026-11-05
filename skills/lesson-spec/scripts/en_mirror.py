@@ -237,6 +237,7 @@ def numbers(text, lang):
         out.append(token.replace(",", "."))
     return out
 TAGGED = re.compile(r"^[ \t]*```([A-Za-z]+)[^\n]*\n(.*?)^[ \t]*```[ \t]*$", re.M | re.S)
+TAGGED_FENCE = TAGGED
 KEY = re.compile(r"^(\s*(?:- )?)([^\s:#][^:#]*?):(?=\s|$)")
 
 
@@ -258,9 +259,31 @@ def cells(row):
     return [c.strip() for c in re.split(r"(?<!\\)\|", row.strip().strip("|"))]
 
 
-def strict(rb, eb):
+STEP = re.compile(r"^[ \t>]*(?:[-*] )?[0-9]+[a-zа-яё]?[.)][ \t]", re.M)   # нумерованный шаг: прозой или в блоке
+
+
+# Переводы с прежним псевдокодом, ещё не пересобранные по источнику (ADR-0121 доп. (3) М (3)): сверка шагов у них
+# отложена до пересборки — P/02 после веток ревью урока, VMS — «Спецификация VMS». Список только сокращается.
+STEPS_PENDING = {
+    "Platform/02-installer/spec/02.1-installer.norms.md", "Platform/02-installer/spec/02.2-installer.norms.md",
+    "Platform/02-installer/spec/02.3-installer.norms.md", "Platform/02-installer/spec/02.5-installer.norms.md",
+    "VMS/02-rec/spec/02.4-rec.norms.md", "VMS/05-detjob/spec/05.3-detjob.norms.md", "VMS/05-detjob/spec/05.4-detjob.norms.md",
+    "VMS/06-detedge/spec/06.2-detedge.norms.md", "VMS/07-auto/spec/07.3-auto.norms.md",
+    "VMS/11-backend/spec/11.2-backend.norms.md", "VMS/12-psim/spec/12.3-psim.norms.md",
+}
+
+
+def steps(body):
+    """The numbered steps of a section — in prose and inside code blocks without a language mark (a procedure written
+    as pseudocode), not inside tagged blocks (yaml data)."""
+    return len(STEP.findall(TAGGED_FENCE.sub("", body)))
+
+
+def strict(rb, eb, count_steps=True):
     """ADR-0120 доп. (5) п. 7: values, orders and identifiers of code blocks, tables and prose agree."""
     out = []
+    if count_steps and steps(rb) != steps(eb):     # ADR-0121 доп. (3) М (3): процедура Н3 — прозой или блоком
+        out.append(f"numbered steps: {steps(eb)}, ru {steps(rb)} — rebuild the translation by the source")
     rt, et = TAGGED.findall(rb), TAGGED.findall(eb)
     if [t for t, _ in rt] != [t for t, _ in et]:
         out.append(f"tagged code blocks differ: ru {[t for t, _ in rt]}, en {[t for t, _ in et]}")
@@ -428,6 +451,10 @@ def compare(ru_text, en_text, ru_path, en_path, root):
     if ru_ids != en_ids:
         errors.append(f"checklist ids differ: ru {ru_ids} / en {en_ids}")
     ru_s, en_s = sections(ru_text), sections(en_text)
+    try:
+        count_steps = Path(en_path).resolve().relative_to(root).as_posix() not in STEPS_PENDING
+    except ValueError:
+        count_steps = True
     if len(ru_s) != len(en_s):
         errors.append(f"{len(en_s)} sections «##»/«###», the Russian text has {len(ru_s)}")
     for (rt, rb), (et, eb) in zip(ru_s, en_s):
@@ -441,7 +468,7 @@ def compare(ru_text, en_text, ru_path, en_path, root):
         pair = {Path(os.path.normpath(Path(p))).relative_to(root).as_posix() for p in (ru_path, en_path)}
         rf = facts(rb, Path(ru_path).parent, root, kinds, pair)
         ef = facts(eb, Path(en_path).parent, root, kinds, pair)
-        errors.extend(f"{where}: {m}" for m in strict(rb, eb))
+        errors.extend(f"{where}: {m}" for m in strict(rb, eb, count_steps=count_steps))
         for key in rf:
             if key in ("spans", "refusal words"):          # английский МОЖЕТ добавить: алгоритм называет, «unit» — и слово
                 missing = rf[key] - ef[key]

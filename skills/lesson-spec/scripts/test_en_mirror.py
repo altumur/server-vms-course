@@ -180,6 +180,13 @@ class Layouts(unittest.TestCase):
         errors = self.compare3(ru=ru.replace(row, row.replace("| 0 |", "| 7 |", 1)))
         self.assertTrue(any("built block «families»" in e and "numbers" in e for e in errors), errors)
 
+    def test_numbered_steps(self):                     # ADR-0121 доп. (3) М (3): шагов процедуры в паре столько же
+        self.assertEqual(en_mirror.steps("1. a\n2. b\n   2a. c\n```yaml\n1. not a step\n```\n"), 3)
+        self.assertEqual(en_mirror.steps("```\n1. a\n2. b\n```\n"), 2)
+        self.assertEqual(en_mirror.strict("1. а\n", "1. a\n2. b\n"),
+                         ["numbered steps: 2, ru 1 — rebuild the translation by the source"])
+        self.assertEqual(en_mirror.strict("1. а\n", "1. a\n2. b\n", count_steps=False), [])
+
     def test_labels_by_dictionary(self):                # метка пары — по словарю Platform/common/placeholders.tsv
         self.assertEqual(en_mirror.as_english_labels("domain/users/<имя> ⟨вариант 2⟩", ROOT), "domain/users/<name> ⟨variant 2⟩")
         self.assertEqual(en_mirror.as_english_labels(".<имя> (имя)", ROOT), ".<name> (name)")

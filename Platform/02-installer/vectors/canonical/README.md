@@ -36,7 +36,7 @@ UTF-8, LF, fields separated by TAB; rows with `#` are explanations, empty ones a
 - `case` — the name of the case: `[A-Za-z0-9][A-Za-z0-9_.-]*`, unique in the file;
 - `input` — the path of the manifest file from the root of the layout (the course or the export `cammeta-specs`): with `/`, without `..`, ending in
   `.subsystem.yaml`; the loader of chapter 2.1 accepts it;
-- `expect` — exactly `expect/<case>.json`: the bytes of the view — JCS ([ADR-0072](../../../../decisions/0072-канонический-json-подписанных-документов-rfc-8785.md)),
+- `expect` — exactly `expect/<case>.json`: the bytes of the view — JCS (ADR-0072, for the human),
   UTF-8, without a line feed at the end;
 - `note` — what the row shows (not compared).
 

@@ -222,9 +222,9 @@ HTTP contract of its own (ADR-0082 addendum 13). The library contract is two nor
 the shell (Н1.5); the late layer — Н1.6. The doors that the module calls, their codes and forms — the chapters of lesson 6 and the [contract of lesson
 6](../../06-console/spec/06-console.api.openapi.yaml); the publication of the module byte for byte, the version `?v=` and the page are normed by
 [chapter 6.5](../../06-console/spec/06.5-console.norms.md) Н1.1. The calls of Н1.5 are the shell addressing the library inside its own
-page, not the platform calling a subsystem: they are not hooks in the sense of the [boundary](../../../ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md)
-§1.1 ([ADR-0002](../../../decisions/0002-без-хуков-спека-воркер-страница.md)); the bytes of the stream and of the archive the shell
-takes from the holder by `door` from `where()`, past the console ([ADR-0015](../../../decisions/0015-байты-мимо-консоли-без-исключений.md)).
+page, not the platform calling a subsystem: they are not hooks in the sense of the boundary (`ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md`, for the human)
+§1.1 (ADR-0002, for the human); the bytes of the stream and of the archive the shell
+takes from the holder by `door` from `where()`, past the console (ADR-0015, for the human).
 
 The description of the public surface of the module (the dictionary `W`, the card markup, the calls of the shell, the look) —
 [`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`](../../../КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md) (not a norm; the move plan of lesson 7, В1). Where the description or
@@ -254,7 +254,7 @@ window; a replay — only by the rules of the owner of the repeat memory; an unk
 The lesson has no acceptance catalogue (the exception `P/07 no-acceptance`; the move plan of lesson 7, В2): the module is a library in the browser,
 the HTTP-TSV stand does not run it. The publication of the module byte for byte with the published files and the version `?v=1` (`?v=2` — 404) —
 sc. 01 of the [acceptance of chapter 6.5](../../06-console/acceptance/5/README.md) (P/06.5 Н1.1). The subjects of Н1.4 and Н1.5 are checked
-by the jsdom tests of the owner of the specification [`Source/tests/console`](../../../Source/tests/console) (review analysis of stage A 6–7,
+by the jsdom tests of the owner of the specification `Source/tests/console` (review analysis of stage A 6–7,
 № 31): a test mounts the published module on a page in jsdom and intercepts its requests; the module is one for all implementations
 (ADR-0005), the evidence is one for all (ADR-0080 addendum 16).
 
@@ -292,7 +292,7 @@ The module is one code in all implementations: an implementation does not write 
    an automatic replay of `PUT` and of any `POST` («а», «е»), the body field `retry_after` instead of the header `Retry-After` («ж»), `may` without grants —
    `true` with any `open` and for an unknown session («б», «в»), no event `logout` («г»), the reference `worker:<w>` without a subsystem («д»),
    `poll_s` from the memory of the browser, `/<table>` at the root, an error without `status` and `body`, the read of `server_unsaid`, a shell without
-   comparing `version` («з»). The evidence — the jsdom tests [`Source/tests/console`](../../../Source/tests/console) by the table of Н5. The debt
+   comparing `version` («з»). The evidence — the jsdom tests `Source/tests/console` by the table of Н5. The debt
    of the product — to «Сборка» (ADR-0005): its copy of the module is brought to these bytes.
 2. **closed: the form of the shared document by `schema`** (Н1.6 `schema`) — by a change of behaviour of the owner of the specification (ADR-0080
    addendum 16; the Architect's decision of 2026-10-21): before — the document `{name, type: json}` as a JSON text without a form (the description § 10a). The evidence —

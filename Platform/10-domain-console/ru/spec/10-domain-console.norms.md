@@ -355,7 +355,7 @@ witness:       domain.witness {report, member_field} (P/02.1 Н1.2б): объе�
                (отказ загрузки — P/02.1 Н1.2б); alive_at = ts − units[член], alive_via = "<cluster>/<имя>"; свидетелей несколько —
                наибольший alive_at среди тех, что позже last_report; при равном — меньший alive_via в байтах UTF-8
                (добавлено сверкой М11, A17)
-clock:         часы домена строки тревог — [договор истории тревог](../../common/contracts/alarm-history.md) «Часы домена» (перенесено туда
+clock:         часы домена строки тревог — [договор истории тревог](../../../common/ru/contracts/alarm-history.md) «Часы домена» (перенесено туда
                без изменения; аудит раскладки, решение «Архитектора» 2026-10-25, А-13)
 events_order:  по t убывая, затем member, id; строки истории — from_history: true
 ```
