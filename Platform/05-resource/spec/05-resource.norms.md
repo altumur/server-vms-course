@@ -21,24 +21,36 @@ the map to former ids is [`id-map.tsv`](../../common/id-map.tsv).
 
 ## Н0 Vocabulary
 
+<!-- req: P/05-R001 -->
+
 Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 Н0](../../01-store/spec/01.1-store.norms.md#н0-vocabulary).
 
 ## Н1 Form
 
+<!-- req: P/05-R002 -->
+
 **Time.** The time fields of the rows and objects of the lesson are time by [the canon of Н0 of P/01.1](../../01-store/spec/01.1-store.norms.md#time-in-a-row): the event line — `t` ([the event log contract](../../common/contracts/event-journal.md)); the resource heartbeat object `platform/resources/<server>/heartbeat` — `ts`, `usage_at`, `pass_started`; the door row `platform/doors/<сервер>` — `since`, `at`; `<sub>/requests/free-<server>-<volume>` — `at`; the tombstone `.gone/<ключ>` — `written` (written by the console, [P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.5).
+
+<!-- req: P/05-R003 -->
 
 **Data** ([catalogue](../../common/data/catalog.tsv)):
 - owns: `platform/resources/<server>/heartbeat`, `platform/doors/<сервер>`, `<sub>/requests/free-<server>-<volume>`, `<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console.alarms/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.workers/<sub>/<экземпляр>.lock`, `<корень событий или объектов>/<путь>/%h<sha256>.name`, `<корень объектов>/<каталог>/~lock` (ADR-0083 addendum (16)), `.gone/<ключ>`, `objects/<sub>/<manifest:objects.rows>`, `objects/<sub>/<manifest:objects.rows>/*`;
 - writes: `<sub>/blobs/sha256-<hex>` (put);
 - reads: `platform/manifest/<sub>`, `platform/manifest/<sub>/rev`, `platform/schema`, `<sub>/heartbeats/<имя>`, `platform/decommission/<сервер>`, `platform/doors/<сервер>`, `platform/resources/<server>/heartbeat`, `<sub>/retention`, `<sub>/alarms_retention`, `platform/space`, `platform/mirror`, `<sub>/<manifest:tables>/<имя>`, `<sub>/<manifest:unit.rows>/<id>` (the unit rows of the manifest with about — the addressee of a hold, the holds contract; P/02.5 Н1.4), `/etc/w2c/tls/<роль>/server.key`.
 
+<!-- req: P/05-R004 -->
+
 The resource reads the key of its own kit with `RESOURCE_TLS=1` (Н1.4 `door.mode` `mtls`, `cert_until`; «Admission to the
 resource doors»; [the role certificate contract](../../common/contracts/role-certificate.md) `kit`) (review of stage B 3–5, № 10).
+
+<!-- req: P/05-R005 -->
 
 The resource puts body copies to a neighbour (put) and deletes its own copy older than the tombstone (delete); it confirms tombstones (cas) and
 removes them (delete) — Н1.1 «Bodies at the resource», «Tombstones».
 
 ### Н1.1 Object
+
+<!-- req: P/05-R006 -->
 
 ```yaml
 object:
@@ -75,6 +87,8 @@ object:
              is not deleted; service names (the lock, the temporary name) — the event log contract «Имена файлов» (ADR-0083 addendum (16))
 ```
 
+<!-- req: P/05-R007 -->
+
 An object key is a non-empty relative path: non-empty segments, without exact `.`/`..`,
 backslash and control characters. `prefix` is the beginning of such a key, also emptiness
 or an ending `/`; it is not a full key. The objects door does not give row objects even from
@@ -82,6 +96,8 @@ an allowed prefix. With equal `written` the server with the lexicographically gr
 name is chosen; the absence of an answer is called `missing`, not the absence of the object. A
 listing returns the closed form ObjectListing of Н2; deleted objects are tombstones `.gone/<ключ>` (below, «Tombstones»): an ordinary listing does not show them, `prefix=.gone/` is
 a read-only listing of tombstones (log of cammeta-go, lesson 10 № 2).
+
+<!-- req: P/05-R008 -->
 
 A listing gives only the keys of the door families under `prefix` — a filter, not a refusal: `prefix=testsub/`, `prefix=t`, an empty
 `prefix` — 200 with the keys of the door families that start with it; keys outside the door families do not enter the listing. A `prefix`
@@ -91,14 +107,22 @@ families, including the directory `testsub/heartbeats` of two parts, — 403; a 
 a family, `testsub/heartbeats/sub`), — 404; a key that differs from the written one only by case or normalization (`W-1` with
 `w-1`), is its own key: 404, not another's object (reconciliation of python and go М10/6–11, E1, E2, E4, E7, E8).
 
+<!-- req: P/05-R009 -->
+
 **File names in shared trees** — one encoding for all implementations: [the event log contract](../../common/contracts/event-journal.md#file-names-in-shared-trees)
 (moved there from this subsection; review of stage A 3–5, № 9).
 
+<!-- req: P/05-R010 -->
+
 A file system error after admission is a refusal of the write, not a success and not «there is no file».
+
+<!-- req: P/05-R011 -->
 
 **Bodies at the resource** (moved from М10/10 Н1.5 `mirror` and Н1.4, parts of
 М10/10-06, -07, -08 by the `note` of id-map; the decision of the Specification on question В2 of the move; the field `blob`, the digest, the bytes door of
 the console, the cleanup of bodies — [chapter 6.1](../../06-console/spec/06.1-console.norms.md) Н1.5):
+
+<!-- req: P/05-R012 -->
 
 ```yaml
 mirror:   every local body — to the next copies live neighbours of the ring (Н1.4 mirror), always, regardless of mirror.enabled;
@@ -109,8 +133,12 @@ mirror:   every local body — to the next copies live neighbours of the ring (�
           its owner writes it: 405 (reconciliation of python and go М10/6–11, T11)
 ```
 
+<!-- req: P/05-R013 -->
+
 Resource ceilings (the rows of the table М10/10 Н1.4 «Потолки», now [P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.4; checked at the door before reading the body where
 possible; a refusal, not a truncation):
+
+<!-- req: P/05-R014 -->
 
 | What | Limit | Where | Words / code |
 |---|---|---|---|
@@ -119,11 +147,17 @@ possible; a refusal, not a truncation):
 | retention term | a finite number > 0 | the resource (Н1.3 `retention`) | «not known», remove nothing |
 | the object store | `max_bytes` (0 — no ceiling); the store says it itself | `put` | `TooLarge` «over this store's limit» |
 
+<!-- req: P/05-R015 -->
+
 Body cleanup ([P/06.1](../../06-console/spec/06.1-console.norms.md) Н3 «уборка тел»): in the exclusive window the operator also closes the incoming mirror copies; a copy
 than which the tombstone of the deleter is newer is not accepted (Н4, «deleted later» — 409).
 
+<!-- req: P/05-R016 -->
+
 **Tombstones and convergence of body copies** (moved from М10/10 Н1.5 `delete`,
 М10/10-09; the bodies, their digest, the bytes door of the console, the mirror of bodies at the console and the cleanup — [P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.5):
+
+<!-- req: P/05-R017 -->
 
 ```yaml
 delete:   the tombstone .gone/<ключ> {written, peers, acked}, the neighbours peers, the reading by a neighbour, the confirmation 404 and the removal —
@@ -133,12 +167,16 @@ delete:   the tombstone .gone/<ключ> {written, peers, acked}, the neighbours
 
 ### Н1.2 Event
 
+<!-- req: P/05-R018 -->
+
 The form of the event line (`line`), the bucket and its path (`bucket`), the class (`class`), the journal `audit` (`journal`), the writers of the file
 (`writer`), the event id and the writer instance — [the event log contract](../../common/contracts/event-journal.md)
 (moved there from this subsection; review of stage A 3–5, № 9). The lesson is its owner: the resource reads buckets (Н1.3),
 copies the closed ones (Н1.4 `mirror`), removes them by term (Н3 «resource pass»). Repeat suppression (`suppress`) —
 [chapter 3.6 Н1.2](../../03-worker/spec/03.6-worker.norms.md); `older_epochs` and the operator marks (`marks`) —
 [chapter 6.4](../../06-console/spec/06.4-console.norms.md) Н1.2 (the console).
+
+<!-- req: P/05-R019 -->
 
 `subsystem` of an index line is the name of the manifest, for the lines of the alarm tree too (`testsub`, not `testsub.alarms`; reconciliation of python and go М10/6–11, E32).
 `unit` in the answer of the index is the full reference `<дерево>/<единица>`;
@@ -148,6 +186,8 @@ answers and is selected by a query as `audit/<роль>`, from `<sub>.alarms/<un
 step 2; the Architect's decision of 2026-10-27).
 
 ### Н1.3 Index and term
+
+<!-- req: P/05-R020 -->
 
 ```yaml
 index:
@@ -176,8 +216,12 @@ retention:
             mirror copies — an hour longer; what is removed — the journal events.removed
 ```
 
+<!-- req: P/05-R021 -->
+
 The merge of the resource answers by the console (`merge`) — [chapter 6.4](../../06-console/spec/06.4-console.norms.md) Н1.3
 and Н3 «merge» (the console); the form of the console answer (`answer` above, `ConsoleEvents` of the contract) is common with the resource.
+
+<!-- req: P/05-R022 -->
 
 A query uses finite `from`/`to`, `from ≤ to`; `limit` is an integer 1…10000 (reconciliation of python and go М10/6–11, E12–E15):
 - `from`, `to` — an ASCII decimal number: an optional `-`, digits (`_` is allowed between digits), an optional dot with
@@ -188,6 +232,8 @@ A query uses finite `from`/`to`, `from ≤ to`; `limit` is an integer 1…10000 
 - `late` — an integer ≥ 0 in decimal notation, only together with `by=occurred`: anything else — 400 (C05-QUERY-LATE-01);
 - an empty or repeated parameter — 400 (Н2); an unknown non-empty parameter is not read (for `/events/wait` — 400, Н1.6).
 
+<!-- req: P/05-R023 -->
+
 **Unreadable bucket line** (P/01.1 Н0 «Stability of output»; reconciliation of python and go М10/6–11, E19, E24, E32). A line that is not JSON,
 not an object, with a BOM, with a number outside JSON (`NaN`), without `kind`, `t` or `id`, with `id` not a string, and also a file not in its place
 (a bucket path not by Н1.2, for example `e01`) is skipped: it does not enter `events` and `truncated`, the answer is 200, and the number of such
@@ -195,6 +241,8 @@ lines is `lines_garbled` of the answer (the field is present only when it is gre
 not `lines_garbled`. The console adds up the `lines_garbled` of the answering resources and itself skips a line of a resource answer not
 in the form EventRow, adding it to its own `lines_garbled`. `events` in BucketInfo is the number of whole readable lines of the bucket;
 500 of a listing — only an unreadable directory or metadata.
+
+<!-- req: P/05-R024 -->
 
 Another query form — 400, including NaN/Infinity, a fractional limit and a bare unit. `by`, the defaults, `truncated` of the resource and
 of the merger — the event log merge contract «The resource query and answer» (EM-READ-33-01).
@@ -205,6 +253,8 @@ until a reliable read. An absent retention row gives the default, a read error d
 `complete`, `partial` of the merger — the event log merge contract «Ответ», «The resource query and answer».
 
 ### Н1.4 Resource
+
+<!-- req: P/05-R025 -->
 
 ```yaml
 resource:                                    # one process per server; without a controller
@@ -288,24 +338,34 @@ resource:                                    # one process per server; without a
   requires:  placement.requires: resource — the worker is outside the pool while the resource of its server is silent (P/04)
 ```
 
+<!-- req: P/05-R026 -->
+
 The content of the presence lock is the family `presence-lock` of the lesson: [schema](../data/presence-lock.schema.json),
 [outcomes](../data/presence-lock.outcomes.tsv) (layers — [LAYERS](../../common/LAYERS.md)): an instance is `{key, file}`, the text of the file with `x-encoding: json` at the root
 (LAYERS § 6), the column `schema` of the catalogue row names the family, the section is «Семьи данных» below; the meaning is [the presence
 lock contract](../../common/contracts/presence-lock.md) (review of stage B 3–5, № 23; ADR-0083 addendum (11); review of stage B 6–7, № 44).
+
+<!-- req: P/05-R027 -->
 
 **Cluster objects — through the resource of its own server** (ADR-0084 addendum (2) Р17; review of stage B 3–5, № 24). A process
 of the platform reads the objects of other servers (the heartbeats of workers and resources, the pass reports) through the objects door of the resource of its own
 server (Н2, `scope`); without a resource on its own server with `cluster://` — «not known», not «no» ([the object store client contract](../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). A stand that needs the heartbeats of workers
 puts a resource on the server of the reader ([P/04](../../04-controller/spec/04-controller.norms.md) Н3 «pass()» step 0).
 
+<!-- req: P/05-R028 -->
+
 PULSE_LIMIT is a finite positive limit of the duration of one step of the resource in seconds,
 chosen and declared by the implementation before the start. The duration is measured by the local
 monotonic clock, not by t/at of the writer; exceeding it gives pass_stalled in the next heartbeat.
 It is a diagnostic threshold, not a promise to stop a hung call or to wait for an answer.
 
+<!-- req: P/05-R029 -->
+
 **Bucket restore** (moved from М10/11 Н1.4
 `restore`, М10/11-09; a server failure and `power_pull` — [P/04](../../04-controller/spec/04-controller.norms.md) Н1.4а, the drill — [system
 acceptance](../../common/acceptance/system/README.md)):
+
+<!-- req: P/05-R030 -->
 
 ```yaml
 restore:    at start the resource pulls its closed buckets from the neighbours whose heartbeats mirrors name it: GET /mirrored/<я>,
@@ -323,6 +383,8 @@ restore:    at start the resource pulls its closed buckets from the neighbours w
 
 ### Н1.6 Hint and HTTP representations
 
+<!-- req: P/05-R031 -->
+
 `GET /events/wait` of the resource is a hint by ADR-0038, not a delivery of events. The profile of the lesson:
 `want` — a non-empty comma-separated list `<sub>/<kind>[/<unit>]`; each part of ASCII letters,
 digits, `_`, `-`, `.`, 1…64 characters, not starting with a dot. `client`, if given, — 1…128
@@ -336,6 +398,8 @@ age; seq is an opaque monotonic number of the resource process, the client only 
 give no hint (both implementations do so, there was no norm).
 This bounded profile does not require accepting any internal unit names: the periodic
 pass of the client stays mandatory and works without the hint.
+
+<!-- req: P/05-R032 -->
 
 The answer is one of the closed forms WaitAnswer: `{changed:true, seq, touched:[…]}`,
 `{changed:false, seq}`, `{changed:false, seq, full:true}` or
@@ -353,6 +417,8 @@ Without client the deployment uses a separate wait per client address; a repeat 
 address — full. The current buckets are observed every 0.1 s while there are waiting ones; a missed
 hint or a write to an old bucket is made up for by the ordinary pass, not by a promise of delivery.
 
+<!-- req: P/05-R033 -->
+
 Paths `/mirror/{server}/{path}`, `/mirrored/{server}[/{path}]`, `/events/{path}` (reconciliation of python and go М10/6–11, E26, E27, E29, E34):
 `{server}` — one segment by the grammar of a server name (P/02.4 Н1.2 `SERVER_NAME`); `{path}` — a bucket path of Н1.2
 (`<дерево>/<unit>/e<эпоха>/<начало>Z.events.jsonl`), no segment is empty or `.`/`..`, `%2F` is not a separator,
@@ -361,6 +427,8 @@ reads or writes a file outside its tree (`.mirror/<server>/` for copies). `PUT /
 is later than the clock of the receiver — 400: the mirror accepts only closed buckets. `PUT /mirror/<свой сервер>/…` (a copy from itself) —
 accept or refuse — «Implementation decides» item 11 (C05-MIRROR-PUT-SELF-01). The value of `X-Sum` is an HTTP field: the spaces at the edges
 (OWS) are dropped before the check of the form (E35).
+
+<!-- req: P/05-R034 -->
 
 The HTTP representations are in the schemas of Н2. `BucketInfo` is the description of one bucket, not an event;
 `/buckets` gives UTF-8 JSON Lines: one object per LF, without an array. `/mirrored/<server>`
@@ -712,6 +780,8 @@ The form `answered` (the mark row of a request, AnsweredMark) — [chapter 6.4](
 
 ## Н2 Doors
 
+<!-- req: P/05-R035 -->
+
 The full contract: [OpenAPI](05-resource.api.openapi.yaml).
 GET of an object is limited to 64 MiB by the bytes actually read: exactly the limit is allowed,
 +1 byte — 413 ResourceError before the success headers; until the size is confirmed the body is
@@ -720,6 +790,8 @@ The ceiling of the store itself can be higher and does not cancel this limit of 
 the resource and the console, JSON answers, a byte stream and the absence of a body. The schemas set the required
 fields and the allowed extensions; the checks of existence, rights, UTF-8 size and state
 are performed separately. An outer array does not replace JSON Lines.
+
+<!-- req: P/05-R036 -->
 
 | Input | Success | Application refusals |
 |---|---|---|
@@ -735,9 +807,13 @@ are performed separately. An outer array does not replace JSON Lines.
 | resource GET /mirrored/{server}/{path} | 200 bytes + X-Sum | 404/500 without a body |
 | resource `PUT /v1/objects/<sub>/blobs/<digest>` | 204 without a body. Required are a length ≤64 MiB, `X-Written` — a non-negative time of the source copy (absent or not a number — 400), a sha256 name with 64 lowercase hex; bytes of another digest — 422; a key not of the blob form or a subsystem without a blob field — 405, as for any object (Н1.1 «Bodies at the resource» `mirror`; reconciliation of python and go М10/6–11, T10, T11). On reading the actual limit/sum are checked | 400/404/405/408/409/411/413/422/503 — `ResourceError`, 403 — it or `ResourceDenied`. The common refusals of the console do not apply here (moved from М10/10 Н2) |
 
+<!-- req: P/05-R037 -->
+
 `GET /events` of the console (the merge, ConsoleEvents, `HEAD`) and the console doors `POST /marks`, `POST /{sub}/requests`,
 `DELETE /{sub}/asked/{sha16}` — [chapter 6.4](../../06-console/spec/06.4-console.norms.md) Н2; the schemas
 of the answer of `/events` common to both doors (`EventRow`, `UnitRef` and below) are in the contract of this lesson.
+
+<!-- req: P/05-R038 -->
 
 For both listings (`/buckets/{sub}/{unit}` and `/mirrored/{server}`) all the necessary
 reads of the directory/metadata complete before the success headers: unknownness/an error —
@@ -745,13 +821,19 @@ reads of the directory/metadata complete before the success headers: unknownness
 A break of an already started transfer of a listing is not a full answer; a new HTTP status
 is not sent after the headers.
 
+<!-- req: P/05-R039 -->
+
 **`scope`** of `/v1/objects` and `/v1/objects/{key}` (ADR-0084 addendum (2) Р17; review of stage B 3–5, № 24): `local`
 (the default) — only the objects directory of this server; `cluster` — the cluster objects by Н1.1 `cluster` (the fresh copy by
 `written` wins, a server that did not answer is `missing`); another value — 400 (Н4). The resource is the read door of the cluster
 objects for the processes of its own server (Н1.4 «Cluster objects — through the resource of its own server»).
 
+<!-- req: P/05-R040 -->
+
 ResourceError is only `{error: текст}`. A refusal 404 on reading an object means «not among those who answered»;
 with an incomplete poll X-Missing is required, completeness is not derived from the code 404 itself.
+
+<!-- req: P/05-R041 -->
 
 **Query parsing.** The resource door — by P/01.1 Н2.1
 (query, the path byte for byte, HTTP by RFC 9112, an early refusal) with deviations: a refusal of query parsing — 400 ResourceError
@@ -761,6 +843,8 @@ the application 405 ResourceError (Н4); `/buckets/{sub}/{unit}` — exactly two
 `/buckets/../objects`, `/buckets/testsub%2Fc1` — 404 without a body; the bodies of `PUT` are bytes, JSON is not parsed (reconciliation of python and go М10/6–11,
 E9, E10, E17, E30, E31, E36).
 
+<!-- req: P/05-R042 -->
+
 ResourceDenied (`error=refused`, detail,
 role on a refusal of the role) — 403 of the resource gateway, before the route handler. A TLS refusal before HTTP
 does not get an invented HTTP body. Every applicable common answer is entered in the OpenAPI.
@@ -768,16 +852,22 @@ With busy — Retry-After: 1. On an unknown path — 404; on an unsupported meth
 path — 405; at the resource both are without a body. This common rule is enough:
 it does not create a separate OpenAPI method for every impossible operation.
 
+<!-- req: P/05-R057 -->
+
+**Route matching form.** The OpenAPI path item has a unique integer `x-route-priority`: smaller is earlier. Match the raw path exactly, with no percent-decoding of literals, path normalization or implicit trailing slash. A path parameter declares `x-path-capture` (`segment` or `remainder`, only at the end) and `x-path-decode: percent-segment`. Capture the raw remainder including an empty tail and empty inner segments; decode each captured segment separately. A decoded slash does not create a separator and is invalid. Empty or other out-of-form values are parameter errors of the selected operation, not a fallback to another route. First filter the structurally matching templates by the HTTP method, then select their lowest priority; only when no such method exists is the answer the common bodyless 405 (no matching template: bodyless 404). The parameter’s `x-path-error` maps each applicable HTTP method to `{status, response_schema}`: the existing OpenAPI component name or `-` for no body. In particular the generic objects GET remains available for a blob-shaped key when the specific blob route has only PUT. The exact priorities, capture mode and refusal projections are the OpenAPI form, not a second route list in prose. Schema refusal and decoding refusal do not normalize a foreign or invalid key into a file path. Error text inside ResourceError remains a non-empty diagnostic, not a new fixed error word.
+
+<!-- req: P/05-R043 -->
+
 **Admission to the resource doors** (ADR-0075 addendum of 2026-10-12 (3)). The resource with TLS checks the client: the chain up to the authority,
 the serial number not in `revoked` ([the role certificate contract](../../common/contracts/role-certificate.md) `revoke`), exactly one role of the route row, CN = `<роль>.<SAN DNS>`; otherwise a refusal
 of the handshake or 403 `ResourceDenied` with the role and the route. The client checks the role `resource` and the SAN DNS of the server against the host
 of the address; an IP with TLS — a refusal of the client.
 
-| Resource route | Admitted roles |
-|---|---|
-| `/events*`, `/buckets/`, `/mirrored/` | `console`, `resource`, `<sub>worker` of the manifests of the catalogue |
-| `PUT /mirror/` | `resource` |
-| reading `/v1/objects` (the families of Н1.1 `door`); `PUT /v1/objects/<sub>/blobs/<digest>` (Н2) | any role with a kit (P/02.4 Н1.6) |
+<!-- req: P/05-R044 -->
+
+For door mode `mtls`, the per-operation role table is [forms/door-roles.tsv](../forms/door-roles.tsv), with the paths and methods of the OpenAPI. `<sub>worker` expands only over the loaded manifest catalogue; `*` means any authenticated kit role. The role check precedes the matched operation handler; the TLS checks above remain mandatory. The loopback mode keeps the admission of the role certificate contract. This does not admit unknown paths or methods.
+
+<!-- req: P/05-R045 -->
 
 **Profile limits.** A bucket file is read whole or by one Range; multiple Ranges and
 conditional HTTP requests are not part of the lesson. The size of the answer is fixed before reading; the answer
@@ -794,9 +884,17 @@ objects the resource door does not write — a refusal of the write of a non-blo
 
 ### resource start — schema check
 
+<!-- req: P/05-R046 -->
+
+The process input inventory is [forms/daemon-flags.tsv](../forms/daemon-flags.tsv); derived defaults and imported validation remain the linked rules. It introduces no CLI flags.
+
+<!-- req: P/05-R047 -->
+
 The resource side of the common block [P/06.6](../../06-console/spec/06.6-console.norms.md) Н3 «старт консоли — проверка схемы» (from М10/10 Н3,
 part of М10/10-01); the row `platform/schema` and its raising — P/06.6 Н1.1а; the other processes — P/06.6, P/03.2,
 P/04). The order of the resource start — [life cycle](../lifecycle.md).
+
+<!-- req: P/05-R048 -->
 
 ```
 as the first step of the resource start, before reading the manifest (P/02.3): the schema contract «Check at start» ([the schema contract](../../../common/contracts/schema.md); moved there
@@ -805,11 +903,15 @@ without a change; layout audit А-02, the decision of the Architect of 2026-10-2
 
 ### write an event (the platform, by observe of the subsystem)
 
+<!-- req: P/05-R049 -->
+
 The steps of writing a line (the class, `of`, suppression, the bucket by `t`, appending and `fsync`) and their «Races» — [the event log contract](../../common/contracts/event-journal.md)
 «Writing a line» (the lesson is the owner of the contract; moved there from this procedure so that the writers — chapters P/03.6 and P/06.4 — do not
 stand on the norms of the lesson; review of stage B 3–5, В1). The refusals of the write — Н4.
 
 ### query (resource) → {events, state, truncated}
+
+<!-- req: P/05-R050 -->
 
 ```
 1. check the parameters (Н1.3)                                         → 400 (ResourceError at the resource, ConsoleRefusal at the console)
@@ -824,13 +926,19 @@ stand on the norms of the lesson; review of stage B 3–5, В1). The refusals of
   a held wait /events/wait does not take this lane — C05-WAIT-COMMON-LANE-01)
 ```
 
+<!-- req: P/05-R051 -->
+
 **Races.** Reading an open bucket during appending: only whole lines are given, a torn one is not given and the answer carries `partial: true` (`truncated` is a number, Н1); a listing does not fix the content of the files: a file that has vanished does not confirm an empty bucket. A read error of a file or a directory is not given as a full answer; after the HTTP stream has started — a break, before it — 503 ResourceError. An unreadable line is not a read error: it is skipped and counted (Н1.3, P/01.1 Н0 «Stability of output»).
 
 ### resource pass — at start, then every 600 s from the end of the pass
 
+<!-- req: P/05-R052 -->
+
 The first pass is right after readiness (the door row is written), not after 600 s: the reconciliation after a restart and the edges of
 `free_ask` do not wait for a window of up to 10 min; the next one is 600 s after the end of the previous one (C05-PASS-FIRST-AT-START-01, the decision of
 the Specification on the recommendation of the Architect, 2026-10-30).
+
+<!-- req: P/05-R053 -->
 
 ```
 retain:  for each tree: days = <sub>/retention | the default (tree.alarms — alarms_retention | the default; audit, console —
@@ -862,43 +970,21 @@ mirror:  platform/mirror does not read → the step is not executed, settings_un
 each step is its own attempt; a step longer than PULSE_LIMIT → pass_stalled in the heartbeat
 ```
 
+<!-- req: P/05-R054 -->
+
 **Races.** In one pass retain precedes mirror; this is not a lock against another read/cleanup. Only a whole closed bucket with a checked sum is copied; a disappearance/an incomplete read gives a failed attempt, without the publication of a partial copy. The next pass lists the available buckets anew. The owner and the copy: a copy is never a source while the owner answers; `restore` (Н1.4 «Bucket restore») pulls copies back only at the word of the owner. The removal of `free_ask` and an ordinary request under the same key: the resource checked the form at the version v and stopped; the reaper removed its old row by ttl, the console accepted an ordinary request with the same rid — the key has the version v′; `delete` with cas v answers conflict, the accepted request is intact; without cas it would have been deleted without an outcome (ADR-0054).
 
 ---
 
 ## Н4 Refusals
 
+<!-- req: P/05-R055 -->
+
 The refusals of the console doors, of requests, marks and the reaper — [chapter 6.4](../../06-console/spec/06.4-console.norms.md) Н4 (the holder side — chapter 3.6); the refusals of loading `suppress` — chapter 3.6, `older_epochs` — chapter 6.4.
 
-| Reason | Code / outcome | Body / record | What the caller does |
-|---|---|---|---|
-| resource: the role is not admitted before the handler (Н2 «Admission to the resource doors») | 403 | ResourceDenied | fix the access; TLS before HTTP is a separate refusal |
-| object: scope/prefix/key not in form, including not UTF-8 and Cc/Zl/Zp; an empty or repeated parameter | 400 | ResourceError | fix the input |
-| object: the family is not given (including `*` not a subsystem of the catalogue); a row object; a `prefix` under which there is no key of the door families | 403 | ResourceError | choose an allowed door |
-| object: not among those who answered | 404 | ResourceError; X-Missing with an incomplete poll | do not derive absence on a silent server |
-| object: the copy/listing does not read | 503 | ResourceError | repeat the read |
-| object: the chosen GET body is larger than 64 MiB | 413 | ResourceError `{error: строка}` | reduce the object/use an allowed form; do not truncate a successful body |
-| PUT of a non-blob object | 405 | ResourceError | the owner of the directory writes; blobs — `PUT /v1/objects/<sub>/blobs/<digest>`, Н2 |
-| body: the copy does not hash; deleted later | 422 / 409 (the resource door) | words | the neighbour repeats |
-| body copy: the key is not of the blob form; a subsystem without a blob field (the resource door) | 405 | words | write by the bytes door of the console (reconciliation of python and go М10/6–11, T11) |
-| body copy without a length (the resource door) | 411 | words | the neighbour repeats |
-| the body copy came slowly (the resource door) | 408 | words | the neighbour repeats |
-| the resource ceilings of Н1.1 | by the table | by the table | change the form, not the ceiling |
-| event: the refusals of the line writer | a refusal of the write | — | [the event log contract](../../common/contracts/event-journal.md) «Writing a line» «Refusals of the writer» (moved there; layout audit Б-29, the Architect's decision of 2026-10-25) |
-| an event query at the resource: keep/class/by/late/unit/from/to/limit not by Н1.3 | 400 | ResourceError (Н2, Н3 «query») | fix the parameters |
-| an event query of the resource: >8 at once / no index | 503 | ResourceError; with busy Retry-After: 1 | repeat; do not give an empty success |
-| wait: the parameters not by Н1.6 / the common lane is busy | 400/503 | ResourceError; with busy Retry-After: 1 | an ordinary pass, then a new wait |
-| wait: the queue is full / the former wait is displaced | 200 | WaitFull / WaitReplaced | do not advance seq; an ordinary pass |
-| buckets: a wrong path / an unknown unit; the file is absent | 404 | without a body | an empty known listing — 200 with an empty JSONL |
-| bucket: one Range / a range outside the file | 206/416 | bytes / text/plain, Content-Range | check the completeness of the range |
-| a listing buckets/mirrored: the directory or the metadata do not read | 500 | without a body, before the success headers | restore stays incomplete; repeat the full listing, an empty success is forbidden |
-| a bucket/copy file: reading/the sum failed before the start of the answer | 500 | without a body | repeat; a break of a started stream is not a second status |
-| mirror: a bad path (Н1.6: a segment `.`/`..`, another's tree, not a bucket path), an open bucket, the sum/a broken body; the size; the term; the sum of the body; the write | 400/413/408/422/500 | without a body | the old copy is kept, a partial one is not published |
-| mirrored, events/{path}: a path not by Н1.6 | 404 | without a body | a file outside its tree is not read |
-| a bucket line is unreadable, a file not in its place | 200, the line is skipped | `lines_garbled` of the answer (Н1.3) | fix the writer; 503 because of a line is forbidden (P/01.1 Н0) |
-| mirrored: no copies directory / no such copy | 404 | without a body | the neighbour is skipped on restore (Н1.4 «Bucket restore») |
-| retention: a wrong days / the read is unknown / holds failed to read | remove nothing in the dependent tree | the reason in the heartbeat: `retention_withheld[<sub>]` — one in the order `unknown` → `days_garbled` → `holds_unread`; a wrong term of any kind (`retention` or `alarms_retention`) — also `<sub>` in `retention_garbled`, regardless of the reason (C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01) | restore a reliable read |
-| no path / the method is not supported | 404/405 | resource — without a body | fix the route; the particular PUT of a non-blob is above |
+<!-- req: P/05-R056 -->
+
+The closed catalogue is [forms/refusals.tsv](../forms/refusals.tsv), `chapter = 5`. It preserves the four original cells in `cause`, `outcome`, `diagnostic`, `caller`; multiple fixed HTTP projections keep the same source `row`. `response_schema` is the OpenAPI component or `-` for a bodyless/text result; no error discriminator is invented. The original Range/hint/skipped-line success outcomes remain success outcomes.
 
 ---
 

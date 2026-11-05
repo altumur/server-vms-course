@@ -1,0 +1,29 @@
+# Process environment of resource, P/05; literal TAB without CSV quoting. No CLI flags or positionals are introduced.
+# Types are the P/01 vocabulary plus string. Environment stays string where its own contract owns parsing (for example port/TLS); CLI spelling is not imposed on it.
+# default is a literal or -; default_text may preserve a derived/default rule, resolved by norm and never copied as a literal placeholder.
+# required/bad are CEL over exact-key f and cmd. Alias comparisons run over supplied values before defaults.
+# Empty bad adds no CEL rule, not permission to skip server/box/instance/address/role/kit validation of the linked contracts.
+# The launcher parses environment files; the resource consumes the resolved environment. No W2C_ROLE default replaces the unit's resource role.
+# Deployment choices such as PULSE_LIMIT, connection limits or LONG_POLL_WAITERS are not invented environment names here.
+#var f map<string,dyn> — supplied environment values, strings
+#var cmd string — resource
+flag	type	default	default_text	required	commands	bad	norm
+$W2C_ROLE	string	-	unit: resource, matching the resource launcher route	false	resource		common/contracts/env-file.md; P/05 lifecycle Environment
+$PLATFORM_STORE	string	-	file://<PLATFORM_DIR>/config	false	resource		common/contracts/env-file.md; P/05 lifecycle Environment
+$PLATFORM_DIR	dir	/data/platform	/data/platform	false	resource		common/contracts/env-file.md; P/05 lifecycle Environment
+$RESOURCE_ROOT	dir	-	<PLATFORM_DIR>/events	false	resource	"$EVENTS" in f && f["$RESOURCE_ROOT"] != f["$EVENTS"]	common/contracts/env-file.md; P/05 lifecycle Environment
+$EVENTS	dir	-	<PLATFORM_DIR>/events	false	resource	"$RESOURCE_ROOT" in f && f["$EVENTS"] != f["$RESOURCE_ROOT"]	common/contracts/env-file.md; P/05 lifecycle Environment
+$OBJECTS	string	-	file://; cluster:// with configstore	false	resource	"$PLATFORM_OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md; P/05 lifecycle Environment
+$PLATFORM_OBJECTS	string	-	file://; cluster:// with configstore	false	resource	"$OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md; P/05 lifecycle Environment
+$SERVER_NAME	string	-	short hostname	false	resource	!f["$SERVER_NAME"].matches("^[a-z0-9]+(-[a-z0-9]+)*$")	common/contracts/env-file.md; P/05 lifecycle Environment
+$BOX_ID	string	-	/etc/machine-id, otherwise hostname; empty is unset	false	resource		common/contracts/env-file.md; P/05 lifecycle Environment
+$INSTANCE_ID	string	-	<box>:<pid>:<6hex>; empty is unset	false	resource		common/contracts/instance.md; common/contracts/event-journal.md: The event id and the writer instance
+$BUILD	string	dev	dev	false	resource		common/contracts/env-file.md; P/05 lifecycle Environment
+$W2C_TLS_DIR	dir	-	Linux /etc/w2c/tls; macOS <W2C_BOX>/tls	false	resource		common/contracts/env-file.md; P/05 lifecycle Environment
+$W2C_ENV	file	/etc/w2c/w2c.env	/etc/w2c/w2c.env	false	resource		common/contracts/env-file.md; P/05 lifecycle Environment
+$W2C_BOX	dir	/opt/w2c	/opt/w2c	false	resource		common/contracts/env-file.md; P/05 lifecycle Environment
+$W2C_MANIFEST_REV	string	-	-	false	resource		common/contracts/env-file.md; P/05 lifecycle Environment
+$RESOURCE_HOST	string	127.0.0.1	127.0.0.1	false	resource		P/02.4 Н1.6 process; P/05 lifecycle Environment
+$RESOURCE_PORT	string	8090	8090	false	resource		P/05 lifecycle Environment; P/02.4 Н1.6
+$RESOURCE_URL	string	-	-	false	resource		P/05 Н1.4 door_row; common/contracts/role-certificate.md
+$RESOURCE_TLS	string	-	unset: loopback; 1: mtls with its role kit	false	resource		P/05 Н1.4 door; P/02.4 Н1.6
