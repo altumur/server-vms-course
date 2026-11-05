@@ -20,6 +20,7 @@ $CONSOLE_PORT	string	8080	8080; listener activation/address/kit checks by the ci
 $CONSOLE_CALL_PORT	string	8081	8081; listener activation/address/kit checks by the cited contract	false	console		P/02.4 Н1.6; common/contracts/role-certificate.md; lifecycle.md: Environment
 $SECRETS_KEY	string	-	absent: development mode with a loud line; explicitly empty: unreadable ring, not absent	false	console		P/06.2 Н1.2; common/contracts/secret-files.md; lifecycle.md: Environment
 $SERVER_NAME	string	-	short hostname; validate by the environment contract	false	console		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
+$INSTANCE_ID	string	-	absent or empty: computed instance; supplied nonempty: preserve the accepted spelling	false	console		common/contracts/env-file.md: Environment variables; common/contracts/instance.md; P/06.4 Н1.2
 $BOX_ID	string	-	machine-id, otherwise hostname; instance is derived, not an input PID or random suffix	false	console		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2; common/contracts/instance.md
 $CLUSTER	string	local	local	false	console		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
 $TIMEZONE	string	UTC	UTC; supplied empty or bad spelling: exit2	false	console	!f["$TIMEZONE"].matches("^[A-Za-z][A-Za-z0-9_+-]*(/[A-Za-z][A-Za-z0-9_+-]*)*$")	common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
