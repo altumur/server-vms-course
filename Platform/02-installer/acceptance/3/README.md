@@ -3,12 +3,12 @@
 This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md). The norm of the chapter is
-[`02.3-installer.norms.md`](../../spec/02.3-installer.norms.md) Н5. `puts.tsv` has 82 installations (9 after `near_*` — the coverage audit P/02 of 2026-10-30, the next 16 — its second pass, below; the 11 next ones — ADR-0094 B7; 3 `calls_*` — the callback list at a subsystem of the catalogue, ADR-0094 B1; the 3 last `calls_first_*`, `calls_second_kind` — ADR-0112 addendum (3) item 2); the installation files are in `puts/`.
+[`02.3-installer.norms.md`](../../spec/02.3-installer.norms.md) Н5. `puts.tsv` has 84 installations (9 after `near_*` — the coverage audit P/02 of 2026-10-30, the next 16 — its second pass, below; the 11 next ones — ADR-0094 B7; 3 `calls_*` — the callback list at a subsystem of the catalogue, ADR-0094 B1; 3 `calls_first_*`, `calls_second_kind` — ADR-0112 addendum (3) item 2; the last two `calls_pulse_ok`, `calls_pulse_bad` — the declared heartbeat callback); the installation files are in `puts/`.
 The table and the files were moved from the acceptance of М10/2 (stage B) without changes; the loader corpus is [the acceptance of chapter 2.1](../1/README.md).
 
 ## puts.tsv
 
-The manifest installation `manifest put` of the implementation (Н3 «Manifest change», the name and the form of the command — «Implementation decides» item 3); the runner calls it
+The manifest installation `manifest put` of the implementation (Н3 «Manifest change», the command name and argv — [`operator-commands.tsv`](../../forms/operator-commands.tsv)); the runner calls it
 by the command `manifest-put {socket} {file}` of the section «Stand» of the common acceptance README (the store pilot, А6).
 
 **The form of the file.** UTF-8, lines separated by LF, fields by TAB. Lines starting with `#` and empty lines are skipped. The first
