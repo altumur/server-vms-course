@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "UDM2",
+ "variant": "",
+ "cells": {
+  "id": "UDM2"
+ },
+ "files": {
+  "in.yaml": "LSB7IHVybDogaHR0cDovL2V4YW1wbGUub3JnIH0K"
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "6S55",
+ "variant": "",
+ "cells": {
+  "id": "6S55"
+ },
+ "files": {
+  "in.yaml": "a2V5OgogLSBiYXIKIC0gYmF6CiBpbnZhbGlkCg=="
+ }
+}

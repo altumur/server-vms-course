@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "Q9WF",
+ "variant": "",
+ "cells": {
+  "id": "Q9WF"
+ },
+ "files": {
+  "in.yaml": "eyBmaXJzdDogU2FtbXksIGxhc3Q6IFNvc2EgfToKIyBTdGF0aXN0aWNzOgogIGhyOiAgIyBIb21lIHJ1bnMKICAgICA2NQogIGF2ZzogIyBBdmVyYWdlCiAgIDAuMjc4Cg=="
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "Q88A",
+ "variant": "",
+ "cells": {
+  "id": "Q88A"
+ },
+ "files": {
+  "in.yaml": "LSBbIGEsIGIgXQotIHsgYTogYiB9Ci0gImEiCi0gJ2InCi0gYwo="
+ }
+}

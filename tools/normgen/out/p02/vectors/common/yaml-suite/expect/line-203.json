@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "EXG3",
+ "variant": "",
+ "cells": {
+  "id": "EXG3"
+ },
+ "files": {
+  "in.yaml": "LS0tCi0tLXdvcmQxCndvcmQyCg=="
+ }
+}

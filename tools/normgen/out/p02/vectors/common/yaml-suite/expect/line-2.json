@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "229Q",
+ "variant": "",
+ "cells": {
+  "id": "229Q"
+ },
+ "files": {
+  "in.yaml": "LQogIG5hbWU6IE1hcmsgTWNHd2lyZQogIGhyOiAgIDY1CiAgYXZnOiAgMC4yNzgKLQogIG5hbWU6IFNhbW15IFNvc2EKICBocjogICA2MwogIGF2ZzogIDAuMjg4Cg=="
+ }
+}

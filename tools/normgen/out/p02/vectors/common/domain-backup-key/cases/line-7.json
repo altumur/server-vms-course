@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/domain-backup-key",
+ "table": "cases.tsv",
+ "case": "other-root",
+ "variant": "",
+ "cells": {
+  "root_key": "44b9a4b07b206e3c60c33007a2ed1eff1f7333844b75b6f796f6b4695855ae06",
+  "backup_key_rev": "1"
+ },
+ "files": {}
+}

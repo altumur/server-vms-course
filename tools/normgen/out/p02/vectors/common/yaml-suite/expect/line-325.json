@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "RZT7",
+ "variant": "",
+ "cells": {
+  "id": "RZT7"
+ },
+ "files": {
+  "in.yaml": "LS0tClRpbWU6IDIwMDEtMTEtMjMgMTU6MDE6NDIgLTUKVXNlcjogZWQKV2FybmluZzoKICBUaGlzIGlzIGFuIGVycm9yIG1lc3NhZ2UKICBmb3IgdGhlIGxvZyBmaWxlCi0tLQpUaW1lOiAyMDAxLTExLTIzIDE1OjAyOjMxIC01ClVzZXI6IGVkCldhcm5pbmc6CiAgQSBzbGlnaHRseSBkaWZmZXJlbnQgZXJyb3IKICBtZXNzYWdlLgotLS0KRGF0ZTogMjAwMS0xMS0yMyAxNTowMzoxNyAtNQpVc2VyOiBlZApGYXRhbDoKICBVbmtub3duIHZhcmlhYmxlICJiYXIiClN0YWNrOgogIC0gZmlsZTogVG9wQ2xhc3MucHkKICAgIGxpbmU6IDIzCiAgICBjb2RlOiB8CiAgICAgIHggPSBNb3JlT2JqZWN0KCIzNDVcbiIpCiAgLSBmaWxlOiBNb3JlQ2xhc3MucHkKICAgIGxpbmU6IDU4CiAgICBjb2RlOiB8LQogICAgICBmb28gPSBiYXIK"
+ }
+}

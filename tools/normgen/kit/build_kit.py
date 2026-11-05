@@ -58,6 +58,7 @@ import gen_families  # noqa: E402 — часть families
 import gen_admin  # noqa: E402 — часть admin
 import gen_cmdtests  # noqa: E402 — stagetests урока без HTTP (P/02)
 import gen_rollout  # noqa: E402 — часть rollout-poll (P/02)
+import gen_vectors  # noqa: E402 — часть vectors урока без двери (P/02)
 import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2): --lesson, по умолчанию 01-store
 L = lesson.CURRENT
 TABLE = L.form("write-checks.tsv")
@@ -203,7 +204,9 @@ def provenance(parts, files, judged):
     }
     out = {}
     for part in parts:
-        if part == "stagetests" and not L.openapi.is_file():
+        if part == "vectors" and not L.openapi.is_file():
+            out[part] = {**gen_vectors.provenance(), "output": output("vectors")}
+        elif part == "stagetests" and not L.openapi.is_file():
             out[part] = {**gen_cmdtests.provenance(), "output": output("stagetests")}
         elif part in ("flags", "refusals", "launch", "core", "families", "admin", "rollout-poll"):
             mod = {"flags": gen_flags, "refusals": gen_refusals, "launch": gen_launch, "core": gen_core,
@@ -303,7 +306,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
     kit_parts = (["writecheck"] if has_wc else []) + sorted(set(parts))
     parts_set = list(kit_parts)
     try:
-        tests = [(f, "vectors") for f in gen_tests.kit_files(module, "vectors")] if "vectors" in parts else []
+        tests = [(f, "vectors") for f in (gen_tests.kit_files(module, "vectors") if http
+                                           else gen_vectors.kit_files(module))] if "vectors" in parts else []
         if "stagetests" in parts:
             tests += [(f, "stagetests") for f in (gen_tests.kit_files(module, "stagetests") if http
                                                     else gen_cmdtests.kit_files(module))]
@@ -316,7 +320,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
         admin_files = gen_admin.kit_files(module) if "admin" in parts else []
     except (gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError, gen_launch.GenError,
             gen_core.GenError, gen_families.GenError, gen_admin.GenError, gen_cmdtests.GenError,
-            gen_rollout.GenError) as exc:
+            gen_rollout.GenError, gen_vectors.GenError) as exc:
         raise KitError(str(exc)) from None
     openapi_sha = sha256(OPENAPI.read_bytes()) if "door" in parts else None
     if openapi_sha:
@@ -387,7 +391,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
         files[-1]["editable"] = True
     stagetests_md = (gen_tests.KIT_MD_STAGETESTS if http else gen_cmdtests.KIT_MD) if "stagetests" in parts else ""
     doc = ((KIT_MD if has_wc else KIT_MD_LESSON.replace("{lesson}", L.code).replace("{dir}", L.kit_dir))
-           + (gen_tests.kit_md() if "vectors" in parts else "")
+           + ((gen_tests.kit_md() if http else gen_vectors.KIT_MD) if "vectors" in parts else "")
            + stagetests_md + (gen_rollout.KIT_MD if rollout_files else "") + (KIT_DOOR_MD if openapi_sha else "")
            + (gen_flags.kit_md() if flag_files else "") + (gen_refusals.kit_md() if refusal_files else "")
            + (gen_families.kit_md() if family_files else "") + (gen_admin.kit_md() if admin_files else "")
@@ -578,7 +582,8 @@ REGEN = ("gen_checks.py", "gen_door.py", "gen_flags.py", "gen_refusals.py", "gen
          "gen_core.py", "gen_admin.py", "gen_launch.py", "gen_families.py")
 # Урок без своей двери (P/02): перегон по частям пакета — генераторы, объявленные для P/01, на нём отказывают.
 PART_GENS = {"flags": ("gen_flags.py",), "refusals": ("gen_refusals.py",), "stagetests": ("gen_cmdtests.py",),
-             "rollout-poll": ("gen_rollout.py",), "families": ("gen_families.py",)}
+             "rollout-poll": ("gen_rollout.py",), "families": ("gen_families.py",),
+             "vectors": ("gen_families.py", "gen_vectors.py")}
 
 
 def regen(parts):

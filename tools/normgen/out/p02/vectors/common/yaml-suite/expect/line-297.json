@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "NJ66",
+ "variant": "",
+ "cells": {
+  "id": "NJ66"
+ },
+ "files": {
+  "in.yaml": "LS0tCi0geyBzaW5nbGUgbGluZTogdmFsdWV9Ci0geyBtdWx0aQogIGxpbmU6IHZhbHVlfQo="
+ }
+}

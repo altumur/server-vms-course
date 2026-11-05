@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "3R3P",
+ "variant": "",
+ "cells": {
+  "id": "3R3P"
+ },
+ "files": {
+  "in.yaml": "JnNlcXVlbmNlCi0gYQo="
+ }
+}

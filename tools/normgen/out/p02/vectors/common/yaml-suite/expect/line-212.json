@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "FRK4",
+ "variant": "",
+ "cells": {
+  "id": "FRK4"
+ },
+ "files": {
+  "in.yaml": "ewogID8gZm9vIDosCiAgOiBiYXIsCn0K"
+ }
+}

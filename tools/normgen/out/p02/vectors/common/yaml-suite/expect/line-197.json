@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "DWX9",
+ "variant": "",
+ "cells": {
+  "id": "DWX9"
+ },
+ "files": {
+  "in.yaml": "fAogCiAgCiAgbGl0ZXJhbAogICAKICAKICB0ZXh0CgogIyBDb21tZW50Cg=="
+ }
+}

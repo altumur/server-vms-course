@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "HS5T",
+ "variant": "",
+ "cells": {
+  "id": "HS5T"
+ },
+ "files": {
+  "in.yaml": "MXN0IG5vbi1lbXB0eQoKIDJuZCBub24tZW1wdHkgCgkzcmQgbm9uLWVtcHR5Cg=="
+ }
+}

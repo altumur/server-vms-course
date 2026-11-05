@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "QLJ7",
+ "variant": "",
+ "cells": {
+  "id": "QLJ7"
+ },
+ "files": {
+  "in.yaml": "JVRBRyAhcHJlZml4ISB0YWc6ZXhhbXBsZS5jb20sMjAxMToKLS0tICFwcmVmaXghQQphOiBiCi0tLSAhcHJlZml4IUIKYzogZAotLS0gIXByZWZpeCFDCmU6IGYK"
+ }
+}

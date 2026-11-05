@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "H3Z8",
+ "variant": "",
+ "cells": {
+  "id": "H3Z8"
+ },
+ "files": {
+  "in.yaml": "LS0tCndhbnRlZDogbG92ZSDimaUgYW5kIHBlYWNlIOKYrgo="
+ }
+}

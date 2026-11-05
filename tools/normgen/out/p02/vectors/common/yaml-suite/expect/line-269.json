@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "LP6E",
+ "variant": "",
+ "cells": {
+  "id": "LP6E"
+ },
+ "files": {
+  "in.yaml": "LSBbYSwgYiAsIGMgXQotIHsgImEiICA6IGIKICAgLCBjIDogJ2QnICwKICAgZSAgIDogImYiCiAgfQotIFsgICAgICBdCg=="
+ }
+}

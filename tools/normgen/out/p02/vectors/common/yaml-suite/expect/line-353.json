@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "U3XV",
+ "variant": "",
+ "cells": {
+  "id": "U3XV"
+ },
+ "files": {
+  "in.yaml": "LS0tCnRvcDE6ICZub2RlMQogICZrMSBrZXkxOiBvbmUKdG9wMjogJm5vZGUyICMgY29tbWVudAogIGtleTI6IHR3bwp0b3AzOgogICZrMyBrZXkzOiB0aHJlZQp0b3A0OgogICZub2RlNAogICZrNCBrZXk0OiBmb3VyCnRvcDU6CiAgJm5vZGU1CiAga2V5NTogZml2ZQp0b3A2OiAmdmFsNgogIHNpeAp0b3A3OgogICZ2YWw3IHNldmVuCg=="
+ }
+}

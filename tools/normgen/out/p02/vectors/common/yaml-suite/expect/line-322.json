@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "RTP8",
+ "variant": "",
+ "cells": {
+  "id": "RTP8"
+ },
+ "files": {
+  "in.yaml": "JVlBTUwgMS4yCi0tLQpEb2N1bWVudAouLi4gIyBTdWZmaXgK"
+ }
+}

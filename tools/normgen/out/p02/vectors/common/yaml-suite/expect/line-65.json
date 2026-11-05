@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "5TYM",
+ "variant": "",
+ "cells": {
+  "id": "5TYM"
+ },
+ "files": {
+  "in.yaml": "JVRBRyAhbSEgIW15LQotLS0gIyBCdWxiIGhlcmUKIW0hbGlnaHQgZmx1b3Jlc2NlbnQKLi4uCiVUQUcgIW0hICFteS0KLS0tICMgQ29sb3IgaGVyZQohbSFsaWdodCBncmVlbgo="
+ }
+}

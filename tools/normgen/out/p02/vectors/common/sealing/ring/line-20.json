@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/sealing",
+ "table": "ring.tsv",
+ "case": "rotate_other_name",
+ "variant": "",
+ "cells": {
+  "file": "\"main 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\\n\"",
+  "rotate": "true"
+ },
+ "files": {}
+}

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/env-file",
+ "table": "files.tsv",
+ "case": "part-no-role-no-w2c-env",
+ "variant": "",
+ "cells": {
+  "input": "{\"route\":\"part\",\"unit\":{\"W2C_ENV\":\"/etc/w2c/w2c.env\",\"W2C_SUB_ENV\":\"/etc/testsub/testsub.env\"},\"files\":{\"/etc/w2c/w2c.env\":[\"B=1\"],\"/etc/testsub/testsub.env\":[\"A=sub\"]}}"
+ },
+ "files": {}
+}

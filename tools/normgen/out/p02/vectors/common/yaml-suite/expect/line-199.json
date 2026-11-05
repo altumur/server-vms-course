@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "EB22",
+ "variant": "",
+ "cells": {
+  "id": "EB22"
+ },
+ "files": {
+  "in.yaml": "LS0tCnNjYWxhcjEgIyBjb21tZW50CiVZQU1MIDEuMgotLS0Kc2NhbGFyMgo="
+ }
+}

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/domain-founding",
+ "table": "recovery.tsv",
+ "case": "recovery-pub-mismatch",
+ "variant": "",
+ "cells": {
+  "input": "{\"file\":{\"domain\":\"d1\",\"root_key\":\"02f31d3decce719bc5e39f6f6bd5686207a6a72c1613f973a4a6efb1a0135a45\",\"root_pub\":\"e2096875c268a0993f20fa4b66e15ff651e9e55cd2c08dfbb24e1f4079c145ba\"},\"mode\":\"0600\"}"
+ },
+ "files": {}
+}

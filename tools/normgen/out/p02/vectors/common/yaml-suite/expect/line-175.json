@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "DBG4",
+ "variant": "",
+ "cells": {
+  "id": "DBG4"
+ },
+ "files": {
+  "in.yaml": "IyBPdXRzaWRlIGZsb3cgY29sbGVjdGlvbjoKLSA6OnZlY3RvcgotICI6IC0gKCkiCi0gVXAsIHVwLCBhbmQgYXdheSEKLSAtMTIzCi0gaHR0cDovL2V4YW1wbGUuY29tL2ZvbyNiYXIKIyBJbnNpZGUgZmxvdyBjb2xsZWN0aW9uOgotIFsgOjp2ZWN0b3IsCiAgIjogLSAoKSIsCiAgIlVwLCB1cCBhbmQgYXdheSEiLAogIC0xMjMsCiAgaHR0cDovL2V4YW1wbGUuY29tL2ZvbyNiYXIgXQo="
+ }
+}

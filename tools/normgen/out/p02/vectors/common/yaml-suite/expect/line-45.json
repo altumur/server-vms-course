@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "4RWC",
+ "variant": "",
+ "cells": {
+  "id": "4RWC"
+ },
+ "files": {
+  "in.yaml": "ICBbMSwgMiwgM10gIAogIA=="
+ }
+}

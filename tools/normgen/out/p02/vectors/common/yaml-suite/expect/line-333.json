@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "SBG9",
+ "variant": "",
+ "cells": {
+  "id": "SBG9"
+ },
+ "files": {
+  "in.yaml": "e2E6IFtiLCBjXSwgW2QsIGVdOiBmfQo="
+ }
+}

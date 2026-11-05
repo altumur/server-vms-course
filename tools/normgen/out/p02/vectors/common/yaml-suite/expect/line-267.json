@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "LE5A",
+ "variant": "",
+ "cells": {
+  "id": "LE5A"
+ },
+ "files": {
+  "in.yaml": "LSAhIXN0ciAiYSIKLSAnYicKLSAmYW5jaG9yICJjIgotICphbmNob3IKLSAhIXN0cgo="
+ }
+}

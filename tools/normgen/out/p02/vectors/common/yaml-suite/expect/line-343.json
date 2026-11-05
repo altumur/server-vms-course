@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "SYW4",
+ "variant": "",
+ "cells": {
+  "id": "SYW4"
+ },
+ "files": {
+  "in.yaml": "aHI6ICA2NSAgICAjIEhvbWUgcnVucwphdmc6IDAuMjc4ICMgQmF0dGluZyBhdmVyYWdlCnJiaTogMTQ3ICAgIyBSdW5zIEJhdHRlZCBJbgo="
+ }
+}

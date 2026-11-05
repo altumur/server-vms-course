@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "HMQ5",
+ "variant": "",
+ "cells": {
+  "id": "HMQ5"
+ },
+ "files": {
+  "in.yaml": "ISFzdHIgJmExICJmb28iOgogICEhc3RyIGJhcgomYTIgYmF6IDogKmExCg=="
+ }
+}

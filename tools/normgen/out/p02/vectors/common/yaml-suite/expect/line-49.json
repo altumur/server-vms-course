@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "4ZYM",
+ "variant": "",
+ "cells": {
+  "id": "4ZYM"
+ },
+ "files": {
+  "in.yaml": "cGxhaW46IHRleHQKICBsaW5lcwpxdW90ZWQ6ICJ0ZXh0CiAgCWxpbmVzIgpibG9jazogfAogIHRleHQKICAgCWxpbmVzCg=="
+ }
+}

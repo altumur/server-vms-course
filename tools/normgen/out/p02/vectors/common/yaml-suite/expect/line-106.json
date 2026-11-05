@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "82AN",
+ "variant": "",
+ "cells": {
+  "id": "82AN"
+ },
+ "files": {
+  "in.yaml": "LS0td29yZDEKd29yZDIK"
+ }
+}

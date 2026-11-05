@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "6HB6",
+ "variant": "",
+ "cells": {
+  "id": "6HB6"
+ },
+ "files": {
+  "in.yaml": "ICAjIExlYWRpbmcgY29tbWVudCBsaW5lIHNwYWNlcyBhcmUKICAgIyBuZWl0aGVyIGNvbnRlbnQgbm9yIGluZGVudGF0aW9uLgogICAgCk5vdCBpbmRlbnRlZDoKIEJ5IG9uZSBzcGFjZTogfAogICAgQnkgZm91cgogICAgICBzcGFjZXMKIEZsb3cgc3R5bGU6IFsgICAgIyBMZWFkaW5nIHNwYWNlcwogICBCeSB0d28sICAgICAgICAjIGluIGZsb3cgc3R5bGUKICBBbHNvIGJ5IHR3bywgICAgIyBhcmUgbmVpdGhlcgogIAlTdGlsbCBieSB0d28gICAjIGNvbnRlbnQgbm9yCiAgICBdICAgICAgICAgICAgICMgaW5kZW50YXRpb24uCg=="
+ }
+}

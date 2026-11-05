@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "W5VH",
+ "variant": "",
+ "cells": {
+  "id": "W5VH"
+ },
+ "files": {
+  "in.yaml": "YTogJjpAKiEkIjxmb28+OiBzY2FsYXIgYQpiOiAqOkAqISQiPGZvbz46Cg=="
+ }
+}

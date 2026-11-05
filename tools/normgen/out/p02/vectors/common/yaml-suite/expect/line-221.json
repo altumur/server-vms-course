@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "GH63",
+ "variant": "",
+ "cells": {
+  "id": "GH63"
+ },
+ "files": {
+  "in.yaml": "PyBhCjogMS4zCmZpZnRlZW46IGQK"
+ }
+}

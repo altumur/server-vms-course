@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "JQ4R",
+ "variant": "",
+ "cells": {
+  "id": "JQ4R"
+ },
+ "files": {
+  "in.yaml": "YmxvY2sgc2VxdWVuY2U6CiAgLSBvbmUKICAtIHR3byA6IHRocmVlCg=="
+ }
+}

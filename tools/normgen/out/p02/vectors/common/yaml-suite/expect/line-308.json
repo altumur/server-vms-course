@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "Q4CL",
+ "variant": "",
+ "cells": {
+  "id": "Q4CL"
+ },
+ "files": {
+  "in.yaml": "a2V5MTogInF1b3RlZDEiCmtleTI6ICJxdW90ZWQyIiB0cmFpbGluZyBjb250ZW50CmtleTM6ICJxdW90ZWQzIgo="
+ }
+}

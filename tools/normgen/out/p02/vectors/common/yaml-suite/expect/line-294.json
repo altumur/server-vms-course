@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "NAT4",
+ "variant": "",
+ "cells": {
+  "id": "NAT4"
+ },
+ "files": {
+  "in.yaml": "LS0tCmE6ICcKICAnCmI6ICcgIAogICcKYzogIgogICIKZDogIiAgCiAgIgplOiAnCgogICcKZjogIgoKICAiCmc6ICcKCgogICcKaDogIgoKCiAgIgo="
+ }
+}

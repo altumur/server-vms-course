@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "5MUD",
+ "variant": "",
+ "cells": {
+  "id": "5MUD"
+ },
+ "files": {
+  "in.yaml": "LS0tCnsgImZvbyIKICA6YmFyIH0K"
+ }
+}

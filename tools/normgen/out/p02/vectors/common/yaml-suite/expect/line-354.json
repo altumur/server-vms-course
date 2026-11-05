@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "U44R",
+ "variant": "",
+ "cells": {
+  "id": "U44R"
+ },
+ "files": {
+  "in.yaml": "bWFwOgogIGtleTE6ICJxdW90ZWQxIgogICBrZXkyOiAiYmFkIGluZGVudGF0aW9uIgo="
+ }
+}

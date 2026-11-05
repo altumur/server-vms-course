@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "EHF6",
+ "variant": "",
+ "cells": {
+  "id": "EHF6"
+ },
+ "files": {
+  "in.yaml": "ISFtYXAgewogIGs6ICEhc2VxCiAgWyBhLCAhIXN0ciBiXQp9Cg=="
+ }
+}
