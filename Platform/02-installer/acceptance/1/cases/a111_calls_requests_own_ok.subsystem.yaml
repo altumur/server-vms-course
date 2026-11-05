@@ -1,0 +1,7 @@
+# a submission to the own subsystem by ticket: calls <own>/requests (P/06.3 Н1.9; P/02.1 relation 131; review of P/02 С5)
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+tables: {stash: {fields: {note: {type: string}}, service: true}}
+worker: {exec: /usr/lib/probe/worker}
+door: {pass: {routes: [api], calls: [probe/requests]}}

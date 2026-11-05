@@ -51,7 +51,9 @@ check:    at the start of the controller, the worker, the resource and the conso
 as the first step of the start, before reading the manifest (P/02.3), at all four processes:
 read platform/schema: absent → own SCHEMA; not a number → do not start; version > SCHEMA → do not start
                                                                  («store is at schema N; this build understands M»)
-  a read error → wait for availability without starting work; do not start — exit with code 2 and a log line
+  a read error → wait for availability without starting work, with a pause, up to START_WAIT = 60 s from the start of the process
+    (P/02.3 Н3 «Process start» step 0); still unconfirmed — do not start with code 1, the supervisor restarts the process;
+  do not start (not a number, a version above SCHEMA) — exit with code 2 and a log line, without a restart
 worker: after the renewal of the slot — P/03.2 Н3 «schema check by the worker»
 ```
 
