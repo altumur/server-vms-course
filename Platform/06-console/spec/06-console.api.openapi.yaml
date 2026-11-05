@@ -89,7 +89,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
-          $ref: '#/components/responses/Denied'
+          $ref: '#/components/responses/WriteDenied'
         '404':
           $ref: '#/components/responses/NotFound'
         '405':
@@ -267,7 +267,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
-          $ref: '#/components/responses/Denied'
+          $ref: '#/components/responses/WriteDenied'
         '404':
           $ref: '#/components/responses/NotFound'
         '405':
@@ -316,7 +316,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
-          $ref: '#/components/responses/Denied'
+          $ref: '#/components/responses/WriteDenied'
         '404':
           $ref: '#/components/responses/NotFound'
         '405':
@@ -389,7 +389,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
-          $ref: '#/components/responses/Denied'
+          $ref: '#/components/responses/WriteDenied'
         '404':
           description: No path, unit, field or row
           content:
@@ -508,7 +508,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
-          $ref: '#/components/responses/Denied'
+          $ref: '#/components/responses/WriteDenied'
         '404':
           description: No path, unit, field or row
           content:
@@ -673,7 +673,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
-          $ref: '#/components/responses/Denied'
+          $ref: '#/components/responses/WriteDenied'
         '404':
           description: No path, unit, field or row
           content:
@@ -786,7 +786,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
-          $ref: '#/components/responses/Denied'
+          $ref: '#/components/responses/WriteDenied'
         '404':
           description: Removal of a missing row or tombstone; no route.
           content:
@@ -6783,6 +6783,19 @@ components:
             const: refused
     Denied:
       $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied'
+    WritesVia:
+      type: object
+      required:
+      - detail
+      - error
+      additionalProperties: false
+      description: 'A write refused by writes_via (chapter 6.1 Н1.1а): error writes via, without field. The detail names the allowed subsystems;
+        for a batch it also names the row number. Nothing is written.'
+      properties:
+        detail:
+          type: string
+        error:
+          const: writes via
     NoRoute:
       unevaluatedProperties: false
       allOf:
@@ -9660,6 +9673,15 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Denied'
+    WriteDenied:
+      description: 'A write refused by writes_via — error writes via (chapter 6.1 Н1.1а), before need and may; another access refusal — error
+        denied, as in Denied. A batch is refused as a whole.'
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Denied'
+            - $ref: '#/components/schemas/WritesVia'
     NoRoute:
       description: No route (chapter 6.5 Н2 «Общие коды»); this is not a loader answer about a faulty manifest.
       content:
