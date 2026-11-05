@@ -250,3 +250,7 @@ The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, n
 [`id-map.tsv`](../../../common/id-map.tsv)): by `sample` — the rows about the scenarios of this chapter; the rows without a scenario (the whole
 `scenarios.tsv`, `inputs`, `@sleep`, the preparation, the move) — into all the successor chapters (review analysis of stage B 6–7, № 18).
 Then — the rows of the move of this chapter and of the history of the sources.
+
+## Kit assistance seams
+
+[seams.tsv](seams.tsv) provides 29 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
