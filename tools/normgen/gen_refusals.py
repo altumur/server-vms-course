@@ -236,6 +236,8 @@ def go_module(table, rel):
 PLAIN_COLUMNS = ["chapter", "row", "name", "surface", "code", "kind", "fields", "headers", "log", "norm", "word",
                  "cause", "outcome", "diagnostic", "caller"]
 PLAIN_SURFACES = ("call", "cli", "start", "process", "peer")
+# P/05: дверь урока с телом-текстом ResourceError — колонка response_schema после word, поверхность http
+RESPONSE_COLUMNS = PLAIN_COLUMNS[:11] + ["response_schema"] + PLAIN_COLUMNS[11:]
 
 
 class PlainTable:
@@ -247,14 +249,20 @@ class PlainTable:
         self.name = name
         self.sha256 = hashlib.sha256(text.encode("utf-8")).hexdigest()
         body = [line for line in text.splitlines() if line and not line.startswith("#")]
-        if not body or body[0].split("\t") != PLAIN_COLUMNS:
-            raise GenError(f"{name}: columns must be {PLAIN_COLUMNS}")
+        head = body[0].split("\t") if body else []
+        self.response = head == RESPONSE_COLUMNS
+        cols = RESPONSE_COLUMNS if self.response else PLAIN_COLUMNS
+        if head != cols:
+            raise GenError(f"{name}: columns must be {PLAIN_COLUMNS} (or with response_schema after word)")
+        schemas = response_schemas() if self.response else set()
+        surfaces = PLAIN_SURFACES + (("http",) if self.response else ())
+        body_at = ("peer", "http") if self.response else ("peer",)
         self.rows, seen = [], set()
         for k, line in enumerate(body[1:], 2):
             cells = line.split("\t")
-            if len(cells) != len(PLAIN_COLUMNS):
-                raise GenError(f"{name}: line {k}: {len(cells)} cells, expected {len(PLAIN_COLUMNS)}")
-            r = dict(zip(PLAIN_COLUMNS, cells))
+            if len(cells) != len(cols):
+                raise GenError(f"{name}: line {k}: {len(cells)} cells, expected {len(cols)}")
+            r = dict(zip(cols, cells))
             where = f"{name}: {r['name']}"
             if not re.fullmatch(r"[a-z][a-z0-9_]*", r["name"]) or r["name"] in seen:
                 raise GenError(f"{where}: name — snake_case, unique")
@@ -262,22 +270,26 @@ class PlainTable:
             if not re.fullmatch(r"[0-9]+(?:\.[0-9]+)?", r["chapter"]) or not re.fullmatch(r"[1-9][0-9]*", r["row"]):
                 raise GenError(f"{where}: chapter {r['chapter']!r} / row {r['row']!r}")
             r["row"] = int(r["row"])
-            if r["surface"] not in PLAIN_SURFACES:
-                raise GenError(f"{where}: surface {r['surface']!r} — one of {PLAIN_SURFACES}")
+            if r["surface"] not in surfaces:
+                raise GenError(f"{where}: surface {r['surface']!r} — one of {surfaces}")
+            if self.response:
+                rs = r["response_schema"]
+                if rs != "-" and (r["surface"] != "http" or rs not in schemas):
+                    raise GenError(f"{where}: response_schema {rs!r} — a components/schemas of the lesson OpenAPI at http, or -")
             if r["kind"] != "-":
                 raise GenError(f"{where}: kind is - (no HTTP Fault of the lesson)")
             r["field_list"] = []
             if r["fields"] != "-":                 # поля тела ответа двери соседа (P/03 door_token_forbidden: error)
-                if r["surface"] != "peer":
-                    raise GenError(f"{where}: fields only at the surface peer (no HTTP body of the lesson)")
+                if r["surface"] not in body_at:
+                    raise GenError(f"{where}: fields only at the surface {'/'.join(body_at)} (no HTTP body of the lesson)")
                 r["field_list"] = [x.strip() for x in r["fields"].split(",")]
                 if not all(re.fullmatch(r"[a-z][a-z0-9_]*", x) for x in r["field_list"]) or \
                         len(set(r["field_list"])) != len(r["field_list"]):
                     raise GenError(f"{where}: fields {r['fields']!r} — a comma list of names without repeats")
             r["header_list"] = []
             if r["headers"] != "-":                # заголовки двери соседа (P/03 process_busy: Retry-After)
-                if r["surface"] != "peer":
-                    raise GenError(f"{where}: headers only at the surface peer")
+                if r["surface"] not in body_at:
+                    raise GenError(f"{where}: headers only at the surface {'/'.join(body_at)}")
                 for h in r["headers"].split(";"):
                     m = re.fullmatch(r"\s*([A-Za-z][A-Za-z0-9-]*): (\S.*?)\s*", h)
                     if not m:
@@ -292,8 +304,8 @@ class PlainTable:
             elif code == "exit !0":
                 r["any"] = True
             elif re.fullmatch(r"[1-5][0-9]{2}", code):
-                if r["surface"] != "peer":
-                    raise GenError(f"{where}: an HTTP status only at the surface peer")
+                if r["surface"] not in body_at:
+                    raise GenError(f"{where}: an HTTP status only at the surface {'/'.join(body_at)}")
                 r["status"] = int(code)
             else:
                 raise GenError(f"{where}: code {code!r} — exit N, exit !0, NNN (peer) or -")
@@ -362,7 +374,14 @@ func (s *Spec) ExitCode() (code int, ok bool) {
 """
 
 
-def go_spec_plain(r, headers=False, word_any=False):
+def response_schemas():
+    """Имена components/schemas OpenAPI урока (для колонки response_schema)."""
+    import yamlsub
+    doc = yamlsub.load(L.openapi.read_text(encoding="utf-8"), L.openapi.name)
+    return set((doc.get("components") or {}).get("schemas") or {})
+
+
+def go_spec_plain(r, headers=False, word_any=False, response=False):
     lst = lambda xs: "[]string{" + ", ".join(go_str(x) for x in xs) + "}" if xs else "nil"  # noqa: E731
     return (f"// {r['var']} — {r['chapter']} row {r['row']}: {r['surface']} {r['code']}"
             f"{' ' + r['word'] if r['word'] != '-' else ''}; {r['norm']}\n"
@@ -371,7 +390,8 @@ def go_spec_plain(r, headers=False, word_any=False):
             f"Status: {r['status']}, Word: {go_str('' if r['word'] == '-' else r['word'])}, "
             f"Log: {lst(r['log_names'])}, Words: {lst(r['log_words'])}, Norm: {go_str(r['norm'])}"
             + (f", Fields: {lst(r['field_list'])}, Headers: {go_headers(r['header_list'])}" if headers else "")
-            + (f", Named: {lst(r['word_any'])}, WordCell: {go_str(r['word_cell'])}" if word_any else "") + "}")
+            + (f", Named: {lst(r['word_any'])}, WordCell: {go_str(r['word_cell'])}" if word_any else "")
+            + (f", Response: {go_str('' if r['response_schema'] == '-' else r['response_schema'])}" if response else "") + "}")
 
 
 def go_headers(hs):
@@ -390,6 +410,13 @@ def plain_api(table):
         api = api.replace("\tNorm    string\n}", "\tNorm    string\n\tFields  []string    // peer: the HTTP body fields of the imported door's "
                           "answer fixed by the form; nil — none\n\tHeaders [][2]string // peer: the headers of the imported door's "
                           "answer fixed by the form; nil — none\n}", 1)
+    if table.response:
+        api = api.replace("\n}", "\n\tResponse string // http: the components/schemas of the body in the lesson OpenAPI; \"\" — "
+                          "no body or text\n}", 1)
+        api = api.replace("// call (a pure procedure), cli (an operator command), start, process (a running process), peer",
+                          "// call (a pure procedure), cli, start, process, peer, http (the lesson's own door)", 1)
+        api = api.replace("// peer: the HTTP status of the peer's door (its owner is another lesson); 0 — none",
+                          "// http, peer: the HTTP status (peer — the imported door); 0 — none", 1)
     if table.word_any:
         api = api.replace("\n}", "\n\tNamed   []string // the named outcomes the word cell lists (two or more `…`): a "
                           "catalogue index — which applies is the norm's, not «any of»\n\tWordCell string  // the "
@@ -405,7 +432,7 @@ def go_module_plain(table, rel):
              f"// Package refusals — the refusal catalogue of {L.code} (ADR-0125 № 4, addendum (5)): no HTTP body of the lesson.\n"
              "package refusals",
              plain_api(table)]
-    parts += [go_spec_plain(r, table.headers, table.word_any) for r in table.rows]
+    parts += [go_spec_plain(r, table.headers, table.word_any, table.response) for r in table.rows]
     parts.append("// All — the rows of the catalogue in the order of the table.\nvar All = []*Spec{" +
                  ", ".join(r["var"] for r in table.rows) + "}")
     parts.append("var byName = map[string]*Spec{" + ", ".join(f"{go_str(r['name'])}: {r['var']}"
@@ -421,7 +448,7 @@ def render(table_path=DEFAULT_TABLE):
         rel = table_path.name
     text = table_path.read_text(encoding="utf-8")
     head = next((ln for ln in text.splitlines() if ln and not ln.startswith("#")), "")
-    if head.split("\t") == PLAIN_COLUMNS:                    # урок без своей двери (P/02)
+    if head.split("\t") in (PLAIN_COLUMNS, RESPONSE_COLUMNS):  # урок без своей двери (P/02) или с телом-текстом (P/05)
         return {"refusals.go": gofmt(go_module_plain(PlainTable(text, table_path.name), rel))}
     table = Table(text, table_path.name)
     return {"refusals.go": gofmt(go_module(table, rel))}

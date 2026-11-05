@@ -22,7 +22,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-LESSONS = {"03-worker": "p03", "04-controller": "p04"}
+LESSONS = {"03-worker": "p03", "04-controller": "p04", "05-resource": "p05"}
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 
 
@@ -79,10 +79,12 @@ def answers(lesson):
 
 
 def fake_go(lesson, mutate=None):
-    lines = ["package lessonadapter", "", "import (", '\t"encoding/json"', '\t"errors"', '\t"fmt"', ")", "",
+    lines = ["package lessonadapter", "", "import (", '\t"bytes"', '\t"encoding/json"', '\t"errors"', '\t"fmt"',
+             '\t"strings"', ")", "",
              "func canon(in json.RawMessage) string {", "\tvar v any", "\t_ = json.Unmarshal(in, &v)",
              "\treturn canonValue(v)", "}", "",
-             "func canonValue(v any) string { b, _ := json.Marshal(v); return string(b) }", "",
+             "func canonValue(v any) string {", "\tvar buf bytes.Buffer", "\tenc := json.NewEncoder(&buf)",
+             "\tenc.SetEscapeHTML(false)", "\t_ = enc.Encode(v)", "\treturn strings.TrimSuffix(buf.String(), \"\\n\")", "}", "",
              "var answers = map[string]string{"]
     ans = answers(lesson)
     for (port, inp), out in ans.items():

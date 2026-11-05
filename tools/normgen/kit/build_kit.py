@@ -215,7 +215,7 @@ def provenance(parts, files, judged):
             out[part] = {**gen_door_lesson.provenance(), "output": output("door")}
         elif part == "vectors" and L.key != lesson.DEFAULT:    # векторы прочих уроков — gen_vectors (P/06 с дверью тоже)
             out[part] = {**gen_vectors.provenance(), "output": output("vectors")}
-        elif part == "stagetests" and not L.openapi.is_file():
+        elif part == "stagetests" and L.key != lesson.DEFAULT:
             out[part] = {**gen_cmdtests.provenance(), "output": output("stagetests")}
         elif part in MACHINES:
             out[part] = {**gen_machine.provenance(part), "output": output(part)}
@@ -289,7 +289,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
     if not MODULE.fullmatch(module) or "//" in module or module.endswith("/"):
         raise KitError(f"--module {module!r} is not a Go import path")
     has_wc = TABLE.is_file()                          # часть writecheck — у урока с forms/write-checks.tsv (P/01)
-    http = L.openapi.is_file()                         # урок со своей дверью: stagetests над apidoor; без неё — gen_cmdtests
+    http = L.openapi.is_file() and L.key == lesson.DEFAULT   # P/01: stagetests над apidoor; прочие (и P/05 с дверью) — gen_cmdtests
     table_sha = sha256(TABLE.read_bytes()) if has_wc else None
     if has_wc:
         fresh_check(gen_checks, TABLE, "go/checks", [n for n, _, _ in CHECKS_FILES])
