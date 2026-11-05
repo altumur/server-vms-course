@@ -152,6 +152,9 @@ LABELS_PENDING = {"VMS"}
 # Уроки, где номера разделов уже латиницей N… (ADR-0121 доп. (5) п. 1): Н<цифра> в источнике — отказ; список растёт до всех.
 NUMBERS_DONE = ("Platform/", "НОРМАТИВНЫЕ-СЛОВА.md", "КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md")
 CYR_NUMBER = re.compile(r"(?<![\wА-Яа-яЁё])Н[0-9]")
+# Таблица меток ключей каталога — сырые ключи catalog.tsv (их читает читатель «Генераторов»): метки в ней — как в каталоге,
+# пока каталог не сменится вместе с генераторами (ADR-0121 доп. (5) п. 3).
+RAW_LABEL_FILES = {"Platform/common/data/README.md"}
 RU_LABEL = re.compile(r"<([^<>`\n|=]*[А-Яа-яЁё][^<>`\n|=]*)>")
 LEGACY_LABELS = [re.compile(r"(?<![\w])М[0-9]+[A-Z]?(?:_[A-Za-z]+)?(?:/[0-9]+)?"),
                  re.compile(r"(?<![\w-])[А-ЯЁ]-?[0-9]+[а-я]?(?![\w])|(?<![\w])[0-9]+[а-я](?![\w])"),
@@ -513,7 +516,11 @@ def compare(ru_text, en_text, ru_path, en_path, root):
         for line in LINK.sub("]()", BUILT.sub(" ", en_text)).splitlines():
             if CYR_NUMBER.search(line):
                 errors.append(f"a Cyrillic section number Н… in the source (N… since ADR-0121 addendum (5)): {line.strip()[:80]!r}")
-    if not legacy:                                  # метка подстановки источника — английская, по словарю (ADR-0121 доп. (3) п. 4)
+    try:
+        raw_labels = Path(en_path).resolve().relative_to(root).as_posix() in RAW_LABEL_FILES
+    except ValueError:
+        raw_labels = False
+    if not legacy and not raw_labels:               # метка подстановки источника — английская, по словарю (ADR-0121 доп. (3) п. 4)
         for m in RU_LABEL.finditer(LINK.sub("]()", BUILT.sub(" ", en_text))):
             if CYR.search(re.sub(r"Н[0-9][0-9.]*[а-я]?|«[^»]*»|М1[0-2][A-Z]?(?:/[0-9]+)?", "", m.group(1))):
                 errors.append(f"a Russian placeholder label in the source: <{m.group(1)}> — the English one of {PLACEHOLDERS}")
