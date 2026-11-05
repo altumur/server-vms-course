@@ -1138,4 +1138,7 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    if L.key != lesson.DEFAULT:                        # уроки после P/01 — gen_door_lesson.py (P/01 байт в байт)
+        import gen_door_lesson
+        sys.exit(gen_door_lesson.main(sys.argv))
     sys.exit(main(sys.argv))

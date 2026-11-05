@@ -16,7 +16,7 @@ NORMGEN = HERE.parent
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 KITS = {"03-worker": ["flags", "refusals", "stagetests", "slot-capture", "families", "vectors"],
         "04-controller": ["flags", "refusals", "stagetests", "slot-fate", "slot-release", "families", "vectors"],
-        "06-console": ["families", "vectors"]}          # P/06 до форм: дверь (3а, 3б) и части по формам — позже
+        "06-console": ["door", "families", "vectors"]}  # P/06 до форм: дверь 3а; 3б и части по формам — позже
 
 
 class KitLessons(unittest.TestCase):
@@ -45,7 +45,7 @@ class KitLessons(unittest.TestCase):
                         or ("/vectoradapter/" in f["path"] and not f["path"].endswith("vectoradapter.go"))
                     self.assertEqual(bool(f.get("editable")), own, f["path"])
                 kit_md = (dst / "KIT.md").read_text()
-                titles = ("Part `vectors`", "draft (tools/normgen/wire_draft.py)") + (() if lesson == "06-console" else (
+                titles = ("Part `vectors`", "draft (tools/normgen/wire_draft.py)") + (("Part `door` (3a)",) if lesson == "06-console" else (
                     "Part `flags`: the process inputs", "Part `stagetests`: the stage tests of the lesson over CALL ports",
                     "Part `refusals`"))
                 for title in titles:

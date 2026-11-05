@@ -58,6 +58,7 @@ import gen_families  # noqa: E402 — часть families
 import gen_admin  # noqa: E402 — часть admin
 import gen_cmdtests  # noqa: E402 — stagetests урока без HTTP (P/02)
 import gen_rollout  # noqa: E402 — часть rollout-poll (P/02)
+import gen_door_lesson  # noqa: E402 — дверь уроков после P/01 (P/06, часть 3а)
 import gen_machine  # noqa: E402 — части машин (slot-capture P/03, slot-fate и slot-release P/04)
 import gen_vectors  # noqa: E402 — часть vectors урока без двери (P/02)
 import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2): --lesson, по умолчанию 01-store
@@ -206,7 +207,9 @@ def provenance(parts, files, judged):
     }
     out = {}
     for part in parts:
-        if part == "vectors" and L.key != lesson.DEFAULT:    # векторы прочих уроков — gen_vectors (P/06 с дверью тоже)
+        if part == "door" and L.key != lesson.DEFAULT:
+            out[part] = {**gen_door_lesson.provenance(), "output": output("door")}
+        elif part == "vectors" and L.key != lesson.DEFAULT:    # векторы прочих уроков — gen_vectors (P/06 с дверью тоже)
             out[part] = {**gen_vectors.provenance(), "output": output("vectors")}
         elif part == "stagetests" and not L.openapi.is_file():
             out[part] = {**gen_cmdtests.provenance(), "output": output("stagetests")}
@@ -327,7 +330,12 @@ def build(dst, module, parts=(), judged=None, seed=None):
             gen_core.GenError, gen_families.GenError, gen_admin.GenError, gen_cmdtests.GenError,
             gen_rollout.GenError, gen_vectors.GenError) as exc:
         raise KitError(str(exc)) from None
-    openapi_sha = sha256(OPENAPI.read_bytes()) if "door" in parts else None
+    door_lesson = "door" in parts and L.key != lesson.DEFAULT
+    try:
+        door_lesson_files = gen_door_lesson.kit_files() if door_lesson else []
+    except gen_door_lesson.GenError as exc:
+        raise KitError(str(exc)) from None
+    openapi_sha = sha256(OPENAPI.read_bytes()) if "door" in parts and not door_lesson else None
     if openapi_sha:
         fresh_check(gen_door, OPENAPI, "go/apidoor", [n for n, _, _ in DOOR_FILES])
     internal = dst / L.kit_dir / "internal"
@@ -343,7 +351,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
 
     for sub in (("checks", "jsonstrict", "writecheck") if has_wc else ()) + \
             (gen_rollout.KIT_DIRS if rollout_files else ()) + sum((gen_tests.PART_DIRS[p] for p in ("vectors", "stagetests") if p in parts), ()) + \
-            (("apidoor",) if openapi_sha else ()) + (gen_flags.KIT_DIRS if flag_files else ()) + \
+            (("apidoor",) if openapi_sha or door_lesson else ()) + (gen_flags.KIT_DIRS if flag_files else ()) + \
             (gen_refusals.KIT_DIRS if refusal_files else ()) + (("launch",) if launch_files else ()) + \
             (gen_families.KIT_DIRS if family_files else ()) + \
             sum((gen_machine.kit_dirs(p) for p in sorted(set(parts) & set(MACHINES))), ()):
@@ -370,6 +378,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
     if openapi_sha:
         for name, origin, source in DOOR_FILES:
             put("apidoor", name, (DOOR / name).read_bytes(), origin, "door", source)
+    for sub, name, data, origin, source in door_lesson_files:
+        put(sub, name, data, origin, "door", source)
     for sub, name, data, origin, source in flag_files:
         put(sub, name, data, origin, "flags", source)
     for sub, name, data, origin, source in refusal_files:
@@ -405,6 +415,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
     doc = ((KIT_MD if has_wc else KIT_MD_LESSON.replace("{lesson}", L.code).replace("{dir}", L.kit_dir))
            + ((gen_tests.kit_md() if L.key == lesson.DEFAULT else gen_vectors.KIT_MD) if "vectors" in parts else "")
            + stagetests_md + (gen_rollout.KIT_MD if rollout_files else "") + (KIT_DOOR_MD if openapi_sha else "")
+           + (gen_door_lesson.KIT_MD if door_lesson else "")
            + (gen_flags.kit_md() if flag_files else "") + (gen_refusals.kit_md() if refusal_files else "")
            + (gen_families.kit_md() if family_files else "") + (gen_admin.kit_md() if admin_files else "")
            + (gen_launch.KIT_MD if launch_files else "") + (gen_core.KIT_MD if core_files else "")
@@ -597,7 +608,7 @@ REGEN = ("gen_checks.py", "gen_door.py", "gen_flags.py", "gen_refusals.py", "gen
 PART_GENS = {"flags": ("gen_flags.py",), "refusals": ("gen_refusals.py",), "stagetests": ("gen_cmdtests.py",),
              "rollout-poll": ("gen_rollout.py",), "families": ("gen_families.py",),
              "vectors": ("gen_families.py", "gen_vectors.py"),
-             **{m: ("gen_machine.py",) for m in MACHINES}}
+             **{m: ("gen_machine.py",) for m in MACHINES}, "door": ("gen_door_lesson.py",)}
 
 
 def regen(parts):
