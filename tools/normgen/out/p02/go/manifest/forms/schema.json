@@ -1,0 +1,5437 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "form of a subsystem manifest, P/02.1",
+ "description": "the root is a mapping with a closed set of sections",
+ "x-owner": "P/02.1 Н1.2",
+ "type": "object",
+ "properties": {
+  "name": {
+   "$ref": "#/$defs/subName",
+   "x-owner": "P/02.1 Н1.2",
+   "x-class": "name"
+  },
+  "unit": {
+   "x-owner": "P/06.1 Н1.1",
+   "type": "object",
+   "properties": {
+    "rows": {
+     "$ref": "#/$defs/rowsName",
+     "x-owner": "P/06.1 Н1.1"
+    },
+    "id": {
+     "description": "`numeric` or a non-secret field of type string (Н1.4)",
+     "x-owner": "P/06.1 Н1.3",
+     "type": "string"
+    },
+    "fields": {
+     "$ref": "#/$defs/unitFields",
+     "default": {},
+     "x-owner": "P/06.1 Н1.2"
+    },
+    "state": {
+     "description": "unit state — name → schema of the row `<sub>/state/<имя>/<unit>` (ADR-0091 item 3); `cursor` — the cursor of the unit",
+     "x-owner": "P/03.6 Н1.7",
+     "x-default-text": "no state",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/name"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/jsonSchemaLite"
+     }
+    },
+    "writes_via": {
+     "description": "the rows are written only by the named subsystems with a ticket; a session, the emergency login and other tickets — 403 writes via; a write by the right of consequences is outside the word (P/06.1 Н1.1а, ADR-0119 addendum (10), (11))",
+     "x-owner": "P/06.1 Н1.1а",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/subName"
+     },
+     "minItems": 1,
+     "uniqueItems": true
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "rows",
+    "id"
+   ]
+  },
+  "placement": {
+   "$ref": "#/$defs/placement",
+   "x-owner": "P/04 Н1.3"
+  },
+  "tables": {
+   "$ref": "#/$defs/tables",
+   "default": {},
+   "x-owner": "P/06.1 Н1.6",
+   "x-default-text": "no tables"
+  },
+  "requests": {
+   "$ref": "#/$defs/requests",
+   "x-owner": "P/06.4 Н1.5"
+  },
+  "holds": {
+   "description": "all keys are optional",
+   "x-owner": "P/06.4 Н1.5",
+   "type": "object",
+   "properties": {
+    "table": {
+     "description": "table",
+     "type": "string"
+    },
+    "unit": {
+     "description": "table field",
+     "type": "string"
+    },
+    "since": {
+     "description": "table field",
+     "type": "string"
+    },
+    "until": {
+     "description": "table field",
+     "type": "string"
+    },
+    "released": {
+     "description": "table field",
+     "type": "string"
+    },
+    "longest": {
+     "description": "seconds",
+     "type": "number",
+     "exclusiveMinimum": 0
+    }
+   },
+   "additionalProperties": false
+  },
+  "events": {
+   "default": {},
+   "x-owner": "P/03.6 Н1.2; P/06.4 Н1.2",
+   "type": "object",
+   "properties": {
+    "suppress": {
+     "description": "event kind → suppression rule",
+     "type": "object",
+     "propertyNames": {
+      "type": "string"
+     },
+     "additionalProperties": {
+      "type": "object",
+      "properties": {
+       "window": {
+        "description": "seconds",
+        "type": "number",
+        "exclusiveMinimum": 0
+       },
+       "by": {
+        "x-default-text": "all fields of the row except these",
+        "type": "array",
+        "items": {
+         "type": "string",
+         "not": {
+          "enum": [
+           "t",
+           "id",
+           "repeats",
+           "since",
+           "until"
+          ]
+         }
+        },
+        "minItems": 1
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "window"
+      ]
+     }
+    },
+    "older_epochs": {
+     "default": "fenced",
+     "enum": [
+      "fenced",
+      "earlier-run"
+     ]
+    },
+    "kinds": {
+     "description": "event kind → `{severity}`; the label of the kind is `display.kinds` (ADR-0115 addendum (3) item 6, addendum (4) item 2)",
+     "x-owner": "P/03.6 Н1.2",
+     "type": "object",
+     "propertyNames": {
+      "type": "string"
+     },
+     "additionalProperties": {
+      "type": "object",
+      "properties": {
+       "severity": {
+        "enum": [
+         "info",
+         "warning",
+         "error",
+         "critical",
+         "alarm"
+        ]
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "severity"
+      ]
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "about": {
+   "x-owner": "P/05 Н1.2; P/06.1 Н1.3",
+   "type": "object",
+   "properties": {
+    "sub": {
+     "$ref": "#/$defs/name",
+     "description": "subsystem name by the `name` grammar; existence is not a check of the loader"
+    },
+    "field": {
+     "description": "a field with `fixed: true`",
+     "type": "string"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "sub",
+    "field"
+   ]
+  },
+  "snapshot": {
+   "description": "list of fields without `*_secret`, blob and `server` and the states `state.<имя>`; `[]` — none",
+   "x-owner": "P/04 Н1.3а",
+   "x-default-text": "all fields except these, and all states except `cursor`",
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "rights": {
+   "$ref": "#/$defs/rights",
+   "default": {},
+   "x-owner": "P/06.3 Н1.5"
+  },
+  "secrets": {
+   "$ref": "#/$defs/secrets",
+   "default": {},
+   "x-owner": "P/02.5 Н1.3"
+  },
+  "worker": {
+   "x-owner": "P/02.5 Н1.4; P/06.4 Н1.5",
+   "type": "object",
+   "properties": {
+    "exec": {
+     "$ref": "#/$defs/execLine",
+     "description": "the program of the subsystem's worker — the service unit of the cluster worker and of the worker on the domain runs it through the runner (`w2c-run.sh worker`, `domainworker`; P/02.4 Н1.1, Н1.12), the slot is the last argument for the cluster (ADR-0091 addendum (4), (5))",
+     "x-owner": "P/02.4 Н1.1"
+    },
+    "writes": {
+     "$ref": "#/$defs/strList",
+     "description": "own tables, not `unit.rows`; a table with a declared `*_secret` field — refusal: its rows are written only by the worker, the console has no write to them, and the console ring does not see them: a change of the ring would leave them under the old key (P/06.2 Н3 «reseal at start»); the list form declares no fields, its secrets are resealed by the worker itself (P/03.4 Н1.6 `list_secret`)",
+     "default": [],
+     "x-owner": "P/02.5 Н1.4",
+     "x-default-text": "no worker tables"
+    },
+    "reads": {
+     "$ref": "#/$defs/grantList",
+     "description": "`<семья>/<имя>` or prefixes with `/`",
+     "x-owner": "P/02.5 Н1.4"
+    },
+    "requests": {
+     "$ref": "#/$defs/strList",
+     "description": "other subsystems (the own one — refusal; whether it accepts — catalogue, Н3)",
+     "x-owner": "P/06.4 Н1.5"
+    },
+    "deletes": {
+     "$ref": "#/$defs/strList",
+     "description": "families of the units of this manifest — only `unit.rows` (ADR-0067 addendum 2026-10-17)",
+     "default": [],
+     "x-owner": "P/02.5 Н1.4",
+     "x-default-text": "the worker does not delete unit rows"
+    },
+    "creates": {
+     "description": "unit rows of another subsystem that the worker of this one creates and renews (ADR-0091 item 1); the addressee, its `unit.rows` and the `key` fields — a catalogue check (Н3)",
+     "x-owner": "P/03.6 Н1.6",
+     "x-default-text": "the worker creates no foreign rows",
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "sub": {
+        "$ref": "#/$defs/name",
+        "description": "the addressee subsystem; the own one — refusal"
+       },
+       "rows": {
+        "$ref": "#/$defs/name",
+        "description": "`unit.rows` of the addressee"
+       },
+       "key": {
+        "description": "substitutions `{поле}` of the addressee joined by `-`, without `:int` (P/03.6 Н1.6 `key`)",
+        "type": "string",
+        "pattern": "^(?:\\{[^{}:]+\\}(-\\{[^{}:]+\\})*)$"
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "sub",
+       "rows",
+       "key"
+      ]
+     }
+    },
+    "uses": {
+     "description": "shares of other subsystems `<подсистема>.<доля>` (their `shares`; catalogue, Н3) — the group of the share in the service unit of the worker",
+     "x-owner": "P/02.4 Н1.1",
+     "x-default-text": "no foreign shares",
+     "type": "array",
+     "items": {
+      "type": "string",
+      "pattern": "^(?:[a-z][a-z0-9_-]{0,31}\\.[a-z][a-z0-9_-]{0,31})$"
+     },
+     "uniqueItems": true
+    },
+    "stop_timeout": {
+     "description": "stop seconds of the worker's service unit — `TimeoutStopSec` (macOS — `ExitTimeOut`); the upper bound 50 is one rule for all workers (ADR-0091 addendum (2) item 1, addendum (3) item 4)",
+     "default": 20,
+     "x-owner": "P/02.4 Н1.1",
+     "type": "integer",
+     "x-integer-place": true,
+     "minimum": 20,
+     "maximum": 50
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "exec"
+   ]
+  },
+  "slot": {
+   "default": {},
+   "x-owner": "P/03.2 Н1.4",
+   "type": "object",
+   "properties": {
+    "prefix": {
+     "default": "w",
+     "type": "string",
+     "pattern": "^(?:[a-z]{1,8})$"
+    },
+    "name_env": {
+     "x-default-text": "the name is not taken from the environment",
+     "type": "string",
+     "pattern": "^(?:[A-Z][A-Z0-9_]*)$"
+    }
+   },
+   "additionalProperties": false
+  },
+  "lease": {
+   "default": {
+    "unconfirmed_max": "off"
+   },
+   "x-owner": "P/03.2 Н1.6",
+   "type": "object",
+   "properties": {
+    "unconfirmed_max": {
+     "type": [
+      "string",
+      "integer"
+     ],
+     "allOf": [
+      {
+       "if": {
+        "type": "string"
+       },
+       "then": {
+        "type": "string",
+        "enum": [
+         "forever",
+         "off"
+        ]
+       }
+      },
+      {
+       "if": {
+        "type": "integer"
+       },
+       "then": {
+        "type": "integer",
+        "x-integer-place": true,
+        "minimum": 1,
+        "maximum": 9007199254740991
+       }
+      }
+     ]
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "unconfirmed_max"
+   ]
+  },
+  "heartbeat": {
+   "default": {},
+   "x-owner": "P/03.4 Н1.1",
+   "type": "object",
+   "properties": {
+    "strings": {
+     "description": "names of heartbeat fields, not from `platform_strings` of P/03.4 Н1.1",
+     "default": [],
+     "x-default-text": "no string fields",
+     "type": "array",
+     "items": {
+      "type": "string",
+      "not": {
+       "enum": [
+        "worker",
+        "server",
+        "url",
+        "instance",
+        "labels",
+        "fetched",
+        "events"
+       ]
+      }
+     }
+    },
+    "door": {
+     "description": "heartbeat fields that the door `GET /<sub>/heartbeats` returns (P/06.7 Н1.6 pulse): fields of the subsystem, not of the heartbeat family of P/03.4 Н1.1 and not secret; no key — no door",
+     "type": "array",
+     "items": {
+      "type": "string",
+      "not": {
+       "anyOf": [
+        {
+         "enum": [
+          "worker",
+          "ts",
+          "status",
+          "server",
+          "instance",
+          "labels",
+          "url",
+          "fetched",
+          "events",
+          "conflicts",
+          "started",
+          "previous_hb",
+          "previous_instance",
+          "previous_server",
+          "fenced",
+          "was_fenced",
+          "store_errors",
+          "pass_failures",
+          "unconfirmed",
+          "place_error",
+          "freeing",
+          "garbled_rows",
+          "schema",
+          "build",
+          "pending_writes",
+          "server_unsaid",
+          "stood_in",
+          "stand_in_renewals",
+          "command_counts",
+          "commands_in_flight",
+          "commands_reanswered",
+          "command_road",
+          "command_request",
+          "command_wait",
+          "filings",
+          "creates",
+          "made_rows"
+         ]
+        },
+        {
+         "pattern": "^(?:[\\s\\S]*_secret)$"
+        }
+       ]
+      }
+     },
+     "x-owner": "P/06.7 Н1.6"
+    },
+    "stale_after": {
+     "description": "the stale threshold of the subsystem's heartbeats at the agent, s (P/09.1 Н1.2 stale): not less than three heartbeat periods HEARTBEAT_EVERY 10 s (P/03.4 Н1.1); no key — LOST_AFTER 45 s",
+     "type": "integer",
+     "x-integer": true,
+     "minimum": 30,
+     "x-owner": "P/09.1 Н1.2"
+    }
+   },
+   "additionalProperties": false
+  },
+  "objects": {
+   "x-owner": "P/05 Н1.1",
+   "type": "object",
+   "properties": {
+    "rows": {
+     "$ref": "#/$defs/strList",
+     "description": "families of object rows"
+    },
+    "door": {
+     "$ref": "#/$defs/strList",
+     "description": "families of the objects door"
+    }
+   },
+   "additionalProperties": false
+  },
+  "shares": {
+   "description": "shared parts of the subsystem for workers of other subsystems (ADR-0091 item 5): name → kind",
+   "x-owner": "P/02.4 Н1.1",
+   "x-default-text": "no shares",
+   "type": "object",
+   "propertyNames": {
+    "$ref": "#/$defs/name"
+   },
+   "additionalProperties": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "enum": [
+       "socket",
+       "dir"
+      ]
+     },
+     "part": {
+      "$ref": "#/$defs/name",
+      "description": "a part from `parts` of this subsystem — the producer of the share: the directory and the socket belong to the user and group of the part (ADR-0091 addendum (2) item 4)"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "kind"
+    ]
+   }
+  },
+  "parts": {
+   "description": "parts of the subsystem with their own service and user (ADR-0091 item 5): name → service",
+   "x-owner": "P/02.4 Н1.1",
+   "x-default-text": "no parts",
+   "type": "object",
+   "propertyNames": {
+    "$ref": "#/$defs/name"
+   },
+   "additionalProperties": {
+    "type": "object",
+    "properties": {
+     "exec": {
+      "$ref": "#/$defs/execLine",
+      "description": "command of the part's service — the same grammar as `worker.exec` (ADR-0091 addendum (5) item 2)"
+     },
+     "volumes": {
+      "description": "volumes: mount points `…/<часть>/volumes/<n>` (ADR-0091 item 4)",
+      "default": false,
+      "type": "boolean"
+     },
+     "stop_timeout": {
+      "description": "stop seconds of the part's service unit — `TimeoutStopSec` (macOS — `ExitTimeOut`; ADR-0091 addendum (2) item 1, addendum (3) item 4)",
+      "default": 20,
+      "type": "integer",
+      "x-integer-place": true,
+      "minimum": 1,
+      "maximum": 9007199254740991
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "exec"
+    ]
+   }
+  },
+  "door": {
+   "default": {},
+   "x-owner": "P/06.5 Н3; P/06.5 Н1.8",
+   "type": "object",
+   "properties": {
+    "routes": {
+     "description": "routes of the process door — the first segment of the request path, byte for byte (the door token contract; the Architect's decision of 2026-10-20); an element is a name (admission `token`: a door token) or `{name, role?, domain?, rank?}` (admission by a role certificate, class `mixed` of the role certificate contract, and/or by a domain token; ADR-0091 addendum (7), (8), (14))",
+     "default": [],
+     "x-owner": "P/06.5 Н3; P/03.4 Н1.7",
+     "x-default-text": "no door",
+     "type": "array",
+     "items": {
+      "type": [
+       "object",
+       "string"
+      ],
+      "allOf": [
+       {
+        "if": {
+         "type": "string"
+        },
+        "then": {
+         "$ref": "#/$defs/name",
+         "description": "a route with admission `token` — by the `name` grammar (without «/»)"
+        }
+       },
+       {
+        "if": {
+         "type": "object"
+        },
+        "then": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "$ref": "#/$defs/name",
+           "description": "route"
+          },
+          "role": {
+           "description": "roles whose presented certificate admits to the route",
+           "type": "array",
+           "items": {
+            "type": "string",
+            "pattern": "^(?:[a-z][a-z0-9_-]*)$"
+           },
+           "minItems": 1,
+           "uniqueItems": true
+          },
+          "domain": {
+           "description": "kinds of domain tokens that admit to the route (P/03.4 Н1.7 door_admission domain); each kind is declared in domain.tokens of a subsystem of the catalogue, otherwise `refused:catalogue` (Н3; ADR-0091 addendum (14) item 1)",
+           "type": "array",
+           "items": {
+            "type": "string",
+            "not": {
+             "enum": [
+              "person"
+             ]
+            },
+            "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
+           },
+           "minItems": 1,
+           "uniqueItems": true
+          },
+          "rank": {
+           "description": "route rank: the token of the door `/where` carries the route only if the person's rank on the unit is not lower (P/06.5 Н3); no key — `view`; only for a route with admission `token` — without `role` and `domain` (ADR-0115 addendum (19) item 1)",
+           "x-owner": "P/06.5 Н3",
+           "enum": [
+            "view",
+            "edit",
+            "admin"
+           ]
+          }
+         },
+         "additionalProperties": false,
+         "required": [
+          "name"
+         ],
+         "allOf": [
+          {
+           "if": {
+            "allOf": [
+             {
+              "type": "object"
+             },
+             {
+              "required": [
+               "role"
+              ]
+             }
+            ]
+           },
+           "then": {
+            "properties": {
+             "rank": {
+              "not": {}
+             }
+            }
+           }
+          },
+          {
+           "if": {
+            "allOf": [
+             {
+              "type": "object"
+             },
+             {
+              "required": [
+               "domain"
+              ]
+             }
+            ]
+           },
+           "then": {
+            "properties": {
+             "rank": {
+              "not": {}
+             }
+            }
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    "pass": {
+     "default": [],
+     "x-owner": "P/06.5 Н1.8",
+     "x-default-text": "no pass",
+     "type": [
+      "array",
+      "object"
+     ],
+     "allOf": [
+      {
+       "if": {
+        "type": "array"
+       },
+       "then": {
+        "$ref": "#/$defs/strList",
+        "description": "the first kind: the first segments of the path"
+       }
+      },
+      {
+       "if": {
+        "type": "object"
+       },
+       "then": {
+        "$ref": "#/$defs/passTicket"
+       }
+      }
+     ]
+    }
+   },
+   "additionalProperties": false
+  },
+  "servers": {
+   "$ref": "#/$defs/servers",
+   "x-owner": "P/06.5 Н1.2"
+  },
+  "display": {
+   "$ref": "#/$defs/display",
+   "default": {},
+   "x-owner": "P/06.5 Н1.2"
+  },
+  "console": {
+   "x-owner": "P/06.5 Н1.2",
+   "type": "object",
+   "properties": {
+    "running": {
+     "description": "`name` of a metric from `metrics[]`",
+     "x-default-text": "`running_gauge: null`",
+     "type": "string"
+    },
+    "shell": {
+     "description": "`true` — the console serves the shell `<sub>.shell.html` of this subsystem, a mounted one (P/06.5 Н1.1 `mounted`); no file next to the manifest — `manifest put` refusal (P/02.3 Н4)",
+     "x-default-text": "`false`",
+     "type": "boolean"
+    },
+    "files": {
+     "description": "static files of the subsystem: paths relative to the directory of the manifest file, console address `/<sub>/<путь>` (P/06.5 Н2 «Статические файлы»); a file not read — `manifest put` refusal (P/02.3 Н4)",
+     "x-default-text": "no files",
+     "type": "array",
+     "items": {
+      "description": "segments separated by `/`, each starts with a letter, a digit or `_` (hence no `..`, no absolute path and no empty segment); the extension is from a closed list, without `html`; not under `api/` — that is the route space of the mounted subsystem (ADR-0094 addendum (4) item 2, addendum (8) item 2)",
+      "type": "string",
+      "pattern": "^(?:(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)*[A-Za-z0-9_][A-Za-z0-9._-]*\\.(?:js|css|json|woff2|woff|ttf|png|svg))$",
+      "not": {
+       "pattern": "^(?:api/[\\s\\S]*)$"
+      }
+     },
+     "uniqueItems": true
+    }
+   },
+   "additionalProperties": false
+  },
+  "metrics": {
+   "$ref": "#/$defs/metrics",
+   "x-owner": "P/06.5 Н1.2; Н3 «Ряды манифеста metrics[]»"
+  },
+  "domain": {
+   "$ref": "#/$defs/domain",
+   "x-owner": "P/08"
+  }
+ },
+ "additionalProperties": false,
+ "required": [
+  "name",
+  "unit",
+  "placement",
+  "worker"
+ ],
+ "$defs": {
+  "book": {
+   "description": "`{}` — a portable book: written by the worker of the subsystem on the domain (P/03.7 Н1.6); `{show}` — the same book with showing; `{from, key, pick, to, show?, stale?}` — a book assembled from the rows of members",
+   "type": "object",
+   "properties": {
+    "from": {
+     "description": "`<sub>/<строка>` — a single row, or `<sub>/<строка>/` — a family of rows under slots; `<sub>` is the own subsystem",
+     "type": "string",
+     "pattern": "^(?:[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31}/?)$"
+    },
+    "key": {
+     "description": "name of a non-secret input field by the `name` grammar: the value is a non-empty string, the key of the book (review of stage A 8–10, № 42; the Architect's decision of 2026-10-20)",
+     "type": "string",
+     "not": {
+      "type": "string",
+      "pattern": "^(?:[\\s\\S]*_secret)$"
+     },
+     "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
+    },
+    "pick": {
+     "enum": [
+      "unique",
+      "all"
+     ]
+    },
+    "to": {
+     "description": "name of a non-secret input field by the `name` grammar, not `key`: a member or a list of members — the recipients of the element; \"*\" — a book for all (P/08.5 Н1.3 to_all) (review of stage A 8–10, № 42; the Architect's decision of 2026-10-20)",
+     "type": "string",
+     "not": {
+      "type": "string",
+      "pattern": "^(?:[\\s\\S]*_secret)$"
+     },
+     "pattern": "^(?:\\*|[a-z][a-z0-9_-]{0,31})$"
+    },
+    "show": {
+     "description": "what the door sees (P/06.7 Н1.1)",
+     "type": "array",
+     "items": {
+      "type": "string",
+      "not": {
+       "type": "string",
+       "pattern": "^(?:[\\s\\S]*_secret)$"
+      }
+     },
+     "minItems": 1,
+     "uniqueItems": true
+    },
+    "stale": {
+     "description": "book to: \"*\": the head carries the servers whose worker of this subsystem is silent (P/08.5 Н1.3 head; ADR-0113 addendum (31)–(33))",
+     "type": "boolean"
+    }
+   },
+   "additionalProperties": false,
+   "allOf": [
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "from"
+        ]
+       }
+      ]
+     },
+     "then": {
+      "required": [
+       "key",
+       "pick",
+       "to"
+      ]
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "from"
+         ]
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "key": {
+        "not": {}
+       },
+       "pick": {
+        "not": {}
+       },
+       "to": {
+        "not": {}
+       }
+      }
+     }
+    }
+   ]
+  },
+  "boundTo": {
+   "description": "a field name or a list of field names of this row, not secrets",
+   "x-owner": "P/06.2 Н1.1",
+   "type": [
+    "array",
+    "string"
+   ],
+   "allOf": [
+    {
+     "if": {
+      "type": "string"
+     },
+     "then": {
+      "type": "string"
+     }
+    },
+    {
+     "if": {
+      "type": "array"
+     },
+     "then": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   ]
+  },
+  "credentials": {
+   "x-owner": "P/06.2 Н1.1",
+   "type": "object",
+   "properties": {
+    "login": {
+     "description": "a row field that is neither url nor secret",
+     "type": "string"
+    },
+    "secret": {
+     "description": "a `*_secret` field",
+     "type": "string"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "login",
+    "secret"
+   ]
+  },
+  "display": {
+   "type": "object",
+   "properties": {
+    "unit": {
+     "default": "единица",
+     "$ref": "#/$defs/label"
+    },
+    "units": {
+     "default": "единица",
+     "$ref": "#/$defs/label"
+    },
+    "units_count": {
+     "default": "единица",
+     "type": "string"
+    },
+    "section": {
+     "type": "string"
+    },
+    "general": {
+     "type": "string"
+    },
+    "fields": {
+     "$ref": "#/$defs/labelMap",
+     "description": "field name → label; a table field — `<т>.<поле>` (ADR-0115 addendum (3) item 3)"
+    },
+    "field_help": {
+     "$ref": "#/$defs/labelMap",
+     "description": "field name → hint; a table field — `<т>.<поле>`"
+    },
+    "options": {
+     "description": "field → `{значение: подпись}`; a table field — `<т>.<поле>` (ADR-0115 addendum (4) item 1)",
+     "type": "object",
+     "propertyNames": {
+      "type": "string"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/labelMap"
+     }
+    },
+    "form": {
+     "x-default-text": "one block with all fields",
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "title": {
+        "type": "string"
+       },
+       "state": {
+        "type": "boolean"
+       },
+       "placement": {
+        "type": "boolean"
+       },
+       "fields": {
+        "$ref": "#/$defs/strList",
+        "description": "fields and platform names"
+       },
+       "note": {
+        "type": "string"
+       },
+       "status": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "field": {
+           "type": "string"
+          },
+          "since": {
+           "type": "string"
+          },
+          "title": {
+           "type": "string"
+          }
+         },
+         "additionalProperties": false,
+         "required": [
+          "field"
+         ]
+        }
+       }
+      },
+      "additionalProperties": false
+     }
+    },
+    "events": {
+     "default": true,
+     "x-default-text": "the tab is present",
+     "type": "boolean"
+    },
+    "kinds": {
+     "$ref": "#/$defs/labelMap",
+     "description": "event kind → string"
+    },
+    "keys": {
+     "description": "id of a domain key family → label",
+     "x-owner": "P/06.7 Н1.11",
+     "type": "object",
+     "propertyNames": {
+      "type": "string"
+     },
+     "additionalProperties": {
+      "type": "object",
+      "properties": {
+       "title": {
+        "type": "string"
+       },
+       "about": {
+        "type": "string"
+       },
+       "absent": {
+        "type": "string"
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "title",
+       "about"
+      ]
+     }
+    },
+    "tree": {
+     "type": "object",
+     "properties": {
+      "group_by": {
+       "description": "field",
+       "type": "string"
+      },
+      "nested_by": {
+       "description": "separator row",
+       "type": "string"
+      },
+      "folders": {
+       "description": "`true` — the page tree is built by the folders of the cluster, and the units of `unit.rows` can be their members (P/06.8 Н1.1; P/06.5 Н1.2 `tree`)",
+       "x-default-text": "`false`",
+       "type": "boolean"
+      },
+      "columns": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "field": {
+          "description": "a field or a platform name",
+          "type": "string"
+         },
+         "title": {
+          "type": "string"
+         },
+         "width": {
+          "type": "integer",
+          "x-integer-place": true,
+          "minimum": 1,
+          "maximum": 9007199254740991
+         }
+        },
+        "additionalProperties": false,
+        "required": [
+         "field"
+        ]
+       }
+      },
+      "children": {
+       "type": "boolean"
+      },
+      "group_title": {
+       "type": "string"
+      },
+      "group_hint": {
+       "type": "string"
+      },
+      "filter": {
+       "type": "string"
+      },
+      "no_group": {
+       "type": "string"
+      },
+      "contents_title": {
+       "type": "string"
+      },
+      "group_word": {
+       "type": "string"
+      },
+      "no_group_suffix": {
+       "type": "string"
+      },
+      "pick_note": {
+       "type": "string"
+      },
+      "new_root": {
+       "type": "string"
+      },
+      "new_sub": {
+       "type": "string"
+      },
+      "add_here": {
+       "type": "string"
+      },
+      "new_group_note": {
+       "type": "string"
+      },
+      "remove": {
+       "type": "string"
+      },
+      "not_in": {
+       "type": "string"
+      },
+      "add_to": {
+       "type": "string"
+      },
+      "no_others": {
+       "type": "string"
+      },
+      "new_group": {
+       "type": "string"
+      }
+     },
+     "additionalProperties": false,
+     "allOf": [
+      {
+       "if": {
+        "properties": {
+         "folders": {
+          "const": true
+         }
+        },
+        "required": [
+         "folders"
+        ]
+       },
+       "then": {
+        "properties": {
+         "group_by": {
+          "not": {}
+         },
+         "nested_by": {
+          "not": {}
+         }
+        }
+       }
+      }
+     ]
+    },
+    "langs": {
+     "$ref": "#/$defs/langs"
+    },
+    "tables": {
+     "description": "table name → label of the kind (`name_key` psim): a string or `{key, text}`, translations — `display.langs`; the name is a table of `tables` (ADR-0115 addendum (11))",
+     "x-owner": "P/06.5 Н1.2",
+     "type": "object",
+     "propertyNames": {
+      "type": "string"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/label"
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "domain": {
+   "type": "object",
+   "properties": {
+    "ref": {
+     "x-owner": "P/08.1 Н1.2",
+     "type": "string"
+    },
+    "view": {
+     "$ref": "#/$defs/nonSecretList",
+     "x-owner": "P/08.1 Н1.4"
+    },
+    "view_status": {
+     "$ref": "#/$defs/nonSecretList",
+     "x-owner": "P/08.1 Н1.4"
+    },
+    "view_pulse": {
+     "allOf": [
+      {
+       "$ref": "#/$defs/nonSecretList"
+      },
+      {
+       "type": "array",
+       "items": {
+        "not": {
+         "enum": [
+          "stale"
+         ]
+        }
+       }
+      }
+     ],
+     "x-owner": "P/08.1 Н1.4",
+     "description": "heartbeat fields; `stale` is a platform word in `pulse.<sub>` of the view (P/08.1 Н1.4)"
+    },
+    "view_tables": {
+     "x-owner": "P/08.1 Н1.4а",
+     "x-class": "reference",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/tableName"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/nonSecretList"
+     }
+    },
+    "edit": {
+     "$ref": "#/$defs/nonSecretList",
+     "x-owner": "P/08.6 Н1.3"
+    },
+    "edit_delete": {
+     "x-owner": "P/08.6 Н1.3б",
+     "type": "boolean"
+    },
+    "edit_tables": {
+     "x-owner": "P/08.6 Н1.3",
+     "x-class": "reference",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/tableName"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/nonSecretList"
+     }
+    },
+    "edit_secrets": {
+     "x-owner": "P/08.6 Н1.3а",
+     "x-class": "reference",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/name"
+     },
+     "additionalProperties": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "pattern": "^(?:[\\s\\S]*_secret)$"
+      }
+     }
+    },
+    "kept": {
+     "$ref": "#/$defs/strList",
+     "x-owner": "P/03.7 Н1.6"
+    },
+    "kept_read": {
+     "$ref": "#/$defs/strList",
+     "description": "domain.kept rows that the domain console door reads: exact names, not families",
+     "x-owner": "P/10 Н1.2а"
+    },
+    "tables": {
+     "$ref": "#/$defs/strList",
+     "x-owner": "P/03.7 Н1.6"
+    },
+    "reports": {
+     "$ref": "#/$defs/strList",
+     "x-owner": "P/09.1 Н1.2"
+    },
+    "shared": {
+     "description": "an element is a name of a unit field (not a secret; it inherits or is `display.tree.group_by`) or a document `{name, type: json, schema}`: name is not a name of a unit field, the value of the document is checked by schema",
+     "x-owner": "P/08.9 Н1.2",
+     "x-class": "value",
+     "type": "array",
+     "items": {
+      "type": [
+       "object",
+       "string"
+      ],
+      "allOf": [
+       {
+        "if": {
+         "type": "string"
+        },
+        "then": {
+         "type": "string",
+         "not": {
+          "type": "string",
+          "pattern": "^(?:[\\s\\S]*_secret)$"
+         }
+        }
+       },
+       {
+        "if": {
+         "type": "object"
+        },
+        "then": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "pattern": "^(?:[a-z][a-z0-9_-]*)$"
+          },
+          "type": {
+           "enum": [
+            "json"
+           ]
+          },
+          "schema": {
+           "$ref": "#/$defs/jsonSchemaLite"
+          }
+         },
+         "additionalProperties": false,
+         "required": [
+          "name",
+          "type",
+          "schema"
+         ]
+        }
+       }
+      ]
+     },
+     "uniqueItems": true
+    },
+    "keys": {
+     "x-owner": "P/06.7 Н1.11",
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "id": {
+        "$ref": "#/$defs/name"
+       },
+       "keys": {
+        "$ref": "#/$defs/strList"
+       },
+       "prefix": {
+        "type": "string"
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "id"
+      ],
+      "allOf": [
+       {
+        "if": {
+         "type": "object"
+        },
+        "then": {
+         "anyOf": [
+          {
+           "required": [
+            "keys"
+           ]
+          },
+          {
+           "required": [
+            "prefix"
+           ]
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    "books": {
+     "x-owner": "P/08.5",
+     "x-class": "value",
+     "type": "object",
+     "propertyNames": {
+      "type": "string",
+      "pattern": "^(?:[a-z0-9][a-z0-9_-]*)$"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/book"
+     }
+    },
+    "names": {
+     "x-owner": "P/08.5 Н1.7",
+     "x-class": "reference",
+     "type": "object",
+     "propertyNames": {
+      "type": "string",
+      "pattern": "^(?:[a-z0-9][a-z0-9_-]*/)$"
+     },
+     "additionalProperties": {
+      "type": "object",
+      "properties": {
+       "exclusive_with": {
+        "enum": [
+         "domain/users"
+        ]
+       },
+       "grant": {
+        "enum": [
+         "view",
+         "edit",
+         "admin"
+        ]
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "exclusive_with"
+      ]
+     }
+    },
+    "tokens": {
+     "x-owner": "P/08.7",
+     "x-class": "value",
+     "type": "object",
+     "propertyNames": {
+      "description": "token kind; the kind is unique in the catalogue (Н3, `refused:catalogue`)",
+      "type": "string",
+      "not": {
+       "enum": [
+        "person"
+       ]
+      },
+      "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/token"
+     }
+    },
+    "witness": {
+     "x-owner": "P/10 Н1.8",
+     "type": "object",
+     "properties": {
+      "report": {
+       "type": "string"
+      },
+      "member_field": {
+       "description": "the fixed field of the unit that carries the name of the member",
+       "type": "string"
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "report",
+      "member_field"
+     ]
+    }
+   },
+   "additionalProperties": false
+  },
+  "execLine": {
+   "description": "command line without a shell: words separated by one space U+0020, no empty words; the first word is an absolute path; in words — printable ASCII without \" ' \\ % $ ` ; | & < > * ? ( ) { } [ ] ~ # !; argv is the split by space (ADR-0091 addendum (5) item 2)",
+   "type": "string",
+   "pattern": "^(?:/[A-Za-z0-9+,./:=@^_\\-]*( [A-Za-z0-9+,./:=@^_\\-]+)*)$"
+  },
+  "fieldEnum": {
+   "description": "values of the field type; only for string and bool",
+   "x-owner": "P/06.1 Н3",
+   "type": "array",
+   "minItems": 1,
+   "uniqueItems": true
+  },
+  "fieldPath": {
+   "type": "string",
+   "pattern": "^(?:[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*)$"
+  },
+  "fieldType": {
+   "description": "a `*_secret` field — only string",
+   "default": "string",
+   "x-owner": "P/06.1 Н1.2",
+   "enum": [
+    "string",
+    "int",
+    "float",
+    "bool",
+    "list",
+    "json",
+    "url",
+    "blob"
+   ]
+  },
+  "grantList": {
+   "type": "array",
+   "items": {
+    "description": "with `/`; without a literal `*`, a leading `!` and `delete:`",
+    "type": "string",
+    "not": {
+     "type": "string",
+     "pattern": "^(?:![\\s\\S]*|delete:[\\s\\S]*|[\\s\\S]*\\*[\\s\\S]*)$"
+    },
+    "pattern": "^(?:[\\s\\S]*/[\\s\\S]*)$"
+   }
+  },
+  "grantName": {
+   "description": "without a literal `*`, a leading `!` and `delete:`",
+   "type": "string",
+   "not": {
+    "type": "string",
+    "pattern": "^(?:![\\s\\S]*|delete:[\\s\\S]*|[\\s\\S]*\\*[\\s\\S]*)$"
+   }
+  },
+  "jsonSchemaLite": {
+   "description": "JSON Schema 2020-12; the keywords are the list `names.key` of this definition (anything else is value), depth ≤ 32 (review of stage A 6–7, № 11)",
+   "x-owner": "P/02.1 Н1.2",
+   "type": "object",
+   "properties": {
+    "properties": {
+     "type": "object",
+     "propertyNames": {
+      "type": "string"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/jsonSchemaLite"
+     }
+    },
+    "additionalProperties": {
+     "$ref": "#/$defs/subSchemaLite"
+    },
+    "items": {
+     "$ref": "#/$defs/subSchemaLite"
+    },
+    "if": {
+     "$ref": "#/$defs/subSchemaLite"
+    },
+    "then": {
+     "$ref": "#/$defs/subSchemaLite"
+    },
+    "else": {
+     "$ref": "#/$defs/subSchemaLite"
+    },
+    "not": {
+     "$ref": "#/$defs/subSchemaLite"
+    },
+    "allOf": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/subSchemaLite"
+     }
+    },
+    "anyOf": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/subSchemaLite"
+     }
+    },
+    "oneOf": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/subSchemaLite"
+     }
+    }
+   },
+   "propertyNames": {
+    "anyOf": [
+     {
+      "enum": [
+       "properties",
+       "additionalProperties",
+       "items",
+       "if",
+       "then",
+       "else",
+       "not",
+       "allOf",
+       "anyOf",
+       "oneOf"
+      ]
+     },
+     {
+      "enum": [
+       "type",
+       "enum",
+       "const",
+       "properties",
+       "required",
+       "additionalProperties",
+       "items",
+       "minItems",
+       "maxItems",
+       "minLength",
+       "maxLength",
+       "minimum",
+       "maximum",
+       "exclusiveMinimum",
+       "exclusiveMaximum",
+       "pattern",
+       "if",
+       "then",
+       "else",
+       "allOf",
+       "anyOf",
+       "oneOf",
+       "not"
+      ]
+     }
+    ]
+   },
+   "additionalProperties": {}
+  },
+  "label": {
+   "description": "a string or `{key, text}`: the translation key by `display.langs` and the text if there is no translation (ADR-0115 addendum (2) item 3)",
+   "x-owner": "P/06.5 Н1.2",
+   "type": [
+    "object",
+    "string"
+   ],
+   "allOf": [
+    {
+     "if": {
+      "type": "object"
+     },
+     "then": {
+      "type": "object",
+      "properties": {
+       "key": {
+        "type": "string",
+        "minLength": 1
+       },
+       "text": {
+        "type": "string"
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "key",
+       "text"
+      ]
+     }
+    }
+   ]
+  },
+  "labelMap": {
+   "type": "object",
+   "propertyNames": {
+    "type": "string"
+   },
+   "additionalProperties": {
+    "$ref": "#/$defs/label"
+   }
+  },
+  "langs": {
+   "description": "language → `{ключ: текст}`; the generator puts translations here; a key absent in the language — the `text` of the label applies (ADR-0115 addendum (2) item 3)",
+   "x-owner": "P/06.5 Н1.2",
+   "type": "object",
+   "propertyNames": {
+    "type": "string",
+    "pattern": "^(?:[a-z]{2,3}(?:-[A-Za-z0-9]{1,8})*)$"
+   },
+   "additionalProperties": {
+    "$ref": "#/$defs/strMap"
+   }
+  },
+  "metrics": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "name": {
+      "description": "a repeat is admissible",
+      "type": "string",
+      "pattern": "^(?:[a-z][a-z0-9_]*)$"
+     },
+     "type": {
+      "enum": [
+       "gauge",
+       "counter",
+       "histogram"
+      ]
+     },
+     "from": {
+      "description": "`heartbeat.<путь>` | `status.<путь>` (P/06.5 Н3 «Ряды манифеста metrics[]»)",
+      "type": "string",
+      "pattern": "^(?:(heartbeat|status)\\.[\\s\\S]+)$"
+     },
+     "agg": {
+      "enum": [
+       "value",
+       "flag",
+       "age",
+       "label",
+       "count",
+       "sum",
+       "max",
+       "histogram"
+      ]
+     },
+     "equals": {
+      "type": [
+       "array",
+       "string",
+       "boolean"
+      ],
+      "allOf": [
+       {
+        "if": {
+         "type": "string"
+        },
+        "then": {
+         "type": "string"
+        }
+       },
+       {
+        "if": {
+         "type": "boolean"
+        },
+        "then": {
+         "type": "boolean"
+        }
+       },
+       {
+        "if": {
+         "type": "array"
+        },
+        "then": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        }
+       }
+      ]
+     },
+     "when": {
+      "type": "string"
+     },
+     "default": {
+      "type": [
+       "string",
+       "number"
+      ]
+     },
+     "live": {
+      "type": "boolean"
+     },
+     "unheld": {
+      "type": "boolean"
+     },
+     "labels": {
+      "type": "object",
+      "x-opaque": true
+     },
+     "count": {
+      "description": "`table <таблица этого манифеста>`",
+      "type": "string",
+      "pattern": "^(?:table [a-z][a-z0-9_-]{0,31})$"
+     },
+     "where": {
+      "description": "the keys are fields; with `count` — table fields",
+      "type": "object",
+      "x-opaque": true
+     },
+     "unless": {
+      "type": "object",
+      "properties": {
+       "table": {
+        "type": "string"
+       },
+       "where": {
+        "type": "object",
+        "x-opaque": true
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "table"
+      ]
+     },
+     "buckets": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      }
+     },
+     "label": {
+      "type": "string"
+     },
+     "values": {
+      "$ref": "#/$defs/strList"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "name"
+    ],
+    "allOf": [
+     {
+      "if": {
+       "type": "object"
+      },
+      "then": {
+       "allOf": [
+        {
+         "anyOf": [
+          {
+           "required": [
+            "count"
+           ]
+          },
+          {
+           "required": [
+            "from"
+           ]
+          }
+         ]
+        },
+        {
+         "if": {
+          "required": [
+           "count"
+          ]
+         },
+         "then": {
+          "properties": {
+           "from": {
+            "not": {}
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "if": {
+       "allOf": [
+        {
+         "type": "object"
+        },
+        {
+         "required": [
+          "count"
+         ]
+        }
+       ]
+      },
+      "then": {
+       "properties": {
+        "values": {
+         "not": {}
+        }
+       }
+      }
+     },
+     {
+      "if": {
+       "allOf": [
+        {
+         "type": "object"
+        },
+        {
+         "not": {
+          "required": [
+           "agg"
+          ],
+          "properties": {
+           "agg": {
+            "enum": [
+             "label"
+            ]
+           }
+          }
+         }
+        }
+       ]
+      },
+      "then": {
+       "properties": {
+        "values": {
+         "not": {}
+        }
+       }
+      }
+     },
+     {
+      "if": {
+       "allOf": [
+        {
+         "type": "object"
+        },
+        {
+         "required": [
+          "agg"
+         ],
+         "properties": {
+          "agg": {
+           "enum": [
+            "count"
+           ]
+          }
+         }
+        }
+       ]
+      },
+      "then": {
+       "properties": {
+        "from": {
+         "type": "string",
+         "pattern": "^(?:status\\.[\\s\\S]+)$"
+        }
+       }
+      }
+     },
+     {
+      "if": {
+       "allOf": [
+        {
+         "type": "object"
+        },
+        {
+         "required": [
+          "agg"
+         ],
+         "properties": {
+          "agg": {
+           "enum": [
+            "histogram"
+           ]
+          }
+         }
+        }
+       ]
+      },
+      "then": {
+       "required": [
+        "buckets"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  "mustMatch": {
+   "description": "`{<поле цели>: <поле этой строки>}`; the keys are not checked",
+   "x-owner": "P/06.1 Н1.3",
+   "type": "object",
+   "propertyNames": {
+    "type": "string"
+   },
+   "additionalProperties": {
+    "type": "string"
+   }
+  },
+  "name": {
+   "type": "string",
+   "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
+  },
+  "nonSecretList": {
+   "type": "array",
+   "items": {
+    "type": "string",
+    "not": {
+     "type": "string",
+     "pattern": "^(?:[\\s\\S]*_secret)$"
+    }
+   }
+  },
+  "passCall": {
+   "description": "a callback door from the closed list of P/06.3 Н1.9: `<s>/<имя>` — unit rows, a table, `policy`, `next_id` or a door route of subsystem `<s>`; the prefix `GET ` — read only; `console/batch`, `changes`, `folders`; `<s>/operations`; `<s>/requests`; `marks`; `GET <s>/where`; `GET <s>/heartbeats`; the door `door.pass` of the first kind; `servers/labels`; `GET manifest|servers|events|session|schema`; `GET manifest/<s>/source` (ADR-0116 addendum (6)); domain doors: `GET domain/users|groups|roles|grants`, `domain/batch`, `domain/verify` (ADR-0119), `domain/shared`, `GET domain/shared/<s>`, `GET domain/topology`; the book door: `GET domain/<s>/books/<книга>`; a book section for all: `GET domain/<s>/books/<книга>/*`; a kept row: `GET domain/<s>/kept/<имя>`",
+   "type": "string",
+   "anyOf": [
+    {
+     "enum": [
+      "servers/labels",
+      "GET domain/at/events",
+      "domain/roles/lines",
+      "GET domain/memberof",
+      "domain/edits",
+      "domain/members",
+      "GET domain/members",
+      "marks",
+      "GET domain/relays",
+      "GET domain/topology",
+      "domain/shared",
+      "domain/placement",
+      "GET domain/placement",
+      "GET domain/folders",
+      "domain/folders",
+      "domain/memberof",
+      "GET domain",
+      "GET domain/users",
+      "GET domain/groups",
+      "GET domain/roles",
+      "GET domain/grants",
+      "domain/batch",
+      "domain/verify"
+     ]
+    },
+    {
+     "pattern": "^(?:GET [a-z][a-z0-9_-]{0,31}/where)$"
+    },
+    {
+     "pattern": "^(?:GET [a-z][a-z0-9_-]{0,31}/heartbeats)$"
+    },
+    {
+     "pattern": "^(?:GET manifest/[a-z][a-z0-9_-]{0,31}/source)$"
+    },
+    {
+     "pattern": "^(?:[a-z][a-z0-9_-]{0,31}/requests)$"
+    },
+    {
+     "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/books/[a-z][a-z0-9_-]{0,31})$"
+    },
+    {
+     "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/books/[a-z][a-z0-9_-]{0,31}/\\*)$"
+    },
+    {
+     "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/kept/[a-z][a-z0-9_-]{0,63})$"
+    },
+    {
+     "pattern": "^(?:GET domain/at/[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31})$"
+    },
+    {
+     "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/(?:tables/)?[a-z][a-z0-9_-]{0,31})$",
+     "not": {
+      "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/books)$"
+     }
+    },
+    {
+     "not": {
+      "pattern": "^(?:(?:GET )?(?:[a-z][a-z0-9_-]{0,31}/(?:platform|spec|manifest|slots|epoch|idem|placement|workers|controller|decommissioned|holds|requests|asked|sweep|servers|where|unplaceable|drain|events|marks|console|audit|session|mounts|healthz|changes|metrics|resources|schema|domain|api|heartbeats|contenders|snapshot|blobs|commands|state)|(?:platform|domain)/[a-z][a-z0-9_-]{0,31}))$"
+     },
+     "pattern": "^(?:changes|console/batch|(?:GET )?folders|GET (?:manifest|servers|events|session|schema)|(?:GET )?[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31})$"
+    }
+   ]
+  },
+  "passRoute": {
+   "description": "route path: segments by the `name` grammar separated by `/`; matches the start of the path by whole segments",
+   "type": "string",
+   "pattern": "^(?:[a-z][a-z0-9_-]{0,31}(?:/[a-z][a-z0-9_-]{0,31})*)$"
+  },
+  "passTicket": {
+   "description": "the second kind: a ticket per request instead of a person's credential (P/06.5 Н1.8, the gate-and-pass contract)",
+   "type": "object",
+   "properties": {
+    "routes": {
+     "description": "passed routes; the first segment — as in the first kind",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/passRoute"
+     },
+     "minItems": 1,
+     "uniqueItems": true
+    },
+    "calls": {
+     "description": "console doors that the worker calls back with a ticket",
+     "default": [],
+     "x-default-text": "no callback",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/passCall"
+     },
+     "uniqueItems": true
+    },
+    "stream": {
+     "description": "routes passed as a stream; each lies under a route of `routes`",
+     "default": [],
+     "x-default-text": "no streams",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/passRoute"
+     },
+     "uniqueItems": true
+    },
+    "wait": {
+     "description": "wait limit of the route, seconds; the key lies under a route of `routes`, the longest one wins; the ceiling is `PASS_WAIT_MAX`",
+     "default": {},
+     "x-default-text": "`PASS_WAIT`; for a stream — until the end of the request",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/passRoute"
+     },
+     "additionalProperties": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9000
+     }
+    },
+    "refusals": {
+     "description": "the form of console refusals on these routes; no key — ConsoleRefusal",
+     "type": "object",
+     "properties": {
+      "form": {
+       "description": "`application/problem+json` `{code, message}`",
+       "type": "string",
+       "enum": [
+        "problem"
+       ]
+      },
+      "codes": {
+       "description": "console status → `code`; the key in quotes; a status not in the map — ConsoleRefusal",
+       "type": "object",
+       "propertyNames": {
+        "enum": [
+         "401",
+         "403",
+         "404",
+         "413",
+         "502",
+         "503",
+         "504"
+        ]
+       },
+       "additionalProperties": {
+        "type": "string",
+        "pattern": "^(?:[A-Z][A-Z0-9_]{0,63})$"
+       },
+       "minProperties": 1
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "form",
+      "codes"
+     ]
+    },
+    "operations": {
+     "description": "group operations of the subsystem (P/06.9 Н1.1): the step call route, own limits, a service table",
+     "type": "object",
+     "properties": {
+      "step": {
+       "$ref": "#/$defs/passRoute",
+       "description": "the step call route; does not lie under `routes`: unavailable to the browser"
+      },
+      "limits": {
+       "description": "own limits, not above the ceilings of P/06.9 Н1.6",
+       "default": {},
+       "x-default-text": "the ceilings of P/06.9 Н1.6",
+       "type": "object",
+       "properties": {
+        "steps": {
+         "description": "steps in an operation",
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 1000
+        },
+        "active": {
+         "description": "unfinished operations",
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 64
+        },
+        "per_person": {
+         "description": "unfinished operations of a person",
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 8
+        },
+        "parallel": {
+         "description": "operations conducted at the same time",
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 4
+        }
+       },
+       "additionalProperties": false
+      },
+      "service": {
+       "description": "the operations table is a service table: doors only with a ticket, a person sees their own operation (P/06.9 Н2)",
+       "default": false,
+       "x-default-text": "`false`",
+       "type": "boolean"
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "step"
+     ]
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "routes"
+   ]
+  },
+  "placement": {
+   "type": "object",
+   "properties": {
+    "capacity": {
+     "type": "object",
+     "properties": {
+      "from": {
+       "description": "heartbeat field",
+       "default": "capacity",
+       "type": "string"
+      },
+      "default": {
+       "type": "integer",
+       "x-integer-place": true,
+       "minimum": 0,
+       "maximum": 9007199254740991
+      },
+      "unit_mb": {
+       "x-owner": "P/03.4 Н1.2",
+       "x-default-text": "the memory budget is not checked (P/03.4 Н1.2 `memory`)",
+       "type": "number",
+       "exclusiveMinimum": 0
+      },
+      "base_mb": {
+       "description": "the memory budget is the one formula of P/03.4 Н1.2 `memory`, the check is P/03.4 Н3 «start() — the budget step»",
+       "default": 0,
+       "x-owner": "P/03.4 Н1.2",
+       "type": "number",
+       "minimum": 0
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "default"
+     ]
+    },
+    "headroom": {
+     "default": {},
+     "type": "object",
+     "properties": {
+      "from": {
+       "description": "heartbeat field",
+       "default": "headroom",
+       "type": "string"
+      }
+     },
+     "additionalProperties": false
+    },
+    "weight": {
+     "description": "without `field` the weight is `default`, without `default` — 1",
+     "default": {},
+     "x-default-text": "weight 1 for all",
+     "type": "object",
+     "properties": {
+      "field": {
+       "description": "a field of type int",
+       "type": "string"
+      },
+      "default": {
+       "default": 1,
+       "type": "integer",
+       "x-integer-place": true,
+       "minimum": 1,
+       "maximum": 9007199254740991
+      }
+     },
+     "additionalProperties": false
+    },
+    "constraint": {
+     "default": "none",
+     "enum": [
+      "none",
+      "labels-subset"
+     ]
+    },
+    "tie_break": {
+     "default": "most-free-capacity",
+     "enum": [
+      "most-free-capacity"
+     ]
+    },
+    "servers": {
+     "default": "shared",
+     "enum": [
+      "shared",
+      "distinct"
+     ]
+    },
+    "place_by": {
+     "description": "`server` or a heartbeat field",
+     "default": "server",
+     "type": "string"
+    },
+    "places": {
+     "type": "object",
+     "properties": {
+      "table": {
+       "description": "table",
+       "type": "string"
+      },
+      "where": {
+       "description": "the keys are table fields",
+       "type": "object",
+       "x-opaque": true
+      },
+      "server_field": {
+       "description": "table field",
+       "type": "string"
+      },
+      "lease": {
+       "enum": [
+        "strict"
+       ]
+      },
+      "wanted": {
+       "description": "table: a row with the name of the place — the place needs a holder (P/04 Н3 «shortage()»)",
+       "type": "string"
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "table"
+     ]
+    },
+    "spread_by": {
+     "description": "field",
+     "type": "string"
+    },
+    "group_by": {
+     "type": "object",
+     "properties": {
+      "field": {
+       "description": "field",
+       "type": "string"
+      },
+      "cut_at": {
+       "description": "only for a url field: for a field of another type — `refused:reference` (the type is a property of the target `group_by.field`, as for `unit.id`)",
+       "enum": [
+        "host"
+       ]
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "field"
+     ]
+    },
+    "near": {
+     "type": "object",
+     "properties": {
+      "sub": {
+       "description": "subsystem (catalogue)",
+       "type": "string"
+      },
+      "by": {
+       "description": "a field of this unit",
+       "type": "string"
+      },
+      "of": {
+       "description": "field of the neighbour",
+       "type": "string"
+      },
+      "prefer": {
+       "description": "fields of the neighbour (catalogue)",
+       "type": "object",
+       "x-opaque": true
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "sub"
+     ]
+    },
+    "home": {
+     "description": "a field or the word `near` (then `near` is required)",
+     "type": "string"
+    },
+    "affinity": {
+     "type": "object",
+     "properties": {
+      "field": {
+       "description": "field",
+       "type": "string"
+      },
+      "table": {
+       "description": "table",
+       "type": "string"
+      },
+      "server_field": {
+       "description": "table field",
+       "type": "string"
+      },
+      "strict": {
+       "description": "the keys are table fields",
+       "type": "object",
+       "x-opaque": true
+      },
+      "exclusive": {
+       "description": "exclusive place: the holder of a binding place (by `strict`) accepts only units bound to it and takes no other places (P/04 Н1.3, P/03.2 Н3; ADR-0091 addendum (9) item 6, addendum (10) items 1–2)",
+       "default": false,
+       "type": "boolean"
+      }
+     },
+     "additionalProperties": false,
+     "allOf": [
+      {
+       "if": {
+        "allOf": [
+         {
+          "type": "object"
+         },
+         {
+          "required": [
+           "exclusive"
+          ],
+          "properties": {
+           "exclusive": {
+            "enum": [
+             true
+            ]
+           }
+          }
+         }
+        ]
+       },
+       "then": {
+        "required": [
+         "strict"
+        ]
+       }
+      }
+     ]
+    },
+    "requires": {
+     "default": "none",
+     "enum": [
+      "none",
+      "resource"
+     ]
+    },
+    "grows": {
+     "description": "the role grows on demand (ADR-0084)",
+     "default": false,
+     "type": "boolean"
+    },
+    "retire_when": {
+     "type": "object",
+     "properties": {
+      "state": {
+       "description": "name of a `unit.state`: the field is its (ADR-0091 item 3)",
+       "x-default-text": "the field is of the unit rows",
+       "type": "string"
+      },
+      "field": {
+       "description": "a field of the unit row or, with `state`, a field of that state",
+       "type": "string"
+      },
+      "in": {
+       "description": "list of values",
+       "type": "array"
+      },
+      "delete_after": {
+       "description": "seconds from retirement to physical deletion of the row (ADR-0091 item 1)",
+       "x-default-text": "do not delete",
+       "type": "integer",
+       "x-integer-place": true,
+       "minimum": 1,
+       "maximum": 9007199254740991
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "field",
+      "in"
+     ]
+    },
+    "ends": {
+     "description": "unit term: the field ≠ `never` and not later than the controller's clock — retire and delete (ADR-0091 item 2)",
+     "x-default-text": "no term",
+     "type": "object",
+     "properties": {
+      "field": {
+       "description": "a field of type int or float — Unix seconds",
+       "type": "string"
+      },
+      "never": {
+       "description": "the value «no term»",
+       "default": 0,
+       "type": "number"
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "field"
+     ]
+    },
+    "rebalance": {
+     "default": {},
+     "type": "object",
+     "properties": {
+      "dead_band": {
+       "default": 0.1,
+       "type": "number",
+       "minimum": 0
+      }
+     },
+     "additionalProperties": false
+    },
+    "unplaced": {
+     "x-default-text": "do not delete",
+     "type": "object",
+     "properties": {
+      "delete_after": {
+       "description": "only with named id, without fixed fields except id, `about` — only by id (ADR-0067)",
+       "type": "integer",
+       "x-integer-place": true,
+       "minimum": 1,
+       "maximum": 9007199254740991
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "delete_after"
+     ]
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "capacity"
+   ]
+  },
+  "refTarget": {
+   "description": "`<подсистема>/<семья>`, both parts are names by Н1.2; the loader does not look for the target",
+   "x-owner": "P/06.1 Н1.3",
+   "type": "string",
+   "pattern": "^(?:[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31})$"
+  },
+  "requests": {
+   "type": "object",
+   "properties": {
+    "schema": {
+     "$ref": "#/$defs/jsonSchemaLite"
+    },
+    "valid_for": {
+     "type": "number",
+     "minimum": 0
+    },
+    "most_valid": {
+     "type": "number",
+     "minimum": 0
+    },
+    "per_person": {
+     "x-default-text": "no limit",
+     "type": "integer",
+     "x-integer-place": true,
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "settle": {
+     "description": "seconds",
+     "default": 60,
+     "type": "number",
+     "minimum": 0
+    },
+    "ttl": {
+     "description": "0 — no limit",
+     "type": "number",
+     "minimum": 0
+    },
+    "key": {
+     "description": "rid template with at least one `{…}` (Н1.4): without a substitution all requests would get one id",
+     "x-default-text": "`r-<sha16(Idempotency-Key)>`",
+     "type": "string",
+     "pattern": "^(?:[\\s\\S]*\\{[^{}]+\\}[\\s\\S]*)$"
+    },
+    "outcome": {
+     "description": "the meaning is P/06.4 Н1.5 (`mark`), chapter 3.6 (the append of `fetched`), ADR-0054 addendum 2026-10-17; `fetched` requires `requests.key` (Н1.4)",
+     "default": "mark",
+     "enum": [
+      "mark",
+      "fetched"
+     ]
+    },
+    "stamp": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "by",
+       "at",
+       "group",
+       "about"
+      ]
+     }
+    },
+    "journal": {
+     "description": "the journal kind",
+     "type": "string"
+    },
+    "elsewhere": {
+     "$ref": "#/$defs/strList",
+     "description": "actions are the values of the body field `action` (the mark contract, «Request» `action`); the loader does not check them against `requests.schema` — the check is the manifest author's: the checklist and `check_spec` for the manifests of the course (the Architect's decision, review of stage B 6–7, № 17)"
+    },
+    "free": {
+     "default": false,
+     "type": "boolean"
+    }
+   },
+   "additionalProperties": false,
+   "allOf": [
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "per_person"
+        ]
+       }
+      ]
+     },
+     "then": {
+      "required": [
+       "ttl"
+      ]
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "anyOf": [
+         {
+          "required": [
+           "free"
+          ],
+          "properties": {
+           "free": {
+            "enum": [
+             false
+            ]
+           }
+          }
+         },
+         {
+          "not": {
+           "required": [
+            "free"
+           ]
+          }
+         }
+        ]
+       }
+      ]
+     },
+     "then": {
+      "required": [
+       "valid_for",
+       "most_valid"
+      ]
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "free"
+        ],
+        "properties": {
+         "free": {
+          "enum": [
+           true
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "required": [
+       "ttl"
+      ]
+     }
+    }
+   ]
+  },
+  "rights": {
+   "type": "object",
+   "properties": {
+    "routes": {
+     "default": {},
+     "x-default-text": "writes require `admin`",
+     "type": "object",
+     "properties": {
+      "view": {
+       "$ref": "#/$defs/strList",
+       "description": "families"
+      },
+      "edit": {
+       "$ref": "#/$defs/strList",
+       "description": "families"
+      }
+     },
+     "additionalProperties": false
+    },
+    "cluster_rows": {
+     "default": false,
+     "type": "boolean"
+    },
+    "unit_of": {
+     "description": "`{таблица: поле таблицы}`",
+     "type": "object",
+     "propertyNames": {
+      "type": "string"
+     },
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "reach": {
+     "type": "object",
+     "properties": {
+      "group": {
+       "$ref": "#/$defs/strList"
+      },
+      "cluster": {
+       "$ref": "#/$defs/strList"
+      },
+      "requests": {
+       "$ref": "#/$defs/strList",
+       "description": "actions are the values of the body field `action` (the mark contract, «Request» `action`); the loader does not check them against `requests.schema` — the check is the manifest author's: the checklist and `check_spec` for the manifests of the course (the Architect's decision, review of stage B 6–7, № 17)"
+      }
+     },
+     "additionalProperties": false
+    },
+    "names": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "field": {
+        "type": "string"
+       },
+       "unit": {
+        "type": "string"
+       },
+       "sub": {
+        "type": "string"
+       },
+       "of": {
+        "type": "string"
+       },
+       "action": {
+        "description": "object key: the action of a request to a unit (the gate-and-pass contract, names)",
+        "type": "string"
+       },
+       "at": {
+        "description": "a path inside the field value: keys separated by dots, [] — each element (the gate-and-pass contract, names)",
+        "type": "string",
+        "pattern": "^(?:[a-z_][a-z0-9_]*(\\[\\])?(\\.[a-z_][a-z0-9_]*(\\[\\])?)*)$"
+       },
+       "walk": {
+        "description": "keys of nested branches",
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "kind": {
+        "description": "object key: target kind",
+        "type": "string"
+       },
+       "kinds": {
+        "description": "target kind → subsystem, folder or server",
+        "type": "object",
+        "additionalProperties": {
+         "type": "object",
+         "properties": {
+          "of": {
+           "type": "string"
+          },
+          "folder": {
+           "type": "boolean",
+           "enum": [
+            true
+           ]
+          },
+          "server": {
+           "type": "boolean",
+           "enum": [
+            true
+           ]
+          },
+          "table": {
+           "type": "string"
+          }
+         },
+         "additionalProperties": false,
+         "minProperties": 1,
+         "maxProperties": 2,
+         "dependentRequired": {
+          "table": [
+           "of"
+          ]
+         },
+         "not": {
+          "required": [
+           "folder",
+           "server"
+          ]
+         }
+        }
+       },
+       "quiet": {
+        "description": "keys of an object without a target (the gate-and-pass contract, names)",
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "field",
+       "unit"
+      ],
+      "allOf": [
+       {
+        "if": {
+         "type": "object"
+        },
+        "then": {
+         "allOf": [
+          {
+           "anyOf": [
+            {
+             "required": [
+              "sub"
+             ]
+            },
+            {
+             "required": [
+              "of"
+             ]
+            },
+            {
+             "required": [
+              "kind",
+              "kinds"
+             ]
+            }
+           ]
+          },
+          {
+           "if": {
+            "required": [
+             "sub"
+            ]
+           },
+           "then": {
+            "properties": {
+             "of": {
+              "not": {}
+             }
+            }
+           }
+          },
+          {
+           "if": {
+            "required": [
+             "kind"
+            ]
+           },
+           "then": {
+            "properties": {
+             "sub": {
+              "not": {}
+             },
+             "of": {
+              "not": {}
+             }
+            }
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "rowsName": {
+   "description": "a name by Н1.2, not from the list of forbidden table names and not `cluster`, `worker`, `ts`",
+   "type": "string",
+   "not": {
+    "enum": [
+     "platform",
+     "spec",
+     "manifest",
+     "next_id",
+     "slots",
+     "epoch",
+     "idem",
+     "policy",
+     "placement",
+     "workers",
+     "controller",
+     "decommissioned",
+     "holds",
+     "requests",
+     "asked",
+     "sweep",
+     "servers",
+     "where",
+     "unplaceable",
+     "drain",
+     "events",
+     "marks",
+     "console",
+     "audit",
+     "session",
+     "mounts",
+     "healthz",
+     "changes",
+     "metrics",
+     "resources",
+     "schema",
+     "domain",
+     "api",
+     "heartbeats",
+     "contenders",
+     "snapshot",
+     "blobs",
+     "commands",
+     "state",
+     "folders",
+     "memberof",
+     "operations",
+     "opsteps",
+     "opdone",
+     "opcount",
+     "opbusy",
+     "operations-turn",
+     "operations-epoch",
+     "cluster",
+     "worker",
+     "ts",
+     "tables",
+     "snapshot-tables"
+    ]
+   },
+   "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
+  },
+  "schemes": {
+   "description": "scheme name → `{host?, fragment?, none?}`; the meaning is the address contract «Schemes» (URLC-HOST-01)",
+   "x-owner": "договор адреса url-credentials «Schemes»; P/06.2 Н1.1",
+   "type": "object",
+   "propertyNames": {
+    "type": "string",
+    "pattern": "^(?:[a-z][a-z0-9+.-]*)$"
+   },
+   "additionalProperties": {
+    "type": "object",
+    "properties": {
+     "host": {
+      "description": "`authority` — the host is the authority component; `path` — the host is the first path segment, the authority component is the hub (`mirror://<hub>/<host>/…`)",
+      "default": "authority",
+      "enum": [
+       "authority",
+       "path"
+      ]
+     },
+     "fragment": {
+      "description": "`none`: `#` is an ordinary character, not the start of a fragment (P/06.2 Н1.1а А2)",
+      "x-default-text": "`#` starts a fragment",
+      "enum": [
+       "none"
+      ]
+     },
+     "none": {
+      "$ref": "#/$defs/strList",
+      "description": "values of the authority component that mean «no host» (`mirror://local/…` — the own copy); the path is required only with `host: path` — the address contract «Schemes»"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  "secretIn": {
+   "x-owner": "P/06.2 Н1.1",
+   "type": "array",
+   "items": {
+    "description": "an element of exactly one kind: `{param, login?}`, `{regex, in?, schemes?, decoded?}` or `{nested}`",
+    "type": "object",
+    "properties": {
+     "param": {
+      "$ref": "#/$defs/strList"
+     },
+     "login": {
+      "$ref": "#/$defs/strList"
+     },
+     "regex": {
+      "type": "string"
+     },
+     "in": {
+      "type": [
+       "array",
+       "string"
+      ],
+      "allOf": [
+       {
+        "if": {
+         "type": "string"
+        },
+        "then": {
+         "type": "string",
+         "enum": [
+          "path",
+          "query",
+          "authority",
+          "fragment"
+         ]
+        }
+       },
+       {
+        "if": {
+         "type": "array"
+        },
+        "then": {
+         "type": "array",
+         "items": {
+          "enum": [
+           "path",
+           "query",
+           "authority",
+           "fragment"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "schemes": {
+      "$ref": "#/$defs/strList"
+     },
+     "decoded": {
+      "type": "boolean"
+     },
+     "nested": {
+      "$ref": "#/$defs/strList"
+     }
+    },
+    "additionalProperties": false,
+    "allOf": [
+     {
+      "if": {
+       "type": "object"
+      },
+      "then": {
+       "allOf": [
+        {
+         "anyOf": [
+          {
+           "required": [
+            "param"
+           ]
+          },
+          {
+           "required": [
+            "regex"
+           ]
+          },
+          {
+           "required": [
+            "nested"
+           ]
+          }
+         ]
+        },
+        {
+         "if": {
+          "required": [
+           "param"
+          ]
+         },
+         "then": {
+          "properties": {
+           "regex": {
+            "not": {}
+           }
+          }
+         }
+        },
+        {
+         "if": {
+          "anyOf": [
+           {
+            "required": [
+             "param"
+            ],
+            "not": {
+             "anyOf": [
+              {
+               "required": [
+                "regex"
+               ]
+              }
+             ]
+            }
+           },
+           {
+            "required": [
+             "regex"
+            ],
+            "not": {
+             "anyOf": [
+              {
+               "required": [
+                "param"
+               ]
+              }
+             ]
+            }
+           }
+          ]
+         },
+         "then": {
+          "properties": {
+           "nested": {
+            "not": {}
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "if": {
+       "allOf": [
+        {
+         "type": "object"
+        },
+        {
+         "not": {
+          "required": [
+           "param"
+          ]
+         }
+        }
+       ]
+      },
+      "then": {
+       "properties": {
+        "login": {
+         "not": {}
+        }
+       }
+      }
+     },
+     {
+      "if": {
+       "allOf": [
+        {
+         "type": "object"
+        },
+        {
+         "not": {
+          "required": [
+           "regex"
+          ]
+         }
+        }
+       ]
+      },
+      "then": {
+       "properties": {
+        "in": {
+         "not": {}
+        },
+        "schemes": {
+         "not": {}
+        },
+        "decoded": {
+         "not": {}
+        }
+       }
+      }
+     }
+    ]
+   }
+  },
+  "secrets": {
+   "type": "object",
+   "properties": {
+    "readers": {
+     "description": "exact row name or prefix with `/` → roles",
+     "default": {},
+     "x-default-text": "no own secret rows",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/grantName"
+     },
+     "additionalProperties": {
+      "type": "array",
+      "items": {
+       "enum": [
+        "console",
+        "controller",
+        "worker",
+        "domainworker",
+        "domain",
+        "domainagent",
+        "resource",
+        "domainconsole"
+       ]
+      },
+      "minItems": 1
+     }
+    },
+    "reads": {
+     "$ref": "#/$defs/grantList",
+     "description": "`<семья>/<имя>` or prefixes with `/`, as in `worker.reads`"
+    }
+   },
+   "additionalProperties": false
+  },
+  "servers": {
+   "type": "object",
+   "properties": {
+    "show": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "table": {
+        "description": "table",
+        "type": "string"
+       },
+       "by": {
+        "description": "table field",
+        "type": "string"
+       },
+       "title": {
+        "type": "string"
+       },
+       "columns": {
+        "$ref": "#/$defs/strList",
+        "description": "table fields"
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "table",
+       "by"
+      ]
+     }
+    },
+    "status": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "field": {
+        "description": "a path in the heartbeat; the first segment is not a heartbeat key of the platform (P/03.4 Н1.1)",
+        "type": "string",
+        "not": {
+         "type": "string",
+         "pattern": "^(?:(worker|ts|status|server|instance|labels|url|fetched|events|conflicts|started|previous_hb|previous_instance|previous_server|fenced|schema|build|pending_writes|server_unsaid|stood_in|stand_in_renewals)(\\.[\\s\\S]*)?)$"
+        }
+       },
+       "title": {
+        "type": "string"
+       },
+       "of": {
+        "description": "table",
+        "type": "string"
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "field"
+      ]
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "strList": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "strMap": {
+   "type": "object",
+   "propertyNames": {
+    "type": "string"
+   },
+   "additionalProperties": {
+    "type": "string"
+   }
+  },
+  "subName": {
+   "description": "not one of the 36 reserved words and does not start with `free-` (the submitter's rid `<подсистема>.<ключ>` would otherwise start with `free-`, which the rid grammar forbids; ADR-0091 addendum (24) item 5); the name is the first segment of all keys of the subsystem `<name>/…` and of its place on the domain",
+   "type": "string",
+   "not": {
+    "anyOf": [
+     {
+      "enum": [
+       "platform",
+       "spec",
+       "manifest",
+       "policy",
+       "drain",
+       "servers",
+       "where",
+       "unplaceable",
+       "console",
+       "audit",
+       "events",
+       "marks",
+       "requests",
+       "asked",
+       "session",
+       "mounts",
+       "healthz",
+       "changes",
+       "metrics",
+       "resources",
+       "schema",
+       "domain",
+       "api",
+       "folders",
+       "users",
+       "grants",
+       "groups",
+       "roles",
+       "deleting",
+       "disabled",
+       "names",
+       "edits",
+       "relays",
+       "placement",
+       "memberof",
+       "shared"
+      ]
+     },
+     {
+      "type": "string",
+      "pattern": "^(?:free-[\\s\\S]*)$"
+     }
+    ]
+   },
+   "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
+  },
+  "subSchemaLite": {
+   "type": [
+    "object",
+    "boolean"
+   ],
+   "allOf": [
+    {
+     "if": {
+      "type": "boolean"
+     },
+     "then": {
+      "type": "boolean"
+     }
+    },
+    {
+     "if": {
+      "type": "object"
+     },
+     "then": {
+      "$ref": "#/$defs/jsonSchemaLite"
+     }
+    }
+   ]
+  },
+  "table": {
+   "type": "object",
+   "properties": {
+    "key": {
+     "description": "a non-secret string field or a template `{поле}` / `{поле:int}` (Н1.4)",
+     "type": "string"
+    },
+    "fields": {
+     "description": "a field by the table «Поле»; the fields `held_by`, `garbled`, `by`, `at`, `made_at`, `revision`, `index` are forbidden",
+     "default": {},
+     "type": "object",
+     "propertyNames": {
+      "type": "string",
+      "not": {
+       "enum": [
+        "held_by",
+        "garbled",
+        "by",
+        "at",
+        "made_at",
+        "revision",
+        "index"
+       ]
+      }
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/tableField"
+     },
+     "patternProperties": {
+      "^(?:[\\s\\S]*_secret)$": {
+       "allOf": [
+        {
+         "$ref": "#/$defs/tableField"
+        },
+        {
+         "if": {
+          "type": "object"
+         },
+         "then": {
+          "properties": {
+           "type": {
+            "enum": [
+             "string"
+            ]
+           }
+          }
+         }
+        }
+       ]
+      },
+      "^(?:[\\s\\S]{0,6}|[\\s\\S]*(?:[^_][\\s\\S]{6}|_[^s][\\s\\S]{5}|_s[^e][\\s\\S]{4}|_se[^c][\\s\\S]{3}|_sec[^r][\\s\\S]{2}|_secr[^e][\\s\\S]|_secre[^t]))$": {
+       "allOf": [
+        {
+         "$ref": "#/$defs/tableField"
+        },
+        {
+         "if": {
+          "type": "object"
+         },
+         "then": {
+          "properties": {
+           "bound_to": {
+            "not": {}
+           }
+          }
+         }
+        }
+       ],
+       "x-complement-of": "^(?:[\\s\\S]*_secret)$"
+      }
+     },
+     "x-ordered": true
+    },
+    "schema": {
+     "$ref": "#/$defs/jsonSchemaLite"
+    },
+    "service": {
+     "description": "service table of the worker: only with a ticket (P/06.1 Н1.6 `service`)",
+     "type": "boolean",
+     "x-default-text": "`false`"
+    },
+    "writes_via": {
+     "description": "the rows are written only by the named subsystems with a ticket; a session, the emergency login and other tickets — 403 writes via; a write by the right of consequences is outside the word (P/06.1 Н1.1а, ADR-0119 addendum (10), (11))",
+     "x-owner": "P/06.1 Н1.1а",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/subName"
+     },
+     "minItems": 1,
+     "uniqueItems": true
+    },
+    "stamp": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "by",
+       "at",
+       "made_at"
+      ]
+     }
+    },
+    "journal": {
+     "x-default-text": "`<т>.written`, `<т>.deleted`",
+     "type": "object",
+     "properties": {
+      "written": {
+       "type": "string"
+      },
+      "deleted": {
+       "type": "string"
+      }
+     },
+     "additionalProperties": false
+    },
+    "delete_after": {
+     "description": "row term in seconds; the console reaper removes the row (P/06.4 Н3 `tables`)",
+     "x-default-text": "no term",
+     "type": "integer",
+     "x-integer-place": true,
+     "minimum": 1,
+     "maximum": 9007199254740991
+    }
+   },
+   "additionalProperties": false,
+   "allOf": [
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "service"
+        ],
+        "properties": {
+         "service": {
+          "enum": [
+           true
+          ]
+         }
+        }
+       },
+       {
+        "required": [
+         "writes_via"
+        ]
+       }
+      ]
+     },
+     "then": false,
+     "description": "service already admits only a ticket of its own subsystem (P/06.1 Н1.6)"
+    }
+   ]
+  },
+  "tableField": {
+   "type": "object",
+   "properties": {
+    "type": {
+     "$ref": "#/$defs/fieldType"
+    },
+    "required": {
+     "default": false,
+     "type": "boolean"
+    },
+    "default": {},
+    "enum": {
+     "$ref": "#/$defs/fieldEnum"
+    },
+    "ref": {
+     "$ref": "#/$defs/refTarget"
+    },
+    "must_match": {
+     "$ref": "#/$defs/mustMatch"
+    },
+    "schema": {
+     "$ref": "#/$defs/jsonSchemaLite"
+    },
+    "bound_to": {
+     "$ref": "#/$defs/boundTo"
+    },
+    "credentials": {
+     "$ref": "#/$defs/credentials"
+    },
+    "secret_in": {
+     "$ref": "#/$defs/secretIn"
+    },
+    "schemes": {
+     "$ref": "#/$defs/schemes"
+    },
+    "hidden": {
+     "description": "the field is not shown by the form; the door writes and returns the value like the others (ADR-0115 item 2.2)",
+     "x-owner": "P/06.5 Н1.2",
+     "type": "boolean"
+    },
+    "items": {
+     "description": "for `type: list`: `ref` of each element is a form hint, the list of values is taken by reading the family; the platform does not judge the value by it (ADR-0115 addendum (2) item 5, addendum (3) item 5)",
+     "x-owner": "P/06.5 Н1.2",
+     "type": "object",
+     "properties": {
+      "ref": {
+       "$ref": "#/$defs/refTarget"
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "ref"
+     ]
+    },
+    "ref_label": {
+     "description": "name of a field of the target row of `ref` or `items.ref` — the label of the value in the form; the loader does not look for the target field (ADR-0115 addendum (5) item 2, addendum (6) item 2)",
+     "x-owner": "P/06.5 Н1.2",
+     "type": "string",
+     "minLength": 1
+    }
+   },
+   "additionalProperties": false,
+   "allOf": [
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "ref"
+         ]
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "must_match": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "blob"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": false,
+     "description": "blob — only in unit.fields"
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "anyOf": [
+         {
+          "required": [
+           "type"
+          ],
+          "properties": {
+           "type": {
+            "enum": [
+             "string"
+            ]
+           }
+          }
+         },
+         {
+          "not": {
+           "required": [
+            "type"
+           ]
+          }
+         }
+        ]
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "default": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "enum": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "int"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "default": {
+        "type": [
+         "integer",
+         "null"
+        ],
+        "x-integer-place": true,
+        "minimum": -9007199254740991,
+        "maximum": 9007199254740991
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "float"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "default": {
+        "type": [
+         "number",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "bool"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "default": {
+        "type": [
+         "boolean",
+         "null"
+        ]
+       },
+       "enum": {
+        "type": "array",
+        "items": {
+         "type": "boolean"
+        }
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "list"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "default": {
+        "type": [
+         "array",
+         "null"
+        ],
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "url"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "default": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "blob"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "allOf": [
+       {
+        "properties": {
+         "default": {
+          "not": {}
+         }
+        }
+       },
+       {
+        "properties": {
+         "required": {
+          "enum": [
+           false
+          ]
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "int",
+           "float",
+           "list",
+           "json",
+           "url",
+           "blob"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "enum": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "type"
+         ],
+         "properties": {
+          "type": {
+           "enum": [
+            "url"
+           ]
+          }
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "credentials": {
+        "not": {}
+       },
+       "secret_in": {
+        "not": {}
+       },
+       "schemes": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "hidden"
+        ],
+        "properties": {
+         "hidden": {
+          "enum": [
+           true
+          ]
+         }
+        }
+       },
+       {
+        "required": [
+         "required"
+        ],
+        "properties": {
+         "required": {
+          "enum": [
+           true
+          ]
+         }
+        }
+       },
+       {
+        "not": {
+         "required": [
+          "default"
+         ]
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "hidden": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "type"
+         ],
+         "properties": {
+          "type": {
+           "enum": [
+            "list"
+           ]
+          }
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "items": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "ref"
+        ]
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "items": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "ref"
+         ]
+        }
+       },
+       {
+        "not": {
+         "required": [
+          "items"
+         ]
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "ref_label": {
+        "not": {}
+       }
+      }
+     }
+    }
+   ]
+  },
+  "tableName": {
+   "description": "a name by Н1.2, not from the list of forbidden table names",
+   "type": "string",
+   "not": {
+    "enum": [
+     "platform",
+     "spec",
+     "manifest",
+     "next_id",
+     "slots",
+     "epoch",
+     "idem",
+     "policy",
+     "placement",
+     "workers",
+     "controller",
+     "decommissioned",
+     "holds",
+     "requests",
+     "asked",
+     "sweep",
+     "servers",
+     "where",
+     "unplaceable",
+     "drain",
+     "events",
+     "marks",
+     "console",
+     "audit",
+     "session",
+     "mounts",
+     "healthz",
+     "changes",
+     "metrics",
+     "resources",
+     "schema",
+     "domain",
+     "api",
+     "heartbeats",
+     "contenders",
+     "snapshot",
+     "blobs",
+     "commands",
+     "state",
+     "folders",
+     "memberof",
+     "operations",
+     "opsteps",
+     "opdone",
+     "opcount",
+     "opbusy",
+     "operations-turn",
+     "operations-epoch",
+     "snapshot-tables"
+    ]
+   },
+   "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
+  },
+  "tables": {
+   "description": "a named mapping (name → table) or a list of names",
+   "type": [
+    "object",
+    "array"
+   ],
+   "propertyNames": {
+    "$ref": "#/$defs/tableName"
+   },
+   "additionalProperties": {
+    "$ref": "#/$defs/table"
+   },
+   "items": {
+    "$ref": "#/$defs/tableName"
+   }
+  },
+  "token": {
+   "type": "object",
+   "properties": {
+    "lifetime": {
+     "description": "seconds",
+     "type": "number",
+     "exclusiveMinimum": 0
+    },
+    "keep": {
+     "description": "the token lies sealed on the worker's medium (P/03.7 Н1.5 keep; ADR-0110 addendum (9))",
+     "type": "boolean",
+     "x-owner": "P/03.7 Н1.5"
+    },
+    "claims": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "not": {
+       "enum": [
+        "iss",
+        "sub",
+        "iat",
+        "exp",
+        "jti",
+        "kind"
+       ]
+      }
+     },
+     "minItems": 1,
+     "uniqueItems": true
+    },
+    "grant": {
+     "description": "roles of the workers to which the kind is issued",
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "minItems": 1,
+     "uniqueItems": true
+    },
+    "placement": {
+     "type": "object",
+     "properties": {
+      "sub": {
+       "description": "subsystem of the assignment records (P/08.6 Н1.1)",
+       "type": "string"
+      },
+      "caller": {
+       "description": "the field of the record where the applicant member must stand",
+       "enum": [
+        "cluster",
+        "origin",
+        "copies"
+       ]
+      },
+      "ref_claim": {
+       "type": "string"
+      },
+      "target_fields": {
+       "description": "where the audience comes from",
+       "type": "array",
+       "items": {
+        "enum": [
+         "cluster",
+         "origin",
+         "copies",
+         "centre",
+         "star_centre"
+        ]
+       },
+       "uniqueItems": true
+      },
+      "audience_claim": {
+       "type": "string"
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "sub",
+      "caller",
+      "ref_claim",
+      "target_fields",
+      "audience_claim"
+     ]
+    },
+    "unit": {
+     "type": "object",
+     "properties": {
+      "sub": {
+       "description": "subsystem of the unit; none — the own one (the own one requires `domain.ref`)",
+       "type": "string"
+      },
+      "caller": {
+       "x-default-text": "`self`",
+       "enum": [
+        "self",
+        "poll_home"
+       ]
+      },
+      "ref_claim": {
+       "type": "string"
+      },
+      "target_fields": {
+       "type": "array",
+       "items": {
+        "enum": [
+         "poll_home",
+         "centre"
+        ]
+       },
+       "uniqueItems": true
+      },
+      "audience_claim": {
+       "type": "string"
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "ref_claim",
+      "target_fields",
+      "audience_claim"
+     ]
+    },
+    "scenario": {
+     "type": "object",
+     "properties": {
+      "doc": {
+       "description": "subsystem of the shared document (P/08.9 Н1.2: `shared.<doc>`)",
+       "type": "string"
+      },
+      "items": {
+       "description": "name of the array in the document",
+       "type": "string",
+       "pattern": "^(?:[a-z][a-z0-9_]*)$"
+      },
+      "name": {
+       "$ref": "#/$defs/fieldPath"
+      },
+      "enabled": {
+       "$ref": "#/$defs/fieldPath"
+      },
+      "trigger": {
+       "$ref": "#/$defs/fieldPath"
+      },
+      "target": {
+       "$ref": "#/$defs/fieldPath"
+      },
+      "member": {
+       "$ref": "#/$defs/fieldPath"
+      },
+      "act": {
+       "$ref": "#/$defs/fieldPath"
+      },
+      "placement": {
+       "description": "the subsystem whose assignment records name the home of the target",
+       "type": "string"
+      },
+      "ref_claim": {
+       "type": "string"
+      },
+      "trigger_claim": {
+       "type": "string"
+      },
+      "acts_claim": {
+       "type": "string"
+      },
+      "up_claim": {
+       "type": "string"
+      },
+      "audience_claim": {
+       "type": "string"
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "doc",
+      "items",
+      "name",
+      "enabled",
+      "trigger",
+      "target",
+      "act",
+      "ref_claim",
+      "trigger_claim",
+      "acts_claim",
+      "up_claim",
+      "audience_claim"
+     ]
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "lifetime",
+    "claims",
+    "grant"
+   ],
+   "allOf": [
+    {
+     "if": {
+      "type": "object"
+     },
+     "then": {
+      "anyOf": [
+       {
+        "required": [
+         "placement"
+        ]
+       },
+       {
+        "required": [
+         "unit"
+        ]
+       },
+       {
+        "required": [
+         "scenario"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "scenario"
+        ]
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "placement": {
+        "not": {}
+       },
+       "unit": {
+        "not": {}
+       }
+      }
+     }
+    }
+   ]
+  },
+  "unitField": {
+   "type": "object",
+   "properties": {
+    "type": {
+     "$ref": "#/$defs/fieldType"
+    },
+    "required": {
+     "default": false,
+     "x-owner": "P/06.1 Н3",
+     "type": "boolean"
+    },
+    "fixed": {
+     "default": false,
+     "x-owner": "P/06.1 Н1.3",
+     "type": "boolean"
+    },
+    "default": {
+     "description": "one value of the field type: for float an integer is admissible, list — a list of strings, json — any JSON value (a mapping for string — refusal); null — no default; from `enum`, if there is one",
+     "x-owner": "P/06.1 Н1.2"
+    },
+    "inherit": {
+     "description": "like `default`; the last link of the inheritance chain; only for a unit field",
+     "x-owner": "P/06.1 Н1.2"
+    },
+    "merge": {
+     "description": "reduction of the inheritance chain; only with `inherit`; `union` — only for `type: list`",
+     "x-owner": "P/06.7 Н1.14",
+     "enum": [
+      "union",
+      "override"
+     ]
+    },
+    "enum": {
+     "$ref": "#/$defs/fieldEnum"
+    },
+    "unique": {
+     "description": "`canonical` — comparison by the canonical form of the URL (P/06.1 Н1.3), only for url; not for list",
+     "x-owner": "P/06.1 Н1.3",
+     "type": [
+      "string",
+      "boolean"
+     ],
+     "allOf": [
+      {
+       "if": {
+        "type": "boolean"
+       },
+       "then": {
+        "type": "boolean",
+        "enum": [
+         true
+        ]
+       }
+      },
+      {
+       "if": {
+        "type": "string"
+       },
+       "then": {
+        "type": "string",
+        "enum": [
+         "canonical"
+        ]
+       }
+      }
+     ]
+    },
+    "ref": {
+     "$ref": "#/$defs/refTarget"
+    },
+    "must_match": {
+     "$ref": "#/$defs/mustMatch"
+    },
+    "schema": {
+     "$ref": "#/$defs/jsonSchemaLite",
+     "x-owner": "P/06.1 Н1.2; P/06.1 Н1.6"
+    },
+    "bound_to": {
+     "$ref": "#/$defs/boundTo"
+    },
+    "credentials": {
+     "$ref": "#/$defs/credentials"
+    },
+    "secret_in": {
+     "$ref": "#/$defs/secretIn"
+    },
+    "schemes": {
+     "$ref": "#/$defs/schemes"
+    },
+    "hidden": {
+     "description": "the field is not shown by the form; the door writes and returns the value like the others (ADR-0115 item 2.2)",
+     "x-owner": "P/06.5 Н1.2",
+     "type": "boolean"
+    },
+    "items": {
+     "description": "for `type: list`: `ref` of each element is a form hint, the list of values is taken by reading the family; the platform does not judge the value by it (ADR-0115 addendum (2) item 5, addendum (3) item 5)",
+     "x-owner": "P/06.5 Н1.2",
+     "type": "object",
+     "properties": {
+      "ref": {
+       "$ref": "#/$defs/refTarget"
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "ref"
+     ]
+    },
+    "ref_label": {
+     "description": "name of a field of the target row of `ref` or `items.ref` — the label of the value in the form; the loader does not look for the target field (ADR-0115 addendum (5) item 2, addendum (6) item 2)",
+     "x-owner": "P/06.5 Н1.2",
+     "type": "string",
+     "minLength": 1
+    }
+   },
+   "additionalProperties": false,
+   "allOf": [
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "default"
+        ]
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "inherit": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "inherit"
+         ]
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "merge": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "ref"
+         ]
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "must_match": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "type"
+         ],
+         "properties": {
+          "type": {
+           "enum": [
+            "list"
+           ]
+          }
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "merge": {
+        "not": {
+         "enum": [
+          "union"
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "list"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "unique": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "type"
+         ],
+         "properties": {
+          "type": {
+           "enum": [
+            "url"
+           ]
+          }
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "unique": {
+        "not": {
+         "enum": [
+          "canonical"
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "anyOf": [
+         {
+          "required": [
+           "type"
+          ],
+          "properties": {
+           "type": {
+            "enum": [
+             "string"
+            ]
+           }
+          }
+         },
+         {
+          "not": {
+           "required": [
+            "type"
+           ]
+          }
+         }
+        ]
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "default": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "enum": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "int"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "default": {
+        "type": [
+         "integer",
+         "null"
+        ],
+        "x-integer-place": true,
+        "minimum": -9007199254740991,
+        "maximum": 9007199254740991
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "float"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "default": {
+        "type": [
+         "number",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "bool"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "default": {
+        "type": [
+         "boolean",
+         "null"
+        ]
+       },
+       "enum": {
+        "type": "array",
+        "items": {
+         "type": "boolean"
+        }
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "list"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "default": {
+        "type": [
+         "array",
+         "null"
+        ],
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "url"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "default": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "blob"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "allOf": [
+       {
+        "properties": {
+         "default": {
+          "not": {}
+         }
+        }
+       },
+       {
+        "properties": {
+         "required": {
+          "enum": [
+           false
+          ]
+         }
+        }
+       }
+      ]
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "int",
+           "float",
+           "list",
+           "json",
+           "url",
+           "blob"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "enum": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "type"
+         ],
+         "properties": {
+          "type": {
+           "enum": [
+            "url"
+           ]
+          }
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "credentials": {
+        "not": {}
+       },
+       "secret_in": {
+        "not": {}
+       },
+       "schemes": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "anyOf": [
+         {
+          "required": [
+           "type"
+          ],
+          "properties": {
+           "type": {
+            "enum": [
+             "string",
+             "url"
+            ]
+           }
+          }
+         },
+         {
+          "not": {
+           "required": [
+            "type"
+           ]
+          }
+         }
+        ]
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "inherit": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "int"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "inherit": {
+        "type": [
+         "integer",
+         "null"
+        ],
+        "x-integer-place": true,
+        "minimum": -9007199254740991,
+        "maximum": 9007199254740991
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "float"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "inherit": {
+        "type": [
+         "number",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "bool"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "inherit": {
+        "type": [
+         "boolean",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "list"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "inherit": {
+        "type": [
+         "array",
+         "null"
+        ],
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "type"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "blob"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "inherit": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "hidden"
+        ],
+        "properties": {
+         "hidden": {
+          "enum": [
+           true
+          ]
+         }
+        }
+       },
+       {
+        "required": [
+         "required"
+        ],
+        "properties": {
+         "required": {
+          "enum": [
+           true
+          ]
+         }
+        }
+       },
+       {
+        "not": {
+         "required": [
+          "default"
+         ]
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "hidden": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "type"
+         ],
+         "properties": {
+          "type": {
+           "enum": [
+            "list"
+           ]
+          }
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "items": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "ref"
+        ]
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "items": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "ref"
+         ]
+        }
+       },
+       {
+        "not": {
+         "required": [
+          "items"
+         ]
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "ref_label": {
+        "not": {}
+       }
+      }
+     }
+    }
+   ]
+  },
+  "unitFields": {
+   "type": "object",
+   "propertyNames": {
+    "description": "not from `platform_fields` of P/06.1 Н1.2; without a dot: the name `<т>.<поле>` in `display` is a table field (ADR-0115 addendum (4) item 1)",
+    "type": "string",
+    "not": {
+     "enum": [
+      "id",
+      "revision",
+      "deleted",
+      "worker",
+      "placement",
+      "epoch",
+      "phase",
+      "observed_revision",
+      "born",
+      "made",
+      "index"
+     ]
+    },
+    "pattern": "^(?:[^.]*)$"
+   },
+   "additionalProperties": {
+    "$ref": "#/$defs/unitField"
+   },
+   "patternProperties": {
+    "^(?:[\\s\\S]*_secret)$": {
+     "allOf": [
+      {
+       "$ref": "#/$defs/unitField"
+      },
+      {
+       "if": {
+        "type": "object"
+       },
+       "then": {
+        "properties": {
+         "type": {
+          "enum": [
+           "string"
+          ]
+         }
+        }
+       }
+      }
+     ]
+    },
+    "^(?:[\\s\\S]{0,6}|[\\s\\S]*(?:[^_][\\s\\S]{6}|_[^s][\\s\\S]{5}|_s[^e][\\s\\S]{4}|_se[^c][\\s\\S]{3}|_sec[^r][\\s\\S]{2}|_secr[^e][\\s\\S]|_secre[^t]))$": {
+     "allOf": [
+      {
+       "$ref": "#/$defs/unitField"
+      },
+      {
+       "if": {
+        "type": "object"
+       },
+       "then": {
+        "properties": {
+         "bound_to": {
+          "not": {}
+         }
+        }
+       }
+      }
+     ],
+     "x-complement-of": "^(?:[\\s\\S]*_secret)$"
+    },
+    "^(?:|[^A-Za-z_][\\s\\S]*|[A-Za-z_][A-Za-z0-9_]{0,63}[^A-Za-z0-9_][\\s\\S]*|[A-Za-z_][A-Za-z0-9_]{63}[\\s\\S]+)$": {
+     "allOf": [
+      {
+       "$ref": "#/$defs/unitField"
+      },
+      {
+       "if": {
+        "allOf": [
+         {
+          "type": "object"
+         },
+         {
+          "required": [
+           "type"
+          ],
+          "properties": {
+           "type": {
+            "enum": [
+             "blob"
+            ]
+           }
+          }
+         }
+        ]
+       },
+       "then": false,
+       "description": "blob name — 1–64 ASCII [A-Za-z_][A-Za-z0-9_]*"
+      }
+     ],
+     "x-complement-of": "^(?:[A-Za-z_][A-Za-z0-9_]{0,63})$"
+    }
+   },
+   "x-ordered": true
+  }
+ }
+}

@@ -1,0 +1,226 @@
+"""Судья части `loader` (gen_manifest.py): загрузчик манифеста P/02.1 и канонический вид P/02.2 против данных урока.
+
+Запуск: /opt/check-env/lesson-spec/bin/python tools/normgen/test_gen_manifest.py [-v]   (go 1.22 и кеш модулей
+закреплённых версий Platform/common/versions/go.mod — без сети)
+
+1. out свежий: out/p02/go/manifest и go.mod, go.sum равны свежему прогону генератора; go vet пакета чистый.
+2. Корпус: каждый случай Platform/02-installer/acceptance/1/verdicts.tsv (946) — вердикт ok/refused, у случаев
+   classes.tsv — класс отказа (text | form | relations); векторы canonical (219) — байты вида равны expect/<case>.json;
+   пакет yaml-suite (402) — исход слоя 1 равен колонке layer1.
+3. Мутанты ручной среды (по одной правке): каждый даёт хотя бы одно расхождение с данными. Данные урока не различают
+   (проверено мутантами, код держит правило стека В7): отказ пустого значения сверх схемы, слой 2 «4.0 → 4» (JCS и
+   text() дают те же байты), x-opaque в проекции (внутри непрозрачных мест нет умолчаний схемы).
+"""
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent.parent
+sys.path.insert(0, str(HERE))
+os.environ.setdefault("NORMGEN_LESSON", "02-installer")
+import gen_manifest  # noqa: E402
+
+OUT = gen_manifest.DEFAULT_OUT / "go"
+ENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off")
+
+HARNESS = r'''package main
+
+import (
+	"bytes"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"%(module)s/manifest"
+)
+
+func tsv(p string) [][]string {
+	b, err := os.ReadFile(p)
+	if err != nil {
+		panic(err)
+	}
+	var out [][]string
+	for _, l := range strings.Split(string(b), "\n") {
+		if l == "" || strings.HasPrefix(l, "#") {
+			continue
+		}
+		out = append(out, strings.Split(l, "\t"))
+	}
+	return out
+}
+
+func main() {
+	root := os.Args[1]
+	acc := filepath.Join(root, "Platform/02-installer/acceptance/1")
+	classes := map[string]string{}
+	for _, r := range tsv(filepath.Join(acc, "classes.tsv")) {
+		classes[r[0]] = r[1]
+	}
+	n, ok, cl := 0, 0, 0
+	for _, r := range tsv(filepath.Join(acc, "verdicts.tsv")) {
+		if r[0] == "case" {
+			continue
+		}
+		n++
+		data, err := os.ReadFile(filepath.Join(acc, "cases", r[0]+".subsystem.yaml"))
+		if err != nil {
+			panic(err)
+		}
+		_, ref := manifest.Load(r[0]+".subsystem.yaml", data)
+		got := "ok"
+		if ref != nil {
+			got = "refused"
+		}
+		switch {
+		case got != r[1]:
+			msg := ""
+			if ref != nil {
+				msg = ref.Message
+			}
+			fmt.Printf("BAD verdict %%s: want %%s, got %%s %%s\n", r[0], r[1], got, msg)
+		case ref != nil && classes[r[0]] != "" && ref.Class != classes[r[0]]:
+			fmt.Printf("BAD class %%s: want %%s, got %%s %%s\n", r[0], classes[r[0]], ref.Class, ref.Message)
+		default:
+			ok++
+			if classes[r[0]] != "" {
+				cl++
+			}
+		}
+	}
+	fmt.Printf("SUM verdicts %%d %%d classes %%d\n", ok, n, cl)
+	vec := filepath.Join(root, "Platform/02-installer/vectors/canonical")
+	cn, cok := 0, 0
+	for _, r := range tsv(filepath.Join(vec, "cases.tsv")) {
+		if r[0] == "case" {
+			continue
+		}
+		cn++
+		data, _ := os.ReadFile(filepath.Join(root, r[1]))
+		want, _ := os.ReadFile(filepath.Join(vec, r[2]))
+		got, ref := manifest.Canonical(filepath.Base(r[1]), data)
+		if ref == nil && bytes.Equal(got, want) {
+			cok++
+		} else if ref != nil {
+			fmt.Printf("BAD canonical %%s: refused %%s\n", r[0], ref.Message)
+		} else {
+			fmt.Printf("BAD canonical %%s: bytes differ\n", r[0])
+		}
+	}
+	fmt.Printf("SUM canonical %%d %%d\n", cok, cn)
+	yd := filepath.Join(root, "Platform/common/vectors/yaml-suite")
+	yn, yok := 0, 0
+	for _, r := range tsv(filepath.Join(yd, "expect.tsv")) {
+		if r[0] == "id" {
+			continue
+		}
+		yn++
+		data, err := os.ReadFile(filepath.Join(yd, "inputs", r[0]+".yaml"))
+		if err != nil {
+			panic(err)
+		}
+		_, _, refused := manifest.Layer1(data)
+		got := "ok"
+		if refused {
+			got = "refused"
+		}
+		if got == r[2] {
+			yok++
+		} else {
+			fmt.Printf("BAD yaml-suite %%s: want %%s, got %%s\n", r[0], r[2], got)
+		}
+	}
+	fmt.Printf("SUM yaml-suite %%d %%d\n", yok, yn)
+}
+'''
+
+
+def run(mod_dir):
+    (mod_dir / "cmd/manifestjudge").mkdir(parents=True, exist_ok=True)
+    (mod_dir / "cmd/manifestjudge/main.go").write_text(HARNESS % {"module": gen_manifest.L.go_module})
+    p = subprocess.run(["go", "run", "./cmd/manifestjudge", str(ROOT)], cwd=mod_dir, capture_output=True, text=True,
+                       env=ENV, timeout=1800)
+    if p.returncode:
+        return None, [p.stderr[-2000:]]
+    sums = {ln.split()[1]: ln.split()[2:] for ln in p.stdout.split("\n") if ln.startswith("SUM ")}
+    bad = [ln for ln in p.stdout.split("\n") if ln.startswith("BAD ")]
+    return sums, bad
+
+
+class Loader(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if shutil.which("go") is None:
+            raise unittest.SkipTest("no go")
+        try:
+            cls.files = gen_manifest.render()
+        except gen_manifest.GenError as exc:
+            raise unittest.SkipTest(f"the forms are refused by the generator: {exc}")
+        cls.tmp = Path(tempfile.mkdtemp(prefix="judge-manifest-"))
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def copy(self, name):
+        d = self.tmp / name
+        shutil.rmtree(d, ignore_errors=True)
+        d.mkdir(parents=True)
+        shutil.copytree(OUT / "manifest", d / "manifest")
+        for f in ("go.mod", "go.sum"):
+            shutil.copy(OUT / f, d / f)
+        return d
+
+    def test_fresh_and_vet(self):
+        for relp, data in self.files.items():
+            self.assertEqual((OUT / relp).read_bytes(), data, f"{relp} is stale: run gen_manifest.py")
+        mod, s = gen_manifest.go_mod(gen_manifest.DEFAULT_OUT)
+        self.assertEqual((OUT / "go.mod").read_bytes(), mod)
+        self.assertEqual((OUT / "go.sum").read_bytes(), s)
+        v = subprocess.run(["go", "vet", "./manifest/"], cwd=OUT, capture_output=True, text=True, env=ENV)
+        self.assertEqual(v.returncode, 0, v.stderr)
+
+    def test_corpus(self):
+        sums, bad = run(self.copy("clean"))
+        self.assertIsNotNone(sums, bad)
+        self.assertEqual(bad, [])
+        for k, (got, total) in ((k, v[:2]) for k, v in sums.items()):
+            self.assertEqual(got, total, k)
+        self.assertEqual(int(sums["verdicts"][1]), 946)
+        self.assertEqual(int(sums["canonical"][1]), 219)
+        self.assertEqual(int(sums["yaml-suite"][1]), 402)
+
+    def test_mutants(self):
+        mutants = [
+            ("manifest.go", "if len(numbers) > 0 {", "if false {"),
+            ("manifest.go", "if len(got) > 0 {", "if false {"),
+            ("view.go", "\tsugar(t)\n", "\n"),
+            ("view.go", "if _, ok := o.M[\"snapshot\"]; !ok {", "if false {"),
+            ("view.go", "setDefault(j, \"deleted\", k+\".deleted\")", ""),
+            ("view.go", "if _, has := d.M[\"form\"]; !has {", "if false {"),
+            ("view.go", "\t\tsetDefault(f, \"default\", nil)\n", "\n"),
+            ("view.go", "setDefault(e, \"decoded\", true)", ""),
+            ("view.go", "if ordered && truthy(chain, \"x-ordered\") {", "if false {"),
+            ("value.go", "sort.Slice(keys, func(i, j int) bool { return utf16Less(keys[i], keys[j]) })", ""),
+            ("text.go", "if depth > maxDepth {", "if depth > maxDepth+1 {"),
+        ]
+        alive = []
+        for i, (f, a, b) in enumerate(mutants):
+            d = self.copy(f"m{i}")
+            p = d / "manifest" / f
+            src = p.read_text()
+            self.assertIn(a, src, f"mutant {i}: {a!r} not in {f}")
+            p.write_text(src.replace(a, b, 1))
+            sums, bad = run(d)
+            if sums is not None and not bad:
+                alive.append((f, a))
+        self.assertEqual(alive, [], "mutants not killed")
+
+
+if __name__ == "__main__":
+    unittest.main()
