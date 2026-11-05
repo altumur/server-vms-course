@@ -28,7 +28,7 @@ chapter 6.5 Н3): a template with `{input}` — the path of a file with an objec
 `seed_hex`, `kid` — the strings of the cells, `now` — the number of the cell, `claims` — the lexeme of the cell as it is (the order of fields, `routes` and
 the numeric lexemes are not re-derived; the row `number_form` with an exponent at `expires` is a valid input of issuing, the form of the checking
 side does not apply to issuing). The seed, `kid` and the time are from the row, not the clock and not the stand's own secrets. The answer is exactly
-`{"claims_jcs": <строка>, "token": <строка>}`, both fields byte for byte with the columns of the table. An input not of the form: not an object,
+`{"claims_jcs": <row>, "token": <row>}`, both fields byte for byte with the columns of the table. An input not of the form: not an object,
 a missing, extra or repeated field, a wrong type, `seed_hex`, `kid` or `claims` not by the issuing contract; there is no refusal
 of issuing with code 0 — the published rows are computable. stdout is exactly one JSON object and LF: the first byte is `{`, after the object — LF and the end; extra fields, bytes, CRLF, whitespace around — FAIL of the row; formatting inside the object is allowed; service output goes to stderr. Code 0 — computed; an input not of the form — code 2, stdout empty. There is no envelope `result` (the guess of stage C C06-F2-IO-02, the Architect's decision of 2026-10-23).
 
@@ -45,7 +45,7 @@ the Architect of 2026-10-23).
 
 ## Keys
 
-The Ed25519 seed is 32 bytes `sha256("w2c test <слово>")` (as the keys of [the sealing vectors](../sealing/README.md)); the tables do not name the words
+The Ed25519 seed is 32 bytes `sha256("w2c test <word>")` (as the keys of [the sealing vectors](../sealing/README.md)); the tables do not name the words
 of derivation — the seed and the public key are fixed as bytes, an implementation takes them from here and does not derive them
 anew (`SA67-Б3`). The seed is what the row `door/signer` holds in `seed_secret` (64 lowercase hex); the public key is the value
 of the row `door/keys` under the same `kid`.

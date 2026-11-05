@@ -2,8 +2,255 @@
 # the label of the column en, its translation `ru/…` — the label of the column ru; en_mirror reads a label of a pair by this
 # table, not byte for byte. A label stands in angle brackets `<…>` (`<name>`), the word of a variant in `⟨… N⟩`.
 ru	en
+член	member
 имя	name
+раздел	part
+кластер	cluster
+роль	role
+сервер	server
+книга	book
+ключ	key
+корень событий	events root
+корень объектов	objects root
+корень событий или объектов	events or objects root
 корень	root
+таблица	table
+поле	field
+код	code
+вид	kind
+слово	word
+ретранслятор	relay
+экземпляр	instance
+воркер	worker
+слот	slot
+значение	value
+метка	label
+метки	labels
+место	place
+путь	path
+эпоха	epoch
+коробка	box
+семья	family
+текст	text
+дерево	tree
+файл	file
 т	t
-имена unit.fields в порядке автора	names of unit.fields in the author's order
+строка	row
+запрос	request
+номер	number
+каталог	dir
+подсистема	subsystem
+ИМЯ	NAME
+Имя	Name
+с	s
+отпечаток	fingerprint
+часть	part name
+маршрут	route
+индекс	index
+доля	share
+к	to
+от	from
+форма	form
+путь входа	entry path
+сегмент	segment
+ссылка	ref
+sha16(имя)	sha16(name)
+единица	unit
+я	me
+адрес	address
+число	count
+счёт	count
+число JSON	JSON number
+держатель	holder
+причина	reason
+шард	shard
+файл восстановления домена	domain recovery file
+дверь	door
+процесс	process
+свой сервер	own server
+имя слота	slot name
+исход	outcome
+человек	person
+образец	pattern
+кто	who
+момент	moment
+схема	schema
+мс	ms
+секунды	seconds
+тело	body
+комплект	kit
+поля	fields
+класс	class
+префикс	prefix
+байтов	bytes
+время	time
+слова	words
+непустая строка	non-empty string
+их id	their ids
+пароль	password
+конверт	envelope
+терм	term
+путь пробы	probe path
+отпечаток m2	m2 fingerprint
+почему	why
+сегмент door.pass	door.pass segment
+сегмент door.pass манифеста	door.pass segment of the manifest
+шаг	step
+начало	start
+целое	integer
+группа	group
+себя	self
+объект	object
+кластеры	clusters
+случай	case
+порт	port
+запись	record
+метод	method
+МЕТОД	METHOD
+подпись	caption
+край	edge
+поля тела	body fields
+сеть	network
+свой кластер	own cluster
+этот кластер	this cluster
+запуск	run
+оп	op
+сценарий	scenario
+лист	leaf
+путь описания	description path
+первый	first
+домен	domain
+член-заявитель	requesting member
+член-вкладчик	contributing member
+член найденный	found member
+члены	members
+исполнитель	executor
+том	volume
+что	what
+via или direct	via or direct
+получатель	recipient
+item строки	row item
+роли	roles
+виды	kinds
+таблица X	table X
+другая	other
+их sub	their sub
+правило	rule
+строка или префикс	row or prefix
+часть из 24 знаков	24-character part
 вариант	variant
+поля show	show fields
+токен двери	door token
+прежний jti	former jti
+новый jti	new jti
+подсказка	hint
+язык	language
+разделитель	separator
+ещё	more
+метрика	metric
+сосед	neighbour
+таблица этого манифеста	table of this manifest
+дайджест	digest
+id как строка	id as a string
+сообщение	message
+пульс	heartbeat
+пульс без worker	heartbeat without worker
+имя строки	row name
+элемент	element
+строка выдачи	output line
+текст JCS	JCS text
+64 строчных hex	64 lowercase hex
+подсистема подателя	filer's subsystem
+своя подсистема	own subsystem
+ячейка rid как есть	rid cell as is
+прочитанное значение	read value
+1007 байт	1007 bytes
+предок	ancestor
+открытый ключ зерна	seed public key
+ряд	series
+свободно	free
+сервер соседа	neighbour's server
+ждущих	waiting
+каноническая запись	canonical record
+токен	token
+текст строки codes	text of the codes row
+роль супервизоров	supervisors role
+статус	status
+команда	command
+sha256 hex байтов исходного компонента	sha256 hex of the bytes of the source component
+моя	mine
+цель	target
+логин	login
+из объявления вида	from the kind declaration
+виды keep: true каталога	kinds keep: true of the catalogue
+виды маршрута	kinds of the route
+поле из объявления вида	field from the kind declaration
+виды keep по манифесту, объявившему вид	kinds keep by the manifest that declared the kind
+имя поля	field name
+алгоритм	algorithm
+ключ группы или ""	group key or ""
+мутация	mutation
+плейсхолдер	placeholder
+подстановка	substitution
+ячейка fetched	fetched cell
+ячейка rid	rid cell
+fault или класс	fault or class
+текст JSON	JSON text
+текст элемента строкой	element text as a string
+значение JSON	JSON value
+зона	zone
+код HTTP	HTTP code
+поле пульса	heartbeat field
+поле place_by	place_by field
+строка единицы — элементы текстом	unit row — elements as text
+отпечаток сертификата строки ca-certs	fingerprint of the certificate of the ca-certs row
+id единицы	unit id
+ответ ресурса	resource answer
+сокет роли	role socket
+путь с query	path with query
+коробка стенда	stand box
+корень событий srv-a	events root of srv-a
+клиент	client
+каталог комплекта	kit dir
+свой порт	own port
+флаги	flags
+операция	operation
+аргументы	arguments
+его токен	its token
+$ключ	$key
+$токен	$token
+слова до конца строки	words to the end of the line
+директива	directive
+PEM центра foreign	PEM of the foreign CA
+sha256 DER листа m2-console	sha256 DER of the m2-console leaf
+PEM листа m2-console	PEM of the m2-console leaf
+имя токена стенда	stand token name
+суффикс	suffix
+ДВЕРЬ	DOOR
+id события	event id
+число счетов	tally count
+каталог состояния воркера	worker state dir
+jti этого токена	jti of this token
+мой сервер	my server
+действие	action
+JSON-тело	JSON body
+слово record	record word
+версия	version
+revision, целое ≥ 1	revision, an integer ≥ 1
+ошибка	error
+ключ объекта	object key
+ключ строки	row key
+имя роли	role name
+поле цели	target field
+поле этой строки	field of this row
+соль: 32 hex	salt: 32 hex
+ключ: 64 hex	key: 64 hex
+стенные секунды	wall-clock seconds
+6 hex случайности	6 hex of randomness
+hexUTF8(дерево)	hexUTF8(tree)
+hexUTF8(единица)	hexUTF8(unit)
+hexUTF8(экземпляр)	hexUTF8(instance)
+hex открытого ключа токенов	hex of the public tokens key
+имена unit.fields в порядке автора	names of unit.fields in the author's order
+заказчик	customer
+entry без суффикса	entry without the suffix

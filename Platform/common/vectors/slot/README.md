@@ -10,7 +10,7 @@ the rows are by the text of the contract, the norms do not change.
 
 UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, the first line not skipped is the header `case<TAB>input<TAB>expect<TAB>note`.
 
-**Input** — `{row, age}`: `row` — the elements of the row `<sub>/slots/<имя>` as text (`holder`, `until`, `released`, `gen`), `age` —
+**Input** — `{row, age}`: `row` — the elements of the row `<sub>/slots/<name>` as text (`holder`, `until`, `released`, `gen`), `age` —
 the age of the observed version on the judge's clock, s (the observation contract «Observation of a version»). **Output** — `{state}`: `held`, `lapsed`,
 `released`, `taking`, `torn`; at `torn` also `takeable` — whether it may be captured by this version (gen reads and the version
 has been observed for no less than `TORN_STILL`; P/03.2 the outcomes `/until`, `/gen`). The comparison — JSON by value.

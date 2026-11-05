@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/ask-sig.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common algorithm of several processes is a contract,
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common algorithm of several processes is a contract,
 not copies in chapters; analysis of the review of stage A 8–10, № 13 / decision 2). The owner is lesson P/08, chapter [8.8](../../08-domain/spec/08.8-domain.norms.md) (moved from
 М11/10 Н3 «ask-sig»): the signature of asks without a member on the path.
 
@@ -12,7 +12,7 @@ not copies in chapters; analysis of the review of stage A 8–10, № 13 / decis
 | `prepare` — `POST /api/prepare` (P/08.8 Н1.7 step 4) | the process `domain` of the holder with the token key `current` of the set (8.8) | the process `domain` of the target (8.8); the target console passes the ask on without a check (P/06.7 Н1.8) |
 | `move` — `POST /domain/move` (P/08.8 Н1.8 by_file) | the command `w2cctl domain move` with the root of the recovery file, when there is no token | the console of the target cluster (P/06.7 Н1.8) and the process `domain` (8.8) |
 
-Moved from М11/10 Н3 «ask-sig — подпись просьбы» (the block `message`, `time`, `signature`, `check`) and Н4 (the words of `ask-sig`)
+Moved from М11/10 Н3 «ask-sig — the ask signature» (the block `message`, `time`, `signature`, `check`) and Н4 (the words of `ask-sig`)
 without a change of behaviour. What a door answers to a refusal (401 at `/api/backup` with `detail` — the word; 400 and 403 at `/api/prepare`),
 who the member is and whose key — are the norms of the doors (P/08.8 Н1.7, Н2; P/06.7 Н1.13). The agent signature `X-Agent-Signature` is another contract
 ([the agent signature contract](agent-signature.md)). References in the moved text are of lesson М11/10 (Н1.7, Н1.8 — the same numbers of chapter P/08.8; Н1.9 — P/06.7 Н1.13).
@@ -21,11 +21,11 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-`pub` is the member key `domain/member-key` (backup), the key `current` of the set `domain/keys` (prepare) or `root_pub` of the row `domain/root` (move): `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`. The doors where `X-W2C-*` is checked are `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/backup`, `/domain/move`) and `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/prepare`) (layout audit, В-07, В-08; the Architect's decision of 2026-10-25).
+`pub` is the member key `domain/member-key` (backup), the key `current` of the set `domain/keys` (prepare) or `root_pub` of the row `domain/root` (move): `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`. The doors where `X-W2C-*` is checked are `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/backup`, `/domain/move`) and `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/prepare`) (layout audit, V-07, V-08; the Architect's decision of 2026-10-25).
 
 ## Signature and check
 
-From М11/10 Н3 «ask-sig — подпись просьбы»:
+From М11/10 Н3 «ask-sig — the ask signature»:
 
 ```
 message:  backup|<cluster>|<member>|<time>   (the backup ask; the member key)
@@ -39,12 +39,12 @@ check:    in order: the header is absent or empty — missing (prepare and move 
           verify — bad_signature; otherwise ok
 ```
 
-`<член>` of the ask `backup` is the value of `X-W2C-Member`; `<кластер>` is the cluster at whose console the copy is asked for; `<цель>`
-of the ask `prepare` is the member to which the domain is handed over (P/08.8 Н1.7 `to`); `<время>` is the value of `X-W2C-Time` as it came.
+`<member>` of the ask `backup` is the value of `X-W2C-Member`; `<cluster>` is the cluster at whose console the copy is asked for; `<target>`
+of the ask `prepare` is the member to which the domain is handed over (P/08.8 Н1.7 `to`); `<time>` is the value of `X-W2C-Time` as it came.
 The form of the function is the input of the command `ask-sig` of [P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н5:
 `{ask: backup | prepare | move, cluster, pub, header: {member?, time?, signature?}, now, body_sha256?}` → `{result: ok}` |
-`{result: refused, reason}`. The fields of the input (the reading of М11/10 Н5 and of the acceptance README of М11/10 «Входы»; analysis of the review of stage B
-8–10, № 4, Claude С-7):
+`{result: refused, reason}`. The fields of the input (the reading of М11/10 Н5 and of the acceptance README of М11/10 «Inputs»; analysis of the review of stage B
+8–10, № 4, Claude S-7):
 
 ```yaml
 cluster:   <cluster> of the messages backup and move and <target> of the message prepare — the cluster of the checker: the console at which the copy is asked for,
@@ -57,7 +57,7 @@ member:    there is no field member at the top level of the input: the member of
            an extra field, the input is out of form, code 2 (P/08.8 Н5 exit; the Architect's decision of 2026-10-20 on the open questions of the analysis of the review of stage B 8–10, question 2; formerly the field was admitted and not read)
 now:       the wall seconds of the checker
 exit:      0 — computed; 2 — the input is out of form; the exit codes follow the principle of the vocabulary of the «Стенда домена» («Коды выхода команд-векторов»: 2 — the form
-           of a trusted input, 0 with a word — a document of another cluster; the Architect's decision on the reconciliation of М11, H14) (a copy of P/08.8 Н5 exit; layout audit, the Architect's decision of 2026-10-25, Б-14):
+           of a trusted input, 0 with a word — a document of another cluster; the Architect's decision on the reconciliation of М11, H14) (a copy of P/08.8 Н5 exit; layout audit, the Architect's decision of 2026-10-25, B-14):
            at ask-sig pub is not hex of 32 bytes, cluster is not a cluster name, ask is not backup | prepare | move, body_sha256 is out of form, it is absent at move or present at another ask, now is not a number or absent, there is no header,
            header is not an object, header.time is not a string, an extra field in header or in the input — 2
 ```

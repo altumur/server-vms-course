@@ -34,7 +34,7 @@
     ]
    },
    {
-    "description": "`room.<sub>` — an element for each subsystem of the catalogue whose role file `roles/<sub>worker.env` is present on the box; next to it `live.<sub>` (ADR-0084 addendum (3) Р14′)",
+    "description": "`room.<sub>` — an element for each subsystem of the catalogue whose role file `roles/<sub>worker.env` is present on the box; next to it `live.<sub>` (ADR-0084 addendum (3) R14′)",
     "type": "string"
    }
   ]

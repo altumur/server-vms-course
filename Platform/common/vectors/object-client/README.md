@@ -14,7 +14,7 @@ read at an access to the objects of the cluster: the object of the row, `null` �
 `cluster` — the read door of the cluster `resource` (an explicit address or the `url` of the door row; `"@unknown"` — the read of the objects of the cluster is
 «не известно» (not known)) and `door` — the key of the read door row, when the address is by it; or `@exit 2` — a refusal of start. 15 rows: a bare
 `file://`, an absolute and a non-absolute path, `cluster://` with `resource` (empty and a name before «?»), another scheme; `resource` empty,
-repeated, with percent-encoding (OBJECT135-URL-01); a bare `cluster://` and `cluster://<имя>` — the door by the door row of its own
+repeated, with percent-encoding (OBJECT135-URL-01); a bare `cluster://` and `cluster://<name>` — the door by the door row of its own
 server; no row, not readable, the store did not answer — `"@unknown"`, not a refusal of start; an explicit `resource` overrides the door
 row (P03-OBJECTS-DEFAULT-1FD, the Architect's decision of 2026-10-26). The vectors check the parsing of the address, not the connection: an IP in
 `resource` (`https://10.0.0.1:8446`) stays — a client of its own cluster will refuse such a door over `https://` with `ip_address` (the contract `tls`;

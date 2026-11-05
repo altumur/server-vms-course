@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row domain/partial/<раздел> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row domain/partial/<раздел> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 	domain	the whole row is unreadable: the source is not known — the merge of the section does not go, the section row does not change, log without the value; the intake and DELETE of this section — 503 unavailable	0	строка	P/08.8 Н1.8а

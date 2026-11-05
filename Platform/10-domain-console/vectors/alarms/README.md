@@ -12,7 +12,7 @@ the alarm page of a member — by the agent ([P/09.1](../../../09-agent/spec/09.
 
 The rows 01–15 were transferred from the inputs of the command `alarms` of the acceptance of М11/11 (`inputs/alarms-*.json`, sc. 04) without a change of the bytes
 of the values: only whitespace and line breaks outside JSON strings are removed; `case` is the name of the input file; the expectation `ok <JSON>` is the cell
-`expect` without whitespace outside strings, `@exit 2` — as a string (the plan of the move of lesson 10, § 3, В7; the Architect's decision on the plans
+`expect` without whitespace outside strings, `@exit 2` — as a string (the plan of the move of lesson 10, § 3, V7; the Architect's decision on the plans
 8–10, ADR-0083 addendum (14) item 17). Scenario 04 of the acceptance of М11/11 and its inputs `alarms-*` are removed by the move of lesson 10: the table is
 the only source of these cases.
 

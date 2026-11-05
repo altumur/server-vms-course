@@ -30,7 +30,7 @@ platform/mirror and platform/space are not set; requests for release and for a c
 console — the door of the console testsub from the loopback, access to operations and units is allowed;
 resource — the door of the resource srv-a with an admissible identity; store — the door of the store with reading of
 testsub/ and objects/testsub/. If the deployment uses TLS, issue the corresponding
-certificates and roles per P/02.4 Н1.6 (`w2c-ca.sh issue <server> <роль>`, the kit `kit`) and the address rule of P/02.4 Н1.6;
+certificates and roles per P/02.4 Н1.6 (`w2c-ca.sh issue <server> <role>`, the kit `kit`) and the address rule of P/02.4 Н1.6;
 these scenarios do not replace the check of TLS refusals.
 Do not accelerate the deadlines and parameters of testsub: valid_for=30, most_valid=600; the ordinary
 ticks of the holder and the reaper are expected, settle=60 by default.
@@ -91,7 +91,7 @@ the vectors [`reap`](../../vectors/reap/README.md): there is no holder on the st
 
 ## Deadline of table rows (sc. 12)
 
-ADR-0094 step 3б. The table `scraps` of the manifest `testsub2`: `delete_after` 35, the fields `name`, `note`; `shelves` has no deadline key. The deadline is not
+ADR-0094 step 3b. The table `scraps` of the manifest `testsub2`: `delete_after` 35, the fields `name`, `note`; `shelves` has no deadline key. The deadline is not
 waited for shorter and is not forged: the age judges the observed version, not the stamp (P/06.4 Н3 `tables`), so the technique with the old
 `at` of sc. 11 is not here. The tick of the reaper is 30 s, the first pass after the write (the moment `t1`) comes not later than 30 s.
 - Step 4 — `@sleep 31`: the first pass has surely happened. A reaper that removes the row at the first look gives 404 at step 5.

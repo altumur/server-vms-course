@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/labels.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5); the Architect's decision on the analysis of the review of stage A 6–7, № 11: the label
+A common contract of the module «Platform» (ADR-0083 addendum (5); the Architect's decision on the analysis of the review of stage A 6–7, № 11: the label
 alphabet is in `common/`). The owner is lesson [P/06](../../06-console/spec/06.6-console.norms.md) (chapter 6.6: the label doors of a
 server; moved from there; analysis of the review of stage B 6–7, № 35). Readers: the controller — the constraint `labels-subset` and the worker labels ([P/04](../../04-controller/spec/04-controller.norms.md)
 Н1.3), the console — the label field of a unit ([P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.2 `list`), the label doors
@@ -14,7 +14,7 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The files the contract works by (layout audit, В-33, В-34; the Architect's decision of 2026-10-25): the server label
+The files the contract works by (layout audit, V-33, V-34; the Architect's decision of 2026-10-25): the server label
 row `platform/servers/<s>` is the family `server-labels`: `Platform/06-console/data/server-labels.schema.json`,
 `Platform/06-console/data/server-labels.outcomes.tsv`; the label doors of a server (`PUT /servers/{server}/labels`, the probe `labels`,
 the refusal 400) are `Platform/06-console/spec/06-console.api.openapi.yaml`.

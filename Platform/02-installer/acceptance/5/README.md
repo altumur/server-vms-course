@@ -13,7 +13,7 @@ The scenarios and the manifest variants were moved from the acceptance of М10/6
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors): a door without a prefix is the store, `@as <роль>`, `@header` before the method, `$имя`, `ASSERT`;
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors): a door without a prefix is the store, `@as <role>`, `@header` before the method, `$имя`, `ASSERT`;
 the expectation is a subset of fields, `index` may be omitted. Own additions:
 
 - `expect` without a body at the code `403` — the full form `{kind: forbidden, error: …}`. For a refusal of an operation on a row, error names the role, the action and the key.
@@ -51,7 +51,7 @@ an allowed read of an absent row returns Row with items null per chapter P/01.1.
 ## Manifest variants (`variants/`)
 
 The derivation of rights by meaning on manifests outside the stand (the reconciliation of python and go М10/6–11: R2–R8, R10, R12; registry line e31e5c28).
-The directory `variants/<вариант>/` — the files `*.subsystem.yaml` (the manifest catalogue of the variant, loaded per chapter 2.1) and exactly
+The directory `variants/<variant>/` — the files `*.subsystem.yaml` (the manifest catalogue of the variant, loaded per chapter 2.1) and exactly
 one of: `expect.tsv` (the derivation of rights and probes), `refused` (an expected generation refusal), `check.tsv` with the directory `check/` (the comparison
 `--check`); the forms of `refused` and `check.tsv` are the Architect's decision on the question of the form (the Gemini audit P/02, properties 24, 25).
 
@@ -62,7 +62,7 @@ line per probe: a role of the rights file (P/01.2 Н1.1), the action `read` | `w
 1. calls the rights derivation tool of the implementation (Н2, «Implementation decides» item 1) on the catalogue of the variant with the deployment `dep` —
    by the rights derivation command of the «Stand» of the common acceptance README; code ≠ 0 — a mismatch of the variant;
 2. starts a fresh store instance with this file (`{rights}`);
-3. for each line calls through the role socket: `read` — `GET /v1/get?key=<ключ>`, `write` — `put` with `items: {"p": "1"}`, `delete`
+3. for each line calls through the role socket: `read` — `GET /v1/get?key=<key>`, `write` — `put` with `items: {"p": "1"}`, `delete`
    — `delete`, without `cas` and a guard. The rule is as in the evaluator vector (`Platform/01-store/vectors/rights-evaluator`):
    `allow` — only a confirmed success: for a read 200 of the form `Row` (for an absent row — `{items: null, index: ""}`,
    chapter P/01.1 Н2), for a write and a deletion 200 `Written`; `deny` — 403 `forbidden`; there is no role socket — the same as 403 (the role is not in the
@@ -89,7 +89,7 @@ set); `comment`, order, repeats and spaces are not compared; a file not by the f
 
 | Variant | Manifests | What it checks |
 |---|---|---|
-| `v1-base` | `va` without `requests`, with `delete_after` | the roles of the platform and of the manifest; there is no console `requests/*` (R8); an empty `<y>` and `never` of the epoch (R12); `retention` of the resource (R2); `domain/grants` of the console — the exact key and the family `domain/grants/*` (`domain/grants/c1` — yes: the domain trace P/06.3 Н1.8; review analysis of stage A 8–10, plan 8 В7, a behaviour change), `domain/view` — no (R5); `domain/holder` of the worker (R7); there is no role `vadomain`; `door/signer` is read by the console, not by the worker, without a declaration in the manifest (review analysis of stage B 6–7, № 36) |
+| `v1-base` | `va` without `requests`, with `delete_after` | the roles of the platform and of the manifest; there is no console `requests/*` (R8); an empty `<y>` and `never` of the epoch (R12); `retention` of the resource (R2); `domain/grants` of the console — the exact key and the family `domain/grants/*` (`domain/grants/c1` — yes: the domain trace P/06.3 Н1.8; review analysis of stage A 8–10, plan 8 V7, a behaviour change), `domain/view` — no (R5); `domain/holder` of the worker (R7); there is no role `vadomain`; `door/signer` is read by the console, not by the worker, without a declaration in the manifest (review analysis of stage B 6–7, № 36) |
 | `v2-requests` | `va` with `requests`, `vb` with `worker.requests: [va]` | the console `requests/*` only at `va`; the submission of `vbworker` into `va`; the marks `objects/va/commands/*` (R8, R9) |
 | `v3-objects-rows` | `va` with `objects.rows: [marks/]` | `marks/` → `objects/va/marks/*` (R10) |
 | `v4-domain-kept` | `va` with `domain.kept: [ledger, badges/]` | `vadomain` writes the slot and `kept`; `domainagent` — by the form of the declaration and without the slot and the pulse of the worker on the domain (R4, R3) |

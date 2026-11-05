@@ -19,7 +19,7 @@ P/08, [глава 8.4](../../../08-domain/ru/spec/08.4-domain.norms.md) (Н1.4 �
 таблица ролей не участвуют (ADR-0097 §4, ADR-0098 §4); модуль консоли считает подсказку по тем же группам и ярусам
 ([P/07](../../../07-console-module/ru/spec/07-console-module.norms.md) Н1.5 `may`), сервер проверяет всегда.
 
-Шаги 1–8 перенесены из М11/9 Н1.4 (вход, вывод) и Н4 (слова `may`); номера шагов прежние, шаги 4а, 7а–7в добавлены ADR-0098–ADR-0100. У
+Шаги 1–8 перенесены из М11/9 Н1.4 (вход, вывод) и Н4 (слова `may`); номера шагов прежние, шаги 4a, 7a–7c добавлены ADR-0098–ADR-0100. У
 владельца остаются: строка гранта ([P/08.4](../../../08-domain/ru/spec/08.4-domain.norms.md) Н1.3: `lines`, `line`, ранги `cap` — `none < view < edit < admin`, `sub`, `scope`,
 `until`, `GRANT_LIFETIME`, `unreadable` — значение и правило входа повторены ниже, «Функция `may`»; копия члена — [P/09.1](../../../09-agent/ru/spec/09.1-agent.norms.md) Н1.4), проверка у процесса
 `domain` и что дверь отвечает на `deny` (P/08.4 Н1.5: 403 `denied`, `detail` у `stale`), аварийная учётка у держателя
@@ -31,7 +31,7 @@ P/08.4 Н1.3; метки — [договор азбуки меток](labels.md)
 
 ## Форма
 
-Входы функции: `grants` — копия `domain/grants` члена и `domain/grants/domain` у консоли домена и процесса `domain` — `Platform/09-agent/data/grants.schema.json`, `Platform/09-agent/data/grants.outcomes.tsv`; `Platform/08-domain/data/grants.schema.json`, `Platform/08-domain/data/grants.outcomes.tsv`; `disabled` — строка `domain/disabled`: `Platform/08-domain/data/disabled.schema.json`, `Platform/08-domain/data/disabled.outcomes.tsv` (аудит раскладки, В-36, В-37; решение «Архитектора» 2026-10-25); `roles` у консоли кластера — копия `domain/roles` члена: `Platform/09-agent/data/roles.schema.json`, `Platform/09-agent/data/roles.outcomes.tsv`; у консоли домена и процесса `domain` — строки `domain/roles/<имя>` и `domain/groups/<имя>`: `Platform/08-domain/data/roles.schema.json`, `Platform/08-domain/data/groups.schema.json` с их таблицами исходов.
+Входы функции: `grants` — копия `domain/grants` члена и `domain/grants/domain` у консоли домена и процесса `domain` — `Platform/09-agent/data/grants.schema.json`, `Platform/09-agent/data/grants.outcomes.tsv`; `Platform/08-domain/data/grants.schema.json`, `Platform/08-domain/data/grants.outcomes.tsv`; `disabled` — строка `domain/disabled`: `Platform/08-domain/data/disabled.schema.json`, `Platform/08-domain/data/disabled.outcomes.tsv` (аудит раскладки, V-36, V-37; решение «Архитектора» 2026-10-25); `roles` у консоли кластера — копия `domain/roles` члена: `Platform/09-agent/data/roles.schema.json`, `Platform/09-agent/data/roles.outcomes.tsv`; у консоли домена и процесса `domain` — строки `domain/roles/<имя>` и `domain/groups/<имя>`: `Platform/08-domain/data/roles.schema.json`, `Platform/08-domain/data/groups.schema.json` с их таблицами исходов.
 
 ## Функция `may`
 
@@ -71,8 +71,8 @@ input:     {grants: <doc {lines}> | null, as_of: <число> | null, disabled: 
   anywhere: {<человек>: <until>} — у кого есть грант в любом кластере домена (P/08.4 Н1.3 anywhere); только шагу 6 и только на двери
            door.pass второго вида и дверях вида домена; поля нет — {}
   as_role: имя роли: проверка действия от роли, человека нет (ADR-0105 п. 4; раздел «Действие от роли»); поля нет — человек
-  iat:     iat токена запроса; на пути билета и шага операции — iat записи билета, токен тот же (договор сторожевой и передачи «Передача второго вида»); null — только сессии без токена: glass, отладочная личность; поля нет — null; нужно только шагу 4а:
-           токен, выпущенный раньше at назначения admin, шагу 4а не служит (ADR-0100 §3); сравнение — по целым секундам: at несёт до
+  iat:     iat токена запроса; на пути билета и шага операции — iat записи билета, токен тот же (договор сторожевой и передачи «Передача второго вида»); null — только сессии без токена: glass, отладочная личность; поля нет — null; нужно только шагу 4a:
+           токен, выпущенный раньше at назначения admin, шагу 4a не служит (ADR-0100 §3); сравнение — по целым секундам: at несёт до
            трёх знаков дроби, iat токена — любое конечное число
 output:    {result: allow} | {result: deny, reason: disabled | stale | no_grant} | {result: unavailable}
            unavailable — дверь отвечает 503 unavailable, а не 403 (правило «Нечитаемая строка» договора сторожевой и передачи)
@@ -83,22 +83,22 @@ output:    {result: allow} | {result: deny, reason: disabled | stale | no_grant}
 2. user ∈ disabled                                                      → deny disabled
 3. grants = null и (unit ≠ null или user нет в anywhere)                → deny no_grant
 4. as_of ≠ null и now − as_of > GRANT_LIFETIME                          → deny stale
-4а. в roles[user] есть {role: admin, until: t, at}, t = 0 или now < t, и iat = null или ⌊iat⌋ ≥ ⌊at⌋ → allow
+4a. в roles[user] есть {role: admin, until: t, at}, t = 0 или now < t, и iat = null или ⌊iat⌋ ≥ ⌊at⌋ → allow
 5. отбор: строка действует, если until = 0 или now < until, и sub строки нет, или равен sub входа, или sub входа = null.
    прямая группа — действующие строки subject = user;
    группы ролей — по одной на каждый {role: R, until: t} из roles[user], R ≠ admin, t = 0 или now < t: действующие строки
    subject = role:R; строки роли не из roles[user] не действуют (ADR-0097 §2, ADR-0098 §4, ADR-0099 §2)
 6. unit = null и cap = view: хоть одна строка прямой группы или группы роли, чей cap ≠ none,
    или anywhere[user] = 0, или now < anywhere[user]                     → allow
-6а. unit = "any": хоть одна строка прямой группы или группы роли с rank(cap строки) ≥ rank(cap) → allow; иначе шаг 7б, затем шаг 8
+6a. unit = "any": хоть одна строка прямой группы или группы роли с rank(cap строки) ≥ rank(cap) → allow; иначе шаг 7b, затем шаг 8
 7. прямая группа: строка с rank(cap строки) ≥ rank(cap) и область покрывает unit → allow
    * — любую (и "*"); unit:<s>/<i> — unit с (sub, id) = (s, i) или его about с (s, i); labels:L — все метки L у about, если
    about есть, иначе у самого unit; folder:<id> — id в цепочке chains у unit или у about;
    null и "*" ни одна область, кроме *, не покрывает; папку-объект (unit.sub = platform) unit: и labels: не покрывают;
    about "unknown" и chains "unknown" — строка, которой они нужны, не покрывает, проверяется следующая (не 503)
-7а. группа роли даёт уровень ≥ rank(cap) (уровень группы — ниже)        → allow
-7б. roles = "unreadable"                                                → unavailable
-7в. есть «нечитаемая» группа роли, которая могла бы разрешить (ниже)    → unavailable
+7a. группа роли даёт уровень ≥ rank(cap) (уровень группы — ниже)        → allow
+7b. roles = "unreadable"                                                → unavailable
+7c. есть «нечитаемая» группа роли, которая могла бы разрешить (ниже)    → unavailable
 8.                                                                      → deny no_grant
 ```
 
@@ -122,19 +122,19 @@ output:    {result: allow} | {result: deny, reason: disabled | stale | no_grant}
 - `k = 2` — ярус 1 пуст, `about` = `"unknown"`, у группы есть строка `unit:`;
 - `k = 3` — ярусы 1–2 пусты, у группы есть строка `folder:`, а `unit.chains` неизвестны, или `about.chains` неизвестны, или `about` = `"unknown"`.
 
-Такая группа уровня не даёт. Могла бы разрешить (шаг 7в) — есть её строка из отбора шага 5 с рангом ≥ `cap` в ярусах от `k` и
+Такая группа уровня не даёт. Могла бы разрешить (шаг 7c) — есть её строка из отбора шага 5 с рангом ≥ `cap` в ярусах от `k` и
 ниже: для `k = 1` — любая; для `k = 2` — `unit:`, `folder:`, `*`; для `k = 3` — `folder:`, `*`.
 
 **Отсечка** (ADR-0099 §2): ярус `k = 3` не «нечитаем», если результат от членства не зависит. Все строки `folder:` группы
-в отборе с рангом ≥ `cap`, а ярус 4 даёт уровень ≥ `cap` — шаг 7а разрешает; все ниже `cap`, а ярус 4 не разрешает — группа не
-разрешает и в шаге 7в не считается. Вызывающий тогда членство не читает.
+в отборе с рангом ≥ `cap`, а ярус 4 даёт уровень ≥ `cap` — шаг 7a разрешает; все ниже `cap`, а ярус 4 не разрешает — группа не
+разрешает и в шаге 7c не считается. Вызывающий тогда членство не читает.
 
 Прямая группа строки только складывает, в ней исключений нет. `none` бывает только в строках ролей. Роль `admin` строк не имеет
-(шаг 4а) и групп не образует: исключения других ролей на неё не действуют (ADR-0100 §1). Шаг 7б — и при отсутствии подходящих строк
+(шаг 4a) и групп не образует: исключения других ролей на неё не действуют (ADR-0100 §1). Шаг 7b — и при отсутствии подходящих строк
 `role:`: нечитаемая таблица могла нести назначение `admin` (ADR-0100 §1). Списки вместо `unavailable` дают `withheld` (P/06.4).
 
 Постоянная и вход строк (из P/08.4 Н1.3 `GRANT_LIFETIME`, `unreadable` и Н5 `exit` без изменения поведения; владелец
-текста — P/08.4; разбор ревью стадии B 8–10, № 4, Claude С-7):
+текста — P/08.4; разбор ревью стадии B 8–10, № 4, Claude S-7):
 
 ```yaml
 GRANT_LIFETIME: 86400   # с — шаг 4: копия члена старше as_of + GRANT_LIFETIME не даёт прав
@@ -146,7 +146,7 @@ lines_in:       функция получает только строки lines 
                 — у вызывающего, код 2 — у функции
 ```
 
-Какой вход не по форме (строки `grants` — доверенный вход) — README векторов [`may`](../vectors/may/README.md) «Форма входа команды `may`» (MAY-G01/G02); коды выхода команды `may` — копия [P/08.4](../../../08-domain/ru/spec/08.4-domain.norms.md) Н5 `exit` (аудит раскладки, решение «Архитектора» 2026-10-25, Б-14):
+Какой вход не по форме (строки `grants` — доверенный вход) — README векторов [`may`](../vectors/may/README.md) «Форма входа команды `may`» (MAY-G01/G02); коды выхода команды `may` — копия [P/08.4](../../../08-domain/ru/spec/08.4-domain.norms.md) Н5 `exit` (аудит раскладки, решение «Архитектора» 2026-10-25, B-14):
 
 ```yaml
 exit:      0 — вычислено; 2 — вход не по форме; коды выхода — по принципу словаря «Стенда домена» («Коды выхода команд-векторов»: 2 — форма
@@ -156,7 +156,7 @@ exit:      0 — вычислено; 2 — вход не по форме; код
 
 ## Суд по цели
 
-Дверь домена судит запись кластера по гранту этого кластера, а не `domain/grants/domain` (ADR-0110 доп. (4) п. 4, доп. (5) пп. 1, 5; Д-1, Д-2, Д-8 разбора). Иначе человек с грантом только на кластер получит пустой домен.
+Дверь домена судит запись кластера по гранту этого кластера, а не `domain/grants/domain` (ADR-0110 доп. (4) п. 4, доп. (5) пп. 1, 5; D-1, D-2, D-8 разбора). Иначе человек с грантом только на кластер получит пустой домен.
 
 ```yaml
 wide:      may(grants = domain/grants/domain, cap = view, unit = "*", sub = null) = allow — зритель домена: фильтра нет, ответ целиком;
@@ -188,8 +188,8 @@ cost:      may считается на запись, но вход меняет�
 
 ```yaml
 input:     as_role: R; user — "", glass — false, disabled — [], iat — null; roles не читается
-steps:     шаги 1, 2, 4а не применяются; шаги 3, 4 — как есть; шаг 5: прямой группы нет, одна группа роли R с until 0; дальше ярусы, шаги 6, 7а, 7в, 8; шаг 7б не применяется
-admin:     R = admin → deny no_grant: у встроенной роли строк нет, шаг 4а только для человека (ADR-0100 §1)
+steps:     шаги 1, 2, 4a не применяются; шаги 3, 4 — как есть; шаг 5: прямой группы нет, одна группа роли R с until 0; дальше ярусы, шаги 6, 7a, 7c, 8; шаг 7b не применяется
+admin:     R = admin → deny no_grant: у встроенной роли строк нет, шаг 4a только для человека (ADR-0100 §1)
 who:       воркер в своём процессе, grants — копия domain/grants кластера, as_of — её; нет строки или старше GRANT_LIFETIME — отказ, как у человека: действие не выполняется, строка журнала
 reads:     worker.reads: [domain/grants, platform/folders/, platform/memberof/] (P/02.5 Н3 шаг 3); chains и about собирает воркер, как сторожевая
 ```
@@ -200,7 +200,7 @@ reads:     worker.reads: [domain/grants, platform/folders/, platform/memberof/] 
 
 ## Векторы
 
-Пакет [`may`](../vectors/may/README.md): 126 строк (`may-role-*` — вход `as_role`, ADR-0105 п. 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, роли, ярусы, шаг 4а); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); из первых 26: 24 — входы команды `may` приёмки М11/9 (сц. 07) без изменения значений, кроме `labels: []` у единицы
+Пакет [`may`](../vectors/may/README.md): 126 строк (`may-role-*` — вход `as_role`, ADR-0105 п. 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, роли, ярусы, шаг 4a); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); из первых 26: 24 — входы команды `may` приёмки М11/9 (сц. 07) без изменения значений, кроме `labels: []` у единицы
 `may-24` (решение «Архитектора» 2026-10-20; README пакета);
 одна из них, `may-24`, — вход не по форме (`@exit 2`; разбор ревью стадии B 8–10, № 22); `may-25` — `subject` "" (`@exit 2`, MAY-G03); `may-26` — `until` не помещается в binary64 (`@exit 2`, MAY-UNTIL-D8-01). Сценарий и входы сняты переносом урока 8 — таблица единственный
 источник этих случаев. Там же `covers.tsv` — 19 строк функции `covers(scope, ref, row)` сторожевой ([договор

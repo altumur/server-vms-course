@@ -3,8 +3,8 @@
 This English text is the source; the Russian translation `ru/acceptance/7/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Стенд домена»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly the dictionary of the М11 README of the acceptance
-М11/01; the plan of the move of lesson 8, В5). The norm of the chapter is
+the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly the dictionary of the М11 README of the acceptance
+М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
 [`08.7-domain.norms.md`](../../spec/08.7-domain.norms.md) Н5. Scenarios 01, 02 were moved from the acceptance of М11/07 (stage B,
 ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones (steps 02/6 and 02/12 have the agent's `error` words, the guesses of stage C LTD-E01, LTD-E02). Scenario 03 is the framing of the local door (the guesses of stage C LTD-E01, LTD-E02): `@header` adds a second `Host`, a second `Content-Length`, `Transfer-Encoding`, headers larger than 16 KiB; a body larger than `TOKEN_BODY`; an answer with `Connection: close`; the input deadline of 10 s — by reading (there is no slow-client directive). Scenario 04 is the body limit at the holder's door (the coverage audit of P/08, audit-kimi 1e9929d51), scenarios 05, 06 are unreadable rows at issuing (the coverage audit of P/08, the second pass of Gemini). In total 7 scenarios / 55 steps.
 
@@ -15,7 +15,7 @@ Issuing in all scopes and refusal words without a stand is checked by the vector
 [P/02.1](../../../02-installer/acceptance/1/README.md); the check of a token at the receiver on vectors is
 [the domain token contract](../../../common/contracts/domain-token.md), the package `domain-token` (the former sc. 12 of the acceptance of М11/02).
 
-The division (the plan of the move of lesson 8, В12): both scenarios are chapter 8.7, their outcome is the holder's issuing and the token claims. The local
+The division (the plan of the move of lesson 8, V12): both scenarios are chapter 8.7, their outcome is the holder's issuing and the token claims. The local
 door of the agent ([the local token door contract](../../../common/contracts/local-token-door.md), [chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.6) and the receiver
 (`@verify`, [P/03.7](../../../03-worker/spec/03.7-worker.norms.md) Н1.5) are neighbours on the stand: steps 02/6, 02/8, 02/12 are refusals of
 the local door (400 `request_id`, 413 `TOKEN_BODY`, 404 `<sub>` not from the catalog), steps 01/4–7 are the check at the receiver.
@@ -28,7 +28,7 @@ difference: the catalog of each cluster is `testsub` and `testsub2`, like the st
 README); on each cluster the controller of `testsub2` works too (without its snapshot shard the agent does not report — [chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md)
 Н1.2 `ready`), the worker of `testsub2` is not needed. The kind `tally` of the manifest `testsub` is the scope `placement`,
 `caller: origin`, `target_fields: [cluster, copies]`. The role `testsub2worker` of the stand is a real identity (a role socket or a kit), and
-the `grant` of the kind `tally` does not name it: step 02/3 — a foreign role asks for a kind that was not given to it. The door `token <кластер> <роль>` and
+the `grant` of the kind `tally` does not name it: step 02/3 — a foreign role asks for a kind that was not given to it. The door `token <cluster> <role>` and
 the directive `@verify` are the dictionary of the domain: `@verify` checks a token with the function `token`
 ([the domain token contract](../../../common/contracts/domain-token.md) «Проверка») by the rows `domain/keys` and `domain/revoked`
 of the named cluster and with its name in `expect`.
@@ -48,9 +48,9 @@ The format is the dictionary of the «Stand» and the dictionary of the domain; 
   ([the agent signature contract](../../../common/contracts/agent-signature.md)); 4609 — 413 `refused` before the signature and the parse
   (the local token door contract `refusal_413`; Н1.3 `body`).
 - Sc. 05, 06 (the coverage audit of P/08, the second pass of Gemini, the draft G08 `e32df6f8b`, rewritten): the holder's rows are spoiled past the door (`admin.sock`).
-  Sc. 05 — the record `domain/placement/testsub/c1` without `copies` is unreadable (the М11 check, T2; the outcomes of the family, Г-35): `tally` — 403
+  Sc. 05 — the record `domain/placement/testsub/c1` without `copies` is unreadable (the М11 check, T2; the outcomes of the family, G-35): `tally` — 403
   `assignment_unreadable` (Н3 step 5; the vector `issue-08` is the same record as the input `"garbled"`). Sc. 06 — `domain/topology` is not
-  JSON (Н3 step 4а): `tally` (the scope `placement` with `target_fields` `[cluster, copies]`) does not take the topology — 200; `probe`
+  JSON (Н3 step 4a): `tally` (the scope `placement` with `target_fields` `[cluster, copies]`) does not take the topology — 200; `probe`
   (the scope `unit`, `poll_home`) — 503 `unavailable` before the scope; the local door passes the code and the body of the holder as they came
   (the local token door contract `answer`).
 

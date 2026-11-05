@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/secret-files.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): one rule of several processes is a contract, not copies
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): one rule of several processes is a contract, not copies
 in chapters; the stage C guesses S-005, DF-G01, the Architect's decision of 2026-10-23). The owner is lesson
 [P/02](../../02-installer/spec/02.4-installer.norms.md), chapter 2.4 (the layout Н1.1, the commands `w2cctl secrets` Н1.9 and «domain
 installation» Н3 — the installer puts both files; ADR-0083 addendum (29) item 9: the line names the owner lesson of the norm; the library by the contract is written by the session `common` of the generation). One placement rule for all secret

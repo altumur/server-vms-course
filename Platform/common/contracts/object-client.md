@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/object-client.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): objects are written and read by all platform processes — a contract,
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): objects are written and read by all platform processes — a contract,
 not copies in chapters; guess of stage C C10-OBJECT-ADDRESS-32, the Architect's decision of 2026-10-25). The owner is lesson
 [P/05](../../05-resource/spec/05-resource.norms.md) (Н1.1 «Object», Н2). Participants: the worker (heartbeats, rival marks — P/03.2,
 P/03.4), the controller (the snapshot, the pass report — P/04), the console (bodies — P/06.1), the resource (its own objects and the object door),
@@ -20,8 +20,8 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 The wire of the resource's object door is `Platform/05-resource/spec/05-resource.api.openapi.yaml`
 ([OpenAPI](../../05-resource/spec/05-resource.api.openapi.yaml); it enters the reading of `common` by ADR-0083 addendum (33) item 1):
 `GET /v1/objects` (`ObjectListing`), `GET /v1/objects/{key}` (bytes, the headers `X-Written`, `X-Server`, `X-Missing`),
-the refusals `ResourceError`, `ResourceDenied`. Tombstones `.gone/<ключ>` — [the tombstone contract](tombstone.md). The door row
-`platform/doors/<сервер>` (the address of the read door with a bare `cluster://`, the section «Address» `door`) — the form
+the refusals `ResourceError`, `ResourceDenied`. Tombstones `.gone/<key>` — [the tombstone contract](tombstone.md). The door row
+`platform/doors/<server>` (the address of the read door with a bare `cluster://`, the section «Address» `door`) — the form
 `Platform/05-resource/data/doors.schema.json`, the outcomes `Platform/05-resource/data/doors.outcomes.tsv`
 ([form](../../05-resource/data/doors.schema.json), [outcomes](../../05-resource/data/doors.outcomes.tsv); P/05 Н1.4 `door_row`).
 

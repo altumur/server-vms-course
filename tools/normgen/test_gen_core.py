@@ -69,6 +69,25 @@ def build(dst):
     return store
 
 
+class SectionLabels(unittest.TestCase):
+    def test_n_and_legacy_section_labels(self):
+        for stored in ("N3 Procedures", "Н3 Procedures"):
+            sec = (stored, 2, [("P/01.1-R001", "the anchored text")])
+            for lookup in ("N3 Procedures", "Н3 Procedures"):
+                with self.subTest(stored=stored, lookup=lookup):
+                    self.assertIs(gen_core.find([sec], lookup), sec)
+
+    def test_qualifier_and_ambiguity_keep_existing_rules(self):
+        sec = ("N3 Procedures(extra)", 2, [])
+        self.assertIs(gen_core.find([sec], "Н3 Procedures"), sec)
+        for secs, name in [([("N30 Procedures", 2, [])], "Н3 Procedures"),
+                           ([("other Н3 Procedures", 2, [])], "other N3 Procedures"),
+                           ([("Н3 Procedures", 2, []), ("N3 Procedures", 2, [])], "N3 Procedures")]:
+            with self.subTest(sections=secs, name=name):
+                with self.assertRaises(gen_core.GenError):
+                    gen_core.find(secs, name)
+
+
 class Core(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -108,7 +127,7 @@ class Core(unittest.TestCase):
         norms = gen_core.NORMS.read_text(encoding="utf-8")
         for name, sections in (("Get", ["read("]), ("List", ["list("]),
                                ("Write", ["write(", "delete(", "write batch(", "Admission time", "Replay by identifier"]),
-                               ("QueryRefused", ["Н2.1 Request parsing"])):
+                               ("QueryRefused", ["N2.1 Request parsing"])):
             m = re.search(rf"((?://.*\n)+)func \(s \*Store\) {name}\(", self.core)
             self.assertTrue(m, name)
             doc = m[1]

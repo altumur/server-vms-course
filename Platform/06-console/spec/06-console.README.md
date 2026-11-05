@@ -359,7 +359,7 @@ or the chapter's readiness checklist. A `not_executed` check remains unchecked a
 | 6.2 Н1.2 | a ring read error became an absence of the setting | distinguish the states; a set unreadable ring forbids all POST/PUT of units |
 | 6.2 Н1.2/Н3 | max for rotate was applied to arbitrary kids | refuse outside kN; check the number before changing the file (the command — P/02.4) |
 | 6.2 Н3 step 3 | the nested secrets of a json field were kept by array index | replace the field as a whole: the password of an element does not pass to a neighbour after a permutation |
-| 6.2 Н1.1а А2, А6 | the end of a free-text address (a quote, `<`) was applied to a field value | a field value is one address; a character outside the RFC 3986 grammar — `bad_url`; the mask — up to the end of the pair value |
+| 6.2 Н1.1а A2, A6 | the end of a free-text address (a quote, `<`) was applied to a field value | a field value is one address; a character outside the RFC 3986 grammar — `bad_url`; the mask — up to the end of the pair value |
 | 6.2 Н3 «reseal at start» | an unreadable row broke the console start | skip the row with a log line, reseal the others |
 | P/02.5 Н1.3 | the exact name of a secret is treated as a prefix | a prefix only with a trailing `/`; reconcile the effective readers with P/02.5 |
 | 6.2 Н2/Н4 | the console 503 was given as `{kind,error}` of the store | the unit write needs detail/error and the established reason |

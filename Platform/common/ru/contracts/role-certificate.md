@@ -60,7 +60,7 @@ rotation:     ca.next.pem рядом — следующий центр, кото
 
 ## Форма
 
-`Entry.ca` — поле записи члена `domain/member-rows/<раздел>`: `Platform/08-domain/data/members.schema.json`, `Platform/08-domain/data/members.outcomes.tsv`; поля `tls_ca`, `tls_ca_certs` публикации `POST /api/member` — `Platform/08-domain/spec/08-domain.api.openapi.yaml`, `Platform/09-agent/spec/09-agent.api.openapi.yaml` (аудит раскладки, В-55, В-56; решение «Архитектора» 2026-10-25). Класс `role`: строка `domain/members/<член>/ca-certs` — `Platform/08-domain/data/member-ca-certs.schema.json`, `Platform/08-domain/data/member-ca-certs.outcomes.tsv`; отказ двери роли — схема `RoleRefusal` `Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml` (C10-SDK-ROLE83, решение «Архитектора» 2026-10-25).
+`Entry.ca` — поле записи члена `domain/member-rows/<раздел>`: `Platform/08-domain/data/members.schema.json`, `Platform/08-domain/data/members.outcomes.tsv`; поля `tls_ca`, `tls_ca_certs` публикации `POST /api/member` — `Platform/08-domain/spec/08-domain.api.openapi.yaml`, `Platform/09-agent/spec/09-agent.api.openapi.yaml` (аудит раскладки, V-55, V-56; решение «Архитектора» 2026-10-25). Класс `role`: строка `domain/members/<член>/ca-certs` — `Platform/08-domain/data/member-ca-certs.schema.json`, `Platform/08-domain/data/member-ca-certs.outcomes.tsv`; отказ двери роли — схема `RoleRefusal` `Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml` (C10-SDK-ROLE83, решение «Архитектора» 2026-10-25).
 
 ## Комплект кластера, роли домена, центр между кластерами
 
@@ -103,7 +103,7 @@ Entry.ca:     поле записи члена в domain/member-rows/<разде
 только аргументы — свои центры и `host` по порогу петли — и после `peer` идёт отзыв.
 
 ```yaml
-own_client:   любой клиент двери своего кластера по https:// (ревью норм ADR-0075, Claude fd85ea8cc, С-1: перечень — примеры, не закрытый список);
+own_client:   любой клиент двери своего кластера по https:// (ревью норм ADR-0075, Claude fd85ea8cc, S-1: перечень — примеры, не закрытый список);
               среди них — агент к своей консоли (P/09.1 Н1.5, Н1.10), скрипт воркеров к /metrics консоли (P/02.4 Н1.5),
               консоль кластера к консоли домена своей коробки — переход 2 по view.url (P/06.7 Н1.4) и в пересылке
               подписанту по SIGNER_URL (P/06.7 Н1.8), консоль домена к SIGNER_URL своей коробки (P/10 Н1.3 pass, роль
@@ -127,16 +127,16 @@ own_client:   любой клиент двери своего кластера �
 loopback:     порог петли — чистая функция {url} → loopback | name | ip над записью хоста URL, до DNS (доп. (3) п. 1, доп.
               (4) п. 1); запись хоста — подстрока URL после «//» и необязательного userinfo@ до «:порт», «/» или конца, как
               записана, без нормализации разборщиком URL (127.0.0.01, 0x7f.0.0.1, LOCALHOST, точка в конце — не
-              переписываются; ревью норм ADR-0075, Claude fd85ea8cc, М-2): loopback — v4 из четырёх десятичных частей 0–255 без ведущих нулей с первой 127 или v6 (в
+              переписываются; ревью норм ADR-0075, Claude fd85ea8cc, M-2): loopback — v4 из четырёх десятичных частей 0–255 без ведущих нулей с первой 127 или v6 (в
               скобках URL) со значением ::1 в любой записи без зоны; ip — иной IP-литерал шага 1 peer (в том числе v6 с
               зоной, ::ffff:127.0.0.1, 0.0.0.0, ::); name — иначе (localhost, 127.1, 127.0.0.01); векторы —
               common/vectors/loopback
   bad_url:    URL не по форме (нет схемы и «//», пустой хост): из окружения (SIGNER_URL, RESOURCE_URL, own_url над
               CONSOLE_HOST) — отказ старта процесса-клиента, код 2; из строки хранилища (view.url, url строки двери) — как
-              поля нет, по исходам своей строки (ревью норм ADR-0075, Claude fd85ea8cc, М-3)
+              поля нет, по исходам своей строки (ревью норм ADR-0075, Claude fd85ea8cc, M-3)
 own_url:      URL клиента своей консоли (агент, скрипт воркеров, воркер и шлюз) — из CONSOLE_HOST и CONSOLE_PORT w2c.env
               (договор файла окружения «Переменные окружения»); порог петли — над https://<CONSOLE_HOST> (v6 — в скобках;
-              в w2c.env CONSOLE_HOST пишется без скобок, со скобками — URL не по форме, bad_url) (ревью норм ADR-0075, Claude fd85ea8cc, М-4):
+              в w2c.env CONSOLE_HOST пишется без скобок, со скобками — URL не по форме, bad_url) (ревью норм ADR-0075, Claude fd85ea8cc, M-4):
               литерал петли — https://<литерал>:<порт> ([::1] у v6); 0.0.0.0 — https://127.0.0.1:<порт>; :: —
               https://[::1]:<порт>; иной (IP вне петли или имя, в том числе localhost) — https://<SERVER_NAME>:<порт>;
               консоли домена в таблице нет — переход 2 берёт view.url (доп. (4) п. 3, доп. (5) п. 3)
@@ -158,7 +158,7 @@ server:       серверная сторона дверей между клас
               разбор ревью стадии A 8–10, № 35) и центр, который этот лист выпустил: цепочка рукопожатия — лист, затем
               его центр из ca.pem или ca.next.pem своего кластера (kit: server.pem — лист, центр сервер добавляет сам);
               так же — каждая дверь процесса с комплектом роли, к которой ходит own_client (классы signed, role, mixed,
-              дверь ресурса P/05 при mtls, консоль кластера, её слушатель обратного вызова и консоль домена для клиентов своего кластера) (ревью норм ADR-0075, Claude fd85ea8cc, С-2);
+              дверь ресурса P/05 при mtls, консоль кластера, её слушатель обратного вызова и консоль домена для клиентов своего кластера) (ревью норм ADR-0075, Claude fd85ea8cc, S-2);
               без центра в chain[1:] клиент не найдёт якорь (договор peer шаг 3 — foreign_ca) (уточнение по вопросу
               «cammeta-acceptance» 2026-10-20; совпадает с cammeta-go):
   signed:     двери между кластерами, где личность — по норме маршрута (подпись, токен, пароль), а не сертификат
@@ -288,7 +288,7 @@ mixed:        как signed целиком: TLS сервера роли проц
   kit_absent: «комплекта нет» — нет каталога W2C_TLS_DIR или в нём нет ca.pem; ca.pem есть, а лист или ключ роли
               (<роль>/server.pem, server.key) отсутствуют или неверны — частичный комплект: не переход на HTTP, отказ
               старта, код 2 — тихого понижения нет (догадка стадии C RC-NOKIT, решение «Архитектора» 2026-10-23)
-# из P/03.4 Н1.7 door_admission domain, role_domain и cors — без изменения (аудит раскладки Б-20, решение «Архитектора» 2026-10-25; читают дверь процесса и domain)
+# из P/03.4 Н1.7 door_admission domain, role_domain и cors — без изменения (аудит раскладки B-20, решение «Архитектора» 2026-10-25; читают дверь процесса и domain)
   domain:     маршрут {name, domain: [<вид>…]} — токен домена в Authorization: Bearer; один вызов функции token договора
               токена домена с expect {kind: [<виды маршрута>], cluster: <свой кластер>, audience_claim: {<вид>: <поле
               аудитории из объявления вида, P/02.1 Н1.2б>}}; шаги 1–8 — прежние, истёкший или с чужой подписью — 401 раньше
@@ -323,7 +323,7 @@ mixed:        как signed целиком: TLS сервера роли проц
 ## Векторы
 
 Пакеты [`crl`](../vectors/crl/README.md) (CRL: подпись, сроки, отзыв) и [`revoked`](../vectors/revoked/README.md) (файл `revoked`). (ADR-0083 доп. (32) п. 2)
-Участник: пакет [`peer`](../vectors/peer/README.md) — пакет общего договора peer, исполняет common; этот договор там — участник: закрытый список `sig` проверяет его шаг 4 (аудит раскладки, В-57; CM-RECORD-VECTORS-128, решение «Архитектора» 2026-10-25).
+Участник: пакет [`peer`](../vectors/peer/README.md) — пакет общего договора peer, исполняет common; этот договор там — участник: закрытый список `sig` проверяет его шаг 4 (аудит раскладки, V-57; CM-RECORD-VECTORS-128, решение «Архитектора» 2026-10-25).
 Пакет [`trust-set`](../vectors/trust-set/README.md) — набор доверия двери роли и сверка листа (класс `role` `trust_set`, `unreadable`; C10-SDK-ROLE83).
 Пакет [`loopback`](../vectors/loopback/README.md) — порог петли клиента своего кластера (`loopback`, 31 строка; ADR-0075 доп. 2026-10-26 (4) п. 1). Подстановку
 `host = SERVER_NAME` до шага 1 `peer` пакет `peer` не выражает (функция не меняется) — её проверяет приёмка уроков клиентов.

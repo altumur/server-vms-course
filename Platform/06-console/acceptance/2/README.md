@@ -52,7 +52,7 @@ The keys `Idempotency-Key` and `@key(N)` are by the dictionary, the body is take
 does not replace the reset of the claim memory in the store on a new full run. The token/role of the console
 has rights to the units used, the login restrictions are set so as not to hinder the scenario.
 
-The list `configured` is checked without order — the rule of arrays without a normed order of the dictionary of [the common acceptance README](../../../common/acceptance/README.md) (`<код> <JSON>`). A subset of
+The list `configured` is checked without order — the rule of arrays without a normed order of the dictionary of [the common acceptance README](../../../common/acceptance/README.md) (`<code> <JSON>`). A subset of
 the fields of an expectation does not cancel the full form of the answer by the contract of the units door (chapter 6.1, [`06-console.api.openapi.yaml`](../../spec/06-console.api.openapi.yaml)). The forms of an expectation are by the dictionary. The store role
 by default is set anew for each scenario; an explicit @as acts on the subsequent
 store requests of this scenario. ASSERT does not perform an HTTP request.
@@ -69,7 +69,7 @@ Sc. 11 (`audit-coverage-gemini` 0a5ae79f9) — resealing at start (Н3 «reseal 
 `console` writes past the console the unit row `t11` with an open `feed_secret`, the table row `sh11` with an open
 `feed_secret` and `door/signer` with an open `seed_secret` (kid `k-acc`, the seed — 32 bytes `0x1f`); after `@restart console`
 (steps 5–8 — `@until`: the resealing pass runs at start, the port may open before its end) all three are an envelope
-`enc:v2:`, the `revision` of the unit is the former `1`; `door/keys` is `{k-acc: <открытый ключ зерна>}` (chapter 6.5 Н3 «`/where/<id>`»
+`enc:v2:`, the `revision` of the unit is the former `1`; `door/keys` is `{k-acc: <seed public key>}` (chapter 6.5 Н3 «`/where/<id>`»
 `door/keys`: one's own kid at start, after the resealing). The Ed25519 public key of the seed `1f…1f` is
 `43046bfe4092b3e94994eada15dcc20d8aaa07b658fd3954eb8e0efb8bdca5de` (RFC 8032, obtained by the library `cryptography`).
 The file does not write the rows `door/signer`, `door/keys` before sc. 11: `/where` is not called in the scenarios of the chapter. Resealing under
@@ -80,9 +80,9 @@ the former kid — by reading: the stand has one ring.
 - Sc. 02 steps 5–6: a mask with a Unicode whitespace character at the edge (`\t***`, `\u00a0***`) — 400 (Н1.1 `mask_in`, S12).
 - Sc. 04 steps 9–14:
   - unparsable urls (`https'://`, a space before `://`, `https:%3A//`) — 400 `bad_url` (S3);
-  - `'` in the host name does not cut the address: `token` after it is a password (А2, S4);
+  - `'` in the host name does not cut the address: `token` after it is a password (A2, S4);
   - a password in the nested address `via` and in the pair `who`, hidden by escaping, — a refusal without the login field `feed_user`
-    (А8 «Вид», А7, А15; S16).
+    (A8 «Вид», A7, A15; S16).
 - Sc. 07: the json field `rule` of the manifest `testsub2` with nested `pw_secret`.
   - A permutation of the elements `cams` without passwords: in the answer and in the store row there are no secrets, the password of A does not go to B
     (Н3 step 3, S1).

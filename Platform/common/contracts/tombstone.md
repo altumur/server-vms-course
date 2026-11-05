@@ -2,9 +2,9 @@
 
 This English text is the source; the Russian translation `ru/contracts/tombstone.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): several processes write and read a tombstone — a contract,
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): several processes write and read a tombstone — a contract,
 not copies in chapters; the stage C guess C06-BLOB-GC-33-01 / IF-OBJECT-TOMBSTONE63-PEERS-01, the Architect's decision of 2026-10-25).
-The owner is lesson [P/05](../../05-resource/spec/05-resource.norms.md) (Н1.1 «Tombstones»; the family `.gone/<ключ>` —
+The owner is lesson [P/05](../../05-resource/spec/05-resource.norms.md) (Н1.1 «Tombstones»; the family `.gone/<key>` —
 [the catalogue](../data/catalog.tsv), the form — [`gone.schema.json`](../../05-resource/data/gone.schema.json), the outcomes —
 [`gone.outcomes.tsv`](../../05-resource/data/gone.outcomes.tsv)). The participants are the console: it writes a tombstone at the completion of the body sweep
 window ([P/06.1](../../06-console/spec/06.1-console.norms.md) Н3 «body sweep»); the resource: it drops copies by the tombstones
@@ -18,11 +18,11 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 ## Form
 
 ```yaml
-tombstone: .gone/<ключ> at the deleter — an object {written, peers, acked}: written — the wall seconds of the deletion, peers —
+tombstone: .gone/<key> at the deleter — an object {written, peers, acked}: written — the wall seconds of the deletion, peers —
            the neighbours of the ring that could have had a copy (the section «Neighbours»), acked — those who acknowledged, acked ⊆ peers (journal
            of cammeta-go, lesson 10 № 2); the object door has no DELETE; the door does not accept writes and deletes of .gone/
 listing:   an ordinary listing does not show .gone/; /v1/objects?prefix=.gone/ is a read-only listing of tombstones;
-           GET /v1/objects/.gone/<ключ> is the body of the tombstone, read only (C05-GONE-BODY-READ-01)
+           GET /v1/objects/.gone/<key> is the body of the tombstone, read only (C05-GONE-BODY-READ-01)
 garbled:   an unreadable tombstone (gone.outcomes.tsv, the whole object) is an unknown outcome: a neighbour does not drop the copy,
            the deleter does not append acknowledgements and does not remove the tombstone; a new write of the key at the deleter is not refused:
            written by the former rules of P/05 Н1.1 `written`, the tombstone stays until the next put of the console (bodies are addressed
@@ -33,7 +33,7 @@ Files: the tombstone — `Platform/05-resource/data/gone.schema.json`, `Platform
 and of decommission requests (the section «Neighbours») — `Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv`,
 `Platform/06-console/data/decommission.schema.json`, `Platform/06-console/data/decommission.outcomes.tsv`; the object door —
 GET of a copy (404 — an acknowledgement), the listing `prefix=.gone/`, 409 «deleted later» — the contract
-`Platform/05-resource/spec/05-resource.api.openapi.yaml` (layout audit, В-60; the Architect's decision of 2026-10-25).
+`Platform/05-resource/spec/05-resource.api.openapi.yaml` (layout audit, V-60; the Architect's decision of 2026-10-25).
 
 ## Neighbours (`peers`)
 
@@ -56,7 +56,7 @@ order:     the order of the elements of peers and acked is not normed; there are
 
 ```yaml
 drop:      a neighbour once per 10 min (the resource pass, P/05 Н3) reads the tombstones of the deleter — finds them by the listing prefix=.gone/, by the body
-           (GET .gone/<ключ>) takes written of the deletion: written of the listing is the mark of the tombstone write, it grows with each
+           (GET .gone/<key>) takes written of the deletion: written of the listing is the mark of the tombstone write, it grows with each
            appended acked and does not name the deletion (C05-GONE-BODY-READ-01) — and drops its own
            copy older than written; a copy than which the tombstone of the deleter is newer is not accepted (P/05 Н4, «deleted later» — 409)
 ```

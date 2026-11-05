@@ -2,8 +2,8 @@
 
 This English text is the source; the Russian translation `ru/contracts/schema.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): the schema check at start is executed by all processes
-of the platform — a contract, not copies in chapters; layout audit А-02, the Architect's decision of 2026-10-25). The owner is chapter
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): the schema check at start is executed by all processes
+of the platform — a contract, not copies in chapters; layout audit A-02, the Architect's decision of 2026-10-25). The owner is chapter
 [P/06.6](../../06-console/spec/06.6-console.norms.md) (Н1.1а «Schema», Н3 «raise_schema»). Participants: the console (P/06.6),
 the controller ([P/04](../../04-controller/spec/04-controller.norms.md) Н3 «controller start — schema check»), the worker
 ([P/03.2](../../03-worker/spec/03.2-worker.norms.md) Н3 «schema check by the worker»), the resource
@@ -39,7 +39,7 @@ SCHEMA:   the number the build understands; adding a field — without a new num
 BUILD:    the build word for a human (env BUILD, default dev); the machine reads SCHEMA
 heartbeat: every heartbeat of the worker and the resource carries schema and build (P/03.4 Н1.1, P/05 Н1.4); schema — a JSON integer without a fraction
           part and exponent (the form int of [the row check contract](../row-check.md) «Preparation of fields»: «An `int` value at the input of the door»), ≥ 1; `1.0`, `1e0`, `-1`, a string, null — the schema of the process is unknown (null
-          in `processes`, P/06.6 Н2.3) (reconciliation of python and go М10/6–11, T3); build — a string; not a string — `null` (not known; reconciliation of python and go М10/6–11, T27; В7 item 3, the Architect's decision of 2026-10-28, П1; row 14 of the list)
+          in `processes`, P/06.6 Н2.3) (reconciliation of python and go М10/6–11, T3); build — a string; not a string — `null` (not known; reconciliation of python and go М10/6–11, T27; V7 item 3, the Architect's decision of 2026-10-28, P1; row 14 of the list)
 check:    at the start of the controller, the worker, the resource and the console: version > SCHEMA → do not start; the row is not a number → do not start;
           the domain processes start the same way — domain, the agent, the domain console (P/02.4 Н1.12); the worker also checks on the renewal
           of the slot (P/03.2 Н3 «schema check by the worker»)
@@ -67,4 +67,4 @@ of the participants (P/06.6; a read error at the resource — sc. 18 of the acce
 
 From P/06.6 Н1.1а (`platform/schema`, `SCHEMA`, `BUILD`, `heartbeat`, `check`; the norm P/06.6-04 by `note` of [id-map](../id-map.tsv))
 and the common block Н3 «start … — schema check» (P/06.6, P/03.2, P/04, P/05; formerly М10/10 Н3, М10/10-01); they refer here
-(layout audit А-02).
+(layout audit A-02).

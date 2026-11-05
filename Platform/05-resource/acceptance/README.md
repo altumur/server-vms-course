@@ -5,8 +5,8 @@ This English text is the source; the Russian translation `ru/acceptance/README.m
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the lesson is [`05-resource.norms.md`](../spec/05-resource.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/08 (01, 02, 08) and
-М10/11 (01 → 09, 16 — the Architect's decision on В2 of the plan of the move of lesson 6: a scenario belongs to the lesson whose norm it checks) and
-М10/10 (10; the Specification's decision on В2 of the move)
+М10/11 (01 → 09, 16 — the Architect's decision on V2 of the plan of the move of lesson 6: a scenario belongs to the lesson whose norm it checks) and
+М10/10 (10; the Specification's decision on V2 of the move)
 (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers, the names of the scenarios and the steps are the former ones, except `09-resource-door`
 (in М10/11 — `01-resource-door`; the number 01 is taken by `01-objects-door` from М10/08). Sc. 17–23 are the coverage audit of P/05 (2026-10-30,
 the drafts F01–F03, F05–F07 of the audit session; the section «Coverage audit» below); sc. 24–28 — F04 (the section «Edges of `free_ask`»); sc. 29–45 —
@@ -14,7 +14,7 @@ the second pass of the coverage audit (Gemini; the section «Coverage audit of P
 after the Architect's decisions of 2026-10-30 on the questions of the norms of the Gemini audit, P/05 items 1, 4).
 
 Doors and directives: `resource`, `console`, `store`, `admin` (sc. 17, 24–29, 37–41), `@start resource` (sc. 09-resource-door, 10-body-copy, 16-presence-lock, 17–28, 31, 37–41; the expectation `@exit 2` — sc. 17), `@start resource on srv-b`, `@sigterm resource`, `@sigkill resource#1` (sc. 31), `@start controller` (sc. 42), `@start worker` (sc. 16, 19, 20, 24–28, 42, 43), `@sigkill` (sc. 16-presence-lock, 43), `@spoil object` (sc. 43), `@put object` from `inputs/` (sc. 44, 45; the section «Inputs `inputs/`»), `@until`, `@append event`
-(sc. 08, 21, 22, 34–38), `@append event-raw` (sc. 22), `@cut role resource store` / `@mend role resource store` and `@sleep` (sc. 18; the sleeps — the section «Sleeps»), the request forms `@header` (`X-Written`, `X-Sum`, `Range`), `@raw`, `@big` (sc. 23), the method `HEAD` (sc. 35), `ASSERT`; the expectations `@oneof` (sc. 20), `@header <Имя>: ~<текст>` (sc. 31, 33, 36), `<код> ~текст` (sc. 33, 36).
+(sc. 08, 21, 22, 34–38), `@append event-raw` (sc. 22), `@cut role resource store` / `@mend role resource store` and `@sleep` (sc. 18; the sleeps — the section «Sleeps»), the request forms `@header` (`X-Written`, `X-Sum`, `Range`), `@raw`, `@big` (sc. 23), the method `HEAD` (sc. 35), `ASSERT`; the expectations `@oneof` (sc. 20), `@header <Name>: ~<text>` (sc. 31, 33, 36), `<code> ~текст` (sc. 33, 36).
 
 ## Preparation of each scenario
 
@@ -38,7 +38,7 @@ requests and copies are not prepared. The build is schema 1.
 
 Sc. `20-door-room`, `23-object-ceiling`, 24–31, 37–41, 44 and 45 install the catalogue `testsub` and `testsub2` the same way as `10-body-copy` (the order —
 «Stand»; the runner installs `testsub2` when a step of the scenario names it).
-Sc. `10-body-copy` (the body copy at the resource, from М10/10; T10, T11) installs the catalogue `testsub` and `testsub2` (the order — «Стенд»;
+Sc. `10-body-copy` (the body copy at the resource, from М10/10; T10, T11) installs the catalogue `testsub` and `testsub2` (the order — «Stand»;
 `testsub2` declares a blob field, `testsub` does not), starts the resource by step 1 (`@start resource`); the resource door `resource` with
 an admissible identity of a neighbour; the digest `sha256-190267417aed…` — of the bytes `peer-copy`. It needs neither the console nor the controller.
 
@@ -46,7 +46,7 @@ console — the console door testsub from the loopback, access to the operations
 the same door at the merge, and 09-resource-door/6–7 — `/servers`, `/metrics`; the console — P/06 (`Platform/06-console/ru/06-console.md`, for people, not in the export));
 resource — the resource door srv-a with an admissible identity; store — the store door with reading of
 testsub/ and `platform/doors/`; admin — the door `admin.sock` (the row `platform/schema` of sc. 17, the console writes it by the role admin, P/06.6 Н1.1а). If the deployment uses TLS, issue the corresponding
-certificates and roles per P/02.4 Н1.6 (`w2c-ca.sh issue <server> <роль>`, the kit `kit`) and the address rule of P/02.4 Н1.6;
+certificates and roles per P/02.4 Н1.6 (`w2c-ca.sh issue <server> <role>`, the kit `kit`) and the address rule of P/02.4 Н1.6;
 these scenarios do not replace the check of the TLS refusals.
 
 ## scenarios.tsv
@@ -68,16 +68,16 @@ Steps of the reconciliation of python and go М10/6–11 (2026-10-18):
   `@raw {}`, `X-Sum` — its SHA-256.
 
 E19 — sc. 08 steps 12–14: `@append event` writes `{bad` into a bucket bypassing the writer, the resource and the console answer 200 with
-`lines_garbled: 1`. Steps 15–16 — the bucket name and `e<эпоха>` are the form of the norm, they are not encoded; an alarm in the tree `audit/console`
+`lines_garbled: 1`. Steps 15–16 — the bucket name and `e<epoch>` are the form of the norm, they are not encoded; an alarm in the tree `audit/console`
 (not `.alarms`) is `class: alarm` by the field ([the event journal contract](../../common/contracts/event-journal.md); the second pilot,
-Н-2, Н-3). Without a step, by reading: E3, E11, E18, E22–E24, E34, E35, E37, E38, E42, E43, E46 — a stand with one resource does not write
+N-2, N-3). Without a step, by reading: E3, E11, E18, E22–E24, E34, E35, E37, E38, E42, E43, E46 — a stand with one resource does not write
 temporary files and does not fill the disk; the dictionary does not express `X-Sum` with a trailing space. The second pass of the audit (Gemini) took as steps
 E32 (an alarm of a subsystem — sc. 34), E44 and E45 (the band between the marks and the disabled marks — sc. 41, 40), an open bucket at
 `PUT /mirror` — by the name of a window in the future (`20990101T000000Z`, sc. 32).
 
 ## The presence lock (sc. 16-presence-lock)
 
-From the acceptance of М10/11 (the second pilot, Н-1; catches Б1): the resource and the worker `w-1` — in the heartbeat of the resource `running: [testsub/w-1]`;
+From the acceptance of М10/11 (the second pilot, N-1; catches B1): the resource and the worker `w-1` — in the heartbeat of the resource `running: [testsub/w-1]`;
 `@sigkill w-1` — the lock is free, `running: []`; a new start of the same name — `running` again. The norm is
 [the presence lock contract](../../common/contracts/presence-lock.md) (the owner is lesson P/05) and Н1.4 `presence`; the heartbeat
 of the resource is read through the objects door (`resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local`). Step 1
@@ -141,7 +141,7 @@ against the report of the first pass, not against the acceptance); large bundles
 
 - sc. 29-row-objects (G01 item 1) — the row objects (Н1.1 `row_object`, `door`; Н4 «строка-объект — 403»): `objects.rows` of `testsub2`
   (`marks/*`) and `commands/*` of both subsystems (the manifests with `requests`) are not given out by the objects door even with a written store row
-  `objects/<ключ>` (the door `admin` writes it bypassing the writer), on any `scope`; a `prefix` under which there are no keys of the families of the door —
+  `objects/<key>` (the door `admin` writes it bypassing the writer), on any `scope`; a `prefix` under which there are no keys of the families of the door —
   403; `prefix=testsub2/` — a filter: 200, there are no row objects in the listing;
 - sc. 30-copy-written-max (G01 item 2) — `written` of a body copy (Н1.1 `written`, C05-COPY-WRITTEN-SOURCE-01): the copy keeps the `written`
   of the original (`X-Written`), one already lying there does not decrease: 1700000010, then 1700000005 — stays 1700000010, then 1700000020;
@@ -195,7 +195,7 @@ against the report of the first pass, not against the acceptance); large bundles
   (the Architect's decision of 2026-10-30, P/05 item 1): the listing `prefix=.gone/` — `{}`, `GET` of the tombstone — 404, without a sleep and `@until`.
 
 Not accepted from the drafts of the second pass (in detail — the report of the analysis):
-G04 `PUT /mirror/<свой сервер>/…` — the norm does not require 400: to accept or to refuse is «Implementation decides» item 11 (C05-MIRROR-PUT-SELF-01,
+G04 `PUT /mirror/<own server>/…` — the norm does not require 400: to accept or to refuse is «Implementation decides» item 11 (C05-MIRROR-PUT-SELF-01,
 the Architect's decision of 2026-10-30, P/05 item 2), the acceptance does not check this; G05 `/buckets/testsub/c1` with the type and the fields in one expectation, `X-Sum` without a value — the dictionary does not express it (the type — sc. 04
 of chapter 6.4); G06 `short: 0` with an unreadable `platform/space` (R05-G03: the input of the pass is not read — the former `short`) and `copies: "bad"` as
 an unreadable `platform/mirror` (by the field — `copies` 1, the row is read); G08 `units: {}` after the spoiling of the heartbeat of the frozen `w-1` (the spoiling is
@@ -204,7 +204,7 @@ at a stopped writer; the norm now names it: an unreadable heartbeat does not ent
 
 ## Inputs `inputs/`
 
-The objects that a scenario puts by `@put object <ключ> inputs/<файл>` bypassing the writer (the exception `P/05 acceptance-entry
+The objects that a scenario puts by `@put object <key> inputs/<file>` bypassing the writer (the exception `P/05 acceptance-entry
 inputs`; the Architect's decision of 2026-10-30, the questions of the norms of the Gemini audit, P/05 item 4). The bytes are those of the drafts of the coverage audit (Gemini,
 G01, G02), without changes.
 

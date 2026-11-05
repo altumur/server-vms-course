@@ -9,17 +9,17 @@ behaviour); the numbers of scenarios and steps are the former ones, except sc. 0
 
 The scenarios run on a stand of the `testsub` processes of the implementation: the store, the console `testsub`, the controller `testsub` and the workers
 `testsub` (the training worker of counters), which the runner controls. The catalogue of the stand is two manifests, `testsub` and `testsub2`, in the order of
-the section «Стенд» of the common acceptance README (reconciliation of python and go М10/3–5, item 24): the worker of one manifest does not touch the rows
+the section «Stand» of the common acceptance README (reconciliation of python and go М10/3–5, item 24): the worker of one manifest does not touch the rows
 of the other on capture and cleanup. The training worker `testsub` reports the started counter by the element `status` with `phase: running` (chapter 3.4 Н1.1
-`phase`) and one word of the subsystem `n` — the value of the counter (chapter 3.4 Н1.1 `status`; the second pilot, `Н-7`). Observation — rows
+`phase`) and one word of the subsystem `n` — the value of the counter (chapter 3.4 Н1.1 `status`; the second pilot, `N-7`). Observation — rows
 through the store door P/01.1 and units through the console door P/06.1; the heartbeat (an object) is not read here. The controller of the stand is
-a neighbour by contract (the data catalogue, the life cycle of P/04), not the norms of the chapter (the plan of the move of lesson 3, В2).
+a neighbour by contract (the data catalogue, the life cycle of P/04), not the norms of the chapter (the plan of the move of lesson 3, V2).
 
 ## scenarios.tsv
 
 The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors):
 the doors `store` (a role with read rights on `testsub/`), `console`, `resource` and `admin` (preparation of rows bypassing their writers — sc. 14–34;
-the floor of epochs — `op: floor`, sc. 26, 27), the directives `@start` (with the expectation `@exit 2` and the environment `<ИМЯ>=<значение>` of the worker), `@sigkill`,
+the floor of epochs — `op: floor`, sc. 26, 27), the directives `@start` (with the expectation `@exit 2` and the environment `<NAME>=<value>` of the worker), `@sigkill`,
 `@sigterm` (sc. 29), the expectation `@oneof` (sc. 33), `@sleep`, `@until`, `ASSERT`, `@cut role testsubworker store` / `@mend role testsubworker store` (sc. 24),
 `@spoil row` (sc. 27), `@spoil object` (sc. 44);
 the expectation is a subset of fields.
@@ -45,9 +45,9 @@ In total 28 scenarios / 263 steps: 01-start (8), 04-two-copies (12), 05-sigkill 
   does not grow — an endless capture with a catalogue of two manifests is visible;
 - sc. 09 — a wrong given name: `@start` confirms the start of the process, not its life; the worker exits with code 2, the runner does not compare
   the code (by reading); observable — neither a slot under this name nor the slot `w-1` (the name is not replaced by a search);
-- sc. 10 — sc. 04 with the resource P/05 (`@start resource` as the first step): the platform journal `audit/<роль>` (the event journal
+- sc. 10 — sc. 04 with the resource P/05 (`@start resource` as the first step): the platform journal `audit/<role>` (the event journal
   contract `journal`) is read by the events door of the console; exactly one row `worker.name_taken` — at the displaced copy; the second
-  `GET` after 12 s — the same one. The resource of the stand is on the server of the controller (`srv-a`; ADR-0084 addendum (2) Р17).
+  `GET` after 12 s — the same one. The resource of the stand is on the server of the controller (`srv-a`; ADR-0084 addendum (2) R17).
 - sc. 04, 08, 10 — with the resource P/05 (`@start resource` as the first step): the controller and the console read the heartbeats of the workers through the objects door
   of the resource of their server; without the resource the reading is «not known» ([the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Sc. 01, 05, 09, 11 do not wait for placement.
 
@@ -99,7 +99,7 @@ analysis by the Specification). The rows that are not written by the worker, the
 write `op: floor` of the door `admin` (the dictionary of the common acceptance README, P/01.3 Н1.3 `floor`): the floor is an integer, at the stand
 `1 << 32` = 4294967296 and `2 << 32` = 8589934592 (the form of the floor of P/01.3 — the generation `<< 32`; the epochs are computed: `max(0, 4294967296) + 1`
 = 4294967297, `max(4294967297, 8589934592) + 1` = 8589934593). The scenario names the box of the contender marks by the environment
-`BOX_ID=box1` (the dictionary, `@start worker … <ИМЯ>=<значение>`): the key of the mark is `<sub>/contenders/<имя>/<коробка>` (Н1.4а).
+`BOX_ID=box1` (the dictionary, `@start worker … <NAME>=<value>`): the key of the mark is `<sub>/contenders/<name>/<box>` (Н1.4а).
 - sc. 26 — the floor before the start: the first epoch of the unit is `max(0, пол) + 1`; the floor raised on the go above the epoch — the lease step
   confirms the lease by reading the floor, an epoch below the floor — `lost`, the unit is stopped and the epoch is released (Н3 «confirm»,
   «lease_step()» steps 2, 4); the next pass takes a new `max(текущая, пол) + 1`, the heartbeat element — `running` under it
@@ -122,7 +122,7 @@ write `op: floor` of the door `admin` (the dictionary of the common acceptance R
   the capture writes its own `server` (Н3 «capture», the table of transitions);
 - sc. 31 — the decommission mark of the subsystem `testsub/decommissioned/srv-a` (the form of P/04 `decommissioned`): the worker `testsub` is
   nobody, there is no slot, heartbeat or contender marks; the worker `testsub2` of the same server takes the name — the mark of a foreign subsystem
-  does not concern it (Н3 «start()» step 3: `<sub>/decommissioned/<мой сервер>`); the mark is removed — a new worker takes the name, as in
+  does not concern it (Н3 «start()» step 3: `<sub>/decommissioned/<my server>`); the mark is removed — a new worker takes the name, as in
   sc. 21;
 - sc. 32 — the row `platform/decommission/srv-a` is not readable by its form (`at: "x"`): no name, no heartbeat; the row is
   removed — the same worker takes the name (Н3 «start()» step 3 «пока она не прочтётся»; `decommission.outcomes.tsv` `<s>worker` —
@@ -169,7 +169,7 @@ Before the start the catalogue `testsub` and `testsub2` from the common testdata
 There are no foreign controllers, resources, spare processes or start timers. The console door is open from the loopback;
 the read role of the store has access to testsub/ and testsub2/. The preparation uses separate administrative rights.
 
-All the workers of a scenario have the constant BOX_ID of the stand and server = srv-a, except `@start worker … on <сервер>` (the dictionary of the common acceptance README; analysis of the review of stage B 3–5, № 33) and the environment `<ИМЯ>=<значение>` of sc. 22; each copy gets a new
+All the workers of a scenario have the constant BOX_ID of the stand and server = srv-a, except `@start worker … on <server>` (the dictionary of the common acceptance README; analysis of the review of stage B 3–5, № 33) and the environment `<NAME>=<value>` of sc. 22; each copy gets a new
 instance. The name is passed by the substitution `{name}` of the directive (the common acceptance README, «Stand»; analysis of the review of stage B 3–5, № 33). A decreasing memory budget is not provoked: the chosen
 CAPACITY/WORKER_MEMORY_MB must satisfy Н1.2 of chapter 3.4. The ordinary configuration of testsub uses
 safe defaults; the parameters of the stand-in and of the deadlines are not accelerated for the sake of the test.

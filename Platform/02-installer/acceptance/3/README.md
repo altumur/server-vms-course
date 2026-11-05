@@ -9,23 +9,23 @@ The table and the files were moved from the acceptance of М10/2 (stage B) witho
 ## puts.tsv
 
 The manifest installation `manifest put` of the implementation (Н3 «Manifest change», the command name and argv — [`operator-commands.tsv`](../../forms/operator-commands.tsv)); the runner calls it
-by the command `manifest-put {socket} {file}` of the section «Stand» of the common acceptance README (the store pilot, А6).
+by the command `manifest-put {socket} {file}` of the section «Stand» of the common acceptance README (the store pilot, A6).
 
 **The form of the file.** UTF-8, lines separated by LF, fields by TAB. Lines starting with `#` and empty lines are skipped. The first
 line not skipped is the header `case<TAB>puts<TAB>expect`, then one line per case; exactly three fields.
 
 - `case` — the case name: `[a-z0-9_]+`, unique in the file;
-- `puts` — the file names `puts/<имя>.subsystem.yaml` separated by one space, in the order of installation, and the directives `@rev-max`,
-  `@shell-put <имя>`, `@file-fill <путь> <байтов>` between them; a file comes first and last; there is no subsystem shell next to the manifest until
+- `puts` — the file names `puts/<name>.subsystem.yaml` separated by one space, in the order of installation, and the directives `@rev-max`,
+  `@shell-put <name>`, `@file-fill <path> <bytes>` between them; a file comes first and last; there is no subsystem shell next to the manifest until
   `@shell-put` puts it (Н1.5 `shell`: no file — the field is not written);
-- `expect` — `<код> <rev>`: `<код>` is the return code of the **last** installation (`0` or `2`), `<rev>` is the decimal value of the field
+- `expect` — `<code> <rev>`: `<code>` is the return code of the **last** installation (`0` or `2`), `<rev>` is the decimal value of the field
   `rev` of the row `platform/manifest/<name>` after it, where `<name>` is the `name` of the last file; `-` — there is no row.
 
 **Directives** (this chapter only; through `admin.sock` of the instance — `{socket}` of the «Stand»; `<name>` is the `name` of the file before the directive):
 - `@rev-max` — read the row `platform/manifest/<name>`, the mark `platform/manifest/<name>/rev` and the view
   `platform/manifest/<name>/canonical/1` and write each with `cas` by the version read, where `rev` = `9007199254740991`
   (2^53 − 1), the other fields byte for byte the former ones: the state as after an honest installation with such a revision (Н1.5 `rev`);
-- `@shell-put <имя>` — put next to the manifest `<name>` the shell `<name>.shell.html` with the bytes of `puts/<имя>.shell.html`
+- `@shell-put <name>` — put next to the manifest `<name>` the shell `<name>.shell.html` with the bytes of `puts/<name>.shell.html`
   (replace the former one); it applies to the following installations of the line; the working copy is its own for each line.
 
 **The files of the list.** Next to the working copy of the manifest of each installation the runner puts the whole content of
@@ -33,7 +33,7 @@ line not skipped is the header `case<TAB>puts<TAB>expect`, then one line per cas
 `testsub2` has on the stand (common README, «Манифесты»); P/02.3 Н3 reads them next to the manifest file. There is no directive for them: the files do not change between
 installations. The shell next to the manifest appears only by `@shell-put`.
 
-- `@file-fill <путь> <байтов>` — put next to the manifest the file `<путь>` (relative, without `..`) of exactly `<байтов>` bytes; it
+- `@file-fill <path> <bytes>` — put next to the manifest the file `<path>` (relative, without `..`) of exactly `<bytes>` bytes; it
   applies to the following installations of the line; the bytes are arbitrary: the subject is the size (the ceilings of P/02.3 Н1.5). The runner creates the file, it is not in `puts/`,
   therefore the ceilings of 8 MiB do not add weight to the acceptance data.
 
@@ -42,7 +42,7 @@ installations. The shell next to the manifest appears only by `@shell-put`.
 command, each by a separate call. All installations except the last MUST return `0`: otherwise — a mismatch of the case
 (the preparation failed). After the last one the runner compares:
 
-1. the return code — with `<код>`;
+1. the return code — with `<code>`;
 2. with code `2` — stderr names the file of the last installation (the file name is part of the text), as with `verdicts.tsv`; a refusal on the attribute
    `on…=` in the shell — the shell file `<name>.shell.html` (P/02.3 Н4: «stderr называет файл и атрибут»; the attribute name — by reading);
 3. `rev` of the row `platform/manifest/<name>` — with `<rev>`: the row is read by the store door (`GET /v1/get?key=platform/manifest/<name>`,
@@ -107,7 +107,7 @@ The report `АУДИТ-ПОКРЫТИЯ-GEMINI-P02.md` (branch gemini/audit-cove
 - `uses_owner_after`, `uses_owner_after_mismatch` — the owner of a share after the consumer: the share is declared — accepted, it is not — code 2
   at the installation of the owner (paired with `target_after_customer`, `target_after_customer_mismatch`).
 - `os_name_*` — the OS names of the catalogue (P/02.4 Н1.1 `users_groups` names): the group `w2c-<sub>controller` with a name of 18 characters —
-  exactly 32, accepted; of 19 — 33, code 2; the user of a part `<dep>-pbox-<часть из 24 знаков>` — 33, code 2; the subsystem
+  exactly 32, accepted; of 19 — 33, code 2; the user of a part `<dep>-pbox-<24-character part>` — 33, code 2; the subsystem
   `store` — the user `<dep>-store` coincided with the platform group `w2c-store`, code 2; the part `belt` and the share `belt` without
   `part` — the user of the part and the group of the share `<dep>-psub-belt` coincided, code 2; a share with `part: belt` has no group of its own —
   accepted. The deployment of the installer is the default `w2c` (P/02.4 Н1.2; the command `manifest-put` of the «Stand» does not receive a deployment

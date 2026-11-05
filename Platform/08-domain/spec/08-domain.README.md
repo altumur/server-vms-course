@@ -65,7 +65,7 @@ console — [chapter 6.7](../../06-console/spec/06.7-console.norms.md), the work
   (the gate of the console, 502) are carried by the contracts of the consoles (lesson P/10, chapter 6.7). `X-W2C-Client` at the doors that
   the domain console passes — by a reference to the forwarding contract. The schemas of the bodies of the agent publication and of the relay package, of the edits, of the view and
   of the shadow report — the original is here: the agent (lesson P/09) and the domain console (lesson P/10) read them from here.
-- The forms of the rows and objects of the lesson are the family schemas `../data/*.schema.json` (the sections «Семьи данных» of the chapters; ADR-0088); the forms
+- The forms of the rows and objects of the lesson are the family schemas `../data/*.schema.json` (the sections «Data families» of the chapters; ADR-0088); the forms
   shared by a holder row and its copy at the agent — the common definitions (`common/data/common.schema.json` for reference; each
   family schema is self-contained, ADR-0092).
 - The acceptance of the chapters checks the norms: [8.1](../acceptance/1/README.md), 8.2 (the vectors of the common packages — [Н5 of the chapter](08.2-domain.norms.md)),
@@ -112,22 +112,22 @@ an unsupported case. Record a change of the acceptance in `journal/corrections-<
   door and the assembly of books (chapters 9.1, 6.3, 8.7, 8.5, 8.4). The rows `domain/root`, `domain/keys`, `domain/signer`,
   `domain/book-seal`, `domain/revoked` by Н1.1–Н1.6 and the families; the writer is the process `domain`, at a member — the agent
   (`domain/root` — only `admin`). The calls of the changes of Н3. The acceptance commands `keys`, `token`, `seal`, `seal-round`.
-- **8.3.** The doors `POST /api/member/<член>`, `GET /api/carry/<член>`, `POST /api/relay/<ретранслятор>`; the function «принять»
+- **8.3.** The doors `POST /api/member/<member>`, `GET /api/carry/<member>`, `POST /api/relay/<relay>`; the function «accept»
   ([the report acceptance contract](../../common/contracts/accept.md)) with a mutex per member, with `via` and `heard_ago`; the knock `knock` and
   the knocks from a package; the holder in the list; the view fields `knocking`, `reports`. The acceptance of `tls_ca` into `Entry.ca` and of
-  `tls_ca_certs` into the row `domain/members/<член>/ca-certs` before it. `members` in the answer only to the one lagging behind; 409
-  `too many members` at the acceptance of a member. The edits of the list (`POST`/`DELETE /domain/members`, `POST /domain/members/<член>/ca`)
+  `tls_ca_certs` into the row `domain/members/<member>/ca-certs` before it. `members` in the answer only to the one lagging behind; 409
+  `too many members` at the acceptance of a member. The edits of the list (`POST`/`DELETE /domain/members`, `POST /domain/members/<member>/ca`)
   and of the topology (`PUT /domain/topology`) come through the domain console (chapter 8.0); the acceptance of a member of Н3 and the write of the topology
   are executed by the process. The commands `accept`, `agent-sig`, `seal-member`, `seal-member-round`.
-- **8.4.** The rows of people and `domain/disabled`, the deletion mark `domain/deleting/<имя>` and the reconciliation by it at every pass;
+- **8.4.** The rows of people and `domain/disabled`, the deletion mark `domain/deleting/<name>` and the reconciliation by it at every pass;
   `POST /api/login` and the attempts limit; the doors of people, of emergency passwords, of grants and of revocation — with the check of the token and of the grants
   of the domain at itself; the command `domain first-admin`; in the answer to the agent — `grants` without the switched-off ones and `break_glass` in `sealed`
   (the form — the domain envelopes contract; the sealing of the answer — chapter 8.3); the command `may`.
-- **8.5.** The assembly of Н3 in the view pass, the rows `domain/<sub>/<книга>/<член>`, `view.books`, the delivery into `sealed.books`;
-  the names index `domain/names/<sub>/<книга>` after the assembly of the books of the pass and its checks at the doors of people and grants; the delivery
+- **8.5.** The assembly of Н3 in the view pass, the rows `domain/<sub>/<book>/<member>`, `view.books`, the delivery into `sealed.books`;
+  the names index `domain/names/<sub>/<book>` after the assembly of the books of the pass and its checks at the doors of people and grants; the delivery
   by the rank of the grant, `person_names` in the view; the command `assemble`.
 - **8.6.** The doors of Н2 of chapter 8.6 that the domain console passes (the write and the deletion of a placement, the edits) — the acceptance by chapter
-  8.0; the rows `domain/placement`, `domain/placement/<sub>/<ref>`, `domain/pending/<член>`, `domain/outcomes/<член>`.
+  8.0; the rows `domain/placement`, `domain/placement/<sub>/<ref>`, `domain/pending/<member>`, `domain/outcomes/<member>`.
   The fields of the answer to the agent `placement` (only the records that name the member, under the mutex of the record; the raise of the counter at start) and
   `pending` (chapter 8.3 Н1.5); the outcomes of Н1.6; the view fields `pending`, `outcomes`.
 - **8.7.** The door `/api/tokens/…`, the issue of Н3 in order, the claims of Н1.4, the signature by the token key, the answer in the envelope `m1`;
@@ -140,7 +140,7 @@ an unsupported case. Record a change of the acceptance in `journal/corrections-<
   `shared` in the answer to the agent (Н1.4 `carry`); `view.shared` — «доставлено скольким» (Н1.6); the alarm history in the pass (Н1.9).
 - **8.10.** The queue `domain/signer-turn`: the guard of every write into the holder rows, the objects — after the confirmation of the queue;
   the standby — 503 `standby` at all the doors; giving up the queue on `SIGTERM`. The ceilings: 413 `whole too large`; 409
-  `too many members` and «the entry of <член> would exceed 1240 bytes» at any write of `domain/member-rows/<раздел>`.
+  `too many members` and «the entry of \<member> would exceed 1240 bytes» at any write of `domain/member-rows/<part>`.
 - The description of all the choices of the sections «Implementation decides» of the chapters — 20 items «Implementation decides» in all — and the means of
   executing the acceptance: the vector commands and the stand directives.
 
@@ -176,7 +176,7 @@ This is a proposed order, not an obligatory structure of the code. The chapters 
    map of the key, SHA-512 of the seed, HKDF, AAD.
 3. «Принять» ([the report acceptance contract](../../common/contracts/accept.md), `accept`): the order of the steps, 409 of three kinds,
    `heard` and `MARK_REFRESH`, the order of the writes of the object, `.delta` and the marks.
-4. «Принять» with a road (`accept` with `via`, `heard_ago`): steps 2, 2а, 3 of the report acceptance contract.
+4. «Принять» with a road (`accept` with `via`, `heard_ago`): steps 2, 2a, 3 of the report acceptance contract.
 5. The acceptance of a member of Н3 and the holder in the list; the topology of Н1.2: the form, the refusals, CAS by `base_rev` and `If-Match`, the JCS of the text `doc`.
 6. The holder on a package of Н3: the topology, `refused`, the answer with `rev` for this road.
 7. `tls_ca` → `Entry.ca`, `tls_ca_certs` → `ca-certs` and the administrator door.
@@ -188,7 +188,7 @@ This is a proposed order, not an obligatory structure of the code. The chapters 
 1. The freshness of Н1.3: a change of the mark and of the heartbeat — on the holder's monotonic clock; the first look at the mark is not a change (the member
    `unseen`), at the heartbeat — a change; `LOST_AFTER` 45 s.
 2. The view of Н1.4: the units from the heartbeats, then from the shards of the snapshot without repeats of id (a row without the value `domain.ref` is not a unit);
-   the placements — by one read per pass (Н3 step 3а); `contested` except the ref of the executors; the order (cluster, id);
+   the placements — by one read per pass (Н3 step 3a); `contested` except the ref of the executors; the order (cluster, id);
    `contested` before `complete`.
 3. The shadow report of Н1.6: the claims from `status[]` with ref by the shard of its own member; the memory of the time of a change of `observed_revision` per
    pair; `clean_streak` is reset by any finding and by `unknown`.
@@ -278,7 +278,7 @@ chapters 8.0 and 8.2 have no catalogue. Fill the checklists of the chapters with
 | 8.2 Н1.2 | signing `json.dumps` with spaces or in the insertion order | the signature — over JCS; the order of the fields of the text `doc` is free |
 | 8.2 Н1.5 | deriving the X25519 key from the seed through HKDF or a hash | the seed is the scalar itself; the library clamps it at the multiplication |
 | 8.2 Н1.5 | base64 with `=` or the standard alphabet | base64url without `=`; `=` in an envelope — `not_an_envelope` |
-| 8.2 Н1.5 | AAD from one field name or `<JCS>:<поле>` | `JCS([member, source_path, item]) ‖ 0x00 ‖ JSON Pointer` as a whole |
+| 8.2 Н1.5 | AAD from one field name or `<JCS>:<field>` | `JCS([member, source_path, item]) ‖ 0x00 ‖ JSON Pointer` as a whole |
 | 8.2 Н1.6 | comparing `exp` with the holder's clock or `>=` at the boundary | the verifier's clock; `now > exp + 60` — a refusal, equality — `ok` |
 | 8.2 Н1.6 | counting an unreadable `domain/revoked` as empty | `no_revocations`: there is nothing to check with; empty — only when there is no row |
 | 8.3 Н1.3 | writing the mark before the object of the generation | the order: the object, then `.delta`, then the mark |
@@ -301,7 +301,7 @@ chapters 8.0 and 8.2 have no catalogue. Fill the checklists of the chapters with
 | 8.4 Н1.3 | reading the copy of the grants as eternal | older than `as_of + GRANT_LIFETIME` — no rights |
 | 8.4 Н1.4 | taking the labels `labels:` from the unit itself that has `about` | the labels — from the unit that is meant (`about`) |
 | 8.4 Н1.4 | counting a right without a unit as any grant for `edit` | without a unit any row fits only for `view`; otherwise — `*` |
-| 8.4 Н3 | DELETE of a person without a mark | first the mark `domain/deleting/<имя>`, then the row and the grants; the reconciliation completes an interruption |
+| 8.4 Н3 | DELETE of a person without a mark | first the mark `domain/deleting/<name>`, then the row and the grants; the reconciliation completes an interruption |
 | 8.5 Н1.3 | a spoiled input — remove only it | the whole contribution of the member in the book is removed, the member — in `missing` |
 | 8.5 Н1.3 | a member `unseen` does not contribute | it contributes and stands in `missing` (`why: unseen`) |
 | 8.5 Н1.3 | a recipient outside the list — deliver «for the future» | it receives nothing; only `view.books.undelivered` |
@@ -323,7 +323,7 @@ chapters 8.0 and 8.2 have no catalogue. Fill the checklists of the chapters with
 | 8.9 Н1.9 | writing the history from a list request | only the holder's pass writes it; the list (lesson P/10) reads it |
 | 8.10 Н1.7 | writing the outputs of the pass without the guard of the queue | every write — with the guard `{key: domain/signer-turn, index}`; a refusal of the guard — become a standby |
 | 8.10 Н1.7 | writing the object `domain/view`, the mark `reported` or the alarm history by `put` without an index after the confirmation of the queue | `get_at` → CAS of the confirmation of the queue → `put_at` by the index read before the confirmation |
-| 8.10 Н1.5 | checking `ENTRY_MAX` only at the changed entry | every write of `domain/member-rows/<раздел>` checks all the entries of the new document |
+| 8.10 Н1.5 | checking `ENTRY_MAX` only at the changed entry | every write of `domain/member-rows/<part>` checks all the entries of the new document |
 
 ## Boundary checks
 

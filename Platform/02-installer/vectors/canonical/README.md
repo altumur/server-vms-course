@@ -6,7 +6,7 @@ The owner is chapter [P/02.2](../../spec/02.2-installer.norms.md) of the install
 the loader [P/02.1](../../spec/02.1-installer.norms.md) (the view is built only from an accepted manifest, verdict `ok`) and the installer
 `manifest put` [P/02.3](../../spec/02.3-installer.norms.md) Н3 (writes the view next to the row). A vector is the bytes of a manifest → the bytes of the field
 `manifest` of the view row `platform/manifest/<sub>/canonical/1`; the wrapper `{form, rev, sha256, manifest}` and `rev` are not vectors but
-[the acceptance of chapter 2.2](../../acceptance/2/README.md) (ADR-0089 addendum (1) Р13). Both implementations — byte for byte. The window of chapter 2.2 is
+[the acceptance of chapter 2.2](../../acceptance/2/README.md) (ADR-0089 addendum (1) R13). Both implementations — byte for byte. The window of chapter 2.2 is
 `decisions/inbox/2026-10-20-окно-главы-2.2-канонический-вид.md` (section 5, the Architect's decision — item 8).
 
 ## Composition
@@ -15,13 +15,13 @@ the loader [P/02.1](../../spec/02.1-installer.norms.md) (the view is built only 
 |---|---|---|
 | table of cases | `cases.tsv` | rows `corpus-*`, `course-*` — the builder; rows `example-*` — the Specification |
 | expected bytes | `expect/<case>.json` — one file per row | the builder of the skill `lesson-spec`, not edited by hand |
-| inputs of the example rows | `inputs/<имя>.subsystem.yaml` | the Specification |
+| inputs of the example rows | `inputs/<name>.subsystem.yaml` | the Specification |
 
 Inputs of the rows:
-- `corpus-<случай>` — each accepted case of the corpus of chapter 2.1 (`acceptance/1/verdicts.tsv`, verdict `ok`);
-- `course-<имя>` — each manifest of the course `Source/tests/testdata/*.subsystem.yaml`;
-- `example-<правило>` — one row per rule of Н1.1 (the defaults note `decisions/inbox/2026-10-19-умолчания-канонического-вида.md`,
-  section 5): a section without a default and with a default, a nested key, sugar ×3, П1 (and a stated `snapshot: []`), П2–П5,
+- `corpus-<case>` — each accepted case of the corpus of chapter 2.1 (`acceptance/1/verdicts.tsv`, verdict `ok`);
+- `course-<name>` — each manifest of the course `Source/tests/testdata/*.subsystem.yaml`;
+- `example-<rule>` — one row per rule of Н1.1 (the defaults note `decisions/inbox/2026-10-19-умолчания-канонического-вида.md`,
+  section 5): a section without a default and with a default, a nested key, sugar ×3, P1 (and a stated `snapshot: []`), P2–P5,
   `ordered`. The input of an example row is a small manifest that changes one rule against the minimal one; what it shows is
   the field `note`.
 
@@ -50,7 +50,7 @@ Who executes — the installer (`02-installer`: «build view» P/02.2 Н3 — fo
 ## What the vector does not cover
 
 The wrapper of the view row, the write order row — view — mark, «без изменений» with the view, the refusal `toolarge` of the view — the acceptance of chapter
-[`acceptance/2/`](../../acceptance/2/README.md). The schema of the view — the section «Форма канонического вида» of the norms of chapter 2.2 (P/02.2-05;
+[`acceptance/2/`](../../acceptance/2/README.md). The schema of the view — the section «Form of the canonical view» of the norms of chapter 2.2 (P/02.2-05;
 `check_spec` checks that the view of each input passes it). The reader of the view — by the edits of the readers (P/02.2-06).
 
 ## Vector wire

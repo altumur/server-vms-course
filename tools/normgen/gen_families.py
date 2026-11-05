@@ -30,6 +30,7 @@ L = lesson.CURRENT
 
 CATALOG = ROOT / "Platform/common/data/catalog.tsv"
 KEYS_README = ROOT / "Platform/common/data/README.md"
+PLACEHOLDER_LABELS = ROOT / "Platform/common/placeholders.tsv"
 PLATFORM = ROOT / "Platform"
 RUNTIME_FLAT = HERE / "famrt/go/runtime.go"
 RUNTIME_DOC = HERE / "famrt2/go/runtime.go"     # режим схемы данными (уроки кроме P/01; ADR-0125 доп. (5))
@@ -91,9 +92,31 @@ def placeholders():
                 break
             m = re.match(r"\| `(<[^`]+>|\*)` \| `(.+?)` \| ", x)
             if m:
-                out[m.group(1)] = m.group(2).replace("\\|", "|")
+                label, grammar = m.group(1), m.group(2).replace("\\|", "|")
+                if label in out and out[label] != grammar:
+                    raise GenError(f"{rel(KEYS_README)}: conflicting grammars for {label}")
+                out[label] = grammar
     if not out:
         raise GenError(f"{rel(KEYS_README)}: no placeholder table")
+    # The catalogue keeps its typed key templates. Only the spelling used to look
+    # up their grammar changes between the ru/en labels of ADR-0121 (3).
+    if PLACEHOLDER_LABELS.is_file():
+        explicit = dict(out)
+        seen = set()
+        for row in tsv(PLACEHOLDER_LABELS, ["ru", "en"]):
+            if not row["ru"] or not row["en"] or row["ru"] in seen:
+                raise GenError(f"{rel(PLACEHOLDER_LABELS)}: empty or duplicate ru label {row['ru']!r}")
+            seen.add(row["ru"])
+            ru, en = f"<{row['ru']}>", f"<{row['en']}>"
+            # README is typed data: explicit <сервер>/<server> and <ключ>/<key>
+            # can denote different types. Prose labels never override those.
+            if ru in explicit and en in explicit:
+                continue
+            source, alias = (en, ru) if en in explicit else (ru, en)
+            if source in explicit:
+                if alias in out and out[alias] != explicit[source]:
+                    raise GenError(f"{rel(PLACEHOLDER_LABELS)}: conflicting grammars for alias {alias}")
+                out[alias] = explicit[source]
     return out
 
 
@@ -509,7 +532,10 @@ def go_module(fams, lesson):
         for s in f["sources"]:
             if s is not None:
                 head += f"// {rel(s)} sha256 {sha(s)}\n"
-    head += (f"// {rel(KEYS_README)} sha256 {sha(KEYS_README)}\n\n"
+    head += f"// {rel(KEYS_README)} sha256 {sha(KEYS_README)}\n"
+    if PLACEHOLDER_LABELS.is_file():
+        head += f"// {rel(PLACEHOLDER_LABELS)} sha256 {sha(PLACEHOLDER_LABELS)}\n"
+    head += ("\n"
              f"// Package families — the reading of the data families of P/{lesson} (ADR-0125 № 5): by family a *Family\n"
              "// (Judge, Matches, OutcomesFor, Readers), the typed row Read<Family> and Items, the key. What an outcome does is\n"
              "// the prose of the norm (the column outcome of <family>.outcomes.tsv) — not here.\n"
@@ -549,6 +575,8 @@ def kit_files(out=DEFAULT_OUT):
 
 def sources(lesson=DEFAULT_LESSON):
     out = [CATALOG, KEYS_README]
+    if PLACEHOLDER_LABELS.is_file():
+        out.append(PLACEHOLDER_LABELS)
     for f in families(lesson):
         out += [s for s in f["sources"] if s is not None]
     return out

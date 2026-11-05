@@ -12,10 +12,10 @@ the lessons М11/1, 3, 4, 6, 8, 9, 11, 12 (the domain console side) (stage B, AD
 lesson [P/08](../../08-domain/spec/08-domain.README.md), the agent is lesson [P/09](../../09-agent/spec/09-agent.README.md), the forwarding
 of the cluster console is chapter P/06.7.
 
-- The read doors `GET /domain`, `/domain/<sub>/<rows>`, `/domain/<sub>/tables/<таблица>`, `/domain/shadow`, `/domain/members`, `/domain/topology`,
+- The read doors `GET /domain`, `/domain/<sub>/<rows>`, `/domain/<sub>/tables/<table>`, `/domain/shadow`, `/domain/members`, `/domain/topology`,
   `/domain/placement*`, `/domain/grants`, `/domain/shared`, `/domain/alarms`.
 - Passing the edits, the people doors and the login on to the process `domain`.
-- The role door of TLS and «принять консолью»; the gate by `domain/grants/domain`.
+- The role door of TLS and «accept by a console»; the gate by `domain/grants/domain`.
 - The holder's page and `door.pass` on the domain.
 
 ## Inputs and their priority
@@ -46,7 +46,7 @@ The instructions introduce no new refusal. Record a change of acceptance in `jou
 - The read doors of Н1.2 and the alarm list of Н1.8 with the function `alarms` (the command `alarms`).
 - The passing of Н1.3: each row of the list of domain doors, except its own reads and `door.pass`, — to the process `domain`
   (`SIGNER_URL`), the answer as it came; the people doors of Н1.3а.
-- The role door of Н1.4 (`server.role`) and «принять консолью»; the gate of Н1.5 (the steps of `identity` 3, 4; `may` by
+- The role door of Н1.4 (`server.role`) and «accept by a console»; the gate of Н1.5 (the steps of `identity` 3, 4; `may` by
   `domain/grants/domain`; `/session` with the grants).
 - `door.pass` on the domain of Н1.6; the holder's page of Н1.7.
 - The start of Н1.1: the reader's side of the manifest row, the schema check, readiness — the port.
@@ -58,7 +58,7 @@ This is a suggested order, not a mandatory structure of the code.
 1. `alarms` by the vector [`alarms`](../vectors/alarms/README.md).
 2. The read doors of Н2 and their refusals of Н4.
 3. The gate of the domain console; `/session` with the grants.
-4. The passing to the process; «принять консолью»; the role door.
+4. The passing to the process; «accept by a console»; the role door.
 5. The holder's page and `door.pass` on the domain.
 6. The stand: scenarios 02, 05–19 of the [acceptance of the lesson](../acceptance/README.md) and the domain console side in the scenarios of the chapters of lesson P/08
    (the table of neighbours on the stand of Н5).

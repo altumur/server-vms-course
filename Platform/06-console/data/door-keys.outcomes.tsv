@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row door/keys (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row door/keys (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 	<s>worker	the whole row is unreadable: the holder — the token's kid is not found in door/keys, the refusal of the holder's door — 403 `forbidden` without a reason (the door token contract; the Architect's decision of 2026-10-20, vectors door-token)	0	строка	P/03.4 Н3 «токен двери у держателя», Н4

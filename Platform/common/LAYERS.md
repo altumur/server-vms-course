@@ -1,28 +1,28 @@
-# The layers of В7: the standard and our own remainder
+# The layers of V7: the standard and our own remainder
 
 This English text is the source; the Russian translation `ru/LAYERS.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 The form of the manifest (P/02.1), the canonical view (P/02.2) and the forms of the data families (the catalogue `Platform/common/data/`) the course
 writes in standard files: JSON Schema 2020-12 — the form, CEL — the relations of the manifest. What the standard does not express is held by
 seven layers of our own; each implementation executes them, the places are the layer tables next to the schemas (ADR-0092 «Свой остаток»). This
-file replaces `DIALECT.md` (ADR-0087; removed by the transition to В7, behind the tag `dialect-reference-dc94d0fd1`). A new word `x-*`
+file replaces `DIALECT.md` (ADR-0087; removed by the transition to V7, behind the tag `dialect-reference-dc94d0fd1`). A new word `x-*`
 and a new rule of a layer are decided by the Architect (ADR-0087 addendum (5), ADR-0092 «Что заменяется»); the description is written by «Спецификация».
 
 ## 1. Files
 
 | File | What | Where |
 |---|---|---|
-| `*.schema.json` | the form: JSON Schema 2020-12 in the words of the standard and the marks `x-*` (§ 3) | the manifest — `02-installer/spec/02.1-installer.schema.json`; the view — `02.2-installer.view.schema.json`; a family — `NN-<процесс>/data/<семья>.schema.json` |
+| `*.schema.json` | the form: JSON Schema 2020-12 in the words of the standard and the marks `x-*` (§ 3) | the manifest — `02-installer/spec/02.1-installer.schema.json`; the view — `02.2-installer.view.schema.json`; a family — `NN-<process>/data/<family>.schema.json` |
 | `*.relations.json` | the relations of the manifest: CEL rows with a number `no` (§ 5) | `02-installer/spec/02.1-installer.relations.json` |
 | `*.layers.tsv` | the places of the marks `x-*` of a schema: `place<TAB>layer<TAB>word<TAB>value` (a place is a JSON Pointer in the schema; the root is the empty pointer `""`); the rows are all and only the places of the words with a layer of § 3; the table does not carry `x-owner`, `x-default-text`, `x-class`; the view schema has no table (`x-step`, `x-default`, `x-unique-by` — in the schema itself), `x-implied-by` — at the relation row (V7-LAYERS-ROOT-HASH-01) | next to the schema |
 | `02.1-installer.scalars.tsv` | the table of the plain scalars of the manifest (P/02.1 Н1.1) | next to the form of the manifest |
 | `common/data/codec.tsv` | the codec of the store rows: a logical type → the notation in `items` and in JSON (layer 3) | `Platform/common/data/` |
-| `<семья>.outcomes.tsv` | the outcomes of an unreadable row or object by readers (§ 7) | next to the schema of the family |
+| `<family>.outcomes.tsv` | the outcomes of an unreadable row or object by readers (§ 7) | next to the schema of the family |
 | `common/versions/` | the pinned versions of the standard libraries and the YAML parsers: [README](versions/README.md), `go.mod`, `go.sum`, `requirements.txt` (ADR-0092 item 9) | `Platform/common/versions/` |
 | `common/data/common.schema.json` | the common definitions of the family schemas — for reference, not a norm: each family schema is self-contained | `Platform/common/data/` |
 
 The files `*.tsv` are tables: UTF-8 without BOM, the line feed LF, TAB is the column separator, a line with `#` is a comment, the first
-line without `#` is the header, the set of columns is closed. The sections of the norms «Form», «Форма канонического вида», «Семьи данных»
+line without `#` is the header, the set of columns is closed. The sections of the norms «Form», «Form of the canonical view», «Data families»
 are built from these files and stand in the norms byte for byte (ADR-0087 item 3; the builder is the skill `lesson-spec`).
 
 ## 2. Seven layers
@@ -34,7 +34,7 @@ are built from these files and stand in the norms byte for byte (ADR-0087 item 3
 | 3 | the codec of the family rows: `items`, time, `max_bytes`, names beyond the limit, the whole sign of the writer and the reader by the exact decimal value of the notation | `codec.tsv`, § 6 |
 | 4 | the place of a refusal where the library does not give it — by the full table of § 6 «Place of refusal» (`required`, `additionalProperties: false` — the path of the key, not of the parent; `propertyNames` — the place of the parent object and the name; `uniqueItems` — the place of each element equal to an earlier one: `[a, a, a]` → `/1`, `/2`); the path of the families is normative (PY-JS-02) | § 6 |
 | 5 | the full match of `pattern` and `patternProperties` (§ 3 «Expression») | § 3 |
-| 6 | the projection of the canonical view — the full algorithm of P/02.2 Н1.1: sugar, defaults (static — the annotation `default`, computed — the rules of P/02.2), П1–П5, `x-ordered`, scalars by the node type | P/02.2 Н1.1 |
+| 6 | the projection of the canonical view — the full algorithm of P/02.2 Н1.1: sugar, defaults (static — the annotation `default`, computed — the rules of P/02.2), P1–P5, `x-ordered`, scalars by the node type | P/02.2 Н1.1 |
 | 7 | relations: three CEL functions — `depth`, `template`, `text`; the other rows are pure CEL | § 5 |
 
 ## 3. Schema words
@@ -94,7 +94,7 @@ yaml-test-suite `data-2022-01-17` (the inputs are in the package, acceptance wit
 ## 5. Relations (CEL)
 
 A row of `relations.json` is a CEL expression over the tree of the loader: an absent value and `has` take the static
-default `default` of the form; the computed defaults, П1–П5 and `x-ordered` are not applied to the relation tree (ADR-0092 layer 6).
+default `default` of the form; the computed defaults, P1–P5 and `x-ordered` are not applied to the relation tree (ADR-0092 layer 6).
 The relations are checked only with a clean form; the refusal is `refused:relations` (P/02.1 Н3, Н4). A row is one expression over
 the variable `doc` (the tree of the loader), the result is a list of violations `{p: путь}`, nested by the number of iterated
 segments of the path of the row. The CEL extensions are the standard `strings` and `two-var-comprehensions`; our own functions are
@@ -118,10 +118,10 @@ Pointer). The path of the families is normative: it chooses the outcome (§ 7); 
 **The key** of an instance is checked by the template of the column `key` of the catalogue: the literals of the template — exactly, a placeholder `<…>` — by
 the [table of placeholders](data/README.md) (the grammar, the number of path components, an example). A key not by the template — the instance is not
 of this family: a refusal on the empty path `""` (the instance whole), the value is not judged — like a row that is not an object; the outcome is the rows
-of the empty path of `<семья>.outcomes.tsv` (V7-FAMILY-KEY-PLACEHOLDER-01). The path `/key` does not fit for this: it is the path of the field
+of the empty path of `<family>.outcomes.tsv` (V7-FAMILY-KEY-PLACEHOLDER-01). The path `/key` does not fit for this: it is the path of the field
 `key` of the value (P/08 `member-report`, `member-report-delta`, `member-reported`; for an open root — any name).
 
-**Place of refusal** is normative and does not depend on the library; the rule is set by the stack of В7 — the set «А» and the vectors
+**Place of refusal** is normative and does not depend on the library; the rule is set by the stack of V7 — the set «А» and the vectors
 `family-read` stand on it (V7-APPLICATOR-PATH-01):
 
 | Word or layer | Place of refusal |
@@ -139,7 +139,7 @@ of the empty path of `<семья>.outcomes.tsv` (V7-FAMILY-KEY-PLACEHOLDER-01).
 
 The answer is a set of paths: repeats merge, the order does not matter.
 
-## 7. Outcomes of the unreadable (`<семья>.outcomes.tsv`)
+## 7. Outcomes of the unreadable (`<family>.outcomes.tsv`)
 
 A row: `path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm`.
 - `path` — a prefix of the refusal path as a JSON Pointer, empty — the row whole; the segment `*` — any name outside the keys of `properties`
@@ -152,7 +152,7 @@ A row: `path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm`.
 - `unit` — the unit of unreadability (`строка`, `поле`, `элемент`): a refusal below it does not make the containing node unreadable;
 - `norm` — the address of the norm.
 
-**Choice of the outcome** of a reader R by the set of refusal paths (V7-OUTCOME-SELECT-01; a rule of the stack of В7):
+**Choice of the outcome** of a reader R by the set of refusal paths (V7-OUTCOME-SELECT-01; a rule of the stack of V7):
 1. the rows of R — with `reader` = R or `*`;
 2. for each refusal path q — the covering rows: their `path` is a prefix of q (the empty one covers everything; the segment `*` — any name
    outside the keys of `properties` of that place or any element);
@@ -161,8 +161,8 @@ A row: `path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm`.
 4. the rows of all paths are united; the rows with the smallest `priority` act, equal ones — all, in the order of the file; there is no refusal
    path or not a single row — there is no outcome.
 
-A schema with a word (`<схема>.schema.json#<слово>` in the column `schema` of the catalogue) is one schema for several families; the outcomes of a family
-with a word — `<схема>.<слово>.outcomes.tsv` next to the schema (V7-DOMAIN-SLOT-PULSE-SCHEMA-01).
+A schema with a word (`<schema>.schema.json#<word>` in the column `schema` of the catalogue) is one schema for several families; the outcomes of a family
+with a word — `<schema>.<word>.outcomes.tsv` next to the schema (V7-DOMAIN-SLOT-PULSE-SCHEMA-01).
 
 The unreadable is not replaced by absence (the rule DF-OUTCOMES-109); for the console gate — the rule «Unreadable row»
 of the [gate-and-pass contract](contracts/gate-and-pass.md).

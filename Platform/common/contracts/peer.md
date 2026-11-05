@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/peer.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (13) and addendum (14): a common algorithm of several processes is a contract, not
+A common contract of the module «Platform» (ADR-0083 addendum (13) and addendum (14): a common algorithm of several processes is a contract, not
 copies in chapters; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 2; analysis of the review of stage A 8–10, № 7; analysis of the review
 of stage A 6–7, № 28; analysis of the review of stage B 6–7, № 25). The owner is lesson P/09, [chapter 9.1](../../09-agent/spec/09.1-agent.norms.md) Н1.7 (P/09.1-27; the first contract — the agent to `https://`;
 the source — М11/8 Н1.6 `client`, `first`, Н3 «peer»).
@@ -14,8 +14,8 @@ By the function `peer` a client of a door of another cluster over `https://` acc
 | the cluster console ([chapter 6.7](../../06-console/spec/06.7-console.norms.md) Н1.7) | the console of a member or of the holder | [the forwarding contract](forwarding.md) `tls` |
 | the process `domain` (8.8) | the consoles of the neighbours on a move and a handover | [P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н1.7, Н1.8 |
 | the domain console ([lesson P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.4) | — (the server of a role door: steps 6–7 over the client leaf with `role: console`) | [the role certificate contract](role-certificate.md) «The server side: the class `role`» (C10-SDK-ROLE83) |
-| the clients of its own cluster ([the role certificate contract](role-certificate.md) `own_client`) | the doors of its own cluster | its own CAs (`ca.pem`, `ca.next.pem` `W2C_TLS_DIR`), `host` by the loop threshold `loopback`, then revocation (review of the norms of ADR-0075, Claude fd85ea8cc, М-5) |
-| a client of another cluster to the door of a process `mixed` (a subsystem process, [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.7 `cross_cluster`) | the door of the process of the member named by the destination or the book of the subsystem | it presents no leaf, the admission is the route `domain` by the domain token; the server is the peer of the destination member: the role is the role of the door, the fingerprints are `Entry.ca` of this member from the copy `domain/member-list/<раздел>` (read by `worker.reads`), the name is from the address; the role certificate contract does not change (ADR-0091 addendum (18) item 2, addendum (19) item 2) |
+| the clients of its own cluster ([the role certificate contract](role-certificate.md) `own_client`) | the doors of its own cluster | its own CAs (`ca.pem`, `ca.next.pem` `W2C_TLS_DIR`), `host` by the loop threshold `loopback`, then revocation (review of the norms of ADR-0075, Claude fd85ea8cc, M-5) |
+| a client of another cluster to the door of a process `mixed` (a subsystem process, [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.7 `cross_cluster`) | the door of the process of the member named by the destination or the book of the subsystem | it presents no leaf, the admission is the route `domain` by the domain token; the server is the peer of the destination member: the role is the role of the door, the fingerprints are `Entry.ca` of this member from the copy `domain/member-list/<part>` (read by `worker.reads`), the name is from the address; the role certificate contract does not change (ADR-0091 addendum (18) item 2, addendum (19) item 2) |
 
 Moved from М11/8 Н1.6 (the lines `client`, `first`; the line `revoke` is the client's side, the decision of «Спецификация» on
 the move of lesson 10), Н3 «peer(chain, fingerprints, role, host, now)» (steps 1–9 and the paragraph
@@ -42,19 +42,19 @@ client:       a client of a door of another cluster over https:// knows the dest
               the member console — the name from CLUSTERS; the console of the holder's cluster and the signer — the holder; the relay —
               RELAY_MEMBER; the agent at the door DOMAIN_URL — the holder, in order: carry.holder of the last trusted answer
               of this road (the record deposed); before the first answer after start — its own readable domain/holder; none — DOMAIN_CA (first below, the first contact); nothing —
-              foreign_ca; there are no new words or variables (fail-closed, П1; C09-PEER-DEST-MEMBER-01); the fingerprints of the holder — ca of the term record domain/holder (the term record contract; ADR-0113 addendum (3) item 2);
-              of another member — Entry.ca of its row domain/member-list/<раздел> of this cluster; there is no row, its fetched_at is older than MEMBER_ROW_AGE (3600 s) or peer refused by it with foreign_ca — the client puts the request domain/member-want/<раздел> (P/09.1 Н1.4 member_want), this request goes by what there is, without a row — foreign_ca (the form of the copy — Platform/09-agent/data/member-list.schema.json,
+              foreign_ca; there are no new words or variables (fail-closed, P1; C09-PEER-DEST-MEMBER-01); the fingerprints of the holder — ca of the term record domain/holder (the term record contract; ADR-0113 addendum (3) item 2);
+              of another member — Entry.ca of its row domain/member-list/<part> of this cluster; there is no row, its fetched_at is older than MEMBER_ROW_AGE (3600 s) or peer refused by it with foreign_ca — the client puts the request domain/member-want/<part> (P/09.1 Н1.4 member_want), this request goes by what there is, without a row — foreign_ca (the form of the copy — Platform/09-agent/data/member-list.schema.json,
               the outcomes — `Platform/09-agent/data/member-list.outcomes.tsv`; C04-DEP-OBS-HEARTBEAT-01)
 first:        DOMAIN_CA=<fingerprint> next to DOMAIN_URL, RELAY_CA=<fingerprint> next to RELAY_URL — applies only while
               the record of the destination member does not name ca; neither a record nor a fingerprint — the refusal foreign_ca: there is no trust at the first
               contact; RELAY_URL on https:// without RELAY_MEMBER — the agent does not start, exit code 2 — a configuration refusal
-              (P/02.4 Н1.1 common; the Architect's decision on the move plans 8–10, ADR-0083 addendum (14) item 10; plan 9 В8)
+              (P/02.4 Н1.1 common; the Architect's decision on the move plans 8–10, ADR-0083 addendum (14) item 10; plan 9 V8)
 revoke:       the revocation of a certificate of a foreign cluster is not visible to the caller; the remedy is a change of the CA (rotation)
 ```
 
 ## The function `peer`
 
-From М11/8 Н3 «peer(chain, fingerprints, role, host, now) — клиент о сервере другого кластера, по порядку»:
+From М11/8 Н3 «peer(chain, fingerprints, role, host, now) — the client about the server of another cluster, in order»:
 
 ```
 1. host is an IP address (v4 or v6, including v6 with a zone `%<zone>`; added by the reconciliation of М11, D15) → ip_address

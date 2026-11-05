@@ -12,7 +12,7 @@
 и проверка схемы при старте ресурса (Н3, часть М10/10-01); из
 М10/11 — `restore` событий от соседей (Н1.4
 там, здесь Н1.4 «Восстановление бакетов»). Номера подразделов — прежние номера М10/8. Форма строки события, id события,
-бакеты, писатели файла, кодирование имён и запись строки (разбор ревью стадии B 3–5, В1) — [договор журнала событий](../../../common/ru/contracts/event-journal.md); замок
+бакеты, писатели файла, кодирование имён и запись строки (разбор ревью стадии B 3–5, V1) — [договор журнала событий](../../../common/ru/contracts/event-journal.md); замок
 присутствия и счёт `room` — [договор замка присутствия](../../../common/ru/contracts/presence-lock.md) (разбор ревью стадии A
 3–5, № 9): урок — владелец обоих. Просьба Н1.5, слияние, жнец, подача и двери консоли — [глава 6.4](../../../06-console/ru/spec/06.4-console.norms.md) (P/06);
 подавление повторов и исполнение просьб — [глава 3.6](../../../03-worker/ru/spec/03.6-worker.norms.md). «P/0N» — урок
@@ -21,7 +21,7 @@
 
 ## Н0 Словарь слов
 
-Нормативные слова (MUST, MUST NOT, SHOULD, MAY по RFC 2119 и RFC 8174) — по [канону курса](../../../../ru/НОРМАТИВНЫЕ-СЛОВА.md). Правила модуля — [P/01.1 Н0](../../../01-store/ru/spec/01.1-store.norms.md#н0-словарь-слов).
+Нормативные слова (MUST, MUST NOT, SHOULD, MAY по RFC 2119 и RFC 8174) — по [канону курса](../../../../ru/НОРМАТИВНЫЕ-СЛОВА.md). Правила модуля — [P/01.1 Н0](../../../01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
 
 ## Н1 Форма
 
@@ -70,7 +70,7 @@ object:
              надгробия .gone/<ключ> — только чтение: листинг prefix=.gone/ и GET тела (договор надгробий; C05-GONE-BODY-READ-01);
              `*` первой части — подсистема каталога манифестов: `other/heartbeats/x` без манифеста other — 403 (сверка python и go М10/6–11, E5)
              тела объектов двери ресурс не разбирает: объект, нечитаемый своей семьёй (пульс воркера, метка), отдаёт
-             как есть, суждение — у читателя (В7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 24 списка)
+             как есть, суждение — у читателя (V7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 24 списка)
   disk:      <PLATFORM_DIR>/objects/<ключ>; каталог 0775, файл 0644; запись — temp + rename под замком каталога `<каталог>/~lock`, flock(LOCK_EX), файл
              не удаляется; служебные имена (замок, временное имя) — договор журнала событий «Имена файлов» (ADR-0083 доп. (16))
 ```
@@ -97,13 +97,13 @@ object:
 Ошибка ФС после допуска — отказ записи, а не успех и не «файла нет».
 
 **Тела у ресурса** (перенесено из М10/10 Н1.5 `mirror` и Н1.4, части
-М10/10-06, -07, -08 по `note` id-map; решение «Спецификации» по вопросу В2 переноса; поле `blob`, дайджест, дверь байтов
+М10/10-06, -07, -08 по `note` id-map; решение «Спецификации» по вопросу V2 переноса; поле `blob`, дайджест, дверь байтов
 консоли, уборка тел — [глава 6.1](../../../06-console/ru/spec/06.1-console.norms.md) Н1.5):
 
 ```yaml
 mirror:   каждое локальное тело — следующим copies живым соседям кольца (Н1.4 mirror), всегда, независимо от mirror.enabled;
           copies — из строки platform/mirror (целое ≥ 0), строки нет или поля copies нет — 1 (журнал cammeta-go, урок 10 № 1); строка
-          не читается — тела в этом проходе не копируются, причина в пульсе (settings_unread: mirror; В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 20 списка);
+          не читается — тела в этом проходе не копируются, причина в пульсе (settings_unread: mirror; V7 п. 3, решение «Архитектора» 2026-10-28, P1; строка 20 списка);
           приём: хэш по мере чтения; PEER_FAILS 3; дверь копии есть только у ключа `<sub>/blobs/sha256-<64 строчных hex>`
           подсистемы с blob-полем; иной ключ (заглавные hex, без `sha256-`, подсистема без blob-поля) — обычный объект,
           его пишет владелец: 405 (сверка python и go М10/6–11, T11)
@@ -214,11 +214,11 @@ resource:                                    # один процесс на се
      retention_garbled?: [<sub>…], retention_withheld?: {<sub>: days_garbled | unknown | holds_unread}, …}
     # retention_garbled, retention_withheld — причины прохода срока (Н3 retain, Н4; нет причины — полей нет; C05-RETENTION-PULSE-33)
     # settings_unread?: [mirror | space] — строки настроек прохода, которые не прочитались: шаг mirror (и копии тел Н1.1) или
-    # relieve в этом проходе не исполняется; по возрастанию байтов; нет таких — поля нет (В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 20, 21 списка)
+    # relieve в этом проходе не исполняется; по возрастанию байтов; нет таких — поля нет (V7 п. 3, решение «Архитектора» 2026-10-28, P1; строка 20, 21 списка)
     # door: {addr, mode: loopback | mtls, cert_until} — в каждом пульсе, пишет ресурс (ADR-0075 доп. (3)): addr —
     # RESOURCE_HOST:RESOURCE_PORT; mode — loopback без RESOURCE_TLS (только петля), mtls с RESOURCE_TLS=1; cert_until —
     # стенные секунды конца срока сертификата сервера своего комплекта, при mtls; при mtls сервер предъявляет лист, затем его центр
-    # (договор сертификата роли server; клиент — own_client, договор клиента объектов tls; ревью норм ADR-0075, Claude fd85ea8cc, С-2); читает w2cctl tls status (P/02.4 Н1.9; разбор ревью стадии B 3–5, № 28)
+    # (договор сертификата роли server; клиент — own_client, договор клиента объектов tls; ревью норм ADR-0075, Claude fd85ea8cc, S-2); читает w2cctl tls status (P/02.4 Н1.9; разбор ревью стадии B 3–5, № 28)
     # waits, restore, mirror, units — в каждом пульсе (сверка python и go М10/6–11, E39): units — {<sub>: [<id>…]} единиц, которые
     # называют в status пульсы воркеров этой коробки из running, id по возрастанию байтов; нет таких — {}; пульс воркера
     # нечитаем (семья heartbeats P/03.4: объект целиком, для ресурса и элемент status[] не по форме) — его единицы в units
@@ -234,17 +234,17 @@ resource:                                    # один процесс на се
   usage:     целое — байты файлов бакетов деревьев этого сервера и копий в .mirror/; usage_at — стенные секунды
              замера; space — том дерева событий: total, free, used — байты (statfs), full — доля used/total от 0 до 1
              (не признак); volumes — то же по каждому тому (журнал cammeta-go, урок 9 № 1)
-  door_row:  platform/doors/<server> {url, since, at, room.<sub>…, live.<sub>…}; at — каждые ALIVE_EVERY (договор наблюдения «Состояние ресурса»; аудит раскладки, решение «Архитектора» 2026-10-25, А-10)
+  door_row:  platform/doors/<server> {url, since, at, room.<sub>…, live.<sub>…}; at — каждые ALIVE_EVERY (договор наблюдения «Состояние ресурса»; аудит раскладки, решение «Архитектора» 2026-10-25, A-10)
   room:      элементы room.<sub> и live.<sub> — по договору замка присутствия «Счёт room» (presence-lock.md; перенесено
-             туда, разбор ревью стадии A 3–5, № 9; live.<sub> — ADR-0084 доп. (3) Р14′, № 3, 19)
+             туда, разбор ревью стадии A 3–5, № 9; live.<sub> — ADR-0084 доп. (3) R14′, № 3, 19)
             не писать дверь, пока стоит platform/decommission/<мой сервер> (договор наблюдения «Сервер выведен» narrower; консоль её удалила)
-  lost_after: LOST_AFTER                      # договор наблюдения «Свежесть» (аудит раскладки, решение «Архитектора» 2026-10-25, А-01); по смене на часах читателя
+  lost_after: LOST_AFTER                      # договор наблюдения «Свежесть» (аудит раскладки, решение «Архитектора» 2026-10-25, A-01); по смене на часах читателя
   pass:      первый — при старте, сразу после готовности (строка двери записана); дальше каждые 600 с от конца прохода
              (C05-PASS-FIRST-AT-START-01): retain → usage → relieve → mirror; каждый шаг в своей попытке; pass_stalled при зависании
   space:     platform/space {enabled: true | false, high: 0.85, low: 0.75}   # доли; включено, пока не выключили:
              # строки нет — включено с порогами 0.85/0.75; enabled: false — ресурс снимает свою строку free-* (сверка python и go М10/6–11, E45)
              # строка не читается — шаг relieve не исполняется: умолчания 0.85/0.75 не подставляются, своя строка free-* не
-             # пишется и не снимается, причина в пульсе settings_unread: space (В7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 21 списка)
+             # пишется и не снимается, причина в пульсе settings_unread: space (V7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 21 списка)
              # форма строки — P/02.4 Н1.9 (пишет admin, w2cctl space)
   free_ask:  <sub>/requests/free-<server>-<volume> {free, volume, server, at}   # своя форма (ADR-0059): пишет и перезаписывает с cas только
              ресурс, не создание-однажды, без unit/digest/схемы семьи; для манифестов с requests.free, пока том > high;
@@ -259,7 +259,7 @@ resource:                                    # один процесс на се
   mirror:    platform/mirror {enabled, copies}; строки нет или поля enabled нет — enabled: false, бакеты
              не копируются, пока не станет enabled: true (догадка стадии C R05-G05, решение «Архитектора» 2026-10-23); строка не читается —
              шаг mirror не исполняется, причина в пульсе settings_unread: mirror, `copies 1, enabled false` не подставляются
-             (В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 20 списка); тела — Н1.1 mirror;
+             (V7 п. 3, решение «Архитектора» 2026-10-28, P1; строка 20 списка); тела — Н1.1 mirror;
              соседи — следующие copies живых серверов по имени; живость — по строке двери platform/doors/<сервер>, как в договоре
              слияния «Живые ресурсы» (версия менялась в последние LOST_AFTER по часам этого ресурса, первый взгляд — как свежий), пульс
              соседа здесь не судит (решение «Архитектора» 2026-10-31); только закрытые бакеты;
@@ -293,7 +293,7 @@ resource:                                    # один процесс на се
 (LAYERS § 6), колонка `schema` строки каталога называет семью, раздел — «Семьи данных» ниже; смысл — [договор замка
 присутствия](../../../common/ru/contracts/presence-lock.md) (разбор ревью стадии B 3–5, № 23; ADR-0083 доп. (11); разбор ревью стадии B 6–7, № 44).
 
-**Объекты кластера — через ресурс своего сервера** (ADR-0084 доп. (2) Р17; разбор ревью стадии B 3–5, № 24). Процесс
+**Объекты кластера — через ресурс своего сервера** (ADR-0084 доп. (2) R17; разбор ревью стадии B 3–5, № 24). Процесс
 платформы читает объекты других серверов (пульсы воркеров и ресурсов, отчёты прохода) дверью объектов ресурса своего
 сервера (Н2, `scope`); без ресурса на своём сервере при `cluster://` — «не известно», не «нет» ([договор клиента хранилища объектов](../../../common/ru/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; решение «Архитектора» 2026-10-27). Стенд, которому нужны пульсы воркеров,
 ставит ресурс на сервер читателя ([P/04](../../../04-controller/ru/spec/04-controller.norms.md) Н3 «проход()» шаг 0).
@@ -384,9 +384,9 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
 | `url` | строка | обязателен |  | the address of the resource door (RESOURCE_URL) |
-| `since` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of the resource start |
-| `at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of the last mark, every 15 s; judged by a change of the row version, not by the value (resource_state of the observation contract) |
-| `.<имя>` | строка | необязателен |  | имя: `room.<sub>` — an element for each subsystem of the catalogue whose role file `roles/<sub>worker.env` is present on the box; next to it `live.<sub>` (ADR-0084 addendum (3) Р14′); a decimal ≥ 0 — how many more processes of the role `<sub>worker` the server will start (the presence lock contract «Счёт room»), or "unknown"; the reader does not refuse an element out of form at the row level: the element is absent, unreadable or unknown — the server is not a candidate for an order of this role (P/04 Н3 «order()»); for `live.<sub>` — the numbers n ≥ 2 of the live locks of the role, comma-separated, ascending, without repeats, from the same snapshot as `room.<sub>`, or empty; absent or unreadable — the server is not a candidate (the presence lock contract, live) |
+| `since` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment of the resource start |
+| `at` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment of the last mark, every 15 s; judged by a change of the row version, not by the value (resource_state of the observation contract) |
+| `.<имя>` | строка | необязателен |  | имя: `room.<sub>` — an element for each subsystem of the catalogue whose role file `roles/<sub>worker.env` is present on the box; next to it `live.<sub>` (ADR-0084 addendum (3) R14′); a decimal ≥ 0 — how many more processes of the role `<sub>worker` the server will start (the presence lock contract «Счёт room»), or "unknown"; the reader does not refuse an element out of form at the row level: the element is absent, unreadable or unknown — the server is not a candidate for an order of this role (P/04 Н3 «order()»); for `live.<sub>` — the numbers n ≥ 2 of the live locks of the role, comma-separated, ascending, without repeats, from the same snapshot as `room.<sub>`, or empty; absent or unreadable — the server is not a candidate (the presence lock contract, live) |
 
 Только у писателя (`$defs.writer`):
 
@@ -399,10 +399,10 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| строка целиком | `<s>controller` | the whole row is unreadable: the server is not a candidate for an order; the fields of the unreadable row are not replaced by absence, the cause goes to the log (layout audit, Г-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/04 Н1, Н3 «заказать()» |
-| строка целиком | `console` | the whole row is unreadable: the life of the resource is judged by a change of the row version (resource_state of the observation contract), not by its fields; the fields of the unreadable row are not replaced by absence; the door row of a decommissioned server is unreadable — the console pass deletes it all the same: delete with cas by the version read, the content is not needed for the deletion (В7 item 3, row 12); the cause goes to the log (layout audit, Г-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | договор наблюдения resource_state; P/06.6 Н3 «decommission_server» |
-| строка целиком | `resource` | the whole row is unreadable: restore — the door is unreadable, the restoration is incomplete; mirror — there is no address, the server is not a neighbour of this pass; the fields of the unreadable row are not replaced by absence, the cause goes to the log (layout audit, Г-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/05 Н1.4 door_row, «Восстановление бакетов» |
-| строка целиком | `<s>worker` | the door row of its own server is unreadable: the object client with a bare cluster:// — reading the cluster objects is «unknown», not «no», not a start refusal and not a refusal of writing to its own catalogue; on the next access the row is read anew (П3; В7 item 3, row 11) | 0 | строка | договор клиента хранилища объектов door (P03-OBJECTS-DEFAULT-1FD) |
+| строка целиком | `<s>controller` | the whole row is unreadable: the server is not a candidate for an order; the fields of the unreadable row are not replaced by absence, the cause goes to the log (layout audit, G-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/04 Н1, Н3 «заказать()» |
+| строка целиком | `console` | the whole row is unreadable: the life of the resource is judged by a change of the row version (resource_state of the observation contract), not by its fields; the fields of the unreadable row are not replaced by absence; the door row of a decommissioned server is unreadable — the console pass deletes it all the same: delete with cas by the version read, the content is not needed for the deletion (V7 item 3, row 12); the cause goes to the log (layout audit, G-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | договор наблюдения resource_state; P/06.6 Н3 «decommission_server» |
+| строка целиком | `resource` | the whole row is unreadable: restore — the door is unreadable, the restoration is incomplete; mirror — there is no address, the server is not a neighbour of this pass; the fields of the unreadable row are not replaced by absence, the cause goes to the log (layout audit, G-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/05 Н1.4 door_row, «Восстановление бакетов» |
+| строка целиком | `<s>worker` | the door row of its own server is unreadable: the object client with a bare cluster:// — reading the cluster objects is «unknown», not «no», not a start refusal and not a refusal of writing to its own catalogue; on the next access the row is read anew (P3; V7 item 3, row 11) | 0 | строка | договор клиента хранилища объектов door (P03-OBJECTS-DEFAULT-1FD) |
 
 #### `platform/resources/<server>/heartbeat` — объект
 
@@ -412,12 +412,12 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 |---|---|---|---|---|
 | `server` | строка; целиком `[a-z0-9]+(-[a-z0-9]+)*` | обязателен |  | its own server — SERVER_NAME by the grammar of the environment file contract «Environment variables», as for the presence lock (stage C guess R05-G07, the Architect's decision of 2026-10-23); not by it or not equal to the server of the key — the heartbeat is unreadable (P/06.5 Н2) |
 | `box` | строка | необязателен |  | the box (BOX_ID, the environment file contract «Environment variables») |
-| `ts` | время (P/01.1 Н0 «Время в строке») | обязателен |  | wall-clock seconds of the heartbeat; written every 10 s |
+| `ts` | время (P/01.1 N0 «Время в строке») | обязателен |  | wall-clock seconds of the heartbeat; written every 10 s |
 | `url` | строка | обязателен |  | the address of the resource door |
 | `schema` | целое; ≥ 1; ≤ 9007199254740991; целый знак и у читателя (x-whole) | обязателен |  | SCHEMA of the build (P/06.6 Н1.1а heartbeat): a JSON integer without a fractional part and exponent, ≥ 1; `1.0`, `1e0`, `-1`, a string, null — the process schema is unknown |
-| `build` | строка | обязателен |  | the build word (BUILD); not a string — the field is unknown: null in the console's answers (В7 item 3, the Architect's decision of 2026-10-28, П1; row 14 of the list) |
+| `build` | строка | обязателен |  | the build word (BUILD); not a string — the field is unknown: null in the console's answers (V7 item 3, the Architect's decision of 2026-10-28, P1; row 14 of the list) |
 | `usage` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | bytes of the bucket files of the trees of this server and of the copies in .mirror/ |
-| `usage_at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | wall-clock seconds of the usage measurement |
+| `usage_at` | время (P/01.1 N0 «Время в строке») | обязателен |  | wall-clock seconds of the usage measurement |
 | `space` | по определению `disk` | обязателен |  | the volume of the event tree |
 | `volumes` | отображение имена автора: имя — строка, значение — по определению `disk` | обязателен |  | the same per volume (log of cammeta-go, lesson 9 № 1) |
 | `volumes.<имя>` | по определению `disk` | необязателен |  |  |
@@ -438,7 +438,7 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 | `waits.max` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | an integer from 0 to 2^53 − 1 |
 | `mirrors` | отображение имена автора: имя — строка, значение — целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | `{<сервер>: n}` — copies of neighbours in .mirror/ |
 | `mirrors.<имя>` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | an integer from 0 to 2^53 − 1 |
-| `pass_started` | время (P/01.1 Н0 «Время в строке») | необязателен |  | the start of the current pass (Н3 «проход ресурса») |
+| `pass_started` | время (P/01.1 N0 «Время в строке») | необязателен |  | the start of the current pass (Н3 «проход ресурса») |
 | `pass_stalled` | число; ≥ 0 | необязателен |  | seconds, only while the pass is hung (PULSE_LIMIT) |
 | `volumes_stuck` | отображение имена автора: имя — строка, значение — число | необязателен |  | volumes whose probe did not answer (P/06.5 ResourceRow) |
 | `volumes_stuck.<имя>` | число | необязателен |  |  |
@@ -452,7 +452,7 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 | `retention_garbled[]` | строка; целиком `[a-z][a-z0-9_-]{0,31}` | необязателен |  |  |
 | `retention_withheld` | отображение имена автора: имя — строка; целиком `[a-z][a-z0-9_-]{0,31}`, значение — строка; одно из: `days_garbled`, `unknown`, `holds_unread` | необязателен |  | why a dependent tree of the subsystem was not cleaned up by term in this pass — a closed list: days_garbled — a wrong days, unknown — the term row was not read (the store did not answer), holds_unread — the holds were not read (the holds contract); a subsystem has one cause, in the order unknown → days_garbled → holds_unread; each tree is held by its own term (R05-G08, R05-RETENTION-MIXED-51-01); no cause — the field is absent (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33) |
 | `retention_withheld.<имя>` | строка; одно из: `days_garbled`, `unknown`, `holds_unread` | необязателен |  |  |
-| `settings_unread` | список, не короче 1, без повторов, элемент — одно из: `mirror`, `space` | необязателен |  | the settings rows of the resource pass that were not read in this pass: mirror — platform/mirror (the mirror step and the body copies are not executed), space — platform/space (the relieve step is not executed); in ascending byte order; none such — the field is absent (P/05 Н1.4 mirror, space, Н3; В7 item 3, the Architect's decision of 2026-10-28, П1; rows 20, 21 of the list) |
+| `settings_unread` | список, не короче 1, без повторов, элемент — одно из: `mirror`, `space` | необязателен |  | the settings rows of the resource pass that were not read in this pass: mirror — platform/mirror (the mirror step and the body copies are not executed), space — platform/space (the relieve step is not executed); in ascending byte order; none such — the field is absent (P/05 Н1.4 mirror, space, Н3; V7 item 3, the Architect's decision of 2026-10-28, P1; rows 20, 21 of the list) |
 | `settings_unread[]` | одно из: `mirror`, `space` | необязателен |  |  |
 | `restore` | отображение имена автора: имя — строка, значение — отображение `{done, silent?, last_ok?, last_error?, error_at?, restored, missing, failures, lines_garbled?, next?}` | необязателен |  | `{<сосед>: …}` — restoring buckets from copies of neighbours (Н1.4 «Восстановление бакетов»); in every heartbeat (E39) |
 | `restore.<имя>` | отображение `{done, silent?, last_ok?, last_error?, error_at?, restored, missing, failures, lines_garbled?, next?}` | необязателен |  |  |
@@ -498,9 +498,9 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
 | `/schema` | * | the process schema is unknown: in processes of the door /schema — schema: null; in ResourceRow of the door /resources — schema: null (analysis of review of stage B 6–7, № 6); the heartbeat stays readable | 0 | поле | P/06.6 Н1.1а heartbeat, Н2.3; P/06.5 Н2 «Выдачи» |
-| `/build` | * | build is not a string — the field is unknown: null in ResourceRow (/resources) and in processes of the door /schema, not ""; the heartbeat stays readable (П1; В7 item 3, row 14) | 0 | поле | P/06.5 Н2; P/06.6 Н2.3 |
-| `/retention_garbled` | * | a field out of form is unknown: null in ResourceRow, not absence (the term causes are not replaced by «no causes»); the heartbeat stays readable (П1; В7 item 3, row 14) | 0 | поле | P/05 Н3 retain; P/06.5 Н2 |
-| `/retention_withheld` | * | a field out of form is unknown: null in ResourceRow, not absence (the term causes are not replaced by «no causes»); the heartbeat stays readable (П1; В7 item 3, row 14) | 0 | поле | P/05 Н3 retain; P/06.5 Н2 |
+| `/build` | * | build is not a string — the field is unknown: null in ResourceRow (/resources) and in processes of the door /schema, not ""; the heartbeat stays readable (P1; V7 item 3, row 14) | 0 | поле | P/06.5 Н2; P/06.6 Н2.3 |
+| `/retention_garbled` | * | a field out of form is unknown: null in ResourceRow, not absence (the term causes are not replaced by «no causes»); the heartbeat stays readable (P1; V7 item 3, row 14) | 0 | поле | P/05 Н3 retain; P/06.5 Н2 |
+| `/retention_withheld` | * | a field out of form is unknown: null in ResourceRow, not absence (the term causes are not replaced by «no causes»); the heartbeat stays readable (P1; V7 item 3, row 14) | 0 | поле | P/05 Н3 retain; P/06.5 Н2 |
 | объект целиком | `<s>controller` | the heartbeat is unreadable: it does not confirm the life of the resource, nor does its change (resource_state: unreachable with a fresh door row, otherwise by the order of the rules); it gives no presence of processes | 1 | строка | договор наблюдения resource_state |
 | объект целиком | `console` | the heartbeat is unreadable: it does not confirm the life of the resource, nor does its change (resource_state: unreachable with a fresh door row, otherwise by the order of the rules); it does not enter /resources, it is counted in w2c_resource_heartbeats_garbled, the answer is 200 | 1 | строка | договор наблюдения resource_state; P/06.5 Н2 «Выдачи» |
 | объект целиком | `resource` | the neighbour's heartbeat is unreadable: restore of the neighbour — the heartbeat is not read, the restoration is incomplete (all known doors are required) | 1 | строка | P/05 Н1.4 «Восстановление бакетов» |
@@ -514,13 +514,13 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 | `free` | число; > 0 | обязателен |  | need = used − total·low − Σ freeing from the heartbeats, bytes; need ≤ 0 — the row is removed, not written |
 | `volume` | строка; целиком `[A-Za-z0-9_]{1,64}` | обязателен |  | the volume name of ASCII A-Z/a-z/0-9/_, 1–64 bytes, without a hyphen; on the box there is one volume — events |
 | `server` | строка; целиком `[\s\S]+` | обязателен |  | its own server — a non-empty key segment of P/01.1, hyphens allowed; matches `<server>` of the key |
-| `at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the write stamp |
+| `at` | время (P/01.1 N0 «Время в строке») | обязателен |  | the write stamp |
 
 Исходы нечитаемой строки (читатель — роль; `*` — все читатели семьи):
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| строка целиком | `<s>worker` | a row not in the resource's form is not a request: skipped, the cause goes to the log without the value (В7 item 3, row 10) | 0 | строка | P/03.6 Н3 «взгляд держателя» |
+| строка целиком | `<s>worker` | a row not in the resource's form is not a request: skipped, the cause goes to the log without the value (V7 item 3, row 10) | 0 | строка | P/03.6 Н3 «взгляд держателя» |
 | строка целиком | `console` | a resource row without a live owner is removed by ttl | 0 | строка | P/06.4 Н3 «reaper» |
 | строка целиком | `resource` | not its own form (unit present, someone else's server/volume, a spoiled form): do not touch, log free_ask.key_taken, skip | 0 | строка | P/05 Н1.4 free_ask, Н3 «проход ресурса» relieve |
 
@@ -530,12 +530,12 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `t` | время (P/01.1 N0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
 | `kind` | строка | обязателен |  | the event kind |
 | `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
 | `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
 | `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
-| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | when it happened; optional |
+| `occurred` | время (P/01.1 N0 «Время в строке») | необязателен |  | when it happened; optional |
 | `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
 | `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
@@ -551,12 +551,12 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `t` | время (P/01.1 N0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
 | `kind` | строка | обязателен |  | the event kind |
 | `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
 | `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
 | `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
-| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | when it happened; optional |
+| `occurred` | время (P/01.1 N0 «Время в строке») | необязателен |  | when it happened; optional |
 | `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
 | `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
@@ -572,12 +572,12 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `t` | время (P/01.1 N0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
 | `kind` | строка | обязателен |  | the event kind |
 | `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
 | `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
 | `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
-| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | when it happened; optional |
+| `occurred` | время (P/01.1 N0 «Время в строке») | необязателен |  | when it happened; optional |
 | `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
 | `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
@@ -593,12 +593,12 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `t` | время (P/01.1 N0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
 | `kind` | строка | обязателен |  | the event kind |
 | `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
 | `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
 | `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
-| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | when it happened; optional |
+| `occurred` | время (P/01.1 N0 «Время в строке») | необязателен |  | when it happened; optional |
 | `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
 | `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
@@ -614,12 +614,12 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `t` | время (P/01.1 N0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
 | `kind` | строка | обязателен |  | the event kind |
 | `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
 | `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
 | `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
-| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | when it happened; optional |
+| `occurred` | время (P/01.1 N0 «Время в строке») | необязателен |  | when it happened; optional |
 | `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
 | `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
@@ -635,12 +635,12 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `t` | время (P/01.1 N0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
 | `kind` | строка | обязателен |  | the event kind |
 | `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
 | `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
 | `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
-| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | when it happened; optional |
+| `occurred` | время (P/01.1 N0 «Время в строке») | необязателен |  | when it happened; optional |
 | `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
 | `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
@@ -656,12 +656,12 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `t` | время (P/01.1 N0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
 | `kind` | строка | обязателен |  | the event kind |
 | `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
 | `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
 | `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
-| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | when it happened; optional |
+| `occurred` | время (P/01.1 N0 «Время в строке») | необязателен |  | when it happened; optional |
 | `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
 | `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
@@ -695,7 +695,7 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `written` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment the body was deleted at the deleter |
+| `written` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment the body was deleted at the deleter |
 | `peers` | список, элемент — строка; целиком `[\s\S]+` | обязателен |  | neighbours of the ring that could have had a copy of the body |
 | `peers[]` | строка; целиком `[\s\S]+` | необязателен |  |  |
 | `acked` | список, элемент — строка; целиком `[\s\S]+` | обязателен |  | neighbours from `peers` that confirmed the deletion (404 on GET of the copy) |
@@ -705,7 +705,7 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| объект целиком | `resource` | the whole object is unreadable: the neighbour does not drop the copy, the deleter does not append confirmations and does not remove the tombstone — an unknown outcome is not a confirmation (the tombstones contract garbled); the cause goes to the pass log (layout audit, Г-10; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/05 Н1.1 «Надгробия» |
+| объект целиком | `resource` | the whole object is unreadable: the neighbour does not drop the copy, the deleter does not append confirmations and does not remove the tombstone — an unknown outcome is not a confirmation (the tombstones contract garbled); the cause goes to the pass log (layout audit, G-10; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/05 Н1.1 «Надгробия» |
 <!-- families:end -->
 
 ---
@@ -745,7 +745,7 @@ GET объекта ограничен 64 МиБ по реально прочит
 Обрыв уже начатой передачи перечня не является полным ответом; новый HTTP-статус
 после заголовков не отправляется.
 
-**`scope`** у `/v1/objects` и `/v1/objects/{key}` (ADR-0084 доп. (2) Р17; разбор ревью стадии B 3–5, № 24): `local`
+**`scope`** у `/v1/objects` и `/v1/objects/{key}` (ADR-0084 доп. (2) R17; разбор ревью стадии B 3–5, № 24): `local`
 (умолчание) — только каталог объектов этого сервера; `cluster` — объекты кластера по Н1.1 `cluster` (свежая копия по
 `written` побеждает, сервер, который не ответил, — `missing`); иное значение — 400 (Н4). Ресурс — дверь чтения объектов
 кластера для процессов своего сервера (Н1.4 «Объекты кластера — через ресурс своего сервера»).
@@ -800,14 +800,14 @@ P/04). Порядок старта ресурса — [жизненный цик
 
 ```
 первым шагом старта ресурса, до чтения манифеста (P/02.3): договор схемы «Проверка при старте» ([договор схемы](../../common/contracts/schema.md); перенесено туда
-без изменения; аудит раскладки А-02, решение «Архитектора» 2026-10-25; разбор ревью стадии B 3–5, № 26)
+без изменения; аудит раскладки A-02, решение «Архитектора» 2026-10-25; разбор ревью стадии B 3–5, № 26)
 ```
 
 ### записать событие (платформа, по observe подсистемы)
 
 Шаги записи строки (класс, `of`, подавление, бакет по `t`, дописывание и `fsync`) и их «Гонки» — [договор журнала событий](../../../common/ru/contracts/event-journal.md)
 «Запись строки» (урок — владелец договора; перенесено туда из этого прохода, чтобы писатели — главы P/03.6 и P/06.4 — не
-стояли на нормах урока; разбор ревью стадии B 3–5, В1). Отказы записи — Н4.
+стояли на нормах урока; разбор ревью стадии B 3–5, V1). Отказы записи — Н4.
 
 ### запрос (ресурс) → {events, state, truncated}
 
@@ -834,7 +834,7 @@ P/04). Порядок старта ресурса — [жизненный цик
 
 ```
 retain:  для каждого дерева: days = <sub>/retention | умолчание (tree.alarms — alarms_retention | умолчание; audit, console —
-         умолчание; умолчания — договор журнала событий «Срок дерева», аудит раскладки А-23, решение «Архитектора» 2026-10-25);
+         умолчание; умолчания — договор журнала событий «Срок дерева», аудит раскладки A-23, решение «Архитектора» 2026-10-25);
          days не число или ≤ 0 или строка не ответила → не известно: ничего не убирать, назвать в пульсе — неверный days:
          <sub> в retention_garbled и retention_withheld[<sub>] = days_garbled; строка не ответила — retention_withheld[<sub>] =
          unknown; удержания не прочитаны (договор удержаний) — retention_withheld[<sub>] = holds_unread (C05-RETENTION-PULSE-33);
@@ -849,8 +849,8 @@ usage:   измерить тома (зонд ≤ 5 с); пульс space/volumes
 relieve: platform/space.enabled ∧ used/total > high → для манифестов с requests.free: need = used − total·low − Σ freeing
          (Σ — по живым пульсам воркеров этой подсистемы на этом сервере, freeing.<volume> этого тома; Н1.4 free_ask);
          platform/space не читается — шаг не исполняется (Н1.4 space); пульс воркера этой подсистемы на этом сервере не
-         читается — need этой подсистемы не считается, её строку free-* шаг не пишет и не снимает, причина в журнал (П1;
-         класс строк 21, 24 списка В7 п. 3)
+         читается — need этой подсистемы не считается, её строку free-* шаг не пишет и не снимает, причина в журнал (P1;
+         класс строк 21, 24 списка V7 п. 3)
          need > 0 → записать free-<server>-<volume> {free: need, volume, server, at}: cas "" или cas по версии строки СВОЕЙ формы
          (без unit И с точными server/volume текущего тома); перед записью проверить грамматику Н1.4 `free_ask`;
          под этим ключом строка с unit, чужими server/volume или испорченной формой → не трогать, журнал free_ask.key_taken, пропустить;
@@ -879,7 +879,7 @@ mirror:  platform/mirror не читается → шаг не исполняе�
 Каталог [`../acceptance/`](../acceptance/README.md): 35 независимых сценариев, 292 шага — дверь объектов, запрос
 событий, пути ресурса (из приёмки М10/08), строка
 двери сервера и замок присутствия (из приёмки М10/11;
-сц. 16 — решение «Архитектора» по В2 плана переноса урока 6), копия тела у
+сц. 16 — решение «Архитектора» по V2 плана переноса урока 6), копия тела у
 ресурса (из приёмки М10/10), сц. 17–28 аудита покрытия P/05 (2026-10-30) и сц. 29–45 его второго прохода (Gemini). Каждый получает
 пустое хранилище, объекты и события, все, кроме `10-body-copy`, — и новую консоль (сценарию `10-body-copy` консоль и контроллер не
 нужны; разбор ревью стадии B 3–5, № 26); ресурс srv-a ([общий README приёмки](../../../common/ru/acceptance/README.md),
@@ -891,10 +891,10 @@ mirror:  platform/mirror не читается → шаг не исполняе�
 |---|---|---|
 | 01 | `01-objects-door` (М10/08): дверь объектов: листинг пустой семьи, 400 на scope, 403 на семью вне двери, 404 на отсутствующий, 405 на PUT не-блоба; листинг — фильтр (`prefix=testsub/` — 200), `other/` — 403, пустой параметр и не-UTF-8 — 400, каталог из двух частей — 403, U+2028 в ключе — 400, `OPTIONS` и `PUT` листинга — 405 (сверка python и go М10/6–11) | Н1.1, Н2 |
 | 02 | запрос событий: 400 на keep/by/class/голый unit; пустой ответ `{events: [], state: "live"}`; грамматика `from`/`limit`/`unit`, пустой и повторённый параметр, незнакомый параметр подсказки, не-ASCII цифры — 400, `1_0` — число; `POST /events` — 405 (сверка python и go М10/6–11); у консоли `from` по грамматике читателя времени: `+1`, `%2B1`, `%201`, `1e3` — 400, `%31` — 200 (C06-EVENTS-QUERY-LEXEME-162-01, решение «Архитектора» 2026-10-27) | Н1.3, Н1.6, Н2, Н4 |
-| 08 | пути ресурса: `..`, `%2F`, чужое дерево в `/mirrored`, `/mirror`, `/events/{path}` — 404/400; `GET` на `/mirror/…` — 405; `/buckets` не из двух сегментов — 404 (сверка python и go М10/6–11, E26, E27, E29–E31, E36); строка `{bad` в бакете — `/events` ресурса и консоли 200 с `lines_garbled: 1` (E19); тревога в дереве `audit/console` (не `.alarms`) — `class: alarm` по полю (второй пилот, Н-2) | Н1.3, Н1.6, Н2, Н4; договор журнала событий |
+| 08 | пути ресурса: `..`, `%2F`, чужое дерево в `/mirrored`, `/mirror`, `/events/{path}` — 404/400; `GET` на `/mirror/…` — 405; `/buckets` не из двух сегментов — 404 (сверка python и go М10/6–11, E26, E27, E29–E31, E36); строка `{bad` в бакете — `/events` ресурса и консоли 200 с `lines_garbled: 1` (E19); тревога в дереве `audit/console` (не `.alarms`) — `class: alarm` по полю (второй пилот, N-2) | Н1.3, Н1.6, Н2, Н4; договор журнала событий |
 | 09 | `09-resource-door` (М10/11): ресурс: пульс и строка двери `platform/doors/srv-a` с `at`, который меняется; `/servers` видит ресурс `live`; `w2c_resources_live 1` | Н1.4 `door_row`; P/02.4 Н1.1, Н3 «старт сервера»; P/04 |
 | 10 | `10-body-copy` (М10/10): копия тела у ресурса: 204, копия читается; не тот дайджест — 422; без `X-Written` — 400; заглавные hex и подсистема без blob-поля — 405 | Н1.1 «Тела у ресурса» `mirror`, Н2 (сверка python и go М10/6–11, T10, T11) |
-| 16 | `16-presence-lock` (М10/11): замок присутствия — ресурс и воркер `w-1`: `running: [testsub/w-1]`; `@sigkill` — `running: []`; новый старт того же имени — снова `running` (второй пилот, Н-1) | Н1.4 `presence`; [договор замка присутствия](../../../common/ru/contracts/presence-lock.md) |
+| 16 | `16-presence-lock` (М10/11): замок присутствия — ресурс и воркер `w-1`: `running: [testsub/w-1]`; `@sigkill` — `running: []`; новый старт того же имени — снова `running` (второй пилот, N-1) | Н1.4 `presence`; [договор замка присутствия](../../../common/ru/contracts/presence-lock.md) |
 | 17 | `17-schema-refusal`: `platform/schema` с `version` выше SCHEMA или не числом — `@start resource` выходит с кодом 2, строки двери нет; `version` 1 — стартует (аудит покрытия P/05, F01) | Н3 «старт ресурса — проверка схемы»; [договор схемы](../../../common/ru/contracts/schema.md) «Проверка при старте» |
 | 18 | `18-schema-read-wait`: хранилище молчит ресурсу (`@cut role resource store`) — ошибка чтения схемы: ресурс ждёт, не выходит; хранилище отвечает — строка двери без перезапуска (аудит покрытия P/05, F01) | Н3 «старт ресурса — проверка схемы»; договор схемы «Проверка при старте», «Граница» |
 | 19 | `19-service-names`: замок каталога `~lock` записи пульса воркера — вне листинга двери объектов, ключ `~lock` — 404 (аудит покрытия P/05, F02) | Н1.1 `disk`, Н2; [договор журнала событий](../../../common/ru/contracts/event-journal.md) «Имена файлов в общих деревьях» |
@@ -939,7 +939,7 @@ TSV наблюдает только перечисленные шаги. Ост�
 Реализация обязана назвать в своём описании:
 
 1. **хранилище объектов на коробке и в кластере** — раскладка на диске (каталоги, надгробия удаления `.gone/<ключ>` — договор надгробий) и пределы размера; адрес `OBJECTS` и обращение клиента — [договор клиента хранилища объектов](../../../common/ru/contracts/object-client.md) (C10-OBJECT-ADDRESS-32);
-2. ~~**как ресурс узнаёт присутствие процессов**~~ — нормировано: [договор замка присутствия](../../../common/ru/contracts/presence-lock.md) `presence_lock` (второй пилот, Н-1);
+2. ~~**как ресурс узнаёт присутствие процессов**~~ — нормировано: [договор замка присутствия](../../../common/ru/contracts/presence-lock.md) `presence_lock` (второй пилот, N-1);
 3. **политика вытеснения кэша индекса** в пределах 64 MiB (Н1.3); число полос слияния (8) и срок (3 с) — норма [P/06.4](../../../06-console/ru/spec/06.4-console.norms.md) Н3 «слияние», не выбор;
 4. **долгий опрос `/events/wait`**: устройство памяти наблюдений и развёртываемый предел ожиданий; формы want/ответа и профиль таймаута — Н1.6, не выбор;
 5. **строка журнала**: поля сверх `sub`/`target`/`addr` договора журнала событий `journal`, роль-писатель, эпоха дерева (`e1`);
@@ -970,7 +970,7 @@ TSV наблюдает только перечисленные шаги. Ост�
 - [ ] **P/05-04** бакет по `t`, 600 с, эпоха в пути, дерево тревог, `fsync` тревог и журнала (договор журнала событий) — чтением; порванная строка — сц. 22 (чтение индексом)
 - [ ] **P/05-05** индекс: один на ресурс, без перестройки, кэш не влияет на правильность; запрос Н1.3 с `epoch_is`, обрезкой и `truncated` — сц. 02; сц. 03 приёмки главы 6.4; дубль id, порядок `cut`, `keep`, `by=occurred`, `late`, `truncated` после дедупликации, `HEAD /events` — 405 — сц. 35; `/events/{path}` 200 с `X-Sum`, 206 и 416 с `Content-Range`, `/buckets` неизвестной единицы — 404 — сц. 36; грамматика параметров — сц. 02; журнал без `requests.journal`, BucketInfo JSON Lines, Range — сц. 04 приёмки главы 6.4; нечитаемая строка бакета и файл не на месте — 200 и `lines_garbled` (P/01.1 Н0 «Устойчивость выдачи») (сц. 08 шаги 12–14; находка переноса); порванный хвост — `partial: true`, не в `events`/`truncated`, не `lines_garbled` — сц. 22; класс строки по дереву, `subsystem` и `unit` тревог без суффикса, `unit` с `.alarms` — 200 без совпадений — сц. 34
 - [ ] **P/05-06** срок на подсистему: 365/1095, «не известно» — не убирать, пол отметок, holds, журнал `events.removed` — чтением; причины в пульсе: неверный `days` в `retention` и `alarms_retention` — `retention_garbled`, `retention_withheld: days_garbled` — сц. 37; строка удержания без читаемого окна — `garbled_rows` — сц. 38
-- [ ] **P/05-07** ресурс Н1.4: пульс 10 с, строка двери, её `room.<sub>` и `live.<sub>` (номера n ≥ 2 живых замков, ADR-0084 доп. (3) Р14′; разбор ревью стадии B 3–5, № 26) по живым замкам (ADR-0084; договор замка присутствия «Счёт room»); замок: flock ресурса без ожидания, ENOENT у stat — несовпадение, удаление gone только после совпавшей сверки — чтением: тест с остановкой воркера между open и flock (разбор ревью стадии B 3–5, № 19); содержимое замка по семье presence-lock: пустое или не по форме у занятого — живой без номера (в `room.<sub>`, не в `workers`, `running`, `live.<sub>`), `unknown` — только нечитаемый файл — чтением (разбор ревью стадии B 3–5, № 23); проход 600 с в порядке Н3, `pass_stalled` — чтением; поле `door {addr, mode: loopback | mtls, cert_until}` в пульсе — сц. 20 (`cert_until` при mtls — чтением; разбор ревью стадии B 3–5, № 28); `room.<sub>` и `live.<sub>` по живым замкам: без воркеров, номер n ≥ 2, базовый n = 1, имя без номера — сц. 20; поля пульса `units`, `waits`, `restore`, `mirror` — сц. 05 шаг 12 приёмки главы 3.6; `units` двух единиц по возрастанию байтов — сц. 42; нечитаемый пульс воркера в `units` не входит (C05-UNITS-PULSE-GARBLED-01) — чтением; `mirrors` — сц. 33; `settings_unread` — сц. 39
+- [ ] **P/05-07** ресурс Н1.4: пульс 10 с, строка двери, её `room.<sub>` и `live.<sub>` (номера n ≥ 2 живых замков, ADR-0084 доп. (3) R14′; разбор ревью стадии B 3–5, № 26) по живым замкам (ADR-0084; договор замка присутствия «Счёт room»); замок: flock ресурса без ожидания, ENOENT у stat — несовпадение, удаление gone только после совпавшей сверки — чтением: тест с остановкой воркера между open и flock (разбор ревью стадии B 3–5, № 19); содержимое замка по семье presence-lock: пустое или не по форме у занятого — живой без номера (в `room.<sub>`, не в `workers`, `running`, `live.<sub>`), `unknown` — только нечитаемый файл — чтением (разбор ревью стадии B 3–5, № 23); проход 600 с в порядке Н3, `pass_stalled` — чтением; поле `door {addr, mode: loopback | mtls, cert_until}` в пульсе — сц. 20 (`cert_until` при mtls — чтением; разбор ревью стадии B 3–5, № 28); `room.<sub>` и `live.<sub>` по живым замкам: без воркеров, номер n ≥ 2, базовый n = 1, имя без номера — сц. 20; поля пульса `units`, `waits`, `restore`, `mirror` — сц. 05 шаг 12 приёмки главы 3.6; `units` двух единиц по возрастанию байтов — сц. 42; нечитаемый пульс воркера в `units` не входит (C05-UNITS-PULSE-GARBLED-01) — чтением; `mirrors` — сц. 33; `settings_unread` — сц. 39
 - [ ] **P/05-08** отметки диска долями (строки `platform/space` нет — включено 0.85/0.75 — чтением; выключено — своя строка снимается, `short` 0 — сц. 40; между low и high при need > 0 стоит — сц. 41; строка не читается — `relieve` не исполняется — сц. 39), просьба `free-*` по формуле, запись с `cas` по версии своей формы, снятие под отметкой только `delete` с `cas` проверенной версии (conflict — не трогать); volume без дефиса по Н1.4 `free_ask`, строку с `unit` или чужими server/volume под своим ключом не трогать — журнал `free_ask.key_taken` (своя строка и `short`, четыре края не своей формы — сц. 24–28); никто не исполняет и не метит; ресурс сам ничего не удаляет кроме бакетов — чтением
 - [ ] **P/05-09** зеркало: соседи по имени и живость по строке двери (граница — вектор `fresh-age`), закрытые бакеты, копия не источник, пределы, `mirror.skipped` — чтением; пути `/mirror`, `/mirrored`, `/events/{path}`, `/buckets` (`..`, `%2F`, чужое дерево) и методы — сц. 08; приём копии: открытый бакет (окно в будущем), нет `X-Sum` или не по форме — 400, сумма — 422 без копии — сц. 32; 204, перечень `/mirrored`, повтор не сдвигает `written`, байты с `X-Sum` — сц. 33; OWS у `X-Sum`, копирование бакетов на двух ресурсах — чтением (бакет закрывается через 600 с)
 - [ ] **P/05-10** `/events/wait` — подсказка Н1.6: формы `{changed: false, seq}` по сроку и `{changed: true, seq, touched}`, `since=0` при строках под `want`, монотонный `seq`, курсор `since=seq` — сц. 21; формы full/replaced, профиль параметров, предел ожиданий и вытеснение своей личности; full/replaced не продвигает курсор; периодический проход обязателен — отдельные пробы README приёмки, не TSV; незнакомый параметр и не-ASCII цифры — сц. 02; деревья console/audit без подсказки — чтением
@@ -987,7 +987,7 @@ TSV наблюдает только перечисленные шаги. Ост�
 Урок перенесён из М10/8 (стадия B): Н1.1 (абзац «Имена файлов в общих деревьях» — в договор журнала событий), Н1.2 без
 подавления (`line`, `bucket`, `class`, `journal`, `writer` и абзац об id — в договор журнала событий; строка индекса —
 здесь), Н1.3 без `merge`, Н1.4 (`presence_lock` и `room` — в договор замка присутствия), Н1.6 без формы `answered`, двери
-ресурса Н2, Н3 «записать событие» (без шага подавления; с разбора ревью стадии B 3–5, В1 — в договор журнала событий,
+ресурса Н2, Н3 «записать событие» (без шага подавления; с разбора ревью стадии B 3–5, V1 — в договор журнала событий,
 раздел «Запись строки»), «запрос (ресурс)», «проход ресурса», строки Н4 и Н5 ресурса,
 пп. 1–3, 5, 6, 9 и часть п. 8 «Решает реализация» (здесь — пп. 1–7), пункты чеклиста М10/8-01…04, 07, 09…12, 18 (здесь
 P/05-01…10). Из М10/10: Н1.5 `delete` (здесь Н1.1 «Надгробия», М10/10-09 → P/05-11), Н1.5 `mirror`, строки потолков Н1.4,
@@ -996,4 +996,4 @@ P/05-01…10). Из М10/10: Н1.5 `delete` (здесь Н1.1 «Надгроби
 `presence` (в договор замка присутствия). М10/8 нормировал то, что рассказывали `М10A_Platform/04-ObjectStore.md`,
 `12-Events.md`, `13-EventDatabase.md`, `14-Resource.md` и `М11_Cluster/06-…`, `07-…` (перечень — «Соответствие прежним
 урокам» М10/8); их части о ресурсе, объектах, событиях и индексе нормирует этот урок, о просьбах и слиянии — М10/8 (ныне глава P/06.4). Переносом урока 6: из приёмки М10/11 — сц. 16 (замок
-присутствия; решение «Архитектора» по В2 плана переноса урока 6).
+присутствия; решение «Архитектора» по V2 плана переноса урока 6).

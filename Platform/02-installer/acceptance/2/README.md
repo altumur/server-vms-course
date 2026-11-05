@@ -19,9 +19,9 @@ the command `manifest-put {socket} {file}` of the section «Stand» of the commo
 line not skipped is the header `case<TAB>puts<TAB>expect<TAB>canonical`, then one line per case; exactly four fields.
 
 - `case` — the case name: `[a-z0-9_]+`, unique in the file;
-- `puts` — separated by one space, in order: the file names `puts/<имя>.subsystem.yaml` and the directives `@view-delete`,
+- `puts` — separated by one space, in order: the file names `puts/<name>.subsystem.yaml` and the directives `@view-delete`,
   `@view-spoil`, `@rev-delete`, `@rev-spoil`; a file comes first and last;
-- `expect` — `<код> <rev>`: `<код>` is the return code of the **last** installation (`0` or `2`), `<rev>` is the decimal `rev` of the row
+- `expect` — `<code> <rev>`: `<code>` is the return code of the **last** installation (`0` or `2`), `<rev>` is the decimal `rev` of the row
   `platform/manifest/<name>` after it, where `<name>` is the `name` of the last file; `-` — there is no row;
 - `canonical` — the case name of [`vectors/canonical/cases.tsv`](../../vectors/canonical/cases.tsv), whose bytes `expect/<case>.json`
   are the expected field `manifest` of the view row; `-` — there is no view row.
@@ -40,7 +40,7 @@ of the file before the directive):
 All installations except the last MUST return `0`, each directive MUST pass: otherwise — a mismatch of the case (the preparation
 failed). After the last installation the runner compares:
 
-1. the return code — with `<код>`;
+1. the return code — with `<code>`;
 2. with code `2` — stderr names the file of the last installation and the key of the refused row: for the case `rev_spoiled` (the last directive before the installation is `@rev-spoil`) — the key of the mark `platform/manifest/<name>/rev`, otherwise — the key of the view `platform/manifest/<name>/canonical/1` (both are part of the
    text; the weight and the ceiling in the text are not compared);
 3. `rev` of the row `platform/manifest/<name>` — with `<rev>`, as in chapter 2.3 (the store door `GET /v1/get?key=…`, the field `rev` in
@@ -60,10 +60,10 @@ of the view after a `cas` conflict — by reading per Н5 of the chapter.
 |---|---|---|---|
 | 01 | `first` | the first installation of `testsub`: the row, the view and the mark rev 1; `manifest` — the vector `course-testsub` | P/02.2-04, P/02.3-01 |
 | 02 | `same_twice` | the same file again — «unchanged»: rev 1, the view is the former one | P/02.3 Н3 «Manifest change» |
-| 03 | `view_deleted` | there is no view, the file is the same — not «unchanged»: the row rev 2, the view and the mark rev 2 | P/02.3 Н3 («строка та же, а вида нет»); window 2.2, Р12 |
+| 03 | `view_deleted` | there is no view, the file is the same — not «unchanged»: the row rev 2, the view and the mark rev 2 | P/02.3 Н3 («строка та же, а вида нет»); window 2.2, R12 |
 | 04 | `view_spoiled` | the view is not equal to the projection, the file is the same — the view is rewritten, rev 2 | ibid. |
 | 05 | `view_over_ceiling` | the weight of the view row is 524289 — one byte above the ceiling, the manifest row (523609) fits: a refusal as a whole, code 2; the row, the view and the mark are the former rev 1 from `probe` | P/02.2 Н3, Н4; P/02.3 Н4 (window 2.2, item 8) |
-| 06 | `view_at_ceiling` | the weight of the view row is exactly 524288 — the view is written, the row and the mark rev 2; the boundary of the domain of accepted manifests | P/02.2 Н1.2 `ceiling` (ADR-0089 addendum (1) Р11) |
+| 06 | `view_at_ceiling` | the weight of the view row is exactly 524288 — the view is written, the row and the mark rev 2; the boundary of the domain of accepted manifests | P/02.2 Н1.2 `ceiling` (ADR-0089 addendum (1) R11) |
 | 07 | `sugared` | the sugar `tables`, `bound_to`, without `snapshot` and `display` — the installer's view equals the vector | P/02.2-02, P/02.2-03 |
 | 08 | `rev_deleted` | there is no mark, the file is the same — «unchanged»: the row and the view are the former rev 1, the mark is brought up to date — rev 1, the `sha256` of the row (the Gemini audit P/02, property 13) | P/02.3 Н3 «Manifest change» («метки нет … → довести»), P/02.3-03 |
 | 09 | `rev_spoiled` | the mark is not by the form (`rev` — `"x"`), the file is the same — a refusal, code 2, nothing is written: the row and the view are the former rev 1, the mark is the spoiled one (property 14) | P/02.3 Н1.5 `rules`, [`manifest-rev.outcomes.tsv`](../../data/manifest-rev.outcomes.tsv) (the reader `admin`), P/02.3-01 |
@@ -96,7 +96,7 @@ The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, n
 
 ## Checks by reading
 
-The order of the writes in time (row — view — mark), the `cas` repeat of the view, a cluster of one process (P/02.4 Н1.10, Р15) and
+The order of the writes in time (row — view — mark), the `cas` repeat of the view, a cluster of one process (P/02.4 Н1.10, R15) and
 the reader of the view (P/02.2-06 — by the readers' edits) — by reading per Н5 of the chapter.
 
 ## The Gemini coverage audit P/02: the mark `/rev` (the Architect's forms)

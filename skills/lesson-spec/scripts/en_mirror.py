@@ -136,7 +136,7 @@ def as_source(rel, root):
 H2 = re.compile(r"^###? ", re.M)                   # разделы и подразделы: сверка по каждому
 FENCE = re.compile(r"^[ \t]*```[^\n]*\n.*?^[ \t]*```[ \t]*$", re.M | re.S)   # и с отступом — блок внутри пункта списка
 SPAN = re.compile(r"(`+)(.+?)\1", re.S)
-NORM_NO = re.compile(r"(?<![\wА-Яа-яЁё])Н[0-9]+(?:\.[0-9]+)*[а-я]?(?!\w|\.[0-9])")
+NORM_NO = re.compile(r"(?<![\wА-Яа-яЁё])[НN][0-9]+(?:\.[0-9]+)*[а-яa-e]?(?!\w|\.[0-9])")   # N… латиницей — доп. (5) п. 1
 LESSON = re.compile(r"(?<![\w/])P/[0-9]{2}(?:\.[0-9]+)?(?:-[0-9]{2})?(?![0-9])")
 ADR = re.compile(r"\bADR-[0-9]{4}\b")
 FINDING = re.compile(r"(?<![\w-])[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-[0-9]{2}(?![\w-])")
@@ -145,11 +145,24 @@ LINK = re.compile(r"\]\(([^()\s]+)\)")
 CHECK_ID = re.compile(r"^- \[[ xX]\] \*\*(P/[0-9.]+-[0-9]+)\*\*", re.M)
 TABLE_ROW = re.compile(r"^\|.*\|[ \t]*$", re.M)
 CYR = re.compile(r"[А-Яа-яЁё]")
+# Суффиксы шагов и метки ревью — латиницей и в источнике, и в переводе (ADR-0121 доп. (3) п. 3): 4a, 2b, A1, G-29, V7, P1;
+# кириллица там — нарушение правила «Кириллица в английском» ниже (разрешены только номера норм Н… и прежние уроки М10–М12).
+# Модуль, ещё не переведённый на латиницу меток, — прежнее разрешение (VMS — «Спецификация VMS»); список только сокращается.
+LABELS_PENDING = {"VMS"}
+# Уроки, где номера разделов уже латиницей N… (ADR-0121 доп. (5) п. 1): Н<цифра> в источнике — отказ; список растёт до всех.
+NUMBERS_DONE = ("Platform/01-store/",)
+CYR_NUMBER = re.compile(r"(?<![\wА-Яа-яЁё])Н[0-9]")
+# Таблица меток ключей каталога — сырые ключи catalog.tsv (их читает читатель «Генераторов»): метки в ней — как в каталоге,
+# пока каталог не сменится вместе с генераторами (ADR-0121 доп. (5) п. 3).
+RAW_LABEL_FILES = {"Platform/common/data/README.md"}
+RU_LABEL = re.compile(r"<([^<>`\n|=]*[А-Яа-яЁё][^<>`\n|=]*)>")
+LEGACY_LABELS = [re.compile(r"(?<![\w])М[0-9]+[A-Z]?(?:_[A-Za-z]+)?(?:/[0-9]+)?"),
+                 re.compile(r"(?<![\w-])[А-ЯЁ]-?[0-9]+[а-я]?(?![\w])|(?<![\w])[0-9]+[а-я](?![\w])"),
+                 re.compile(r"<[^<>`\n|=]*[А-Яа-яЁё][^<>`\n|=]*>")]          # и русские метки подстановки
 ALLOWED_CYR = [SPAN, re.compile(r"«[^»\n]*»"), NORM_NO, LINK,
                re.compile(r"[\wА-Яа-яЁё.-]*[А-Яа-яЁё][\wА-Яа-яЁё.-]*\.(?:md|tsv|yaml|json)\b"),   # имена файлов
-               re.compile(r"(?<![\w])М[0-9]+[A-Z]?(?:_[A-Za-z]+)?(?:/[0-9]+)?"),
-               re.compile(r"(?<![\w-])[А-ЯЁ]-?[0-9]+[а-я]?(?![\w])|(?<![\w])[0-9]+[а-я](?![\w])"),   # id ревью А1, С-1; шаги 3б, 4а
-               re.compile(r"<[а-яё][а-яё_-]*>")]               # заполнители кода — те же, что в русском: <роль>, <форма>, <т>   # id находок ревью по-русски: А1, А10
+               re.compile(r"(?<![\w])М1[0-2][A-Z]?(?:_[A-Za-z]+)?(?:/[0-9]+)?"),   # прежние уроки М10, М11, М12A
+               ]               # заполнители кода — те же, что в русском: <роль>, <форма>, <т>   # id находок ревью по-русски: А1, А10
 
 
 def sections(text):
@@ -168,7 +181,7 @@ def kinds_of(ru_text):
     """Refusal words: the first code span of the `kind` column (third) of the Н4 table of the Russian text."""
     words = set()
     for title, body in sections(ru_text):
-        if not re.match(r"Н4(?:\s|$)", title):
+        if not re.match(r"[НN]4(?:\s|$)", title):
             continue
         for row in TABLE_ROW.findall(body):
             cells = [c.strip() for c in re.split(r"(?<!\\)\|", row.strip().strip("|"))]
@@ -279,8 +292,10 @@ def steps(body):
     return len(STEP.findall(TAGGED_FENCE.sub("", body)))
 
 
-def strict(rb, eb, count_steps=True):
-    """ADR-0120 доп. (5) п. 7: values, orders and identifiers of code blocks, tables and prose agree."""
+def strict(rb, eb, count_steps=True, root=None):
+    """ADR-0120 доп. (5) п. 7: values, orders and identifiers of code blocks, tables and prose agree (placeholder labels
+    by the dictionary of `root`, by default the course of this script)."""
+    root = Path(__file__).resolve().parents[3] if root is None else root
     out = []
     if count_steps and steps(rb) != steps(eb):     # ADR-0121 доп. (3) М (3): процедура Н3 — прозой или блоком
         out.append(f"numbered steps: {steps(eb)}, ru {steps(rb)} — rebuild the translation by the source")
@@ -319,7 +334,8 @@ def strict(rb, eb, count_steps=True):
                     out.append(f"{where}: {y!r}, ru {x!r}")
                 elif sorted(numbers(SPAN.sub("", xs), "ru")) != sorted(numbers(SPAN.sub("", ys), "en")):
                     out.append(f"{where}: numbers {sorted(numbers(SPAN.sub('', ys), 'en'))}, ru {sorted(numbers(SPAN.sub('', xs), 'ru'))}")
-                elif {m.group(2) for m in SPAN.finditer(xs)} - {m.group(2) for m in SPAN.finditer(ys)}:
+                elif ({as_english_labels(m.group(2), root) for m in SPAN.finditer(xs)}
+                      - {as_english_labels(m.group(2), root) for m in SPAN.finditer(ys)}):
                     out.append(f"{where}: code spans {sorted({m.group(2) for m in SPAN.finditer(xs)} - {m.group(2) for m in SPAN.finditer(ys)})} missing")
     rp = TABLE_ROW.sub("", LINK.sub("]()", FENCE.sub("", rb)))
     ep = TABLE_ROW.sub("", LINK.sub("]()", FENCE.sub("", eb)))
@@ -468,10 +484,12 @@ def compare(ru_text, en_text, ru_path, en_path, root):
         pair = {Path(os.path.normpath(Path(p))).relative_to(root).as_posix() for p in (ru_path, en_path)}
         rf = facts(rb, Path(ru_path).parent, root, kinds, pair)
         ef = facts(eb, Path(en_path).parent, root, kinds, pair)
-        errors.extend(f"{where}: {m}" for m in strict(rb, eb, count_steps=count_steps))
+        errors.extend(f"{where}: {m}" for m in strict(rb, eb, count_steps=count_steps, root=root))
         for key in rf:
             if key in ("spans", "refusal words"):          # английский МОЖЕТ добавить: алгоритм называет, «unit» — и слово
                 missing = rf[key] - ef[key]
+                if key == "spans":                         # метки подстановки — по словарю (ADR-0121 доп. (3) п. 4)
+                    missing = {x for x in missing if as_english_labels(x, root) not in ef[key]}
                 if missing:
                     errors.append(f"{where}: {'code spans' if key == 'spans' else key} of the Russian text missing: {sorted(missing)}")
             elif rf[key] != ef[key]:
@@ -480,11 +498,32 @@ def compare(ru_text, en_text, ru_path, en_path, root):
                                   f"only en {sorted(ef[key] - rf[key])}")
                 else:
                     errors.append(f"{where}: {key} differ: ru {rf[key]}, en {ef[key]}")
+    try:
+        legacy = Path(en_path).resolve().relative_to(root).parts[0] in LABELS_PENDING
+    except ValueError:
+        legacy = False
+    allowed = ALLOWED_CYR + (LEGACY_LABELS if legacy else [])
     rest = FENCE.sub(" ", en_text)
-    for pattern in ALLOWED_CYR:
+    for pattern in allowed:
         rest = pattern.sub(" ", rest)
     for fence in FENCE.findall(en_text):                     # блоки кода — тоже по-английски, кроме «…» и Н…
-        rest += "\n" + re.sub("|".join([r"«[^»\n]*»", NORM_NO.pattern] + [x.pattern for x in ALLOWED_CYR[4:]]), " ", fence)
+        rest += "\n" + re.sub("|".join([r"«[^»\n]*»", NORM_NO.pattern] + [x.pattern for x in allowed[4:]]), " ", fence)
+    try:
+        numbers_done = Path(en_path).resolve().relative_to(root).as_posix().startswith(NUMBERS_DONE)
+    except ValueError:
+        numbers_done = False
+    if numbers_done:                                 # номер раздела источника — латиницей (ADR-0121 доп. (5) п. 1)
+        for line in LINK.sub("]()", BUILT.sub(" ", en_text)).splitlines():
+            if CYR_NUMBER.search(line):
+                errors.append(f"a Cyrillic section number Н… in the source (N… since ADR-0121 addendum (5)): {line.strip()[:80]!r}")
+    try:
+        raw_labels = Path(en_path).resolve().relative_to(root).as_posix() in RAW_LABEL_FILES
+    except ValueError:
+        raw_labels = False
+    if not legacy and not raw_labels:               # метка подстановки источника — английская, по словарю (ADR-0121 доп. (3) п. 4)
+        for m in RU_LABEL.finditer(LINK.sub("]()", BUILT.sub(" ", en_text))):
+            if CYR.search(re.sub(r"Н[0-9][0-9.]*[а-я]?|«[^»]*»|М1[0-2][A-Z]?(?:/[0-9]+)?", "", m.group(1))):
+                errors.append(f"a Russian placeholder label in the source: <{m.group(1)}> — the English one of {PLACEHOLDERS}")
     if not marked:
         errors.append(f"the Russian text has no mark «{want}» in its head")
     for line in rest.splitlines():

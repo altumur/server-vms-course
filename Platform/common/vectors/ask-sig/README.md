@@ -33,7 +33,7 @@ of the acceptance.
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](cases.tsv), 27 rows: 5 `ok`, 16 refusals, 6 `@exit 2` (row 13 — the field `member` at the top level of the input, review analysis of stage B 8–10, question 2; rows 14–26 — `move`, row 27 — `backup` with an extra `body_sha256`, C08-MOVE-BY-FILE-01) | `input` — the input of the command `ask-sig` as JSON text → `expect`: `{"result":"ok"}` (`backup`, `prepare`, the window boundary of 300 s) or `{"result":"refused","reason":<слово>}`: `missing` (no signature), `bad_time` (without a fraction, one digit of the fraction), `skew` (301 s into the past and into the future), `bad_signature` (a foreign key, another cluster in the message, `prepare` with a foreign key); `@exit 2` — `pub` is not hex |
+| [`cases.tsv`](cases.tsv), 27 rows: 5 `ok`, 16 refusals, 6 `@exit 2` (row 13 — the field `member` at the top level of the input, review analysis of stage B 8–10, question 2; rows 14–26 — `move`, row 27 — `backup` with an extra `body_sha256`, C08-MOVE-BY-FILE-01) | `input` — the input of the command `ask-sig` as JSON text → `expect`: `{"result":"ok"}` (`backup`, `prepare`, the window boundary of 300 s) or `{"result":"refused","reason":<word>}`: `missing` (no signature), `bad_time` (without a fraction, one digit of the fraction), `skew` (301 s into the past and into the future), `bad_signature` (a foreign key, another cluster in the message, `prepare` with a foreign key); `@exit 2` — `pub` is not hex |
 
 The vectors are checked by reference Ed25519 (RFC 8032) against the text of the contract, not by the code of implementations; on a discrepancy the contract is right,
 «Спецификация» corrects the vector.

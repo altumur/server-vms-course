@@ -21,7 +21,7 @@
 
 Причины прохода срока и счёт нечитаемых строк удержаний (`garbled_rows.<table>`, `retention_withheld`) ресурс пишет в свой
 пульс — семья `resource-heartbeat`: `Platform/05-resource/data/resource-heartbeat.schema.json`,
-`Platform/05-resource/data/resource-heartbeat.outcomes.tsv` (аудит раскладки, В-30; решение «Архитектора» 2026-10-25).
+`Platform/05-resource/data/resource-heartbeat.outcomes.tsv` (аудит раскладки, V-30; решение «Архитектора» 2026-10-25).
 
 ## Объявление
 
@@ -40,7 +40,7 @@ addressee:  A — подсистема адресата: about.sub манифе�
 ## Строка удержания
 
 Строка — `<M>/<table>/<id>`; элементы — тексты по `values_by_type` ([договор проверки строки](row-check.md) «Строка
-единицы»; векторы [`values-by-type`](../vectors/values-by-type/README.md); Б-23).
+единицы»; векторы [`values-by-type`](../vectors/values-by-type/README.md); B-23).
 
 ```yaml
 released:   объявлен released и элемент этого поля в строке есть и непуст (текст длиннее нуля) — строка ничего не держит,
@@ -48,7 +48,7 @@ released:   объявлен released и элемент этого поля в �
             непустой текст
 unit:       элемент поля unit — id единицы подсистемы A как есть, байт в байт; элемента нет или он пуст — адресат не
             прочитан
-since, until: элементы полей since и until, прочитанные своим типом, — конечные числа, стенные секунды (кодек `Platform/common/data/codec.tsv`, строка `time`; Б-27);
+since, until: элементы полей since и until, прочитанные своим типом, — конечные числа, стенные секунды (кодек `Platform/common/data/codec.tsv`, строка `time`; B-27);
             запись читается и читателем `time`: ^(0|[1-9][0-9]*)(\.[0-9]+)?$, значение конечно — «-1», «+5», «1e3» не по форме,
             хотя тип int или float их прочёл бы (решение «Архитектора» 2026-10-27, как OBS154-RAW-TIME-EXACT-01);
             элемента нет, он не читается своим типом или читателем `time`, поле не числового типа или число не конечно — окно не прочитано

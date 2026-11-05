@@ -21,7 +21,7 @@ the dictionary of the «Stand» ([the common acceptance README](../../acceptance
 value. The form of the input and the output, the meaning of the fields (`catalog`, `refreshed_ago`, `refresh`, `whole`, `status`) and the exit code 2 are
 [the contract](../../contracts/accept.md) «The form of the function»; the mark `mark` is by the form of the contract «Generation, mark, limits», its
 `sha256` is of the JCS of `stored`, except `accept-05-rebase-stored-not-mark` and `accept-20-whole-over-broken-stored` of lesson 3: there
-`stored` is deliberately not with `mark.sha256` (the review analysis of stage B 8–10, № 22, Claude `М-18`).
+`stored` is deliberately not with `mark.sha256` (the review analysis of stage B 8–10, № 22, Claude `M-18`).
 
 The inputs depend on the bytes of the catalogue manifest (P/08.3 Н5; the review analysis of stage A 8–10, № 37; the review analysis of stage B 8–10, № 22,
 Kimi SB810-06): at the rows of lessons 3 and 4 `catalog` is `["testsub"]`, the keys of the objects are `testsub/*`; at the rows of the families `reports`,
@@ -36,7 +36,7 @@ witnesses and contributions (`accept-36`…`accept-39`) — `["testsub", "testsu
 The bytes of `testsub2` changed on 2026-11-04 (the roadmap 4.5): the token kind `vault` with `keep: true` was added to `domain.tokens`, then the comments of the header were rewritten without the names of test files; the fields on which the expectations of this table depend were not touched — a recheck by the oracle is not needed.
 
 A change of these bytes is a reason to recheck the table.
-Who performs is the holder (`08-domain`, the process `domain`: P/08.3 Н3 «accept» on `POST /api/member/<член>` and the relay batch with `via`) and the relay (`09-agent`, the door over its own memory, P/09.2 Н2) — all rows. They only read the result: the member's agent (the side of P/09.1 — the answer `carry` and 409 of the holder, Н3 «the agent pass») and the domain console (`10-domain-console` — the mark `reported`, P/10 Н3 `alarms`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who performs is the holder (`08-domain`, the process `domain`: P/08.3 Н3 «accept» on `POST /api/member/<member>` and the relay batch with `via`) and the relay (`09-agent`, the door over its own memory, P/09.2 Н2) — all rows. They only read the result: the member's agent (the side of P/09.1 — the answer `carry` and 409 of the holder, Н3 «the agent pass») and the domain console (`10-domain-console` — the mark `reported`, P/10 Н3 `alarms`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Files
 
@@ -73,9 +73,9 @@ rows 44–50 — `"@absent"`; `accept-51` — `heard` with `refresh: true` and t
 
 ## Candidates
 
-The review analysis of stage B 8–10, № 6 (Claude `П-2`):
+The review analysis of stage B 8–10, № 6 (Claude `P-2`):
 
-- **step 4а, `whole_too_large`** (`{"result":"refused","status":413,"reason":"whole_too_large"}`) — there is no row: the input would have to
+- **step 4a, `whole_too_large`** (`{"result":"refused","status":413,"reason":"whole_too_large"}`) — there is no row: the input would have to
   give a JCS of the whole `whole'` larger than `BODY_LIMIT` (16 MiB). A body larger than the limit is cut off by the door before the function (413 of the body), and
   the objects outside `member_objects` are dropped, so the input is megabytes: a large `stored` at `base > 0` (`mark` with its
   `sha256`) and a small delta; a cell `input` of such a size is unfit in a table. A form of the package input is needed that does not exist: an input

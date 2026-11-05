@@ -23,11 +23,11 @@ import "normgen/p01-1/flags"
 //	    index — as Row of chapter 1.1) or {key, items: null, index, unreadable: true} — a damaged row as read (Row of
 //	    chapter 1.1); the writer puts the keys in ascending order of UTF-8 bytes, the reader does not require an order;
 //	    platform/epoch_floor is included as an ordinary input row for upper and the generation_at clock check, but is not
-//	    transferred; the id replay memory (chapter 1.1 Н3) is not part of the copy; the copy knows no manifests — rows of
+//	    transferred; the id replay memory (chapter 1.1 N3) is not part of the copy; the copy knows no manifests — rows of
 //	    any families, a family check at import is not needed (import below); another format or version, an extra or a
 //	    missing field, a line not JSON or not by Row, a repeated key, an index of a row higher than the index of the
-//	    header — a refusal of the whole input before the first write (Н4); an unreadable row in the input — also a
-//	    refusal (Н4). A copy of one implementation is restored by another (the store pilot, А2)
+//	    header — a refusal of the whole input before the first write (N4); an unreadable row in the input — also a
+//	    refusal (N4). A copy of one implementation is restored by another (the store pilot, A2)
 //	spec/01.3-store.norms.md «Н2 Doors» (the CLI):
 //	  req: P/01.3-R018 — The CLI `backup` reads a consistent state of the row store — the copy replays into exactly those
 //	    rows and versions that the daemon saw at one index at the moment of the copy (the way — «Implementation decides»

@@ -16,10 +16,10 @@ import "normgen/p01-1/flags"
 //	  repeat: join of an id with another Raft address and leave of an unknown id — 409 refused, without changes (guess of
 //	    stage C CL-03, the Architect's decision of 2026-10-23)
 //	  box: join of its own id — 200 {}, of a foreign one — 409 refused even with -force
-//	the door it calls on admin.sock — spec/01.3-store.norms.md «Н2 Doors»:
+//	the door it calls on admin.sock — spec/01.3-store.norms.md «N2 Doors»:
 //	  req: P/01.3-R016 — POST `/v1/join`: `{id, raft, api, force?}`, success 200 `{}`; 409 `{kind: refused, error}` — an
 //	    inadmissible membership; 403 — `ForbiddenFault` of chapter 1.1: it is called only by `admin.sock` and a daemon of
-//	    the group over mTLS of the role `configstore` (Н1.3 `identity`); a role socket (`console.sock` and others) — 403
+//	    the group over mTLS of the role `configstore` (N1.3 `identity`); a role socket (`console.sock` and others) — 403
 //	    before parsing the membership (reconciliation of python and go М10/6–11, B1); empty `raft`, `api` — 400 before
 //	    the membership (B4)
 //	the flags — forms/daemon-flags.tsv (commands ∋ join; f.<Field> of package flags):

@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/alarm-history.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): the holder writes the history, the domain console reads it — a contract,
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): the holder writes the history, the domain console reads it — a contract,
 not copies in chapters; the stage C guess C10-ALARM-SAME-LINE83, the Architect's decision of 2026-10-25). The owner is chapter
 [P/08.9](../../08-domain/spec/08.9-domain.norms.md) Н1.9. Participants: the writer — the holder pass, the process `domain`
 (ADR-0032); the reader — the alarm list of the domain console ([P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.8, Н3
@@ -15,7 +15,7 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The object `domain/alarm-history/<член>` is the family `alarm-history`: the form `Platform/08-domain/data/alarm-history.schema.json`,
+The object `domain/alarm-history/<member>` is the family `alarm-history`: the form `Platform/08-domain/data/alarm-history.schema.json`,
 the outcomes `Platform/08-domain/data/alarm-history.outcomes.tsv` ([form](../../08-domain/data/alarm-history.schema.json),
 [outcomes](../../08-domain/data/alarm-history.outcomes.tsv)). A history line is a line of the alarm page of the member, as accepted:
 `t` — by the domain clock (the section «Domain clock»), `t_src` — the `t` of the line as it came, by the member's clock. Times follow the canon of P/01.1 Н0
@@ -23,7 +23,7 @@ the outcomes `Platform/08-domain/data/alarm-history.outcomes.tsv` ([form](../../
 
 ## Domain clock
 
-Moved from [P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.8 `clock` without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, А-13):
+Moved from [P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.8 `clock` without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, A-13):
 the clock of a line is read by the holder pass (it writes the history, `events[].t`) and by the alarm list of the domain console.
 
 ```yaml
@@ -35,7 +35,7 @@ clock:         the time of a page line by the domain clock: t + (received_at −
 ## History
 
 ```yaml
-history:       the holder object domain/alarm-history/<член> {events, cut_before} — a sliding week, at most
+history:       the holder object domain/alarm-history/<member> {events, cut_before} — a sliding week, at most
                HISTORY_LINES lines, the newest ones; cut_before — from which moment the member is held whole: a number (domain clock),
                on creation of the history — 0, not null (reconciliation of М11, A13)
 cut:           cut_before moves only on removal of lines and on an unappended line older than a week (`writer` below): lines with t < now − HISTORY_DAYS × 86400 removed —

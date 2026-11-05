@@ -219,7 +219,7 @@ def check_refusals(path):
             continue
         text = norms[0].read_text(encoding="utf-8")
         lines = text.split("\n")
-        start = next((i for i, line in enumerate(lines) if line.startswith("## Н4")), None)
+        start = next((i for i, line in enumerate(lines) if line.startswith(("## Н4", "## N4"))), None)
         if start is None:
             errors.append(f"{path.name}: chapter {chapter}: {norms[0].name} has no Н4")
             continue

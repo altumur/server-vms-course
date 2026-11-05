@@ -33,7 +33,7 @@ garbled:   нечитаемое надгробие (gone.outcomes.tsv, объе�
 и запросов вывода (раздел «Соседи») — `Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv`,
 `Platform/06-console/data/decommission.schema.json`, `Platform/06-console/data/decommission.outcomes.tsv`; дверь объектов —
 GET копии (404 — подтверждение), листинг `prefix=.gone/`, 409 «удалено позже» — контракт
-`Platform/05-resource/spec/05-resource.api.openapi.yaml` (аудит раскладки, В-60; решение «Архитектора» 2026-10-25).
+`Platform/05-resource/spec/05-resource.api.openapi.yaml` (аудит раскладки, V-60; решение «Архитектора» 2026-10-25).
 
 ## Соседи (`peers`)
 

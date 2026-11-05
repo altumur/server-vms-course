@@ -9,24 +9,24 @@ import "normgen/p01-1/apidoor"
 // stage needs it; then replace the body (the signature stays: Store is a coreadapter.Core). Identity first —
 // Context (core.go). By the norms:
 //
-//	spec/01.3-store.norms.md «Н2 Doors»:
+//	spec/01.3-store.norms.md «N2 Doors»:
 //	  req: P/01.3-R013 — The doors of the chapter are at the store daemon (chapter 1.1: `/v1/get`, `/v1/list`,
 //	    `/v1/write`) and its service doors:
-//	spec/01.3-store.norms.md «Н2 Doors»:
+//	spec/01.3-store.norms.md «N2 Doors»:
 //	  req: P/01.3-R015 — All own JSON answers have full schemas, metrics are text/plain, without a fictitious empty JSON
 //	    instead of text.
-//	spec/01.3-store.norms.md «Н2 Doors»:
+//	spec/01.3-store.norms.md «N2 Doors»:
 //	  req: P/01.3-R016 — GET `/v1/status`: `{id, state, leader, leader_id, term, commit, applied, voters, members, tls,
-//	    max_value}`; optional `base, again, role, last_snapshot, out, admission_ahead` (Н1.3 `admission`; ADR-0091 item
+//	    max_value}`; optional `base, again, role, last_snapshot, out, admission_ahead` (N1.3 `admission`; ADR-0091 item
 //	    1). Indices are exact uint64, state — Leader/Follower/Candidate/Shutdown/Door; voters/out — an array of ids,
 //	    members — a map id → `-api` address, without `-api` the member is not in `members` (the map can be `{}`; a value
 //	    is never empty — `minLength: 1` of OpenAPI; C01-STATUS-MEMBERS-NOAPI, the Architect's decision of 2026-10-26);
 //	    `leader` — the `-api` address of the leader (empty if the leader is unknown or was started without `-api`),
-//	    `leader_id` — the id of the leader (empty if the leader is unknown) (the store pilot, А7). Door requires
+//	    `leader_id` — the id of the leader (empty if the leader is unknown) (the store pilot, A7). Door requires
 //	    role=door and term/commit/applied=0. `max_value` is this instance’s effective row-weight ceiling in bytes, the
-//	    value of `-max-value` (Н1.3; the row weight of chapter 1.1), separately from `-max-body`; on the acceptance stand
+//	    value of `-max-value` (N1.3; the row weight of chapter 1.1), separately from `-max-body`; on the acceptance stand
 //	    it is 524288. This is a local observation, not a confirmation by the majority
-//	spec/01.3-store.norms.md «Н2 Doors»:
+//	spec/01.3-store.norms.md «N2 Doors»:
 //	  req: P/01.3-R017 — The order of checks: the frame (framing, the body limit 1 MiB — 413) → route and method (404,
 //	    405) → identity (403) → body and membership (400, 409)
 //	the refusals — forms/refusals.tsv:

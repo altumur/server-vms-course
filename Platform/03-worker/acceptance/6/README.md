@@ -28,7 +28,7 @@ platform/mirror and platform/space are not set; requests for release and for a c
 console — the door of the console testsub from the loopback, access to operations and units is allowed;
 resource — the door of the resource srv-a with an admissible identity; store — the door of the store with reading of
 testsub/ and objects/testsub/. If the deployment uses TLS, issue the corresponding
-certificates and roles per P/02.4 Н1.6 (`w2c-ca.sh issue <server> <роль>`, the kit `kit`) and the address rule of P/02.4 Н1.6;
+certificates and roles per P/02.4 Н1.6 (`w2c-ca.sh issue <server> <role>`, the kit `kit`) and the address rule of P/02.4 Н1.6;
 these scenarios do not replace the check of TLS refusals.
 Do not accelerate the deadlines and parameters of testsub: valid_for=30, most_valid=600; the ordinary
 ticks of the holder and the reaper are expected, settle=60 by default.
@@ -41,7 +41,7 @@ the acceptance of the chapter does not depend on the tables door (the log of cam
 `testsub2worker`: it reads `testsub2/`, `objects/testsub2/commands/*` and the row-objects `objects/testsub2/marks/*`
 (the log of cammeta-python, lesson 8 № 34). Do not accelerate the deadlines of `testsub2`:
 settle=30. The worker `testsub2` carries the training handler of the append (the norms of the chapter, Н5): the count is the row-object
-`objects/testsub2/marks/<единица>` `{count, ranges}`. The scenario sees `fetched` of the heartbeat (chapter 3.4 Н1.1, the names `SaidID`) through
+`objects/testsub2/marks/<unit>` `{count, ranges}`. The scenario sees `fetched` of the heartbeat (chapter 3.4 Н1.1, the names `SaidID`) through
 the removal of the row by the reaper — the only ground for the removal of an append; steps 19–24 — the own shelf `sh2` in the zone `z2` (`spread_by: zone` does not put two units of one zone on one server) and a unit with a name longer than 40 characters: its rid
 the heartbeat names by the hash `#<20 hex>`, the row is removed all the same (a unit name with a comma is not admitted by the grammar of the row check contract). The limits of the body/memory must not hinder the small requests given.
 
@@ -88,7 +88,7 @@ These are tasks for the implementation/stand, not checks already performed:
 
 | Area | Counterexample and the required observation |
 |---|---|
-| Suppression | suppress gives out the first one and the total (from the row «События» of the former README) |
+| Suppression | suppress gives out the first one and the total (from the row «Events» of the former README) |
 | Requests | Two contenders for begun: no more than one call; a lost answer of put_new: zero calls by assumption. A foreign unit/digest is not overwritten; unknown does not start a repeat |
 | Outcome and cleanup | An old CAS of the reaper does not overwrite performed. A late answer replaces unknown with late. An error of publishing the mark leaves the row; the console does not delete the mark |
 
@@ -118,7 +118,7 @@ requests:                     # the append profile of ADR-0054: the key from the
   journal: tally.asked
   elsewhere: [recount]
 # the holder of the unit tallies adds to its count the number of integers of [from, to] that the count has not yet covered
-# (the covered ranges — in the row-object objects/testsub2/marks/<единица>, the norms of the chapter, Н5), and names the rid in fetched of the heartbeat; a repeat by the data
+# (the covered ranges — in the row-object objects/testsub2/marks/<unit>, the norms of the chapter, Н5), and names the rid in fetched of the heartbeat; a repeat by the data
 # adds nothing
 ```
 
@@ -162,7 +162,7 @@ has written `result`; the runner rewrites the slot row `testsub2/slots/t-1` to t
 `cas` (on top of the renewal, P/01.1 Н1 `cas`). The lease step of the worker sees a foreign `holder` — `отдать_имя()`, the fencing (P/03.2
 Н3 «lease_step()» step 1): exactly one row `worker.name_taken` in `audit/testsub2worker` (once per episode; the repeated
 search — NameOnAnotherBox, does not write it), the version of the slot does not change, there is no heartbeat any more (`ts` as before, P/03.2 Н3
-«nobody and getting the name back»), the state row `result` is of the same version — the fenced holder does not write it (Н3 «записать состояние»).
+«nobody and getting the name back»), the state row `result` is of the same version — the fenced holder does not write it (Н3 «write state»).
 
 ## Scenarios 38–43 (coverage audit of P/03, the second pass of Gemini, 2026-10-30)
 
@@ -185,7 +185,7 @@ the form of the family `requests` (P/06.4 Н1.5): `unit`, the body field `add` a
 - **41-order-tombstones** — two order rows before the start are tombstones of its own `made` (`deleted: true`, `made.by: testsub`):
   at `testsub-c41` `made.gone` is the year 2100 (the start event is not later than `gone + 60`) — the outcome `gone`, no write, the version is the same; at
   `testsub-c42` `made.gone` 1000 (the event is later than `1000 + 60`) — a creation over the tombstone: `revision` 2, a new `born`, `made`
-  of the orderer, no `deleted`; the heartbeat — `created` 1, `gone` 1 (Н3 «заказать» step 4; the row check contract
+  of the orderer, no `deleted`; the heartbeat — `created` 1, `gone` 1 (Н3 «order» step 4; the row check contract
   «Строка заказчика: made» `tombstone`).
 - **42-order-unchanged-never** — its own order row with `until: "0"` (without a deadline, `placement.ends` `testsub2`) and `made.at` in
   the year 2100, `made.keep = made.at + 720` = 4102445520 (computed by python): the former `until` = never is not touched, `made.at` =

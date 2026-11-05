@@ -50,7 +50,7 @@ class Mirror(unittest.TestCase):
         self.mutated("(C01-ROW-INDEX-LOST-01, the Architect's decision of 2026-10-29).\n",
                      "(the Architect's decision of 2026-10-29).\n")
         self.mutated("it names names and versions, not content (ADR-0021).", "it names names and versions, not content.")
-        self.mutated("UTF-8 is not required (Н3 «list»).", "UTF-8 is not required (Н5 «list»).")
+        self.mutated("UTF-8 is not required (N3 «list»).", "UTF-8 is not required (N5 «list»).")
 
     def test_link(self):
         self.mutated("[P/08.4](../../08-domain/spec/08.4-domain.norms.md)", "[P/08.4](../../08-domain/spec/08.3-domain.norms.md)")
@@ -68,7 +68,7 @@ class Mirror(unittest.TestCase):
         self.mutated("## Correspondence to former lessons", "### Correspondence to former lessons")
 
     def test_heading_number(self):
-        self.mutated("### Н2.1 Request parsing", "### Н2.2 Request parsing")
+        self.mutated("### N2.1 Request parsing", "### N2.2 Request parsing")
 
     def test_cyrillic(self):
         errors = self.mutated("The read MUST be linearizable", "The read ДОЛЖЕН be linearizable")
@@ -144,11 +144,11 @@ class Layouts(unittest.TestCase):
     def test_translation_links_translation(self):       # ru/…#русский якорь ≡ …#английский якорь по парам заголовков
         self.assertEqual(self.compare3(), [])
         ru = RU3.read_text(encoding="utf-8")
-        self.assertIn("(01.1-store.norms.md#н0-словарь-слов)", ru)
-        errors = self.compare3(ru=ru.replace("(01.1-store.norms.md#н0-словарь-слов)", "(01.1-store.norms.md#н1-форма)"))
+        self.assertIn("(01.1-store.norms.md#n0-словарь-слов)", ru)
+        errors = self.compare3(ru=ru.replace("(01.1-store.norms.md#n0-словарь-слов)", "(01.1-store.norms.md#n1-форма)"))
         self.assertTrue(any("link targets differ" in e for e in errors), errors)
-        errors = self.compare3(ru=ru.replace("(01.1-store.norms.md#н0-словарь-слов)",
-                                             "(../../spec/01.1-store.norms.md#н0-vocabulary)"))
+        errors = self.compare3(ru=ru.replace("(01.1-store.norms.md#n0-словарь-слов)",
+                                             "(../../spec/01.1-store.norms.md#n0-vocabulary)"))
         self.assertEqual(errors, [])                       # перевод МОЖЕТ сослаться и на источник — цель та же
 
     def test_source_anchor(self):
@@ -186,6 +186,27 @@ class Layouts(unittest.TestCase):
         self.assertEqual(en_mirror.strict("1. а\n", "1. a\n2. b\n"),
                          ["numbered steps: 2, ru 1 — rebuild the translation by the source"])
         self.assertEqual(en_mirror.strict("1. а\n", "1. a\n2. b\n", count_steps=False), [])
+
+    def test_latin_step_and_review_labels(self):        # ADR-0121 доп. (3) п. 3: в источнике — латиница, кириллица — отказ
+        en, ru = EN3.read_text(encoding="utf-8"), RU3.read_text(encoding="utf-8")
+        self.assertEqual(self.compare3(), [])
+        tail = "\nSee step 4а and the audit Г-29.\n"
+        errors = self.compare3(en=en + tail, ru=ru + "\nСм. шаг 4a и аудит G-29.\n")
+        self.assertTrue(any(e.startswith("Cyrillic outside code") and "4а" in e for e in errors), errors)
+        self.assertEqual(self.compare3(en=en + "\nSee step 4a and the audit G-29 (М10/2).\n",
+                                       ru=ru + "\nСм. шаг 4a и аудит G-29 (М10/2).\n"), [])
+
+    def test_english_placeholder_labels(self):         # ADR-0121 доп. (3) п. 4: метка источника — английская, перевод — по словарю
+        en, ru = EN3.read_text(encoding="utf-8"), RU3.read_text(encoding="utf-8")
+        errors = self.compare3(en=en + "\nThe key `domain/users/<имя>`.\n", ru=ru + "\nКлюч `domain/users/<имя>`.\n")
+        self.assertTrue(any("a Russian placeholder label in the source: <имя>" in e for e in errors), errors)
+        self.assertEqual(self.compare3(en=en + "\nThe key `domain/users/<name>`.\n", ru=ru + "\nКлюч `domain/users/<имя>`.\n"), [])
+
+    def test_latin_section_numbers(self):              # ADR-0121 доп. (5) п. 1: в P/01 номера разделов — N…, Н… — отказ
+        en, ru = EN3.read_text(encoding="utf-8"), RU3.read_text(encoding="utf-8")
+        self.assertIn("## N0", en)
+        errors = self.compare3(en=en + "\nSee Н1.3.\n", ru=ru + "\nСм. N1.3.\n")
+        self.assertTrue(any("a Cyrillic section number" in e for e in errors), errors)
 
     def test_labels_by_dictionary(self):                # метка пары — по словарю Platform/common/placeholders.tsv
         self.assertEqual(en_mirror.as_english_labels("domain/users/<имя> ⟨вариант 2⟩", ROOT), "domain/users/<name> ⟨variant 2⟩")

@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/acceptance/README.m
 
 The stand, the dictionary of directives and doors — [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors) and its
 section [«Domain stand»](../../common/acceptance/README.md#domain-stand) (the door `holder` — the domain console on `hold`, the doors
-`member`, the directives `@domain`, `@person`, `@stop agent`, `@start agent`; the plan of lesson 10 В10). The norm of the lesson is
+`member`, the directives `@domain`, `@person`, `@stop agent`, `@start agent`; the plan of lesson 10 V10). The norm of the lesson is
 [`10-domain-console.norms.md`](../spec/10-domain-console.norms.md) Н5. The scenarios were moved from the acceptances of М11/08 (sc. 05) and
 М11/11 (sc. 02) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers of the scenarios and the steps are the former ones; sc. 06–09 —
 the coverage audit of P/10 (audit-kimi 290ae7697), the numbers — after the largest number of the sources (М11/08 sc. 05); sc. 10–16 —
@@ -56,7 +56,7 @@ The neighbours on the stand: the edit of the shared document (sc. 02 step 03) is
 the execution — [chapter 8.9](../../08-domain/spec/08.9-domain.norms.md) Н1.3); the content of `delivery` (steps 04, 09) —
 `view.shared` of chapter 8.9 (Н1.6), the door `GET /domain/shared` — this lesson (P/10-14); the document is taken by the agent of the member
 ([chapter 9.1](../../09-agent/spec/09.1-agent.norms.md)); step 11 — the agent signature at `/events` of the cluster console of the member
-([the agent signature contract](../../common/contracts/agent-signature.md), the gate P/06.3; the plan of lesson 10 В6: the step is not split).
+([the agent signature contract](../../common/contracts/agent-signature.md), the gate P/06.3; the plan of lesson 10 V6: the step is not split).
 
 The stand does not call the alarm page (the front once a second, the urgent report, `truncated`): the stand has no training subsystem that
 raises alarms. This is checked by the vector `alarms` and by reading.
@@ -90,7 +90,7 @@ the spoiling it is stopped (`@on hold @sigterm domain`, as sc. 07), the domain c
   stopped, the mark of `m1` is spoiled by `@spoil object` — the door 200, `m1` — `unreadable` without `known_until` and `silent_since`, the other
   member — not `unreadable`. A generation `reports/<rev>` not by the `sha256` of the mark (C10-ALARMS-INPUT-01) — by reading: the key of the generation carries
   the `rev` of the mark, and the directive `@on … @spoil object` takes the key as it is.
-- **Scenario 15** — before the gate (Н2, Н1.4 «принять консолью», Н1.5 `session`): without a token (`@person -`) a path with a segment
+- **Scenario 15** — before the gate (Н2, Н1.4 «accept by a console», Н1.5 `session`): without a token (`@person -`) a path with a segment
   `.` or `.%2E` — 404 `not a domain route`, not 401 (steps 3, 4); an incoming `X-User: root` is stripped — without a token 401, `/session`
   is anonymous, without `user` (steps 5, 6); with the token of `root` an incoming `X-User: forged` does not change the identity, `/session` carries the grants
   `domain/grants/domain` (`[{cap, scope}]`, the first administrator, step 8). `X-Operator: console` — by reading (until the TLS stand).
@@ -102,8 +102,8 @@ the spoiling it is stopped (`@on hold @sigterm domain`, as sc. 07), the domain c
 
 ## Scenarios 17–19
 
-Sc. 17 — ADR-0094 B4 (the version of the row at the read doors); sc. 18, 19 — the doors `GET /domain/<sub>/kept/<имя>` and
-`GET /domain/relays/<ретранслятор>` (the journal `journal/corrections.tsv`, 2026-11-02); the numbers — after sc. 16.
+Sc. 17 — ADR-0094 B4 (the version of the row at the read doors); sc. 18, 19 — the doors `GET /domain/<sub>/kept/<name>` and
+`GET /domain/relays/<relay>` (the journal `journal/corrections.tsv`, 2026-11-02); the numbers — after sc. 16.
 
 - **Scenario 17** — the version of the row at the read doors (Н1.2; [P/08.0](../../08-domain/spec/08.0-domain.norms.md) Н1.9): the index of `versions` and of the record equals the index of the store row (steps 10–13); steps 14–18 go through the door `member m1 console`: `If-Match`, `Idempotency-Key` and `ETag` pass the cluster console and the domain console ([the forwarding contract](../../common/contracts/forwarding.md) `pass`, `answer`). Step 14 waits (`@until 30`) until `GET /domain/topology` through the door `member m1 console` gives 200 `rev: 1`. The stand does not bind the value of `ETag`: it judges the quotes of the header.
 - **Scenario 18** — the door of a `kept` row (Н1.2а; [P/06.2](../../06-console/spec/06.2-console.norms.md) Н1.4): the row
@@ -130,7 +130,7 @@ The subset of expect does not replace the check of the full HTTP form of the Ope
 The journal of the AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows of the journals of the acceptances of М11/08 and М11/11 about
 the scenarios and the inputs of the lesson — as they are (the plan of the move of lesson 10, § 3 «corrections.tsv»: from М11/08 — the row 2026-10-18 about
 sc. 05; from М11/11 — R41-16, № 52–54, «класс record и сумм», `04-alarms 11–14`, `03-resolve 11, 04-alarms 15`,
-`04-alarms 6`; the paths of the old rows — `11/…`, `NN-<имя> <шаг>` — are resolved by [id-map](../../common/id-map.tsv)); the rows about
+`04-alarms 6`; the paths of the old rows — `11/…`, `NN-<name> <step>` — are resolved by [id-map](../../common/id-map.tsv)); the rows about
 sc. 04 — also in «Журнал источника» of the vector `alarms`; the last row — the move.
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)

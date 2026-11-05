@@ -17,7 +17,7 @@
    ]
   },
   "slots": {
-   "description": "names of the given-away slots by the list rule of P/06.1 Н1.2; \"\" — none; names, not a number (Д7)",
+   "description": "names of the given-away slots by the list rule of P/06.1 Н1.2; \"\" — none; names, not a number (D7)",
    "type": "array",
    "items": {
     "description": "the name of the given-away slot, P/03.2 Н1.4",

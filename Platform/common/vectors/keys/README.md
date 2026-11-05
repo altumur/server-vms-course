@@ -21,7 +21,7 @@ Who performs: `cases.tsv` — the member's agent (`09-agent`), the cluster conso
 
 ## Keys
 
-The seeds are `sha256("w2c test <слово>")`, the words are [the README of the package `domain-token`](../domain-token/README.md#keys) «Keys» (`root 1` — the root of the domain `acme`, `root 2` —
+The seeds are `sha256("w2c test <word>")`, the words are [the README of the package `domain-token`](../domain-token/README.md#keys) «Keys» (`root 1` — the root of the domain `acme`, `root 2` —
 a foreign root, `token key 1…3`, `book seal 1`, `book seal 2`); the bytes of the keys are in the inputs themselves (`pinned.pub`, `doc`).
 The public root of `acme` is `34dc3424ca1fc497170b49eef38222db60fbcaa887852645d7c73bedcc9f7684`.
 
@@ -32,7 +32,7 @@ of the acceptance.
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](cases.tsv), 29 rows: 7 `took`/`holding`, 22 refusals | `input` is the input of the command `keys` as JSON text (`pinned` — `{pub, domain}` or `null`, `held` — the set document or `null`, `offered` — the row `domain/keys` as it came) → `expect` — `{"result":"took"\|"holding","rev":…}` or `{"result":"refused","reason":<слово>[,"rev":…]}`: `older` (rev of `held`), `no_pin`, `another_root` (the root, the domain), `bad_signature` (a forgery, `kid` not `root`, a signature of 63 bytes, the wrong key), `not_a_set` (not JSON, an extra field, `current` not in `keys`, an extra element of the row, a repeat of a JSON key), `no_book_seal` (none, a point of small order) |
+| [`cases.tsv`](cases.tsv), 29 rows: 7 `took`/`holding`, 22 refusals | `input` is the input of the command `keys` as JSON text (`pinned` — `{pub, domain}` or `null`, `held` — the set document or `null`, `offered` — the row `domain/keys` as it came) → `expect` — `{"result":"took"\|"holding","rev":…}` or `{"result":"refused","reason":<word>[,"rev":…]}`: `older` (rev of `held`), `no_pin`, `another_root` (the root, the domain), `bad_signature` (a forgery, `kid` not `root`, a signature of 63 bytes, the wrong key), `not_a_set` (not JSON, an extra field, `current` not in `keys`, an extra element of the row, a repeat of a JSON key), `no_book_seal` (none, a point of small order) |
 | [`revoked.tsv`](revoked.tsv), 7 rows | `input` — `{own, answer, now}`: the member's own row `jtis`, the `jtis` of the holder's answer or `null`, the wall seconds; `expect` — the `jtis` of the row that the agent writes (`merge`, `repeat`, `prune` of the contract; `TOKEN_SKEW` 60; KEYS-G01) |
 
 The vectors were checked by reference Ed25519 (RFC 8032), X25519 (RFC 7748) and JCS (RFC 8785) against the text of the contract, not against the code

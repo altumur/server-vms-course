@@ -22,7 +22,7 @@ The absence of a field (`term` at `stay` without its own record that passed `rec
 
 ## Keys
 
-The keys of the issuer and the set are bytes in the inputs (`keys.issuing`, `doc.issuer`). The seeds are `sha256("w2c test <слово>")`, as
+The keys of the issuer and the set are bytes in the inputs (`keys.issuing`, `doc.issuer`). The seeds are `sha256("w2c test <word>")`, as
 in the package [`record`](../../../common/vectors/record/README.md) «Keys» (the root `root 1`, the token key `token key 1`, the issuers
 `issuing key 1`, `issuing key 0` — in `revoked_issuing`, `issuing key 9` — a foreign one, the members `member m1`, `member m2`). The set `keys`
 of rows 01–12 is one: `domain: acme`, `rev: 2`, the root signature; rows 13–21 change in it only what their `note` names
@@ -35,12 +35,12 @@ the scenario and the step of the acceptance of М11, in rows 13–21 — the cas
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](cases.tsv), 21 rows: 7 `follow`, 8 `stay`, 6 `@exit 2` | `input` — the input of the command `follow` as JSON text (`keys` — the set document, `held` — `{doc}` of its own row `domain/holder` or `null`, `answers` — `{<кластер>: {doc} \| null}`) → `expect`: `{"result":"follow","term":…,"holder":…,"url":…}` (a larger term; the same holder with a new `url` and a larger `at`; the same term at another holder; its own `held` is a backup copy document or a grant, it does not count as its own record) or `{"result":"stay","reason":<слово>}` — `larger` (its own is larger), `holding` (the same; a forged or tampered larger answer — in `refused`), `two_holders` (two holders on one term), `none` (no answers; only a forged one); `refused` — `{<кластер>: <слово record>}` |
+| [`cases.tsv`](cases.tsv), 21 rows: 7 `follow`, 8 `stay`, 6 `@exit 2` | `input` — the input of the command `follow` as JSON text (`keys` — the set document, `held` — `{doc}` of its own row `domain/holder` or `null`, `answers` — `{<cluster>: {doc} \| null}`) → `expect`: `{"result":"follow","term":…,"holder":…,"url":…}` (a larger term; the same holder with a new `url` and a larger `at`; the same term at another holder; its own `held` is a backup copy document or a grant, it does not count as its own record) or `{"result":"stay","reason":<word>}` — `larger` (its own is larger), `holding` (the same; a forged or tampered larger answer — in `refused`), `two_holders` (two holders on one term), `none` (no answers; only a forged one); `refused` — `{<cluster>: <record word>}` |
 
 The vectors were checked by the runs of the implementations of the acceptance of М11/10 (run 41, the reconciliation of М11 09–12) and by the text of the norms; on a discrepancy
 the norm is right, «Спецификация» corrects the vector. Rows 13–21 — the coverage audit of P/09, the second pass (Gemini): the input forms and the exit
 codes of Н5 `exit` (`keys` not of the form, no `held`, an extra field, `answers` not an object — 2; a tampered `sig` of the set — not
-a refusal; `held` not `{doc}` — its own record did not pass `record`; `answers.<к>` not `{doc}` — `not_a_record`, a key that is not a cluster name
+a refusal; `held` not `{doc}` — its own record did not pass `record`; `answers.<to>` not `{doc}` — `not_a_record`, a key that is not a cluster name
 — counted as an answer); the expectations are the output and the exit code of the command `follow` of the witness М11, reconciled with the norm.
 
 ## Source log

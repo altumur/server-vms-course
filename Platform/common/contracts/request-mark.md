@@ -2,8 +2,8 @@
 
 This English text is the source; the Russian translation `ru/contracts/request-mark.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5) and addendum (11): a contract that several processes read
-and write lies in `Platform/common/`; review of stage B 3–5, В1). The owner is chapter [P/06.4](../../06-console/spec/06.4-console.norms.md)
+A common contract of the module «Platform» (ADR-0083 addendum (5) and addendum (11): a contract that several processes read
+and write lies in `Platform/common/`; review of stage B 3–5, V1). The owner is chapter [P/06.4](../../06-console/spec/06.4-console.norms.md)
 (the console): it creates the request row by the door and removes it by the reaper, keeps the accounting `asked` itself, and in
 the mark it is a participant (the reaper writes `no_begun` `expired` and `unknown` by the index; P/06.4 Н3 «file a request»,
 «reaper»). Read and written by: the holder worker — the mark `begun` and the outcome, the cleanup of the mark after `kept`, the
@@ -23,14 +23,14 @@ Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The files the contract works by (layout audit, В-50–В-54, Б-17; the Architect's decision of 2026-10-25):
+The files the contract works by (layout audit, V-50–V-54, B-17; the Architect's decision of 2026-10-25):
 
 - the request row `<sub>/requests/<rid>` — the family `requests`: `Platform/06-console/data/requests.schema.json`,
   `Platform/06-console/data/requests.outcomes.tsv`; the mark `objects/<sub>/commands/<rid>` — the family `commands`:
   `Platform/06-console/data/commands.schema.json`, `Platform/06-console/data/commands.outcomes.tsv`;
 - a resource request `<sub>/requests/free-<server>-<volume>` — the family `free-ask`: `Platform/05-resource/data/free-ask.schema.json`,
   `Platform/05-resource/data/free-ask.outcomes.tsv`;
-- the accounting of a person `<sub>/asked/<sha16(имя)>` — the family `asked`: `Platform/06-console/data/asked.schema.json`, `Platform/06-console/data/asked.outcomes.tsv`;
+- the accounting of a person `<sub>/asked/<sha16(name)>` — the family `asked`: `Platform/06-console/data/asked.schema.json`, `Platform/06-console/data/asked.outcomes.tsv`;
 - `fetched` of the holder's heartbeat — the family `heartbeats`: `Platform/03-worker/data/heartbeats.schema.json`,
   `Platform/03-worker/data/heartbeats.outcomes.tsv`;
 - the keys `requests` of the manifest — `Platform/02-installer/spec/02.1-installer.schema.json` (the key `requests`);
@@ -45,7 +45,7 @@ The files the contract works by (layout audit, В-50–В-54, Б-17; the Archite
   unit:        <id>                          # MUST; absent in a resource request (ADR-0059, free_ask); a resource request is told apart by the family of the key
                                              # requests/free-<server>-<volume> (the catalogue, P/05 Н1.4), not by the absence of unit (review of stage B 6–7, № 37)
   <body fields>: by requests.schema, as text: a string — as is, another value — canonical JSON (JCS, ADR-0072)
-  valid_until: <секунды>                     # the time of the writer (`Platform/common/data/codec.tsv` row time; P/01.1 Н0) (a sent one — truncated down to ms, a negative one — 0, P/06.4 Н3 step 1);
+  valid_until: <seconds>                     # the time of the writer (`Platform/common/data/codec.tsv` row time; P/01.1 Н0) (a sent one — truncated down to ms, a negative one — 0, P/06.4 Н3 step 1);
                                              # when the manifest has valid_for or the client sent its own term; 0 and a past one are a term
                                              # that has already expired (expired), not «no term» (reconciliation of python and go М10/6–11, E52)
   digest:      <sha256 hex>                  # MUST in every executed request (not in a resource request): in one filed by the door — JCS of the client body after the schema without
@@ -82,7 +82,7 @@ manifest:                                    # requests: (the form — `Platform
   schema:      JSON Schema of the body
   valid_for:   seconds to the deadline; mandatory without free
   most_valid:  the ceiling of valid_for; mandatory with valid_for; ≥ valid_for
-  per_person:  the limit of reserved/unanswered rid of one person (without a domain the person is operator, the gate-and-pass contract «Сторожевая» open); requires ttl; a reservation after a refusal can
+  per_person:  the limit of reserved/unanswered rid of one person (without a domain the person is operator, the gate-and-pass contract «The gate» open); requires ttl; a reservation after a refusal can
                conservatively take a place until a repeat or maintenance completes, but is not lost for an accepted request
   settle:      a finite number of seconds ≥0 before an answered row is removed; default 60; the local monotonic age of the first confirmation of the outcome by the rule below
   ttl:         the term of an ordinary row without valid_until, of an append without a holder (+ REAP_AFTER, section «States…») and of a resource row without an owner; mandatory with free and per_person; 0 — no limit.
@@ -100,7 +100,7 @@ manifest:                                    # requests: (the form — `Platform
   free:        accepts requests of a resource to free a place
 ```
 
-The accounting of a person `ledger` (`<sub>/asked/<sha16(имя)>`), the manifest section `holds` and the constants of the reaper (`CLEAR_EVERY`, `SWEEP_EVERY`,
+The accounting of a person `ledger` (`<sub>/asked/<sha16(name)>`), the manifest section `holds` and the constants of the reaper (`CLEAR_EVERY`, `SWEEP_EVERY`,
 `REAP_AFTER`) — [P/06.4 Н1.5](../../06-console/spec/06.4-console.norms.md); the constants of the holder (`PERFORM_TIMEOUT`,
 `PERFORM_GRACE`, `REQUESTS_HOLD`, `COMMANDS_PER_LOOK`) — [P/03.6 Н1.5](../../03-worker/spec/03.6-worker.norms.md).
 
@@ -229,7 +229,7 @@ The rows «holder …», «another holder …», «the holder that began …» a
 
 Moved from [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.1 `said_id` and P/03.6 «Implementation decides» item 1 (the limits)
 without a change of behaviour: the name of a request in `fetched` of the heartbeat is written by the holder worker (P/03.6 Н3 «holder's look»), read by the reaper
-of the console (P/06.4 Н3 «reaper» `clear`) (layout audit А-24, Б-02, the Architect's decision of 2026-10-25). The field `fetched` of the heartbeat has the form of P/03.4 Н1.1
+of the console (P/06.4 Н3 «reaper» `clear`) (layout audit A-24, B-02, the Architect's decision of 2026-10-25). The field `fetched` of the heartbeat has the form of P/03.4 Н1.1
 (`Platform/03-worker/data/heartbeats.schema.json`, the outcomes `Platform/03-worker/data/heartbeats.outcomes.tsv`).
 
 ```yaml
@@ -250,7 +250,7 @@ From the «Races» of the procedure «reaper» of P/06.4 Н3: two holders of one
 
 ## Vectors
 
-The grammar of `rid` — the vectors [`rid`](../../06-console/vectors/rid/README.md); the write of a body field into the row (`<body fields>`; `<поля тела>` in the Russian text) — the vectors
+The grammar of `rid` — the vectors [`rid`](../../06-console/vectors/rid/README.md); the write of a body field into the row (`<body fields>`; `<body fields>` in the Russian text) — the vectors
 [`requests-body`](../../06-console/vectors/requests-body/README.md); `digest` — the vectors [`request-digest`](../../06-console/vectors/request-digest/README.md);
 the name `SaidID(rid)` in `fetched` of the heartbeat — section «fetched» `said_id` (the vectors
 [`said-id`](../vectors/said-id/README.md), the owner is this contract); the reaper over an append request — the marks `gone` and `expired`, `settle`, without removal by `ttl` alone (the rows
@@ -263,7 +263,7 @@ of lesson P/01 (`canonical_json.tsv`: input → the RFC 8785 form → sha256; AD
 
 ## Correspondence to former lessons
 
-From P/06.4 (review of stage B 3–5, В1; formerly М10/8): Н1.5 — the blocks `<sub>/requests/<rid>`, `action`, `rid`, `manifest`,
+From P/06.4 (review of stage B 3–5, V1; formerly М10/8): Н1.5 — the blocks `<sub>/requests/<rid>`, `action`, `rid`, `manifest`,
 `mark` (with `kept`) and the paragraph on the vectors; Н1.6 — the paragraph on the forms of the mark (here «Three forms of the mark»; the door `answered` stays in
 P/06.4 Н1.6 with a reference here); Н3 «States of an executed request and its mark» whole; «Races» of the procedure «reaper». The references inside
 the moved text («Н1.5», «chapter 3.6», «chapter 6.3», «Н2», «by Н3») are written with the full address (P/06.4 …, P/03.6 …,

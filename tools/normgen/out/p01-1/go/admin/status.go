@@ -15,16 +15,16 @@ import "normgen/p01-1/flags"
 //	  admin_ops: status/backup/leave of oneself — at any
 //	  box: /v1/status — state Leader, term 1, leader — its -api address (empty without -api), leader_id — its id, voters
 //	    [<id>], members {<id>: <api>} (without -api — {}, C01-STATUS-MEMBERS-NOAPI)
-//	the door it calls on admin.sock — spec/01.3-store.norms.md «Н2 Doors»:
+//	the door it calls on admin.sock — spec/01.3-store.norms.md «N2 Doors»:
 //	  req: P/01.3-R016 — GET `/v1/status`: `{id, state, leader, leader_id, term, commit, applied, voters, members, tls,
-//	    max_value}`; optional `base, again, role, last_snapshot, out, admission_ahead` (Н1.3 `admission`; ADR-0091 item
+//	    max_value}`; optional `base, again, role, last_snapshot, out, admission_ahead` (N1.3 `admission`; ADR-0091 item
 //	    1). Indices are exact uint64, state — Leader/Follower/Candidate/Shutdown/Door; voters/out — an array of ids,
 //	    members — a map id → `-api` address, without `-api` the member is not in `members` (the map can be `{}`; a value
 //	    is never empty — `minLength: 1` of OpenAPI; C01-STATUS-MEMBERS-NOAPI, the Architect's decision of 2026-10-26);
 //	    `leader` — the `-api` address of the leader (empty if the leader is unknown or was started without `-api`),
-//	    `leader_id` — the id of the leader (empty if the leader is unknown) (the store pilot, А7). Door requires
+//	    `leader_id` — the id of the leader (empty if the leader is unknown) (the store pilot, A7). Door requires
 //	    role=door and term/commit/applied=0. `max_value` is this instance’s effective row-weight ceiling in bytes, the
-//	    value of `-max-value` (Н1.3; the row weight of chapter 1.1), separately from `-max-body`; on the acceptance stand
+//	    value of `-max-value` (N1.3; the row weight of chapter 1.1), separately from `-max-body`; on the acceptance stand
 //	    it is 524288. This is a local observation, not a confirmation by the majority
 //	the flags — forms/daemon-flags.tsv (commands ∋ status; f.<Field> of package flags):
 //	  -sockets dir

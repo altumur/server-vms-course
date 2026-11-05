@@ -20,7 +20,7 @@ The format is [the dictionary of directives and doors](../../../common/acceptanc
 
 - `$f`, `$g` and the like bind the folder id from the answer `201`. The scenario does not set the value of the id: the console chooses 128 random bits.
 - `$i`, `$j` bind `index`: they are compared only for equality. The `index` of the answer of `PUT` equals the index of the row in the store — sc. 02 steps 4–5.
-- Sc. 03 steps 11–14: the key `testsub/counters/<1007 байт>` is exactly 1024 bytes: the unit row is representable, the membership key is longer than the limit — `400 bad member`. The neighbour at 989 bytes gives a membership key of exactly 1024 bytes and passes.
+- Sc. 03 steps 11–14: the key `testsub/counters/<1007 bytes>` is exactly 1024 bytes: the unit row is representable, the membership key is longer than the limit — `400 bad member`. The neighbour at 989 bytes gives a membership key of exactly 1024 bytes and passes.
 - Sc. 04: a chain of eight folders — `FOLDERS_DEPTH_MAX`; the ninth — `too deep`. Steps 13–16: a tombstone of an ancestor in the middle of the chain.
 - Sc. 05 step 8: a write over a tombstone goes through the batch door, because `PUT` and `DELETE` of such a folder answer 404.
 - Sc. 09: the boundary `FOLDERS_PER_UNIT_MAX`: the eighth folder passes, the ninth — 400, the deletion of a unit at the boundary removes all eight.
@@ -42,7 +42,7 @@ The plan of the rights scenarios, when the norm `may` is entered (a domain stand
 
 1. a person with `edit` on a unit without `admin`, the unit is in a folder: `DELETE` of the unit — 200, the folder is without it;
 2. the creation of a unit with a folder row without `admin` over the folder — 403, nothing is written;
-3. a write of a folder without `admin` over it — 403; with `admin` on `folder:<предок>` — 200;
+3. a write of a folder without `admin` over it — 403; with `admin` on `folder:<ancestor>` — 200;
 4. adding and removing a unit with `admin` over the folder, without `admin` on the unit — 403;
 5. deleting a folder with a role row `folder:` on a descendant without `admin` on `*` in `sub` of this row — 403.
 

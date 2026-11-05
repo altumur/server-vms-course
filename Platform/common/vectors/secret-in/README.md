@@ -2,12 +2,12 @@
 
 This English text is the source; the Russian translation `ru/vectors/secret-in/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is chapter [P/06.2](../../../06-console/spec/06.2-console.norms.md) of the console (Н1.1 `url_field`, `common_words`, `mask`; Н1.1а А1–А15;
+The owner is chapter [P/06.2](../../../06-console/spec/06.2-console.norms.md) of the console (Н1.1 `url_field`, `common_words`, `mask`; Н1.1а A1–A15;
 Н3 «read_address»; Н4 the row «a password or a login in an address»). The participants are the loader [P/02.1](../../../02-installer/spec/02.1-installer.norms.md)
 (the declarations `credentials` and `secret_in` of a field `type: url`, Н1.2а) and [P/02.4](../../../02-installer/spec/02.4-installer.norms.md)
 (address parsing). The bytes are written by «Спецификация»; the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16,
 ADR-0083). Moved from `Source/tests/testdata/secret_in.tsv` byte for byte (stage B, the move of lesson 6, the Architect's decision
-on В8 of the plan of lesson 6); the head of the file is English, as it was: `М10/7 Н1.1а` in it is the former address of chapter P/06.2 Н1.1а.
+on V8 of the plan of lesson 6); the head of the file is English, as it was: `М10/7 Н1.1а` in it is the former address of chapter P/06.2 Н1.1а.
 
 ## `cases.tsv`
 
@@ -18,13 +18,13 @@ between TABs, nothing is unescaped: `\t`, `\n` in a cell are two characters. Fiv
 |---|---|
 | `field` | by whose rule the row is read: `cam.source` or `rec.volumes.url`; a field the reader does not know is a wrong row, not a skip |
 | `raw` | the address as written |
-| `masked` | the display (Н1.1а А14): every password is `***` where it stands; the login — as written |
-| `fault` | the refusal of the value as a value of the field (А15): empty — the credentials do not refuse it; otherwise — the field of `credentials` that the refusal names (`cred_secret`, `access_secret` — a password; `cred_username`, `access_key` — a login only) |
+| `masked` | the display (Н1.1а A14): every password is `***` where it stands; the login — as written |
+| `fault` | the refusal of the value as a value of the field (A15): empty — the credentials do not refuse it; otherwise — the field of `credentials` that the refusal names (`cred_secret`, `access_secret` — a password; `cred_username`, `access_key` — a login only) |
 | `note` | why the row exists |
 
 The declarations of the two fields are vector data, not a reference to the VMS catalog (ADR-0001): the file
 [`fields.yaml`](fields.yaml) next to it (moved from the acceptance of chapter 6.2 byte for byte; stage C guess URLC-SOURCE-01, the Architect's decision 2026-10-23; the key is the name from the column `field`, the value is the declaration
-of the field by the form of P/02.1 Н1.2а). The rule of the catalog for nested addresses (А8) is the union of the rules of these two fields with the common
+of the field by the form of P/02.1 Н1.2а). The rule of the catalog for nested addresses (A8) is the union of the rules of these two fields with the common
 dictionary Н1.1 `common_words`.
 
 ## Run
@@ -37,7 +37,7 @@ A side reads each row by the rule of the named field:
    characters the text of a refusal may carry without a leak (the reading of the commits of «cammeta-acceptance» 2026-10-20).
 
 The package checks the display and the refusal by the credentials (`fault` — a field of `credentials` or empty), including the refusal of an address that does not
-parse by RFC 3986 (a character outside the grammar of А2, a non-numeric port) — it names `credentials.secret` (А15). Outside the package are
+parse by RFC 3986 (a character outside the grammar of A2, a non-numeric port) — it names `credentials.secret` (A15). Outside the package are
 only the refusals of a parsed address by the «Схемам» of [the address contract](../../contracts/url-credentials.md) (a scheme not from `schemes`,
 no host, at `host: path` no path): the credentials do not give them, `bad_url` is the url step of the row check; such a row has
 an empty `fault` (stage C guess URLC-VECTORS-02, a refinement, the Architect's decision 2026-10-23).

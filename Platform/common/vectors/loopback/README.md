@@ -12,7 +12,7 @@ its package do not change from this. The bytes are written by «Специфик
 
 UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, the first non-skipped one is the header `case<TAB>input<TAB>expect<TAB>note`.
 
-**Input** — `{url}`: an absolute URL with a scheme and a host (v6 — in brackets, the zone — `%25<зона>`). **Output** — a JSON string
+**Input** — `{url}`: an absolute URL with a scheme and a host (v6 — in brackets, the zone — `%25<zone>`). **Output** — a JSON string
 `"loopback"` (a loopback literal: v4 of four decimal parts 0–255 without leading zeros with the first `127`; v6 with the value `::1`
 in any notation without a zone), `"ip"` (another IP literal by step 1 of `peer`, including v6 with a zone, `::ffff:127.0.0.1`,
 `0.0.0.0`, `::`) or `"name"` (otherwise: `localhost`, `127.1`, a notation with leading zeros); or `@exit 2` — an input not of the form (not

@@ -8,14 +8,14 @@ The norm of the chapter is [`08.8-domain.norms.md`](../../spec/08.8-domain.norms
 М11/10 (stage B, ADR-0083 addendum (1): without
 a change of behaviour); the numbers of the scenarios and the steps are the former ones. Scenarios 05 (`record`) and 07 (`ask-sig`) are removed — the same cases are in
 the packages [`common/vectors/record`](../../../common/vectors/record/README.md) and
-[`common/vectors/ask-sig`](../../../common/vectors/ask-sig/README.md) (the plan of the move of lesson 8, В1); scenario 06 (`follow`) is removed — the package
+[`common/vectors/ask-sig`](../../../common/vectors/ask-sig/README.md) (the plan of the move of lesson 8, V1); scenario 06 (`follow`) is removed — the package
 [`follow`](../../../09-agent/vectors/follow/README.md), 11 — [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md); 01 —
 [the acceptance of chapter 6.7](../../../06-console/acceptance/7/README.md) sc. 15.
 
 ## Stand
 
-The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Подготовка каждого сценария»; from the acceptance README of М11/03).
-The doors `holder`, `holder@<кластер>`, `member`, `signer` and the directives `@domain`, `@start domain on`, `@stop domain`, `@move` are
+The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Preparation of each scenario»; from the acceptance README of М11/03).
+The doors `holder`, `holder@<cluster>`, `member`, `signer` and the directives `@domain`, `@start domain on`, `@stop domain`, `@move` are
 the dictionary of the «Domain stand». The runner goes as the human `root` (chapter 8.4).
 
 - **Scenario 02.**
@@ -62,12 +62,12 @@ the package [`follow`](../../../09-agent/vectors/follow/README.md).
 
 ## scenarios.tsv
 
-The format is the dictionary of the «Domain stand»; the directives `@move` are `<код> <JSON>`.
+The format is the dictionary of the «Domain stand»; the directives `@move` are `<code> <JSON>`.
 
 Sc. 15–17 (the coverage audit of P/08, the second pass of Gemini, the draft G09 `e32df6f8b`, rewritten):
 - sc. 15 — `POST /domain/stranded/apply` (Н1.6 `apply`): at the acting holder — 409; after a handover to `m1` (`stranded`
   is empty) the displaced `hold` has no element — 404; the row `domain/stranded` is spoiled past the door (`doc` is not JSON) — 503
-  `unavailable`, nothing is applied (the outcomes of `domain/stranded`, Г-40). A replay of an edit at the new holder and 400 «redo it on
+  `unavailable`, nothing is applied (the outcomes of `domain/stranded`, G-40). A replay of an edit at the new holder and 400 «redo it on
   the new holder» for an element that is not an edit — by reading: the stand does not create abandoned ones.
 - sc. 16 — `POST /api/take` (Н1.7 `take`, the order): at the domain holder — 409 before the body form; at a signer without keys
   on `m1` (`@start domain on m1`; C08-TURN-WITHOUT-SIGNER-01 — the door answers on the merits) the body `{}` — 400.

@@ -17,10 +17,10 @@ P/06.5](../../06-console/acceptance/5/README.md) (analysis of the review of stag
 
 The scenarios run on a stand of the `testsub` processes of the implementation: the store, the console `testsub`, the controller `testsub` and the workers `testsub`
 (the training worker of counters), which the runner controls; sc. 11, 14–17, 34–39, 43, 44 — the controller and the workers `testsub2` (analysis of the review of stage B 3–5, № 17). The catalogue of the stand is two
-manifests, `testsub` and `testsub2`, in the order of the section «Стенд» of the common acceptance README (reconciliation of python and go М10/3–5, item 24): the worker
+manifests, `testsub` and `testsub2`, in the order of the section «Stand» of the common acceptance README (reconciliation of python and go М10/3–5, item 24): the worker
 of one manifest does not touch the rows of the other on capture and cleanup. The training worker `testsub` reports the started counter by the element
 `status` with `phase: running` (P/03.4 Н1.1 `phase`) and one word of the subsystem `n` — the value of the counter (P/03.4 Н1.1 `status`;
-the second pilot, Н-7). Observation — rows through the store door P/01.1, units and placement through the console door (`/where`,
+the second pilot, N-7). Observation — rows through the store door P/01.1, units and placement through the console door (`/where`,
 `/unplaceable`, `/servers`, `/metrics`), the pass report `<sub>/controller/pass` — through the objects door of the resource (sc. 12, 15);
 the heartbeat (an object) is not read here. The resource P/05 is needed by all the scenarios with workers and the controller — 03, 07, 08, 11–44 (the resource on the server of the controller; sc. 15, 33, 36–39, 44 — two resources; analysis of the review of stage B 3–5, № 17): the controller reads the heartbeats of the workers through the objects door of the resource of its server, without the resource — «не известно» ([the object store client contract](../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27).
 
@@ -28,8 +28,8 @@ the heartbeat (an object) is not read here. The resource P/05 is needed by all t
 
 The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors):
 the doors `store` (a role with read rights on `testsub/`), `console`, `console2`, `resource`, `admin` (sc. 23 — the row `platform/schema`);
-the directives `@start` (including `@start controller <sub> shrink_after=<с>`, `@start worker <sub> <имя> on <сервер>`,
-`@start worker <имя> on srv-b` sc. 33 and `@start worker <имя> labels=<метки>` sc. 24), `@sigterm`, `@sigkill`, `@sleep`, `@until`,
+the directives `@start` (including `@start controller <sub> shrink_after=<s>`, `@start worker <sub> <name> on <server>`,
+`@start worker <name> on srv-b` sc. 33 and `@start worker <name> labels=<labels>` sc. 24), `@sigterm`, `@sigkill`, `@sleep`, `@until`,
 `@as` (including `@as console store …` sc. 08, 24, 34, 35; `@as testsubcontroller store …` — rows of the controller bypassing it,
 sc. 28–32, 41; `@as testsubworker store …` sc. 13, 21, 42), `@grow`, `@cut role testsubcontroller store` / `@mend role testsubcontroller store` (sc. 25), `@freeze w-1` /
 `@thaw w-1` (sc. 26, 27); the expectation — a subset of fields, `@any`, `@absent` (sc. 21), `@time` (sc. 03, 21, 23, 25), `@exit 2` at
@@ -53,12 +53,12 @@ a scenario. One scenario takes no longer than 3 minutes.
 - sc. 11 — `group_by` of `testsub2` (`feed`, the norms Н1.3): two `tallies` without a value and one written bypassing the door with
   an unreadable `feed` are not a group; each is placed on `t-1` by itself and does not wait for a common group. `testsub2` has `spread_by: zone`:
   the three `tallies` have no `zone`, and an empty value does not separate — all three are on one worker (the norms Н1.3). `testsub2` has
-  `servers: distinct` and the place from the heartbeat (`place_by: shelf`): units are given only to the keeper of a non-empty place (Р15),
+  `servers: distinct` and the place from the heartbeat (`place_by: shelf`): units are given only to the keeper of a non-empty place (R15),
   therefore steps 4–5 put the shelf `s-1` on the server of `t-1` (`srv-a`) and wait for the hold row `testsub2/holds/s-1` (analysis
   of the review of stage A 3–5, № 7);
 - sc. 12 — `@sigkill` of a worker with a live resource P/05 and a second worker `w-2`: the resource sees the lock free, the fate of
   `w-1` is `move` (`why` — a word about `gone`, as a substring), `c12` moves to `w-2` within 60 s, then the slot `w-1` is released (`released: true`; `move` is visible in the report of one pass, 5 s, — the step `fates` goes before the check of the move, C04-FATES-WINDOW-01) ([the presence lock contract](../../common/contracts/presence-lock.md),
-  the norms Н3 «fate»; the second pilot, Н-1; the log of cammeta-go, lesson 5 № 8 — the norms do not tell to remove the placement before a new
+  the norms Н3 «fate»; the second pilot, N-1; the log of cammeta-go, lesson 5 № 8 — the norms do not tell to remove the placement before a new
   target); as sc. 10 of the acceptance of P/03.2 — after P/05;
 - sc. 13 — an abandoned capture (the Quint pilot, F2): step 7 waits for epoch 1 — `w-1` has started `c13` (the placement row does not
   mean this: the worker reads the assignment once per LEASE_EVERY, P/03.3 Н3 «loop()»); `@sigkill w-1`, then the first write of the capture
@@ -68,22 +68,22 @@ a scenario. One scenario takes no longer than 3 minutes.
   A completed capture (the second write) does not take the unit away — by reading;
 - sc. 14, 15 — the order of workers (ADR-0084): `testsub2` with `grows: true` without `placement.weight` — each unit weighs 1
   (the norms Н1.3), the default capacity is 8: the ninth `tally` on one base (sc. 14, 16) and the seventeenth on two (sc. 15) —
-  a shortage of one process; `@grow <сервер>` executes the series `testsub2_workers_wanted{server}` instead of the script (the dictionary
+  a shortage of one process; `@grow <server>` executes the series `testsub2_workers_wanted{server}` instead of the script (the dictionary
   of the common acceptance README; analysis of the review of stage B 3–5, № 33). Sc. 15 — two resources (after P/05; the door `resource` of the steps is the resource `srv-a` on the server of the controller, `{rport}` of the first
   `@start resource`; the second — `@start resource on srv-b`): «не поднял» is observed — the order on `srv-a` without `@grow`, after
   `WANT_GRACE` `want` goes back, `raise_failed`, the order on `srv-b`. The shrinking (`SHRINK_AFTER` 300 s) does not fit into the ceiling of 3 min of the scenario
   — it is checked by sc. 16 with `shrink_after=20` (`W2C_SHRINK_AFTER`). A refusal to start a process by the order
   (systemd did not raise the instance of the unit, code 2 of the process) and a number above want (the process came up after the withdrawal by the deadline — outside the pool,
-  the script stops it, want is not raised, ADR-0084 addendum (4) Р28) — by reading: `@grow` raises the process at once or does not raise it at all
+  the script stops it, want is not raised, ADR-0084 addendum (4) R28) — by reading: `@grow` raises the process at once or does not raise it at all
   (a debt of the stand; analysis of the review of stage A 3–5, № 18);
 - sc. 16 — the shrinking: all nine `tallies` are deleted (the hysteresis `per` 8 requires 8 free at the remaining one), the assignment of
   `t-srv-a-2` is empty — `retiring` and `want − 1` in one write, `@grow` stops `-2`. The transfer of the units of the victim the stand does not
   observe: with capacity 8 and `per` 8 the hysteresis requires 8 free at the remaining ones — by reading;
-- sc. 17 — `distinct`, one shelf (ADR-0084 addendum (3) Р16′; analysis of the review of stage A 3–5, № 1): `testsub2` has the place from the heartbeat,
+- sc. 17 — `distinct`, one shelf (ADR-0084 addendum (3) R16′; analysis of the review of stage A 3–5, № 1): `testsub2` has the place from the heartbeat,
   there is one shelf (`s-a1` on `srv-a`), the base `t-srv-a-1` holds it and carries eight `tallies`; the ninth — a shortage, the growth — one
   trial process (`want` 2), `@grow` raises `t-srv-a-2` without a place; it carries no units, `t9` is in `/unplaceable` with
   the words `no free shelf`; within 25 s (the deadline `shrink_after=20` and the pass step 5 s) `want` does not grow and `t-srv-a-2` is not shrunk
-  (after P/05: the resource writes `room.testsub2`). The branch «живые без места при ждущих не сокращаются» (Р16′) the stand does not distinguish
+  (after P/05: the resource writes `room.testsub2`). The branch «живые без места при ждущих не сокращаются» (R16′) the stand does not distinguish
   from the hysteresis: the remaining `t-srv-a-1` has free 8 − 8 = 0 < `per` 8, and the shrinking is forbidden with any definition of
   «нехватки нет»; a preparation where the hysteresis would allow shrinking with waiting ones the stand with one shelf and capacity 8 does not give —
   the branch is checked by the vector [`shrink-allowed`](../vectors/shrink-allowed/README.md) — the rows `placeless-with-waiting`
@@ -110,7 +110,7 @@ a scenario. One scenario takes no longer than 3 minutes.
   `platform/schema` with `version` 2 (above SCHEMA 1) and `x` (not a number) — `@start controller` exits with code 2, there is no pass report;
   with `version` 1 — the controller starts and writes the report. The resource is raised before the write of the row: it checks the schema at its own
   start. The branch «ошибка чтения — ждать» — sc. 25, «до чтения манифеста» — by reading (the coverage audit of P/04, D07);
-- sc. 24 — the labels of a server (Н1.1 `platform/servers/<сервер>`, Н1.3 `constraint`, Н3 «pass()» step 5): the labels of the node of `w-1` —
+- sc. 24 — the labels of a server (Н1.1 `platform/servers/<server>`, Н1.3 `constraint`, Н3 «pass()» step 5): the labels of the node of `w-1` —
   `{zz}`; the row `{qq}` beats the node — `c1` with the label `qq` is placed; an empty row reaches nothing: the forecast
   `will_move` names `testsub/c1`, `c1` is removed with a reason of reachability, `c2` with the label `zz` is not placed within 12 s (the labels
   of the node would accept it); the row is removed — the labels of the node again: `c2` is placed; the row `{qq, zz}` — `c1` is again on `w-1`; a row
@@ -139,7 +139,7 @@ a scenario. One scenario takes no longer than 3 minutes.
 ## Coverage audit of P/04, second pass (sc. 28–42)
 
 The session of the coverage audit, the second pass (Gemini, 2026-10-30, commit 82da537d5, `АУДИТ-ПОКРЫТИЯ-GEMINI-P04.md`, G01–G07).
-The scenarios are in the forms of sc. 13, 18–27 (rows bypassing the writer `@as <роль> store`, the pass report through the door of the resource, `@sleep` with
+The scenarios are in the forms of sc. 13, 18–27 (rows bypassing the writer `@as <role> store`, the pass report through the door of the resource, `@sleep` with
 a reason in the table of sleeps); the rows of the controller before its start are written by the role `testsubcontroller` (as sc. 07 of the acceptance of P/06.5).
 The revision of the manifest of the stand is 1 (the first installation, P/02.3 Н1.5).
 - Sc. 28 — the restoration of intent (Н1.5; Н3 «accept and complete a decision», «При смене держателя active intent восстанавливается с шага 3»):
@@ -170,7 +170,7 @@ The revision of the manifest of the stand is 1 (the first installation, P/02.3 �
   «Unit state» `acts`): the holder of `t1` writes `result` `{state: open}` (P/03.6 sc. 09); its row is rewritten to
   `done` by cas — the state is in effect (born and the revision of the row), `t1` is removed with the reason `done`, the assignment is empty, it does not enter
   `unplaced` (0); the row of the unit is not deleted (`delete_after` 600 s — by reading), the effective state is not removed by the cleanup.
-- Sc. 35 — the cleanup of a state with a foreign `born` (Н3 step 8а): the row of the unit `t2` is live, the state row has another `born`:
+- Sc. 35 — the cleanup of a state with a foreign `born` (Н3 step 8a): the row of the unit `t2` is live, the state row has another `born`:
   orphaned, removed, `state_swept_total: 1`; the row of the unit is not touched (the cleanup without the row of the unit and after its deletion
   — sc. 18).
 - Sc. 36–39 — `testsub2` on two servers (Н1.3 `spread_by`, `affinity`, `home`; Н3 «choose», «leaving», step 7). The shelf of
@@ -238,7 +238,7 @@ Before the start the catalogue `testsub` and `testsub2` from the common testdata
 There are no foreign controllers, resources, spare processes or start timers. The console door is open from the loopback;
 the read role of the store has access to testsub/ and testsub2/. The preparation uses separate administrative rights.
 
-All the workers of a scenario have the constant BOX_ID of the stand and server = srv-a, except `@start worker … on <сервер>` (the dictionary of the common acceptance README; analysis of the review of stage B 3–5, № 33);
+All the workers of a scenario have the constant BOX_ID of the stand and server = srv-a, except `@start worker … on <server>` (the dictionary of the common acceptance README; analysis of the review of stage B 3–5, № 33);
 each copy gets a new instance. The name is passed by the substitution `{name}` of the directive (the common acceptance README, «Stand»; analysis of the review of stage B 3–5, № 33).
 A decreasing memory budget is not provoked: the chosen CAPACITY/WORKER_MEMORY_MB must satisfy P/03.4 (the budget).
 The ordinary configuration of testsub uses safe defaults; the parameters of the stand-in and of the deadlines are not accelerated for the sake of the test.

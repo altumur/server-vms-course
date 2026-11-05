@@ -13,7 +13,7 @@ rights from the manifest catalogue (chapter 2.5). Pass the Н5 acceptance of the
 - **2.1.** Implement strict loading of a manifest and of a manifest catalogue per Н1–Н4 of [chapter 2.1](02.1-installer.norms.md). Pass
   the Н5 acceptance by the regular loading path and close the whole [readiness checklist](02.1-installer.norms.md#readiness-checklist).
   The main input of the chapter is the procedure `загрузить(байты, источник)`, not an HTTP door.
-- **2.2.** The canonical view of a manifest per [chapter 2.2](02.2-installer.norms.md): the projection of Н1.1 (sugar, defaults, the steps П1–П5,
+- **2.2.** The canonical view of a manifest per [chapter 2.2](02.2-installer.norms.md): the projection of Н1.1 (sugar, defaults, the steps P1–P5,
   `ordered`, JCS), the view row of Н1.2 and the write of `manifest put` per Н3 — the view before the write, above the ceiling — a refusal as a whole, the order
   row — view — mark. Pass the vectors [`canonical`](../vectors/canonical/README.md) byte for byte and the acceptance of the chapter
   [`acceptance/2/`](../acceptance/2/README.md) (window 2.2, item 8: vectors and acceptance).
@@ -34,7 +34,7 @@ The lesson has no HTTP contract of its own: the door `GET /manifest` and the for
 | File | Role | Priority |
 |---|---|---|
 | [02.1-installer.norms.md](02.1-installer.norms.md) | the canon of chapter 2.1: text, document, fields, references, loading passes, refusals and the corpus | 1 |
-| [02.1-installer.schema.json](02.1-installer.schema.json), [`.relations.json`](02.1-installer.relations.json), [`.layers.tsv`](02.1-installer.layers.tsv), [`.scalars.tsv`](02.1-installer.scalars.tsv); [the В7 layers](../../common/LAYERS.md) | the form source of chapter 2.1 (ADR-0092): standard files — JSON Schema 2020-12 and CEL, executed by libraries of pinned versions and by own layers; the section «Form» of the chapter norms is built from them | 1 |
+| [02.1-installer.schema.json](02.1-installer.schema.json), [`.relations.json`](02.1-installer.relations.json), [`.layers.tsv`](02.1-installer.layers.tsv), [`.scalars.tsv`](02.1-installer.scalars.tsv); [the V7 layers](../../common/LAYERS.md) | the form source of chapter 2.1 (ADR-0092): standard files — JSON Schema 2020-12 and CEL, executed by libraries of pinned versions and by own layers; the section «Form» of the chapter norms is built from them | 1 |
 | [02.3-installer.norms.md](02.3-installer.norms.md) | the canon of chapter 2.3: the manifest row and the mark, the start and the change, `manifest put` | 1 |
 | [02.4-installer.norms.md](02.4-installer.norms.md) | the canon of chapter 2.4: units, environment, workers on order, certificates, installation, operator commands; the late layer — the ports and units of the domain, the installation of the domain (lesson 8) | 1 |
 | [02.5-installer.norms.md](02.5-installer.norms.md) | the canon of chapter 2.5: roles and the derivation of rights, the readers of secret rows, generation and `--check` | 1 |
@@ -42,7 +42,7 @@ The lesson has no HTTP contract of its own: the door `GET /manifest` and the for
 | [The acceptance README of chapter 2.3](../acceptance/3/README.md), `puts.tsv`, `puts/` | the installations of `manifest put` | 3 — check the canon, do not add to it |
 | [The acceptance README of chapter 2.5](../acceptance/5/README.md), `scenarios.tsv`, `variants/`; the stand — [the common README](../../common/acceptance/README.md) | preparing and comparing rights | 3 — check the canon, do not add to it |
 | [The vectors of the workers script](../vectors/workers-script/README.md) | rules 2–4 of the workers script (chapter 2.4 Н1.5) | 3 |
-| [The vectors of the exec command line](../vectors/exec/README.md) | argv of `worker.exec`, `parts.<часть>.exec` (chapter 2.1 `execLine`) | 3 |
+| [The vectors of the exec command line](../vectors/exec/README.md) | argv of `worker.exec`, `parts.<part name>.exec` (chapter 2.1 `execLine`) | 3 |
 | [The vectors of the installation order](../vectors/install-order/README.md) | the order of `manifest put` of the primary installation (chapter 2.4 Н1.7 `order`) | 3 |
 | [The norms of P/01](../../01-store/spec/01.1-store.norms.md) | the normative words and the store operations for Н3 of chapter 2.3; the rights file and the evaluator (P/01.2) for chapter 2.5 | by the references of the canon |
 | The grammars of the owner lessons listed in Н1.2 of chapter 2.1 | the admissible keys inside the sections of a manifest | by the references of the canon; a consolidated list is not derived from the code of an implementation |
@@ -103,7 +103,7 @@ The implementation stages are [`forms/stages.tsv`](../forms/stages.tsv) (ADR-012
 1. *(2.1)* Write out the boundaries of the closed, named and opaque levels from Н1.2,
    their owner lessons and the choices of the implementation. Check the mandatory unit/rows/id: the loader does not invent a family or a kind of id; the absence of unit.fields means an empty mapping.
 2. *(2.1)* Set up the reading of bytes and the parsing of the text per Н1.1: a YAML 1.2 parser of a pinned version and the fine check of layer 1
-   ([the В7 layers](../../common/LAYERS.md) § 4, workarounds D13, D16). Run the checks that need the original text or the list of keys before
+   ([the V7 layers](../../common/LAYERS.md) § 4, workarounds D13, D16). Run the checks that need the original text or the list of keys before
    the conversion into a mapping before the library loses this information; one document — by bytes.
 3. *(2.1)* Carry out the loading pass of Н3 by layers: text → form (the JSON Schema 2020-12 schema and the words `x-*`, the integer place —
    layer 2) → relations (CEL, only with a clean form). Filling the defaults does not hide an erroneous input.
@@ -120,7 +120,7 @@ The implementation stages are [`forms/stages.tsv`](../forms/stages.tsv) (ADR-012
 1. Match the roles, groups, directories, permissions, sockets and environment to each row of Н1.1–Н1.2. Check the priority of values and the absence of source for data; do not count After as readiness (Н3).
 2. Design the preliminary check and the write points of the installer. Force a refusal at each phase: before the write there are no changes, after the start a partial result with diagnostics is admissible and without enable/start of new services (Н1.7).
 3. Check the script of workers on order: budgets, reservation before start, numbers 2…99 (start of the smallest, stop of the largest), no series — nothing, an unknown outcome of a start and a stale console, polkit start/stop of the full names of its own server (ADR-0084). Certificates — a separate test CA, revocation before concluding a full cut-off (Н1.5–Н1.6).
-4. The role certificate (SAN URI `urn:w2c:role:<роль>`, CN `<роль>.<сервер>`, the key 0640 root:<the group of the unit's user>) and
+4. The role certificate (SAN URI `urn:w2c:role:<role>`, CN `<role>.<server>`, the key 0640 root:<the group of the unit's user>) and
    the address rule (a daemon off the loopback — only with TLS; a process door without a kit — the loopback; signer and relay — by an explicit
    address with a loud log line, on the process default `0.0.0.0` — a start refusal, code 2; resource without a kit — only the loopback, ADR-0075 addendum 2026-10-26 (6) item 2; ADR-0075 addendum 2026-10-26 (5) item 4): confirm it by a structural test of the units and by the tests of the centre (Н5) or
    explicitly leave it without evidence of execution: the acceptance has no stand with TLS, it is checked by reading ([the system stand](../../common/acceptance/system/README.md)).

@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 	domain	the whole row is unreadable: an edit of the membership of this unit — 503 unavailable; the answer to the agent — without this unit in memberof, the copy at the member is the former one	1	строка	P/08.5 Н1.8

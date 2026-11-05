@@ -18,10 +18,10 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | `participant` | `"console"` or `{"worker": [<sub>…]}` — the subsystems whose epoch rows are declared in `worker.reads` |
 | `query` | `{limit?, keep?}` — as at the request of P/05 Н1.3 (the defaults 1000, `newest`); none — the defaults |
 | `policies` | `{<sub>: fenced \| earlier-run}` — `older_epochs` of the manifest; none — `fenced` |
-| `epochs` | `{<sub>: {<id единицы>: <эпоха>} \| "did not answer"}` — what the participant read in `<sub>/epoch/*`; at the worker — only the declared ones |
-| `grant` | the `view` scopes of the caller of the console — `*`, `unit:<sub>/<id>`, `labels:<метка>[,…]` (the contract `may` step 7); none — `["*"]` |
-| `units` | `{<sub>/<id>: [<метка>…] \| "@unreadable"}` — the labels of the unit rows as read (the field `labels` declared in `unit.fields`; `"@unreadable"` — the row is unreadable or the read is not confirmed); there is no unit — there are no labels (`[]`) |
-| `resources` | `{<сервер>: <ответ ресурса> \| "did not answer" \| "silent" \| {"said": <state>}}` — the live resources and their outcomes; the answer is `{events, state, truncated, partial?, lines_garbled?}` of P/05 Н1.3 |
+| `epochs` | `{<sub>: {<unit id>: <epoch>} \| "did not answer"}` — what the participant read in `<sub>/epoch/*`; at the worker — only the declared ones |
+| `grant` | the `view` scopes of the caller of the console — `*`, `unit:<sub>/<id>`, `labels:<label>[,…]` (the contract `may` step 7); none — `["*"]` |
+| `units` | `{<sub>/<id>: [<label>…] \| "@unreadable"}` — the labels of the unit rows as read (the field `labels` declared in `unit.fields`; `"@unreadable"` — the row is unreadable or the read is not confirmed); there is no unit — there are no labels (`[]`) |
+| `resources` | `{<server>: <resource answer> \| "did not answer" \| "silent" \| {"said": <state>}}` — the live resources and their outcomes; the answer is `{events, state, truncated, partial?, lines_garbled?}` of P/05 Н1.3 |
 
 **Output** — the answer of the contract `{events, state, truncated, partial?, lines_garbled?, complete, incomplete, withheld?}`. `expect` is a subset:
 `events` — an array of rows in the order of output, at each the listed fields are compared (`id`, `epoch_is`, `fenced`; `"@absent"` —
@@ -30,7 +30,7 @@ there is no field); the other keys — by JSON value (`"@absent"` — there is n
 23 rows: 13 of the console (5 — the visibility filter: a grant by labels and an unreadable unit — the row is hidden, `withheld` with it; a grant on
 a unit and on `*` — visible, no `withheld`; labels by `of`; labels `[]` — hidden without `withheld`; C06-EVENTS-LABEL-SOURCE-138-07), 4
 of the worker, 3 common ones (`limit`/`keep`, an equal time, `partial`/`lines_garbled`) at the console and 3 of their twins at the worker (`*-worker`:
-the merge of the worker — steps 1–6 of the contract without the filter 5а; ACC-VECTORS-CONNECT-03).
+the merge of the worker — steps 1–6 of the contract without the filter 5a; ACC-VECTORS-CONNECT-03).
 
 ## Run
 
@@ -42,7 +42,7 @@ Who performs a row is by the field `participant` of the input: `"console"` — t
 
 ## What the vector does not cover
 
-The visibility filter of the console (the contract, step 5а) — the rows with `grant` above; without `grant` the caller is with `view` on `*`. The cut by `limit`
+The visibility filter of the console (the contract, step 5a) — the rows with `grant` above; without `grant` the caller is with `view` on `*`. The cut by `limit`
 after the filter with the limit 10000 to the resources and the reading of the unit rows themselves — the acceptance and reading (C06-EVENTS-VIEW-33-01). The freshness of the door row (the package [`fresh-age`](../fresh-age/README.md)), `from mirror`, the lanes and the timeout, a late answer, the reconciliation
 of the evidence row with a fresh read of the epoch — by reading the contract; the rights of the worker to `<sub>/epoch/` — P/02.5 and the scenarios.
 

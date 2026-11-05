@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/store-client.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): the store client is at all processes of the platform; a contract,
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): the store client is at all processes of the platform; a contract,
 not copies in chapters; the stage C guess SC-WIRE78-G01 / C08-SDK-06, the Architect's decision of 2026-10-25). The owner is chapter
 [P/01.1](../../01-store/spec/01.1-store.norms.md). The participants are all processes that talk to the store through the door of P/01.1:
 the console, the controller, the worker, the resource, the domain processes, the agent, the installer.
@@ -19,12 +19,12 @@ The wire is the contract of the store door `Platform/01-store/spec/01-store.api.
 ([OpenAPI](../../01-store/spec/01-store.api.openapi.yaml); it is part of the reading of `common` by ADR-0083 addendum (33) item 1): the routes
 `GET /v1/get?key=`, `GET /v1/list?prefix=`, `POST /v1/write` (`Cmd`: `put` | `delete`; `BatchCmd`: `batch`), the schemas `Key`, `Row`, `Listing`,
 `Cmd`, `BatchCmd`, `Written`, `Fault`. The row, the condition `cas`, the guard `guard`, the time conditions `not_after`/`not_before` and the `id` of a write are
-the schemas `Row` and `Cmd` of the same OpenAPI (P/01.1 Н1; the client writes by them; layout audit, Б-05).
+the schemas `Row` and `Cmd` of the same OpenAPI (P/01.1 Н1; the client writes by them; layout audit, B-05).
 
 ## Address
 
 ```yaml
-address:   PLATFORM_STORE of the process (the environment file contract «Environment variables»): configstore:///run/configstore/<роль>.sock — HTTP/1.1 with JSON bodies over
+address:   PLATFORM_STORE of the process (the environment file contract «Environment variables»): configstore:///run/configstore/<role>.sock — HTTP/1.1 with JSON bodies over
            the Unix socket of the role; the identity is the socket the connection came to (P/01.2 Н1.1 identity); file:// and memory:// —
            a store inside the process of the same implementation (the profile «the whole box is one implementation»), the same semantics, no wire;
            the client has no other addresses — http(s) is not introduced (SC-WIRE78-G01, the Architect's answer of 2026-10-25 (1))

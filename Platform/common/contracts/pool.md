@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/pool.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13), addendum (30): a common algorithm of several processes is a contract, not
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13), addendum (30): a common algorithm of several processes is a contract, not
 copies in chapters; guess of stage C C06-SERVER-POLICY-33-01, the Architect's decision of 2026-10-25). The owner is lesson
 [P/04](../../04-controller/spec/04-controller.norms.md) (Н3 «choose»: the controller places units only on the workers of the pool).
 The participant is the cluster console ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2: `WorkerRow.idle_by_policy`,
@@ -17,16 +17,16 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The rows and objects that the pool computation reads follow the forms and outcomes of their families (layout audit, В-42–В-44, Б-07; the Architect's decision of 2026-10-25): the heartbeat `<sub>/heartbeats/<имя>`
-— `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; the slot `<sub>/slots/<имя>` —
-`Platform/03-worker/data/slots.schema.json`, `Platform/03-worker/data/slots.outcomes.tsv`; the assignment `<sub>/workers/<имя>` —
+The rows and objects that the pool computation reads follow the forms and outcomes of their families (layout audit, V-42–V-44, B-07; the Architect's decision of 2026-10-25): the heartbeat `<sub>/heartbeats/<name>`
+— `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; the slot `<sub>/slots/<name>` —
+`Platform/03-worker/data/slots.schema.json`, `Platform/03-worker/data/slots.outcomes.tsv`; the assignment `<sub>/workers/<name>` —
 `Platform/04-controller/data/workers.schema.json`, `Platform/04-controller/data/workers.outcomes.tsv`; the order row
-`<sub>/want/<сервер>` — `Platform/04-controller/data/want.schema.json`, `Platform/04-controller/data/want.outcomes.tsv`; the decision
+`<sub>/want/<server>` — `Platform/04-controller/data/want.schema.json`, `Platform/04-controller/data/want.outcomes.tsv`; the decision
 `<sub>/controller/placement_intent` — `Platform/04-controller/data/placement-intent.schema.json`,
-`Platform/04-controller/data/placement-intent.outcomes.tsv`; the decommission `<sub>/decommissioned/<сервер>` —
+`Platform/04-controller/data/placement-intent.outcomes.tsv`; the decommission `<sub>/decommissioned/<server>` —
 `Platform/04-controller/data/decommissioned.schema.json`, `Platform/04-controller/data/decommissioned.outcomes.tsv`; the drain
 `platform/drain` — `Platform/06-console/data/drain.schema.json`, `Platform/06-console/data/drain.outcomes.tsv`; the decommission request
-`platform/decommission/<сервер>` — `Platform/06-console/data/decommission.schema.json`,
+`platform/decommission/<server>` — `Platform/06-console/data/decommission.schema.json`,
 `Platform/06-console/data/decommission.outcomes.tsv`.
 
 ## Live worker
@@ -49,7 +49,7 @@ pool:      the live workers
              a fact, the worker passes)
            − retiring of the order rows <sub>/want/<server> (the field retiring, want.schema.json; ADR-0084)
            − the role processes with a number greater than want of their server (the name and the number — the slot name contract
-             «Role process name and its number»; ADR-0084 addendum (4) Р28)
+             «Role process name and its number»; ADR-0084 addendum (4) R28)
            − the workers with an unreadable assignment row <sub>/workers/<name> (P/04 Н4 «a heartbeat/slot/assignment does not read»;
              at the console — the same, answer (3))
            − with servers: distinct — all except the keeper of their place (the section below)
@@ -63,11 +63,11 @@ want_rule: retiring and «number above want» apply only with grows: true and on
 
 ```yaml
 place:     the place of a worker — by place_by of the manifest (default server): the server or a heartbeat field; the value "" from the heartbeat — there is no place
-           (as with spread_by), there is no common place "" (ADR-0084 addendum (2) Р15; moved from P/04 Н1.3 place_by — layout audit, the Architect's decision of 2026-10-25, Б-07)
+           (as with spread_by), there is no common place "" (ADR-0084 addendum (2) R15; moved from P/04 Н1.3 place_by — layout audit, the Architect's decision of 2026-10-25, B-07)
 keeper:    every non-empty place has one keeper among the workers of the pool before the subtraction of distinct: the greatest load, on
            equality — the first in slot order (the slot name contract); a worker without a place is not a keeper
 load:      the load — one definition with «free» of P/04 Н3: the sum of the weights of the unique ids assigned to the worker (the row
-           <sub>/workers/<name>) or directed to it by the effective decision (the reserve of the active intent — the observation contract «Чтение решения»; Б-07); there is no
+           <sub>/workers/<name>) or directed to it by the effective decision (the reserve of the active intent — the observation contract «Чтение решения»; B-07); there is no
            assignment row — the load is 0; not the number of units (answer (2))
 weight:    the weight of an id — the field placement.weight.field of its unit row, an integer ≥ 1 (P/04 Н1.3); no field — weight.default; for
            a manifest without placement.weight — 1; there is no unit row, it is unreadable or the field is not an integer ≥ 1 — 0 (C06-POOL-FACTS-33-01,
@@ -76,7 +76,7 @@ count:     the count — the number of all assigned ids (with the intent reserve
 capacity:  the capacity — the heartbeat field placement.capacity.from (default capacity); no field — capacity.default (mandatory); the field
            is there but not a number (a word, a boolean) — the worker accepts no new units until the heartbeat is fixed, those already assigned are not
            removed, the reason is in the pass report, the field fates.<worker>.why: «capacity is not a number» (like the weight, R25);
-           unit_mb/base_mb — the memory budget of the worker at start (P/03.4) (moved from P/04 Н1.3 capacity; layout audit, the Architect's decision of 2026-10-25, А-12)
+           unit_mb/base_mb — the memory budget of the worker at start (P/03.4) (moved from P/04 Н1.3 capacity; layout audit, the Architect's decision of 2026-10-25, A-12)
 ```
 
 ## `idle_by_policy` (answer (1))
@@ -102,7 +102,7 @@ decommission, order), resources, the manifest; the output — the pool, the keep
 [`fresh-age`](../vectors/fresh-age/README.md) and [`resource-state`](../vectors/resource-state/README.md); `constraint`,
 `spread_by`, `affinity`, the order of choice — P/04, the scenarios and reading. A participant: the package [`slot-name`](../vectors/slot-name/README.md)
 — the package of the common contract slot-name, executed by common; this contract is a participant there (slot order —
-the keeper on equal load; В-44; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25).
+the keeper on equal load; V-44; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25).
 
 ## Correspondence to former lessons
 

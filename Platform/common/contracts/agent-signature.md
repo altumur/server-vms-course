@@ -2,21 +2,21 @@
 
 This English text is the source; the Russian translation `ru/contracts/agent-signature.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common algorithm of several processes is a contract,
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common algorithm of several processes is a contract,
 not copies in chapters; analysis of the review of stage A 8–10, № 13 / decision 2). The owner is [chapter 9.1](../../09-agent/spec/09.1-agent.norms.md) of lesson P/09 (Н1.3; the source —
 М11/3 Н1.4): the member agent signs its requests with the member key
 `domain/member-key` (P/09.1 Н1.1). Checked by:
 
 | Who checks | Doors | Window |
 |---|---|---|
-| the holder — the process `domain` ([P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н2, [P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н1.3) | `POST /api/member/<член>`, `GET /api/carry/<член>`, `POST /api/tokens/<член>/…` | `MEMBER_WINDOW` |
+| the holder — the process `domain` ([P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н2, [P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н1.3) | `POST /api/member/<member>`, `GET /api/carry/<member>`, `POST /api/tokens/<member>/…` | `MEMBER_WINDOW` |
 | the relay ([P/09.2](../../09-agent/spec/09.2-agent.norms.md) Н2) | the relay doors for the members behind it; the relay's batch to the holder is signed by it as well | `MEMBER_WINDOW` |
 | the cluster console of its own member ([P/06.3](../../06-console/spec/06.3-console.norms.md) Н1.3 `identity` step 2) | the doors of units, of the tables `domain.edit_tables`, `POST /console/batch`, `GET /events?class=alarm` | `UNIT_WINDOW` |
 
 Moved from М11/3 Н1.4 (the block `header`, `window`, `replay` and the paragraph on the check and the refusal words) without a change of behaviour.
 The member key, its birth and its pinning in the member record are P/09.1 Н1.1 `pub`, `born` (P/09.1-01); what a door does after
 the check (the knock, 403 of the key, 401) is the norms of the checking doors. References in the moved text: «Н1.1 pub», «Н2», «Н3» are of lesson
-М11/3; «lesson N» is lesson М11/N. Their addresses now (analysis of the review of stage B 8–10, № 22; Claude М-1, С-7): «Н1.1 pub» — P/09.1
+М11/3; «lesson N» is lesson М11/N. Their addresses now (analysis of the review of stage B 8–10, № 22; Claude M-1, S-7): «Н1.1 pub» — P/09.1
 Н1.1 `pub`, the small order and «not a point of the curve» are defined right here («Check and refusal words»); «Н2» — P/08.3 Н2; «Н3» at
 `agent-sig` — the function of this contract, at `replay` (idempotency of the report) — [the report acceptance contract](accept.md) step 2;
 «lesson 4» — P/09.2; «lesson 6» — P/09.1 Н1.5; «lesson 10» — [the ask signature contract](ask-sig.md) (P/08.8).
@@ -25,21 +25,21 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The signature key of a member is `domain/member-key`: `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`. The doors where the header is checked are the OpenAPI `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`POST /api/member`, `GET /api/carry`, `POST /api/tokens`), `Platform/09-agent/spec/09-agent.api.openapi.yaml` (the relay doors), `Platform/06-console/spec/06-console.api.openapi.yaml` (the doors of units, `GET /events?class=alarm`) (layout audit, В-05, В-06; the Architect's decision of 2026-10-25).
+The signature key of a member is `domain/member-key`: `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`. The doors where the header is checked are the OpenAPI `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`POST /api/member`, `GET /api/carry`, `POST /api/tokens`), `Platform/09-agent/spec/09-agent.api.openapi.yaml` (the relay doors), `Platform/06-console/spec/06-console.api.openapi.yaml` (the doors of units, `GET /events?class=alarm`) (layout audit, V-05, V-06; the Architect's decision of 2026-10-25).
 
 ## Signature
 
 From М11/3 Н1.4:
 
 ```yaml
-header:         X-Agent-Signature: <мс>.<sig>
-  <мс>:         the agent's Unix wall milliseconds, a decimal integer without a sign and leading zeros (0 — «0" itself), ≤ 16 digits
+header:         X-Agent-Signature: <ms>.<sig>
+  <ms>:         the agent's Unix wall milliseconds, a decimal integer without a sign and leading zeros (0 — «0" itself), ≤ 16 digits
   sig:          base64url of 64 bytes of an Ed25519 signature with the member key over UTF-8:
-                <METHOD> "\n" <path> "\n" <мс> "\n" <hex sha256 of the body bytes>     # the body of GET is empty: sha256 of the empty string
+                <METHOD> "\n" <path> "\n" <ms> "\n" <hex sha256 of the body bytes>     # the body of GET is empty: sha256 of the empty string
                 with the header X-Agent-For — also "\n" <its value>
   X-Agent-For:  <person name> <iat>: whose edit; only a stored edit with by (P/08.6 Н1.4); without the header — as before
   path:         the request path without query, byte for byte as in the request line
-window:         |now − <мс>/1000| ≤ window, in both directions; now — the wall seconds of the checker
+window:         |now − <ms>/1000| ≤ window, in both directions; now — the wall seconds of the checker
   MEMBER_WINDOW: 300        # s — the doors of the holder (Н2) and of the relay (lesson 4)
   UNIT_WINDOW:   60         # s — the unit doors of the member console (P/06.3 Н1.3 identity 2: the agent edits the units of its own cluster, lesson 6)
 replay:         there is no repeat cache: the same bytes within the window are accepted again — the norm names this a limit; the report door

@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/vectors/order/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The owner is lesson P/04 ([norms](../../spec/04-controller.norms.md) Н3 «нехватка(), заказать(), снять заказ, сократить()»: `в пути`, `per`, `нужно`, `кандидат`,
-`порядок`, `заказать`; ADR-0084 and addendum (1) Р2, Р6, Р9, addendum (2)–(3) Р13′–Р22; cammeta-go М10-04 № 5). The participant is `<s>controller`. The bytes are written by
+`порядок`, `заказать`; ADR-0084 and addendum (1) R2, R6, R9, addendum (2)–(3) R13′–R22; cammeta-go М10-04 № 5). The participant is `<s>controller`. The bytes are written by
 the Specification (ADR-0083, stage A, A6).
 
 ## `cases.tsv`
@@ -16,39 +16,39 @@ byte, nothing is expanded. Four fields: `case`, `input` and `expect` — JSON te
 - `default` — `placement.capacity.default` of the manifest (an integer ≥ 0);
 - `workers` — the suitable live workers: `capacity` (an integer or `null` — the capacity is not named) and `free` (free);
 - `waiting` — Σ of the weights of the waiting ones, `groups` — the number of groups for which there is no place anywhere;
-- `servers` — `{<сервер>: {want, live, room, base?, numbers?, door?, placeless?, drained?, quiet?}}`: `want` — the order row, `live` — live(s)
+- `servers` — `{<server>: {want, live, room, base?, numbers?, door?, placeless?, drained?, quiet?}}`: `want` — the order row, `live` — live(s)
   by the heartbeats (with the base and the victim), `room` — `room.<sub>`, `base` — the base `-1` is alive (no field — `true`), `drained` —
   a drain or a decommission, `quiet` — «не поднял» in the window `RAISE_QUIET`. `numbers` — the numbers of the live processes of the role by the heartbeats
   (the base `1` if it is alive; `live` of them); no field — consecutive: `1…live` with `base: true`, otherwise `2…live + 1`. `в пути(s)` =
-  `|{2…want} ∖ numbers|` — by numbers, not by a count (Р13′, ADR-0084 addendum (4) Р26; analysis of the review of stage A 3–5, № 6); with consecutive numbers —
+  `|{2…want} ∖ numbers|` — by numbers, not by a count (R13′, ADR-0084 addendum (4) R26; analysis of the review of stage A 3–5, № 6); with consecutive numbers —
   `max(0, (want − 1) − заказанные)`. `door` — the list `live.<sub>` of the door row: the numbers n ≥ 2 of the live locks; no field —
   the numbers n ≥ 2 from `numbers` (the door coincides with the heartbeats), `null` — the door has no `live.<sub>`: the server is not a candidate; `свободно(s)` = `room −
-  |{2…want} ∖ door|`, once per pass, minus each share (Р14′);
+  |{2…want} ∖ door|`, once per pass, minus each share (R14′);
 - `place_by` of the set and `placeless` of a server — only with `servers: distinct` and the place from the heartbeat: `place_by` — the name of the place field,
   `placeless` — the number of suitable live processes without a place on this server (no field — 0; their free does not enter
   `workers`: only the keepers are there); a candidate is a server with `placeless` 0 and without a probe in flight (`в пути(s)` 0); the growth of the set is no
-  more than one trial process per pass; the rest — `withheld` with `why: "no free <place_by>"` (Р16′, ADR-0084 addendum (5) Р16‴).
+  more than one trial process per pass; the rest — `withheld` with `why: "no free <place_by>"` (R16′, ADR-0084 addendum (5) R16‴).
   A caveat: the capacity of a process without a place enters `per` (Н3 `per` — over all the suitable live ones), but it is not in `workers` of the vector;
   the rows with `placeless` take it no less than the `per` of the keepers (equal to `default`). A case where the capacity of a worker without a place is less than
   the capacities of the keepers and therefore sets `per`, the vector does not express — by reading (analysis of the review of stage B 3–5, № 14).
 
 **Output** — `{per, processes, in_flight, need, orders, withheld}`: `in_flight` — Σ `в пути(s)`, `need` — needed,
 `orders` — the new `want` of the servers that got a share, `withheld` — the remainder without a candidate, a number of processes (as the series
-`workers_withheld{labels}` of P/06.5). `in_flight` — how much in flight the set took: `min(Σ в пути, processes)` (Р18). The capacity of
+`workers_withheld{labels}` of P/06.5). `in_flight` — how much in flight the set took: `min(Σ в пути, processes)` (R18). The capacity of
 a worker without a named one is `default`; `per` is the smallest positive one over all `workers`, named or `default`; a named 0
-is not replaced with `default` (Р19′). Without a computable `per` — an element of the same fields: `{per: null, processes: 0, in_flight: 0,
-need: 0, orders: {}, withheld: 0, why: "no positive capacity estimate"}` (Р20; `why` — the words of `short.withheld` of the report, Н1.2).
+is not replaced with `default` (R19′). Without a computable `per` — an element of the same fields: `{per: null, processes: 0, in_flight: 0,
+need: 0, orders: {}, withheld: 0, why: "no positive capacity estimate"}` (R20; `why` — the words of `short.withheld` of the report, Н1.2).
 
 **Several sets** — an input with `sets: [{labels, waiting, groups}]` instead of `waiting` and `groups`; all the servers and workers
 of the input suit each set. A label set is a set: the canonical writing is the unique labels in ascending order separated by
-commas, a repeat collapses (Р21). The sets go in the order of the UTF-8 bytes of the canonical writing (the empty one first); a set takes the free, `в пути` and `room` only up to its need, the rest goes to the next one (Н3
-«порядок наборов», cammeta-go М10-04 № 7). The output — `{sets: {<каноническая запись>: {per, processes, in_flight, need,
+commas, a repeat collapses (R21). The sets go in the order of the UTF-8 bytes of the canonical writing (the empty one first); a set takes the free, `в пути` and `room` only up to its need, the rest goes to the next one (Н3
+«порядок наборов», cammeta-go М10-04 № 7). The output — `{sets: {<canonical record>: {per, processes, in_flight, need,
 withheld}}, orders, withheld}`: the `in_flight` of a set — how much capacity in flight it took, `orders` — the final `want` of the servers,
 `withheld` — the sum over the sets.
 
 **Comparison** — JSON by value; `orders` is an object, the order of the keys does not matter.
 
-## Input not by form (Р22)
+## Input not by form (R22)
 
 The executor of the vector answers with code 2 (the cell `expect` — `@exit 2`) exactly to an input from the list: not a JSON object; a field of the wrong
 type (numbers — integers ≥ 0, `capacity` — an integer ≥ 0 or `null`, `base`, `drained`, `quiet` — booleans, labels — strings by [the label
@@ -63,5 +63,5 @@ Who executes it is the controller (`04-controller`: the shortage, `в пути`,
 
 ## What the vector does not cover
 
-The withdrawal by the deadline (Р27),
-a number above want (Р28) and the shrinking — by time, the steps of [the acceptance of P/04](../../acceptance/README.md) (sc. 14–17; analysis of the review of stage B 3–5, № 17).
+The withdrawal by the deadline (R27),
+a number above want (R28) and the shrinking — by time, the steps of [the acceptance of P/04](../../acceptance/README.md) (sc. 14–17; analysis of the review of stage B 3–5, № 17).

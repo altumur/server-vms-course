@@ -11,7 +11,7 @@ the coverage audit of P/08; 09, 10 — the coverage audit of P/08, the second pa
 
 ## Stand
 
-The preparation is as the «Подготовка каждого сценария» of the acceptance of [chapter 8.3](../3/README.md) (formerly the acceptance README of М11/03,
+The preparation is as the «Preparation of each scenario» of the acceptance of [chapter 8.3](../3/README.md) (formerly the acceptance README of М11/03,
 «Подготовка каждого сценария 01–09»), the catalog `testsub`. The doors `holder`, `member`, `resource`, `signer`, `signer2` and
 the directives `@domain`, `@start domain`, `@start agent`, `@install domain`, `@start domain second`, `@on`, `@freeze`, `@thaw` are the dictionary of the
 «Domain stand» and the common dictionary of directives of the common acceptance README. The runner goes as the human `root` (chapter 8.4). The clock is not accelerated: `LOST_AFTER` 45 s,
@@ -25,9 +25,9 @@ the directives `@domain`, `@start domain`, `@start agent`, `@install domain`, `@
   through `admin.sock`; the acceptance of `m1` gives member 500 — 200, the acceptance of `m2` — 409 `too many servers`. Both sides of the ceiling.
 
 - **Scenario 07** (the coverage audit of P/08, audit-kimi 1e9929d51). `ENTRY_MAX` over all Entries (Н1.5 `every_entry`): the stand
-  is brought up by hand, like sc. 05 (`@domain` would accept `m1` itself); `domain/member-rows/<раздел>` is rewritten as a row through `admin.sock` —
+  is brought up by hand, like sc. 05 (`@domain` would accept `m1` itself); `domain/member-rows/<part>` is rewritten as a row through `admin.sock` —
   the record `f01991` of the section of `m1` (3232) with a `by` of 1300 characters `x` (Entry 1336 bytes JCS > 1240; the field `by` is not limited by the form, the limit is a check of the
-  writer). The acceptance of `m1` — 409 «… would exceed 1240 bytes» (the name in the text is not compared: step 6 «принять члена» names
+  writer). The acceptance of `m1` — 409 «… would exceed 1240 bytes» (the name in the text is not compared: step 6 «admit a member» names
   the accepted one, Н1.5 — the member with the large Entry), `m1` is not written; the leaving of `f01991` (the record without it passes the check) — 200; the acceptance of
   `m1` — 200.
 - **Scenario 08** (the coverage audit of P/08). The freshness of the queue (Н1.7 `fresh_turn`): without agents, two copies of `domain`; the first
@@ -38,12 +38,12 @@ the directives `@domain`, `@start domain`, `@start agent`, `@install domain`, `@
   (alive, number 1) — 503 `standby` (`@until`: the norm does not limit the answer window of the door); the second answers 200. During the
   freeze the door `signer` is not touched — a request to the frozen copy would hang.
 - **Scenario 09** (the coverage audit of P/08, the second pass of Gemini, the draft G11 `e32df6f8b`, rewritten). `ENTRY_MAX` over all Entries at the administrator's edit
-  `Entry.ca` (Н1.5 `every_entry`): the stand is brought up by hand without the agent of `m1`; `domain/member-rows/<раздел>` is rewritten through `admin.sock`
+  `Entry.ca` (Н1.5 `every_entry`): the stand is brought up by hand without the agent of `m1`; `domain/member-rows/<part>` is rewritten through `admin.sock`
   — `hold` as before, `f01991` of 1336 bytes JCS (like sc. 07) and `m1` without a key (Entry `{by, how, since}` — of the form). `POST
   /domain/members/m1/ca` — 409 «… would exceed 1240 bytes», `m1` has no `Entry.ca`. Then `f01991` with five `revoked_keys`
   (`11…11`…`55…55`, 64 hex; Entry 392 bytes) — the same edit of `m1` passes and trims the `revoked_keys` of the foreign Entry to the four
   last ones (Н1.5 `revoked_keys`, `every_entry`).
-- **Scenario 10** (the coverage audit of P/08, the second pass of Gemini). An unreadable queue at the start (Н3 «очередь процесса domain» step 1): `@stop domain`, the row
+- **Scenario 10** (the coverage audit of P/08, the second pass of Gemini). An unreadable queue at the start (Н3 «the turn of the domain process» step 1): `@stop domain`, the row
   `domain/signer-turn` is rewritten through `admin.sock` not of the form (`{turn: "1"}` — no `holder`), `@start domain` —
   the process is standby: the login 503 `standby` (`@until`: the process is coming up), the row is as before — it does not rewrite it.
 

@@ -15,7 +15,7 @@ spec/01-store.README.md          implementation instructions
 lifecycle.md                     flags, environment, exit codes, units
 forms/write-checks.tsv           forms of ADR-0120 (check tables with their probes, machines with their traces)
 forms/daemon-flags.tsv           the daemon flags (ADR-0125): type, default, required, commands
-forms/refusals.tsv               the refusal catalogue of Н4 of chapters 1.1–1.3 (ADR-0125)
+forms/refusals.tsv               the refusal catalogue of N4 of chapters 1.1–1.3 (ADR-0125)
 forms/stages.tsv                 the stages of the implementation (ADR-0126): a plan, not a norm
 data/<family>.schema.json        data families the lesson owns (JSON Schema 2020-12, ADR-0092; ADR-0088)
 vectors/<algorithm>/             vectors of the algorithms the lesson introduces

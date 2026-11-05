@@ -60,9 +60,9 @@ Without workers there is no placement; the counter c4 is created only in 04. The
   with `cas` goes in the same batch, `n` is the largest number of the batch; `POST /probe-x/probes` after the batch takes the next number (steps 6, 15). The index of the counter — through the door `GET /probe-x/next_id` (steps 2, 4, 7), the index of the unit row — through the store door by the role `console`.
 - **The counter door (sc. 30; ADR-0094 B4).** `GET /probe-x/next_id` (P/06.1 Н2 «Counter door»), the door only reads: step 1 — an empty subsystem, `n: 0`, `index: ""`; step 2 — a batch by this read; step 4 — `index` equals the index of the store; step 6 — `testsub` with a named id — 404; step 8 — the counter row is removed bypassing the console (`admin`), step 9 — `n` by recover, step 10 — `POST` takes `n + 1`; steps 12–14 — an unreadable row: `n` by recover, `index` is its version.
 - **The weight field (sc. 23; the coverage audit of P/06).** `probe-x` has the field `cost: {type: int, default: 1}` and `placement.weight:
-  {field: cost, default: 1}` (the form — «Дополнительные проверки прогона 25» of the acceptance README of chapter 6.1): POST without `cost` — 1;
+  {field: cost, default: 1}` (the form — «Additional checks of run 25» of the acceptance README of chapter 6.1): POST without `cost` — 1;
   `cost` 0 and −1 for POST and PUT — 400 `error: type`, `field: /cost`, `detail` «cost must be at least 1» without `fault`; `"1"` and `true` — 400 `not_number` by the ordinary
-  type check (earlier than the weight, the row check contract П2); a refused PUT — the row and `revision` are the earlier ones. The numbers burnt
+  type check (earlier than the weight, the row check contract P2); a refused PUT — the row and `revision` are the earlier ones. The numbers burnt
   by refused POSTs the TSV does not compare.
 - **Static files and the shell of `testsub2` (sc. 26–28; ADR-0094 B7).** The bytes lie in `inputs/testsub2/`: the files of the list
   `console.files` of the manifest and `testsub2.shell.html`. The stand puts them next to the manifest before `manifest-put` (common README, «Манифесты»).
@@ -90,7 +90,7 @@ Without workers there is no placement; the counter c4 is created only in 04. The
   `@put object`: under `w-1` with `name: "w-2"` (not equal to the key segment — unreadable, but fresh: a contender for `w-1`,
   `name_conflict_unreadable: true`) and the search mark `-` (not a contender); the series `testsub_name_conflicts` is 1 (Н3 «/servers»
   «Соперники»; the vectors `contender-projection` `name-mismatch`, `dash-not-contender`).
-- **Series.** The expectation `~<ряд>[ <значение>]` on the body of `/metrics` of the console (with the door prefix and without) — a series with this name (and
+- **Series.** The expectation `~<series>[ <value>]` on the body of `/metrics` of the console (with the door prefix and without) — a series with this name (and
   exactly this set of labels, if named) and the value, if named; several — through « ~» (sc. 05 step 6, sc. 10
   step 3); not a substring: `fake_counter_age` does not satisfy `~counter_age`, a repeat of a series or a line not by the series form —
   a mismatch. Series without values: the value is not fixed.
@@ -100,7 +100,7 @@ Without workers there is no placement; the counter c4 is created only in 04. The
 
 ### Inputs `inputs/` (sc. 05, 11, 12, 21, 25)
 
-Heartbeats of a given form are put by `@put object <ключ> inputs/<файл>` bypassing the writer (the exception `P/06 acceptance-entry
+Heartbeats of a given form are put by `@put object <key> inputs/<file>` bypassing the writer (the exception `P/06 acceptance-entry
 5/inputs`). There are no workers in these scenarios; the resource `srv-a` — the first step `@start resource`: the console reads the heartbeats through the objects door of the resource of its own server (C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29). The first look of the console at a heartbeat is fresh
 ([the observation contract](../../../common/contracts/observation.md): `resource_state`, the first observation; `worker_state` —
 [chapter 6.1](../../spec/06.1-console.norms.md) Н2).

@@ -7,13 +7,13 @@ import "normgen/p01-1/apidoor"
 
 // Get — P/01.1:
 //
-//	spec/01.1-store.norms.md «Н3 Procedures»:
+//	spec/01.1-store.norms.md «N3 Procedures»:
 //	  req: P/01.1-R056 — The vocabulary in which all procedures of the course are written. An operation is one indivisible action of the sto…
 //	spec/01.1-store.norms.md Н3 «read(key) → (items, index)»:
-//	  req: P/01.1-R057 — If the key fails the checks of Н1, return `badkey`.
-//	  req: P/01.1-R058 — If the caller has no read right, return `forbidden` (P/01.2 Н3 «check»: `allowed(роль, read, key)`).
+//	  req: P/01.1-R057 — If the key fails the checks of N1, return `badkey`.
+//	  req: P/01.1-R058 — If the caller has no read right, return `forbidden` (P/01.2 N3 «check»: `allowed(role, read, key)`).
 //	  req: P/01.1-R059 — If the row `key` does not exist, return (null, "").
-//	  req: P/01.1-R060 — If the row exists but is not readable (Н2), return (null, index, `unreadable: true`).
+//	  req: P/01.1-R060 — If the row exists but is not readable (N2), return (null, index, `unreadable: true`).
 //	  req: P/01.1-R061 — Return (a copy of items, index).
 //	  req: P/01.1-R062 — The read MUST be linearizable: it returns a state not older than the last completed write seen by any caller. In a…
 //	  req: P/01.1-R063 — Races. A read between two writes sees either the first or the second, never a half. There are no others.

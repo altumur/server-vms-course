@@ -40,7 +40,7 @@ of escalation is in the section «On a discrepancy». Internal functions, types 
    An already placed unit does not become new because a freer worker has appeared.
    For distinct apply the slot order of P/03.2 Н1.4, including w-a/w-b and the equal numbers w-01/w-1.
    With equal free capacity a separate comparison by the full ASCII name is kept.
-   The order of workers (ADR-0084): the row `<sub>/want/<сервер>` always, `want` is an absolute target, the capacity in flight is subtracted
+   The order of workers (ADR-0084): the row `<sub>/want/<server>` always, `want` is an absolute target, the capacity in flight is subtracted
    from the shortage; the withdrawal by the deadline, the number above want, the shrinking with `retiring` and a budget — Н3 «нехватка(), заказать()…»;
    the vectors [`order`](../vectors/order/README.md), [`shrink-victim`](../vectors/shrink-victim/README.md) and
    [`shrink-allowed`](../vectors/shrink-allowed/README.md) (the condition of shrinking and the order of the reasons of refusal; the Architect's decision of 2026-10-20, № 12 of the analysis of the review of stage B 3–5).
@@ -48,8 +48,8 @@ of escalation is in the section «On a discrepancy». Internal functions, types 
    of one snapshot), free(s) is computed once per pass and decreases with each share; the withdrawal by the deadline — `want := 1 + |живые
    номера ∩ {2…want}|`; a number above want is outside the pool, the script stops it (want is not raised); with `distinct` and a place
    from the heartbeat — a candidate without a live suitable process without a place and without a probe in flight, no more than one trial process per pass, the rest
-   withheld with `no free <place_by>`; a probe on one server does not stop the growth on another (ADR-0084 addendum (2)–(5) Р13′–Р28,
-   Р16‴; analysis of the review of stage B 6–7, № 45). Check on the vectors a hole in the numbers, numbers in the door that are not consecutive, a door without `live.<sub>`, a set without
+   withheld with `no free <place_by>`; a probe on one server does not stop the growth on another (ADR-0084 addendum (2)–(5) R13′–R28,
+   R16‴; analysis of the review of stage B 6–7, № 45). Check on the vectors a hole in the numbers, numbers in the door that are not consecutive, a door without `live.<sub>`, a set without
    a computable `per`, a repeat of labels in a set, an input not by form — code 2 exactly by the list of the README of the package.
 4. Implement turn and intent per Н1.5/Н3: all changes of placement/workers are protected by the guard turn,
    and a new decision takes the fresh load with the reserves. A group gets one target, the removals of all
@@ -68,7 +68,7 @@ of escalation is in the section «On a discrepancy». Internal functions, types 
    check the bytes of the whole serialization against the 64 MiB of the resource door; max_bytes is held by the store on put, its `TooLarge` is the
    same outcome (C04-SNAPSHOT-CEILING-MAXBYTES-01); exactly the limit / +1, an empty shard and the former shard after a refusal.
 7. Run the acceptance by its README: 37 scenarios / 533 steps in the order of the file (all — with the resource P/05 on
-   the server of the controller: the controller reads the objects of the cluster through the resource of its server, Р17; without the resource — «не известно»,
+   the server of the controller: the controller reads the objects of the cluster through the resource of its server, R17; without the resource — «не известно»,
    P03-OBJECTS-DEFAULT-1FD).
    A repeated run also clears the POST claims and the id memory.
 8. Attach the evidence of reading per Н5 for the branches not observable on the stand. The stand checks several cases with
@@ -85,8 +85,8 @@ of escalation is in the section «On a discrepancy». Internal functions, types 
 | cas | repeating the ready decision after a conflict | re-read and check the mutator and manifest_rev anew |
 | guard | replacing the guard turn with the version of a separate placement | a late A after a change of holder gets 412 on any change of an assignment |
 | admission | re-reading workers but keeping the former estimate of the free space | a new computation under turn with the reserve of the whole intent, capacity/spread_by/group |
-| forecast | min of an empty pool or a division by zero | a positive default as the estimate; without it withheld with an explanation; a named 0 is not replaced with default (Р19′) |
-| door | the candidate by `live` of the heartbeats instead of `live.<sub>` of the door; free recomputed by the current want in each set | `свободно(s)` by the door, once per pass, minus each share (Р14′) |
+| forecast | min of an empty pool or a division by zero | a positive default as the estimate; without it withheld with an explanation; a named 0 is not replaced with default (R19′) |
+| door | the candidate by `live` of the heartbeats instead of `live.<sub>` of the door; free recomputed by the current want in each set | `свободно(s)` by the door, once per pass, minus each share (R14′) |
 | labels | the anchor $ lets a final line feed through | check a, vlan:a and a\n as different cases |
 | counters | true is taken for 1 | JSON booleans are not numbers |
 | Н1.3а | a read error zeroes the age/publishes an empty shard | keep the unknown and the last observation; emptiness only from a successful traversal |

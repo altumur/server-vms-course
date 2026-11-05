@@ -8,7 +8,7 @@ the negations of the secret readers; review analysis of stage A 6–7, № 5). T
 `display.form[].fields[]` — a field of the unit or a name from `platform_shown`; `objects.rows[]` names no families of the platform) and
 the rights generator P/02.5 Н2. The bytes are written by the Specification; the conformance of the product — by its acceptance against this table (ADR-0080
 addendum 16, ADR-0083). Moved from `Source/tests/testdata/platform_lists.tsv` byte for byte (stage B, the move of lesson 6,
-the Architect's decision on В8 of the plan of lesson 6 with correction № 5).
+the Architect's decision on V8 of the plan of lesson 6 with correction № 5).
 
 ## `cases.tsv`
 
@@ -19,7 +19,7 @@ UTF-8, LF, fields separated by TAB; rows with `#` are explanations, empty ones a
 |---|---|---|
 | `heartbeat_strings` | the string fields of the platform in every heartbeat: `heartbeat.strings` of a manifest names none of them | P/02.1 Н1.2а `heartbeat.strings`; P/03.4 Н1.1 |
 | `secret_roles` | the roles that `secrets.readers` may name | P/02.5 Н1.3 `roles` |
-| `secret_readers` | the secret rows of the platform and their readers, `<строка или префикс>=<роль>`; `<строка>=` — nobody except the reader named by the manifest | P/02.5 Н1.3 `platform_readers` |
+| `secret_readers` | the secret rows of the platform and their readers, `<row or prefix>=<role>`; `<row>=` — nobody except the reader named by the manifest | P/02.5 Н1.3 `platform_readers` |
 | `platform_shown` | the fields of a platform unit that a manifest may name where it shows a unit | P/02.1 Н1.2а (reference row 71 `display.tree.columns[].field`) |
 | `object_families` | the object families of the platform under `objects/<sub>/`: `objects.rows[]` of a manifest names none of them; `*` — the prefix of the whole family | P/02.1 Н1.2а `objects.rows`; P/05 Н1.1 `key` |
 

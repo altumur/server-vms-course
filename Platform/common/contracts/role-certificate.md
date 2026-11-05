@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/role-certificate.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5); the Architect's decision on the review of stage B 1–2, item 4). The owner is lesson
+A common contract of the module «Platform» (ADR-0083 addendum (5); the Architect's decision on the review of stage B 1–2, item 4). The owner is lesson
 [P/02](../../02-installer/spec/02.4-installer.norms.md), chapter 2.4 Н1.6 (the center, the role kits, the address rule; ADR-0083 addendum (29) item 9: the line names the lesson that owns the norm; the library by the contract is written by the session `common` of the generation). The
 certificates are issued by the installer ([P/02.4 Н1.6](../../02-installer/spec/02.4-installer.norms.md): the center, `w2c-ca.sh`, the role kits,
 the address rule); the peer is verified by every door between processes — the store daemon
@@ -18,14 +18,14 @@ one, the other participants do not request it — ADR-0083 addendum (20), addend
 Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ```yaml
-cert:         CN <роль>.<server>; SAN DNS <server>; SAN URI urn:w2c:role:<роль> — exactly one role; serverAuth + clientAuth;
+cert:         CN <role>.<server>; SAN DNS <server>; SAN URI urn:w2c:role:<role> — exactly one role; serverAuth + clientAuth;
               825 days; the center 10 years; the roles configstore and configstore-door — with no other; the extension profile
               of the center and the leaf and the terms in seconds are the issue rule P/02.4 Н1.6 ca; the verifier does not require them beyond the contract peer of steps 2–5
               and of the class signer (guess of stage C RC-03, the Architect's decision of 2026-10-23)
 sig:          the signatures of the certificates of the center, the intermediates and the leaves — a closed list: ECDSA P-256 and P-384 with SHA-256 or
               SHA-384, RSA ≥ 2048 bits — PKCS#1 v1.5 and PSS with SHA-256 or SHA-384, Ed25519; another signature —
               the chain is not verified (added by the reconciliation of М11, D14, cammeta-python М11-08 № 21)
-kit:          /etc/w2c/tls/ca.pem, revoked | crl.pem, <роль>/server.pem, <роль>/server.key (the key 0600 owned by the unit's user or 0640 root:<the group of the unit's user> by ADR-0075 add.3; the directory 0750 root:<the group of the unit's user>, not the group of the role socket — P/02.4 Н1.1 `dirs`, Н1.6 `identity.doors`)
+kit:          /etc/w2c/tls/ca.pem, revoked | crl.pem, <role>/server.pem, <role>/server.key (the key 0600 owned by the unit's user or 0640 root:<the group of the unit's user> by ADR-0075 add.3; the directory 0750 root:<the group of the unit's user>, not the group of the role socket — P/02.4 Н1.1 `dirs`, Н1.6 `identity.doors`)
               # /etc/w2c/tls — the root W2C_TLS_DIR on Linux (the section «The cluster kit…» below; analysis of review of stage B 8–10, № 4)
 revoke:       the serials in revoked — are copied to every server; the processes reread by content; configstore leave at the leader
   file:       revoked — UTF-8 text, lines separated by LF; a line is one certificate serial: hex digits (0–9, a–f, A–F) without «0x»,
@@ -60,7 +60,7 @@ rotation:     ca.next.pem next to it — the next center, already trusted
 
 ## Form
 
-`Entry.ca` is a field of the member record `domain/member-rows/<раздел>`: `Platform/08-domain/data/members.schema.json`, `Platform/08-domain/data/members.outcomes.tsv`; the fields `tls_ca`, `tls_ca_certs` of the publication `POST /api/member` — `Platform/08-domain/spec/08-domain.api.openapi.yaml`, `Platform/09-agent/spec/09-agent.api.openapi.yaml` (layout audit, `В-55`, `В-56`; the Architect's decision of 2026-10-25). The class `role`: the row `domain/members/<член>/ca-certs` — `Platform/08-domain/data/member-ca-certs.schema.json`, `Platform/08-domain/data/member-ca-certs.outcomes.tsv`; the refusal of the role door — the schema `RoleRefusal` `Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml` (C10-SDK-ROLE83, the Architect's decision of 2026-10-25).
+`Entry.ca` is a field of the member record `domain/member-rows/<part>`: `Platform/08-domain/data/members.schema.json`, `Platform/08-domain/data/members.outcomes.tsv`; the fields `tls_ca`, `tls_ca_certs` of the publication `POST /api/member` — `Platform/08-domain/spec/08-domain.api.openapi.yaml`, `Platform/09-agent/spec/09-agent.api.openapi.yaml` (layout audit, `V-55`, `V-56`; the Architect's decision of 2026-10-25). The class `role`: the row `domain/members/<member>/ca-certs` — `Platform/08-domain/data/member-ca-certs.schema.json`, `Platform/08-domain/data/member-ca-certs.outcomes.tsv`; the refusal of the role door — the schema `RoleRefusal` `Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml` (C10-SDK-ROLE83, the Architect's decision of 2026-10-25).
 
 ## The cluster kit, the domain roles, the center between clusters
 
@@ -72,7 +72,7 @@ of the reading order). The owners of the text stay the same and refer here; the 
 
 ```yaml
 W2C_TLS_DIR:  the root of the kits kit (above): Linux /etc/w2c/tls, macOS <W2C_BOX>/tls (ADR-0075; the environment file contract «Environment variables»); the paths of kit are
-              from it: <W2C_TLS_DIR>/ca.pem, ca.next.pem, revoked | crl.pem, <роль>/server.pem, <роль>/server.key
+              from it: <W2C_TLS_DIR>/ca.pem, ca.next.pem, revoked | crl.pem, <role>/server.pem, <role>/server.key
 domain_roles: the roles of the kits of the domain processes: the process domain — domain; the domain console — domainconsole; the agent and the door
               of the relay (P/09.2: it is an agent) — domainagent; the cluster console — console (P/02.4 Н1.6 roles; P/10 Н1.4 roles)
 peer_role:    the expected role of the server — the argument role of the function peer (the contract peer) at the member's agent and the relay: the door
@@ -81,7 +81,7 @@ peer_role:    the expected role of the server — the argument role of the funct
               — the listener SIGNER_URL of the holder would verify it by its own centers: alert, the member is silent
               (signer, clients below; ADR-0083 addendum (20), addendum (21) item 6)
 fingerprint:  the fingerprint of a center — sha256 hex (64 characters, lowercase) of the DER certificate of the center
-tls_ca:       a field of the member's publication (the report reception contract «The member's publication»): [<отпечаток>…] ascending, without repeats —
+tls_ca:       a field of the member's publication (the report reception contract «The member's publication»): [<fingerprint>…] ascending, without repeats —
               ca.pem and ca.next.pem of the directory W2C_TLS_DIR of the cluster (rotation above); no directory or no ca.pem — no field; each
               file is exactly one certificate of a center (CA:true): the file exists but is not readable, the blocks are not one or not a center — no
               field (the agent writes the reason to the log; added by the reconciliation of М11, D13); outside the delta (not part of whole, it creates no
@@ -91,7 +91,7 @@ tls_ca_certs: a field of the publication next to tls_ca: [<PEM>…] — the cert
               added by the reconciliation of М11, D12), sha256(DER) of an element is the fingerprint of tls_ca at the same place; present only together with
               tls_ca; outside the delta; goes in every publication (the Architect's decision on cammeta-python М11-08 № 19). The form
               of the publication is closed: a holder of a former build rejects a report with the field — the implementations switch at the same time
-Entry.ca:     a field of the member record in domain/member-rows/<раздел> and in the member's copy domain/member-list/<раздел>: [<отпечаток>…], 1–2, ascending, without
+Entry.ca:     a field of the member record in domain/member-rows/<part> and in the member's copy domain/member-list/<part>: [<fingerprint>…], 1–2, ascending, without
               repeats; none — no fingerprints; written by the holder (P/08.3 Н1.6 on_accept, admin); the form of the copy at the member is
               Platform/09-agent/data/member-list.schema.json (outcomes — `Platform/09-agent/data/member-list.outcomes.tsv`) (C04-DEP-OBS-HEARTBEAT-01)
 ```
@@ -103,7 +103,7 @@ verifies the server with the same function `peer` as a client of another cluster
 the arguments change — its own centers and `host` by the loopback threshold — and revocation comes after `peer`.
 
 ```yaml
-own_client:   any client of a door of its own cluster over https:// (review of the norms of ADR-0075, Claude fd85ea8cc, С-1: the list is examples, not a closed list);
+own_client:   any client of a door of its own cluster over https:// (review of the norms of ADR-0075, Claude fd85ea8cc, S-1: the list is examples, not a closed list);
               among them — the agent to its own console (P/09.1 Н1.5, Н1.10), the workers script to /metrics of the console (P/02.4 Н1.5),
               the cluster console to the domain console of its own box — transition 2 by view.url (P/06.7 Н1.4) and in forwarding
               to the signer by SIGNER_URL (P/06.7 Н1.8), the domain console to SIGNER_URL of its own box (P/10 Н1.3 pass, role
@@ -127,16 +127,16 @@ own_client:   any client of a door of its own cluster over https:// (review of t
 loopback:     the loopback threshold — a pure function {url} → loopback | name | ip over the host notation of the URL, before DNS (addendum (3) item 1, addendum
               (4) item 1); the host notation is the substring of the URL after «//» and an optional userinfo@ up to «:port», «/» or the end, as
               written, without normalisation by a URL parser (127.0.0.01, 0x7f.0.0.1, LOCALHOST, a dot at the end — are not
-              rewritten; review of the norms of ADR-0075, Claude fd85ea8cc, М-2): loopback — v4 of four decimal parts 0–255 without leading zeros with the first 127, or v6 (in
+              rewritten; review of the norms of ADR-0075, Claude fd85ea8cc, M-2): loopback — v4 of four decimal parts 0–255 without leading zeros with the first 127, or v6 (in
               the brackets of the URL) with the value ::1 in any notation without a zone; ip — another IP literal of step 1 of peer (including v6 with
               a zone, ::ffff:127.0.0.1, 0.0.0.0, ::); name — otherwise (localhost, 127.1, 127.0.0.01); vectors —
               common/vectors/loopback
   bad_url:    a URL out of form (no scheme and «//», an empty host): from the environment (SIGNER_URL, RESOURCE_URL, own_url over
               CONSOLE_HOST) — a start refusal of the client process, code 2; from a store row (view.url, url of the door row) — as
-              no field, by the outcomes of its row (review of the norms of ADR-0075, Claude fd85ea8cc, М-3)
+              no field, by the outcomes of its row (review of the norms of ADR-0075, Claude fd85ea8cc, M-3)
 own_url:      the URL of a client of its own console (the agent, the workers script, the worker and the gateway) — from CONSOLE_HOST and CONSOLE_PORT of w2c.env
               (the environment file contract «Environment variables»); the loopback threshold — over https://<CONSOLE_HOST> (v6 — in brackets;
-              in w2c.env CONSOLE_HOST is written without brackets, with brackets — a URL out of form, bad_url) (review of the norms of ADR-0075, Claude fd85ea8cc, М-4):
+              in w2c.env CONSOLE_HOST is written without brackets, with brackets — a URL out of form, bad_url) (review of the norms of ADR-0075, Claude fd85ea8cc, M-4):
               a loopback literal — https://<literal>:<port> ([::1] for v6); 0.0.0.0 — https://127.0.0.1:<port>; :: —
               https://[::1]:<port>; another (an IP off the loopback or a name, localhost included) — https://<SERVER_NAME>:<port>;
               the domain console is not in the table — transition 2 takes view.url (addendum (4) item 3, addendum (5) item 3)
@@ -158,7 +158,7 @@ server:       the server side of the doors between clusters — two classes (log
               analysis of review of stage A 8–10, № 35) and the center that issued this leaf: the handshake chain is the leaf, then
               its center from ca.pem or ca.next.pem of its own cluster (kit: server.pem is the leaf, the server adds the center itself);
               the same for every door of a process with a role kit that own_client goes to (the classes signed, role, mixed,
-              the resource door P/05 at mtls, the cluster console, its callback listener and the domain console for clients of its own cluster) (review of the norms of ADR-0075, Claude fd85ea8cc, С-2);
+              the resource door P/05 at mtls, the cluster console, its callback listener and the domain console for clients of its own cluster) (review of the norms of ADR-0075, Claude fd85ea8cc, S-2);
               without the center in chain[1:] the client will not find the anchor (the contract peer step 3 — foreign_ca) (a clarification on the question
               «cammeta-acceptance» of 2026-10-20; it matches cammeta-go):
   signed:     the doors between clusters where the identity is by the norm of the route (a signature, a token, a password), not by the certificate
@@ -166,7 +166,7 @@ server:       the server side of the doors between clusters — two classes (log
               (the agent signature contract agent-signature.md; P/09.2 Н1.6). The class is divided by listener, not by route
               (ADR-0083 addendum (20), addendum (21) item 2):
   signer:     the listener SIGNER_URL of the process domain of the holder (the unit — P/02.4-13) — all of its routes (the summary table
-              P/08.0 Н2: POST /api/member/<член>, GET /api/carry/<член>, the relay batch — P/08.3; prepare, take,
+              P/08.0 Н2: POST /api/member/<member>, GET /api/carry/<member>, the relay batch — P/08.3; prepare, take,
               move — P/08.8; the people doors that the domain console passes on — P/08.0 Н1.8); TLS with a server certificate
               of the role domain (P/10 Н1.4 roles); it requests the client certificate optionally, a presented one it verifies in
               the handshake by a closed set: the leaf converges to its own ca.pem or ca.next.pem, the term is in force, no
@@ -208,8 +208,8 @@ role:         the doors where the role matters: the reception by the domain cons
               removing a member's center removes the TLS trust in it, not the membership: a forwarding of the member with a valid token goes
               as before (the Architect's decision of 2026-10-21, ADR-0083 addendum (18), addendum (19) item 2; analysis of review of ADR-0090,
               № 24, 27). The door requests the client certificate and in the handshake trusts the union of the centers
-              of the admitted members: the certificates of the row domain/members/<член>/ca-certs whose sha256 stands in the current Entry.ca
-              of this member (domain/member-rows/<раздел>), and its own ca.pem, ca.next.pem of the holder's cluster (W2C_TLS_DIR); a change of the list
+              of the admitted members: the certificates of the row domain/members/<member>/ca-certs whose sha256 stands in the current Entry.ca
+              of this member (domain/member-rows/<part>), and its own ca.pem, ca.next.pem of the holder's cluster (W2C_TLS_DIR); a change of the list
               or of the row — new connections see the new set; a certificate that converges to none of them (a foreign
               center, a wrong chain or term) — the handshake is refused (TLS alert), there is no HTTP answer; likewise a client leaf
               that has extendedKeyUsage without clientAuth is refused (analysis of review of stage A 8–10, № 35); a member without
@@ -227,11 +227,11 @@ role:         the doors where the role matters: the reception by the domain cons
               affected; the listener SIGNER_URL — likewise: new connections see a change, it does not resume sessions
               (signer of the class signed above; ADR-0083 addendum (20), addendum (21) item 5)
 trust_set:    the trust set of the role door — a function over what is read: its own ca.pem, ca.next.pem of the holder's cluster (W2C_TLS_DIR)
-              ∪ the certificates of the row domain/members/<член>/ca-certs of each member whose sha256 (fingerprint above) stands in
-              the current Entry.ca of this member in domain/member-rows/<раздел>; a member without Entry.ca (before a report with tls_ca) or only with
+              ∪ the certificates of the row domain/members/<member>/ca-certs of each member whose sha256 (fingerprint above) stands in
+              the current Entry.ca of this member in domain/member-rows/<part>; a member without Entry.ca (before a report with tls_ca) or only with
               fingerprints without certificates — is not part of it; a certificate of the row ca-certs whose fingerprint is not in Entry.ca — is not
-              part of it; a repeat — one (the domain console does not read the copy domain/member-list/<раздел> — P/10 Н1 «Data»)
-unreadable:   domain/member-rows/<раздел> is unreadable — the set has only its own centers; the row ca-certs of a member is unreadable or its Entry.ca is out
+              part of it; a repeat — one (the domain console does not read the copy domain/member-list/<part> — P/10 Н1 «Data»)
+unreadable:   domain/member-rows/<part> is unreadable — the set has only its own centers; the row ca-certs of a member is unreadable or its Entry.ca is out
               of form — the member is not part of it: less trust is safe (C10-SDK-ROLE83, the Architect's decision of 2026-10-25);
               the log — by change: a line when the input turns unreadable and when it returns, not at every handshake
               (C10-ROLE-LOG-C47, the Architect's decision of 2026-10-25)
@@ -286,11 +286,11 @@ mixed:        as signed in full: TLS of the server of the process role (cert, se
   no_kit:     a door without a kit (loopback only, P/03.4 Н1.7) does not serve the routes role: they are closed — 401 no_role,
               a log line at start; the process and the routes token and domain work — on the loopback (ADR-0091 addendum (14) item 3)
   kit_absent: «no kit» — no directory W2C_TLS_DIR or no ca.pem in it; ca.pem exists, but the leaf or the key of the role
-              (<роль>/server.pem, server.key) are absent or invalid — a partial kit: not a switch to HTTP, a start
+              (<role>/server.pem, server.key) are absent or invalid — a partial kit: not a switch to HTTP, a start
               refusal, code 2 — there is no silent downgrade (guess of stage C RC-NOKIT, the Architect's decision of 2026-10-23)
-# from P/03.4 Н1.7 door_admission domain, role_domain and cors — without a change (layout audit Б-20, the Architect's decision of 2026-10-25; read by the process door and domain)
-  domain:     a route {name, domain: [<вид>…]} — the domain token in Authorization: Bearer; one call of the function token of the domain
-              token contract with expect {kind: [<the kinds of the route>], cluster: <its own cluster>, audience_claim: {<вид>: <the audience
+# from P/03.4 Н1.7 door_admission domain, role_domain and cors — without a change (layout audit B-20, the Architect's decision of 2026-10-25; read by the process door and domain)
+  domain:     a route {name, domain: [<kind>…]} — the domain token in Authorization: Bearer; one call of the function token of the domain
+              token contract with expect {kind: [<the kinds of the route>], cluster: <its own cluster>, audience_claim: {<kind>: <the audience
               field from the declaration of the kind, P/02.1 Н1.2б>}}; steps 1–8 — as before, an expired one or one with a foreign signature — 401 before
               the kind; a kind not from the list — 403 wrong_kind, an audience without its own cluster — 403 wrong_audience; no header
               or not Bearer — no token: 401 not_a_token; the other words of steps 1–8 — 401 with the word, no_revocations — 503
@@ -323,7 +323,7 @@ mixed:        as signed in full: TLS of the server of the process role (cert, se
 ## Vectors
 
 The packages [`crl`](../vectors/crl/README.md) (CRL: the signature, the terms, revocation) and [`revoked`](../vectors/revoked/README.md) (the file `revoked`). (ADR-0083 addendum (32) item 2)
-A participant: the package [`peer`](../vectors/peer/README.md) — the package of the common contract peer, executed by common; this contract is a participant there: the closed list `sig` is checked by its step 4 (layout audit, `В-57`; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25).
+A participant: the package [`peer`](../vectors/peer/README.md) — the package of the common contract peer, executed by common; this contract is a participant there: the closed list `sig` is checked by its step 4 (layout audit, `V-57`; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25).
 The package [`trust-set`](../vectors/trust-set/README.md) — the trust set of the role door and the check of the leaf (the class `role` `trust_set`, `unreadable`; C10-SDK-ROLE83).
 The package [`loopback`](../vectors/loopback/README.md) — the loopback threshold of the client of its own cluster (`loopback`, 31 rows; ADR-0075 addendum of 2026-10-26 (4) item 1). The substitution
 `host = SERVER_NAME` before step 1 of `peer` is not expressed by the package `peer` (the function does not change) — the acceptance of the client lessons checks it.

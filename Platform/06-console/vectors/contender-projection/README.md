@@ -13,12 +13,12 @@ are written by the Specification; the rows follow the text of the norm, the rule
 UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, the first non-skipped one is the header `case<TAB>input<TAB>expect<TAB>note`.
 
 **Input** — a JSON object `{workers, marks}`: `workers` — the names of the workers of the output; `marks` — the marks
-`{key: "<имя>/<коробка>", name, state, age}`: `key` — the part of the key after `<sub>/contenders/`, `name` and `state` — fields
+`{key: "<name>/<box>", name, state, age}`: `key` — the part of the key after `<sub>/contenders/`, `name` and `state` — fields
 of the mark object, `age` — the age of the observed version on the console clock, s.
 
-**Output** — `{name_conflict: {<воркер>: bool}, name_conflicts: n, name_conflict_unreadable?: [<воркер>…]}`:
+**Output** — `{name_conflict: {<worker>: bool}, name_conflicts: n, name_conflict_unreadable?: [<worker>…]}`:
 `name_conflict_unreadable` — the workers under whose name there is a fresh unreadable mark (the conflict is counted in
-`name_conflict`, `name_conflicts` as well), in ascending order of bytes; the key is absent when there are none (В7 item 3, the Architect's decision of 2026-10-28, П1; row 22 of the list); the comparison is JSON by
+`name_conflict`, `name_conflicts` as well), in ascending order of bytes; the key is absent when there are none (V7 item 3, the Architect's decision of 2026-10-28, P1; row 22 of the list); the comparison is JSON by
 value.
 
 7 rows: three marks of one name (two `refused` and `waiting`), the mark «-», any `state`, the boundary 300 / 300.001, `name` ≠

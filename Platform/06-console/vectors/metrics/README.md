@@ -18,16 +18,16 @@ UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, th
 | `sub` | the series prefix (`metrics.prefix`) |
 | `now` | the wall seconds of the console |
 | `metrics` | the elements `metrics[]` of the manifest (usually one; a repeated `name` — two) |
-| `heartbeats` | `{<воркер>: <пульс без worker>}` — the heartbeats read by the console (the heartbeat fields and `status`) |
+| `heartbeats` | `{<worker>: <heartbeat without worker>}` — the heartbeats read by the console (the heartbeat fields and `status`) |
 | `live` | the workers whose heartbeat version changed within the last `LOST_AFTER` (no field — empty) |
-| `tables` | `{<таблица>: {<имя строки>: {<элемент>: <текст>}}}` — the readable rows of the manifest tables |
-| `held` | the row names of the places table held by a live hold `<sub>/holds/<имя>` |
+| `tables` | `{<table>: {<row name>: {<element>: <text>}}}` — the readable rows of the manifest tables |
+| `held` | the row names of the places table held by a live hold `<sub>/holds/<name>` |
 
-**Output** — `{"lines": [<строка выдачи>…], "garbled": <n>}`: the `/metrics` lines of these elements in order (with `# TYPE`) and the number of
+**Output** — `{"lines": [<output line>…], "garbled": <n>}`: the `/metrics` lines of these elements in order (with `# TYPE`) and the number of
 fields whose unreadable count increased (`<sub>_console_rows_garbled{table="field"}`). The comparison is the array of lines byte for byte
 and the number.
 
-29 rows: all the keys — `name` (and a repeat), `type`, `labels`, `from` (`heartbeat`, `status`, the segment `<имя>`), `agg` (`value`, `flag`,
+29 rows: all the keys — `name` (and a repeat), `type`, `labels`, `from` (`heartbeat`, `status`, the segment `<name>`), `agg` (`value`, `flag`,
 `age`, `label`, `count`, `sum`, `max`, `histogram`), `equals`, `when`, `default`, `live`, `count`, `where` (a word and a list), `unheld`,
 `unless`, `buckets`, `label`, `values`; the value is written in the canonical JCS number notation (P/06.5 Н3: an integer < 1e21 in digits,
 otherwise the shortest ECMAScript notation — 1e+21, 1e-7, 1234567.5), escaping of a label; a boolean value in a numeric field

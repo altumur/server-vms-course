@@ -205,7 +205,7 @@
   "snapshot": {
    "description": "list of fields without `*_secret`, blob and `server` and the states `state.<имя>`; `[]` — none",
    "x-owner": "P/04 Н1.3а",
-   "x-step": "П1",
+   "x-step": "P1",
    "type": "array",
    "items": {
     "type": "string"
@@ -835,7 +835,7 @@
      }
     },
     "form": {
-     "x-step": "П3",
+     "x-step": "P3",
      "type": "array",
      "items": {
       "type": "object",
@@ -2485,7 +2485,7 @@
       ]
      },
      "fragment": {
-      "description": "`none`: `#` is an ordinary character, not the start of a fragment (P/06.2 Н1.1а А2)",
+      "description": "`none`: `#` is an ordinary character, not the start of a fragment (P/06.2 Н1.1а A2)",
       "enum": [
        "none"
       ]
@@ -2533,7 +2533,7 @@
       "$ref": "#/$defs/strList"
      },
      "decoded": {
-      "x-step": "П5",
+      "x-step": "P5",
       "type": "boolean"
      },
      "nested": {
@@ -2792,7 +2792,7 @@
         "type": "boolean"
        },
        "default": {
-        "x-step": "П4"
+        "x-step": "P4"
        },
        "enum": {
         "$ref": "#/$defs/fieldEnum"
@@ -2869,15 +2869,15 @@
      }
     },
     "journal": {
-     "x-step": "П2",
+     "x-step": "P2",
      "type": "object",
      "properties": {
       "written": {
-       "x-step": "П2",
+       "x-step": "P2",
        "type": "string"
       },
       "deleted": {
-       "x-step": "П2",
+       "x-step": "P2",
        "type": "string"
       }
      },
@@ -3251,7 +3251,7 @@
      "default": {
       "description": "one value of the field type: for float an integer is admissible, list — a list of strings, json — any JSON value (a mapping for string — refusal); null — no default; from `enum`, if there is one",
       "x-owner": "P/06.1 Н1.2",
-      "x-step": "П4"
+      "x-step": "P4"
      },
      "inherit": {
       "description": "like `default`; the last link of the inheritance chain; only for a unit field",

@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import family_judge
 import gen_families
@@ -13,6 +14,94 @@ from gen_checks import GenError
 
 HERE = Path(__file__).resolve().parent
 OUT = HERE / "out/p01-1/go"
+
+
+class PlaceholderLabels(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix="family-labels-")
+        self.addCleanup(self.tmp.cleanup)
+        self.readme = Path(self.tmp.name) / "README.md"
+        self.labels = Path(self.tmp.name) / "placeholders.tsv"
+        self.enterContext(patch.object(gen_families, "KEYS_README", self.readme))
+        self.enterContext(patch.object(gen_families, "PLACEHOLDER_LABELS", self.labels))
+
+    def grammar(self, rows):
+        self.readme.write_text("| Placeholder | Grammar | Example | Norm |\n|---|---|---|---|\n" +
+                               "".join(f"| `{label}` | `{expr}` | `1` | norm |\n" for label, expr in rows))
+
+    def test_old_export_without_dictionary(self):
+        self.grammar([("<форма>", "^(?:[1-9][0-9]*)$")])
+        grammar = gen_families.placeholders()
+        self.assertEqual(gen_families.template("canonical/<форма>", grammar)[1],
+                         ("", "<форма>", "^(?:[1-9][0-9]*)$"))
+        with self.assertRaisesRegex(GenError, "no grammar"):
+            gen_families.template("canonical/<form>", grammar)
+
+    def test_dictionary_lookup_preserves_catalogue_key_and_grammar(self):
+        self.labels.write_text("ru\ten\nформа\tform\n")
+        for label in ("<форма>", "<form>"):
+            with self.subTest(readme_label=label):
+                self.grammar([(label, "^(?:[1-9][0-9]*)$")])
+                grammar = gen_families.placeholders()
+                segs = gen_families.template("canonical/<форма>", grammar)
+                self.assertEqual(segs, [("canonical/", "", ""), ("", "<форма>", "^(?:[1-9][0-9]*)$")])
+                self.assertIsNotNone(gen_families.re.fullmatch(segs[1][2], "12"))
+                self.assertIsNone(gen_families.re.fullmatch(segs[1][2], "0"))
+                self.assertIsNone(gen_families.re.fullmatch(segs[1][2], "1/2"))
+                with self.assertRaisesRegex(GenError, "no grammar"):
+                    gen_families.template("canonical/<unknown>", grammar)
+
+    def test_dictionary_is_typed_and_unambiguous(self):
+        self.grammar([("<form>", "^(?:[1-9][0-9]*)$")])
+        for text in ("en\tru\nform\tформа\n", "ru\ten\nформа\t\n",
+                     "ru\ten\nформа\tform\nформа\tother\n"):
+            with self.subTest(dictionary=text):
+                self.labels.write_text(text)
+                with self.assertRaises(GenError):
+                    gen_families.placeholders()
+
+    def test_explicit_typed_grammars_take_priority_over_prose_labels(self):
+        self.grammar([("<форма>", "^(?:old)$"), ("<form>", "^(?:new)$")])
+        self.labels.write_text("ru\ten\nформа\tform\n")
+        self.assertEqual(gen_families.placeholders(), {"<форма>": "^(?:old)$", "<form>": "^(?:new)$"})
+
+    def test_ambiguous_missing_label_is_refused(self):
+        self.grammar([("<один>", "^(?:old)$"), ("<два>", "^(?:new)$")])
+        self.labels.write_text("ru\ten\nодин\tmissing\nдва\tmissing\n")
+        with self.assertRaisesRegex(GenError, "conflicting grammars for alias <missing>"):
+            gen_families.placeholders()
+
+    def test_conflicting_readme_duplicates_are_refused_before_mapping(self):
+        # These two collisions were introduced by translating distinct typed
+        # labels to the same English spelling. Neither may use the last row.
+        for label in ("<server>", "<key>"):
+            for dictionary in (None, "wrong\theader\n"):
+                with self.subTest(label=label, dictionary=dictionary):
+                    self.grammar([(label, "^(?:[a-z]+)$"), (label, "^(?:[^/]+/[^/]+)$")])
+                    self.labels.unlink(missing_ok=True)
+                    if dictionary is not None:
+                        self.labels.write_text(dictionary)
+                    with self.assertRaisesRegex(GenError, f"README.md: conflicting grammars for {label}"):
+                        gen_families.placeholders()
+
+    def test_identical_duplicate_rows_and_aliases_are_allowed(self):
+        expr = "^(?:[a-z]+)$"
+        self.grammar([("<server>", expr), ("<server>", expr), ("<сервер>", expr)])
+        self.labels.write_text("ru\ten\nсервер\tserver\n")
+        grammar = gen_families.placeholders()
+        self.assertEqual(grammar, {"<server>": expr, "<сервер>": expr})
+        self.assertEqual(gen_families.template("<сервер>/<server>", grammar),
+                         [("", "<сервер>", expr), ("/", "", ""), ("", "<server>", expr)])
+
+    def test_legacy_distinct_types_are_not_merged_without_dictionary(self):
+        host = r"^(?:[a-z]+(?:\.[a-z]+)*)$"
+        server_name = r"^(?:[a-z]+(?:-[a-z]+)*)$"
+        self.grammar([("<сервер>", host), ("<server>", server_name)])
+        grammar = gen_families.placeholders()
+        self.assertEqual(grammar, {"<сервер>": host, "<server>": server_name})
+        self.assertIsNotNone(gen_families.re.fullmatch(grammar["<сервер>"], "srv.example"))
+        self.assertIsNone(gen_families.re.fullmatch(grammar["<server>"], "srv.example"))
+        self.assertIsNotNone(gen_families.re.fullmatch(grammar["<server>"], "srv-a"))
 
 
 def module_copy(t):
@@ -46,6 +135,9 @@ class Fresh(unittest.TestCase):
         paths = [e["path"] for e in p["form"]]
         self.assertIn("Platform/01-store/data/epoch_floor.schema.json", paths)
         self.assertIn("Platform/01-store/data/configstore-doors.layers.tsv", paths)
+        self.assertIn("Platform/common/placeholders.tsv", paths)
+        self.assertIn(gen_families.sha(gen_families.PLACEHOLDER_LABELS),
+                      [e["sha256"] for e in p["form"] if e["path"] == "Platform/common/placeholders.tsv"])
         self.assertEqual(p["judge"]["path"], "tools/normgen/family_judge.py")
 
 

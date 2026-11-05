@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/local-token-door.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common contract can appear before the move
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common contract can appear before the move
 of the owner lesson; analysis of review of stage A 8–10, № 1 / decision 1). The owner is [chapter 9.1](../../09-agent/spec/09.1-agent.norms.md) of lesson P/09 (Н1.6,
 P/09.1-10; the source is М11/7 Н1.2): the member's agent listens on the local door and passes the request on to the
 holder. The participant is the worker, chapter [P/03.7](../../03-worker/spec/03.7-worker.norms.md) Н1.5: it asks for a token through this door.
@@ -12,7 +12,7 @@ claims of a token — chapter [P/08.7](../../08-domain/spec/08.7-domain.norms.md
 
 Moved from М11/7 Н1.2 (the block `door`, `body`, `request`, `TOKEN_BODY`, `answer`, `no_queue`, `TOKEN_WAIT`) and the rows of Н4
 «у агента» without a change of behaviour. The section «The role socket» is a change of behaviour (the Architect's decision of 2026-10-20, ADR-0083 addendum
-(13)): formerly the transport and the port were a choice of the implementation (М11/12 Н1.8 `local_door`, М11/12 «Решает реализация» item 3, М11/7
+(13)): formerly the transport and the port were a choice of the implementation (М11/12 Н1.8 `local_door`, М11/12 «Implementation decides» item 3, М11/7
 «Implementation decides» item 1). ADR-0080 item 2 («the mechanics of a side» is decided by the implementation) does not apply to this door: the door
 connects processes of different implementations on one box, and the witnesses already differ in the socket name.
 
@@ -20,7 +20,7 @@ Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The holder's door to which the agent passes the request (`/api/tokens/{member}/{sub}/{kind}`; the code and the body of the holder — as received) — `Platform/08-domain/spec/08-domain.api.openapi.yaml`; the local door — `Platform/09-agent/spec/09-agent.api.openapi.yaml`, the tag `local-door` (layout audit, В-35; the Architect's decision of 2026-10-25).
+The holder's door to which the agent passes the request (`/api/tokens/{member}/{sub}/{kind}`; the code and the body of the holder — as received) — `Platform/08-domain/spec/08-domain.api.openapi.yaml`; the local door — `Platform/09-agent/spec/09-agent.api.openapi.yaml`, the tag `local-door` (layout audit, V-35; the Architect's decision of 2026-10-25).
 
 ## The role socket
 
@@ -29,22 +29,22 @@ The Architect's decision of 2026-10-20 (analysis of review of stage A 8–10, de
 ```yaml
 transport:   on a box — a Unix stream socket (SOCK_STREAM), over it HTTP/1.1 of the door «The door» below; there is no other transport on
              a box
-address:     <AGENT_TOKEN_DIR>/<роль>.sock — one socket for each worker role of the manifest catalogue (<роль> — <sub>worker);
+address:     <AGENT_TOKEN_DIR>/<role>.sock — one socket for each worker role of the manifest catalogue (<role> — <sub>worker);
              flat, no subdirectories
 AGENT_TOKEN_DIR: the directory of the sockets of the local door; the default /run/w2c/domainagent; set by the agent unit and the worker unit with one
              value (P/02.4 Н1.1, Н1.2); on the stand — by the runner
 identity:    the role of the connection is the role of the socket it came into; the local door has no other identity (the role is not
              named in the body, Н1.2 below)
-group:       the socket <роль>.sock — mode 0660, owner root, group — the group of the worker role (<dep>-<роль>, P/02.4 Н1.1
+group:       the socket <role>.sock — mode 0660, owner root, group — the group of the worker role (<dep>-<role>, P/02.4 Н1.1
              users_groups); the group is set by SocketGroup= of the socket unit, the agent gets the socket ready and is not a member of the groups of the worker
              roles — like the store daemon (P/01.3 Н1.3 sockets, P/02.4 Н1.1 users_groups rule)
-units:       w2c-domainagent-token-<роль>.socket — one unit per role: ListenStream=<AGENT_TOKEN_DIR>/<роль>.sock;
-             FileDescriptorName=token-<роль>; SocketUser=root; SocketMode=0660; SocketGroup=<the role group>;
+units:       w2c-domainagent-token-<role>.socket — one unit per role: ListenStream=<AGENT_TOKEN_DIR>/<role>.sock;
+             FileDescriptorName=token-<role>; SocketUser=root; SocketMode=0660; SocketGroup=<the role group>;
              Service=w2c-domainagent.service (P/02.4 Н1.1)
 inherit:     the inherited sockets (the protocol sd_listen_fds: LISTEN_PID equals its own pid, LISTEN_FDS, LISTEN_FDNAMES) the agent
-             takes by FileDescriptorName; for each it checks the type (a stream socket), listening, the path <AGENT_TOKEN_DIR>/<роль>.sock
+             takes by FileDescriptorName; for each it checks the type (a stream socket), listening, the path <AGENT_TOKEN_DIR>/<role>.sock
              and a repeated name — anything else or two with one name — a start refusal; its own copies of descriptors that it does not hold it closes;
-             a socket that was not passed the agent creates itself: <AGENT_TOKEN_DIR>/<роль>.sock, mode 0660, the group of the process;
+             a socket that was not passed the agent creates itself: <AGENT_TOKEN_DIR>/<role>.sock, mode 0660, the group of the process;
              the path already exists — lstat without following a link: a socket and connect to it — ECONNREFUSED — stale: the agent removes
              it and creates its own; connect succeeded or returned another error — busy, not removed, a start refusal; not a socket (a file
              of another type, a symbolic link included — another type, do not follow it) — not removed, a start refusal;
@@ -58,26 +58,26 @@ in_process:  the agent in the platform process of a cluster of one — a call, n
 
 **An open question — a worker on another server of the cluster.** The local door over TCP with a role certificate (ADR-0075) for a worker
 whose cluster's agent is on another server is not normed until the stand; the place is [P/09.1 Н5](../../09-agent/spec/09.1-agent.norms.md#open)
-«Open» (the move plan of lesson 9, В1). While the question is open, such a door does not take the domain ports 8444–8447 ([P/02.4 Н1.12](../../02-installer/spec/02.4-installer.norms.md)).
+«Open» (the move plan of lesson 9, V1). While the question is open, such a door does not take the domain ports 8444–8447 ([P/02.4 Н1.12](../../02-installer/spec/02.4-installer.norms.md)).
 
 ## The door
 
 From М11/7 Н1.2:
 
 ```yaml
-door:       POST /tokens/<sub>/<вид> at the agent of its own cluster; the identity of the connection is the worker role by one of the ways of
+door:       POST /tokens/<sub>/<kind> at the agent of its own cluster; the identity of the connection is the worker role by one of the ways of
             P/02.4 Н1.6: the role socket on a box or the role certificate (ADR-0075) in a cluster; the role is not named in the body
 body:       {request_id, ref, by?, revoked?} — request_id 1–64 [A-Za-z0-9_-]; ref, by — non-empty strings; revoked — the jti of a token that the recipient refused with the word revoked (P/08.7 Н1.3), 16 hex; larger than TOKEN_BODY — 413
 request:    the header Transfer-Encoding in the request (chunked together with Content-Length included) — 400; <sub> of the path is not a manifest
             of the catalogue — 404 at the agent, the request does not go to the holder (a kind not declared by the manifest — the holder decides, 403
             not_granted); added by the М11 reconciliation, T7, T8
 TOKEN_BODY: 4 KiB          # the limit of the client's body at the local door of the agent; the bytes of the body as received are measured
-TOKEN_HOLDER_BODY: 4608    # the limit of the body at the holder's door POST /api/tokens/<член>/<sub>/<вид> (P/08.7 Н1.3): = TOKEN_BODY + 512
+TOKEN_HOLDER_BODY: 4608    # the limit of the body at the holder's door POST /api/tokens/<member>/<sub>/<kind> (P/08.7 Н1.3): = TOKEN_BODY + 512
                            # for what the agent adds (role and the JSON wrapping): a body of exactly TOKEN_BODY at the local door does not get
                            # 413 at the holder; the bytes of the body as received are measured (journal of cammeta-go, М11-07 № 4; moved from P/08.7
-                           # Н1.3 without a change; layout audit, the Architect's decision of 2026-10-25, А-19)
+                           # Н1.3 without a change; layout audit, the Architect's decision of 2026-10-25, A-19)
 refusal_413: 413 {error: "refused", detail} — a body larger than TOKEN_BODY at the local door of the agent, larger than TOKEN_HOLDER_BODY at
-            the holder's door — before the signature and the parse; detail — the words of the implementation (from P/08.7 Н4 without a change; Б-31)
+            the holder's door — before the signature and the parse; detail — the words of the implementation (from P/08.7 Н4 without a change; B-31)
 framing:    exactly one Host and one Content-Length; Transfer-Encoding (chunked included) — 400; an ambiguous or incomplete
             message — 400; the request line and the headers ≤ 16 KiB, otherwise 400; the input of the whole request ≤ 10 s, otherwise 400; one exchange
             per connection, the answer with Connection: close; TOKEN_WAIT is counted after the body is received and includes the opening of the holder's
@@ -106,9 +106,9 @@ The code and `error` are normative; `detail` is the words of the implementation,
 | `bad request` | 400 | at the agent: the body is not in the form of Н1.2, the header `Transfer-Encoding`, framing («The door» `framing`), the input deadline expired |
 | `refused` | 413 | at the agent: the body is larger than `TOKEN_BODY`; `detail` — for example «body exceeds TOKEN_BODY» (the form — `refusal_413` above) |
 | `invalid token reply` | 502 | at the agent: `m1` did not open, a wrong `request_id`, `exp ≤ now` |
-| `unavailable` | 503 | at the agent: upstream did not answer within TOKEN_WAIT — the holder or the relay; 502 `did not answer` of the relay — also 503 (`no_queue`; the Architect's decision of 2026-10-20 on the question of commit 9); 503 `frozen` of the holder (P/08.7 Н3 «issue» step 6а) — also 503 `unavailable`: the worker has no word for freezing, the request is repeated, the former token is kept (ADR-0110 addendum (12) item 3) |
+| `unavailable` | 503 | at the agent: upstream did not answer within TOKEN_WAIT — the holder or the relay; 502 `did not answer` of the relay — also 503 (`no_queue`; the Architect's decision of 2026-10-20 on the question of commit 9); 503 `frozen` of the holder (P/08.7 Н3 «issue» step 6a) — also 503 `unavailable`: the worker has no word for freezing, the request is repeated, the former token is kept (ADR-0110 addendum (12) item 3) |
 
-413 of the local door and of the holder's door — `refusal_413` above (Б-31); the code and the body of the holder passed on «as received» — [P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н4. The holder's answer is opened by the agent ([P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.6 `agent`; `m1` — [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.5 and the [domain envelopes contract](domain-envelopes.md)).
+413 of the local door and of the holder's door — `refusal_413` above (B-31); the code and the body of the holder passed on «as received» — [P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н4. The holder's answer is opened by the agent ([P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.6 `agent`; `m1` — [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.5 and the [domain envelopes contract](domain-envelopes.md)).
 
 ## The call in the process
 

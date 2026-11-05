@@ -1,10 +1,10 @@
-# System acceptance of the module «Платформа» — the stand of all processes
+# System acceptance of the module «Platform» — the stand of all processes
 
 This English text is the source; the Russian translation `ru/acceptance/system/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 End-to-end scenarios that check the norms of several micromodules at once and require a stand of all processes of the platform
 (the module note `Platform/module-design.md`, for people, not in the export: «сквозные сценарии … со стендом из всех микромодулей»). Moved from the acceptance of М10/11
-(sc. 05, 06; stage B, ADR-0083 addendum (1): without a change of behaviour) by the Architect's decision on В2 of the move plan of lesson 6:
+(sc. 05, 06; stage B, ADR-0083 addendum (1): without a change of behaviour) by the Architect's decision on V2 of the move plan of lesson 6:
 a scenario belongs to the lesson whose norm it checks (the presence lock, sc. 16 of М10/11, — the acceptance of
 [P/05](../../../05-resource/acceptance/README.md)), the drills of many processes — here. The numbers and steps are the former ones.
 Four scenarios / 75 steps: sc. 05 — 61 automatic steps on the three-server cluster stand (the section «Sc. 05»; not executable yet — the section «Executability»), sc. 07 and 08 — 7 steps `@manual`, sc. 09 — 7 steps `@manual`; sc. 06 `recover` is moved by scenario 18 of the [acceptance of P/01.3](../../../01-store/acceptance/3/README.md) to the store group stand (ПРАВИЛА-РАБОТЫ.md § 4, 2026-10-30); sc. 07 — a cold start of a part and a worker (ADR-0091 addendum (2), (3)), sc. 08 — the worker program from the manifest row (ADR-0091 addendum (4)–(6)).
@@ -60,7 +60,7 @@ The server `srv-b` carries a unit without a home `c1` (`testsub`, the worker `w-
 | 59–60 | `c1` has no home — it stays at `$holder` | P/04 Н1.4а `moves`; Н3 «pull the power» |
 | 61 | the resource of `srv-b` is `live` again | the observation contract `resource_state` |
 
-The stand gives a name to each process (`@start worker <имя>`), so step 54 checks the return of its own name, while the choice of a free name
+The stand gives a name to each process (`@start worker <name>`), so step 54 checks the return of its own name, while the choice of a free name
 by a nameless process is the acceptance of chapter P/03.2. Step 49 waits for `restored: 1`: `srv-c` has two copies, but `$closed` remained on the volume of `srv-b` and is not counted, only the bucket of step 33 is pulled
 (the Architect's decision of 2026-10-31).
 

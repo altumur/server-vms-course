@@ -2,8 +2,8 @@
 
 This English text is the source; the Russian translation `ru/contracts/door-token.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5) and addendum (11): a contract that one process writes and others read
-lies in `Platform/common/`; analysis of the review of stage B 3–5, В1). The owner is lesson [P/06](../../06-console/spec/06.5-console.norms.md)
+A common contract of the module «Platform» (ADR-0083 addendum (5) and addendum (11): a contract that one process writes and others read
+lies in `Platform/common/`; analysis of the review of stage B 3–5, V1). The owner is lesson [P/06](../../06-console/spec/06.5-console.norms.md)
 (chapter 6.5): the console issues the token in the answer of `/where/<id>` and `/where/<table>/<place>` (P/06.5 Н3), holds the signer
 `door/signer` and writes the public keys `door/keys`. Readers: the door holder — the worker that checks the token at its door
 (chapter [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н3 «the door token at the holder», P/03.4-08); the domain agent reads
@@ -22,7 +22,7 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The files by which the contract works (layout audit, В-15–В-17; the Architect's decision of 2026-10-25):
+The files by which the contract works (layout audit, V-15–V-17; the Architect's decision of 2026-10-25):
 
 - the signer `door/signer` — the family `door-signer`: `Platform/06-console/data/door-signer.schema.json`,
   `Platform/06-console/data/door-signer.outcomes.tsv`;
@@ -41,7 +41,7 @@ From P/06.5 Н3 «`/where/<id>`», «Door token — bytes» (the cammeta-go jour
 token:      door1.<kid>.<claims>.<sig> — exactly four parts separated by «.», ASCII
   kid:      the name of the signing key, 1–32 characters [a-z0-9-]; by it the checker takes the public key from door/keys
   claims:   base64url without «=» of the JCS (RFC 8785) bytes of the object {user, unit, holder, routes, expires}: user — the proven name
-            ([the gate-and-pass contract](gate-and-pass.md) «Сторожевая» identity), unit — "<sub>/<id>", holder — the holder's instance from its heartbeat (instance, P/03.4 Н1.1), routes — an array
+            ([the gate-and-pass contract](gate-and-pass.md) «The gate» identity), unit — "<sub>/<id>", holder — the holder's instance from its heartbeat (instance, P/03.4 Н1.1), routes — an array
             of the routes door.routes of the manifest with the admission token (name elements and {name} without role and domain; routes with role or
             domain do not enter the token — their admission is the role certificate, the class mixed of the role certificate contract, or the domain token,
             P/03.4 Н1.7; ADR-0091 addendum (8) item 3, addendum (14) item 1) and with a rank allowed to the person on the unit (P/06.5 Н3 «/where/<id>»; ADR-0115 addendum (19) item 1), expires — the whole wall seconds of the issue + 120 (analysis of the review of stage B 6–7, № 10): floor(now) + 120, now — the wall clock
@@ -77,7 +77,7 @@ the grammar of `door.routes` (P/02.1, `strList`), without repetitions; `expires`
 a fractional or greater `expires`, a repetition in `routes` — a refusal 403 `{"error": "forbidden"}`, even with a correct signature (the Architect's decision of 2026-10-20, Kimi SB67-01).
 An element of `routes` is a segment by the grammar of `name` `[a-z][a-z0-9_-]{0,31}`, without «/» ([P/02.1](../../02-installer/spec/02.1-installer.norms.md)
 Н1 «Form», `door.routes`); `read/x` or `Read` is a refusal (the Architect's decision of 2026-10-20). A JSON integer is only a notation without a dot
-and an exponent, like the whole sign of the family writer ([layers В7](../LAYERS.md) § 3, `x-whole`): `1792454520.0` and `1.79245452E9` in the bytes of the
+and an exponent, like the whole sign of the family writer ([layers V7](../LAYERS.md) § 3, `x-whole`): `1792454520.0` and `1.79245452E9` in the bytes of the
 claims are a refusal, although the value is whole (the Architect's decision of 2026-10-20).
 The checker reads the text of the claims by I-JSON (RFC 7493): the bytes are strict UTF-8 (an invalid sequence is a refusal, not
 a replacement with U+FFFD); a field name twice is a refusal, not «the last value»; names are compared byte for byte (`User` is not `user`:
@@ -112,7 +112,7 @@ a refusal — the checker does not read the row by entries (analysis of the revi
 **Races.** The answer names the observed holder; a move can complete before the door is used, and the answer does not extend
 the lease. The validity of the operation is checked again by the holder by epoch/lease: a holder that changed after the answer
 is cut off by the epoch/lease check at the door (from P/06.5 Н3 «`/where/<id>`», «`/where/<table>/<place>`» «Races» without change;
-layout audit Б-21, the Architect's decision of 2026-10-25).
+layout audit B-21, the Architect's decision of 2026-10-25).
 
 ## Vectors
 
@@ -127,7 +127,7 @@ of lesson P/01 (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-00
 
 ## Correspondence to former lessons
 
-From P/06.5 (analysis of the review of stage B 3–5, В1; formerly М10/9 Н3 «`/where/<id>`»): the block «Door token — bytes» — the row `token`
+From P/06.5 (analysis of the review of stage B 3–5, V1; formerly М10/9 Н3 «`/where/<id>`»): the block «Door token — bytes» — the row `token`
 (here «Token») and the row `door/keys` about the writer; the row `door/signer` stays in P/06.5 Н3. From P/03.4 Н3 «the door token at the
 holder» (formerly a part of М10/9-09): the row `door/keys` about the checker and the phrase of «Races» (here «Keys `door/keys`»; both
 halves of the row `door/keys` are merged into one, as in the source М10/9). Parts of the norms by `note` of [id-map](../id-map.tsv): P/06.5-05

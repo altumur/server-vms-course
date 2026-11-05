@@ -20,13 +20,13 @@ This English text is the source; the Russian translation `ru/lifecycle.md` (for 
 
 ## Environment
 
-The setting channel is only the environment of P/02.4 Н1.2 and the layout of `PLATFORM_DIR` (the second pilot, Н-4).
+The setting channel is only the environment of P/02.4 Н1.2 and the layout of `PLATFORM_DIR` (the second pilot, N-4).
 
 | Variable | Meaning | Default | Norm |
 |---|---|---|---|
 | `W2C_ROLE` | the role `domainconsole` | the unit | P/02.4 Н1.2 |
 | `PLATFORM_DIR`, `PLATFORM_STORE`, `OBJECTS`, `RESOURCE_ROOT` / `EVENTS` | the state, the store door, the roots of objects and events (the role journal is written) | P/02.4 Н1.2 | P/02.4 Н1.2 «The setting channel and the layout» |
-| `DOMAIN_CONSOLE_HOST`, `DOMAIN_CONSOLE_PORT` | the door of the domain operator; the consoles of the members forward here; TLS — by the kit of the role (P/02.4 Н1.6, [the role certificate contract](../common/contracts/role-certificate.md) `kit`; ADR-0075 addendum 2026-10-26 (2) item 4) | `0.0.0.0:8444` — the default of the process (the unit does not write it), not an explicit address: only with the kit, without the kit — a start refusal, code 2 (P/02.4 Н1.6 `process`; ADR-0075 addendum 2026-10-26 (3) item 5, (4) item 4; review of the norms of ADR-0075, Claude fd85ea8cc, С-3) | [P/02.4 Н1.12](../02-installer/spec/02.4-installer.norms.md) |
+| `DOMAIN_CONSOLE_HOST`, `DOMAIN_CONSOLE_PORT` | the door of the domain operator; the consoles of the members forward here; TLS — by the kit of the role (P/02.4 Н1.6, [the role certificate contract](../common/contracts/role-certificate.md) `kit`; ADR-0075 addendum 2026-10-26 (2) item 4) | `0.0.0.0:8444` — the default of the process (the unit does not write it), not an explicit address: only with the kit, without the kit — a start refusal, code 2 (P/02.4 Н1.6 `process`; ADR-0075 addendum 2026-10-26 (3) item 5, (4) item 4; review of the norms of ADR-0075, Claude fd85ea8cc, S-3) | [P/02.4 Н1.12](../02-installer/spec/02.4-installer.norms.md) |
 | `SIGNER_URL` | the door of the process `domain` of its own box — the passing of edits; the server check — [the role certificate contract](../common/contracts/role-certificate.md) «The client of a door of its own cluster» (the host is a loopback literal — the name `SERVER_NAME`; `localhost` — a name) | `http://localhost:8445` (the stand of one machine, as [the lifecycle of P/08](../08-domain/lifecycle.md); review analysis of stage A 8–10, № 33) | [P/10 Н1.3](spec/10-domain-console.norms.md) (the passing; the reception — P/08.0 Н1.8); [P/08.2 Н1.3](../08-domain/spec/08.2-domain.norms.md) |
 | `LOGIN_URL` | the login of people, the value `login_url` in `/session` | `/api/login` | [the gate-and-pass contract](../common/contracts/gate-and-pass.md) `session` `login_url`; [P/08.4 Н1.2](../08-domain/spec/08.4-domain.norms.md); P/02.4 Н1.2 |
 | `TIMEZONE` | the time zone: the value `timezone` in `/session`; from `w2c.env` of its own box; empty or out of form — code 2 | `UTC` | [the environment file contract](../common/contracts/env-file.md); [P/10 Н1.7](spec/10-domain-console.norms.md) `session` |
@@ -45,7 +45,7 @@ None: the setting channel is only the environment (P/02.4 Н1.2).
 - There is no ring ([P/02.4 Н1.12](../02-installer/spec/02.4-installer.norms.md)).
 - The holder page is the same page of the console module, `sections: [domain]` ([P/10 Н1.7](spec/10-domain-console.norms.md));
   the module is shipped with the console binary, not from `$CAMMETA_SPECS` ([P/06.5](../06-console/spec/06.5-console.norms.md) Н1.1 `module`).
-- The role journal — `<корень событий>/audit/domainconsole/e1/…`, the alarm `session.debug_open` — `audit.alarms/domainconsole`
+- The role journal — `<events root>/audit/domainconsole/e1/…`, the alarm `session.debug_open` — `audit.alarms/domainconsole`
   ([the event journal contract](../common/contracts/event-journal.md) `journal`).
 
 ## Exit codes
@@ -69,6 +69,6 @@ The roots `{data}/config`, `objects`, `events` are created before the process st
 acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
 
 The stand of several clusters ([the common acceptance README](../common/acceptance/README.md#domain-stand), the section «Domain stand»): `@start domain` brings up the processes `domain` and of the domain console on
-`hold`; the door `holder <запрос>` — the domain console on `hold`, `holder@<кластер>` — on another cluster after the move;
+`hold`; the door `holder <request>` — the domain console on `hold`, `holder@<cluster>` — on another cluster after the move;
 `Idempotency-Key` at `POST`, `PUT`, `DELETE` — by the rule `@key`. `{data}` — `PLATFORM_DIR` of the cluster ([the common
 acceptance README](../common/acceptance/README.md) «Stand»; review analysis of stage B 3–5, № 33).

@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/password-hash.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
 in chapters; the stage C guess GP-G06, the Architect's decision of 2026-10-23). The owner is chapter
 [P/08.4](../../08-domain/spec/08.4-domain.norms.md) (Н1.1 `pwhash_secret` of a person row, Н1.6 — of the break-glass account).
 Participants: the process `domain` — writes the hash (people, the break-glass account) and checks the login of people (P/08.4 Н1.2); the cluster console —
@@ -23,7 +23,7 @@ secret:   in a store row the field *_secret is sealed by the holder's ring (the 
 
 ## Form
 
-`pwhash_secret` is a field of the person rows and of the break-glass account: `Platform/08-domain/data/users.schema.json`, `Platform/08-domain/data/users.outcomes.tsv`; `Platform/08-domain/data/break-glass.schema.json`, `Platform/08-domain/data/break-glass.outcomes.tsv` (layout audit, В-41; the Architect's decision of 2026-10-25).
+`pwhash_secret` is a field of the person rows and of the break-glass account: `Platform/08-domain/data/users.schema.json`, `Platform/08-domain/data/users.outcomes.tsv`; `Platform/08-domain/data/break-glass.schema.json`, `Platform/08-domain/data/break-glass.outcomes.tsv` (layout audit, V-41; the Architect's decision of 2026-10-25).
 
 ## Vectors
 

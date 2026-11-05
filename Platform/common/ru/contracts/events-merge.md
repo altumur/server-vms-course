@@ -21,7 +21,7 @@ P/05 Н1.3; форма строки и ответа — раздел «Форм�
 ([OpenAPI урока P/06](../../../06-console/spec/06-console.api.openapi.yaml)). Оба файла входят в чтение `common` (ADR-0083
 доп. (33) п. 1; EM-READ-33-01). Строки эпох `<sub>/epoch/<id>` — семья `epoch`: `Platform/03-worker/data/epoch.schema.json`,
 `Platform/03-worker/data/epoch.outcomes.tsv`; строки дверей `platform/doors/<s>` (раздел «Живые ресурсы») — семья `doors`:
-`Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv` (аудит раскладки, В-18, В-19, Б-18;
+`Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv` (аудит раскладки, V-18, V-19, B-18;
 решение «Архитектора» 2026-10-25).
 
 ## Запрос и ответ ресурса
@@ -65,7 +65,7 @@ admission:    дверь ресурса /events* допускает роли con
               клиента: цепочка до центра, серийник не в revoked (договор сертификата роли revoke), ровно одна роль из строки
               маршрута, CN = <роль>.<SAN DNS>; иначе отказ рукопожатия или 403 ResourceDenied с ролью и маршрутом; клиент
               сверяет роль resource и SAN DNS сервера с хостом адреса; IP при TLS — отказ клиента (перенесено из P/05 Н2
-              «Допуск к дверям ресурса» для участника; аудит раскладки, решение «Архитектора» 2026-10-25, Б-18)
+              «Допуск к дверям ресурса» для участника; аудит раскладки, решение «Архитектора» 2026-10-25, B-18)
 ```
 
 ## Живые ресурсы
@@ -80,7 +80,7 @@ admission:    дверь ресурса /events* допускает роли con
 
 ```
 1. живых ресурсов спросить параллельно (8 полос, 3 с) тем же запросом (`query` выше); у консоли с фильтром видимости (грант
-   вызывающего уже view на *, шаг 5а) — с limit = предел 10000, общий limit — после фильтра (C06-EVENTS-VIEW-33-01)
+   вызывающего уже view на *, шаг 5a) — с limit = предел 10000, общий limit — после фильтра (C06-EVENTS-VIEW-33-01)
 2. не ответил → incomplete[<сервер>] = did not answer; сказал не live → said <state>; несвежая строка двери → silent;
    у каждого из них state получает «; <s> unreachable»; копии бакетов silent-ресурса в ответах других ресурсов
    отдаются, и тогда state ещё «; <s> from mirror» (сверка python и go М10/6–11, E23)
@@ -88,7 +88,7 @@ admission:    дверь ресурса /events* допускает роли con
    lines_garbled ответа — сумма lines_garbled ответивших плюс пропуски шага 3; partial: true, если у ответившего true
 4. дубли по id → одна
 5. эпохи (раздел «Эпохи» ниже): epoch_is и fenced у каждой строки
-5а. фильтр видимости — только консоль (воркер сливает своё без фильтра): строку видит вызывающий, чей грант view охватывает её
+5a. фильтр видимости — только консоль (воркер сливает своё без фильтра): строку видит вызывающий, чей грант view охватывает её
    unit или единицу of (scope договора сторожевой: unit:<sub>/<id>; labels: — по меткам единицы of, если of есть, иначе unit);
    метки единицы — поле labels её строки <sub>/<unit.rows манифеста>/<id> ([договор проверки строки](row-check.md) «строка единицы»), объявленное в unit.fields списком (то же поле, что
    вход unit.labels функции may и метки размещения); поля не объявлено или в строке его нет — меток нет ([]); строка единицы
@@ -128,7 +128,7 @@ failed:       нужная эпоха (подсистемы, чьи строки
 
 ## Ответ
 
-`{events, state, truncated, partial?, lines_garbled?, complete, incomplete, withheld?}`: `withheld` — только у консоли (шаг 5а); `events` — строки P/05 Н1.3 с `epoch_is` (кроме
+`{events, state, truncated, partial?, lines_garbled?, complete, incomplete, withheld?}`: `withheld` — только у консоли (шаг 5a); `events` — строки P/05 Н1.3 с `epoch_is` (кроме
 `failed`) и `fenced`; `state` — `live[; <s> unreachable][; <s> from mirror]`; `incomplete` — `{<сервер> | <sub>/epoch: did not
 answer | silent | said <state>}`; `complete` — `incomplete` пуст: это полнота ответивших источников и прочитанных эпох, а не
 отсутствие обрезки по `limit`. У консоли это тело `GET /events` (схема `ConsoleEvents` OpenAPI урока 6); у воркера — его

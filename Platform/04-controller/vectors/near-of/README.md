@@ -13,7 +13,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; 
 | Field | Value |
 |---|---|
 | `case` | the name of the row |
-| `input` | a JSON object: `near` — the manifest key (`{sub, by?, of?, prefer?}`); `me` — my row (`id` and fields); `neighbours` — the live rows of the subsystem `sub` (`id` and fields); `refs` — a field of the neighbour → `<подсистема>/<семья>` of its `ref` (for the path of `prefer`); `rows` — the rows of the targets of the references: the key `<подсистема>/<семья>/<id>` → fields |
+| `input` | a JSON object: `near` — the manifest key (`{sub, by?, of?, prefer?}`); `me` — my row (`id` and fields); `neighbours` — the live rows of the subsystem `sub` (`id` and fields); `refs` — a field of the neighbour → `<subsystem>/<family>` of its `ref` (for the path of `prefer`); `rows` — the rows of the targets of the references: the key `<subsystem>/<family>/<id>` → fields |
 | `expect` | the id of the chosen neighbour; `""` — there is no neighbour |
 | `note` | the rule of the norm |
 

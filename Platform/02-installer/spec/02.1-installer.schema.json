@@ -2950,7 +2950,7 @@
       ]
      },
      "fragment": {
-      "description": "`none`: `#` is an ordinary character, not the start of a fragment (P/06.2 Н1.1а А2)",
+      "description": "`none`: `#` is an ordinary character, not the start of a fragment (P/06.2 Н1.1а A2)",
       "x-default-text": "`#` starts a fragment",
       "enum": [
        "none"

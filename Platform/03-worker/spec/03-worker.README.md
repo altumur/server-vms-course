@@ -29,7 +29,7 @@ The canon is the norms of the chapters, including Н0, the deadlines of Н1.2 of
 Н2; ADR-0082 addendum 13): the forms of the requests and answers of the store are set by [P/01.1](../../01-store/spec/01-store.api.openapi.yaml),
 the doors of units — by [lesson P/06](../../06-console/spec/06-console.api.openapi.yaml) (chapter 6.1), the publication of objects — by
 [lesson P/05](../../05-resource/spec/05-resource.norms.md#н2-doors). The forms of the rows and objects of the lesson are
-the family schemas `../data/*.schema.json` (the sections «Семьи данных» of chapters 3.2 and 3.4; ADR-0088).
+the family schemas `../data/*.schema.json` (the sections «Data families» of chapters 3.2 and 3.4; ADR-0088).
 
 ## What to create
 
@@ -73,7 +73,7 @@ the family schemas `../data/*.schema.json` (the sections «Семьи данны
    also checked are non-numeric suffixes, equal numbers of different names and the next number after a long digit
    suffix. After 412 re-read the ownership: one's own renewal keeps the name, a foreign holder/gen fences off. Taking away on
    one's own box is available only to the first start; NameOnAnotherBox leaves the process nobody with the mark `refused` in the object
-   `<sub>/contenders/<имя>/<коробка>` (chapter 3.2 Н1.4а) and the alarm `worker.name_taken`
+   `<sub>/contenders/<name>/<box>` (chapter 3.2 Н1.4а) and the alarm `worker.name_taken`
    (chapter 3.2 Н3 «nobody and getting the name back») per Н4, without a change of the name. With a torn gen the candidate is not rewritten; with a torn until and a readable gen,
    after TORN_STILL the generation is increased. Count the UTF-8 bytes of the full key together with the prefix and the separators;
    handle a definite badkey per chapter 3.2 Н3 «Full keys and store refusal».

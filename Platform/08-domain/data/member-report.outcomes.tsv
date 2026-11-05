@@ -1,4 +1,4 @@
-# Outcomes of an unreadable object domain/members/<член>/reports/<rev> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable object domain/members/<член>/reports/<rev> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 	domain	the whole object is unreadable (as «no object» or «not with the sha256 of the mark»): there is no copy — the member is silent in the view (Н3 «read the copy»; chapter 8.1 Н3 step 2), the book assembler and the backup do not take its generation (chapters 8.5, 8.8), never a mixture (Н1.3); intake: stored does not read — a delta (base > 0) — 409 rebase, a whole one — a new generation over the spoiled one (the report intake contract, steps 3, 6, 7; reconciliation of М11, A1)	0	строка	P/08.3 Н1.3, Н3 «прочитать копию»; договор приёма отчёта

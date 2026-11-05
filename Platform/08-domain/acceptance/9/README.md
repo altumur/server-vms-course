@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/9/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) and its
-section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (the doors `holder`, `member`, the directives `@domain`, `@person`; the plan of lesson 8 В5). The norm of the chapter is
+section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (the doors `holder`, `member`, the directives `@domain`, `@person`; the plan of lesson 8 V5). The norm of the chapter is
 [`08.9-domain.norms.md`](../../spec/08.9-domain.norms.md) Н5. Scenario 01 was moved from the acceptance of М11/11 (stage B, ADR-0083
 addendum (1): without a change of behaviour); the numbers of the scenario and of the steps are the former ones; scenario 07 is the coverage audit of P/08 (the numbers 02–06 belong to the scenarios of М11/11 in neighbouring acceptances). The other scenarios of М11/11 are lesson P/10 (02 — the list of
 alarms; the vectors `alarms` — 04), [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md) (05; 06 → 14) and the cluster console (the vectors [`resolve`](../../../06-console/vectors/resolve/README.md) — 03, chapter P/06.7); lesson P/10 is [the acceptance](../../../10-domain-console/acceptance/README.md)
@@ -12,7 +12,7 @@ owners.
 
 ## Stand
 
-The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Подготовка каждого сценария», from М11/03: the clusters `hold`, `m1`,
+The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Preparation of each scenario», from М11/03: the clusters `hold`, `m1`,
 `m2`, the catalog `testsub`), with a declaration of the shared in `testsub`:
 - `domain.shared: [step, marks, {rounds}]`;
 - `step` is an `int` with `inherit: 1`;
@@ -20,7 +20,7 @@ The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («
 
 The runner goes as the human `root` (the first administrator — chapter 8.4, the directive `@person`).
 
-- **Scenario 09** — versions and the replay memory ([chapter 8.0](../../spec/08.0-domain.norms.md) Н1.9; Н1.3 steps 1а–3). The first write carries `base_rev: 0` (step 2). `If-Match` with `base_rev`: different, an index next to it, neither one nor the other — 400 `field: /base_rev` (steps 6–8), equal — a write (step 9). Step 5: `row` is a pointer. Step 14: the condition before the content.
+- **Scenario 09** — versions and the replay memory ([chapter 8.0](../../spec/08.0-domain.norms.md) Н1.9; Н1.3 steps 1a–3). The first write carries `base_rev: 0` (step 2). `If-Match` with `base_rev`: different, an index next to it, neither one nor the other — 400 `field: /base_rev` (steps 6–8), equal — a write (step 9). Step 5: `row` is a pointer. Step 14: the condition before the content.
 - **Scenario 01.**
   - Step 05 — an edit with an outdated `base_rev` and an unknown subsystem: the revision 409 before the content 400 (Н1.3 steps 3, 4).
   - Steps 06–08 — content refusals: there is no subsystem and the name is not shared, the type of a field, the schema of the document `rounds` (`every` ≥ 1). Step 06
@@ -49,7 +49,7 @@ and the section «Domain stand»: a subset of fields, `~` is a substring. In tot
 
 Sc. 08 (the coverage audit of P/08, the second pass of Gemini, the draft G10 `e32df6f8b`, rewritten): the removal of the last field of a subsystem (`null`) removes the
 subsystem itself too — `doc.shared` is exactly `{}` (Н1.3 `order` step 5: «пустая подсистема — снять»); the pointer `domain/shared` is spoiled
-past the door (`doc` is not JSON) — the edit 503 `unavailable`, the row is as before (the outcomes of `domain/shared`, Г-38). Not taken from the draft:
+past the door (`doc` is not JSON) — the edit 503 `unavailable`, the row is as before (the outcomes of `domain/shared`, G-38). Not taken from the draft:
 a replay of `null` of an absent field «без новой `rev`»: step 5 gives a new document with `rev + 1` for each edit, the shared document has no rule
 «то же содержимое — без записи» (a question of the norm, if it is needed).
 
@@ -59,7 +59,7 @@ A subset of expect does not replace the check of the full HTTP form of the OpenA
 
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The log of the acceptance of М11/11 is moved here
 as a whole, the rows as they are (the plan of lesson 8 § 3 «Журналы»: the log of the source goes into each directory that takes its scenarios;
-the paths of the old rows — `11/…`, `NN-<имя> <шаг>` — are resolved by [id-map](../../../common/id-map.tsv)); the last row is the move.
+the paths of the old rows — `11/…`, `NN-<name> <step>` — are resolved by [id-map](../../../common/id-map.tsv)); the last row is the move.
 
 ## Kit seams
 
