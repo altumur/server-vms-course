@@ -5,7 +5,7 @@
 // Platform/05-resource/data/resource-heartbeat.schema.json sha256 c74a6b1a186babe01910bd996e0e2f05504928e190e7d4a9f35626173a6e2148
 // Platform/05-resource/data/resource-heartbeat.layers.tsv sha256 918437aa3b2b5a5d7c16ee0bdde9dc8c1465b3c306c7c7c209d21e31f6ef40c9
 // Platform/05-resource/data/resource-heartbeat.outcomes.tsv sha256 2ce5112434ecc08773723f2b5bfef1fb09c8c802d9c37994b51772bde3ad94da
-// Platform/common/data/README.md sha256 649728648d75b6686baf6550640190895eeb1829654bc763ccd6b7f85bd98bdb
+// Platform/common/data/README.md sha256 163df9f2f212a53e182144db14200c5ba0ee2cafeb6ce1650ec5f2a225062287
 // Platform/common/placeholders.tsv sha256 3178e8397f6baae5ba0ca7c676e091798ff2648be38cf871b744680128de90b7
 
 // Package heartbeat — the reading of the data families of P/03+P/05 (ADR-0125 № 5): by family a *Family
