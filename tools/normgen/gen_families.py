@@ -89,7 +89,7 @@ def placeholders():
         if inside:
             if not x.startswith("|"):
                 break
-            m = re.match(r"\| `(<[^`]+>)` \| `(.+?)` \| ", x)
+            m = re.match(r"\| `(<[^`]+>|\*)` \| `(.+?)` \| ", x)
             if m:
                 out[m.group(1)] = m.group(2).replace("\\|", "|")
     if not out:
@@ -99,13 +99,13 @@ def placeholders():
 
 def template(key, grammar):
     """Шаблон ключа каталога → [(литерал, плейсхолдер, грамматика)]."""
-    if "*" in key and not DOC_MODE:         # режим схемы данными: «*» — литерал (spec.KeyTemplate экранирует литералы)
+    if "*" in key and not DOC_MODE:         # режим схемы данными: «*» — плейсхолдер таблицы README (spec.PLACEHOLDER)
         raise GenError(f"{key}: «*» in a key template is outside the generator")
     segs = []
-    for part in re.split(r"(<[^<>]+>)", key):
+    for part in re.split(r"(<[^<>]+>|\*)", key):
         if not part:
             continue
-        if part.startswith("<"):
+        if part.startswith("<") or part == "*":
             if part not in grammar:
                 raise GenError(f"{key}: placeholder {part} has no grammar in {rel(KEYS_README)}")
             segs.append(("", part, grammar[part]))
