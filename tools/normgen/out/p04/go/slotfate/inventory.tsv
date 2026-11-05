@@ -1,0 +1,19 @@
+# Inventory of the slot-fate form tests (gen_machine.py): every row — its cases; no row is excluded.
+n	state	next	action	norm	cases
+1	judge	alive	result("alive", "")	P/04-R040	12
+2	judge	release	- (YOURS JudgeToRelease)	P/04-R041	14
+3	judge	move	result("move", gen_readable ? version : "")	P/04-R040	14
+4	judge	alive	result("alive", "")	P/04-R040	16
+5	judge	alive	result("alive", "")	P/04-R040	15
+6	judge	hung_moved	result("hung_moved", gen_readable ? version : "")	P/04-R040	6
+7	judge	hung	result("hung", "")	P/04-R040	7
+8	judge	wait	result("wait", gen_readable && age >= HUNG_MOVE_AFTER ? version : "")	P/04-R040	9
+9	judge	unsure_moved	result("unsure_moved", gen_readable ? version : "")	P/04-R040	6
+10	judge	unsure	result("unsure", "")	P/04-R040	7
+11	judge	unsure_moved	result("unsure_moved", gen_readable ? version : "")	P/04-R040	9
+12	judge	unsure	result("unsure", "")	P/04-R040	10
+13	judge	move	result("move", gen_readable ? version : "")	P/04-R040	12
+14	judge	move	result("move", gen_readable ? version : "")	P/04-R040	11
+15	judge	move	result("move", gen_readable ? version : "")	P/04-R040	10
+16	judge	release	- (YOURS JudgeToRelease)	P/04-R041	10
+-	judge	judge	no match: wait	-	0
