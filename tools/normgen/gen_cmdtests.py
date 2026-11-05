@@ -25,6 +25,7 @@
 import base64
 import json
 import re
+import textwrap
 import sys
 from pathlib import Path
 
@@ -47,6 +48,34 @@ PUTS_REASON = "needs the store of P/01 (runner corpus puts)"
 
 class GenError(Exception):
     pass
+
+
+PORT_HEAD = re.compile(r"\| CALL port \| [^|]+\|")
+PORT_ROW = re.compile(r"\| `([a-z][a-z0-9-]*)` \| (.+) \|")
+
+
+def read_ports(root=ROOT):
+    """{порт: описание} — таблица «CALL port» forms/README.md урока (P/03, P/04); нет таблицы — {} (P/02)."""
+    path = Path(root) / L.rel / "forms/README.md"
+    if not path.is_file():
+        return {}
+    ports, inside = {}, False
+    for line in path.read_text(encoding="utf-8").split("\n"):
+        if PORT_HEAD.fullmatch(line.strip()):
+            inside = True
+            continue
+        if inside:
+            if line.startswith("|---"):
+                continue
+            m = PORT_ROW.fullmatch(line.strip())
+            if not m:
+                break
+            if m[1] in ports:
+                raise GenError(f"forms/README.md: CALL port {m[1]} repeats")
+            ports[m[1]] = m[2]
+    if inside and not ports:
+        raise GenError("forms/README.md: the table «CALL port» has no rows")
+    return ports
 
 
 def camel(name):
@@ -148,7 +177,10 @@ def parse_step(root, chapter, scenario, step, request, expect):
                 "expect": [("run", parse_expect_run(expect, where))]}
     if request.startswith("CALL "):
         name, _, rest = request[5:].partition(" ")
-        if name not in CALLS:
+        ports = read_ports(root)
+        if ports and name not in ports:
+            raise GenError(f"{where}: CALL {name!r} — a port of the table «CALL port» of forms/README.md ({', '.join(ports)})")
+        if not ports and name not in CALLS:
             raise GenError(f"{where}: CALL {name!r} — one of {CALLS} (forms README «CALL normalization»)")
         json_text(rest, where)
         return {"kind": "call", "name": name, "input": rest, "expect": [("call", parse_expect_call(expect, where))]}
@@ -393,6 +425,9 @@ def build(root=ROOT):
                 body += [f"// {test} — chapter {chapter}, seams.tsv.", f"func {test}(t *testing.T) {{",
                          "\trunSeam(t, []step{"] + [f"\t\t{go_step(s)}," for s in data] + ["\t})", "}", ""]
         files[f"go/stagetests/{stage.replace('-', '_')}_test.go"] = gofmt("\n".join(body))
+    ports = read_ports(root)
+    if ports:
+        return build_ports(files, inventory, tests, ports)
     files["go/stagetests/engine_test.go"] = gofmt(ENGINE.replace("normgen/p02/", GO_MODULE + "/"))
     files["go/stagetests/doc.go"] = gofmt(DOC)
     files["go/stagetests/testdata/verdicts.jsonl"] = "".join(
@@ -405,6 +440,300 @@ def build(root=ROOT):
            "step\tstage\ttest\tstatus\treason"] + ["\t".join(map(str, r)) for r in inventory]
     files["go/stagetests/inventory.tsv"] = "\n".join(inv) + "\n"
     return files, inventory
+
+
+def go_ident(port):
+    return "".join(w[:1].upper() + w[1:] for w in port.split("-"))
+
+
+def build_ports(files, inventory, tests, ports):
+    """Швы урока по портам CALL (P/03, P/04): движок только CALL, по файлу адаптера на порт (YOURS)."""
+    used, names = set(), set()
+    for stage, items in tests.items():
+        for _, _, test, _ in items:
+            if test in names:
+                raise GenError(f"{stage}: two seams give one test name {test} (scenario names repeat across chapters)")
+            names.add(test)
+        for kind, chapter, test, data in items:
+            if kind != "seams":
+                raise GenError(f"{stage}: {kind} in a lesson of CALL ports — not yet")
+            for st in data:
+                if st["kind"] != "call" or st.get("k"):
+                    raise GenError(f"{stage}: {test} step {st['n']}: {st['kind']} — a lesson of CALL ports has CALL "
+                                   "steps only (not yet RUN, @file, @read, @parallel)")
+                if st["expect"][0][1] in ("@absent", "@exit 2"):
+                    raise GenError(f"{stage}: {test} step {st['n']}: {st['expect'][0][1]} is not a CALL port answer")
+                used.add(st["name"])
+    table = "".join(f"\t{go_str(p)}: lessonadapter.{go_ident(p)},\n" for p in ports)
+    files["go/stagetests/engine_test.go"] = gofmt(PORT_ENGINE.replace("normgen/p02/", GO_MODULE + "/")
+                                                  .replace("//PORTS\n", table) + "\n" + PORT_HELPERS)
+    files["go/stagetests/doc.go"] = gofmt(PORT_DOC.replace("{lesson}", L.code))
+    files["go/lessonadapter/lessonadapter.go"] = gofmt(PORT_ADAPTER.replace("{lesson}", L.code))
+    for port, text in ports.items():
+        doc = "\n".join("// " + line for line in textwrap.wrap(text.replace("`", ""), 112))
+        files[f"go/lessonadapter/{port.replace('-', '_')}.go"] = gofmt(
+            PORT_STUB_HEAD + 'import "encoding/json"\n\n'
+            f"// {go_ident(port)} — the CALL port {port} (forms/README.md «Seams»): input is its one JSON value; it returns\n"
+            "// the JSON value the seams compare (an object by subset). Invoke your real code and record its effects;\n"
+            "// never answer a case from its expected output. An error is «cannot answer», never a normal refusal.\n"
+            f"//\n{doc}\n"
+            f"func {go_ident(port)}(input json.RawMessage) (json.RawMessage, error) {{\n"
+            f'\treturn nil, ErrNotImplemented("{port}")\n}}\n')
+    for port in ports:
+        if port not in used:
+            inventory.append((f"forms/README.md/CALL {port}", "-", "-", "excluded",
+                              "no seam of the stage plan calls this port"))
+    inv = ["# Inventory of the stage tests of the lesson (gen_cmdtests.py): every selected step — translated or excluded.",
+           "step\tstage\ttest\tstatus\treason"] + ["\t".join(map(str, r)) for r in inventory]
+    files["go/stagetests/inventory.tsv"] = "\n".join(inv) + "\n"
+    return files, inventory
+
+
+PORT_STUB_HEAD = """// Generated by tools/normgen/gen_cmdtests.py. YOURS from here: the kit puts this file once and never overwrites it.
+// One port per file: replace the body with a call of your own code; keep the signature (the stage tests call it).
+
+package lessonadapter
+
+"""
+
+PORT_ADAPTER = """// Code generated by tools/normgen/gen_cmdtests.py; DO NOT EDIT.
+
+// Package lessonadapter — the CALL ports of the seams of {lesson} (forms/README.md «Seams»): one function per port, in
+// its own file (yours). The port names and JSON are test normalization, not the API of your implementation.
+package lessonadapter
+
+import "errors"
+
+// ErrNotImplemented — the stub's answer: the port is not connected yet (the test is red, never a refusal).
+func ErrNotImplemented(port string) error { return errors.New("lessonadapter: the CALL port " + port + " is not implemented") }
+"""
+
+PORT_DOC = """// Code generated by tools/normgen/gen_cmdtests.py; DO NOT EDIT.
+
+// Package stagetests — the stage tests of {lesson} from forms/stages.tsv and the seams acceptance/…/seams.tsv: each
+// scenario is a list of CALL <port> <JSON> steps through lessonadapter; the answer is compared by the common acceptance
+// rules (an object by subset, {} exactly empty, "@absent" — no field, "$name" — a binding, numbers by value). Run:
+// go test ./internal/stagetests/.
+package stagetests
+"""
+
+PORT_ENGINE = r"""// Code generated by tools/normgen/gen_cmdtests.py: the engine of the CALL ports; DO NOT EDIT.
+
+package stagetests
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"math/big"
+	"regexp"
+	"sort"
+	"testing"
+
+	"normgen/p02/lessonadapter"
+)
+
+type expect struct {
+	call string
+}
+
+type step struct {
+	n       int
+	line    int
+	kind    string
+	name    string
+	input   string
+	expects []expect
+}
+
+var varRx = regexp.MustCompile(`^\$[A-Za-z_][A-Za-z0-9_]*$`)
+
+var ports = map[string]func(json.RawMessage) (json.RawMessage, error){
+//PORTS
+}
+
+// runSeam — one scenario: a fresh start per scenario is the adapter's (forms README); the steps in order, a failed
+// step stops the scenario.
+func runSeam(t *testing.T, steps []step) {
+	t.Helper()
+	env := map[string]string{}
+	for _, st := range steps {
+		if errs := callStep(st, env); len(errs) > 0 {
+			t.Fatalf("seams.tsv line %d (step %d, CALL %s):\n  %s", st.line, st.n, st.name, joinErrs(errs))
+		}
+	}
+}
+
+func joinErrs(errs []string) string {
+	out := ""
+	for i, e := range errs {
+		if i > 0 {
+			out += "\n  "
+		}
+		out += e
+	}
+	return out
+}
+
+func callStep(st step, env map[string]string) (errs []string) {
+	port, ok := ports[st.name]
+	if !ok {
+		return []string{"no port " + st.name}
+	}
+	var out json.RawMessage
+	var err error
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("the port panicked: %v (a panic is not a refusal)", r)
+			}
+		}()
+		out, err = port(json.RawMessage(st.input))
+	}()
+	if err != nil {
+		return []string{err.Error()}
+	}
+	act, err := decode(out)
+	if err != nil {
+		return []string{fmt.Sprintf("the answer %q: %v", clip(out), err)}
+	}
+	for _, e := range st.expects {
+		exp, err := decode([]byte(e.call))
+		if err != nil {
+			return []string{"the expectation: " + err.Error()}
+		}
+		trial := copyEnv(env)
+		match(exp, act, trial, "$", &errs)
+		if len(errs) == 0 {
+			for k, v := range trial {
+				env[k] = v
+			}
+		}
+	}
+	return errs
+}
+
+func copyEnv(env map[string]string) map[string]string {
+	out := make(map[string]string, len(env))
+	for k, v := range env {
+		out[k] = v
+	}
+	return out
+}
+
+var _ = sort.Strings
+var _ = big.NewRat
+var _ = bytes.NewReader
+"""
+
+PORT_HELPERS = r'''// decode — JSON with numbers as json.Number (compared by value).
+func decode(data []byte) (any, error) {
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.UseNumber()
+	var v any
+	if err := dec.Decode(&v); err != nil {
+		return nil, err
+	}
+	if dec.More() {
+		return nil, fmt.Errorf("more than one JSON value")
+	}
+	return v, nil
+}
+
+// match — the common acceptance rules: an object by subset ({} — exactly empty; "@absent" — the field is absent),
+// a list element by element, "$name" — a string binding, numbers by value, the rest equal.
+func match(exp, act any, env map[string]string, path string, out *[]string) {
+	if s, ok := exp.(string); ok && varRx.MatchString(s) {
+		as, ok := act.(string)
+		switch {
+		case !ok:
+			*out = append(*out, fmt.Sprintf("%s: %s must be a string, got %s", path, s, show(act)))
+		case env[s] != "":
+			if env[s] != as {
+				*out = append(*out, fmt.Sprintf("%s: %s is %q, got %q", path, s, env[s], as))
+			}
+		default:
+			env[s] = as
+		}
+		return
+	}
+	switch e := exp.(type) {
+	case map[string]any:
+		a, ok := act.(map[string]any)
+		if !ok {
+			*out = append(*out, fmt.Sprintf("%s: want an object, got %s", path, show(act)))
+			return
+		}
+		if len(e) == 0 && len(a) != 0 {
+			*out = append(*out, fmt.Sprintf("%s: want {} exactly, got %s", path, show(act)))
+			return
+		}
+		keys := make([]string, 0, len(e))
+		for k := range e {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			v := e[k]
+			av, has := a[k]
+			if v == "@absent" {
+				if has {
+					*out = append(*out, fmt.Sprintf("%s.%s: want absent, got %s", path, k, show(av)))
+				}
+				continue
+			}
+			if !has {
+				*out = append(*out, fmt.Sprintf("%s.%s: missing", path, k))
+				continue
+			}
+			match(v, av, env, path+"."+k, out)
+		}
+	case []any:
+		a, ok := act.([]any)
+		if !ok || len(a) != len(e) {
+			*out = append(*out, fmt.Sprintf("%s: want %s, got %s", path, show(exp), show(act)))
+			return
+		}
+		for i := range e {
+			match(e[i], a[i], env, fmt.Sprintf("%s[%d]", path, i), out)
+		}
+	case json.Number:
+		an, ok := act.(json.Number)
+		x, okx := new(big.Rat).SetString(string(e))
+		var y *big.Rat
+		oky := false
+		if ok {
+			y, oky = new(big.Rat).SetString(string(an))
+		}
+		if !ok || !okx || !oky || x.Cmp(y) != 0 {
+			*out = append(*out, fmt.Sprintf("%s: want %s, got %s", path, e, show(act)))
+		}
+	default:
+		if fmt.Sprintf("%T %v", exp, exp) != fmt.Sprintf("%T %v", act, act) {
+			*out = append(*out, fmt.Sprintf("%s: want %s, got %s", path, show(exp), show(act)))
+		}
+	}
+}
+
+func show(v any) string {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Sprint(v)
+	}
+	if len(b) > 300 {
+		return string(b[:300]) + "…"
+	}
+	return string(b)
+}
+
+func clip(b []byte) string {
+	if len(b) > 300 {
+		return string(b[:300]) + "…"
+	}
+	return string(b)
+}
+
+'''
 
 
 ADAPTER_TYPES = '''// Code generated by tools/normgen/gen_cmdtests.py; DO NOT EDIT.
@@ -1214,6 +1543,7 @@ def provenance():
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()}
     forms = [L.form("stages.tsv"), L.form("README.md")]
     forms += sorted((L.path("acceptance")).glob("*/seams.tsv")) + sorted((L.path("acceptance")).glob("*/verdicts.tsv"))
+    forms += [L.path("acceptance/seams.tsv")]           # урок одной главой (P/04): швы без подкаталога
     return {"form": [entry(f) for f in forms if Path(f).is_file()], "generator": entry(Path(__file__).resolve()),
             "handwritten": [], "judge": entry(JUDGE)}
 
@@ -1244,6 +1574,28 @@ code is not an exit code), so every test is red until you connect your code. `Te
 `puts.tsv` are not here: they need the store of P/01 — the runner judges them (`inventory.tsv` names them).
 """
 
+
+
+KIT_MD_PORTS = """
+## Part `stagetests`: the stage tests of the lesson over CALL ports (generated; the adapter is **yours**)
+
+| Package | Import path | Origin |
+|---|---|---|
+| `stagetests` | `{module}/internal/stagetests` | generated from `forms/stages.tsv` and the seams `acceptance/…/seams.tsv`; closed |
+| `lessonadapter` | `{module}/internal/lessonadapter` | `lessonadapter.go` — closed; one file per CALL port of `forms/README.md` «Seams» — **yours** |
+
+```go
+func WorkerCapture(input json.RawMessage) (json.RawMessage, error) // one function per port: <port> in CamelCase
+```
+
+Each port takes the one JSON value of `CALL <port> <JSON>` and returns the JSON value the seam compares (an object
+by subset, `{}` exactly empty, `"@absent"` — no field, `"$name"` — a binding within the scenario, numbers by value).
+Start a fresh real implementation per scenario, invoke it and record its effects; never answer from the expected
+output. An error or a panic is a failed step, never a refusal. The stubs answer «not implemented»: every test is red
+until you connect a port. `Test<Stage>_<Scenario>` — one per seam scenario of the stage plan (`inventory.tsv`).
+"""
+if read_ports():
+    KIT_MD = KIT_MD_PORTS
 
 def main(argv):
     out = Path(argv[1]) if len(argv) > 1 else DEFAULT_OUT
