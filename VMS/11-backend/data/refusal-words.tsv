@@ -1,7 +1,7 @@
 # The closed list of values of code of the Problem answer of the backend doors: chapters 11.1–11.6, 11.8, 11.20 (ADR-0094 B5; measurement С.5). Moved from Н4, it does not change the norms: on a mismatch the source is the norm in the column norm.
 # The word error here is the code of the contract. Where it is translated from (a console or domain word) — in the column norm. The values — the list ProblemCode of the contract; there are no own codes (V/11.2 Н1.3).
-# door — the contract doors: devices, archives, volumes, objects; folders; operations; discovery; access; rules; schedules — and day-groups, modes, maintenance-windows; exports — and /me/export (11.20); test — /test/*; * — every door. code — the status; 4xx — the door status; «-» — the code of a step result, a failed group record has no status: 200.
-# field — «-»: there is no field; <поле> — the contract field that the refusal names; otherwise — the exact value. 502–504 — UPSTREAM_UNAVAILABLE (V/11.2 Н1.3). The words of the assistant turn — V/11.7.
+# door — the contract doors: units — `/kinds`, `/units` and the subject paths `/units/{uid}/…` (the folders are records of the kind `folder`); objects; domains — `/domains/{domainId}/…`; operations; discovery; access; rules; schedules — and day-groups, modes, maintenance-windows; exports — and /me/export (11.20); test — /test/*; * — every door. code — the status; 4xx — the door status; «-» — the code of a step result, a failed group record has no status: 200.
+# field — «-»: there is no field; <поле> — the contract field that the refusal names; otherwise — the exact value: on the core paths a JSON Pointer (/name, /parentId, /kind, /folders, /properties/<имя>; V/11.14 Н1.2), outside them and in the parameters of a request — the name of the schema field. 502–504 — UPSTREAM_UNAVAILABLE (V/11.2 Н1.3). The words of the assistant turn — V/11.7.
 door	code	error	field	norm
 *	401	UNAUTHORIZED	-	11.1, 11.2 Н4; 11.4 Н4: 401 of the gate, 401 of the callback; 11.5 Н4
 *	403	PERMISSION_DENIED	-	11.1 Н4; 11.4 Н4: 403 denied
@@ -12,77 +12,77 @@ door	code	error	field	norm
 *	404	NOT_FOUND	-	11.4 Н4: 404 there is no row
 *	412	VERSION_MISMATCH	-	11.4 Н4: 412 row moved otherwise, revision moved; current
 *	428	PRECONDITION_REQUIRED	-	11.4 Н1.3, Н1.8; 11.8 Н4
-*	422	NOT_SUPPORTED	<поле>	11.3 Н4: writing a field none, read, const
-*	422	VALIDATION_FAILED	<поле>	11.4 Н4: 400 of the schema, the field is named in the word; 11.4 Н1.3, 11.8 Н1.5: the body does not match the contract schema; 11.3 Н4: null, an id outside the listing, local without serverId
+*	422	NOT_SUPPORTED	<поле>	11.3 Н4: writing a property none, read, const; a property outside Unit.writable
+*	422	VALIDATION_FAILED	<поле>	11.4 Н4: 400 of the schema, the field is named in the word; 11.4 Н1.3, 11.8 Н1.5: the body does not match the contract schema; 11.3 Н4: null, an id outside the listing, a kind with serverRequired without a server parentId; a readOnly property, a property outside the kind schema (params.keyword)
 *	4xx	VALIDATION_FAILED	-	11.4, 11.8 Н4: 4xx, the word is not derived unambiguously; the door status
-devices	409	NAME_TAKEN	-	11.4 Н4: 409 unique (name)
-devices	409	NAME_TAKEN	name	11.4 Н4: 412 row moved of the row rec/volumes/<name> with cas ""
-devices	422	NAME_REQUIRED	name	11.3 Н4: an empty name of a device, of a storage
-devices	422	VALIDATION_FAILED	ip	11.4 Н4: 409 unique (camera address); 11.3 Н4: no ip, PATCH ip: null
-devices	422	VALIDATION_FAILED	rtspUrl	11.3 Н4: creation without rtspUrl and without vendor, model
-devices	422	VALIDATION_FAILED	videoChannel	11.3 Н4: videoChannel less than 1
-devices	422	VALIDATION_FAILED	detectorKind	11.4 Н1.2: creating a detector without a kind
-devices	422	VALIDATION_FAILED	noDetector	11.3 Н1.2б: a kind outside the contract listing
-devices	422	VALIDATION_FAILED	<поле>	11.4 Н4: 409 ref, must_match, fixed
-devices	422	VALIDATION_FAILED	copies	11.4 Н1.14: a repeat, no server, two servers of one cluster, a server of the primary's cluster
-devices	422	VALIDATION_FAILED	-	11.4 Н4: 413 batch too large
-devices	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.4: another body, another operation with the same key
-devices	422	NOT_SUPPORTED	type	11.3 Н4: the device kind; 11.4 Н1.2: DELETE, PATCH channel, storage, children; 11.20 Н1.7: recording days not of a camera
-devices	422	NOT_SUPPORTED	stream	11.3 Н4: no other stream, another word
-devices	422	NOT_SUPPORTED	<поле>	11.3 Н4: address fields next to rtspUrl, an address not ipint://, a host change of ipsrv, configMode, children; 11.4 Н1.2: ipsrv without a row
-devices	409	IDENTIFIER_TAKEN	identifier	11.4 Н1.2, Н1.5: a taken number
-devices	422	PARENT_MISMATCH	parentId	11.4 Н1.5: parentId of creation
-devices	-	IDENTIFIER_TAKEN	identifier	11.4 Н1.5: failed of an element, status 200
-devices	-	PARENT_MISMATCH	parentId	11.4 Н1.5: failed of an element, status 200
-devices	422	VALIDATION_FAILED	recordScheduleId	11.4 Н1.3: sched without a schedule
-devices	422	NOT_SUPPORTED	recordDetectorIds	11.3 Н4: different kinds
-devices	422	VALIDATION_FAILED	recordDetectorIds	11.3 Н4: not det/units, built-in, without motion
-devices	-	VALIDATION_FAILED	folderId	11.4 Н1.7: failed, the domain doors do not answer, there is no device
-devices	-	NOT_FOUND	folderId	11.4 Н1.7: failed, the folder is not in the tree
-devices	409	DEVICE_OFFLINE	enabled	11.4 Н1.2: enabling one disabled by a rule, a request without an outcome
-devices	-	DEVICE_OFFLINE	enabled	11.4 Н1.2: the same, failed of an element, the step result
-devices	422	NOT_SUPPORTED	encrypted	11.3 Н4
-devices	422	NOT_SUPPORTED	name	11.3 Н4
-devices	422	NOT_SUPPORTED	detectorKind	11.3 Н4
-devices	422	NOT_SUPPORTED	sensitivity	11.3 Н4
-devices	409	BUSY	-	11.3 Н4: a built-in detector, an incompatible one is enabled, params.reason: incompatible, params.with
-devices	-	BUSY	enabled	11.4 Н1.5: failed of an element, status 200
-devices	422	NOT_SUPPORTED	retentionDays	11.3 Н4
-devices	422	NOT_SUPPORTED	ip	11.3 Н4: source without a network host
-folders	403	PERMISSION_DENIED	-	11.4 Н1.7: the folder tree to a cluster administrator, params scope
-folders	409	SERVER_OFFLINE	-	11.4 Н1.7: the domain doors of folders and membership do not answer
-folders	404	NOT_FOUND	-	11.4 Н4: no such folder, no such parent, parent gone, folder gone, parent moved, row moved of the chain guard
-folders	412	VERSION_MISMATCH	-	11.4 Н4: folder moved, revision moved; current
-folders	422	VALIDATION_FAILED	parentId	11.4 Н4: too deep
-folders	422	NAME_REQUIRED	name	11.4 Н1.7
-folders	422	NOT_SUPPORTED	<поле>	11.4 Н1.7: a folder member is not a unit
+units	409	NAME_TAKEN	-	11.4 Н4: 409 unique (name)
+units	409	NAME_TAKEN	/name	11.4 Н4: 412 row moved of the row rec/volumes/<name> with cas ""
+units	422	NAME_REQUIRED	/name	11.3 Н4: an empty name of a device, of a storage
+units	422	VALIDATION_FAILED	/properties/ip	11.4 Н4: 409 unique (camera address); 11.3 Н4: no ip, PATCH ip: null
+units	422	VALIDATION_FAILED	/properties/rtspUrl	11.3 Н4: creation without rtspUrl and without vendor, model
+units	422	VALIDATION_FAILED	/properties/videoChannel	11.3 Н4: videoChannel less than 1
+units	422	VALIDATION_FAILED	/properties/detectorKind	11.4 Н1.2: creating a detector without a kind
+units	422	VALIDATION_FAILED	noDetector	11.3 Н1.2б: a kind outside the contract listing
+units	422	VALIDATION_FAILED	<поле>	11.4 Н4: 409 ref, must_match, fixed
+units	422	VALIDATION_FAILED	copies	11.4 Н1.14: a repeat, no server, two servers of one cluster, a server of the primary's cluster
+units	422	VALIDATION_FAILED	-	11.4 Н4: 413 batch too large
+units	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.4: another body, another operation with the same key
+units	422	NOT_SUPPORTED	/kind	11.3 Н4: a kind outside GET /kinds, a unit without a template of the kind, removal over a batch B9; 11.2 Н1.2, 11.4 Н1.2: a kind without the capability (DELETE, PATCH channel, storage), params.capability; 11.20 Н1.7: recording days of a kind without vms.camera/1
+units	422	NOT_SUPPORTED	/properties/stream	11.3 Н4: no other stream, another word
+units	422	NOT_SUPPORTED	<поле>	11.3 Н4: address fields next to rtspUrl, an address not ipint://, a host change of ipsrv, configMode, children; 11.4 Н1.2: ipsrv without a row
+units	409	IDENTIFIER_TAKEN	/properties/identifier	11.4 Н1.2, Н1.5: a taken number
+units	422	PARENT_MISMATCH	/parentId	11.4 Н1.5: parentId of creation
+units	-	IDENTIFIER_TAKEN	/properties/identifier	11.4 Н1.5: failed of an element, status 200
+units	-	PARENT_MISMATCH	/parentId	11.4 Н1.5: failed of an element, status 200
+units	422	VALIDATION_FAILED	/properties/recordScheduleId	11.4 Н1.3: sched without a schedule
+units	422	NOT_SUPPORTED	/properties/recordDetectorIds	11.3 Н4: different kinds
+units	422	VALIDATION_FAILED	/properties/recordDetectorIds	11.3 Н4: not det/units, built-in, without motion
+units	-	VALIDATION_FAILED	/folders	11.4 Н1.7: failed, the domain doors do not answer, there is no device
+units	-	NOT_FOUND	/folders	11.4 Н1.7: failed, the folder is not in the tree
+units	409	DEVICE_OFFLINE	/properties/enabled	11.4 Н1.2: enabling one disabled by a rule, a request without an outcome
+units	-	DEVICE_OFFLINE	/properties/enabled	11.4 Н1.2: the same, failed of an element, the step result
+units	422	NOT_SUPPORTED	/properties/encrypted	11.3 Н4
+units	422	NOT_SUPPORTED	/name	11.3 Н4
+units	422	NOT_SUPPORTED	/properties/detectorKind	11.3 Н4
+units	422	NOT_SUPPORTED	/properties/sensitivity	11.3 Н4
+units	409	BUSY	-	11.3 Н4: a built-in detector, an incompatible one is enabled, params.reason: incompatible, params.with
+units	-	BUSY	/properties/enabled	11.4 Н1.5: failed of an element, status 200
+units	422	NOT_SUPPORTED	/properties/retentionDays	11.3 Н4
+units	422	NOT_SUPPORTED	/properties/ip	11.3 Н4: source without a network host
+units	403	PERMISSION_DENIED	-	11.4 Н1.7: the folder tree to a cluster administrator, params scope
+units	409	SERVER_OFFLINE	-	11.4 Н1.7: the domain doors of folders and membership do not answer
+units	404	NOT_FOUND	-	11.4 Н4: no such folder, no such parent, parent gone, folder gone, parent moved, row moved of the chain guard
+units	412	VERSION_MISMATCH	-	11.4 Н4: folder moved, revision moved; current
+units	422	VALIDATION_FAILED	/parentId	11.4 Н4: too deep
+units	422	NAME_REQUIRED	/name	11.4 Н1.7
+units	422	NOT_SUPPORTED	<поле>	11.4 Н1.7: a folder member is not a unit
 operations	404	NOT_FOUND	-	11.4 Н4: no such operation, no operations
 operations	409	BUSY	-	11.4 Н4: root busy, operation done, operation running, nothing to retry
-devices	409	BUSY	-	11.4 Н1.8: a busy object
-devices	-	BUSY	-	11.4 Н1.8: a busy object, failed of an element
-devices	409	SERVER_OFFLINE	-	11.4 Н4: the target member is not ok, the deadline of the edit outcome has passed (Н1.13)
-devices	412	VERSION_MISMATCH	-	11.4 Н4: the edit outcome conflict (Н1.13)
-devices	403	PERMISSION_DENIED	-	11.4 Н4: the edit outcome refused, status 403 (Н1.13)
-devices	404	NOT_FOUND	-	11.4 Н4: the edit outcome refused, status 404; serverId outside the listing (Н1.13)
+units	409	BUSY	-	11.4 Н1.8: a busy object
+units	-	BUSY	-	11.4 Н1.8: a busy object, failed of an element
+units	409	SERVER_OFFLINE	-	11.4 Н4: the target member is not ok, the deadline of the edit outcome has passed (Н1.13)
+units	412	VERSION_MISMATCH	-	11.4 Н4: the edit outcome conflict (Н1.13)
+units	403	PERMISSION_DENIED	-	11.4 Н4: the edit outcome refused, status 403 (Н1.13)
+units	404	NOT_FOUND	-	11.4 Н4: the edit outcome refused, status 404; serverId outside the listing (Н1.13)
 discovery	409	BUSY	-	11.4 Н1.9, Н4: a discovery is running
-operations	422	VALIDATION_FAILED	items	11.4 Н4: too many steps, too many operations; 11.4 Н1.8: a step not with exactly one of set, folderIds, create, an empty items
+operations	422	VALIDATION_FAILED	items	11.4 Н4: too many steps, too many operations; 11.4 Н1.8: a step not with exactly one of patch, action, delete, folders, createUnit, move (OperationItemRequest), an empty items
 operations	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.8
 operations	-	UPSTREAM_UNAVAILABLE	-	11.4 Н1.8: the step not_run, the code of the step result
-operations	-	SERVER_OFFLINE	-	11.4 Н1.7: the step folderIds, the domain doors do not answer
+operations	-	SERVER_OFFLINE	-	11.4 Н1.7: the step folders, the domain doors do not answer
 operations	409	NOT_REVERTIBLE	-	11.4 Н1.12: revert: expired, reverted, running, empty, notLast, isRevert; repeat: notLast, stale in params.reason
-devices	409	DEVICE_REFUSED	-	11.4 Н1.16, Н1.17: noOperation, refused in params.reason
-devices	409	DEVICE_OFFLINE	-	11.4 Н1.16, Н1.17: no connectivity, a request without an outcome
-devices	422	NOT_SUPPORTED	streamId	11.4 Н1.15: the main stream
-devices	422	NOT_SUPPORTED	ptz	11.4 Н1.16: a camera without ptz
-devices	422	NOT_SUPPORTED	<поле>	11.4 Н1.19: a ServerPatch field other than labels
-devices	422	VALIDATION_FAILED	labels	11.4 Н1.19: a label outside the alphabet
+units	409	DEVICE_REFUSED	-	11.4 Н1.16, Н1.17: noOperation, refused in params.reason
+units	409	DEVICE_OFFLINE	-	11.4 Н1.16, Н1.17: no connectivity, a request without an outcome
+units	422	NOT_SUPPORTED	streamId	11.4 Н1.15: the main stream
+units	422	NOT_SUPPORTED	ptz	11.4 Н1.16: a camera without ptz
+units	422	NOT_SUPPORTED	<поле>	11.4 Н1.19: a UnitPatch field of a server record other than labels
+units	422	VALIDATION_FAILED	/properties/labels	11.4 Н1.19: a label outside the alphabet
 access	422	NAME_REQUIRED	name	11.4 Н1.18: a stream account without a name
 access	422	VALIDATION_FAILED	name	11.4 Н1.18: bad name
 access	404	NOT_FOUND	-	11.4 Н1.18: no such account
-devices	422	VALIDATION_FAILED	stream	11.3 Н4, 11.4 Н1.15: a stream not from Device.streams, taken
-devices	422	VALIDATION_FAILED	res	11.3 Н4: outside resOptions
-devices	422	VALIDATION_FAILED	zone	11.3 Н4: a zone not of the form
-devices	422	VALIDATION_FAILED	template	11.3 Н4: a template outside detectorOptions
+units	422	VALIDATION_FAILED	/properties/stream	11.3 Н4, 11.4 Н1.15: a stream not from the stream records of the camera (properties.streamId), taken
+units	422	VALIDATION_FAILED	/properties/res	11.3 Н4: outside resOptions
+units	422	VALIDATION_FAILED	/properties/zone	11.3 Н4: a zone not of the form
+units	422	VALIDATION_FAILED	/properties/template	11.3 Н4: a template outside detectorOptions
 rules	422	RULE_INVALID	-	11.3 Н4: the input, output number differs from the target's record
 operations	-	NOT_SUPPORTED	<слово>	11.4 Н1.12: a revert step, refuse: volume, deleted, bound_to, secret, folderIds
 operations	-	VERSION_MISMATCH	-	11.4 Н1.12: a revert step, the values are not equal to after
@@ -131,35 +131,38 @@ test	422	NOT_SUPPORTED	fixturePatch	11.6 Н1.3, Н4
 test	422	NOT_SUPPORTED	actAs	11.6 Н1.3, Н4
 *	422	INVALID_CURSOR	-	11.3 Н1.2б: cursor expired, someone else's
 *	422	VALIDATION_FAILED	limit	11.3 Н1.2б: limit outside 1…pageMax
-devices	422	VALIDATION_FAILED	ids	11.3 Н1.2б, 11.5 Н1.2: ids over idsMax, watchMax
-devices	422	VALIDATION_FAILED	watch	11.5 Н1.2: watch of the open request over watchMax
-folders	422	VALIDATION_FAILED	add	11.4 Н1.7: the content over selectMax, outside the kind's listing, a chain
-folders	422	VALIDATION_FAILED	remove	11.4 Н1.7: outside the kind's listing
+units	422	VALIDATION_FAILED	ids	11.3 Н1.2б, 11.5 Н1.2: ids over idsMax, watchMax
+units	422	VALIDATION_FAILED	watch	11.5 Н1.2: watch of the open request over watchMax
+units	422	VALIDATION_FAILED	/folders	11.4 Н1.7: Unit.folders over selectMax, outside the kind's listing, a chain
+units	422	VALIDATION_FAILED	/folders	11.4 Н1.7: outside the kind's listing
 objects	422	VALIDATION_FAILED	items	11.4 Н1.5: over selectMax
-devices	409	OTHER_CLUSTER	-	11.4 Н1.13: live, pan-tilt, preset, params.url
-devices	-	FINGERPRINT_MISMATCH	-	11.4 Н1.14: element failed
+units	409	OTHER_CLUSTER	-	11.4 Н1.13: live, pan-tilt, preset, params.url
+units	-	FINGERPRINT_MISMATCH	-	11.4 Н1.14: element failed, the step move of /operations
+units	409	FINGERPRINT_MISMATCH	-	11.4 Н1.14: POST /units/{uid}/move with another params.fingerprint (UnitMoveRequest)
 operations	-	NOT_SUPPORTED	-	11.4 Н1.12: a revert step, params.reason: folders
-devices	409	NAME_TAKEN	items[i].name	11.4 Н1.21
-devices	422	VALIDATION_FAILED	items	11.4 Н1.21: the form, over scenariosMax
+domains	409	NAME_TAKEN	items[i].name	11.4 Н1.21
+domains	422	VALIDATION_FAILED	items	11.4 Н1.21: the form, over scenariosMax
 access	422	VALIDATION_FAILED	changes[i]	11.8 Н1.5 item 1а
 access	422	VALIDATION_FAILED	retryClusters	11.8 Н1.5 item 5а
-devices	409	OTHER_NETWORK	-	11.4 Н1.15: delivery for another network, params.labels
-devices	409	NO_PRIMARY	-	11.4 Н1.25: there is no primary recording of its own cluster
-devices	409	DEVICE_REFUSED	-	11.4 Н1.23: the door has no route keeps
-devices	422	VALIDATION_FAILED	state	11.4 Н1.17: no state
-devices	422	VALIDATION_FAILED	at	11.4 Н1.22: at not of the form
-devices	422	VALIDATION_FAILED	to	11.4 Н1.23, Н1.25: the end is not later than the start; 11.4 Н1.24: a span without to, a moment with to; 11.20 Н1.7: recording days
-devices	422	VALIDATION_FAILED	note	11.4 Н1.24: an empty note
-devices	422	VALIDATION_FAILED	recordingIds	11.4 Н1.23: a recording not of this camera
-devices	503	UPSTREAM_UNAVAILABLE	-	11.4 Н1.15: there is no gateway yet
-exports	422	VALIDATION_FAILED	<поле>	11.20 Н1.2 item 1: not by the schema ExportCreate, a JSON Pointer into the body; item 3: the combinations of V/08.6 Н1.1 — /periods, /at, /cameras/i/archiveId, a repeat /cameras/i; /cameras/i/deviceId, /cameras/i/archiveId of item 5; /special/maxFileMb below 100
+units	409	OTHER_NETWORK	-	11.4 Н1.15: delivery for another network, params.labels
+units	409	NO_PRIMARY	-	11.4 Н1.25: there is no primary recording of its own cluster
+units	409	DEVICE_REFUSED	-	11.4 Н1.23: the door has no route keeps
+units	422	VALIDATION_FAILED	state	11.4 Н1.17: no state
+units	422	VALIDATION_FAILED	at	11.4 Н1.22: at not of the form
+units	422	VALIDATION_FAILED	to	11.4 Н1.23, Н1.25: the end is not later than the start
+units	422	VALIDATION_FAILED	/to	11.4 Н1.24: a span without to or with to not later than occurred, a moment with to (BookmarkCreate); 11.20 Н1.7: recording days, to earlier than from
+units	422	VALIDATION_FAILED	/from	11.20 Н1.7: recording days, a window longer than a year
+units	422	VALIDATION_FAILED	note	11.4 Н1.24: an empty note
+units	422	VALIDATION_FAILED	recordingIds	11.4 Н1.23: a recording not of this camera
+units	503	UPSTREAM_UNAVAILABLE	-	11.4 Н1.15: there is no gateway yet
+exports	422	VALIDATION_FAILED	<поле>	11.20 Н1.2 item 1: not by the schema ExportCreate, a JSON Pointer into the body; item 3: the combinations of V/08.6 Н1.1 — /periods, /at, /cameras/i/archiveId, a repeat /cameras/i; /cameras/i/archiveId of item 5; /special/maxFileMb below 100
 exports	422	VALIDATION_FAILED	/periods/i/to	11.20 Н1.2 item 3: the end of a period is not later than its start
 exports	422	VALIDATION_FAILED	/cameras/i/area	11.20 Н1.2 item 3: the area box outside w > 0, h > 0, x + w ≤ 1, y + h ≤ 1 (ADR-0117 addendum (7) item 3)
 exports	422	VALIDATION_FAILED	idempotencyKey	11.20 Н1.2 «Repeat»: another body with the same key (11.4 Н1.4)
 exports	422	VALIDATION_FAILED	ids	11.20 Н1.1: ids over idsMax, an id not a UUID
 exports	422	VALIDATION_FAILED	state	11.20 Н1.3: a word outside Export.state
 exports	422	NOT_SUPPORTED	/cameras	11.20 Н1.2 item 2: a frame of several cameras (the Architect's decision of 2026-11-04)
-exports	422	NOT_SUPPORTED	<поле>	11.20 Н1.2 item 2: outside the declaration and Reference.export — /format, /singleFile, /source, /quality/…, /titles/…, /special/player, /privacy, /highlight, /destination; item 5: /cameras/i/deviceId not a camera; item 10: transcoding without a server gpu
+exports	422	NOT_SUPPORTED	<поле>	11.20 Н1.2 item 2: outside the declaration and Reference.export — /format, /singleFile, /source, /quality/…, /titles/…, /special/player, /privacy, /highlight, /destination; item 5: /cameras/i a kind without vms.camera/1; item 10: transcoding without a server gpu
 exports	422	LIMIT_EXCEEDED	<поле>	11.20 Н1.2 item 4: /cameras over EXPORT_CAMERAS_MAX, /periods over EXPORT_PERIODS_MAX or EXPORT_TOTAL_MAX; /special/maxFileMb over maxFileMbMax
 exports	422	NO_RECORDING	<поле>	11.20 Н1.2 item 5: /cameras/i without a primary recording; item 10: /periods, /at — no span in any period
 exports	403	PERMISSION_DENIED	/cameras/i	11.20 Н1.2 item 6: no edit on exp, edit without admin (params.reason: privacy), a live frame without live viewing; a refused batch row
@@ -168,8 +171,9 @@ exports	422	PASSWORD_REQUIRED	/password	11.20 Н1.2 item 7: a camera without adm
 exports	403	SUPERVISOR_REJECTED	/supervisor	11.20 Н1.2 item 8, «Supervisor»: no supervisor when required (params.reason: required), the author, 401, deny, ok: false of /domain/verify
 exports	409	BUSY	-	11.20 Н1.2 item 9: unfinished orders of the person — EXPORT_ACTIVE_PER_USER or more
 exports	409	OTHER_CLUSTER	-	11.20 Н1.2 item 5: a camera of another cluster, params.url
-exports	409	DEVICE_OFFLINE	-	11.20 Н1.2 item 10: a live frame from a camera with online false
+exports	409	DEVICE_OFFLINE	-	11.20 Н1.2 item 10: a live frame from a camera with status.link offline
 exports	409	NOT_RUNNABLE	-	11.20 Н1.4: cancel of an ended order; Н1.5: retry-failed without failed parts
 exports	410	EXPORT_EXPIRED	-	11.20 Н1.6: the part is expired or its result.expires has passed
 exports	404	NOT_FOUND	-	11.20 Н1.2 «Repeat», Н1.3–Н1.6: no visible part of the order, no such file
+exports	404	NOT_FOUND	/cameras/i	11.20 Н1.2 item 5: no record with the uid of the camera
 exports	503	UPSTREAM_UNAVAILABLE	-	11.20 Н1.1, Н1.2 item 8, «Supervisor»: no X-W2C-Supervision, /domain/verify unavailable, 503, 409 deposed, 429; Н1.4: 429 per_person; Н1.6: the holder is not known

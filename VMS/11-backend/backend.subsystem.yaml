@@ -54,7 +54,7 @@ door:
     # A stream goes to the client as it comes, without the 4 MiB limit; its ticket — reads, /changes, the model's route.
     stream: [api/stream, api/assist/turns]
     # Longer than PASS_WAIT, the longest covering key wins; api/assist/turns — ASSIST_TURN_MAX (V/11.7 Н1.5).
-    wait: {api/domains: 15, api/servers: 15, api/archives: 15, api/volumes: 15, api/stream-accounts: 15, api/objects/delete: 30, api/devices: 30, api/folders: 30, api/operations: 30, api/access: 30, api/rules: 30, api/schedules: 30, api/day-groups: 30, api/modes: 30, api/maintenance-windows: 30, api/test: 120, api/assist/turns: 7500}
+    wait: {api/kinds: 15, api/stream-accounts: 15, api/objects/delete: 30, api/units: 30, api/operations: 30, api/access: 30, api/rules: 30, api/schedules: 30, api/day-groups: 30, api/modes: 30, api/maintenance-windows: 30, api/test: 120, api/assist/turns: 7500}
     # The console's own refusals on api are `Problem` (question 5).
     refusals:
       form: problem
@@ -209,7 +209,9 @@ tables:
       h:        {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of user, 0, key
       user:     {type: string, required: true, schema: {minLength: 1}}   # the person of the ticket; compared on lookup
       idem_key: {type: string, required: true, schema: {minLength: 1}}   # the external idempotencyKey as given
-      op:       {type: string, required: true, enum: [createDevices, updateDevices, deleteObjects, createOperation, updateRules, assignServers, createExport]}
+      # the operationId of the group whose memory this is (V/11.4 Н1.4, the contract 0.2.0); runRule, retryRuleFire,
+      # runUnitAction keep their key in the console's memory of requests, runKindAction and checkExport write nothing
+      op:       {type: string, required: true, enum: [createUnits, deleteObjects, createOperation, updateRules, createExport]}
       body:     {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of the body's bytes
       state:    {type: string, required: true, enum: [started, done]}
       operation: {type: string, schema: {pattern: "^[0-9a-f]{32}$"}}   # op createOperation: the id of the accepted operation
