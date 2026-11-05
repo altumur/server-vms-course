@@ -224,4 +224,4 @@ class FormsAllLessons(unittest.TestCase):         # ADR-0125 доп. (5): гра
         (one / "spec/04-controller.norms.md").write_text("<!-- req: P/04-R001 -->\nx\n<!-- req: P/04.1-R002 -->\n", encoding="utf-8")
         errs = check_forms.check_req_anchors(one)[0]
         self.assertEqual(len(errs), 1, errs)                   # P/04.1-R002 не этого файла; P/04-R001 — годен
-        self.assertIn("slot-capture", check_forms.KIT_PARTS)
+        self.assertTrue({"slot-capture", "slot-fate", "slot-release"} <= check_forms.KIT_PARTS)

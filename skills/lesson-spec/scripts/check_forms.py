@@ -290,7 +290,8 @@ def check_refusals(path):
 
 
 KIT_PARTS = {"writecheck", "door", "flags", "refusals", "vectors", "stagetests", "launch",   # ADR-0126 доп. (2) п. 1, доп. (7) п. 4; ADR-0083 доп. (95) п. 3
-             "families", "admin", "core", "rollout-poll", "slot-capture"}                                   # ADR-0125 доп. (5)
+             "families", "admin", "core", "rollout-poll", "slot-capture",
+             "slot-fate", "slot-release"}                                                # машины P/04 (ADR-0125 доп. (5))                                   # ADR-0125 доп. (5)
 CH = r"[0-9]+(?:\.[0-9]+)?"          # глава NN.K или урок одной главой NN (P/04, ADR-0125 доп. (5))
 GATE = re.compile(rf"tests:({CH}):([^:;\s]+)(:seams)?|accept:({CH}):([^:;\s]+)|vectors:([a-z0-9-]+)|build"
                   rf"|(verdicts|puts):({CH}):([^:;\s]+)")
