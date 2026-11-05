@@ -80,6 +80,10 @@ files_total_over	filed-none @file-fill sum1.js 8388608 @file-fill sum2.js 838860
 calls_ok	neart-door calls-client	0 1
 calls_no_target	calls-client	0 1
 calls_bad_door	neart-door calls-client-bad	2 -
+# P/06.3 Н1.9: <s>/requests of the own and of another subsystem; the other one is absent — defer, present without requests — accepted (the door answers 404).
+calls_requests_ok	neart-door calls-requests	0 1
+calls_requests_no_target	calls-requests	0 1
+calls_requests_own	calls-requests-own	0 1
 # ADR-0112 addendum (3) item 2: first-kind entry and GET <s>/where with live and rec in the catalogue; a segment outside door.pass or of the second kind — catalogue refusal.
 calls_first_ok	live-first rec-where calls-first	0 1
 calls_first_nosuch	live-first calls-first-nosuch	2 -
