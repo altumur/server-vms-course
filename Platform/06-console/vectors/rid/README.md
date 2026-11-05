@@ -29,7 +29,7 @@ No more than 200 UTF-8 **bytes**, not empty, not `.` and not `..`; without `/ \ 
 U+2028, U+2029); does not begin with `free-` — that is the family of the resource requests `<sub>/requests/free-<server>-<volume>`
 ([P/05](../../../05-resource/spec/05-resource.norms.md) Н1.4 `free_ask`). Case matters: `Free-a` is not `free-`.
 
-The last row of the table is the form of `rid` by the filer's key `<подсистема подателя>.<ключ>` (the request contract `rid`; ADR-0091
+The last row of the table is the form of `rid` by the filer's key `<filer's subsystem>.<key>` (the request contract `rid`; ADR-0091
 addendum (23) item 2): a dot in the name is allowed, the grammar is the same.
 
 ## `template.tsv`
@@ -41,7 +41,7 @@ UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, th
 |---|---|
 | `key` | the template `requests.key` as a JSON string (`{поле}` — a string, `{поле:int}` — a number; the form — P/02.1, the request contract `manifest.key`) |
 | `body` | the request body — a JSON object with the fields of the template |
-| `expect` | `{"rid": <rid>}` — the substitution gave a rid by the grammar; `{"detail": <поле>}` — a refusal 400 RequestError, `detail` names this field of the template |
+| `expect` | `{"rid": <rid>}` — the substitution gave a rid by the grammar; `{"detail": <field>}` — a refusal 400 RequestError, `detail` names this field of the template |
 
 The rule of the refusal field is the contract of the request and its mark `rid` and P/06.4 Н4: a beginning `free-` — the field with which the rid begins;
 the limit of 200 bytes — the field on whose substitution the rid, assembled from left to right, exceeded the limit (in a literal after a field — that
@@ -53,13 +53,13 @@ column — the common rule «Vectors» of [the common acceptance README](../../.
 `body`. Who executes it are the same ones that build a rid by the template: the console requests door (`06-console`, P/06.4 Н3 «file a request» step 1)
 and the filing worker at a target with `requests.key` (`03-worker`, P/03.6 Н1.5: both have one rid name) — both
 compare `rid`; the field `detail` — only the door (for the worker the refusal is `RequestRefused`, the field in the log). On the 17 `detail` rows
-the worker answers with code 0 and `{"detail": <непустая строка>}` — a refusal without a rid; the value is not compared (for the door — as
+the worker answers with code 0 and `{"detail": <non-empty string>}` — a refusal without a rid; the value is not compared (for the door — as
 in `expect`) (ACC-RID-TEMPLATE-WORKER-01, the Architect's decision of 2026-10-27).
 
 ## The stand command `rid`
 
 The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../common/acceptance/README.md));
-a template with `{input}` — the path of a file with one JSON object `{"rid": <ячейка rid как есть>}` (the cell is a JSON string, the runner inserts
+a template with `{input}` — the path of a file with one JSON object `{"rid": <rid cell as is>}` (the cell is a JSON string, the runner inserts
 its lexeme without a second layer of quotes and without decoding it again); there are no fields other than `rid`. The answer is `{"status": "ok"}` or
 `{"status": "refused"}`, checked against the column `verdict`; a refusal of the name is code 0 with `refused`, not code 2. An input not in form: not an object,
 no `rid` or a repeated one, an unknown field, `rid` not a string. stdout is exactly one JSON object and LF: the first byte is `{`, after the object — LF and the end; extra fields, bytes, CRLF, spaces

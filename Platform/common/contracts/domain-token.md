@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/domain-token.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5) and addendum (11): a common contract can appear before the move of the
+A common contract of the module «Platform» (ADR-0083 addendum (5) and addendum (11): a common contract can appear before the move of the
 owner lesson if an already moved lesson relies on it; analysis of review of stage B 3–5, V1). The owner is lesson P/08,
 chapter 8.2 ([norms](../../08-domain/spec/08.2-domain.norms.md)):
 the process `domain` issues tokens and keeps the set `domain/keys` and the revocations `domain/revoked` (P/08.2 Н1.2, Н1.3, Н1.6), the meaning
@@ -55,22 +55,22 @@ such door MUST pass `expect` below, except the one named without it (the Archite
 
 | Checker | Where | `expect` |
 |---|---|---|
-| the gate of the cluster console | [the gate-and-pass contract](gate-and-pass.md) «Сторожевая» `identity` item 3; [P/06.3](../../06-console/spec/06.3-console.norms.md) Н1.3, [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.9 `cluster` | `{kind: person, cluster: null}` |
+| the gate of the cluster console | [the gate-and-pass contract](gate-and-pass.md) «The gate» `identity` item 3; [P/06.3](../../06-console/spec/06.3-console.norms.md) Н1.3, [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.9 `cluster` | `{kind: person, cluster: null}` |
 | the gate of the domain console (P/10 Н1.5; the right — the row `domain` of P/08.4 Н1.5) | the same contract, `identity` item 3 | `{kind: person, cluster: null}` |
 | the process `domain`, the people doors | [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н3 «people door» step 2 | `{kind: person, cluster: null}` |
-| the recipient of a kind token — a worker or a member's door | [P/03.7](../../03-worker/spec/03.7-worker.norms.md) Н1.5, Н3 «check at the recipient» | `{kind: <вид>, cluster: <свой кластер>, audience_claim: <из объявления вида>, keep: <виды keep: true каталога>}` |
+| the recipient of a kind token — a worker or a member's door | [P/03.7](../../03-worker/spec/03.7-worker.norms.md) Н1.5, Н3 «check at the recipient» | `{kind: <kind>, cluster: <own cluster>, audience_claim: <from the kind declaration>, keep: <kinds keep: true of the catalogue>}` |
 | a worker, the door `door.pass` of the first kind: checks the credentials passed by the cluster console | [the gate-and-pass contract](gate-and-pass.md) «Pass of `door.pass`» `rule` | `{kind: person, cluster: null}` |
 | the process `domain`, `POST /domain/revoke` | P/08.4 Н1.2 `revoke` | `expect {kind: person, cluster: null}`: the token in the body is a credential of oneself, the tokens of the kinds with `keep` are revoked by `DELETE /domain/issued`, a kind without `keep` lives until `exp`: a limit (ADR-0110 addendum (16) item 1) |
-| the door of a subsystem process, a route with `domain` | [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.7 `door_admission` `domain`, `role_domain` | `{kind: [<виды маршрута>], cluster: <свой кластер>, audience_claim: {<вид>: <поле из объявления вида>}, keep: [<виды keep по манифесту, объявившему вид>]}` (ADR-0091 addendum (17) item 9, addendum (18) item 1, addendum (19) item 1) |
+| the door of a subsystem process, a route with `domain` | [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.7 `door_admission` `domain`, `role_domain` | `{kind: [<kinds of the route>], cluster: <own cluster>, audience_claim: {<kind>: <field from the kind declaration>}, keep: [<kinds keep by the manifest that declared the kind>]}` (ADR-0091 addendum (17) item 9, addendum (18) item 1, addendum (19) item 1) |
 
 The worker token door (lesson 7) issues tokens and does not check them. A subsystem worker on the domain does not check the person token of an incoming
 `door.pass`: people are checked by the gate of the domain console, the worker accepts the source of the request by the role
 `domainconsole` of the TLS client ([P/03.7](../../03-worker/spec/03.7-worker.norms.md) Н1.6 `door_client`; the Architect's decision of 2026-10-20 on the reconciliation of 3.7). The kind of the token and `aud` — lesson 7: a token of another cluster or kind
 is refused at the recipient, by steps 9–10 of this contract.
 
-## The check: `token(keys, revoked, now, token) → ok payload | refused <слово>`
+## The check: `token(keys, revoked, now, token) → ok payload | refused <word>`
 
-From М11/2 Н3; `keys` is the accepted set ([the domain key set contract](keys.md) «Набор»), `revoked` is the row
+From М11/2 Н3; `keys` is the accepted set ([the domain key set contract](keys.md) «The set»), `revoked` is the row
 `domain/revoked` as read (the form — [the domain key set contract](keys.md) «Отзывы»), `now` is the wall-clock seconds of the
 checker:
 
@@ -96,8 +96,8 @@ checker:
 ```
 
 «Н1.6» in steps 1 and 5 is М11/2 Н1.6 (now P/08.2 Н1.6): the form of `domain/revoked` (step 1; now — [the domain key set contract](keys.md) «Отзывы») and the grammar of `jti` (the section «The token» above, step 5). The form of
-`expect` is the input of the command `token` ([P/08.2](../../08-domain/spec/08.2-domain.norms.md) Н5): `expect?: {kind: <строка> | [<строка>…], cluster: <член> | null, audience_claim?: <имя
-поля — непустая строка, умолчание aud> | {<вид>: <имя поля>}, keep?: [<вид>…]}`; `keep` is the kinds with `keep: true` of the manifest, no field — empty. `kind` as a string — one kind, `audience_claim` with it — a string;
+`expect` is the input of the command `token` ([P/08.2](../../08-domain/spec/08.2-domain.norms.md) Н5): `expect?: {kind: <row> | [<row>…], cluster: <member> | null, audience_claim?: <имя
+поля — непустая строка, умолчание aud> | {<kind>: <field name>}, keep?: [<kind>…]}`; `keep` is the kinds with `keep: true` of the manifest, no field — empty. `kind` as a string — one kind, `audience_claim` with it — a string;
 `kind` as a list — non-empty, without repeats, without `person`, `audience_claim` with it — a map, the keys are kinds from the list (a kind without
 an entry — `aud`); another combination, `person` in the list, a key of the map not from the list — out of form, code 2 (ADR-0091 addendum (18)
 item 1, addendum (19) item 1). The key `cluster` is required; `null` is allowed only with `kind: person` as a string. `expect`

@@ -18,7 +18,7 @@ byte. Fields: `case`, `input` and `expect` — JSON text, `note`.
 - `reconcile_age` — the text of the value of the series `<sub>_reconcile_last_success_age_seconds` by the value form of P/06.5 Н3 «/metrics — text»
   (the canonical JCS notation: a fraction is allowed — `60.5`, `0.5`; `-1`; another notation — `1e1`, `60.50`, `+5` — not by form, do nothing);
   the comparison with 60 — by value (C02-RECONCILE-AGE-FORM-01); no field — the series is in order;
-- `memory` — the values of `roles/<роль>.env` as strings as written: `{HOST_MEMORY_MB, WORKER_MEMORY_MB, CAPACITY}`; `null` —
+- `memory` — the values of `roles/<role>.env` as strings as written: `{HOST_MEMORY_MB, WORKER_MEMORY_MB, CAPACITY}`; `null` —
   there is no file; no field — the memory ceiling does not limit.
 
 **Output** — `{start: [<n>…], stop: [<n>…]}` in ascending order: the target is exactly the numbers `{2…want}`: start the missing ones
@@ -26,7 +26,7 @@ byte. Fields: `case`, `input` and `expect` — JSON text, `note`.
 numbers, not a count). The memory ceiling
 `floor(HOST_MEMORY_MB / WORKER_MEMORY_MB)` is the number of processes of the role on the server together with the base `-1`: no more than
 `потолок − 1 − работающие n ≥ 2` are started. Start nothing and stop nothing (`{start: [], stop: []}`) if: there is no series,
-the value is not by the metric form of P/06.5 Н3 «/metrics — текст» (in the explanations of `cases.tsv` — the former address М10/9; an integer without leading zeros, sign and fraction — `02`, `2.0` are not read) or outside 1…99
+the value is not by the metric form of P/06.5 Н3 «/metrics — text» (in the explanations of `cases.tsv` — the former address М10/9; an integer without leading zeros, sign and fraction — `02`, `2.0` are not read) or outside 1…99
 (rules 2); the console is silent or `reconcile_age` is greater than 60 or `-1` (rules 2); there is no role file, the budget is not a positive
 integer, `CAPACITY` is not an integer > 0 or the divisor is zero (rules 4). Comparison — JSON by value.
 

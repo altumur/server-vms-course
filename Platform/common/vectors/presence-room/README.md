@@ -10,7 +10,7 @@ the Architect of 2026-10-23). The participants are the resource (writes `room.<s
 
 UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, the first non-skipped one is the header `case<TAB>input<TAB>expect<TAB>note`.
 `input` — `{prefix, server, HOST_MEMORY_MB, WORKER_MEMORY_MB, locks}`: the `slot.prefix` of the manifest and `SERVER_NAME` (by them the number
-`n` of the name `<prefix>-<сервер>-<n>`; in all rows `w` and `srv-a`, C61-PREFIX-01), the values of the role file and the field `worker`
+`n` of the name `<prefix>-<server>-<n>`; in all rows `w` and `srv-a`, C61-PREFIX-01), the values of the role file and the field `worker`
 of each live lock of the role (the flock is held); `expect` — `{room, live}` as strings, as in the door row.
 
 ## Run

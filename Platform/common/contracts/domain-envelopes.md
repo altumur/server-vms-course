@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/domain-envelopes.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (11) and addendum (13): a contract that one
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (11) and addendum (13): a contract that one
 process writes and others read lies in `Platform/common/`; analysis of the review of stage A 8–10, № 12). The owner is
 lesson P/08: the book acceptance key and its envelope are chapter 8.2 ([P/08.2](../../08-domain/spec/08.2-domain.norms.md) Н1.4, Н1.5), the answer
 of the holder to a member is chapter 8.3 ([P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.5). Participants:
@@ -19,7 +19,7 @@ order of checks), М11/3 Н1.5 (the block `envelope_m1` and the paragraph of ref
 Н1.3 `carry` and Н1.6 `carry` without a change of behaviour. The book acceptance key (`domain/book-seal`, `book_seal` of the set), its
 birth and changes belong to the owner (P/08.2 Н1.2, Н1.4, Н3); what the agent does with the opened content is P/09.1 Н1.4 `sealed` and the lessons of the
 fields. The references «урок N» in the moved text are lesson М11/N; their addresses now: «урок 3» (the agent seals before signing the
-report) — P/09.1 Н1.2, «урок 4» (the relay) — P/09.2, «урок 5» (the assembly of a book, the family row `domain.books.<книга>.from`)
+report) — P/09.1 Н1.2, «урок 4» (the relay) — P/09.2, «урок 5» (the assembly of a book, the family row `domain.books.<book>.from`)
 — P/08.5 Н1.3 and P/02.1 Н1.2б (analysis of the review of stage B 8–10, № 22; Kimi SB810-07); «урок 2 Н1.5» in the section `m1` is the section
 «Envelope `x25519:v1`» of this contract. The JSON Pointer path follows [the sealing contract](sealing.md) «AAD path».
 
@@ -45,7 +45,7 @@ key:           HKDF-SHA256(ikm = X25519(eph_priv, book_seal), salt = eph ‖ boo
                # at opening ikm = X25519(seed_secret, eph); book_seal is the public half of seed_secret
 aad:           UTF-8(JCS([member, source_path, item])) ‖ 0x00 ‖ UTF-8(pointer)
   member:      the name of the contributing member
-  source_path: the key of the source row of the contribution in the member's store (lesson 5: the family row domain.books.<книга>.from)
+  source_path: the key of the source row of the contribution in the member's store (lesson 5: the family row domain.books.<book>.from)
   item:        the element of this row — the contribution
   pointer:     the JSON Pointer of the secret in the JSON document of the element — by the path rule of the sealing contract (`~0`, `~1`, indices)
 plain:         the UTF-8 bytes of the secret value as given; an empty value is sealed too
@@ -92,7 +92,7 @@ four parts, a part is not base64url without `=`, `eph` is not 32 bytes, `nonce` 
 
 Moved from [P/03.7](../../03-worker/spec/03.7-worker.norms.md) Н1.2 (`source_row` `entry`) without a change of behaviour: the form of
 the input is written by the worker (P/03.7), carried by the agent (P/09.1 Н1.2 `in_report`), checked by the holder's book assembly (P/08.5 Н1.3, Н3 step 4)
-(layout audit A-22, the Architect's decision of 2026-10-25). The contribution row is `<sub>/<строка>` or `<sub>/<строка>/<слот>`, the element is an input of the book: the name of the element is `item`,
+(layout audit A-22, the Architect's decision of 2026-10-25). The contribution row is `<sub>/<row>` or `<sub>/<row>/<slot>`, the element is an input of the book: the name of the element is `item`,
 the value is the text of a JSON object (P/03.7 Н1.2 `source_row`).
 
 ```yaml
@@ -110,14 +110,14 @@ an envelope `m1` with a JSON object of what is secret to the member. From М11/3
 ```yaml
 sealed:         an envelope m1 with a JSON object of what is secret to the member; only when there is something secret or held — there is no empty envelope
                 (added by the reconciliation of М11, D8)
-  grants?:      {doc} — the row domain/grants/<член> (P/08.4 Н1.3 carry)
+  grants?:      {doc} — the row domain/grants/<member> (P/08.4 Н1.3 carry)
   anywhere?:    {as_of, sha256} — the summary of P/08.4 Н1.3 anywhere; the body by the door on a change; does not depend on grants
   held?:        [<field name>…] of "grants", "roles", "anywhere", "break_glass" — not sent in this pass, do not touch the copies (P/08.4 Н1.3, Н1.6 carry): the row is unreadable, the assembly did not converge, the table is over the limit;
                 the absence of a field without its name in held means «no row»
   roles?:       {doc_sha256, groups, assigned, admin_at} — the role table of this member (P/08.4 Н1.3б); always goes together with grants, only with it;
                 empty — {doc_sha256, groups: {}, assigned: {}, admin_at: {}}; the intermediary (P/09.2) does not see the assignments (ADR-0098 §4)
   break_glass?: {pwhash_secret, set_at} (P/08.4 Н1.6 carry)
-  books?:       {<sub>: {<книга>: {<item>: <JSON text>}}} — the holder's row domain/<sub>/<книга>/<член>, secrets opened; a book to: "*" does not go here: carry.book_rev (P/08.5 Н1.4)
+  books?:       {<sub>: {<book>: {<item>: <JSON text>}}} — the holder's row domain/<sub>/<book>/<member>, secrets opened; a book to: "*" does not go here: carry.book_rev (P/08.5 Н1.4)
                 by the holder's ring before m1 (P/08.5 Н1.4 carry)
 ```
 

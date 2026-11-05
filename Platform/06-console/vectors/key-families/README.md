@@ -16,7 +16,7 @@ UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, th
 the family are under `domain/<sub>/`, as loading requires); `present`: the keys of the rows under `domain/` of this store, a JSON array, the order
 does not matter.
 
-**Output** — `families`: `{<id>: [<ключ>…]}`; the comparison is JSON by value, the order in an array matters.
+**Output** — `families`: `{<id>: [<key>…]}`; the comparison is JSON by value, the order in an array matters.
 
 12 rows: one manifest (no keys — an empty list, sc. 06 step 2; a named key and keys under `prefix`); one `id` in two
 manifests — the union, the same answer with another order of the manifests, keys of only one side (each), of neither; a common

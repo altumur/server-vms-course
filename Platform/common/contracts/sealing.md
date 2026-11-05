@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/sealing.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5): a contract that several processes read lies in
+A common contract of the module «Platform» (ADR-0083 addendum (5): a contract that several processes read lies in
 `Platform/common/`; the Architect's decision on the review of stage B 1–2, item 4). The owner is lesson [P/06](../../06-console/spec/06.2-console.norms.md),
 chapter 6.2 Н1.2 «The envelope and the key ring» (moved from М10/7 Н1.2; ADR-0083 addendum (29) item 9: the line names the owner lesson of the norm; the library by the contract is written by the session `common` of the generation). Readers: the installer — the commands `w2cctl secrets`
 ([P/02.4 Н1.9](../../02-installer/spec/02.4-installer.norms.md)), the worker — opening (chapter P/03.5), the console —

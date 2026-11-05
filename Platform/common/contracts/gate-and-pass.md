@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/gate-and-pass.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (11) and addendum (13): a contract that several
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (11) and addendum (13): a contract that several
 processes execute lies in `Platform/common/`; analysis of review of stage A 8–10, № 14 / decision 3). The owner is lesson
 [P/06](../../06-console/spec/06.3-console.norms.md) (chapters 6.3 — the gate and the session, 6.5 — `door.pass`): the cluster console
 asks every door for the identity and the grant and passes the routes `door.pass` to a worker. The participant is lesson P/10, the domain console
@@ -40,7 +40,7 @@ The files the contract works by (layout audit, `V-23`–`V-29`; the Architect's 
 - the grants: the copy of `domain/grants` at the cluster console — `Platform/09-agent/data/grants.schema.json`,
   `Platform/09-agent/data/grants.outcomes.tsv`; `domain/grants/domain` at the domain console — `Platform/08-domain/data/grants.schema.json`,
   `Platform/08-domain/data/grants.outcomes.tsv`;
-- the break-glass account `domain/break-glass/<кластер>` — `Platform/08-domain/data/break-glass.schema.json`,
+- the break-glass account `domain/break-glass/<cluster>` — `Platform/08-domain/data/break-glass.schema.json`,
   `Platform/08-domain/data/break-glass.outcomes.tsv`;
 - the worker heartbeat (`door.pass` — to a live worker with a door, to the worker on the domain — by the heartbeat) — `Platform/03-worker/data/heartbeats.schema.json`,
   `Platform/03-worker/data/heartbeats.outcomes.tsv`;
@@ -72,13 +72,13 @@ gate:
        (ADR-0094 B1; P/06.3 Н1.9)
     1. the break-glass cookie w2c_glass (a session in memory, 15 min); a cookie without a live emergency session is as without it,
        the check goes on to the next step (the cookie stays in the browser after 15 min too; GP-G03)
-    2. X-Agent-Signature — the agent of the domain: only the doors of units, of tables domain.edit_tables, POST /console/batch and GET /events?class=alarm; with X-Agent-For (the form is <имя> <iat>, out of form — 401; without a proven signature the header is removed) the identity of the door is this person, iat is from the header, then the usual need and may by the copy of grants: a refusal is 403, the agent's outcome is refused (ADR-0111 item 16; D-2) (the front and the alarm page — P/09.1 Н1.10; the form and the window UNIT_WINDOW 60 s — the agent signature contract common/contracts/agent-signature.md; analysis of review of stage A 8–10, № 13)
-    3. Authorization: Bearer <токен> | the cookie w2c_token → the domain: {user, until, grants} (the token — the domain token contract «Проверка» with expect {kind: person, cluster: null} (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10), the owner is P/08.2 — analysis of review of stage B 3–5, V1; the grants — P/06.7 Н1.9 (the cluster console), P/10 Н1.5 (the domain console); may — the right contract may.md)
+    2. X-Agent-Signature — the agent of the domain: only the doors of units, of tables domain.edit_tables, POST /console/batch and GET /events?class=alarm; with X-Agent-For (the form is <name> <iat>, out of form — 401; without a proven signature the header is removed) the identity of the door is this person, iat is from the header, then the usual need and may by the copy of grants: a refusal is 403, the agent's outcome is refused (ADR-0111 item 16; D-2) (the front and the alarm page — P/09.1 Н1.10; the form and the window UNIT_WINDOW 60 s — the agent signature contract common/contracts/agent-signature.md; analysis of review of stage A 8–10, № 13)
+    3. Authorization: Bearer <token> | the cookie w2c_token → the domain: {user, until, grants} (the token — the domain token contract «Проверка» with expect {kind: person, cluster: null} (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10), the owner is P/08.2 — analysis of review of stage B 3–5, V1; the grants — P/06.7 Н1.9 (the cluster console), P/10 Н1.5 (the domain console); may — the right contract may.md)
        the name is sub of the token, until is exp (the fields — the domain token contract «Токен» person); sub out of the form of a person name — 401
        (guess of stage C GP-L01, the Architect's decision of 2026-10-23); Authorization before the cookie w2c_token: with both, the header is read (guess of stage C GP-L02, the Architect's decision of 2026-10-23)
        a presented and wrong X-Agent-Signature (item 2) or token (item 3: by the header or by the cookie w2c_token) — 401, to item 4
        they do not go on (guess of stage C GP-G03, the Architect's decision of 2026-10-23)
-    4. the debug identity (ADR-0050): W2C_DEBUG_PERSON=<имя> is set, a request without a token presented in any form
+    4. the debug identity (ADR-0050): W2C_DEBUG_PERSON=<name> is set, a request without a token presented in any form
        (neither Authorization nor the cookie w2c_token; GP-G03), the address of the TCP connection
        127.0.0.1 or ::1 (address headers are not read) → this person with their grants from domain/grants; the criterion
        of disabling is the row domain/disabled (the form Platform/08-domain/data/disabled.schema.json (outcomes — `Platform/08-domain/data/disabled.outcomes.tsv`), outcomes disabled.outcomes.tsv;
@@ -114,7 +114,7 @@ gate:
                                        only creation is lowered (the table «Rights by the body» below; finding M-2)
     GET /<rows>?deleted=1&about=<z>  → view on the unit <about.sub>/<z> (P/06.1 Н2 «Tombstones by `about`»; ADR-0094 addendum (5) item 1)
     GET /changes                     → view without a unit — any grant; what is seen is decided by the filter of the door (P/06.1 Н2 «Change feed»; ADR-0094 B2)
-    GET /{sub}/<маршрут>/<id>[/…]    → view on the unit <sub>/<id> (P/06.3 Н1.9 «Door route»; P/06.7 Н1.6 route)
+    GET /{sub}/<route>/<id>[/…]    → view on the unit <sub>/<id> (P/06.3 Н1.9 «Door route»; P/06.7 Н1.6 route)
     GET /{sub}/heartbeats            → view without a unit — any grant: the door gives only the fields heartbeat.door (P/06.7 Н1.6 pulse; ADR-0112 addendum (12) item 3)
     GET /{sub}/next_id               → as the creation of rows <sub>: admin on * | by rights.routes — there is no body, the pre-check create_about | cluster_rows → *
                                        (P/06.1 Н2 «Counter door»; ADR-0094 B4)
@@ -184,7 +184,7 @@ session:
   login_url: the domain door /api/login (P/08.4 Н1.2) — the console forwards it to the domain (open_routes, the forwarding contract «Domain doors»);
              the console issues no tokens of people; the value is LOGIN_URL of the environment (the environment file contract «Environment variables»), not set — "/api/login"
              (a string, not null, at an open console too)
-  grants:    one element per (cap, sub, scope, source): a direct row — without role, through a role — role: <имя>; the order — by (cap, sub,
+  grants:    one element per (cap, sub, scope, source): a direct row — without role, through a role — role: <name>; the order — by (cap, sub,
              scope), no sub — the empty string, then the direct one, then roles by name in UTF-8 bytes; rows none are included; the assignment admin
              gives no element (ADR-0097 §4, ADR-0098 §4, ADR-0099 §6)
   admin:     true when step 4a of the right contract holds for this identity; a field of the answer, not a row; otherwise there is no field (ADR-0100 §1)
@@ -313,18 +313,18 @@ console is P/10 Н1.5 (the grants `domain/grants/domain`).
 cluster:   P/06.3 Н1.3 identity step 3 (Bearer | the cookie w2c_token): the token — the function token of the domain token contract «Проверка»
            by the set and domain/revoked of this cluster with expect {kind: person, cluster: null} — the domain token contract «Токен» (the Architect's decision
            of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10); a refusal — 401 {error: denied, detail:
-           "token refused: <слово>"}, the form `Denied` (`Platform/common/contracts/gate-and-pass.api.openapi.yaml`), except
+           "token refused: <word>"}, the form `Denied` (`Platform/common/contracts/gate-and-pass.api.openapi.yaml`), except
            no_revocations: the rule «Unreadable row» (503 {error: "unavailable"}; the Architect's decision of 2026-10-28 by the reconciliation ddc9bee1e); then may (the right contract) with
            grants = doc of the row domain/grants (the copy of this cluster; exists but does not read — the rule «Unreadable row»), as_of — its as_of, disabled — domain/disabled of this
            store (exists only at the holder), cap and unit — need of P/06.3 Н1.3, sub — section «Subsystem of the check», roles — below,
-           iat — iat of the token; deny — 403 {error: denied, detail: "<имя> may not <cap> <sub>/<id> | here"}; unavailable — the rule
+           iat — iat of the token; deny — 403 {error: denied, detail: "<name> may not <cap> <sub>/<id> | here"}; unavailable — the rule
            «Unreadable row»; stale — detail «the grants this cluster holds are older than a day: its agent has not reached the
            domain»
 roles_in:  the role table: the copy of domain/roles of this cluster (P/09.1 Н1.4 member_roles). No row — roles = null. The table is taken
            only if its doc_sha256 matched the hex SHA-256 of the text doc of the current copy of grants and its as_of passes step 4 of the right contract; otherwise, and
            with an unreadable row, — roles = "unreadable". An unreadable element of lines of the copy: for the subject role:<R> — unread {role: R},
            with sub if it is read; the subject is not read — unread "all"; a direct group skips such a line.
-           The console expands: {<имя>: [{role, until, at}…]} from assigned and groups once per version of the copy, not per check; at of the role admin — admin_at[<имя>], for the other roles 0
+           The console expands: {<name>: [{role, until, at}…]} from assigned and groups once per version of the copy, not per check; at of the role admin — admin_at[<name>], for the other roles 0
            (ADR-0098 §4)
 ```
 
@@ -357,7 +357,7 @@ applications of the rule.
 | break-glass entry: the password did not match | 401 | `{detail, error: denied}` | do not create a session; the common journal of access refusal; counts toward the limit (chapter 6.7 Н1.10; P/08.4 Н1.10) |
 | break-glass entry: no row or no member (the conditions) | 403 | `{detail, error: denied}` | do not create a session; the common journal of access refusal |
 | not an identity | 401 | `{detail: "this console asks who is calling: …", error: denied}` | log in (login_url) |
-| no grant | 403 | `{detail: "<кто> may not <cap> <единица \| here>", error: denied}`; journal | — |
+| no grant | 403 | `{detail: "<who> may not <cap> <единица \| here>", error: denied}`; journal | — |
 | no domain, not loopback | 403 | `{detail: "this cluster is in no domain … loopback", error: denied}` | connect a domain |
 | there were keys, nothing to check with | 503 | `{detail: "…admits nobody", error: denied}` | restore the trust |
 | the row `domain/keys` exists but does not read — nothing to check a token with ([family `keys`](../../08-domain/data/keys.outcomes.tsv)) | 503 | `{error: "unavailable"}` — the rule «Unreadable row»; not «the token is valid» | wait for a readable row (DF-OUTCOMES-109, the Architect's decision of 2026-10-25) |
@@ -407,15 +407,15 @@ From P/06.3 Н1.5 (the keys `rights:` of the manifest — the boundary of the ri
 names:     # the layout of rights.names: [{field, at?, walk?, quiet?, unit, sub | of | kind, kinds?, action?}] (guess of stage C GP-G07, by the witness, the Architect's decision of 2026-10-23; at, walk, kind — ADR-0105 item 4)
   field:   a json field of the row; its value is a list of objects, with at — also an object
   at:      a path from an object: from an element of the field's list, from a node of walk, from the value itself if it is an object. Keys are joined by a dot, [] — each element: target.include[]. The objects at the end of the path are what the entry is read over. No key on the path — the entry is silent; a value not of that form — "*"
-  walk:    [<ключ>…] the keys of nested branches: the value is a list of objects of the same form, the entries of names of this field are read over them too; deeper than 32 — "*" (P/06.1 Н1.4); a key that is not a list — "*"
-  quiet:   [<ключ>…] an object with such a key in which no entry named a unit names nobody and gives no "*": a step without a target (wait, ask, alarm); a unit, if named, such an object names as usual
-  kind:    the name of the key of the object whose value is the kind of the target, instead of sub and of; kinds: {<вид>: {of: <подсистема>} | {of: <подсистема>, table: <таблица>} | {folder: true} | {server: true}}: of — a unit of this subsystem; with table — the value of unit is the name of a table row, the unit is its field by rights.unit_of of that subsystem, as for a table edit; the row does not read or the table is not in unit_of — "*"; folder — the id of a folder: the target is the folder object of the right contract, chains by reading; server — a server has no unit: "*"; a kind outside kinds — "*"
+  walk:    [<key>…] the keys of nested branches: the value is a list of objects of the same form, the entries of names of this field are read over them too; deeper than 32 — "*" (P/06.1 Н1.4); a key that is not a list — "*"
+  quiet:   [<key>…] an object with such a key in which no entry named a unit names nobody and gives no "*": a step without a target (wait, ask, alarm); a unit, if named, such an object names as usual
+  kind:    the name of the key of the object whose value is the kind of the target, instead of sub and of; kinds: {<kind>: {of: <subsystem>} | {of: <subsystem>, table: <table>} | {folder: true} | {server: true}}: of — a unit of this subsystem; with table — the value of unit is the name of a table row, the unit is its field by rights.unit_of of that subsystem, as for a table edit; the row does not read or the table is not in unit_of — "*"; folder — the id of a folder: the target is the folder object of the right contract, chains by reading; server — a server has no unit: "*"; a kind outside kinds — "*"
   unit:    the name of the key of the object whose value is the id of the unit; an empty or absent id — the entry does not name
   sub:     the name of the key of the object whose value is the name of the subsystem of the unit
   of:      the name of the subsystem itself (constant) — instead of sub
   action:  the name of the key of the object whose value is the action of a request to the named unit; with at the key is read from the object the path goes from (a step, a node of walk), not from the end of the path: the target lies deeper than the action word, otherwise output through target would bypass edit on the group; the action is named in rights.reach.requests of the manifest of its subsystem —
            edit on all units of its group, as for the request itself; no field or the action outside the list — only the unit (C06-NAMES-ACTION-01, the Architect's decision of 2026-11-01, analysis of the VMS invariants)
-  name:    the unit is <подсистема>/<id>; the entries of names with one field are read over each object of the list together
+  name:    the unit is <subsystem>/<id>; the entries of names with one field are read over each object of the list together
   outcomes: the value of the field null — nobody; a value not JSON or not a list — "*" (all: the edit reaches all units);
            an element of the list that is not an object — skipped; an object in which no entry named a unit and there is neither a key of walk with a list nor a key of quiet — "*"; a branch node is judged by its children; an empty list by at — nobody
            the exclusions of the target (exclude) do not change the reach: at does not name them, the right is judged on the whole included area
@@ -436,8 +436,8 @@ session:   GET /session of a proven identity (section «The gate» session) — 
 domain:    the domain console and the process domain: may with grants = domain/grants/domain, as_of null, roles — the rows of roles and groups of the holder (P/08.4 Н1.3б roles_at_holder), iat — of the token, sub — null; view — GET /domain*, /manifest,
            /mounts and the doors of the lesson with GET; admin — the other doors /domain/* (the table of the [forwarding contract](../forwarding.md)
            «Domain doors»; layout audit, B-10); unit = "*" at admin; except POST /domain/revoke — without an identity and a grant: the credential is the token in the body
-           (P/08.4 Н1.2 revoke); the doors of the view GET /domain, GET /domain/<sub>/<rows>, GET /domain/<sub>/tables/<таблица>, all doors
-           of the kept edit P/08.6 Н1.3, Н1.3б, GET /domain/users, /groups, /roles, GET /domain/grants, PUT /domain/grants/<кластер> with a cluster ≠ domain,
+           (P/08.4 Н1.2 revoke); the doors of the view GET /domain, GET /domain/<sub>/<rows>, GET /domain/<sub>/tables/<table>, all doors
+           of the kept edit P/08.6 Н1.3, Н1.3б, GET /domain/users, /groups, /roles, GET /domain/grants, PUT /domain/grants/<cluster> with a cluster ≠ domain,
            POST /domain/batch by row (P/08.4 Н2), GET and PUT /domain/memberof — «Judgement by target» of the right contract, not this line (ADR-0110); the domain console judges them by the same norm as the process
 ```
 
@@ -446,7 +446,7 @@ domain:    the domain console and the process domain: may with grants = domain/g
 From P/06.7 Н1.10 (the cluster console; the domain console has no emergency session — it has no steps 1 and 2 of `identity`, P/10 Н1.5) and
 P/08.4 Н1.10 (the attempt limit is common to `POST /session/break-glass` of the cluster console and `POST /api/login` of the process `domain`,
 to which the domain console passes it) without a change of behaviour (guess of stage C GP-G05, the Architect's decision of 2026-10-23). The holder's side (the row
-`domain/break-glass/<кластер>`, `GLASS_MIN`, `carry`) — [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.6.
+`domain/break-glass/<cluster>`, `GLASS_MIN`, `carry`) — [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.6.
 
 ```yaml
 door:          POST /session/break-glass {who, why, password} at the cluster console (section «The gate» open_routes) — in order:
@@ -534,9 +534,9 @@ There are no vectors for these rules — they are checked by the scenarios of th
 From P/06.5 Н1.8; the grammar of `door.pass` in the manifest — [P/02.1](../../02-installer/spec/02.1-installer.norms.md):
 
 ```yaml
-manifest: door: {routes: […], pass: [<сегмент>…]}   # the segments do not repeat routes, rows and where (P/02.1)
+manifest: door: {routes: […], pass: [<segment>…]}   # the segments do not repeat routes, rows and where (P/02.1)
 rule:     a console route whose first segment is in pass is passed to a live worker of the subsystem with a door (the smallest name):
-          the method, the path `/<сегмент>[/…]` — without the mount prefix at any root and mount, as at the domain console
+          the method, the path `/<segment>[/…]` — without the mount prefix at any root and mount, as at the domain console
           (CONSOLE_ROOT=<sub> — /accounts/x, mounted — /<sub>/accounts/x → to the worker /accounts/x; C06-DOOR-PASS-PATH-01,
           the Architect's decision of 2026-10-29, analysis of V/03 question 7), query — as it came, the body ≤ 1 MiB, the headers Authorization,
           Content-Type, Idempotency-Key, X-Operator and X-W2C-Supervision (set by the console, section «Supervision»); the identity is proven by the cookie w2c_token — the console puts its token into the passed Authorization: Bearer,
@@ -555,8 +555,8 @@ words:    the body of the refusals of codes — ConsoleRefusal {detail, error: d
 PASS_WAIT: 5               # s; a default — a deployment can override it, acceptance runs on the default (guess of stage C GP-G01, the Architect's decision of 2026-10-23)
 ```
 
-Which worker gets the route depends on the side (the table above). The domain console passes the path `/<сегмент>[/…]` and the query with the client of
-the role `domainconsole`; no worker on the domain is heard — 503 `{detail: <текст строки codes>, error: "unavailable"}` (P/10 Н1.6 `absent`;
+Which worker gets the route depends on the side (the table above). The domain console passes the path `/<segment>[/…]` and the query with the client of
+the role `domainconsole`; no worker on the domain is heard — 503 `{detail: <text of the codes row>, error: "unavailable"}` (P/10 Н1.6 `absent`;
 C06-GP-L03-DOMAIN-WORKER-503-01, the Architect's decision of 2026-10-28). The worker on the domain accepts
 `door.pass` only from a client with the role certificate `domainconsole` (otherwise 403 `forbidden`) and does not check the credentials of people
 again: the token of the person was checked by the gate of the domain console ([P/03.7](../../03-worker/spec/03.7-worker.norms.md) Н1.6
@@ -564,7 +564,7 @@ again: the token of the person was checked by the gate of the domain console ([P
 
 ### Supervision
 
-ADR-0119 addendum (5)–(7): supervision is `supervision: {<sub>: <роль супервизоров>}` at a domain role (P/08.4 Н1.3а); the cluster console judges it
+ADR-0119 addendum (5)–(7): supervision is `supervision: {<sub>: <supervisors role>}` at a domain role (P/08.4 Н1.3а); the cluster console judges it
 by the copy of the role table of the member (P/09.1 Н1.4 member_roles: `assigned`, `groups`, `supervision`, `unreadable`); it does not know the meaning of the subsystem.
 
 ```yaml
@@ -593,8 +593,8 @@ role and only to the doors of the list (ADR-0094 B1, addendum (3), (6), (12); AD
 The accounts of the subsystems that need the first kind stay on it until their transition; `door.pass` of one manifest is of one kind.
 
 ```yaml
-manifest: door: {pass: {routes: [<путь>…], calls: [<дверь>…], stream: [<путь>…], wait: {<путь>: <с>}, refusals: {form: problem, codes: {<статус>: <code>}}}}
-match:    <путь> matches the beginning of the request path by whole segments, the path is without the mount prefix: api covers /api and /api/x, not /apix.
+manifest: door: {pass: {routes: [<path>…], calls: [<door>…], stream: [<path>…], wait: {<path>: <s>}, refusals: {form: problem, codes: {<status>: <code>}}}}
+match:    <path> matches the beginning of the request path by whole segments, the path is without the mount prefix: api covers /api and /api/x, not /apix.
           A request goes to the pass if an element of routes covers it. Its first segment is the first segment of an element of routes, and no element covers
           it — 404 by the form of the route (refusals below). A stream: an element of stream covers it. The limit: the longest covering key of wait;
           no key — PASS_WAIT, a stream has no limit, the end of the request closes it (close below)
@@ -637,7 +637,7 @@ writes_via: a row of a unit or of a table with the word writes_via (P/06.1 Н1.1
           its role; otherwise 403 writes via. Further need and may of the person of the ticket — as for the other writes (ADR-0119 addendum (10), (11))
 service:  a table service: true (P/06.1 Н1.6) by ticket: it is read and written by the right of consequences, may is not asked, if <sub> of the table is sub of the addressee of the ticket and the transport of
           step 2 is its role; otherwise 403 denied, as to a person. A row of such a table in a batch — by the same rule. The feed by ticket gives its rows with the field user equal to user of the ticket (P/06.1 Н2 «Change feed»). The journal — as for the other writes
-journal:  every accepted callback is a line pass.called in audit/<console role>/e1 (the event journal contract): {user, via: <sub>/<worker>, door: "<метод> <path without query>", status};
+journal:  every accepted callback is a line pass.called in audit/<console role>/e1 (the event journal contract): {user, via: <sub>/<worker>, door: "<method> <path without query>", status};
           a write made by ticket carries the same user and via in its journal line
 counter:  <sub>_passed_calls_total — a series of /metrics (P/06.5 Н3): of the accepted callbacks
 refusals: the console on the path of the route answers with its own refusal (a status outside the worker: 401, 403, 404, 413, 502, 503, 504) — the manifest has refusals and the status is in codes —

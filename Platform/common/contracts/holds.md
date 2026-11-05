@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/holds.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies in
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies in
 chapters; the stage C guess R05-G06, the Architect's decision of 2026-10-23). The owner is lesson P/06, [chapter 6.4](../../06-console/spec/06.4-console.norms.md)
 Н1.5 `holds`. The rows of the hold table are written by the table door of the console ([P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.6); the holds
 are read by the resource in the term pass ([P/05](../../05-resource/spec/05-resource.norms.md) Н3 «resource pass» `retain`; the rights —

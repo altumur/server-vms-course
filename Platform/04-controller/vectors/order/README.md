@@ -16,7 +16,7 @@ byte, nothing is expanded. Four fields: `case`, `input` and `expect` — JSON te
 - `default` — `placement.capacity.default` of the manifest (an integer ≥ 0);
 - `workers` — the suitable live workers: `capacity` (an integer or `null` — the capacity is not named) and `free` (free);
 - `waiting` — Σ of the weights of the waiting ones, `groups` — the number of groups for which there is no place anywhere;
-- `servers` — `{<сервер>: {want, live, room, base?, numbers?, door?, placeless?, drained?, quiet?}}`: `want` — the order row, `live` — live(s)
+- `servers` — `{<server>: {want, live, room, base?, numbers?, door?, placeless?, drained?, quiet?}}`: `want` — the order row, `live` — live(s)
   by the heartbeats (with the base and the victim), `room` — `room.<sub>`, `base` — the base `-1` is alive (no field — `true`), `drained` —
   a drain or a decommission, `quiet` — «не поднял» in the window `RAISE_QUIET`. `numbers` — the numbers of the live processes of the role by the heartbeats
   (the base `1` if it is alive; `live` of them); no field — consecutive: `1…live` with `base: true`, otherwise `2…live + 1`. `в пути(s)` =
@@ -42,7 +42,7 @@ need: 0, orders: {}, withheld: 0, why: "no positive capacity estimate"}` (R20; `
 **Several sets** — an input with `sets: [{labels, waiting, groups}]` instead of `waiting` and `groups`; all the servers and workers
 of the input suit each set. A label set is a set: the canonical writing is the unique labels in ascending order separated by
 commas, a repeat collapses (R21). The sets go in the order of the UTF-8 bytes of the canonical writing (the empty one first); a set takes the free, `в пути` and `room` only up to its need, the rest goes to the next one (Н3
-«порядок наборов», cammeta-go М10-04 № 7). The output — `{sets: {<каноническая запись>: {per, processes, in_flight, need,
+«порядок наборов», cammeta-go М10-04 № 7). The output — `{sets: {<canonical record>: {per, processes, in_flight, need,
 withheld}}, orders, withheld}`: the `in_flight` of a set — how much capacity in flight it took, `orders` — the final `want` of the servers,
 `withheld` — the sum over the sets.
 

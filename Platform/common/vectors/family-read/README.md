@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/family-read
 
 Reading a data family of the catalog (`Platform/common/data/catalog.tsv`) by the common library of an implementation: the input is the family (`key`,
 `kind`), the mode `writer` or `reader`, the text of the instance; the outcome is the verdict, the refusal paths (JSON Pointer), the outcome of
-`<семья>.outcomes.tsv` (only at the reader). The schema of the family is the column `schema` of the catalog (JSON Schema 2020-12), the layers are the words
+`<family>.outcomes.tsv` (only at the reader). The schema of the family is the column `schema` of the catalog (JSON Schema 2020-12), the layers are the words
 `x-*` of the schema and `codec.tsv`.
 
 The table `NN.tsv` holds the families of the owner lesson NN (the column `owner` of the catalog). A row:
@@ -13,14 +13,14 @@ The table `NN.tsv` holds the families of the owner lesson NN (the column `owner`
   the grammar of the placeholder table `Platform/common/data/README.md`; a key not by the template — `refused`, the path `""` (the row
   as a whole, the value is not judged; not `/key` — that is the path of the field `key` of the families of P/08), the outcome — the rows of the empty path;
 - `who` — who performs it, a JSON array of roles: at `writer` — the roles of the operations of the catalog (`ops`), at `reader` — the readers of the family
-  (the rows of the empty path of `<семья>.outcomes.tsv`: the `readers` of the catalog ∪ the participants of `cas` and `guard`), in the order of the file;
+  (the rows of the empty path of `<family>.outcomes.tsv`: the `readers` of the catalog ∪ the participants of `cas` and `guard`), in the order of the file;
 - `text` — at `row` — a JSON object of the fields of `items` (the values are strings, as written in the store); at `object` and `file` —
   the text of the value as is;
 - `verdict` — `ok` or `refused`; `paths` — a JSON array of the refusal paths (the order does not matter); `outcome` — at the writer `[]`,
-  at the reader — a JSON object «роль → массив путей строк `<семья>.outcomes.tsv`, чей исход у этой роли действует»
+  at the reader — a JSON object «роль → массив путей строк `<family>.outcomes.tsv`, чей исход у этой роли действует»
   (the empty path — the row as a whole);
-- `note` — a mutation of set «А» (`base` — the instance without a mutation; `<путь>: <мутация>`, including the fields `key` of the families of P/08),
-  the case id of set «Б», `catalog key: <плейсхолдер> "<подстановка>"` or `catalog key: literal` — a key not by the template, `add: …` —
+- `note` — a mutation of set «А» (`base` — the instance without a mutation; `<path>: <mutation>`, including the fields `key` of the families of P/08),
+  the case id of set «Б», `catalog key: <placeholder> "<substitution>"` or `catalog key: literal` — a key not by the template, `add: …` —
   a row added outside set «А» (a place of refusal, a defect of the library).
 
 The answer of an implementation to a row is the JSON `{"verdict", "paths", "outcome"}`: strictly compared are the verdict, the set of paths and

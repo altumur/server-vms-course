@@ -90,7 +90,7 @@ the upper of the input before the first row (Н1.3 `floor`); the number depends 
 
 C01-STATUS-MEMBERS-NOAPI (the Architect's decision of 2026-10-26): a member without `-api` is not in `members` of `/v1/status`,
 the map of a single member of a box is `{}` (Н1.3 `-api`, `box`; Н2 `GET /v1/status`); `leader` is empty. The expectation `members`
-`{}` is exactly an empty map (the dictionary of the common README, the line `<код> <JSON>`; ACC-EMPTY-OBJECT-01); `{"<id>": ""}` is not by the form of the OpenAPI of the lesson
+`{}` is exactly an empty map (the dictionary of the common README, the line `<code> <JSON>`; ACC-EMPTY-OBJECT-01); `{"<id>": ""}` is not by the form of the OpenAPI of the lesson
 (`minLength: 1`), and the step does not pass.
 
 ## The store group (sc. 07, 17, 18, 25–29, 31)

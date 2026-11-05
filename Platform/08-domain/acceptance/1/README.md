@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Стенд домена»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly — the М11 dictionary of the acceptance README of
+the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly — the М11 dictionary of the acceptance README of
 М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
 [`08.1-domain.norms.md`](../../spec/08.1-domain.norms.md) Н5. The scenarios were moved from the acceptance of М11/03 (04, 06–09) and
 М11/06 (06 → 15) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones, except the scenario of М11/06:
@@ -16,7 +16,7 @@ console (lesson P/10, [Н1.2а](../../../10-domain-console/spec/10-domain-consol
 
 ## Preparation
 
-As the acceptance README of [chapter 8.3](../3/README.md) («Stand», «Подготовка каждого сценария»;
+As the acceptance README of [chapter 8.3](../3/README.md) («Stand», «Preparation of each scenario»;
 formerly — the acceptance README of М11/03): the runner brings up three clusters on one machine — `hold`, `m1`, `m2`; each has its own empty store,
 its own `{data}`, its own role sockets and ports of the console and the resource, its own ring (P/06.2 Н1.2), the manifest catalogue — only `testsub`
 (`domain.ref: name`); the console, the controller and the worker `w-1` of `testsub`, the resource of its own server (`srv-hold`, `srv-m1`, `srv-m2`).
@@ -40,7 +40,7 @@ The format is the dictionary of the «Stand» and the domain dictionary; the exp
 | 15 | `shadow-and-executors` | 6 | an assignment with `copies`: the claims of the executors from `cluster` and `copies` are not a `conflict`; an assignment without a unit — `orphaned` after SHADOW_STALL |
 
 Scenarios 06–09 repeat on the stand scenarios 01–05 of the acceptance of М11/01 (the vectors `view`): real reports of agents in
-`domain/members/<член>/reports/<rev>` and the holder's view.
+`domain/members/<member>/reports/<rev>` and the holder's view.
 
 ## `journal/corrections-1.tsv`
 

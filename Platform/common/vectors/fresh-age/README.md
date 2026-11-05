@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/vectors/fresh-age/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 The owner is [the observation contract](../../contracts/observation.md) «Freshness: `LOST_AFTER`» (a common contract of the module
-«Платформа»). The participants are all observers that judge «changed within the last LOST_AFTER»: the controller — a live worker of the pool,
+«Platform»). The participants are all observers that judge «changed within the last LOST_AFTER»: the controller — a live worker of the pool,
 the fate of a slot, `resource_state` ([P/04](../../../04-controller/spec/04-controller.norms.md) Н3); the console — `worker_state`
 and `WorkerRow.state` ([chapter 6.1](../../../06-console/spec/06.1-console.norms.md) Н2,
 [chapter 6.5](../../../06-console/spec/06.5-console.norms.md)), `w2c_resources_live` (chapter 6.5), the live resources of the merge of

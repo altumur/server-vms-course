@@ -50,18 +50,18 @@ argument of the runner command is the subsystem name `<sub>`.
 ## Directories and files
 
 - **Store rows** — through the role socket, the rights — the rights file [P/02.5] Н1.4. The rows of the lesson — [catalogue], owner `P/04`:
-  `<sub>/placement/<id>`, `<sub>/workers/<имя>`, `<sub>/want/<сервер>`, `<sub>/controller/placement_turn`,
-  `<sub>/controller/placement_intent`, `<sub>/decommissioned/<сервер>`; participation in `<sub>/slots/<имя>` (a proposal) and `<sub>/<manifest:unit.rows>/<id>`
+  `<sub>/placement/<id>`, `<sub>/workers/<name>`, `<sub>/want/<server>`, `<sub>/controller/placement_turn`,
+  `<sub>/controller/placement_intent`, `<sub>/decommissioned/<server>`; participation in `<sub>/slots/<name>` (a proposal) and `<sub>/<manifest:unit.rows>/<id>`
   (`delete_after`).
 - **Objects** in the objects root: the pass report `<sub>/controller/pass` ([P/04] Н1.2), the snapshot shards
-  `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced` ([P/04] Н1.3а). File names — one encoding ([the event journal contract](../common/contracts/event-journal.md) «File names in shared trees»).
+  `<sub>/snapshot/<worker>`, `<sub>/snapshot/unplaced` ([P/04] Н1.3а). File names — one encoding ([the event journal contract](../common/contracts/event-journal.md) «File names in shared trees»).
 - **Cluster objects** (the heartbeats of workers and resources, the reports) the controller reads through the resource of its own server (the
   objects door [P/05](../05-resource/spec/05-resource.norms.md), `scope`); without a resource on its own server with `cluster://` — «unknown», not «no» ([the object store client contract](../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision 2026-10-27); a stand that needs the worker heartbeats
   puts a resource on the server of the controller ([P/04] Н3 «pass()» step 0; ADR-0084 addendum (2) R17; review of stage A
   3–5, № 22).
-- **Reads**: the worker heartbeats `<sub>/heartbeats/<имя>`, the resource heartbeat `platform/resources/<server>/heartbeat`,
+- **Reads**: the worker heartbeats `<sub>/heartbeats/<name>`, the resource heartbeat `platform/resources/<server>/heartbeat`,
   `platform/manifest/<sub>` and the mark `/rev`, `platform/schema`, `platform/servers/*`, `platform/doors/*`,
-  `platform/decommission/*`, `platform/drain`, the slots `<sub>/slots/<имя>`, the places `<sub>/holds/<место>` ([catalogue]);
+  `platform/decommission/*`, `platform/drain`, the slots `<sub>/slots/<name>`, the places `<sub>/holds/<place>` ([catalogue]);
   the placement turn and the intent (`<sub>/controller/placement_turn`, `placement_intent`) it both writes and reads ([P/04] Н1.5).
 - **The build word** (`BUILD`) of the controller is not in the output: it writes no heartbeat and is not in `processes` of `/schema`
   ([P/06.6] Н2.3 `GET /schema`).

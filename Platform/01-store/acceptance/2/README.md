@@ -14,7 +14,7 @@ into `{rights}` before the store starts; the chapter needs no rights generator: 
 
 ## scenarios.tsv
 
-The format is the dictionary of directives and doors of the common acceptance README: a door without a prefix is the store, `@as <роль>`, `@header` before
+The format is the dictionary of directives and doors of the common acceptance README: a door without a prefix is the store, `@as <role>`, `@header` before
 the method, `$имя`, `ASSERT`; the expectation is a subset of fields, `index` may be omitted. Specific to the chapter:
 
 - `expect` without a body for code `403` is the full form `{kind: forbidden, error: …}`. For a refusal of an operation on a row, error names the role, the action and the key. For an identity refusal in scenario 08 — the socket role `testsubworker` and the reason why the role header is prohibited (naming the route is admissible); the key of the row is not required, and the imposed role console does not replace the socket role.

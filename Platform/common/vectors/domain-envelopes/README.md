@@ -32,7 +32,7 @@ of «cammeta-acceptance» 2026-10-20):
 | Table | Command | Output |
 |---|---|---|
 | `x25519-open.tsv` | `seal` | `{result: ok, plain}` or `{result: refused, reason}` |
-| `x25519-round.tsv` | `seal-round` | `{result: ok, envelopes: [<конверт>, <конверт>], opened: [<plain>, <plain>], distinct}` or `{result: refused, reason}` |
+| `x25519-round.tsv` | `seal-round` | `{result: ok, envelopes: [<envelope>, <envelope>], opened: [<plain>, <plain>], distinct}` or `{result: refused, reason}` |
 | `m1-open.tsv` | `seal-member` | `{result: ok, plain}` or `{result: refused, reason}` |
 | `m1-round.tsv` | `seal-member-round` | `{result: ok, sealed: [<m1>, <m1>], opened: [<plain>, <plain>], distinct}` |
 
@@ -41,7 +41,7 @@ At the rounds `ok` — both envelopes opened into `plain` and differ (`distinct:
 
 ## Keys
 
-The seeds are 32 bytes `sha256("w2c test <слово>")` (as the keys of [the sealing vectors](../sealing/README.md) and
+The seeds are 32 bytes `sha256("w2c test <word>")` (as the keys of [the sealing vectors](../sealing/README.md) and
 of [the door token](../door-token/README.md)); the table does not name the words of derivation — the bytes are fixed here, an implementation
 takes them from here. The envelopes of the opening vectors are sealed with the one-time seeds `eph 1…3` and `nonce` — the bytes 0…11 only for
 reproducibility; in operation `eph` and `nonce` are random (the contract, `seal`).

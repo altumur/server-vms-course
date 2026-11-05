@@ -25,8 +25,8 @@ one `id` in several manifests, the order; on the stand there is one manifest wit
 ## Stand
 
 **Scenarios 01–03, 15** (from the READMEs of the acceptances of М11/08 and М11/10). The preparation is as in the acceptance of [chapter 8.3](../../../08-domain/acceptance/3/README.md)
-(«Stand», «Подготовка каждого сценария»): the clusters `hold`, `m1`, `m2`, the catalogue `testsub`. The doors `holder`,
-`holder@<кластер>`, `member <кластер> console`, `signer` and the directives `@domain`, `@person`, `@env`, `@start domain on`,
+(«Stand», «Preparation of each scenario»): the clusters `hold`, `m1`, `m2`, the catalogue `testsub`. The doors `holder`,
+`holder@<cluster>`, `member <cluster> console`, `signer` and the directives `@domain`, `@person`, `@env`, `@start domain on`,
 `@stop domain`, `@move` — the section «Domain stand» of the common acceptance README; the forwarding environment is there too (`CLUSTERS` of the consoles,
 `DOMAIN_CONSOLE_URL` of the process `domain`, `SIGNER_URL` only at `hold`). The runner goes as the person `root` (chapter 8.4).
 
@@ -66,8 +66,8 @@ A logged-in person without a grant (`403`) — by reading.
 **Scenarios 06, 13, 14** (from the READMEs of the acceptances of М11/05 and М11/09). The preparation is as in the acceptance of [chapter 8.5](../../../08-domain/acceptance/5/README.md)
 («Preparation»): the catalogue of each cluster is `testsub` and `testsub2`; on each cluster the controllers of both work, the worker
 `w-1` of the manifest `testsub`, the worker `t-1` of the manifest `testsub2` (with the training writer of contributions — [chapter 8.5](../../../08-domain/spec/08.5-domain.norms.md) Н5) and
-the resource of its own server `srv-<кластер>`; before the steps the store of each cluster has the counter `testsub` `c1-<кластер>` and the shelf
-`testsub2` `sh1` `{zone: z1, server: srv-<кластер>}`. `console2` at `member` is the prefix `/testsub2`.
+the resource of its own server `srv-<cluster>`; before the steps the store of each cluster has the counter `testsub` `c1-<cluster>` and the shelf
+`testsub2` `sh1` `{zone: z1, server: srv-<cluster>}`. `console2` at `member` is the prefix `/testsub2`.
 
 - The person `root` with the password `w2c test root password` is created at `@install domain` (`domain first-admin`, the directive
   `@admin`). The runner goes as this person by default: `admin` `*` at the domain door and in the grants row of each cluster of the stand.

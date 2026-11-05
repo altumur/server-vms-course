@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/labels.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5); the Architect's decision on the analysis of the review of stage A 6–7, № 11: the label
+A common contract of the module «Platform» (ADR-0083 addendum (5); the Architect's decision on the analysis of the review of stage A 6–7, № 11: the label
 alphabet is in `common/`). The owner is lesson [P/06](../../06-console/spec/06.6-console.norms.md) (chapter 6.6: the label doors of a
 server; moved from there; analysis of the review of stage B 6–7, № 35). Readers: the controller — the constraint `labels-subset` and the worker labels ([P/04](../../04-controller/spec/04-controller.norms.md)
 Н1.3), the console — the label field of a unit ([P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.2 `list`), the label doors

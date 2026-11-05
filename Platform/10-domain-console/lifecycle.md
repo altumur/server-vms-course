@@ -45,7 +45,7 @@ None: the setting channel is only the environment (P/02.4 Н1.2).
 - There is no ring ([P/02.4 Н1.12](../02-installer/spec/02.4-installer.norms.md)).
 - The holder page is the same page of the console module, `sections: [domain]` ([P/10 Н1.7](spec/10-domain-console.norms.md));
   the module is shipped with the console binary, not from `$CAMMETA_SPECS` ([P/06.5](../06-console/spec/06.5-console.norms.md) Н1.1 `module`).
-- The role journal — `<корень событий>/audit/domainconsole/e1/…`, the alarm `session.debug_open` — `audit.alarms/domainconsole`
+- The role journal — `<events root>/audit/domainconsole/e1/…`, the alarm `session.debug_open` — `audit.alarms/domainconsole`
   ([the event journal contract](../common/contracts/event-journal.md) `journal`).
 
 ## Exit codes
@@ -69,6 +69,6 @@ The roots `{data}/config`, `objects`, `events` are created before the process st
 acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
 
 The stand of several clusters ([the common acceptance README](../common/acceptance/README.md#domain-stand), the section «Domain stand»): `@start domain` brings up the processes `domain` and of the domain console on
-`hold`; the door `holder <запрос>` — the domain console on `hold`, `holder@<кластер>` — on another cluster after the move;
+`hold`; the door `holder <request>` — the domain console on `hold`, `holder@<cluster>` — on another cluster after the move;
 `Idempotency-Key` at `POST`, `PUT`, `DELETE` — by the rule `@key`. `{data}` — `PLATFORM_DIR` of the cluster ([the common
 acceptance README](../common/acceptance/README.md) «Stand»; review analysis of stage B 3–5, № 33).

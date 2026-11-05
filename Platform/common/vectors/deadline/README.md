@@ -14,7 +14,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | Field | Meaning |
 |---|---|
 | `input` | the text of the value `valid_until` from the request body — one JSON value, as sent |
-| `expect` | `{"written": <текст>}` — the element of the request row by the time writer of P/01.1 Н0: truncation down to milliseconds (towards −∞), a negative one — `0`, an integer — without a fractional part; or `{"status": 400, "error": "bad deadline"}` — the value is not a finite JSON number (the refusal of step 1, P/06.4 Н4 RequestError) |
+| `expect` | `{"written": <text>}` — the element of the request row by the time writer of P/01.1 Н0: truncation down to milliseconds (towards −∞), a negative one — `0`, an integer — without a fractional part; or `{"status": 400, "error": "bad deadline"}` — the value is not a finite JSON number (the refusal of step 1, P/06.4 Н4 RequestError) |
 
 13 rows: 8 records (`0`, negative ones, `1e-12`, the truncation of `1000.1234` and `1.2349`, the integer `1000` and `1e3`), 5 refusals (`null`, a string,
 bool, a list, the overflow `1e400`).

@@ -10,10 +10,10 @@ The owner is lesson P/04 ([norms](../../spec/04-controller.norms.md) Н3 «со�
 UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, the first non-skipped one is the header. A cell is read byte for
 byte. Fields: `case`, `input` and `expect` — JSON text, `note`.
 
-**Input** — `{prefix, want: {<сервер>: <want>}, workers: [{name, server}]}`: the live workers of the role, the names
-`<prefix>-<сервер>-<n>` (P/03.2 Н1.4); `want` — the target of the order row of each server on which there is a worker (an integer 1…99,
+**Input** — `{prefix, want: {<server>: <want>}, workers: [{name, server}]}`: the live workers of the role, the names
+`<prefix>-<server>-<n>` (P/03.2 Н1.4); `want` — the target of the order row of each server on which there is a worker (an integer 1…99,
 P/04 Н1.4).
-**Output** — `{victim: <имя> | null}`: the largest number `n ∈ {2…want}` of its own server, the number — as an integer, not by the slot
+**Output** — `{victim: <name> | null}`: the largest number `n ∈ {2…want}` of its own server, the number — as an integer, not by the slot
 order; the base `-1` is never a victim; a live number above the want of its server is not a victim: the script stops it
 (R28), the end of the shrinking does not put it out (ADR-0084 addendum (6); analysis of the review of stage B 6–7, № 42); `null` — there is no victim.
 Comparison — JSON by value.

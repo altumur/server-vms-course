@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/pool.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13), addendum (30): a common algorithm of several processes is a contract, not
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13), addendum (30): a common algorithm of several processes is a contract, not
 copies in chapters; guess of stage C C06-SERVER-POLICY-33-01, the Architect's decision of 2026-10-25). The owner is lesson
 [P/04](../../04-controller/spec/04-controller.norms.md) (Н3 «choose»: the controller places units only on the workers of the pool).
 The participant is the cluster console ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2: `WorkerRow.idle_by_policy`,
@@ -17,16 +17,16 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The rows and objects that the pool computation reads follow the forms and outcomes of their families (layout audit, V-42–V-44, B-07; the Architect's decision of 2026-10-25): the heartbeat `<sub>/heartbeats/<имя>`
-— `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; the slot `<sub>/slots/<имя>` —
-`Platform/03-worker/data/slots.schema.json`, `Platform/03-worker/data/slots.outcomes.tsv`; the assignment `<sub>/workers/<имя>` —
+The rows and objects that the pool computation reads follow the forms and outcomes of their families (layout audit, V-42–V-44, B-07; the Architect's decision of 2026-10-25): the heartbeat `<sub>/heartbeats/<name>`
+— `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; the slot `<sub>/slots/<name>` —
+`Platform/03-worker/data/slots.schema.json`, `Platform/03-worker/data/slots.outcomes.tsv`; the assignment `<sub>/workers/<name>` —
 `Platform/04-controller/data/workers.schema.json`, `Platform/04-controller/data/workers.outcomes.tsv`; the order row
-`<sub>/want/<сервер>` — `Platform/04-controller/data/want.schema.json`, `Platform/04-controller/data/want.outcomes.tsv`; the decision
+`<sub>/want/<server>` — `Platform/04-controller/data/want.schema.json`, `Platform/04-controller/data/want.outcomes.tsv`; the decision
 `<sub>/controller/placement_intent` — `Platform/04-controller/data/placement-intent.schema.json`,
-`Platform/04-controller/data/placement-intent.outcomes.tsv`; the decommission `<sub>/decommissioned/<сервер>` —
+`Platform/04-controller/data/placement-intent.outcomes.tsv`; the decommission `<sub>/decommissioned/<server>` —
 `Platform/04-controller/data/decommissioned.schema.json`, `Platform/04-controller/data/decommissioned.outcomes.tsv`; the drain
 `platform/drain` — `Platform/06-console/data/drain.schema.json`, `Platform/06-console/data/drain.outcomes.tsv`; the decommission request
-`platform/decommission/<сервер>` — `Platform/06-console/data/decommission.schema.json`,
+`platform/decommission/<server>` — `Platform/06-console/data/decommission.schema.json`,
 `Platform/06-console/data/decommission.outcomes.tsv`.
 
 ## Live worker

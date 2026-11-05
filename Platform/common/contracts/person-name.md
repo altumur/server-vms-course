@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/person-name.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): the form of a person's name is checked by the process `domain`, the gates
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): the form of a person's name is checked by the process `domain`, the gates
 of the consoles, the token recipient, the function `may`, and the set of white-space characters is also read by the log mask and the secret mask — a contract,
 not copies in chapters; layout audit A-20, the Architect's decision of 2026-10-25). The owner is chapter
 [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.1 (`name` of a person row). Participants: the process `domain` (P/08.4 Н1.1–Н1.2:
@@ -16,7 +16,7 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The person row `domain/users/<имя>` is the family `users`: the form `Platform/08-domain/data/users.schema.json`, the outcomes
+The person row `domain/users/<name>` is the family `users`: the form `Platform/08-domain/data/users.schema.json`, the outcomes
 `Platform/08-domain/data/users.outcomes.tsv` ([form](../../08-domain/data/users.schema.json),
 [outcomes](../../08-domain/data/users.outcomes.tsv)).
 

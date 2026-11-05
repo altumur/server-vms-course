@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/4/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Стенд домена»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly — the М11 dictionary of the acceptance README of
+the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly — the М11 dictionary of the acceptance README of
 М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
 [`08.4-domain.norms.md`](../../spec/08.4-domain.norms.md) Н5. Scenarios 01, 02, 04, 08, 09, 10 were moved from the acceptance of М11/09
 (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones (there is one source, the numbers do not collide).
@@ -18,7 +18,7 @@ The scenario М11/09 07 (`07-may`, 24 steps) is the same cases, it is not moved 
 
 The preparation is as the acceptance of [chapter 8.5](../5/README.md) (formerly the acceptance README of
 М11/05): the catalogue `testsub` and `testsub2`, the counter
-`c1-<кластер>` and the shelf `sh1` on each cluster, the training writer of contributions. The doors `holder`, `member`, `signer` and the directives
+`c1-<cluster>` and the shelf `sh1` on each cluster, the training writer of contributions. The doors `holder`, `member`, `signer` and the directives
 `@domain`, `@person`, `@stop agent` — the section «Domain stand» of the common acceptance README.
 
 - The person `root` with the password `w2c test root password` is created at `@install domain` (`domain first-admin`, the directive
@@ -52,7 +52,7 @@ The preparation is as the acceptance of [chapter 8.5](../5/README.md) (formerly 
   `domain/disabled` is still `["ann"]`, the grant of `ann` is not removed (the reconciliation of subjects without a name: the row exists, but is unreadable —
   the person exists, C08-GRANTS-ORPHAN-01). `DELETE` deletes the unreadable row too, removes the grant (`grants_changed: ["m1"]`);
   then `domain/disabled` is `[]` (the reconciliation by the flags of the rows of people), the login of `ann` — an ordinary 401. The norm does not name an edit `PUT` of an unreadable
-  row (Н3 «дверь людей» step 7: «нет — 404» against the rule «Unreadable row») — there is no step.
+  row (Н3 «people door» step 7: «нет — 404» against the rule «Unreadable row») — there is no step.
 - Scenario 14 — the common ceiling (Н1.10 `ceiling`, the contract of the gate and the forwarding «Attempt limit»): the names `n1`–`n4` with
   five failures each (the key is the pair (address, name): the fifth failure of each key still passes, `per_address` does not fire) — 20
   refusals of all keys; a fresh name `n5` — the first attempt passes (401: «не чаще одной попытки в 60 с» does not yet act for a key without an attempt),
@@ -108,7 +108,7 @@ The format is the dictionary of the «Stand» and the section «Domain stand» o
 | 36 | `changes-role-assignment` | 12 | the removal of a role assignment — a reset; there is no dry run |
 | 37 | `versions-groups-roles` | 20 | the versions and the memory of groups, roles, a batch; there is no dry run |
 
-Sc. 09 — the deletion mark `domain/deleting/<имя>`: the mark is written directly into the holder's store, the pass reconciliation (chapter 8.4 Н3,
+Sc. 09 — the deletion mark `domain/deleting/<name>`: the mark is written directly into the holder's store, the pass reconciliation (chapter 8.4 Н3,
 «Обрыв шага 9») removes the grant rows by it and deletes it; a break of `DELETE` after the row of the person — by reading (the stand debt
 item 3, ADR-0083 addendum (9)). Sc. 10 (the М11 reconciliation, P1, P3) — a mark of any form: `a|b` (a name not by the grammar) and `aa` with
 non-empty `items` are removed by the pass, the pass does not stall; the mark `zz` without a person — an edit of a grant with the line `zz` 409
@@ -122,8 +122,8 @@ Sc. 16–19 (the coverage audit of P/08, the second pass of Gemini, the draft G0
   `subject` (`ann` before `root`).
 - sc. 17 — `last_admin` (Н1.3, C08-LAST-ADMIN-UNREADABLE-01): `ann` is the second administrator of `domain/grants/domain`, her row is
   spoiled past the door (`name` ≠ the name of the key, as sc. 13); removing `root` and disabling `root` — 409 `last admin`: an unreadable
-  row of a person is not counted as an admin. `DELETE` deletes it too (Н3 «дверь людей» step 7).
-- sc. 18 — an unreadable row `domain/grants/m1` (`doc` is not JSON): `POST /domain/users` — 503 `unavailable` (Н3 «дверь людей»
+  row of a person is not counted as an admin. `DELETE` deletes it too (Н3 «people door» step 7).
+- sc. 18 — an unreadable row `domain/grants/m1` (`doc` is not JSON): `POST /domain/users` — 503 `unavailable` (Н3 «people door»
   step 7a, C08-GRANTS-ORPHAN-01), an edit `PUT /domain/grants/m1` over it — 503 (the outcomes of `domain/grants`, `G-25`: an edit
   over an unreadable row is not written); the row is fixed through `admin.sock` by a write by the form (`doc` with an empty `lines`; `delete` under `domain/` is forbidden to `admin` too, C09-AUDIT-HEAL-NOT-DELETE-01) — the person is created.
 

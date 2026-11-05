@@ -34,7 +34,7 @@ a file not in the mapping does not exist. `expect` — the environment after the
 `W2C_ENV` → `W2C_ENV` → `W2C_SUB_ENV`; what is read earlier wins; at a part — the unit → `W2C_SUB_ENV`. 6 rows: `W2C_ENV` and `W2C_SUB_ENV`
 in a file do not redirect; `W2C_ROLE` is absent and is not equal to the role of the command — code 2; the route of a part — without a role, only the unit and
 `W2C_SUB_ENV`, `w2c.env` is not read (C02-ENV-PART-99). `files.tsv` is performed by the runner `w2c-run.sh` (`02-installer`): the reading order
-of the files is its own (the contract «Files and reading order»); `cases.tsv` — by those whose norm itself parses an environment file: the runner `w2c-run.sh` and the workers script (`roles/<роль>.env`,
+of the files is its own (the contract «Files and reading order»); `cases.tsv` — by those whose norm itself parses an environment file: the runner `w2c-run.sh` and the workers script (`roles/<role>.env`,
 P/02.4 Н1.5 step 4) — the profile `02-installer`; the role processes get the variables from the runner and do not parse files
 (lifecycle P/03–P/10: «окружение собирает раннер») (ACC-VECTORS-CONNECT-02, -04, the Architect's decisions 2026-10-26).
 

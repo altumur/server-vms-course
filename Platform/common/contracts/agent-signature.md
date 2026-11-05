@@ -2,14 +2,14 @@
 
 This English text is the source; the Russian translation `ru/contracts/agent-signature.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common algorithm of several processes is a contract,
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common algorithm of several processes is a contract,
 not copies in chapters; analysis of the review of stage A 8–10, № 13 / decision 2). The owner is [chapter 9.1](../../09-agent/spec/09.1-agent.norms.md) of lesson P/09 (Н1.3; the source —
 М11/3 Н1.4): the member agent signs its requests with the member key
 `domain/member-key` (P/09.1 Н1.1). Checked by:
 
 | Who checks | Doors | Window |
 |---|---|---|
-| the holder — the process `domain` ([P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н2, [P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н1.3) | `POST /api/member/<член>`, `GET /api/carry/<член>`, `POST /api/tokens/<член>/…` | `MEMBER_WINDOW` |
+| the holder — the process `domain` ([P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н2, [P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н1.3) | `POST /api/member/<member>`, `GET /api/carry/<member>`, `POST /api/tokens/<member>/…` | `MEMBER_WINDOW` |
 | the relay ([P/09.2](../../09-agent/spec/09.2-agent.norms.md) Н2) | the relay doors for the members behind it; the relay's batch to the holder is signed by it as well | `MEMBER_WINDOW` |
 | the cluster console of its own member ([P/06.3](../../06-console/spec/06.3-console.norms.md) Н1.3 `identity` step 2) | the doors of units, of the tables `domain.edit_tables`, `POST /console/batch`, `GET /events?class=alarm` | `UNIT_WINDOW` |
 
@@ -32,14 +32,14 @@ The signature key of a member is `domain/member-key`: `Platform/09-agent/data/me
 From М11/3 Н1.4:
 
 ```yaml
-header:         X-Agent-Signature: <мс>.<sig>
-  <мс>:         the agent's Unix wall milliseconds, a decimal integer without a sign and leading zeros (0 — «0" itself), ≤ 16 digits
+header:         X-Agent-Signature: <ms>.<sig>
+  <ms>:         the agent's Unix wall milliseconds, a decimal integer without a sign and leading zeros (0 — «0" itself), ≤ 16 digits
   sig:          base64url of 64 bytes of an Ed25519 signature with the member key over UTF-8:
-                <METHOD> "\n" <path> "\n" <мс> "\n" <hex sha256 of the body bytes>     # the body of GET is empty: sha256 of the empty string
+                <METHOD> "\n" <path> "\n" <ms> "\n" <hex sha256 of the body bytes>     # the body of GET is empty: sha256 of the empty string
                 with the header X-Agent-For — also "\n" <its value>
   X-Agent-For:  <person name> <iat>: whose edit; only a stored edit with by (P/08.6 Н1.4); without the header — as before
   path:         the request path without query, byte for byte as in the request line
-window:         |now − <мс>/1000| ≤ window, in both directions; now — the wall seconds of the checker
+window:         |now − <ms>/1000| ≤ window, in both directions; now — the wall seconds of the checker
   MEMBER_WINDOW: 300        # s — the doors of the holder (Н2) and of the relay (lesson 4)
   UNIT_WINDOW:   60         # s — the unit doors of the member console (P/06.3 Н1.3 identity 2: the agent edits the units of its own cluster, lesson 6)
 replay:         there is no repeat cache: the same bytes within the window are accepted again — the norm names this a limit; the report door

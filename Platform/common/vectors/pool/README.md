@@ -14,22 +14,22 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 
 | Field | Meaning |
 |---|---|
-| `manifest` | `{prefix, servers: shared \| distinct, place_by?: server \| <поле пульса>, requires: none \| resource, grows?: bool, weight?: {field, default}, capacity?: {from, default}}` (`capacity` — the pool contract capacity; the field `from` of the heartbeat in the input `heartbeats`) |
-| `manifest.prefix` | the `slot.prefix` of the manifest (P/02.1 Н1.2; the slot name contract): by it the slot order (the keeper at equality, the order of the pool) and the parsing of the name of the role process `<prefix>-<сервер>-<n>` («number above `want`»); in all rows `t` (C61-PREFIX-01) |
-| `heartbeats` | `{<воркер>: {server, <поле place_by>?}}` — the read heartbeats |
+| `manifest` | `{prefix, servers: shared \| distinct, place_by?: server \| <heartbeat field>, requires: none \| resource, grows?: bool, weight?: {field, default}, capacity?: {from, default}}` (`capacity` — the pool contract capacity; the field `from` of the heartbeat in the input `heartbeats`) |
+| `manifest.prefix` | the `slot.prefix` of the manifest (P/02.1 Н1.2; the slot name contract): by it the slot order (the keeper at equality, the order of the pool) and the parsing of the name of the role process `<prefix>-<server>-<n>` («number above `want`»); in all rows `t` (C61-PREFIX-01) |
+| `heartbeats` | `{<worker>: {server, <place_by field>?}}` — the read heartbeats |
 | `live` | the workers whose heartbeat changed within the last `LOST_AFTER` |
-| `slots` | `{<воркер>: {released: "false" \| "true" \| "taking", holder}}`; no entry — there is no slot row |
-| `assignments` | `{<воркер>: [<id>…] \| "@garbled"}` — the assignment rows; no entry — there is no row |
-| `units` | `{<id>: <строка единицы — элементы текстом> \| "@garbled"}`; no entry — there is no row (weight 0) |
+| `slots` | `{<worker>: {released: "false" \| "true" \| "taking", holder}}`; no entry — there is no slot row |
+| `assignments` | `{<worker>: [<id>…] \| "@garbled"}` — the assignment rows; no entry — there is no row |
+| `units` | `{<id>: <unit row — elements as text> \| "@garbled"}`; no entry — there is no row (weight 0) |
 | `intent` | `{target, members}` — an active intent (a load reserve) or no field |
 | `drain`, `decommissioned` | the drained server (`""` — none) and the decommissioned servers |
-| `resources` | `{<сервер>: live \| silent \| unknown}` — `resource_state` |
-| `wants` | `{<сервер>: {want, retiring?} \| "@garbled"}` — the order rows; no entry — there is no row |
+| `resources` | `{<server>: live \| silent \| unknown}` — `resource_state` |
+| `wants` | `{<server>: {want, retiring?} \| "@garbled"}` — the order rows; no entry — there is no row |
 
-**Output** — `{pool: [<воркер>…], keepers: {<место>: <воркер>}, idle_by_policy: {<воркер>: bool}, placeable: {<сервер>:
-{placeable, why?}}, load: {<воркер>: n}, count: {<воркер>: n}}`: the pool in the slot order; `load` and `count` — at the workers with
+**Output** — `{pool: [<worker>…], keepers: {<place>: <worker>}, idle_by_policy: {<worker>: bool}, placeable: {<server>:
+{placeable, why?}}, load: {<worker>: n}, count: {<worker>: n}}`: the pool in the slot order; `load` and `count` — at the workers with
 a readable assignment (unreadable — no entry); the keepers at `distinct`; `idle_by_policy` at each read heartbeat;
-`placeable` at the servers of the heartbeats and the resources; with `manifest.capacity` — also `capacity: {<воркер>: <число> | null}` (`null` — the field is not a number: it does not accept new units) and `fates: {<воркер>: {why}}` (C04-POOL-CAPACITY-0E-01). The comparison is JSON by value.
+`placeable` at the servers of the heartbeats and the resources; with `manifest.capacity` — also `capacity: {<worker>: <count> | null}` (`null` — the field is not a number: it does not accept new units) and `fates: {<worker>: {why}}` (C04-POOL-CAPACITY-0E-01). The comparison is JSON by value.
 
 22 rows: the capacity — no field (the default), a fraction, not a number (a boolean, a string; C04-POOL-CAPACITY-0E-01); `grows: false`, without an order row, with an unreadable one, retiring from a readable one; the load at an absent, an unreadable
 unit row, a weight field not a number, without `placement.weight`; the former ones — liveness by the slot, the drain and the decommission, `requires: resource` (silent, unknown) and `requires: none`, `retiring` and a number above

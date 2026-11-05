@@ -30,7 +30,7 @@ platform/mirror and platform/space are not set; requests for release and for a c
 console — the door of the console testsub from the loopback, access to operations and units is allowed;
 resource — the door of the resource srv-a with an admissible identity; store — the door of the store with reading of
 testsub/ and objects/testsub/. If the deployment uses TLS, issue the corresponding
-certificates and roles per P/02.4 Н1.6 (`w2c-ca.sh issue <server> <роль>`, the kit `kit`) and the address rule of P/02.4 Н1.6;
+certificates and roles per P/02.4 Н1.6 (`w2c-ca.sh issue <server> <role>`, the kit `kit`) and the address rule of P/02.4 Н1.6;
 these scenarios do not replace the check of TLS refusals.
 Do not accelerate the deadlines and parameters of testsub: valid_for=30, most_valid=600; the ordinary
 ticks of the holder and the reaper are expected, settle=60 by default.

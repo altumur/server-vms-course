@@ -23,7 +23,7 @@ byte. Fields: `case`, `input` and `expect` — JSON text, `note`. There are 51 r
 - `per` — the `per` of the set (Н3 «по набору меток»), an integer ≥ 1; `null` — there is no estimate (`no positive capacity estimate`);
 - `servers` — `[{server, want, live}]`: `want` — `want(s)`, an integer 1…99; `live` — the numbers of the live processes of the role on `s` by
   the heartbeats (live(s)), without repeats;
-- `workers` — `[{name, free, load, placeless, holder}]`: the live workers suitable for the set, the name `<prefix>-<сервер>-<n>`
+- `workers` — `[{name, free, load, placeless, holder}]`: the live workers suitable for the set, the name `<prefix>-<server>-<n>`
   of a server from `servers`; `free` — free (capacity − load), `load` — the load (Σ of the weights of its units), integers ≥ 0;
   `placeless` — a live one without a place (the field `place_by` of the heartbeat is empty), `holder` — the keeper of a place; both are bool, meaningful only
   with `distinct` (the Architect's decision of 2026-10-20).

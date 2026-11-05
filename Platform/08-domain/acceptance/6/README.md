@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/6/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Стенд домена»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly the dictionary of the М11 README of the acceptance
+the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly the dictionary of the М11 README of the acceptance
 М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
 [`08.6-domain.norms.md`](../../spec/08.6-domain.norms.md) Н5; [the contract](../../spec/08-domain.api.openapi.yaml),
 the lecture (`ru/08-domain.md`, for people, not in the export). Scenarios 01, 02, 03, 05, 09 were moved from the acceptance of М11/06 (stage B, ADR-0083 addendum (1): without
@@ -15,14 +15,14 @@ through which the stand reads placements, the view and the units, are doors of t
 
 ## Preparation
 
-As the acceptance README of [chapter 8.3](../3/README.md) («Stand», «Подготовка каждого сценария»;
+As the acceptance README of [chapter 8.3](../3/README.md) («Stand», «Preparation of each scenario»;
 formerly the acceptance README of М11/03): the runner brings up three clusters on one machine — `hold`, `m1`, `m2`; each has its own
 empty store, its own `{data}`, its own role sockets and console and resource ports, its own ring (P/06.2 Н1.2), a manifest catalog of
 only `testsub` (`domain.edit: [start, labels]`, `domain.ref: name`); the console, the controller and the worker `w-1` of `testsub`, the resource
 of its own server (`srv-hold`, `srv-m1`, `srv-m2`). There are no units. There is no domain: it is set by the directive `@domain` of the first step of each
 scenario. The domain name is `acme`; the recovery file is `{recovery}` in the instance directory.
 
-- `store` of `member <кластер>` is the store door of the cluster through `admin.sock` (observation of the domain rows:
+- `store` of `member <cluster>` is the store door of the cluster through `admin.sock` (observation of the domain rows:
   `domain/placed*` of the members, `domain/pending/m1` of the holder).
 - The clock is not accelerated: LOST_AFTER 45 s, REPORT_EVERY 5 s, MARK_REFRESH 22.5 s, VIEW_EVERY 3 s; the deadlines of `@until` are taken with a margin.
 - At the door `holder` the runner sets `Idempotency-Key` for `PUT`/`DELETE` too; `@key(N)` repeats the key of step `N`.
@@ -37,7 +37,7 @@ The format is the dictionary of the «Stand» and the dictionary of the domain; 
 | 02 | `edit-refusals` | 15 | edit: no unit with a full answer — 404; a field outside `domain.edit`, an empty body, a platform field — 400; a secret — 400; `?cluster=` not a member — 404; `contested` — 503; not found with a silent one — 503 |
 | 03 | `kept-and-applied` | 17 | an edit to a switched-off member: 202 `kept`, a replay — the same id, another body — 422, `view.pending`; after the return — applied, outcomes `performed`, 0 waiting; the holder's copy with a new `start` — then `DELETE` of the edit door — outcome `performed`, the unit is gone |
 | 05 | `kept-full` | 56 | 50 edits of one unit wait for a switched-off member, edit 51 — 409 `kept_full`; `view.pending` — 50 |
-| 09 | `forms-of-edits` | 16 | forms (the М11 check 05–08): `POST` without `cluster` or with a number — 400; `<sub>` not from the catalog — 404; `DELETE` with a body — 400; placement `cluster: ""` — 400, `ref` with `/` — 400, `a%20b` — ref literally; `asked.path` of the kept edit — with `?cluster=<член>` |
+| 09 | `forms-of-edits` | 16 | forms (the М11 check 05–08): `POST` without `cluster` or with a number — 400; `<sub>` not from the catalog — 404; `DELETE` with a body — 400; placement `cluster: ""` — 400, `ref` with `/` — 400, `a%20b` — ref literally; `asked.path` of the kept edit — with `?cluster=<member>` |
 | 10 | `executors` | 14 | the executors of placement (ADR-0091 addenda (12)–(19)): one ref at `m1` and `m2` without placement — `contested`; placement `{cluster: m1, copies: [m2]}` — the view is full, both units in `units`; `m1` switched off — an edit without `?cluster=` — 409 `executors` with `clusters`; with `?cluster=m1` — 202; the same key without `?cluster=` — an early replay at `m1`, 202 with the same id; placement `{cluster: m1, origin: m2}` — `m2` outside the executors, `contested` |
 | 11 | `outcomes-limit` | 60 | the outcomes limit 50: the outcome of the first edit (`Idempotency-Key: h05-oldest`) is written; 50 edits to the switched-off `m1`, the return — 0 waiting, exactly 50 outcomes in the view, the first is displaced from the row `domain/outcomes/m1` |
 | 12 | `post-kept` | 8 | a kept `POST`: 202 `kept`, `what` — `name,start` (the field `domain.ref`, without `cluster`), `asked.path` without a query; after the return of `m1` — the unit is created, outcome `performed` 201 |
@@ -57,17 +57,17 @@ applied value, Н1.4 base): the steps judge the number of outcomes and the field
 
 Sc. 12–15 (the coverage audit of P/08, the second pass of Gemini, the draft G06 `e32df6f8b`, rewritten): the keys `Idempotency-Key` are set by `@header`, the ids are known
 in advance (Н1.4 id): `g08-post` — `e-a56508c8a4e8`, `g08-garbled` — `e-2a8bdc8848eb`, `g08-fresh` — `e-747d2dcc4cc4`
-(`sha256("m1" ‖ 0x00 ‖ <ключ>)`, the first 12 hex). Sc. 12 — a kept creation `POST` (Н1.3 `kept`, Н1.4 `what`, `asked`):
+(`sha256("m1" ‖ 0x00 ‖ <key>)`, the first 12 hex). Sc. 12 — a kept creation `POST` (Н1.3 `kept`, Н1.4 `what`, `asked`):
 `asked.path` is `/domain/testsub/counters` without a query (step 4), the outcome is the status of the units door (201). Sc. 13 — a waiting `DELETE`
-(Н3 «принять правку» step 4). Sc. 14 — the outcomes of `domain/placement/<sub>/<ref>` and `domain/placement` (G-35, G-36): a record
+(Н3 «accept an edit» step 4). Sc. 14 — the outcomes of `domain/placement/<sub>/<ref>` and `domain/placement` (G-35, G-36): a record
 without the fields `origin`, `copies`, `reason`, `at`, `rev` is not of the form (without `copies` — unreadable, the М11 check, T2),
 «то же содержимое» with it is false — `rev` 3; the counter `{rev: "x"}` is unreadable — 503, `c3` is not written. `rev` after the start is 1 (the section
-«Placement counter after the start»): the write 2, the overwrite 3, the deletion 4, `c2` — 5. Sc. 15 — the outcomes of `domain/pending/<член>`
+«Placement counter after the start»): the write 2, the overwrite 3, the deletion 4, `c2` — 5. Sc. 15 — the outcomes of `domain/pending/<member>`
 (G-32, G-34): the element `e-2a8bdc8848eb` is not JSON — a replay of its key 422 (the key is not reused), an edit with a fresh key
 — 202, the element is not touched; `seq` `"x"` — 503, nothing is written. `m1` is cut (`@cut`) — the edits wait.
 
 Not taken from the draft G06: an unreadable row `domain/outcomes/m1` at the acceptance of an edit (expectation 503) — the norm (G-31) does not
-stop the acceptance: settle is not performed in this pass, the view `outcomes` is without the field; `view.pending.<член>: null` with
+stop the acceptance: settle is not performed in this pass, the view `outcomes` is without the field; `view.pending.<member>: null` with
 an unreadable `seq` — the norm gives `null` to a row unreadable as a whole, and the outcomes table does not distinguish the refusal path of a row without `seq` (`""` or `/seq`)
 (by reading).
 

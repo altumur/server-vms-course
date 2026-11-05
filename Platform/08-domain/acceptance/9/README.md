@@ -12,7 +12,7 @@ owners.
 
 ## Stand
 
-The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Подготовка каждого сценария», from М11/03: the clusters `hold`, `m1`,
+The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Preparation of each scenario», from М11/03: the clusters `hold`, `m1`,
 `m2`, the catalog `testsub`), with a declaration of the shared in `testsub`:
 - `domain.shared: [step, marks, {rounds}]`;
 - `step` is an `int` with `inherit: 1`;
@@ -59,7 +59,7 @@ A subset of expect does not replace the check of the full HTTP form of the OpenA
 
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The log of the acceptance of М11/11 is moved here
 as a whole, the rows as they are (the plan of lesson 8 § 3 «Журналы»: the log of the source goes into each directory that takes its scenarios;
-the paths of the old rows — `11/…`, `NN-<имя> <шаг>` — are resolved by [id-map](../../../common/id-map.tsv)); the last row is the move.
+the paths of the old rows — `11/…`, `NN-<name> <step>` — are resolved by [id-map](../../../common/id-map.tsv)); the last row is the move.
 
 ## Kit seams
 

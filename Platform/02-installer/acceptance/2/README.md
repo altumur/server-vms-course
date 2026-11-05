@@ -19,9 +19,9 @@ the command `manifest-put {socket} {file}` of the section «Stand» of the commo
 line not skipped is the header `case<TAB>puts<TAB>expect<TAB>canonical`, then one line per case; exactly four fields.
 
 - `case` — the case name: `[a-z0-9_]+`, unique in the file;
-- `puts` — separated by one space, in order: the file names `puts/<имя>.subsystem.yaml` and the directives `@view-delete`,
+- `puts` — separated by one space, in order: the file names `puts/<name>.subsystem.yaml` and the directives `@view-delete`,
   `@view-spoil`, `@rev-delete`, `@rev-spoil`; a file comes first and last;
-- `expect` — `<код> <rev>`: `<код>` is the return code of the **last** installation (`0` or `2`), `<rev>` is the decimal `rev` of the row
+- `expect` — `<code> <rev>`: `<code>` is the return code of the **last** installation (`0` or `2`), `<rev>` is the decimal `rev` of the row
   `platform/manifest/<name>` after it, where `<name>` is the `name` of the last file; `-` — there is no row;
 - `canonical` — the case name of [`vectors/canonical/cases.tsv`](../../vectors/canonical/cases.tsv), whose bytes `expect/<case>.json`
   are the expected field `manifest` of the view row; `-` — there is no view row.
@@ -40,7 +40,7 @@ of the file before the directive):
 All installations except the last MUST return `0`, each directive MUST pass: otherwise — a mismatch of the case (the preparation
 failed). After the last installation the runner compares:
 
-1. the return code — with `<код>`;
+1. the return code — with `<code>`;
 2. with code `2` — stderr names the file of the last installation and the key of the refused row: for the case `rev_spoiled` (the last directive before the installation is `@rev-spoil`) — the key of the mark `platform/manifest/<name>/rev`, otherwise — the key of the view `platform/manifest/<name>/canonical/1` (both are part of the
    text; the weight and the ceiling in the text are not compared);
 3. `rev` of the row `platform/manifest/<name>` — with `<rev>`, as in chapter 2.3 (the store door `GET /v1/get?key=…`, the field `rev` in

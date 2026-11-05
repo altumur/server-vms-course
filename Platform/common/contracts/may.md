@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/may.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (13) and addendum (14): a common algorithm of several processes is a contract, not
+A common contract of the module «Platform» (ADR-0083 addendum (13) and addendum (14): a common algorithm of several processes is a contract, not
 copies in chapters; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 1; analysis of review of stage A 8–10). The owner is lesson
 P/08, [chapter 8.4](../../08-domain/spec/08.4-domain.norms.md) (Н1.4 is a pointer here): people, grants and
 the right by grants. The function `may` is performed by:
@@ -12,7 +12,7 @@ the right by grants. The function `may` is performed by:
 | the cluster console ([P/06.3](../../06-console/spec/06.3-console.norms.md) Н1.3 `identity` step 3, `need`; chapter 6.7 — a session with grants) | [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.9 `cluster`, `session` (effective lines — step 5) | the copy of `domain/grants` of this cluster and its `as_of`; `domain/disabled` of this store |
 | the domain console ([lesson P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.5) and the process `domain` (8.4) | [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.5 `domain`; Н3 «people door» step 2, «grants» step 1 | `domain/grants/domain`, `as_of` — `null`; `roles` — from the role and group rows of the holder (P/08.4 Н1.3 `roles_at_holder`) |
 
-Where the cluster console gets the input `roles` — the copy of the role table `domain/roles` and its tie with the copy of the grants: [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.9 `cluster`, [the gate-and-pass contract](gate-and-pass.md) «Сторожевая с грантами» (ADR-0098 §4).
+Where the cluster console gets the input `roles` — the copy of the role table `domain/roles` and its tie with the copy of the grants: [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.9 `cluster`, [the gate-and-pass contract](gate-and-pass.md) «The gate with grants» (ADR-0098 §4).
 
 Step 5 (effective lines) is also read by the delivery of a book by grant ([P/08.5](../../08-domain/spec/08.5-domain.norms.md)
 Н1.3 `grant`) and by the name index (P/08.5 Н1.7 `delivery`): `sub` is the subsystem of the book, only the direct group; the `role:` lines and
@@ -31,17 +31,17 @@ Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-Inputs of the function: `grants` — the copy of `domain/grants` of a member, and `domain/grants/domain` at the domain console and the process `domain` — `Platform/09-agent/data/grants.schema.json`, `Platform/09-agent/data/grants.outcomes.tsv`; `Platform/08-domain/data/grants.schema.json`, `Platform/08-domain/data/grants.outcomes.tsv`; `disabled` — the row `domain/disabled`: `Platform/08-domain/data/disabled.schema.json`, `Platform/08-domain/data/disabled.outcomes.tsv` (layout audit, V-36, V-37; the Architect's decision of 2026-10-25); `roles` at the cluster console — the member's copy of `domain/roles`: `Platform/09-agent/data/roles.schema.json`, `Platform/09-agent/data/roles.outcomes.tsv`; at the domain console and the process `domain` — the rows `domain/roles/<имя>` and `domain/groups/<имя>`: `Platform/08-domain/data/roles.schema.json`, `Platform/08-domain/data/groups.schema.json` with their outcome tables.
+Inputs of the function: `grants` — the copy of `domain/grants` of a member, and `domain/grants/domain` at the domain console and the process `domain` — `Platform/09-agent/data/grants.schema.json`, `Platform/09-agent/data/grants.outcomes.tsv`; `Platform/08-domain/data/grants.schema.json`, `Platform/08-domain/data/grants.outcomes.tsv`; `disabled` — the row `domain/disabled`: `Platform/08-domain/data/disabled.schema.json`, `Platform/08-domain/data/disabled.outcomes.tsv` (layout audit, V-36, V-37; the Architect's decision of 2026-10-25); `roles` at the cluster console — the member's copy of `domain/roles`: `Platform/09-agent/data/roles.schema.json`, `Platform/09-agent/data/roles.outcomes.tsv`; at the domain console and the process `domain` — the rows `domain/roles/<name>` and `domain/groups/<name>`: `Platform/08-domain/data/roles.schema.json`, `Platform/08-domain/data/groups.schema.json` with their outcome tables.
 
 ## The function `may`
 
-From М11/9 Н1.4 «Право — функция `may`»:
+From М11/9 Н1.4 «The right — the function `may`»:
 
 ```yaml
-input:     {grants: <doc {lines}> | null, as_of: <число> | null, disabled: [<имя>…], user, glass, cap, unit, now,
+input:     {grants: <doc {lines}> | null, as_of: <count> | null, disabled: [<name>…], user, glass, cap, unit, now,
             sub?, roles?, unread?, iat?, anywhere?, as_role?}
   unit:    null — a door without a unit; "*" — the right to everything; "any" — the domain's judgement by the target cluster: at least one line of the needed rank, the scope is not
-           judged («Judgement by target» below); {sub, id, labels: [<метка>…], about?, chains?}
+           judged («Judgement by target» below); {sub, id, labels: [<label>…], about?, chains?}
   about:   {sub, id, labels, chains?} — the about unit; "unknown" — about is needed but unknown (the unit's row is unreadable or
            the read is not confirmed); no field — the unit has no about; the value of the field about.field in the row is empty or the field is
            absent from the row — the same: no about, the unit is judged by itself (C02-ABOUT-EMPTY-01)
@@ -59,7 +59,7 @@ input:     {grants: <doc {lines}> | null, as_of: <число> | null, disabled: 
   sub:     a subsystem name (the grammar P/02.1 Н1.2 name), platform or null; no field — null. The subsystem of the check, not of the unit:
            a check of the subsystem testsub2 over a unit of testsub — unit {sub: testsub, id: c1}, sub: testsub2. Who names it and how — the gate-and-pass contract
            «Subsystem of the check»; null — only the pre-check before the body and the reading «любой грант» (ADR-0097 §2)
-  roles:   a table {<имя>: [{role, until, at}…]}, expanded by the caller down to the pointer «person → roles»; null or no field —
+  roles:   a table {<name>: [{role, until, at}…]}, expanded by the caller down to the pointer «person → roles»; null or no field —
            the member has no table: role lines do not apply, this is a checked absence; "unreadable" — the copy of the table does not read,
            the fingerprint did not match or as_of of the table did not pass step 4 (ADR-0098 §4). One role of a person twice (directly and through
            a group) — one element: the later until (0 — later than all) (ADR-0098 §4)
@@ -68,7 +68,7 @@ input:     {grants: <doc {lines}> | null, as_of: <число> | null, disabled: 
   unread:  which role groups the caller saw incomplete: [{role: <R>, sub?: <S>}…] — a line of this role is out of form, the subject
            did read (sub — if it read too: then only in this sub); "all" — the subject of the line did not read: incomplete are all
            role groups of the document; no field — []. The caller drops an unreadable line (lines_in) but does not lose the sign (ADR-0099 §2)
-  anywhere: {<человек>: <until>} — who has a grant in any cluster of the domain (P/08.4 Н1.3 anywhere); only for step 6 and only at the door
+  anywhere: {<person>: <until>} — who has a grant in any cluster of the domain (P/08.4 Н1.3 anywhere); only for step 6 and only at the door
            door.pass of the second kind and at the view doors of the domain; no field — {}
   as_role: a role name: a check of an action as a role, there is no person (ADR-0105 item 4; the section «Action as a role»); no field — a person
   iat:     iat of the request token; on the path of a ticket and of an operation step — iat of the ticket record, the token is the same (the gate-and-pass contract «Pass of the second kind»); null — only sessions without a token: glass, the debug identity; no field — null; needed only by step 4a:

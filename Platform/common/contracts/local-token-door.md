@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/local-token-door.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common contract can appear before the move
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common contract can appear before the move
 of the owner lesson; analysis of review of stage A 8–10, № 1 / decision 1). The owner is [chapter 9.1](../../09-agent/spec/09.1-agent.norms.md) of lesson P/09 (Н1.6,
 P/09.1-10; the source is М11/7 Н1.2): the member's agent listens on the local door and passes the request on to the
 holder. The participant is the worker, chapter [P/03.7](../../03-worker/spec/03.7-worker.norms.md) Н1.5: it asks for a token through this door.
@@ -12,7 +12,7 @@ claims of a token — chapter [P/08.7](../../08-domain/spec/08.7-domain.norms.md
 
 Moved from М11/7 Н1.2 (the block `door`, `body`, `request`, `TOKEN_BODY`, `answer`, `no_queue`, `TOKEN_WAIT`) and the rows of Н4
 «у агента» without a change of behaviour. The section «The role socket» is a change of behaviour (the Architect's decision of 2026-10-20, ADR-0083 addendum
-(13)): formerly the transport and the port were a choice of the implementation (М11/12 Н1.8 `local_door`, М11/12 «Решает реализация» item 3, М11/7
+(13)): formerly the transport and the port were a choice of the implementation (М11/12 Н1.8 `local_door`, М11/12 «Implementation decides» item 3, М11/7
 «Implementation decides» item 1). ADR-0080 item 2 («the mechanics of a side» is decided by the implementation) does not apply to this door: the door
 connects processes of different implementations on one box, and the witnesses already differ in the socket name.
 
@@ -29,22 +29,22 @@ The Architect's decision of 2026-10-20 (analysis of review of stage A 8–10, de
 ```yaml
 transport:   on a box — a Unix stream socket (SOCK_STREAM), over it HTTP/1.1 of the door «The door» below; there is no other transport on
              a box
-address:     <AGENT_TOKEN_DIR>/<роль>.sock — one socket for each worker role of the manifest catalogue (<роль> — <sub>worker);
+address:     <AGENT_TOKEN_DIR>/<role>.sock — one socket for each worker role of the manifest catalogue (<role> — <sub>worker);
              flat, no subdirectories
 AGENT_TOKEN_DIR: the directory of the sockets of the local door; the default /run/w2c/domainagent; set by the agent unit and the worker unit with one
              value (P/02.4 Н1.1, Н1.2); on the stand — by the runner
 identity:    the role of the connection is the role of the socket it came into; the local door has no other identity (the role is not
              named in the body, Н1.2 below)
-group:       the socket <роль>.sock — mode 0660, owner root, group — the group of the worker role (<dep>-<роль>, P/02.4 Н1.1
+group:       the socket <role>.sock — mode 0660, owner root, group — the group of the worker role (<dep>-<role>, P/02.4 Н1.1
              users_groups); the group is set by SocketGroup= of the socket unit, the agent gets the socket ready and is not a member of the groups of the worker
              roles — like the store daemon (P/01.3 Н1.3 sockets, P/02.4 Н1.1 users_groups rule)
-units:       w2c-domainagent-token-<роль>.socket — one unit per role: ListenStream=<AGENT_TOKEN_DIR>/<роль>.sock;
-             FileDescriptorName=token-<роль>; SocketUser=root; SocketMode=0660; SocketGroup=<the role group>;
+units:       w2c-domainagent-token-<role>.socket — one unit per role: ListenStream=<AGENT_TOKEN_DIR>/<role>.sock;
+             FileDescriptorName=token-<role>; SocketUser=root; SocketMode=0660; SocketGroup=<the role group>;
              Service=w2c-domainagent.service (P/02.4 Н1.1)
 inherit:     the inherited sockets (the protocol sd_listen_fds: LISTEN_PID equals its own pid, LISTEN_FDS, LISTEN_FDNAMES) the agent
-             takes by FileDescriptorName; for each it checks the type (a stream socket), listening, the path <AGENT_TOKEN_DIR>/<роль>.sock
+             takes by FileDescriptorName; for each it checks the type (a stream socket), listening, the path <AGENT_TOKEN_DIR>/<role>.sock
              and a repeated name — anything else or two with one name — a start refusal; its own copies of descriptors that it does not hold it closes;
-             a socket that was not passed the agent creates itself: <AGENT_TOKEN_DIR>/<роль>.sock, mode 0660, the group of the process;
+             a socket that was not passed the agent creates itself: <AGENT_TOKEN_DIR>/<role>.sock, mode 0660, the group of the process;
              the path already exists — lstat without following a link: a socket and connect to it — ECONNREFUSED — stale: the agent removes
              it and creates its own; connect succeeded or returned another error — busy, not removed, a start refusal; not a socket (a file
              of another type, a symbolic link included — another type, do not follow it) — not removed, a start refusal;
@@ -65,14 +65,14 @@ whose cluster's agent is on another server is not normed until the stand; the pl
 From М11/7 Н1.2:
 
 ```yaml
-door:       POST /tokens/<sub>/<вид> at the agent of its own cluster; the identity of the connection is the worker role by one of the ways of
+door:       POST /tokens/<sub>/<kind> at the agent of its own cluster; the identity of the connection is the worker role by one of the ways of
             P/02.4 Н1.6: the role socket on a box or the role certificate (ADR-0075) in a cluster; the role is not named in the body
 body:       {request_id, ref, by?, revoked?} — request_id 1–64 [A-Za-z0-9_-]; ref, by — non-empty strings; revoked — the jti of a token that the recipient refused with the word revoked (P/08.7 Н1.3), 16 hex; larger than TOKEN_BODY — 413
 request:    the header Transfer-Encoding in the request (chunked together with Content-Length included) — 400; <sub> of the path is not a manifest
             of the catalogue — 404 at the agent, the request does not go to the holder (a kind not declared by the manifest — the holder decides, 403
             not_granted); added by the М11 reconciliation, T7, T8
 TOKEN_BODY: 4 KiB          # the limit of the client's body at the local door of the agent; the bytes of the body as received are measured
-TOKEN_HOLDER_BODY: 4608    # the limit of the body at the holder's door POST /api/tokens/<член>/<sub>/<вид> (P/08.7 Н1.3): = TOKEN_BODY + 512
+TOKEN_HOLDER_BODY: 4608    # the limit of the body at the holder's door POST /api/tokens/<member>/<sub>/<kind> (P/08.7 Н1.3): = TOKEN_BODY + 512
                            # for what the agent adds (role and the JSON wrapping): a body of exactly TOKEN_BODY at the local door does not get
                            # 413 at the holder; the bytes of the body as received are measured (journal of cammeta-go, М11-07 № 4; moved from P/08.7
                            # Н1.3 without a change; layout audit, the Architect's decision of 2026-10-25, A-19)

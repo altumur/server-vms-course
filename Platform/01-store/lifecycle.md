@@ -14,7 +14,7 @@ durability barriers), [P/01.2](spec/01.2-store.norms.md) (rights file, role sock
 | What | How | Norm |
 |---|---|---|
 | the group daemon | the unit `configstore.service`: `User=configstore`, `UMask=0077`, `-dir /data/platform/configstore`, `-sockets /run/configstore`, `-rights`, `-tls`, `-group-size`; the runner `w2c-run.sh configstore` | P/02.4 Н1.1 `units` |
-| sockets | the units `configstore-admin.socket` and `configstore-<роль>.socket`, `FileDescriptorName=admin \| <роль>`, `Service=configstore.service` | P/02.4 Н1.1, P/01.3 Н1.3 `sockets` |
+| sockets | the units `configstore-admin.socket` and `configstore-<role>.socket`, `FileDescriptorName=admin \| <role>`, `Service=configstore.service` | P/02.4 Н1.1, P/01.3 Н1.3 `sockets` |
 | first start and restart | `member.json` exists — a restart, otherwise `-bootstrap` (the first server) or `-join` (the others) | P/02.4 Н3 «server start» step 1, P/01.3 Н1.3 `group.join` |
 | the box store | a build without raft, one voter (`box`) | P/01.3 Н1.3 `box` |
 | the in-process store | the profile `file://` «the whole box is one implementation», without a door; the on-disk format is not a contract | P/02.4 Н1.2 `PLATFORM_STORE`, P/01.1 Н2 |
@@ -50,10 +50,10 @@ The closed table «Daemon flags» — [P/01.3 Н1.3](spec/01.3-store.norms.md), 
 | `<PLATFORM_DIR>/configstore` (`-dir`) | the daemon's data directory; the on-disk format — the implementation decides (P/01.1 «Implementation decides» item 3) | P/02.4 Н1.2 «The setting channel and the layout» |
 | `<-dir>/FORMAT` | the format mark `{format, version, impl}`: written first into an empty directory; a foreign one or none in a non-empty directory — a refusal, code 2 | P/01.3 Н1.3 `format` |
 | `<-dir>/member.json` | the partners and `how` after joining; a restart is not a join | P/01.3 Н1.3 `group.join` (the path inside `-dir` — the implementation decides) |
-| `/run/configstore/admin.sock`, `/run/configstore/<роль>.sock` | flat; inherited from the `.socket` units: `admin.sock` 0600, a role socket 0660 with the role's group (`SocketGroup=`); a socket that was not passed the daemon creates itself in `-sockets`: `admin.sock` 0600, a role socket 0660 with the process's group | P/01.3 Н1.3 `sockets`, Н1.1 `dirs` |
+| `/run/configstore/admin.sock`, `/run/configstore/<role>.sock` | flat; inherited from the `.socket` units: `admin.sock` 0600, a role socket 0660 with the role's group (`SocketGroup=`); a socket that was not passed the daemon creates itself in `-sockets`: `admin.sock` 0600, a role socket 0660 with the process's group | P/01.3 Н1.3 `sockets`, Н1.1 `dirs` |
 | `/etc/w2c/configstore-rights.json` (`-rights`) | the rights file; without the file — only `admin.sock`; there is no live reload | P/01.2 Н1.2 |
 | `/etc/w2c/tls` (`-tls`) | the root of the kits: inside — the kit of the role `configstore` or `configstore-door` | P/01.3 Н1.3 «Daemon flags» `-tls`, Н1.6 |
-| the copy file (`backup <файл>`) | JSON Lines `copy`, 0600, tmp + rename, outside `-dir` | P/01.3 Н1.3 `copy`, `admin_ops`; the vector — `Platform/common/vectors/README.md` |
+| the copy file (`backup <file>`) | JSON Lines `copy`, 0600, tmp + rename, outside `-dir` | P/01.3 Н1.3 `copy`, `admin_ops`; the vector — `Platform/common/vectors/README.md` |
 | the row `platform/configstore-doors/<id>` | written by a door without a vote every 30 s | [catalogue](../common/data/catalog.tsv) |
 | the row `platform/epoch_floor` | raised only by `op: floor` on the leader's `admin.sock` (`restore`, `import`, `recover`) | P/01.3 Н1.3 `floor`, [catalogue](../common/data/catalog.tsv) |
 

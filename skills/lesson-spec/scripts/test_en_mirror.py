@@ -196,6 +196,12 @@ class Layouts(unittest.TestCase):
         self.assertEqual(self.compare3(en=en + "\nSee step 4a and the audit G-29 (М10/2).\n",
                                        ru=ru + "\nСм. шаг 4a и аудит G-29 (М10/2).\n"), [])
 
+    def test_english_placeholder_labels(self):         # ADR-0121 доп. (3) п. 4: метка источника — английская, перевод — по словарю
+        en, ru = EN3.read_text(encoding="utf-8"), RU3.read_text(encoding="utf-8")
+        errors = self.compare3(en=en + "\nThe key `domain/users/<имя>`.\n", ru=ru + "\nКлюч `domain/users/<имя>`.\n")
+        self.assertTrue(any("a Russian placeholder label in the source: <имя>" in e for e in errors), errors)
+        self.assertEqual(self.compare3(en=en + "\nThe key `domain/users/<name>`.\n", ru=ru + "\nКлюч `domain/users/<имя>`.\n"), [])
+
     def test_labels_by_dictionary(self):                # метка пары — по словарю Platform/common/placeholders.tsv
         self.assertEqual(en_mirror.as_english_labels("domain/users/<имя> ⟨вариант 2⟩", ROOT), "domain/users/<name> ⟨variant 2⟩")
         self.assertEqual(en_mirror.as_english_labels(".<имя> (имя)", ROOT), ".<name> (name)")

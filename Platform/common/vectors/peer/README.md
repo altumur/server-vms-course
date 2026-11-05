@@ -24,7 +24,7 @@ the client's leaf) — the rows with `reason` `no_role` and `wrong_role` (ACC-VE
 
 ## Centres and leaves
 
-As in the README of the acceptance of М11/8 «Входы»: the centres A (`w2c test ca north`), its intermediate AI and B (`w2c test ca south`), EC
+As in the README of the acceptance of М11/8 «Inputs»: the centres A (`w2c test ca north`), its intermediate AI and B (`w2c test ca south`), EC
 P-256; the leaves of the role `console` with SAN DNS `m2.w2c.test`; the anchors RSA-2048, Ed25519 and P-384 with SHA-384 (the reconciliation of М11, D14). The fingerprint
 is the sha256 hex of the DER of the centre ([P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `fingerprint`). `now` is 1760000000.
 
@@ -35,7 +35,7 @@ of the acceptance.
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](cases.tsv), 31 rows: 7 `ok`, 23 refusals, 1 `@exit 2` (the row `peer-27-chain-out-of-order` — the centres are swapped, step 4 by adjacent elements; review analysis of stage B 8–10, № 10; rows 28–32 — the coverage audit of P/09, the second pass: `127.1` — a name, `::1` — `ip_address`, an empty chain before empty fingerprints — `bad_chain`, a dot at the end of host — `wrong_name`, an input without fields — `@exit 2`) | `input` — the input of the command `peer` as JSON text → `expect`: `{"result":"ok"}` (directly, an intermediate anchor, a root anchor through an intermediate, two fingerprints — either, an RSA, Ed25519, P-384 anchor) or `{"result":"refused","reason":<слово>}`: `foreign_ca` (no fingerprints, a foreign centre, only the leaf in the chain), `bad_chain` (the leaf is not from the anchor, there is no intermediate, the leaf is not from the named centre, the intermediate is not a centre, not PEM), `expired` (the leaf, the anchor, the leaf is not yet valid), `no_role` (no SAN URI, two roles, an empty role), `wrong_role`, `wrong_name`, `ip_address` (IPv4, IPv6 with a zone) |
+| [`cases.tsv`](cases.tsv), 31 rows: 7 `ok`, 23 refusals, 1 `@exit 2` (the row `peer-27-chain-out-of-order` — the centres are swapped, step 4 by adjacent elements; review analysis of stage B 8–10, № 10; rows 28–32 — the coverage audit of P/09, the second pass: `127.1` — a name, `::1` — `ip_address`, an empty chain before empty fingerprints — `bad_chain`, a dot at the end of host — `wrong_name`, an input without fields — `@exit 2`) | `input` — the input of the command `peer` as JSON text → `expect`: `{"result":"ok"}` (directly, an intermediate anchor, a root anchor through an intermediate, two fingerprints — either, an RSA, Ed25519, P-384 anchor) or `{"result":"refused","reason":<word>}`: `foreign_ca` (no fingerprints, a foreign centre, only the leaf in the chain), `bad_chain` (the leaf is not from the anchor, there is no intermediate, the leaf is not from the named centre, the intermediate is not a centre, not PEM), `expired` (the leaf, the anchor, the leaf is not yet valid), `no_role` (no SAN URI, two roles, an empty role), `wrong_role`, `wrong_name`, `ip_address` (IPv4, IPv6 with a zone) |
 
 The vectors are checked by an oracle against the text of the contract (steps 1–9; the signatures — the closed list `sig` of the role certificate contract;
 the library `cryptography`), not by the code of implementations; on a discrepancy the contract is right, «Спецификация» corrects the vector. Rows 28–32 are

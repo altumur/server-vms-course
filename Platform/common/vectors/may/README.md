@@ -32,7 +32,7 @@ line:      exactly {subject, cap, sub?, scope, until, by} — a trusted input (a
            or role: and a name of the same grammar, except admin (ADR-0098 §2, ADR-0100 §1)
   cap:     none | view | edit | admin; none — only at a role line (ADR-0099 §1)
   sub:     a manifest name [a-z][a-z0-9_-]{0,31} (P/02.1); platform passes the same grammar
-  scope:   "*" | "unit:<sub>/<id>" | "labels:<метка>[,<метка>…]" | "folder:<id>"; at a role line labels: is not of the form (ADR-0099 §1);
+  scope:   "*" | "unit:<sub>/<id>" | "labels:<label>[,<label>…]" | "folder:<id>"; at a role line labels: is not of the form (ADR-0099 §1);
            the <id> of a folder is 32 lowercase hex digits (P/06.8 Н1.1); <sub> is a manifest name [a-z][a-z0-9_-]{0,31} (P/02.1),
            <id> is by the row check contract «Identifier and field constraints» named (`unit:testsub/a,b` — 2),
            a label is by the labels alphabet contract
@@ -50,7 +50,7 @@ unit:      null | "*" | "any" | exactly {sub, id, labels, about?, chains?}: sub,
 chains:    [[string…]…] | "unknown"; no field — the same as "unknown"
 now:       a finite JSON number
 sub:       a string by the grammar of a manifest name | null
-roles:     null | "unreadable" | {<имя>: [exactly {role, until, at}…]}: role — a string; until and at — a time, as the until of a line
+roles:     null | "unreadable" | {<name>: [exactly {role, until, at}…]}: role — a string; until and at — a time, as the until of a line
 unread:    "all" | [exactly {role, sub?}…]: role and sub — strings
 iat:       a finite JSON number | null
 repeats:   repeats in disabled, labels, lines and in the labels of a scope labels: are not a form error
@@ -70,9 +70,9 @@ file rules as `cases.tsv`.
 
 ```yaml
 input:   {scope, ref, row}
-  scope: "*" | "unit:<sub>/<id>" | "labels:<метка>[,<метка>…]" | "folder:<id>" — the grammar of a grant line (above); otherwise — code 2
+  scope: "*" | "unit:<sub>/<id>" | "labels:<label>[,<label>…]" | "folder:<id>" — the grammar of a grant line (above); otherwise — code 2
   ref:   exactly {sub, id} — the unit named in the path or ?unit=; a folder as the object of a write — {sub: platform, id: <folder id>}
-  row:   exactly {labels: [<метка>…], about?: {sub, id, labels, chains?}, chains?} — the unit row as read (labels — the field
+  row:   exactly {labels: [<label>…], about?: {sub, id, labels, chains?}, chains?} — the unit row as read (labels — the field
          declared in unit.fields; none — []); chains — as at the input of may; "@unreadable" — the row is unreadable or the read is not confirmed
 output:  true | false (stdout JSON); code 2 — an input not of the form
 rule:    "*" — true; unit:<s>/<i> = ref — true by the name, not reading the row; otherwise unit:<s>/<i> — true when row is readable and
@@ -106,7 +106,7 @@ of the acceptance.
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](cases.tsv), 126 rows: 52 `allow`, 44 `deny`, 7 `unavailable`, 23 `@exit 2` (may-26 — `until` does not fit in binary64, MAY-UNTIL-D8-01; may-27…may-106 — ADR-0097–ADR-0100, there is no dry run by an implementation) | `input` is the input of the command `may` as JSON text → `expect`: `{"result":"allow"}` (a break-glass session without grants, a copy of exactly one day of age, a holder line without `as_of`, `view` without a unit — any line, `*`, `unit:` its own and through `about`, `labels:` all labels, the labels of `about`, a higher rank, the term of the line ahead) or `{"result":"deny","reason":<слово>}`: `disabled` (disabled at a grant), `stale` (a copy older than one day), `no_grant` (no line, `edit` without a unit not by `*`, a foreign unit, one label missing, the labels of the unit itself at `about`, a lower rank, an expired line, `"*"` not by `*`, a line of another subject, a unit without labels); `@exit 2` — a scope `unit:` with an id not by the grammar of [P/06.1](../../../06-console/spec/06.1-console.norms.md) Н1.3; `subject` "" of a grant line (`may-25`, MAY-G03) |
+| [`cases.tsv`](cases.tsv), 126 rows: 52 `allow`, 44 `deny`, 7 `unavailable`, 23 `@exit 2` (may-26 — `until` does not fit in binary64, MAY-UNTIL-D8-01; may-27…may-106 — ADR-0097–ADR-0100, there is no dry run by an implementation) | `input` is the input of the command `may` as JSON text → `expect`: `{"result":"allow"}` (a break-glass session without grants, a copy of exactly one day of age, a holder line without `as_of`, `view` without a unit — any line, `*`, `unit:` its own and through `about`, `labels:` all labels, the labels of `about`, a higher rank, the term of the line ahead) or `{"result":"deny","reason":<word>}`: `disabled` (disabled at a grant), `stale` (a copy older than one day), `no_grant` (no line, `edit` without a unit not by `*`, a foreign unit, one label missing, the labels of the unit itself at `about`, a lower rank, an expired line, `"*"` not by `*`, a line of another subject, a unit without labels); `@exit 2` — a scope `unit:` with an id not by the grammar of [P/06.1](../../../06-console/spec/06.1-console.norms.md) Н1.3; `subject` "" of a grant line (`may-25`, MAY-G03) |
 
 The vectors were checked by an oracle against the text of the contract (steps 1–8) and the form of the input of [P/08.4](../../../08-domain/spec/08.4-domain.norms.md) Н1.3, Н5 `exit`, not against the code of implementations; on a
 divergence the contract is right, the vector is corrected by «Спецификация».

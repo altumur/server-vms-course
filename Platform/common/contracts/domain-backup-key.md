@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/domain-backup-key.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
 in chapters; the stage C guess I02-BACKUP-HMAC, the Architect's decision of 2026-10-23). The owner is lesson P/08, chapter
 [8.8](../../08-domain/spec/08.8-domain.norms.md) Н1.5 (the backup copy of the holder: the secret envelopes, `kid`, reading).
 Participants: the installer — the command «domain installation» ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н3 step 8)

@@ -51,7 +51,7 @@ code 0 — computed, 2 — an input not of the form; stdout is compared with the
 
 - `said-id` — the cell `rid` is written into the file byte for byte (a JSON string); stdout — the SaidID as a JSON string and LF; the expectation is
   the cell `said`;
-- `said-read` — `{"fetched": <ячейка fetched>, "rid": <ячейка rid>}` is written into the file (the cells — byte for byte); stdout —
+- `said-read` — `{"fetched": <fetched cell>, "rid": <rid cell>}` is written into the file (the cells — byte for byte); stdout —
   `true` or `false` and LF; the expectation is the cell `reported`.
 
 ## Run

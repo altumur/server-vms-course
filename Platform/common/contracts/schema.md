@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/schema.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): the schema check at start is executed by all processes
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): the schema check at start is executed by all processes
 of the platform — a contract, not copies in chapters; layout audit A-02, the Architect's decision of 2026-10-25). The owner is chapter
 [P/06.6](../../06-console/spec/06.6-console.norms.md) (Н1.1а «Schema», Н3 «raise_schema»). Participants: the console (P/06.6),
 the controller ([P/04](../../04-controller/spec/04-controller.norms.md) Н3 «controller start — schema check»), the worker

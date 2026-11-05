@@ -14,7 +14,7 @@ the acceptance of М10/05 — scenarios 07, 11–16. The numbers of the subsecti
 М10/11 with numbers that already exist in М10/4 carry the letter «а» (Н1.3а, Н1.4а). The console doors (М10/4 Н2), their procedures and
 refusals, the norms М10/4-14, -15, -20 and the acceptance of М10/04 are moved to P/06 (chapters 6.5, 6.6; the move of lesson 6); `resource_state`,
 freshness and the rule of the decision reader are [the observation contract](../../common/contracts/observation.md); the console side of
-«вывести_сервер» is P/06.6 (review of stage A 6–7, № 2). «P/0N» is a lesson of the module, «P/0N.K» is its chapter; «М10/N» without
+«decommission_server» is P/06.6 (review of stage A 6–7, № 2). «P/0N» is a lesson of the module, «P/0N.K» is its chapter; «М10/N» without
 an address is a former lesson (the history of the move). Norm ids are
 `P/04-MM`; the map to former ids is [`id-map.tsv`](../../common/id-map.tsv).
 
@@ -28,27 +28,27 @@ Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow
 
 <!-- req: P/04-R002 -->
 
-**Time.** The time fields of the rows and objects of the lesson are time by [the canon of Н0 of P/01.1](../../01-store/spec/01.1-store.norms.md#time-in-a-row): `<sub>/placement/<id>` — `at`; `platform/doors/<сервер>` — `since`, `at`; `platform/drain` — `at`; `platform/decommission/<сервер>` — `at`; `<sub>/decommissioned/<сервер>` — `asked_at`, `at`; `<sub>/controller/placement_intent` — `at`; `<sub>/want/<сервер>` — `at`; the object `<sub>/controller/pass` — `at`, `last_success`; the object `<sub>/snapshot/<воркер>` — `ts`.
+**Time.** The time fields of the rows and objects of the lesson are time by [the canon of Н0 of P/01.1](../../01-store/spec/01.1-store.norms.md#time-in-a-row): `<sub>/placement/<id>` — `at`; `platform/doors/<server>` — `since`, `at`; `platform/drain` — `at`; `platform/decommission/<server>` — `at`; `<sub>/decommissioned/<server>` — `asked_at`, `at`; `<sub>/controller/placement_intent` — `at`; `<sub>/want/<server>` — `at`; the object `<sub>/controller/pass` — `at`, `last_success`; the object `<sub>/snapshot/<worker>` — `ts`.
 
 <!-- req: P/04-R003 -->
 
 **Data** ([catalogue](../../common/data/catalog.tsv)):
-- owns: `<sub>/placement/<id>`, `<sub>/workers/<имя>`, `<sub>/want/<сервер>`, `<sub>/decommissioned/<сервер>`, `<sub>/controller/placement_turn`, `<sub>/controller/placement_intent`, `<sub>/controller/pass`, `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced`, `<sub>/snapshot-tables/<таблица>`;
-- writes: `<sub>/slots/<имя>` (cas), `<sub>/<manifest:unit.rows>/<id>` (delete), `<sub>/<manifest:domain.books.from>/<слот>` (delete), `<sub>/state/<имя>/<id>` (delete), `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append), `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append), `<корень событий или объектов>/<путь>/%h<sha256>.name` (create), `<корень объектов>/<каталог>/~lock` (create);
-- reads: `platform/manifest/<sub>`, `platform/manifest/<sub>/rev`, `<sub>/heartbeats/<имя>`, `<sub>/slots/<имя>`, `<sub>/holds/<место>`, `<sub>/<manifest:unit.rows>/<id>`, `<sub>/state/<имя>/<id>`, `platform/schema`, `platform/resources/<server>/heartbeat`, `<sub>/policy`, `platform/servers/<сервер>`, `platform/doors/<сервер>`, `platform/drain`, `platform/decommission/<сервер>`, `<sub>/<manifest:tables>/<имя>`, `/etc/w2c/tls/<роль>/server.key`.
+- owns: `<sub>/placement/<id>`, `<sub>/workers/<name>`, `<sub>/want/<server>`, `<sub>/decommissioned/<server>`, `<sub>/controller/placement_turn`, `<sub>/controller/placement_intent`, `<sub>/controller/pass`, `<sub>/snapshot/<worker>`, `<sub>/snapshot/unplaced`, `<sub>/snapshot-tables/<table>`;
+- writes: `<sub>/slots/<name>` (cas), `<sub>/<manifest:unit.rows>/<id>` (delete), `<sub>/<manifest:domain.books.from>/<slot>` (delete), `<sub>/state/<name>/<id>` (delete), `<events root>/audit/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append), `<events root>/audit.alarms/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append), `<events or objects root>/<path>/%h<sha256>.name` (create), `<objects root>/<dir>/~lock` (create);
+- reads: `platform/manifest/<sub>`, `platform/manifest/<sub>/rev`, `<sub>/heartbeats/<name>`, `<sub>/slots/<name>`, `<sub>/holds/<place>`, `<sub>/<manifest:unit.rows>/<id>`, `<sub>/state/<name>/<id>`, `platform/schema`, `platform/resources/<server>/heartbeat`, `<sub>/policy`, `platform/servers/<server>`, `platform/doors/<server>`, `platform/drain`, `platform/decommission/<server>`, `<sub>/<manifest:tables>/<name>`, `/etc/w2c/tls/<role>/server.key`.
 
 <!-- req: P/04-R004 -->
 
-The tables of places and links (`places.table`, `places.wanted`, `affinity.table`, Н1.3) and the tables `domain.view_tables` (Н1.3б) the controller reads as rows `<sub>/<manifest:tables>/<имя>`;
+The tables of places and links (`places.table`, `places.wanted`, `affinity.table`, Н1.3) and the tables `domain.view_tables` (Н1.3б) the controller reads as rows `<sub>/<manifest:tables>/<name>`;
 the journal `unit.unplaced_deleted` (Н3 «pass()», step 8) and the alarms (`workers.raise_failed` — Н1.4, hung/unsure — step 3) it writes to
-`audit/<роль>` and `audit.alarms/<роль>`, the file `%h<sha256>.name` — by the [event journal
+`audit/<role>` and `audit.alarms/<role>`, the file `%h<sha256>.name` — by the [event journal
 contract](../../common/contracts/event-journal.md) (`journal`, `writer`, «Имена файлов»); the key of its own kit is for
 the resource doors over HTTPS ([P/02.4 Н1.6](../../02-installer/spec/02.4-installer.norms.md) `roles`) (review of stage B 3–5, № 10).
 
 <!-- req: P/04-R005 -->
 
-The rows `<sub>/policy`, `platform/servers/<сервер>`, `platform/drain`, `platform/decommission/<сервер>` (written by the console, P/06.6) and
-`platform/doors/<сервер>` (written by the resource, P/05) are given in Н1.1 in the form that the controller reads; the owner of the row is
+The rows `<sub>/policy`, `platform/servers/<server>`, `platform/drain`, `platform/decommission/<server>` (written by the console, P/06.6) and
+`platform/doors/<server>` (written by the resource, P/05) are given in Н1.1 in the form that the controller reads; the owner of the row is
 the writer process (catalogue).
 
 ### Н1.1 Controller rows
@@ -62,27 +62,27 @@ the writer process (catalogue).
   at:        <wall seconds of the controller>
   rev:       <decimal integer ≥ 1>        # +1 on every write
   manifest_rev:  <revision of the manifest under which the decision was taken>   # MUST for an implementation that keeps the manifest in a row (P/02.3)
-<sub>/workers/<имя>:                      # an assignment; derived from the placement rows
+<sub>/workers/<name>:                      # an assignment; derived from the placement rows
   units:     <list of ids by the list rule of P/06.1 Н1.2 (comma-separated, otherwise a JSON array)>   # sorted
   rev:       <decimal integer ≥ 1>        # +1 only when the list changes
 <sub>/policy:                             # the writer is the console; the controller reads it
   servers:   shared | distinct            # another value or key on read — the manifest default; on write — a refusal
-platform/servers/<сервер>:                # the writer is the console (ADR-0026)
+platform/servers/<server>:                # the writer is the console (ADR-0026)
   labels:    <comma-separated labels>     # "" — none; the row beats the node labels
-platform/doors/<сервер>:                  # the writer is the resource of the server (ADR-0045); the form — P/05 Н1.4 door_row (family doors)
+platform/doors/<server>:                  # the writer is the resource of the server (ADR-0045); the form — P/05 Н1.4 door_row (family doors)
   room.<sub>, live.<sub>:                 # the controller reads them — free(s) Н3 «shortage()» (ADR-0084 addendum (3) R14′); the element
                                           # is absent, does not read or is unknown — the server is not an order candidate
 platform/drain:                           # the writer is the console; one row per cluster
-  server: <сервер>; at: <момент>
-platform/decommission/<сервер>:           # the writer is the console
-  by: <кто>; at: <момент>; why: <слова>; gone: "true"?   # gone — the confirmation «there is no server» when the resource was never heard
-<sub>/decommissioned/<сервер>:            # the writer is the controller; removed when the request is withdrawn
+  server: <server>; at: <moment>
+platform/decommission/<server>:           # the writer is the console
+  by: <who>; at: <moment>; why: <words>; gone: "true"?   # gone — the confirmation «there is no server» when the resource was never heard
+<sub>/decommissioned/<server>:            # the writer is the controller; removed when the request is withdrawn
   asked_at, at:  <wall seconds of the console request and of the controller mark>
   slots, units, holds:  <names of the released slots, ids of the removed units, places of the holds — by the list rule of P/06.1 Н1.2; "" — none>
                  # an element: slots — a slot name P/03.2 Н1.4, units — a unit id P/06.1 Н1.3, holds — a place name P/03.2 Н1.3;
                  # a count («0») is not an element (added by the pilot of the data family schemas, D7)
                  # names, not numbers (reconciliation of python and go 2026-10-18)
-<sub>/want/<сервер>:                      # the writer is the controller, cas with the guard placement_turn (Н1.5); ADR-0084 and addendum (1)
+<sub>/want/<server>:                      # the writer is the controller, cas with the guard placement_turn (Н1.5); ADR-0084 and addendum (1)
   want:      <decimal 1…99>               # the absolute target of the number of role processes on the server, the base <prefix>-<server>-1 is included
   at:        <moment of the write>        # diagnostics; the terms — by the observation of the row version (Н1.4 terms)
   by:        <controller instance>        # diagnostics; the authority — cas and the guard placement_turn
@@ -111,7 +111,7 @@ pass:
                         is postponed because of a lagging manifest; a row — once per pass> (C04-MANIFEST-BEHIND-COUNT-01)
   names_given:          {<slot name>: <version of the slot row at which the name is given>}
   hung_move_after:      <seconds of the hang limit in force at this controller>
-  fates:                {<имя>: {fate, server, why, rev, since}}   # only occupied slots not released: holder non-empty, released
+  fates:                {<name>: {fate, server, why, rev, since}}   # only occupied slots not released: holder non-empty, released
                         #   false (not true and not taking — the slot contract «States»); since — the moment the slot entered this fate on the clock of the controller
                         #   (a change of fate — a new since), not the first look at the slot (reconciliation of python and go 2026-10-18)
   diverged:             <assignments fixed by sync>
@@ -138,11 +138,11 @@ pass:
                         #   an empty set in the words of why is any labels; a set without a computable per is the same element: workers 0,
                         #   ordered 0, withheld «no positive capacity estimate» (R20); the series <sub>_workers_withheld{labels}
                         #   (P/06.5 /metrics) — for each set of the pass report, zero too (ADR-0084 addendum (2) R23)
-  wants:                {<сервер>: {want, live, pending, retiring?, why, state}}   # only with grows: true; live — the live
+  wants:                {<server>: {want, live, pending, retiring?, why, state}}   # only with grows: true; live — the live
                         #   role processes of the server, pending — in flight(s) by heartbeats (Н3, R13′); state: ok | raising |
                         #   raise_failed | no_base
-  raise_failed:         {<сервер>: {since, times}}   # the server «failed to raise»: since — the moment the order was withdrawn, times — in a row
-  near_waiting:         [<подсистема>…]   # only with placement.near whose near.sub is not in the manifest catalogue of this pass:
+  raise_failed:         {<server>: {since, times}}   # the server «failed to raise»: since — the moment the order was withdrawn, times — in a row
+  near_waiting:         [<subsystem>…]   # only with placement.near whose near.sub is not in the manifest catalogue of this pass:
                         #   the affinity waits for its installation (Н1.3 near; ADR-0091 addendum (27) item 6); otherwise there is no field
 ```
 
@@ -156,21 +156,21 @@ The form of the keys is P/02.1 (Н1.2). Here — what each of them means for the
 
 | Key | Meaning | Default |
 |---|---|---|
-| `capacity: {from, default, unit_mb, base_mb}` | capacity — [the pool contract](../../common/contracts/pool.md) `capacity` (moved there without a change; layout audit, the Architect's decision of 2026-10-25, A-12); the reason — the field `fates.<воркер>.why` of the pass report (Н1.2) | `from: capacity`; `default` is required |
+| `capacity: {from, default, unit_mb, base_mb}` | capacity — [the pool contract](../../common/contracts/pool.md) `capacity` (moved there without a change; layout audit, the Architect's decision of 2026-10-25, A-12); the reason — the field `fates.<worker>.why` of the pass report (Н1.2) | `from: capacity`; `default` is required |
 | `headroom: {from}` | headroom — a heartbeat field that the subsystem names; the controller does not read it (neither the choice, nor the slot fate, nor the pass report); the console shows it — the series `worker_headroom{worker,server}` and `headroom` ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н3 «/metrics — text») (C04-HEADROOM-UNREADABLE-01) | `from: headroom` |
 | `weight: {field, default}` | the weight of a unit — an `int` field of the row ≥ 1, when the field is absent — weight.default ≥ 1; a wrong present value is not replaced with default: the unit row is unreadable (`garbled` of the pass report), the unit is neither placed nor removed, the reason is in `unplaceable`; the load = Σ of the weights (ADR-0078) | without the key — weight 1 for all |
-| `constraint` | `none` \| `labels-subset`: the labels of the unit ⊆ the labels of the worker. The labels of the unit — its field `labels` of type `list` (no field — an empty set, the constraint holds); a label — by [the label alphabet](../../common/contracts/labels.md); the labels of the worker — the row `platform/servers/<сервер>` or the node labels | `none` |
+| `constraint` | `none` \| `labels-subset`: the labels of the unit ⊆ the labels of the worker. The labels of the unit — its field `labels` of type `list` (no field — an empty set, the constraint holds); a label — by [the label alphabet](../../common/contracts/labels.md); the labels of the worker — the row `platform/servers/<server>` or the node labels | `none` |
 | `tie_break` | `most-free-capacity` — the only word | the same |
 | `servers` | `shared` \| `distinct`: with `distinct` only one worker can carry the units on one place — the one with the largest load, on equality the first in the slot order of P/03.2 Н1.4; the others stay idle | `shared`; the row `policy` overrides |
 | `place_by` | what counts as a place with `distinct` — [the pool contract](../../common/contracts/pool.md) `place`, the keeper — `keeper` (layout audit, the Architect's decision of 2026-10-25, B-07); `distinct` units are given only to the keeper of a non-empty place (ADR-0084 addendum (2) R15) | `server` |
-| `places: {table, where, server_field, lease, wanted}` | the table of places and the hold row `<sub>/holds/<место>` (P/03.2 Н1.3); `lease: strict` — a strict place; `wanted` — a table of the subsystem: a row with the name of a place says that the place needs a holder, the reason is known to the subsystem (Н3 «shortage()»; C04-PLACE-WANTED-01) | — |
+| `places: {table, where, server_field, lease, wanted}` | the table of places and the hold row `<sub>/holds/<place>` (P/03.2 Н1.3); `lease: strict` — a strict place; `wanted` — a table of the subsystem: a row with the name of a place says that the place needs a holder, the reason is known to the subsystem (Н3 «shortage()»; C04-PLACE-WANTED-01) | — |
 | `spread_by` | a field: two units with one value are not on one server; an absent or empty value does not take part in the spreading — a unit without a value neither constrains nor is constrained (a pair to `group_by`: empty is not a group; reconciliation of python and go М10/3–5, the Architect's decision) | — |
 | `group_by: {field, cut_at}` | a group — one value of the field (for `url` — the host by `cut_at: host`); it is placed only whole on one worker (ADR-0011). What a group is, the host in one spelling, `none`, an unreadable host, «не в группе» and the refusal — [the contract of the group by host](../../common/contracts/group-of.md) (moved without a change of behaviour; stage C guess W03-GROUP-01, the Architect's decision of 2026-10-23; ADR-0053; vector [`group-of`](../../common/vectors/group-of/README.md); review of stage A, SA1-20; reconciliation of python and go 2026-10-18) | — |
 | `near: {sub, by, of, prefer}` | a preference: beside the holder of a neighbour — the units of the subsystem `sub` (the manifest catalogue). My value — the field `by` of my row, without `by` — my id; the value of a neighbour — its field `of`, without `of` — its id; the neighbours — the live rows of `sub` whose value equals mine. Among several neighbours first those that matched `prefer` — AND over the fields, OR over a list of values; a field value is a scalar (equality) or a list (as `affinity.strict`; C04-NEAR-PREFER-SCALAR-01); a field of `prefer` is a path: a segment through `.` is a step along a reference field of the neighbour to the row it names (`home.kind` — the field `kind` of the row named by the field `home` of the neighbour); among equals — by the id of the neighbour (UTF-8 bytes). The worker holding the chosen neighbour is preferred; no holder — no preference (ADR-0091 item 10; vectors [`near-of`](../vectors/near-of/README.md)). The manifest `sub` is not in the catalogue — the affinity does not apply, the unit is placed without it, the controller does not need the rows of `sub`; the subsystem is in `near_waiting` of the pass report (Н1.2); the affinity is switched on from the pass at which the manifest `sub` appeared in the catalogue (Н3 «pass()» step 1; ADR-0091 addendum (26) item 2, addendum (27) items 5–6) | `none` |
 | `home` | a preference, not a filter: a field of the row naming the home (the value — of the first member in UTF-8 order; no value — no home), or `near` — the home is at the neighbour; only one side of a pair can follow. The field is a reference `ref` to the table of places `places.table`: the home is the holder of the named place, the worker whose place (`place_by`, the pool contract `place`) is the name of this row; there is no holder among the eligible (Н3 «choose») — the workers of the server from the field `places.server_field` of this row, if the field is non-empty; otherwise there is no home. An empty server field does not hinder the home when there is a holder: the home is the holder (a volume without a server). Another worker of the same server, when there is a holder, is not the home: a unit at it moves to the holder (Н3 «pass()», step 7). The reason: `place_by` names where the data of the unit lie; a comparison with the server would give it to the holder of another place of this server, and step 7 would not bring it back. No row or it does not read — no home. A field without `ref` — its value is the server itself: the home is the workers whose `server` equals the value. A `ref` to another table (or the manifest has no `places`) — no home: the value is the id of a foreign row, not a server, and `places.server_field` is not named for it (C04-HOME-REF-OTHER-01). C04-HOME-PLACE-HOLDER-01, the Architect's decision of 2026-10-30, replaces the comparison with the server C04-HOME-PLACE-OR-SERVER-01 | — |
 | `affinity: {field, table, server_field, strict, exclusive}` | a filter: a place from the table that admits the unit; `admits: false` takes nobody; a binding row leads the unit only to its own place. The place of the unit is the row of `table` named by its `field` (no value or no row — affinity does not apply). `strict` is a predicate that selects the binding rows: a row is binding when each field of `strict` equals the value or is in the list of values (AND over the fields, OR over a list); no `strict` or `{}` — all rows of the table bind, there are no non-binding ones (C04-AFFINITY-EMPTY-STRICT-01). A binding row leads the unit only to the holder of its place — the worker whose place (`place_by`, P/03.2 Н1.3) is the name of the row; with a non-empty `server_field` of the row — also only if the server of the worker is that one (both conditions; another worker of the same server with another place does not fit; C04-AFFINITY-BOUND-HOLDER-01); a non-binding one is a preference for the server `server_field`, not a filter. `admits` is checked at the actual place of the unit (journal of cammeta-go, lesson 8 № 2). `exclusive: true` (only with `strict`, P/02.1) — the binding place is exclusive: its holder admits only the units bound to this place, the others are not placed on it (as `admits` for strangers); a worker with such a place takes no other places (P/03.2 Н3 «place: take, hold, let go»); a binding row with an empty `server_field` — strictness by the holder of the place without a check of the server (ADR-0091 addendum (9) item 6, addendum (10) items 1–3; repeated review of addendum (10)) | — |
 | `requires` | `none` \| `resource`: with `resource` a worker is eligible only while the resource of its server is not silent | `none` |
-| `grows` | `true` — the role grows on demand: the controller counts the shortage and orders processes of the role per server with the row `<sub>/want/<сервер>` (Н3 «shortage(), order()…»; ADR-0084) | `false` |
+| `grows` | `true` — the role grows on demand: the controller counts the shortage and orders processes of the role per server with the row `<sub>/want/<server>` (Н3 «shortage(), order()…»; ADR-0084) | `false` |
 | `retire_when: {state?, field, in, delete_after?}` | a unit with a value of the field from `in` is not placed and is removed with the value as the reason. Without `state` the field is one of the unit row; with `state` — a field of the value of the acting state `unit.state.<state>` (the row-check contract «Unit state» acts; no acting one — not finished). `delete_after` — N s after the removal by `retire_when`, by the clock of the controller, delete the row (Н3 step 8): the count starts from the first pass at which the controller saw the unit removed by `retire_when`; a pass at which it is no longer removed (an operator edit removed the value or the acting state) clears the count, a new removal counts anew (C04-RETIRE-TIMER-CLEAR-01); after a restart of the controller the count starts anew, as for `unplaced.delete_after` (ADR-0091 items 1, 3; replaces `forget_finished` of the subsystems) | — |
 | `ends: {field, never}` | the deadline of a unit: the field `field` of the row (Unix seconds) ≠ `never` and not later than the clock of the controller — the unit is not placed, is removed with the reason `ends`, the row is deleted (Н3 step 8); `never` — no deadline (ADR-0091 item 2) | without the key — no deadline; `never: 0` |
 | `rebalance: {dead_band}` | rebalancing on request: while the spread of the load is smaller — do not move | `0.10` |
@@ -181,7 +181,7 @@ The form of the keys is P/02.1 (Н1.2). Here — what each of them means for the
 <!-- req: P/04-R011 -->
 
 ```yaml
-<sub>/snapshot/<воркер> | <sub>/snapshot/unplaced:     # objects; the writer is the controller; the worker name unplaced is a refusal
+<sub>/snapshot/<worker> | <sub>/snapshot/unplaced:     # objects; the writer is the controller; the worker name unplaced is a refusal
   {cluster, worker: <name> | null, ts, <rows>: [{id, revision, <fields of snapshot:>, state?, worker, server}]}
           worker: the worker name of the shard; null — for the shard unplaced and for the shard of a gone worker (C04-SNAPSHOT-GONE-WORKER-01)
 cluster:  the installation name — CLUSTER of the environment (the environment file contract «Environment variables»; the name of a domain member, [P/08.1](../../../08-domain/spec/08.1-domain.norms.md) Н1.1); not set — "local" (outside a domain)
@@ -207,7 +207,7 @@ ceiling:  before the write the controller judges L = 64 MiB of the resource door
           The size is the number of bytes of the full serialized object, including the envelope and the empty shards, with the actual
           notation of ts (its length is part of the size) (reconciliation of python and go М10/6–11, matched without a norm).
           Exactly L is allowed; more than L → TooLarge before put_durable, do not replace the former shard.
-          Diagnostics: «N units on <шард>; snapshot is B bytes, limit is L bytes»; raising OBJECTS does not lift the door limit
+          Diagnostics: «N units on <shard>; snapshot is B bytes, limit is L bytes»; raising OBJECTS does not lift the door limit
 ```
 
 ### Н1.3б Table snapshot
@@ -219,7 +219,7 @@ The domain view shows the units with `domain.ref`; the other unit rows and the c
 <!-- req: P/04-R013 -->
 
 ```yaml
-<sub>/snapshot-tables/<таблица>:  # an object; the writer is the controller; <таблица> — a key of domain.view_tables of the manifest (P/02.1, P/08.1 Н1.4а):
+<sub>/snapshot-tables/<table>:  # an object; the writer is the controller; <table> — a key of domain.view_tables of the manifest (P/02.1, P/08.1 Н1.4а):
                                   # a table of tables or unit.rows
   {cluster, ts, refused?, rows: [{key, revision, fields, secrets?, labels?, about?, worker?, server?, phase?, status?}]}
 cluster:  as for a shard, Н1.3а
@@ -900,7 +900,7 @@ it is counted neither as decommissioned nor as not decommissioned (V7 item 3, th
 
 <!-- req: P/04-R035 -->
 
-**Reason** (for a human; it MUST be non-empty; it SHOULD follow the grammar): `most free capacity (<свободно>) among <n> worker(s)` — `<n>` is the number of the eligible (after the filters), not of all live ones + `; weight <w>` — only for a manifest with `placement.weight` + ` reaching <метки>` + `; on <сервер>` + `, whose resource is <state>` + a mark of the choice by the rank of the chosen worker: the home rank — `, at home on <s>`, with `home: near` — `, beside <их id> holding it`; the neighbour rank — `, beside <их id> holding it`, and if a home is declared but its rank is empty — also ` (home <s> has no room)`; the rank «all» with `near` whose server is not chosen — `, away from <их id> on <сервер соседа> (no room there)`, and with a declared `home`, except `home: near`, outside the home — also `; away from home <s>`; `<s>` of the home marks is what the home is named by: the place of the holder or the server. Leaving: `slot <имя> released`, `slot <имя> capture did not finish`, `resource on <s> silent`, `server <s> draining`, `server <s> decommissioned`, `<w> holds no <place_by> now`, `<w>'s <place_by> <место> admits no unit` (`<place_by>` is the name of the field `placement.place_by`, `<место>` is the id of the place of the worker: `w-1 holds no shard now`, `w-1's shard s3 admits no unit`; C04-LEAVING-PLACE-WORD-01). Reachability: `<s> no longer reaches <метка>; …` / `; nothing live reaches it`. Group: `with <id>, one <group_by>: <why>; on <s>`. Deleted: `deleted`.
+**Reason** (for a human; it MUST be non-empty; it SHOULD follow the grammar): `most free capacity (<free>) among <n> worker(s)` — `<n>` is the number of the eligible (after the filters), not of all live ones + `; weight <w>` — only for a manifest with `placement.weight` + ` reaching <labels>` + `; on <server>` + `, whose resource is <state>` + a mark of the choice by the rank of the chosen worker: the home rank — `, at home on <s>`, with `home: near` — `, beside <their ids> holding it`; the neighbour rank — `, beside <their ids> holding it`, and if a home is declared but its rank is empty — also ` (home <s> has no room)`; the rank «all» with `near` whose server is not chosen — `, away from <their ids> on <neighbour's server> (no room there)`, and with a declared `home`, except `home: near`, outside the home — also `; away from home <s>`; `<s>` of the home marks is what the home is named by: the place of the holder or the server. Leaving: `slot <name> released`, `slot <name> capture did not finish`, `resource on <s> silent`, `server <s> draining`, `server <s> decommissioned`, `<w> holds no <place_by> now`, `<w>'s <place_by> <place> admits no unit` (`<place_by>` is the name of the field `placement.place_by`, `<place>` is the id of the place of the worker: `w-1 holds no shard now`, `w-1's shard s3 admits no unit`; C04-LEAVING-PLACE-WORD-01). Reachability: `<s> no longer reaches <label>; …` / `; nothing live reaches it`. Group: `with <id>, one <group_by>: <why>; on <s>`. Deleted: `deleted`.
 
 <!-- req: P/04-R036 -->
 
@@ -952,8 +952,8 @@ write release: write the slot released (cas),
                                                                                    if gen does not read — do not change the row, do not issue
                                                                                    a permission for the capture (P/03.2 Н1.4)
 abandoned capture: released = "taking", the version unchanged ≥ SLOT_TERM on the clock of the controller (the capturer died between the writes
-                   of P/03.2 Н3 «capture» steps 3 and 4) → remove the rows under the slot: the contributions <sub>/<from>/<слот> of each book of the manifest
-                   with a from family (P/03.7 Н1.2) by a batch with guards by <sub>/slots/<слот> with the version of this judgement, do not write the slot;
+                   of P/03.2 Н3 «capture» steps 3 and 4) → remove the rows under the slot: the contributions <sub>/<from>/<slot> of each book of the manifest
+                   with a from family (P/03.7 Н1.2) by a batch with guards by <sub>/slots/<slot> with the version of this judgement, do not write the slot;
                    no row — skip; a guard refusal (412 guard, 409 conflict) — a live capture changed the version: do not repeat;
                    with a server decommission and without: an abandoned capture carries the server of the capturer, step 2 of «decommission_server» by server = s does
                    not recognise it, and an orphan under taking would keep the contribution stale forever (ADR-0113 addendum (49), (50))
@@ -1002,7 +1002,7 @@ The first of: the slot is released (released = true — at once); an abandoned c
 <!-- req: P/04-R049 -->
 
 The role grows on demand: the controller orders the number of processes of the role on a specific server with the row
-`<sub>/want/<сервер>`, the server script brings the number of processes to it (P/02.4 Н1.5); the controller does not start processes
+`<sub>/want/<server>`, the server script brings the number of processes to it (P/02.4 Н1.5); the controller does not start processes
 (ADR-0021, ADR-0084 and addendum (1)).
 
 <!-- req: P/04-R050 -->
@@ -1050,11 +1050,11 @@ per label set:   the capacity of a worker without a named one — placement.capa
                  an exclusive place (Н1.3 affinity.exclusive): the capacity of the worker holding it does not enter free for the other
                  units; waiting units bound to a place without a holder — an order for the place: the server of the place (server_field
                  of the row) is a candidate out of order, share 1; an empty server_field — no order, the place waits for a holder; a place
-                 whose secret did not open — no order, withheld «<place_by> <место> is sealed»: the controller learns Sealed from
-                 place_error.<место> = sealed in the heartbeats of the live workers of the role on the server of the place (P/03.4 Н1.1); there are no live workers
+                 whose secret did not open — no order, withheld «<place_by> <place> is sealed»: the controller learns Sealed from
+                 place_error.<place> = sealed in the heartbeats of the live workers of the role on the server of the place (P/03.4 Н1.1); there are no live workers
                  there — one ordinary order (ADR-0091 addendum (9) item 6, addendum (10) items 1–3; repeated review of addendum (10))
                  a place without a holder: for a manifest with places.wanted the row of the table of places passes places.where, its hold does not act, and the row
-                 <sub>/<wanted>/<место> exists and reads — an order for the place, a waiting piece of weight 1: the place may wait for neither a record nor a unit,
+                 <sub>/<wanted>/<place> exists and reads — an order for the place, a waiting piece of weight 1: the place may wait for neither a record nor a unit,
                  and without a holder nobody reads its archive. The server is from the row of the place, as for an exclusive place: server_field non-empty — this server is a candidate out of
                  order, share 1, on top of the general check of the candidate; not fit — no order, the place waits; Sealed — withheld, as there. server_field empty — the place is on any server: the piece goes
                  with the empty label set as an ordinary probe; a limit: a new process will take the first free place, not necessarily this one, a superfluous process lives until shrinking.
@@ -1078,7 +1078,7 @@ order:           distribute needed of the set over the candidates in order, to e
                  for a manifest with a non-empty door.pass.calls the ceiling of want(s) is 1, not 99: a ticket is bound to the sheet of the server, there is one sheet per role and server
                  (the warden and hand-over contract «Pass of the second kind»); the remainder of needed — withheld, as with a lack of candidates;
                  after a share free(s) −= share (R14′); want(s) := want(s) + share — a write of the order row with cas by the read version and guard
-                 of the own version of placement_turn, why — the reason «<n> more for <метки> on <s>: <ждущих> waiting» (<метки> — the canonical
+                 of the own version of placement_turn, why — the reason «<n> more for <labels> on <s>: <waiting> waiting» (<labels> — the canonical
                  notation of the set; the empty set — any labels, R23);
                  want is the absolute target: a repeated pass and a new holder of the turn recompute needed with the capacity in
                  flight and do not repeat the growth — one acting logical order per piece of shortage (label set);
@@ -1168,19 +1168,19 @@ controller (step 2): the server answers — the same rule as the console refusal
          the mark <sub>/decommissioned/<s> already stands and the request stands → at any answer of the server remove the remaining contributions of its slots:
          a break between batches would otherwise leave contributions stale forever (ADR-0113 addendum (44) item 2, addendum (45) item 3); the slots of the server —
          by the field server of the slot row (server = s, released = "true"), not by the slot list of the mark: by the list a repeat would remove the contribution
-         of a new holder; the guard — guards by <sub>/slots/<слот> with the version of this read, a refusal — as for the removal batch below;
+         of a new holder; the guard — guards by <sub>/slots/<slot> with the version of this read, a refusal — as for the removal batch below;
          server does not read or is absent — the slot is skipped, its rows are removed by the capture cleanup (P/03.7 Н1.2 claim; addendum (45) item 4);
          the server stopped answering and there is no mark <sub>/decommissioned/<s> → execute (the mark exists — only the remainder of contributions by the line
          above, do not rewrite the mark and the slots: otherwise a slot already taken by a spare worker would be released again):
          release the slots of the server, write <sub>/decommissioned/<s>, delete the order row <sub>/want/<s>; the workers of the server — outside the pool;
-         by the same batch remove the contributions <sub>/<from>/<слот> of each slot of the server of each book of the manifest with a from family (P/03.7 Н1.2):
+         by the same batch remove the contributions <sub>/<from>/<slot> of each slot of the server of each book of the manifest with a from family (P/03.7 Н1.2):
          otherwise the contribution of a server removed forever would be stale forever (P/09.1 Н1.2), and each new reader of the cluster would write reserves
          until the sections arrive (ADR-0113 addendum (39)); no contribution row — skip; in the release batch a slot is written with cas, the contribution of its
          slot is removed under the same cas: the batch is atomic, while P/01.1 rejects a guard on a key from writes (400 badrequest), and the mark
          would never be written (ADR-0113 addendum (46) item 1); a refusal of the release batch (cas of a slot, of the mark, of the want row) — the whole batch
          on the next pass; the limit of a batch is books × slots of the server: beyond BATCH_WRITES (P/01.1) the contributions are removed by the following
          batches of the same pass, the decommission mark is already written, a worker of the server does not start; such a batch is under the guard of the slot
-         row: guards by <sub>/slots/<слот> with the version from the answer of the release batch, not by a re-read (addendum (45) item 1, addendum (46) item 2):
+         row: guards by <sub>/slots/<slot> with the version from the answer of the release batch, not by a re-read (addendum (45) item 1, addendum (46) item 2):
          any capture changes the slot version, and the contribution of a new holder that took the name is not removed silently (addendum (44) item 1);
          a refusal of the removal batch (409 conflict, 412 guard) — remove the rows of this slot from the batch, do not re-read and do not repeat
          for them, the remainder — by the same pass without them; the P/01.1 rule «re-read and retry» does not apply to the removal batch
@@ -1226,7 +1226,7 @@ The environment and the launcher argument are inventoried in [forms/daemon-flags
 
 <!-- req: P/04-R060 -->
 
-The controller side of the common block of [P/06.6](../../06-console/spec/06.6-console.norms.md) Н3 «старт консоли — проверка схемы» (part of М10/10-01
+The controller side of the common block of [P/06.6](../../06-console/spec/06.6-console.norms.md) Н3 «console start — schema check» (part of М10/10-01
 by `note` of id-map; the row `platform/schema`, `SCHEMA` and the raise are P/06.6 Н1.1а, Н3 «raise_schema»).
 
 <!-- req: P/04-R061 -->
@@ -1330,7 +1330,7 @@ the snapshot is [chapter 6.5](../../06-console/spec/06.5-console.norms.md); revi
 | 21 | the write `release` (with the resource P/05): three workers without units are killed — the readable slot `w-1` is released with the former holder/until/gen/server, the name in `names_given` (release, not move); a torn `until` with a readable `gen` — released wholly and nobody's, `gen` and `server` kept; an unreadable `gen` — the row is the same, no name; the released slot is taken by a new process (coverage audit of P/04, D04) | Н3 «fate», «write release», `names_given`; [the slot contract](../../common/contracts/slot.md) «States» |
 | 22 | the group whole (with the resource P/05): nine `tallies` of one host `feed` with capacity 8 — none is placed, a unit outside the group is placed; a group of eight with 8 free — whole on one worker (coverage audit of P/04, D03) | Н1.3 `group_by`, Н3 «choose», Н4 |
 | 23 | the schema check at start: `version` above SCHEMA and not a number — `@start controller` exits with code 2, no pass report; `version` 1 — it starts (coverage audit of P/04, D07) | Н3 «controller start — schema check»; [the schema contract](../../common/contracts/schema.md) «Check at start» |
-| 24 | the server labels (with the resource P/05): the row beats the node labels; an empty one — reaches nothing (`will_move`, removal with the reason of reachability, a unit with a node label is not placed); no row — the node labels; an unreadable one — the last read ones and without a judgement on reachability (coverage audit of P/04, D10) | Н1.1 `platform/servers/<сервер>`, Н1.3 `constraint`, Н3 «pass()» step 5; the outcomes of the family `server-labels` |
+| 24 | the server labels (with the resource P/05): the row beats the node labels; an empty one — reaches nothing (`will_move`, removal with the reason of reachability, a unit with a node label is not placed); no row — the node labels; an unreadable one — the last read ones and without a judgement on reachability (coverage audit of P/04, D10) | Н1.1 `platform/servers/<server>`, Н1.3 `constraint`, Н3 «pass()» step 5; the outcomes of the family `server-labels` |
 | 25 | an error reading the schema row at start: the store is silent to the controller role (`@cut role testsubcontroller store`) — no pass report; the store answers again — the controller writes the report without a restart (coverage audit of P/04, D07) | Н3 «controller start — schema check»; [the schema contract](../../common/contracts/schema.md) «Check at start» |
 | 26 | a silent live worker with a unit (with the resource P/05): `@freeze w-1` — presence `runs`; after 75 s still `alive` (the margin), then `hung`: `names_given` is empty, the slot is not released, the unit is on `w-1`; after `@thaw` — `alive` (coverage audit of P/04, D08) | Н3 «fate» (the order of the rules, the margin), «leaving», Н1.2 `fates`, `names_given`; [the presence lock contract](../../common/contracts/presence-lock.md) |
 | 27 | the same without units: `hung`, not `release` — the slot is not released, the name is not given; after `@thaw` — `alive` (coverage audit of P/04, D08) | Н3 «fate», «Transitions of release» (presence `runs`) |
@@ -1345,7 +1345,7 @@ the snapshot is [chapter 6.5](../../06-console/spec/06.5-console.norms.md); revi
 | 36 | `spread_by: zone` with a non-empty value: the second unit of the zone on one server is not placed, a worker of another server — it is placed (coverage audit of P/04, the second pass, G05) | Н1.3 `spread_by`; Н3 «choose» |
 | 37 | the binding shelf `reserve` leads the unit only to its holder (coverage audit of P/04, the second pass, G05) | Н1.3 `affinity` (`strict`, the holder of the place) |
 | 38 | home: a unit with a shelf of another server moves home when a worker appeared there (coverage audit of P/04, the second pass, G05) | Н1.3 `home`; Н3 «pass()» step 7, HOME_BUDGET |
-| 39 | the place does not admit (`admits: false`) — the units of the holder leave with the reason `<w>'s shelf <место> admits no unit` (coverage audit of P/04, the second pass, G05) | Н1.3 `affinity` `admits`; Н3 «leaving», «Reason» |
+| 39 | the place does not admit (`admits: false`) — the units of the holder leave with the reason `<w>'s shelf <place> admits no unit` (coverage audit of P/04, the second pass, G05) | Н1.3 `affinity` `admits`; Н3 «leaving», «Reason» |
 | 40 | the shard of a worker: a unit with the fields `snapshot`, `worker`, `server`; `unplaced` is empty; a gone worker — an empty shard of the same form, `worker: null`, `<rows>: []` (coverage audit of P/04, the second pass, G06; C04-SNAPSHOT-GONE-WORKER-01) | Н1.3а `worker`, `publish`; Н3 «snapshot — after the pass» |
 | 41 | an unreadable assignment — the worker is not in the pool, not counted in `garbled`, the row is not rewritten (coverage audit of P/04, the second pass, G07) | Н4 «a heartbeat/slot/assignment does not read»; the outcomes of the family `workers` |
 | 42 | the fate `wait`: an occupied slot without a process with a live resource (`unlisted`) — after the margin `wait`, the name is not given, the slot is not released (coverage audit of P/04, the second pass, G07) | Н3 «fate», «Transitions of release»; Н1.2 `fates`, `names_given` |
@@ -1449,13 +1449,13 @@ findings and window records refer to (ADR-0080 addendum 6):
 ## Correspondence to former lessons
 
 The lesson is moved from М10/4 (stage B): Н1.1–Н1.5, Н3 (all subsections except the procedures of the console doors), the rows of Н4 and Н5
-of the controller, items 1–8, 10 of «Решает реализация» (here items 1–9), the checklist items М10/4-01…13, -16…19, -21…23 (here
-P/04-01…20 by id-map); from М10/10 — Н1.3 (the writer side, here Н1.3а), Н3 «снимок — после прохода», items 4, 6 of «Решает реализация»
+of the controller, items 1–8, 10 of «Implementation decides» (here items 1–9), the checklist items М10/4-01…13, -16…19, -21…23 (here
+P/04-01…20 by id-map); from М10/10 — Н1.3 (the writer side, here Н1.3а), Н3 «snapshot — after the pass», items 4, 6 of «Implementation decides»
 (here items 10, 11), the item М10/10-04 (here P/04-21) and a part of М10/10-01 (the schema check at the start of the controller,
-here P/04-23); from М10/11 — Н1.4 `moves`, `fresh_controller`, `stays`, `lost`, `store`, `return` (here Н1.4а), Н3 «вырвать питание», the row of Н4 «сервер не вернулся» and the item М10/11-08 (here P/04-22); from the acceptance of
+here P/04-23); from М10/11 — Н1.4 `moves`, `fresh_controller`, `stays`, `lost`, `store`, `return` (here Н1.4а), Н3 «pull the power», the row of Н4 «сервер не вернулся» and the item М10/11-08 (here P/04-22); from the acceptance of
 М10/05 — scenarios 07, 11–16. By the move of lesson 6: from the acceptance of М10/10 — sc. 03, 08 without the steps `/metrics` of the console
 (review of stage A 6–7, № 32); `resource_state` (Н1.4) and the rule of the decision reader — into [the observation
-contract](../../common/contracts/observation.md), the console side of Н3 «вывести_сервер» — into P/06.6 (analysis № 2). М10/4 normed what was told by `М10A_Platform/08-Controller-and-Worker.md` (steps 1–6:
+contract](../../common/contracts/observation.md), the console side of Н3 «decommission_server» — into P/06.6 (analysis № 2). М10/4 normed what was told by `М10A_Platform/08-Controller-and-Worker.md` (steps 1–6:
 a controller without state, a write with `cas`, the mutator, live by change, assignments, fates and resource states),
 `М10A_Platform/10-SpecController-rows.md` (step 6-controller: the removal of the deleted), `М10A_Platform/11-SpecController-placement.md`
 (steps 1–18: the picture of the world, the constraint and the catalogue, the pool, the choice, preferences, the reason, two keys, the pass, the move,

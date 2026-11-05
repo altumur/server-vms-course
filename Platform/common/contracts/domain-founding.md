@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/domain-founding.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
 in chapters; the Architect's decision of 2026-10-23 on the finding of the Specification I02-FOUND). The owner is lesson P/08: chapter [8.2](../../08-domain/spec/08.2-domain.norms.md) (the root, the forms, the keys of the holder
 and of book acceptance) and chapter [8.8](../../08-domain/spec/08.8-domain.norms.md) (the term record). Participants: the installer — the command
 «domain installation» ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н3) and the change commands that read the recovery
@@ -108,7 +108,7 @@ yet, the rows of steps 4–5 are overwritten. The process `domain` does not foun
 ## Term record 1
 
 ```yaml
-claim_1:     the holder's process domain at the first start after the installation — when the absence of domain/holder and domain/member-rows/<раздел>
+claim_1:     the holder's process domain at the first start after the installation — when the absence of domain/holder and domain/member-rows/<part>
              of its own store is confirmed; one of them is unreadable or the store did not answer — claim_1 is not written; its own
              term record 1 already lying there is not rewritten (C08-CLAIM-1-01, P/08.8 Н1.1) — writes domain/holder {doc} (P/08.8 Н1.1 claim;
              the writer of the row is only domain, the installer does not write it): doc {domain, term: 1, holder, url, ca?, at, issuer,

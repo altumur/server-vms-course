@@ -1,4 +1,4 @@
-# System acceptance of the module «Платформа» — the stand of all processes
+# System acceptance of the module «Platform» — the stand of all processes
 
 This English text is the source; the Russian translation `ru/acceptance/system/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
@@ -60,7 +60,7 @@ The server `srv-b` carries a unit without a home `c1` (`testsub`, the worker `w-
 | 59–60 | `c1` has no home — it stays at `$holder` | P/04 Н1.4а `moves`; Н3 «pull the power» |
 | 61 | the resource of `srv-b` is `live` again | the observation contract `resource_state` |
 
-The stand gives a name to each process (`@start worker <имя>`), so step 54 checks the return of its own name, while the choice of a free name
+The stand gives a name to each process (`@start worker <name>`), so step 54 checks the return of its own name, while the choice of a free name
 by a nameless process is the acceptance of chapter P/03.2. Step 49 waits for `restored: 1`: `srv-c` has two copies, but `$closed` remained on the volume of `srv-b` and is not counted, only the bucket of step 33 is pulled
 (the Architect's decision of 2026-10-31).
 

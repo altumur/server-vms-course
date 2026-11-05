@@ -21,7 +21,7 @@ retell them (stage B: the references to М10/8, М10/10, М10/11 are retargeted 
 - **Launch** — through the runner `w2c-run.sh resource` with `W2C_ROLE=resource` ([P/02.4] Н1.1 — the unit sets it, review of stage B 3–5, № 29; Н1.9).
 - **Start order** — the schema check of `platform/schema` and the read of the manifest row before the first write ([P/05] Н3 «resource start
   — schema check», [P/02.3] Н3 «Process start»); then the heartbeat at once, the heartbeat stream, `restore` of the buckets in its own attempt,
-  the door row `platform/doors/<сервер>` ([P/02.4] Н3 «server start», step 2).
+  the door row `platform/doors/<server>` ([P/02.4] Н3 «server start», step 2).
 
 ## Environment
 
@@ -50,19 +50,19 @@ None: the setting channel is the environment only ([P/02.4] Н1.2 «The setting 
 
 ## Directories and files
 
-- **The events root** — the buckets of all the trees of the server `<корень событий>/<дерево>/<unit>/e<эпоха>/<start>Z.events.jsonl`;
+- **The events root** — the buckets of all the trees of the server `<events root>/<tree>/<unit>/e<epoch>/<start>Z.events.jsonl`;
   the resource is the owner of the file contract of the event journal, the workers and the console write into it ([event journal], [P/05] Н1.2, [catalogue]).
-  The copies of the buckets of the neighbours — `<корень событий>/.mirror/<server>/…`, only the resource writes them.
-- **Presence locks** — `<корень событий>/.workers/<sub>/<экземпляр>.lock`: the resource takes `flock` without waiting and derives
+  The copies of the buckets of the neighbours — `<events root>/.mirror/<server>/…`, only the resource writes them.
+- **Presence locks** — `<events root>/.workers/<sub>/<instance>.lock`: the resource takes `flock` without waiting and derives
   `runs`, `gone`, `unknown`; a `gone` file it MAY remove under its own `flock` ([presence lock] `presence_lock`, [catalogue]).
-- **The objects root** — the objects door, the body copies `<sub>/blobs/sha256-<hex>` from the neighbours of the ring, the tombstones `.gone/<ключ>`, the directory locks `<каталог>/~lock`
+- **The objects root** — the objects door, the body copies `<sub>/blobs/sha256-<hex>` from the neighbours of the ring, the tombstones `.gone/<key>`, the directory locks `<dir>/~lock`
   ([P/05] Н1.1, Н1.1 «Tombstones»; ADR-0083 addendum (16)). File names in both roots — one encoding `%XX` / `%h<sha256>` ([event journal]
   «File names in shared trees»; the threshold of `%h` — by the full file name with the suffix of the norm and the margin of the temporary name, review of stage B 3–5, № 20).
-- **Store rows** — the heartbeat `platform/resources/<server>/heartbeat` (an object), the door row `platform/doors/<сервер>`,
+- **Store rows** — the heartbeat `platform/resources/<server>/heartbeat` (an object), the door row `platform/doors/<server>`,
   the release requests `<sub>/requests/free-<server>-<volume>`; it reads `platform/space`, `platform/mirror`,
   `<sub>/retention`, `<sub>/alarms_retention`, `platform/decommission/*`, `platform/schema`, `platform/manifest/<sub>` and the mark
   `/rev` ([catalogue], [P/02.5] Н1.4).
-- **Its own journal** — `<корень событий>/audit/resource/e1/…` under an exclusive file lock ([event journal]
+- **Its own journal** — `<events root>/audit/resource/e1/…` under an exclusive file lock ([event journal]
   `journal`, `writer`).
 
 ## Exit codes
@@ -81,7 +81,7 @@ start refusal, code 2 ([P/02.4] Н1.6 `process`; ADR-0075 addendum of 2026-10-26
 
 ## Signals and readiness
 
-- **Readiness** — the port `RESOURCE_PORT` and the row `platform/doors/<сервер>`; the stand runner waits for both ([Stand], [P/05]
+- **Readiness** — the port `RESOURCE_PORT` and the row `platform/doors/<server>`; the stand runner waits for both ([Stand], [P/05]
   Н1.4).
 - **Heartbeat** — every 10 s; the door row — every 15 s; the pass — every 600 s, a step longer than `PULSE_LIMIT` gives
   `pass_stalled` ([P/05] Н1.4, «Implementation decides» item 7 — the value of `PULSE_LIMIT`).
@@ -94,8 +94,8 @@ start refusal, code 2 ([P/02.4] Н1.6 `process`; ADR-0075 addendum of 2026-10-26
 The roots `{data}/config`, `objects`, `events` are created before the process start by the role start command of the profile — [the common
 acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
 
-- The command of the «Стенд» with the substitutions `{rport}` — the door port, `{server}` — the server name (`srv-a`; at the stand of М11 —
-  `srv-<кластер>`) ([Stand] «Ресурс»).
+- The command of the «Stand» with the substitutions `{rport}` — the door port, `{server}` — the server name (`srv-a`; at the stand of М11 —
+  `srv-<cluster>`) ([Stand] «Resource»).
 - `{data}` is `PLATFORM_DIR`: the stand sets `PLATFORM_DIR={data}`, `RESOURCE_PORT={rport}`, `SERVER_NAME`, `BOX_ID`;
   the events root is `{data}/events`, there is no separate key ([Stand] «Один каталог данных»).
 

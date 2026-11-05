@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/turn.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): one changing writer at each moment — at the
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): one changing writer at each moment — at the
 subsystem controller and at the `domain` process of the holder; one algorithm is a contract, not copies in chapters; layout audit A-03,
 the Architect's decision of 2026-10-25). The owner is lesson [P/04](../../04-controller/spec/04-controller.norms.md) (Н1.5 «Placement admission
 between controllers», Н3 «get and hold the placement turn»). Participants: the controller — the row
@@ -59,7 +59,7 @@ makes under the guard (at the controller — P/04 Н3 «get and hold the placeme
 turns (C08-TURN-SELF-99, the Architect's decision of 2026-10-26; at the `domain` process — P/08.10 Н3): it is not counted as a success; re-read `<turn>`: if `holder` is the mark of this attempt
 (at the turn of the `domain` process — this instance), confirm it by `cas` of the read version (confirmed — the turn is one's own, the
 version is remembered); otherwise (there is no row, `holder` is foreign or empty) the turn is not obtained in this attempt. The giving up
-of the subsystem turn (step 6) writes `{holder: "", manifest_rev: <моя>}` — the field is required by the form.
+of the subsystem turn (step 6) writes `{holder: "", manifest_rev: <mine>}` — the field is required by the form.
 
 ## Differences of the turns
 

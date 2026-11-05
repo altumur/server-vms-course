@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/2/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand, the dictionary of directives and doors — [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Стенд домена»](../../../common/acceptance/README.md#domain-stand) (the stand of several clusters; formerly — the М11 dictionary of the acceptance README
+the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (the stand of several clusters; formerly — the М11 dictionary of the acceptance README
 of М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is [`09.2-agent.norms.md`](../../spec/09.2-agent.norms.md) Н5. Scenarios
 02–04 were moved from the acceptance of М11/04 (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers, names and steps are
 the former ones, the number 01 is empty (sc. 01 of М11/04 — the acceptance of [chapter 8.3](../../../08-domain/acceptance/3/README.md) sc. 15). In total 5
@@ -11,16 +11,16 @@ scenarios / 62 steps (sc. 06 — the coverage audit of P/09, the second pass, be
 [`accept`](../../../common/vectors/accept/README.md).
 
 The division (the appendix of the plan of the move of lesson 8): the outcome of all three scenarios is the door, the package and the relay pass. The neighbours on
-the stand: the holder on the relay package and the knock ([P/08.3](../../../08-domain/spec/08.3-domain.norms.md) Н3 «the holder on `POST /api/relay/<ретранслятор>`»;
+the stand: the holder on the relay package and the knock ([P/08.3](../../../08-domain/spec/08.3-domain.norms.md) Н3 «the holder on `POST /api/relay/<relay>`»;
 P/08.3-07, P/08.3-13), the acceptance and the topology (chapter 8.3), `join` and `domain/reached` of the agent of a member behind a
 relay (chapter 9.1: P/09.1-05, P/09.1-21, P/09.1-24), the silence of a member in the view (chapter 8.1).
 
 ## Stand
 
-The preparation is as the acceptance README of [chapter 8.3](../../../08-domain/acceptance/3/README.md) («Stand», «Подготовка каждого сценария»;
+The preparation is as the acceptance README of [chapter 8.3](../../../08-domain/acceptance/3/README.md) («Stand», «Preparation of each scenario»;
 formerly — the acceptance README of М11/03), there are four clusters: `hold`, `m1`, `m2`, `relay`. The agent `relay` always opens
 the relay door (`RELAY=1`, `{relay_port}`); the doors and the directives — the section «Domain stand» of the common acceptance README
-(`@domain <кластеры>`, `@start agent <кластер> via relay`, `@stop agent`, `@cut relay`, `@mend relay`, `@clock`).
+(`@domain <clusters>`, `@start agent <cluster> via relay`, `@stop agent`, `@cut relay`, `@mend relay`, `@clock`).
 The topology is empty until the step that writes it.
 
 ## scenarios.tsv
@@ -42,7 +42,7 @@ of the stranger whom the holder learned of from a knock that came in a relay pac
 ## Coverage audit of P/09, the second pass (Gemini)
 
 - Sc. 06 `token-through-relay` (`audit-coverage-gemini` cc36de538, draft G05; Н1.1 `not_author`, Н2 `POST
-  /api/tokens/<член>/…`; [the local token door contract](../../../common/contracts/local-token-door.md) `no_queue`).
+  /api/tokens/<member>/…`; [the local token door contract](../../../common/contracts/local-token-door.md) `no_queue`).
   The preparation is as in sc. 02, steps 1–7. The placement `c1` (`cluster: m1`, `origin: m2`) — as in sc. 01
   of [the acceptance of chapter 8.7](../../../08-domain/acceptance/7/README.md). The request of the worker `m2` through the local door of its agent goes
   through the relay door to the holder and gets 200. Under `@cut relay` the holder does not answer the relay: the relay

@@ -28,7 +28,7 @@ by the same rule, its cases are the `signer` rows, P/09.1 Н1.13);
 
 **Actions**: `{write, cas}` — write the turn row `write` by `cas` (`""` — there is no row, otherwise the version); in `write` at
 `placement` `holder` is `"@new"` (a new unique mark of this attempt, not equal to the former ones) or `"@same"` (the mark of its own
-attempt), `manifest_rev` — mine; at `signer` — `{holder: <я>}` or `{holder: ""}`; `held` — the turn is its own, the version is remembered;
+attempt), `manifest_rev` — mine; at `signer` — `{holder: <me>}` or `{holder: ""}`; `held` — the turn is its own, the version is remembered;
 `not_held` — not obtained (including after `reread`: the row does not name this attempt) (at `signer` — a waiting one); `busy` — occupied; `refused` — a refusal of the step (the row is unreadable; at `signer` —
 a waiting one); `manifest_behind` — step 1; `{guard: {key, index}}` — the write goes with the guard; `wait` — its own term has expired, do not
 write until a confirmed renewal; `stop` — cease the writes; `reread` — re-read (the barrier is confirmed at `placement`:

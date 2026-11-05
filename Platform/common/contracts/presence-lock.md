@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/presence-lock.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5); analysis of the review of stage A 3–5, № 9). The owner is the resource
+A common contract of the module «Platform» (ADR-0083 addendum (5); analysis of the review of stage A 3–5, № 9). The owner is the resource
 [P/05](../../05-resource/spec/05-resource.norms.md): it reads the locks of its box, derives from them the presence of the worker
 processes (P/05 Н1.4 `workers`, `running`, `unknown`, `presence`) and the count `room.<sub>` of the door row (P/05 Н1.4
 `door_row`). The lock is held by the worker — the worker's side: chapter [P/03.2](../../03-worker/spec/03.2-worker.norms.md) Н3
@@ -17,7 +17,7 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 The content of the lock is the family `presence-lock`: `Platform/05-resource/data/presence-lock.schema.json`,
 `Platform/05-resource/data/presence-lock.outcomes.tsv`; the elements `room.<sub>`, `live.<sub>` are written into the door row
-`platform/doors/<сервер>` — `Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv`
+`platform/doors/<server>` — `Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv`
 (layout audit, V-45; the Architect's decision of 2026-10-25).
 
 ## Lock
@@ -108,4 +108,4 @@ The package [`presence-room`](../vectors/presence-room/README.md) (the count `ro
 
 From М10/8 Н1.4 (stage B, analysis of the review of stage A 3–5, № 9): `presence_lock` whole and `room` (at P/05 Н1.4 `room` is
 a reference here); from М10/11 Н1.4 — `presence`. Part of the norm М10/8-10 (the lock and the count `room`; P/05-07) — by `note` of
-[id-map](../id-map.tsv); the worker's side (step 2b «старт()» of М10/5) — chapter P/03.2, a part of М10/5 by the id-map of lesson 3.
+[id-map](../id-map.tsv); the worker's side (step 2b «start()» of М10/5) — chapter P/03.2, a part of М10/5 by the id-map of lesson 3.

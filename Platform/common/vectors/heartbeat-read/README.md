@@ -16,7 +16,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | Field | Meaning |
 |---|---|
 | `object` | the heartbeat of a resource — a JSON object under the key `platform/resources/srv-a/heartbeat` |
-| `expect` | `{"readable": false}` — the whole object is unreadable (the outcome «объект целиком»: it does not confirm life); `{"readable": true, "fields": [<поле>…]}` — the heartbeat is readable, for the listed fields (in the order of the rows of `outcomes.tsv`) their field outcome from `outcomes.tsv` applies (`build` — reads as `""`, `retention_garbled`, `retention_withheld` — as absent), an empty list — there are no field outcomes |
+| `expect` | `{"readable": false}` — the whole object is unreadable (the outcome «объект целиком»: it does not confirm life); `{"readable": true, "fields": [<field>…]}` — the heartbeat is readable, for the listed fields (in the order of the rows of `outcomes.tsv`) their field outcome from `outcomes.tsv` applies (`build` — reads as `""`, `retention_garbled`, `retention_withheld` — as absent), an empty list — there are no field outcomes |
 
 18 rows: 11 readable (7 of them with a field outcome), 7 unreadable. The lexemes of time and of integers (OBS154-RAW-TIME-EXACT-01, the Architect's decision
 2026-10-26): the time `ts`, `usage_at` with `1e0`, `1e-400`, `-0` — not of the form (`codec.tsv` `time`, the reader); `usage` `100.0` is
@@ -25,14 +25,14 @@ the integer 100, `100.00000000000000001` is not an integer by the exact decimal 
 
 ## `worker.tsv`
 
-Reading the heartbeat of a worker `<sub>/heartbeats/<имя>` by the form `Platform/03-worker/data/heartbeats.schema.json` and the outcomes
+Reading the heartbeat of a worker `<sub>/heartbeats/<name>` by the form `Platform/03-worker/data/heartbeats.schema.json` and the outcomes
 `Platform/03-worker/data/heartbeats.outcomes.tsv` (lesson P/03.4 Н1.1; C08-HEARTBEAT-READER-99-VECTORS, the Architect's decision 2026-10-26). The readers are the console (`GET /{rows}`, `/servers`,
 `/metrics`, `/where`, door.pass, `/schema`), the controller, the drain, the shadow report of the domain. The same file rules; the fields `case`,
 `key` (the key of the object), `object`, `expect`, `note`.
 
 | `expect` | Meaning |
 |---|---|
-| `rows` | the reader `GET /{rows}` (P/06.1 Н2 «rows»): `"unreadable"` — the heartbeat as a whole is unreadable, the elements do not read; `{"skip": [<индекс>…]}` — the elements of `status[]` not of the form are skipped, the rest go into rows |
+| `rows` | the reader `GET /{rows}` (P/06.1 Н2 «rows»): `"unreadable"` — the heartbeat as a whole is unreadable, the elements do not read; `{"skip": [<index>…]}` — the elements of `status[]` not of the form are skipped, the rest go into rows |
 | `others` | the other readers (`/servers`, `/metrics`, `/where`, the controller, the drain): `"unreadable"` — there is no heartbeat (the worker is not shown, the heartbeat is in `<sub>_heartbeats_garbled`); at an element of `status[]` not of the form — also `"unreadable"` (the outcome `/status`); `"readable"` — readable |
 | `fields` | at `others: "readable"` — the fields with a field outcome in the order of the rows of `outcomes.tsv` (`build` — `""`, `schema` — `null` in processes, `pending_writes` — not stated); otherwise `[]` |
 

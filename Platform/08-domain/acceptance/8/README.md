@@ -14,8 +14,8 @@ the packages [`common/vectors/record`](../../../common/vectors/record/README.md)
 
 ## Stand
 
-The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Подготовка каждого сценария»; from the acceptance README of М11/03).
-The doors `holder`, `holder@<кластер>`, `member`, `signer` and the directives `@domain`, `@start domain on`, `@stop domain`, `@move` are
+The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Preparation of each scenario»; from the acceptance README of М11/03).
+The doors `holder`, `holder@<cluster>`, `member`, `signer` and the directives `@domain`, `@start domain on`, `@stop domain`, `@move` are
 the dictionary of the «Domain stand». The runner goes as the human `root` (chapter 8.4).
 
 - **Scenario 02.**
@@ -62,7 +62,7 @@ the package [`follow`](../../../09-agent/vectors/follow/README.md).
 
 ## scenarios.tsv
 
-The format is the dictionary of the «Domain stand»; the directives `@move` are `<код> <JSON>`.
+The format is the dictionary of the «Domain stand»; the directives `@move` are `<code> <JSON>`.
 
 Sc. 15–17 (the coverage audit of P/08, the second pass of Gemini, the draft G09 `e32df6f8b`, rewritten):
 - sc. 15 — `POST /domain/stranded/apply` (Н1.6 `apply`): at the acting holder — 409; after a handover to `m1` (`stranded`

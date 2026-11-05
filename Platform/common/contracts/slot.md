@@ -2,9 +2,9 @@
 
 This English text is the source; the Russian translation `ru/contracts/slot.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): the state of a slot row is judged by the worker, the controller, the console and
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): the state of a slot row is judged by the worker, the controller, the console and
 the agent — a contract, not copies in chapters; layout audit A-04, the Architect's decision of 2026-10-25). The owner is chapter
-[P/03.2](../../03-worker/spec/03.2-worker.norms.md) Н1.4 (the row `<sub>/slots/<имя>`). Participants: the worker — capture and
+[P/03.2](../../03-worker/spec/03.2-worker.norms.md) Н1.4 (the row `<sub>/slots/<name>`). Participants: the worker — capture and
 renewal (P/03.2 Н3); the controller — the slot judge, the leaving of units, the order ([P/04](../../04-controller/spec/04-controller.norms.md)
 Н1.4, Н3); the console — `WorkerRow.released`, `slot_taking`, `slot_until`, `slot_garbled` ([P/06.5](../../06-console/spec/06.5-console.norms.md)
 Н2, Н3 «/servers»), the drain ([P/06.6](../../06-console/spec/06.6-console.norms.md)); the agent — the liveness of a worker in the domain
@@ -18,7 +18,7 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The row `<sub>/slots/<имя>` is the family `slots`: the form `Platform/03-worker/data/slots.schema.json`, the outcomes
+The row `<sub>/slots/<name>` is the family `slots`: the form `Platform/03-worker/data/slots.schema.json`, the outcomes
 `Platform/03-worker/data/slots.outcomes.tsv` ([form](../../03-worker/data/slots.schema.json),
 [outcomes](../../03-worker/data/slots.outcomes.tsv)); the fields `holder`, `until`, `released`, `gen`, `server` are there and in P/03.2
 Н1.4.

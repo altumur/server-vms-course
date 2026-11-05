@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/group-of.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
 in chapters; the stage C guess W03-GROUP-01, the Architect's decision of 2026-10-23). The owner is lesson
 [P/04](../../04-controller/spec/04-controller.norms.md) (Н1.3 `group_by`; ADR-0011, ADR-0053). Participants: the controller —
 the placement of a group whole on one worker (P/04 Н1.3, Н3); the worker — the stamp `group` of a request submitted by the worker, and one

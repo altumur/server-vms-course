@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/row-check.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes
 is a contract, not copies in chapters; the stage C guess W03-E07, the Architect's decision of 2026-10-23). The owner is
 chapter [P/06.1](../../06-console/spec/06.1-console.norms.md) of the console (Н1.2 «Unit row», Н1.3 «Identifier», Н3
 «Common row check»). Participants: the units and tables door of the console (P/06.1 Н3 «create», «edit», «table — write a
@@ -20,7 +20,7 @@ P/06.1 Н3, their checks are the section «Order of checks» below.
 
 The unit row follows the catalogue manifest (`unit.fields`; the form of the manifest is `Platform/02-installer/spec/02.1-installer.schema.json`,
 [form](../../02-installer/spec/02.1-installer.schema.json)) and the section «Unit row» below. The unit state row
-`<sub>/state/<имя>/<id>` (section «Unit state») — the form `Platform/03-worker/data/state.schema.json`, the outcomes
+`<sub>/state/<name>/<id>` (section «Unit state») — the form `Platform/03-worker/data/state.schema.json`, the outcomes
 `Platform/03-worker/data/state.outcomes.tsv` ([form](../../03-worker/data/state.schema.json),
 [outcomes](../../03-worker/data/state.outcomes.tsv); C149-STATE-SUPPORT-01, the Architect's decision of 2026-10-26).
 
@@ -40,7 +40,7 @@ The unit row follows the catalogue manifest (`unit.fields`; the form of the mani
                                                    # the customer's library; gone — the time the door deleted the row, set by the door
                                                    # by its own clock (Н3 «delete»)
   deleted:   "true"                                # only in a tombstone; otherwise there is no element
-  <поле>:    <a value by its type>                 # each field of the manifest except the absent ones (below)
+  <field>:    <a value by its type>                 # each field of the manifest except the absent ones (below)
 values_by_type:
   string, url: as is
   int:        decimal notation
@@ -62,7 +62,7 @@ absent:
   - a field with inherit, if not set: there is no element (not "" and not "null")
   - a json field with the value null
 platform_fields:   [id, revision, deleted, worker, placement, epoch, phase, observed_revision, born, made, index]   # unit rows
-table_platform_fields: [by, at, made_at, held_by, garbled, revision, index]   # table rows — their own list (P/02.1 tables.<имя>.fields «не из»;
+table_platform_fields: [by, at, made_at, held_by, garbled, revision, index]   # table rows — their own list (P/02.1 tables.<name>.fields «не из»;
   # P/06.1 Н3 «table — write a row» step 1): a table field declared with a name from platform_fields of the unit (worker,
   # epoch, …) is an ordinary field; an unknown one is a refusal, as before (the stage C guess C06-ROWCHECK-TABLE-FIELDS-707-01, the
   # Architect's decision of 2026-10-25)
@@ -72,7 +72,7 @@ table_platform_fields: [by, at, made_at, held_by, garbled, revision, index]   # 
   # 400 «a client may not set …» (Н3 step 4), an edit keeps them (ADR-0091 items 1, 3); made — in the answer (Н2);
   # state is not an element of the row: the effective state of the unit — in the GET answer (Н2; P/03.6 Н1.7); worker/placement — the row <sub>/placement/<id> (P/04 Н1.1, added by М10/4);
   # epoch — the epoch row; phase, observed_revision — status[].phase, status[].observed_revision
-  # of the object <sub>/heartbeats/<имя> (P/03.4 Н1.1, added by М10/5)
+  # of the object <sub>/heartbeats/<name> (P/03.4 Н1.1, added by М10/5)
 ```
 
 The text forms of values by type are the vectors [`values-by-type`](../vectors/values-by-type/README.md) (review of stage A
@@ -180,10 +180,10 @@ An empty element is admissible in an ordinary list, but not in placement labels 
 
 ```yaml
 id:
-  named:                                    # unit.id: <поле>
+  named:                                    # unit.id: <field>
     rule:    the value of a non-secret field of type string, including the default of the type; a source with the suffix _secret is forbidden by the loader of P/02.1; one line; MUST be non-empty
     update:  the source field of the id is immutable even without fixed in the manifest; PUT may omit it or give the same id;
-             another value — 400 «<поле> is fixed» without a write; this door does not rename
+             another value — 400 «<field> is fixed» without a write; this door does not rename
     refused: empty; "." and ".."; contains `/`, `\`, `|`, `"`, `,`; control characters (Cc), line and
              paragraph separators (Zl, Zp); digits outside 0–9 (Nd not ASCII); categories — by the Unicode 15.0.0 tables (UnicodeData), as the NFKC of
              chapter 6.2; a character not assigned in this version belongs to none of them (added by review of stage A 2)
@@ -203,7 +203,7 @@ id:
     - the default port is not removed, the query is not sorted, an empty path is not replaced with «/»: «the same stream» is a meaning
       of the subsystem, not of the platform (ADR-0057)
 ref_and_must_match:                      # a field of a unit or a table (P/02.1 Н1.3)
-  ref:        <подсистема>/<семья>       # the target of the value v is the row <ref>/<v>
+  ref:        <subsystem>/<family>       # the target of the value v is the row <ref>/<v>
   must_match: {<target field>: <field of this row>}   # with a live target the values are equal; otherwise 409 conflict, fault must_match;
                                                   # an absent element of the target is equal to nothing, and "" too
   rules:
@@ -239,8 +239,8 @@ P2. preparation (section «Preparation of fields»), keeping the information on 
     group: there is no refusal — there is no value, it is empty or the host does not read — the unit is not in a group; bad_url of the source — the
     url step with the name of the field; the row check does not compute the group (explanation — P/04 Н1.3 group_by; RC-12)
 P3. named: the source field of the id is given or obtained non-empty from the default → by the section «Identifier and field constraints»; an empty or
-    not given id P3 skips: the refusal comes from P4 («needs a <поле>»), and for a field that is not required — bad id «is empty» after P4;
-    a creation over a tombstone: other fixed → «<поле> is fixed» (tombstone)
+    not given id P3 skips: the refusal comes from P4 («needs a <field>»), and for a field that is not required — bad id «is empty» after P4;
+    a creation over a tombstone: other fixed → «<field> is fixed» (tombstone)
 P4. required: each required field is given by the client and is not ""
 P5. references in order: direct ref / must_match of the row itself → reverse must_match (the rows that refer to it) →
     unique over live rows; within each — the order of unit.fields (RC-11). Reverse must_match, the first refusal: the referring
@@ -251,7 +251,7 @@ P5. references in order: direct ref / must_match of the row itself → reverse m
 
 edit (only the given fields, without filling defaults):
 R1. P1 and the checks of values of P2 over the given fields, except the blob subcase «not the former digest of the row» — it is in R2
-R2. by the row read: a fixed field changes or the given source field of a named id is not equal to the id → «<поле> is
+R2. by the row read: a fixed field changes or the given source field of a named id is not equal to the id → «<field> is
     fixed»; a blob field: the value is not the former digest of the row and not ""
 R3. references by the new values, in the order of P5
 ```
@@ -293,12 +293,12 @@ library — the outcome of the order `refused` and the count `creates.refused` o
 | `enum` is not from the list | P2 | `error: enum` | 400 |
 | the value of a field that is not `json` is not by the `schema` of the field | P2 | `error: type`, `detail` with the name of the field | 400 |
 | the value is not by the type of the field: not a number for `int`/`float`, not a boolean, not a list of strings, not a string | P2 | for numbers `error: not_number`, `fault: not_number`; otherwise `error: type`; `detail` with the name of the field | 400 |
-| an integer value of the field placement.weight.field < 1 | P2 | `{detail, error: type}`, without fault; `detail` «<поле> must be at least 1» | 400 |
+| an integer value of the field placement.weight.field < 1 | P2 | `{detail, error: type}`, without fault; `detail` «\<field> must be at least 1» | 400 |
 | `url` does not read, with credentials, with `#`, a scheme not from `schemes` | P2 | `error: bad_url`, `fault: bad_url`; `detail` without the value, with the names of the fields `credentials` ([address contract](url-credentials.md) A15) | 400 |
 | the labels are not by the label alphabet | P2 | `error: labels` | 400 |
 | the id is not by the section «Identifier and field constraints» | P3 | `error: bad_id`, `detail` with the name and the reason | 400 |
-| a `fixed` field changes (an edit or a return over a tombstone); the source field of the id changes | P3, R2 | `error: fixed`, `detail` «<поле> is fixed …» | 400 |
-| a `required` field is not set or is `""` | P4 | `error: required`, `detail` `a <sub> unit needs a <поле>` | 400 |
+| a `fixed` field changes (an edit or a return over a tombstone); the source field of the id changes | P3, R2 | `error: fixed`, `detail` «\<field> is fixed …» | 400 |
+| a `required` field is not set or is `""` | P4 | `error: required`, `detail` `a <sub> unit needs a <field>` | 400 |
 | `unique`/`ref`/`must_match` are violated; a referenced row does not read | P5, R3 | `error: conflict`, `fault: unique \| must_match \| garbled` | 409 |
 
 ## Vectors

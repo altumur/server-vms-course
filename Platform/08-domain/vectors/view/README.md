@@ -18,7 +18,7 @@ by the move of lesson 8 (the directory М11/01 is removed): the table is the onl
 ## Run
 
 Without a stand: the command `view` of an implementation gets the input (the column `input`) and prints the JSON `{view, shadow}`; `expect` is
-a subset of the fields of the output by the dictionary of the «Stand» ([the common acceptance README](../../../common/acceptance/README.md), `<код>
+a subset of the fields of the output by the dictionary of the «Stand» ([the common acceptance README](../../../common/acceptance/README.md), `<code>
 <JSON>`: the named fields exist and are equal, an array — by length, order and elements, a number — by value) or `@exit 2` (an input not
 of the form `ViewInput`). Each row is a separate run on a fresh state: the memory of the shadow report does not pass between rows.
 The `as_of` of the output is the wall seconds of the command process, it is not compared.
@@ -26,10 +26,10 @@ The `as_of` of the output is the wall seconds of the command process, it is not 
 ## Inputs and manifests
 
 The form of the input is `ViewInput`, of the output `ViewOutput` ([the contract of the lesson](../../spec/08-domain.api.openapi.yaml)): `manifests` are the manifests of the catalog,
-`holder` is the name of the holder, `passes` are the passes; in a pass `at` is the monotonic seconds of the holder, `members.<член>` is
+`holder` is the name of the holder, `passes` are the passes; in a pass `at` is the monotonic seconds of the holder, `members.<member>` is
 `{mark, stale?, objects}` (`mark` is the `rev` of the mark `reported` or `null`, `stale` is the field `stale` of the mark, `objects` are the pulses
-`<sub>/heartbeats/<воркер>` and the shards `<sub>/snapshot/<шард>` of the copy), `placements` are the placements
-`{<sub>: {<ref>: <член> | {cluster, copies?, origin?}}}` or `null` — the placements of this pass were not read (P/08.1 Н3
+`<sub>/heartbeats/<worker>` and the shards `<sub>/snapshot/<shard>` of the copy), `placements` are the placements
+`{<sub>: {<ref>: <member> | {cluster, copies?, origin?}}}` or `null` — the placements of this pass were not read (P/08.1 Н3
 step 3a; ADR-0091 addendum (13) item 1). The `shadow` of the output is the report of the last pass that built it (P/08.1 Н1.6 `unread`). The holder sees a change of the mark and of the pulse between the passes of the input; the first pass
 is the first look.
 

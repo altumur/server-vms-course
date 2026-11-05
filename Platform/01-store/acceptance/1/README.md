@@ -9,7 +9,7 @@ The stand and the dictionary of directives and doors are in [the common acceptan
 
 The format is the dictionary of directives and doors of the common acceptance README. Specific to chapter 1.1:
 
-- `expect` is `<код> <JSON-тело>`; the JSON is compared whole; `error` is compared only if it is named: its text is not normed.
+- `expect` is `<code> <JSON body>`; the JSON is compared whole; `error` is compared only if it is named: its text is not normed.
 - For a `200` answer to `GET /v1/list` the **order of names inside `keys`** is also checked: the sequence of names decoded from the JSON in the order received MUST equal the sequence in `expect`, which is given by UTF-8 bytes. The runner keeps this order when parsing the answer and does not sort what it received before the comparison. For example, in sc. 08 step 4 an answer with `b` before `a` is a mismatch, although the values match. For an empty `keys` the sequence is empty. Spaces and the way of JSON escaping are insignificant; the order of other objects, `items` included, is still not checked.
 - `$имя` binds only a JSON string (Н1: a version is a string on the wire); a number or another type is a mismatch of the step.
 - Only for the body refusal in sc. 22 step 1 the optional field `size` is admitted: if it is present, it is the integer

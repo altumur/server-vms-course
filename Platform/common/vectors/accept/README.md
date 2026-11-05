@@ -36,7 +36,7 @@ witnesses and contributions (`accept-36`…`accept-39`) — `["testsub", "testsu
 The bytes of `testsub2` changed on 2026-11-04 (the roadmap 4.5): the token kind `vault` with `keep: true` was added to `domain.tokens`, then the comments of the header were rewritten without the names of test files; the fields on which the expectations of this table depend were not touched — a recheck by the oracle is not needed.
 
 A change of these bytes is a reason to recheck the table.
-Who performs is the holder (`08-domain`, the process `domain`: P/08.3 Н3 «accept» on `POST /api/member/<член>` and the relay batch with `via`) and the relay (`09-agent`, the door over its own memory, P/09.2 Н2) — all rows. They only read the result: the member's agent (the side of P/09.1 — the answer `carry` and 409 of the holder, Н3 «the agent pass») and the domain console (`10-domain-console` — the mark `reported`, P/10 Н3 `alarms`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who performs is the holder (`08-domain`, the process `domain`: P/08.3 Н3 «accept» on `POST /api/member/<member>` and the relay batch with `via`) and the relay (`09-agent`, the door over its own memory, P/09.2 Н2) — all rows. They only read the result: the member's agent (the side of P/09.1 — the answer `carry` and 409 of the holder, Н3 «the agent pass») and the domain console (`10-domain-console` — the mark `reported`, P/10 Н3 `alarms`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Files
 

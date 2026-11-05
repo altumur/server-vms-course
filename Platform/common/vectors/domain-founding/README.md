@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/domain-foun
 
 The owner is [the domain founding contract](../../contracts/domain-founding.md) (the finding of «Спецификация» I02-FOUND, the Architect's decision
 of 2026-10-23). The participants are the installer (P/02.4 Н3 «domain installation», the change commands) and the process `domain`
-of the holder (the term record 1). The keys are derived from constant bytes (`sha256("w2c test <слово>")`); the bytes are written by «Спецификация».
+of the holder (the term record 1). The keys are derived from constant bytes (`sha256("w2c test <word>")`); the bytes are written by «Спецификация».
 
 UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; the first non-skipped one is the header `case<TAB>…<TAB>expect<TAB>note`.
 

@@ -30,17 +30,17 @@ of `testsub`, the resource of its own server (`srv-hold`, `srv-m1`, `srv-m2`). T
 (`@install domain`, `@start domain`, `@start agent`) or by the directive `@domain`. The domain name is `acme`; the recovery file of the
 installation is `{recovery}` in the instance directory.
 
-- `store` at `member <кластер>` is the store door of the cluster through `admin.sock` (the preparation and the observation of the domain rows).
-- `resource` without a prefix is the resource door of `hold`: through it the holder's objects `domain/members/<член>/…` are read.
+- `store` at `member <cluster>` is the store door of the cluster through `admin.sock` (the preparation and the observation of the domain rows).
+- `resource` without a prefix is the resource door of `hold`: through it the holder's objects `domain/members/<member>/…` are read.
 - Do not speed up the clocks: LOST_AFTER 45 s, REPORT_EVERY 5 s, MARK_REFRESH 22.5 s; the `@until` terms are taken with a margin.
 
 **Scenarios 15, 16** (from the acceptance README of М11/04), **21 and 25**: there are four clusters — `hold`, `m1`, `m2`, `relay`. The agent `relay` always
-opens the relay door (`RELAY=1`, `{relay_port}`); the directives `@domain <кластеры>`, `@start agent <кластер> via
+opens the relay door (`RELAY=1`, `{relay_port}`); the directives `@domain <clusters>`, `@start agent <cluster> via
 relay`, `@stop agent`. The topology is empty until the step that writes it.
 
 **Scenarios 20–22** (the coverage audit of P/08, audit-kimi 1e9929d51) — the view fields of chapter 8.1 on the stand:
 - sc. 20 — `trust` and `topology` of the view ([chapter 8.1](../../spec/08.1-domain.norms.md) Н1.2а, Н1.6а): before the topology is written —
-  exactly `{rev: 0, star: [], via: {}}`; `trust.rev` is the same `rev` of the set as `reports.<член>.keys_rev` after `@domain`
+  exactly `{rev: 0, star: [], via: {}}`; `trust.rev` is the same `rev` of the set as `reports.<member>.keys_rev` after `@domain`
   (the readiness of `@domain` — each member holds the holder's set); the written topology is seen in the view by the next pass
   (`@until`). `m2` in `via` is not a relay — there are no refusals of Н1.2; the direct report of `m1` is the second road (Н1.3а).
 - sc. 21 — `relay_refused` (Н1.6а): the mark of `m1` at the holder is spoiled (`@stop domain`, then `@on hold @spoil object` — the writer of the
@@ -69,7 +69,7 @@ a change of the centres at the member is rewritten by its next report. Steps 14�
 **Scenario 19** — a neighbour on the stand: the door `GET /domain/members` of the domain console ([lesson P/10](../../../10-domain-console/spec/10-domain-console.norms.md)
 Н1.2б, P/10-07; C10-MEMBERS-SOURCE-01, C10-MEMBERS-KNOCKING-ABSENT-01). The process `domain` is stopped (step 2), so that the pass of
 the holder does not rewrite the view; in its place the view `inputs/view-member-list-ghost.json` is put: only `hold`, there is no field `knocking` (step 3). Step 4 shows that the domain console reads this view. Step 5: `members` is the
-doc of the rows `domain/member-rows/<раздел>` (`hold`, `m1`, `m2`), not the view; there is no field `knocking` in the read view —
+doc of the rows `domain/member-rows/<part>` (`hold`, `m1`, `m2`), not the view; there is no field `knocking` in the read view —
 `knocking: []`.
 
 **Scenario 17** (from the acceptance README of М11/12): the agent `m1` holds the row of its own section — the holder's answer is without `members`. An edit of `ca` changes this row — the copy
@@ -115,11 +115,11 @@ Sc. 03 does not depend on the moment of the backup copy (chapter 8.8: `first`, `
 it the snapshot is there for any number of generations between them (a generation carries all objects of the member, Н1.3).
 
 **Scenarios 23–28** (23–26 — the coverage audit of P/08, the second pass of Gemini, the draft G03 `e32df6f8b`, rewritten; 27 — ADR-0094 B3, B4; 28 — C08-STOLEN-KEY-ENTRY-01):
-- sc. 23 — a repeat of the admission (Н3 «принять члена» step 1, D20): the stand is brought up by hand, as sc. 01; step 5 also waits for the `key`
+- sc. 23 — a repeat of the admission (Н3 «admit a member» step 1, D20): the stand is brought up by hand, as sc. 01; step 5 also waits for the `key`
   of the holder in the list — further the list does not rewrite itself, and the `rev` after the admission (`$r1`) does not change. The same fingerprint —
   200 without a write (the same `rev`, step 9 reads it again); another one — 409 «… was admitted with another key: have it leave first»;
   `m2` without an agent does not knock — 404.
-- sc. 24 — `POST /domain/members/<член>/ca` (Н1.6 `admin`): a list not in ascending order is written in ascending order; the same
+- sc. 24 — `POST /domain/members/<member>/ca` (Н1.6 `admin`): a list not in ascending order is written in ascending order; the same
   list again — a new write (`rev` grows). The agent `m1` has no TLS kit — `on_accept` does not rewrite the edit.
 - sc. 25 — the removal of the centre and of a route by an edit of the topology (Н1.2 `centre`, `put_order`): `centre: ""` and `via: {"m1": ""}`
   remove the centre and the route; `centre: null` — too.
@@ -130,11 +130,11 @@ it the snapshot is there for any number of generations between them (a generatio
   `If-Match` with `base_rev`: different ones and the index next to it — 400, equal ones — a write (steps 10–12). The index of the former version no longer fits (step 13), the current one fits (steps 14, 15).
   Step 17 repeats step 16 with the former `If-Match`: without the memory this would be a 412 of one's own write; step 22 gives the saved 412 with `revision: 4`, although the row is already at 5.
   Step 24: `<key>` — `sha256("root" ‖ 0x00 ‖ "PUT" ‖ 0x00 ‖ "/domain/topology" ‖ 0x00 ‖ "t-r1")`; `body` is judged by a substring: the order of the fields of the body is the implementation's.
-  Steps 27–31 — `If-Match` by the row `domain/member-rows/<раздел>`: `$m` is the `rev` of the list, the number depends on the course of `@domain`. Step 30: a non-member — 404 before the condition; step 31: the admission judges the condition first.
+  Steps 27–31 — `If-Match` by the row `domain/member-rows/<part>`: `$m` is the `rev` of the list, the number depends on the course of `@domain`. Step 30: a non-member — 404 before the condition; step 31: the admission judges the condition first.
   The stand does not bind the value of `ETag`: it judges the quotes of the header, and the index — through `If-Match` from the store row.
-- sc. 28 — a machine came back after a theft (Н3 «принять члена» steps 1, 4, 6; the contract of the admission of a report `forget`; C08-STOLEN-KEY-ENTRY-01): `stolen` is not caused on the stand, the record of `m1` without `key` is seeded by `admin.sock`. Step 3: the key of the agent is in `revoked_keys` — the knock is kept, the admission 409. Step 6: `revoked_keys` holds a foreign key, therefore the key of the agent plays the new key of the machine — the admission 200, `revoked_keys` remained, the knock is removed. Not run by an implementation.
+- sc. 28 — a machine came back after a theft (Н3 «admit a member» steps 1, 4, 6; the contract of the admission of a report `forget`; C08-STOLEN-KEY-ENTRY-01): `stolen` is not caused on the stand, the record of `m1` without `key` is seeded by `admin.sock`. Step 3: the key of the agent is in `revoked_keys` — the knock is kept, the admission 409. Step 6: `revoked_keys` holds a foreign key, therefore the key of the agent plays the new key of the machine — the admission 200, `revoked_keys` remained, the knock is removed. Not run by an implementation.
 
-Not taken from the draft G03: 503 of step 0 of «принять члена» with an unreadable `domain/view` — the view object is rewritten by the pass of
+Not taken from the draft G03: 503 of step 0 of «admit a member» with an unreadable `domain/view` — the view object is rewritten by the pass of
 the holder once in `VIEW_EVERY` (3 s), the stand will not hold the spoiling window (a race, by reading; with `domain` stopped there is no door);
 the refusal of the agent door with an unreadable `domain/revoked` (C08-CARRY-UNREADABLE-01) —
 `@carry` sees only the answer 200, and `silent` after LOST_AFTER does not tell the cause (by reading). The expectation of the draft `star: []`

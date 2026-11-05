@@ -4,8 +4,8 @@ This English text is the source; the Russian translation `ru/vectors/sealing/REA
 
 The vectors of [the sealing contract](../../contracts/sealing.md): the AAD path, the envelope `enc:v2`, the opening and the ring file. The implementation
 of every process that seals or opens (the installer — `w2cctl secrets`, the worker, the console, the domain processes)
-passes them by its own function, without a stand. The keys and the nonce are deterministic: a key is 32 bytes `sha256("w2c test <слово>")`,
-a nonce is the first 12 bytes of `sha256("w2c test <слово>")`; in operation a nonce is 12 random bytes, the vectors fix it. The table does not name
+passes them by its own function, without a stand. The keys and the nonce are deterministic: a key is 32 bytes `sha256("w2c test <word>")`,
+a nonce is the first 12 bytes of `sha256("w2c test <word>")`; in operation a nonce is 12 random bytes, the vectors fix it. The table does not name
 the words of derivation: the keys and the nonce are fixed in the tables as bytes (`key_hex`, `nonce_b64url`), an implementation
 takes them from there and does not derive them anew (Kimi's addition to the review analysis of stage A 6–7, `SA67-Б3`).
 

@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/requests-body/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) Н1.5 `<поля тела>`: «строка — как есть, иное значение — канонический JSON (JCS, ADR-0072)»;
+The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) Н1.5 `<body fields>`: «строка — как есть, иное значение — канонический JSON (JCS, ADR-0072)»;
 Н2: the `fault` of the requests door is only `too_long`). The participants are the units and tables door of
 [chapter 6.1](../../spec/06.1-console.norms.md) (a field of type `json`: the value as is, the ceiling `JSON_CEILING`, `not_json`) and
 the worker that writes a request itself ([chapter 3.6](../../../03-worker/spec/03.6-worker.norms.md) Н1.5: the fields of the row body
@@ -30,7 +30,7 @@ the JSON text is written the way JSON writes them in a string (`\t`, `\n`).
 ## Stand
 
 Both sides file through one stand: a family whose schema says `v: {maxLength: 32}` (the request row: `POST /<sub>/requests
-{"unit": <единица>, "v": <body>}`, the field `v` of the row is read back), and the table `counters`, whose field `doc` is of type `json`
+{"unit": <unit>, "v": <body>}`, the field `v` of the row is read back), and the table `counters`, whose field `doc` is of type `json`
 (`POST /counters {"name": …, "doc": <body>}`, the field `doc` of the unit is read back); a refusal is the `fault` of the 400 answer.
 
 The stand manifest is `Source/tests/testdata/testsub.subsystem.yaml` with two changes and no others (a copy in the temporary
@@ -42,7 +42,7 @@ directory of the stand; the source file does not change):
 
 Before the table, the unit `c1` is created; the requests are filed to it. Processes other than the store and the console are not started.
 The row is read by a role with the right to read `testsub/` through the store door; a refusal is 400 with `fault` (or without it) and no
-row. A repeated filing of a `json` row (below) is `PUT /counters/<name> {"doc": <прочитанное значение>}` (an edit of chapter 6.1),
+row. A repeated filing of a `json` row (below) is `PUT /counters/<name> {"doc": <read value>}` (an edit of chapter 6.1),
 then the field `doc` is compared again. The stand is one fresh stand for the whole table (analysis of the reading of the «cammeta-acceptance» commits
 2026-10-20: preparation is the data of the package, not a choice of the runner).
 
@@ -66,7 +66,7 @@ door of the console (`06-console`, chapter 6.1); `request` — the requests door
 itself (`03-worker`, chapter 3.6 Н1.5; with its own body-writing function, without the console stand) (ACC-VECTORS-CONNECT-02, the Architect's decision of 2026-10-26).
 
 For the worker (`03-worker`, the rows `request`, 52: 46 accepted, 1 `too_long`, 5 `<refused>`) the input of the single command `vectors` is
-`cells: {body}`, the cell as is; the native outcome is code 0 and `{"stored": <строка>}` for an accepted row (`<empty>` — `""`)
+`cells: {body}`, the cell as is; the native outcome is code 0 and `{"stored": <row>}` for an accepted row (`<empty>` — `""`)
 or `{"fault": "too_long"}` or `{"fault": "<refused>"}` — by the column `fault`; the comparison is by value. `too_long` for the worker
 is judged not by the writing function but by the check of the body against `requests.schema` before filing (P/03.6 Н1.5) — by the schema of the package stand
 (`v: {maxLength: 32}`, the length by the written text); a refusal by the schema is the outcome `refused` of the norm, in the vector it is distinguished

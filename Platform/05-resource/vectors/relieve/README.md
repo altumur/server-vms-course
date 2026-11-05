@@ -19,7 +19,7 @@ the heartbeat field, or it is absent); `expect` — `{action: write, free}` (wri
 
 The heartbeat field of the resource `short` (P/05 Н1.4; the guess of stage C R05-G03, the Architect's decision of 2026-10-23). The same rules of the file; the header is `case<TAB>input<TAB>expect<TAB>note`.
 `input` — `{space, server, volumes, subs, heartbeats}`: the row `platform/space`, the server of the resource, the volumes (`name`, `used`, `total`),
-the subsystems with `requests.free`, the heartbeats of the workers (as in `cases.tsv`); `expect` — `{short: <целое>}`: Σ over the volumes of the largest `need`
+the subsystems with `requests.free`, the heartbeats of the workers (as in `cases.tsv`); `expect` — `{short: <integer>}`: Σ over the volumes of the largest `need`
 (> 0) among the subsystems — each subsystem has the `need` of a volume per Н3 `relieve` (`used − total·low − Σ freeing`, rounded up to a byte), only
 for a volume above `high`. 6 cases: two volumes and two subsystems, a volume below `high`, everything is being freed, `space` is disabled, no subsystems,
 rounding up.

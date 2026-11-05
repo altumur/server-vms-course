@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/log-mask.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): all processes of the platform write the mask into the log — the console,
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): all processes of the platform write the mask into the log — the console,
 the worker, the resource, the domain processes; a contract, not copies in chapters; the stage C guess C06-LOG-MASK-33-01, the
 Architect's decision of 2026-10-25). The owner is chapter [P/06.2](../../06-console/spec/06.2-console.norms.md) of the console (Н1.4 `never`
 `log`). The participants are all processes of the platform that write a log (id-map: М10/7-08 → P/06.2-05, «все процессы»). The parsing

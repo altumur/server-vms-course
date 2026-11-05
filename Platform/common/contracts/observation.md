@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/observation.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5): a contract that several processes read lies in
+A common contract of the module «Platform» (ADR-0083 addendum (5): a contract that several processes read lies in
 `Platform/common/`; the Architect's decision on the review of stage A 6–7, № 1, № 2). The owner is lesson
 [P/04](../../04-controller/spec/04-controller.norms.md) (Н1.4: the constant `LOST_AFTER` and the judge; the blocks are moved from there; review of stage B 6–7, № 35). Readers: the controller — the pool, the judge
 of a slot, the decommissioning of a server ([P/04](../../04-controller/spec/04-controller.norms.md) Н1.4, Н3), the console — the outputs of observations
@@ -29,9 +29,9 @@ an outcome row of the field (`build`, `schema`, `retention_garbled`, `retention_
 readable; only the outcome «the whole object» makes the heartbeat unreadable (a field outside the closed form included).
 
 The other forms by which observers read (layout audit, V-38–V-40, B-16; the Architect's decision of 2026-10-25): the place hold row `<sub>/holds/<place>` —
-`Platform/03-worker/data/holds.schema.json`, `Platform/03-worker/data/holds.outcomes.tsv`; the worker heartbeat `<sub>/heartbeats/<имя>`
+`Platform/03-worker/data/holds.schema.json`, `Platform/03-worker/data/holds.outcomes.tsv`; the worker heartbeat `<sub>/heartbeats/<name>`
 — `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; the contender mark
-`<sub>/contenders/<имя>/<коробка>` — `Platform/03-worker/data/contenders.schema.json`,
+`<sub>/contenders/<name>/<box>` — `Platform/03-worker/data/contenders.schema.json`,
 `Platform/03-worker/data/contenders.outcomes.tsv`; the decision rows `<sub>/controller/placement_intent` and `<sub>/placement/<id>`
 — `Platform/04-controller/data/placement-intent.schema.json`, `Platform/04-controller/data/placement-intent.outcomes.tsv`,
 `Platform/04-controller/data/placement.schema.json`, `Platform/04-controller/data/placement.outcomes.tsv`. The version of an object
@@ -206,7 +206,7 @@ stays at the writer (P/03.2 Н1.2). The reader is the console: `WorkerRow.name_c
 
 ```yaml
 CONTENDER_FRESH: 300   # s; the freshness bound of a contender mark
-contender: a contender mark <sub>/contenders/<имя>/<коробка> (contenders.schema.json, section «Form») is fresh — the age of its observed version
+contender: a contender mark <sub>/contenders/<name>/<box> (contenders.schema.json, section «Form») is fresh — the age of its observed version
            (section «Observation of a version» age) on the monotonic clock of the reader ≤ CONTENDER_FRESH; the first look — age 0
            (first); the field at is a display, not an input of the judgement (changed: the clock of the writer does not prove freshness); older than
            CONTENDER_FRESH — do not count it, as if there were no mark; an unreadable one (not by the form contenders.schema.json) —

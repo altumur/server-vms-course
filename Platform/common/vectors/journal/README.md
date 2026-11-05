@@ -24,7 +24,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; 
 
 The same file rules; the header `case<TAB>input<TAB>expect<TAB>note`. The rows `read-*` are reading: `input` is
 `{entry, suffix, name_file}`: the name of the directory entry, the suffix of the norm of the compound component (`""`, `.lock`, `.alarms`) and
-the content of the file `<entry без суффикса>.name` as a string or `null` — there is no file; `expect` is the original component as a JSON string
+the content of the file `<entry without the suffix>.name` as a string or `null` — there is no file; `expect` is the original component as a JSON string
 or `@skip` — the entry is skipped with a count, as an unreadable one. The rows `write-*` are writing: `input` is `{component,
 name_file}`: the original component and the current content of `.name` (`null` — none); `expect` is `write` (the writer writes
 `.name`), `keep` (it matches — leave it), `refuse` (it does not match — a refusal without overwriting).

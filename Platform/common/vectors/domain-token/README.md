@@ -27,7 +27,7 @@ Who performs it — every checker of a token, all rows by one function (`expect`
 
 The keys of the inputs of chapter [P/08.2](../../../08-domain/spec/08.2-domain.norms.md) (the packages `keys`, `domain-token`,
 `domain-envelopes`; the book acceptance key — and the package `assemble`) are test keys and open: the seed of each is `sha256("w2c test
-<слово>")`, the words are `root 1` (the root of the domain `acme`),
+<word>")`, the words are `root 1` (the root of the domain `acme`),
 `root 2` (a foreign root), `token key 1…3` (the token keys `t1…t3`), `book seal 1`, `book seal 2` (the book acceptance keys),
 `member m1` (the member key in `revoked_members`), `eph 1…3` (one-time pairs of the vector envelopes; `nonce` — the bytes 0…11).
 The envelope vectors are sealed with these `eph` and `nonce` only for reproducibility; an implementation takes
@@ -52,7 +52,7 @@ of the acceptance.
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](cases.tsv), 53 rows: 12 `ok`, 31 refusals, 10 `@exit 2` | `input` — the input of the command `token` as JSON text (`keys` — the set document, `revoked` — `{jtis}` as read or `null`, `now`, `token`, `expect?` — `{kind, cluster, audience_claim?}`, `kind` — a string or a list of kinds) → `expect` — `{"result":"ok","payload":{…}}` (a subset of the fields of `payload`) or `{"result":"refused","reason":<слово>}`: `unknown_key` (a former key after `until`, the key is not in the set, a stolen key after a new set), `bad_signature` (a substituted `payload`), `not_a_token` (two parts, `alg` not `EdDSA`, a repeated key in `header`), `bad_claims` (no `jti`, `jti` not by the grammar, no `kind`, `exp` as a string), `expired`, `future`, `revoked`, `no_revocations` (`jtis` not a string, the `exp` of an entry — a word, a leading zero, not finite), `wrong_kind`, `wrong_audience` (a foreign cluster, the audience field `audience_claim`) |
+| [`cases.tsv`](cases.tsv), 53 rows: 12 `ok`, 31 refusals, 10 `@exit 2` | `input` — the input of the command `token` as JSON text (`keys` — the set document, `revoked` — `{jtis}` as read or `null`, `now`, `token`, `expect?` — `{kind, cluster, audience_claim?}`, `kind` — a string or a list of kinds) → `expect` — `{"result":"ok","payload":{…}}` (a subset of the fields of `payload`) or `{"result":"refused","reason":<word>}`: `unknown_key` (a former key after `until`, the key is not in the set, a stolen key after a new set), `bad_signature` (a substituted `payload`), `not_a_token` (two parts, `alg` not `EdDSA`, a repeated key in `header`), `bad_claims` (no `jti`, `jti` not by the grammar, no `kind`, `exp` as a string), `expired`, `future`, `revoked`, `no_revocations` (`jtis` not a string, the `exp` of an entry — a word, a leading zero, not finite), `wrong_kind`, `wrong_audience` (a foreign cluster, the audience field `audience_claim`) |
 
 Boundaries: `now = exp + 60` — `ok`, `exp + 61` — `expired`; `now = iat − 60` — `ok`, `iat − 61` — `future`; `expect` with
 `cluster: null` (`person`) — the audience is not checked.
@@ -97,7 +97,7 @@ The rows of `corrections.tsv` of the acceptance of М11/02 before the move and t
 | 2026-10-17 | 02/inputs/token-*, sc. 05 step 7, sc. 12 | the Architect's decision on М11/7 item 6 and the addition: kind at every token (without it — bad_claims); the check by the recipient — wrong_kind, wrong_audience |
 | 2026-10-18 | 02/scenarios.tsv: 02/02, 02/03; keys-18, keys-19 | run 41, mutations №7, №8: kid not root before a foreign domain; the signature before book_seal (a double error — the first refusal in order) |
 | 2026-10-18 | 02/scenarios.tsv; inputs | run 41, mutations №6: iat = now + 60 — ok |
-| 2026-10-18 | 02/scenarios.tsv; inputs | run 41, mutations №9, №10: a revocation entry not «`<jti>:<число JSON>`» — no_revocations; the audience by audience_claim, not by aud |
+| 2026-10-18 | 02/scenarios.tsv; inputs | run 41, mutations №9, №10: a revocation entry not «`<jti>:<JSON number>`» — no_revocations; the audience by audience_claim, not by aud |
 | 2026-10-18 | 02/scenarios.tsv; inputs | run 41, mutations of the signature class: a set signature of 63 bytes; exp as a string — bad_claims |
 | 2026-10-19 | 03 step 8, 07 step 6, 11 step 2; inputs keys-21, token-29, seal-round-02 | reconciliation of М11 01–04 (S1, T3): a book_seal of small order — no_book_seal and not_an_envelope at seal-round, the exp of a revocation not finite — no_revocations |
 | 2026-10-20 | the move | the scenarios 04-token-keys, 05-token-form, 06-token-clock, 07-token-revoked, 12-token-kind-and-audience from М11/02 (stage B) — the vector rows common/vectors/domain-token/cases.tsv (29), the inputs inputs/token-*.json — the input cells without a change of bytes; the expectations reconciled by an oracle against the text of the domain token contract «Проверка» |

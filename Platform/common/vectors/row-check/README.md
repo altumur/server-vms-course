@@ -21,7 +21,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; 
 | Field | Meaning |
 |---|---|
 | `case` | the name of the case, unique |
-| `unit` | `<подсистема>/<rows>` — the units table of a manifest, or `<подсистема>/<таблица>` — a table of a manifest (a table row: `P1` by `table_platform_fields`, the preparation — «Table row» of the contract) |
+| `unit` | `<subsystem>/<rows>` — the units table of a manifest, or `<subsystem>/<table>` — a table of a manifest (a table row: `P1` by `table_platform_fields`, the preparation — «Table row» of the contract) |
 | `op` | `create` — creation (`P1`–`P5` of the contract), `edit` — an edit (`R1`–`R3`) |
 | `body` | the passed fields — a JSON object; numbers are lexemes as written (`1e2`, `-0`) |
 | `stored` | for `edit` — the read row; for `create` — the tombstone over which one creates; empty — there is no row. A JSON object in the form of a unit row (the elements are strings) |
@@ -48,7 +48,7 @@ Who performs: the units door of the console (`06-console`) — all rows; the cus
 tables (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-26).
 
 The native outcome of `cases.tsv` is code 0 and one JSON object: `ok` — `{"result": "ok", "row": {…}}`, `row` — the prepared row
-`{элемент: текст}` (no element — no key); `refused` — `{"result": "refused", "word": "<fault или класс>", "field": "<поле>"}`
+`{элемент: текст}` (no element — no key); `refused` — `{"result": "refused", "word": "<fault or class>", "field": "<field>"}`
 (no field — no key `field`). Compared are `result`, `word`, `field` and for `ok` — the elements named in the column `row`
 (`@absent` — no key; a list in the form of a JSON array — by value); the column `step` is not compared — it is for a human: the step
 of the contract (C06-VECTOR-ROWCHECK-WIRE-168-11, the Architect's decision of 2026-10-27; the input and the algorithm do not change).

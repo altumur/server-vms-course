@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The module of specification lessons of the platform, sliced by micromodules: one lesson — one process or library (ADR-0083).
-The catalogue of a lesson is `NN-<процесс>`; the lesson number is the address of the owner (`P/NN`), the map — [`lessons.tsv`](lessons.tsv).
+The catalogue of a lesson is `NN-<process>`; the lesson number is the address of the owner (`P/NN`), the map — [`lessons.tsv`](lessons.tsv).
 Common to all — [`common/`](common/README.md); the layers of V7 — [`common/LAYERS.md`](common/LAYERS.md), the pinned versions of the libraries — [`common/versions/`](common/versions/README.md). The design note — `Platform/module-design.md` (for people, not in the export).
 
 | P | Catalogue | Micromodule |

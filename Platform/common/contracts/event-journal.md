@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/event-journal.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5): a contract that several processes read and write lies in
+A common contract of the module «Platform» (ADR-0083 addendum (5): a contract that several processes read and write lies in
 `Platform/common/`; review of stage A 3–5, № 9). The owner is the resource [P/05](../../05-resource/spec/05-resource.norms.md):
 it reads the buckets (the index P/05 Н1.3), copies the closed ones (P/05 Н1.4 `mirror`), removes them by term and pulls them back
 (P/05 Н3 «resource pass», Н1.4 «Bucket restore»); the order of writing a line is the section «Writing a line» below (moved
@@ -21,18 +21,18 @@ Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-С�
 ```yaml
 line:                                        # one JSON line in the bucket file
   t:        <seconds of the wall clock of the writer when written>  # MUST; selects the bucket
-  kind:     <вид>                                                  # MUST
+  kind:     <kind>                                                  # MUST
   id:       e1-<hexUTF8(tree)>-<hexUTF8(unit)>-<epoch>-<hexUTF8(instance)>-<number>                   # MUST; unique; duplicates of copies are removed by it
   of:       <sub>/<id>                                             # the unit the line is about; set by the platform from about;
                                                                    # its own of — only the trees console and audit
   class:    alarm                                                  # only in an alarm; observation is not written
-  occurred: <секунды>                                              # when it happened; optional
+  occurred: <seconds>                                              # when it happened; optional
   # t and occurred are time of common.time, as all times (P/01.1 Н0 «Time in a row»): the writer writes strictly (the codec
   # Platform/common/data/codec.tsv time: a number, up to three fraction digits), the reader reads tolerantly (a number or a string by
-  # the codec of the reader); the form of the line — the families events of P/05 by tree (Platform/05-resource/data/events-<дерево>.schema.json and .outcomes.tsv: events-unit,
+  # the codec of the reader); the form of the line — the families events of P/05 by tree (Platform/05-resource/data/events-<tree>.schema.json and .outcomes.tsv: events-unit,
   # events-unit-alarms, events-audit, events-audit-alarms, events-console, events-console-alarms, events-mirror); the vectors of reading —
   # common/vectors/journal bucket.tsv t-* (the stage C guess EJ-G07, the Architect's decision of 2026-10-23)
-  <поля>:   words of the subsystem                                 # v is not written: absence = version 1; v is a positive
+  <fields>:   words of the subsystem                                 # v is not written: absence = version 1; v is a positive
                                                                    # integer by the form, v = 2 is kept, there is no choice of behaviour
                                                                    # by v (EJ-L04); v is an additional
                                                                    # field, the reader tolerates it, the writer writes strictly by the form
@@ -42,9 +42,9 @@ line:                                        # one JSON line in the bucket file
             that is deeper — a refusal to the caller, nothing is written; the reader (the resource, the merger — the console and the worker) — the line
             is unreadable: a skip and the count garbled (lines_garbled, P/05 Н1.3), as the others not by the form (EJ-DEPTH-BASELINE33, the Architect's decision of 2026-10-25)
 bucket:
-  path:     <root>/<дерево>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl    # root: RESOURCE_ROOT | <PLATFORM_DIR>/events;
+  path:     <root>/<tree>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl    # root: RESOURCE_ROOT | <PLATFORM_DIR>/events;
                                                                           # the tree — <sub> of the subsystem, console or audit (review of stage B 6–7, № 35)
-  alarms:   <root>/<дерево>.alarms/<unit>/e<epoch>/…                              # each tree has a tree of its own
+  alarms:   <root>/<tree>.alarms/<unit>/e<epoch>/…                              # each tree has a tree of its own
   span:     600 s; the start = floor(t / 600) × 600 by UTC; closed when end ≤ now; rolls only by the clock
   years:    the year of the bucket name — four digits, 0001–9999 (from below time is limited by t ≥ 0, P/01.1 Н0); t later than the year 9999 — a refusal
             of the write before an id is allocated (vectors common/vectors/journal years.tsv; the stage C guess EJ-G06)
@@ -52,7 +52,7 @@ bucket:
   modes:    the group of the event trees — w2c-events (P/02.4 Н1.1 users_groups; the events root — RESOURCE_ROOT (the environment file contract «Environment variables»; the default
             <PLATFORM_DIR>/events, the same object; EJ-G12) — 2771 w2c:w2c-events:
             passage for others without reading, the path to the presence locks .workers — the presence lock contract modes, the stage C guess PL-G03, the Architect's decision of 2026-10-23,
-            Н1.1 dirs); a directory in which more than one user of the group writes or deletes (the tree, <unit>, e<эпоха>:
+            Н1.1 dirs); a directory in which more than one user of the group writes or deletes (the tree, <unit>, e<epoch>:
             created by the writer, the closed buckets are deleted by the resource P/05), — 2770; a directory of one writing user — 2750;
             a bucket file — 0660 if processes of different users of the group write it, otherwise 0640; the writers and the readers are
             members of the group by the units of P/02.4 (workers, the console, controllers, the resource, the domain processes); others — nothing;
@@ -69,7 +69,7 @@ bucket:
             the stage C guess EJ-G03, the Architect's decision of 2026-10-23)
 class:      [alarm, observation]             # closed; the class of a line is its field class: alarm — an alarm, no field —
                                              # observation; the index takes the class from the field, the tree does not override it;
-                                             # the layout .alarms is at the writer: it puts an alarm into <дерево>.alarms of any
+                                             # the layout .alarms is at the writer: it puts an alarm into <tree>.alarms of any
                                              # tree, audit.alarms and console.alarms included (the term alarms_retention)
                                              # (the Architect's decision, the second pilot, N-2; changes the choice of the reconciliation М10/6–11 E18)
 ```
@@ -77,11 +77,11 @@ class:      [alarm, observation]             # closed; the class of a line is it
 ## The journal and the writers of the file
 
 ```yaml
-journal:    the tree audit/<роль>/e1/…: the lines of the platform about itself (unit.created|changed|deleted, door.issued, pass.called, schema.raised,
+journal:    the tree audit/<role>/e1/…: the lines of the platform about itself (unit.created|changed|deleted, door.issued, pass.called, schema.raised,
             events.removed, policy.changed, drain.*, server.*, worker.name_taken (alarm), door.keys_conflict (alarm; P/06.5 Н3 «/where/<id>»; the Architect's decision of 2026-10-20, review of stage B 6–7), worker.name_back (observation; chapter P/03.2 Н3 «rejoin»), worker.hung, clock.skew, free_ask.key_taken, …);
             fields: what the line is about — sub and target (the unit; not subsystem/unit), the address of the client in lines about a door — addr;
             these fields have no second name (ADR-0069)
-door_journal: the door journal of a subsystem process (P/03.4 Н1.7 journal) — lines of door kinds in audit/<роль>/e1 by its own writer
+door_journal: the door journal of a subsystem process (P/03.4 Н1.7 journal) — lines of door kinds in audit/<role>/e1 by its own writer
             of the journal (writer below); the common fields: user (the name from the door token) or role (the role of the leaf), sub (the subsystem of the door),
             target, of, bytes (the bytes of the body served), status (the code of the answer), addr (the address of the client); the kinds and their fields beyond
             the common ones are named by the owner lesson of the door (archive.read — V/02) (ADR-0091 addendum (7) item 4, addendum (8) item 9); the same
@@ -89,7 +89,7 @@ door_journal: the door journal of a subsystem process (P/03.4 Н1.7 journal) —
             x_operator) — role: "console"; without an accepted header there is no field; there is no new kind (C10-XOPERATOR-JOURNAL-01)
 writer:     the console is a separate process; it writes the journal and the marks into the events root of its server (the same as
             that of the resource of this server), the resource indexes them as its own buckets; a file has one writer, except the journal:
-            into audit/<роль>/e1 all processes of this role on the server write (the path does not carry the instance, the unit of the journal is the role);
+            into audit/<role>/e1 all processes of this role on the server write (the path does not carry the instance, the unit of the journal is the role);
             a line is appended whole under an exclusive lock of the file (flock(2) LOCK_EX, as the presence lock; review of stage B 6–7, № 35), the lines of different processes do not interleave,
             the id tells them apart (the instance is in it); the bucket is the same by t at all writers (journal of cammeta-go, lesson 8 № 5)
 ```
@@ -127,7 +127,7 @@ of the full key permit is representable on disk. The layout of directories is by
   `%41`, `:` — `%3a`, `%` — `%25`, `я` — `%d1%8f`); the component `.` — `%2e`, `..` — `%2e%2e`;
 - the threshold is by the full name of the file or directory: if the encoded component, the norm suffix of a composite component (below:
   `.alarms`, `.lock`) and the reserve of the temporary name `TEMP_RESERVE` = 16 bytes together are longer than 255 bytes, the component is written
-  as `%h<sha256 hex байтов исходного компонента>` (the sha256 hex of the bytes of the source component; the norm suffix — after it: `%h<sha256>.lock`), next to it the file
+  as `%h<sha256 hex of the bytes of the source component>` (the sha256 hex of the bytes of the source component; the norm suffix — after it: `%h<sha256>.lock`), next to it the file
   `%h<sha256>.name` with the source component (UTF-8 bytes, without a line feed); the temporary name of the writer (temp + rename)
   is the final name, `~` and no more than 15 bytes (together with `~` no more than `TEMP_RESERVE`; ADR-0083 addendum (16)), so that neither
   the final nor the temporary name gets ENAMETOOLONG (review of stage B 3–5, № 20; ADR-0083 addendum (11));
@@ -139,14 +139,14 @@ of the full key permit is representable on disk. The layout of directories is by
 - decoding is the inverse; truncation and normalization of a key are forbidden, different keys — different paths, there is no file profile narrower
   than the grammar;
 - a service name contains `~` (ADR-0083 addendum (16)): the encoding does not write the byte `~` raw (`%7e`), so a service name does not
-  coincide with a key. The directory lock of the objects root (P/05 Н1.1 `disk`) is the file `<каталог>/~lock` in the directory of
+  coincide with a key. The directory lock of the objects root (P/05 Н1.1 `disk`) is the file `<dir>/~lock` in the directory of
   the object being written, `flock(LOCK_EX)` for the time of the write; the file is not deleted. The temporary name — the item above. A walk
   of a tree skips names with `~`; another non-canonical name — by the former norm;
 - encoded are the components taken from names and keys: `<sub>`, the tree, `<unit>`, the role, the instance, `<server>`, the segments of the key
   of an object; the components whose form the norm itself sets are written as is — the bucket name `<YYYYMMDDTHHMMSSZ>.events.jsonl`,
-  `e<эпоха>`, the suffix `.alarms`, the directories `.workers`, `.mirror`, `.gone`, the endings `.lock`, `.name`, the service `~lock` and the tail of the temporary name with `~` (`T` and `Z` of the
+  `e<epoch>`, the suffix `.alarms`, the directories `.workers`, `.mirror`, `.gone`, the endings `.lock`, `.name`, the service `~lock` and the tail of the temporary name with `~` (`T` and `Z` of the
   bucket name — not `%54`, `%5a`); a composite component is the encoded name plus the norm suffix: `testsub.alarms`,
-  `<экземпляр>.lock` (journal of cammeta-go, lesson 8 № 10; the Architect's decision). The step — sc. 08 steps 12–16 of the [acceptance of P/05](../../05-resource/acceptance/README.md): a bucket that
+  `<instance>.lock` (journal of cammeta-go, lesson 8 № 10; the Architect's decision). The step — sc. 08 steps 12–16 of the [acceptance of P/05](../../05-resource/acceptance/README.md): a bucket that
   the runner writes past the writer under the name of the norm is read by the resource.
 
 ## Retention of a tree
@@ -178,7 +178,7 @@ file contract — the steps that each writer of a line executes (the worker by `
 3. suppression (events.suppress.<kind>) — only at the writer of the events of the subsystem (the worker by observe, chapter P/03.6 Н1.2);
    the journal of the console (the tree console) and audit are not suppressed: each line is written (the Architect's decision, review
    of stage B 6–7, № 34)
-4. the bucket by t: <root>/<дерево>/<unit>/e<эпоха>/<start>Z.events.jsonl; a new directory — the directory barrier
+4. the bucket by t: <root>/<tree>/<unit>/e<epoch>/<start>Z.events.jsonl; a new directory — the directory barrier
 5. append the line; an alarm/the journal — fsync of the line and of the directories up to the root; the file does not end with LF (a tail of a former writer
    without LF) — first LF, then the line, no extra bytes: the tail becomes a full line — a full parsable JSON —
    an ordinary line with its own id, a damaged one — garbled (EJ-G03); there is no truncation; therefore the journal is «at least once»:
@@ -201,7 +201,7 @@ file contract — the steps that each writer of a line executes (the worker by `
 
 1. **A diagnostic line without a kind named by the norm** (C-JOURNAL-DIAG-KIND-01, the Architect's decision of 2026-10-29). Where a norm
    prescribes «journal» or «journal without the value» and does not name the kind, the implementation chooses the kind and the fields of the line: the form `line` above
-   (the family events of P/05 by tree), the tree `audit/<роль>` of its writer; `kind` is a string by the form `line` that coincides with none of
+   (the family events of P/05 by tree), the tree `audit/<role>` of its writer; `kind` is a string by the form `line` that coincides with none of
    the kinds named by the norms; there are no values of secrets («without the value» — without the value, the name of the field is admissible). The acceptance does not judge such
    lines; the contract introduces no new words.
 

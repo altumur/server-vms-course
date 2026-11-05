@@ -20,7 +20,7 @@ UTF-8, LF, fields separated by TAB. Lines with `#` and empty lines are skipped, 
 | `type` | the type of the manifest field: `string`, `url`, `int`, `float`, `bool`, `list`, `json`, `blob`; `secret` — a string field with the suffix `_secret`; `list:labels` — the field of the placement labels (`placement.constraint: labels-subset`, the label alphabet — [the contract](../../contracts/labels.md)); `int:inherit` — an `int` field with `inherit` |
 | `dir` | `write` — a JSON value at the input of a door → an element of the row; `read` — an element of the row → a JSON value of the answer; `both` — both directions |
 | `json` | the JSON value (JSON text) — as in the request body (`write`) or the answer (`read`); `@unset` — the field is not passed (`write`) / the answer has no field (`read`); `@unreadable` — the element does not read as its type (`read`) |
-| `row` | the element of the store row — **a JSON string** with the text of the element (`"5"` — the text `5`, `""` — an empty text); `@absent` — there is no element; `@refuse` — the write is refused, 400 at the door (Н4), `@refuse <слово>` — with this `fault` ([the dictionary](../fault/README.md)); `@json <текст JSON>` — the element is the text of a JSON array, equal by value; `@sealed` — an envelope `enc:v2:…` ([the sealing contract](../../contracts/sealing.md)) |
+| `row` | the element of the store row — **a JSON string** with the text of the element (`"5"` — the text `5`, `""` — an empty text); `@absent` — there is no element; `@refuse` — the write is refused, 400 at the door (Н4), `@refuse <word>` — with this `fault` ([the dictionary](../fault/README.md)); `@json <JSON text>` — the element is the text of a JSON array, equal by value; `@sealed` — an envelope `enc:v2:…` ([the sealing contract](../../contracts/sealing.md)) |
 | `note` | where the row comes from: a rule of the norm or an acceptance step of P/06.1 (sc. — the scenario number of [the acceptance of the chapter](../../../06-console/acceptance/1/README.md)) |
 
 ## Run
@@ -29,7 +29,7 @@ A side takes a loaded manifest with a field of the needed type (`testsub2` has f
 `list:labels` — `testsub.labels`) and checks the rows by its own conversion code, without HTTP:
 
 1. **`write`, `both`** — from `json` it gets the element of the row: the text is byte for byte equal to `row`; `@absent` — there is no element;
-   `@refuse` — the conversion is refused as a type refusal of Н4 (at `@refuse <слово>` — with this `fault`); `@json X` — the text
+   `@refuse` — the conversion is refused as a type refusal of Н4 (at `@refuse <word>` — with this `fault`); `@json X` — the text
    begins with `[`, parses as a JSON array and equals `X` by value (the norm does not set the whitespace inside the text);
    `@sealed` — the text begins with `enc:v2:` and opens with a ring key into the original value.
 2. **`read`, `both`** — from `row` it gets the value of the answer: equal to `json` by JSON value (`1` = `1.0`; a string, a boolean and
@@ -59,10 +59,10 @@ a template with `{input}` — the path of a file with one JSON object. The runne
 - **Write** — exactly `{type, direction, json}`, all rows, `direction` = `write`, `type` — the word of the column `type` (including
   `list:labels`, `int:inherit`); `json` — the original text of the cell `json` as a JSON string (the lexeme is not re-derived: `1`, `1.0`,
   `1e0`, `-0` are distinguishable) or exactly `@unset` — the field is not passed (the JSON string `"@unset"` is passed as text with quotes and
-  does not match the marker). The answer is one of the closed ones: `{"status": "ok", "row": <текст элемента строкой>}` (an empty text is
+  does not match the marker). The answer is one of the closed ones: `{"status": "ok", "row": <element text as a string>}` (an empty text is
   `ok` too); `{"status": "absent"}` — there is no element (`@absent`); `{"status": "refused"}` or `{"status": "refused",
-  "fault": <слово>}` — a type refusal (`@refuse <слово>` requires this `fault`; a bare `@refuse` neither requires nor
-  forbids the field). At a secret — `{"status": "ok", "row": <конверт>, "plaintext": <значение>}`: the command seals by its own
+  "fault": <word>}` — a type refusal (`@refuse <word>` requires this `fault`; a bare `@refuse` neither requires nor
+  forbids the field). At a secret — `{"status": "ok", "row": <envelope>, "plaintext": <value>}`: the command seals by its own
   regular procedure on a temporary test ring and by the same ring regularly opens the obtained envelope; `plaintext` is
   the result of the opening, not a copy of the input; the field `plaintext` occurs only at a secret envelope. The reconciliation: `row` — byte for byte with the text
   of the cell `row`; `@json X` — `row` begins with `[` and equals `X` by value; `@sealed` — `row` begins with `enc:v2:`,
@@ -71,7 +71,7 @@ a template with `{input}` — the path of a file with one JSON object. The runne
   `sealed: false`, `row` — its text, decoded once; `@json X` — `row` is the text `X` as written; `@absent` —
   `present: false`, `sealed: false`, `row: null`; `@sealed` — `present: true`, `sealed: true`, `row: null`: only `secret`,
   the command itself prepares an envelope by its sealing procedure and gives it to the regular read («любой конверт» of item 2
-  above). The answer is `{"status": "ok", "value": <значение JSON>}` (`value: null` — the field exists with the value `null`),
+  above). The answer is `{"status": "ok", "value": <JSON value>}` (`value: null` — the field exists with the value `null`),
   `{"status": "absent"}` (`@unset`) or `{"status": "unreadable"}` (`@unreadable`; an unreadable text is an input of the form, code 0).
   The reconciliation of `value` with the column `json` — by JSON value, as in item 2.
 

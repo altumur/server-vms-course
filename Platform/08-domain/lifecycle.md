@@ -16,7 +16,7 @@ This English text is the source; the Russian translation `ru/lifecycle.md` (for 
 - The process does not found the domain: the installation is done by an operator command, once per domain
   ([P/02.4 Н3 «domain installation»](../02-installer/spec/02.4-installer.norms.md), P/02.4-10); without the row
   `domain/signer` the process waits for it once every `VIEW_EVERY` and does not take the holder role ([P/08.2](spec/08.2-domain.norms.md) Н3
-  «процесс `domain` домена не основывает», «холодный старт»).
+  «the process `domain` does not found the domain», «cold start»).
 
 ## Environment
 
@@ -31,8 +31,8 @@ The setting channel is only the environment of P/02.4 Н1.2 and the layout of `P
 | `SIGNER_URL` | the address of this door, which the term record writes as `domain/holder.url`; the clients of their own box (forwarding to the signer) check it by [the role certificate contract](../common/contracts/role-certificate.md) «The client of a door of its own cluster»: the host — a loopback literal — the name `SERVER_NAME`, `localhost` — a name, checked as a name: the outcome — the first refusal `peer` (ADR-0075 addendum 2026-10-26 (6) item 1); at a holder of several nodes — an address that reaches any node | `http://localhost:8445` (the stand of one machine; review analysis of stage A 8–10, № 33) | [P/08.8 Н1.1](spec/08.8-domain.norms.md) (the form of `url` — [the term record contract](../common/contracts/record.md)), [P/08.10 Н1.7](spec/08.10-domain.norms.md) `url` |
 | `DOMAIN_CONSOLE_URL` | the address of the domain console door — the field `view.url`; with a kit — `https://` by a loopback literal or the name `SERVER_NAME` (hop 2 — a client of its own cluster, [the role certificate contract](../common/contracts/role-certificate.md) `own_client`: with a loopback literal `host` = `SERVER_NAME`; `localhost` — a name, checked as a name; an IP outside the loopback — `ip_address`) (the review of the norms of ADR-0075 by Kimi 80ee2b775, Н3) | — (none — `domain console not known` at the consoles) | [P/08.1](spec/08.1-domain.norms.md) Н1.4 `url`; the forwarding address — [the forwarding contract](../common/contracts/forwarding.md) (`view.url`) (review analysis of stage B 8–10, № 22: M-16) |
 | `CLUSTER` | the name of the cluster of the installation — the name of the holder member | `local` | P/02.4 Н1.2 |
-| `CLUSTERS` | the consoles of the member clusters `<имя>=<url>[,…]`: the target of the planned handover, the retry of an edit of the deposed one, the neighbours of the emergency move | none or empty — an empty list | [the forwarding contract](../common/contracts/forwarding.md) (`CLUSTERS`; the form — at the owner it refers to) (review analysis of stage B 8–10, № 22: M-16); [P/08.8](spec/08.8-domain.norms.md) Н1.6 `apply`, Н1.7 `target`, Н1.8 step 5 (review analysis of stage A 8–10, № 32) |
-| `BOX_ID`, `SERVER_NAME` | the box and the server; the instance `<коробка>:<pid>:<6 hex>` — the holder of the queue | P/02.4 Н1.2 | P/08.10 Н1.7 `turn` |
+| `CLUSTERS` | the consoles of the member clusters `<name>=<url>[,…]`: the target of the planned handover, the retry of an edit of the deposed one, the neighbours of the emergency move | none or empty — an empty list | [the forwarding contract](../common/contracts/forwarding.md) (`CLUSTERS`; the form — at the owner it refers to) (review analysis of stage B 8–10, № 22: M-16); [P/08.8](spec/08.8-domain.norms.md) Н1.6 `apply`, Н1.7 `target`, Н1.8 step 5 (review analysis of stage A 8–10, № 32) |
+| `BOX_ID`, `SERVER_NAME` | the box and the server; the instance `<box>:<pid>:<6 hex>` — the holder of the queue | P/02.4 Н1.2 | P/08.10 Н1.7 `turn` |
 
 TLS: the kit of the role `domain` by `W2C_ROLE` (P/02.4 Н1.6 `roles`); the server side of the class `signed` — [P/08.0 Н1.6](spec/08.0-domain.norms.md)
 and [the role certificate contract](../common/contracts/role-certificate.md).
@@ -56,7 +56,7 @@ None: the setting channel is the environment only (P/02.4 Н1.2).
   «domain installation», step 3; the form — [P/08.2](spec/08.2-domain.norms.md) Н1.1); the process does not read it. It is needed by the installation, the planned change
   of the token key, the change of the book acceptance key and the change after a theft (P/08.2 Н1.1 `needed_for`; the move — `w2cctl domain move`,
   [P/08.8](spec/08.8-domain.norms.md) Н1.8; review analysis of stage A 8–10, № 33).
-- The role journal — `<корень событий>/audit/domain/e1/…` ([the event journal contract](../common/contracts/event-journal.md) `journal`).
+- The role journal — `<events root>/audit/domain/e1/…` ([the event journal contract](../common/contracts/event-journal.md) `journal`).
 
 ## Exit codes
 
@@ -65,7 +65,7 @@ None: the setting channel is the environment only (P/02.4 Н1.2).
 | 2 | a start refusal by the manifest, the rights, the schema — without a restart | P/02.4 Н1.1 `common` |
 | ≠ 0 | another failure; the unit restarts | P/02.4 Н1.1 |
 
-Without the row `domain/signer` the process does not exit but waits (P/08.2 Н3 «процесс `domain` домена не основывает»).
+Without the row `domain/signer` the process does not exit but waits (P/08.2 Н3 «the process `domain` does not found the domain»).
 
 ## Signals and readiness
 
@@ -83,7 +83,7 @@ acceptance README](../common/acceptance/README.md) «Stand without root»; the p
 
 The stand of several clusters — the section «Domain stand» of [the common acceptance README](../common/acceptance/README.md): `@install domain` — the installation
 with `{domain}` and `{recovery}`; `@start domain` — the processes `domain` and of the domain console on `hold`; `@start domain on
-<кластер>` — without the installation; `@start domain second` — a second copy with the same `{data}`; `@move` — the move. The door `signer` —
+<cluster>` — without the installation; `@start domain second` — a second copy with the same `{data}`; `@move` — the move. The door `signer` —
 through the runner's proxy (`DOMAIN_URL` of the agents). `{data}` — `PLATFORM_DIR` of the cluster ([the common acceptance README](../common/acceptance/README.md) «Stand»; review analysis of stage B 3–5, № 33).
 
 ## Open

@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/5/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Стенд домена»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly — the М11 dictionary of the acceptance README of
+the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly — the М11 dictionary of the acceptance README of
 М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
 [`08.5-domain.norms.md`](../../spec/08.5-domain.norms.md) Н5. The scenarios were moved from the acceptances of М11/05 (01, 03, 05) and
 М11/09 (05 → 11) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones, except the scenario of М11/09:
@@ -21,9 +21,9 @@ As the preparation of the stand of chapter 8.3 ([the acceptance of chapter 8.3](
 М11/03, «Подготовка каждого сценария 01–09») with
 differences: the catalogue of each cluster is `testsub` and `testsub2` (the order — the «Stand» of the common acceptance README); on each cluster
 there run the controllers of both, the worker `w-1` of the manifest `testsub`, the worker `t-1` of the manifest `testsub2` (with the training writer of contributions, Н5
-of the chapter) and the resource of its own server `srv-<кластер>`; before the steps the store of each cluster has the counter `testsub` `c1-<кластер>`
+of the chapter) and the resource of its own server `srv-<cluster>`; before the steps the store of each cluster has the counter `testsub` `c1-<cluster>`
 (its own ref at each: a common `c1` would be contested, and `@domain` would not wait for `complete: true`) and the shelf `testsub2` `sh1`
-`{zone: z1, server: srv-<кластер>}`. `console2` at `member` is the prefix `/testsub2`.
+`{zone: z1, server: srv-<cluster>}`. `console2` at `member` is the prefix `/testsub2`.
 
 Sc. 11 has people too (the former stand of the acceptance of М11/09):
 - the person `root` with the password `w2c test root password` is created at `@install domain` (`domain first-admin`, the directive

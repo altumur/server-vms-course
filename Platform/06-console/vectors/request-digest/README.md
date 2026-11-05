@@ -50,7 +50,7 @@ only for repeats of one client by `Idempotency-Key` at a target without `request
 The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../common/acceptance/README.md));
 a template with `{input}` — the path of a file with one JSON object `{"sender": "client" | "worker", "input": <исходный текст ячейки input
 строкой JSON>}`: the text of the cell is escaped only for the outer string — the number lexemes, the order of fields and the characters are preserved,
-the runner does not parse the cell and does not re-serialize it. The answer is `{"canonical": <текст JCS>, "sha256": <64 строчных hex>}`: `canonical`
+the runner does not parse the cell and does not re-serialize it. The answer is `{"canonical": <JCS text>, "sha256": <64 lowercase hex>}`: `canonical`
 is compared with the column `canonical` by UTF-8 bytes, `sha256` — with the column `sha256`. An input not in form: not an object, a repeated or
 unknown field, `sender` not one of the two words, `input` not a string, its text not a JSON object, for `worker` a value of the object not a string.
 stdout is exactly one JSON object and LF: the first byte is `{`, after the object — LF and the end; extra fields, bytes, CRLF, spaces

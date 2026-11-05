@@ -20,7 +20,7 @@ the empty value of the field: `<none>`, no refusal (GO-EMPTY-01).
 
 The key `stand` of the profiles `03-worker` and `04-controller` (the section «Layout by processes» of [the common acceptance
 README](../../acceptance/README.md)), by the general rule of the vector commands: a template with `{input}` — the path of a file into which the runner
-writes the bytes of the cell `raw` (the first field of the row) as they are; stdout — `{"group": <ключ группы или "">, "fault": <"bad_url" или
+writes the bytes of the cell `raw` (the first field of the row) as they are; stdout — `{"group": <group key or "">, "fault": <"bad_url" или
 "">}` and LF, the `<none>` of the table — `""`; the comparison is JSON by value; code 0 — computed, 2 — an input not of the form, stdout empty.
 An empty address is of the form; an unreadable address — code 0 with `fault: "bad_url"`; not of the form — only invalid UTF-8 (code 2,
 stdout empty; the guess of stage C W03-G06, the Architect's decision of 2026-10-23) (the guess of stage C C04-VECTOR-01, the Architect's decision of 2026-10-23).

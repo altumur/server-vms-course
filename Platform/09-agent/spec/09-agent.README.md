@@ -32,7 +32,7 @@ the late layer of the cluster console — [chapter 6.7](../../06-console/spec/06
   the owner), [the key set](../../common/contracts/keys.md) (the function `keys`, merge and prune of `domain/revoked` — chapter 9.1;
   `keys` of the package answer — chapter 9.2), [the domain envelopes](../../common/contracts/domain-envelopes.md) (the agent seals
   `x25519:v1` and opens `m1`; the relay carries `m1` without opening it), [the report acceptance](../../common/contracts/accept.md)
-  (the function «принять» over the relay memory — chapter 9.2), [the term record](../../common/contracts/record.md) (following,
+  (the function «accept» over the relay memory — chapter 9.2), [the term record](../../common/contracts/record.md) (following,
   the keeper, the shared document — chapter 9.1), [the sealing](../../common/contracts/sealing.md) (the home secrets — envelopes
   of the ring), [the role certificate](../../common/contracts/role-certificate.md#the-server-side-the-class-signed) (the relay
   door — chapter 9.2), [the forwarding](../../common/contracts/forwarding.md) (502 `did not answer` of the token door of the
@@ -71,9 +71,9 @@ Record a change of the acceptance in `journal/corrections-<K>.tsv` of the chapte
 - **9.1.** The agent (the role `domainagent`): the member key, the pass of Н3, the publication of Н1.2 whole or as a delta, the signature of Н1.3,
   the application of the answer of Н1.4. The command `join` on a member.
 - **9.1.** The contributions in the report as objects, the slot liveness with a re-read, the secrets — `x25519:v1`, the same envelope for the same
-  value; the row `domain/<sub>/<книга>` at a member.
+  value; the row `domain/<sub>/<book>` at a member.
 - **9.1.** The copies `domain/placed*`, the application of edits with `If-Match`, `domain/outcomes`; the holder — its own edits at itself.
-- **9.1.** The local door `/tokens/<sub>/<вид>` with the identity of the role ([the local token door
+- **9.1.** The local door `/tokens/<sub>/<kind>` with the identity of the role ([the local token door
   contract](../../common/contracts/local-token-door.md#the-role-socket): the role socket); the request to the holder; opening `m1`, the check of
   `request_id`, `exp`.
 - **9.1.** `RELAY_URL` for a member behind a relay; `domain/reached`, `domain/reaches`; the HTTPS client by the contract `peer`.
@@ -85,8 +85,8 @@ Record a change of the acceptance in `journal/corrections-<K>.tsv` of the chapte
   always with `base > 0`, do not send a whole larger than the limit; 503 `standby` — the next pass. A cluster of one: the agent in the
   process without the kit of the role — the client only to the doors of the holder and of the relay; the local door is a call (the local token
   door contract, «The call in the process»).
-- **9.2.** At the agent: the relay door (`RELAY=1`) with `POST /api/member/<член>`, `GET /api/carry/<член>`,
-  `POST /api/tokens/<член>/<sub>/<вид>` (byte for byte, 502 `did not answer`); the relay pass of Н3. The HTTP form —
+- **9.2.** At the agent: the relay door (`RELAY=1`) with `POST /api/member/<member>`, `GET /api/carry/<member>`,
+  `POST /api/tokens/<member>/<sub>/<kind>` (byte for byte, 502 `did not answer`); the relay pass of Н3. The HTTP form —
   [the OpenAPI of the lesson](09-agent.api.openapi.yaml), the tag `relay`.
 - The commands of the vectors `peer`, `follow` (`agent-sig` — chapter 8.3) and the description of all the choices of the sections «Implementation decides» of the chapters —
   11 items «Implementation decides» in all — and the means of running the acceptance: the commands of the vectors and the stand directives.
@@ -117,7 +117,7 @@ relies on the agent pass.
 
 ### Chapter 9.2 — the relay mode
 
-1. The door and the relay pass of Н3: its own copy and `rev` of each member (the function «принять» over its own memory — [the report
+1. The door and the relay pass of Н3: its own copy and `rev` of each member (the function «accept» over its own memory — [the report
    acceptance contract](../../common/contracts/accept.md), the vectors [`accept`](../../common/vectors/accept/README.md)), the deltas
    against the confirmed base, the packages, the return of the untaken publications into the memory (step 5).
 2. The check of the member signature at the door — [the agent signature contract](../../common/contracts/agent-signature.md), the key — from `keys`
@@ -165,7 +165,7 @@ Run the vectors and the acceptance scenarios separately, with the preparation th
 
 The rows and objects of chapter 9.1 are written only by the agent of its own cluster (the paragraph «Данные» of [chapter 9.1](09.1-agent.norms.md)); the holder
 rows are written by the process `domain` (lesson P/08). In foreign rows — `domain/keys`, `domain/revoked`,
-`domain/break-glass/<член>`, `domain/holder`, the row `domain/shared` — the agent is a participant, and at the holder cluster it writes none
+`domain/break-glass/<member>`, `domain/holder`, the row `domain/shared` — the agent is a participant, and at the holder cluster it writes none
 of them while that cluster holds the term (Н1.4 `holder_cluster`). The relay mode has no rows of its own: the memory is in the process.
 
 ### What the agent does not do for its neighbours

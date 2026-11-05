@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/door-token.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5) and addendum (11): a contract that one process writes and others read
+A common contract of the module «Platform» (ADR-0083 addendum (5) and addendum (11): a contract that one process writes and others read
 lies in `Platform/common/`; analysis of the review of stage B 3–5, V1). The owner is lesson [P/06](../../06-console/spec/06.5-console.norms.md)
 (chapter 6.5): the console issues the token in the answer of `/where/<id>` and `/where/<table>/<place>` (P/06.5 Н3), holds the signer
 `door/signer` and writes the public keys `door/keys`. Readers: the door holder — the worker that checks the token at its door
@@ -41,7 +41,7 @@ From P/06.5 Н3 «`/where/<id>`», «Door token — bytes» (the cammeta-go jour
 token:      door1.<kid>.<claims>.<sig> — exactly four parts separated by «.», ASCII
   kid:      the name of the signing key, 1–32 characters [a-z0-9-]; by it the checker takes the public key from door/keys
   claims:   base64url without «=» of the JCS (RFC 8785) bytes of the object {user, unit, holder, routes, expires}: user — the proven name
-            ([the gate-and-pass contract](gate-and-pass.md) «Сторожевая» identity), unit — "<sub>/<id>", holder — the holder's instance from its heartbeat (instance, P/03.4 Н1.1), routes — an array
+            ([the gate-and-pass contract](gate-and-pass.md) «The gate» identity), unit — "<sub>/<id>", holder — the holder's instance from its heartbeat (instance, P/03.4 Н1.1), routes — an array
             of the routes door.routes of the manifest with the admission token (name elements and {name} without role and domain; routes with role or
             domain do not enter the token — their admission is the role certificate, the class mixed of the role certificate contract, or the domain token,
             P/03.4 Н1.7; ADR-0091 addendum (8) item 3, addendum (14) item 1) and with a rank allowed to the person on the unit (P/06.5 Н3 «/where/<id>»; ADR-0115 addendum (19) item 1), expires — the whole wall seconds of the issue + 120 (analysis of the review of stage B 6–7, № 10): floor(now) + 120, now — the wall clock

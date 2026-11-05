@@ -73,7 +73,7 @@ The start interface is the section «Stand» of the common acceptance README, wi
 `{manifest}`, at the resource `{rport}`); the resource is ready when it listens on `{rport}` and there is the row `platform/doors/srv-a`.
 `console …` and `console2 …` are one console on `{port}`, the second is the prefix `/testsub2`. `store …` without `@as` is the store door
 `admin.sock` (`{socket}` — the door with full rights, [the common acceptance README](../../../common/acceptance/README.md) «Сокеты ролей»):
-step 14 of sc. 04 and step 10 of sc. 05 read `platform/drain` and `platform/servers/srv-a` outside the subsystem prefix; `@as <роль>` — the role socket until the end of the scenario.
+step 14 of sc. 04 and step 10 of sc. 05 read `platform/drain` and `platform/servers/srv-a` outside the subsystem prefix; `@as <role>` — the role socket until the end of the scenario.
 
 Before each scenario stop the processes of the previous one, create separate empty row/object stores and clear
 the variables/replay memory. Load the unchanged testsub and testsub2; root is testsub, the second is available under /testsub2;

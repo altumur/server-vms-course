@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/instance.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): several processes write the process instance into the rows of the slot, the turn, the presence
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): several processes write the process instance into the rows of the slot, the turn, the presence
 lock and into event ids — a contract, not copies in chapters; layout audit A-06, the Architect's decision of
 2026-10-25). The owner is chapter [P/03.2](../../03-worker/spec/03.2-worker.norms.md) (Н1.4 `holder`, Н3 «start()» step 2).
 Participants: the worker (the slot, the contender mark, the heartbeat — P/03.2, P/03.4), the resource — the field `instance` of the presence lock

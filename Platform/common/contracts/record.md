@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/record.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common algorithm of several processes is a contract, not
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common algorithm of several processes is a contract, not
 copies in chapters; analysis of review of stage A 8–10, № 13 / decision 2). The owner is lesson P/08, chapter [8.8](../../08-domain/spec/08.8-domain.norms.md) (moved from
 М11/10 Н1.1, Н3 «record»): the process `domain` of the holder
 signs with the issuing key the record of its term, the backup document and the handover grant. They are checked by the function `record`:
@@ -17,7 +17,7 @@ signs with the issuing key the record of its term, the backup document and the h
 Moved from М11/10 Н1.1 (the row `domain/holder` and the block `doc`), Н3 «`record(keys, row, виды)`» (the paragraph about the kinds and steps
 1–6) and Н4 (the words of `record`) without a change of behaviour. The owner keeps: `claim` and `check` of the term record (Н1.1), the forms
 of the backup document (Н1.5) and of the grant (Н1.7), the issuing key (`issuing_key_secret`, [P/08.2](../../08-domain/spec/08.2-domain.norms.md) Н1.3), the kind «shared
-document» ([P/08.9](../../08-domain/spec/08.9-domain.norms.md) Н1.2 `document`, `signature`). References in the moved text: «Н1.x», «Н3» — of lesson М11/10 (Н1.1, Н1.5, Н1.7 — the same numbers of chapter P/08.8; Н3 «следовать» —
+document» ([P/08.9](../../08-domain/spec/08.9-domain.norms.md) Н1.2 `document`, `signature`). References in the moved text: «Н1.x», «Н3» — of lesson М11/10 (Н1.1, Н1.5, Н1.7 — the same numbers of chapter P/08.8; Н3 «follow» —
 P/09.1 Н3 «follow», «check the backup copy»); «lesson N» — lesson М11/N, their addresses now: «lesson 3» (the agent carries
 reports) — P/09.1 Н3 and P/08.3 Н2, «lesson 11» (the shared document) — P/08.9 Н1.2 (analysis of review of stage B 8–10, № 22; Kimi
 SB810-07); `keys` — the accepted set ([the domain key set contract](keys.md)). What is common to the forms — the [domain founding contract](domain-founding.md)
@@ -43,7 +43,7 @@ domain/holder:   {doc: <the JCS text of the document>}       # at the holder —
                  http://localhost:8445 (a one-machine stand) — agents carry reports there (lesson 3); at
                  a holder of several nodes — an address that reaches any node of the cluster, not one server
                  (the queue of the process domain — P/08.10 Н1.7; added by М11/12)
-    ca?:         [<отпечаток>…], 1–2 — the holder's centre (P/08.3 Н1.6; ADR-0075 clarification 2)
+    ca?:         [<fingerprint>…], 1–2 — the holder's centre (P/08.3 Н1.6; ADR-0075 clarification 2)
     key?:        hex of the key of the holder member; at term 1 before the first report of its agent there is no field (ADR-0113 addendum (3) item 2)
     at:          wall-clock seconds of the signature; a change of the centre or the appearance of the key — a reissue of the same term with a greater at: at strictly grows, a clock going back — the former + 0.001
     restored_from?: {term, rev} — the backup copy from which this term is restored (Н1.5); term 1 — without the field
@@ -52,7 +52,7 @@ domain/holder:   {doc: <the JCS text of the document>}       # at the holder —
     sig:         base64url without «=» of the Ed25519 signature of the issuer over UTF-8(JCS(doc without kid and sig))
 ```
 
-The backup document (Н1.5), the grant (Н1.7) and the members row `domain/member-rows/<раздел>` (P/08.3 Н1.1) are signed the same way: `issuer`, `kid`, `sig` — by the rows above; the kind of the members row also checks `part` and the part of each name (the function `record` step 1; the section «The members row»).
+The backup document (Н1.5), the grant (Н1.7) and the members row `domain/member-rows/<part>` (P/08.3 Н1.1) are signed the same way: `issuer`, `kid`, `sig` — by the rows above; the kind of the members row also checks `part` and the part of each name (the function `record` step 1; the section «The members row»).
 
 ## The switch point `switch`
 
@@ -61,9 +61,9 @@ the condition is read by the process `domain` of the holder and by the agent of 
 `domain/revoked` the agent of the holder's cluster does not write while the cluster holds the term).
 
 ```yaml
-switch:      at the holder's cluster the rows domain/keys, domain/revoked, domain/holder, its own domain/break-glass/<кластер> and
+switch:      at the holder's cluster the rows domain/keys, domain/revoked, domain/holder, its own domain/break-glass/<cluster> and
              the pointer domain/shared are written by the process domain, and the agent of this cluster does not write them — while the record domain/holder
-             of its own store passes record by the follow set of the agent (the key set contract «Набор следования»; added by the Quint model of М11,
+             of its own store passes record by the follow set of the agent (the key set contract «The follow set»; added by the Quint model of М11,
              G1) and names this cluster as the holder (P/09.1 Н1.4 holder_cluster). The condition of the agent is
              only by the record: «domain/signer not forgotten» is a condition of the process domain, domain/signer is not open to the agent; forget
              comes only after a record of a foreign greater term (P/08.8 Н1.6 yields), therefore the record «the holder is this cluster» and forgotten

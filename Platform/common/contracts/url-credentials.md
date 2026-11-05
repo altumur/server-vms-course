@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/contracts/url-credentials.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
+A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
 in the chapters; guess of stage C W03-E07, the Architect's decision of 2026-10-23). The owner is chapter
 [P/06.2](../../06-console/spec/06.2-console.norms.md) of the console (Н1.1 `url_field`, Н1.1а, Н3 «read_address»). Participants:
 [the common row check](row-check.md) — the door of units and tables of the console ([P/06.1](../../06-console/spec/06.1-console.norms.md))
@@ -20,12 +20,12 @@ Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-С�
 url_field:                                   # at a field with type: url (the form — Platform/02-installer/spec/02.1-installer.schema.json, P/02.1 Н1.2а)
   credentials: {login: <a row field, not url and not a secret>, secret: <a *_secret field>}
   secret_in:                                 # a list, each element of one of three kinds; read by A1–A15 below
-    - {param: [<имя>…], login: [<имя>…]}     # the name pattern — A5; login ⊆ param: the names from login are a login
+    - {param: [<name>…], login: [<name>…]}     # the name pattern — A5; login ⊆ param: the names from login are a login
                                              # (a refusal, without a mask), the others are a secret
     - {regex: '…(?P<login>…)(?P<secret>…)(?P<name>…)', in: path | query | authority | fragment | [list],
-       schemes: [<схема>…], decoded: true | false}      # RE2; the groups are only login, secret, name, at least one of
+       schemes: [<schema>…], decoded: true | false}      # RE2; the groups are only login, secret, name, at least one of
                                                          # the first two; decoded is true by default (A13)
-    - {nested: [<имя>…]}                     # the value of the pair is a nested address: the united rule of the catalogue
+    - {nested: [<name>…]}                     # the value of the pair is a nested address: the united rule of the catalogue
                                              # together with the field rule, not deeper than 3 (A8; ADR-0053, addendum of 2026-10-06)
 common_words: [password, passwd, pass, pwd, secret, token, key, credential, credentials, psk, privkey, apikey, =auth, =pin]
 normalisation: A4 — only the name of a pair, for recognition; the value of a secret, the envelope and AAD are not transformed;
@@ -55,7 +55,7 @@ host:      authority (the default) — the host is the host of authority (after 
            below): `mirror://hub/h:99999/x` — accepted, `mirror://hub/h:abc/x` — bad_url; an empty first segment — no host:
            `mirror://hub/` — bad_url
 fragment:  none — `#` is an ordinary character, not the start of a fragment (A2); without the key — `#` starts a fragment
-none:      [<значение>…] — the exact values of the authority node that mean «no host» (`mirror://local/…` — its own copy, whatever
+none:      [<value>…] — the exact values of the authority node that mean «no host» (`mirror://local/…` — its own copy, whatever
            the path); the check «no host» is not applied to such a link, group_by P/04 Н1.3 does not take it into a group
 path:      the path is required only at host: path, including with a node from none: `mirror://local`, `driverpack://file` without
            a path — bad_url; `mirror://local/x` and `mirror://local/` at none: [local] — accepted; `mirror://local:80/` — a node with
@@ -191,7 +191,7 @@ The name is masked together with the value. The reason: the recipient will decod
 is read as a nested address of level 1. A password in it masks the whole value. `%40` is not `@`: the value
 `/mnt/a%40b` is accepted.
 
-**A10. userinfo.** At each `://` of the value `://<логин>:<пароль>@` is sought.
+**A10. userinfo.** At each `://` of the value `://<login>:<password>@` is sought.
 - The login is characters other than `/`, `@`, `:`, `?`, `#` and a space; the login can be empty (`rtsp://:pw@h`).
 - The password stretches to the last `@` of the same word without spaces. `/`, `?`, `#`, `@`, `=`, `+` inside are part
   of the password: `admin:pa/ss?x@h` → `admin:***@h`, `admin:p@pw@h` → `admin:***@h`.
@@ -228,7 +228,7 @@ is a password in the place of the port: `rtsp://h:pw/` → `h:***/`, `rtsp://adm
 - The group `secret` is a password, `login` is a login (shown as written), `name` is a name for the reason of the refusal. An empty
   group finds nothing.
 - Only `regex` reads pairs through `_` (`user=admin_password=…`, `?channel=1_pwd=…`), a password as a segment after
-  a name (`/password/<пароль>/`) and a login with a password in the path of `driverpack://` (in the vectors `secret-in` — at `cam.source`). The common rule does
+  a name (`/password/<password>/`) and a login with a password in the path of `driverpack://` (in the vectors `secret-in` — at `cam.source`). The common rule does
   not know them: these are spellings of devices, not parts of an address.
 
 **A14. The display.** First a nested address with a password (A8, A9) is replaced as a whole by `***`: the value of a pair,
