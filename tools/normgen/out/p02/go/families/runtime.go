@@ -154,6 +154,20 @@ func (f *Family) JudgeItems(items Items, mode Mode) Result {
 	return f.sch.judgeRow(items, mode)
 }
 
+// JudgeText — the reading of an object or file family (kind object | file) by its key and text: object — a JSON text
+// (not JSON — refused on ""), file — the text in UTF-8 (not UTF-8 — refused on ""); a key not by the template —
+// refused on "". For a row family use Judge.
+func (f *Family) JudgeText(key string, text []byte, mode Mode) Result {
+	if !f.Matches(key) {
+		return Result{"refused", []string{""}}
+	}
+	f.once.Do(func() { f.sch, f.err = compile(f.Doc) })
+	if f.err != nil {
+		panic("families: the schema of " + f.Key + ": " + f.err.Error())
+	}
+	return f.sch.judgeText(f.Kind, text, mode)
+}
+
 // Readers — the readers of the family: the rows of the empty path of outcomes.tsv, in the order of the file.
 func (f *Family) Readers() []string {
 	var out []string
@@ -1638,6 +1652,40 @@ func (s *schema) judgeRow(items Items, mode Mode) Result {
 		}
 	}
 	v := s.layer3(value, mode, decoded, &fails)
+	recs := s.records(s.doc, v, nil, false)
+	if mode == Writer && s.writer != nil {
+		recs = append(recs, s.records(s.writer, v, nil, false)...)
+	}
+	paths := canonical(append(fails, norm(recs)...))
+	if len(paths) == 0 {
+		return Result{"ok", []string{}}
+	}
+	return Result{"refused", paths}
+}
+
+// judgeText — stack.Family.judge for kind object (a JSON text) and file (a UTF-8 text).
+func (s *schema) judgeText(kind string, text []byte, mode Mode) Result {
+	var v any
+	switch kind {
+	case "object":
+		if !utf8.Valid(text) {
+			return Result{"refused", []string{""}}
+		}
+		x, err := strictJSON(string(text), false)
+		if err != nil {
+			return Result{"refused", []string{""}}
+		}
+		v = x
+	case "file":
+		if !utf8.Valid(text) {
+			return Result{"refused", []string{""}}
+		}
+		v = string(text)
+	default:
+		return Result{"refused", []string{""}}
+	}
+	var fails [][]any
+	v = s.layer3(v, mode, map[string]bool{}, &fails)
 	recs := s.records(s.doc, v, nil, false)
 	if mode == Writer && s.writer != nil {
 		recs = append(recs, s.records(s.writer, v, nil, false)...)

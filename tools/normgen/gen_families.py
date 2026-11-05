@@ -261,14 +261,17 @@ def load_family_doc(row, grammar):
     """Режим схемы данными: семья row со схемой как есть — её исполняет famrt2 (закрытый набор слов JSON Schema и
     слои В7); генератор проверяет форму (корень — объект, layers.tsv — копия слов x-*, пути исходов — поля строки)."""
     key, kind = row["key"], row["kind"]
-    if kind != "row":
-        raise GenError(f"{key}: kind {kind!r} — the schema mode reads row families (object, file — not yet)")
-    schema_path = PLATFORM / row["schema"]
+    if kind not in ("row", "object", "file"):
+        raise GenError(f"{key}: kind {kind!r} — the schema mode reads row, object and file families")
+    file_cell, _, word_ = row["schema"].partition("#")   # #<слово> — только имя файла исходов (spec.load_family)
+    schema_path = PLATFORM / file_cell
     if not schema_path.name.endswith(".schema.json") or not schema_path.is_file():
         raise GenError(f"{key}: schema {row['schema']!r} is not a file")
     base = schema_path.name[:-len(".schema.json")]
+    out_base = base[:-len(kind) - 1] if kind != "file" and base.endswith("." + kind) else base
+    out_base += f".{word_}" if word_ else ""
     schema = Schema(schema_path)
-    if schema.doc.get("type") != "object":
+    if kind == "row" and schema.doc.get("type") != "object":
         raise GenError(f"{rel(schema_path)}: the root of a row family is an object")
     words = set()
 
@@ -290,12 +293,14 @@ def load_family_doc(row, grammar):
         raise GenError(f"{rel(schema_path)}: words {sorted(extra)} are outside famrt2 (supported: {sorted(DOC_WORDS)})")
     layers = schema_path.with_name(base + ".layers.tsv")
     n_layers = check_layers(schema, layers) if layers.is_file() else 0
-    outcomes_path = schema_path.with_name(base + ".outcomes.tsv")
+    outcomes_path = schema_path.with_name(out_base + ".outcomes.tsv")
     outcomes = []
     for r in tsv(outcomes_path, OUTCOME_COLUMNS):
         p = r["path"]
-        if p and (not p.startswith("/") or "*" in unpointer(p) or schema.at("/properties" + p) is None):
-            raise GenError(f"{rel(outcomes_path)}: path {p!r} — \"\" or a field of the row (no «*»)")
+        if p and (not p.startswith("/") or (kind == "row" and ("*" in unpointer(p)
+                                                               or schema.at("/properties" + p) is None))):
+            raise GenError(f"{rel(outcomes_path)}: path {p!r} — \"\" or a field of the row (no «*»); object, file — "
+                           f"a JSON Pointer")
         if not re.fullmatch(r"0|[1-9][0-9]*", r["priority"]) or r["unit"] not in UNITS:
             raise GenError(f"{rel(outcomes_path)}: priority — an integer ≥ 0, unit — one of {UNITS}")
         outcomes.append({"path": p, "reader": r["reader"], "priority": int(r["priority"]), "unit": r["unit"]})
@@ -325,7 +330,7 @@ def go_family_doc(f):
 def families(lesson=DEFAULT_LESSON):
     grammar = placeholders()
     rows = [r for r in tsv(CATALOG, CATALOG_COLUMNS)
-            if r["owner"].startswith(f"P/{lesson}") and r["schema"].endswith(".schema.json")]
+            if r["owner"].startswith(f"P/{lesson}") and re.search(r"\.schema\.json(#[a-z][a-z0-9-]*)?$", r["schema"])]
     if not rows:
         raise GenError(f"{rel(CATALOG)}: no family of P/{lesson} with a schema")
     out = [(load_family_doc if DOC_MODE else load_family)(r, grammar) for r in rows]

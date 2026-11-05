@@ -290,7 +290,14 @@ func familyRead(family, key, kind, mode, whoText, text string) (any, error) {
 	default:
 		return nil, fmt.Errorf("mode %q, want writer or reader", mode)
 	}
-	r := f.Judge(key, families.ParseItems([]byte(text)), m)
+	var r families.Result
+	if jt, ok := any(f).(interface {
+		JudgeText(string, []byte, families.Mode) families.Result
+	}); ok && f.Kind != "row" {
+		r = jt.JudgeText(key, []byte(text), m) // object, file (the schema mode)
+	} else {
+		r = f.Judge(key, families.ParseItems([]byte(text)), m)
+	}
 	paths := append([]string{}, r.Paths...)
 	sort.Strings(paths)
 	var outcome any = []string{}

@@ -38,7 +38,14 @@ func main() {
 		if c.Mode == "writer" {
 			mode = families.Writer
 		}
-		r := f.Judge(c.Key, families.ParseItems([]byte(c.Text)), mode)
+		var r families.Result
+		if jt, ok := any(f).(interface {
+			JudgeText(string, []byte, families.Mode) families.Result
+		}); ok && f.Kind != "row" {
+			r = jt.JudgeText(c.Key, []byte(c.Text), mode) // object, file (the schema mode)
+		} else {
+			r = f.Judge(c.Key, families.ParseItems([]byte(c.Text)), mode)
+		}
 		var outcome any = []string{}
 		if mode == families.Reader {
 			m := map[string][]string{}
