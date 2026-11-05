@@ -390,7 +390,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
            + (gen_tests.kit_md() if "vectors" in parts else "")
            + stagetests_md + (gen_rollout.KIT_MD if rollout_files else "") + (KIT_DOOR_MD if openapi_sha else "")
            + (gen_flags.kit_md() if flag_files else "") + (gen_refusals.kit_md() if refusal_files else "")
-           + (gen_families.KIT_MD if family_files else "") + (gen_admin.kit_md() if admin_files else "")
+           + (gen_families.kit_md() if family_files else "") + (gen_admin.kit_md() if admin_files else "")
            + (gen_launch.KIT_MD if launch_files else "") + (gen_core.KIT_MD if core_files else "")).replace("{module}", module)
     connect = connect_md(kit_parts, module) if L.key == lesson.DEFAULT else ""   # примеры частей — кодом P/01
     doc = (doc + connect + exported_md(internal, dst, module)).encode("utf-8")

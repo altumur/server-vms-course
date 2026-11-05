@@ -48,7 +48,8 @@ def rows(lesson):
 def harness(module_dir, cases):
     work = Path(tempfile.mkdtemp(prefix="family-judge-"))
     try:
-        shutil.copy(HERE / "families/harness/main.go", work / "main.go")
+        (work / "main.go").write_text((HERE / "families/harness/main.go").read_text(encoding="utf-8")
+                                      .replace('"normgen/p01-1/', f'"{L.go_module}/'), encoding="utf-8")
         (work / "go.mod").write_text(f"module normgen/familyharness\n\ngo 1.22\n\nrequire {L.go_module} v0.0.0\n\n"
                                      f"replace {L.go_module} => {Path(module_dir).resolve()}\n", encoding="utf-8")
         build = subprocess.run(["go", "build", "-o", "harness", "."], cwd=work, capture_output=True, text=True,
@@ -78,6 +79,95 @@ def compare(case, got):
 V7_SCRIPTS = ROOT / "skills/lesson-spec/scripts"
 
 
+DEEP_PER_FIELD = 80                                  # предел мутаций на поле (детерминированный порядок обхода)
+
+
+def deep_texts(items, stack):
+    """Тексты строки с мутацией внутри JSON-документа поля: у объекта — удалить ключ, добавить лишний; у массива —
+    повтор первого элемента, пустой, без последнего; у листа — другой тип и граничные значения. Документ пишется
+    канонически (JCS) и с отступами — ожидание у обоих даёт стек В7."""
+    out = []
+    for k, t in items.items():
+        if not isinstance(t, str) or t[:1] not in ("{", "["):
+            continue
+        try:
+            doc = json.loads(t)
+        except ValueError:
+            continue
+        muts = []
+
+        def walk(x, path):
+            if isinstance(x, dict):
+                for key in list(x)[:6]:
+                    muts.append((path, ("del", key)))
+                muts.append((path, ("add", "zz_extra")))
+                muts.append((path, ("badname", "!! not a name")))   # имя не по форме со значением не по схеме
+                for key in list(x)[:12]:
+                    walk(x[key], path + [key])
+            elif isinstance(x, list):
+                if x:
+                    muts.append((path, ("dup", 0)))
+                    muts.append((path, ("pop", None)))
+                    walk(x[0], path + [0])
+                muts.append((path, ("empty", None)))
+            else:
+                for leaf in (1, "", "x" * 300, -1, 1.5, 9007199254740993, True, None, "1e400"):
+                    muts.append((path, ("set", leaf)))
+        walk(doc, [])
+        per_op, picked = {}, []
+        for m in muts:                                    # предел — на вид операции: глубокие места не теряются
+            if per_op.get(m[1][0], 0) < DEEP_PER_FIELD // 2:
+                per_op[m[1][0]] = per_op.get(m[1][0], 0) + 1
+                picked.append(m)
+        for path, (op, arg) in picked:
+            d = json.loads(t)
+            parent = d
+            for seg in path:
+                parent = parent[seg]
+            if op == "del":
+                del parent[arg]
+            elif op == "add":
+                parent[arg] = "x"
+            elif op == "badname":
+                parent[arg] = {"zz": [1, 1]}
+            elif op == "dup":
+                parent.insert(0, parent[0])
+            elif op == "pop":
+                parent.pop()
+            elif op == "empty":
+                if path:
+                    holder = d
+                    for seg in path[:-1]:
+                        holder = holder[seg]
+                    holder[path[-1]] = []
+                else:
+                    d = []
+            elif op == "set":
+                if path:
+                    holder = d
+                    for seg in path[:-1]:
+                        holder = holder[seg]
+                    holder[path[-1]] = arg
+                else:
+                    d = arg
+            for enc in (stack.jcs(d) if not _has_huge(d) else None, json.dumps(d, indent=1, ensure_ascii=False)):
+                if enc is None:
+                    continue
+                if isinstance(enc, str) and enc.count('"1e400"'):
+                    enc = enc.replace('"1e400"', "1e400")
+                out.append(json.dumps(dict(items, **{k: enc}), ensure_ascii=False))
+    seen, uniq = set(), []
+    for x in out:
+        if x not in seen:
+            seen.add(x)
+            uniq.append(x)
+    return uniq
+
+
+def _has_huge(d):
+    return False
+
+
 def v7_cases(lesson, base_rows):
     """Свои экземпляры поверх базовой строки каждой семьи; ожидание — стек В7 (Python)."""
     sys.path.insert(0, str(V7_SCRIPTS))
@@ -101,9 +191,18 @@ def v7_cases(lesson, base_rows):
                         '"-0"', '"01"', '"1e3"', '"1E400"', '"' + "9" * 400 + '"'):
                 texts.append("{" + ",".join(json.dumps(x) + ":" + (raw if x == k else json.dumps(v))
                                             for x, v in items.items()) + "}")
+        deep = []                                     # мутации внутри документов полей x-encoding (P/02):
+        for seed in [r for r in base_rows if r["family"] == row["key"] and r["verdict"] == "ok"
+                     and r["mode"] == "writer"]:          # затравки — читаемые строки писателя с документами
+            try:
+                its = json.loads(seed["text"])
+            except ValueError:
+                continue
+            if isinstance(its, dict):
+                deep += [t for t in deep_texts(its, stack) if t not in deep]
         keys = [key, key + "/x", key.rsplit("/", 1)[0] + "/." if "/" in key else key + ".", key.upper()]
-        for text in texts:
-            for k in keys:
+        for text in texts + deep:
+            for k in (keys if text not in deep else [key]):
                 for mode in ("writer", "reader"):
                     who = bases[mode]["who"]
                     v = spec.judge_family(fam, tmpl, k, row["kind"], text, mode)
