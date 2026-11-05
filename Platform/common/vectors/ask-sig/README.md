@@ -37,3 +37,7 @@ of the acceptance.
 
 The vectors are checked by reference Ed25519 (RFC 8032) against the text of the contract, not by the code of implementations; on a discrepancy the contract is right,
 «Спецификация» corrects the vector.
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/ask-sig` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

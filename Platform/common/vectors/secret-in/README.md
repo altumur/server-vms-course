@@ -67,3 +67,7 @@ perform the runner does not compare; there are no extra keys.
 The refusal at the unit door (400 `fault: bad_url`, the order of refusals Н3 step 2) — scenario 04 of [the acceptance of chapter 6.2](../../../06-console/acceptance/2/README.md);
 the grammar of the url itself (schemes, host) — [P/02.1 Н1.2а](../../../02-installer/spec/02.1-installer.norms.md) `schemes` and the vectors
 [`group-of`](../group-of/README.md).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/secret-in` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

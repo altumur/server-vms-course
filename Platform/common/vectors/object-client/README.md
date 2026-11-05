@@ -34,3 +34,7 @@ Who performs both files is every process whose norm writes or reads the objects 
 of the catalogue; ACC-VECTORS-CONNECT-04, the Architect's decision of 2026-10-26; the principle ACC-VECTORS-CONNECT-03): the worker and the worker at the domain (`03-worker`), the controller (`04-controller`), the resource (`05-resource`:
 its own objects, the heartbeats, the bodies and the tombstones of the neighbours), the cluster console (`06-console`), the process `domain` (`08-domain`), the agent
 (`09-agent`), the domain console (`10-domain-console`). The installer writes only the value of the address and does not perform the functions.
+
+## Vector wire
+
+The wire of `address.tsv`, `read.tsv` is set by the `common/object-client` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

@@ -56,4 +56,4 @@ outputs the table does not read (P/06.2-05).
 
 ## Vector wire
 
-The wire of `cases.tsv` is set by the `common/log-mask` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+The wire of `cases.tsv`, `mask_in.tsv` is set by the `common/log-mask` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

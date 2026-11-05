@@ -28,6 +28,8 @@ the console, the process `domain` (the book at the holder), the agent (the membe
 `reseal.tsv` — the console (resealing at start) and the installer (`w2cctl secrets seal`); the rows `rotate*` —
 the installer (`w2cctl secrets rotate`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-26).
 
+For reseal, the native labels `@same` and `@untouched` are observations: the adapter compares the actual before/after bytes produced by its regular reseal code. A `{kid, plaintext}` observation opens the actual new envelope with that key and the original AAD. It is not a copy of the expected marker or input plaintext. The expectation columns are judge-side data and never enter the call.
+
 ## Vector wire
 
 The wire of `aad.tsv`, `envelope.tsv`, `open.tsv`, `reseal.tsv`, `ring.tsv` is set by the `common/sealing` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

@@ -25,3 +25,7 @@ Without a stand: a side gives the value to its deadline translation of the door 
 (`written` — a string byte for byte). The check `too far` (by the value as
 sent, against `now` and `most_valid`) is not here: the acceptance of chapter 6.4, sc. 04 and 06.
 Who performs it — the console (`06-console`: the request door translates the sent deadline, P/06.4 Н3 «file a request» step 1). The worker (`03-worker`) does no translation: it reads a ready `valid_until` from the request row (P/03.6 Н3), its own filing is without a deadline sent by a client (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/deadline` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.
