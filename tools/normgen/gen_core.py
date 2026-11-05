@@ -50,6 +50,24 @@ OPS = {
 }
 LINE = 116      # ширина строки комментария якоря
 
+# Личность вызова над Context (core.go): места норм, не код решения (Архитектор 2026-11-05: 26 — R38-06).
+# (файл норм, якорь, выражение отбора текста пункта или None — первая строка пункта).
+NORMS_12 = ROOT / "Platform/01-store/spec/01.2-store.norms.md"
+NORMS_13 = ROOT / "Platform/01-store/spec/01.3-store.norms.md"
+REFUSALS = ROOT / "Platform/01-store/forms/refusals.tsv"
+ACCEPT_2 = ROOT / "Platform/01-store/acceptance/2/README.md"
+IDENTITY = [
+    (NORMS_12, "Н1.1 «Roles» identity, box", "P/01.2-R006", r"\bbox:\s*(.*?)\s+doors:"),
+    (NORMS_12, "Н3 «check(role, action, key)» steps 1–3", "P/01.2-R017", None),
+    (NORMS_12, None, "P/01.2-R018", None),
+    (NORMS_12, None, "P/01.2-R019", None),
+    (NORMS, "Н2.1 «Request parsing» (a refusal before the body)", "P/01.1-R050", None),
+    (NORMS, "Н3 «list»", "P/01.1-R066", r"(Identity is checked before the operation.*?403 forbidden\.)"),
+]
+ORDER = (NORMS_13, r"\*\*(P/01\.3-07)\*\*[^«]*the order «([^»]+)»")
+ROLE_HEADER = (ACCEPT_2, r"the name (X-[A-Za-z-]+) is a designation of the header of trusted role forwarding")
+IDENTITY_REFUSALS = ("role_header", "identity", "forwarding_untrusted")
+
 
 class GenError(Exception):
     pass
@@ -173,7 +191,7 @@ func newStore(cfg Config) (*Store, error) {
 	return &Store{cfg: cfg}, nil
 }
 
-// Context — the context of one request: the socket identity (Call.Sock: "admin" or a role) and the headers.
+{identity}
 func (s *Store) Context(call Call, header map[string]string) Ctx {
 	return &Request{Call: call, Header: header}
 }
@@ -227,9 +245,77 @@ func Open(cfg Config) (Core, error) {
 '''
 
 
+def plain(text):
+    t = re.sub(r"\*\*|\[([^\]]+)\]\([^)]+\)", lambda m: m[1] or "", text)
+    return re.sub(r"\s+", " ", re.sub(r"^(- |\d+\. )", "", t)).strip()
+
+
+def wrap(text, first, rest):
+    """Текст пункта целиком (без обрезки brief): строки комментария не шире LINE + отступ."""
+    out, cur = [], first
+    for w in text.split(" "):
+        if len(cur) + len(w) + 1 > LINE + len(first) and cur.strip("/ "):
+            out.append(cur.rstrip())
+            cur = rest
+        cur += w + " "
+    out.append(cur.rstrip())
+    return out
+
+
+def anchored(path):
+    return {a: t for _, _, items in sections(path.read_text(encoding="utf-8")) for a, t in items}
+
+
+def identity_comment():
+    """Комментарий над Context: личность вызова — якоря норм, порядок, заголовок, строки отказа refusals.tsv."""
+    lines = ["// Context — the identity of the call (KIT.md «Context — the identity of the call: what to check»): the socket",
+             "// (Call.Sock: \"admin\" or a role) and the headers. Context cannot refuse: every method gets c — check c first, before",
+             "// the body or the query is used (QueryRefused too: the query is parsed before your method). By the norms:"]
+    texts = {}
+    for path, where, anchor, expr in IDENTITY:
+        if path not in texts:
+            texts[path] = anchored(path)
+        text = texts[path].get(anchor)
+        if text is None:
+            raise GenError(f"{path.name}: no req anchor {anchor}")
+        if expr is not None:
+            m = re.search(expr, text, re.S)
+            if not m:
+                raise GenError(f"{path.name}: {anchor} — no text by {expr!r}")
+            text = m[1]
+        if where:
+            lines.append(f"//   spec/{path.name} {where}:")
+        lines += wrap(f"req: {anchor} — {plain(text)}", "//     ", "//       ")
+    path, expr = ORDER
+    m = re.search(expr, path.read_text(encoding="utf-8"))
+    if not m:
+        raise GenError(f"{path.name}: no order «… → …» in the checklist")
+    lines.append(f"//   the order «{m[2]}» — spec/{path.name} readiness {m[1]} (no req anchor; coreadapter.Handle does")
+    lines.append("//     frame (413) → route; identity is yours, before the body)")
+    path, expr = ROLE_HEADER
+    m = re.search(expr, path.read_text(encoding="utf-8"))
+    if not m:
+        raise GenError(f"{path.name}: no name of the role forwarding header")
+    lines.append(f"//   the role forwarding header: {m[1]} (acceptance/2/README.md), in c.Header")
+    rows = {}
+    for line in REFUSALS.read_text(encoding="utf-8").split("\n"):
+        cols = line.split("\t")
+        if len(cols) == 10 and cols[2] in IDENTITY_REFUSALS:
+            rows[cols[2]] = cols
+    if set(rows) != set(IDENTITY_REFUSALS):
+        raise GenError(f"{REFUSALS.name}: rows {sorted(set(IDENTITY_REFUSALS) - set(rows))} not found")
+    lines.append("//   the refusal — forms/refusals.tsv:")
+    for name in IDENTITY_REFUSALS:
+        ch, row, _, _, code, kind, _, _, _, norm = rows[name]
+        var = "".join(w[:1].upper() + w[1:] for w in name.split("_"))
+        lines.append(f"//     {ch} row {row} {name} — {code} {kind} ({norm}); with part refusals: refusals.{var}")
+    lines.append("//     apidoor.Refuse(op, 403, \"forbidden\", msg, nil)")
+    return "\n".join(lines)
+
+
 def render():
     """→ ({путь от core/: текст}, [(метод, глава, число якорей)])."""
-    for p in (NORMS, OPENAPI, DOOR):
+    for p in (NORMS, OPENAPI, DOOR, NORMS_12, NORMS_13, REFUSALS, ACCEPT_2):
         if not p.is_file():
             raise GenError(f"no {p}" + (": run tools/normgen/gen_door.py" if p == DOOR else ""))
     secs = sections(NORMS.read_text(encoding="utf-8"))
@@ -267,7 +353,7 @@ def render():
         stub = GET_STUB if name == "Get" else f"\treturn notImplemented({op})"
         body.append((name, "\n".join(lines) + f"\n{sig} {{\n{stub}\n}}\n"))
         report.append((name, chapter, count))
-    core = CORE_HEAD.replace("{norms_sha}", sha(NORMS)).replace("{openapi_sha}", sha(OPENAPI)).replace("{module}", GO_MODULE)
+    core = CORE_HEAD.replace("{identity}", identity_comment()).replace("{norms_sha}", sha(NORMS)).replace("{openapi_sha}", sha(OPENAPI)).replace("{module}", GO_MODULE)
     files = {"coreadapter/core.go": gofmt(core), "coreadapter/open.go": gofmt(OPEN)}
     for name, text in body:
         rel = f"coreadapter/{name.lower()}.go"
@@ -303,7 +389,7 @@ def provenance():
     """Паспорт части (ADR-0125 доп. (1) п. 6 (а)): формы, генератор, ручная среда (нет), судья."""
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": sha(path)}
-    return {"form": [entry(NORMS), entry(OPENAPI)], "generator": entry(Path(__file__).resolve()),
+    return {"form": [entry(p) for p in (NORMS, OPENAPI, NORMS_12, NORMS_13, REFUSALS, ACCEPT_2)], "generator": entry(Path(__file__).resolve()),
             "handwritten": [], "judge": entry(JUDGE)}
 
 
@@ -334,7 +420,13 @@ a `coreadapter.Core`). Everything compiles and runs from the start: the stage te
 3. `write.go`: first `writecheck.Check(body, c.Call.Sock, lim, allowed)` (the form of the body — part writecheck), then
    the command by Н3 on its parsed body. Answers: `apidoor.AnswerOf(op, code, value)`, refusals
    `apidoor.Refuse(op, code, kind, msg, fields)` (codes and kinds — Н4 and `forms/refusals.tsv`).
-4. `rights.go` (chapter 1.2), `status.go`, `join.go`, `leave.go`, `metrics.go` (chapter 1.3) answer 503 «not in this stage»: leave
+4. **Context — the identity of the call: what to check.** `Context(call, header)` in `core.go` gives `c` to every
+   method; it cannot refuse, so each method checks `c` first, before the body or the query is used (`QueryRefused` too).
+   Above `Context` — the places: P/01.2 Н1.1 `identity` (box: a role header on any socket — 403 with the role of the
+   socket), P/01.2 Н3 «check» steps 1–3 (a role header on a role socket — `403` before the body is parsed; a listing —
+   after the identity check), P/01.1 Н2.1 (a refusal before the body), P/01.1 Н3 «list», the order «frame → route →
+   identity → body», the header name and the rows of `forms/refusals.tsv` (403 `forbidden`). The check itself is yours.
+5. `rights.go` (chapter 1.2), `status.go`, `join.go`, `leave.go`, `metrics.go` (chapter 1.3) answer 503 «not in this stage»: leave
    them until your stage needs them. Keep the signatures: `Store` must stay a `coreadapter.Core`.
 
 Do not study `apidoor` or `coreadapter.Handle` beyond the signatures in these files: the route, the query parse, the body

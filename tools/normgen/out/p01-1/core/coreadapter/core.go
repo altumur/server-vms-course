@@ -28,7 +28,41 @@ func newStore(cfg Config) (*Store, error) {
 	return &Store{cfg: cfg}, nil
 }
 
-// Context — the context of one request: the socket identity (Call.Sock: "admin" or a role) and the headers.
+// Context — the identity of the call (KIT.md «Context — the identity of the call: what to check»): the socket
+// (Call.Sock: "admin" or a role) and the headers. Context cannot refuse: every method gets c — check c first, before
+// the body or the query is used (QueryRefused too: the query is parsed before your method). By the norms:
+//
+//	spec/01.2-store.norms.md Н1.1 «Roles» identity, box:
+//	  req: P/01.2-R006 — the writer's name at a store of files/memory + the same list of rights; the box door also opens
+//	    a socket per role; there are no trusted forwarding senders on a box: a role header on any socket, admin.sock
+//	    included, — 403 with the role of the socket
+//	spec/01.2-store.norms.md Н3 «check(role, action, key)» steps 1–3:
+//	  req: P/01.2-R017 — Let role be the role from the socket (a cluster) or from the writer's name (a box). If a header
+//	    with a role is on a role socket, return `403` before the body is parsed (a body out of form with such a header is
+//	    also `403`; reconciliation of python and go М10/6–11: both so).
+//	  req: P/01.2-R018 — If the role is forwarded, first check the trust in the group daemon and the ban on a forwarded
+//	    admin (step 9).
+//	  req: P/01.2-R019 — If the operation is list, after the identity check return the names and versions without
+//	    checking the read right.
+//	spec/01.1-store.norms.md Н2.1 «Request parsing» (a refusal before the body):
+//	  req: P/01.1-R050 — Early refusal. When a door refuses before reading the whole body (`Content-Length` larger than
+//	    the limit — `413`; any other refusal before the body), the door MUST send the full answer with `Connection:
+//	    close`, then read and discard what was sent, without parsing, up to the declared length but no more than the
+//	    drain volume and no longer than the drain time, and only then close the connection: a client that is still
+//	    sending the body gets the answer, not a connection reset. The rule is one for all HTTP doors of the module
+//	    (console — P/06.5 Н2 «Console request parsing», the byte door — P/06.1 Н2, the resource door — P/05 Н2 «Разбор
+//	    запроса»); the drain volume and time are item 9 of «Implementation decides».
+//	spec/01.1-store.norms.md Н3 «list»:
+//	  req: P/01.1-R066 — Identity is checked before the operation by P/01.2 Н3 «check»: a substituted role or an
+//	    untrusted forwarding gives 403 forbidden.
+//	the order «frame → route → identity → body» — spec/01.3-store.norms.md readiness P/01.3-07 (no req anchor; coreadapter.Handle does
+//	  frame (413) → route; identity is yours, before the body)
+//	the role forwarding header: X-Configstore-Role (acceptance/2/README.md), in c.Header
+//	the refusal — forms/refusals.tsv:
+//	  1.2 row 7 role_header — 403 forbidden (P/01.2 Н1.1); with part refusals: refusals.RoleHeader
+//	  1.1 row 4 identity — 403 forbidden (P/01.2 Н3 «check»; P/01.3 Н4); with part refusals: refusals.Identity
+//	  1.2 row 8 forwarding_untrusted — 403 forbidden (P/01.2 Н3; P/01.3 Н3); with part refusals: refusals.ForwardingUntrusted
+//	  apidoor.Refuse(op, 403, "forbidden", msg, nil)
 func (s *Store) Context(call Call, header map[string]string) Ctx {
 	return &Request{Call: call, Header: header}
 }
