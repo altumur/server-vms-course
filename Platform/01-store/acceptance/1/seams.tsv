@@ -17,7 +17,7 @@ s2-admission-equal	4	POST /v1/write {"op":"put","key":"acc/s2/c2","items":{"n":"
 s2-admission-equal	5	POST /v1/write {"op":"put","key":"acc/s2/c3","items":{"n":"1"},"cas":"","not_after":2000000000}	409 {"kind":"expired"}
 s2-admission-equal	6	@clock +0.25	ok
 s2-admission-equal	7	POST /v1/write {"op":"put","key":"acc/s2/put/after_before","items":{"n":"1"},"cas":"","not_after":2000000001.125}	409 {"kind":"expired"}
-s2-admission-equal	8	GET /v1/get?key=acc/s2/put/after_before	200 {"items":null}
+s2-admission-equal	8	GET /v1/get?key=acc/s2/put/after_before	200 {"items":null,"index":""}
 s2-admission-equal	9	POST /v1/write {"op":"put","key":"acc/s2/put/after_equal","items":{"n":"1"},"cas":"","not_after":2000000001.25}	200 {"index":"$fput1"}
 s2-admission-equal	10	GET /v1/get?key=acc/s2/put/after_equal	200 {"items":{"n":"1"},"index":"$fput1"}
 s2-admission-equal	11	POST /v1/write {"op":"put","key":"acc/s2/put/after_after","items":{"n":"1"},"cas":"","not_after":2000000001.375}	200 {"index":"$fput2"}
@@ -25,25 +25,25 @@ s2-admission-equal	12	GET /v1/get?key=acc/s2/put/after_after	200 {"items":{"n":"
 s2-admission-equal	13	POST /v1/write {"op":"put","key":"acc/s2/put/before_before","items":{"n":"1"},"cas":"","not_before":2000000001.125}	200 {"index":"$fput3"}
 s2-admission-equal	14	GET /v1/get?key=acc/s2/put/before_before	200 {"items":{"n":"1"},"index":"$fput3"}
 s2-admission-equal	15	POST /v1/write {"op":"put","key":"acc/s2/put/before_equal","items":{"n":"1"},"cas":"","not_before":2000000001.25}	409 {"kind":"early"}
-s2-admission-equal	16	GET /v1/get?key=acc/s2/put/before_equal	200 {"items":null}
+s2-admission-equal	16	GET /v1/get?key=acc/s2/put/before_equal	200 {"items":null,"index":""}
 s2-admission-equal	17	POST /v1/write {"op":"put","key":"acc/s2/put/before_after","items":{"n":"1"},"cas":"","not_before":2000000001.375}	409 {"kind":"early"}
-s2-admission-equal	18	GET /v1/get?key=acc/s2/put/before_after	200 {"items":null}
+s2-admission-equal	18	GET /v1/get?key=acc/s2/put/before_after	200 {"items":null,"index":""}
 s2-admission-equal	19	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s2/delete/after_before","items":{"n":"1"},"cas":""},{"op":"put","key":"acc/s2/delete/after_equal","items":{"n":"1"},"cas":""},{"op":"put","key":"acc/s2/delete/after_after","items":{"n":"1"},"cas":""},{"op":"put","key":"acc/s2/delete/before_before","items":{"n":"1"},"cas":""},{"op":"put","key":"acc/s2/delete/before_equal","items":{"n":"1"},"cas":""},{"op":"put","key":"acc/s2/delete/before_after","items":{"n":"1"},"cas":""}]}	200 {"index":"$s2delete"}
 s2-admission-equal	20	POST /v1/write {"op":"delete","key":"acc/s2/delete/after_before","cas":"$s2delete","not_after":2000000001.125}	409 {"kind":"expired"}
 s2-admission-equal	21	GET /v1/get?key=acc/s2/delete/after_before	200 {"items":{"n":"1"},"index":"$s2delete"}
 s2-admission-equal	22	POST /v1/write {"op":"delete","key":"acc/s2/delete/after_equal","cas":"$s2delete","not_after":2000000001.25}	200 {"index":"$fdelete1"}
-s2-admission-equal	23	GET /v1/get?key=acc/s2/delete/after_equal	200 {"items":null}
+s2-admission-equal	23	GET /v1/get?key=acc/s2/delete/after_equal	200 {"items":null,"index":""}
 s2-admission-equal	24	POST /v1/write {"op":"delete","key":"acc/s2/delete/after_after","cas":"$s2delete","not_after":2000000001.375}	200 {"index":"$fdelete2"}
-s2-admission-equal	25	GET /v1/get?key=acc/s2/delete/after_after	200 {"items":null}
+s2-admission-equal	25	GET /v1/get?key=acc/s2/delete/after_after	200 {"items":null,"index":""}
 s2-admission-equal	26	POST /v1/write {"op":"delete","key":"acc/s2/delete/before_before","cas":"$s2delete","not_before":2000000001.125}	200 {"index":"$fdelete3"}
-s2-admission-equal	27	GET /v1/get?key=acc/s2/delete/before_before	200 {"items":null}
+s2-admission-equal	27	GET /v1/get?key=acc/s2/delete/before_before	200 {"items":null,"index":""}
 s2-admission-equal	28	POST /v1/write {"op":"delete","key":"acc/s2/delete/before_equal","cas":"$s2delete","not_before":2000000001.25}	409 {"kind":"early"}
 s2-admission-equal	29	GET /v1/get?key=acc/s2/delete/before_equal	200 {"items":{"n":"1"},"index":"$s2delete"}
 s2-admission-equal	30	POST /v1/write {"op":"delete","key":"acc/s2/delete/before_after","cas":"$s2delete","not_before":2000000001.375}	409 {"kind":"early"}
 s2-admission-equal	31	GET /v1/get?key=acc/s2/delete/before_after	200 {"items":{"n":"1"},"index":"$s2delete"}
 s2-admission-equal	32	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s2/batch/after_before/a","items":{"n":"1"},"cas":""},{"op":"put","key":"acc/s2/batch/after_before/b","items":{"n":"1"},"cas":""}],"not_after":2000000001.125}	409 {"kind":"expired"}
-s2-admission-equal	33	GET /v1/get?key=acc/s2/batch/after_before/a	200 {"items":null}
-s2-admission-equal	34	GET /v1/get?key=acc/s2/batch/after_before/b	200 {"items":null}
+s2-admission-equal	33	GET /v1/get?key=acc/s2/batch/after_before/a	200 {"items":null,"index":""}
+s2-admission-equal	34	GET /v1/get?key=acc/s2/batch/after_before/b	200 {"items":null,"index":""}
 s2-admission-equal	35	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s2/batch/after_equal/a","items":{"n":"1"},"cas":""},{"op":"put","key":"acc/s2/batch/after_equal/b","items":{"n":"1"},"cas":""}],"not_after":2000000001.25}	200 {"index":"$fbatch1"}
 s2-admission-equal	36	GET /v1/get?key=acc/s2/batch/after_equal/a	200 {"items":{"n":"1"},"index":"$fbatch1"}
 s2-admission-equal	37	GET /v1/get?key=acc/s2/batch/after_equal/b	200 {"items":{"n":"1"},"index":"$fbatch1"}
@@ -54,11 +54,11 @@ s2-admission-equal	41	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"
 s2-admission-equal	42	GET /v1/get?key=acc/s2/batch/before_before/a	200 {"items":{"n":"1"},"index":"$fbatch3"}
 s2-admission-equal	43	GET /v1/get?key=acc/s2/batch/before_before/b	200 {"items":{"n":"1"},"index":"$fbatch3"}
 s2-admission-equal	44	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s2/batch/before_equal/a","items":{"n":"1"},"cas":""},{"op":"put","key":"acc/s2/batch/before_equal/b","items":{"n":"1"},"cas":""}],"not_before":2000000001.25}	409 {"kind":"early"}
-s2-admission-equal	45	GET /v1/get?key=acc/s2/batch/before_equal/a	200 {"items":null}
-s2-admission-equal	46	GET /v1/get?key=acc/s2/batch/before_equal/b	200 {"items":null}
+s2-admission-equal	45	GET /v1/get?key=acc/s2/batch/before_equal/a	200 {"items":null,"index":""}
+s2-admission-equal	46	GET /v1/get?key=acc/s2/batch/before_equal/b	200 {"items":null,"index":""}
 s2-admission-equal	47	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s2/batch/before_after/a","items":{"n":"1"},"cas":""},{"op":"put","key":"acc/s2/batch/before_after/b","items":{"n":"1"},"cas":""}],"not_before":2000000001.375}	409 {"kind":"early"}
-s2-admission-equal	48	GET /v1/get?key=acc/s2/batch/before_after/a	200 {"items":null}
-s2-admission-equal	49	GET /v1/get?key=acc/s2/batch/before_after/b	200 {"items":null}
+s2-admission-equal	48	GET /v1/get?key=acc/s2/batch/before_after/a	200 {"items":null,"index":""}
+s2-admission-equal	49	GET /v1/get?key=acc/s2/batch/before_after/b	200 {"items":null,"index":""}
 s3-admission-monotone	1	@clock +100.25	ok
 s3-admission-monotone	2	POST /v1/write {"op":"put","key":"acc/s3/a","items":{"n":"1"},"cas":""}	200 {"index":"$a"}
 s3-admission-monotone	3	@clock -100.25	ok
