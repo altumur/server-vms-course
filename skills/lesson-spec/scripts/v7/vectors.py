@@ -20,6 +20,7 @@ import sys
 
 from . import project, stack, textv7
 from .spec import Places, SpecError as SourceError
+from .section import lang_of
 from .view import BEGIN, END, STEPS, build_view_section, unique_names
 
 LESSON = Path("Platform/02-installer")
@@ -320,7 +321,7 @@ class Chapter:
         said = "\n".join(lines[begins[0] + 1:ends[0]]) + "\n"
         if self.schema is None:
             return
-        built = build_view_section(self.schema)
+        built = build_view_section(self.schema, lang=lang_of(path, self.root))
         if said != built:
             old, new = said.splitlines(), built.splitlines()
             at = next((i for i, (a, b) in enumerate(zip(old, new)) if a != b), min(len(old), len(new)))

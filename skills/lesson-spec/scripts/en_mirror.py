@@ -25,7 +25,9 @@
   Блок без пометки — процедура: английский пишет её нумерованным алгоритмом (ADR-0120 п. 1 (а)), построчно не сверяется.
 Чеклист: id `P/…-MM` — те же, в том же порядке. Кириллица в английском — только в `code`, «…», номерах `Н…`, целях
 ссылок, именах файлов, прежних уроков (`М10A_Platform/…`, `М10/11`) и id ревью (`А1`): русские слова там — нарушение.
-Блоки `families`, `form`, `canonical` (sections.py) английский несёт байт в байт (ADR-0121 доп. (1) п. 2).
+Блоки `families`, `form`, `canonical` (sections.py): в раскладке ADR-0124 источник несёт английский блок, перевод —
+русский (ADR-0121 доп. (3) п. 1); сверка построчно — форма строки, `code` (метки по словарю `Platform/common/placeholders.tsv`),
+числа, цели ссылок. В прежней раскладке — байт в байт.
 """
 import os
 import re
@@ -323,10 +325,81 @@ def resolved(block, path, root):
     return LINK.sub(one, block)
 
 
+PLACEHOLDERS = Path("Platform/common/placeholders.tsv")   # словарь меток ru → en (ADR-0121 доп. (3) пп. 1, 4)
+_LABELS = {}
+
+
+def labels(root):
+    """The dictionary of placeholder labels `Platform/common/placeholders.tsv` → {ru: en}; empty without the file."""
+    key = str(Path(root).resolve())
+    if key not in _LABELS:
+        out = {}
+        try:
+            rows = [ln for ln in (Path(root) / PLACEHOLDERS).read_text(encoding="utf-8").splitlines()
+                    if ln and not ln.startswith("#")]
+        except OSError:
+            rows = []
+        for ln in rows[1:]:
+            ru, _, en = ln.partition("\t")
+            out[ru] = en
+        _LABELS[key] = out
+    return _LABELS[key]
+
+
+def as_english_labels(text, root):
+    """Labels of the Russian text → those of the source by the dictionary: `<имя>` → `<name>`, `⟨вариант 1⟩` →
+    `⟨variant 1⟩`; a label outside the dictionary stays."""
+    table = labels(root)
+    text = re.sub(r"<([^<>`\n]+)>", lambda m: "<%s>" % table.get(m.group(1), m.group(1)), text)
+    text = re.sub(r"(?<= )\(([^()\s]+)\)$", lambda m: "(%s)" % table.get(m.group(1), m.group(1)), text)   # «.<имя> (имя)»
+    return re.sub(r"⟨(\S+)( [0-9]+)⟩", lambda m: "⟨%s%s⟩" % (table.get(m.group(1), m.group(1)), m.group(2)), text)
+
+
+def line_shape(line):
+    """The shape of a line of a built block: a heading of its level, a table row of its cells, a list item, an empty line
+    or prose."""
+    if not line.strip():
+        return "empty"
+    if line.startswith("#"):
+        return "heading " + line.split(" ", 1)[0]
+    if line.startswith("|"):
+        return "row of %d cells" % len(re.split(r"(?<!\\)\|", line.strip())[1:-1])
+    if line.startswith("- "):
+        return "item"
+    return "prose"
+
+
+def built_pair(ru_block, en_block, root):
+    """A built block of the translation and of the source (ADR-0121 addendum (3) item 1): the source carries the English
+    block, the translation the Russian one, both built from the same rows of `catalog.tsv` and the files of the form.
+    Line by line: as many lines; each of the same shape, with the same code spans (labels of both read by the dictionary:
+    the texts of the data carry one label for both), numbers and targets of links (resolved). → [message]."""
+    out = []
+    rl, el = ru_block.split("\n"), en_block.split("\n")
+    if len(rl) != len(el):
+        return ["%d lines, ru %d" % (len(el), len(rl))]
+    for no, (r, e) in enumerate(zip(rl, el), 1):
+        if line_shape(r) != line_shape(e):
+            out.append("line %d: %s, ru %s" % (no, line_shape(e), line_shape(r)))
+            continue
+        rs = [as_english_labels(m.group(2), root) for m in SPAN.finditer(r)]
+        es = [as_english_labels(m.group(2), root) for m in SPAN.finditer(e)]   # метки данных — общие, и у источника
+        if rs != es:
+            out.append("line %d: code spans %s, ru %s" % (no, [x for x in es if x not in rs][:3],
+                                                         [x for x in rs if x not in es][:3]))
+            continue
+        rn, en = re.findall(r"[0-9]+", SPAN.sub(" ", r)), re.findall(r"[0-9]+", SPAN.sub(" ", e))
+        if sorted(rn) != sorted(en):
+            out.append("line %d: numbers %s, ru %s" % (no, sorted(en), sorted(rn)))
+        elif LINK.findall(r) != LINK.findall(e):
+            out.append("line %d: links %s, ru %s" % (no, LINK.findall(e), LINK.findall(r)))
+    return out
+
+
 def compare(ru_text, en_text, ru_path, en_path, root):
-    """→ list of messages (empty: the texts agree). Built blocks between `<!-- …:begin/end -->` (sections.py) are
-    compared as they are: the English source carries the block byte for byte until sections.py has an English mode
-    (in the layout of ADR-0124 — byte for byte but the targets of links, resolved from each file)."""
+    """→ list of messages (empty: the texts agree). Built blocks between `<!-- …:begin/end -->` (sections.py): in the layout
+    of ADR-0124 the source carries the English block, the translation the Russian one — compared line by line
+    (built_pair; the targets of links resolved from each file); in the former layout — byte for byte."""
     en_text = REQ_ANCHOR.sub("", en_text)           # якоря требований и надгробия — только у источника (ADR-0122 доп. (1) п. 1)
     ru_blocks, en_blocks = BUILT.findall(ru_text), BUILT.findall(en_text)
     built_ru, built_en = [m.group(0) for m in BUILT.finditer(ru_text)], [m.group(0) for m in BUILT.finditer(en_text)]
@@ -336,7 +409,12 @@ def compare(ru_text, en_text, ru_path, en_path, root):
         built_ru = [resolved(b, Path(ru_path).resolve(), r) for b in built_ru]
         built_en = [resolved(b, Path(en_path).resolve(), r) for b in built_en]
     pre = []
-    if built_ru != built_en:
+    if ru_blocks != en_blocks:
+        pre.append(f"built blocks differ: ru {ru_blocks}, en {en_blocks}")
+    elif new:                                       # раскладка ADR-0124: источник — английский блок, перевод — русский
+        for kind, r, e in zip(ru_blocks, built_ru, built_en):
+            pre.extend(f"built block «{kind}»: {m}" for m in built_pair(r, e, root)[:5])
+    elif built_ru != built_en:                      # прежняя раскладка: блок один, байт в байт
         pre.append(f"built blocks differ: ru {ru_blocks}, en {en_blocks} (the English source carries them as built)")
     ru_text, en_text = BUILT.sub("<!-- built -->", ru_text), BUILT.sub("<!-- built -->", en_text)
     root, ru_path, en_path = Path(root).resolve(), Path(ru_path).resolve(), Path(en_path).resolve()
