@@ -87,6 +87,12 @@
      }
     }
    ]
+  },
+  "every": {
+   "type": "number",
+   "minimum": 1,
+   "maximum": 3600,
+   "description": "period in seconds told to the member by the last answer with a mark write; absent means REPORT_EVERY, by the report intake contract Generation, mark, limits and The answer carry: every"
   }
  },
  "additionalProperties": false,

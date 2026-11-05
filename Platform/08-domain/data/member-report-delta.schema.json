@@ -66,6 +66,21 @@
   },
   "members_rev": {
    "$ref": "#/$defs/out_of_delta"
+  },
+  "class": {
+   "$ref": "#/$defs/out_of_delta"
+  },
+  "batch": {
+   "$ref": "#/$defs/out_of_delta"
+  },
+  "row": {
+   "$ref": "#/$defs/out_of_delta"
+  },
+  "book_parts": {
+   "$ref": "#/$defs/out_of_delta"
+  },
+  "gathered": {
+   "$ref": "#/$defs/out_of_delta"
   }
  },
  "additionalProperties": false,
