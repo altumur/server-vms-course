@@ -161,6 +161,10 @@ class FormsAllLessons(unittest.TestCase):         # ADR-0125 доп. (5): гра
         self.assertTrue({"families", "admin", "core", "rollout-poll"} <= check_forms.KIT_PARTS)
         self.assertTrue(check_forms.COMMAND.fullmatch("manifest-put"))
         self.assertFalse(check_forms.COMMAND.fullmatch("Put"))
+        for ok in ("-dir", "--sha256", "$INSTANCE_ID", "<subsystem>"):
+            self.assertTrue(check_forms.FLAG_NAME.fullmatch(ok), ok)
+        for bad in ("$instance", "<Sub>", "dir", "---x", "$1X"):
+            self.assertFalse(check_forms.FLAG_NAME.fullmatch(bad), bad)
 
     def test_process_seams(self):                     # швы не по HTTP: RUN, CALL, @file, @read (грамматика stagetests)
         path = self.lesson / "acceptance/1/seams.tsv"

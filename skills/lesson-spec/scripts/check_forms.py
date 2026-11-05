@@ -27,6 +27,7 @@ COMMAND = re.compile(r"[a-z][a-z-]*")   # подкоманда урока; св�
 UNITS = {"KiB": 1024, "MiB": 1024 ** 2, "GiB": 1024 ** 3}
 FAULT_KIND = {"BadRequestFault": "badrequest", "BodyTooLargeFault": "toolarge", "ForbiddenFault": "forbidden"}
 CELL = re.compile(r"(?<!\\)\|")
+FLAG_NAME = re.compile(r"--?[a-z][a-z0-9-]*|\$[A-Z][A-Z0-9_]*|<[a-z][a-z0-9-]*>")   # флаг, переменная окружения, позиционный (ADR-0125 доп. (5))
 TWO_HYPHENS = {"--from"}      # the name of the prose admin_ops; a rename is a change of the norms (ADR-0125 доп. (2) п. 1)
 
 
@@ -101,8 +102,8 @@ def check_flags(path):
     seen = set()
     for r in rows:
         where = f"{path.name}: {r['flag']}"
-        if not (re.fullmatch(r"--?[a-z][a-z0-9-]*", r["flag"]) or r["flag"] in TWO_HYPHENS) or r["flag"] in seen:
-            errors.append(f"{where}: the flag is not -name or repeats")
+        if not (FLAG_NAME.fullmatch(r["flag"]) or r["flag"] in TWO_HYPHENS) or r["flag"] in seen:
+            errors.append(f"{where}: the name is not -flag, --flag, $ENV or <arg>, or repeats")
         seen.add(r["flag"])
         if not TYPE.fullmatch(r["type"]):
             errors.append(f"{where}: type {r['type']!r} is not of the closed vocabulary")
