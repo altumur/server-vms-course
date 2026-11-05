@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "06-console/rid",
+ "table": "template.tsv",
+ "case": "len-utf8",
+ "variant": "",
+ "cells": {
+  "key": "\"{unit}-{from:int}-{to:int}\"",
+  "body": "{\"unit\":\"яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяu\",\"from\":1,\"to\":2}"
+ },
+ "files": {}
+}

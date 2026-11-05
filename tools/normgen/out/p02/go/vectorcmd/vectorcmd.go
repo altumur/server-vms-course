@@ -173,6 +173,7 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 		"common/sealing reseal.tsv":             {"input", ""},
 		"common/sealing ring.tsv":               {"*", ""},
 		"common/yaml-suite expect.tsv":          {"id", "in.yaml"},
+		"01-store/jcs canonical_json.tsv":       {"raw", ""},
 		"common/crl cases.tsv":                  {"input", ""},
 		"common/family-read 02.tsv":             {"family,key,kind,mode,text,who", ""},
 		"common/log-mask cases.tsv":             {"raw", "fields.yaml"},
@@ -289,6 +290,12 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 		value = a.Value
 	case "common/yaml-suite expect.tsv":
 		a := vectoradapter.YamlSuite(*in.Table, cellmap, files)
+		if c, o, e, done := answerOf(a); done {
+			return c, o, e, nil
+		}
+		value = a.Value
+	case "01-store/jcs canonical_json.tsv":
+		a := vectoradapter.JCS(*in.Table, cellmap, files)
 		if c, o, e, done := answerOf(a); done {
 			return c, o, e, nil
 		}

@@ -86,3 +86,7 @@ unit referred to by another row — they are checked by reading and by the scena
 P/06.2: the table rows are `table_*` (`testsub2/shelves`: the preparation and the platform fields of a table, C06-ROWCHECK-TABLE-FIELDS-707-01),
 the full replacement and the secrets of a table, the states of the ring — by reading: they are not in the input (C06-ROWCHECK-TABLE-33-01, C06-ROWCHECK-DEV-01).
 A table field with a name from the `platform_fields` of a unit — by reading: the tables of `testsub`/`testsub2` have no such field.
+
+## Vector wire
+
+The wire of `cases.tsv`, `state.tsv` is set by the `common/row-check` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

@@ -157,33 +157,38 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 	}
 	pkg := *in.Package + " " + *in.Table
 	want := map[string][2]string{
-		"common/domain-token cases.tsv":    {"input", ""},
-		"common/events-merge cases.tsv":    {"input", ""},
-		"common/instance box.tsv":          {"input", ""},
-		"common/instance cases.tsv":        {"input", ""},
-		"common/journal append.tsv":        {"file,line", ""},
-		"common/journal names.tsv":         {"input", ""},
-		"common/journal years.tsv":         {"t", ""},
-		"common/labels cases.tsv":          {"input,op", ""},
-		"common/loopback cases.tsv":        {"input", ""},
-		"common/object-client address.tsv": {"input", ""},
-		"common/object-client read.tsv":    {"input", ""},
-		"common/row-check cases.tsv":       {"body,op,rows,stored,unit", "testsub.subsystem.yaml,testsub2.subsystem.yaml"},
-		"common/row-check state.tsv":       {"name,state,unit", "testsub2.subsystem.yaml"},
-		"common/schema cases.tsv":          {"input", ""},
-		"common/secret-in cases.tsv":       {"field,raw", "fields.yaml"},
-		"common/sealing aad.tsv":           {"path,row_key", ""},
-		"common/sealing open.tsv":          {"envelope,key_hex,pointer,row_key", ""},
-		"common/sealing ring.tsv":          {"file", ""},
-		"common/slot cases.tsv":            {"input", ""},
-		"common/slot-name cases.tsv":       {"input,op", ""},
-		"common/values-by-type cases.tsv":  {"*", ""},
-		"03-worker/creates-key cases.tsv":  {"input", ""},
-		"common/crl cases.tsv":             {"input", ""},
-		"common/family-read 03.tsv":        {"family,key,kind,mode,text,who", ""},
-		"common/log-mask cases.tsv":        {"raw", "fields.yaml"},
-		"common/revoked cases.tsv":         {"file", ""},
-		"common/store-client cases.tsv":    {"input", ""},
+		"common/domain-token cases.tsv":              {"input", ""},
+		"common/events-merge cases.tsv":              {"input", ""},
+		"common/instance box.tsv":                    {"input", ""},
+		"common/instance cases.tsv":                  {"input", ""},
+		"common/journal append.tsv":                  {"file,line", ""},
+		"common/journal names.tsv":                   {"input", ""},
+		"common/journal years.tsv":                   {"t", ""},
+		"common/labels cases.tsv":                    {"input,op", ""},
+		"common/loopback cases.tsv":                  {"input", ""},
+		"common/object-client address.tsv":           {"input", ""},
+		"common/object-client read.tsv":              {"input", ""},
+		"common/row-check cases.tsv":                 {"body,op,rows,stored,unit", "testsub.subsystem.yaml,testsub2.subsystem.yaml"},
+		"common/row-check state.tsv":                 {"name,state,unit", "testsub2.subsystem.yaml"},
+		"common/schema cases.tsv":                    {"input", ""},
+		"common/secret-in cases.tsv":                 {"field,raw", "fields.yaml"},
+		"common/sealing aad.tsv":                     {"path,row_key", ""},
+		"common/sealing open.tsv":                    {"envelope,key_hex,pointer,row_key", ""},
+		"common/sealing ring.tsv":                    {"file", ""},
+		"common/slot cases.tsv":                      {"input", ""},
+		"common/slot-name cases.tsv":                 {"input,op", ""},
+		"common/values-by-type cases.tsv":            {"*", ""},
+		"03-worker/creates-key cases.tsv":            {"input", ""},
+		"01-store/jcs canonical_json.tsv":            {"raw", ""},
+		"06-console/request-digest digest.tsv":       {"input,sender", ""},
+		"06-console/requests-body requests_body.tsv": {"body", ""},
+		"06-console/rid rid.tsv":                     {"rid", ""},
+		"06-console/rid template.tsv":                {"body,key", ""},
+		"common/crl cases.tsv":                       {"input", ""},
+		"common/family-read 03.tsv":                  {"family,key,kind,mode,text,who", ""},
+		"common/log-mask cases.tsv":                  {"raw", "fields.yaml"},
+		"common/revoked cases.tsv":                   {"file", ""},
+		"common/store-client cases.tsv":              {"input", ""},
 	}
 	shape, ok := want[pkg]
 	if !ok {
@@ -354,6 +359,36 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 			return c, o, e, nil
 		}
 		return 0, a.Raw, nil, nil
+	case "01-store/jcs canonical_json.tsv":
+		a := vectoradapter.JCS(*in.Table, cellmap, files)
+		if c, o, e, done := answerOf(a); done {
+			return c, o, e, nil
+		}
+		value = a.Value
+	case "06-console/request-digest digest.tsv":
+		a := vectoradapter.RequestDigestCells(*in.Table, cellmap, files)
+		if c, o, e, done := answerOf(a); done {
+			return c, o, e, nil
+		}
+		value = a.Value
+	case "06-console/requests-body requests_body.tsv":
+		a := vectoradapter.RequestsBody(*in.Table, cellmap, files)
+		if c, o, e, done := answerOf(a); done {
+			return c, o, e, nil
+		}
+		value = a.Value
+	case "06-console/rid rid.tsv":
+		a := vectoradapter.RidCells(*in.Table, cellmap, files)
+		if c, o, e, done := answerOf(a); done {
+			return c, o, e, nil
+		}
+		value = a.Value
+	case "06-console/rid template.tsv":
+		a := vectoradapter.RidCells(*in.Table, cellmap, files)
+		if c, o, e, done := answerOf(a); done {
+			return c, o, e, nil
+		}
+		value = a.Value
 	case "common/crl cases.tsv":
 		v, err := vectoradapter.CRL([]byte(cell("input")))
 		if err != nil {

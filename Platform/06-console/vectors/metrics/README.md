@@ -37,3 +37,7 @@ otherwise the shortest ECMAScript notation — 1e+21, 1e-7, 1234567.5), escaping
 
 Without a stand: the side gives the input to its own construction of the series (the reads are replaced by the input) and compares the lines.
 Who executes it is the console (`06-console`, `GET /metrics`: P/06.5 Н3 «Manifest series `metrics[]`»). The manifest loader (`02-installer`) checks only the form of the element `metrics[]` (P/02.1 «Form», the field `metrics`) and does not build series; the heartbeats and the table rows of the input are written by their owners (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `06-console/metrics` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

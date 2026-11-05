@@ -26,3 +26,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 Without a stand: a side gives the input to its judgement «удержание действует» (the observation memory and the clock are replaced by the input).
 The freshness of the heartbeat as a boundary — the package [`fresh-age`](../fresh-age/README.md).
 Who performs it — the console (`06-console`: the judgement «удержание действует» in `/where/<table>/<place>` and `held_by`, P/06.5 Н3, P/06.1 Н1). The worker taking a place (`03-worker`) shares with it only the boundary 45 + `HOLD_SKEW`, does not judge the holder's heartbeat and does not perform the table (P/03.2 Н3 «take_place»); the controller (`04-controller`) reads the holds only to account for places at the decommission of a server (P/04 Н1.1) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/hold-state` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

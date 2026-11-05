@@ -40,3 +40,7 @@ of the acceptance.
 The vectors are checked by an oracle against the text of the contract (steps 1–9; the signatures — the closed list `sig` of the role certificate contract;
 the library `cryptography`), not by the code of implementations; on a discrepancy the contract is right, «Спецификация» corrects the vector. Rows 28–32 are
 the output and the exit code of the command `peer` of the witness М11, reconciled with steps 1, 2, 3, 8 of the contract.
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/peer` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

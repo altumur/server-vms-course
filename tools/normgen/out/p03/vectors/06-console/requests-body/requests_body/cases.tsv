@@ -1,0 +1,53 @@
+case	input	exit	stdout
+line-49	line-49.json	0	{"stored": "true"}
+line-50	line-50.json	0	{"stored": "false"}
+line-51	line-51.json	0	{"stored": "null"}
+line-52	line-52.json	0	{"stored": ""}
+line-53	line-53.json	0	{"stored": "5"}
+line-54	line-54.json	0	{"stored": "5"}
+line-55	line-55.json	0	{"stored": "0"}
+line-56	line-56.json	0	{"stored": "0.1"}
+line-57	line-57.json	0	{"stored": "-2.5"}
+line-58	line-58.json	0	{"stored": "1e+21"}
+line-59	line-59.json	0	{"stored": "1e-7"}
+line-60	line-60.json	0	{"stored": "1.5e-10"}
+line-61	line-61.json	0	{"stored": "9007199254740992"}
+line-62	line-62.json	0	{"stored": "1e+33"}
+line-63	line-63.json	0	{"stored": "abc"}
+line-64	line-64.json	0	{"stored": "5"}
+line-65	line-65.json	0	{"stored": "{\"a\":2,\"b\":1}"}
+line-66	line-66.json	0	{"stored": "{\"a\":[1,2]}"}
+line-67	line-67.json	0	{"stored": "{\"t\":\"<b>&\"}"}
+line-68	line-68.json	0	{"stored": "{\"ж\":\"ё\"}"}
+line-84	line-84.json	0	{"stored": "1000"}
+line-85	line-85.json	0	{"stored": "1.5"}
+line-86	line-86.json	0	{"stored": "1000"}
+line-87	line-87.json	0	{"stored": "1000"}
+line-88	line-88.json	0	{"stored": "0"}
+line-89	line-89.json	0	{"stored": "12345678901234567000"}
+line-90	line-90.json	0	{"stored": "1e+32"}
+line-91	line-91.json	0	{"stored": "-1e+32"}
+line-92	line-92.json	0	{"stored": "1e+40"}
+line-93	line-93.json	0	{"stored": "text"}
+line-94	line-94.json	0	{"stored": "text, as \"it\" is"}
+line-95	line-95.json	0	{"stored": "5.0"}
+line-96	line-96.json	0	{"stored": "true"}
+line-97	line-97.json	0	{"stored": "é ü"}
+line-98	line-98.json	0	{"fault": "too_long"}
+line-99	line-99.json	0	{"stored": "{\"a\":[1],\"b\":2}"}
+line-100	line-100.json	0	{"stored": "[1.5,1000,0]"}
+line-101	line-101.json	0	{"stored": "[12345678901234567000]"}
+line-102	line-102.json	0	{"stored": "{\"s\":\"<&>/\"}"}
+line-103	line-103.json	0	{"stored": "{\"e\":\"\\b\\f\\n\\u0001\"}"}
+line-104	line-104.json	0	{"stored": "{\"l\":\" \"}"}
+line-105	line-105.json	0	{"stored": "{\"é\":true}"}
+line-106	line-106.json	0	{"stored": "[]"}
+line-107	line-107.json	0	{"stored": "{}"}
+line-108	line-108.json	0	{"stored": "{\"y\":false,\"z\":null}"}
+line-109	line-109.json	0	{"fault": "<refused>"}
+line-110	line-110.json	0	{"fault": "<refused>"}
+line-111	line-111.json	0	{"fault": "<refused>"}
+line-113	line-113.json	0	{"fault": "<refused>"}
+line-115	line-115.json	0	{"fault": "<refused>"}
+line-120	line-120.json	0	{"stored": "{\"😀\":1,\"דּ\":2}"}
+line-125	line-125.json	0	{"stored": "0.000001"}

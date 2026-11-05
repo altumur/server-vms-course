@@ -13,7 +13,7 @@ import common_vectors
 import wire
 
 # Сигнатуры Go — выбор пакета. Входы, фикстуры, ожидания, группировки и сравнения задаёт только wire.tsv.
-API = [
+API_P02 = [
     ('02-installer/canonical', 'cases.tsv', 'stand:canonical', 'Canonical', 'source'),
     ('02-installer/exec', 'cases.tsv', 'stand:exec', 'Exec', 'input'),
     ('02-installer/install-order', 'cases.tsv', 'stand:install-order', 'InstallOrder', 'input'),
@@ -35,46 +35,81 @@ API = [
 ]
 
 
-def declarations(root):
-    bindings = wire.lesson_bindings(root, "02-installer")
-    by = {b.key: b for b in bindings if b.surface != "layout"}
+def declarations(root, lesson="02-installer", api=API_P02):
+    bindings = wire.lesson_bindings(root, lesson)
+    runs, _ = wire.expand(root, lesson)
+    active = {}
+    for run in runs:
+        active.setdefault(run.binding.key, []).append(run)
+    by = {b.key: b for b in bindings if b.key in active}
     out = []
-    api_rows = list(API)
-    if ("01-store/jcs", "canonical_json.tsv", "vectors") in by:
-        api_rows.append(("01-store/jcs", "canonical_json.tsv", "vectors", "JCS", "cells"))
+    columns = ("package", "table", "surface", "fn", "args")
+    api_rows, seen_api, signatures = [], set(), {}
+    for row in api:
+        if isinstance(row, dict):
+            if set(row) != set(columns):
+                raise wire.WireError(f"Go API admits only {columns}, got {sorted(row)}")
+            row = tuple(row[k] for k in columns)
+        else:
+            row = tuple(row)
+        if len(row) != 5 or not all(isinstance(x, str) for x in row):
+            raise wire.WireError(f"invalid Go API mapping {row!r}")
+        if row[:3] in seen_api:
+            raise wire.WireError(f"duplicate Go API mapping {row[:3]}")
+        seen_api.add(row[:3])
+        fn, args = row[3:]
+        if not re.fullmatch(r"[A-Z][A-Za-z0-9_]*", fn) or (fn in signatures and signatures[fn] != args):
+            raise wire.WireError(f"conflicting/invalid Go API function {fn!r}")
+        signatures[fn] = args
+        api_rows.append(row)
+    jcs = ("01-store/jcs", "canonical_json.tsv", "vectors")
+    if lesson == "02-installer" and jcs in by and not any(row[:3] == jcs for row in api_rows):
+        api_rows.append((*jcs, "JCS", "cells"))
     for package, table, surface, fn, args in api_rows:
         key = package, table, surface
         if key not in by:
-            raise wire.WireError(f"{wire.FORM}: missing adapter binding {key}")
-        b = by[key]
+            raise wire.WireError(f"{wire.FORM}: missing adapter binding {key} for {lesson}")
+        b, selected = by[key], active[key]
+        if args not in {"cells", "cells+variant", "source", "input", "none"}:
+            raise wire.WireError(f"{key}: unknown Go API args {args!r}")
+        if surface == "vectors" and args == "input" and any(len(r.cells) != 1 or r.files for r in selected):
+            raise wire.WireError(f"{key}: input API requires exactly one cell and no fixtures")
+        if surface == "vectors" and args == "source":
+            raise wire.WireError(f"{key}: source API requires a stand argument file")
         d = dict(package=package, table=table, surface=surface, fn=fn, args=args)
-        if args == "none" and surface == "vectors":
-            d["per_list"] = True    # the Go API returns all lists; vectorcmd projects one selected list
+        if package == "02-installer/platform-lists" and args == "none" and surface == "vectors":
+            d["per_list"] = True
         d["doc"] = f"Native input and output: Platform/{b.norm}; transport: Platform/common/vectors/wire.tsv."
-        d["inputs"] = sorted({k for x in b.inputs for k in x.get("cells", {})})
-        d["files"] = b.files
+        d["inputs"] = sorted({k for r in selected for k in (r.cells or {})})
+        d["files"] = {k: b.files[k] for r in selected for k in r.files}
         d["compare"] = b.compare
+        d["native"] = b.native
+        shapes = {}
+        for r in selected:
+            shape = (",".join(sorted(r.cells or {})), ",".join(sorted(r.files)))
+            if shape not in shapes.setdefault(r.variant, []):
+                shapes[r.variant].append(shape)
+        d["wire_shapes"] = shapes
         if any("literal" in v for x in b.inputs for v in x.get("cells", {}).values()):
-            d["extra_cells"] = True       # vectorcmd admits the optional rotate cell (API takes a map)
+            d["extra_cells"] = True
         out.append(d)
-    common = {(f"common/{n}", t, "vectors") for n, t in common_vectors.composition(
-        "02-installer", root, known_only=True)}
+    common = {(f"common/{n}", t, "vectors") for n, t in common_vectors.composition(lesson, root, known_only=True)}
     missing = set(by) - {tuple(d[k] for k in ("package", "table", "surface")) for d in out} - common
     if missing:
         raise wire.WireError(f"{wire.FORM}: no Go adapter API for {sorted(missing)}")
     if common - set(by):
         raise wire.WireError(f"{wire.FORM}: missing common bindings {sorted(common - set(by))}")
-    # Fail closed before touching out when a consumer has no wire declaration.
     covered = {(b.package, b.table) for b in bindings}
-    required = {k for k, owners in wire.consumers(root).items() if "02-installer" in owners}
+    required = {key for key, owners in wire.consumers(root).items() if lesson in owners}
     if required - covered:
         raise wire.WireError(f"{wire.FORM}: undeclared consumers {sorted(required - covered)}")
-    stages = Path(root) / "Platform/02-installer/forms/stages.tsv"
-    lines = [line.split("\t") for line in stages.read_text().splitlines() if line and not line.startswith("#")]
-    gate = lines[0].index("gate")
-    for pkg in {p for row in lines[1:] for p in re.findall(r"vectors:([a-z0-9-]+)", row[gate])}:
-        if not any(b.package == f"02-installer/{pkg}" for b in bindings):
-            raise wire.WireError(f"{wire.FORM}: undeclared stages.tsv package {pkg}")
+    stages = Path(root) / "Platform" / lesson / "forms/stages.tsv"
+    if stages.is_file():
+        lines = [line.split("\t") for line in stages.read_text().splitlines() if line and not line.startswith("#")]
+        gate = lines[0].index("gate")
+        for pkg in {p for row in lines[1:] for p in re.findall(r"vectors:([a-z0-9-]+)", row[gate])}:
+            if not any(b.package == f"{lesson}/{pkg}" for b in bindings):
+                raise wire.WireError(f"{wire.FORM}: undeclared stages.tsv package {pkg}")
     return out
 
 
@@ -112,28 +147,35 @@ def payload(r):
 def expectation(r):
     out = {"code": r.code, "ignore": r.ignore_stdout, "value": None if isinstance(r.value, bytes) else r.value,
            "raw": base64.b64encode(r.value).decode("ascii") if isinstance(r.value, bytes) else None,
-           "compare": r.compare, "native": r.native, "asserts": [a._asdict() for a in r.asserts]}
+           "compare": r.compare, "native": r.native,
+           "asserts": [{k: v for k, v in a._asdict().items() if k != "ignore" or v is not None} for a in r.asserts]}
     if r.ignore:
         out["ignored"] = r.ignore
     return json.dumps(out, ensure_ascii=False)
 
 
-def build(root, g):
-    decls = declarations(root)
-    runs, excluded = wire.expand(root, "02-installer")
-    for r in runs:
-        check_native(r.native)
-        if r.compare.startswith("lines-"):
-            raise wire.WireError(f"{wire.FORM}: P/02 does not support {r.compare} yet")
-    known = g.common_vectors.composition("02-installer", root, known_only=True)
+def build(root, g, decls=None, lesson=None):
+    key = lesson or g.L.key
+    decls = declarations(root, key) if decls is None else decls
+    runs, excluded = wire.expand(root, key)
+    known = g.common_vectors.composition(key, root, known_only=True)
     return render(root, g, decls, runs, excluded, known)
+
+
+def runtime_files(g, full=False):
+    # P/02 remains byte-for-byte on its published runtime. Full grammar is explicitly selected by its caller.
+    schema = (g.HERE / "doorrt2/go/schema.go").read_text().split("// mediaType —", 1)[0]
+    if "func validate(" not in schema or "func DecodeRequest(" in schema:
+        raise g.GenError("schema runtime boundary moved")
+    schema = schema.replace("package apidoor", "package wirecheck").replace('\n\t"math"', '')
+    checker = "wirert/full/go/check.go" if full else "wirert/go/check.go"
+    return {"go/wirecheck/schema.go": g.gofmt(schema + '\nconst bundle = `{ "$defs": {} }`\n').encode(),
+            "go/wirecheck/check.go": (g.HERE / checker).read_bytes()}
 
 
 def render(root, g, decls, runs, excluded, known=(), scaffold=True):
     for r in runs:
         check_native(r.native)
-        if r.compare.startswith("lines-"):
-            raise wire.WireError(f"{wire.FORM}: unsupported compare {r.compare}")
     files, inv = {}, []
     by_fn = {}
     for d in decls:
@@ -146,17 +188,18 @@ def render(root, g, decls, runs, excluded, known=(), scaffold=True):
             files[f"go/vectoradapter/{name}"] = g.gofmt(text).encode()
     bindings = {r.binding.key: r.binding for r in runs}
     if scaffold:
-        files["go/vectorcmd/vectorcmd.go"] = g.go_vectorcmd(decls, known, bindings).encode()
+        files["go/vectorcmd/vectorcmd.go"] = (g.go_vectorcmd(decls, known, bindings) if g.L.key == "02-installer"
+                                                else g.go_vectorcmd(decls, known, bindings, full_wire=True)).encode()
         files["go/cmd/vectors/main.go"] = g.gofmt(g.MAIN_GO % g.GO_MODULE).encode()
     helper = "helpers_test.go" if scaffold else "consumer_helpers_test.go"
-    files["go/vectortests/" + helper] = g.gofmt(HELPER.replace("MODULE", g.GO_MODULE)).encode()
-    # Reuse the independently judged schema engine of the door, up to the HTTP-specific functions.
-    schema = (g.HERE / "doorrt2/go/schema.go").read_text().split("// mediaType —", 1)[0]
-    if "func validate(" not in schema or "func DecodeRequest(" in schema:
-        raise g.GenError("schema runtime boundary moved")
-    schema = schema.replace("package apidoor", "package wirecheck").replace('\n\t"math"', '')
-    files["go/wirecheck/schema.go"] = g.gofmt(schema + '\nconst bundle = `{ "$defs": {} }`\n').encode()
-    files["go/wirecheck/check.go"] = (g.HERE / "wirert/go/check.go").read_bytes()
+    helper_text = HELPER
+    if scaffold and g.L.key != "02-installer":
+        helper_text = helper_text.replace("code = vectorcmd.Stand(stand, p, &o, &e)\n        out, errout = o.Bytes(), e.Bytes()",
+                                          "var err error\n        code, out, errout, err = vectorcmd.StandResult(stand, p)\n        if err != nil { t.Fatal(err) }")
+        helper_text = helper_text.replace("var o, e bytes.Buffer", "")
+        helper_text = helper_text.replace('    "bytes"\n', '')
+    files["go/vectortests/" + helper] = g.gofmt(helper_text.replace("MODULE", g.GO_MODULE)).encode()
+    files.update(runtime_files(g, full=g.L.key != "02-installer"))
     groups = {}
     for r in runs:
         groups.setdefault(r.binding.key, []).append(r)

@@ -111,7 +111,9 @@ class NewPin(unittest.TestCase):
         cls.root.mkdir()
         data = subprocess.check_output(['git','archive',PIN,'Platform','Source/tests/testdata'], cwd=ROOT)
         with tarfile.open(fileobj=io.BytesIO(data)) as t: t.extractall(cls.root, filter='data')
-        cls.base = C.read(ROOT)
+        fixture=json.loads((HERE/'testdata/consumer-owners-8af61893a.json').read_text())
+        assert fixture['source_commit']=='8af61893a7458054d8c79701f78b3b284e8573a8'
+        cls.base={(r['package'],r['table']):set(r['lessons']) for r in fixture['tables']}
         cls.new = C.read(cls.root)
 
     @classmethod

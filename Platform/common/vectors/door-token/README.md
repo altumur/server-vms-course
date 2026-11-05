@@ -100,3 +100,7 @@ the refusal is given only by the condition of the contract «A или R мало
 
 The vectors were obtained by reference Ed25519 (RFC 8032) and JCS (RFC 8785, checked on [`jcs`](../../../01-store/vectors/jcs/README.md))
 by the contract, not by the code of implementations; on a divergence the contract is right, the vector is corrected by «Спецификация».
+
+## Vector wire
+
+The wire of `issue.tsv` is set by the `common/door-token` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

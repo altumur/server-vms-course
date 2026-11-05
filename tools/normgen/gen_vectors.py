@@ -441,7 +441,130 @@ UNIFIED_CASE = '''	case %(key)s:
 '''
 
 
-def go_vectorcmd(decls, known, bindings=None):
+FULL_STAND = r'''// Stand runs the native stand command; StandResult preserves execution errors for the generated judge.
+func Stand(key, path string, stdout, stderr io.Writer) int {
+    code, out, errout, err := StandResult(key, path)
+    if err != nil { fmt.Fprintln(stderr, err); return 1 }
+    stdout.Write(out); stderr.Write(errout); return code
+}
+func StandResult(key, path string) (code int, stdout, stderr []byte, err error) {
+    data, err := os.ReadFile(path)
+    if err != nil { return 0,nil,nil,err }
+    _ = data
+    defer func() { if r:=recover();r!=nil { code,stdout,stderr,err=0,nil,nil,fmt.Errorf("panic: %v",r) } }()
+    var a vectoradapter.Answer
+    rawFrame := false
+    switch key {
+{{STAND}}    default: return 0,nil,nil,fmt.Errorf("not a stand key of this lesson: %s",key)
+    }
+    return wireAnswer(a,rawFrame)
+}
+func wireAnswer(a vectoradapter.Answer, rawFrame bool) (int,[]byte,[]byte,error) {
+    if a.Code < 0 || a.Code > 255 { return 0,nil,nil,fmt.Errorf("adapter did not execute: %v (code %d)",a.Value,a.Code) }
+    if a.Raw != nil { return a.Code,a.Raw,nil,nil }
+    if rawFrame { return 0,nil,nil,fmt.Errorf("raw native frame requires Answer.Raw") }
+    var buf bytes.Buffer
+    enc:=json.NewEncoder(&buf);enc.SetEscapeHTML(false)
+    if err:=enc.Encode(a.Value);err!=nil { return 0,nil,nil,err }
+    return a.Code,buf.Bytes(),nil,nil
+}
+
+'''
+
+
+def _go_vectorcmd_full(decls, known, bindings):
+    """The explicit full-wire mode; it does not change the published P/02 template."""
+    if bindings is None:
+        raise GenError("full wire dispatch requires bindings")
+    imports = [f'\t"{GO_MODULE}/vectoradapter"']
+    fam = any(n == "family-read" for n, _ in known)
+    if fam:
+        imports.insert(0, f'\t"{GO_MODULE}/families"')
+    want, cases, stands, shapes = [], [], [], []
+
+    def add_shape(package, table, variant, cells, files):
+        key = go_str(package + " " + table + "\x00" + variant)
+        # Multiple shapes of a variant are alternatives, not multiple Go map entries.
+        shapes.append((key, f"{{{go_str(cells)}, {go_str(files)}}}"))
+
+    for d in decls:
+        native = d.get("native", {})
+        frames = {n.get("frame") for n in (native if isinstance(native, list) else [native])}
+        raw_frame = "true" if frames == {"raw"} else "false"
+        fn, args = d["fn"], d["args"]
+        if d["surface"] == "vectors":
+            key = go_str(f"{d['package']} {d['table']}")
+            want.append(f'\t\t{key}: {{"*", "*"}},\n')
+            if "wire_shapes" not in d:
+                raise GenError(f"{d['package']} {d['table']}: no declared full-wire input shapes")
+            for variant, alternatives in d["wire_shapes"].items():
+                for cells, files in alternatives:
+                    add_shape(d["package"], d["table"], variant, cells, files)
+            prefix = ""
+            if args == "cells":
+                call = f"vectoradapter.{fn}(*in.Table,cellmap,files)"
+            elif args == "cells+variant":
+                call = f"vectoradapter.{fn}(*in.Table,*in.Variant,cellmap,files)"
+            elif args == "input":
+                prefix = '\t\tvar text string\n\t\tfor _, v := range cellmap { text=v }\n'
+                call = f"vectoradapter.{fn}([]byte(text))"
+            elif args == "none":
+                call = f"vectoradapter.{fn}()"
+            else:
+                raise GenError(f"{d['package']}: Go API {args} cannot read vector cells")
+            branch = f"\tcase {key}:\n{prefix}\t\ta := {call}\n"
+            if d.get("per_list"):
+                branch += ('\t\tif a.Code==0 {\n\t\t\tb,err:=json.Marshal(a.Value);if err!=nil {return 0,nil,nil,err}\n'
+                           '\t\t\tvar all map[string]any;if err=json.Unmarshal(b,&all);err!=nil{return 0,nil,nil,err}\n'
+                           '\t\t\twords,ok:=all[cell("list")];if !ok{return 0,nil,nil,fmt.Errorf("missing list")}\n'
+                           '\t\t\ta.Value=words\n\t\t}\n')
+            cases.append(branch + f"\t\treturn wireAnswer(a,{raw_frame})\n")
+        else:
+            key = d["surface"].split(":",1)[1]
+            if args == "source":
+                call=f"vectoradapter.{fn}(filepath.Base(path),data)"
+            elif args == "input":
+                call=f"vectoradapter.{fn}(data)"
+            elif args == "none":
+                call=f"vectoradapter.{fn}()"
+            else:
+                raise GenError(f"{d['package']}: Go API {args} cannot read a stand argument")
+            branch=f"\tcase {go_str(key)}:\n\t\ta={call}\n\t\trawFrame={raw_frame}\n"
+            if branch not in stands:
+                stands.append(branch)
+    for name, table in known:
+        cd = common_vectors.DECLS[name]
+        package = f"common/{name}"
+        key = go_str(f"{package} {table}")
+        want.append(f'\t\t{key}: {{"*", "*"}},\n')
+        binding = bindings[package, table, "vectors"]
+        for d in binding.inputs:
+            add_shape(package, table, d["variant"], ",".join(sorted(d["cells"])), ",".join(sorted(binding.files)))
+        cases.append(common_vectors.VECTORCMD[name] % {"key": key})
+    body = VECTORCMD % {"imports": "\n".join(imports)+"\n", "want": "".join(want), "cases": "".join(cases),
+                        "stand": "", "extra": common_vectors.FAMILY_READ_GO if fam else ""}
+    a,b=body.index("// Stand —"),body.index("func parse(")
+    body=body[:a]+FULL_STAND.replace("{{STAND}}","".join(stands))+body[b:]
+    a,b=body.index('\tif *in.Variant != ""'),body.index('\tfiles := map[string][]byte{}',body.index('func Run('))
+    body=body[:a]+('\t_ = shape\n\tif !wireShape(pkg,*in.Variant,keys(in.Cells),keys(in.Files)) {\n'
+                   '\t\treturn 0,nil,nil,fmt.Errorf("cells/files/variant are not a declared wire shape")\n\t}\n')+body[b:]
+    body=body.replace('[]byte(fmt.Sprintf("panic: %v\\n", r)), nil',
+                      '[]byte(fmt.Sprintf("panic: %v\\n", r)), fmt.Errorf("panic: %v", r)')
+    by = {}
+    for key, value in shapes:
+        if value not in by.setdefault(key,[]):
+            by[key].append(value)
+    entries="".join(f"\t\t{k}: {{{', '.join(v)}}},\n" for k,v in by.items())
+    body += ('\nfunc wireShape(pkg,variant,cells,files string) bool {\n'
+             '\tshapes:=map[string][][2]string{\n'+entries+'\t}\n'
+             '\tfor _,s:=range shapes[pkg+"\\x00"+variant] {if s[0]==cells && s[1]==files{return true}}\n'
+             '\treturn false\n}\n')
+    return gofmt(body)
+
+
+def go_vectorcmd(decls, known, bindings=None, full_wire=False):
+    if full_wire:
+        return _go_vectorcmd_full(decls, known, bindings)
     imports = [f'\t"{GO_MODULE}/vectoradapter"']
     fam = any(n == "family-read" for n, _ in known)
     if fam:
@@ -1209,6 +1332,11 @@ BASE_COMPARES = ("raw", "layer1", "sets", "value")
 
 def frames_of(d, rows, pdir):
     """[(строка, cells, variant, cells кадра | None, (код, значение, сырые байты))]; frames — половины строки."""
+    if d.get("_form"):
+        by_line = dict(rows)
+        return [(r.lines[0], by_line[r.lines[0]], r.variant, r.cells,
+                 (r.code, None if isinstance(r.value, bytes) else r.value,
+                  r.value if isinstance(r.value, bytes) else None), r.compare) for r in d["_runs"]]
     out = []
     if d["compare"] == "sets":
         return out
@@ -1422,16 +1550,17 @@ def provenance():
         return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()),
                 "handwritten": [entry(HERE / p) for p in ("wire.py", "wire_vectors.py", "vector_consumers.py", "wirert/go/check.go",
                                                           "doorrt2/go/schema.go")], "judge": entry(JUDGE),
-                "judges": [entry(HERE / p) for p in ("test_wire_vectors.py", "test_wire.py", "test_consumer_packages.py")]}
+                "judges": [entry(HERE / p) for p in ("test_wire_vectors.py", "test_wire.py", "test_consumer_packages.py", "test_wire_full.py", "wire_fakes.py")]}
     forms = sorted({read_table(ROOT, d)[1] for d in decls}) + [ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS]
     if any(d.get("_form") for d in decls):
         forms.append(ROOT / "Platform/common/vectors/wire.tsv")
     hand = ["vector_consumers.py", "consumer_vectors.py"]
     if any(d.get("_form") for d in decls):
-        hand += ["wire.py", "wire_vectors.py", "wirert/go/check.go", "doorrt2/go/schema.go"]
+        hand += ["wire.py", "wire_vectors.py", "wirert/full/go/check.go", "doorrt2/go/schema.go"]
     return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()),
             "handwritten": [entry(HERE / p) for p in hand], "judge": entry(JUDGE),
-            "judges": [entry(HERE / "test_consumer_packages.py")]}
+            "judges": [entry(HERE / p) for p in ("test_consumer_packages.py", "test_gen_vectors_lessons.py",
+                                                "test_wire_full.py", "wire_fakes.py")]}
 
 
 KIT_MD = """

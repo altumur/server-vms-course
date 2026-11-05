@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "06-console/rid",
+ "table": "template.tsv",
+ "case": "mixed-length-char",
+ "variant": "",
+ "cells": {
+  "key": "\"{of}-{unit}\"",
+  "body": "{\"of\":\"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\",\"unit\":\"a/b\"}"
+ },
+ "files": {}
+}

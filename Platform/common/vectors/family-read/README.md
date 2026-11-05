@@ -34,4 +34,4 @@ of keys (uniqueness and `prefix_free` — without element numbers); the set is r
 
 ## Vector wire
 
-The wire of `01.tsv`, `02.tsv` is set by the `common/family-read` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+The wire of `01.tsv`, `02.tsv`, `03.tsv`, `04.tsv`, `06.tsv` is set by the `common/family-read` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

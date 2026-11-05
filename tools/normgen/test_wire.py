@@ -215,7 +215,7 @@ class Mutants(unittest.TestCase):
         self.jedit("common/log-mask", "cases.tsv", "vectors", "expect", lambda v: add(v, 4))
         runs, _ = wire.expand(self.tmp, "02-installer", self.cel)
         r = next(r for r in runs if r.binding.package == "common/log-mask")
-        self.assertEqual(r.asserts[0][1:], ("no-leak", None, [r.cells["raw"]], 4, False, None))
+        self.assertEqual(r.asserts[0][1:], ("no-leak", None, [r.cells["raw"]], 4, False, None, None))
 
     def test_json_decode_is_preserved_in_assertion(self):
         self.jedit("common/sealing", "reseal.tsv", "vectors", "expect",

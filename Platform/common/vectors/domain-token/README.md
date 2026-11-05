@@ -106,3 +106,7 @@ The rows of `corrections.tsv` of the acceptance of М11/02 before the move and t
 | 2026-10-20 | token-30, token-31 | review analysis of stage B 8–10, № 13 (item 7 of the note on the plans 8–10, the edit 0c9521c66): expect without the key cluster and cluster: null at kind ≠ person — @exit 2; the input — token-18 with a changed expect |
 | 2026-10-23 | token-32 | stage C guess DT-G03, the Architect's decision 2026-10-23: expect is a closed form, an unknown key — @exit 2; the input — token-18 with an extra key audience_clam |
 | 2026-10-30 | +token-44-expect-empty-audience-claim, token-45-keys-no-current | the coverage audit of P/08, the second pass of Gemini (G02, e32df6f8b): package candidates — `audience_claim` empty and `keys` not of the form — `@exit 2`; the input — token-18 with one edit; the expectations — the output of the witnesses cammeta-python and cammeta-go; a repeated kind in `expect.kind` stays a candidate |
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/domain-token` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

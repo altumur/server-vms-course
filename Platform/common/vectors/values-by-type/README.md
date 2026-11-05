@@ -86,3 +86,7 @@ of refusals (Н3 step 4), the ceiling of a `json` field of 4000 bytes (Н1.4, sc
 `secret-in`), the bytes of the envelope (the vectors [`common/vectors/sealing/`](../sealing/README.md)), `fixed`,
 references and `unique` (Н1.3). The cross-language notation of `float` beyond the examples is by the rule `values_by_type` of [the row check contract](../../contracts/row-check.md) «Unit row» («the shortest that restores
 the number, without an exponent»), not by this table.
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/values-by-type` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.
