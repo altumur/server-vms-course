@@ -96,5 +96,34 @@ class Contracts(unittest.TestCase):
         print(f"\ncontracts: {covered} vector tests green over {len(adapter_fns())} adapters", flush=True)
 
 
+class ContractsKit(unittest.TestCase):
+    def test_kit_part(self):
+        """build_kit --part contracts: пакет internal/contracts и адаптеры над ним вместо заглушек; тесты таблиц — зелёные."""
+        import json
+        import sys
+        if not shutil.which("go"):
+            self.skipTest("go is not in PATH")
+        with tempfile.TemporaryDirectory(prefix="contracts-kit-") as tmp:
+            dst = Path(tmp) / "kit"
+            done = subprocess.run([sys.executable, str(HERE / "kit/build_kit.py"), str(dst), "--lesson", "03-worker",
+                                   "--part", "families", "--part", "vectors", "--part", "contracts"],
+                                  capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            man = json.loads((dst / "kit.manifest.json").read_text())
+            paths = {f["path"]: f for f in man["files"]}
+            self.assertIn("03-worker/internal/contracts/instance.go", paths)
+            fns = adapter_fns()
+            for fn in fns:
+                f = paths.get(f"03-worker/internal/vectoradapter/{fn.lower()}.go")
+                if f:
+                    self.assertTrue(f.get("editable"), fn)
+                    self.assertTrue(f["source"].startswith("tools/normgen/contracts/adapters/"), f["source"])
+            mod = dst / "03-worker"
+            (mod / "go.mod").write_text(f"module {man['module']}\n\ngo 1.22\n")
+            done = subprocess.run(["go", "test", "-count=1", "-run", "|".join(fns), "./internal/vectortests/"], cwd=mod,
+                                  capture_output=True, text=True, env=GOENV)
+            self.assertEqual(done.returncode, 0, done.stdout[-2000:])
+
+
 if __name__ == "__main__":
     unittest.main()
