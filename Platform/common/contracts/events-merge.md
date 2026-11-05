@@ -40,7 +40,7 @@ by:          by=occurred — a row without occurred uses t both in the filter an
 cut:         before the cut remove duplicates by id; first alarm, then observation; within a class by by (newest — descending, oldest —
              ascending), at an equal time id lexicographically by UTF-8 bytes; the first limit rows
 from_mirror: the resource reads the copies .mirror/<сервер>/ together with its own tree: the same bucket — a duplicate, it answers under the owner's name
-             (the field server of the row is the owner); at the merger the bucket copies of a silent resource in the answers of others give state «; <s> from
+             (the field server of the row is the owner, except a line with its own field server — P/05 Н1.3 `row`); at the merger the bucket copies of a silent resource in the answers of others give state «; <s> from
              mirror» (the section «The merge» step 2)
 truncated:   at a resource — matching whole rows unique by id that did not fit into its local limit (the number of candidates after
              deduplication minus the number given out); at the merger — the sum of truncated of those who answered plus the candidates that did not fit into the common
