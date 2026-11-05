@@ -1,8 +1,8 @@
-# Ожидаемые эффективные права варианта v11-controller-cross-tables (README приёмки главы 2.5, «Варианты манифестов»):
-# роль, действие, ключ, allow | deny. Манифесты vb, vc, vd — байт в байт v6-near-about-ref; va — с таблицей shelves и
-# разделом requests (per_person). Контроллер связной подсистемы (near.sub — vb, about.sub — vc, ref — vd) читает таблицы X,
-# decommissioned и placement_intent X; просьбы и учёт людей X — нет (P/02.5 Н1.4 строка <s>controller; решение
-# «Архитектора» 2026-10-27; аудит покрытия P/02, второй проход).
+# Expected effective rights of v11-controller-cross-tables (chapter 2.5 acceptance README, «Варианты манифестов»):
+# role, action, key, allow | deny. Manifests vb, vc, vd are byte-identical to v6-near-about-ref; va has a shelves table and
+# a requests section (per_person). The controller of a related subsystem (near.sub — vb, about.sub — vc, ref — vd) reads X's tables,
+# decommissioned and placement_intent; not X's requests or per-person accounting (P/02.5 Н1.4 row <s>controller; the Architect's decision,
+# 2026-10-27; P/02 coverage audit, second pass).
 role	action	key	expect
 vbcontroller	read	va/shelves/s1	allow
 vccontroller	read	va/shelves/s1	allow

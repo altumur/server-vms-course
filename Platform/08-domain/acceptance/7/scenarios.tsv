@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/08.7: стенд hold, m1, m2 с testsub и testsub2 и местной дверью агента (дверь token). Перенесено из М11/07 (сц. 01, 02) (стадия B). Формат и директивы — README.
+# Acceptance P/08.7: stand hold, m1, m2 with testsub/testsub2 and the agent's local door (token door). Moved from М11/07 (sc. 01, 02) (stage B). Format/directives: README.
 01-token-and-audience	1	@domain	ok
 01-token-and-audience	2	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "origin": "m2", "copies": []}	200
 01-token-and-audience	3	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r1", "ref": "c1"}	200 {"request_id": "r1", "token": "$tok", "exp": "@any"}
@@ -40,7 +40,7 @@ scenario	step	request	expect
 06-topology-unreadable	3	member hold store POST /v1/write {"op": "put", "key": "domain/topology", "items": {"doc": "not json"}}	200
 06-topology-unreadable	4	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r1", "ref": "c1"}	200 {"request_id": "r1", "token": "@any"}
 06-topology-unreadable	5	token m1 testsubworker POST /tokens/testsub/probe {"request_id": "r2", "ref": "c1"}	503 {"error": "unavailable"}
-# 07-kept-token-revoked-word (ADR-0110 доп. (10)–(16); P/08.2 Н1.6а jti, door; P/08.7 Н1.3 body revoked; договор местной двери токенов): вид vault манифеста testsub2 с keep — jti постоянен для цели; просьба со словом revoked, равным jti строки, — так член, чей получатель отказал токену, а держатель отзыва не знает (копия старше DELETE), — кладёт jti в domain/revoked и выдаёт новый; неравное слово — просьба обычная; DELETE отзывает все токены цели
+# 07-kept-token-revoked-word (ADR-0110 addenda (10)–(16); P/08.2 Н1.6а jti, door; P/08.7 Н1.3 body revoked; local token door contract): testsub2 kind vault with keep has a stable jti per target; a revoked word equal to the row's jti — a member whose recipient refused the token while the holder has not learnt the revocation (copy older than DELETE) — places jti in domain/revoked and issues a new one; an unequal word is an ordinary request; DELETE revokes all target tokens.
 07-kept-token-revoked-word	1	@domain	ok
 07-kept-token-revoked-word	2	holder PUT /domain/placement/testsub2/t1 {"cluster": "m1", "origin": "m2", "copies": []}	200
 07-kept-token-revoked-word	3	token m2 testsub2worker POST /tokens/testsub2/vault {"request_id": "r1", "ref": "t1"}	200 {"request_id": "r1", "token": "$t1", "exp": "@any"}

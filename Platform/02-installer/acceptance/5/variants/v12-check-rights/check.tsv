@@ -1,9 +1,9 @@
-# Сверка файла прав по смыслу (P/02.5 Н2 `--check`, Н3 «установить», Н4): раннер зовёт `rights --check <file>` реализации на
-# манифестах варианта (va — байт в байт v1-base) с развёртыванием dep и сравнивает код: 0 — равен сгенерированному, !0 — не 0.
-# Файл same — ровно вывод прав этого каталога по Н1.4 (ресурсу нет va/holds/* — C02-RESOURCE-HOLDS-TABLE-01; у domainconsole
-# нет !domain/signer, !domain/signer-pending при !domain/signer* — C02-NONREADER-DENY-AFTER-01; решения «Архитектора» 2026-10-30,
-# вопросы норм аудита Gemini, P/02 пп. 1, 2): код 0. Прочие — этот вывод с одной правкой, которая по Н3 «установить» расходится.
-# Раннер зовёт сверку командой stand.rights-check профиля 02-installer (общий README приёмки); ключа нет — случаи не исполнены.
+# Semantic rights-file comparison (P/02.5 Н2 `--check`, Н3 «установить», Н4): the runner invokes the implementation's `rights --check <file>` on
+# the variant manifests (va is byte-identical to v1-base) with deployment dep and compares the code: 0 — equal to generated rights, !0 — nonzero.
+# File same is exactly this catalogue's rights output under Н1.4 (resource has no va/holds/* — C02-RESOURCE-HOLDS-TABLE-01; domainconsole
+# has no !domain/signer or !domain/signer-pending under !domain/signer* — C02-NONREADER-DENY-AFTER-01; the Architect's decisions, 2026-10-30,
+# Gemini audit norm questions, P/02 items 1, 2): code 0. The other files are that output with one differing edit under Н3 «установить».
+# The runner invokes stand.rights-check of profile 02-installer (common acceptance README); no binding means these cases were not executed.
 case	file	code
 same	check/same.rights	0
 role_missing	check/role_missing.rights	!0

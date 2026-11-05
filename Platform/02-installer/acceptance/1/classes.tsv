@@ -1,4 +1,4 @@
-# Класс отказа Н4 у выбранных случаев verdicts.tsv (сверка cammeta-python и cammeta-go 2026-10-18): case<TAB>class.
+# Н4 refusal class for selected verdicts.tsv cases (cammeta-python/cammeta-go reconciliation, 2026-10-18): case<TAB>class.
 # case	class
 dup_top_key_name	text
 unknown_depth4	form
@@ -198,7 +198,7 @@ c2_metrics_histogram_no_buckets	form
 c2_metrics_values_not_label	form
 c2_metrics_values_with_count	form
 c2_metrics_name_underscore	form
-# Набор Б ADR-0092 (пакет перехода на В7): случаи t*, f*, r* — набор Б навыка lesson-spec
+# Set B of ADR-0092 (V7 transition package): t*, f*, r* cases — set B of the lesson-spec skill.
 c2_flow_seq_pair	form
 c3_tab_block_ok	text
 c3_tab_quoted_ok	text

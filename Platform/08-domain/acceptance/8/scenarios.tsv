@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/08.8: стенд hold, m1, m2 с подписантом и на m1 (аварийный перенос, плановая передача, смещение); сценарии 02–04, 08–10, 12 перенесены из М11/10 (стадия B), номера и шаги прежние. Формат — README.
+# Acceptance P/08.8: stand hold, m1, m2 with a signer also at m1 (emergency move, planned handover, deposition); scenarios 02–04, 08–10, 12 moved from М11/10 (stage B), scenario numbers/steps unchanged. Format: README.
 02-emergency-move	1	@domain	ok
 02-emergency-move	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
 02-emergency-move	3	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200

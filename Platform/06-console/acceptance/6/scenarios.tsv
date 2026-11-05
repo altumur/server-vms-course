@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/06.6: двери управления консоли testsub (root) и testsub2; сц. 01–07 без префикса двери — консоль. Перенесено из М10/04 (сц. 01–07), М10/10 (01 → 08-schema, 02 → 10-drain-strand, 09, 12) и М10/11 (03 → 11-schema-processes) (стадия B). Формат и директивы — README.
+# Acceptance P/06.6: management doors of console testsub (root) and testsub2; sc. 01–07 without a door prefix mean console. Moved from М10/04 (sc. 01–07), М10/10 (01 → 08-schema, 02 → 10-drain-strand, 09, 12), М10/11 (03 → 11-schema-processes) (stage B). Format/directives: README.
 01-unplaced	1	@start resource	ok
 01-unplaced	2	POST /counters {"name": "u1", "start": 1}	201 {"id": "u1", "worker": null}
 01-unplaced	3	GET /where/u1	404
@@ -122,7 +122,7 @@ scenario	step	request	expect
 12-pulse-number-forms	25	@put object testsub/heartbeats/w-1 inputs/hb-w-1-build-number.json	ok
 12-pulse-number-forms	26	@until 10 console GET /schema	200 {"processes": {"testsub/w-1": {"schema": 1, "build": null}}}
 12-pulse-number-forms	27	console DELETE /drain	2xx
-# 13-decommission-flow (аудит покрытия P/06, второй проход Gemini, G09; Н3 «вывести_сервер» — сторона консоли): живой srv-a — 409 server answers, may_confirm_gone false и с gone; srv-b известен только слотом: пока слот свеж — 409 false и с gone, после LOST_AFTER без смены версии — 409 may_confirm_gone true, с gone — 202 warning и строка запроса; повтор — 202, строка и журнал прежние; отзыв — 200 {}, строки нет; журнал requested один раз и withdrawn
+# 13-decommission-flow (P/06 coverage audit, second Gemini pass, G09; Н3 «вывести_сервер», console side): live srv-a gives 409 server answers, may_confirm_gone false even with gone; srv-b known only by slot: fresh slot gives 409 false even with gone; after LOST_AFTER without version change — 409 may_confirm_gone true, with gone — 202 warning and request row; retry — 202, row/log unchanged; withdraw — 200 {}, no row; journal requested once, then withdrawn.
 13-decommission-flow	1	@start resource	ok
 13-decommission-flow	2	@until 20 console GET /servers	200 {"servers": {"srv-a": {"resource": "live"}}}
 13-decommission-flow	3	console POST /servers/srv-a/decommission {"why": "live box"}	409 {"error": "server answers", "server": "srv-a", "may_confirm_gone": false}
@@ -143,7 +143,7 @@ scenario	step	request	expect
 13-decommission-flow	18	@key(17) console POST /servers/srv-b/decommission {"why": "third", "gone": true}	202 {"warning": "@any"}
 13-decommission-flow	19	@key(17) console POST /servers/srv-b/decommission {"why": "fourth", "gone": true}	422 {"error": "key reused"}
 13-decommission-flow	20	store GET /v1/get?key=platform/decommission/srv-b	200 {"items": {"why": "third"}}
-# 14-unreadable-policy-drain (аудит покрытия P/06, второй проход Gemini, G10): строка политики не по форме — GET /policy отдаёт умолчание манифеста (shared), не прежнее distinct и не отказ; строка дренажа не по форме — GET /drain 503 unavailable
+# 14-unreadable-policy-drain (P/06 coverage audit, second Gemini pass, G10): malformed policy row makes GET /policy return manifest default (shared), not former distinct or refusal; malformed drain row makes GET /drain return 503 unavailable.
 14-unreadable-policy-drain	1	@start resource	ok
 14-unreadable-policy-drain	2	console PUT /policy {"servers": "distinct"}	200
 14-unreadable-policy-drain	3	console GET /policy	200 {"servers": "distinct"}
@@ -152,13 +152,13 @@ scenario	step	request	expect
 14-unreadable-policy-drain	6	console GET /policy	200 {"servers": "shared"}
 14-unreadable-policy-drain	7	store POST /v1/write {"id":"07","op":"put","key":"platform/drain","items":{"server":"bad/srv","at":"1000"},"cas":""}	200
 14-unreadable-policy-drain	8	console GET /drain	503 {"error": "unavailable"}
-# 15-unreadable-schema (аудит покрытия P/06, второй проход Gemini, G10): строка platform/schema не по форме (version не число) у работающей консоли — GET /schema version null и schema_unknown true; PUT /schema — 409 «mend the row first», строка прежняя
+# 15-unreadable-schema (P/06 coverage audit, second Gemini pass, G10): malformed platform/schema (nonnumeric version) at a running console makes GET /schema return version null and schema_unknown true; PUT /schema gives 409 «mend the row first», row unchanged.
 15-unreadable-schema	1	@start resource	ok
 15-unreadable-schema	2	@as console store POST /v1/write {"id":"32","op":"put","key":"platform/schema","items":{"version":"x","at":"1000"},"cas":""}	200
 15-unreadable-schema	3	console GET /schema	200 {"version": null, "schema_unknown": true, "understood": 1}
 15-unreadable-schema	4	console PUT /schema?version=1	409 {"error": "refused", "detail": "~mend the row first"}
 15-unreadable-schema	5	store GET /v1/get?key=platform/schema	200 {"items": {"version": "x", "at": "1000"}}
-# 16-unreadable-server-labels (аудит покрытия P/06, второй проход Gemini, G10): строка меток сервера не по азбуке меток — /servers labels null и labels_source null (не node/unknown), ряд servers_labels_unread 1
+# 16-unreadable-server-labels (P/06 coverage audit, second Gemini pass, G10): labels row outside label grammar makes /servers return labels null and labels_source null (not node/unknown), servers_labels_unread 1.
 16-unreadable-server-labels	1	@start resource	ok
 16-unreadable-server-labels	2	@as console store POST /v1/write {"id":"c2","op":"put","key":"platform/servers/srv-a","items":{"labels":"bad label"},"cas":""}	200
 16-unreadable-server-labels	3	@until 20 console GET /servers	200 {"servers": {"srv-a": {"labels": null, "labels_source": null}}}

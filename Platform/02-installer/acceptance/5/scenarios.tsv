@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/02.5: дверь хранилища под ролями развёртывания testsub (сценарии 01–04, 09, 11, 12 из М10/06, стадия B; 05–08, 10 — Platform/01-store/acceptance/2). Формат — README.
+# Acceptance P/02.5: store door under the deployment roles of testsub (scenarios 01–04, 09, 11, 12 from М10/06, stage B; 05–08, 10 from Platform/01-store/acceptance/2). Format: README.
 01-worker	1	@as testsubworker POST /v1/write {"id":"a1","op":"put","key":"testsub/epoch/c1","items":{"epoch":"1"},"cas":""}	200
 01-worker	2	POST /v1/write {"id":"a2","op":"put","key":"testsub/slots/w-1","items":{"holder":"box:1:aaaaaa","until":"9999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200
 01-worker	3	POST /v1/write {"id":"a3","op":"put","key":"testsub/holds/p1","items":{"holder":"box:1:aaaaaa","until":"9999999999","released":"false","gen":"1","by":"w-1"},"cas":""}	200
@@ -60,7 +60,7 @@ scenario	step	request	expect
 12-domain-roles	18	POST /v1/write {"id":"aa14","op":"put","key":"domain/idem/k1","items":{"n":"1"}}	403
 12-domain-roles	19	@as domainconsole GET /v1/get?key=domain/idem/k1	403
 12-domain-roles	20	@as testsubdomain GET /v1/get?key=domain/idem/k1	403
-# 13-orders (ADR-0091 пп. 1, 3): заказчик testsub пишет строки своего префикса в testsub2/tallies без удаления; держатель testsub2 пишет состояние, контроллер — только удаляет его
+# 13-orders (ADR-0091 items 1, 3): testsub's requester writes its prefix rows in testsub2/tallies without deletion; testsub2's holder writes state, its controller only deletes state.
 13-orders	1	@as testsubworker POST /v1/write {"id":"d1","op":"put","key":"testsub2/tallies/testsub-c1","items":{"id":"testsub-c1","revision":"1","name":"testsub-c1","of":"c1"},"cas":""}	200
 13-orders	2	@as testsubworker GET /v1/get?key=testsub2/tallies/testsub-c1	200 {"items": {"of": "c1"}}
 13-orders	3	@as testsubworker POST /v1/write {"id":"d3","op":"delete","key":"testsub2/tallies/testsub-c1"}	403 {"kind": "forbidden"}

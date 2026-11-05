@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/08.3: стенд домена hold, m1, m2 (сц. 15, 16 — и relay); сценарии из М11/03, М11/04, М11/08, М11/12 (стадия B). Формат — README.
+# Acceptance P/08.3: domain stand hold, m1, m2 (also relay for sc. 15, 16); scenarios from М11/03, М11/04, М11/08, М11/12 (stage B). Format: README.
 01-cold-start-and-acceptance	1	@install domain	ok
 01-cold-start-and-acceptance	2	@start domain	ok
 01-cold-start-and-acceptance	3	@start agent hold	ok
@@ -204,7 +204,7 @@ scenario	step	request	expect
 28-machine-back-after-theft	6	member hold store POST /v1/write {"op": "put", "key": "domain/member-rows/3232", "items": {"doc": "{\"domain\":\"acme\",\"issuer\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"kid\":\"0000000000000000\",\"members\":{\"m1\":{\"by\":\"root\",\"how\":\"admitted\",\"revoked_keys\":[\"1111111111111111111111111111111111111111111111111111111111111111\"],\"since\":$ms}},\"part\":\"3232\",\"rev\":102,\"sig\":\"x\",\"term\":1}"}}	200
 28-machine-back-after-theft	7	holder POST /domain/members {"name": "m1", "fingerprint": "$fp"}	200 {"members": {"m1": {"how": "admitted", "key": "$mk", "revoked_keys": ["1111111111111111111111111111111111111111111111111111111111111111"]}}}
 28-machine-back-after-theft	8	@until 30 holder GET /domain/members	200 {"knocking": []}
-# 29-batch-admission (ADR-0113 доп. (2)–(4); P/08.3 Н1.1б, договор приёма отчёта «Стук партии»; P/09.1 Н1.1 join batch): партия приёма — коробка m2 с токеном партии принимается без человека классом camera; исключённая коробка тем же токеном не возвращается (refused партии), её стук ждёт человека
+# 29-batch-admission (ADR-0113 addenda (2)–(4); P/08.3 Н1.1б, report reception contract «Стук партии»; P/09.1 Н1.1 join batch): admission batch — box m2 with batch token is admitted without a person as camera; excluded box cannot rejoin with that token (batch refused); its knock waits for a person.
 29-batch-admission	1	@domain m1	ok
 29-batch-admission	2	holder POST /domain/batches {"name": "b1", "n": 2}	201 {"name": "b1", "token": "$k", "until": "@any"}
 29-batch-admission	3	holder POST /domain/batches {"name": "b1", "n": 1}	409 {"error": "refused", "detail": "~batch exists"}
