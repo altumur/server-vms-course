@@ -33,6 +33,7 @@ DEFAULT_OUT = L.out
 METHODS = ("get", "put", "post", "delete", "patch", "head", "options", "trace")
 RUNTIME = HERE / "doorrt2/go/routes.go"
 SCHEMA_RT = HERE / "doorrt2/go/schema.go"
+PRIORITY_RT = HERE / "doorrt2/go/routes_priority.go"   # режим x-route-priority (P/05-R057)
 SCHEMA_WORDS = {"$ref", "type", "enum", "const", "allOf", "anyOf", "oneOf", "not", "if", "then", "else", "properties",
                 "patternProperties", "additionalProperties", "unevaluatedProperties", "propertyNames", "required",
                 "dependentRequired", "minProperties", "maxProperties", "items", "minItems", "maxItems", "uniqueItems",
@@ -84,6 +85,10 @@ class Docs:
                 raise GenError(f"$ref {ref}: no {part}")
             node = node[part]
         return node, path
+
+    def deref_list(self, item, op, base):
+        """Параметры пути и операции с их x-* словами (после разворота $ref)."""
+        return [self.deref(p, base)[0] for p in item.get("parameters", []) + op_raw(item, op).get("parameters", [])]
 
     def deref(self, node, base, seen=()):
         while isinstance(node, dict) and "$ref" in node and len(node) == 1:
@@ -152,6 +157,10 @@ class Bundle:
             else:
                 out[k] = v
         return out
+
+
+def op_raw(item, op):
+    return item[op["method"].lower()]
 
 
 def param_check(docs, schema, base, where):
@@ -231,6 +240,7 @@ def prefixed(item):
 
 
 bodies = []          # (req|resp, Op, код, media, схема, файл) — собирает build для bodies.go
+priority = []        # шаблоны режима x-route-priority — собирает build
 
 
 def build(root=ROOT):
@@ -240,6 +250,7 @@ def build(root=ROOT):
     ops, templates, checks, by_pm, methods_of, all405 = [], [], {}, {}, {}, {}
     names = set()
     bodies.clear()
+    priority.clear()
     for path, item in doc.get("paths", {}).items():
         segs = segments(path)
         pre = prefixed(item)
@@ -283,6 +294,16 @@ def build(root=ROOT):
                 r_node, r_base = docs.deref(r_raw, spec)
                 for media, mo in (r_node.get("content") or {}).items():
                     bodies.append(("resp", name, str(r_code), media, mo.get("schema"), r_base))
+                    sch = mo.get("schema") or {}
+                    if isinstance(sch, dict) and "x-line-schema" in sch:      # x-ndjson: схема строки
+                        bodies.append(("line", name, str(r_code), media, sch["x-line-schema"], r_base))
+            for prm in item.get("parameters", []) + op.get("parameters", []):
+                prm, pbase = docs.deref(prm, spec)
+                if prm["in"] in ("query", "header"):
+                    sch = prm.get("schema") or {}
+                    sch_node = docs.deref(sch, pbase)[0] if isinstance(sch, dict) else {}
+                    bodies.append(("param", name, prm["in"], prm["name"], sch, pbase,
+                                   bool(prm.get("required")), sch_node.get("default") if isinstance(sch_node, dict) else None))
             for media, mo in req_content.items():
                 bodies.append(("req", name, "", media, mo.get("schema"), docs.deref(rb, spec)[1]))
             ops.append({"name": name, "method": m.upper(), "path": path, "prefixed": pre, "params": params,
@@ -291,6 +312,33 @@ def build(root=ROOT):
             path_ops.append(ops[-1])
         if not path_ops:
             continue
+        if "x-route-priority" in item:                 # режим P/05-R057: приоритет пути и захват/декодирование/ошибки
+            caps, decs, errs, schemas = {}, {}, {}, {}
+            for o in path_ops:
+                for prm in o["params"]:
+                    if prm["in"] != "path":
+                        continue
+                    raw_prm = next(x for x in docs.deref_list(item, o, spec) if x["name"] == prm["name"] and x["in"] == "path")
+                    cap = raw_prm.get("x-path-capture", "segment")
+                    if cap not in ("segment", "remainder"):
+                        raise GenError(f"{path} {prm['name']}: x-path-capture {cap!r}")
+                    if caps.setdefault(prm["name"], cap) != cap:
+                        raise GenError(f"{path} {prm['name']}: x-path-capture differs between methods")
+                    dec = raw_prm.get("x-path-decode", "none")
+                    if dec not in ("percent-segment", "none"):
+                        raise GenError(f"{path} {prm['name']}: x-path-decode {dec!r}")
+                    decs[prm["name"]] = dec == "percent-segment"
+                    for meth, pe in (raw_prm.get("x-path-error") or {}).items():
+                        errs.setdefault(prm["name"], {})[meth.upper()] = (int(pe["status"]), pe.get("response_schema", "-"))
+                    schemas[prm["name"]] = (prm["schema"], prm["base"])
+            segs_p = []
+            for k, (lit, prm) in enumerate(segs):
+                rem = bool(prm) and caps.get(prm) == "remainder"
+                if rem and k != len(segs) - 1:
+                    raise GenError(f"{path}: remainder {prm} is not the last segment")
+                segs_p.append((lit, prm, rem))
+            priority.append({"path": path, "segs": segs_p, "priority": int(item["x-route-priority"]),
+                             "decode": decs, "errors": errs, "schemas": schemas})
         methods_of[path] = [o["method"] for o in path_ops]
         all405[path] = all(any(r["code"] == "405" for r in o["responses"]) for o in path_ops)
         templates.append((path, segs, False))
@@ -321,11 +369,11 @@ def go_check(c):
     return f"paramCheck{{minLen: {c['min']}, maxLen: {c['max']}, rx: {rx}, enum: {enum}, notEnum: {ne}, notRx: {nrx}}}"
 
 
-def go_source(ops, templates, checks, by_pm, methods_of, all405, rel, sha):
+def go_source(ops, templates, checks, by_pm, methods_of, all405, rel, sha, roles=None):
     out = [f"// Code generated by tools/normgen/gen_door_lesson.py from {rel} (sha256 {sha[:16]}); DO NOT EDIT.", "",
            f"// Package apidoor — the door of {L.code} by its OpenAPI, part 3a: the operations, the router tables and the",
            "// declared responses and media types. The bodies (decode, check, encode) are part 3b.",
-           "package apidoor", "", 'import "regexp"', "",
+           "package apidoor", "", ('import "regexp"' if not priority else ""), "",
            "// Op — an operation of the OpenAPI (path, method) in the order of the document.", "type Op int", "",
            "const ("]
     for k, o in enumerate(ops):
@@ -350,6 +398,28 @@ def go_source(ops, templates, checks, by_pm, methods_of, all405, rel, sha):
         out.append(f"\t{o['name']}: {{Method: {go_str(o['method'])}, Path: {go_str(o['path'])}, Prefixed: "
                    f"{str(o['prefixed']).lower()}, Params: []Param{{{params}}}, Responses: []Response{{{resps}}}, "
                    f"RequestMedia: {req}, RequestRequired: {str(o['req_required']).lower()}}},")
+    if priority:
+        out += ["}", "", "var prioTemplates = []prioTemplate{"]
+        for t in priority:
+            ss = ", ".join(f"{{lit: {go_str(lit)}}}" if not prm else
+                           f"{{param: {go_str(prm)}, remainder: {str(rem).lower()}}}" for lit, prm, rem in t["segs"])
+            out.append(f"\t{{path: {go_str(t['path'])}, segs: []prioSegment{{{ss}}}, priority: {t['priority']}}},")
+        out += ["}", "", "var pathDecode = map[string]map[string]bool{"]
+        out += [f"\t{go_str(t['path'])}: {{" + ", ".join(f"{go_str(k)}: {str(v).lower()}" for k, v in t["decode"].items())
+                + "}," for t in priority]
+        out += ["}", "", "var pathErrors = map[string]map[string]map[string]pathError{"]
+        for t in priority:
+            out.append(f"\t{go_str(t['path'])}: {{" + ", ".join(
+                f"{go_str(n)}: {{" + ", ".join(f"{go_str(m)}: {{status: {st}, response: {go_str('' if rs == '-' else rs)}}}"
+                                               for m, (st, rs) in es.items()) + "}" for n, es in t["errors"].items()) + "},")
+        out += ["}", "", "var byPathMethod = map[string]Op{"]
+        out += [f"\t{go_str(k)}: {v}," for k, v in by_pm.items()]
+        out += ["}", "", "// opRoles — door-roles.tsv: роли, допущенные к операции (режим mtls).",
+                "var opRoles = map[Op][]string{"]
+        for op, rs in (roles or {}).items():
+            out.append(f"\t{op}: {{" + ", ".join(go_str(r) for r in rs) + "},")
+        out += ["}", ""]
+        return "\n".join(out)
     out += ["}", "", "var templates = []template{"]
     for path, segs, pre in templates:
         ss = ", ".join(f"{{lit: {go_str(lit)}}}" if not prm else f"{{param: {go_str(prm)}}}" for lit, prm in segs)
@@ -369,8 +439,26 @@ def go_source(ops, templates, checks, by_pm, methods_of, all405, rel, sha):
 
 def bodies_source(docs, rel, sha):
     b = Bundle(docs)
-    req, resp = {}, {}
-    for kind, op, code, media, schema, base in bodies:
+    req, resp, lines, params = {}, {}, {}, {}
+    for entry in bodies:
+        if entry[0] == "param":
+            _, op, place, pname, schema, base, required, default = entry
+            if isinstance(schema, dict) and set(schema) == {"$ref"}:
+                sname = b.ref(schema["$ref"], base)[len("#/$defs/"):]
+            elif schema:
+                sname = b.inline(f"{op}.param.{place}.{re.sub(r'[^A-Za-z0-9_-]', '_', pname)}", schema, base)
+            else:
+                sname = ""
+            params.setdefault(op, []).append((pname, place, required, sname,
+                                              "" if default is None else json.dumps(default, ensure_ascii=False)))
+            continue
+        kind, op, code, media, schema, base = entry
+        if kind == "line":
+            if isinstance(schema, dict) and set(schema) == {"$ref"}:
+                lines.setdefault(op, {})[code] = b.ref(schema["$ref"], base)[len("#/$defs/"):]
+            else:
+                lines.setdefault(op, {})[code] = b.inline(f"{op}.line.{code}", schema, base)
+            continue
         if schema is None:
             name = ""
         elif isinstance(schema, dict) and set(schema) == {"$ref"}:
@@ -382,6 +470,14 @@ def bodies_source(docs, rel, sha):
             req.setdefault(op, {})[media] = name
         else:
             resp.setdefault(op, {}).setdefault(code, {})[media] = name
+    path_schemas = {}
+    for t in priority:                                 # схемы параметров пути (режим x-route-priority)
+        for name, (schema, base) in t["schemas"].items():
+            if isinstance(schema, dict) and set(schema) == {"$ref"}:
+                path_schemas.setdefault(t["path"], {})[name] = b.ref(schema["$ref"], base)[len("#/$defs/"):]
+            else:
+                safe = re.sub(r"[/{}~]", "_", t["path"])
+                path_schemas.setdefault(t["path"], {})[name] = b.inline(f"path{safe}.{name}", schema, base)
     bundle = json.dumps({"$defs": b.defs}, ensure_ascii=True, sort_keys=True, separators=(",", ":"))  # BOM в Go — нельзя
     out = [f"// Code generated by tools/normgen/gen_door_lesson.py from {rel} (sha256 {sha[:16]}); DO NOT EDIT.", "",
            "package apidoor", "",
@@ -396,8 +492,46 @@ def bodies_source(docs, rel, sha):
     for op, codes in resp.items():
         out.append(f"\t{op}: {{" + ", ".join(f"{go_str(c)}: {{" + ", ".join(f"{go_str(m)}: {go_str(n)}" for m, n in ms.items())
                                               + "}" for c, ms in codes.items()) + "},")
+    out += ["}", "", "// paramSchemas — параметры query и header операции: имя, место, обязательность, схема, умолчание (JSON).",
+            "var paramSchemas = map[Op][]paramSpec{"]
+    for op, ps in params.items():
+        out.append(f"\t{op}: {{" + ", ".join(f"{{name: {go_str(n)}, in: {go_str(i)}, required: {str(r).lower()}, "
+                                              f"schema: {go_str(sn)}, def: {go_str(d)}}}" for n, i, r, sn, d in ps) + "},")
+    out += ["}", "", "// ndjsonLines — схема строки тела application/x-ndjson ответа по коду (x-line-schema).",
+            "var ndjsonLines = map[Op]map[string]string{"]
+    for op, cs in lines.items():
+        out.append(f"\t{op}: {{" + ", ".join(f"{go_str(c)}: {go_str(n)}" for c, n in cs.items()) + "},")
     out += ["}", ""]
+    if priority:
+        out += ["// pathSchemas — схема параметра пути в сборке (режим x-route-priority).",
+                "var pathSchemas = map[string]map[string]string{"]
+        out += [f"\t{go_str(p)}: {{" + ", ".join(f"{go_str(n)}: {go_str(v)}" for n, v in ms.items()) + "},"
+                for p, ms in path_schemas.items()]
+        out += ["}", ""]
     return "\n".join(out), len(b.defs)
+
+
+def read_roles(ops):
+    """forms/door-roles.tsv урока: method path roles norm → {Op: [роли]}; каждая строка — операция OpenAPI."""
+    path = L.form("door-roles.tsv")
+    if not path.is_file():
+        return {}
+    lines = [ln.split("\t") for ln in path.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("#")]
+    if not lines or lines[0] != ["method", "path", "roles", "norm"]:
+        raise GenError("door-roles.tsv: columns must be method path roles norm")
+    by = {(o["method"], o["path"]): o["name"] for o in ops}
+    out = {}
+    for cells in lines[1:]:
+        if len(cells) != 4:
+            raise GenError(f"door-roles.tsv: {cells[:2]}: {len(cells)} cells")
+        op = by.get((cells[0].upper(), cells[1]))
+        if op is None:
+            raise GenError(f"door-roles.tsv: {cells[0]} {cells[1]} is not an operation of the OpenAPI")
+        roles = [r.strip() for r in cells[2].split(",")]
+        if not all(re.fullmatch(r"\*|<sub>worker|[a-z][a-z0-9_-]*", r) for r in roles):
+            raise GenError(f"door-roles.tsv: {cells[1]}: roles {cells[2]!r}")
+        out[op] = roles
+    return out
 
 
 def gofmt(src):
@@ -424,6 +558,12 @@ def render(root=ROOT):
     rel = f"{L.rel}/spec/{spec.name}"
     head = "// Code generated by tools/normgen/gen_door_lesson.py: copy of tools/normgen/doorrt2/go/{}; DO NOT EDIT.\n\n"
     bodies_go, _ = bodies_source(docs, rel, sha)
+    roles = read_roles(ops) if priority else None
+    if priority:
+        return {"routes.go": gofmt(go_source(ops, templates, checks, by_pm, methods_of, all405, rel, sha, roles)),
+                "routes_rt.go": gofmt(head.format("routes_priority.go") + PRIORITY_RT.read_text(encoding="utf-8")),
+                "bodies.go": gofmt(bodies_go),
+                "schema_rt.go": gofmt(head.format("schema.go") + SCHEMA_RT.read_text(encoding="utf-8"))}, len(ops), len(templates)
     # операции без ответов с телом и без тела запроса — пустые записи (таблицы полны по Op)
     return {"routes.go": gofmt(go_source(ops, templates, checks, by_pm, methods_of, all405, rel, sha)),
             "routes_rt.go": gofmt(head.format("routes.go") + RUNTIME.read_text(encoding="utf-8")),
@@ -472,6 +612,8 @@ def provenance():
 def kit_md():
     """Справка части: что решает Catalog и какие группы шаблонов одной формы он различает (по таблицам урока)."""
     ops, templates, checks, by_pm, methods_of, all405, docs = build(ROOT)
+    if priority:
+        return KIT_MD_PRIORITY + KIT_MD_TAIL
     groups = {}
     for path, segs, pre in templates:
         shape = tuple("{}" if prm else lit for lit, prm in segs)
@@ -509,6 +651,29 @@ candidate list and never picks an operation — it only answers names from your 
 path declares 405, otherwise 404.
 
 The templates of one shape that only the catalog tells apart:
+"""
+
+KIT_MD_PRIORITY = """
+## Part `door`: the routes of the lesson's OpenAPI by x-route-priority (generated)
+
+| Package | Import path | Origin |
+|---|---|---|
+| `apidoor` | `{module}/internal/apidoor` | `routes.go` generated from the OpenAPI and `forms/door-roles.tsv`; `routes_rt.go` — the kit's router; closed |
+
+```go
+func Route(method, rawPath string) (Match, *RouteError)          // rawPath — the target without the query, not decoded
+func Admitted(op Op, role string, isSub func(string) bool) bool // door-roles.tsv (mode mtls); isSub — your loaded catalogue
+func CheckParam(op Op, in, name string, vals []string) (any, bool, *Violation); func CheckParams(op Op, query, header map[string][]string) (map[string]any, *Violation)
+```
+
+The router follows P/05-R057: the literals are compared on the raw bytes of the segments (the path is not decoded as
+a whole, a trailing «/» is not normalized, «%2F» does not split a segment); `segment` takes one raw segment,
+`remainder` (last only) the raw rest; of the templates of the matching shape those with the request method stay, then
+the least `x-route-priority`. A matching shape without the method — `RouteError{Code: 405}` without a body; no match —
+404 without a body. Then each parameter is decoded segment by segment (a decoded «/», a bad %XX, an empty capture,
+not UTF-8, or out of its schema — a parameter error): `RouteError{Code, Response, Op, Param}` from `x-path-error` of
+the method — `Response` names the body schema, "" — no body; no other operation is tried. The role check goes after
+matching, before the handler; the TLS chain and the role certificate stay yours.
 """
 
 KIT_MD_TAIL = """

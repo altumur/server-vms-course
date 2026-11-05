@@ -532,6 +532,9 @@ func CheckResponse(op Op, code int, media string, v any) *Violation {
 		}
 		return nil
 	}
+	if line, ok := ndjsonLines[op][strconv.Itoa(code)]; ok && m == "application/x-ndjson" {
+		return checkNDJSON(line, v)
+	}
 	if !isJSONMedia(m) {
 		switch v.(type) {
 		case string, []byte:
@@ -568,6 +571,17 @@ func EncodeResponse(op Op, code int, media string, v any) ([]byte, *Violation) {
 	if m == "" {
 		return nil, nil
 	}
+	if _, ok := ndjsonLines[op][strconv.Itoa(code)]; ok && m == "application/x-ndjson" {
+		var buf bytes.Buffer
+		for _, l := range v.([]any) {
+			enc := json.NewEncoder(&buf)
+			enc.SetEscapeHTML(false)
+			if err := enc.Encode(l); err != nil {
+				return nil, &Violation{Rule: err.Error()}
+			}
+		}
+		return buf.Bytes(), nil
+	}
 	if !isJSONMedia(m) {
 		if b, ok := v.([]byte); ok {
 			return b, nil
@@ -581,4 +595,110 @@ func EncodeResponse(op Op, code int, media string, v any) ([]byte, *Violation) {
 		return nil, &Violation{Rule: err.Error()}
 	}
 	return bytes.TrimSuffix(buf.Bytes(), []byte("\n")), nil
+}
+
+type paramSpec struct {
+	name, in string
+	required bool
+	schema   string // имя схемы в сборке ("" — без схемы)
+	def      string // умолчание — текст JSON ("" — нет)
+}
+
+// CheckParams — параметры query и header операции op по их схемам: обязательность, повтор (нарушение), умолчание
+// схемы (JSON), приведение текста к типу схемы (number/integer — десятичная запись JSON, boolean — true|false, иначе
+// строка). → значения по имени параметра; Violation.At — имя параметра.
+func CheckParams(op Op, query map[string][]string, header map[string][]string) (map[string]any, *Violation) {
+	out := map[string]any{}
+	for _, p := range paramSchemas[op] {
+		var vals []string
+		if p.in == "query" {
+			vals = query[p.name]
+		} else {
+			for k, v := range header {
+				if strings.EqualFold(k, p.name) {
+					vals = append(vals, v...)
+				}
+			}
+		}
+		v, present, viol := checkParam(p, vals)
+		if viol != nil {
+			return nil, viol
+		}
+		if present {
+			out[p.name] = v
+		}
+	}
+	return out, nil
+}
+
+// CheckParam — один параметр query или header операции op по значениям vals (в порядке запроса): значение (с
+// умолчанием схемы, если параметра нет), есть ли оно, нарушение.
+func CheckParam(op Op, in, name string, vals []string) (any, bool, *Violation) {
+	for _, p := range paramSchemas[op] {
+		if p.in == in && strings.EqualFold(p.name, name) {
+			return checkParam(p, vals)
+		}
+	}
+	return nil, false, &Violation{At: name, Rule: "not a parameter of the operation"}
+}
+
+func checkParam(p paramSpec, vals []string) (any, bool, *Violation) {
+	if len(vals) == 0 {
+		if p.required {
+			return nil, false, &Violation{At: p.name, Rule: "required"}
+		}
+		if p.def != "" {
+			d, _ := StrictJSON([]byte(p.def))
+			return d, true, nil
+		}
+		return nil, false, nil
+	}
+	if len(vals) > 1 {
+		return nil, false, &Violation{At: p.name, Rule: "repeated"}
+	}
+	v := coerce(p.schema, vals[0])
+	if p.schema != "" {
+		if viol := Validate(p.schema, v); viol != nil {
+			return nil, false, &Violation{At: p.name, Rule: viol.Rule}
+		}
+	}
+	return v, true, nil
+}
+
+var numberText = regexp.MustCompile(`^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$`)
+
+func coerce(schema string, raw string) any {
+	s, _ := schemaDefs()[schema].(map[string]any)
+	t, _ := s["type"].(string)
+	switch t {
+	case "number", "integer":
+		if numberText.MatchString(raw) {
+			return json.Number(raw)
+		}
+	case "boolean":
+		if raw == "true" || raw == "false" {
+			return raw == "true"
+		}
+	}
+	return raw
+}
+
+// checkNDJSON — тело application/x-ndjson: v — список значений строк, каждая по x-line-schema.
+func checkNDJSON(name string, v any) *Violation {
+	lines, ok := v.([]any)
+	if !ok {
+		return &Violation{Rule: "an x-ndjson body is a list of line values"}
+	}
+	for i, l := range lines {
+		b, err := json.Marshal(l)
+		if err != nil {
+			return &Violation{At: "/" + strconv.Itoa(i), Rule: err.Error()}
+		}
+		x, _ := StrictJSON(b)
+		if viol := Validate(name, x); viol != nil {
+			viol.At = "/" + strconv.Itoa(i) + viol.At
+			return viol
+		}
+	}
+	return nil
 }

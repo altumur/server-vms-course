@@ -17,6 +17,7 @@ GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOL
 KITS = {"03-worker": ["flags", "refusals", "stagetests", "slot-capture", "families", "vectors"],
         "04-controller": ["flags", "refusals", "stagetests", "slot-fate", "slot-release", "families", "vectors"],
         "06-console": ["door", "families", "vectors"],  # P/06 до форм: дверь 3а, 3б; части по формам — позже
+        "05-resource": ["flags", "refusals", "stagetests", "door"],
         "08-domain": ["door", "families", "vectors"], "09-agent": ["door", "families", "vectors"],
         "10-domain-console": ["door", "vectors"]}      # P/08–P/10 до форм: дверь, семьи (у P/10 нет), векторы
 
@@ -48,7 +49,8 @@ class KitLessons(unittest.TestCase):
                     self.assertEqual(bool(f.get("editable")), own, f["path"])
                 kit_md = (dst / "KIT.md").read_text()
                 titles = ((("Part `vectors`", "draft (tools/normgen/wire_draft.py)") if "vectors" in parts else ())
-                          + (("Part `door` (3a)",) if "door" in parts else ())
+                          + ((("Part `door`: the routes of the lesson's OpenAPI by x-route-priority",) if lesson == "05-resource"
+                              else ("Part `door` (3a)",)) if "door" in parts else ())
                           + (("Part `flags`: the process inputs",
                               "Part `stagetests`: the stage tests of the lesson over CALL ports",
                               "Part `refusals`") if "flags" in parts else ()))

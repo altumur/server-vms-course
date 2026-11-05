@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/may cases.tsv (gen_vectors.py); compare subset.
-# source Platform/common/vectors/may/cases.tsv sha256 de54b5b2777a0c1697d159a8bbdccd116385fd819988db9f09604336834be9f6
+# source Platform/common/vectors/may/cases.tsv sha256 78facef3527f53fb73d4fddc1ca500ba5b34748db5f00349d66274929bb886cd
 case	input	exit	stdout
 line-7	line-7.json	0	{"result":"allow"}
 line-8	line-8.json	0	{"result":"deny","reason":"disabled"}
@@ -121,3 +121,9 @@ line-123	line-123.json	0	{"result":"deny","reason":"no_grant"}
 line-124	line-124.json	0	{"result":"deny","reason":"no_grant"}
 line-125	line-125.json	0	{"result":"deny","reason":"no_grant"}
 line-126	line-126.json	0	{"result":"deny","reason":"stale"}
+line-127	line-127.json	0	{"result":"allow"}
+line-128	line-128.json	2	
+line-129	line-129.json	2	
+line-130	line-130.json	2	
+line-131	line-131.json	2	
+line-132	line-132.json	2	

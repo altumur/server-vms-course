@@ -26,7 +26,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-LESSONS = {"06-console": "p06", "08-domain": "p08", "09-agent": "p09", "10-domain-console": "p10"}
+LESSONS = {"05-resource": "p05", "06-console": "p06", "08-domain": "p08", "09-agent": "p09", "10-domain-console": "p10"}
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 sys.path.insert(0, str(HERE))
 
@@ -375,6 +375,86 @@ class DoorBodiesBase:
         for name in SYNTH:
             verdicts = {check(n, v) for n, v in SYNTH_CASES if n == name}
             self.assertEqual(verdicts, {True, False}, f"{name}: the values do not split it")
+
+    def test_params(self):
+        """CheckParams против модели судьи: параметры query и header из OpenAPI, приведение текста, оракул jsonschema."""
+        import yamlsub
+        from jsonschema import Draft202012Validator
+        from referencing import Registry, Resource
+        from referencing.jsonschema import DRAFT202012
+        spec = ROOT / "Platform" / self.LESSON / "spec" / f"{self.LESSON}.api.openapi.yaml"
+        reg = Registry()
+        docs = {}
+        for f in sorted((ROOT / "Platform").rglob("*.api.openapi.yaml")):
+            try:
+                docs[f.resolve()] = yamlsub.load(f.read_text(encoding="utf-8"), f.name)
+            except yamlsub.YamlError:
+                continue
+            reg = reg.with_resource(f.resolve().as_uri(), Resource(contents=docs[f.resolve()], specification=DRAFT202012))
+        doc = docs[spec.resolve()]
+        routes = (self.fresh / "apidoor/routes.go").read_text()
+        cases = []
+        for path, item in doc["paths"].items():
+            for m in ("get", "put", "post", "delete", "patch", "head"):
+                if m not in item:
+                    continue
+                op = re.search(r'"' + re.escape(path) + " " + m.upper() + r'":\s+(Op\w+),', routes)[1]
+                for prm in item.get("parameters", []) + item[m].get("parameters", []):
+                    base = spec
+                    if "$ref" in prm:
+                        ref = prm["$ref"]
+                        f, _, ptr = ref.partition("#")
+                        base = (spec.parent / f).resolve() if f else spec
+                        prm = docs[Path(base).resolve()]
+                        for part in ptr.strip("/").split("/"):
+                            prm = prm[part]
+                    if prm["in"] not in ("query", "header"):
+                        continue
+                    sch = prm.get("schema", {})
+                    for raw in ("1", "0", "-3", "1.5", "1e3", "abc", "true", "", "local", "cluster", "newest", "t",
+                                "bytes=0-9", "sha256-" + "0" * 64, "x" * 200):
+                        cases.append((op, prm["in"], prm["name"], raw, sch, Path(base).resolve(), bool(prm.get("required"))))
+        if not cases:
+            self.skipTest("no query/header parameters")
+
+        def node(sch, base):
+            while isinstance(sch, dict) and "$ref" in sch:
+                f, _, ptr = sch["$ref"].partition("#")
+                base = (Path(base).parent / f).resolve() if f else base
+                sch = docs[Path(base).resolve()]
+                for part in ptr.strip("/").split("/"):
+                    sch = sch[part]
+            return sch
+
+        def want(c):
+            op, place, name, raw, sch, base, req = c
+            t = node(sch, base).get("type") if isinstance(node(sch, base), dict) else None
+            v = raw
+            if t in ("number", "integer") and re.fullmatch(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?", raw):
+                v = float(raw) if any(ch in raw for ch in ".eE") else int(raw)
+            elif t == "boolean" and raw in ("true", "false"):
+                v = raw == "true"
+            ok = Draft202012Validator({"$ref": f"{Path(base).as_uri()}#" + ("" if "$ref" in sch else "")} if False else
+                                      dict(sch) if "$ref" not in sch else {"$ref": base.as_uri() + "#" + sch["$ref"].partition("#")[2]}
+                                      if not sch["$ref"].partition("#")[0] else
+                                      {"$ref": (Path(base).parent / sch["$ref"].partition("#")[0]).resolve().as_uri() + "#"
+                                       + sch["$ref"].partition("#")[2]}, registry=reg).is_valid(v)
+            return ok
+        prog = ["package main", "", "import (", '\t"fmt"', "", f'\t"{(self.fresh / "go.mod").read_text().split()[1]}/apidoor"', ")", "",
+                "func main() {"]
+        for op, place, name, raw, *_ in cases:
+            nm = name.lower() if place == "header" else name      # заголовок — без учёта регистра
+            prog.append(f'\t{{ _, _, v := apidoor.CheckParam(apidoor.{op}, {json.dumps(place)}, {json.dumps(nm)}, '
+                        f'[]string{{{json.dumps(raw)}}}); fmt.Println(v == nil) }}')
+        prog.append("}")
+        d = self.fresh / "cmd/judgeparams"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "main.go").write_text("\n".join(prog) + "\n")
+        done = subprocess.run(["go", "run", "./cmd/judgeparams"], cwd=self.fresh, capture_output=True, text=True, env=GOENV)
+        self.assertEqual(done.returncode, 0, done.stderr[-1500:])
+        got = [x == "true" for x in done.stdout.split()]
+        bad = [(c[:4], want(c), g) for c, g in zip(cases, got) if want(c) != g]
+        self.assertEqual(bad[:3], [], f"{len(bad)} of {len(cases)} parameter verdicts disagree")
 
     def test_api(self):
         if self.LESSON != "06-console":

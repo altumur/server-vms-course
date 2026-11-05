@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/may",
+ "table": "cases.tsv",
+ "case": "may-extra-known-before-glass",
+ "variant": "",
+ "cells": {
+  "input": "{\"grants\":null,\"as_of\":1759999990,\"disabled\":[],\"user\":\"ann\",\"glass\":true,\"cap\":\"none\",\"unit\":\"*\",\"now\":1760000000,\"not_a_known_field\":{\"arbitrary\":[true,null,17]}}"
+ },
+ "files": {}
+}

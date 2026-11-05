@@ -4,8 +4,6 @@
 // declared responses and media types. The bodies (decode, check, encode) are part 3b.
 package apidoor
 
-import "regexp"
-
 // Op — an operation of the OpenAPI (path, method) in the order of the document.
 type Op int
 
@@ -63,27 +61,43 @@ var Ops = map[Op]OpInfo{
 	OpGetMirroredByServerByPath:      {Method: "GET", Path: "/mirrored/{server}/{path}", Prefixed: false, Params: []Param{{"server", "path", true}, {"path", "path", true}}, Responses: []Response{{"200", []string{"application/octet-stream"}, []string{"X-Sum"}}, {"404", nil, nil}, {"500", nil, nil}, {"403", []string{"application/json"}, nil}}, RequestMedia: nil, RequestRequired: false},
 }
 
-var templates = []template{
-	{path: "/v1/objects", segs: []segment{{lit: "v1"}, {lit: "objects"}}, prefixed: false},
-	{path: "/v1/objects/{key}", segs: []segment{{lit: "v1"}, {lit: "objects"}, {param: "key"}}, prefixed: false},
-	{path: "/v1/objects/{sub}/blobs/{digest}", segs: []segment{{lit: "v1"}, {lit: "objects"}, {param: "sub"}, {lit: "blobs"}, {param: "digest"}}, prefixed: false},
-	{path: "/events", segs: []segment{{lit: "events"}}, prefixed: false},
-	{path: "/events/wait", segs: []segment{{lit: "events"}, {lit: "wait"}}, prefixed: false},
-	{path: "/buckets/{sub}/{unit}", segs: []segment{{lit: "buckets"}, {param: "sub"}, {param: "unit"}}, prefixed: false},
-	{path: "/events/{path}", segs: []segment{{lit: "events"}, {param: "path"}}, prefixed: false},
-	{path: "/mirror/{server}/{path}", segs: []segment{{lit: "mirror"}, {param: "server"}, {param: "path"}}, prefixed: false},
-	{path: "/mirrored/{server}", segs: []segment{{lit: "mirrored"}, {param: "server"}}, prefixed: false},
-	{path: "/mirrored/{server}/{path}", segs: []segment{{lit: "mirrored"}, {param: "server"}, {param: "path"}}, prefixed: false},
+var prioTemplates = []prioTemplate{
+	{path: "/v1/objects", segs: []prioSegment{{lit: "v1"}, {lit: "objects"}}, priority: 50},
+	{path: "/v1/objects/{key}", segs: []prioSegment{{lit: "v1"}, {lit: "objects"}, {param: "key", remainder: true}}, priority: 60},
+	{path: "/v1/objects/{sub}/blobs/{digest}", segs: []prioSegment{{lit: "v1"}, {lit: "objects"}, {param: "sub", remainder: false}, {lit: "blobs"}, {param: "digest", remainder: false}}, priority: 20},
+	{path: "/events", segs: []prioSegment{{lit: "events"}}, priority: 70},
+	{path: "/events/wait", segs: []prioSegment{{lit: "events"}, {lit: "wait"}}, priority: 10},
+	{path: "/buckets/{sub}/{unit}", segs: []prioSegment{{lit: "buckets"}, {param: "sub", remainder: false}, {param: "unit", remainder: false}}, priority: 90},
+	{path: "/events/{path}", segs: []prioSegment{{lit: "events"}, {param: "path", remainder: true}}, priority: 80},
+	{path: "/mirror/{server}/{path}", segs: []prioSegment{{lit: "mirror"}, {param: "server", remainder: false}, {param: "path", remainder: true}}, priority: 100},
+	{path: "/mirrored/{server}", segs: []prioSegment{{lit: "mirrored"}, {param: "server", remainder: false}}, priority: 40},
+	{path: "/mirrored/{server}/{path}", segs: []prioSegment{{lit: "mirrored"}, {param: "server", remainder: false}, {param: "path", remainder: true}}, priority: 30},
 }
 
-var paramChecks = map[string]map[string]paramCheck{
-	"/v1/objects/{key}":                {"key": paramCheck{minLen: 1, maxLen: -1, rx: regexp.MustCompile("^(?:(?:[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.\\.[^/\\\\\u0000-\u001f-  ]+)(?:/(?:[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.\\.[^/\\\\\u0000-\u001f-  ]+))*)$"), enum: nil, notEnum: nil, notRx: nil}},
-	"/v1/objects/{sub}/blobs/{digest}": {"sub": paramCheck{minLen: 1, maxLen: 32, rx: regexp.MustCompile("^(?:[a-z][\\s\\S]*)$"), enum: nil, notEnum: []string{"platform", "domain", "console", "audit", "spec", "manifest", "session", "mounts", "healthz", "metrics", "servers", "resources", "where", "unplaceable", "policy", "drain", "schema", "events", "marks", "requests", "asked", "api"}, notRx: []*regexp.Regexp{regexp.MustCompile("^(?:[\\s\\S]*[^a-z0-9_-][\\s\\S]*)$")}}, "digest": paramCheck{minLen: 0, maxLen: -1, rx: regexp.MustCompile("^(?:sha256-[0-9a-f]{64})$"), enum: nil, notEnum: nil, notRx: nil}},
-	"/buckets/{sub}/{unit}":            {"sub": paramCheck{minLen: 0, maxLen: -1, rx: regexp.MustCompile("^(?:[a-z][a-z0-9_-]{0,31})$"), enum: nil, notEnum: nil, notRx: nil}, "unit": paramCheck{minLen: 1, maxLen: -1, rx: nil, enum: nil, notEnum: []string{".", ".."}, notRx: []*regexp.Regexp{regexp.MustCompile("^(?:[\\s\\S]*[/\\\\\u0000-\u001f-  ][\\s\\S]*)$")}}},
-	"/events/{path}":                   {"path": paramCheck{minLen: 1, maxLen: -1, rx: regexp.MustCompile("^(?:(?:[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.\\.[^/\\\\\u0000-\u001f-  ]+)(?:/(?:[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.\\.[^/\\\\\u0000-\u001f-  ]+))*)$"), enum: nil, notEnum: nil, notRx: nil}},
-	"/mirror/{server}/{path}":          {"server": paramCheck{minLen: 1, maxLen: -1, rx: nil, enum: nil, notEnum: []string{".", ".."}, notRx: []*regexp.Regexp{regexp.MustCompile("^(?:[\\s\\S]*[/\\\\\u0000-\u001f-  ][\\s\\S]*)$")}}, "path": paramCheck{minLen: 1, maxLen: -1, rx: regexp.MustCompile("^(?:(?:[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.\\.[^/\\\\\u0000-\u001f-  ]+)(?:/(?:[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.\\.[^/\\\\\u0000-\u001f-  ]+))*)$"), enum: nil, notEnum: nil, notRx: nil}},
-	"/mirrored/{server}":               {"server": paramCheck{minLen: 1, maxLen: -1, rx: nil, enum: nil, notEnum: []string{".", ".."}, notRx: []*regexp.Regexp{regexp.MustCompile("^(?:[\\s\\S]*[/\\\\\u0000-\u001f-  ][\\s\\S]*)$")}}},
-	"/mirrored/{server}/{path}":        {"server": paramCheck{minLen: 1, maxLen: -1, rx: nil, enum: nil, notEnum: []string{".", ".."}, notRx: []*regexp.Regexp{regexp.MustCompile("^(?:[\\s\\S]*[/\\\\\u0000-\u001f-  ][\\s\\S]*)$")}}, "path": paramCheck{minLen: 1, maxLen: -1, rx: regexp.MustCompile("^(?:(?:[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.\\.[^/\\\\\u0000-\u001f-  ]+)(?:/(?:[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.[^/.\\\\\u0000-\u001f-  ][^/\\\\\u0000-\u001f-  ]*|\\.\\.[^/\\\\\u0000-\u001f-  ]+))*)$"), enum: nil, notEnum: nil, notRx: nil}},
+var pathDecode = map[string]map[string]bool{
+	"/v1/objects":                      {},
+	"/v1/objects/{key}":                {"key": true},
+	"/v1/objects/{sub}/blobs/{digest}": {"sub": true, "digest": true},
+	"/events":                          {},
+	"/events/wait":                     {},
+	"/buckets/{sub}/{unit}":            {"sub": true, "unit": true},
+	"/events/{path}":                   {"path": true},
+	"/mirror/{server}/{path}":          {"server": true, "path": true},
+	"/mirrored/{server}":               {"server": true},
+	"/mirrored/{server}/{path}":        {"server": true, "path": true},
+}
+
+var pathErrors = map[string]map[string]map[string]pathError{
+	"/v1/objects":                      {},
+	"/v1/objects/{key}":                {"key": {"GET": {status: 400, response: "ResourceError"}, "PUT": {status: 400, response: "ResourceError"}}},
+	"/v1/objects/{sub}/blobs/{digest}": {"sub": {"PUT": {status: 400, response: "ResourceError"}}, "digest": {"PUT": {status: 405, response: "ResourceError"}}},
+	"/events":                          {},
+	"/events/wait":                     {},
+	"/buckets/{sub}/{unit}":            {"sub": {"GET": {status: 404, response: ""}}, "unit": {"GET": {status: 404, response: ""}}},
+	"/events/{path}":                   {"path": {"GET": {status: 404, response: ""}}},
+	"/mirror/{server}/{path}":          {"server": {"PUT": {status: 400, response: ""}}, "path": {"PUT": {status: 400, response: ""}}},
+	"/mirrored/{server}":               {"server": {"GET": {status: 404, response: ""}}},
+	"/mirrored/{server}/{path}":        {"server": {"GET": {status: 404, response: ""}}, "path": {"GET": {status: 404, response: ""}}},
 }
 
 var byPathMethod = map[string]Op{
@@ -100,28 +114,17 @@ var byPathMethod = map[string]Op{
 	"/mirrored/{server}/{path} GET":        OpGetMirroredByServerByPath,
 }
 
-var methodsOf = map[string][]string{
-	"/v1/objects":                      {"GET"},
-	"/v1/objects/{key}":                {"GET", "PUT"},
-	"/v1/objects/{sub}/blobs/{digest}": {"PUT"},
-	"/events":                          {"GET"},
-	"/events/wait":                     {"GET"},
-	"/buckets/{sub}/{unit}":            {"GET"},
-	"/events/{path}":                   {"GET"},
-	"/mirror/{server}/{path}":          {"PUT"},
-	"/mirrored/{server}":               {"GET"},
-	"/mirrored/{server}/{path}":        {"GET"},
-}
-
-var all405 = map[string]bool{
-	"/v1/objects":                      false,
-	"/v1/objects/{key}":                false,
-	"/v1/objects/{sub}/blobs/{digest}": true,
-	"/events":                          true,
-	"/events/wait":                     false,
-	"/buckets/{sub}/{unit}":            false,
-	"/events/{path}":                   false,
-	"/mirror/{server}/{path}":          false,
-	"/mirrored/{server}":               false,
-	"/mirrored/{server}/{path}":        false,
+// opRoles — door-roles.tsv: роли, допущенные к операции (режим mtls).
+var opRoles = map[Op][]string{
+	OpGetV1Objects:                   {"*"},
+	OpGetV1ObjectsByKey:              {"*"},
+	OpPutV1ObjectsByKey:              {"*"},
+	OpPutV1ObjectsBySubBlobsByDigest: {"*"},
+	OpGetEvents:                      {"console", "resource", "<sub>worker"},
+	OpGetEventsWait:                  {"console", "resource", "<sub>worker"},
+	OpGetBucketsBySubByUnit:          {"console", "resource", "<sub>worker"},
+	OpGetEventsByPath:                {"console", "resource", "<sub>worker"},
+	OpPutMirrorByServerByPath:        {"resource"},
+	OpGetMirroredByServer:            {"console", "resource", "<sub>worker"},
+	OpGetMirroredByServerByPath:      {"console", "resource", "<sub>worker"},
 }
