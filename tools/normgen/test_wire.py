@@ -9,7 +9,7 @@
    байты, сравнение, case), общие пакеты P/01/P/02 — с common_vectors (ожидание, вход, фикстуры; family-read —
    verdict подмножеством, paths множеством, outcome писателя значением и читателя множествами).
 3. Мутанты формы (повторный ключ JSON, чужой конструктор, неизвестное сравнение, два входа одного варианта на строку,
-   decode json у строкового домена, якорь нормы без заголовка, фикстура у stand, no-leak без целого min_bytes ≥ 1, owner вне
+   decode json у строкового домена, якорь нормы без заголовка, фикстура у stand, no-leak без целого min_bytes ≥ 1, whole вне no-leak или не булево, owner вне
    consumers.tsv, when, различный в группе, повтор запуска) отвергаются WireError.
 """
 import json
@@ -132,7 +132,7 @@ class Form(unittest.TestCase):
                     if name != "family-read":
                         self.assertEqual(w.value, want, where)
                         continue
-                    a = {p: (c, v) for p, _, c, v, _ in w.asserts}
+                    a = {x.pointer: (x.compare, x.value) for x in w.asserts}
                     self.assertEqual((w.compare, w.value), ("subset", {"verdict": want["verdict"]}), where)
                     self.assertEqual((a["/paths"][0], sorted(a["/paths"][1])), ("set", want["paths"]), where)
                     c, v = a["/outcome"]
@@ -246,12 +246,39 @@ class Mutants(unittest.TestCase):
         self.jedit("common/log-mask", "cases.tsv", "vectors", "expect", lambda v: add(v, 4))
         runs, _ = wire.expand(self.tmp, "02-installer", self.cel)
         r = next(r for r in runs if r.binding.package == "common/log-mask")
-        self.assertEqual(r.asserts[0][1:], ("no-leak", None, [r.cells["raw"]], 4))
+        self.assertEqual(r.asserts[0][1:], ("no-leak", None, [r.cells["raw"]], 4, False))
+
+    def test_whole_only_with_no_leak(self):
+        def add(v, extra):
+            v[0]["assert"] = [dict({"pointer": "", "value": {"column": "raw", "decode": "text"}}, **extra)]
+        bad = ({"test": "no-leak", "min_bytes": 4, "whole": 1}, {"test": "prefix", "whole": True},
+               {"whole": False}, {"min_bytes": 4})
+        for extra in bad:
+            with self.subTest(extra=extra):
+                self.jedit("common/log-mask", "cases.tsv", "vectors", "expect", lambda v: add(v, extra))
+                self.refused()
+                self.tearDown()
+        self.jedit("common/log-mask", "cases.tsv", "vectors", "expect",
+                   lambda v: add(v, {"test": "no-leak", "min_bytes": 4, "whole": True}))
+        runs, _ = wire.expand(self.tmp, "02-installer", self.cel)
+        r = next(r for r in runs if r.binding.package == "common/log-mask")
+        self.assertIs(r.asserts[0].whole, True)
+
 
     def test_escape_the_export(self):
         self.jedit("common/log-mask", "cases.tsv", "vectors", "files",
                    lambda v: v["fields.yaml"].__setitem__("path", "../../../../../etc/passwd"))
         self.refused()
+
+
+class Leaks(unittest.TestCase):
+    def test_fragment_and_whole(self):
+        self.assertEqual(wire.leaks("x=abcd", ["zzabcdzz"], 4), ["zzabcdzz"])         # фрагмент ≥ 4 байт
+        self.assertEqual(wire.leaks("x=abc", ["zzabcdzz"], 4), [])
+        self.assertEqual(wire.leaks("x=abcd", ["zzabcdzz"], 4, whole=True), [])         # целиком нет
+        self.assertEqual(wire.leaks("x=zzabcdzz!", ["zzabcdzz"], 4, whole=True), ["zzabcdzz"])
+        self.assertEqual(wire.leaks("x=ab", ["ab"], 4, whole=True), [])                 # короткий не судится
+        self.assertEqual(wire.leaks("пароль", ["арол"], 8), ["арол"])                   # байты UTF-8
 
 
 if __name__ == "__main__":

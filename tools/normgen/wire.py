@@ -11,6 +11,7 @@ check_forms; на CT 103 — /opt/check-env/lesson-spec/bin/python.
 import json
 import re
 from dataclasses import dataclass, field
+from typing import NamedTuple, Optional
 from pathlib import Path
 
 FORM = "Platform/common/vectors/wire.tsv"
@@ -156,18 +157,20 @@ def check_asserts(a, where, group, prefix=False):
         raise WireError(f"{where}: assert {a!r}")
     for i, x in enumerate(a):
         w = f"{where}.assert[{i}]"
-        keys_of(x, w, ("pointer",), ("test", "value", "decode", "compare", "min_bytes"))
+        keys_of(x, w, ("pointer",), ("test", "value", "decode", "compare", "min_bytes", "whole"))
         if not isinstance(x["pointer"], str) or not (x["pointer"] == "" or x["pointer"].startswith("/")):
             raise WireError(f"{w}: pointer {x['pointer']!r}")
         if "test" in x:
             if x["test"] not in TESTS or (x["test"] == "absent") == ("value" in x) or "compare" in x:
                 raise WireError(f"{w}: {x!r}")
-            leak = x["test"] == "no-leak"
-            mb = x.get("min_bytes")
-            if leak != ("min_bytes" in x) or (leak and (not isinstance(mb, int) or isinstance(mb, bool) or mb < 1)):
-                raise WireError(f"{w}: min_bytes (an integer >= 1) goes with no-leak only: {x!r}")
         elif "value" not in x:
             raise WireError(f"{w}: no value")
+        leak = x.get("test") == "no-leak"
+        mb = x.get("min_bytes")
+        if leak != ("min_bytes" in x) or (leak and (not isinstance(mb, int) or isinstance(mb, bool) or mb < 1)):
+            raise WireError(f"{w}: min_bytes (an integer >= 1) goes with no-leak only: {x!r}")
+        if "whole" in x and (not leak or not isinstance(x["whole"], bool)):
+            raise WireError(f"{w}: whole (a boolean) goes with no-leak only: {x!r}")
         if x.get("decode", "json") != "json":
             raise WireError(f"{w}: decode {x['decode']!r}")
         if "compare" in x and (x["compare"] not in COMPARES or x["compare"].startswith("lines-")):
@@ -316,6 +319,29 @@ def check_binding(root, b, w):
 
 # ---------------------------------------------------------------- раскрытие в запуски
 
+class Assert(NamedTuple):
+    pointer: str
+    test: Optional[str]             # prefix | absent | no-leak | None (сравнение значения)
+    compare: Optional[str]
+    value: object
+    min_bytes: Optional[int]        # только no-leak
+    whole: Optional[bool]           # только no-leak (по умолчанию false)
+
+
+def leaks(text, secrets, min_bytes, whole=False):
+    """Смысл no-leak: → секреты, след которых есть в UTF-8 текста. whole=false — любая подстрока секрета длиной
+    ≥ min_bytes байт; whole=true — секрет целиком, если его длина ≥ min_bytes байт (короткие не судятся)."""
+    data, out = text.encode("utf-8"), []
+    for s in secrets:
+        b = s.encode("utf-8")
+        if whole:
+            if len(b) >= min_bytes and b in data:
+                out.append(s)
+        elif len(b) >= min_bytes and any(b[i:i + min_bytes] in data for i in range(len(b) - min_bytes + 1)):
+            out.append(s)                # любая подстрока длиннее содержит подстроку ровно min_bytes
+    return out
+
+
 @dataclass
 class Run:
     owner: str
@@ -331,7 +357,7 @@ class Run:
     ignore_stdout: bool = False
     value: object = None            # ожидаемое значение JSON (или bytes при native bytes)
     compare: str = "value"
-    asserts: list = field(default_factory=list)    # [(pointer, test|None, compare|None, value, min_bytes|None)]
+    asserts: list = field(default_factory=list)    # [Assert]
     native: dict = None
 
     @property
@@ -490,7 +516,7 @@ class Expander:
         raise WireError(f"{where}: {v!r}")
 
     def asserts(self, a, rows, pdir, where, suffix=None):
-        """→ [(pointer, test | None, compare | None, значение | None, min_bytes | None)]; no-leak — массив секретов."""
+        """→ [Assert]; у no-leak value — массив секретов, whole — false по умолчанию."""
         out = []
         for x in a:
             v = self.value(x["value"], rows, pdir, where, suffix) if "value" in x else None
@@ -498,7 +524,8 @@ class Expander:
                 v = [v] if isinstance(v, str) else v
                 if not isinstance(v, list) or not all(isinstance(s, str) for s in v):
                     raise WireError(f"{where}: no-leak value is a string or an array of strings, got {v!r:.80}")
-            out.append((x["pointer"], x.get("test"), x.get("compare"), v, x.get("min_bytes")))
+            out.append(Assert(x["pointer"], x.get("test"), x.get("compare"), v, x.get("min_bytes"),
+                              bool(x.get("whole", False)) if x.get("test") == "no-leak" else None))
         return out
 
     def run(self, b, owner):
