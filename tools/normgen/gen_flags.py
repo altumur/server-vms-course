@@ -12,6 +12,7 @@
 Запуск: python tools/normgen/gen_flags.py [таблица.tsv [каталог_выхода]].
 """
 import hashlib
+import json
 import re
 import sys
 from pathlib import Path
@@ -28,20 +29,69 @@ L = lesson.CURRENT
 DEFAULT_TABLE = L.form("daemon-flags.tsv")
 DEFAULT_OUT = L.out
 COLUMNS = ["flag", "type", "default", "default_text", "required", "commands", "bad", "norm"]
-FLAG = re.compile(r"-[a-z][a-z-]*|--[a-z][a-z-]*")
-TYPE = re.compile(r"path|dir|file|addr|id|bool|duration|bytes:>0|list:id@addr(?:/addr)?"
+FLAG = re.compile(r"-[a-z][a-z0-9-]*|--[a-z][a-z0-9-]*")
+TYPE = re.compile(r"path|dir|file|addr|id|bool|duration|bytes:>0|list:id@addr(?:/addr)?|string|number"
                   r"|enum:[A-Za-z0-9_.-]+(?:\|[A-Za-z0-9_.-]+)*|int:(-?[0-9]+)\.\.(-?[0-9]*)")
 INITIALISMS = {"id": "ID", "api": "API", "tls": "TLS"}
 DURATION = re.compile(r"[1-9][0-9]*(?:ms|s|m|h)")          # шапка формы (P/01.3-R031)
 DURATION_NS = {"ns": 1, "us": 1000, "µs": 1000, "ms": 10 ** 6, "s": 10 ** 9, "m": 60 * 10 ** 9, "h": 3600 * 10 ** 9}
 MEMBER_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}")
 INT64 = (-2 ** 63, 2 ** 63 - 1)
+NUMBER = re.compile(r"-?(0|[1-9][0-9]*)(\.[0-9]+)?")       # number: конечная десятичная запись (P/02 forms README)
+COMMANDS_FORM = "operator-commands.tsv"                      # команды урока с префиксом argv (P/02); нет — команды P/01
+COMMAND_COLUMNS = ["command", "process", "prefix", "positionals", "norm"]
+COMMAND_ID = re.compile(r"[a-z][a-z0-9-]*")
+WORD = re.compile(r"[a-z][a-z0-9-]*")
 
 
 # ---------------------------------------------------------------- таблица
 
+class Commands:
+    """operator-commands.tsv: команда (id), процесс, префикс argv (JSON-массив слов), позиционные (JSON Schema массива
+    строк с minItems/maxItems — другой схемы генератор не исполняет), норма."""
+
+    def __init__(self, text, name=COMMANDS_FORM):
+        self.name = name
+        self.sha256 = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        body = [line for line in text.splitlines() if line and not line.startswith("#")]
+        if not body or body[0].split("\t") != COMMAND_COLUMNS:
+            raise GenError(f"{name}: columns must be {COMMAND_COLUMNS}")
+        self.rows, seen, prefixes = [], set(), set()
+        for k, line in enumerate(body[1:], 2):
+            cells = line.split("\t")
+            if len(cells) != len(COMMAND_COLUMNS):
+                raise GenError(f"{name}: row {k}: {len(cells)} cells, expected {len(COMMAND_COLUMNS)}")
+            row = dict(zip(COMMAND_COLUMNS, cells))
+            where = f"{name}: {row['command']}"
+            if not COMMAND_ID.fullmatch(row["command"]) or row["command"] in seen:
+                raise GenError(f"{where}: the command id is not [a-z][a-z0-9-]* or repeats")
+            seen.add(row["command"])
+            if not re.fullmatch(r"[a-z][a-z0-9.-]*", row["process"]):
+                raise GenError(f"{where}: process {row['process']!r}")
+            try:
+                prefix, schema = json.loads(row["prefix"]), json.loads(row["positionals"])
+            except ValueError as exc:
+                raise GenError(f"{where}: prefix or positionals is not JSON: {exc}") from None
+            if not isinstance(prefix, list) or not prefix or not all(isinstance(w, str) and WORD.fullmatch(w)
+                                                                   for w in prefix):
+                raise GenError(f"{where}: prefix — a non-empty JSON array of words [a-z][a-z0-9-]*")
+            if (row["process"], tuple(prefix)) in prefixes:
+                raise GenError(f"{where}: the prefix {prefix} of {row['process']} repeats")
+            prefixes.add((row["process"], tuple(prefix)))
+            if not isinstance(schema, dict) or set(schema) - {"type", "items", "minItems", "maxItems"} or \
+                    schema.get("type") != "array" or schema.get("items") != {"type": "string"}:
+                raise GenError(f"{where}: positionals — only {{type: array, items: {{type: string}}, minItems, "
+                               f"maxItems}} is executed by the generator")
+            lo, hi = schema.get("minItems", 0), schema.get("maxItems")
+            if not isinstance(lo, int) or lo < 0 or (hi is not None and (not isinstance(hi, int) or hi < lo)):
+                raise GenError(f"{where}: minItems/maxItems out of form")
+            row.update(prefix=prefix, min=lo, max=hi)
+            self.rows.append(row)
+        self.ids = [r["command"] for r in self.rows]
+
+
 class Table:
-    def __init__(self, text, name="daemon-flags.tsv"):
+    def __init__(self, text, name="daemon-flags.tsv", commands=None):
         self.name = name
         self.sha256 = hashlib.sha256(text.encode("utf-8")).hexdigest()
         self.vars, self.fns, self.lims, self.rows = {}, {}, [], []
@@ -57,6 +107,8 @@ class Table:
                 self.fns[m[1]] = (args, m[3], m[4])
             elif re.match(r"#(var|lim|fn) ", line):
                 raise GenError(f"{name}: header line out of form: {line}")
+        if commands is not None and not self.vars:              # P/02: f и cmd названы в шапке прозой
+            self.vars = {"f": "map<string,dyn>", "cmd": "string"}
         if set(self.vars) != {"f", "cmd"}:
             raise GenError(f"{name}: #var must declare f and cmd (got {sorted(self.vars)})")
         body = [line for line in lines if not line.startswith("#")]
@@ -75,7 +127,8 @@ class Table:
             if not TYPE.fullmatch(row["type"]):
                 raise GenError(f"{where}: type {row['type']!r} is not of the closed vocabulary")
             row["commands"] = row["commands"].split(",")
-            if not all(re.fullmatch(r"[a-z]+", c) for c in row["commands"]) or \
+            known = (lambda c: re.fullmatch(r"[a-z]+", c)) if commands is None else (lambda c: c in commands.ids)
+            if not all(known(c) for c in row["commands"]) or \
                     len(set(row["commands"])) != len(row["commands"]):
                 raise GenError(f"{where}: commands {row['commands']} — a comma list of names without repeats")
             if not row["required"]:
@@ -93,6 +146,10 @@ class Table:
                 if not other or other["type"] != row["type"] or not set(row["commands"]) <= set(other["commands"]):
                     raise GenError(f"{self.name}: {row['flag']}: default {row['default']} — a flag of the same type "
                                    f"admitted at every command of this one")
+        self.command_table = commands
+        if commands is not None:
+            self.commands = list(commands.ids)
+            return
         self.commands = []
         for row in self.rows:
             for c in row["commands"]:
@@ -139,10 +196,14 @@ def default_value(row, where):
         if d != "false":
             raise bad
         return None
-    if t in ("path", "dir", "file"):
+    if t in ("path", "dir", "file", "string"):
         if not d:
             raise bad
         return go_str(d)
+    if t == "number":
+        if not NUMBER.fullmatch(d):
+            raise bad
+        return f"float64({d})"
     if t == "id":
         if not MEMBER_ID.fullmatch(d):
             raise bad
@@ -181,6 +242,8 @@ def go_field_type(t):
         return "int64"
     if t == "duration":
         return "time.Duration"
+    if t == "number":
+        return "float64"
     if t.startswith("list:"):
         return "[]Member"
     return "string"
@@ -193,6 +256,11 @@ def go_assign(row):
     t, fld = row["type"], f"fl.{row['field']}"
     if t in ("path", "dir", "file"):
         return [f"v, err := valNonEmpty(raw)", "if err != nil {", "\treturn nil, refuse(name, err.Error())", "}",
+                f"{fld} = v", "f[name] = v"]
+    if t == "string":
+        return ["v := raw", f"{fld} = v", "f[name] = v"]
+    if t == "number":
+        return ["v, err := valNumber(raw)", "if err != nil {", "\treturn nil, refuse(name, err.Error())", "}",
                 f"{fld} = v", "f[name] = v"]
     if t in ("addr", "id"):
         fn = "valAddr" if t == "addr" else "valID"
@@ -396,6 +464,216 @@ def go_module(table, rel, module, compiled):
     return "\n\n".join(parts) + "\n"
 
 
+# ---------------------------------------------------------------- режим команд (P/02: operator-commands.tsv)
+
+GO_API_CMD = """
+// Refusal — a refusal of the option form of a command: the option (or the word) and the reason. The forms set no exit
+// code for it: your command chooses it by its rows of forms/refusals.tsv; the message names the option.
+type Refusal struct {
+	Flag   string
+	Reason string
+}
+
+func (r *Refusal) Error() string { return "option " + r.Flag + ": " + r.Reason }
+
+func refuse(flag, reason string) *Refusal { return &Refusal{Flag: flag, Reason: reason} }
+
+// Command — a row of forms/operator-commands.tsv: the id, the process, the fixed argv words (prefix), the count of the
+// positional words after the options (Max -1 — no maximum).
+type Command struct {
+	ID      string
+	Process string
+	Prefix  []string
+	Min     int
+	Max     int
+}
+
+// Commands — the rows of operator-commands.tsv in order.
+var Commands = []Command{
+%s}
+
+func isCommand(cmd string) bool {
+	for _, c := range Commands {
+		if c.ID == cmd {
+			return true
+		}
+	}
+	return false
+}
+
+// Lookup — the command of process whose prefix is the longest prefix of argv (argv without the process name) and the
+// rest of argv; nil — no command of process starts argv.
+func Lookup(process string, argv []string) (*Command, []string) {
+	var best *Command
+	for i := range Commands {
+		c := &Commands[i]
+		if c.Process != process || len(c.Prefix) > len(argv) || (best != nil && len(c.Prefix) <= len(best.Prefix)) {
+			continue
+		}
+		ok := true
+		for k, w := range c.Prefix {
+			if argv[k] != w {
+				ok = false
+				break
+			}
+		}
+		if ok {
+			best = c
+		}
+	}
+	if best == nil {
+		return nil, argv
+	}
+	return best, argv[len(best.Prefix):]
+}
+
+// ParseArgv — Lookup and Parse: argv is the command line without the process name.
+func ParseArgv(process string, argv []string) (*Flags, *Refusal) {
+	c, rest := Lookup(process, argv)
+	if c == nil {
+		word := ""
+		if len(argv) > 0 {
+			word = argv[0]
+		}
+		return nil, refuse(word, "not a command of "+process+" (forms/operator-commands.tsv)")
+	}
+	return Parse(c.ID, rest)
+}
+
+// Flags — a parsed command line. A field of an option the command does not admit is zero.
+type Flags struct {
+	Cmd   string          // the command id of operator-commands.tsv
+	Given map[string]bool // the options given on the line (the keys of f of the table)
+	Args  []string        // the positional words in order (their count — the command's Min..Max)
+%s}
+
+type env struct{ f, cmd any }
+
+var numberRE = regexp.MustCompile(`^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$`)
+
+// valNumber — the type number: a finite decimal number (forms/README.md «Command options»).
+func valNumber(raw string) (float64, error) {
+	if !numberRE.MatchString(raw) {
+		return 0, errors.New("not a finite decimal number")
+	}
+	v, err := strconv.ParseFloat(raw, 64)
+	if err != nil || math.IsInf(v, 0) || math.IsNaN(v) {
+		return 0, errors.New("not a finite decimal number")
+	}
+	return v, nil
+}
+"""
+
+
+def go_parse_cmd(table):
+    out = ["// Parse — the options and the positional words of the command cmd (an id of operator-commands.tsv): -name value",
+           "// or -name=value, a bool without a value, -- ends the options (the kit's writing; the forms fix none).",
+           "func Parse(cmd string, args []string) (*Flags, *Refusal) {",
+           "\tif !isCommand(cmd) {",
+           "\t\treturn nil, refuse(cmd, \"not a command of forms/operator-commands.tsv\")",
+           "\t}",
+           "\tfl := &Flags{Cmd: cmd, Given: map[string]bool{}}",
+           "\tf := map[string]any{}",
+           "\tfor k := 0; k < len(args); k++ {",
+           "\t\ttok := args[k]",
+           "\t\tif tok == \"--\" {",
+           "\t\t\tfl.Args = append(fl.Args, args[k+1:]...)",
+           "\t\t\tbreak",
+           "\t\t}",
+           "\t\tif len(tok) < 2 || tok[0] != '-' {",
+           "\t\t\tfl.Args = append(fl.Args, tok)",
+           "\t\t\tcontinue",
+           "\t\t}",
+           "\t\tname, raw, eq := strings.Cut(tok, \"=\")",
+           "\t\tif fl.Given[name] {",
+           "\t\t\treturn nil, refuse(name, \"the option is repeated\")",
+           "\t\t}",
+           "\t\tswitch name {"]
+    for row in table.rows:
+        out += [f"\t\tcase {go_str(row['flag'])}: // {row['type']}",
+                f"\t\t\tif !({admits(row)}) {{",
+                f"\t\t\t\treturn nil, refuse(name, \"not an option of the command \"+cmd)",
+                "\t\t\t}"]
+        if row["type"] == "bool":
+            out += ["\t\t\tif eq {", "\t\t\t\treturn nil, refuse(name, \"the option takes no value\")", "\t\t\t}",
+                    f"\t\t\tfl.{row['field']} = true", "\t\t\tf[name] = true"]
+        else:
+            out += ["\t\t\tif !eq {", "\t\t\t\tif k+1 >= len(args) {",
+                    "\t\t\t\t\treturn nil, refuse(name, \"no value\")", "\t\t\t\t}",
+                    "\t\t\t\tk++", "\t\t\t\traw = args[k]", "\t\t\t}"]
+            out += [f"\t\t\t{s}" for s in go_assign(row)]
+    out += ["\t\tdefault:",
+            "\t\t\treturn nil, refuse(name, \"not an option of forms/daemon-flags.tsv\")",
+            "\t\t}",
+            "\t\tfl.Given[name] = true",
+            "\t}",
+            "\tfor _, c := range Commands {",
+            "\t\tif c.ID == cmd && (len(fl.Args) < c.Min || (c.Max >= 0 && len(fl.Args) > c.Max)) {",
+            "\t\t\treturn nil, refuse(cmd, fmt.Sprintf(\"%d positional words, the command takes %d..%d (-1: no maximum)\", "
+            "len(fl.Args), c.Min, c.Max))",
+            "\t\t}",
+            "\t}",
+            "\te := &env{f: f, cmd: cmd}",
+            "\t_ = e // a table without CEL in required and bad does not read it"]
+    for k, row in enumerate(table.rows, 1):
+        if row["required"] == "false":
+            continue
+        test = "" if row["required"] == "true" else f" && isTrue(required{k}(e))"
+        out += [f"\tif ({admits(row)}) && !fl.Given[{go_str(row['flag'])}]{test} {{",
+                f"\t\treturn nil, refuse({go_str(row['flag'])}, {go_str('the option is required: ' + row['required'])})",
+                "\t}"]
+    for k, row in enumerate(table.rows, 1):
+        if row["bad"]:
+            out += [f"\tif fl.Given[{go_str(row['flag'])}] && isTrue(bad{k}(e)) {{",
+                    f"\t\treturn nil, refuse({go_str(row['flag'])}, {go_str('a refusal of the option form: ' + row['bad'])})",
+                    "\t}"]
+    for row in table.rows:
+        if row["default_go"] is not None:
+            out += [f"\tif ({admits(row)}) && !fl.Given[{go_str(row['flag'])}] {{",
+                    f"\t\tfl.{row['field']} = {row['default_go']}", "\t}"]
+        elif row["default"].startswith("="):
+            other = next(r for r in table.rows if r["flag"] == row["default"][1:])
+            out += [f"\tif ({admits(row)}) && !fl.Given[{go_str(row['flag'])}] {{",
+                    f"\t\tfl.{row['field']} = fl.{other['field']}", "\t}"]
+    out += ["\treturn fl, nil", "}"]
+    return "\n".join(out)
+
+
+def go_module_cmd(table, rel, module, compiled):
+    cmds = table.command_table
+    for row in table.rows:
+        if row["default"].startswith("$"):
+            raise GenError(f"{table.name}: {row['flag']}: an environment default in the command form")
+    fields = ""
+    for row in table.rows:
+        dflt = row["default_text"] if row["default"] != "-" else "none"
+        fields += (f"\t// {row['flag']} — {row['type']}; default {dflt}; {','.join(row['commands'])}; {row['norm']}\n"
+                   f"\t{row['field']} {go_field_type(row['type'])}\n")
+    rows = "".join(f"\t{{ID: {go_str(r['command'])}, Process: {go_str(r['process'])}, Prefix: []string{{"
+                   + ", ".join(go_str(w) for w in r["prefix"]) + f"}}, Min: {r['min']}, "
+                   f"Max: {-1 if r['max'] is None else r['max']}}}, // {r['norm']}\n" for r in cmds.rows)
+    imports = ['"errors"', '"fmt"', '"math"', '"regexp"', '"strconv"', '"strings"']
+    parts = [f"// Code generated by tools/normgen/gen_flags.py from {rel} and {cmds.name}; DO NOT EDIT.\n"
+             f"// Таблица sha256 {table.sha256}; команды sha256 {cmds.sha256}.\n\n"
+             "// Package flags — the command line of the operator commands of the lesson (ADR-0125 № 3, addendum (5)):\n"
+             "// the commands of forms/operator-commands.tsv, their options of forms/daemon-flags.tsv.\n"
+             "package flags\n\n"
+             f"import ({chr(10).join(imports)})",
+             GO_API_CMD.strip("\n") % (rows, fields)]
+    if module.regexes:
+        parts.append("var (\n" + "".join(f"\trx{k} = regexp.MustCompile({go_str(re2)})\n"
+                                         for k, (re2, _) in enumerate(module.regexes, 1)) + ")")
+    for name, (args, result, doc) in table.fns.items():
+        parts.append(go_fn_wrapper(name, args, result, doc, True))
+    for k, row in enumerate(table.rows, 1):
+        for column in ("required", "bad"):
+            if (k, column) in compiled:
+                parts.append(go_function(f"{column}{k}", [], compiled[k, column],
+                                         f"{row['flag']} {column}: {row[column]}"))
+    parts.append(go_parse_cmd(table))
+    return "\n\n".join(parts) + "\n"
+
+
 def build(table, rel="daemon-flags.tsv"):
     """→ исходник Go flags.go; GenError — таблица вне формы."""
     _, go_prims = prims_present()
@@ -409,6 +687,8 @@ def build(table, rel="daemon-flags.tsv"):
                 compiled[k, column] = compile_expr(table, module, f"{table.name}: {row['flag']}: {column}",
                                                    row[column], {})
         Parser(row["required"], row["flag"]).parse()
+    if table.command_table is not None:
+        return go_module_cmd(table, rel, module, compiled)
     return go_module(table, rel, module, compiled)
 
 
@@ -423,7 +703,9 @@ def render(table_path=DEFAULT_TABLE):
         rel = table_path.relative_to(ROOT).as_posix()
     except ValueError:
         rel = table_path.name
-    table = Table(table_path.read_text(encoding="utf-8"), table_path.name)
+    cmds_path = table_path.parent / COMMANDS_FORM
+    cmds = Commands(cmds_path.read_text(encoding="utf-8")) if cmds_path.is_file() else None
+    table = Table(table_path.read_text(encoding="utf-8"), table_path.name, cmds)
     files = {"flags.go": gofmt(build(table, rel))}
     for name, src in COPIES:
         text = src.read_text(encoding="utf-8")
@@ -439,6 +721,9 @@ def generate(table_path=DEFAULT_TABLE, out=DEFAULT_OUT):
     gdir.mkdir(parents=True, exist_ok=True)
     for name, text in render(table_path).items():
         (gdir / name).write_text(text, encoding="utf-8")
+    mod = Path(out) / "go/go.mod"                     # модуль выхода урока (у P/01 его пишет gen_tests)
+    if not mod.exists():
+        mod.write_text(f"module {L.go_module}\n\ngo 1.22\n", encoding="utf-8")
     return gdir
 
 
@@ -463,6 +748,10 @@ def provenance():
     """Паспорт части (ADR-0125 доп. (1) п. 6 (а)): форма, генератор, судья — пути и sha256."""
     def entry(path):
         return {"path": str(path.relative_to(ROOT)), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+    cmds = DEFAULT_TABLE.parent / COMMANDS_FORM
+    if cmds.is_file():                                 # команды урока (P/02): обе формы, судья cmdflag_judge
+        return {"form": [entry(DEFAULT_TABLE), entry(cmds)], "generator": entry(Path(__file__).resolve()),
+                "judge": entry(HERE / "cmdflag_judge.py")}
     return {"form": entry(DEFAULT_TABLE), "generator": entry(Path(__file__).resolve()), "judge": entry(JUDGE)}
 
 
@@ -512,6 +801,36 @@ type Flags struct {
 
 
 KIT_MD = KIT_MD.replace("Platform/01-store/", L.rel + "/")      # пути урока; прочий текст — урока P/01
+
+KIT_MD_CMD = """
+## Part `flags`: the command line of the operator commands (generated from `forms/operator-commands.tsv` and `forms/daemon-flags.tsv`)
+
+| Package | Import path | Origin |
+|---|---|---|
+| `flags` | `{module}/internal/flags` | generated: the commands, their options and positional words; closed |
+
+```go
+func ParseArgv(process string, argv []string) (*Flags, *Refusal) // argv without the process name: Lookup, then Parse
+func Lookup(process string, argv []string) (*Command, []string) // the command whose prefix is the longest prefix of argv
+func Parse(cmd string, args []string) (*Flags, *Refusal)        // cmd — a command id of operator-commands.tsv
+type Command struct { ID, Process string; Prefix []string; Min, Max int } // Max -1 — no maximum
+var Commands []Command                                          // the rows of operator-commands.tsv
+type Flags struct { Cmd string; Given map[string]bool; Args []string; /* one field per option */ }
+type Refusal struct { Flag, Reason string }                     // Error() names the option
+```
+
+- The kit's writing of an option (the forms fix none — a choice of the kit, not a norm): `-name value` or `-name=value`;
+  a `bool` takes no value (given — true, absent — false); `--` ends the options; the other words are positional.
+- `number` — the kit's choice of writing: a finite decimal `-?(0|[1-9][0-9]*)(\\.[0-9]+)?` (no `+`, exponent or `.5`);
+  the value is kept as `float64` with its fraction. `string` — the word as is; `file` — a non-empty path.
+- `required` and `bad` of the form are evaluated (CEL over `f` and `cmd`); a refusal is a `*Refusal`. **The forms set no
+  exit code for it**: your command chooses the code by its rows of `forms/refusals.tsv` (surface `cli`).
+"""
+
+
+def kit_md():
+    """Справка части: команды урока (operator-commands.tsv) — KIT_MD_CMD; иначе флаги демона P/01."""
+    return KIT_MD_CMD if (DEFAULT_TABLE.parent / COMMANDS_FORM).is_file() else KIT_MD
 
 
 def main(argv):
