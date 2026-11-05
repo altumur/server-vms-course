@@ -1,7 +1,7 @@
 [
  {
   "name": "device_values",
-  "description": "The values a Device field takes on the devices in scope, with counts: learn the codes before writing a condition.",
+  "description": "The values a field of the records of the kind takes in scope, with counts: learn the codes before writing a condition.",
   "inputSchema": {
    "type": "object",
    "properties": {
@@ -10,7 +10,7 @@
     },
     "type": {
      "type": "string",
-     "description": "Device type, empty — cameras"
+     "description": "Kind code, empty — cameras (camera)"
     }
    },
    "required": [
@@ -30,7 +30,7 @@
     },
     "type": {
      "type": "string",
-     "description": "Device type, empty — cameras"
+     "description": "Kind code, empty — cameras (camera)"
     },
     "where": {
      "type": "array",

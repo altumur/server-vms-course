@@ -64,7 +64,7 @@ camera	properties.serverId	rec/heartbeats	сервер держателя осн
 camera	status.link	cam/heartbeats	phase	read	running, idle or held — true; not part of the version
 camera	status.observed.fault	cam/heartbeats	device_state	read	a login refusal — auth, did not open or no connectivity — conn, otherwise — drv; the device answers — no field
 camera	status.observed.licenseExceeded	cam/heartbeats	phase	read	unlicensed — true (V/01.7)
-camera	properties.archiveId	rec/recordings	home основной <cam>	both	no primary — null; a volume backup, edge, incidents — 422 VALIDATION_FAILED, field /properties/archiveId (V/11.3 Н1.3)
+camera	properties.archiveId	rec/recordings	home основной <cam>	both	no primary — null; a volume backup, edge — 422 NOT_SUPPORTED, incidents — 422 VALIDATION_FAILED (admits), field /properties/archiveId (V/11.3 Н1.3)
 camera	properties.recordMode	rec/recordings + auto/scenarios	<cam>: enabled и replica_from; строка записи камеры	both	always — the primary enabled, replica_from empty; replica — the primary enabled, replica_from not empty; sched — a recording row with the condition time; motion — there is a recording row (ADR-0111 item 4); none — otherwise; writing replica without the source field — replica_from: device, a nonempty one does not change; other transitions — V/11.4 Н1.2
 camera	properties.retentionDays	rec/recordings	retention_days основной	both	0 — 422 NOT_SUPPORTED (V/11.3 Н1.3)
 camera	properties.minDepthDays	rec/recordings	min_depth_days основной, вниз до целого	both	greater than the retention — 422 VALIDATION_FAILED, field /properties/minDepthDays
@@ -155,7 +155,7 @@ ipsrv	properties.labels	cam/cameras	labels строки	both	no row — no field
 ipsrv	status.observed.faultText	cam/heartbeats	reason строки	read
 ipsrv	properties.unitOptions	unit-templates.tsv + device-catalog.json	шаблоны вендора строки, parent -	read	no row — no field
 ipsrv	children	—	—	none	at creation it is skipped without a write: the holder finds the composition (V/11.3 Н1.1)
-channel	—	cam/devices	channels	read	a derived record: n from 0 to channels − 1 of the host's ipsrv; no edit: 422 NOT_SUPPORTED, field /kind
+channel	—	cam/devices	channels	read	a derived record: n from 0 to channels − 1 of the host's ipsrv; no edit: 422 NOT_SUPPORTED — a property — field /properties/<p>, the name — /name; DELETE — /kind
 channel	uid	cam/devices	UUID device:<кластер>/cam/devices/<хост>#<n>	read
 channel	kind	—	"channel"	const
 channel	parentId	cam/devices	UUID ipsrv хоста	read
@@ -275,7 +275,7 @@ volume	status.observed.incidentsAtRisk	rec/heartbeats	incidents_at_risk пуль
 volume	name	rec/volumes	name	read	the row key: an edit — 422 NOT_SUPPORTED, field /name
 volume	properties.disk	rec/volumes	url: путь file:// без конечного сегмента, равного Archive.id, иначе путь целиком; у бакета — схема	both	a write — file://<disk>/<Archive.id> (V/11.3 Н1.3)
 volume	properties.sizeBytes	rec/volumes	quota_bytes	both
-volume	status.observed.usedPercent	—	0	const	neither the row nor the heartbeat carries the volume fill; the field is required in the contract (V/11.3 Н1.3)
+volume	status.observed.usedPercent	—	—	none	neither the row nor the heartbeat carries the volume fill: no field (the contract 0.2.0 — an optional observation; V/11.3 Н1.3)
 volume	properties.state	rec/volumes, rec/heartbeats	enabled: false — off, volume_missing пульса — broken, иначе ready	read	V/11.3 Н1.3
 volume	properties.enabled	rec/volumes	enabled	both	no field — true; false — state off
 volume	status.observed.shrinkPendingBytes	rec/heartbeats	shrink_pending элемента тома	read	none — no field; not part of the version (V/11.3 Н1.3)
@@ -324,7 +324,7 @@ Rule	version	auto/scenarios + auto/rule_marks	s<индекс строки>.m<и�
 Rule	historyNote	auto/versions	note строки версии	write	RuleWrite: restore, undo; no field in the answer
 RuleTrigger	source	—	"unit"	const	the subsystem of the row — by the row event (V/11.13 Н1.4)
 RuleTrigger	event	auto/scenarios	when[].kind как есть; when[].sub: motion, linecross, lpr, disappeared, abandoned, crowd — det (покрывает и встроенный, V/07.2 Н1.3), segment.lost — rec, прочие — cam	both
-RuleTrigger	kinds	data:VMS/11-backend/data/rule-catalog.json#triggers	kinds строки с этим event; не хранится	both
+RuleTrigger	kinds	data:VMS/11-backend/data/rule-catalog.json#triggers	проверка по kinds строки с этим event; не хранится	write	a check only: reading gives no field — a limit (V/11.4 Н1.10)
 RuleTrigger	implements	—	—	none
 RuleTrigger	target	auto/scenarios	when[].target; unit — цель из одного устройства	both	see RuleTarget
 RuleTrigger	match	auto/scenarios	when[].match: value active ↔ closed, normal ↔ open; port строка цифр ↔ целое, из записи цели; word как есть; у события unit word ↔ event, unit — ключ cam/device_units; прочие ключи и типы как есть	both	template — 422 NOT_SUPPORTED; a number mismatch — RULE_INVALID (V/11.3 Н1.3)

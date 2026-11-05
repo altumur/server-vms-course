@@ -24,7 +24,7 @@ units	422	VALIDATION_FAILED	/properties/videoChannel	11.3 Н4: videoChannel less
 units	422	VALIDATION_FAILED	/properties/detectorKind	11.4 Н1.2: creating a detector without a kind
 units	422	VALIDATION_FAILED	noDetector	11.3 Н1.2б: a kind outside the contract listing
 units	422	VALIDATION_FAILED	<поле>	11.4 Н4: 409 ref, must_match, fixed
-units	422	VALIDATION_FAILED	copies	11.4 Н1.14: a repeat, no server, two servers of one cluster, a server of the primary's cluster
+units	422	VALIDATION_FAILED	/copies	11.4 Н1.14: a repeat, no server, two servers of one cluster, a server of the primary's cluster
 units	422	VALIDATION_FAILED	-	11.4 Н4: 413 batch too large
 units	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.4: another body, another operation with the same key
 units	422	NOT_SUPPORTED	/kind	11.3 Н4: a kind outside GET /kinds, a unit without a template of the kind, removal over a batch B9; 11.2 Н1.2, 11.4 Н1.2: a kind without the capability (DELETE, PATCH channel, storage), params.capability; 11.20 Н1.7: recording days of a kind without vms.camera/1
@@ -72,8 +72,8 @@ operations	-	SERVER_OFFLINE	-	11.4 Н1.7: the step folders, the domain doors do 
 operations	409	NOT_REVERTIBLE	-	11.4 Н1.12: revert: expired, reverted, running, empty, notLast, isRevert; repeat: notLast, stale in params.reason
 units	409	DEVICE_REFUSED	-	11.4 Н1.16, Н1.17: noOperation, refused in params.reason
 units	409	DEVICE_OFFLINE	-	11.4 Н1.16, Н1.17: no connectivity, a request without an outcome
-units	422	NOT_SUPPORTED	streamId	11.4 Н1.15: the main stream
-units	422	NOT_SUPPORTED	ptz	11.4 Н1.16: a camera without ptz
+units	422	NOT_SUPPORTED	/streamId	11.4 Н1.15: the main stream
+units	422	NOT_SUPPORTED	/properties/ptz	11.4 Н1.16: a camera without ptz
 units	422	NOT_SUPPORTED	<поле>	11.4 Н1.19: a UnitPatch field of a server record other than labels
 units	422	VALIDATION_FAILED	/properties/labels	11.4 Н1.19: a label outside the alphabet
 access	422	NAME_REQUIRED	name	11.4 Н1.18: a stream account without a name
@@ -147,13 +147,13 @@ access	422	VALIDATION_FAILED	retryClusters	11.8 Н1.5 item 5а
 units	409	OTHER_NETWORK	-	11.4 Н1.15: delivery for another network, params.labels
 units	409	NO_PRIMARY	-	11.4 Н1.25: there is no primary recording of its own cluster
 units	409	DEVICE_REFUSED	-	11.4 Н1.23: the door has no route keeps
-units	422	VALIDATION_FAILED	state	11.4 Н1.17: no state
-units	422	VALIDATION_FAILED	at	11.4 Н1.22: at not of the form
-units	422	VALIDATION_FAILED	to	11.4 Н1.23, Н1.25: the end is not later than the start
+units	422	VALIDATION_FAILED	/params/state	11.4 Н1.17: no state
+units	422	VALIDATION_FAILED	/at	11.4 Н1.22: at not of the form
+units	422	VALIDATION_FAILED	/to	11.4 Н1.23, Н1.25: the end is not later than the start
 units	422	VALIDATION_FAILED	/to	11.4 Н1.24: a span without to or with to not later than occurred, a moment with to (BookmarkCreate); 11.20 Н1.7: recording days, to earlier than from
 units	422	VALIDATION_FAILED	/from	11.20 Н1.7: recording days, a window longer than a year
-units	422	VALIDATION_FAILED	note	11.4 Н1.24: an empty note
-units	422	VALIDATION_FAILED	recordingIds	11.4 Н1.23: a recording not of this camera
+units	422	VALIDATION_FAILED	/note	11.4 Н1.24: an empty note
+units	422	VALIDATION_FAILED	/recordingIds	11.4 Н1.23: a recording not of this camera
 units	503	UPSTREAM_UNAVAILABLE	-	11.4 Н1.15: there is no gateway yet
 exports	422	VALIDATION_FAILED	<поле>	11.20 Н1.2 item 1: not by the schema ExportCreate, a JSON Pointer into the body; item 3: the combinations of V/08.6 Н1.1 — /periods, /at, /cameras/i/archiveId, a repeat /cameras/i; /cameras/i/archiveId of item 5; /special/maxFileMb below 100
 exports	422	VALIDATION_FAILED	/periods/i/to	11.20 Н1.2 item 3: the end of a period is not later than its start
