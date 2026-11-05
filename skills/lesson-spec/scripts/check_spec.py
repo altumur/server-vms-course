@@ -678,13 +678,18 @@ def outline(text):
     return headings, ids
 
 
+def section_latin(name):
+    """`Н1.2а` and `N1.2a` are one section number (ADR-0121 addendum (5) item 1: N… in Latin, the suffix by its order)."""
+    return re.sub(r"^Н", "N", name).translate(str.maketrans("абвгдежз", "abcdefgh"))
+
+
 def section_body(text, name):
     """The text of the section `Нx[.y]` of old norms (heading `## Нx …` or `### Нx.y …`) up to the next heading,
     stripped; None if there is no such heading."""
     lines = text.splitlines()
     for i, line in enumerate(lines):
-        match = re.match(r"(#{2,4}) (Н[0-9](?:\.[0-9]+[а-я]?)?)(?:\s|$)", line)
-        if match and match.group(2) == name:
+        match = re.match(r"(#{2,4}) ([НN][0-9](?:\.[0-9]+[а-яa-h]?)?)(?:\s|$)", line)
+        if match and section_latin(match.group(2)) == section_latin(name):
             body = []
             for rest in lines[i + 1:]:
                 if re.match(r"#{1,6} ", rest):
@@ -1145,7 +1150,7 @@ class Check:
             if address.startswith("P/"):
                 continue
             tail = norm[match.end():parts[i + 1].start() if i + 1 < len(parts) else len(norm)]
-            sections = re.findall(r"(?<![\w.])Н[0-9](?:\.[0-9]+[а-я]?)?(?![\w.])", tail)
+            sections = re.findall(r"(?<![\w.])[НN][0-9](?:\.[0-9]+[а-яa-h]?)?(?![\w.])", tail)
             path = self.lesson_norms(address)
             text = self.read(path) if sections and path is not None else None
             if text is None:
