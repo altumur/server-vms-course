@@ -165,6 +165,93 @@ func init() {
 }
 '''
 
+CALL_PROBES = r'''package stagetests
+import (
+    "encoding/json"
+    "errors"
+    "os"
+    "testing"
+    "time"
+    "normgen/p01-1/coreadapter"
+)
+func TestCALLContract(t *testing.T) {
+    prior:=callSeam
+    defer func(){callSeam=prior}()
+    sc:=&scenario{core:fakeCore{}, cfg:coreadapter.Config{DataDir:t.TempDir(),Now:func()time.Time{return time.Unix(7,123)}},env:map[string]any{}}
+    type probe struct{ want,actual string; pass bool }
+    cases:=[]probe{
+        {`{"n":1}`,`{"n":1.0,"extra":true}`,true},
+        {`{"n":1e3}`,`{"n":1000.000}`,true},
+        {`{"n":9007199254740993}`,`{"n":9007199254740993.0}`,true},
+        {`{"n":9007199254740993}`,`{"n":9007199254740992.0}`,false},
+        {`{"n":1}`,`{"n":true}`,false},
+        {`{"n":true}`,`{"n":1}`,false},
+        {`{"o":{"a":1}}`,`{"o":{"a":1.0,"b":2},"extra":true}`,true},
+        {`{"o":{}}`,`{"o":{"b":2}}`,false},
+        {`{}`,`{"a":1}`,false},
+        {`{"xs":[1,2]}`,`{"xs":[1.0,2.0]}`,true},
+        {`{"xs":[1,2]}`,`{"xs":[2,1]}`,false},
+        {`{"xs":[1,2]}`,`{"xs":[1,2,3]}`,false},
+        {`{"x":"@absent"}`,`{"other":1}`,true},
+        {`{"x":"@absent"}`,`{"x":null}`,false},
+        {`{"s":"$empty"}`,`{"s":""}`,true},
+        {`{"s":"$empty"}`,`{"s":"changed"}`,false},
+        {`{"s":"$1"}`,`{"s":"$1"}`,true},
+        {`{"s":"$1"}`,`{"s":"literal"}`,false},
+    }
+    input:=`{"raw": 9007199254740993, "fraction":1e+2}`
+    received:=0
+    for i,p:=range cases {
+        callSeam=func(c coreadapter.Core,cfg coreadapter.Config,name string,args json.RawMessage)(json.RawMessage,error){
+            if c!=sc.core || cfg.DataDir!=sc.cfg.DataDir || cfg.Now().UnixNano()!=7000000123 || name!="store-start-flags" || string(args)!=input {t.Fatal("ABI/context/raw arguments changed")}
+            if err:=os.WriteFile(cfg.DataDir+"/adapter-observed",[]byte(name),0600);err!=nil {t.Fatal(err)}
+            received++
+            return json.RawMessage(p.actual),nil
+        }
+        errs:=sc.runStep(step{request:"CALL store-start-flags "+input,expect:p.want})
+        if (len(errs)==0)!=p.pass {t.Fatalf("probe %d: pass=%v, errors=%v",i,p.pass,errs)}
+    }
+    if received!=len(cases) {t.Fatal("adapter was not invoked for every case")}
+    // HTTP keeps its former type-sensitive comparison, apart from CALL.
+    one,_:=decode([]byte(`{"n":1}`)); decimal,_:=decode([]byte(`{"n":1.0}`))
+    if len(checkResponse(200,decimal,`200 {"n":1}`,map[string]any{},"GET","/probe"))==0 {t.Fatal("CALL changed HTTP number types")}
+    if len(checkResponse(200,one,`200 {"n":1}`,map[string]any{},"GET","/probe"))!=0 {t.Fatal("old HTTP positive control failed")}
+}
+
+func TestCALLFailurePaths(t *testing.T) {
+    prior:=callSeam
+    defer func(){callSeam=prior}()
+    sc:=&scenario{core:fakeCore{},cfg:coreadapter.Config{DataDir:t.TempDir()},env:map[string]any{}}
+    st:=step{request:`CALL store-copy-floor {"input":"test-only"}`,expect:`{"complete":true}`}
+    for name,fn:=range map[string]func(coreadapter.Core,coreadapter.Config,string,json.RawMessage)(json.RawMessage,error){
+        "stub":coreadapter.CallSeam,
+        "error":func(coreadapter.Core,coreadapter.Config,string,json.RawMessage)(json.RawMessage,error){return []byte(`{"complete":true}`),errors.New("I/O failed")},
+        "panic":func(coreadapter.Core,coreadapter.Config,string,json.RawMessage)(json.RawMessage,error){panic("I/O panic")},
+        "notexecuted":func(coreadapter.Core,coreadapter.Config,string,json.RawMessage)(json.RawMessage,error){return nil,nil},
+    } {
+        callSeam=fn
+        if errs:=sc.runStep(st);len(errs)==0 {t.Fatal(name,"passed")}
+    }
+    called:=false
+    callSeam=func(coreadapter.Core,coreadapter.Config,string,json.RawMessage)(json.RawMessage,error){called=true;return []byte(`{"complete":true}`),nil}
+    bad:=st;bad.request=`CALL invented-port {}`
+    if errs:=sc.runStep(bad);len(errs)==0 || called {t.Fatal("unknown port was executed or passed")}
+    for _,raw:=range [][]byte{
+        []byte(`{"complete":true,"complete":true}`),[]byte(`{"complete":true} {}`),[]byte(`{"complete":true} }`),
+        []byte("\xef\xbb\xbf{\"complete\":true}"),[]byte(`{"complete":NaN}`),[]byte{'"',0xff,'"'},
+    } {
+        callSeam=func(coreadapter.Core,coreadapter.Config,string,json.RawMessage)(json.RawMessage,error){return raw,nil}
+        if errs:=sc.runStep(st);len(errs)==0 {t.Fatalf("non-strict actual passed: %q",raw)}
+        called=false
+        callSeam=func(coreadapter.Core,coreadapter.Config,string,json.RawMessage)(json.RawMessage,error){called=true;return []byte(`{"complete":true}`),nil}
+        bad=st;bad.request="CALL store-copy-floor "+string(raw)
+        if errs:=sc.runStep(bad);len(errs)==0 || called {t.Fatalf("non-strict input executed/passed: %q",raw)}
+        bad=st;bad.expect=string(raw)
+        if errs:=sc.runStep(bad);len(errs)==0 || called {t.Fatalf("non-strict expectation executed/passed: %q",raw)}
+    }
+}
+'''
+
 
 def synthetic_root(tmp, scen, seams=None):
     root = Path(tmp) / "root"
@@ -214,12 +301,13 @@ class StageTests(unittest.TestCase):
         if "tests:1.1:" not in STAGES:                     # переходное объявление, пока форма без tests:<глава>
             self.assertEqual(len(inventory), want)
         self.assertTrue(all(len(r) == 6 for r in inventory))
-        seams, _, _ = gen_stagetests.read_table(ROOT, "1.1", "seams.tsv")
-        listed = {r[0].split("/")[2] for r in inventory if r[0].split("/")[1] == "seams.tsv"}
-        if seams:                                        # каждый сценарий швов формы — в описи, шаг в шаг
-            self.assertEqual(listed, {n for n in seams if any(n in r[0] for r in inventory)})
-            self.assertEqual(sum(1 for r in inventory if r[0].split("/")[1] == "seams.tsv"),
-                             sum(len(seams[n]) for n in listed))
+        for chapter in ("1.1", "1.3"):
+            seams, _, _ = gen_stagetests.read_table(ROOT, chapter, "seams.tsv")
+            selected = [r for r in inventory if r[0].startswith(chapter + "/seams.tsv/")]
+            listed = {r[0].split("/")[2] for r in selected}
+            if seams:                                    # каждый сценарий швов формы — в описи, шаг в шаг
+                self.assertEqual(listed, set(seams))
+                self.assertEqual(len(selected), sum(len(seams[n]) for n in listed))
         stages = {r[1] for r in inventory}
         for line in STAGES.split("\n"):
             cells = line.split("\t")
@@ -239,6 +327,42 @@ class StageTests(unittest.TestCase):
         self.assertEqual(status["1.1/seams.tsv/m3-par/2"][4], "yes")                 # -race у теста с @parallel
         self.assertEqual(status["1.1/scenarios.tsv/s9-prefix/1"][4], "no")
         self.assertIn("TestStoreCore_S9Prefix", files["go/stagetests/store_core_test.go"])
+
+    def test_required_call_seams_and_strict_form(self):
+        _, inventory = gen_stagetests.build(ROOT)
+        required = {"s7-loopback-api-no-tls", "s8-loopback-join-needs-tls", "s9-public-api-needs-tls", "s10-import-floor-resume"}
+        calls = [r for r in inventory if r[0].startswith("1.3/seams.tsv/")]
+        self.assertEqual({r[0].split("/")[2] for r in calls}, required)
+        self.assertEqual(len(calls), 4)
+        self.assertTrue(all(r[3] == "translated" and r[2] != "-" for r in calls), calls)
+        for request, expect in (("CALL unknown-port {}", "{}"), ('CALL store-copy-floor {"x":1,"x":2}', "{}"),
+                                ("CALL store-copy-floor NaN", "{}"), ("CALL store-copy-floor {} {}", "{}"),
+                                ("CALL store-copy-floor {}", '{"x":1,"x":2}'), ("CALL store-copy-floor {}", "{} }")):
+            with self.subTest(request=request, expect=expect), self.assertRaises(gen_stagetests.GenError):
+                gen_stagetests.step_blocker("1.3", ("1", request, expect, 1), True, {}, 9)
+
+    def test_call_engine_contract_and_default_stub_failure(self):
+        mod = self.sub("callmod")
+        shutil.copytree(OUT / "go", mod)
+        (mod / "stagetests/fake_test.go").write_text(FAKE % "", encoding="utf-8")
+        (mod / "stagetests/call_contract_test.go").write_text(CALL_PROBES, encoding="utf-8")
+        done = subprocess.run(["go", "test", "-count=1", "-race", "-run", "^TestCALL", "./stagetests"],
+                              cwd=mod, capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        done = subprocess.run(["go", "test", "-count=1", "-json", "-run", "^TestDaemon(Doors|Copy)_", "./stagetests"],
+                              cwd=mod, capture_output=True, text=True)
+        roots = {}
+        for raw in done.stdout.splitlines():
+            event = json.loads(raw)
+            name = event.get("Test", "")
+            if name and "/" not in name and event.get("Action") in ("pass", "fail", "skip"):
+                roots[name] = event["Action"]
+        self.assertEqual(len(roots), 4, done.stdout + done.stderr)
+        self.assertEqual(set(roots.values()), {"fail"}, done.stdout + done.stderr)
+        self.assertIn("not implemented", done.stdout)
+
+    def test_bad_selection_and_parallel_forms(self):
+        root = synthetic_root(self.sub("bad-selection"), [c[:4] for c in SCEN], [c[:4] for c in SEAMS])
         bad = [
             ("tests:1.1:s99", {}),                                            # сценария нет
             ("tests:1.1:s9-prefix,s9-prefix", {}),                            # повтор

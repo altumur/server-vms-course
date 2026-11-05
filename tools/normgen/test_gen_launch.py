@@ -140,7 +140,11 @@ class Launch(unittest.TestCase):
         return err
 
     def test_refusals(self):
-        for extra in (["-join", "127.0.0.1:9"], ["-group-size", "3"], ["-door", "-voters", "a@127.0.0.1:9"]):
+        no_tls = self.fresh()
+        self.assertIn("-tls", self.refused(no_tls, "-join", "127.0.0.1:9"))
+        self.assertFalse((no_tls / "data").exists(), "TLS admission must refuse before opening the store")
+        for extra in (["-join", "127.0.0.1:9", "-tls", str(self.tmp / "tls")],
+                      ["-group-size", "3"], ["-door", "-voters", "a@127.0.0.1:9"]):
             with self.subTest(extra=extra):
                 self.assertIn("no raft", self.refused(self.fresh(), *extra))
         d = self.fresh()

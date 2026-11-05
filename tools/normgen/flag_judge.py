@@ -412,13 +412,23 @@ class Probes:
             if r["required"] not in ("true", "false"):
                 for trig in re.findall(r'"(-[a-z-]+)" in f', r["required"]):
                     tr = self.m.by[trig]
-                    v = [] if tr["type"] == "bool" else self.good(tr)[:1]
-                    if trig == "-group-size":
-                        v = ["3"]
-                    argv = self.complete(self.fresh() + [trig] + v, keep=r["flag"])
-                    if self.m.expect(argv, {"SERVER_NAME": "judge"}) != ("refuse", r["flag"]):
+                    values = [[]] if tr["type"] == "bool" else [[v] for v in self.good(tr)]
+                    if tr["type"] == "addr":
+                        # A required expression may depend on the value, not just
+                        # presence: TLS for non-loopback API/raft, always for join.
+                        # Keep both polarities as real probes, including 127/8.
+                        values += [[f"{host}:{free_port()}"] for host in
+                                   ("127.9.9.9", "LOCALHOST", "[::1]", "192.0.2.7", "[2001:db8::1]")]
+                    isolated = None
+                    for value in values:
+                        argv = self.complete(self.fresh() + [trig] + value, keep=r["flag"])
+                        if tr["type"] == "addr":
+                            self.add(f"required context {r['flag']} {trig} {' '.join(value)}", argv)
+                        if self.m.expect(argv, {"SERVER_NAME": "judge"}) == ("refuse", r["flag"]) and isolated is None:
+                            isolated = argv
+                    if isolated is None:
                         raise SystemExit(f"flag_judge: no probe isolates required {r['flag']} by {trig}")
-                    self.add(f"required {r['flag']} by {trig}", argv)
+                    self.add(f"required {r['flag']} by {trig}", isolated)
             if r["bad"]:
                 for trig in re.findall(r'"(-[a-z-]+)" in f', r["bad"]):
                     if trig == "-tls":
@@ -443,9 +453,18 @@ class Probes:
         return self.out
 
     def scenarios(self):
+        scenario, members = None, None
         for line in SCENARIOS.read_text(encoding="utf-8").splitlines():
             cells = line.split("\t")
-            if len(cells) != 4 or not cells[2].startswith("@store-start "):
+            if len(cells) != 4 or cells[0].startswith("#"):
+                continue
+            if cells[0] != scenario:
+                scenario, members = cells[0], None
+            if cells[2].startswith("@group-setup "):
+                setup = SCENARIOS.parent / cells[2].split(" ", 1)[1]
+                members = json.loads(setup.read_text(encoding="utf-8"))["members"]
+                continue
+            if not cells[2].startswith("@store-start "):
                 continue
             words = cells[2].split()[1:]
             member, rest = words[0], words[1:]
@@ -455,6 +474,16 @@ class Probes:
             rest = [re.sub(r"\{(api|raft)@(\w+)\}", lambda m: ports.setdefault(m[0], f"127.0.0.1:{free_port()}"), w)
                     for w in rest]
             argv = self.fresh() + ["-id", member] + rest
+            if members is not None:
+                # Common acceptance README, Store group stand / Member launch:
+                # the runner supplies TLS/API/tuning (and raft for a voter),
+                # even when these words are absent from the directive itself.
+                if member not in members:
+                    raise SystemExit(f"flag_judge: member {member} absent from @group-setup")
+                argv += ["-tls", self.tls or str(self.tmp / "group-tls"),
+                         "-api", f"127.0.0.1:{free_port()}", "-tuning", "lan"]
+                if members[member] == "configstore":
+                    argv += ["-raft", f"127.0.0.1:{free_port()}", "-raft-bind", f"127.0.0.1:{free_port()}"]
             want = "refuse" if cells[3] == "@exit 2" else "ok"
             kind, got = self.m.expect(argv, {"SERVER_NAME": "judge"})
             if kind != want:

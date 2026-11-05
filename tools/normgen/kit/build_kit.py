@@ -212,7 +212,8 @@ def provenance(parts, files, judged):
                                 "generator": NORMGEN / "gen_tests.py", "judge": NORMGEN / "vector_judge.py"}),
         "stagetests": (("stagetests",), {"form": [L.form("stages.tsv"),
                                                L.path("acceptance/1/scenarios.tsv"),
-                                               L.path("acceptance/1/seams.tsv")],
+                                               L.path("acceptance/1/seams.tsv"),
+                                               L.path("acceptance/3/seams.tsv")],
                                       "generator": NORMGEN / "gen_stagetests.py",
                                       "judge": NORMGEN / "scenario_judge.py"}),
     }
