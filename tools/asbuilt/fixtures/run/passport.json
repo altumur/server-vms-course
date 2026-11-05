@@ -1,0 +1,11 @@
+{
+  "implementation": "probe",
+  "lesson": "07-thing",
+  "commit": "<filled by the test: HEAD of the fixture copy>",
+  "spec": "<filled by the test: export pin>",
+  "runner": "runner-probe-1",
+  "profile": "single-node",
+  "targets": ["boundary", "acceptance"],
+  "steps": ["@thing-put", "@thing-read", "@thing-put"],
+  "ports": {"7101": "admin", "7102": "subsystem"}
+}

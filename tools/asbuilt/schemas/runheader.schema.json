@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "asbuilt/runheader",
+  "title": "Run snapshot header (ADR-0123 доп. (1) п. 2, доп. (2) п. 1)",
+  "description": "Passport of a run snapshot. commit: implementation SHA the stand ran; spec: export pin; runner: runner pin; profile: stand profile; targets, steps: executed by the run, sorted, without repeats; inputs: sha256 of the saved journal and passport the snapshot was extracted from. Repeated extraction from inputs with these hashes gives the same bytes; two runs are compared by meaning (runsnap.py diff), not byte for byte.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["commit", "extractor", "implementation", "inputs", "lesson", "profile", "runner", "source", "spec", "steps", "targets"],
+  "properties": {
+    "commit": {"type": "string"},
+    "extractor": {"type": "string", "description": "asbuilt/<n>+runsnap/<n>"},
+    "implementation": {"type": "string"},
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["journal", "passport"],
+      "properties": {"journal": {"type": "string"}, "passport": {"type": "string"}}
+    },
+    "lesson": {"type": "string"},
+    "profile": {"type": "string"},
+    "runner": {"type": "string"},
+    "source": {"const": "run"},
+    "spec": {"type": "string"},
+    "steps": {"type": "array", "items": {"type": "string"}},
+    "targets": {"type": "array", "items": {"type": "string"}}
+  }
+}

@@ -3,11 +3,16 @@
 
 The synthetic Go module in fixtures/goprobe has known flags, environment
 names, constants, refusals, exits and imports; fixtures/spec is committed into
-a throw-away git repository that plays the export at the implementation's pin.
+a throw-away git repository that plays the export at the implementation's pin;
+fixtures/run holds a run passport and two saved storage journals of one run
+plan whose one operation had different admissible outcomes.
 
-Checks: each extractor finds what is known; two runs give the same bytes; the
-snapshots fit tools/asbuilt/schemas; no host path leaks; child processes stay
-under 1 GiB resident.
+Checks: each extractor finds what is known; repeated extraction from one
+unchanged set of inputs gives the same bytes, two saved journals with
+different admissible outcomes give different run snapshots compared by
+meaning (ADR-0123 доп. (2) п. 1); the comparison uses the closed list of six
+outcomes (доп. (2) п. 2); the snapshots fit tools/asbuilt/schemas; no host
+path leaks; child processes stay under 1 GiB resident.
 
 Run: python3 tools/asbuilt/test_asbuilt.py
 """
@@ -25,10 +30,12 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import asbuilt  # noqa: E402
 import compare  # noqa: E402
+import runsnap  # noqa: E402
 import yamlio  # noqa: E402
 
 FIXTURE = HERE / "fixtures" / "goprobe"
 SPEC = HERE / "fixtures" / "spec"
+RUN = HERE / "fixtures" / "run"
 LESSON = "07-thing"
 GIB = 1 << 30
 
@@ -89,6 +96,12 @@ class AsBuilt(unittest.TestCase):
         cls.root = cls.tmp / "impl"
         shutil.copytree(FIXTURE, cls.root)
         (cls.root / "SPEC_VERSION").write_text(cls.pin[:7] + "\n")
+        # The code by SHA: the copy committed, so snapshots name its commit.
+        git(cls.root, "init", "-q")
+        git(cls.root, "add", ".")
+        git(cls.root, "commit", "-q", "-m", "impl")
+        cls.commit = subprocess.run(["git", "-C", str(cls.root), "rev-parse", "HEAD"], capture_output=True,
+                                    text=True, check=True).stdout.strip()
         cls.outs = []
         for i in range(2):
             out = cls.tmp / ("out%d" % i)
@@ -116,7 +129,10 @@ class AsBuilt(unittest.TestCase):
 
     # ---- determinism, schema, leaks, memory ----
 
-    def test_two_runs_same_bytes(self):
+    def test_reextract_same_bytes(self):
+        """Static: two extractions from one code SHA give one set of bytes (доп. (2) п. 1)."""
+        self.assertEqual(self.params["header"]["commit"], self.commit)
+        self.assertFalse(self.params["header"]["dirty"])
         for name in ("params.yaml", "refusals.yaml", "deps.yaml", "compare.tsv", "compare.md"):
             self.assertEqual((self.outs[0] / name).read_bytes(), (self.outs[1] / name).read_bytes(), name)
 
@@ -273,6 +289,36 @@ class AsBuilt(unittest.TestCase):
         self.assertIn(self.pin[:12], md)
         self.assertIn("| params |", md)
 
+    # ---- six outcomes (доп. (2) п. 2) ----
+
+    def test_six_outcomes(self):
+        six = ["match", "extra", "absent", "unobserved", "differs", "out_of_scope"]
+        self.assertEqual(compare.STATUSES, six)
+        schema = json.loads((HERE / "schemas" / "compare.schema.json").read_text())
+        self.assertEqual(schema["properties"]["status"]["enum"], six)
+        self.assertNotIn("out_of_scope", compare.NEGATIVE)
+        self.assertEqual(sorted(compare.NEGATIVE + ("match", "out_of_scope")), sorted(six))
+
+    def test_unknown_outcome_is_schema_error(self):
+        schema = json.loads((HERE / "schemas" / "compare.schema.json").read_text())
+        row = dict(self.rows[0], status="missing")
+        with self.assertRaises(AssertionError):
+            validate(row, schema, schema)
+        with self.assertRaises(ValueError):
+            compare.Report().add("params", "flag:-x", "missing")
+
+    def test_run_outcome(self):
+        executed = {"@thing-put"}
+        self.assertEqual(compare.run_outcome(True, "@thing-put", executed), "match")
+        self.assertEqual(compare.run_outcome(False, "@thing-put", executed), "unobserved")
+        self.assertEqual(compare.run_outcome(False, "@thing-watch", executed), "out_of_scope")
+        self.assertEqual(compare.run_outcome(False, "", executed), "out_of_scope")
+
+    def test_static_report_has_no_run_section(self):
+        md = (self.snap / "compare.md").read_text()
+        self.assertIn("| unobserved |", md)
+        self.assertNotIn("Не встретилось в прогоне", md)
+
     # ---- word matcher ----
 
     def test_word_match(self):
@@ -285,6 +331,85 @@ class AsBuilt(unittest.TestCase):
         self.assertTrue(asbuilt.mask("/run/configstore").startswith("<path:"))
         self.assertEqual(asbuilt.mask("/v1/rights admin required"), "/v1/rights admin required")
         self.assertEqual(asbuilt.mask("512KiB"), "512KiB")
+
+
+class RunSnapshot(unittest.TestCase):
+    """Determinism of extraction from saved run inputs (ADR-0123 доп. (2) п. 1)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = Path(tempfile.mkdtemp(prefix="asbuilt-run-"))
+        cls.root = cls.tmp / "impl"
+        shutil.copytree(FIXTURE, cls.root)
+        git(cls.root, "init", "-q")
+        git(cls.root, "add", ".")
+        git(cls.root, "commit", "-q", "-m", "impl")
+        cls.commit = subprocess.run(["git", "-C", str(cls.root), "rev-parse", "HEAD"], capture_output=True,
+                                    text=True, check=True).stdout.strip()
+        passport = json.loads((RUN / "passport.json").read_text())
+        passport.update(commit=cls.commit, spec="0" * 40)
+        cls.passport = cls.tmp / "passport.json"
+        cls.passport.write_text(json.dumps(passport, indent=2) + "\n")
+        cls.snaps = {}
+        for j in ("a", "b"):
+            for i in range(2):
+                out = cls.tmp / ("out-%s%d" % (j, i))
+                path = runsnap.extract(RUN / ("journal-%s.jsonl" % j), cls.passport, out, root=cls.root)
+                cls.snaps[j, i] = path
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def load(self, j):
+        return yamlio.load(self.snaps[j, 0].read_text())
+
+    def test_reextract_same_bytes(self):
+        for j in ("a", "b"):
+            self.assertEqual(self.snaps[j, 0].read_bytes(), self.snaps[j, 1].read_bytes(), j)
+
+    def test_two_journals_differ(self):
+        self.assertNotEqual(self.snaps["a", 0].read_bytes(), self.snaps["b", 0].read_bytes())
+
+    def test_header_hashes_inputs(self):
+        a, b = self.load("a")["header"], self.load("b")["header"]
+        self.assertEqual(a["commit"], self.commit)
+        self.assertEqual(a["source"], "run")
+        self.assertEqual(a["inputs"]["journal"], runsnap.sha256(RUN / "journal-a.jsonl"))
+        self.assertNotEqual(a["inputs"]["journal"], b["inputs"]["journal"])
+        self.assertEqual(a["inputs"]["passport"], b["inputs"]["passport"])
+        self.assertEqual(a["steps"], ["@thing-put", "@thing-read"])
+        self.assertEqual(a["targets"], ["acceptance", "boundary"])
+
+    def test_normalised(self):
+        text = self.snaps["a", 0].read_text()
+        for gone in ("2026-11-05", "4242", "7101", "7102", "/thing/cfg/a"):
+            self.assertNotIn(gone, text)
+        k = {(x["role"], x["op"], x["prefix"]): x["outcomes"] for x in self.load("a")["keys"]}
+        self.assertEqual(k["admin", "put", "/thing/cfg/"], [{"count": 2, "outcome": "ok"}])
+        self.assertEqual(k["subsystem", "put", "/thing/state/"], [{"count": 1, "outcome": "ok"}])
+        self.assertIn(("<unmapped>", "get", "/thing/cfg/"), k)
+        (u,) = self.load("a")["unresolved"]
+        self.assertEqual((u["reason"], u["calls"]), ("no role for port 7999", 1))
+
+    def test_schemas(self):
+        schema = json.loads((HERE / "schemas" / "keys.schema.json").read_text())
+        for j in ("a", "b"):
+            validate(self.load(j), schema, schema)
+
+    def test_diff_by_meaning(self):
+        a, b = self.load("a"), self.load("b")
+        self.assertEqual(runsnap.diff(a, a), [])
+        self.assertEqual(runsnap.diff(a, b), [
+            {"kind": "outcomes", "unit": "subsystem put /thing/state/", "a": ["ok"], "b": ["conflict"]}])
+        less = dict(b, header=dict(b["header"], steps=["@thing-put"]))
+        self.assertIn({"kind": "coverage", "unit": "steps", "a": ["@thing-read"], "b": []}, runsnap.diff(a, less))
+
+    def test_commit_must_be_head(self):
+        bad = self.tmp / "bad.json"
+        bad.write_text(json.dumps(dict(json.loads(self.passport.read_text()), commit="f" * 40)))
+        with self.assertRaises(ValueError):
+            runsnap.extract(RUN / "journal-a.jsonl", bad, self.tmp / "out-bad", root=self.root)
 
 
 if __name__ == "__main__":

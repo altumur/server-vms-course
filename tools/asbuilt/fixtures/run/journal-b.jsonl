@@ -1,0 +1,5 @@
+{"ts": "2026-11-05T11:30:07.411Z", "pid": 5151, "port": 7101, "op": "put", "key": "/thing/cfg/a", "outcome": "ok"}
+{"ts": "2026-11-05T11:30:07.412Z", "pid": 5151, "port": 7102, "op": "get", "key": "/thing/cfg/a", "outcome": "ok"}
+{"ts": "2026-11-05T11:30:07.413Z", "pid": 5151, "port": 7102, "op": "put", "key": "/thing/state/x", "outcome": "conflict"}
+{"ts": "2026-11-05T11:30:07.414Z", "pid": 5151, "role": "admin", "op": "put", "key": "/thing/cfg/b", "outcome": "ok"}
+{"ts": "2026-11-05T11:30:07.415Z", "pid": 5151, "port": 7999, "op": "get", "prefix": "/thing/cfg/", "outcome": "ok"}
