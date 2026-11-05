@@ -10,6 +10,9 @@ The parity tables of stage A lay in `Source/tests/testdata/`; at stage B they mo
 `NN-<процесс>/vectors/<алгоритм>/`, together with the lesson (lesson 6 — `fault`, `group_of`, `rid`, `requests_body`, `secret_in`,
 `log_mask`, `platform_lists`; with them `canonical_json` — in P/01; the former files are removed), and the product switched the paths once. The common vectors lie here.
 
+The machine-readable consumer registry is [`consumers.tsv`](consumers.tsv): one row per `(package, table, lesson)`, with the norm that assigns the computation. Package names are `common/<name>`, table names are file names, and lessons are the directory names of `Platform/lessons.tsv`. The registry covers every table in the common packages and adds no new consumer. The package README still selects the rows, operations, directions and output fields performed by that consumer; an assignment is not permission to execute foreign rows. The published byte module `07-console-module` performs none of these functions. The native outcome and the unified command envelope remain those of the package README and the common acceptance README; a masked log line is a JSON string, not bare stdout text.
+
+
 | Vector | Where now | Owner (stage A) | Norm |
 |---|---|---|---|
 | JCS | [`01-store/vectors/jcs/`](../../01-store/vectors/jcs/) | P/01 | ADR-0072, RFC 8785 |
