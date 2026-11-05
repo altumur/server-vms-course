@@ -24,3 +24,7 @@ byte order). 21 rows: 8 `peers`, 5 `ack`, 8 `remove`.
 Without a stand: a side gives the input to its functions of the peers, of the acknowledgement and of the removal (the listings, the answers of the neighbours and the clock are replaced by
 the input). The dropping of a copy by a neighbour and 409 «deleted later» — P/05, by reading.
 Who performs is by `op`: `peers` — the console (`06-console`, writes the tombstone); `ack` and `remove` — the resource (`05-resource`) (ACC-VECTORS-CONNECT-02, the Architect's decision of 2026-10-26).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/tombstone` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

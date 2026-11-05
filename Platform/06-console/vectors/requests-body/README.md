@@ -71,3 +71,7 @@ or `{"fault": "too_long"}` or `{"fault": "<refused>"}` — by the column `fault`
 is judged not by the writing function but by the check of the body against `requests.schema` before filing (P/03.6 Н1.5) — by the schema of the package stand
 (`v: {maxLength: 32}`, the length by the written text); a refusal by the schema is the outcome `refused` of the norm, in the vector it is distinguished
 by the word of the column `fault` (ACC-REQUESTS-BODY-WORKER-01, the Architect's decision of 2026-10-27).
+
+## Vector wire
+
+The wire of `requests_body.tsv` is set by the `06-console/requests-body` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

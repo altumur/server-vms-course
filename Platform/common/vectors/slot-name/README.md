@@ -25,3 +25,7 @@ Who performs is by `op`: `order` — the slot capture (`03-worker`) and the plac
 `06-console`); `next` — the slot capture (`03-worker`); `role` — «number above want» and the victim of shrinking (`04-controller`,
 `06-console` by the pool contract); the workers script takes the numbers from its own unit instances and does not read the heartbeat — it does not perform
 `role` (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-26).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/slot-name` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

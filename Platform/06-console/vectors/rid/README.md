@@ -72,3 +72,7 @@ The side decodes the cell `rid` as a JSON string and checks the verdict with its
 worker. `rid.tsv` checks the grammar; the substitution of the template `requests.key` and the field of its refusal are checked by `template.tsv`; the computation of
 `r-<sha16(Idempotency-Key)>` is not checked by the tables.
 Who executes it are the console requests door (`06-console`: the rid by the template and `r-<sha16>`, the form of `rids` of the record `asked`; P/06.4 Н3 «file a request» step 1, Н4) and the filing worker (`03-worker`, P/03.6 Н1.5 `worker.requests`) — all the rows with one name check (the contract of the request and its mark `rid`) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+
+## Vector wire
+
+The wire of `rid.tsv`, `template.tsv` is set by the `06-console/rid` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

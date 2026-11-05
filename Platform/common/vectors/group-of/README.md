@@ -28,3 +28,7 @@ stdout empty; the guess of stage C W03-G06, the Architect's decision of 2026-10-
 ## Who performs
 
 Who performs is by the field of the output: `group` — the controller (`04-controller`, P/04 Н1.3 `group_by`: the group of a unit at placement), the worker (`03-worker`, P/03.6 Н1.5 the stamp `group` of a request, Н3 — one call per group) and the requests door of the console (`06-console`, the stamp `group` of a request row, P/06.4); `fault` — the url step of the row check: the units door of the console (`06-console`, P/06.1 Н4) and the customer's library (`03-worker`, P/03.6 Н1.6). The controller does not perform the refusal — the rows have already passed the url step before it: at it only `group` is compared, at the worker and the console — both fields (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/group-of` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

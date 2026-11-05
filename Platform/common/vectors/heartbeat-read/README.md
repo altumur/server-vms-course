@@ -50,3 +50,7 @@ reader from `expect` by its own part) and compares: whether the heartbeat is rea
 Who performs it: `cases.tsv` — the observers of `resource_state`: the controller (`04-controller`) and the console (`06-console`);
 `worker.tsv` — the console (`06-console`) the whole `expect`; the controller (`04-controller`) and the shadow report of the domain (`08-domain`) —
 the parts `others` and `fields` (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-26).
+
+## Vector wire
+
+The wire of `cases.tsv`, `worker.tsv` is set by the `common/heartbeat-read` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

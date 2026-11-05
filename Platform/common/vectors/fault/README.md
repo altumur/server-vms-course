@@ -51,3 +51,7 @@ of refusals `{<слово>: <код HTTP>}`, the code is a JSON integer (not a s
 the order of fields does not matter; a word beyond the table or a missing one — FAIL. An input not of the form: not an object or a non-empty object.
 stdout is exactly one JSON object and LF: the first byte is `{`, after the object — LF and the end; extra fields, bytes, CRLF, whitespace around — FAIL of the row; formatting inside the object is allowed; service output goes to stderr. Code 0 — computed; an input not of the form — code 2, stdout empty. There is no envelope `result` (the guess of stage C C06-F2-IO-02, the Architect's decision of 2026-10-23).
 Through the record `vectors` `common/fault` of the profile (the single command of the common acceptance README; it or `stand.fault` is enough — ACC-VECTORS-COVERS-STAND-01) — the same one call per table: the frame `table` `fault.tsv`, `case` `fault.tsv`, `variant` `""`, `cells` `{}`, `files` `{}`; the native outcome is by this section (ACC-VECTORS-FAULT-FRAME-01, the decision of «Спецификация»).
+
+## Vector wire
+
+The wire of `fault.tsv` is set by the `common/fault` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.
