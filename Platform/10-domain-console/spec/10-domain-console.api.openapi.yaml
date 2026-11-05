@@ -26,6 +26,12 @@ servers:
       description: Origin without a trailing /; an example address (a one-machine stand), not a setting.
 paths:
   /domain:
+    parameters:
+      - name: cursor
+        in: query
+        required: false
+        schema: {type: string}
+        description: Opaque continuation returned by GET /domain, including a boundary within one part. Without it, start the traversal; at most 1000 MemberState elements per page (P/10 Н1.2а, G10-PAGE-CURSOR-01). Encoding is chosen by the implementation.
     get:
       summary: Domain view (Н1.2а)
       description: 'Answered by the domain console itself (P/10-01); the field url of the view that is not readable (not a string) — null in the answer (В7
