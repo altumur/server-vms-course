@@ -401,3 +401,16 @@ class Wire(unittest.TestCase):                     # провод векторо
         self.assertEqual(self.mutate(crl, crl + "\n" + fault), [])
         self.assertTrue(self.mutate(crl, crl + "\n" + fault.replace("-,word,code", "-,word")))
         self.assertTrue(self.mutate(crl, crl + "\n" + layout.replace("\t[]\t-\tcommon", "\t[]\tvalue\tcommon")))
+
+
+class SeamFiles(unittest.TestCase):                     # находка spec103: швы урока одной главой (acceptance/seams.tsv)
+    def test_flat_and_chapter_seams_found(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            for rel in ("Platform/04-controller/acceptance/seams.tsv", "Platform/01-store/acceptance/1/seams.tsv"):
+                (tmp / rel).parent.mkdir(parents=True, exist_ok=True)
+                (tmp / rel).write_text("# s\n# scenario\tstep\trequest\texpect\n", encoding="utf-8")
+            found = {str(p.relative_to(tmp)) for p in check_forms.seam_files(tmp)}
+            self.assertEqual(found, {"Platform/04-controller/acceptance/seams.tsv", "Platform/01-store/acceptance/1/seams.tsv"})
+        finally:
+            shutil.rmtree(tmp)

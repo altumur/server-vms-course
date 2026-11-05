@@ -528,7 +528,9 @@ def process_step_errors(request, expect):
 
 
 def seam_files(root):
-    return sorted(Path(root).glob("Platform/*/acceptance/*/seams.tsv"))
+    """Швы глав (acceptance/K/seams.tsv) и урока одной главой (acceptance/seams.tsv, P/04, P/05)."""
+    root = Path(root)
+    return sorted(set(root.glob("Platform/*/acceptance/*/seams.tsv")) | set(root.glob("Platform/*/acceptance/seams.tsv")))
 
 
 def check_seams(path):
