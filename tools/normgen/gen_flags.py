@@ -30,6 +30,7 @@ DEFAULT_TABLE = L.form("daemon-flags.tsv")
 DEFAULT_OUT = L.out
 COLUMNS = ["flag", "type", "default", "default_text", "required", "commands", "bad", "norm"]
 FLAG = re.compile(r"-[a-z][a-z0-9-]*|--[a-z][a-z0-9-]*")
+INPUT = re.compile(r"\$[A-Z][A-Z0-9_]*|<[a-z][a-z0-9_-]*>")    # входы процесса (P/03, P/04): $ОКРУЖЕНИЕ, <позиционный>
 TYPE = re.compile(r"path|dir|file|addr|id|bool|duration|bytes:>0|list:id@addr(?:/addr)?|string|number"
                   r"|enum:[A-Za-z0-9_.-]+(?:\|[A-Za-z0-9_.-]+)*|int:(-?[0-9]+)\.\.(-?[0-9]*)")
 INITIALISMS = {"id": "ID", "api": "API", "tls": "TLS"}
@@ -121,7 +122,7 @@ class Table:
                 raise GenError(f"{name}: row {k}: {len(cells)} cells, expected {len(COLUMNS)}")
             row = dict(zip(COLUMNS, cells))
             where = f"{name}: {row['flag']}"
-            if not FLAG.fullmatch(row["flag"]) or row["flag"] in seen:
+            if not (FLAG.fullmatch(row["flag"]) or INPUT.fullmatch(row["flag"])) or row["flag"] in seen:
                 raise GenError(f"{where}: the flag is not -name (--name) or repeats")
             seen.add(row["flag"])
             if not TYPE.fullmatch(row["type"]):
@@ -133,7 +134,7 @@ class Table:
                 raise GenError(f"{where}: commands {row['commands']} — a comma list of names without repeats")
             if not row["required"]:
                 raise GenError(f"{where}: required is empty (true, false or CEL)")
-            row["field"] = field_name(row["flag"])
+            row["field"] = input_field(row["flag"]) if INPUT.fullmatch(row["flag"]) else field_name(row["flag"])
             if row["field"] in fields or row["field"] in ("Cmd", "Given", "Args"):
                 raise GenError(f"{where}: the field name {row['field']} repeats")
             fields.add(row["field"])
@@ -147,6 +148,24 @@ class Table:
                     raise GenError(f"{self.name}: {row['flag']}: default {row['default']} — a flag of the same type "
                                    f"admitted at every command of this one")
         self.command_table = commands
+        kinds = {bool(INPUT.fullmatch(r["flag"])) for r in self.rows}
+        if kinds == {True, False}:
+            raise GenError(f"{self.name}: flags and process inputs ($NAME, <arg>) in one form")
+        self.inputs = kinds == {True}
+        if self.inputs:
+            if commands is not None:
+                raise GenError(f"{self.name}: process inputs with {COMMANDS_FORM}")
+            for row in self.rows:
+                if row["default"].startswith(("=", "$")):
+                    raise GenError(f"{self.name}: {row['flag']}: default {row['default']} — a literal or - for a process input")
+                if row["type"] == "bool" or row["type"].startswith("list:"):
+                    raise GenError(f"{self.name}: {row['flag']}: type {row['type']} for a process input")
+            self.commands = []
+            for row in self.rows:
+                for c in row["commands"]:
+                    if c not in self.commands:
+                        self.commands.append(c)
+            return
         if commands is not None:
             self.commands = list(commands.ids)
             return
@@ -159,6 +178,12 @@ class Table:
             raise GenError(f"{self.name}: no flag of the command daemon")
         self.commands.remove("daemon")
         self.commands.insert(0, "daemon")
+
+
+def input_field(name):
+    """$BOX_ID → BoxID, $W2C_TLS_DIR → W2CTLSDir, <name> → Name."""
+    words = re.split(r"[_-]", name.strip("$<>").lower())
+    return "".join(INITIALISMS.get(w, w[:1].upper() + w[1:]) for w in words)
 
 
 def field_name(flag):
@@ -674,6 +699,147 @@ def go_module_cmd(table, rel, module, compiled):
     return "\n\n".join(parts) + "\n"
 
 
+# ---------------------------------------------------------------- режим входов процесса (P/03, P/04: $ОКРУЖЕНИЕ, <arg>)
+
+GO_API_INPUTS = """
+// Refusal — a refusal of a process input: the input ($NAME or <arg>) and the reason. The form sets no exit code for it:
+// the process chooses it by its rows of forms/refusals.tsv (start); the message names the input.
+type Refusal struct {
+	Flag   string
+	Reason string
+}
+
+func (r *Refusal) Error() string { return "input " + r.Flag + ": " + r.Reason }
+
+func refuse(flag, reason string) *Refusal { return &Refusal{Flag: flag, Reason: reason} }
+
+// Commands — the processes of the form (the column commands) in order of appearance.
+var Commands = []string{%s}
+
+func isCommand(cmd string) bool {
+	for _, c := range Commands {
+		if c == cmd {
+			return true
+		}
+	}
+	return false
+}
+
+// Inputs — the process inputs of cmd. A field of an input that cmd does not admit is zero; an input not given and
+// without a literal default is zero too: its default rule (default_text, the field comment) is the adapter's, by the
+// norm — Given tells which inputs were given.
+type Inputs struct {
+	Cmd   string          // the process: a value of the column commands
+	Given map[string]bool // the inputs given ($NAME present in the environment, <arg> present): the keys of f
+%s}
+
+type env struct{ f, cmd any }
+
+var numberRE = regexp.MustCompile(`^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$`)
+
+// valNumber — the type number: a finite decimal number.
+func valNumber(raw string) (float64, error) {
+	if !numberRE.MatchString(raw) {
+		return 0, errors.New("not a finite decimal number")
+	}
+	v, err := strconv.ParseFloat(raw, 64)
+	if err != nil || math.IsInf(v, 0) || math.IsNaN(v) {
+		return 0, errors.New("not a finite decimal number")
+	}
+	return v, nil
+}
+"""
+
+
+def go_parse_inputs(table):
+    pos = [r for r in table.rows if r["flag"].startswith("<")]
+    out = ["// Parse — the process inputs of cmd: args are the positional words (the <arg> rows admitted by cmd, in form",
+           "// order; more words — a refusal), getenv the environment (ok — the name is present, an empty value included).",
+           "// Required and bad (CEL over f — the given values — and cmd) are checked before the literal defaults.",
+           "func Parse(cmd string, args []string, getenv func(string) (string, bool)) (*Inputs, *Refusal) {",
+           "\tif !isCommand(cmd) {",
+           "\t\treturn nil, refuse(cmd, \"not a process of forms/daemon-flags.tsv\")",
+           "\t}",
+           "\tin := &Inputs{Cmd: cmd, Given: map[string]bool{}}",
+           "\tf := map[string]any{}",
+           "\tvar positional []string"]
+    for row in pos:
+        out += [f"\tif {admits(row)} {{", f"\t\tpositional = append(positional, {go_str(row['flag'])})", "\t}"]
+    out += ["\tif len(args) > len(positional) {",
+            "\t\treturn nil, refuse(args[len(positional)], fmt.Sprintf(\"%d positional words, the process takes %d\", "
+            "len(args), len(positional)))",
+            "\t}",
+            "\tgiven := map[string]string{}",
+            "\tfor k, w := range args {",
+            "\t\tgiven[positional[k]] = w",
+            "\t}"]
+    for row in table.rows:
+        if row["flag"].startswith("$"):
+            out += [f"\tif {admits(row)} {{",
+                    f"\t\tif v, ok := getenv({go_str(row['flag'][1:])}); ok {{",
+                    f"\t\t\tgiven[{go_str(row['flag'])}] = v", "\t\t}", "\t}"]
+    out += ["\tfor _, name := range inputOrder {",
+            "\t\traw, ok := given[name]",
+            "\t\tif !ok {",
+            "\t\t\tcontinue",
+            "\t\t}",
+            "\t\tswitch name {"]
+    for row in table.rows:
+        out += [f"\t\tcase {go_str(row['flag'])}: // {row['type']}"]
+        out += [f"\t\t\t{x}" for x in go_assign(row).copy()]
+    out += ["\t\t}", "\t\tin.Given[name] = true", "\t}",
+            "\te := &env{f: f, cmd: cmd}",
+            "\t_ = e // a table without CEL in required and bad does not read it"]
+    for k, row in enumerate(table.rows, 1):
+        if row["required"] == "false":
+            continue
+        test = "" if row["required"] == "true" else f" && isTrue(required{k}(e))"
+        out += [f"\tif ({admits(row)}) && !in.Given[{go_str(row['flag'])}]{test} {{",
+                f"\t\treturn nil, refuse({go_str(row['flag'])}, {go_str('the input is required: ' + row['required'])})",
+                "\t}"]
+    for k, row in enumerate(table.rows, 1):
+        if row["bad"]:
+            out += [f"\tif in.Given[{go_str(row['flag'])}] && isTrue(bad{k}(e)) {{",
+                    f"\t\treturn nil, refuse({go_str(row['flag'])}, {go_str('a start refusal: ' + row['bad'])})",
+                    "\t}"]
+    for row in table.rows:
+        if row["default_go"] is not None:
+            out += [f"\tif ({admits(row)}) && !in.Given[{go_str(row['flag'])}] {{",
+                    f"\t\tin.{row['field']} = {row['default_go']}", "\t}"]
+    out += ["\treturn in, nil", "}"]
+    return "\n".join(out).replace("fl.", "in.")
+
+
+def go_module_inputs(table, rel, module, compiled):
+    fields = ""
+    for row in table.rows:
+        dflt = row["default"] if row["default"] != "-" else "none"
+        rule = f"; rule {row['default_text']}" if row["default_text"] not in ("-", row["default"]) else ""
+        fields += (f"\t// {row['flag']} — {row['type']}; default {dflt}{rule}; {','.join(row['commands'])}; {row['norm']}\n"
+                   f"\t{row['field']} {go_field_type(row['type'])}\n")
+    order = "var inputOrder = []string{" + ", ".join(go_str(r["flag"]) for r in table.rows) + "}"
+    imports = ['"errors"', '"fmt"', '"math"', '"regexp"', '"strconv"']
+    parts = [f"// Code generated by tools/normgen/gen_flags.py from {rel}; DO NOT EDIT.\n"
+             f"// Таблица sha256 {table.sha256}.\n\n"
+             "// Package flags — the process inputs of the lesson (ADR-0125 № 3, addendum (5)): environment values $NAME\n"
+             "// and positional <arg> of forms/daemon-flags.tsv; no CLI options.\n"
+             "package flags\n\n"
+             f"import ({chr(10).join(imports)})",
+             GO_API_INPUTS.strip("\n") % (", ".join(go_str(c) for c in table.commands), fields), order]
+    if module.regexes:
+        parts.append("var (\n" + "".join(f"\trx{k} = regexp.MustCompile({go_str(re2)})\n"
+                                         for k, (re2, _) in enumerate(module.regexes, 1)) + ")")
+    for name, (args, result, doc) in table.fns.items():
+        parts.append(go_fn_wrapper(name, args, result, doc, True))
+    for k, row in enumerate(table.rows, 1):
+        for column in ("required", "bad"):
+            if (k, column) in compiled:
+                parts.append(go_function(f"{column}{k}", [], compiled[k, column],
+                                         f"{row['flag']} {column}: {row[column]}"))
+    parts.append(go_parse_inputs(table))
+    return "\n\n".join(parts) + "\n"
+
+
 def build(table, rel="daemon-flags.tsv"):
     """→ исходник Go flags.go; GenError — таблица вне формы."""
     _, go_prims = prims_present()
@@ -689,6 +855,8 @@ def build(table, rel="daemon-flags.tsv"):
         Parser(row["required"], row["flag"]).parse()
     if table.command_table is not None:
         return go_module_cmd(table, rel, module, compiled)
+    if table.inputs:
+        return go_module_inputs(table, rel, module, compiled)
     return go_module(table, rel, module, compiled)
 
 
@@ -752,7 +920,37 @@ def provenance():
     if cmds.is_file():                                 # команды урока (P/02): обе формы, судья cmdflag_judge
         return {"form": [entry(DEFAULT_TABLE), entry(cmds)], "generator": entry(Path(__file__).resolve()),
                 "judge": entry(HERE / "cmdflag_judge.py")}
+    if inputs_form():                                  # входы процесса (P/03, P/04): судья test_gen_flags_inputs
+        return {"form": [entry(DEFAULT_TABLE)], "generator": entry(Path(__file__).resolve()),
+                "judge": entry(HERE / "test_gen_flags_inputs.py")}
     return {"form": entry(DEFAULT_TABLE), "generator": entry(Path(__file__).resolve()), "judge": entry(JUDGE)}
+
+
+def inputs_form():
+    """Форма урока — входы процесса ($NAME, <arg>), а не флаги."""
+    if not DEFAULT_TABLE.is_file() or (DEFAULT_TABLE.parent / COMMANDS_FORM).is_file():
+        return False
+    return Table(DEFAULT_TABLE.read_text(encoding="utf-8"), DEFAULT_TABLE.name).inputs
+
+
+KIT_MD_INPUTS = """
+## Part `flags`: the process inputs (generated from `forms/daemon-flags.tsv`: `$NAME` environment, `<arg>` positional)
+
+| Package | Import path | Origin |
+|---|---|---|
+| `flags` | `{module}/internal/flags` | generated: `Parse`, `Inputs`, `Commands`, `Refusal`; closed |
+
+```go
+func Parse(cmd string, args []string, getenv func(string) (string, bool)) (*Inputs, *Refusal) // cmd — a process of the form
+type Inputs struct { Cmd string; Given map[string]bool; /* one field per row */ }
+type Refusal struct { Flag, Reason string }   // no exit code: the process chooses it by forms/refusals.tsv
+```
+
+`getenv` reports presence (`os.LookupEnv`; an empty value is given). The kit checks the form only: the type (dir and
+file non-empty, number a finite decimal), `required`, `bad` (CEL over the given values), then literal defaults. A
+default rule (`default_text`, in the field comment) and the contract checks of the norms (instance, labels, addresses,
+role, capacity) are yours — `Given` tells what was supplied.
+"""
 
 
 KIT_MD = """
@@ -830,7 +1028,9 @@ type Refusal struct { Flag, Reason string }                     // Error() names
 
 def kit_md():
     """Справка части: команды урока (operator-commands.tsv) — KIT_MD_CMD; иначе флаги демона P/01."""
-    return KIT_MD_CMD if (DEFAULT_TABLE.parent / COMMANDS_FORM).is_file() else KIT_MD
+    if (DEFAULT_TABLE.parent / COMMANDS_FORM).is_file():
+        return KIT_MD_CMD
+    return KIT_MD_INPUTS if inputs_form() else KIT_MD
 
 
 def main(argv):
