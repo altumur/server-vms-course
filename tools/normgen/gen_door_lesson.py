@@ -302,8 +302,22 @@ def build(root=ROOT):
                 if prm["in"] in ("query", "header"):
                     sch = prm.get("schema") or {}
                     sch_node = docs.deref(sch, pbase)[0] if isinstance(sch, dict) else {}
+                    lex = prm.get("x-query-lexeme")
+                    if lex is not None:                # P/05-R022, R031: закрытое расширение query
+                        stype = sch_node.get("type") if isinstance(sch_node, dict) else None
+                        want = {"number": "number", "integer": "integer", "uint64": "string"}.get(lex.get("parse"))
+                        if prm["in"] != "query" or set(lex) - {"pattern", "parse", "strip"} or "pattern" not in lex \
+                                or want is None or want != stype or ("strip" in lex and (lex["strip"] != "_" or
+                                                                                       lex["parse"] != "number")):
+                            raise GenError(f"{path} {m} {prm['name']}: x-query-lexeme {lex} — closed keys pattern, "
+                                           f"parse (number|integer|uint64, matching the schema type), strip «_» for number")
+                        try:
+                            re.compile(lex["pattern"])
+                        except re.error as exc:
+                            raise GenError(f"{path} {m} {prm['name']}: x-query-lexeme pattern: {exc}") from None
                     bodies.append(("param", name, prm["in"], prm["name"], sch, pbase,
-                                   bool(prm.get("required")), sch_node.get("default") if isinstance(sch_node, dict) else None))
+                                   bool(prm.get("required")), sch_node.get("default") if isinstance(sch_node, dict) else None,
+                                   lex))
             for media, mo in req_content.items():
                 bodies.append(("req", name, "", media, mo.get("schema"), docs.deref(rb, spec)[1]))
             ops.append({"name": name, "method": m.upper(), "path": path, "prefixed": pre, "params": params,
@@ -442,7 +456,7 @@ def bodies_source(docs, rel, sha):
     req, resp, lines, params = {}, {}, {}, {}
     for entry in bodies:
         if entry[0] == "param":
-            _, op, place, pname, schema, base, required, default = entry
+            _, op, place, pname, schema, base, required, default, lex = entry
             if isinstance(schema, dict) and set(schema) == {"$ref"}:
                 sname = b.ref(schema["$ref"], base)[len("#/$defs/"):]
             elif schema:
@@ -450,7 +464,7 @@ def bodies_source(docs, rel, sha):
             else:
                 sname = ""
             params.setdefault(op, []).append((pname, place, required, sname,
-                                              "" if default is None else json.dumps(default, ensure_ascii=False)))
+                                              "" if default is None else json.dumps(default, ensure_ascii=False), lex))
             continue
         kind, op, code, media, schema, base = entry
         if kind == "line":
@@ -495,8 +509,10 @@ def bodies_source(docs, rel, sha):
     out += ["}", "", "// paramSchemas — параметры query и header операции: имя, место, обязательность, схема, умолчание (JSON).",
             "var paramSchemas = map[Op][]paramSpec{"]
     for op, ps in params.items():
-        out.append(f"\t{op}: {{" + ", ".join(f"{{name: {go_str(n)}, in: {go_str(i)}, required: {str(r).lower()}, "
-                                              f"schema: {go_str(sn)}, def: {go_str(d)}}}" for n, i, r, sn, d in ps) + "},")
+        out.append(f"\t{op}: {{" + ", ".join(
+            f"{{name: {go_str(n)}, in: {go_str(i)}, required: {str(r).lower()}, schema: {go_str(sn)}, def: {go_str(d)}"
+            + (f", lexeme: &queryLexeme{{pattern: {go_str(lx['pattern'])}, parse: {go_str(lx['parse'])}, "
+               f"strip: {go_str(lx.get('strip', ''))}}}" if lx else "") + "}" for n, i, r, sn, d, lx in ps) + "},")
     out += ["}", "", "// ndjsonLines — схема строки тела application/x-ndjson ответа по коду (x-line-schema).",
             "var ndjsonLines = map[Op]map[string]string{"]
     for op, cs in lines.items():

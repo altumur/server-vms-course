@@ -735,6 +735,11 @@ WIRE["10-domain-console"] = [
 ]
 
 WIRE["05-resource"] = [
+    {"package": "common/events-merge", "table": "resource.tsv", "surface": "vectors", "fn": "EventsMerge", "args": "cells",
+     "inputs": ["input"], "compare": "value", "expect": value(),
+     "doc": "the resource's filter and cut of events (resource.tsv): {events, query} → the full ResourceEvents",
+     "src": "events-merge/README.md#resourcetsv; wire.tsv (spec103 3ad5d3b2a)"},
+    FRESH_VECTORS,
     value_pkg("common/holds", "Holds", "whether a row holds a bucket: {hold}", "holds/README.md:31-45",
               inputs=("holds", "types", "row", "bucket")),
     instance("box.tsv"), instance("cases.tsv"),

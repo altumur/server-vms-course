@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/events-merge",
+ "table": "resource.tsv",
+ "case": "resource-empty",
+ "variant": "",
+ "cells": {
+  "input": "{\"events\":[],\"query\":{}}"
+ },
+ "files": {}
+}

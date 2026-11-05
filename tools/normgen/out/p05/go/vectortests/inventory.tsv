@@ -1,5 +1,35 @@
 # The vector tables of the lesson (gen_vectors.py).
 table	status
+common/events-merge resource.tsv 3	translated
+common/events-merge resource.tsv 4	translated
+common/events-merge resource.tsv 5	translated
+common/events-merge resource.tsv 6	translated
+common/events-merge resource.tsv 7	translated
+common/events-merge resource.tsv 8	translated
+common/events-merge resource.tsv 9	translated
+common/events-merge resource.tsv 10	translated
+common/events-merge resource.tsv 11	translated
+common/events-merge resource.tsv 12	translated
+common/events-merge resource.tsv 13	translated
+common/events-merge resource.tsv 14	translated
+common/events-merge resource.tsv 15	translated
+common/events-merge resource.tsv 16	translated
+common/events-merge resource.tsv 17	translated
+common/events-merge resource.tsv 18	translated
+common/events-merge resource.tsv 19	translated
+common/events-merge resource.tsv 20	translated
+common/events-merge resource.tsv 21	translated
+common/events-merge resource.tsv 22	translated
+common/events-merge resource.tsv 23	translated
+common/events-merge resource.tsv 24	translated
+common/fresh-age fresh.tsv 3	translated
+common/fresh-age fresh.tsv 4	translated
+common/fresh-age fresh.tsv 5	translated
+common/fresh-age fresh.tsv 6	translated
+common/fresh-age fresh.tsv 7	translated
+common/fresh-age fresh.tsv 8	translated
+common/fresh-age fresh.tsv 9	translated
+common/fresh-age fresh.tsv 10	translated
 common/holds cases.tsv 4	translated
 common/holds cases.tsv 5	translated
 common/holds cases.tsv 6	translated
@@ -201,3 +231,4 @@ common_family_read_test.go	translated
 common_log_mask_test.go	translated
 common_revoked_test.go	translated
 common_store_client_test.go	translated
+common/journal modes.tsv	excluded: a layout test, not a function (journal README; runner EXCLUDED_EXECUTION_TABLES)

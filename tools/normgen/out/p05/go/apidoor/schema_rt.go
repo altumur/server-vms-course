@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"regexp"
 	"sort"
@@ -604,6 +605,49 @@ type paramSpec struct {
 	required bool
 	schema   string // имя схемы в сборке ("" — без схемы)
 	def      string // умолчание — текст JSON ("" — нет)
+	lexeme   *queryLexeme
+}
+
+// queryLexeme — x-query-lexeme параметра query (P/05-R022, R031): шаблон текста, затем удаление strip, затем разбор.
+type queryLexeme struct {
+	pattern string
+	parse   string // number | integer | uint64
+	strip   string // "" | "_" (только number)
+}
+
+var maxUint64 = new(big.Int).SetUint64(^uint64(0))
+
+// lexemeValue — текст по x-query-lexeme: шаблон → strip → number (конечное binary64; исчезновение порядка — 0,
+// переполнение — отказ) | integer (точное целое) | uint64 (0…2^64−1, исходный текст); ok false — отказ параметра.
+func lexemeValue(l *queryLexeme, raw string) (any, bool) {
+	if !rx(l.pattern).MatchString(raw) {
+		return nil, false
+	}
+	text := raw
+	if l.strip != "" {
+		text = strings.ReplaceAll(text, l.strip, "")
+	}
+	switch l.parse {
+	case "number":
+		f, err := strconv.ParseFloat(text, 64)
+		if math.IsInf(f, 0) || math.IsNaN(f) || (err != nil && !errors.Is(err, strconv.ErrRange)) {
+			return nil, false
+		}
+		return json.Number(strconv.FormatFloat(f, 'g', -1, 64)), true
+	case "integer":
+		n, ok := new(big.Int).SetString(text, 10)
+		if !ok {
+			return nil, false
+		}
+		return json.Number(n.String()), true
+	case "uint64":
+		n, ok := new(big.Int).SetString(text, 10)
+		if !ok || n.Sign() < 0 || n.Cmp(maxUint64) > 0 {
+			return nil, false
+		}
+		return raw, true
+	}
+	return nil, false
 }
 
 // CheckParams — параметры query и header операции op по их схемам: обязательность, повтор (нарушение), умолчание
@@ -659,6 +703,13 @@ func checkParam(p paramSpec, vals []string) (any, bool, *Violation) {
 		return nil, false, &Violation{At: p.name, Rule: "repeated"}
 	}
 	v := coerce(p.schema, vals[0])
+	if p.lexeme != nil {
+		lv, ok := lexemeValue(p.lexeme, vals[0])
+		if !ok {
+			return nil, false, &Violation{At: p.name, Rule: "x-query-lexeme"}
+		}
+		v = lv
+	}
 	if p.schema != "" {
 		if viol := Validate(p.schema, v); viol != nil {
 			return nil, false, &Violation{At: p.name, Rule: viol.Rule}

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/events-merge",
+ "table": "resource.tsv",
+ "case": "resource-unit-alarms-suffix",
+ "variant": "",
+ "cells": {
+  "input": "{\"events\":[{\"id\":\"alarm-early\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"epoch\":1,\"t\":5,\"kind\":\"jam\",\"server\":\"srv-a\",\"bucket\":\"testsub/c1/e1/19700101T000000Z.events.jsonl\",\"class\":\"alarm\"},{\"id\":\"a\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"epoch\":1,\"t\":10,\"kind\":\"tick\",\"server\":\"srv-a\",\"bucket\":\"testsub/c1/e1/19700101T000000Z.events.jsonl\",\"class\":\"observation\"}],\"query\":{\"unit\":\"testsub.alarms/c1\"}}"
+ },
+ "files": {}
+}
