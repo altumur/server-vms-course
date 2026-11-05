@@ -129,10 +129,21 @@ def plain(a):
         logs = [] if r["log"] == "-" else [x.strip() for x in re.findall(r"«[^«»]*»|[^,«»]+", r["log"]) if x.strip()]
         names = [x for x in logs if not x.startswith("«")]
         words = [x[1:-1] for x in logs if x.startswith("«")]
+        want_word, want_any = ("" if r["word"] == "-" else r["word"]), []
+        if L.key != "02-installer":                     # P/03+: word — ячейка источника; токены `…` — проекция
+            toks = re.findall(r"`([^`]+)`", r["word"])
+            plain_cell = re.sub(r"`[^`]+`|,|\s", "", r["word"]) == ""
+            want_word, want_any = "", []
+            if toks and plain_cell:
+                want_word, want_any = (toks[0], []) if len(toks) == 1 else ("", toks)
+        want_fields = [] if r["fields"] == "-" else [x.strip() for x in r["fields"].split(",")]
+        want_headers = [] if r["headers"] == "-" else [[x.strip() for x in h.split(": ", 1)] for h in r["headers"].split(";")]
         diffs = [k for k, ok in (("chapter", g["Chapter"] == r["chapter"]), ("row", g["Row"] == int(r["row"])),
                                  ("surface", g["Surface"] == r["surface"]), ("exit", g["Exit"] == exit_),
                                  ("any", g["AnyNonZero"] == anyc), ("status", g["Status"] == status),
-                                 ("word", g["Word"] == ("" if r["word"] == "-" else r["word"])),
+                                 ("word", g["Word"] == want_word), ("word_any", (g.get("WordAny") or []) == want_any),
+                                 ("fields", (g.get("Fields") or []) == want_fields),
+                                 ("headers", (g.get("Headers") or []) == want_headers),
                                  ("log", (g["Log"] or []) == names), ("words", (g["Words"] or []) == words),
                                  ("norm", g["Norm"] == r["norm"])) if not ok]
         check(f"catalogue {r['name']}", f"differs from the table in {diffs}" if diffs else None)
