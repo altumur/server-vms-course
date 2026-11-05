@@ -5,7 +5,30 @@ package coreadapter
 
 import "normgen/p01-1/apidoor"
 
-// Status — chapter 1.3 (P/01.3): not in the store core stage; replace when your stage needs it.
+// Status — chapter 1.3 (P/01.3), not in the store core stage: 503 «not in this stage» until your
+// stage needs it; then replace the body (the signature stays: Store is a coreadapter.Core). Identity first —
+// Context (core.go). By the norms:
+//
+//	spec/01.3-store.norms.md «Н2 Doors»:
+//	  req: P/01.3-R013 — The doors of the chapter are at the store daemon (chapter 1.1: `/v1/get`, `/v1/list`,
+//	    `/v1/write`) and its service doors:
+//	spec/01.3-store.norms.md «Н2 Doors»:
+//	  req: P/01.3-R015 — All own JSON answers have full schemas, metrics are text/plain, without a fictitious empty JSON
+//	    instead of text.
+//	spec/01.3-store.norms.md «Н2 Doors»:
+//	  req: P/01.3-R016 — GET `/v1/status`: `{id, state, leader, leader_id, term, commit, applied, voters, members, tls,
+//	    max_value}`; optional `base, again, role, last_snapshot, out, admission_ahead` (Н1.3 `admission`; ADR-0091 item
+//	    1). Indices are exact uint64, state — Leader/Follower/Candidate/Shutdown/Door; voters/out — an array of ids,
+//	    members — a map id → `-api` address, without `-api` the member is not in `members` (the map can be `{}`; a value
+//	    is never empty — `minLength: 1` of OpenAPI; C01-STATUS-MEMBERS-NOAPI, the Architect's decision of 2026-10-26);
+//	    `leader` — the `-api` address of the leader (empty if the leader is unknown or was started without `-api`),
+//	    `leader_id` — the id of the leader (empty if the leader is unknown) (the store pilot, А7). Door requires
+//	    role=door and term/commit/applied=0. This is a local observation, not a confirmation by the majority
+//	spec/01.3-store.norms.md «Н2 Doors»:
+//	  req: P/01.3-R017 — The order of checks: the frame (framing, the body limit 1 MiB — 413) → route and method (404,
+//	    405) → identity (403) → body and membership (400, 409)
+//	the refusals — forms/refusals.tsv:
+//	  1.3 row 4 service_method — 405 badrequest (P/01.3 Н2); with part refusals: refusals.ServiceMethod
 func (s *Store) Status(c Ctx) apidoor.Answer {
 	return notInStage(apidoor.OpStatus)
 }

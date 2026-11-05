@@ -5,7 +5,28 @@ package coreadapter
 
 import "normgen/p01-1/apidoor"
 
-// Join — chapter 1.3 (P/01.3): not in the store core stage; replace when your stage needs it.
+// Join — chapter 1.3 (P/01.3), not in the store core stage: 503 «not in this stage» until your
+// stage needs it; then replace the body (the signature stays: Store is a coreadapter.Core). Identity first —
+// Context (core.go). By the norms:
+//
+//	spec/01.3-store.norms.md «Н2 Doors»:
+//	  req: P/01.3-R013 — The doors of the chapter are at the store daemon (chapter 1.1: `/v1/get`, `/v1/list`,
+//	    `/v1/write`) and its service doors:
+//	spec/01.3-store.norms.md «Н2 Doors»:
+//	  req: P/01.3-R016 — POST `/v1/join`: `{id, raft, api, force?}`, success 200 `{}`; 409 `{kind: refused, error}` — an
+//	    inadmissible membership; 403 — `ForbiddenFault` of chapter 1.1: it is called only by `admin.sock` and a daemon of
+//	    the group over mTLS of the role `configstore` (Н1.3 `identity`); a role socket (`console.sock` and others) — 403
+//	    before parsing the membership (reconciliation of python and go М10/6–11, B1); empty `raft`, `api` — 400 before
+//	    the membership (B4)
+//	spec/01.3-store.norms.md «Н2 Doors»:
+//	  req: P/01.3-R017 — The order of checks: the frame (framing, the body limit 1 MiB — 413) → route and method (404,
+//	    405) → identity (403) → body and membership (400, 409)
+//	the refusals — forms/refusals.tsv:
+//	  1.3 row 1 service_body_form — 400 badrequest (P/01.3 Н2; P/01.1 Н2); with part refusals: refusals.ServiceBodyForm
+//	  1.3 row 2 service_body_limit — 413 toolarge (P/01.3 Н2); with part refusals: refusals.ServiceBodyLimit
+//	  1.3 row 12 join_role_socket — 403 forbidden (P/01.3 Н2); with part refusals: refusals.JoinRoleSocket
+//	  1.3 row 10 join_parity — 409 refused (P/01.3 Н1.3 join); with part refusals: refusals.JoinParity
+//	  1.3 row 11 join_left — 403 forbidden (P/01.3 Н1.3 leave); with part refusals: refusals.JoinLeft
 func (s *Store) Join(c Ctx, body []byte) apidoor.Answer {
 	return notInStage(apidoor.OpJoin)
 }
