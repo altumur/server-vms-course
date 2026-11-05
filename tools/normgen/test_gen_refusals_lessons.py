@@ -11,7 +11,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-LESSONS = {"03-worker": "p03", "04-controller": "p04", "05-resource": "p05"}
+LESSONS = {"03-worker": "p03", "04-controller": "p04", "05-resource": "p05", "06-console": "p06"}
 ENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 
 
@@ -50,6 +50,7 @@ class Refusals(unittest.TestCase):
         src = (HERE / "out/p03/go/refusals/refusals.go").read_text(encoding="utf-8")
         p04 = (HERE / "out/p04/go/refusals/refusals.go").read_text(encoding="utf-8")
         p05 = (HERE / "out/p05/go/refusals/refusals.go").read_text(encoding="utf-8")
+        p06 = (HERE / "out/p06/go/refusals/refusals.go").read_text(encoding="utf-8")
         muts = {
             ("03-worker", "fields"): src.replace('Fields: []string{"error"}', "Fields: nil", 1),
             ("03-worker", "headers"): src.replace('{"Retry-After", "1"}', '{"Retry-After", "2"}', 1),
@@ -60,10 +61,12 @@ class Refusals(unittest.TestCase):
             ("04-controller", "chapter"): p04.replace('Chapter: "4", Row: 3,', 'Chapter: "4.1", Row: 3,', 1),
             ("05-resource", "response"): p05.replace('Response: "ResourceDenied"', 'Response: "ResourceError"', 1),
             ("05-resource", "http-status"): p05.replace('Status: 206,', 'Status: 200,', 1),
+            ("06-console", "word-phrase"): p06.replace('Word: "no such book shown"', 'Word: ""', 1),
+            ("06-console", "response-peer"): p06.replace('Response: "DomainRefusal"', 'Response: "Fault"', 1),
         }
         for (lesson, name), text in muts.items():
             with self.subTest(mutant=name):
-                base = {"03-worker": src, "04-controller": p04, "05-resource": p05}[lesson]
+                base = {"03-worker": src, "04-controller": p04, "05-resource": p05, "06-console": p06}[lesson]
                 self.assertNotEqual(text, base, f"{name}: the mutant does not apply")
                 mod = self.tmp / f"mut-{name}"
                 shutil.copytree(HERE / "out" / LESSONS[lesson] / "go", mod)
