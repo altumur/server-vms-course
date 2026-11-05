@@ -41,12 +41,16 @@ The numbers of the subsections are new (the place of the source is in the bracke
 8.K», «chapter 9.K» are the chapters of lessons P/08, P/09; «М11/N» is the lesson М11 (the history of the move). Norm ids are `P/10-MM`; the map to
 former ids is [`id-map.tsv`](../../common/id-map.tsv).
 
+<!-- req: P/10-R001 -->
 ## Н0 Vocabulary
 
 Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 Н0](../../01-store/spec/01.1-store.norms.md#н0-vocabulary)
 (including the order of output arrays, scope — lessons 8–10).
 
+<!-- req: P/10-R002 -->
 ## Н1 Form
+
+[runtime-constants.tsv](../forms/runtime-constants.tsv) projects four existing positive integer limits with their requirement anchors; the [form grammar](../forms/README.md#inputs-and-constants) fixes units and scope. These are not additional environment settings.
 
 **Time.** The lesson writes no rows and objects with time; a line of the role journal has `t` by [the event
 journal contract](../../common/contracts/event-journal.md). `age` of the answer of `GET /domain` is seconds by the wall clock of the console, not a time in
@@ -78,6 +82,7 @@ of the role door — the transition of the trust set into unreadable and back (t
 C10-ROLE-LOG-C47) and a service without a kit (`no_kit`) — are a diagnostic of the process (stderr), not events of `audit/domainconsole`:
 there are no kinds for them and new ones are not introduced, the text is the implementation's, acceptance does not compare it (C10-ROLE-LOG-DIAG-01).
 
+<!-- req: P/10-R003 -->
 ### Н1.1 The process and the start (М11/12 Н1.8; P/02.4 Н1.12)
 
 The domain console is the process `domainconsole` at the holder cluster, next to the process `domain`: the unit
@@ -87,8 +92,9 @@ Like the processes of the platform, it executes the reader's side of the manifes
 the schema check against `SCHEMA` of the platform build ([the schema contract](../../common/contracts/schema.md) «Check at start»);
 step 1 — the whole catalogue; step 2 — only `sha256` of the row (there are no built-in bytes to compare with); then the environment, the kit
 of TLS, the port (the Architect's decision of 2026-10-25, C10-START83); readiness is the port, it does not send `sd_notify` (the text is P/02.4 Н1.12, from М11/12 Н1.8; here it is
-the domain console part, P/10-15). The environment, the exit codes and the unit are in the [life cycle](../lifecycle.md).
+the domain console part, P/10-15). The process environment is projected by [daemon-flags.tsv](../forms/daemon-flags.tsv) with the [form grammar](../forms/README.md#inputs-and-constants); the launcher and imported contextual contracts remain mandatory. The environment, the exit codes and the unit are in the [life cycle](../lifecycle.md).
 
+<!-- req: P/10-R004 -->
 ### Н1.2 The read doors — it answers itself
 
 The parsing of a request is [the gate-and-pass contract](../../common/contracts/gate-and-pass.md) «Request parsing and the order of checks»
@@ -168,6 +174,7 @@ The document and the pointer are [chapter 8.9](../../08-domain/spec/08.9-domain.
 `domain.shared` is [P/02.1 Н1.2б](../../02-installer/spec/02.1-installer.norms.md). The console passes the edit `PUT /domain/shared` on
 to the process (Н1.3; the execution — chapter 8.9 Н1.3).
 
+<!-- req: P/10-R005 -->
 ### Н1.3 Passing on to the process `domain` (М11/3 Н1.8 `console`, `pass`; М11/9 Н1.9 `pass`)
 
 The reception of the passing, `writer` and `answers` are [P/08.0 Н1.8](../../08-domain/spec/08.0-domain.norms.md) (P/08.0-01); here is the side
@@ -195,6 +202,7 @@ passes on are the rows of the list of domain doors of the forwarding contract «
 Н2, the summary table). The console serves the answer of the process as it came — `409 deposed`, `503 frozen`, `503 standby` too: it does not
 recompute them (P/08.0 Н1.8 `answers`; the forwarding contract «Refusals by transition», transition 3).
 
+<!-- req: P/10-R006 -->
 ### Н1.3а People doors (М11/9 Н1.9 `pass`)
 
 The lines `first`, `member` are [P/08.4 Н1.9](../../08-domain/spec/08.4-domain.norms.md) (P/08.4-07); here is the passing.
@@ -208,6 +216,7 @@ pass:      the doors /domain/users…, /domain/groups…, /domain/roles…, /dom
 **The path of `backend` to the domain doors** (ADR-0098 §6, ADR-0094 addendum (11), (12) item 9). The request comes by forwarding from the cluster console ([P/06.3](../../06-console/spec/06.3-console.norms.md) Н1.9 «Domain doors»): the original token of the human; the bytes of the ticket do not reach here. Further on the path does not differ from a request
 of the page: the process judges the right of the human by P/08.4 Н1.5, `by` is the name of the human. Records one by one from `backend` do not go. The sign of the path is the closed header `X-W2C-Via-Worker: <sub>/<instance>` ([the forwarding contract](../../common/contracts/forwarding.md)): the cluster console sets it on the forwarding by ticket, the cluster console of the holder lets it through as declared on transition 1; the domain console strips it from an external request, accepts it only from the leaf of the role of the cluster console and passes it on to the process, and the process trusts it only on the connection of its own console. It serves as neither a right nor a check: only the journal and the alarm. The journal carries `via: <sub>/<instance>`.
 
+<!-- req: P/10-R007 -->
 ### Н1.4 Accepting the forwarding and the role door of TLS (М11/8 Н1.6 `roles`, `server.role`; Н3 «accept by a console»)
 
 The domain console accepts the forwarding of the cluster console (transition 2) by [the forwarding contract](../../common/contracts/forwarding.md):
@@ -239,6 +248,7 @@ the role certificate contract `cert`, `sig`. The row `domain/member-rows/<part>`
 the trust union of the role door for this pass is only its own CAs (`ca.pem`, `ca.next.pem`): a handshake of other members is a
 refusal, a journal line (V7 item 3, the Architect's decision of 2026-10-28, on the proposal; line 36 of the list). The domain console part of the item М11/8-08 (P/10-11).
 
+<!-- req: P/10-R008 -->
 ### Н1.5 The gate of the domain console (М11/9 Н1.5 `body_unit`, `session`; P/08.4 Н1.5 `domain`)
 
 The domain console is a participant of [the gate-and-pass contract](../../common/contracts/gate-and-pass.md): of the section
@@ -273,6 +283,7 @@ itself are compared by name without a row; `labels:…` and `unit:` of an about-
 (they are not in its «Data», Н1; the view and the copies of reports do not serve as them) — such a grant does not cover, none
 covered — 403 by `refusal`; there is no substitution from the view or the cluster (C10-PASS-SCOPE-01).
 
+<!-- req: P/10-R009 -->
 ### Н1.6 `door.pass` on the domain (М11/8 Н1.7)
 
 ```yaml
@@ -300,6 +311,7 @@ contract «Domain doors». What the worker on the domain checks at an arrived ro
 
 **Callback address header (G10-PASS-CALL-URL-01).** In this pass, the outgoing `X-W2C-Pass-Console` is absent, with or without a role kit. The same header received from outside is removed by `to_worker` of the gate-and-pass contract. `CONSOLE_CALL_PORT` names the callback listener of the cluster console; neither that URL nor the main `DOMAIN_CONSOLE_HOST/PORT` address is a callback address of this domain-console instance. The ticket remains bound to the open request in memory by the contract above; an incoming `X-W2C-Pass-Ticket` at the domain console is refused with 401 as above.
 
+<!-- req: P/10-R010 -->
 ### Н1.7 The holder's page (М11/8 Н1.8)
 
 ```yaml
@@ -318,6 +330,7 @@ module:   which doors the module calls in the mode domain, and that its nodes ar
           owner; the acceptance of the lesson — only the doors of the page
 ```
 
+<!-- req: P/10-R011 -->
 ### Н1.8 The alarm list at the holder (М11/11 Н1.8)
 
 The console assembles the alarms of members from their reports: it opens no connections to a member. The history (chapter 8.9 Н1.9) is written only by
@@ -357,6 +370,7 @@ The member's alarm page and its front are [chapter 9.1](../../09-agent/spec/09.1
 
 ---
 
+<!-- req: P/10-R012 -->
 ## Н2 Doors
 
 The HTTP contract: [10-domain-console.api.openapi.yaml](10-domain-console.api.openapi.yaml). The refusal body is `{error, detail}`.
@@ -380,6 +394,7 @@ the process and to the worker on the domain (the forwarding contract «Domain do
 
 ## Н3 Procedures
 
+<!-- req: P/10-R013 -->
 ### accept the forwarding and pass on to the process (the domain console)
 
 The lesson introduces no order of checks of its own: each place is set by its own norm. «Accept by a console» is [the forwarding
@@ -387,6 +402,7 @@ contract](../../common/contracts/forwarding.md) «Accept by a console» (Н1.4);
 `server.role`); a path with `.`/`..` — 404 before the gate (Н2); the gate — Н1.5; further — its own read door (Н1.2, Н1.8),
 `door.pass` (Н1.6) or the passing to the process `domain` (Н1.3 `pass`): the answer of the process is as it came, a break and silence — 502.
 
+<!-- req: P/10-R014 -->
 ### alarms(input) (М11/11 Н3)
 
 The filter is at the door, the form is at the function: the alarm door assembles the input from the store and discards a broken witness (without ts and the like)
@@ -436,6 +452,7 @@ input:  {now, since, until, lost_after, members: {<member>: {last_report: <domai
 
 ---
 
+<!-- req: P/10-R015 -->
 ## Н4 Refusals
 
 The codes of transition 2 are the reception and the passing ([the forwarding contract](../../common/contracts/forwarding.md) «Refusals by transition»; the decision
@@ -443,31 +460,15 @@ of the Architect on the review analysis of stage A 8–10, decision 3: each Open
 `domain`: the codes of its own door, `409 deposed`, `503 frozen`, `503 standby`) the console serves as they came — the OpenAPI of lesson
 [P/08](../../08-domain/spec/08-domain.api.openapi.yaml); the codes of transitions 1–2 from the forwarding side are the cluster console (chapter P/06.7).
 
-| `error` | Code | When |
-|---|---|---|
-| the word of `peer`: `no_role` / `no_role`, `wrong_role`, `bad_chain` | 401 / 403 | the domain console accepts the forwarding on transition 2 (Н1.4 `server.role`; the normative client is the cluster console of the holder): at the TLS door (there is a kit) there is no client certificate — 401; without a kit (`no_kit`) the door serves on the loopback over HTTP without a role check — there are no such refusals, the role is not proven, `X-Operator: console` is stripped (the role certificate contract, class `role`, `no_kit`; C10-ROLE-NOKIT-01); the certificate chained to the union of CAs (its own `ca.pem`, `ca.next.pem` or the Entry.ca of an admitted member), but the SAN of the leaf does not have exactly one role or it is not `console` — 403; a signature of the leaf or of a CA outside the list of the role certificate contract `sig` — 403 `bad_chain` (reconciliation of М11); before the gate. A chain not by the union of CAs — a handshake refusal, there is no HTTP answer (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 27) |
-| `not a domain route` | 404 | a path with a segment `.` or `..`, percent-encoded too (the forwarding contract «Domain doors»; reconciliation of М11, D4) — before the gate, without passing on |
-| `denied` | 401, 403 | the gate (Н1.5; the form of [P/06.3](../../06-console/spec/06.3-console.norms.md) Н4): there is no token or it did not pass; `may` — deny |
-| (the gate `shut`) | 503 | there were keys or there is a trace of the domain, but there is nothing to check with (the gate-and-pass contract `shut`; P/06.3 Н1.8) |
-| `unavailable` | 503 | the gate: a row of the access check — `domain/keys`, `domain/revoked` (`no_revocations`), `domain/grants/domain`, `domain/disabled`, `domain/roles/admin` and the groups from its `assigned` — exists but does not read (Н1.5; the rule «Unreadable row» of the gate-and-pass contract) — not 401, not 403 |
-| ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н4) | 413 / 400 / 408 | the body is larger than the limit of the console, chunked, read slowly (the gate-and-pass contract `body`) |
-| the words of the forwarding contract `answer` | 502 | the passing to the process `domain` (Н1.3 `pass`): a break and silence — as the forwarding contract «Forwarding is one function» `answer` |
-| `door.pass` | 400, 408, 413, 502, 503 | the codes of «Pass of `door.pass`» of the gate-and-pass contract (`codes`); the worker on the domain is not heard — 503 `unavailable` (Н1.6 `absent`) |
-| `no domain here` | 404 | the view is not built (Н1.2а, Н1.2б, Н1.2в, Н1.2е) |
-| `unavailable` | 503 | a row that a read door answers with (the view, the shadow, `domain/member-rows/<part>`, `domain/topology`, `domain/placement`, a placement record, the pointer `domain/shared` and its document) exists but does not read — not 404 and not «there is no row» (Н1.2а–Н1.2г, Н1.2е; V7 item 3, the Architect's decision of 2026-10-28, P1; lines 36, 42, 43, 50, 54 of the list) |
-| `not in the directory` | 404 | a manifest without `domain.ref` (Н1.2а) |
-| `no such member` | 404 | `?cluster=` is not a member (Н1.2а) |
-| `siblings` | 409 | transition 3 — the answer of the process `domain` as it came: an edit of a ref at several units of one member without `?id=` |
-| `executors` | 409 | transition 3 — the answer of the process `domain` as it came: an edit `PUT`, `DELETE` `/domain/<sub>/<rows>/<ref>` without `?cluster=`, the ref is at two executors or more; the body is `{error, detail, clusters}` ([P/08.6](../../08-domain/spec/08.6-domain.norms.md) Н3 «accept an edit» step 2a; ADR-0091 addendum (15) item 4) |
-| — | 400 / 404 | the request: `cluster` twice or empty; there is no manifest; `rows` is not its own ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2); placements: there is no record, there is no manifest or it is without `domain.ref` (Н1.2г) |
-| `refused` | 400 | the window of `/domain/alarms` (Н1.8 `door`) |
+[The refusal catalogue](../forms/refusals.tsv) is the normative table: chapter=10; row retains the former Н4 row number. word/outcome/cause preserve the original three cells verbatim; a compound code has one projection per code. The [form grammar](../forms/README.md#refusal-catalogue) defines the imported startup, callback and native-command rows and the HTTP response schemas.
 
-The words of its own doors are the closed list [`refusal-words.tsv`](../data/refusal-words.tsv) (ADR-0094 B5); the rules are [P/08.0](../../08-domain/spec/08.0-domain.norms.md) Н4. The row «—» of the table: 400 — `refused`, 404 — `no such path`, placements — `refused`. Its own doors have no `field`: they read, they have no body; at the doors of transition 3 — the answer of the process `domain` as it came.
+The words of its own doors are the closed list [`refusal-words.tsv`](../data/refusal-words.tsv) (ADR-0094 B5); the rules are [P/08.0](../../08-domain/spec/08.0-domain.norms.md) Н4. The row 15 of the form (word «—»): 400 — `refused`, 404 — `no such path`, placements — `refused`. Its own doors have no `field`: they read, they have no body; at the doors of transition 3 — the answer of the process `domain` as it came.
 
 The words of `peer` are [the `peer` contract](../../common/contracts/peer.md) «Refusal words».
 
 ---
 
+<!-- req: P/10-R016 -->
 ## Н5 Acceptance
 
 The catalogue [`acceptance/`](../acceptance/README.md): the stand of several clusters of chapter 8.3 (`hold`, `m1`, `m2`, the catalogue
@@ -538,6 +539,7 @@ the stand is ready (ADR-0083 addendum (9)).
 
 ---
 
+<!-- req: P/10-R017 -->
 ## Implementation decides
 
 1. **the command `alarms`** — a template with `{input}` (the vector `alarms`; М11/11 «Implementation decides» item 1 in the part of `alarms`;
