@@ -109,9 +109,9 @@ func TestStoreCore_S1IdMemoryTimeAlone(t *testing.T) {
 	runScenario(t, "1.1", "s1-id-memory-time-alone", true, seams1_1["s1-id-memory-time-alone"][:3])
 }
 
-// TestStoreCore_S2AdmissionEqual — chapter 1.1, seams.tsv, scenario s2-admission-equal: steps 1…5 of the projection.
+// TestStoreCore_S2AdmissionEqual — chapter 1.1, seams.tsv, scenario s2-admission-equal: steps 1…49 of the projection.
 func TestStoreCore_S2AdmissionEqual(t *testing.T) {
-	runScenario(t, "1.1", "s2-admission-equal", true, seams1_1["s2-admission-equal"][:5])
+	runScenario(t, "1.1", "s2-admission-equal", true, seams1_1["s2-admission-equal"][:49])
 }
 
 // TestStoreCore_S3AdmissionMonotone — chapter 1.1, seams.tsv, scenario s3-admission-monotone: steps 1…4 of the projection.
