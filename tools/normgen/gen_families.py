@@ -92,7 +92,10 @@ def placeholders():
                 break
             m = re.match(r"\| `(<[^`]+>|\*)` \| `(.+?)` \| ", x)
             if m:
-                out[m.group(1)] = m.group(2).replace("\\|", "|")
+                label, grammar = m.group(1), m.group(2).replace("\\|", "|")
+                if label in out and out[label] != grammar:
+                    raise GenError(f"{rel(KEYS_README)}: conflicting grammars for {label}")
+                out[label] = grammar
     if not out:
         raise GenError(f"{rel(KEYS_README)}: no placeholder table")
     # The catalogue keeps its typed key templates. Only the spelling used to look

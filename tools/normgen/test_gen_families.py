@@ -66,6 +66,38 @@ class PlaceholderLabels(unittest.TestCase):
         with self.assertRaisesRegex(GenError, "conflicting grammars"):
             gen_families.placeholders()
 
+    def test_conflicting_readme_duplicates_are_refused_before_mapping(self):
+        # These two collisions were introduced by translating distinct typed
+        # labels to the same English spelling. Neither may use the last row.
+        for label in ("<server>", "<key>"):
+            for dictionary in (None, "wrong\theader\n"):
+                with self.subTest(label=label, dictionary=dictionary):
+                    self.grammar([(label, "^(?:[a-z]+)$"), (label, "^(?:[^/]+/[^/]+)$")])
+                    self.labels.unlink(missing_ok=True)
+                    if dictionary is not None:
+                        self.labels.write_text(dictionary)
+                    with self.assertRaisesRegex(GenError, f"README.md: conflicting grammars for {label}"):
+                        gen_families.placeholders()
+
+    def test_identical_duplicate_rows_and_aliases_are_allowed(self):
+        expr = "^(?:[a-z]+)$"
+        self.grammar([("<server>", expr), ("<server>", expr), ("<сервер>", expr)])
+        self.labels.write_text("ru\ten\nсервер\tserver\n")
+        grammar = gen_families.placeholders()
+        self.assertEqual(grammar, {"<server>": expr, "<сервер>": expr})
+        self.assertEqual(gen_families.template("<сервер>/<server>", grammar),
+                         [("", "<сервер>", expr), ("/", "", ""), ("", "<server>", expr)])
+
+    def test_legacy_distinct_types_are_not_merged_without_dictionary(self):
+        host = r"^(?:[a-z]+(?:\.[a-z]+)*)$"
+        server_name = r"^(?:[a-z]+(?:-[a-z]+)*)$"
+        self.grammar([("<сервер>", host), ("<server>", server_name)])
+        grammar = gen_families.placeholders()
+        self.assertEqual(grammar, {"<сервер>": host, "<server>": server_name})
+        self.assertIsNotNone(gen_families.re.fullmatch(grammar["<сервер>"], "srv.example"))
+        self.assertIsNone(gen_families.re.fullmatch(grammar["<server>"], "srv.example"))
+        self.assertIsNotNone(gen_families.re.fullmatch(grammar["<server>"], "srv-a"))
+
 
 def module_copy(t):
     """Модуль выхода с пакетом families (без прочих пакетов: они не нужны обвесу)."""
