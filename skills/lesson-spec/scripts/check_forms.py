@@ -1048,15 +1048,37 @@ def lesson_dirs(root):
     return {ln.split("\t")[1] for ln in lf_lines(Path(root) / "Platform/lessons.tsv") if ln and not ln.startswith("#")}
 
 
+CONSUMER_COLUMNS = ["package", "table", "lesson", "norm"]
+
+
 def consumers(root):
-    """`consumers.tsv` → {(package, table): [lesson, …]}."""
-    out = {}
+    """`consumers.tsv` (wire.md «consumer set») → (ошибки, {(package, table): [lesson, …]}). package — полный путь
+    `(common|NN-name)/name` без vectors/, NN-name — урок lessons.tsv; повтор (package, table, lesson), неизвестный
+    урок, пакет или таблица — ошибка формы."""
+    out, errors, seen = {}, [], set()
     path = Path(root) / "Platform/common/vectors/consumers.tsv"
-    lines = [ln for ln in lf_lines(path) if ln and not ln.startswith("#")]
-    for line in lines[1:]:
+    lessons = lesson_dirs(root)
+    lines = [(no, ln) for no, ln in enumerate(lf_lines(path), 1) if ln and not ln.startswith("#")]
+    if not lines or lines[0][1].split("\t") != CONSUMER_COLUMNS:
+        return [f"{path.name}: columns must be {CONSUMER_COLUMNS}"], out
+    for no, line in lines[1:]:
         c = line.split("\t")
-        out.setdefault((c[0], c[1]), []).append(c[2])
-    return out
+        if len(c) != len(CONSUMER_COLUMNS):
+            errors.append(f"{path.name}: row {no}: {len(c)} cells, expected {len(CONSUMER_COLUMNS)}")
+            continue
+        package, table, lesson = c[:3]
+        m = WIRE_PACKAGE.fullmatch(package)
+        if not m or (m[1] != "common" and m[1] not in lessons) or not (Path(root) / "Platform" / m[1] / "vectors" / m[2]).is_dir():
+            errors.append(f"{path.name}: row {no}: package {package!r} is not an existing (common|NN-name)/name of lessons.tsv")
+        elif "/" in table or not table.endswith(".tsv") or not (Path(root) / "Platform" / m[1] / "vectors" / m[2] / table).is_file():
+            errors.append(f"{path.name}: row {no}: table {table!r} is not a TSV file of {package}")
+        if lesson not in lessons:
+            errors.append(f"{path.name}: row {no}: lesson {lesson!r} is not a directory of lessons.tsv")
+        if (package, table, lesson) in seen:
+            errors.append(f"{path.name}: row {no}: ({package}, {table}, {lesson}) repeats")
+        seen.add((package, table, lesson))
+        out.setdefault((package, table), []).append(lesson)
+    return errors, out
 
 
 def _decoded(text, decode, err, what, line):
@@ -1089,7 +1111,8 @@ def check_wire(path):
     if not body or body[0][1].split("\t") != WIRE_COLUMNS:
         return errors + [f"{path.name}: columns must be {WIRE_COLUMNS}"], stats
     cel, env = wire_cel_env()
-    owners_of = consumers(root)
+    cerr, owners_of = consumers(root)
+    errors += cerr
     seen = set()
     for no, line in body[1:]:
         cells = line.split("\t")
@@ -1116,7 +1139,7 @@ def _check_binding(r, root, platform, env, cel, owners_of, seen, err, stats):
         return
     m = WIRE_PACKAGE.fullmatch(r["package"])
     pkg = platform / m[1] / "vectors" / m[2] if m else None
-    if not m or not pkg.is_dir():
+    if not m or not pkg.is_dir() or (m[1] != "common" and m[1] not in lesson_dirs(root)):
         err.add(f"package {r['package']!r} is not <lesson>/<name> of an existing Platform/<lesson>/vectors/<name>")
         return
     table = pkg / r["table"]
@@ -1319,22 +1342,15 @@ def _check_binding(r, root, platform, env, cel, owners_of, seen, err, stats):
     for v in grouped_variants:
         if any("group_by" not in d for _, d, _ in decls if d["variant"] == v):
             err.add(f"variant {v!r}: group, groups or map requires group_by on its input declarations")
-    named = sorted({a or b for w in whens for a, b in OWNER_WORD.findall(w)})
-    if r["package"].startswith("common/"):
-        owner_set = owners_of.get((r["package"], r["table"]), [])
-        if not owner_set:
-            err.add("no consumer of the table in consumers.tsv")
-            return
-        for name in named:
-            if name not in owner_set:
-                err.add(f"when names {name!r}, not a consumer of the table in consumers.tsv")
-    else:
-        # пакет урока: consumers.tsv его не назначает — потребители урок пакета и уроки, названные в when (README
-        # пакета, например rid и request-digest P/06 у 03-worker); owner — каталог урока (wire.md)
-        owner_set = [r["package"].split("/")[0]] + [n for n in named if n != r["package"].split("/")[0]]
-        for name in named:
-            if name not in lesson_dirs(root):
-                err.add(f"when names {name!r}, not a lesson directory of Platform/lessons.tsv")
+    # потребители — явные строки consumers.tsv и урок-владелец пакета урока; у common неявного урока нет (wire.md)
+    owner_set = ([] if r["package"].startswith("common/") else [r["package"].split("/")[0]])
+    owner_set += [n for n in owners_of.get((r["package"], r["table"]), []) if n not in owner_set]
+    if not owner_set:
+        err.add("no consumer of the table in consumers.tsv")
+        return
+    for name in sorted({a or b for w in whens for a, b in OWNER_WORD.findall(w)}):
+        if name not in owner_set:
+            err.add(f"when names {name!r}, not a consumer of the table (consumers.tsv or the owner lesson)")
     if err.lines:                                          # строки судятся только по годной форме привязки
         return
     _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whens, owner_set, pkg, root, err, stats)

@@ -382,10 +382,37 @@ class Wire(unittest.TestCase):                     # провод векторо
         crl = self.row("common/store-client", "cases.tsv", "vectors")
         self.assertTrue(any("consumers.tsv" in e for e in self.mutate('"when":"true","cells"', '"when":"owner == \\"07-console-module\\"","cells"', crl)))
 
-    def test_lesson_package_owner(self):             # пакет урока: owner — каталог урока; другой урок — по README пакета
+    def test_lesson_package_owner(self):             # потребители — строки consumers.tsv ∪ урок-владелец пакета урока
         row = self.row("01-store/rights-evaluator", "expect.tsv", "vectors")
-        self.assertEqual(self.mutate('owner == \\"01-store\\"', 'owner == \\"03-worker\\"', row), [])
-        self.assertTrue(any("lesson directory" in e for e in self.mutate('owner == \\"01-store\\"', 'owner == \\"99-nope\\"', row)))
+        self.assertTrue(any("not a consumer" in e for e in self.mutate('owner == \\"01-store\\"', 'owner == \\"03-worker\\"', row)))
+        self.consumers("06-console/rid\ttemplate.tsv\t03-worker\t", None)    # без строки when с 03-worker — чужой
+        self.assertTrue(any("not a consumer" in e and "template.tsv" in e for e in self.errors()))
+
+    def consumers(self, start, new):
+        """Строка consumers.tsv, начинающаяся с `start`, заменена на `new` (None — удалена; копия вместо ссылки)."""
+        path = self.path.parent / "consumers.tsv"
+        text = path.read_text(encoding="utf-8")
+        path.unlink()
+        lines = text.split("\n")
+        hit = [i for i, ln in enumerate(lines) if ln.startswith(start)]
+        self.assertEqual(len(hit), 1, start)
+        lines[hit[0]:hit[0] + 1] = [] if new is None else [new]
+        path.write_text("\n".join(lines), encoding="utf-8")
+
+    def test_consumers_form(self):                  # wire.md: повтор, неизвестный урок, пакет или таблица — ошибка формы
+        start = "06-console/rid\ttemplate.tsv\t03-worker\t"
+        line = next(ln for ln in (self.path.parent / "consumers.tsv").read_text(encoding="utf-8").split("\n") if ln.startswith(start))
+        for new, word in ((line + "\n" + line, "repeats"),
+                          (line.replace("\t03-worker\t", "\t99-nope\t"), "lesson '99-nope'"),
+                          (line.replace("06-console/rid\t", "rid\t"), "package 'rid'"),
+                          (line.replace("06-console/rid\t", "99-nope/rid\t"), "package '99-nope/rid'"),
+                          (line.replace("06-console/rid\t", "common/rid\t"), "package 'common/rid'"),
+                          (line.replace("\ttemplate.tsv\t", "\tnope.tsv\t"), "table 'nope.tsv'")):
+            self.base = set()
+            self.consumers(start, new)
+            self.assertTrue(any(word in e for e in check_forms.check_wire(self.path)[0]), word)
+            (self.path.parent / "consumers.tsv").unlink()
+            (self.path.parent / "consumers.tsv").symlink_to(ROOT / "Platform/common/vectors/consumers.tsv")
 
     def test_assert_tests(self):                  # test: prefix | absent | no-leak (min_bytes ≥ 1 только у no-leak)
         row = self.row("common/family-read", "01.tsv", "vectors")
