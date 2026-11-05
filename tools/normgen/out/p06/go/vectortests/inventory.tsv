@@ -1793,3 +1793,20 @@ common_revoked_test.go	translated
 common_store_client_test.go	translated
 common/journal modes.tsv	excluded: a layout test, not a function (journal README; runner EXCLUDED_EXECUTION_TABLES)
 06-console/requests-body requests_body.tsv	excluded: layout (Architect, wire P/06 item 5): an unperformed duty of the real HTTP stand of the README «Stand» (POST and round trip on a fresh stand) — the runner checks the publication; no vector function, not a PASS
+01-store/jcs canonical_json.tsv 10 vectors	translated
+01-store/jcs canonical_json.tsv 11 vectors	translated
+01-store/jcs canonical_json.tsv 12 vectors	translated
+01-store/jcs canonical_json.tsv 13 vectors	translated
+01-store/jcs canonical_json.tsv 14 vectors	translated
+01-store/jcs canonical_json.tsv 15 vectors	translated
+01-store/jcs canonical_json.tsv 16 vectors	translated
+01-store/jcs canonical_json.tsv 17 vectors	translated
+01-store/jcs canonical_json.tsv 18 vectors	translated
+01-store/jcs canonical_json.tsv 19 vectors	translated
+01-store/jcs canonical_json.tsv 20 vectors	translated
+01-store/jcs canonical_json.tsv 21 vectors	translated
+01-store/jcs canonical_json.tsv 22 vectors	translated
+01-store/jcs canonical_json.tsv 23 vectors	translated
+01-store/jcs canonical_json.tsv 24 vectors	translated
+01-store/jcs canonical_json.tsv 25 vectors	translated
+01-store/jcs canonical_json.tsv 26 vectors	translated

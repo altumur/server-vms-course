@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "06-console/rid",
+ "table": "rid.tsv",
+ "case": "line-23",
+ "variant": "",
+ "cells": {
+  "rid": "\"a\\\"b\""
+ },
+ "files": {}
+}

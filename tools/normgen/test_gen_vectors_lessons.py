@@ -111,6 +111,11 @@ def fake_go(g, mut=None):
             for no, r, variant, fcells, (code, value, raw), fcompare in g.frames_of(d, rows, pdir):
                 compare = fcompare or d["compare"]
                 ans = {"code": code, "value": native(compare, value, state) if code == 0 else None, "raw": raw}
+                if d.get("_form"):
+                    import wire_fakes
+                    run = next(r for r in d["_runs"] if r.lines[0] == no and r.variant == variant)
+                    if raw is None:
+                        ans["value"] = wire_fakes.native_value(run)
                 if mut:
                     ans = mut(d, no, variant, compare, ans)
                 if d["surface"] == "vectors":
