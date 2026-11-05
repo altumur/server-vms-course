@@ -145,6 +145,8 @@ def plain(a):
                                  ("word_cell", L.key == "02-installer" or g.get("WordCell") == r["word"]),
                                  ("fields", (g.get("Fields") or []) == want_fields),
                                  ("headers", (g.get("Headers") or []) == want_headers),
+                                 ("response", "response_schema" not in r or
+                                  g.get("Response") == ("" if r["response_schema"] == "-" else r["response_schema"])),
                                  ("log", (g["Log"] or []) == names), ("words", (g["Words"] or []) == words),
                                  ("norm", g["Norm"] == r["norm"])) if not ok]
         check(f"catalogue {r['name']}", f"differs from the table in {diffs}" if diffs else None)
