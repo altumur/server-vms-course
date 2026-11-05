@@ -67,7 +67,7 @@ def build(mod, fn, adapter, contracts_src, tmp):
         stub.unlink()
     text = kitside.fill(adapter.read_text(), mod / "vectortests")
     (dst / "vectoradapter" / f"{fn.lower()}_contracts.go").write_text(
-        text.replace('"kitmodule/internal/contracts"', f'"{module}/contracts"'))
+        text.replace('"kitmodule/internal/contracts', f'"{module}/contracts'))
     return dst
 
 
@@ -93,6 +93,13 @@ class Contracts(unittest.TestCase):
         done = subprocess.run(["gofmt", "-l", str(CONTRACTS), str(ADAPTERS)], capture_output=True, text=True)
         self.assertEqual(done.stdout.strip(), "", "gofmt")
 
+    def test_heartbeat_fresh(self):
+        sys.path.insert(0, str(HERE / "contracts/gen"))
+        import gen_heartbeat
+        for name, text in gen_heartbeat.render().items():
+            self.assertEqual((CONTRACTS / "heartbeat" / name).read_text(encoding="utf-8"), text,
+                             "run tools/normgen/contracts/gen/gen_heartbeat.py")
+
     def test_vectors(self):
         covered = 0
         for fn, adapter in adapter_fns().items():
@@ -111,6 +118,28 @@ class Contracts(unittest.TestCase):
 
 
 class ContractsKit(unittest.TestCase):
+    def test_heartbeat_kit(self):
+        """A foreign-family reader in a controller kit: nested files, import rewriting, and actual vector calls."""
+        if not shutil.which("go"):
+            self.skipTest("go is not in PATH")
+        with tempfile.TemporaryDirectory(prefix="heartbeat-kit-") as tmp:
+            dst = Path(tmp) / "kit"
+            done = subprocess.run([sys.executable, str(HERE / "kit/build_kit.py"), str(dst), "--lesson", "04-controller",
+                                   "--part", "families", "--part", "vectors", "--part", "contracts"],
+                                  capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            import json
+            man = json.loads((dst / "kit.manifest.json").read_text())
+            paths = {f["path"]: f for f in man["files"]}
+            for name in ("families.go", "runtime.go", "read.go"):
+                self.assertIn(f"04-controller/internal/contracts/heartbeat/{name}", paths)
+            self.assertIn("ReadWorker", (dst / "KIT.md").read_text())
+            mod = dst / "04-controller"
+            (mod / "go.mod").write_text(f"module {man['module']}\n\ngo 1.22\n")
+            done = subprocess.run(["go", "test", "-count=1", "-run", "^TestHeartbeatRead_", "./internal/vectortests/"],
+                                  cwd=mod, capture_output=True, text=True, env=GOENV)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
     def test_kit_part(self):
         """build_kit --part contracts: пакет internal/contracts и адаптеры над ним вместо заглушек; тесты таблиц — зелёные."""
         import json
@@ -164,6 +193,55 @@ func main() {
 	w.Flush()
 }
 """
+
+
+class Heartbeat(unittest.TestCase):
+    def test_mixed_outcomes(self):
+        """Field priority 0 must not hide a whole-object error or a status error at another path."""
+        if not shutil.which("go"):
+            self.skipTest("go is not in PATH")
+        src = r'''package heartbeat
+import ("testing"; "strings"; "sync")
+func TestMixed(t *testing.T) {
+    worker := `{"worker":"w-1","ts":100,"status":[{"id":"c1","phase":"running","epoch":1,"revision":1,"observed_revision":1}],"server":"srv-a","instance":"box-a:1:aaaaaa","build":7}`
+    key := "testsub/heartbeats/w-1"
+    whole := strings.Replace(worker, `,"instance":"box-a:1:aaaaaa"`, "", 1)
+    if got := ReadWorker(key, []byte(whole)); got.Rows != "unreadable" || got.Others != "unreadable" || len(got.Fields) != 0 { t.Fatalf("whole: %#v", got) }
+    element := strings.Replace(worker, `,"phase":"running"`, "", 1)
+    got := ReadWorker(key, []byte(element))
+    rows, ok := got.Rows.(RowItems)
+    if !ok || len(rows.Skip) != 1 || rows.Skip[0] != 0 || got.Others != "unreadable" || len(got.Fields) != 0 { t.Fatalf("element: %#v", got) }
+    resource := `{"ts":100,"url":"http://127.0.0.1:8090","schema":1,"build":5,"usage":0,"usage_at":100,"space":{"total":1000,"free":900,"used":100,"full":0.1},"volumes":{},"units":{},"mirrors":{},"short":0}`
+    if got := ReadResource("platform/resources/srv-a/heartbeat", []byte(resource)); got.Readable { t.Fatalf("resource without server: %#v", got) }
+    var wg sync.WaitGroup
+    for i := 0; i < 8; i++ { wg.Add(1); go func() { defer wg.Done(); for j := 0; j < 10; j++ { ReadWorker(key, []byte(worker)); ReadResource("platform/resources/srv-a/heartbeat", []byte(resource)) } }() }
+    wg.Wait()
+}
+'''
+        with tempfile.TemporaryDirectory(prefix="heartbeat-mixed-") as tmp:
+            dst = Path(tmp)
+            (dst / "go.mod").write_text("module heartbeatjudge\n\ngo 1.22\n")
+            shutil.copytree(CONTRACTS, dst / "contracts")
+            (dst / "contracts/heartbeat/mixed_test.go").write_text(src)
+            done = subprocess.run(["go", "test", "-race", "-count=1", "./contracts/heartbeat/"], cwd=dst,
+                                  capture_output=True, text=True, env=GOENV)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
+    def test_mutant(self):
+        """The common vectors reject a reader that ignores whole-object outcomes."""
+        if not shutil.which("go"):
+            self.skipTest("go is not in PATH")
+        mod = OUT / "p04/go"
+        with tempfile.TemporaryDirectory(prefix="heartbeat-mutant-") as tmp:
+            dst = build(mod, "HeartbeatRead", ADAPTERS / "heartbeatread.go", CONTRACTS, Path(tmp))
+            path = dst / "contracts/heartbeat/read.go"
+            text = path.read_text()
+            self.assertIn('if active[""] {', text)
+            path.write_text(text.replace('if active[""] {', 'if false {', 1))
+            done = run(dst, tests_calling(mod, "HeartbeatRead"))
+            self.assertNotEqual(done.returncode, 0)
+            self.assertIn("--- FAIL: TestHeartbeatRead_", done.stdout, done.stdout + done.stderr)
+            self.assertNotIn("panic:", done.stdout)
 
 
 class NFKC(unittest.TestCase):
