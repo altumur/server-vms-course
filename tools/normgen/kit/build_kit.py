@@ -56,6 +56,8 @@ import gen_launch  # noqa: E402 — часть launch
 import gen_core  # noqa: E402 — часть core
 import gen_families  # noqa: E402 — часть families
 import gen_admin  # noqa: E402 — часть admin
+import gen_cmdtests  # noqa: E402 — stagetests урока без HTTP (P/02)
+import gen_rollout  # noqa: E402 — часть rollout-poll (P/02)
 import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2): --lesson, по умолчанию 01-store
 L = lesson.CURRENT
 TABLE = L.form("write-checks.tsv")
@@ -132,7 +134,7 @@ def git_head():
         return None
 
 
-PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core", "families", "admin")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
+PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core", "families", "admin", "rollout-poll")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
 
 
 EXAMPLES = HERE / "examples"                # пример подключения на часть: Go-файл, его собирает kit/test_kit.py
@@ -201,9 +203,11 @@ def provenance(parts, files, judged):
     }
     out = {}
     for part in parts:
-        if part in ("flags", "refusals", "launch", "core", "families", "admin"):
+        if part == "stagetests" and not L.openapi.is_file():
+            out[part] = {**gen_cmdtests.provenance(), "output": output("stagetests")}
+        elif part in ("flags", "refusals", "launch", "core", "families", "admin", "rollout-poll"):
             mod = {"flags": gen_flags, "refusals": gen_refusals, "launch": gen_launch, "core": gen_core,
-                   "families": gen_families, "admin": gen_admin}[part]
+                   "families": gen_families, "admin": gen_admin, "rollout-poll": gen_rollout}[part]
             out[part] = {**mod.provenance(), "output": output(part)}
         else:
             component, t = table[part]
@@ -270,11 +274,16 @@ def build(dst, module, parts=(), judged=None, seed=None):
         raise KitError(f"--judged: unknown parts {sorted(set(judged) - set(('writecheck',) + PARTS))}")
     if not MODULE.fullmatch(module) or "//" in module or module.endswith("/"):
         raise KitError(f"--module {module!r} is not a Go import path")
-    table_sha = sha256(TABLE.read_bytes())
-    fresh_check(gen_checks, TABLE, "go/checks", [n for n, _, _ in CHECKS_FILES])
+    has_wc = TABLE.is_file()                          # часть writecheck — у урока с forms/write-checks.tsv (P/01)
+    http = L.openapi.is_file()                         # урок со своей дверью: stagetests над apidoor; без неё — gen_cmdtests
+    table_sha = sha256(TABLE.read_bytes()) if has_wc else None
+    if has_wc:
+        fresh_check(gen_checks, TABLE, "go/checks", [n for n, _, _ in CHECKS_FILES])
     if set(parts) - set(PARTS):
         raise KitError(f"--part {sorted(set(parts) - set(PARTS))}: one of {list(PARTS)}")
-    if "stagetests" in parts and "door" not in parts:
+    if "rollout-poll" in parts and "stagetests" not in parts:
+        raise KitError("--part rollout-poll needs --part stagetests: the traces call lessonadapter.RolloutPoll")
+    if "stagetests" in parts and http and "door" not in parts:
         raise KitError("--part stagetests needs --part door: the stage tests go through coreadapter over apidoor "
                        "(ADR-0126 addendum (7) item 5)")
     if "vectors" in parts and gen_tests.common_vectors.uses_families(L.key) and "families" not in parts:
@@ -291,11 +300,14 @@ def build(dst, module, parts=(), judged=None, seed=None):
     if "core" in parts and not {"door", "stagetests"} <= set(parts):
         raise KitError("--part core needs --part door and --part stagetests: the core is the coreadapter.Core of the "
                        "stage tests over apidoor.Handler (ADR-0083 addendum (95) item 3)")
-    kit_parts = ["writecheck", *sorted(set(parts))]
+    kit_parts = (["writecheck"] if has_wc else []) + sorted(set(parts))
     parts_set = list(kit_parts)
     try:
         tests = [(f, "vectors") for f in gen_tests.kit_files(module, "vectors")] if "vectors" in parts else []
-        tests += [(f, "stagetests") for f in gen_tests.kit_files(module, "stagetests")] if "stagetests" in parts else []
+        if "stagetests" in parts:
+            tests += [(f, "stagetests") for f in (gen_tests.kit_files(module, "stagetests") if http
+                                                    else gen_cmdtests.kit_files(module))]
+        rollout_files = gen_rollout.kit_files(module) if "rollout-poll" in parts else []
         flag_files = gen_flags.kit_files() if "flags" in parts else []
         refusal_files = gen_refusals.kit_files() if "refusals" in parts else []
         launch_files = gen_launch.kit_files(module) if "launch" in parts else []
@@ -303,7 +315,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
         family_files = gen_families.kit_files() if "families" in parts else []
         admin_files = gen_admin.kit_files(module) if "admin" in parts else []
     except (gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError, gen_launch.GenError,
-            gen_core.GenError, gen_families.GenError, gen_admin.GenError) as exc:
+            gen_core.GenError, gen_families.GenError, gen_admin.GenError, gen_cmdtests.GenError,
+            gen_rollout.GenError) as exc:
         raise KitError(str(exc)) from None
     openapi_sha = sha256(OPENAPI.read_bytes()) if "door" in parts else None
     if openapi_sha:
@@ -319,15 +332,16 @@ def build(dst, module, parts=(), judged=None, seed=None):
         files.append({"path": str(target.relative_to(dst)), "sha256": sha256(data), "lines": lines(data),
                       "origin": origin, "component": component, "source": source})
 
-    for sub in ("checks", "jsonstrict", "writecheck") + sum((gen_tests.PART_DIRS[p] for p in ("vectors", "stagetests") if p in parts), ()) + \
+    for sub in (("checks", "jsonstrict", "writecheck") if has_wc else ()) + \
+            (gen_rollout.KIT_DIRS if rollout_files else ()) + sum((gen_tests.PART_DIRS[p] for p in ("vectors", "stagetests") if p in parts), ()) + \
             (("apidoor",) if openapi_sha else ()) + (gen_flags.KIT_DIRS if flag_files else ()) + \
             (gen_refusals.KIT_DIRS if refusal_files else ()) + (("launch",) if launch_files else ()) + \
             (gen_families.KIT_DIRS if family_files else ()):
         if Path(os.path.normpath(internal / sub)).exists():
             shutil.rmtree(os.path.normpath(internal / sub))
-    for name, origin, source in CHECKS_FILES:
+    for name, origin, source in CHECKS_FILES if has_wc else ():
         put("checks", name, (GENERATED / name).read_bytes(), origin, "normgen", source)
-    for sub, name in KIT_FILES:
+    for sub, name in KIT_FILES if has_wc else ():
         data = (HANDWRITTEN / sub / name).read_bytes()
         if PLACEHOLDER.encode() in data:
             data = data.replace(PLACEHOLDER.encode(), f'"{module}/internal/'.encode())
@@ -352,6 +366,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
         put(sub, name, data, origin, "refusals", source)
     for sub, name, data, origin, source in family_files:
         put(sub, name, data, origin, "families", source)
+    for sub, name, data, origin, source in rollout_files:
+        put(sub, name, data, origin, "rollout-poll", source)
     for sub, name, data, origin, source, own in admin_files:
         if own and taken(Path(os.path.normpath(internal / sub / name)), data):
             continue                    # подкоманды реализации не трогаются
@@ -369,12 +385,15 @@ def build(dst, module, parts=(), judged=None, seed=None):
             continue                    # ядро реализации не трогается
         put(sub, name, data, origin, "core", source)
         files[-1]["editable"] = True
-    doc = (KIT_MD + (gen_tests.kit_md() if "vectors" in parts else "")
-           + (gen_tests.KIT_MD_STAGETESTS if "stagetests" in parts else "") + (KIT_DOOR_MD if openapi_sha else "")
+    stagetests_md = (gen_tests.KIT_MD_STAGETESTS if http else gen_cmdtests.KIT_MD) if "stagetests" in parts else ""
+    doc = ((KIT_MD if has_wc else KIT_MD_LESSON.replace("{lesson}", L.code).replace("{dir}", L.kit_dir))
+           + (gen_tests.kit_md() if "vectors" in parts else "")
+           + stagetests_md + (gen_rollout.KIT_MD if rollout_files else "") + (KIT_DOOR_MD if openapi_sha else "")
            + (gen_flags.kit_md() if flag_files else "") + (gen_refusals.kit_md() if refusal_files else "")
            + (gen_families.KIT_MD if family_files else "") + (gen_admin.kit_md() if admin_files else "")
            + (gen_launch.KIT_MD if launch_files else "") + (gen_core.KIT_MD if core_files else "")).replace("{module}", module)
-    doc = (doc + connect_md(kit_parts, module) + exported_md(internal, dst, module)).encode("utf-8")
+    connect = connect_md(kit_parts, module) if L.key == lesson.DEFAULT else ""   # примеры частей — кодом P/01
+    doc = (doc + connect + exported_md(internal, dst, module)).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)
     # Паспорт попытки (доп. (86) п. 3) считает порознь: по происхождению (generated | handwritten) и по части
     # (normgen — генератор с его ручной средой runtime.go, prims.go; kit — ручной пакет jsonstrict, writecheck).
@@ -383,12 +402,13 @@ def build(dst, module, parts=(), judged=None, seed=None):
         totals[f["origin"]] = totals.get(f["origin"], 0) + f["lines"]
         parts[f["component"]] = parts.get(f["component"], 0) + f["lines"]
     manifest = {
-        "kit": "P/01 pack B (ADR-0083 amendment 86): Н2.1 write checks and strict JSON body parser, Go",
+        "kit": ("P/01 pack B (ADR-0083 amendment 86): Н2.1 write checks and strict JSON body parser, Go" if has_wc
+                else f"{L.code} kit (ADR-0125 addendum (5)): the generated parts of the lesson, Go"),
         "module": module,
         "parts": kit_parts,
         "commit": os.environ.get(COURSE_ENV) or git_head(),
         "export": os.environ.get(EXPORT_ENV) or None,
-        "table": {"path": str(TABLE.relative_to(ROOT)), "sha256": table_sha},
+        "table": {"path": str(TABLE.relative_to(ROOT)), "sha256": table_sha} if has_wc else None,
         "files": files,
         "provenance": provenance(parts_set, files, judged or {}),
         "doc": {"path": "KIT.md", "sha256": sha256(doc), "lines": lines(doc)},
@@ -556,6 +576,21 @@ SPECS = Path(os.environ.get("CAMMETA_SPECS", Path.home() / "cammeta-specs"))
 # Порядок перегона out во временном каталоге: дверь и флаги — до core и launch (они читают их выход).
 REGEN = ("gen_checks.py", "gen_door.py", "gen_flags.py", "gen_refusals.py", "gen_tests.py", "gen_stagetests.py",
          "gen_core.py", "gen_admin.py", "gen_launch.py", "gen_families.py")
+# Урок без своей двери (P/02): перегон по частям пакета — генераторы, объявленные для P/01, на нём отказывают.
+PART_GENS = {"flags": ("gen_flags.py",), "refusals": ("gen_refusals.py",), "stagetests": ("gen_cmdtests.py",),
+             "rollout-poll": ("gen_rollout.py",), "families": ("gen_families.py",)}
+
+
+def regen(parts):
+    """Генераторы перегона: у P/01 — все (REGEN, порядок прежний), у прочих уроков — части parts по PART_GENS."""
+    if L.key == lesson.DEFAULT:
+        return REGEN
+    gens = []
+    for p in parts:
+        if p not in PART_GENS:
+            raise KitError(f"--part {p}: no generator of it for lesson {L.key} yet")
+        gens += [g for g in PART_GENS[p] if g not in gens]
+    return tuple(gens)
 
 
 def git(*args, cwd):
@@ -579,6 +614,15 @@ KIT_DOOR_MD = KIT_DOOR_MD.replace("Platform/01-store/spec/01-store.api.openapi.y
                                   str(L.openapi.relative_to(ROOT)))
 
 
+KIT_MD_LESSON = """# Kit: the generated parts of {lesson} (Go)
+
+Ready-made Go packages under `{dir}/internal/`, generated from the forms of the lesson (ADR-0125 addendum (5)). The closed
+ones are part of your tree, but **do not edit them** (writes there are closed): import and call them. The files marked
+**yours** are stubs you edit — the kit puts each once and never overwrites it. `kit.manifest.json` lists every file
+with its sha256 and whether it is yours (`editable`). Standard library only, Go 1.22.
+"""
+
+
 def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT, seed=None):
     """Пакет из чистого HEAD курса на входах выгрузки export (seed — посев, см. seed_rule). → манифест."""
     dst = Path(dst).resolve()
@@ -595,7 +639,7 @@ def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT
         unpack(root, course, "tools/normgen", stage)
         unpack(specs, sha, "Platform", stage)
         gens = stage / "tools/normgen"
-        for g in REGEN:
+        for g in regen(parts):
             done = subprocess.run([sys.executable, g], cwd=gens, capture_output=True, text=True)
             if done.returncode:
                 raise KitError(f"{g} on the export {sha[:9]}: {(done.stderr or done.stdout).strip()[-2000:]}")
