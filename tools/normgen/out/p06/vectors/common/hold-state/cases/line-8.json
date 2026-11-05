@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/hold-state",
+ "table": "cases.tsv",
+ "case": "hb-45.001",
+ "variant": "",
+ "cells": {
+  "input": "{\"hold\":{\"by\":\"t-1\",\"holder\":\"box:42:a1b2c3\",\"released\":\"false\",\"gen\":\"3\"},\"hold_age\":10,\"heartbeat\":{\"worker\":\"t-1\",\"instance\":\"box:42:a1b2c3\"},\"heartbeat_age\":45.001}"
+ },
+ "files": {}
+}

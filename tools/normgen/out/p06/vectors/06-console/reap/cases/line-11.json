@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "06-console/reap",
+ "table": "cases.tsv",
+ "case": "fetched-settle-29",
+ "variant": "",
+ "cells": {
+  "input": "{\"profile\":\"fetched\",\"settle\":30,\"ttl\":3600,\"row\":{\"unit\":\"t1\",\"digest\":\"4f1c0e8a2b7d3c9e5a6f0b1d2c3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e\"},\"row_age\":10,\"fetched_age\":29,\"mark\":null,\"mark_age\":null,\"unit\":\"present\"}"
+ },
+ "files": {}
+}

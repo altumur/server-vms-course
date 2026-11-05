@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/labels",
+ "table": "cases.tsv",
+ "case": "out_case_distinct",
+ "variant": "",
+ "cells": {
+  "op": "set_write",
+  "input": "[\"a\",\"A\"]"
+ },
+ "files": {}
+}

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/peer",
+ "table": "cases.tsv",
+ "case": "peer-32-exit2-fields-missing",
+ "variant": "",
+ "cells": {
+  "input": "{\"chain\":\"not-a-list\"}"
+ },
+ "files": {}
+}

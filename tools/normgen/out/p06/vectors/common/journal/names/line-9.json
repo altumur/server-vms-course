@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/journal",
+ "table": "names.tsv",
+ "case": "write-absent",
+ "variant": "",
+ "cells": {
+  "input": "{\"component\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"name_file\":null}"
+ },
+ "files": {}
+}

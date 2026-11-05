@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/instance",
+ "table": "box.tsv",
+ "case": "box-id-empty",
+ "variant": "",
+ "cells": {
+  "input": "{\"BOX_ID\":\"\",\"machine_id\":\"0123abcd\\n\",\"hostname\":\"host-1\"}"
+ },
+ "files": {}
+}

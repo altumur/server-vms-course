@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/object-client",
+ "table": "read.tsv",
+ "case": "too-large",
+ "variant": "",
+ "cells": {
+  "input": "{\"reply\":{\"status\":413,\"X-Missing\":null}}"
+ },
+ "files": {}
+}

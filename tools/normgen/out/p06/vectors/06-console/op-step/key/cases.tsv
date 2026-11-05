@@ -1,0 +1,9 @@
+# Inputs of the vector command for 06-console/op-step key.tsv (gen_vectors.py); compare value.
+# source Platform/06-console/vectors/op-step/key.tsv sha256 e20ab1a4c057a150fa30b9d2d7ea74171ca036a8e104a48d546c0fabcb472452
+case	input	exit	stdout
+line-2	line-2.json	0	"50e8b4c94dfff4df563aff9a490700e267aea0076ddf2311a7757122946deef7"
+line-3	line-3.json	0	"1fe139247f622a4306eee1a7bd829335d5fcaafbd9a0d2d6d17e1cde2fa5a8a9"
+line-4	line-4.json	0	"9925f91f97c890499f4c0869a7509fa7d9026da778abbae16fd55783bd63bd20"
+line-5	line-5.json	0	"021514620de16231ef85bdfecd51a18b388208479aa84dbaa8a7ecd3840f93a4"
+line-6	line-6.json	0	"c29213816e212018bf9899ae398a88de1124111521b2727006a4a74e1439b3fc"
+line-7	line-7.json	0	"7e693ce8a7dc42043f78d85563f9aaea4009cf3ad32b0da0db1cdcd453494479"

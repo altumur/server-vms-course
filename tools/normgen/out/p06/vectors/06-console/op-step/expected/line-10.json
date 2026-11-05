@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "06-console/op-step",
+ "table": "expected.tsv",
+ "case": "later-ignored",
+ "variant": "",
+ "cells": {
+  "input": "{\"steps\":[{\"root\":\"a\",\"expected\":{\"a\":\"1\"}},{\"root\":\"a\",\"expected\":{\"a\":\"1\"}},{\"root\":\"a\",\"expected\":{\"a\":\"1\"}}],\"done\":{\"2\":{\"state\":\"ok\",\"versions\":{\"a\":\"9\"}}},\"i\":1}"
+ },
+ "files": {}
+}

@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "06-console/key-families",
+ "table": "cases.tsv",
+ "case": "same-id-two-manifests",
+ "variant": "",
+ "cells": {
+  "decls": "{\"testsub\":[{\"id\":\"tallies\",\"keys\":[\"domain/testsub/tallies\"]}],\"testsub2\":[{\"id\":\"tallies\",\"prefix\":\"domain/testsub2/tallies/\"}]}",
+  "present": "[\"domain/keys\",\"domain/member-list\",\"domain/testsub2/tallies/m1\",\"domain/testsub/tallies\"]"
+ },
+ "files": {}
+}

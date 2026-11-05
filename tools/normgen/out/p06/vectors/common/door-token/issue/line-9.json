@@ -1,0 +1,14 @@
+{
+ "format": 1,
+ "package": "common/door-token",
+ "table": "issue.tsv",
+ "case": "unicode",
+ "variant": "",
+ "cells": {
+  "seed_hex": "72207cdee579aae6185325025d5d4f82594247e8301c16b85909b5c363c2b8a9",
+  "kid": "c1",
+  "now": "1792454400",
+  "claims": "{\"user\": \"оператор Ёлка 🎥\", \"unit\": \"testsub/камера-1\", \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\"], \"expires\": 1792454520}"
+ },
+ "files": {}
+}

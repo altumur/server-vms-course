@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/pool",
+ "table": "cases.tsv",
+ "case": "distinct-load",
+ "variant": "",
+ "cells": {
+  "input": "{\"manifest\":{\"prefix\":\"t\",\"servers\":\"distinct\",\"place_by\":\"server\",\"requires\":\"none\",\"weight\":{\"field\":\"w\",\"default\":1}},\"heartbeats\":{\"t-1\":{\"server\":\"srv-a\"},\"t-2\":{\"server\":\"srv-a\"}},\"live\":[\"t-1\",\"t-2\"],\"slots\":{\"t-1\":{\"released\":\"false\",\"holder\":\"i-t-1\"},\"t-2\":{\"released\":\"false\",\"holder\":\"i-t-2\"}},\"assignments\":{\"t-1\":[\"c1\",\"c2\"],\"t-2\":[\"c3\"]},\"units\":{\"c1\":{\"name\":\"c1\"},\"c2\":{\"name\":\"c2\"},\"c3\":{\"name\":\"c3\",\"w\":\"5\"}}}"
+ },
+ "files": {}
+}

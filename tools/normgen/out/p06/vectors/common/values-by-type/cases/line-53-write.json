@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "l-bracket",
+ "variant": "write",
+ "cells": {
+  "type": "list",
+  "json": "[\"[x\",\"y\"]"
+ },
+ "files": {}
+}

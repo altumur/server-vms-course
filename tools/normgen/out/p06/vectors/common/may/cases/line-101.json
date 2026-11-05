@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/may",
+ "table": "cases.tsv",
+ "case": "may-95-admin-over-none",
+ "variant": "",
+ "cells": {
+  "input": "{\"grants\":{\"lines\":[{\"subject\":\"role:op\",\"cap\":\"none\",\"scope\":\"unit:testsub/c1\",\"until\":0,\"by\":\"root\"}]},\"as_of\":1759999990,\"disabled\":[],\"user\":\"ann\",\"glass\":false,\"cap\":\"admin\",\"unit\":{\"sub\":\"testsub\",\"id\":\"c1\",\"labels\":[]},\"now\":1760000000,\"roles\":{\"ann\":[{\"role\":\"admin\",\"until\":0,\"at\":1759000000},{\"role\":\"op\",\"until\":0,\"at\":1759000000}]},\"iat\":1759999990}"
+ },
+ "files": {}
+}

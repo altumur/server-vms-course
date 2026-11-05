@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "06-console/metrics",
+ "table": "cases.tsv",
+ "case": "garbled-two-elements",
+ "variant": "",
+ "cells": {
+  "input": "{\"sub\":\"testsub\",\"now\":1000,\"metrics\":[{\"name\":\"jam_n\",\"from\":\"heartbeat.jam\"},{\"name\":\"jam_age\",\"from\":\"heartbeat.jam\",\"agg\":\"age\",\"default\":0}],\"heartbeats\":{\"w-1\":{\"jam\":\"stuck\"}}}"
+ },
+ "files": {}
+}

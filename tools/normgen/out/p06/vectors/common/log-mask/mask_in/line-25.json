@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/log-mask",
+ "table": "mask_in.tsv",
+ "case": "nel-edge",
+ "variant": "",
+ "cells": {
+  "value": "\"\\u0085***\""
+ },
+ "files": {}
+}

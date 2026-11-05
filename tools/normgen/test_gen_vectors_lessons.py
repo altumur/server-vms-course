@@ -1,4 +1,4 @@
-"""Тесты части vectors P/03, P/04 (gen_vectors.py по черновику провода wire_p03p04.py; ADR-0125 доп. (5) п. 5).
+"""Тесты части vectors P/03, P/04 (gen_vectors.py по черновику провода wire_draft.py; ADR-0125 доп. (5) п. 5).
 
 Запуск: python3 tools/normgen/test_gen_vectors_lessons.py [-v]   (go 1.22)
 
@@ -7,7 +7,8 @@
 2. Заглушки — всё красное без паники (кроме family-read — его читает часть families).
 3. Подставной адаптер — нативные ответы, выписанные судьёй из таблиц по правилу сравнения README («@absent» опущен,
    «@new»/«@same» — метки, у отказа secret-in — текст без пароля): всё зелёное.
-4. Мутанты по правилам — красные: subset (нет ключа), events (поле события), row (лишнее слово), secret (текст с
+4. Мутанты по правилам — красные: without (поле вне исключённого), secret с masked, vbt-write запечатанной, вызов на
+   таблицу (fault), стенд rid, subset (нет ключа), events (поле события), row (лишнее слово), secret (текст с
    паролем), turn (пустая метка вместо новой), vbt-write (лишний ключ), fields (поле из списка), setarrays (повтор),
    raw (байт), stand (код); поле вне списка fields — зелёное (правило не шире README).
 """
@@ -24,7 +25,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-LESSONS = {"03-worker": "p03", "04-controller": "p04"}
+LESSONS = {"03-worker": "p03", "04-controller": "p04", "06-console": "p06"}
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 
 
@@ -56,18 +57,23 @@ def native(compare, value, state):
             out["row"] = {k: v for k, v in (value.get("row") or {}).items() if v != "@absent"}
         return out
     if compare == "secret":
-        return {"fault": value["fault"], "text": "refused"} if value["fault"] else {"fault": ""}
+        out = {"fault": value["fault"], "text": "refused"} if value["fault"] else {"fault": ""}
+        if "masked" in value:                          # консоль: отображение и отказ
+            out["masked"] = value["masked"]
+        return out
     if compare == "turn":
         out, current = [], None
         for act in value:
             if isinstance(act, dict) and isinstance(act.get("write"), dict) and act["write"].get("holder") in ("@new", "@same"):
-                if act["write"]["holder"] == "@new" or current is None:
+                if act["write"]["holder"] == "@new":
                     state["n"] += 1
                     current = f"mark-{state['n']}"
                 act = dict(act, write=dict(act["write"], holder=current))
             out.append(act)
         return out
     if compare == "vbt-write":
+        if value.get("sealed"):
+            return {"status": "ok", "row": "enc:v2:fake", "plaintext": value["plaintext"]}
         if "rowjson" in value:
             return {"status": "ok", "row": json.dumps(value["rowjson"], ensure_ascii=False)}
         return value
@@ -242,6 +248,17 @@ class VectorsLessons(unittest.TestCase):
             ("04-controller", "fields-listed"): first("common/slot", "cases.tsv",
                                                       set_value(lambda v: dict(v, state="mutant"))),
         }
+        cases.update({
+            ("06-console", "without-listed"): first("common/pool", "cases.tsv", set_value(lambda v: dict(v, count=-1))),
+            ("06-console", "secret-masked"): first("common/secret-in", "cases.tsv",
+                                                   set_value(lambda v: dict(v, masked="mutant"))),
+            ("06-console", "vbt-sealed"): first("common/values-by-type", "cases.tsv",
+                                                set_value(lambda v: dict(v, row="plain") if str(v.get("row", "")).startswith("enc:v2:")
+                                                          else None), variant="write"),
+            ("06-console", "whole-table"): first("common/fault", "fault.tsv",
+                                                 set_value(lambda v: dict(v, **{sorted(v)[0]: 999}))),
+            ("06-console", "stand-raw"): first("06-console/rid", "rid.tsv", set_value(lambda v: {"status": "mutant"})),
+        })
         g3 = gv("03-worker")
 
         def leak(d, no, v, cmp, ans):                      # текст отказа повторяет пароль строки
@@ -249,11 +266,11 @@ class VectorsLessons(unittest.TestCase):
                 return ans
             pdir, path, rows = g3.read_table(ROOT, d)
             r = dict(rows)[no]
-            hidden = g3.WIRE["03-worker"] and __import__("wire_p03p04").secret_hidden(r["raw"], r["masked"])
+            hidden = g3.WIRE["03-worker"] and __import__("wire_draft").secret_hidden(r["raw"], r["masked"])
             if not r["fault"] or not hidden:
                 return ans
             leak.done = True
-            return dict(ans, value={"fault": r["fault"], "text": "bad " + hidden[0]})
+            return dict(ans, value={"fault": r["fault"], "text": "bad " + hidden[0][:4]})   # 4 байта — уже утечка
         leak.done = False
         cases[("03-worker", "secret-leak")] = leak
 
@@ -279,6 +296,9 @@ class VectorsLessons(unittest.TestCase):
                 self.assertTrue(getattr(mut, "done", True), f"{name}: the mutant does not apply")
                 self.assertEqual(len(fails), 1, f"{name}: red {fails}")
 
+        # без fates (pool P/06): поле fates не судится — зелёное
+        fates = first("common/pool", "cases.tsv", set_value(lambda v: dict(v, fates="mutant") if "fates" in v else None))
+        self.assertEqual(self.mutant("06-console", "without-fates", fates), [])
         # поле вне списка fields:state (takeable у slot P/04) — правило не шире README: зелёное
         unlisted = first("common/slot", "cases.tsv", set_value(lambda v: dict(v, takeable="mutant") if "takeable" in v else None))
         self.assertEqual(self.mutant("04-controller", "fields-unlisted", unlisted), [])

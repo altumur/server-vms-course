@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "i-read-point-zero",
+ "variant": "read",
+ "cells": {
+  "type": "int",
+  "row": "\"100.0\""
+ },
+ "files": {}
+}

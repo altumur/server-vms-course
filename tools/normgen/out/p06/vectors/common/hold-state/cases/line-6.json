@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/hold-state",
+ "table": "cases.tsv",
+ "case": "age-50",
+ "variant": "",
+ "cells": {
+  "input": "{\"hold\":{\"by\":\"t-1\",\"holder\":\"box:42:a1b2c3\",\"released\":\"false\",\"gen\":\"3\"},\"hold_age\":50,\"heartbeat\":{\"worker\":\"t-1\",\"instance\":\"box:42:a1b2c3\"},\"heartbeat_age\":5}"
+ },
+ "files": {}
+}

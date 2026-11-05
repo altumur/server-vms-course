@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "03-worker/creates-key",
+ "table": "cases.tsv",
+ "case": "int-neg",
+ "variant": "",
+ "cells": {
+  "input": "{\"customer\":\"testsub\",\"key\":\"{cam}-{n}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"n\":{\"type\":\"int\",\"value\":-3}}}"
+ },
+ "files": {}
+}

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/pool",
+ "table": "cases.tsv",
+ "case": "slot-not-held",
+ "variant": "",
+ "cells": {
+  "input": "{\"manifest\":{\"prefix\":\"t\",\"servers\":\"shared\",\"requires\":\"none\"},\"heartbeats\":{\"t-1\":{\"server\":\"srv-a\"},\"t-2\":{\"server\":\"srv-a\"},\"t-3\":{\"server\":\"srv-b\"},\"t-4\":{\"server\":\"srv-b\"}},\"live\":[\"t-1\",\"t-2\",\"t-3\",\"t-4\"],\"slots\":{\"t-1\":{\"released\":\"true\",\"holder\":\"i1\"},\"t-2\":{\"released\":\"taking\",\"holder\":\"i2\"},\"t-3\":{\"released\":\"false\",\"holder\":\"\"}}}"
+ },
+ "files": {}
+}

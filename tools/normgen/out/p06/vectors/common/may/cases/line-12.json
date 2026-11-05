@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/may",
+ "table": "cases.tsv",
+ "case": "may-06-holder-row-no-as-of",
+ "variant": "",
+ "cells": {
+  "input": "{\"grants\":{\"lines\":[{\"subject\":\"ann\",\"cap\":\"view\",\"scope\":\"*\",\"until\":0,\"by\":\"root\"}]},\"as_of\":null,\"disabled\":[],\"user\":\"ann\",\"glass\":false,\"cap\":\"view\",\"unit\":{\"sub\":\"testsub\",\"id\":\"c1\",\"labels\":[\"east\",\"ground\"]},\"now\":1760000000}"
+ },
+ "files": {}
+}

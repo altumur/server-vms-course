@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/ask-sig",
+ "table": "cases.tsv",
+ "case": "ask-sig-13-top-level-member",
+ "variant": "",
+ "cells": {
+  "input": "{\"ask\":\"backup\",\"cluster\":\"m2\",\"member\":\"m1\",\"pub\":\"b7b1b2708888b80495bdee35906cdbf0143b649eb92b6cf1f95d8108a3533b62\",\"header\":{\"member\":\"m1\",\"time\":\"1759999995.000\",\"signature\":\"3El59uRd59uMwaQdO_2qr1mDj9KXrDD77yUtgDBQsazPaMzhuKpzsIPvM3UVdwVW7trJJtVeyIfcLX80t7TqDg\"},\"now\":1760000000}"
+ },
+ "files": {}
+}

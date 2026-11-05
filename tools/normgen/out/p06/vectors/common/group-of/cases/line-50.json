@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/group-of",
+ "table": "cases.tsv",
+ "case": "line-50",
+ "variant": "",
+ "cells": {
+  "raw": "rtsp://admin:pw@10.0.0.50:554/stream"
+ },
+ "files": {}
+}

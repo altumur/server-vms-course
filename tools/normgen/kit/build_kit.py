@@ -206,7 +206,7 @@ def provenance(parts, files, judged):
     }
     out = {}
     for part in parts:
-        if part == "vectors" and not L.openapi.is_file():
+        if part == "vectors" and L.key != lesson.DEFAULT:    # векторы прочих уроков — gen_vectors (P/06 с дверью тоже)
             out[part] = {**gen_vectors.provenance(), "output": output("vectors")}
         elif part == "stagetests" and not L.openapi.is_file():
             out[part] = {**gen_cmdtests.provenance(), "output": output("stagetests")}
@@ -310,7 +310,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
     kit_parts = (["writecheck"] if has_wc else []) + sorted(set(parts))
     parts_set = list(kit_parts)
     try:
-        tests = [(f, "vectors") for f in (gen_tests.kit_files(module, "vectors") if http
+        tests = [(f, "vectors") for f in (gen_tests.kit_files(module, "vectors") if L.key == lesson.DEFAULT
                                            else gen_vectors.kit_files(module))] if "vectors" in parts else []
         if "stagetests" in parts:
             tests += [(f, "stagetests") for f in (gen_tests.kit_files(module, "stagetests") if http
@@ -403,7 +403,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
         files[-1]["editable"] = True
     stagetests_md = (gen_tests.KIT_MD_STAGETESTS if http else gen_cmdtests.KIT_MD) if "stagetests" in parts else ""
     doc = ((KIT_MD if has_wc else KIT_MD_LESSON.replace("{lesson}", L.code).replace("{dir}", L.kit_dir))
-           + ((gen_tests.kit_md() if http else gen_vectors.KIT_MD) if "vectors" in parts else "")
+           + ((gen_tests.kit_md() if L.key == lesson.DEFAULT else gen_vectors.KIT_MD) if "vectors" in parts else "")
            + stagetests_md + (gen_rollout.KIT_MD if rollout_files else "") + (KIT_DOOR_MD if openapi_sha else "")
            + (gen_flags.kit_md() if flag_files else "") + (gen_refusals.kit_md() if refusal_files else "")
            + (gen_families.kit_md() if family_files else "") + (gen_admin.kit_md() if admin_files else "")

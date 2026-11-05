@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/events-merge",
+ "table": "cases.tsv",
+ "case": "console-dedupe-order",
+ "variant": "",
+ "cells": {
+  "input": "{\"participant\":\"console\",\"query\":{\"limit\":1000},\"policies\":{\"testsub\":\"fenced\"},\"epochs\":{\"testsub\":{\"c1\":1}},\"resources\":{\"srv-a\":{\"events\":[{\"id\":\"e1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"epoch\":1,\"t\":100,\"kind\":\"tick\",\"server\":\"srv-a\",\"bucket\":\"testsub/c1/e1/20261023T000000Z.events.jsonl\",\"class\":\"observation\"},{\"id\":\"e2\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"epoch\":1,\"t\":105,\"kind\":\"jam\",\"server\":\"srv-a\",\"bucket\":\"testsub/c1/e1/20261023T000000Z.events.jsonl\",\"class\":\"alarm\"}],\"state\":\"live\",\"truncated\":2},\"srv-b\":{\"events\":[{\"id\":\"e1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"epoch\":1,\"t\":100,\"kind\":\"tick\",\"server\":\"srv-a\",\"bucket\":\"testsub/c1/e1/20261023T000000Z.events.jsonl\",\"class\":\"observation\"},{\"id\":\"e3\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"epoch\":1,\"t\":110,\"kind\":\"tick\",\"server\":\"srv-a\",\"bucket\":\"testsub/c1/e1/20261023T000000Z.events.jsonl\",\"class\":\"observation\"}],\"state\":\"live\",\"truncated\":1}}}"
+ },
+ "files": {}
+}

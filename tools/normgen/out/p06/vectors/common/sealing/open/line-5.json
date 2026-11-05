@@ -1,0 +1,14 @@
+{
+ "format": 1,
+ "package": "common/sealing",
+ "table": "open.tsv",
+ "case": "name_only_aad",
+ "variant": "",
+ "cells": {
+  "key_hex": "29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea",
+  "envelope": "enc:v2:k1:ikNeujSOpkp66hql:fk441dK8AoBEOw-1P8ktkqbnUjsQkZE",
+  "row_key": "testsub2/tallies/t1",
+  "pointer": "feed_secret"
+ },
+ "files": {}
+}

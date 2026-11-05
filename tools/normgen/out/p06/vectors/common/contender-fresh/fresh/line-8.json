@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/contender-fresh",
+ "table": "fresh.tsv",
+ "case": "above-int",
+ "variant": "",
+ "cells": {
+  "age": "301"
+ },
+ "files": {}
+}

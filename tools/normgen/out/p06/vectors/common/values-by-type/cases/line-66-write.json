@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "j-reorder",
+ "variant": "write",
+ "cells": {
+  "type": "json",
+  "json": "{\"b\":1,\"a\":2}"
+ },
+ "files": {}
+}

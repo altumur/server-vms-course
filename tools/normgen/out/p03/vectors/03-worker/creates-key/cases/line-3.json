@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "03-worker/creates-key",
+ "table": "cases.tsv",
+ "case": "hyphen-a",
+ "variant": "",
+ "cells": {
+  "input": "{\"customer\":\"testsub\",\"key\":\"{cam}-{kind}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"kind\":{\"type\":\"string\",\"value\":\"1-x\"}}}"
+ },
+ "files": {}
+}

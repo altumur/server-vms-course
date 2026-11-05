@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "j-canonical",
+ "variant": "write",
+ "cells": {
+  "type": "json",
+  "json": "{\"a\":2,\"b\":1}"
+ },
+ "files": {}
+}

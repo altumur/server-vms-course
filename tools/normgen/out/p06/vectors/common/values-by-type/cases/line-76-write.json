@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "sec-empty",
+ "variant": "write",
+ "cells": {
+  "type": "secret",
+  "json": "\"\""
+ },
+ "files": {}
+}

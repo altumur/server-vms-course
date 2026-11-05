@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/labels",
+ "table": "cases.tsv",
+ "case": "read_bracket_inside",
+ "variant": "",
+ "cells": {
+  "op": "text_read",
+  "input": "\"a,[b\""
+ },
+ "files": {}
+}

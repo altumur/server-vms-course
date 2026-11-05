@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/resource-state",
+ "table": "cases.tsv",
+ "case": "absent_only",
+ "variant": "",
+ "cells": {
+  "history": "[[0,\"pulse\",\"absent\"],[0,\"door\",\"absent\"]]",
+  "at": "0"
+ },
+ "files": {}
+}

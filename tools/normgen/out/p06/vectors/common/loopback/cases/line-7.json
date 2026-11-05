@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/loopback",
+ "table": "cases.tsv",
+ "case": "v4-leading-zero",
+ "variant": "",
+ "cells": {
+  "input": "{\"url\":\"https://127.0.0.01:8080\"}"
+ },
+ "files": {}
+}

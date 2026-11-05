@@ -53,7 +53,7 @@ func Revoked(file []byte) (any, error) {
 	return nil, errors.New("vectoradapter.Revoked: not implemented")
 }
 '''),
-    "log-mask": dict(header=None, fields=["raw", "masked", "note"], inputs=["raw"],
+    "log-mask": dict(tables=("cases.tsv",), header=None, fields=["raw", "masked", "note"], inputs=["raw"],
                      files={"fields.yaml": "Platform/common/vectors/secret-in/fields.yaml"}, expect="string",
                      go="LogMask", adapter="logmask.go",
                      native="code 0, the JSON string of the masked text, compared byte for byte",
@@ -122,6 +122,8 @@ def composition(lesson_key, root=None, known_only=False):
         if not package.startswith("common/"):
             raise CommonError(f"{CONSUMERS}: row {no}: package {package!r} — common/<name>")
         name = package[len("common/"):]
+        if known_only and name in DECLS and table not in DECLS[name].get("tables", (table,)):
+            continue                                   # таблица пакета вне объявления P/01 — её объявляет gen_vectors
         if name not in DECLS:
             if known_only:
                 continue

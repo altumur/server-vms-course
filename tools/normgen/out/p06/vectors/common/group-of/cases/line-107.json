@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/group-of",
+ "table": "cases.tsv",
+ "case": "line-107",
+ "variant": "",
+ "cells": {
+  "raw": "http://nvr50:8080/snap.jpg"
+ },
+ "files": {}
+}

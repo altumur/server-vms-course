@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/resource-state",
+ "table": "cases.tsv",
+ "case": "door_only",
+ "variant": "",
+ "cells": {
+  "history": "[[0,\"door\",\"v1\"]]",
+  "at": "0"
+ },
+ "files": {}
+}

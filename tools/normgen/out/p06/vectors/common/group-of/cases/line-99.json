@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/group-of",
+ "table": "cases.tsv",
+ "case": "line-99",
+ "variant": "",
+ "cells": {
+  "raw": "mirror://acme/010.0.0.5/y"
+ },
+ "files": {}
+}

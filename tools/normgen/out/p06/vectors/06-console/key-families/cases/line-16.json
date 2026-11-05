@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "06-console/key-families",
+ "table": "cases.tsv",
+ "case": "byte-order-ascii",
+ "variant": "",
+ "cells": {
+  "decls": "{\"testsub\":[{\"id\":\"t\",\"prefix\":\"domain/testsub/t/\"}]}",
+  "present": "[\"domain/keys\",\"domain/member-list\",\"domain/testsub/t/b\",\"domain/testsub/t/a_1\",\"domain/testsub/t/B\",\"domain/testsub/t/a.1\",\"domain/testsub/t/a-1\"]"
+ },
+ "files": {}
+}

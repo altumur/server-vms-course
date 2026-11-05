@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/labels",
+ "table": "cases.tsv",
+ "case": "word",
+ "variant": "",
+ "cells": {
+  "op": "label",
+  "input": "\"gpu\""
+ },
+ "files": {}
+}

@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "f-five-e-minus-7",
+ "variant": "write",
+ "cells": {
+  "type": "float",
+  "json": "5e-7"
+ },
+ "files": {}
+}

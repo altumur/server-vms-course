@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/loopback",
+ "table": "cases.tsv",
+ "case": "name-server",
+ "variant": "",
+ "cells": {
+  "input": "{\"url\":\"https://srv-a:8443\"}"
+ },
+ "files": {}
+}
