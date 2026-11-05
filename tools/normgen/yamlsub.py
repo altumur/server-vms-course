@@ -258,6 +258,7 @@ class _Block:
                 raise YamlError(f"{name}:{no}: tab in indentation")
             self.lines.append(_Line(no, len(raw) - len(raw.lstrip(" ")), raw.strip(" "), raw))
         self.i = 0
+        self.anchors = {}                     # якоря &имя значений отображений (P/10); алиас *имя — то же значение
         for ln in self.lines:
             if ln.indent == 0 and (ln.text.startswith("---") or ln.text.startswith("...") or ln.text.startswith("%")):
                 raise YamlError(f"{name}:{ln.no}: directives and document markers are not in the subset")
@@ -334,6 +335,14 @@ class _Block:
             if kv is None:
                 raise YamlError(f"{self.where(ln)}: expected 'key: value'")
             key, rest = kv
+            anchor = None
+            if rest.startswith("&"):                 # «ключ: &имя» (блок ниже) или «ключ: &имя скаляр»
+                m = re.fullmatch(r"&([A-Za-z0-9_-]+)(?: +(.*))?", _strip_comment(rest)[0])
+                if not m:
+                    raise YamlError(f"{self.where(ln)}: anchor {rest[:20]!r} is not in the subset")
+                anchor, rest = m[1], (m[2] or "")
+                if anchor in self.anchors:
+                    raise YamlError(f"{self.where(ln)}: anchor &{anchor} repeats")
             if isinstance(key, float) or key is None or isinstance(key, bool):
                 raise YamlError(f"{self.where(ln)}: key {key!r} of an unsupported type")
             if key in out:
@@ -348,12 +357,20 @@ class _Block:
                     out[key] = self.block(nxt.indent)
             else:
                 out[key] = self.scalar_rest(rest, ln, indent)
+            if anchor is not None:
+                self.anchors[anchor] = out[key]
         return out
 
     def scalar_rest(self, rest, ln, indent):
         """Значение после «ключ: » или «- » в строке ln (отступ родителя indent); съедает строки значения."""
         where = self.where(ln)
         text, depth = _strip_comment(rest)
+        if text[:1] == "*":                          # алиас — значение якоря целиком
+            m = re.fullmatch(r"\*([A-Za-z0-9_-]+)", text)
+            if not m or m[1] not in self.anchors:
+                raise YamlError(f"{where}: alias {text[:20]!r} — no such anchor before it")
+            self.i += 1
+            return self.anchors[m[1]]
         if text[:1] in "|>":
             return self.block_scalar(text, ln, indent)
         if text[:1] in "[{":

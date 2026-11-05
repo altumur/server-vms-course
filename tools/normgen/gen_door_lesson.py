@@ -114,6 +114,7 @@ class Bundle:
             last = pointer.rstrip("/").split("/")[-1] if pointer else path.stem
             name = self.prefix(path) + (last if pointer.startswith("/components/schemas/") else
                                         pointer.strip("/").replace("/", "."))
+            name = re.sub(r"[/~]", "_", name.replace("~1", "_").replace("~0", "_"))   # имя — без «/» и «~» (JSON Pointer)
             if name in self.defs:
                 raise GenError(f"schema bundle: two schemas named {name}")
             self.names[key] = name
@@ -223,8 +224,9 @@ def prefixed(item):
     urls = [s.get("url", "") for s in servers]
     if not urls:
         return False
-    if not set(urls) <= {"{origin}", "{origin}/{sub}"}:
-        raise GenError(f"servers {urls}: only {{origin}} and {{origin}}/{{sub}}")
+    literal = [u for u in urls if "{" not in u]       # адрес-пример без переменных (P/09) — путь без префикса
+    if not set(urls) - set(literal) <= {"{origin}", "{origin}/{sub}"}:
+        raise GenError(f"servers {urls}: only {{origin}}, {{origin}}/{{sub}} or literal example URLs")
     return "{origin}/{sub}" in urls
 
 

@@ -329,23 +329,21 @@ class DoorBase(unittest.TestCase):
 
 class Loader(unittest.TestCase):
     def test_yaml_matches_pyyaml(self):
-        """yamlsub = PyYAML на всех OpenAPI курса; якорь — отказ (вне подмножества)."""
+        """yamlsub = PyYAML на всех OpenAPI курса (якоря и алиасы значений отображений — в подмножестве, P/10)."""
         files = subprocess.run(["git", "ls-files", "*.openapi.yaml"], cwd=ROOT, capture_output=True,
                                text=True).stdout.split()
         self.assertGreater(len(files), 5)
         same = 0
         for f in files:
             text = (ROOT / f).read_text(encoding="utf-8")
-            if any(getattr(e, "anchor", None) or isinstance(e, yaml.AliasEvent) for e in yaml.parse(text)):
-                with self.assertRaises(yamlsub.YamlError, msg=f):
-                    yamlsub.load(text, f)
-                continue
             self.assertEqual(yamlsub.load(text, f), yaml.safe_load(text), f)
             same += 1
         self.assertGreater(same, 5)
 
     def test_yaml_refusals(self):
-        for text in ("a: &x 1\nb: *x\n", "a: !!str 1\n", "--- \na: 1\n", "a: 1\na: 2\n", "? a\n: 1\n", "a: |2\n  x\n"):
+        self.assertEqual(yamlsub.load("a: &x 1\nb: *x\nc: &y\n  d: 2\ne: *y\n"),
+                         yaml.safe_load("a: &x 1\nb: *x\nc: &y\n  d: 2\ne: *y\n"))
+        for text in ("a: *x\n", "a: &x 1\nb: &x 2\n", "- &x 1\n- *x\n", "a: !!str 1\n", "--- \na: 1\n", "a: 1\na: 2\n", "? a\n: 1\n", "a: |2\n  x\n"):
             with self.assertRaises(yamlsub.YamlError, msg=text):
                 yamlsub.load(text)
 

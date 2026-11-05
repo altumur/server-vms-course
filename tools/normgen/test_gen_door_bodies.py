@@ -26,7 +26,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-LESSON, SLUG = "06-console", "p06"
+LESSONS = {"06-console": "p06", "08-domain": "p08", "09-agent": "p09", "10-domain-console": "p10"}
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 sys.path.insert(0, str(HERE))
 
@@ -287,7 +287,9 @@ def synth_module(src, dst):
     return dst
 
 
-class DoorBodies(unittest.TestCase):
+class DoorBodiesBase:
+    LESSON = SLUG = None
+
     @classmethod
     def setUpClass(cls):
         if not shutil.which("go"):
@@ -299,7 +301,7 @@ class DoorBodies(unittest.TestCase):
             raise unittest.SkipTest("no jsonschema/referencing: /opt/check-env/lesson-spec/bin/python")
         cls.tmp = Path(tempfile.mkdtemp(prefix="door-bodies-"))
         out = cls.tmp / "fresh"
-        done = subprocess.run([sys.executable, str(HERE / "gen_door_lesson.py"), "--lesson", LESSON, str(out)],
+        done = subprocess.run([sys.executable, str(HERE / "gen_door_lesson.py"), "--lesson", cls.LESSON, str(out)],
                               capture_output=True, text=True)
         if done.returncode:
             raise AssertionError(done.stderr)
@@ -313,7 +315,7 @@ class DoorBodies(unittest.TestCase):
 
     def test_fresh(self):
         for name in ("bodies.go", "schema_rt.go", "routes.go", "routes_rt.go"):
-            kept = HERE / "out" / SLUG / "go/apidoor" / name
+            kept = HERE / "out" / self.SLUG / "go/apidoor" / name
             self.assertEqual(kept.read_bytes(), (self.fresh / "apidoor" / name).read_bytes(), f"{kept} is stale")
 
     def test_bundle_equals_source(self):
@@ -322,7 +324,7 @@ class DoorBodies(unittest.TestCase):
         from referencing import Registry, Resource
         from referencing.jsonschema import DRAFT202012
         import yamlsub
-        spec = ROOT / "Platform" / LESSON / "spec" / f"{LESSON}.api.openapi.yaml"
+        spec = ROOT / "Platform" / self.LESSON / "spec" / f"{self.LESSON}.api.openapi.yaml"
         files = [spec] + [ROOT / "Platform" / f for f in ("05-resource/spec/05-resource.api.openapi.yaml",
                                                            "08-domain/spec/08-domain.api.openapi.yaml")]
         reg = Registry()
@@ -335,9 +337,13 @@ class DoorBodies(unittest.TestCase):
         check = oracle(self.defs)
         compared = 0
         for name, schema in self.defs.items():
-            if name[:3] in ("05.", "08."):
-                src = files[1 if name.startswith("05.") else 2]
-                ref = f"{src.resolve().as_uri()}#/components/schemas/{name[3:]}"
+            if "." in re.sub(r"^\d\d\.", "", name):
+                continue                                      # имя по указателю вне components/schemas — сверяет вердикт операций
+            if re.match(r"\d\d\.", name):                   # внешняя схема урока NN — его OpenAPI
+                cand = sorted((ROOT / "Platform").glob(f"{name[:2]}-*/spec/*.api.openapi.yaml"))
+                if not cand:
+                    continue
+                ref = f"{cand[0].resolve().as_uri()}#/components/schemas/{name[3:]}"
             elif "." in name:
                 continue                                      # встроенные схемы тел — их сверяет вердикт операций
             else:
@@ -347,7 +353,7 @@ class DoorBodies(unittest.TestCase):
                 if cname == name:
                     self.assertEqual(v.is_valid(value), check(name, value), f"{name}: {json.dumps(value)[:200]}")
                     compared += 1
-        self.assertGreater(compared, 1000)
+        self.assertGreater(compared, 2 * len([n for n in self.defs if "." not in n or re.match(r"\d\d\.", n)]))
 
     def test_validate_against_oracle(self):
         check = oracle(self.defs)
@@ -371,6 +377,8 @@ class DoorBodies(unittest.TestCase):
             self.assertEqual(verdicts, {True, False}, f"{name}: the values do not split it")
 
     def test_api(self):
+        if self.LESSON != "06-console":
+            self.skipTest("the API probe names operations of P/06")
         prog = r'''package main
 
 import (
@@ -425,6 +433,11 @@ func main() {
                         continue
                     bad += [1 for (n, v), g in zip(cases, got) if g != chk(n, v)]
                 self.assertTrue(bad, f"{name} survives")
+
+
+for _lesson, _slug in LESSONS.items():
+    _name = "DoorBodies_" + _slug
+    globals()[_name] = type(_name, (DoorBodiesBase, unittest.TestCase), {"LESSON": _lesson, "SLUG": _slug})
 
 
 if __name__ == "__main__":
