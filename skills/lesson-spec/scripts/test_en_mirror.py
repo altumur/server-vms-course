@@ -50,7 +50,7 @@ class Mirror(unittest.TestCase):
         self.mutated("(C01-ROW-INDEX-LOST-01, the Architect's decision of 2026-10-29).\n",
                      "(the Architect's decision of 2026-10-29).\n")
         self.mutated("it names names and versions, not content (ADR-0021).", "it names names and versions, not content.")
-        self.mutated("UTF-8 is not required (Н3 «list»).", "UTF-8 is not required (Н5 «list»).")
+        self.mutated("UTF-8 is not required (N3 «list»).", "UTF-8 is not required (N5 «list»).")
 
     def test_link(self):
         self.mutated("[P/08.4](../../08-domain/spec/08.4-domain.norms.md)", "[P/08.4](../../08-domain/spec/08.3-domain.norms.md)")
@@ -68,7 +68,7 @@ class Mirror(unittest.TestCase):
         self.mutated("## Correspondence to former lessons", "### Correspondence to former lessons")
 
     def test_heading_number(self):
-        self.mutated("### Н2.1 Request parsing", "### Н2.2 Request parsing")
+        self.mutated("### N2.1 Request parsing", "### N2.2 Request parsing")
 
     def test_cyrillic(self):
         errors = self.mutated("The read MUST be linearizable", "The read ДОЛЖЕН be linearizable")
@@ -144,11 +144,11 @@ class Layouts(unittest.TestCase):
     def test_translation_links_translation(self):       # ru/…#русский якорь ≡ …#английский якорь по парам заголовков
         self.assertEqual(self.compare3(), [])
         ru = RU3.read_text(encoding="utf-8")
-        self.assertIn("(01.1-store.norms.md#н0-словарь-слов)", ru)
-        errors = self.compare3(ru=ru.replace("(01.1-store.norms.md#н0-словарь-слов)", "(01.1-store.norms.md#н1-форма)"))
+        self.assertIn("(01.1-store.norms.md#n0-словарь-слов)", ru)
+        errors = self.compare3(ru=ru.replace("(01.1-store.norms.md#n0-словарь-слов)", "(01.1-store.norms.md#n1-форма)"))
         self.assertTrue(any("link targets differ" in e for e in errors), errors)
-        errors = self.compare3(ru=ru.replace("(01.1-store.norms.md#н0-словарь-слов)",
-                                             "(../../spec/01.1-store.norms.md#н0-vocabulary)"))
+        errors = self.compare3(ru=ru.replace("(01.1-store.norms.md#n0-словарь-слов)",
+                                             "(../../spec/01.1-store.norms.md#n0-vocabulary)"))
         self.assertEqual(errors, [])                       # перевод МОЖЕТ сослаться и на источник — цель та же
 
     def test_source_anchor(self):
