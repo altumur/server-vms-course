@@ -25,6 +25,7 @@ import (
 	"syscall"
 	"time"
 
+	"normgen/p01-1/admin"
 	"normgen/p01-1/apidoor"
 	"normgen/p01-1/coreadapter"
 	"normgen/p01-1/flags"
@@ -55,7 +56,8 @@ type App struct {
 	Raft bool
 	// Start — optional: called once the sockets listen (an -api door, the group…); stop is called on SIGTERM.
 	Start func(f *flags.Flags, c coreadapter.Core) (stop func(), err error)
-	// Admin — the subcommands of admin_ops (status, join, …); nil — «not implemented», exit 1.
+	// Admin — the subcommands of admin_ops (status, join, …); nil — admin.Run (kit part admin: your function per
+	// subcommand in internal/admin, «not in this stage» exit 1 until written).
 	Admin func(f *flags.Flags) int
 	// Log — the daemon log; nil — os.Stderr.
 	Log io.Writer
@@ -82,6 +84,12 @@ func Main(args []string, getenv func(string) string, app App) int {
 	if log == nil {
 		log = os.Stderr
 	}
+	env := admin.Env{Stdout: os.Stdout, Stderr: log, Getenv: getenv}
+	if len(args) > 0 {
+		if own, ok := admin.Own[args[0]]; ok { // your stand commands (admin/own.go): before the flag form
+			return own(args[1:], env)
+		}
+	}
 	f, r := flags.ParseArgs(args, getenv)
 	if r != nil {
 		fmt.Fprintf(log, "configstore: %s\n", r.Error())
@@ -89,8 +97,7 @@ func Main(args []string, getenv func(string) string, app App) int {
 	}
 	if f.Cmd != "daemon" {
 		if app.Admin == nil {
-			fmt.Fprintf(log, "configstore: %s: not implemented\n", f.Cmd)
-			return 1
+			return admin.Run(f, env)
 		}
 		return app.Admin(f)
 	}

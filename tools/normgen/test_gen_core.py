@@ -21,7 +21,7 @@ import build_kit  # noqa: E402
 import gen_core  # noqa: E402
 
 MOD = "example.com/w2c/store"
-PARTS = ["door", "flags", "refusals", "vectors", "stagetests", "launch", "core"]
+PARTS = ["door", "flags", "refusals", "vectors", "stagetests", "launch", "core", "admin"]
 
 PROBE = '''package coreadapter
 

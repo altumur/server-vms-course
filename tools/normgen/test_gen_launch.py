@@ -206,7 +206,7 @@ class Frame(unittest.TestCase):
     def test_frame_is_yours(self):
         with tempfile.TemporaryDirectory(prefix="nlf-", dir="/tmp") as t:
             dst = Path(t)
-            m = build_kit.build(dst, self.MOD, ["door", "flags", "refusals", "stagetests", "launch"])
+            m = build_kit.build(dst, self.MOD, ["door", "flags", "refusals", "stagetests", "launch", "admin"])
             own = {f["path"] for f in m["files"] if f.get("editable")}
             self.assertIn("01-store/internal/frame/frame.go", own)
             self.assertIn("01-store/cmd/configstore/main.go", own)
@@ -226,7 +226,7 @@ class Frame(unittest.TestCase):
             # правка рамки: свой заголовок на каждом ответе — демон отвечает рамкой реализации
             frame.write_text(text.replace("\t\tw.WriteHeader(code)", '\t\tw.Header().Set("X-Frame", "mine")\n\t\tw.WriteHeader(code)'),
                              encoding="utf-8")
-            build_kit.build(dst, self.MOD, ["door", "flags", "refusals", "stagetests", "launch"])
+            build_kit.build(dst, self.MOD, ["door", "flags", "refusals", "stagetests", "launch", "admin"])
             self.assertIn("X-Frame", frame.read_text(encoding="utf-8"))
             (store / "go.mod").write_text(f"module {self.MOD}\n\ngo 1.22\n", encoding="utf-8")
             done = subprocess.run(["go", "build", "-o", str(dst / "cs"), "./cmd/configstore"], cwd=store,
@@ -272,7 +272,7 @@ class Connect(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="nlc-") as t:
             dst = Path(t)
             mod = "example.com/w2c/store"
-            parts = ["door", "flags", "refusals", "families", "vectors", "stagetests", "launch"]
+            parts = ["door", "flags", "refusals", "families", "vectors", "stagetests", "launch", "admin"]
             build_kit.build(dst, mod, parts)
             store = dst / "01-store"
             (store / "go.mod").write_text(f"module {mod}\n\ngo 1.22\n", encoding="utf-8")

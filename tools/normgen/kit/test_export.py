@@ -19,7 +19,7 @@ import build_kit  # noqa: E402
 ROOT = build_kit.ROOT
 EXPORT = "4c1015709945fd5dc9434a2aca4d554aeaaa1b65"
 MODULE = "p01store/01-store"
-PARTS = ["door", "flags", "refusals", "launch", "vectors", "stagetests", "core", "families"]
+PARTS = ["door", "flags", "refusals", "launch", "vectors", "stagetests", "core", "families", "admin"]
 
 
 def git(cwd, *args):
