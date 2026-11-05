@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-rights-8074",
+ "variant": "",
+ "cells": {
+  "family": "<sub>/opsteps/<id>/<i>",
+  "key": "testsub/opsteps/0123456789abcdef0123456789abcdef/0",
+  "kind": "row",
+  "mode": "reader",
+  "who": "[\"console\"]",
+  "text": "{\"body\":\"{\",\"root\":\"testsub.c1\",\"expected\":\"{\\\"c1\\\":\\\"7\\\"}\"}"
+ },
+ "files": {}
+}

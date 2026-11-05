@@ -5,8 +5,8 @@ package vectoradapter
 
 // SecretIn — common/secret-in cases.tsv (vectors):
 //
-//	the credentials of an address: the display (item 1) → {masked}; the refusal (items 2-3) → {fault[, text]}
-//	(text only at a non-empty fault, never repeating the password of the row)
+//	Native input and output: Platform/common/vectors/secret-in/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func SecretIn(table string, cells map[string]string, files map[string][]byte) Answer {

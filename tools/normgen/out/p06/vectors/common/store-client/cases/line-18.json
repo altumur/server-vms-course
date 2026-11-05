@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/store-client",
+ "table": "cases.tsv",
+ "case": "write-conflict",
+ "variant": "",
+ "cells": {
+  "input": "{\"op\":\"write\",\"reply\":{\"status\":409,\"body\":{\"kind\":\"conflict\",\"error\":\"x\",\"index\":\"5\"}}}"
+ },
+ "files": {}
+}

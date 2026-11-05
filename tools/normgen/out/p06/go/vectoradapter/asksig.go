@@ -5,8 +5,8 @@ package vectoradapter
 
 // AskSig — common/ask-sig cases.tsv (vectors):
 //
-//	the ask signature check (backup, move): {result: ok} | {result: refused, reason} (subset); code 2 — out of
-//	form
+//	Native input and output: Platform/common/vectors/ask-sig/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func AskSig(table string, cells map[string]string, files map[string][]byte) Answer {

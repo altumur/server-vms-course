@@ -1,13 +1,11 @@
-# Inputs of the vector command for common/hold-state cases.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/hold-state/cases.tsv sha256 ef43a440b542bea3d93322ec4a3161f1a0eb6d5ff8ecce05687e7bfac3e44fb7
 case	input	exit	stdout
-line-4	line-4.json	0	{"active":true}
-line-5	line-5.json	0	{"active":true}
-line-6	line-6.json	0	{"active":false}
-line-7	line-7.json	0	{"active":true}
-line-8	line-8.json	0	{"active":false}
-line-9	line-9.json	0	{"active":false}
-line-10	line-10.json	0	{"active":false}
-line-11	line-11.json	0	{"active":false}
-line-12	line-12.json	0	{"active":false}
-line-13	line-13.json	0	{"active":false}
+line-4	line-4.json	0	{"active": true}
+line-5	line-5.json	0	{"active": true}
+line-6	line-6.json	0	{"active": false}
+line-7	line-7.json	0	{"active": true}
+line-8	line-8.json	0	{"active": false}
+line-9	line-9.json	0	{"active": false}
+line-10	line-10.json	0	{"active": false}
+line-11	line-11.json	0	{"active": false}
+line-12	line-12.json	0	{"active": false}
+line-13	line-13.json	0	{"active": false}

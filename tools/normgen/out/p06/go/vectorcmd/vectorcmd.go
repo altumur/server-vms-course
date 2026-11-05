@@ -67,52 +67,77 @@ func Main(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
-// Stand — a stand command: the native code is the exit code, stdout — Raw or the JSON value and one LF.
+// Stand runs the native stand command; StandResult preserves execution errors for the generated judge.
 func Stand(key, path string, stdout, stderr io.Writer) int {
-	data, err := os.ReadFile(path)
+	code, out, errout, err := StandResult(key, path)
 	if err != nil {
-		fmt.Fprintf(stderr, "vectors stand %s: %v\n", key, err)
-		return 2
-	}
-	var a vectoradapter.Answer
-	func() {
-		defer func() {
-			if r := recover(); r != nil {
-				a = vectoradapter.Answer{Code: 1, Value: fmt.Sprintf("panic: %v", r)}
-			}
-		}()
-		switch key {
-		case "password-hash":
-			a = vectoradapter.PasswordHash(data)
-		case "said-id":
-			a = vectoradapter.SaidID(data)
-		case "said-read":
-			a = vectoradapter.SaidRead(data)
-		case "request-digest":
-			a = vectoradapter.RequestDigest(data)
-		case "rid":
-			a = vectoradapter.Rid(data)
-		default:
-			a = vectoradapter.Answer{Code: 2, Value: "not a stand key of the kit: " + key}
-		}
-	}()
-	if a.Code < 0 {
-		fmt.Fprintf(stderr, "vectors stand %s: %v\n", key, a.Value)
+		fmt.Fprintln(stderr, err)
 		return 1
 	}
+	stdout.Write(out)
+	stderr.Write(errout)
+	return code
+}
+func StandResult(key, path string) (code int, stdout, stderr []byte, err error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return 0, nil, nil, err
+	}
+	_ = data
+	defer func() {
+		if r := recover(); r != nil {
+			code, stdout, stderr, err = 0, nil, nil, fmt.Errorf("panic: %v", r)
+		}
+	}()
+	var a vectoradapter.Answer
+	rawFrame := false
+	switch key {
+	case "request-digest":
+		a = vectoradapter.RequestDigest(data)
+		rawFrame = false
+	case "rid":
+		a = vectoradapter.Rid(data)
+		rawFrame = false
+	case "door-token-issue":
+		a = vectoradapter.DoorTokenIssueStand(data)
+		rawFrame = false
+	case "fault":
+		a = vectoradapter.FaultStand(data)
+		rawFrame = false
+	case "fresh-age":
+		a = vectoradapter.FreshAgeStand(data)
+		rawFrame = false
+	case "password-hash":
+		a = vectoradapter.PasswordHash(data)
+		rawFrame = false
+	case "said-read":
+		a = vectoradapter.SaidRead(data)
+		rawFrame = false
+	case "said-id":
+		a = vectoradapter.SaidID(data)
+		rawFrame = false
+	default:
+		return 0, nil, nil, fmt.Errorf("not a stand key of this lesson: %s", key)
+	}
+	return wireAnswer(a, rawFrame)
+}
+func wireAnswer(a vectoradapter.Answer, rawFrame bool) (int, []byte, []byte, error) {
+	if a.Code < 0 || a.Code > 255 {
+		return 0, nil, nil, fmt.Errorf("adapter did not execute: %v (code %d)", a.Value, a.Code)
+	}
 	if a.Raw != nil {
-		stdout.Write(a.Raw)
-		return a.Code
+		return a.Code, a.Raw, nil, nil
+	}
+	if rawFrame {
+		return 0, nil, nil, fmt.Errorf("raw native frame requires Answer.Raw")
 	}
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
 	enc.SetEscapeHTML(false)
 	if err := enc.Encode(a.Value); err != nil {
-		fmt.Fprintf(stderr, "vectors stand %s: %v\n", key, err)
-		return 1
+		return 0, nil, nil, err
 	}
-	stdout.Write(buf.Bytes())
-	return a.Code
+	return a.Code, buf.Bytes(), nil, nil
 }
 
 func parse(data []byte) (*input, error) {
@@ -159,80 +184,72 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 	}
 	pkg := *in.Package + " " + *in.Table
 	want := map[string][2]string{
-		"common/agent-sig cases.tsv":                {"input", ""},
-		"common/ask-sig cases.tsv":                  {"input", ""},
-		"common/contender-fresh fresh.tsv":          {"age", ""},
-		"common/deadline cases.tsv":                 {"input", ""},
-		"common/domain-token cases.tsv":             {"input", ""},
-		"common/door-token issue.tsv":               {"claims,kid,now,seed_hex", ""},
-		"common/events-merge cases.tsv":             {"input", ""},
-		"common/fault fault.tsv":                    {"", ""},
-		"common/fresh-age fresh.tsv":                {"age", ""},
-		"common/group-of cases.tsv":                 {"raw", ""},
-		"common/heartbeat-read cases.tsv":           {"object", ""},
-		"common/heartbeat-read worker.tsv":          {"key,object", ""},
-		"common/hold-state cases.tsv":               {"input", ""},
-		"common/instance box.tsv":                   {"input", ""},
-		"common/instance cases.tsv":                 {"input", ""},
-		"common/journal append.tsv":                 {"file,line", ""},
-		"common/journal names.tsv":                  {"input", ""},
-		"common/journal years.tsv":                  {"t", ""},
-		"common/keys cases.tsv":                     {"input", ""},
-		"common/labels cases.tsv":                   {"input,op", ""},
-		"common/log-mask mask_in.tsv":               {"value", ""},
-		"common/loopback cases.tsv":                 {"input", ""},
-		"common/may cases.tsv":                      {"input", ""},
-		"common/may covers.tsv":                     {"input", ""},
-		"common/object-client address.tsv":          {"input", ""},
-		"common/object-client read.tsv":             {"input", ""},
-		"common/peer cases.tsv":                     {"input", ""},
-		"common/pool cases.tsv":                     {"input", ""},
-		"common/record shared.tsv":                  {"input", ""},
-		"common/resource-state cases.tsv":           {"at,history", ""},
-		"common/row-check cases.tsv":                {"body,op,rows,stored,unit", "testsub.subsystem.yaml,testsub2.subsystem.yaml"},
-		"common/row-check state.tsv":                {"name,state,unit", "testsub2.subsystem.yaml"},
-		"common/schema cases.tsv":                   {"input", ""},
-		"common/secret-in cases.tsv":                {"field,raw", "fields.yaml"},
-		"common/sealing aad.tsv":                    {"path,row_key", ""},
-		"common/sealing open.tsv":                   {"envelope,key_hex,pointer,row_key", ""},
-		"common/sealing ring.tsv":                   {"file", ""},
-		"common/sealing envelope.tsv":               {"key_hex,kid,nonce_b64url,plaintext,pointer,row_key", ""},
-		"common/sealing reseal.tsv":                 {"input", ""},
-		"common/slot-name cases.tsv":                {"input,op", ""},
-		"common/tombstone cases.tsv":                {"input,op", ""},
-		"common/values-by-type cases.tsv":           {"*", ""},
-		"06-console/contender-projection cases.tsv": {"input", ""},
-		"06-console/key-families cases.tsv":         {"decls,present", ""},
-		"06-console/metrics cases.tsv":              {"input", ""},
-		"06-console/op-step key.tsv":                {"i,id", ""},
-		"06-console/op-step expected.tsv":           {"input", ""},
-		"06-console/reap cases.tsv":                 {"input", ""},
-		"06-console/resolve cases.tsv":              {"input", ""},
-		"06-console/request-digest digest.tsv":      {"input,sender", ""},
-		"06-console/rid rid.tsv":                    {"rid", ""},
-		"06-console/rid template.tsv":               {"body,key", ""},
-		"01-store/jcs canonical_json.tsv":           {"raw", ""},
-		"common/crl cases.tsv":                      {"input", ""},
-		"common/family-read 06.tsv":                 {"family,key,kind,mode,text,who", ""},
-		"common/log-mask cases.tsv":                 {"raw", "fields.yaml"},
-		"common/revoked cases.tsv":                  {"file", ""},
-		"common/store-client cases.tsv":             {"input", ""},
+		"01-store/jcs canonical_json.tsv":           {"*", "*"},
+		"06-console/contender-projection cases.tsv": {"*", "*"},
+		"06-console/key-families cases.tsv":         {"*", "*"},
+		"06-console/metrics cases.tsv":              {"*", "*"},
+		"06-console/op-step expected.tsv":           {"*", "*"},
+		"06-console/op-step key.tsv":                {"*", "*"},
+		"06-console/reap cases.tsv":                 {"*", "*"},
+		"06-console/request-digest digest.tsv":      {"*", "*"},
+		"06-console/resolve cases.tsv":              {"*", "*"},
+		"06-console/rid rid.tsv":                    {"*", "*"},
+		"06-console/rid template.tsv":               {"*", "*"},
+		"common/agent-sig cases.tsv":                {"*", "*"},
+		"common/ask-sig cases.tsv":                  {"*", "*"},
+		"common/contender-fresh fresh.tsv":          {"*", "*"},
+		"common/deadline cases.tsv":                 {"*", "*"},
+		"common/domain-token cases.tsv":             {"*", "*"},
+		"common/door-token issue.tsv":               {"*", "*"},
+		"common/events-merge cases.tsv":             {"*", "*"},
+		"common/fault fault.tsv":                    {"*", "*"},
+		"common/fresh-age fresh.tsv":                {"*", "*"},
+		"common/group-of cases.tsv":                 {"*", "*"},
+		"common/heartbeat-read cases.tsv":           {"*", "*"},
+		"common/heartbeat-read worker.tsv":          {"*", "*"},
+		"common/hold-state cases.tsv":               {"*", "*"},
+		"common/instance box.tsv":                   {"*", "*"},
+		"common/instance cases.tsv":                 {"*", "*"},
+		"common/journal append.tsv":                 {"*", "*"},
+		"common/journal names.tsv":                  {"*", "*"},
+		"common/journal years.tsv":                  {"*", "*"},
+		"common/keys cases.tsv":                     {"*", "*"},
+		"common/labels cases.tsv":                   {"*", "*"},
+		"common/log-mask mask_in.tsv":               {"*", "*"},
+		"common/loopback cases.tsv":                 {"*", "*"},
+		"common/may cases.tsv":                      {"*", "*"},
+		"common/may covers.tsv":                     {"*", "*"},
+		"common/object-client address.tsv":          {"*", "*"},
+		"common/object-client read.tsv":             {"*", "*"},
+		"common/peer cases.tsv":                     {"*", "*"},
+		"common/pool cases.tsv":                     {"*", "*"},
+		"common/record shared.tsv":                  {"*", "*"},
+		"common/resource-state cases.tsv":           {"*", "*"},
+		"common/row-check cases.tsv":                {"*", "*"},
+		"common/row-check state.tsv":                {"*", "*"},
+		"common/schema cases.tsv":                   {"*", "*"},
+		"common/sealing aad.tsv":                    {"*", "*"},
+		"common/sealing envelope.tsv":               {"*", "*"},
+		"common/sealing open.tsv":                   {"*", "*"},
+		"common/sealing reseal.tsv":                 {"*", "*"},
+		"common/sealing ring.tsv":                   {"*", "*"},
+		"common/secret-in cases.tsv":                {"*", "*"},
+		"common/slot-name cases.tsv":                {"*", "*"},
+		"common/tombstone cases.tsv":                {"*", "*"},
+		"common/values-by-type cases.tsv":           {"*", "*"},
+		"common/crl cases.tsv":                      {"*", "*"},
+		"common/family-read 06.tsv":                 {"*", "*"},
+		"common/log-mask cases.tsv":                 {"*", "*"},
+		"common/revoked cases.tsv":                  {"*", "*"},
+		"common/store-client cases.tsv":             {"*", "*"},
 	}
 	shape, ok := want[pkg]
 	if !ok {
 		return 0, nil, nil, fmt.Errorf("package %q table %q is not a package of this command", *in.Package, *in.Table)
 	}
-	halves := map[string]bool{
-		"common/values-by-type cases.tsv": true,
-	}
-	if halves[pkg] != (*in.Variant == "write" || *in.Variant == "read") || (!halves[pkg] && *in.Variant != "") {
-		return 0, nil, nil, fmt.Errorf("variant %q is not a variant of %s", *in.Variant, pkg)
-	}
-	if shape[0] != "*" && keys(in.Cells) != shape[0] {
-		return 0, nil, nil, fmt.Errorf("cells {%s}, want {%s}", keys(in.Cells), shape[0])
-	}
-	if keys(in.Files) != shape[1] {
-		return 0, nil, nil, fmt.Errorf("files {%s}, want {%s}", keys(in.Files), shape[1])
+	_ = shape
+	if !wireShape(pkg, *in.Variant, keys(in.Cells), keys(in.Files)) {
+		return 0, nil, nil, fmt.Errorf("cells/files/variant are not a declared wire shape")
 	}
 	files := map[string][]byte{}
 	for k, v := range in.Files {
@@ -250,329 +267,174 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 	_ = cell
 	defer func() {
 		if r := recover(); r != nil {
-			code, stdout, stderr, err = 1, nil, []byte(fmt.Sprintf("panic: %v\n", r)), nil
+			code, stdout, stderr, err = 1, nil, []byte(fmt.Sprintf("panic: %v\n", r)), fmt.Errorf("panic: %v", r)
 		}
 	}()
 	var value any
 	switch pkg {
-	case "common/agent-sig cases.tsv":
-		a := vectoradapter.AgentSig(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/ask-sig cases.tsv":
-		a := vectoradapter.AskSig(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/contender-fresh fresh.tsv":
-		a := vectoradapter.ContenderFresh(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/deadline cases.tsv":
-		a := vectoradapter.Deadline(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/domain-token cases.tsv":
-		a := vectoradapter.DomainToken(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/door-token issue.tsv":
-		a := vectoradapter.DoorTokenIssue(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/events-merge cases.tsv":
-		a := vectoradapter.EventsMerge(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/fault fault.tsv":
-		a := vectoradapter.Fault(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/fresh-age fresh.tsv":
-		a := vectoradapter.FreshAge(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/group-of cases.tsv":
-		a := vectoradapter.GroupOf(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/heartbeat-read cases.tsv":
-		a := vectoradapter.HeartbeatRead(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/heartbeat-read worker.tsv":
-		a := vectoradapter.HeartbeatRead(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/hold-state cases.tsv":
-		a := vectoradapter.HoldState(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/instance box.tsv":
-		a := vectoradapter.Instance(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/instance cases.tsv":
-		a := vectoradapter.Instance(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/journal append.tsv":
-		a := vectoradapter.Journal(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/journal names.tsv":
-		a := vectoradapter.Journal(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/journal years.tsv":
-		a := vectoradapter.Journal(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/keys cases.tsv":
-		a := vectoradapter.Keys(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/labels cases.tsv":
-		a := vectoradapter.Labels(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/log-mask mask_in.tsv":
-		a := vectoradapter.LogMaskIn(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/loopback cases.tsv":
-		a := vectoradapter.Loopback(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/may cases.tsv":
-		a := vectoradapter.May(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/may covers.tsv":
-		a := vectoradapter.May(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/object-client address.tsv":
-		a := vectoradapter.ObjectClient(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/object-client read.tsv":
-		a := vectoradapter.ObjectClient(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/peer cases.tsv":
-		a := vectoradapter.Peer(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/pool cases.tsv":
-		a := vectoradapter.Pool(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/record shared.tsv":
-		a := vectoradapter.Record(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/resource-state cases.tsv":
-		a := vectoradapter.ResourceState(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/row-check cases.tsv":
-		a := vectoradapter.RowCheck(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/row-check state.tsv":
-		a := vectoradapter.RowCheck(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/schema cases.tsv":
-		a := vectoradapter.Schema(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/secret-in cases.tsv":
-		a := vectoradapter.SecretIn(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/sealing aad.tsv":
-		a := vectoradapter.Sealing(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/sealing open.tsv":
-		a := vectoradapter.Sealing(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/sealing ring.tsv":
-		a := vectoradapter.Sealing(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/sealing envelope.tsv":
-		a := vectoradapter.Sealing(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/sealing reseal.tsv":
-		a := vectoradapter.Sealing(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/slot-name cases.tsv":
-		a := vectoradapter.SlotName(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/tombstone cases.tsv":
-		a := vectoradapter.Tombstone(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "common/values-by-type cases.tsv":
-		a := vectoradapter.ValuesByType(*in.Table, *in.Variant, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "06-console/contender-projection cases.tsv":
-		a := vectoradapter.ContenderProjection(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "06-console/key-families cases.tsv":
-		a := vectoradapter.KeyFamilies(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "06-console/metrics cases.tsv":
-		a := vectoradapter.Metrics(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "06-console/op-step key.tsv":
-		a := vectoradapter.OpStep(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "06-console/op-step expected.tsv":
-		a := vectoradapter.OpStep(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "06-console/reap cases.tsv":
-		a := vectoradapter.Reap(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "06-console/resolve cases.tsv":
-		a := vectoradapter.Resolve(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "06-console/request-digest digest.tsv":
-		a := vectoradapter.RequestDigestCells(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "06-console/rid rid.tsv":
-		a := vectoradapter.RidCells(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
-	case "06-console/rid template.tsv":
-		a := vectoradapter.RidCells(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
-		}
-		value = a.Value
 	case "01-store/jcs canonical_json.tsv":
 		a := vectoradapter.JCS(*in.Table, cellmap, files)
-		if c, o, e, done := answerOf(a); done {
-			return c, o, e, nil
+		return wireAnswer(a, false)
+	case "06-console/contender-projection cases.tsv":
+		a := vectoradapter.ContenderProjection(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "06-console/key-families cases.tsv":
+		a := vectoradapter.KeyFamilies(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "06-console/metrics cases.tsv":
+		a := vectoradapter.Metrics(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "06-console/op-step expected.tsv":
+		a := vectoradapter.OpStep(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "06-console/op-step key.tsv":
+		a := vectoradapter.OpStep(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "06-console/reap cases.tsv":
+		a := vectoradapter.Reap(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "06-console/request-digest digest.tsv":
+		a := vectoradapter.RequestDigestCells(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "06-console/resolve cases.tsv":
+		a := vectoradapter.Resolve(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "06-console/rid rid.tsv":
+		a := vectoradapter.RidCells(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "06-console/rid template.tsv":
+		a := vectoradapter.RidCells(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/agent-sig cases.tsv":
+		a := vectoradapter.AgentSig(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/ask-sig cases.tsv":
+		a := vectoradapter.AskSig(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/contender-fresh fresh.tsv":
+		a := vectoradapter.ContenderFresh(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/deadline cases.tsv":
+		a := vectoradapter.Deadline(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/domain-token cases.tsv":
+		a := vectoradapter.DomainToken(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/door-token issue.tsv":
+		a := vectoradapter.DoorTokenIssue(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/events-merge cases.tsv":
+		a := vectoradapter.EventsMerge(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/fault fault.tsv":
+		a := vectoradapter.Fault(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/fresh-age fresh.tsv":
+		a := vectoradapter.FreshAge(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/group-of cases.tsv":
+		var text string
+		for _, v := range cellmap {
+			text = v
 		}
-		value = a.Value
+		a := vectoradapter.GroupOf([]byte(text))
+		return wireAnswer(a, false)
+	case "common/heartbeat-read cases.tsv":
+		a := vectoradapter.HeartbeatRead(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/heartbeat-read worker.tsv":
+		a := vectoradapter.HeartbeatRead(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/hold-state cases.tsv":
+		a := vectoradapter.HoldState(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/instance box.tsv":
+		a := vectoradapter.Instance(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/instance cases.tsv":
+		a := vectoradapter.Instance(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/journal append.tsv":
+		a := vectoradapter.Journal(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/journal names.tsv":
+		a := vectoradapter.Journal(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/journal years.tsv":
+		a := vectoradapter.Journal(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/keys cases.tsv":
+		a := vectoradapter.Keys(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/labels cases.tsv":
+		a := vectoradapter.Labels(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/log-mask mask_in.tsv":
+		a := vectoradapter.LogMaskIn(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/loopback cases.tsv":
+		a := vectoradapter.Loopback(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/may cases.tsv":
+		a := vectoradapter.May(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/may covers.tsv":
+		a := vectoradapter.May(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/object-client address.tsv":
+		a := vectoradapter.ObjectClient(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/object-client read.tsv":
+		a := vectoradapter.ObjectClient(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/peer cases.tsv":
+		a := vectoradapter.Peer(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/pool cases.tsv":
+		a := vectoradapter.Pool(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/record shared.tsv":
+		a := vectoradapter.Record(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/resource-state cases.tsv":
+		a := vectoradapter.ResourceState(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/row-check cases.tsv":
+		a := vectoradapter.RowCheck(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/row-check state.tsv":
+		a := vectoradapter.RowCheck(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/schema cases.tsv":
+		a := vectoradapter.Schema(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/sealing aad.tsv":
+		a := vectoradapter.Sealing(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/sealing envelope.tsv":
+		a := vectoradapter.Sealing(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/sealing open.tsv":
+		a := vectoradapter.Sealing(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/sealing reseal.tsv":
+		a := vectoradapter.Sealing(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/sealing ring.tsv":
+		a := vectoradapter.Sealing(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/secret-in cases.tsv":
+		a := vectoradapter.SecretIn(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/slot-name cases.tsv":
+		a := vectoradapter.SlotName(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/tombstone cases.tsv":
+		a := vectoradapter.Tombstone(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
+	case "common/values-by-type cases.tsv":
+		a := vectoradapter.ValuesByType(*in.Table, *in.Variant, cellmap, files)
+		return wireAnswer(a, false)
 	case "common/crl cases.tsv":
 		v, err := vectoradapter.CRL([]byte(cell("input")))
 		if err != nil {
@@ -668,4 +530,74 @@ func familyRead(family, key, kind, mode, whoText, text string) (any, error) {
 		outcome = byRole
 	}
 	return map[string]any{"verdict": r.Verdict, "paths": paths, "outcome": outcome}, nil
+}
+
+func wireShape(pkg, variant, cells, files string) bool {
+	shapes := map[string][][2]string{
+		"01-store/jcs canonical_json.tsv\x00":           {{"raw", ""}},
+		"06-console/contender-projection cases.tsv\x00": {{"input", ""}},
+		"06-console/key-families cases.tsv\x00":         {{"decls,present", ""}},
+		"06-console/metrics cases.tsv\x00":              {{"input", ""}},
+		"06-console/op-step expected.tsv\x00":           {{"input", ""}},
+		"06-console/op-step key.tsv\x00":                {{"i,id", ""}},
+		"06-console/reap cases.tsv\x00":                 {{"input", ""}},
+		"06-console/request-digest digest.tsv\x00":      {{"input,sender", ""}},
+		"06-console/resolve cases.tsv\x00":              {{"input", ""}},
+		"06-console/rid rid.tsv\x00":                    {{"rid", ""}},
+		"06-console/rid template.tsv\x00":               {{"body,key", ""}},
+		"common/agent-sig cases.tsv\x00":                {{"input", ""}},
+		"common/ask-sig cases.tsv\x00":                  {{"input", ""}},
+		"common/contender-fresh fresh.tsv\x00":          {{"age", ""}},
+		"common/deadline cases.tsv\x00":                 {{"input", ""}},
+		"common/domain-token cases.tsv\x00":             {{"input", ""}},
+		"common/door-token issue.tsv\x00":               {{"claims,kid,now,seed_hex", ""}},
+		"common/events-merge cases.tsv\x00":             {{"input", ""}},
+		"common/fault fault.tsv\x00":                    {{"", ""}},
+		"common/fresh-age fresh.tsv\x00":                {{"age", ""}},
+		"common/group-of cases.tsv\x00":                 {{"raw", ""}},
+		"common/heartbeat-read cases.tsv\x00":           {{"object", ""}},
+		"common/heartbeat-read worker.tsv\x00":          {{"key,object", ""}},
+		"common/hold-state cases.tsv\x00":               {{"input", ""}},
+		"common/instance box.tsv\x00":                   {{"input", ""}},
+		"common/instance cases.tsv\x00":                 {{"input", ""}},
+		"common/journal append.tsv\x00":                 {{"file,line", ""}},
+		"common/journal names.tsv\x00":                  {{"input", ""}},
+		"common/journal years.tsv\x00":                  {{"t", ""}},
+		"common/keys cases.tsv\x00":                     {{"input", ""}},
+		"common/labels cases.tsv\x00":                   {{"input,op", ""}},
+		"common/log-mask mask_in.tsv\x00":               {{"value", ""}},
+		"common/loopback cases.tsv\x00":                 {{"input", ""}},
+		"common/may cases.tsv\x00":                      {{"input", ""}},
+		"common/may covers.tsv\x00":                     {{"input", ""}},
+		"common/object-client address.tsv\x00":          {{"input", ""}},
+		"common/object-client read.tsv\x00":             {{"input", ""}},
+		"common/peer cases.tsv\x00":                     {{"input", ""}},
+		"common/pool cases.tsv\x00":                     {{"input", ""}},
+		"common/record shared.tsv\x00":                  {{"input", ""}},
+		"common/resource-state cases.tsv\x00":           {{"at,history", ""}},
+		"common/row-check cases.tsv\x00":                {{"body,op,rows,stored,unit", "testsub.subsystem.yaml,testsub2.subsystem.yaml"}},
+		"common/row-check state.tsv\x00":                {{"name,state,unit", "testsub2.subsystem.yaml"}},
+		"common/schema cases.tsv\x00":                   {{"input", ""}},
+		"common/sealing aad.tsv\x00":                    {{"path,row_key", ""}},
+		"common/sealing envelope.tsv\x00":               {{"key_hex,kid,nonce_b64url,plaintext,pointer,row_key", ""}},
+		"common/sealing open.tsv\x00":                   {{"envelope,key_hex,pointer,row_key", ""}},
+		"common/sealing reseal.tsv\x00":                 {{"input", ""}},
+		"common/sealing ring.tsv\x00":                   {{"file", ""}},
+		"common/secret-in cases.tsv\x00":                {{"field,raw", "fields.yaml"}},
+		"common/slot-name cases.tsv\x00":                {{"input,op", ""}},
+		"common/tombstone cases.tsv\x00":                {{"input,op", ""}},
+		"common/values-by-type cases.tsv\x00write":      {{"json,type", ""}},
+		"common/values-by-type cases.tsv\x00read":       {{"row,type", ""}},
+		"common/crl cases.tsv\x00":                      {{"input", ""}},
+		"common/family-read 06.tsv\x00":                 {{"family,key,kind,mode,text,who", ""}},
+		"common/log-mask cases.tsv\x00":                 {{"raw", "fields.yaml"}},
+		"common/revoked cases.tsv\x00":                  {{"file", ""}},
+		"common/store-client cases.tsv\x00":             {{"input", ""}},
+	}
+	for _, s := range shapes[pkg+"\x00"+variant] {
+		if s[0] == cells && s[1] == files {
+			return true
+		}
+	}
+	return false
 }

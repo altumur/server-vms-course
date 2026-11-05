@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-0157",
+ "variant": "",
+ "cells": {
+  "family": "platform/decommission/<сервер>",
+  "key": "platform/decommission/srv-a",
+  "kind": "row",
+  "mode": "writer",
+  "who": "[\"console\"]",
+  "text": "{\"by\":\"1.0\",\"at\":\"1\",\"why\":\"a\"}"
+ },
+ "files": {}
+}

@@ -1,18 +1,16 @@
-# Inputs of the vector command for common/object-client address.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/object-client/address.tsv sha256 aa4f12e4469d8b665adfa2764259d1cdeb7e97c08956426956cb14eb246a37f0
 case	input	exit	stdout
-line-3	line-3.json	0	{"kind":"file","dir":"/data/platform/objects"}
-line-4	line-4.json	0	{"kind":"file","dir":"/srv/objects"}
-line-5	line-5.json	2	
-line-6	line-6.json	0	{"kind":"cluster","dir":"/data/platform/objects","resource":"https://10.0.0.1:8446"}
-line-7	line-7.json	0	{"kind":"cluster","dir":"/data/platform/objects","resource":"https://10.0.0.1:8446"}
-line-8	line-8.json	2	
-line-9	line-9.json	2	
-line-10	line-10.json	2	
-line-11	line-11.json	0	{"kind":"cluster","dir":"/data/platform/objects","resource":"http://h:1"}
-line-12	line-12.json	0	{"kind":"cluster","dir":"/data/platform/objects","door":"platform/doors/srv-a","resource":"https://10.0.0.2:8446"}
-line-13	line-13.json	0	{"kind":"cluster","dir":"/data/platform/objects","door":"platform/doors/srv-a","resource":"https://10.0.0.2:8446"}
-line-14	line-14.json	0	{"kind":"cluster","dir":"/data/platform/objects","door":"platform/doors/srv-a","resource":"@unknown"}
-line-15	line-15.json	0	{"kind":"cluster","dir":"/data/platform/objects","door":"platform/doors/srv-a","resource":"@unknown"}
-line-16	line-16.json	0	{"kind":"cluster","dir":"/data/platform/objects","door":"platform/doors/srv-a","resource":"@unknown"}
-line-17	line-17.json	0	{"kind":"cluster","dir":"/data/platform/objects","resource":"https://10.0.0.1:8446"}
+line-3	line-3.json	0	{"kind": "file", "dir": "/data/platform/objects"}
+line-4	line-4.json	0	{"kind": "file", "dir": "/srv/objects"}
+line-5	line-5.json	2	null
+line-6	line-6.json	0	{"kind": "cluster", "dir": "/data/platform/objects", "resource": "https://10.0.0.1:8446"}
+line-7	line-7.json	0	{"kind": "cluster", "dir": "/data/platform/objects", "resource": "https://10.0.0.1:8446"}
+line-8	line-8.json	2	null
+line-9	line-9.json	2	null
+line-10	line-10.json	2	null
+line-11	line-11.json	0	{"kind": "cluster", "dir": "/data/platform/objects", "resource": "http://h:1"}
+line-12	line-12.json	0	{"kind": "cluster", "dir": "/data/platform/objects", "door": "platform/doors/srv-a", "resource": "https://10.0.0.2:8446"}
+line-13	line-13.json	0	{"kind": "cluster", "dir": "/data/platform/objects", "door": "platform/doors/srv-a", "resource": "https://10.0.0.2:8446"}
+line-14	line-14.json	0	{"kind": "cluster", "dir": "/data/platform/objects", "door": "platform/doors/srv-a", "resource": "@unknown"}
+line-15	line-15.json	0	{"kind": "cluster", "dir": "/data/platform/objects", "door": "platform/doors/srv-a", "resource": "@unknown"}
+line-16	line-16.json	0	{"kind": "cluster", "dir": "/data/platform/objects", "door": "platform/doors/srv-a", "resource": "@unknown"}
+line-17	line-17.json	0	{"kind": "cluster", "dir": "/data/platform/objects", "resource": "https://10.0.0.1:8446"}

@@ -5,7 +5,8 @@ package vectoradapter
 
 // PasswordHash — common/password-hash cases.tsv (stand:password-hash):
 //
-//	the password check (stand password-hash): true | false (a JSON value and LF)
+//	Native input and output: Platform/common/vectors/password-hash/README.md#stand-command-password-hash;
+//	transport: Platform/common/vectors/wire.tsv.
 //
 // input — the bytes of the {input} file of the stand command (the cell as written).
 func PasswordHash(input []byte) Answer {

@@ -1,12 +1,10 @@
-# Inputs of the vector command for common/schema cases.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/schema/cases.tsv sha256 fba7614fd82d19ebec19d1f08aef4e51bf70dab41cbbba0d4462e7691add09ba
 case	input	exit	stdout
-line-3	line-3.json	0	{"start":true,"version":"1"}
-line-4	line-4.json	0	{"start":true,"version":"3"}
-line-5	line-5.json	0	{"refuse":"too_new","n":"4"}
-line-6	line-6.json	0	{"refuse":"too_new","n":"9223372036854775808"}
-line-7	line-7.json	0	{"refuse":"not_a_form"}
-line-8	line-8.json	0	{"refuse":"not_a_form"}
-line-9	line-9.json	0	{"start":true,"version":"3"}
-line-10	line-10.json	0	{"start":true,"version":"1"}
-line-11	line-11.json	0	{"refuse":"not_a_form"}
+line-3	line-3.json	0	{"start": true, "version": "1"}
+line-4	line-4.json	0	{"start": true, "version": "3"}
+line-5	line-5.json	0	{"refuse": "too_new", "n": "4"}
+line-6	line-6.json	0	{"refuse": "too_new", "n": "9223372036854775808"}
+line-7	line-7.json	0	{"refuse": "not_a_form"}
+line-8	line-8.json	0	{"refuse": "not_a_form"}
+line-9	line-9.json	0	{"start": true, "version": "3"}
+line-10	line-10.json	0	{"start": true, "version": "1"}
+line-11	line-11.json	0	{"refuse": "not_a_form"}

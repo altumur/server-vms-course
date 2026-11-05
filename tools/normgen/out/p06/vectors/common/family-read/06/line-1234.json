@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-k0009",
+ "variant": "",
+ "cells": {
+  "family": "door/signer",
+  "key": "door/signerx",
+  "kind": "row",
+  "mode": "writer",
+  "who": "[\"console\", \"admin\"]",
+  "text": "{\"kid\":\"a\",\"seed_secret\":\"a\"}"
+ },
+ "files": {}
+}

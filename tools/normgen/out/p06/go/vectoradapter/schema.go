@@ -5,7 +5,8 @@ package vectoradapter
 
 // Schema — common/schema cases.tsv (vectors):
 //
-//	the schema start check: {start: true, version} | {refuse: "too_new", n} | {refuse: "not_a_form"} (code 0)
+//	Native input and output: Platform/common/vectors/schema/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Schema(table string, cells map[string]string, files map[string][]byte) Answer {

@@ -1,5 +1,3 @@
-# Inputs of the vector command for common/loopback cases.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/loopback/cases.tsv sha256 2564ba5ba9724a2e86a61638fa27cd7ceadb5ab8484dc58a8e956094f62aa531
 case	input	exit	stdout
 line-3	line-3.json	0	"loopback"
 line-4	line-4.json	0	"loopback"
@@ -27,8 +25,8 @@ line-25	line-25.json	0	"name"
 line-26	line-26.json	0	"loopback"
 line-27	line-27.json	0	"ip"
 line-28	line-28.json	0	"loopback"
-line-29	line-29.json	2	
-line-30	line-30.json	2	
-line-31	line-31.json	2	
-line-32	line-32.json	2	
-line-33	line-33.json	2	
+line-29	line-29.json	2	null
+line-30	line-30.json	2	null
+line-31	line-31.json	2	null
+line-32	line-32.json	2	null
+line-33	line-33.json	2	null

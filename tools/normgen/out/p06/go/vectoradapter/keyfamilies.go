@@ -5,7 +5,8 @@ package vectoradapter
 
 // KeyFamilies — 06-console/key-families cases.tsv (vectors):
 //
-//	the key families present: {<id>: [<key>…]} (order matters)
+//	Native input and output: Platform/06-console/vectors/key-families/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func KeyFamilies(table string, cells map[string]string, files map[string][]byte) Answer {

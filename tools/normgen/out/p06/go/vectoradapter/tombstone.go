@@ -5,7 +5,8 @@ package vectoradapter
 
 // Tombstone — common/tombstone cases.tsv (vectors):
 //
-//	the tombstone peers: {peers: [...]} (a set) | "no_delete"
+//	Native input and output: Platform/common/vectors/tombstone/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Tombstone(table string, cells map[string]string, files map[string][]byte) Answer {

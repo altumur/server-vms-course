@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/store-client",
+ "table": "cases.tsv",
+ "case": "write-refused-connection",
+ "variant": "",
+ "cells": {
+  "input": "{\"op\":\"write\",\"reply\":\"@refused\"}"
+ },
+ "files": {}
+}

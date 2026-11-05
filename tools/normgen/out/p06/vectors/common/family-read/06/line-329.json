@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-0328",
+ "variant": "",
+ "cells": {
+  "family": "<sub>/next_id",
+  "key": "testsub/next_id",
+  "kind": "row",
+  "mode": "reader",
+  "who": "[\"console\"]",
+  "text": "{\"n\":\"1e0\"}"
+ },
+ "files": {}
+}

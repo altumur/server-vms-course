@@ -3,10 +3,10 @@
 
 package vectoradapter
 
-// Sealing — common/sealing aad.tsv (vectors), common/sealing open.tsv (vectors), common/sealing ring.tsv (vectors), common/sealing envelope.tsv (vectors), common/sealing reseal.tsv (vectors):
+// Sealing — common/sealing aad.tsv (vectors), common/sealing envelope.tsv (vectors), common/sealing open.tsv (vectors), common/sealing reseal.tsv (vectors), common/sealing ring.tsv (vectors):
 //
-//	the sealing contract (the console seals and opens): aad.tsv → {pointer, aad_hex}; open.tsv → "sealed" or the
-//	value of expect; ring.tsv → the word or value of expect
+//	Native input and output: Platform/common/vectors/sealing/README.md#vector-wire; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Sealing(table string, cells map[string]string, files map[string][]byte) Answer {

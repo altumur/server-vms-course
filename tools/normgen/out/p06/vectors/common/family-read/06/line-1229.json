@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-k0004",
+ "variant": "",
+ "cells": {
+  "family": "platform/servers/<сервер>",
+  "key": "platform/servers/",
+  "kind": "row",
+  "mode": "reader",
+  "who": "[\"<s>controller\", \"console\"]",
+  "text": "{\"labels\":\"A\"}"
+ },
+ "files": {}
+}

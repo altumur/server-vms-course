@@ -1,4 +1,2 @@
-# Inputs of the vector command for common/fault fault.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/fault/fault.tsv sha256 4dbbc3dc61a161b39b30fad9416af9154a42cd07d7bec7b2ecebd8a8abfcd8e9
 case	input	exit	stdout
-line-11	line-11.json	0	{"not_json":400,"not_number":400,"too_long":400,"bad_url":400,"must_match":409,"unique":409,"garbled":409}
+line-11	line-11.json	0	{"not_json": 400, "not_number": 400, "too_long": 400, "bad_url": 400, "must_match": 409, "unique": 409, "garbled": 409}

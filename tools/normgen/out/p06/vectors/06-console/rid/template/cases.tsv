@@ -1,23 +1,21 @@
-# Inputs of the vector command for 06-console/rid template.tsv (gen_vectors.py); compare value.
-# source Platform/06-console/vectors/rid/template.tsv sha256 378df6d2320709e2a6cbaccbd2aa17beee3cc99c81da780d8c575adf12895d3f
 case	input	exit	stdout
-line-4	line-4.json	0	{"rid":"t1-1-2"}
-line-5	line-5.json	0	{"detail":"unit"}
-line-6	line-6.json	0	{"detail":"unit"}
-line-7	line-7.json	0	{"rid":"Free-a-1-2"}
-line-8	line-8.json	0	{"rid":"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu-1-2"}
-line-9	line-9.json	0	{"detail":"to"}
-line-10	line-10.json	0	{"detail":"from"}
-line-11	line-11.json	0	{"detail":"unit"}
-line-12	line-12.json	0	{"detail":"unit"}
-line-13	line-13.json	0	{"detail":"to"}
-line-14	line-14.json	0	{"detail":"unit"}
-line-15	line-15.json	0	{"detail":"of"}
-line-16	line-16.json	0	{"detail":"unit"}
-line-17	line-17.json	0	{"detail":"unit"}
-line-18	line-18.json	0	{"detail":"unit"}
-line-19	line-19.json	0	{"detail":"unit"}
-line-20	line-20.json	0	{"detail":"unit"}
-line-21	line-21.json	0	{"detail":"of"}
-line-22	line-22.json	0	{"detail":"of"}
-line-23	line-23.json	0	{"detail":"unit"}
+line-4	line-4.json	0	{"rid": "t1-1-2"}
+line-5	line-5.json	0	{"detail": "unit"}
+line-6	line-6.json	0	{"detail": "unit"}
+line-7	line-7.json	0	{"rid": "Free-a-1-2"}
+line-8	line-8.json	0	{"rid": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu-1-2"}
+line-9	line-9.json	0	{"detail": "to"}
+line-10	line-10.json	0	{"detail": "from"}
+line-11	line-11.json	0	{"detail": "unit"}
+line-12	line-12.json	0	{"detail": "unit"}
+line-13	line-13.json	0	{"detail": "to"}
+line-14	line-14.json	0	{"detail": "unit"}
+line-15	line-15.json	0	{"detail": "of"}
+line-16	line-16.json	0	{"detail": "unit"}
+line-17	line-17.json	0	{"detail": "unit"}
+line-18	line-18.json	0	{"detail": "unit"}
+line-19	line-19.json	0	{"detail": "unit"}
+line-20	line-20.json	0	{"detail": "unit"}
+line-21	line-21.json	0	{"detail": "of"}
+line-22	line-22.json	0	{"detail": "of"}
+line-23	line-23.json	0	{"detail": "unit"}

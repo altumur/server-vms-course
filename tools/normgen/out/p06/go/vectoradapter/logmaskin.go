@@ -5,7 +5,8 @@ package vectoradapter
 
 // LogMaskIn — common/log-mask mask_in.tsv (vectors):
 //
-//	whether a value is masked in a log: {mask: bool}
+//	Native input and output: Platform/common/vectors/log-mask/README.md#run; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func LogMaskIn(table string, cells map[string]string, files map[string][]byte) Answer {

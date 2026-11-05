@@ -5,7 +5,8 @@ package vectoradapter
 
 // FreshAge — common/fresh-age fresh.tsv (vectors):
 //
-//	the freshness of an age: true | false
+//	Native input and output: Platform/common/vectors/fresh-age/README.md#vector-wire; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func FreshAge(table string, cells map[string]string, files map[string][]byte) Answer {

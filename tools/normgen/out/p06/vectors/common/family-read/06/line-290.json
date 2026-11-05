@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "06.tsv",
+ "case": "06-0289",
+ "variant": "",
+ "cells": {
+  "family": "door/keys",
+  "key": "door/keys",
+  "kind": "row",
+  "mode": "writer",
+  "who": "[\"console\"]",
+  "text": "{\"Bad Name!\":\"0000000000000000000000000000000000000000000000000000000000000000\"}"
+ },
+ "files": {}
+}

@@ -1,15 +1,13 @@
-# Inputs of the vector command for 06-console/request-digest digest.tsv (gen_vectors.py); compare value.
-# source Platform/06-console/vectors/request-digest/digest.tsv sha256 b164da14364c40adeccabce2c191c93c218b07e98982c7f74bdb9964689caa27
 case	input	exit	stdout
-line-17	line-17.json	0	{"canonical":"{\"from\":1,\"to\":2,\"unit\":\"t1\"}","sha256":"23c2bedd6b60e991b4f565353c71a6951a20a392b2f65afedb81ac02ff23fee9"}
-line-18	line-18.json	0	{"canonical":"{\"from\":1,\"to\":2,\"unit\":\"t1\"}","sha256":"23c2bedd6b60e991b4f565353c71a6951a20a392b2f65afedb81ac02ff23fee9"}
-line-19	line-19.json	0	{"canonical":"{\"from\":1,\"to\":2,\"unit\":\"t1\"}","sha256":"23c2bedd6b60e991b4f565353c71a6951a20a392b2f65afedb81ac02ff23fee9"}
-line-20	line-20.json	0	{"canonical":"{\"from\":1,\"to\":2,\"unit\":\"t1\"}","sha256":"23c2bedd6b60e991b4f565353c71a6951a20a392b2f65afedb81ac02ff23fee9"}
-line-21	line-21.json	0	{"canonical":"{\"add\":{\"a\":null,\"b\":[1,2.5]},\"unit\":\"c1\"}","sha256":"0a79615c48aa82b64d9a56610321323d314517133c77c0409719a325b2101a25"}
-line-22	line-22.json	0	{"canonical":"{\"unit\":\"c1\",\"x\":1e-7,\"y\":1e+21}","sha256":"5f5b1e736f58a7c02bfd6a84ffa10cc648bb3f210519289e1e2636cc3e2bd3ec"}
-line-23	line-23.json	0	{"canonical":"{\"note\":\"ж <&> x\",\"unit\":\"т1\"}","sha256":"4f31d442f551f9e6281bbefbef38e0ae853cfaccaeae295095bd08432e60b05d"}
-line-24	line-24.json	0	{"canonical":"{\"unit\":\"c1\",\"😀\":2,\"דּ\":1}","sha256":"24cfc601a748641e5c9a7d3568695f8199ac1dd988a275b875d58189a4f7198b"}
-line-25	line-25.json	0	{"canonical":"{\"from\":\"1\",\"to\":\"2\"}","sha256":"43b3d94566323558c36734b307ab637f3ccb2061bf371ff9cdfbe11e3745c0d9"}
-line-26	line-26.json	0	{"canonical":"{\"from\":\"1\",\"to\":\"2\"}","sha256":"43b3d94566323558c36734b307ab637f3ccb2061bf371ff9cdfbe11e3745c0d9"}
-line-27	line-27.json	0	{"canonical":"{\"f\":\"1.5\",\"n\":\"5\"}","sha256":"690b88e0089a62b4146ddd2fe3ebd2a32af2bceadf6fb12ecccb14e485d9615f"}
-line-28	line-28.json	0	{"canonical":"{\"add\":\"{\\\"a\\\":1}\"}","sha256":"b3701c5b9e17fabfbdfe3b57abd7ae43c17f769f8708a581f2d0c1170e40a5c9"}
+line-17	line-17.json	0	{"canonical": "{\"from\":1,\"to\":2,\"unit\":\"t1\"}", "sha256": "23c2bedd6b60e991b4f565353c71a6951a20a392b2f65afedb81ac02ff23fee9"}
+line-18	line-18.json	0	{"canonical": "{\"from\":1,\"to\":2,\"unit\":\"t1\"}", "sha256": "23c2bedd6b60e991b4f565353c71a6951a20a392b2f65afedb81ac02ff23fee9"}
+line-19	line-19.json	0	{"canonical": "{\"from\":1,\"to\":2,\"unit\":\"t1\"}", "sha256": "23c2bedd6b60e991b4f565353c71a6951a20a392b2f65afedb81ac02ff23fee9"}
+line-20	line-20.json	0	{"canonical": "{\"from\":1,\"to\":2,\"unit\":\"t1\"}", "sha256": "23c2bedd6b60e991b4f565353c71a6951a20a392b2f65afedb81ac02ff23fee9"}
+line-21	line-21.json	0	{"canonical": "{\"add\":{\"a\":null,\"b\":[1,2.5]},\"unit\":\"c1\"}", "sha256": "0a79615c48aa82b64d9a56610321323d314517133c77c0409719a325b2101a25"}
+line-22	line-22.json	0	{"canonical": "{\"unit\":\"c1\",\"x\":1e-7,\"y\":1e+21}", "sha256": "5f5b1e736f58a7c02bfd6a84ffa10cc648bb3f210519289e1e2636cc3e2bd3ec"}
+line-23	line-23.json	0	{"canonical": "{\"note\":\"ж <&> x\",\"unit\":\"т1\"}", "sha256": "4f31d442f551f9e6281bbefbef38e0ae853cfaccaeae295095bd08432e60b05d"}
+line-24	line-24.json	0	{"canonical": "{\"unit\":\"c1\",\"😀\":2,\"דּ\":1}", "sha256": "24cfc601a748641e5c9a7d3568695f8199ac1dd988a275b875d58189a4f7198b"}
+line-25	line-25.json	0	{"canonical": "{\"from\":\"1\",\"to\":\"2\"}", "sha256": "43b3d94566323558c36734b307ab637f3ccb2061bf371ff9cdfbe11e3745c0d9"}
+line-26	line-26.json	0	{"canonical": "{\"from\":\"1\",\"to\":\"2\"}", "sha256": "43b3d94566323558c36734b307ab637f3ccb2061bf371ff9cdfbe11e3745c0d9"}
+line-27	line-27.json	0	{"canonical": "{\"f\":\"1.5\",\"n\":\"5\"}", "sha256": "690b88e0089a62b4146ddd2fe3ebd2a32af2bceadf6fb12ecccb14e485d9615f"}
+line-28	line-28.json	0	{"canonical": "{\"add\":\"{\\\"a\\\":1}\"}", "sha256": "b3701c5b9e17fabfbdfe3b57abd7ae43c17f769f8708a581f2d0c1170e40a5c9"}
