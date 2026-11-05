@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "05-resource/relieve",
+ "table": "short.tsv",
+ "case": "round-up",
+ "variant": "",
+ "cells": {
+  "input": "{\"space\":{\"enabled\":true,\"high\":0.85,\"low\":0.75},\"server\":\"srv-a\",\"volumes\":[{\"name\":\"events\",\"used\":900,\"total\":999}],\"subs\":[\"rec\"],\"heartbeats\":[]}"
+ },
+ "files": {}
+}

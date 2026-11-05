@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/tombstone",
+ "table": "cases.tsv",
+ "case": "remove-empty-peers",
+ "variant": "",
+ "cells": {
+  "op": "remove",
+  "input": "{\"tombstone\":{\"written\":1000,\"peers\":[],\"acked\":[]},\"now\":605800,\"rewritten\":false}"
+ },
+ "files": {}
+}

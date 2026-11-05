@@ -17,7 +17,7 @@ GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOL
 KITS = {"03-worker": ["flags", "refusals", "stagetests", "slot-capture", "families", "vectors"],
         "04-controller": ["flags", "refusals", "stagetests", "slot-fate", "slot-release", "families", "vectors"],
         "06-console": ["door", "families", "vectors"],  # P/06 до форм: дверь 3а, 3б; части по формам — позже
-        "05-resource": ["flags", "refusals", "stagetests", "door"],
+        "05-resource": ["flags", "refusals", "stagetests", "door", "families", "vectors"],
         "08-domain": ["door", "families", "vectors"], "09-agent": ["door", "families", "vectors"],
         "10-domain-console": ["door", "vectors"]}      # P/08–P/10 до форм: дверь, семьи (у P/10 нет), векторы
 

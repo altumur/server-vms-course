@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/tombstone",
+ "table": "cases.tsv",
+ "case": "remove-not-all-acked",
+ "variant": "",
+ "cells": {
+  "op": "remove",
+  "input": "{\"tombstone\":{\"written\":1000,\"peers\":[\"srv-b\",\"srv-c\"],\"acked\":[\"srv-b\"]},\"now\":3000000,\"rewritten\":false}"
+ },
+ "files": {}
+}

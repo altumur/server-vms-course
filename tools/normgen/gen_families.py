@@ -368,6 +368,10 @@ def load_family_doc(row, grammar):
             for e in x:
                 walk(e)
     walk(schema.doc)
+    if "x-file" in words:                          # LAYERS.md слой 3: экземпляр семьи — файл (смысл несёт kind file)
+        if kind != "file" or schema.doc.get("x-file") is not True or json.dumps(schema.doc).count('"x-file"') != 1:
+            raise GenError(f"{rel(schema_path)}: x-file — only true, only at the root, only of a family of kind file")
+        words.discard("x-file")
     extra = words - DOC_WORDS
     if extra:
         raise GenError(f"{rel(schema_path)}: words {sorted(extra)} are outside famrt2 (supported: {sorted(DOC_WORDS)})")

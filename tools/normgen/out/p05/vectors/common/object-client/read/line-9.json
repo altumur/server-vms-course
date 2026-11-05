@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/object-client",
+ "table": "read.tsv",
+ "case": "outside-door",
+ "variant": "",
+ "cells": {
+  "input": "{\"reply\":{\"status\":403,\"X-Missing\":null}}"
+ },
+ "files": {}
+}

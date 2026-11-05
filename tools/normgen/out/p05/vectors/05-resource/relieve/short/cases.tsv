@@ -1,0 +1,9 @@
+# Inputs of the vector command for 05-resource/relieve short.tsv (gen_vectors.py); compare value.
+# source Platform/05-resource/vectors/relieve/short.tsv sha256 472c062141f817adc7fe70562235a2296018dad4a5b55cdaf2f17d755375e5db
+case	input	exit	stdout
+line-3	line-3.json	0	{"short":400}
+line-4	line-4.json	0	{"short":150}
+line-5	line-5.json	0	{"short":0}
+line-6	line-6.json	0	{"short":0}
+line-7	line-7.json	0	{"short":0}
+line-8	line-8.json	0	{"short":151}
