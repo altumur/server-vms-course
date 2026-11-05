@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "06-console/op-step",
+ "table": "expected.tsv",
+ "case": "ok-fail-set",
+ "variant": "",
+ "cells": {
+  "input": "{\"steps\":[{\"root\":\"a\",\"expected\":{\"a\":\"1\"}},{\"root\":\"a\",\"expected\":{\"a\":\"1\"}},{\"root\":\"a\",\"expected\":{\"a\":\"1\"}}],\"done\":{\"0\":{\"state\":\"ok\",\"versions\":{\"a\":\"2\"}},\"1\":{\"state\":\"fail\"}},\"i\":2}"
+ },
+ "files": {}
+}

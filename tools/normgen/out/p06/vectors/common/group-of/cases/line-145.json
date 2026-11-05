@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/group-of",
+ "table": "cases.tsv",
+ "case": "line-145",
+ "variant": "",
+ "cells": {
+  "raw": "ftp://nvr50/a"
+ },
+ "files": {}
+}

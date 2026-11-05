@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/log-mask",
+ "table": "mask_in.tsv",
+ "case": "ideographic-and-ls",
+ "variant": "",
+ "cells": {
+  "value": "\"\\u3000***\\u2028\""
+ },
+ "files": {}
+}

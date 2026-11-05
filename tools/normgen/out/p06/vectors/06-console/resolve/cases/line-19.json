@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "06-console/resolve",
+ "table": "cases.tsv",
+ "case": "resolve-13-union-not-string",
+ "variant": "",
+ "cells": {
+  "input": "{\"field\":{\"name\":\"marks\",\"type\":\"list\",\"inherit\":[],\"merge\":\"union\"},\"unit\":[\"mine\",1],\"domain\":{\"term\":1,\"rev\":3,\"value\":[\"site\"]}}"
+ },
+ "files": {}
+}

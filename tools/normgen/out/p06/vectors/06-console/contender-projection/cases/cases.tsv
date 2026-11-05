@@ -1,0 +1,10 @@
+# Inputs of the vector command for 06-console/contender-projection cases.tsv (gen_vectors.py); compare value.
+# source Platform/06-console/vectors/contender-projection/cases.tsv sha256 04bf2b9a47077aed67284593929b0eb41116864c4bfda1df263c4b55e607c88e
+case	input	exit	stdout
+line-3	line-3.json	0	{"name_conflict":{"t-1":true},"name_conflicts":1}
+line-4	line-4.json	0	{"name_conflict":{"t-1":false},"name_conflicts":0}
+line-5	line-5.json	0	{"name_conflict":{"t-1":true,"t-2":true,"t-3":true},"name_conflicts":3}
+line-6	line-6.json	0	{"name_conflict":{"t-1":true,"t-2":false},"name_conflicts":1}
+line-7	line-7.json	0	{"name_conflict":{"t-2":true,"t-3":false},"name_conflicts":1,"name_conflict_unreadable":["t-2"]}
+line-8	line-8.json	0	{"name_conflict":{"t-1":false},"name_conflicts":1}
+line-9	line-9.json	0	{"name_conflict":{"t-1":true},"name_conflicts":1}

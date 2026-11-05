@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/labels",
+ "table": "cases.tsv",
+ "case": "read_repeat",
+ "variant": "",
+ "cells": {
+  "op": "text_read",
+  "input": "\"a,a\""
+ },
+ "files": {}
+}

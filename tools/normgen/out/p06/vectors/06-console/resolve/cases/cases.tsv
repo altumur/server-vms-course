@@ -1,0 +1,17 @@
+# Inputs of the vector command for 06-console/resolve cases.tsv (gen_vectors.py); compare subset.
+# source Platform/06-console/vectors/resolve/cases.tsv sha256 9a47a1d53e6ccf97d9f36bebe0c92429275e61c73b646a208c1fee0041236c0e
+case	input	exit	stdout
+line-7	line-7.json	0	{"value":3,"from":"unit"}
+line-8	line-8.json	0	{"value":5,"from":"domain term 1 rev 3"}
+line-9	line-9.json	0	{"value":1,"from":"manifest"}
+line-10	line-10.json	0	{"value":["east","mine","site"],"from":"unit + domain term 1 rev 3"}
+line-11	line-11.json	0	{"value":["east"],"from":"domain term 1 rev 3"}
+line-12	line-12.json	0	{"value":["mine"],"from":"unit"}
+line-13	line-13.json	0	{"value":[{"counter":"c1","every":5}],"from":"domain term 1 rev 3"}
+line-14	line-14.json	0	{"value":null,"from":"none"}
+line-15	line-15.json	0	{"groups":["east","west"],"from":"domain term 1 rev 3"}
+line-16	line-16.json	0	{"value":["mine"],"from":"unit"}
+line-17	line-17.json	2	
+line-18	line-18.json	2	
+line-19	line-19.json	2	
+line-20	line-20.json	2	

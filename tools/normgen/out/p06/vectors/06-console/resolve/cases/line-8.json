@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "06-console/resolve",
+ "table": "cases.tsv",
+ "case": "resolve-02-domain",
+ "variant": "",
+ "cells": {
+  "input": "{\"field\":{\"name\":\"step\",\"type\":\"int\",\"inherit\":1},\"domain\":{\"term\":1,\"rev\":3,\"value\":5}}"
+ },
+ "files": {}
+}

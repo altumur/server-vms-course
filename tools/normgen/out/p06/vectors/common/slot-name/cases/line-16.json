@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/slot-name",
+ "table": "cases.tsv",
+ "case": "role-numeric-only",
+ "variant": "",
+ "cells": {
+  "op": "role",
+  "input": "{\"prefix\":\"w\",\"name\":\"w-5\",\"server\":\"srv-a\"}"
+ },
+ "files": {}
+}

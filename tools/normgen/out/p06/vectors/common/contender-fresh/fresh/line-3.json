@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/contender-fresh",
+ "table": "fresh.tsv",
+ "case": "first-look",
+ "variant": "",
+ "cells": {
+  "age": "0"
+ },
+ "files": {}
+}

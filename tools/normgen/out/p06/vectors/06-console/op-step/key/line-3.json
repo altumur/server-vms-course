@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "06-console/op-step",
+ "table": "key.tsv",
+ "case": "one",
+ "variant": "",
+ "cells": {
+  "id": "0123456789abcdef0123456789abcdef",
+  "i": "1"
+ },
+ "files": {}
+}

@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/sealing",
+ "table": "envelope.tsv",
+ "case": "platform",
+ "variant": "",
+ "cells": {
+  "key_hex": "563d51fa1fa5792ff7e97119be700ebd63c96ee698b512501e4d65ac9b54d1b9",
+  "kid": "k3",
+  "nonce_b64url": "qEHEp1wZaZEjoBq2",
+  "row_key": "platform/config/doors",
+  "pointer": "/doors/console/tls_key_secret",
+  "plaintext": "\"-----BEGIN KEY-----\""
+ },
+ "files": {}
+}

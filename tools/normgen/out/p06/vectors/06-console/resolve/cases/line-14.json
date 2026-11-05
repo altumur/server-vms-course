@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "06-console/resolve",
+ "table": "cases.tsv",
+ "case": "resolve-08-document-none",
+ "variant": "",
+ "cells": {
+  "input": "{\"field\":{\"name\":\"rounds\",\"type\":\"json\",\"document\":true},\"domain\":null}"
+ },
+ "files": {}
+}

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "06-console/metrics",
+ "table": "cases.tsv",
+ "case": "sum-bool",
+ "variant": "",
+ "cells": {
+  "input": "{\"sub\":\"testsub\",\"now\":1000,\"metrics\":[{\"name\":\"ready_total\",\"from\":\"heartbeat.ready\",\"agg\":\"sum\"}],\"heartbeats\":{\"w-1\":{\"ready\":true},\"w-2\":{\"ready\":true},\"w-3\":{\"ready\":false}}}"
+ },
+ "files": {}
+}

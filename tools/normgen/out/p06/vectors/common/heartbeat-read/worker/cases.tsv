@@ -1,0 +1,22 @@
+# Inputs of the vector command for common/heartbeat-read worker.tsv (gen_vectors.py); compare value.
+# source Platform/common/vectors/heartbeat-read/worker.tsv sha256 1c1c7d125cf3a702fd8de44f0c93d91b50625d94b484a9c336b887a3ebb35221
+case	input	exit	stdout
+line-4	line-4.json	0	{"rows":{"skip":[]},"others":"readable","fields":[]}
+line-5	line-5.json	0	{"rows":"unreadable","others":"unreadable","fields":[]}
+line-6	line-6.json	0	{"rows":"unreadable","others":"unreadable","fields":[]}
+line-7	line-7.json	0	{"rows":"unreadable","others":"unreadable","fields":[]}
+line-8	line-8.json	0	{"rows":"unreadable","others":"unreadable","fields":[]}
+line-9	line-9.json	0	{"rows":{"skip":[1]},"others":"unreadable","fields":[]}
+line-10	line-10.json	0	{"rows":{"skip":[0]},"others":"unreadable","fields":[]}
+line-11	line-11.json	0	{"rows":{"skip":[0]},"others":"unreadable","fields":[]}
+line-12	line-12.json	0	{"rows":{"skip":[]},"others":"readable","fields":[]}
+line-13	line-13.json	0	{"rows":{"skip":[0]},"others":"unreadable","fields":[]}
+line-14	line-14.json	0	{"rows":{"skip":[]},"others":"readable","fields":["build"]}
+line-15	line-15.json	0	{"rows":{"skip":[]},"others":"readable","fields":["pending_writes","schema"]}
+line-16	line-16.json	0	{"rows":"unreadable","others":"unreadable","fields":[]}
+line-17	line-17.json	0	{"rows":"unreadable","others":"unreadable","fields":[]}
+line-18	line-18.json	0	{"rows":"unreadable","others":"unreadable","fields":[]}
+line-19	line-19.json	0	{"rows":"unreadable","others":"unreadable","fields":[]}
+line-20	line-20.json	0	{"rows":{"skip":[]},"others":"readable","fields":[]}
+line-21	line-21.json	0	{"rows":"unreadable","others":"unreadable","fields":[]}
+line-22	line-22.json	0	{"rows":{"skip":[]},"others":"readable","fields":["pending_writes"]}

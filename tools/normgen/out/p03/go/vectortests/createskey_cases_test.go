@@ -14,111 +14,111 @@ var _ = vectoradapter.NotImplemented
 // Platform/03-worker/vectors/creates-key/cases.tsv:3 hyphen-a
 func TestCreatesKey_Cases_Line3(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:3", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}-{kind}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"kind\":{\"type\":\"string\",\"value\":\"1-x\"}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}-{kind}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"kind\":{\"type\":\"string\",\"value\":\"1-x\"}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-7-1%2Dx"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:4 hyphen-b
 func TestCreatesKey_Cases_Line4(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:4", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}-{kind}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7-1\"},\"kind\":{\"type\":\"string\",\"value\":\"x\"}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}-{kind}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7-1\"},\"kind\":{\"type\":\"string\",\"value\":\"x\"}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-7%2D1-x"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:5 plain
 func TestCreatesKey_Cases_Line5(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:5", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-7"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:6 unreserved
 func TestCreatesKey_Cases_Line6(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:6", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"A_z.0~\"}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"A_z.0~\"}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-A_z.0~"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:7 percent
 func TestCreatesKey_Cases_Line7(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:7", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"a b/c%\"}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"a b/c%\"}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-a%20b%2Fc%25"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:8 upper-hex
 func TestCreatesKey_Cases_Line8(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:8", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"\xd0\xba\xd0\xb0\xd0\xbc\"}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"\xd0\xba\xd0\xb0\xd0\xbc\"}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-%D0%BA%D0%B0%D0%BC"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:9 pct2d
 func TestCreatesKey_Cases_Line9(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:9", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"-\"}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"-\"}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-%2D"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:10 url
 func TestCreatesKey_Cases_Line10(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:10", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{src}\",\"fields\":{\"src\":{\"type\":\"url\",\"value\":\"rtsp://h/x?a=1\"}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{src}\",\"fields\":{\"src\":{\"type\":\"url\",\"value\":\"rtsp://h/x?a=1\"}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-rtsp%3A%2F%2Fh%2Fx%3Fa%3D1"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:11 int-neg
 func TestCreatesKey_Cases_Line11(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:11", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}-{n}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"n\":{\"type\":\"int\",\"value\":-3}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}-{n}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"n\":{\"type\":\"int\",\"value\":-3}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-7-%2D3"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:12 bool
 func TestCreatesKey_Cases_Line12(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:12", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}-{on}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"on\":{\"type\":\"bool\",\"value\":true}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}-{on}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"on\":{\"type\":\"bool\",\"value\":true}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-7-true"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:13 float-half
 func TestCreatesKey_Cases_Line13(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:13", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}-{from}-{to}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"from\":{\"type\":\"float\",\"value\":1.5},\"to\":{\"type\":\"float\",\"value\":2}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}-{from}-{to}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"from\":{\"type\":\"float\",\"value\":1.5},\"to\":{\"type\":\"float\",\"value\":2}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-7-1.5-2"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:14 float-other
 func TestCreatesKey_Cases_Line14(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:14", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}-{from}-{to}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"from\":{\"type\":\"float\",\"value\":1},\"to\":{\"type\":\"float\",\"value\":5.2}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}-{from}-{to}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"from\":{\"type\":\"float\",\"value\":1},\"to\":{\"type\":\"float\",\"value\":5.2}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-7-1-5.2"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:15 float-small
 func TestCreatesKey_Cases_Line15(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:15", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}-{from}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"from\":{\"type\":\"float\",\"value\":5e-07}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}-{from}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"from\":{\"type\":\"float\",\"value\":5e-07}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-7-0.0000005"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:16 float-big
 func TestCreatesKey_Cases_Line16(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:16", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}-{from}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"from\":{\"type\":\"float\",\"value\":1e+21}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}-{from}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"from\":{\"type\":\"float\",\"value\":1e+21}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-7-1000000000000000000000"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:17 float-minus-zero
 func TestCreatesKey_Cases_Line17(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:17", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}-{from}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"from\":{\"type\":\"float\",\"value\":-0.0}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}-{from}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"from\":{\"type\":\"float\",\"value\":-0.0}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-7-0"), "raw")
 }
 
 // Platform/03-worker/vectors/creates-key/cases.tsv:18 float-tie
 func TestCreatesKey_Cases_Line18(t *testing.T) {
 	check(t, "Platform/03-worker/vectors/creates-key/cases.tsv:18", func() vectoradapter.Answer {
-		return vectoradapter.CreatesKey([]byte("{\"customer\":\"testsub\",\"key\":\"{cam}-{from}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"from\":{\"type\":\"float\",\"value\":1125899906842624.2}}}"))
+		return vectoradapter.CreatesKeyCells("cases.tsv", map[string]string{"input": "{\"customer\":\"testsub\",\"key\":\"{cam}-{from}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"from\":{\"type\":\"float\",\"value\":1125899906842624.2}}}"}, map[string][]byte{})
 	}, 0, "null", []byte("testsub-7-1125899906842624.2"), "raw")
 }

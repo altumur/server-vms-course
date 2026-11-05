@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/group-of",
+ "table": "cases.tsv",
+ "case": "line-84",
+ "variant": "",
+ "cells": {
+  "raw": "driverpack://acme?x/10.0.0.5"
+ },
+ "files": {}
+}

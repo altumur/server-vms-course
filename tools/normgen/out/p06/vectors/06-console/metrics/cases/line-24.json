@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "06-console/metrics",
+ "table": "cases.tsv",
+ "case": "name-repeat",
+ "variant": "",
+ "cells": {
+  "input": "{\"sub\":\"testsub\",\"now\":1000,\"metrics\":[{\"name\":\"shelves\",\"count\":\"table shelves\",\"where\":{\"kind\":\"plain\"},\"labels\":{\"kind\":\"plain\"}},{\"name\":\"shelves\",\"count\":\"table shelves\",\"where\":{\"kind\":\"reserve\"},\"labels\":{\"kind\":\"reserve\"}}],\"tables\":{\"shelves\":{\"sh1\":{\"name\":\"sh1\",\"kind\":\"plain\",\"enabled\":\"true\"},\"sh2\":{\"name\":\"sh2\",\"kind\":\"plain\",\"enabled\":\"True\"},\"sh3\":{\"name\":\"sh3\",\"kind\":\"plain\",\"enabled\":\"false\"},\"sh4\":{\"name\":\"sh4\",\"kind\":\"reserve\"}},\"notches\":{\"n1\":{\"of\":\"c1\",\"from\":\"1\",\"to\":\"2\"}}}}"
+ },
+ "files": {}
+}

@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "bl-empty",
+ "variant": "write",
+ "cells": {
+  "type": "blob",
+  "json": "\"\""
+ },
+ "files": {}
+}

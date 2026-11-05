@@ -178,6 +178,7 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 		"common/slot cases.tsv":            {"input", ""},
 		"common/slot-name cases.tsv":       {"input,op", ""},
 		"common/values-by-type cases.tsv":  {"*", ""},
+		"03-worker/creates-key cases.tsv":  {"input", ""},
 		"common/crl cases.tsv":             {"input", ""},
 		"common/family-read 03.tsv":        {"family,key,kind,mode,text,who", ""},
 		"common/log-mask cases.tsv":        {"raw", "fields.yaml"},
@@ -347,6 +348,12 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 			return c, o, e, nil
 		}
 		value = a.Value
+	case "03-worker/creates-key cases.tsv":
+		a := vectoradapter.CreatesKeyCells(*in.Table, cellmap, files)
+		if c, o, e, done := answerOf(a); done {
+			return c, o, e, nil
+		}
+		return 0, a.Raw, nil, nil
 	case "common/crl cases.tsv":
 		v, err := vectoradapter.CRL([]byte(cell("input")))
 		if err != nil {

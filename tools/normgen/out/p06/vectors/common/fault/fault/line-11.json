@@ -1,0 +1,9 @@
+{
+ "format": 1,
+ "package": "common/fault",
+ "table": "fault.tsv",
+ "case": "fault.tsv",
+ "variant": "",
+ "cells": {},
+ "files": {}
+}

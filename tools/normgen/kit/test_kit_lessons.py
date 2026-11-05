@@ -15,7 +15,8 @@ HERE = Path(__file__).resolve().parent
 NORMGEN = HERE.parent
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 KITS = {"03-worker": ["flags", "refusals", "stagetests", "slot-capture", "families", "vectors"],
-        "04-controller": ["flags", "refusals", "stagetests", "slot-fate", "slot-release", "families", "vectors"]}
+        "04-controller": ["flags", "refusals", "stagetests", "slot-fate", "slot-release", "families", "vectors"],
+        "06-console": ["families", "vectors"]}          # P/06 до форм: дверь (3а, 3б) и части по формам — позже
 
 
 class KitLessons(unittest.TestCase):
@@ -44,20 +45,25 @@ class KitLessons(unittest.TestCase):
                         or ("/vectoradapter/" in f["path"] and not f["path"].endswith("vectoradapter.go"))
                     self.assertEqual(bool(f.get("editable")), own, f["path"])
                 kit_md = (dst / "KIT.md").read_text()
-                for title in ("Part `flags`: the process inputs", "Part `stagetests`: the stage tests of the lesson over CALL ports",
-                              "Part `refusals`", "Part `vectors`", "draft (tools/normgen/wire_p03p04.py)"):
+                titles = ("Part `vectors`", "draft (tools/normgen/wire_draft.py)") + (() if lesson == "06-console" else (
+                    "Part `flags`: the process inputs", "Part `stagetests`: the stage tests of the lesson over CALL ports",
+                    "Part `refusals`"))
+                for title in titles:
                     self.assertIn(title, kit_md)
                 mod = dst / lesson
                 (mod / "go.mod").write_text(f"module {man['module']}\n\ngo 1.22\n")
                 done = subprocess.run(["go", "vet", "./..."], cwd=mod, capture_output=True, text=True, env=GOENV)
                 self.assertEqual(done.returncode, 0, done.stderr)
                 machines = [f"./internal/{p.replace('-', '')}/" for p in parts if p.startswith("slot-")]
-                done = subprocess.run(["go", "test", "-count=1", *machines], cwd=mod, capture_output=True, text=True, env=GOENV)
-                self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
-                done = subprocess.run(["go", "test", "-count=1", "./internal/stagetests/"], cwd=mod, capture_output=True,
-                                      text=True, env=GOENV)
-                self.assertNotEqual(done.returncode, 0)
-                self.assertNotIn("panic:", done.stdout)
+                if machines:
+                    done = subprocess.run(["go", "test", "-count=1", *machines], cwd=mod, capture_output=True, text=True,
+                                          env=GOENV)
+                    self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+                if "stagetests" in parts:
+                    done = subprocess.run(["go", "test", "-count=1", "./internal/stagetests/"], cwd=mod,
+                                          capture_output=True, text=True, env=GOENV)
+                    self.assertNotEqual(done.returncode, 0)
+                    self.assertNotIn("panic:", done.stdout)
 
 
 if __name__ == "__main__":

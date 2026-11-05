@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/object-client",
+ "table": "address.tsv",
+ "case": "cluster-named",
+ "variant": "",
+ "cells": {
+  "input": "{\"OBJECTS\":\"cluster://north?resource=https://10.0.0.1:8446\",\"PLATFORM_DIR\":\"/data/platform\"}"
+ },
+ "files": {}
+}

@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/resource-state",
+ "table": "cases.tsv",
+ "case": "nothing",
+ "variant": "",
+ "cells": {
+  "history": "[]",
+  "at": "0"
+ },
+ "files": {}
+}

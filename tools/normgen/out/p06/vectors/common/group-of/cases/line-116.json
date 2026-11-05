@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/group-of",
+ "table": "cases.tsv",
+ "case": "line-116",
+ "variant": "",
+ "cells": {
+  "raw": "http://Cam.Example.COM.:80"
+ },
+ "files": {}
+}

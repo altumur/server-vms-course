@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/deadline",
+ "table": "cases.tsv",
+ "case": "zero",
+ "variant": "",
+ "cells": {
+  "input": "0"
+ },
+ "files": {}
+}

@@ -1,0 +1,14 @@
+# Inputs of the vector command for common/sealing reseal.tsv (gen_vectors.py); compare value.
+# source Platform/common/vectors/sealing/reseal.tsv sha256 78073d5787860cff0bf0ed2588a2809e77c0f3d6df20a0c3a4e32c4777b002da
+case	input	exit	stdout
+line-4	line-4.json	0	{"row":"changed","secrets":{"/feed_secret":{"kid":"k2","plaintext":"hunter2"}}}
+line-5	line-5.json	0	{"row":"same","secrets":{"/feed_secret":"@same"}}
+line-6	line-6.json	0	{"row":"changed","secrets":{"/settings/a~1b/0/password_secret":{"kid":"k2","plaintext":"s3cret:with:colons"}}}
+line-7	line-7.json	0	{"row":"changed","secrets":{"/feed_secret":{"kid":"k2","plaintext":"hunter2"}}}
+line-8	line-8.json	0	{"row":"same","secrets":{"/feed_secret":"@same"}}
+line-9	line-9.json	0	{"row":"same","secrets":{}}
+line-10	line-10.json	0	{"row":"same","secrets":{"/feed_secret":"@untouched"}}
+line-11	line-11.json	0	{"row":"skip"}
+line-12	line-12.json	0	{"row":"changed","secrets":{"/feed_secret":"@untouched","/token_secret":{"kid":"k2","plaintext":"tok-1"}}}
+line-13	line-13.json	0	{"row":"changed","secrets":{"/feed_secret":"@untouched","/token_secret":{"kid":"k2","plaintext":"tok-1"}}}
+line-14	line-14.json	0	{"row":"changed","secrets":{"/feed_secret":"@untouched","/token_secret":{"kid":"k2","plaintext":"tok-1"}}}

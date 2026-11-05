@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/may",
+ "table": "covers.tsv",
+ "case": "covers-folder-not-grammar",
+ "variant": "",
+ "cells": {
+  "input": "{\"scope\":\"folder:17\",\"ref\":{\"sub\":\"testsub\",\"id\":\"c1\"},\"row\":{\"labels\":[]}}"
+ },
+ "files": {}
+}

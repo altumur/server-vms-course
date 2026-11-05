@@ -1,0 +1,16 @@
+# Inputs of the vector command for common/deadline cases.tsv (gen_vectors.py); compare value.
+# source Platform/common/vectors/deadline/cases.tsv sha256 bd2e54d7317426285bbc2fd4eb84bb33e9a4f24a099b8bcc77ac3828a57ceb12
+case	input	exit	stdout
+line-4	line-4.json	0	{"written":"0"}
+line-5	line-5.json	0	{"written":"0"}
+line-6	line-6.json	0	{"written":"0"}
+line-7	line-7.json	0	{"written":"0"}
+line-8	line-8.json	0	{"written":"1000.123"}
+line-9	line-9.json	0	{"written":"1.234"}
+line-10	line-10.json	0	{"written":"1000"}
+line-11	line-11.json	0	{"written":"1000"}
+line-12	line-12.json	0	{"status":400,"error":"bad deadline"}
+line-13	line-13.json	0	{"status":400,"error":"bad deadline"}
+line-14	line-14.json	0	{"status":400,"error":"bad deadline"}
+line-15	line-15.json	0	{"status":400,"error":"bad deadline"}
+line-16	line-16.json	0	{"status":400,"error":"bad deadline"}

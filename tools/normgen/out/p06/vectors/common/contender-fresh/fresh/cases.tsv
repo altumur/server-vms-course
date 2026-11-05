@@ -1,0 +1,9 @@
+# Inputs of the vector command for common/contender-fresh fresh.tsv (gen_vectors.py); compare value.
+# source Platform/common/vectors/contender-fresh/fresh.tsv sha256 d6527c8ef82a648581b7c9a9fc6667b2e49e034c6b61d9c8da8023120292ddc8
+case	input	exit	stdout
+line-3	line-3.json	0	true
+line-4	line-4.json	0	true
+line-5	line-5.json	0	true
+line-6	line-6.json	0	true
+line-7	line-7.json	0	false
+line-8	line-8.json	0	false

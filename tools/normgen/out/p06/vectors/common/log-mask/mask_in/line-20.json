@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/log-mask",
+ "table": "mask_in.tsv",
+ "case": "mixed-set",
+ "variant": "",
+ "cells": {
+  "value": "\"*•●\""
+ },
+ "files": {}
+}

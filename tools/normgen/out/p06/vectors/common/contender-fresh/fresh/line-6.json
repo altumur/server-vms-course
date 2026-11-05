@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/contender-fresh",
+ "table": "fresh.tsv",
+ "case": "equal-fraction",
+ "variant": "",
+ "cells": {
+  "age": "300.0"
+ },
+ "files": {}
+}

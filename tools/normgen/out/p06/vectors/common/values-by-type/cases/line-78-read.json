@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "sec-read",
+ "variant": "read",
+ "cells": {
+  "type": "secret",
+  "row": "@sealed"
+ },
+ "files": {}
+}

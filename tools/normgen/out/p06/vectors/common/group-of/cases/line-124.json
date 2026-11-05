@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/group-of",
+ "table": "cases.tsv",
+ "case": "line-124",
+ "variant": "",
+ "cells": {
+  "raw": "ipint://admin:pa@ss@nvr50/Acme/N8"
+ },
+ "files": {}
+}

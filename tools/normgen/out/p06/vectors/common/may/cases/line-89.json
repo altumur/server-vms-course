@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/may",
+ "table": "cases.tsv",
+ "case": "may-83-unread-all",
+ "variant": "",
+ "cells": {
+  "input": "{\"grants\":{\"lines\":[{\"subject\":\"role:op\",\"cap\":\"admin\",\"scope\":\"*\",\"until\":0,\"by\":\"root\"}]},\"as_of\":1759999990,\"disabled\":[],\"user\":\"ann\",\"glass\":false,\"cap\":\"admin\",\"unit\":{\"sub\":\"testsub\",\"id\":\"c1\",\"labels\":[]},\"now\":1760000000,\"roles\":{\"ann\":[{\"role\":\"op\",\"until\":0,\"at\":1759000000}]},\"unread\":\"all\"}"
+ },
+ "files": {}
+}

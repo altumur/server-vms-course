@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "06-console/metrics",
+ "table": "cases.tsv",
+ "case": "age-round-half-even",
+ "variant": "",
+ "cells": {
+  "input": "{\"sub\":\"testsub\",\"now\":0.75,\"metrics\":[{\"name\":\"away_seconds\",\"from\":\"heartbeat.away_since\",\"agg\":\"age\"}],\"heartbeats\":{\"w-1\":{\"away_since\":0.5},\"w-2\":{\"away_since\":0.4},\"w-3\":{\"away_since\":0.3}}}"
+ },
+ "files": {}
+}

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/group-of",
+ "table": "cases.tsv",
+ "case": "line-159",
+ "variant": "",
+ "cells": {
+  "raw": "mirror://hub1/Feed.Example/a"
+ },
+ "files": {}
+}

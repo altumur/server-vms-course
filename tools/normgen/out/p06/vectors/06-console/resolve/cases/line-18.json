@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "06-console/resolve",
+ "table": "cases.tsv",
+ "case": "resolve-12-no-inherit",
+ "variant": "",
+ "cells": {
+  "input": "{\"field\":{\"name\":\"step\",\"type\":\"int\"},\"domain\":null}"
+ },
+ "files": {}
+}

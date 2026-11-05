@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "06-console/key-families",
+ "table": "cases.tsv",
+ "case": "one-manifest-named-and-prefix",
+ "variant": "",
+ "cells": {
+  "decls": "{\"testsub\":[{\"id\":\"tallies\",\"keys\":[\"domain/testsub/tallies\"],\"prefix\":\"domain/testsub/tallies/\"},{\"id\":\"ledger\",\"keys\":[\"domain/testsub/ledger\"]}]}",
+  "present": "[\"domain/keys\",\"domain/member-list\",\"domain/testsub/tallies\",\"domain/testsub/tallies/m2\",\"domain/testsub/tallies/m1\",\"domain/testsub/ledger\"]"
+ },
+ "files": {}
+}

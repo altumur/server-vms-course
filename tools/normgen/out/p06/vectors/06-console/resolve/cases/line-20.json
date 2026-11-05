@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "06-console/resolve",
+ "table": "cases.tsv",
+ "case": "resolve-14-rev-over",
+ "variant": "",
+ "cells": {
+  "input": "{\"field\":{\"name\":\"marks\",\"type\":\"list\",\"inherit\":[],\"merge\":\"union\"},\"unit\":[\"mine\"],\"domain\":{\"term\":1,\"rev\":9007199254740992,\"value\":[\"site\"]}}"
+ },
+ "files": {}
+}

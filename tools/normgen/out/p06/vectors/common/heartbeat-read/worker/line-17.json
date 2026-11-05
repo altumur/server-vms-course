@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/heartbeat-read",
+ "table": "worker.tsv",
+ "case": "time-exponent",
+ "variant": "",
+ "cells": {
+  "key": "testsub/heartbeats/w-1",
+  "object": "{\"worker\":\"w-1\",\"ts\":1e0,\"status\":[{\"id\":\"c1\",\"phase\":\"running\",\"epoch\":1,\"revision\":1,\"observed_revision\":1}],\"server\":\"srv-a\",\"instance\":\"box-a:1:aaaaaa\",\"started\":90,\"previous_hb\":80,\"freeing\":{\"v1\":0},\"pending_writes\":0}"
+ },
+ "files": {}
+}
