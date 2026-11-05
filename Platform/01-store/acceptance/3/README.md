@@ -15,8 +15,9 @@ a non-durable training store (the norms of chapter 1.3, «Implementation decides
 
 ## Stand
 
-The stand store is as in the acceptance of М10/11: schema 1, the manifests `testsub` and `testsub2` are put by `manifest-put` through `admin.sock`
-(common README), the rights file `{rights}` is the ready input of chapter 1.2 [`../2/inputs/rights.json`](../2/inputs/rights.json); the runner puts it before the store starts. Of it, the steps of the chapter need only the role socket
+The stand store is as in the acceptance of М10/11: schema 1, the manifest rows `testsub` and `testsub2` are written by the runner itself through `admin.sock`, without the installer
+(ADR-0083 addendum (98)): `put` with `cas: ""` and exactly the fields of the writer of P/02.3 Н1.5 — `yaml` (the bytes of the file), `sha256`
+of these bytes, `rev` `"1"`; the rights file `{rights}` is the ready input of chapter 1.2 [`../2/inputs/rights.json`](../2/inputs/rights.json); the runner puts it before the store starts. Of it, the steps of the chapter need only the role socket
 `console` without the rights of `admin` (`@as console`: sc. 08 step 8, sc. 15 steps 1–2) and the manifest rows `testsub`, `testsub2` (sc. 11
 steps 9–10: the copy `backup` carries the manifest rows). The resource, the controller, the console and the workers are not needed by the chapter. The stand store of the chapter is
 a single member of a box without `-api` (Н1.3 `-api`: the flag is not mandatory; the box has no partners): sc. 16 relies on this.
