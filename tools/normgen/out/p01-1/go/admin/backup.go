@@ -37,5 +37,8 @@ import "normgen/p01-1/flags"
 //	the refusals — forms/refusals.tsv:
 //	  1.3 row 13 backup_inside_dir — exit !0 - (P/01.3 Н1.3 copy; B8); with part refusals: refusals.BackupInsideDir
 func Backup(f *flags.Flags, env Env) int {
+	if env.Copy != nil {
+		return runCopy("backup", f, env)
+	}
 	return NotInStage("backup", env)
 }

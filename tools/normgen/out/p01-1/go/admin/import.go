@@ -94,5 +94,8 @@ import "normgen/p01-1/flags"
 //	  1.3 row 14 import_repeated — exit !0 - (P/01.3 Н3; B12); with part refusals: refusals.ImportRepeated
 //	  1.3 row 24 clock_early — exit !0 - (P/01.3 Н3); with part refusals: refusals.ClockEarly
 func Import(f *flags.Flags, env Env) int {
+	if env.Copy != nil {
+		return runCopy("import", f, env)
+	}
 	return NotInStage("import", env)
 }

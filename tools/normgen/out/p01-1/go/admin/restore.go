@@ -61,5 +61,8 @@ import "normgen/p01-1/flags"
 //	  1.3 row 23 copy_input — exit !0 - (P/01.3 Н1.3 copy); with part refusals: refusals.CopyInput
 //	  1.3 row 24 clock_early — exit !0 - (P/01.3 Н3); with part refusals: refusals.ClockEarly
 func Restore(f *flags.Flags, env Env) int {
+	if env.Copy != nil {
+		return runCopy("restore", f, env)
+	}
 	return NotInStage("restore", env)
 }
