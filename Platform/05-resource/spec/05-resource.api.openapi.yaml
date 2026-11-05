@@ -15,6 +15,7 @@ info:
     of an implementation may diverge: the contract does not claim that any implementation has been checked against it.'
 paths:
   /v1/objects:
+    x-route-priority: 50
     get:
       summary: 'Resource: the list of available objects'
       responses:
@@ -63,9 +64,15 @@ paths:
           - cluster
           default: local
   /v1/objects/{key}:
+    x-route-priority: 60
     parameters:
     - name: key
       in: path
+      x-path-capture: remainder
+      x-path-decode: percent-segment
+      x-path-error:
+        GET: {status: 400, response_schema: ResourceError}
+        PUT: {status: 400, response_schema: ResourceError}
       required: true
       schema:
         $ref: '#/components/schemas/ObjectKey'
@@ -171,14 +178,23 @@ paths:
           - cluster
           default: local
   /v1/objects/{sub}/blobs/{digest}:
+    x-route-priority: 20
     parameters:
     - name: sub
       in: path
+      x-path-capture: segment
+      x-path-decode: percent-segment
+      x-path-error:
+        PUT: {status: 400, response_schema: ResourceError}
       required: true
       schema:
         $ref: '#/components/schemas/SubsystemName'
     - name: digest
       in: path
+      x-path-capture: segment
+      x-path-decode: percent-segment
+      x-path-error:
+        PUT: {status: 405, response_schema: ResourceError}
       required: true
       schema:
         type: string
@@ -272,6 +288,7 @@ paths:
         '204':
           description: The whole copy is accepted; there is no response body
   /events:
+    x-route-priority: 70
     get:
       summary: 'Resource: the local index (Н1.3, Н3 «запрос (ресурс)»); the console merge — the contract P/06 (chapter 6.4)'
       description: 'The order and the cut (cut, Н1.3) — the same for the resource and for the console merge (chapter 6.4 Н3 «merge»): before the cut
@@ -380,6 +397,7 @@ paths:
           maximum: 9007199254740991
           default: 3600
   /events/wait:
+    x-route-priority: 10
     get:
       summary: 'Resource: a hint to re-read, without event rows (ADR-0038)'
       responses:
@@ -442,14 +460,23 @@ paths:
           maxLength: 128
           pattern: "^(?:[!-~]+)$"
   /buckets/{sub}/{unit}:
+    x-route-priority: 90
     parameters:
     - name: sub
       in: path
+      x-path-capture: segment
+      x-path-decode: percent-segment
+      x-path-error:
+        GET: {status: 404, response_schema: "-"}
       required: true
       schema:
         $ref: '#/components/schemas/Subsystem'
     - name: unit
       in: path
+      x-path-capture: segment
+      x-path-decode: percent-segment
+      x-path-error:
+        GET: {status: 404, response_schema: "-"}
       required: true
       schema:
         $ref: '#/components/schemas/SafeSegment'
@@ -476,9 +503,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResourceDenied'
   /events/{path}:
+    x-route-priority: 80
     parameters:
     - name: path
       in: path
+      x-path-capture: remainder
+      x-path-decode: percent-segment
+      x-path-error:
+        GET: {status: 404, response_schema: "-"}
       required: true
       schema:
         $ref: '#/components/schemas/ObjectKey'
@@ -541,14 +573,23 @@ paths:
           pattern: "^(?:bytes=(?:[0-9]+-[0-9]*|-[1-9][0-9]*))$"
         description: In the lesson profile there is one range; multiple/conditional requests are outside the profile.
   /mirror/{server}/{path}:
+    x-route-priority: 100
     parameters:
     - name: server
       in: path
+      x-path-capture: segment
+      x-path-decode: percent-segment
+      x-path-error:
+        PUT: {status: 400, response_schema: "-"}
       required: true
       schema:
         $ref: '#/components/schemas/SafeSegment'
     - name: path
       in: path
+      x-path-capture: remainder
+      x-path-decode: percent-segment
+      x-path-error:
+        PUT: {status: 400, response_schema: "-"}
       required: true
       schema:
         $ref: '#/components/schemas/ObjectKey'
@@ -587,9 +628,14 @@ paths:
               type: string
               format: binary
   /mirrored/{server}:
+    x-route-priority: 40
     parameters:
     - name: server
       in: path
+      x-path-capture: segment
+      x-path-decode: percent-segment
+      x-path-error:
+        GET: {status: 404, response_schema: "-"}
       required: true
       schema:
         $ref: '#/components/schemas/SafeSegment'
@@ -613,14 +659,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResourceDenied'
   /mirrored/{server}/{path}:
+    x-route-priority: 30
     parameters:
     - name: server
       in: path
+      x-path-capture: segment
+      x-path-decode: percent-segment
+      x-path-error:
+        GET: {status: 404, response_schema: "-"}
       required: true
       schema:
         $ref: '#/components/schemas/SafeSegment'
     - name: path
       in: path
+      x-path-capture: remainder
+      x-path-decode: percent-segment
+      x-path-error:
+        GET: {status: 404, response_schema: "-"}
       required: true
       schema:
         $ref: '#/components/schemas/ObjectKey'

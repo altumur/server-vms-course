@@ -299,3 +299,7 @@ implementation (P/01.1 item 9 «Implementation decides»; the witness has 1 MiB)
 closes the connection with a break while the client is still sending: the answer 413 may not reach the client (the dry run of Go 2026-10-30:
 «транспорт»). The step «+1 → 413, no key» is removed from the scenario and is checked by reading: 413 by `Content-Length` before the body,
 the answer before the drain, no key; exactly 64 MiB — 204 and the reading 200 — stay a scenario (as G09 item 4 of the audit of P/06).
+
+## Kit seams
+
+[seams.tsv](seams.tsv) contains additional CALL probes for generated stagetests; their exact fixture setup and observations are [the forms README](../forms/README.md). They invoke the real resource procedures or front door. They supplement [scenarios.tsv](scenarios.tsv), the additional probes and reading, and are not the runner’s process acceptance.
