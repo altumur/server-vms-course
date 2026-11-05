@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/may",
+ "table": "cases.tsv",
+ "case": "may-extra-nested-line",
+ "variant": "",
+ "cells": {
+  "input": "{\"grants\":{\"lines\":[{\"subject\":\"ann\",\"cap\":\"view\",\"scope\":\"*\",\"until\":0,\"by\":\"root\",\"unexpected\":true}]},\"as_of\":1759999990,\"disabled\":[],\"user\":\"ann\",\"glass\":true,\"cap\":\"admin\",\"unit\":\"*\",\"now\":1760000000,\"not_a_known_field\":{\"arbitrary\":[true,null,17]}}"
+ },
+ "files": {}
+}
