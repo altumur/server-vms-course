@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/resource-state",
+ "table": "cases.tsv",
+ "case": "pulse_new_version",
+ "variant": "",
+ "cells": {
+  "history": "[[0,\"pulse\",\"v1\"],[40,\"pulse\",\"v2\"],[80,\"pulse\",\"v2\"]]",
+  "at": "80"
+ },
+ "files": {}
+}

@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "s-number",
+ "variant": "write",
+ "cells": {
+  "type": "string",
+  "json": "5"
+ },
+ "files": {}
+}

@@ -1,0 +1,14 @@
+# Inputs of the vector command for common/slot cases.tsv (gen_vectors.py); compare fields:state.
+# source Platform/common/vectors/slot/cases.tsv sha256 75909c7c7143f79d6ba0b78c4644d1c4288f07690d09eff9d03d8177f91932fd
+case	input	exit	stdout
+line-3	line-3.json	0	{"state":"held"}
+line-4	line-4.json	0	{"state":"held"}
+line-5	line-5.json	0	{"state":"lapsed"}
+line-6	line-6.json	0	{"state":"released"}
+line-7	line-7.json	0	{"state":"taking"}
+line-8	line-8.json	0	{"state":"held"}
+line-9	line-9.json	0	{"state":"held"}
+line-10	line-10.json	0	{"state":"torn","takeable":false}
+line-11	line-11.json	0	{"state":"torn","takeable":false}
+line-12	line-12.json	0	{"state":"torn","takeable":true}
+line-13	line-13.json	0	{"state":"torn","takeable":false}

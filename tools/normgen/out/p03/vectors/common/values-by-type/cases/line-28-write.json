@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "f-half",
+ "variant": "write",
+ "cells": {
+  "type": "float",
+  "json": "0.5"
+ },
+ "files": {}
+}

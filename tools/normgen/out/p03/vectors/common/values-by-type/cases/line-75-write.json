@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "bl-not-digest",
+ "variant": "write",
+ "cells": {
+  "type": "blob",
+  "json": "\"not-a-digest\""
+ },
+ "files": {}
+}

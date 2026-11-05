@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "l-empty",
+ "variant": "read",
+ "cells": {
+  "type": "list",
+  "row": "\"\""
+ },
+ "files": {}
+}

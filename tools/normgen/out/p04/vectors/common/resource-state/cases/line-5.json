@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/resource-state",
+ "table": "cases.tsv",
+ "case": "pulse_boundary",
+ "variant": "",
+ "cells": {
+  "history": "[[0,\"pulse\",\"v1\"],[45,\"pulse\",\"v1\"]]",
+  "at": "45"
+ },
+ "files": {}
+}

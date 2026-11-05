@@ -1,0 +1,21 @@
+# Inputs of the vector command for common/heartbeat-read cases.tsv (gen_vectors.py); compare value.
+# source Platform/common/vectors/heartbeat-read/cases.tsv sha256 eaebabe55212140439cb4f5262c114113fd34e9cd2f483e99ab78fec7d7d785c
+case	input	exit	stdout
+line-4	line-4.json	0	{"readable":true,"fields":[]}
+line-5	line-5.json	0	{"readable":true,"fields":[]}
+line-6	line-6.json	0	{"readable":true,"fields":[]}
+line-7	line-7.json	0	{"readable":true,"fields":["retention_withheld"]}
+line-8	line-8.json	0	{"readable":true,"fields":["retention_withheld"]}
+line-9	line-9.json	0	{"readable":true,"fields":["retention_garbled"]}
+line-10	line-10.json	0	{"readable":true,"fields":["retention_garbled"]}
+line-11	line-11.json	0	{"readable":true,"fields":["build"]}
+line-12	line-12.json	0	{"readable":true,"fields":["build","retention_withheld"]}
+line-13	line-13.json	0	{"readable":false}
+line-14	line-14.json	0	{"readable":false}
+line-15	line-15.json	0	{"readable":false}
+line-16	line-16.json	0	{"readable":false}
+line-17	line-17.json	0	{"readable":false}
+line-18	line-18.json	0	{"readable":false}
+line-19	line-19.json	0	{"readable":true,"fields":[]}
+line-20	line-20.json	0	{"readable":false}
+line-21	line-21.json	0	{"readable":true,"fields":["schema"]}

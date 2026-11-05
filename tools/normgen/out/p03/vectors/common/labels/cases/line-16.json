@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/labels",
+ "table": "cases.tsv",
+ "case": "non_ascii",
+ "variant": "",
+ "cells": {
+  "op": "label",
+  "input": "\"é\""
+ },
+ "files": {}
+}

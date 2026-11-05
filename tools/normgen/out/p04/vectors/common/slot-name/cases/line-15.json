@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/slot-name",
+ "table": "cases.tsv",
+ "case": "role-no-heartbeat",
+ "variant": "",
+ "cells": {
+  "op": "role",
+  "input": "{\"prefix\":\"t\",\"name\":\"t-srv-a-2\",\"server\":null}"
+ },
+ "files": {}
+}

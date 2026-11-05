@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "lb-comma",
+ "variant": "write",
+ "cells": {
+  "type": "list:labels",
+  "json": "[\"a,b\"]"
+ },
+ "files": {}
+}

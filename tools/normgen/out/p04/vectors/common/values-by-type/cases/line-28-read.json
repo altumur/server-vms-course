@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "f-half",
+ "variant": "read",
+ "cells": {
+  "type": "float",
+  "row": "\"0.5\""
+ },
+ "files": {}
+}

@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/resource-state",
+ "table": "cases.tsv",
+ "case": "pulse_stale",
+ "variant": "",
+ "cells": {
+  "history": "[[0,\"pulse\",\"v1\"],[46,\"pulse\",\"v1\"]]",
+  "at": "46"
+ },
+ "files": {}
+}

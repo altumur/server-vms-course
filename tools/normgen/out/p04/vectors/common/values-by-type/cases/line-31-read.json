@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "f-shortest",
+ "variant": "read",
+ "cells": {
+  "type": "float",
+  "row": "\"0.30000000000000004\""
+ },
+ "files": {}
+}

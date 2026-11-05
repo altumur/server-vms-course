@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/heartbeat-read",
+ "table": "worker.tsv",
+ "case": "not-object",
+ "variant": "",
+ "cells": {
+  "key": "testsub/heartbeats/w-1",
+  "object": "[]"
+ },
+ "files": {}
+}

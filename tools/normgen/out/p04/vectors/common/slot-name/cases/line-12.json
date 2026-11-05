@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/slot-name",
+ "table": "cases.tsv",
+ "case": "role-dash-server",
+ "variant": "",
+ "cells": {
+  "op": "role",
+  "input": "{\"prefix\":\"t\",\"name\":\"t-rack-1-node-7-3\",\"server\":\"rack-1-node-7\"}"
+ },
+ "files": {}
+}

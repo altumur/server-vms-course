@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/slot-name",
+ "table": "cases.tsv",
+ "case": "next-big",
+ "variant": "",
+ "cells": {
+  "op": "next",
+  "input": "{\"prefix\":\"w\",\"names\":[\"w-18446744073709551615\"]}"
+ },
+ "files": {}
+}
