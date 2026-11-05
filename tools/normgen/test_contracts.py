@@ -12,11 +12,14 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE / "contracts"))
+import kitside  # noqa: E402
 CONTRACTS = HERE / "contracts/go"
 ADAPTERS = HERE / "contracts/adapters"
 OUT = HERE / "out"
@@ -24,7 +27,7 @@ GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOL
 
 
 def adapter_fns():
-    return {re.search(r"^func ([A-Z]\w*)\((?:table string|input \[\]byte)", p.read_text(), re.M)[1]: p
+    return {re.search(r"^func ([A-Z]\w*)\((?:table string|input \[\]byte|file \[\]byte|raw string)", p.read_text(), re.M)[1]: p
             for p in sorted(ADAPTERS.glob("*.go"))}
 
 
@@ -52,8 +55,9 @@ def build(mod, fn, adapter, contracts_src, tmp):
     stub = dst / "vectoradapter" / f"{fn.lower()}.go"
     if stub.exists():
         stub.unlink()
+    text = kitside.fill(adapter.read_text(), mod / "vectortests")
     (dst / "vectoradapter" / f"{fn.lower()}_contracts.go").write_text(
-        adapter.read_text().replace('"kitmodule/internal/contracts"', f'"{module}/contracts"'))
+        text.replace('"kitmodule/internal/contracts"', f'"{module}/contracts"'))
     return dst
 
 
@@ -123,6 +127,74 @@ class ContractsKit(unittest.TestCase):
             done = subprocess.run(["go", "test", "-count=1", "-run", "|".join(fns), "./internal/vectortests/"], cwd=mod,
                                   capture_output=True, text=True, env=GOENV)
             self.assertEqual(done.returncode, 0, done.stdout[-2000:])
+
+
+NFKC_MAIN = """package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"os"
+
+	"nfkcjudge/contracts"
+)
+
+func main() {
+	sc := bufio.NewScanner(os.Stdin)
+	sc.Buffer(make([]byte, 1<<20), 1<<20)
+	w := bufio.NewWriter(os.Stdout)
+	for sc.Scan() {
+		var s string
+		if json.Unmarshal(sc.Bytes(), &s) != nil {
+			os.Exit(2)
+		}
+		b, _ := json.Marshal(contracts.NFKC(s))
+		w.Write(append(b, '\\n'))
+	}
+	w.Flush()
+}
+"""
+
+
+class NFKC(unittest.TestCase):
+    """NFKC пакета (адресный договор А4: таблицы Unicode 15.0.0) — свежесть таблиц gen_nfkc.py и равенство
+    unicodedata.normalize("NFKC") Python 3.12 (Unicode 15.0.0) на каждой кодовой точке и на случайных цепочках
+    из несоединяемых, составных, хангыля и знаков."""
+
+    def test_tables_fresh(self):
+        import sys
+        sys.path.insert(0, str(HERE / "contracts/gen"))
+        import gen_nfkc
+        self.assertEqual((CONTRACTS / "nfkc_tables.go").read_text(encoding="utf-8"), gen_nfkc.render(),
+                         "run tools/normgen/contracts/gen/gen_nfkc.py")
+
+    def test_equals_unicodedata(self):
+        import json
+        import random
+        import unicodedata
+        if not shutil.which("go"):
+            self.skipTest("go is not in PATH")
+        self.assertEqual(unicodedata.unidata_version, "15.0.0")
+        rnd = random.Random(7)
+        cps = [c for c in range(0x110000) if not 0xD800 <= c < 0xE000]
+        marks = [c for c in cps if unicodedata.combining(chr(c))]
+        composed = [c for c in cps if unicodedata.decomposition(chr(c))]
+        pools = [marks, composed, cps[:0x3000], range(0x1100, 0x1200), range(0xAC00, 0xAC40)]
+        inputs = [chr(c) for c in cps]
+        inputs += ["".join(chr(rnd.choice(rnd.choice(pools))) for _ in range(rnd.randint(2, 6)))
+                   for _ in range(100000)]
+        with tempfile.TemporaryDirectory(prefix="contracts-nfkc-") as tmp:
+            mod = Path(tmp)
+            (mod / "go.mod").write_text("module nfkcjudge\n\ngo 1.22\n")
+            shutil.copytree(CONTRACTS, mod / "contracts")
+            (mod / "main.go").write_text(NFKC_MAIN)
+            done = subprocess.run(["go", "run", "."], cwd=mod, input="\n".join(json.dumps(s) for s in inputs) + "\n",
+                                  capture_output=True, text=True, env=GOENV)
+        self.assertEqual(done.returncode, 0, done.stderr[-2000:])
+        got = done.stdout.split("\n")[:-1]
+        self.assertEqual(len(got), len(inputs))
+        bad = [(s, g) for s, g in zip(inputs, got) if json.loads(g) != unicodedata.normalize("NFKC", s)]
+        self.assertEqual(bad[:5], [], f"{len(bad)} of {len(inputs)} differ")
 
 
 if __name__ == "__main__":

@@ -58,6 +58,8 @@ import gen_door  # noqa: E402 — свежесть door
 import gen_launch  # noqa: E402 — часть launch
 import gen_core  # noqa: E402 — часть core
 import gen_families  # noqa: E402 — часть families
+sys.path.insert(0, str(HERE.parent / "contracts"))
+import kitside  # noqa: E402 — стороны урока у адаптеров части contracts
 import gen_admin  # noqa: E402 — часть admin
 import gen_box  # noqa: E402 — часть box
 import gen_manifest  # noqa: E402 — часть loader (P/02)
@@ -214,8 +216,11 @@ def provenance(parts, files, judged):
     out = {}
     for part in parts:
         if part == "contracts":
-            out[part] = {"form": [], "generator": None, "judge": entry(NORMGEN / "test_contracts.py"),
-                         "handwritten": [entry(f) for f in sorted(CONTRACTS.rglob("*.go"))], "output": output("contracts")}
+            out[part] = {"form": [], "generator": entry(CONTRACTS / "gen/gen_nfkc.py"),
+                         "judge": entry(NORMGEN / "test_contracts.py"),
+                         "handwritten": [entry(f) for f in sorted(CONTRACTS.rglob("*.go"))
+                                         if not f.read_bytes().startswith(b"// Code generated")],
+                         "output": output("contracts")}
         elif part == "door" and L.key != lesson.DEFAULT:
             out[part] = {**gen_door_lesson.provenance(), "output": output("door")}
         elif part == "vectors" and L.key != lesson.DEFAULT:    # векторы прочих уроков — gen_vectors (P/06 с дверью тоже)
@@ -389,14 +394,17 @@ def build(dst, module, parts=(), judged=None, seed=None):
     contract_adapters = {}
     if "contracts" in parts:                           # общий пакет договоров: пакет и адаптеры векторов над ним
         for f in sorted((CONTRACTS / "go").glob("*.go")):
-            put("contracts", f.name, f.read_bytes(), "handwritten", "contracts", str(f.relative_to(ROOT)))
+            data = f.read_bytes()       # nfkc_tables.go — выход contracts/gen/gen_nfkc.py (таблицы Unicode 15.0.0)
+            origin = "generated" if data.startswith(b"// Code generated") else "handwritten"
+            put("contracts", f.name, data, origin, "contracts", str(f.relative_to(ROOT)))
         for f in sorted((CONTRACTS / "adapters").glob("*.go")):
-            fn = re.search(r"^func ([A-Z]\w*)\((?:table string|input \[\]byte)", f.read_text(), re.M)[1]
+            fn = re.search(r"^func ([A-Z]\w*)\((?:table string|input \[\]byte|file \[\]byte|raw string)", f.read_text(), re.M)[1]
             contract_adapters[f"{fn.lower()}.go"] = f
     for (sub, name, data, origin, source, own), component in tests:
         if sub == "vectoradapter" and name in contract_adapters:   # заглушка → адаптер над contracts (свой у реализации)
             f = contract_adapters[name]
-            data = f.read_bytes().replace(PLACEHOLDER.encode(), f'"{module}/internal/'.encode())
+            data = kitside.fill(f.read_text(encoding="utf-8"), L.out / "go/vectortests").encode()
+            data = data.replace(PLACEHOLDER.encode(), f'"{module}/internal/'.encode())
             origin, source = "handwritten", str(f.relative_to(ROOT))
         if core_files and (sub, name) == ("coreadapter", "open.go"):
             continue                    # open.go — у части core: Open уже возвращает её ядро
@@ -592,7 +600,9 @@ KIT_CONTRACTS_MD = """
 | `contracts` | `{module}/internal/contracts` | the kit's implementation of `Platform/common/contracts/*.md` — closed; use it in your code |
 
 The functions are the pure computations of their contracts (the instance and the box, the slot names, the labels, the
-event journal: names, buckets, lines…); reading files, the environment and the clock is yours. With the part
+event journal: names, buckets, lines…; the outcome of a store answer for its client; the revocation files revoked and
+crl.pem by the centers; the login and the password in a url value — the display and the refusal, the log mask of
+free text, the mask at the input; the url field rules from their declarations; NFKC of Unicode 15.0.0); reading files, the environment and the clock is yours. With the part
 `vectors`, the adapters of the tables they cover (`vectoradapter/<package>.go`) call this package — yours to change
 like any adapter. `tools/normgen/test_contracts.py` runs the common vectors of every lesson against them.
 """
