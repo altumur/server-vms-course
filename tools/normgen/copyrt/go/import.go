@@ -19,20 +19,18 @@ func ImportCopy(store CopyStorage, data []byte, ceiling int64, opts CopyOptions)
 		return copyError
 	}
 	var err error
-	if opts.IndexBase < index {
-		return copyRefuse("Check", "index-base is below the copy index")
-	}
-	if _, err = copyNowText(opts.Now); err != nil {
-		return err
-	}
-	if err = checkCopyUpperAndClock(rows, opts); err != nil {
+	if err = checkCopyPreflight(index, rows, opts); err != nil {
 		return err
 	}
 	if store == nil {
 		return copyRefuse("Isolation", "no copy storage connected")
 	}
 	digest := fmt.Sprintf("%x", sha256.Sum256(data))
-	return store.WithCopyLock(func(tx CopyTxn) error {
+	called := 0
+	var operationErr error
+	lockErr := store.WithCopyLock(func(tx CopyTxn) (result error) {
+		called++
+		defer func() { operationErr = result }()
 		state, err := tx.Snapshot()
 		if err != nil {
 			return fmt.Errorf("import snapshot: %w", err)
@@ -129,6 +127,16 @@ func ImportCopy(store CopyStorage, data []byte, ceiling int64, opts CopyOptions)
 		}
 		return checkCopyComplete(state, progress, rows)
 	})
+	if operationErr != nil {
+		return operationErr
+	}
+	if lockErr != nil {
+		return lockErr
+	}
+	if called != 1 {
+		return copyRefuse("Isolation", "copy storage executed transfer %d times, want once", called)
+	}
+	return nil
 }
 
 func cloneCopyRow(row Row) Row {

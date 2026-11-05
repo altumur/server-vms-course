@@ -1,4 +1,6 @@
 """Judge of the copy-to-store port: real files, controlled failures, no implementation-line source."""
+import csv
+import json
 import os
 import shutil
 import subprocess
@@ -7,8 +9,304 @@ import unittest
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent.parent
 OUT = HERE / "out/p01-1/go"
 ENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
+
+SCENARIO_TEST = r'''package box
+import (
+    "bytes"
+    "crypto/sha256"
+    "encoding/json"
+    "errors"
+    "fmt"
+    "math/big"
+    "net/url"
+    "os"
+    "path/filepath"
+    "reflect"
+    "strconv"
+    "strings"
+    "testing"
+    "time"
+    "normgen/p01-1/admin"
+    "normgen/p01-1/apidoor"
+    "normgen/p01-1/coreadapter"
+    "normgen/p01-1/flags"
+    "normgen/p01-1/launch"
+)
+
+type publicStep struct {Scenario,Step,Request,Expect string}
+type publicFixture struct {Steps []publicStep; InputDir string; Manifests map[string]string; SeamRequest,SeamExpect string}
+type copyStand struct {
+    t *testing.T
+    inputDir string
+    source,restored *diskFixture
+    backups map[string]string
+    output string
+}
+var standMark=launch.Mark{Format:"normgen-copy-judge",Version:1,Impl:"judge"}
+func newStandDisk(t *testing.T)*diskFixture {
+    t.Helper()
+    d:=&diskFixture{dir:t.TempDir()}
+    if err:=launch.CheckFormat(d.dir,standMark);err!=nil{t.Fatal(err)}
+    return d
+}
+func ordinaryGet(d *diskFixture,key string)(map[string]any,error) {
+    if err:=launch.CheckFormat(d.dir,standMark);err!=nil{return nil,err}
+    s,err:=d.Snapshot();if err!=nil{return nil,err}
+    if err=CopyStartAllowed(s.Import);err!=nil{return nil,err}
+    for _,row:=range s.Rows {if row.Key==key{return map[string]any{"items":row.Items,"index":strconv.FormatUint(row.Index,10)},nil}}
+    return map[string]any{"items":nil,"index":""},nil
+}
+
+// The ordinary command parser and admin dispatcher call CopyControl. Only its
+// persistence/transport port is supplied by this reference host; expected output
+// is never a parameter of a native command, Get or Put.
+func nativeCommand(command string,d *diskFixture,file string,base uint64,force bool)(int,string) {
+    argv:=[]string{command}
+    if command=="backup" {argv=append(argv,file)} else {
+        argv=append(argv,"-dir",d.dir,"--from",file)
+        if command=="import" {argv=append(argv,"-index-base",strconv.FormatUint(base,10))}
+        if force {argv=append(argv,"-force")}
+    }
+    f,ref:=flags.ParseArgs(argv,func(string)string{return ""})
+    if ref!=nil{return ref.Code,ref.Error()}
+    now:=d.now
+    if now==nil {now=func()time.Time{return copyOpts(base).Now}}
+    control:=CopyControl{Dir:d.dir,Ceiling:RowCeiling,Now:now,
+        Open:func(name string)(CopyStorage,func(),error){
+            if name!="backup" {if err:=launch.CheckFormat(d.dir,standMark);err!=nil{return nil,nil,err}}
+            return d,func(){},nil
+        }}
+    var log bytes.Buffer
+    code:=admin.Run(f,admin.Env{Stdout:&log,Stderr:&log,Copy:control})
+    return code,log.String()
+}
+
+func (s *copyStand) perform(request string)(int,map[string]any,error) {
+    words:=strings.Fields(request)
+    switch {
+    case strings.HasPrefix(request,"@foreign store "):
+        d:=s.t.TempDir()
+        if err:=os.WriteFile(filepath.Join(d,"opaque"),[]byte("do not alter"),0600);err!=nil{return 0,nil,err}
+        if words[2]=="otherlabel" {
+            raw,_:=json.Marshal(launch.Mark{Format:"foreign",Version:99,Impl:"other"})
+            if err:=os.WriteFile(filepath.Join(d,"FORMAT"),raw,0600);err!=nil{return 0,nil,err}
+        }
+        before,err:=treeBytes(d);if err!=nil{return 0,nil,err}
+        refusal:=launch.CheckFormat(d,standMark)
+        after,err:=treeBytes(d);if err!=nil{return 0,nil,err}
+        var startRefusal *launch.Refusal
+        if !errors.As(refusal,&startRefusal) || !reflect.DeepEqual(before,after){return 1,nil,nil}
+        return 0,map[string]any{"startup_exit":2,"unchanged":true},nil
+    case strings.HasPrefix(request,"@import store "):
+        file:=filepath.Join(s.inputDir,strings.TrimPrefix(words[2],"inputs/"))
+        if words[2]=="backup" {file=s.backups[words[3]]}
+        raw,err:=os.ReadFile(file);if err!=nil{return 0,nil,err}
+        base,_,parseErr:=DecodeCopy(raw,RowCeiling)
+        if parseErr!=nil {base=0}
+        s.restored=&diskFixture{dir:s.t.TempDir()}
+        code,log:=nativeCommand("import",s.restored,file,base,false)
+        // The real stand starts this stopped target even after a refused input.
+        // This ordinary startup mark/gate sees the durable state, not the result.
+        if err=launch.CheckFormat(s.restored.dir,standMark);err!=nil{return 0,nil,err}
+        state,err:=s.restored.Snapshot();if err!=nil{return 0,nil,err}
+        if err=CopyStartAllowed(state.Import);err!=nil{return 0,nil,err}
+        return code,map[string]any{"log":log},nil
+    case strings.HasPrefix(request,"@backup store "):
+        file:=filepath.Join(s.output,words[2]+".copy")
+        if len(words)>3 && words[3]=="in-data" {file=filepath.Join(s.source.dir,words[2]+".copy")}
+        code,log:=nativeCommand("backup",s.source,file,0,false)
+        if code==0 {s.backups[words[2]]=file}
+        return code,map[string]any{"log":log},nil
+    }
+    fields:=strings.SplitN(request," ",4)
+    if len(fields)<3{return 0,nil,fmt.Errorf("unsupported public request %s",request)}
+    d:=s.source
+    if fields[0]=="restored" {d=s.restored}
+    if d==nil{return 0,nil,errors.New("no restored target executed")}
+    if fields[1]=="GET" {
+        u,err:=url.ParseRequestURI(fields[2]);if err!=nil{return 0,nil,err}
+        if u.Path!="/v1/get" {return 0,nil,fmt.Errorf("unsupported Get path %s",u.Path)}
+        body,err:=ordinaryGet(d,u.Query().Get("key"));return 200,body,err
+    }
+    if fields[1]=="POST" && fields[2]=="/v1/write" && len(fields)==4 {
+        var cmd struct {ID,Op,Key string;Items map[string]string}
+        if err:=json.Unmarshal([]byte(fields[3]),&cmd);err!=nil{return 0,nil,err}
+        if cmd.Op!="put" {return 0,nil,fmt.Errorf("unsupported fixture write op %s",cmd.Op)}
+        index,again,err:=d.ordinaryPut(cmd.ID,cmd.Key,cmd.Items)
+        if err!=nil{return 0,nil,err}
+        body:=map[string]any{"index":strconv.FormatUint(index,10)}
+        if again {body["again"]=true}
+        return 200,body,nil
+    }
+    return 0,nil,fmt.Errorf("unexecuted public request %s",request)
+}
+
+func treeBytes(dir string)(map[string]string,error) {
+    out:=map[string]string{}
+    err:=filepath.WalkDir(dir,func(path string,e os.DirEntry,err error)error{
+        if err!=nil{return err};if e.IsDir(){return nil}
+        b,err:=os.ReadFile(path);if err!=nil{return err}
+        out[strings.TrimPrefix(path,dir+string(os.PathSeparator))]=string(b);return nil
+    })
+    return out,err
+}
+
+func matchObservation(want,got any,vars map[string]string)bool {
+    switch w:=want.(type) {
+    case map[string]any:
+        g,ok:=got.(map[string]any);if !ok || len(w)==0 && len(g)!=0{return false}
+        for k,v:=range w {
+            a,has:=g[k]
+            if v=="@absent" {if has{return false};continue}
+            if !has || !matchObservation(v,a,vars){return false}
+        };return true
+    case []any:
+        g,ok:=got.([]any);if !ok || len(w)!=len(g){return false}
+        for i:=range w {if !matchObservation(w[i],g[i],vars){return false}};return true
+    case string:
+        if w=="@any" {return true}
+        if w=="@time" {g,ok:=got.(string);if !ok{return false};_,ok=readCopyTime(g);return ok}
+        if strings.HasPrefix(w,"$") {g,ok:=got.(string);if !ok{return false};if old,has:=vars[w];has{return g==old};vars[w]=g;return true}
+        return reflect.DeepEqual(w,got)
+    case json.Number:
+        g,ok:=got.(json.Number);if !ok{return false}
+        a,aok:=new(big.Rat).SetString(string(w));b,bok:=new(big.Rat).SetString(string(g));return aok && bok && a.Cmp(b)==0
+    default:return reflect.DeepEqual(want,got)
+    }
+}
+
+func TestDaemonCopyExisting51Steps(t *testing.T) {
+    raw,err:=os.ReadFile(os.Getenv("COPY_JUDGE_SCENARIOS"));if err!=nil{t.Fatal(err)}
+    var fixture publicFixture;if err=json.Unmarshal(raw,&fixture);err!=nil{t.Fatal(err)}
+    if len(fixture.Steps)!=51 {t.Fatalf("not the published 51 ordinary steps: %d",len(fixture.Steps))}
+    previous:="";var stand *copyStand;vars:=map[string]string{}
+    for _,st:=range fixture.Steps {
+        if st.Scenario!=previous {
+            previous=st.Scenario;vars=map[string]string{}
+            stand=&copyStand{t:t,inputDir:fixture.InputDir,source:newStandDisk(t),backups:map[string]string{},output:t.TempDir()}
+            if st.Scenario=="11-copy" {
+                file:=filepath.Join(fixture.InputDir,"copy-ok.jsonl")
+                if code,log:=nativeCommand("restore",stand.source,file,0,false);code!=0{t.Fatalf("prepare source through native restore: %d %s",code,log)}
+            }
+            // P01.3 README Stand: the original stand store has the two public
+            // manifest rows even though copy-ok.jsonl deliberately has none.
+            // Write actual fixture bytes through the ordinary store operation.
+            for _,name:=range []string{"testsub","testsub2"} {
+                raw,err:=os.ReadFile(fixture.Manifests[name]);if err!=nil{t.Fatal(err)}
+                items:=map[string]string{"yaml":string(raw),"sha256":fmt.Sprintf("%x",sha256.Sum256(raw)),"rev":"1"}
+                if _,_,err=stand.source.ordinaryPut("prepare-"+name,"platform/manifest/"+name,items);err!=nil{t.Fatal(err)}
+            }
+        }
+        t.Run(st.Scenario+"/"+st.Step,func(t *testing.T){
+            code,body,err:=stand.perform(st.Request)
+            if err!=nil {t.Fatal("unexecuted/failed native path",err)}
+            switch st.Expect {
+            case "ok":if code!=0{t.Fatalf("want ok, native code %d body %v",code,body)}
+            case "refused":if code==0{t.Fatal("expected refusal was accepted",body)}
+            default:
+                status,text,_:=strings.Cut(st.Expect," ")
+                expectedCode,err:=strconv.Atoi(status);if err!=nil || code!=expectedCode {t.Fatalf("status want %s got %d",status,code)}
+                dec:=json.NewDecoder(strings.NewReader(text));dec.UseNumber();var expected any
+                if err=dec.Decode(&expected);err!=nil{t.Fatal(err)}
+                // Normalize only JSON types, never the result from the expectation.
+                encoded,err:=json.Marshal(body);if err!=nil{t.Fatal(err)}
+                actualDecoder:=json.NewDecoder(bytes.NewReader(encoded));actualDecoder.UseNumber();var actual any
+                if err=actualDecoder.Decode(&actual);err!=nil{t.Fatal(err)}
+                if !matchObservation(expected,actual,vars){t.Fatalf("want %s, actual %s",text,encoded)}
+            }
+        })
+    }
+}
+
+type referenceCore struct {coreadapter.NotInStage; t *testing.T; fixture publicFixture}
+func (*referenceCore)Get(coreadapter.Ctx,apidoor.GetQuery)apidoor.Answer{return apidoor.Answer{}}
+func (*referenceCore)List(coreadapter.Ctx,apidoor.ListQuery)apidoor.Answer{return apidoor.Answer{}}
+func (*referenceCore)Write(coreadapter.Ctx,[]byte)apidoor.Answer{return apidoor.Answer{}}
+func (*referenceCore)QueryRefused(coreadapter.Ctx,apidoor.Op,*apidoor.QueryError)apidoor.Answer{return apidoor.Answer{}}
+func (*referenceCore)Context(coreadapter.Call,map[string]string)coreadapter.Ctx{return nil}
+func (*referenceCore)Close(){}
+
+// This is a YOURS adapter over the very same native command/storage functions
+// used by the 51-step host. It receives no expectation and observes actual I/O.
+func(c *referenceCore)NativeSeam(cfg coreadapter.Config,name string,args json.RawMessage)(json.RawMessage,error) {
+    if name!="store-copy-floor" {return nil,errors.New("reference host implements copy seam only")}
+    var input struct {Input string;InterruptAfter int `json:"interrupt_after_target_rows"`}
+    if err:=json.Unmarshal(args,&input);err!=nil{return nil,err}
+    if input.Input!="backup_of_restored_store" || input.InterruptAfter!=1{return nil,errors.New("unknown copy seam input")}
+    if cfg.Now==nil{return nil,errors.New("no fixture clock")}
+    source:=newStandDisk(c.t)
+    source.now=cfg.Now
+    seed:=filepath.Join(c.fixture.InputDir,"copy-ok.jsonl")
+    if code,log:=nativeCommand("restore",source,seed,0,false);code!=0{return nil,fmt.Errorf("restore failed %d: %s",code,log)}
+    backup:=filepath.Join(c.t.TempDir(),"restored.copy")
+    if code,log:=nativeCommand("backup",source,backup,0,false);code!=0{return nil,fmt.Errorf("backup failed %d: %s",code,log)}
+    raw,err:=os.ReadFile(backup);if err!=nil{return nil,err}
+    base,rows,copyErr:=DecodeCopy(raw,RowCeiling);if copyErr!=nil{return nil,copyErr}
+    var old Row
+    for _,row:=range rows {if row.Key==FloorKey{old=row}}
+    if old.Items==nil || len(rows)<3{return nil,errors.New("source backup was not of a restored store")}
+    target:=newStandDisk(c.t);target.failAfter=input.InterruptAfter;target.now=cfg.Now
+    code,log:=nativeCommand("import",target,backup,base,false)
+    if code==0 || !strings.Contains(log,"injected I/O error after durable target row") {
+        return nil,fmt.Errorf("expected controlled I/O interruption, got %d: %s",code,log)
+    }
+    first,err:=target.Snapshot();if err!=nil{return nil,err}
+    if first.Import==nil{return nil,errors.New("interruption had no durable first floor")}
+    f1:=cloneCopyRow(first.Import.Floor)
+    reopened:=&diskFixture{dir:target.dir,now:cfg.Now}
+    if code,log=nativeCommand("import",reopened,backup,base,false);code!=0{return nil,fmt.Errorf("resume failed %d: %s",code,log)}
+    final,err:=reopened.Snapshot();if err!=nil{return nil,err}
+    actual,err:=copyRowsByKey(final.Rows);if err!=nil{return nil,err}
+    kept:=true
+    for _,row:=range rows {if row.Key!=FloorKey && !reflect.DeepEqual(actual[row.Key],row){kept=false}}
+    oldFloor,err:=strconv.ParseUint(old.Items["floor"],10,64);if err!=nil{return nil,err}
+    newFloor,err:=strconv.ParseUint(f1.Items["floor"],10,64);if err!=nil{return nil,err}
+    oldTransferred:=false
+    for _,row:=range append(target.writeLog,reopened.writeLog...) {if row.Key==FloorKey && reflect.DeepEqual(row,old){oldTransferred=true}}
+    observation:=map[string]any{
+        "first_write_is_new_floor":len(target.writeLog)>0 && reflect.DeepEqual(target.writeLog[0],f1),
+        "new_floor_greater_than_input":newFloor>oldFloor,
+        "old_floor_transferred":oldTransferred,
+        "same_floor_row_after_resume":reflect.DeepEqual(actual[FloorKey],f1),
+        "other_rows_and_versions_equal":kept,
+        "complete":final.Import!=nil && final.Import.Phase=="Done" && len(actual)==len(rows) && kept,
+        "first_generation_at":f1.Items["generation_at"],
+    }
+    return json.Marshal(observation)
+}
+
+func TestPublishedCopyCALLThroughYOURSAndNativeIO(t *testing.T) {
+    raw,err:=os.ReadFile(os.Getenv("COPY_JUDGE_SCENARIOS"));if err!=nil{t.Fatal(err)}
+    var fixture publicFixture;if err=json.Unmarshal(raw,&fixture);err!=nil{t.Fatal(err)}
+    cfg:=coreadapter.Config{DataDir:t.TempDir(),RowCeiling:RowCeiling,Now:func()time.Time{return time.Date(2027,2,3,4,5,6,123456789,time.UTC)}}
+    // The live fixture directory is a sentinel, never an import destination.
+    if err=os.WriteFile(filepath.Join(cfg.DataDir,"live"),[]byte("untouched"),0600);err!=nil{t.Fatal(err)}
+    before,err:=treeBytes(cfg.DataDir);if err!=nil{t.Fatal(err)}
+    c:=&referenceCore{t:t,fixture:fixture}
+    name,input,ok:=strings.Cut(strings.TrimPrefix(fixture.SeamRequest,"CALL ")," ");if !ok{t.Fatal("no public CALL")}
+    actual,err:=coreadapter.CallSeam(c,cfg,name,json.RawMessage(input));if err!=nil{t.Fatal(err)}
+    var want,got any
+    if err=json.Unmarshal([]byte(fixture.SeamExpect),&want);err!=nil{t.Fatal(err)}
+    if err=json.Unmarshal(actual,&got);err!=nil{t.Fatal(err)}
+    if !matchObservation(want,got,map[string]string{}){t.Fatalf("want %s, actual %s",fixture.SeamExpect,actual)}
+    at,_:=copyNowText(cfg.Now())
+    if got.(map[string]any)["first_generation_at"]!=at{t.Fatal("native copy ignored the fixture wall clock")}
+    after,err:=treeBytes(cfg.DataDir);if err!=nil || !reflect.DeepEqual(before,after){t.Fatal("CALL imported over the live fixture directory",err)}
+}
+'''
+
+SEAM_BRIDGE = '''package coreadapter
+import "encoding/json"
+// YOURS connection for the reference host: ordinary paths live on the core, no expected input.
+func CallSeam(c Core,cfg Config,name string,args json.RawMessage)(json.RawMessage,error) {
+    native,ok:=c.(interface{NativeSeam(Config,string,json.RawMessage)(json.RawMessage,error)})
+    if !ok {return nil,ErrNotImplemented}
+    return native.NativeSeam(cfg,name,args)
+}
+'''
 
 BACKUP_TEST = r'''package box
 
@@ -16,9 +314,11 @@ import (
     "bytes"
     "encoding/json"
     "errors"
+    "math"
     "os"
     "path/filepath"
     "reflect"
+    "strconv"
     "strings"
     "sync"
     "testing"
@@ -34,6 +334,7 @@ type diskFixture struct {
     targetWrites int
     loseFloorReply bool
     dropWrites bool
+    now func()time.Time
 }
 
 type diskRecord struct {
@@ -165,6 +466,7 @@ func TestBackupInsideDataAndLinkRefuseBeforeStoreAccess(t *testing.T) {
     for _,file:=range []string{filepath.Join(d.dir,"copy"),filepath.Join(link,"copy")} {
         if err:=BackupCopy(d,file,d.dir); err==nil { t.Fatal("inside-data backup accepted") }
     }
+    if err:=BackupTarget(filepath.Join(t.TempDir(),"copy"),string(filepath.Separator));err==nil {t.Fatal("filesystem root was treated as having an outside path")}
     after,_:=os.ReadFile(filepath.Join(d.dir,"state.json"))
     if !bytes.Equal(before,after) || d.snapshots!=0 { t.Fatal("refused backup touched the store") }
 }
@@ -258,13 +560,13 @@ func TestImportBackupAndInterruptedResumeKeepExactF1(t *testing.T) {
     // A new object reopens only the durable file. A later clock would choose a
     // different generation if the controller wrongly ran New floor again.
     reopened:=&diskFixture{dir:dest.dir}
-    later:=copyOpts(header);later.Now=later.Now.Add(48*time.Hour)
+    later:=copyOpts(header);later.Now=time.Date(2300,1,1,0,0,0,0,time.UTC)
     if err=ImportCopy(reopened,raw,RowCeiling,later);err!=nil {t.Fatal(err)}
     done,err:=reopened.Snapshot();if err!=nil{t.Fatal(err)}
-    if done.Import.Phase!="Done" || !sameCopyRow(done.Import.Floor,f1) {t.Fatal("resume changed F1 or failed Done")}
+    if done.Import.Phase!="Done" || !reflect.DeepEqual(done.Import.Floor,f1) {t.Fatal("resume changed F1 or failed Done")}
     actual,_:=copyRowsByKey(done.Rows)
-    if !sameCopyRow(actual[FloorKey],f1) || sameCopyRow(actual[FloorKey],old) {t.Fatal("input floor overwrote F1")}
-    for _,want:=range input {if want.Key!=FloorKey && !sameCopyRow(actual[want.Key],want) {t.Fatal("lost row/version",want.Key)}}
+    if !reflect.DeepEqual(actual[FloorKey],f1) || reflect.DeepEqual(actual[FloorKey],old) {t.Fatal("input floor overwrote F1")}
+    for _,want:=range input {if want.Key!=FloorKey && !reflect.DeepEqual(actual[want.Key],want) {t.Fatal("lost row/version",want.Key)}}
     if len(actual)!=len(input) {t.Fatal("not exactly all non-floor input rows plus new F1")}
     for _,row:=range reopened.writeLog {if row.Key==FloorKey {t.Fatal("resume wrote F1 again")}}
     before,_:=os.ReadFile(filepath.Join(reopened.dir,"state.json"))
@@ -312,22 +614,66 @@ func TestCopyDoesNotCarryIDReplayMemoryOrAdmission(t *testing.T) {
     _,again,err=dest.ordinaryPut("b1","other/b10",map[string]string{"n":"1"})
     if err!=nil || !again {t.Fatal("new store did not remember its own first replay",again,err)}
 }
+
+func TestPreflightNeverMutatesBeforeRefusing(t *testing.T) {
+    raw:=seedCopy(t)
+    _,rows,parseErr:=DecodeCopy(raw,RowCeiling);if parseErr!=nil{t.Fatal(parseErr)}
+    overflowRows:=append([]Row{},rows...)
+    for i:=range overflowRows {overflowRows[i]=cloneCopyRow(overflowRows[i]);if overflowRows[i].Key==FloorKey {overflowRows[i].Items["floor"]=strconv.FormatUint(math.MaxUint64,10)}}
+    overflow,err:=EncodeCopy(7,overflowRows);if err!=nil{t.Fatal(err)}
+    invalidRows:=append([]Row{},rows...)
+    for i:=range invalidRows {invalidRows[i]=cloneCopyRow(invalidRows[i]);if invalidRows[i].Key==FloorKey {invalidRows[i].Items["generation_at"]="not time"}}
+    invalid,err:=EncodeCopy(7,invalidRows);if err!=nil{t.Fatal(err)}
+    forced:=copyOpts(7);forced.Force=true
+    future:=copyOpts(7);future.Now=time.Date(2300,1,1,0,0,0,0,time.UTC)
+    for _,p:=range []struct{data []byte;opts CopyOptions;initial CopyState}{
+        {raw,copyOpts(6),CopyState{}},
+        {raw,copyOpts(math.MaxUint64),CopyState{}},
+        {overflow,forced,CopyState{}},
+        {invalid,forced,CopyState{}},
+        {raw,future,CopyState{}},
+        {raw,copyOpts(7),CopyState{Index:math.MaxUint64}},
+        {raw,copyOpts(7),CopyState{Index:1,Rows:[]Row{{Key:"other/not-fresh",Index:1,Items:map[string]string{}}}}},
+    } {
+        d:=newDisk(t,p.initial)
+        before,_:=os.ReadFile(filepath.Join(d.dir,"state.json"))
+        if err=ImportCopy(d,p.data,RowCeiling,p.opts);err==nil{t.Fatal("bad input/base/upper/freshness accepted")}
+        after,_:=os.ReadFile(filepath.Join(d.dir,"state.json"))
+        if !bytes.Equal(before,after) || len(d.writeLog)!=0 {t.Fatal("refusal mutated the target")}
+    }
+}
+
+type emptyPort struct{}
+func(emptyPort)WithCopyLock(func(CopyTxn)error)error{return nil}
+type swallowedPort struct{store *diskFixture}
+func(s swallowedPort)WithCopyLock(fn func(CopyTxn)error)error {
+    return s.store.WithCopyLock(func(tx CopyTxn)error{_ = fn(tx);return nil})
+}
+func TestStoragePortMustExecuteAndPropagateOutcome(t *testing.T) {
+    if err:=ImportCopy(emptyPort{},seedCopy(t),RowCeiling,copyOpts(7));err==nil{t.Fatal("unexecuted storage port reported successful import")}
+    if err:=BackupCopy(emptyPort{},filepath.Join(t.TempDir(),"copy"),t.TempDir());err==nil{t.Fatal("unexecuted storage port reported successful backup")}
+    d:=newDisk(t,CopyState{});d.failAfter=1
+    if err:=ImportCopy(swallowedPort{d},seedCopy(t),RowCeiling,copyOpts(7));err==nil{t.Fatal("host swallowed the actual transfer I/O failure")}
+    actual,err:=d.Snapshot();if err!=nil{t.Fatal(err)}
+    if actual.Import==nil || actual.Import.Phase!="Transfer"{t.Fatal("not an executed interrupted transfer")}
+}
 '''
 
 
 class CopyStorage(unittest.TestCase):
+    def module(self, mod):
+        for name in ("go.mod", "apidoor", "jsonstrict", "refusals", "flags", "box", "launch", "coreadapter", "admin"):
+            src = OUT / name
+            if src.is_dir():
+                shutil.copytree(src, mod / name)
+            else:
+                shutil.copyfile(src, mod / name)
+        (mod / "box/copy_storage_test.go").write_text(BACKUP_TEST, encoding="utf-8")
+
     def test_copy_port_with_real_files_and_restart(self):
         with tempfile.TemporaryDirectory(prefix="normgen-copy-") as tmp:
             mod = Path(tmp)
-            for name in ("go.mod", "apidoor", "jsonstrict", "refusals", "flags", "box"):
-                src = OUT / name
-                if src.is_dir():
-                    shutil.copytree(src, mod / name)
-                else:
-                    shutil.copyfile(src, mod / name)
-            shutil.copyfile(HERE / "copyrt/go/storage.go", mod / "box/copy_storage.go")
-            shutil.copyfile(HERE / "copyrt/go/validation.go", mod / "box/copy_validation.go")
-            (mod / "box/copy_storage_test.go").write_text(BACKUP_TEST, encoding="utf-8")
+            self.module(mod)
             done = subprocess.run(["go", "test", "-race", "-count=1", "-v", "./box"], cwd=mod, env=ENV,
                                   capture_output=True, text=True, timeout=120)
             self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
@@ -335,8 +681,79 @@ class CopyStorage(unittest.TestCase):
                          "TestBackupInsideDataAndLinkRefuseBeforeStoreAccess", "TestBackupRequiresCompleteStore",
                          "TestClockGrammarAndForceBoundary", "TestOrdinaryStartupGateUsesDurableProgress",
                          "TestImportBackupAndInterruptedResumeKeepExactF1", "TestLostFloorReplyAndIdentityAndCompleteness",
-                         "TestCopyDoesNotCarryIDReplayMemoryOrAdmission"):
+                         "TestCopyDoesNotCarryIDReplayMemoryOrAdmission", "TestPreflightNeverMutatesBeforeRefusing",
+                         "TestStoragePortMustExecuteAndPropagateOutcome"):
                 self.assertIn("--- PASS: " + name, done.stdout)
+
+    def test_published_51_steps_through_actual_commands_and_files(self):
+        import gate
+        with (ROOT / "Platform/01-store/forms/stages.tsv").open() as stream:
+            stages = list(csv.DictReader((line for line in stream if not line.startswith("#")), delimiter="\t"))
+        stage = next(row for row in stages if row["stage"] == "daemon_copy")
+        names = set()
+        for item in gate.parse(stage["gate"]):
+            if item.kind == "accept" and item.chapter == "1.3":
+                self.assertIsNotNone(item.names, "use the exact published ordinary scenarios, not a guessed wildcard")
+                names.update(item.names)
+        inputs = ROOT / "Platform/01-store/acceptance/3"
+        with (inputs / "scenarios.tsv").open() as stream:
+            steps = [row for row in csv.DictReader((line for line in stream if not line.startswith("#")), delimiter="\t")
+                     if row["scenario"] in names]
+        self.assertEqual(len(steps), 51)
+        self.assertEqual({row["scenario"] for row in steps}, names)
+        with tempfile.TemporaryDirectory(prefix="normgen-copy-51-") as tmp:
+            mod = Path(tmp)
+            self.module(mod)
+            (mod / "box/copy_scenarios_test.go").write_text(SCENARIO_TEST, encoding="utf-8")
+            (mod / "coreadapter/seams.go").write_text(SEAM_BRIDGE, encoding="utf-8")
+            fixture = mod / "public-copy-steps.json"
+            manifests = {name: str(ROOT / "Source/tests/testdata" / f"{name}.subsystem.yaml") for name in ("testsub", "testsub2")}
+            with (inputs / "seams.tsv").open() as stream:
+                seam = next(row.split("\t") for row in stream if row.startswith("s10-import-floor-resume\t"))
+            fixture.write_text(json.dumps({"Steps": steps, "InputDir": str(inputs / "inputs"), "Manifests": manifests,
+                                           "SeamRequest": seam[2], "SeamExpect": seam[3].strip()}), encoding="utf-8")
+            env = dict(ENV, COPY_JUDGE_SCENARIOS=str(fixture))
+            done = subprocess.run(["go", "test", "-race", "-count=1", "-json", "./box"], cwd=mod,
+                                  env=env, capture_output=True, text=True, timeout=120)
+            events = [json.loads(raw) for raw in done.stdout.splitlines()]
+            failed = {event.get("Test", "") for event in events if event.get("Action") == "fail"}
+            failure = "".join(event.get("Output", "") for event in events if event.get("Test", "") in failed)
+            self.assertEqual(done.returncode, 0, failure + done.stderr)
+            actual = {}
+            prefix = "TestDaemonCopyExisting51Steps/"
+            for raw in done.stdout.splitlines():
+                event = json.loads(raw)
+                test = event.get("Test", "")
+                if test.startswith(prefix) and test.count("/") == 2 and event.get("Action") in ("pass", "fail", "skip"):
+                    actual[test[len(prefix):]] = event["Action"]
+            self.assertEqual(set(actual), {row["scenario"] + "/" + row["step"] for row in steps})
+            self.assertEqual(set(actual.values()), {"pass"})
+            self.assertTrue(any(e.get("Test") == "TestPublishedCopyCALLThroughYOURSAndNativeIO" and
+                                e.get("Action") == "pass" for e in events))
+
+    def test_runtime_mutants_are_executed_and_killed(self):
+        mutants = (
+            ("input_floor_transferred", "if row.Key == FloorKey {\n\t\t\t\tcontinue", "if false && row.Key == FloorKey {\n\t\t\t\tcontinue"),
+            ("no_continuation", "if state.Import != nil {", "if false && state.Import != nil {"),
+            ("row_versions_lost", "tx.WriteImport(cloneCopyRow(row))", "tx.WriteImport(func() Row { r := cloneCopyRow(row); r.Index = 0; return r }())"),
+            ("index_not_advanced", "Index: base + 1", "Index: 1"),
+            ("false_completeness", "!exists || !sameCopyRow(got, want)", "false && (!exists || !sameCopyRow(got, want))"),
+        )
+        with tempfile.TemporaryDirectory(prefix="normgen-copy-mutants-") as tmp:
+            for name, old, new in mutants:
+                with self.subTest(mutant=name):
+                    mod = Path(tmp) / name
+                    mod.mkdir()
+                    self.module(mod)
+                    source = mod / "box/copy_import.go"
+                    text = source.read_text()
+                    self.assertIn(old, text, "mutant must touch its stated runtime check")
+                    source.write_text(text.replace(old, new, 1))
+                    done = subprocess.run(["go", "test", "-count=1", "./box"], cwd=mod,
+                                          env=ENV, capture_output=True, text=True, timeout=120)
+                    self.assertNotEqual(done.returncode, 0, name + " survived")
+                    self.assertNotIn("build failed", done.stdout + done.stderr)
+                    self.assertIn("--- FAIL:", done.stdout, "a compile error is not an executed killed mutant")
 
 
 if __name__ == "__main__":

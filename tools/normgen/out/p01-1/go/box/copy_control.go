@@ -83,13 +83,7 @@ func (c CopyControl) transfer(command, file string, base uint64, force bool) err
 	opts := CopyOptions{IndexBase: base, Force: force, Now: c.Now()}
 	// Reject bad input and clock before even opening a target. ImportCopy repeats
 	// these checks under its own public API; the host opener can itself refuse.
-	if _, err = copyNowText(opts.Now); err != nil {
-		return fmt.Errorf("copy input %s: %w", file, err)
-	}
-	if base < index {
-		return fmt.Errorf("copy input %s: %w", file, copyRefuse("Check", "index-base is below the copy index"))
-	}
-	if err = checkCopyUpperAndClock(rows, opts); err != nil {
+	if err = checkCopyPreflight(index, rows, opts); err != nil {
 		return fmt.Errorf("copy input %s: %w", file, err)
 	}
 	s, close, err := c.open(command)

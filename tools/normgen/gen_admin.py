@@ -321,7 +321,7 @@ def render():
         raise GenError(f"{NORMS_13.name}: Н3 «{RECOVER}» — {len(rec)} found or no req anchors")
     files, report = {}, []
     for cmd in cmds:
-        if go_name(cmd) in ("Run", "NotInStage", "Env", "Own"):
+        if go_name(cmd) in ("Run", "NotInStage", "Env", "Own", "CopyOps"):
             raise GenError(f"subcommand {cmd!r}: its Go name clashes with admin.go")
         doc = stub_comment(cmd, gram[cmd], rest, keys, cli, rec[0][2], flags[cmd])
         delegate = (f'\tif env.Copy != nil {{ return runCopy("{cmd}", f, env) }}\n'

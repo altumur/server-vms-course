@@ -68,7 +68,11 @@ func BackupCopy(store CopyStorage, file, dir string) error {
 	if err := BackupTarget(file, dir); err != nil {
 		return err
 	}
-	return store.WithCopyLock(func(tx CopyTxn) error {
+	called := 0
+	var operationErr error
+	lockErr := store.WithCopyLock(func(tx CopyTxn) (result error) {
+		called++
+		defer func() { operationErr = result }()
 		state, err := tx.Snapshot()
 		if err != nil {
 			return fmt.Errorf("backup snapshot: %w", err)
@@ -82,6 +86,16 @@ func BackupCopy(store CopyStorage, file, dir string) error {
 		}
 		return WriteCopyFile(file, data)
 	})
+	if operationErr != nil {
+		return operationErr
+	}
+	if lockErr != nil {
+		return lockErr
+	}
+	if called != 1 {
+		return fmt.Errorf("backup: copy storage executed snapshot %d times, want once", called)
+	}
+	return nil
 }
 
 // WriteCopyFile uses a new file of mode 0600 in the destination directory, syncs

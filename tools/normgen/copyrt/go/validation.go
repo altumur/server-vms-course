@@ -82,6 +82,27 @@ func checkCopyUpperAndClock(rows []Row, opts CopyOptions) error {
 	return nil
 }
 
+func checkCopyPreflight(index uint64, rows []Row, opts CopyOptions) error {
+	if opts.IndexBase < index {
+		return copyRefuse("Check", "index-base is below the copy index")
+	}
+	if opts.IndexBase == math.MaxUint64 {
+		return copyRefuse("Check", "version overflow")
+	}
+	if _, err := copyNowText(opts.Now); err != nil {
+		return err
+	}
+	if err := checkCopyUpperAndClock(rows, opts); err != nil {
+		return err
+	}
+	// Only the immutable input's bound can be checked here. A continuation
+	// never allocates a generation from the current clock, even much later.
+	if _, _, ok := Floor(Upper(rows, nil), Since); !ok {
+		return copyRefuse("Check", "generation overflow")
+	}
+	return nil
+}
+
 // CopyStartAllowed is the host's ordinary startup/read/write gate. A host must
 // call it using the actual durable progress; it must not discard a pending mark
 // when a daemon restarts. Startup maps its refusal to code 2; an in-process store

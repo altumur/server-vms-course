@@ -109,13 +109,17 @@ def facts():
         if not re.search(pat, copy_):
             raise GenError(f"Н1.3 copy: {pat!r} is not found")
     import_ = block_line(t13, "import")
-    for phrase in ("Transfer excludes the input platform/epoch_floor: the first write is the new floor F1",
-                   "a partial replay preserves the exact saved F1 row (items and index)"):
-        if phrase not in import_:
-            raise GenError(f"Н1.3 import: the published F1/continuation rule is absent: {phrase}")
-    for pattern in (r"^(0|[1-9][0-9]*)(\.[0-9]+)?$", r"^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$"):
-        if pattern not in t11:
-            raise GenError("Н0 time: the reader/writer notation used by the copy environment is absent")
+    copy_rules = ("Transfer excludes the input platform/epoch_floor: the first write is the new floor F1",
+                  "a partial replay preserves the exact saved F1 row (items and index)")
+    f["copy_storage"] = all(phrase in import_ for phrase in copy_rules)
+    if any(phrase in import_ for phrase in copy_rules) and not f["copy_storage"]:
+        raise GenError("Н1.3 import: incomplete published F1/continuation rule")
+    if not f["copy_storage"] and "platform/epoch_floor is an ordinary row" not in copy_:
+        raise GenError("Н1.3 copy: neither the known earlier form nor the complete F1 rule")
+    if f["copy_storage"]:
+        for pattern in (r"^(0|[1-9][0-9]*)(\.[0-9]+)?$", r"^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$"):
+            if pattern not in t11:
+                raise GenError("Н0 time: the reader/writer notation used by the copy environment is absent")
     gm = re.search(r"generation: max\(\(upper >> (\d+)\) \+ 1, whole hours of UTC since (\d{4})-(\d\d)-(\d\d)\); "
                    r"floor = generation << (\d+);", floor)
     bm = re.search(r"1 … 2\^53 − 2\^32", floor)
@@ -584,6 +588,9 @@ func BackupTarget(file, dir string) error {
 	if err != nil {
 		return err
 	}
+	if d == string(filepath.Separator) { // the filesystem root has no outside target
+		return &InsideDir{File: f, Dir: d}
+	}
 	if f == d || strings.HasPrefix(f, d+string(filepath.Separator)) {
 		return &InsideDir{File: f, Dir: d}
 	}
@@ -663,13 +670,17 @@ def render():
                         sub=f["<sub>"][4:-2], id=f["<id>"][4:-2], since_y=f["since"][0], since_m=f["since"][1],
                         since_d=f["since"][2], shift=f["shift"], max_generation=f["max_generation"])
     files = {"box/box.go": gofmt(box), "box/copy.go": gofmt(cp)}
-    files.update({rel: gofmt(source.read_text(encoding="utf-8")) for rel, source in COPY_RUNTIME.items()})
+    if f["copy_storage"]:
+        files.update({rel: gofmt(source.read_text(encoding="utf-8")) for rel, source in COPY_RUNTIME.items()})
     return files, f
 
 
 def generate(out=DEFAULT_OUT):
     gdir = Path(out) / "go"
     files, _ = render()
+    for rel in COPY_RUNTIME:
+        if rel not in files:
+            (gdir / rel).unlink(missing_ok=True)  # an older export must not retain a newer procedure
     for rel, text in files.items():
         (gdir / rel).parent.mkdir(parents=True, exist_ok=True)
         (gdir / rel).write_text(text, encoding="utf-8")
@@ -694,9 +705,16 @@ def kit_files(module, out=DEFAULT_OUT):
 def provenance():
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": sha(path)}
+    storage = facts()["copy_storage"]
     return {"form": [entry(p) for p in (NORMS_13, NORMS_11, REFUSALS, OPENAPI, KEYS_README)],
-            "generator": entry(Path(__file__).resolve()), "handwritten": [entry(p) for p in COPY_RUNTIME.values()],
-            "judge": entry(JUDGE), "judges": [entry(JUDGE), entry(COPY_JUDGE)]}
+            "generator": entry(Path(__file__).resolve()), "handwritten": [entry(p) for p in COPY_RUNTIME.values()] if storage else [],
+            "judge": entry(JUDGE), "judges": [entry(JUDGE), entry(COPY_JUDGE)] if storage else [entry(JUDGE)],
+            "judge_inputs": [entry(p) for p in (L.form("stages.tsv"),
+                            *sorted(L.path("acceptance/3").glob("*.tsv")),
+                            L.path("acceptance/3/README.md"),
+                            *sorted(L.path("acceptance/3/inputs").glob("*.jsonl")),
+                            ROOT / "Source/tests/testdata/testsub.subsystem.yaml",
+                            ROOT / "Source/tests/testdata/testsub2.subsystem.yaml")] if storage else []}
 
 
 KIT_MD = """
@@ -750,7 +768,14 @@ they fail explicitly. You still implement the storage/CLI transport connection; 
 
 
 def kit_md():
-    return KIT_MD
+    if facts()["copy_storage"]:
+        return KIT_MD
+    return """\n## Part `box`: the earlier form of the box primitives (closed)
+
+`box.go`: Status/Metrics/Join/Leave/Admit/Recover/StartRefusal. `copy.go`: EncodeCopy/DecodeCopy/Upper/Floor/BackupTarget.
+This export predates the complete F1 continuation rule. It receives these earlier primitives, not the new store
+procedure; the implementation connects the copy to its store under this export's own norms.
+"""
 
 
 def main(argv):
