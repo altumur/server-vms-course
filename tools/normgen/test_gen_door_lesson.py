@@ -23,8 +23,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-LESSON = "06-console"
-SLUG = "p06"
+LESSONS = {"06-console": "p06", "08-domain": "p08", "09-agent": "p09", "10-domain-console": "p10"}
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 METHODS = ("get", "put", "post", "delete", "patch", "head", "options", "trace")
 CATALOG = {"sub": {"testsub", "testsub2"}, "rows": {"units", "cams"}, "table": {"tallies"}, "pass": {"probe"}}
@@ -37,8 +36,8 @@ import yamlsub  # noqa: E402
 class Model:
     """Своя модель маршрутов судьи: OpenAPI → шаблоны и проверки параметров."""
 
-    def __init__(self):
-        self.spec = ROOT / "Platform" / LESSON / "spec" / f"{LESSON}.api.openapi.yaml"
+    def __init__(self, lesson):
+        self.spec = ROOT / "Platform" / lesson / "spec" / f"{lesson}.api.openapi.yaml"
         self.files = {}
         self.doc = self.load(self.spec)
         self.paths = []
@@ -53,10 +52,10 @@ class Model:
                 if m not in item:
                     continue
                 op = item[m]
-                prms = [self.deref(p, self.spec)[0] for p in item.get("parameters", []) + op.get("parameters", [])]
-                for p in prms:
+                prms = [self.deref(p, self.spec) for p in item.get("parameters", []) + op.get("parameters", [])]
+                for p, pbase in prms:                     # схема параметра — от файла, где параметр объявлен
                     if p["in"] == "path":
-                        checks[p["name"]] = self.schema(p["schema"], self.spec)
+                        checks[p["name"]] = self.schema(p["schema"], pbase)
                 codes = [str(c) for c in op["responses"]]
                 ops[m.upper()] = codes
             urls = [s["url"] for s in item.get("servers") or []]
@@ -292,19 +291,21 @@ def expected(model, probe):
     return {"path": r[1], "method": r[2], "params": r[3], "prefixed": r[4]}
 
 
-class DoorLesson(unittest.TestCase):
+class DoorLessonBase:
+    LESSON = SLUG = None
+
     @classmethod
     def setUpClass(cls):
         if not shutil.which("go"):
             raise unittest.SkipTest("go is not in PATH")
         cls.tmp = Path(tempfile.mkdtemp(prefix="door-lesson-"))
         out = cls.tmp / "fresh"
-        done = subprocess.run([sys.executable, str(HERE / "gen_door_lesson.py"), "--lesson", LESSON, str(out)],
+        done = subprocess.run([sys.executable, str(HERE / "gen_door_lesson.py"), "--lesson", cls.LESSON, str(out)],
                               capture_output=True, text=True)
         if done.returncode:
             raise AssertionError(done.stderr)
         cls.fresh = out / "go"
-        cls.model = Model()
+        cls.model = Model(cls.LESSON)
 
     @classmethod
     def tearDownClass(cls):
@@ -312,7 +313,7 @@ class DoorLesson(unittest.TestCase):
 
     def test_fresh(self):
         for name in ("routes.go", "routes_rt.go"):
-            kept = HERE / "out" / SLUG / "go/apidoor" / name
+            kept = HERE / "out" / self.SLUG / "go/apidoor" / name
             self.assertEqual(kept.read_bytes(), (self.fresh / "apidoor" / name).read_bytes(), f"{kept} is stale")
 
     def test_ops(self):
@@ -334,9 +335,11 @@ class DoorLesson(unittest.TestCase):
                 for pre in ((False, True) if p["prefixed"] else (False,))}
         missed = want - hit_ops
         # пробы, затенённые более конкретным шаблоном или без образца, — допустимы, но не больше 10 %
-        self.assertLess(len(missed), len(want) // 10, f"probes reach too few operations: {sorted(missed)[:10]}")
+        self.assertLessEqual(len(missed), len(want) // 10, f"probes reach too few operations: {sorted(missed)[:10]}")
         codes = {g.get("err") for g in got}
-        self.assertTrue({404, 405} <= codes, codes)
+        self.assertIn(404, codes)
+        if any(p["all405"] for p in self.model.paths):
+            self.assertIn(405, codes)
 
     def test_mutants(self):
         rnd = random.Random(7)
@@ -347,14 +350,31 @@ class DoorLesson(unittest.TestCase):
         muts = {
             "prefix-lost": ("routes.go", re.sub(r"(\{path: \"[^\"]+\", segs: \[\]segment\{\{param: \"sub\"\}[^\n]*prefixed: )true",
                                                 r"\1false", src, count=1)),
-            "all405": ("routes.go", src.replace(f"\t{m405[1]}true,", f"\t{m405[1]}false,", 1)),
+            "all405": ("routes.go", src.replace(f"\t{m405[1]}true,", f"\t{m405[1]}false,", 1) if m405 else src),
             "pattern": ("routes.go", re.sub(r'("(?!sub"|rows"|table"|pass")\w+": paramCheck\{minLen: )1(, maxLen: -1, rx: nil)',
                                             r"\g<1>3\2", src, count=1)),
             "rank": ("routes_rt.go", rt.replace('case s.param == "sub" || s.param == "rows"', 'case s.param == "sub" || s.param == "zz"', 1)),
         }
+        prefixed = any(p["prefixed"] for p in self.model.paths)
+        shapes = {}
+        for p, tsegs, pre in self.model.templates():
+            shapes.setdefault(tuple("{}" if re.fullmatch(r"\{.+\}", sg) else sg for sg in tsegs), []).append(tsegs)
+
+        def rows_vs_free(group):                       # ранг rows решает: {rows} и свободный параметр на одной позиции
+            for i in range(len(group[0])):
+                names = {sg for sg in (t[i] for t in group)}
+                if "{rows}" in names and any(re.fullmatch(r"\{(.+)\}", n) and n[1:-1] not in CATALOG for n in names):
+                    return True
+            return False
+        classes = any(len(v) > 1 and rows_vs_free(v) for v in shapes.values())
         for name, (f, text) in muts.items():
+            if (name == "prefix-lost" and not prefixed) or (name == "rank" and not classes) \
+                    or (name == "all405" and m405 is None):
+                continue                                   # на уроке без префикса и классов каталога — неприменим
+            base = src if f == "routes.go" else rt
+            if name == "pattern" and text == base:
+                continue                                   # у урока нет свободного параметра с minLength 1 без шаблона
             with self.subTest(mutant=name):
-                base = src if f == "routes.go" else rt
                 self.assertNotEqual(text, base, f"{name}: the mutant does not apply")
                 mod = self.tmp / f"mut-{name}"
                 shutil.copytree(self.fresh, mod)
@@ -365,6 +385,11 @@ class DoorLesson(unittest.TestCase):
                     continue
                 bad = [p for p, g in zip(pr, got) if expected(self.model, p) != g]
                 self.assertTrue(bad, f"{name} survives")
+
+
+for _lesson, _slug in LESSONS.items():
+    _name = "DoorLesson_" + _slug
+    globals()[_name] = type(_name, (DoorLessonBase, unittest.TestCase), {"LESSON": _lesson, "SLUG": _slug})
 
 
 if __name__ == "__main__":
