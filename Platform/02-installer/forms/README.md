@@ -22,7 +22,7 @@ an output format, an exit code on unspecified input, or a new interface for comm
 chapter row name surface code kind fields headers log norm word cause outcome diagnostic caller
 ```
 
-The separator is a literal TAB. Lines starting with `#` are comments; the first other line is the header. Every row has fifteen cells.
+The separator is a literal TAB. Lines starting with `#` are comments; the first other line is the header. Every row has 15 cells.
 `name` is unique snake_case; `chapter` is `2.K`; `row` is the original 1-based row of that chapter’s Н4 catalogue, not a new normative id.
 `surface` is one of `call` (a pure procedure), `cli`, `start`, `process` (a running process), `peer` (a check whose owner is another lesson).
 `code` is a three-digit HTTP status for a `peer` outcome, `exit N` with a decimal integer N >= 0, `exit !0` (any nonzero code, including 2), or `-` (no numeric code prescribed here).
