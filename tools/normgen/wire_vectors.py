@@ -39,7 +39,10 @@ def declarations(root):
     bindings = wire.lesson_bindings(root, "02-installer")
     by = {b.key: b for b in bindings if b.surface != "layout"}
     out = []
-    for package, table, surface, fn, args in API:
+    api_rows = list(API)
+    if ("01-store/jcs", "canonical_json.tsv", "vectors") in by:
+        api_rows.append(("01-store/jcs", "canonical_json.tsv", "vectors", "JCS", "cells"))
+    for package, table, surface, fn, args in api_rows:
         key = package, table, surface
         if key not in by:
             raise wire.WireError(f"{wire.FORM}: missing adapter binding {key}")
@@ -107,10 +110,12 @@ def payload(r):
 
 
 def expectation(r):
-    return json.dumps({"code": r.code, "ignore": r.ignore_stdout, "value": None if isinstance(r.value, bytes) else r.value,
-                       "raw": base64.b64encode(r.value).decode("ascii") if isinstance(r.value, bytes) else None,
-                       "compare": r.compare, "native": r.native,
-                       "asserts": [a._asdict() for a in r.asserts]}, ensure_ascii=False)
+    out = {"code": r.code, "ignore": r.ignore_stdout, "value": None if isinstance(r.value, bytes) else r.value,
+           "raw": base64.b64encode(r.value).decode("ascii") if isinstance(r.value, bytes) else None,
+           "compare": r.compare, "native": r.native, "asserts": [a._asdict() for a in r.asserts]}
+    if r.ignore:
+        out["ignored"] = r.ignore
+    return json.dumps(out, ensure_ascii=False)
 
 
 def build(root, g):
@@ -121,6 +126,14 @@ def build(root, g):
         if r.compare.startswith("lines-"):
             raise wire.WireError(f"{wire.FORM}: P/02 does not support {r.compare} yet")
     known = g.common_vectors.composition("02-installer", root, known_only=True)
+    return render(root, g, decls, runs, excluded, known)
+
+
+def render(root, g, decls, runs, excluded, known=(), scaffold=True):
+    for r in runs:
+        check_native(r.native)
+        if r.compare.startswith("lines-"):
+            raise wire.WireError(f"{wire.FORM}: unsupported compare {r.compare}")
     files, inv = {}, []
     by_fn = {}
     for d in decls:
@@ -128,12 +141,15 @@ def build(root, g):
     files["go/vectoradapter/vectoradapter.go"] = g.gofmt(g.TYPES_GO).encode()
     for fn, ds in by_fn.items():
         files[f"go/vectoradapter/{fn.lower()}.go"] = g.gofmt(g.stub(ds)).encode()
-    for name, text in g.common_vectors.adapters("02-installer", known_only=True).items():
-        files[f"go/vectoradapter/{name}"] = g.gofmt(text).encode()
-    bindings = {b.key: b for b in wire.lesson_bindings(root, "02-installer")}
-    files["go/vectorcmd/vectorcmd.go"] = g.go_vectorcmd(decls, known, bindings).encode()
-    files["go/cmd/vectors/main.go"] = g.gofmt(g.MAIN_GO % g.GO_MODULE).encode()
-    files["go/vectortests/helpers_test.go"] = g.gofmt(HELPER.replace("MODULE", g.GO_MODULE)).encode()
+    if scaffold:
+        for name, text in g.common_vectors.adapters(g.L.key, known_only=True, root=root).items():
+            files[f"go/vectoradapter/{name}"] = g.gofmt(text).encode()
+    bindings = {r.binding.key: r.binding for r in runs}
+    if scaffold:
+        files["go/vectorcmd/vectorcmd.go"] = g.go_vectorcmd(decls, known, bindings).encode()
+        files["go/cmd/vectors/main.go"] = g.gofmt(g.MAIN_GO % g.GO_MODULE).encode()
+    helper = "helpers_test.go" if scaffold else "consumer_helpers_test.go"
+    files["go/vectortests/" + helper] = g.gofmt(HELPER.replace("MODULE", g.GO_MODULE)).encode()
     # Reuse the independently judged schema engine of the door, up to the HTTP-specific functions.
     schema = (g.HERE / "doorrt2/go/schema.go").read_text().split("// mediaType —", 1)[0]
     if "func validate(" not in schema or "func DecodeRequest(" in schema:
@@ -175,6 +191,9 @@ def build(root, g):
         why = "a layout test (wire.tsv)" if e.binding.surface == "layout" else e.reason
         inv.append((f"{e.binding.package} {e.binding.table}" + (f" {e.line}" if e.line else ""), "excluded: " + why))
     files["go/vectortests/inventory.tsv"] = ("# Vector runs from wire.tsv; layout and unselected rows are excluded.\ntable\tstatus\n" + "\n".join("\t".join(x) for x in inv) + "\n").encode()
+    if not scaffold:
+        files.pop("go/vectoradapter/vectoradapter.go", None)
+        files.pop("go/vectortests/inventory.tsv", None)
     return files, inv
 
 

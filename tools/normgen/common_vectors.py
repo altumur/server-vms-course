@@ -10,6 +10,8 @@ crl, revoked, log-mask, store-client, family-read). Модуль генерат�
 import json
 from pathlib import Path
 
+import vector_consumers
+
 COMMON = "Platform/common/vectors"
 
 # Состав урока — форма «Спецификации» Platform/common/vectors/consumers.tsv (package common/<имя>, table, lesson,
@@ -108,22 +110,19 @@ def composition(lesson_key, root=None, known_only=False):
     path = root / CONSUMERS
     if not path.is_file():
         return list(BEFORE_FORM.get(lesson_key, []))
-    lines = [ln for ln in path.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("#")]
-    if not lines or lines[0].split("\t") != CONSUMER_COLUMNS:
-        raise CommonError(f"{CONSUMERS}: columns must be {CONSUMER_COLUMNS}")
+    try:
+        assigned = vector_consumers.read(root)
+        if lesson_key not in vector_consumers.lessons(root):
+            raise vector_consumers.ConsumerError(f"{CONSUMERS}: unknown lesson {lesson_key!r}")
+    except vector_consumers.ConsumerError as exc:
+        raise CommonError(str(exc)) from None
     out = []
-    for no, line in enumerate(lines[1:], 2):
-        cells = line.split("\t")
-        if len(cells) != len(CONSUMER_COLUMNS):
-            raise CommonError(f"{CONSUMERS}: row {no}: {len(cells)} cells")
-        package, table, lesson_, _ = cells
-        if lesson_ != lesson_key:
-            continue
-        if not package.startswith("common/"):
-            raise CommonError(f"{CONSUMERS}: row {no}: package {package!r} — common/<name>")
+    for (package, table), owners in assigned.items():
+        if lesson_key not in owners or not package.startswith("common/"):
+            continue                 # own/foreign packages are dispatched by gen_tests/gen_vectors, not these APIs
         name = package[len("common/"):]
         if known_only and name in DECLS and table not in DECLS[name].get("tables", (table,)):
-            continue                                   # таблица пакета вне объявления P/01 — её объявляет gen_vectors
+            continue
         if name not in DECLS:
             if known_only:
                 continue
@@ -197,9 +196,9 @@ import "errors"
 '''
 
 
-def adapters(lesson_key, known_only=False):
+def adapters(lesson_key, known_only=False, root=None):
     """{имя файла vectoradapter: текст Go} заготовок общих пакетов урока (без family-read — его исполняет пакет)."""
-    return {DECLS[n]["adapter"]: ADAPTER_HEAD + DECLS[n]["doc"] for n, _ in composition(lesson_key, known_only=known_only)
+    return {DECLS[n]["adapter"]: ADAPTER_HEAD + DECLS[n]["doc"] for n, _ in composition(lesson_key, root=root, known_only=known_only)
             if DECLS[n]["adapter"]}
 
 

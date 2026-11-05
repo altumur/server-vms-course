@@ -14,6 +14,8 @@ from dataclasses import dataclass, field
 from typing import NamedTuple, Optional
 from pathlib import Path
 
+import vector_consumers
+
 FORM = "Platform/common/vectors/wire.tsv"
 CONSUMERS = "Platform/common/vectors/consumers.tsv"
 COLUMNS = ["package", "table", "surface", "header", "inputs", "files", "expect", "compare", "markers", "native", "norm"]
@@ -179,6 +181,19 @@ def check_asserts(a, where, group, prefix=False):
             check_value(x["value"], w + ".value", group=group, prefix=prefix)
 
 
+def check_ignore(paths, where):
+    if not isinstance(paths, list) or not paths:
+        raise WireError(f"{where}: ignore must be a nonempty pointer array")
+    seen = []
+    for p in paths:
+        if not isinstance(p, str) or not p.startswith("/") or re.search(r"~(?![01])", p):
+            raise WireError(f"{where}: invalid ignore pointer {p!r}")
+        parts = tuple(x.replace("~1", "/").replace("~0", "~") for x in p[1:].split("/"))
+        if any(parts[:len(q)] == q or q[:len(parts)] == parts for q in seen):
+            raise WireError(f"{where}: duplicate/overlapping ignore pointer {p!r}")
+        seen.append(parts)
+
+
 def check_native(n, where):
     for i, d in enumerate(n if isinstance(n, list) else [n]):
         w = f"{where}[{i}]" if isinstance(n, list) else where
@@ -192,7 +207,7 @@ def check_native(n, where):
             raise WireError(f"{w}: frame raw is only for bytes")
 
 
-def parse(root):
+def parse(root, keys=None, surfaces=None):
     """→ [Binding] формы; любое отступление от грамматики — WireError с номером строки."""
     root = Path(root)
     path = root / FORM
@@ -220,6 +235,9 @@ def parse(root):
         if key in seen:
             raise WireError(f"{w}: second row {key}")
         seen.add(key)
+        if ((keys is not None and (r["package"], r["table"]) not in keys)
+                or (surfaces is not None and r["surface"] not in surfaces)):
+            continue  # only selected table grammars are used; incomplete P/06 is not silently executed
         layout = r["surface"] == "layout"
         js = {k: strict_json(r[k], f"{w} {k}") for k in ("inputs", "files", "expect", "markers")}
         js["native"] = None if layout and r["native"] == "-" else strict_json(r["native"], f"{w} native")
@@ -281,7 +299,7 @@ def check_binding(root, b, w):
             raise WireError(f"{w}: expect")
         for i, e in enumerate(b.expect):
             we = f"{w} expect[{i}]"
-            keys_of(e, we, ("variant", "code", "value"), ("when", "assert"))
+            keys_of(e, we, ("variant", "code", "value"), ("when", "assert", "ignore"))
             if e["variant"] not in variants:
                 raise WireError(f"{we}: variant {e['variant']!r} has no input")
             if not isinstance(e["code"], int) or isinstance(e["code"], bool) or not 0 <= e["code"] <= 255:
@@ -290,6 +308,8 @@ def check_binding(root, b, w):
                 raise WireError(f"{we}: omit at the root")
             check_value(e["value"], we + ".value", group=group)
             check_asserts(e.get("assert", []), we, group)
+            if "ignore" in e:
+                check_ignore(e["ignore"], we)
         for i, m in enumerate(b.markers):
             wm = f"{w} markers[{i}]"
             keys_of(m, wm, ("variant", "column", "match"),
@@ -359,6 +379,7 @@ class Run:
     value: object = None            # ожидаемое значение JSON (или bytes при native bytes)
     compare: str = "value"
     asserts: list = field(default_factory=list)    # [Assert]
+    ignore: list = field(default_factory=list)     # comparison pointers, after the full native schema
     native: dict = None
 
     @property
@@ -381,7 +402,10 @@ class Cel:
         T = cel.Type
         self.cel = cel
         cfg = cel.NewEnvConfigFromYaml("name: wire\nextensions:\n  - name: strings\n")
-        self.env = cel.NewEnv(config=cfg, variables={"row": T.Map(T.STRING, T.STRING), "owner": T.STRING})
+        fn = cel.FunctionDecl("json", [cel.Overload(id="wire_json", parameters=[T.STRING], return_type=T.DYN,
+                                                   impl=lambda text: strict_json(text, "wire when json"))])
+        self.env = cel.NewEnv(config=cfg, variables={"row": T.Map(T.STRING, T.STRING), "owner": T.STRING},
+                              functions=[fn])
         self.cache = {}
 
     def __call__(self, expr, row, owner, where):
@@ -393,7 +417,10 @@ class Cel:
                 e = self.cache[expr] = self.env.compile(expr)
             except Exception as x:          # noqa: BLE001 — ошибка компиляции CEL
                 raise WireError(f"{where}: when {expr!r}: {x}") from None
-        v = e.eval(data={"row": row, "owner": owner})
+        try:
+            v = e.eval(data={"row": row, "owner": owner})
+        except Exception as x:
+            raise WireError(f"{where}: when {expr!r}: {x}") from None
         if v.type() == self.cel.Type.ERROR or not isinstance(v.plain_value(), bool):
             raise WireError(f"{where}: when {expr!r} on {row}: {v.value()}")
         return v.plain_value()
@@ -617,6 +644,7 @@ class Expander:
                 break
         run.code = e["code"]
         run.compare = cmp
+        run.ignore = e.get("ignore", [])
         if marker is None:
             run.value = self.value(e["value"], part, pdir, f"{w} expect")
             run.asserts = self.asserts(e.get("assert", []), part, pdir, f"{w} expect")
@@ -631,7 +659,7 @@ class Expander:
             src = marker.get("assert", [] if "value" in marker else e.get("assert", []))
             run.asserts = self.asserts(src, part, pdir, f"{w} marker", suffix)
         if not run.ignore_stdout:
-            check_type(run.value, run.native, f"{w} line {no0}", schema=not run.compare.endswith("subset"))
+            check_type(run.value, run.native, f"{w} line {no0}", schema=not run.compare.endswith("subset") and not run.ignore)
         return run
 
 
@@ -664,26 +692,24 @@ def check_type(v, native, where, schema=True):
 
 def consumers(root):
     """→ {(package от Platform без vectors/, table): {урок}} из consumers.tsv."""
-    out = {}
-    for line in (Path(root) / CONSUMERS).read_text(encoding="utf-8").split("\n"):
-        cells = line.split("\t")
-        if not line or line.startswith("#") or len(cells) != 4 or cells[0] == "package":
-            continue
-        pkg = cells[0] if cells[0].startswith("common/") else "common/" + cells[0]
-        out.setdefault((pkg, cells[1]), set()).add(cells[2])
-    return out
+    try:
+        return vector_consumers.read(root)
+    except vector_consumers.ConsumerError as exc:
+        raise WireError(str(exc)) from None
 
 
 def lesson_bindings(root, owner, bindings=None):
     """Привязки урока: свои пакеты урока и общие, назначенные уроку consumers.tsv."""
-    bindings = parse(root) if bindings is None else bindings
     cons = consumers(root)
+    if owner not in vector_consumers.lessons(root):
+        raise WireError(f"{CONSUMERS}: unknown lesson {owner!r}")
+    keys = {key for key, owners in cons.items() if owner in owners}
+    bindings = parse(root, keys=keys) if bindings is None else bindings
     for b in bindings:
-        if b.package.startswith("common/"):
-            for d in b.inputs:
-                for o in re.findall(r'owner\s*==\s*"([^"]+)"', d.get("when", "")):
-                    if o not in cons.get((b.package, b.table), set()):
-                        raise WireError(f"{FORM}:{b.line}: owner {o!r} is not a consumer of {b.package} {b.table}")
+        for d in b.inputs:
+            for o in re.findall(r'owner\s*==\s*"([^"]+)"', d.get("when", "")):
+                if o not in cons.get((b.package, b.table), set()):
+                    raise WireError(f"{FORM}:{b.line}: owner {o!r} is not a consumer of {b.package} {b.table}")
     return [b for b in bindings
             if b.package.split("/", 1)[0] == owner or owner in cons.get((b.package, b.table), set())]
 

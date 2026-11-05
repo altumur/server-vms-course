@@ -36,6 +36,7 @@ sys.path.insert(0, str(HERE))
 from gen_checks import camel, go_str, gofmt  # noqa: E402 — общие кирпичи генератора № 1
 import gen_stagetests  # noqa: E402 — тесты этапов из сценариев (ADR-0125 доп. (3))
 import gate  # noqa: E402 — общий разбор gate (ревью Codex С4)
+import vector_consumers
 import common_vectors  # noqa: E402 — общие пакеты векторов урока (ADR-0125 доп. (5) п. 5)
 import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
 L = lesson.CURRENT
@@ -650,10 +651,10 @@ func main() { os.Exit(vectorcmd.Main(os.Args[1:], os.Stdout, os.Stderr)) }
 '''
 
 
-def go_vectorcmd(sources):
+def go_vectorcmd(sources, root=ROOT):
     packages, want, cases = [], [], []
     decls = [(name, decl, VECTORCMD_CASES[name]) for name, decl in PACKAGES.items()]
-    for name, table in common_vectors.composition(L.key):          # общие пакеты урока (ADR-0125 доп. (5) п. 5)
+    for name, table in common_vectors.composition(L.key, root):    # общие пакеты урока (ADR-0125 доп. (5) п. 5)
         d = common_vectors.DECLS[name]
         decls.append((name, {"package": f"common/{name}", "table": table, "inputs": d["inputs"],
                              "files": list(d["files"]), "native": d["native"]}, common_vectors.VECTORCMD[name]))
@@ -703,6 +704,14 @@ def render(root=ROOT):
     except lesson.LessonError as exc:
         raise GenError(str(exc)) from None
     root = Path(root)
+    try:
+        assigned = vector_consumers.for_lesson(root, L.key) if (root / vector_consumers.FORM).is_file() else set()
+        available = {(d["package"], d["table"]) for d in PACKAGES.values()}
+        available |= {(f"common/{n}", t) for n, t in common_vectors.composition(L.key, root)}
+    except (vector_consumers.ConsumerError, common_vectors.CommonError) as exc:
+        raise GenError(str(exc)) from None
+    if assigned - available:
+        raise GenError(f"consumers.tsv: no gen_tests adapter for {sorted(assigned - available)}")
     stages, stages_src = read_stages(root)
     probes, probe_lim, probe_allow, probe_srcs = read_probes(root)
     jcs, jcs_src = read_jcs(root)
@@ -716,7 +725,7 @@ def render(root=ROOT):
                                                    test_prefix(stages, "jcs")).encode("utf-8"),
         "go/vectortests/rights_eval_test.go": go_rights_tests(rights, rights_src, rights_file, stages_src,
                                                               test_prefix(stages, "rights-evaluator")).encode("utf-8"),
-        "go/vectorcmd/vectorcmd.go": go_vectorcmd([jcs_src, rights_src] + probe_srcs).encode("utf-8"),
+        "go/vectorcmd/vectorcmd.go": go_vectorcmd([jcs_src, rights_src] + probe_srcs, root).encode("utf-8"),
         "go/cmd/vectors/main.go": gofmt(go_head([]) + "\n" + MAIN_GO % {"module": GO_MODULE}).encode("utf-8"),
     }
     # Копии ручного пакета kit/go (jsonstrict, writecheck): модуль выхода собирается сам по себе (vectorcmd импортирует
@@ -767,7 +776,7 @@ def render(root=ROOT):
 
 def common(root, files):
     """Общие пакеты векторов урока (common_vectors): заготовки адаптера, тесты TestCommon<Пакет>_Line<N>, входы судьи."""
-    for fname, text in common_vectors.adapters(L.key).items():
+    for fname, text in common_vectors.adapters(L.key, root=root).items():
         files[f"go/vectoradapter/{fname}"] = gofmt(text).encode("utf-8")
 
     def head(*rels):
