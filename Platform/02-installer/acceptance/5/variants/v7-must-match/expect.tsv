@@ -1,8 +1,8 @@
-# Ожидаемые эффективные права варианта v7-must-match (README приёмки главы 2.5, «Варианты манифестов»):
-# роль, действие, ключ, allow | deny. Формат: `role<TAB>action<TAB>key<TAB>expect`.
-# Заказчик vb создаёт строки va/items (worker.creates); общая проверка строки (договор проверки строки) читает:
-#  - цели ref/must_match полей адресата — va/shelves/* (прямая ветвь);
-#  - строки каталога, чьё поле с ref на таблицу адресата и must_match, — vc/links/* (ОБРАТНАЯ ветвь must_match).
+# Expected effective rights of v7-must-match (chapter 2.5 acceptance README, «Варианты манифестов»):
+# role, action, key, allow | deny. Format: `role<TAB>action<TAB>key<TAB>expect`.
+# Requester vb creates va/items rows (worker.creates); common row validation (row-check contract) reads:
+# - targets of the destination's ref/must_match fields — va/shelves/* (forward branch);
+# - catalogue rows whose field has a ref to the destination table and must_match — vc/links/* (REVERSE must_match branch).
 role	action	key	expect
 vbworker	read	va/shelves/u1	allow
 vbworker	read	vc/links/x	allow

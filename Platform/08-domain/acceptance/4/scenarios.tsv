@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/08.4: стенд домена hold, m1, m2 с людьми и грантами (двери holder, member, signer; @admin при @install domain, @person); сценарии 01, 02, 04, 08, 09, 10 перенесены из М11/09 (стадия B). Формат — README.
+# Acceptance P/08.4: domain stand hold, m1, m2 with people/grants (holder, member, signer doors; @admin with @install domain, @person); scenarios 01, 02, 04, 08, 09, 10 moved from М11/09 (stage B). Format: README.
 01-login-people-grants	1	@domain	ok
 01-login-people-grants	2	signer POST /api/login {"user": "root", "password": "w2c test root password"}	200 {"token": "@any", "until": "@any", "user": "root"}
 01-login-people-grants	3	signer POST /api/login {"user": "root", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}

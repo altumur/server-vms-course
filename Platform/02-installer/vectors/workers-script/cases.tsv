@@ -1,5 +1,5 @@
-# Что запускает и останавливает скрипт воркеров по заказу (P/02.4 Н1.5 rules 2–4; ADR-0084 доп. (1) Р1, Р4, доп. (4) Р26).
-# Форма — README рядом. Стадия A (A6).
+# What the worker script starts and stops on request (P/02.4 Н1.5 rules 2–4; ADR-0084 addendum (1) R1, R4, addendum (4) R26).
+# Form: the adjacent README. Stage A (A6).
 case	input	expect	note
 start-two	{"want": "3", "running": []}	{"start": [2, 3], "stop": []}	want 3 — два заказанных к базовому
 start-missing	{"want": "3", "running": [2]}	{"start": [3], "stop": []}	недостающий — наименьший свободный номер

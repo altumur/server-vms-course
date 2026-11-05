@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/08.9: стенд hold, m1, m2 — общий документ: правка и её отказы, значение у члена, доставка; сценарий 01 перенесён из М11/11 (стадия B). Формат — README.
+# Acceptance P/08.9: stand hold, m1, m2 — shared document edits/refusals, value at a member, delivery; scenario 01 moved from М11/11 (stage B). Format: README.
 01-shared-edit-and-read	1	@domain	ok
 01-shared-edit-and-read	2	holder GET /domain/shared	200 {"doc": null, "delivery": {"term": 0, "rev": 0, "holding": [], "behind": {}, "refused": {}, "sentence": "~rev 0 on 0 of 3 members"}, "declared": {"testsub": [{"name": "marks", "type": "list"}, {"name": "rounds", "type": "json", "schema": "@any"}, {"name": "step", "type": "int"}]}}
 01-shared-edit-and-read	3	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 5, "marks": ["site"]}}}	200 {"term": 1, "rev": 1, "by": "root"}

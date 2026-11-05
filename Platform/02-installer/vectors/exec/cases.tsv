@@ -1,4 +1,4 @@
-# Командная строка exec (P/02.1 execLine: worker.exec, parts.<часть>.exec; ADR-0091 доп. (5) п. 2): строка → argv или @refuse. Форма — README.
+# exec command line (P/02.1 execLine: worker.exec, `parts.<часть>.exec`; ADR-0091 addendum (5) item 2): string → argv or @refuse. Form: README.
 case	exec	expect	note
 one-word	"/usr/lib/cam/worker"	["/usr/lib/cam/worker"]	одно слово — абсолютный путь
 args	"/usr/lib/cam/worker --mode=a,b +x @y:z ^w_1.2"	["/usr/lib/cam/worker", "--mode=a,b", "+x", "@y:z", "^w_1.2"]	разрешённые знаки + , . / : = @ ^ _ -

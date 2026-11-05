@@ -1,10 +1,10 @@
-# Ожидаемые эффективные права варианта v9-asked-free-resource (P/02.5 Н1.4):
-# - console пишет vb/asked/* (у vb есть requests.per_person) и не пишет va/asked/* (у va нет per_person);
-# - vbworker и vbcontroller не читают vb/asked/* (!vb/asked/*);
-# - resource пишет/читает/удаляет vb/requests/free-* (у vb requests.free: true), не пишет vb/requests/r1 и va/requests/free-*;
-# - resource читает таблицу holds (vb/notches/*) и строки единиц манифеста с about (vb/things/*), но не обычную таблицу vb/shelves/* и не строки va/items/* без about.
-# - resource не читает семью места <s>/holds/* ни у vb (с holds), ни у va (без holds): ресурсу — только <M>/<holds.table>/*
-#   (C02-RESOURCE-HOLDS-TABLE-01; решение «Архитектора» 2026-10-30, вопросы норм аудита Gemini, P/02 п. 1).
+# Expected effective rights of v9-asked-free-resource (P/02.5 Н1.4):
+# - console writes vb/asked/* (vb has requests.per_person), not va/asked/* (va has no per_person);
+# - vbworker and vbcontroller do not read vb/asked/* (!vb/asked/*);
+# - resource writes/reads/deletes vb/requests/free-* (vb has requests.free: true), not vb/requests/r1 or va/requests/free-*;
+# - resource reads the holds table (vb/notches/*) and unit rows of a manifest with about (vb/things/*), but not ordinary table vb/shelves/* or va/items/* rows without about.
+# - resource does not read the slot family <s>/holds/* for either vb (with holds) or va (without holds): resource gets only <M>/<holds.table>/*
+#   (C02-RESOURCE-HOLDS-TABLE-01; the Architect's decision, 2026-10-30; Gemini audit norm questions, P/02 item 1).
 role	action	key	expect
 console	write	vb/asked/alice	allow
 console	delete	vb/asked/alice	allow

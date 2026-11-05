@@ -1,9 +1,9 @@
-# Ожидаемые эффективные права варианта v10-worker-domain-reads (P/02.5 Н1.4 строка <s>worker, Н3 шаг 3):
-# - domain/placed/va/ в worker.reads даёт и domain/placed/va/*, и domain/placement/va/*;
-# - копия своей книги domain/va/tallies в worker.reads даёт точный ключ domain/va/tallies/local (CLUSTER=local по умолчанию), но не domain/va/tallies/other (C02-OWN-BOOK-HOLDER-01);
-# - источники собираемых книг domain.books.<книга>.from: va/notes/ даёт write на va/notes/*, одиночная строка va/rolls даёт write на va/rolls, но не на va/rolls/*;
-# - контроллер снимает вклады семьи источника книги при выводе сервера: delete va/notes/* (ADR-0113 доп. (39)), одиночная строка va/rolls — нет;
-# - условные чтения vaworker (и отсутствие их у vbworker): domain/shared (при domain.shared), domain/topology и domain/member-topology (при domain.tokens.<вид>.unit), domain/grants (при door.routes).
+# Expected effective rights of v10-worker-domain-reads (P/02.5 Н1.4 row <s>worker, Н3 step 3):
+# - domain/placed/va/ in worker.reads grants both domain/placed/va/* and domain/placement/va/*;
+# - its own book copy domain/va/tallies in worker.reads grants the exact key domain/va/tallies/local (default CLUSTER=local), not domain/va/tallies/other (C02-OWN-BOOK-HOLDER-01);
+# - assembled book sources `domain.books.<книга>.from`: va/notes/ grants write on va/notes/*; singleton row va/rolls grants write on va/rolls, not va/rolls/*;
+# - the controller removes book-source family contributions on server decommission: delete va/notes/* (ADR-0113 addendum (39)); not the singleton row va/rolls;
+# - conditional reads of vaworker (absent for vbworker): domain/shared (with domain.shared), domain/topology and domain/member-topology (with `domain.tokens.<вид>.unit`), domain/grants (with door.routes).
 role	action	key	expect
 vaworker	read	domain/placed/va/u1	allow
 vaworker	read	domain/placement/va/u1	allow

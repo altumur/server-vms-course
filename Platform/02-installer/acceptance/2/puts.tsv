@@ -1,7 +1,7 @@
-# Приёмка P/02.2: установки manifest put с каноническим видом (Н3; окно 2.2, п. 8). Строка: case<TAB>puts<TAB>expect<TAB>canonical.
-# puts — файлы puts/<имя>.subsystem.yaml через пробел и директивы @view-delete, @view-spoil между ними; expect — код
-# последней установки и rev строки platform/manifest/<name> после неё; canonical — вектор vectors/canonical (байты manifest вида)
-# или «-» (вида нет). Правила — README.
+# Acceptance P/02.2: manifest put installations with a canonical view (Н3; window 2.2, item 8). Row: case<TAB>puts<TAB>expect<TAB>canonical.
+# puts lists space-separated `puts/<имя>.subsystem.yaml` files with @view-delete and @view-spoil directives between them; expect is the code
+# of the final installation and the resulting rev of platform/manifest/<name>; canonical is the vectors/canonical case (manifest bytes of the view)
+# or «-» (no view). Rules: README.
 case	puts	expect	canonical
 first	testsub	0 1	course-testsub
 same_twice	testsub testsub	0 1	course-testsub
@@ -10,6 +10,6 @@ view_spoiled	testsub @view-spoil testsub	0 2	course-testsub
 view_over_ceiling	probe view-over	2 1	example-sections
 view_at_ceiling	probe view-at-ceiling	0 2	example-view-at-ceiling
 sugared	sugared	0 1	example-sugared
-# Аудит покрытия Gemini P/02 (свойства 13, 14; формы «Архитектора»): метка /rev снята — «без изменений» её доводит; метка не по форме — отказ
+# Gemini P/02 coverage audit (properties 13, 14; the Architect's forms): removed /rev mark — the no-change path completes it; malformed mark — refusal.
 rev_deleted	probe @rev-delete probe	0 1	example-sections
 rev_spoiled	probe @rev-spoil probe	2 1	example-sections

@@ -1,6 +1,6 @@
-# Уроки модуля «Платформа»: номер — адрес владельца (P/NN), каталог — NN-<процесс>; process — имя процесса урока (роль и
-# аргумент раннера w2c-run.sh), unit — его юнит в P/02.4 Н1.1 («-» — нет); delta_base — SHA курса, с которого урок правится
-# дельтами (ADR-0122 доп. (1) п. 7), «-» — по ADR-0114. Читает check_spec.
+# Lessons of module «Платформа»: number is the owner's address (P/NN), directory is `NN-<процесс>`; process is the lesson process name (role and
+# w2c-run.sh runner argument), unit is its unit in P/02.4 Н1.1 («-» means none); delta_base is the course SHA from which the lesson is edited
+# by deltas (ADR-0122 addendum (1) item 7); «-» follows ADR-0114. Read by check_spec.
 # lesson	dir	title	process	unit	delta_base
 01	01-store	Хранилище	configstore	configstore.service	725653954
 02	02-installer	Манифест и установщик	w2cctl	-	-
