@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/revoked",
+ "table": "cases.tsv",
+ "case": "line-9",
+ "variant": "",
+ "cells": {
+  "file": "\"0\\n000\\n\""
+ },
+ "files": {}
+}

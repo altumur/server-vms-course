@@ -36,6 +36,7 @@ sys.path.insert(0, str(HERE))
 from gen_checks import camel, go_str, gofmt  # noqa: E402 — общие кирпичи генератора № 1
 import gen_stagetests  # noqa: E402 — тесты этапов из сценариев (ADR-0125 доп. (3))
 import gate  # noqa: E402 — общий разбор gate (ревью Codex С4)
+import common_vectors  # noqa: E402 — общие пакеты векторов урока (ADR-0125 доп. (5) п. 5)
 import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
 L = lesson.CURRENT
 
@@ -439,9 +440,7 @@ import (
 	"sort"
 	"strings"
 
-	"%(module)s/vectoradapter"
-	"%(module)s/writecheck"
-)
+%(imports)s)
 
 type input struct {
 	Format  *int               `json:"format"`
@@ -457,6 +456,16 @@ type answer struct {
 	ExitCode  int    `json:"exit_code"`
 	StdoutB64 string `json:"stdout_b64"`
 	StderrB64 string `json:"stderr_b64"`
+}
+
+// Run runs one vector of the input text data (the same as Main without the file): the native outcome; err — the
+// input is out of the wire.
+func Run(data []byte) (code int, stdout, stderr []byte, err error) {
+	in, err := parse(data)
+	if err != nil {
+		return 0, nil, nil, err
+	}
+	return run(in)
 }
 
 // Main runs one vector: args is [path of {input}]. It returns the outer exit code.
@@ -565,7 +574,7 @@ func run(in *input) (code int, stdout, stderr []byte, err error) {
 	}
 	return 0, buf.Bytes(), nil, nil
 }
-'''
+%(extra)s'''
 
 VECTORCMD_CASES = {
     "jcs": '''	case %(key)s:
@@ -643,15 +652,23 @@ func main() { os.Exit(vectorcmd.Main(os.Args[1:], os.Stdout, os.Stderr)) }
 
 def go_vectorcmd(sources):
     packages, want, cases = [], [], []
-    for name, decl in PACKAGES.items():
+    decls = [(name, decl, VECTORCMD_CASES[name]) for name, decl in PACKAGES.items()]
+    for name, table in common_vectors.composition(L.key):          # общие пакеты урока (ADR-0125 доп. (5) п. 5)
+        d = common_vectors.DECLS[name]
+        decls.append((name, {"package": f"common/{name}", "table": table, "inputs": d["inputs"],
+                             "files": list(d["files"]), "native": d["native"]}, common_vectors.VECTORCMD[name]))
+    for name, decl, case in decls:
         key = go_str(f"{decl['package']} {decl['table']}")
         packages.append(f"//   - {decl['package']} {decl['table']}: cells {{{', '.join(decl['inputs'])}}}, "
                         f"files {{{', '.join(decl['files'])}}}; {decl['native']}.")
         want.append(f"\t\t{key}: {{{go_str(','.join(sorted(decl['inputs'])))}, "
                     f"{go_str(','.join(sorted(decl['files'])))}}},\n")
-        cases.append(VECTORCMD_CASES[name] % {"key": key})
+        cases.append(case % {"key": key})
+    fam = common_vectors.uses_families(L.key)
+    imports = "".join(f'\t"{GO_MODULE}/{p}"\n' for p in (["families"] if fam else []) + ["vectoradapter", "writecheck"])
     body = VECTORCMD_GO % {"packages": "\n".join(packages) + "\n//", "module": GO_MODULE, "want": "".join(want),
-                           "cases": "".join(cases)}
+                           "cases": "".join(cases), "imports": "\n" + imports,
+                           "extra": common_vectors.FAMILY_READ_GO if fam else ""}
     return gofmt(go_head(sources) + "\n" + body)
 
 
@@ -741,7 +758,31 @@ def render(root=ROOT):
         files[f"{base}/{name}"] = wire_input(decl, no, {"sock": sock, "body": body, **shared}, {})
         case_rows.append((f"line-{no}", name, 0, compact(want)))
     files[f"{base}/cases.tsv"] = cases_tsv(decl, probe_srcs, case_rows)
+    try:
+        common(root, files)
+    except common_vectors.CommonError as exc:
+        raise GenError(str(exc)) from None
     return files
+
+
+def common(root, files):
+    """Общие пакеты векторов урока (common_vectors): заготовки адаптера, тесты TestCommon<Пакет>_Line<N>, входы судьи."""
+    for fname, text in common_vectors.adapters(L.key).items():
+        files[f"go/vectoradapter/{fname}"] = gofmt(text).encode("utf-8")
+
+    def head(*rels):
+        return go_head([Source(root, r) for r in rels if r])
+    for fname, text in common_vectors.go_tests(L.key, root, go_str, head, GO_MODULE).items():
+        files[f"go/vectortests/{fname}"] = gofmt(text).encode("utf-8")
+    for name, table, rel, _, items, fx_rels in common_vectors.wire_rows(L.key, root):
+        d = common_vectors.DECLS[name]
+        decl = {"package": f"common/{name}", "table": table, "native": d["native"]}
+        base = f"vectors/common/{name}"
+        rows = []
+        for no, cells, fxs, want in items:
+            files[f"{base}/line-{no}.json"] = wire_input(decl, no, cells, fxs)
+            rows.append((f"line-{no}", f"line-{no}.json", 0, want))
+        files[f"{base}/cases.tsv"] = cases_tsv(decl, [Source(root, rel)] + [Source(root, r) for r in fx_rels], rows)
 
 
 # ---------------------------------------------------------------- часть пакета Б `tests` (ADR-0126 доп. (2) п. 1)
@@ -820,8 +861,33 @@ subcommand.
 - `vectors:write-checks` (stage `model`) — the kit's checks (`writecheck.Check`), none of your code;
 - `vectors:jcs`, `vectors:rights-evaluator` — your adapter `internal/vectoradapter` (`Canonical`, `LoadRights`):
   until you connect it they answer «not implemented».
-
+{common}
 """
+
+COMMON_MD = """
+### The common vector packages of the lesson (`Platform/common/vectors`)
+
+The profile maps each of them to the same command: `common/<package>: 'bin/vectors {input}'`. Its tests are
+`TestCommon<Package>_Line<N>` (one per row; `go test -run '^TestCommonCrl_' ./...`).
+
+| Package (table) | How it answers | Yours |
+|---|---|---|
+{rows}
+
+Each adapter file holds one function; its comment says the input and the native answer (code 0, one JSON value).
+`common/family-read` needs none of your code: the kit's part `families` reads the row — the tests are green as is.
+"""
+
+
+def kit_md():
+    """Справка части vectors: общие пакеты урока — из common_vectors (их состав у урока)."""
+    rows = []
+    for name, table in common_vectors.composition(L.key):
+        d = common_vectors.DECLS[name]
+        rows.append(f"| `common/{name}` (`{table}`) | {d['native']} | "
+                    + (f"`{d['adapter']}`: `{d['go']}`" if d["adapter"] else "— (the kit's `families`)") + " |")
+    return KIT_MD.replace("{common}", COMMON_MD.replace("{rows}", "\n".join(rows)) if rows else "")
+
 
 KIT_MD_STAGETESTS = """
 ## Part `stagetests`: stage tests from the scenarios (`internal/stagetests`, `internal/coreadapter`)

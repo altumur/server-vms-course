@@ -277,6 +277,9 @@ def build(dst, module, parts=(), judged=None, seed=None):
     if "stagetests" in parts and "door" not in parts:
         raise KitError("--part stagetests needs --part door: the stage tests go through coreadapter over apidoor "
                        "(ADR-0126 addendum (7) item 5)")
+    if "vectors" in parts and gen_tests.common_vectors.uses_families(L.key) and "families" not in parts:
+        raise KitError("--part vectors needs --part families: the vector command reads common/family-read by the "
+                       "kit's families (ADR-0125 addendum (5) item 5)")
     if "admin" in parts and "flags" not in parts:
         raise KitError("--part admin needs --part flags: the subcommands get *flags.Flags of the form")
     if "launch" in parts and "admin" not in parts:
@@ -366,7 +369,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
             continue                    # ядро реализации не трогается
         put(sub, name, data, origin, "core", source)
         files[-1]["editable"] = True
-    doc = (KIT_MD + (gen_tests.KIT_MD if "vectors" in parts else "")
+    doc = (KIT_MD + (gen_tests.kit_md() if "vectors" in parts else "")
            + (gen_tests.KIT_MD_STAGETESTS if "stagetests" in parts else "") + (KIT_DOOR_MD if openapi_sha else "")
            + (gen_flags.KIT_MD if flag_files else "") + (gen_refusals.KIT_MD if refusal_files else "")
            + (gen_families.KIT_MD if family_files else "") + (gen_admin.kit_md() if admin_files else "")

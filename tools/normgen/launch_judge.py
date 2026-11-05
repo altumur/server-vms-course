@@ -81,7 +81,7 @@ def stand(dst, spec, kit=None, vectors=False):
         if manifest.get("module") != MODULE:
             raise build_kit.KitError(f"{kit}: module {manifest.get('module')!r}, the stand wants {MODULE}")
     else:
-        manifest = build_kit.build(dst, MODULE, PARTS + (("vectors",) if vectors else ()))
+        manifest = build_kit.build(dst, MODULE, PARTS + (("vectors", "families") if vectors else ()))
     store = dst / "01-store"
     (store / "go.mod").write_text(f"module {MODULE}\n\ngo 1.22\n", encoding="utf-8")
     build = "go build -o bin/configstore ./cmd/configstore" + (" && go build -o bin/vectors ./cmd/vectors" if vectors else "")

@@ -18,6 +18,11 @@
 //   - 01-store/jcs canonical_json.tsv: cells {raw}, files {}; code 0, {canonical, sha256} by value.
 //   - 01-store/rights-evaluator expect.tsv: cells {role, action, key}, files {rights.json}; code 0, "allow" | "deny".
 //   - 01-store/write-checks write-checks.probes.tsv: cells {sock, body, lim, allow}, files {}; code 0, {"n": 0} | {"n", "code", "kind"} of the first violated row.
+//   - common/crl cases.tsv: cells {input}, files {}; code 0, one JSON value: the object {ca, ca_next, …} by the form of expect or the string "@bad".
+//   - common/revoked cases.tsv: cells {file}, files {}; code 0, one JSON value: the array of serials or the string "@bad".
+//   - common/log-mask cases.tsv: cells {raw}, files {fields.yaml}; code 0, the JSON string of the masked text, compared byte for byte.
+//   - common/store-client cases.tsv: cells {input}, files {}; code 0, one JSON string: the outcome of the store client contract.
+//   - common/family-read 01.tsv: cells {family, key, kind, mode, who, text}, files {}; code 0, the object {"verdict", "paths", "outcome"} (paths and each outcome sorted).
 package vectorcmd
 
 import (
@@ -32,6 +37,7 @@ import (
 	"sort"
 	"strings"
 
+	"normgen/p01-1/families"
 	"normgen/p01-1/vectoradapter"
 	"normgen/p01-1/writecheck"
 )
@@ -50,6 +56,16 @@ type answer struct {
 	ExitCode  int    `json:"exit_code"`
 	StdoutB64 string `json:"stdout_b64"`
 	StderrB64 string `json:"stderr_b64"`
+}
+
+// Run runs one vector of the input text data (the same as Main without the file): the native outcome; err — the
+// input is out of the wire.
+func Run(data []byte) (code int, stdout, stderr []byte, err error) {
+	in, err := parse(data)
+	if err != nil {
+		return 0, nil, nil, err
+	}
+	return run(in)
 }
 
 // Main runs one vector: args is [path of {input}]. It returns the outer exit code.
@@ -124,6 +140,11 @@ func run(in *input) (code int, stdout, stderr []byte, err error) {
 		"01-store/jcs canonical_json.tsv":               {"raw", ""},
 		"01-store/rights-evaluator expect.tsv":          {"action,key,role", "rights.json"},
 		"01-store/write-checks write-checks.probes.tsv": {"allow,body,lim,sock", ""},
+		"common/crl cases.tsv":                          {"input", ""},
+		"common/revoked cases.tsv":                      {"file", ""},
+		"common/log-mask cases.tsv":                     {"raw", "fields.yaml"},
+		"common/store-client cases.tsv":                 {"input", ""},
+		"common/family-read 01.tsv":                     {"family,key,kind,mode,text,who", ""},
 	}
 	shape, ok := want[pkg]
 	if !ok {
@@ -206,6 +227,36 @@ func run(in *input) (code int, stdout, stderr []byte, err error) {
 		default:
 			value = map[string]any{"n": ref.N, "code": ref.Code, "kind": ref.Kind}
 		}
+	case "common/crl cases.tsv":
+		v, err := vectoradapter.CRL([]byte(cell("input")))
+		if err != nil {
+			return 1, nil, []byte("CRL: " + err.Error() + "\n"), nil
+		}
+		value = v
+	case "common/revoked cases.tsv":
+		v, err := vectoradapter.Revoked([]byte(cell("file")))
+		if err != nil {
+			return 1, nil, []byte("Revoked: " + err.Error() + "\n"), nil
+		}
+		value = v
+	case "common/log-mask cases.tsv":
+		m, err := vectoradapter.LogMask(cell("raw"), files["fields.yaml"])
+		if err != nil {
+			return 1, nil, []byte("LogMask: " + err.Error() + "\n"), nil
+		}
+		value = m
+	case "common/store-client cases.tsv":
+		o, err := vectoradapter.StoreClient([]byte(cell("input")))
+		if err != nil {
+			return 1, nil, []byte("StoreClient: " + err.Error() + "\n"), nil
+		}
+		value = o
+	case "common/family-read 01.tsv":
+		v, err := familyRead(cell("family"), cell("key"), cell("kind"), cell("mode"), cell("who"), cell("text"))
+		if err != nil {
+			return 1, nil, []byte("family-read: " + err.Error() + "\n"), nil
+		}
+		value = v
 	}
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
@@ -214,4 +265,43 @@ func run(in *input) (code int, stdout, stderr []byte, err error) {
 		return 1, nil, []byte(err.Error() + "\n"), nil
 	}
 	return 0, buf.Bytes(), nil, nil
+}
+
+// familyRead — a row of common/family-read by the kit's part families (the schemas of the catalog, the kit's code):
+// {verdict, paths, outcome}, the paths and the outcome of each role sorted (the runner compares them as sets).
+func familyRead(family, key, kind, mode, whoText, text string) (any, error) {
+	f := families.ByKey(family)
+	if f == nil {
+		return nil, fmt.Errorf("no family %q in package families", family)
+	}
+	if kind != f.Kind {
+		return nil, fmt.Errorf("family %q is of kind %q, the row says %q", family, f.Kind, kind)
+	}
+	var who []string
+	if err := json.Unmarshal([]byte(whoText), &who); err != nil {
+		return nil, fmt.Errorf("who: %v", err)
+	}
+	var m families.Mode
+	switch mode {
+	case "writer":
+		m = families.Writer
+	case "reader":
+		m = families.Reader
+	default:
+		return nil, fmt.Errorf("mode %q, want writer or reader", mode)
+	}
+	r := f.Judge(key, families.ParseItems([]byte(text)), m)
+	paths := append([]string{}, r.Paths...)
+	sort.Strings(paths)
+	var outcome any = []string{}
+	if m == families.Reader {
+		byRole := map[string][]string{}
+		for _, role := range who {
+			o := append([]string{}, f.OutcomesFor(r.Paths, role)...)
+			sort.Strings(o)
+			byRole[role] = o
+		}
+		outcome = byRole
+	}
+	return map[string]any{"verdict": r.Verdict, "paths": paths, "outcome": outcome}, nil
 }

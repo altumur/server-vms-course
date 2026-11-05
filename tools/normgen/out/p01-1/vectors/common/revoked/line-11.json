@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/revoked",
+ "table": "cases.tsv",
+ "case": "line-11",
+ "variant": "",
+ "cells": {
+  "file": "\"# отозваны 2026-10-23\\n\\nab\\n#cd\\n\""
+ },
+ "files": {}
+}

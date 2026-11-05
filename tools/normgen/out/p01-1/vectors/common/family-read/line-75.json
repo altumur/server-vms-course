@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "01.tsv",
+ "case": "line-75",
+ "variant": "",
+ "cells": {
+  "family": "platform/configstore-doors/<id>",
+  "key": "platform/configstore-doors/t1",
+  "kind": "row",
+  "mode": "reader",
+  "who": "[\"configstore-door\"]",
+  "text": "{\"seen_at\":\"1\"}"
+ },
+ "files": {}
+}

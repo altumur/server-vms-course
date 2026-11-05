@@ -1,0 +1,26 @@
+# Inputs of the vector command for common/crl cases.tsv (tools/normgen/gen_tests.py, ADR-0125 № 6).
+# Native outcome: code 0, one JSON value: the object {ca, ca_next, …} by the form of expect or the string "@bad"; stdout is compared as one JSON value by value (tools/normgen/vector_judge.py).
+# source Platform/common/vectors/crl/cases.tsv sha256 453253a119b067cc6628e66c4bf35382ec54d55e57651ef81839d1a7ef9934fa
+case	input	exit	stdout
+line-3	line-3.json	0	{"ca":["ab","1a2b"],"ca_next":null,"stale":[]}
+line-4	line-4.json	0	{"ca":[],"ca_next":["cd"],"stale":[]}
+line-5	line-5.json	0	{"ca":["ab","1a2b"],"ca_next":["cd"],"stale":[]}
+line-6	line-6.json	0	{"ca":["ab"],"ca_next":[],"stale":[]}
+line-7	line-7.json	0	{"ca":["ef"],"ca_next":null,"stale":[]}
+line-8	line-8.json	0	"@bad"
+line-9	line-9.json	0	"@bad"
+line-10	line-10.json	0	"@bad"
+line-11	line-11.json	0	"@bad"
+line-12	line-12.json	0	"@bad"
+line-13	line-13.json	0	{"ca":["ab"],"ca_next":null,"stale":["ca"]}
+line-14	line-14.json	0	{"ca":["ab"],"ca_next":null,"stale":["ca"]}
+line-15	line-15.json	0	{"ca":["ab"],"ca_next":null,"stale":[]}
+line-16	line-16.json	0	{"ca":["ab"],"ca_next":null,"stale":["ca"]}
+line-17	line-17.json	0	{"ca":["ab"],"ca_next":null,"stale":["ca"]}
+line-18	line-18.json	0	{"ca":["ab","1a2b"],"ca_next":["cd"],"stale":["ca_next"]}
+line-19	line-19.json	0	"@bad"
+line-20	line-20.json	0	"@bad"
+line-21	line-21.json	0	"@bad"
+line-22	line-22.json	0	"@bad"
+line-23	line-23.json	0	{"ca":["ab"],"ca_next":null,"stale":[]}
+line-24	line-24.json	0	"@bad"
