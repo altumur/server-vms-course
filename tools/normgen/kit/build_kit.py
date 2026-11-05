@@ -604,7 +604,8 @@ event journal: names, buckets, lines…; the outcome of a store answer for its c
 crl.pem by the centers; the login and the password in a url value — the display and the refusal, the log mask of
 free text, the mask at the input; the url field rules from their declarations; NFKC of Unicode 15.0.0; the loopback
 threshold and the IP literal of peer; the schema check at start; the object address and the read outcome; freshness by LOST_AFTER; the fault words of
-the doors; the envelope enc:v2, the AAD path, the ring file and resealing a value; the values by type of a row);
+the doors; the envelope enc:v2, the AAD path, the ring file and resealing a value; the values by type of a row; peer — the
+client about the server of another cluster; the domain token check);
 reading files, the environment and the clock is yours. With the part
 `vectors`, the adapters of the tables they cover (`vectoradapter/<package>.go`) call this package — yours to change
 like any adapter. `tools/normgen/test_contracts.py` runs the common vectors of every lesson against them.
