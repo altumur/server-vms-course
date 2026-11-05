@@ -99,3 +99,5 @@ The М11 vectors are the former inputs of the stand commands of their lessons; a
 of the lesson and the common packages above, lesson 9 — the package `follow`, lesson 10 — `resolve` of chapter 6.7 and `alarms` of lesson P/10; their scenarios and
 inputs in the acceptance of М11 are removed by the moves). The rows «векторов нет»
 are algorithms of the module note that so far have only acceptance steps (review of stage A, Gemini 4.5).
+
+The machine-readable wire bindings are [`wire.tsv`](wire.tsv), with the closed grammar in [`wire.md`](wire.md). The first slice covers P/01 and P/02 vector tables; missing bindings remain undeclared. The form distinguishes the unified vectors command, existing stand commands and layout checks. The package README keeps algorithm meaning and consumer obligations; wire declarations move into this single form.
