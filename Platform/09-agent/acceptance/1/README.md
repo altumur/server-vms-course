@@ -253,7 +253,7 @@ Then — the rows of the move of this chapter and of the history of the sources.
 
 ## Kit assistance seams
 
-[seams.tsv](seams.tsv) provides 34 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
+[seams.tsv](seams.tsv) provides 38 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
 
 ## Anywhere copy hash (G09-ANYWHERE-HASH-01)
 
@@ -269,7 +269,7 @@ computed_sha256, copy_writes, marker_confirmed; for a refusal also related_edits
 copy_items, copy_index and taken_sha256. The digest observation comes from the normal code path that judges the body;
 it is not computed by the fixture instead of that path. The two positive vectors must reach the actual copy write.
 
-The existing agent-carry IO seam can carry these inputs: these files do not declare a new native command. A fixture
+The s35–s38 cases of seams.tsv pass these JSON inputs inline to the existing agent-carry IO seam and take their expected observations from cases.tsv; the carry stage selects all four. These files do not declare a new native command. A fixture
 that only calculates the expected digest does not check the negative cases: they require the former copy, exact index
 and marker to stay unchanged and zero copy writes and related edits. The four cases cover as_of in the digest, JCS
 instead of wire formatting, a refused digest of doc alone and a refused mismatching whole-body digest.
