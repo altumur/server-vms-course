@@ -1,6 +1,6 @@
 """Судья части `families` (ADR-0125 № 5, доп. (1) п. 1): чтение семей сгенерированным пакетом против векторов семей.
 
-Запуск (на CT 103): python tools/normgen/family_judge.py [--module-dir <каталог go.mod с families>] [--lesson 01]
+Запуск (на CT 103): python tools/normgen/family_judge.py [--module-dir <каталог go.mod с families>] [--lesson NN-<имя>]
                     [--runs 3] [--json итог]
 
 Вход — таблица `Platform/common/vectors/family-read/<урок>.tsv` (case family key kind mode who text verdict paths outcome
@@ -23,6 +23,9 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
+sys.path.insert(0, str(HERE))
+import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+L = lesson.CURRENT
 VECTORS = ROOT / "Platform/common/vectors/family-read"
 HEADER = ["case", "family", "key", "kind", "mode", "who", "text", "verdict", "paths", "outcome", "note"]
 
@@ -46,8 +49,8 @@ def harness(module_dir, cases):
     work = Path(tempfile.mkdtemp(prefix="family-judge-"))
     try:
         shutil.copy(HERE / "families/harness/main.go", work / "main.go")
-        (work / "go.mod").write_text("module normgen/familyharness\n\ngo 1.22\n\nrequire normgen/p01-1 v0.0.0\n\n"
-                                     f"replace normgen/p01-1 => {Path(module_dir).resolve()}\n", encoding="utf-8")
+        (work / "go.mod").write_text(f"module normgen/familyharness\n\ngo 1.22\n\nrequire {L.go_module} v0.0.0\n\n"
+                                     f"replace {L.go_module} => {Path(module_dir).resolve()}\n", encoding="utf-8")
         build = subprocess.run(["go", "build", "-o", "harness", "."], cwd=work, capture_output=True, text=True,
                                timeout=300)
         if build.returncode:
@@ -112,7 +115,7 @@ def v7_cases(lesson, base_rows):
     return out
 
 
-def judge(module_dir, lesson="01", runs=3, v7=False):
+def judge(module_dir, lesson=L.nn, runs=3, v7=False):
     cases = rows(lesson)
     if v7:
         cases += v7_cases(lesson, cases)
@@ -131,21 +134,20 @@ def judge(module_dir, lesson="01", runs=3, v7=False):
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--module-dir", default=str(HERE / "out/p01-1/go"))
-    ap.add_argument("--lesson", default="01")
+    ap.add_argument("--module-dir", default=str(L.out / "go"))
     ap.add_argument("--runs", type=int, default=3)
     ap.add_argument("--v7", action="store_true", help="also own instances judged by the V7 stack of the course")
     ap.add_argument("--json")
     a = ap.parse_args(argv)
     try:
-        res = judge(a.module_dir, a.lesson, a.runs, a.v7)
+        res = judge(a.module_dir, L.nn, a.runs, a.v7)
     except SystemExit as exc:
         print(exc, file=sys.stderr)
         return 2
     for f in res["failures"]:
         print(f"FAIL {f['case']}: {f['why']}")
     ok = not res["failures"]
-    print(f"families: P/{a.lesson} {res['pass']}/{res['cases']} {'PASS' if ok else 'FAIL'} (runs {res['runs']})")
+    print(f"families: P/{L.nn} {res['pass']}/{res['cases']} {'PASS' if ok else 'FAIL'} (runs {res['runs']})")
     if a.json:
         Path(a.json).write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return 0 if ok else 1

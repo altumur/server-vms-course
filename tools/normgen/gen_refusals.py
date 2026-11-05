@@ -22,8 +22,10 @@ sys.path.insert(0, str(HERE))
 
 from gen_checks import GenError, camel, go_str, gofmt  # noqa: E402
 
-DEFAULT_TABLE = ROOT / "Platform/01-store/forms/refusals.tsv"
-DEFAULT_OUT = HERE / "out/p01-1"
+import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+L = lesson.CURRENT
+DEFAULT_TABLE = L.form("refusals.tsv")
+DEFAULT_OUT = L.out
 COLUMNS = ["chapter", "row", "name", "surface", "code", "kind", "fields", "headers", "log", "norm"]
 KIT_DIRS = ("refusals",)
 JUDGE = HERE / "refusal_judge.py"
@@ -301,6 +303,9 @@ func (s *Spec) Exit(logf func(string), values map[string]string) int // logs Log
 - The catalogue says the code, the kind, the fields, the header and what the log names — not when a refusal happens:
   the conditions in words are the prose of Н4, the write command order is `write-checks.tsv` (part `writecheck`).
 """
+
+
+KIT_MD = KIT_MD.replace("Platform/01-store/", L.rel + "/")      # пути урока; прочий текст — урока P/01
 
 
 def main(argv):

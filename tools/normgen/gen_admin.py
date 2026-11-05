@@ -24,16 +24,18 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import gen_core  # noqa: E402 — разбор норм, обёртка комментария, строки refusals.tsv
+import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+L = lesson.CURRENT
 
-DEFAULT_OUT = HERE / "out/p01-1"
-NORMS_13 = ROOT / "Platform/01-store/spec/01.3-store.norms.md"
-NORMS_12 = ROOT / "Platform/01-store/spec/01.2-store.norms.md"
-NORMS_11 = ROOT / "Platform/01-store/spec/01.1-store.norms.md"
-FLAGS = ROOT / "Platform/01-store/forms/daemon-flags.tsv"
-REFUSALS = ROOT / "Platform/01-store/forms/refusals.tsv"
+DEFAULT_OUT = L.out
+NORMS_13 = L.norms("3")
+NORMS_12 = L.norms("2")
+NORMS_11 = L.norms("1")
+FLAGS = L.form("daemon-flags.tsv")
+REFUSALS = L.form("refusals.tsv")
 COMMON = ROOT / "Platform/common/acceptance/README.md"
 JUDGE = HERE / "admin_judge.py"
-GO_MODULE = "normgen/p01-1"
+GO_MODULE = L.go_module
 BLOCK_ANCHOR = "P/01.3-R006"            # Н1.3 Store — блок yaml: daemon, copy, …, admin_ops, floor, import, box, repeat
 CLI_ANCHOR = "P/01.3-R018"              # CLI backup, restore/import, recover, admit
 RECOVER = "recover the store (no majority)"
@@ -262,6 +264,10 @@ var Own = map[string]func(args []string, env Env) int{
 
 def render():
     """→ ({путь от go/: текст}, [(подкоманда, число строк комментария)])."""
+    try:
+        lesson.require(L, "gen_admin (KEYS, DOORS, REFUSAL_ROWS, OWN)")
+    except lesson.LessonError as exc:
+        raise GenError(str(exc)) from None
     for p in (NORMS_13, NORMS_12, NORMS_11, FLAGS, REFUSALS, COMMON):
         if not p.is_file():
             raise GenError(f"no {p}")

@@ -29,7 +29,10 @@ import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-CASES_ROOT = HERE / "out/p01-1/vectors"
+sys.path.insert(0, str(HERE))
+import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+L = lesson.CURRENT
+CASES_ROOT = L.out / "vectors"
 ALIASES = {"jcs": "01-store/jcs", "rights-evaluator": "01-store/rights-evaluator", "write-checks": "01-store/write-checks"}
 ENVELOPE = {"exit_code", "stdout_b64", "stderr_b64"}
 

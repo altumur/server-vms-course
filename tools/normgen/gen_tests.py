@@ -36,10 +36,12 @@ sys.path.insert(0, str(HERE))
 from gen_checks import camel, go_str, gofmt  # noqa: E402 — общие кирпичи генератора № 1
 import gen_stagetests  # noqa: E402 — тесты этапов из сценариев (ADR-0125 доп. (3))
 import gate  # noqa: E402 — общий разбор gate (ревью Codex С4)
+import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+L = lesson.CURRENT
 
-DEFAULT_OUT = HERE / "out/p01-1"
-GO_MODULE = "normgen/p01-1"
-STAGES = "Platform/01-store/forms/stages.tsv"
+DEFAULT_OUT = L.out
+GO_MODULE = L.go_module
+STAGES = f"{L.rel}/forms/stages.tsv"
 ACTIONS = ("read", "write", "delete")
 HEX64 = re.compile(r"[0-9a-f]{64}")
 
@@ -679,6 +681,10 @@ def compact(value):
 
 def render(root=ROOT):
     """→ {путь относительно каталога выхода: байты}; GenError — источник вне формы."""
+    try:
+        lesson.require(L, "gen_tests (PACKAGES)")
+    except lesson.LessonError as exc:
+        raise GenError(str(exc)) from None
     root = Path(root)
     stages, stages_src = read_stages(root)
     probes, probe_lim, probe_allow, probe_srcs = read_probes(root)

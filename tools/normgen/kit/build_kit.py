@@ -56,8 +56,10 @@ import gen_launch  # noqa: E402 — часть launch
 import gen_core  # noqa: E402 — часть core
 import gen_families  # noqa: E402 — часть families
 import gen_admin  # noqa: E402 — часть admin
-TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"
-GENERATED = ROOT / "tools/normgen/out/p01-1/go/checks"
+import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2): --lesson, по умолчанию 01-store
+L = lesson.CURRENT
+TABLE = L.form("write-checks.tsv")
+GENERATED = L.out / "go/checks"
 HANDWRITTEN = HERE / "go"
 PLACEHOLDER = '"kitmodule/internal/'
 MODULE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._~-]*(/[A-Za-z0-9._~-]+)*")
@@ -65,7 +67,7 @@ MODULE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._~-]*(/[A-Za-z0-9._~-]+)*")
 # Файлы пакета checks: (имя, происхождение, исходник в репозитории). runtime.go и prims.go генератор копирует
 # из своих ручных файлов; checks.go строит по таблице.
 CHECKS_FILES = [
-    ("checks.go", "generated", "tools/normgen/out/p01-1/go/checks/checks.go"),
+    ("checks.go", "generated", f"tools/normgen/out/{L.slug}/go/checks/checks.go"),
     ("runtime.go", "handwritten", "tools/normgen/runtime/go/runtime.go"),
     ("prims.go", "handwritten", "tools/normgen/prims/go/prims.go"),
 ]
@@ -74,10 +76,10 @@ KIT_FILES = [
     ("writecheck", "writecheck.go"),
 ]
 # Часть door: door.go строит gen_door.py по OpenAPI, runtime.go — копия его ручной среды.
-OPENAPI = ROOT / "Platform/01-store/spec/01-store.api.openapi.yaml"
-DOOR = ROOT / "tools/normgen/out/p01-1/go/apidoor"
+OPENAPI = L.openapi
+DOOR = L.out / "go/apidoor"
 DOOR_FILES = [
-    ("door.go", "generated", "tools/normgen/out/p01-1/go/apidoor/door.go"),
+    ("door.go", "generated", f"tools/normgen/out/{L.slug}/go/apidoor/door.go"),
     ("runtime.go", "handwritten", "tools/normgen/doorrt/go/runtime.go"),
 ]
 
@@ -98,13 +100,13 @@ def fresh_check(gen, src, sub, names):
     """Весь копируемый выход части равен свежему прогону генератора (ревью Codex С2): шапка формы не доказывает,
     что генератор, его ручная среда (runtime, prims, doorrt) и сам out не менялись. GenError, расхождение — KitError."""
     with tempfile.TemporaryDirectory(prefix="kit-fresh-") as tmp:
-        out = Path(tmp) / "p01-1"
+        out = Path(tmp) / L.slug
         try:
             gen.generate(src, out)
         except gen.GenError as exc:
             raise KitError(f"tools/normgen/{Path(gen.__file__).name}: {exc}") from None
         for name in names:
-            kept = NORMGEN / "out/p01-1" / sub / name
+            kept = NORMGEN / "out" / L.slug / sub / name
             new = (out / sub / name).read_bytes()
             if not kept.is_file() or kept.read_bytes() != new:
                 raise KitError(f"{kept} differs from a fresh run of tools/normgen/"
@@ -124,7 +126,7 @@ def git_head():
     try:
         done = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True, text=True, check=True)
         dirty = subprocess.run(["git", "-C", str(ROOT), "status", "--porcelain", "--", "tools/normgen",
-                                "Platform/01-store/data"], capture_output=True, text=True, check=True).stdout.strip()
+                                f"{L.rel}/data"], capture_output=True, text=True, check=True).stdout.strip()
         return done.stdout.strip() + ("-dirty" if dirty else "")
     except (OSError, subprocess.CalledProcessError):
         return None
@@ -170,7 +172,7 @@ def exported_md(internal, dst, module):
                 names |= set(re.findall(r"^\t([A-Z]\w*)", b[1], re.M))
         names.discard(None)
         if names:
-            rel = pkg.relative_to(Path(dst) / "01-store")
+            rel = pkg.relative_to(Path(dst) / L.kit_dir)
             out.append(f"- `{module}/{rel}`: " + ", ".join(f"`{n}`" for n in sorted(names)))
     return "\n".join(out) + "\n"
 
@@ -189,11 +191,11 @@ def provenance(parts, files, judged):
                                    "judge": NORMGEN / "test_gen_checks.py"}),
         "door": (("door",), {"form": [OPENAPI], "generator": NORMGEN / "gen_door.py",
                           "handwritten": [NORMGEN / "doorrt/go/runtime.go"], "judge": NORMGEN / "door_judge.py"}),
-        "vectors": (("vectors",), {"form": [ROOT / "Platform/01-store/forms/stages.tsv"],
+        "vectors": (("vectors",), {"form": [L.form("stages.tsv")],
                                 "generator": NORMGEN / "gen_tests.py", "judge": NORMGEN / "vector_judge.py"}),
-        "stagetests": (("stagetests",), {"form": [ROOT / "Platform/01-store/forms/stages.tsv",
-                                               ROOT / "Platform/01-store/acceptance/1/scenarios.tsv",
-                                               ROOT / "Platform/01-store/acceptance/1/seams.tsv"],
+        "stagetests": (("stagetests",), {"form": [L.form("stages.tsv"),
+                                               L.path("acceptance/1/scenarios.tsv"),
+                                               L.path("acceptance/1/seams.tsv")],
                                       "generator": NORMGEN / "gen_stagetests.py",
                                       "judge": NORMGEN / "scenario_judge.py"}),
     }
@@ -303,7 +305,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
     openapi_sha = sha256(OPENAPI.read_bytes()) if "door" in parts else None
     if openapi_sha:
         fresh_check(gen_door, OPENAPI, "go/apidoor", [n for n, _, _ in DOOR_FILES])
-    internal = dst / "01-store/internal"
+    internal = dst / L.kit_dir / "internal"
     files = []
     taken, kept, refreshed = seed_rule(dst, seed)
 
@@ -568,6 +570,12 @@ def unpack(repo, rev, path, into):
         raise KitError(f"tar: {done.stderr.decode(errors='replace').strip()}")
 
 
+# Пути урока в справке (ADR-0125 доп. (5) п. 2); прочий текст справки — урока P/01.
+KIT_MD = KIT_MD.replace("Platform/01-store/", L.rel + "/").replace("`01-store/internal/`", f"`{L.kit_dir}/internal/`")
+KIT_DOOR_MD = KIT_DOOR_MD.replace("Platform/01-store/spec/01-store.api.openapi.yaml",
+                                  str(L.openapi.relative_to(ROOT)))
+
+
 def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT, seed=None):
     """Пакет из чистого HEAD курса на входах выгрузки export (seed — посев, см. seed_rule). → манифест."""
     dst = Path(dst).resolve()
@@ -611,8 +619,9 @@ def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("dst", help="the attempt directory (the kit goes to <dst>/01-store/internal)")
-    ap.add_argument("--module", required=True, help="Go import path of <dst>/01-store")
+    ap.add_argument("dst", help=f"the attempt directory (the kit goes to <dst>/{L.kit_dir}/internal)")
+    ap.add_argument("--module", default=L.module, help=f"Go import path of <dst>/{L.kit_dir} (default {L.module})")
+    ap.add_argument("--lesson", default=L.key, help="the lesson NN-<name> (lesson.py; default 01-store)")
     ap.add_argument("--part", action="append", default=[], choices=PARTS, help="an extra part of the kit")
     ap.add_argument("--judged", action="append", default=[], metavar="PART=REF",
                     help="the judge result of this output of a part (a queue id, a report path) — into provenance")
@@ -636,7 +645,7 @@ def main(argv=None):
     except KitError as exc:
         print(f"build_kit: {exc}", file=sys.stderr)
         return 1
-    print(f"build_kit: {len(manifest['files'])} files in {args.dst}/01-store/internal; lines {manifest['lines']}")
+    print(f"build_kit: {len(manifest['files'])} files in {args.dst}/{L.kit_dir}/internal; lines {manifest['lines']}")
     return 0
 
 

@@ -26,7 +26,7 @@ sys.path.insert(0, str(HERE / "kit"))
 import build_kit  # noqa: E402
 import gen_admin  # noqa: E402
 
-MODULE = "p01store/01-store"
+MODULE = build_kit.L.module
 PARTS = ("door", "flags", "refusals", "stagetests", "launch", "core", "admin")
 # Подкоманда → слова командной строки по форме ({d} — каталог данных, {f} — файл): обязательные флаги даны.
 INVOKE = {
@@ -44,7 +44,7 @@ OWN = {"spoil-row": ["-dir", "{d}", "-key", "acc/k", "-what", "body"]}
 
 
 def build_binary(kit, work):
-    store = Path(kit) / "01-store"
+    store = Path(kit) / build_kit.L.kit_dir
     (store / "go.mod").write_text(f"module {MODULE}\n\ngo 1.22\n", encoding="utf-8")
     env = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
     exe = Path(work) / "configstore"

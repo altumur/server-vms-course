@@ -45,8 +45,11 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-TABLE = ROOT / "Platform/01-store/forms/daemon-flags.tsv"
-SCENARIOS = ROOT / "Platform/01-store/acceptance/3/scenarios.tsv"
+sys.path.insert(0, str(HERE))
+import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+L = lesson.CURRENT
+TABLE = L.form("daemon-flags.tsv")
+SCENARIOS = L.path("acceptance/3/scenarios.tsv")
 sys.path.insert(0, str(HERE / "prims/python"))
 from prims import prim_loopback  # noqa: E402
 

@@ -23,8 +23,10 @@ sys.path.insert(0, str(HERE))
 from gen_checks import (FN_TYPES, GenError, Module, Parser, compile_expr, go_fn_wrapper,  # noqa: E402
                         go_function, go_str, gofmt, prims_present, camel)
 
-DEFAULT_TABLE = ROOT / "Platform/01-store/forms/daemon-flags.tsv"
-DEFAULT_OUT = HERE / "out/p01-1"
+import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+L = lesson.CURRENT
+DEFAULT_TABLE = L.form("daemon-flags.tsv")
+DEFAULT_OUT = L.out
 COLUMNS = ["flag", "type", "default", "default_text", "required", "commands", "bad", "norm"]
 FLAG = re.compile(r"-[a-z][a-z-]*|--[a-z][a-z-]*")
 TYPE = re.compile(r"path|dir|file|addr|id|bool|duration|bytes:>0|list:id@addr(?:/addr)?"
@@ -507,6 +509,9 @@ type Flags struct {
   certificate, the FORMAT mark, the inherited sockets, the positional words of the subcommands. Your own subcommands
   (for example `vectors` of part `tests`) — dispatch them before `ParseArgs`.
 """
+
+
+KIT_MD = KIT_MD.replace("Platform/01-store/", L.rel + "/")      # пути урока; прочий текст — урока P/01
 
 
 def main(argv):

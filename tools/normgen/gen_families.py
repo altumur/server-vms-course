@@ -25,14 +25,16 @@ ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 
 from gen_checks import GenError, go_str, gofmt  # noqa: E402
+import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+L = lesson.CURRENT
 
 CATALOG = ROOT / "Platform/common/data/catalog.tsv"
 KEYS_README = ROOT / "Platform/common/data/README.md"
 PLATFORM = ROOT / "Platform"
 RUNTIME = HERE / "famrt/go/runtime.go"
 JUDGE = HERE / "family_judge.py"
-DEFAULT_OUT = HERE / "out/p01-1"
-DEFAULT_LESSON = "01"
+DEFAULT_OUT = L.out
+DEFAULT_LESSON = L.nn
 KIT_DIRS = ("families",)
 CATALOG_COLUMNS = ["key", "kind", "owner", "ops", "readers", "when", "version", "schema", "norm"]
 OUTCOME_COLUMNS = ["path", "reader", "outcome", "priority", "unit", "norm"]
