@@ -21,7 +21,10 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-SCENARIOS = ROOT / "Platform/01-store/acceptance/1/scenarios.tsv"
+sys.path.insert(0, str(HERE))
+import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+L = lesson.CURRENT
+SCENARIOS = L.path("acceptance/1/scenarios.tsv")
 CORE = re.compile(r'"(cas|guard|guards|id|not_after|not_before|again)"\s*:|"kind":\s*"(conflict|guard|expired|early)"')
 
 

@@ -24,8 +24,11 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-TABLE = ROOT / "Platform/01-store/forms/refusals.tsv"
-ACCEPTANCE = ROOT / "Platform/01-store/acceptance"
+sys.path.insert(0, str(HERE))
+import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+L = lesson.CURRENT
+TABLE = L.form("refusals.tsv")
+ACCEPTANCE = L.path("acceptance")
 WHOLE = {"1"}                 # главы, где тело сравнивается целиком (README приёмки 1.1); прочие — подмножеством
 
 
@@ -47,8 +50,8 @@ def harness(module_dir, work):
     hdir = Path(work) / "harness"
     hdir.mkdir()
     shutil.copy(HERE / "refusals/harness/main.go", hdir / "main.go")
-    (hdir / "go.mod").write_text("module normgen/refusalharness\n\ngo 1.22\n\nrequire normgen/p01-1 v0.0.0\n\n"
-                                 f"replace normgen/p01-1 => {Path(module_dir).resolve()}\n", encoding="utf-8")
+    (hdir / "go.mod").write_text(f"module normgen/refusalharness\n\ngo 1.22\n\nrequire {L.go_module} v0.0.0\n\n"
+                                 f"replace {L.go_module} => {Path(module_dir).resolve()}\n", encoding="utf-8")
     done = subprocess.run(["go", "run", "."], cwd=hdir, capture_output=True, text=True, timeout=300)
     if done.returncode:
         raise SystemExit(f"refusal_judge: the harness: {done.stderr.strip()}")
@@ -74,7 +77,7 @@ def expectations():
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--module-dir", default=str(HERE / "out/p01-1/go"))
+    ap.add_argument("--module-dir", default=str(L.out / "go"))
     ap.add_argument("--json")
     a = ap.parse_args(argv)
     if not shutil.which("go"):

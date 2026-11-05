@@ -37,9 +37,11 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import yamlsub  # noqa: E402
+import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+L = lesson.CURRENT
 
-DEFAULT_SPEC = ROOT / "Platform/01-store/spec/01-store.api.openapi.yaml"
-DEFAULT_OUT = HERE / "out/p01-1"
+DEFAULT_SPEC = L.openapi
+DEFAULT_OUT = L.out
 RUNTIME = HERE / "doorrt/go/runtime.go"
 # ADR-0125 доп. (1) п. 3: «одна форма — один генератор». Тело команды записи судит write-checks.tsv; эти схемы и всё,
 # что достижимо только из них, генератор двери не обходит.

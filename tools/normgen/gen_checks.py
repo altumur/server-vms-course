@@ -26,8 +26,11 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-DEFAULT_TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"          # ADR-0124: формы — в forms/
-DEFAULT_OUT = HERE / "out/p01-1"
+sys.path.insert(0, str(HERE))
+import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+L = lesson.CURRENT
+DEFAULT_TABLE = L.form("write-checks.tsv")          # ADR-0124: формы — в forms/
+DEFAULT_OUT = L.out
 COLUMNS = ["n", "id", "op", "group", "each", "check", "when", "code", "kind", "fault", "norm"]   # id — ADR-0122 доп. (1) п. 4
 EACH = re.compile(r"([a-z]\w*), ([a-z]\w*) in (body(?:\.[a-z_]+)+)")
 FN_TYPES = {"string", "map", "double", "int", "bool", "list", "dyn"}
