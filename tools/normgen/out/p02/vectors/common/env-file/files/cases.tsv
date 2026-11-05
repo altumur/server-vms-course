@@ -1,9 +1,7 @@
-# Inputs of the vector command for common/env-file files.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/env-file/files.tsv sha256 df1e6b13bdffae37b8e18a7b3eda663ec9f7a28f66cdf98f49a5210fb924c000
 case	input	exit	stdout
-line-3	line-3.json	0	{"W2C_ENV":"/etc/w2c/w2c.env","W2C_ROLE":"testsubworker","A":"1"}
-line-4	line-4.json	0	{"W2C_ENV":"/etc/w2c/w2c.env","W2C_ROLE":"testsubworker","W2C_SUB_ENV":"/etc/testsub/testsub.env","A":"1","S":"1"}
-line-5	line-5.json	2	
-line-6	line-6.json	2	
-line-7	line-7.json	0	{"W2C_SUB_ENV":"/etc/testsub/testsub.env","A":"sub"}
-line-8	line-8.json	0	{"W2C_ENV":"/etc/w2c/w2c.env","W2C_SUB_ENV":"/etc/testsub/testsub.env","A":"sub"}
+line-3	line-3.json	0	{"W2C_ENV": "/etc/w2c/w2c.env", "W2C_ROLE": "testsubworker", "A": "1"}
+line-4	line-4.json	0	{"W2C_ENV": "/etc/w2c/w2c.env", "W2C_ROLE": "testsubworker", "W2C_SUB_ENV": "/etc/testsub/testsub.env", "A": "1", "S": "1"}
+line-5	line-5.json	2	null
+line-6	line-6.json	2	null
+line-7	line-7.json	0	{"W2C_SUB_ENV": "/etc/testsub/testsub.env", "A": "sub"}
+line-8	line-8.json	0	{"W2C_ENV": "/etc/w2c/w2c.env", "W2C_SUB_ENV": "/etc/testsub/testsub.env", "A": "sub"}

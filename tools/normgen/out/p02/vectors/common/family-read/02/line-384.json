@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "02.tsv",
+ "case": "02-0383",
+ "variant": "",
+ "cells": {
+  "family": "<sub>/alarms_retention",
+  "key": "testsub/alarms_retention",
+  "kind": "row",
+  "mode": "writer",
+  "who": "[\"admin\"]",
+  "text": "{}"
+ },
+ "files": {}
+}

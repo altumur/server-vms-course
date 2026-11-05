@@ -5,7 +5,8 @@ package vectoradapter
 
 // Loopback — common/loopback cases.tsv (vectors):
 //
-//	the kind of an address of the own cluster: "loopback", "ip" or "name"; code 2 — not an address
+//	Native input and output: Platform/common/vectors/loopback/README.md#vector-wire; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func Loopback(table string, cells map[string]string, files map[string][]byte) Answer {

@@ -5,8 +5,8 @@ package vectoradapter
 
 // Canonical — 02-installer/canonical cases.tsv (stand:canonical):
 //
-//	the canonical projection (P/02.2 Н1.1) of the manifest file: the JCS bytes of the projection — stdout is
-//	compared with expect/<case>.json byte for byte (no LF)
+//	Native input and output: Platform/02-installer/vectors/canonical/README.md#vector-wire; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // source — the file name, text — its bytes; return Raw (the bytes of stdout).
 func Canonical(source string, text []byte) Answer {

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/store-client",
+ "table": "cases.tsv",
+ "case": "write-toolarge",
+ "variant": "",
+ "cells": {
+  "input": "{\"op\":\"write\",\"reply\":{\"status\":413,\"body\":{\"kind\":\"toolarge\",\"error\":\"x\",\"limit\":1048576}}}"
+ },
+ "files": {}
+}

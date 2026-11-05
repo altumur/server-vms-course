@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "02.tsv",
+ "case": "02-0120",
+ "variant": "",
+ "cells": {
+  "family": "platform/manifest/<sub>",
+  "key": "platform/manifest/testsub",
+  "kind": "row",
+  "mode": "reader",
+  "who": "[\"<s>controller\", \"<s>domain\", \"<s>worker\", \"admin\", \"console\", \"domain\", \"domainconsole\", \"resource\"]",
+  "text": "{\"yaml\":\"a\",\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"rev\":\"1\",\"shell\":\"{\\\"b\\\":1,\\\"a\\\":2}\"}"
+ },
+ "files": {}
+}

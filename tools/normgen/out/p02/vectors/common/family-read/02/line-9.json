@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "02.tsv",
+ "case": "02-0008",
+ "variant": "",
+ "cells": {
+  "family": "platform/manifest/<sub>",
+  "key": "platform/manifest/testsub",
+  "kind": "row",
+  "mode": "reader",
+  "who": "[\"<s>controller\", \"<s>domain\", \"<s>worker\", \"admin\", \"console\", \"domain\", \"domainconsole\", \"resource\"]",
+  "text": "{\"yaml\":\"a\",\"rev\":\"1\"}"
+ },
+ "files": {}
+}

@@ -5,8 +5,8 @@ package vectoradapter
 
 // PlatformLists — 02-installer/platform-lists cases.tsv (stand:platform-lists), 02-installer/platform-lists cases.tsv (vectors):
 //
-//	the closed lists of the platform (P/02.5 Н1.3, Н1.4): Value — map[string][]string, list → its words
-//	(compared as sets); the unified command answers one list per call (cells {list}), the stand — all five
+//	Native input and output: Platform/02-installer/vectors/platform-lists/README.md#vector-wire; transport:
+//	Platform/common/vectors/wire.tsv.
 func PlatformLists() Answer {
 	return NotImplemented("PlatformLists")
 }

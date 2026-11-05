@@ -40,7 +40,17 @@ def tests_calling(mod, fn):
     for f in (mod / "vectortests").glob("*_test.go"):
         for chunk in f.read_text().split("\nfunc ")[1:]:
             m = re.match(r"(Test\w+)\(t \*testing\.T\)", chunk)
-            if m and f"vectoradapter.{fn}(" in chunk.split("\n}\n")[0]:
+            if not m:
+                continue
+            direct = f"vectoradapter.{fn}(" in chunk.split("\n}\n")[0]
+            # P/02 wire tests call the actual vector command; select by the adapter's package test prefix.
+            via_wire = False
+            if (mod / "wirecheck").is_dir():
+                import common_vectors
+                common = next((n for n, d in common_vectors.DECLS.items() if d["go"] == fn), None)
+                prefix = "TestCommon" + common_vectors.camel(common) if common else "Test" + fn + "_"
+                via_wire = m[1].startswith(prefix)
+            if direct or via_wire:
                 names.append(m[1])
     return names
 

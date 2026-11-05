@@ -5,7 +5,8 @@ package vectoradapter
 
 // DomainBackupKey — common/domain-backup-key cases.tsv (vectors):
 //
-//	the domain backup copy key (HMAC-SHA256 of root_key and backup_key_rev): "<64 hex>" or "@refuse"
+//	Native input and output: Platform/common/vectors/domain-backup-key/README.md#vector-wire; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func DomainBackupKey(table string, cells map[string]string, files map[string][]byte) Answer {

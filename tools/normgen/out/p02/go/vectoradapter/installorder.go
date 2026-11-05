@@ -5,8 +5,8 @@ package vectoradapter
 
 // InstallOrder — 02-installer/install-order cases.tsv (stand:install-order):
 //
-//	the initial installation order (P/02.4 Н1.7 order) of {manifests, installed}: {"result":"ok","order":[…]} or
-//	{"result":"refused"} (code 0)
+//	Native input and output: Platform/02-installer/vectors/install-order/README.md#vector-wire; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // input — the bytes of the {input} file of the stand command (the cell as written).
 func InstallOrder(input []byte) Answer {

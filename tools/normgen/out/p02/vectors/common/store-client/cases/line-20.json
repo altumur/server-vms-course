@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/store-client",
+ "table": "cases.tsv",
+ "case": "write-guard",
+ "variant": "",
+ "cells": {
+  "input": "{\"op\":\"write\",\"reply\":{\"status\":412,\"body\":{\"kind\":\"guard\",\"error\":\"x\",\"key\":\"s/slots/w-1\",\"index\":\"4\"}}}"
+ },
+ "files": {}
+}
