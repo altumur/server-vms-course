@@ -137,3 +137,7 @@ sc. 04 — also in «Журнал источника» of the vector `alarms`; t
 
 There are no sleeps: the waits for events — `@until` by a sign (sc. 02 steps 04, 05, 09, 10; sc. 07 step 3; the readiness of the process `domain` —
 sc. 08 step 7, sc. 09 step 5; the raise of the placement counter at start — sc. 11 step 2; the topology at the console of `m1` — sc. 17 step 14).
+
+## Kit assistance seams
+
+[seams.tsv](seams.tsv) provides 39 CALL steps of 25 scenarios over ordinary implementation paths. The fixture/port contract is [forms/README.md](../forms/README.md); [stages.tsv](../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary scenarios of this directory, the vector `alarms`, the neighbours on the stands of lesson P/08 or the items checked by reading.
