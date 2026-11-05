@@ -169,8 +169,8 @@ func ListText(items []string) string {
 	return CanonicalJSON(arr)
 }
 
-// CanonicalJSON — canonical JSON (ADR-0072): keys ascending by UTF-16 code units, no whitespace, numbers by FloatText
-// (integers without a fraction), strings with the minimal escapes.
+// CanonicalJSON — canonical JSON (ADR-0072, RFC 8785): keys ascending by UTF-16 code units, no whitespace,
+// finite numbers by the ES6 notation (1e21 → 1e+21, -0 → 0), strings with the minimal escapes.
 func CanonicalJSON(v any) string {
 	var b bytes.Buffer
 	canon(&b, v)
@@ -189,9 +189,9 @@ func canon(b *bytes.Buffer, v any) {
 			b.WriteString(string(x))
 			return
 		}
-		b.WriteString(FloatText(f))
+		canonNumber(b, f)
 	case float64:
-		b.WriteString(FloatText(x))
+		canonNumber(b, x)
 	case string:
 		canonString(b, x)
 	case []any:
@@ -220,6 +220,16 @@ func canon(b *bytes.Buffer, v any) {
 		}
 		b.WriteByte('}')
 	}
+}
+
+func canonNumber(b *bytes.Buffer, f float64) {
+	if f == 0 {
+		b.WriteByte('0')
+		return
+	}
+	// encoding/json uses the ES6 decimal/exponent thresholds and strips exponent leading zeroes.
+	text, _ := json.Marshal(f)
+	b.Write(text)
 }
 
 func utf16Less(a, b string) bool {

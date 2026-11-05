@@ -616,8 +616,14 @@ threshold and the IP literal of peer; the schema check at start; the object addr
 the doors; the envelope enc:v2, the AAD path, the ring file and resealing a value; the values by type of a row; peer — the
 client about the server of another cluster; the domain token check; agent signatures and signed batch knocks;
 the turn state machine; domain keys and revocation merging; may and scope coverage; heartbeat reading by the foreign
-families, including whole-object, field and status-element outcomes);
-reading files, the environment and the clock is yours. With the part
+families, including whole-object, field and status-element outcomes).
+
+`Record(keys, row, kinds)` checks only the caller's accepted kinds (term, backup, grant, members, shared); use
+`ParseRecordInput` at the vector command boundary and `TakeMemberRecord` for the members-row freshness bound.
+`MergeEvents(inputJSON)` merges console/worker resource replies; `FilterResourceEvents(inputJSON)` applies the
+resource's own query and cut, preserving complete source rows. Both return a JSON object and an error for invalid
+command inputs. The caller supplies replies, epoch reads and visibility inputs; these functions perform no I/O.
+Reading files, the environment and the clock is yours. With the part
 `vectors`, the adapters of the tables they cover (`vectoradapter/<package>.go`) call this package — yours to change
 like any adapter. `tools/normgen/test_contracts.py` runs the common vectors of every lesson against them.
 """
