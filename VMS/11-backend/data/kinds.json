@@ -1,5 +1,5 @@
 {
- "$comment": "The kind descriptions of the w2c kinds of the core (V/11.14 Н1.1; ADR-0116 addendum (9)). Lesson data of «Спецификация VMS»: built from the reference set fixtures/demo.json of the fork at 11f0620 (the source of the profile tables of BACKEND.md), narrowed to the w2c translation: the properties are those of mapping.tsv (readOnly by way read and const, writeOnly by write), the capabilities, parents, children, actions and events — what backend translates. from — the places of the kind, write — none, row or assembly (V/11.14 Н1.1). backend gives out description as UnitKind of GET /kinds.",
+ "$comment": "The kind descriptions of the w2c kinds of the core (V/11.14 Н1.1; ADR-0116 addendum (9)). Lesson data of «Спецификация VMS»: built from the reference set fixtures/demo.json of the fork at 11f0620 (the source of the profile tables of BACKEND.md), narrowed to the w2c translation: the properties are those of mapping.tsv (readOnly by way read and const, writeOnly by write), the capabilities, parents, children, actions and events — what backend translates. from — the places of the kind, write — none, row or assembly (V/11.14 Н1.1). backend gives out description as UnitKind of GET /kinds. profiles — the Profile entries of the reference set for the profiles the kinds implement: GET /kinds gives them as KindsList.profiles.",
  "kinds": {
   "domain": {
    "from": "GET /session",
@@ -4975,5 +4975,300 @@
     }
    }
   }
- }
+ },
+ "profiles": [
+  {
+   "id": "vms.domain/1",
+   "label": {
+    "key": "profile.vms.domain/1",
+    "text": "Домен",
+    "lang": "ru"
+   },
+   "properties": [
+    "license"
+   ]
+  },
+  {
+   "id": "vms.server/1",
+   "label": {
+    "key": "profile.vms.server/1",
+    "text": "Сервер",
+    "lang": "ru"
+   },
+   "properties": [
+    "allocated",
+    "dns",
+    "gateway",
+    "ip",
+    "labels",
+    "netmask",
+    "port",
+    "role"
+   ],
+   "status": [
+    "class",
+    "disks",
+    "fingerprint",
+    "gpu",
+    "telemetry"
+   ]
+  },
+  {
+   "id": "vms.folder/1",
+   "label": {
+    "key": "profile.vms.folder/1",
+    "text": "Папка",
+    "lang": "ru"
+   },
+   "properties": []
+  },
+  {
+   "id": "vms.camera/1",
+   "label": {
+    "key": "profile.vms.camera/1",
+    "text": "Камера",
+    "lang": "ru"
+   },
+   "properties": [
+    "alarmKinds",
+    "archiveId",
+    "audioDeviceId",
+    "azimuth",
+    "codec",
+    "configMode",
+    "detectorOptions",
+    "enabled",
+    "extraArchives",
+    "firmware",
+    "fps",
+    "identifier",
+    "ip",
+    "labels",
+    "lat",
+    "login",
+    "lon",
+    "mac",
+    "minDepthDays",
+    "model",
+    "password",
+    "port",
+    "preRecordSec",
+    "presetMax",
+    "presets",
+    "ptz",
+    "recordDetectorIds",
+    "recordMode",
+    "recordScheduleId",
+    "replicaFrom",
+    "res",
+    "resOptions",
+    "retentionDays",
+    "rtspUrl",
+    "serverId",
+    "short",
+    "stream",
+    "templateId",
+    "unitOptions",
+    "vendor",
+    "videoChannel"
+   ],
+   "status": [
+    "archiveJobs",
+    "armed",
+    "detectorKinds",
+    "direct",
+    "disabledByRuleAt",
+    "disabledByRuleId",
+    "fault",
+    "faultText",
+    "licenseExceeded",
+    "recordReason",
+    "recordState",
+    "recordingTarget",
+    "replicaLagSec"
+   ],
+   "apis": [
+    "recording-target",
+    "recording-days"
+   ]
+  },
+  {
+   "id": "vms.archive/1",
+   "label": {
+    "key": "profile.vms.archive/1",
+    "text": "Хранилище",
+    "lang": "ru"
+   },
+   "properties": [
+    "admits",
+    "encrypted",
+    "provider",
+    "recordMode",
+    "retentionDays",
+    "storage"
+   ]
+  },
+  {
+   "id": "vms.volume/1",
+   "label": {
+    "key": "profile.vms.volume/1",
+    "text": "Том",
+    "lang": "ru"
+   },
+   "properties": [
+    "account",
+    "bucket",
+    "confirmShrinkBytes",
+    "dir",
+    "disk",
+    "enabled",
+    "endpoint",
+    "file",
+    "host",
+    "keyId",
+    "login",
+    "mode",
+    "password",
+    "path",
+    "port",
+    "proto",
+    "region",
+    "secret",
+    "sizeBytes",
+    "state",
+    "style"
+   ],
+   "status": [
+    "incidentsAtRisk",
+    "incidentsLost",
+    "shrinkPendingBytes",
+    "usedPercent"
+   ]
+  },
+  {
+   "id": "vms.stream/1",
+   "label": {
+    "key": "profile.vms.stream/1",
+    "text": "Поток",
+    "lang": "ru"
+   },
+   "properties": [
+    "codec",
+    "fps",
+    "height",
+    "res",
+    "resOptions",
+    "streamId",
+    "width"
+   ]
+  },
+  {
+   "id": "vms.detector/1",
+   "label": {
+    "key": "profile.vms.detector/1",
+    "text": "Детектор",
+    "lang": "ru"
+   },
+   "properties": [
+    "alarmKinds",
+    "builtin",
+    "detectorKind",
+    "enabled",
+    "labels",
+    "params",
+    "sensitivity",
+    "serverId",
+    "stream",
+    "template",
+    "zone"
+   ]
+  },
+  {
+   "id": "vms.acs/1",
+   "label": {
+    "key": "profile.vms.acs/1",
+    "text": "Единица СКУД с командами",
+    "lang": "ru"
+   },
+   "properties": [
+    "enabled",
+    "identifier",
+    "ip",
+    "login",
+    "model",
+    "operations",
+    "password",
+    "path",
+    "port",
+    "properties",
+    "short",
+    "unitOptions",
+    "vendor"
+   ],
+   "status": [
+    "fault"
+   ]
+  },
+  {
+   "id": "vms.live/1",
+   "label": {
+    "key": "profile.vms.live/1",
+    "text": "Живое видео",
+    "lang": "ru"
+   },
+   "properties": [],
+   "apis": [
+    "live"
+   ]
+  },
+  {
+   "id": "vms.ptz/1",
+   "label": {
+    "key": "profile.vms.ptz/1",
+    "text": "PTZ",
+    "lang": "ru"
+   },
+   "properties": [
+    "ptz",
+    "presets",
+    "presetMax"
+   ],
+   "apis": [
+    "ptz",
+    "presets/{n}"
+   ]
+  },
+  {
+   "id": "vms.talk/1",
+   "label": {
+    "key": "profile.vms.talk/1",
+    "text": "Разговор",
+    "lang": "ru"
+   },
+   "properties": [
+    "channel",
+    "enabled",
+    "short"
+   ],
+   "apis": [
+    "talk"
+   ]
+  },
+  {
+   "id": "vms.timeline/1",
+   "label": {
+    "key": "profile.vms.timeline/1",
+    "text": "Архив: шкала и записи",
+    "lang": "ru"
+   },
+   "properties": [],
+   "apis": [
+    "timeline",
+    "playback",
+    "holds",
+    "bookmarks",
+    "archive-fetch"
+   ]
+  }
+ ]
 }

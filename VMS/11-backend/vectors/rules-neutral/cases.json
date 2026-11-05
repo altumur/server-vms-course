@@ -296,7 +296,7 @@
  "cases": [
   {
    "id": "sensor-relay",
-   "note": "a sensor and a relay by name, value as is, source from the kind and the action",
+   "note": "a sensor and a relay by name, value as is, kinds from the catalogue trigger, an action of the object with state open — false",
    "plan": [
     {
      "op": "createRule",
@@ -327,13 +327,16 @@
       "name": "Dock light off",
       "triggers": [
        {
-        "source": "vms",
-        "kind": "io.input",
+        "source": "unit",
+        "kinds": [
+         "sensor",
+         "acfa_sensor"
+        ],
+        "event": "io.input",
         "target": {
          "include": [
           {
-           "kind": "device",
-           "id": "child:4-sensor-3"
+           "uid": "child:4-sensor-3"
           }
          ],
          "exclude": [],
@@ -347,20 +350,21 @@
       ],
       "steps": [
        {
-        "source": "vms",
+        "type": "unitAction",
         "action": "output",
         "target": {
          "include": [
           {
-           "kind": "device",
-           "id": "child:4-relay-4"
+           "uid": "child:4-relay-4"
           }
          ],
          "exclude": [],
          "gone": [],
          "fromEvent": false
         },
-        "state": "open"
+        "params": {
+         "state": false
+        }
        }
       ]
      }
@@ -370,7 +374,7 @@
   },
   {
    "id": "folder-except",
-   "note": "a folder with an exception in the trigger, the event target in the step",
+   "note": "a folder as an area with an exception in the trigger, the event target in the step",
    "plan": [
     {
      "op": "createRule",
@@ -404,13 +408,16 @@
       "name": "Perimeter motion",
       "triggers": [
        {
-        "source": "det",
-        "kind": "motion",
+        "source": "unit",
+        "kinds": [
+         "camera"
+        ],
+        "event": "motion",
         "target": {
          "include": [
           {
-           "kind": "folder",
-           "id": "folder:30"
+           "area": "folder",
+           "uid": "folder:30"
           }
          ],
          "exclude": [
@@ -424,14 +431,15 @@
       ],
       "steps": [
        {
-        "source": "alarm",
+        "type": "unitAction",
         "action": "alarm",
         "target": {
          "include": [],
          "exclude": [],
          "gone": [],
          "fromEvent": true
-        }
+        },
+        "params": {}
        }
       ]
      }
@@ -476,13 +484,16 @@
       "name": "Two cams",
       "triggers": [
        {
-        "source": "vms",
-        "kind": "io.input",
+        "source": "unit",
+        "kinds": [
+         "sensor",
+         "acfa_sensor"
+        ],
+        "event": "io.input",
         "target": {
          "include": [
           {
-           "kind": "device",
-           "id": "child:1-sensor-1"
+           "uid": "child:1-sensor-1"
           }
          ],
          "exclude": [],
@@ -497,24 +508,24 @@
       ],
       "steps": [
        {
-        "source": "rec",
+        "type": "unitAction",
         "action": "record",
         "target": {
          "include": [
           {
-           "kind": "device",
-           "id": "device:1"
+           "uid": "device:1"
           },
           {
-           "kind": "device",
-           "id": "device:2"
+           "uid": "device:2"
           }
          ],
          "exclude": [],
          "gone": [],
          "fromEvent": false
         },
-        "minutes": 5
+        "params": {
+         "minutes": 5
+        }
        }
       ]
      }
@@ -566,13 +577,15 @@
       "name": "Night tour",
       "triggers": [
        {
-        "source": "vms",
-        "kind": "silent",
+        "source": "unit",
+        "kinds": [
+         "camera"
+        ],
+        "event": "silent",
         "target": {
          "include": [
           {
-           "kind": "device",
-           "id": "device:3"
+           "uid": "device:3"
           }
          ],
          "exclude": [],
@@ -822,13 +835,16 @@
       "name": "Gate ask",
       "triggers": [
        {
-        "source": "vms",
-        "kind": "io.input",
+        "source": "unit",
+        "kinds": [
+         "sensor",
+         "acfa_sensor"
+        ],
+        "event": "io.input",
         "target": {
          "include": [
           {
-           "kind": "device",
-           "id": "child:1-sensor-1"
+           "uid": "child:1-sensor-1"
           }
          ],
          "exclude": [],
@@ -849,20 +865,21 @@
         "default": "no",
         "yes": [
          {
-          "source": "vms",
+          "type": "unitAction",
           "action": "output",
           "target": {
            "include": [
             {
-             "kind": "device",
-             "id": "child:1-relay-1"
+             "uid": "child:1-relay-1"
             }
            ],
            "exclude": [],
            "gone": [],
            "fromEvent": false
           },
-          "state": "closed"
+          "params": {
+           "state": true
+          }
          }
         ],
         "no": []
@@ -1050,13 +1067,16 @@
       "name": "Door relay",
       "triggers": [
        {
-        "source": "vms",
-        "kind": "io.input",
+        "source": "unit",
+        "kinds": [
+         "sensor",
+         "acfa_sensor"
+        ],
+        "event": "io.input",
         "target": {
          "include": [
           {
-           "kind": "device",
-           "id": "child:21-sensor-1"
+           "uid": "child:21-sensor-1"
           }
          ],
          "exclude": [],
@@ -1070,20 +1090,21 @@
       ],
       "steps": [
        {
-        "source": "vms",
+        "type": "unitAction",
         "action": "output",
         "target": {
          "include": [
           {
-           "kind": "device",
-           "id": "child:22-relay-1"
+           "uid": "child:22-relay-1"
           }
          ],
          "exclude": [],
          "gone": [],
          "fromEvent": false
         },
-        "state": "closed"
+        "params": {
+         "state": true
+        }
        }
       ]
      }
@@ -1200,13 +1221,16 @@
       "name": "Parking motion",
       "triggers": [
        {
-        "source": "det",
-        "kind": "motion",
+        "source": "unit",
+        "kinds": [
+         "camera"
+        ],
+        "event": "motion",
         "target": {
          "include": [
           {
-           "kind": "folder",
-           "id": "folder:22"
+           "area": "folder",
+           "uid": "folder:22"
           }
          ],
          "exclude": [],
@@ -1218,14 +1242,15 @@
       ],
       "steps": [
        {
-        "source": "alarm",
+        "type": "unitAction",
         "action": "alarm",
         "target": {
          "include": [],
          "exclude": [],
          "gone": [],
          "fromEvent": true
-        }
+        },
+        "params": {}
        }
       ]
      }
@@ -1301,13 +1326,16 @@
       "name": "Gate escalate",
       "triggers": [
        {
-        "source": "vms",
-        "kind": "io.input",
+        "source": "unit",
+        "kinds": [
+         "sensor",
+         "acfa_sensor"
+        ],
+        "event": "io.input",
         "target": {
          "include": [
           {
-           "kind": "device",
-           "id": "child:1-sensor-1"
+           "uid": "child:1-sensor-1"
           }
          ],
          "exclude": [],
@@ -1418,13 +1446,16 @@
       "name": "Gate ask",
       "triggers": [
        {
-        "source": "vms",
-        "kind": "io.input",
+        "source": "unit",
+        "kinds": [
+         "sensor",
+         "acfa_sensor"
+        ],
+        "event": "io.input",
         "target": {
          "include": [
           {
-           "kind": "device",
-           "id": "child:1-sensor-1"
+           "uid": "child:1-sensor-1"
           }
          ],
          "exclude": [],
@@ -1502,13 +1533,16 @@
       "name": "Gate escalate",
       "triggers": [
        {
-        "source": "vms",
-        "kind": "io.input",
+        "source": "unit",
+        "kinds": [
+         "sensor",
+         "acfa_sensor"
+        ],
+        "event": "io.input",
         "target": {
          "include": [
           {
-           "kind": "device",
-           "id": "child:1-sensor-1"
+           "uid": "child:1-sensor-1"
           }
          ],
          "exclude": [],
