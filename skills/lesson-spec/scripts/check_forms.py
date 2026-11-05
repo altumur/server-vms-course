@@ -1367,3 +1367,93 @@ def _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whe
             for k, item in enumerate(mk.get("assert", hit[0].get("assert", []))):
                 if isinstance(item, dict) and "value" in item:
                     values(item["value"], group, f"assert[{k}]", line, suffix)
+
+
+ROUTE_METHODS = ("get", "put", "post", "delete", "patch", "head", "options")
+
+
+def route_lessons(root):
+    """Уроки, чей OpenAPI несёт расширения маршрутизации (x-route-priority, x-path-*), ADR-0125 доп. (5), P/05."""
+    out = []
+    for api in sorted(Path(root).glob("Platform/*/spec/*.api.openapi.yaml")):
+        text = api.read_text(encoding="utf-8")
+        if "x-route-priority" in text or "x-path-" in text:
+            out.append(api)
+    return out
+
+
+def check_openapi_routing(api):
+    """x-route-priority у всех path item (уникальные целые ≥ 1, меньшее — раньше); x-path-capture segment|remainder только
+    у параметров пути, remainder — последний параметр шаблона; x-path-decode percent-segment; x-path-error: МЕТОД операции
+    этого пути → {status: 100..599 из ответов операции, response_schema: компонент схемы или -}."""
+    api = Path(api)
+    doc = yaml.safe_load(api.read_text(encoding="utf-8")) or {}
+    schemas = (doc.get("components") or {}).get("schemas") or {}
+    cparams = (doc.get("components") or {}).get("parameters") or {}
+    errors, seen, n = [], {}, 0
+
+    def resolve(p):
+        if isinstance(p, dict) and "$ref" in p and str(p["$ref"]).startswith("#/components/parameters/"):
+            return cparams.get(p["$ref"].rsplit("/", 1)[1]) or {}
+        return p if isinstance(p, dict) else {}
+    paths = doc.get("paths") or {}
+    has = [p for p, item in paths.items() if isinstance(item, dict) and "x-route-priority" in item]
+    for path, item in paths.items():
+        if not isinstance(item, dict):
+            continue
+        where = f"{api.name}: {path}"
+        if has:
+            pr = item.get("x-route-priority")
+            if pr is None:
+                errors.append(f"{where}: no x-route-priority (other paths of the file have it)")
+            elif type(pr) is not int or pr < 1:
+                errors.append(f"{where}: x-route-priority {pr!r} is not an integer ≥ 1")
+            elif pr in seen:
+                errors.append(f"{where}: x-route-priority {pr} repeats {seen[pr]}")
+            else:
+                seen[pr] = path
+        names = re.findall(r"\{([^}]+)\}", path)
+        ops = {m.upper(): op for m, op in item.items() if m in ROUTE_METHODS and isinstance(op, dict)}
+        params = [resolve(p) for p in item.get("parameters") or []]
+        for op in ops.values():
+            params += [resolve(p) for p in op.get("parameters") or []]
+        for p in params:
+            x = {k for k in p if k.startswith("x-path-")}
+            if not x:
+                continue
+            n += 1
+            pw = f"{where}: parameter {p.get('name')}"
+            if p.get("in") != "path":
+                errors.append(f"{pw}: x-path-* only on path parameters")
+                continue
+            if x - {"x-path-capture", "x-path-decode", "x-path-error"}:
+                errors.append(f"{pw}: unknown {sorted(x - {'x-path-capture', 'x-path-decode', 'x-path-error'})}")
+            cap = p.get("x-path-capture")
+            if cap not in ("segment", "remainder"):
+                errors.append(f"{pw}: x-path-capture {cap!r} is not segment or remainder")
+            elif cap == "remainder" and not (names and names[-1] == p.get("name") and path.endswith("{" + p["name"] + "}")):
+                errors.append(f"{pw}: remainder is only the last parameter, at the end of the template")
+            if "x-path-decode" in p and p["x-path-decode"] != "percent-segment":
+                errors.append(f"{pw}: x-path-decode {p['x-path-decode']!r} is not percent-segment")
+            pe = p.get("x-path-error")
+            if pe is None:
+                continue
+            if not isinstance(pe, dict) or not pe:
+                errors.append(f"{pw}: x-path-error is not a map METHOD → {{status, response_schema}}")
+                continue
+            for meth, e in pe.items():
+                ew = f"{pw}: x-path-error {meth}"
+                if meth not in ops:
+                    errors.append(f"{ew}: not an operation of this path")
+                    continue
+                if not isinstance(e, dict) or set(e) != {"status", "response_schema"}:
+                    errors.append(f"{ew}: takes exactly status and response_schema")
+                    continue
+                st, rs = e["status"], e["response_schema"]
+                if type(st) is not int or not 100 <= st <= 599:
+                    errors.append(f"{ew}: status {st!r} is not an HTTP code")
+                elif str(st) not in {str(k) for k in (ops[meth].get("responses") or {})}:
+                    errors.append(f"{ew}: status {st} is not among the responses of the operation")
+                if rs != "-" and rs not in schemas:
+                    errors.append(f"{ew}: response_schema {rs!r} is not a component schema of the file")
+    return errors, {"route_priorities": len(seen), "path_param_routes": n}

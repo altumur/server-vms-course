@@ -2145,6 +2145,11 @@ class Check:
             for message in errors:
                 self.error(path, message)
             self.stats["seam_steps"] = self.stats.get("seam_steps", 0) + stats["seam_steps"]
+        for path in check_forms.route_lessons(self.root):
+            errors, stats = check_forms.check_openapi_routing(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
         for path in check_forms.door_role_forms(self.root):
             errors, stats = check_forms.check_door_roles(path)
             for message in errors:

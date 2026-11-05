@@ -414,3 +414,45 @@ class SeamFiles(unittest.TestCase):                     # находка spec103
             self.assertEqual(found, {"Platform/04-controller/acceptance/seams.tsv", "Platform/01-store/acceptance/1/seams.tsv"})
         finally:
             shutil.rmtree(tmp)
+
+
+class OpenAPIRouting(unittest.TestCase):                # P/05: x-route-priority, x-path-capture/decode/error
+    BASE = """openapi: 3.1.0
+paths:
+  /v1/objects:
+    x-route-priority: 50
+    get: {responses: {'200': {description: ok}}}
+  /v1/objects/{key}:
+    x-route-priority: 60
+    get:
+      parameters:
+        - {name: key, in: path, required: true, schema: {type: string}, x-path-capture: remainder, x-path-decode: percent-segment,
+           x-path-error: {GET: {status: 400, response_schema: ResourceError}}}
+      responses: {'200': {description: ok}, '400': {description: bad}}
+components: {schemas: {ResourceError: {type: object}}}
+"""
+
+    def run_on(self, text):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            f = tmp / "05-resource.api.openapi.yaml"
+            f.write_text(text, encoding="utf-8")
+            return check_forms.check_openapi_routing(f)[0]
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_clean_and_mutations(self):
+        self.assertEqual(self.run_on(self.BASE), [])
+        for old, new in (("x-route-priority: 60", "x-route-priority: 50"),        # повтор
+                         ("x-route-priority: 60", "x-route-priority: 0"),         # не ≥ 1
+                         ("    x-route-priority: 50\n", ""),                       # не у всех
+                         ("x-path-capture: remainder", "x-path-capture: rest"),
+                         ("x-path-decode: percent-segment", "x-path-decode: raw"),
+                         ("{GET: {status: 400", "{PUT: {status: 400"),              # метода нет у пути
+                         ("status: 400, response_schema: ResourceError", "status: 404, response_schema: ResourceError"),  # нет в ответах
+                         ("response_schema: ResourceError}", "response_schema: NoSuch}"),
+                         ("{name: key, in: path", "{name: key, in: query")):
+            self.assertTrue(self.run_on(self.BASE.replace(old, new, 1)), (old, new))
+        two = self.BASE.replace("/v1/objects/{key}:", "/v1/objects/{key}/{part}:").replace(
+            "        - {name: key", "        - {name: part, in: path, required: true, schema: {type: string}, x-path-capture: segment}\n        - {name: key")
+        self.assertTrue(self.run_on(two))                                         # remainder не последний
