@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "asbuilt/keys",
+  "title": "keys — storage calls met in a run: socket role, operation, key prefix, outcomes",
+  "description": "Normalisation: ports replaced by socket roles from the passport, time and PID dropped, keys cut to the prefix up to the last '/', host paths masked; keys sorted by role, op, prefix; outcomes by outcome. Every outcome met is kept: another admissible outcome of one operation is a fact, not noise.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["header", "keys", "unresolved"],
+  "properties": {
+    "header": {"$ref": "runheader.schema.json"},
+    "keys": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["op", "outcomes", "prefix", "role"],
+        "properties": {
+          "op": {"type": "string"},
+          "outcomes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["count", "outcome"],
+              "properties": {"count": {"type": "integer"}, "outcome": {"type": "string"}}
+            }
+          },
+          "prefix": {"type": "string"},
+          "role": {"type": "string", "description": "<unmapped> when the journal names neither a role nor a known port"}
+        }
+      }
+    },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["calls", "op", "prefix", "reason", "role"],
+        "properties": {
+          "calls": {"type": "integer"},
+          "op": {"type": "string"},
+          "prefix": {"type": "string"},
+          "reason": {"type": "string"},
+          "role": {"type": "string"}
+        }
+      }
+    }
+  }
+}

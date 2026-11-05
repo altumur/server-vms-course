@@ -12,9 +12,18 @@ snapshot header (ADR-0123 доп. (1) п. 3), never from the working tree:
 
 `deps` has no machine pair yet (доп. (1) п. 1): it is reference only.
 
-Outcomes: match, extra (built, not in spec), absent (in spec, not found in
-code), differs (value or code differs), out_of_scope (no spec pair for this
-fact). A row whose pairing is a heuristic carries fuzzy=1.
+Outcomes — a closed list of six (ADR-0123 доп. (2) п. 2); any other value is
+a schema error:
+  match         built as specified;
+  extra         built, not in the specification;
+  absent        static snapshot: in the specification, not found in code;
+  unobserved    run snapshot: in the specification, not met although the run
+                executed a step that checks it (the run passport names them);
+  differs       the value or code differs;
+  out_of_scope  no applicable scope or pair for this fact in this snapshot
+                (also a norm whose checking step the run did not execute);
+                not a negative result of the comparison.
+A row whose pairing is a heuristic carries fuzzy=1.
 
 Writes compare.tsv and compare.md next to the snapshots.
 
@@ -33,7 +42,9 @@ import yamlio  # noqa: E402
 from asbuilt import check_leaks, mask  # noqa: E402
 
 COLUMNS = ["snapshot", "unit", "status", "fuzzy", "spec_ref", "spec", "code_ref", "code", "note"]
-STATUSES = ["match", "extra", "absent", "differs", "out_of_scope"]
+STATUSES = ["match", "extra", "absent", "unobserved", "differs", "out_of_scope"]
+# Outcomes that count against the build; out_of_scope is not one of them.
+NEGATIVE = ("extra", "absent", "unobserved", "differs")
 BASE_KINDS = {"badrequest", "badkey", "forbidden", "toolarge", "notfound", "refused", "unavailable",
               "conflict", "expired", "early", "guard", "ambiguous"}
 CELL_SPLIT = re.compile(r"(?<!\\)\|")
@@ -393,12 +404,31 @@ def word_match(spec_w, code_w):
 # ---------------- comparison ----------------
 
 
+def check_status(status):
+    """Reject an outcome outside the closed list (ADR-0123 доп. (2) п. 2)."""
+    if status not in STATUSES:
+        raise ValueError("compare: unknown outcome %r; allowed: %s" % (status, ", ".join(STATUSES)))
+    return status
+
+
+def run_outcome(seen, step, executed):
+    """Outcome of a specified fact in a run snapshot (ADR-0123 доп. (1) п. 1).
+
+    seen: the fact was met in the run; step: the acceptance step that checks
+    it; executed: steps the run passport names as executed. A fact not met is
+    `unobserved` only when its step ran, otherwise `out_of_scope`.
+    """
+    if seen:
+        return "match"
+    return "unobserved" if step and step in executed else "out_of_scope"
+
+
 class Report:
     def __init__(self):
         self.rows = []
 
     def add(self, snapshot, unit, status, fuzzy=False, spec_ref="", spec="", code_ref="", code="", note=""):
-        assert status in STATUSES, status
+        check_status(status)
         self.rows.append({"snapshot": snapshot, "unit": unit, "status": status, "fuzzy": "1" if fuzzy else "0",
                           "spec_ref": spec_ref, "spec": spec, "code_ref": code_ref, "code": code, "note": note})
 
@@ -723,7 +753,9 @@ def write_reports(snap_dir, rep, hdr, stale):
     md.append("- экстрактор: `%s`, источник `%s`; `deps` — справочный снимок без сверки (ADR-0123 доп. (1) п. 1)"
               % (hdr["extractor"], hdr["source"]))
     md.append("")
-    md.append("Число единиц; в скобках — из них с неуверенным сопоставлением (`fuzzy`).")
+    md.append("Число единиц; в скобках — из них с неуверенным сопоставлением (`fuzzy`). "
+              "`out_of_scope` — у факта нет применимой области или пары, это не отрицательный итог "
+              "(ADR-0123 доп. (2) п. 2).")
     md.append("")
     md.append("| снимок | " + " | ".join(STATUSES) + " |")
     md.append("|---|" + "---|" * len(STATUSES))
@@ -738,8 +770,11 @@ def write_reports(snap_dir, rep, hdr, stale):
         md.append("| %s | %s |" % (snap, " | ".join(cell(rs, s) for s in STATUSES)))
     for status, title in (("extra", "Лишнее (в коде есть, в спецификации нет)"),
                           ("absent", "Недостающее (в спецификации есть, в коде не найдено)"),
+                          ("unobserved", "Не встретилось в прогоне (шаг проверки исполнен)"),
                           ("differs", "Разошлось")):
         rs = [r for r in rows if r["status"] == status]
+        if not rs and status == "unobserved":
+            continue  # a static report has no run outcomes
         md += ["", "## %s — %d, первые 20" % (title, len(rs)), ""]
         if not rs:
             md.append("нет")
