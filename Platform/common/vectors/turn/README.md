@@ -34,18 +34,21 @@ a waiting one); `manifest_behind` — step 1; `{guard: {key, index}}` — the wr
 write until a confirmed renewal; `stop` — cease the writes; `reread` — re-read (the barrier is confirmed at `placement`:
 intent and the rows; an unknown outcome of the write of its own turn row: the turn, and in `read` `holder` `"@same"` — the mark of this attempt); `done` — the release is complete, the conflict does not repeat.
 
-48 rows: the existing33 rows are byte-identical; `placement` — take an empty one, a released one, a foreign one older than `TURN_TERM` (45; 44.999 — occupied), the first look, below and above
+49 rows: the existing33 rows are byte-identical; `placement` — take an empty one, a released one, a foreign one older than `TURN_TERM` (45; 44.999 — occupied), the first look, below and above
 `manifest_rev` (10 > 9 as a number), an unreadable one, a capture conflict, a renewal and its conflict, the guard before and after `TURN_TERM`, 412,
 the barrier (confirmed, without an answer, a conflict), the release `holder ""`, an unknown outcome of the taking (applied, no row, a foreign one) and
 of the renewal; `signer` — take an empty one, its own row (`held`, not `busy`) and its
 conflict, a foreign live one and one older than `TURN_TERM`, a released one, an unreadable one, the guard, the renewal, `SIGTERM`, an unknown outcome of the taking (its own, a foreign one),
 the barrier of a write with the guard.
 
-The 15 added `operations` rows cover taking an absent/released/stale row, live and first-look busy, unreadable form, capture conflict, renewal and conflict, guard age/412, release, and unknown capture/renewal outcomes (own, absent or foreign). These are the common turn obligation of the console, with a new attempt holder. They do not rename signer cases or copy placement's plan barrier into operations. The operations-epoch CAS barrier, generation/ticket guards, two leaders and late IO remain P/06.9's separate mandatory acceptance duties; `held` proves only the turn capture.
+The first 15 `operations` rows cover taking an absent/released/stale row, live and first-look busy, unreadable form, capture conflict, renewal and conflict, guard age/412, release, and unknown capture/renewal outcomes (own, absent or foreign). These are the common turn obligation of the console, with a new attempt holder. They do not rename signer cases or copy placement's plan barrier into operations. The operations-epoch CAS barrier, generation/ticket guards, two leaders and late IO remain P/06.9's separate mandatory acceptance duties; `held` proves only the turn capture.
 
 The release of `placement` writes `manifest_rev` with its own revision (the form `placement-turn` requires the field); an unknown outcome of the write
 of its own turn row — the contract «An unknown outcome of a write of one's own turn row» (both answers — C08-TURN-SELF-99, the decision
 of «Architect» 2026-10-26).
+
+
+Case49, `operations-two-attempts-after-release`, is the approved12-event sequence with exactly `@new`, `@same`, empty-holder/done, `@new`, `@same`, empty-holder/done. Both end events mean idle with no unfinished work, not SIGTERM. Keep one live process/Turn; the caller schedules its next pass/capture after done, not an internal retry. Preserve all earlier fresh labels across release within this case: the second new label differs from the first, and same refers to the latest new. Reset label history only between cases. The second capture has an unknown reply, then the ordinary owned reread/CAS confirmation. Old33+15 rows stay byte-identical. This is a published source obligation, not proof that a Turn/native/operations implementation executed it.
 
 ## Run
 
