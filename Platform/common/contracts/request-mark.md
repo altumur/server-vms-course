@@ -19,7 +19,7 @@ of the rows — the families of the owner [`requests`](../../06-console/data/req
 [`commands`](../../06-console/data/commands.schema.json) (`objects/<sub>/commands/<rid>`) with the tables of outcomes next to
 them ([catalogue](../data/catalog.tsv)). A reference «P/0N[.K] NM» is a norm of a lesson or of a chapter of the module.
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

@@ -24,7 +24,7 @@ P/06.7 N1.7, `peer` — [the `peer` contract](peer.md); the gate — [the gate-a
 P/06.7 N1.8; «lesson 9 N1.5» — P/06.7 N1.9; «lesson 2 N1.8» — P/06.3 N1.8; «lesson 3 N1.8 pass» — P/10 N1.3; «lesson 10» (the terms of
 the move) — P/08.8 N1.7, N1.8.
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

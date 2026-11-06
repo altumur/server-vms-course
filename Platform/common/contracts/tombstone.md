@@ -13,7 +13,7 @@ of a neighbour, appends acknowledgements and removes the tombstone (P/05 N1.1 «
 Moved from P/05 N1.1 «Tombstones» (formerly M10/10 N1.5 `delete`) without a change of behaviour; new is the rule `peers`
 (the section «Neighbours»): formerly the source and the completeness of the list were not named.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

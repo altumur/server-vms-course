@@ -1,0 +1,17 @@
+<!doctype html>
+<!-- The platform's own console page: the platform's console module (/platform/console.js) and nothing else.
+     It is what a subsystem with no page of its own is shown with, and the test of the module's contract
+     (the course's CONSOLE-MODULE.md, §10): everything here comes from /manifest and the platform's doors.
+     A subsystem's page is the same three lines plus what it adds through the module's calls. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>console</title>
+<link rel="stylesheet" href="/platform/console.css?v=1">
+<div id="app"></div>
+<script src="/platform/console.js?v=1"></script>
+<script>
+  // the module's version is the page's before anything of it is used (P/07 N1.5 version, P/06.5 N1.1)
+  const app = document.getElementById("app");
+  if (PlatformConsole.version === 1) window.platformConsole = PlatformConsole.mount(app);
+  else app.textContent = "The console module is version " + PlatformConsole.version + ", this page needs 1: reload the page.";
+</script>

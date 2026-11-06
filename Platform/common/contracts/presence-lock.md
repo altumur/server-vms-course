@@ -11,7 +11,7 @@ processes (P/05 N1.4 `workers`, `running`, `unknown`, `presence`) and the count 
 and the layout of `PLATFORM_DIR`». Moved from M10/8 N1.4 (`presence_lock`, `room`) and M10/11 N1.4 (`presence`) without a change of
 behaviour; the derivation of the presence words from the fields of the resource heartbeat — P/05 N1.4 `presence`.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

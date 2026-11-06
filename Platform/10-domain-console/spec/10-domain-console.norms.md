@@ -22,7 +22,7 @@ participant); the alarm history — [chapter 8.9](../../08-domain/spec/08.9-doma
 <!-- req: P/10-R001 -->
 ## N0 Vocabulary
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module are [P/01.1 N0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary)
+Normative keywords follow the [course canon](../../common/NORMATIVE-TERMS.md). The rules of the module are [P/01.1 N0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary)
 (including the order of output arrays, scope — lessons 8–10).
 
 <!-- req: P/10-R002 -->

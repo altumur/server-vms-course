@@ -20,7 +20,7 @@ For a generation line, the completion criterion is packaging of the published by
 The canon is the [norms](07-console-module.norms.md). The doors the module calls are the [contract of lesson
 P/06](../../06-console/spec/06-console.api.openapi.yaml); the publication of the module and the version `?v=1` are observed by sc. 01 of [the acceptance of chapter
 6.5](../../06-console/acceptance/5/README.md); the lecture (`ru/07-console-module.md`, for people, not in the export) explains the reasons; the description of the surface is
-[`CONSOLE-MODULE.md`](../../../CONSOLE-MODULE.md) (not a norm; where it differs from N1.5, the lesson is right). On a
+[`CONSOLE-MODULE.md`](../CONSOLE-MODULE.md) (not a norm; where it differs from N1.5, the lesson is right). On a
 contradiction, record the place and a counterexample and pass it to the Specification; the instructions introduce no new refusal. The internal types,
 functions and structure of the module remain the choice of its owner.
 

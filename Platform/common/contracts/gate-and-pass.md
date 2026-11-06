@@ -25,7 +25,7 @@ a change of behaviour; the source chapters hold pointers. What the grants and th
 P/06.3 N1.5; the refusals of the gate are the section «Refusals of the gate»; the refusals of the pass are P/06.5 N4.
 References «N1.x» in the moved text are to the source chapter (N1.5, N1.8 — P/06.3; N4 — P/06.5); «chapter 6.K» is a chapter of lesson P/06.
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

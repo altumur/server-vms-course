@@ -1,7 +1,7 @@
 # The function assemble (P/08.5 N3 «book assembly»): the assembly of one book at the holder from the copies of the members → the book rows of each member
 # of the list before the ring (secrets opened) and a report of the form {conflicts, dropped, undelivered}. input — the input of the command assemble as
 # JSON text (P/08.5 N5): catalog, book, members, book_seal_seed, copies, grants?, now?; the declarations of books and names — the manifests of the catalogue
-# Source/tests/testdata/testsub*.subsystem.yaml (README). expect — a subset of the output («@absent» — no field) or «@exit 2»
+# Platform/common/data/testsub/testsub*.subsystem.yaml (README). expect — a subset of the output («@absent» — no field) or «@exit 2»
 # (the input is out of form). The rows — the acceptance inputs of M11/05 inputs/assemble-*.json, sc. 06.
 # A row: case<TAB>input<TAB>expect<TAB>note.
 case	input	expect	note

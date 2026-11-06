@@ -22,7 +22,7 @@ N1.5. References in the moved text: «N1.2» — the section «The member's publ
 limits» (P/08.3 N1.3); «N1.5» — the section «The answer `carry`»; «N2» — P/08.3 N2; «lesson 4 N1.3» — the section «Generation, mark, limits»
 `ROAD_QUIET` (P/08.3 N1.3a).
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

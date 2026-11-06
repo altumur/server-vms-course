@@ -1,0 +1,13 @@
+{
+  "base": "e07b32a5030c696d89c72444e760a86f6246c487",
+  "sameInputRepeatedWriteByteExact": true,
+  "files": {
+    "Platform/07-console-module/module/console.js": "05d167f53a4d91214f30188d5331f0f4afbd99bfa7e4ac349b98f423f1bec89e",
+    "Platform/07-console-module/module/console.css": "44d4045693f60fcf719e7c216352e9e4b7873b69c372ae35e37d010050bb4de6",
+    "Platform/07-console-module/module/console.html": "c3e33f59424b516e1778dc514712050692a1a9a07327267f6e37f6af4334fb76",
+    "Platform/07-console-module/data/localization.tsv": "a5b3c4b9c1af6cfe40a72c80b58d2348a9e9517d7c36c0b6ad8a91bc807850e9",
+    "decisions/inbox/2026-11-06-console-p07-module-locale/map.json": "8f04f56240fad7416a5894543a11e486b2cf0e1bae90925b0cb090c9142a817e",
+    "decisions/inbox/2026-11-06-console-p07-module-locale/evidence.json": "036e7ed0356f261d96ead7e24b7599bf079837e90ea5bb2776a7d0233699d662"
+  },
+  "oldLocaleAbsent": true
+}

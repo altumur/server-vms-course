@@ -15,7 +15,7 @@ listener: the listener `SIGNER_URL` of the process `domain` requests the client 
 one, the other participants do not request it — ADR-0083 addendum (20), addendum (21)). Moved from P/01.3 N1.6
 (formerly M10/11 N1.6) without a change of behaviour: which roles each door admits stays in the norm of that door.
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ```yaml
 cert:         CN <role>.<server>; SAN DNS <server>; SAN URI urn:w2c:role:<role> — exactly one role; serverAuth + clientAuth;

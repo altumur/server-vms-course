@@ -14,7 +14,7 @@ Moved from P/03.2 N1.4 (`states`, `SLOT_TERM`, `TORN_STILL`) without a change of
 here. The form of the row, the name and the order of names are with the owner and in [the slot name contract](slot-name.md); the age of the observed version is
 [the observation contract](observation.md) «Observation of a version».
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

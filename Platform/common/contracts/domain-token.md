@@ -23,7 +23,7 @@ the claims of the token — [chapter 8.7](../../08-domain/spec/08.7-domain.norms
 in the moved text is lesson M11/N, their addresses now: «lesson 7» (the worker token) — P/08.7, «lesson 9» (the person token) —
 P/08.4 (analysis of review of stage B 8–10, № 22); «N1.x» in the steps — the chapters of P/08.2 (formerly of lesson M11/2; the numbers of the subsections are the former ones).
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

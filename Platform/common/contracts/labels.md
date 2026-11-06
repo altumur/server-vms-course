@@ -10,7 +10,7 @@ of a server and the forecasts ([P/06.6](../../06-console/spec/06.6-console.norms
 `scope`). Moved from chapter 6.6 N2.1 (formerly M10/4 N2) without a change of behaviour. The form of the server label row is the family
 `server-labels` ([P/06.6](../../06-console/data/server-labels.schema.json)); what labels mean for placement is with the reading lessons.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

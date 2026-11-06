@@ -15,7 +15,7 @@ side of the decision) without a change of behaviour, except one: the freshness b
 `live` of a process in `/schema`, `state` of a worker in an output) is in the norms of the reading lessons; the form of the observed rows and objects is at
 their owners ([catalogue](../data/catalog.tsv)).
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

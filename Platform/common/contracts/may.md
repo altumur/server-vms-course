@@ -27,7 +27,7 @@ owner keeps: the grant line ([P/08.4](../../08-domain/spec/08.4-domain.norms.md)
 «N1.6» in the moved text is M11/9 N1.6, now P/06.7 N1.10 (the break-glass session of the console); `rank` is the order of `cap` of
 P/08.4 N1.3; labels — the [labels alphabet contract](labels.md).
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

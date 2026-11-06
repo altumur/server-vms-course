@@ -1,0 +1,756 @@
+--- a/VMS/01-cam/ru/spec/01.1-cam.norms.md
++++ b/VMS/01-cam/ru/spec/01.1-cam.norms.md
+@@ -19 +19 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/01-cam/ru/spec/01.2-cam.norms.md
++++ b/VMS/01-cam/ru/spec/01.2-cam.norms.md
+@@ -21 +21 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/01-cam/ru/spec/01.3-cam.norms.md
++++ b/VMS/01-cam/ru/spec/01.3-cam.norms.md
+@@ -20 +20 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/01-cam/ru/spec/01.4-cam.norms.md
++++ b/VMS/01-cam/ru/spec/01.4-cam.norms.md
+@@ -21 +21 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/01-cam/ru/spec/01.5-cam.norms.md
++++ b/VMS/01-cam/ru/spec/01.5-cam.norms.md
+@@ -20 +20 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/01-cam/ru/spec/01.6-cam.norms.md
++++ b/VMS/01-cam/ru/spec/01.6-cam.norms.md
+@@ -21 +21 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/01-cam/ru/spec/01.7-cam.norms.md
++++ b/VMS/01-cam/ru/spec/01.7-cam.norms.md
+@@ -20 +20 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/01-cam/ru/spec/01.8-cam.norms.md
++++ b/VMS/01-cam/ru/spec/01.8-cam.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/01-cam/spec/01.1-cam.norms.md
++++ b/VMS/01-cam/spec/01.1-cam.norms.md
+@@ -19 +19 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module Platform are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module Platform are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/01-cam/spec/01.2-cam.norms.md
++++ b/VMS/01-cam/spec/01.2-cam.norms.md
+@@ -21 +21 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/01-cam/spec/01.3-cam.norms.md
++++ b/VMS/01-cam/spec/01.3-cam.norms.md
+@@ -20 +20 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the Platform module are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the Platform module are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/01-cam/spec/01.4-cam.norms.md
++++ b/VMS/01-cam/spec/01.4-cam.norms.md
+@@ -22 +22 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/01-cam/spec/01.5-cam.norms.md
++++ b/VMS/01-cam/spec/01.5-cam.norms.md
+@@ -20 +20 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the Platform module are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the Platform module are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/01-cam/spec/01.6-cam.norms.md
++++ b/VMS/01-cam/spec/01.6-cam.norms.md
+@@ -21 +21 @@
+-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/01-cam/spec/01.7-cam.norms.md
++++ b/VMS/01-cam/spec/01.7-cam.norms.md
+@@ -20 +20 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the Platform module are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the Platform module are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/01-cam/spec/01.8-cam.norms.md
++++ b/VMS/01-cam/spec/01.8-cam.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the Platform module are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the Platform module are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/02-rec/ru/spec/02.1-rec.norms.md
++++ b/VMS/02-rec/ru/spec/02.1-rec.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/02-rec/ru/spec/02.2-rec.norms.md
++++ b/VMS/02-rec/ru/spec/02.2-rec.norms.md
+@@ -20 +20 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/02-rec/ru/spec/02.3-rec.norms.md
++++ b/VMS/02-rec/ru/spec/02.3-rec.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/02-rec/ru/spec/02.4-rec.norms.md
++++ b/VMS/02-rec/ru/spec/02.4-rec.norms.md
+@@ -19 +19 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/02-rec/ru/spec/02.5-rec.norms.md
++++ b/VMS/02-rec/ru/spec/02.5-rec.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/02-rec/ru/spec/02.6-rec.norms.md
++++ b/VMS/02-rec/ru/spec/02.6-rec.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/02-rec/ru/spec/02.7-rec.norms.md
++++ b/VMS/02-rec/ru/spec/02.7-rec.norms.md
+@@ -19 +19 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/02-rec/ru/spec/02.8-rec.norms.md
++++ b/VMS/02-rec/ru/spec/02.8-rec.norms.md
+@@ -20 +20 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/02-rec/ru/spec/02.9-rec.norms.md
++++ b/VMS/02-rec/ru/spec/02.9-rec.norms.md
+@@ -21 +21 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/02-rec/spec/02.1-rec.norms.md
++++ b/VMS/02-rec/spec/02.1-rec.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/02-rec/spec/02.2-rec.norms.md
++++ b/VMS/02-rec/spec/02.2-rec.norms.md
+@@ -20 +20 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/02-rec/spec/02.3-rec.norms.md
++++ b/VMS/02-rec/spec/02.3-rec.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/02-rec/spec/02.4-rec.norms.md
++++ b/VMS/02-rec/spec/02.4-rec.norms.md
+@@ -19 +19 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/02-rec/spec/02.5-rec.norms.md
++++ b/VMS/02-rec/spec/02.5-rec.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/02-rec/spec/02.6-rec.norms.md
++++ b/VMS/02-rec/spec/02.6-rec.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/02-rec/spec/02.7-rec.norms.md
++++ b/VMS/02-rec/spec/02.7-rec.norms.md
+@@ -19 +19 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/02-rec/spec/02.8-rec.norms.md
++++ b/VMS/02-rec/spec/02.8-rec.norms.md
+@@ -20 +20 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/02-rec/spec/02.9-rec.norms.md
++++ b/VMS/02-rec/spec/02.9-rec.norms.md
+@@ -21 +21 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/03-live/ru/spec/03.1-live.norms.md
++++ b/VMS/03-live/ru/spec/03.1-live.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/03-live/ru/spec/03.2-live.norms.md
++++ b/VMS/03-live/ru/spec/03.2-live.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/03-live/ru/spec/03.3-live.norms.md
++++ b/VMS/03-live/ru/spec/03.3-live.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/03-live/ru/spec/03.4-live.norms.md
++++ b/VMS/03-live/ru/spec/03.4-live.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/03-live/ru/spec/03.5-live.norms.md
++++ b/VMS/03-live/ru/spec/03.5-live.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/03-live/ru/spec/03.6-live.norms.md
++++ b/VMS/03-live/ru/spec/03.6-live.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/03-live/spec/03.1-live.norms.md
++++ b/VMS/03-live/spec/03.1-live.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/03-live/spec/03.2-live.norms.md
++++ b/VMS/03-live/spec/03.2-live.norms.md
+@@ -18 +18 @@
+-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/03-live/spec/03.3-live.norms.md
++++ b/VMS/03-live/spec/03.3-live.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/03-live/spec/03.4-live.norms.md
++++ b/VMS/03-live/spec/03.4-live.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/03-live/spec/03.5-live.norms.md
++++ b/VMS/03-live/spec/03.5-live.norms.md
+@@ -17 +17 @@
+-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/03-live/spec/03.6-live.norms.md
++++ b/VMS/03-live/spec/03.6-live.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/04-det/ru/spec/04.1-det.norms.md
++++ b/VMS/04-det/ru/spec/04.1-det.norms.md
+@@ -16 +16 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/04-det/ru/spec/04.2-det.norms.md
++++ b/VMS/04-det/ru/spec/04.2-det.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/04-det/ru/spec/04.3-det.norms.md
++++ b/VMS/04-det/ru/spec/04.3-det.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/04-det/ru/spec/04.4-det.norms.md
++++ b/VMS/04-det/ru/spec/04.4-det.norms.md
+@@ -16 +16 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/04-det/spec/04.1-det.norms.md
++++ b/VMS/04-det/spec/04.1-det.norms.md
+@@ -16 +16 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/04-det/spec/04.2-det.norms.md
++++ b/VMS/04-det/spec/04.2-det.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/04-det/spec/04.3-det.norms.md
++++ b/VMS/04-det/spec/04.3-det.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/04-det/spec/04.4-det.norms.md
++++ b/VMS/04-det/spec/04.4-det.norms.md
+@@ -16 +16 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/05-detjob/ru/spec/05.1-detjob.norms.md
++++ b/VMS/05-detjob/ru/spec/05.1-detjob.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/05-detjob/ru/spec/05.2-detjob.norms.md
++++ b/VMS/05-detjob/ru/spec/05.2-detjob.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/05-detjob/ru/spec/05.3-detjob.norms.md
++++ b/VMS/05-detjob/ru/spec/05.3-detjob.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/05-detjob/ru/spec/05.4-detjob.norms.md
++++ b/VMS/05-detjob/ru/spec/05.4-detjob.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/05-detjob/spec/05.1-detjob.norms.md
++++ b/VMS/05-detjob/spec/05.1-detjob.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/05-detjob/spec/05.2-detjob.norms.md
++++ b/VMS/05-detjob/spec/05.2-detjob.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/05-detjob/spec/05.3-detjob.norms.md
++++ b/VMS/05-detjob/spec/05.3-detjob.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/05-detjob/spec/05.4-detjob.norms.md
++++ b/VMS/05-detjob/spec/05.4-detjob.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/06-detedge/ru/spec/06.1-detedge.norms.md
++++ b/VMS/06-detedge/ru/spec/06.1-detedge.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/06-detedge/ru/spec/06.2-detedge.norms.md
++++ b/VMS/06-detedge/ru/spec/06.2-detedge.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/06-detedge/ru/spec/06.3-detedge.norms.md
++++ b/VMS/06-detedge/ru/spec/06.3-detedge.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/06-detedge/ru/spec/06.4-detedge.norms.md
++++ b/VMS/06-detedge/ru/spec/06.4-detedge.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/06-detedge/spec/06.1-detedge.norms.md
++++ b/VMS/06-detedge/spec/06.1-detedge.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/06-detedge/spec/06.2-detedge.norms.md
++++ b/VMS/06-detedge/spec/06.2-detedge.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/06-detedge/spec/06.3-detedge.norms.md
++++ b/VMS/06-detedge/spec/06.3-detedge.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/06-detedge/spec/06.4-detedge.norms.md
++++ b/VMS/06-detedge/spec/06.4-detedge.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/07-auto/ru/spec/07.1-auto.norms.md
++++ b/VMS/07-auto/ru/spec/07.1-auto.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/07-auto/ru/spec/07.2-auto.norms.md
++++ b/VMS/07-auto/ru/spec/07.2-auto.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/07-auto/ru/spec/07.3-auto.norms.md
++++ b/VMS/07-auto/ru/spec/07.3-auto.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/07-auto/ru/spec/07.4-auto.norms.md
++++ b/VMS/07-auto/ru/spec/07.4-auto.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/07-auto/ru/spec/07.5-auto.norms.md
++++ b/VMS/07-auto/ru/spec/07.5-auto.norms.md
+@@ -19 +19 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/07-auto/ru/spec/07.6-auto.norms.md
++++ b/VMS/07-auto/ru/spec/07.6-auto.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/07-auto/spec/07.1-auto.norms.md
++++ b/VMS/07-auto/spec/07.1-auto.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/07-auto/spec/07.2-auto.norms.md
++++ b/VMS/07-auto/spec/07.2-auto.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/07-auto/spec/07.3-auto.norms.md
++++ b/VMS/07-auto/spec/07.3-auto.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/07-auto/spec/07.4-auto.norms.md
++++ b/VMS/07-auto/spec/07.4-auto.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/07-auto/spec/07.5-auto.norms.md
++++ b/VMS/07-auto/spec/07.5-auto.norms.md
+@@ -19 +19 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/07-auto/spec/07.6-auto.norms.md
++++ b/VMS/07-auto/spec/07.6-auto.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/08-exp/ru/spec/08.6-exp.norms.md
++++ b/VMS/08-exp/ru/spec/08.6-exp.norms.md
+@@ -19 +19 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/08-exp/ru/spec/08.7-exp.norms.md
++++ b/VMS/08-exp/ru/spec/08.7-exp.norms.md
+@@ -16 +16 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Слова урока — глава 6 Н0.
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Слова урока — глава 6 Н0.
+--- a/VMS/08-exp/ru/spec/08.8-exp.norms.md
++++ b/VMS/08-exp/ru/spec/08.8-exp.norms.md
+@@ -16 +16 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Слова урока — глава 6 Н0.
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Слова урока — глава 6 Н0.
+--- a/VMS/08-exp/ru/spec/08.9-exp.norms.md
++++ b/VMS/08-exp/ru/spec/08.9-exp.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Слова урока — глава 6 Н0.
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Слова урока — глава 6 Н0.
+--- a/VMS/08-exp/spec/08.6-exp.norms.md
++++ b/VMS/08-exp/spec/08.6-exp.norms.md
+@@ -19 +19 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/08-exp/spec/08.7-exp.norms.md
++++ b/VMS/08-exp/spec/08.7-exp.norms.md
+@@ -16 +16 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The words of the lesson — chapter 6 Н0.
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The words of the lesson — chapter 6 Н0.
+--- a/VMS/08-exp/spec/08.8-exp.norms.md
++++ b/VMS/08-exp/spec/08.8-exp.norms.md
+@@ -16 +16 @@
+-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md). The lesson's words — chapter 6 Н0.
++Normative keywords follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The lesson's words — chapter 6 Н0.
+--- a/VMS/08-exp/spec/08.9-exp.norms.md
++++ b/VMS/08-exp/spec/08.9-exp.norms.md
+@@ -18 +18 @@
+-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md). The lesson's words — chapter 6 Н0.
++Normative keywords follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The lesson's words — chapter 6 Н0.
+--- a/VMS/09-deploy/ru/spec/09.1-deploy.norms.md
++++ b/VMS/09-deploy/ru/spec/09.1-deploy.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/09-deploy/ru/spec/09.2-deploy.norms.md
++++ b/VMS/09-deploy/ru/spec/09.2-deploy.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/09-deploy/ru/spec/09.3-deploy.norms.md
++++ b/VMS/09-deploy/ru/spec/09.3-deploy.norms.md
+@@ -16 +16 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/09-deploy/ru/spec/09.4-deploy.norms.md
++++ b/VMS/09-deploy/ru/spec/09.4-deploy.norms.md
+@@ -16 +16 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/09-deploy/spec/09.1-deploy.norms.md
++++ b/VMS/09-deploy/spec/09.1-deploy.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/09-deploy/spec/09.2-deploy.norms.md
++++ b/VMS/09-deploy/spec/09.2-deploy.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/09-deploy/spec/09.3-deploy.norms.md
++++ b/VMS/09-deploy/spec/09.3-deploy.norms.md
+@@ -16 +16 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/09-deploy/spec/09.4-deploy.norms.md
++++ b/VMS/09-deploy/spec/09.4-deploy.norms.md
+@@ -16 +16 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/10-assist/ru/spec/10.1-assist.norms.md
++++ b/VMS/10-assist/ru/spec/10.1-assist.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/10-assist/ru/spec/10.2-assist.norms.md
++++ b/VMS/10-assist/ru/spec/10.2-assist.norms.md
+@@ -20 +20 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/10-assist/spec/10.1-assist.norms.md
++++ b/VMS/10-assist/spec/10.1-assist.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/10-assist/spec/10.2-assist.norms.md
++++ b/VMS/10-assist/spec/10.2-assist.norms.md
+@@ -20 +20 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/11-backend/ru/spec/11.1-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.1-backend.norms.md
+@@ -19 +19 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
+--- a/VMS/11-backend/ru/spec/11.10-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.10-backend.norms.md
+@@ -20 +20 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/11-backend/ru/spec/11.11-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.11-backend.norms.md
+@@ -21 +21 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/11-backend/ru/spec/11.12-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.12-backend.norms.md
+@@ -15 +15 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/11-backend/ru/spec/11.13-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.13-backend.norms.md
+@@ -15 +15 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/11-backend/ru/spec/11.14-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.14-backend.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/11-backend/ru/spec/11.15-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.15-backend.norms.md
+@@ -16 +16 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+@@ -85 +85 @@
+-  `refresh` модуль отдаёт «как они пришли» ([контракт модуля](../../../../ru/CONSOLE-MODULE.md), `refresh`) — так
++  `refresh` модуль отдаёт «как они пришли» ([контракт модуля](../../../../Platform/07-console-module/ru/CONSOLE-MODULE.md), `refresh`) — так
+--- a/VMS/11-backend/ru/spec/11.16-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.16-backend.norms.md
+@@ -15 +15 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/11-backend/ru/spec/11.17-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.17-backend.norms.md
+@@ -16 +16 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/11-backend/ru/spec/11.18-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.18-backend.norms.md
+@@ -16 +16 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/11-backend/ru/spec/11.19-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.19-backend.norms.md
+@@ -19 +19 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/11-backend/ru/spec/11.2-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.2-backend.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
+--- a/VMS/11-backend/ru/spec/11.20-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.20-backend.norms.md
+@@ -15 +15 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов). Слова выгрузки — заказ, часть, ведущая часть, держатель части — V/08.6 Н0.
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов). Слова выгрузки — заказ, часть, ведущая часть, держатель части — V/08.6 Н0.
+--- a/VMS/11-backend/ru/spec/11.3-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.3-backend.norms.md
+@@ -19 +19 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
+--- a/VMS/11-backend/ru/spec/11.4-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.4-backend.norms.md
+@@ -17 +17 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
+--- a/VMS/11-backend/ru/spec/11.5-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.5-backend.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
+--- a/VMS/11-backend/ru/spec/11.6-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.6-backend.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
+--- a/VMS/11-backend/ru/spec/11.7-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.7-backend.norms.md
+@@ -20 +20 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
+--- a/VMS/11-backend/ru/spec/11.8-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.8-backend.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1
+--- a/VMS/11-backend/ru/spec/11.9-backend.norms.md
++++ b/VMS/11-backend/ru/spec/11.9-backend.norms.md
+@@ -15 +15 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/11-backend/spec/11.1-backend.norms.md
++++ b/VMS/11-backend/spec/11.1-backend.norms.md
+@@ -19 +19 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1
+--- a/VMS/11-backend/spec/11.10-backend.norms.md
++++ b/VMS/11-backend/spec/11.10-backend.norms.md
+@@ -20 +20 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/11-backend/spec/11.11-backend.norms.md
++++ b/VMS/11-backend/spec/11.11-backend.norms.md
+@@ -21 +21 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/11-backend/spec/11.12-backend.norms.md
++++ b/VMS/11-backend/spec/11.12-backend.norms.md
+@@ -15 +15 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/11-backend/spec/11.13-backend.norms.md
++++ b/VMS/11-backend/spec/11.13-backend.norms.md
+@@ -15 +15 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/11-backend/spec/11.14-backend.norms.md
++++ b/VMS/11-backend/spec/11.14-backend.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/11-backend/spec/11.15-backend.norms.md
++++ b/VMS/11-backend/spec/11.15-backend.norms.md
+@@ -16 +16 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+@@ -85 +85 @@
+-  `refresh` «как они пришли» ("as they came") ([the module contract](../../../CONSOLE-MODULE.md), `refresh`) — this is how
++  `refresh` «как они пришли» ("as they came") ([the module contract](../../../Platform/07-console-module/CONSOLE-MODULE.md), `refresh`) — this is how
+--- a/VMS/11-backend/spec/11.16-backend.norms.md
++++ b/VMS/11-backend/spec/11.16-backend.norms.md
+@@ -15 +15 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/11-backend/spec/11.17-backend.norms.md
++++ b/VMS/11-backend/spec/11.17-backend.norms.md
+@@ -16 +16 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/11-backend/spec/11.18-backend.norms.md
++++ b/VMS/11-backend/spec/11.18-backend.norms.md
+@@ -16 +16 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/11-backend/spec/11.19-backend.norms.md
++++ b/VMS/11-backend/spec/11.19-backend.norms.md
+@@ -19 +19 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/11-backend/spec/11.2-backend.norms.md
++++ b/VMS/11-backend/spec/11.2-backend.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/11-backend/spec/11.20-backend.norms.md
++++ b/VMS/11-backend/spec/11.20-backend.norms.md
+@@ -15 +15 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary). The words of the export — order, part, leading part, part holder — are V/08.6 Н0.
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary). The words of the export — order, part, leading part, part holder — are V/08.6 Н0.
+--- a/VMS/11-backend/spec/11.3-backend.norms.md
++++ b/VMS/11-backend/spec/11.3-backend.norms.md
+@@ -19 +19 @@
+-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1
++Normative keywords follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1
+--- a/VMS/11-backend/spec/11.4-backend.norms.md
++++ b/VMS/11-backend/spec/11.4-backend.norms.md
+@@ -17 +17 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1
+--- a/VMS/11-backend/spec/11.5-backend.norms.md
++++ b/VMS/11-backend/spec/11.5-backend.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1
+--- a/VMS/11-backend/spec/11.6-backend.norms.md
++++ b/VMS/11-backend/spec/11.6-backend.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1
+--- a/VMS/11-backend/spec/11.7-backend.norms.md
++++ b/VMS/11-backend/spec/11.7-backend.norms.md
+@@ -20 +20 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1
+--- a/VMS/11-backend/spec/11.8-backend.norms.md
++++ b/VMS/11-backend/spec/11.8-backend.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1
+--- a/VMS/11-backend/spec/11.9-backend.norms.md
++++ b/VMS/11-backend/spec/11.9-backend.norms.md
+@@ -15 +15 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/12-psim/ru/spec/12.1-psim.norms.md
++++ b/VMS/12-psim/ru/spec/12.1-psim.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Правила модуля «Платформа» — [P/01.1 Н0](../../../../Platform/01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+--- a/VMS/12-psim/ru/spec/12.2-psim.norms.md
++++ b/VMS/12-psim/ru/spec/12.2-psim.norms.md
+@@ -16 +16 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Слова урока — глава 1 Н0.
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Слова урока — глава 1 Н0.
+--- a/VMS/12-psim/ru/spec/12.3-psim.norms.md
++++ b/VMS/12-psim/ru/spec/12.3-psim.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Слова урока — глава 1 Н0.
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Слова урока — глава 1 Н0.
+--- a/VMS/12-psim/ru/spec/12.4-psim.norms.md
++++ b/VMS/12-psim/ru/spec/12.4-psim.norms.md
+@@ -18 +18 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Слова урока — глава 1 Н0, глава 2 Н0.
++Нормативные слова — по [канону курса](../../../../Platform/common/ru/NORMATIVE-TERMS.md). Слова урока — глава 1 Н0, глава 2 Н0.
+--- a/VMS/12-psim/spec/12.1-psim.norms.md
++++ b/VMS/12-psim/spec/12.1-psim.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The rules of the module «Платформа» are [P/01.1 Н0](../../../Platform/01-store/spec/01.1-store.norms.md#n0-vocabulary).
+--- a/VMS/12-psim/spec/12.2-psim.norms.md
++++ b/VMS/12-psim/spec/12.2-psim.norms.md
+@@ -16 +16 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The words of the lesson are chapter 1 Н0.
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md). The words of the lesson are chapter 1 Н0.
+--- a/VMS/12-psim/spec/12.3-psim.norms.md
++++ b/VMS/12-psim/spec/12.3-psim.norms.md
+@@ -20 +20 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md).
+--- a/VMS/12-psim/spec/12.4-psim.norms.md
++++ b/VMS/12-psim/spec/12.4-psim.norms.md
+@@ -18 +18 @@
+-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md).
++Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../Platform/common/NORMATIVE-TERMS.md).

@@ -17,7 +17,7 @@ of the controller, the worker, the resource or the console — schema check» (P
 a change of behaviour; they refer here. The raise of the schema by the operator (`raise`, `PUT /schema`, the maintenance window) is with the
 owner, P/06.6 N1.1a, N3 «raise_schema».
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

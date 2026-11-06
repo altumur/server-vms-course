@@ -32,8 +32,8 @@ N3 «выдать» шаги 2–7; N5 «`issue`»). Шаги 0–1 (смещё�
 запись без `copies` — тоже нечитаема), `topology` (`centre?`, `star`, `via`), `units` — владельцы единиц по ref, `shared` —
 общий документ, `now` — 1760000000. Домен — `acme`; члены — `hold`, `m1`, `m2`, `relay`. Объявления видов во входах — виды
 `tally`, `probe` манифеста `testsub` и `feed`, `tally2` манифеста `testsub2` из данных спецификации
-([`testsub`](../../../../../Source/tests/testdata/testsub.subsystem.yaml),
-[`testsub2`](../../../../../Source/tests/testdata/testsub2.subsystem.yaml)) — входы несут их целиком и от байтов манифестов не
+([`testsub`](../../../../common/data/testsub/testsub.subsystem.yaml),
+[`testsub2`](../../../../common/data/testsub/testsub2.subsystem.yaml)) — входы несут их целиком и от байтов манифестов не
 зависят. Строки `issue-31`…`issue-35` несут объявление `tally` с изменённой областью `placement` (`target_fields`
 `[cluster, star_centre]` или `[cluster, origin]`, `caller: copies`) — по форме загрузки P/02.1 N1.2b (оба свидетеля его
 принимают), не байты манифеста.

@@ -11,7 +11,7 @@ admission — the section «The participant» `admission`) and the epoch rows of
 limits do not change (ADR-0091 addendum (21) item 1, addendum (23) items 3–5, addendum (24) item 4, addendum (25) item 4, addendum (27) item 2). The index is
 P/05 N1.3; the form of the row and of the answer — the section «Form», the query and the cut `cut` — «The resource query and answer» below; the hint `/events/wait` is at the resources (P/05 N1.6), the console has none.
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

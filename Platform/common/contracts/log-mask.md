@@ -12,7 +12,7 @@ as a whole.
 Moved from P/06.2 N1.4 `log` and the lines of the address contract about free text (A1, A2) without a change of behaviour; P/06.2 and
 the address contract refer here.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Function
 

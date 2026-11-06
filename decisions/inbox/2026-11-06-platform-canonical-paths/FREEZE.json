@@ -1,0 +1,58 @@
+{
+  "base": "e07b32a5030c696d89c72444e760a86f6246c487",
+  "branch": "spec/platform-canonical-paths-e07",
+  "prior_commits": {
+    "source_moves": "6f9320f69e7bb31a4cc01ff77846287bc9ff78a7",
+    "authorized_URLs": "36ba710b45bfeb6ef28baef6b9199f6c332017e1"
+  },
+  "scope": "ADR-0083 (115)-(117): canonical document/data relocation, related URL-only edits, explicit VMS/B URL permission; no Console bytes or locale move.",
+  "source_map": "final-source-map.json",
+  "source_map_sha256": "6ccb295cd8a6697c1c59eb67ec7c326b6dfb4b3193dcec5bcb151530f3725e82",
+  "mapped_source_history_ledger_paths": 502,
+  "historical_evidence": "Initial source-map/final-file-map/source-checks describe the 6f phase with deferred URLs; 36ba activates both stored patches without rewriting that phase.",
+  "result": {
+    "raw_copies": 141,
+    "raw_archives": 2,
+    "VMS_URL_files": 150,
+    "VMS_URLs": 152,
+    "B_URLs": 4,
+    "mirror_pairs": 393,
+    "mirror_errors": 0,
+    "cell_errors": 0,
+    "local_file_links": 9128,
+    "missing_local_files": 0,
+    "cyrillic_check": "PASS --shrink --ready Platform; registry unchanged",
+    "ready_directories": 14,
+    "strict_check_spec": "RED exit1: exactly three pending reader/path errors; 62 existing exceptions"
+  },
+  "pending_readers": [
+    "ERROR Platform/02-installer/acceptance/1/spec_verdicts: unsupported acceptance entry; add a format-specific check",
+    "ERROR Platform/02-installer/vectors/canonical/cases.tsv: canonical: no vector for the accepted input Source/tests/testdata/testsub.subsystem.yaml (rebuild: cd skills/lesson-spec/scripts && python -m v7.vectors)",
+    "ERROR Platform/02-installer/vectors/canonical/cases.tsv: canonical: no vector for the accepted input Source/tests/testdata/testsub2.subsystem.yaml (rebuild: cd skills/lesson-spec/scripts && python -m v7.vectors)"
+  ],
+  "limits": [
+    "No helper/judge edits; review103 owns new readers.",
+    "No normgen/KIT/full joint/export/pin/main/runtime/queue changes.",
+    "No Go/model/native/product/SUT/JS execution; no product synchronization.",
+    "Console module and locale relocation are separate Console-owner work, not implemented here."
+  ],
+  "next_owner": "Architect forwards source freeze to coord103; review103 owns reader integration; coord103 owns composition/export/full normgen+KIT/main/pins.",
+  "artifacts": {
+    "changed-document-links.json": "0720bd83ae1ed302e7c70b65725fa300f3ee60a541a3838ddb2d3eecaf5e3530",
+    "check-spec-before-reader.log": "74b38c2e112730246846f1aa2ccb5d5c70f6e0f0b87625f29f7172468b9e281a",
+    "copies.tsv": "06754a24a138184189594e6f1bfdf6cbd1d4e6adc1cbbe1ccd37ff9d705a2eb3",
+    "cyrillic-final.log": "42055716a1745dd78d868878a6e18da737110c3b5dfca393fddbae92dc1b1418",
+    "deferred-links.json": "42527775b06be40a7ba94830adb7963ffea69b89b08ea0f965873e4a08adfc9d",
+    "deferred-patch-format.json": "9e4abf8d02c243aa0e1b9a0f24ccb286a31d2d00c82f7c650708f8293d183514",
+    "final-file-map.json": "def41e0c43ee1eb243a096fc0de4e51b905b646442c40afd12f27585b0d67d4d",
+    "final-source-checks.json": "fe144c3850b5ec5ed2fda1ca2328693e9f2c361ca346f3e48e264d7a5cc89674",
+    "final-source-map.json": "6ccb295cd8a6697c1c59eb67ec7c326b6dfb4b3193dcec5bcb151530f3725e82",
+    "package-notes.json": "dfde9d8a6383e0149e40554c03126697a3dcbffb782c73f1343689dfc3fbdf6a",
+    "related-pointer-delta.json": "546a378f13d66aeb0a8dbed9bd6c11d90f545f203a2e2337d427e38e67208974",
+    "reserved-B-links.proposed.patch": "a42c84f5bb7ad00c5607d6bcf7be6f7ee47eab52299e31c18378da974bb395a2",
+    "source-checks-initial.json": "cc192616216164edd8e7a144801dc205188d42f5b4c568f6750e563518f86492",
+    "source-map.json": "894b2677176fffb3d6fe2d09ac723ec83340ec8d00abccd3a32f8e9e47b1a3cb",
+    "url-only-followup.json": "fa0652a761139c55198958928123e965aa3bfed47e243dc0d822fff73d07095a",
+    "vms-links.proposed.patch": "8c40df3fd41ebbf07319539b0344702f7f8ae84d77a3e80594a75f604595df87"
+  }
+}
