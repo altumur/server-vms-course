@@ -36,6 +36,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"%(m)s/apidoor"
@@ -47,6 +48,7 @@ type cfg struct {
 	ID, API string
 	TLS     bool
 	Max     int64
+	MaxBody int64
 }
 
 type cs struct {
@@ -84,7 +86,7 @@ func main() {
 		if err := json.Unmarshal(in.Bytes(), &c); err != nil {
 			panic(err)
 		}
-		bc := box.Config{ID: c.Cfg.ID, API: c.Cfg.API, TLS: c.Cfg.TLS, MaxValue: c.Cfg.Max}
+		bc := box.Config{ID: c.Cfg.ID, API: c.Cfg.API, TLS: c.Cfg.TLS, MaxValue: c.Cfg.Max%(max_body_config)s}
 		ix := box.Indices{Last: c.Ix[0], Commit: c.Ix[1], Applied: c.Ix[2]}
 		var logs []string
 		logf := func(s string) { logs = append(logs, s) }
@@ -92,6 +94,19 @@ func main() {
 		switch c.Op {
 		case "status":
 			r = answer(apidoor.OpStatus, box.Status(bc, ix, nil))
+		case "status-flags":
+			f, refused := flags.Parse("daemon", []string{"-dir", "data", "-id", c.Cfg.ID,
+				"-max-body", fmt.Sprint(c.Cfg.MaxBody), "-max-value", fmt.Sprint(c.Cfg.Max)},
+				func(string) string { return "" })
+			if refused != nil { panic(fmt.Sprint(refused)) }
+			r = answer(apidoor.OpStatus, box.Status(box.ConfigOf(f), ix, nil))
+		case "status-schema":
+			var body any
+			decoder := json.NewDecoder(strings.NewReader(c.Body))
+			decoder.UseNumber()
+			if err := decoder.Decode(&body); err != nil { panic(err) }
+			e, known := apidoor.CheckSchema("Status", body)
+			r = map[string]any{"known": known, "valid": e == nil}
 		case "metrics":
 			r = answer(apidoor.OpMetrics, box.Metrics(ix))
 		case "join":
@@ -148,9 +163,12 @@ CEIL = 524288
 
 
 def status(c, ix):
-    return {"id": c["ID"], "state": "Leader", "leader": c["API"], "leader_id": c["ID"], "term": 1, "commit": ix[1],
+    result = {"id": c["ID"], "state": "Leader", "leader": c["API"], "leader_id": c["ID"], "term": 1, "commit": ix[1],
             "applied": ix[2], "voters": [c["ID"]], "members": {c["ID"]: c["API"]} if c["API"] else {}, "tls": c["TLS"],
             "max_value": c["Max"]}
+    if F["status_max_body"]:
+        result["max_body"] = c["MaxBody"]
+    return result
 
 
 def metrics(ix):
@@ -300,7 +318,8 @@ class Box(unittest.TestCase):
                 raise AssertionError(f"mutant: {mutate[1]!r} not in {mutate[0]}")
             p.write_text(src.replace(mutate[1], mutate[2], 1))
         (mod / "cmd/boxjudge").mkdir(parents=True, exist_ok=True)
-        (mod / "cmd/boxjudge/main.go").write_text(HARNESS % {"m": MODULE})
+        (mod / "cmd/boxjudge/main.go").write_text(HARNESS % {
+            "m": MODULE, "max_body_config": ", MaxBody: c.Cfg.MaxBody" if F["status_max_body"] else ""})
         exe = mod / "boxjudge"
         b = subprocess.run(["go", "build", "-o", str(exe), "./cmd/boxjudge"], cwd=mod, capture_output=True, text=True)
         if b.returncode:
@@ -313,8 +332,8 @@ class Box(unittest.TestCase):
         (d / "data").mkdir(parents=True)
         (d / "out").mkdir()
         os.symlink(d / "data", d / "link")
-        cfgs = [{"ID": "s1", "API": "127.0.0.1:9001", "TLS": True, "Max": 524288},
-                {"ID": "box-2", "API": "", "TLS": False, "Max": 1000}]
+        cfgs = [{"ID": "s1", "API": "127.0.0.1:9001", "TLS": True, "Max": 524288, "MaxBody": 1048576},
+                {"ID": "box-2", "API": "", "TLS": False, "Max": 1000, "MaxBody": 2097152}]
         cs = []
         for c in cfgs:
             for ix in ([0, 0, 0], [7, 7, 7], [2 ** 64 - 1, 5, 4]):
@@ -421,6 +440,32 @@ class Box(unittest.TestCase):
 
     def test_model(self):
         self.assertEqual(self.mismatches(self.harness()), [])
+
+    def test_status_body_limits(self):
+        if not F["status_max_body"]:
+            self.skipTest("this source does not declare Status.max_body")
+        source = gen_box.ROOT / "Platform/01-store/acceptance/3/inputs/status-body-limits.json"
+        cases = json.loads(source.read_text(encoding="utf-8"))["cases"]
+        self.assertEqual(len(cases), 10)
+        self.assertEqual(sum(c["valid"] for c in cases), 3)
+        exe = self.harness()
+        requests = [{"Op": "status-schema", "Body": json.dumps(c["response"])} for c in cases]
+        configured = [{"ID": "s1", "Max": 524288, "MaxBody": 2097152},
+                      {"ID": "s2", "Max": 731, "MaxBody": 7}]
+        requests += [{"Op": "status-flags", "Cfg": c} for c in configured]
+        done = subprocess.run([str(exe)], input="\n".join(json.dumps(c) for c in requests) + "\n",
+                              capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        answers = [json.loads(line) for line in done.stdout.splitlines()]
+        self.assertEqual(len(answers), len(requests))
+        for c, got in zip(cases, answers):
+            self.assertEqual(got, {"known": True, "valid": c["valid"]}, c["case"])
+        for cfg, got in zip(configured, answers[len(cases):]):
+            self.assertEqual(got["code"], 200)
+            body = json.loads(got["body"])
+            self.assertEqual(body["max_body"], cfg["MaxBody"])
+            self.assertEqual(body["max_value"], cfg["Max"])
+        self.assertIn(source, [gen_box.ROOT / e["path"] for e in gen_box.provenance()["judge_inputs"]])
 
     def test_mutants(self):
         mutants = [

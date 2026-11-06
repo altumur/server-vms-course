@@ -240,6 +240,62 @@ func main() {
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         self.assertEqual(set(done.stdout.splitlines()), {"PASS " + c["source"] for c in cases})
 
+    def test_p06_numeric_supplement(self):
+        import tsv_input
+
+        roster = ROOT / "Platform/06-console/forms/numeric-loader.cases.tsv"
+        if not roster.is_file():
+            self.skipTest("this source has no P06 numeric-loader supplement")
+        rows = tsv_input.read(roster, names=("case", "input", "expect", "relation", "norm"), root=ROOT).rows
+        self.assertEqual(len(rows), 9)
+        self.assertEqual(sum(row["expect"] == "ok" for _, row in rows), 5)
+        cases = []
+        paths = {roster}
+        for _, row in rows:
+            self.assertIn(row["expect"], ("ok", "refused:relations"))
+            self.assertIn(row["relation"], ("160", "161", "162") if row["expect"] != "ok" else ("-",))
+            path = roster.parent / row["input"]
+            paths.add(path)
+            cases.append({"Case": row["case"], "Source": path.relative_to(ROOT).as_posix(),
+                          "Text": path.read_bytes().decode("utf-8"), "Expect": row["expect"],
+                          "Rule": int(row["relation"]) if row["relation"] != "-" else 0})
+        mod = self.copy("numeric-supplement")
+        (mod / "witnesses.json").write_text(json.dumps(cases), encoding="utf-8")
+        cmd = mod / "cmd/numericprobe"
+        cmd.mkdir(parents=True)
+        (cmd / "main.go").write_text(r'''package main
+import (
+    "encoding/json"
+    "fmt"
+    "os"
+    "strings"
+    "MODULE/manifest"
+)
+func main() {
+    data, err := os.ReadFile(os.Args[1]); if err != nil { panic(err) }
+    var cases []struct { Case, Source, Text, Expect string; Rule int }
+    if err := json.Unmarshal(data, &cases); err != nil { panic(err) }
+    bad := false
+    for _, c := range cases {
+        loaded, refusal := manifest.Load(c.Source, []byte(c.Text))
+        ok := loaded != nil && refusal == nil
+        if c.Expect == "refused:relations" {
+            ok = loaded == nil && refusal != nil && refusal.Class == "relations" && refusal.Row == c.Rule &&
+                 strings.Contains(refusal.Message, c.Source)
+        }
+        if !ok { fmt.Printf("FAIL %s: %+v\n", c.Case, refusal); bad = true
+        } else { fmt.Printf("PASS %s\n", c.Case) }
+    }
+    if bad { os.Exit(1) }
+}
+'''.replace("MODULE", gen_manifest.L.go_module), encoding="utf-8")
+        done = subprocess.run(["go", "run", "./cmd/numericprobe", "witnesses.json"], cwd=mod,
+                              capture_output=True, text=True, env=ENV)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertEqual(set(done.stdout.splitlines()), {"PASS " + c["Case"] for c in cases})
+        provenance_paths = {ROOT / entry["path"] for entry in gen_manifest.provenance()["judge_inputs"]}
+        self.assertTrue(paths <= provenance_paths)
+
     def test_mutants(self):
         mutants = [
             ("manifest.go", "if len(numbers) > 0 {", "if false {"),

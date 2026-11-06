@@ -70,7 +70,18 @@ def facts():
     t13 = NORMS_13.read_text(encoding="utf-8")
     t11 = NORMS_11.read_text(encoding="utf-8")
     metrics, box, copy_, floor = (block_line(t13, w) for w in ("metrics", "box", "copy", "floor"))
-    f = {}
+    import yamlsub
+
+    try:
+        api = yamlsub.load(OPENAPI.read_text(encoding="utf-8"), OPENAPI.name)
+    except yamlsub.YamlError as exc:
+        raise GenError(str(exc)) from None
+    status = api["components"]["schemas"]["Status"]
+    body = status.get("properties", {}).get("max_body")
+    if body is not None and ("max_body" not in status.get("required", []) or
+                             body.get("type") != "integer" or body.get("minimum") != 1):
+        raise GenError("Status.max_body must be a required positive integer")
+    f = {"status_max_body": body is not None}
     m = re.match(r"(configstore_raft_term), (.*?), (configstore_doors);", metrics)
     if not m:
         raise GenError("Н1.3 metrics: the list «configstore_raft_term, …, configstore_doors;» is not found")
@@ -174,16 +185,16 @@ import (
 
 // Config — что box знает о себе: -id (или SERVER_NAME), -api, -tls и -max-value (max_value статуса — действующий
 // потолок веса строки в байтах; spec103 2026-11-05) из флагов демона.
-type Config struct {
+%(max_body_comment)stype Config struct {
 	ID       string
 	API      string // пусто — демон без -api: leader "" и members {} (C01-STATUS-MEMBERS-NOAPI)
 	TLS      bool
 	MaxValue int64
-}
+%(max_body_field)s}
 
 // ConfigOf — Config из разобранных флагов демона (ID уже с умолчанием SERVER_NAME у разбора launch).
 func ConfigOf(f *flags.Flags) Config {
-	return Config{ID: f.ID, API: f.API, TLS: f.TLS != "", MaxValue: f.MaxValue}
+	return Config{ID: f.ID, API: f.API, TLS: f.TLS != "", MaxValue: f.MaxValue%(max_body_flags)s}
 }
 
 // Indices — индексы хранилища: last — последний записанный, commit, applied (на box все три обычно равны).
@@ -199,7 +210,7 @@ func Status(c Config, ix Indices, admissionAhead *float64) apidoor.Answer {
 		members[c.ID] = c.API
 	}
 	st := apidoor.Status{Id: c.ID, State: %(state_go)s, Leader: c.API, LeaderId: c.ID, Term: %(term)d, Commit: ix.Commit,
-		Applied: ix.Applied, Voters: []string{c.ID}, Members: members, Tls: c.TLS, MaxValue: c.MaxValue,
+		Applied: ix.Applied, Voters: []string{c.ID}, Members: members, Tls: c.TLS, MaxValue: c.MaxValue,%(max_body_status)s
 		AdmissionAhead: admissionAhead}
 	return apidoor.Answer{Code: 200, Body: st}
 }
@@ -664,7 +675,12 @@ def render():
     f = facts()
     common = {"module": GO_MODULE, "norms": str(NORMS_13.relative_to(ROOT)), "norms_sha": sha(NORMS_13),
               "refusals": str(REFUSALS.relative_to(ROOT)), "refusals_sha": sha(REFUSALS), **f["refusals"]}
-    box = BOX_GO % dict(common, state=f["state"], state_go=go_str(f["state"]), term=f["values"]["term"],
+    body = {"max_body_comment": "// MaxBody is this instance's configured HTTP entity-body byte ceiling.\n",
+            "max_body_field": "\tMaxBody int64\n", "max_body_flags": ", MaxBody: f.MaxBody",
+            "max_body_status": " MaxBody: c.MaxBody,"}
+    if not f["status_max_body"]:
+        body = {name: "" for name in body}
+    box = BOX_GO % dict(common, **body, state=f["state"], state_go=go_str(f["state"]), term=f["values"]["term"],
                         series_names=", ".join(go_str(n) for n, _, _ in f["series"]), metrics_body=metrics_body(f))
     cp = COPY_GO % dict(common, format_go=go_str(f["copy_format"]), version=f["copy_version"], ceiling=f["ceiling"],
                         sub=f["<sub>"][4:-2], id=f["<id>"][4:-2], since_y=f["since"][0], since_m=f["since"][1],
@@ -711,16 +727,19 @@ def provenance():
     def entries(sources):
         return [entry(p) for p in dict.fromkeys(p for src in sources for p in
                 (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src]))]
+    judge_inputs = [L.form("stages.tsv"), *sorted(L.path("acceptance/3").glob("*.tsv")),
+                    L.path("acceptance/3/README.md"),
+                    *sorted(L.path("acceptance/3/inputs").glob("*.jsonl")),
+                    ROOT / "Source/tests/testdata/testsub.subsystem.yaml",
+                    ROOT / "Source/tests/testdata/testsub2.subsystem.yaml"] if storage else []
+    status_cases = L.path("acceptance/3/inputs/status-body-limits.json")
+    if status_cases.is_file():
+        judge_inputs.append(status_cases)
     return {"form": entries([NORMS_13, NORMS_11, REFUSALS, OPENAPI, KEYS_README]),
             "generator": entry(Path(__file__).resolve()), "handwritten": [entry(p) for p in COPY_RUNTIME.values()] if storage else [],
             "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
             "judge": entry(JUDGE), "judges": [entry(JUDGE), entry(COPY_JUDGE)] if storage else [entry(JUDGE)],
-            "judge_inputs": entries([L.form("stages.tsv"),
-                            *sorted(L.path("acceptance/3").glob("*.tsv")),
-                            L.path("acceptance/3/README.md"),
-                            *sorted(L.path("acceptance/3/inputs").glob("*.jsonl")),
-                            ROOT / "Source/tests/testdata/testsub.subsystem.yaml",
-                            ROOT / "Source/tests/testdata/testsub2.subsystem.yaml"]) if storage else []}
+            "judge_inputs": entries(judge_inputs)}
 
 
 KIT_MD = """
