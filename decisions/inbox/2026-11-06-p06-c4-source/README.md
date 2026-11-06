@@ -1,0 +1,9 @@
+# P06 C4: operations turn source activation
+
+The Architect accepted the exact391ef proposal and coord103 assigned these source paths. This slice adds15 operations cases, their sole06-console consumer and the explicit common/turn wire row;33 previous rows and the whole previous consumer/wire tables are byte prefixes of the new files. No existing case, owner/kind selection or expectation is replaced. Operations uses a new holder per attempt with no manifest revision; signer retains its process-instance identity.
+
+The common source/ru contracts and vector instructions name the operations obligation. The existing lowercase `vectors/wire.md` and ru mirror define the approved narrow `compare=turn`, fresh @new/current @same holder semantics and exact comparison elsewhere. No holder ignore, alias, wider selector, new command or published implementation is added. Epoch barriers, generation/ticket guards, two leaders and late IO remain separate P06.9 mandatory duties, not a turn-vector result.
+
+`source-map.json` includes the9 changed common paths, before/after byte hashes, old33 byte preservation and per-owner selected/excluded rosters evaluated with the existing CEL implementation. This is a source/form audit, not turn algorithm execution. The pre-merge check_wire correctly rejects the new compare on the old judge; the authorized Architect helper95743b9 is to be merged normally after this commit and checked on the exact joint. Source declaration alone is not wire GREEN. The source-cell decoder and check_wire implementation are owned by the Architect, not modified here.
+
+The preceding LOCAL06 cad88b419 is separately checked strict62 and is not claimed as full English or a CODE/export freeze. C2 profile1f00c4c02 awaits its extra source scope; C3/localization and later language/cell-json remain separate. No Source,14 raw assets, VMS, P09 two ops cells, reserved P10 contracts, tools, runtime, normgen, KIT or pin change is included.

@@ -692,6 +692,7 @@ components:
       - members
       - tls
       - max_value
+      - max_body
       additionalProperties: false
       properties:
         id:
@@ -747,6 +748,10 @@ components:
           type: integer
           minimum: 1
           description: 'This instance’s effective row-weight ceiling in bytes: -max-value (P/01.3 N1.3; row weight P/01.1); distinct from the HTTP body limit -max-body. Acceptance stand: 524288 bytes.'
+        max_body:
+          type: integer
+          minimum: 1
+          description: 'This instance’s actual configured -max-body in entity-body bytes, including emitted JSON whitespace/LF and excluding HTTP framing. Required local observation for the static finite profile installation check (ADR-0127 P/06 C2); distinct from max_value. Default acceptance stand: 1048576 bytes.'
         role:
           type: string
         last_snapshot:

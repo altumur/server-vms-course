@@ -1,0 +1,107 @@
+{
+  "status": "INACTIVE proposal audit only; no active source edits or runtime evidence",
+  "base": "c81dd35d5ff850c687c94d251cdc84269e28730d",
+  "source_binding_signature_direct_checks": [
+    {
+      "expected": "valid; first data physical3",
+      "rows": 1,
+      "errors": []
+    },
+    {
+      "expected": "valid outer; invalid inner remains opaque",
+      "rows": 1,
+      "errors": []
+    },
+    {
+      "expected": "form error",
+      "rows": 1,
+      "errors": [
+        "line 3, column request: cell-json is not one strict JSON string: Expecting value: line 1 column 1 (char 0)"
+      ]
+    },
+    {
+      "expected": "form error",
+      "rows": 1,
+      "errors": [
+        "line 3, column request: cell-json must decode to a string"
+      ]
+    },
+    {
+      "expected": "form error",
+      "rows": 1,
+      "errors": [
+        "line 3, column request: cell-json has an unpaired surrogate"
+      ]
+    },
+    {
+      "expected": "form error: duplicate declaration column",
+      "rows": 1,
+      "errors": [
+        "line 1: duplicate cell-json column",
+        "line 3, column request: cell-json requires an ASCII JSON string with Unicode escapes"
+      ]
+    },
+    {
+      "expected": "form error: wrong width",
+      "rows": 0,
+      "errors": [
+        "line 3: cell-json table has 3 cells, expected 4"
+      ]
+    }
+  ],
+  "C2_codec_checks": "exact entity boundaries plusLF/ASCIIescape and framing; individual rows within ceilings",
+  "C3_old_source_checks": "9 backgrounds accepted by unchanged source validator; 21 current numeric ok cases,0 newly incompatible by proposed predicate",
+  "C4": "15 proposed rows parsed, compare=turn NOT in current closed wire; not activated",
+  "product_native_runs": 0,
+  "SUT_runs": 0,
+  "files": {
+    "README.md": {
+      "bytes": 1919,
+      "sha256": "08cf2dda64bf97ab5dee2333fbcc4be4b5d57d5828c80a5fbbdf47286c6c87e7"
+    },
+    "c2-byte-witnesses.json": {
+      "bytes": 12391,
+      "sha256": "1a779238b708ed61719efe2c3cf66de87e8ef58caf9773b9aa9b925f5a2a3351"
+    },
+    "c2-packet.md": {
+      "bytes": 6694,
+      "sha256": "a3a4f176e2045f4da74cc29063d0a7884ef3b076dbdead8f3bf873d7ae53f91e"
+    },
+    "c3-cases.proposed.json": {
+      "bytes": 7005,
+      "sha256": "16a18c71d22cdfd7b6b2a0ec6cf9af1466ae74a5dc51be4173b84cf72c78f7dc"
+    },
+    "c3-current-source-check.json": {
+      "bytes": 9198,
+      "sha256": "4e101671b5a0432ef5ca8333249cd308e2883c6ee3a468aa50335fe4dccee8e5"
+    },
+    "c3-loader-proposal.json": {
+      "bytes": 6181,
+      "sha256": "f0d9331ef6dc07f07a7348cb2e3d00392c5fc682c9b0fe1825f4609c8a8ce32d"
+    },
+    "c4-turn-cases.proposed.tsv": {
+      "bytes": 5129,
+      "sha256": "85808e47b80268019bea4a8e5d47a682809d5221a20c616fa2d2b619c3fdf5d2"
+    },
+    "c4-turn-proposal.json": {
+      "bytes": 2891,
+      "sha256": "649897afc69442a1168ad31547b5cfdbaa59683f32e6548e68c65832f993a0aa"
+    },
+    "c4-wire-row.proposed.tsv": {
+      "bytes": 686,
+      "sha256": "84a20ad38b88704ab263b0052462c63bb3adaa6c2c653871213f58ff38887da1"
+    },
+    "prepare.py": {
+      "bytes": 15511,
+      "sha256": "12c7664b3dbf2655b0fad14aced9cd43fb0fc4c771baa853061de9ef872d0597"
+    },
+    "source-binding-proposal.json": {
+      "bytes": 3585,
+      "sha256": "7494a9c13cef2265b4c282f3e500ce7251025bf692ca02ff2e376cfa3e410ea0"
+    },
+    "ui-related.md": {
+      "bytes": 2516,
+      "sha256": "1bb589f8a70f906f3c5baec44de80bfccb657b2a82fd04a27c4d19a7614f00dd"
+    }
+  }
+}
