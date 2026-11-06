@@ -244,17 +244,19 @@ def apply_parallel(steps, where):
 
 
 def read_seams(root, chapter):
+    import tsv_input
+
     path = acceptance(root, chapter) / "seams.tsv"
     if not path.is_file():
         raise GenError(f"no {path.relative_to(root)}")
+    try:
+        table = tsv_input.read(path, names=("scenario", "step", "request", "expect"),
+                               positional=True, root=root)
+    except tsv_input.TSVError as exc:
+        raise GenError(str(exc)) from None
     scen = {}
-    for no, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
-        if not line or line.startswith("#"):
-            continue
-        cells = line.split("\t")
-        if len(cells) != 4:
-            raise GenError(f"{path.name}:{no}: {len(cells)} cells, want scenario step request expect")
-        name, step, request, expect = cells
+    for no, row in table.rows:
+        name, step, request, expect = (row[c] for c in ("scenario", "step", "request", "expect"))
         scen.setdefault(name, [])
         if str(len(scen[name]) + 1) != step:
             raise GenError(f"{path.name}:{no}: {name} step {step} — the steps are consecutive from 1")

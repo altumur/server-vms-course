@@ -806,7 +806,7 @@ def prepare(parts=(), *, profiles=None, output_root=None, source_root=ROOT, code
     Full verification: prepare(profiles=lesson.PROFILES). A selected/component or
     historical/export set has its own root and identity, never a full-nine claim.
     """
-    profiles = lesson._profiles(profiles or (L.slug,))
+    profiles = lesson._profiles((L.slug,) if profiles is None else profiles)
     output_root = Path(output_root or lesson.output_root())
     if not output_root.is_absolute() or output_root.is_symlink():
         raise KitError("prepared output root must be an absolute regular directory")
