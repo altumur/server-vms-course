@@ -35,7 +35,7 @@ func TestRequestsStateOrders_S4GroupBusyAfterTimeout(t *testing.T) {
 // TestRequestsStateOrders_S5StateStartBorn — chapter 3.6, seams.tsv.
 func TestRequestsStateOrders_S5StateStartBorn(t *testing.T) {
 	runSeam(t, []step{
-		{n: 1, line: 9, kind: "call", name: "worker-state-write", input: "{\"start\":{\"id\":\"u1\",\"born\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"revision\":3,\"epoch\":8,\"epoch_index\":\"e8\"},\"reread_row\":{\"born\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":4},\"name\":\"result\",\"value\":{\"state\":\"open\"},\"may_write\":true}", expects: []expect{expect{call: "{\"items\":{\"born\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"revision\":\"3\",\"epoch\":\"8\",\"value\":\"{\\\"state\\\":\\\"open\\\"}\"},\"guard\":{\"key\":\"testsub/epoch/u1\",\"index\":\"e8\"}}"}}},
+		{n: 1, line: 9, kind: "call", name: "worker-state-write", input: "{\"start\":{\"id\":\"u1\",\"born\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"revision\":3,\"epoch\":8,\"epoch_index\":\"9007199254740993\"},\"reread_row\":{\"born\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":4},\"name\":\"result\",\"value\":{\"state\":\"open\"},\"may_write\":true}", expects: []expect{expect{call: "{\"items\":{\"born\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"revision\":\"3\",\"epoch\":\"8\",\"value\":\"{\\\"state\\\":\\\"open\\\"}\"},\"guard\":{\"key\":\"testsub/epoch/u1\",\"index\":\"9007199254740993\"}}"}}},
 	})
 }
 

@@ -99,3 +99,41 @@ worker-token-cache now distinguishes local now from verification.now at the rece
 ## Row-write bindings
 
 [row-write-bindings.tsv](row-write-bindings.tsv) and its [grammar](row-write-bindings.md) define the state constructor from the start snapshot at P/03.6-R018/R029 under ADR-0127; IO/CAS/retry remain with the procedure.
+
+## Worker policy machines
+
+The existing machine class is used by [`contender-writer.machine.yaml`](contender-writer.machine.yaml) with
+[`contender-writer.traces.tsv`](contender-writer.traces.tsv), and [`token-cache.machine.yaml`](token-cache.machine.yaml)
+with [`token-cache.traces.tsv`](token-cache.traces.tsv). Their norm fields name P/03.2-R012, P/03.2-R047 and
+P/03.7-R009, P/03.7-R018. One ordered transition is one row of transitions; from/to refer only to states, initial is
+one state, terminal is an explicit subset with no outgoing transitions. There is no additional KIT_PART.
+
+The files declare their typed events, typed variables and action arguments. Action args are a name → type map; positional call arguments follow that declaration order, while an event payload is matched by field name. The closed types are bool, int (int64), double, number, string, dyn, null, object, array, `list<T>`, `map<string,T>`, unions with | and records declared in types. An external event has exactly the named
+payload fields. The event names input and advance belong to the trace envelope, all others are declared in events.
+const contains only this machine's finite JSON constants. timers is empty in these two policies: cadence, wall-clock
+reads and local calendar-day computation are inputs supplied by the ordinary core. No rollout timer or constant is implied.
+The shared executor also accepts declared every/after timers from an explicit clock expression (or s0), and a timer
+after_io an explicitly named IO action; a typed timer event's payload is declared by CEL expressions. Timer events
+come from the executor, not an external trace. A terminal state stops all transitions and timers.
+
+A non-IO action performs simultaneous CEL assignments to its declared variables. Actions are executed in row order;
+action arguments see assignments made by earlier actions of that transition. An action with io selects an ordinary
+core effect: the reference trace records io, the declared action name and a JSON array of its evaluated arguments.
+The reference executes no IO. Assertions io=[...] compare the complete ordered list for that step, including an empty
+list that rejects any unpromised IO; `var.<name>=JSON` compares a variable. TSV has literal TAB cells and LF rows;
+Unicode U+2028 within a JSON string is data, not a row boundary.
+
+For contender-writer, the caller supplies actual capture/loss and NameOnAnotherBox results. The form selects
+state/since/at and the existing name_taken/name_back episode events; it neither captures a slot nor constructs a
+holder snapshot. Actual capture admission, CONTEND_EVERY scheduling, the complete contender object and its write are
+still governed by the ordinary core and the data family. since does not restart just because the writer clock moves
+backwards. The form has 8 traces, with first search, foreign-box priority, no mark while decommissioned, no write
+before due, state changes and repeated loss/recovery episodes.
+
+For token-cache, the scope is a kind with keep:true and one ref in the running worker. Handles and JTIs refer to actual
+parsed tokens without placing token bytes in the form or trace. Recipient results, not local exp, drive replacement;
+unknown_key waits, a revoked token supplies its exact JTI, a same-JTI reply waits through that worker day. The machine
+selects persist only after the first accepted request using the candidate. persist is an IO intent, not confirmation
+of a completed file write: sealing, the path/context, mode0600, IO errors, retries and write ordering remain with the
+ordinary file writer under the norm. These are existing core effects and call sites; no new token command is declared.
+The form has 12 traces with positive acceptance and negative unknown-key, early-file, same-day and stale-result paths.
