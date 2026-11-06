@@ -559,7 +559,7 @@ def pairs(root):
 
 # ADR-0121 (6), (7): completed source slices contain no Cyrillic letters.
 # Grow this list only with the complete lesson/common source delivery.
-FULL_ENGLISH_DONE = ("Platform/common/", "NORMATIVE-TERMS.md", "Platform/01-store/", "Platform/02-installer/", "Platform/03-worker/")
+FULL_ENGLISH_DONE = ("Platform/common/", "NORMATIVE-TERMS.md", "Platform/01-store/", "Platform/02-installer/", "Platform/03-worker/", "Platform/04-controller/")
 LOCALIZATION = Path("Platform/06-console/data/localization.tsv")
 SOURCE_SUFFIXES = {".md", ".tsv", ".json", ".yaml", ".yml"}
 

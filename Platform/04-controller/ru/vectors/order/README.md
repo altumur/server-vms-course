@@ -2,8 +2,8 @@
 
 Текст производный от `vectors/order/README.md`, руками не правится: источник — английский [`vectors/order/README.md`](../../../vectors/order/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
-Владелец — урок P/04 ([нормы](../../spec/04-controller.norms.md) N3 «нехватка(), заказать(), снять заказ, сократить()»: `in_flight`, `per`, `need`, `candidate`,
-`order`, `order_row`; ADR-0084 и доп. (1) R2, R6, R9, доп. (2)–(3) R13′–R22; cammeta-go М10-04 № 5). Участник — `<s>controller`. Байты пишет
+Владелец — урок P/04 ([нормы](../../spec/04-controller.norms.md) N3 «shortage(), order(), withdraw the order, shrink()»: `in_flight`, `per`, `need`, `candidate`,
+`order`, `order_row`; ADR-0084 и доп. (1) R2, R6, R9, доп. (2)–(3) R13′–R22; cammeta-go M10-04 № 5). Участник — `<s>controller`. Байты пишет
 «Спецификация» (ADR-0083, стадия A, A6).
 
 ## `cases.tsv`
@@ -18,7 +18,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 - `waiting` — Σ весов ждущих, `groups` — групп, которым нигде нет места;
 - `servers` — `{<сервер>: {want, live, room, base?, numbers?, door?, placeless?, drained?, quiet?}}`: `want` — строка заказа, `live` — живые(s)
   по пульсам (с базовым и жертвой), `room` — `room.<sub>`, `base` — базовый `-1` жив (нет поля — `true`), `drained` —
-  дренаж или вывод, `quiet` — «не поднял» в окне `RAISE_QUIET`. `numbers` — номера живых процессов роли по пульсам
+  дренаж или вывод, `quiet` — «failed to raise» в окне `RAISE_QUIET`. `numbers` — номера живых процессов роли по пульсам
   (базовый `1`, если жив; их `live` штук); нет поля — подряд: `1…live` при `base: true`, иначе `2…live + 1`. `in_flight(s)` =
   `|{2…want} ∖ numbers|` — номерами, не счётом (R13′, ADR-0084 доп. (4) R26; разбор ревью стадии A 3–5, № 6); при номерах подряд —
   `max(0, (want − 1) − ordered)`. `door` — список `live.<sub>` строки двери: номера n ≥ 2 живых замков; нет поля —
@@ -42,7 +42,7 @@ need: 0, orders: {}, withheld: 0, why: "no positive capacity estimate"}` (R20; `
 **Несколько наборов** — вход с `sets: [{labels, waiting, groups}]` вместо `waiting` и `groups`; все серверы и воркеры
 входа подходят каждому набору. Набор меток — множество: каноническая запись — уникальные метки по возрастанию через
 запятую, повтор схлопывается (R21). Наборы идут в порядке байт UTF-8 канонической записи (пустой — первым); набор берёт свободное, `in_flight` и `room` только до своей потребности, остаток — следующему (N3
-«порядок наборов», cammeta-go М10-04 № 7). Выход — `{sets: {<каноническая запись>: {per, processes, in_flight, need,
+«set order», cammeta-go M10-04 № 7). Выход — `{sets: {<каноническая запись>: {per, processes, in_flight, need,
 withheld}}, orders, withheld}`: `in_flight` набора — сколько ёмкости в пути он взял, `orders` — итоговый `want` серверов,
 `withheld` — сумма по наборам.
 
@@ -59,7 +59,7 @@ withheld}}, orders, withheld}`: `in_flight` набора — сколько ём
 
 ## Кто исполняет
 
-Кто исполняет — контроллер (`04-controller`: нехватка, `in_flight`, `free(s)`, кандидаты и доли, P/04 N3 «нехватка(), заказать()») — все строки. Только читают готовое: ресурс (`05-resource`, пишет `room`/`live` строки двери, P/05 N1.4 `door_row`), скрипт сервера (`02-installer`, P/02.4 N1.5) и консоль (`06-console`, ряды `workers_wanted`/`workers_withheld`, P/06.5 N3 «/metrics — текст») (ACC-VECTORS-CONNECT-03: строку исполняет роль, чья норма вызывает её функцию; решение «Архитектора» 2026-10-27).
+Кто исполняет — контроллер (`04-controller`: нехватка, `in_flight`, `free(s)`, кандидаты и доли, P/04 N3 «shortage(), order()») — все строки. Только читают готовое: ресурс (`05-resource`, пишет `room`/`live` строки двери, P/05 N1.4 `door_row`), скрипт сервера (`02-installer`, P/02.4 N1.5) и консоль (`06-console`, ряды `workers_wanted`/`workers_withheld`, P/06.5 N3 «/metrics — текст») (ACC-VECTORS-CONNECT-03: строку исполняет роль, чья норма вызывает её функцию; решение «Архитектора» 2026-10-27).
 
 ## Чего вектор не покрывает
 

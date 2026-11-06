@@ -96,9 +96,9 @@ The roots `{data}/config`, `objects`, `events` are created before the process st
 acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) N1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
 
 - The command of the «Stand» with the substitution `{sub}` (`testsub` when there is no `<sub>`); `{data}` is `PLATFORM_DIR`, the stand turns
-  the substitutions into the environment of [P/02.4] N1.2 ([Stand] «Один каталог данных»).
+  the substitutions into the environment of [P/02.4] N1.2 ([Stand] «One data directory»).
 - The command printing the pass report — a template with `{data}` and `{sub}` ([Stand]).
-- The rights of the stand of the acceptances moved from М10/4–11 (review of stage B 3–5, № 34) — `{rights}` from the manifests of the stand by the rights output command ([Stand]).
+- The rights of the stand of the acceptances moved from M10/4–11 (review of stage B 3–5, № 34) — `{rights}` from the manifests of the stand by the rights output command ([Stand]).
 
 ## Open
 

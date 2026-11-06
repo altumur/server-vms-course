@@ -94,7 +94,7 @@
 | `<place>` | `<sub>/holds/<place>` | имя строки таблицы мест | непустой компонент, не `.`, не `..` | 1 | P/03.2 N1.3; P/06.1 N1.6 |
 | `<name>` | `domain/users/<name>`, `domain/deleting/<name>` | имя человека | грамматика имени человека (`common.person_name`), не `break-glass` | 1 | P/08.4 N1.1; договор имени человека |
 | `<name>` | `<sub>/<manifest:domain.witness.report>/<name>` | имя отчёта свидетеля | непустой компонент | 1 | P/10 N1.8 |
-| `<host>` | `platform/servers/<host>`, `platform/decommission/<host>`, `<sub>/decommissioned/<host>` | имя сервера у двери консоли (копия — у вывода) | имя хоста RFC 1123: метки `[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?` через `.`, не длиннее 253 байт | 1 | P/06.6 N2.1; P/04 N1.1 |
+| `<host>` | `platform/servers/<host>`, `platform/decommission/<host>`, `<sub>/decommissioned/<host>`, `<sub>/decommission-pending/<host>` | имя сервера у двери консоли (копия — у вывода) | имя хоста RFC 1123: метки `[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?` через `.`, не длиннее 253 байт | 1 | P/06.6 N2.1; P/04 N1.1 |
 | `<host>`, `<server>` | `platform/doors/<host>`, `platform/resources/<server>/heartbeat`, `<sub>/want/<host>`, `<sub>/requests/free-<server>-<volume>`, `<events root>/.mirror/<server>/…` | свой сервер — `SERVER_NAME` | `[a-z0-9]+(-[a-z0-9]+)*` | 1 | договор файла окружения `SERVER_NAME`; P/04; P/05 N1.4, N1.6 |
 | `<volume>` | `<sub>/requests/free-<server>-<volume>` | том ресурса | `[A-Za-z0-9_]{1,64}` | часть 1 | P/05 N1.4 free_ask |
 | `<rid>` | `<sub>/requests/<rid>` | id просьбы | непустой компонент, не `.`, не `..`, не `free-[\s\S]*` | 1 | договор просьбы и её метки `rid`; P/06.4 N1.5 |
