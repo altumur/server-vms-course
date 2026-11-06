@@ -332,6 +332,11 @@ def build(dst, module, parts=(), judged=None, seed=None):
                        "stage tests over apidoor.Handler (ADR-0083 addendum (95) item 3)")
     kit_parts = (["writecheck"] if has_wc else []) + sorted(set(parts))
     parts_set = list(kit_parts)
+    # Required producer/runtime/judge inputs must exist before touching dst/seed.
+    try:
+        provenance(parts_set, [], judged or {})
+    except OSError as exc:
+        raise KitError(f"prepared provenance dependency: {exc}") from None
     try:
         tests = [(f, "vectors") for f in (gen_tests.kit_files(module, "vectors") if L.key == lesson.DEFAULT
                                            else gen_vectors.kit_files(module))] if "vectors" in parts else []
@@ -798,6 +803,9 @@ def _finish_output(parts):
         target = L.out / "go" / rel
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
+    # Do not seal a set that cannot supply the declared provenance on consumption.
+    required = (["writecheck"] if TABLE.is_file() else []) + list(parts)
+    provenance(required, [], {})
 
 
 def prepare(parts=(), *, profiles=None, output_root=None, source_root=ROOT, code_root=ROOT, context=None):
