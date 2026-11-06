@@ -90,7 +90,9 @@
       "type": "string"
      },
      "scope": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^(?:\\*|folder:[0-9a-f]{32})$",
+      "description": "Whole-domain role scope: only * or folder; labels and unit are forbidden on role lines (P/08.4 N1.3a; P08 review C2)."
      },
      "until": {
       "type": "number",

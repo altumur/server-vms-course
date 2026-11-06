@@ -2,10 +2,10 @@
 # of lesson 8 § 4). Chapters refer to their paths (the description of each path names its chapter): 8.3 — /api/member/{member},
 # /api/carry/{member}, /api/relay/{relay}, /domain/members, /domain/members/{name}, /domain/members/{member}/ca,
 # /domain/topology; 8.4 — /api/login, /domain/users, /domain/users/{name}, /domain/groups, /domain/groups/{name}, /domain/roles,
-# /domain/roles/{name}, /domain/batch, /domain/grants/{cluster}, /domain/break-glass,
+# /domain/roles/{name}, /domain/roles/{role}/lines, /domain/batch, /domain/grants/{cluster}, /domain/break-glass,
 # /domain/break-glass/{cluster}, /domain/revoke; 8.6 — /domain/placement/{sub}/{ref}, /domain/{sub}/{rows},
 # /domain/{sub}/{rows}/{ref}; 8.7 — /api/tokens/{member}/{sub}/{kind}; 8.8 — /api/prepare, /api/take, /domain/move,
-# /domain/handover, /domain/stranded/apply; 8.9 — /domain/shared. Chapters 8.0, 8.1, 8.2, 8.5, 8.10 have no paths of their own: 8.0 —
+# /domain/handover, /domain/stranded/apply; 8.9 — /domain/shared; 8.5 — /domain/folders and /domain/memberof. Chapters 8.0, 8.1, 8.2, 8.10 have no paths of their own: 8.0 —
 # the X-W2C-Client parameter and the answers deposed, frozen, standby; 8.1 — the schemas of the view and of the shadow report (the domain console serves them,
 # lesson P/10 refers by $ref), the input and output of the view command; 8.10 — 409 and 413 of the ceilings at the paths of 8.3, 503 standby at every door.
 # The process's own doors (class signed: /api/member, /api/carry, /api/relay, /api/tokens) — 4 operations; the doors that are passed
@@ -265,6 +265,7 @@ paths:
     post:
       operationId: login
       summary: Login of a person (N1.2)
+      description: 'iat is the confirmed credential read time before unlocked PBKDF2; exp=iat+TOKEN_LIFETIME. A too-long issuance refuses with 401 refused and asks for a new request, never a refreshed iat (P08 review C5).'
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
       requestBody:
@@ -605,13 +606,13 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/DomainFolderView'}
-        '412': {$ref: '#/components/responses/RevisionMoved'}
-        '400': {$ref: '#/components/responses/Refused'}
+        '412': {$ref: '#/components/responses/DomainFolderRefused'}
+        '400': {$ref: '#/components/responses/DomainFolderRefused'}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
-        '404': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/DomainFolderRefused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
-        '409': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/DomainFolderRefused'}
         '413': {$ref: '#/components/responses/BodyRefused'}
         '422': {$ref: '#/components/responses/KeyReused'}
         '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
@@ -667,13 +668,13 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/DomainFolderView'}
-        '412': {$ref: '#/components/responses/RevisionMoved'}
-        '400': {$ref: '#/components/responses/Refused'}
+        '412': {$ref: '#/components/responses/DomainFolderConditionRefused'}
+        '400': {$ref: '#/components/responses/DomainFolderRefused'}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
-        '404': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/DomainFolderRefused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
-        '409': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/DomainFolderRefused'}
         '413': {$ref: '#/components/responses/BodyRefused'}
         '422': {$ref: '#/components/responses/KeyReused'}
         '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
@@ -697,13 +698,13 @@ paths:
                 additionalProperties: false
                 properties:
                   deleted: {type: string, pattern: '^[0-9a-f]{32}$'}
-        '412': {$ref: '#/components/responses/RevisionMoved'}
-        '400': {$ref: '#/components/responses/Refused'}
+        '412': {$ref: '#/components/responses/DomainFolderConditionRefused'}
+        '400': {$ref: '#/components/responses/DomainFolderRefused'}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
-        '404': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/DomainFolderRefused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
-        '409': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/DomainFolderRefused'}
         '413': {$ref: '#/components/responses/BodyRefused'}
         '422': {$ref: '#/components/responses/KeyReused'}
         '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
@@ -752,12 +753,12 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/DomainMembershipView'}
         '412': {$ref: '#/components/responses/IndexMoved'}
-        '400': {$ref: '#/components/responses/Refused'}
+        '400': {$ref: '#/components/responses/DomainFolderRefused'}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
-        '404': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/DomainFolderRefused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
-        '409': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/DomainFolderRefused'}
         '413': {$ref: '#/components/responses/BodyRefused'}
         '422': {$ref: '#/components/responses/KeyReused'}
         '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
@@ -1485,6 +1486,7 @@ paths:
                 assigned:
                   type: array
                   items: {$ref: '#/components/schemas/RoleAssigned'}
+                supervision: {$ref: '#/components/schemas/RoleSupervision'}
       responses:
         '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
@@ -1535,6 +1537,7 @@ paths:
                 assigned:
                   type: array
                   items: {$ref: '#/components/schemas/RoleAssigned'}
+                supervision: {$ref: '#/components/schemas/RoleSupervision'}
       responses:
         '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
@@ -1619,6 +1622,15 @@ paths:
                       name: {type: string}
                       cas: {type: string, description: 'index from GET of this row; "" — creation.'}
                       fields: {type: object, additionalProperties: true, description: 'Open: the fields — the bodies of the door of its kind (P/08.4 N2 «Batch door»).'}
+                    allOf:
+                      - if:
+                          required: [kind, op]
+                          properties:
+                            kind: {const: role}
+                            op: {const: put}
+                        then:
+                          properties:
+                            fields: {$ref: '#/components/schemas/RolePutFields'}
       responses:
         '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
@@ -1858,7 +1870,7 @@ paths:
         '400': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/Standby'}
+        '503': {$ref: '#/components/responses/RestoreTarget503'}
   /api/take:
     description: 'Chapter 8.8 N1.7 take, N2; passed to the process of the target by the cluster console (forwarding to the signer).'
     post:
@@ -1896,7 +1908,7 @@ paths:
         '400': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/Refused503'}
+        '503': {$ref: '#/components/responses/RestoreTarget503'}
   /domain/move:
     description: 'Chapter 8.8 N1.8, N2; passed to the process of the target by the cluster console (forwarding to the signer) — the process does not read X-W2C-Client
       here; identity and the admin grant of the target cluster are checked by the cluster console (OpenAPI of lesson 6 POST /domain/move;
@@ -1962,7 +1974,7 @@ paths:
         '400': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/Refused503'}
+        '503': {$ref: '#/components/responses/RestoreTarget503'}
   /domain/handover:
     description: 'Chapter 8.8 N1.7, N2; passed to the process by the domain console (chapter 8.0 N1.8).'
     post:
@@ -2349,6 +2361,28 @@ components:
       content:
         application/json:
           schema: {$ref: '#/components/schemas/IndexMoved'}
+    DomainFolderRefused:
+      description: 'Other folder and chain refusals keep the imported P/06.8 N4 vocabulary; domain identity, versions and repeat memory retain their explicit P/08 rules.'
+      content:
+        application/json:
+          schema: {$ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/FolderRefused'}
+    DomainFolderConditionRefused:
+      description: 'Stale If-Match is RevisionMoved; a changed ancestor guard is the imported parent moved refusal of P/06.8 N4.'
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - {$ref: '#/components/schemas/RevisionMoved'}
+              - {$ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/FolderRefused'}
+    RestoreTarget503:
+      description: 'Existing standby/unavailable failures or occupied target restore exclusion, with no pending/restore/claim writes (P/08.8 N1.7; P08 review C1).'
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - {$ref: '#/components/schemas/StandbyBody'}
+              - {$ref: '#/components/schemas/RestoreBusyBody'}
+              - {$ref: '#/components/schemas/Refusal'}
   schemas:
     TokenSealed:
       type: object
@@ -2391,6 +2425,8 @@ components:
             - no such group
             - no such role
             - unknown member
+            - unknown role
+            - role referenced
             - bad batch
             - admin only
             - builtin
@@ -3177,6 +3213,27 @@ components:
     Scope:
       type: string
       pattern: "^(?:\\*|unit:[a-z][a-z0-9_-]{0,31}/[^\u000A\u000D\u2028\u2029]+|labels:[^,]+(?:,[^,]+)*|folder:[0-9a-f]{32})$"
+    RoleSupervision:
+      type: object
+      description: 'Subsystem to supervisor role. POST omission/{} means none; PUT omission preserves, {} clears, a nonempty object replaces. Null is invalid. Self-reference is allowed; other roles require existence/version guards; builtin admin refuses changes.'
+      propertyNames: {$ref: '#/components/schemas/SubName'}
+      additionalProperties: {$ref: '#/components/schemas/PersonName'}
+    RolePutFields:
+      type: object
+      additionalProperties: false
+      description: 'Role fields of a batch put; same supervision and reference guards over the final snapshot as ordinary role POST/PUT. No name field: BatchWrite.name supplies it.'
+      properties:
+        title: {type: string, maxLength: 200}
+        comment: {type: string, maxLength: 2000}
+        assigned: {type: array, items: {$ref: '#/components/schemas/RoleAssigned'}}
+        supervision: {$ref: '#/components/schemas/RoleSupervision'}
+    RestoreBusyBody:
+      type: object
+      required: [error, detail]
+      additionalProperties: false
+      properties:
+        error: {const: refused}
+        detail: {const: 'a move is under way here already: seconds, not minutes'}
     GlobalRoleLine:
       type: object
       required: [cap, scope, until]
@@ -3287,7 +3344,7 @@ components:
       properties:
         lines:
           type: array
-          items: {type: object, additionalProperties: true}
+          items: {$ref: '#/components/schemas/GlobalRoleLine'}
           description: Rights of the role over the whole domain (chapter 8.4 N1.3a lines).
         lines_at: {type: number}
         name: {$ref: '#/components/schemas/PersonName'}
@@ -3296,6 +3353,7 @@ components:
         assigned:
           type: array
           items: {$ref: '#/components/schemas/RoleAssigned'}
+        supervision: {$ref: '#/components/schemas/RoleSupervision'}
         at: {type: number}
         by: {type: string}
         revision: {type: integer, minimum: 0}

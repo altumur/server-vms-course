@@ -169,3 +169,5 @@ agent-tokens	400	bad request	-	P/09.1 N1.6 the agent's local door
 agent-tokens	404	not found	-	P/09.1 N1.6 the agent's local door
 versions	400	If-Match is a store index	-	P/08.0 N1.9 optional-index
 versions	412	revision moved	/index	P/08.0 N1.9 optional-index
+people	400	unknown role	-	P/08.4 N1.3a supervision
+people	409	role referenced	-	P/08.4 N1.3a supervision
