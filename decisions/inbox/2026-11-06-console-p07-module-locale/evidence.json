@@ -1,0 +1,132 @@
+{
+  "base": "e07b32a5030c696d89c72444e760a86f6246c487",
+  "authorCheckNotIndependentJudge": true,
+  "parser": "acorn@8.15.0 / ES2022",
+  "artifacts": {
+    "Platform/07-console-module/module/console.js": {
+      "bytes": 312509,
+      "sha256": "37bfbc44151b0a2afff77cf547ab9adb132b665b2d196bb8209c520674d30ef7",
+      "rawCyrillic": false
+    },
+    "Platform/07-console-module/module/console.css": {
+      "bytes": 41676,
+      "sha256": "44d4045693f60fcf719e7c216352e9e4b7873b69c372ae35e37d010050bb4de6",
+      "rawCyrillic": false
+    },
+    "Platform/07-console-module/module/console.html": {
+      "bytes": 1063,
+      "sha256": "c3e33f59424b516e1778dc514712050692a1a9a07327267f6e37f6af4334fb76",
+      "rawCyrillic": false
+    }
+  },
+  "immutableWitnesses": {
+    "js": "9e0356451fcc3c143aacdc643da3881d57936dc91b3315eb6125c35f5a404c71",
+    "css": "049db5be822fd7e8a01f2345a9d787dcad136a941ed41c255763c05a1cdc7989",
+    "html": "639676470e26202738b14bc0bd8b8500ab8612e8ec85aad099578df7edf46968"
+  },
+  "canonicalTable": {
+    "path": "Platform/07-console-module/data/localization.tsv",
+    "movedFrom": "Platform/06-console/data/localization.tsv",
+    "sha256": "a5b3c4b9c1af6cfe40a72c80b58d2348a9e9517d7c36c0b6ad8a91bc807850e9",
+    "bytes": 44852,
+    "keys": 519,
+    "oldPathAbsent": true
+  },
+  "wordsAndBehavior": {
+    "normalizedTokenSha256": "efaea6c0bc2f7782f0c76af0e3a111cae378a01f183c062786302d0a2fdb6535",
+    "tokensOutsideApprovedHoles": 50765,
+    "normalizedASTSha256": "406e15d5208de345dd266a80e3119c8d006d77f0a85d6ecde6b2f826a5bc8759",
+    "astAndRawTokensExactOutsideTwoHoles": true,
+    "witnessDuplicateProperties": [
+      "en.glass",
+      "ru.glass"
+    ],
+    "generatedDuplicateProperties": [],
+    "decodedLeavesPerLanguage": 519,
+    "parameterizedKeys": 28,
+    "parameterOccurrencesPerLanguage": 37,
+    "glassLastWinsExact": true,
+    "loginAtFinalU0020Exact": true,
+    "formatters": {
+      "fmt": {
+        "unchanged": true,
+        "expressionSha256": "921df7f86cd109d46de0fb075b97d3fcc1f1ddd63e1684b034d9c702785f9af9"
+      },
+      "fmtDay": {
+        "unchanged": true,
+        "expressionSha256": "42de078d44d9ab5b45858d4bd1d4cf3f0828aceaf81cf16fa720e9593ac83805"
+      }
+    },
+    "languageMatrix": [
+      {
+        "lang": null,
+        "browser": "ru-RU",
+        "expected": "en",
+        "actual": "en"
+      },
+      {
+        "lang": "en",
+        "browser": "ru-RU",
+        "expected": "en",
+        "actual": "en"
+      },
+      {
+        "lang": "ru",
+        "browser": "en-US",
+        "expected": "ru",
+        "actual": "ru"
+      },
+      {
+        "lang": "ru-RU",
+        "browser": "ru-RU",
+        "expected": "en",
+        "actual": "en"
+      },
+      {
+        "lang": "RU",
+        "browser": "ru-RU",
+        "expected": "en",
+        "actual": "en"
+      }
+    ]
+  },
+  "englishCaptionsExactWitness": true,
+  "russianEscapesDerivedFromRuOnly": true,
+  "cssNoncommentBytesExact": true,
+  "htmlMarkupAndInlineTokensExact": true,
+  "rejectedInputs": [
+    {
+      "name": "extra-key",
+      "rejected": true,
+      "reason": "TSV roster mismatch; missing=[]; extra=[\"notAnExistingKey\"]"
+    },
+    {
+      "name": "missing-key",
+      "rejected": true,
+      "reason": "TSV roster mismatch; missing=[\"unsaved\"]; extra=[]"
+    },
+    {
+      "name": "duplicate-key",
+      "rejected": true,
+      "reason": "duplicate TSV key: unsaved"
+    },
+    {
+      "name": "changed-parameter",
+      "rejected": true,
+      "reason": "parameter mismatch: newGroupIn"
+    },
+    {
+      "name": "loginAt-space",
+      "rejected": true,
+      "reason": "value mismatch: en.loginAt"
+    },
+    {
+      "name": "outside-WORDS-behavior",
+      "rejected": true,
+      "reason": "outside-WORDS/selector token drift"
+    }
+  ],
+  "inlineCSP": [
+    "sha256-K6/bRB86z0QTI8XlLEzh/ToRbBk4CcB8zKVr/dHEMIw="
+  ]
+}
