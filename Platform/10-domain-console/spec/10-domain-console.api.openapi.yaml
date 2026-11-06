@@ -3447,7 +3447,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: #/components/schemas/GateOrRole403
+                $ref: '#/components/schemas/GateOrRole403'
         '404':
           description: 'Transition 2: a path with a segment . or .. (including in percent form) — not a domain route,
             before the gate and not passed on (the forwarding contract «Domain doors»). Transition 3: response 404
@@ -3455,7 +3455,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: #/components/schemas/NotADomainRoute
+                $ref: '#/components/schemas/NotADomainRoute'
         '408':
           $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody
         '413':
