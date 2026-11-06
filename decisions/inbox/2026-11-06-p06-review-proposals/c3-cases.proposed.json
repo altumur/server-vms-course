@@ -1,0 +1,344 @@
+[
+  {
+    "case": "p06-c3-numeric-retire",
+    "doc": {
+      "name": "probe",
+      "unit": {
+        "rows": "units",
+        "id": "numeric",
+        "fields": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "until": {
+            "type": "float"
+          },
+          "retired": {
+            "type": "bool"
+          }
+        }
+      },
+      "placement": {
+        "capacity": {
+          "default": 1
+        },
+        "retire_when": {
+          "field": "retired",
+          "in": [
+            true
+          ],
+          "delete_after": 1
+        }
+      },
+      "worker": {
+        "exec": "/usr/lib/probe/worker"
+      }
+    },
+    "proposed_expect": "refused:relations",
+    "status": "INACTIVE independent witness, not part of947/220"
+  },
+  {
+    "case": "p06-c3-numeric-ends",
+    "doc": {
+      "name": "probe",
+      "unit": {
+        "rows": "units",
+        "id": "numeric",
+        "fields": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "until": {
+            "type": "float"
+          },
+          "retired": {
+            "type": "bool"
+          }
+        }
+      },
+      "placement": {
+        "capacity": {
+          "default": 1
+        },
+        "ends": {
+          "field": "until",
+          "never": 0
+        }
+      },
+      "worker": {
+        "exec": "/usr/lib/probe/worker"
+      }
+    },
+    "proposed_expect": "refused:relations",
+    "status": "INACTIVE independent witness, not part of947/220"
+  },
+  {
+    "case": "p06-c3-numeric-delete",
+    "doc": {
+      "name": "probe",
+      "unit": {
+        "rows": "units",
+        "id": "numeric",
+        "fields": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "until": {
+            "type": "float"
+          },
+          "retired": {
+            "type": "bool"
+          }
+        }
+      },
+      "placement": {
+        "capacity": {
+          "default": 1
+        }
+      },
+      "worker": {
+        "exec": "/usr/lib/probe/worker",
+        "deletes": [
+          "units"
+        ]
+      }
+    },
+    "proposed_expect": "refused:relations",
+    "status": "INACTIVE independent witness, not part of947/220"
+  },
+  {
+    "case": "p06-c3-fixed-ends",
+    "doc": {
+      "name": "probe",
+      "unit": {
+        "rows": "units",
+        "id": "numeric",
+        "fields": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "until": {
+            "type": "float"
+          },
+          "retired": {
+            "type": "bool"
+          },
+          "pin": {
+            "type": "string",
+            "fixed": true
+          }
+        }
+      },
+      "placement": {
+        "capacity": {
+          "default": 1
+        },
+        "ends": {
+          "field": "until",
+          "never": 0
+        }
+      },
+      "worker": {
+        "exec": "/usr/lib/probe/worker"
+      }
+    },
+    "proposed_expect": "ok",
+    "status": "INACTIVE independent witness, not part of947/220"
+  },
+  {
+    "case": "p06-c3-fixed-retire",
+    "doc": {
+      "name": "probe",
+      "unit": {
+        "rows": "units",
+        "id": "numeric",
+        "fields": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "until": {
+            "type": "float"
+          },
+          "retired": {
+            "type": "bool"
+          },
+          "pin": {
+            "type": "string",
+            "fixed": true
+          }
+        }
+      },
+      "placement": {
+        "capacity": {
+          "default": 1
+        },
+        "retire_when": {
+          "field": "retired",
+          "in": [
+            true
+          ],
+          "delete_after": 1
+        }
+      },
+      "worker": {
+        "exec": "/usr/lib/probe/worker"
+      }
+    },
+    "proposed_expect": "ok",
+    "status": "INACTIVE independent witness, not part of947/220"
+  },
+  {
+    "case": "p06-c3-fixed-delete",
+    "doc": {
+      "name": "probe",
+      "unit": {
+        "rows": "units",
+        "id": "numeric",
+        "fields": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "until": {
+            "type": "float"
+          },
+          "retired": {
+            "type": "bool"
+          },
+          "pin": {
+            "type": "string",
+            "fixed": true
+          }
+        }
+      },
+      "placement": {
+        "capacity": {
+          "default": 1
+        }
+      },
+      "worker": {
+        "exec": "/usr/lib/probe/worker",
+        "deletes": [
+          "units"
+        ]
+      }
+    },
+    "proposed_expect": "refused:relations",
+    "status": "INACTIVE independent witness, not part of947/220"
+  },
+  {
+    "case": "p06-c3-named-retire",
+    "doc": {
+      "name": "probe",
+      "unit": {
+        "rows": "units",
+        "id": "name",
+        "fields": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "until": {
+            "type": "float"
+          },
+          "retired": {
+            "type": "bool"
+          }
+        }
+      },
+      "placement": {
+        "capacity": {
+          "default": 1
+        },
+        "retire_when": {
+          "field": "retired",
+          "in": [
+            true
+          ],
+          "delete_after": 1
+        }
+      },
+      "worker": {
+        "exec": "/usr/lib/probe/worker"
+      }
+    },
+    "proposed_expect": "ok",
+    "status": "INACTIVE independent witness, not part of947/220"
+  },
+  {
+    "case": "p06-c3-named-ends",
+    "doc": {
+      "name": "probe",
+      "unit": {
+        "rows": "units",
+        "id": "name",
+        "fields": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "until": {
+            "type": "float"
+          },
+          "retired": {
+            "type": "bool"
+          }
+        }
+      },
+      "placement": {
+        "capacity": {
+          "default": 1
+        },
+        "ends": {
+          "field": "until",
+          "never": 0
+        }
+      },
+      "worker": {
+        "exec": "/usr/lib/probe/worker"
+      }
+    },
+    "proposed_expect": "ok",
+    "status": "INACTIVE independent witness, not part of947/220"
+  },
+  {
+    "case": "p06-c3-named-delete",
+    "doc": {
+      "name": "probe",
+      "unit": {
+        "rows": "units",
+        "id": "name",
+        "fields": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "until": {
+            "type": "float"
+          },
+          "retired": {
+            "type": "bool"
+          }
+        }
+      },
+      "placement": {
+        "capacity": {
+          "default": 1
+        }
+      },
+      "worker": {
+        "exec": "/usr/lib/probe/worker",
+        "deletes": [
+          "units"
+        ]
+      }
+    },
+    "proposed_expect": "ok",
+    "status": "INACTIVE independent witness, not part of947/220"
+  }
+]

@@ -1,0 +1,206 @@
+{
+  "norm": "P/01.3 N2 status; ADR-0127 P06 C2",
+  "schema": "Platform/01-store/spec/01-store.api.openapi.yaml#/components/schemas/Status",
+  "cases": [
+    {
+      "case": "one",
+      "response": {
+        "id": "s1",
+        "state": "Leader",
+        "leader": "",
+        "leader_id": "s1",
+        "term": 1,
+        "commit": 0,
+        "applied": 0,
+        "voters": [
+          "s1"
+        ],
+        "members": {},
+        "tls": false,
+        "max_value": 524288,
+        "max_body": 1
+      },
+      "valid": true
+    },
+    {
+      "case": "default",
+      "response": {
+        "id": "s1",
+        "state": "Leader",
+        "leader": "",
+        "leader_id": "s1",
+        "term": 1,
+        "commit": 0,
+        "applied": 0,
+        "voters": [
+          "s1"
+        ],
+        "members": {},
+        "tls": false,
+        "max_value": 524288,
+        "max_body": 1048576
+      },
+      "valid": true
+    },
+    {
+      "case": "configured",
+      "response": {
+        "id": "s1",
+        "state": "Leader",
+        "leader": "",
+        "leader_id": "s1",
+        "term": 1,
+        "commit": 0,
+        "applied": 0,
+        "voters": [
+          "s1"
+        ],
+        "members": {},
+        "tls": false,
+        "max_value": 524288,
+        "max_body": 2097152
+      },
+      "valid": true
+    },
+    {
+      "case": "zero",
+      "response": {
+        "id": "s1",
+        "state": "Leader",
+        "leader": "",
+        "leader_id": "s1",
+        "term": 1,
+        "commit": 0,
+        "applied": 0,
+        "voters": [
+          "s1"
+        ],
+        "members": {},
+        "tls": false,
+        "max_value": 524288,
+        "max_body": 0
+      },
+      "valid": false
+    },
+    {
+      "case": "negative",
+      "response": {
+        "id": "s1",
+        "state": "Leader",
+        "leader": "",
+        "leader_id": "s1",
+        "term": 1,
+        "commit": 0,
+        "applied": 0,
+        "voters": [
+          "s1"
+        ],
+        "members": {},
+        "tls": false,
+        "max_value": 524288,
+        "max_body": -1
+      },
+      "valid": false
+    },
+    {
+      "case": "fraction",
+      "response": {
+        "id": "s1",
+        "state": "Leader",
+        "leader": "",
+        "leader_id": "s1",
+        "term": 1,
+        "commit": 0,
+        "applied": 0,
+        "voters": [
+          "s1"
+        ],
+        "members": {},
+        "tls": false,
+        "max_value": 524288,
+        "max_body": 1.5
+      },
+      "valid": false
+    },
+    {
+      "case": "bool",
+      "response": {
+        "id": "s1",
+        "state": "Leader",
+        "leader": "",
+        "leader_id": "s1",
+        "term": 1,
+        "commit": 0,
+        "applied": 0,
+        "voters": [
+          "s1"
+        ],
+        "members": {},
+        "tls": false,
+        "max_value": 524288,
+        "max_body": true
+      },
+      "valid": false
+    },
+    {
+      "case": "string",
+      "response": {
+        "id": "s1",
+        "state": "Leader",
+        "leader": "",
+        "leader_id": "s1",
+        "term": 1,
+        "commit": 0,
+        "applied": 0,
+        "voters": [
+          "s1"
+        ],
+        "members": {},
+        "tls": false,
+        "max_value": 524288,
+        "max_body": "1048576"
+      },
+      "valid": false
+    },
+    {
+      "case": "null",
+      "response": {
+        "id": "s1",
+        "state": "Leader",
+        "leader": "",
+        "leader_id": "s1",
+        "term": 1,
+        "commit": 0,
+        "applied": 0,
+        "voters": [
+          "s1"
+        ],
+        "members": {},
+        "tls": false,
+        "max_value": 524288,
+        "max_body": null
+      },
+      "valid": false
+    },
+    {
+      "case": "missing",
+      "response": {
+        "id": "s1",
+        "state": "Leader",
+        "leader": "",
+        "leader_id": "s1",
+        "term": 1,
+        "commit": 0,
+        "applied": 0,
+        "voters": [
+          "s1"
+        ],
+        "members": {},
+        "tls": false,
+        "max_value": 524288
+      },
+      "valid": false
+    }
+  ],
+  "limits": "Complete Status schema witnesses only. Actual configured HTTP response is checked by scenario16 step1 and the explicit nondefault repeat. No SUT execution claimed."
+}

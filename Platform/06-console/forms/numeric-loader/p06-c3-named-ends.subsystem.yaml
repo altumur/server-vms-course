@@ -1,0 +1,20 @@
+name: probe
+unit:
+  rows: units
+  id: name
+  fields:
+    name:
+      type: string
+      required: true
+    until:
+      type: float
+    retired:
+      type: bool
+placement:
+  capacity:
+    default: 1
+  ends:
+    field: until
+    never: 0
+worker:
+  exec: /usr/lib/probe/worker

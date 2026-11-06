@@ -49,3 +49,9 @@ The plan of the rights scenarios, when the norm `may` is entered (a domain stand
 ## `journal/corrections-8.tsv`
 
 The log of corrections of the scenarios of the chapter (ADR-0124: a log, not an input, not in the export), the format is as in the neighbouring chapters.
+
+## Static deletion profile and exact entity bytes (ADR-0127 C2)
+
+Before a folder-enabled profile is installed, use the existing P02.3 manifest put entry and effective Status.max_body/max_value, then its finite-profile validator before every installation write, including unchanged. The owned13 form/arithmetic witnesses are Platform/02-installer/forms/finite-profile.cases.json; missing/H/multiplicity/provenance negatives need the Architect's separate judge and do not become passing from JSON Schema alone. The actual implementation's complete descriptors and mixed-packet coverage must be proved separately. Declare a sufficient existing body_limit/row_ceiling for the actual stand; no acceptance.yaml key is invented and AssemblyError is not an installer refusal.
+
+The 6 codec witnesses in ../../forms/deletion-body-witnesses.json count whole compact UTF-8 entities:1048575/1048576/1048577, extra LF, alternative escaping and the own1380972-byte counterexample. The padded cases use V=1048576 rather than default524288; the sufficient whole-profile test is distinct from one favorable packet's size. Check actual emitted target/done/auxiliary requests and Content-Length or decoded chunk data when proving IO; HTTP framing is excluded. This source addition performs no such store/console run, changes no existing scenario/seam or native command, and does not introduce a mutation-time DELETE refusal.
