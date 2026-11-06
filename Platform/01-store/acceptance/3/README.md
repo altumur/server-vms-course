@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/acceptance/3/README
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`01.3-store.norms.md`](../../spec/01.3-store.norms.md) N5. The scenarios were moved from the acceptance of
-М10/11 (stage B, ADR-0083 addendum (1): without a change of
+M10/11 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the numbers of scenarios and steps are the former ones.
 
 Directives and doors: `admin`, `store`, `@as`, `@big`, `@restart store`, `@foreign store` (sc. 10), `@backup store`,
@@ -15,7 +15,7 @@ a non-durable training store (the norms of chapter 1.3, «Implementation decides
 
 ## Stand
 
-The stand store is as in the acceptance of М10/11: schema 1, the manifest rows `testsub` and `testsub2` are written by the runner itself through `admin.sock`, without the installer
+The stand store is as in the acceptance of M10/11: schema 1, the manifest rows `testsub` and `testsub2` are written by the runner itself through `admin.sock`, without the installer
 (ADR-0083 addendum (98)): `put` with `cas: ""` and exactly the fields of the writer of P/02.3 N1.5 — `yaml` (the bytes of the file), `sha256`
 of these bytes, `rev` `"1"`; the rights file `{rights}` is the ready input of chapter 1.2 [`../2/inputs/rights.json`](../2/inputs/rights.json); the runner puts it before the store starts. Of it, the steps of the chapter need only the role socket
 `console` without the rights of `admin` (`@as console`: sc. 08 step 8, sc. 15 steps 1–2) and the manifest rows `testsub`, `testsub2` (sc. 11
@@ -25,7 +25,7 @@ a single member of a box without `-api` (N1.3 `-api`: the flag is not mandatory;
 ## `journal/corrections-3.tsv`
 
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
-of the acceptance of М10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
+of the acceptance of M10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
 resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (review analysis of stage B 6–7, № 18).
 
 ## Batch and restart (sc. 30)
@@ -74,7 +74,7 @@ the upper of the input before the first row (N1.3 `floor`); the number depends o
 `testsub2`. The writer side of the rule «Time in a row» (N0 of chapter 1.1): sc. 11 step 4 — the floor after `import`, `generation_at`
 (`@time`).
 
-## Reconciliation of python and go М10/6–11 (sc. 08 steps 10–12, sc. 14, 15)
+## Reconciliation of python and go M10/6–11 (sc. 08 steps 10–12, sc. 14, 15)
 
 - Sc. 08 steps 10–12: `floor` that is not an integer JSON (`2.0e1`) — 400 before the write, not 409 «only upwards»; the largest uint64 is
   an admissible floor (N1.3 floor `form`; B5).
@@ -98,9 +98,9 @@ the map of a single member of a box is `{}` (N1.3 `-api`, `box`; N2 `GET /v1/sta
 The group stand is the section «Store group stand» of the common README: the members `s1`…`s5`, `d1`, `d2` on the loopback, the kits are
 [`inputs/group.json`](inputs/group.json) (one centre, the server name of a leaf is the `<id>` of the member), the scenario role at the doors `store@<id>` is `console`
 (the stand rights file). These scenarios do not need the stand store of the chapter. Formerly sc. 07 was a `@manual` drill on a real
-cluster; by ПРАВИЛА-РАБОТЫ.md § 4 it and the drills of the checklist items of the chapter (the door, size and membership, the floor of epochs, the metrics row of doors) became scenarios (the plan
-`decisions/inbox/2026-10-30-план-сценарии-группы-автоматом.md`, accepted by the Architect on 2026-10-30; steps for the defect classes
-of the pilot comparison — `decisions/inbox/ревью/РЕВЬЮ-СРАВНЕНИЕ-P01-Claude.md`, `P-1`…`P-6`, where they are visible from outside). The norms do not
+cluster; by work rules (for people) § 4 it and the drills of the checklist items of the chapter (the door, size and membership, the floor of epochs, the metrics row of doors) became scenarios (the plan
+`automatic group scenarios plan (2026-10-30, for people)`, accepted by the Architect on 2026-10-30; steps for the defect classes
+of the pilot comparison — `P01 comparison review by Claude (for people)`, `P-1`…`P-6`, where they are visible from outside). The norms do not
 change. The leader after `-bootstrap` and the joins is `s1` (step 5 of each scenario checks this as well). The assembly 1→2→3: the second member joins with `-force` (a group of two is a transitional parity, P/01.3 N1.3 `join`), the third without it (C01-GROUP-BOOTSTRAP-EVEN-01). The box store build
 (`keys.store_build: box`, P/01.3 N1.3 `box`) has no group: sc. 07, 17, 18, 25–29, 31 are not_applicable for it, not red; without
 the marker they are not executed (common README, «Store group stand»).

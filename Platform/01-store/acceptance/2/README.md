@@ -9,7 +9,7 @@ The file has 11 scenarios / 67 steps (mutation check 7cecaf2 № 28, 31: `never`
 file of the stand is a ready input [`inputs/rights.json`](inputs/rights.json) (the form of P/01.2 N1.2): the roles `console`,
 `testsubcontroller`, `testsubworker`, `testsub2worker` and the patterns the steps need — a subset of the rights output of P/02.5 N1.4 for
 `testsub` and `testsub2` (`Source/tests/testdata/testsub*.subsystem.yaml`) with the deployment name `testsub`. The runner puts it
-into `{rights}` before the store starts; the chapter needs no rights generator: the chapter checks the evaluator, not the output. The scenarios were moved from the acceptance of М10/06
+into `{rights}` before the store starts; the chapter needs no rights generator: the chapter checks the evaluator, not the output. The scenarios were moved from the acceptance of M10/06
 (stage B) with the former numbers, steps and texts; the scenarios of the rights output from a manifest are in [the acceptance of P/02.5](../../../02-installer/acceptance/5/README.md).
 
 ## scenarios.tsv
@@ -30,12 +30,12 @@ roles know it; steps 4–7 — a row and a guard without the right, nothing is w
 The roles of the scenarios: `console`, `testsubcontroller`, `testsubworker`, `testsub2worker`, `admin`; in sc. 14 after `@rights store
 inputs/rights-domain-roles.json` — the domain roles `domain`, `domainagent`, `testsubdomain`.
 
-Reconciliation of python and go М10/6–11 (R12): sc. 05 steps 8–10 — `never` and an empty `<y>`; sc. 08 step 2 — the role header before the body.
+Reconciliation of python and go M10/6–11 (R12): sc. 05 steps 8–10 — `never` and an empty `<y>`; sc. 08 step 2 — the role header before the body.
 
 ## `journal/corrections-2.tsv`
 
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from
-`corrections.tsv` of the acceptance of М10/06 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
+`corrections.tsv` of the acceptance of M10/06 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
 resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (review analysis of stage B 6–7, № 18).
 
 ## Isolation
@@ -78,7 +78,7 @@ not the subsequent refusal of the key write.
 
 ## Coverage audit of P/01 (sc. 11–13)
 
-The session audit-kimi (2026-10-30, commit 399e4783b, `АУДИТ-ПОКРЫТИЯ-P01.md`): properties that were formerly checked by reading.
+The session audit-kimi (2026-10-30, commit 399e4783b, `coverage audit P01 (for people)`): properties that were formerly checked by reading.
 - Sc. 11 — `never` (N1.3): for the console a 403 is indistinguishable from a refusal by rights, so the distinguishing role is admin: its rights are
   «everything except never», and without `never` these writes would pass. Reading the floor by admin — 200: the refusal concerns the action.
 - Sc. 12 — the role forwarding header at `GET /v1/list` (N3 «check», R38-06): the header name is a designation, as in sc. 08.
@@ -90,7 +90,7 @@ The session audit-kimi (2026-10-30, commit 399e4783b, `АУДИТ-ПОКРЫТИ
 
 ## Coverage audit of P/01, second pass (sc. 14–15)
 
-The coverage audit session, second pass (Gemini, 2026-10-30, commit 6a5817f88, `АУДИТ-ПОКРЫТИЯ-GEMINI-P01.md`, G04):
+The coverage audit session, second pass (Gemini, 2026-10-30, commit 6a5817f88, `coverage audit Gemini P01 (for people)`, G04):
 - Sc. 14 — the edges of `never` (N1.3). Steps 1–6 for admin (rights «everything except `never`»): `platform/epoch/c1` (`x = platform`),
   `testsub/epoch/a/b` (two segments after `epoch/`) and `testsub/epoch` (no `/` after `epoch`) are not epoch rows, their
   deletion — 200; an implementation whose `never` is wider than the norm refuses here. Steps 7–13 — the rights file
