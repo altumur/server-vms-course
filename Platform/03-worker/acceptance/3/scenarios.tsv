@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Acceptance of P/03.3: the reconciliation loop of the worker, the testsub stand under the runner. Moved from М10/05 (stage B). Format — README.
+# Acceptance of P/03.3: the reconciliation loop of the worker, the testsub stand under the runner. Moved from M10/05 (stage B). Format — README.
 02-unit	1	@start resource	ok
 02-unit	2	@start controller	ok
 02-unit	3	@start worker w-1	ok

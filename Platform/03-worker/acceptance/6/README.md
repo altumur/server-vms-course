@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/acceptance/6/README
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`03.6-worker.norms.md`](../../spec/03.6-worker.norms.md) N5. The scenarios were moved from the acceptance of
-М10/08 (stage B, ADR-0083 addendum (1): without a change of
+M10/08 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the numbers of scenarios and steps are the former ones. The preparation, the comparison and the evidence below are the parts of the former README needed by
 these scenarios; the forms of foreign doors belong to their owners ([P/05](../../../05-resource/spec/05-resource.norms.md) — the doors of the resource,
 [chapter P/06.4](../../../06-console/spec/06.4-console.norms.md) — the doors of the console).
@@ -49,11 +49,11 @@ the heartbeat names by the hash `#<20 hex>`, the row is removed all the same (a 
 
 The format is the dictionary of directives and doors of the «Stand» of the common acceptance README: the doors `console`, `console2`, `resource`, `store`,
 `admin` (sc. 10, 38–43), the directives `@start`, `@until`, `@as`, `@key`, `@sleep`, `@sigterm` (in sc. 38 — also of the console), `ASSERT` (sc. 40). Sc. 05 and 07 — 52 steps: 44 HTTP (with @until, @as and @key), six
-@start, @sleep and @sigterm; sc. 08 and 09 (ADR-0091) — 23 steps; sc. 10 (coverage audit of P/03) — 16 steps; sc. 38–43 (the second pass of the coverage audit) — 58 steps; in total 11 scenarios / 149 steps (step 05/16 — the event `command` of the base, the VMS request «команды и строка устройства»; step 39/9 — `command.failed` of a refusal before the call, C03-REFUSED-BEFORE-CALL-EVENT-01) (steps 07/34–36 — (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7)). Steps 05/7–8 — the row stands 20 s after `performed`
+@start, @sleep and @sigterm; sc. 08 and 09 (ADR-0091) — 23 steps; sc. 10 (coverage audit of P/03) — 16 steps; sc. 38–43 (the second pass of the coverage audit) — 58 steps; in total 11 scenarios / 149 steps (step 05/16 — the event `command` of the base, the VMS request «commands and the device row»; step 39/9 — `command.failed` of a refusal before the call, C03-REFUSED-BEFORE-CALL-EVENT-01) (steps 07/34–36 — (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7)). Steps 05/7–8 — the row stands 20 s after `performed`
 (the lower bound of settle with a margin); 05/11–13 — the heartbeat through the objects door: the mandatory fields and the last heartbeat on SIGTERM
 with an empty `status` (mutation check 7cecaf2 № 24, 26, 37).
 
-Steps of the reconciliation of python and go М10/6–11 (2026-10-18):
+Steps of the reconciliation of python and go M10/6–11 (2026-10-18):
 - **05/11** — the heartbeat of the holder after `performed` carries `command_counts.performed` 1: one call of the action since its start, a repeat
   with the same rid (step 10) does not call the action (chapter 3.4 N1.1; chapter 3.6 N3 «holder's look»; coverage audit of P/03, 2026-10-30).
 - **05/12–13** — the heartbeat of the resource carries `units` (`c5` on `w-1`), `waits`, `restore`, `mirror`; `W-1` with `w-1` — 404; the former
@@ -99,7 +99,7 @@ Additional check of the class of errors of run 36 (Kimi), by reading: suppress i
 Additional case R38-03/04/05:
 
 - The append, P/03.6-04 (the holder) and P/06.4-07 (the console) (scenario 07 — the path request → data → removal → repeat; the rest below — by reading; the loading of the key
-  is checked by the cases of P/02.1 `requests_outcome_*`, the debt of the product — in ХОД-Спецификация.md): an admissible unit testsub2/tallies/t1, the request {unit:"t1",from:1,to:2}, rid=t1-1-2, the reserve asked. The holder reconciles the data and reports fetched; objects/testsub2/commands/t1-1-2 is absent before/after. After the local settle the console removes the read version of the row by CAS and releases the rid in asked by CAS, keeping a concurrently added rid. A CAS conflict/an unknown fetched does not permit counting the removal as done. A repeat after the removal again reconciles the data without begun and does not repeat the range already present. Without fetched the mark expired/unknown is not created and age alone does not release the reserve. free_ask does not get into this branch; a body with `action` from `elsewhere` in the append profile — the same branch: the holder reconciles the data and reports fetched (steps 07/34–36; (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7)). This is a separate case of the boundary of ADR-0054, not a performed run rec and not a promise of a single call for the append.
+  is checked by the cases of P/02.1 `requests_outcome_*`, the debt of the product — in the specification progress note (for people)): an admissible unit testsub2/tallies/t1, the request {unit:"t1",from:1,to:2}, rid=t1-1-2, the reserve asked. The holder reconciles the data and reports fetched; objects/testsub2/commands/t1-1-2 is absent before/after. After the local settle the console removes the read version of the row by CAS and releases the rid in asked by CAS, keeping a concurrently added rid. A CAS conflict/an unknown fetched does not permit counting the removal as done. A repeat after the removal again reconciles the data without begun and does not repeat the range already present. Without fetched the mark expired/unknown is not created and age alone does not release the reserve. free_ask does not get into this branch; a body with `action` from `elsewhere` in the append profile — the same branch: the holder reconciles the data and reports fetched (steps 07/34–36; (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7)). This is a separate case of the boundary of ADR-0054, not a performed run rec and not a promise of a single call for the append.
 
 The form of the consumer of the append in `testsub2` (in the bytes of the manifest since 2026-10-17, ADR-0054 addendum 2026-10-17; the field `action` —
 analysis of the review of stage A 6–7, № 14):
@@ -127,7 +127,7 @@ This is a subject of a manual check of the specification and of a future check o
 ## `journal/corrections-6.tsv`
 
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are in `corrections.tsv`
-of the acceptance of М10/08 (their paths are resolved by `Platform/common/id-map.tsv`).
+of the acceptance of M10/08 (their paths are resolved by `Platform/common/id-map.tsv`).
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
@@ -150,7 +150,7 @@ carry the training orderer, the workers `testsub2` — the training state holder
   instance — `extended` 1, `taken` 1. The controller `testsub2` is not started: the order row is not placed.
 - **09-state** — step 4: the worker `t-1` takes the place `sh1` before the assignment — the heartbeat carries `shelf: sh1` before `t1` is created (P/03.2 N3
   «lease_step()» step 6; the Architect's decision of 2026-10-27); the holder of the count `t1` writes under epoch 1 the state `result` `{state: "open"}` with `born` and `revision` of the row;
-  the console shows it in `configured[].state` (P/06.1 N2 «Состояние в ответе»).
+  the console shows it in `configured[].state` (P/06.1 N2 «State in the answer»).
 
 Checked by reading: the epoch guard and `not_after` of the order write, a repeat after a physical cleanup and the move of the clock (P/01.1 sc. 28 —
 only the edges), the fencing of the holder in the middle of a write (after the loss of the name — sc. 10), the cursor not more often than `STATE_EVERY`.
@@ -186,14 +186,14 @@ the form of the family `requests` (P/06.4 N1.5): `unit`, the body field `add` as
   at `testsub-c41` `made.gone` is the year 2100 (the start event is not later than `gone + 60`) — the outcome `gone`, no write, the version is the same; at
   `testsub-c42` `made.gone` 1000 (the event is later than `1000 + 60`) — a creation over the tombstone: `revision` 2, a new `born`, `made`
   of the orderer, no `deleted`; the heartbeat — `created` 1, `gone` 1 (N3 «order» step 4; the row check contract
-  «Строка заказчика: made» `tombstone`).
+  «Customer row: made» `tombstone`).
 - **42-order-unchanged-never** — its own order row with `until: "0"` (without a deadline, `placement.ends` `testsub2`) and `made.at` in
   the year 2100, `made.keep = made.at + 720` = 4102445520 (computed by python): the former `until` = never is not touched, `made.at` =
   max(former, t_E) and `made.keep` = max(former, `made.at` + 720) are as before — the outcome `unchanged`, no write (`revision` 1).
 - **43-state-unreadable** — the preparation of sc. 09 (the shelf — through the door `admin`): the holder has written `result` under epoch 1; the runner
   rewrites the state row not by the form (without `cas`); the worker `t-1` is restarted — the new holder under epoch 2 reads
   the unreadable state as absent and writes `result` anew (`state.outcomes.tsv` `<s>worker`; the norms of the chapter, N5
-  `tally_result`: «если действующего result нет»). Without spoiling, the state in effect survives the move and would not
+  `tally_result`: «if there is no current result»). Without spoiling, the state in effect survives the move and would not
   be rewritten (the row check contract «Unit state» `acts`).
 
 Not taken from the second pass: the closing by the holder of a foreign `begun` without an outcome (the deadline of the request row relative to the clock of

@@ -4,10 +4,10 @@ This English text is the source; the Russian translation `ru/acceptance/4/README
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`03.4-worker.norms.md`](../../spec/03.4-worker.norms.md) N5. The scenario was moved from the acceptance of
-М10/05 (stage B, ADR-0083 addendum (1): without a change of
-behaviour); the number of the scenario and of the steps are the former ones, except the first step `@start resource` of sc. 03: the controller reads the heartbeat of the worker through the objects door of the resource of its server, without the resource «not known» ([the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Four scenarios / 36 steps: 03-sigterm (9), 13-pulse-counters (9; the VMS request «пульс и битая строка»: the counts of the heartbeat and the rows of `/metrics`, with the resource `srv-a` — the heartbeat is read through its door), 36-previous-heartbeat (12), 37-place-released-on-sigterm (6) (coverage audit of P/03, the second pass of Gemini).
+M10/05 (stage B, ADR-0083 addendum (1): without a change of
+behaviour); the number of the scenario and of the steps are the former ones, except the first step `@start resource` of sc. 03: the controller reads the heartbeat of the worker through the objects door of the resource of its server, without the resource «not known» ([the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Four scenarios / 36 steps: 03-sigterm (9), 13-pulse-counters (9; the VMS request «heartbeat and a garbled row»: the counts of the heartbeat and the rows of `/metrics`, with the resource `srv-a` — the heartbeat is read through its door), 36-previous-heartbeat (12), 37-place-released-on-sigterm (6) (coverage audit of P/03, the second pass of Gemini).
 
-The scenario runs on a stand of the `testsub` processes of the implementation: the store, the console `testsub`, the controller `testsub` and the workers `testsub` (the training worker of counters), which the runner controls. The catalogue of the stand is two manifests, `testsub` and `testsub2`, in the order of the section «Stand» of the common acceptance README (reconciliation of python and go М10/3–5, item 24). Observation — rows through the store door P/01.1; the heartbeat (an object) is not read here. The controller is a neighbour by contract (the data catalogue, `lifecycle.md` of P/04), not the norms of P/04 (the plan of the move of lesson 3, V2): step 8 sees that the placement is removed by the controller with a reason.
+The scenario runs on a stand of the `testsub` processes of the implementation: the store, the console `testsub`, the controller `testsub` and the workers `testsub` (the training worker of counters), which the runner controls. The catalogue of the stand is two manifests, `testsub` and `testsub2`, in the order of the section «Stand» of the common acceptance README (reconciliation of python and go M10/3–5, item 24). Observation — rows through the store door P/01.1; the heartbeat (an object) is not read here. The controller is a neighbour by contract (the data catalogue, `lifecycle.md` of P/04), not the norms of P/04 (the plan of the move of lesson 3, V2): step 8 sees that the placement is removed by the controller with a reason.
 
 ## scenarios.tsv
 
@@ -29,12 +29,12 @@ analysis by the Specification):
   (`heartbeats.outcomes.tsv` `<s>worker`);
 - sc. 37 — the worker `testsub2` took its own place `sh1` (the shelf — through the door `admin`, as in sc. 23 of the acceptance of chapter 3.2); on `@sigterm`
   the hold row is released (`released: "true"`, `by` as before) and the slot is released (N3 «stop by SIGTERM» step 4; chapter 3.2
-  N3 «место» `release` — before the release of the slot; the steps do not distinguish the order of the two writes — by reading).
+  N3 «place» `release` — before the release of the slot; the steps do not distinguish the order of the two writes — by reading).
 
 ## `journal/corrections-4.tsv`
 
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
-of the acceptance of М10/05 (removed by the move), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are resolved by
+of the acceptance of M10/05 (removed by the move), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are resolved by
 `Platform/common/id-map.tsv`; analysis of the review of stage B 3–5, № 30).
 
 ## Scenario boundaries

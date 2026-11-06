@@ -100,7 +100,7 @@ the family schemas `../data/*.schema.json` (the sections «Data families» of ch
     begun does not yet prove the call of the external action. The mark is deleted only by the holder after the disappearance of the row and kept.
     The outcome refused after a call always has error, never performed; check both the pass and the form of the mark.
 13. The late layer (3.7): the contribution under the slot and the cleanup on capturing a foreign slot (the training writer of contributions `testsub2` — P/08.5
-    N5); the check at the recipient `wrong_kind`, `wrong_audience` (`token` of the domain token contract «Проверка» with `expect`).
+    N5); the check at the recipient `wrong_kind`, `wrong_audience` (`token` of the domain token contract «The check» with `expect`).
 14. Run the acceptance scenarios separately, each with a new state and new processes: in total the lesson has 48 scenarios / 497
     steps — chapter 3.2 (`acceptance/2/`: 01, 04, 05, 08, 09, 10, 11, 14–24, 26–34, 44), chapter 3.3 (`acceptance/3/`: 02, 06, 12, 25, 35),
     chapter 3.4 (`acceptance/4/`: 03, 13, 36, 37), chapter 3.6 (`acceptance/6/`: 05, 07, 08, 09, 10, 38–43). Fill in the checklists of the chapters with evidence from N5 of the chapters.
