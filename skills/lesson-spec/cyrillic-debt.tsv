@@ -1,6 +1,7 @@
 # ADR-0121 (8): per-file Cyrillic letter debt; only shrink or declare a clean unit ready.
 kind	path	letters
 ready	Platform/01-store	-
+ready	Platform/02-installer	-
 ready	Platform/03-worker	-
 ready	Platform/04-controller	-
 ready	Platform/05-resource	-
@@ -9,11 +10,6 @@ ready	Platform/08-domain	-
 ready	Platform/09-agent	-
 ready	Platform/10-domain-console	-
 ready	Platform/common	-
-debt	Platform/02-installer/acceptance/3/puts/paged.shell.html	42
-debt	Platform/02-installer/acceptance/3/puts/pagedok-alt.shell.html	46
-debt	Platform/02-installer/acceptance/3/puts/pagedok.shell.html	34
-debt	Platform/02-installer/acceptance/5/variants/v13-refused-idem-read/refused	109
-debt	Platform/02-installer/acceptance/5/variants/v14-refused-secrets-reads-nested/refused	108
 debt	Platform/07-console-module/README.md	5
 debt	Platform/07-console-module/spec/07-console-module.norms.md	247
 debt	Platform/lessons.tsv	138
