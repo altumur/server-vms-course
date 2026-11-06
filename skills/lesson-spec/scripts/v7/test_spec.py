@@ -28,6 +28,72 @@ import cel_expr_python  # noqa: F401,E402
 import yaml  # noqa: F401,E402
 TREE = None
 
+# Three historical descriptions and two existing registry descriptions acquired
+# closed numeric references in approved P08 B. Historical cells remain unchanged.
+MEANING_CLOSED_REFS = {
+    ("Platform/08-domain/spec/08.4-domain.norms.md", "`domain/users/<имя>` — строка", "`pwhash_secret`", "desc"):
+        "PBKDF2_ITERATIONS",
+    ("Platform/08-domain/spec/08.4-domain.norms.md", "`domain/break-glass/<кластер>` — строка", "`pwhash_secret`", "desc"):
+        "PBKDF2_ITERATIONS",
+    ("Platform/08-domain/spec/08.9-domain.norms.md", "`domain/alarm-history/<член>` — объект", "`events`", "desc"):
+        "HISTORY_LINES",
+    ("Platform/08-domain/spec/08.5-domain.norms.md", "`domain/<sub>/<manifest:domain.books>/<член>` — строка", '`"".missing`', "desc"):
+        "MISSING_SHOWN",
+    ("Platform/08-domain/spec/08.5-domain.norms.md", "`domain/names/<sub>/<книга>` — строка", '`"".missing`', "desc"):
+        "MISSING_SHOWN",
+}
+P08_MISSING_REGISTRY_COORDS = tuple(place for place, name in MEANING_CLOSED_REFS.items() if name == "MISSING_SHOWN")
+P08_MISSING_ACTUAL_COORDS = {(*place[:2], r'`\"\".missing`', "desc"): place for place in P08_MISSING_REGISTRY_COORDS}
+P08_MISSING_REGISTRY_SHA256 = "1c85896e4673aa6393c2b6da7b5c2553acc849b381525ad8ae429d9e84de35d2"
+P09_C4_MEANING_COORDS = (
+    ("Platform/09-agent/spec/09.1-agent.norms.md", "`domain/member-key` — строка", "`pub`", "desc"),
+    ("Platform/09-agent/spec/09.1-agent.norms.md", "`domain/member` — строка", "`pub`", "desc"),
+)
+# Exact two headerless rows approved by coord103; Source e778 C4, not a generic allowance.
+P09_C4_MEANING_SHA256 = "795d6d527d2fe596d859c1480084f24fb6ea6871c2f7f3a0418ac61b6f659124"
+
+
+def closed_meaning_description(root, place, text):
+    """Resolve the one approved reference at an exact coordinate, never an alias."""
+    import csv
+    import re
+    name = MEANING_CLOSED_REFS.get(place)
+    if name is None:
+        return text
+    if name in {"PBKDF2_ITERATIONS", "MISSING_SHOWN"}:
+        source = Path(root) / "Platform/08-domain/forms/runtime-constants.tsv"
+        lines = source.read_text(encoding="utf-8").split("\n")
+        reader = csv.DictReader((line for line in lines if line and not line.startswith("#")), delimiter="\t")
+        if reader.fieldnames != ["name", "value", "unit", "norm", "meaning"]:
+            raise AssertionError(f"closed {name} meaning reference: invalid source header")
+        rows = [row for row in reader if row["name"] == name]
+        if len(rows) != 1 or rows[0].get("unit") != "count" or None in rows[0] or any(v is None for v in rows[0].values()):
+            raise AssertionError(f"closed {name} meaning reference: one count row required")
+        value = rows[0]["value"]
+    else:
+        from markdown_it import MarkdownIt
+        source = Path(root) / "Platform/common/contracts/alarm-history.md"
+        raw = source.read_text(encoding="utf-8")
+        lines, values = raw.split("\n"), []
+        for token in MarkdownIt("commonmark").parse(raw):
+            if token.type != "fence" or token.info.strip() != "yaml":
+                continue
+            declarations = [line for line in token.content.split("\n") if line.startswith("HISTORY_LINES:")]
+            if declarations and lines[token.map[1] - 1].strip() != token.markup:
+                raise AssertionError("closed HISTORY_LINES meaning reference: unclosed YAML fence")
+            values.extend(line[len("HISTORY_LINES:"):].strip(" \t") for line in declarations)
+        if len(values) != 1:
+            raise AssertionError("closed HISTORY_LINES meaning reference: one YAML scalar required")
+        value = values[0]
+    if re.fullmatch(r"0|[1-9][0-9]*", value) is None:
+        raise AssertionError(f"closed {name} meaning reference: canonical ASCII decimal required")
+    if name == "MISSING_SHOWN" and value == "0":
+        raise AssertionError("closed MISSING_SHOWN meaning reference: positive integer required")
+    reference = re.compile(r"(?<![A-Za-z0-9_])" + name + r"(?![A-Za-z0-9_])")
+    if len(reference.findall(text)) != 1:
+        raise AssertionError(f"closed {name} meaning reference: expected exactly one source reference")
+    return reference.sub(name + " " + value if name == "MISSING_SHOWN" else value, text)
+
 
 def setUpModule():
     """Копия Platform/, VMS/ и манифестов курса с пакетом перехода (если курс ещё на диалекте) — одна на модуль."""
@@ -473,7 +539,17 @@ class TestTree(unittest.TestCase):
             cols = ln.split("\t")
             if ln and not ln.startswith("#") and cols[0] != "file":
                 self.assertEqual(len(cols), 7, ln[:80])
+                self.assertNotIn(tuple(cols[:4]), reg, "duplicate meaning coordinate")
                 reg[tuple(cols[:4])] = cols[4:]
+        import hashlib
+        for place in (*P09_C4_MEANING_COORDS, *P08_MISSING_REGISTRY_COORDS):
+            self.assertIn(place, reg, "required meaning registry coordinate")
+        approved = "".join("\t".join([*place, *reg[place]]) + "\n" for place in P09_C4_MEANING_COORDS)
+        self.assertEqual(hashlib.sha256(approved.encode("utf-8")).hexdigest(), P09_C4_MEANING_SHA256,
+                         "exact approved P09 C4 meaning rows, including their basis")
+        unchanged = "".join("\t".join([*place, *reg[place]]) + "\n" for place in P08_MISSING_REGISTRY_COORDS)
+        self.assertEqual(hashlib.sha256(unchanged.encode("utf-8")).hexdigest(), P08_MISSING_REGISTRY_SHA256,
+                         "existing P08 missing registry rows must remain byte-identical")
         cells = {"need": 0, "owner": 1, "desc": 2}
         diff, used, n, translated = [], {}, 0, 0
 
@@ -503,19 +579,24 @@ class TestTree(unittest.TestCase):
             ru = TREE / parts[0] / parts[1] / "ru" / Path(*parts[2:])
             b = rows((ru if ru.is_file() else TREE / f).read_text(encoding="utf-8"))
             for k, v in a.items():
+                section_ = k[1][len("#### "):] if k[1] else "-"
                 w = b.get((k[0], translated_address(k[1]), k[2]))
+                actual_place = (f, section_, k[2], "desc")
+                if actual_place in P08_MISSING_ACTUAL_COORDS or actual_place in P08_MISSING_REGISTRY_COORDS:
+                    self.assertIsNotNone(w, "required exact current escaped missing coordinate")
                 if w is None:
                     continue
                 n += 1
                 old = (v[2].replace("'", '"'), v[3], re.sub(r"(?:; )?класс отказа `\w+`$", "", v[4]))
-                section_ = k[1][len("#### "):] if k[1] else "-"
                 for col, i in cells.items():
-                    place = (f, section_, k[2], col)
+                    place = P08_MISSING_ACTUAL_COORDS.get((f, section_, k[2], col), (f, section_, k[2], col))
+                    observed = closed_meaning_description(TREE, place, w[2 + i])
                     if place in reg:
                         was, became, _ = reg[place]
-                        used[place] = w[2 + i] in (translated_address(became), was) and old[i] == was
-                    elif old[i] != w[2 + i]:
-                        if re.search("[А-Яа-яЁё]", old[i]) and neutral(old[i]) == neutral(w[2 + i]):
+                        current = (translated_address(became),) if place in P09_C4_MEANING_COORDS else (translated_address(became), was)
+                        used[place] = observed in current and old[i] == was
+                    elif old[i] != observed:
+                        if re.search("[А-Яа-яЁё]", old[i]) and neutral(old[i]) == neutral(observed):
                             translated += 1        # перевод ADR-0121: код, числа и ссылки те же; смысл — ревью перевода
                             continue
                         diff.append((f, section_, k[2], col, old[i][:80], w[2 + i][:80]))
@@ -524,6 +605,139 @@ class TestTree(unittest.TestCase):
         self.assertEqual(diff, [], "расхождение смысла без строки v7/sections-meaning-deltas.tsv")
         stale = [place for place in reg if not used.get(place)]
         self.assertEqual(stale, [], "строка реестра: места нет, «было» не то или ячейка ни «было», ни «стало»")
+
+    def test_closed_meaning_references_keep_actual_numeric_comparison(self):
+        """The complete source comparison must pass before any negative can count."""
+        from unittest.mock import patch
+        root = self.copy()
+        source = root / "Platform/08-domain/forms/runtime-constants.tsv"
+        history = root / "Platform/common/contracts/alarm-history.md"
+        desc = root / "Platform/08-domain/ru/spec/08.4-domain.norms.md"
+        before = {p: p.read_bytes() for p in (source, history, desc)}
+        for coordinate in MEANING_CLOSED_REFS:
+            changed = (*coordinate[:3], "owner")
+            self.assertEqual(closed_meaning_description(root, changed, "PBKDF2_ITERATIONS HISTORY_LINES"),
+                             "PBKDF2_ITERATIONS HISTORY_LINES")
+        with patch.object(sys.modules[__name__], "TREE", root):
+            self.test_sections_keep_dialect_meaning()
+            row = next(line for line in source.read_text().split("\n") if line.startswith("PBKDF2_ITERATIONS\t"))
+            history_line = next(line for line in history.read_text().split("\n") if line.startswith("HISTORY_LINES:"))
+            data_line = next(line for line in desc.read_text().split("\n")
+                             if line.startswith("| `pwhash_secret` |") and "PBKDF2_ITERATIONS" in line)
+            mutants = {
+                "missing PBKDF row": (source, before[source].replace((row + "\n").encode(), b"")),
+                "duplicate PBKDF row": (source, before[source] + (row + "\n").encode()),
+                "changed PBKDF value": (source, before[source].replace(b"PBKDF2_ITERATIONS\t600000\t", b"PBKDF2_ITERATIONS\t600001\t")),
+                "Boolean PBKDF value": (source, before[source].replace(b"PBKDF2_ITERATIONS\t600000\t", b"PBKDF2_ITERATIONS\ttrue\t")),
+                "padded PBKDF decimal": (source, before[source].replace(b"PBKDF2_ITERATIONS\t600000\t", b"PBKDF2_ITERATIONS\t0600000\t")),
+                "missing history scalar": (history, before[history].replace((history_line + "\n").encode(), b"")),
+                "changed history scalar": (history, before[history].replace(history_line.encode(), b"HISTORY_LINES: 2001")),
+                "Boolean history scalar": (history, before[history].replace(history_line.encode(), b"HISTORY_LINES: true")),
+                "duplicate history scalar": (history, before[history].replace(history_line.encode(), (history_line + "\n" + history_line).encode())),
+                "outside YAML is not a scalar": (history, before[history].replace((history_line + "\n").encode(), b"") + ("\n" + history_line + "\n").encode()),
+                "wrong description alias": (desc, before[desc].replace(data_line.encode(), data_line.replace("PBKDF2_ITERATIONS", "OTHER_COST").encode())),
+                "restored literal is not the reference": (desc, before[desc].replace(data_line.encode(), data_line.replace("PBKDF2_ITERATIONS", "600000").encode())),
+            }
+            for name, (path, data) in mutants.items():
+                with self.subTest(mutant=name):
+                    self.assertNotEqual(data, before[path], "vacuous mutant")
+                    path.write_bytes(data)
+                    try:
+                        with self.assertRaises(AssertionError):
+                            self.test_sections_keep_dialect_meaning()
+                    finally:
+                        path.write_bytes(before[path])
+
+    def test_p09_c4_registry_requires_exact_rows_and_current_meaning(self):
+        from unittest.mock import patch
+        root = self.copy()
+        registry_home = root / "owned-meaning-registry"
+        registry_home.mkdir()
+        registry = registry_home / "sections-meaning-deltas.tsv"
+        registry.write_bytes((HERE / registry.name).read_bytes())
+        original = registry.read_text(encoding="utf-8")
+        rows = {tuple(line.split("\t")[:4]): line for line in original.split("\n")
+                if line and not line.startswith("#") and not line.startswith("file\t")}
+        desc = root / "Platform/09-agent/ru/spec/09.1-agent.norms.md"
+        old_desc = desc.read_text(encoding="utf-8")
+        with patch.object(sys.modules[__name__], "HERE", registry_home), patch.object(sys.modules[__name__], "TREE", root):
+            self.test_sections_keep_dialect_meaning()      # otherwise every negative would be vacuous
+            for place in P09_C4_MEANING_COORDS:
+                row = rows[place]
+                cells = row.split("\t")
+                for name, replacement in [("missing", ""), ("old changed", row.replace(cells[4], cells[4] + " 1", 1)),
+                                          ("new changed", row.replace(cells[5], cells[5] + " 1", 1)),
+                                          ("basis changed", "\t".join(cells[:6] + ["unapproved basis"]))]:
+                    with self.subTest(place=place, mutant=name):
+                        registry.write_text(original.replace(row + "\n", replacement + "\n" if replacement else ""), encoding="utf-8")
+                        try:
+                            with self.assertRaises(AssertionError):
+                                self.test_sections_keep_dialect_meaning()
+                        finally:
+                            registry.write_text(original, encoding="utf-8")
+                self.assertEqual(old_desc.count(cells[5]), 1, "actual current C4 description")
+                for changed in (cells[4], cells[5] + " stale"):
+                    with self.subTest(place=place, current=changed):
+                        desc.write_text(old_desc.replace(cells[5], changed), encoding="utf-8")
+                        try:
+                            with self.assertRaises(AssertionError):
+                                self.test_sections_keep_dialect_meaning()
+                        finally:
+                            desc.write_text(old_desc, encoding="utf-8")
+
+    def test_two_missing_meanings_require_exact_current_keys_and_source_count(self):
+        from unittest.mock import patch
+        root = self.copy()
+        form = root / "Platform/08-domain/forms/runtime-constants.tsv"
+        desc = root / "Platform/08-domain/ru/spec/08.5-domain.norms.md"
+        original_form, original_desc = form.read_text(), desc.read_text()
+        row = next(line for line in original_form.split("\n") if line.startswith("MISSING_SHOWN\t"))
+        with patch.object(sys.modules[__name__], "TREE", root):
+            self.test_sections_keep_dialect_meaning()
+            replacements = {"missing": "", "duplicate": row + "\n" + row + "\n",
+                            "wrong type": row.replace("\tcount\t", "\ts\t") + "\n"}
+            for value in ("0", "true", "0500", "5e2", "501"):
+                replacements[value] = row.replace("\t500\t", "\t" + value + "\t") + "\n"
+            for name, replacement in replacements.items():
+                with self.subTest(form=name):
+                    changed = original_form.replace(row + "\n", replacement)
+                    self.assertNotEqual(changed, original_form, "vacuous count mutant")
+                    form.write_text(changed)
+                    try:
+                        with self.assertRaises(AssertionError):
+                            self.test_sections_keep_dialect_meaning()
+                    finally:
+                        form.write_text(original_form)
+            headers = ("#### `domain/<sub>/<manifest:domain.books>/<member>` — строка",
+                       "#### `domain/names/<sub>/<book>` — строка")
+            for header in headers:
+                lines, head, indexes = original_desc.split("\n"), "", []
+                for n, line in enumerate(lines):
+                    if line.startswith("#### "):
+                        head = line
+                    if head == header and line.startswith('| `"".missing` |'):
+                        indexes.append(n)
+                self.assertEqual(len(indexes), 1, header)
+                at = indexes[0]
+                for name, replacement in [("missing current row", None),
+                                          ("escaped key rollback", lines[at].replace('`"".missing`', r'`\"\".missing`')),
+                                          ("literal rollback", lines[at].replace("MISSING_SHOWN", "500"))]:
+                    with self.subTest(header=header, mutant=name):
+                        changed = lines[:]
+                        if replacement is None:
+                            del changed[at]
+                        else:
+                            self.assertNotEqual(replacement, changed[at], "vacuous current-cell mutant")
+                            changed[at] = replacement
+                        desc.write_text("\n".join(changed))
+                        try:
+                            with self.assertRaises(AssertionError):
+                                self.test_sections_keep_dialect_meaning()
+                        finally:
+                            desc.write_text(original_desc)
+        foreign = ("Platform/08-domain/spec/08.5-domain.norms.md", "`domain/<sub>/<manifest:domain.books>/*` — строка",
+                   '`"".missing`', "desc")
+        self.assertEqual(closed_meaning_description(root, foreign, "MISSING_SHOWN"), "MISSING_SHOWN")
 
     def test_registry_v7_and_whole_package(self):
         """Реестр режима В7 (М-4): отложенная таблица — EXCEPTION, таблица есть при исключении — устарело, пометка
