@@ -1,5 +1,6 @@
 """Independent P/08 carrier roster, closed-reference and frozen-witness mutants."""
 import json
+import re
 import shutil
 import tempfile
 import unittest
@@ -256,6 +257,275 @@ class Constants(unittest.TestCase):
             self.assertTrue(any(p == wire for p, _ in self.errors()))
 
 
+class StoreConstants(unittest.TestCase):
+    """Independent three-pointer scope; actual source values, owned fixture mutations."""
+    FORM = "Platform/01-store/forms/runtime-constants.tsv"
+    API = "Platform/01-store/spec/01-store.api.openapi.yaml"
+    DOORS = "Platform/01-store/data/configstore-doors.schema.json"
+    BINDINGS = (
+        (API, "/components/schemas/Status/properties/admission_ahead/exclusiveMinimum", "CLOCK_SKEW", "s"),
+        (API, "/components/schemas/Key/description", "KEY_BYTES", "bytes"),
+        (DOORS, "/properties/seen_at/description", "DOOR_SEEN_EVERY", "s"),
+    )
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name)
+        self.original = {rel: (ROOT / rel).read_bytes() for rel in (self.FORM, self.API, self.DOORS)}
+        self.restore()
+        rows = [line.split("\t") for line in self.original[self.FORM].decode().split("\n")
+                if line and not line.startswith("#")][1:]
+        self.values = {row[0]: int(row[1]) for row in rows}
+
+    def restore(self):
+        for rel, data in self.original.items():
+            path = self.root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+
+    def check(self):
+        return check_constants.check_p01_constants(self.root)
+
+    def document(self, rel):
+        text = (self.root / rel).read_text()
+        return yaml.safe_load(text) if rel.endswith(".yaml") else json.loads(text)
+
+    def write_document(self, rel, doc):
+        (self.root / rel).write_text(yaml.safe_dump(doc) if rel.endswith(".yaml") else json.dumps(doc))
+
+    def carrier(self, binding, value, literal=False):
+        rel, pointer, name, _ = binding
+        doc = self.document(rel)
+        parent, key = parent_at(doc, pointer)
+        if literal or name == "CLOCK_SKEW":
+            parent[key] = value
+        else:
+            pattern = r"(?<=limit of )[0-9]+(?= UTF-8 bytes)" if name == "KEY_BYTES" else r"(?<=every )[0-9]+(?= s\))"
+            parent[key], count = re.subn(pattern, str(value), parent[key])
+            self.assertEqual(count, 1, "the actual description must contain one numeric binding")
+        self.write_document(rel, doc)
+
+    def constant(self, name, value=None, unit=None, remove=False, duplicate=False):
+        path = self.root / self.FORM
+        lines = path.read_text().split("\n")
+        places = [i for i, line in enumerate(lines) if line.startswith(name + "\t")]
+        self.assertEqual(len(places), 1)
+        at = places[0]
+        cells = lines[at].split("\t")
+        if value is not None:
+            cells[1] = str(value)
+        if unit is not None:
+            cells[2] = unit
+        lines[at] = "\t".join(cells)
+        if duplicate:
+            lines.append(lines[at])
+        if remove:
+            del lines[at]
+        path.write_text("\n".join(lines))
+
+    def assert_carrier_error(self, binding):
+        rel, pointer, _, _ = binding
+        errors, stats = self.check()
+        self.assertTrue(any(path == self.root / rel and pointer in message for path, message in errors), errors)
+        self.assertLess(stats.get("p01_constant_equalities", 0), 3)
+
+    def test_actual_closed_three_pointer_roster_and_read_only_clean(self):
+        self.assertEqual(tuple(row[:4] for row in check_constants.P01_CONSTANT_BINDINGS), self.BINDINGS)
+        self.assertEqual(self.check(), ([], {"p01_constant_equalities": 3}))
+        self.assertEqual({rel: (self.root / rel).read_bytes() for rel in self.original}, self.original)
+
+    def test_each_row_only_drift_fails(self):
+        for binding in self.BINDINGS:
+            with self.subTest(name=binding[2]):
+                self.constant(binding[2], self.values[binding[2]] + 7)
+                self.assert_carrier_error(binding)
+                self.restore()
+
+    def test_each_carrier_only_drift_fails(self):
+        for binding in self.BINDINGS:
+            with self.subTest(name=binding[2]):
+                self.carrier(binding, self.values[binding[2]] + 7)
+                self.assert_carrier_error(binding)
+                self.restore()
+
+    def test_each_coherent_change_uses_the_actual_form_value(self):
+        for binding in self.BINDINGS:
+            for value in (1, self.values[binding[2]] + 7, 9007199254740991):
+                with self.subTest(name=binding[2], value=value):
+                    self.constant(binding[2], value)
+                    self.carrier(binding, value)
+                    self.assertEqual(self.check(), ([], {"p01_constant_equalities": 3}))
+                    self.restore()
+
+    def test_missing_each_file_and_exact_pointer_never_uses_decoys(self):
+        for rel in self.original:
+            with self.subTest(file=rel):
+                (self.root / rel).unlink()
+                self.assertTrue(any(path == self.root / rel for path, _ in self.check()[0]))
+                self.restore()
+        for binding in self.BINDINGS:
+            rel, pointer, _, _ = binding
+            with self.subTest(pointer=pointer):
+                doc = self.document(rel)
+                parent, key = parent_at(doc, pointer)
+                doc[key] = parent.pop(key)
+                self.write_document(rel, doc)
+                self.assert_carrier_error(binding)
+                self.restore()
+
+    def test_required_single_rows_units_and_unpadded_ascii_integer_types(self):
+        for _, _, name, unit in self.BINDINGS:
+            mutations = [{"remove": True}, {"duplicate": True}, {"unit": "bytes" if unit == "s" else "s"}]
+            mutations += [{"value": value} for value in ("true", "false", "0", "-1", "1.0", "1e2", "01", "١", "", " 1")]
+            for mutation in mutations:
+                with self.subTest(name=name, mutation=mutation):
+                    self.constant(name, **mutation)
+                    self.assertTrue(any(path == self.root / self.FORM for path, _ in self.check()[0]))
+                    self.restore()
+        for text in ("", "bad\theader\n", "name\tvalue\tunit\tnorm\tmeaning\nCLOCK_SKEW\t1\ts\n"):
+            (self.root / self.FORM).write_text(text)
+            self.assertTrue(self.check()[0])
+
+    def test_numeric_carrier_rejects_boolean_and_wrong_types(self):
+        binding = self.BINDINGS[0]
+        self.constant("CLOCK_SKEW", 1)
+        form = (self.root / self.FORM).read_bytes()
+        for value in (True, False, None, "1", [], {}, 1.5):
+            with self.subTest(value=value):
+                self.carrier(binding, value)
+                self.assert_carrier_error(binding)
+                self.restore()
+                (self.root / self.FORM).write_bytes(form)
+
+    def test_nonfinite_carrier_source_is_an_explicit_parse_failure(self):
+        for value in (float("inf"), float("nan")):
+            with self.subTest(value=value):
+                self.carrier(self.BINDINGS[0], value)
+                errors, stats = self.check()
+                self.assertTrue(any(path == self.root / self.API and "cannot parse numeric carrier" in message
+                                    for path, message in errors), errors)
+                self.assertLess(stats.get("p01_constant_equalities", 0), 3)
+                self.restore()
+
+    def test_numeric_equality_is_exact_without_binary_float_rounding(self):
+        binding = self.BINDINGS[0]
+        for suffix, refused in ((".0", False), (".000000000000000000001", True)):
+            self.carrier(binding, "PRECISE_NUMBER")
+            path = self.root / self.API
+            text = path.read_text()
+            self.assertEqual(text.count("PRECISE_NUMBER"), 1)
+            path.write_text(text.replace("PRECISE_NUMBER", str(self.values["CLOCK_SKEW"]) + suffix))
+            if refused:
+                self.assert_carrier_error(binding)
+            else:
+                self.assertEqual(self.check(), ([], {"p01_constant_equalities": 3}))
+            self.restore()
+
+    def test_strict_greater_cannot_be_replaced_by_minimum_or_wrong_schema_type(self):
+        binding = self.BINDINGS[0]
+        for kind in ("inclusive", "additional minimum", "integer", "string", "number list", "missing type"):
+            with self.subTest(kind=kind):
+                doc = self.document(self.API)
+                parent, key = parent_at(doc, binding[1])
+                if kind == "inclusive":
+                    parent["minimum"] = parent.pop(key)
+                elif kind == "additional minimum":
+                    parent["minimum"] = self.values["CLOCK_SKEW"] + 1
+                elif kind == "missing type":
+                    del parent["type"]
+                else:
+                    parent["type"] = ["number"] if kind == "number list" else kind
+                self.write_document(self.API, doc)
+                self.assert_carrier_error(binding)
+                self.restore()
+
+    def test_key_description_requires_one_utf8_byte_binding_and_preserves_sentence(self):
+        binding = self.BINDINGS[1]
+        parent, key = parent_at(self.document(self.API), binding[1])
+        text = parent[key]
+        number = str(self.values["KEY_BYTES"])
+        bad = [text.replace("UTF-8 bytes", unit) for unit in ("characters", "UTF-8 characters", "UTF-16 bytes", "bytes")]
+        bad += [text.replace(number, value) for value in ("0" + number, number + ".0", "١٠٢٤", "true")]
+        bad += [text + " " + text, text + " Another limit is accepted.", text.replace("a smaller file limit", "a larger file limit"),
+                text.replace("maxLength does not express", "maxLength expresses"), "UTF-8 bytes " + number]
+        for changed in bad:
+            with self.subTest(description=changed):
+                self.assertNotEqual(changed, text)
+                self.carrier(binding, changed, literal=True)
+                self.assert_carrier_error(binding)
+                self.restore()
+
+    def test_door_description_requires_one_seconds_binding(self):
+        binding = self.BINDINGS[2]
+        parent, key = parent_at(self.document(self.DOORS), binding[1])
+        text = parent[key]
+        number = str(self.values["DOOR_SEEN_EVERY"])
+        bad = [text.replace(" s)", unit) for unit in (" ms)", " min)", " bytes)")]
+        bad += [text.replace(number, value) for value in ("0" + number, number + ".0", "٣٠", "true")]
+        bad += [text + " " + text, text.replace("every", "at least every"), "every " + number + " s", text + "; or 1 s"]
+        for changed in bad:
+            with self.subTest(description=changed):
+                self.assertNotEqual(changed, text)
+                self.carrier(binding, changed, literal=True)
+                self.assert_carrier_error(binding)
+                self.restore()
+
+    def test_descriptions_are_strings_and_key_maxlength_is_not_a_byte_limit(self):
+        for binding in self.BINDINGS[1:]:
+            for value in (None, True, False, 1, [], {}):
+                with self.subTest(pointer=binding[1], value=value):
+                    self.carrier(binding, value, literal=True)
+                    self.assert_carrier_error(binding)
+                    self.restore()
+        for schema_type in ("string", "number", ["string"]):
+            doc = self.document(self.API)
+            parent, _ = parent_at(doc, self.BINDINGS[1][1])
+            parent["type"] = schema_type
+            if schema_type == "string":
+                parent["maxLength"] = self.values["KEY_BYTES"]
+            self.write_document(self.API, doc)
+            self.assert_carrier_error(self.BINDINGS[1])
+            self.restore()
+
+    def test_duplicate_document_keys_malformed_files_and_nonutf8_fail(self):
+        for rel in (self.API, self.DOORS):
+            for raw in (b"null", b"[]", b"true", b'"not an object"', b"\xff", b"{invalid"):
+                with self.subTest(file=rel, raw=raw):
+                    (self.root / rel).write_bytes(raw)
+                    self.assertTrue(any(path == self.root / rel for path, _ in self.check()[0]))
+                    self.restore()
+        path = self.root / self.API
+        text = path.read_text()
+        line = "          exclusiveMinimum: " + str(self.values["CLOCK_SKEW"])
+        self.assertEqual(text.count(line + "\n"), 1)
+        path.write_text(text.replace(line + "\n", line + "\n" + line + "\n"))
+        self.assertTrue(any(path == p and "duplicate" in m.lower() for p, m in self.check()[0]))
+        self.restore()
+        path = self.root / self.DOORS
+        text = path.read_text()
+        line = next(line for line in text.split("\n") if '"description":' in line)
+        self.assertEqual(text.count(line), 1)
+        path.write_text(text.replace(line, line + "\n" + line))
+        self.assertTrue(any(path == p and "duplicate" in m.lower() for p, m in self.check()[0]))
+
+    def test_actual_mutants_fail_through_check_spec_hook(self):
+        from check_spec import Check
+        for source in (ROOT / "Platform/01-store/spec").glob("*.norms.md"):
+            shutil.copyfile(source, self.root / "Platform/01-store/spec" / source.name)
+        clean = Check(self.root)
+        clean.check_forms()
+        self.assertEqual(clean.errors, [])
+        self.assertEqual(clean.stats["p01_constant_equalities"], 3)
+        for binding in self.BINDINGS:
+            with self.subTest(name=binding[2]):
+                self.carrier(binding, self.values[binding[2]] + 7)
+                result = Check(self.root)
+                result.check_forms()
+                self.assertTrue(any(binding[1] in message for message in result.errors), result.errors)
+                self.restore()
+
+
 class FolderConstants(unittest.TestCase):
     BINDINGS = (
         ("Platform/06-console/data/folders.schema.json", "/$defs/writer/properties/members/maxItems", "FOLDERS_MEMBERS_MAX"),
@@ -369,6 +639,20 @@ class FolderConstants(unittest.TestCase):
 
 
 class Integration(unittest.TestCase):
+    def test_p01_subject_errors_and_counts_reach_check_spec(self):
+        from check_spec import Check
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "Platform/01-store").mkdir(parents=True)
+            path = root / StoreConstants.API
+            result = Check(root)
+            with patch("check_constants.check_p01_constants", return_value=([(path, "store subject mutant")],
+                                                                          {"p01_constant_equalities": 2})) as called:
+                result.check_forms()
+            called.assert_called_once_with(root)
+            self.assertTrue(any("store subject mutant" in e for e in result.errors))
+            self.assertEqual(result.stats["p01_constant_equalities"], 2)
+
     def test_p06_only_subject_errors_and_counts_reach_check_spec(self):
         from check_spec import Check
         with tempfile.TemporaryDirectory() as tmp:

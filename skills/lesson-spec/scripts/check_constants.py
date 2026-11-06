@@ -1,4 +1,4 @@
-"""P/08 numeric carriers and closed shared references (ADR-0129 (5)).
+"""Closed P/01, P/06 and P/08 numeric carriers (ADR-0129).
 
 The roster is closed by coord103: 139 author carriers, two canonical book
 carriers and five form equalities. Read source only; no generator imports.
@@ -29,6 +29,16 @@ BOOK_POINTER = "/$defs/common.book_row/properties//properties"
 P06_FOLDER_BINDINGS = (
     ("Platform/06-console/data/folders.schema.json", "/$defs/writer/properties/members/maxItems", "FOLDERS_MEMBERS_MAX"),
     ("Platform/06-console/data/memberof.schema.json", "/$defs/writer/properties/folders/maxItems", "FOLDERS_PER_UNIT_MAX"),
+)
+P01_API = "Platform/01-store/spec/01-store.api.openapi.yaml"
+P01_CONSTANT_BINDINGS = (
+    (P01_API, "/components/schemas/Status/properties/admission_ahead/exclusiveMinimum", "CLOCK_SKEW", "s", None),
+    (P01_API, "/components/schemas/Key/description", "KEY_BYTES", "bytes",
+     r"N1: a key is not empty, does not start with /, no segment between / equals \.\.; "
+     r"\.\.foo is admissible\. The limit of (?P<value>[1-9][0-9]*) UTF-8 bytes and a smaller file limit "
+     r"are checked separately; maxLength does not express a number of bytes\."),
+    ("Platform/01-store/data/configstore-doors.schema.json", "/properties/seen_at/description", "DOOR_SEEN_EVERY", "s",
+     r"the wall time of the last confirmation of the door \(every (?P<value>[1-9][0-9]*) s\)"),
 )
 
 
@@ -191,6 +201,39 @@ class Judge:
             else:
                 self.stats["p06_folder_equalities"] += 1
 
+    def store_constants(self):
+        """Three assigned P01 carriers; descriptions are exact closed source sentences."""
+        for path, pointer, name, unit, pattern in P01_CONSTANT_BINDINGS:
+            expected = self.constant("01-store", name, unit)
+            node = self.document(path)
+            if node is None:
+                continue
+            try:
+                keys = pointer[1:].split("/")
+                for key in keys[:-1]:
+                    node = node[key]
+                parent, node = node, node[keys[-1]]
+            except (KeyError, TypeError):
+                self.error(path, f"missing numeric carrier {pointer}")
+                continue
+            if pattern is None:
+                numeric = type(node) is int or isinstance(node, Decimal) and node.is_finite()
+                if not numeric or node != expected:
+                    self.error(path, f"{pointer}: expected 01-store/{name}={expected}, got {node!r}")
+                    continue
+                if parent.get("type") != "number" or "minimum" in parent:
+                    self.error(path, f"{pointer}: admission_ahead must remain a number strictly greater than {name}")
+                    continue
+            else:
+                match = re.fullmatch(pattern, node) if isinstance(node, str) else None
+                if match is None or int(match["value"]) != expected:
+                    self.error(path, f"{pointer}: expected closed {unit} description for 01-store/{name}={expected}")
+                    continue
+                if name == "KEY_BYTES" and (parent.get("type") != "string" or "maxLength" in parent):
+                    self.error(path, f"{pointer}: KEY_BYTES is a UTF-8 byte limit, never a maxLength character limit")
+                    continue
+            self.stats["p01_constant_equalities"] += 1
+
     def contract(self, path, keys, names, phrases):
         text = self.text(path)
         if text is None:
@@ -316,4 +359,10 @@ def check_p08_constants(root):
 def check_p06_folder_constants(root):
     judge = Judge(root)
     judge.folder_schemas()
+    return judge.errors, dict(judge.stats)
+
+
+def check_p01_constants(root):
+    judge = Judge(root)
+    judge.store_constants()
     return judge.errors, dict(judge.stats)
