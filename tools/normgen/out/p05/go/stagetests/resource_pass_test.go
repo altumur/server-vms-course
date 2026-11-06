@@ -59,3 +59,136 @@ func TestResourcePass_S29PassIndependentAttempts(t *testing.T) {
 		{n: 1, line: 31, kind: "call", name: "resource-pass", input: "{\"retain_reply\":\"unavailable\"}", expects: []expect{expect{call: "{\"attempted\":[\"retain\",\"usage\",\"relieve\",\"mirror\"]}"}}},
 	})
 }
+
+// TestResourcePass_S41PresenceUnboundOpen — chapter 5, seams.tsv.
+func TestResourcePass_S41PresenceUnboundOpen(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 43, kind: "call", name: "resource-presence", input: "{\"fixture\":\"lock_error_cold_start\",\"listing\":\"successful\",\"error_operation\":\"open\",\"error\":\"EACCES\",\"current_slot_name_available\":false,\"other_role\":\"testsub2\",\"other_role_live_number\":2,\"host_memory_mb\":100,\"worker_memory_mb\":1,\"lock_content\":\"\"}", expects: []expect{expect{call: "{\"presence_fields\":[],\"instances_present\":false,\"room\":{\"testsub\":\"unknown\",\"testsub2\":97},\"live\":{\"testsub2\":\"2\"},\"testsub_live_present\":false,\"files_removed\":0,\"invented_slot\":false}"}}},
+	})
+}
+
+// TestResourcePass_S42PresenceUnboundRead — chapter 5, seams.tsv.
+func TestResourcePass_S42PresenceUnboundRead(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 44, kind: "call", name: "resource-presence", input: "{\"fixture\":\"lock_error_cold_start\",\"listing\":\"successful\",\"error_operation\":\"read\",\"error\":\"EACCES\",\"current_slot_name_available\":false,\"other_role\":\"testsub2\",\"other_role_live_number\":2,\"host_memory_mb\":100,\"worker_memory_mb\":1,\"lock_content\":\"\"}", expects: []expect{expect{call: "{\"presence_fields\":[],\"instances_present\":false,\"room\":{\"testsub\":\"unknown\",\"testsub2\":97},\"live\":{\"testsub2\":\"2\"},\"testsub_live_present\":false,\"files_removed\":0,\"invented_slot\":false}"}}},
+	})
+}
+
+// TestResourcePass_S43PresenceUnboundFlock — chapter 5, seams.tsv.
+func TestResourcePass_S43PresenceUnboundFlock(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 45, kind: "call", name: "resource-presence", input: "{\"fixture\":\"lock_error_cold_start\",\"listing\":\"successful\",\"error_operation\":\"flock\",\"error\":\"EACCES\",\"current_slot_name_available\":false,\"other_role\":\"testsub2\",\"other_role_live_number\":2,\"host_memory_mb\":100,\"worker_memory_mb\":1,\"lock_content\":\"\"}", expects: []expect{expect{call: "{\"presence_fields\":[],\"instances_present\":false,\"room\":{\"testsub\":\"unknown\",\"testsub2\":97},\"live\":{\"testsub2\":\"2\"},\"testsub_live_present\":false,\"files_removed\":0,\"invented_slot\":false}"}}},
+	})
+}
+
+// TestResourcePass_S44PresenceUnboundFstat — chapter 5, seams.tsv.
+func TestResourcePass_S44PresenceUnboundFstat(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 46, kind: "call", name: "resource-presence", input: "{\"fixture\":\"lock_error_cold_start\",\"listing\":\"successful\",\"error_operation\":\"fstat\",\"error\":\"EACCES\",\"current_slot_name_available\":false,\"other_role\":\"testsub2\",\"other_role_live_number\":2,\"host_memory_mb\":100,\"worker_memory_mb\":1,\"lock_content\":\"\"}", expects: []expect{expect{call: "{\"presence_fields\":[],\"instances_present\":false,\"room\":{\"testsub\":\"unknown\",\"testsub2\":97},\"live\":{\"testsub2\":\"2\"},\"testsub_live_present\":false,\"files_removed\":0,\"invented_slot\":false}"}}},
+	})
+}
+
+// TestResourcePass_S45PresenceUnboundStat — chapter 5, seams.tsv.
+func TestResourcePass_S45PresenceUnboundStat(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 47, kind: "call", name: "resource-presence", input: "{\"fixture\":\"lock_error_cold_start\",\"listing\":\"successful\",\"error_operation\":\"stat\",\"error\":\"EACCES\",\"current_slot_name_available\":false,\"other_role\":\"testsub2\",\"other_role_live_number\":2,\"host_memory_mb\":100,\"worker_memory_mb\":1,\"lock_content\":\"\"}", expects: []expect{expect{call: "{\"presence_fields\":[],\"instances_present\":false,\"room\":{\"testsub\":\"unknown\",\"testsub2\":97},\"live\":{\"testsub2\":\"2\"},\"testsub_live_present\":false,\"files_removed\":0,\"invented_slot\":false}"}}},
+	})
+}
+
+// TestResourcePass_S49RetainBeforeWrittenDeadline — chapter 5, seams.tsv.
+func TestResourcePass_S49RetainBeforeWrittenDeadline(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 51, kind: "call", name: "resource-retain", input: "{\"fixture\":\"retention_written_boundary\",\"tree\":\"testsub\",\"bucket_window\":[0,600],\"written\":100,\"mtime\":0,\"now\":86499.999,\"retention\":{\"days\":1},\"alarms_retention\":{\"days\":2},\"holds\":\"confirmed_empty\"}", expects: []expect{expect{call: "{\"bucket_removed\":false,\"observed_written\":100}"}}},
+	})
+}
+
+// TestResourcePass_S50RetainAtWrittenDeadline — chapter 5, seams.tsv.
+func TestResourcePass_S50RetainAtWrittenDeadline(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 52, kind: "call", name: "resource-retain", input: "{\"fixture\":\"retention_written_boundary\",\"tree\":\"testsub\",\"bucket_window\":[0,600],\"written\":100,\"mtime\":200000,\"now\":86500,\"retention\":{\"days\":1},\"alarms_retention\":{\"days\":2},\"holds\":\"confirmed_empty\"}", expects: []expect{expect{call: "{\"bucket_removed\":true,\"observed_written\":100}"}}},
+	})
+}
+
+// TestResourcePass_S51RetainAfterWrittenDeadline — chapter 5, seams.tsv.
+func TestResourcePass_S51RetainAfterWrittenDeadline(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 53, kind: "call", name: "resource-retain", input: "{\"fixture\":\"retention_written_boundary\",\"tree\":\"testsub\",\"bucket_window\":[0,600],\"written\":100,\"mtime\":200000,\"now\":86500.001,\"retention\":{\"days\":1},\"alarms_retention\":{\"days\":2},\"holds\":\"confirmed_empty\"}", expects: []expect{expect{call: "{\"bucket_removed\":true,\"observed_written\":100}"}}},
+	})
+}
+
+// TestResourcePass_S52RetainAlarmOwnTerm — chapter 5, seams.tsv.
+func TestResourcePass_S52RetainAlarmOwnTerm(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 54, kind: "call", name: "resource-retain", input: "{\"fixture\":\"retention_written_boundary\",\"tree\":\"testsub.alarms\",\"bucket_window\":[0,600],\"written\":100,\"mtime\":0,\"now\":86500,\"retention\":{\"days\":1},\"alarms_retention\":{\"days\":2},\"holds\":\"confirmed_empty\"}", expects: []expect{expect{call: "{\"bucket_removed\":false,\"observed_written\":100}"}}},
+	})
+}
+
+// TestResourcePass_S53RetainAlarmAtDeadline — chapter 5, seams.tsv.
+func TestResourcePass_S53RetainAlarmAtDeadline(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 55, kind: "call", name: "resource-retain", input: "{\"fixture\":\"retention_written_boundary\",\"tree\":\"testsub.alarms\",\"bucket_window\":[0,600],\"written\":100,\"mtime\":200000,\"now\":172900,\"retention\":{\"days\":1},\"alarms_retention\":{\"days\":2},\"holds\":\"confirmed_empty\"}", expects: []expect{expect{call: "{\"bucket_removed\":true,\"observed_written\":100}"}}},
+	})
+}
+
+// TestResourcePass_S54RetainAuditAtDeadline — chapter 5, seams.tsv.
+func TestResourcePass_S54RetainAuditAtDeadline(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 56, kind: "call", name: "resource-retain", input: "{\"fixture\":\"retention_written_boundary\",\"tree\":\"audit\",\"bucket_window\":[0,600],\"written\":100,\"mtime\":100000000,\"now\":94608100,\"retention\":{\"days\":1},\"alarms_retention\":{\"days\":2},\"holds\":\"confirmed_empty\"}", expects: []expect{expect{call: "{\"bucket_removed\":true,\"observed_written\":100}"}}},
+	})
+}
+
+// TestResourcePass_S55RetainConsoleLongestFloor — chapter 5, seams.tsv.
+func TestResourcePass_S55RetainConsoleLongestFloor(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 57, kind: "call", name: "resource-retain", input: "{\"fixture\":\"retention_written_boundary\",\"tree\":\"console\",\"bucket_window\":[0,600],\"written\":100,\"mtime\":0,\"now\":94608100,\"retention\":{\"days\":1},\"alarms_retention\":{\"days\":2},\"holds\":\"confirmed_empty\",\"longest_tree_days\":1096}", expects: []expect{expect{call: "{\"bucket_removed\":false,\"observed_written\":100}"}}},
+	})
+}
+
+// TestResourcePass_S56RetainConsoleAtFloor — chapter 5, seams.tsv.
+func TestResourcePass_S56RetainConsoleAtFloor(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 58, kind: "call", name: "resource-retain", input: "{\"fixture\":\"retention_written_boundary\",\"tree\":\"console\",\"bucket_window\":[0,600],\"written\":100,\"mtime\":0,\"now\":94694500,\"retention\":{\"days\":1},\"alarms_retention\":{\"days\":2},\"holds\":\"confirmed_empty\",\"longest_tree_days\":1096}", expects: []expect{expect{call: "{\"bucket_removed\":true,\"observed_written\":100}"}}},
+	})
+}
+
+// TestResourcePass_S57RetainLateMirrorBefore — chapter 5, seams.tsv.
+func TestResourcePass_S57RetainLateMirrorBefore(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 59, kind: "call", name: "resource-retain", input: "{\"fixture\":\"retention_written_boundary\",\"tree\":\"testsub\",\"bucket_window\":[0,600],\"written\":90000,\"mtime\":0,\"now\":179999.999,\"retention\":{\"days\":1},\"alarms_retention\":{\"days\":2},\"holds\":\"confirmed_empty\",\"mirror\":true,\"source_bucket_written\":100}", expects: []expect{expect{call: "{\"bucket_removed\":false,\"observed_written\":90000}"}}},
+	})
+}
+
+// TestResourcePass_S58RetainLateMirrorAt — chapter 5, seams.tsv.
+func TestResourcePass_S58RetainLateMirrorAt(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 60, kind: "call", name: "resource-retain", input: "{\"fixture\":\"retention_written_boundary\",\"tree\":\"testsub\",\"bucket_window\":[0,600],\"written\":90000,\"mtime\":200000,\"now\":180000,\"retention\":{\"days\":1},\"alarms_retention\":{\"days\":2},\"holds\":\"confirmed_empty\",\"mirror\":true,\"source_bucket_written\":100}", expects: []expect{expect{call: "{\"bucket_removed\":true,\"observed_written\":90000}"}}},
+	})
+}
+
+// TestResourcePass_S59RetainRestoredBefore — chapter 5, seams.tsv.
+func TestResourcePass_S59RetainRestoredBefore(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 61, kind: "call", name: "resource-retain", input: "{\"fixture\":\"retention_written_boundary\",\"tree\":\"testsub\",\"bucket_window\":[0,600],\"written\":90000,\"mtime\":0,\"now\":176399.999,\"retention\":{\"days\":1},\"alarms_retention\":{\"days\":2},\"holds\":\"confirmed_empty\",\"restore_copy_written\":90000,\"restore_clock\":150000}", expects: []expect{expect{call: "{\"bucket_removed\":false,\"observed_written\":90000}"}}},
+	})
+}
+
+// TestResourcePass_S60RetainRestoredAt — chapter 5, seams.tsv.
+func TestResourcePass_S60RetainRestoredAt(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 62, kind: "call", name: "resource-retain", input: "{\"fixture\":\"retention_written_boundary\",\"tree\":\"testsub\",\"bucket_window\":[0,600],\"written\":90000,\"mtime\":200000,\"now\":176400,\"retention\":{\"days\":1},\"alarms_retention\":{\"days\":2},\"holds\":\"confirmed_empty\",\"restore_copy_written\":90000,\"restore_clock\":150000}", expects: []expect{expect{call: "{\"bucket_removed\":true,\"observed_written\":90000}"}}},
+	})
+}
+
+// TestResourcePass_S61RetainHoldBeforePredicate — chapter 5, seams.tsv.
+func TestResourcePass_S61RetainHoldBeforePredicate(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 63, kind: "call", name: "resource-retain", input: "{\"fixture\":\"retention_written_boundary\",\"tree\":\"testsub\",\"bucket_window\":[0,600],\"written\":100,\"mtime\":0,\"now\":86500,\"retention\":{\"days\":1},\"alarms_retention\":{\"days\":2},\"holds\":\"confirmed_hold\"}", expects: []expect{expect{call: "{\"bucket_removed\":false,\"observed_written\":100}"}}},
+	})
+}
+
+// TestResourcePass_S62RetainUnreadHoldsBeforePredicate — chapter 5, seams.tsv.
+func TestResourcePass_S62RetainUnreadHoldsBeforePredicate(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 64, kind: "call", name: "resource-retain", input: "{\"fixture\":\"retention_written_boundary\",\"tree\":\"testsub\",\"bucket_window\":[0,600],\"written\":100,\"mtime\":0,\"now\":86500,\"retention\":{\"days\":1},\"alarms_retention\":{\"days\":2},\"holds\":\"unreadable\"}", expects: []expect{expect{call: "{\"bucket_removed\":false,\"observed_written\":100}"}}},
+	})
+}

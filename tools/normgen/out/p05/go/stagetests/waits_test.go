@@ -38,3 +38,10 @@ func TestWaits_S19WaitDisconnect(t *testing.T) {
 		{n: 1, line: 21, kind: "call", name: "resource-wait", input: "{\"disconnect\":true,\"elapsed_after_disconnect\":1}", expects: []expect{expect{call: "{\"waiting_after\":0}"}}},
 	})
 }
+
+// TestWaits_S46WaitFullSameIdentity — chapter 5, seams.tsv.
+func TestWaits_S46WaitFullSameIdentity(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 48, kind: "call", name: "resource-wait", input: "{\"limit\":16,\"open_waits\":16,\"old\":{\"cn\":\"console.srv-a\",\"client\":\"c\"},\"new\":{\"cn\":\"console.srv-a\",\"client\":\"c\"}}", expects: []expect{expect{call: "{\"old_answer\":\"replaced\",\"new_waiting\":true,\"waiting\":16,\"full\":0,\"replaced\":1}"}}},
+	})
+}

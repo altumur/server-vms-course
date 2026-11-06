@@ -38,3 +38,17 @@ func TestMirrorRestore_S21RestoreUnknownNeighbours(t *testing.T) {
 		{n: 1, line: 23, kind: "call", name: "resource-restore", input: "{\"local_events_lost\":true,\"neighbour_heartbeats\":\"unavailable\"}", expects: []expect{expect{call: "{\"done\":false,\"assumed_empty_neighbour_set\":false}"}}},
 	})
 }
+
+// TestMirrorRestore_S47RestoreListing404Complete — chapter 5, seams.tsv.
+func TestMirrorRestore_S47RestoreListing404Complete(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 49, kind: "call", name: "resource-restore", input: "{\"necessary\":[\"srv-b\"],\"listings\":{\"srv-b\":\"empty_404\"}}", expects: []expect{expect{call: "{\"done\":true,\"restored\":0,\"listed_bucket_gets\":0}"}}},
+	})
+}
+
+// TestMirrorRestore_S48RestoreListedBucket404Incomplete — chapter 5, seams.tsv.
+func TestMirrorRestore_S48RestoreListedBucket404Incomplete(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 50, kind: "call", name: "resource-restore", input: "{\"necessary\":[\"srv-b\"],\"listings\":{\"srv-b\":\"complete\"},\"bucket_replies\":{\"srv-b\":\"404\"},\"peer_fails\":3}", expects: []expect{expect{call: "{\"done\":false,\"restored\":0,\"missing\":1}"}}},
+	})
+}

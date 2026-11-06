@@ -31,3 +31,24 @@ func TestObjectVersions_S04CopySourceTime(t *testing.T) {
 		{n: 1, line: 6, kind: "call", name: "resource-body-copy", input: "{\"source_written\":100,\"existing_written\":200,\"local_clock\":1000}", expects: []expect{expect{call: "{\"status\":204,\"written\":200}"}}},
 	})
 }
+
+// TestObjectVersions_S38DeleteEqualClock — chapter 5, seams.tsv.
+func TestObjectVersions_S38DeleteEqualClock(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 40, kind: "call", name: "resource-body-copy", input: "{\"fixture\":\"two_resources_admitted_body_sweep\",\"source_written\":100,\"mark_at\":101,\"grace_monotonic\":300,\"delete_clock\":100,\"peer_written\":100,\"propagate_tombstone\":true}", expects: []expect{expect{call: "{\"tombstone_written\":100.001,\"deleted_version_written\":100,\"peer_status_after_pass\":404,\"acked\":[\"srv-b\"],\"copy_source_written_changed\":false}"}}},
+	})
+}
+
+// TestObjectVersions_S39DeleteRollbackClock — chapter 5, seams.tsv.
+func TestObjectVersions_S39DeleteRollbackClock(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 41, kind: "call", name: "resource-body-copy", input: "{\"fixture\":\"two_resources_admitted_body_sweep\",\"source_written\":100,\"mark_at\":101,\"grace_monotonic\":300,\"delete_clock\":50,\"peer_written\":100,\"propagate_tombstone\":true}", expects: []expect{expect{call: "{\"tombstone_written\":100.001,\"deleted_version_written\":100,\"peer_status_after_pass\":404,\"acked\":[\"srv-b\"],\"copy_source_written_changed\":false}"}}},
+	})
+}
+
+// TestObjectVersions_S40DeleteNewerCopySurvives — chapter 5, seams.tsv.
+func TestObjectVersions_S40DeleteNewerCopySurvives(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 42, kind: "call", name: "resource-body-copy", input: "{\"fixture\":\"two_resources_admitted_body_sweep\",\"source_written\":100,\"mark_at\":101,\"grace_monotonic\":300,\"delete_clock\":50,\"peer_written\":100.002,\"propagate_tombstone\":true}", expects: []expect{expect{call: "{\"tombstone_written\":100.001,\"peer_status_after_pass\":200,\"peer_written_after_pass\":100.002,\"acked\":[],\"copy_source_written_changed\":false}"}}},
+	})
+}
