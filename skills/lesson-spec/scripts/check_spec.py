@@ -30,7 +30,8 @@ def arguments():
     parser.add_argument("lessons", nargs="*",
                         help="module/NN-slug.md; only the new shared-spec layout; none — every Platform lesson of "
                              "Platform/lessons.tsv and every VMS/NN-*/NN-*.md lesson, strictly (one result for one tree, whatever the shell globs)")
-    parser.add_argument("--root", type=Path, default=Path.cwd(), help="repository root, default cwd")
+    parser.add_argument("--root", type=Path, default=Path.cwd(),
+                        help="complete course source root, default cwd; exports require a separate identity proof")
     parser.add_argument("--exceptions", type=Path, default=EXCEPTIONS,
                         help="registry of allowed deviations, default the skill's exceptions.tsv")
     parser.add_argument("--cyrillic-debt", type=Path, default=SCRIPTS.parent / "cyrillic-debt.tsv",
@@ -471,6 +472,9 @@ MANIFEST_FORMS = {"unit.rows", "tables", "objects.rows", "domain.books.from", "d
 # (and scenario and vector addresses, which these checks do not read).
 IDMAP = Path("decisions/history/platform/id-map.tsv")
 IDMAP_FIELDS = ["old", "new", "chapter", "subject", "note"]
+TESTSUB = Path("Platform/common/data/testsub")
+TESTSUB_FILES = ("testsub.subsystem.yaml", "testsub2.subsystem.yaml")
+LEGACY_VERDICTS = Path("Platform/02-installer/acceptance/1/spec_verdicts")
 # The VMS module (ADR-0090 доп. (1) «Условия старта», доп. (2)): its lessons, data catalog and id-map are read from
 # VMS/common/; a lesson's manifest is VMS/NN-<имя>/<subsystem>.subsystem.yaml. The bytes of Source/vms/ are the frozen
 # witness's (доп. (6) п. 8, (7) п. 4): after the start nobody edits them, the list of their sha256 is recorded at the
@@ -1704,6 +1708,7 @@ class Check:
                 silenced += len(self.errors) - before
                 del self.errors[before:]
             self.refusal_word(path, line, expect)
+            self.module_file_binding(path, line, expect)
         # `@key(N)` repeats the key bytes of step N of the same scenario: that step exists and carries a writing
         # request (ACC-06-KEY-SHIFT-01, решение «Архитектора» 2026-10-29: a step inserted before it shifts the number).
         for line, scenario, n in keys:
@@ -1715,6 +1720,21 @@ class Check:
         if not steps:
             self.error(path, "empty scenarios table")
         return silenced
+
+    def module_file_binding(self, path, line, expect):
+        """Actual @file expectations bind canonical module bytes, never Source witnesses."""
+        if not Path(path).is_relative_to(self.root / "Platform"):
+            return
+        match = re.fullmatch(r"[1-5][0-9]{2} @file (\S+)", expect)
+        if match is None or Path(match[1]).name not in {"console.js", "console.css", "console.html"}:
+            return
+        canonical = Path("Platform/07-console-module/module") / Path(match[1]).name
+        target = self.root / canonical
+        if match[1] != canonical.as_posix():
+            self.error(path, f"line {line}: @file module input must be {canonical}; Source is a frozen witness")
+        elif not target.is_file() or target.resolve() != target.absolute():
+            self.error(path, f"line {line}: missing canonical module input {canonical} (no symlinks)")
+        self.stats["module_file_bindings"] += 1
 
     # The word of `error` in an expectation is a word of a closed table `data/refusal-words.tsv` (стандарт пробы, ADR-0083,
     # правка В-7). Judged against the union of the tables, not door by door: `@any`, `!contains`, `~`, `$имя` are not words.
@@ -1920,8 +1940,7 @@ class Check:
         # Corpora (cases/, spec_verdicts/) hold refused manifests on purpose; only the manifests subsystems ship are
         # checked here. The VMS manifests are checked in VMS/ (their canon since the start, ADR-0090 доп. (6) п. 8);
         # Source/vms/ holds the frozen witness's bytes and is never form-checked.
-        manifests = [*(self.root / VMS_DIR).glob("[0-9][0-9]-*/*.subsystem.yaml"),
-                     *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
+        manifests = self.course_manifests()
         for path in sorted(manifests):
             try:
                 got = runner.judge(path.read_bytes())
@@ -2002,8 +2021,7 @@ class Check:
                 elif not set(lines_) <= set(got["lines"]):
                     self.error(path, f"form source: lines expected {lines_}, got {got['lines']}")
             self.stats["form_cases"] += 1
-        manifests = [*(self.root / VMS_DIR).glob("[0-9][0-9]-*/*.subsystem.yaml"),
-                     *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
+        manifests = self.course_manifests()
         for path in sorted(manifests):
             got = loader.judge(path.read_bytes())
             if got["verdict"] != "ok":
@@ -2030,8 +2048,7 @@ class Check:
         except ImportError as exc:
             self.error(norms, f"the standard files need the В7 stack, missing: {exc}; run: {V7_INSTALL}")
             return
-        manifests = [*(self.root / VMS_DIR).glob("[0-9][0-9]-*/*.subsystem.yaml"),
-                     *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
+        manifests = self.course_manifests()
         try:
             implied = {value for (lesson, kind, value) in self.registry if kind == "implied"}
             extra = self.numeric_loader(base)
@@ -2054,6 +2071,66 @@ class Check:
                 self.used.add((key, kind, value))
                 self.error(base, f"stale exception implied {key} {value}: no relation row {value} with x-implied-by")
         self.stats.update(stats)
+
+    def course_manifests(self):
+        """Canonical manifests only; a missing new home must not turn a glob empty."""
+        paths = []
+        for name in TESTSUB_FILES:
+            path = self.root / TESTSUB / name
+            if not path.is_file() or path.resolve() != path.absolute():
+                self.error(path, "required canonical course manifest (regular file without symlinks)")
+            else:
+                paths.append(path)
+        home = self.root / TESTSUB
+        if home.is_dir():
+            for path in sorted(home.glob("*.subsystem.yaml")):
+                if path.name not in TESTSUB_FILES:
+                    self.error(path, "unexpected canonical course manifest; expected exactly testsub and testsub2")
+        return [*(self.root / VMS_DIR).glob("[0-9][0-9]-*/*.subsystem.yaml"), *paths]
+
+    def canonical_layout(self):
+        """ADR-0083 (115): root notes and frozen Source copies are not aliases."""
+        for name in ("Platform/common/NORMATIVE-TERMS.md", "Platform/07-console-module/CONSOLE-MODULE.md"):
+            path = self.root / name
+            if not path.is_file() or path.resolve() != path.absolute():
+                self.error(path, "required canonical document (regular file without symlinks)")
+        for name in ("NORMATIVE-TERMS.md", "CONSOLE-MODULE.md", "ru/NORMATIVE-TERMS.md", "ru/CONSOLE-MODULE.md"):
+            path = self.root / name
+            if path.exists() or path.is_symlink():
+                self.error(path, "legacy root document is forbidden; use its Platform canonical home")
+
+    def legacy_spec_verdicts(self):
+        """Relocated headerless roster, separate from P02's active corpus and canonical vectors."""
+        home = self.root / LEGACY_VERDICTS
+        table = home / "spec_verdicts.tsv"
+        rows = self.tsv(table, 2)
+        seen = set()
+        for line, (case, verdict) in rows:
+            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", case) or case in seen:
+                self.error(table, f"line {line}: invalid or duplicate legacy case {case!r}")
+                continue
+            seen.add(case)
+            if verdict not in {"ok", "refused"}:
+                self.error(table, f"line {line}: legacy verdict is ok or refused")
+            path = home / f"{case}.subsystem.yaml"
+            if not path.is_file() or path.resolve() != path.absolute():
+                self.error(path, "missing legacy verdict input (regular file without symlinks)")
+        if not seen:
+            self.error(table, "empty legacy verdict roster")
+        try:
+            for path in sorted(home.iterdir()):
+                if path.name == table.name or path.name in IGNORED:
+                    continue
+                if path.name == "README.md" and path.is_file():
+                    text = self.read(path)
+                    if text is not None:
+                        self.markdown(path, text)
+                    continue
+                if path.name not in {f"{case}.subsystem.yaml" for case in seen}:
+                    self.error(path, "unlisted legacy verdict input")
+        except OSError as exc:
+            self.error(home, str(exc))
+        self.stats["legacy_spec_verdicts"] += len(seen)
 
     # The numeric-loader witnesses of P/06 C3 (решение «Архитектора» 2026-11-06): a separate binding outside the corpus
     # of P/02.1 — each row of numeric-loader.cases.tsv is loaded by the same loader as the corpus, refused exactly by
@@ -2631,6 +2708,10 @@ class Check:
         supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "classes.tsv", "cases",
                      "en",                     # en/README.en.md — английский источник README (ADR-0121), сверка english_mirrors
                      "seams.tsv"}              # швы процесса (ADR-0126 доп. (7) п. 1) — check_forms.check_seams
+        legacy = acceptance == self.root / LEGACY_VERDICTS.parent
+        if legacy:
+            supported.add("spec_verdicts")
+            self.legacy_spec_verdicts()
         puts = (key, entry) in PUTS_CHAPTERS
         if puts:
             supported |= {"puts.tsv", "puts"}
@@ -2652,7 +2733,7 @@ class Check:
                     own_format = True
                 elif item.name not in supported:
                     self.error(item, "unsupported acceptance entry; add a format-specific check")
-                elif item.name not in ("cases", "puts", "en") and not item.is_file():
+                elif item.name not in ("cases", "puts", "en", "spec_verdicts") and not item.is_file():
                     self.error(item, "acceptance table/document must be a file")
         except OSError as exc:
             self.error(acceptance, str(exc))
@@ -3191,6 +3272,19 @@ def environment():
 def main():
     args = arguments().parse_args()
     check = Check(args.root, args.exceptions, args.strict_coverage)
+    import check_cyrillic
+    if check_cyrillic.export_mode(check.root):
+        check.error(check.root, "check_spec requires the full course source at the exact nested COURSE_COMMIT; "
+                               "an export omits history and frozen witnesses. Run source check_spec and the "
+                               "separate export identity/roster proof plus check_cyrillic --export; see validation.md")
+        check.check_cyrillic(args.cyrillic_debt)
+        for error in check.errors:
+            print("ERROR", error)
+        print("COUNTS", " ".join(f"{key}={value}" for key, value in sorted(check.stats.items())))
+        print("FAIL source proof requires the complete course tree; no export checks were silently skipped")
+        return 1
+    if (check.root / LESSONS).is_file():
+        check.canonical_layout()
     for name, got, want in environment():
         check.error(REQUIREMENTS, f"environment: {name} {got or 'is missing'}, pinned {want}; run: {SCHEMA_INSTALL}")
     names = args.lessons or [lecture_of(check.root / "Platform" / row["dir"]).relative_to(check.root).as_posix()

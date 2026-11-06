@@ -6,7 +6,8 @@
   ссылки источника — в источник (`Y`, английский якорь): при сверке цель перевода `<урок>/ru/Y#якорь` читается как
   `<урок>/Y#английский-якорь` по парам заголовков `Y` и `ru/Y` (один к одному). Построенные блоки сверяются по
   разрешённым целям ссылок: у источника и перевода глубина путей разная. Мелкие дома — корень курса
-  (`NORMATIVE-TERMS.md`, `CONSOLE-MODULE.md`; доп. (1) п. 4) и каталог модуля (`VMS/README.md`) с `ru/`:
+  (`README.md`) и каталог модуля (`VMS/README.md`) с `ru/`; перенесённые записки — в
+  `Platform/common/` и `Platform/07-console-module/` (ADR-0083 (115)):
   пара — свой файл `X` ↔ `ru/X`; прочие файлы рядом (записки курса, `Platform/lessons.tsv`) — не источники.
 - Прежняя (ADR-0121): английский `<каталог>/en/<имя>.en.md` — источник (нормы — в `spec/en/`); русский
   `<каталог>/<имя>.md` — производный, с пометкой «производный от en, руками не правится».
@@ -150,7 +151,7 @@ CYR = re.compile(r"[А-Яа-яЁё]")
 # Модуль, ещё не переведённый на латиницу меток, — прежнее разрешение (VMS — «Спецификация VMS»); список только сокращается.
 LABELS_PENDING = {"VMS"}
 # Уроки, где номера разделов уже латиницей N… (ADR-0121 доп. (5) п. 1): Н<цифра> в источнике — отказ; список растёт до всех.
-NUMBERS_DONE = ("Platform/", "NORMATIVE-TERMS.md", "CONSOLE-MODULE.md")
+NUMBERS_DONE = ("Platform/",)
 CYR_NUMBER = re.compile(r"(?<![\wА-Яа-яЁё])Н[0-9]")
 # Таблица меток ключей каталога — сырые ключи catalog.tsv (их читает читатель «Генераторов»): метки в ней — как в каталоге,
 # пока каталог не сменится вместе с генераторами (ADR-0121 доп. (5) п. 3).
@@ -538,8 +539,8 @@ def pairs(root):
     - урок с `ru/` (ADR-0124): каждый `*.md` урока вне `ru/` и `journal/` — источник `X`, перевод — `ru/X`;
     - мелкий дом с `ru/` (корень курса, каталог модуля; ADR-0124 доп. (1) п. 4): каждый `ru/X.md` — перевод своего `X`;
     - урок без `ru/` (ADR-0121 п. 1): `<каталог>/en/<имя>.en.md` ↔ `<каталог>/<имя>.md` (нормы в `spec/en/`, у прочих
-      каталогов — `en/` рядом); корневые НОРМАТИВНЫЕ-СЛОВА и КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ — `en/` в корне (ADR-0124 доп. (1)
-      п. 4)."""
+      каталогов — `en/` рядом). Перенесённые общие записки имеют канонический дом в Platform/ с его ru/;
+      корневые псевдонимы не используются (ADR-0083 (115))."""
     root = Path(root)
     homes = sorted(h for h in [*root.glob("Platform/*"), *root.glob("VMS/*")] if (h / "ru").is_dir())
     out = []
@@ -559,8 +560,8 @@ def pairs(root):
 
 # ADR-0121 (6), (7): completed source slices contain no Cyrillic letters.
 # Grow this list only with the complete lesson/common source delivery.
-FULL_ENGLISH_DONE = ("Platform/common/", "NORMATIVE-TERMS.md", "Platform/01-store/", "Platform/02-installer/", "Platform/03-worker/", "Platform/04-controller/", "Platform/05-resource/", "Platform/06-console/", "Platform/07-console-module/", "CONSOLE-MODULE.md", "README.md")
-LOCALIZATION = Path("Platform/06-console/data/localization.tsv")
+FULL_ENGLISH_DONE = ("Platform/common/", "Platform/01-store/", "Platform/02-installer/", "Platform/03-worker/", "Platform/04-controller/", "Platform/05-resource/", "Platform/06-console/", "Platform/07-console-module/", "README.md")
+LOCALIZATION = Path("Platform/07-console-module/data/localization.tsv")
 SOURCE_SUFFIXES = {".md", ".tsv", ".json", ".yaml", ".yml"}
 
 

@@ -206,9 +206,10 @@ class LayoutBase(unittest.TestCase):
         (cases / "one.subsystem.yaml").write_text(manifest("    a: {}"))
         (cases / "two.subsystem.yaml").write_text(manifest("    a: {type: int}", "tables: [t]\n"))
         (cases / "bad.subsystem.yaml").write_text("name: X\n")
-        course = self.root / "Source/tests/testdata"
+        course = self.root / "Platform/common/data/testsub"
         course.mkdir(parents=True)
-        (course / "sub.subsystem.yaml").write_text(manifest())
+        for name in ("testsub", "testsub2"):
+            (course / f"{name}.subsystem.yaml").write_text(manifest())
 
     def vectors(self):
         generate(self.root)
@@ -223,7 +224,7 @@ class LayoutBase(unittest.TestCase):
 
 class GeneratorTests(LayoutBase):
     def test_inputs_and_repeat(self):
-        self.assertEqual([c for c, _ in accepted_inputs(self.root)], ["corpus-one", "corpus-two", "course-sub"])
+        self.assertEqual([c for c, _ in accepted_inputs(self.root)], ["corpus-one", "corpus-two", "course-testsub", "course-testsub2"])
         self.vectors()
         vec = self.root / VECTORS
         first = {p.name: p.read_bytes() for p in (vec / "expect").iterdir()} | {"cases": (vec / "cases.tsv").read_bytes()}
@@ -264,7 +265,7 @@ class ChapterTests(LayoutBase):
         self.vectors()
         got = self.chapter()
         self.assertEqual(got.errors, [])
-        self.assertEqual((got.stats["canonical_views"], got.stats["canonical_vectors"]), (3, 3))
+        self.assertEqual((got.stats["canonical_views"], got.stats["canonical_vectors"]), (4, 4))
         self.assertLess(got.stats["canonical_mutants_killed"], got.stats["canonical_mutants"])
         self.assertTrue(any("changes no vector" in m for m in self.messages(strict=True)))
 
@@ -275,9 +276,9 @@ class ChapterTests(LayoutBase):
         self.assertTrue(any("differs from the built view" in m for m in self.messages()))
         generate(self.root)
         text = (vec / "cases.tsv").read_text()
-        (vec / "cases.tsv").write_text("\n".join(l for l in text.split("\n") if not l.startswith("course-sub")))
-        (vec / "expect/course-sub.json").unlink()
-        self.assertTrue(any("no vector for the accepted input Source/tests/testdata/sub.subsystem.yaml" in m
+        (vec / "cases.tsv").write_text("\n".join(l for l in text.split("\n") if not l.startswith("course-testsub")))
+        (vec / "expect/course-testsub.json").unlink()
+        self.assertTrue(any("no vector for the accepted input Platform/common/data/testsub/testsub.subsystem.yaml" in m
                             for m in self.messages()))
         (vec / "notes.txt").write_text("x")
         self.assertTrue(any("unsupported entry" in m for m in self.messages()))
