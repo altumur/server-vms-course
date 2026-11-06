@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/journal bucket.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/journal/bucket.tsv sha256 8e49f8576a31dd758ae3f92291918a950030d007360c200e158878f23068c98a
+# source Platform/common/vectors/journal/bucket.tsv sha256 1a8e96ef9e71e490b6a7255bde3f8045e980d94597f37960d0fd659079c4ebe7
 case	input	exit	stdout
 line-3	line-3.json	0	{"ids":["e1-61-63-1-77-1","e1-61-63-1-77-2"],"torn":0,"garbled":0,"duplicate":0}
 line-4	line-4.json	0	{"ids":[],"torn":0,"garbled":0,"duplicate":0}

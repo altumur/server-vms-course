@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/record cases.tsv (gen_vectors.py); compare subset.
-# source Platform/common/vectors/record/cases.tsv sha256 38d3c2d92eba00155492fa81207e3ee8620d2e94f288eb0d3ce2370451a371d8
+# source Platform/common/vectors/record/cases.tsv sha256 f530ac185b86f72060b60623a0a976cfa97fa78bc3da0ae7218bfd38433abff6
 case	input	exit	stdout
 line-7	line-7.json	0	{"result":"ok","term":1,"holder":"hold"}
 line-8	line-8.json	0	{"result":"ok","term":2,"holder":"m1"}

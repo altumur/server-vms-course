@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+import tsv_input
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -47,9 +48,14 @@ class GenError(Exception):
 class Table:
     def __init__(self, text, name="table"):
         self.name = name
-        self.sha256 = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        try:
+            source = text if isinstance(text, tsv_input.Table) else tsv_input.parse(text, names=COLUMNS, where=name)
+        except tsv_input.TSVError as exc:
+            raise GenError(f"{name}: source columns/cells: {exc}") from None
+        self.sha256 = source.sha256
+        self.sources = source.sources
         self.vars, self.lims, self.fns, self.rows = {}, [], {}, []
-        lines = text.splitlines()
+        lines = source.text.split("\n")
         for line in lines:
             if m := re.match(r"#var (\w+) (\S+) — ", line):
                 self.vars[m[1]] = m[2]
@@ -65,15 +71,9 @@ class Table:
                 raise GenError(f"{name}: header line out of form: {line}")
         if set(self.vars) != {"body", "sock", "lone", "lim"}:
             raise GenError(f"{name}: #var must declare body, sock, lone, lim (got {sorted(self.vars)})")
-        body = [line for line in lines if not line.startswith("#")]
-        if not body or body[0].split("\t") != COLUMNS:
-            raise GenError(f"{name}: columns must be {COLUMNS}")
         last_group, seen, ids = None, set(), set()
-        for k, line in enumerate(body[1:], 1):
-            cells = line.split("\t")
-            if len(cells) != len(COLUMNS):
-                raise GenError(f"{name}: row {k}: {len(cells)} cells, expected {len(COLUMNS)}")
-            row = dict(zip(COLUMNS, cells))
+        for k, (_, cells) in enumerate(source.rows, 1):
+            row = dict(cells)
             where = f"{name}: n {row['n']}"
             if row["n"] != str(k):
                 raise GenError(f"{where}: n must be {k}")
@@ -1196,7 +1196,11 @@ def generate(table_path=DEFAULT_TABLE, out=DEFAULT_OUT):
         rel = table_path.relative_to(ROOT).as_posix()
     except ValueError:
         rel = table_path.name
-    table = Table(table_path.read_text(encoding="utf-8"), table_path.name)
+    try:
+        source = tsv_input.read(table_path, names=COLUMNS, root=ROOT)
+    except tsv_input.TSVError as exc:
+        raise GenError(str(exc)) from None
+    table = Table(source, table_path.name)
     go_src, py_src = build(table, rel)
     gdir, pdir = out / "go/checks", out / "python"
     gdir.mkdir(parents=True, exist_ok=True)

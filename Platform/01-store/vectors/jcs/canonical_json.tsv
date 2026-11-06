@@ -3,7 +3,7 @@
 # A row is: a JSON text as it may come; its RFC 8785 form; the sha256 of that form's UTF-8, hex. Both sides read every
 # input, canonicalize it and compare both columns. Required (the ADR): <>& unescaped, 1.0 → 1, 1e21 → 1e+21, -0 → 0,
 # nesting, a name outside the BMP (sorted by UTF-16 code units: U+1F600 before U+FB33), the control characters,
-# the empty object and list. Owner: «Спецификация» (the Specification session); the product's conformance — its own acceptance against this table
+# the empty object and list. Owner: «Specification» (the Specification session); the product's conformance — its own acceptance against this table
 # (ADR-0080 addendum 16, ADR-0083).
 # A cell is read byte for byte between TABs, nothing is unescaped: a TAB or a line break inside a JSON text is
 # written as JSON writes it inside a string — the escape `\t`, `\n` (two characters, the JSON's own), never raw.

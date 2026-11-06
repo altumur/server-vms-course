@@ -23,7 +23,7 @@ import "normgen/p01-1/flags"
 //	the flags — forms/daemon-flags.tsv (commands ∋ leave; f.<Field> of package flags):
 //	  -sockets dir
 //	the refusals — forms/refusals.tsv:
-//	  1.3 row 9 box_last_voter — 409 refused (P/01.3 Н1.3 box); with part refusals: refusals.BoxLastVoter
+//	  1.3 row 9 box_last_voter — 409 refused (P/01.3 N1.3 box); with part refusals: refusals.BoxLastVoter
 func Leave(f *flags.Flags, env Env) int {
 	return NotInStage("leave", env)
 }

@@ -5,7 +5,7 @@
  "case": "06-rights-8133",
  "variant": "",
  "cells": {
-  "family": "<sub>/opbusy/<корень>",
+  "family": "<sub>/opbusy/<root>",
   "key": "testsub/opbusy/testsub.c1",
   "kind": "row",
   "mode": "writer",

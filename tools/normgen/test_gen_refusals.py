@@ -7,6 +7,7 @@
 - таблица вне формы — отказ генератора (GenError);
 - пакет Б с частями door и refusals собирается и проходит go vet; Check, LogLine, Exit ведут себя по каталогу.
 """
+import hashlib
 import shutil
 import subprocess
 import sys
@@ -122,20 +123,32 @@ class GenRefusals(unittest.TestCase):
             ("\tstart\texit 2\t-\t-\t-\trights file", "\tstart\texit 3\t-\t-\t-\trights file"),
             ("\tstart\texit 2\t-\t-\t-\trights file", "\tstart\texit 2\tbadkey\t-\t-\trights file"),
             ("\thttp\t409\tconflict\tindex,key?", "\thttp\t409\tconflict\tindex,index"),
-            ("Retry-After: 1\t-\tP/01.1 Н4; P/01.3", "Retry-After 1\t-\tP/01.1 Н4; P/01.3"),
+            ("Retry-After: 1\t-\tP/01.1 N4; P/01.3", "Retry-After 1\t-\tP/01.1 N4; P/01.3"),
             ("key_rules\thttp\t400", "key_rules\tgate\t400"),
         ]
         for old, new in cases:
             with self.subTest(new=new):
-                with self.assertRaises(GenError):
+                with self.assertRaises(GenError) as raised:
                     gen_refusals.Table(mutate(TABLE, old, new))
+                if new.startswith("Retry-After 1"):
+                    self.assertIn("header 'Retry-After 1'", str(raised.exception))
 
     def test_kit_part_refusals(self):
         import build_kit
         dst = Path(self.tmp.name) / "kit"
         manifest = build_kit.build(dst, "example.com/attempt/01-store", ["door", "refusals"])
         self.assertEqual(manifest["parts"], ["writecheck", "door", "refusals"])
-        self.assertEqual(set(manifest["provenance"]["refusals"]), {"form", "generator", "judge", "output", "judged"})
+        prov = manifest["provenance"]["refusals"]
+        self.assertEqual(set(prov), {"form", "generator", "generators", "judge", "output", "judged"})
+        root = HERE.parent.parent
+        generators = {f["path"]: f["sha256"] for f in prov["generators"]}
+        helper = "tools/normgen/tsv_input.py"
+        self.assertEqual(generators[helper], hashlib.sha256((root / helper).read_bytes()).hexdigest())
+        forms = {f["path"]: f["sha256"] for f in prov["form"]}
+        table = gen_refusals.DEFAULT_TABLE.relative_to(root).as_posix()
+        self.assertEqual(forms[table], hashlib.sha256((root / table).read_bytes()).hexdigest())
+        proof = "Platform/common/data/cell-json-sha256.tsv"
+        self.assertEqual(forms[proof], hashlib.sha256((root / proof).read_bytes()).hexdigest())
         mod = dst / "01-store"
         (mod / "go.mod").write_text("module example.com/attempt/01-store\n\ngo 1.22\n", encoding="utf-8")
         (mod / "internal/refusals/behaviour_test.go").write_text(BEHAVIOUR, encoding="utf-8")

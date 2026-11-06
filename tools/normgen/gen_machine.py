@@ -684,10 +684,14 @@ def kit_files(part, module, out=DEFAULT_OUT):
 
 
 def provenance(part):
+    import tsv_input
+
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()}
-    return {"form": [entry(machine_forms()[part]), entry(L.form("README.md"))],
+    forms = tsv_input.source_files(machine_forms()[part], root=ROOT) + [L.form("README.md")]
+    return {"form": [entry(p) for p in dict.fromkeys(forms)],
             "generator": entry(Path(__file__).resolve()),
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
             "handwritten": [entry(HERE / "gen_checks.py")], "judge": entry(JUDGE)}
 
 

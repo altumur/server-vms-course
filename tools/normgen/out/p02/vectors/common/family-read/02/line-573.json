@@ -5,7 +5,7 @@
  "case": "02-k0008",
  "variant": "",
  "cells": {
-  "family": "platform/manifest/<sub>/canonical/<форма>",
+  "family": "platform/manifest/<sub>/canonical/<form>",
   "key": "platform/manifest/testsub/canonical/",
   "kind": "row",
   "mode": "reader",

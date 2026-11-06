@@ -3,8 +3,9 @@
 Читает каталог `Platform/common/data/catalog.tsv` (семьи урока-владельца со схемой), схему семьи
 `Platform/<NN-процесс>/data/<семья>.schema.json` (JSON Schema 2020-12 со словами слоя 3 `x-*`), сверяет с ней
 `<семья>.layers.tsv` (место, слово, значение — то же в схеме), берёт из `<семья>.outcomes.tsv` только путь, читателя,
-приоритет и единицу (исход словами — проза нормы, генератор его не читает), грамматику плейсхолдеров ключа — из первой
-таблицы `Platform/common/data/README.md`. Строит пакет Go 1.22 только на стандартной библиотеке `<out>/go/families`:
+приоритет и единицу (исход словами — проза нормы, генератор его не читает), грамматику плейсхолдеров ключа — из
+`Platform/common/data/key-placeholders.tsv` (для старых выгрузок — первая таблица README). Единицы закрыты
+`data/outcome-units.tsv`; словарь `common/ru` не является входом. Строит пакет Go 1.22 на стандартной библиотеке:
 `families.go` (по *Family на семью, типизированная строка, Read<Семья>, Items, ключ) и ручную среду
 `famrt/go/runtime.go` (проход стека В7: кодек items, слой 3, JSON Schema, пути отказа, исходы по читателю).
 
@@ -26,11 +27,14 @@ sys.path.insert(0, str(HERE))
 
 from gen_checks import GenError, go_str, gofmt  # noqa: E402
 import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import tsv_input  # noqa: E402
 L = lesson.CURRENT
 
 CATALOG = ROOT / "Platform/common/data/catalog.tsv"
 KEYS_README = ROOT / "Platform/common/data/README.md"
 PLACEHOLDER_LABELS = ROOT / "Platform/common/placeholders.tsv"
+KEY_GRAMMARS = ROOT / "Platform/common/data/key-placeholders.tsv"
+OUTCOME_UNITS = ROOT / "Platform/common/data/outcome-units.tsv"
 PLATFORM = ROOT / "Platform"
 RUNTIME_FLAT = HERE / "famrt/go/runtime.go"
 RUNTIME_DOC = HERE / "famrt2/go/runtime.go"     # режим схемы данными (уроки кроме P/01; ADR-0125 доп. (5))
@@ -42,7 +46,8 @@ DEFAULT_LESSON = L.nn
 KIT_DIRS = ("families",)
 CATALOG_COLUMNS = ["key", "kind", "owner", "ops", "readers", "when", "version", "schema", "norm"]
 OUTCOME_COLUMNS = ["path", "reader", "outcome", "priority", "unit", "norm"]
-UNITS = ("строка", "поле", "элемент")
+UNITS = ("row", "field", "element")
+LEGACY_UNITS = ("строка", "поле", "элемент")
 ROOT_WORDS = {"$schema", "type", "properties", "additionalProperties", "required", "$defs", "description"}
 PLACE_WORDS = {"$ref", "description", "type", "x-codec", "x-whole", "x-time", "x-integer", "minimum", "maximum",
                "x-max-bytes", "enum"}
@@ -68,20 +73,44 @@ def rel(path):
 
 
 def tsv(path, columns):
-    lines = [x for x in Path(path).read_text(encoding="utf-8").split("\n") if x and not x.startswith("#")]
-    if not lines or lines[0].split("\t") != columns:
-        raise GenError(f"{rel(path)}: header must be {'<TAB>'.join(columns)}")
-    out = []
-    for no, x in enumerate(lines[1:], 2):
-        cols = x.split("\t")
-        if len(cols) != len(columns):
-            raise GenError(f"{rel(path)}: row {no}: {len(cols)} columns, expected {len(columns)}")
-        out.append(dict(zip(columns, cols)))
-    return out
+    try:
+        return [row for _, row in tsv_input.read(path, names=columns, root=ROOT).rows]
+    except tsv_input.TSVError as exc:
+        raise GenError(str(exc)) from None
+
+
+def grammar_sources():
+    if KEY_GRAMMARS.is_file():
+        return [KEY_GRAMMARS]
+    return [KEYS_README] + ([PLACEHOLDER_LABELS] if PLACEHOLDER_LABELS.is_file() else [])
+
+
+def unit_words():
+    """Semantic units from this source's registry; legacy exports keep their raw words."""
+    if OUTCOME_UNITS.is_file():
+        words = [r["unit"] for r in tsv(OUTCOME_UNITS, ["unit", "meaning"])]
+        if len(words) != len(UNITS) or set(words) != set(UNITS):
+            raise GenError(f"{rel(OUTCOME_UNITS)}: closed units must be {UNITS}")
+        return dict(zip(UNITS, UNITS))
+    if KEY_GRAMMARS.is_file():
+        raise GenError(f"{rel(OUTCOME_UNITS)}: missing canonical unit registry")
+    return dict(zip(UNITS, LEGACY_UNITS))
 
 
 def placeholders():
-    """Первая таблица README ключей: плейсхолдер → грамматика (переносимое выражение ^(?:…)$)."""
+    """Typed registry (legacy: README): placeholder → portable grammar ^(?:…)$."""
+    if KEY_GRAMMARS.is_file():
+        out = {}
+        for row in tsv(KEY_GRAMMARS, ["placeholder", "pattern", "example", "norm"]):
+            label, grammar = row["placeholder"], row["pattern"]
+            if label in out and out[label] != grammar:
+                raise GenError(f"{rel(KEY_GRAMMARS)}: conflicting grammars for {label}")
+            if not label or not grammar:
+                raise GenError(f"{rel(KEY_GRAMMARS)}: empty placeholder or grammar")
+            out[label] = grammar
+        if not out:
+            raise GenError(f"{rel(KEY_GRAMMARS)}: no placeholder grammar")
+        return out
     out, inside = {}, False
     for x in KEYS_README.read_text(encoding="utf-8").split("\n"):
         if x.startswith("| Placeholder | Grammar |"):
@@ -130,7 +159,7 @@ def template(key, grammar):
             continue
         if part.startswith("<") or part == "*":
             if part not in grammar:
-                raise GenError(f"{key}: placeholder {part} has no grammar in {rel(KEYS_README)}")
+                raise GenError(f"{key}: placeholder {part} has no grammar in {rel(grammar_sources()[0])}")
             segs.append(("", part, grammar[part]))
         else:
             segs.append((part, "", ""))
@@ -286,12 +315,13 @@ def load_family(row, grammar):
     n_layers = check_layers(schema, layers) if layers.is_file() else 0
     outcomes_path = schema_path.with_name(base + ".outcomes.tsv")
     outcomes = []
+    units = tuple(unit_words().values())
     for r in tsv(outcomes_path, OUTCOME_COLUMNS):
         p = r["path"]
         if p and (not p.startswith("/") or "*" in unpointer(p) or schema.at("/properties" + p) is None):
             raise GenError(f"{rel(outcomes_path)}: path {p!r} — \"\" or a field of the row (no «*»)")
-        if not re.fullmatch(r"0|[1-9][0-9]*", r["priority"]) or r["unit"] not in UNITS:
-            raise GenError(f"{rel(outcomes_path)}: priority — an integer ≥ 0, unit — one of {UNITS}")
+        if not re.fullmatch(r"0|[1-9][0-9]*", r["priority"]) or r["unit"] not in units:
+            raise GenError(f"{rel(outcomes_path)}: priority — an integer ≥ 0, unit — one of {units}")
         outcomes.append({"path": p, "reader": r["reader"], "priority": int(r["priority"]), "unit": r["unit"]})
     if not any(o["path"] == "" for o in outcomes):
         raise GenError(f"{rel(outcomes_path)}: no row of the empty path (the readers)")
@@ -402,14 +432,15 @@ def load_family_doc(row, grammar):
     n_layers = check_layers(schema, layers) if layers.is_file() else 0
     outcomes_path = schema_path.with_name(out_base + ".outcomes.tsv")
     outcomes = []
+    units = tuple(unit_words().values())
     for r in tsv(outcomes_path, OUTCOME_COLUMNS):
         p = r["path"]
         wild = place(schema.doc, p) if p.startswith("/") else None
         if p and (not p.startswith("/") or (kind == "row" and wild is None)):
             raise GenError(f"{rel(outcomes_path)}: path {p!r} — \"\" or a place of the row schema (В7: «*» — a name "
                            f"or an item); object, file — a JSON Pointer")
-        if not re.fullmatch(r"0|[1-9][0-9]*", r["priority"]) or r["unit"] not in UNITS:
-            raise GenError(f"{rel(outcomes_path)}: priority — an integer ≥ 0, unit — one of {UNITS}")
+        if not re.fullmatch(r"0|[1-9][0-9]*", r["priority"]) or r["unit"] not in units:
+            raise GenError(f"{rel(outcomes_path)}: priority — an integer ≥ 0, unit — one of {units}")
         outcomes.append({"path": p, "reader": r["reader"], "priority": int(r["priority"]), "unit": r["unit"],
                          "wild": wild or {}})
     if not any(o["path"] == "" for o in outcomes):
@@ -532,15 +563,16 @@ def go_module(fams, lesson):
         for s in f["sources"]:
             if s is not None:
                 head += f"// {rel(s)} sha256 {sha(s)}\n"
-    head += f"// {rel(KEYS_README)} sha256 {sha(KEYS_README)}\n"
-    if PLACEHOLDER_LABELS.is_file():
-        head += f"// {rel(PLACEHOLDER_LABELS)} sha256 {sha(PLACEHOLDER_LABELS)}\n"
+    for path in grammar_sources() + ([OUTCOME_UNITS] if OUTCOME_UNITS.is_file() else []):
+        head += f"// {rel(path)} sha256 {sha(path)}\n"
     head += ("\n"
              f"// Package families — the reading of the data families of P/{lesson} (ADR-0125 № 5): by family a *Family\n"
              "// (Judge, Matches, OutcomesFor, Readers), the typed row Read<Family> and Items, the key. What an outcome does is\n"
              "// the prose of the norm (the column outcome of <family>.outcomes.tsv) — not here.\n"
              "package families\n" + ('\nimport "strconv"\n' if uses_bool else ""))
-    parts = [head] + [(go_family_doc if DOC_MODE else go_family)(f) for f in fams]
+    units = unit_words()
+    parts = [head, f"const unitRow = {go_str(units['row'])}\nconst unitField = {go_str(units['field'])}"] \
+        + [(go_family_doc if DOC_MODE else go_family)(f) for f in fams]
     parts.append("// All — the families in the order of the catalog.\nvar All = []*Family{" +
                  ", ".join(f["name"] for f in fams) + "}")
     parts.append("// ByKey — the family of a catalog key template; nil — none.\nfunc ByKey(key string) *Family {\n"
@@ -574,12 +606,11 @@ def kit_files(out=DEFAULT_OUT):
 
 
 def sources(lesson=DEFAULT_LESSON):
-    out = [CATALOG, KEYS_README]
-    if PLACEHOLDER_LABELS.is_file():
-        out.append(PLACEHOLDER_LABELS)
+    out = [CATALOG] + grammar_sources() + ([OUTCOME_UNITS] if OUTCOME_UNITS.is_file() else [])
     for f in families(lesson):
         out += [s for s in f["sources"] if s is not None]
-    return out
+    return list(dict.fromkeys(p for src in out for p in
+                              (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src])))
 
 
 def provenance():
@@ -587,6 +618,7 @@ def provenance():
     def entry(path):
         return {"path": rel(path), "sha256": sha(path)}
     return {"form": [entry(p) for p in sources()], "generator": entry(Path(__file__).resolve()),
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
             "handwritten": [entry(RUNTIME)], "judge": entry(JUDGE)}
 
 

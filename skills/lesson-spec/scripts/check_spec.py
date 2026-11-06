@@ -1245,6 +1245,8 @@ class Check:
 
     def read(self, path):
         try:
+            if path.suffix == ".tsv":
+                return path.read_bytes().decode("utf-8")
             return path.read_text(encoding="utf-8")
         except (OSError, UnicodeError) as exc:
             self.error(path, str(exc))
@@ -1649,7 +1651,22 @@ class Check:
         rows = []
         if text is None:
             return rows
-        for line_no, line in enumerate(text.splitlines(), 1):
+        import source_cells
+        first = next((line.split("\t") for line in text.split("\n") if line and not line.startswith("#")), [])
+        names, decoded, problems = source_cells.table(text, header, bool(header and first != header))
+        if problems:
+            for problem in problems:
+                self.error(path, problem)
+            return rows
+        if names:
+            columns = header if header is not None else (list(decoded[0][1]) if decoded else [])
+            for line_no, row in decoded:
+                if len(row) != width:
+                    self.error(path, f"line {line_no}: expected {width} TSV columns, got {len(row)}")
+                else:
+                    rows.append((line_no, [row[name] for name in columns]))
+            return rows
+        for line_no, line in enumerate(text.split("\n"), 1):
             if not line or line.startswith("#"):
                 continue
             cols = line.split("\t")

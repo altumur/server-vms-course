@@ -39,6 +39,7 @@ import gate  # noqa: E402 — общий разбор gate (ревью Codex С4
 import vector_consumers
 import common_vectors  # noqa: E402 — общие пакеты векторов урока (ADR-0125 доп. (5) п. 5)
 import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import tsv_input  # noqa: E402 — source transport inputs in P/01 provenance
 L = lesson.CURRENT
 
 DEFAULT_OUT = L.out
@@ -931,7 +932,7 @@ type Config struct {
     DataDir string                       // fresh per scenario; @reopen opens the same directory again
 }
 type Core interface {                    // your value
-    apidoor.Handler[Ctx]                 // Get, List, Write, QueryRefused — your core of Н3; embed coreadapter.NotInStage
+    apidoor.Handler[Ctx]                 // Get, List, Write, QueryRefused — your core of N3; embed coreadapter.NotInStage
                                          // for Rights, Status, Join, Leave, Metrics (503 «not in this stage»)
     Context(call Call, header map[string]string) Ctx // Call{Sock}: "acc" — the role socket, "admin" — admin.sock
     Close()
@@ -948,6 +949,33 @@ clock (what was written must read back), `@parallel K` — the next request K ti
 def counts(root=ROOT):
     """→ {пакет: число строк-векторов} — для отчёта и сверки покрытия."""
     return {"jcs": len(read_jcs(root)[0]), "rights-evaluator": len(read_rights(root)[0])}
+
+
+def sources(part, root=ROOT):
+    """P/01 vector/stage inputs, including physical source transport proofs."""
+    root = Path(root)
+    paths = [root / STAGES]
+    if part == "vectors":
+        for d in PACKAGES.values():
+            paths.append(root / d["dir"] / d["table"])
+            paths.extend(root / d["dir"] / f for f in d["files"])
+        paths.append(root / L.rel / "forms/write-checks.tsv")
+        # Older exports use BEFORE_FORM and do not read either registry.
+        # When consumers is present, composition still requires lessons.tsv.
+        if (root / common_vectors.CONSUMERS).is_file():
+            paths += [root / common_vectors.CONSUMERS, root / vector_consumers.LESSONS]
+        for name, table in common_vectors.composition(L.key, root):
+            directory = root / "Platform/common/vectors" / name
+            paths.append(directory / table)
+            paths.extend(directory / f for f in common_vectors.DECLS[name]["files"])
+    elif part == "stagetests":
+        paths.append(root / L.rel / "forms/refusals.tsv")
+        for chapter in sorted((root / L.rel / "acceptance").iterdir()):
+            paths.extend(p for p in (chapter / "scenarios.tsv", chapter / "seams.tsv") if p.is_file())
+    else:
+        raise GenError(f"unknown P/01 test part {part!r}")
+    return list(dict.fromkeys(p for src in paths for p in
+                             (tsv_input.source_files(src, root=root) if src.suffix == ".tsv" else [src])))
 
 
 def generate(root=ROOT, out=DEFAULT_OUT):

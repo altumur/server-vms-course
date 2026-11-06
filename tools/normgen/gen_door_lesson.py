@@ -617,10 +617,20 @@ def kit_files(out=DEFAULT_OUT):
 
 
 def provenance():
+    import tsv_input
+
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()}
     spec = Path(ROOT) / L.rel / "spec" / f"{L.key}.api.openapi.yaml"
-    return {"form": [entry(spec)], "generator": entry(Path(__file__).resolve()),
+    docs = build(ROOT)[-1]
+    # Body schemas can load imported OpenAPI files after route parsing.
+    bodies_source(docs, str(spec.relative_to(ROOT)), hashlib.sha256(spec.read_bytes()).hexdigest())
+    forms = sorted(docs.cache)
+    roles = L.form("door-roles.tsv")
+    if roles.is_file():
+        forms += tsv_input.source_files(roles, root=ROOT)
+    return {"form": [entry(p) for p in dict.fromkeys(forms)], "generator": entry(Path(__file__).resolve()),
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
             "handwritten": [entry(RUNTIME), entry(SCHEMA_RT)],
             "judge": entry(JUDGE)}
 

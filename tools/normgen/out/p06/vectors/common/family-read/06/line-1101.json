@@ -10,7 +10,7 @@
   "kind": "row",
   "mode": "reader",
   "who": "[\"console\", \"domainagent\"]",
-  "text": "{\"name\":\"Подъезд\",\"parent\":\"fedcba9876543210fedcba9876543210\",\"members\":\"testsub/counters/c1\"}"
+  "text": "{\"name\":\"\\u041f\\u043e\\u0434\\u044a\\u0435\\u0437\\u0434\",\"parent\":\"fedcba9876543210fedcba9876543210\",\"members\":\"testsub/counters/c1\"}"
  },
  "files": {}
 }

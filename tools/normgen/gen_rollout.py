@@ -230,12 +230,18 @@ def kit_files(module, out=DEFAULT_OUT):
 
 
 def provenance():
+    import tsv_input
+
     import hashlib
 
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()}
-    return {"form": [entry(Path(ROOT) / L.rel / TRACES), entry(Path(ROOT) / L.rel / "forms/rollout-poll.machine.yaml")],
-            "generator": entry(Path(__file__).resolve()), "handwritten": [], "judge": entry(JUDGE)}
+    forms = tsv_input.source_files(Path(ROOT) / L.rel / TRACES, root=ROOT)
+    forms.append(Path(ROOT) / L.rel / "forms/rollout-poll.machine.yaml")
+    return {"form": [entry(p) for p in dict.fromkeys(forms)],
+            "generator": entry(Path(__file__).resolve()),
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
+            "handwritten": [], "judge": entry(JUDGE)}
 
 
 KIT_MD = """

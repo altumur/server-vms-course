@@ -52,13 +52,13 @@ class Forms(unittest.TestCase):
     def test_flag_required_and_cel(self):
         self.edit("forms/daemon-flags.tsv", "-isolated\tbool\tfalse\toff\ttrue\t", "-isolated\tbool\tfalse\toff\tfalse\t")
         self.assertTrue(self.flags())
-        self.edit("forms/daemon-flags.tsv", '"-join" in f\tP/01.3 Н1.3 join', '"-join" in\tP/01.3 Н1.3 join')
+        self.edit("forms/daemon-flags.tsv", '"-join" in f\tP/01.3 N1.3 join', '"-join" in\tP/01.3 N1.3 join')
         self.assertTrue(self.flags())
 
     def test_flag_type_and_commands(self):
         self.edit("forms/daemon-flags.tsv", "-tuning\tenum:default|lan|slow\t", "-tuning\tenum:default|lan|fast\t")
         self.assertTrue(self.flags())
-        self.edit("forms/daemon-flags.tsv", "\trecover\t\tP/01.3 Н3 recover", "\tdaemon\t\tP/01.3 Н3 recover")
+        self.edit("forms/daemon-flags.tsv", "\trecover\t\tP/01.3 N3 recover", "\tdaemon\t\tP/01.3 N3 recover")
         self.assertTrue(self.flags())
 
     def test_two_hyphens_only_from(self):               # --from — имя прозы; иное с двумя дефисами — отказ

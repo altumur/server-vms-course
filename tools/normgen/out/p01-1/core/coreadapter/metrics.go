@@ -15,7 +15,7 @@ import "normgen/p01-1/apidoor"
 //	spec/01.3-store.norms.md «N2 Doors»:
 //	  req: P/01.3-R016 — GET `/metrics`: The list of text series of N1.3; correct escaping of labels
 //	the refusals — forms/refusals.tsv:
-//	  1.3 row 4 service_method — 405 badrequest (P/01.3 Н2); with part refusals: refusals.ServiceMethod
+//	  1.3 row 4 service_method — 405 badrequest (P/01.3 N2); with part refusals: refusals.ServiceMethod
 func (s *Store) Metrics(c Ctx) apidoor.Answer {
 	return notInStage(apidoor.OpMetrics)
 }

@@ -5,7 +5,7 @@
  "case": "06-0031",
  "variant": "",
  "cells": {
-  "family": "platform/servers/<сервер>",
+  "family": "platform/servers/<host>",
   "key": "platform/servers/srv-a",
   "kind": "row",
   "mode": "writer",
