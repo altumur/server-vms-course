@@ -11,9 +11,11 @@ N1.1 without a change of behaviour.
 
 Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
+`PBKDF2_ITERATIONS` has exactly one binding: its uniquely named row in the [P/08 form](../../08-domain/forms/runtime-constants.tsv). In `form`, the metavariable `<PBKDF2_ITERATIONS>` expands only to that row value as unpadded ASCII decimal digits; the `hash` operand uses the same value. Neither brackets nor the identifier are emitted on the wire; no other iteration count, alias, setting or additional accepted format is introduced.
+
 ```yaml
-form:     pbkdf2-sha256$600000$<salt: 32 lowercase hex>$<key: 64 lowercase hex>
-hash:     key = PBKDF2-HMAC-SHA256(the password — UTF-8 bytes, the salt — 16 random bytes, 600000 iterations, length 32 bytes);
+form:     pbkdf2-sha256$<PBKDF2_ITERATIONS>$<salt: 32 lowercase hex>$<key: 64 lowercase hex>
+hash:     key = PBKDF2-HMAC-SHA256(the password — UTF-8 bytes, the salt — 16 random bytes, PBKDF2_ITERATIONS iterations, length 32 bytes);
           the writer writes hex in lowercase
 verify:   a string by form — compute the key from the password and the salt of the string and compare it with the key of the string in constant time: equal —
           the password fits; a string not by form (another algorithm or number of iterations, uppercase hex, another length, an extra part,

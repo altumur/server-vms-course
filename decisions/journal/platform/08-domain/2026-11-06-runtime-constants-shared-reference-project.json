@@ -1,0 +1,48 @@
+{
+  "status": "assigned four shared references applied; canonical member-entry description applied narrowly; canonical book-row keywords remain read-only",
+  "base": "7b785e5e2e93cf93b562a405650cce30c5733c2a",
+  "description": {
+    "path": "Platform/common/data/common.schema.json",
+    "pointer": "/$defs/common.domain_member_entry/description",
+    "before": "the member entry Entry (P/08.3 N1.1); by — only at admitted, Entry not larger than ENTRY_MAX 1240 bytes of JCS (P/08.10 N1.5) — checks of the lesson at the writer, not of the form",
+    "after": "the member entry Entry (P/08.3 N1.1); by — only at admitted, Entry not larger than ENTRY_MAX bytes of JCS (P/08.10 N1.5) — checks of the lesson at the writer, not of the form",
+    "validation_tree_unchanged": true,
+    "status": "applied after exact coord103 assignment; this description only, no keyword change"
+  },
+  "password_hash_closed_reference": {
+    "path": "Platform/common/contracts/password-hash.md",
+    "block": "first yaml fence, form/hash entries",
+    "before_form": "pbkdf2-sha256$600000$<salt: 32 lowercase hex>$<key: 64 lowercase hex>",
+    "proposed_form": "pbkdf2-sha256$<PBKDF2_ITERATIONS>$<salt: 32 lowercase hex>$<key: 64 lowercase hex>",
+    "binding": "Only PBKDF2_ITERATIONS from Platform/08-domain/forms/runtime-constants.tsv. Expand to its unpadded ASCII decimal digits, never literal angle brackets or arbitrary iterations. The current encoding stays byte-exact pbkdf2-sha256$600000$... . No new accepted cost, wire alias, runtime option or decoder.",
+    "proposed_hash": "replace only the iteration operand 600000 by PBKDF2_ITERATIONS in the human algorithm sentence",
+    "producer_readonly_evidence": "Current tools/normgen Python grep has only vector bindings for password-hash, no form/hash extractor. Subject checker must judge this exact closed reference before source READY.",
+    "accepted_binding": "Exactly one P08 row, unpadded ASCII decimal; same constant in form/hash; no new alias/options/accepted costs"
+  },
+  "accept_closed_references": {
+    "paths": [
+      "Platform/common/contracts/accept.md",
+      "Platform/common/ru/contracts/accept.md"
+    ],
+    "scope": "BATCH_LIMIT and KNOCKS source references in the relay batch limits block; use the existing positive integer rows from P08, no extra syntax/column/class; thresholds and wire payloads unchanged"
+  },
+  "schema_equality_project": "/home/pilot/spec103/p08-constants-equality-project.json",
+  "actual_shared": {
+    "Platform/common/contracts/accept.md": {
+      "sha256": "0ded199cab5d9c84be5abc65a4097f6bd869710459567ff01deae088ff1442db",
+      "relevant_block": "```yaml\nBATCH_LIMIT:   the P/08 form value     # = 4 × BODY_LIMIT (the section «Generation, mark, limits»); a body of POST /api/relay/<relay>\n                          # larger — 413 before parsing; the entries — in the order of the member names; a member larger than BODY_LIMIT is not sent (log)\nKNOCKS:        the P/08 form value; a knock body at most 256 KiB, with the field row — 768 KiB: the section row up to 512 KiB; at the relay — KNOCKS strangers in memory, the last one from a name\n               replaces the former; stranger KNOCKS + 1 evicts the oldest knock (by the reception time); the evicted one learns of it\n               only by the holder's knocking (the section «The knock») — there is no new refusal\nholder:        at the holder, more than KNOCKS knocks in a batch — those beyond the first KNOCKS by name are skipped without a write; a knock with a body\n               larger than 256 KiB, with the field row — larger than 768 KiB — skipped without a write (as a knock out of form, P/08.3 N3 step 3); the batch lives; 413 — only\n               a whole batch larger than BATCH_LIMIT\nanswer:        the holder's answer to the client of the agent and of the relay (carry on POST and GET /api/carry, RelayAnswer on\n               POST /api/relay) the client reads at most BATCH_LIMIT; larger — as «no answer» (P/09.1 N3 step 5:\n               the next pass, the base as before), a log line without the value of the body; there is no new number\n               (C09-ANSWER-LIMIT-01, the Architect's decision)\n```"
+    },
+    "Platform/common/ru/contracts/accept.md": {
+      "sha256": "3f01ba6d71bd8c13da6c0b1965485fb335d54893c41f5995ffde3b1eded8ec10",
+      "relevant_block": "```yaml\nBATCH_LIMIT:   значение формы P/08     # = 4 × BODY_LIMIT (раздел «Поколение, метка, пределы»); тело POST /api/relay/<ретранслятор>\n                          # больше — 413 до разбора; пакеты — в порядке имён членов; член больше BODY_LIMIT — не шлётся (журнал)\nKNOCKS:        значение формы P/08; тело стука не больше 256 KiB, с полем row — 768 KiB: строка раздела до 512 KiB; у ретранслятора — KNOCKS незнакомцев в памяти, последний от имени\n               заменяет прежний; незнакомец KNOCKS + 1 вытесняет самый старый стук (по времени приёма); вытесненный узнаёт это\n               только по knocking держателя (раздел «Стук») — нового отказа нет\nholder:        у держателя стуков в пакете больше KNOCKS — сверх первых KNOCKS по имени пропускаются без записи; стук с телом\n               больше 256 KiB, с полем row — больше 768 KiB — пропуск без записи (как стук не по форме, P/08.3 N3 шаг 3); пакет живёт; 413 — только\n               целый пакет больше BATCH_LIMIT\nanswer:        ответ держателя клиенту агента и ретранслятора (carry на POST и GET /api/carry, RelayAnswer на\n               POST /api/relay) клиент читает не больше BATCH_LIMIT; больше — как «нет ответа» (P/09.1 N3 шаг 5:\n               следующий проход, база прежняя), строка журнала без значения тела; нового числа нет\n               (C09-ANSWER-LIMIT-01, решение «Архитектора»)\n```"
+    },
+    "Platform/common/contracts/password-hash.md": {
+      "sha256": "1f3f94a6bc2b72f47465bb396e0647e05b2e311d659820cf23a06ee89442668d",
+      "relevant_block": "```yaml\nform:     pbkdf2-sha256$<PBKDF2_ITERATIONS>$<salt: 32 lowercase hex>$<key: 64 lowercase hex>\nhash:     key = PBKDF2-HMAC-SHA256(the password — UTF-8 bytes, the salt — 16 random bytes, PBKDF2_ITERATIONS iterations, length 32 bytes);\n          the writer writes hex in lowercase\nverify:   a string by form — compute the key from the password and the salt of the string and compare it with the key of the string in constant time: equal —\n          the password fits; a string not by form (another algorithm or number of iterations, uppercase hex, another length, an extra part,\n          an empty string) — the password does not fit, not an error\nsecret:   in a store row the field *_secret is sealed by the holder's ring (the sealing contract); the hash is of the open value\n```"
+    },
+    "Platform/common/ru/contracts/password-hash.md": {
+      "sha256": "f4b3e82f2444b0599fd747073f7f8ca9468c691e91b4514dcda2a5811669cb4f",
+      "relevant_block": "```yaml\nform:     pbkdf2-sha256$<PBKDF2_ITERATIONS>$<соль: 32 строчных hex>$<ключ: 64 строчных hex>\nhash:     ключ = PBKDF2-HMAC-SHA256(пароль — байты UTF-8, соль — 16 случайных байт, PBKDF2_ITERATIONS итераций, длина 32 байта);\n          писатель пишет hex строчными\nverify:   строка по form — вычислить ключ от пароля и соли строки и сравнить с ключом строки за постоянное время: равны —\n          пароль подходит; строка не по form (иной алгоритм или число итераций, hex заглавными, иная длина, лишняя часть,\n          пустая строка) — пароль не подходит, не ошибка\nsecret:   в строке хранилища поле *_secret запечатано кольцом держателя (договор запечатывания); хэш — у открытого значения\n```"
+    }
+  }
+}

@@ -67,7 +67,7 @@
      "properties": {
       "missing": {
        "$ref": "#/$defs/common.book_missing",
-       "description": "the first MISSING_SHOWN 500: class server first, within by member (P/08.5 N1.3 result)",
+       "description": "the first MISSING_SHOWN: class server first, within by member (P/08.5 N1.3 result)",
        "maxItems": 500
       },
       "missing_count": {
@@ -83,7 +83,7 @@
        "$ref": "#/$defs/common.pos53"
       },
       "stale": {
-       "description": "a book to: \"*\" with stale: <member>/<server> — the worker of the book's subsystem is silent, the first MISSING_SHOWN 500 by UTF-8 bytes (P/08.5 N1.3 head)",
+       "description": "a book to: \"*\" with stale: <member>/<server> — the worker of the book's subsystem is silent, the first MISSING_SHOWN by UTF-8 bytes (P/08.5 N1.3 head)",
        "type": "array",
        "maxItems": 500,
        "uniqueItems": true,
@@ -310,7 +310,7 @@
    "pattern": "^(?:[a-z0-9-]{1,64})$"
   },
   "common.domain_member_entry": {
-   "description": "the member entry Entry (P/08.3 N1.1); by — only at admitted, Entry not larger than ENTRY_MAX 1240 bytes of JCS (P/08.10 N1.5) — checks of the lesson at the writer, not of the form",
+   "description": "the member entry Entry (P/08.3 N1.1); by — only at admitted, Entry not larger than ENTRY_MAX bytes of JCS (P/08.10 N1.5) — checks of the lesson at the writer, not of the form",
    "type": "object",
    "properties": {
     "how": {
