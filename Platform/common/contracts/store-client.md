@@ -11,7 +11,7 @@ Moved from P/01.1 (the caller's side: N1, N2, N2.1, N3, N4 «What the caller doe
 side (parsing, the order of checks, operations, the repeat memory, codes) stays in P/01.1 and [P/01.3](../../01-store/spec/01.3-store.norms.md);
 P/01.1 refers here.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

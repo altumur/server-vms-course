@@ -27,7 +27,7 @@ subsections are the former ones); «lesson N» — lesson M11/N, their addresses
 «lesson 3 N1.6 from_carry» — P/09.1 N1.4 `from_carry`, «lesson 7» (the kind token) — P/08.7, «lesson 9» (the revocation of a person) — P/08.4,
 «lesson 10» (the issuing holder) — P/08.8 (analysis of review of stage B 8–10, № 22; Kimi SB810-07).
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

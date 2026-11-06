@@ -18,7 +18,7 @@ the acceptance of [chapter P/03.2](../../../03-worker/acceptance/2/README.md).
 
 ## Preparation and order: scenarios 01–14 (the units door)
 
-The scenarios go through the units door of the console of the subsystem `testsub` (`Source/tests/testdata/testsub.subsystem.yaml`, the same one as
+The scenarios go through the units door of the console of the subsystem `testsub` (`Platform/common/data/testsub/testsub.subsystem.yaml`, the same one as
 the product's): the rows `counters`, `id: name`.
 
 For each full run the runner creates a separate instance of the store and of the console, loads `testsub`

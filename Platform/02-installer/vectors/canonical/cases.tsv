@@ -220,5 +220,5 @@ corpus-unplaced_delete_after_about_its_id	Platform/02-installer/acceptance/1/cas
 corpus-unplaced_delete_after_fixed_field	Platform/02-installer/acceptance/1/cases/unplaced_delete_after_fixed_field.subsystem.yaml	expect/corpus-unplaced_delete_after_fixed_field.json	accepted chapter 2.1 corpus case
 corpus-worker_writes_declared_list_ok	Platform/02-installer/acceptance/1/cases/worker_writes_declared_list_ok.subsystem.yaml	expect/corpus-worker_writes_declared_list_ok.json	accepted chapter 2.1 corpus case
 corpus-worker_writes_declared_ok	Platform/02-installer/acceptance/1/cases/worker_writes_declared_ok.subsystem.yaml	expect/corpus-worker_writes_declared_ok.json	accepted chapter 2.1 corpus case
-course-testsub	Source/tests/testdata/testsub.subsystem.yaml	expect/course-testsub.json	course manifest
-course-testsub2	Source/tests/testdata/testsub2.subsystem.yaml	expect/course-testsub2.json	course manifest
+course-testsub	Platform/common/data/testsub/testsub.subsystem.yaml	expect/course-testsub.json	course manifest
+course-testsub2	Platform/common/data/testsub/testsub2.subsystem.yaml	expect/course-testsub2.json	course manifest

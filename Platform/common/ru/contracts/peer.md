@@ -31,7 +31,7 @@ N1.6. Класс `role` (`server.role`) — участник, [договор с
 [договор сертификата роли](role-certificate.md) `sig`. Форма функции — вход строки пакета [`peer`](../vectors/peer/README.md) (прежде команда `peer` приёмки M11/8 N5):
 `{chain: [<PEM>…], fingerprints: [<hex>…], role, host, now}` → `{result: ok}` | `{result: refused, reason}`.
 
-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md).
+Нормативные слова — по [канону курса](../NORMATIVE-TERMS.md).
 
 ## Клиент и первый контакт
 

@@ -16,7 +16,7 @@ Moved from M11/7 N1.2 (the block `door`, `body`, `request`, `TOKEN_BODY`, `answe
 «Implementation decides» item 1). ADR-0080 item 2 («the mechanics of a side» is decided by the implementation) does not apply to this door: the door
 connects processes of different implementations on one box, and the witnesses already differ in the socket name.
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

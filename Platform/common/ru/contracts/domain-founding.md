@@ -20,7 +20,7 @@
 (`Platform/08-domain/data/holder.schema.json`, `Platform/08-domain/data/holder.outcomes.tsv`) и [договор записи
 срока](record.md).
 
-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md).
+Нормативные слова — по [канону курса](../NORMATIVE-TERMS.md).
 
 ## Общие правила форм
 

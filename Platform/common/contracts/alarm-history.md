@@ -11,7 +11,7 @@ not copies in chapters; the stage C guess C10-ALARM-SAME-LINE83, the Architect's
 Moved from P/08.9 N1.9 without a change of behaviour, together with the rule of a repeated line within one page (P/10 N3 `alarms`
 step 2; reconciliation of M11, A16); P/08.9 and P/10 refer here.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

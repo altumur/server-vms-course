@@ -110,7 +110,9 @@ Platform/
     data/catalog.tsv                  template/path, owner, operations/participants, readers, ...
     vectors/README.md                 index by owner
     acceptance/system/  acceptance/matrix/
-Source/tests/testdata/                current shared testsub canon (ADR-0083 (113))
+Platform/common/data/testsub/         canonical course test manifests (ADR-0083 (115))
+Platform/02-installer/acceptance/1/spec_verdicts/  course-owned legacy verdict witnesses
+Source/tests/testdata/                immutable Source witness copies, not canonical input
 decisions/history/platform/           historical id-map.tsv, manifest-rename.tsv, explanations/
 decisions/journal/platform/           historical lesson/common correction journals (ADR-0121 (9))
 ```
@@ -193,7 +195,7 @@ The module's `console.may` is a session-grant UI hint under P/07 N1.5, not the 8
      - Canonical defaults follow the 2026-10-19 inbox defaults note and ADR-0089 (2): do not inject events.suppress.by; default:null for fields lacking a default, including blob. Narrow the N1.2a default for display.unit/units/units_count/section/general to the first three; section/general have no default, as in M10/9 N1.2.
    - **Lesson 6 migration:** 6.5 takes GET /manifest from M10/9 and reconciles the M2_* copies at /{sub}/manifest and /mounts with M10/2's original: Retry-After is a string; original ManifestView is stricter (Architect decision on lesson 2).
 6. **Separate behaviour changes** follow the owner lesson: tolerant reader, canonical view, array order and relay extraction if chosen.
-7. **Shared data:** the historical plan proposed Platform/common/testdata for testsub and owner vector directories for shared tables. The current shared testsub canon remains `Source/tests/testdata/` under ADR-0083 (113). Specification owns bytes; product acceptance establishes conformance. Product sync-course.sh switches paths once.
+7. **Shared data:** the historical plan proposed Platform/common/testdata for testsub and owner vector directories for shared tables. The current course testsub canon is `Platform/common/data/testsub/`; the legacy verdict package is `Platform/02-installer/acceptance/1/spec_verdicts/` (ADR-0083 (115)). Specification owns the canonical bytes independently; Source copies remain immutable witnesses, and no product synchronization is required.
 8. **Former M10/M11 directories removed on 2026-10-21.** where-the-database-lives.md remains at course root; the M10 design note's form rules moved into the lesson-spec checklist. cammeta-specs exports Platform.
 9. **Stage C: regenerate by micromodule** after stage B (ADR-0083 (5)).
    - A micromodule generator reads its own lesson and neighbours' shared OpenAPI/catalogue/vectors/lifecycle/library/common contracts, never other processes' norms.

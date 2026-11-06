@@ -8,7 +8,7 @@ The stand and the dictionary of directives and doors are in [the common acceptan
 The file has 11 scenarios / 67 steps (mutation check 7cecaf2 № 28, 31: `never` for admin, `/v1/rights` only for admin; sc. 11–13 — the coverage audit of P/01 2026-10-30: `never` of the floor and of `domain/`, a role header on listing, the rights file — `@rights store`; sc. 14–15 — its second pass: the bounds of `never`, the domain roles, `comment`); the rights
 file of the stand is a ready input [`inputs/rights.json`](inputs/rights.json) (the form of P/01.2 N1.2): the roles `console`,
 `testsubcontroller`, `testsubworker`, `testsub2worker` and the patterns the steps need — a subset of the rights output of P/02.5 N1.4 for
-`testsub` and `testsub2` (`Source/tests/testdata/testsub*.subsystem.yaml`) with the deployment name `testsub`. The runner puts it
+`testsub` and `testsub2` (`Platform/common/data/testsub/testsub*.subsystem.yaml`) with the deployment name `testsub`. The runner puts it
 into `{rights}` before the store starts; the chapter needs no rights generator: the chapter checks the evaluator, not the output. The scenarios were moved from the acceptance of M10/06
 (stage B) with the former numbers, steps and texts; the scenarios of the rights output from a manifest are in [the acceptance of P/02.5](../../../02-installer/acceptance/5/README.md).
 

@@ -1,0 +1,5 @@
+{
+  "context_lines": 0,
+  "apply": "git apply --unidiff-zero",
+  "requires": "Verify every target file SHA against deferred-links.json before applying. No VMS/B target file is edited by this author slice."
+}

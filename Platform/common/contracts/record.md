@@ -23,7 +23,7 @@ reports) — P/09.1 N3 and P/08.3 N2, «lesson 11» (the shared document) — P/
 SB810-07); `keys` — the accepted set ([the domain key set contract](keys.md)). What is common to the forms — the [domain founding contract](domain-founding.md)
 «Common rules of forms» (layout audit, B-03).
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

@@ -32,8 +32,8 @@ the requesting member, `body` is the body `{request_id, ref, by?}`, `members`, `
 a record without `copies` is unreadable too), `topology` (`centre?`, `star`, `via`), `units` are the owners of units by ref, `shared` is
 the shared document, `now` is 1760000000. The domain is `acme`; the members are `hold`, `m1`, `m2`, `relay`. The kind declarations in the inputs are the kinds
 `tally`, `probe` of the manifest `testsub` and `feed`, `tally2` of the manifest `testsub2` from the specification data
-([`testsub`](../../../../Source/tests/testdata/testsub.subsystem.yaml),
-[`testsub2`](../../../../Source/tests/testdata/testsub2.subsystem.yaml)) — the inputs carry them whole and do not depend on the bytes of the manifests.
+([`testsub`](../../../common/data/testsub/testsub.subsystem.yaml),
+[`testsub2`](../../../common/data/testsub/testsub2.subsystem.yaml)) — the inputs carry them whole and do not depend on the bytes of the manifests.
 The rows `issue-31`…`issue-35` carry the declaration `tally` with a changed scope `placement` (`target_fields`
 `[cluster, star_centre]` or `[cluster, origin]`, `caller: copies`) — of the loading form of P/02.1 N1.2b (both witnesses
 accept it), not the bytes of the manifest.

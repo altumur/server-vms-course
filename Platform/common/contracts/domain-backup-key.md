@@ -10,7 +10,7 @@ derives the key with `backup_key_rev` 1 and writes it into `domain/signer`; the 
 copy and derives the key on reading a copy by its `backup_key_rev`. Moved from P/08.8 N1.5 (the line `backup_key`) without
 a change of behaviour.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ```yaml
 backup_key:      HMAC-SHA256(key: root_key of the recovery file — 32 bytes written as hex (the domain founding contract),

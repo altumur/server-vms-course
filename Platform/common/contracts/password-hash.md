@@ -9,7 +9,7 @@ Participants: the process `domain` — writes the hash (people, the break-glass 
 checks the password of the break-glass login ([the gate-and-pass contract](gate-and-pass.md) «Break-glass entry»). Moved from P/08.4
 N1.1 without a change of behaviour.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 `PBKDF2_ITERATIONS` has exactly one binding: its uniquely named row in the [P/08 form](../../08-domain/forms/runtime-constants.tsv). In `form`, the metavariable `<PBKDF2_ITERATIONS>` expands only to that row value as unpadded ASCII decimal digits; the `hash` operand uses the same value. Neither brackets nor the identifier are emitted on the wire; no other iteration count, alias, setting or additional accepted format is introduced.
 

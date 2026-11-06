@@ -6,7 +6,7 @@
 [`02.5-installer.norms.md`](../../spec/02.5-installer.norms.md) N5, полные тела двух маршрутов —
 [OpenAPI](../../../../01-store/spec/01-store.api.openapi.yaml) урока P/01.
 В файле 8 сценариев / 70 шагов (сц. 12 шаги 12–18 — `domainagent` не пишет `domain/root`, `view`, `shadow`, `backups/rev-1`, `shared-docs/rev-1`, `alarm-history/m1`, `idem/k1`, 403, C02-LOCAL-BINDING240-ROOT; мутационная проверка 7cecaf2 № 29, 49: строки допуска контроллера без delete, отрицание `idem` у воркера; сц. 13 — заказ и состояние, ADR-0091, сц. 02 шаг 8 — удаление строки `testsub2` контроллером теперь 200: у неё `retire_when.delete_after` и `ends`); роли и файл прав генерируются из `testsub` и `testsub2`
-(`Source/tests/testdata/testsub*.subsystem.yaml`) с именем развёртывания `testsub`.
+(`Platform/common/data/testsub/testsub*.subsystem.yaml`) с именем развёртывания `testsub`.
 Сценарии и варианты манифестов перенесены из приёмки M10/6
 (стадия B) с прежними номерами, шагами и текстами. Сценарии 05–08 и 10 (оценщик, `never`, перечисление, страж, личность,
 `/v1/rights`) — в приёмке [P/01.2](../../../../01-store/ru/acceptance/2/README.md) (стадия B); номера оставшихся не менялись.

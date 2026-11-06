@@ -19,7 +19,7 @@ the chapter 2.2 canonical-view window of 2026-10-20 (раздел 5, решен�
 
 Входы строк:
 - `corpus-<случай>` — каждый принятый случай корпуса главы 2.1 (`acceptance/1/verdicts.tsv`, вердикт `ok`);
-- `course-<имя>` — каждый манифест курса `Source/tests/testdata/*.subsystem.yaml`;
+- `course-<имя>` — каждый манифест курса `Platform/common/data/testsub/*.subsystem.yaml`;
 - `example-<правило>` — по строке на правило N1.1 (записка умолчаний the canonical-view defaults note of 2026-10-19,
   раздел 5): раздел без умолчания и с умолчанием, вложенный ключ, сахар ×3, P1 (и сказанный `snapshot: []`), P2–P5,
   `ordered`. Вход строки-примера — маленький манифест, который меняет одно правило против минимального; что он показывает, —

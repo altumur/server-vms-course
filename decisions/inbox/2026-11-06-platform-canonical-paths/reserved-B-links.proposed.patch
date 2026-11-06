@@ -1,0 +1,20 @@
+--- a/Platform/common/contracts/accept.md
++++ b/Platform/common/contracts/accept.md
+@@ -25 +25 @@
+-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
++Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
+--- a/Platform/common/contracts/password-hash.md
++++ b/Platform/common/contracts/password-hash.md
+@@ -12 +12 @@
+-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
++Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
+--- a/Platform/common/ru/contracts/accept.md
++++ b/Platform/common/ru/contracts/accept.md
+@@ -25 +25 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md).
++Нормативные слова — по [канону курса](../NORMATIVE-TERMS.md).
+--- a/Platform/common/ru/contracts/password-hash.md
++++ b/Platform/common/ru/contracts/password-hash.md
+@@ -12 +12 @@
+-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md).
++Нормативные слова — по [канону курса](../NORMATIVE-TERMS.md).

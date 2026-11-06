@@ -13,7 +13,7 @@ Moved from P/05 N1.1 (`api`, `ops`, `cluster`, `written`, the key and the prefix
 door, `scope`, refusals) without a change of behaviour; the door side (request parsing, admission, the layout on disk, limits) is in
 P/05, P/05 refers here.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

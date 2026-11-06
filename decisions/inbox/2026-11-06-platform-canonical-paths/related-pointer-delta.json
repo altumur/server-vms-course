@@ -1,0 +1,70 @@
+{
+  "edits": [
+    {
+      "path": "Platform/common/vectors/row-check/README.md",
+      "before_sha256": "2c87e43d99b5087ae6aad89f1bce9a94fc955f24947b45ff9a1341603a627dba",
+      "after_sha256": "fec51ccd5484537a3f34fff73bb3642bf2d2e992fa63844c3e1a8dd8f46a05e2",
+      "scope": "exact canonical manifest path only"
+    },
+    {
+      "path": "Platform/common/ru/vectors/row-check/README.md",
+      "before_sha256": "e4053f31ec246db2143f1463fc16cb97c239e1e6edcb7406ff34711f2126472b",
+      "after_sha256": "7287860553e93481dc90acc20ca3b384308c31eaef4af4362c3cbd80203a8392",
+      "scope": "exact canonical manifest path only"
+    },
+    {
+      "path": "Platform/02-installer/vectors/canonical/README.md",
+      "before_sha256": "1c237281a18d8a8bcb6d2c1cd2eedaef39807b50ffaadf0f734bdff55508910c",
+      "after_sha256": "d48de7fcd243960686dc15d2c5494b3b3a79bda50479153223079118edfa2217",
+      "scope": "exact canonical manifest path only"
+    },
+    {
+      "path": "Platform/02-installer/ru/vectors/canonical/README.md",
+      "before_sha256": "cf0a4740c9129d33efd6e7e10c9b9064deb9e3c7b0e6673e110880a34b6e0321",
+      "after_sha256": "93c6fa5e023d74893cee5f2744ca17ff62d4a98745ffb38f9c45ebb763e98b8c",
+      "scope": "exact canonical manifest path only"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.3-domain.norms.md",
+      "before_sha256": "77dde219a75e38b4ef185631ac17ee2227ca4884863ff266b180892e628508b3",
+      "after_sha256": "344b91d410e5dd86c5985fccb564de270e31ae37ffed6fd119256cf6253b3cf0",
+      "scope": "exact canonical manifest path only"
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.3-domain.norms.md",
+      "before_sha256": "eb5a012a52bb4421f852f49d09d95c5398c40e3b3116e73aaa8a5b54a132d437",
+      "after_sha256": "a15206e447b0b058b33ea5fdbf80fb74d55450e69a40c9bafac2644c2d159a9b",
+      "scope": "exact canonical manifest path only"
+    },
+    {
+      "path": "Platform/common/vectors/row-check/cases.tsv",
+      "before_sha256": "919e53b900a489f394e601c12aef11ef10a4d3d22c1331260466fe39c06dc5fb",
+      "after_sha256": "dd1c35d385ae2c62a561692ad4373b2626abc5b97a3eaad17913a295fd6955b8",
+      "scope": "comment-only pointer; every data cell unchanged"
+    },
+    {
+      "path": "Platform/08-domain/vectors/assemble/cases.tsv",
+      "before_sha256": "5760c937bc98b924bc0b93b2216faae2ae9465e7dfe5431346eb96033068bcd0",
+      "after_sha256": "c47a316193e5a711a8d3772eb944b81aee7165f03aa14bae31444a2252e211e2",
+      "scope": "comment-only pointer; every data cell unchanged"
+    },
+    {
+      "path": "Platform/module-design.md",
+      "before_sha256": "c6ca414dc323eef870475da1e92f573d596a0054ffc03e5c0e29019d2d66acd4",
+      "after_sha256": "f69c9fcf1306c89f1c84cb8b543c26154de4edc5c204c2e1bfdbf56fdb2cd86a",
+      "scope": "approved current source ownership/layout pointers; historical plan remains labelled"
+    },
+    {
+      "path": "Platform/common/vectors/README.md",
+      "before_sha256": "396bcb398cecfd7281064db19b8bcdfa5c3f8a0365273d6f62205974b1cbf1a6",
+      "after_sha256": "a0a7fabc0c5de105209e27aa3069188be340a4e2b4dd17a1bb535447681416fc",
+      "scope": "ADR115 ownership/provenance note, no vector data or selector edit"
+    },
+    {
+      "path": "Platform/common/ru/vectors/README.md",
+      "before_sha256": "1d4a5d5d3e921e9803a054768feca5b653b1a9ed4ab0ce8e12b39eaa5cd6e3ed",
+      "after_sha256": "c54d84aec9c5c36fadac1a4384256f8bc42b564486b89e16183aac687e457cd0",
+      "scope": "ADR115 ownership/provenance note, no vector data or selector edit"
+    }
+  ]
+}

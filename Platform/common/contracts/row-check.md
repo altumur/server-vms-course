@@ -12,7 +12,7 @@ canonical_url, ref_and_must_match), N3 «Common row check» and steps 4–7 of �
 behaviour; what the door does around the check (the claim, the number, the write, HTTP codes, `made_prefix`, `made_key`,
 secrets) — P/06.1 and [P/06.2](../../06-console/spec/06.2-console.norms.md), what the library does — P/03.6.
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md). «N1.2», «N1.3», «N3», «N4» in the moved text
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md). «N1.2», «N1.3», «N3», «N4» in the moved text
 are addresses of chapters of P/06.1 unless said otherwise; «step N» of «create»/«edit» is a step of the door procedure of
 P/06.1 N3, their checks are the section «Order of checks» below.
 

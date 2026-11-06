@@ -33,7 +33,7 @@ Both sides file through one stand: a family whose schema says `v: {maxLength: 32
 {"unit": <unit>, "v": <body>}`, the field `v` of the row is read back), and the table `counters`, whose field `doc` is of type `json`
 (`POST /counters {"name": …, "doc": <body>}`, the field `doc` of the unit is read back); a refusal is the `fault` of the 400 answer.
 
-The stand manifest is `Source/tests/testdata/testsub.subsystem.yaml` with two changes and no others (a copy in the temporary
+The stand manifest is `Platform/common/data/testsub/testsub.subsystem.yaml` with two changes and no others (a copy in the temporary
 directory of the stand; the source file does not change):
 - `unit.fields.doc: {type: json}`;
 - `requests.schema` — `{type: object, required: [unit, v], additionalProperties: false, properties: {unit: {type:

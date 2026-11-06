@@ -6,6 +6,8 @@ A package of algorithms common to the micromodules: input → expected output. E
 vectors. The bytes are written by «Specification»; the conformance of the product is by its acceptance against these tables (ADR-0080 addendum 16, ADR-0083;
 «Parity» is removed). The owner is the lesson that introduces the algorithm first (the module note, «Vectors»).
 
+The course owns its specification data independently of the product; historical product references below do not require synchronization (ADR-0083 addendum (115)).
+
 The parity tables of stage A lay in `Source/tests/testdata/`; at stage B they moved into the directory of the owner lesson,
 `NN-<process>/vectors/<algorithm>/`, together with the lesson (lesson 6 — `fault`, `group_of`, `rid`, `requests_body`, `secret_in`,
 `log_mask`, `platform_lists`; with them `canonical_json` — in P/01; the former files are removed), and the product switched the paths once. The common vectors lie here.

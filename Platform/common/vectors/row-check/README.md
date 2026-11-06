@@ -8,7 +8,7 @@ N3 «create», «edit») and the customer's library of the worker ([P/03.6](../.
 N3 «order»): one table for both sides. The bytes are written by «Specification». The cases are taken from the norms of the contract and the steps
 of the acceptance of P/06.1 (sc. 15, 16, 18, 20 — in the column `note`).
 
-The manifests are `testsub` and `testsub2` (`Source/tests/testdata/*.subsystem.yaml`), loaded together: the catalogue of manifests
+The manifests are `testsub` and `testsub2` (`Platform/common/data/testsub/*.subsystem.yaml`), loaded together: the catalogue of manifests
 of both. `testsub2/tallies` is the table that the library of `testsub` orders (`worker.creates`), so most
 cases are on it. In the input of the single command `vectors` the manifests are `files` with the keys
 `testsub.subsystem.yaml` and `testsub2.subsystem.yaml` (the bytes of these files of the export); `cells` — `unit`, `op`, `body`,
