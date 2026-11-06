@@ -1,5 +1,5 @@
 # P/10 — doors of the domain console (domainconsole, port 8444): the HTTP contract of the lesson (transfer plan of lesson 10, § 4). Merged from
-# the contracts М11/1, М11/3, М11/4, М11/6, М11/8, М11/9, М11/11 (paths of the domain console; М11/4, М11/6 — from history, removed
+# the contracts M11/1, M11/3, M11/4, M11/6, M11/8, M11/9, M11/11 (paths of the domain console; M11/4, M11/6 — from history, removed
 # by commit 9) — stage B, without a change of behaviour. Codes — only of transition 2 of the forwarding contract
 # Platform/common/contracts/forwarding.md «Refusals by transition» (analysis of review of stage A 8–10, decision 3): the TLS role door
 # (401/403 no_role, wrong_role, bad_chain; a handshake refusal — without an HTTP answer), the gate (401/403 denied, 503 shut and unavailable),
@@ -1603,7 +1603,7 @@ paths:
             contract, shut; P/06.3 N1.8) or unavailable — the access check row exists, but is not readable (N1.5; rule
             «Unreadable row», form Unavailable). Transition 3 — the answer of the process domain as it came: OpenAPI P/08, operationId usersList,
             answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby;
-            added by М11/12))'
+            added by M11/12))'
           content:
             application/json:
               schema:
@@ -1948,7 +1948,7 @@ paths:
             contract shut; P/06.3 N1.8) or unavailable — the access check row exists, but is not readable (N1.5; rule
             «Unreadable row», form Unavailable). Transition 3 — the answer of the process domain as it came: OpenAPI P/08, operationId groupsList,
             answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby;
-            added by М11/12))'
+            added by M11/12))'
           content:
             application/json:
               schema:
@@ -2293,7 +2293,7 @@ paths:
             contract shut; P/06.3 N1.8) or unavailable — the access check row exists, but is not readable (N1.5; rule
             «Unreadable row», form Unavailable). Transition 3 — the answer of the process domain as it came: OpenAPI P/08, operationId rolesList,
             answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby;
-            added by М11/12))'
+            added by M11/12))'
           content:
             application/json:
               schema:
@@ -2818,7 +2818,7 @@ paths:
             contract shut; P/06.3 N1.8) or unavailable — the row of the access check exists but is not readable (N1.5; the rule
             «Unreadable row», form Unavailable). Transition 3 — the answer of the process domain as it came: OpenAPI P/08, operationId breakGlassList,
             answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby;
-            added by М11/12))'
+            added by M11/12))'
           content:
             application/json:
               schema:
@@ -3166,7 +3166,7 @@ paths:
             contract shut; P/06.3 N1.8) or unavailable — the row of the access check exists but is not readable (N1.5; the rule
             «Unreadable row», form Unavailable). Transition 3 — the answer of the process domain as it came: OpenAPI P/08, operationId strandedApply,
             answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby;
-            added by М11/12))'
+            added by M11/12))'
           content:
             application/json:
               schema:
@@ -3177,7 +3177,7 @@ paths:
   '/domain/{sub}/{pass}':
     description: 'door.pass at the domain (N1.6, P/10-03): the route /domain/<sub>/<segment>[/…], whose segment is in door.pass of the manifest
       <sub>, the domain console passes to the worker at the domain of this subsystem (the address — the pulse domain/<sub>/heartbeat) by the path /<segment>[/…]
-      with query, as a client of the role domainconsole; the headers, the body, the answer and the codes — the gate-and-pass contract «Передача door.pass».
+      with query, as a client of the role domainconsole; the headers, the body, the answer and the codes — the gate-and-pass contract «Pass of door.pass».
       The answer of the worker — as received (default: this is the answer of the worker, not of the process domain; the decision item 9 on the pass to the process does not
       concern it). One path segment is told apart by the loaded manifest: unit.rows — /domain/{sub}/{rows}, door.pass — this path (as
       /{rows} and /{pass} of OpenAPI P/06); a path longer than one segment is passed the same way.'
@@ -3517,7 +3517,7 @@ components:
       properties:
         versions:
           type: object
-          description: 'The row version of each cluster from grants (N1.2 «Версия строки»; P/08.0 N1.9): the index and revision stand with the row, the values are fit for If-Match.'
+          description: 'The row version of each cluster from grants (N1.2 «Row version»; P/08.0 N1.9): the index and revision stand with the row, the values are fit for If-Match.'
           additionalProperties:
             type: object
             required:
