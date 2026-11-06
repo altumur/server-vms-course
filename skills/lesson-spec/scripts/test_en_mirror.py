@@ -66,7 +66,7 @@ class Mirror(unittest.TestCase):
         self.mutated("- [ ] **P/01.1-31** batch", "- [ ] **P/01.1-32** batch")
 
     def test_section(self):
-        self.mutated("## Correspondence to former lessons", "### Correspondence to former lessons")
+        self.mutated("## Implementation decides", "### Implementation decides")
 
     def test_heading_number(self):
         self.mutated("### N2.1 Request parsing", "### N2.2 Request parsing")
