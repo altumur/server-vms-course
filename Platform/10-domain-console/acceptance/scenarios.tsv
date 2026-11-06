@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Acceptance P/10: stand hold, m1, m2 — domain console: alarms with a silent member (sc. 02 from М11/11) and holder page (sc. 05 from М11/08); scenario numbers/steps unchanged (stage B); 06–09 — P/10 coverage audit: view-door refusals, 502 forwarding after process domain break/silence; 10–16 — second Gemini pass: HEAD/row-door parameters, unreadable read-door/gate rows, alarm-window grammar, reported mark, ./.. segments, X-User; 17 — read-door row version (ADR-0094 B4); 18, 19 — kept-row and relays doors. Format: README.
+# Acceptance P/10: stand hold, m1, m2 — domain console: alarms with a silent member (sc. 02 from M11/11) and holder page (sc. 05 from M11/08); scenario numbers/steps unchanged (stage B); 06–09 — P/10 coverage audit: view-door refusals, 502 forwarding after process domain break/silence; 10–16 — second Gemini pass: HEAD/row-door parameters, unreadable read-door/gate rows, alarm-window grammar, reported mark, ./.. segments, X-User; 17 — read-door row version (ADR-0094 B4); 18, 19 — kept-row and relays doors. Format: README.
 02-silent-member	1	@domain	ok
 02-silent-member	2	@stop agent m2	ok
 02-silent-member	3	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 4}}}	200 {"rev": 1}

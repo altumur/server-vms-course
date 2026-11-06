@@ -9,9 +9,28 @@ This file is for the agent (or person) who writes code from the lesson. The expl
 Implement the process `domain` of the domain holder in the language `<LANG>`: the door of the process, the domain trust, the acceptance of reports, the view and
 the shadow report, people and grants, books, placement and edits, the issue of tokens, the term and the move, the shared document and the alarm
 history, the queue — by the eleven chapters of the lesson; pass the N5 acceptance of the chapters and close their readiness checklists. 89 norms in all:
-P/08.0-01…04, P/08.1-01…11, P/08.2-01…11, P/08.3-01…13, P/08.4-01…09 and P/08.4-17 (ADR-0119), P/08.5-01…05, P/08.6-01…05, P/08.7-01…03,
-P/08.8-01…09, P/08.9-01…03 and P/08.9-05, -06 (the number 04 is empty: the alarm list at the holder went to lesson P/10 —
-[`id-map.tsv`](../../common/id-map.tsv)), P/08.10-01…03. The lesson is assembled from lessons М11/1–12 (the holder side) (stage B,
+
+<!-- checklist-inventory:begin -->
+
+| chapter | ids |
+|---|---|
+| 8.0 | `P/08.0-01`, `P/08.0-02`, `P/08.0-03`, `P/08.0-04` |
+| 8.1 | `P/08.1-01`, `P/08.1-02`, `P/08.1-03`, `P/08.1-04`, `P/08.1-05`, `P/08.1-06`, `P/08.1-07`, `P/08.1-08`, `P/08.1-09`, `P/08.1-10`, `P/08.1-11` |
+| 8.2 | `P/08.2-01`, `P/08.2-02`, `P/08.2-03`, `P/08.2-04`, `P/08.2-05`, `P/08.2-06`, `P/08.2-07`, `P/08.2-08`, `P/08.2-09`, `P/08.2-10`, `P/08.2-11` |
+| 8.3 | `P/08.3-01`, `P/08.3-02`, `P/08.3-03`, `P/08.3-04`, `P/08.3-05`, `P/08.3-06`, `P/08.3-07`, `P/08.3-08`, `P/08.3-09`, `P/08.3-10`, `P/08.3-11`, `P/08.3-12`, `P/08.3-13`, `P/08.3-14` |
+| 8.4 | `P/08.4-01`, `P/08.4-02`, `P/08.4-03`, `P/08.4-04`, `P/08.4-05`, `P/08.4-06`, `P/08.4-07`, `P/08.4-08`, `P/08.4-10`, `P/08.4-11`, `P/08.4-12`, `P/08.4-13`, `P/08.4-14`, `P/08.4-15`, `P/08.4-16`, `P/08.4-09`, `P/08.4-17` |
+| 8.5 | `P/08.5-01`, `P/08.5-02`, `P/08.5-03`, `P/08.5-04`, `P/08.5-05` |
+| 8.6 | `P/08.6-01`, `P/08.6-02`, `P/08.6-03`, `P/08.6-04`, `P/08.6-05` |
+| 8.7 | `P/08.7-01`, `P/08.7-02`, `P/08.7-03` |
+| 8.8 | `P/08.8-01`, `P/08.8-02`, `P/08.8-03`, `P/08.8-04`, `P/08.8-05`, `P/08.8-06`, `P/08.8-07`, `P/08.8-08`, `P/08.8-09`, `P/08.8-10`, `P/08.8-11` |
+| 8.9 | `P/08.9-01`, `P/08.9-02`, `P/08.9-03`, `P/08.9-05`, `P/08.9-06` |
+| 8.10 | `P/08.10-01`, `P/08.10-02`, `P/08.10-03` |
+
+<!-- checklist-inventory:end -->
+
+The inventory is built from the readiness checklists below; all 89 full ids must occur exactly once. P/08.9-04 moved to P/10; see [`id-map.tsv`](../../common/id-map.tsv).
+
+The lesson is assembled from lessons M11/1–12 (the holder side) (stage B,
 ADR-0083 addendum (1), (14)). The member agent and the relay — lesson P/09, the domain console — lesson P/10, the late layer of the cluster
 console — [chapter 6.7](../../06-console/spec/06.7-console.norms.md), the worker on the domain — [chapter P/03.7](../../03-worker/spec/03.7-worker.norms.md).
 
@@ -40,7 +59,7 @@ console — [chapter 6.7](../../06-console/spec/06.7-console.norms.md), the work
   the emergency move by the recovery file — [chapter 8.8](08.8-domain.norms.md). The members follow the larger term by themselves
   (lesson P/09).
 - **8.9.** The shared document: the edit, the object and the pointer, the re-signing after a move, `shared` in the answer to the agent,
-  «доставлено скольким»; the alarm history in the pass — [chapter 8.9](08.9-domain.norms.md).
+  «delivered to how many»; the alarm history in the pass — [chapter 8.9](08.9-domain.norms.md).
 - **8.10.** The queue `domain/signer-turn` and the guard of every write, the standby process, giving up the queue on `SIGTERM`; the ceilings:
   the ceiling of the section row, `SERVERS_MAX`, `ENTRY_MAX`, `whole` — [chapter 8.10](08.10-domain.norms.md).
 
@@ -49,7 +68,7 @@ console — [chapter 6.7](../../06-console/spec/06.7-console.norms.md), the work
 - The canon is the norms of chapters [8.0](08.0-domain.norms.md), [8.1](08.1-domain.norms.md), [8.2](08.2-domain.norms.md),
   [8.3](08.3-domain.norms.md), [8.4](08.4-domain.norms.md), [8.5](08.5-domain.norms.md), [8.6](08.6-domain.norms.md),
   [8.7](08.7-domain.norms.md), [8.8](08.8-domain.norms.md), [8.9](08.9-domain.norms.md), [8.10](08.10-domain.norms.md),
-  including N0, the paragraphs «Данные», the order of N3 and the refusals of N4. The input and the output of the acceptance commands — N5 of the chapters.
+  including N0, the paragraphs «Data», the order of N3 and the refusals of N4. The input and the output of the acceptance commands — N5 of the chapters.
 - The common algorithms are contracts; the chapters refer to them and do not repeat them: [the key set](../../common/contracts/keys.md),
   [the domain token](../../common/contracts/domain-token.md) and [the domain envelopes](../../common/contracts/domain-envelopes.md)
   (`x25519:v1`, `m1`, the content of `sealed`) — chapters 8.2, 8.3; [the report acceptance](../../common/contracts/accept.md) and
@@ -107,7 +126,7 @@ an unsupported case. Record a change of the acceptance in `journal/corrections-<
   handshake — its own CA, the validity, EKU `clientAuth`, otherwise an alert; ADR-0083 addendum (20), addendum (21)).
 - **8.1.** The holder's pass of N3: the domain view (the head once every 3 s, the sections in a round) and the shadow report, the objects `domain/view` and `domain/shadow`; the view fields
   of the other chapters by the same pass. The command `view` with the same function without the store; its call is the door `view` of the vocabulary of the
-  «Стенда домена».
+  «Domain stand».
 - **8.2.** The functions of N3 `keys`, `token`, the opening and the sealing of `x25519:v1` — one and the same for the agent, the gate, the token
   door and the assembly of books (chapters 9.1, 6.3, 8.7, 8.5, 8.4). The rows `domain/root`, `domain/keys`, `domain/signer`,
   `domain/book-seal`, `domain/revoked` by N1.1–N1.6 and the families; the writer is the process `domain`, at a member — the agent
@@ -137,7 +156,7 @@ an unsupported case. Record a change of the acceptance in `journal/corrections-<
   the handover; the emergency move; `backup_key_secret` and `backup_key_rev` in `domain/signer` (chapter 8.2 N1.3, the installation —
   P/02.4). The commands `record`, `ask-sig`; `w2cctl domain move`.
 - **8.9.** The edit of the shared document in the order of N1.3, the object and the pointer; the re-signing after a move (N1.2 `after_move`);
-  `shared` in the answer to the agent (N1.4 `carry`); `view.shared` — «доставлено скольким» (N1.6); the alarm history in the pass (N1.9).
+  `shared` in the answer to the agent (N1.4 `carry`); `view.shared` — «delivered to how many» (N1.6); the alarm history in the pass (N1.9).
 - **8.10.** The queue `domain/signer-turn`: the guard of every write into the holder rows, the objects — after the confirmation of the queue;
   the standby — 503 `standby` at all the doors; giving up the queue on `SIGTERM`. The ceilings: 413 `whole too large`; 409
   `too many members` and «the entry of \<member> would exceed 1240 bytes» at any write of `domain/member-rows/<part>`.
@@ -174,9 +193,9 @@ This is a proposed order, not an obligatory structure of the code. The chapters 
    both directions, the path without a query.
 2. The envelope `m1` ([the domain envelopes contract](../../common/contracts/domain-envelopes.md), `seal-member`): the birational
    map of the key, SHA-512 of the seed, HKDF, AAD.
-3. «Принять» ([the report acceptance contract](../../common/contracts/accept.md), `accept`): the order of the steps, 409 of three kinds,
+3. «Accept» ([the report acceptance contract](../../common/contracts/accept.md), `accept`): the order of the steps, 409 of three kinds,
    `heard` and `MARK_REFRESH`, the order of the writes of the object, `.delta` and the marks.
-4. «Принять» with a road (`accept` with `via`, `heard_ago`): steps 2, 2a, 3 of the report acceptance contract.
+4. «Accept» with a road (`accept` with `via`, `heard_ago`): steps 2, 2a, 3 of the report acceptance contract.
 5. The acceptance of a member of N3 and the holder in the list; the topology of N1.2: the form, the refusals, CAS by `base_rev` and `If-Match`, the JCS of the text `doc`.
 6. The holder on a package of N3: the topology, `refused`, the answer with `rev` for this road.
 7. `tls_ca` → `Entry.ca`, `tls_ca_certs` → `ca-certs` and the administrator door.
@@ -203,7 +222,7 @@ This is a proposed order, not an obligatory structure of the code. The chapters 
 2. The row of a person, the PBKDF2 hash, the login and the limit; the indistinguishability of the answer.
 3. The grant rows, the last administrator, the deletion mark and the reconciliation.
 4. The check at the doors of the process by `domain/grants/domain`; the emergency account at the holder.
-5. The stand of [the acceptance of the chapter](../acceptance/4/README.md) with the identity `root`, which the runner sets by the vocabulary of the «Стенда домена».
+5. The stand of [the acceptance of the chapter](../acceptance/4/README.md) with the identity `root`, which the runner sets by the vocabulary of the «Domain stand».
 
 ### Chapter 8.5 — books and the names index
 
@@ -227,7 +246,7 @@ This is a proposed order, not an obligatory structure of the code. The chapters 
 
 1. `issue` (the pure function of N3): the forms, the role, `by`, the scopes placement → unit, scenario; the audience; the refusal words;
    the vectors [`issue`](../vectors/issue/README.md).
-2. The claims and the signature ([the domain token contract](../../common/contracts/domain-token.md) «Токен»).
+2. The claims and the signature ([the domain token contract](../../common/contracts/domain-token.md) «The token»).
 3. The holder door `/api/tokens/…` and the answer in the envelope `m1` ([the domain envelopes contract](../../common/contracts/domain-envelopes.md)).
 4. The stand of [the acceptance of the chapter](../acceptance/7/README.md): the runner logs into the local door of the agent with the identity of a role
    ([the local token door contract](../../common/contracts/local-token-door.md#the-role-socket)).
@@ -239,12 +258,12 @@ This is a proposed order, not an obligatory structure of the code. The chapters 
 3. The backup copy: the composition, its key, the revision by the content, the keepers.
 4. The emergency move: the neighbours, the choice of the backup copy, the new term, the keys.
 5. The displacement; the planned handover; the stranded.
-6. The stand of [the acceptance of the chapter](../acceptance/8/README.md): the signer on `m1` too, the move by the directives of the vocabulary of the «Стенда домена».
+6. The stand of [the acceptance of the chapter](../acceptance/8/README.md): the signer on `m1` too, the move by the directives of the vocabulary of the «Domain stand».
 
 ### Chapter 8.9 — the shared document and the alarm history
 
 1. The document, the pointer, the edit (N1.2, N1.3).
-2. `shared` in the answer to the agent; «доставлено скольким» (N1.4, N1.6).
+2. `shared` in the answer to the agent; «delivered to how many» (N1.4, N1.6).
 3. The alarm history (N1.9).
 4. The stand of [the acceptance of the chapter](../acceptance/9/README.md).
 
@@ -361,11 +380,11 @@ the observations and the limitations. The data of past runs do not replace the p
   reports of the members; the description of the implementation names the command `view` and where the memory of the shadow report is kept.
 - **8.2.** The vectors `keys`, `domain-token`, `domain-envelopes` (`x25519-open`, `x25519-round`) pass by the commands `keys`,
   `token`, `seal`, `seal-round`; the description of the implementation names the acceptance commands and the calls of the changes (the installation command — by
-  P/02.4); the items «проверяется чтением» and the stands of chapters 8.3 and 8.8 are named separately.
+  P/02.4); the items «checked by reading» and the stands of chapters 8.3 and 8.8 are named separately.
 - **8.3.** The acceptance scenarios of the chapter pass; the vectors `accept`, `agent-sig`, `domain-envelopes` (`m1-open`, `m1-round`)
   pass by their function; the description of the implementation names the commands of the check by the vectors.
 - **8.4.** The acceptance scenarios of the chapter pass; the vectors `may` give their answers; the stands of the chapters of the lesson pass with the identity `root`
-  by the vocabulary of the «Стенда домена»; the description of the implementation names the commands `may` and `domain first-admin`.
+  by the vocabulary of the «Domain stand»; the description of the implementation names the commands `may` and `domain first-admin`.
 - **8.5.** The acceptance scenarios of the chapter pass; the vectors `assemble` give their expectations; the cases `m51_books_*` and `m59_names_*`
   of the corpus of P/02.1 give their verdicts; the description of the implementation names `assemble` and the training writer `testsub2`.
 - **8.6.** The acceptance scenarios of the chapter pass, and with them — scenario 14 of chapter P/06.1 (`If-Match`) and scenario 15 of chapter 8.1 (the executors);

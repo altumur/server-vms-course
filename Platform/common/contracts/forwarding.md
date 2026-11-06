@@ -44,6 +44,7 @@ The files the contract works by (layout audit, `V-20`–`V-22`; the Architect's 
 | `X-Operator: console` | the cluster console on every forwarding — transition 1 and transition 2 (ADR-0083 addendum (19) item 2, № 20) | the domain console at transition 2 — only on a connection with the proven role `console` (the role door, P/10 N1.4 `server.role`); the cluster console at transition 1 does not recognize it; it is always removed (the class `signed`, P/06.7 N1.7 `server`; ADR-0083 addendum (18)) | «Forwarding is one function», «Accept by a console» |
 | `X-W2C-Via-Worker: <sub>/<instance>` | the cluster console on forwarding by ticket (P/06.3 N1.9 «Domain doors»); the domain console passes it to the process `domain` | a declared sign: it serves neither as a right nor as a check, only the journal and an alarm. Transition 1 — the cluster console of the holder neither removes nor sets it: the leaf cannot be proven there (the class `signed`), the loss of the sign is more dangerous than a forgery. Transition 2 — the domain console removes it from an external request and accepts it only with the leaf of the role of the cluster console. The process `domain` — only on a connection of the role `domainconsole` | P/08.4 N1.3c `via_backend` |
 | `X-W2C-Client: <address>` | the domain console when passing to the process `domain` (transition 3) | the process `domain` — only on a connection of the role `domainconsole` | «Client address» |
+| `X-W2C-Pass-Policy: <digest>` | every console on a confirmed domain worker pass | every hop compares its own confirmed descriptor; no identity or authority | «Domain worker pass hop policy»; removed before the worker |
 | `X-W2C-Ticket: <sub>` | the cluster console on forwarding `POST /domain/verify` by ticket (P/06.7 N1.15); the domain console passes it to the process `domain` | the domain console — only on a connection with the proven role `console`; the process `domain` — only on a connection of the role `domainconsole`; otherwise it is not read | «Ticket on forwarding» |
 | `X-User` | nobody: one that came is always removed | — | [gate-and-pass contract](gate-and-pass.md) `x_user` |
 
@@ -100,6 +101,28 @@ journal:      domain.forwarded {cluster, path, user, status} at the forwarding c
               user — the name proven by the gate (before lesson 9 — operator), not X-User; status — the code of the answer or of the refusal (a handshake refusal of
               the role door — 502, as the network)
 ```
+
+### Domain worker pass hop policy
+
+This is the narrow exception for a confirmed `door.pass` route on the domain (P/10 N1.6), after the reserved platform routes have been matched. Ordinary platform forwarding keeps its existing row wait (normally 5 seconds), `FORWARD_MAX` 1 MiB, credentials and refusals. The 5-second table cell for the dynamic pass row is the transport interval used below, not a cap on a declared worker wait or a stream.
+
+Every console on member console -> holder console -> domain console -> worker derives the same closed descriptor from its own validated, confirmed installed manifest and this request:
+
+```json
+{"sub":"testsub","method":"GET","path_b64":"YXBpL3g","kind":2,"wait":10,"stream":false,"max_bytes":4194304}
+```
+
+The keys are exactly `sub, method, path_b64, kind, wait, stream, max_bytes`. `sub` is the selected subsystem. `method` is the original method token. `path_b64` is unpadded base64url of the unchanged pass-path bytes after `/domain/<sub>/`, without the leading slash or query (the example is `api/x`). `kind` is 1 or 2. `wait` is the effective finite wait in seconds, or null for a stream; `stream` is boolean; `max_bytes` is 4194304 for a finite answer, or null for a stream. The first kind uses its existing `PASS_WAIT`; the second uses the longest covering declared wait key, otherwise `PASS_WAIT`, and its existing stream match. A policy is pinned for this request, not recomputed to extend a running deadline.
+
+`X-W2C-Pass-Policy` is exactly one header field with exactly one lowercase 64-hex value: SHA-256 of UTF-8 JCS of that descriptor. Repeated fields, a comma list, uppercase hex, whitespace within the parsed digest value or any other spelling are malformed. A missing header is filled with the locally derived digest. Each hop, after the guards that it normally owes and before forwarding, computes its own policy and compares a present claim. Malformed spelling, unavailable/unconfirmed policy or a different digest gives the existing 503 `unavailable` form, without calling the worker, replacing the claim, downgrading or retrying another policy. Refusals mapped by the second-kind manifest retain their normal mapping. The claim is carried unchanged between consoles and removed before the worker; it is not returned as a credential.
+
+The digest proves only consistency. It proves no identity, role, right, client certificate or trusted origin and cannot raise a local limit. Ordinary identity, need, may, cookie-CSRF, TLS, Authorization and first-cookie-hop rules remain mandatory, including on the signed listener without a client leaf. No guard acquires a substitute successful outcome from this header. Ordinary routes remove this header rather than taking this exception.
+
+For a finite worker wait W, the domain console budgets W for the complete worker answer, the holder console budgets W + 2 × F for its domain-console request, and the member console budgets W + 4 × F for its holder-console request, where F is the existing 5-second forwarding transport interval of the pass row. The declared wait ceiling remains `PASS_WAIT_MAX` 9000 seconds; the transport allowances do not enlarge the worker's wait. Each hop uses its own monotonic elapsed deadline, without resetting it on a header, chunk or retry; no shared wall-clock deadline is inferred. A finite answer is buffered up to 4 MiB before exposing client headers at every hop, as required by the worker pass, rather than capped at `FORWARD_MAX`.
+
+A stream has neither the 5-second response cap nor the 1 MiB/4 MiB body cap; connecting and TLS handshaking retain the ordinary transport bound. It is relayed as bytes arrive, without buffering the whole body. Before exposing client headers, failures use the existing own refusal: for the second kind, expiration before worker headers is 504; finite-body break, size and other transport refusals retain their specified codes. A peer refusal received in full is passed as received. After client headers are exposed, all hops propagate only bytes and closure: a break never appends, wraps or replaces them with a new `502` JSON body. Ordinary cancellation and the stream's revocation/disabled/expiry checks still close downstream work; they create no callback authority and do not release application write guards early.
+
+The domain console still refuses an incoming `X-W2C-Pass-Ticket` with 401 and sends no `X-W2C-Pass-Console`; this exception creates no listener, callback door, JWT, X-User or credential and does not extend C06-PASS-COOKIE-01. The worker keeps its independent credential and epoch checks. The worker-side pass remains the [gate-and-pass contract](gate-and-pass.md).
 
 ### First cookie transition to the domain
 

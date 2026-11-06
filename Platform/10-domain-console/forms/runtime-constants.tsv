@@ -1,0 +1,6 @@
+# P/10 existing positive integer limits; literal TAB. Not environment settings.
+name	value	unit	norm	meaning
+DOMAIN_PAGE_MEMBERS	1000	count	P/10-R004	Maximum members served on one aggregate domain or member-list page; the exact cursor policy remains the source
+RELAY_MEMBERS_MAX	5000	count	P/10-R004	Maximum member names returned by the existing relay-members door; keys never leave
+LOST_AFTER	45	s	P/10-R011	Imported observation silence threshold; silent_since is the last report plus this threshold
+ALARMS_WINDOW	86400	s	P/10-R011	The default one-day window preceding now; explicit bounds keep the strict reader-time query grammar

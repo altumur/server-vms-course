@@ -651,6 +651,8 @@ PASS_STREAMS_MAX: 256         # passes as a stream of one instance at once: each
 PASS_TICKET_CHECK: 5          # s; the term within which an open stream notices a revocation, a disabling and exp
 ```
 
+**Domain pass across consoles.** For the domain path, the [forwarding hop policy](forwarding.md#domain-worker-pass-hop-policy) fixes the confirmed manifest descriptor, `X-W2C-Pass-Policy`, finite complete-answer budgets at every hop, 4 MiB buffering, and unbounded stream time/body. This is a narrow exception to ordinary forwarding. The second-kind 504 before worker headers and refusal mapping above remain; after client headers only bytes and closure are possible. It creates no domain callback or credential.
+
 **One worker per server.** A ticket is bound to the leaf of the server, and the leaf is one per role and server: a second worker with a callback on the same server would share it. Therefore the controller's order for such a subsystem does not raise `want` of the server above 1 ([P/04](../../04-controller/spec/04-controller.norms.md) N3 «shortage(), order()…»).
 
 **Races.** Two callbacks of one ticket at once are independent, the edits are judged by `cas` and `If-Match`. The request closes in the middle of a callback — a call that has passed `ticket` runs to its end: one write is atomic, and the next call gets 401, so the worker stops the translation and writes nothing more. A disabling and a revocation are seen by the next call or by the stream check: the window is `PASS_TICKET_CHECK` and the delay of the copy at the cluster: at a member a revocation goes by the copy of `domain/revoked`, a disabling — by the copy of grants, so the ticket of a disabled person is not removed there until the end of the request, but `may` refuses it.

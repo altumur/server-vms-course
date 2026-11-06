@@ -212,7 +212,8 @@ def references(document, external=None, place=lambda where: where):
 # Built sections between their markers: the form of ADR-0087, the data families of ADR-0088 and the form of the
 # canonical view of ADR-0089 (chapter 2.2).
 FORM_MARKERS = {"<!-- form:begin -->", "<!-- form:end -->", "<!-- families:begin -->", "<!-- families:end -->",
-                "<!-- canonical:begin -->", "<!-- canonical:end -->"}
+                "<!-- canonical:begin -->", "<!-- canonical:end -->",
+                "<!-- checklist-inventory:begin -->", "<!-- checklist-inventory:end -->"}   # опись чеклистов (2026-11-06)
 # Acceptance chapters whose puts.tsv (and puts/) the script checks (form_source.vectors.Chapter.puts): chapter 2.2 with
 # the view column, chapter 2.3 in three columns.
 PUTS_CHAPTERS = {("P/02", "2/"), ("P/02", "3/")}
@@ -501,6 +502,8 @@ def chapter_key(path):
 # Номер главы — 0, 1–99 (главы 8.0 и 8.10 урока 8).
 CHAPTER = r"(?:0|[1-9][0-9]?)"
 NORM_ID = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]+|[PV]/[0-9]{2}(?:\." + CHAPTER + r")?)-[0-9]+"
+INVENTORY_BEGIN = "<!-- checklist-inventory:begin -->"   # опись чеклистов в instruction (решение 2026-11-06)
+INVENTORY_END = "<!-- checklist-inventory:end -->"
 # A section of an old lesson that moved keeps only a pointer: its text starts with «Перенесено в»; «Остаётся здесь» —
 # part of it stays.
 MOVED_SECTION = re.compile(r"^Перенесено в\b")
@@ -1546,6 +1549,82 @@ class Check:
                 said = match.group(1) or match.group(2)
                 if int(said) != len(ids):
                     mismatch(said, len(ids), "checklist ids")
+
+    # The checklist inventory of the instruction (решение «Архитектора» 2026-11-06, P/08): a block between
+    # INVENTORY_BEGIN and INVENTORY_END with the table `| chapter | ids |`; every id in full, in backticks, no ranges.
+    # The ids of the block are the ids of all checklists of the lesson, once each; a count said in the block or in the
+    # line before it matches; the source and the translation (ADR-0124) hold one set. A lesson without the block in
+    # either file owes nothing.
+    def inventory_block(self, path, text, key):
+        """→ (ids in order, chapter of each id) or None without the block."""
+        begin, end = text.find(INVENTORY_BEGIN), text.find(INVENTORY_END)
+        if begin < 0 and end < 0:
+            return None
+        if begin < 0 or end < begin or text.count(INVENTORY_BEGIN) != 1 or text.count(INVENTORY_END) != 1:
+            self.error(path, "checklist inventory: expected one begin marker and one end marker after it")
+            return None
+        body = text[begin + len(INVENTORY_BEGIN):end]
+        before = [ln for ln in text[:begin].splitlines() if ln.strip()][-1:]
+        before = [ln for ln in before if ln.lstrip().startswith("#")]      # the heading of the block, if right above
+        ids, rows, said = [], 0, []
+        for line in [*before, *body.splitlines()]:
+            stripped = line.strip()
+            if not stripped.startswith("|"):
+                said += re.findall(r"(?<![\w/.-])(\d+)\s+(?:ids?(?!\w)|id-\w*|пункт\w*|норм\w*|items?(?!\w))",
+                                   stripped)
+                continue
+            cells = [c.strip() for c in stripped.strip("|").split("|")]
+            if len(cells) != 2:
+                self.error(path, f"checklist inventory: a row of the table | chapter | ids | has {len(cells)} cells")
+                continue
+            if cells == ["chapter", "ids"] or re.fullmatch(r":?-+:?", cells[0]):
+                continue
+            rows += 1
+            chapter = re.match(r"`?(?:[PV]/)?(?:[0-9]{1,2}\.)?(" + CHAPTER + r")`?(?!\S)", cells[0])   # P/08.0, 08.0, 8.0, 0
+            prefix = f"{key}.{chapter[1]}-" if chapter else None
+            tokens = re.findall(r"`([^`]*)`", cells[1])
+            if re.sub(r"`[^`]*`", "", cells[1]).strip(" ,;") or not tokens:
+                self.error(path, f"checklist inventory: chapter {cells[0]}: ids must be full ids in backticks, "
+                                 f"separated by commas, got {cells[1]!r}")
+            for token in tokens:
+                if not re.fullmatch(NORM_ID, token):
+                    self.error(path, f"checklist inventory: `{token}` is not a full checklist id (no ranges)")
+                    continue
+                if prefix and not token.startswith(prefix):
+                    self.error(path, f"checklist inventory: {token} is not an id of chapter {cells[0]}")
+                ids.append(token)
+        if not rows:
+            self.error(path, "checklist inventory: no rows in the table | chapter | ids |")
+        for value, count in Counter(ids).items():
+            if count != 1:
+                self.error(path, f"checklist inventory: {value} repeats")
+        for number in said:
+            self.stats["count_phrases"] += 1
+            if int(number) != len(ids):
+                self.error(path, f"checklist inventory: says {number} ids, the block lists {len(ids)}")
+        return ids
+
+    def checklist_inventory(self, source, translation, key, all_ids):
+        blocks = {}
+        for path in dict.fromkeys([source, translation]):
+            text = self.read(path) if path.exists() else None
+            blocks[path] = self.inventory_block(path, text, key) if text is not None else None
+        if all(b is None for b in blocks.values()):
+            return
+        self.stats["checklist_inventories"] += 1
+        wanted = set(all_ids)
+        for path, ids in blocks.items():
+            if ids is None:
+                self.error(path, "checklist inventory: the block is missing here, the other language has it")
+                continue
+            for value in sorted(wanted - set(ids)):
+                self.error(path, f"checklist inventory: checklist id {value} is not listed")
+            for value in sorted(set(ids) - wanted):
+                self.error(path, f"checklist inventory: {value} is in no checklist of the lesson")
+        listed = [set(ids) for ids in blocks.values() if ids is not None]
+        if len(listed) == 2 and listed[0] != listed[1]:
+            self.error(translation, "checklist inventory: the ids differ from the source "
+                                    f"({sorted(listed[0] ^ listed[1])})")
 
     # Every directive a scenario uses is in a stand dictionary («Словарь директив»): the shared one of the Platform
     # module and the module's own (README of lesson 1), which adds only its new directives.
@@ -2889,6 +2968,7 @@ class Check:
         for path, text in texts.items():
             self.counts(path, text, key, all_ids, totals["scenarios"], path == instructions, totals["verdicts"],
                         total_choices or None, lecture=path == lesson)
+        self.checklist_inventory(spec / f"{stem}.README.md", instructions, key, all_ids)
         self.stale(key, acceptance)
         self.stats["lessons"] += 1
 

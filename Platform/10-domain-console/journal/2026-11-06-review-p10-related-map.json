@@ -1,0 +1,95 @@
+{
+  "base": "f0e038d57b4d8301c6a7ebe1a03a1f9ebc85680a",
+  "source_endpoint": "d731181d0c3739dd2e70553ae046b7eb8edb5693",
+  "files": [
+    {
+      "path": "Platform/common/contracts/forwarding.md",
+      "before_sha256": "b9ce0b85b8831f0f31940a2daa7b75241a3d676715338b3bfbb17d5cc3e2aca4",
+      "after_sha256": "7493f01a8add711c479e34683b7e37d3194d4dcf4697d3e8c83d4fdfdd10ce89",
+      "scope": "explicitly assigned and reserved common contract C3; unrelated common files excluded"
+    },
+    {
+      "path": "Platform/common/contracts/gate-and-pass.md",
+      "before_sha256": "5948a22d049dc4b0ea842c00191b66fcae49750a9a02ca4d38407825835b6425",
+      "after_sha256": "506182184574c849f771b343f32fef7067564ac70a731003b52d0e01c53c8b1f",
+      "scope": "explicitly assigned and reserved common contract C3; unrelated common files excluded"
+    },
+    {
+      "path": "Platform/common/ru/contracts/forwarding.md",
+      "before_sha256": "3193a8f899e4acc3298b140f18dfadb04e49544265fb377aed5dd2f8dc9a316d",
+      "after_sha256": "d3fffd39c88097eb3f520b83a968a8e5f85f5a775cdd7950bfb8fab1ab63eb21",
+      "scope": "explicitly assigned and reserved common contract C3; unrelated common files excluded"
+    },
+    {
+      "path": "Platform/common/ru/contracts/gate-and-pass.md",
+      "before_sha256": "735ec1dc4248faa248013971c5e18f7461335301b9bbdb0bba50e698c8b18bba",
+      "after_sha256": "6d81ba7d17aefe05b393f5b7ddfd9f2323805252d0ece5c6fde699e55468cf4e",
+      "scope": "explicitly assigned and reserved common contract C3; unrelated common files excluded"
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "before_sha256": "468184c320c1dc011498f1dde732d14b0b3bbebc08c53bd4fbd730b9acb28312",
+      "after_sha256": "c9e41d69e5686587df9efa08276ff0d970243099fa5306bd1998e0d50544fdac",
+      "scope": "one served url type pointer"
+    }
+  ],
+  "exact_assigned_p08_pointer": "/components/schemas/ServedView/allOf/1/properties/url/type",
+  "p08_before": "string",
+  "p08_after": [
+    "string",
+    "null"
+  ],
+  "p08_other_nodes_equal": true,
+  "stored_view_writer_unchanged": true,
+  "common_catalog_pair_ops_unchanged": true,
+  "new_header": {
+    "name": "X-W2C-Pass-Policy",
+    "before": null,
+    "after": "exactly one lowercase 64-hex SHA256 UTF8 JCS of the closed descriptor; consistency only, never authority",
+    "descriptor_keys": [
+      "sub",
+      "method",
+      "path_b64",
+      "kind",
+      "wait",
+      "stream",
+      "max_bytes"
+    ],
+    "digest_example": {
+      "descriptor": {
+        "sub": "testsub",
+        "method": "GET",
+        "path_b64": "YXBpL2ElMkZi",
+        "kind": 2,
+        "wait": 10,
+        "stream": false,
+        "max_bytes": 4194304
+      },
+      "sha256": "c5b465d361781c60e582244158d7f69eef2201d0542099489217824afff0eb39"
+    }
+  },
+  "native_input_added": {
+    "path": "P/10 alarms members.*.silent_after",
+    "before": null,
+    "after": "optional finite positive number; absent uses the supplied lost_after; actual collector always supplies class/mark-derived value"
+  },
+  "map": {
+    "path": "Platform/10-domain-console/journal/2026-11-06-review-p10-related-source-map.tsv",
+    "rows": 7,
+    "sha256": "6d63de2b581fd6418452a9ec9bea01059f1ebc34f7f66293fe0ac2eaa2081533"
+  },
+  "authorizations": [
+    "Architect accepted review P10 C3 exact header/policy; MacroSpec reserved these four files",
+    "coord103 explicitly assigned exactly the P08 ServedView url type pointer"
+  ],
+  "not_changed": [
+    "Other P08/P09 source and CALLs",
+    "common catalog outside retained P09 pair ops",
+    "all family-read data/roles/rosters",
+    "common source-cell grammar/reader code",
+    "P01/P02/P03 source and generated output",
+    "runner/runtime/pins/SUT"
+  ],
+  "limits": "Source evidence; coordination must retain related generator/runner changes and perform the full joint GATE before a new export/pin.",
+  "p08_exact_byte_patch_only_type": true
+}

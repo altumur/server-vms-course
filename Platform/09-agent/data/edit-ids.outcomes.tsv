@@ -1,4 +1,4 @@
 # Outcomes of an unreadable row domain/edit-ids (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domainagent	the whole row is unreadable: the bundle with new is not applied in this pass: the number of the previous attempt is unknown, a new one would give a second unit; the log without the value	1	row	P/08.6 Н1.3б
+	domainagent	the whole row is unreadable: the bundle with new is not applied in this pass: the number of the previous attempt is unknown, a new one would give a second unit; the log without the value	1	row	P/08.6 N1.3b

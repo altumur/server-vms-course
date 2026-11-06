@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Acceptance P/09.2: stand hold, m1, m2, relay (relay agent exposes the relay door). Moved from М11/04 (sc. 02–04, scenario numbers/steps unchanged, 01 empty) (stage B). Format/directives: README.
+# Acceptance P/09.2: stand hold, m1, m2, relay (relay agent exposes the relay door). Moved from M11/04 (sc. 02–04, scenario numbers/steps unchanged, 01 empty) (stage B). Format/directives: README.
 02-road-through-the-relay	1	@domain m1 relay	ok
 02-road-through-the-relay	2	@start agent m2 via relay	ok
 02-road-through-the-relay	3	@until 40 holder GET /domain/members	200 {"knocking": [{"name": "m2", "fingerprint": "$fp2", "pinned": "none"}]}

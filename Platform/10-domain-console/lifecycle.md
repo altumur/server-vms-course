@@ -40,7 +40,7 @@ None: the setting channel is only the environment (P/02.4 N1.2).
 ## Directories and files
 
 - It reads the holder rows (`domain/*` except `!domain/signer*` and `!domain/idem/*`, P/02.5 N1.4); it writes no rows of its own; the reads — the paragraph
-  «Данные» of [P/10 N1](spec/10-domain-console.norms.md) and the data catalogue [`common/data/catalog.tsv`](../common/data/catalog.tsv),
+  «Data» of [P/10 N1](spec/10-domain-console.norms.md) and the data catalogue [`common/data/catalog.tsv`](../common/data/catalog.tsv),
   the reader `domainconsole`.
 - There is no ring ([P/02.4 N1.12](../02-installer/spec/02.4-installer.norms.md)).
 - The holder page is the same page of the console module, `sections: [domain]` ([P/10 N1.7](spec/10-domain-console.norms.md));
