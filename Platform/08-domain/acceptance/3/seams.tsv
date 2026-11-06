@@ -3,3 +3,4 @@
 s01-signature-before-mark	1	CALL domain-report-admit {"signature":"bad"}	{"status":401,"mark_writes":0}
 s02-old-copy-unconfirmed	1	CALL domain-report-admit {"old_generation":"read_unconfirmed"}	{"status":503,"mark_writes":0}
 s03-generation-before-mark	1	CALL domain-report-admit {"generation_put":"outcome_unconfirmed"}	{"status":503,"mark_writes":0,"generation_accepted":false}
+s04-cleanup-is-retried-on-cleanup-path	1	CALL domain-report-admit {"fixture":"cleanup_retry","requests":["new_generation_cleanup_delete_fails","exact_same","heard_without_refresh","new_generation_cleanup_succeeds"]}	{"accepted":[true,true,true,true],"cleanup_attempts":[1,0,0,1],"accepted_mark_undone":false,"old_remainder_until_last_request":true,"remainder_removed_on_last_request":true}
