@@ -18,11 +18,20 @@ Creation and consumption are separate. In a new empty external root:
 
 ```sh
 export NORMGEN_OUT="$(mktemp -d)"
-PYTHONPATH=tools/normgen:tools/normgen/kit /opt/check-env/lesson-spec/bin/python -c \
-  'import lesson,build_kit; build_kit.prepare(profiles=lesson.PROFILES)'
+NORMGEN_OUT_MANIFEST_SHA256="$(PYTHONPATH=tools/normgen:tools/normgen/kit \
+  /opt/check-env/lesson-spec/bin/python -c \
+  'import os,lesson,build_kit; build_kit.prepare(profiles=lesson.PROFILES); print(os.environ[lesson.OUTPUT_RECEIPT_ENV])')"
+export NORMGEN_OUT_MANIFEST_SHA256
 ```
 
-`lesson.ready_outputs(output_root=..., source_root=..., code_root=..., profiles=...)` reads the prepared manifest,
+`lesson.ready_outputs(output_root=..., source_root=..., code_root=..., profiles=..., expected_manifest_sha256=...)`
+and `lesson.output_manifest(..., expected_manifest_sha256=...)` require the creation receipt held by the caller.
+Without the keyword, they require the external `NORMGEN_OUT_MANIFEST_SHA256`, exactly 64 lowercase hexadecimal
+characters. Creation hashes its own serialized manifest bytes once and publishes the receipt only after successful
+validation. Keep it outside the supplied set; never obtain the expected SHA by rehashing that set's manifest.
+The export parent receives the creator's receipt through stdout and passes it to the consumer's environment.
+
+The reader checks that SHA before parsing the prepared manifest or reading payload, then
 checks exact source/code/runtime identities, the declared profile/file roster, modes, types, sizes and SHA256,
 then returns a mapping from profile slug to absolute directory. It never prepares, renders or repairs a set.
 Missing, extra, empty, duplicated or changed data is an error before copying. New inputs require a **new** output root.

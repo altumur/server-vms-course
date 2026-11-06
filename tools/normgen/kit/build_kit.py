@@ -931,11 +931,16 @@ def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT
         env = dict(os.environ, NORMGEN_OUT=generated, PYTHONDONTWRITEBYTECODE="1",
                    **{COURSE_ENV: course, EXPORT_ENV: sha})
         context = {"kind": "export", "course_commit": course, "export_commit": sha}
-        creator = ("import sys;sys.path.insert(0,'kit');import build_kit as k;"
-                   f"k.prepare({tuple(parts)!r},profiles=({L.slug!r},),context={context!r})")
+        creator = ("import os,sys;sys.path.insert(0,'kit');import build_kit as k;"
+                   f"k.prepare({tuple(parts)!r},profiles=({L.slug!r},),context={context!r});"
+                   "print(os.environ[k.lesson.OUTPUT_RECEIPT_ENV])")
         done = subprocess.run([sys.executable, "-c", creator], cwd=gens, env=env, capture_output=True, text=True)
         if done.returncode:
             raise KitError(f"prepare export {sha[:9]}: {(done.stderr or done.stdout).strip()}")
+        receipt = done.stdout.removesuffix("\n")
+        if re.fullmatch(r"[0-9a-f]{64}", receipt) is None:
+            raise KitError("export creator did not return a strict creation receipt")
+        env[lesson.OUTPUT_RECEIPT_ENV] = receipt
         cmd = [sys.executable, str(gens / "kit/build_kit.py"), str(dst), "--module", module]
         cmd += sum((["--part", p] for p in parts), []) + sum((["--judged", f"{k}={v}"] for k, v in judged.items()), [])
         cmd += ["--seed", str(seed)] if seed is not None else []
