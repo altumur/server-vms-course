@@ -6,7 +6,7 @@ This English text is the source; the Russian translation `ru/CONSOLE-MODULE.md` 
 
 2026-10-04. The note of «The console» for step 3 of the boundary note (`ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md`, §2.2, §6.1; the Architect's answers to five questions). Accepted by the Architect with edits; the edits are made. There is no code by it yet (the code of the module — P/07 N1.5).
 
-The contract is public. It is read by the course (`Source/`) and by the product (`vmssubsystem`); the page of any subsystem is written by it.
+The contract is public. It is read by the course (`Source/`) and by the product; the page of any subsystem is written by it.
 
 ## 1. What it is
 
@@ -267,7 +267,7 @@ Everything that the shell has added the module places and repaints by its own po
 
 This is the test of the contract.
 
-- **The platform page** (`w2cplatform/console.html` in the product `vmssubsystem`, `Source/w2cplatform/console.html` in the course) — the three lines from §1 and nothing else. It adds nothing and works on any manifest.
+- **The platform page** (`w2cplatform/console.html` in the product, `Source/w2cplatform/console.html` in the course) — the three lines from §1 and nothing else. It adds nothing and works on any manifest.
 - **`testsub`** — a fictitious subsystem (`testsub.subsystem.yaml`, §2.3 of the boundary note). The test brings up the console with it only and opens the minimal page in jsdom. It checks:
   - the unit tree;
   - adding, editing and deleting;
@@ -306,7 +306,7 @@ The domain holder page is the module: `PlatformConsole.mount(app, {sections: ["d
 3. The minimal page and the test `testsub` (§10).
 4. The product's `vms/console.html` becomes a shell: video, archives, volumes, scenarios, ingest and the intersections of the domain.
 5. `domain/page.html` is deleted: the platform part of the domain is in the module, the cameras and the intersections in the product's `shell.html`; there is no option `Page` (§1).
-6. The course: the module is moved as is (it is JS common to the course and the product `vmssubsystem`), the course's `vms/console.html` is written after the example of the product, lesson 16 is split in two (answer 4).
+6. The course: the module is moved as is (it is JS common to the course and the product), the course's `vms/console.html` is written after the example of the product, lesson 16 is split in two (answer 4).
 
 ## 12. Decisions on the questions (the Architect, 2026-10-04)
 
