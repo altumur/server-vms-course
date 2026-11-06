@@ -793,8 +793,6 @@ def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT
         stage = Path(t)
         unpack(root, course, "tools/normgen", stage)
         unpack(specs, sha, "Platform", stage)
-        if git("ls-tree", "--name-only", sha, "Source/tests/testdata", cwd=specs).strip():
-            unpack(specs, sha, "Source/tests/testdata", stage)   # Course manifests referenced by vectors (P/02 canonical).
         gens = stage / "tools/normgen"
         for g in regen(parts):
             done = subprocess.run([sys.executable, g], cwd=gens, capture_output=True, text=True)

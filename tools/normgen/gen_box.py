@@ -723,8 +723,8 @@ def provenance():
     judge_inputs = [L.form("stages.tsv"), *sorted(L.path("acceptance/3").glob("*.tsv")),
                     L.path("acceptance/3/README.md"),
                     *sorted(L.path("acceptance/3/inputs").glob("*.jsonl")),
-                    ROOT / "Source/tests/testdata/testsub.subsystem.yaml",
-                    ROOT / "Source/tests/testdata/testsub2.subsystem.yaml"] if storage else []
+                    ROOT / "Platform/common/data/testsub/testsub.subsystem.yaml",
+                    ROOT / "Platform/common/data/testsub/testsub2.subsystem.yaml"] if storage else []
     status_cases = L.path("acceptance/3/inputs/status-body-limits.json")
     if status_cases.is_file():
         judge_inputs.append(status_cases)

@@ -707,7 +707,7 @@ class CopyStorage(unittest.TestCase):
             (mod / "box/copy_scenarios_test.go").write_text(SCENARIO_TEST, encoding="utf-8")
             (mod / "coreadapter/seams.go").write_text(SEAM_BRIDGE, encoding="utf-8")
             fixture = mod / "public-copy-steps.json"
-            manifests = {name: str(ROOT / "Source/tests/testdata" / f"{name}.subsystem.yaml") for name in ("testsub", "testsub2")}
+            manifests = {name: str(ROOT / "Platform/common/data/testsub" / f"{name}.subsystem.yaml") for name in ("testsub", "testsub2")}
             with (inputs / "seams.tsv").open() as stream:
                 seam = next(row.split("\t") for row in stream if row.startswith("s10-import-floor-resume\t"))
             fixture.write_text(json.dumps({"Steps": steps, "InputDir": str(inputs / "inputs"), "Manifests": manifests,
