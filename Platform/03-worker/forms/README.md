@@ -72,6 +72,26 @@ name adds a new process operation. All counters are observations since the fresh
 | `worker-holder-group` | ordered begin/timeout/observe/look/return events for two requests of one group. Observe calls before/after the first return and maximum unfinished calls. Timeout does not stand in for completion of the device call. |
 | `worker-state-write` | start identity, re-read unit row, state name/value, may_write. Observe wire items and epoch-row guard. The fixture declares result as an object schema. Identity stamps remain those of the start, not the newer unit row. |
 | `worker-token-cache` | kind, current token identity, ordered refusal/issue events, same-local-day and a verification fixture. The agent transport is controlled; real token bytes, keys, revocations and time are copied from the public common domain-token cases token-36-kind-list-audience-map and token-keep-alive. No validation path is bypassed. Observe requests, revoked word, waiting, files/rows/logs. Recipient crypto also passes the common domain-token vectors. |
+| `worker-base-heartbeat` | Ordinary base heartbeat without subsystem overrides; report decoded schema/build/pending_writes from SCHEMA/BUILD/defaults. |
+| `worker-contribution-cleanup` | Actual two-manifest taking/guarded-cleanup/final-live fixture; count own and foreign contribution IO and inspect the preserved foreign row. |
+| `worker-holder-takeover` | Two holder process epochs with a real late-return callback; record pending calls after fixed wait and the explicit overlap witness, not a cross-holder exclusion promise. |
 
 These seams supplement reading witnesses. They do not remove the checklist or close a process scenario, domain stand, keyless opening case,
 place writer, or OS presence-lock race that they do not execute. The stage plan lists them as kit tests; the full lesson remains the runner's work.
+
+
+## Lesson-review boundaries
+
+The Architect's accepted P/03 review under ADR-0127 supplements the same ports and [seams](../acceptance/2/seams.tsv); no process command or HTTP API is introduced. All original seams and process scenarios remain required.
+
+The capture adapter derives gen_readable from the unchanged family reader, and gen_incrementable by exact comparison before any int conversion. The latter is true for confirmed absence or a readable generation in [0,9007199254740991). Only then is gen the exact machine operand; otherwise gen=0 is an unused placeholder and the exact original remains available. A high generation is not an unreadable one. Range refusal applies only to an otherwise eligible existing-row capture, retaining the prior NameOnAnotherBox and torn-young precedence. New capture probes observe final_gen or the exact slot_gen_after, gen_readable, refusal and absence of writes.
+
+worker-grant likewise compares epoch and floor exactly, including values beyond int64. New issue probes report actual issue_writes and launch_calls; >=MAX refuses before a write and without retrying the known invalid issue. These are independent from capture generation.
+
+worker-base-heartbeat invokes the ordinary base heartbeat builder with no subsystem overrides. It reports decoded schema/build/pending_writes, using SCHEMA and BUILD, with pending_writes zero. worker-stand-in with strict_place=true installs one real held permitted strict-place fixture and observes its actual CAS under the slot guard. It counts contribution/state writes separately; no such publication becomes allowed.
+
+worker-contribution-cleanup loads two real valid manifests with distinct subsystem names and the same slot name. own_from names every declared book source of the own manifest (two actual rows); foreign_from names a live foreign contribution. It invokes ordinary taking/guarded cleanup/final-live code. The result counts contribution reads/deletes of each subsystem from recorded IO and verifies the foreign row directly after the run. Manifest catalogue reads are not foreign contribution reads. A prepared answer or a model of cleanup is not this seam.
+
+worker-holder-takeover runs two holder process epochs and a real blocked action callback. A starts r1 at 0.2; B takes epoch2 at 1; the old callback returns at 30.2. At 11.2 the fixed 10.2-second wait of B has elapsed while the actual old call is still pending. Record the real in-flight trace and holder/epoch changes: old_call_unfinished_after_wait=true, cross_holder_exclusion_proven_by_wait=false, witness=overlap_possible_marked. The adapter derives these observations from the controlled IO/callback trace, not by returning constants. The seam does not require B to dispatch at the earliest permitted instant: a stronger barrier/fence may defer or reject it. It records why fixed wait alone is not cross-holder exclusion; the original single-holder s4 still requires maximum one unfinished call. No new alarm/event kind is introduced.
+
+worker-token-cache now distinguishes local now from verification.now at the receiver. The keep-current probe sets local now beyond exp but verifies and accepts the real current token at the recipient's still-valid time; receiver=accepted is that actual reply. It counts actual new-token requests and cache replacements and checks that current remains. Signature verification is retained; a local clock is not substituted for the receiver's outcome.

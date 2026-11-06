@@ -45,3 +45,24 @@ func TestLifecycleHeartbeat_S4BudgetOver(t *testing.T) {
 		{n: 1, line: 8, kind: "call", name: "worker-memory", input: "{\"command\":\"worker\",\"manifest\":{\"placement\":{\"capacity\":{\"default\":3,\"unit_mb\":100,\"base_mb\":10}}},\"environment\":{\"CAPACITY\":\"3\",\"WORKER_MEMORY_MB\":\"309\"}}", expects: []expect{expect{call: "{\"checked\":true,\"refused\":true,\"reason\":\"MemoryBudgetRefused\"}"}}},
 	})
 }
+
+// TestLifecycleHeartbeat_S5HeartbeatBaseDefault — chapter 3.4, seams.tsv.
+func TestLifecycleHeartbeat_S5HeartbeatBaseDefault(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 9, kind: "call", name: "worker-base-heartbeat", input: "{\"subsystem_overrides\":{},\"environment\":{}}", expects: []expect{expect{call: "{\"schema\":1,\"build\":\"dev\",\"pending_writes\":0}"}}},
+	})
+}
+
+// TestLifecycleHeartbeat_S6HeartbeatBaseBuild — chapter 3.4, seams.tsv.
+func TestLifecycleHeartbeat_S6HeartbeatBaseBuild(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 10, kind: "call", name: "worker-base-heartbeat", input: "{\"subsystem_overrides\":{},\"environment\":{\"BUILD\":\"review\"}}", expects: []expect{expect{call: "{\"schema\":1,\"build\":\"review\",\"pending_writes\":0}"}}},
+	})
+}
+
+// TestLifecycleHeartbeat_S7StandInStrictPlace — chapter 3.4, seams.tsv.
+func TestLifecycleHeartbeat_S7StandInStrictPlace(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 11, kind: "call", name: "worker-stand-in", input: "{\"step_age\":13,\"slot_owned\":true,\"writing_allowed\":true,\"strict_place\":true,\"loop_heartbeat\":{\"ts\":100,\"status\":[]},\"wall\":113}", expects: []expect{expect{call: "{\"strict_place_writes\":1,\"strict_place_guarded_by_slot\":true,\"contribution_writes\":0,\"state_writes\":0,\"watchdog_calls\":0}"}}},
+	})
+}
