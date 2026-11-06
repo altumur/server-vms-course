@@ -212,7 +212,8 @@ def references(document, external=None, place=lambda where: where):
 # Built sections between their markers: the form of ADR-0087, the data families of ADR-0088 and the form of the
 # canonical view of ADR-0089 (chapter 2.2).
 FORM_MARKERS = {"<!-- form:begin -->", "<!-- form:end -->", "<!-- families:begin -->", "<!-- families:end -->",
-                "<!-- canonical:begin -->", "<!-- canonical:end -->"}
+                "<!-- canonical:begin -->", "<!-- canonical:end -->",
+                "<!-- checklist-inventory:begin -->", "<!-- checklist-inventory:end -->"}   # опись чеклистов (2026-11-06)
 # Acceptance chapters whose puts.tsv (and puts/) the script checks (form_source.vectors.Chapter.puts): chapter 2.2 with
 # the view column, chapter 2.3 in three columns.
 PUTS_CHAPTERS = {("P/02", "2/"), ("P/02", "3/")}
@@ -1577,7 +1578,7 @@ class Check:
             if cells == ["chapter", "ids"] or re.fullmatch(r":?-+:?", cells[0]):
                 continue
             rows += 1
-            chapter = re.match(r"`?(?:[PV]/)?(?:[0-9]{2}\.)?(" + CHAPTER + r")`?(?!\S)", cells[0])
+            chapter = re.match(r"`?(?:[PV]/)?(?:[0-9]{1,2}\.)?(" + CHAPTER + r")`?(?!\S)", cells[0])   # P/08.0, 08.0, 8.0, 0
             prefix = f"{key}.{chapter[1]}-" if chapter else None
             tokens = re.findall(r"`([^`]*)`", cells[1])
             if re.sub(r"`[^`]*`", "", cells[1]).strip(" ,;") or not tokens:

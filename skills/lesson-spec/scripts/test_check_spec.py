@@ -996,6 +996,7 @@ paths:
         """Опись чеклистов instruction (решение «Архитектора» 2026-11-06): без блока — ничего; блок = все id."""
         self.assertEqual(self.inventory_errors("# Instructions\n"), [])
         self.assertEqual(self.inventory_errors(self.INVENTORY), [])
+        self.assertEqual(self.check().errors, [])          # маркеры блока — не «unsupported raw HTML»
         self.assertEqual(self.check().stats["checklist_inventories"], 1)
         bad = {
             "missing id": self.INVENTORY.replace("| P/01.2 | `P/01.2-01` |\n", ""),
@@ -1004,6 +1005,7 @@ paths:
             "range": self.INVENTORY.replace("`P/01.2-01`", "`P/01.2-01…02`"),
             "no backticks": self.INVENTORY.replace("`P/01.2-01`", "P/01.2-01"),
             "wrong chapter": self.INVENTORY.replace("| P/01.2 |", "| P/01.1 |"),
+            "wrong chapter, short form": self.INVENTORY.replace("| P/01.2 |", "| 1.1 |"),
             "count": self.INVENTORY.replace("2 ids", "3 ids"),
             "no end": self.INVENTORY.replace("<!-- checklist-inventory:end -->\n", ""),
             "three cells": self.INVENTORY.replace("| P/01.2 | `P/01.2-01` |", "| P/01.2 | `P/01.2-01` | x |"),

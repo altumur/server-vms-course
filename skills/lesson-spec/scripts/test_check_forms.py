@@ -656,7 +656,7 @@ class VersionedDoors(unittest.TestCase):                # P/08 versioned-doors.t
     def test_real_form_clean(self):
         errors, stats = check_forms.check_versioned_doors(ROOT / "Platform/08-domain/forms/versioned-doors.tsv")
         self.assertEqual(errors, [])
-        self.assertEqual(stats["versioned_doors"], 19)
+        self.assertEqual(stats["versioned_doors"], 24)
         self.assertEqual(self.errors(self.good), [])
 
     def test_mutations(self):
