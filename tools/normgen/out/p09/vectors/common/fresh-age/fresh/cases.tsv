@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/fresh-age fresh.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/fresh-age/fresh.tsv sha256 3ae39846ab0661af72da5f26335060df83bde770be23f1634791dd2b24d5a292
+# source Platform/common/vectors/fresh-age/fresh.tsv sha256 81b1c9dea18b24f1b441cc53a209950da4e2792e031d8d8fc2275ca7519a049e
 case	input	exit	stdout
 line-3	line-3.json	0	true
 line-4	line-4.json	0	true

@@ -67,6 +67,7 @@ import gen_admin  # noqa: E402 — часть admin
 import gen_box  # noqa: E402 — часть box
 import gen_manifest  # noqa: E402 — часть loader (P/02)
 import gen_cmdtests  # noqa: E402 — stagetests урока без HTTP (P/02)
+import gen_policy_machines  # noqa: E402 — closed P/03 policies inside stagetests
 import gen_rollout  # noqa: E402 — часть rollout-poll (P/02)
 import gen_door_lesson  # noqa: E402 — дверь уроков после P/01 (P/06, часть 3а)
 import gen_machine  # noqa: E402 — части машин (slot-capture P/03, slot-fate и slot-release P/04)
@@ -202,19 +203,27 @@ def provenance(parts, files, judged):
         own = sorted((f["path"], f["sha256"]) for f in files if f["component"] in components and not f.get("editable"))
         return sha256("".join(f"{p}\t{h}\n" for p, h in own).encode())
     table = {
-        "writecheck": (("normgen", "kit"), {"form": [TABLE], "generator": NORMGEN / "gen_checks.py",
+        "writecheck": (("normgen", "kit"), {"form": gen_checks.tsv_input.source_files(TABLE, root=ROOT) if TABLE.is_file() else [],
+                                   "generator": NORMGEN / "gen_checks.py",
+                                   "generators": [NORMGEN / "gen_checks.py", NORMGEN / "tsv_input.py"],
                                    "handwritten": [NORMGEN / "runtime/go/runtime.go", NORMGEN / "prims/go/prims.go"]
                                    + [HANDWRITTEN / sub / name for sub, name in KIT_FILES],
                                    "judge": NORMGEN / "test_gen_checks.py"}),
         "door": (("door",), {"form": [OPENAPI], "generator": NORMGEN / "gen_door.py",
                           "handwritten": [NORMGEN / "doorrt/go/runtime.go"], "judge": NORMGEN / "door_judge.py"}),
-        "vectors": (("vectors",), {"form": [L.form("stages.tsv")],
-                                "generator": NORMGEN / "gen_tests.py", "judge": NORMGEN / "vector_judge.py"}),
-        "stagetests": (("stagetests",), {"form": [L.form("stages.tsv"),
+        "vectors": (("vectors",), {"form": gen_tests.sources("vectors") if L.key == lesson.DEFAULT else [L.form("stages.tsv")],
+                                "generator": NORMGEN / "gen_tests.py",
+                                "generators": [NORMGEN / p for p in ("gen_tests.py", "gen_stagetests.py", "gen_cmdtests.py",
+                                                                    "gen_checks.py", "common_vectors.py", "wire.py",
+                                                                    "vector_consumers.py", "tsv_input.py", "gate.py")],
+                                "judge": NORMGEN / "vector_judge.py"}),
+        "stagetests": (("stagetests",), {"form": gen_tests.sources("stagetests") if L.key == lesson.DEFAULT else [L.form("stages.tsv"),
                                                L.path("acceptance/1/scenarios.tsv"),
                                                L.path("acceptance/1/seams.tsv"),
                                                L.path("acceptance/3/seams.tsv")],
                                       "generator": NORMGEN / "gen_stagetests.py",
+                                      "generators": [NORMGEN / p for p in ("gen_stagetests.py", "gen_tests.py", "gen_checks.py",
+                                                                          "gen_cmdtests.py", "tsv_input.py", "gate.py")],
                                       "judge": NORMGEN / "scenario_judge.py"}),
     }
     out = {}
@@ -246,6 +255,8 @@ def provenance(parts, files, judged):
             out[part] = {"form": [entry(f) for f in t["form"] if f.is_file()], "generator": entry(t["generator"]),
                          "handwritten": [entry(f) for f in t.get("handwritten", [])], "judge": entry(t["judge"]),
                          "output": output(*component)}
+            if "generators" in t:
+                out[part]["generators"] = [entry(f) for f in t["generators"]]
         out[part]["judged"] = judged.get(part)
     return out
 
@@ -358,11 +369,12 @@ def build(dst, module, parts=(), judged=None, seed=None):
         box_files = gen_box.kit_files(module) if "box" in parts else []
         loader_files = gen_manifest.kit_files(module) if "loader" in parts else []
         loader_root = gen_manifest.vendor(module) if "loader" in parts else []
+        policy_root = gen_policy_machines.vendor(module) if L.key == "03-worker" and "stagetests" in parts else []
         loader_wired = gen_manifest.wired(module) if "loader" in parts else {}
         machine_files = [(p, f) for p in sorted(set(parts) & set(MACHINES)) for f in gen_machine.kit_files(p, module)]
     except (gen_machine.GenError, gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError, gen_launch.GenError,
             gen_core.GenError, gen_families.GenError, gen_admin.GenError, gen_box.GenError, gen_manifest.GenError, gen_cmdtests.GenError,
-            gen_rollout.GenError, gen_vectors.GenError, gen_versioned_doors.GenError) as exc:
+            gen_rollout.GenError, gen_vectors.GenError, gen_versioned_doors.GenError, gen_policy_machines.GenError) as exc:
         raise KitError(str(exc)) from None
     door_lesson = "door" in parts and L.key != lesson.DEFAULT
     try:
@@ -384,6 +396,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
                       "origin": origin, "component": component, "source": source})
 
     for sub in (("checks", "jsonstrict", "writecheck") if has_wc else ()) + \
+            (("workerpolicy", "../vendor") if policy_root else ()) + \
             (gen_rollout.KIT_DIRS if rollout_files else ()) + sum((gen_tests.PART_DIRS[p] for p in ("vectors", "stagetests") if p in parts), ()) + \
             (("apidoor",) if openapi_sha or door_lesson else ()) + (gen_flags.KIT_DIRS if flag_files else ()) + \
             (gen_refusals.KIT_DIRS if refusal_files else ()) + (("launch",) if launch_files else ()) + \
@@ -468,6 +481,15 @@ def build(dst, module, parts=(), judged=None, seed=None):
             "Platform/common/versions" + ("" if own else " (go mod vendor)"))
         if own:
             files[-1]["editable"] = True
+    for relp, data in policy_root:
+        sub, name = os.path.split(relp)
+        own = relp in ("go.mod", "go.sum")
+        if own and taken(Path(os.path.normpath(internal / ".." / relp)), data):
+            continue
+        put(os.path.join("..", sub), name, data, "vendored" if relp.startswith("vendor/") else "generated",
+            "stagetests", "Platform/common/versions" + (" (go mod vendor)" if relp.startswith("vendor/") else ""))
+        if own:
+            files[-1]["editable"] = True
     for sub, name, data, origin, source, own in launch_files:
         if own and taken(Path(os.path.normpath(internal / sub / name)), data):
             continue                    # main.go и рамка реализации не трогаются
@@ -481,6 +503,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
         if own:
             files[-1]["editable"] = True
     stagetests_md = (gen_tests.KIT_MD_STAGETESTS if http else gen_cmdtests.KIT_MD) if "stagetests" in parts else ""
+    if policy_root:
+        stagetests_md += gen_policy_machines.KIT_MD
     doc = ((KIT_MD if has_wc else KIT_MD_LESSON.replace("{lesson}", L.code).replace("{dir}", L.kit_dir))
            + ((gen_tests.kit_md() if L.key == lesson.DEFAULT else gen_vectors.KIT_MD) if "vectors" in parts else "")
            + stagetests_md + (gen_rollout.KIT_MD if rollout_files else "") + (KIT_DOOR_MD if openapi_sha else "")
@@ -493,6 +517,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
            + ((gen_versioned_doors if L.key == "08-domain" else gen_core).KIT_MD if core_files else "")
            + "".join(gen_machine.kit_md(p) for p in sorted(set(parts) & set(MACHINES)))
            + (KIT_CONTRACTS_MD if "contracts" in parts else "")).replace("{module}", module)
+    if policy_root:
+        doc = doc.replace("Standard library only, Go 1.22.", "Go 1.22; the closed policies use vendored cel-go v0.26.1 from Platform/common/versions.")
     connect = connect_md(kit_parts, module) if L.key == lesson.DEFAULT else ""   # примеры частей — кодом P/01
     doc = (doc + connect + exported_md(internal, dst, module)).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)
@@ -503,7 +529,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
         totals[f["origin"]] = totals.get(f["origin"], 0) + f["lines"]
         parts[f["component"]] = parts.get(f["component"], 0) + f["lines"]
     manifest = {
-        "kit": ("P/01 pack B (ADR-0083 amendment 86): Н2.1 write checks and strict JSON body parser, Go" if has_wc
+        "kit": ("P/01 pack B (ADR-0083 amendment 86): N2.1 write checks and strict JSON body parser, Go" if has_wc
                 else f"{L.code} kit (ADR-0125 addendum (5)): the generated parts of the lesson, Go"),
         "module": module,
         "parts": kit_parts,
@@ -525,7 +551,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
     return manifest
 
 
-KIT_MD = """# Kit: write checks of P/01.1 Н2.1 (Go)
+KIT_MD = """# Kit: write checks of P/01.1 N2.1 (Go)
 
 Ready-made Go packages under `01-store/internal/`. They are part of your tree, but **do not edit them** (writes there are
 closed): import and call them. `kit.manifest.json` lists every file with its sha256.
@@ -533,7 +559,7 @@ closed): import and call them. `kit.manifest.json` lists every file with its sha
 | Package | Import path | Origin |
 |---|---|---|
 | `writecheck` | `{module}/internal/writecheck` | handwritten: parser + checks in one call — **use this** |
-| `jsonstrict` | `{module}/internal/jsonstrict` | handwritten: the strict JSON parser of Н2.1 |
+| `jsonstrict` | `{module}/internal/jsonstrict` | handwritten: the strict JSON parser of N2.1 |
 | `checks` | `{module}/internal/checks` | generated from `Platform/01-store/forms/write-checks.tsv` |
 
 Standard library only, Go 1.22. All functions are pure and safe for concurrent use.
@@ -554,21 +580,21 @@ type Refusal struct {
 }
 ```
 
-- `body` — the whole decoded body bytes. Call it only after the HTTP framing and the body limit of Н2.1 (`413` before the
+- `body` — the whole decoded body bytes. Call it only after the HTTP framing and the body limit of N2.1 (`413` before the
   body is parsed); the kit does not read HTTP.
-- `sock` — the role of the caller's socket (P/01.2 Н1.1 identity): `admin`, `console`, `domain` or a role name.
-- `lim` — the lesson values of `BATCH_WRITES`, `BATCH_GUARDS`, `ROW_CEILING` (P/01.1 Н1). A missing name panics
-  (a code error, not an input error). `JSON_DEPTH` is fixed by Н2.1 (128) and is not taken from `lim`.
-- `allowed(sock, op, key)` — the rights of P/01.2 Н3 «проверить», `op` is `read`, `write` or `delete`. You implement it;
+- `sock` — the role of the caller's socket (P/01.2 N1.1 identity): `admin`, `console`, `domain` or a role name.
+- `lim` — the lesson values of `BATCH_WRITES`, `BATCH_GUARDS`, `ROW_CEILING` (P/01.1 N1). A missing name panics
+  (a code error, not an input error). `JSON_DEPTH` is fixed by N2.1 (128) and is not taken from `lim`.
+- `allowed(sock, op, key)` — the rights of P/01.2 N3 «check», `op` is `read`, `write` or `delete`. You implement it;
   the kit calls it for the target key and for guard keys. `nil` panics.
 
 Result:
 
-- `(*Refusal, nil)` with `N == 0` — the body is not JSON by Н2.1 (a repeated field name at any level, `NaN`,
+- `(*Refusal, nil)` with `N == 0` — the body is not JSON by N2.1 (a repeated field name at any level, `NaN`,
   `Infinity`, a BOM, not UTF-8, deeper than 128, any RFC 8259 syntax error): always `400 badrequest`.
 - `(*Refusal, body)` with `N > 0` — the first violated row of the table. Answer `Code` with the JSON body
   `{"kind": Kind}` plus every field of `Fault` (for `413 toolarge`: `limit`, `key`, `size`). Nothing is written.
-- `(nil, body)` — every check passed: execute the command by Н3 with `body`.
+- `(nil, body)` — every check passed: execute the command by N3 with `body`.
 
 `Reason`, `N` and `Check` are never sent to the caller (a refusal does not quote the input).
 
@@ -583,13 +609,13 @@ Result:
 - A lone surrogate (`\\ud800`) becomes U+FFFD in the string. The rows already refuse it where it matters (`key`,
   `guard.key`, the keys of `writes` and `guards` — `badkey`; `items` — `badrequest`); in extra fields it is not read.
 - Extra fields stay in the map: do not read them.
-- `op: floor` passes the table on the `admin` socket only (row 3); everything after that is P/01.3 Н2 — yours.
+- `op: floor` passes the table on the `admin` socket only (row 3); everything after that is P/01.3 N2 — yours.
 
 ## What the kit does NOT do
 
 - HTTP: the request line, headers, routes, methods, `Content-Length` / chunked framing, the body limit, the early
-  refusal and drain, the query of `GET /v1/get` and `GET /v1/list` (all Н2.1 — yours).
-- The store state (Н3): `cas` and `guard` compared with the stored rows, the `id` memory and its answers, admission
+  refusal and drain, the query of `GET /v1/get` and `GET /v1/list` (all N2.1 — yours).
+- The store state (N3): `cas` and `guard` compared with the stored rows, the `id` memory and its answers, admission
   of `not_after` / `not_before` against the clock, writing and the index. The table checks only the form.
 - Rights: the kit does not know the rights; it asks `allowed`. Identity of the socket (P/01.2) is yours.
 
@@ -641,8 +667,8 @@ KIT_DOOR_MD = """
 
 Import path `{module}/internal/apidoor` (package `apidoor`: your own `internal/door`, if any, stays yours), generated by `tools/normgen/gen_door.py` from
 `Platform/01-store/spec/01-store.api.openapi.yaml` (`door.go`; `runtime.go` is its handwritten environment). It is the
-mechanical part of the doors: what the OpenAPI says as a form. The frame of HTTP, the limits of Н2.1, the identity,
-the order «frame → route → identity → body» and the store (Н3) are yours. Standard library only, Go 1.22.
+mechanical part of the doors: what the OpenAPI says as a form. The frame of HTTP, the limits of N2.1, the identity,
+the order «frame → route → identity → body» and the store (N3) are yours. Standard library only, Go 1.22.
 
 ```go
 // Route — the operation by the method and the raw request-target; the path is compared byte for byte.
@@ -695,7 +721,7 @@ a `const` field is not a field (it is always sent), an optional `const` is a `bo
 The names of a map are written in the order of UTF-8 bytes. `type: integer` is a JSON number written without a
 fraction and an exponent (`1.0` is not an integer).
 
-What the door does NOT do: the byte limit of a key (1024, Н1), which `kind` a query refusal is, `HEAD` without a body,
+What the door does NOT do: the byte limit of a key (1024, N1), which `kind` a query refusal is, `HEAD` without a body,
 the body limit, the identity and the rights, the store.
 """
 

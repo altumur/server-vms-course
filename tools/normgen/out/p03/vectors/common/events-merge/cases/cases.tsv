@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/events-merge cases.tsv (gen_vectors.py); compare events.
-# source Platform/common/vectors/events-merge/cases.tsv sha256 c080d3ee8c6d60274e1aef0aaa77df6452fa167939a93949493501afa540a9f8
+# source Platform/common/vectors/events-merge/cases.tsv sha256 2c93a5cb7b9fec740d4af5b43fa3911ff041bb2ccf52dc5a37d01636b701104a
 case	input	exit	stdout
 line-13	line-13.json	0	{"events":[{"id":"e2","epoch_is":"current","fenced":false},{"id":"e1","epoch_is":"fenced","fenced":true}],"complete":true}
 line-14	line-14.json	0	{"events":[{"id":"e1","epoch_is":"unknown","fenced":false}],"complete":true,"incomplete":{}}

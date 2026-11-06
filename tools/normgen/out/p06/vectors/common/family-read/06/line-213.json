@@ -5,7 +5,7 @@
  "case": "06-0212",
  "variant": "",
  "cells": {
-  "family": "platform/decommission/<сервер>",
+  "family": "platform/decommission/<host>",
   "key": "platform/decommission/srv-a",
   "kind": "row",
   "mode": "reader",

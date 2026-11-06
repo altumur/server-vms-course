@@ -15,7 +15,7 @@ import "normgen/p01-1/flags"
 //	  admin_ops: status/backup/leave of oneself — at any
 //	  admin_ops: backup <file>: the file path (after resolving links) outside -dir of the daemon, otherwise a refusal
 //	    before writing, code ≠ 0, the data directory untouched: a copy into the own log of a live daemon spoils it
-//	    (reconciliation of python and go М10/6–11, B8)
+//	    (reconciliation of python and go M10/6–11, B8)
 //	  copy: the backup copy and the import/restore input — one format for all implementations, JSON Lines: UTF-8, a line
 //	    is one JSON object, the line end is LF; the first line is the header {"format": "w2c-configstore-copy",
 //	    "version": 1, "index": <version>}: index — the version of the store (Version of chapter 1.1) at which the copy is
@@ -35,7 +35,7 @@ import "normgen/p01-1/flags"
 //	the flags — forms/daemon-flags.tsv (commands ∋ backup; f.<Field> of package flags):
 //	  -sockets dir
 //	the refusals — forms/refusals.tsv:
-//	  1.3 row 13 backup_inside_dir — exit !0 - (P/01.3 Н1.3 copy; B8); with part refusals: refusals.BackupInsideDir
+//	  1.3 row 13 backup_inside_dir — exit !0 - (P/01.3 N1.3 copy; B8); with part refusals: refusals.BackupInsideDir
 func Backup(f *flags.Flags, env Env) int {
 	if env.Copy != nil {
 		return runCopy("backup", f, env)

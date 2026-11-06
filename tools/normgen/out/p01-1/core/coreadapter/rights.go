@@ -30,11 +30,11 @@ import "normgen/p01-1/apidoor"
 //	  req: P/01.3-R016 — GET `/v1/rights`: The exact form and the refusals of chapter 1.2, availability
 //	    admin/role/forwarding by its N3
 //	the refusals — forms/refusals.tsv:
-//	  1.2 row 2 rights_no_route — 404 badrequest (P/01.2 Н2); with part refusals: refusals.RightsNoRoute
-//	  1.2 row 2 rights_store_unavailable — 503 unavailable (P/01.2 Н2); with part refusals: refusals.RightsStoreUnavailable
-//	  1.2 row 9 rights_not_admin — 403 forbidden (P/01.2 Н2); with part refusals: refusals.RightsNotAdmin
-//	  1.2 row 10 rights_not_loaded — 404 badrequest (P/01.2 Н2); with part refusals: refusals.RightsNotLoaded
-//	  1.2 row 8 forwarding_untrusted — 403 forbidden (P/01.2 Н3; P/01.3 Н3); with part refusals: refusals.ForwardingUntrusted
+//	  1.2 row 2 rights_no_route — 404 badrequest (P/01.2 N2); with part refusals: refusals.RightsNoRoute
+//	  1.2 row 2 rights_store_unavailable — 503 unavailable (P/01.2 N2); with part refusals: refusals.RightsStoreUnavailable
+//	  1.2 row 9 rights_not_admin — 403 forbidden (P/01.2 N2); with part refusals: refusals.RightsNotAdmin
+//	  1.2 row 10 rights_not_loaded — 404 badrequest (P/01.2 N2); with part refusals: refusals.RightsNotLoaded
+//	  1.2 row 8 forwarding_untrusted — 403 forbidden (P/01.2 N3; P/01.3 N3); with part refusals: refusals.ForwardingUntrusted
 func (s *Store) Rights(c Ctx) apidoor.Answer {
 	return notInStage(apidoor.OpRights)
 }

@@ -15,7 +15,7 @@ import "normgen/p01-1/flags"
 //	  admin_ops: import/restore/floor in a group (raft) — only on admin.sock of the leader, before the first row
 //	  admin_ops: import into a directory where a former import has already finished (N3 phase «Done») — a refusal, code ≠
 //	    0, nothing changes
-//	  admin_ops: an unfinished attempt is continued by a replay (import below) (reconciliation of python and go М10/6–11,
+//	  admin_ops: an unfinished attempt is continued by a replay (import below) (reconciliation of python and go M10/6–11,
 //	    B12)
 //	  copy: the backup copy and the import/restore input — one format for all implementations, JSON Lines: UTF-8, a line
 //	    is one JSON object, the line end is LF; the first line is the header {"format": "w2c-configstore-copy",
@@ -68,14 +68,14 @@ import "normgen/p01-1/flags"
 //	    force allows only the clock going back, but not a repeat/lowering of the generation, a uint64 overflow or a
 //	    parallel recovery; form: floor in op: floor — a JSON integer without a fraction or an exponent (`20`, not `2.0e1`
 //	    and not `20.0`), 1 … 2^53 − 2^32; otherwise — 400 badrequest before writing (reconciliation of python and go
-//	    М10/6–11, B5); epochs are JSON integers < 2^53 (ADR-0070), so the floor leaves 2^32 numbers above itself:
+//	    M10/6–11, B5); epochs are JSON integers < 2^53 (ADR-0070), so the floor leaves 2^32 numbers above itself:
 //	    generation ≤ 2^21 − 1 (hours since 2026-01-01 suffice for ~239 years); a generation that would give more — a
 //	    refusal of recovery, as an overflow (added by the pilot of data family schemas, D6); issue: next_epoch =
 //	    max(current, floor) + 1 (P/03.2); an issue that read the floor before the raise can write a number below floor —
 //	    the worker does not start such an epoch: a confirmation after the write (P/03.2 N3 «take_epoch(id)»; added by the
 //	    Quint pilot, F1)
 //	  box: recover — a refusal, code 2 («this build has no raft»): a box has no group, there is nothing to recover it
-//	    with, a copy — import (reconciliation of python and go М10/6–11, B15)
+//	    with, a copy — import (reconciliation of python and go M10/6–11, B15)
 //	  box: import/restore on a box — into a fresh directory of a stopped daemon, not through admin.sock (in a group —
 //	    admin.sock of the leader, `admin_ops` above): the floor as the first write, then the rows
 //	  box: restore coincides with import (there are no neighbours)
@@ -90,9 +90,9 @@ import "normgen/p01-1/flags"
 //	  -index-base int:0..
 //	  --from file, required: true
 //	the refusals — forms/refusals.tsv:
-//	  1.3 row 23 copy_input — exit !0 - (P/01.3 Н1.3 copy); with part refusals: refusals.CopyInput
-//	  1.3 row 14 import_repeated — exit !0 - (P/01.3 Н3; B12); with part refusals: refusals.ImportRepeated
-//	  1.3 row 24 clock_early — exit !0 - (P/01.3 Н3); with part refusals: refusals.ClockEarly
+//	  1.3 row 23 copy_input — exit !0 - (P/01.3 N1.3 copy); with part refusals: refusals.CopyInput
+//	  1.3 row 14 import_repeated — exit !0 - (P/01.3 N3; B12); with part refusals: refusals.ImportRepeated
+//	  1.3 row 24 clock_early — exit !0 - (P/01.3 N3); with part refusals: refusals.ClockEarly
 func Import(f *flags.Flags, env Env) int {
 	if env.Copy != nil {
 		return runCopy("import", f, env)

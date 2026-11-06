@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/keys cases.tsv (gen_vectors.py); compare subset.
-# source Platform/common/vectors/keys/cases.tsv sha256 f052539601721de2acbf58a6b49cab150af75ab573c8f41912a7d2f3d4cb6767
+# source Platform/common/vectors/keys/cases.tsv sha256 ee1c7edbba60531fa01955e527401c74b8739db380f9d465fb7f5c3426394f6e
 case	input	exit	stdout
 line-7	line-7.json	0	{"result":"took","rev":2}
 line-8	line-8.json	0	{"result":"holding","rev":2}

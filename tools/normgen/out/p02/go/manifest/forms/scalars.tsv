@@ -1,13 +1,13 @@
-# The table of scalars of P/02.1 Н1.1 (scalars): a plain scalar → kind; the first matching row from the top.
-# A quoted scalar and a block scalar are always a string (Н1.1 string). Layers — Platform/common/LAYERS.md § 8.
+# The table of scalars of P/02.1 N1.1 (scalars): a plain scalar → kind; the first matching row from the top.
+# A quoted scalar and a block scalar are always a string (N1.1 string). Layers — Platform/common/LAYERS.md § 8.
 kind	pattern	norm
-null	null|Null|NULL|~|	Н1.1 scalars null; an empty value is separate (a stated key without a value, Н1.2а)
-true	[tT][rR][uU][eE]	Н1.1 scalars bool: in any case
-false	[fF][aA][lL][sS][eE]	Н1.1 scalars bool: in any case
-int	[-+]?[0-9]+	Н1.1 scalars int: decimal digits with a sign; 0x10, 0o7, 1_000 are words
-float	[-+]?(\.[0-9]+|[0-9]+(\.[0-9]*)?)([eE][-+]?[0-9]+)?	Н1.1 scalars float: with a dot or an exponent; in an integer place — value
-nonfinite	[-+]?\.(inf|Inf|INF)	Н1.1 scalars float: .inf is recognized, refusal value
-nonfinite	\.(nan|NaN|NAN)	Н1.1 scalars float: .nan is recognized, refusal value
-string	.*	Н1.1 scalars string: everything else
-limit	int_max=9007199254740991	Н1.1 scalars int: in absolute value at most 2^53 − 1
-limit	float_max=1.7976931348623157e308	Н1.1: float values are finite and in absolute value not greater
+null	null|Null|NULL|~|	N1.1 scalars null; an empty value is separate (a stated key without a value, N1.2a)
+true	[tT][rR][uU][eE]	N1.1 scalars bool: in any case
+false	[fF][aA][lL][sS][eE]	N1.1 scalars bool: in any case
+int	[-+]?[0-9]+	N1.1 scalars int: decimal digits with a sign; 0x10, 0o7, 1_000 are words
+float	[-+]?(\.[0-9]+|[0-9]+(\.[0-9]*)?)([eE][-+]?[0-9]+)?	N1.1 scalars float: with a dot or an exponent; in an integer place — value
+nonfinite	[-+]?\.(inf|Inf|INF)	N1.1 scalars float: .inf is recognized, refusal value
+nonfinite	\.(nan|NaN|NAN)	N1.1 scalars float: .nan is recognized, refusal value
+string	.*	N1.1 scalars string: everything else
+limit	int_max=9007199254740991	N1.1 scalars int: in absolute value at most 2^53 − 1
+limit	float_max=1.7976931348623157e308	N1.1: float values are finite and in absolute value not greater

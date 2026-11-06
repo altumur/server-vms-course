@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/accept cases.tsv (gen_vectors.py); compare subset.
-# source Platform/common/vectors/accept/cases.tsv sha256 d0c8ce6c6aa3925cf5552c824755a5bc57269c4ad30bb011280b5eb577ad35ab
+# source Platform/common/vectors/accept/cases.tsv sha256 dcaace291b6a3dd090628cdff5d22d2495d1816dfbd9221bd1fc7472d229dab9
 case	input	exit	stdout
 line-8	line-8.json	0	{"result":"generation","rev":1,"base":0,"whole":{"sent_at":900.0}}
 line-9	line-9.json	0	{"result":"generation","rev":5,"base":4,"whole":{"sent_at":1005.0,"objects":{"testsub/heartbeats/w-1":{"ts":105.0,"status":[]},"testsub/heartbeats/w-2":"@absent","testsub/snapshot/w-1":"@any"}}}

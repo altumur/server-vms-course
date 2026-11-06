@@ -7,7 +7,7 @@ import (
 	"kitmodule/internal/refusals"
 )
 
-// guardMismatch — a refusal of Н4 by its catalogue row: code, kind, fields and header from forms/refusals.tsv.
+// guardMismatch — a refusal of N4 by its catalogue row: code, kind, fields and header from forms/refusals.tsv.
 func guardMismatch(key, index string) apidoor.Answer {
 	s := refusals.GuardMismatch // 412 guard {key, index}
 	a, err := apidoor.Refuse(apidoor.OpWrite, s.Code, s.Kind, "the guard does not hold", map[string]any{"key": key, "index": index})

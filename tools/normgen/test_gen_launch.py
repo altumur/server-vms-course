@@ -226,7 +226,7 @@ class Frame(unittest.TestCase):
                 self.assertIn(f"req: {a}", text)
             doc = (dst / "KIT.md").read_text(encoding="utf-8")
             self.assertIn("is a temporary frame on `net/http`; the raw HTTP acceptance requires the strict parse of\n> "
-                          "Н2.1 — replace it.", doc)
+                          "N2.1 — replace it.", doc)
             # правка рамки: свой заголовок на каждом ответе — демон отвечает рамкой реализации
             frame.write_text(text.replace("\t\tw.WriteHeader(code)", '\t\tw.Header().Set("X-Frame", "mine")\n\t\tw.WriteHeader(code)'),
                              encoding="utf-8")
