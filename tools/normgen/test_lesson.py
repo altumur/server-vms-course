@@ -106,10 +106,12 @@ class Generators(unittest.TestCase):
         actual = json.loads(done.stdout)
         self.assertEqual(actual['vectors'], ['gen_vectors.py'])
         self.assertEqual(actual['families'], ['gen_families.py'])
+        original = output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         with tempfile.TemporaryDirectory(prefix='p10-no-families-') as tmp:
-            done = run(['gen_families.py', tmp], env={lesson.ENV: '10-domain-console'})
+            done = run(['gen_families.py', '10', tmp], env={lesson.ENV: '10-domain-console'})
             self.assertNotEqual(done.returncode, 0, 'undeclared families explicitly requested')
             self.assertFalse(any(Path(tmp).rglob('families.go')))
+        self.assertEqual(output_lesson.ready_outputs(profiles=output_lesson.PROFILES), original)
 
     def test_build_kit_lesson_default_module(self):
         with tempfile.TemporaryDirectory() as t:
