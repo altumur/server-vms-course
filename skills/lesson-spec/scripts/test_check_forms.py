@@ -817,5 +817,91 @@ class RowWriteBindings(unittest.TestCase):              # P/03 row-write-binding
             self.assertTrue(self.errors(text), what)
 
 
+TURN_WIRE_ROW = 'common/turn\tcases.tsv\tvectors\tcase,input,expect,note\t[{"variant":"","when":"(owner == \\"04-controller\\" && json(row[\\"input\\"])[\\"kind\\"] == \\"placement\\") || (owner in [\\"08-domain\\",\\"09-agent\\"] && json(row[\\"input\\"])[\\"kind\\"] == \\"signer\\") || (owner == \\"06-console\\" && json(row[\\"input\\"])[\\"kind\\"] == \\"operations\\")","cells":{"input":{"column":"input"}}}]\t{}\t[{"variant":"","code":0,"value":{"column":"expect","decode":"json"}}]\tturn\t[]\t{"type":"array","frame":"json"}\tcommon/vectors/turn/README.md#run'   # decisions/inbox/2026-11-06-p06-review-proposals/c4-wire-row.proposed.tsv (391efde0d)
+TURN_OPS_ROWS = ['operations-take-empty\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"ok","version":1}]}\t[{"write":{"holder":"@new"},"cas":""},"held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-take-released\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":{"holder":""},"seen":0,"version":3},{"reply":"ok","version":4}]}\t[{"write":{"holder":"@new"},"cas":3},"held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-busy-live\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":{"holder":"c-old"},"seen":44.999,"version":3}]}\t["busy"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-take-stale\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":{"holder":"c-old"},"seen":45,"version":3},{"reply":"ok","version":4}]}\t[{"write":{"holder":"@new"},"cas":3},"held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-first-sight\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":{"holder":"c-old"},"seen":0,"version":3}]}\t["busy"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-unreadable\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":"@unreadable","seen":0}]}\t["refused"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-take-conflict\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"conflict"}]}\t[{"write":{"holder":"@new"},"cas":""},"not_held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-renew\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"ok","version":1},{"renew":true},{"reply":"ok","version":2},{"renew":true},{"reply":"conflict"}]}\t[{"write":{"holder":"@new"},"cas":""},"held",{"write":{"holder":"@same"},"cas":1},"held",{"write":{"holder":"@same"},"cas":2},"stop"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-guard\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"ok","version":1},{"target":true,"age":44.999},{"target":true,"age":45}]}\t[{"write":{"holder":"@new"},"cas":""},"held",{"guard":{"key":"testsub/operations-turn","index":1}},"wait"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-guard-412\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"ok","version":1},{"target":true,"age":1},{"target_reply":"412"}]}\t[{"write":{"holder":"@new"},"cas":""},"held",{"guard":{"key":"testsub/operations-turn","index":1}},"stop"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-release\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"ok","version":1},{"end":true},{"reply":"conflict"}]}\t[{"write":{"holder":"@new"},"cas":""},"held",{"write":{"holder":""},"cas":1},"done"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-unknown-take-applied\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"none"},{"read":{"holder":"@same"},"seen":0,"version":1},{"reply":"ok","version":2}]}\t[{"write":{"holder":"@new"},"cas":""},"reread",{"write":{"holder":"@same"},"cas":1},"held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-unknown-take-lost\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"none"},{"read":null,"seen":0}]}\t[{"write":{"holder":"@new"},"cas":""},"reread","not_held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-unknown-take-foreign\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"none"},{"read":{"holder":"c-other"},"seen":0,"version":1}]}\t[{"write":{"holder":"@new"},"cas":""},"reread","not_held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-unknown-renew\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"ok","version":1},{"renew":true},{"reply":"none"},{"read":{"holder":"@same"},"seen":0,"version":2},{"reply":"ok","version":3}]}\t[{"write":{"holder":"@new"},"cas":""},"held",{"write":{"holder":"@same"},"cas":1},"reread",{"write":{"holder":"@same"},"cas":2},"held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.']   # там же c4-turn-cases.proposed.tsv: 15 строк operations
+
+
+class WireTurn(unittest.TestCase):               # compare=turn — решение «Архитектора» 2026-11-06 (P/06 C4)
+    def setUp(self):
+        Wire.setUp(self)
+        vectors = self.path.parent
+        (vectors / "turn").unlink()                 # пакет turn и consumers.tsv — копии с предложенными строками
+        shutil.copytree(ROOT / "Platform/common/vectors/turn", vectors / "turn")
+        self.cases = vectors / "turn/cases.tsv"
+        self.cases.write_text(self.cases.read_text(encoding="utf-8").rstrip("\n") + "\n" + "\n".join(TURN_OPS_ROWS) + "\n",
+                              encoding="utf-8")
+        consumers = vectors / "consumers.tsv"
+        text = consumers.read_text(encoding="utf-8")
+        consumers.unlink()
+        line = "common/turn\tcases.tsv\t06-console\tcommon/vectors/turn/README.md: own operations turn; ADR-0127 P06 C4"
+        consumers.write_text(text.rstrip("\n") + "\n" + line + "\n", encoding="utf-8")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def check(self, row=TURN_WIRE_ROW, old=None, new=None):
+        if old is not None:
+            self.assertEqual(row.count(old), 1, old)
+            row = row.replace(old, new)
+        self.path.write_text(self.good.rstrip("\n") + "\n" + row + "\n", encoding="utf-8")
+        return check_forms.check_wire(self.path)[0]
+
+    def case(self, old, new):                     # порча ожидания одной предложенной строки
+        text = self.cases.read_text(encoding="utf-8")
+        self.assertEqual(text.count(old), 1, old)
+        self.cases.write_text(text.replace(old, new), encoding="utf-8")
+
+    def test_proposed_row_passes(self):
+        errors, stats = check_forms.check_wire(self.path)
+        self.assertEqual(errors, [])
+        self.assertEqual(self.check(), [])
+        calls = check_forms.check_wire(self.path)[1]["wire_calls"] - stats["wire_calls"]
+        self.assertEqual(calls, 20 + 2 * 13 + 15)           # 04 — placement, 08 и 09 — signer, 06 — operations
+
+    def test_turn_only_common_turn(self):
+        other = Wire.row(self, "common/crl", "cases.tsv", "vectors")
+        errors = self.check(other.replace("\tvalue\t", "\tturn\t"))
+        self.assertTrue(any("compare turn is only for the binding" in e for e in errors), errors)
+        errors = self.check(other.replace("\tvalue\t", '\t{"":"turn"}\t'))      # и картой вариантов — вне списка
+        self.assertTrue(any("is not one of" in e for e in errors), errors)
+
+    def test_unknown_freshness_mark(self):
+        self.case('[{"write":{"holder":"@new"},"cas":""},"not_held"]', '[{"write":{"holder":"@fresh"},"cas":""},"not_held"]')
+        self.assertTrue(any("unknown freshness mark '@fresh'" in e for e in self.check()))
+
+    def test_same_before_new(self):
+        self.case('[{"write":{"holder":"@new"},"cas":""},"reread","not_held"]\tProposed C4 common turn obligation only; '
+                  'epoch barrier and real leader IO remain separate.\noperations-unknown-take-foreign',
+                  '[{"write":{"holder":"@same"},"cas":""},"reread","not_held"]\tProposed C4 common turn obligation only; '
+                  'epoch barrier and real leader IO remain separate.\noperations-unknown-take-foreign')
+        self.assertTrue(any("@same before any @new" in e for e in self.check()))
+
+    def test_holder_alias(self):
+        self.case('[{"write":{"holder":"@new"},"cas":""},"not_held"]', '[{"write":{"value":"@new"},"cas":""},"not_held"]')
+        self.assertTrue(any("outside holder (no alias)" in e for e in self.check()))
+        self.cases.write_text(self.cases.read_text(encoding="utf-8").replace('{"value":"@new"}', '{"holder":"@new"}'),
+                              encoding="utf-8")
+        alias = '{"column":"expect","decode":"json"}'
+        errors = self.check(old=alias, new='{"object":{"holder":{"literal":"@new"}}}')
+        self.assertTrue(any("no holder or value alias" in e for e in errors), errors)
+
+    def test_ignore_turn_field(self):
+        errors = self.check(old='"code":0,', new='"code":0,"ignore":["/0/write/holder"],')
+        self.assertTrue(any("no ignore or assert" in e for e in errors), errors)
+
+    def test_selector_not_cel(self):
+        when = TURN_WIRE_ROW.split('"when":', 1)[1].split(',"cells"', 1)[0]
+        errors = self.check(old=when, new='{"owner":"06-console","kind":"operations"}')
+        self.assertTrue(any("when is not a CEL string" in e for e in errors), errors)
+        errors = self.check(old=when, new='"owner = 06-console"')
+        self.assertTrue(any("does not compile" in e for e in errors), errors)
+        errors = self.check(old='"variant":"","when":' + when + ',', new='"variant":"",')
+        self.assertTrue(any("explicit CEL selector" in e for e in errors), errors)
+
+    def test_turn_markers_empty(self):
+        errors = self.check(old="\tturn\t[]\t", new='\tturn\t[{"variant":"","column":"expect","match":"[\\"busy\\"]"}]\t')
+        self.assertTrue(any("markers must be []" in e for e in errors), errors)
+
+
 if __name__ == "__main__":
     unittest.main()

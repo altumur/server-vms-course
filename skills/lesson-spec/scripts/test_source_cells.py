@@ -1,6 +1,7 @@
 """Source-form conformance and complete byte preservation, ADR-0121 (6)."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -106,6 +107,79 @@ class SourceCells(unittest.TestCase):
                  (ROOT / 'Platform/common/data/cell-json-sha256.tsv').read_text().splitlines()
                  if line.startswith('Platform/')]
         self.assertEqual(source_cells.errors(ROOT, sorted(set(paths))), [])
+
+
+SEAMS = 'Platform/06-console/acceptance/8/seams.tsv'
+# decisions/inbox/2026-11-06-p06-review-proposals/source-binding-proposal.json (391efde0d): source, expected,
+# decoded request, decoded SHA-256
+SEAMS_FIXTURES = [
+    ('# cell-json: request\n# owned positional source fixture\nowned-first\t1\t"CALL console-folder-create {\\"name\\":\\"\\u0436\\"}"\t{"ok":true}\n', 'valid; first data physical3', 'CALL console-folder-create {"name":"ж"}', '6eddb902c055e34ac8117c0e012ac40daf230afc8c58d4f2eb64d9632e922e85'),
+    ('# cell-json: request\n# owned positional source fixture\nowned-first\t1\t"CALL console-folder-create {invalid-inner"\t{"ok":true}\n', 'valid outer; invalid inner remains opaque', 'CALL console-folder-create {invalid-inner', '29e6ed42e2f94991638951154eeb995c459b87b1094e5f9524268d2e7a1655e0'),
+    ('# cell-json: request\n# owned positional source fixture\nowned-first\t1\tnot-json\t{"ok":true}\n', 'form error', None, None),
+    ('# cell-json: request\n# owned positional source fixture\nowned-first\t1\tnull\t{"ok":true}\n', 'form error', None, None),
+    ('# cell-json: request\n# owned positional source fixture\nowned-first\t1\t"\\ud800"\t{"ok":true}\n', 'form error', None, None),
+    ('# cell-json: request,request\n# owned positional source fixture\nowned-first\t1\t"CALL console-folder-create {\\"name\\":\\"\\u0436\\"}"\t{"ok":true}\n', 'form error: duplicate declaration column', None, None),
+    ('# cell-json: request\n# owned positional source fixture\nowned-first\t"CALL console-folder-create {\\"name\\":\\"\\u0436\\"}"\t{"ok":true}\n', 'form error: wrong width', None, None),
+]
+
+
+class SeamsBinding(unittest.TestCase):               # Architect 2026-11-06: one exact positional path
+    def write(self, root, rel, text):
+        path = root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(text.encode())
+        return path
+
+    def test_exact_path_only(self):
+        with tempfile.TemporaryDirectory() as directory, tempfile.TemporaryDirectory() as elsewhere:
+            root = Path(directory)
+            self.write(root, 'Platform/06-console/acceptance/9/seams.tsv', 'x\n')
+            self.write(root, 'Platform/04-controller/acceptance/8/seams.tsv', 'x\n')
+            forms = source_cells.wire_headers(root)
+            self.assertEqual(forms[Path(SEAMS)], (['scenario', 'step', 'request', 'expect'], True))
+            self.assertEqual([p for p in forms if p.name == 'seams.tsv'], [Path(SEAMS)])
+            cwd = os.getcwd()
+            try:
+                os.chdir(elsewhere)                        # unrelated cwd: the same binding
+                self.assertEqual(source_cells.wire_headers(root), forms)
+            finally:
+                os.chdir(cwd)
+
+    def test_proposal_fixtures(self):
+        self.assertEqual(len(SEAMS_FIXTURES), 7)
+        for source, expected, request, sha in SEAMS_FIXTURES:
+            with self.subTest(expected=expected), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                path = self.write(root, SEAMS, source)
+                columns, positional = source_cells.wire_headers(root)[path.relative_to(root)]
+                names, rows, errors = source_cells.table(source, columns, positional)
+                manifest = root / 'Platform/common/data/cell-json-sha256.tsv'
+                manifest.parent.mkdir(parents=True)
+                header = 'table\tline\tcolumn\tbefore_sha256\tdecoded_sha256\n'
+                if request is None:                        # form error before build/dispatch
+                    self.assertTrue(errors)
+                    self.assertTrue(source_cells.errors(root, [path]))
+                    continue
+                self.assertEqual(errors, [])
+                self.assertEqual(names, ('request',))
+                raw = source.split('\n')[2].split('\t')
+                self.assertEqual(rows, [(3, dict(scenario='owned-first', step='1', request=request, expect=raw[3]))])
+                self.assertEqual(hashlib.sha256(request.encode()).hexdigest(), sha)
+                self.assertEqual(rows[0][1]['expect'].encode(), raw[3].encode())      # unmarked cell untouched
+                self.assertTrue(source_cells.errors(root, [path]))                    # no proof: refused
+                manifest.write_text(header + f'{SEAMS}\t3\trequest\t{sha}\t{sha}\n')
+                self.assertEqual(source_cells.errors(root, [path]), [])
+                manifest.write_text(header + f'{SEAMS}\t3\trequest\t{"0" * 64}\t{"0" * 64}\n')
+                self.assertTrue(source_cells.errors(root, [path]))
+                moved = Path('Platform/06-console/acceptance/9/seams.tsv')          # undeclared path: not positional
+                other = self.write(root, moved.as_posix(), source)
+                self.assertNotIn(moved, source_cells.wire_headers(root))
+                self.assertTrue(source_cells.errors(root, [other]))
+
+    def test_real_seams_unchanged(self):
+        text = (ROOT / SEAMS).read_bytes().decode('utf-8')
+        columns, positional = source_cells.wire_headers(ROOT)[Path(SEAMS)]
+        self.assertEqual(source_cells.table(text, columns, positional), ((), [], []))
 
 
 if __name__ == '__main__':
