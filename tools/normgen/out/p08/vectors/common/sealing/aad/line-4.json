@@ -5,7 +5,7 @@
  "case": "top",
  "variant": "",
  "cells": {
-  "row_key": "\"testsub2/tallies/t1\"",
+  "row_key": "testsub2/tallies/t1",
   "path": "[\"feed_secret\"]"
  },
  "files": {}

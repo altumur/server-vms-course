@@ -8,7 +8,7 @@
   "key_hex": "29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea",
   "kid": "k1",
   "nonce_b64url": "ikNeujSOpkp66hql",
-  "row_key": "\"testsub2/tallies/t1\"",
+  "row_key": "testsub2/tallies/t1",
   "pointer": "/feed_secret",
   "plaintext": "\"hunter2\""
  },

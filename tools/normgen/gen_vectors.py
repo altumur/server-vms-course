@@ -94,26 +94,18 @@ def read_table(root, decl):
     path = d / decl["table"]
     if not path.is_file():
         raise GenError(f"no {path.relative_to(root)}")
-    rows, header = [], decl.get("header", "file")
-    head = None if header is None else None
-    for no, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
-        if not line or line.startswith("#"):
-            continue
-        cells = line.split("\t")
-        if header is None:
-            rows.append((no, dict(zip(decl["fields"], cells))))
-            continue
-        if head is None:
-            head = cells
-            continue
-        if len(cells) != len(head):
-            raise GenError(f"{path.relative_to(root)}:{no}: {len(cells)} cells, header {head}")
-        rows.append((no, dict(zip(head, cells))))
+    import tsv_input
+    header = decl.get("header", "file")
+    try:
+        table = tsv_input.read(path, root=root, positional=header is None,
+                               names=decl["fields"] if header is None else None)
+    except tsv_input.TSVError as exc:
+        raise GenError(str(exc)) from None
     if header is not None:
         need = set(decl.get("inputs", [])) | ({decl["input"]} if isinstance(decl.get("input"), str) else set())
-        if head is None or need - set(head):
-            raise GenError(f"{path.relative_to(root)}: columns {sorted(need - set(head or []))} not in the header")
-    return d, path, rows
+        if need - set(table.columns):
+            raise GenError(f"{path.relative_to(root)}: columns {sorted(need - set(table.columns))} not in the header")
+    return d, path, table.rows
 
 
 def plan(root=ROOT):
