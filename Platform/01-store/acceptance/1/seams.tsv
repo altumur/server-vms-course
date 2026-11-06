@@ -80,3 +80,131 @@ s6-reopen-batch	2	@reopen	ok
 s6-reopen-batch	3	GET /v1/get?key=acc/s6/a	200 {"items":{"n":"1"},"index":"$i"}
 s6-reopen-batch	4	GET /v1/get?key=acc/s6/b	200 {"items":{"n":"1"},"index":"$i"}
 s6-reopen-batch	5	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s6/a","items":{"n":"1"},"cas":""},{"op":"put","key":"acc/s6/b","items":{"n":"1"},"cas":""}],"id":"5601"}	200 {"index":"$i","again":true}
+s7-admitted-single-refusals	1	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s7-admitted-single-refusals/expired/a","items":{"v":"old"},"cas":""},{"op":"put","key":"acc/s7-admitted-single-refusals/early/a","items":{"v":"old"},"cas":""},{"op":"put","key":"acc/s7-admitted-single-refusals/guard/a","items":{"v":"old"},"cas":""},{"op":"put","key":"acc/s7-admitted-single-refusals/conflict/a","items":{"v":"old"},"cas":""}]}	200 {"index":"$seed"}
+s7-admitted-single-refusals	2	@clock +100.25	ok
+s7-admitted-single-refusals	3	POST /v1/write {"op":"put","key":"acc/s7-admitted-single-refusals/expired/a","cas":"$seed","items":{"v":"new"},"id":"a701","not_after":1999999999}	409 {"kind":"expired"}
+s7-admitted-single-refusals	4	@clock -100.25	ok
+s7-admitted-single-refusals	5	GET /v1/list?prefix=acc/s7-admitted-single-refusals/	200 {"keys":{"acc/s7-admitted-single-refusals/conflict/a":"$seed","acc/s7-admitted-single-refusals/early/a":"$seed","acc/s7-admitted-single-refusals/expired/a":"$seed","acc/s7-admitted-single-refusals/guard/a":"$seed"}}
+s7-admitted-single-refusals	6	GET /v1/get?key=acc/s7-admitted-single-refusals/expired/a	200 {"items":{"v":"old"},"index":"$seed"}
+s7-admitted-single-refusals	7	POST /v1/write {"op":"put","key":"acc/s7-admitted-single-refusals/probe/expired","items":{"v":"probe"},"cas":"","not_before":2000000100.125}	200 {"index":"$probe1"}
+s7-admitted-single-refusals	8	POST /v1/write {"op":"put","key":"acc/s7-admitted-single-refusals/expired/a","cas":"$seed","items":{"v":"new"},"id":"a701"}	200 {"index":"$done1"}
+s7-admitted-single-refusals	9	GET /v1/get?key=acc/s7-admitted-single-refusals/expired/a	200 {"items":{"v":"new"},"index":"$done1"}
+s7-admitted-single-refusals	10	@clock +200.50	ok
+s7-admitted-single-refusals	11	POST /v1/write {"op":"delete","key":"acc/s7-admitted-single-refusals/early/a","cas":"$seed","id":"a702","not_before":2000000200.50}	409 {"kind":"early"}
+s7-admitted-single-refusals	12	@clock -200.50	ok
+s7-admitted-single-refusals	13	GET /v1/list?prefix=acc/s7-admitted-single-refusals/	200 {"keys":{"acc/s7-admitted-single-refusals/conflict/a":"$seed","acc/s7-admitted-single-refusals/early/a":"$seed","acc/s7-admitted-single-refusals/expired/a":"$done1","acc/s7-admitted-single-refusals/guard/a":"$seed","acc/s7-admitted-single-refusals/probe/expired":"$probe1"}}
+s7-admitted-single-refusals	14	GET /v1/get?key=acc/s7-admitted-single-refusals/early/a	200 {"items":{"v":"old"},"index":"$seed"}
+s7-admitted-single-refusals	15	POST /v1/write {"op":"put","key":"acc/s7-admitted-single-refusals/probe/early","items":{"v":"probe"},"cas":"","not_before":2000000200.375}	200 {"index":"$probe2"}
+s7-admitted-single-refusals	16	POST /v1/write {"op":"delete","key":"acc/s7-admitted-single-refusals/early/a","cas":"$seed","id":"a702"}	200 {"index":"$done2"}
+s7-admitted-single-refusals	17	GET /v1/get?key=acc/s7-admitted-single-refusals/early/a	200 {"items":null,"index":""}
+s7-admitted-single-refusals	18	@clock +300.75	ok
+s7-admitted-single-refusals	19	POST /v1/write {"op":"put","key":"acc/s7-admitted-single-refusals/guard/a","cas":"$seed","items":{"v":"new"},"id":"a703","guard":{"key":"acc/s7-admitted-single-refusals/guard","index":"0"}}	412 {"kind":"guard","key":"acc/s7-admitted-single-refusals/guard","index":""}
+s7-admitted-single-refusals	20	@clock -300.75	ok
+s7-admitted-single-refusals	21	GET /v1/list?prefix=acc/s7-admitted-single-refusals/	200 {"keys":{"acc/s7-admitted-single-refusals/conflict/a":"$seed","acc/s7-admitted-single-refusals/expired/a":"$done1","acc/s7-admitted-single-refusals/guard/a":"$seed","acc/s7-admitted-single-refusals/probe/early":"$probe2","acc/s7-admitted-single-refusals/probe/expired":"$probe1"}}
+s7-admitted-single-refusals	22	GET /v1/get?key=acc/s7-admitted-single-refusals/guard/a	200 {"items":{"v":"old"},"index":"$seed"}
+s7-admitted-single-refusals	23	POST /v1/write {"op":"put","key":"acc/s7-admitted-single-refusals/probe/guard","items":{"v":"probe"},"cas":"","not_before":2000000300.625}	200 {"index":"$probe3"}
+s7-admitted-single-refusals	24	POST /v1/write {"op":"put","key":"acc/s7-admitted-single-refusals/guard/a","cas":"$seed","items":{"v":"new"},"id":"a703","guard":{"key":"acc/s7-admitted-single-refusals/guard","index":""}}	200 {"index":"$done3"}
+s7-admitted-single-refusals	25	GET /v1/get?key=acc/s7-admitted-single-refusals/guard/a	200 {"items":{"v":"new"},"index":"$done3"}
+s7-admitted-single-refusals	26	@clock +401.00	ok
+s7-admitted-single-refusals	27	POST /v1/write {"op":"delete","key":"acc/s7-admitted-single-refusals/conflict/a","cas":"","id":"a704"}	409 {"kind":"conflict","index":"$seed"}
+s7-admitted-single-refusals	28	@clock -401.00	ok
+s7-admitted-single-refusals	29	GET /v1/list?prefix=acc/s7-admitted-single-refusals/	200 {"keys":{"acc/s7-admitted-single-refusals/conflict/a":"$seed","acc/s7-admitted-single-refusals/expired/a":"$done1","acc/s7-admitted-single-refusals/guard/a":"$done3","acc/s7-admitted-single-refusals/probe/early":"$probe2","acc/s7-admitted-single-refusals/probe/expired":"$probe1","acc/s7-admitted-single-refusals/probe/guard":"$probe3"}}
+s7-admitted-single-refusals	30	GET /v1/get?key=acc/s7-admitted-single-refusals/conflict/a	200 {"items":{"v":"old"},"index":"$seed"}
+s7-admitted-single-refusals	31	POST /v1/write {"op":"put","key":"acc/s7-admitted-single-refusals/probe/conflict","items":{"v":"probe"},"cas":"","not_before":2000000400.875}	200 {"index":"$probe4"}
+s7-admitted-single-refusals	32	POST /v1/write {"op":"delete","key":"acc/s7-admitted-single-refusals/conflict/a","cas":"$seed","id":"a704"}	200 {"index":"$done4"}
+s7-admitted-single-refusals	33	GET /v1/get?key=acc/s7-admitted-single-refusals/conflict/a	200 {"items":null,"index":""}
+s7-admitted-single-refusals	34	GET /v1/list?prefix=acc/s7-admitted-single-refusals/	200 {"keys":{"acc/s7-admitted-single-refusals/expired/a":"$done1","acc/s7-admitted-single-refusals/guard/a":"$done3","acc/s7-admitted-single-refusals/probe/conflict":"$probe4","acc/s7-admitted-single-refusals/probe/early":"$probe2","acc/s7-admitted-single-refusals/probe/expired":"$probe1","acc/s7-admitted-single-refusals/probe/guard":"$probe3"}}
+s8-admitted-batch-refusals	1	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s8-admitted-batch-refusals/expired/a","items":{"v":"old"},"cas":""},{"op":"put","key":"acc/s8-admitted-batch-refusals/expired/b","items":{"v":"old"},"cas":""},{"op":"put","key":"acc/s8-admitted-batch-refusals/early/a","items":{"v":"old"},"cas":""},{"op":"put","key":"acc/s8-admitted-batch-refusals/early/b","items":{"v":"old"},"cas":""},{"op":"put","key":"acc/s8-admitted-batch-refusals/guard/a","items":{"v":"old"},"cas":""},{"op":"put","key":"acc/s8-admitted-batch-refusals/guard/b","items":{"v":"old"},"cas":""},{"op":"put","key":"acc/s8-admitted-batch-refusals/conflict/a","items":{"v":"old"},"cas":""},{"op":"put","key":"acc/s8-admitted-batch-refusals/conflict/b","items":{"v":"old"},"cas":""}]}	200 {"index":"$seed"}
+s8-admitted-batch-refusals	2	@clock +100.25	ok
+s8-admitted-batch-refusals	3	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s8-admitted-batch-refusals/expired/a","cas":"$seed","items":{"v":"new"}},{"op":"delete","key":"acc/s8-admitted-batch-refusals/expired/b","cas":"$seed"}],"id":"a801","not_after":1999999999}	409 {"kind":"expired"}
+s8-admitted-batch-refusals	4	@clock -100.25	ok
+s8-admitted-batch-refusals	5	GET /v1/list?prefix=acc/s8-admitted-batch-refusals/	200 {"keys":{"acc/s8-admitted-batch-refusals/conflict/a":"$seed","acc/s8-admitted-batch-refusals/conflict/b":"$seed","acc/s8-admitted-batch-refusals/early/a":"$seed","acc/s8-admitted-batch-refusals/early/b":"$seed","acc/s8-admitted-batch-refusals/expired/a":"$seed","acc/s8-admitted-batch-refusals/expired/b":"$seed","acc/s8-admitted-batch-refusals/guard/a":"$seed","acc/s8-admitted-batch-refusals/guard/b":"$seed"}}
+s8-admitted-batch-refusals	6	GET /v1/get?key=acc/s8-admitted-batch-refusals/expired/a	200 {"items":{"v":"old"},"index":"$seed"}
+s8-admitted-batch-refusals	7	POST /v1/write {"op":"put","key":"acc/s8-admitted-batch-refusals/probe/expired","items":{"v":"probe"},"cas":"","not_before":2000000100.125}	200 {"index":"$probe1"}
+s8-admitted-batch-refusals	8	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s8-admitted-batch-refusals/expired/a","cas":"$seed","items":{"v":"new"}},{"op":"delete","key":"acc/s8-admitted-batch-refusals/expired/b","cas":"$seed"}],"id":"a801"}	200 {"index":"$done1"}
+s8-admitted-batch-refusals	9	GET /v1/get?key=acc/s8-admitted-batch-refusals/expired/a	200 {"items":{"v":"new"},"index":"$done1"}
+s8-admitted-batch-refusals	10	@clock +200.50	ok
+s8-admitted-batch-refusals	11	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s8-admitted-batch-refusals/early/a","cas":"$seed","items":{"v":"new"}},{"op":"delete","key":"acc/s8-admitted-batch-refusals/early/b","cas":"$seed"}],"id":"a802","not_before":2000000200.50}	409 {"kind":"early"}
+s8-admitted-batch-refusals	12	@clock -200.50	ok
+s8-admitted-batch-refusals	13	GET /v1/list?prefix=acc/s8-admitted-batch-refusals/	200 {"keys":{"acc/s8-admitted-batch-refusals/conflict/a":"$seed","acc/s8-admitted-batch-refusals/conflict/b":"$seed","acc/s8-admitted-batch-refusals/early/a":"$seed","acc/s8-admitted-batch-refusals/early/b":"$seed","acc/s8-admitted-batch-refusals/expired/a":"$done1","acc/s8-admitted-batch-refusals/guard/a":"$seed","acc/s8-admitted-batch-refusals/guard/b":"$seed","acc/s8-admitted-batch-refusals/probe/expired":"$probe1"}}
+s8-admitted-batch-refusals	14	GET /v1/get?key=acc/s8-admitted-batch-refusals/early/a	200 {"items":{"v":"old"},"index":"$seed"}
+s8-admitted-batch-refusals	15	POST /v1/write {"op":"put","key":"acc/s8-admitted-batch-refusals/probe/early","items":{"v":"probe"},"cas":"","not_before":2000000200.375}	200 {"index":"$probe2"}
+s8-admitted-batch-refusals	16	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s8-admitted-batch-refusals/early/a","cas":"$seed","items":{"v":"new"}},{"op":"delete","key":"acc/s8-admitted-batch-refusals/early/b","cas":"$seed"}],"id":"a802"}	200 {"index":"$done2"}
+s8-admitted-batch-refusals	17	GET /v1/get?key=acc/s8-admitted-batch-refusals/early/a	200 {"items":{"v":"new"},"index":"$done2"}
+s8-admitted-batch-refusals	18	@clock +300.75	ok
+s8-admitted-batch-refusals	19	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s8-admitted-batch-refusals/guard/a","cas":"$seed","items":{"v":"new"}},{"op":"delete","key":"acc/s8-admitted-batch-refusals/guard/b","cas":"$seed"}],"id":"a803","guards":[{"key":"acc/s8-admitted-batch-refusals/guard","index":"0"}]}	412 {"kind":"guard","key":"acc/s8-admitted-batch-refusals/guard","index":""}
+s8-admitted-batch-refusals	20	@clock -300.75	ok
+s8-admitted-batch-refusals	21	GET /v1/list?prefix=acc/s8-admitted-batch-refusals/	200 {"keys":{"acc/s8-admitted-batch-refusals/conflict/a":"$seed","acc/s8-admitted-batch-refusals/conflict/b":"$seed","acc/s8-admitted-batch-refusals/early/a":"$done2","acc/s8-admitted-batch-refusals/expired/a":"$done1","acc/s8-admitted-batch-refusals/guard/a":"$seed","acc/s8-admitted-batch-refusals/guard/b":"$seed","acc/s8-admitted-batch-refusals/probe/early":"$probe2","acc/s8-admitted-batch-refusals/probe/expired":"$probe1"}}
+s8-admitted-batch-refusals	22	GET /v1/get?key=acc/s8-admitted-batch-refusals/guard/a	200 {"items":{"v":"old"},"index":"$seed"}
+s8-admitted-batch-refusals	23	POST /v1/write {"op":"put","key":"acc/s8-admitted-batch-refusals/probe/guard","items":{"v":"probe"},"cas":"","not_before":2000000300.625}	200 {"index":"$probe3"}
+s8-admitted-batch-refusals	24	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s8-admitted-batch-refusals/guard/a","cas":"$seed","items":{"v":"new"}},{"op":"delete","key":"acc/s8-admitted-batch-refusals/guard/b","cas":"$seed"}],"id":"a803","guards":[{"key":"acc/s8-admitted-batch-refusals/guard","index":""}]}	200 {"index":"$done3"}
+s8-admitted-batch-refusals	25	GET /v1/get?key=acc/s8-admitted-batch-refusals/guard/a	200 {"items":{"v":"new"},"index":"$done3"}
+s8-admitted-batch-refusals	26	@clock +401.00	ok
+s8-admitted-batch-refusals	27	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s8-admitted-batch-refusals/conflict/a","cas":"$seed","items":{"v":"new"}},{"op":"delete","key":"acc/s8-admitted-batch-refusals/conflict/b","cas":""}],"id":"a804"}	409 {"kind":"conflict","index":"$seed","key":"acc/s8-admitted-batch-refusals/conflict/b"}
+s8-admitted-batch-refusals	28	@clock -401.00	ok
+s8-admitted-batch-refusals	29	GET /v1/list?prefix=acc/s8-admitted-batch-refusals/	200 {"keys":{"acc/s8-admitted-batch-refusals/conflict/a":"$seed","acc/s8-admitted-batch-refusals/conflict/b":"$seed","acc/s8-admitted-batch-refusals/early/a":"$done2","acc/s8-admitted-batch-refusals/expired/a":"$done1","acc/s8-admitted-batch-refusals/guard/a":"$done3","acc/s8-admitted-batch-refusals/probe/early":"$probe2","acc/s8-admitted-batch-refusals/probe/expired":"$probe1","acc/s8-admitted-batch-refusals/probe/guard":"$probe3"}}
+s8-admitted-batch-refusals	30	GET /v1/get?key=acc/s8-admitted-batch-refusals/conflict/a	200 {"items":{"v":"old"},"index":"$seed"}
+s8-admitted-batch-refusals	31	POST /v1/write {"op":"put","key":"acc/s8-admitted-batch-refusals/probe/conflict","items":{"v":"probe"},"cas":"","not_before":2000000400.875}	200 {"index":"$probe4"}
+s8-admitted-batch-refusals	32	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s8-admitted-batch-refusals/conflict/a","cas":"$seed","items":{"v":"new"}},{"op":"delete","key":"acc/s8-admitted-batch-refusals/conflict/b","cas":"$seed"}],"id":"a804"}	200 {"index":"$done4"}
+s8-admitted-batch-refusals	33	GET /v1/get?key=acc/s8-admitted-batch-refusals/conflict/a	200 {"items":{"v":"new"},"index":"$done4"}
+s8-admitted-batch-refusals	34	GET /v1/list?prefix=acc/s8-admitted-batch-refusals/	200 {"keys":{"acc/s8-admitted-batch-refusals/conflict/a":"$done4","acc/s8-admitted-batch-refusals/early/a":"$done2","acc/s8-admitted-batch-refusals/expired/a":"$done1","acc/s8-admitted-batch-refusals/guard/a":"$done3","acc/s8-admitted-batch-refusals/probe/conflict":"$probe4","acc/s8-admitted-batch-refusals/probe/early":"$probe2","acc/s8-admitted-batch-refusals/probe/expired":"$probe1","acc/s8-admitted-batch-refusals/probe/guard":"$probe3"}}
+s9-reopen-refused-admission	1	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s9-reopen-refused-admission/expired/a","items":{"v":"old"},"cas":""},{"op":"put","key":"acc/s9-reopen-refused-admission/expired/b","items":{"v":"old"},"cas":""},{"op":"put","key":"acc/s9-reopen-refused-admission/guard/a","items":{"v":"old"},"cas":""},{"op":"put","key":"acc/s9-reopen-refused-admission/guard/b","items":{"v":"old"},"cas":""}]}	200 {"index":"$seed"}
+s9-reopen-refused-admission	2	@clock +100.25	ok
+s9-reopen-refused-admission	3	POST /v1/write {"op":"put","key":"acc/s9-reopen-refused-admission/expired/a","cas":"$seed","items":{"v":"new"},"id":"a901","not_after":1999999999}	409 {"kind":"expired"}
+s9-reopen-refused-admission	4	@clock -100.25	ok
+s9-reopen-refused-admission	5	@reopen	ok
+s9-reopen-refused-admission	6	GET /v1/list?prefix=acc/s9-reopen-refused-admission/	200 {"keys":{"acc/s9-reopen-refused-admission/expired/a":"$seed","acc/s9-reopen-refused-admission/expired/b":"$seed","acc/s9-reopen-refused-admission/guard/a":"$seed","acc/s9-reopen-refused-admission/guard/b":"$seed"}}
+s9-reopen-refused-admission	7	GET /v1/get?key=acc/s9-reopen-refused-admission/expired/a	200 {"items":{"v":"old"},"index":"$seed"}
+s9-reopen-refused-admission	8	POST /v1/write {"op":"put","key":"acc/s9-reopen-refused-admission/probe/expired","items":{"v":"probe"},"cas":"","not_before":2000000100.125}	200 {"index":"$probe1"}
+s9-reopen-refused-admission	9	POST /v1/write {"op":"put","key":"acc/s9-reopen-refused-admission/expired/a","cas":"$seed","items":{"v":"new"},"id":"a901"}	200 {"index":"$done1"}
+s9-reopen-refused-admission	10	GET /v1/get?key=acc/s9-reopen-refused-admission/expired/a	200 {"items":{"v":"new"},"index":"$done1"}
+s9-reopen-refused-admission	11	@clock +200.50	ok
+s9-reopen-refused-admission	12	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s9-reopen-refused-admission/guard/a","cas":"$seed","items":{"v":"new"}},{"op":"delete","key":"acc/s9-reopen-refused-admission/guard/b","cas":"$seed"}],"id":"a902","guards":[{"key":"acc/s9-reopen-refused-admission/guard","index":"0"}]}	412 {"kind":"guard","key":"acc/s9-reopen-refused-admission/guard","index":""}
+s9-reopen-refused-admission	13	@clock -200.50	ok
+s9-reopen-refused-admission	14	@reopen	ok
+s9-reopen-refused-admission	15	GET /v1/list?prefix=acc/s9-reopen-refused-admission/	200 {"keys":{"acc/s9-reopen-refused-admission/expired/a":"$done1","acc/s9-reopen-refused-admission/expired/b":"$seed","acc/s9-reopen-refused-admission/guard/a":"$seed","acc/s9-reopen-refused-admission/guard/b":"$seed","acc/s9-reopen-refused-admission/probe/expired":"$probe1"}}
+s9-reopen-refused-admission	16	GET /v1/get?key=acc/s9-reopen-refused-admission/guard/a	200 {"items":{"v":"old"},"index":"$seed"}
+s9-reopen-refused-admission	17	POST /v1/write {"op":"put","key":"acc/s9-reopen-refused-admission/probe/guard","items":{"v":"probe"},"cas":"","not_before":2000000200.375}	200 {"index":"$probe2"}
+s9-reopen-refused-admission	18	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s9-reopen-refused-admission/guard/a","cas":"$seed","items":{"v":"new"}},{"op":"delete","key":"acc/s9-reopen-refused-admission/guard/b","cas":"$seed"}],"id":"a902","guards":[{"key":"acc/s9-reopen-refused-admission/guard","index":""}]}	200 {"index":"$done2"}
+s9-reopen-refused-admission	19	GET /v1/get?key=acc/s9-reopen-refused-admission/guard/a	200 {"items":{"v":"new"},"index":"$done2"}
+s9-reopen-refused-admission	20	GET /v1/list?prefix=acc/s9-reopen-refused-admission/	200 {"keys":{"acc/s9-reopen-refused-admission/expired/a":"$done1","acc/s9-reopen-refused-admission/expired/b":"$seed","acc/s9-reopen-refused-admission/guard/a":"$done2","acc/s9-reopen-refused-admission/probe/expired":"$probe1","acc/s9-reopen-refused-admission/probe/guard":"$probe2"}}
+s10-binary64-boundary	1	POST /v1/write {"op":"put","key":"acc/s10-binary64-boundary/put-after","items":{},"cas":"","not_after":1999999999.99999999}	200 {"index":"$pa"}
+s10-binary64-boundary	2	POST /v1/write {"op":"put","key":"acc/s10-binary64-boundary/put-before","items":{},"cas":"","not_before":1999999999.99999999}	409 {"kind":"early"}
+s10-binary64-boundary	3	GET /v1/get?key=acc/s10-binary64-boundary/put-before	200 {"items":null,"index":""}
+s10-binary64-boundary	4	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s10-binary64-boundary/delete-after","items":{},"cas":""},{"op":"put","key":"acc/s10-binary64-boundary/delete-before","items":{},"cas":""}]}	200 {"index":"$seed"}
+s10-binary64-boundary	5	POST /v1/write {"op":"delete","key":"acc/s10-binary64-boundary/delete-after","cas":"$seed","not_after":1999999999.99999999}	200 {"index":"$da"}
+s10-binary64-boundary	6	GET /v1/get?key=acc/s10-binary64-boundary/delete-after	200 {"items":null,"index":""}
+s10-binary64-boundary	7	POST /v1/write {"op":"delete","key":"acc/s10-binary64-boundary/delete-before","cas":"$seed","not_before":1999999999.99999999}	409 {"kind":"early"}
+s10-binary64-boundary	8	GET /v1/get?key=acc/s10-binary64-boundary/delete-before	200 {"items":{},"index":"$seed"}
+s10-binary64-boundary	9	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s10-binary64-boundary/batch-after","items":{},"cas":""}],"not_after":1999999999.99999999}	200 {"index":"$ba"}
+s10-binary64-boundary	10	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s10-binary64-boundary/batch-before","items":{},"cas":""}],"not_before":1999999999.99999999}	409 {"kind":"early"}
+s10-binary64-boundary	11	GET /v1/get?key=acc/s10-binary64-boundary/batch-before	200 {"items":null,"index":""}
+s11-binary64-fingerprint	1	POST /v1/write {"op":"put","key":"acc/s11-binary64-fingerprint/put","cas":"","items":{"v":"1"},"id":"ab111","not_after":9007199254740992,"not_before":1.00000000000000001}	200 {"index":"$f1"}
+s11-binary64-fingerprint	2	POST /v1/write {"op":"put","key":"acc/s11-binary64-fingerprint/put","cas":"","items":{"v":"1"},"id":"ab111","not_after":9007199254740993,"not_before":1.0}	200 {"index":"$f1","again":true}
+s11-binary64-fingerprint	3	POST /v1/write {"op":"put","key":"acc/s11-binary64-fingerprint/put","cas":"","items":{"v":"1"},"id":"ab111","not_after":9007199254740994,"not_before":1.0}	400 {"kind":"badrequest"}
+s11-binary64-fingerprint	4	POST /v1/write {"op":"put","key":"acc/s11-binary64-fingerprint/put","cas":"","items":{"v":"1"},"id":"ab111","not_after":9007199254740993,"not_before":1.0000000000000002}	400 {"kind":"badrequest"}
+s11-binary64-fingerprint	5	GET /v1/get?key=acc/s11-binary64-fingerprint/put	200 {"items":{"v":"1"},"index":"$f1"}
+s11-binary64-fingerprint	6	POST /v1/write {"op":"delete","key":"acc/s11-binary64-fingerprint/delete","cas":"","id":"ab112","not_after":9007199254740992,"not_before":1.00000000000000001}	200 {"index":"$f2"}
+s11-binary64-fingerprint	7	POST /v1/write {"op":"delete","key":"acc/s11-binary64-fingerprint/delete","cas":"","id":"ab112","not_after":9007199254740993,"not_before":1.0}	200 {"index":"$f2","again":true}
+s11-binary64-fingerprint	8	POST /v1/write {"op":"delete","key":"acc/s11-binary64-fingerprint/delete","cas":"","id":"ab112","not_after":9007199254740994,"not_before":1.0}	400 {"kind":"badrequest"}
+s11-binary64-fingerprint	9	POST /v1/write {"op":"delete","key":"acc/s11-binary64-fingerprint/delete","cas":"","id":"ab112","not_after":9007199254740993,"not_before":1.0000000000000002}	400 {"kind":"badrequest"}
+s11-binary64-fingerprint	10	GET /v1/get?key=acc/s11-binary64-fingerprint/delete	200 {"items":null,"index":""}
+s11-binary64-fingerprint	11	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s11-binary64-fingerprint/batch","items":{"v":"1"},"cas":""}],"id":"ab113","not_after":9007199254740992,"not_before":1.00000000000000001}	200 {"index":"$f3"}
+s11-binary64-fingerprint	12	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s11-binary64-fingerprint/batch","items":{"v":"1"},"cas":""}],"id":"ab113","not_after":9007199254740993,"not_before":1.0}	200 {"index":"$f3","again":true}
+s11-binary64-fingerprint	13	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s11-binary64-fingerprint/batch","items":{"v":"1"},"cas":""}],"id":"ab113","not_after":9007199254740994,"not_before":1.0}	400 {"kind":"badrequest"}
+s11-binary64-fingerprint	14	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s11-binary64-fingerprint/batch","items":{"v":"1"},"cas":""}],"id":"ab113","not_after":9007199254740993,"not_before":1.0000000000000002}	400 {"kind":"badrequest"}
+s11-binary64-fingerprint	15	GET /v1/get?key=acc/s11-binary64-fingerprint/batch	200 {"items":{"v":"1"},"index":"$f3"}
+s12-zero-version-not-absence	1	POST /v1/write {"op":"put","key":"acc/s12-zero-version-not-absence/1","cas":"0","items":{},"id":"ac121"}	409 {"kind":"conflict","index":""}
+s12-zero-version-not-absence	2	GET /v1/get?key=acc/s12-zero-version-not-absence/1	200 {"items":null,"index":""}
+s12-zero-version-not-absence	3	POST /v1/write {"op":"put","key":"acc/s12-zero-version-not-absence/1","cas":"","items":{},"id":"ac121"}	200 {"index":"$z1"}
+s12-zero-version-not-absence	4	POST /v1/write {"op":"delete","key":"acc/s12-zero-version-not-absence/2","cas":"0","id":"ac122"}	409 {"kind":"conflict","index":""}
+s12-zero-version-not-absence	5	GET /v1/get?key=acc/s12-zero-version-not-absence/2	200 {"items":null,"index":""}
+s12-zero-version-not-absence	6	POST /v1/write {"op":"put","key":"acc/s12-zero-version-not-absence/3","cas":"","items":{},"id":"ac123","guard":{"key":"acc/s12-zero-version-not-absence/guard","index":"0"}}	412 {"kind":"guard","index":"","key":"acc/s12-zero-version-not-absence/guard"}
+s12-zero-version-not-absence	7	GET /v1/get?key=acc/s12-zero-version-not-absence/3	200 {"items":null,"index":""}
+s12-zero-version-not-absence	8	POST /v1/write {"op":"put","key":"acc/s12-zero-version-not-absence/3","cas":"","items":{},"id":"ac123","guard":{"key":"acc/s12-zero-version-not-absence/guard","index":""}}	200 {"index":"$z3"}
+s12-zero-version-not-absence	9	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s12-zero-version-not-absence/4","cas":"0","items":{}}],"id":"ac124"}	409 {"kind":"conflict","index":"","key":"acc/s12-zero-version-not-absence/4"}
+s12-zero-version-not-absence	10	GET /v1/get?key=acc/s12-zero-version-not-absence/4	200 {"items":null,"index":""}
+s12-zero-version-not-absence	11	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s12-zero-version-not-absence/4","cas":"","items":{}}],"id":"ac124"}	200 {"index":"$z4"}
+s12-zero-version-not-absence	12	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s12-zero-version-not-absence/5","cas":"","items":{}}],"id":"ac125","guards":[{"key":"acc/s12-zero-version-not-absence/guard","index":"0"}]}	412 {"kind":"guard","index":"","key":"acc/s12-zero-version-not-absence/guard"}
+s12-zero-version-not-absence	13	GET /v1/get?key=acc/s12-zero-version-not-absence/5	200 {"items":null,"index":""}
+s12-zero-version-not-absence	14	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s12-zero-version-not-absence/5","cas":"","items":{}}],"id":"ac125","guards":[{"key":"acc/s12-zero-version-not-absence/guard","index":""}]}	200 {"index":"$z5"}
