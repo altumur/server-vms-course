@@ -61,7 +61,7 @@ func ReadResource(key string, text []byte) ResourceResult {
 	return ResourceResult{Readable: !active[""], Fields: fields(f, active)}
 }
 
-// ReadWorker — the worker form and worker == the name in its key (P/03.4 Н1.1). A whole-object error precedes
+// ReadWorker — the worker form and worker == the name in its key (P/03.4 N1.1). A whole-object error precedes
 // element handling; a malformed status list is a whole-object error, rather than one skipped element.
 func ReadWorker(key string, text []byte) WorkerResult {
 	unreadable := WorkerResult{Rows: "unreadable", Others: "unreadable", Fields: []string{}}

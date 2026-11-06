@@ -1,7 +1,7 @@
-"""Выход gen_vectors P/02 из wire.tsv; здесь только Go API адаптеров, не провод и не ожидания.
+"""P/02 gen_vectors output from wire.tsv; this module specifies only the adapters' Go API, not wiring or expectations.
 
-P/01 сохраняет прежний gen_tests; уроки без полной формы — wire_draft. Все запуски P/02 (включая общие)
-идут через wire.py, единую команду/стенд и проверку полного нативного ответа.
+P/01 keeps gen_tests; lessons without a complete form use wire_draft. Every P/02 run, including shared packages,
+uses wire.py, the unified command/stand and validation of the full native response.
 """
 import base64
 import hashlib
@@ -12,7 +12,7 @@ from pathlib import Path
 import common_vectors
 import wire
 
-# Сигнатуры Go — выбор пакета. Входы, фикстуры, ожидания, группировки и сравнения задаёт только wire.tsv.
+# Go signatures are a package choice. Only wire.tsv defines inputs, fixtures, expectations, grouping and comparisons.
 API_P02 = [
     ('02-installer/canonical', 'cases.tsv', 'stand:canonical', 'Canonical', 'source'),
     ('02-installer/exec', 'cases.tsv', 'stand:exec', 'Exec', 'input'),

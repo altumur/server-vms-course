@@ -198,7 +198,7 @@ func termRev(v any) bool {
 	return a && b
 }
 
-// MemberPart — first 12 bits of SHA-256(UTF-8(name)), in four decimal digits (P/08.3 Н1.1).
+// MemberPart — first 12 bits of SHA-256(UTF-8(name)), in four decimal digits (P/08.3 N1.1).
 func MemberPart(name string) string {
 	h := sha256.Sum256([]byte(name))
 	return fmt.Sprintf("%04d", int(h[0])<<4|int(h[1])>>4)

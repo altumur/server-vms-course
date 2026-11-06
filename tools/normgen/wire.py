@@ -1,12 +1,12 @@
-"""Чтение формы провода векторов Platform/common/vectors/wire.tsv (грамматика — Platform/common/vectors/wire.md).
+"""Read Platform/common/vectors/wire.tsv; its grammar is Platform/common/vectors/wire.md.
 
-Форма — данные: строка (package, table, surface) объявляет вход, фикстуры, ожидание, маркеры, сравнение и нативную рамку
-вызова на каждой строке исходной таблицы (или группе строк). Здесь — разбор формы с отказом на всё, чего нет в закрытой
-грамматике, и раскрытие в конкретные запуски урока: run(owner) → [Run] (вход, ожидаемый код, значение или байты,
-сравнение, утверждения) и [Excluded] (строки, которые ни одно объявление урока не выбрало, — не PASS).
+The form is data: a (package, table, surface) row declares inputs, fixtures, expectations, markers, comparison and
+native framing for each source-table row or group. This reader rejects anything outside the closed grammar and
+expands it into lesson runs: run(owner) → [Run] (input, expected code, value or bytes, comparison, assertions)
+and [Excluded] (rows selected by none of the lesson's declarations; these are not PASS).
 
-Условия when — CEL (row: map<string,string>, owner: string, расширение strings) — считает cel_expr_python, как
-check_forms; на CT 103 — /opt/check-env/lesson-spec/bin/python.
+CEL conditions use row: map<string,string>, owner: string and the strings extension. They are evaluated by
+cel_expr_python, as in check_forms; on CT 103 use /opt/check-env/lesson-spec/bin/python.
 """
 import json
 import re
@@ -35,7 +35,7 @@ class WireError(Exception):
 
 
 def strict_json(text, where):
-    """Строгий JSON: без BOM, NaN/Infinity и повторных ключей."""
+    """Strict JSON: no BOM, NaN/Infinity or duplicate keys."""
     if text.startswith("﻿"):
         raise WireError(f"{where}: BOM")
 
@@ -71,12 +71,12 @@ def keys_of(obj, where, required=(), optional=()):
 
 
 def anchor(heading):
-    """Якорь заголовка Markdown (как GitHub): нижний регистр, без пунктуации, пробел → «-»."""
+    """Markdown heading anchor, as on GitHub: lowercase, no punctuation, space → '-'."""
     s = re.sub(r"[^\w\- ]", "", heading.strip().lower())
     return s.replace(" ", "-")
 
 
-# ---------------------------------------------------------------- разбор формы
+# ---------------------------------------------------------------- form parsing
 
 @dataclass
 class Binding:
@@ -273,7 +273,7 @@ def check_native(n, where):
 
 
 def parse(root, keys=None, surfaces=None):
-    """→ [Binding] формы; любое отступление от грамматики — WireError с номером строки."""
+    """Return the form's [Binding]; any grammar violation raises WireError with its line number."""
     root = Path(root)
     path = root / FORM
     if not path.is_file():
@@ -455,22 +455,22 @@ def check_binding(root, b, w):
             raise WireError(f"{w}: norm {b.norm!r}: no heading #{anc} in Platform/{norm}")
 
 
-# ---------------------------------------------------------------- раскрытие в запуски
+# ---------------------------------------------------------------- expansion into runs
 
 class Assert(NamedTuple):
     pointer: str
-    test: Optional[str]             # prefix | absent | no-leak | None (сравнение значения)
+    test: Optional[str]             # prefix | absent | no-leak | None (value comparison)
     compare: Optional[str]
     value: object
-    min_bytes: Optional[int]        # только no-leak
-    whole: Optional[bool]           # только no-leak (по умолчанию false)
-    decode: Optional[str] = None    # json внутри строкового поля ответа
+    min_bytes: Optional[int]        # no-leak only
+    whole: Optional[bool]           # no-leak only (default false)
+    decode: Optional[str] = None    # json inside a string field of the response
     ignore: Optional[list] = None   # comparison-only pointers, never with test
 
 
 def leaks(text, secrets, min_bytes, whole=False):
-    """Смысл no-leak: → секреты, след которых есть в UTF-8 текста. whole=false — любая подстрока секрета длиной
-    ≥ min_bytes байт; whole=true — секрет целиком, если его длина ≥ min_bytes байт (короткие не судятся)."""
+    """Return secrets whose bytes occur in the UTF-8 text. With whole=false, any secret substring of at least
+    min_bytes bytes counts; with whole=true, only the whole secret counts, and shorter secrets are not judged."""
     data, out = text.encode("utf-8"), []
     for s in secrets:
         b = s.encode("utf-8")
@@ -478,7 +478,7 @@ def leaks(text, secrets, min_bytes, whole=False):
             if len(b) >= min_bytes and b in data:
                 out.append(s)
         elif len(b) >= min_bytes and any(b[i:i + min_bytes] in data for i in range(len(b) - min_bytes + 1)):
-            out.append(s)                # любая подстрока длиннее содержит подстроку ровно min_bytes
+            out.append(s)                # every longer substring contains one of exactly min_bytes
     return out
 
 
@@ -488,14 +488,14 @@ class Run:
     binding: Binding
     variant: str
     case: str
-    lines: list                     # физические строки таблицы (одна или группа)
-    cells: dict = None              # vectors: имя → строка
-    arg: bytes = None               # stand: байты файла {input} (path_column — байты фикстуры)
-    arg_path: str = None            # stand path_column: путь фикстуры от корня выгрузки
-    files: dict = field(default_factory=dict)      # имя → байты
+    lines: list                     # physical table rows (one row or a group)
+    cells: dict = None              # vectors: name → string
+    arg: bytes = None               # stand: {input} file bytes (path_column uses fixture bytes)
+    arg_path: str = None            # stand path_column: fixture path relative to the export root
+    files: dict = field(default_factory=dict)      # name → bytes
     code: int = 0
     ignore_stdout: bool = False
-    value: object = None            # ожидаемое значение JSON (или bytes при native bytes)
+    value: object = None            # expected JSON value (or bytes for native bytes)
     compare: str = "value"
     asserts: list = field(default_factory=list)    # [Assert]
     ignore: list = field(default_factory=list)     # comparison pointers, after the full native schema
@@ -534,7 +534,7 @@ class Cel:
         if e is None:
             try:
                 e = self.cache[expr] = self.env.compile(expr)
-            except Exception as x:          # noqa: BLE001 — ошибка компиляции CEL
+            except Exception as x:          # noqa: BLE001 — CEL compilation failure
                 raise WireError(f"{where}: when {expr!r}: {x}") from None
         try:
             v = e.eval(data={"row": row, "owner": owner})
@@ -551,7 +551,7 @@ def package_dir(root, package):
 
 
 def resolve(root, base_dir, rel, where):
-    """Путь фикстуры: относительный, внутри выгрузки, существующий файл."""
+    """A fixture path must be relative, inside the export, and refer to an existing file."""
     if rel.startswith("/") or not rel:
         raise WireError(f"{where}: path {rel!r}")
     p = (base_dir / rel).resolve()
@@ -564,7 +564,7 @@ def resolve(root, base_dir, rel, where):
 
 
 def read_rows(root, b):
-    """→ [(строка, {колонка: ячейка})]; шапка или позиционные поля сверены с header формы."""
+    """Return [(line, {column: cell})]; validate the header or positional fields against the form's header."""
     path = package_dir(root, b.package) / b.table
     if not path.is_file():
         raise WireError(f"{FORM}:{b.line}: no {path.relative_to(root)}")
@@ -627,7 +627,7 @@ class Expander:
         self.cel = cel or Cel()
 
     def agree(self, expr, rows, owner, where):
-        """when на каждой строке группы; все результаты обязаны совпасть."""
+        """Evaluate when on each group row; every result must agree."""
         vals = {self.cel(expr, r, owner, where) for _, r in rows}
         if len(vals) != 1:
             raise WireError(f"{where}: when {expr!r} differs over the group")
@@ -703,7 +703,7 @@ class Expander:
         raise WireError(f"{where}: forbidden argument expression")
 
     def asserts(self, a, rows, pdir, where, suffix=None):
-        """→ [Assert]; у no-leak value — массив секретов, whole — false по умолчанию."""
+        """Return [Assert]; no-leak value is an array of secrets, with whole defaulting to false."""
         out = []
         for x in a:
             v = self.value(x["value"], rows, pdir, where, suffix) if "value" in x else None
@@ -716,7 +716,7 @@ class Expander:
         return out
 
     def run(self, b, owner):
-        """→ ([Run], [Excluded]) привязки b для урока owner (каталог урока)."""
+        """Return ([Run], [Excluded]) for binding b and lesson owner (the lesson directory)."""
         w = f"{FORM}:{b.line}"
         if b.surface == "layout":
             return [], [Excluded(owner, b, 0, f"layout ({b.norm})")]
@@ -838,8 +838,8 @@ def json_type(v):
 
 
 def check_type(v, native, where, schema=True):
-    """Ожидание обязано подходить нативной форме (type и schema): строка 12 при string и decode cell — ошибка.
-    При сравнении subset ожидание — часть ответа: схема ответа к нему не прикладывается, только тип."""
+    """The expectation must fit the native type and schema: cell 12 with type string and decode cell is an error.
+    With subset comparison, the expectation is a partial response: check its type, without the full response schema."""
     types = native["type"] if isinstance(native["type"], list) else [native["type"]]
     t = json_type(v)
     if "value" not in types and t not in types:
@@ -852,10 +852,10 @@ def check_type(v, native, where, schema=True):
             raise WireError(f"{where}: expected value fails the native schema: {e.message}") from None
 
 
-# ---------------------------------------------------------------- урок
+# ---------------------------------------------------------------- lesson
 
 def consumers(root):
-    """→ {(package от Platform без vectors/, table): {урок}} из consumers.tsv."""
+    """Read {(package relative to Platform, without vectors/, table): {lesson}} from consumers.tsv."""
     try:
         return vector_consumers.read(root)
     except vector_consumers.ConsumerError as exc:
@@ -863,7 +863,7 @@ def consumers(root):
 
 
 def lesson_bindings(root, owner, bindings=None):
-    """Привязки урока: свои пакеты урока и общие, назначенные уроку consumers.tsv."""
+    """Lesson bindings: its own packages and shared packages assigned by consumers.tsv."""
     cons = consumers(root)
     if owner not in vector_consumers.lessons(root):
         raise WireError(f"{CONSUMERS}: unknown lesson {owner!r}")
@@ -879,7 +879,7 @@ def lesson_bindings(root, owner, bindings=None):
 
 
 def expand(root, owner, cel=None):
-    """→ ([Run], [Excluded]) урока owner по форме."""
+    """Return the form's ([Run], [Excluded]) for lesson owner."""
     ex = Expander(root, cel)
     runs, excl = [], []
     for b in lesson_bindings(root, owner):

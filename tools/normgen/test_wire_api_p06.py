@@ -144,7 +144,7 @@ class CanonicalP06(unittest.TestCase):
                                   env=GOENV, capture_output=True, text=True)
             self.assertEqual(done.returncode, 0, done.stderr)
             path = self.mod / 'probe.json'
-            for raw in (' [1.00e+02,9007199254740993,-0] ', '"данные"', 'panic'):
+            for raw in (' [1.00e+02,9007199254740993,-0] ', '"\u0434\u0430\u043d\u043d\u044b\u0435"', 'panic'):
                 frame = dict(format=1, package='common/group-of', table='cases.tsv', case='probe',
                              variant='', cells={'raw': raw}, files={})
                 path.write_text(json.dumps(frame, ensure_ascii=False))

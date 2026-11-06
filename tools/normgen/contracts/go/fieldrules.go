@@ -8,7 +8,7 @@ import (
 )
 
 // The rules of url fields (the address contract «The field rule and the common vocabulary», «Schemes»): the
-// declarations credentials, secret_in, schemes of a field type: url (P/02.1 Н1.2а). ReadFieldRules reads them from the
+// declarations credentials, secret_in, schemes of a field type: url (P/02.1 N1.2a). ReadFieldRules reads them from the
 // subset of YAML that the field declarations use (fields.yaml of the vectors secret-in): block mappings and sequences,
 // flow mappings and sequences, plain, single- and double-quoted scalars, comments. A loader with its own YAML parser
 // builds URLRule directly.
@@ -21,13 +21,13 @@ type SchemeRule struct {
 	None         []string
 }
 
-// ParamRule — {param, login}: the name patterns (А5); the names of Login are a login, the others a secret.
+// ParamRule — {param, login}: the name patterns (A5); the names of Login are a login, the others a secret.
 type ParamRule struct {
 	Param []string
 	Login []string
 }
 
-// RegexRule — a spelling of the manifest (А13): RE2 with the groups login, secret, name; In — the parts (path, query,
+// RegexRule — a spelling of the manifest (A13): RE2 with the groups login, secret, name; In — the parts (path, query,
 // authority, fragment); Schemes — empty is any; Decoded — the part is decoded to a fixed point (default true).
 type RegexRule struct {
 	Re      *regexp.Regexp
@@ -47,7 +47,7 @@ type URLRule struct {
 	Nested  []string
 }
 
-// Union — the united rule: the param, login, regex and nested of all rules (А8 «The rule»).
+// Union — the united rule: the param, login, regex and nested of all rules (A8 «The rule»).
 func Union(rules ...URLRule) URLRule {
 	out := URLRule{}
 	for _, r := range rules {

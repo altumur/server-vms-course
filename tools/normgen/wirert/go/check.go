@@ -1,4 +1,4 @@
-// Ручная среда провода wire.tsv: сравнение полного нативного ответа, не оболочки vectors.
+// Handwritten wire.tsv runtime: compare the full native response, not the vectors envelope.
 package wirecheck
 
 import (
@@ -35,7 +35,7 @@ type expected struct {
 	Asserts []assertion `json:"asserts"`
 }
 
-// Check — код, рамка, полный тип/схема, затем сравнение и утверждения. ignore_stdout исключает только stdout.
+// Check validates code, framing and full type/schema, then comparisons and assertions. ignore_stdout excludes only stdout.
 func Check(code int, output []byte, spec string) error {
 	var e expected
 	dec := json.NewDecoder(strings.NewReader(spec))
