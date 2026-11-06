@@ -1,47 +1,47 @@
-# The closed list of error words of the doors of lesson V/01: chapter 1.5, chapter 1.4 (ADR-0094 B5; measurement С.5). Moved from Н4, it does not change the norms: on a mismatch the source is the norm in the column norm.
-# door — the doors: holder GET /devices, /recordings/{id}, /playback/{id}, POST /talk/{id}/{number}; commands — the field error of the request label, the words of cam, the code is «-»; the other words of the same label (a refusal before the call, a deadline beyond most_valid, the group moved, a foreign epoch) are the worker's base, P/03.6 Н3. The console door — the list of P/06.
+# The closed list of error words of the doors of lesson V/01: chapter 1.5, chapter 1.4 (ADR-0094 B5; measurement C.5). Moved from N4, it does not change the norms: on a mismatch the source is the norm in the column norm.
+# door — the doors: holder GET /devices, /recordings/{id}, /playback/{id}, POST /talk/{id}/{number}; commands — the field error of the request label, the words of cam, the code is «-»; the other words of the same label (a refusal before the call, a deadline beyond most_valid, the group moved, a foreign epoch) are the worker's base, P/03.6 N3. The console door — the list of P/06.
 # The words are constant (ADR-0094 addendum (13)): names and numbers — for a door in detail; a label has no detail, they are in reply. field — «-»: there is no field.
 door	code	error	field	norm
-holder	400	bad range	-	01.5 Н4
-holder	404	no device archive	-	01.5 Н4
-holder	404	no such path	-	01.5 Н4
-holder	404	no call	-	01.5 Н4
-holder	400	bad query	-	01.5 Н2, Н4
-holder	409	busy	-	01.5 Н4: talk
-holder	405	method not allowed	-	01.5 Н4
-holder	413	toolarge	-	01.5 Н4; P/03.4 Н1.7
-holder	501	no index	-	01.5 Н4
-holder	503	device opening	-	01.5 Н4
-holder	503	device busy	-	01.5 Н4: stuck, reads, sessions ran out, the spare PLAYBACK_SPARE; V/06.2 Н1.4
-holder	503	busy	-	01.5 Н4: PLAYBACK_PER_CLIENT, the door budget; P/03.4 Н1.7 door_limits
-holder	401	no_role	-	01.5 Н2, Н4
-holder	403	no_role	-	01.5 Н2, Н4
-holder	403	wrong_role	-	01.5 Н2, Н4
-holder	403	bad_chain	-	01.5 Н2, Н4
-commands	-	camera is not licensed	-	01.4 Н3, Н4
-commands	-	command the camera, not its stream	-	01.4 Н3, Н4
-commands	-	arm and disable are for a camera	-	01.4 Н3, Н4
-commands	-	disable needs a rule and a time	-	01.4 Н3, Н4
-commands	-	camera is off by a rule	-	01.4 Н3, Н4
-commands	-	camera has no device	-	01.4 Н3, Н4
-commands	-	device is not open now	-	01.4 Н3, Н4
-commands	-	an argument is a number or a word	-	01.4 Н3, Н4
-commands	-	pulse_ms is a whole number of milliseconds	-	01.4 Н3, Н4
-commands	-	ports and presets count from 1	-	01.4 Н3, Н4
-commands	-	output needs a port	-	01.4 Н3, Н4
-commands	-	this device has no outputs	-	01.4 Н3, Н4
-commands	-	no such output	-	01.4 Н3, Н4
-commands	-	output is disabled	-	01.4 Н3, Н4
-commands	-	preset needs n	-	01.4 Н3, Н4
-commands	-	unit needs n and an operation	-	01.4 Н3, Н4
-commands	-	no such unit	-	01.4 Н3, Н4
-commands	-	unit is off	-	01.4 Н3, Н4
-commands	-	no such operation	-	01.4 Н3, Н4
-commands	-	this device has no telemetry	-	01.4 Н3, Н4
-commands	-	talk needs a port	-	01.4 Н3, Н4
-commands	-	no such speaker	-	01.4 Н3, Н4
-commands	-	speaker is disabled	-	01.4 Н3, Н4
-commands	-	busy	-	01.4 Н3, Н4
-commands	-	device refused	-	01.4 Н3, Н4
-commands	-	state is open, closed or pulse	-	01.4 Н3
-commands	-	pulse needs pulse_ms	-	01.4 Н3
+holder	400	bad range	-	01.5 N4
+holder	404	no device archive	-	01.5 N4
+holder	404	no such path	-	01.5 N4
+holder	404	no call	-	01.5 N4
+holder	400	bad query	-	01.5 N2, N4
+holder	409	busy	-	01.5 N4: talk
+holder	405	method not allowed	-	01.5 N4
+holder	413	toolarge	-	01.5 N4; P/03.4 N1.7
+holder	501	no index	-	01.5 N4
+holder	503	device opening	-	01.5 N4
+holder	503	device busy	-	01.5 N4: stuck, reads, sessions ran out, the spare PLAYBACK_SPARE; V/06.2 N1.4
+holder	503	busy	-	01.5 N4: PLAYBACK_PER_CLIENT, the door budget; P/03.4 N1.7 door_limits
+holder	401	no_role	-	01.5 N2, N4
+holder	403	no_role	-	01.5 N2, N4
+holder	403	wrong_role	-	01.5 N2, N4
+holder	403	bad_chain	-	01.5 N2, N4
+commands	-	camera is not licensed	-	01.4 N3, N4
+commands	-	command the camera, not its stream	-	01.4 N3, N4
+commands	-	arm and disable are for a camera	-	01.4 N3, N4
+commands	-	disable needs a rule and a time	-	01.4 N3, N4
+commands	-	camera is off by a rule	-	01.4 N3, N4
+commands	-	camera has no device	-	01.4 N3, N4
+commands	-	device is not open now	-	01.4 N3, N4
+commands	-	an argument is a number or a word	-	01.4 N3, N4
+commands	-	pulse_ms is a whole number of milliseconds	-	01.4 N3, N4
+commands	-	ports and presets count from 1	-	01.4 N3, N4
+commands	-	output needs a port	-	01.4 N3, N4
+commands	-	this device has no outputs	-	01.4 N3, N4
+commands	-	no such output	-	01.4 N3, N4
+commands	-	output is disabled	-	01.4 N3, N4
+commands	-	preset needs n	-	01.4 N3, N4
+commands	-	unit needs n and an operation	-	01.4 N3, N4
+commands	-	no such unit	-	01.4 N3, N4
+commands	-	unit is off	-	01.4 N3, N4
+commands	-	no such operation	-	01.4 N3, N4
+commands	-	this device has no telemetry	-	01.4 N3, N4
+commands	-	talk needs a port	-	01.4 N3, N4
+commands	-	no such speaker	-	01.4 N3, N4
+commands	-	speaker is disabled	-	01.4 N3, N4
+commands	-	busy	-	01.4 N3, N4
+commands	-	device refused	-	01.4 N3, N4
+commands	-	state is open, closed or pulse	-	01.4 N3
+commands	-	pulse needs pulse_ms	-	01.4 N3

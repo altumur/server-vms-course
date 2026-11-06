@@ -8,8 +8,8 @@
 #   * it reads the recording's footage through the archive doors of the recorders holding its volumes
 #     (`/spans`, `/samples`, V/02.5) instead of subscribing to a fan-out, so it wants to be beside the
 #     recorder that holds it — an affinity, since the door serves the frames to any server of the cluster;
-#   * it finishes: its result is the unit's state (`unit.state.result`, P/03.6 Н1.7), and the controller
-#     stops placing a unit whose result says so (`retire_when`, P/04 Н1.3).
+#   * it finishes: its result is the unit's state (`unit.state.result`, P/03.6 N1.7), and the controller
+#     stops placing a unit whose result says so (`retire_when`, P/04 N1.3).
 #
 # Its events go to `detjob/<job>/e<epoch>/` on the resource — its OWN tree, not `det/<unit>/`. A scan of
 # last Tuesday writes events dated last Tuesday, and merging them into the live detector's buckets would
@@ -24,26 +24,26 @@ unit:
   rows: jobs                         # detjob/jobs/<name>
   id: name                           # the operator's name for the run; an order's — `rec-…`, `auto-…`; a re-run is a new row
   fields:
-    name:    {type: string, required: true}
-    cam:     {type: string, required: true, fixed: true}   # the camera the footage is of — what every event line is
+    name: {type: string, required: true}
+    cam: {type: string, required: true, fixed: true}       # the camera the footage is of — what every event line is
                                                  # about (`of: cam/7`): `/events?unit=cam/7` finds a scan's results by the
                                                  # LINE, not the tree
     # The RECORDING whose streams hold the footage — a recording OF `cam`: a scan reads the footage of the camera it
     # names (the review's fifth pass, major: a job of camera 1 naming camera 2's recording read camera 2's archive and
     # filed what it found under camera 1). `must_match` says it, and the platform refuses the row.
-    rec:     {type: string, required: true, fixed: true, ref: rec/recordings, must_match: {cam: cam}}
-    kind:    {type: string, required: true}      # which model: motion | linecross | lpr | tick | … — the detectors' registry
-    params:  {type: string}                      # the model's settings, opaque to the platform; the row's limit is its limit
-    mask:    {type: blob}                        # sha256-<hex>; the bytes are in the object store (P/06.1 Н1.5)
+    rec: {type: string, required: true, fixed: true, ref: rec/recordings, must_match: {cam: cam}}
+    kind: {type: string, required: true}         # which model: motion | linecross | lpr | tick | … — the detectors' registry
+    params: {type: string}                       # the model's settings, opaque to the platform; the row's limit is its limit
+    mask: {type: blob}                           # sha256-<hex>; the bytes are in the object store (P/06.1 N1.5)
     # WHOSE mask: the id of a detector of the same camera (an order names the detector it scans for, V/02.8, V/07.4). The
     # row's own non-empty `mask` wins; else the mask of that detector's row when the model starts; no such row — the job
-    # fails. A reference keeps no body alive (P/06.1 sweep counts only blob fields), so the job names the ROW (V/05.3 Н1.3).
+    # fails. A reference keeps no body alive (P/06.1 sweep counts only blob fields), so the job names the ROW (V/05.3 N1.3).
     mask_of: {type: string, ref: det/units, must_match: {cam: cam}}
-    alarms:  {type: list,   default: ["linecross", "lpr"]}   # which event kinds are ALARMS — the detector's field, copied by the orders
-    from:    {type: float,  required: true}      # unix seconds, inclusive — MEDIA time, not the time the job was made
-    to:      {type: float,  required: true}      # unix seconds, exclusive
-    labels:  {type: list,   default: ["gpu"]}    # where it may run: a worker whose server has these labels
-  # What the holder keeps of the job beside the row, under its epoch (P/03.6 Н1.7): the RESULT, which outlives a move
+    alarms: {type: list, default: ["linecross", "lpr"]}      # which event kinds are ALARMS — the detector's field, copied by the orders
+    from: {type: float, required: true}          # unix seconds, inclusive — MEDIA time, not the time the job was made
+    to: {type: float, required: true}            # unix seconds, exclusive
+    labels: {type: list, default: ["gpu"]}       # where it may run: a worker whose server has these labels
+  # What the holder keeps of the job beside the row, under its epoch (P/03.6 N1.7): the RESULT, which outlives a move
   # and is what retires the job, and the CURSOR — the stretches of the recording already scanned — so the next holder
   # goes on from where the last one stopped (V/05.3).
   state:
@@ -52,12 +52,12 @@ unit:
       required: [end, covered, asked, events]
       additionalProperties: false
       properties:
-        end:     {enum: [done, failed]}
+        end: {enum: [done, failed]}
         covered: {type: number, minimum: 0}      # seconds of footage scanned
-        asked:   {type: number, minimum: 0}      # seconds of the interval
-        events:  {type: integer, minimum: 0}
+        asked: {type: number, minimum: 0}        # seconds of the interval
+        events: {type: integer, minimum: 0}
         partial: {type: array, items: {type: string}}   # what was not waited out (V/05.4): <volume>@<server> | device:<from:int>-<to:int>
-        why:     {type: string}
+        why: {type: string}
     cursor:
       type: object
       required: [revision, done, events]
@@ -67,41 +67,41 @@ unit:
         done:
           type: array
           items: {type: array, items: {type: number}, minItems: 2, maxItems: 2}
-        events:   {type: integer, minimum: 0}
+        events: {type: integer, minimum: 0}
         # Waits are ACCUMULATED durations, not points of a clock: the holder adds what its monotonic clock ran between
-        # cursor writes; a new holder goes on from here; time with no holder is not counted (V/05.4 Н1.2).
-        waited:       {type: number, minimum: 0}  # seconds something has been missing (or the model unsupported)
+        # cursor writes; a new holder goes on from here; time with no holder is not counted (V/05.4 N1.2).
+        waited: {type: number, minimum: 0}        # seconds something has been missing (or the model unsupported)
         fetch_waited: {type: number, minimum: 0}  # seconds backfill has been awaited
-# The words of the console and of the assistant (V/11.10 Н1.4): labels the admin's text names a field by.
+# The words of the console and of the assistant (V/11.10 N1.4): labels the admin's text names a field by.
 display:
-  unit: задача скана
-  units: задачи скана
-  units_count: задач скана
+  unit: scan job
+  units: scan jobs
+  units_count: scan jobs
   fields:
-    name: Имя задачи
-    cam: Камера
-    rec: Запись
-    kind: Модель
-    params: Параметры
-    mask: Маска
-    mask_of: Маска детектора
-    alarms: Тревожные события
-    from: С
-    to: По
-    labels: Метки серверов
+    name: Job name
+    cam: Camera
+    rec: Recording
+    kind: Model
+    params: Parameters
+    mask: Mask
+    mask_of: Detector mask
+    alarms: Alarm events
+    from: From
+    to: To
+    labels: Server labels
   field_help:
-    rec: запись, которую сканирует задача
-    from: начало отрезка записи
-    to: конец отрезка записи
+    rec: recording scanned by this job
+    from: start of the recording interval
+    to: end of the recording interval
 placement:
-  capacity:   {from: capacity, default: 2}      # scans a worker will carry at once — its OWN number, in its OWN
+  capacity: {from: capacity, default: 2}        # scans a worker will carry at once — its OWN number, in its OWN
                                                  # heartbeat. This is why a scan is a subsystem and not a flag on a
                                                  # `det` row: a retro-search must not be able to spend the streams
                                                  # live detection is running on.
-  headroom:   {from: headroom}
+  headroom: {from: headroom}
   constraint: labels-subset
-  requires:   resource                           # it writes its events into the resource on its own server
-  near:       {sub: rec, by: rec}                # An affinity, never a filter: be beside the recorder holding the
+  requires: resource                             # it writes its events into the resource on its own server
+  near: {sub: rec, by: rec}                      # An affinity, never a filter: be beside the recorder holding the
                                                  # recording this scan reads, so the footage crosses no network. `by: rec`
                                                  # follows the RECORDING the job names, not the job's own id. Where it
                                                  # cannot be had, the scan runs on any GPU server and reads through the
@@ -112,7 +112,7 @@ placement:
                                                  # in its state retires it, and three days later its row goes. In the
                                                  # STATE, because a job that was only `done` in a heartbeat would be
                                                  # un-placed, dropped, forgotten — and started again from the top.
-  tie_break:  most-free-capacity
+  tie_break: most-free-capacity
 snapshot: [name, cam, kind, state.result]        # what leaves the cluster: enough for a domain to say "camera 7 is
                                                  # being scanned" and how it ended; `from`/`to`/`rec` have no reader
                                                  # above the cluster.
@@ -123,8 +123,8 @@ events:
                                      # is a run that moved or was taken over — a result to compare against, not a writer
                                      # that lost a race. `fenced` would tell the operator their search was never valid.
 metrics:
-  - {name: jobs_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
-  - {name: filings_total, from: "heartbeat.filings.<outcome>", agg: sum, type: counter}   # requests for backfill it filed
+- {name: jobs_running, from: status.phase, agg: count, equals: running, live: true}     # the running gauge (`console.running`)
+- {name: filings_total, from: "heartbeat.filings.<outcome>", agg: sum, type: counter}     # requests for backfill it filed
 console:
   running: jobs_running              # detjob_jobs_running: scans whose worker is decoding right now
 # What a job worker reads besides its rows: the recorders' heartbeats (their archive doors) and volumes, the recordings

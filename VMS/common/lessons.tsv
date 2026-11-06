@@ -1,15 +1,15 @@
 # Lessons of the VMS module (ADR-0090 addendum (2)): the number is the owner's address (V/NN), the directory — NN-<name>; subsystem — the name of the
-# lesson's manifest (<sub>.subsystem.yaml in its directory) or «-»; status — переведён | не переведён (moved to the module or not; the values stay as written). Read by check_spec.
+# lesson's manifest (<sub>.subsystem.yaml in its directory) or '-'; status — translated | not translated.
 # lesson	dir	title	subsystem	status
-01	01-cam	Камера	cam	переведён
-02	02-rec	Запись	rec	переведён
-03	03-live	Живое видео	live	переведён
-04	04-det	Живая детекция	det	переведён
-05	05-detjob	Задача по интервалу архива	detjob	переведён
-06	06-detedge	Детекция по архиву устройства	detedge	переведён
-07	07-auto	Сценарии	auto	переведён
-08	08-exp	Выгрузка	exp	переведён
-09	09-deploy	Развёртывание VMS	-	переведён
-10	10-assist	Ассистент	assist	переведён
-11	11-backend	Бэкенд конфигуратора	backend	переведён
-12	12-psim	Плагины psim	-	переведён
+01	01-cam	Camera	cam	translated
+02	02-rec	Recording	rec	translated
+03	03-live	Live video	live	translated
+04	04-det	Live detection	det	translated
+05	05-detjob	Archive interval job	detjob	translated
+06	06-detedge	Device archive detection	detedge	translated
+07	07-auto	Scenarios	auto	translated
+08	08-exp	Export	exp	translated
+09	09-deploy	VMS deployment	-	translated
+10	10-assist	Assistant	assist	translated
+11	11-backend	Configurator backend	backend	translated
+12	12-psim	psim plugins	-	translated

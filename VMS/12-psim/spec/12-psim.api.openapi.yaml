@@ -3,22 +3,22 @@ info:
   title: V/12 — the door of the psim plugin adapter
   version: 1.0.0
   description: |
-    The HTTP contract of the process door of the adapter worker of the subsystem `psim-<id>` — chapter V/12.3 Н1.6 of the lesson «Плагины psim» of the VMS module.
+    The HTTP contract of the process door of the adapter worker of the subsystem `psim-<id>` — chapter V/12.3 N1.6 of the lesson psim plugins of the VMS module.
     The canon is [the norms of chapter 3](12.3-psim.norms.md); this file expresses them and adds no requirements. The resource routes are the names
-    `path_prefix` of the plugin's `PROXY` resources (V/12.1 Н1.5), here the parameter `route`; their content is the plugin's business, the door
-    proxies it to `location` from `RegisterResource` (V/12.3 Н1.2). Sign-in — the console door token (`GET /psim-<id>/where/plugin`,
+    `path_prefix` of the plugin's `PROXY` resources (V/12.1 N1.5), here the parameter `route`; their content is the plugin's business, the door
+    proxies it to `location` from `RegisterResource` (V/12.3 N1.2). Sign-in — the console door token (`GET /psim-<id>/where/plugin`,
     the door token contract) in `?t=` or `Authorization: Bearer`; after sign-in — the session cookie of the `psim` page. `static` — without
-    admittance. Request parsing and connection limits — the process door of P/03.4 Н1.7.
+    admittance. Request parsing and connection limits — the process door of P/03.4 N1.7.
 servers:
   - url: https://{server}:{port}
-    description: the process door of the adapter with the kit of the worker role — the address SERVER_NAME (P/03.4 Н1.7 kit)
+    description: the process door of the adapter with the kit of the worker role — the address SERVER_NAME (P/03.4 N1.7 kit)
     variables:
       server: {default: "srv-a"}
       port: {default: "0"}
 paths:
   /static/i18n.js:
     get:
-      summary: The dictionary of the psim pages — the bytes of psim-sdk c3d9ebb by SHA-256 (V/12.3 Н1.6)
+      summary: The dictionary of the psim pages — the bytes of psim-sdk c3d9ebb by SHA-256 (V/12.3 N1.6)
       security: []
       responses:
         "200":
@@ -32,7 +32,7 @@ paths:
       - name: route
         in: path
         required: true
-        description: a route of a plugin `PROXY` resource (V/12.1 Н1.5), not `static`
+        description: a route of a plugin `PROXY` resource (V/12.1 N1.5), not `static`
         schema: {type: string, pattern: "^(?:[a-z][a-z0-9_-]{0,31})$"}
       - name: rest
         in: path
@@ -40,7 +40,7 @@ paths:
         description: the tail of the path — goes to the resource's `location` as is
         schema: {type: string}
     get:
-      summary: Sign-in by token or a request of a plugin page (V/12.3 Н1.6)
+      summary: Sign-in by token or a request of a plugin page (V/12.3 N1.6)
       security: [{doorToken: []}, {pageCookie: []}]
       parameters:
         - name: t
@@ -61,7 +61,7 @@ paths:
         "403": {$ref: "#/components/responses/Refusal"}
         "502": {$ref: "#/components/responses/Refusal"}
     post:
-      summary: A request of a plugin page to its own server (V/12.3 Н1.6)
+      summary: A request of a plugin page to its own server (V/12.3 N1.6)
       security: [{doorToken: []}, {pageCookie: []}]
       responses:
         "200": {description: the plugin's answer as is}
@@ -77,7 +77,7 @@ components:
       type: apiKey
       in: cookie
       name: psim_<plugin_id>
-      description: the session of the adapter page (V/12.3 Н1.6), 128 random bits, 3600 s; the name carries the plugin id
+      description: the session of the adapter page (V/12.3 N1.6), 128 random bits, 3600 s; the name carries the plugin id
   responses:
     Refusal:
       description: "a refusal of the door: an object with the field error — the refusal word"

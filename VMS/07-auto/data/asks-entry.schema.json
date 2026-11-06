@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "value of an element of the book domain/auto/asks (the copy at a member) and domain/auto/asks/<member> (at the domain holder), V/07.5 Н1.3: a road to the target camera — at which receivers it holds the poll; fields without a value are omitted",
+ "description": "value of an element of the book domain/auto/asks (the copy at a member) and domain/auto/asks/<member> (at the domain holder), V/07.5 N1.3: a road to the target camera — at which receivers it holds the poll; fields without a value are omitted",
  "type": "object",
  "properties": {
   "target": {

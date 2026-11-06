@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/6/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norms are [`08.6-exp.norms.md`](../../spec/08.6-exp.norms.md) … [`08.9-exp.norms.md`](../../spec/08.9-exp.norms.md), sections Н5. The stand and
+The norms are [`08.6-exp.norms.md`](../../spec/08.6-exp.norms.md) … [`08.9-exp.norms.md`](../../spec/08.9-exp.norms.md), sections N5. The stand and
 the vocabulary are [the common VMS acceptance README](../../../common/acceptance/README.md) over the common platform README (export `7a875c75`).
 
 ## Preparation
@@ -20,7 +20,7 @@ a domain (one identity with full rights). A scenario — on a clean instance.
 | `04-door` | V/08.9-01 … V/08.9-04, V/08.7-05 | the file door and the route `parts` |
 
 Steps with the media stand, going through the gateway and the file door are `@manual` with a description: they are judged by a run of the implementation on a stand with
-a camera holder, the recorder `obsd` and the gateway (the README of the common VMS stand, «Медиа стенда»). The translation of a `backend` order is
+a camera holder, the recorder `obsd` and the gateway (the README of the common VMS stand, «Stand media»). The translation of a `backend` order is
 V/11 when the contract of the fork with `/exports` is fixed.
 
 In all, 4 independent scenarios, 13 steps.

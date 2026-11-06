@@ -1,6 +1,6 @@
 # Приёмка V/03.1 — раздача — единица по спросу
 
-Норма главы — [`03.1-live.norms.md`](../../spec/03.1-live.norms.md) Н5. Стенд и словарь — [общий README приёмки
+Норма главы — [`03.1-live.norms.md`](../../spec/03.1-live.norms.md) N5. Стенд и словарь — [общий README приёмки
 VMS](../../../../common/ru/acceptance/README.md) поверх общего README платформы (выгрузка `7a875c75`).
 
 Текст производный от `acceptance/1/README.md`, руками не правится: источник — английский [`acceptance/1/README.md`](../../../acceptance/1/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
@@ -15,7 +15,7 @@ VMS](../../../../common/ru/acceptance/README.md) поверх общего READM
 Сценарий `02-two-viewers` — на стенде домена VMS ([общий README приёмки VMS](../../../../common/ru/acceptance/README.md), «Стенд
 домена VMS»): `@domain m1`, на `m1` — те же манифесты, `member m1 console` — корень `live`, `member m1 console2` — `/cam`;
 люди и гранты — двери `holder` и директива `@person` общего README платформы. Ann видит только камеру `$a`, Bob — только
-`$b`. Выбор потока на двери шлюза (`?stream=`, `?width=&height=`, V/03.3 Н1.2) — [приёмка 3](../3/README.md): шлюза на этом стенде нет.
+`$b`. Выбор потока на двери шлюза (`?stream=`, `?width=&height=`, V/03.3 N1.2) — [приёмка 3](../3/README.md): шлюза на этом стенде нет.
 
 | Сценарий | Норма | Что наблюдает |
 |---|---|---|

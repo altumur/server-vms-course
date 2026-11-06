@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "the words of the subsystem det in an event row of a detector bucket (the open place of the Platform family events-unit — the root of the row); the field type is set by the writing lesson — V/04.2 Н1.2 (the teaching model tick), V/04.3 Н1.1; the fields of other models — the worker's registry («Решает реализация» of V/04.2), not judged by the family; read by the console (as is) and the auto scenarios (V/07.2 Н1.3 — strictly)",
+ "description": "the words of the subsystem det in an event row of a detector bucket (the open place of the Platform family events-unit — the root of the row); the field type is set by the writing lesson — V/04.2 N1.2 (the teaching model tick), V/04.3 N1.1; the fields of other models — the worker's registry (Implementation decides of V/04.2), not judged by the family; read by the console (as is) and the auto scenarios (V/07.2 N1.3 — strictly)",
  "type": "object",
  "allOf": [
   {

@@ -12,7 +12,7 @@ scenario	step	request	expect
 01-door	10	archive r-srv-a-1 POST /spans/door	405 {"error": "method not allowed"}
 01-door	11	archive r-srv-a-1 GET /timeline/door	403 {"error": "forbidden"}
 01-door	12	archive r-srv-a-1 POST /spans/door/	404 {"error": "no such path"}
-02-audio	1	@manual запись со звуком: кусок fMP4 — два trak, moof с двумя traf, файл играет браузером со звуком; тот же интервал — те же байты	manual
-02-audio	2	@manual запись без звука — байты одной дорожки; кусок backfill и e0 со звуком — две дорожки; /samples с track=audio — записи major 3; track иное — 400 bad range	manual
-02-audio	3	@manual разрыв видео внутри куска — звук не наезжает на себя, звук разрыва потерян; камера 15 к/с без длительности буфера — сэмплы видео по разности begin, звук не обрезан	manual
-02-audio	4	@manual удержание: копия e0 и e0/audio, сохранённый инцидент играет со звуком; дайджест считает оба потока, правка байта звука — verify damaged	manual
+02-audio	1	@manual recording with audio: fMP4 piece has two trak and moof with two traf; browser playback has audio; the same interval yields the same bytes	manual
+02-audio	2	@manual recording without audio: single-track bytes; backfill and e0 pieces with audio: two tracks; /samples with track=audio: major 3 records; another track: 400 bad range	manual
+02-audio	3	@manual video gap within a piece: audio does not overlap itself, audio during the gap is lost; 15 fps camera without buffer duration: video samples use begin differences and audio is not truncated	manual
+02-audio	4	@manual hold: copy e0 and e0/audio, retained incident plays with audio; the digest includes both streams; changing an audio byte yields verify damaged	manual

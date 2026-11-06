@@ -7,7 +7,7 @@ instructions do not add to them. The platform is the export `cammeta-specs` `7a8
 
 ## Inputs and their priority
 
-- The canon: the norms of the chapters `09.K-deploy.norms.md` (Н1–Н5 of each chapter; the addresses `V/09.K Н…`).
+- The canon: the norms of the chapters `09.K-deploy.norms.md` (N1–N5 of each chapter; the addresses `V/09.K N…`).
 - The lecture (`ru/09-deploy.md`, for people, not in the export) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
 
 Record a contradiction with its place and a counterexample (the section «On a divergence»); an arbitrary refusal does not replace an
@@ -28,9 +28,9 @@ The installation is a mechanism of the platform (P/02.4): the VMS implementation
 
 | Norm | Possible mistake | How to keep the behaviour |
 |---|---|---|
-| V/09.4 Н1.1 | judging health by a difference of counts | health is a failure (the «Failure» phases, `/unplaceable`, `workers_live`); the counts are diagnostics |
-| V/09.2 Н1.3 | computing `CAPACITY` without the load limit | `min(память, предел)` with `unit_mb`, otherwise the limit; the package file is the `default`, the operator edits it for the server |
-| V/09.1 Н1.2 | putting the installation under an OS name base other than `vms` | `W2C_DEPLOYMENT=vms`: the share directories and the `obsd` client group depend on it |
+| V/09.4 N1.1 | judging health by a difference of counts | health is a failure (the «Failure» phases, `/unplaceable`, `workers_live`); the counts are diagnostics |
+| V/09.2 N1.3 | computing `CAPACITY` without the load limit | `min(memory, limit)` with `unit_mb`, otherwise the limit; the package file is the `default`, the operator edits it for the server |
+| V/09.1 N1.2 | putting the installation under an OS name base other than `vms` | `W2C_DEPLOYMENT=vms`: the share directories and the `obsd` client group depend on it |
 
 ## Done when
 
@@ -41,6 +41,6 @@ installer does not substitute for it.
 ## On a divergence
 
 The order of the sources: the norms of the chapter → OpenAPI → acceptance and vectors → the lecture; the platform — the norms of the export of the VMS pin.
-If a norm is silent or contradicts itself — a question to «Спецификация VMS» with the place, a counterexample and a proposal; a platform
-norm — through «Архитектор». An acceptance defect (an expectation against a norm) — the same route; a closed decision
+If a norm is silent or contradicts itself — a question to VMS Specification with the place, a counterexample and a proposal; a platform
+norm — through Architect. An acceptance defect (an expectation against a norm) — the same route; a closed decision
 is entered into the canon and does not stay in these instructions.

@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`07.1-auto.norms.md`](../../spec/07.1-auto.norms.md) Н5. The stand and the vocabulary are [the common VMS acceptance
+The norm of the chapter is [`07.1-auto.norms.md`](../../spec/07.1-auto.norms.md) N5. The stand and the vocabulary are [the common VMS acceptance
 README](../../../common/acceptance/README.md) over the common platform README (export `7a875c75`).
 
 ## Preparation
@@ -13,7 +13,7 @@ Requests — from loopback without a domain (one identity with full rights). A s
 
 | Scenario | Norm | What it observes |
 |---|---|---|
-| `01-create` steps 1–6 | V/07.1-01, V/07.1-02, V/07.1-03 | a scenario with the defaults and the number 1 (`match` and `port` are integers, V/01.2 Н1.5, V/01.4 Н1.1); an empty `when` is set up; an extra trigger key, an action not from the forms, `within` greater than an hour, `valid_for` 3 — 400 |
+| `01-create` steps 1–6 | V/07.1-01, V/07.1-02, V/07.1-03 | a scenario with the defaults and the number 1 (`match` and `port` are integers, V/01.2 N1.5, V/01.4 N1.1); an empty `when` is set up; an extra trigger key, an action not from the forms, `within` greater than an hour, `valid_for` 3 — 400 |
 | `01-create` steps 7–10 | V/07.1-03 | each of the other four forms of an action is set up (201) |
 | `01-create` steps 11–20 | V/07.1-03 | for each form — without a required key and with an extra key — 400 |
 | `01-create` steps 21–28 | V/07.1-01, V/07.1-02, V/07.1-03 | five triggers, five actions — 400; `rate_per_minute` 601 — 400, `0` is stored; `valid_for` `0` is stored, `9` — 400; `minutes` as a string, `port` as a string — 400 |

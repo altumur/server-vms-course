@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "value of an element of the book domain/cam/sources (the copy at a member) and domain/cam/sources/<member> (at the domain holder), V/01.6 Н1.2: a placed camera or a polled camera; fields without a value are omitted, \"\" and null never occur",
+ "description": "value of an element of the book domain/cam/sources (the copy at a member) and domain/cam/sources/<member> (at the domain holder), V/01.6 N1.2: a placed camera or a polled camera; fields without a value are omitted, \"\" and null never occur",
  "type": "object",
  "properties": {
   "ref": {

@@ -1,6 +1,6 @@
 # Приёмка V/08.6–V/08.9 — выгрузка
 
-Нормы — [`08.6-exp.norms.md`](../../spec/08.6-exp.norms.md) … [`08.9-exp.norms.md`](../../spec/08.9-exp.norms.md), разделы Н5. Стенд и
+Нормы — [`08.6-exp.norms.md`](../../spec/08.6-exp.norms.md) … [`08.9-exp.norms.md`](../../spec/08.9-exp.norms.md), разделы N5. Стенд и
 словарь — [общий README приёмки VMS](../../../../common/ru/acceptance/README.md) поверх общего README платформы (выгрузка `7a875c75`).
 
 Текст производный от `acceptance/6/README.md`, руками не правится: источник — английский [`acceptance/6/README.md`](../../../acceptance/6/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).

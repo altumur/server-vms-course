@@ -1,24 +1,24 @@
 # exp — export of footage and frames (V/08; ADR-0117 with addenda (1)–(6)). A unit is a PART: one camera, one recording
 # (or the live picture of one camera), its periods and the files it makes. An order of several cameras is several
 # parts written by `backend` in one batch; the lead part (its `name` equals `export`) carries the order, the others
-# copy what a door of theirs must judge alone (`by`, the order's settings; доп. (6) п. 4). No coordinator: `backend`
-# sums progress and result by reading the parts (доп. (4) п. 1). A part sits beside its recording (`near`), cuts the
+# copy what a door of theirs must judge alone (`by`, the order's settings; addendum. (6) item. 4). No coordinator: `backend`
+# sums progress and result by reading the parts (addendum. (4) item. 1). A part sits beside its recording (`near`), cuts the
 # footage it reads over the recorder's doors, and keeps the files on its own volume until they expire; then its
-# holder deletes the files and the row (доп. (6) п. 1). Bytes never pass the console or backend (ADR-0015).
+# holder deletes the files and the row (addendum. (6) item. 1). Bytes never pass the console or backend (ADR-0015).
 name: exp
 slot: {prefix: x, name_env: EXP_NAME}
 about: {sub: cam, field: cam}   # a part is about a camera: its grants, labels and events are the camera's
 unit:
   rows: parts                        # exp/parts/<name>
-  writes_via: [backend]              # only backend writes the parts (ADR-0119 доп. (10)): a session cannot forge supervised_by
-  id: name                           # backend's: the lead's — the order's id; the others — <order>-<n> (V/08.6 Н1.1)
+  writes_via: [backend]              # only backend writes the parts (ADR-0119 addendum. (10)): a session cannot forge supervised_by
+  id: name                           # backend's: the lead's — the order's id; the others — <order>-<n> (V/08.6 N1.1)
   fields:
-    name:     {type: string, required: true}
-    export:   {type: string, required: true, fixed: true}   # the order: the lead part's name; the lead's own name
-    cam:      {type: string, required: true, fixed: true}
-    rec:      {type: string, fixed: true, ref: rec/recordings, must_match: {cam: cam}}   # none — the live frame
-    source:   {type: string, required: true, fixed: true, enum: [archive, live]}
-    mode:     {type: string, required: true, fixed: true, enum: [video, frame]}
+    name: {type: string, required: true}
+    export: {type: string, required: true, fixed: true}     # the order: the lead part's name; the lead's own name
+    cam: {type: string, required: true, fixed: true}
+    rec: {type: string, fixed: true, ref: rec/recordings, must_match: {cam: cam}}        # none — the live frame
+    source: {type: string, required: true, fixed: true, enum: [archive, live]}
+    mode: {type: string, required: true, fixed: true, enum: [video, frame]}
     periods:
       type: json
       fixed: true
@@ -26,8 +26,8 @@ unit:
         type: array
         maxItems: 32
         items: {type: array, items: {type: number}, minItems: 2, maxItems: 2}
-    at:       {type: float, fixed: true}                    # the moment of an archive frame; none for video and live
-    format:   {type: string, required: true, fixed: true, enum: [mkv, mp4, avi, jpg, pdf]}
+    at: {type: float, fixed: true}                          # the moment of an archive frame; none for video and live
+    format: {type: string, required: true, fixed: true, enum: [mkv, mp4, avi, jpg, pdf]}
     settings:
       type: json
       fixed: true
@@ -35,29 +35,29 @@ unit:
         type: object
         additionalProperties: false
         properties:
-          quality:    {enum: [original, high, medium, low]}
-          width:      {type: integer, minimum: 16, maximum: 7680}
-          height:     {type: integer, minimum: 16, maximum: 4320}
-          fps_div:    {type: integer, minimum: 1, maximum: 30}
-          audio:      {type: boolean}
-          titles:     {type: array, maxItems: 8, items: {enum: [camera, time, date, comment]}}
-          font:       {type: string, maxLength: 64}
+          quality: {enum: [original, high, medium, low]}
+          width: {type: integer, minimum: 16, maximum: 7680}
+          height: {type: integer, minimum: 16, maximum: 4320}
+          fps_div: {type: integer, minimum: 1, maximum: 30}
+          audio: {type: boolean}
+          titles: {type: array, maxItems: 8, items: {enum: [camera, time, date, comment]}}
+          font: {type: string, maxLength: 64}
           area:
             type: array
             items: {type: number, minimum: 0, maximum: 1}
             minItems: 4
             maxItems: 4
           single_file: {type: boolean}
-          file_mb:    {type: integer, minimum: 100, maximum: 4000}
-          tz:         {type: string, maxLength: 64}   # the IANA zone of the file names: backend writes the system time zone (the Architect's decision 2026-11-04; V/08.7 Н1.4)
-          chapters:   {type: array, maxItems: 256, items: {type: object, required: [at, title], additionalProperties: false, properties: {at: {type: number}, title: {type: string, maxLength: 128}}}}
-    password_secret: {type: string}                         # ZIP AES-256 or the PDF's; gone with the row (доп. (4) п. 3)
-    by:       {type: string, required: true, fixed: true}   # the author: a copy in each part (доп. (6) п. 4)
-    comment:  {type: string}
-    supervised_by: {type: string, fixed: true}               # the name of the person who confirmed the order (ADR-0119 п. 5, доп. (1) п. 3)
+          file_mb: {type: integer, minimum: 100, maximum: 4000}
+          tz: {type: string, maxLength: 64}           # the IANA zone of the file names: backend writes the system time zone (the Architect's decision 2026-11-04; V/08.7 N1.4)
+          chapters: {type: array, maxItems: 256, items: {type: object, required: [at, title], additionalProperties: false, properties: {at: {type: number}, title: {type: string, maxLength: 128}}}}
+    password_secret: {type: string}                         # ZIP AES-256 or the PDF's; gone with the row (addendum. (4) item. 3)
+    by: {type: string, required: true, fixed: true}         # the author: a copy in each part (addendum. (6) item. 4)
+    comment: {type: string}
+    supervised_by: {type: string, fixed: true}               # the name of the person who confirmed the order (ADR-0119 item. 5, addendum. (1) item. 3)
     retry_of: {type: string, fixed: true}                    # the order this one retries the failed parts of
-    keep:     {type: int, fixed: true, default: 86400, hidden: true, schema: {minimum: 60}}   # seconds the files live after the part ends (EXPORT_KEEP; V/08.8 Н1.4); a person sees result.expires
-    labels:   {type: list, default: []}                      # ["gpu"] when the part transcodes (V/08.7 Н1.4)
+    keep: {type: int, fixed: true, default: 86400, hidden: true, schema: {minimum: 60}}       # seconds the files live after the part ends (EXPORT_KEEP; V/08.8 N1.4); a person sees result.expires
+    labels: {type: list, default: []}                        # ["gpu"] when the part transcodes (V/08.7 N1.4)
   state:
     cursor:
       type: object
@@ -65,17 +65,17 @@ unit:
       additionalProperties: false
       properties:
         revision: {type: integer, minimum: 0}
-        done:     {type: number, minimum: 0, maximum: 1}     # share of the part ready
-        bytes:    {type: integer, minimum: 0}
-        at:       {type: number}                             # when written: at least every 5 s while running
+        done: {type: number, minimum: 0, maximum: 1}         # share of the part ready
+        bytes: {type: integer, minimum: 0}
+        at: {type: number}                                   # when written: at least every 5 s while running
     result:
       type: object
       required: [end]
       additionalProperties: false
       properties:
-        end:     {enum: [done, failed, canceled, expired]}
+        end: {enum: [done, failed, canceled, expired]}
         expires: {type: number}                            # when the part ended + keep: the files' end and the row's
-        code:    {enum: [no_recording, unreachable, no_space, limit, offline]}
+        code: {enum: [no_recording, unreachable, no_space, limit, offline]}
         partial: {type: array, items: {type: array, items: {type: number}, minItems: 2, maxItems: 2}}   # holes
         files:
           type: array
@@ -84,72 +84,72 @@ unit:
             required: [id, name, size, sha256]
             additionalProperties: false
             properties:
-              id:     {type: string, pattern: "^(?:f[0-9]{1,4})$"}
-              name:   {type: string, maxLength: 255}
-              size:   {type: integer, minimum: 0}
+              id: {type: string, pattern: "^(?:f[0-9]{1,4})$"}
+              name: {type: string, maxLength: 255}
+              size: {type: integer, minimum: 0}
               sha256: {type: string, pattern: "^(?:[0-9a-f]{64})$"}
-        why:     {type: string}
+        why: {type: string}
 display:
-  unit: часть выгрузки
-  units: части выгрузки
-  units_count: частей выгрузки
+  unit: export part
+  units: export parts
+  units_count: export parts
   fields:
-    name: Имя части
-    export: Выгрузка
-    cam: Камера
-    rec: Запись
-    source: Источник
-    mode: Режим
-    periods: Отрезки
-    at: Момент кадра
-    format: Формат
-    settings: Настройки
-    password_secret: Пароль
-    by: Автор
-    comment: Комментарий
-    supervised_by: Подтвердил
-    retry_of: Повтор выгрузки
-    labels: Метки серверов
+    name: Part name
+    export: Export
+    cam: Camera
+    rec: Recording
+    source: Source
+    mode: Mode
+    periods: Periods
+    at: Frame time
+    format: Format
+    settings: Settings
+    password_secret: Password
+    by: Author
+    comment: Comment
+    supervised_by: Approved by
+    retry_of: Export retry
+    labels: Server labels
   kinds:
-    export.made: выгрузка заказана
-    export.refused: выгрузка отказана
-    export.finished: выгрузка готова
-    export.issued: выдана ссылка
-    export.read: файл скачан
-    export.deleted: файлы удалены
+    export.made: export ordered
+    export.refused: export refused
+    export.finished: export ready
+    export.issued: link issued
+    export.read: file downloaded
+    export.deleted: files deleted
 placement:
-  capacity:   {from: capacity, default: 64}     # parts a worker HOLDS, ready ones too until they expire: the memory of files; the work is limited by EXP_ACTIVE (V/08.6 Н1.2)
-  headroom:   {from: headroom}
+  capacity: {from: capacity, default: 64}       # parts a worker HOLDS, ready ones too until they expire: the memory of files; the work is limited by EXP_ACTIVE (V/08.6 N1.2)
+  headroom: {from: headroom}
   constraint: labels-subset
-  requires:   resource                           # it writes the camera's export lines into the resource of its server
-  near:       {sub: rec, by: rec}                # an affinity, never a filter (ADR-0117 п. 1.2)
-  tie_break:  most-free-capacity
+  requires: resource                             # it writes the camera's export lines into the resource of its server
+  near: {sub: rec, by: rec}                      # an affinity, never a filter (ADR-0117 item. 1.2)
+  tie_break: most-free-capacity
 snapshot: [name, export, cam, mode, state.result]
 rights:
-  routes: {edit: [parts]}            # creating an order is `edit` on exp of each camera (ADR-0117 п. 4.1)
+  routes: {edit: [parts]}            # creating an order is `edit` on exp of each camera (ADR-0117 item. 4.1)
 requests:
   schema:
     type: object
     required: [unit, action]
     additionalProperties: false
     properties:
-      unit:   {type: string}
+      unit: {type: string}
       action: {enum: [cancel, delete]}
   valid_for: 30
   most_valid: 600
-  ttl: 600                           # a cancel or a delete older than this is closed by the reaper (P/06.4 Н3)
-  per_person: 64                     # EXPORT_CAMERAS_MAX × EXPORT_ACTIVE_PER_USER, cancel and delete together (М ревью доп. (6))
+  ttl: 600                           # a cancel or a delete older than this is closed by the reaper (P/06.4 N3)
+  per_person: 64                     # EXPORT_CAMERAS_MAX × EXPORT_ACTIVE_PER_USER, cancel and delete together (minor review of addendum (6))
   stamp: [by, at]
 events:
   older_epochs: earlier-run
 door:
   routes:
-    - files                          # a person's download: the door token of /exp/where/<part> (V/08.9)
-    - {name: parts, role: [expworker]}   # the lead part pulls the others' files for «one file» (V/08.9 Н1.3)
-parts: {files: {exec: /usr/lib/exp/files-part, volumes: true}}   # the volume of export files (ADR-0117 доп. (3) М)
+  - files                            # a person's download: the door token of /exp/where/<part> (V/08.9)
+  - {name: parts, role: [expworker]}     # the lead part pulls the others' files for «one file» (V/08.9 N1.3)
+parts: {files: {exec: /usr/lib/exp/files-part, volumes: true}}   # the volume of export files (ADR-0117 addendum. (3) M)
 shares: {files: {kind: dir, part: files}}
 metrics:
-  - {name: parts_running, from: status.phase, agg: count, equals: running, live: true}
+- {name: parts_running, from: status.phase, agg: count, equals: running, live: true}
 console:
   running: parts_running
 worker: {exec: /usr/lib/exp/worker, reads: [rec/heartbeats/, rec/recordings/, rec/volumes/, live/heartbeats/, cam/cameras/, exp/heartbeats/, exp/placement/], deletes: [parts], creates: [{sub: live, rows: streams, key: "{cam}"}], uses: [exp.files]}

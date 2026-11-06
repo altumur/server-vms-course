@@ -1,18 +1,18 @@
-# Outcomes of unreadable words of rec in the heartbeat rec/heartbeats/<name> (V/02.4 Н1.8, V/02.5 Н1.7, V/02.8 Н1.2, V/02.9 Н1.3, Н1.10) for the subsystem readers; a wholly unreadable heartbeat is the Platform family heartbeats. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of unreadable words of rec in the heartbeat rec/heartbeats/<name> (V/02.4 N1.8, V/02.5 N1.7, V/02.8 N1.2, V/02.9 N1.3, N1.10) for the subsystem readers; a wholly unreadable heartbeat is the Platform family heartbeats. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-/ingest	recworker	ingest of a neighbour not in form: not read, rather than «no receiver» — on this pass not a neighbour, the stream is not pushed to it; the next heartbeat — again	1	row	V/02.9 Н1.5
-/status	recworker	written_through of a recording not in form: not read, rather than absent — have of this pair (camera, stream) is not given, as with a stale heartbeat; the camera sends everything; the backup after the first 45 s of `running` considers that the primary is not recording, without a delay	1	element	V/02.9 Н1.3 «Ответ опроса», V/02.6 Н1.4
-/stream	recworker	stream of the card's recorder not in form: not read, rather than absent — the camera is silent, the catch-up recording window decides	1	row	V/02.8 Н1.2
-	recworker	the heartbeat words of a neighbour are unreadable: on this pass it is not a neighbour, have by its recordings is not given; the other recorders go on	1	row	V/02.9 Н1.3, Н1.5
-/ingest	liveworker	ingest of a recorder not in form: not read, rather than «no receiver» — on the pass this recorder is not a receiver candidate, the next one in order is; no readable ones — the source does not change, one not open waits	1	row	V/03.2 Н1.3
-	liveworker	the heartbeat words of a recorder are unreadable: on the pass it is not a receiver candidate; the other recorders go on	1	row	V/03.2 Н1.3
-/ingest	detworker	ingest of a recorder not in form: not read, rather than «no receiver» — on the pass not a receiver candidate, the next one is; no readable ones — the source kind does not change, one not open — waiting, reason «rec heartbeat unreadable: ingest»	1	row	V/04.2 Н1.1
-	detworker	the heartbeat words of a recorder are unreadable: on the pass it is not a receiver candidate; the others go on	1	row	V/04.2 Н1.1
-/url	detjobworker	url of a recorder not in form: not a live door on this pass — it is not asked; its volume — unread by the condition of V/05.2 Н1.1 (not read, rather than «no recording»)	1	row	V/05.2 Н1.1
-/volume	detjobworker	volume not in form: not a live door on this pass; this heartbeat row names no volume — gives no unread	1	row	V/05.2 Н1.1
-	detjobworker	the heartbeat words of a recorder are unreadable: not a live door; this heartbeat names no volume and no recording — gives no unread	1	row	V/05.2 Н1.1
-/url	expworker	url of a recorder not in form: not a live door on this pass — it is not asked; a segment that lies only in its volume — a hole of the part (partial), not «no recording»	1	row	V/08.7 Н1.1
-/volume	expworker	volume not in form: not a live door on this pass; this heartbeat row names no volume — gives no hole	1	row	V/08.7 Н1.1
-	expworker	the heartbeat words of a recorder are unreadable: not a live door; this heartbeat names no volume and no recording — gives no hole	1	row	V/08.7 Н1.1
-/ingest	autoworker	ingest of a recorder not in form: not read, rather than «no receiver» — on the pass the recorder is not in the urls of the contribution to the book asks, the others are; no readable ones — the contribution keeps the urls published last	1	row	V/07.5 Н1.3
-	autoworker	the heartbeat words of a recorder are unreadable: on the pass it is not in the urls of the contribution; the others go on	1	row	V/07.5 Н1.3
+/ingest	recworker	ingest of a neighbour not in form: not read, rather than «no receiver» — on this pass not a neighbour, the stream is not pushed to it; the next heartbeat — again	1	row	V/02.9 N1.5
+/status	recworker	written_through of a recording not in form: not read, rather than absent — have of this pair (camera, stream) is not given, as with a stale heartbeat; the camera sends everything; the backup after the first 45 s of `running` considers that the primary is not recording, without a delay	1	element	V/02.9 N1.3 «Poll answer», V/02.6 N1.4
+/stream	recworker	stream of the card's recorder not in form: not read, rather than absent — the camera is silent, the catch-up recording window decides	1	row	V/02.8 N1.2
+	recworker	the heartbeat words of a neighbour are unreadable: on this pass it is not a neighbour, have by its recordings is not given; the other recorders go on	1	row	V/02.9 N1.3, N1.5
+/ingest	liveworker	ingest of a recorder not in form: not read, rather than «no receiver» — on the pass this recorder is not a receiver candidate, the next one in order is; no readable ones — the source does not change, one not open waits	1	row	V/03.2 N1.3
+	liveworker	the heartbeat words of a recorder are unreadable: on the pass it is not a receiver candidate; the other recorders go on	1	row	V/03.2 N1.3
+/ingest	detworker	ingest of a recorder not in form: not read, rather than «no receiver» — on the pass not a receiver candidate, the next one is; no readable ones — the source kind does not change, one not open — waiting, reason «rec heartbeat unreadable: ingest»	1	row	V/04.2 N1.1
+	detworker	the heartbeat words of a recorder are unreadable: on the pass it is not a receiver candidate; the others go on	1	row	V/04.2 N1.1
+/url	detjobworker	url of a recorder not in form: not a live door on this pass — it is not asked; its volume — unread by the condition of V/05.2 N1.1 (not read, rather than «no recording»)	1	row	V/05.2 N1.1
+/volume	detjobworker	volume not in form: not a live door on this pass; this heartbeat row names no volume — gives no unread	1	row	V/05.2 N1.1
+	detjobworker	the heartbeat words of a recorder are unreadable: not a live door; this heartbeat names no volume and no recording — gives no unread	1	row	V/05.2 N1.1
+/url	expworker	url of a recorder not in form: not a live door on this pass — it is not asked; a segment that lies only in its volume — a hole of the part (partial), not «no recording»	1	row	V/08.7 N1.1
+/volume	expworker	volume not in form: not a live door on this pass; this heartbeat row names no volume — gives no hole	1	row	V/08.7 N1.1
+	expworker	the heartbeat words of a recorder are unreadable: not a live door; this heartbeat names no volume and no recording — gives no hole	1	row	V/08.7 N1.1
+/ingest	autoworker	ingest of a recorder not in form: not read, rather than «no receiver» — on the pass the recorder is not in the urls of the contribution to the book asks, the others are; no readable ones — the contribution keeps the urls published last	1	row	V/07.5 N1.3
+	autoworker	the heartbeat words of a recorder are unreadable: on the pass it is not in the urls of the contribution; the others go on	1	row	V/07.5 N1.3

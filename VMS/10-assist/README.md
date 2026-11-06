@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-Status: **translated** — chapters V/10.1, V/10.2 (2026-10-29; started 2026-10-28, «Спецификация VMS»). The lesson plan is accepted by «Архитектор» — ADR-0093 addendum (1).
+Status: **translated** — chapters V/10.1, V/10.2 (2026-10-29; started 2026-10-28, VMS Specification). The lesson plan is accepted by Architect — ADR-0093 addendum (1).
 The norms — the export `35582ba`. The loop, the tools, the check, the application and the rules as text moved to V/11, chapters 9–13
 (ADR-0093 addendum (8) items 2, 3; 2026-11-02). The basis is ADR-0093; the assistant pilot (outside the export) (reference, not canon).
 The platform is the export `cammeta-specs` `7a875c75` (the VMS pin). The manifest is [`assist.subsystem.yaml`](assist.subsystem.yaml)
@@ -20,8 +20,8 @@ the subsystem is required for the assistant (ADR-0093 addendum (9) item 2, it li
 
 | Chapter | What it norms | Status | Platform and lessons |
 |---|---|---|---|
-| V/10.1 | The model — the unit `assist/models/<name>` and the worker: fields and rights (talking to the model — `view` on the row), placement by label, one model per server, the model process — a child process of the holder on a unix socket 0700 (the command, the protocol `health`/`step`, life, shut down before giving up the slot), the heartbeat and series | norms | P/02.1; P/02.4 Н1.1; P/03.4 Н1.2, Н1.7; P/04 Н1.3; V/09 |
-| V/10.2 | The model door: `door.routes: [chat]`, the token by `where`, an asynchronous step (submit, the state and the answer by a long poll ≤ 20 s, cancellation), the step owner — `claims.user`, the queue and isolation, limits, a log without texts, the model stub of acceptance | norms | the contract `door-token`; P/03.4 Н1.7; P/06.5 Н3; V/03.3 (sample) |
+| V/10.1 | The model — the unit `assist/models/<name>` and the worker: fields and rights (talking to the model — `view` on the row), placement by label, one model per server, the model process — a child process of the holder on a unix socket 0700 (the command, the protocol `health`/`step`, life, shut down before giving up the slot), the heartbeat and series | norms | P/02.1; P/02.4 N1.1; P/03.4 N1.2, N1.7; P/04 N1.3; V/09 |
+| V/10.2 | The model door: `door.routes: [chat]`, the token by `where`, an asynchronous step (submit, the state and the answer by a long poll ≤ 20 s, cancellation), the step owner — `claims.user`, the queue and isolation, limits, a log without texts, the model stub of acceptance | norms | the contract `door-token`; P/03.4 N1.7; P/06.5 N3; V/03.3 (sample) |
 
 ## Decisions (ADR-0093 addendum (1))
 
@@ -34,29 +34,17 @@ the subsystem is required for the assistant (ADR-0093 addendum (9) item 2, it li
 The other items of addenda (1)–(5) are in [V/11](../11-backend/README.md#assistant-decisions): they are about the loop and the plan.
 
 **ADR-0093 addendum (2)** (Kimi's review): the model door — the door token by `view` on the model row; `rights.routes` is not needed (clarified
-by the norms review, Claude С-3); the door is open to any client with `view`, the step — to its owner (V/10.1 Н1.1, V/10.2 Н1.1).
+by the norms review, Claude S-3); the door is open to any client with `view`, the step — to its owner (V/10.1 N1.1, V/10.2 N1.1).
 
 ## Forms and doors
 
-- **Rows and objects:** `assist/models/<name>`, the heartbeat `assist/heartbeats/<воркер>`, the snapshot `assist/snapshot/*`; the door log
+- **Rows and objects:** `assist/models/<name>`, the heartbeat `assist/heartbeats/<worker>`, the snapshot `assist/snapshot/*`; the door log
   `audit/assistworker/e1` (`assist.step`).
 - **Doors:** the model rows — the units door of the console (P/06.1); the model door — the holder's route `chat` ([the lesson's OpenAPI](spec/10-assist.api.openapi.yaml));
-  the address and the token — `/assist/where/<name>` of the console (P/06.5); `backend` — the route `/assist/chat/<имя>/…` by ticket (V/11.7 Н1.2).
+  the address and the token — `/assist/where/<name>` of the console (P/06.5); `backend` — the route `/assist/chat/<name>/…` by ticket (V/11.7 N1.2).
 
 ## Acceptance
 
 - [Acceptance 1](acceptance/1/README.md) — the units door of the console: the model row, form refusals (V/10.1).
-- [Acceptance 2](acceptance/2/README.md) — a stand with the model holder and the stub `model-stub` (V/10.1 Н1.3, V/10.2).
+- [Acceptance 2](acceptance/2/README.md) — a stand with the model holder and the stub `model-stub` (V/10.1 N1.3, V/10.2).
 - The model evaluation suite is not acceptance: the lesson's information from the handover package.
-
-## Edits of other lessons
-
-- **V/09:** the role `assistworker` (`CAPACITY=1`, anything else — a start refusal, V/10.1 Н1.2), the label of the model server — a premise, the memory by the package measurements, the delivery of the weights (≈ 12 GB),
-  the installation order.
-- **V/11:** the door client; chapters 9–13, `harness/`, `data/rule-catalog.json`, the vectors `plan-check`, `apply`, `turn`, `rules-words`.
-- `common/lessons.tsv` — row 10; `id-map.tsv` — the norms with the source `ADR-0093`.
-
-## Work order
-
-1. V/10.1, V/10.2 — the norms, the lecture, the instructions, the manifest, OpenAPI, acceptance 1 and 2.
-2. Chapter by chapter, a commit per chapter, `check_spec` over all VMS lessons.

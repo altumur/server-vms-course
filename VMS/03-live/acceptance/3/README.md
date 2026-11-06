@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`03.3-live.norms.md`](../../spec/03.3-live.norms.md) Н5. The stand and the vocabulary are in [the common VMS acceptance
+The norm of the chapter is [`03.3-live.norms.md`](../../spec/03.3-live.norms.md) N5. The stand and the vocabulary are in [the common VMS acceptance
 README](../../../common/acceptance/README.md) on top of the common platform README (export `7a875c75`).
 
 All steps are `@manual`: they need a worker `live` with a holder of two streams of different sizes, a live driver with sound and a WebRTC client; the stand has none of them.

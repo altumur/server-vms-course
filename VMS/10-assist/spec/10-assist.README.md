@@ -8,7 +8,7 @@ instructions do not add to them. The platform is the export `cammeta-specs` `7a8
 
 ## Inputs and their priority
 
-- The canon: the norms of the chapters `10.K-assist.norms.md` (Н1–Н5 of each chapter; the addresses `V/10.K Н…`).
+- The canon: the norms of the chapters `10.K-assist.norms.md` (N1–N5 of each chapter; the addresses `V/10.K N…`).
 - The canon of the manifest: [`assist.subsystem.yaml`](../assist.subsystem.yaml): the bytes as they are.
 - [The contract](10-assist.api.openapi.yaml) expresses the forms of the HTTP inputs of the canon.
 - Acceptance: [chapter 1](../acceptance/1/README.md), [chapter 2](../acceptance/2/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../common/acceptance/README.md); acceptance introduces no new requirements.
@@ -37,26 +37,26 @@ platform (ADR-0090 addenda (8), (9)). `assist` depends on no VMS subsystem; its 
 
 | Norm | Possible mistake | How to keep the behaviour |
 |---|---|---|
-| V/10.2 Н1.4 | giving a step to a foreign `user` | the step owner is `user` of the door token |
-| V/10.2 Н1.5 | printing the texts of steps to the log | the log `assist.step` — without texts |
-| V/10.1 Н1.3 | leaving the model process after giving up the slot | the model process shuts down before the slot is given up |
+| V/10.2 N1.4 | giving a step to a foreign `user` | the step owner is `user` of the door token |
+| V/10.2 N1.5 | printing the texts of steps to the log | the log `assist.step` — without texts |
+| V/10.1 N1.3 | leaving the model process after giving up the slot | the model process shuts down before the slot is given up |
 
 ## Done when
 
 The manifest loads with the strict loader without edits; the acceptance of chapters 1, 2 passes on a platform that has passed its own acceptance; the lesson's vectors pass by the package command;
-the checklist items marked «by reading» are confirmed by the implementation description (the section «Решает реализация» of each chapter).
+the checklist items marked «by reading» are confirmed by the implementation description (the section Implementation decides of each chapter).
 The checks of the schema, of the loader and of the stand do not substitute for one another.
 
 ## On a divergence
 
 The order of the sources: the norms of the chapter → OpenAPI → acceptance and vectors → the lecture; the platform — the norms of the export of the VMS pin.
-If a norm is silent or contradicts itself — a question to «Спецификация VMS» with the place, a counterexample and a proposal; a platform
-norm — through «Архитектор». An acceptance defect (an expectation against a norm) — the same route; a closed decision
+If a norm is silent or contradicts itself — a question to VMS Specification with the place, a counterexample and a proposal; a platform
+norm — through Architect. An acceptance defect (an expectation against a norm) — the same route; a closed decision
 is entered into the canon and does not stay in these instructions.
 
 ## Implementation decides
 
 The implementation MUST name in its description: the model server of the package command (how it listens on the socket, how it does not print the texts
 of steps, how a cancellation reaches the model), the path of the weights of the pair in the package, how the model server reports an overflow of the window, how the model
-process shuts down with the death of the holder outside a unit, how a cache with data goes only to the same `user` and `turn` (V/10.2 Н1.4), and
-the command to start the worker for «Стенд» (V/10.1, V/10.2 «Решает реализация»).
+process shuts down with the death of the holder outside a unit, how a cache with data goes only to the same `user` and `turn` (V/10.2 N1.4), and
+the command to start the worker for Stand (V/10.1, V/10.2 Implementation decides).

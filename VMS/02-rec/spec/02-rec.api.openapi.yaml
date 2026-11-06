@@ -3,29 +3,29 @@ info:
   title: V/02 — the archive door and the receiver of the recorder
   version: 1.0.0
   description: |
-    The HTTP contract of the archive door of the recorder `recworker` — chapter V/02.5 of the lesson «Запись» of the VMS module. The canon is
+    The HTTP contract of the archive door of the recorder `recworker` — chapter V/02.5 of the lesson Recording of the VMS module. The canon is
     [the norms of chapter 5](02.5-rec.norms.md); the file expresses them and adds no requirements. The class `mixed` of the role
-    certificate contract (Н2): for processes — `/spans`, `/samples` (the role certificate `recworker`, `detjobworker`, `expworker`; the words of the class
+    certificate contract (N2): for processes — `/spans`, `/samples` (the role certificate `recworker`, `detjobworker`, `expworker`; the words of the class
     `role`); for the page — `/timeline`, `/segment`, `/keeps` (the console door token, the door token contract; absent or invalid —
-    403 `forbidden`). The request parsing — P/01.1 Н2.1 with the deviations of Н2; the order: path (404) → method (405) → admission
+    403 `forbidden`). The request parsing — P/01.1 N2.1 with the deviations of N2; the order: path (404) → method (405) → admission
     (401, 403) → query (400) → no volume (503). A chain rejected by TLS is a handshake refusal without an HTTP answer (not
-    expressed in the contract). CORS — `cors` of the role certificate contract (Н1.8), not expressed in the contract.
-    The receiver `/ingest/*` — chapter V/02.9 Н2 (the route `ingest` of the manifest: process roles or domain tokens; the frame, the bodies
-    of calls and the refusals — there too); the local joint within one server is «Решает реализация» and is not part of the contract.
+    expressed in the contract). CORS — `cors` of the role certificate contract (N1.8), not expressed in the contract.
+    The receiver `/ingest/*` — chapter V/02.9 N2 (the route `ingest` of the manifest: process roles or domain tokens; the frame, the bodies
+    of calls and the refusals — there too); the local joint within one server is Implementation decides and is not part of the contract.
 servers:
   - url: https://{server}:{port}
-    description: with the kit of the role recworker — the address SERVER_NAME (V/02.5 Н1.7; P/03.4 Н1.7 kit); the client certificate is requested as optional
+    description: with the kit of the role recworker — the address SERVER_NAME (V/02.5 N1.7; P/03.4 N1.7 kit); the client certificate is requested as optional
     variables:
       server: {default: "srv-a"}
       port: {default: "0"}
   - url: http://127.0.0.1:{port}
-    description: without a certificate kit — loopback only; only the `token` routes work, the process routes — 401 no_role (V/02.5 Н2)
+    description: without a certificate kit — loopback only; only the `token` routes work, the process routes — 401 no_role (V/02.5 N2)
     variables:
       port: {default: "0"}
 paths:
   /spans/{unit}:
     get:
-      summary: The visible spans of a recording in the volume of this recorder (Н1.4)
+      summary: The visible spans of a recording in the volume of this recorder (N1.4)
       parameters:
         - $ref: "#/components/parameters/Unit"
         - $ref: "#/components/parameters/FromS"
@@ -33,7 +33,7 @@ paths:
       security: [{roleCertificate: []}]
       responses:
         "200":
-          description: the spans, clipped by the ceiling (Н1.2)
+          description: the spans, clipped by the ceiling (N1.2)
           content:
             application/json:
               schema: {$ref: "#/components/schemas/Spans"}
@@ -45,7 +45,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /samples/{unit}:
     get:
-      summary: The frames of a recording (SMPL in a row) over an interval (Н1.4)
+      summary: The frames of a recording (SMPL in a row) over an interval (N1.4)
       parameters:
         - $ref: "#/components/parameters/Unit"
         - $ref: "#/components/parameters/FromS"
@@ -53,12 +53,12 @@ paths:
         - name: stream
           in: query
           required: false
-          description: only this stream of the recording, a fenced one too — `<epoch>` or `<epoch>/backfill`; without the parameter — by the rule «one moment — one epoch» (Н1.3)
+          description: only this stream of the recording, a fenced one too — `<epoch>` or `<epoch>/backfill`; without the parameter — by the rule «one moment — one epoch» (N1.3)
           schema: {type: string, pattern: "^(?:[0-9]+(/backfill)?)$"}
         - name: track
           in: query
           required: false
-          description: "`audio` — the audio frames of the same streams (V/02.5 Н1.4); a repeat, another value — 400"
+          description: "`audio` — the audio frames of the same streams (V/02.5 N1.4); a repeat, another value — 400"
           schema: {type: string, enum: [audio]}
       security: [{roleCertificate: []}]
       responses:
@@ -75,7 +75,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /timeline/{recording}:
     get:
-      summary: The timeline of a recording from all live doors and the device archive (Н1.5)
+      summary: The timeline of a recording from all live doors and the device archive (N1.5)
       security: [{doorToken: []}]
       parameters:
         - $ref: "#/components/parameters/Recording"
@@ -83,7 +83,7 @@ paths:
         - $ref: "#/components/parameters/ToS"
       responses:
         "200":
-          description: the spans by (start_ms, epoch) and the unavailable — in the body (Н1.5)
+          description: the spans by (start_ms, epoch) and the unavailable — in the body (N1.5)
           content:
             application/json:
               schema: {$ref: "#/components/schemas/Timeline"}
@@ -94,7 +94,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /segment/{recording}/{epoch}/{piece}:
     get:
-      summary: An fMP4 piece (Н1.6)
+      summary: An fMP4 piece (N1.6)
       security: [{doorToken: []}]
       parameters:
         - $ref: "#/components/parameters/Recording"
@@ -145,7 +145,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /ingest/poll:
     post:
-      summary: Poll of the receiver (V/02.9 Н1.3, Н2) — recworker; domain tokens stream, poll, upstream
+      summary: Poll of the receiver (V/02.9 N1.3, N2) — recworker; domain tokens stream, poll, upstream
       security: [{roleCertificate: []}, {domainToken: []}]
       requestBody:
         required: true
@@ -154,7 +154,7 @@ paths:
             schema: {$ref: "#/components/schemas/PollRequest"}
       responses:
         "200":
-          description: the answer of the call (V/02.9 Н2)
+          description: the answer of the call (V/02.9 N2)
           content:
             application/json:
               schema: {$ref: "#/components/schemas/PollAnswer"}
@@ -167,7 +167,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /ingest/subscribe:
     post:
-      summary: Subscription to a camera stream (V/02.9 Н2) — liveworker, detworker, recworker
+      summary: Subscription to a camera stream (V/02.9 N2) — liveworker, detworker, recworker
       security: [{roleCertificate: []}]
       requestBody:
         required: true
@@ -176,7 +176,7 @@ paths:
             schema: {$ref: "#/components/schemas/SubscribeRequest"}
       responses:
         "200":
-          description: the answer of the call (V/02.9 Н2)
+          description: the answer of the call (V/02.9 N2)
           content:
             application/x-ndjson:
               schema: {$ref: "#/components/schemas/Frame"}
@@ -189,7 +189,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /ingest/push:
     post:
-      summary: Push of frames (V/02.9 Н2) — recworker; domain tokens stream, upstream
+      summary: Push of frames (V/02.9 N2) — recworker; domain tokens stream, upstream
       security: [{roleCertificate: []}, {domainToken: []}]
       requestBody:
         required: true
@@ -198,7 +198,7 @@ paths:
             schema: {$ref: "#/components/schemas/PushRequest"}
       responses:
         "200":
-          description: the answer of the call (V/02.9 Н2)
+          description: the answer of the call (V/02.9 N2)
           content:
             application/json:
               schema: {$ref: "#/components/schemas/PushAnswer"}
@@ -211,7 +211,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /ingest/upload:
     post:
-      summary: Upload of a range in pieces (V/02.9 Н1.4, Н1.5, Н2) — recworker (a neighbour); domain tokens stream, upstream
+      summary: Upload of a range in pieces (V/02.9 N1.4, N1.5, N2) — recworker (a neighbour); domain tokens stream, upstream
       security: [{roleCertificate: []}, {domainToken: []}]
       requestBody:
         required: true
@@ -220,7 +220,7 @@ paths:
             schema: {$ref: "#/components/schemas/UploadRequest"}
       responses:
         "200":
-          description: the answer of the call (V/02.9 Н2)
+          description: the answer of the call (V/02.9 N2)
           content:
             application/json:
               schema: {$ref: "#/components/schemas/UploadAnswer"}
@@ -233,7 +233,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /ingest/pull:
     post:
-      summary: Pull of a batch (V/02.9 Н1.8, Н2) — domain token upstream
+      summary: Pull of a batch (V/02.9 N1.8, N2) — domain token upstream
       security: [{domainToken: []}]
       requestBody:
         required: true
@@ -242,7 +242,7 @@ paths:
             schema: {$ref: "#/components/schemas/PullRequest"}
       responses:
         "200":
-          description: the answer of the call (V/02.9 Н2)
+          description: the answer of the call (V/02.9 N2)
           content:
             application/json:
               schema: {$ref: "#/components/schemas/PullAnswer"}
@@ -255,7 +255,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /ingest/asks:
     post:
-      summary: A request to a camera (V/02.9 Н2, V/07.5 Н1.4) — domain token ask
+      summary: A request to a camera (V/02.9 N2, V/07.5 N1.4) — domain token ask
       security: [{domainToken: []}]
       requestBody:
         required: true
@@ -264,7 +264,7 @@ paths:
             schema: {$ref: "#/components/schemas/AskRequest"}
       responses:
         "200":
-          description: the answer of the call (V/02.9 Н2)
+          description: the answer of the call (V/02.9 N2)
           content:
             application/json:
               schema: {$ref: "#/components/schemas/AskAnswer"}
@@ -281,7 +281,7 @@ components:
       type: mutualTLS
       description: |
         the role certificate of the client (the class `mixed`, the routes `role` of the role certificate contract): admitted are recworker,
-        detjobworker, expworker; the trust set — ca.pem, ca.next.pem of its own cluster (V/02.5 Н2)
+        detjobworker, expworker; the trust set — ca.pem, ca.next.pem of its own cluster (V/02.5 N2)
     doorToken:
       type: http
       scheme: bearer
@@ -311,17 +311,17 @@ components:
       name: from
       in: query
       required: false
-      description: Unix seconds — written as a JSON number, finite, once (Н2); without the parameter — 0
+      description: Unix seconds — written as a JSON number, finite, once (N2); without the parameter — 0
       schema: {type: number}
     ToS:
       name: to
       in: query
       required: false
-      description: Unix seconds — written as a JSON number, finite, once, not less than from (Н2); without the parameter — the door clock + 86400
+      description: Unix seconds — written as a JSON number, finite, once, not less than from (N2); without the parameter — the door clock + 86400
       schema: {type: number}
   responses:
     Refusal:
-      description: a refusal (V/02.5 Н4); 503 of the limits — with Retry-After
+      description: a refusal (V/02.5 N4); 503 of the limits — with Retry-After
       headers:
         Retry-After:
           required: false
@@ -337,7 +337,7 @@ components:
               detail: {type: string}
     NoRole:
       description: |
-        a process route: no client certificate (with a kit) or no kit (loopback) — 401 no_role (V/02.5 Н2)
+        a process route: no client certificate (with a kit) or no kit (loopback) — 401 no_role (V/02.5 N2)
       content:
         application/json:
           schema:
@@ -350,7 +350,7 @@ components:
     RoleRefusal:
       description: |
         a process route after the handshake: not exactly one role in SAN — no_role; a role not among the admitted — wrong_role;
-        the signature of the leaf or of the authority outside sig, the serial in revoked — bad_chain (the class `role`; V/02.5 Н2)
+        the signature of the leaf or of the authority outside sig, the serial in revoked — bad_chain (the class `role`; V/02.5 N2)
       content:
         application/json:
           schema:
@@ -406,7 +406,7 @@ components:
       additionalProperties: false
       properties:
         keep: {type: string}
-        volume: {type: string, description: "the volume of this door whose copy and seal were verified (V/02.7 Н1.4)"}
+        volume: {type: string, description: "the volume of this door whose copy and seal were verified (V/02.7 N1.4)"}
         integrity: {type: string, description: "ok | broken: … | unknown: …"}
         ok: {type: boolean}
         recordings:
@@ -435,15 +435,15 @@ components:
     Frame:
       type: object
       additionalProperties: true
-      description: a frame (V/02.9 Н2); for a subscription — one application/x-ndjson line per frame
+      description: a frame (V/02.9 N2); for a subscription — one application/x-ndjson line per frame
       required: [t, key, sample]
       properties:
         t: {type: number, description: seconds by the sender's clock}
         key: {type: boolean}
         sample: {type: string, contentEncoding: base64}
-        kind: {type: string, enum: [audio], description: an audio frame; no field — video (V/02.9 Н2)}
+        kind: {type: string, enum: [audio], description: an audio frame; no field — video (V/02.9 N2)}
         mic: {type: integer, minimum: 0, description: "the real number of `mic`, for the upload of the transmitter — `audio` of the claim; mandatory for audio"}
-        first: {type: boolean, description: this `mic` is the first of the camera; the frame also goes to the subscribers of number 0 (V/02.9 Н1.3а)}
+        first: {type: boolean, description: this `mic` is the first of the camera; the frame also goes to the subscribers of number 0 (V/02.9 N1.3a)}
         codec: {type: string, minLength: 1, description: "<rtpmap name>/<rate>[/<channels>]; mandatory for audio"}
     Frames:
       type: array
@@ -485,19 +485,19 @@ components:
               have: {type: number}
               audio:
                 type: array
-                description: the numbers of `mic` needed by the subscribers of the stream (V/02.9 Н1.3а)
+                description: the numbers of `mic` needed by the subscribers of the stream (V/02.9 N1.3a)
                 items: {type: integer, minimum: 0}
         range:
           type: object
           additionalProperties: false
           required: [rid, from, to, recording, piece]
           properties:
-            audio: {type: integer, minimum: 0, description: the number of `mic` of the recording; no field — no audio (V/02.9 Н1.4)}
+            audio: {type: integer, minimum: 0, description: the number of `mic` of the recording; no field — no audio (V/02.9 N1.4)}
             rid: {type: string}
             from: {type: number}
             to: {type: number}
             recording: {type: string}
-            piece: {type: integer, description: "the piece size, bytes (V/02.9 Н1.4)"}
+            piece: {type: integer, description: "the piece size, bytes (V/02.9 N1.4)"}
         asks:
           type: array
           items:
@@ -517,7 +517,7 @@ components:
       additionalProperties: true
       required: [cam]
       properties:
-        audio: {type: integer, minimum: 0, description: the number of `mic`; 0 — the first of the camera; no field — without audio (V/02.9 Н1.3а)}
+        audio: {type: integer, minimum: 0, description: the number of `mic`; 0 — the first of the camera; no field — without audio (V/02.9 N1.3a)}
         cam: {type: string}
         stream: {type: string}
     PushRequest:
@@ -568,7 +568,7 @@ components:
       required: [ref]
       properties:
         ref: {type: string}
-        audio: {type: integer, minimum: 0, description: the number of `mic` of the recording (V/02.9 Н1.3а)}
+        audio: {type: integer, minimum: 0, description: the number of `mic` of the recording (V/02.9 N1.3a)}
         last:
           type: object
           additionalProperties: true
@@ -593,7 +593,7 @@ components:
         action: {type: string}
         n: {type: integer, minimum: 1}
         port: {type: integer, minimum: 1}
-        firing: {type: string, pattern: "^(?:[0-9a-f]{32})$", description: the firing key (V/07.5 Н1.4)}
+        firing: {type: string, pattern: "^(?:[0-9a-f]{32})$", description: the firing key (V/07.5 N1.4)}
         deadline: {type: number}
         camera_now: {type: number}
     AskAnswer:

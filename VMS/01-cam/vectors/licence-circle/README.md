@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/licence-circle/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson V/01 ([the norms of chapter 7](../../spec/01.7-cam.norms.md) Н1.2, Н3 «Счёт»; ADR-0113 addendum (11) item 5). The numbers are derived from the text of the norm and are not checked by an implementation. The run — after the first stage C generation.
+The owner is lesson V/01 ([the norms of chapter 7](../../spec/01.7-cam.norms.md) N1.2, N3 Count; ADR-0113 addendum (11) item 5). The numbers are derived from the text of the norm and are not checked by an implementation. The run — after the first stage C generation.
 
 ## Files
 

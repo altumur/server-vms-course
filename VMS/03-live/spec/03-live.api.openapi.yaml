@@ -3,56 +3,56 @@ info:
   title: V/03 — the door of the live video gateway
   version: 1.0.0
   description: |
-    The HTTP contract of the door of the gateway `liveworker` — lesson V/03 «Живое видео» of the VMS module. The canon is the norms of the chapters `03.K-live.norms.md`;
+    The HTTP contract of the door of the gateway `liveworker` — lesson V/03 Live video of the VMS module. The canon is the norms of the chapters `03.K-live.norms.md`;
     this file expresses them and adds no requirements. The route `whep` (chapter V/03.3): the offer and the hang-up; admittance — the door token of the console
-    (`GET /live/where/<cam>`, the door token contract; `Authorization: Bearer` or `?t=`). The request parsing — P/01.1 Н2.1 with
+    (`GET /live/where/<cam>`, the door token contract; `Authorization: Bearer` or `?t=`). The request parsing — P/01.1 N2.1 with
     the deviations of chapters V/03.3 and V/03.6: the path byte for byte (`/whep/7/`, empty segments — 404), another method — 405, a repeat of
-    `stream`, `width`, `height` — 400, an empty `stream` — as without it; the SDP body — at most 256 KiB of **bytes** by `Content-Length` (V/03.3 Н1.2;
-    `maxLength` measures characters and does not express the limit). CORS — `cors` of the role certificate contract (V/03.3 Н1.4), not expressed in
+    `stream`, `width`, `height` — 400, an empty `stream` — as without it; the SDP body — at most 256 KiB of **bytes** by `Content-Length` (V/03.3 N1.2;
+    `maxLength` measures characters and does not express the limit). CORS — `cors` of the role certificate contract (V/03.3 N1.4), not expressed in
     the contract.
     Stream accounts (chapter V/03.6) — the routes of the cluster console `/live/accounts…` (the mounted `live`) and `/accounts…`
     (`CONSOLE_ROOT=live`), which the console passes to the gateway (`door.pass`): the console checks the person's right (view on anything — reading,
-    admin on `*` — writing); the gateway checks the leaf of the role `console` (class `role`) and the person's credential again (V/03.6 Н1.2). The path the
+    admin on `*` — writing); the gateway checks the leaf of the role `console` (class `role`) and the person's credential again (V/03.6 N1.2). The path the
     gateway receives is `/accounts…` under any root (the pass contract, C06-DOOR-PASS-PATH-01).
 servers:
   - url: https://{server}:{port}
-    description: the gateway with the kit of the role liveworker — the address SERVER_NAME (P/03.4 Н1.7 kit)
+    description: the gateway with the kit of the role liveworker — the address SERVER_NAME (P/03.4 N1.7 kit)
     variables:
       server: {default: "srv-a"}
       port: {default: "0"}
   - url: http://127.0.0.1:{port}
-    description: the gateway without a certificate kit — loopback only (P/03.4 Н1.7); the account doors are closed (no_kit, 401 no_role)
+    description: the gateway without a certificate kit — loopback only (P/03.4 N1.7); the account doors are closed (no_kit, 401 no_role)
     variables:
       port: {default: "0"}
 paths:
   /whep/{cam}:
     post:
-      summary: The WebRTC offer — an answer without trickle (Н1.2)
+      summary: The WebRTC offer — an answer without trickle (N1.2)
       security: [{doorToken: []}]
       parameters:
         - name: cam
           in: path
           required: true
-          description: the camera id — the name of the delivery (V/03.1 Н1.1)
+          description: the camera id — the name of the delivery (V/03.1 N1.1)
           schema: {type: string, minLength: 1}
         - name: stream
           in: query
           required: false
-          description: a stream of the camera — the id of its other stream (decoded); not empty — the size is not judged; a repeat of the parameter — 400; a stream not of this camera — 404 `stream refused` (V/03.3 Н1.2)
+          description: a stream of the camera — the id of its other stream (decoded); not empty — the size is not judged; a repeat of the parameter — 400; a stream not of this camera — 404 `stream refused` (V/03.3 N1.2)
           schema: {type: string}
         - name: width
           in: query
           required: false
-          description: the width of the viewer's window in pixels, together with `height`; the gateway chooses the stream; `stream` not empty — there is no choice; neither of the two — the main one; one without the other, not in form, a repeat — 400 `bad query` (V/03.3 Н1.2)
+          description: the width of the viewer's window in pixels, together with `height`; the gateway chooses the stream; `stream` not empty — there is no choice; neither of the two — the main one; one without the other, not in form, a repeat — 400 `bad query` (V/03.3 N1.2)
           schema: {type: string, pattern: "^(?:[1-9][0-9]*)$"}
         - name: height
           in: query
           required: false
-          description: the height of the viewer's window in pixels, together with `width` (V/03.3 Н1.2)
+          description: the height of the viewer's window in pixels, together with `width` (V/03.3 N1.2)
           schema: {type: string, pattern: "^(?:[1-9][0-9]*)$"}
       requestBody:
         required: true
-        description: the SDP offer; at most 256 KiB of bytes by Content-Length (V/03.3 Н1.2), otherwise 413 before the body is read
+        description: the SDP offer; at most 256 KiB of bytes by Content-Length (V/03.3 N1.2), otherwise 413 before the body is read
         content:
           application/sdp:
             schema: {type: string}
@@ -77,7 +77,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /whep/session/{session}:
     delete:
-      summary: The hang-up of one's own session (Н1.3)
+      summary: The hang-up of one's own session (N1.3)
       security: [{doorToken: []}]
       parameters:
         - name: session
@@ -88,7 +88,7 @@ paths:
         - name: gateway
           in: query
           required: false
-          description: the gateway name from Location; its own — as without the parameter, another's — 404 `no session` (after the token check, V/03.3 Н1.3)
+          description: the gateway name from Location; its own — as without the parameter, another's — 404 `no session` (after the token check, V/03.3 N1.3)
           schema: {type: string}
       responses:
         "204":
@@ -100,13 +100,13 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /frame/{cam}:
     get:
-      summary: A JPEG frame of the delivery for the export — only to the worker exp by the role certificate (V/03.3 Н1.5)
+      summary: A JPEG frame of the delivery for the export — only to the worker exp by the role certificate (V/03.3 N1.5)
       security: [{roleCertificate: []}]
       parameters:
         - name: cam
           in: path
           required: true
-          description: the camera id — the name of the delivery (V/03.1 Н1.1)
+          description: the camera id — the name of the delivery (V/03.1 N1.1)
           schema: {type: string, minLength: 1}
         - name: stream
           in: query
@@ -125,7 +125,7 @@ paths:
         "504": {$ref: "#/components/responses/Refusal"}
   /talk/{cam}/{number}:
     post:
-      summary: The talk offer — the browser's audio to `spk` of the host (V/03.3 Н1.2а)
+      summary: The talk offer — the browser's audio to `spk` of the host (V/03.3 N1.2a)
       security: [{doorToken: []}]
       parameters:
         - name: cam
@@ -185,7 +185,7 @@ components:
           variables:
             console: {default: "console.example"}
       get:
-        summary: The stream accounts of the cluster, without passwords (V/03.6 Н1.2; through door.pass of the console, the right view)
+        summary: The stream accounts of the cluster, without passwords (V/03.6 N1.2; through door.pass of the console, the right view)
         security: [{personToken: []}]
         responses:
           "401": {$ref: "#/components/responses/Refusal"}
@@ -323,7 +323,7 @@ components:
     personToken:
       type: http
       scheme: bearer
-      description: the person's credential at the cluster console (P/06.3); the gateway checks it again after the leaf of the role console (V/03.6 Н1.2)
+      description: the person's credential at the cluster console (P/06.3); the gateway checks it again after the leaf of the role console (V/03.6 N1.2)
     doorToken:
       type: http
       scheme: bearer
@@ -344,7 +344,7 @@ components:
               account: {$ref: "#/components/schemas/Account"}
               password: {type: string, minLength: 32, maxLength: 32}
     Refusal:
-      description: a refusal (V/03.3 Н4, V/03.6 Н4; 401/403 of the gate and of the admittance, 502/503 of the pass); 503 of the limits — with Retry-After
+      description: a refusal (V/03.3 N4, V/03.6 N4; 401/403 of the gate and of the admittance, 502/503 of the pass); 503 of the limits — with Retry-After
       headers:
         Retry-After:
           required: false
