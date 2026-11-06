@@ -1,0 +1,30 @@
+{
+  "base": "73096723594e9abcf35aa5ca0a9e86fa8bb1b1de",
+  "change": "0129-p01-v2-leader-wait",
+  "live_paths": [
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "before_sha256": "22cf100179046b1e04fa5688bb312ca33713ce1b4aa31f4933c0adfb6187db74",
+      "after_sha256": "2b5ce1f73fdbf269581465430a2a9104c4247ac3912cddc8e4f3d75b9b74b9b3",
+      "before_blob": "30946b8464df2233978a5ded6f699e1c15ba278a",
+      "after_blob": "2375adc37f4af9889d2d8538288ffca080526e11",
+      "line": 859,
+      "before": "7. **how the door tells «not added to the log» from «unknown»**; the leader wait time before `unavailable` is 5 s from the loss of the leader, a norm of P/01.3 N1.3, not a choice.",
+      "after": "7. **how the door tells «not added to the log» from «unknown»**; the leader wait time before `unavailable` follows the effective `-leader-wait` interval from the loss of the leader, by P/01.3 N1.3; its default is owned only by [daemon-flags.tsv](../forms/daemon-flags.tsv)."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.1-store.norms.md",
+      "before_sha256": "b2812e91055b36adaef3250821c4d4e76dccaf46264bf5e18976a176c2da48a7",
+      "after_sha256": "8fe156c0a1dce55a70796c0e36777d011c014ff5a2cf1d891c087e42f6a5f990",
+      "before_blob": "a63ef5da32b5559f06e540ab45e04560e1c6f15f",
+      "after_blob": "d2ee84e0e24ec21c64824e9862702fdbe78d31fb",
+      "line": 585,
+      "before": "7. **как дверь отличает «не добавлено в журнал» от «неизвестно»**; срок ожидания лидера перед `unavailable` — 5 с от потери лидера, норма P/01.3 N1.3, не выбор.",
+      "after": "7. **как дверь отличает «не добавлено в журнал» от «неизвестно»**; срок ожидания лидера перед `unavailable` следует действующему интервалу `-leader-wait` от потери лидера по P/01.3 N1.3; его умолчанием владеет только [daemon-flags.tsv](../../forms/daemon-flags.tsv)."
+    }
+  ],
+  "req": "P/01.1-R145",
+  "old_unit_sha256": "76f289ef2d899e45f643bb643a85564817a74624981be79f36b4f9a19fde31df",
+  "new_unit_sha256": "1fc8c16e0cc30fda07e163d279c6facdb502097ef4431be91985e7d8a163e2f9",
+  "scope": "normal child, two item7 source lines only, current effective flag source; frozen730/history intact"
+}
