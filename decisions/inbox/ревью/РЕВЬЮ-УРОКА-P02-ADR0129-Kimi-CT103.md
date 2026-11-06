@@ -11,7 +11,7 @@
 Прочитано целиком (байты на базе a635beb6a):
 - нормы: `spec/02.1-installer.norms.md` (1398 строк), `02.2` (856), `02.3` (430), `02.4` (930), `02.5` (273); `README.md`, `lifecycle.md`, `spec/02-installer.README.md` урока;
 - формы: `forms/README.md`, `daemon-flags.tsv`, `operator-commands.tsv`, `stages.tsv`, `refusals.tsv` (62 строки, целиком), `finite-profile.schema.json`, `rollout-poll.machine.yaml` (целиком), `rollout-poll.traces.tsv` (первые 40 из 254 + структура/заголовок);
-- приёмка: `acceptance/1/README.md` (947/203/744, классы, диагностики), `acceptance/2/README.md` (9 кейсов + puts-ceiling), `acceptance/3/README.md` (87 установок), `acceptance/4/README.md` (швы, 11 сценариев/19 шагов), `acceptance/5/README.md` (8 сценариев/70 шагов, варианты v1–v14);
+- приёмка: `acceptance/1/README.md` (947/203/744, классы, диагностики), `acceptance/2/README.md` (9 кейсов + puts-ceiling), `acceptance/3/README.md` (87 установок), `acceptance/4/README.md` и `seams.tsv` (**14 сценариев/22 шага** по `seams.tsv` на a635, включая `s11-unit-role-socket-groups`, `s12-secrets-walk-unknown`, `s13-secrets-walk-kept`; README главы и `corrections-4.tsv` называют 11/19 — расхождение счётчиков канона, согласование вне моего назначения), `acceptance/5/README.md` (8 сценариев/70 шагов, варианты v1–v14);
 - векторы: `vectors/canonical/README.md` (дочитан), `vectors/exec/README.md`, `vectors/install-order/README.md`, `vectors/platform-lists/README.md`, `vectors/workers-script/README.md`;
 - журналы правок: `decisions/journal/platform/02-installer/corrections-1.tsv` (69 записей), `corrections-2…5.tsv` — целиком;
 - общие зависимости P/02: `Platform/common/NORMATIVE-TERMS.md` (целиком), `contracts/env-file.md` (целиком), `contracts/schema.md` (строка 54 и контекст), `contracts/forwarding.md` (строка 121 и контекст), `data/catalog.tsv` (строки P/02), `LAYERS.md` (§1–2, §8 заголовки), `acceptance/README.md` (стенд: словарь директив, потолки 524288/1048576);
@@ -41,9 +41,9 @@
 
 - **Где:** `Platform/02-installer/spec/02.3-installer.norms.md:44–46` — `FILE_PART` = 262144, `FILE_MAX` = 8 MiB (8388608), `FILES_TOTAL_MAX` = 32 MiB (33554432); `02.3:213` — «`START_WAIT` = 60 s»; `02.4:560` — «ROLLOUT_WAIT: 300 s»; `02.4:257,259` — «3650 × 86400 s», «825 × 86400 s»; `02.3:311` и чеклист `02.3:427` — «not less often than once in 30 s»; `02.2:794`, `02.3:212`, `02.4:558`, `forms/refusals.tsv:20` — «a pause of 1 s» / «polling once per 1 s».
 - **reqID:** P/02.3 N1.5 (P/02.3-05), P/02.3 N3 (P/02.3-02/03), P/02.4 N1.9 (P/02.4-22), P/02.2 N3 «Reader» (P/02.2-06).
-- **Причина:** значения в прозе без формы-констант; несколько носителей: `START_WAIT` — уже **три** носителя (`common/contracts/schema.md:54` = 60 s; `02.3:213`; `refusals.tsv:20`); `ROLLOUT_WAIT` — два (`02.4:560`; форма `rollout-poll.machine.yaml:40` const ROLLOUT_WAIT=300); `FILE_MAX` — два, из них машинный: `data/manifest-row.schema.json:48` (`"maximum": 8388608`). У P/02 нет `runtime-constants.tsv` (у P/01 заведён CLOCK_SKEW по доп. (10) п. 3).
+- **Причина:** значения в прозе без формы-констант; несколько носителей: `START_WAIT` — уже **три** носителя (`common/contracts/schema.md:54` = 60 s; `02.3:213`; `refusals.tsv:20`); `ROLLOUT_WAIT` — два (`02.4:560`; форма `rollout-poll.machine.yaml:40` const ROLLOUT_WAIT=300); `FILE_MAX` — два, из них машинный: `data/manifest-row.schema.json:48` (`"maximum": 8388608`). У P/02 нет `runtime-constants.tsv` (образец формы — `Platform/01-store/forms/runtime-constants.tsv`: JSON_DEPTH/HEADER_BYTES/BATCH_WRITES/BATCH_GUARDS; CLOCK_SKEW по доп. (10) п. 3 на pin a635 **нет** — только прозой `01.1:80,893`, `01.3:95`, в незавершённом source spec103).
 - **Минимальный контрпример:** spec103 меняет `FILE_MAX` правкой только `02.3:45` — схема `manifest-row.schema.json:48` продолжает отклонять `size` > 8388608, проза разрешает: два читателя нормы (генератор семейств и человек) получают разные границы без единого сбоя. Аналогично пауза 1 s: правка `02.3:212` не меняет `refusals.tsv:20`.
-- **Точечное предложение:** завести форму констант P/02 (по образцу CLOCK_SKEW/P/01): строки `FILE_PART`, `FILE_MAX`, `FILES_TOTAL_MAX`, `ROLLOUT_WAIT`, `MARK_POLL_INTERVAL` (30 s), `READ_RETRY_PAUSE` (1 s); проза и `refusals.tsv` называют по имени; сверку схем семейств с формой — см. М2.
+- **Точечное предложение:** завести форму констант P/02 (по образцу `runtime-constants.tsv` P/01): строки `FILE_PART`, `FILE_MAX`, `FILES_TOTAL_MAX`, `ROLLOUT_WAIT`, `MARK_POLL_INTERVAL` (30 s), `READ_RETRY_PAUSE` (1 s); проза и `refusals.tsv` называют по имени; сверку схем семейств с формой — см. М2.
 
 ### С2. Значения чужих констант продублированы в форме и прозе P/02 (доп. (5) п. 1: «константа другого урока — ссылкой; проза числа не повторяет»)
 
@@ -151,3 +151,15 @@ wc -l tools/normgen/manifestrt/go/*.go                                    # 1742
 - Три главные находки: **(1)** именованные числа P/02 без единого места объявления — FILE_*, ROLLOUT_WAIT, паузы 1 s, период 30 s (С1) + значения чужих констант продублированы (С2) → нужна форма констант P/02 и ссылки без чисел; **(2)** дубли значений форма↔проза — stop_timeout, refusals.codes, space 0.85/0.75, delete_after, ROLLOUT_WAIT/BATCH (С3); **(3)** безымянные числа поведения — «the first 45 s», OnBootSec «1–2 min», «2 s» (С4).
 - (б) новых генераторов нет; Б1/Б2 порог Т2 не проходят; Б3 оценка неприменима (мало правок). (г) снимать нечего. Действующие формы и внешние судьи P/02 целостны: корпус 947/203/744, 87+9 установок, 8 сценариев/70 шагов, 220 векторов canonical — counts согласованы с README.
 - Вопросы «Архитектору»: статус hand-written `manifestrt/go` (1742 строки) после отмены доп. (4) — снимать/оставить/засчитать договором; подтверждение сверки `check_spec` границ схем семейств с формами (М2); фиксация ЗТ1/ЗТ2 (граница «места», правило «<3 правок — не оцениваем»).
+
+
+---
+
+## Followup 1 (2026-11-06) — fact-only уточнения после сверки с coord103
+
+Два FACT-ONLY уточнения к frozen input, сверенных мной независимо на a635beb6a (подтверждены оба; coord103 прислал те же факты, я сверил самостоятельно):
+
+1. **CLOCK_SKEW.** На pin a635 `Platform/01-store/forms/runtime-constants.tsv` содержит только `JSON_DEPTH` (128), `HEADER_BYTES` (65536), `BATCH_WRITES` (64), `BATCH_GUARDS` (64). `CLOCK_SKEW` в форме констант на a635 **отсутствует** — только прозой (`01.1-store.norms.md:80,893`; `01.3-store.norms.md:95` «CLOCK_SKEW 60 s»); решение ADR-0129 доп. (10) п. 3 на этом pin не выполнено (незавершённый source spec103). Правки в §0 и С1 внесены (образец формы — `runtime-constants.tsv` P/01, не CLOCK_SKEW). На выводы и счёт не влияет: предложение С1 — завести такую форму для P/02 — остаётся в силе.
+2. **acceptance/4.** Точный `acceptance/4/seams.tsv` на a635 даёт **14 уникальных сценариев / 22 шага** (включая `s11-unit-role-socket-groups`, `s12-secrets-walk-unknown`, `s13-secrets-walk-kept`); моя строка покрытия §0 исправлена (была «11/19» по `corrections-4.tsv`). Зафиксировано фактом: счётчики в README главы и `corrections-4.tsv` (11/19) расходятся с `seams.tsv` (14/22) — согласование канона вне моего назначения, новая находка не заводится (поручение: не новая находка/переклассификация).
+
+Выводы, классификация Б/С/М и вопросы «Архитектору» без изменений. History: коммит e64df1117 сохранён, правки поверх него, base a635beb6a не тронут.
