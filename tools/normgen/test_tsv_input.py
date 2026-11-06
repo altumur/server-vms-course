@@ -11,6 +11,11 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class SourceFixtures(unittest.TestCase):
+    def test_column_names_are_a_sequence(self):
+        for names in ("raw", b"raw"):
+            with self.subTest(names=names), self.assertRaises(t.TSVError):
+                t.parse("x\n", names=names, positional=True)
+
     def test_author_cases(self):
         path = ROOT / "Platform/common/vectors/source-cells/cases.json"
         fixtures = json.loads(path.read_bytes())
@@ -27,13 +32,18 @@ class SourceFixtures(unittest.TestCase):
                         t.parse(f["text"], **args)
 
     def test_lf_only_and_unmarked_cells(self):
-        for value in ("a\u2028b", "a\vb", '"object"', r'\u0436', "\u0430a", "\u00e9e\u0301"):
+        for value in ("a\u2028b", "a\vb", "a\rb", '"object"', r'\u0436', "\u0430a", "\u00e9e\u0301"):
             with self.subTest(value=value):
                 data = ("raw\n" + value + "\n").encode("utf-8")
                 got = t.parse(data)
                 self.assertEqual(got.rows, [(2, {"raw": value})])
                 self.assertEqual(got.raw, data)
                 self.assertEqual(got.sha256, hashlib.sha256(data).hexdigest())
+                with tempfile.TemporaryDirectory(prefix="tsv-io-") as temp:
+                    path = Path(temp) / "data.tsv"
+                    path.write_bytes(data)
+                    self.assertEqual(t.read(path).raw, data)
+                    self.assertEqual(t.read(path).rows, got.rows)
 
     def test_positional_comment_header_and_first_row(self):
         source = '# cell-json: request\n# scenario\tstep\trequest\texpect\ns1\t1\t"\\u0436"\tok\ns1\t2\t"\\\\u0436"\tok\n'

@@ -37,7 +37,7 @@ _PROOF_COLUMNS = ("table", "line", "column", "before_sha256", "decoded_sha256")
 
 
 def _names(names, where):
-    if not names or any(not isinstance(n, str) or not n for n in names):
+    if isinstance(names, (str, bytes)) or not names or any(not isinstance(n, str) or not n for n in names):
         raise TSVError(f"{where}: nonempty column names required")
     if len(names) != len(set(names)):
         raise TSVError(f"{where}: duplicate column")

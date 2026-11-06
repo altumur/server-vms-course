@@ -24,6 +24,8 @@ class PlaceholderLabels(unittest.TestCase):
         self.labels = Path(self.tmp.name) / "placeholders.tsv"
         self.enterContext(patch.object(gen_families, "KEYS_README", self.readme))
         self.enterContext(patch.object(gen_families, "PLACEHOLDER_LABELS", self.labels))
+        self.enterContext(patch.object(gen_families, "KEY_GRAMMARS", Path(self.tmp.name) / "absent-keys.tsv"))
+        self.enterContext(patch.object(gen_families, "OUTCOME_UNITS", Path(self.tmp.name) / "absent-units.tsv"))
 
     def grammar(self, rows):
         self.readme.write_text("| Placeholder | Grammar | Example | Norm |\n|---|---|---|---|\n" +
@@ -114,6 +116,52 @@ def module_copy(t):
     return dst
 
 
+class CanonicalInputs(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix="family-canonical-")
+        self.addCleanup(self.tmp.cleanup)
+        self.keys = Path(self.tmp.name) / "keys.tsv"
+        self.units = Path(self.tmp.name) / "units.tsv"
+        self.legacy = Path(self.tmp.name) / "legacy.tsv"
+        self.enterContext(patch.object(gen_families, "KEY_GRAMMARS", self.keys))
+        self.enterContext(patch.object(gen_families, "OUTCOME_UNITS", self.units))
+        self.enterContext(patch.object(gen_families, "PLACEHOLDER_LABELS", self.legacy))
+        self.enterContext(patch.object(gen_families, "KEYS_README", Path(self.tmp.name) / "not-read.md"))
+
+    def test_direct_typed_registry_never_reads_human_dictionary(self):
+        self.keys.write_text("placeholder\tpattern\texample\tnorm\n<host>\t^(?:[A-Za-z.]+)$\tHost.example\tnorm\n"
+                             "<server>\t^(?:[a-z-]+)$\tsrv-a\tnorm\n"
+                             "<object-key>\t^(?:[^/]+(?:/[^/]+)*)$\ta/b\tnorm\n"
+                             "<key>\t^(?:[^/]+)$\tone\tnorm\n")
+        self.legacy.write_text("invalid dictionary must not be read")
+        got = gen_families.placeholders()
+        self.assertEqual(gen_families.grammar_sources(), [self.keys])
+        for name, value, want in [("host", "Host.example", True), ("server", "Host.example", False),
+                                  ("object-key", "a/b", True), ("key", "a/b", False),
+                                  ("object-key", "a//b", False)]:
+            with self.subTest(name=name, value=value):
+                self.assertEqual(gen_families.re.fullmatch(got[f"<{name}>"], value) is not None, want)
+        self.legacy.write_text("another invalid dictionary")
+        self.assertEqual(gen_families.placeholders(), got)
+
+    def test_canonical_unit_vocabulary_is_closed(self):
+        self.keys.write_text("placeholder\tpattern\texample\tnorm\n<key>\t.+\tx\tnorm\n")
+        for values in [("row", "field", "element"), ("row", "field", "item"),
+                       ("строка", "поле", "элемент"), ("row", "field", "field")]:
+            with self.subTest(values=values):
+                self.units.write_text("unit\tmeaning\n" + "".join(x + "\tmeaning\n" for x in values))
+                if values == ("row", "field", "element"):
+                    self.assertEqual(gen_families.unit_words(), dict(zip(values, values)))
+                else:
+                    with self.assertRaisesRegex(GenError, "closed units"):
+                        gen_families.unit_words()
+        self.units.unlink()
+        with self.assertRaisesRegex(GenError, "missing canonical"):
+            gen_families.unit_words()
+        self.keys.unlink()
+        self.assertEqual(gen_families.unit_words(), {"row": "строка", "field": "поле", "element": "элемент"})
+
+
 class Fresh(unittest.TestCase):
     def test_out_is_fresh(self):
         for name, text in gen_families.render().items():
@@ -128,16 +176,17 @@ class Fresh(unittest.TestCase):
         text = (OUT / "families/families.go").read_text(encoding="utf-8")
         self.assertNotIn("fenced", text)
         self.assertNotIn("does not count as a visible door", text)
-        self.assertIn('{Path: "/generation_at", Reader: "*", Priority: 1, Unit: "поле"}', text)
+        self.assertIn('{Path: "/generation_at", Reader: "*", Priority: 1, Unit: "field"}', text)
 
     def test_provenance(self):
         p = gen_families.provenance()
         paths = [e["path"] for e in p["form"]]
         self.assertIn("Platform/01-store/data/epoch_floor.schema.json", paths)
         self.assertIn("Platform/01-store/data/configstore-doors.layers.tsv", paths)
-        self.assertIn("Platform/common/placeholders.tsv", paths)
-        self.assertIn(gen_families.sha(gen_families.PLACEHOLDER_LABELS),
-                      [e["sha256"] for e in p["form"] if e["path"] == "Platform/common/placeholders.tsv"])
+        self.assertIn("Platform/common/data/key-placeholders.tsv", paths)
+        self.assertIn("Platform/common/data/outcome-units.tsv", paths)
+        self.assertNotIn("Platform/common/placeholders.tsv", paths)
+        self.assertFalse(any("/ru/" in path for path in paths))
         self.assertEqual(p["judge"]["path"], "tools/normgen/family_judge.py")
 
 
