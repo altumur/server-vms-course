@@ -3657,3 +3657,13 @@ components:
           additionalProperties:
             $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ManifestView'
           description: The description of a subsystem P/06.5 N2 /mounts; the form — ManifestView of the contract P/06.
+    GateDenied:
+      $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied'
+    ConsoleRefusal:
+      $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+    DomainPassRefusal:
+      description: 'Existing door.pass forms: ordinary console refusal, unavailable, or the manifest-mapped refusal of the second kind; the source is the gate-and-pass contract.'
+      anyOf:
+      - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
+      - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
+      - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ProblemRefusal'

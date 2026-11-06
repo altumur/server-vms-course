@@ -63,6 +63,8 @@ This is a suggested order, not a mandatory structure of the code.
 6. The stand: scenarios 02, 05–19 of the [acceptance of the lesson](../acceptance/README.md) and the domain console side in the scenarios of the chapters of lesson P/08
    (the table of neighbours on the stand of N5).
 
+The machine-readable plan of this order is [forms/stages.tsv](../forms/stages.tsv), with the CALL ports in [forms/README.md](../forms/README.md); its kit [seams](../acceptance/seams.tsv) supplement the scenarios of step 6 and the reading, they do not replace them.
+
 ## Pitfalls of the language and the library
 
 | Norm | Possible mistake | How to keep the behaviour |
