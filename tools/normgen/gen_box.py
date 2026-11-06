@@ -726,7 +726,7 @@ KIT_MD = """
 | `{module}/internal/box/copy.go` | kit (closed): the copy format — `EncodeCopy`, `DecodeCopy`, `Upper`, `Floor`, `BackupTarget`, `ImportRepeated` |
 | `{module}/internal/box/copy_storage.go`, `copy_validation.go`, `copy_import.go`, `copy_control.go` | handwritten kit environment (closed): `CopyStorage`, `ImportCopy`, `BackupCopy`, `CopyControl`, `CopyStartAllowed` |
 
-The store of a box (P/01.3 Н1.3 `box`) answers its service doors by the norm alone; you give it only the indices of
+The store of a box (P/01.3 N1.3 `box`) answers its service doors by the norm alone; you give it only the indices of
 your store. Wire it from your files (one line each), after your identity check (a role socket — 403 before the body):
 
 ```go
@@ -741,7 +741,7 @@ return box.Recover(logf)        // code 2 «this build has no raft»
 if code, refused := box.StartRefusal(f, logf); refused { return code }   // -group-size 3|5, -join, -door
 ```
 
-**The copy** (Н1.3 `copy`, `import`, `floor`; Н3 phases; `admin_ops` backup): implement `box.CopyStorage` over your actual
+**The copy** (N1.3 `copy`, `import`, `floor`; N3 phases; `admin_ops` backup): implement `box.CopyStorage` over your actual
 store. `WithCopyLock` excludes ordinary writers/batches for the whole callback. Inside it, `CopyTxn.Snapshot` reads actual
 rows and the index; `BeginImport` atomically makes the new F1 and progress durable and advances the index;
 `WriteImport` durably writes one supplied row with its exact version; `FinishImport` persists Done. Source replay/admission

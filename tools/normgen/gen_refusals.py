@@ -488,7 +488,7 @@ KIT_MD = """
 
 | Package | Import path | Origin |
 |---|---|---|
-| `refusals` | `{module}/internal/refusals` | generated from `Platform/01-store/forms/refusals.tsv` (Н4 of chapters 1.1–1.3) |
+| `refusals` | `{module}/internal/refusals` | generated from `Platform/01-store/forms/refusals.tsv` (N4 of chapters 1.1–1.3) |
 
 One `*refusals.Spec` per row, named after the row (`refusals.KeyRules`, `refusals.ConnectionLimit`,
 `refusals.StartFlags`, …); `refusals.All`, `refusals.ByName(name)`.
@@ -510,14 +510,14 @@ func (s *Spec) LogLine(values map[string]string) (string, error) // start, cli: 
 func (s *Spec) Exit(logf func(string), values map[string]string) int // logs LogLine, returns Code
 ```
 
-- An http refusal: pick the row by its condition (the names are the conditions of Н4; the rows of the write command
+- An http refusal: pick the row by its condition (the names are the conditions of N4; the rows of the write command
   carry the names of `write-checks.tsv` checks), then with part `door`:
   `a, err := apidoor.Refuse(op, s.Code, s.Kind, msg, values)`; `a.RetryAfter = s.RetryAfter`. `Check(values)` first if
   you want the catalogue to judge the fields; the door judges the body against the OpenAPI `*Fault`.
 - A start refusal: `os.Exit(refusals.StartFlags.Exit(log.Print, map[string]string{"flag": r.Flag}))` (with part
   `flags`: `r` is the `*flags.Refusal`).
 - The catalogue says the code, the kind, the fields, the header and what the log names — not when a refusal happens:
-  the conditions in words are the prose of Н4, the write command order is `write-checks.tsv` (part `writecheck`).
+  the conditions in words are the prose of N4, the write command order is `write-checks.tsv` (part `writecheck`).
 """
 
 
