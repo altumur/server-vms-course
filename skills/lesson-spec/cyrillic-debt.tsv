@@ -12,5 +12,3 @@ ready	Platform/08-domain	-
 ready	Platform/09-agent	-
 ready	Platform/10-domain-console	-
 ready	Platform/common	-
-debt	tools/normgen/flags/stub/main.go	164
-debt	tools/normgen/kit/stub/main.go	698
