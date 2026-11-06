@@ -187,6 +187,103 @@ def openapi_schemas(lesson):
     return out
 
 
+def typed_refusal_causes(path, norms, section, rows):
+    """N4 names causes/caller actions; the typed catalogue owns the outcomes (ADR-0129 (2) item 8)."""
+    from markdown_it import MarkdownIt
+    from urllib.parse import unquote, urlsplit
+
+    errors, groups, stack = [], [], []
+    linked = False
+    for token in MarkdownIt("commonmark").parse(section):
+        if token.type == "inline":
+            for child in token.children or []:
+                if child.type == "link_open" and "blockquote_open" not in stack:
+                    target = urlsplit(child.attrGet("href") or "")
+                    if not target.scheme and not target.netloc and \
+                            (norms.parent / unquote(target.path)).resolve() == path.resolve():
+                        linked = True
+            if stack == ["bullet_list_open", "list_item_open", "paragraph_open"]:
+                match = re.fullmatch(r"(`[^`]+`(?:,\s*`[^`]+`)*)\s*:\s*(.*?)\s*Caller action:\s*(.*)",
+                                     token.content, re.S)
+                if not match or not all(s.strip(" \t\r\n.;:") for s in match.group(2, 3)):
+                    errors.append(f"{path.name}: {norms.name}: expected refusal names, cause and Caller action in N4 item")
+                else:
+                    groups.append(re.findall(r"`([^`]+)`", match[1]))
+        if token.nesting == 1:
+            stack.append(token.type)
+        elif token.nesting == -1:
+            stack.pop()
+    if not linked:
+        errors.append(f"{path.name}: {norms.name}: N4 needs a Markdown reference to forms/{path.name}")
+    by_name = {r["name"]: r for r in rows}
+    seen = set()
+    for number, names in enumerate(groups, 1):
+        for name in names:
+            if name in seen:
+                errors.append(f"{path.name}: {norms.name}: repeated N4 refusal cause {name}")
+            seen.add(name)
+            if name not in by_name:
+                errors.append(f"{path.name}: {norms.name}: N4 refusal cause {name} is not in this chapter's catalogue")
+            elif by_name[name]["row"] != str(number):
+                errors.append(f"{path.name}: {norms.name}: refusal {name}: row {by_name[name]['row']!r}, "
+                              f"N4 cause group is {number}")
+    for name in sorted(set(by_name) - seen):
+        errors.append(f"{path.name}: {norms.name}: missing N4 refusal cause/caller for {name}")
+    for r in rows:
+        where = f"{path.name}: {norms.name}: {r['name']}"
+        if any(not r[c].strip() for c in REF_COLUMNS):
+            errors.append(f"{where}: typed catalogue cells must be nonempty (use - where absent)")
+        if r["surface"] == "http" and not re.fullmatch(r"[1-5][0-9]{2}", r["code"]):
+            errors.append(f"{where}: an http refusal needs an HTTP code")
+        fields = r["fields"].split(",") if r["fields"] != "-" else []
+        if len({f.rstrip('?') for f in fields}) != len(fields) or \
+                any(not re.fullmatch(r"[a-z][a-z0-9_]*\??", f) for f in fields):
+            errors.append(f"{where}: fields must be distinct field names with optional ?")
+    return errors
+
+
+def openapi_refusal_pairs(lesson):
+    """HTTP code/kind pairs carried by actual responses, including local refs and schema alternatives."""
+    pairs = set()
+    for api in (lesson / "spec").glob("*.api.openapi.yaml"):
+        doc = yaml.safe_load(api.read_text(encoding="utf-8")) or {}
+
+        def resolve(node, seen):
+            while isinstance(node, dict) and "$ref" in node:
+                ref = node["$ref"]
+                if not isinstance(ref, str) or not ref.startswith("#/") or ref in seen:
+                    return {}, seen
+                seen = seen | {ref}
+                node = doc
+                try:
+                    for key in ref[2:].split("/"):
+                        node = node[key.replace("~1", "/").replace("~0", "~")]
+                except (KeyError, TypeError):
+                    return {}, seen
+            return node if isinstance(node, dict) else {}, seen
+
+        def kinds(node, seen=frozenset()):
+            node, seen = resolve(node, seen)
+            props = node.get("properties") or {}
+            field = props.get("kind") if isinstance(props, dict) else None
+            kind = field.get("const") if isinstance(field, dict) else None
+            found = {kind} if isinstance(kind, str) else set()
+            for key in ("oneOf", "anyOf", "allOf"):
+                for child in node.get(key, []):
+                    found |= kinds(child, seen)
+            return found
+
+        for item in doc.get("paths", {}).values():
+            for method, operation in item.items():
+                if method not in {"get", "put", "post", "delete", "patch", "head", "options", "trace"}:
+                    continue
+                for code, response in operation.get("responses", {}).items():
+                    response, seen = resolve(response, frozenset())
+                    for media in response.get("content", {}).values():
+                        pairs |= {(str(code), kind) for kind in kinds(media.get("schema", {}), seen)}
+    return pairs
+
+
 def check_refusals(path):
     path = Path(path)
     lesson = path.parent.parent
@@ -208,7 +305,14 @@ def check_refusals(path):
         if r["surface"] != "http" and r["kind"] != "-":
             errors.append(f"{where}: kind of a {r['surface']} refusal is -")
     number = re.match(r"([0-9]{2})-", lesson.name)[1].lstrip("0") if re.match(r"[0-9]{2}-", lesson.name) else ""
-    for chapter in sorted({r["chapter"] for r in rows}):
+    chapters = {r["chapter"] for r in rows}
+    # Source references also discover a chapter removed wholesale from the catalogue.
+    for norms in english_norms(lesson):
+        match = re.fullmatch(r"[0-9]{2}(?:\.([0-9]+))?-[^.]+\.norms\.md", norms.name)
+        if match and f"forms/{path.name}" in norms.read_text(encoding="utf-8"):
+            chapters.add(number + ("." + match[1] if match[1] else ""))
+    typed_names = set()
+    for chapter in sorted(chapters):
         if "." in chapter:
             norms = sorted((lesson / "spec").glob(f"{lesson.name[:2]}.{chapter.split('.')[1]}-*.norms.md"))
             mine_ok = chapter.startswith(number + ".")
@@ -231,6 +335,10 @@ def check_refusals(path):
         if not prose:
             # Н4 — ссылка на форму (ADR-0125 доп. (1) п. 5, доп. (5)): ячейки нормы — колонки формы
             section = "\n".join(lines[start:end])
+            if "outcome" not in (rows[0] if rows else {}):
+                errors.extend(typed_refusal_causes(path, norms[0], section, mine))
+                typed_names.update(r["name"] for r in mine)
+                continue
             if f"forms/{path.name}" not in section or "outcome" not in (rows[0] if rows else {}):
                 errors.append(f"{path.name}: chapter {chapter}: Н4 of {norms[0].name} has no table and no reference to "
                               f"forms/{path.name} with the columns {REF_EXTRA}")
@@ -273,6 +381,7 @@ def check_refusals(path):
                     errors.append(f"{where}: fields {missing} not in the prose cell")
     kinds = fault_kinds(lesson)
     schemas = openapi_schemas(lesson)
+    pairs = openapi_refusal_pairs(lesson) if typed_names else set()
     for r in rows:
         if r["surface"] != "http":
             continue
@@ -302,6 +411,16 @@ def check_refusals(path):
             missing = [f.rstrip("?") for f in r["fields"].split(",") if f.rstrip("?") not in kinds[r["kind"]]]
             if missing:
                 errors.append(f"{where}: fields {missing} not in the OpenAPI schemas of kind {r['kind']}")
+        if r["name"] in typed_names and r["kind"] in kinds:
+            if (r["code"], r["kind"]) not in pairs:
+                errors.append(f"{where}: HTTP code/kind {r['code']} {r['kind']} is not in the OpenAPI responses")
+            required = [set(s.get("required") or []) - {"kind", "error"} for s in schemas.values()
+                        if isinstance(s, dict) and isinstance(s.get("properties", {}).get("kind"), dict)
+                        and s["properties"]["kind"].get("const") == r["kind"]]
+            declared = {f for f in r["fields"].split(",") if f != "-" and not f.endswith("?")}
+            missing = set.intersection(*required) - declared if required else set()
+            if missing:
+                errors.append(f"{where}: required OpenAPI fields {sorted(missing)} are not required in the catalogue")
     catalogue = {(r["code"], r["kind"]) for r in rows}
     by_name = {r["name"]: r for r in rows}
     for table in sorted((lesson / "forms").glob("*-checks.tsv")):
@@ -317,6 +436,8 @@ def check_refusals(path):
             if r and (r["code"], r["kind"]) != (w["code"], w["kind"]):
                 errors.append(f"{path.name}: {r['name']}: {r['code']} {r['kind']}, {table.name} says {w['code']} {w['kind']}")
     stats["refusal_chapters"] = len({r["chapter"] for r in rows})
+    if typed_names:
+        stats["refusal_cause_names"] = len(typed_names)
     return errors, stats
 
 

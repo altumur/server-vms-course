@@ -18,6 +18,39 @@ ROOT = Path(__file__).resolve().parents[3]
 LESSON = ROOT / "Platform/01-store"
 
 
+# Frozen prose witness from ec48a8949, before the form became the sole source.
+LEGACY_FLAG_PROSE = r'''**Daemon flags** — a closed set (the store pilot, A3, A8). A flag outside the table is a start refusal, code 2. The machine form of the table — [`forms/daemon-flags.tsv`](../forms/daemon-flags.tsv) (ADR-0125): type, default, required, commands; `check_spec` checks that it agrees with this table.
+
+| Flag | Type | Default | Meaning |
+|---|---|---|---|
+| `-dir` | path | none: required, without it a start refusal, code 2 | the data directory of the daemon; the mark `FORMAT` (`format` above); also of `recover`, `restore`, `import` — they write into the directory of a stopped daemon on a box (ADR-0125 addendum (2) item 1) |
+| `-id` | member id (N2) | in a group (`-join`, `-door`, `-group-size 3` or `5`) none: required; otherwise — `SERVER_NAME` (P/02.4 N1.2) | the member name in `members`, `voters`, `leader_id`; also of `recover` |
+| `-sockets` | directory path | `/run/configstore` | the socket directory, flat (`sockets` above); the commands `status`, `join`, `leave`, `admit`, `backup`, `restore`, `import`, `rights` find `admin.sock` by it, `recover` does not (ADR-0125 addendum (2) item 1) |
+| `-rights` | file path | none: without it — only `admin.sock` (chapter 1.2 N1.2) | the rights file |
+| `-tls` | directory path | none: required with -join or a non-loopback -api/-raft | the root of the certificate kits (N1.6), mTLS of `-raft` and `-api` |
+| `-raft` | `host:port` | none | the raft address that the daemon names to its partners |
+| `-raft-bind` | `host:port` | `-raft` | the address on which the daemon listens for raft, if it differs from the named one |
+| `-api` | `host:port` | none: without it there is no service HTTP door for partners | the address of the service doors of N2 for partners; the value of `members` and `leader` in `/v1/status`; without `-api` the member is not in `members` (the map can be `{}`; C01-STATUS-MEMBERS-NOAPI, the Architect's decision of 2026-10-26) |
+| `-bootstrap` | no value | off | the first server of the group (`join` above); with `-join` — a start refusal |
+| `-join` | `host:port` | none | the `-api` address of a group member through which the daemon joins (`join` above); always with `-tls` |
+| `-group-size` | `1` \| `3` \| `5` | `1` | the declared group size, the same on all servers |
+| `-force` | no value | off | joining at a transitional evenness (`join` above), also of the command `join`; for `restore`, `import`, `recover` — only the clock refusal |
+| `-isolated` | no value | off | only for `recover`, required: the operator confirms that the former group and the writers are isolated and nothing was handed out above upper (N3 step 0); without it `recover` is a refusal before changes (guess of stage C S02, the Architect's decision of 2026-10-23) |
+| `-upper` | integer 0 … 2^53 − 1 | none | only for `recover`: the bound of the lost tail of epochs known to the operator; it only raises the computed upper (`floor.generation`): upper := max(computed, N); N below the computed one — a refusal before changes (guess of stage C S02, the Architect's decision of 2026-10-23) |
+| `-peers` | a comma-separated list `id@<raft host:port>/<api host:port>` | none: required for `recover` | only for `recover`: the recovered membership — the remaining members, the one being recovered (`-id`) among them; the id and both addresses are required for each: raft — the address of the raft membership, api — the value of `members` in `/v1/status`; any other notation — a refusal before changes (guess of stage C S03, the Architect's decision of 2026-10-23) |
+| `-door` | no value | off | a door without a vote (`door` above) |
+| `-voters` | a comma-separated list `id@host:port` | none: required with `-door`, without it a start refusal, code 2 | the voters for a door without a vote: the id and the `-api` address |
+| `-tuning` | `default` \| `lan` \| `slow` | `default` | the raft timing profile (`tuning` above) |
+| `-leader-wait` | duration | `5s` | the leader wait (`leader_wait` above) |
+| `-max-value` | bytes, > 0 (`0` and not a number — a start refusal, code 2; reconciliation of python and go M10/6–11, B7) | `512KiB` | the row ceiling (chapter 1.1 N4, `{row_ceiling}` of «Stand») |
+| `-max-body` | bytes, > 0 (as `-max-value`) | `1MiB` | the read limit of the HTTP body of `POST /v1/write` (chapter 1.1 N2, `{body_limit}` of «Stand»), separately from the row ceiling `-max-value` (log of cammeta-python, lesson 11 № 24) |
+| `-max-conns`, `-api-conns`, `-api-per-address` | integer > 0 | 64, 32, 8 | connection limits (below) |
+| `-index-base` | integer ≥ 0 | 0 | for `import`: the version base (`import` above) |
+| `-groups` | no value | off | only for `rights` (`admin_ops` above; ADR-0125 addendum (2) item 1) |
+| `--from` | file path | none: required for `restore`, `import` | only for `restore`, `import`: the input — the backup copy (`copy` above; `admin_ops` above; ADR-0125 addendum (2) item 1) |
+'''
+
+
 class Forms(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
@@ -40,35 +73,47 @@ class Forms(unittest.TestCase):
     def refusals(self):
         return check_forms.check_refusals(self.lesson / "forms/refusals.tsv")[0]
 
+    def legacy_flag_prose(self):
+        (self.lesson / "spec/00-legacy.norms.md").write_text(LEGACY_FLAG_PROSE, encoding="utf-8")
+
+    def test_legacy_flag_prose_passes(self):
+        self.legacy_flag_prose()
+        self.assertEqual(self.flags(), [])
+
     def test_clean(self):
         self.assertEqual(self.flags(), [])
         self.assertEqual(self.refusals(), [])
 
     def test_flag_missing(self):
+        self.legacy_flag_prose()
         text = (self.lesson / "forms/daemon-flags.tsv").read_text(encoding="utf-8")
         line = next(x for x in text.split("\n") if x.startswith("-tuning\t"))
         self.edit("forms/daemon-flags.tsv", line + "\n", "")
         self.assertTrue(self.flags())
 
     def test_flag_default(self):
+        self.legacy_flag_prose()
         self.edit("forms/daemon-flags.tsv", "\t524288\t512KiB\t", "\t524289\t512KiB\t")
         self.assertTrue(self.flags())
         self.edit("forms/daemon-flags.tsv", "\t524289\t512KiB\t", "\t1048576\t1MiB\t")
         self.assertTrue(self.flags())                          # the prose writes 512KiB
 
     def test_flag_required_and_cel(self):
+        self.legacy_flag_prose()
         self.edit("forms/daemon-flags.tsv", "-isolated\tbool\tfalse\toff\ttrue\t", "-isolated\tbool\tfalse\toff\tfalse\t")
         self.assertTrue(self.flags())
         self.edit("forms/daemon-flags.tsv", '"-join" in f\tP/01.3 N1.3 join', '"-join" in\tP/01.3 N1.3 join')
         self.assertTrue(self.flags())
 
     def test_flag_type_and_commands(self):
+        self.legacy_flag_prose()
         self.edit("forms/daemon-flags.tsv", "-tuning\tenum:default|lan|slow\t", "-tuning\tenum:default|lan|fast\t")
         self.assertTrue(self.flags())
         self.edit("forms/daemon-flags.tsv", "\trecover\t\tP/01.3 N3 recover", "\tdaemon\t\tP/01.3 N3 recover")
         self.assertTrue(self.flags())
 
     def test_two_hyphens_only_from(self):               # --from — имя прозы; иное с двумя дефисами — отказ
+        self.legacy_flag_prose()
         self.edit("forms/daemon-flags.tsv", "--from\tfile\t", "--input\tfile\t")
         self.assertTrue(self.flags())
 
@@ -135,6 +180,91 @@ class Forms(unittest.TestCase):
     def test_write_checks_agree(self):
         self.edit("forms/refusals.tsv", "1.1\t1\tkey_rules\thttp\t400\tbadkey\t", "1.1\t1\tkey_rules\thttp\t400\tbadrequest\t")
         self.assertTrue(self.refusals())
+
+    def test_typed_catalogue_without_outcome_is_complete(self):
+        path = self.lesson / "forms/refusals.tsv"
+        head = next(line for line in path.read_text().splitlines() if line and not line.startswith("#"))
+        self.assertNotIn("outcome", head.split("\t"))
+        errors, stats = check_forms.check_refusals(path)
+        self.assertEqual(errors, [])
+        self.assertEqual(stats, {"refusal_rows": 59, "refusal_chapters": 3, "refusal_cause_names": 59})
+
+    def test_typed_causes_missing_unknown_repeated_or_hidden(self):
+        path = self.lesson / "spec/01.1-store.norms.md"
+        good = path.read_text()
+        line = next(line for line in good.splitlines() if line.startswith("- `ambiguous_barrier`:"))
+        for replacement in ("", line.replace("`ambiguous_barrier`:", "`invented_refusal`:"), line + "\n" + line,
+                            "```md\n" + line + "\n```", "> " + line):
+            with self.subTest(replacement=replacement[:60]):
+                path.write_text(good.replace(line, replacement))
+                self.assertTrue(self.refusals())
+
+    def test_typed_cause_and_caller_are_required(self):
+        path = self.lesson / "spec/01.2-store.norms.md"
+        good = path.read_text()
+        line = next(line for line in good.splitlines() if line.startswith("- `list_form`:"))
+        for replacement in ("- `list_form`: Caller action: fix the request.",
+                            "- `list_form`: malformed input. Caller action:",
+                            "- `list_form`: malformed input. Caller action: .",
+                            "- `list_form`: malformed input without caller action."):
+            with self.subTest(replacement=replacement):
+                path.write_text(good.replace(line, replacement))
+                self.assertTrue(any("cause and Caller action" in e for e in self.refusals()))
+
+    def test_typed_catalogue_requires_a_real_n4_reference(self):
+        path = self.lesson / "spec/01.1-store.norms.md"
+        good = path.read_text()
+        link = "[`forms/refusals.tsv`](../forms/refusals.tsv)"
+        self.assertEqual(good.count(link), 1)
+        for replacement in ("`forms/refusals.tsv`", "[`forms/refusals.tsv`](../other/refusals.tsv)",
+                            "\n\n```md\n" + link + "\n```\n\n", "\n\n> " + link + "\n\n"):
+            with self.subTest(replacement=replacement):
+                path.write_text(good.replace(link, replacement))
+                self.assertTrue(self.refusals())
+
+    def test_typed_catalogue_detects_a_whole_missing_chapter(self):
+        path = self.lesson / "forms/refusals.tsv"
+        path.write_text("\n".join(line for line in path.read_text().splitlines() if not line.startswith("1.2\t")) + "\n")
+        self.assertTrue(any("01.2-store.norms.md" in e and "not in this chapter's catalogue" in e
+                            for e in self.refusals()))
+
+    def test_typed_catalogue_validates_code_fields_cells_and_cause_groups(self):
+        path = self.lesson / "forms/refusals.tsv"
+        good = path.read_text()
+        row = next(line for line in good.splitlines() if line.startswith("1.1\t9\tguard_mismatch\t"))
+        cases = {"row": "x", "code": "exit 2", "fields": "key,key", "kind": "", "headers": "", "norm": ""}
+        head = check_forms.REF_COLUMNS
+        for column, value in cases.items():
+            with self.subTest(column=column):
+                cells = row.split("\t")
+                cells[head.index(column)] = value
+                path.write_text(good.replace(row, "\t".join(cells)))
+                self.assertTrue(self.refusals())
+        path.write_text(good.replace("1.1\t9\tguard_mismatch\t", "1.1\t8\tguard_mismatch\t"))
+        self.assertTrue(any("cause group is 9" in e for e in self.refusals()))
+
+    def test_typed_required_fields_cannot_be_dropped_or_made_optional(self):
+        path = self.lesson / "forms/refusals.tsv"
+        good = path.read_text()
+        for fields in ("-", "key,index?", "key?,index"):
+            with self.subTest(fields=fields):
+                path.write_text(good.replace("\tguard\tkey,index\t", "\tguard\t" + fields + "\t"))
+                self.assertTrue(any("required OpenAPI fields" in e for e in self.refusals()))
+
+    def test_typed_code_kind_requires_an_actual_openapi_response(self):
+        import yaml
+        path = self.lesson / "spec/01-store.api.openapi.yaml"
+        good = path.read_text()
+        for bad_ref in ("#/components/responses/Conflict", "#/components/responses/Missing"):
+            with self.subTest(ref=bad_ref):
+                doc = yaml.safe_load(good)
+                doc["paths"]["/v1/write"]["post"]["responses"]["412"] = {"$ref": bad_ref}
+                path.write_text(yaml.safe_dump(doc))
+                self.assertTrue(any("412 guard is not in the OpenAPI responses" in e for e in self.refusals()))
+        doc = yaml.safe_load(good)
+        doc["components"]["responses"]["Guard"] = {"$ref": "#/components/responses/Guard"}
+        path.write_text(yaml.safe_dump(doc))
+        self.assertTrue(any("412 guard is not in the OpenAPI responses" in e for e in self.refusals()))
 
 
 class FormsAllLessons(unittest.TestCase):         # ADR-0125 доп. (5): грамматика форм для уроков кроме P/01

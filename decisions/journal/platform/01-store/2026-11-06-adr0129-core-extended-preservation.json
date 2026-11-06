@@ -1,0 +1,205 @@
+{
+  "base": "62751995ba14646dac48d482d5dc394ecd9a87c2",
+  "parked": "ec48a894952ac65a493cfa1aea4b81b74d1687bb",
+  "parked_ancestor_preserved": true,
+  "modified_req": [
+    [
+      "Platform/01-store/spec/01.1-store.norms.md",
+      "P/01.1-R019"
+    ],
+    [
+      "Platform/01-store/spec/01.1-store.norms.md",
+      "P/01.1-R048"
+    ],
+    [
+      "Platform/01-store/spec/01.1-store.norms.md",
+      "P/01.1-R053"
+    ],
+    [
+      "Platform/01-store/spec/01.1-store.norms.md",
+      "P/01.1-R070"
+    ],
+    [
+      "Platform/01-store/spec/01.1-store.norms.md",
+      "P/01.1-R078"
+    ],
+    [
+      "Platform/01-store/spec/01.1-store.norms.md",
+      "P/01.1-R088"
+    ],
+    [
+      "Platform/01-store/spec/01.1-store.norms.md",
+      "P/01.1-R090"
+    ],
+    [
+      "Platform/01-store/spec/01.1-store.norms.md",
+      "P/01.1-R122"
+    ],
+    [
+      "Platform/01-store/spec/01.1-store.norms.md",
+      "P/01.1-R132"
+    ],
+    [
+      "Platform/01-store/spec/01.1-store.norms.md",
+      "P/01.1-R143"
+    ],
+    [
+      "Platform/01-store/spec/01.1-store.norms.md",
+      "P/01.1-R144"
+    ],
+    [
+      "Platform/01-store/spec/01.2-store.norms.md",
+      "P/01.2-R029"
+    ],
+    [
+      "Platform/01-store/spec/01.3-store.norms.md",
+      "P/01.3-R006"
+    ],
+    [
+      "Platform/01-store/spec/01.3-store.norms.md",
+      "P/01.3-R007"
+    ],
+    [
+      "Platform/01-store/spec/01.3-store.norms.md",
+      "P/01.3-R029"
+    ]
+  ],
+  "ordinary_steps": 345,
+  "ordinary_byte_exact": true,
+  "original_seam_steps": 73,
+  "parked_seam_steps": 201,
+  "parked_complete_file_exact_prefix": true,
+  "new_replay_cases": {
+    "s13-replay-put-admission": 12,
+    "s14-replay-delete-admission": 13,
+    "s15-replay-batch-admission": 13
+  },
+  "new_replay_steps": 38,
+  "combined_seam_steps": 239,
+  "newly_selected_since_base": 166,
+  "preview_translated": 166,
+  "preview_excluded": 0,
+  "preview_total_inventory": 418,
+  "preview_output_files_in_memory_only": 13,
+  "stage_only_selectors_appended": true,
+  "final_empty_when_preserved": true,
+  "operational_forms_flags_refusals_write_checks_and_api_exact": true,
+  "pending_checker": "review103: form-source P01 refusal catalog with original code/kind/fields header and no duplicated outcome column/table",
+  "source588_max_body_imported": false,
+  "new_core_form_port_algorithm_implementation_generator": false,
+  "artifacts": [
+    {
+      "path": "Platform/01-store/acceptance/1/README.md",
+      "before_sha256": "249deee1e60934b95a1a31d97e5192e5dfdc1c4ec3993965641990c91a1c6227",
+      "after_sha256": "663f51fe6b886d4c2d7b45161da6ced578eb6acb24fd6130385d8ea9c9e25af9",
+      "base_blob": "9ec7a5933f66a7eb99557a5090998329b4065939",
+      "result_blob": "4e5e13bbdcbfb5f4b4b524ccfe38bd9c5ead30a8"
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/seams.tsv",
+      "before_sha256": "d717b76be360aa3e8d2df2d3fe67011cbf3b9e73c01951463a3fab33fd538922",
+      "after_sha256": "fca69518d1b7b57abeba0d2224b0147d0033add1fbeb88109bc756033a1ff992",
+      "base_blob": "03f5a6b6ae45ec14aa99d17365a6cf1a9631e6c2",
+      "result_blob": "5b8958ea5cd07b1727a6e98bb6071637d880f632"
+    },
+    {
+      "path": "Platform/01-store/forms/runtime-constants.tsv",
+      "before_sha256": null,
+      "after_sha256": "a7cb424767718b293f09148da87bea4db53aac8c99d73710d103d2ac18a152bb",
+      "base_blob": "-",
+      "result_blob": "6848bc76497da9948a44f03f82812a57f056b988"
+    },
+    {
+      "path": "Platform/01-store/forms/stages.tsv",
+      "before_sha256": "00b8de10314e13fdd197bff2c46ba631a03e3216034b42ccb368ecddeea73394",
+      "after_sha256": "ba28a4d28c1c866a1dda7ab190797938f241b02683001f4c8a7f6dcea9b7449c",
+      "base_blob": "a8930f21e1bf2550806b12d170ef477d2d92f7c7",
+      "result_blob": "eee382380a53d1fba31b1f78a9ca701f971972e1"
+    },
+    {
+      "path": "Platform/01-store/journal/corrections-1.tsv",
+      "before_sha256": "66f18af305bb18c39ae47e3b732775ab3ca33ffc25a246caa5574682974c55c0",
+      "after_sha256": "28ef0b4bf1d13add22246cdead58e105fb27e500bd89179565adf29c0c62482d",
+      "base_blob": "10da15185d41606041c55a25f0f8074d22c2c4c5",
+      "result_blob": "003151b212131e816e3f9230d1efbe4de1ac81f0"
+    },
+    {
+      "path": "Platform/01-store/lifecycle.md",
+      "before_sha256": "6df66a23ebb69e3dce12a7c49219f593e0bef61dc2832264d78002d51acaafe6",
+      "after_sha256": "f2cbad60526b51ad289d35736a6da998f45c35fab6794112b82ed23f2e9558be",
+      "base_blob": "d38ca31cd4e930db0ea83b259000b5a135d30fa7",
+      "result_blob": "2c76a4a88a038174ae823f3eb3bef3a99a120ce1"
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/1/README.md",
+      "before_sha256": "75bbf60f3670a701b694d45e11149a511ef63adfd0d828fe713be9057f7e8e16",
+      "after_sha256": "89f2e74bd29a8a056711a3d2cb63adc0468c9a18fbba79cc499316ce3f314b8f",
+      "base_blob": "1a1aeb48b381a49e90810c2bb3368c36ac7df95c",
+      "result_blob": "5d49d7848e98464df6836593ae951d1ec245283a"
+    },
+    {
+      "path": "Platform/01-store/ru/lifecycle.md",
+      "before_sha256": "4f17e67599273a1b5c2d5c013aa2e6c72a225b752403414fa247ad1ad527b8f3",
+      "after_sha256": "fb0c2dd3147bc1af4e1f6b87048efb92ebefe1b7f824277f917fc1ea389a0309",
+      "base_blob": "e90dd3e7b66a0181fce31e95e234144018fe10a1",
+      "result_blob": "b74e43cf0684000cbd9b3fb5cb718c092e43a45c"
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.1-store.norms.md",
+      "before_sha256": "ef453f332d7419820a1559c98d31828e8b7c08fa53c80a3c18d1277d26a1238c",
+      "after_sha256": "155918d265be8d807eb83caf86d12c817cbc58343672ee4c0d492b424900e023",
+      "base_blob": "deb03250d5147e51e9003daa2b3b02d642bfa39d",
+      "result_blob": "c61edd18740fddb83b32619ef7f10b9f60e24d5f"
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.2-store.norms.md",
+      "before_sha256": "e39bb67d797aa161056d23453976e4932c83e0e0363b9f175f7deaa4cd9df335",
+      "after_sha256": "d0adc5f03ba40f3892a55eab79700afa52e81099e4b225895d70b0aa86bece75",
+      "base_blob": "61f7163a086d62ad9df3ba40cf336e5b9a645d81",
+      "result_blob": "a7cb65c17e8bb301ffb6557c59ed20899305d3cf"
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "before_sha256": "a2c1c0333f3de930013ba97ce7417651e1b21ab213b22158f02280a5a5a575ca",
+      "after_sha256": "f851cd1488d272d404adc8691ab5f522e8609b3c637039d41e725f8583e20ad1",
+      "base_blob": "f7acd9c139407c4dd0c3bc2f4a0fdc5e89bedc71",
+      "result_blob": "55608e7db6fa4d239a09b1d9fd232db3ddffc74b"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "before_sha256": "03f962021e09a1b4df5f958fe44dbea96a732648db3431eb7aa87671d73a50e4",
+      "after_sha256": "15a0a5b1a2d56a75f8c80f04500179b516b882a2069f680ad3d2c42bcc5b2a39",
+      "base_blob": "6a6e6396fde48ca52fd60b1dadaadfcfb816b30a",
+      "result_blob": "0efab0906502308d42d58ef9ae1079312717c8ad"
+    },
+    {
+      "path": "Platform/01-store/spec/01.2-store.norms.md",
+      "before_sha256": "65be1705d0fa483ba25b104b73b498ac69674ae0f4937f95489e291903701b87",
+      "after_sha256": "3579acf8b1fca1c098c1ed443268a98f26f5e3f546cc92b48286ee7ca05bf656",
+      "base_blob": "a55a1c1f9a4b0672d6967ef7790eaaeedafb6b92",
+      "result_blob": "cfa75219178b067280642cebcce9ec86e17ea202"
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "before_sha256": "1c182e9c33416632094667f3b08ae78bafc5981176b598335bc49eb6b26d56c9",
+      "after_sha256": "6c456ba7ec12978c7f48dcdfde5691565aa2f0b337f7bf5936792ddc28fdae0d",
+      "base_blob": "76484a5da6970817caebd108412cab6b569dd6df",
+      "result_blob": "333f31df9590bb419b32ad9793ddbf32261f6274"
+    },
+    {
+      "path": "decisions/adr-norms.tsv",
+      "before_sha256": "ce9bc784671fa0a9cbc183bb69ff56a3d7d7d65ede0f3afb8ee87bafd39c61b0",
+      "after_sha256": "0cf820264b0136f742388a1c4835b6c4ceae493a2ce32fb9e0545624788de595",
+      "base_blob": "fdc5c22a6b9a9017312c074365cb010d164615ea",
+      "result_blob": "eccc49db93299317ac7a45e3e7792b825adda965"
+    },
+    {
+      "path": "decisions/changes/registry.tsv",
+      "before_sha256": "7536b71ad438276cc733fd8ce8ab852174469108f385179747d358494e478800",
+      "after_sha256": "81578d0402b295de5f009dc2eac7ebca37002bd8c9466493e1ec2afe9e6d1a98",
+      "base_blob": "f1ecc4cf8c3768499a5803d8a5197e7f8c6cfe4c",
+      "result_blob": "f48e968cbf6054c69ba9b3b86fd72ff0c70bcd4a"
+    }
+  ],
+  "status": "SOURCE candidate; no full normgen/KIT or executed SUT claim"
+}
