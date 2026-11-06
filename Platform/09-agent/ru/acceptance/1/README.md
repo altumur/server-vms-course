@@ -258,7 +258,7 @@ SIGKILL активного — очередь не отдана: через 30 �
 ## Хеш копии anywhere (G09-ANYWHERE-HASH-01)
 
 Четыре вектора фикстуры в [`inputs/anywhere-hash/cases.tsv`](../../../acceptance/1/inputs/anywhere-hash/cases.tsv) задают хеш всего тела
-по P/08.4 Н1.3 carry и проверку перед копией Н1.4 member_anywhere. Колонка input называет JSON-файл
+по P/08.4 N1.3 carry и проверку перед копией N1.4 member_anywhere. Колонка input называет JSON-файл
 рядом с таблицей; expect — JSON-подмножество наблюдений, не вход реализации.
 
 В каждом входе исходная сохранённая копия с точным индексом и последней подтверждённой меткой taken_sha256 и список attempts.
