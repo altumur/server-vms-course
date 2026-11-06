@@ -14,6 +14,45 @@ RU3 = ROOT / "Platform/01-store/ru/spec/01.3-store.norms.md"
 EN3 = ROOT / "Platform/01-store/spec/01.3-store.norms.md"
 
 
+# Owned examples of the inline/code/table syntax used before C23b (ec48a8949).
+# They are parser witnesses; test_pair_agrees reads the actual published pair.
+OWNED_REFUSALS = ((400, "badkey"), (400, "badrequest"), (403, "forbidden"), (409, "conflict"),
+                  (409, "expired"), (409, "early"), (412, "guard"), (413, "toolarge"),
+                  (503, "unavailable"), (409, "refused"), (503, "ambiguous"))
+OWNED_RU = '''# Фикстура синтаксиса
+
+производный от `spec/01.1-store.norms.md`, руками не правится
+
+## N1 Форма
+
+`JSON_DEPTH` = 128 вложенных объектов и массивов.
+
+```yaml
+BATCH_WRITES: 64             # предел записей пакета; ровно на пределе — проходит, на один больше — badrequest
+```
+
+## N4 Отказы
+
+| Причина | Код | `kind` и поля | Действие |
+|---|---|---|---|
+''' + "".join(f"| причина | {code} | `{kind}` | действие |\n" for code, kind in OWNED_REFUSALS)
+OWNED_EN = '''# Syntax fixture
+
+## N1 Form
+
+`JSON_DEPTH` = 128 nested objects and arrays.
+
+```yaml
+BATCH_WRITES: 64             # the limit of batch writes; exactly at the limit — passes, one more — badrequest
+```
+
+## N4 Refusals
+
+| Cause | Code | `kind` and fields | Caller |
+|---|---|---|---|
+''' + "".join(f"| condition | {code} | `{kind}` | action |\n" for code, kind in OWNED_REFUSALS)
+
+
 class Mirror(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -23,10 +62,15 @@ class Mirror(unittest.TestCase):
     def compare(self, ru=None, en=None):
         return en_mirror.compare(self.ru if ru is None else ru, self.en if en is None else en, RU, EN, ROOT)
 
-    def mutated(self, old, new, which="en"):
-        text = self.en if which == "en" else self.ru
+    def mutated(self, old, new, which="en", *, owned=False):
+        ru, en = (OWNED_RU, OWNED_EN) if owned else (self.ru, self.en)
+        if owned:
+            self.assertEqual(self.compare(ru=ru, en=en), [])
+        text = en if which == "en" else ru
         self.assertEqual(text.count(old), 1, old)
-        errors = self.compare(**{which: text.replace(old, new)})
+        self.assertNotEqual(old, new)
+        changed = text.replace(old, new)
+        errors = self.compare(ru=changed if which == "ru" else ru, en=changed if which == "en" else en)
         self.assertTrue(errors, f"no refusal for {old!r} → {new!r}")
         return errors
 
@@ -35,9 +79,10 @@ class Mirror(unittest.TestCase):
         self.assertIn((RU, EN), list(en_mirror.pairs(ROOT)))
 
     def test_kinds_from_n4(self):
-        self.assertEqual(en_mirror.kinds_of(self.ru), {"badkey", "badrequest", "forbidden", "conflict", "expired",
-                                                      "early", "guard", "toolarge", "unavailable", "refused",
-                                                      "ambiguous"})
+        expected = {"badkey", "badrequest", "forbidden", "conflict", "expired", "early", "guard", "toolarge",
+                    "unavailable", "refused", "ambiguous"}
+        self.assertEqual(en_mirror.kinds_of(OWNED_RU), expected)
+        self.mutated("`early`", "`expired`", owned=True)
 
     def test_code(self):
         self.mutated("then the door MUST answer `404 {kind: badrequest}`", "then the door MUST answer `405 {kind: badrequest}`")
@@ -57,7 +102,7 @@ class Mirror(unittest.TestCase):
         self.mutated("[P/08.4](../../08-domain/spec/08.4-domain.norms.md)", "[P/08.4](../../08-domain/spec/08.3-domain.norms.md)")
 
     def test_code_span_dropped(self):
-        self.mutated("`JSON_DEPTH` = 128", "JSON_DEPTH = 128")
+        self.mutated("`JSON_DEPTH` = 128", "JSON_DEPTH = 128", owned=True)
 
     def test_table_row(self):
         self.mutated("| 40 | batch rights:", "| 39b | x | y |\n| 40 | batch rights:")
@@ -78,15 +123,19 @@ class Mirror(unittest.TestCase):
 
     def test_code_block_value(self):                    # ADR-0120 доп. (5) п. 7: значение без смены размеров
         self.mutated("    ceiling: 524288          # 512 KiB", "    ceiling: 524289          # 512 KiB")
-        self.mutated("BATCH_WRITES: 64             # the limit", "BATCH_WRITES: 65             # the limit")
+        self.mutated("BATCH_WRITES: 64             # the limit", "BATCH_WRITES: 65             # the limit", owned=True)
 
     def test_code_block_untranslated_part(self):        # вне комментария — только перевод русской прозы
         self.mutated("      - does not start with \"/\"", "      - does not start with \"\\\\\"")
-        self.mutated("BATCH_WRITES: 64             # the limit", "BATCH_LIMIT: 64              # the limit")
+        self.mutated("BATCH_WRITES: 64             # the limit", "BATCH_LIMIT: 64              # the limit", owned=True)
 
     def test_code_block_comment_free(self):             # комментарий переводится свободно
-        text = self.en.replace("# the limit of batch writes;", "# how many writes a batch carries;")
-        self.assertEqual(self.compare(en=text), [])
+        self.assertEqual(self.compare(ru=OWNED_RU, en=OWNED_EN), [])
+        before = "# the limit of batch writes;"
+        self.assertEqual(OWNED_EN.count(before), 1)
+        text = OWNED_EN.replace(before, "# how many writes a batch carries;")
+        self.assertNotEqual(text, OWNED_EN)
+        self.assertEqual(self.compare(ru=OWNED_RU, en=text), [])
 
     def test_link_inside_code_span(self):               # «](…)» в регулярке внутри кода — не ссылка
         ru = self.ru + "\nШаблон `[a-z](?:[a-z0-9]{0,61})` — имя.\n"
@@ -104,7 +153,7 @@ class Mirror(unittest.TestCase):
         self.mutated("| 02 | a creation with", "| 03 | a creation with")
 
     def test_prose_number(self):
-        self.mutated("`JSON_DEPTH` = 128 nested", "`JSON_DEPTH` = 127 nested")
+        self.mutated("`JSON_DEPTH` = 128 nested", "`JSON_DEPTH` = 127 nested", owned=True)
 
     def test_number_notation(self):                     # «0,5» ≡ «0.5», «250 000» ≡ «250,000» ≡ «250000»
         self.assertEqual(en_mirror.numbers("0,5 с, 250 000 записей", "ru"), ["0.5", "250000"])
