@@ -1,0 +1,1375 @@
+{
+  "base": "a635beb6a4f5c13e04034c4dc96d14a798a035a6",
+  "change": "0129-p01-v2-norms",
+  "normalization": "only delta unit SHA guards normalize LF/trailing spaces/final LF; actual source and witness bytes are not normalized",
+  "files": [
+    {
+      "path": "Platform/01-store/acceptance/1/README.md",
+      "before_sha256": "e95982d958ece2450eba5aebba2d1670b59eec2b585fcc9b01cb9df12adfc6e6",
+      "after_sha256": "8a1474eff8c88026f8fc13e0262bbc5a20bfd2628bb2e124e323b99f5744c9d2",
+      "before_blob": "8eea9f2a5cd9b5cd0565e6231a8fd9908827ac75",
+      "after_blob": "cc6001e47f38bd76bcdee190a3edd56a0d09211d",
+      "before_bytes": 16649,
+      "after_bytes": 18554,
+      "blocks": [
+        {
+          "old_start_0": 141,
+          "old_end_0": 141,
+          "new_start_0": 141,
+          "new_end_0": 149,
+          "before": "",
+          "after": "\n## Admitted mismatches and admission-number domain (ADR-0129 addendum (10), item 3)\n\nThe complete previous 15 seam scenarios / 239 steps remain byte-exact. s16–s18 add put/delete/batch with an already-applied identifier and different content: clock +100, mismatch gives badrequest, immediate -100, then a not_after probe gives expired. A second +200/mismatch/-200/ordinary reopen/probe sequence checks durable last admission metadata. No read between mismatch and rollback/reopen/probe can mask lost metadata. The original rows/visible absence and first id answer remain; an original-command replay still returns that answer with again. The mismatch does not replace or free the original applied-id entry. These are admitted refusals, distinct from form/rights/framing refusals before admission. In s16 an earlier invalid-items request with the same id is rejected before admission at clock+50; after rollback a bound-between-clocks probe succeeds. This negative control prevents treating every badrequest as admitted.\n\ns19 starts at the existing clock2000000000. +0.0000001 is converted to the same binary64 value before max, so not_before2000000000 gives early. After a further +0.0003999, a bound2000000000.0002 passes. Roll back0.0004, reopen, and apply the same bound to another row: it still passes because the assigned fractional binary64 admission value survived. No integer/millisecond or three-digit row-time writer may truncate it. The witness does not prescribe a metadata encoding or physical clock accuracy.\n\nAll four cases use only existing HTTP, signed-decimal @clock and @reopen steps and are selected by the existing durable gate. No port, internal API, CALL grammar, snapshot or power-cut claim is added. The 56 new source steps are not executed implementation acceptance. Constant names are owned by forms/runtime-constants.tsv; specific stand/probe input numbers remain test data.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/seams.tsv",
+      "before_sha256": "fca69518d1b7b57abeba0d2224b0147d0033add1fbeb88109bc756033a1ff992",
+      "after_sha256": "f1d156863dea69514c33b5b115012a523c63347131b010ea85d2657ed5e1be80",
+      "before_blob": "5b8958ea5cd07b1727a6e98bb6071637d880f632",
+      "after_blob": "29116434233cd64c6a573cea3d7cbfc944a961de",
+      "before_bytes": 40477,
+      "after_bytes": 47635,
+      "blocks": [
+        {
+          "old_start_0": 248,
+          "old_end_0": 248,
+          "new_start_0": 248,
+          "new_end_0": 304,
+          "before": "",
+          "after": "s16-mismatched-put-admission\t1\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s16-mismatched-put-admission/target\",\"cas\":\"\",\"items\":{\"v\":\"kept\"},\"id\":\"ae16\"}\t200 {\"index\":\"$first\"}\ns16-mismatched-put-admission\t2\t@clock +50\tok\ns16-mismatched-put-admission\t3\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s16-mismatched-put-admission/target\",\"cas\":\"\",\"items\":42,\"id\":\"ae16\"}\t400 {\"kind\":\"badrequest\"}\ns16-mismatched-put-admission\t4\t@clock -50\tok\ns16-mismatched-put-admission\t5\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s16-mismatched-put-admission/pre-admission-probe\",\"cas\":\"\",\"items\":{},\"not_after\":2000000025}\t200 {\"index\":\"$pre\"}\ns16-mismatched-put-admission\t6\t@clock +100\tok\ns16-mismatched-put-admission\t7\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s16-mismatched-put-admission/target\",\"cas\":\"\",\"items\":{\"v\":\"changed\"},\"id\":\"ae16\"}\t400 {\"kind\":\"badrequest\"}\ns16-mismatched-put-admission\t8\t@clock -100\tok\ns16-mismatched-put-admission\t9\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s16-mismatched-put-admission/probe\",\"cas\":\"\",\"items\":{\"v\":\"must-not-write\"},\"not_after\":2000000050}\t409 {\"kind\":\"expired\"}\ns16-mismatched-put-admission\t10\t@clock +200\tok\ns16-mismatched-put-admission\t11\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s16-mismatched-put-admission/target\",\"cas\":\"\",\"items\":{\"v\":\"changed\"},\"id\":\"ae16\"}\t400 {\"kind\":\"badrequest\"}\ns16-mismatched-put-admission\t12\t@clock -200\tok\ns16-mismatched-put-admission\t13\t@reopen\tok\ns16-mismatched-put-admission\t14\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s16-mismatched-put-admission/probe\",\"cas\":\"\",\"items\":{\"v\":\"must-not-write\"},\"not_after\":2000000150}\t409 {\"kind\":\"expired\"}\ns16-mismatched-put-admission\t15\tGET /v1/get?key=acc/s16-mismatched-put-admission/probe\t200 {\"items\":null,\"index\":\"\"}\ns16-mismatched-put-admission\t16\tGET /v1/get?key=acc/s16-mismatched-put-admission/target\t200 {\"items\":{\"v\":\"kept\"},\"index\":\"$first\"}\ns16-mismatched-put-admission\t17\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s16-mismatched-put-admission/target\",\"cas\":\"\",\"items\":{\"v\":\"kept\"},\"id\":\"ae16\"}\t200 {\"index\":\"$first\",\"again\":true}\ns17-mismatched-delete-admission\t1\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s17-mismatched-delete-admission/target\",\"items\":{\"v\":\"seed\"}}\t200 {\"index\":\"$seed\"}\ns17-mismatched-delete-admission\t2\tPOST /v1/write {\"op\":\"delete\",\"key\":\"acc/s17-mismatched-delete-admission/target\",\"cas\":\"$seed\",\"id\":\"ae17\"}\t200 {\"index\":\"$first\"}\ns17-mismatched-delete-admission\t3\t@clock +100\tok\ns17-mismatched-delete-admission\t4\tPOST /v1/write {\"op\":\"delete\",\"key\":\"acc/s17-mismatched-delete-admission/other\",\"cas\":\"$seed\",\"id\":\"ae17\"}\t400 {\"kind\":\"badrequest\"}\ns17-mismatched-delete-admission\t5\t@clock -100\tok\ns17-mismatched-delete-admission\t6\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s17-mismatched-delete-admission/probe\",\"cas\":\"\",\"items\":{\"v\":\"must-not-write\"},\"not_after\":2000000050}\t409 {\"kind\":\"expired\"}\ns17-mismatched-delete-admission\t7\t@clock +200\tok\ns17-mismatched-delete-admission\t8\tPOST /v1/write {\"op\":\"delete\",\"key\":\"acc/s17-mismatched-delete-admission/other\",\"cas\":\"$seed\",\"id\":\"ae17\"}\t400 {\"kind\":\"badrequest\"}\ns17-mismatched-delete-admission\t9\t@clock -200\tok\ns17-mismatched-delete-admission\t10\t@reopen\tok\ns17-mismatched-delete-admission\t11\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s17-mismatched-delete-admission/probe\",\"cas\":\"\",\"items\":{\"v\":\"must-not-write\"},\"not_after\":2000000150}\t409 {\"kind\":\"expired\"}\ns17-mismatched-delete-admission\t12\tGET /v1/get?key=acc/s17-mismatched-delete-admission/probe\t200 {\"items\":null,\"index\":\"\"}\ns17-mismatched-delete-admission\t13\tGET /v1/get?key=acc/s17-mismatched-delete-admission/target\t200 {\"items\":null,\"index\":\"\"}\ns17-mismatched-delete-admission\t14\tGET /v1/get?key=acc/s17-mismatched-delete-admission/other\t200 {\"items\":null,\"index\":\"\"}\ns17-mismatched-delete-admission\t15\tPOST /v1/write {\"op\":\"delete\",\"key\":\"acc/s17-mismatched-delete-admission/target\",\"cas\":\"$seed\",\"id\":\"ae17\"}\t200 {\"index\":\"$first\",\"again\":true}\ns18-mismatched-batch-admission\t1\tPOST /v1/write {\"op\":\"batch\",\"writes\":[{\"op\":\"put\",\"key\":\"acc/s18-mismatched-batch-admission/target\",\"cas\":\"\",\"items\":{\"v\":\"kept\"}},{\"op\":\"delete\",\"key\":\"acc/s18-mismatched-batch-admission/absent\",\"cas\":\"\"}],\"id\":\"ae18\"}\t200 {\"index\":\"$first\"}\ns18-mismatched-batch-admission\t2\t@clock +100\tok\ns18-mismatched-batch-admission\t3\tPOST /v1/write {\"op\":\"batch\",\"writes\":[{\"op\":\"put\",\"key\":\"acc/s18-mismatched-batch-admission/target\",\"cas\":\"\",\"items\":{\"v\":\"changed\"}},{\"op\":\"delete\",\"key\":\"acc/s18-mismatched-batch-admission/absent\",\"cas\":\"\"}],\"id\":\"ae18\"}\t400 {\"kind\":\"badrequest\"}\ns18-mismatched-batch-admission\t4\t@clock -100\tok\ns18-mismatched-batch-admission\t5\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s18-mismatched-batch-admission/probe\",\"cas\":\"\",\"items\":{\"v\":\"must-not-write\"},\"not_after\":2000000050}\t409 {\"kind\":\"expired\"}\ns18-mismatched-batch-admission\t6\t@clock +200\tok\ns18-mismatched-batch-admission\t7\tPOST /v1/write {\"op\":\"batch\",\"writes\":[{\"op\":\"put\",\"key\":\"acc/s18-mismatched-batch-admission/target\",\"cas\":\"\",\"items\":{\"v\":\"changed\"}},{\"op\":\"delete\",\"key\":\"acc/s18-mismatched-batch-admission/absent\",\"cas\":\"\"}],\"id\":\"ae18\"}\t400 {\"kind\":\"badrequest\"}\ns18-mismatched-batch-admission\t8\t@clock -200\tok\ns18-mismatched-batch-admission\t9\t@reopen\tok\ns18-mismatched-batch-admission\t10\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s18-mismatched-batch-admission/probe\",\"cas\":\"\",\"items\":{\"v\":\"must-not-write\"},\"not_after\":2000000150}\t409 {\"kind\":\"expired\"}\ns18-mismatched-batch-admission\t11\tGET /v1/get?key=acc/s18-mismatched-batch-admission/probe\t200 {\"items\":null,\"index\":\"\"}\ns18-mismatched-batch-admission\t12\tGET /v1/get?key=acc/s18-mismatched-batch-admission/target\t200 {\"items\":{\"v\":\"kept\"},\"index\":\"$first\"}\ns18-mismatched-batch-admission\t13\tGET /v1/get?key=acc/s18-mismatched-batch-admission/absent\t200 {\"items\":null,\"index\":\"\"}\ns18-mismatched-batch-admission\t14\tPOST /v1/write {\"op\":\"batch\",\"writes\":[{\"op\":\"put\",\"key\":\"acc/s18-mismatched-batch-admission/target\",\"cas\":\"\",\"items\":{\"v\":\"kept\"}},{\"op\":\"delete\",\"key\":\"acc/s18-mismatched-batch-admission/absent\",\"cas\":\"\"}],\"id\":\"ae18\"}\t200 {\"index\":\"$first\",\"again\":true}\ns19-admission-binary64-fraction\t1\t@clock +0.0000001\tok\ns19-admission-binary64-fraction\t2\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s19-admission-binary64-fraction/rounded\",\"items\":{},\"not_before\":2000000000}\t409 {\"kind\":\"early\"}\ns19-admission-binary64-fraction\t3\t@clock +0.0003999\tok\ns19-admission-binary64-fraction\t4\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s19-admission-binary64-fraction/retained\",\"items\":{\"v\":\"kept\"},\"not_before\":2000000000.0002}\t200 {\"index\":\"$fraction\"}\ns19-admission-binary64-fraction\t5\t@clock -0.0004\tok\ns19-admission-binary64-fraction\t6\t@reopen\tok\ns19-admission-binary64-fraction\t7\tPOST /v1/write {\"op\":\"put\",\"key\":\"acc/s19-admission-binary64-fraction/probe\",\"items\":{\"v\":\"kept\"},\"not_before\":2000000000.0002}\t200 {\"index\":\"$probe\"}\ns19-admission-binary64-fraction\t8\tGET /v1/get?key=acc/s19-admission-binary64-fraction/rounded\t200 {\"items\":null,\"index\":\"\"}\ns19-admission-binary64-fraction\t9\tGET /v1/get?key=acc/s19-admission-binary64-fraction/retained\t200 {\"items\":{\"v\":\"kept\"},\"index\":\"$fraction\"}\ns19-admission-binary64-fraction\t10\tGET /v1/get?key=acc/s19-admission-binary64-fraction/probe\t200 {\"items\":{\"v\":\"kept\"},\"index\":\"$probe\"}\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.md",
+      "before_sha256": "2b2db32a7de4ea4f2c5481acf5c58cf5a01ddf53f3c4b0cf4a8e0ffaf3fd40fe",
+      "after_sha256": "a50bc1e64e04631b4092a4f9f7f26304a113dac13f550f2febf1e9b9dc4f2085",
+      "before_blob": "7a218c15f5101936033d1e26b1c035327f8f7364",
+      "after_blob": "4605aecb805445f952c80ba156793e42332caa9f",
+      "before_bytes": 25385,
+      "after_bytes": 26514,
+      "blocks": [
+        {
+          "old_start_0": 65,
+          "old_end_0": 67,
+          "new_start_0": 65,
+          "new_end_0": 67,
+          "before": "Sc. 11 step 4 sees the floor `platform/epoch_floor` after `import`: the floor of the input is an ordinary row of the copy, `import` raises it above\nthe upper of the input before the first row (N1.3 `floor`); the number depends on the clock, the step does not fix it. Steps 7–10 — the copy `backup` of the stand store, transferred into a fresh directory, carries the manifest rows `testsub` and\n",
+          "after": "Sc. 11 step 4 sees the floor `platform/epoch_floor` after `import`: the input floor is used only for the upper and generation_at checks and is not transferred; `import` raises a new floor above\nthe upper of the input before transferring the other rows (N1.3 `floor`); the number depends on the clock, the step does not fix it. Steps 7–10 — the copy `backup` of the stand store, transferred into a fresh directory, carries the manifest rows `testsub` and\n"
+        },
+        {
+          "old_start_0": 79,
+          "old_end_0": 80,
+          "new_start_0": 79,
+          "new_end_0": 80,
+          "before": "  an admissible floor (N1.3 floor `form`; B5).\n",
+          "after": "  out of the floor form and gives 400; the upper bound of N1.3 floor `form` itself is admissible (B5).\n"
+        },
+        {
+          "old_start_0": 123,
+          "old_end_0": 124,
+          "new_start_0": 123,
+          "new_end_0": 124,
+          "before": "  through `s1` — 503 `unavailable` after `leader_wait` 5 s (`@sleep 6` — the deadline of the norm): the door is not part of the quorum.\n",
+          "after": "  through `s1` — 503 `unavailable` after the effective `-leader-wait` interval (`@sleep 6` — the deadline of the norm): the door is not part of the quorum.\n"
+        },
+        {
+          "old_start_0": 195,
+          "old_end_0": 196,
+          "new_start_0": 195,
+          "new_end_0": 196,
+          "before": "By reading: 503 unavailable after 5 s without a leader, ambiguous after an unknown outcome and unavailable with Retry-After at the connection limit are different branches. Sc. 05 of [the system acceptance](../../../common/acceptance/system/README.md) with one dropped server keeps the quorum and does not check all the 503 branches. A replay of id with another floor — 400 badrequest. For /v1/write and /v1/rights an unknown method gives the 404 of the owners; 405 only for status/join/leave/metrics. The metric of sc.04 is configstore_raft_voters_expected. The environment values and 64/32/8 are normative defaults; an override of the profile is declared before acceptance.\n",
+          "after": "By reading: 503 unavailable after the effective -leader-wait interval without a leader, ambiguous after an unknown outcome and unavailable with Retry-After at the connection limit are different branches. Sc. 05 of [the system acceptance](../../../common/acceptance/system/README.md) with one dropped server keeps the quorum and does not check all the 503 branches. A replay of id with another floor — 400 badrequest. For /v1/write and /v1/rights an unknown method gives the 404 of the owners; 405 only for status/join/leave/metrics. The metric of sc.04 is configstore_raft_voters_expected. The launcher values follow P/02.4 and the daemon defaults belong only to forms/daemon-flags.tsv; an override of the profile is declared before acceptance.\n"
+        },
+        {
+          "old_start_0": 206,
+          "old_end_0": 206,
+          "new_start_0": 206,
+          "new_end_0": 210,
+          "before": "",
+          "after": "\n## Non-default service body limit\n\nUse the existing fresh-stand body_limit parameter (the daemon -max-body), for example2097152 from the status-limit witness above. Let B be that actual limit reported by max_body. Send POST /metrics with one JSON object padded by JSON whitespace to exactly B entity bytes: the frame passes and the existing method outcome is405. At B+1 entity bytes the answer is413 before the method outcome, with BodyTooLargeFault.limit equal to B, not the row ceiling or the default of the flag. Repeat the oversized body at a service POST route: it is refused before JSON/body or membership work. Compare membership before/after; it is unchanged. Preserve the ordinary full Fault/header checks and the independent max_value observation. No new profile key, command spelling or request grammar is needed. These are raw HTTP probe obligations on the actual daemon, not a source/schema execution result.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/forms/runtime-constants.tsv",
+      "before_sha256": "a7cb424767718b293f09148da87bea4db53aac8c99d73710d103d2ac18a152bb",
+      "after_sha256": "0bb59d5b17f30a6bbb4eb6267987712b5b20d7158d8f0fd718269329cb068ee4",
+      "before_blob": "6848bc76497da9948a44f03f82812a57f056b988",
+      "after_blob": "54a936e06939ef4e23fd14c6b134d4987d560e3a",
+      "before_bytes": 638,
+      "after_bytes": 1967,
+      "blocks": [
+        {
+          "old_start_0": 6,
+          "old_end_0": 6,
+          "new_start_0": 6,
+          "new_end_0": 18,
+          "before": "",
+          "after": "CLOCK_SKEW\t60\ts\tP/01.1-R013\tMaximum wall-clock difference assumed between cluster writers; deployment premise, not a store clock check.\nKEY_BYTES\t1024\tbytes\tP/01.1-R019\tMaximum UTF-8 length of a key at the door; a file-based implementation may declare a smaller local limit.\nID_REPLAY_MIN_AGE\t120\ts\tP/01.1-R141\tStrict age threshold since first application; forgetting also requires ID_REPLAY_MIN_RECORDS.\nID_REPLAY_MIN_RECORDS\t50000\tcount\tP/01.1-R141\tApplied records with an identifier after the first application; forgetting also requires the strict age threshold.\nDOOR_REQUEST_TIMEOUT\t2\ts\tP/01.3-R006\tAttempt budget of a door forwarding to a voter.\nDOOR_REQUEST_MARGIN\t1\ts\tP/01.3-R006\tMargin of the door forwarding attempt.\nDOOR_MEMBERS_EVERY\t5\ts\tP/01.3-R006\tDoor group-membership polling interval.\nDOOR_SEEN_EVERY\t30\ts\tP/01.3-R006\tDoor own seen_at publication interval.\nDOOR_SEEN_PERIODS\t3\tcount\tP/01.3-R006\tMaximum age of a visible door is this many DOOR_SEEN_EVERY intervals.\nRAFT_LAG_ALARM\t1000\tcount\tP/01.3-R006\tFollower lag strictly above this threshold raises the existing voter alarm.\nRAFT_ELECTION_ALARM_COUNT\t3\tcount\tP/01.3-R006\tMore elections than this count in RAFT_ELECTION_ALARM_WINDOW raises the existing voter alarm.\nRAFT_ELECTION_ALARM_WINDOW\t600\ts\tP/01.3-R006\tWindow of the existing election-frequency alarm.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/forms/stages.tsv",
+      "before_sha256": "ba28a4d28c1c866a1dda7ab190797938f241b02683001f4c8a7f6dcea9b7449c",
+      "after_sha256": "869d965dba6fcb8b338f00691aa45da39ce7e8ae24c4a438eccb04777dbe20a8",
+      "before_blob": "eee382380a53d1fba31b1f78a9ca701f971972e1",
+      "after_blob": "9038fb38ad54d1aec87c82b3fe714edca080c71d",
+      "before_bytes": 5491,
+      "after_bytes": 5631,
+      "blocks": [
+        {
+          "old_start_0": 25,
+          "old_end_0": 26,
+          "new_start_0": 25,
+          "new_end_0": 26,
+          "before": "10\tdurable\tA file-based store: indivisibility, versions, the durability barriers, an unreadable row, a restart\tP/01.1 N1; P/01.1 «Implementation decides»; P/01.3 N1.3\ttests:1.1:s5-reopen-id-admission,s6-reopen-batch:seams;accept:1.3:08-floor-replay,19-version-restart,20-spoil-row,22-spoil-row-guard,30-batch-restart;tests:1.1:s9-reopen-refused-admission:seams;tests:1.1:s13-replay-put-admission,s14-replay-delete-admission,s15-replay-batch-admission:seams\t3\t-\tstagetests\t9\t\n",
+          "after": "10\tdurable\tA file-based store: indivisibility, versions, the durability barriers, an unreadable row, a restart\tP/01.1 N1; P/01.1 «Implementation decides»; P/01.3 N1.3\ttests:1.1:s5-reopen-id-admission,s6-reopen-batch:seams;accept:1.3:08-floor-replay,19-version-restart,20-spoil-row,22-spoil-row-guard,30-batch-restart;tests:1.1:s9-reopen-refused-admission:seams;tests:1.1:s13-replay-put-admission,s14-replay-delete-admission,s15-replay-batch-admission:seams;tests:1.1:s16-mismatched-put-admission,s17-mismatched-delete-admission,s18-mismatched-batch-admission,s19-admission-binary64-fraction:seams\t3\t-\tstagetests\t9\t\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.tsv",
+      "before_sha256": "74430e7db8abc9b07af565d6b5a2be80a273650d2cc3c9e4b4f7b3a2d10fbafb",
+      "after_sha256": "23c626ef5251ac5048074039122b67e48a56c0da066233649aa24aae784b6777",
+      "before_blob": "06a0019ece5febeffbb93742ce7934119d5b8449",
+      "after_blob": "b8b8a4394eaba11a20543ea06b12a354e1bdfabe",
+      "before_bytes": 8339,
+      "after_bytes": 8508,
+      "blocks": [
+        {
+          "old_start_0": 7,
+          "old_end_0": 8,
+          "new_start_0": 7,
+          "new_end_0": 8,
+          "before": "#var sock string — the socket role of the caller (P/01.2 N1.1 identity): admin, console, domain or a role name\n",
+          "after": "#var sock string — the effective caller role after P/01.2 N3 check steps 1–2: the local socket identity or verified forwarded role, not the forwarding transport role\n"
+        },
+        {
+          "old_start_0": 13,
+          "old_end_0": 14,
+          "new_start_0": 13,
+          "new_end_0": 14,
+          "before": "#fn key_ok(string) -> bool — the key rules of N1 row.key: not empty, does not start with /, no segment .., at most 1024 UTF-8 bytes\n",
+          "after": "#fn key_ok(string) -> bool — the key rules of N1 row.key: not empty, does not start with /, no segment .., at most KEY_BYTES UTF-8 bytes\n"
+        },
+        {
+          "old_start_0": 16,
+          "old_end_0": 17,
+          "new_start_0": 16,
+          "new_end_0": 17,
+          "before": "#fn allowed(string, string, string) -> bool — the rights of the role (socket, operation read | write | delete, key): P/01.2 N3 «check»\n",
+          "after": "#fn allowed(string, string, string) -> bool — full permission for the effective role, operation read | write | delete and key by P/01.2 N3 «check», including never and admin/internal-role exceptions; not only the ordinary-role file evaluator\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/lifecycle.md",
+      "before_sha256": "f2cbad60526b51ad289d35736a6da998f45c35fab6794112b82ed23f2e9558be",
+      "after_sha256": "2b61befc74345ab98fda291ac7d6edeb55ece3313fe2c6deabd0277e54f15cf9",
+      "before_blob": "2c76a4a88a038174ae823f3eb3bef3a99a120ce1",
+      "after_blob": "f8f945b242e04163967a5d350c06f8d2042d66b7",
+      "before_bytes": 8718,
+      "after_bytes": 8382,
+      "blocks": [
+        {
+          "old_start_0": 31,
+          "old_end_0": 33,
+          "new_start_0": 31,
+          "new_end_0": 33,
+          "before": "| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | daemon flags from `configstore.env`; read by the runner | `configstore.env` sets `tuning` `lan`; the default of the flag `-tuning` itself is `default` | P/02.4 N1.2, P/01.3 N1.3 «Daemon flags» |\n| `SERVER_NAME` | the default of `-id` outside a group | the short hostname | P/02.4 N1.2, P/01.3 N1.3 «Daemon flags» `-id` |\n",
+          "after": "| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | daemon flags from `configstore.env`; read by the runner | launcher setting by P/02.4 N1.2; daemon defaults only in the flag form | P/02.4 N1.2, P/01.3 N1.3 «Daemon flags» |\n| `SERVER_NAME` | input of the non-group `-id` fallback | launcher-owned value by P/02.4 N1.2; default semantics only in the flag form | P/02.4 N1.2, P/01.3 N1.3 «Daemon flags» `-id` |\n"
+        },
+        {
+          "old_start_0": 34,
+          "old_end_0": 35,
+          "new_start_0": 34,
+          "new_end_0": 35,
+          "before": "| `NOTIFY_SOCKET` | the systemd watchdog | — | P/02.4 N1.2 |\n",
+          "after": "| `NOTIFY_SOCKET` | common systemd environment; this daemon does not send sd_notify (readiness below) | — | P/02.4 N1.2 |\n"
+        },
+        {
+          "old_start_0": 40,
+          "old_end_0": 46,
+          "new_start_0": 40,
+          "new_end_0": 41,
+          "before": "The flag purposes — [P/01.3 N1.3](spec/01.3-store.norms.md), machine form [`forms/daemon-flags.tsv`](forms/daemon-flags.tsv):\n`-dir` (required), `-id`, `-sockets`, `-rights`, `-tls`, `-raft`, `-raft-bind`, `-api`, `-bootstrap`, `-join`,\n`-group-size`, `-force`, `-isolated`, `-upper`, `-peers` (the last three — only for `recover`), `-door`, `-voters`, `-tuning`, `-leader-wait`, `-max-value`, `-max-body`, `-max-conns`,\n`-api-conns`, `-api-per-address`, `-index-base`, `-groups` (only for `rights`), `--from` (only for `restore`, `import`). A flag outside the table is a start refusal, code 2. The administrative commands —\n`configstore status | join | leave | admit | backup | restore | import | recover | rights` (P/01.3 N1.3 `admin_ops`,\nN1.9).\n",
+          "after": "Flag purposes and administrative commands are [P/01.3 N1.3](spec/01.3-store.norms.md). The single machine source for spelling, types, defaults, required/bad checks and command scopes is [forms/daemon-flags.tsv](forms/daemon-flags.tsv); this lifecycle adds no flag restrictions. Administrative command grammar is N1.3 `admin_ops`; startup refusal names and codes are [forms/refusals.tsv](forms/refusals.tsv).\n"
+        },
+        {
+          "old_start_0": 54,
+          "old_end_0": 55,
+          "new_start_0": 49,
+          "new_end_0": 50,
+          "before": "| `/run/configstore/admin.sock`, `/run/configstore/<role>.sock` | flat; inherited from the `.socket` units: `admin.sock` 0600, a role socket 0660 with the role's group (`SocketGroup=`); a socket that was not passed the daemon creates itself in `-sockets`: `admin.sock` 0600, a role socket 0660 with the process's group | P/01.3 N1.3 `sockets`, N1.1 `dirs` |\n",
+          "after": "| `/run/configstore/admin.sock`, `/run/configstore/<role>.sock` | flat; inherited from the `.socket` units: `admin.sock` 0600, a role socket 0660 with the role's group (`SocketGroup=`); a socket that was not passed the daemon creates itself in `-sockets`: `admin.sock` 0600, a role socket 0660 with the process's group | P/01.3 N1.3 `sockets`; P/02.4 N1.1 |\n"
+        },
+        {
+          "old_start_0": 58,
+          "old_end_0": 59,
+          "new_start_0": 53,
+          "new_end_0": 54,
+          "before": "| the row `platform/configstore-doors/<id>` | written by a door without a vote every 30 s | [catalogue](../common/data/catalog.tsv) |\n",
+          "after": "| the row `platform/configstore-doors/<id>` | written by a door without a vote every DOOR_SEEN_EVERY (the P/01 constant form) | [catalogue](../common/data/catalog.tsv) |\n"
+        },
+        {
+          "old_start_0": 66,
+          "old_end_0": 68,
+          "new_start_0": 61,
+          "new_end_0": 63,
+          "before": "| 2 | a start refusal: `-bootstrap` with `-join`, a size not 1/3/5, an address outside the loopback without `-tls`, a door certificate at a voter; no `-dir`; no `-id` in a group; a flag outside the table; `-max-value` or `-max-body` not > 0; a foreign or missing mark `FORMAT`; an inherited socket with a foreign name; the box store with `-group-size 3`/`5` or `-join`; `recover` on a box | P/01.3 N1.3 `refuse_start`, N4 |\n| ≠ 0 | an administrative command refused: `backup` into `-dir`, a repeated `import`, an input not by `copy`, the clock earlier than `generation_at` | P/01.3 N4 |\n",
+          "after": "| by the start causes in `forms/refusals.tsv` | `start_config`, `start_flags`, `start_format`, `box_no_raft`; exact conditions and codes are owned by the form and P/01.3 N4 | [forms/refusals.tsv](forms/refusals.tsv), P/01.3 N4 |\n| by the CLI causes in `forms/refusals.tsv` | administrative refusal names and caller actions — P/01.3 N4; no separate lifecycle refusal catalog | [forms/refusals.tsv](forms/refusals.tsv), P/01.3 N4 |\n"
+        },
+        {
+          "old_start_0": 77,
+          "old_end_0": 78,
+          "new_start_0": 72,
+          "new_end_0": 73,
+          "before": "| a majority failure | 503 `unavailable` after 5 s; recovery — `recover` by hand | P/04 N1.4a `power_pull` `store`; P/01.3 N3 «recover the store» |\n",
+          "after": "| a majority failure | 503 `unavailable` after the effective `-leader-wait` interval; recovery — `recover` by hand | P/04 N1.4a `power_pull` `store`; P/01.3 N3 «recover the store» |\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/1/README.md",
+      "before_sha256": "2dafed67d01028a989ca80d074e988e61bc80173b16cab615b85fce24f699706",
+      "after_sha256": "163bb3ef93161eec37ecf11104a5a6d35eace3ece8131a231836340ad220c0d1",
+      "before_blob": "b0e30defd3be96cd436f2b7f8605583b3b2ac234",
+      "after_blob": "5bdfa7dd31154c3cfd36c097cf7bd6414d5818dd",
+      "before_bytes": 23362,
+      "after_bytes": 26648,
+      "blocks": [
+        {
+          "old_start_0": 141,
+          "old_end_0": 141,
+          "new_start_0": 141,
+          "new_end_0": 149,
+          "before": "",
+          "after": "\n## Принятые несовпадения и числовой домен приёма (ADR-0129 доп. (10), п. 3)\n\nПолные прежние 15 швов / 239 шагов сохранены побайтно. s16–s18 добавляют put/delete/batch с уже применённым идентификатором и иным содержимым: часы +100, несовпадение даёт badrequest, немедленно -100, затем проба not_after даёт expired. Вторая последовательность +200/несовпадение/-200/обычное открытие после закрытия/проба проверяет прочность последних метаданных приёма. Между несовпадением и откатом/открытием/пробой нет чтения, способного скрыть потерю метаданных. Исходные строки/видимое отсутствие и первый ответ id сохраняются; повтор исходной команды по-прежнему возвращает этот ответ с again. Несовпадение не заменяет и не освобождает исходную запись памяти применённого id. Это принятые отказы, отдельно от формы/прав/framing до приёма. В s16 прежний запрос с тем же id и неправильным items отказывает до приёма при часах+50; после отката проба с границей между часами проходит. Этот отрицательный контроль не позволяет считать всякий badrequest принятым.\n\ns19 начинает с прежних часов2000000000. +0.0000001 до max переводится в то же значение binary64, поэтому not_before2000000000 даёт early. После ещё +0.0003999 граница2000000000.0002 проходит. Откатить0.0004, переоткрыть и применить ту же границу к другой строке: она всё ещё проходит, поскольку назначенное дробное значение binary64 пережило открытие. Нельзя обрезать его до целых секунд/миллисекунд или записью времени строки в три знака. Свидетель не задаёт кодирования метаданных или точности физических часов.\n\nВсе четыре случая используют только существующие HTTP, signed-decimal @clock и @reopen и выбраны прежним gate durable. Нового порта, внутреннего API, грамматики CALL, обещания snapshot или потери питания нет. 56 новых исходных шагов — не исполненная приёмка реализации. Именами констант владеет forms/runtime-constants.tsv; конкретные числа входов стенда/проб остаются тестовыми данными.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/3/README.md",
+      "before_sha256": "e52d43fbd5703df291b7fef7f553c968851417016b7e2b2d4f94ac8b8889cd7b",
+      "after_sha256": "029590950406b2265a0502f4985ca5c529503f8a4e9ddb91cfbb1c8b5adbf181",
+      "before_blob": "37442c6dd487de391e5eed57950bd0183e7c753c",
+      "after_blob": "850299e7653a8877484eab6cb247ffa17d6056cd",
+      "before_bytes": 33579,
+      "after_bytes": 35339,
+      "blocks": [
+        {
+          "old_start_0": 65,
+          "old_end_0": 67,
+          "new_start_0": 65,
+          "new_end_0": 67,
+          "before": "Сц. 11 шаг 4 видит пол `platform/epoch_floor` после `import`: пол входа — обычная строка копии, `import` поднимает его выше\nupper входа до первой строки (N1.3 `floor`); число зависит от часов, шаг его не фиксирует. Шаги 7–10 — копия `backup` хранилища стенда, перенесённая в свежий каталог, несёт строки манифестов `testsub` и\n",
+          "after": "Сц. 11 шаг 4 видит пол `platform/epoch_floor` после `import`: пол входа используется только для проверок upper и generation_at и не переносится; `import` поднимает новый пол выше\nupper входа перед переносом остальных строк (N1.3 `floor`); число зависит от часов, шаг его не фиксирует. Шаги 7–10 — копия `backup` хранилища стенда, перенесённая в свежий каталог, несёт строки манифестов `testsub` и\n"
+        },
+        {
+          "old_start_0": 79,
+          "old_end_0": 80,
+          "new_start_0": 79,
+          "new_end_0": 80,
+          "before": "  допустимый пол (N1.3 floor `form`; B5).\n",
+          "after": "  вне формы пола и даёт 400; сама верхняя граница N1.3 floor `form` допустима (B5).\n"
+        },
+        {
+          "old_start_0": 124,
+          "old_end_0": 125,
+          "new_start_0": 124,
+          "new_end_0": 125,
+          "before": "  через `s1` — 503 `unavailable` после `leader_wait` 5 с (`@sleep 6` — срок нормы): дверь в кворум не входит.\n",
+          "after": "  через `s1` — 503 `unavailable` после действующего интервала `-leader-wait` (`@sleep 6` — срок нормы): дверь в кворум не входит.\n"
+        },
+        {
+          "old_start_0": 196,
+          "old_end_0": 197,
+          "new_start_0": 196,
+          "new_end_0": 197,
+          "before": "Чтением: 503 unavailable после 5 с без лидера, ambiguous после неизвестного исхода и unavailable с Retry-After при пределе соединений — разные ветви. Сц. 05 [системной приёмки](../../../../common/ru/acceptance/system/README.md) с одним выпавшим сервером сохраняет кворум и не проверяет все 503. Повтор id с другим floor — 400 badrequest. Для /v1/write и /v1/rights неизвестный метод — 404 владельцев, 405 только у status/join/leave/metrics. Метрика сц.04 — configstore_raft_voters_expected. Значения окружения и 64/32/8 — нормативные умолчания; переопределение профиля объявляют до приёмки.\n",
+          "after": "Чтением: 503 unavailable после действующего интервала -leader-wait без лидера, ambiguous после неизвестного исхода и unavailable с Retry-After при пределе соединений — разные ветви. Сц. 05 [системной приёмки](../../../../common/ru/acceptance/system/README.md) с одним выпавшим сервером сохраняет кворум и не проверяет все 503. Повтор id с другим floor — 400 badrequest. Для /v1/write и /v1/rights неизвестный метод — 404 владельцев, 405 только у status/join/leave/metrics. Метрика сц.04 — configstore_raft_voters_expected. Значения запускающего следуют P/02.4, умолчания демона принадлежат только forms/daemon-flags.tsv; переопределение профиля объявляют до приёмки.\n"
+        },
+        {
+          "old_start_0": 207,
+          "old_end_0": 207,
+          "new_start_0": 207,
+          "new_end_0": 211,
+          "before": "",
+          "after": "\n## Нестандартный предел тела служебной двери\n\nИспользовать прежний параметр свежего стенда body_limit (флаг -max-body), например2097152 из свидетеля status выше. Пусть B — этот фактический предел в max_body. Послать POST /metrics с одним JSON-объектом, дополненным JSON whitespace ровно до B байтов сущности: рамка проходит, прежний исход метода405. При B+1 байтах ответ413 идёт до исхода метода, с BodyTooLargeFault.limit равным B, а не потолку строки или умолчанию флага. Повторить лишнее тело у служебного POST-маршрута: отказ до JSON/body или работы с составом. Сравнить состав до/после: он неизменен. Сохранить обычную проверку полного Fault/заголовков и независимого max_value. Нового ключа профиля, записи команды или грамматики запроса не нужно. Это обязанности сырой HTTP-пробы настоящего демона, не результат исполнения источника/схемы.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/lifecycle.md",
+      "before_sha256": "fb0c2dd3147bc1af4e1f6b87048efb92ebefe1b7f824277f917fc1ea389a0309",
+      "after_sha256": "1db96a4776051d14514054f6b27a4c0bf93d543d550b0c2e3815fcdbb9c3eaf3",
+      "before_blob": "b74e43cf0684000cbd9b3fb5cb718c092e43a45c",
+      "after_blob": "36ea007ad038b3868f6ac7b22fbb85fc6872f80d",
+      "before_bytes": 11230,
+      "after_bytes": 10975,
+      "blocks": [
+        {
+          "old_start_0": 31,
+          "old_end_0": 33,
+          "new_start_0": 31,
+          "new_end_0": 33,
+          "before": "| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | флаги демона из `configstore.env`; читает раннер | `configstore.env` ставит `tuning` `lan`; умолчание самого флага `-tuning` — `default` | P/02.4 N1.2, P/01.3 N1.3 «Флаги демона» |\n| `SERVER_NAME` | умолчание `-id` вне группы | короткий hostname | P/02.4 N1.2, P/01.3 N1.3 «Флаги демона» `-id` |\n",
+          "after": "| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | флаги демона из `configstore.env`; читает раннер | настройка запускающего по P/02.4 N1.2; умолчания демона только в форме флагов | P/02.4 N1.2, P/01.3 N1.3 «Флаги демона» |\n| `SERVER_NAME` | вход fallback `-id` вне группы | значение запускающего по P/02.4 N1.2; смысл умолчания только в форме флагов | P/02.4 N1.2, P/01.3 N1.3 «Флаги демона» `-id` |\n"
+        },
+        {
+          "old_start_0": 40,
+          "old_end_0": 46,
+          "new_start_0": 40,
+          "new_end_0": 41,
+          "before": "Назначение флагов — [P/01.3 N1.3](spec/01.3-store.norms.md), машинная форма [`forms/daemon-flags.tsv`](../forms/daemon-flags.tsv):\n`-dir` (обязателен), `-id`, `-sockets`, `-rights`, `-tls`, `-raft`, `-raft-bind`, `-api`, `-bootstrap`, `-join`,\n`-group-size`, `-force`, `-isolated`, `-upper`, `-peers` (три последних — только у `recover`), `-door`, `-voters`, `-tuning`, `-leader-wait`, `-max-value`, `-max-body`, `-max-conns`,\n`-api-conns`, `-api-per-address`, `-index-base`, `-groups` (только у `rights`), `--from` (только у `restore`, `import`). Флаг вне таблицы — отказ старта, код 2. Административные команды —\n`configstore status | join | leave | admit | backup | restore | import | recover | rights` (P/01.3 N1.3 `admin_ops`,\nN1.9).\n",
+          "after": "Назначение флагов и административные команды — [P/01.3 N1.3](spec/01.3-store.norms.md). Единственный машинный источник записи, типов, умолчаний, required/bad и областей команд — [forms/daemon-flags.tsv](../forms/daemon-flags.tsv); этот lifecycle не вводит ограничений флагов. Грамматика административных команд — N1.3 `admin_ops`; имена и коды отказов старта — [forms/refusals.tsv](../forms/refusals.tsv).\n"
+        },
+        {
+          "old_start_0": 54,
+          "old_end_0": 55,
+          "new_start_0": 49,
+          "new_end_0": 50,
+          "before": "| `/run/configstore/admin.sock`, `/run/configstore/<роль>.sock` | плоско; унаследованные от юнитов `.socket`: `admin.sock` 0600, сокет роли 0660 с группой роли (`SocketGroup=`); сокет, которого не передали, демон создаёт сам в `-sockets`: `admin.sock` 0600, сокет роли 0660 с группой процесса | P/01.3 N1.3 `sockets`, N1.1 `dirs` |\n",
+          "after": "| `/run/configstore/admin.sock`, `/run/configstore/<роль>.sock` | плоско; унаследованные от юнитов `.socket`: `admin.sock` 0600, сокет роли 0660 с группой роли (`SocketGroup=`); сокет, которого не передали, демон создаёт сам в `-sockets`: `admin.sock` 0600, сокет роли 0660 с группой процесса | P/01.3 N1.3 `sockets`; P/02.4 N1.1 |\n"
+        },
+        {
+          "old_start_0": 58,
+          "old_end_0": 59,
+          "new_start_0": 53,
+          "new_end_0": 54,
+          "before": "| строка `platform/configstore-doors/<id>` | пишет дверь без голоса раз в 30 с | [каталог](../../common/data/catalog.tsv) |\n",
+          "after": "| строка `platform/configstore-doors/<id>` | пишет дверь без голоса каждые DOOR_SEEN_EVERY (форма констант P/01) | [каталог](../../common/data/catalog.tsv) |\n"
+        },
+        {
+          "old_start_0": 66,
+          "old_end_0": 68,
+          "new_start_0": 61,
+          "new_end_0": 63,
+          "before": "| 2 | отказ старта: `-bootstrap` с `-join`, размер не 1/3/5, адрес вне петли без `-tls`, сертификат двери у голосующего; нет `-dir`; нет `-id` в группе; флаг вне таблицы; `-max-value` или `-max-body` не > 0; чужая или пропавшая метка `FORMAT`; унаследованный сокет чужого имени; хранилище коробки с `-group-size 3`/`5` или `-join`; `recover` на коробке | P/01.3 N1.3 `refuse_start`, N4 |\n| ≠ 0 | административная команда отказана: `backup` внутрь `-dir`, повтор `import`, вход не по `copy`, часы раньше `generation_at` | P/01.3 N4 |\n",
+          "after": "| по причинам старта `forms/refusals.tsv` | `start_config`, `start_flags`, `start_format`, `box_no_raft`; точные условия и коды принадлежат форме и P/01.3 N4 | [forms/refusals.tsv](../forms/refusals.tsv), P/01.3 N4 |\n| по причинам CLI `forms/refusals.tsv` | имена административных отказов и действия вызывающего — P/01.3 N4; отдельного каталога отказов lifecycle нет | [forms/refusals.tsv](../forms/refusals.tsv), P/01.3 N4 |\n"
+        },
+        {
+          "old_start_0": 77,
+          "old_end_0": 78,
+          "new_start_0": 72,
+          "new_end_0": 73,
+          "before": "| отказ большинства | 503 `unavailable` через 5 с; восстановление — `recover` рукой | P/04 N1.4a `power_pull` `store`; P/01.3 N3 «восстановить хранилище» |\n",
+          "after": "| отказ большинства | 503 `unavailable` через действующий интервал `-leader-wait`; восстановление — `recover` рукой | P/04 N1.4a `power_pull` `store`; P/01.3 N3 «восстановить хранилище» |\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01-store.README.md",
+      "before_sha256": "27d03b19223dfade1a31f604c801d9fac63f25c305cbfb3d6c2bf2840f9e7880",
+      "after_sha256": "0468caa3b95703969d02b651982d72312520b810191b4658ad43b86b9548d30d",
+      "before_blob": "349f6aebb0585ea5cd3ccf8211715c0f42448e93",
+      "after_blob": "11af4e40f49b4bb6c05ebea5fca8a8dfcf2be9d7",
+      "before_bytes": 25839,
+      "after_bytes": 25935,
+      "blocks": [
+        {
+          "old_start_0": 57,
+          "old_end_0": 58,
+          "new_start_0": 57,
+          "new_end_0": 58,
+          "before": "4. Подготовить экземпляры по README приёмки главы 1.1: потолок строки 524288 байт, предел тела 1048576 байт. Прогнать сценарии главы 1.1. Каждое падение — сверить с нормами глав, исправить **код**.\n",
+          "after": "4. Подготовить экземпляры по README приёмки главы 1.1: потолок строки и предел тела, отдельно объявленные стендом приёмки (N5). Прогнать сценарии главы 1.1. Каждое падение — сверить с нормами глав, исправить **код**.\n"
+        },
+        {
+          "old_start_0": 59,
+          "old_end_0": 60,
+          "new_start_0": 59,
+          "new_end_0": 60,
+          "before": "6. Пройти чеклист главы 1.1 (P/01.1-01…23); у пунктов «проверяется чтением» указать в описании реализации, где в коде это обеспечено.\n",
+          "after": "6. Пройти чеклист главы 1.1 (P/01.1-01…31); у пунктов «проверяется чтением» указать в описании реализации, где в коде это обеспечено.\n"
+        },
+        {
+          "old_start_0": 83,
+          "old_end_0": 84,
+          "new_start_0": 83,
+          "new_end_0": 84,
+          "before": "1. Описать устойчивый/переходный состав группы, последовательные join/leave и дверь без голоса. Для status сохранить точные uint64; `leader` — адрес `-api`, `leader_id` — id. Не пересылать admin.sock; права взять у главы 1.2. Флаги демона — только таблица «Флаги демона» N1.3; сокеты — в одном каталоге, без подкаталогов (admin.sock и сокеты ролей рядом), унаследованные — по `FileDescriptorName` (N1.3 `sockets`).\n",
+          "after": "1. Описать устойчивый/переходный состав группы, последовательные join/leave и дверь без голоса. Для status сохранить точные uint64; `leader` — адрес `-api`, `leader_id` — id. Не пересылать admin.sock; права взять у главы 1.2. Флаги демона — только [forms/daemon-flags.tsv](../../forms/daemon-flags.tsv); сокеты — в одном каталоге, без подкаталогов (admin.sock и сокеты ролей рядом), унаследованные — по `FileDescriptorName` (N1.3 `sockets`).\n"
+        },
+        {
+          "old_start_0": 156,
+          "old_end_0": 157,
+          "new_start_0": 156,
+          "new_end_0": 157,
+          "before": "Дополнительная проверка после прогона 33: Служебные POST: unknown field/не объект/лишний JSON/framing — 400; 1 МиБ + 1 — 413; нет пути/метод — 404/405. Сверить каждую причину с N2, N4 и полным Fault, не только номер кода.\n",
+          "after": "Дополнительная проверка после прогона 33: Служебные POST: unknown field/не объект/лишний JSON/framing — 400; байт сверх действующего `-max-body` — 413; нет пути/метод — 404/405. Сверить каждую причину с N2, N4 и полным Fault, не только номер кода.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.1-store.norms.md",
+      "before_sha256": "b249f7f437c1389f9c60f02bf357a9378c7e8bbfbc7f6269d9d2f6ea23771b73",
+      "after_sha256": "b2812e91055b36adaef3250821c4d4e76dccaf46264bf5e18976a176c2da48a7",
+      "before_blob": "50eab4878b677bd506410b336ac10d3f5e627258",
+      "after_blob": "a63ef5da32b5559f06e540ab45e04560e1c6f15f",
+      "before_bytes": 105645,
+      "after_bytes": 109249,
+      "blocks": [
+        {
+          "old_start_0": 33,
+          "old_end_0": 33,
+          "new_start_0": 33,
+          "new_end_0": 36,
+          "before": "",
+          "after": "\n  Частные метаданные приёма не являются полем времени строки с этой записью писателя. Они используют конечный числовой домен binary64 N3 «Время приёма» и ДОЛЖНЫ сохранять назначенное значение при хранении и восстановлении, включая дроби длиннее разрешённых этой записью писателя. Исключение не задаёт внутреннего кодирования или дополнительного поля провода.\n\n"
+        },
+        {
+          "old_start_0": 49,
+          "old_end_0": 50,
+          "new_start_0": 52,
+          "new_end_0": 53,
+          "before": "воркеров и писателя события, о котором пишет воркер, — расходятся между собой не больше чем на `CLOCK_SKEW` = 60 с.\n",
+          "after": "воркеров и писателя события, о котором пишет воркер, — расходятся между собой не больше чем на `CLOCK_SKEW` из [forms/runtime-constants.tsv](../../forms/runtime-constants.tsv).\n"
+        },
+        {
+          "old_start_0": 81,
+          "old_end_0": 82,
+          "new_start_0": 84,
+          "new_end_0": 85,
+          "before": "      - at most 1024 bytes                     # у двери; реализация на файлах МОЖЕТ отказать раньше (ниже)\n",
+          "after": "      - at most KEY_BYTES bytes                     # у двери; реализация на файлах МОЖЕТ отказать раньше (ниже)\n"
+        },
+        {
+          "old_start_0": 89,
+          "old_end_0": 90,
+          "new_start_0": 92,
+          "new_end_0": 93,
+          "before": "    ceiling: 524288          # 512 КиБ; тот же потолок — в сводке P/06.1 N1.4 (строка «store row»); иного объявления потолка P/06.1 не вводит\n",
+          "after": "    ceiling: ROW_CEILING     # настроенный потолок; у демона действующий -max-value; его умолчание только в forms/daemon-flags.tsv\n"
+        },
+        {
+          "old_start_0": 152,
+          "old_end_0": 152,
+          "new_start_0": 155,
+          "new_end_0": 157,
+          "before": "",
+          "after": "`KEY_BYTES`, `BATCH_WRITES` и `BATCH_GUARDS` — именованные пределы [runtime-constants.tsv](../../forms/runtime-constants.tsv). `ROW_CEILING` — настроенный потолок этого экземпляра хранилища; у демона это действующий `-max-value`, умолчанием которого владеет [daemon-flags.tsv](../../forms/daemon-flags.tsv). Хранилище в процессе использует свой объявленный потолок и параметр стенда N5 без обязательного флага или внутреннего API. Это не второй фиксированный потолок строки.\n\n"
+        },
+        {
+          "old_start_0": 157,
+          "old_end_0": 158,
+          "new_start_0": 162,
+          "new_end_0": 163,
+          "before": "Реализация на файлах, где строка — файл с именем из ключа, МОЖЕТ отказать и ключу, который проходит предел двери, если его кодированное имя не помещается в имя файла; свой предел, меньший 1024 байт UTF-8, она называет в своём описании (решает реализация).\n",
+          "after": "Реализация на файлах, где строка — файл с именем из ключа, МОЖЕТ отказать и ключу, который проходит предел двери, если его кодированное имя не помещается в имя файла; свой предел, меньший KEY_BYTES байт UTF-8, она называет в своём описании (решает реализация).\n"
+        },
+        {
+          "old_start_0": 244,
+          "old_end_0": 245,
+          "new_start_0": 249,
+          "new_end_0": 250,
+          "before": "  массивов от корня, корневой объект — 1, в любом поле, и в лишнем; 129 — `400 badrequest`.\n",
+          "after": "  массивов от корня, корневой объект — 1, в любом поле, и в лишнем; глубина `JSON_DEPTH + 1` — `400 badrequest`.\n"
+        },
+        {
+          "old_start_0": 323,
+          "old_end_0": 326,
+          "new_start_0": 328,
+          "new_end_0": 329,
+          "before": "Если часы дают дробные секунды Unix, назначение, хранение и восстановление времени приёма, `max` и сравнения с\n`not_after` и `not_before` ДОЛЖНЫ сохранять эту дробную часть. Часы, предыдущее время приёма и границы НЕЛЬЗЯ\nокруглять до целых секунд для этих операций. Точность или разрешение физического источника часов этим не задаются.\n",
+          "after": "Время приёма использует конечные секунды Unix в binary64. До `max` показание часов переводится в binary64 с округлением к ближайшему и выбором чётного при равенстве; предыдущее значение приёма и обе границы используют тот же числовой домен (R007). Хранение, восстановление и применение ДОЛЖНЫ сохранять назначенное числовое значение binary64. НЕЛЬЗЯ дополнительно округлять его до целых секунд или миллисекунд либо применять к нему ограничение записи писателя строки N0. Точность и разрешение физических часов не задаются; перевод в binary64 не обещает сохранить дробь меньше шага его представимых значений.\n"
+        },
+        {
+          "old_start_0": 345,
+          "old_end_0": 346,
+          "new_start_0": 348,
+          "new_end_0": 349,
+          "before": "   1. Если та запись была иной (op, key, items, cas, guard, not_after, not_before), вернуть `badrequest`.\n",
+          "after": "   1. Если та запись была иной (op, key, items, cas, guard, not_after, not_before), вернуть `badrequest`; исходная запись памяти применённого id и её ответ не меняются. Приём уже состоялся, поэтому новое последнее время приёма сохраняется по R070.\n"
+        },
+        {
+          "old_start_0": 366,
+          "old_end_0": 367,
+          "new_start_0": 369,
+          "new_end_0": 370,
+          "before": "Отсутствие бизнес-эффектов отличается от метаданных приёма: уже принятая put или delete при любом из этих четырёх отказов обновляет последнее время приёма значением `admitted` этой записи (оно может равняться прежнему). Эти метаданные не откатываются вместе с отказанными эффектами строки/id/версии. Правило сохранности то же, что у приёма успешной записи (N3 Время приёма). Это утверждение об уже принятой записи, не о запросе, отказанном до приёма.\n",
+          "after": "Отсутствие бизнес-эффектов отличается от метаданных приёма: уже принятая put или delete при `expired`, `early`, `guard`, `conflict` либо `badrequest` несовпадения уже применённого id обновляет последнее время приёма значением `admitted` этой записи (оно может равняться прежнему). Эти метаданные не откатываются вместе с отказанными эффектами строки/id/версии. При несовпадении id первая запись памяти применённого id и её исходный ответ сохраняются, без замены или освобождения. Правило сохранности то же, что у приёма успешной записи (N3 Время приёма). Это утверждение об уже принятой записи, не о запросе, отказанном до приёма.\n"
+        },
+        {
+          "old_start_0": 395,
+          "old_end_0": 396,
+          "new_start_0": 398,
+          "new_end_0": 399,
+          "before": "   вернуть `badrequest`.\n",
+          "after": "   вернуть `badrequest`. В обеих ветвях бизнес-строки, выданные версии и исходная запись памяти применённого id не меняются; вновь принятое время сохраняется прочно по R070, в том числе при несовпадении.\n"
+        },
+        {
+          "old_start_0": 419,
+          "old_end_0": 420,
+          "new_start_0": 422,
+          "new_end_0": 423,
+          "before": "   1. Если та запись была иной (отпечаток ниже), вернуть `badrequest`.\n",
+          "after": "   1. Если та запись была иной (отпечаток ниже), вернуть `badrequest`; исходная запись памяти применённого id и её ответ не меняются. Приём уже состоялся, поэтому новое последнее время приёма сохраняется по R070.\n"
+        },
+        {
+          "old_start_0": 440,
+          "old_end_0": 441,
+          "new_start_0": 443,
+          "new_end_0": 444,
+          "before": "Отказанный пакет всё же обновляет последнее время приёма значением `admitted` этой записи (оно может равняться прежнему), с той же сохранностью, что у приёма успешного пакета. Ноль изменений бизнес-строк, незанятый `id` и невыданная версия не означают отката этих метаданных. Это относится к каждому из четырёх названных отказов после приёма, не к запросу, отказанному до приёма.\n",
+          "after": "Отказанный пакет всё же обновляет последнее время приёма значением `admitted` этой записи (оно может равняться прежнему), с той же сохранностью, что у приёма успешного пакета. Ноль изменений бизнес-строк, незанятый `id` и невыданная версия не означают отката этих метаданных. Это относится к каждому из четырёх названных отказов после приёма. Принятый пакет с `badrequest` несовпадения id также сохраняет новое последнее время приёма с той же прочностью, без эффектов бизнес-строк или выданных версий; исходная запись памяти применённого id и её ответ не меняются. Ничто из этого не относится к запросу, отказанному до приёма.\n"
+        },
+        {
+          "old_start_0": 463,
+          "old_end_0": 464,
+          "new_start_0": 466,
+          "new_end_0": 467,
+          "before": "Хранилище ДОЛЖЕН отвечать повтору тем же ответом, пока не выполнены оба условия: после первого применения прошло больше двух минут **и** после него применено не меньше 50 000 записей с идентификатором; когда выполнены оба — МОЖЕТ забыть. Забытый повтор применяется как новая запись — поэтому `cas` у каждой записи, которая имеет значение.\n",
+          "after": "Хранилище ДОЛЖЕН отвечать повтору тем же ответом, пока не выполнены оба условия: после первого применения прошло больше `ID_REPLAY_MIN_AGE` **и** после него применено не меньше `ID_REPLAY_MIN_RECORDS` записей с идентификатором; когда выполнены оба — МОЖЕТ забыть. Забытый повтор применяется как новая запись — поэтому `cas` у каждой записи, которая имеет значение.\n"
+        },
+        {
+          "old_start_0": 546,
+          "old_end_0": 547,
+          "new_start_0": 549,
+          "new_end_0": 550,
+          "before": "| 38 | форма пакета: `writes` нет, пуст, не массив; элемент не по закрытой форме; `op` элемента; ключи — `badrequest` и `badkey`; `guards` не массив, `null`; повторы ключей; страж на ключ записи; предел 64 записей и 64 стражей — ровно на пределе 200, на один больше 400; порядок проверок; лишние поля верхнего уровня не читаются | N1 `batch`, N2, N2.1 |\n",
+          "after": "| 38 | форма пакета: `writes` нет, пуст, не массив; элемент не по закрытой форме; `op` элемента; ключи — `badrequest` и `badkey`; `guards` не массив, `null`; повторы ключей; страж на ключ записи; пределы `BATCH_WRITES` и `BATCH_GUARDS` — ровно на пределе 200, на один больше 400; порядок проверок; лишние поля верхнего уровня не читаются | N1 `batch`, N2, N2.1 |\n"
+        },
+        {
+          "old_start_0": 578,
+          "old_end_0": 579,
+          "new_start_0": 581,
+          "new_end_0": 582,
+          "before": "4. **предел длины ключа** реализации на файлах, если он меньше 1024;\n",
+          "after": "4. **предел длины ключа** реализации на файлах, если он меньше KEY_BYTES;\n"
+        },
+        {
+          "old_start_0": 582,
+          "old_end_0": 584,
+          "new_start_0": 585,
+          "new_end_0": 587,
+          "before": "8. **предел чтения HTTP-тела** у хранилища в процессе без демона; у демона он задан флагом `-max-body` (P/01.3 N1.3 «Флаги демона», умолчание 1 МиБ) отдельно от потолка строки `-max-value`; значение и смысл `limit` — по N2, параметры приёмки — по N5 (журнал cammeta-python, урок 11 № 24).\n9. **пределы разбора запроса**: длина строки запроса HTTP (в байтах, без завершающего CRLF); превышение — `400 badrequest` по N2.1; длина строки размера куска chunked с расширениями (без CRLF) — превышение — ошибка рамки: `400 badrequest` и закрытие соединения (C01-CHUNK-LINE-LIMIT-01); объём и срок слива после раннего отказа (N2.1). Предел заголовков (`HEADER_BYTES` 65536) и глубина JSON (`JSON_DEPTH` 128) — нормы N2.1, не выбор (сверка python и go 2026-10-18);\n",
+          "after": "8. **предел чтения HTTP-тела** у хранилища в процессе без демона; у демона он задан флагом `-max-body` (источник умолчаний — [daemon-flags.tsv](../../forms/daemon-flags.tsv)) отдельно от потолка строки `-max-value`; значение и смысл `limit` — по N2, параметры приёмки — по N5 (журнал cammeta-python, урок 11 № 24).\n9. **пределы разбора запроса**: длина строки запроса HTTP (в байтах, без завершающего CRLF); превышение — `400 badrequest` по N2.1; длина строки размера куска chunked с расширениями (без CRLF) — превышение — ошибка рамки: `400 badrequest` и закрытие соединения (C01-CHUNK-LINE-LIMIT-01); объём и срок слива после раннего отказа (N2.1). Предел заголовков (`HEADER_BYTES`) и глубина JSON (`JSON_DEPTH`) — нормы N2.1, не выбор (сверка python и go 2026-10-18);\n"
+        },
+        {
+          "old_start_0": 601,
+          "old_end_0": 602,
+          "new_start_0": 604,
+          "new_end_0": 605,
+          "before": "- [ ] **P/01.1-11** повтор по `id`: первый ответ, `again: true`; иное содержимое — `400`; память держит не одну запись (id A, id B, повтор A — `again`) — сц. 12; изменение игнорируемых полей команды не меняет отпечаток — сц. 23; отпечаток `delete` (`op`, `key`, `cas`, `guard`, `not_after`, `not_before`), порядок полей `items` и `cas: null` у `put` — сц. 30; срок памяти: не меньше двух минут — сц. 21 главы 1.3 (`@sleep 121`: формат главы 1.1 директив не несёт); право забыть после 2 мин и 50 000 записей (N3) — чтением описания реализации\n",
+          "after": "- [ ] **P/01.1-11** повтор по `id`: первый ответ, `again: true`; иное содержимое — `400`; память держит не одну запись (id A, id B, повтор A — `again`) — сц. 12; изменение игнорируемых полей команды не меняет отпечаток — сц. 23; отпечаток `delete` (`op`, `key`, `cas`, `guard`, `not_after`, `not_before`), порядок полей `items` и `cas: null` у `put` — сц. 30; срок памяти: не меньше `ID_REPLAY_MIN_AGE` — сц. 21 главы 1.3 (`@sleep 121`: формат главы 1.1 директив не несёт); право забыть после условий возраста и числа записей `ID_REPLAY_MIN_AGE` и `ID_REPLAY_MIN_RECORDS` (N3) — чтением описания реализации\n"
+        },
+        {
+          "old_start_0": 611,
+          "old_end_0": 612,
+          "new_start_0": 614,
+          "new_end_0": 615,
+          "before": "- [ ] **P/01.1-21** реализация на файлах МОЖЕТ отказать ключу короче 1024 байт UTF-8 по пределу имени файла; свой предел названа в её описании — проверяется чтением описания реализации\n",
+          "after": "- [ ] **P/01.1-21** реализация на файлах МОЖЕТ отказать ключу короче KEY_BYTES байт UTF-8 по пределу имени файла; свой предел названа в её описании — проверяется чтением описания реализации\n"
+        },
+        {
+          "old_start_0": 614,
+          "old_end_0": 614,
+          "new_start_0": 617,
+          "new_end_0": 618,
+          "before": "",
+          "after": "- [ ] **P/01.1-24** порядок массивов вывода N0 (область — уроки 8–10): проверяется у уроков области — их сценариями и векторами (до переноса — приёмка M11) и чтением форм вывода; у главы 1.1 своих выдач области нет (разбор ревью стадии A 8–10, № 19 / решение 4)\n"
+        },
+        {
+          "old_start_0": 616,
+          "old_end_0": 617,
+          "new_start_0": 620,
+          "new_end_0": 621,
+          "before": "- [ ] **P/01.1-27** предпосылка «часы писателей кластера расходятся ≤ `CLOCK_SKEW` 60 с» (N0 «Часы кластера») — проверяется чтением: предпосылка развёртывания, реализация её не проверяет\n",
+          "after": "- [ ] **P/01.1-27** предпосылка «часы писателей кластера расходятся ≤ `CLOCK_SKEW`» (N0 «Часы кластера») — проверяется чтением: предпосылка развёртывания, реализация её не проверяет\n"
+        },
+        {
+          "old_start_0": 621,
+          "old_end_0": 622,
+          "new_start_0": 625,
+          "new_end_0": 625,
+          "before": "- [ ] **P/01.1-24** порядок массивов вывода N0 (область — уроки 8–10): проверяется у уроков области — их сценариями и векторами (до переноса — приёмка M11) и чтением форм вывода; у главы 1.1 своих выдач области нет (разбор ревью стадии A 8–10, № 19 / решение 4)\n",
+          "after": ""
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.2-store.norms.md",
+      "before_sha256": "0ca8ee65bb0237adff0ea4a6f7e1ca21fa91f0dec90a61b9e4ff09d7882326e2",
+      "after_sha256": "c393489fe89d704beb0efc5cd2d6fbf84772b0c607a3c7807582873bdedf1702",
+      "before_blob": "11b0163d3df101c80e8ebaadd6e2697ad2b3058b",
+      "after_blob": "146ce615d64c500e9c5eba04238a9e705ea73c36",
+      "before_bytes": 27094,
+      "after_bytes": 27126,
+      "blocks": [
+        {
+          "old_start_0": 201,
+          "old_end_0": 202,
+          "new_start_0": 201,
+          "new_end_0": 202,
+          "before": "| 16 | пакет по ролям (ADR-0094 B9): роль `console` пишет 65 строк одним пакетом, иная роль — 400 (`BATCH_WRITES` P/01.1 N1); 65 стражей у иной роли — 400, у роли `domain` — 200 (сц. 14); строка без права, страж без чтения — 403 всего пакета, ничего не записано; `never` одной строки пакета — 403 и у admin | N1.3 `batch`, N3 «проверить»; P/01.1 N1 |\n",
+          "after": "| 16 | пакет по ролям (ADR-0094 B9): роль `console` пишет `BATCH_WRITES + 1` строк одним пакетом, иная роль — 400 (`BATCH_WRITES` P/01.1 N1); `BATCH_GUARDS + 1` стражей у иной роли — 400, у роли `domain` — 200 (сц. 14); строка без права, страж без чтения — 403 всего пакета, ничего не записано; `never` одной строки пакета — 403 и у admin | N1.3 `batch`, N3 «проверить»; P/01.1 N1 |\n"
+        },
+        {
+          "old_start_0": 227,
+          "old_end_0": 227,
+          "new_start_0": 227,
+          "new_end_0": 228,
+          "before": "",
+          "after": "- [ ] **P/01.2-08** личность — сокет роли / имя писателя; заголовок роли не читается; пересылка только от демона группы (голосующий или дверь без голоса) — сц. 08; отказ заголовка роли до разбора тела — сц. 08 шаг 2; у перечисления — сц. 12; пересланный admin при загруженном файле — сц. 07 главы 1.3 (проба `@tls`); чтением\n"
+        },
+        {
+          "old_start_0": 228,
+          "old_end_0": 229,
+          "new_start_0": 229,
+          "new_end_0": 229,
+          "before": "- [ ] **P/01.2-08** личность — сокет роли / имя писателя; заголовок роли не читается; пересылка только от демона группы (голосующий или дверь без голоса) — сц. 08; отказ заголовка роли до разбора тела — сц. 08 шаг 2; у перечисления — сц. 12; пересланный admin при загруженном файле — сц. 07 главы 1.3 (проба `@tls`); чтением\n",
+          "after": ""
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "before_sha256": "8b1255688d8eff8a1588f3a40381aeb7571fdf7d89aad66f88088cb6baba2e5b",
+      "after_sha256": "d308d074d5d7a6298c4257cdea248ab5801f4c25542ef3573d50f9df3bddd41d",
+      "before_blob": "858a2bd0faaf3c151a89dd3f3cc6895d463fda4b",
+      "after_blob": "9d0bb6e6872a382933f242e6365c840d1f60cdad",
+      "before_bytes": 84133,
+      "after_bytes": 85201,
+      "blocks": [
+        {
+          "old_start_0": 42,
+          "old_end_0": 43,
+          "new_start_0": 42,
+          "new_end_0": 43,
+          "before": "leader_wait: 5 с от потери лидера (не на запрос) → 503 unavailable; запись, ушедшая лидеру без ответа → ambiguous (глава 1.1)\n",
+          "after": "leader_wait: действующий интервал -leader-wait от потери лидера (не на запрос) → 503 unavailable; запись, ушедшая лидеру без ответа → ambiguous (глава 1.1)\n"
+        },
+        {
+          "old_start_0": 50,
+          "old_end_0": 52,
+          "new_start_0": 50,
+          "new_end_0": 52,
+          "before": "door:      -door -id -voters a@h:p,…: без голоса; те же сокеты и права; к лидеру или любому голосующему (попытка 2 с, запас 1 с);\n           состав группы — каждые 5 с; строка platform/configstore-doors/<id> {seen_at} каждые 30 с (не под platform/doors/ — там двери серверов, P/05 N1.4);\n",
+          "after": "door:      -door -id -voters a@h:p,…: без голоса; те же сокеты и права; к лидеру или любому голосующему (попытка DOOR_REQUEST_TIMEOUT, запас DOOR_REQUEST_MARGIN);\n           состав группы — каждые DOOR_MEMBERS_EVERY; строка platform/configstore-doors/<id> {seen_at} каждые DOOR_SEEN_EVERY (не под platform/doors/ — там двери серверов, P/05 N1.4);\n"
+        },
+        {
+          "old_start_0": 59,
+          "old_end_0": 60,
+          "new_start_0": 59,
+          "new_end_0": 60,
+          "before": "           configstore_doors, пока её строка читается своей формой и seen_at в ней не старше 3 × 30 с по часам голосующего,\n",
+          "after": "           configstore_doors, пока её строка читается своей формой и seen_at в ней не старше DOOR_SEEN_PERIODS × DOOR_SEEN_EVERY по часам голосующего,\n"
+        },
+        {
+          "old_start_0": 86,
+          "old_end_0": 87,
+          "new_start_0": 86,
+          "new_end_0": 87,
+          "before": "           записи впереди его часов, если больше CLOCK_SKEW 60 с (глава 1.1 N0 «Часы кластера»); иначе поля нет; у\n",
+          "after": "           записи впереди его часов, если больше CLOCK_SKEW (глава 1.1 N0 «Часы кластера»); иначе поля нет; у\n"
+        },
+        {
+          "old_start_0": 124,
+          "old_end_0": 125,
+          "new_start_0": 124,
+          "new_end_0": 125,
+          "before": "           platform/configstore-doors/<id> (служебные строки самой группы, `door` выше: живая дверь пишет свою каждые 30 с —\n",
+          "after": "           platform/configstore-doors/<id> (служебные строки самой группы, `door` выше: живая дверь пишет свою каждые DOOR_SEEN_EVERY —\n"
+        },
+        {
+          "old_start_0": 152,
+          "old_end_0": 154,
+          "new_start_0": 152,
+          "new_end_0": 154,
+          "before": "           ambiguous) и configstore_door_voters_reachable (gauge: голосующие, ответившие на её последний опрос состава, раз в 5 с)\n           (C01-DOOR-METRICS-01, решение «Архитектора» 2026-10-30, смысл и тип — как свидетель); тревоги голосующих: состав ≠ объявленному, ведомый отстал > 1000, выборов > 3 за 10 мин\n",
+          "after": "           ambiguous) и configstore_door_voters_reachable (gauge: голосующие, ответившие на её последний опрос состава, раз в DOOR_MEMBERS_EVERY)\n           (C01-DOOR-METRICS-01, решение «Архитектора» 2026-10-30, смысл и тип — как свидетель); тревоги голосующих: состав ≠ объявленному, ведомый отстал > RAFT_LAG_ALARM, выборов > RAFT_ELECTION_ALARM_COUNT за RAFT_ELECTION_ALARM_WINDOW\n"
+        },
+        {
+          "old_start_0": 168,
+          "old_end_0": 168,
+          "new_start_0": 168,
+          "new_end_0": 170,
+          "before": "",
+          "after": "\nФиксированные численные пределы `DOOR_*` и `RAFT_*` принадлежат только [runtime-constants.tsv](../../forms/runtime-constants.tsv). Действующим `-leader-wait` и умолчаниями пределов соединений владеет [daemon-flags.tsv](../../forms/daemon-flags.tsv).\n"
+        },
+        {
+          "old_start_0": 193,
+          "old_end_0": 194,
+          "new_start_0": 195,
+          "new_end_0": 196,
+          "before": "- `-max-body`: предел чтения HTTP-тела `POST /v1/write` (глава 1.1 N2, `{body_limit}` «Стенда»), отдельно от потолка строки `-max-value` (журнал cammeta-python, урок 11 № 24)\n",
+          "after": "- `-max-body`: действующий предел чтения байтов тела `POST /v1/write` и служебных POST N2 (глава 1.1 N2, `{body_limit}` «Стенда»), отдельно от потолка строки `-max-value` (журнал cammeta-python, урок 11 № 24)\n"
+        },
+        {
+          "old_start_0": 200,
+          "old_end_0": 202,
+          "new_start_0": 202,
+          "new_end_0": 203,
+          "before": "Числа max-conns=64, api-conns=32, api-per-address=8 — умолчания профиля, не скрытый\nвыбор каждой реализации. Развёртывание может задать другие положительные пределы до\n",
+          "after": "Умолчания пределов соединений принадлежат только их строкам [daemon-flags.tsv](../../forms/daemon-flags.tsv), а не скрытому выбору каждой реализации. Развёртывание может задать другие положительные пределы до\n"
+        },
+        {
+          "old_start_0": 204,
+          "old_end_0": 205,
+          "new_start_0": 205,
+          "new_end_0": 206,
+          "before": "Запись флагов (ADR-0125 доп. (2)): флаг — `-name value` или `-name=value`, имя ровно как в таблице (`--from` с двумя дефисами); флаг типа `bool` пишется без значения (`-door=true` — отказ); `--` отдельно кончает флаги. Повтор флага, флаг чужой команды, значение вне своего типа и позиционное слово у демона — отказ старта, код 2; позиционные слова — только у `admin_ops` по его грамматике выше (`admit <id>`, `backup <file>`, `leave [id]`). Значения: `bytes` и `int` — десятичное целое без знака, плюса и ведущих нулей (сам `0` можно), `bytes` — без суффикса единиц (`512KiB` — запись прозы, не значение); `duration` — `<integer><unit>`, единица `ms`, `s`, `m` или `h`, больше `0` (`5s`, `250ms`); `addr` — `host:port`, хост непустой (имя, IPv4 или `[IPv6]`), порт десятичный `1`–`65535`. `-id` вне группы по умолчанию — `SERVER_NAME`; пустой или отсутствующий `SERVER_NAME` умолчания не даёт.\n",
+          "after": "Запись флагов (ADR-0125 доп. (2)): флаг — `-name value` или `-name=value`, имя ровно как в таблице (`--from` с двумя дефисами); флаг типа `bool` пишется без значения (`-door=true` — отказ); `--` отдельно кончает флаги. Повтор флага, флаг чужой команды, значение вне своего типа и позиционное слово у демона — отказ старта, код 2; позиционные слова — только у `admin_ops` по его грамматике выше (`admit <id>`, `backup <file>`, `leave [id]`). Значения: `bytes` и `int` — десятичное целое без знака, плюса и ведущих нулей (сам `0` можно), `bytes` — без суффикса единиц (`512KiB` — запись прозы, не значение); `duration` — `<integer><unit>`, единица `ms`, `s`, `m` или `h`, больше `0` (`5s`, `250ms`); `addr` — `host:port`, хост непустой (имя, IPv4 или `[IPv6]`), порт десятичный `1`–`65535`. Умолчание `-id` и его отсутствие определяются только строкой и шапкой [daemon-flags.tsv](../../forms/daemon-flags.tsv).\n"
+        },
+        {
+          "old_start_0": 274,
+          "old_end_0": 275,
+          "new_start_0": 275,
+          "new_end_0": 276,
+          "before": "| GET `/v1/status` | `{id, state, leader, leader_id, term, commit, applied, voters, members, tls, max_value, max_body}`; optional `base, again, role, last_snapshot, out, admission_ahead` (N1.3 `admission`; ADR-0091 п. 1). Индексы — точные uint64, state — Leader/Follower/Candidate/Shutdown/Door; voters/out — массив id, members — карта id → адрес `-api`, без `-api` участника в `members` нет (карта может быть `{}`; значение пустым не бывает — `minLength: 1` OpenAPI; C01-STATUS-MEMBERS-NOAPI, решение «Архитектора» 2026-10-26); `leader` — адрес `-api` лидера (пусто, если лидер неизвестен или запущен без `-api`), `leader_id` — id лидера (пусто, если лидер неизвестен) (пилот хранилища, A7). Door требует role=door и term/commit/applied=0. `max_value` — действующий потолок веса строки в байтах этого экземпляра, значение `-max-value` (N1.3; вес строки главы 1.1), отдельно от `-max-body`; на стенде приёмки 524288. `max_body` — обязательное положительное целое: фактический настроенный `-max-body` этого экземпляра в байтах сущности (включая JSON whitespace и фактический LF, исключая HTTP framing); на стандартном стенде приёмки1048576. Из max_value не выводится. Установщик читает его для статической проверки конечного профиля до записей (ADR-0127 P/06 C2). Это локальное наблюдение, не подтверждение большинства |\n",
+          "after": "| GET `/v1/status` | `{id, state, leader, leader_id, term, commit, applied, voters, members, tls, max_value, max_body}`; optional `base, again, role, last_snapshot, out, admission_ahead` (N1.3 `admission`; ADR-0091 п. 1). Индексы — точные uint64, state — Leader/Follower/Candidate/Shutdown/Door; voters/out — массив id, members — карта id → адрес `-api`, без `-api` участника в `members` нет (карта может быть `{}`; значение пустым не бывает — `minLength: 1` OpenAPI; C01-STATUS-MEMBERS-NOAPI, решение «Архитектора» 2026-10-26); `leader` — адрес `-api` лидера (пусто, если лидер неизвестен или запущен без `-api`), `leader_id` — id лидера (пусто, если лидер неизвестен) (пилот хранилища, A7). Door требует role=door и term/commit/applied=0. `max_value` — действующий потолок веса строки в байтах этого экземпляра, значение `-max-value` (N1.3; вес строки главы 1.1), отдельно от `-max-body`; параметры стенда приёмки — N5. `max_body` — обязательное положительное целое: фактический настроенный `-max-body` этого экземпляра в байтах сущности (включая JSON whitespace и фактический LF, исключая HTTP framing); умолчанием владеет только форма флагов. Из max_value не выводится. Установщик читает его для статической проверки конечного профиля до записей (ADR-0127 P/06 C2). Это локальное наблюдение, не подтверждение большинства |\n"
+        },
+        {
+          "old_start_0": 281,
+          "old_end_0": 282,
+          "new_start_0": 282,
+          "new_end_0": 283,
+          "before": "Идентификатор участника — 1–128 ASCII-символов: первый буква/цифра, дальше буквы/цифры/`_`/`.`/`-`. Это профиль входов данного урока. Разбор запроса служебных дверей — глава 1.1 N2.1 (query, JSON тела, путь байт в байт, HTTP, ранний отказ); отступления ниже. Порядок проверок: рамка (framing, предел тела 1 МиБ — 413) → маршрут и метод (404, 405) → личность (403) → тело и состав (400, 409): лишнее тело больше предела у чужого метода — 413 раньше 404/405 (сверка python и go M10/6–11, B3). `HEAD` служебным дверям не метод: `/v1/status`, `/v1/join`, `/v1/leave`, `/metrics` — 405, `/v1/write` и `/v1/rights` — 404 по владельцам — главам 1.1 и 1.2 (обе реализации, совпало без нормы). Тела служебных POST — один объект JSON; unknown fields отвергаются; предел чтения 1 МиБ, фактический счёт байтов, лишний JSON/framing/обрыв — 400, превышение — 413, время чтения ограничено реализацией. 400/404/405 — `BadRequestFault`, 403 — `ForbiddenFault`, 413 — `BodyTooLargeFault` главы 1.1. Для собственных status/join/leave/write/metrics 503 — `UnavailableFault` до отправки, `AmbiguousFault` после отправки изменения; при пределе соединений — `UnavailableFault` с `Retry-After: 1` (глава 1.1 N4). После неизвестного join/leave оператор читает status; автоматического доказательства успеха из таймаута нет. Пол сохраняет память повторов главы 1.1.\n",
+          "after": "Идентификатор участника — 1–128 ASCII-символов: первый буква/цифра, дальше буквы/цифры/`_`/`.`/`-`. Это профиль входов данного урока. Разбор запроса служебных дверей — глава 1.1 N2.1 (query, JSON тела, путь байт в байт, HTTP, ранний отказ); отступления ниже. Порядок проверок: рамка (framing, действующий предел `-max-body` — 413) → маршрут и метод (404, 405) → личность (403) → тело и состав (400, 409): лишнее тело больше предела у чужого метода — 413 раньше 404/405 (сверка python и go M10/6–11, B3). `HEAD` служебным дверям не метод: `/v1/status`, `/v1/join`, `/v1/leave`, `/metrics` — 405, `/v1/write` и `/v1/rights` — 404 по владельцам — главам 1.1 и 1.2 (обе реализации, совпало без нормы). Тела служебных POST — один объект JSON; unknown fields отвергаются; тот же действующий предел чтения `-max-body`, фактический счёт байтов, лишний JSON/framing/обрыв — 400, превышение — 413, время чтения ограничено реализацией. 400/404/405 — `BadRequestFault`, 403 — `ForbiddenFault`, 413 — `BodyTooLargeFault` главы 1.1. Для собственных status/join/leave/write/metrics 503 — `UnavailableFault` до отправки, `AmbiguousFault` после отправки изменения; при пределе соединений — `UnavailableFault` с `Retry-After: 1` (глава 1.1 N4). После неизвестного join/leave оператор читает status; автоматического доказательства успеха из таймаута нет. Пол сохраняет память повторов главы 1.1.\n"
+        },
+        {
+          "old_start_0": 340,
+          "old_end_0": 341,
+          "new_start_0": 341,
+          "new_end_0": 342,
+          "before": "- `no_leader`: нет лидера 5 с. Действие вызывающего: ждать; воркеры живут по аренде.\n",
+          "after": "- `no_leader`: нет лидера в течение действующего интервала `-leader-wait`. Действие вызывающего: ждать; воркеры живут по аренде.\n"
+        },
+        {
+          "old_start_0": 364,
+          "old_end_0": 365,
+          "new_start_0": 365,
+          "new_end_0": 366,
+          "before": "| 08 | повтор `op: floor` тем же `id` после перезапуска хранилища — сохранённый исход (`again`); иной пол с этим `id` — 400; пол не целым (`2.0e1`) — 400; пол выше 2^53 − 2^32 (наибольший uint64) — 400, 2^53 − 2^32 — допустим (пилот схем семей данных, D6) | N2, N1.3 floor |\n",
+          "after": "| 08 | повтор `op: floor` тем же `id` после перезапуска хранилища — сохранённый исход (`again`); иной пол с этим `id` — 400; пол не целым (`2.0e1`) — 400; пол выше верхней границы N1.3 `floor.form`, включая наибольший uint64, — 400; сама верхняя граница допустима (пилот схем семей данных, D6) | N2, N1.3 floor |\n"
+        },
+        {
+          "old_start_0": 369,
+          "old_end_0": 370,
+          "new_start_0": 370,
+          "new_end_0": 371,
+          "before": "| 15 | служебные двери, шаги 1–8: `join`/`leave` с сокета роли — 403; тело больше 1 МиБ — 413 и у чужого метода раньше 405; пустые `raft`/`api` — 400; `HEAD` — 405 и 404 (B1–B4) | N2 |\n",
+          "after": "| 15 | служебные двери, шаги 1–8: `join`/`leave` с сокета роли — 403; тело больше действующего `-max-body` — 413 и у чужого метода раньше 405; пустые `raft`/`api` — 400; `HEAD` — 405 и 404 (B1–B4) | N2 |\n"
+        },
+        {
+          "old_start_0": 419,
+          "old_end_0": 420,
+          "new_start_0": 420,
+          "new_end_0": 421,
+          "before": "- [ ] **P/01.3-01** демон: флаги N1.3, хранилище коробки без raft (`box`) — сц. 04 и чтением, `members` без `-api` — `{}` (сц. 16), отказы старта, размер 1/3/5, вступление и `-force`, `leave`/`admit`, ожидание лидера 5 с — сц. 07, 17 (стенд группы); mTLS, сокеты — чтением; ветвь 503 «нет лидера 5 с» — сц. 17; ambiguous и unavailable с Retry-After при пределе соединений — чтением N1.3/N4: сценарии не насыщают соединения и не обрывают ответ лидера\n",
+          "after": "- [ ] **P/01.3-01** демон: флаги N1.3, хранилище коробки без raft (`box`) — сц. 04 и чтением, `members` без `-api` — `{}` (сц. 16), отказы старта, размер 1/3/5, вступление и `-force`, `leave`/`admit`, действующий интервал `-leader-wait` — сц. 07, 17 (стенд группы); mTLS, сокеты — чтением; ветвь 503 «нет лидера в течение действующего интервала `-leader-wait`» — сц. 17; ambiguous и unavailable с Retry-After при пределе соединений — чтением N1.3/N4: сценарии не насыщают соединения и не обрывают ответ лидера\n"
+        },
+        {
+          "old_start_0": 423,
+          "old_end_0": 424,
+          "new_start_0": 424,
+          "new_end_0": 425,
+          "before": "- [ ] **P/01.3-05** метрики демона N1.3 — сц. 04 (два ряда); ряды `_state`, `_elections_total`, `_index`, `_last_contact_seconds`, `_voters`, `_voters_expected` лидера и ведомого — сц. 17; три тревоги — проверяется чтением: тест метрик реализации (предмет — перечень N1.3); `configstore_doors` — число строк `platform/configstore-doors/<id>`, читаемых своей формой, с `seen_at` не старше 3 × 30 с — у голосующего по своей реплике и своим часам, у двери без голоса ряда нет (C01-DOORS-COUNT-FRESH-01, C01-DOORS-COUNT-PLACE-01) — сц. 07 (стенд группы) (решение «Архитектора» по хвостам переноса урока 1)\n",
+          "after": "- [ ] **P/01.3-05** метрики демона N1.3 — сц. 04 (два ряда); ряды `_state`, `_elections_total`, `_index`, `_last_contact_seconds`, `_voters`, `_voters_expected` лидера и ведомого — сц. 17; три тревоги — проверяется чтением: тест метрик реализации (предмет — перечень N1.3); `configstore_doors` — число строк `platform/configstore-doors/<id>`, читаемых своей формой, с `seen_at` не старше `DOOR_SEEN_PERIODS × DOOR_SEEN_EVERY` — у голосующего по своей реплике и своим часам, у двери без голоса ряда нет (C01-DOORS-COUNT-FRESH-01, C01-DOORS-COUNT-PLACE-01) — сц. 07 (стенд группы) (решение «Архитектора» по хвостам переноса урока 1)\n"
+        },
+        {
+          "old_start_0": 427,
+          "old_end_0": 428,
+          "new_start_0": 428,
+          "new_end_0": 430,
+          "before": "- [ ] **P/01.3-10** время приёма в записи журнала и снимке, продолжение от снимка, `admission_ahead` в `/v1/status` лидера сверх 60 с (N1.3 `admission`) — проверяется чтением: стенд не двигает часы лидера и не снимает снимок по требованию\n",
+          "after": "- [ ] **P/01.3-09** проверка TLS-пира демоном N1.6: CN и SAN, одна роль `configstore` или `configstore-door`, алгоритмы подписи цепочки, доверие `ca.pem` и `ca.next.pem`, отзыв по содержимому без перезапуска — проверяется чтением: тесты реализации на тестовой CA (предмет — N1.6: без сертификата, чужая CA, отозванный, чужая роль, своя); причина — CA и файловые права не меняются HTTP-TSV\n- [ ] **P/01.3-10** время приёма в записи журнала и снимке, продолжение от снимка, `admission_ahead` в `/v1/status` лидера сверх `CLOCK_SKEW` (N1.3 `admission`) — проверяется чтением: стенд не двигает часы лидера и не снимает снимок по требованию\n"
+        },
+        {
+          "old_start_0": 429,
+          "old_end_0": 430,
+          "new_start_0": 431,
+          "new_end_0": 431,
+          "before": "- [ ] **P/01.3-09** проверка TLS-пира демоном N1.6: CN и SAN, одна роль `configstore` или `configstore-door`, алгоритмы подписи цепочки, доверие `ca.pem` и `ca.next.pem`, отзыв по содержимому без перезапуска — проверяется чтением: тесты реализации на тестовой CA (предмет — N1.6: без сертификата, чужая CA, отозванный, чужая роль, своя); причина — CA и файловые права не меняются HTTP-TSV\n",
+          "after": ""
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/spec/01-store.README.md",
+      "before_sha256": "7f333e019d416594917e67d82b1705b31d73e4d7585bacd15c1c04e753d61014",
+      "after_sha256": "c20a5b05ba03814eeb6ae359faa14e74625ef2404fad4ff789aebffaf31b8ca3",
+      "before_blob": "5d435bf7edbedc46de4acc4936eb8141b28f1b0a",
+      "after_blob": "5b5c08352acbb39d16b1626ffe97527253f4d4da",
+      "before_bytes": 18025,
+      "after_bytes": 18095,
+      "blocks": [
+        {
+          "old_start_0": 58,
+          "old_end_0": 59,
+          "new_start_0": 58,
+          "new_end_0": 59,
+          "before": "4. Prepare instances per the acceptance README of chapter 1.1: the row ceiling 524288 bytes, the body limit 1048576 bytes. Run the scenarios of chapter 1.1. Check each failure against the norms of the chapters and fix the **code**.\n",
+          "after": "4. Prepare instances per the acceptance README of chapter 1.1: the row ceiling and body limit declared by the acceptance stand (N5), separately. Run the scenarios of chapter 1.1. Check each failure against the norms of the chapters and fix the **code**.\n"
+        },
+        {
+          "old_start_0": 60,
+          "old_end_0": 61,
+          "new_start_0": 60,
+          "new_end_0": 61,
+          "before": "6. Go through the checklist of chapter 1.1 (P/01.1-01…23); for the items «checked by reading», state in the implementation description where in the code this is ensured.\n",
+          "after": "6. Go through the checklist of chapter 1.1 (P/01.1-01…31); for the items «checked by reading», state in the implementation description where in the code this is ensured.\n"
+        },
+        {
+          "old_start_0": 84,
+          "old_end_0": 85,
+          "new_start_0": 84,
+          "new_end_0": 85,
+          "before": "1. Describe the stable/transitional membership of the group, sequential join/leave and the door without a vote. For status keep the exact uint64; `leader` is the `-api` address, `leader_id` is the id. Do not forward admin.sock; take the rights from chapter 1.2. The daemon flags are only the table «Daemon flags» of N1.3; the sockets are in one directory, without subdirectories (admin.sock and the role sockets side by side), inherited ones by `FileDescriptorName` (N1.3 `sockets`).\n",
+          "after": "1. Describe the stable/transitional membership of the group, sequential join/leave and the door without a vote. For status keep the exact uint64; `leader` is the `-api` address, `leader_id` is the id. Do not forward admin.sock; take the rights from chapter 1.2. The daemon flags are only [forms/daemon-flags.tsv](../forms/daemon-flags.tsv); the sockets are in one directory, without subdirectories (admin.sock and the role sockets side by side), inherited ones by `FileDescriptorName` (N1.3 `sockets`).\n"
+        },
+        {
+          "old_start_0": 157,
+          "old_end_0": 158,
+          "new_start_0": 157,
+          "new_end_0": 158,
+          "before": "An additional check after run 33: service POSTs: unknown field/not an object/extra JSON/framing — 400; 1 MiB + 1 — 413; no path/method — 404/405. Check each reason against N2, N4 and the full Fault, not only the code number.\n",
+          "after": "An additional check after run 33: service POSTs: unknown field/not an object/extra JSON/framing — 400; one byte above the effective `-max-body` — 413; no path/method — 404/405. Check each reason against N2, N4 and the full Fault, not only the code number.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "before_sha256": "71c2a7cee9d5f595fc141fe9b6525ee4257418f647af22698e709f103207bfd2",
+      "after_sha256": "22cf100179046b1e04fa5688bb312ca33713ce1b4aa31f4933c0adfb6187db74",
+      "before_blob": "ad315db8d1f144aad746c17e67188e65d522f494",
+      "after_blob": "30946b8464df2233978a5ded6f699e1c15ba278a",
+      "before_bytes": 78253,
+      "after_bytes": 80349,
+      "blocks": [
+        {
+          "old_start_0": 51,
+          "old_end_0": 51,
+          "new_start_0": 51,
+          "new_end_0": 53,
+          "before": "",
+          "after": "  Private admission metadata is not a row time field subject to this writer notation. It uses the finite binary64 numeric domain of N3 «Admission time» and MUST preserve its assigned value through storage and restoration, including fractions longer than this row-writer notation permits. This exception prescribes no internal encoding or additional wire field.\n\n"
+        },
+        {
+          "old_start_0": 79,
+          "old_end_0": 81,
+          "new_start_0": 81,
+          "new_end_0": 82,
+          "before": "door, the workers, and the writer of the event a worker writes about — differ from one another by at most `CLOCK_SKEW` =\n60 s. Norms rely on it (deadlines of rows with `made` — [P/06.1](../../06-console/spec/06.1-console.norms.md) N1.1\n",
+          "after": "door, the workers, and the writer of the event a worker writes about — differ from one another by at most `CLOCK_SKEW` from [forms/runtime-constants.tsv](../forms/runtime-constants.tsv). Norms rely on it (deadlines of rows with `made` — [P/06.1](../../06-console/spec/06.1-console.norms.md) N1.1\n"
+        },
+        {
+          "old_start_0": 121,
+          "old_end_0": 122,
+          "new_start_0": 122,
+          "new_end_0": 123,
+          "before": "      - at most 1024 bytes                     # at the door; a file-based implementation MAY refuse earlier (below)\n",
+          "after": "      - at most KEY_BYTES bytes                     # at the door; a file-based implementation MAY refuse earlier (below)\n"
+        },
+        {
+          "old_start_0": 129,
+          "old_end_0": 130,
+          "new_start_0": 130,
+          "new_end_0": 131,
+          "before": "    ceiling: 524288          # 512 KiB; the same ceiling is in the summary of P/06.1 N1.4 (row «store row»); P/06.1 declares no other ceiling\n",
+          "after": "    ceiling: ROW_CEILING     # configured ceiling; on a daemon, effective -max-value; its default is only in forms/daemon-flags.tsv\n"
+        },
+        {
+          "old_start_0": 192,
+          "old_end_0": 192,
+          "new_start_0": 193,
+          "new_end_0": 195,
+          "before": "",
+          "after": "`KEY_BYTES`, `BATCH_WRITES` and `BATCH_GUARDS` are the named limits in [runtime-constants.tsv](../forms/runtime-constants.tsv). `ROW_CEILING` is the configured ceiling of this store instance; on a daemon it is the effective `-max-value`, whose default is owned by [daemon-flags.tsv](../forms/daemon-flags.tsv). An in-process store uses its declared ceiling and the N5 stand parameter without a required flag or internal API. This is not a second fixed row ceiling.\n\n"
+        },
+        {
+          "old_start_0": 203,
+          "old_end_0": 204,
+          "new_start_0": 206,
+          "new_end_0": 207,
+          "before": "encoded name does not fit a file name; it names its own limit, smaller than 1024 UTF-8 bytes, in its description (the\n",
+          "after": "encoded name does not fit a file name; it names its own limit, smaller than KEY_BYTES UTF-8 bytes, in its description (the\n"
+        },
+        {
+          "old_start_0": 343,
+          "old_end_0": 344,
+          "new_start_0": 346,
+          "new_end_0": 347,
+          "before": "  extra ones too; 129 — `400 badrequest`.\n",
+          "after": "  extra ones too; depth `JSON_DEPTH + 1` — `400 badrequest`.\n"
+        },
+        {
+          "old_start_0": 466,
+          "old_end_0": 470,
+          "new_start_0": 469,
+          "new_end_0": 471,
+          "before": "Where the clock provides fractional Unix seconds, assignment, storage and restoration of the admission time, the `max` and the\ncomparisons with `not_after` and `not_before` MUST retain that fractional part. The clock, the previous admission time and the\nbounds MUST NOT be rounded to integer seconds for these operations. This does not prescribe the accuracy or resolution of the\nphysical clock source. For an admission time A, `not_after` admits A <= bound and refuses A > bound; `not_before` admits\n",
+          "after": "Admission time uses finite binary64 Unix seconds. Convert the clock reading to binary64 with round-to-nearest, ties-to-even before the `max`; the previous admission value and both bounds use that same numeric domain (R007). Storage, restoration and application MUST preserve the assigned binary64 numeric value. They MUST NOT additionally round it to integer seconds or milliseconds, or apply the row-writer notation limit of N0. The physical clock's accuracy and resolution are not prescribed; conversion to binary64 does not promise to retain a fraction smaller than its representable spacing.\nFor an admission time A, `not_after` admits A <= bound and refuses A > bound; `not_before` admits\n"
+        },
+        {
+          "old_start_0": 503,
+          "old_end_0": 504,
+          "new_start_0": 504,
+          "new_end_0": 505,
+          "before": "   1. If that record was different (op, key, items, cas, guard, not_after, not_before), return `badrequest`.\n",
+          "after": "   1. If that record was different (op, key, items, cas, guard, not_after, not_before), return `badrequest`; keep the original applied-id entry and its answer unchanged. This is after admission, so the new last admission time is retained by R070.\n"
+        },
+        {
+          "old_start_0": 543,
+          "old_end_0": 544,
+          "new_start_0": 544,
+          "new_end_0": 545,
+          "before": "The absence of business effects is distinct from admission metadata: an already admitted put or delete that returns any of these four refusals still updates the last admission time to this record's `admitted` (which may equal the previous time). It does not roll that metadata back with the refused row/id/version effects. The persistence rule is the same as for admission in the successful case (N3 Admission time). This statement concerns an already admitted record, not a request rejected before admission.\n",
+          "after": "The absence of business effects is distinct from admission metadata: an already admitted put or delete that returns `expired`, `early`, `guard`, `conflict`, or `badrequest` for mismatching an already-applied id still updates the last admission time to this record's `admitted` (which may equal the previous time). It does not roll that metadata back with the refused row/id/version effects. An id mismatch keeps the first applied-id entry and its original answer, without replacing or freeing them. The persistence rule is the same as for admission in the successful case (N3 Admission time). This statement concerns an already admitted record, not a request rejected before admission.\n"
+        },
+        {
+          "old_start_0": 601,
+          "old_end_0": 602,
+          "new_start_0": 602,
+          "new_end_0": 603,
+          "before": "   return `badrequest`.\n",
+          "after": "   return `badrequest`. In either branch the business rows, issued versions and original applied-id entry stay unchanged; the newly admitted time is retained durably by R070, also for a mismatch.\n"
+        },
+        {
+          "old_start_0": 656,
+          "old_end_0": 657,
+          "new_start_0": 657,
+          "new_end_0": 658,
+          "before": "   1. If that record was different (fingerprint below), return `badrequest`.\n",
+          "after": "   1. If that record was different (fingerprint below), return `badrequest`; keep the original applied-id entry and its answer unchanged. This is after admission, so the new last admission time is retained by R070.\n"
+        },
+        {
+          "old_start_0": 696,
+          "old_end_0": 697,
+          "new_start_0": 697,
+          "new_end_0": 698,
+          "before": "The refused batch still updates the last admission time to this record's `admitted` (which may equal the previous time), with the same durability as admission of a successful batch. Zero business-row changes, no occupied `id` and no issued version do not mean rolling back this admission metadata. This applies to each of the four named refusals after admission, not to a request rejected before admission.\n",
+          "after": "The refused batch still updates the last admission time to this record's `admitted` (which may equal the previous time), with the same durability as admission of a successful batch. Zero business-row changes, no occupied `id` and no issued version do not mean rolling back this admission metadata. This applies to each of the four named refusals after admission. An admitted batch returning `badrequest` for an id mismatch also retains its new last admission time with the same durability and no business-row or issued-version effects; its original applied-id entry and answer remain unchanged. None of this applies to a request rejected before admission.\n"
+        },
+        {
+          "old_start_0": 735,
+          "old_end_0": 736,
+          "new_start_0": 736,
+          "new_end_0": 737,
+          "before": "The store MUST answer a replay with the same answer until both conditions hold: more than two minutes have passed since the first application **and** at least 50 000 records with an identifier have been applied after it; when both hold, it MAY forget. A forgotten replay is applied as a new write — hence `cas` on every write that matters.\n",
+          "after": "The store MUST answer a replay with the same answer until both conditions hold: more than `ID_REPLAY_MIN_AGE` has passed since the first application **and** at least `ID_REPLAY_MIN_RECORDS` records with an identifier have been applied after it; when both hold, it MAY forget. A forgotten replay is applied as a new write — hence `cas` on every write that matters.\n"
+        },
+        {
+          "old_start_0": 822,
+          "old_end_0": 823,
+          "new_start_0": 823,
+          "new_end_0": 824,
+          "before": "| 38 | the batch form: `writes` absent, empty, not an array; an element not in its closed form; the `op` of an element; keys — `badrequest` and `badkey`; `guards` not an array, `null`; repeated keys; a guard on a written key; the limit of 64 writes and 64 guards — exactly at the limit 200, one more 400; the order of checks; extra top-level fields are not read | N1 `batch`, N2, N2.1 |\n",
+          "after": "| 38 | the batch form: `writes` absent, empty, not an array; an element not in its closed form; the `op` of an element; keys — `badrequest` and `badkey`; `guards` not an array, `null`; repeated keys; a guard on a written key; the limits `BATCH_WRITES` and `BATCH_GUARDS` — exactly at the limit 200, one more 400; the order of checks; extra top-level fields are not read | N1 `batch`, N2, N2.1 |\n"
+        },
+        {
+          "old_start_0": 854,
+          "old_end_0": 855,
+          "new_start_0": 855,
+          "new_end_0": 856,
+          "before": "4. **the key length limit** of a file-based implementation, if it is smaller than 1024;\n",
+          "after": "4. **the key length limit** of a file-based implementation, if it is smaller than KEY_BYTES;\n"
+        },
+        {
+          "old_start_0": 858,
+          "old_end_0": 860,
+          "new_start_0": 859,
+          "new_end_0": 861,
+          "before": "8. **the read limit of the HTTP body** of a store in the process without a daemon; for the daemon it is set by the flag `-max-body` (P/01.3 N1.3 «Daemon flags», default 1 MiB) separately from the row ceiling `-max-value`; the value and meaning of `limit` — by N2, the acceptance parameters — by N5 (log of cammeta-python, lesson 11 № 24).\n9. **the request parsing limits**: the length of the HTTP request line (in bytes, without the final CRLF); exceeding it is `400 badrequest` by N2.1; the length of a chunk-size line of chunked with extensions (without CRLF) — exceeding it is a framing error: `400 badrequest` and the connection closed (C01-CHUNK-LINE-LIMIT-01); the drain volume and time after an early refusal (N2.1). The header limit (`HEADER_BYTES` 65536) and the JSON depth (`JSON_DEPTH` 128) are norms of N2.1, not a choice (reconciliation of python and go 2026-10-18);\n",
+          "after": "8. **the read limit of the HTTP body** of a store in the process without a daemon; for the daemon it is set by the flag `-max-body` (the source of defaults is [daemon-flags.tsv](../forms/daemon-flags.tsv)) separately from the row ceiling `-max-value`; the value and meaning of `limit` — by N2, the acceptance parameters — by N5 (log of cammeta-python, lesson 11 № 24).\n9. **the request parsing limits**: the length of the HTTP request line (in bytes, without the final CRLF); exceeding it is `400 badrequest` by N2.1; the length of a chunk-size line of chunked with extensions (without CRLF) — exceeding it is a framing error: `400 badrequest` and the connection closed (C01-CHUNK-LINE-LIMIT-01); the drain volume and time after an early refusal (N2.1). The header limit (`HEADER_BYTES`) and the JSON depth (`JSON_DEPTH`) are norms of N2.1, not a choice (reconciliation of python and go 2026-10-18);\n"
+        },
+        {
+          "old_start_0": 877,
+          "old_end_0": 878,
+          "new_start_0": 878,
+          "new_end_0": 879,
+          "before": "- [ ] **P/01.1-11** a replay by `id`: the first answer, `again: true`; other content — `400`; the memory holds more than one write (id A, id B, replay A — `again`) — sc. 12; a change of ignored command fields does not change the fingerprint — sc. 23; the `delete` fingerprint (`op`, `key`, `cas`, `guard`, `not_after`, `not_before`), the order of the fields of `items` and `cas: null` for `put` — sc. 30; the memory lifetime: at least two minutes — sc. 21 of chapter 1.3 (`@sleep 121`: the format of chapter 1.1 carries no directives); the right to forget after 2 min and 50 000 writes (N3) — by reading the implementation's description\n",
+          "after": "- [ ] **P/01.1-11** a replay by `id`: the first answer, `again: true`; other content — `400`; the memory holds more than one write (id A, id B, replay A — `again`) — sc. 12; a change of ignored command fields does not change the fingerprint — sc. 23; the `delete` fingerprint (`op`, `key`, `cas`, `guard`, `not_after`, `not_before`), the order of the fields of `items` and `cas: null` for `put` — sc. 30; the memory lifetime: at least `ID_REPLAY_MIN_AGE` — sc. 21 of chapter 1.3 (`@sleep 121`: the format of chapter 1.1 carries no directives); the right to forget after the age and record-count conditions `ID_REPLAY_MIN_AGE` and `ID_REPLAY_MIN_RECORDS` (N3) — by reading the implementation's description\n"
+        },
+        {
+          "old_start_0": 887,
+          "old_end_0": 888,
+          "new_start_0": 888,
+          "new_end_0": 889,
+          "before": "- [ ] **P/01.1-21** a file-based implementation MAY refuse a key shorter than 1024 UTF-8 bytes by the file name limit; its limit is named in its description — checked by reading the implementation's description\n",
+          "after": "- [ ] **P/01.1-21** a file-based implementation MAY refuse a key shorter than KEY_BYTES UTF-8 bytes by the file name limit; its limit is named in its description — checked by reading the implementation's description\n"
+        },
+        {
+          "old_start_0": 890,
+          "old_end_0": 890,
+          "new_start_0": 891,
+          "new_end_0": 892,
+          "before": "",
+          "after": "- [ ] **P/01.1-24** the order of output arrays of N0 (scope — lessons 8–10): checked at the lessons of the scope — by their scenarios and vectors (before the move — the acceptance of M11) and by reading the output forms; chapter 1.1 has no outputs of the scope of its own (review of stage A 8–10, № 19 / decision 4)\n"
+        },
+        {
+          "old_start_0": 892,
+          "old_end_0": 893,
+          "new_start_0": 894,
+          "new_end_0": 895,
+          "before": "- [ ] **P/01.1-27** the premise «the clocks of the cluster's writers differ by ≤ `CLOCK_SKEW` 60 s» (N0 «Cluster clocks») — checked by reading: a premise of deployment, the implementation does not check it\n",
+          "after": "- [ ] **P/01.1-27** the premise «the clocks of the cluster's writers differ by ≤ `CLOCK_SKEW`» (N0 «Cluster clocks») — checked by reading: a premise of deployment, the implementation does not check it\n"
+        },
+        {
+          "old_start_0": 897,
+          "old_end_0": 898,
+          "new_start_0": 899,
+          "new_end_0": 899,
+          "before": "- [ ] **P/01.1-24** the order of output arrays of N0 (scope — lessons 8–10): checked at the lessons of the scope — by their scenarios and vectors (before the move — the acceptance of M11) and by reading the output forms; chapter 1.1 has no outputs of the scope of its own (review of stage A 8–10, № 19 / decision 4)\n",
+          "after": ""
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/spec/01.2-store.norms.md",
+      "before_sha256": "672c238b3a7da1cf6cd23b8f0dff23861ee4f6c540fe274de0c7eb6977ff8cb5",
+      "after_sha256": "5e08b87c5a75535e397d123e65bdc4f65d44f937aa6892616e4b80b1b18e706b",
+      "before_blob": "d43ea60ceefb911166454b56e60d49be9709419c",
+      "after_blob": "b1f66117d7c66875f3450b34968a425f0acb3277",
+      "before_bytes": 21003,
+      "after_bytes": 21035,
+      "blocks": [
+        {
+          "old_start_0": 243,
+          "old_end_0": 244,
+          "new_start_0": 243,
+          "new_end_0": 244,
+          "before": "| 16 | a batch by roles (ADR-0094 B9): the role `console` writes 65 rows in one batch, another role — 400 (`BATCH_WRITES` P/01.1 N1); 65 guards for another role — 400, for the role `domain` — 200 (sc. 14); a row without the right, a guard without read — 403 for the whole batch, nothing written; `never` of one row of the batch — 403, for admin too | N1.3 `batch`, N3 «check»; P/01.1 N1 |\n",
+          "after": "| 16 | a batch by roles (ADR-0094 B9): the role `console` writes `BATCH_WRITES + 1` rows in one batch, another role — 400 (`BATCH_WRITES` P/01.1 N1); `BATCH_GUARDS + 1` guards for another role — 400, for the role `domain` — 200 (sc. 14); a row without the right, a guard without read — 403 for the whole batch, nothing written; `never` of one row of the batch — 403, for admin too | N1.3 `batch`, N3 «check»; P/01.1 N1 |\n"
+        },
+        {
+          "old_start_0": 269,
+          "old_end_0": 269,
+          "new_start_0": 269,
+          "new_end_0": 270,
+          "before": "",
+          "after": "- [ ] **P/01.2-08** the identity — the role socket / the writer's name; the role header is not read; forwarding only from a daemon of the group (a voting one or the door without a vote) — sc. 08; the refusal of a role header before the body is parsed — sc. 08 step 2; at a listing — sc. 12; a forwarded admin with a loaded file — sc. 07 of chapter 1.3 (the probe `@tls`); by reading\n"
+        },
+        {
+          "old_start_0": 270,
+          "old_end_0": 271,
+          "new_start_0": 271,
+          "new_end_0": 271,
+          "before": "- [ ] **P/01.2-08** the identity — the role socket / the writer's name; the role header is not read; forwarding only from a daemon of the group (a voting one or the door without a vote) — sc. 08; the refusal of a role header before the body is parsed — sc. 08 step 2; at a listing — sc. 12; a forwarded admin with a loaded file — sc. 07 of chapter 1.3 (the probe `@tls`); by reading\n",
+          "after": ""
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "before_sha256": "737cb4f4694a7f30ccfff10e60475a3718028cdf59db4a4d8d4fa82e6ccf7f57",
+      "after_sha256": "1af25acb3155a5c87914fe2022ca1c64ee3292eb0d83673bfc58b7cd3f280390",
+      "before_blob": "f6365421248a5e2194fc67db7f81ddf58e6751fe",
+      "after_blob": "b47a2f025ef46fd272e26100ea2a31099e27338e",
+      "before_bytes": 63840,
+      "after_bytes": 64579,
+      "blocks": [
+        {
+          "old_start_0": 50,
+          "old_end_0": 51,
+          "new_start_0": 50,
+          "new_end_0": 51,
+          "before": "leader_wait: 5 s from the loss of the leader (not per request) → 503 unavailable; a write gone to the leader without an answer → ambiguous (chapter 1.1)\n",
+          "after": "leader_wait: the effective -leader-wait interval from the loss of the leader (not per request) → 503 unavailable; a write gone to the leader without an answer → ambiguous (chapter 1.1)\n"
+        },
+        {
+          "old_start_0": 58,
+          "old_end_0": 60,
+          "new_start_0": 58,
+          "new_end_0": 60,
+          "before": "door:      -door -id -voters a@h:p,…: without a vote; the same sockets and rights; to the leader or any voter (attempt 2 s, margin 1 s);\n           the group membership — every 5 s; the row platform/configstore-doors/<id> {seen_at} every 30 s (not under platform/doors/ — there are the doors of servers, P/05 N1.4);\n",
+          "after": "door:      -door -id -voters a@h:p,…: without a vote; the same sockets and rights; to the leader or any voter (attempt DOOR_REQUEST_TIMEOUT, margin DOOR_REQUEST_MARGIN);\n           the group membership — every DOOR_MEMBERS_EVERY; the row platform/configstore-doors/<id> {seen_at} every DOOR_SEEN_EVERY (not under platform/doors/ — there are the doors of servers, P/05 N1.4);\n"
+        },
+        {
+          "old_start_0": 67,
+          "old_end_0": 68,
+          "new_start_0": 67,
+          "new_end_0": 68,
+          "before": "           configstore_doors while its row reads in its own form and seen_at in it is not older than 3 × 30 s by the clock of the voter\n",
+          "after": "           configstore_doors while its row reads in its own form and seen_at in it is not older than DOOR_SEEN_PERIODS × DOOR_SEEN_EVERY by the clock of the voter\n"
+        },
+        {
+          "old_start_0": 94,
+          "old_end_0": 95,
+          "new_start_0": 94,
+          "new_end_0": 95,
+          "before": "           record is ahead of its clock, if more than CLOCK_SKEW 60 s (chapter 1.1 N0 «Cluster clocks»); otherwise there is no field; a\n",
+          "after": "           record is ahead of its clock, if more than CLOCK_SKEW (chapter 1.1 N0 «Cluster clocks»); otherwise there is no field; a\n"
+        },
+        {
+          "old_start_0": 132,
+          "old_end_0": 133,
+          "new_start_0": 132,
+          "new_end_0": 133,
+          "before": "           platform/configstore-doors/<id> (service rows of the group itself, `door` above: a live door writes its own every 30 s —\n",
+          "after": "           platform/configstore-doors/<id> (service rows of the group itself, `door` above: a live door writes its own every DOOR_SEEN_EVERY —\n"
+        },
+        {
+          "old_start_0": 160,
+          "old_end_0": 162,
+          "new_start_0": 160,
+          "new_end_0": 162,
+          "before": "           ambiguous) and configstore_door_voters_reachable (gauge: the voters that answered its last membership poll, once per 5 s)\n           (C01-DOOR-METRICS-01, the Architect's decision of 2026-10-30, the meaning and the type — as the witness); alarms of the voters: membership ≠ declared, a follower lagging > 1000, more than 3 elections in 10 min\n",
+          "after": "           ambiguous) and configstore_door_voters_reachable (gauge: the voters that answered its last membership poll, once per DOOR_MEMBERS_EVERY)\n           (C01-DOOR-METRICS-01, the Architect's decision of 2026-10-30, the meaning and the type — as the witness); alarms of the voters: membership ≠ declared, a follower lagging > RAFT_LAG_ALARM, more than RAFT_ELECTION_ALARM_COUNT elections in RAFT_ELECTION_ALARM_WINDOW\n"
+        },
+        {
+          "old_start_0": 176,
+          "old_end_0": 176,
+          "new_start_0": 176,
+          "new_end_0": 178,
+          "before": "",
+          "after": "\nFixed `DOOR_*` and `RAFT_*` numeric limits are owned only by [runtime-constants.tsv](../forms/runtime-constants.tsv). The effective `-leader-wait` and connection-limit defaults are owned by [daemon-flags.tsv](../forms/daemon-flags.tsv).\n"
+        },
+        {
+          "old_start_0": 203,
+          "old_end_0": 204,
+          "new_start_0": 205,
+          "new_end_0": 206,
+          "before": "- `-max-body`: the read limit of the HTTP body of `POST /v1/write` (chapter 1.1 N2, `{body_limit}` of «Stand»), separately from the row ceiling `-max-value` (log of cammeta-python, lesson 11 № 24)\n",
+          "after": "- `-max-body`: the effective entity-body read limit of `POST /v1/write` and service POSTs of N2 (chapter 1.1 N2, `{body_limit}` of «Stand»), separately from the row ceiling `-max-value` (log of cammeta-python, lesson 11 № 24)\n"
+        },
+        {
+          "old_start_0": 211,
+          "old_end_0": 213,
+          "new_start_0": 213,
+          "new_end_0": 214,
+          "before": "The numbers max-conns=64, api-conns=32, api-per-address=8 are the defaults of the profile, not a hidden\nchoice of each implementation. A deployment MAY set other positive limits before\n",
+          "after": "The connection-limit defaults are owned only by their rows of [daemon-flags.tsv](../forms/daemon-flags.tsv), not by a hidden choice of each implementation. A deployment MAY set other positive limits before\n"
+        },
+        {
+          "old_start_0": 216,
+          "old_end_0": 217,
+          "new_start_0": 217,
+          "new_end_0": 218,
+          "before": "The writing of the flags (ADR-0125 addendum (2)): a flag is `-name value` or `-name=value`, the name exactly as the table writes it (`--from` with two hyphens); a flag of the type `bool` is written without a value (`-door=true` is a refusal); `--` alone ends the flags. A repeated flag, a flag of another command, a value out of its type and a positional word of the daemon are a start refusal, code 2; positional words are only those of `admin_ops` by its grammar above (`admit <id>`, `backup <file>`, `leave [id]`). The values: `bytes` and `int` — a decimal integer without a sign, a plus or leading zeros (`0` itself is allowed), `bytes` without a unit suffix (`512KiB` is the writing of the prose, not a value); `duration` — `<integer><unit>`, the unit `ms`, `s`, `m` or `h`, greater than `0` (`5s`, `250ms`); `addr` — `host:port`, a non-empty host (a name, IPv4 or `[IPv6]`) and a decimal port `1`–`65535`. `-id` outside a group defaults to `SERVER_NAME`; an empty or absent `SERVER_NAME` gives no default.\n",
+          "after": "The writing of the flags (ADR-0125 addendum (2)): a flag is `-name value` or `-name=value`, the name exactly as the table writes it (`--from` with two hyphens); a flag of the type `bool` is written without a value (`-door=true` is a refusal); `--` alone ends the flags. A repeated flag, a flag of another command, a value out of its type and a positional word of the daemon are a start refusal, code 2; positional words are only those of `admin_ops` by its grammar above (`admit <id>`, `backup <file>`, `leave [id]`). The values: `bytes` and `int` — a decimal integer without a sign, a plus or leading zeros (`0` itself is allowed), `bytes` without a unit suffix (`512KiB` is the writing of the prose, not a value); `duration` — `<integer><unit>`, the unit `ms`, `s`, `m` or `h`, greater than `0` (`5s`, `250ms`); `addr` — `host:port`, a non-empty host (a name, IPv4 or `[IPv6]`) and a decimal port `1`–`65535`. The default of `-id` and the absence of a default are defined only by its row and header in [daemon-flags.tsv](../forms/daemon-flags.tsv).\n"
+        },
+        {
+          "old_start_0": 294,
+          "old_end_0": 295,
+          "new_start_0": 295,
+          "new_end_0": 296,
+          "before": "| GET `/v1/status` | `{id, state, leader, leader_id, term, commit, applied, voters, members, tls, max_value, max_body}`; optional `base, again, role, last_snapshot, out, admission_ahead` (N1.3 `admission`; ADR-0091 item 1). Indices are exact uint64, state — Leader/Follower/Candidate/Shutdown/Door; voters/out — an array of ids, members — a map id → `-api` address, without `-api` the member is not in `members` (the map can be `{}`; a value is never empty — `minLength: 1` of OpenAPI; C01-STATUS-MEMBERS-NOAPI, the Architect's decision of 2026-10-26); `leader` — the `-api` address of the leader (empty if the leader is unknown or was started without `-api`), `leader_id` — the id of the leader (empty if the leader is unknown) (the store pilot, A7). Door requires role=door and term/commit/applied=0. `max_value` is this instance’s effective row-weight ceiling in bytes, the value of `-max-value` (N1.3; the row weight of chapter 1.1), separately from `-max-body`; on the acceptance stand it is 524288. `max_body` is a required positive integer: this instance's actual configured `-max-body` in entity-body bytes (including JSON whitespace and an actual LF, excluding HTTP framing); it is1048576 on the default acceptance stand. It is not derived from max_value. The installer reads it for the static finite-profile check before writes (ADR-0127 P/06 C2). This is a local observation, not a confirmation by the majority |\n",
+          "after": "| GET `/v1/status` | `{id, state, leader, leader_id, term, commit, applied, voters, members, tls, max_value, max_body}`; optional `base, again, role, last_snapshot, out, admission_ahead` (N1.3 `admission`; ADR-0091 item 1). Indices are exact uint64, state — Leader/Follower/Candidate/Shutdown/Door; voters/out — an array of ids, members — a map id → `-api` address, without `-api` the member is not in `members` (the map can be `{}`; a value is never empty — `minLength: 1` of OpenAPI; C01-STATUS-MEMBERS-NOAPI, the Architect's decision of 2026-10-26); `leader` — the `-api` address of the leader (empty if the leader is unknown or was started without `-api`), `leader_id` — the id of the leader (empty if the leader is unknown) (the store pilot, A7). Door requires role=door and term/commit/applied=0. `max_value` is this instance’s effective row-weight ceiling in bytes, the value of `-max-value` (N1.3; the row weight of chapter 1.1), separately from `-max-body`; the acceptance stand parameters are N5. `max_body` is a required positive integer: this instance's actual configured `-max-body` in entity-body bytes (including JSON whitespace and an actual LF, excluding HTTP framing); its default is owned only by the flag form. It is not derived from max_value. The installer reads it for the static finite-profile check before writes (ADR-0127 P/06 C2). This is a local observation, not a confirmation by the majority |\n"
+        },
+        {
+          "old_start_0": 302,
+          "old_end_0": 303,
+          "new_start_0": 303,
+          "new_end_0": 304,
+          "before": "A member identifier is 1–128 ASCII characters: the first a letter/digit, then letters/digits/`_`/`.`/`-`. This is the input profile of this lesson. The request parsing of the service doors is chapter 1.1 N2.1 (query, the JSON of the body, the path byte for byte, HTTP, early refusal); deviations are below. The order of checks: the frame (framing, the body limit 1 MiB — 413) → route and method (404, 405) → identity (403) → body and membership (400, 409): an extra body larger than the limit with a foreign method — 413 earlier than 404/405 (reconciliation of python and go M10/6–11, B3). `HEAD` is not a method of the service doors: `/v1/status`, `/v1/join`, `/v1/leave`, `/metrics` — 405, `/v1/write` and `/v1/rights` — 404 by their owners, chapters 1.1 and 1.2 (both implementations, agreed without a norm). The bodies of service POSTs are one JSON object; unknown fields are rejected; the read limit is 1 MiB, the actual count of bytes, extra JSON/framing/truncation — 400, exceeding — 413, the read time is limited by the implementation. 400/404/405 — `BadRequestFault`, 403 — `ForbiddenFault`, 413 — `BodyTooLargeFault` of chapter 1.1. For own status/join/leave/write/metrics 503 is `UnavailableFault` before sending, `AmbiguousFault` after sending a change; at the connection limit — `UnavailableFault` with `Retry-After: 1` (chapter 1.1 N4). After an unknown join/leave the operator reads status; there is no automatic proof of success from a timeout. The floor keeps the replay memory of chapter 1.1.\n",
+          "after": "A member identifier is 1–128 ASCII characters: the first a letter/digit, then letters/digits/`_`/`.`/`-`. This is the input profile of this lesson. The request parsing of the service doors is chapter 1.1 N2.1 (query, the JSON of the body, the path byte for byte, HTTP, early refusal); deviations are below. The order of checks: the frame (framing, the effective `-max-body` limit — 413) → route and method (404, 405) → identity (403) → body and membership (400, 409): an extra body larger than the limit with a foreign method — 413 earlier than 404/405 (reconciliation of python and go M10/6–11, B3). `HEAD` is not a method of the service doors: `/v1/status`, `/v1/join`, `/v1/leave`, `/metrics` — 405, `/v1/write` and `/v1/rights` — 404 by their owners, chapters 1.1 and 1.2 (both implementations, agreed without a norm). The bodies of service POSTs are one JSON object; unknown fields are rejected; the read limit is the same effective `-max-body`, counting actual entity bytes, extra JSON/framing/truncation — 400, exceeding — 413, the read time is limited by the implementation. 400/404/405 — `BadRequestFault`, 403 — `ForbiddenFault`, 413 — `BodyTooLargeFault` of chapter 1.1. For own status/join/leave/write/metrics 503 is `UnavailableFault` before sending, `AmbiguousFault` after sending a change; at the connection limit — `UnavailableFault` with `Retry-After: 1` (chapter 1.1 N4). After an unknown join/leave the operator reads status; there is no automatic proof of success from a timeout. The floor keeps the replay memory of chapter 1.1.\n"
+        },
+        {
+          "old_start_0": 375,
+          "old_end_0": 376,
+          "new_start_0": 376,
+          "new_end_0": 377,
+          "before": "- `no_leader`: no leader for 5 s. Caller action: wait; workers live by the lease.\n",
+          "after": "- `no_leader`: no leader for the effective `-leader-wait` interval. Caller action: wait; workers live by the lease.\n"
+        },
+        {
+          "old_start_0": 400,
+          "old_end_0": 401,
+          "new_start_0": 401,
+          "new_end_0": 402,
+          "before": "| 08 | a replay of `op: floor` with the same `id` after a store restart — the saved outcome (`again`); another floor with this `id` — 400; a floor not as an integer (`2.0e1`) — 400; a floor above 2^53 − 2^32 (the greatest uint64) — 400, 2^53 − 2^32 — admissible (the pilot of data family schemas, D6) | N2, N1.3 floor |\n",
+          "after": "| 08 | a replay of `op: floor` with the same `id` after a store restart — the saved outcome (`again`); another floor with this `id` — 400; a floor not as an integer (`2.0e1`) — 400; a floor above the upper bound of N1.3 `floor.form`, including the greatest uint64 — 400; the upper bound itself is admissible (the pilot of data family schemas, D6) | N2, N1.3 floor |\n"
+        },
+        {
+          "old_start_0": 405,
+          "old_end_0": 406,
+          "new_start_0": 406,
+          "new_end_0": 407,
+          "before": "| 15 | service doors, steps 1–8: `join`/`leave` from a role socket — 403; a body larger than 1 MiB — 413, also with a foreign method, earlier than 405; empty `raft`/`api` — 400; `HEAD` — 405 and 404 (B1–B4) | N2 |\n",
+          "after": "| 15 | service doors, steps 1–8: `join`/`leave` from a role socket — 403; a body larger than the effective `-max-body` — 413, also with a foreign method, earlier than 405; empty `raft`/`api` — 400; `HEAD` — 405 and 404 (B1–B4) | N2 |\n"
+        },
+        {
+          "old_start_0": 455,
+          "old_end_0": 456,
+          "new_start_0": 456,
+          "new_end_0": 457,
+          "before": "- [ ] **P/01.3-01** the daemon: the flags of N1.3, the store of a box without raft (`box`) — sc. 04 and by reading, `members` without `-api` — `{}` (sc. 16), start refusals, sizes 1/3/5, joining and `-force`, `leave`/`admit`, the leader wait of 5 s — sc. 07, 17 (the group stand); mTLS, sockets — by reading; the 503 branch «no leader for 5 s» — sc. 17; ambiguous and unavailable with Retry-After at the connection limit — by reading N1.3/N4: the scenarios do not saturate connections and do not cut the leader's answer\n",
+          "after": "- [ ] **P/01.3-01** the daemon: the flags of N1.3, the store of a box without raft (`box`) — sc. 04 and by reading, `members` without `-api` — `{}` (sc. 16), start refusals, sizes 1/3/5, joining and `-force`, `leave`/`admit`, the effective `-leader-wait` interval — sc. 07, 17 (the group stand); mTLS, sockets — by reading; the 503 branch «no leader for the effective `-leader-wait` interval» — sc. 17; ambiguous and unavailable with Retry-After at the connection limit — by reading N1.3/N4: the scenarios do not saturate connections and do not cut the leader's answer\n"
+        },
+        {
+          "old_start_0": 459,
+          "old_end_0": 460,
+          "new_start_0": 460,
+          "new_end_0": 461,
+          "before": "- [ ] **P/01.3-05** the daemon metrics of N1.3 — sc. 04 (two series); the series `_state`, `_elections_total`, `_index`, `_last_contact_seconds`, `_voters`, `_voters_expected` of the leader and a follower — sc. 17; the three alarms — checked by reading: the metrics test of the implementation (the subject — the list of N1.3); `configstore_doors` — the number of rows `platform/configstore-doors/<id>` that read in their own form, with `seen_at` not older than 3 × 30 s — at a voter by its own replica and its own clock, a door without a vote has no series (C01-DOORS-COUNT-FRESH-01, C01-DOORS-COUNT-PLACE-01) — sc. 07 (the group stand) (the Architect's decision on the tails of the move of lesson 1)\n",
+          "after": "- [ ] **P/01.3-05** the daemon metrics of N1.3 — sc. 04 (two series); the series `_state`, `_elections_total`, `_index`, `_last_contact_seconds`, `_voters`, `_voters_expected` of the leader and a follower — sc. 17; the three alarms — checked by reading: the metrics test of the implementation (the subject — the list of N1.3); `configstore_doors` — the number of rows `platform/configstore-doors/<id>` that read in their own form, with `seen_at` not older than `DOOR_SEEN_PERIODS × DOOR_SEEN_EVERY` — at a voter by its own replica and its own clock, a door without a vote has no series (C01-DOORS-COUNT-FRESH-01, C01-DOORS-COUNT-PLACE-01) — sc. 07 (the group stand) (the Architect's decision on the tails of the move of lesson 1)\n"
+        },
+        {
+          "old_start_0": 463,
+          "old_end_0": 464,
+          "new_start_0": 464,
+          "new_end_0": 466,
+          "before": "- [ ] **P/01.3-10** the admission time in the log record and the snapshot, continuation from the snapshot, `admission_ahead` in `/v1/status` of the leader beyond 60 s (N1.3 `admission`) — checked by reading: the stand does not move the leader's clock and does not take a snapshot on demand\n",
+          "after": "- [ ] **P/01.3-09** verification of the TLS peer by the daemon of N1.6: CN and SAN, one role `configstore` or `configstore-door`, the signature algorithms of the chain, trust of `ca.pem` and `ca.next.pem`, revocation by content without a restart — checked by reading: the tests of the implementation on a test CA (the subject — N1.6: without a certificate, a foreign CA, a revoked one, a foreign role, its own); the reason — the CA and file rights are not changed by HTTP-TSV\n- [ ] **P/01.3-10** the admission time in the log record and the snapshot, continuation from the snapshot, `admission_ahead` in `/v1/status` of the leader beyond `CLOCK_SKEW` (N1.3 `admission`) — checked by reading: the stand does not move the leader's clock and does not take a snapshot on demand\n"
+        },
+        {
+          "old_start_0": 465,
+          "old_end_0": 466,
+          "new_start_0": 467,
+          "new_end_0": 467,
+          "before": "- [ ] **P/01.3-09** verification of the TLS peer by the daemon of N1.6: CN and SAN, one role `configstore` or `configstore-door`, the signature algorithms of the chain, trust of `ca.pem` and `ca.next.pem`, revocation by content without a restart — checked by reading: the tests of the implementation on a test CA (the subject — N1.6: without a certificate, a foreign CA, a revoked one, a foreign role, its own); the reason — the CA and file rights are not changed by HTTP-TSV\n",
+          "after": ""
+        }
+      ]
+    },
+    {
+      "path": "Platform/common/contracts/store-client.md",
+      "before_sha256": "b61d444e35ac4a5fcc3916b1a298c578e5edd33131cd13abd0fe17f7f2c668d1",
+      "after_sha256": "a465b2ffe74c9b54afc2ebb75cafbaa972f64e11c3cf62d6c063d1df26fc02eb",
+      "before_blob": "75cded35e73ce74526570e1feb73468a5d674a38",
+      "after_blob": "b55e7051adf96b7079dd0c84b9cf1156dc6bf4ea",
+      "before_bytes": 9351,
+      "after_bytes": 9799,
+      "blocks": [
+        {
+          "old_start_0": 45,
+          "old_end_0": 48,
+          "new_start_0": 45,
+          "new_end_0": 48,
+          "before": "limits:    a key — at most 1024 bytes of UTF-8 of the full key (an implementation on files MAY have less — its description); the weight of items —\n           at most 524288 bytes (the sum of the lengths of keys and values); the body of POST /v1/write — at most the body read limit\n           named in the description of the store implementation (at the daemon — -max-body, default 1 MiB, P/01.3 N1.3)\n",
+          "after": "limits:    a key — at most KEY_BYTES bytes of UTF-8 of the full key (an implementation on files MAY have less — its description); the weight of items —\n           at most ROW_CEILING bytes (the sum of the lengths of keys and values); the body of POST /v1/write — at most the body read limit\n           named in the description of the store implementation (at the daemon — effective -max-body; its default is owned only by the P/01 flag form)\n"
+        },
+        {
+          "old_start_0": 49,
+          "old_end_0": 49,
+          "new_start_0": 49,
+          "new_end_0": 51,
+          "before": "",
+          "after": "\n`KEY_BYTES` is defined by the P/01 [runtime-constants form](../../01-store/forms/runtime-constants.tsv). `ROW_CEILING` is the configured ceiling of this store instance (on a daemon, the effective `-max-value`); its default and the `-max-body` default are defined only by [daemon-flags.tsv](../../01-store/forms/daemon-flags.tsv). These references change neither the operations nor their limit values.\n"
+        },
+        {
+          "old_start_0": 88,
+          "old_end_0": 89,
+          "new_start_0": 90,
+          "new_end_0": 91,
+          "before": "           up to 524288 bytes, larger in JSON with escaping; a listing is not limited in the number of rows), therefore the limit\n",
+          "after": "           up to ROW_CEILING bytes, larger in JSON with escaping; a listing is not limited in the number of rows), therefore the limit\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/common/ru/contracts/store-client.md",
+      "before_sha256": "39a2296a111112af7f10eaae539448d008e8ca141dd66e08d30af1ec20abdefb",
+      "after_sha256": "a346534ded43027f70c28c6447ef07f55a83cffc0b2ddb5ec12fb1df1170d4db",
+      "before_blob": "732384bd3b89ba3a83580f0b051c669dbfda52c2",
+      "after_blob": "e60d829b5a9a04c2f091a26524c6e10e63897637",
+      "before_bytes": 12663,
+      "after_bytes": 13280,
+      "blocks": [
+        {
+          "old_start_0": 45,
+          "old_end_0": 48,
+          "new_start_0": 45,
+          "new_end_0": 48,
+          "before": "limits:    ключ — не больше 1024 байт UTF-8 полного ключа (реализация на файлах МОЖЕТ меньше — её описание); вес items —\n           не больше 524288 байт (сумма длин ключей и значений); тело POST /v1/write — не больше предела чтения тела,\n           названного в описании реализации хранилища (у демона — -max-body, умолчание 1 МиБ, P/01.3 N1.3)\n",
+          "after": "limits:    ключ — не больше KEY_BYTES байт UTF-8 полного ключа (реализация на файлах МОЖЕТ меньше — её описание); вес items —\n           не больше ROW_CEILING байт (сумма длин ключей и значений); тело POST /v1/write — не больше предела чтения тела,\n           названного в описании реализации хранилища (у демона — действующий -max-body; его умолчанием владеет только форма флагов P/01)\n"
+        },
+        {
+          "old_start_0": 49,
+          "old_end_0": 49,
+          "new_start_0": 49,
+          "new_end_0": 51,
+          "before": "",
+          "after": "\n`KEY_BYTES` определён [формой runtime-constants P/01](../../../01-store/forms/runtime-constants.tsv). `ROW_CEILING` — настроенный потолок этого экземпляра хранилища (у демона — действующий `-max-value`); его умолчание и умолчание `-max-body` определены только [daemon-flags.tsv](../../../01-store/forms/daemon-flags.tsv). Ссылки не меняют операции или значения их пределов.\n"
+        },
+        {
+          "old_start_0": 88,
+          "old_end_0": 89,
+          "new_start_0": 90,
+          "new_end_0": 91,
+          "before": "           до 524288 байт, в JSON с экранированием больше; перечисление числом строк не ограничено), поэтому предел\n",
+          "after": "           до ROW_CEILING байт, в JSON с экранированием больше; перечисление числом строк не ограничено), поэтому предел\n"
+        }
+      ]
+    },
+    {
+      "path": "decisions/adr-norms.tsv",
+      "before_sha256": "8e5b53ae5d7bf0f85ecca946c96b16d9dd7bb071e0c27c1a8fa958d58c799ba1",
+      "after_sha256": "1c2bb0ac3e41b1f0c74b526e78b23198116aa6410971741060dbf52340caa70d",
+      "before_blob": "1f5437c423770269ac33c28c3404fe66d1b92361",
+      "after_blob": "57d01a8c51e9b3ecc3315bd1fc7281e2f8a3379d",
+      "before_bytes": 450352,
+      "after_bytes": 451839,
+      "blocks": [
+        {
+          "old_start_0": 1656,
+          "old_end_0": 1656,
+          "new_start_0": 1656,
+          "new_end_0": 1657,
+          "before": "",
+          "after": "0129\t10\tP/01 v2 normative clarification, item 3\tНОРМА\tPlatform/01-store/spec/01.1-store.norms.md; spec/01.2-store.norms.md; spec/01.3-store.norms.md; spec/01-store.README.md; lifecycle.md; forms/runtime-constants.tsv; forms/write-checks.tsv; acceptance/1/seams.tsv; acceptance/3/README.md; EN/RU; Platform/common/contracts/store-client.md and ru mirror\tadmitted mismatch, binary64 metadata, single numeric source, reference consistency\tрешение Спецификации CT 103 по ADR-0129 доп. (10) п.3 по поручению coord103: mismatch уже применённого id после admission сохраняет новое last-admitted и прежний id/ответ без бизнес-эффектов; clock переводится в конечный binary64 до max, assigned numeric value сохраняется без row-writer округления. Существующая форма констант дополнена без смены значений; default max-body только во flags-form. Floor/README, служебный body limit, effective sock и ссылки/чеклисты согласованы. Четыре новых шва56шагов только прежней HTTP/@clock/@reopen грамматики; old345/239prefix/CEL/operational schemas сохранены. Нет новой coreform/CODE/ABI/порта/атомарности/генерации/SUT; новый judge только review103 через coord103\n"
+        }
+      ]
+    },
+    {
+      "path": "decisions/changes/registry.tsv",
+      "before_sha256": "81578d0402b295de5f009dc2eac7ebca37002bd8c9466493e1ec2afe9e6d1a98",
+      "after_sha256": "7c9dea5879ee4bf38e61bd8d260a25fa3a84c640c99110f53e21e6fcc446e2ce",
+      "before_blob": "f48e968cbf6054c69ba9b3b86fd72ff0c70bcd4a",
+      "after_blob": "bd033bcf2adee4efd8a1d5bf60e6e947fcd5425f",
+      "before_bytes": 839,
+      "after_bytes": 902,
+      "blocks": [
+        {
+          "old_start_0": 11,
+          "old_end_0": 11,
+          "new_start_0": 11,
+          "new_end_0": 12,
+          "before": "",
+          "after": "0129-p01-v2-norms\tP/01\tСпецификация\t1\treview\t-\t-\t-\n"
+        }
+      ]
+    },
+    {
+      "path": "decisions/journal/platform/01-store/corrections-1.tsv",
+      "before_sha256": "28ef0b4bf1d13add22246cdead58e105fb27e500bd89179565adf29c0c62482d",
+      "after_sha256": "064e50bb14f71706d932a2e9bea8dcf242bd835b9d883d46fa87fb6b44a6b9e1",
+      "before_blob": "003151b212131e816e3f9230d1efbe4de1ac81f0",
+      "after_blob": "176da56e01a43013f6b4be04fe9d80493f753d01",
+      "before_bytes": 12548,
+      "after_bytes": 13051,
+      "blocks": [
+        {
+          "old_start_0": 39,
+          "old_end_0": 39,
+          "new_start_0": 39,
+          "new_end_0": 40,
+          "before": "",
+          "after": "2026-11-06\tADR-0129 (10) item 3; s16-s19\tAdmitted id-mismatch retains last admission and the first applied-id answer. Define finite binary64 admission before max and preserve it beyond row-writer precision through ordinary reopen. Append four existing-grammar witnesses with a pre-admission negative control, 56 steps; former 345 ordinary steps and complete 239 seam prefix remain byte exact. Constants/references only elsewhere; no core form, ABI, generator, implementation or executed acceptance.\tall\n"
+        }
+      ]
+    }
+  ],
+  "actual_source_changes": [
+    "Platform/01-store/acceptance/1/README.md",
+    "Platform/01-store/acceptance/1/seams.tsv",
+    "Platform/01-store/acceptance/3/README.md",
+    "Platform/01-store/forms/runtime-constants.tsv",
+    "Platform/01-store/forms/stages.tsv",
+    "Platform/01-store/forms/write-checks.tsv",
+    "Platform/01-store/lifecycle.md",
+    "Platform/01-store/ru/acceptance/1/README.md",
+    "Platform/01-store/ru/acceptance/3/README.md",
+    "Platform/01-store/ru/lifecycle.md",
+    "Platform/01-store/ru/spec/01-store.README.md",
+    "Platform/01-store/ru/spec/01.1-store.norms.md",
+    "Platform/01-store/ru/spec/01.2-store.norms.md",
+    "Platform/01-store/ru/spec/01.3-store.norms.md",
+    "Platform/01-store/spec/01-store.README.md",
+    "Platform/01-store/spec/01.1-store.norms.md",
+    "Platform/01-store/spec/01.2-store.norms.md",
+    "Platform/01-store/spec/01.3-store.norms.md",
+    "Platform/common/contracts/store-client.md",
+    "Platform/common/ru/contracts/store-client.md",
+    "decisions/adr-norms.tsv",
+    "decisions/changes/registry.tsv",
+    "decisions/journal/platform/01-store/corrections-1.tsv"
+  ],
+  "scope": "ADR0129(10)item3; two store-client paths explicitly reserved by coord103",
+  "new_core_form_or_implementation": false
+}

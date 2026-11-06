@@ -43,10 +43,12 @@ batch:     op: batch — {writes: [{op: put|delete, key, items?, cas?}], guards?
            all or nothing, one version for all rows; at most BATCH_WRITES writes and BATCH_GUARDS guards (the role domain has no limit on the number of guards, on writes it has; the role console has no
            limit on the number); a key once; a guard on a written key is a form refusal
 time:      not_after, not_before — JSON numbers in the notation «Time in a row» (Platform/common/data/codec.tsv row time; P/01.1 N0), finite, ≥ 0
-limits:    a key — at most 1024 bytes of UTF-8 of the full key (an implementation on files MAY have less — its description); the weight of items —
-           at most 524288 bytes (the sum of the lengths of keys and values); the body of POST /v1/write — at most the body read limit
-           named in the description of the store implementation (at the daemon — -max-body, default 1 MiB, P/01.3 N1.3)
+limits:    a key — at most KEY_BYTES bytes of UTF-8 of the full key (an implementation on files MAY have less — its description); the weight of items —
+           at most ROW_CEILING bytes (the sum of the lengths of keys and values); the body of POST /v1/write — at most the body read limit
+           named in the description of the store implementation (at the daemon — effective -max-body; its default is owned only by the P/01 flag form)
 ```
+
+`KEY_BYTES` is defined by the P/01 [runtime-constants form](../../01-store/forms/runtime-constants.tsv). `ROW_CEILING` is the configured ceiling of this store instance (on a daemon, the effective `-max-value`); its default and the `-max-body` default are defined only by [daemon-flags.tsv](../../01-store/forms/daemon-flags.tsv). These references change neither the operations nor their limit values.
 
 ## Answer
 
@@ -86,7 +88,7 @@ no_reply:  a truncated, unreadable (not by the closed answer form) or never arri
            a listing: unavailable, for a write, delete and batch: ambiguous; not «no» and not an exception that drops the cycle
 wait:      the answer read limit and the answer wait term — decided by the client implementation, which names them in its description; the limit is
            not less than the largest answer the store may give by P/01: P/01 names no number (a row — the weight of items
-           up to 524288 bytes, larger in JSON with escaping; a listing is not limited in the number of rows), therefore the limit
+           up to ROW_CEILING bytes, larger in JSON with escaping; a listing is not limited in the number of rows), therefore the limit
            of the client is not less than the answer of a row read at the weight ceiling and of a listing of its store; exceeding the limit or
            the term is no_reply: the outcome is unknown, the write is repeated only with the same id (SC-WIRE78-G01, the Architect's answer of 2026-10-25 (2))
 retry:     after ambiguous a repeat is safe only with the same id: if the first one applied, the repeat answers with its answer (again);

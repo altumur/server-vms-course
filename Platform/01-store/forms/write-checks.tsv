@@ -5,16 +5,16 @@
 # each binds the index and the element of a list (i, w in body.writes), the group applies to the elements in order, element i as a whole before element i + 1; no list — no elements.
 # when and fault are CEL (extensions strings, two-var-comprehensions; type(), has(), matches() — standard CEL). Variables:
 #var body dyn — the JSON of the body; strings carry U+FFFD instead of a lone surrogate
-#var sock string — the socket role of the caller (P/01.2 N1.1 identity): admin, console, domain or a role name
+#var sock string — the effective caller role after P/01.2 N3 check steps 1–2: the local socket identity or verified forwarded role, not the forwarding transport role
 #var lone list<string> — the JSON Pointer of every string of the body with a lone surrogate; for a field name — the pointer of the object where it stands (N2.1)
 #var lim map<string,int> — the parameters of the lesson, only the names of #lim
 #lim BATCH_WRITES — P/01.1 N1 batch
 #lim BATCH_GUARDS — P/01.1 N1 batch
 #lim ROW_CEILING — P/01.1 N1 row.items.ceiling: the row ceiling of the store
-#fn key_ok(string) -> bool — the key rules of N1 row.key: not empty, does not start with /, no segment .., at most 1024 UTF-8 bytes
+#fn key_ok(string) -> bool — the key rules of N1 row.key: not empty, does not start with /, no segment .., at most KEY_BYTES UTF-8 bytes
 #fn weight(map) -> int — the weight of items of N1: the sum of UTF-8 byte lengths of all names and values
 #fn finite(double) -> bool — finite in binary64 (1e400 is not)
-#fn allowed(string, string, string) -> bool — the rights of the role (socket, operation read | write | delete, key): P/01.2 N3 «check»
+#fn allowed(string, string, string) -> bool — full permission for the effective role, operation read | write | delete and key by P/01.2 N3 «check», including never and admin/internal-role exceptions; not only the ordinary-role file evaluator
 # id — the stable address of the row (ADR-0122 addendum (1) item 4): wc-<check> (a check name repeated at op batch — wc-batch_<check>), apart from the order n; not renumbered
 n	id	op	group	each	check	when	code	kind	fault	norm
 1	wc-body_object	*			body_object	type(body) != map	400	badrequest		P/01.1 N2.1

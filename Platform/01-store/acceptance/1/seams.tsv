@@ -246,3 +246,59 @@ s15-replay-batch-admission	10	POST /v1/write {"op":"put","key":"acc/s15-replay-b
 s15-replay-batch-admission	11	GET /v1/get?key=acc/s15-replay-batch-admission/probe	200 {"items":null,"index":""}
 s15-replay-batch-admission	12	GET /v1/get?key=acc/s15-replay-batch-admission/target	200 {"items":{"v":"kept"},"index":"$first"}
 s15-replay-batch-admission	13	GET /v1/get?key=acc/s15-replay-batch-admission/absent	200 {"items":null,"index":""}
+s16-mismatched-put-admission	1	POST /v1/write {"op":"put","key":"acc/s16-mismatched-put-admission/target","cas":"","items":{"v":"kept"},"id":"ae16"}	200 {"index":"$first"}
+s16-mismatched-put-admission	2	@clock +50	ok
+s16-mismatched-put-admission	3	POST /v1/write {"op":"put","key":"acc/s16-mismatched-put-admission/target","cas":"","items":42,"id":"ae16"}	400 {"kind":"badrequest"}
+s16-mismatched-put-admission	4	@clock -50	ok
+s16-mismatched-put-admission	5	POST /v1/write {"op":"put","key":"acc/s16-mismatched-put-admission/pre-admission-probe","cas":"","items":{},"not_after":2000000025}	200 {"index":"$pre"}
+s16-mismatched-put-admission	6	@clock +100	ok
+s16-mismatched-put-admission	7	POST /v1/write {"op":"put","key":"acc/s16-mismatched-put-admission/target","cas":"","items":{"v":"changed"},"id":"ae16"}	400 {"kind":"badrequest"}
+s16-mismatched-put-admission	8	@clock -100	ok
+s16-mismatched-put-admission	9	POST /v1/write {"op":"put","key":"acc/s16-mismatched-put-admission/probe","cas":"","items":{"v":"must-not-write"},"not_after":2000000050}	409 {"kind":"expired"}
+s16-mismatched-put-admission	10	@clock +200	ok
+s16-mismatched-put-admission	11	POST /v1/write {"op":"put","key":"acc/s16-mismatched-put-admission/target","cas":"","items":{"v":"changed"},"id":"ae16"}	400 {"kind":"badrequest"}
+s16-mismatched-put-admission	12	@clock -200	ok
+s16-mismatched-put-admission	13	@reopen	ok
+s16-mismatched-put-admission	14	POST /v1/write {"op":"put","key":"acc/s16-mismatched-put-admission/probe","cas":"","items":{"v":"must-not-write"},"not_after":2000000150}	409 {"kind":"expired"}
+s16-mismatched-put-admission	15	GET /v1/get?key=acc/s16-mismatched-put-admission/probe	200 {"items":null,"index":""}
+s16-mismatched-put-admission	16	GET /v1/get?key=acc/s16-mismatched-put-admission/target	200 {"items":{"v":"kept"},"index":"$first"}
+s16-mismatched-put-admission	17	POST /v1/write {"op":"put","key":"acc/s16-mismatched-put-admission/target","cas":"","items":{"v":"kept"},"id":"ae16"}	200 {"index":"$first","again":true}
+s17-mismatched-delete-admission	1	POST /v1/write {"op":"put","key":"acc/s17-mismatched-delete-admission/target","items":{"v":"seed"}}	200 {"index":"$seed"}
+s17-mismatched-delete-admission	2	POST /v1/write {"op":"delete","key":"acc/s17-mismatched-delete-admission/target","cas":"$seed","id":"ae17"}	200 {"index":"$first"}
+s17-mismatched-delete-admission	3	@clock +100	ok
+s17-mismatched-delete-admission	4	POST /v1/write {"op":"delete","key":"acc/s17-mismatched-delete-admission/other","cas":"$seed","id":"ae17"}	400 {"kind":"badrequest"}
+s17-mismatched-delete-admission	5	@clock -100	ok
+s17-mismatched-delete-admission	6	POST /v1/write {"op":"put","key":"acc/s17-mismatched-delete-admission/probe","cas":"","items":{"v":"must-not-write"},"not_after":2000000050}	409 {"kind":"expired"}
+s17-mismatched-delete-admission	7	@clock +200	ok
+s17-mismatched-delete-admission	8	POST /v1/write {"op":"delete","key":"acc/s17-mismatched-delete-admission/other","cas":"$seed","id":"ae17"}	400 {"kind":"badrequest"}
+s17-mismatched-delete-admission	9	@clock -200	ok
+s17-mismatched-delete-admission	10	@reopen	ok
+s17-mismatched-delete-admission	11	POST /v1/write {"op":"put","key":"acc/s17-mismatched-delete-admission/probe","cas":"","items":{"v":"must-not-write"},"not_after":2000000150}	409 {"kind":"expired"}
+s17-mismatched-delete-admission	12	GET /v1/get?key=acc/s17-mismatched-delete-admission/probe	200 {"items":null,"index":""}
+s17-mismatched-delete-admission	13	GET /v1/get?key=acc/s17-mismatched-delete-admission/target	200 {"items":null,"index":""}
+s17-mismatched-delete-admission	14	GET /v1/get?key=acc/s17-mismatched-delete-admission/other	200 {"items":null,"index":""}
+s17-mismatched-delete-admission	15	POST /v1/write {"op":"delete","key":"acc/s17-mismatched-delete-admission/target","cas":"$seed","id":"ae17"}	200 {"index":"$first","again":true}
+s18-mismatched-batch-admission	1	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s18-mismatched-batch-admission/target","cas":"","items":{"v":"kept"}},{"op":"delete","key":"acc/s18-mismatched-batch-admission/absent","cas":""}],"id":"ae18"}	200 {"index":"$first"}
+s18-mismatched-batch-admission	2	@clock +100	ok
+s18-mismatched-batch-admission	3	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s18-mismatched-batch-admission/target","cas":"","items":{"v":"changed"}},{"op":"delete","key":"acc/s18-mismatched-batch-admission/absent","cas":""}],"id":"ae18"}	400 {"kind":"badrequest"}
+s18-mismatched-batch-admission	4	@clock -100	ok
+s18-mismatched-batch-admission	5	POST /v1/write {"op":"put","key":"acc/s18-mismatched-batch-admission/probe","cas":"","items":{"v":"must-not-write"},"not_after":2000000050}	409 {"kind":"expired"}
+s18-mismatched-batch-admission	6	@clock +200	ok
+s18-mismatched-batch-admission	7	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s18-mismatched-batch-admission/target","cas":"","items":{"v":"changed"}},{"op":"delete","key":"acc/s18-mismatched-batch-admission/absent","cas":""}],"id":"ae18"}	400 {"kind":"badrequest"}
+s18-mismatched-batch-admission	8	@clock -200	ok
+s18-mismatched-batch-admission	9	@reopen	ok
+s18-mismatched-batch-admission	10	POST /v1/write {"op":"put","key":"acc/s18-mismatched-batch-admission/probe","cas":"","items":{"v":"must-not-write"},"not_after":2000000150}	409 {"kind":"expired"}
+s18-mismatched-batch-admission	11	GET /v1/get?key=acc/s18-mismatched-batch-admission/probe	200 {"items":null,"index":""}
+s18-mismatched-batch-admission	12	GET /v1/get?key=acc/s18-mismatched-batch-admission/target	200 {"items":{"v":"kept"},"index":"$first"}
+s18-mismatched-batch-admission	13	GET /v1/get?key=acc/s18-mismatched-batch-admission/absent	200 {"items":null,"index":""}
+s18-mismatched-batch-admission	14	POST /v1/write {"op":"batch","writes":[{"op":"put","key":"acc/s18-mismatched-batch-admission/target","cas":"","items":{"v":"kept"}},{"op":"delete","key":"acc/s18-mismatched-batch-admission/absent","cas":""}],"id":"ae18"}	200 {"index":"$first","again":true}
+s19-admission-binary64-fraction	1	@clock +0.0000001	ok
+s19-admission-binary64-fraction	2	POST /v1/write {"op":"put","key":"acc/s19-admission-binary64-fraction/rounded","items":{},"not_before":2000000000}	409 {"kind":"early"}
+s19-admission-binary64-fraction	3	@clock +0.0003999	ok
+s19-admission-binary64-fraction	4	POST /v1/write {"op":"put","key":"acc/s19-admission-binary64-fraction/retained","items":{"v":"kept"},"not_before":2000000000.0002}	200 {"index":"$fraction"}
+s19-admission-binary64-fraction	5	@clock -0.0004	ok
+s19-admission-binary64-fraction	6	@reopen	ok
+s19-admission-binary64-fraction	7	POST /v1/write {"op":"put","key":"acc/s19-admission-binary64-fraction/probe","items":{"v":"kept"},"not_before":2000000000.0002}	200 {"index":"$probe"}
+s19-admission-binary64-fraction	8	GET /v1/get?key=acc/s19-admission-binary64-fraction/rounded	200 {"items":null,"index":""}
+s19-admission-binary64-fraction	9	GET /v1/get?key=acc/s19-admission-binary64-fraction/retained	200 {"items":{"v":"kept"},"index":"$fraction"}
+s19-admission-binary64-fraction	10	GET /v1/get?key=acc/s19-admission-binary64-fraction/probe	200 {"items":{"v":"kept"},"index":"$probe"}

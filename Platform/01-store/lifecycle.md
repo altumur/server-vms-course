@@ -29,21 +29,16 @@ The order of the runner's environment files — the unit's values → `roles/<W2
 
 | Variable | Meaning | Default | Norm |
 |---|---|---|---|
-| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | daemon flags from `configstore.env`; read by the runner | `configstore.env` sets `tuning` `lan`; the default of the flag `-tuning` itself is `default` | P/02.4 N1.2, P/01.3 N1.3 «Daemon flags» |
-| `SERVER_NAME` | the default of `-id` outside a group | the short hostname | P/02.4 N1.2, P/01.3 N1.3 «Daemon flags» `-id` |
+| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | daemon flags from `configstore.env`; read by the runner | launcher setting by P/02.4 N1.2; daemon defaults only in the flag form | P/02.4 N1.2, P/01.3 N1.3 «Daemon flags» |
+| `SERVER_NAME` | input of the non-group `-id` fallback | launcher-owned value by P/02.4 N1.2; default semantics only in the flag form | P/02.4 N1.2, P/01.3 N1.3 «Daemon flags» `-id` |
 | `LISTEN_FDS`, `LISTEN_FDNAMES` | inherited sockets (`sd_listen_fds`); read by the daemon itself | — | P/01.3 N1.3 `sockets` |
-| `NOTIFY_SOCKET` | the systemd watchdog | — | P/02.4 N1.2 |
+| `NOTIFY_SOCKET` | common systemd environment; this daemon does not send sd_notify (readiness below) | — | P/02.4 N1.2 |
 
 The daemon itself reads `SERVER_NAME` only when `-id` is absent and the non-group name fallback of the [flag form](forms/daemon-flags.tsv) applies. The launcher sets the environment by P/02.4; the daemon does not infer a hostname on its own. An explicit `-id` does not require this fallback; neither source gives the existing `start_flags` refusal.
 
 ## Flags
 
-The flag purposes — [P/01.3 N1.3](spec/01.3-store.norms.md), machine form [`forms/daemon-flags.tsv`](forms/daemon-flags.tsv):
-`-dir` (required), `-id`, `-sockets`, `-rights`, `-tls`, `-raft`, `-raft-bind`, `-api`, `-bootstrap`, `-join`,
-`-group-size`, `-force`, `-isolated`, `-upper`, `-peers` (the last three — only for `recover`), `-door`, `-voters`, `-tuning`, `-leader-wait`, `-max-value`, `-max-body`, `-max-conns`,
-`-api-conns`, `-api-per-address`, `-index-base`, `-groups` (only for `rights`), `--from` (only for `restore`, `import`). A flag outside the table is a start refusal, code 2. The administrative commands —
-`configstore status | join | leave | admit | backup | restore | import | recover | rights` (P/01.3 N1.3 `admin_ops`,
-N1.9).
+Flag purposes and administrative commands are [P/01.3 N1.3](spec/01.3-store.norms.md). The single machine source for spelling, types, defaults, required/bad checks and command scopes is [forms/daemon-flags.tsv](forms/daemon-flags.tsv); this lifecycle adds no flag restrictions. Administrative command grammar is N1.3 `admin_ops`; startup refusal names and codes are [forms/refusals.tsv](forms/refusals.tsv).
 
 ## Directories and files
 
@@ -52,11 +47,11 @@ N1.9).
 | `<PLATFORM_DIR>/configstore` (`-dir`) | the daemon's data directory; the on-disk format — the implementation decides (P/01.1 «Implementation decides» item 3) | P/02.4 N1.2 «The setting channel and the layout» |
 | `<-dir>/FORMAT` | the format mark `{format, version, impl}`: written first into an empty directory; a foreign one or none in a non-empty directory — a refusal, code 2 | P/01.3 N1.3 `format` |
 | `<-dir>/member.json` | the partners and `how` after joining; a restart is not a join | P/01.3 N1.3 `group.join` (the path inside `-dir` — the implementation decides) |
-| `/run/configstore/admin.sock`, `/run/configstore/<role>.sock` | flat; inherited from the `.socket` units: `admin.sock` 0600, a role socket 0660 with the role's group (`SocketGroup=`); a socket that was not passed the daemon creates itself in `-sockets`: `admin.sock` 0600, a role socket 0660 with the process's group | P/01.3 N1.3 `sockets`, N1.1 `dirs` |
+| `/run/configstore/admin.sock`, `/run/configstore/<role>.sock` | flat; inherited from the `.socket` units: `admin.sock` 0600, a role socket 0660 with the role's group (`SocketGroup=`); a socket that was not passed the daemon creates itself in `-sockets`: `admin.sock` 0600, a role socket 0660 with the process's group | P/01.3 N1.3 `sockets`; P/02.4 N1.1 |
 | `/etc/w2c/configstore-rights.json` (`-rights`) | the rights file; without the file — only `admin.sock`; there is no live reload | P/01.2 N1.2 |
 | `/etc/w2c/tls` (`-tls`) | the root of the kits: inside — the kit of the role `configstore` or `configstore-door` | P/01.3 N1.3 «Daemon flags» `-tls`, N1.6 |
 | the copy file (`backup <file>`) | JSON Lines `copy`, 0600, tmp + rename, outside `-dir` | P/01.3 N1.3 `copy`, `admin_ops`; the vector — `Platform/common/vectors/README.md` |
-| the row `platform/configstore-doors/<id>` | written by a door without a vote every 30 s | [catalogue](../common/data/catalog.tsv) |
+| the row `platform/configstore-doors/<id>` | written by a door without a vote every DOOR_SEEN_EVERY (the P/01 constant form) | [catalogue](../common/data/catalog.tsv) |
 | the row `platform/epoch_floor` | raised only by `op: floor` on the leader's `admin.sock` (`restore`, `import`, `recover`) | P/01.3 N1.3 `floor`, [catalogue](../common/data/catalog.tsv) |
 
 ## Exit codes
@@ -64,8 +59,8 @@ N1.9).
 | Code | When | Norm |
 |---|---|---|
 | 0 | an orderly stop | — |
-| 2 | a start refusal: `-bootstrap` with `-join`, a size not 1/3/5, an address outside the loopback without `-tls`, a door certificate at a voter; no `-dir`; no `-id` in a group; a flag outside the table; `-max-value` or `-max-body` not > 0; a foreign or missing mark `FORMAT`; an inherited socket with a foreign name; the box store with `-group-size 3`/`5` or `-join`; `recover` on a box | P/01.3 N1.3 `refuse_start`, N4 |
-| ≠ 0 | an administrative command refused: `backup` into `-dir`, a repeated `import`, an input not by `copy`, the clock earlier than `generation_at` | P/01.3 N4 |
+| by the start causes in `forms/refusals.tsv` | `start_config`, `start_flags`, `start_format`, `box_no_raft`; exact conditions and codes are owned by the form and P/01.3 N4 | [forms/refusals.tsv](forms/refusals.tsv), P/01.3 N4 |
+| by the CLI causes in `forms/refusals.tsv` | administrative refusal names and caller actions — P/01.3 N4; no separate lifecycle refusal catalog | [forms/refusals.tsv](forms/refusals.tsv), P/01.3 N4 |
 
 ## Signals and readiness
 
@@ -75,7 +70,7 @@ N1.9).
 | restart | `Restart=always`, `RestartSec=2`, `RestartPreventExitStatus=2` | P/02.4 N1.1 `common` |
 | readiness | the socket is open; `After=configstore.service` at the others is an order, not readiness: each process itself waits for a reliable read | P/02.4 N3 «server start», «Races» |
 | durability | the barriers are switched off neither by the environment nor by an operation flag | P/01.3 N1.3 `durability`, P/01.1 «Implementation decides» item 3 |
-| a majority failure | 503 `unavailable` after 5 s; recovery — `recover` by hand | P/04 N1.4a `power_pull` `store`; P/01.3 N3 «recover the store» |
+| a majority failure | 503 `unavailable` after the effective `-leader-wait` interval; recovery — `recover` by hand | P/04 N1.4a `power_pull` `store`; P/01.3 N3 «recover the store» |
 
 ## Stand
 

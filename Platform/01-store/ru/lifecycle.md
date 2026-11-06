@@ -29,8 +29,8 @@ SERVER_NAME для умолчания имени вне группы, когда
 
 | Переменная | Смысл | Умолчание | Норма |
 |---|---|---|---|
-| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | флаги демона из `configstore.env`; читает раннер | `configstore.env` ставит `tuning` `lan`; умолчание самого флага `-tuning` — `default` | P/02.4 N1.2, P/01.3 N1.3 «Флаги демона» |
-| `SERVER_NAME` | умолчание `-id` вне группы | короткий hostname | P/02.4 N1.2, P/01.3 N1.3 «Флаги демона» `-id` |
+| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | флаги демона из `configstore.env`; читает раннер | настройка запускающего по P/02.4 N1.2; умолчания демона только в форме флагов | P/02.4 N1.2, P/01.3 N1.3 «Флаги демона» |
+| `SERVER_NAME` | вход fallback `-id` вне группы | значение запускающего по P/02.4 N1.2; смысл умолчания только в форме флагов | P/02.4 N1.2, P/01.3 N1.3 «Флаги демона» `-id` |
 | `LISTEN_FDS`, `LISTEN_FDNAMES` | унаследованные сокеты (`sd_listen_fds`); читает сам демон | — | P/01.3 N1.3 `sockets` |
 | `NOTIFY_SOCKET` | сторож systemd | — | P/02.4 N1.2 |
 
@@ -38,12 +38,7 @@ SERVER_NAME для умолчания имени вне группы, когда
 
 ## Флаги
 
-Назначение флагов — [P/01.3 N1.3](spec/01.3-store.norms.md), машинная форма [`forms/daemon-flags.tsv`](../forms/daemon-flags.tsv):
-`-dir` (обязателен), `-id`, `-sockets`, `-rights`, `-tls`, `-raft`, `-raft-bind`, `-api`, `-bootstrap`, `-join`,
-`-group-size`, `-force`, `-isolated`, `-upper`, `-peers` (три последних — только у `recover`), `-door`, `-voters`, `-tuning`, `-leader-wait`, `-max-value`, `-max-body`, `-max-conns`,
-`-api-conns`, `-api-per-address`, `-index-base`, `-groups` (только у `rights`), `--from` (только у `restore`, `import`). Флаг вне таблицы — отказ старта, код 2. Административные команды —
-`configstore status | join | leave | admit | backup | restore | import | recover | rights` (P/01.3 N1.3 `admin_ops`,
-N1.9).
+Назначение флагов и административные команды — [P/01.3 N1.3](spec/01.3-store.norms.md). Единственный машинный источник записи, типов, умолчаний, required/bad и областей команд — [forms/daemon-flags.tsv](../forms/daemon-flags.tsv); этот lifecycle не вводит ограничений флагов. Грамматика административных команд — N1.3 `admin_ops`; имена и коды отказов старта — [forms/refusals.tsv](../forms/refusals.tsv).
 
 ## Каталоги и файлы
 
@@ -52,11 +47,11 @@ N1.9).
 | `<PLATFORM_DIR>/configstore` (`-dir`) | каталог данных демона; формат на диске — решает реализация (P/01.1 «Решает реализация» п. 3) | P/02.4 N1.2 «Канал настройки и раскладка» |
 | `<-dir>/FORMAT` | метка формата `{format, version, impl}`: пишется первой в пустой каталог; чужая или нет при непустом каталоге — отказ, код 2 | P/01.3 N1.3 `format` |
 | `<-dir>/member.json` | партнёры и `how` после вступления; рестарт — не вступление | P/01.3 N1.3 `group.join` (путь внутри `-dir` — решает реализация) |
-| `/run/configstore/admin.sock`, `/run/configstore/<роль>.sock` | плоско; унаследованные от юнитов `.socket`: `admin.sock` 0600, сокет роли 0660 с группой роли (`SocketGroup=`); сокет, которого не передали, демон создаёт сам в `-sockets`: `admin.sock` 0600, сокет роли 0660 с группой процесса | P/01.3 N1.3 `sockets`, N1.1 `dirs` |
+| `/run/configstore/admin.sock`, `/run/configstore/<роль>.sock` | плоско; унаследованные от юнитов `.socket`: `admin.sock` 0600, сокет роли 0660 с группой роли (`SocketGroup=`); сокет, которого не передали, демон создаёт сам в `-sockets`: `admin.sock` 0600, сокет роли 0660 с группой процесса | P/01.3 N1.3 `sockets`; P/02.4 N1.1 |
 | `/etc/w2c/configstore-rights.json` (`-rights`) | файл прав; без файла — только `admin.sock`; живой перезагрузки нет | P/01.2 N1.2 |
 | `/etc/w2c/tls` (`-tls`) | корень комплектов: внутри — комплект роли `configstore` или `configstore-door` | P/01.3 N1.3 «Флаги демона» `-tls`, N1.6 |
 | файл копии (`backup <файл>`) | JSON Lines `copy`, 0600, tmp + rename, вне `-dir` | P/01.3 N1.3 `copy`, `admin_ops`; вектор — `Platform/common/vectors/README.md` |
-| строка `platform/configstore-doors/<id>` | пишет дверь без голоса раз в 30 с | [каталог](../../common/data/catalog.tsv) |
+| строка `platform/configstore-doors/<id>` | пишет дверь без голоса каждые DOOR_SEEN_EVERY (форма констант P/01) | [каталог](../../common/data/catalog.tsv) |
 | строка `platform/epoch_floor` | поднимается только `op: floor` на `admin.sock` лидера (`restore`, `import`, `recover`) | P/01.3 N1.3 `floor`, [каталог](../../common/data/catalog.tsv) |
 
 ## Коды выхода
@@ -64,8 +59,8 @@ N1.9).
 | Код | Когда | Норма |
 |---|---|---|
 | 0 | упорядоченная остановка | — |
-| 2 | отказ старта: `-bootstrap` с `-join`, размер не 1/3/5, адрес вне петли без `-tls`, сертификат двери у голосующего; нет `-dir`; нет `-id` в группе; флаг вне таблицы; `-max-value` или `-max-body` не > 0; чужая или пропавшая метка `FORMAT`; унаследованный сокет чужого имени; хранилище коробки с `-group-size 3`/`5` или `-join`; `recover` на коробке | P/01.3 N1.3 `refuse_start`, N4 |
-| ≠ 0 | административная команда отказана: `backup` внутрь `-dir`, повтор `import`, вход не по `copy`, часы раньше `generation_at` | P/01.3 N4 |
+| по причинам старта `forms/refusals.tsv` | `start_config`, `start_flags`, `start_format`, `box_no_raft`; точные условия и коды принадлежат форме и P/01.3 N4 | [forms/refusals.tsv](../forms/refusals.tsv), P/01.3 N4 |
+| по причинам CLI `forms/refusals.tsv` | имена административных отказов и действия вызывающего — P/01.3 N4; отдельного каталога отказов lifecycle нет | [forms/refusals.tsv](../forms/refusals.tsv), P/01.3 N4 |
 
 ## Сигналы и готовность
 
@@ -75,7 +70,7 @@ N1.9).
 | перезапуск | `Restart=always`, `RestartSec=2`, `RestartPreventExitStatus=2` | P/02.4 N1.1 `common` |
 | готовность | сокет открыт; `After=configstore.service` у остальных — порядок, не готовность: каждый процесс сам ждёт достоверного чтения | P/02.4 N3 «старт сервера», «Гонки» |
 | долговечность | барьеры не выключаются ни окружением, ни флагом эксплуатации | P/01.3 N1.3 `durability`, P/01.1 «Решает реализация» п. 3 |
-| отказ большинства | 503 `unavailable` через 5 с; восстановление — `recover` рукой | P/04 N1.4a `power_pull` `store`; P/01.3 N3 «восстановить хранилище» |
+| отказ большинства | 503 `unavailable` через действующий интервал `-leader-wait`; восстановление — `recover` рукой | P/04 N1.4a `power_pull` `store`; P/01.3 N3 «восстановить хранилище» |
 
 ## Стенд
 

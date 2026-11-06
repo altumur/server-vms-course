@@ -56,9 +56,9 @@ The one-box daemon work is split into `daemon_doors` (the service doors and stat
 1. The data model of N1: the checks of `key`, `items`, `cas`, `guard`, `id` as separate pure functions. These are the first tests (the stage `model`).
 2. The chosen store (for example, in memory): the procedures of N3 strictly step by step, with the same order of checks (the guard before CAS).
 3. The HTTP layer and the mapping of the refusals of N4 ([`forms/refusals.tsv`](../forms/refusals.tsv)).
-4. Prepare instances per the acceptance README of chapter 1.1: the row ceiling 524288 bytes, the body limit 1048576 bytes. Run the scenarios of chapter 1.1. Check each failure against the norms of the chapters and fix the **code**.
+4. Prepare instances per the acceptance README of chapter 1.1: the row ceiling and body limit declared by the acceptance stand (N5), separately. Run the scenarios of chapter 1.1. Check each failure against the norms of the chapters and fix the **code**.
 5. If a file-based store is chosen: check indivisibility, versions, durability barriers, a damaged row (`Row.unreadable`). Run the scenarios again.
-6. Go through the checklist of chapter 1.1 (P/01.1-01…23); for the items «checked by reading», state in the implementation description where in the code this is ensured.
+6. Go through the checklist of chapter 1.1 (P/01.1-01…31); for the items «checked by reading», state in the implementation description where in the code this is ensured.
 
 ### Chapter 1.2 — the rights file and the evaluator
 
@@ -82,7 +82,7 @@ The one-box daemon work is split into `daemon_doors` (the service doors and stat
 
 References «N…» are norms of chapter 1.3; rights are chapter 1.2.
 
-1. Describe the stable/transitional membership of the group, sequential join/leave and the door without a vote. For status keep the exact uint64; `leader` is the `-api` address, `leader_id` is the id. Do not forward admin.sock; take the rights from chapter 1.2. The daemon flags are only the table «Daemon flags» of N1.3; the sockets are in one directory, without subdirectories (admin.sock and the role sockets side by side), inherited ones by `FileDescriptorName` (N1.3 `sockets`).
+1. Describe the stable/transitional membership of the group, sequential join/leave and the door without a vote. For status keep the exact uint64; `leader` is the `-api` address, `leader_id` is the id. Do not forward admin.sock; take the rights from chapter 1.2. The daemon flags are only [forms/daemon-flags.tsv](../forms/daemon-flags.tsv); the sockets are in one directory, without subdirectories (admin.sock and the role sockets side by side), inherited ones by `FileDescriptorName` (N1.3 `sockets`).
 
    Write the mark `FORMAT` first into an empty directory and check it before any write: a foreign or unmarked non-empty directory is exit code 2 without changes. Write the copy `backup`, and read `import`/`restore`, only in the form of N1.3 `copy`; do not carry your own on-disk format into the copy.
 
@@ -155,4 +155,4 @@ Chapter 1.3:
 | a scenario contradicts the norms of the chapters | an acceptance defect; a question to the author; the code follows the norms of the chapters |
 | an AI made a mistake and was corrected by a person | a row in `corrections-<K>.tsv` (historical correction record) of the chapter (ADR-0080 addendum 1) |
 
-An additional check after run 33: service POSTs: unknown field/not an object/extra JSON/framing — 400; 1 MiB + 1 — 413; no path/method — 404/405. Check each reason against N2, N4 and the full Fault, not only the code number.
+An additional check after run 33: service POSTs: unknown field/not an object/extra JSON/framing — 400; one byte above the effective `-max-body` — 413; no path/method — 404/405. Check each reason against N2, N4 and the full Fault, not only the code number.
