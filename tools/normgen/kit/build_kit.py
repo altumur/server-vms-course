@@ -212,7 +212,8 @@ def provenance(parts, files, judged):
                           "handwritten": [NORMGEN / "doorrt/go/runtime.go"], "judge": NORMGEN / "door_judge.py"}),
         "vectors": (("vectors",), {"form": gen_tests.sources("vectors") if L.key == lesson.DEFAULT else [L.form("stages.tsv")],
                                 "generator": NORMGEN / "gen_tests.py",
-                                "generators": [NORMGEN / p for p in ("gen_tests.py", "gen_checks.py", "common_vectors.py",
+                                "generators": [NORMGEN / p for p in ("gen_tests.py", "gen_stagetests.py", "gen_cmdtests.py",
+                                                                    "gen_checks.py", "common_vectors.py", "wire.py",
                                                                     "vector_consumers.py", "tsv_input.py", "gate.py")],
                                 "judge": NORMGEN / "vector_judge.py"}),
         "stagetests": (("stagetests",), {"form": gen_tests.sources("stagetests") if L.key == lesson.DEFAULT else [L.form("stages.tsv"),
@@ -220,8 +221,8 @@ def provenance(parts, files, judged):
                                                L.path("acceptance/1/seams.tsv"),
                                                L.path("acceptance/3/seams.tsv")],
                                       "generator": NORMGEN / "gen_stagetests.py",
-                                      "generators": [NORMGEN / p for p in ("gen_stagetests.py", "gen_cmdtests.py",
-                                                                          "tsv_input.py", "gate.py")],
+                                      "generators": [NORMGEN / p for p in ("gen_stagetests.py", "gen_tests.py", "gen_checks.py",
+                                                                          "gen_cmdtests.py", "tsv_input.py", "gate.py")],
                                       "judge": NORMGEN / "scenario_judge.py"}),
     }
     out = {}
