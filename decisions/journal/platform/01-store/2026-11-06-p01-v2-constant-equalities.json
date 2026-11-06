@@ -1,0 +1,52 @@
+{
+  "base": "a635beb6a4f5c13e04034c4dc96d14a798a035a6",
+  "runtime_form": "Platform/01-store/forms/runtime-constants.tsv",
+  "runtime_form_sha256": "0bb59d5b17f30a6bbb4eb6267987712b5b20d7158d8f0fd718269329cb068ee4",
+  "actual_readonly_carriers": [
+    {
+      "constant": "CLOCK_SKEW",
+      "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
+      "pointer": "/components/schemas/Status/properties/admission_ahead/exclusiveMinimum",
+      "carrier": 60,
+      "relation": "numeric equality; threshold remains strictly greater",
+      "form_value": 60,
+      "source_sha256": "fcae210de91b44b21cc344bd4c274ffa3c6227b605f0ff744cecb729959164e3"
+    },
+    {
+      "constant": "KEY_BYTES",
+      "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
+      "pointer": "/components/schemas/Key/description",
+      "carrier": "N1: a key is not empty, does not start with /, no segment between / equals ..; ..foo is admissible. The limit of 1024 UTF-8 bytes and a smaller file limit are checked separately; maxLength does not express a number of bytes.",
+      "relation": "description names the UTF-8 byte limit; deliberately no maxLength keyword (characters are not bytes)",
+      "form_value": 1024,
+      "source_sha256": "fcae210de91b44b21cc344bd4c274ffa3c6227b605f0ff744cecb729959164e3"
+    },
+    {
+      "constant": "DOOR_SEEN_EVERY",
+      "path": "Platform/01-store/data/configstore-doors.schema.json",
+      "pointer": "/properties/seen_at/description",
+      "carrier": "the wall time of the last confirmation of the door (every 30 s)",
+      "relation": "existing generated family-description carrier: publication every30s; no schema keyword change",
+      "form_value": 30,
+      "source_sha256": "5e01688a43dfb4c8a03053f4bdb7f77cefa7ff625571e6644e7f0f3c3cb7c331"
+    }
+  ],
+  "full_equality_judge": "NOT implemented or run; review103 after exact author/source scope",
+  "non_schema_limits": [
+    "HEADER_BYTES",
+    "JSON_DEPTH",
+    "BATCH_WRITES",
+    "BATCH_GUARDS",
+    "ID_REPLAY_MIN_AGE",
+    "ID_REPLAY_MIN_RECORDS",
+    "DOOR_REQUEST_TIMEOUT",
+    "DOOR_REQUEST_MARGIN",
+    "DOOR_MEMBERS_EVERY",
+    "DOOR_SEEN_PERIODS",
+    "RAFT_LAG_ALARM",
+    "RAFT_ELECTION_ALARM_COUNT",
+    "RAFT_ELECTION_ALARM_WINDOW"
+  ],
+  "dynamic_limits": "ROW_CEILING = configured instance ceiling (on a daemon, effective -max-value); entity body limit is configured, daemon -max-body; daemon defaults only unchanged daemon-flags.tsv",
+  "readonly_built_family_blocks": "not regenerated or edited; descriptions are existing carriers, not a second editable numeric source"
+}

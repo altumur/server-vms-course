@@ -1,0 +1,204 @@
+{
+  "base": "a635beb6a4f5c13e04034c4dc96d14a798a035a6",
+  "change": "0129-p01-v2-norms",
+  "source_only": true,
+  "old_coverage_byte_exact": [
+    {
+      "path": "Platform/01-store/acceptance/1/scenarios.tsv",
+      "sha256": "a60cbcd2c429cc6464daa228320097ce6d15d26253239e34602f6fd1bf31bcde",
+      "byte_exact": true
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/scenarios.tsv",
+      "sha256": "722911eadc7e98cb7b7664f7c272afcf00ae42a0086eeff866bc32705997464b",
+      "byte_exact": true
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/scenarios.tsv",
+      "sha256": "43ff33618fa58178ae20ed9322a1082733ef64606fc7a685244d76cce18cdf9d",
+      "byte_exact": true
+    },
+    {
+      "path": "Platform/01-store/forms/daemon-flags.tsv",
+      "sha256": "bca631d4f0e702d65da5e573c9908acee0519666d57c0db5cdb2f7cf94325932",
+      "byte_exact": true
+    },
+    {
+      "path": "Platform/01-store/forms/refusals.tsv",
+      "sha256": "3476b866b4709d4f0161db34086d6baf6c970d54adb2b6f37412dd2001a941c1",
+      "byte_exact": true
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.probes.tsv",
+      "sha256": "eb28949ae665ea166fc8ff4f163190410cab068f6179878665ed04cff7cc02a3",
+      "byte_exact": true
+    },
+    {
+      "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
+      "sha256": "fcae210de91b44b21cc344bd4c274ffa3c6227b605f0ff744cecb729959164e3",
+      "byte_exact": true
+    }
+  ],
+  "old_seam_steps": 239,
+  "new_steps": 56,
+  "new_total_seam_steps": 295,
+  "old_seam_complete_byte_prefix": true,
+  "new_cases": {
+    "s16-mismatched-put-admission": 17,
+    "s17-mismatched-delete-admission": 15,
+    "s18-mismatched-batch-admission": 14,
+    "s19-admission-binary64-fraction": 10
+  },
+  "new_grammar_API_ports": false,
+  "old_four_constant_rows_complete_byte_prefix": true,
+  "new_constant_rows": 12,
+  "constant_total": 16,
+  "no_second_max_body_default": true,
+  "writecheck_CEL_and_signatures_byte_exact": true,
+  "stage_only_durable_gate_append": true,
+  "unmodified_requirement_units": 187,
+  "modified_req_units": [
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "req": "P/01.1-R007",
+      "old_sha256": "165f8c4c9d24aee1f94e8fa48fc41c9d72403c3d2ee814ac8e56dc72bc99b581",
+      "new_sha256": "425db8c1a3eb4641c1de1dde80d8e70b5e0078ba300cf4566f5b86c3409b782a"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "req": "P/01.1-R013",
+      "old_sha256": "ec0aea5799ccdcfbd6c99ec8bbc37bc9b9d4818910d16d32ff65fc5df1fcbb5e",
+      "new_sha256": "814aca11de54c5162b81e552793489fc81412cb11ddaf7fc5cc144003be50d77"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "req": "P/01.1-R019",
+      "old_sha256": "0576ef9bbef9628c2730a1e147b0a211fc009058f1775ab876cdf3f7c82d3391",
+      "new_sha256": "e6e7896e9c981077b2d28dbc5e1648ad720c0d448b32314d78ca0b8d1a416e40"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "req": "P/01.1-R021",
+      "old_sha256": "ecd669b1e7f364b58a51b849a9dc05b48746106ec23abf202f8ccf0bf88145a2",
+      "new_sha256": "2d515d38f9875b266a52600c5be942209a1b471aeffd474fa44d61b2a7bb3ccf"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "req": "P/01.1-R048",
+      "old_sha256": "4eeeec8fadf810e387db9e6318b17f43a0ea8f6c5eeac1593a24f15782154a0a",
+      "new_sha256": "6b0bbad7358a8bca35dfef2e8eb751620ead47daa20c0a4f0d59b5c080e360f7"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "req": "P/01.1-R070",
+      "old_sha256": "e7520deade3b544a652057cf8ffb6712d4c2b2dae59420c23adb4a555f59a238",
+      "new_sha256": "b6dba96d2d50dc215acfd36af07f7bd1b7fafa3ff4ac3ec4dc6a9d66211d8490"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "req": "P/01.1-R078",
+      "old_sha256": "41398b32548e815f5809847660cf3594177ac47b4816c4276522739d564f9d84",
+      "new_sha256": "d59fc85bed918b80c94ba53ee776d590c8f3a0deb8b2992e890c5efbc82216c3"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "req": "P/01.1-R088",
+      "old_sha256": "576bb9e896399570c630f8ad7a244d614725872c56af552713649dbe4a75272d",
+      "new_sha256": "5f921e2998f4590ab4cb6564822d0729aa600c84d6e75192d2eefb9d8ad0ae05"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "req": "P/01.1-R105",
+      "old_sha256": "b3a4b6da492b5ed25b4537ac37d0b35b351597d32cca3ca80f6dfc8fed5b67d9",
+      "new_sha256": "369c0beb6aa0bb4df4098e4f96d27c969e1873ae72188b704603acd751c0702a"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "req": "P/01.1-R122",
+      "old_sha256": "0c62897e8c820a4b7b19344b6168566ac5229819317649fbfb6280b0409fb91a",
+      "new_sha256": "4f38b32171bc970ae5817da27e6ef8ae119d59b20ab6615ff98651daeda016e1"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "req": "P/01.1-R132",
+      "old_sha256": "cd44f7d9272fd63887953d71a2df8a75da9aa0d7083295d6c1f68ac7e3d30bbc",
+      "new_sha256": "5a0bf72413940342bdfcd255277a7ebcffd4f30f13e22b17de21c7c483ae0d85"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "req": "P/01.1-R141",
+      "old_sha256": "d237c77126d8b964aa74d92af3dd834ff10e089b904506e123319c3dbd323b62",
+      "new_sha256": "26638392aa1c567493c7a171d6d49c47be79b9e013c68c2a7a15712368fc0e03"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "req": "P/01.1-R145",
+      "old_sha256": "df524d7e91dea64ba87e5f2a56c6bf102aed0f1d146effa9e895e1cd01ca5c9f",
+      "new_sha256": "76f289ef2d899e45f643bb643a85564817a74624981be79f36b4f9a19fde31df"
+    },
+    {
+      "path": "Platform/01-store/spec/01.2-store.norms.md",
+      "req": "P/01.2-R031",
+      "old_sha256": "51a4471c754104ae0c12c33dc000a57929e9e16f1683054ea10ace0a29db954b",
+      "new_sha256": "c9052aa333cf20de5789740319a0472c0a9ea4aa06674c964d9b12135c9150d7"
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "req": "P/01.3-R006",
+      "old_sha256": "87517b7c77f88a42b65e49889433bcc92df7ed02a320cdef3e68e7397154dd4e",
+      "new_sha256": "b5b149af08939eaa00968d5985e5295ba4573a63d74e7096114d9339f6866a4c"
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "req": "P/01.3-R007",
+      "old_sha256": "d1ca4a21fc9b958300c0a461dcba8c1806993f340cabe19f473a8188ad1fa3cf",
+      "new_sha256": "13ca88ed24276dc9d3acad2e63d908c57fa07e95b53fe6ed09442e16d656d56f"
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "req": "P/01.3-R008",
+      "old_sha256": "1c136de4275f084150fdc9948969c40ca19185f099a43199182c291a103c798e",
+      "new_sha256": "2ee36905bb390305a4f482c8565ff173df940b5cb63eb22982c8356a26d2e189"
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "req": "P/01.3-R031",
+      "old_sha256": "b6b45b70a05d92366ceeaf04e88e00a4987ee78c6e189f24e02ecd7c81e2f809",
+      "new_sha256": "b99a6859d2bf6d92290710658c8952f403d434c130c2e2078d881fc93b57564c"
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "req": "P/01.3-R016",
+      "old_sha256": "93348b3bb1c6283f037fe0de1b2a62c39d3de5052b38506a15a47e4b66e05301",
+      "new_sha256": "2486aa837d67ac58aa41da64fb25738e099d784885fecbe817f7b6a68337e5c1"
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "req": "P/01.3-R017",
+      "old_sha256": "1ed365d4a4367bf49c2387e42bb65b24b28aeb9ac5b823af3d1ff811ce40d37d",
+      "new_sha256": "f6fbd7af864b3448115212f228cd039fc4b85ae4ba4002f1ef53032249e6963f"
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "req": "P/01.3-R029",
+      "old_sha256": "c2a200bab9aeb047122290865cb6ba4f1c816775edf4956626408db24d3241e2",
+      "new_sha256": "44f5aa1885e09f5ace2bd397c149de37f906fda6c8a9e44b5677fccebc2cdbbd"
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "req": "P/01.3-R030",
+      "old_sha256": "4d61bacb93b9ced1fe5054d46b5bf646a9c3f7b580de739242a7b81537a53c3b",
+      "new_sha256": "49e81dd556ba18c094143ab7fcd25af1afe9e3cdb2e1f1ae1a6994af22da1b3e"
+    }
+  ],
+  "preserved_trees": [
+    "Source",
+    "VMS",
+    "tools",
+    "skills",
+    "Platform/02-installer",
+    "Platform/07-console-module/module"
+  ],
+  "not_execution_PASS": true,
+  "no_full_Gate_generation_runner_SUT": true
+}

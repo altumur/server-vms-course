@@ -63,8 +63,8 @@ nothing is transferred: there is no row (`items: null`, `index: ""`).
 | `bad-floor-gen-at.jsonl` | the floor row with `generation_at` `not-a-time` — not a time, the floor row is unreadable (sc. 12 steps 29–30) |
 | `copy-future-floor.jsonl` | a correct copy, the floor has `generation_at` `4102444800` (2100) — the stand clock is earlier, a refusal without `-force` (sc. 12 steps 31–32; with `-force` — sc. 29) |
 
-Sc. 11 step 4 sees the floor `platform/epoch_floor` after `import`: the floor of the input is an ordinary row of the copy, `import` raises it above
-the upper of the input before the first row (N1.3 `floor`); the number depends on the clock, the step does not fix it. Steps 7–10 — the copy `backup` of the stand store, transferred into a fresh directory, carries the manifest rows `testsub` and
+Sc. 11 step 4 sees the floor `platform/epoch_floor` after `import`: the input floor is used only for the upper and generation_at checks and is not transferred; `import` raises a new floor above
+the upper of the input before transferring the other rows (N1.3 `floor`); the number depends on the clock, the step does not fix it. Steps 7–10 — the copy `backup` of the stand store, transferred into a fresh directory, carries the manifest rows `testsub` and
 `testsub2`. The writer side of the rule «Time in a row» (N0 of chapter 1.1): sc. 11 step 4 — the floor after `import`, `generation_at`
 (`@time`).
 
@@ -77,7 +77,7 @@ The independent schema witnesses in `inputs/status-body-limits.json` use complet
 ## Reconciliation of python and go M10/6–11 (sc. 08 steps 10–12, sc. 14, 15)
 
 - Sc. 08 steps 10–12: `floor` that is not an integer JSON (`2.0e1`) — 400 before the write, not 409 «only upwards»; the largest uint64 is
-  an admissible floor (N1.3 floor `form`; B5).
+  out of the floor form and gives 400; the upper bound of N1.3 floor `form` itself is admissible (B5).
 - Sc. 14: the `id` replay memory is not part of the copy (N1.3 `copy`). A write with `id` `b1` on the stand store, a copy, a transfer:
   a replay of the same `id` at the transferred store — a new write without `again`, the next replay — `again` (B10). The key `other/b10` is
   outside the stand families; `admin` writes it.
@@ -121,7 +121,7 @@ the marker they are not executed (common README, «Store group stand»).
   `P-1`: three writes without `cas` through different members, a restart of a follower, then of the whole group — each has the same version `$r3`,
   and a write with `cas` `$r3` through a follower passes (the log is not applied again; the versions are the same at all members). `P-2`: a write, `@sigkill` of the leader — a read at both
   remaining members right after the election sees its version `$w`, the returned `s1` too (the read is linearizable, P/01.1 N3). `P-3`: the door `d1` and one voter `s1` without the two others — a write through the door and
-  through `s1` — 503 `unavailable` after `leader_wait` 5 s (`@sleep 6` — the deadline of the norm): the door is not part of the quorum.
+  through `s1` — 503 `unavailable` after the effective `-leader-wait` interval (`@sleep 6` — the deadline of the norm): the door is not part of the quorum.
 - **Sc. 18 — `import` into a group and `recover`.** `import` of the copy `copy-ok.jsonl` (`index` 7) with `-index-base 7` into a fresh
   group at the leader; a repeat of a completed one — a refusal (N1.3 `admin_ops`, B12). `P-5`: the transferred rows keep the versions of the copy — `testsub/next_id` `3`, `testsub/counters/1` `5`, and `cas` by them passes (P/01.3 N1.3 `import`, N3 «the copy is replayed into exactly those rows and versions»; C01-IMPORT-VERSIONS-01): an implementation that rewrites the transfer by ordinary `put` with new small versions fails here. That the new versions after the transfer are above `-index-base`, the scenario does not judge by numbers (the strings are compared only by `==`/`!=`) — by reading. The epoch row
   `testsub/epoch/u1` `429496729600005` (100000 << 32 | 5); the majority is lost (`s2`, `s3` killed, `s1` stopped);
@@ -193,7 +193,7 @@ that keeps it in process memory answers 409 «only upwards» after a restart, an
 
 ## Additional check of the class of errors of run 36 (Kimi)
 
-By reading: 503 unavailable after 5 s without a leader, ambiguous after an unknown outcome and unavailable with Retry-After at the connection limit are different branches. Sc. 05 of [the system acceptance](../../../common/acceptance/system/README.md) with one dropped server keeps the quorum and does not check all the 503 branches. A replay of id with another floor — 400 badrequest. For /v1/write and /v1/rights an unknown method gives the 404 of the owners; 405 only for status/join/leave/metrics. The metric of sc.04 is configstore_raft_voters_expected. The environment values and 64/32/8 are normative defaults; an override of the profile is declared before acceptance.
+By reading: 503 unavailable after the effective -leader-wait interval without a leader, ambiguous after an unknown outcome and unavailable with Retry-After at the connection limit are different branches. Sc. 05 of [the system acceptance](../../../common/acceptance/system/README.md) with one dropped server keeps the quorum and does not check all the 503 branches. A replay of id with another floor — 400 badrequest. For /v1/write and /v1/rights an unknown method gives the 404 of the owners; 405 only for status/join/leave/metrics. The metric of sc.04 is configstore_raft_voters_expected. The launcher values follow P/02.4 and the daemon defaults belong only to forms/daemon-flags.tsv; an override of the profile is declared before acceptance.
 
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
 
@@ -204,3 +204,7 @@ This is a subject of a manual check of the specification and of a future check o
 `store-start-flags` invokes the ordinary daemon command-line parsing and startup configuration admission (before build-specific Raft capability checks), not a validator that exists only for tests. Valid temporary dir/sockets, id and all neutral inputs are supplied. loopback/non_loopback select valid addresses under the existing loopback predicate, not new address syntax. Missing TLS must refuse before network setup; observe actual calls and exit code. Acceptance here proves configuration admission, not full process/group execution.
 
 `store-copy-floor` uses the actual durable backup/import/continuation paths. First restore a valid seed, take a real backup of that restored store with its existing floor and at least two other rows, then import that immutable backup into a fresh destination. Interrupt I/O after one non-floor target row has been durably transferred; close and continue the same attempt with the same input. Capture the first new floor row F1, including items/index/generation_at, and compare it after continuation. Inspect actual write order, every non-floor row/version, completeness and absence of an old-floor transfer. Use a controlled wall clock; no canned backup/import result or fabricated expected observation. A panic, unrelated failure or unexecuted path fails.
+
+## Non-default service body limit
+
+Use the existing fresh-stand body_limit parameter (the daemon -max-body), for example2097152 from the status-limit witness above. Let B be that actual limit reported by max_body. Send POST /metrics with one JSON object padded by JSON whitespace to exactly B entity bytes: the frame passes and the existing method outcome is405. At B+1 entity bytes the answer is413 before the method outcome, with BodyTooLargeFault.limit equal to B, not the row ceiling or the default of the flag. Repeat the oversized body at a service POST route: it is refused before JSON/body or membership work. Compare membership before/after; it is unchanged. Preserve the ordinary full Fault/header checks and the independent max_value observation. No new profile key, command spelling or request grammar is needed. These are raw HTTP probe obligations on the actual daemon, not a source/schema execution result.
