@@ -258,7 +258,7 @@ Then — the rows of the move of this chapter and of the history of the sources.
 ## Anywhere copy hash (G09-ANYWHERE-HASH-01)
 
 The four fixture vectors in [`inputs/anywhere-hash/cases.tsv`](inputs/anywhere-hash/cases.tsv) specify the complete-body
-digest of P/08.4 Н1.3 carry and the check before the copy of Н1.4 member_anywhere. The input column names a JSON file
+digest of P/08.4 N1.3 carry and the check before the copy of N1.4 member_anywhere. The input column names a JSON file
 next to the table; expect is a JSON subset of the observations, not an input to the implementation.
 
 Each input has an initial stored copy with its exact index and last confirmed taken_sha256 marker, and a list of attempts.
