@@ -3,17 +3,17 @@
 This English text is the source; the Russian translation `ru/acceptance/system/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 End-to-end scenarios that check the norms of several micromodules at once and require a stand of all processes of the platform
-(the module note `Platform/module-design.md`, for people, not in the export: «сквозные сценарии … со стендом из всех микромодулей»). Moved from the acceptance of М10/11
+(the module note `Platform/module-design.md`, for people, not in the export: «end-to-end scenarios … with a stand of all micro-modules»). Moved from the acceptance of M10/11
 (sc. 05, 06; stage B, ADR-0083 addendum (1): without a change of behaviour) by the Architect's decision on V2 of the move plan of lesson 6:
-a scenario belongs to the lesson whose norm it checks (the presence lock, sc. 16 of М10/11, — the acceptance of
+a scenario belongs to the lesson whose norm it checks (the presence lock, sc. 16 of M10/11, — the acceptance of
 [P/05](../../../05-resource/acceptance/README.md)), the drills of many processes — here. The numbers and steps are the former ones.
-Four scenarios / 75 steps: sc. 05 — 61 automatic steps on the three-server cluster stand (the section «Sc. 05»; not executable yet — the section «Executability»), sc. 07 and 08 — 7 steps `@manual`, sc. 09 — 7 steps `@manual`; sc. 06 `recover` is moved by scenario 18 of the [acceptance of P/01.3](../../../01-store/acceptance/3/README.md) to the store group stand (ПРАВИЛА-РАБОТЫ.md § 4, 2026-10-30); sc. 07 — a cold start of a part and a worker (ADR-0091 addendum (2), (3)), sc. 08 — the worker program from the manifest row (ADR-0091 addendum (4)–(6)).
+Four scenarios / 75 steps: sc. 05 — 61 automatic steps on the three-server cluster stand (the section «Sc. 05»; not executable yet — the section «Executability»), sc. 07 and 08 — 7 steps `@manual`, sc. 09 — 7 steps `@manual`; sc. 06 `recover` is moved by scenario 18 of the [acceptance of P/01.3](../../../01-store/acceptance/3/README.md) to the store group stand (work rules (for people) § 4, 2026-10-30); sc. 07 — a cold start of a part and a worker (ADR-0091 addendum (2), (3)), sc. 08 — the worker program from the manifest row (ADR-0091 addendum (4)–(6)).
 
 ## Stand
 
 Sc. 05 runs on the stand of the runner: [«Three-server cluster stand»](../README.md#three-server-cluster-stand) of the common README,
 the manifests `testsub` and `testsub2`, the event mirror is switched on by step 6. Before, it was a drill `@manual` on a real cluster; the plan
-of stage 2 is `decisions/inbox/2026-10-30-план-сценарии-группы-автоматом.md` (ПРАВИЛА-РАБОТЫ.md § 4).
+of stage 2 is `automatic group scenarios plan (2026-10-30, for people)` (work rules (for people) § 4).
 
 Sc. 07 and 08 check a box with systemd, not a group: a real test server with the units of the platform
 ([P/02.4](../../../02-installer/spec/02.4-installer.norms.md) N1.1). The operator runs the drills by the drill log, the runner only prints the steps
@@ -51,7 +51,7 @@ The server `srv-b` carries a unit without a home `c1` (`testsub`, the worker `w-
 | 38–40 | `c1` at another worker, epoch 2 | P/04 N1.4a `moves`, N3 «fate»; P/03.2 N1.5 |
 | 41 | `h1` at another holder, without waiting for the home | P/04 N3 «pass()» step 6, N1.3 `home` (a preference, not a filter) |
 | 42 | `fate: move`, the name `w-2` is given away by the controller | P/04 N3 «fate», N1.2 `names_given` |
-| 43–46 | the merge of the console: the closed bucket — from the copy of `srv-c` under the name of the owner, `from mirror`, `fenced`; there is no open one; the answer is incomplete, `srv-b` is `silent`; `srv-a` has no copies | the merge contract «Слияние» steps 2, 7, «Epochs», `from_mirror`; P/04 N1.4a `stays`, `lost`; P/05 N2 `/mirrored` |
+| 43–46 | the merge of the console: the closed bucket — from the copy of `srv-c` under the name of the owner, `from mirror`, `fenced`; there is no open one; the answer is incomplete, `srv-b` is `silent`; `srv-a` has no copies | the merge contract «Merge» steps 2, 7, «Epochs», `from_mirror`; P/04 N1.4a `stays`, `lost`; P/05 N2 `/mirrored` |
 | 47–48 | the return: the member is a follower again, without `-join` | P/04 N3 «pull the power» «return»; P/01.3 N1.3 `join` |
 | 49–50 | the restore is done, one bucket is pulled, it is on the volume | P/05 N1.4 «Bucket restore», the heartbeat field `restore` |
 | 51–53 | the archive is intact: both previous buckets are on the volume, the row of the open one is seen by the merge under the old epoch, the answer is complete | P/04 N1.4a `stays`; the merge contract «Epochs» |
@@ -98,13 +98,13 @@ comes out with the pass that takes `c1` away. Later it does not disappear: `move
 ### Executability
 
 Sc. 05 is **not executable yet**: the runner has the directives and doors of the section (the target `system/05-power-pull`, by name only), but there was no dry run by an implementation. The rule of the plan
-«Сухой прогон до выпуска»: a scenario goes into a runner release only after a run against an implementation, each red step is analysed
+«Dry run before release»: a scenario goes into a runner release only after a run against an implementation, each red step is analysed
 by the question «norm or data» before the release. New scenarios enter the pin of the lines only by a runner release. The store build `box`
 does not execute the scenario (the common README).
 
 ## scenarios.tsv
 
-The format is the [dictionary of directives and doors of «Стенда» of the common acceptance README](../README.md#dictionary-of-directives-and-doors). Sc. 05 — the directives
+The format is the [dictionary of directives and doors of «Stand» of the common acceptance README](../README.md#dictionary-of-directives-and-doors). Sc. 05 — the directives
 and doors of the section «Three-server cluster stand» and of the dictionary; sc. 07, 08 — only `@manual`, the expectation — `manual`.
 
 ## Scenario boundaries
@@ -114,5 +114,5 @@ Sc. 05 — the boundary of the common README: each run gets new directories and 
 ## `journal/corrections-system.tsv`
 
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
-of the acceptance of М10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
+of the acceptance of M10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
 resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (review analysis of stage B 6–7, № 18).

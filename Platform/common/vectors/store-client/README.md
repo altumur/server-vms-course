@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/store-clien
 
 The owner is [the store client contract](../../contracts/store-client.md) (chapter P/01.1; the guess of stage C SC-WIRE78-G01 /
 C08-SDK-06, the Architect's decision of 2026-10-25). The participants are all processes that talk with the store through the door of P/01.1. The bytes
-are written by «Спецификация»; the rows are by the text of the contract and P/01.1 N2, N4.
+are written by «Specification»; the rows are by the text of the contract and P/01.1 N2, N4.
 
 ## `cases.tsv`
 

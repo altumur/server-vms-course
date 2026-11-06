@@ -12,7 +12,7 @@ contract](log-mask.md) `space`, `mask_in`).
 
 Moved from P/08.4 N1.1 `name` without a change of behaviour; P/08.4 and the participant contracts refer here.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 

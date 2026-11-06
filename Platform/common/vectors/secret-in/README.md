@@ -5,9 +5,9 @@ This English text is the source; the Russian translation `ru/vectors/secret-in/R
 The owner is chapter [P/06.2](../../../06-console/spec/06.2-console.norms.md) of the console (N1.1 `url_field`, `common_words`, `mask`; N1.1a A1–A15;
 N3 «read_address»; N4 the row «a password or a login in an address»). The participants are the loader [P/02.1](../../../02-installer/spec/02.1-installer.norms.md)
 (the declarations `credentials` and `secret_in` of a field `type: url`, N1.2a) and [P/02.4](../../../02-installer/spec/02.4-installer.norms.md)
-(address parsing). The bytes are written by «Спецификация»; the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16,
+(address parsing). The bytes are written by «Specification»; the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16,
 ADR-0083). Moved from `Source/tests/testdata/secret_in.tsv` byte for byte (stage B, the move of lesson 6, the Architect's decision
-on V8 of the plan of lesson 6); the head of the file is English, as it was: `М10/7 N1.1a` in it is the former address of chapter P/06.2 N1.1a.
+on V8 of the plan of lesson 6); the head of the file is English, as it was: `M10/7 N1.1a` in it is the former address of chapter P/06.2 N1.1a.
 
 ## `cases.tsv`
 
@@ -38,7 +38,7 @@ A side reads each row by the rule of the named field:
 
 The package checks the display and the refusal by the credentials (`fault` — a field of `credentials` or empty), including the refusal of an address that does not
 parse by RFC 3986 (a character outside the grammar of A2, a non-numeric port) — it names `credentials.secret` (A15). Outside the package are
-only the refusals of a parsed address by the «Схемам» of [the address contract](../../contracts/url-credentials.md) (a scheme not from `schemes`,
+only the refusals of a parsed address by the «Schemes» of [the address contract](../../contracts/url-credentials.md) (a scheme not from `schemes`,
 no host, at `host: path` no path): the credentials do not give them, `bad_url` is the url step of the row check; such a row has
 an empty `fault` (stage C guess URLC-VECTORS-02, a refinement, the Architect's decision 2026-10-23).
 

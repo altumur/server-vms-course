@@ -4,9 +4,9 @@ This English text is the source; the Russian translation `ru/LAYERS.md` (for peo
 
 The form of the manifest (P/02.1), the canonical view (P/02.2) and the forms of the data families (the catalogue `Platform/common/data/`) the course
 writes in standard files: JSON Schema 2020-12 — the form, CEL — the relations of the manifest. What the standard does not express is held by
-seven layers of our own; each implementation executes them, the places are the layer tables next to the schemas (ADR-0092 «Свой остаток»). This
+seven layers of our own; each implementation executes them, the places are the layer tables next to the schemas (ADR-0092 «Our own remainder»). This
 file replaces `DIALECT.md` (ADR-0087; removed by the transition to V7, behind the tag `dialect-reference-dc94d0fd1`). A new word `x-*`
-and a new rule of a layer are decided by the Architect (ADR-0087 addendum (5), ADR-0092 «Что заменяется»); the description is written by «Спецификация».
+and a new rule of a layer are decided by the Architect (ADR-0087 addendum (5), ADR-0092 «What is replaced»); the description is written by «Specification».
 
 ## 1. Files
 
@@ -63,7 +63,7 @@ of a static default, `description`; the place of refusal of each — § 6). The 
 | `x-complement-of` | 5 | the expression is the complement of the named one (translated by hand, ADR-0092 item 12) |
 | `x-implied-by` | 7 | the relation row follows from the named rows (`[16, 17]`): it is executed like the others; in the coverage a group mutation instead of a single mutant (V7-IMPLIED-ROW-EXEC-01) |
 | `x-owner`, `x-default-text` | — | reference marks of a norm section (the owner lesson, the default in words); they give no checks |
-| `x-class` | — | the refusal class of the former dialect — only for the reconciliation of the set «А»; the refusal class by the norm is a layer (P/02.1 N4) |
+| `x-class` | — | the refusal class of the former dialect — only for the reconciliation of the set «A»; the refusal class by the norm is a layer (P/02.1 N4) |
 
 **Expression** (`pattern`, `patternProperties`) — a portable subset: ECMA-262 in the mode `u` intersected with RE2 — without
 lookahead and lookbehind, without backreferences; a character is written as the character itself in the JSON string (not `\x{HHHH}`). The match is
@@ -86,7 +86,7 @@ The workarounds of the defects of the pinned parsers are not rules (the outcome 
   the final `\n` — layer 1 appends LF to the end of a text without LF before parsing.
 
 The other known defects of the pinned versions and their workarounds — [the list of library defects](versions/DEFECTS.md) (ADR-0092 item 9):
-each has a vector row on which the answer is different without the workaround, or «страж».
+each has a vector row on which the answer is different without the workaround, or «guard».
 
 **The package `yaml-suite`** ([`vectors/yaml-suite/`](vectors/yaml-suite/README.md)) — the outcome of layer 1 on each test of
 yaml-test-suite `data-2022-01-17` (the inputs are in the package, acceptance without a network); `layer1` is checked strictly, the rule is a summary.
@@ -121,7 +121,7 @@ of this family: a refusal on the empty path `""` (the instance whole), the value
 of the empty path of `<family>.outcomes.tsv` (V7-FAMILY-KEY-PLACEHOLDER-01). The path `/key` does not fit for this: it is the path of the field
 `key` of the value (P/08 `member-report`, `member-report-delta`, `member-reported`; for an open root — any name).
 
-**Place of refusal** is normative and does not depend on the library; the rule is set by the stack of V7 — the set «А» and the vectors
+**Place of refusal** is normative and does not depend on the library; the rule is set by the stack of V7 — the set «A» and the vectors
 `family-read` stand on it (V7-APPLICATOR-PATH-01):
 
 | Word or layer | Place of refusal |
@@ -149,7 +149,7 @@ A row: `path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm`.
   all readers; the pair `(path, reader)` does not repeat;
 - `outcome` — what this reader does when it meets the unreadable (in the words of the norm of the owner lesson);
 - `priority` — an integer, smaller earlier (the choice — below);
-- `unit` — the unit of unreadability (`row`, `field`, `element`): a refusal below it does not make the containing node unreadable;
+- `unit` — the unit of unreadability (the closed vocabulary [outcome-units.tsv](data/outcome-units.tsv): `row`, `field`, `element`): a refusal below it does not make the containing node unreadable;
 - `norm` — the address of the norm.
 
 **Choice of the outcome** of a reader R by the set of refusal paths (V7-OUTCOME-SELECT-01; a rule of the stack of V7):

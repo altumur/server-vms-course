@@ -6,13 +6,13 @@ The vectors of [the right contract](../../contracts/may.md): the function `may` 
 the term of the line, the age of the copy, a disabled person, a break-glass session). The owner is lesson P/08, chapter 8.4; it is performed by the gate consoles
 of a cluster ([P/06.3](../../../06-console/spec/06.3-console.norms.md) N1.3, chapter 6.7), by the consoles of the domain (lesson 10) and by the process
 `domain` (8.4) (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 1; the review analysis of stage A 8–10). The bytes are written by
-«Спецификация» (ADR-0083); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
+«Specification» (ADR-0083); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
-The rows were transferred from the inputs of the command `may` of the acceptance of М11/9 (`inputs/may-*.json`, sc. 07) without a change of values: the JSON
+The rows were transferred from the inputs of the command `may` of the acceptance of M11/9 (`inputs/may-*.json`, sc. 07) without a change of values: the JSON
 of the input is in one line, the order of keys and the lexemes of numbers are as in the file; `case` is the name of the input file. One exception is
 `may-24-unit-id-not-grammar`: `"labels": []` was added to the unit of the input (the Architect's decision of 2026-10-20): a unit
 `{sub, id}` without `labels` is itself an input not of the form (`unit` is `{sub, id, labels, about?}`), and `@exit 2` would not distinguish an id
-of a scope `unit:` not by the grammar from a unit without labels. Sc. 07 of the acceptance of М11/9 and its inputs were removed by the move of lesson 8 (the Architect's
+of a scope `unit:` not by the grammar from a unit without labels. Sc. 07 of the acceptance of M11/9 and its inputs were removed by the move of lesson 8 (the Architect's
 decision of 2026-10-20, ADR-0083 addendum (14) item 17): the table is the only source of these cases; the log is the acceptance of chapter 8.4 (`Platform/08-domain/journal/corrections-4.tsv`, a log, not in the export).
 
 ## Form of the input of the command `may`
@@ -109,7 +109,7 @@ of the acceptance.
 | [`cases.tsv`](cases.tsv), 126 rows: 52 `allow`, 44 `deny`, 7 `unavailable`, 23 `@exit 2` (may-26 — `until` does not fit in binary64, MAY-UNTIL-D8-01; may-27…may-106 — ADR-0097–ADR-0100, there is no dry run by an implementation) | `input` is the input of the command `may` as JSON text → `expect`: `{"result":"allow"}` (a break-glass session without grants, a copy of exactly one day of age, a holder line without `as_of`, `view` without a unit — any line, `*`, `unit:` its own and through `about`, `labels:` all labels, the labels of `about`, a higher rank, the term of the line ahead) or `{"result":"deny","reason":<word>}`: `disabled` (disabled at a grant), `stale` (a copy older than one day), `no_grant` (no line, `edit` without a unit not by `*`, a foreign unit, one label missing, the labels of the unit itself at `about`, a lower rank, an expired line, `"*"` not by `*`, a line of another subject, a unit without labels); `@exit 2` — a scope `unit:` with an id not by the grammar of [P/06.1](../../../06-console/spec/06.1-console.norms.md) N1.3; `subject` "" of a grant line (`may-25`, MAY-G03) |
 
 The vectors were checked by an oracle against the text of the contract (steps 1–8) and the form of the input of [P/08.4](../../../08-domain/spec/08.4-domain.norms.md) N1.3, N5 `exit`, not against the code of implementations; on a
-divergence the contract is right, the vector is corrected by «Спецификация».
+divergence the contract is right, the vector is corrected by «Specification».
 
 ## Vector wire
 

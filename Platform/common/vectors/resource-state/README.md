@@ -2,10 +2,10 @@
 
 This English text is the source; the Russian translation `ru/vectors/resource-state/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the observation contract](../../contracts/observation.md) («Observation of a version» with `lapse`, «Свежесть», «Resource state»;
+The owner is [the observation contract](../../contracts/observation.md) («Observation of a version» with `lapse`, «Freshness», «Resource state»;
 the guess of stage C OBS-001 (Go), the Architect's decision of 2026-10-23). The participants are the observers of `resource_state`:
 the controller ([P/04](../../../04-controller/spec/04-controller.norms.md) N3) and the console (`ServerRow.resource`
-of [chapter 6.5](../../../06-console/spec/06.5-console.norms.md), the server output of chapter 6.6). The bytes are written by «Спецификация».
+of [chapter 6.5](../../../06-console/spec/06.5-console.norms.md), the server output of chapter 6.6). The bytes are written by «Specification».
 The freshness boundary is one — the vectors [`fresh-age`](../fresh-age/README.md); here — how the age and the state follow from
 the observation history: the first look, a repeat of the same version, a new version, an unreadable one, a non-answer and a confirmed absence.
 

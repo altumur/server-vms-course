@@ -19,23 +19,23 @@ N1.3 `grant`) и индекс имён (P/08.5 N1.7 `delivery`): `sub` — по�
 таблица ролей не участвуют (ADR-0097 §4, ADR-0098 §4); модуль консоли считает подсказку по тем же группам и ярусам
 ([P/07](../../../07-console-module/ru/spec/07-console-module.norms.md) N1.5 `may`), сервер проверяет всегда.
 
-Шаги 1–8 перенесены из М11/9 N1.4 (вход, вывод) и N4 (слова `may`); номера шагов прежние, шаги 4a, 7a–7c добавлены ADR-0098–ADR-0100. У
+Шаги 1–8 перенесены из M11/9 N1.4 (вход, вывод) и N4 (слова `may`); номера шагов прежние, шаги 4a, 7a–7c добавлены ADR-0098–ADR-0100. У
 владельца остаются: строка гранта ([P/08.4](../../../08-domain/ru/spec/08.4-domain.norms.md) N1.3: `lines`, `line`, ранги `cap` — `none < view < edit < admin`, `sub`, `scope`,
 `until`, `GRANT_LIFETIME`, `unreadable` — значение и правило входа повторены ниже, «Функция `may`»; копия члена — [P/09.1](../../../09-agent/ru/spec/09.1-agent.norms.md) N1.4), проверка у процесса
 `domain` и что дверь отвечает на `deny` (P/08.4 N1.5: 403 `denied`, `detail` у `stale`), аварийная учётка у держателя
 (P/08.4 N1.6); сторожевая с грантами и аварийный вход у консоли кластера — P/06.7 N1.9, N1.10, у консоли домена — P/10 N1.5. Ссылка
-«N1.6» в перенесённом тексте — М11/9 N1.6, теперь P/06.7 N1.10 (аварийная сессия консоли); `rank` — порядок `cap`
+«N1.6» в перенесённом тексте — M11/9 N1.6, теперь P/06.7 N1.10 (аварийная сессия консоли); `rank` — порядок `cap`
 P/08.4 N1.3; метки — [договор азбуки меток](labels.md).
 
-Нормативные слова — по [канону курса](../../../../ru/НОРМАТИВНЫЕ-СЛОВА.md).
+Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md).
 
 ## Форма
 
-Входы функции: `grants` — копия `domain/grants` члена и `domain/grants/domain` у консоли домена и процесса `domain` — `Platform/09-agent/data/grants.schema.json`, `Platform/09-agent/data/grants.outcomes.tsv`; `Platform/08-domain/data/grants.schema.json`, `Platform/08-domain/data/grants.outcomes.tsv`; `disabled` — строка `domain/disabled`: `Platform/08-domain/data/disabled.schema.json`, `Platform/08-domain/data/disabled.outcomes.tsv` (аудит раскладки, V-36, V-37; решение «Архитектора» 2026-10-25); `roles` у консоли кластера — копия `domain/roles` члена: `Platform/09-agent/data/roles.schema.json`, `Platform/09-agent/data/roles.outcomes.tsv`; у консоли домена и процесса `domain` — строки `domain/roles/<имя>` и `domain/groups/<имя>`: `Platform/08-domain/data/roles.schema.json`, `Platform/08-domain/data/groups.schema.json` с их таблицами исходов.
+Входы функции: `grants` — копия `domain/grants` члена и `domain/grants/domain` у консоли домена и процесса `domain` — `Platform/09-agent/data/grants.schema.json`, `Platform/09-agent/data/grants.outcomes.tsv`; `Platform/08-domain/data/grants.schema.json`, `Platform/08-domain/data/grants.outcomes.tsv`; `disabled` — строка `domain/disabled`: `Platform/08-domain/data/disabled.schema.json`, `Platform/08-domain/data/disabled.outcomes.tsv` (аудит раскладки, V-36, V-37; решение «Архитектора» 2026-10-25); `roles` у консоли кластера — копия `domain/roles` члена: `Platform/09-agent/data/roles.schema.json`, `Platform/09-agent/data/roles.outcomes.tsv`; у консоли домена и процесса `domain` — строки `domain/roles/<name>` и `domain/groups/<name>`: `Platform/08-domain/data/roles.schema.json`, `Platform/08-domain/data/groups.schema.json` с их таблицами исходов.
 
 ## Функция `may`
 
-Из М11/9 N1.4 «Право — функция `may`»:
+Из M11/9 N1.4 «Право — функция `may`»:
 
 ```yaml
 input:     {grants: <doc {lines}> | null, as_of: <число> | null, disabled: [<имя>…], user, glass, cap, unit, now,
@@ -150,7 +150,7 @@ lines_in:       функция получает только строки lines 
 
 ```yaml
 exit:      0 — вычислено; 2 — вход не по форме; коды выхода — по принципу словаря «Стенда домена» («Коды выхода команд-векторов»: 2 — форма
-           доверенного входа, 0 со словом — документ другого кластера; решение «Архитектора» по сверке М11, H14):
+           доверенного входа, 0 со словом — документ другого кластера; решение «Архитектора» по сверке M11, H14):
            строки grants у may — доверенный вход (копия, уже разобранная по N1.3), поэтому строка не по форме — 2, не пропуск
 ```
 
@@ -196,11 +196,11 @@ reads:     worker.reads: [domain/grants, platform/folders/, platform/memberof/] 
 
 ## Слова отказа
 
-Из М11/9 N4: слова `may`: `disabled`, `stale`, `no_grant`. Исход `unavailable` — не слово отказа `may`: дверь отвечает 503 `{error: "unavailable"}`.
+Из M11/9 N4: слова `may`: `disabled`, `stale`, `no_grant`. Исход `unavailable` — не слово отказа `may`: дверь отвечает 503 `{error: "unavailable"}`.
 
 ## Векторы
 
-Пакет [`may`](../vectors/may/README.md): 126 строк (`may-role-*` — вход `as_role`, ADR-0105 п. 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, роли, ярусы, шаг 4a); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); из первых 26: 24 — входы команды `may` приёмки М11/9 (сц. 07) без изменения значений, кроме `labels: []` у единицы
+Пакет [`may`](../vectors/may/README.md): 126 строк (`may-role-*` — вход `as_role`, ADR-0105 п. 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, роли, ярусы, шаг 4a); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); из первых 26: 24 — входы команды `may` приёмки M11/9 (сц. 07) без изменения значений, кроме `labels: []` у единицы
 `may-24` (решение «Архитектора» 2026-10-20; README пакета);
 одна из них, `may-24`, — вход не по форме (`@exit 2`; разбор ревью стадии B 8–10, № 22); `may-25` — `subject` "" (`@exit 2`, MAY-G03); `may-26` — `until` не помещается в binary64 (`@exit 2`, MAY-UNTIL-D8-01). Сценарий и входы сняты переносом урока 8 — таблица единственный
 источник этих случаев. Там же `covers.tsv` — 19 строк функции `covers(scope, ref, row)` сторожевой ([договор
@@ -208,6 +208,6 @@ reads:     worker.reads: [domain/grants, platform/folders/, platform/memberof/] 
 
 ## Соответствие прежним урокам
 
-Из М11/9 (решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 1; разбор ревью стадии A 8–10): N1.4 целиком (здесь
-«Функция `may`»; в М11/9 — указатель) и фраза N4 о словах `may` (здесь «Слова отказа»). Норма М11/9-05 (`may` по порядку)
+Из M11/9 (решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 1; разбор ревью стадии A 8–10): N1.4 целиком (здесь
+«Функция `may`»; в M11/9 — указатель) и фраза N4 о словах `may` (здесь «Слова отказа»). Норма M11/9-05 (`may` по порядку)
 — по `note` [id-map](../../id-map.tsv).

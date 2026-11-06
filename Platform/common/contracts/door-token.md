@@ -18,7 +18,7 @@ of the answer), the signer `door/signer` and its envelope are in the owner's nor
 [`door-keys`](../../06-console/data/door-keys.schema.json) with the outcome table next to it. JCS is RFC 8785 (ADR-0072; the vectors
 [`jcs`](../../01-store/vectors/jcs/README.md) of lesson P/01).
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -85,7 +85,7 @@ there is no field `user` — a refusal) (analysis of the review of stage B 6–7
 surrogate written as `\uD800` is a refusal, although the bytes are valid UTF-8) and no noncharacters (U+FDD0–U+FDEF, U+xFFFE, U+xFFFF — a refusal) (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7).
 **The place of the token and the path** (analysis of the review of stage B 6–7, № 9; ADR-0083 addendum (12)). The holder takes the token from the header
 `Authorization: Bearer <token>`, and if there is no such header — from the query parameter `t` (`?t=<token>`: the element `<video>`
-does not set headers, lecture М10B/24). An `Authorization` header with another scheme is as if absent (then `?t=`);
+does not set headers, lecture M10B/24). An `Authorization` header with another scheme is as if absent (then `?t=`);
 the parameter `t` twice or more is a refusal; neither Bearer nor `?t=` is a refusal; with Bearer the query is not read (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7). «The request path» is the URL path without the query: «?» and everything after it do not enter the path; for
 `/play?t=…` the segment is `play`. HTTP details (guess of stage C DT-G01, the Architect's decision of 2026-10-23): the scheme `Bearer` is ASCII case-insensitive,
 between the scheme and the token — SP or HTAB; an `Authorization` header with the scheme `Bearer` is present, even an empty one — the query is not
@@ -127,8 +127,8 @@ of lesson P/01 (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-00
 
 ## Correspondence to former lessons
 
-From P/06.5 (analysis of the review of stage B 3–5, V1; formerly М10/9 N3 «`/where/<id>`»): the block «Door token — bytes» — the row `token`
+From P/06.5 (analysis of the review of stage B 3–5, V1; formerly M10/9 N3 «`/where/<id>`»): the block «Door token — bytes» — the row `token`
 (here «Token») and the row `door/keys` about the writer; the row `door/signer` stays in P/06.5 N3. From P/03.4 N3 «the door token at the
-holder» (formerly a part of М10/9-09): the row `door/keys` about the checker and the phrase of «Races» (here «Keys `door/keys`»; both
-halves of the row `door/keys` are merged into one, as in the source М10/9). Parts of the norms by `note` of [id-map](../id-map.tsv): P/06.5-05
+holder» (formerly a part of M10/9-09): the row `door/keys` about the checker and the phrase of «Races» (here «Keys `door/keys`»; both
+halves of the row `door/keys` are merged into one, as in the source M10/9). Parts of the norms by `note` of [id-map](../id-map.tsv): P/06.5-05
 (the bytes of the token, `door/keys`), P/03.4-08 (the check at the holder).

@@ -3,9 +3,9 @@
 This English text is the source; the Russian translation `ru/vectors/group-of/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 The owner is lesson P/04 through [the group by host contract](../../contracts/group-of.md) ([the norms](../../../04-controller/spec/04-controller.norms.md) N1.3 `group_by`, `cut_at: host`; ADR-0053; the parsing of the address is
-`schemes` of P/02.1 N1.2a). The participants are `<s>controller` (the group of a unit at placement) and `<s>worker` (the stamp `group` of a request and the call per group, P/03.6); moved from `04-controller/vectors/group-of` byte for byte (W03-GROUP-01). The bytes are written by «Спецификация»; moved
+`schemes` of P/02.1 N1.2a). The participants are `<s>controller` (the group of a unit at placement) and `<s>worker` (the stamp `group` of a request and the call per group, P/03.6); moved from `04-controller/vectors/group-of` byte for byte (W03-GROUP-01). The bytes are written by «Specification»; moved
 from `Source/tests/testdata/group_of.tsv` (stage B, the move of lesson 6, the Architect's decision on V8 of the plan of lesson 6). The header
-of `cases.tsv` was moved byte for byte and names the former addresses: М10/3 N4 — now P/06.1 N4, М10/7 N1.1a — P/06.2 N1.1a,
+of `cases.tsv` was moved byte for byte and names the former addresses: M10/3 N4 — now P/06.1 N4, M10/7 N1.1a — P/06.2 N1.1a,
 `fault.tsv` — the package [`fault`](../fault/README.md).
 
 ## `cases.tsv`
@@ -13,7 +13,7 @@ of `cases.tsv` was moved byte for byte and names the former addresses: М10/3 N4
 UTF-8, LF, fields separated by TAB; lines with `#` are explanations (the declaration of the field `source` with the schemes and the parsing rules are in the header of the file,
 they are part of the package), empty lines are skipped. There is no header; three fields: `raw` — the address (as in the unit row), `group` — the group (the host in
 one notation) and `fault` — the refusal (`bad_url` or empty); the input of the single command `vectors` is `cells: {raw}`, the name is one for
-all tables without a header with a cell «как записана» (as written) (the common acceptance README «Единая команда пакета векторов»; the inventory C04/C06-NEXT-167, the Architect's decision of 2026-10-27). An empty group without a refusal — the unit is not in a group. The comparison is by bytes. A row with an empty first cell (it starts with TAB) is
+all tables without a header with a cell «as written» (as written) (the common acceptance README «The unified command of a vector package»; the inventory C04/C06-NEXT-167, the Architect's decision of 2026-10-27). An empty group without a refusal — the unit is not in a group. The comparison is by bytes. A row with an empty first cell (it starts with TAB) is
 the empty value of the field: `<none>`, no refusal (GO-EMPTY-01).
 
 ## Stand command `group-of`

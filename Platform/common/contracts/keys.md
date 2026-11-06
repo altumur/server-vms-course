@@ -10,24 +10,24 @@ of the holder signs the set with the root and keeps the revocations. Participant
 | Who | What it does by the contract |
 |---|---|
 | the member's agent ([chapter 9.1](../../09-agent/spec/09.1-agent.norms.md) N1.4 `from_carry`) | accepts the set from the holder's answer with the function `keys` and writes `domain/keys`; merges `domain/revoked` of the answer with its own row and removes the `prune` entries |
-| the relay ([P/09.2](../../09-agent/spec/09.2-agent.norms.md) N1.4 `keys`) | reads the accepted set of its cluster (id-map М11/2-04) |
-| the cluster console ([P/06.3](../../06-console/spec/06.3-console.norms.md) «Ключи есть») | accepts the set with the function `keys` with the pinned root |
+| the relay ([P/09.2](../../09-agent/spec/09.2-agent.norms.md) N1.4 `keys`) | reads the accepted set of its cluster (id-map M11/2-04) |
+| the cluster console ([P/06.3](../../06-console/spec/06.3-console.norms.md) «Keys exist») | accepts the set with the function `keys` with the pinned root |
 | the checkers of a domain token ([the domain token contract](domain-token.md)) | read the accepted set and `domain/revoked` |
 | the process `domain` at a move and at following ([chapter 8.8](../../08-domain/spec/08.8-domain.norms.md) N1.8; «follow» — the section «The follow set» below) | accepts the sets of the answers of `/api/held` with the function `keys` |
 
-Moved from М11/2 N1.2 (the rows `row`, `doc`, `writer_forms`, `only_forward`), N1.6 (the block `domain/revoked`: the form,
+Moved from M11/2 N1.2 (the rows `row`, `doc`, `writer_forms`, `only_forward`), N1.6 (the block `domain/revoked`: the form,
 `writer`, `order`, `prune`, `readers`), N3 «`keys(pinned, held, offered)`» (steps 1–8 and the paragraph about the refusal) and the rows
 of `from_carry` of P/09.1 N1.4 about `revoked` without a change of behaviour. The owner keeps: the root and its pinning (P/08.2 N1.1),
 the `rev` of the writer, the emergency `rev` and the premise of clocks (P/08.2 N1.2 `rev`, `emergency`, `clocks`), the holder keys and `OLD_KEYS`
 (P/08.2 N1.3, N1.6), the changes of the set (P/08.2 N3; installation — [P/02.4](../../02-installer/spec/02.4-installer.norms.md) N3),
 the offline revocation window (P/08.2 N1.7). What is common to the forms — the [domain founding contract](domain-founding.md)
 «Common rules of forms» (layout audit, B-03: hex, canonical base64url, JCS — RFC 8785, Ed25519 — RFC 8032, X25519 — RFC 7748, completeness
-of JSON forms, a repeated key, «integer»). References in the moved text: «N1.x», «N3» — the chapters of P/08.2 (formerly of lesson М11/2; the numbers of the
-subsections are the former ones); «lesson N» — lesson М11/N, their addresses now: «lesson 3» (the agent, the admission and the signature of a member) — P/09.1 and P/08.3,
+of JSON forms, a repeated key, «integer»). References in the moved text: «N1.x», «N3» — the chapters of P/08.2 (formerly of lesson M11/2; the numbers of the
+subsections are the former ones); «lesson N» — lesson M11/N, their addresses now: «lesson 3» (the agent, the admission and the signature of a member) — P/09.1 and P/08.3,
 «lesson 3 N1.6 from_carry» — P/09.1 N1.4 `from_carry`, «lesson 7» (the kind token) — P/08.7, «lesson 9» (the revocation of a person) — P/08.4,
 «lesson 10» (the issuing holder) — P/08.8 (analysis of review of stage B 8–10, № 22; Kimi SB810-07).
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -38,7 +38,7 @@ The rows of the contract: the set `domain/keys` and the revocations `domain/revo
 The form of the rows of the families — `Platform/08-domain/data/keys.schema.json`, `keys.outcomes.tsv` and
 `Platform/08-domain/data/revoked.schema.json`, `revoked.outcomes.tsv` (C04-DEP-OBS-HEARTBEAT-01: the data files named by a contract are in the reading of `common`, ADR-0083 addendum (32) item 1).
 
-From М11/2 N1.2:
+From M11/2 N1.2:
 
 ```yaml
 row:           domain/keys {doc: <the JSON text of the document>}   # exactly one element doc, a string; another composition — not_a_set;
@@ -61,7 +61,7 @@ doc:                                                       # a closed set of fie
   thefts?:         an integer 1 … 2^53−1 — the count of changes after theft (P/08.2 N3 step 3); none — 0; passes into each next set
   book_seal:       hex of the public book acceptance key X25519 (N1.4); required: a set without it does not read; a point of small
                    order (X25519 with any scalar gives a zero shared secret, RFC 7748 §6.1) — the set does not read
-                   (added by the М11 reconciliation, S1)
+                   (added by the M11 reconciliation, S1)
   kid:             "root"
   sig:             base64url of the Ed25519 signature of the root over UTF-8(JCS(doc without kid and sig))
 writer_forms:      kid of a token key = the first 8 hex characters of its public key; serial = the first 16 hex characters of the public
@@ -86,7 +86,7 @@ not_serial:    a fingerprint is not a serial (writer_forms above: the first 16 h
 
 ## The function `keys`
 
-From М11/2 N3 «`keys(pinned, held, offered) → took rev | holding rev | refused <word>`»:
+From M11/2 N3 «`keys(pinned, held, offered) → took rev | holding rev | refused <word>`»:
 
 A function of the member's agent over the set from the holder's answer (lesson 3) and of the process domain over its own set at a change. The steps are in
 order; the first rule that fires gives the result.
@@ -127,7 +127,7 @@ exit:        0 — computed (a refusal by a word included); 2 — the input is n
 
 ## Revocations `domain/revoked`
 
-From М11/2 N1.6:
+From M11/2 N1.6:
 
 ```yaml
 domain/revoked: {jtis: "<jti>:<exp>,…"}      # exactly one element jtis, a string; empty — ""; no row — no revocations;
@@ -136,7 +136,7 @@ domain/revoked: {jtis: "<jti>:<exp>,…"}      # exactly one element jtis, a str
   writer:      the process domain at a revocation (lesson 9: a person; lesson 7: a kind token) and at every pass of the holder, CAS by the read version: otherwise the pass
                would overwrite a revocation of the same minute; a conflict of a revocation — read again, at most 3 times, then 503 unavailable; a conflict of a pass — the next pass
                (C08-REVOKED-CAS-01); at a member —
-               the agent by merging the holder's answer with its own row (lesson 3 N1.6 from_carry; added by the Quint model of М11,
+               the agent by merging the holder's answer with its own row (lesson 3 N1.6 from_carry; added by the Quint model of M11,
                RV): at a member an entry is removed only by prune; the agent of the holder's cluster does not write it while the cluster holds the term (the term record contract «The switch point `switch`»)
   order:       ascending by jti in bytes; exp — a JSON number, the exp of the revoked token
   repeat:      a repeated jti in one row (its own or of the answer) at a merge and a cleanup — for the jti the greatest exp is taken, then prune:
@@ -146,12 +146,12 @@ domain/revoked: {jtis: "<jti>:<exp>,…"}      # exactly one element jtis, a str
   readers:     the cluster console, the worker roles — by the platform basis of rights (P/02.5 N1.4), the agent (lesson 3); at a member — a copy
 ```
 
-From М11/3 N1.6 `from_carry` (the member's agent, the field `revoked` of the holder's answer; now P/09.1 N1.4 `from_carry`):
+From M11/3 N1.6 `from_carry` (the member's agent, the field `revoked` of the holder's answer; now P/09.1 N1.4 `from_carry`):
 
 ```yaml
 merge:          revoked → a union with its own row domain/revoked: the entries of the answer ∪ its own by jti (at an equal jti — the greater
                 exp); only prune of lesson 2 N1.6 removes (exp + TOKEN_SKEW < now) — a revocation is not cancelled by an answer (added
-                by the Quint model of М11, RV: after an emergency move an answer from a copy would otherwise remove the revocation of the last BACKUP_EVERY);
+                by the Quint model of M11, RV: after an emergency move an answer from a copy would otherwise remove the revocation of the last BACKUP_EVERY);
                 the same after a move without stolen. The exception is a change after theft: an agent that wrote domain/keys with a set whose thefts is
                 higher than that of the trusted set of its memory (P/09.1 N1.4 from_carry; not from the row — addendum (25) item 1), by any path —
                 by the holder's answer (from_carry) or by following (the write of domain/holder with a set, «The follow set»), — in the same
@@ -168,7 +168,7 @@ merge:          revoked → a union with its own row domain/revoked: the entries
                 version with the entries of the answer, the reason into the journal without a value (V7 item 3, the Architect's decision of 2026-10-28, P2; row 44 of the list)
 ```
 
-`TOKEN_SKEW` and «N3 token step 6» are the [domain token contract](domain-token.md) «Токен», «Проверка»; «prune of lesson 2 N1.6» is
+`TOKEN_SKEW` and «N3 token step 6» are the [domain token contract](domain-token.md) «The token», «The check»; «prune of lesson 2 N1.6» is
 the row `prune` above. When the agent applies the field `revoked` (after the outcome `took` or `holding` of the function `keys` over the set of the same
 answer) — P/09.1 N1.4 `from_carry`.
 
@@ -189,25 +189,25 @@ start — the row domain/keys of its own store (a move without stolen changes th
 the answer of the new holder); the set of an answer is taken only if the term record of the same answer passes record with this set and
 its term is not less than its own record (SET_GUARD; the term of its own record — of its own domain/holder that passed record by the follow set of the start of the
 pass; it is computed once per pass: a set taken in the pass does not recheck it and does not remove the bound, otherwise a second candidate with a greater rev takes the term back, and the outcome depends on the order of CLUSTERS (Quint M12 N2; C09-SET-GUARD-OWN-02); there is no checked own record at the start of the pass — nothing to compare with; C09-SET-GUARD-OWN-01,
-the decision of «Спецификация домена»; its own record whose issuer is in revoked_issuing of the answer's set, while thefts of this set is greater than that of the follow set of the start of the pass, is revoked by a theft and does not serve as a bound: otherwise the thief's record of a huge term would forever block the set of the change after theft; revoked_issuing grows at every move, only thefts tells a theft apart (P/08.2 change after theft step 3): otherwise a cut-off member would take back an honest chain of handovers of the same issuer, C08-GUARD-STOLEN-RECORD-01; revoked_members does not fit for this: at a second theft on the same holder the new key is not in it, Quint M12 N8, C08-GUARD-THEFTS-01); the same condition at `from_carry` (P/09.1 N1.4) with the term record of this answer, the bound is the greatest of the bound of the pass and of the term written by step 4 of «follow» of this pass: otherwise a lone holder of a smaller term takes the term back (C08-GUARD-FROM-CARRY-01); the agent writes the row domain/keys from the follow set when the condition of the switch
-point (the term record contract «The switch point `switch`») is false by this set (at the holder's cluster — from the switch point; added by the Quint model of М11, G1, G7); a set by which its own term record does not pass record it writes only in one batch op: batch with a term record that passes by this set: the best one of step 4 of «follow» or the record of the answer `from_carry`; each row has its own cas, the guard domain/agent-turn (otherwise a break between them deprives its own record of the check and the bound SET_GUARD of the next pass is lost; the Architect's decision of 2026-10-31, Quint M12 N2, C08-KEYS-CLAIM-BATCH-01); the batch refused — the set stays in memory (C09-HELD-MEMORY-01), together with it the bound of this pass stays in memory, the next pass writes the batch again; the bound lives in memory only while its own record has not changed: at the start of the pass, before the follow set and the bound, its own record that passed record by its own row domain/keys with a term above the bound of memory (no bound — any) removes the set and the bound of memory, otherwise a record of a new term does not pass the set of memory, the condition of the switch point is false and the next pass writes a smaller term over it; the set is not lost: it will come from a neighbour and meet the new bound, SET_GUARD will refuse, step 2a will raise an alarm (the Architect's decision of 2026-11-01, Quint M13 N15, C09-HELD-MEMORY-02); a row with a `rev` greater than its own set it does not rewrite: at the target of a move it is put by the batch claim before the agent has heard the new set (C08-TARGET-KEYS-RACE-01)
+the decision of «Domain Specification»; its own record whose issuer is in revoked_issuing of the answer's set, while thefts of this set is greater than that of the follow set of the start of the pass, is revoked by a theft and does not serve as a bound: otherwise the thief's record of a huge term would forever block the set of the change after theft; revoked_issuing grows at every move, only thefts tells a theft apart (P/08.2 change after theft step 3): otherwise a cut-off member would take back an honest chain of handovers of the same issuer, C08-GUARD-STOLEN-RECORD-01; revoked_members does not fit for this: at a second theft on the same holder the new key is not in it, Quint M12 N8, C08-GUARD-THEFTS-01); the same condition at `from_carry` (P/09.1 N1.4) with the term record of this answer, the bound is the greatest of the bound of the pass and of the term written by step 4 of «follow» of this pass: otherwise a lone holder of a smaller term takes the term back (C08-GUARD-FROM-CARRY-01); the agent writes the row domain/keys from the follow set when the condition of the switch
+point (the term record contract «The switch point `switch`») is false by this set (at the holder's cluster — from the switch point; added by the Quint model of M11, G1, G7); a set by which its own term record does not pass record it writes only in one batch op: batch with a term record that passes by this set: the best one of step 4 of «follow» or the record of the answer `from_carry`; each row has its own cas, the guard domain/agent-turn (otherwise a break between them deprives its own record of the check and the bound SET_GUARD of the next pass is lost; the Architect's decision of 2026-10-31, Quint M12 N2, C08-KEYS-CLAIM-BATCH-01); the batch refused — the set stays in memory (C09-HELD-MEMORY-01), together with it the bound of this pass stays in memory, the next pass writes the batch again; the bound lives in memory only while its own record has not changed: at the start of the pass, before the follow set and the bound, its own record that passed record by its own row domain/keys with a term above the bound of memory (no bound — any) removes the set and the bound of memory, otherwise a record of a new term does not pass the set of memory, the condition of the switch point is false and the next pass writes a smaller term over it; the set is not lost: it will come from a neighbour and meet the new bound, SET_GUARD will refuse, step 2a will raise an alarm (the Architect's decision of 2026-11-01, Quint M13 N15, C09-HELD-MEMORY-02); a row with a `rev` greater than its own set it does not rewrite: at the target of a move it is put by the batch claim before the agent has heard the new set (C08-TARGET-KEYS-RACE-01)
 ```
 
 ## Vectors
 
 The package [`keys`](../vectors/keys/README.md) (analysis of review of stage A 8–10, № 13): 29 lines — 21 inputs of the command `keys` of the acceptance of
-М11/2 (sc. 01–03) without a change of bytes, two lines of the field `thefts`, four lines of the field `keep_until` and two lines of the field `stolen_issuing`; the scenarios and the inputs were removed by the move of lesson 8 — the table is the only source of these
+M11/2 (sc. 01–03) without a change of bytes, two lines of the field `thefts`, four lines of the field `keep_until` and two lines of the field `stolen_issuing`; the scenarios and the inputs were removed by the move of lesson 8 — the table is the only source of these
 cases. The merge and the removal of `domain/revoked` at a member (`merge`, `repeat`, `prune`) — `revoked.tsv` of the same package (7 lines;
 guess of stage C KEYS-G01, the Architect's decision of 2026-10-23); the bound of `prune` at the token checker — the vectors [`domain-token`](../vectors/domain-token/README.md) (formerly sc. 07
-of the acceptance of М11/2) through the function `token`.
+of the acceptance of M11/2) through the function `token`.
 
 The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 
 ## Correspondence to former lessons
 
-From М11/2 (analysis of review of stage A 8–10, № 13 / decision 2): N1.2 — the rows `row`, `doc`, `writer_forms`, `only_forward` (here
+From M11/2 (analysis of review of stage A 8–10, № 13 / decision 2): N1.2 — the rows `row`, `doc`, `writer_forms`, `only_forward` (here
 «The set»; in N1.2 — a pointer, `rev`, `emergency`, `clocks` stayed); N1.6 — the block `domain/revoked` (here «Revocations»;
-`OLD_KEYS` stayed); N3 «keys» — steps 1–8 and the paragraph about the refusal (here «The function `keys`»). From М11/3 N1.6 — a part of the row
-`from_carry` about `revoked` (here `merge`). Parts of the norms М11/2-02, -04, -06 and М11/3-09 — by `note` of [id-map](../id-map.tsv);
+`OLD_KEYS` stayed); N3 «keys» — steps 1–8 and the paragraph about the refusal (here «The function `keys`»). From M11/3 N1.6 — a part of the row
+`from_carry` about `revoked` (here `merge`). Parts of the norms M11/2-02, -04, -06 and M11/3-09 — by `note` of [id-map](../id-map.tsv);
 the catalogue row `domain/revoked` (participant `domainagent`) — a merge by jti (analysis of review of stage A 8–10, № 3).

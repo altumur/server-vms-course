@@ -11,7 +11,7 @@ admission — the section «The participant» `admission`) and the epoch rows of
 limits do not change (ADR-0091 addendum (21) item 1, addendum (23) items 3–5, addendum (24) item 4, addendum (25) item 4, addendum (27) item 2). The index is
 P/05 N1.3; the form of the row and of the answer — the section «Form», the query and the cut `cut` — «The resource query and answer» below; the hint `/events/wait` is at the resources (P/05 N1.6), the console has none.
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -83,14 +83,14 @@ of its mirror neighbours ([P/05](../../05-resource/spec/05-resource.norms.md) N1
    of the caller is narrower than view on *, step 5a) — with limit = the ceiling 10000, the common limit — after the filter (C06-EVENTS-VIEW-33-01)
 2. did not answer → incomplete[<server>] = did not answer; said not live → said <state>; a stale door row → silent;
    for each of them state gets «; <s> unreachable»; bucket copies of a silent resource in the answers of other resources
-   are given out, and then state also gets «; <s> from mirror» (reconciliation of python and go М10/6–11, E23)
+   are given out, and then state also gets «; <s> from mirror» (reconciliation of python and go M10/6–11, E23)
 3. a row of a resource answer not in the form EventRow → skip it, count it in lines_garbled of the merger (P/05 N1.3; E24);
    lines_garbled of the answer — the sum of lines_garbled of those who answered plus the skips of step 3; partial: true if true at one who answered
 4. duplicates by id → one
 5. epochs (the section «Epochs» below): epoch_is and fenced at each row
 5a. the visibility filter — only the console (the worker merges its own without a filter): a row is seen by a caller whose grant view covers its
    unit or the unit of (scope of the gate contract: unit:<sub>/<id>; labels: — by the labels of the unit of, if there is of, otherwise unit);
-   the labels of a unit — the field labels of its row <sub>/<unit.rows of the manifest>/<id> ([the row check contract](../row-check.md) «строка единицы»), declared in unit.fields as a list (the same field as
+   the labels of a unit — the field labels of its row <sub>/<unit.rows of the manifest>/<id> ([the row check contract](../row-check.md) «the unit row»), declared in unit.fields as a list (the same field as
    the input unit.labels of the function may and the placement labels); the field is not declared or the row does not have it — no labels ([]); the unit row
    is unreadable or its read is not confirmed — the labels are unknown: the rows of this unit are seen by a grant on the unit itself (or on of) and
    on *, a grant by labels — not; this is not a 503 of the door — one unit does not bring down the output; to a caller with a grant view by labels such
@@ -104,7 +104,7 @@ of its mirror neighbours ([P/05](../../05-resource/spec/05-resource.norms.md) N1
    truncated = the sum of truncated of the resources that answered + the number of candidates (at the console — visible) that did not fit into the common limit;
    deduplication, epoch marking and the visibility filter do not enter this counter
 7. with unit: a query without fencing, then marking by epochs — a row of a former epoch is given out with fenced: true, not thrown away
-   (reconciliation of python and go М10/6–11, E21)
+   (reconciliation of python and go M10/6–11, E21)
 ```
 
 **Races.** Sources and epochs can change between reads: there is no common snapshot. The count refers to the observed answers:
@@ -144,5 +144,5 @@ an unreadable unit (`withheld`), a grant on the unit and on `*`, labels by `of`,
 
 ## Correspondence to former lessons
 
-From P/06.4 N1.3 `merge` and N3 «merge (the console)» (formerly М10/8): the algorithm and the paragraph about the freshness of the door row — whole; P/06.4 has
+From P/06.4 N1.3 `merge` and N3 «merge (the console)» (formerly M10/8): the algorithm and the paragraph about the freshness of the door row — whole; P/06.4 has
 a reference here. New: the worker participant, `unknown`, a failure of reading an epoch (ADR-0091 addendum (20)–(27)).

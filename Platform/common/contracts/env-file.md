@@ -10,7 +10,7 @@ step 4); the role processes get their environment from the runner (lifecycle of 
 parsing; ACC-VECTORS-CONNECT-04). Moved from P/02.4 N1.2 together with the edges B19 without a change of behaviour; files and reading order, variables, `CLUSTERS` and
 the unit constants are the sections below (layout audit, the Architect's decision of 2026-10-25, A-07, A-09, A-16, A-17, B-26).
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Grammar
 
@@ -19,7 +19,7 @@ Environment files (`w2c.env`, `roles/*.env`, the subsystem file, `configstore.en
 or `'…'` is taken without the quotes, there are no substitutions; an empty line and a line whose first non-blank character is `#` are skipped. Any other
 line is a start refusal with code 2 and a log line that names the file and the line number.
 
-At the edges (reconciliation of python and go М10/6–11, B19): lines are separated by LF; a CR character in a line, a BOM at the start of the file, a space or a tab before or after
+At the edges (reconciliation of python and go M10/6–11, B19): lines are separated by LF; a CR character in a line, a BOM at the start of the file, a space or a tab before or after
 `=` and in the name — the line is not by the grammar; `export` is exactly one word and one space before `KEY`, `export` without `KEY=` is not by the
 grammar; a value without quotes is everything after `=` to the end of the line as is, without trimming spaces, a `#` inside the value is
 part of the value, not a comment; an empty value (`KEY=`) is an empty string; an unpaired quote is not by the grammar.
@@ -40,7 +40,7 @@ a skip, not an error (like `W2C_SUB_ENV` [P/02.4](../../02-installer/spec/02.4-i
 
 Moved from [P/02.4](../../02-installer/spec/02.4-installer.norms.md) N1.2 without change (layout audit, the Architect's decision of 2026-10-25, B-26).
 
-The runner's reading order: the unit values → the role file `roles/<W2C_ROLE>.env` → `w2c.env` → the subsystem file; what is read earlier wins. A part unit (`w2c-run.sh part`, P/02.4 N1.9) reads only the unit values and the subsystem file `W2C_SUB_ENV` (ADR-0091 addendum (3) item 2). The directory `roles/` lies next to `w2c.env` (the directory of the file `W2C_ENV`, by default `/etc/w2c/roles/`); there is no other place. A `W2C_ROLE` of the unit that does not match the role of the runner command (`w2c-run.sh <command>`, P/02.4 N1.9) is a start refusal with code 2 (reconciliation of python and go М10/6–11, B20); for `w2c-run.sh worker <sub>` the role of the command is `<sub>worker`, for `domainworker <sub>` it is `<sub>domain`: one program in both roles sees the environment by one rule (ADR-0091 addendum (4), (5); the Architect's decisions on the repeated review of 2026-10-23).
+The runner's reading order: the unit values → the role file `roles/<W2C_ROLE>.env` → `w2c.env` → the subsystem file; what is read earlier wins. A part unit (`w2c-run.sh part`, P/02.4 N1.9) reads only the unit values and the subsystem file `W2C_SUB_ENV` (ADR-0091 addendum (3) item 2). The directory `roles/` lies next to `w2c.env` (the directory of the file `W2C_ENV`, by default `/etc/w2c/roles/`); there is no other place. A `W2C_ROLE` of the unit that does not match the role of the runner command (`w2c-run.sh <command>`, P/02.4 N1.9) is a start refusal with code 2 (reconciliation of python and go M10/6–11, B20); for `w2c-run.sh worker <sub>` the role of the command is `<sub>worker`, for `domainworker <sub>` it is `<sub>domain`: one program in both roles sees the environment by one rule (ADR-0091 addendum (4), (5); the Architect's decisions on the repeated review of 2026-10-23).
 
 `W2C_ENV` and `W2C_SUB_ENV` are taken from the unit environment once per reading pass: the same key in a loaded file is not
 applied (there is no redirection), a journal line without the value, not a refusal. `W2C_ROLE` of the unit is mandatory and equals the role of the
@@ -57,8 +57,8 @@ with the value is the norms of its lesson. `CLUSTERS` is the section below.
 |---|---|---|---|
 | the variable `slot.name_env` of the manifest (only if the manifest declared it; `testsub2` — `TALLY_NAME`) | the slot name (a wish, P/03.2 N1.4) — the same as the argument `%i` of the unit | — | the unit |
 | `BOX_ID` | the box; otherwise `/etc/machine-id`, otherwise hostname; an empty value is as if not set ([the instance contract](instance.md) `sources`; INSTANCE130-SOURCES-01) | `%m` | the unit |
-| `SERVER_NAME` | the server; by the grammar of the slot suffix `^[a-z0-9]+(-[a-z0-9]+)*$` (P/03.2 N1.4: lowercase, without dots — the server name enters the slot name `<prefix>-<server>-<n>` of the unit instance, P/02.4 N1.1, and the series `workers_wanted{server}`, P/02.4 N1.5), otherwise a start refusal with code 2; narrower than the host name of the doors of P/06.6 N2.1 (reconciliation of python and go М10/3–5) | the short hostname (`%l`) | `w2c.env` |
-| `LABELS` | the node labels separated by commas — [the label list](labels.md); a word outside the label alphabet is a worker start refusal, code 2, like other wrong environment values (P/03.2 N3 «start()» step 2; the VMS request «пульс и битая строка», the Architect's decision of 2026-10-23) | — | `w2c.env` |
+| `SERVER_NAME` | the server; by the grammar of the slot suffix `^[a-z0-9]+(-[a-z0-9]+)*$` (P/03.2 N1.4: lowercase, without dots — the server name enters the slot name `<prefix>-<server>-<n>` of the unit instance, P/02.4 N1.1, and the series `workers_wanted{server}`, P/02.4 N1.5), otherwise a start refusal with code 2; narrower than the host name of the doors of P/06.6 N2.1 (reconciliation of python and go M10/3–5) | the short hostname (`%l`) | `w2c.env` |
+| `LABELS` | the node labels separated by commas — [the label list](labels.md); a word outside the label alphabet is a worker start refusal, code 2, like other wrong environment values (P/03.2 N3 «start()» step 2; the VMS request «heartbeat and a garbled row», the Architect's decision of 2026-10-23) | — | `w2c.env` |
 | `INSTANCE_ID` | a unique instance instead of `<box>:<pid>:<6hex>`; an empty value is as if not set (INSTANCE130-SOURCES-01); both sources are by the grammar of [the instance contract](instance.md), on disk — the name encoding of [the event journal contract](event-journal.md); otherwise a refusal before the start (P/03.2 N3 «start()» step 2, N4; analysis of the review of stage B 3–5, № 7); a new process does not reuse a former value | — | — |
 | `PLATFORM_DIR` | the state root | `/data/platform` | `w2c.env` |
 | `PLATFORM_STORE` | the store: `configstore:///run/configstore/<role>.sock` — the door of P/01.1, the only link of a process with the store of another implementation (ADR-0083 item 2); `file://` — the profile «the whole box is one implementation»: the processes of the box and the store are of one implementation, the format on disk is not normed and is not a contract; `memory://` — in the process, without durability (the store pilot, A9) | `file://<PLATFORM_DIR>/config` | the unit |
@@ -109,7 +109,7 @@ From [P/06.7](../../06-console/spec/06.7-console.norms.md) N1.4 without change (
 
 ```yaml
 CLUSTERS:     <name>=<url>[,<name>=<url>…]; name — a member name (P/08.3 N1.1), url — http:// or https:// with a host, without
-              userinfo (`user@`), a path and a trailing «/» (userinfo — added by the reconciliation of М11, D6); a repeated name, an element without
+              userinfo (`user@`), a path and a trailing «/» (userinfo — added by the reconciliation of M11, D6); a repeated name, an element without
               «=», another url — the value is not read (503 at the console, not a process crash); no variable or empty — an empty list
 ```
 

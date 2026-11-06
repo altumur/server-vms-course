@@ -15,7 +15,7 @@ side of the decision) without a change of behaviour, except one: the freshness b
 `live` of a process in `/schema`, `state` of a worker in an output) is in the norms of the reading lessons; the form of the observed rows and objects is at
 their owners ([catalogue](../data/catalog.tsv)).
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -124,7 +124,7 @@ resource_state:
                 a ground up to the same bound — the age of its last version ≤ LOST_AFTER, there is no new count
                 (lapse; OBS-001)
   unknown:      the observer has never seen either a readable heartbeat or the door row: an unreadable heartbeat does not count
-                as seen (reconciliation of python and go М10/6–11, C13); what was read before and disappeared is seen (lapse)
+                as seen (reconciliation of python and go M10/6–11, C13); what was read before and disappeared is seen (lapse)
   silent:       otherwise; only silent excludes and moves
 ALIVE_EVERY:    15           # s; the resource rewrites at of its door row platform/doors/<s> (P/05 N1.4 door_row) — so
                              # the door row changes even with a silent heartbeat (moved from P/04 N1.4; layout audit, the Architect's decision of 2026-10-25, A-10)
@@ -170,7 +170,7 @@ member_state:                                    # by the monotonic clock of the
   never:     the member is accepted, this process has never seen a mark (one that disappeared after being seen — silent, not never)
   leave:     the member left the list (P/08.3 N2 DELETE) — the process forgets its memory (the mark, the copy, the first look, the heartbeats);
              one that came back — a first look anew (unseen)
-  # disappearance, never and leaving — added by the reconciliation of М11 (V1–V3)
+  # disappearance, never and leaving — added by the reconciliation of M11 (V1–V3)
 ```
 
 ## Reading the decision: intent → placement → intent
@@ -224,7 +224,7 @@ The packages [`fresh-age`](../vectors/fresh-age/README.md) (the freshness bound:
 From P/04 N1.4 (the move of lesson 6, review of stage A 6–7, № 2): the block `resource_state` (here «Resource state») and
 the meaning of the freshness `LOST_AFTER` (here «Freshness»; the value of the constant is here since layout audit A-01, its role in the terms of the judge — P/04 N1.4); from P/04 N1.4 — ALIVE_EVERY (A-10); from P/03.2 N3 and P/04 N3 — «Server decommissioned» (A-18); from P/08.1 N1.3 — `member_state` (A-15); from P/04 N1.5 — the rule
 of the reader of the decision (the paragraphs «An active intent is an accepted common decision…», «An unreadable turn/intent row…» in the part of the readers);
-from М10/9 N3 «`/where/<id>`» — the choice of target/reason at an active intent
+from M10/9 N3 «`/where/<id>`» — the choice of target/reason at an active intent
 (chapter 6.5); from P/03.2 N1.4 — the definition of the age of the observed version (by reference); from P/03.2 N1.2, N1.4a — `CONTENDER_FRESH` and the freshness
 of a contender mark (C06-CONTENDER-FRESH-33-01). Parts of norms by `note` of
 [id-map](../id-map.tsv): P/04-04 (life by the change of the heartbeat, the first look), P/04-10 (`resource_state`), P/04-01 (the double

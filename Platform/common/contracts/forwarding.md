@@ -14,17 +14,17 @@ the forwarding, passing to the process — [norms of lesson P/10](../../10-domai
 the process `domain` (P/08: accepting and the answers — [P/08.0](../../08-domain/spec/08.0-domain.norms.md) N1.8 `pass`, `answers`; reading
 `X-W2C-Client` — P/08.0 N1.8; the limit by address — [P/08.4](../../08-domain/spec/08.4-domain.norms.md) N1.10 `address`).
 
-Moved from М11/8 N1.3 (the line `via`), N1.4 (the block in full), N3 «accept by a console» and М11/9 N1.10 (the line `header`) without
+Moved from M11/8 N1.3 (the line `via`), N1.4 (the block in full), N3 «accept by a console» and M11/9 N1.10 (the line `header`) without
 a change of behaviour; the section «Refusals by transition» is the Architect's decision of 2026-10-20 (decision 3: each OpenAPI carries
 only its own codes), the codes in it are from the norms of the transitions, there are no new ones. The forwarding table is the section «Domain doors» below; the address (`holds`, `to`, `view.url`,
 `CLUSTERS`), `where` of a member and forwarding to the signer are norms of the owner (P/06.7 N1.4, N1.6, N1.8); TLS between clusters —
 P/06.7 N1.7, `peer` — [the `peer` contract](peer.md); the gate — [the gate-and-pass contract](gate-and-pass.md). References in the moved text: «N1.x»,
-«N3» are of lesson М11/8 (at the line `header` — of М11/9); «lesson N» is lesson М11/N. Their addresses now (stage B, lesson 10): М11/8 N1.2 —
+«N3» are of lesson M11/8 (at the line `header` — of M11/9); «lesson N» is lesson M11/N. Their addresses now (stage B, lesson 10): M11/8 N1.2 —
 «Domain doors» below, N1.3 — P/06.7 N1.4, N1.4 — «Forwarding is one function» below, N1.5 — P/06.7 N1.6, N1.6 — P/06.7 N1.7 (`server.role` — P/10 N1.4), N1.7 — P/10 N1.6, N1.9 —
 P/06.7 N1.8; «lesson 9 N1.5» — P/06.7 N1.9; «lesson 2 N1.8» — P/06.3 N1.8; «lesson 3 N1.8 pass» — P/10 N1.3; «lesson 10» (the terms of
 the move) — P/08.8 N1.7, N1.8.
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -49,17 +49,17 @@ The files the contract works by (layout audit, `V-20`–`V-22`; the Architect's 
 
 ### One hop
 
-From М11/8 N1.3:
+From M11/8 N1.3:
 
 ```yaml
 via:          X-W2C-Via: <CLUSTER> is set by every forwarding to the console of another cluster; «X-W2C-Via came» — the header
-              is present, an empty one included (added by the reconciliation of М11, D7); a console that received X-W2C-Via
+              is present, an empty one included (added by the reconciliation of M11, D7); a console that received X-W2C-Via
               does not forward to the console of another cluster (400 one hop); to the domain console of its own box (holds) — it forwards
 ```
 
 ### Forwarding is one function
 
-From М11/8 N1.4:
+From M11/8 N1.4:
 
 ```yaml
 request:      the method, the path and the query as they came; the path segments are decoded once, %2F creates no route level, the accepted
@@ -71,7 +71,7 @@ set:          X-Operator: console — on every forwarding: transition 1 and tran
               X-W2C-Via-Worker: <sub>/<instance> — on forwarding by ticket (P/06.3 N1.9 «Domain doors»)
 never:        the other headers that came; X-User, X-Operator, X-W2C-Via that came never go further; X-W2C-Via-Worker at transition 1 passes as declared, at transition 2 — only from the leaf of the role of the cluster console, otherwise it is removed
 x_operator:   the receiving console recognizes X-Operator: console (the value byte for byte: `Console` is not it; added
-              by the reconciliation of М11, D16) only on a connection with the proven role console (the role certificate P/02.4 N1.6, N1.6 below).
+              by the reconciliation of M11, D16) only on a connection with the proven role console (the role certificate P/02.4 N1.6, N1.6 below).
               Such a connection exists only at the role door of the domain console at transition 2 (a connection without a role is refused there
               earlier — the role certificate contract «The server side: the class `role`»). The cluster console at transition 1 and for everything incoming from other clusters does not
               recognize it; it removes it always (the class signed, P/06.7 N1.7 server; the Architect's decision of 2026-10-21, ADR-0083
@@ -117,7 +117,7 @@ The mandatory vectors are CALL seams in [P/06.7](../../06-console/acceptance/7/s
 
 ### Accept by a console
 
-From М11/8 N3 «accept by a console (any console, before the guard)»:
+From M11/8 N3 «accept by a console (any console, before the guard)»:
 
 ```
 1. X-User — remove ([gate-and-pass contract](../gate-and-pass.md) «The gate» `x_user`)
@@ -128,7 +128,7 @@ From М11/8 N3 «accept by a console (any console, before the guard)»:
 
 ### Client address
 
-From М11/9 N1.10 `address` (the line `header`; what the process counts by address is the limit of entry attempts, [P/08.4](../../08-domain/spec/08.4-domain.norms.md) N1.10):
+From M11/9 N1.10 `address` (the line `header`; what the process counts by address is the limit of entry attempts, [P/08.4](../../08-domain/spec/08.4-domain.norms.md) N1.10):
 
 ```yaml
   header:  X-W2C-Client: <TCP peer address of the client> — set by the domain console when passing to the process domain; the process trusts it
@@ -139,8 +139,8 @@ From М11/9 N1.10 `address` (the line `header`; what the process counts by addre
            do not present it (the role certificate contract clients); the handshake passed, the role from SAN is domainconsole,
            the signatures are in the list sig, the serial is not in revoked → the header is read; otherwise (no certificate, another role, a signature
            outside sig, revoked, HTTP of the stand) — it is not read, the limit counts the address of the TCP peer (ADR-0083 addendum (20), addendum (21) item 4); on a stand without TLS the header is never trusted — a debt of the stand, not of the norm (added
-           by the reconciliation of М11, cammeta-python М11-09 № 22); an X-W2C-Client that came from outside
-           the console removes, as X-User (lesson 3 N1.8 pass; the Architect's decision by the reconciliation of М11, P16)
+           by the reconciliation of M11, cammeta-python M11-09 № 22); an X-W2C-Client that came from outside
+           the console removes, as X-User (lesson 3 N1.8 pass; the Architect's decision by the reconciliation of M11, P16)
 ```
 
 ### Ticket on forwarding
@@ -157,16 +157,16 @@ ADR-0119 addendum (2) item 2: the process `domain` does not see the entries `cal
 
 ## Domain doors
 
-From М11/8 N1.2 «The forwarding table» without a change of behaviour (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 5):
+From M11/8 N1.2 «The forwarding table» without a change of behaviour (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 5):
 the owner is this contract (P/06), the participants are the process `domain` (chapter [P/08.0](../../08-domain/spec/08.0-domain.norms.md)) and
-the domain console ([lesson P/10](../../10-domain-console/spec/10-domain-console.norms.md) N2); chapter 6.7 and N2 of lesson P/10 refer here. «lesson N» in the table is lesson М11/N.
+the domain console ([lesson P/10](../../10-domain-console/spec/10-domain-console.norms.md) N2); chapter 6.7 and N2 of lesson P/10 refer here. «lesson N» in the table is lesson M11/N.
 
-A closed list. Each next lesson adds its doors to the table as a row «added by М11/N»; a door of the domain console
-that is not in the table is a review finding (the Architect's decision on М11/8 item 1). «Wait» is the term of the answer of the domain console for this
-row (М11/8 N1.4 `FORWARD_WAIT`, below «Forwarding is one function»); for the handover of lesson 10 (P/08.8 N1.7) it is greater than its 90 s. «Identity» «—» is an open row: the lesson whose door it is takes it
-without an identity and a grant (the credential is in the body); the gate of the forwarding console does not ask it (М11/8 N1.4 `gate`).
+A closed list. Each next lesson adds its doors to the table as a row «added by M11/N»; a door of the domain console
+that is not in the table is a review finding (the Architect's decision on M11/8 item 1). «Wait» is the term of the answer of the domain console for this
+row (M11/8 N1.4 `FORWARD_WAIT`, below «Forwarding is one function»); for the handover of lesson 10 (P/08.8 N1.7) it is greater than its 90 s. «Identity» «—» is an open row: the lesson whose door it is takes it
+without an identity and a grant (the credential is in the body); the gate of the forwarding console does not ask it (M11/8 N1.4 `gate`).
 
-| Method | Path | Lesson (М11/N — the source of the row; addresses — id-map) | Wait, s | Identity |
+| Method | Path | Lesson (M11/N — the source of the row; addresses — id-map) | Wait, s | Identity |
 |---|---|---|---|---|
 | GET | `/domain` | 1 N2 | 5 | yes |
 | GET | `/domain/shadow` | 1 N2 | 5 | yes |
@@ -192,37 +192,37 @@ without an identity and a grant (the credential is in the body); the gate of the
 | GET | `/domain/folders/<id>/units` | P/08.5 N1.8 | 5 | yes |
 | PUT, DELETE | `/domain/<sub>/<rows>/<ref>` | 6 N2 | 5 | yes |
 | any | `/domain/<sub>/<door.pass segment of the manifest>[/…]` | 8 N1.7 | 5 | yes |
-| GET, POST | `/domain/users` | 9 N2 (added by М11/9) | 5 | yes |
-| PUT, DELETE | `/domain/users/<name>` | 9 N2 (added by М11/9) | 5 | yes |
+| GET, POST | `/domain/users` | 9 N2 (added by M11/9) | 5 | yes |
+| PUT, DELETE | `/domain/users/<name>` | 9 N2 (added by M11/9) | 5 | yes |
 | GET, POST | `/domain/groups` | P/08.4 N2 (ADR-0098) | 5 | yes |
 | PUT, DELETE | `/domain/groups/<name>` | P/08.4 N2 (ADR-0098) | 5 | yes |
 | GET, POST | `/domain/roles` | P/08.4 N2 (ADR-0098) | 5 | yes |
 | PUT | `/domain/roles/<name>/lines` | P/08.4 N2 (ADR-0110 D-3) | 5 | yes |
 | PUT, DELETE | `/domain/roles/<name>` | P/08.4 N2 (ADR-0098) | 5 | yes |
 | POST | `/domain/batch` | P/08.4 N2 (ADR-0098 §6) | 5 | yes |
-| GET | `/domain/grants` | 9 N2 (added by М11/9) | 5 | yes |
-| PUT | `/domain/grants/<cluster>` | 9 N2 (added by М11/9) | 5 | yes |
-| GET | `/domain/break-glass` | 9 N2 (added by М11/9) | 5 | yes |
-| PUT | `/domain/break-glass/<cluster>` | 9 N2 (added by М11/9) | 5 | yes |
-| POST | `/domain/revoke` | 9 N2 (added by М11/9) | 5 | — (the token in the body) |
+| GET | `/domain/grants` | 9 N2 (added by M11/9) | 5 | yes |
+| PUT | `/domain/grants/<cluster>` | 9 N2 (added by M11/9) | 5 | yes |
+| GET | `/domain/break-glass` | 9 N2 (added by M11/9) | 5 | yes |
+| PUT | `/domain/break-glass/<cluster>` | 9 N2 (added by M11/9) | 5 | yes |
+| POST | `/domain/revoke` | 9 N2 (added by M11/9) | 5 | — (the token in the body) |
 | DELETE | `/domain/issued/<sub>/<kind>/<ref>` | P/08.2 N1.6a | 5 | yes |
-| POST | `/domain/handover` | 10 N2 (added by М11/10) | 100 | yes |
+| POST | `/domain/handover` | 10 N2 (added by M11/10) | 100 | yes |
 | POST | `/domain/partial/close` | P/08.8 N1.8a | 5 | yes |
 | GET | `/domain/<sub>/kept/<name>` | P/10 N1.2a | 5 | yes |
 | GET | `/domain/relays/<relay>` | P/10 N1.2a | 5 | yes |
 | GET | `/domain/<sub>/books/<book>/*/<part>` | P/08.5 N2 | 5 | yes |
-| POST | `/domain/stranded/apply` | 10 N2 (added by М11/10) | 5 | yes |
-| GET, PUT | `/domain/shared` | 11 N2 (added by М11/11) | 5 | yes |
-| GET | `/domain/alarms` | 11 N2 (added by М11/11) | 5 | yes |
-| POST | `/api/login` | 9 N1.2 (added by М11/9; the entry of people through the console) | 5 | — (the entry) |
+| POST | `/domain/stranded/apply` | 10 N2 (added by M11/10) | 5 | yes |
+| GET, PUT | `/domain/shared` | 11 N2 (added by M11/11) | 5 | yes |
+| GET | `/domain/alarms` | 11 N2 (added by M11/11) | 5 | yes |
+| POST | `/api/login` | 9 N1.2 (added by M11/9; the entry of people through the console) | 5 | — (the entry) |
 | POST | `/domain/verify` (the domain console passes it to the process by the path `/api/verify`; only by ticket — «Ticket on forwarding») | P/08.4 N1.2a (ADR-0119) | 5 | yes (the token of the person who is the author) |
 
 A row with `GET` also covers `HEAD` of the same path: it is forwarded as `HEAD`, the answer is the same code and headers without a body ([P/06.5](../../06-console/spec/06.5-console.norms.md) N2;
-run 41). The same at `/domain/at/…` (М11/8 N1.5): `HEAD` — as `GET` of the same form, without a body (added by the reconciliation of М11, D2).
+run 41). The same at `/domain/at/…` (M11/8 N1.5): `HEAD` — as `GET` of the same form, without a body (added by the reconciliation of M11, D2).
 
 A path with a segment `.` or `..`, including one in the percent form (`%2e`, `%2E`, `.%2e`, `%2e%2e` and the like), is 404 `not a domain
 route` before the gate, before forwarding and before the pass to the worker on the domain (N1.7); the segments are not normalized (added by the reconciliation of
-М11, D4: the path `/domain/<sub>/<segment>/../members` would otherwise bypass the table).
+M11, D4: the path `/domain/<sub>/<segment>/../members` would otherwise bypass the table).
 
 Matching goes in order: `books` (its own: the book door `GET /domain/<sub>/books/<book>` by exactly this path, the tail `/*/<part>` is a row of the table, [P/06.7](../../06-console/spec/06.7-console.norms.md) N1.1; layout audit `B-19`, the Architect's decision of 2026-10-25), `at` (its own), the rows of the table from top to bottom; `<sub>` is a subsystem of the directory
 of this console; a segment `door.pass` that coincides with `books`, `kept`, `tables`, `placement`, `members`, `topology`, `shadow`, `at` is not
@@ -239,7 +239,7 @@ side (ADR-0083 addendum (19) item 2; analysis of review of ADR-0090, № 20): «
 | Transition (side) | Process, OpenAPI | Its own codes and words | Norm |
 |---|---|---|---|
 | 1–2 — forwarding of `/domain/*` (forwarding) | the cluster console; [OpenAPI of lesson P/06](../../06-console/spec/06-console.api.openapi.yaml) (the paths of chapter 6.7) | 404 `not a domain route`; 413 / 400 / 408 body; 401 / 403 gate — who calls; 503 `domain console not known`; 400 `one hop`; 503 `the list of members does not read`; 404 `no domain here`; 503 `CLUSTERS does not read`; 404 `no console known`; 502 `did not answer`, `answer too large`, `answer broke off`; at `/domain/at/…` — 404 `not a route handed to a member`, `not another member`, `no such member`; at the signer — 404 `no signer here`, 502 `did not answer` | [P/06.7](../../06-console/spec/06.7-console.norms.md) N3 «forward», «at a member», N1.8, N4 |
-| 2 — accepting and passing by transition 3 (receiving) | the domain console; [OpenAPI of lesson P/10](../../10-domain-console/spec/10-domain-console.api.openapi.yaml) | a handshake refusal of the role door (there is no HTTP answer); 401 `no_role`, 403 `no_role`, `wrong_role`, `bad_chain`; 401 / 403 / 503 gate; 404 `not a domain route` (the segment `.`/`..`); `door.pass` — the codes of «Передачи» of the gate contract; the pass to the process — 502 at a break and at silence (as N1.4 `answer`) | [P/10](../../10-domain-console/spec/10-domain-console.norms.md) N1.4 `server.role`, N1.6; «Domain doors» above; P/10 N1.3 `pass`; [gate-and-pass contract](gate-and-pass.md) |
+| 2 — accepting and passing by transition 3 (receiving) | the domain console; [OpenAPI of lesson P/10](../../10-domain-console/spec/10-domain-console.api.openapi.yaml) | a handshake refusal of the role door (there is no HTTP answer); 401 `no_role`, 403 `no_role`, `wrong_role`, `bad_chain`; 401 / 403 / 503 gate; 404 `not a domain route` (the segment `.`/`..`); `door.pass` — the codes of «Pass» of the gate contract; the pass to the process — 502 at a break and at silence (as N1.4 `answer`) | [P/10](../../10-domain-console/spec/10-domain-console.norms.md) N1.4 `server.role`, N1.6; «Domain doors» above; P/10 N1.3 `pass`; [gate-and-pass contract](gate-and-pass.md) |
 | 3 — execution (receiving) | the process `domain`; [OpenAPI of lesson P/08](../../08-domain/spec/08-domain.api.openapi.yaml) | the codes of its own door (N3 and N4 of the chapters of lesson P/08); 409 `deposed`; 503 `frozen`; 503 `standby` | the chapters of lesson P/08 by the door (the summary table [P/08.0](../../08-domain/spec/08.0-domain.norms.md) N2); [P/08.8](../../08-domain/spec/08.8-domain.norms.md) N1.6, N1.7; [P/08.10](../../08-domain/spec/08.10-domain.norms.md) N1.7 |
 
 The doors of the process `domain` are described by the OpenAPI of lesson P/08; the doors of the cluster console — by the OpenAPI of lesson P/06 (the paths of chapter 6.7; the answers of
@@ -256,11 +256,11 @@ There are no vectors: forwarding is checked by the scenarios of the acceptances 
 
 ## Correspondence to former lessons
 
-From М11/8 (analysis of review of stage A 8–10, № 23 / decision 3): N1.3 — the line `via` (here «One hop»; `holds`, `to`,
-`view.url`, `CLUSTERS` stayed); N1.4 in full (here «Forwarding is one function»; in М11/8 — a pointer); N3 «accept by a console»
-(here «Accept by a console»). From М11/9 N1.10 — the line `header` (here «Client address»). The rule
+From M11/8 (analysis of review of stage A 8–10, № 23 / decision 3): N1.3 — the line `via` (here «One hop»; `holds`, `to`,
+`view.url`, `CLUSTERS` stayed); N1.4 in full (here «Forwarding is one function»; in M11/8 — a pointer); N3 «accept by a console»
+(here «Accept by a console»). From M11/9 N1.10 — the line `header` (here «Client address»). The rule
 `X-W2C-Client` — by reference from [P/08.0](../../08-domain/spec/08.0-domain.norms.md) N1.8 `pass` (accepting) and from lesson P/10 (passing,
-N1.3; stage B, lesson 10). Parts of the norms М11/8-03, -04, -05,
--06 (chapter 6.7) and М11/9-09 — by `note` of the [id-map](../id-map.tsv).
-From М11/8 N1.2 — «The forwarding table» in full (here «Domain doors»; the Architect's decision of 2026-10-20, ADR-0083 addendum (14)
+N1.3; stage B, lesson 10). Parts of the norms M11/8-03, -04, -05,
+-06 (chapter 6.7) and M11/9-09 — by `note` of the [id-map](../id-map.tsv).
+From M11/8 N1.2 — «The forwarding table» in full (here «Domain doors»; the Architect's decision of 2026-10-20, ADR-0083 addendum (14)
 item 5).

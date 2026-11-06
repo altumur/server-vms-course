@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/presence-ro
 
 The owner is [the presence lock contract](../../contracts/presence-lock.md) «Count `room`» (the guess of stage C PL-EXT-01, the decision of
 the Architect of 2026-10-23). The participants are the resource (writes `room.<sub>`, `live.<sub>` by the door mark, P/05 N1.4) and the controller
-(reads, P/04 N3 «order()», «free(s)»). The bytes are written by «Спецификация».
+(reads, P/04 N3 «order()», «free(s)»). The bytes are written by «Specification».
 
 ## `cases.tsv`
 

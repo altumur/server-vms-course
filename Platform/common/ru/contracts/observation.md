@@ -15,7 +15,7 @@
 `live` процесса в `/schema`, `state` воркера в выдаче) — в нормах читающих уроков; форма наблюдаемых строк и объектов — у
 их владельцев ([каталог](../../data/catalog.tsv)).
 
-Нормативные слова — по [канону курса](../../../../ru/НОРМАТИВНЫЕ-СЛОВА.md).
+Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md).
 
 ## Форма
 
@@ -29,9 +29,9 @@
 читаемым; нечитаемым пульс делает только исход «объект целиком» (в том числе поле вне закрытой формы).
 
 Прочие формы, по которым читают наблюдатели (аудит раскладки, V-38–V-40, B-16; решение «Архитектора» 2026-10-25): строка удержания места `<sub>/holds/<place>` —
-`Platform/03-worker/data/holds.schema.json`, `Platform/03-worker/data/holds.outcomes.tsv`; пульс воркера `<sub>/heartbeats/<имя>`
+`Platform/03-worker/data/holds.schema.json`, `Platform/03-worker/data/holds.outcomes.tsv`; пульс воркера `<sub>/heartbeats/<name>`
 — `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; метка соперника
-`<sub>/contenders/<имя>/<коробка>` — `Platform/03-worker/data/contenders.schema.json`,
+`<sub>/contenders/<name>/<box>` — `Platform/03-worker/data/contenders.schema.json`,
 `Platform/03-worker/data/contenders.outcomes.tsv`; строки решения `<sub>/controller/placement_intent` и `<sub>/placement/<id>`
 — `Platform/04-controller/data/placement-intent.schema.json`, `Platform/04-controller/data/placement-intent.outcomes.tsv`,
 `Platform/04-controller/data/placement.schema.json`, `Platform/04-controller/data/placement.outcomes.tsv`. Версия объекта
@@ -124,7 +124,7 @@ resource_state:
                 остаётся основанием до той же границы — возраст её последней версии ≤ LOST_AFTER, нового отсчёта нет
                 (lapse; OBS-001)
   unknown:      наблюдатель не видел ни читаемого пульса, ни строки двери ни разу: нечитаемый пульс увиденным не
-                считается (сверка python и go М10/6–11, C13); прочитанное прежде и пропавшее — увидено (lapse)
+                считается (сверка python и go M10/6–11, C13); прочитанное прежде и пропавшее — увидено (lapse)
   silent:       иначе; исключает и двигает только silent
 ALIVE_EVERY:    15           # с; ресурс переписывает at своей строки двери platform/doors/<s> (P/05 N1.4 door_row) — так
                              # строка двери меняется и при молчащем пульсе (перенесено из P/04 N1.4; аудит раскладки, решение «Архитектора» 2026-10-25, A-10)
@@ -170,7 +170,7 @@ member_state:                                    # по монотонным ч�
   never:     член принят, метки этот процесс не видел ни разу (пропавшая после виденной — silent, не never)
   leave:     член ушёл из списка (P/08.3 N2 DELETE) — процесс забывает его память (метку, копию, первый взгляд, пульсы);
              вернувшийся — первый взгляд заново (unseen)
-  # пропажа, never и уход — добавлено сверкой М11 (V1–V3)
+  # пропажа, never и уход — добавлено сверкой M11 (V1–V3)
 ```
 
 ## Чтение решения: intent → placement → intent
@@ -224,7 +224,7 @@ contender: метка соперника <sub>/contenders/<имя>/<коробк
 Из P/04 N1.4 (перенос урока 6, разбор ревью стадии A 6–7, № 2): блок `resource_state` (здесь «Состояние ресурса») и
 смысл свежести `LOST_AFTER` (здесь «Свежесть»; значение константы — здесь с аудита раскладки A-01, её роль в сроках судьи — P/04 N1.4); из P/04 N1.4 — ALIVE_EVERY (A-10); из P/03.2 N3 и P/04 N3 — «Сервер выведен» (A-18); из P/08.1 N1.3 — `member_state` (A-15); из P/04 N1.5 — правило
 читателя решения (абзацы «Active intent — принятое общее решение…», «Нечитаемая строка turn/intent…» в части читателей);
-из М10/9 N3 «`/where/<id>`» — выбор target/reason при активном intent
+из M10/9 N3 «`/where/<id>`» — выбор target/reason при активном intent
 (глава 6.5); из P/03.2 N1.4 — определение возраста наблюдаемой версии (ссылкой); из P/03.2 N1.2, N1.4a — `CONTENDER_FRESH` и свежесть
 метки соперника (C06-CONTENDER-FRESH-33-01). Части норм по `note`
 [id-map](../../id-map.tsv): P/04-04 (жизнь по изменению пульса, первый взгляд), P/04-10 (`resource_state`), P/04-01 (двойное

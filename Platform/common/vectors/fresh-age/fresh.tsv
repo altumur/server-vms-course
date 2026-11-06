@@ -1,4 +1,4 @@
-# Freshness: the age of the observed version → fresh with LOST_AFTER = 45 s (the observation contract «Свежесть: LOST_AFTER»). The form — README next to it.
+# Freshness: the age of the observed version → fresh with LOST_AFTER = 45 s (the observation contract «Freshness: LOST_AFTER»). The form — README next to it.
 case	age	fresh	note
 zero	0	true	the first look, a new version or changed bytes — age 0: fresh
 below-int	44	true	LOST_AFTER − 1: fresh

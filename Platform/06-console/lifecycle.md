@@ -72,7 +72,7 @@ None: the setting channel is the environment only ([P/02.4] N1.2 «The setting c
 - **The events root of its own server** — the journal `audit/console/e1/…` under an exclusive file lock and the operator
   marks `console/<instance>/e1/…`; the names — one `%XX` encoding ([the event journal contract](../common/contracts/event-journal.md),
   [P/06.4] N1.2 `writer`, `marks`).
-- **The objects root** — the bodies `<sub>/blobs/sha256-<hex>` ([P/06.1] N1.5); the tombstones `.gone/<key>` — a resource row, the console
+- **The objects root** — the bodies `<sub>/blobs/sha256-<hex>` ([P/06.1] N1.5); the tombstones `.gone/<object-key>` — a resource row, the console
   is a participant `put` in it ([P/05](../05-resource/spec/05-resource.norms.md) N1.1 «Tombstones»; review analysis of stage A 6–7, № 17).
 - **Store rows** — the doors of units and tables, the requests and their accounting, the cleanup marks, the drain, the policy, the server labels,
   the decommission of servers, the schema ([catalogue]: the rows where the participant is `console`).

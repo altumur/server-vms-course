@@ -5,13 +5,13 @@ This English text is the source; the Russian translation `ru/vectors/accept/READ
 The vectors of [the report acceptance contract](../../contracts/accept.md): the function «accept» (`accept`) — the generation, the mark, `same`,
 `heard`, `ignored`, the refusals, the roads. The owner is lesson P/08, chapter 8.3 (the holder); the participant is the relay (9.2), which
 accepts a member by the same function over its own memory (the review analysis of stage A 8–10, № 13 / decision 2; ADR-0083 addendum (13)). The bytes
-are written by «Спецификация» (ADR-0083); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
+are written by «Specification» (ADR-0083); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
 The rows were transferred from the inputs of the command `accept` of the acceptance of
-М11/3 (`inputs/accept-*.json`, sc. 13) and
-М11/4 (`inputs/accept-*.json`, sc. 06 — the roads) without
+M11/3 (`inputs/accept-*.json`, sc. 13) and
+M11/4 (`inputs/accept-*.json`, sc. 06 — the roads) without
 a change of bytes; `case` is the name of the input file (the numbers of lesson 4 start anew, the names differ), `note` is the lesson, the scenario and
-the step. The scenarios М11/03 sc. 13 and М11/04 sc. 06 and their inputs were removed by the move of lesson 8 (ADR-0083 addendum (14) item 17; the log is
+the step. The scenarios M11/03 sc. 13 and M11/04 sc. 06 and their inputs were removed by the move of lesson 8 (ADR-0083 addendum (14) item 17; the log is
 the acceptance of chapter P/08.3 (`Platform/08-domain/journal/corrections-3.tsv`, a log, not in the export)): the table is the only source of these cases.
 
 ## Run
@@ -79,11 +79,11 @@ The review analysis of stage B 8–10, № 6 (Claude `P-2`):
   give a JCS of the whole `whole'` larger than `BODY_LIMIT` (16 MiB). A body larger than the limit is cut off by the door before the function (413 of the body), and
   the objects outside `member_objects` are dropped, so the input is megabytes: a large `stored` at `base > 0` (`mark` with its
   `sha256`) and a small delta; a cell `input` of such a size is unfit in a table. A form of the package input is needed that does not exist: an input
-  from a file next to the table or a rule for generating the input (repeating an object up to the size) — a decision of «Спецификация» on the form of the
+  from a file next to the table or a rule for generating the input (repeating an object up to the size) — a decision of «Specification» on the form of the
   package; then `mark.sha256` is the sha256 of the JCS of this `stored`. The Architect's decision of 2026-10-20: the row stays a candidate
   of the package, the reason is an input larger than 16 MiB (question 1 on the review analysis of stage B 8–10).
 
 The vectors of lessons 3 and 4 are inputs of an acceptance that passed at two witness implementations; the rows of stage C were composed by the contract;
 they were not checked by a reference rebuild (the generation and the mark
 rest on the sections of the contract «Generation, mark, limits» and «The member's publication»; the owners of the text are P/08.3 N1.3,
-[P/09.1](../../../09-agent/spec/09.1-agent.norms.md) N1.2). On a divergence the contract is right, the vector is corrected by «Спецификация».
+[P/09.1](../../../09-agent/spec/09.1-agent.norms.md) N1.2). On a divergence the contract is right, the vector is corrected by «Specification».

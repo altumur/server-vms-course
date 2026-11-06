@@ -19,15 +19,15 @@ N1.3 `grant`) and by the name index (P/08.5 N1.7 `delivery`): `sub` is the subsy
 the role table do not take part (ADR-0097 §4, ADR-0098 §4); the console module computes a hint by the same groups and tiers
 ([P/07](../../07-console-module/spec/07-console-module.norms.md) N1.5 `may`), the server always checks.
 
-Steps 1–8 are moved from М11/9 N1.4 (input, output) and N4 (the words of `may`); the step numbers are the former ones, steps 4a, 7a–7c were added by ADR-0098–ADR-0100. The
+Steps 1–8 are moved from M11/9 N1.4 (input, output) and N4 (the words of `may`); the step numbers are the former ones, steps 4a, 7a–7c were added by ADR-0098–ADR-0100. The
 owner keeps: the grant line ([P/08.4](../../08-domain/spec/08.4-domain.norms.md) N1.3: `lines`, `line`, the ranks of `cap` — `none < view < edit < admin`, `sub`, `scope`,
 `until`, `GRANT_LIFETIME`, `unreadable` — the value and the input rule are repeated below, «The function `may`»; the member's copy — [P/09.1](../../09-agent/spec/09.1-agent.norms.md) N1.4), the check at the process
 `domain` and what the door answers on `deny` (P/08.4 N1.5: 403 `denied`, `detail` at `stale`), the break-glass account at the holder
 (P/08.4 N1.6); the gate with grants and the break-glass entry at the cluster console — P/06.7 N1.9, N1.10, at the domain console — P/10 N1.5. The reference
-«N1.6» in the moved text is М11/9 N1.6, now P/06.7 N1.10 (the break-glass session of the console); `rank` is the order of `cap` of
+«N1.6» in the moved text is M11/9 N1.6, now P/06.7 N1.10 (the break-glass session of the console); `rank` is the order of `cap` of
 P/08.4 N1.3; labels — the [labels alphabet contract](labels.md).
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -35,7 +35,7 @@ Inputs of the function: `grants` — the copy of `domain/grants` of a member, an
 
 ## The function `may`
 
-From М11/9 N1.4 «The right — the function `may`»:
+From M11/9 N1.4 «The right — the function `may`»:
 
 ```yaml
 input:     {grants: <doc {lines}> | null, as_of: <count> | null, disabled: [<name>…], user, glass, cap, unit, now,
@@ -58,7 +58,7 @@ input:     {grants: <doc {lines}> | null, as_of: <count> | null, disabled: [<nam
            a grant line out of form, an outcome of the family grants (MAY-UNTIL-D8-01, the Architect's decision of 2026-10-25)
   sub:     a subsystem name (the grammar P/02.1 N1.2 name), platform or null; no field — null. The subsystem of the check, not of the unit:
            a check of the subsystem testsub2 over a unit of testsub — unit {sub: testsub, id: c1}, sub: testsub2. Who names it and how — the gate-and-pass contract
-           «Subsystem of the check»; null — only the pre-check before the body and the reading «любой грант» (ADR-0097 §2)
+           «Subsystem of the check»; null — only the pre-check before the body and the reading «any grant» (ADR-0097 §2)
   roles:   a table {<name>: [{role, until, at}…]}, expanded by the caller down to the pointer «person → roles»; null or no field —
            the member has no table: role lines do not apply, this is a checked absence; "unreadable" — the copy of the table does not read,
            the fingerprint did not match or as_of of the table did not pass step 4 (ADR-0098 §4). One role of a person twice (directly and through
@@ -149,8 +149,8 @@ lines_in:       the function gets only lines of lines in the form of P/08.4 N1.3
 Which input is out of form (the `grants` lines are a trusted input) — the README of the vectors [`may`](../vectors/may/README.md) «Form of the input of the command `may`» (MAY-G01/G02); the exit codes of the command `may` are a copy of [P/08.4](../../08-domain/spec/08.4-domain.norms.md) N5 `exit` (layout audit, the Architect's decision of 2026-10-25, B-14):
 
 ```yaml
-exit:      0 — computed; 2 — the input is out of form; exit codes follow the principle of the vocabulary of «Domain stand» («Коды выхода команд-векторов»: 2 — the form
-           of a trusted input, 0 with a word — a document of another cluster; the Architect's decision on the М11 reconciliation, H14):
+exit:      0 — computed; 2 — the input is out of form; exit codes follow the principle of the vocabulary of «Domain stand» («Exit codes of vector commands»: 2 — the form
+           of a trusted input, 0 with a word — a document of another cluster; the Architect's decision on the M11 reconciliation, H14):
            the grants lines of may are a trusted input (a copy already parsed by N1.3), so a line out of form is 2, not a skip
 ```
 
@@ -196,11 +196,11 @@ reads:     worker.reads: [domain/grants, platform/folders/, platform/memberof/] 
 
 ## Refusal words
 
-From М11/9 N4: the words of `may`: `disabled`, `stale`, `no_grant`. The outcome `unavailable` is not a refusal word of `may`: the door answers 503 `{error: "unavailable"}`.
+From M11/9 N4: the words of `may`: `disabled`, `stale`, `no_grant`. The outcome `unavailable` is not a refusal word of `may`: the door answers 503 `{error: "unavailable"}`.
 
 ## Vectors
 
-The package [`may`](../vectors/may/README.md): 126 lines (`may-role-*` — the input `as_role`, ADR-0105 item 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, roles, tiers, step 4a); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); of the first 26: 24 are inputs of the command `may` of the acceptance of М11/9 (sc. 07) without a change of values, except `labels: []` at the unit of
+The package [`may`](../vectors/may/README.md): 126 lines (`may-role-*` — the input `as_role`, ADR-0105 item 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, roles, tiers, step 4a); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); of the first 26: 24 are inputs of the command `may` of the acceptance of M11/9 (sc. 07) without a change of values, except `labels: []` at the unit of
 `may-24` (the Architect's decision of 2026-10-20; the README of the package);
 one of them, `may-24`, is an input out of form (`@exit 2`; analysis of review of stage B 8–10, № 22); `may-25` — `subject` "" (`@exit 2`, MAY-G03); `may-26` — `until` does not fit in binary64 (`@exit 2`, MAY-UNTIL-D8-01). The scenario and the inputs were removed by the move of lesson 8 — the table is the only
 source of these cases. There is also `covers.tsv` — 19 lines of the function `covers(scope, ref, row)` of the gate ([the gate
@@ -208,6 +208,6 @@ contract](gate-and-pass.md) `scope`; C06-EVENTS-QUERY-UNKNOWN-138-10).
 
 ## Correspondence to former lessons
 
-From М11/9 (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 1; analysis of review of stage A 8–10): N1.4 whole (here
-«The function `may`»; in М11/9 — a pointer) and the phrase of N4 about the words of `may` (here «Refusal words»). The norm М11/9-05 (`may` in order)
+From M11/9 (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 1; analysis of review of stage A 8–10): N1.4 whole (here
+«The function `may`»; in M11/9 — a pointer) and the phrase of N4 about the words of `may` (here «Refusal words»). The norm M11/9-05 (`may` in order)
 — by `note` of [id-map](../id-map.tsv).

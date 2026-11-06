@@ -9,9 +9,9 @@ not copies in chapters; the stage C guess C10-ALARM-SAME-LINE83, the Architect's
 `alarms`: the merge of the page and the history); the backup copy of the holder (P/08.8 N1.5 `objects`).
 
 Moved from P/08.9 N1.9 without a change of behaviour, together with the rule of a repeated line within one page (P/10 N3 `alarms`
-step 2; reconciliation of М11, A16); P/08.9 and P/10 refer here.
+step 2; reconciliation of M11, A16); P/08.9 and P/10 refer here.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -37,14 +37,14 @@ clock:         the time of a page line by the domain clock: t + (received_at −
 ```yaml
 history:       the holder object domain/alarm-history/<member> {events, cut_before} — a sliding week, at most
                HISTORY_LINES lines, the newest ones; cut_before — from which moment the member is held whole: a number (domain clock),
-               on creation of the history — 0, not null (reconciliation of М11, A13)
+               on creation of the history — 0, not null (reconciliation of M11, A13)
 cut:           cut_before moves only on removal of lines and on an unappended line older than a week (`writer` below): lines with t < now − HISTORY_DAYS × 86400 removed —
                cut_before = max(cut_before, now − HISTORY_DAYS × 86400); the oldest ones beyond HISTORY_LINES removed —
                cut_before = max(cut_before, t of the newest removed one); beyond HISTORY_LINES the newest by t (domain clock) stay,
                with equal t — stably by the order of the history (the earlier accepted are removed first), the remaining ones — in the former
                order (AH-SAME52-01, AH-CUT52-01, the Architect's decision of 2026-10-25); nothing removed and cut_before not moved — the history object and its bytes are the former ones, there is no write, and a silent
-               member does not move the rev of the backup copy (P/08.8 N1.5 rev); the initial 0; cut_before does not decrease (reconciliation of М11,
-               A14; the Architect's decision on cammeta-go М11-03 № 11)
+               member does not move the rev of the backup copy (P/08.8 N1.5 rev); the initial 0; cut_before does not decrease (reconciliation of M11,
+               A14; the Architect's decision on cammeta-go M11-03 № 11)
   events:      the page lines as accepted: t — by the domain clock (the section «Domain clock»), t_src — as it came
 HISTORY_DAYS:  7
 HISTORY_LINES: 2000
@@ -63,7 +63,7 @@ same_line:     lines a and b are one line when (t_src, kind, subsystem, unit) ar
                do not change; kind, subsystem, unit: absent = absent, absent ≠ null, present ones — equality
                of JSON values, not of text (AH-SAME52-01, AH-CUT52-01, the Architect's decision of 2026-10-25)
 page_repeat:   a repeat by same_line within one page — the first line in the order of the page is taken, the others are dropped
-               (reconciliation of М11, A16)
+               (reconciliation of M11, A16)
 ```
 
 The merge of the page and the history in the output of the domain console (a page line before a history line, the window `[since, until]`, the silence

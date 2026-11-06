@@ -1,5 +1,5 @@
 # Outcomes of an unreadable value of an element of the primaries book: the row `domain/rec/primaries/*/<section>` at the domain holder and the copy at a member, schema `primaries-entry.schema.json#member` (V/02.9 Н1.6); the path is from value. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-	camworker	a camera element not in form: not read, rather than absent — the pusher keeps the receivers and push of the last read element; none read — does not push, waits, the log	1	элемент	V/01.6 Н1.4
-	recworker	the primary's element not in form: not read, rather than absent — the backup keeps the state by the element read earlier since the start (lapse); no earlier one — the backup records (no knowledge at all)	1	элемент	V/02.9 Н1.6
-	domainagent	puts the copy of the section as it came, does not judge the value of an element: the unreadable is judged by the reader; the next answer of the door overwrites the row	1	строка	P/09.1 Н1.4 book_want
+	camworker	a camera element not in form: not read, rather than absent — the pusher keeps the receivers and push of the last read element; none read — does not push, waits, the log	1	element	V/01.6 Н1.4
+	recworker	the primary's element not in form: not read, rather than absent — the backup keeps the state by the element read earlier since the start (lapse); no earlier one — the backup records (no knowledge at all)	1	element	V/02.9 Н1.6
+	domainagent	puts the copy of the section as it came, does not judge the value of an element: the unreadable is judged by the reader; the next answer of the door overwrites the row	1	row	P/09.1 Н1.4 book_want

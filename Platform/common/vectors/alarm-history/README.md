@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/alarm-histo
 
 The owner is [the alarm history contract](../../contracts/alarm-history.md) (chapter P/08.9 N1.9; the guess of stage C
 C10-ALARM-SAME-LINE83, the Architect's decision of 2026-10-25). The participants are the holder's pass (the process `domain`) and the alarm list
-of the domain console (P/10). The bytes are written by «Спецификация»; the rows are by the text of the contract.
+of the domain console (P/10). The bytes are written by «Specification»; the rows are by the text of the contract.
 
 ## `cases.tsv`
 

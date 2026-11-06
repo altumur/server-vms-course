@@ -9,7 +9,7 @@ want», the victim of shrinking), [the pool contract](pool.md), the worker scrip
 the console. Moved from P/03.2 N1.4 («The order of names and the next number») without a change of behaviour; the name of a role process and the number
 N are the Architect's answers of 2026-10-25 (P/04 was silent about the form).
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 

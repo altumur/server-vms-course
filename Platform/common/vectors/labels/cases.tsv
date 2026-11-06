@@ -31,4 +31,4 @@ read_json_bad_label	text_read	"[\"a b\"]"	@refuse	an element of the array — al
 read_repeat	text_read	"a,a"	@refuse	a repeat — a refusal (P/06.6 sc. 05 step 6, query of the probe)
 env_repeat	env_labels	"a,a"	["a"]	LABELS of the environment: a repeat — not a refusal, the node's labels as a set (ENV54-02)
 env_order	env_labels	"b,a"	["a","b"]	the set by output — in ascending bytes
-env_bad	env_labels	"a,b@c"	@refuse	a word outside the alphabet — a start refusal, code 2 (P/03.2 Н3 «start()» step 2)
+env_bad	env_labels	"a,b@c"	@refuse	a word outside the alphabet — a start refusal, code 2 (P/03.2 N3 «start()» step 2)

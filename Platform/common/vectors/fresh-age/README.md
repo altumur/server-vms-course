@@ -10,12 +10,12 @@ and `WorkerRow.state` ([chapter 6.1](../../../06-console/spec/06.1-console.norms
 `/events` ([chapter 6.4](../../../06-console/spec/06.4-console.norms.md) N3 «merge»), `live` of `/schema`, «live» of the schema
 raise and «heard» of the server output ([chapter 6.6](../../../06-console/spec/06.6-console.norms.md)); the resource — the neighbours of the mirror ([P/05](../../../05-resource/spec/05-resource.norms.md) N1.4 `mirror`). The package replaces «a step
 of the acceptance at the boundary», which a stand without a controlled clock does not do (the Architect's decision on the review analysis of stage B 6–7,
-№ 20; the boundary `≤` — the review analysis of stage A 6–7, № 1). The bytes are written by «Спецификация» (ADR-0083); the conformance of the product is by its
+№ 20; the boundary `≤` — the review analysis of stage A 6–7, № 1). The bytes are written by «Specification» (ADR-0083); the conformance of the product is by its
 acceptance against this table (ADR-0080 addendum 16).
 
-## Rule (the observation contract «Свежесть»)
+## Rule (the observation contract «Freshness»)
 
-- `LOST_AFTER` = 45 s (the value is the observation contract «Свежесть»; the role in the terms of the judge is [P/04](../../../04-controller/spec/04-controller.norms.md) N1.4);
+- `LOST_AFTER` = 45 s (the value is the observation contract «Freshness»; the role in the terms of the judge is [P/04](../../../04-controller/spec/04-controller.norms.md) N1.4);
 - **fresh** — the age of the observed version ≤ `LOST_AFTER`; **not fresh** — the age > `LOST_AFTER`. The relation is one for all
   observers and outputs.
 
@@ -51,7 +51,7 @@ writes the cell `age` byte for byte (a JSON number); stdout — `true` or `false
 A side implements the judgement of freshness by its own function (the one that stands behind all the places above) and checks each row:
 fresh(`age`) equals `fresh`. The comparison is over the number of the age as it is, without rounding: the output of `age` with one digit after
 the point (chapter 6.1 N2) is a display, not an input of the judgement. The vectors are derived from the contract; on a divergence the contract is right, the vector
-is corrected by «Спецификация».
+is corrected by «Specification».
 Who performs is every observer whose norm judges «changed within the last LOST_AFTER» by its own code: the controller (`04-controller`, P/04 N3 «fate», «choose», `resource_state`), the resource (`05-resource`, P/05-R026 mirror neighbours by their door row), the console (`06-console`, P/06.1 N2 `worker_state`, P/06.4 N3 «merge», P/06.5 N1.8, N2 `WorkerRow.state`, `w2c_resources_live`, P/06.6 `/schema`, «heard»), the agent (`09-agent`, P/09.1 N1.2 `fresh` — the heartbeats in `stale`) and the domain console (`10-domain-console`, the worker heartbeat at the domain: P/03.7 N1.6, P/10 N1.6 `absent`). They only read the result: the process `domain` (`08-domain`, `stale` of the member mark, P/08.1 N1.3 `unit_state`) and the console module (`07-console-module`, `WorkerRow.state` from `/servers`); The worker only declares the term as a writer; the resource also reads and judges the door versions of its mirror neighbours. The freshness of a domain member (`member_state`, P/08.1, P/10) is its own section of the observation contract and its own vectors of chapter 8.1, not this package (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Vector wire

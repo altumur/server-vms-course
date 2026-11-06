@@ -4,13 +4,13 @@ This English text is the source; the Russian translation `ru/contracts/sealing.m
 
 A common contract of the module «Platform» (ADR-0083 addendum (5): a contract that several processes read lies in
 `Platform/common/`; the Architect's decision on the review of stage B 1–2, item 4). The owner is lesson [P/06](../../06-console/spec/06.2-console.norms.md),
-chapter 6.2 N1.2 «The envelope and the key ring» (moved from М10/7 N1.2; ADR-0083 addendum (29) item 9: the line names the owner lesson of the norm; the library by the contract is written by the session `common` of the generation). Readers: the installer — the commands `w2cctl secrets`
+chapter 6.2 N1.2 «The envelope and the key ring» (moved from M10/7 N1.2; ADR-0083 addendum (29) item 9: the line names the owner lesson of the norm; the library by the contract is written by the session `common` of the generation). Readers: the installer — the commands `w2cctl secrets`
 ([P/02.4 N1.9](../../02-installer/spec/02.4-installer.norms.md)), the worker — opening (chapter P/03.5), the console —
 sealing and resealing ([chapter P/06.2](../../06-console/spec/06.2-console.norms.md)),
-the domain processes (М11). Moved from М10/7 N1.2 without a change of behaviour: what to seal, who holds the key, rotation, the mode
+the domain processes (M11). Moved from M10/7 N1.2 without a change of behaviour: what to seal, who holds the key, rotation, the mode
 without a key and the idempotency fingerprint stay in the norms of the reading lessons.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Envelope
 
@@ -50,7 +50,7 @@ ring_file:                                   # SECRETS_KEY=<path>; the default i
                                              # <PLATFORM_DIR>/etc/secrets/platform.key (P/02.4 N1.1); not set for a process —
                                              # development mode (no_key below; analysis of the review of stage A 6–7, № 19)
   line:    <kid> <64 hex>                    # 32 bytes of key; the first key entry is the current one; empty lines and separate comment lines are skipped;
-                                             # a BOM U+FEFF at the start of the file is skipped and does not enter the kid (reconciliation of python and go М10/6–11, agreed)
+                                             # a BOM U+FEFF at the start of the file is skipped and does not enter the kid (reconciliation of python and go M10/6–11, agreed)
   mode:    0640 root:w2c-secrets; the directory is not accessible to others; the file is NOT inside a directory of the store, of the objects or of their copies
            (the list — the secret files contract forbidden layout: copies — only the given ones; STAND-FORBIDDEN-DIRS-01, the Architect's decision of 2026-10-27)
   link:    the placement — [the secret files placement contract](secret-files.md): the file itself is a regular one, not a symbolic link;
@@ -65,7 +65,7 @@ the worker — P/03.5 N1.2 `open_without`):
 ```yaml
 no_key:
   unset:       SECRETS_KEY is not set → development mode with a loud log line (not an envelope, the values are open — by the norm of the lesson);
-               SECRETS_KEY="" (set empty) is not development mode but unreadable below (reconciliation of python and go М10/6–11, S11)
+               SECRETS_KEY="" (set empty) is not development mode but unreadable below (reconciliation of python and go M10/6–11, S11)
   unreadable:  set but not readable (an empty or a wrong file included — «Ring file» below) — this is not the mode without a key;
                what refuses is at the lesson (the console: all POST/PUT of units — 503 unavailable, P/06.2 N1.2)
   open:        set and readable — the envelope enc:v2 by this contract
@@ -117,6 +117,6 @@ C06-RESEAL-33-01). (ADR-0083 addendum (32) item 2)
 
 ## Correspondence to former lessons
 
-From М10/7 N1.2 (stage B, review of stage B 1–2 item 4): the blocks `envelope` and `ring_file` (`line`, `mode`), the paragraphs about the AAD path
-and about the grammar of the ring file. Parts of the norms М10/7-03 (the envelope and AAD; chapter P/03.5) and М10/7-04 (the form of the ring file — here; the ring, `rotate` and
+From M10/7 N1.2 (stage B, review of stage B 1–2 item 4): the blocks `envelope` and `ring_file` (`line`, `mode`), the paragraphs about the AAD path
+and about the grammar of the ring file. Parts of the norms M10/7-03 (the envelope and AAD; chapter P/03.5) and M10/7-04 (the form of the ring file — here; the ring, `rotate` and
 resealing — chapter P/06.2) — by `note` of [id-map](../id-map.tsv) (analysis of the review of stage B 6–7, № 23).

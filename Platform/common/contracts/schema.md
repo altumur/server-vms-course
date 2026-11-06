@@ -13,11 +13,11 @@ the agent, the domain console ([P/02.4 N1.12](../../02-installer/spec/02.4-insta
 N3 «Process start».
 
 Moved from P/06.6 N1.1a (the lines `platform/schema`, `SCHEMA`, `BUILD`, `heartbeat`, `check`) and the common block «start
-of the controller, the worker, the resource or the console — schema check» (P/06.6, P/03.2, P/04, P/05 N3; formerly М10/10 N3) without
+of the controller, the worker, the resource or the console — schema check» (P/06.6, P/03.2, P/04, P/05 N3; formerly M10/10 N3) without
 a change of behaviour; they refer here. The raise of the schema by the operator (`raise`, `PUT /schema`, the maintenance window) is with the
 owner, P/06.6 N1.1a, N3 «raise_schema».
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -39,7 +39,7 @@ SCHEMA:   the number the build understands; adding a field — without a new num
 BUILD:    the build word for a human (env BUILD, default dev); the machine reads SCHEMA
 heartbeat: every heartbeat of the worker and the resource carries schema and build (P/03.4 N1.1, P/05 N1.4); schema — a JSON integer without a fraction
           part and exponent (the form int of [the row check contract](../row-check.md) «Preparation of fields»: «An `int` value at the input of the door»), ≥ 1; `1.0`, `1e0`, `-1`, a string, null — the schema of the process is unknown (null
-          in `processes`, P/06.6 N2.3) (reconciliation of python and go М10/6–11, T3); build — a string; not a string — `null` (not known; reconciliation of python and go М10/6–11, T27; V7 item 3, the Architect's decision of 2026-10-28, P1; row 14 of the list)
+          in `processes`, P/06.6 N2.3) (reconciliation of python and go M10/6–11, T3); build — a string; not a string — `null` (not known; reconciliation of python and go M10/6–11, T27; V7 item 3, the Architect's decision of 2026-10-28, P1; row 14 of the list)
 check:    at the start of the controller, the worker, the resource and the console: version > SCHEMA → do not start; the row is not a number → do not start;
           the domain processes start the same way — domain, the agent, the domain console (P/02.4 N1.12); the worker also checks on the renewal
           of the slot (P/03.2 N3 «schema check by the worker»)
@@ -66,5 +66,5 @@ of the participants (P/06.6; a read error at the resource — sc. 18 of the acce
 ## Correspondence to former lessons
 
 From P/06.6 N1.1a (`platform/schema`, `SCHEMA`, `BUILD`, `heartbeat`, `check`; the norm P/06.6-04 by `note` of [id-map](../id-map.tsv))
-and the common block N3 «start … — schema check» (P/06.6, P/03.2, P/04, P/05; formerly М10/10 N3, М10/10-01); they refer here
+and the common block N3 «start … — schema check» (P/06.6, P/03.2, P/04, P/05; formerly M10/10 N3, M10/10-01); they refer here
 (layout audit A-02).

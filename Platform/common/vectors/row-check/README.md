@@ -5,7 +5,7 @@ This English text is the source; the Russian translation `ru/vectors/row-check/R
 The owner is chapter P/06.1 of the console through [the row check contract](../../contracts/row-check.md) (the guess of stage C W03-E07,
 the Architect's decision of 2026-10-23). The participants are the units door of the console ([P/06.1](../../../06-console/spec/06.1-console.norms.md)
 N3 «create», «edit») and the customer's library of the worker ([P/03.6](../../../03-worker/spec/03.6-worker.norms.md) N1.6,
-N3 «order»): one table for both sides. The bytes are written by «Спецификация». The cases are taken from the norms of the contract and the steps
+N3 «order»): one table for both sides. The bytes are written by «Specification». The cases are taken from the norms of the contract and the steps
 of the acceptance of P/06.1 (sc. 15, 16, 18, 20 — in the column `note`).
 
 The manifests are `testsub` and `testsub2` (`Source/tests/testdata/*.subsystem.yaml`), loaded together: the catalogue of manifests
@@ -73,7 +73,7 @@ not reconciled: the contract `acts`, P/03.6 N1.7 `cursor`; C170-STATE-CURSOR-01)
 The input of the single command `vectors` is `cells` `name`, `unit`, `state`; `files` — `testsub2.subsystem.yaml` (the schemas of `unit.state`).
 The native outcome is code 0 and the object `expect` (the general rule «Vectors» of the common acceptance README).
 
-Who performs is everyone whose norm judges «состояние действует»: the holder of the unit (`03-worker`, P/03.6 N1.7 — writes anew
+Who performs is everyone whose norm judges «the state is effective»: the holder of the unit (`03-worker`, P/03.6 N1.7 — writes anew
 a non-acting one), the controller (`04-controller`, P/04 N1.3 `retire_when`, N1.3a `state` and the count `snapshot_state_garbled`) and
 the console (`06-console`, P/06.1 N2 «State in the answer») — all rows (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 

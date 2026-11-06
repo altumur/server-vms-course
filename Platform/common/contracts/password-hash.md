@@ -6,10 +6,10 @@ A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (1
 in chapters; the stage C guess GP-G06, the Architect's decision of 2026-10-23). The owner is chapter
 [P/08.4](../../08-domain/spec/08.4-domain.norms.md) (N1.1 `pwhash_secret` of a person row, N1.6 — of the break-glass account).
 Participants: the process `domain` — writes the hash (people, the break-glass account) and checks the login of people (P/08.4 N1.2); the cluster console —
-checks the password of the break-glass login ([the gate-and-pass contract](gate-and-pass.md) «Аварийный вход»). Moved from P/08.4
+checks the password of the break-glass login ([the gate-and-pass contract](gate-and-pass.md) «Break-glass entry»). Moved from P/08.4
 N1.1 without a change of behaviour.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ```yaml
 form:     pbkdf2-sha256$600000$<salt: 32 lowercase hex>$<key: 64 lowercase hex>

@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/domain-back
 
 The owner is [the domain backup copy key contract](../../contracts/domain-backup-key.md) (stage C guesses I02-BACKUP-HMAC,
 DBK-G01/G02, the Architect's decision 2026-10-23). The participants are the installer (P/02.4 N3 «domain installation» step 8) and the process `domain`
-of the holder (P/08.8 N1.5). The bytes are written by «Спецификация».
+of the holder (P/08.8 N1.5). The bytes are written by «Specification».
 
 ## `cases.tsv`
 

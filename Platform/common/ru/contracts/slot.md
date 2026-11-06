@@ -4,7 +4,7 @@
 
 Общий договор модуля «Платформа» (ADR-0083 доп. (5), доп. (13): состояние строки слота судят воркер, контроллер, консоль и
 агент — договор, а не копии в главах; аудит раскладки A-04, решение «Архитектора» 2026-10-25). Владелец — глава
-[P/03.2](../../../03-worker/ru/spec/03.2-worker.norms.md) N1.4 (строка `<sub>/slots/<имя>`). Участники: воркер — захват и
+[P/03.2](../../../03-worker/ru/spec/03.2-worker.norms.md) N1.4 (строка `<sub>/slots/<name>`). Участники: воркер — захват и
 продление (P/03.2 N3); контроллер — судья слота, уход единиц, заказ ([P/04](../../../04-controller/ru/spec/04-controller.norms.md)
 N1.4, N3); консоль — `WorkerRow.released`, `slot_taking`, `slot_until`, `slot_garbled` ([P/06.5](../../../06-console/ru/spec/06.5-console.norms.md)
 N2, N3 «/servers»), дренаж ([P/06.6](../../../06-console/ru/spec/06.6-console.norms.md)); агент — живость воркера на домене
@@ -14,11 +14,11 @@ N2, N3 «/servers»), дренаж ([P/06.6](../../../06-console/ru/spec/06.6-co
 сюда. Форма строки, имя и порядок имён — у владельца и в [договоре имени слота](slot-name.md); возраст наблюдаемой версии —
 [договор наблюдения](observation.md) «Наблюдение версии».
 
-Нормативные слова — по [канону курса](../../../../ru/НОРМАТИВНЫЕ-СЛОВА.md).
+Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md).
 
 ## Форма
 
-Строка `<sub>/slots/<имя>` — семья `slots`: форма `Platform/03-worker/data/slots.schema.json`, исходы
+Строка `<sub>/slots/<name>` — семья `slots`: форма `Platform/03-worker/data/slots.schema.json`, исходы
 `Platform/03-worker/data/slots.outcomes.tsv` ([форма](../../../03-worker/data/slots.schema.json),
 [исходы](../../../03-worker/data/slots.outcomes.tsv)); поля `holder`, `until`, `released`, `gen`, `server` — там и в P/03.2
 N1.4.

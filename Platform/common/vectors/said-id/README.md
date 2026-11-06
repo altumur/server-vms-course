@@ -7,8 +7,8 @@ The owner is [the request mark contract](../../contracts/request-mark.md) «fetc
 writes into the heartbeat the SaidIDs of the requests whose outcome it reported ([chapter 3.6](../../../03-worker/spec/03.6-worker.norms.md) N3
 «holder's look»). The participant is [chapter 6.4](../../../06-console/spec/06.4-console.norms.md): the reaper of the console reads
 `fetched` and removes the append row when its rid is reported (N3 «reaper» `clear`;
-before the move — М10/8). The package is common: the algorithm is read by two processes (the Architect's decision on the review analysis of stage A 6–7, № 2).
-The bytes are written by «Спецификация» (ADR-0083); the conformance of the product is by its acceptance against these tables (ADR-0080 addendum 16).
+before the move — M10/8). The package is common: the algorithm is read by two processes (the Architect's decision on the review analysis of stage A 6–7, № 2).
+The bytes are written by «Specification» (ADR-0083); the conformance of the product is by its acceptance against these tables (ADR-0080 addendum 16).
 
 ## Rule (P/03.4 N1.1 `said_id`)
 
@@ -57,7 +57,7 @@ code 0 — computed, 2 — an input not of the form; stdout is compared with the
 ## Run
 
 A side implements SaidID and the reading of `fetched` by its own function (the worker — the write, the console — the reading) and checks each row: `said.tsv` — SaidID(`rid`) equals `said` byte for byte; `read.tsv` — the outcome of the reading
-equals `reported`. The vectors are derived from the norm; on a divergence the norm is right, the vector is corrected by «Спецификация».
+equals `reported`. The vectors are derived from the norm; on a divergence the norm is right, the vector is corrected by «Specification».
 Who performs is by the table: `said.tsv` — the worker (`03-worker`, writes SaidID into `fetched`, P/03.4 N1.1, P/03.6 N3) and the console (`06-console`, the reaper computes SaidID(rid) when reading, P/06.4 N3 «reaper» `clear`); `read.tsv` — the console (`06-console`); the worker does not read `fetched` (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Vector wire

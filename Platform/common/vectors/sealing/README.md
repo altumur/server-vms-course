@@ -19,7 +19,7 @@ takes them from there and does not derive them anew (Kimi's addition to the revi
 
 Invalid UTF-8 of the ring file (the contract: the ring is unreadable) and symbolic links (`link`) cannot be expressed as a JSON string — they
 are checked by reading the file. The values in `plaintext`, `expect` (except `sealed`) and `file` are JSON strings (`\n`, `\t`, `﻿` — by JSON escaping).
-The vectors are obtained by reference AES-256-GCM by the contract; on a discrepancy the contract is right, «Спецификация» corrects the vector.
+The vectors are obtained by reference AES-256-GCM by the contract; on a discrepancy the contract is right, «Specification» corrects the vector.
 
 Who performs it (the ring holders — P/06.2 N1.2 `holders`, the installer — P/02.4 N1.9): `aad.tsv`, `open.tsv` and the rows
 of `ring.tsv` except `rotate*` — all who open: the installer (`02-installer`), the worker (`03-worker`), the console

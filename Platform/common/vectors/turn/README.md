@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/turn/README
 
 The owner is [the writer turn contract](../../contracts/turn.md) (lesson P/04 N1.5, N3; C08-TURN-SELF-99, the Architect's decision
 2026-10-26). The participants are the controller (`<sub>/controller/placement_turn`, P/04) and the process `domain` of the holder
-(`domain/signer-turn`, [P/08.10](../../../08-domain/spec/08.10-domain.norms.md) N1.7, N3). The bytes are written by «Спецификация»; the rows are
+(`domain/signer-turn`, [P/08.10](../../../08-domain/spec/08.10-domain.norms.md) N1.7, N3). The bytes are written by «Specification»; the rows are
 by the text of the contract and P/08.10 N3 «the turn of the domain process», the norms do not change.
 
 ## `cases.tsv`
@@ -43,7 +43,7 @@ the barrier of a write with the guard.
 
 The release of `placement` writes `manifest_rev` with its own revision (the form `placement-turn` requires the field); an unknown outcome of the write
 of its own turn row — the contract «An unknown outcome of a write of one's own turn row» (both answers — C08-TURN-SELF-99, the decision
-of «Архитектора» 2026-10-26).
+of «Architect» 2026-10-26).
 
 ## Run
 

@@ -12,11 +12,11 @@
 
 Перенесено из P/08.4 N1.1 `name` без изменения поведения; у P/08.4 и у договоров-участников — ссылки сюда.
 
-Нормативные слова — по [канону курса](../../../../ru/НОРМАТИВНЫЕ-СЛОВА.md).
+Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md).
 
 ## Форма
 
-Строка человека `domain/users/<имя>` — семья `users`: форма `Platform/08-domain/data/users.schema.json`, исходы
+Строка человека `domain/users/<name>` — семья `users`: форма `Platform/08-domain/data/users.schema.json`, исходы
 `Platform/08-domain/data/users.outcomes.tsv` ([форма](../../../08-domain/data/users.schema.json),
 [исходы](../../../08-domain/data/users.outcomes.tsv)).
 

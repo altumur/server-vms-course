@@ -50,8 +50,8 @@ argument of the runner command is the subsystem name `<sub>`.
 ## Directories and files
 
 - **Store rows** — through the role socket, the rights — the rights file [P/02.5] N1.4. The rows of the lesson — [catalogue], owner `P/04`:
-  `<sub>/placement/<id>`, `<sub>/workers/<name>`, `<sub>/want/<server>`, `<sub>/controller/placement_turn`,
-  `<sub>/controller/placement_intent`, `<sub>/decommissioned/<server>`; participation in `<sub>/slots/<name>` (a proposal) and `<sub>/<manifest:unit.rows>/<id>`
+  `<sub>/placement/<id>`, `<sub>/workers/<name>`, `<sub>/want/<host>`, `<sub>/controller/placement_turn`,
+  `<sub>/controller/placement_intent`, `<sub>/decommissioned/<host>`; participation in `<sub>/slots/<name>` (a proposal) and `<sub>/<manifest:unit.rows>/<id>`
   (`delete_after`).
 - **Objects** in the objects root: the pass report `<sub>/controller/pass` ([P/04] N1.2), the snapshot shards
   `<sub>/snapshot/<worker>`, `<sub>/snapshot/unplaced` ([P/04] N1.3a). File names — one encoding ([the event journal contract](../common/contracts/event-journal.md) «File names in shared trees»).

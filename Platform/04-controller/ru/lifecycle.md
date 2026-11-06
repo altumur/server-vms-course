@@ -50,18 +50,18 @@
 ## Каталоги и файлы
 
 - **Строки хранилища** — через сокет роли, права — файл прав [P/02.5] N1.4. Строки урока — [каталог], владелец `P/04`:
-  `<sub>/placement/<id>`, `<sub>/workers/<имя>`, `<sub>/want/<сервер>`, `<sub>/controller/placement_turn`,
-  `<sub>/controller/placement_intent`, `<sub>/decommissioned/<сервер>`; участие в `<sub>/slots/<имя>` (предложение) и `<sub>/<manifest:unit.rows>/<id>`
+  `<sub>/placement/<id>`, `<sub>/workers/<name>`, `<sub>/want/<host>`, `<sub>/controller/placement_turn`,
+  `<sub>/controller/placement_intent`, `<sub>/decommissioned/<host>`; участие в `<sub>/slots/<name>` (предложение) и `<sub>/<manifest:unit.rows>/<id>`
   (`delete_after`).
 - **Объекты** в корне объектов: отчёт прохода `<sub>/controller/pass` ([P/04] N1.2), шарды снимка
-  `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced` ([P/04] N1.3a). Имена файлов — одно кодирование ([договор журнала событий](../../common/ru/contracts/event-journal.md) «Имена файлов в общих деревьях»).
+  `<sub>/snapshot/<worker>`, `<sub>/snapshot/unplaced` ([P/04] N1.3a). Имена файлов — одно кодирование ([договор журнала событий](../../common/ru/contracts/event-journal.md) «Имена файлов в общих деревьях»).
 - **Объекты кластера** (пульсы воркеров и ресурсов, отчёты) контроллер читает через ресурс своего сервера (дверь
   объектов [P/05](../../05-resource/ru/spec/05-resource.norms.md), `scope`); без ресурса на своём сервере при `cluster://` — «не известно», не «нет» ([договор клиента хранилища объектов](../../common/ru/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; решение «Архитектора» 2026-10-27); стенд, которому нужны пульсы воркеров,
   ставит ресурс на сервер контроллера ([P/04] N3 «проход()» шаг 0; ADR-0084 доп. (2) R17; разбор ревью стадии A
   3–5, № 22).
-- **Читает**: пульсы воркеров `<sub>/heartbeats/<имя>`, пульс ресурса `platform/resources/<server>/heartbeat`,
+- **Читает**: пульсы воркеров `<sub>/heartbeats/<name>`, пульс ресурса `platform/resources/<server>/heartbeat`,
   `platform/manifest/<sub>` и метку `/rev`, `platform/schema`, `platform/servers/*`, `platform/doors/*`,
-  `platform/decommission/*`, `platform/drain`, слоты `<sub>/slots/<имя>`, места `<sub>/holds/<место>` ([каталог]);
+  `platform/decommission/*`, `platform/drain`, слоты `<sub>/slots/<name>`, места `<sub>/holds/<place>` ([каталог]);
   очередь размещения и intent (`<sub>/controller/placement_turn`, `placement_intent`) он и пишет, и читает ([P/04] N1.5).
 - **Слова сборки** (`BUILD`) у контроллера нет в выдаче: пульса он не пишет и в `processes` `/schema` не входит
   ([P/06.6] N2.3 `GET /schema`).

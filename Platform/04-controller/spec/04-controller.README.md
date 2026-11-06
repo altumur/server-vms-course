@@ -40,7 +40,7 @@ of escalation is in the section «On a discrepancy». Internal functions, types 
    An already placed unit does not become new because a freer worker has appeared.
    For distinct apply the slot order of P/03.2 N1.4, including w-a/w-b and the equal numbers w-01/w-1.
    With equal free capacity a separate comparison by the full ASCII name is kept.
-   The order of workers (ADR-0084): the row `<sub>/want/<server>` always, `want` is an absolute target, the capacity in flight is subtracted
+   The order of workers (ADR-0084): the row `<sub>/want/<host>` always, `want` is an absolute target, the capacity in flight is subtracted
    from the shortage; the withdrawal by the deadline, the number above want, the shrinking with `retiring` and a budget — N3 «нехватка(), заказать()…»;
    the vectors [`order`](../vectors/order/README.md), [`shrink-victim`](../vectors/shrink-victim/README.md) and
    [`shrink-allowed`](../vectors/shrink-allowed/README.md) (the condition of shrinking and the order of the reasons of refusal; the Architect's decision of 2026-10-20, № 12 of the analysis of the review of stage B 3–5).

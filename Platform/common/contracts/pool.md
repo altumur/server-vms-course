@@ -13,7 +13,7 @@ of the console, about which P/04 was silent, — four answers of the Architect o
 beyond the pool (`constraint`, `spread_by`, `affinity`, the group, the home, capacity and order) — still P/04 N3 «choose», the line
 «eligible» and below.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -21,19 +21,19 @@ The rows and objects that the pool computation reads follow the forms and outcom
 — `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; the slot `<sub>/slots/<name>` —
 `Platform/03-worker/data/slots.schema.json`, `Platform/03-worker/data/slots.outcomes.tsv`; the assignment `<sub>/workers/<name>` —
 `Platform/04-controller/data/workers.schema.json`, `Platform/04-controller/data/workers.outcomes.tsv`; the order row
-`<sub>/want/<server>` — `Platform/04-controller/data/want.schema.json`, `Platform/04-controller/data/want.outcomes.tsv`; the decision
+`<sub>/want/<host>` — `Platform/04-controller/data/want.schema.json`, `Platform/04-controller/data/want.outcomes.tsv`; the decision
 `<sub>/controller/placement_intent` — `Platform/04-controller/data/placement-intent.schema.json`,
-`Platform/04-controller/data/placement-intent.outcomes.tsv`; the decommission `<sub>/decommissioned/<server>` —
+`Platform/04-controller/data/placement-intent.outcomes.tsv`; the decommission `<sub>/decommissioned/<host>` —
 `Platform/04-controller/data/decommissioned.schema.json`, `Platform/04-controller/data/decommissioned.outcomes.tsv`; the drain
 `platform/drain` — `Platform/06-console/data/drain.schema.json`, `Platform/06-console/data/drain.outcomes.tsv`; the decommission request
-`platform/decommission/<server>` — `Platform/06-console/data/decommission.schema.json`,
+`platform/decommission/<host>` — `Platform/06-console/data/decommission.schema.json`,
 `Platform/06-console/data/decommission.outcomes.tsv`.
 
 ## Live worker
 
 ```yaml
 live:      the heartbeat <sub>/heartbeats/<name> is readable and changed within the last LOST_AFTER by the reader's clock (the observation contract
-           «Свежесть»; the boundary — the vector fresh-age) ∧ the slot row <sub>/slots/<name> is readable, released = false (not given away and not in
+           «Freshness»; the boundary — the vector fresh-age) ∧ the slot row <sub>/slots/<name> is readable, released = false (not given away and not in
            the capture taking — slots.schema.json), holder is non-empty; a heartbeat whose worker ≠ the name in the key (heartbeats.schema.json) is not read —
            there is no worker
 ```
@@ -47,14 +47,14 @@ pool:      the live workers
              <sub>/decommissioned/<s>; an unreadable one is not a fact, do not subtract, like the rule want_rule; the Architect's answer of 2026-10-25)
            − with requires: resource — the workers of a server whose resource is silent (resource_state of the observation contract; unknown is not
              a fact, the worker passes)
-           − retiring of the order rows <sub>/want/<server> (the field retiring, want.schema.json; ADR-0084)
+           − retiring of the order rows <sub>/want/<host> (the field retiring, want.schema.json; ADR-0084)
            − the role processes with a number greater than want of their server (the name and the number — the slot name contract
              «Role process name and its number»; ADR-0084 addendum (4) R28)
            − the workers with an unreadable assignment row <sub>/workers/<name> (P/04 N4 «a heartbeat/slot/assignment does not read»;
              at the console — the same, answer (3))
            − with servers: distinct — all except the keeper of their place (the section below)
 want_rule: retiring and «number above want» apply only with grows: true and only to the processes of a server whose order row
-           <sub>/want/<server> is readable: grows: false — they do not apply; there is no order row of the server — they do not apply to its
+           <sub>/want/<host> is readable: grows: false — they do not apply; there is no order row of the server — they do not apply to its
            processes; the row is unreadable — they do not apply (the server script does not stop by it — P/02.4 N1.5; the controller —
            an error of step 9, P/04 N4); retiring — only from a readable row (POOL-WANT-33-01, the Architect's decision of 2026-10-25)
 ```
@@ -67,7 +67,7 @@ place:     the place of a worker — by place_by of the manifest (default server
 keeper:    every non-empty place has one keeper among the workers of the pool before the subtraction of distinct: the greatest load, on
            equality — the first in slot order (the slot name contract); a worker without a place is not a keeper
 load:      the load — one definition with «free» of P/04 N3: the sum of the weights of the unique ids assigned to the worker (the row
-           <sub>/workers/<name>) or directed to it by the effective decision (the reserve of the active intent — the observation contract «Чтение решения»; B-07); there is no
+           <sub>/workers/<name>) or directed to it by the effective decision (the reserve of the active intent — the observation contract «Reading the decision»; B-07); there is no
            assignment row — the load is 0; not the number of units (answer (2))
 weight:    the weight of an id — the field placement.weight.field of its unit row, an integer ≥ 1 (P/04 N1.3); no field — weight.default; for
            a manifest without placement.weight — 1; there is no unit row, it is unreadable or the field is not an integer ≥ 1 — 0 (C06-POOL-FACTS-33-01,

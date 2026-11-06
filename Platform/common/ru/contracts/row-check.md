@@ -12,7 +12,7 @@ canonical_url, ref_and_must_match), N3 «Общая проверка строк�
 поведения; что делает дверь вокруг проверки (заявка, номер, запись, коды HTTP, `made_prefix`, `made_key`, секреты) —
 P/06.1 и [P/06.2](../../../06-console/ru/spec/06.2-console.norms.md), что делает библиотека — P/03.6.
 
-Нормативные слова — по [канону курса](../../../../ru/НОРМАТИВНЫЕ-СЛОВА.md). «N1.2», «N1.3», «N3», «N4» в перенесённом тексте — адреса
+Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). «N1.2», «N1.3», «N3», «N4» в перенесённом тексте — адреса
 глав P/06.1, если не сказано иное; «шаг N» «создать»/«править» — шаги прохода двери P/06.1 N3, их проверки — разделы
 «Порядок проверок» ниже.
 
@@ -20,7 +20,7 @@ P/06.1 и [P/06.2](../../../06-console/ru/spec/06.2-console.norms.md), что д
 
 Строка единицы — по манифесту каталога (`unit.fields`; форма манифеста — `Platform/02-installer/spec/02.1-installer.schema.json`,
 [форма](../../../02-installer/spec/02.1-installer.schema.json)) и разделу «Строка единицы» ниже. Строка состояния единицы
-`<sub>/state/<имя>/<id>` (раздел «Состояние единицы») — форма `Platform/03-worker/data/state.schema.json`, исходы
+`<sub>/state/<name>/<id>` (раздел «Состояние единицы») — форма `Platform/03-worker/data/state.schema.json`, исходы
 `Platform/03-worker/data/state.outcomes.tsv` ([форма](../../../03-worker/data/state.schema.json),
 [исходы](../../../03-worker/data/state.outcomes.tsv); C149-STATE-SUPPORT-01, решение «Архитектора» 2026-10-26).
 
@@ -70,9 +70,9 @@ table_platform_fields: [by, at, made_at, held_by, garbled, revision, index]   # 
   # unit.fields не объявляет (отказ загрузки P/02.1), клиент не задаёт; в живой строке только id, revision, born и
   # made (у строки заказчика), deleted — только у надгробия; born и made дверь не выдаёт клиенту на запись: тело с ними —
   # 400 «a client may not set …» (N3 шаг 4), правка их сохраняет (ADR-0091 пп. 1, 3); made — в ответе (N2);
-  # state — не элемент строки: действующее состояние единицы — в ответе GET (N2; P/03.6 N1.7); worker/placement — строка <sub>/placement/<id> (P/04 N1.1, добавлено М10/4);
+  # state — не элемент строки: действующее состояние единицы — в ответе GET (N2; P/03.6 N1.7); worker/placement — строка <sub>/placement/<id> (P/04 N1.1, добавлено M10/4);
   # epoch — строка эпохи; phase, observed_revision — status[].phase, status[].observed_revision
-  # объекта <sub>/heartbeats/<имя> (P/03.4 N1.1, добавлено М10/5)
+  # объекта <sub>/heartbeats/<имя> (P/03.4 N1.1, добавлено M10/5)
 ```
 
 Текстовые формы значений по типам — векторы [`values-by-type`](../vectors/values-by-type/README.md) (разбор ревью стадии A

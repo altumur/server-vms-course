@@ -1,4 +1,4 @@
-# The count of room and live (the presence lock contract «Счёт room»; PL-EXT-01): the slot names of the live locks of a role (prefix w, server srv-a) and the memory budget → room.<sub>, live.<sub>. The form — README.
+# The count of room and live (the presence lock contract «Room count»; PL-EXT-01): the slot names of the live locks of a role (prefix w, server srv-a) and the memory budget → room.<sub>, live.<sub>. The form — README.
 case	input	expect	note
 n-99	{"prefix":"w","server":"srv-a","HOST_MEMORY_MB":4096,"WORKER_MEMORY_MB":256,"locks":["w-srv-a-1","w-srv-a-2","w-srv-a-99"]}	{"room":"13","live":"2,99"}	n = 99 — an ordered slot: in the count of numbers and in live
 n-100	{"prefix":"w","server":"srv-a","HOST_MEMORY_MB":4096,"WORKER_MEMORY_MB":256,"locks":["w-srv-a-1","w-srv-a-2","w-srv-a-100"]}	{"room":"13","live":"2"}	n = 100 — not a slot of this installation: as a lock without a number — among the live (memory), not in the count of numbers and not in live; a log line

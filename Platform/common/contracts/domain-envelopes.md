@@ -14,16 +14,16 @@ of the holder to a member is chapter 8.3 ([P/08.3](../../08-domain/spec/08.3-dom
 | `m1` of the answer `carry` | the holder (8.3) | the relay (9.2) — bytes | the agent of the member (9.1) |
 | `m1` of the answer of the token door | the holder ([8.7](../../08-domain/spec/08.7-domain.norms.md) N1.3) | the relay (9.2) | the agent of the member (9.1, [the local token door contract](local-token-door.md)) |
 
-Moved from М11/2 N1.5 (a paragraph, a block, the refusal table, the paragraph about trying AAD), М11/2 N3 «seal / open» (the
-order of checks), М11/3 N1.5 (the block `envelope_m1` and the paragraph of refusals), the forms of the fields `sealed` from М11/3 N1.5 `sealed?`, М11/5 N1.4 `carry`, М11/9
+Moved from M11/2 N1.5 (a paragraph, a block, the refusal table, the paragraph about trying AAD), M11/2 N3 «seal / open» (the
+order of checks), M11/3 N1.5 (the block `envelope_m1` and the paragraph of refusals), the forms of the fields `sealed` from M11/3 N1.5 `sealed?`, M11/5 N1.4 `carry`, M11/9
 N1.3 `carry` and N1.6 `carry` without a change of behaviour. The book acceptance key (`domain/book-seal`, `book_seal` of the set), its
 birth and changes belong to the owner (P/08.2 N1.2, N1.4, N3); what the agent does with the opened content is P/09.1 N1.4 `sealed` and the lessons of the
-fields. The references «урок N» in the moved text are lesson М11/N; their addresses now: «урок 3» (the agent seals before signing the
-report) — P/09.1 N1.2, «урок 4» (the relay) — P/09.2, «урок 5» (the assembly of a book, the family row `domain.books.<book>.from`)
-— P/08.5 N1.3 and P/02.1 N1.2b (analysis of the review of stage B 8–10, № 22; Kimi SB810-07); «урок 2 N1.5» in the section `m1` is the section
+fields. The references «lesson N» in the moved text are lesson M11/N; their addresses now: «lesson 3» (the agent seals before signing the
+report) — P/09.1 N1.2, «lesson 4» (the relay) — P/09.2, «lesson 5» (the assembly of a book, the family row `domain.books.<book>.from`)
+— P/08.5 N1.3 and P/02.1 N1.2b (analysis of the review of stage B 8–10, № 22; Kimi SB810-07); «lesson 2 N1.5» in the section `m1` is the section
 «Envelope `x25519:v1`» of this contract. The JSON Pointer path follows [the sealing contract](sealing.md) «AAD path».
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -31,7 +31,7 @@ Opening is by `seed_secret` of the row `domain/book-seal`, sealing is to `book_s
 
 ## Envelope `x25519:v1`
 
-From М11/2 N1.5:
+From M11/2 N1.5:
 
 A secret field (`*_secret`, [P/02.1](../../02-installer/spec/02.1-installer.norms.md) N1.3a) of a member's contribution to a book travels to the holder as an envelope to `book_seal`: the agent seals
 before signing the report (lesson 3), the relay carries the bytes (lesson 4), the holder opens only when assembling the book (lesson 5).
@@ -51,7 +51,7 @@ aad:           UTF-8(JCS([member, source_path, item])) ‖ 0x00 ‖ UTF-8(pointe
 plain:         the UTF-8 bytes of the secret value as given; an empty value is sealed too
 seal:          a new eph pair and a new nonce for every envelope; two envelopes of one value differ; book_seal of small
                order (X25519(eph_priv, book_seal) — a zero shared secret) — there is no envelope, refusal not_an_envelope
-               (added by the reconciliation of М11, S1)
+               (added by the reconciliation of M11, S1)
 ```
 
 A refusal of opening is one of three words; the value is repeated neither in the reason nor in the journal ([P/06.2](../../06-console/spec/06.2-console.norms.md) N1.4):
@@ -64,7 +64,7 @@ A refusal of opening is one of three words; the value is repeated neither in the
 
 A substituted AAD and a foreign key are indistinguishable — both causes are `does_not_open`. Trying other AAD at opening is forbidden.
 
-From М11/2 N3 «`seal(book_seal, plain, aad)` и `open(seed_secret, envelope, aad)`»: sealing and opening are N1.5 (here — the
+From M11/2 N3 «`seal(book_seal, plain, aad)` and `open(seed_secret, envelope, aad)`»: sealing and opening are N1.5 (here — the
 block above); the order of the opening checks: `not_v1` → `not_an_envelope` → `does_not_open`.
 
 The same envelope with another AAD context is the holder's transfer keys `keys_sealed` (to `seal` of the target, AAD `take|<to>`; the form of the
@@ -72,7 +72,7 @@ plain text and the refusal — [P/08.8 N1.7](../../08-domain/spec/08.8-domain.no
 
 ## Envelope `m1`
 
-From М11/3 N1.5:
+From M11/3 N1.5:
 
 ```yaml
 envelope_m1:    m1:<eph>:<nonce>:<ct>             # like x25519:v1 of lesson 2 N1.5: four parts separated by «:», 2–4 — base64url without «=»
@@ -97,7 +97,7 @@ the value is the text of a JSON object (P/03.7 N1.2 `source_row`).
 
 ```yaml
 entry:       a JSON object: the field key is a non-empty string, the field to is a member name, a list of names or "servers" — all members of class server of this pass: the worker's copy of the list holds only its own sections, it cannot enumerate all (ADR-0113 addendum (8) item 4, addendum (9) item 2); the name servers is taken: P/08.3 N3 «admit a member» step 1. The addressee «all» is the declaration of a book to: "*" in the manifest, P/08.5 N1.3 to_all: the field to of such an input is not read, and "*" in an input of an ordinary book is bad_contribution; the other fields are the worker's;
-             *_secret at any depth is a secret (P/06.2 N1.1; and a field named exactly `_secret`, without a prefix — the reconciliation of М11,
+             *_secret at any depth is a secret (P/06.2 N1.1; and a field named exactly `_secret`, without a prefix — the reconciliation of M11,
              the implementations agreed), in the member's row it is an envelope of the member's ring (the sealing contract) with the AAD
              of the profile P/08.5 N1.3 at_rest: the row key, 0x00, «/<item>» and the JSON Pointer of the secret in the text of the element
 ```
@@ -105,11 +105,11 @@ entry:       a JSON object: the field key is a non-empty string, the field to is
 ## Content of `sealed`
 
 The field `sealed` of the holder's answer to the agent (`carry`, [P/08.3](../../08-domain/spec/08.3-domain.norms.md) N1.5) is
-an envelope `m1` with a JSON object of what is secret to the member. From М11/3 N1.5 `sealed?`, М11/5 N1.4 `carry`, М11/9 N1.3 `carry` and N1.6 `carry`:
+an envelope `m1` with a JSON object of what is secret to the member. From M11/3 N1.5 `sealed?`, M11/5 N1.4 `carry`, M11/9 N1.3 `carry` and N1.6 `carry`:
 
 ```yaml
 sealed:         an envelope m1 with a JSON object of what is secret to the member; only when there is something secret or held — there is no empty envelope
-                (added by the reconciliation of М11, D8)
+                (added by the reconciliation of M11, D8)
   grants?:      {doc} — the row domain/grants/<member> (P/08.4 N1.3 carry)
   anywhere?:    {as_of, sha256} — the summary of P/08.4 N1.3 anywhere; the body by the door on a change; does not depend on grants
   held?:        [<field name>…] of "grants", "roles", "anywhere", "break_glass" — not sent in this pass, do not touch the copies (P/08.4 N1.3, N1.6 carry): the row is unreadable, the assembly did not converge, the table is over the limit;
@@ -128,7 +128,7 @@ The reader of the content of `sealed` skips fields outside the list (ADR-0098 §
 
 The package [`domain-envelopes`](../vectors/domain-envelopes/README.md) (analysis of the review of stage A 8–10, № 12): opening
 `x25519:v1` (`x25519-open.tsv`) and `m1` (`m1-open.tsv`), the rounds `seal-round` (`x25519-round.tsv`) and `seal-member-round`
-(`m1-round.tsv`). The rows are the inputs of the acceptance vector commands of М11/2 (`seal`, `seal-round`) and М11/3 (`seal-member`,
+(`m1-round.tsv`). The rows are the inputs of the acceptance vector commands of M11/2 (`seal`, `seal-round`) and M11/3 (`seal-member`,
 `seal-member-round`) without a change of bytes; the scenarios and inputs were removed by the move of lesson 8 — the tables are the only source of these
 cases. An implementation passes them with its own function, without a stand. `keys_sealed` and the content of
 `sealed` have no vectors — candidates (README of the package).
@@ -138,8 +138,8 @@ of lesson P/01 (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-00
 
 ## Correspondence to former lessons
 
-From М11/2 (analysis of the review of stage A 8–10, № 12): N1.5 whole (here «Envelope `x25519:v1`»; in М11/2 — a pointer) and the line of N3
-«`seal` / `open`» (the order of checks). From М11/3: the block `envelope_m1` and the paragraph of refusals of N1.5 (here «Envelope `m1`»), the line
-`sealed?` of the answer (here «Content of `sealed`»; in `carry` of М11/3 — a pointer). From М11/5 N1.4 and М11/9 N1.3, N1.6 — the forms of the fields
-`books`, `grants`, `break_glass` (in the sources — a pointer, the meaning of the field stays there). Parts of the norms М11/2-08, М11/2-09 and
-М11/3-09 — by `note` of [id-map](../id-map.tsv); vectors — the rows of id-map of the contract and of the package.
+From M11/2 (analysis of the review of stage A 8–10, № 12): N1.5 whole (here «Envelope `x25519:v1`»; in M11/2 — a pointer) and the line of N3
+«`seal` / `open`» (the order of checks). From M11/3: the block `envelope_m1` and the paragraph of refusals of N1.5 (here «Envelope `m1`»), the line
+`sealed?` of the answer (here «Content of `sealed`»; in `carry` of M11/3 — a pointer). From M11/5 N1.4 and M11/9 N1.3, N1.6 — the forms of the fields
+`books`, `grants`, `break_glass` (in the sources — a pointer, the meaning of the field stays there). Parts of the norms M11/2-08, M11/2-09 and
+M11/3-09 — by `note` of [id-map](../id-map.tsv); vectors — the rows of id-map of the contract and of the package.

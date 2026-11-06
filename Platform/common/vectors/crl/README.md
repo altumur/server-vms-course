@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/crl/README.
 
 The owner is the common [role certificate contract](../../contracts/role-certificate.md) `revoke` (`crl`, `both`, `absent`;
 stage C guesses RC-02, S03, RC-05 and RC-06, the Architect's decision 2026-10-23). The participants are the same doors as at the package
-[`revoked`](../revoked/README.md). The bytes are written by «Спецификация»; the centres and the CRLs were issued once with keys from constant
+[`revoked`](../revoked/README.md). The bytes are written by «Specification»; the centres and the CRLs were issued once with keys from constant
 bytes (Ed25519 and ECDSA P-256), the validity — 2026-01-01…2036-01-01, unless the row says otherwise.
 
 ## `cases.tsv`

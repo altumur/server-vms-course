@@ -20,7 +20,7 @@ The forms of the rows that this contract names are in the families of lesson P/0
 (`Platform/08-domain/data/holder.schema.json`, `Platform/08-domain/data/holder.outcomes.tsv`) and [the term
 record contract](record.md).
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Common rules of forms
 
@@ -51,11 +51,11 @@ recovery_file: JSON {domain, root_key, root_pub}       # the private half of the
   root_key:    hex of 32 bytes — the seed of the Ed25519 private key (RFC 8032 §5.1.5)
   root_pub:    hex of 32 bytes — the public key; not the one derived from root_key — the file is not read (a refusal, nothing changes)
   place:       at the operator, outside the platform directory as a whole (PLATFORM_DIR — the ring is in it too, the sealing contract) and outside the directories of the store,
-               the objects and their copies; mode 0600; the path is named by the call of the operation (outside PLATFORM_DIR — added by the reconciliation of М11, I2);
+               the objects and their copies; mode 0600; the path is named by the call of the operation (outside PLATFORM_DIR — added by the reconciliation of M11, I2);
                a regular file, not a symbolic link, links in the directories of the path are resolved before the check «outside …», an unresolvable
                directory is a refusal: [the secret files placement contract](secret-files.md) (guess of stage C DF-G01)
   mode:        the mode is checked at every reading of the file (the changes of N3, the move of chapter 8.8, any command that takes from the file
-               root_pub): wider than 0600 — a refusal, nothing changes (added by the reconciliation of М11, I3)
+               root_pub): wider than 0600 — a refusal, nothing changes (added by the reconciliation of M11, I3)
 ```
 
 ## Root pinning
@@ -79,7 +79,7 @@ decides» item 8).
 ```
 1. the store of the holder cluster answers, the ring ([the sealing contract](sealing.md) «Ring file») is read; otherwise a refusal, nothing is written
 2. domain/keys or domain/root already exists                          → a refusal, nothing changes (domain/root —
-   added by the reconciliation of М11, I1: an installation over someone else's pinned root would get stuck)
+   added by the reconciliation of M11, I1: an installation over someone else's pinned root would get stuck)
 3. a new root; the recovery file is created first, only if the path does not exist, mode 0600,
    outside PLATFORM_DIR and the store directories (place — «Root and recovery file») → otherwise a refusal, nothing is written to the store
 4. the holder keys (the token key, the issuing key) and the backup key at backup_key_rev 1 ([the domain backup key

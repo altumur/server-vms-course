@@ -5,7 +5,7 @@ This English text is the source; the Russian translation `ru/vectors/contender-f
 The owner is [the observation contract](../../contracts/observation.md) «Freshness of a contender mark: `CONTENDER_FRESH`» (stage C guess
 C06-CONTENDER-FRESH-33-01, the Architect's decision 2026-10-25). The writer of the mark is the worker
 ([P/03.2](../../../03-worker/spec/03.2-worker.norms.md) N1.4a, `CONTEND_EVERY`); the reader is the console (`WorkerRow.name_conflict`
-`/servers`, the series `name_conflicts`, [chapter 6.5](../../../06-console/spec/06.5-console.norms.md)). The bytes are written by «Спецификация»;
+`/servers`, the series `name_conflicts`, [chapter 6.5](../../../06-console/spec/06.5-console.norms.md)). The bytes are written by «Specification»;
 the rows are by the text of the contract.
 
 ## Rule
@@ -28,7 +28,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 
 Without a stand: a side gives `age` to its judgement of the freshness of a mark and reconciles with `fresh`, over the number as is, without
 rounding.
-On a discrepancy the contract is right, «Спецификация» corrects the vector.
+On a discrepancy the contract is right, «Specification» corrects the vector.
 Who performs it — the console (`06-console`: the freshness of marks for `WorkerRow.name_conflict` and the series `name_conflicts`, P/06.5 N3 «/servers»). The worker (`03-worker`) only writes the mark and does not judge the freshness of foreign marks (P/03.2 N1.4a; ACC-VECTORS-CONNECT-02, the Architect's decision 2026-10-26); the field `name_conflicts` of the controller report (`04-controller`, P/04 N1.2) is not counted by this rule (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
 
 ## Native outcome

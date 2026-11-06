@@ -1,4 +1,4 @@
 # Outcomes of an unreadable row <sub>/opsteps/<id>/<i> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	console	the whole row is unreadable: the leader makes no call of the step, writes the result `fail` with the code `not_run` with the counters, the operation goes on; `retry-failed` does not copy such a step, the cause goes to the log	0	строка	P/06.9 Н3 «step», «retry»
+	console	the whole row is unreadable: the leader makes no call of the step, writes the result `fail` with the code `not_run` with the counters, the operation goes on; `retry-failed` does not copy such a step, the cause goes to the log	0	row	P/06.9 Н3 «step», «retry»

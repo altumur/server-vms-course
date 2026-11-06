@@ -10,11 +10,11 @@ from P/05 N3 «write an event»; review of stage B 3–5, V1). Lines are appende
 (`append`) by: the worker — the events of the subsystem by `observe` (chapter [P/03.6](../../03-worker/spec/03.6-worker.norms.md)),
 the console — the journal and the marks of the operator (chapter [P/06.4](../../06-console/spec/06.4-console.norms.md)),
 each process of the platform — the journal `audit` of its role; the encoding of file names is performed by each process that puts a file into
-the root of events or of objects. Moved from М10/8 N1.1 (the paragraph «File names in shared trees») and N1.2 (the blocks `line`,
+the root of events or of objects. Moved from M10/8 N1.1 (the paragraph «File names in shared trees») and N1.2 (the blocks `line`,
 `bucket`, `class`, `journal`, `writer`, the paragraph on the id) without a change of behaviour: the suppression of repeats (`suppress`) — chapter
 P/03.6 N1.2; `older_epochs` and the marks of the operator (`marks`) — chapter P/06.4 N1.2. The vectors — the section «Vectors» below.
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
 
 ## The line and the bucket
 
@@ -71,7 +71,7 @@ class:      [alarm, observation]             # closed; the class of a line is it
                                              # observation; the index takes the class from the field, the tree does not override it;
                                              # the layout .alarms is at the writer: it puts an alarm into <tree>.alarms of any
                                              # tree, audit.alarms and console.alarms included (the term alarms_retention)
-                                             # (the Architect's decision, the second pilot, N-2; changes the choice of the reconciliation М10/6–11 E18)
+                                             # (the Architect's decision, the second pilot, N-2; changes the choice of the reconciliation M10/6–11 E18)
 ```
 
 ## The journal and the writers of the file
@@ -120,7 +120,7 @@ the addressee is determined by the manifest.
 
 **File names in shared trees** — one encoding for all implementations: objects and event trees (P/05 N1.1, N1.2,
 N1.4) are written by processes of different implementations on one box (the Architect's decision, the second pilot, N-3; it carries out the reconciliation of python and go
-М10/3–5 item 14 and U20). Any logical key that the grammar of [P/01.1](../../01-store/spec/01.1-store.norms.md), the grammars of the id ([P/06.1](../../06-console/spec/06.1-console.norms.md) N1.3) and of the slot ([P/03.2](../../03-worker/spec/03.2-worker.norms.md) N1.4) and the limit
+M10/3–5 item 14 and U20). Any logical key that the grammar of [P/01.1](../../01-store/spec/01.1-store.norms.md), the grammars of the id ([P/06.1](../../06-console/spec/06.1-console.norms.md) N1.3) and of the slot ([P/03.2](../../03-worker/spec/03.2-worker.norms.md) N1.4) and the limit
 of the full key permit is representable on disk. The layout of directories is by the logical key, component by component (between `/`):
 
 - a byte of a component from `[a-z0-9._-]` is written as is, any other UTF-8 byte — as `%` and two lowercase hex digits (`A` —
@@ -211,9 +211,9 @@ The package [`journal`](../vectors/journal/README.md): `bucket.tsv` (reading a b
 
 ## Correspondence to former lessons
 
-From М10/8 (stage B, review of stage A 3–5, № 9): N1.2 — the blocks `line`, `bucket`, `class`, `journal`, `writer`, the paragraph
+From M10/8 (stage B, review of stage A 3–5, № 9): N1.2 — the blocks `line`, `bucket`, `class`, `journal`, `writer`, the paragraph
 on the event id and the writer instance (except the sentences on the index line — P/05 N1.2); N1.1 — the paragraph «File names in shared
-trees». The parts of norms М10/8-01 (the encoding of names; P/05-01), М10/8-03 (the fields of the line; P/05-03) and М10/8-04 (the bucket, `fsync`,
+trees». The parts of norms M10/8-01 (the encoding of names; P/05-01), M10/8-03 (the fields of the line; P/05-03) and M10/8-04 (the bucket, `fsync`,
 a torn line; P/05-04) — by `note` of [id-map](../id-map.tsv). Suppression (`suppress` and its paragraph) — chapter P/03.6 N1.2;
 `older_epochs`, `marks` — P/06.4 N1.2 (review of stage B 6–7, № 24). From P/05 N3 (review of stage B 3–5, V1): «write an event» — steps 1–5 and «Races»
 (here «Writing a line»; the references «N1.1», «the event journal contract `writer`» are written as «P/05 N1.1», «`writer` above»); the parts

@@ -51,7 +51,7 @@ N3 «установка домена» (перенос урока 8, стади�
 | Путь | Что | Норма |
 |---|---|---|
 | `/etc/w2c` → `/data/platform/etc`, `/etc/<sub>` | ссылки; настоящий каталог на их месте — отказ установки | P/02.4 N1.1 `dirs`, N1.7 `install.refuse` |
-| `/etc/w2c/w2c.env`, `/etc/w2c/roles/<роль>.env`, `<W2C_SUB_ENV>`, `/etc/w2c/configstore.env` | файлы окружения: создаются, никогда не переписываются; грамматика — [договор файла окружения](../../common/ru/contracts/env-file.md), разбор, не `source` | P/02.4 N1.2, N1.7 |
+| `/etc/w2c/w2c.env`, `/etc/w2c/roles/<role>.env`, `<W2C_SUB_ENV>`, `/etc/w2c/configstore.env` | файлы окружения: создаются, никогда не переписываются; грамматика — [договор файла окружения](../../common/ru/contracts/env-file.md), разбор, не `source` | P/02.4 N1.2, N1.7 |
 | `/etc/w2c/configstore-rights.json` | файл прав, по смыслу равный выводу; иначе установка отказана | P/02.5 N3 «установить» |
 | строки `platform/manifest/<sub>`, `platform/manifest/<sub>/rev` | строка манифеста и метка | [каталог](../../common/data/catalog.tsv), P/02.3 N1.5 |
 | `/etc/w2c/tls/ca.pem`, `ca.next.pem`, `revoked`, `crl.pem`, `<роль>/server.pem`, `<роль>/server.key` | центр и комплекты ролей | [каталог](../../common/data/catalog.tsv), P/02.4 N1.6 |

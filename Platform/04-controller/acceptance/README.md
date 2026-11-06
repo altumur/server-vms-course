@@ -110,7 +110,7 @@ a scenario. One scenario takes no longer than 3 minutes.
   `platform/schema` with `version` 2 (above SCHEMA 1) and `x` (not a number) — `@start controller` exits with code 2, there is no pass report;
   with `version` 1 — the controller starts and writes the report. The resource is raised before the write of the row: it checks the schema at its own
   start. The branch «ошибка чтения — ждать» — sc. 25, «до чтения манифеста» — by reading (the coverage audit of P/04, D07);
-- sc. 24 — the labels of a server (N1.1 `platform/servers/<server>`, N1.3 `constraint`, N3 «pass()» step 5): the labels of the node of `w-1` —
+- sc. 24 — the labels of a server (N1.1 `platform/servers/<host>`, N1.3 `constraint`, N3 «pass()» step 5): the labels of the node of `w-1` —
   `{zz}`; the row `{qq}` beats the node — `c1` with the label `qq` is placed; an empty row reaches nothing: the forecast
   `will_move` names `testsub/c1`, `c1` is removed with a reason of reachability, `c2` with the label `zz` is not placed within 12 s (the labels
   of the node would accept it); the row is removed — the labels of the node again: `c2` is placed; the row `{qq, zz}` — `c1` is again on `w-1`; a row

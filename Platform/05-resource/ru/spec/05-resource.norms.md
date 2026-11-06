@@ -21,16 +21,16 @@
 
 ## N0 Словарь слов
 
-Нормативные слова (MUST, MUST NOT, SHOULD, MAY по RFC 2119 и RFC 8174) — по [канону курса](../../../../ru/НОРМАТИВНЫЕ-СЛОВА.md). Правила модуля — [P/01.1 N0](../../../01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
+Нормативные слова (MUST, MUST NOT, SHOULD, MAY по RFC 2119 и RFC 8174) — по [канону курса](../../../../ru/NORMATIVE-TERMS.md). Правила модуля — [P/01.1 N0](../../../01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
 
 ## N1 Форма
 
-**Время.** Поля времени строк и объектов урока — время по [канону N0 P/01.1](../../../01-store/ru/spec/01.1-store.norms.md#время-в-строке): строка события — `t` ([договор журнала событий](../../../common/ru/contracts/event-journal.md)); объект пульса ресурса `platform/resources/<server>/heartbeat` — `ts`, `usage_at`, `pass_started`; строка двери `platform/doors/<сервер>` — `since`, `at`; `<sub>/requests/free-<server>-<volume>` — `at`; надгробие `.gone/<ключ>` — `written` (пишет консоль, [P/06.1](../../../06-console/ru/spec/06.1-console.norms.md) N1.5).
+**Время.** Поля времени строк и объектов урока — время по [канону N0 P/01.1](../../../01-store/ru/spec/01.1-store.norms.md#время-в-строке): строка события — `t` ([договор журнала событий](../../../common/ru/contracts/event-journal.md)); объект пульса ресурса `platform/resources/<server>/heartbeat` — `ts`, `usage_at`, `pass_started`; строка двери `platform/doors/<host>` — `since`, `at`; `<sub>/requests/free-<server>-<volume>` — `at`; надгробие `.gone/<object-key>` — `written` (пишет консоль, [P/06.1](../../../06-console/ru/spec/06.1-console.norms.md) N1.5).
 
 **Данные** ([каталог](../../../common/data/catalog.tsv)):
-- владеет: `platform/resources/<server>/heartbeat`, `platform/doors/<сервер>`, `<sub>/requests/free-<server>-<volume>`, `<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console.alarms/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.workers/<sub>/<экземпляр>.lock`, `<корень событий или объектов>/<путь>/%h<sha256>.name`, `<корень объектов>/<каталог>/~lock` (ADR-0083 доп. (16)), `.gone/<ключ>`, `objects/<sub>/<manifest:objects.rows>`, `objects/<sub>/<manifest:objects.rows>/*`;
+- владеет: `platform/resources/<server>/heartbeat`, `platform/doors/<host>`, `<sub>/requests/free-<server>-<volume>`, `<events root>/<sub>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/<sub>.alarms/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/audit/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/audit.alarms/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/console/<instance>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/console.alarms/<instance>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/.mirror/<server>/<tree>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/.workers/<sub>/<instance>.lock`, `<events or objects root>/<path>/%h<sha256>.name`, `<objects root>/<dir>/~lock` (ADR-0083 доп. (16)), `.gone/<object-key>`, `objects/<sub>/<manifest:objects.rows>`, `objects/<sub>/<manifest:objects.rows>/*`;
 - пишет: `<sub>/blobs/sha256-<hex>` (put);
-- читает: `platform/manifest/<sub>`, `platform/manifest/<sub>/rev`, `platform/schema`, `<sub>/heartbeats/<имя>`, `platform/decommission/<сервер>`, `platform/doors/<сервер>`, `platform/resources/<server>/heartbeat`, `<sub>/retention`, `<sub>/alarms_retention`, `platform/space`, `platform/mirror`, `<sub>/<manifest:tables>/<имя>`, `<sub>/<manifest:unit.rows>/<id>` (строки единиц манифеста с about — адресат удержания, договор удержаний; P/02.5 N1.4), `/etc/w2c/tls/<роль>/server.key`.
+- читает: `platform/manifest/<sub>`, `platform/manifest/<sub>/rev`, `platform/schema`, `<sub>/heartbeats/<name>`, `platform/decommission/<host>`, `platform/doors/<host>`, `platform/resources/<server>/heartbeat`, `<sub>/retention`, `<sub>/alarms_retention`, `platform/space`, `platform/mirror`, `<sub>/<manifest:tables>/<name>`, `<sub>/<manifest:unit.rows>/<id>` (строки единиц манифеста с about — адресат удержания, договор удержаний; P/02.5 N1.4), `/etc/w2c/tls/<role>/server.key`.
 
 Ключ своего комплекта ресурс читает при `RESOURCE_TLS=1` (N1.4 `door.mode` `mtls`, `cert_until`; «Допуск к дверям
 ресурса»; [договор сертификата роли](../../../common/ru/contracts/role-certificate.md) `kit`) (разбор ревью стадии B 3–5, № 10).
@@ -56,7 +56,7 @@ object:
              копия тела (PUT .../blobs/<digest> с X-Written, зеркало) хранит written исходной копии, не свой: иначе копия,
              лежавшая до удаления, оказалась бы новее надгробия; уже лежащая копия того же ключа — written не уменьшается
              (большее из двух) (C05-COPY-WRITTEN-SOURCE-01); у ключа, удалённого здесь, прежний written — written его
-             надгробия `.gone/<ключ>`, пока оно лежит: новая запись — строго больше него (иначе соседи сочли бы её старше
+             надгробия `.gone/<object-key>`, пока оно лежит: новая запись — строго больше него (иначе соседи сочли бы её старше
              удаления, договор надгробий `drop`, `rewrite`); отдельной памяти нет — надгробие и есть отметка; запись
              после written снимает надгробие тем же действием, до ответа записи (договор надгробий `rewrite`;
              C05-GONE-REWRITE-AT-WRITE-01, решение «Архитектора» 2026-10-30, вопросы норм аудита Gemini, P/05 п. 1); надгробие
@@ -80,7 +80,7 @@ object:
 или конец `/`; это не полный ключ. Объектная дверь не выдаёт строки-объекты даже из
 разрешённого префикса. При равном `written` выбирается сервер с лексикографически большим
 именем; отсутствие ответа называется `missing`, а не отсутствием объекта. При листинге
-возвращается закрытая форма ObjectListing из N2; удалённые объекты — надгробия `.gone/<ключ>` (ниже, «Надгробия»): обычный листинг их не показывает, `prefix=.gone/` —
+возвращается закрытая форма ObjectListing из N2; удалённые объекты — надгробия `.gone/<object-key>` (ниже, «Надгробия»): обычный листинг их не показывает, `prefix=.gone/` —
 листинг надгробий только для чтения (журнал cammeta-go, урок 10 № 2).
 
 Листинг отдаёт только ключи семей двери под `prefix` — фильтр, а не отказ: `prefix=testsub/`, `prefix=t`, пустой
@@ -228,13 +228,13 @@ resource:                                    # один процесс на се
              присутствие не прочлось: файл замка не читается (разбор ревью стадии B 3–5, № 23) или flock/stat замка дали ошибку,
              кроме «занят» и ENOENT у stat (договор замка присутствия; (решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7));
              instances: {<sub>/<имя слота>: <экземпляр>}; ключ с подсистемой: имя слота уникально только внутри своей
-             подсистемы (P/03.2 `<sub>/slots/<имя>`), у двух подсистем с одним `slot.prefix` имена совпадают; pass_stalled: <секунды>, только пока проход завис (PULSE_LIMIT)
+             подсистемы (P/03.2 `<sub>/slots/<name>`), у двух подсистем с одним `slot.prefix` имена совпадают; pass_stalled: <секунды>, только пока проход завис (PULSE_LIMIT)
              # одна форма пульса: консоль выдаёт её как ResourceRow P/06.5 (производная выдача), контроллер
              # выводит из неё присутствие (ниже, P/04 «судьба»)
   usage:     целое — байты файлов бакетов деревьев этого сервера и копий в .mirror/; usage_at — стенные секунды
              замера; space — том дерева событий: total, free, used — байты (statfs), full — доля used/total от 0 до 1
              (не признак); volumes — то же по каждому тому (журнал cammeta-go, урок 9 № 1)
-  door_row:  platform/doors/<server> {url, since, at, room.<sub>…, live.<sub>…}; at — каждые ALIVE_EVERY (договор наблюдения «Состояние ресурса»; аудит раскладки, решение «Архитектора» 2026-10-25, A-10)
+  door_row:  platform/doors/<host> {url, since, at, room.<sub>…, live.<sub>…}; at — каждые ALIVE_EVERY (договор наблюдения «Состояние ресурса»; аудит раскладки, решение «Архитектора» 2026-10-25, A-10)
   room:      элементы room.<sub> и live.<sub> — по договору замка присутствия «Счёт room» (presence-lock.md; перенесено
              туда, разбор ревью стадии A 3–5, № 9; live.<sub> — ADR-0084 доп. (3) R14′, № 3, 19)
             не писать дверь, пока стоит platform/decommission/<мой сервер> (договор наблюдения «Сервер выведен» narrower; консоль её удалила)
@@ -377,9 +377,9 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 Форма строк и объектов и файлов JSON, которыми глава владеет по [каталогу](../../../common/data/catalog.tsv), — JSON Schema 2020-12 семьи (ADR-0092). Экземпляр строки — `{key, row}`, объекта — `{key, object}`, файла — `{key, file}` (текст файла UTF-8; корень схемы — его разбор, `x-encoding`); ключ — грамматика колонки `key` каталога. Поля `row` — значения `items` после [кодека](../../../common/data/codec.tsv): писатель проверяет схему и её `$defs.writer`, читатель — схему (слой 3 — слова `x-*` схемы). Нечитаемо — строка не раскодировалась или не прошла схему в режиме читателя; исход — по таблице исходов семьи: путь — префикс пути отказа (пустой — строка целиком), при нескольких путях отказа действует исход с наименьшим приоритетом.
 
-#### `platform/doors/<сервер>` — строка
+#### `platform/doors/<host>` — строка
 
-Схема — [`doors.schema.json`](../../data/doors.schema.json), исходы — [`doors.outcomes.tsv`](../../data/doors.outcomes.tsv); версия формы 1; норма — P/05 Н1.4 door_row; договор замка присутствия; P/06.6 Н3 «вывести_сервер» (delete консолью).
+Схема — [`doors.schema.json`](../../data/doors.schema.json), исходы — [`doors.outcomes.tsv`](../../data/doors.outcomes.tsv); версия формы 1; норма — P/05 N1.4 door_row; the presence lock contract; P/06.6 N3 «decommission a server» (delete by the console).
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
@@ -399,14 +399,14 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| строка целиком | `<s>controller` | the whole row is unreadable: the server is not a candidate for an order; the fields of the unreadable row are not replaced by absence, the cause goes to the log (layout audit, G-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/04 Н1, Н3 «заказать()» |
-| строка целиком | `console` | the whole row is unreadable: the life of the resource is judged by a change of the row version (resource_state of the observation contract), not by its fields; the fields of the unreadable row are not replaced by absence; the door row of a decommissioned server is unreadable — the console pass deletes it all the same: delete with cas by the version read, the content is not needed for the deletion (V7 item 3, row 12); the cause goes to the log (layout audit, G-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | договор наблюдения resource_state; P/06.6 Н3 «decommission_server» |
-| строка целиком | `resource` | the whole row is unreadable: restore — the door is unreadable, the restoration is incomplete; mirror — there is no address, the server is not a neighbour of this pass; the fields of the unreadable row are not replaced by absence, the cause goes to the log (layout audit, G-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/05 Н1.4 door_row, «Восстановление бакетов» |
-| строка целиком | `<s>worker` | the door row of its own server is unreadable: the object client with a bare cluster:// — reading the cluster objects is «unknown», not «no», not a start refusal and not a refusal of writing to its own catalogue; on the next access the row is read anew (P3; V7 item 3, row 11) | 0 | строка | договор клиента хранилища объектов door (P03-OBJECTS-DEFAULT-1FD) |
+| строка целиком | `<s>controller` | the whole row is unreadable: the server is not a candidate for an order; the fields of the unreadable row are not replaced by absence, the cause goes to the log (layout audit, G-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | row | P/04 Н1, Н3 «заказать()» |
+| строка целиком | `console` | the whole row is unreadable: the life of the resource is judged by a change of the row version (resource_state of the observation contract), not by its fields; the fields of the unreadable row are not replaced by absence; the door row of a decommissioned server is unreadable — the console pass deletes it all the same: delete with cas by the version read, the content is not needed for the deletion (V7 item 3, row 12); the cause goes to the log (layout audit, G-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | row | договор наблюдения resource_state; P/06.6 Н3 «decommission_server» |
+| строка целиком | `resource` | the whole row is unreadable: restore — the door is unreadable, the restoration is incomplete; mirror — there is no address, the server is not a neighbour of this pass; the fields of the unreadable row are not replaced by absence, the cause goes to the log (layout audit, G-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | row | P/05 Н1.4 door_row, «Восстановление бакетов» |
+| строка целиком | `<s>worker` | the door row of its own server is unreadable: the object client with a bare cluster:// — reading the cluster objects is «unknown», not «no», not a start refusal and not a refusal of writing to its own catalogue; on the next access the row is read anew (P3; V7 item 3, row 11) | 0 | row | договор клиента хранилища объектов door (P03-OBJECTS-DEFAULT-1FD) |
 
 #### `platform/resources/<server>/heartbeat` — объект
 
-Схема — [`resource-heartbeat.schema.json`](../../data/resource-heartbeat.schema.json), исходы — [`resource-heartbeat.outcomes.tsv`](../../data/resource-heartbeat.outcomes.tsv); версия формы 1; норма — P/05 Н1.4.
+Схема — [`resource-heartbeat.schema.json`](../../data/resource-heartbeat.schema.json), исходы — [`resource-heartbeat.outcomes.tsv`](../../data/resource-heartbeat.outcomes.tsv); версия формы 1; норма — P/05 N1.4.
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
@@ -497,17 +497,17 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| `/schema` | * | the process schema is unknown: in processes of the door /schema — schema: null; in ResourceRow of the door /resources — schema: null (analysis of review of stage B 6–7, № 6); the heartbeat stays readable | 0 | поле | P/06.6 Н1.1а heartbeat, Н2.3; P/06.5 Н2 «Выдачи» |
-| `/build` | * | build is not a string — the field is unknown: null in ResourceRow (/resources) and in processes of the door /schema, not ""; the heartbeat stays readable (P1; V7 item 3, row 14) | 0 | поле | P/06.5 Н2; P/06.6 Н2.3 |
-| `/retention_garbled` | * | a field out of form is unknown: null in ResourceRow, not absence (the term causes are not replaced by «no causes»); the heartbeat stays readable (P1; V7 item 3, row 14) | 0 | поле | P/05 Н3 retain; P/06.5 Н2 |
-| `/retention_withheld` | * | a field out of form is unknown: null in ResourceRow, not absence (the term causes are not replaced by «no causes»); the heartbeat stays readable (P1; V7 item 3, row 14) | 0 | поле | P/05 Н3 retain; P/06.5 Н2 |
-| объект целиком | `<s>controller` | the heartbeat is unreadable: it does not confirm the life of the resource, nor does its change (resource_state: unreachable with a fresh door row, otherwise by the order of the rules); it gives no presence of processes | 1 | строка | договор наблюдения resource_state |
-| объект целиком | `console` | the heartbeat is unreadable: it does not confirm the life of the resource, nor does its change (resource_state: unreachable with a fresh door row, otherwise by the order of the rules); it does not enter /resources, it is counted in w2c_resource_heartbeats_garbled, the answer is 200 | 1 | строка | договор наблюдения resource_state; P/06.5 Н2 «Выдачи» |
-| объект целиком | `resource` | the neighbour's heartbeat is unreadable: restore of the neighbour — the heartbeat is not read, the restoration is incomplete (all known doors are required) | 1 | строка | P/05 Н1.4 «Восстановление бакетов» |
+| `/schema` | * | the process schema is unknown: in processes of the door /schema — schema: null; in ResourceRow of the door /resources — schema: null (analysis of review of stage B 6–7, № 6); the heartbeat stays readable | 0 | field | P/06.6 Н1.1а heartbeat, Н2.3; P/06.5 Н2 «Выдачи» |
+| `/build` | * | build is not a string — the field is unknown: null in ResourceRow (/resources) and in processes of the door /schema, not ""; the heartbeat stays readable (P1; V7 item 3, row 14) | 0 | field | P/06.5 Н2; P/06.6 Н2.3 |
+| `/retention_garbled` | * | a field out of form is unknown: null in ResourceRow, not absence (the term causes are not replaced by «no causes»); the heartbeat stays readable (P1; V7 item 3, row 14) | 0 | field | P/05 Н3 retain; P/06.5 Н2 |
+| `/retention_withheld` | * | a field out of form is unknown: null in ResourceRow, not absence (the term causes are not replaced by «no causes»); the heartbeat stays readable (P1; V7 item 3, row 14) | 0 | field | P/05 Н3 retain; P/06.5 Н2 |
+| объект целиком | `<s>controller` | the heartbeat is unreadable: it does not confirm the life of the resource, nor does its change (resource_state: unreachable with a fresh door row, otherwise by the order of the rules); it gives no presence of processes | 1 | row | договор наблюдения resource_state |
+| объект целиком | `console` | the heartbeat is unreadable: it does not confirm the life of the resource, nor does its change (resource_state: unreachable with a fresh door row, otherwise by the order of the rules); it does not enter /resources, it is counted in w2c_resource_heartbeats_garbled, the answer is 200 | 1 | row | договор наблюдения resource_state; P/06.5 Н2 «Выдачи» |
+| объект целиком | `resource` | the neighbour's heartbeat is unreadable: restore of the neighbour — the heartbeat is not read, the restoration is incomplete (all known doors are required) | 1 | row | P/05 Н1.4 «Восстановление бакетов» |
 
 #### `<sub>/requests/free-<server>-<volume>` — строка
 
-Схема — [`free-ask.schema.json`](../../data/free-ask.schema.json), исходы — [`free-ask.outcomes.tsv`](../../data/free-ask.outcomes.tsv); версия формы 1; норма — P/05 Н1.4 free_ask.
+Схема — [`free-ask.schema.json`](../../data/free-ask.schema.json), исходы — [`free-ask.outcomes.tsv`](../../data/free-ask.outcomes.tsv); версия формы 1; норма — P/05 N1.4 free_ask.
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
@@ -520,34 +520,13 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| строка целиком | `<s>worker` | a row not in the resource's form is not a request: skipped, the cause goes to the log without the value (V7 item 3, row 10) | 0 | строка | P/03.6 Н3 «взгляд держателя» |
-| строка целиком | `console` | a resource row without a live owner is removed by ttl | 0 | строка | P/06.4 Н3 «reaper» |
-| строка целиком | `resource` | not its own form (unit present, someone else's server/volume, a spoiled form): do not touch, log free_ask.key_taken, skip | 0 | строка | P/05 Н1.4 free_ask, Н3 «проход ресурса» relieve |
+| строка целиком | `<s>worker` | a row not in the resource's form is not a request: skipped, the cause goes to the log without the value (V7 item 3, row 10) | 0 | row | P/03.6 Н3 «взгляд держателя» |
+| строка целиком | `console` | a resource row without a live owner is removed by ttl | 0 | row | P/06.4 Н3 «reaper» |
+| строка целиком | `resource` | not its own form (unit present, someone else's server/volume, a spoiled form): do not touch, log free_ask.key_taken, skip | 0 | row | P/05 Н1.4 free_ask, Н3 «проход ресурса» relieve |
 
-#### `<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
+#### `<events root>/<sub>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
 
-Схема — [`events-unit.schema.json`](../../data/events-unit.schema.json), исходы — [`events-unit.outcomes.tsv`](../../data/events-unit.outcomes.tsv); версия формы 1; норма — P/05 Н1.2; договор журнала событий.
-
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
-|---|---|---|---|---|
-| `t` | время (P/01.1 N0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
-| `kind` | строка | обязателен |  | the event kind |
-| `id` | строка | обязателен |  | `e1-<hexUTF8(tree)>-<hexUTF8(unit)>-<epoch>-<hexUTF8(instance)>-<number>`; unique, duplicate copies are removed by it |
-| `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
-| `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
-| `occurred` | время (P/01.1 N0 «Время в строке») | необязателен |  | when it happened; optional |
-| `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
-| `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
-
-Исходы нечитаемого файла (читатель — роль; `*` — все читатели семьи):
-
-| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
-|---|---|---|---|---|---|
-| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
-
-#### `<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
-
-Схема — [`events-unit-alarms.schema.json`](../../data/events-unit-alarms.schema.json), исходы — [`events-unit-alarms.outcomes.tsv`](../../data/events-unit-alarms.outcomes.tsv); версия формы 1; норма — P/05 Н1.2; договор журнала событий.
+Схема — [`events-unit.schema.json`](../../data/events-unit.schema.json), исходы — [`events-unit.outcomes.tsv`](../../data/events-unit.outcomes.tsv); версия формы 1; норма — P/05 N1.2; the event journal contract.
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
@@ -564,32 +543,11 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
-#### `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
+#### `<events root>/<sub>.alarms/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
 
-Схема — [`events-audit.schema.json`](../../data/events-audit.schema.json), исходы — [`events-audit.outcomes.tsv`](../../data/events-audit.outcomes.tsv); версия формы 1; норма — P/05 Н1.2; договор журнала событий.
-
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
-|---|---|---|---|---|
-| `t` | время (P/01.1 N0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
-| `kind` | строка | обязателен |  | the event kind |
-| `id` | строка | обязателен |  | `e1-<hexUTF8(tree)>-<hexUTF8(unit)>-<epoch>-<hexUTF8(instance)>-<number>`; unique, duplicate copies are removed by it |
-| `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
-| `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
-| `occurred` | время (P/01.1 N0 «Время в строке») | необязателен |  | when it happened; optional |
-| `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
-| `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
-
-Исходы нечитаемого файла (читатель — роль; `*` — все читатели семьи):
-
-| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
-|---|---|---|---|---|---|
-| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
-
-#### `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
-
-Схема — [`events-audit-alarms.schema.json`](../../data/events-audit-alarms.schema.json), исходы — [`events-audit-alarms.outcomes.tsv`](../../data/events-audit-alarms.outcomes.tsv); версия формы 1; норма — P/05 Н1.2; договор журнала событий.
+Схема — [`events-unit-alarms.schema.json`](../../data/events-unit-alarms.schema.json), исходы — [`events-unit-alarms.outcomes.tsv`](../../data/events-unit-alarms.outcomes.tsv); версия формы 1; норма — P/05 N1.2; the event journal contract.
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
@@ -606,32 +564,11 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
-#### `<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
+#### `<events root>/audit/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
 
-Схема — [`events-console.schema.json`](../../data/events-console.schema.json), исходы — [`events-console.outcomes.tsv`](../../data/events-console.outcomes.tsv); версия формы 1; норма — P/05 Н1.2; договор журнала событий.
-
-| Ключ | Тип и границы | Обязательность | Урок | Смысл |
-|---|---|---|---|---|
-| `t` | время (P/01.1 N0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
-| `kind` | строка | обязателен |  | the event kind |
-| `id` | строка | обязателен |  | `e1-<hexUTF8(tree)>-<hexUTF8(unit)>-<epoch>-<hexUTF8(instance)>-<number>`; unique, duplicate copies are removed by it |
-| `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
-| `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
-| `occurred` | время (P/01.1 N0 «Время в строке») | необязателен |  | when it happened; optional |
-| `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
-| `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
-
-Исходы нечитаемого файла (читатель — роль; `*` — все читатели семьи):
-
-| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
-|---|---|---|---|---|---|
-| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
-
-#### `<корень событий>/console.alarms/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
-
-Схема — [`events-console-alarms.schema.json`](../../data/events-console-alarms.schema.json), исходы — [`events-console-alarms.outcomes.tsv`](../../data/events-console-alarms.outcomes.tsv); версия формы 1; норма — P/05 Н1.2; договор журнала событий.
+Схема — [`events-audit.schema.json`](../../data/events-audit.schema.json), исходы — [`events-audit.outcomes.tsv`](../../data/events-audit.outcomes.tsv); версия формы 1; норма — P/05 N1.2; the event journal contract.
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
@@ -648,11 +585,11 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
-#### `<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
+#### `<events root>/audit.alarms/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
 
-Схема — [`events-mirror.schema.json`](../../data/events-mirror.schema.json), исходы — [`events-mirror.outcomes.tsv`](../../data/events-mirror.outcomes.tsv); версия формы 1; норма — P/05 Н1.4 mirror.
+Схема — [`events-audit-alarms.schema.json`](../../data/events-audit-alarms.schema.json), исходы — [`events-audit-alarms.outcomes.tsv`](../../data/events-audit-alarms.outcomes.tsv); версия формы 1; норма — P/05 N1.2; the event journal contract.
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
@@ -669,11 +606,74 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
-#### `<корень событий>/.workers/<sub>/<экземпляр>.lock` — файл
+#### `<events root>/console/<instance>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
 
-Схема — [`presence-lock.schema.json`](../../data/presence-lock.schema.json), исходы — [`presence-lock.outcomes.tsv`](../../data/presence-lock.outcomes.tsv); версия формы 1; норма — P/05 Н1.4; договор замка присутствия.
+Схема — [`events-console.schema.json`](../../data/events-console.schema.json), исходы — [`events-console.outcomes.tsv`](../../data/events-console.outcomes.tsv); версия формы 1; норма — P/05 N1.2; the event journal contract.
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `t` | время (P/01.1 N0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `kind` | строка | обязателен |  | the event kind |
+| `id` | строка | обязателен |  | `e1-<hexUTF8(tree)>-<hexUTF8(unit)>-<epoch>-<hexUTF8(instance)>-<number>`; unique, duplicate copies are removed by it |
+| `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
+| `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
+| `occurred` | время (P/01.1 N0 «Время в строке») | необязателен |  | when it happened; optional |
+| `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
+| `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
+
+Исходы нечитаемого файла (читатель — роль; `*` — все читатели семьи):
+
+| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
+|---|---|---|---|---|---|
+| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+
+#### `<events root>/console.alarms/<instance>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
+
+Схема — [`events-console-alarms.schema.json`](../../data/events-console-alarms.schema.json), исходы — [`events-console-alarms.outcomes.tsv`](../../data/events-console-alarms.outcomes.tsv); версия формы 1; норма — P/05 N1.2; the event journal contract.
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `t` | время (P/01.1 N0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `kind` | строка | обязателен |  | the event kind |
+| `id` | строка | обязателен |  | `e1-<hexUTF8(tree)>-<hexUTF8(unit)>-<epoch>-<hexUTF8(instance)>-<number>`; unique, duplicate copies are removed by it |
+| `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
+| `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
+| `occurred` | время (P/01.1 N0 «Время в строке») | необязателен |  | when it happened; optional |
+| `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
+| `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
+
+Исходы нечитаемого файла (читатель — роль; `*` — все читатели семьи):
+
+| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
+|---|---|---|---|---|---|
+| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+
+#### `<events root>/.mirror/<server>/<tree>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
+
+Схема — [`events-mirror.schema.json`](../../data/events-mirror.schema.json), исходы — [`events-mirror.outcomes.tsv`](../../data/events-mirror.outcomes.tsv); версия формы 1; норма — P/05 N1.4 mirror.
+
+| Ключ | Тип и границы | Обязательность | Урок | Смысл |
+|---|---|---|---|---|
+| `t` | время (P/01.1 N0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `kind` | строка | обязателен |  | the event kind |
+| `id` | строка | обязателен |  | `e1-<hexUTF8(tree)>-<hexUTF8(unit)>-<epoch>-<hexUTF8(instance)>-<number>`; unique, duplicate copies are removed by it |
+| `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
+| `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
+| `occurred` | время (P/01.1 N0 «Время в строке») | необязателен |  | when it happened; optional |
+| `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
+| `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
+
+Исходы нечитаемого файла (читатель — роль; `*` — все читатели семьи):
+
+| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
+|---|---|---|---|---|---|
+| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+
+#### `<events root>/.workers/<sub>/<instance>.lock` — файл
+
+Схема — [`presence-lock.schema.json`](../../data/presence-lock.schema.json), исходы — [`presence-lock.outcomes.tsv`](../../data/presence-lock.outcomes.tsv); версия формы 1; норма — P/05 N1.4; the presence lock contract.
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
@@ -687,11 +687,11 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| файл целиком | `resource` | the content is empty or out of form (not a JSON object, a field missing, a field out of form, an extra field): the lock is busy — a live process without a number: it enters `room.<sub>`, does not enter workers, running, `live.<sub>`; the lock is taken by the resource and the check matched — gone by the file, there is no key `<sub>/<worker>`, the file MAY be deleted; unknown — a file that cannot be read (an open or read error), and an flock or fstat/stat error, except «busy» and ENOENT at stat (the Architect's decision of 2026-10-20, analysis of review of stage B 6–7), not its content (analysis of review of stage B 3–5, № 23) | 0 | строка | договор замка присутствия «Lock», «Счёт room»; P/05 Н1.4 workers, room |
+| файл целиком | `resource` | the content is empty or out of form (not a JSON object, a field missing, a field out of form, an extra field): the lock is busy — a live process without a number: it enters `room.<sub>`, does not enter workers, running, `live.<sub>`; the lock is taken by the resource and the check matched — gone by the file, there is no key `<sub>/<worker>`, the file MAY be deleted; unknown — a file that cannot be read (an open or read error), and an flock or fstat/stat error, except «busy» and ENOENT at stat (the Architect's decision of 2026-10-20, analysis of review of stage B 6–7), not its content (analysis of review of stage B 3–5, № 23) | 0 | row | договор замка присутствия «Lock», «Счёт room»; P/05 Н1.4 workers, room |
 
-#### `.gone/<ключ>` — объект
+#### `.gone/<object-key>` — объект
 
-Схема — [`gone.schema.json`](../../data/gone.schema.json), исходы — [`gone.outcomes.tsv`](../../data/gone.outcomes.tsv); версия формы 1; норма — P/05 Н1.1 «Надгробия»; P/06.1 Н3 «уборка тел»; договор надгробий.
+Схема — [`gone.schema.json`](../../data/gone.schema.json), исходы — [`gone.outcomes.tsv`](../../data/gone.outcomes.tsv); версия формы 1; норма — P/05 N1.1 «Tombstones»; P/06.1 N3 «body cleanup»; the tombstone contract.
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
@@ -705,7 +705,7 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| объект целиком | `resource` | the whole object is unreadable: the neighbour does not drop the copy, the deleter does not append confirmations and does not remove the tombstone — an unknown outcome is not a confirmation (the tombstones contract garbled); the cause goes to the pass log (layout audit, G-10; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/05 Н1.1 «Надгробия» |
+| объект целиком | `resource` | the whole object is unreadable: the neighbour does not drop the copy, the deleter does not append confirmations and does not remove the tombstone — an unknown outcome is not a confirmation (the tombstones contract garbled); the cause goes to the pass log (layout audit, G-10; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | row | P/05 Н1.1 «Надгробия» |
 <!-- families:end -->
 
 ---
@@ -923,7 +923,7 @@ mirror:  platform/mirror не читается → шаг не исполняе�
 | 42 | `42-heartbeat-units`: `units` пульса ресурса — id единиц из `status` живого воркера по возрастанию байтов (G08) | N1.4 `heartbeat` (E39), `running` |
 | 43 | `43-spoiled-object-door`: испорченный объект — дверь отдаёт как есть: листинг и `GET` 200 (G08) | N1.1 `door`; «Решает реализация» п. 8 (C05-SPOIL-OBJECT-BYTES-01) |
 | 44 | `44-objects-door-family`: `objects.door` манифеста — `testsub2/tickets/t1` (`@put object` из `inputs/`) — `GET` 200 и в листинге; `testsub/tickets/t1` без `objects` у манифеста — 403 (G01) | N1.1 `door`; N2; N4 |
-| 45 | `45-gone-door`: надгробие `.gone/<ключ>` (`@put object` из `inputs/`) — вне обычного листинга, `prefix=.gone/` и `GET` тела — чтение, `PUT` — 405; копия старше — 409, ключа нет; новее — 204 с исходным `written`, надгробие снято тем же действием (G02) | N1.1 `written` (C05-GONE-REWRITE-AT-WRITE-01), `door` (C05-GONE-BODY-READ-01); N4 «удалено позже»; [договор надгробий](../../../common/ru/contracts/tombstone.md) `listing`, `rewrite` |
+| 45 | `45-gone-door`: надгробие `.gone/<object-key>` (`@put object` из `inputs/`) — вне обычного листинга, `prefix=.gone/` и `GET` тела — чтение, `PUT` — 405; копия старше — 409, ключа нет; новее — 204 с исходным `written`, надгробие снято тем же действием (G02) | N1.1 `written` (C05-GONE-REWRITE-AT-WRITE-01), `door` (C05-GONE-BODY-READ-01); N4 «удалено позже»; [договор надгробий](../../../common/ru/contracts/tombstone.md) `listing`, `rewrite` |
 
 TSV наблюдает только перечисленные шаги. Остальные свидетельства перечислены отдельно
 в README приёмки: запись/чтение бакетов и реальные барьеры fsync, retention/holds, зеркало и поток с обрывом, free_ask
@@ -938,7 +938,7 @@ TSV наблюдает только перечисленные шаги. Ост�
 
 Реализация обязана назвать в своём описании:
 
-1. **хранилище объектов на коробке и в кластере** — раскладка на диске (каталоги, надгробия удаления `.gone/<ключ>` — договор надгробий) и пределы размера; адрес `OBJECTS` и обращение клиента — [договор клиента хранилища объектов](../../../common/ru/contracts/object-client.md) (C10-OBJECT-ADDRESS-32);
+1. **хранилище объектов на коробке и в кластере** — раскладка на диске (каталоги, надгробия удаления `.gone/<object-key>` — договор надгробий) и пределы размера; адрес `OBJECTS` и обращение клиента — [договор клиента хранилища объектов](../../../common/ru/contracts/object-client.md) (C10-OBJECT-ADDRESS-32);
 2. ~~**как ресурс узнаёт присутствие процессов**~~ — нормировано: [договор замка присутствия](../../../common/ru/contracts/presence-lock.md) `presence_lock` (второй пилот, N-1);
 3. **политика вытеснения кэша индекса** в пределах 64 MiB (N1.3); число полос слияния (8) и срок (3 с) — норма [P/06.4](../../../06-console/ru/spec/06.4-console.norms.md) N3 «слияние», не выбор;
 4. **долгий опрос `/events/wait`**: устройство памяти наблюдений и развёртываемый предел ожиданий; формы want/ответа и профиль таймаута — N1.6, не выбор;

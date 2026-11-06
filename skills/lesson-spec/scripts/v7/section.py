@@ -599,7 +599,6 @@ KIND_WORD = {"row": "строка", "object": "объект", "file": "файл"
 KIND_WORD_EN = {"row": "row", "object": "object", "file": "file"}
 UNREADABLE = {"row": "нечитаемой строки", "object": "нечитаемого объекта", "file": "нечитаемого файла"}
 UNREADABLE_EN = {"row": "an unreadable row", "object": "an unreadable object", "file": "an unreadable file"}
-UNIT_EN = {"строка": "row", "поле": "field", "элемент": "element"}   # значения `unit` исходов (spec.UNITS) — словами блока
 CATALOG = Path("Platform/common/data/catalog.tsv")
 CODEC = Path("Platform/common/data/codec.tsv")
 
@@ -651,6 +650,6 @@ def build_families_section(norms, root, families, lang="ru"):
             out.append("| %s | %s | %s | %d | %s | %s |" % (
                 "`%s`" % code_cell(o.path) if o.path else t("%s целиком", "the whole %s") % kind_word[row["kind"]],
                 "`%s`" % o.reader if o.reader != "*" else "*", cell(o.outcome), o.priority,
-                UNIT_EN.get(o.unit, o.unit) if lang == "en" else o.unit, cell(o.norm)))
+                o.unit, cell(o.norm)))
         out.append("")
     return "\n".join(out)

@@ -4,25 +4,25 @@ This English text is the source; the Russian translation `ru/contracts/tombstone
 
 A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): several processes write and read a tombstone — a contract,
 not copies in chapters; the stage C guess C06-BLOB-GC-33-01 / IF-OBJECT-TOMBSTONE63-PEERS-01, the Architect's decision of 2026-10-25).
-The owner is lesson [P/05](../../05-resource/spec/05-resource.norms.md) (N1.1 «Tombstones»; the family `.gone/<key>` —
+The owner is lesson [P/05](../../05-resource/spec/05-resource.norms.md) (N1.1 «Tombstones»; the family `.gone/<object-key>` —
 [the catalogue](../data/catalog.tsv), the form — [`gone.schema.json`](../../05-resource/data/gone.schema.json), the outcomes —
 [`gone.outcomes.tsv`](../../05-resource/data/gone.outcomes.tsv)). The participants are the console: it writes a tombstone at the completion of the body sweep
 window ([P/06.1](../../06-console/spec/06.1-console.norms.md) N3 «body sweep»); the resource: it drops copies by the tombstones
 of a neighbour, appends acknowledgements and removes the tombstone (P/05 N1.1 «Bodies at the resource», «Tombstones»).
 
-Moved from P/05 N1.1 «Tombstones» (formerly М10/10 N1.5 `delete`) without a change of behaviour; new is the rule `peers`
+Moved from P/05 N1.1 «Tombstones» (formerly M10/10 N1.5 `delete`) without a change of behaviour; new is the rule `peers`
 (the section «Neighbours»): formerly the source and the completeness of the list were not named.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
 ```yaml
-tombstone: .gone/<key> at the deleter — an object {written, peers, acked}: written — the wall seconds of the deletion, peers —
+tombstone: .gone/<object-key> at the deleter — an object {written, peers, acked}: written — the wall seconds of the deletion, peers —
            the neighbours of the ring that could have had a copy (the section «Neighbours»), acked — those who acknowledged, acked ⊆ peers (journal
            of cammeta-go, lesson 10 № 2); the object door has no DELETE; the door does not accept writes and deletes of .gone/
 listing:   an ordinary listing does not show .gone/; /v1/objects?prefix=.gone/ is a read-only listing of tombstones;
-           GET /v1/objects/.gone/<key> is the body of the tombstone, read only (C05-GONE-BODY-READ-01)
+           GET /v1/objects/.gone/<object-key> is the body of the tombstone, read only (C05-GONE-BODY-READ-01)
 garbled:   an unreadable tombstone (gone.outcomes.tsv, the whole object) is an unknown outcome: a neighbour does not drop the copy,
            the deleter does not append acknowledgements and does not remove the tombstone; a new write of the key at the deleter is not refused:
            written by the former rules of P/05 N1.1 `written`, the tombstone stays until the next put of the console (bodies are addressed
@@ -56,7 +56,7 @@ order:     the order of the elements of peers and acked is not normed; there are
 
 ```yaml
 drop:      a neighbour once per 10 min (the resource pass, P/05 N3) reads the tombstones of the deleter — finds them by the listing prefix=.gone/, by the body
-           (GET .gone/<key>) takes written of the deletion: written of the listing is the mark of the tombstone write, it grows with each
+           (GET .gone/<object-key>) takes written of the deletion: written of the listing is the mark of the tombstone write, it grows with each
            appended acked and does not name the deletion (C05-GONE-BODY-READ-01) — and drops its own
            copy older than written; a copy than which the tombstone of the deleter is newer is not accepted (P/05 N4, «deleted later» — 409)
 ```

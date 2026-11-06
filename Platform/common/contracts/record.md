@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/contracts/record.md
 
 A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common algorithm of several processes is a contract, not
 copies in chapters; analysis of review of stage A 8–10, № 13 / decision 2). The owner is lesson P/08, chapter [8.8](../../08-domain/spec/08.8-domain.norms.md) (moved from
-М11/10 N1.1, N3 «record»): the process `domain` of the holder
+M11/10 N1.1, N3 «record»): the process `domain` of the holder
 signs with the issuing key the record of its term, the backup document and the handover grant. They are checked by the function `record`:
 
 | Who | Where | Kinds |
@@ -14,16 +14,16 @@ signs with the issuing key the record of its term, the backup document and the h
 | the cluster console ([P/06.7](../../06-console/spec/06.7-console.norms.md) N1.14; the vectors `resolve`) and the agent (9.1) | the shared document ([P/08.9](../../08-domain/spec/08.9-domain.norms.md) N1.2 `document`; N3 «take the document» step 4 — [P/09.1](../../09-agent/spec/09.1-agent.norms.md)) | the shared document |
 | the token issue (8.7) | the shared document of the scenario ([P/08.7](../../08-domain/spec/08.7-domain.norms.md) N3 step 5) | the shared document checked by the agent |
 
-Moved from М11/10 N1.1 (the row `domain/holder` and the block `doc`), N3 «`record(keys, row, kinds)`» (the paragraph about the kinds and steps
+Moved from M11/10 N1.1 (the row `domain/holder` and the block `doc`), N3 «`record(keys, row, kinds)`» (the paragraph about the kinds and steps
 1–6) and N4 (the words of `record`) without a change of behaviour. The owner keeps: `claim` and `check` of the term record (N1.1), the forms
 of the backup document (N1.5) and of the grant (N1.7), the issuing key (`issuing_key_secret`, [P/08.2](../../08-domain/spec/08.2-domain.norms.md) N1.3), the kind «shared
-document» ([P/08.9](../../08-domain/spec/08.9-domain.norms.md) N1.2 `document`, `signature`). References in the moved text: «N1.x», «N3» — of lesson М11/10 (N1.1, N1.5, N1.7 — the same numbers of chapter P/08.8; N3 «follow» —
-P/09.1 N3 «follow», «check the backup copy»); «lesson N» — lesson М11/N, their addresses now: «lesson 3» (the agent carries
+document» ([P/08.9](../../08-domain/spec/08.9-domain.norms.md) N1.2 `document`, `signature`). References in the moved text: «N1.x», «N3» — of lesson M11/10 (N1.1, N1.5, N1.7 — the same numbers of chapter P/08.8; N3 «follow» —
+P/09.1 N3 «follow», «check the backup copy»); «lesson N» — lesson M11/N, their addresses now: «lesson 3» (the agent carries
 reports) — P/09.1 N3 and P/08.3 N2, «lesson 11» (the shared document) — P/08.9 N1.2 (analysis of review of stage B 8–10, № 22; Kimi
 SB810-07); `keys` — the accepted set ([the domain key set contract](keys.md)). What is common to the forms — the [domain founding contract](domain-founding.md)
 «Common rules of forms» (layout audit, B-03).
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -31,7 +31,7 @@ The kinds of the document: the closed set of the backup copy — `Platform/08-do
 
 ## The term record `domain/holder`
 
-From М11/10 N1.1 (the form of the family — `Platform/08-domain/data/holder.schema.json` (outcomes — `Platform/08-domain/data/holder.outcomes.tsv`); C04-DEP-OBS-HEARTBEAT-01 — the data files named by a contract are in the reading of `common`, ADR-0083 addendum (32) item 1):
+From M11/10 N1.1 (the form of the family — `Platform/08-domain/data/holder.schema.json` (outcomes — `Platform/08-domain/data/holder.outcomes.tsv`); C04-DEP-OBS-HEARTBEAT-01 — the data files named by a contract are in the reading of `common`, ADR-0083 addendum (32) item 1):
 
 ```yaml
 domain/holder:   {doc: <the JCS text of the document>}       # at the holder — written by the process domain (claim); at a member — by the agent (N3 «follow»)
@@ -42,7 +42,7 @@ domain/holder:   {doc: <the JCS text of the document>}       # at the holder —
     url:         the address of the door of the holder's process domain — SIGNER_URL of the environment of this process, without it
                  http://localhost:8445 (a one-machine stand) — agents carry reports there (lesson 3); at
                  a holder of several nodes — an address that reaches any node of the cluster, not one server
-                 (the queue of the process domain — P/08.10 N1.7; added by М11/12)
+                 (the queue of the process domain — P/08.10 N1.7; added by M11/12)
     ca?:         [<fingerprint>…], 1–2 — the holder's centre (P/08.3 N1.6; ADR-0075 clarification 2)
     key?:        hex of the key of the holder member; at term 1 before the first report of its agent there is no field (ADR-0113 addendum (3) item 2)
     at:          wall-clock seconds of the signature; a change of the centre or the appearance of the key — a reissue of the same term with a greater at: at strictly grows, a clock going back — the former + 0.001
@@ -63,7 +63,7 @@ the condition is read by the process `domain` of the holder and by the agent of 
 ```yaml
 switch:      at the holder's cluster the rows domain/keys, domain/revoked, domain/holder, its own domain/break-glass/<cluster> and
              the pointer domain/shared are written by the process domain, and the agent of this cluster does not write them — while the record domain/holder
-             of its own store passes record by the follow set of the agent (the key set contract «The follow set»; added by the Quint model of М11,
+             of its own store passes record by the follow set of the agent (the key set contract «The follow set»; added by the Quint model of M11,
              G1) and names this cluster as the holder (P/09.1 N1.4 holder_cluster). The condition of the agent is
              only by the record: «domain/signer not forgotten» is a condition of the process domain, domain/signer is not open to the agent; forget
              comes only after a record of a foreign greater term (P/08.8 N1.6 yields), therefore the record «the holder is this cluster» and forgotten
@@ -72,7 +72,7 @@ switch:      at the holder's cluster the rows domain/keys, domain/revoked, domai
              only write into these rows before the point). From it the process yields and writes these rows no more, the agent writes
              them as at any member. The process sees the point at its first check after it (the check is on every pass and
              every request): the window lasts until the next check, no longer than a pass; its edits in the window go into stranded
-             (added by the Quint model of М11, SW). At the target — mirrored: claim of a new term (P/08.8 N1.1) is the point, from it the agent of the target does not write them
+             (added by the Quint model of M11, SW). At the target — mirrored: claim of a new term (P/08.8 N1.1) is the point, from it the agent of the target does not write them
              (a record naming the target came before claim — the agent already does not write these rows, the process writes them from claim)
 ```
 
@@ -94,7 +94,7 @@ member_name:  a member name — CLUSTER of its installation: 1–64 characters [
 
 ## The function `record`
 
-From М11/10 N3 «`record(keys, row, kinds)` — запись срока или документ с подписью N1.1, по порядку»:
+From M11/10 N3 «`record(keys, row, kinds)` — a term record or a signed document of N1.1, in order»:
 
 `kinds` is the closed set of document kinds that the caller accepts. This lesson calls record with the three kinds of step 1; the agent, the holder and the relay — also with the kind «members row» (the section «The members row»);
 chapter 8.9 — with the one kind «shared document» (P/08.9 N1.2 document; N3 «take the document» step 4 — P/09.1). Steps 2–5 are common
@@ -112,7 +112,7 @@ as `depth` of links, [the V7 layers](../LAYERS.md) § 5); deeper than 64 — `no
    an integer ≥ 1, members — a list of member names without repeats, state — {<row key>: {<element>: <text>}}, objects —
    an object, raw — {<key>: a base64 string RFC 4648 §4 with padding, "" — 0 bytes}, a key of raw is not a key of objects (C08-BACKUP-JSON-99, the Architect's decision of 2026-10-26), backup_key_rev — an integer ≥ 1,
    holder_member_key — hex of 32 bytes, parts — {<part>: {sha256, rev, key_rev}}, counts — {servers, cameras} (P/08.8 N1.5a); at the grant grant — "handover", to and from —
-   member names, rev — an integer ≥ 1 (the kinds and the types — added by the М11 reconciliation, H9, H11, H12); at the members row part — four digits 0000…4095, rev — an integer ≥ 1, members — {<member name>: object}, the part of each name (P/08.3 N1.1) equals part, gathered — {term, rev}, integers ≥ 1, or null, new — a list of names from members; at the term record key — hex of 32 bytes; at a term record with term 1 — the field
+   member names, rev — an integer ≥ 1 (the kinds and the types — added by the M11 reconciliation, H9, H11, H12); at the members row part — four digits 0000…4095, rev — an integer ≥ 1, members — {<member name>: object}, the part of each name (P/08.3 N1.1) equals part, gathered — {term, rev}, integers ≥ 1, or null, new — a list of names from members; at the term record key — hex of 32 bytes; at a term record with term 1 — the field
    restored_from; domain, kid and sig step 1 does not check by content (any JSON type of domain — step 2; kid — any
    string, sig — any string: steps 3–5) — one rule for all kinds, the shared document included (guess of stage C REC-G01, the Architect's decision of 2026-10-23)
                                                                                  → not_a_record
@@ -148,7 +148,7 @@ take(keys, row, part, have):
 
 ## Refusal words
 
-From М11/10 N4: the words of `record`: `not_a_record`, `another_domain`, `revoked_issuer`, `unknown_issuer`, `bad_signature`; of `take` — also `another_part`, `older`, `same`. What
+From M11/10 N4: the words of `record`: `not_a_record`, `another_domain`, `revoked_issuer`, `unknown_issuer`, `bad_signature`; of `take` — also `another_part`, `older`, `same`. What
 the caller does with a refusal (not to follow, the journal `domain.follow.refused`, `domain.shared.refused`, to yield) — the norms
 of the caller (P/08.8 N1.6; P/09.1 N3 «follow», «take the document»).
 
@@ -156,15 +156,15 @@ of the caller (P/08.8 N1.6; P/09.1 N3 «follow», «take the document»).
 
 The package [`record`](../vectors/record/README.md) (analysis of review of stage A 8–10, № 13): `shared.tsv` — 8 lines of the kind «shared
 document» (REC-G01); `cases.tsv` — 46 lines: 10 of the kind «members row» (`record-member-row-*`), 1 of a term record with `key`, 7 by C08-BACKUP-JSON-99 (`raw` of the backup document: the bytes `ff7b` — `/3s=`, 0 bytes — `""`, a JSON out of form « [ 1.00 ] » — its bytes; an object in form — into `objects`; without padding, base64url and a key both in `objects` and in `raw` — `not_a_record`), 1 by C137-SCHEMA-TIME-01 (`until` beyond binary64 — code 2), 3 by REC-TRUSTED-TIME73 (the time `until` of the trusted set by the canon of P/01.1 N0: a string of the record is accepted, −1 and «1e9» — code 2), 4 by REC-G02 (nesting 64/65 of the text `doc`, of the row and of `keys`), 3 by REC-G01 (term 1 with `restored_from`, `domain` as a number, `kid` not hex) and 17 — the inputs of the command `record`
-of the acceptance of М11/10 (sc. 05) without a change of bytes: three kinds of document, a foreign domain, a revoked and an unknown issuer,
+of the acceptance of M11/10 (sc. 05) without a change of bytes: three kinds of document, a foreign domain, a revoked and an unknown issuer,
 `kid` ≠ `issuer`, a substitution, forms and types; one line is an input out of form (`@exit 2`; analysis of review of stage B 8–10, № 22); the scenario and the inputs were removed by the move
 of lesson 8 — the table is the only source of these cases. The form of the function and the exit codes of the command are a copy of
 [P/08.8](../../08-domain/spec/08.8-domain.norms.md) N5 `record`, `exit` (layout audit, the Architect's decision of 2026-10-25, B-14):
 
 ```yaml
 record:    input {keys: <the set document>, row: {doc}}; output {result: ok, term, holder} | {result: refused, reason}
-exit:      0 — computed; 2 — the input is out of form; exit codes follow the principle of the vocabulary of «Domain stand» («Коды выхода команд-векторов»: 2 — the form
-           of a trusted input, 0 with a word — a document of another cluster; the Architect's decision on the М11 reconciliation, H14):
+exit:      0 — computed; 2 — the input is out of form; exit codes follow the principle of the vocabulary of «Domain stand» («Exit codes of vector commands»: 2 — the form
+           of a trusted input, 0 with a word — a document of another cluster; the Architect's decision on the M11 reconciliation, H14):
            keys of record is a trusted set document of chapter 8.2 N1.2 of a closed form: a field is absent (revoked_issuing,
            sig, domain), issuing is not a list, keys null — 2; the signature of the set was checked at the write (the function keys of the domain key set
            contract), the function does not check it — a spoiled sig is not a refusal; record has no row, an extra field, the input is not an object — 2; row (null, a string,
@@ -180,7 +180,7 @@ of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; AD
 
 ## Correspondence to former lessons
 
-From М11/10 (analysis of review of stage A 8–10, № 13 / decision 2): N1.1 — the row `domain/holder` with the block `doc` (here «The term
+From M11/10 (analysis of review of stage A 8–10, № 13 / decision 2): N1.1 — the row `domain/holder` with the block `doc` (here «The term
 record»; `claim` and `check` stayed); N3 «record» — the paragraph about the kinds and steps 1–6 (here «The function `record`»); N4 — the phrase about the words of
-`record` (here «Refusal words»). Parts of the norms М11/10-01 (the term record and `record`) and М11/11-04 (the check of the shared document) —
+`record` (here «Refusal words»). Parts of the norms M11/10-01 (the term record and `record`) and M11/11-04 (the check of the shared document) —
 by `note` of [id-map](../id-map.tsv).

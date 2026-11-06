@@ -13,15 +13,15 @@ Moved from P/05 N1.1 (`api`, `ops`, `cluster`, `written`, the key and the prefix
 door, `scope`, refusals) without a change of behaviour; the door side (request parsing, admission, the layout on disk, limits) is in
 P/05, P/05 refers here.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
 The wire of the resource's object door is `Platform/05-resource/spec/05-resource.api.openapi.yaml`
 ([OpenAPI](../../05-resource/spec/05-resource.api.openapi.yaml); it enters the reading of `common` by ADR-0083 addendum (33) item 1):
 `GET /v1/objects` (`ObjectListing`), `GET /v1/objects/{key}` (bytes, the headers `X-Written`, `X-Server`, `X-Missing`),
-the refusals `ResourceError`, `ResourceDenied`. Tombstones `.gone/<key>` — [the tombstone contract](tombstone.md). The door row
-`platform/doors/<server>` (the address of the read door with a bare `cluster://`, the section «Address» `door`) — the form
+the refusals `ResourceError`, `ResourceDenied`. Tombstones `.gone/<object-key>` — [the tombstone contract](tombstone.md). The door row
+`platform/doors/<host>` (the address of the read door with a bare `cluster://`, the section «Address» `door`) — the form
 `Platform/05-resource/data/doors.schema.json`, the outcomes `Platform/05-resource/data/doors.outcomes.tsv`
 ([form](../../05-resource/data/doors.schema.json), [outcomes](../../05-resource/data/doors.outcomes.tsv); P/05 N1.4 `door_row`).
 
@@ -81,7 +81,7 @@ written:   the mark of the keeper resource at the write of a key (X-Written, wri
 missing:   a server that did not answer is missing (X-Missing), not the absence of the object; 404 — «absent among those that answered»: with
            an incomplete poll X-Missing is mandatory, completeness is not derived from the code 404 itself
 listing:   the closed form ObjectListing; only the keys of the door families under prefix — a filter, not a refusal; deleted objects are
-           tombstones .gone/<key>: the ordinary listing does not show them, prefix=.gone/ — a read-only listing of tombstones
+           tombstones .gone/<object-key>: the ordinary listing does not show them, prefix=.gone/ — a read-only listing of tombstones
 ```
 
 ## Outcomes and what the client does

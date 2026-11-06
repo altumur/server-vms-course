@@ -8,16 +8,16 @@ processes (P/05 N1.4 `workers`, `running`, `unknown`, `presence`) and the count 
 `door_row`). The lock is held by the worker — the worker's side: chapter [P/03.2](../../03-worker/spec/03.2-worker.norms.md) N3
 «start()», step 2b; the number `room.<sub>` is read by the controller ([P/04](../../04-controller/spec/04-controller.norms.md) N3
 «shortage(), order(), withdraw the order, shrink() — with grows: true»); the layout of the events root — [P/02.4 N1.2](../../02-installer/spec/02.4-installer.norms.md) «The setting channel
-and the layout of `PLATFORM_DIR`». Moved from М10/8 N1.4 (`presence_lock`, `room`) and М10/11 N1.4 (`presence`) without a change of
+and the layout of `PLATFORM_DIR`». Moved from M10/8 N1.4 (`presence_lock`, `room`) and M10/11 N1.4 (`presence`) without a change of
 behaviour; the derivation of the presence words from the fields of the resource heartbeat — P/05 N1.4 `presence`.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
 The content of the lock is the family `presence-lock`: `Platform/05-resource/data/presence-lock.schema.json`,
 `Platform/05-resource/data/presence-lock.outcomes.tsv`; the elements `room.<sub>`, `live.<sub>` are written into the door row
-`platform/doors/<server>` — `Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv`
+`platform/doors/<host>` — `Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv`
 (layout audit, V-45; the Architect's decision of 2026-10-25).
 
 ## Lock
@@ -106,6 +106,6 @@ The package [`presence-room`](../vectors/presence-room/README.md) (the count `ro
 
 ## Correspondence to former lessons
 
-From М10/8 N1.4 (stage B, analysis of the review of stage A 3–5, № 9): `presence_lock` whole and `room` (at P/05 N1.4 `room` is
-a reference here); from М10/11 N1.4 — `presence`. Part of the norm М10/8-10 (the lock and the count `room`; P/05-07) — by `note` of
-[id-map](../id-map.tsv); the worker's side (step 2b «start()» of М10/5) — chapter P/03.2, a part of М10/5 by the id-map of lesson 3.
+From M10/8 N1.4 (stage B, analysis of the review of stage A 3–5, № 9): `presence_lock` whole and `room` (at P/05 N1.4 `room` is
+a reference here); from M10/11 N1.4 — `presence`. Part of the norm M10/8-10 (the lock and the count `room`; P/05-07) — by `note` of
+[id-map](../id-map.tsv); the worker's side (step 2b «start()» of M10/5) — chapter P/03.2, a part of M10/5 by the id-map of lesson 3.

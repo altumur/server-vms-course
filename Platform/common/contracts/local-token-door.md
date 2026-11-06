@@ -4,19 +4,19 @@ This English text is the source; the Russian translation `ru/contracts/local-tok
 
 A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common contract can appear before the move
 of the owner lesson; analysis of review of stage A 8–10, № 1 / decision 1). The owner is [chapter 9.1](../../09-agent/spec/09.1-agent.norms.md) of lesson P/09 (N1.6,
-P/09.1-10; the source is М11/7 N1.2): the member's agent listens on the local door and passes the request on to the
+P/09.1-10; the source is M11/7 N1.2): the member's agent listens on the local door and passes the request on to the
 holder. The participant is the worker, chapter [P/03.7](../../03-worker/spec/03.7-worker.norms.md) N1.5: it asks for a token through this door.
 The socket units — [P/02.4 N1.1](../../02-installer/spec/02.4-installer.norms.md); the variable `AGENT_TOKEN_DIR` — in the life
 cycles of the [agent](../../09-agent/lifecycle.md) and of the [worker](../../03-worker/lifecycle.md). The holder's door, the issue and the
 claims of a token — chapter [P/08.7](../../08-domain/spec/08.7-domain.norms.md) (N1.3, N1.4, N3); the form of a token — the [domain token contract](domain-token.md).
 
-Moved from М11/7 N1.2 (the block `door`, `body`, `request`, `TOKEN_BODY`, `answer`, `no_queue`, `TOKEN_WAIT`) and the rows of N4
-«у агента» without a change of behaviour. The section «The role socket» is a change of behaviour (the Architect's decision of 2026-10-20, ADR-0083 addendum
-(13)): formerly the transport and the port were a choice of the implementation (М11/12 N1.8 `local_door`, М11/12 «Implementation decides» item 3, М11/7
+Moved from M11/7 N1.2 (the block `door`, `body`, `request`, `TOKEN_BODY`, `answer`, `no_queue`, `TOKEN_WAIT`) and the rows of N4
+«at the agent» without a change of behaviour. The section «The role socket» is a change of behaviour (the Architect's decision of 2026-10-20, ADR-0083 addendum
+(13)): formerly the transport and the port were a choice of the implementation (M11/12 N1.8 `local_door`, M11/12 «Implementation decides» item 3, M11/7
 «Implementation decides» item 1). ADR-0080 item 2 («the mechanics of a side» is decided by the implementation) does not apply to this door: the door
 connects processes of different implementations on one box, and the witnesses already differ in the socket name.
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -62,7 +62,7 @@ whose cluster's agent is on another server is not normed until the stand; the pl
 
 ## The door
 
-From М11/7 N1.2:
+From M11/7 N1.2:
 
 ```yaml
 door:       POST /tokens/<sub>/<kind> at the agent of its own cluster; the identity of the connection is the worker role by one of the ways of
@@ -70,11 +70,11 @@ door:       POST /tokens/<sub>/<kind> at the agent of its own cluster; the ident
 body:       {request_id, ref, by?, revoked?} — request_id 1–64 [A-Za-z0-9_-]; ref, by — non-empty strings; revoked — the jti of a token that the recipient refused with the word revoked (P/08.7 N1.3), 16 hex; larger than TOKEN_BODY — 413
 request:    the header Transfer-Encoding in the request (chunked together with Content-Length included) — 400; <sub> of the path is not a manifest
             of the catalogue — 404 at the agent, the request does not go to the holder (a kind not declared by the manifest — the holder decides, 403
-            not_granted); added by the М11 reconciliation, T7, T8
+            not_granted); added by the M11 reconciliation, T7, T8
 TOKEN_BODY: 4 KiB          # the limit of the client's body at the local door of the agent; the bytes of the body as received are measured
 TOKEN_HOLDER_BODY: 4608    # the limit of the body at the holder's door POST /api/tokens/<member>/<sub>/<kind> (P/08.7 N1.3): = TOKEN_BODY + 512
                            # for what the agent adds (role and the JSON wrapping): a body of exactly TOKEN_BODY at the local door does not get
-                           # 413 at the holder; the bytes of the body as received are measured (journal of cammeta-go, М11-07 № 4; moved from P/08.7
+                           # 413 at the holder; the bytes of the body as received are measured (journal of cammeta-go, M11-07 № 4; moved from P/08.7
                            # N1.3 without a change; layout audit, the Architect's decision of 2026-10-25, A-19)
 refusal_413: 413 {error: "refused", detail} — a body larger than TOKEN_BODY at the local door of the agent, larger than TOKEN_HOLDER_BODY at
             the holder's door — before the signature and the parse; detail — the words of the implementation (from P/08.7 N4 without a change; B-31)
@@ -95,7 +95,7 @@ The HTTP form of the door — [OpenAPI of lesson 9](../../09-agent/spec/09-agent
 
 ## Refusals
 
-From М11/7 N4 (the rows «у агента»):
+From M11/7 N4 (the rows «at the agent»):
 
 The code and `error` are normative; `detail` is the words of the implementation, as at the relay's door (guess of stage C LTD-E02, the Architect's decision of 2026-10-23).
 
@@ -112,9 +112,9 @@ The code and `error` are normative; `detail` is the words of the implementation,
 
 ## The call in the process
 
-From М11/12 N1.3 `tokens` (the norm is [P/09.1 N1.11](../../09-agent/spec/09.1-agent.norms.md), P/09.1-14; the Architect's decision
-on the move plans of 8–10, item 4: the agent has no library contract). The rows `call`, `differs` are a reading of М11/12 N1.3
-«в процессе — вызов, а не дверь»: the former tail «без очереди, TOKEN_WAIT и 503 …» was also read as a removal of the door's refusals
+From M11/12 N1.3 `tokens` (the norm is [P/09.1 N1.11](../../09-agent/spec/09.1-agent.norms.md), P/09.1-14; the Architect's decision
+on the move plans of 8–10, item 4: the agent has no library contract). The rows `call`, `differs` are a reading of M11/12 N1.3
+«in the process — a call, not a door»: the former tail «without a queue, TOKEN_WAIT and 503 …» was also read as a removal of the door's refusals
 (analysis of review of stage B 8–10, № 2):
 
 ```yaml
@@ -143,9 +143,9 @@ these are system calls over the file system of the box, not a function of data, 
 
 ## Correspondence to former lessons
 
-From М11/7 (analysis of review of stage A 8–10, № 1 / decision 1): N1.2 whole (here «The door»; in М11/7 — a pointer) and the rows of N4
-«у агента» — 401/404/400, 502 `invalid token reply`, 503 `unavailable` (here «Refusals»). From М11/12 N1.8 — the row
+From M11/7 (analysis of review of stage A 8–10, № 1 / decision 1): N1.2 whole (here «The door»; in M11/7 — a pointer) and the rows of N4
+«at the agent» — 401/404/400, 502 `invalid token reply`, 503 `unavailable` (here «Refusals»). From M11/12 N1.8 — the row
 `local_door` (do not take the ports 8444–8447; here «An open question»); the former «choice of the implementation» and the TCP default `8448`
-are removed by decision 1. The norm is P/09.1-10 (М11/7-02; `note` of [id-map](../id-map.tsv)); the participant is P/03.7-04. From М11/12
+are removed by decision 1. The norm is P/09.1-10 (M11/7-02; `note` of [id-map](../id-map.tsv)); the participant is P/03.7-04. From M11/12
 N1.3 `tokens` — the section «The call in the process» (the Architect's decision on the move plans of 8–10, item 4).
-The contract has no vectors: the door is checked by sc. 01, 02 of the [acceptance of chapter 8.7](../../08-domain/acceptance/7/README.md) (М11/7-02 → P/09.1-10).
+The contract has no vectors: the door is checked by sc. 01, 02 of the [acceptance of chapter 8.7](../../08-domain/acceptance/7/README.md) (M11/7-02 → P/09.1-10).

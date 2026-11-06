@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/tombstone/R
 
 The owner is [the tombstone contract](../../contracts/tombstone.md) (lesson P/05; the guess of stage C C06-BLOB-GC-33-01 /
 IF-OBJECT-TOMBSTONE63-PEERS-01, the Architect's decision of 2026-10-25). The participants are the console (writes the tombstone, P/06.1 N3
-«body sweep») and the resource (the acknowledgements and the removal, P/05 N1.1). The bytes are written by «Спецификация»; the rows are by the text of the contract.
+«body sweep») and the resource (the acknowledgements and the removal, P/05 N1.1). The bytes are written by «Specification»; the rows are by the text of the contract.
 
 ## `cases.tsv`
 

@@ -1,46 +1,46 @@
-# The transition table of ADR-0086 (addendum (1) Р2): names with the word spec that mean the file <имя>.subsystem.yaml — to manifest.
+# The transition table of ADR-0086 (addendum (1) R2): names with the word spec that mean the file <name>.subsystem.yaml — to manifest.
 # Closed: the transition is the last commit of stage B, by this table as a whole; the Confirmation of ADR-0086 checks every row.
-# Inventory over М10_Platform/, М11_Domain/, Platform/, Source/tests/testdata/acceptance/, `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`,
-# the console module (console.js) at the snapshot 617b82422. There are no pulse and metrics fields with spec (search w2c_*spec, the pulse fields of М10/5, М10/8).
-# Not renamed: the norm directories spec/, cammeta-specs and $CAMMETA_SPECS, lesson-spec, check_spec, «Спецификация» — these are
+# Inventory over M10_Platform/, M11_Domain/, Platform/, Source/tests/testdata/acceptance/, `CONSOLE-MODULE.md`,
+# the console module (console.js) at the snapshot 617b82422. There are no pulse and metrics fields with spec (search w2c_*spec, the pulse fields of M10/5, M10/8).
+# Not renamed: the norm directories spec/, cammeta-specs and $CAMMETA_SPECS, lesson-spec, check_spec, «Specification» — these are
 # norms and tools; the old code of the course, its tests and data
-# (spec_verdicts.tsv, spec_verdicts/, spec_parity_debt.txt, spec_load_debt.txt) — a frozen witness (Р6); the link
+# (spec_verdicts.tsv, spec_verdicts/, spec_parity_debt.txt, spec_load_debt.txt) — a frozen witness (R6); the link
 # WHATWG url.spec.whatwg.org; the names of corpus cases with the forbidden word spec (k38_sub_spec, m49_table_spec) — the word
-# spec stays reserved. The texts of accepted ADRs are not rewritten. The product — a debt to «Сборка» with the label ADR-0086 (Р7).
+# spec stays reserved. The texts of accepted ADRs are not rewritten. The product — a debt to «Build» with the label ADR-0086 (R7).
 # Row: old<TAB>new<TAB>kind<TAB>owner<TAB>consumers. owner — where the name is defined; consumers — who names it.
 old	new	kind	owner	consumers
 platform/spec/<sub>	platform/manifest/<sub>	key of a store row	P/02.3 N1.5	Platform/02-installer, 03-worker, 04-controller, 05-resource, 06-console; catalog.tsv
 platform/spec/<sub>/rev	platform/manifest/<sub>/rev	key of a mark	P/02.3 N1.5	Platform/02-installer, 04-controller, 05-resource, 06-console; catalog.tsv
-platform/spec/<sub>/canonical/<форма>	platform/manifest/<sub>/canonical/<форма>	key (future, ADR-0089 addendum (1) Р11)	P/02.2	readers of the lessons P/03–P/06 after their own behaviour change
+platform/spec/<sub>/canonical/<form>	platform/manifest/<sub>/canonical/<form>	key (future, ADR-0089 addendum (1) R11)	P/02.2	readers of the lessons P/03–P/06 after their own behaviour change
 spec_rev	manifest_rev	field of the rows <sub>/placement/<id>, <sub>/controller/placement_turn, placement_intent and of the object <sub>/controller/pass	P/04 N1.1, N1.2, N1.5	Platform/03-worker, 06-console; the acceptance of P/04, P/06.5; catalog.tsv; id-map.tsv
 spec_behind	manifest_behind	counter of the pass report (the object <sub>/controller/pass)	P/04 N1.2	lecture P/04; id-map.tsv
-GET /spec	GET /manifest	door of the cluster console and of the domain console	P/06.5 N2 «GET /spec»	P/02.1, P/06.5; P/10 N1.7; `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`; the console module (console.js); the acceptance of P/02, P/06.5, P/10; id-map.tsv
-GET /<sub>/spec	GET /<sub>/manifest	door of the console (subsystems from /mounts)	P/06.5 N2	`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`; the console module (console.js)
+GET /spec	GET /manifest	door of the cluster console and of the domain console	P/06.5 N2 «GET /spec»	P/02.1, P/06.5; P/10 N1.7; `CONSOLE-MODULE.md`; the console module (console.js); the acceptance of P/02, P/06.5, P/10; id-map.tsv
+GET /<sub>/spec	GET /<sub>/manifest	door of the console (subsystems from /mounts)	P/06.5 N2	`CONSOLE-MODULE.md`; the console module (console.js)
 SpecView	ManifestView	OpenAPI schema of the door's response	P/06.5 N2 «GET /spec» (06-console.api.openapi.yaml)	P/02.1, P/06; the acceptance of P/02, P/06.5; id-map.tsv
 w2cctl spec put	w2cctl manifest put	installer command	P/02.3 N3, P/02.4	Platform/02-installer/lifecycle.md; the acceptance of P/02; catalog.tsv (ops); id-map.tsv
 w2cctl spec status	w2cctl manifest status	installer command	P/02.3 N3	Platform/02-installer/lifecycle.md
-spec-put {socket} {file}	manifest-put {socket} {file}	command of the «Стенд» via admin.sock	the acceptance of М10/01 README	the acceptance of P/01, P/02; Platform/02-installer/lifecycle.md; module-design.md
+spec-put {socket} {file}	manifest-put {socket} {file}	command of the «Stand» via admin.sock	the acceptance of M10/01 README	the acceptance of P/01, P/02; Platform/02-installer/lifecycle.md; module-design.md
 {spec}	{manifest}	substitution of the «Stand»	the common acceptance README (common/acceptance/README.md; review of stage B 3–5, № 33)	the acceptance of P/06.1, P/06.6
 {specs}	{manifests}	substitution of the rights output command	the common acceptance README (common/acceptance/README.md; review of stage B 3–5, № 33)	Platform/02-installer/lifecycle.md
-SPEC_DIR	MANIFEST_DIR	environment variable of the installer	P/02.4 N1.2	P/02.5; the common acceptance README (review of stage B 3–5, № 33); Platform/02-installer/lifecycle.md; `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`
+SPEC_DIR	MANIFEST_DIR	environment variable of the installer	P/02.4 N1.2	P/02.5; the common acceptance README (review of stage B 3–5, № 33); Platform/02-installer/lifecycle.md; `CONSOLE-MODULE.md`
 /opt/w2c/specs	/opt/w2c/manifests	directory on disk (the default of SPEC_DIR)	P/02.4 N1.2	Platform/02-installer/lifecycle.md
-<spec:…>	<manifest:…>	notation of a part of a data catalog key taken from the manifest	Platform/common/data/catalog.tsv (form — inbox `2026-10-18-каталог-данных-форма.md`)	М10/3, 4, 5, 7, 8, 9, 10; М11/5, 6, 11; Platform/04-controller; the «Data» paragraphs
-console.spec(name)	console.manifest(name)	call of the console module	P/07 N1.5 `words` (`spec(name)`); description — `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md` («Архитектор»)	the console module (console.js, C.spec); subsystem pages
+<spec:…>	<manifest:…>	notation of a part of a data catalog key taken from the manifest	Platform/common/data/catalog.tsv (form — inbox `data catalogue form (2026-10-18, for people)`)	M10/3, 4, 5, 7, 8, 9, 10; M11/5, 6, 11; Platform/04-controller; the «Data» paragraphs
+console.spec(name)	console.manifest(name)	call of the console module	P/07 N1.5 `words` (`spec(name)`); description — `CONSOLE-MODULE.md` («Architect»)	the console module (console.js, C.spec); subsystem pages
 getJSON("/spec"), getJSON("/<sub>/spec")	getJSON("/manifest"), getJSON("/<sub>/manifest")	code of the console module (part of the export)	the console module (console.js)	—
 from: "spec"	from: "manifest"	word of the value source in the resolve output	P/06.7 N3 resolve	vectors 06-console/vectors/resolve
-—	manifest	reserved name (next to spec: subsystem name, unit.rows, table name)	P/02.1 N1.2, N1.2a	the corpus of P/02.1: negative cases k38_sub_manifest, m49_table_manifest and an allowed neighbour (ADR-0086 addendum (1) Р3)
-«спека подсистемы», «спека» (файл <имя>.subsystem.yaml)	«манифест подсистемы», «манифест»	prose	P/02.1	all lessons, lectures, READMEs and instructions of М10, М11, Platform/, `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`, the glossary (the article «Манифест подсистемы»)
-«Спека подсистемы и строгий загрузчик»	«Манифест подсистемы и строгий загрузчик»	heading of lesson P/02	P/02.1	Platform/module-design.md (already with the target name), README
-spec (в текстах и исключениях check_spec и навыка lesson-spec)	manifest	strings of the checks and of the skill	skills/ («Архитектор»)	—
+—	manifest	reserved name (next to spec: subsystem name, unit.rows, table name)	P/02.1 N1.2, N1.2a	the corpus of P/02.1: negative cases k38_sub_manifest, m49_table_manifest and an allowed neighbour (ADR-0086 addendum (1) R3)
+«subsystem specification», «specification» (file <name>.subsystem.yaml)	«subsystem manifest», «manifest»	prose	P/02.1	all lessons, lectures, READMEs and instructions of M10, M11, Platform/, `CONSOLE-MODULE.md`, the glossary (the article «Subsystem manifest»)
+«Subsystem specification and the strict loader»	«Subsystem manifest and the strict loader»	heading of lesson P/02	P/02.1	Platform/module-design.md (already with the target name), README
+spec (in the text and exceptions of check_spec and the lesson-spec skill)	manifest	strings of the checks and of the skill	skills/ («Architect»)	—
 # Added during the transition (ADR-0086 addendum (2)): names with spec in the meaning of the manifest found during the transition outside the rows above.
-spec put, spec show (короткие формы)	manifest put, manifest show	installer command in text and in the catalog's ops	P/02.3 N3, P/02.4	Platform/02-installer; catalog.tsv (ops admin(manifest put …)); id-map.tsv
-spec (поле строки вида {form, rev, sha256, spec})	manifest	field of the row platform/manifest/<sub>/canonical/<форма>; pointer /spec → /manifest	P/02.2 N1.2	P/02.3 N3; data/canonical-row.schema.json; the acceptance of P/02 chapter 2 (puts.tsv; row weight 83 → 87 + length of the view); vectors canonical; the lesson-spec skill; id-map.tsv
+spec put, spec show (short forms)	manifest put, manifest show	installer command in text and in the catalog's ops	P/02.3 N3, P/02.4	Platform/02-installer; catalog.tsv (ops admin(manifest put …)); id-map.tsv
+spec (field of the view row {form, rev, sha256, spec})	manifest	field of the row platform/manifest/<sub>/canonical/<form>; pointer /spec → /manifest	P/02.2 N1.2	P/02.3 N3; data/canonical-row.schema.json; the acceptance of P/02 chapter 2 (puts.tsv; row weight 83 → 87 + length of the view); vectors canonical; the lesson-spec skill; id-map.tsv
 data/spec-row.*, data/spec-rev.*	data/manifest-row.*, data/manifest-rev.*	files of data families	Platform/02-installer/data	catalog.tsv (column schema)
-spec (значение колонки schema)	manifest	value of the schema column of the data catalog	Platform/common/data/catalog.tsv	check_spec; exceptions.tsv
+spec (value of the schema column)	manifest	value of the schema column of the data catalog	Platform/common/data/catalog.tsv	check_spec; exceptions.tsv
 SpecNoRoot	ManifestNoRoot	OpenAPI schema of the response of the /manifest door of the domain console	P/10 N1.7 (10-domain-console.api.openapi.yaml)	—
-specs (поле ViewInput)	manifests	field of the input of the view vectors	P/08 (08-domain.api.openapi.yaml)	08-domain/vectors/view (cases.tsv, README)
-spec: (метка нотации)	manifest:	label of a notation and of a section	P/08.5 N1.7, P/10 N1.7	—
-spec: (метка блока YAML-описания)	manifest:	label of a block in form descriptions	P/06.4 N1.5, P/06.5 N1.8, P/06.7	common/contracts/request-mark.md, gate-and-pass.md; id-map.tsv
+specs (field of ViewInput)	manifests	field of the input of the view vectors	P/08 (08-domain.api.openapi.yaml)	08-domain/vectors/view (cases.tsv, README)
+spec: (notation label)	manifest:	label of a notation and of a section	P/08.5 N1.7, P/10 N1.7	—
+spec: (label of a YAML description block)	manifest:	label of a block in form descriptions	P/06.4 N1.5, P/06.5 N1.8, P/06.7	common/contracts/request-mark.md, gate-and-pass.md; id-map.tsv
 spec.lease, spec.placement.capacity.from	manifest.lease, manifest.placement.capacity.from	path of a manifest field in prose	P/03.2, P/03.4	—
 NoSpec	NoManifest	refusal name	P/03.4 N3–N5	—
 per_spec:	per_manifest:	label of the rights output form	P/01.2 N1.2	—
@@ -48,9 +48,9 @@ per_spec:	per_manifest:	label of the rights output form	P/01.2 N1.2	—
 02-spec-and-mounts	02-manifest-and-mounts	acceptance scenario id	06-console/acceptance/5	id-map.tsv
 resolve-03-spec	resolve-03-manifest	vector case id	06-console/vectors/resolve	id-map.tsv
 sub.spec, loadSpecs, rootSpec, fromSpecs	sub.manifest, loadManifests, rootManifest, fromManifests	internal names of the console module	the console module (console.js)	jsdom tests of the module (names of the checks); the cam shell (pc.manifest, /det/manifest)
-spec_schema/, SPEC_FORMS, spec_schema(), --spec, schema_specs, form_specs	manifest_schema/, MANIFEST_FORMS, manifest_schema(), --manifest, schema_manifests, form_manifests	package, names and counters of the skill	skills/lesson-spec/scripts	validation.md (anchors «…-манифеста-…»)
-«Спека и установщик»	«Манифест и установщик»	name of lesson P/02 (chapter 2.1 — «Subsystem manifest and the strict loader»)	Platform/lessons.tsv	Platform/README.md; lecture P/02
+spec_schema/, SPEC_FORMS, spec_schema(), --spec, schema_specs, form_specs	manifest_schema/, MANIFEST_FORMS, manifest_schema(), --manifest, schema_manifests, form_manifests	package, names and counters of the skill	skills/lesson-spec/scripts	validation.md (anchors «…-manifest-…»)
+«Specification and installer»	«Manifest and installer»	name of lesson P/02 (chapter 2.1 — «Subsystem manifest and the strict loader»)	Platform/lessons.tsv	Platform/README.md; lecture P/02
 # Not renamed during the transition: the comments of Source/tests/testdata/testsub*.subsystem.yaml and their copy in the acceptance of P/02 chapter 2 (the sha256
-# is pinned in the inputs of the vectors; the file is shared with the product); the literal names of the old code and of the product's commands in the prose of М10B, М12B
-# (until the product is corrected, Р7); the logs corrections.tsv. The bytes of the table shared with the product
-# 02-installer/vectors/platform-lists/cases.tsv changed (comments) — a debt of the product Р7.
+# is pinned in the inputs of the vectors; the file is shared with the product); the literal names of the old code and of the product's commands in the prose of M10B, M12B
+# (until the product is corrected, R7); the logs corrections.tsv. The bytes of the table shared with the product
+# 02-installer/vectors/platform-lists/cases.tsv changed (comments) — a debt of the product R7.

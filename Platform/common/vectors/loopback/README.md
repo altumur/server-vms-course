@@ -6,7 +6,7 @@ The owner is [the role certificate contract](../../contracts/role-certificate.md
 (ADR-0075 addendum 2026-10-26 (3) item 1, (4) item 1, (5) item 1). The participants are the clients of the door of their own cluster (`own_client` of the contract):
 the agent to its console, the workers script, the cluster console at transition 2 and in the forwarding to the signer, the client of the resource door.
 The threshold decides whether to substitute `SERVER_NAME` into the `host` of the function [`peer`](../peer/README.md) before step 1; the function `peer` itself and
-its package do not change from this. The bytes are written by «Спецификация»; the rows are by the text of the contract.
+its package do not change from this. The bytes are written by «Specification»; the rows are by the text of the contract.
 
 ## `cases.tsv`
 

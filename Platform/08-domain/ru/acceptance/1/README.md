@@ -40,7 +40,7 @@
 | 15 | `shadow-and-executors` | 6 | назначение с `copies`: заявки исполнителей из `cluster` и `copies` — не `conflict`; назначение без единицы — `orphaned` после SHADOW_STALL |
 
 Сценарии 06–09 повторяют на стенде сценарии 01–05 приёмки М11/01 (векторы `view`): настоящие отчёты агентов в
-`domain/members/<член>/reports/<rev>` и вид держателя.
+`domain/members/<member>/reports/<rev>` и вид держателя.
 
 ## `journal/corrections-1.tsv`
 

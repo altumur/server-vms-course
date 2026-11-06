@@ -1,0 +1,343 @@
+[
+  {
+    "case": "first-data-row",
+    "text": "# cell-json: raw\ncase\traw\nfirst\t\"one\"\nsecond\t\"two\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": true,
+    "declared": [
+      "raw"
+    ],
+    "rows": [
+      [
+        3,
+        {
+          "case": "first",
+          "raw": "one"
+        }
+      ],
+      [
+        4,
+        {
+          "case": "second",
+          "raw": "two"
+        }
+      ]
+    ]
+  },
+  {
+    "case": "unicode-scalar",
+    "text": "# cell-json: raw\nraw\n\"\\u0436\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": true,
+    "declared": [
+      "raw"
+    ],
+    "rows": [
+      [
+        3,
+        {
+          "raw": "\u0436"
+        }
+      ]
+    ]
+  },
+  {
+    "case": "surrogate-pair",
+    "text": "# cell-json: raw\nraw\n\"\\ud83c\\udfa5\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": true,
+    "declared": [
+      "raw"
+    ],
+    "rows": [
+      [
+        3,
+        {
+          "raw": "\ud83c\udfa5"
+        }
+      ]
+    ]
+  },
+  {
+    "case": "empty-string",
+    "text": "# cell-json: raw\nraw\n\"\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": true,
+    "declared": [
+      "raw"
+    ],
+    "rows": [
+      [
+        3,
+        {
+          "raw": ""
+        }
+      ]
+    ]
+  },
+  {
+    "case": "escaped-controls",
+    "text": "# cell-json: raw\nraw\n\"a\\tb\\nc\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": true,
+    "declared": [
+      "raw"
+    ],
+    "rows": [
+      [
+        3,
+        {
+          "raw": "a\tb\nc"
+        }
+      ]
+    ]
+  },
+  {
+    "case": "decode-once",
+    "text": "# cell-json: raw\nraw\n\"\\\\u0436\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": true,
+    "declared": [
+      "raw"
+    ],
+    "rows": [
+      [
+        3,
+        {
+          "raw": "\\u0436"
+        }
+      ]
+    ]
+  },
+  {
+    "case": "objectclient-read-expect-quotes",
+    "text": "# cell-json: expect\nexpect\n\"\\\"object\\\"\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": true,
+    "declared": [
+      "expect"
+    ],
+    "rows": [
+      [
+        3,
+        {
+          "expect": "\"object\""
+        }
+      ]
+    ],
+    "origin": {
+      "table": "Platform/common/vectors/object-client/read.tsv",
+      "line": 3,
+      "column": "expect"
+    }
+  },
+  {
+    "case": "valid-outer-invalid-inner",
+    "text": "# cell-json: raw\nraw\n\"{not-json\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": true,
+    "declared": [
+      "raw"
+    ],
+    "rows": [
+      [
+        3,
+        {
+          "raw": "{not-json"
+        }
+      ]
+    ]
+  },
+  {
+    "case": "two-columns",
+    "text": "# cell-json: raw,other\nraw\tother\n\"x\"\t\"y\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": true,
+    "declared": [
+      "raw",
+      "other"
+    ],
+    "rows": [
+      [
+        3,
+        {
+          "raw": "x",
+          "other": "y"
+        }
+      ]
+    ]
+  },
+  {
+    "case": "positional-first-row",
+    "text": "# cell-json: raw\n\"one\"\tok\n\"two\"\trefused\n",
+    "columns": [
+      "raw",
+      "result"
+    ],
+    "positional": true,
+    "valid": true,
+    "declared": [
+      "raw"
+    ],
+    "rows": [
+      [
+        2,
+        {
+          "raw": "one",
+          "result": "ok"
+        }
+      ],
+      [
+        3,
+        {
+          "raw": "two",
+          "result": "refused"
+        }
+      ]
+    ]
+  },
+  {
+    "case": "unquoted-cell",
+    "text": "# cell-json: raw\nraw\nplain\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "mixed-column",
+    "text": "# cell-json: raw\nraw\n\"one\"\nplain\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "non-string",
+    "text": "# cell-json: raw\nraw\n123\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "non-ascii-cell",
+    "text": "# cell-json: raw\nraw\n\"\u0436\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "unpaired-high",
+    "text": "# cell-json: raw\nraw\n\"\\ud800\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "unpaired-low",
+    "text": "# cell-json: raw\nraw\n\"\\udc00\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "trailing-json",
+    "text": "# cell-json: raw\nraw\n\"x\" \"y\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "duplicate-column",
+    "text": "# cell-json: raw,raw\nraw\n\"x\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "duplicate-header",
+    "text": "# cell-json: raw\nraw\traw\n\"x\"\t\"y\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "unknown-column",
+    "text": "# cell-json: absent\nraw\n\"x\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "late-marker",
+    "text": "raw\n# cell-json: raw\n\"x\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "duplicate-marker",
+    "text": "# cell-json: raw\n# cell-json: raw\nraw\n\"x\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "empty-declaration",
+    "text": "# cell-json: \nraw\n\"x\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "space-after-comma",
+    "text": "# cell-json: raw, other\nraw\tother\n\"x\"\t\"y\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "indented-marker",
+    "text": " # cell-json: raw\nraw\n\"x\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "missing-colon",
+    "text": "# cell-json raw\nraw\n\"x\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "row-width",
+    "text": "# cell-json: raw\nraw\tother\n\"x\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "wire-header-mismatch",
+    "text": "# cell-json: raw\nraw\n\"x\"\n",
+    "columns": [
+      "another"
+    ],
+    "positional": false,
+    "valid": false
+  },
+  {
+    "case": "positional-no-form",
+    "text": "# cell-json: raw\n\"x\"\n",
+    "columns": null,
+    "positional": true,
+    "valid": false
+  }
+]

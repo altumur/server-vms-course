@@ -33,7 +33,7 @@ cc36de538, черновики G03, G04; ниже); 21 — сц. 27 `roles-copy` 
 Единиц нет. Домена нет: его ставит директива `@domain` первого шага каждого сценария. Имя домена — `acme`.
 
 - `store` у `member <кластер>` — дверь хранилища кластера через `admin.sock` (подготовка и наблюдение строк домена у члена:
-  `domain/agent`, `domain/member-key`, `domain/member-list/<раздел>`, `domain/keys`, `domain/member-topology`, `domain/grants`,
+  `domain/agent`, `domain/member-key`, `domain/member-list/<part>`, `domain/keys`, `domain/member-topology`, `domain/grants`,
   `domain/backup-taken`, `domain/shared`, `domain/shared-refused`, `domain/root`, `domain/placed`, `domain/outcomes`,
   `domain/agent-turn`); `store` без `member` — хранилище `hold`.
 - `resource` без префикса — дверь ресурса `hold`: через неё читаются объекты держателя `domain/members/<член>/…`.
@@ -46,7 +46,7 @@ cc36de538, черновики G03, G04; ниже); 21 — сц. 27 `roles-copy` 
 - **Сценарии 01, 03, 06** (из README приёмки М11/12). Двери `holder`, `member`, `resource` и директивы `@domain`,
   `@start`/`@stop agent` — словарь «Стенда домена».
   - **01.** Член `m1` без изменений: после `@domain` и 10 с тишины его поколение стоит, а метка свежеет за 30 с (больше
-    `MARK_REFRESH` и прохода). Индексы строк `domain/member-list/<раздел>` и `domain/keys` у `m1` не растут: агент пишет дома только
+    `MARK_REFRESH` и прохода). Индексы строк `domain/member-list/<part>` и `domain/keys` у `m1` не растут: агент пишет дома только
     при отличии. Строки `domain/agent` нет: её пишут только при сбое подписи или слишком большом целом. Окно наблюдения
     открывается только после резервной копии (глава 8.8): шаг 2 ждёт `BACKUP_EVERY` и проход после `@domain` — последняя
     копия держателя сделана; шаги 3–4 — `m1` (хранитель) записал у себя ту же копию, что указатель `domain/keepers/m1`
@@ -108,7 +108,7 @@ cc36de538, черновики G03, G04; ниже); 21 — сц. 27 `roles-copy` 
   - **18** (J03). Копия аварийной строки (N1.4 `break_glass`): пароль `m1` задан держателем — копия у `m1`; пароль
     `hold` — его собственная строка, агент держателя её не пишет и не удаляет (`set_at` и индекс прежние после двух
     проходов и в конце). Строка держателя `domain/break-glass/m1` испорчена через `admin.sock` (`set_at` не по форме времени, `pwhash_secret` — `enc:v2` не по
-    грамматике: строка нечитаема по форме, без опоры на разбор открытого секрета): держатель шлёт `held` с именем `break_glass` (исходы семьи `domain/break-glass/<кластер>`, читатель `domain`), копия `m1` прежняя.
+    грамматике: строка нечитаема по форме, без опоры на разбор открытого секрета): держатель шлёт `held` с именем `break_glass` (исходы семьи `domain/break-glass/<cluster>`, читатель `domain`), копия `m1` прежняя.
     Двери снятия нет (у пути только GET и PUT), поэтому строку снимает `admin.sock`: строки нет — поля нет, агент удаляет копию.
   - **19** (J04). Агент хранителя (N1.9, N3 «проверить резервную копию» шаг 3): `m1` — единственный хранитель
     (`BACKUP_HOLDERS`); при остановленном агенте раннер кладёт ему свою копию срока 99 — объект `domain/backup`
@@ -144,7 +144,7 @@ cc36de538, черновики G03, G04; ниже); 21 — сц. 27 `roles-copy` 
   проход без нового документа (дожим; шаг 1 «взять документ» — «ничего»). Нечитаемый отказ (`doc` не JSON) снимается
   тем же дожимом: сравнение с нечитаемым даёт «отличается» (P2). Своя `domain/shared` не откатывается.
 - **23** (G04). Нечитаемые копии дома (N1.4 `home_write`, `member_copy`; N1.5 `member`; исходы семей
-  `domain/member-list/<раздел>` — G-53, `domain/member-topology` — G-54, `domain/grants` — G-51, `domain/placed` — G-58). Агент —
+  `domain/member-list/<part>` — G-53, `domain/member-topology` — G-54, `domain/grants` — G-51, `domain/placed` — G-58). Агент —
   единственный писатель: ответ против нечитаемой строки для него «отличается», и он перезаписывает строку CAS значением
   ответа. Раннер портит четыре строки `m1` (`doc` не JSON, `as_of` не время, `rev` не целое), и каждая возвращается к
   значению, связанному до порчи (`$ml`, `$mt`, `$gd`). У `domain/placed` это `rev` 2: 1 после `@domain`, 2 после записи
@@ -188,7 +188,7 @@ SIGKILL активного — очередь не отдана: через 30 �
 
 | № | Сценарий | Шагов | Что |
 |---|---|---|---|
-| 01 | `quiet-member` | 13 | спокойный член: `reported.rev` стоит, `received_at` свежеет, индексы `domain/member-list/<раздел>` и `domain/keys` у члена не растут, `domain/agent` нет |
+| 01 | `quiet-member` | 13 | спокойный член: `reported.rev` стоит, `received_at` свежеет, индексы `domain/member-list/<part>` и `domain/keys` у члена не растут, `domain/agent` нет |
 | 03 | `unreadable-member-key` | 19 | ключ члена испорчен — `domain/agent` со счётом, член `silent`; починен — `ok`; испорчен на ходу — тот же счёт; перезапуск — строки прошлого запуска нет |
 | 04 | `conflict` | 9 | правка хранится, член меняет единицу сам — исход 412 `conflict`, значение члена сохранено |
 | 05 | `unsigned-document` | 6 | документ неизвестного выпускающего мимо правки — `domain/shared-refused` `unknown_issuer`, строки `domain/shared` нет; консоль держателя — `from: manifest` (C09-SHARED-ACCEPT-01) |
@@ -206,7 +206,7 @@ SIGKILL активного — очередь не отдана: через 30 �
 | 20 | `join-same-and-another` | 9 | повторный `join` того же корня — `ok`, `domain/root` и индекс прежние; закреплён другой — `refused`, строка прежняя (аудит P/09, второй проход, G03) |
 | 21 | `member-key-pair` | 11 | `pub` ключа члена не от `seed_secret` — строка нечитаема: `sign_failures_domain`, местная дверь токенов 503 `unavailable`, член `silent`, строка не рождается заново (C09-MEMBER-KEY-PAIR-01; G03) |
 | 22 | `shared-refused-cleanup` | 12 | взятый документ снимает отказ с парой не новее своей; отказ не новее своей `domain/shared` и нечитаемый отказ снимаются дожимом (C09-SHARED-REFUSED-CLEANUP-01, -02; G04) |
-| 23 | `unreadable-copies-heal` | 16 | нечитаемые `domain/member-list/<раздел>`, `domain/member-topology`, `domain/grants`, `domain/placed` перезаписаны ответом держателя (G-51, G-53, G-54, G-58; G04) |
+| 23 | `unreadable-copies-heal` | 16 | нечитаемые `domain/member-list/<part>`, `domain/member-topology`, `domain/grants`, `domain/placed` перезаписаны ответом держателя (G-51, G-53, G-54, G-58; G04) |
 | 24 | `unreadable-outcomes` | 12 | нечитаемая `domain/outcomes` — правка не исполняется, строка не перезаписывается; исправлена — исход `performed` (G-56; G04) |
 | 25 | `unreadable-agent-turn` | 12 | нечитаемая `domain/agent-turn` — агент ждущий, член `silent`, строка не перезаписана, местная дверь токенов 200; исправлена — очередь взята, член `ok` (G-44; G04) |
 | 27 | `roles-copy` | 21 | копия `domain/roles` у `m1` по грантам держателя: отключённый `bob` выпадает из `assigned`, сессия `ann` — `view` через роль `ops`; строка грантов держателя нечитаема — копии `domain/grants` и `domain/roles` не стёрты, индексы прежние (ADR-0098 §4) |

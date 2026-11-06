@@ -1,4 +1,4 @@
 # Outcomes of an unreadable row <sub>/operations/<id> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	console	the whole row is unreadable: the operation's doors — 503 `unavailable`; the leader does not lead the operation, calls no steps; the reaper does not remove its rows, the cause goes to the log	0	строка	P/06.9 Н3 «step», «reaper»
+	console	the whole row is unreadable: the operation's doors — 503 `unavailable`; the leader does not lead the operation, calls no steps; the reaper does not remove its rows, the cause goes to the log	0	row	P/06.9 Н3 «step», «reaper»

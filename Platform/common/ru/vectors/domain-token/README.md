@@ -10,10 +10,10 @@
 ([глава 8.4](../../../../08-domain/ru/spec/08.4-domain.norms.md)) и консоль домена (урок P/10). Байты пишет «Спецификация»
 (ADR-0083); соответствие продукта — его приёмкой по этой таблице (ADR-0080 доп. 16).
 
-Строки переложены из входов команды `token` приёмки М11/2
+Строки переложены из входов команды `token` приёмки M11/2
 (`inputs/token-*.json`, сц. 04–07, 12) без изменения байтов: сняты только пробелы и переводы строк вне строк JSON; `case` —
 имя файла входа (перенос урока 8, план переноса урока 8 § 3, решение «Архитектора» по плану, п. 17; строка «Векторы»
-договора). Сценарии М11/02 сц. 04–07, 12 и их входы сняты переносом урока 8 (журнал — «Журнал источника» ниже): таблица —
+договора). Сценарии M11/02 сц. 04–07, 12 и их входы сняты переносом урока 8 (журнал — «Журнал источника» ниже): таблица —
 единственный источник этих случаев.
 
 ## Прогон
@@ -87,22 +87,22 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 ## Журнал источника
 
-Строки `corrections.tsv` приёмки М11/02 до переноса и строки переноса — для пакетов `keys`, `domain-token`,
-`domain-envelopes` (каталог приёмки М11/02 снят переносом урока 8; пути и номера — прежние, их разрешает
+Строки `corrections.tsv` приёмки M11/02 до переноса и строки переноса — для пакетов `keys`, `domain-token`,
+`domain-envelopes` (каталог приёмки M11/02 снят переносом урока 8; пути и номера — прежние, их разрешает
 [`id-map.tsv`](../../../id-map.tsv)):
 
 | date | sample | fix |
 |---|---|---|
-| 2026-10-17 | 02/seal-16-noncanonical-ct | cammeta-python М11-02 № 6: base64url — каноническая запись (лишние биты нулевые); неканонический конверт — not_an_envelope |
-| 2026-10-17 | 02/inputs/token-*, сц. 05 шаг 7, сц. 12 | Решение «Архитектора» по М11/7 п. 6 и дополнение: kind у каждого токена (без него — bad_claims); проверка получателем — wrong_kind, wrong_audience |
+| 2026-10-17 | 02/seal-16-noncanonical-ct | cammeta-python M11-02 № 6: base64url — каноническая запись (лишние биты нулевые); неканонический конверт — not_an_envelope |
+| 2026-10-17 | 02/inputs/token-*, сц. 05 шаг 7, сц. 12 | Решение «Архитектора» по M11/7 п. 6 и дополнение: kind у каждого токена (без него — bad_claims); проверка получателем — wrong_kind, wrong_audience |
 | 2026-10-18 | 02/scenarios.tsv: 02/02, 02/03; keys-18, keys-19 | прогон 41, мутации №7, №8: kid не root раньше чужого домена; подпись раньше book_seal (двойная ошибка — первый по порядку отказ) |
 | 2026-10-18 | 02/scenarios.tsv; inputs | прогон 41, мутации №6: iat = now + 60 — ok |
 | 2026-10-18 | 02/scenarios.tsv; inputs | прогон 41, мутации №9, №10: запись отзыва не «`<jti>:<число JSON>`» — no_revocations; аудитория по audience_claim, а не по aud |
 | 2026-10-18 | 02/scenarios.tsv; inputs | прогон 41, мутации класс подписей: подпись набора 63 байта; exp строкой — bad_claims |
-| 2026-10-19 | 03 шаг 8, 07 шаг 6, 11 шаг 2; inputs keys-21, token-29, seal-round-02 | сверка М11 01–04 (S1, T3): book_seal малого порядка — no_book_seal и not_an_envelope у seal-round, exp отзыва не конечное — no_revocations |
-| 2026-10-20 | перенос | сценарии 04-token-keys, 05-token-form, 06-token-clock, 07-token-revoked, 12-token-kind-and-audience из М11/02 (стадия B) — строки векторов common/vectors/domain-token/cases.tsv (29), входы inputs/token-*.json — ячейки input без изменения байтов; ожидания сверены оракулом по тексту договора токена домена «Проверка» |
-| 2026-10-20 | перенос | сценарии 01-key-set-forward, 02-key-set-root, 03-key-set-form, 08-envelope-opens, 09-envelope-does-not-open, 10-envelope-form, 11-seal-round из М11/02 сняты (стадия B): те же случаи — common/vectors/keys (21), common/vectors/domain-envelopes x25519-open.tsv (16), x25519-round.tsv (2) (план переноса урока 8 V1; решение «Архитектора», ADR-0083 доп. (14), п. 17) |
-| 2026-10-20 | история М11/02 | строки corrections.tsv приёмки М11/02 до переноса — целиком в начале журнала, с прежними путями и номерами (их разрешает Platform/common/id-map.tsv) |
+| 2026-10-19 | 03 шаг 8, 07 шаг 6, 11 шаг 2; inputs keys-21, token-29, seal-round-02 | сверка M11 01–04 (S1, T3): book_seal малого порядка — no_book_seal и not_an_envelope у seal-round, exp отзыва не конечное — no_revocations |
+| 2026-10-20 | перенос | сценарии 04-token-keys, 05-token-form, 06-token-clock, 07-token-revoked, 12-token-kind-and-audience из M11/02 (стадия B) — строки векторов common/vectors/domain-token/cases.tsv (29), входы inputs/token-*.json — ячейки input без изменения байтов; ожидания сверены оракулом по тексту договора токена домена «Проверка» |
+| 2026-10-20 | перенос | сценарии 01-key-set-forward, 02-key-set-root, 03-key-set-form, 08-envelope-opens, 09-envelope-does-not-open, 10-envelope-form, 11-seal-round из M11/02 сняты (стадия B): те же случаи — common/vectors/keys (21), common/vectors/domain-envelopes x25519-open.tsv (16), x25519-round.tsv (2) (план переноса урока 8 V1; решение «Архитектора», ADR-0083 доп. (14), п. 17) |
+| 2026-10-20 | история M11/02 | строки corrections.tsv приёмки M11/02 до переноса — целиком в начале журнала, с прежними путями и номерами (их разрешает Platform/common/id-map.tsv) |
 | 2026-10-20 | token-30, token-31 | разбор ревью стадии B 8–10, № 13 (п. 7 записки о планах 8–10, правка 0c9521c66): expect без ключа cluster и cluster: null при kind ≠ person — @exit 2; вход — token-18 с изменённым expect |
 | 2026-10-23 | token-32 | догадка стадии C DT-G03, решение «Архитектора» 2026-10-23: expect — закрытая форма, незнакомый ключ — @exit 2; вход — token-18 с лишним ключом audience_clam |
 | 2026-10-30 | +token-44-expect-empty-audience-claim, token-45-keys-no-current | аудит покрытия P/08, второй проход Gemini (G02, e32df6f8b): кандидаты пакета — `audience_claim` пустой и `keys` не по форме — `@exit 2`; вход — token-18 с одной правкой; ожидания — вывод свидетелей cammeta-python и cammeta-go; повтор вида в `expect.kind` остаётся кандидатом |

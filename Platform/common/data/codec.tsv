@@ -1,4 +1,4 @@
-# The codec of store rows — one for the platform (ADR-0088 item 3, addendum (1) R1, R6; addendum (2) S1, S2, S4, S9). Bytes — «Спецификация».
+# The codec of store rows — one for the platform (ADR-0088 item 3, addendum (1) R1, R6; addendum (2) S1, S2, S4, S9). Bytes — «Specification».
 # A store row is an object of strings items (P/01.1 N1): each value is a string; the logical type of a node of the family schema → a notation.
 # Two modes: the writer (strict notation) and the reader (tolerant). A node marked whole: true — integer notation for the reader too.
 # The signed comes before tolerance (addendum (1) R6): the codec and the reader's schema — on the parsed copy, the signature and sha256 — by the original bytes.

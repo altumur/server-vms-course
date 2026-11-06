@@ -1,10 +1,10 @@
-# SaidID(rid) — the name of a request in the field fetched of a worker's heartbeat (P/03.4 Н1.1 `said_id`). The form — the README beside.
+# SaidID(rid) — the name of a request in the field fetched of a worker's heartbeat (P/03.4 N1.1 `said_id`). The form — the README beside.
 case	rid	said	note
 plain-ascii	"cmd-1"	"cmd-1"	printable ASCII up to 40 characters — as is
 plain-40	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	exactly 40 code points — as is
 hashed-41	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	"#c0f8bd4dbc2b0c03107c"	41 code points — a hash
-plain-40-cyrillic	"яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя"	"яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя"	40 code points, 80 bytes of UTF-8 — as is: points are counted, not bytes
-hashed-41-cyrillic	"яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя"	"#8400dc5cc484765228a5"	41 code points of Cyrillic — a hash
+plain-40-cyrillic	"\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f"	"\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f"	40 code points, 80 bytes of UTF-8 — as is: points are counted, not bytes
+hashed-41-cyrillic	"\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f\u044f"	"#8400dc5cc484765228a5"	41 code points of Cyrillic — a hash
 plain-40-astral	"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"	"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"	40 points outside the BMP (So), 160 bytes — as is: not UTF-16 units
 hashed-41-astral	"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"	"#b92150a6b2d80d09f1fb"	41 points outside the BMP — a hash
 plain-40-combining	"e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301"	"e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301"	20 letters with a combining mark (Mn) — 40 points — as is: points are counted, not graphemes

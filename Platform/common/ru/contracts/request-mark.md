@@ -8,7 +8,7 @@
 `no_begun` `expired` и `unknown` по индексу; P/06.4 N3 «подать просьбу», «жнец»). Читают и пишут: воркер-держатель — метку
 `begun` и исход, уборку метки после `kept`, подачу строки по `worker.requests` (глава
 [P/03.6](../../../03-worker/ru/spec/03.6-worker.norms.md) N1.5, N3 «взгляд держателя», «Исполнение и уборка метки»); пульс
-держателя с `fetched` — глава [P/03.4](../../../03-worker/ru/spec/03.4-worker.norms.md) N1.1. Перенесено из P/06.4 (прежде М10/8)
+держателя с `fetched` — глава [P/03.4](../../../03-worker/ru/spec/03.4-worker.norms.md) N1.1. Перенесено из P/06.4 (прежде M10/8)
 N1.5 (блоки `<sub>/requests/<rid>`, `action`, `rid`, `manifest`, `mark` и абзац о векторах), N1.6 (абзац о формах метки),
 N3 «Состояния исполняемой просьбы и её метки» (целиком) и «Гонки» прохода «жнец» без изменения поведения. Учёт человека
 (`ledger`), `holds`, константы жнеца, двери консоли, подача `POST /<sub>/requests` и проход жнеца — в нормах владельца
@@ -16,9 +16,9 @@ N3 «Состояния исполняемой просьбы и её метки
 [P/02.1](../../../02-installer/ru/spec/02.1-installer.norms.md) N1.4, N4. Форма строк — семьи владельца
 [`requests`](../../../06-console/data/requests.schema.json) (`<sub>/requests/<rid>`) и
 [`commands`](../../../06-console/data/commands.schema.json) (`objects/<sub>/commands/<rid>`) с таблицами исходов рядом
-([каталог](../../data/catalog.tsv)). Ссылка «P/0N[.K] НM» — норма урока или главы модуля.
+([каталог](../../data/catalog.tsv)). Ссылка «P/0N[.K] NM» — норма урока или главы модуля.
 
-Нормативные слова — по [канону курса](../../../../ru/НОРМАТИВНЫЕ-СЛОВА.md).
+Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md).
 
 ## Форма
 
@@ -29,7 +29,7 @@ N3 «Состояния исполняемой просьбы и её метки
   `Platform/06-console/data/commands.schema.json`, `Platform/06-console/data/commands.outcomes.tsv`;
 - просьба ресурса `<sub>/requests/free-<server>-<volume>` — семья `free-ask`: `Platform/05-resource/data/free-ask.schema.json`,
   `Platform/05-resource/data/free-ask.outcomes.tsv`;
-- учёт человека `<sub>/asked/<sha16(имя)>` — семья `asked`: `Platform/06-console/data/asked.schema.json`, `Platform/06-console/data/asked.outcomes.tsv`;
+- учёт человека `<sub>/asked/<sha16(name)>` — семья `asked`: `Platform/06-console/data/asked.schema.json`, `Platform/06-console/data/asked.outcomes.tsv`;
 - `fetched` пульса держателя — семья `heartbeats`: `Platform/03-worker/data/heartbeats.schema.json`,
   `Platform/03-worker/data/heartbeats.outcomes.tsv`;
 - ключи `requests` манифеста — `Platform/02-installer/spec/02.1-installer.schema.json` (ключ `requests`);
@@ -46,7 +46,7 @@ N3 «Состояния исполняемой просьбы и её метки
   <поля тела>: по requests.schema, текстом: строка — как есть, иное значение — канонический JSON (JCS, ADR-0072)
   valid_until: <секунды>                     # время писателя (`Platform/common/data/codec.tsv` строка time; P/01.1 N0) (присланное — усечение вниз до мс, отрицательное — 0, P/06.4 N3 шаг 1);
                                              # когда у манифеста valid_for или клиент прислал свой срок; 0 и прошедшее — срок,
-                                             # уже вышедший (expired), а не «без срока» (сверка python и go М10/6–11, E52)
+                                             # уже вышедший (expired), а не «без срока» (сверка python и go M10/6–11, E52)
   digest:      <sha256 hex>                  # ДОЛЖЕН у всякой исполняемой просьбы (не у просьбы ресурса): у поданной дверью — JCS тела клиента после схемы без
                                              # полей сервера (вид client); у поданной воркером — JCS объекта из полей тела строки как записаны (текстом), без unit,
                                              # valid_until и штампов (вид worker); воркер считает его сам при записи (P/03.6 N1.5); им сравнивают повторы;
@@ -94,12 +94,12 @@ manifest:                                    # requests: (форма — `Platfo
                fetched — дозапись: только слово fetched в пульсе, метки нет, кроме метки жнеца: gone к отсутствующей единице либо expired по сроку (раздел «Состояния…»);
                fetched без key — отказ загрузки P/02.1 N1.4
   stamp:       [by, at, group, about]       # about — поле about.field манифеста (у testsub2 — of) со значением единицы-адресата (E56)
-  journal:     вид строки журнала; нет ключа — request.asked (сверка python и go М10/6–11, E58)
+  journal:     вид строки журнала; нет ключа — request.asked (сверка python и go M10/6–11, E58)
   elsewhere:   действия (action), которые исполняет другой процесс (жнец их не трогает)
   free:        принимает просьбы ресурса освободить место
 ```
 
-Учёт человека `ledger` (`<sub>/asked/<sha16(имя)>`), раздел манифеста `holds` и константы жнеца (`CLEAR_EVERY`, `SWEEP_EVERY`,
+Учёт человека `ledger` (`<sub>/asked/<sha16(name)>`), раздел манифеста `holds` и константы жнеца (`CLEAR_EVERY`, `SWEEP_EVERY`,
 `REAP_AFTER`) — [P/06.4 N1.5](../../../06-console/ru/spec/06.4-console.norms.md); константы держателя (`PERFORM_TIMEOUT`,
 `PERFORM_GRACE`, `REQUESTS_HOLD`, `COMMANDS_PER_LOOK`) — [P/03.6 N1.5](../../../03-worker/ru/spec/03.6-worker.norms.md).
 
@@ -262,7 +262,7 @@ limits:      FETCHED_COUNT, FETCHED_BYTES — предел длины fetched в
 
 ## Соответствие прежним урокам
 
-Из P/06.4 (разбор ревью стадии B 3–5, V1; прежде М10/8): N1.5 — блоки `<sub>/requests/<rid>`, `action`, `rid`, `manifest`,
+Из P/06.4 (разбор ревью стадии B 3–5, V1; прежде M10/8): N1.5 — блоки `<sub>/requests/<rid>`, `action`, `rid`, `manifest`,
 `mark` (с `kept`) и абзац о векторах; N1.6 — абзац о формах метки (здесь «Три формы метки»; дверь `answered` остаётся у
 P/06.4 N1.6 ссылкой сюда); N3 «Состояния исполняемой просьбы и её метки» целиком; «Гонки» прохода «жнец». Ссылки внутри
 перенесённого текста («N1.5», «глава 3.6», «глава 6.3», «N2», «по N3») записаны полным адресом (P/06.4 …, P/03.6 …,

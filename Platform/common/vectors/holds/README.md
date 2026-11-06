@@ -3,8 +3,8 @@
 This English text is the source; the Russian translation `ru/vectors/holds/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 The owner is [the holds contract](../../contracts/holds.md) (the owner of the contract is lesson P/06, [chapter 6.4](../../../06-console/spec/06.4-console.norms.md)
-N1.5 `holds`): the sections «Declaration», «Hold row», «What a row holds». The function of the package is «держит ли строка бакет»
-of the section «Vectors» of the contract (ADR-0083 addendum (37) item 5). The bytes are written by «Спецификация»; the rows are by the text of the contract.
+N1.5 `holds`): the sections «Declaration», «Hold row», «What a row holds». The function of the package is «whether a row holds a bucket»
+of the section «Vectors» of the contract (ADR-0083 addendum (37) item 5). The bytes are written by «Specification»; the rows are by the text of the contract.
 
 ## `cases.tsv`
 
@@ -17,7 +17,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | `types` | the field types of the hold table `tables.<table>.fields` — a JSON object `{field: type}`, the type words are as in [`values-by-type`](../values-by-type/README.md) |
 | `row` | the row `<M>/<table>/<id>` — a JSON object `{field: element text}` (no element — no key); `@garbled` — the row did not decode as a table row |
 | `bucket` | the beginning of the bucket, wall seconds (a multiple of 600: the event journal contract `bucket` `span`); the span is `[start, start + 600]` |
-| `expect` | `{"hold": "held"}` — it holds; `{"hold": "not_held"}` — it does not hold (released, an empty window, the bucket outside the window, there is no section); `{"hold": "unknown"}` — the addressee or the window are not read, the declaration is incomplete or the row did not decode: it holds by the rule «не прочитано — держится» («What a row holds» rows 2–3, «Declaration» `partial`), the row — in `garbled_rows.<table>` of the resource heartbeat |
+| `expect` | `{"hold": "held"}` — it holds; `{"hold": "not_held"}` — it does not hold (released, an empty window, the bucket outside the window, there is no section); `{"hold": "unknown"}` — the addressee or the window are not read, the declaration is incomplete or the row did not decode: it holds by the rule «unread — held» («What a row holds» rows 2–3, «Declaration» `partial`), the row — in `garbled_rows.<table>` of the resource heartbeat |
 | `note` | the rule of the contract |
 
 37 rows: 11 `held`, 12 `not_held`, 14 `unknown`. The window — the ends inclusive (touching `since` by the end of the bucket and `until`
@@ -28,8 +28,8 @@ fields; `unit` without an element, empty, with spaces (as is); `since`/`until` w
 
 ## Run
 
-Without a stand: a side gives the declaration, the field types, the row and the bucket span to its function «держит ли строка бакет» and
-compares `hold`. The belonging of the bucket to the addressee (the trees `<A>`, `<A>.alarms`, the hold «про» by `about.field` and
+Without a stand: a side gives the declaration, the field types, the row and the bucket span to its function «whether a row holds a bucket» and
+compares `hold`. The belonging of the bucket to the addressee (the trees `<A>`, `<A>.alarms`, the hold «about» by `about.field` and
 the tombstone) is outside the function: the input is a bucket already attributed to the unit that the row names. Who performs it — the resource
 (`05-resource`: the term pass, [P/05](../../../05-resource/spec/05-resource.norms.md) N3 «resource pass» `retain`). The console
 (`06-console`) writes the hold rows by the table door (P/06.1 N1.6) and does not perform the function; the loader (`02-installer`) checks
@@ -41,5 +41,5 @@ In the input of the single command `vectors` ([the common acceptance README](../
 ## What the vector does not cover
 
 The listing of the rows of the table and its break (the contract «Reading the table»: the holds are not read — `holds_unread`), the choice of the trees
-of the addressee and the hold «про» by `about` (the section «Declaration» `addressee`, «What a row holds» row 1), the count of `garbled_rows`
+of the addressee and the hold «about» by `about` (the section «Declaration» `addressee`, «What a row holds» row 1), the count of `garbled_rows`
 and the heartbeat reasons (P/05 N1.4, N4), the cleanup by term itself (the stand does not wait out the term of buckets: P/05-06, P/06.4-08 — by reading).

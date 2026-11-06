@@ -5,7 +5,7 @@ This English text is the source; the Russian translation `ru/contracts/peer.md` 
 A common contract of the module «Platform» (ADR-0083 addendum (13) and addendum (14): a common algorithm of several processes is a contract, not
 copies in chapters; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 2; analysis of the review of stage A 8–10, № 7; analysis of the review
 of stage A 6–7, № 28; analysis of the review of stage B 6–7, № 25). The owner is lesson P/09, [chapter 9.1](../../09-agent/spec/09.1-agent.norms.md) N1.7 (P/09.1-27; the first contract — the agent to `https://`;
-the source — М11/8 N1.6 `client`, `first`, N3 «peer»).
+the source — M11/8 N1.6 `client`, `first`, N3 «peer»).
 By the function `peer` a client of a door of another cluster over `https://` accepts a server:
 
 | Who | Whom it calls | Where |
@@ -17,7 +17,7 @@ By the function `peer` a client of a door of another cluster over `https://` acc
 | the clients of its own cluster ([the role certificate contract](role-certificate.md) `own_client`) | the doors of its own cluster | its own CAs (`ca.pem`, `ca.next.pem` `W2C_TLS_DIR`), `host` by the loop threshold `loopback`, then revocation (review of the norms of ADR-0075, Claude fd85ea8cc, M-5) |
 | a client of another cluster to the door of a process `mixed` (a subsystem process, [P/03.4](../../03-worker/spec/03.4-worker.norms.md) N1.7 `cross_cluster`) | the door of the process of the member named by the destination or the book of the subsystem | it presents no leaf, the admission is the route `domain` by the domain token; the server is the peer of the destination member: the role is the role of the door, the fingerprints are `Entry.ca` of this member from the copy `domain/member-list/<part>` (read by `worker.reads`), the name is from the address; the role certificate contract does not change (ADR-0091 addendum (18) item 2, addendum (19) item 2) |
 
-Moved from М11/8 N1.6 (the lines `client`, `first`; the line `revoke` is the client's side, the decision of «Спецификация» on
+Moved from M11/8 N1.6 (the lines `client`, `first`; the line `revoke` is the client's side, the decision of «Specification» on
 the move of lesson 10), N3 «peer(chain, fingerprints, role, host, now)» (steps 1–9 and the paragraph
 after them) and N4 (the words of `peer`) without a change of behaviour; the step numbers are the former ones. The fingerprint
 of a CA, the publication fields `tls_ca`, `tls_ca_certs`, the form of `Entry.ca`, `W2C_TLS_DIR`, the roles of the domain processes and the expected
@@ -27,15 +27,15 @@ contract](role-certificate.md) «The cluster kit, the domain roles, the center b
 `signed` is there too; the write of `Entry.ca` at the holder (`on_accept`, the row `ca-certs`, `admin`) is the holder's side, P/08.3
 N1.6. The class `role` (`server.role`) is a participant, [the role certificate contract](role-certificate.md) «The server side: the class `role`» (the table above); the answer of forwarding to a refusal is P/06.7 N4
 `did not answer`. References in the moved text: «N1.x», «N3» are
-of lesson М11/8 (N1.6 — P/06.7 N1.7 and the lines of this contract, N3 — P/06.7 N3); «lesson N» is lesson М11/N; signatures are
-[the role certificate contract](role-certificate.md) `sig`. The form of the function is the input of a row of the package [`peer`](../vectors/peer/README.md) (formerly the command `peer` of the acceptance of М11/8 N5):
+of lesson M11/8 (N1.6 — P/06.7 N1.7 and the lines of this contract, N3 — P/06.7 N3); «lesson N» is lesson M11/N; signatures are
+[the role certificate contract](role-certificate.md) `sig`. The form of the function is the input of a row of the package [`peer`](../vectors/peer/README.md) (formerly the command `peer` of the acceptance of M11/8 N5):
 `{chain: [<PEM>…], fingerprints: [<hex>…], role, host, now}` → `{result: ok}` | `{result: refused, reason}`.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Client and first contact
 
-From М11/8 N1.6:
+From M11/8 N1.6:
 
 ```yaml
 client:       a client of a door of another cluster over https:// knows the destination member and accepts the server when peer = ok:
@@ -54,27 +54,27 @@ revoke:       the revocation of a certificate of a foreign cluster is not visibl
 
 ## The function `peer`
 
-From М11/8 N3 «peer(chain, fingerprints, role, host, now) — the client about the server of another cluster, in order»:
+From M11/8 N3 «peer(chain, fingerprints, role, host, now) — the client about the server of another cluster, in order»:
 
 ```
-1. host is an IP address (v4 or v6, including v6 with a zone `%<zone>`; added by the reconciliation of М11, D15) → ip_address
-   # a notation like `127.1` is not an IP address but a name (the implementations agreed, written by the reconciliation of М11)
+1. host is an IP address (v4 or v6, including v6 with a zone `%<zone>`; added by the reconciliation of M11, D15) → ip_address
+   # a notation like `127.1` is not an IP address but a name (the implementations agreed, written by the reconciliation of M11)
 2. chain is not a non-empty list of readable PEM certificates: an element is exactly one CERTIFICATE block, strict base64,
    the DER parses whole; otherwise — before the search for the anchor          → bad_chain
 3. fingerprints is empty, or chain[1:] has no CA certificate (CA:true) with a fingerprint from fingerprints → foreign_ca
    the anchor is the first such certificate in the order of chain
 4. there is no path chain[0] → … → anchor over neighbouring elements of chain: chain[i] is signed by the key of chain[i+1] with an algorithm of the closed list
-   of the role certificate contract `sig` (added by the reconciliation of М11, D14), the next one is CA:true; pathLen and keyUsage are not read, a leaf with
-   CA:true is a leaf (the implementations agreed, written by the reconciliation of М11)
+   of the role certificate contract `sig` (added by the reconciliation of M11, D14), the next one is CA:true; pathLen and keyUsage are not read, a leaf with
+   CA:true is a leaf (the implementations agreed, written by the reconciliation of M11)
    the order of chain is the order of the server (the leaf, then the CA; the role certificate contract server); the elements are not rearranged and
    not tried in turn (the Architect's decision, analysis of the review of stage B 8–10, № 10, ADR-0083 addendum (15))
                                                                              → bad_chain
 5. now is outside [notBefore, notAfter] of some certificate of the path (the leaf and the anchor included) → expired
 6. the leaf has not exactly one SAN URI of the form urn:w2c:role:<role> with a non-empty role (`urn:w2c:role:` — no role; the scheme and
-   the prefix — byte for byte; added by the reconciliation of М11, D15)        → no_role
+   the prefix — byte for byte; added by the reconciliation of M11, D15)        → no_role
 7. the role of the leaf ≠ role (byte for byte)                               → wrong_role
 8. host is not among the SAN DNS of the leaf — comparison byte for byte: case matters, a wildcard is not expanded, a trailing dot is not
-   removed (the implementations agreed, written by the reconciliation of М11)  → wrong_name
+   removed (the implementations agreed, written by the reconciliation of M11)  → wrong_name
 9.                                                                           → ok
 ```
 
@@ -83,19 +83,19 @@ A client of a door of its own cluster calls the same function with its own CAs a
 and its vectors do not change because of this.
 
 Above the anchor the chain is not checked: the anchor is assigned by the fingerprint of the record (whether it stands as a root or an intermediate — it does not matter);
-the revocation of a foreign cluster is not checked (the line `revoke` above; formerly М11/8 N1.6). A client with a `peer` refusal closes the connection; forwarding answers
+the revocation of a foreign cluster is not checked (the line `revoke` above; formerly M11/8 N1.6). A client with a `peer` refusal closes the connection; forwarding answers
 502 `did not answer` with the refusal word in `detail`.
 
 ## Refusal words
 
-From М11/8 N4: the words of `peer`: `ip_address`, `bad_chain`, `foreign_ca`, `expired`, `no_role`, `wrong_role`, `wrong_name`.
+From M11/8 N4: the words of `peer`: `ip_address`, `bad_chain`, `foreign_ca`, `expired`, `no_role`, `wrong_role`, `wrong_name`.
 
 ## Vectors
 
-The package [`peer`](../vectors/peer/README.md): 31 rows — 25 inputs of the command `peer` of the acceptance of М11/8 (sc. 06) without a change of values, row 27 — a rearranged chain → `bad_chain` (step 4; analysis of the review of stage B 8–10, № 10) and rows 28–32 of the coverage audit of P/09 (second pass): `127.1` — a name, `::1` — `ip_address`, an empty chain before empty fingerprints — `bad_chain`, a trailing dot of host — `wrong_name`, an input without fields — `@exit 2`.
+The package [`peer`](../vectors/peer/README.md): 31 rows — 25 inputs of the command `peer` of the acceptance of M11/8 (sc. 06) without a change of values, row 27 — a rearranged chain → `bad_chain` (step 4; analysis of the review of stage B 8–10, № 10) and rows 28–32 of the coverage audit of P/09 (second pass): `127.1` — a name, `::1` — `ip_address`, an empty chain before empty fingerprints — `bad_chain`, a trailing dot of host — `wrong_name`, an input without fields — `@exit 2`.
 
 ## Correspondence to former lessons
 
-From М11/8 (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 2; analysis of the review of stage A 8–10, № 7): the lines `client` and
-`first` of N1.6 (here «Client and first contact»; in М11/8 — a pointer), N3 «peer» whole (here «The function `peer`») and the phrase of N4
-on the words of `peer` (here «Refusal words»). The norm М11/8-09 (`peer` and the first contact of a CA) — by `note` of [id-map](../id-map.tsv).
+From M11/8 (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 2; analysis of the review of stage A 8–10, № 7): the lines `client` and
+`first` of N1.6 (here «Client and first contact»; in M11/8 — a pointer), N3 «peer» whole (here «The function `peer`») and the phrase of N4
+on the words of `peer` (here «Refusal words»). The norm M11/8-09 (`peer` and the first contact of a CA) — by `note` of [id-map](../id-map.tsv).

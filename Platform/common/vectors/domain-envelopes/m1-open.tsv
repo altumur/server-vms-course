@@ -1,6 +1,6 @@
-# Opening m1 (the domain envelopes contract, «Конверт m1»): open(seed_hex, sealed) → a value or a word.
+# Opening m1 (the domain envelopes contract, «Envelope m1»): open(seed_hex, sealed) → a value or a word.
 # seed_hex — seed_secret of the member's key (Ed25519); sealed — as it came. expect — the value as a JSON string or the word not_m1 | not_an_envelope | does_not_open.
-# The rows — the acceptance inputs of М11/3 inputs/seal-member-*.json (case — the file name), the expectations — sc. 11 scenarios.tsv.
+# The rows — the acceptance inputs of M11/3 inputs/seal-member-*.json (case — the file name), the expectations — sc. 11 scenarios.tsv.
 # A row: case<TAB>seed_hex<TAB>sealed<TAB>expect<TAB>note.
 case	seed_hex	sealed	expect	note
 seal-member-01-opens	c27e2aa35b5905de643148195bc7c476e5c8dabaf63a2e9bb2dd17ac6d5cac39	m1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:LunirZ9_HDhNkRX82xtQbhzEyUTctUuKZvxiFkJD2V6vh2QJFfqkP2re2cxK	"{\"grants\":{\"alice\":[\"view\"]}}"	control: the key of member m1 — the value (JSON text)

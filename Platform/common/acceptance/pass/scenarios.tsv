@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Second-kind pass stand (ADR-0094 B1): not yet executable — README, «Исполнимость». Manifest probe-p, runner's substitute worker.
+# Second-kind pass stand (ADR-0094 B1): not yet executable — README, «Executability». Manifest probe-p, runner's substitute worker.
 01-ticket-lives-with-request	1	@domain m1	ok
 01-ticket-lives-with-request	2	@pass-worker m1 probe-p p-1	ok
 01-ticket-lives-with-request	3	@pass-open a member m1 console GET /probe-p/api/x?y=1	ok {"path": "/api/x", "query": "y=1", "ticket": "$t", "headers": {"Authorization": "@absent", "Cookie": "@absent", "X-W2C-Pass-Console": "@absent"}}
@@ -136,7 +136,7 @@ scenario	step	request	expect
 10-ticket-token-to-first-kind	10	@pass-answer b 200 application/json {"accounts": []}	200 {"accounts": []}
 10-ticket-token-to-first-kind	11	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /probe-f/fthings	401 {"error": "denied", "detail": "ticket refused"}
 10-ticket-token-to-first-kind	12	@pass-answer a 200 application/json {"ok": true}	200 {"ok": true}
-# 11-verify-race-pair, 12-verify-race-author, 13-verify-race-name (ADR-0119 addendum (18); gate contract «Предел попыток» verify answer, outcome, retry; P/08.4 N1.2a, N1.10; P/06.7 N1.15): verify admission reserves an attempt in three keys; two concurrent failures at boundaries 4/19/9 yield one 401 and one 429, counts at most 5/20/10; boundary success spends no budget.
+# 11-verify-race-pair, 12-verify-race-author, 13-verify-race-name (ADR-0119 addendum (18); gate contract «Attempt limit» verify answer, outcome, retry; P/08.4 N1.2a, N1.10; P/06.7 N1.15): verify admission reserves an attempt in three keys; two concurrent failures at boundaries 4/19/9 yield one 401 and one 429, counts at most 5/20/10; boundary success spends no budget.
 11-verify-race-pair	1	@domain m1	ok
 11-verify-race-pair	2	@pass-worker m1 probe-p p-1	ok
 11-verify-race-pair	3	holder POST /domain/users {"name": "sup", "password": "sup password 1"}	201

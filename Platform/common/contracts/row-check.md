@@ -12,7 +12,7 @@ canonical_url, ref_and_must_match), N3 «Common row check» and steps 4–7 of �
 behaviour; what the door does around the check (the claim, the number, the write, HTTP codes, `made_prefix`, `made_key`,
 secrets) — P/06.1 and [P/06.2](../../06-console/spec/06.2-console.norms.md), what the library does — P/03.6.
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). «N1.2», «N1.3», «N3», «N4» in the moved text
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md). «N1.2», «N1.3», «N3», «N4» in the moved text
 are addresses of chapters of P/06.1 unless said otherwise; «step N» of «create»/«edit» is a step of the door procedure of
 P/06.1 N3, their checks are the section «Order of checks» below.
 
@@ -62,7 +62,7 @@ absent:
   - a field with inherit, if not set: there is no element (not "" and not "null")
   - a json field with the value null
 platform_fields:   [id, revision, deleted, worker, placement, epoch, phase, observed_revision, born, made, index]   # unit rows
-table_platform_fields: [by, at, made_at, held_by, garbled, revision, index]   # table rows — their own list (P/02.1 tables.<name>.fields «не из»;
+table_platform_fields: [by, at, made_at, held_by, garbled, revision, index]   # table rows — their own list (P/02.1 tables.<name>.fields «not from»;
   # P/06.1 N3 «table — write a row» step 1): a table field declared with a name from platform_fields of the unit (worker,
   # epoch, …) is an ordinary field; an unknown one is a refusal, as before (the stage C guess C06-ROWCHECK-TABLE-FIELDS-707-01, the
   # Architect's decision of 2026-10-25)
@@ -70,9 +70,9 @@ table_platform_fields: [by, at, made_at, held_by, garbled, revision, index]   # 
   # unit.fields does not declare them (a load refusal of P/02.1), the client does not set them; a live row has only id, revision, born and
   # made (in a customer's row), deleted — only in a tombstone; born and made the door does not give the client to write: a body with them —
   # 400 «a client may not set …» (N3 step 4), an edit keeps them (ADR-0091 items 1, 3); made — in the answer (N2);
-  # state is not an element of the row: the effective state of the unit — in the GET answer (N2; P/03.6 N1.7); worker/placement — the row <sub>/placement/<id> (P/04 N1.1, added by М10/4);
+  # state is not an element of the row: the effective state of the unit — in the GET answer (N2; P/03.6 N1.7); worker/placement — the row <sub>/placement/<id> (P/04 N1.1, added by M10/4);
   # epoch — the epoch row; phase, observed_revision — status[].phase, status[].observed_revision
-  # of the object <sub>/heartbeats/<name> (P/03.4 N1.1, added by М10/5)
+  # of the object <sub>/heartbeats/<name> (P/03.4 N1.1, added by M10/5)
 ```
 
 The text forms of values by type are the vectors [`values-by-type`](../vectors/values-by-type/README.md) (review of stage A

@@ -25,7 +25,7 @@ a change of behaviour; the source chapters hold pointers. What the grants and th
 P/06.3 N1.5; the refusals of the gate are the section «Refusals of the gate»; the refusals of the pass are P/06.5 N4.
 References «N1.x» in the moved text are to the source chapter (N1.5, N1.8 — P/06.3; N4 — P/06.5); «chapter 6.K» is a chapter of lesson P/06.
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -73,8 +73,8 @@ gate:
     1. the break-glass cookie w2c_glass (a session in memory, 15 min); a cookie without a live emergency session is as without it,
        the check goes on to the next step (the cookie stays in the browser after 15 min too; GP-G03)
     2. X-Agent-Signature — the agent of the domain: only the doors of units, of tables domain.edit_tables, POST /console/batch and GET /events?class=alarm; with X-Agent-For (the form is <name> <iat>, out of form — 401; without a proven signature the header is removed) the identity of the door is this person, iat is from the header, then the usual need and may by the copy of grants: a refusal is 403, the agent's outcome is refused (ADR-0111 item 16; D-2) (the front and the alarm page — P/09.1 N1.10; the form and the window UNIT_WINDOW 60 s — the agent signature contract common/contracts/agent-signature.md; analysis of review of stage A 8–10, № 13)
-    3. Authorization: Bearer <token> | the cookie w2c_token → the domain: {user, until, grants} (the token — the domain token contract «Проверка» with expect {kind: person, cluster: null} (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10), the owner is P/08.2 — analysis of review of stage B 3–5, V1; the grants — P/06.7 N1.9 (the cluster console), P/10 N1.5 (the domain console); may — the right contract may.md)
-       the name is sub of the token, until is exp (the fields — the domain token contract «Токен» person); sub out of the form of a person name — 401
+    3. Authorization: Bearer <token> | the cookie w2c_token → the domain: {user, until, grants} (the token — the domain token contract «The check» with expect {kind: person, cluster: null} (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10), the owner is P/08.2 — analysis of review of stage B 3–5, V1; the grants — P/06.7 N1.9 (the cluster console), P/10 N1.5 (the domain console); may — the right contract may.md)
+       the name is sub of the token, until is exp (the fields — the domain token contract «The token» person); sub out of the form of a person name — 401
        (guess of stage C GP-L01, the Architect's decision of 2026-10-23); Authorization before the cookie w2c_token: with both, the header is read (guess of stage C GP-L02, the Architect's decision of 2026-10-23)
        a presented and wrong X-Agent-Signature (item 2) or token (item 3: by the header or by the cookie w2c_token) — 401, to item 4
        they do not go on (guess of stage C GP-G03, the Architect's decision of 2026-10-23)
@@ -143,7 +143,7 @@ gate:
                                        (C06-PASS-NEED-51-01, the Architect's decision of 2026-10-25)
     by the body — rights.unit_of, reach, names add units (section «Rights by the body»); before the body — the pre-check body_unit
     (at the cluster console — a grant on anything, at the domain gate — unit = "*"), the checks after the body are kept
-    (added by the reconciliation of М11; C06-BODYEDIT-SCOPE-33-01)
+    (added by the reconciliation of M11; C06-BODYEDIT-SCOPE-33-01)
   scope:    a grant on * | unit:<sub>/<id> | labels:<…> | folder:<id>; a grant on the unit or on its about-unit (C06-EVENTS-QUERY-UNKNOWN-138-10, the Architect's decision of 2026-10-26):
             - * and unit:<sub>/<id> of the unit itself are matched by the name given in the path or ?unit=: the unit row need not be read,
               with an unreadable row the grant covers;
@@ -288,7 +288,7 @@ A body refusal at the doors of the console: chunked — 400, larger than the lim
    of the pass of the second kind) / common; busy → 503 busy
 2. erase X-User; framing and the limit by the header; chunked → 400
 3. determine the trust gate — by reading on every request, without a cache: the store did not answer or the trust is unknown →
-   503 {error: denied} before parsing the path and the body (earlier — only steps 1–2: the lane and the frame; reconciliation of python and go М10/3–5, U19); no domain and not loopback → 403 FOR ALL paths,
+   503 {error: denied} before parsing the path and the body (earlier — only steps 1–2: the lane and the frame; reconciliation of python and go M10/3–5, U19); no domain and not loopback → 403 FOR ALL paths,
    the open ones and /session* included; no such door has been executed yet
 4. /session* → the procedure of chapter 6.3 N1.3: after the identity is established, if the request acts by cookie,
    a foreign Origin → 403 before a change of the session/cookies; otherwise the answer of the procedure
@@ -310,8 +310,8 @@ only by the entry and the grants. The side of the process `domain` is [P/08.4](.
 console is P/10 N1.5 (the grants `domain/grants/domain`).
 
 ```yaml
-cluster:   P/06.3 N1.3 identity step 3 (Bearer | the cookie w2c_token): the token — the function token of the domain token contract «Проверка»
-           by the set and domain/revoked of this cluster with expect {kind: person, cluster: null} — the domain token contract «Токен» (the Architect's decision
+cluster:   P/06.3 N1.3 identity step 3 (Bearer | the cookie w2c_token): the token — the function token of the domain token contract «The check»
+           by the set and domain/revoked of this cluster with expect {kind: person, cluster: null} — the domain token contract «The token» (the Architect's decision
            of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10); a refusal — 401 {error: denied, detail:
            "token refused: <word>"}, the form `Denied` (`Platform/common/contracts/gate-and-pass.api.openapi.yaml`), except
            no_revocations: the rule «Unreadable row» (503 {error: "unavailable"}; the Architect's decision of 2026-10-28 by the reconciliation ddc9bee1e); then may (the right contract) with
@@ -382,7 +382,7 @@ by the function `keys` ([domain key set contract](keys.md); analysis of review o
 `domain/grants/*`, `domain/break-glass/*`, or this console process has already seen keys: then without keys — `shut` (503), not `open`.
 
 In the state `on` the identity goes by the order of N1.3 `identity`: the agent signature — [agent signature contract](agent-signature.md); the token — the function `token` of the
-[domain token contract](domain-token.md) «Проверка» (owner P/08.2; analysis of review of stage B 3–5, V1) by the set of this cluster with `expect {kind: person, cluster: null}` (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10); the grants of a person and the entry — P/08.4. Without an identity — 401, not 503: 503 is only `shut`. In `on`
+[domain token contract](domain-token.md) «The check» (owner P/08.2; analysis of review of stage B 3–5, V1) by the set of this cluster with `expect {kind: person, cluster: null}` (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10); the grants of a person and the entry — P/08.4. Without an identity — 401, not 503: 503 is only `shut`. In `on`
 a person is admitted only by the entry and the grants (section «The gate with grants»); «loopback — operator» is only `open`; the agent of its own cluster passes by
 the signature ([agent signature contract](agent-signature.md); analysis of review of stage A 8–10, № 13).
 
@@ -423,7 +423,7 @@ body_unit: need whose unit is in the body (section «The gate» need: /marks, PO
            before the body — the pre-check «there is a grant edit on anything» (none — 403, the body is not read), after the body — the exact
            check of edit on the unit of the body (unit) and on the units of rights.unit_of, reach, names; a unit is not resolved — by
            unresolved ("*"); a grant on the about-unit of the row — by scope; at the domain gate before the body — unit = "*", the checks
-           after the body are kept (added by the reconciliation of М11; guess of stage C C06-BODYEDIT-SCOPE-33-01, the Architect's decision of
+           after the body are kept (added by the reconciliation of M11; guess of stage C C06-BODYEDIT-SCOPE-33-01, the Architect's decision of
            2026-10-25)
 create_about: the creation of a unit row whose unit is about from the body (rights.routes): before the body — the pre-check «there is a grant
            of the needed capability on anything» (as body_unit, but at the cluster console — without the requirement "*"), after the body —
@@ -462,7 +462,7 @@ door:          POST /session/break-glass {who, why, password} at the cluster con
                5. the password did not match — 401 {error: denied, detail: "break-glass: wrong password"} (counts toward the limit)
                5a. there are already GLASS_SESSIONS_MAX open sessions — 429 the form RateLimited of the contract of P/06 (`Platform/06-console/spec/06-console.api.openapi.yaml`), detail «too many
                   emergency sessions», Retry-After — the seconds until the end of the earliest session; the refusal does not count toward «Attempt limit»
-                  (added by the reconciliation of М11, P20)
+                  (added by the reconciliation of M11, P20)
                6. 200 {user: "break-glass(<who>)", until} + the cookie w2c_glass; the session is in the memory of the console process,
                   GLASS_SESSION, there is no token
 GLASS_SESSION: 900         # s
@@ -484,7 +484,7 @@ count:     a refusal is a wrong pair at POST /api/login (N1.2), at POST /api/ver
 address:   at the cluster console — the address of the TCP peer (address headers are not read); at the process domain — the address of the client that
            the domain console passes (its TCP peer; chapter 8.0 N1.8 pass): the process trusts a passed address only from the domain
            console, from other connections — the address of the TCP peer; a count by the TCP peer of the process would count all people as one address
-           of the console (added by the reconciliation of М11, P16)
+           of the console (added by the reconciliation of M11, P16)
   header:  X-W2C-Client — the forwarding contract «Client address» (who sets it, on which connection the process trusts it, the removal
            of one that came from outside; analysis of review of stage A 8–10, № 23 / decision 3)
 key:       the count key — at the process domain the pair (address, name): the name is the field user of the body of POST /api/login byte for byte, including
@@ -509,7 +509,7 @@ verify:    POST /api/verify has three count keys, each — refusals 401 in the l
   outcome: 401 — the reserve becomes a refusal with the time of the answer; 200, 503, 409 deposed, another refusal after the admission, a break or a timeout —
            the reserve is removed; a success and 429 spend no budget. The finalization of the reserve is single and atomic, under the same lock of
            the keys: the outcome is applied to the reserve once, a repeated one (a late answer after a timeout, a break after 401) is not applied
-           («М» of review (18) Codex)
+           («M» of review (18) Codex)
   retry:   Retry-After — by the key that fired: the sum is not below the limit only because of reserves (the refusals of the window are below the limit) —
            Retry-After: 1; otherwise — the seconds until the oldest refusal leaves the window; several fired — the key with the largest such
            term (with equal ones — pair, name, author), otherwise a retry after Retry-After would get 429 again (the Specification's decision;
@@ -661,8 +661,8 @@ There are no vectors: the gate, `/session`, the rights by the body, the break-gl
 
 ## Correspondence to former lessons
 
-From P/06.3 (analysis of review of stage A 8–10, № 14 / decision 3; formerly М10/9 N1.3): N1.3 — the block `gate`, `open_routes`, `session`
-in full (here «The gate»; in P/06.3 N1.3 — a pointer and a paragraph about request parsing). From P/06.5 N1.8 (formerly М10/11 N1.8):
+From P/06.3 (analysis of review of stage A 8–10, № 14 / decision 3; formerly M10/9 N1.3): N1.3 — the block `gate`, `open_routes`, `session`
+in full (here «The gate»; in P/06.3 N1.3 — a pointer and a paragraph about request parsing). From P/06.5 N1.8 (formerly M10/11 N1.8):
 the block `manifest`, `rule`, `codes` (here «Pass of `door.pass`»; the definition of «a live worker with a door» stayed in P/06.5 N1.8). Parts of the norms
-P/06.3-02, P/06.3-03 and P/06.5-12 — by `note` of the [id-map](../id-map.tsv); the domain console — М11/8-10 (`door.pass` on the domain,
-P/10-03), М11/8-11 (the holder's page, P/10-04) and М11/9-06 (the gate with grants; the part of the domain console — P/10-13, of the cluster console — P/06.7-11).
+P/06.3-02, P/06.3-03 and P/06.5-12 — by `note` of the [id-map](../id-map.tsv); the domain console — M11/8-10 (`door.pass` on the domain,
+P/10-03), M11/8-11 (the holder's page, P/10-04) and M11/9-06 (the gate with grants; the part of the domain console — P/10-13, of the cluster console — P/06.7-11).

@@ -1,8 +1,8 @@
 # Outcomes of an unreadable row platform/manifest/<sub>/canonical/<форма> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-/rev	*	as the whole view: the reader — does not start, code 2 (a running one — stops, code 2); manifest put — the view is rewritten (not «no changes»)	0	строка	P/02.2 Н3 «Reader», «manifest put»
-/sha256	*	as the whole view: the reader — does not start, code 2; manifest put — the view is rewritten	0	строка	P/02.2 Н3 «Reader», «manifest put»
-/manifest	*	as the whole view: the reader — does not start, code 2 (manifest not by the built schema — the same); manifest put — the view is rewritten	0	строка	P/02.2 Н3 «Reader», «manifest put»
-	admin	the whole view is unreadable: manifest put — the view is not «present, readable and equal to the projection», not «no changes»: a row with rev + 1, the view, the mark (chapter 2.3 Н3 «Manifest change»)	1	строка	P/02.2 Н3 «установщик manifest put»; P/02.3 Н3 «Manifest change»
-	<s>worker	the whole view is unreadable: the worker runner does not take the program from the view — as an unreadable manifest: does not start, code 2, the cause goes to the log (P1; V7 item 3, row 18)	1	строка	P/02.2 Н3 «Reader»; P/02.3 Н3 «Программа воркера из строки»
-	<s>domain	the whole view is unreadable: the worker runner does not take the program from the view — as an unreadable manifest: does not start, code 2, the cause goes to the log (P1; V7 item 3, row 18)	1	строка	P/02.2 Н3 «Reader»; P/02.3 Н3 «Программа воркера из строки»
+/rev	*	as the whole view: the reader — does not start, code 2 (a running one — stops, code 2); manifest put — the view is rewritten (not «no changes»)	0	row	P/02.2 Н3 «Reader», «manifest put»
+/sha256	*	as the whole view: the reader — does not start, code 2; manifest put — the view is rewritten	0	row	P/02.2 Н3 «Reader», «manifest put»
+/manifest	*	as the whole view: the reader — does not start, code 2 (manifest not by the built schema — the same); manifest put — the view is rewritten	0	row	P/02.2 Н3 «Reader», «manifest put»
+	admin	the whole view is unreadable: manifest put — the view is not «present, readable and equal to the projection», not «no changes»: a row with rev + 1, the view, the mark (chapter 2.3 Н3 «Manifest change»)	1	row	P/02.2 Н3 «установщик manifest put»; P/02.3 Н3 «Manifest change»
+	<s>worker	the whole view is unreadable: the worker runner does not take the program from the view — as an unreadable manifest: does not start, code 2, the cause goes to the log (P1; V7 item 3, row 18)	1	row	P/02.2 Н3 «Reader»; P/02.3 Н3 «Программа воркера из строки»
+	<s>domain	the whole view is unreadable: the worker runner does not take the program from the view — as an unreadable manifest: does not start, code 2, the cause goes to the log (P1; V7 item 3, row 18)	1	row	P/02.2 Н3 «Reader»; P/02.3 Н3 «Программа воркера из строки»

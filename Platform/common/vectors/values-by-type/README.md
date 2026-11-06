@@ -7,7 +7,7 @@ N4 — type refusals). The participants are all who read or write unit and table
 `<s>domain`, `domain`, `domainagent` (the readers of a unit row by [the catalog](../../data/catalog.tsv)), the codec of the schemas
 of families [`codec.tsv`](../../data/codec.tsv) (the types `string`, `integer`, `number`, `boolean`, `array`, `null` — the
 same rule), table rows (P/06.1 N1.6: the values and stamps — by `values_by_type`), the row `sweep` (P/06.1 N1.5: `at`).
-The bytes are written by «Спецификация» (ADR-0083, stage B; review analysis of stage A 6–7, № 33); the conformance of the product is by its acceptance
+The bytes are written by «Specification» (ADR-0083, stage B; review analysis of stage A 6–7, № 33); the conformance of the product is by its acceptance
 against this table (ADR-0080 addendum 16).
 
 ## `cases.tsv`
@@ -70,7 +70,7 @@ a template with `{input}` — the path of a file with one JSON object. The runne
 - **Read** — exactly `{type, direction, present, sealed, row}`, `direction` = `read`: a cell that is a JSON string — `present: true`,
   `sealed: false`, `row` — its text, decoded once; `@json X` — `row` is the text `X` as written; `@absent` —
   `present: false`, `sealed: false`, `row: null`; `@sealed` — `present: true`, `sealed: true`, `row: null`: only `secret`,
-  the command itself prepares an envelope by its sealing procedure and gives it to the regular read («любой конверт» of item 2
+  the command itself prepares an envelope by its sealing procedure and gives it to the regular read («any envelope» of item 2
   above). The answer is `{"status": "ok", "value": <JSON value>}` (`value: null` — the field exists with the value `null`),
   `{"status": "absent"}` (`@unset`) or `{"status": "unreadable"}` (`@unreadable`; an unreadable text is an input of the form, code 0).
   The reconciliation of `value` with the column `json` — by JSON value, as in item 2.

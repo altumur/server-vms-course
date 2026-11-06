@@ -11,7 +11,7 @@ and the issue stay with the owner. Readers: the gate of the cluster console — 
 [P/03.7](../../03-worker/spec/03.7-worker.norms.md) N1.5, N3 «check at the recipient»), the worker token door ([chapter 8.7](../../08-domain/spec/08.7-domain.norms.md)),
 the process `domain` — the people doors and `/domain/revoke` ([chapter 8.4](../../08-domain/spec/08.4-domain.norms.md) N1.2, N3
 «people door»), the domain console — the gate by the [gate-and-pass contract](gate-and-pass.md) ([lesson P/10](../../10-domain-console/spec/10-domain-console.norms.md) N1.5) (analysis of
-review of stage A 8–10, № 16). Moved from М11/2 N1.6 (the row `token` with `header`,
+review of stage A 8–10, № 16). Moved from M11/2 N1.6 (the row `token` with `header`,
 `payload`, `sig`, the constant `TOKEN_SKEW`, the paragraph about who checks), N3 «`token(keys, revoked, now, token)`» (the steps with
 `expect` and the paragraph about the boundary) and the rows of N4 about the token without a change of behaviour. What is common to the forms of chapter 8.2 (hex, canonical
 base64url, JCS — RFC 8785, ADR-0072, «wall-clock seconds», Ed25519 — RFC 8032, completeness of JSON forms, a repeated key) —
@@ -20,10 +20,10 @@ the [domain founding contract](domain-founding.md) «Common rules of forms» (la
 review of stage A 8–10, № 13); the offline revocation window — P/08.2 N1.7. The kind of a worker token
 and `audience_claim` — the kind declaration of [P/02.1](../../02-installer/spec/02.1-installer.norms.md) N1.2b (the late layer),
 the claims of the token — [chapter 8.7](../../08-domain/spec/08.7-domain.norms.md). The reference «lesson N»
-in the moved text is lesson М11/N, their addresses now: «lesson 7» (the worker token) — P/08.7, «lesson 9» (the person token) —
-P/08.4 (analysis of review of stage B 8–10, № 22); «N1.x» in the steps — the chapters of P/08.2 (formerly of lesson М11/2; the numbers of the subsections are the former ones).
+in the moved text is lesson M11/N, their addresses now: «lesson 7» (the worker token) — P/08.7, «lesson 9» (the person token) —
+P/08.4 (analysis of review of stage B 8–10, № 22); «N1.x» in the steps — the chapters of P/08.2 (formerly of lesson M11/2; the numbers of the subsections are the former ones).
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -31,7 +31,7 @@ The function `token` reads `domain/keys` and `domain/revoked`: `Platform/08-doma
 
 ## The token
 
-From М11/2 N1.6:
+From M11/2 N1.6:
 
 ```yaml
 token:         <b64url(header)>.<b64url(payload)>.<b64url(sig)>       # exactly three parts
@@ -70,13 +70,13 @@ is refused at the recipient, by steps 9–10 of this contract.
 
 ## The check: `token(keys, revoked, now, token) → ok payload | refused <word>`
 
-From М11/2 N3; `keys` is the accepted set ([the domain key set contract](keys.md) «The set»), `revoked` is the row
-`domain/revoked` as read (the form — [the domain key set contract](keys.md) «Отзывы»), `now` is the wall-clock seconds of the
+From M11/2 N3; `keys` is the accepted set ([the domain key set contract](keys.md) «The set»), `revoked` is the row
+`domain/revoked` as read (the form — [the domain key set contract](keys.md) «Revocations»), `now` is the wall-clock seconds of the
 checker:
 
 ```
 1. revoked exists and is not in the form of N1.6 (not {jtis: string}; an entry not «<jti>:<number>»; the number is finite, by the grammar of
-   JSON without spaces: `0123`, `1e400`, `+1` — out of form; added by the М11 reconciliation, T2, T3) → refused no_revocations
+   JSON without spaces: `0123`, `1e400`, `+1` — out of form; added by the M11 reconciliation, T2, T3) → refused no_revocations
 2. token is not a string; not three parts; a part is not base64url; header or payload is not a JSON object or has a repeated key;
    header.alg ≠ "EdDSA"; header.kid is not a string                              → refused not_a_token
 3. kid ∉ keys.keys                                                               → refused unknown_key
@@ -95,7 +95,7 @@ checker:
 # (person without an audience, lesson 9): the audience is not checked
 ```
 
-«N1.6» in steps 1 and 5 is М11/2 N1.6 (now P/08.2 N1.6): the form of `domain/revoked` (step 1; now — [the domain key set contract](keys.md) «Отзывы») and the grammar of `jti` (the section «The token» above, step 5). The form of
+«N1.6» in steps 1 and 5 is M11/2 N1.6 (now P/08.2 N1.6): the form of `domain/revoked` (step 1; now — [the domain key set contract](keys.md) «Revocations») and the grammar of `jti` (the section «The token» above, step 5). The form of
 `expect` is the input of the command `token` ([P/08.2](../../08-domain/spec/08.2-domain.norms.md) N5): `expect?: {kind: <row> | [<row>…], cluster: <member> | null, audience_claim?: <field
 name — a non-empty string, default aud> | {<kind>: <field name>}, keep?: [<kind>…]}`; `keep` is the kinds with `keep: true` of the manifest, no field — empty. `kind` as a string — one kind, `audience_claim` with it — a string;
 `kind` as a list — non-empty, without repeats, without `person`, `audience_claim` with it — a map, the keys are kinds from the list (a kind without
@@ -112,7 +112,7 @@ gate — the rule «Unreadable row» of the gate-and-pass contract, [P/06.3](../
 
 ## Refusal words
 
-From М11/2 N4 (the rows about the token):
+From M11/2 N4 (the rows about the token):
 
 | Reason | Outcome | Who sees it and how | What the caller does |
 |---|---|---|---|
@@ -126,7 +126,7 @@ At the recipient of a kind token (P/03.7 N4) — `wrong_kind`, `wrong_audience` 
 ## Vectors
 
 The package [`domain-token`](../vectors/domain-token/README.md) (owner P/08.2; the move of lesson 8): 53 lines — 29 inputs of the command
-`token` of the acceptance of М11/2 (`inputs/token-*.json`, sc. 04–07, 12 — the key and `until`, the form, the boundary `exp + 60` and `iat − 60`,
+`token` of the acceptance of M11/2 (`inputs/token-*.json`, sc. 04–07, 12 — the key and `until`, the form, the boundary `exp + 60` and `iat − 60`,
 revocation, `expect`) without a change of bytes; the scenarios and the inputs were removed by the move of lesson 8 — the table is the only source of these
 cases; 3 lines of the form `expect` and 11 lines of the list of kinds (ADR-0091 addendum (18) item 1, addendum (19) item 1) — by the text of the contract; 2 lines
 of an input out of form (`audience_claim` empty, `keys` without `current`; coverage audit of P/08, the second pass of Gemini) — by the output of the witnesses; 8 lines
@@ -138,13 +138,13 @@ of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; AD
 
 ## Correspondence to former lessons
 
-From М11/2 (analysis of review of stage B 3–5, V1): N1.6 — the row `token` (`header`, `payload`, `sig`), `TOKEN_SKEW` and the paragraph
-«The check of a token is the function `token`…» (here «The token»; `domain/revoked` — now [the domain key set contract](keys.md) «Отзывы», `OLD_KEYS` — P/08.2 N1.6); N3
+From M11/2 (analysis of review of stage B 3–5, V1): N1.6 — the row `token` (`header`, `payload`, `sig`), `TOKEN_SKEW` and the paragraph
+«The check of a token is the function `token`…» (here «The token»; `domain/revoked` — now [the domain key set contract](keys.md) «Revocations», `OLD_KEYS` — P/08.2 N1.6); N3
 «`token(keys, revoked, now, token)`» — steps 1–11 with the comment `expect` and the paragraph about the boundary (here «The check»); N4 — the rows
-about the token (here «Refusal words»). A part of the norm М11/2-05 (the order of the check) and М11/2-06 (an unreadable row of revocations —
-«nothing to check with») — now P/08.2-05, P/08.2-06 — by `note` of [id-map](../id-map.tsv); the readers — P/03.7-03, P/06.3 N1.3. The steps refer to the norms of М11/2
+about the token (here «Refusal words»). A part of the norm M11/2-05 (the order of the check) and M11/2-06 (an unreadable row of revocations —
+«nothing to check with») — now P/08.2-05, P/08.2-06 — by `note` of [id-map](../id-map.tsv); the readers — P/03.7-03, P/06.3 N1.3. The steps refer to the norms of M11/2
 («N1.6», now P/08.2 N1.6) as to the owner: the references and the step numbers are the former ones, P/03.7 N4 and the vectors
-[`domain-token`](../vectors/domain-token/README.md) refer to them (formerly the acceptance of М11/2 sc. 12).
+[`domain-token`](../vectors/domain-token/README.md) refer to them (formerly the acceptance of M11/2 sc. 12).
 A change of behaviour after the move: the required key `cluster` in `expect` (`null` — only with `kind: person`), step 10 at
 `cluster: null`, the table of checkers with their `expect` (the gates of the cluster and domain consoles formerly called `token` without
 `expect`) (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10).

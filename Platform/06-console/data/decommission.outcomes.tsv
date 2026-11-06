@@ -1,7 +1,7 @@
 # Outcomes of an unreadable row platform/decommission/<сервер> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	<s>controller	the whole row is unreadable: the controller does not execute the decommission in this pass; the row is not rewritten, the cause goes to the log (layout audit, G-12; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)	0	строка	P/04 Н3 «decommission_server» шаг 2
-	<s>worker	the whole row is unreadable: the worker takes no name at start and stays nobody until a readable row, log (the Architect's answer of 2026-10-25 to the questions of stage 3, G-12)	0	строка	P/03.2 Н3 «старт()» шаг 3
-	console	the whole row is unreadable: the console does not delete the door row; the row is not rewritten, the cause goes to the log (layout audit, G-12; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)	0	строка	P/06.6 Н3 «decommission_server»
-	resource	the whole row is unreadable: the resource does not write its own door row, log (the Architect's answer of 2026-10-25 to the questions of stage 3, G-12)	0	строка	P/05 Н1.4 door_row
+	<s>controller	the whole row is unreadable: the controller does not execute the decommission in this pass; the row is not rewritten, the cause goes to the log (layout audit, G-12; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)	0	row	P/04 Н3 «decommission_server» шаг 2
+	<s>worker	the whole row is unreadable: the worker takes no name at start and stays nobody until a readable row, log (the Architect's answer of 2026-10-25 to the questions of stage 3, G-12)	0	row	P/03.2 Н3 «старт()» шаг 3
+	console	the whole row is unreadable: the console does not delete the door row; the row is not rewritten, the cause goes to the log (layout audit, G-12; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)	0	row	P/06.6 Н3 «decommission_server»
+	resource	the whole row is unreadable: the resource does not write its own door row, log (the Architect's answer of 2026-10-25 to the questions of stage 3, G-12)	0	row	P/05 Н1.4 door_row

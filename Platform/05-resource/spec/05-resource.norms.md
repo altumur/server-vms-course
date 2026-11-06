@@ -23,20 +23,20 @@ the map to former ids is [`id-map.tsv`](../../common/id-map.tsv).
 
 <!-- req: P/05-R001 -->
 
-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 N0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary).
+Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module are [P/01.1 N0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary).
 
 ## N1 Form
 
 <!-- req: P/05-R002 -->
 
-**Time.** The time fields of the rows and objects of the lesson are time by [the canon of N0 of P/01.1](../../01-store/spec/01.1-store.norms.md#time-in-a-row): the event line — `t` ([the event log contract](../../common/contracts/event-journal.md)); the resource heartbeat object `platform/resources/<server>/heartbeat` — `ts`, `usage_at`, `pass_started`; the door row `platform/doors/<server>` — `since`, `at`; `<sub>/requests/free-<server>-<volume>` — `at`; the tombstone `.gone/<key>` — `written` (written by the console, [P/06.1](../../06-console/spec/06.1-console.norms.md) N1.5).
+**Time.** The time fields of the rows and objects of the lesson are time by [the canon of N0 of P/01.1](../../01-store/spec/01.1-store.norms.md#time-in-a-row): the event line — `t` ([the event log contract](../../common/contracts/event-journal.md)); the resource heartbeat object `platform/resources/<server>/heartbeat` — `ts`, `usage_at`, `pass_started`; the door row `platform/doors/<host>` — `since`, `at`; `<sub>/requests/free-<server>-<volume>` — `at`; the tombstone `.gone/<object-key>` — `written` (written by the console, [P/06.1](../../06-console/spec/06.1-console.norms.md) N1.5).
 
 <!-- req: P/05-R003 -->
 
 **Data** ([catalogue](../../common/data/catalog.tsv)):
-- owns: `platform/resources/<server>/heartbeat`, `platform/doors/<server>`, `<sub>/requests/free-<server>-<volume>`, `<events root>/<sub>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/<sub>.alarms/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/audit/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/audit.alarms/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/console/<instance>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/console.alarms/<instance>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/.mirror/<server>/<tree>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/.workers/<sub>/<instance>.lock`, `<events or objects root>/<path>/%h<sha256>.name`, `<objects root>/<dir>/~lock` (ADR-0083 addendum (16)), `.gone/<key>`, `objects/<sub>/<manifest:objects.rows>`, `objects/<sub>/<manifest:objects.rows>/*`;
+- owns: `platform/resources/<server>/heartbeat`, `platform/doors/<host>`, `<sub>/requests/free-<server>-<volume>`, `<events root>/<sub>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/<sub>.alarms/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/audit/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/audit.alarms/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/console/<instance>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/console.alarms/<instance>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/.mirror/<server>/<tree>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<events root>/.workers/<sub>/<instance>.lock`, `<events or objects root>/<path>/%h<sha256>.name`, `<objects root>/<dir>/~lock` (ADR-0083 addendum (16)), `.gone/<object-key>`, `objects/<sub>/<manifest:objects.rows>`, `objects/<sub>/<manifest:objects.rows>/*`;
 - writes: `<sub>/blobs/sha256-<hex>` (put);
-- reads: `platform/manifest/<sub>`, `platform/manifest/<sub>/rev`, `platform/schema`, `<sub>/heartbeats/<name>`, `platform/decommission/<server>`, `platform/doors/<server>`, `platform/resources/<server>/heartbeat`, `<sub>/retention`, `<sub>/alarms_retention`, `platform/space`, `platform/mirror`, `<sub>/<manifest:tables>/<name>`, `<sub>/<manifest:unit.rows>/<id>` (the unit rows of the manifest with about — the addressee of a hold, the holds contract; P/02.5 N1.4), `/etc/w2c/tls/<role>/server.key`.
+- reads: `platform/manifest/<sub>`, `platform/manifest/<sub>/rev`, `platform/schema`, `<sub>/heartbeats/<name>`, `platform/decommission/<host>`, `platform/doors/<host>`, `platform/resources/<server>/heartbeat`, `<sub>/retention`, `<sub>/alarms_retention`, `platform/space`, `platform/mirror`, `<sub>/<manifest:tables>/<name>`, `<sub>/<manifest:unit.rows>/<id>` (the unit rows of the manifest with about — the addressee of a hold, the holds contract; P/02.5 N1.4), `/etc/w2c/tls/<role>/server.key`.
 
 <!-- req: P/05-R004 -->
 
@@ -68,7 +68,7 @@ object:
              a body copy (PUT .../blobs/<digest> with X-Written, the mirror) keeps the written of the source copy, not its own: otherwise a copy
              that lay before the delete would be newer than the tombstone; for a copy of the same key already lying there written does not decrease
              (the greater of the two) (C05-COPY-WRITTEN-SOURCE-01); for a key deleted here the former written is the written of its
-             tombstone `.gone/<key>` while it lies: a new write is strictly greater than it (otherwise the neighbours would count it older than
+             tombstone `.gone/<object-key>` while it lies: a new write is strictly greater than it (otherwise the neighbours would count it older than
              the delete, the tombstone contract `drop`, `rewrite`); there is no separate memory — the tombstone is the mark; a write
              after written removes the tombstone by the same action, before the answer of the write (the tombstone contract `rewrite`;
              C05-GONE-REWRITE-AT-WRITE-01, the decision of the Architect of 2026-10-30, norm questions of the Gemini audit, P/05 item 1); the tombstone
@@ -79,7 +79,7 @@ object:
              (objects.rows of the manifest; commands/* — always, for a manifest with requests); put_new = a write with cas ""
   door:      only the families PLATFORM_DOOR (platform/resources/*, domain/* (М11), */heartbeats/*, */contenders/*, */snapshot/*, */snapshot-tables/*,
              */controller/*, */blobs/*; snapshot and blobs — added by М10/10) and objects.door of the manifest; anything else — 403;
-             tombstones .gone/<key> — read only: the listing prefix=.gone/ and GET of the body (the tombstone contract; C05-GONE-BODY-READ-01);
+             tombstones .gone/<object-key> — read only: the listing prefix=.gone/ and GET of the body (the tombstone contract; C05-GONE-BODY-READ-01);
              `*` of the first part is a subsystem of the manifest catalogue: `other/heartbeats/x` without a manifest other — 403 (reconciliation of python and go М10/6–11, E5)
              the resource does not parse the bodies of door objects: an object unreadable by its family (a worker heartbeat, a mark) it gives
              as it is, the judgement is with the reader (V7 item 3, the decision of the Architect of 2026-10-28, on the proposal; line 24 of the list)
@@ -94,7 +94,7 @@ backslash and control characters. `prefix` is the beginning of such a key, also 
 or an ending `/`; it is not a full key. The objects door does not give row objects even from
 an allowed prefix. With equal `written` the server with the lexicographically greater
 name is chosen; the absence of an answer is called `missing`, not the absence of the object. A
-listing returns the closed form ObjectListing of N2; deleted objects are tombstones `.gone/<key>` (below, «Tombstones»): an ordinary listing does not show them, `prefix=.gone/` is
+listing returns the closed form ObjectListing of N2; deleted objects are tombstones `.gone/<object-key>` (below, «Tombstones»): an ordinary listing does not show them, `prefix=.gone/` is
 a read-only listing of tombstones (log of cammeta-go, lesson 10 № 2).
 
 <!-- req: P/05-R008 -->
@@ -160,7 +160,7 @@ than which the tombstone of the deleter is newer is not accepted (N4, «deleted 
 <!-- req: P/05-R017 -->
 
 ```yaml
-delete:   the tombstone .gone/<key> {written, peers, acked}, the neighbours peers, the reading by a neighbour, the confirmation 404 and the removal —
+delete:   the tombstone .gone/<object-key> {written, peers, acked}, the neighbours peers, the reading by a neighbour, the confirmation 404 and the removal —
           [the tombstone contract](../../../common/contracts/tombstone.md) (moved there without a change of behaviour; C06-BLOB-GC-33-01, the decision of the Architect of 2026-10-25);
           the objects door has no DELETE
 ```
@@ -284,7 +284,7 @@ resource:                                    # one process per server; without a
   usage:     an integer — the bytes of the bucket files of the trees of this server and of the copies in .mirror/; usage_at — the wall seconds
              of the measurement; space — the volume of the event tree: total, free, used — bytes (statfs), full — the share used/total from 0 to 1
              (not a flag); volumes — the same per volume (log of cammeta-go, lesson 9 № 1)
-  door_row:  platform/doors/<server> {url, since, at, room.<sub>…, live.<sub>…}; at — every ALIVE_EVERY (the observation contract «Resource state»; layout audit, the decision of the Architect of 2026-10-25, A-10)
+  door_row:  platform/doors/<host> {url, since, at, room.<sub>…, live.<sub>…}; at — every ALIVE_EVERY (the observation contract «Resource state»; layout audit, the decision of the Architect of 2026-10-25, A-10)
   room:      the elements room.<sub> and live.<sub> — by the presence lock contract «Счёт room» (presence-lock.md; moved
              there, review of stage A 3–5, № 9; live.<sub> — ADR-0084 addendum (3) R14′, № 3, 19)
             do not write the door while platform/decommission/<my server> stands (the observation contract «Server decommissioned» narrower; the console deleted it)
@@ -310,7 +310,7 @@ resource:                                    # one process per server; without a
              are not copied until enabled: true (guess of stage C R05-G05, the decision of the Architect of 2026-10-23); the row does not read —
              the step mirror is not executed, the reason is in the heartbeat settings_unread: mirror, `copies 1, enabled false` are not substituted
              (V7 item 3, the decision of the Architect of 2026-10-28, P1; line 20 of the list); bodies — N1.1 mirror;
-             the neighbours — the next copies live servers by name; liveness — by the door row platform/doors/<server>, as in the merge
+             the neighbours — the next copies live servers by name; liveness — by the door row platform/doors/<host>, as in the merge
              contract «Live resources» (the version changed within the last LOST_AFTER on the clock of this resource, the first look — as fresh), the heartbeat
              of the neighbour does not judge here (the decision of the Architect of 2026-10-31); only closed buckets;
              the copy in .mirror/<server>/…; a copy is never a source while the owner answers; PEER_FAILS 3, a bucket ≤ 64 MiB
@@ -445,9 +445,9 @@ The form `answered` (the mark row of a request, AnsweredMark) — [chapter 6.4](
 
 The form of the rows and objects and JSON files that the chapter owns by the [catalog](../../common/data/catalog.tsv) is the JSON Schema 2020-12 of the family (ADR-0092). An instance of a row is `{key, row}`, of an object `{key, object}`, of a file `{key, file}` (the text of the file in UTF-8; the root of the schema is its parse, `x-encoding`); the key is the grammar of the column `key` of the catalog. The fields of `row` are the values of `items` after the [codec](../../common/data/codec.tsv): the writer checks the schema and its `$defs.writer`, the reader the schema (layer 3 — the words `x-*` of the schema). Unreadable — the row did not decode or did not pass the schema in the reader's mode; the outcome is by the table of outcomes of the family: the path is a prefix of the path of the refusal (empty — the whole row); with several paths of refusal the outcome of the least priority applies.
 
-#### `platform/doors/<сервер>` — row
+#### `platform/doors/<host>` — row
 
-Schema — [`doors.schema.json`](../data/doors.schema.json), outcomes — [`doors.outcomes.tsv`](../data/doors.outcomes.tsv); form version 1; norm — P/05 Н1.4 door_row; договор замка присутствия; P/06.6 Н3 «вывести_сервер» (delete консолью).
+Schema — [`doors.schema.json`](../data/doors.schema.json), outcomes — [`doors.outcomes.tsv`](../data/doors.outcomes.tsv); form version 1; norm — P/05 N1.4 door_row; the presence lock contract; P/06.6 N3 «decommission a server» (delete by the console).
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
@@ -474,7 +474,7 @@ Outcomes of an unreadable row (the reader is a role; `*` — all readers of the 
 
 #### `platform/resources/<server>/heartbeat` — object
 
-Schema — [`resource-heartbeat.schema.json`](../data/resource-heartbeat.schema.json), outcomes — [`resource-heartbeat.outcomes.tsv`](../data/resource-heartbeat.outcomes.tsv); form version 1; norm — P/05 Н1.4.
+Schema — [`resource-heartbeat.schema.json`](../data/resource-heartbeat.schema.json), outcomes — [`resource-heartbeat.outcomes.tsv`](../data/resource-heartbeat.outcomes.tsv); form version 1; norm — P/05 N1.4.
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
@@ -575,7 +575,7 @@ Outcomes of an unreadable object (the reader is a role; `*` — all readers of t
 
 #### `<sub>/requests/free-<server>-<volume>` — row
 
-Schema — [`free-ask.schema.json`](../data/free-ask.schema.json), outcomes — [`free-ask.outcomes.tsv`](../data/free-ask.outcomes.tsv); form version 1; norm — P/05 Н1.4 free_ask.
+Schema — [`free-ask.schema.json`](../data/free-ask.schema.json), outcomes — [`free-ask.outcomes.tsv`](../data/free-ask.outcomes.tsv); form version 1; norm — P/05 N1.4 free_ask.
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
@@ -592,30 +592,9 @@ Outcomes of an unreadable row (the reader is a role; `*` — all readers of the 
 | the whole row | `console` | a resource row without a live owner is removed by ttl | 0 | row | P/06.4 Н3 «reaper» |
 | the whole row | `resource` | not its own form (unit present, someone else's server/volume, a spoiled form): do not touch, log free_ask.key_taken, skip | 0 | row | P/05 Н1.4 free_ask, Н3 «проход ресурса» relieve |
 
-#### `<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
+#### `<events root>/<sub>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
 
-Schema — [`events-unit.schema.json`](../data/events-unit.schema.json), outcomes — [`events-unit.outcomes.tsv`](../data/events-unit.outcomes.tsv); form version 1; norm — P/05 Н1.2; договор журнала событий.
-
-| Key | Type and bounds | Requirement | Lesson | Meaning |
-|---|---|---|---|---|
-| `t` | time (P/01.1 N0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
-| `kind` | string | required |  | the event kind |
-| `id` | string | required |  | `e1-<hexUTF8(tree)>-<hexUTF8(unit)>-<epoch>-<hexUTF8(instance)>-<number>`; unique, duplicate copies are removed by it |
-| `of` | string | optional |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
-| `class` | string; one of: `alarm` | optional |  | only for an alarm; not written for observation |
-| `occurred` | time (P/01.1 N0 «Time in a row») | optional |  | when it happened; optional |
-| `v` | integer; ≥ 1 | optional |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
-| `.<name>` | any value | optional |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
-
-Outcomes of an unreadable file (the reader is a role; `*` — all readers of the family):
-
-| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
-|---|---|---|---|---|---|
-| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
-
-#### `<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
-
-Schema — [`events-unit-alarms.schema.json`](../data/events-unit-alarms.schema.json), outcomes — [`events-unit-alarms.outcomes.tsv`](../data/events-unit-alarms.outcomes.tsv); form version 1; norm — P/05 Н1.2; договор журнала событий.
+Schema — [`events-unit.schema.json`](../data/events-unit.schema.json), outcomes — [`events-unit.outcomes.tsv`](../data/events-unit.outcomes.tsv); form version 1; norm — P/05 N1.2; the event journal contract.
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
@@ -634,30 +613,9 @@ Outcomes of an unreadable file (the reader is a role; `*` — all readers of the
 |---|---|---|---|---|---|
 | the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
-#### `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
+#### `<events root>/<sub>.alarms/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
 
-Schema — [`events-audit.schema.json`](../data/events-audit.schema.json), outcomes — [`events-audit.outcomes.tsv`](../data/events-audit.outcomes.tsv); form version 1; norm — P/05 Н1.2; договор журнала событий.
-
-| Key | Type and bounds | Requirement | Lesson | Meaning |
-|---|---|---|---|---|
-| `t` | time (P/01.1 N0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
-| `kind` | string | required |  | the event kind |
-| `id` | string | required |  | `e1-<hexUTF8(tree)>-<hexUTF8(unit)>-<epoch>-<hexUTF8(instance)>-<number>`; unique, duplicate copies are removed by it |
-| `of` | string | optional |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
-| `class` | string; one of: `alarm` | optional |  | only for an alarm; not written for observation |
-| `occurred` | time (P/01.1 N0 «Time in a row») | optional |  | when it happened; optional |
-| `v` | integer; ≥ 1 | optional |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
-| `.<name>` | any value | optional |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
-
-Outcomes of an unreadable file (the reader is a role; `*` — all readers of the family):
-
-| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
-|---|---|---|---|---|---|
-| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
-
-#### `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
-
-Schema — [`events-audit-alarms.schema.json`](../data/events-audit-alarms.schema.json), outcomes — [`events-audit-alarms.outcomes.tsv`](../data/events-audit-alarms.outcomes.tsv); form version 1; norm — P/05 Н1.2; договор журнала событий.
+Schema — [`events-unit-alarms.schema.json`](../data/events-unit-alarms.schema.json), outcomes — [`events-unit-alarms.outcomes.tsv`](../data/events-unit-alarms.outcomes.tsv); form version 1; norm — P/05 N1.2; the event journal contract.
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
@@ -676,30 +634,9 @@ Outcomes of an unreadable file (the reader is a role; `*` — all readers of the
 |---|---|---|---|---|---|
 | the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
-#### `<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
+#### `<events root>/audit/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
 
-Schema — [`events-console.schema.json`](../data/events-console.schema.json), outcomes — [`events-console.outcomes.tsv`](../data/events-console.outcomes.tsv); form version 1; norm — P/05 Н1.2; договор журнала событий.
-
-| Key | Type and bounds | Requirement | Lesson | Meaning |
-|---|---|---|---|---|
-| `t` | time (P/01.1 N0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
-| `kind` | string | required |  | the event kind |
-| `id` | string | required |  | `e1-<hexUTF8(tree)>-<hexUTF8(unit)>-<epoch>-<hexUTF8(instance)>-<number>`; unique, duplicate copies are removed by it |
-| `of` | string | optional |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
-| `class` | string; one of: `alarm` | optional |  | only for an alarm; not written for observation |
-| `occurred` | time (P/01.1 N0 «Time in a row») | optional |  | when it happened; optional |
-| `v` | integer; ≥ 1 | optional |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
-| `.<name>` | any value | optional |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
-
-Outcomes of an unreadable file (the reader is a role; `*` — all readers of the family):
-
-| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
-|---|---|---|---|---|---|
-| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
-
-#### `<корень событий>/console.alarms/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
-
-Schema — [`events-console-alarms.schema.json`](../data/events-console-alarms.schema.json), outcomes — [`events-console-alarms.outcomes.tsv`](../data/events-console-alarms.outcomes.tsv); form version 1; norm — P/05 Н1.2; договор журнала событий.
+Schema — [`events-audit.schema.json`](../data/events-audit.schema.json), outcomes — [`events-audit.outcomes.tsv`](../data/events-audit.outcomes.tsv); form version 1; norm — P/05 N1.2; the event journal contract.
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
@@ -718,9 +655,9 @@ Outcomes of an unreadable file (the reader is a role; `*` — all readers of the
 |---|---|---|---|---|---|
 | the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
-#### `<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
+#### `<events root>/audit.alarms/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
 
-Schema — [`events-mirror.schema.json`](../data/events-mirror.schema.json), outcomes — [`events-mirror.outcomes.tsv`](../data/events-mirror.outcomes.tsv); form version 1; norm — P/05 Н1.4 mirror.
+Schema — [`events-audit-alarms.schema.json`](../data/events-audit-alarms.schema.json), outcomes — [`events-audit-alarms.outcomes.tsv`](../data/events-audit-alarms.outcomes.tsv); form version 1; norm — P/05 N1.2; the event journal contract.
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
@@ -739,9 +676,72 @@ Outcomes of an unreadable file (the reader is a role; `*` — all readers of the
 |---|---|---|---|---|---|
 | the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
-#### `<корень событий>/.workers/<sub>/<экземпляр>.lock` — file
+#### `<events root>/console/<instance>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
 
-Schema — [`presence-lock.schema.json`](../data/presence-lock.schema.json), outcomes — [`presence-lock.outcomes.tsv`](../data/presence-lock.outcomes.tsv); form version 1; norm — P/05 Н1.4; договор замка присутствия.
+Schema — [`events-console.schema.json`](../data/events-console.schema.json), outcomes — [`events-console.outcomes.tsv`](../data/events-console.outcomes.tsv); form version 1; norm — P/05 N1.2; the event journal contract.
+
+| Key | Type and bounds | Requirement | Lesson | Meaning |
+|---|---|---|---|---|
+| `t` | time (P/01.1 N0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `kind` | string | required |  | the event kind |
+| `id` | string | required |  | `e1-<hexUTF8(tree)>-<hexUTF8(unit)>-<epoch>-<hexUTF8(instance)>-<number>`; unique, duplicate copies are removed by it |
+| `of` | string | optional |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
+| `class` | string; one of: `alarm` | optional |  | only for an alarm; not written for observation |
+| `occurred` | time (P/01.1 N0 «Time in a row») | optional |  | when it happened; optional |
+| `v` | integer; ≥ 1 | optional |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
+| `.<name>` | any value | optional |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
+
+Outcomes of an unreadable file (the reader is a role; `*` — all readers of the family):
+
+| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
+|---|---|---|---|---|---|
+| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+
+#### `<events root>/console.alarms/<instance>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
+
+Schema — [`events-console-alarms.schema.json`](../data/events-console-alarms.schema.json), outcomes — [`events-console-alarms.outcomes.tsv`](../data/events-console-alarms.outcomes.tsv); form version 1; norm — P/05 N1.2; the event journal contract.
+
+| Key | Type and bounds | Requirement | Lesson | Meaning |
+|---|---|---|---|---|
+| `t` | time (P/01.1 N0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `kind` | string | required |  | the event kind |
+| `id` | string | required |  | `e1-<hexUTF8(tree)>-<hexUTF8(unit)>-<epoch>-<hexUTF8(instance)>-<number>`; unique, duplicate copies are removed by it |
+| `of` | string | optional |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
+| `class` | string; one of: `alarm` | optional |  | only for an alarm; not written for observation |
+| `occurred` | time (P/01.1 N0 «Time in a row») | optional |  | when it happened; optional |
+| `v` | integer; ≥ 1 | optional |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
+| `.<name>` | any value | optional |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
+
+Outcomes of an unreadable file (the reader is a role; `*` — all readers of the family):
+
+| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
+|---|---|---|---|---|---|
+| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+
+#### `<events root>/.mirror/<server>/<tree>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
+
+Schema — [`events-mirror.schema.json`](../data/events-mirror.schema.json), outcomes — [`events-mirror.outcomes.tsv`](../data/events-mirror.outcomes.tsv); form version 1; norm — P/05 N1.4 mirror.
+
+| Key | Type and bounds | Requirement | Lesson | Meaning |
+|---|---|---|---|---|
+| `t` | time (P/01.1 N0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `kind` | string | required |  | the event kind |
+| `id` | string | required |  | `e1-<hexUTF8(tree)>-<hexUTF8(unit)>-<epoch>-<hexUTF8(instance)>-<number>`; unique, duplicate copies are removed by it |
+| `of` | string | optional |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
+| `class` | string; one of: `alarm` | optional |  | only for an alarm; not written for observation |
+| `occurred` | time (P/01.1 N0 «Time in a row») | optional |  | when it happened; optional |
+| `v` | integer; ≥ 1 | optional |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
+| `.<name>` | any value | optional |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
+
+Outcomes of an unreadable file (the reader is a role; `*` — all readers of the family):
+
+| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
+|---|---|---|---|---|---|
+| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+
+#### `<events root>/.workers/<sub>/<instance>.lock` — file
+
+Schema — [`presence-lock.schema.json`](../data/presence-lock.schema.json), outcomes — [`presence-lock.outcomes.tsv`](../data/presence-lock.outcomes.tsv); form version 1; norm — P/05 N1.4; the presence lock contract.
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
@@ -757,9 +757,9 @@ Outcomes of an unreadable file (the reader is a role; `*` — all readers of the
 |---|---|---|---|---|---|
 | the whole file | `resource` | the content is empty or out of form (not a JSON object, a field missing, a field out of form, an extra field): the lock is busy — a live process without a number: it enters `room.<sub>`, does not enter workers, running, `live.<sub>`; the lock is taken by the resource and the check matched — gone by the file, there is no key `<sub>/<worker>`, the file MAY be deleted; unknown — a file that cannot be read (an open or read error), and an flock or fstat/stat error, except «busy» and ENOENT at stat (the Architect's decision of 2026-10-20, analysis of review of stage B 6–7), not its content (analysis of review of stage B 3–5, № 23) | 0 | row | договор замка присутствия «Lock», «Счёт room»; P/05 Н1.4 workers, room |
 
-#### `.gone/<ключ>` — object
+#### `.gone/<object-key>` — object
 
-Schema — [`gone.schema.json`](../data/gone.schema.json), outcomes — [`gone.outcomes.tsv`](../data/gone.outcomes.tsv); form version 1; norm — P/05 Н1.1 «Надгробия»; P/06.1 Н3 «уборка тел»; договор надгробий.
+Schema — [`gone.schema.json`](../data/gone.schema.json), outcomes — [`gone.outcomes.tsv`](../data/gone.outcomes.tsv); form version 1; norm — P/05 N1.1 «Tombstones»; P/06.1 N3 «body cleanup»; the tombstone contract.
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
@@ -1037,7 +1037,7 @@ the former ones, except `09-resource-door` from М10/11 (there — 01; the numbe
 | 42 | `42-heartbeat-units`: `units` of the resource heartbeat — the ids of the units from `status` of a live worker in ascending order of bytes (G08) | N1.4 `heartbeat` (E39), `running` |
 | 43 | `43-spoiled-object-door`: a spoiled object — the door gives it as it is: the listing and `GET` 200 (G08) | N1.1 `door`; «Implementation decides» item 8 (C05-SPOIL-OBJECT-BYTES-01) |
 | 44 | `44-objects-door-family`: `objects.door` of the manifest — `testsub2/tickets/t1` (`@put object` from `inputs/`) — `GET` 200 and in the listing; `testsub/tickets/t1` without `objects` in the manifest — 403 (G01) | N1.1 `door`; N2; N4 |
-| 45 | `45-gone-door`: the tombstone `.gone/<key>` (`@put object` from `inputs/`) — outside the ordinary listing, `prefix=.gone/` and `GET` of the body — reading, `PUT` — 405; an older copy — 409, there is no key; a newer one — 204 with the source `written`, the tombstone is removed by the same action (G02) | N1.1 `written` (C05-GONE-REWRITE-AT-WRITE-01), `door` (C05-GONE-BODY-READ-01); N4 «deleted later»; [the tombstone contract](../../common/contracts/tombstone.md) `listing`, `rewrite` |
+| 45 | `45-gone-door`: the tombstone `.gone/<object-key>` (`@put object` from `inputs/`) — outside the ordinary listing, `prefix=.gone/` and `GET` of the body — reading, `PUT` — 405; an older copy — 409, there is no key; a newer one — 204 with the source `written`, the tombstone is removed by the same action (G02) | N1.1 `written` (C05-GONE-REWRITE-AT-WRITE-01), `door` (C05-GONE-BODY-READ-01); N4 «deleted later»; [the tombstone contract](../../common/contracts/tombstone.md) `listing`, `rewrite` |
 
 TSV observes only the listed steps. The other evidence is listed separately
 in the acceptance README: the writing/reading of buckets and the real fsync barriers, retention/holds, the mirror and a stream with a break, free_ask
@@ -1052,7 +1052,7 @@ neither replaces the execution of timers, TLS, fsync, streams and failures on a 
 
 An implementation is to name in its description:
 
-1. **the object store on the box and in the cluster** — the layout on disk (directories, the delete tombstones `.gone/<key>` — the tombstone contract) and the size limits; the address `OBJECTS` and the access of the client — [the object store client contract](../../common/contracts/object-client.md) (C10-OBJECT-ADDRESS-32);
+1. **the object store on the box and in the cluster** — the layout on disk (directories, the delete tombstones `.gone/<object-key>` — the tombstone contract) and the size limits; the address `OBJECTS` and the access of the client — [the object store client contract](../../common/contracts/object-client.md) (C10-OBJECT-ADDRESS-32);
 2. ~~**how the resource learns the presence of processes**~~ — normed: [the presence lock contract](../../common/contracts/presence-lock.md) `presence_lock` (the second pilot, N-1);
 3. **the eviction policy of the index cache** within 64 MiB (N1.3); the number of merge lanes (8) and the term (3 s) are a norm of [P/06.4](../../06-console/spec/06.4-console.norms.md) N3 «merge», not a choice;
 4. **the long poll `/events/wait`**: the structure of the memory of observations and the deployable limit of waits; the forms of want/the answer and the profile of the timeout are N1.6, not a choice;

@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/schema/READ
 
 The owner is [the schema contract](../../contracts/schema.md) (chapter P/06.6; C06-SCHEMA-WIDE-32-01, the Architect's decision
 2026-10-25). The participants are the processes that check the schema at start: the controller, the worker, the resource, the console, the domain processes.
-The bytes are written by «Спецификация»; the rows are by the text of the contract.
+The bytes are written by «Specification»; the rows are by the text of the contract.
 
 ## `cases.tsv`
 
@@ -13,7 +13,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 **Input** — `{SCHEMA, row}`: `SCHEMA` — the build number (in the vectors 3, to distinguish 1, SCHEMA and SCHEMA + 1; at the current
 specification SCHEMA = 1); `row` — the elements of the row `platform/schema` as text (`{version, at}`) or `null` — there is no row.
 **Output** — `{start: true, version}` (start; the version as a decimal string) or `{refuse: "too_new", n}` (the schema is newer; `n` —
-the exact N as a decimal string) or `{refuse: "not_a_form"}`. The comparison — JSON by value. «Отказ — код 2» is an outcome
+the exact N as a decimal string) or `{refuse: "not_a_form"}`. The comparison — JSON by value. «Refusal — code 2» is an outcome
 of the process at start; the function of the package in the single command `vectors` answers with code 0 and the output object `{refuse…}`
 (ACC-VECTORS-CONNECT-04; ACC-SCHEMA-REFUSE-EXIT-01, the Architect's decision 2026-10-27).
 

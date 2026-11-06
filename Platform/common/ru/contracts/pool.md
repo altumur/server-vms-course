@@ -13,20 +13,20 @@
 сверх пула (`constraint`, `spread_by`, `affinity`, группа, дом, ёмкость и порядок) — по-прежнему P/04 N3 «выбрать», строка
 «пригодные» и ниже.
 
-Нормативные слова — по [канону курса](../../../../ru/НОРМАТИВНЫЕ-СЛОВА.md).
+Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md).
 
 ## Форма
 
-Строки и объекты, которые читает расчёт пула, — по формам и исходам их семей (аудит раскладки, V-42–V-44, B-07; решение «Архитектора» 2026-10-25): пульс `<sub>/heartbeats/<имя>`
-— `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; слот `<sub>/slots/<имя>` —
-`Platform/03-worker/data/slots.schema.json`, `Platform/03-worker/data/slots.outcomes.tsv`; назначение `<sub>/workers/<имя>` —
+Строки и объекты, которые читает расчёт пула, — по формам и исходам их семей (аудит раскладки, V-42–V-44, B-07; решение «Архитектора» 2026-10-25): пульс `<sub>/heartbeats/<name>`
+— `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; слот `<sub>/slots/<name>` —
+`Platform/03-worker/data/slots.schema.json`, `Platform/03-worker/data/slots.outcomes.tsv`; назначение `<sub>/workers/<name>` —
 `Platform/04-controller/data/workers.schema.json`, `Platform/04-controller/data/workers.outcomes.tsv`; строка заказа
-`<sub>/want/<сервер>` — `Platform/04-controller/data/want.schema.json`, `Platform/04-controller/data/want.outcomes.tsv`; решение
+`<sub>/want/<host>` — `Platform/04-controller/data/want.schema.json`, `Platform/04-controller/data/want.outcomes.tsv`; решение
 `<sub>/controller/placement_intent` — `Platform/04-controller/data/placement-intent.schema.json`,
-`Platform/04-controller/data/placement-intent.outcomes.tsv`; вывод `<sub>/decommissioned/<сервер>` —
+`Platform/04-controller/data/placement-intent.outcomes.tsv`; вывод `<sub>/decommissioned/<host>` —
 `Platform/04-controller/data/decommissioned.schema.json`, `Platform/04-controller/data/decommissioned.outcomes.tsv`; дренаж
 `platform/drain` — `Platform/06-console/data/drain.schema.json`, `Platform/06-console/data/drain.outcomes.tsv`; запрос вывода
-`platform/decommission/<сервер>` — `Platform/06-console/data/decommission.schema.json`,
+`platform/decommission/<host>` — `Platform/06-console/data/decommission.schema.json`,
 `Platform/06-console/data/decommission.outcomes.tsv`.
 
 ## Живой воркер

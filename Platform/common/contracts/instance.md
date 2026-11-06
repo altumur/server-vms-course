@@ -15,7 +15,7 @@ Moved from P/03.2 N1.4 (`holder`: the grammar of the instance) and N3 «start()�
 P/03.2 and the readers refer here. The profile of the instance as a path component (forbidden characters, representability in file names)
 stays in the event journal contract; what a process does on a refusal is with its lesson (the worker — P/03.2 N3 «start()», N4).
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 

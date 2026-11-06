@@ -21,7 +21,7 @@ retell them (stage B: the references to М10/8, М10/10, М10/11 are retargeted 
 - **Launch** — through the runner `w2c-run.sh resource` with `W2C_ROLE=resource` ([P/02.4] N1.1 — the unit sets it, review of stage B 3–5, № 29; N1.9).
 - **Start order** — the schema check of `platform/schema` and the read of the manifest row before the first write ([P/05] N3 «resource start
   — schema check», [P/02.3] N3 «Process start»); then the heartbeat at once, the heartbeat stream, `restore` of the buckets in its own attempt,
-  the door row `platform/doors/<server>` ([P/02.4] N3 «server start», step 2).
+  the door row `platform/doors/<host>` ([P/02.4] N3 «server start», step 2).
 
 ## Environment
 
@@ -55,10 +55,10 @@ None: the setting channel is the environment only ([P/02.4] N1.2 «The setting c
   The copies of the buckets of the neighbours — `<events root>/.mirror/<server>/…`, only the resource writes them.
 - **Presence locks** — `<events root>/.workers/<sub>/<instance>.lock`: the resource takes `flock` without waiting and derives
   `runs`, `gone`, `unknown`; a `gone` file it MAY remove under its own `flock` ([presence lock] `presence_lock`, [catalogue]).
-- **The objects root** — the objects door, the body copies `<sub>/blobs/sha256-<hex>` from the neighbours of the ring, the tombstones `.gone/<key>`, the directory locks `<dir>/~lock`
+- **The objects root** — the objects door, the body copies `<sub>/blobs/sha256-<hex>` from the neighbours of the ring, the tombstones `.gone/<object-key>`, the directory locks `<dir>/~lock`
   ([P/05] N1.1, N1.1 «Tombstones»; ADR-0083 addendum (16)). File names in both roots — one encoding `%XX` / `%h<sha256>` ([event journal]
   «File names in shared trees»; the threshold of `%h` — by the full file name with the suffix of the norm and the margin of the temporary name, review of stage B 3–5, № 20).
-- **Store rows** — the heartbeat `platform/resources/<server>/heartbeat` (an object), the door row `platform/doors/<server>`,
+- **Store rows** — the heartbeat `platform/resources/<server>/heartbeat` (an object), the door row `platform/doors/<host>`,
   the release requests `<sub>/requests/free-<server>-<volume>`; it reads `platform/space`, `platform/mirror`,
   `<sub>/retention`, `<sub>/alarms_retention`, `platform/decommission/*`, `platform/schema`, `platform/manifest/<sub>` and the mark
   `/rev` ([catalogue], [P/02.5] N1.4).
@@ -81,7 +81,7 @@ start refusal, code 2 ([P/02.4] N1.6 `process`; ADR-0075 addendum of 2026-10-26 
 
 ## Signals and readiness
 
-- **Readiness** — the port `RESOURCE_PORT` and the row `platform/doors/<server>`; the stand runner waits for both ([Stand], [P/05]
+- **Readiness** — the port `RESOURCE_PORT` and the row `platform/doors/<host>`; the stand runner waits for both ([Stand], [P/05]
   N1.4).
 - **Heartbeat** — every 10 s; the door row — every 15 s; the pass — every 600 s, a step longer than `PULSE_LIMIT` gives
   `pass_stalled` ([P/05] N1.4, «Implementation decides» item 7 — the value of `PULSE_LIMIT`).

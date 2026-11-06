@@ -10,7 +10,7 @@ unfinished action call per group ([P/03.6](../../03-worker/spec/03.6-worker.norm
 of the source by the url step of [the row check](row-check.md). The rules are moved from P/04 N1.3 `group_by` and the header of the vectors
 [`group-of`](../vectors/group-of/README.md) without a change of behaviour.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Group
 

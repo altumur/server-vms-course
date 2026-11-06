@@ -2,6 +2,7 @@
 `code`-вставка, таблица, чеклист, кириллица, пометка «производный» — даёт отказ. P/01 — в раскладке ADR-0124 (источник `X`,
 перевод `ru/X`), прочие уроки — в прежней (ADR-0121): пары обеих раскладок."""
 import unittest
+import tempfile
 from pathlib import Path
 
 import en_mirror
@@ -132,7 +133,7 @@ class Layouts(unittest.TestCase):
         self.assertIn((RU3, EN3), pairs)
         self.assertIn((ROOT / "Platform/01-store/ru/lifecycle.md", ROOT / "Platform/01-store/lifecycle.md"), pairs)
         self.assertIn((ROOT / "VMS/ru/README.md", ROOT / "VMS/README.md"), pairs)   # мелкий дом: README модуля
-        self.assertIn((ROOT / "ru/НОРМАТИВНЫЕ-СЛОВА.md", ROOT / "НОРМАТИВНЫЕ-СЛОВА.md"), pairs)   # мелкий дом: корень
+        self.assertIn((ROOT / "ru/NORMATIVE-TERMS.md", ROOT / "NORMATIVE-TERMS.md"), pairs)   # мелкий дом: корень
         self.assertFalse([p for p in pairs if p[1].parent == ROOT and p[1].name.startswith("ГРАНИЦА")])   # записки — не пары
         for ru, en in pairs:                           # каждая пара — одной из двух раскладок
             self.assertTrue(en.parent.name == "en" and en.name.endswith(".en.md") and ru.name == en.name[:-6] + ".md"
@@ -156,7 +157,7 @@ class Layouts(unittest.TestCase):
                          "Platform/01-store/spec/01.1-store.norms.md#time-in-a-row")
         self.assertEqual(en_mirror.as_source("Platform/02-installer/spec/02.1-installer.norms.md#x", ROOT),
                          "Platform/02-installer/spec/02.1-installer.norms.md#x")
-        self.assertEqual(en_mirror.as_source("ru/НОРМАТИВНЫЕ-СЛОВА.md", ROOT), "НОРМАТИВНЫЕ-СЛОВА.md")
+        self.assertEqual(en_mirror.as_source("ru/NORMATIVE-TERMS.md", ROOT), "NORMATIVE-TERMS.md")
         self.assertEqual(en_mirror.as_source("VMS/ru/README.md", ROOT), "VMS/README.md")
         self.assertIsNone(en_mirror.home_of(ROOT / "ARCHITECTURE.md", ROOT))         # записка курса — не источник
         self.assertEqual(en_mirror.home_of(ROOT / "Platform/README.md", ROOT), (ROOT / "Platform", Path("README.md")))   # модуль с ru/
@@ -208,10 +209,56 @@ class Layouts(unittest.TestCase):
         errors = self.compare3(en=en + "\nSee Н1.3.\n", ru=ru + "\nСм. N1.3.\n")
         self.assertTrue(any("a Cyrillic section number" in e for e in errors), errors)
 
-    def test_labels_by_dictionary(self):                # метка пары — по словарю Platform/common/placeholders.tsv
+    def test_labels_by_dictionary(self):                # метка пары — по словарю Platform/common/ru/placeholders.tsv
         self.assertEqual(en_mirror.as_english_labels("domain/users/<имя> ⟨вариант 2⟩", ROOT), "domain/users/<name> ⟨variant 2⟩")
         self.assertEqual(en_mirror.as_english_labels(".<имя> (имя)", ROOT), ".<name> (name)")
         self.assertEqual(en_mirror.as_english_labels("<неизвестная>", ROOT), "<неизвестная>")
+
+
+class FullEnglishSource(unittest.TestCase):
+    def test_quotes_code_and_machine_values_are_not_exempt(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name, text in {"README.md": "`word` «слово»", "data/x.tsv": "key\tзначение",
+                               "data/x.json": '{"default":"единица"}', "forms/x.yaml": 'word: "отказ"'}.items():
+                p = root / "Platform/demo" / name
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_text(text)
+            errors = en_mirror.full_english_errors(root, ["Platform/demo/"])
+            self.assertEqual(len(errors), 4, errors)
+
+    def test_vector_journal_is_source_and_human_journal_is_not(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in ["ru/README.md", "journal/corrections.tsv", "vectors/journal/cases.tsv"]:
+                p = root / "Platform/common" / name
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_text("русский")
+            errors = en_mirror.full_english_errors(root, ["Platform/common/"])
+            self.assertEqual([p.relative_to(root).as_posix() for p, _ in errors],
+                             ["Platform/common/vectors/journal/cases.tsv"])
+
+    def test_only_localization_ru_column_is_exempt(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            p = root / en_mirror.LOCALIZATION
+            p.parent.mkdir(parents=True)
+            p.write_text("key\ten\tru\nrefresh\tRefresh\tОбновить\n")
+            self.assertEqual(en_mirror.full_english_errors(root, [p.relative_to(root)]), [])
+            p.write_text("key\ten\tru\nrefresh\tОбновить\tОбновить\n")
+            self.assertTrue(en_mirror.full_english_errors(root, [p.relative_to(root)]))
+            p.write_text("key\ten\tru\nrefresh\tRefresh\tОбновить\textra\n")
+            self.assertTrue(en_mirror.full_english_errors(root, [p.relative_to(root)]))
+
+    def test_unicode_escapes_preserve_payload_but_extended_cyrillic_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            p = root / "Platform/common/x.json"
+            p.parent.mkdir(parents=True)
+            p.write_text(r'{"input":"\u044f"}')
+            self.assertEqual(en_mirror.full_english_errors(root, ["Platform/common/"]), [])
+            p.write_text('{"input":"Ӕ"}')
+            self.assertTrue(en_mirror.full_english_errors(root, ["Platform/common/"]))
 
 
 if __name__ == "__main__":

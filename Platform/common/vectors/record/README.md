@@ -5,11 +5,11 @@ This English text is the source; the Russian translation `ru/vectors/record/READ
 The vectors of [the term record contract](../../contracts/record.md): the function `record(keys, row, kinds)` — the check of a document
 signed by the issuing key of the holder (a term record, a backup copy document, a grant). The owner is lesson P/08, chapter 8.8;
 the function is performed by the member's agent (9.1), the process `domain` (8.8) and the cluster console (6.7, the shared document of [chapter 8.9](../../../08-domain/spec/08.9-domain.norms.md)) (the review
-analysis of stage A 8–10, № 13 / decision 2; ADR-0083 addendum (13)). The bytes are written by «Спецификация» (ADR-0083); the conformance of the product is
+analysis of stage A 8–10, № 13 / decision 2; ADR-0083 addendum (13)). The bytes are written by «Specification» (ADR-0083); the conformance of the product is
 by its acceptance against this table (ADR-0080 addendum 16).
 
-The rows were transferred from the inputs of the command `record` of the acceptance of М11/10
-(`inputs/record-*.json`, sc. 05) without a change of bytes; `case` is the name of the input file. Scenario 05 of the acceptance of М11/10 and its inputs
+The rows were transferred from the inputs of the command `record` of the acceptance of M11/10
+(`inputs/record-*.json`, sc. 05) without a change of bytes; `case` is the name of the input file. Scenario 05 of the acceptance of M11/10 and its inputs
 were removed by the move of lesson 8 (ADR-0083 addendum (14) item 17; the log is the acceptance of chapter P/08.8 (`Platform/08-domain/journal/corrections-8.tsv`, a log, not in the export)):
 the table is the only source of these cases.
 
@@ -26,7 +26,7 @@ P/06.7 N1.14) and the member's agent (`09-agent`) (ACC-VECTORS-CONNECT-03: a row
 ## Keys
 
 The keys of the issuer and the set are bytes in the inputs (`keys.issuing`, `doc.issuer`). The seeds are `sha256("w2c test <word>")`
-(moved from the acceptance README of М11/10 «Inputs»): the root `root 1`, the token keys `token key 1` (`t1`) and `token key 0` (`t0`, rows 25–27); the issuers `issuing key 1` (in
+(moved from the acceptance README of M11/10 «Inputs»): the root `root 1`, the token keys `token key 1` (`t1`) and `token key 0` (`t0`, rows 25–27); the issuers `issuing key 1` (in
 `issuing` of the set), `issuing key 0` (in `revoked_issuing`), `issuing key 9` (a foreign one); the members `member m1`, `member m2`. The set
 `keys` is one at all rows: `domain: acme`, `rev: 2`, the root signature; at rows 25–27 `t0` and `until` are added to it (the function does not check the signature of the set).
 
@@ -42,7 +42,7 @@ of the acceptance.
 | [`shared.tsv`](shared.tsv), 8 rows: 1 `ok`, 7 refusals | the input is the same; the function with one kind «shared document» (P/08.9 N1.2 document) → `expect` — a subset of `{result, term?, reason?}`; `kid` and `sig` outside the writer's form — steps 3–5, not `not_a_record` (REC-G01) |
 
 The vectors were checked by reference Ed25519 (RFC 8032) and JCS (RFC 8785) against the text of the contract (the signatures and steps 2–5), not against the code
-of implementations; on a divergence the contract is right, the vector is corrected by «Спецификация».
+of implementations; on a divergence the contract is right, the vector is corrected by «Specification».
 
 ## Vector wire
 

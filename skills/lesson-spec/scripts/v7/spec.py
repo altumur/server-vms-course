@@ -19,7 +19,7 @@ OUTCOME_HEADER = ["path", "reader", "outcome", "priority", "unit", "norm"]
 # каждого читателя семьи, `*` нельзя; у полей `*` — все читатели. Читатели семьи — `readers` ∪ писатели с `cas`/`guard`.
 READER = re.compile(r"(?:console|resource|domainagent|domainconsole|domain|admin|configstore-door|"
                     r"<s>(?:controller|worker|domain)|proc:[0-9]{2}-[a-z][a-z-]*)")
-UNITS = ("строка", "поле", "элемент")
+UNITS = ("row", "field", "element")
 KINDS = ("row", "object", "file")
 # Семья VMS (решение «Архитектора» по запросу VMS «семьи в открытых местах», вариант А): схема `VMS/NN-<урок>/data/…`
 # урока-владельца V/NN[.K] судит значение открытого места семьи платформы; читатели её исходов — и роли подсистем VMS.
@@ -218,7 +218,7 @@ def outcomes_for(outcomes, paths, reader=None):
         cov = [o for o in outcomes if o.covers(q)]
         deep = max((len(o.segs) for o in cov), default=0)
         top = [o for o in cov if len(o.segs) == deep]
-        keep.update(id(o) for o in (top if any(o.unit != "строка" for o in top) else cov))
+        keep.update(id(o) for o in (top if any(o.unit != "row" for o in top) else cov))
     hit = [o for o in outcomes if id(o) in keep]
     if not paths or not hit:
         return []
@@ -382,57 +382,47 @@ FR_HEADER = ["case", "family", "key", "kind", "mode", "who", "text", "verdict", 
 
 # ---- ключ строки по шаблону каталога (V7-FAMILY-KEY-PLACEHOLDER-01)
 
-KEYS_README = Path("Platform/common/data/README.md")
-KEYS_HEADER = ["Плейсхолдер", "Грамматика", "Пример", "Норма"]
+KEYS_TABLE = Path("Platform/common/data/key-placeholders.tsv")
+KEYS_HEADER = ["placeholder", "pattern", "example", "norm"]
 KEY_REFUSED = [""]          # ключ не по шаблону: строка целиком, значение не судится (не `/key` — поле key у P/08)
 PLACEHOLDER = re.compile(r"(<[^<>]+>|\*)")
 
 
-def md_cells(line):
-    """Ячейки строки таблицы Markdown: `\\|` внутри ячейки — знак `|`, обратные кавычки вокруг ячейки снимаются."""
-    cells = [c.replace("\\|", "|").strip() for c in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
-    return [c[1:-1] if len(c) > 1 and c[0] == c[-1] == "`" else c for c in cells]
-
-
 def placeholder_table(root):
-    """Таблица плейсхолдеров ключа из README каталога: {плейсхолдер: (грамматика, пример)}, [ошибки]. Таблица — первая
-    с заголовком KEYS_HEADER; грамматика — переносимое выражение `^(?:…)$` (слой 5) на подстроку ключа, которую занимает
-    плейсхолдер (`/` — только если грамматика его берёт); пример — по грамматике."""
-    path = Path(root) / KEYS_README
-    if (Path(root) / "Platform/common/ru").is_dir():     # ADR-0124: шапка KEYS_HEADER — у русского перевода ru/
-        path = Path(root) / "Platform/common/ru" / KEYS_README.relative_to("Platform/common")
+    """Canonical typed source: {placeholder: (portable grammar, example)}, errors.
+
+    Human mirrors and the ru/en translation dictionary are never reader inputs.
+    """
+    path = Path(root) / KEYS_TABLE
     if not path.is_file():
-        return None, ["%s: no file — the placeholder table of the catalog keys (%s)" % (KEYS_README,
-                                                                                     " | ".join(KEYS_HEADER))]
-    table, errors, inside = {}, [], False
+        return None, ["%s: no canonical key placeholder table" % KEYS_TABLE]
+    table, errors, header = {}, [], False
     for no, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
-        if not line.startswith("|"):
-            if inside:
-                break
+        if not line or line.startswith("#"):
             continue
-        cells = md_cells(line)
-        if not inside:
-            inside = cells == KEYS_HEADER
-            continue
-        if set(line.replace("|", "").strip()) <= set("-: "):
+        cells = line.split("\t")
+        if not header:
+            header = True
+            if cells != KEYS_HEADER:
+                return {}, ["%s:%d: header must be %s" % (KEYS_TABLE, no, "<TAB>".join(KEYS_HEADER))]
             continue
         if len(cells) != len(KEYS_HEADER):
-            errors.append("%s:%d: expected %d cells" % (KEYS_README, no, len(KEYS_HEADER)))
+            errors.append("%s:%d: expected %d cells" % (KEYS_TABLE, no, len(KEYS_HEADER)))
             continue
         name, grammar, example, _ = cells
         why = regex.check(grammar)
         if not PLACEHOLDER.fullmatch(name):
-            errors.append("%s:%d: %r is not a placeholder <…> or *" % (KEYS_README, no, name))
+            errors.append("%s:%d: %r is not a placeholder <…> or *" % (KEYS_TABLE, no, name))
         elif name in table:
-            errors.append("%s:%d: placeholder %s twice" % (KEYS_README, no, name))
+            errors.append("%s:%d: placeholder %s twice" % (KEYS_TABLE, no, name))
         elif why:
-            errors.append("%s:%d: grammar of %s: %s" % (KEYS_README, no, name, why))
+            errors.append("%s:%d: grammar of %s: %s" % (KEYS_TABLE, no, name, why))
         elif not regex.search(grammar, example):
-            errors.append("%s:%d: example %r of %s is not by its grammar" % (KEYS_README, no, example, name))
+            errors.append("%s:%d: example %r of %s is not by its grammar" % (KEYS_TABLE, no, example, name))
         else:
             table[name] = (grammar, example)
-    if not inside:
-        errors.append("%s: no table with the header | %s |" % (KEYS_README, " | ".join(KEYS_HEADER)))
+    if not header or not table:
+        errors.append("%s: no key placeholder rows" % KEYS_TABLE)
     return table, errors
 
 
@@ -444,7 +434,7 @@ class KeyTemplate:
         missing = [t for t in self.parts[1::2] if t not in table]
         if missing:
             raise SpecError("catalog key %s: placeholder %s is not in the table of %s"
-                            % (template, ", ".join(missing), KEYS_README))
+                            % (template, ", ".join(missing), KEYS_TABLE))
         self.grammars = [table[t][0][4:-2] for t in self.parts[1::2]]          # тело ^(?:…)$
         self.examples = [table[t][1] for t in self.parts[1::2]]
         self.re = re.compile("".join(re.escape(lit) + ("(?:%s)" % g if i < len(self.grammars) else "")

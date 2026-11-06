@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/deadline/RE
 
 The owner is [the contract of the request and its mark](../../contracts/request-mark.md) «Request» `valid_until` (the owner of the contract is chapter P/06.4;
 [norms](../../../06-console/spec/06.4-console.norms.md) N3 «file a request» step 1; stage C guesses C06-DEADLINE-PRECISION-33-01,
-C47-DEADLINE-VECTORS-01, the Architect's decisions 2026-10-25). The participant is the request door of the console. The bytes are written by «Спецификация»;
+C47-DEADLINE-VECTORS-01, the Architect's decisions 2026-10-25). The participant is the request door of the console. The bytes are written by «Specification»;
 the rows are by the text of the norm.
 
 ## `cases.tsv`

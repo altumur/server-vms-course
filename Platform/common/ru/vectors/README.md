@@ -64,7 +64,7 @@
 | SaidID: имя просьбы в `fetched` и его чтение | [`said-id/`](said-id/README.md) | P/03.4 (участник 6.4) | [P/03.4](../../../03-worker/ru/spec/03.4-worker.norms.md) N1.1 `said_id` |
 | токен двери `door1`: выпуск (JCS, Ed25519) и проверка у держателя по `door/keys` | [`door-token/`](door-token/README.md) | P/06.5 (участник 3.4) | [договор токена двери](../contracts/door-token.md); P/06.5-05, P/03.4-08 |
 | «принять консолью» | векторов нет — шаги приёмки [главы 6.7](../../../06-console/ru/acceptance/7/README.md) (сц. 01, 02) | P/06 | [договор пересылки](../contracts/forwarding.md) «Принять консолью» |
-| конверты домена `x25519:v1` и `m1`: открытие и круг (`seal`, `seal-round`, `seal-member`, `seal-member-round` приёмки М11) | [`domain-envelopes/`](domain-envelopes/README.md) | common (владелец P/08, главы 8.2, 8.3) | [договор конвертов домена](../contracts/domain-envelopes.md); разбор ревью стадии A 8–10, № 12 |
+| конверты домена `x25519:v1` и `m1`: открытие и круг (`seal`, `seal-round`, `seal-member`, `seal-member-round` приёмки M11) | [`domain-envelopes/`](domain-envelopes/README.md) | common (владелец P/08, главы 8.2, 8.3) | [договор конвертов домена](../contracts/domain-envelopes.md); разбор ревью стадии A 8–10, № 12 |
 | подпись агента `X-Agent-Signature`: проверка `agent-sig` (окна, байты, формы) | [`agent-sig/`](agent-sig/README.md) | common (владелец P/09, глава 9.1) | [договор подписи агента](../contracts/agent-signature.md); разбор ревью стадии A 8–10, № 13 |
 | набор ключей домена: функция `keys` | [`keys/`](keys/README.md) | common (владелец P/08, глава 8.2) | [договор набора ключей домена](../contracts/keys.md); разбор ревью стадии A 8–10, № 13 |
 | запись срока и подпись выпускающего: функция `record` | [`record/`](record/README.md) | common (владелец P/08, глава 8.8) | [договор записи срока](../contracts/record.md); разбор ревью стадии A 8–10, № 13 |
@@ -80,8 +80,8 @@
 | сборка книги: функция `assemble` | [`08-domain/vectors/assemble/`](../../../08-domain/ru/vectors/assemble/README.md) | P/08.5 | [P/08.5](../../../08-domain/ru/spec/08.5-domain.norms.md) N1.3, N3 |
 | выдача токена воркера: функция `issue` | [`08-domain/vectors/issue/`](../../../08-domain/ru/vectors/issue/README.md) | P/08.7 | [P/08.7](../../../08-domain/ru/spec/08.7-domain.norms.md) N3 |
 | следование: функция `follow` | [`09-agent/vectors/follow/`](../../../09-agent/ru/vectors/follow/README.md) | P/09.1 | [P/09.1](../../../09-agent/ru/spec/09.1-agent.norms.md) N3 «следовать» |
-| значение при чтении: функция `resolve` | [`06-console/vectors/resolve/`](../../../06-console/ru/vectors/resolve/README.md) (14 строк; 11 из М11/11 сц. 03) | P/06.7 | [P/06.7](../../../06-console/ru/spec/06.7-console.norms.md) N1.14, N3 `resolve` |
-| список тревог: функция `alarms` | [`10-domain-console/vectors/alarms/`](../../../10-domain-console/ru/vectors/alarms/README.md) (27 строк; 15 из М11/11 сц. 04; 17–27 — аудит покрытия Gemini P/10) | P/10 | [P/10](../../../10-domain-console/ru/spec/10-domain-console.norms.md) N1.8, N3 `alarms` |
+| значение при чтении: функция `resolve` | [`06-console/vectors/resolve/`](../../../06-console/ru/vectors/resolve/README.md) (14 строк; 11 из M11/11 сц. 03) | P/06.7 | [P/06.7](../../../06-console/ru/spec/06.7-console.norms.md) N1.14, N3 `resolve` |
+| список тревог: функция `alarms` | [`10-domain-console/vectors/alarms/`](../../../10-domain-console/ru/vectors/alarms/README.md) (27 строк; 15 из M11/11 сц. 04; 17–27 — аудит покрытия Gemini P/10) | P/10 | [P/10](../../../10-domain-console/ru/spec/10-domain-console.norms.md) N1.8, N3 `alarms` |
 | нехватка набора меток и заказ по серверам (`in_flight`, `per`, кандидаты, раздача) | [`04-controller/vectors/order/`](../../../04-controller/vectors/order/) | P/04 | P/04 N3 «нехватка(), заказать()»; ADR-0084 доп. (1)–(3) |
 | жертва сокращения | [`04-controller/vectors/shrink-victim/`](../../../04-controller/vectors/shrink-victim/) | P/04 | P/04 N3 «сократить()», R4, R22 |
 | разрешено ли сокращение: условие и порядок причин отказа (жертва, живые без места при ждущих, выдержка, в пути, гистерезис) | [`04-controller/vectors/shrink-allowed/`](../../../04-controller/vectors/shrink-allowed/) | P/04 | P/04 N3 «сократить (шаг 9a)», условие; R3, R13′, R16′, R16‴, R22, R28 (решение «Архитектора» 2026-10-20, № 12 разбора ревью стадии B 3–5) |
@@ -95,9 +95,9 @@
 | `YIELD_SAME_TERM`, `SET_GUARD` (набор следования) | шагом приёмки — [P/08.8](../../../08-domain/ru/acceptance/8/README.md) сц. 09; вход `follow` наборов ответов не несёт | P/08.8 | [P/08.8](../../../08-domain/ru/spec/08.8-domain.norms.md) N1.6 `yields`; [P/09.1](../../../09-agent/ru/spec/09.1-agent.norms.md) N3 «следовать» 1a |
 | `put_at` по индексу до подтверждения очереди, CAS своей строки очереди (G6, T6) | чтением — стенд не останавливает процесс между шагами | P/08.10 | [P/08.10](../../../08-domain/ru/spec/08.10-domain.norms.md) N1.7, N3 «очередь процесса domain» |
 
-Векторы М11 — бывшие входы команд стенда своих уроков; все они теперь пакеты (урок 8 — пакеты `view`, `assemble`, `issue`
+Векторы M11 — бывшие входы команд стенда своих уроков; все они теперь пакеты (урок 8 — пакеты `view`, `assemble`, `issue`
 урока и общие пакеты выше, урок 9 — пакет `follow`, урок 10 — `resolve` главы 6.7 и `alarms` урока P/10; их сценарии и
-входы в приёмке М11 сняты переносами). Строки «векторов нет»
+входы в приёмке M11 сняты переносами). Строки «векторов нет»
 — алгоритмы записки модуля, у которых пока только шаги приёмки (ревью стадии A, Gemini 4.5).
 
 Машинные объявления провода — [`wire.tsv`](../../vectors/wire.tsv), закрытая грамматика — [`wire.md`](wire.md). Первый срез охватывает таблицы векторов P/01 и P/02; отсутствующие объявления остаются необъявленными. Форма различает единую команду vectors, существующие stand-команды и проверки раскладки. В README пакета остаются смысл алгоритма и обязанности потребителей; объявления провода переносятся в эту единую форму.

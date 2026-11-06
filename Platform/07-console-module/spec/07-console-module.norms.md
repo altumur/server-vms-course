@@ -12,7 +12,7 @@ ADR-0083 addendum (1): without a change of behaviour): N1.4 and N1.5 (the number
 the checklist items М10/9-06, -07. The late layer — the domain section, `sections: [domain]` of the call `mount`, the
 holder mode — is N1.6, without ids of its own (plan, V5); its text was moved by the move of lessons 8–10 (stage B, commit 10; the move plan
 of lesson 8, § 5, row P/07 N1.6) from М11/8 N1.8 `module`, М11/11 N1.6 `declared` and the module description § 7, § 10a. The canon of the module is the norms N1.5 (review analysis of stage A 6–7, № 6): the published
-bytes of `console.js`, `console.html` and the description [`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`](../../../КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md) were brought
+bytes of `console.js`, `console.html` and the description [`CONSOLE-MODULE.md`](../../../CONSOLE-MODULE.md) were brought
 to it by a change of behaviour after the commit of the lesson («Implementation decides» item 1, closed; the Architect's decision of 2026-10-21). The three parts of the console, the mounting
 `PlatformConsole.mount(root, opts)`, `opts`, `never` of the module and `may`/`may_not` of the shell — [P/06.5 N1.1](../../06-console/spec/06.5-console.norms.md)
 `module`, `shell`. A reference «lesson N» without a chapter is the module lesson P/NN (М10 and М11 were moved whole; review analysis of stage B 3–5, № 34); «P/06.K», «P/08.K» are the chapters of lessons 6 and 8;
@@ -20,7 +20,7 @@ to it by a change of behaviour after the commit of the lesson («Implementation 
 
 ## N0 Vocabulary
 
-Normative words follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 N0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary).
+Normative words follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module are [P/01.1 N0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary).
 
 ## N1 Form
 
@@ -166,7 +166,7 @@ The session, the grants and the login by which `may` judges — [P/06.3](../../0
 The parts of N1.4 and N1.5 that the domain introduces are parts of P/07-01 and P/07-02 without ids of their own (the move plan of lesson 7, V5; as P/02.1
 N1.2b). The text was moved by the move of lessons 8–10 (stage B, commit 10; the move plan of lesson 8, § 5, row P/07 N1.6): the parts
 about the module from М11/8 N1.8 `module`, М11/11 N1.6 `declared` and the module description
-[`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`](../../../КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md) § 7 (the sections `domain`, `access`, `GET /api/held`) and
+[`CONSOLE-MODULE.md`](../../../CONSOLE-MODULE.md) § 7 (the sections `domain`, `access`, `GET /api/held`) and
 § 10a (the holder page) (review analysis of stage A 6–7, № 27, № 30). The doors that the domain console gives to the page —
 [lesson P/10](../../10-domain-console/spec/10-domain-console.norms.md) (the holder page — P/10-04); the forwarding to them, `/api/held`
 and `/domain/shared/<sub>` at the cluster console — [chapter P/06.7](../../06-console/spec/06.7-console.norms.md).
@@ -227,7 +227,7 @@ page, not the platform calling a subsystem: they are not hooks in the sense of t
 takes from the holder by `door` from `where()`, past the console (ADR-0015, for the human).
 
 The description of the public surface of the module (the dictionary `W`, the card markup, the calls of the shell, the look) —
-[`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`](../../../КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md) (not a norm; the move plan of lesson 7, V1). Where the description or
+[`CONSOLE-MODULE.md`](../../../CONSOLE-MODULE.md) (not a norm; the move plan of lesson 7, V1). Where the description or
 the published bytes differ from N1.4, N1.5, the lesson is right (review analysis of stage A 6–7, № 6); the discrepancies «Implementation decides»
 items 1 and 2 are removed by changes of behaviour (the Architect's decision of 2026-10-21).
 
@@ -286,7 +286,7 @@ For a generation line, P/07 is packaging: the published files are taken unchange
 The module is one code in all implementations: an implementation does not write it and chooses nothing in it, but serves the published bytes
 (P/06.5 N1.1 `module`). The items below are debts of the published module; the owner of the specification closes them (ADR-0080 addendum 16); items 1–5 are closed; items 6 and 7 remain open debts of this owner, not a separate module implementation by a generation line:
 
-1. **closed: the bytes of `console.js`, `console.html` and the description `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md` are brought to N1.4, N1.5**
+1. **closed: the bytes of `console.js`, `console.html` and the description `CONSOLE-MODULE.md` are brought to N1.4, N1.5**
    by a change of behaviour after the commit of lesson 7 (the Architect's decision of 2026-10-21; review analysis of stage A 6–7, № 6, findings A-30, A-31;
    review analysis of stage B 6–7, № 26–29; findings of Claude M-1, M-2, M-3, M-5). Before: a key by method, path and body and
    an automatic replay of `PUT` and of any `POST` («а», «е»), the body field `retry_after` instead of the header `Retry-After` («ж»), `may` without grants —
@@ -324,7 +324,7 @@ findings and window records refer to (ADR-0080 addendum 6). The implementation h
 
 ## Correspondence to former lessons
 
-The lesson is moved from М10/9 (stage B): N1.4, N1.5 (the numbers are the former ones), the row of N5 «Проверяются чтением и структурно: модуль — по контракту `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md` (закрытый список вызовов, словарь, `may`, `api` с ключом, дерево, форма, серверы, домен)»
+The lesson is moved from М10/9 (stage B): N1.4, N1.5 (the numbers are the former ones), the row of N5 «Проверяются чтением и структурно: модуль — по контракту `CONSOLE-MODULE.md` (закрытый список вызовов, словарь, `may`, `api` с ключом, дерево, форма, серверы, домен)»
 (here N5 with the table of subjects), the checklist items М10/9-06, -07 (here P/07-01, -02). The late layer N1.6 — without ids of its own
 (plan, V5); moved by the move of lessons 8–10 (stage B, commit 10): М11/8 N1.8 `module` (here N1.6 `holder` and the last
 paragraph; the item М11/8-11 — P/10-04, the `note` of id-map «аргумент sections — P/07 N1.6»), М11/11 N1.6 `declared` in the part `schema`
@@ -336,7 +336,7 @@ The rest of М10/9 is lesson 6 (chapters 6.3, 6.5). From the
 «Соответствие» of М10/9: the module contract (sections 1–10) was normed as N1.1, N1.4, N1.5 — the parts N1.4, N1.5 here, N1.1 —
 P/06.5; section 10a — the late layer (N1.6); the discrepancies of the contract with the code are removed in favour of the lesson (the name of the shell
 `<sub>.shell.html`, the list of calls of the module supplemented with `/schema`, `/unplaceable`, `/policy`, `/servers/<s>/labels`). The contract
-`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md` remains the description of the public surface (plan, V1): the row «Нормативно» — P/07, the dead
+`CONSOLE-MODULE.md` remains the description of the public surface (plan, V1): the row «Нормативно» — P/07, the dead
 `/servers/<s>/writes`, `display.actions` and the row `server_unsaid` are removed, § 2 — by a reference to N1.4 (analysis, № 26, № 30). М10/9
 normed what `М10A_Platform/16-HTML.md` told (the module, the words, the overlay, the form, `api`, the calls of the shell, CSP):
 the parts about the module and the shell — here, the page and CSP — P/06.5.

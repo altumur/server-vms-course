@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/slot-name/R
 
 The owner is [the slot name contract](../../contracts/slot-name.md) (chapter P/03.2 N1.4; the guess of stage C POOL-ORDER-51-01, the Architect's decision
 of 2026-10-25). The participants are the slot capture, the controller, the pool contract, the workers script, the console. The bytes are written by
-«Спецификация»; the rows are by the text of the contract.
+«Specification»; the rows are by the text of the contract.
 
 ## `cases.tsv`
 

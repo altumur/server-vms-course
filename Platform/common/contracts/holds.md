@@ -15,7 +15,7 @@ Moved from P/06.4 N1.5 `holds` and `about` without a change of behaviour; added 
 declaration and unreadable rows — in them the rule «an unknown read is not equal to absence» applies (P/05 N1.3 `retention`
 `rule`): what is not read reliably is held.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 

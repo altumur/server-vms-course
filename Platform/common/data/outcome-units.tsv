@@ -1,0 +1,6 @@
+# Closed unreadability units (LAYERS.md section 7; ADR-0121 (6), (7)).
+# These are identifiers shared by source, generators and readers, not UI text.
+unit	meaning
+row	The containing row is unreadable; use the row-level covering outcomes.
+field	The field is unreadable; at the deepest matched path use its field outcomes.
+element	The collection element is unreadable; at the deepest matched path use its element outcomes.

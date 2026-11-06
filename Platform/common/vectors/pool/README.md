@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/pool/README
 
 The owner is [the pool contract](../../contracts/pool.md) (lesson P/04; the guess of stage C C06-SERVER-POLICY-33-01, the Architect's decision of
 2026-10-25). The participants are the controller (P/04 N3 «choose») and the console (P/06.5 N2: `idle_by_policy`, `placeable`, `why`). The bytes
-are written by «Спецификация»; the rows were composed by the text of the contract and checked by its oracle, not by the code of implementations.
+are written by «Specification»; the rows were composed by the text of the contract and checked by its oracle, not by the code of implementations.
 
 ## `cases.tsv`
 

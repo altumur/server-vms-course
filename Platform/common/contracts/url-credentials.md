@@ -12,7 +12,7 @@ and the customer library ([P/03.6](../../03-worker/spec/03.6-worker.norms.md) N1
 Moved from P/06.2 N1.1 (`url_field` without `bound_to`, `common_words`, `normalisation`), N1.1a and N3 «read_address» without
 a change of behaviour; the address rules A1–A15 are kept.
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
 
 ## The field rule and the common vocabulary
 
@@ -102,7 +102,7 @@ In free text (a value without `://` by A1, a log line — [the log mask contract
 A value of a field `type: url` with `://` is one address as a whole: these characters do not cut it. A character that the grammar of RFC 3986
 admits nowhere — a space and control characters, `"`, `<`, `>`, `\`, `^`, `` ` ``, `{`, `|`, `}` — makes the url
 unparsable: the refusal `bad_url` before storing (A15). Non-ASCII characters are admissible: A4 reads them. `'` is a character of the grammar
-(sub-delims): in `https://hub.ex'ample/x?token=…` the address does not end at `'`, and `token` in it is a password (reconciliation of python and go М10/6–11, S4).
+(sub-delims): in `https://hub.ex'ample/x?token=…` the address does not end at `'`, and `token` in it is a password (reconciliation of python and go M10/6–11, S4).
 For a scheme with `fragment: none` (P/02.1 N1.2a `schemes`) the character `#` is an ordinary character, not the start of a fragment.
 
 **A3. Pairs.** A pair is `name=value` inside a part of the value. The name is the text of the part before its first `=`,
@@ -151,7 +151,7 @@ a login: `accessKeyId` is a login, because its head is `id`, not `key`. Why the 
 `token_bucket` is a bucket, not a token.
 
 **A6. A secret pair and a login pair.** The value of a secret pair is a password, it is masked to the end of the value: `<`, `>`, `\`
-and a quote inside the value do not cut it (`pwd=Hun<ter2` → `pwd=***`, not `pwd=***<ter2`) (reconciliation of python and go М10/6–11, S4).
+and a quote inside the value do not cut it (`pwd=Hun<ter2` → `pwd=***`, not `pwd=***<ter2`) (reconciliation of python and go M10/6–11, S4).
 A secret pair with an empty value also gives a refusal, the display stays empty. The value of a login pair is a login, it is shown as written.
 The value of a secret ends where its part ends. There is one exception. If `/` stands right after the value,
 and further up to the nearest `?`, `#` or the end of the value there is `;` or `&`, the value stretches to this `;` or `&`:

@@ -8,16 +8,16 @@
 `door_row`). Держит замок воркер — сторона воркера: глава [P/03.2](../../../03-worker/ru/spec/03.2-worker.norms.md) N3
 «старт()», шаг 2b; число `room.<sub>` читает контроллер ([P/04](../../../04-controller/ru/spec/04-controller.norms.md) N3
 «нехватка(), заказать(), снять заказ, сократить() — при grows: true»); раскладка корня событий — [P/02.4 N1.2](../../../02-installer/ru/spec/02.4-installer.norms.md) «Канал настройки
-и раскладка `PLATFORM_DIR`». Перенесено из М10/8 N1.4 (`presence_lock`, `room`) и М10/11 N1.4 (`presence`) без изменения
+и раскладка `PLATFORM_DIR`». Перенесено из M10/8 N1.4 (`presence_lock`, `room`) и M10/11 N1.4 (`presence`) без изменения
 поведения; вывод слов присутствия из полей пульса ресурса — P/05 N1.4 `presence`.
 
-Нормативные слова — по [канону курса](../../../../ru/НОРМАТИВНЫЕ-СЛОВА.md).
+Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md).
 
 ## Форма
 
 Содержимое замка — семья `presence-lock`: `Platform/05-resource/data/presence-lock.schema.json`,
 `Platform/05-resource/data/presence-lock.outcomes.tsv`; элементы `room.<sub>`, `live.<sub>` пишутся в строку двери
-`platform/doors/<сервер>` — `Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv`
+`platform/doors/<host>` — `Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv`
 (аудит раскладки, V-45; решение «Архитектора» 2026-10-25).
 
 ## Замок
@@ -106,6 +106,6 @@ live:      рядом с каждым room.<sub> — элемент live.<sub>: 
 
 ## Соответствие прежним урокам
 
-Из М10/8 N1.4 (стадия B, разбор ревью стадии A 3–5, № 9): `presence_lock` целиком и `room` (у P/05 N1.4 `room` —
-ссылка сюда); из М10/11 N1.4 — `presence`. Часть нормы М10/8-10 (замок и счёт `room`; P/05-07) — по `note`
-[id-map](../../id-map.tsv); сторона воркера (шаг 2b «старт()» М10/5) — глава P/03.2, часть М10/5 по id-map урока 3.
+Из M10/8 N1.4 (стадия B, разбор ревью стадии A 3–5, № 9): `presence_lock` целиком и `room` (у P/05 N1.4 `room` —
+ссылка сюда); из M10/11 N1.4 — `presence`. Часть нормы M10/8-10 (замок и счёт `room`; P/05-07) — по `note`
+[id-map](../../id-map.tsv); сторона воркера (шаг 2b «старт()» M10/5) — глава P/03.2, часть M10/5 по id-map урока 3.

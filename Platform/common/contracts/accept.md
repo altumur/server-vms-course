@@ -9,20 +9,20 @@ the publication of a member on `POST /api/member/<member>` after the signature. 
 memory; the holder accepts a relay batch with it too, with `via` = the relay ([P/08.3](../../08-domain/spec/08.3-domain.norms.md)
 N3 «the holder on `POST /api/relay/<relay>`»).
 
-Moved from М11/3 N3 «`accept(mark, stored, body, via, heard_ago)`» (the paragraph on `via` and `heard_ago`, steps 0–7, the paragraph on
+Moved from M11/3 N3 «`accept(mark, stored, body, via, heard_ago)`» (the paragraph on `via` and `heard_ago`, steps 0–7, the paragraph on
 `sent_at`, the answer and a failure) without a change of behaviour. The forms that the function relies on are repeated here so that the holder,
 the relay and the agent execute the contract without the norms 8.x (analysis of review of stage B 8–10, № 4, № 6; ADR-0083 addendum (15); Claude
 `S-3`, `S-4`, `S-6`, `P-2`; Kimi SB810-01): the generation, the mark, `MARK_REFRESH`, `BODY_LIMIT` — the section «Generation, mark, limits»
 (from [P/08.3](../../08-domain/spec/08.3-domain.norms.md) N1.3, N1.3a); the publication, `member_objects`, the fields outside the delta,
 `ready` — the section «The member's publication» (from [P/09.1](../../09-agent/spec/09.1-agent.norms.md) N1.2 and P/08.3 N1.6 `form`);
 the field `every` of the answer — the section «The answer `carry`: `every`» (from P/08.3 N1.5); the form of the function, the output and the exit code 2 — the section
-«The form of the function» (from М11/3 N5, М11/4 N5). The owners of the text stay the same (P/08.3, P/09.1) and refer here; the values
+«The form of the function» (from M11/3 N5, M11/4 N5). The owners of the text stay the same (P/08.3, P/09.1) and refer here; the values
 do not change. The other fields of the answer `carry` — the section «The answer `carry`»; the ceiling of the integer `whole` — [P/08.10](../../08-domain/spec/08.10-domain.norms.md)
 N1.5. References in the moved text: «N1.2» — the section «The member's publication» (P/09.1 N1.2); «N1.3» — the section «Generation, mark,
 limits» (P/08.3 N1.3); «N1.5» — the section «The answer `carry`»; «N2» — P/08.3 N2; «lesson 4 N1.3» — the section «Generation, mark, limits»
 `ROAD_QUIET` (P/08.3 N1.3a).
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -49,7 +49,7 @@ reported:       domain/members/<member>/reported               # the mark object
   delta_sha256: hex sha256 of the bytes of delta (at base 0 — of the body of the whole, as it came)
   signature?:   the header X-Agent-Signature of the direct report that created the generation, as it came (N1.4); through a relay
                 there is no field (N1.3a); via is a field of the last request, so a mark without signature and without via is lawful:
-                the generation came through a relay, then a direct heard (the Architect's decision on the reconciliation of М11, A14)
+                the generation came through a relay, then a direct heard (the Architect's decision on the reconciliation of M11, A14)
   key, keys_rev?, pinned?: from the publication — by them the domain console admits the member and shows the pinning
   # fields of the last accepted request
   sent_at:      sent_at of the publication; received_at — wall-clock seconds of the accepting holder
@@ -57,7 +57,7 @@ reported:       domain/members/<member>/reported               # the mark object
   via?:         the relay — N1.3a
   stale:        from the publication at every acceptance, «heard» included (report reception contract, step 6); not in the publication — []
   sign_failures?: from the publication at every acceptance with a write of the mark, as stale; it creates no generation and does not
-                refresh the mark by itself; not in the publication — no field (N1.6a; P/09.1 N1.12; the Architect's decision on the reconciliation of М11, A7, W1)
+                refresh the mark by itself; not in the publication — no field (N1.6a; P/09.1 N1.12; the Architect's decision on the reconciliation of M11, A7, W1)
   every?:       s — the period told to the member by the last answer with a write of the mark (N1.5; the report reception contract «The answer `carry`: `every`»); none — REPORT_EVERY
 keep:           the two last generations and their delta; older ones and those above the mark are removed by the next acceptance
 REPORT_EVERY:   5           # s — the agent pass; the holder's answer can assign every (N1.5), 1 … 3600
@@ -134,10 +134,10 @@ member_objects:                               # what the agent carries and what 
     scope:                    reports and witness — of each manifest that declared them, domain.ref is not needed; a key of a heartbeat or of a snapshot
                               shard of a manifest with domain.ref belongs to its own family, reports neither widens nor replaces it; a manifest
                               without domain.ref has no such families — the objects go as reports (C09-REPORTS-SCOPE-01, the decision
-                              of «Спецификация домена»); reports is the last of the families of member_objects: a key of another family (contributions,
+                              of «Domain Specification»); reports is the last of the families of member_objects: a key of another family (contributions,
                               witnesses, domain/…) is that family's; a contribution row that did not pass liveness or no_seal does not free the key;
                               the contributions domain.books.*.from and the witnesses — of each manifest that declared them, domain.ref is not needed
-                              (C09-REPORTS-SCOPE-02, the decision of «Спецификация домена»)
+                              (C09-REPORTS-SCOPE-02, the decision of «Domain Specification»)
     domain/shared, domain/shared-refused: the value is the parsed doc of the row: {term, rev, sha256} | {term, rev, reason, at};
                               at the holder's cluster domain/shared — {term, rev, sha256, object}; term and rev are JSON integers (P/09.1 N1.10)
     domain/alarms:            the alarm page (P/09.1 N1.10, P/10 N1.8)
@@ -158,7 +158,7 @@ order over its own memory (P/09.2 N2); the relay batch at the holder — P/08.3 
 
 ```yaml
 order:          in order: 503 `standby` before reading the body (P/08.10 N1.7); 413 larger than BODY_LIMIT; 400 not a publication of P/09.1 N1.2 (including JSON nesting deeper than
-                JSON_DEPTH P/01.1 N1 — 128; reconciliation of М11, A12); the name is its own holder, there is no record or it is not `how: "holder"`: the signature by the key from the body is wrong — 401, right — step 1 of the procedure «the holder in the list» (P/08.3 N3), exhaustion or a failure — 503 `unavailable`, the agent will repeat; not a member — the signature by the key from the body (`key`): wrong — 401,
+                JSON_DEPTH P/01.1 N1 — 128; reconciliation of M11, A12); the name is its own holder, there is no record or it is not `how: "holder"`: the signature by the key from the body is wrong — 401, right — step 1 of the procedure «the holder in the list» (P/08.3 N3), exhaustion or a failure — 503 `unavailable`, the agent will repeat; not a member — the signature by the key from the body (`key`): wrong — 401,
                 right — a knock (the sections «The knock», «The batch knock») and 404 «no member called <member>», for class camera with retry_in (the section «Busy»); a gathering «from nothing» is going on — also send_row and the merge of row (P/08.8 N1.8a), the signature at 403 of the key is also judged by the key from the body; a member — a holder whose Entry is still without key
                 (P/08.3 N3 «the holder in the list» step 1): the signature by the key from the body (`key`) — right → step 2 of that procedure, it checks the key against `domain/member-key`,
                 otherwise 401; a record without key with `revoked_keys` (P/08.3 N3 «admit a member» step 1) — as not a member: a knock; any other member — 403 the key is not in the record or is not that one, 403 revoked (`revoked_keys`,
@@ -178,19 +178,19 @@ carry:          the answer 200 to POST /api/member/<member> and GET /api/carry/<
   cluster:      the name of the member
   rev:          the rev of the mark of this member after the acceptance (0 — no generation); the agent sends the next change against it
   every?:       s — the agent pass, 1 … 3600; outside — the agent takes the nearest bound; the value and the case without the field — the section «The answer `carry`: `every`»
-  # in М11/3 there are: cluster, rev, every, keys, revoked, members — each row as it is, when the holder has it;
-  # М11/3 had no sealed (there was nothing secret for a member before М11/5 and М11/9); in P/08 — sealed? below (analysis of review of stage B 8–10, № 22: M-9)
-  keys?:        the row domain/keys of the holder {doc} (the domain key set contract «Набор domain/keys»)
-  revoked?:     the row domain/revoked of the holder {jtis} (the domain key set contract «Отзывы domain/revoked»)
+  # in M11/3 there are: cluster, rev, every, keys, revoked, members — each row as it is, when the holder has it;
+  # M11/3 had no sealed (there was nothing secret for a member before M11/5 and M11/9); in P/08 — sealed? below (analysis of review of stage B 8–10, № 22: M-9)
+  keys?:        the row domain/keys of the holder {doc} (the domain key set contract «The set domain/keys»)
+  revoked?:     the row domain/revoked of the holder {jtis} (the domain key set contract «Revocations domain/revoked»)
   folders?:     the shared folders (P/08.5 N1.8) — only when the rev of the copy lags behind
   gone_seen?:   the links gone for which the holder has no rows (P/08.5 N1.8)
   members?:     the row domain/member-rows/<part> {doc} (P/08.3 N1.1) — only to the one lagging behind: members_rev of the publication is absent or ≠ (term, rev)
-                (the section «The list of members to the one lagging behind»; added in М11/12); at GET /api/carry — always
+                (the section «The list of members to the one lagging behind»; added in M11/12); at GET /api/carry — always
   holder?:      the row domain/holder of the holder {doc} (P/08.8 N1.1; the term record contract)
   book_rev?:    {<sub>/<book>: {term, rev}} — the versions of the heads of the books to: "*" (P/08.5 N1.4)
   book_stale?:  {<sub>/<book>: [<part>…]} — the sections from publication.book_parts whose version is different, or null whose row has appeared; while the head `/*` of the book of the current term is not written, there is no field (P/08.5 N1.3 first; ADR-0113 addendum (47) item 1)
   send_row?:    true — send your own section row in the field row (P/08.8 N1.8a); carry.members is then absent
-  sealed?:      the envelope m1 with a JSON object of what is secret for the member — the domain envelopes contract «Содержимое sealed» (analysis of review
+  sealed?:      the envelope m1 with a JSON object of what is secret for the member — the domain envelopes contract «Content of sealed» (analysis of review
                 of stage A 8–10, № 12)
   <fields of lessons>: placement — P/08.6 N1.2 (the assignment — P/08.6 N1.1), pending — P/08.6 N1.4; topology — P/08.3 N1.2;
                 shared — P/08.9 N1.4; backup — P/08.8 N1.5
@@ -272,14 +272,14 @@ every:          a field of the answer carry (P/08.3 N1.5): s — the agent pass,
                 the row domain/member-count is absent or unreadable — no field for a camera, the agent keeps the former one (P/09.1 N3 step 5); a value outside
                 1 … 3600 the agent does not reject — the answer is accepted, the agent takes the nearest bound (1 or 3600; P/09.1 N3
                 «the agent pass» step 5). The bound 1 … 3600 of the schema Carry.every `Platform/08-domain/spec/08-domain.api.openapi.yaml` is what the holder sends, not
-                a reason for the agent to reject the answer (the behaviour of М11/3 N1.6)
+                a reason for the agent to reject the answer (the behaviour of M11/3 N1.6)
 ```
 
 The batch signature — the package [`agent-sig`](../vectors/agent-sig/README.md), the file `batch-knock.tsv`.
 
 ## The function «accept»
 
-From М11/3 N3 «принять(mark, stored, body, via, heard_ago) — держатель, на `POST /api/member/<member>` после подписи»:
+From M11/3 N3 «accept(mark, stored, body, via, heard_ago) — the holder, at `POST /api/member/<member>` after the signature»:
 
 `via` is the road: none — directly, otherwise the name of the relay (lesson 4 N1.3); `heard_ago` — monotonic seconds since the last
 acceptance of this member by any road (none — not heard); acceptance is the outcomes `generation`, `heard` (with a write of the mark or without) and
@@ -290,21 +290,21 @@ acceptance of this member by any road (none — not heard); acceptance is the ou
 1. body is not a JSON object by the form of N1.2                                    → 400 not_a_publication
 2. mark exists and body.sent_at = mark.sent_at (one clock of the member on all roads, lesson 4 N1.3): sha256(body) ≠
    mark.request_sha256 → 409 same_sent_at; mark.via = via → same (write nothing, do not refresh the mark); otherwise → heard
-   (a repeat by another road: no generation, the mark — by the refresh rule of step 6; added in М11/4)
+   (a repeat by another road: no generation, the mark — by the refresh rule of step 6; added in M11/4)
 2a. mark exists, mark.via ≠ via, body.sent_at < mark.sent_at and heard_ago < road_quiet (lesson 4 N1.3; for class server it is ROAD_QUIET) → ignored
    (write nothing: the former road is alive, and this body is older by the member's clock)
 3. base > 0 and (no mark, or mark.via ≠ via, or base ≠ mark.rev, or stored is unreadable or not with mark.sha256) → 409 rebase
 4. objects' = (base > 0 ? the objects of stored : {}) ∪ body.objects − body.deleted; drop the objects outside member_objects
-4a. JCS(whole') larger than BODY_LIMIT → 413 {error: "whole too large", detail}; write nothing (P/08.10 N1.5; added in М11/12)
+4a. JCS(whole') larger than BODY_LIMIT → 413 {error: "whole too large", detail}; write nothing (P/08.10 N1.5; added in M11/12)
 5. no snapshot shard of some manifest of the catalogue with domain.ref                → 409 not_ready
 6. mark exists, stored is readable and with mark.sha256, and whole' without sent_at = whole of stored without sent_at (JCS) → heard
-   (stored unreadable or not with mark.sha256 — step 7: a spoiled generation is replaced by a new one; added by the reconciliation of М11, A1):
+   (stored unreadable or not with mark.sha256 — step 7: a spoiled generation is replaced by a new one; added by the reconciliation of M11, A1):
    this process did not write the mark, or wrote it no less than MARK_REFRESH ago (monotonic), or body.stale ≠ mark.stale
-   (sorted lists of keys are compared; reconciliation of М11, A8), or the input every exists and ≠ mark.every →
+   (sorted lists of keys are compared; reconciliation of M11, A8), or the input every exists and ≠ mark.every →
    rewrite the mark: the generation fields as before; the fields of the last request — sent_at, received_at, request_sha256, via, stale,
    sign_failures, every — of this request; otherwise write nothing
 7. otherwise → generation: rev = (mark ? mark.rev : 0) + 1; mark.rev = 2^53 − 1 → 503 {error: "refused", reason: "rev_exhausted",
-   detail: "<member>'s generations reached 2^53 − 1: the mark cannot grow"}, nothing changes (added by the reconciliation of М11, A18); write reports/<rev> = JCS(whole'), then reports/<rev>.delta = body,
+   detail: "<member>'s generations reached 2^53 − 1: the mark cannot grow"}, nothing changes (added by the reconciliation of M11, A18); write reports/<rev> = JCS(whole'), then reports/<rev>.delta = body,
    then the mark {rev, sha256, base, delta_sha256, signature?, key, keys_rev?, pinned?, sent_at, received_at,
    request_sha256 (= delta_sha256), via?, stale, sign_failures?, every?};
    remove reports/<rev−2> and its .delta and the objects above rev
@@ -316,7 +316,7 @@ the `rev` of the mark if `mark.via` = the road of the answer, otherwise 0 (the o
 
 ## The form of the function
 
-From М11/3 N5 `accept`, `exit` and М11/4 N5 (the fields `via`, `heard_ago`) without a change of behaviour: the input and the output of the rows of the package
+From M11/3 N5 `accept`, `exit` and M11/4 N5 (the fields `via`, `heard_ago`) without a change of behaviour: the input and the output of the rows of the package
 [`accept`](../vectors/accept/README.md) (the scenarios were removed by the move of lesson 8; analysis of review of stage B 8–10, № 6, Claude `P-2`;
 № 4, Claude `S-4`):
 
@@ -372,7 +372,7 @@ answer:        the holder's answer to the client of the agent and of the relay (
 ## Vectors
 
 The package [`accept`](../vectors/accept/README.md) (analysis of review of stage A 8–10, № 13): 66 rows — the inputs of the command `accept`
-of the acceptance of М11/3 (sc. 13, 26 rows) and М11/4 (sc. 06, 9 rows — roads) without a change of bytes, 3 rows of ADR-0113 (`road_quiet`, a change of `every`) (the scenarios and inputs were removed by the move
+of the acceptance of M11/3 (sc. 13, 26 rows) and M11/4 (sc. 06, 9 rows — roads) without a change of bytes, 3 rows of ADR-0113 (`road_quiet`, a change of `every`) (the scenarios and inputs were removed by the move
 of lesson 8 — the table is the only source of these cases), 2 rows of the relay door and 25 rows of stage C: the other families
 of `member_objects`, extra fields and `@exit 2`, the form of `sign_failures`, the form of the mark — `sign_failures` {} and the time `received_at` (ACC-FORM172, ACC-TIME172; the README of the package), 1 row — a mark without `stale` (coverage audit of P/08, the second pass of Gemini). The implementation of the holder and
 the relay passes them with its function, without a stand. There is no row for step 4a (`whole_too_large`) — a candidate of the package
@@ -384,8 +384,8 @@ of lesson P/01 (`canonical_json.tsv`: input → the form of RFC 8785 → sha256;
 
 ## Correspondence to former lessons
 
-From М11/3 (analysis of review of stage A 8–10, № 13 / decision 2): N3 «accept» in full (here «The function «accept»»; in М11/3 —
-a pointer). The norm М11/3-06 (acceptance: `same`, `same_sent_at`, `rebase`, `heard`) — by `note` of [id-map](../id-map.tsv);
-executed by 8.3 and 9.2. From М11/3 N5 and М11/4 N5 — the forms of the command `accept` and `exit` (here «The form of the function»; analysis of review
+From M11/3 (analysis of review of stage A 8–10, № 13 / decision 2): N3 «accept» in full (here «The function «accept»»; in M11/3 —
+a pointer). The norm M11/3-06 (acceptance: `same`, `same_sent_at`, `rebase`, `heard`) — by `note` of [id-map](../id-map.tsv);
+executed by 8.3 and 9.2. From M11/3 N5 and M11/4 N5 — the forms of the command `accept` and `exit` (here «The form of the function»; analysis of review
 of stage B 8–10, № 6). The sections «Generation, mark, limits», «The member's publication», «The answer `carry`: `every`» are copies of the rows of
 P/08.3 N1.3, N1.3a, N1.5, N1.6 `form` and P/09.1 N1.2 for the self-sufficiency of lesson P/09 (analysis of review of stage B 8–10, № 4).

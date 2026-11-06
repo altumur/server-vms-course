@@ -252,7 +252,7 @@ common/values-by-type	cases.tsv	04-controller	common/vectors/values-by-type/READ
 common/values-by-type	cases.tsv	06-console	common/vectors/values-by-type/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/values-by-type	cases.tsv	08-domain	common/vectors/values-by-type/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/values-by-type	cases.tsv	09-agent	common/vectors/values-by-type/README.md: Who performs; ACC-VECTORS-CONNECT-03
-common/yaml-suite	expect.tsv	02-installer	P/02.1 Н1.1; common/LAYERS.md; common/vectors/yaml-suite/README.md
+common/yaml-suite	expect.tsv	02-installer	P/02.1 N1.1; common/LAYERS.md; common/vectors/yaml-suite/README.md
 01-store/jcs	canonical_json.tsv	02-installer	01-store/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
 01-store/jcs	canonical_json.tsv	03-worker	01-store/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
 01-store/jcs	canonical_json.tsv	06-console	01-store/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03

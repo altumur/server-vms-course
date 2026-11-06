@@ -9,7 +9,7 @@ the mark it is a participant (the reaper writes `no_begun` `expired` and `unknow
 «reaper»). Read and written by: the holder worker — the mark `begun` and the outcome, the cleanup of the mark after `kept`, the
 filing of a row by `worker.requests` (chapter [P/03.6](../../03-worker/spec/03.6-worker.norms.md) N1.5, N3 «holder's look»,
 «Execution and cleanup of the mark»); the heartbeat of the holder with `fetched` — chapter [P/03.4](../../03-worker/spec/03.4-worker.norms.md)
-N1.1. Moved from P/06.4 (formerly М10/8) N1.5 (the blocks `<sub>/requests/<rid>`, `action`, `rid`, `manifest`, `mark` and the
+N1.1. Moved from P/06.4 (formerly M10/8) N1.5 (the blocks `<sub>/requests/<rid>`, `action`, `rid`, `manifest`, `mark` and the
 paragraph on the vectors), N1.6 (the paragraph on the forms of the mark), N3 «States of an executed request and its mark»
 (whole) and «Races» of the procedure «reaper» without a change of behaviour. The accounting of a person (`ledger`), `holds`,
 the constants of the reaper, the doors of the console, the filing `POST /<sub>/requests` and the procedure of the reaper are in
@@ -17,9 +17,9 @@ the norms of the owner (P/06.4 N1.5, N2, N3); the constants of the holder — P/
 manifest and the refusals of their loading — [P/02.1](../../02-installer/spec/02.1-installer.norms.md) N1.4, N4. The form
 of the rows — the families of the owner [`requests`](../../06-console/data/requests.schema.json) (`<sub>/requests/<rid>`) and
 [`commands`](../../06-console/data/commands.schema.json) (`objects/<sub>/commands/<rid>`) with the tables of outcomes next to
-them ([catalogue](../data/catalog.tsv)). A reference «P/0N[.K] НM» is a norm of a lesson or of a chapter of the module.
+them ([catalogue](../data/catalog.tsv)). A reference «P/0N[.K] NM» is a norm of a lesson or of a chapter of the module.
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -47,7 +47,7 @@ The files the contract works by (layout audit, V-50–V-54, B-17; the Architect'
   <body fields>: by requests.schema, as text: a string — as is, another value — canonical JSON (JCS, ADR-0072)
   valid_until: <seconds>                     # the time of the writer (`Platform/common/data/codec.tsv` row time; P/01.1 N0) (a sent one — truncated down to ms, a negative one — 0, P/06.4 N3 step 1);
                                              # when the manifest has valid_for or the client sent its own term; 0 and a past one are a term
-                                             # that has already expired (expired), not «no term» (reconciliation of python and go М10/6–11, E52)
+                                             # that has already expired (expired), not «no term» (reconciliation of python and go M10/6–11, E52)
   digest:      <sha256 hex>                  # MUST in every executed request (not in a resource request): in one filed by the door — JCS of the client body after the schema without
                                              # the server fields (kind client); in one filed by the worker — JCS of the object of the body fields of the row as written (as text), without unit,
                                              # valid_until and stamps (kind worker); the worker computes it itself at the write (P/03.6 N1.5); repeats are compared by it;
@@ -95,7 +95,7 @@ manifest:                                    # requests: (the form — `Platform
                fetched — an append: only the word fetched in the heartbeat, there is no mark, except the mark of the reaper: gone to an absent unit or expired by the term (section «States…»);
                fetched without key — a load refusal of P/02.1 N1.4
   stamp:       [by, at, group, about]       # about — the field about.field of the manifest (in testsub2 — of) with the value of the addressee unit (E56)
-  journal:     the kind of the journal line; no key — request.asked (reconciliation of python and go М10/6–11, E58)
+  journal:     the kind of the journal line; no key — request.asked (reconciliation of python and go M10/6–11, E58)
   elsewhere:   the actions (action) that another process executes (the reaper does not touch them)
   free:        accepts requests of a resource to free a place
 ```
@@ -176,7 +176,7 @@ CAS and the rid from `asked` by CAS; an unknown read — leave it. A late `fetch
 change, the start of `settle` does not move — the request has one outcome, the first confirmed one; `fetched` confirmed earlier
 excludes the mark `expired`. Nobody cleans up the mark `expired` (marks accumulate, one per rid), and the rid of an append is derived from data and the door does not read the mark: a new request with the same rid is accepted (202), and the former mark with the same `unit`/`digest` closes it through `settle`, not through `ttl` — the repeat window after `expired` is shortened, the consumer knows this; the platform does not introduce a cleanup of append marks (the Architect's decision of 2026-10-31). Without a mark of the reaper an append has no marks, and it is not removed by `ttl` alone (P/06.4 N3 reaper `gone`,
 `expired`; ADR-0091 addendum (11) item 4; the stage C guess C06-GONE-FETCHED-33-01, the Architect's decision of 2026-10-25; the VMS request
-«срок просьбы», the Architect's decision of 2026-10-29; vectors [`reap`](../../06-console/vectors/reap/README.md)). The holder's side of the append is [chapter P/03.6](../../03-worker/spec/03.6-worker.norms.md) N3 «The ADR-0054 append».
+«request lifetime», the Architect's decision of 2026-10-29; vectors [`reap`](../../06-console/vectors/reap/README.md)). The holder's side of the append is [chapter P/03.6](../../03-worker/spec/03.6-worker.norms.md) N3 «The ADR-0054 append».
 The sign of an append is `requests.outcome: fetched` (ADR-0054 addendum 2026-10-17); the training consumer is the requests of `testsub2`
 (the form — the README of the [acceptance of chapter 3.6](../../03-worker/acceptance/6/README.md), the handler — P/03.6 N5). Except for these two marks the reaper neither marks such a row nor removes it by `ttl` alone; scenario 07 of the acceptance of chapter 3.6.
 Resource rows and elsewhere stay with their owners; the reaper neither marks them nor
@@ -263,7 +263,7 @@ of lesson P/01 (`canonical_json.tsv`: input → the RFC 8785 form → sha256; AD
 
 ## Correspondence to former lessons
 
-From P/06.4 (review of stage B 3–5, V1; formerly М10/8): N1.5 — the blocks `<sub>/requests/<rid>`, `action`, `rid`, `manifest`,
+From P/06.4 (review of stage B 3–5, V1; formerly M10/8): N1.5 — the blocks `<sub>/requests/<rid>`, `action`, `rid`, `manifest`,
 `mark` (with `kept`) and the paragraph on the vectors; N1.6 — the paragraph on the forms of the mark (here «Three forms of the mark»; the door `answered` stays in
 P/06.4 N1.6 with a reference here); N3 «States of an executed request and its mark» whole; «Races» of the procedure «reaper». The references inside
 the moved text («N1.5», «chapter 3.6», «chapter 6.3», «N2», «by N3») are written with the full address (P/06.4 …, P/03.6 …,

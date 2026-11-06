@@ -1,4 +1,4 @@
 # Outcomes of an unreadable row domain/stranded (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domain	the whole row is unreadable: `POST /domain/stranded/apply` (the element is looked up in items) — 503 unavailable, nothing is applied; the view field term.stranded (Н1.3) — without the field; log (layout audit, G-40; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)	0	строка	P/08.8 Н1.6 stranded, apply; Н1.3 stranded
+	domain	the whole row is unreadable: `POST /domain/stranded/apply` (the element is looked up in items) — 503 unavailable, nothing is applied; the view field term.stranded (Н1.3) — without the field; log (layout audit, G-40; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)	0	row	P/08.8 Н1.6 stranded, apply; Н1.3 stranded

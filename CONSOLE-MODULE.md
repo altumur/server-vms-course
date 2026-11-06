@@ -2,7 +2,7 @@
 
 # The platform console module: contract
 
-This English text is the source; the Russian translation `ru/КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/CONSOLE-MODULE.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 2026-10-04. The note of «The console» for step 3 of the boundary note (`ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md`, §2.2, §6.1; the Architect's answers to five questions). Accepted by the Architect with edits; the edits are made. There is no code by it yet (the code of the module — P/07 N1.5).
 

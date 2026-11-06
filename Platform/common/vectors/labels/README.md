@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/labels/READ
 
 The owner is lesson P/06 through [the label alphabet contract](../../contracts/labels.md) (`label`, `set` `output`, `text`, `read`;
 stage C guesses L01–L03, the Architect's decision 2026-10-23). The participants are those who read labels by the contract: the console (the labels field
-of a unit, the label doors of a server), the controller (`labels-subset`), grants by labels. The bytes are written by «Спецификация». The labels field
+of a unit, the label doors of a server), the controller (`labels-subset`), grants by labels. The bytes are written by «Specification». The labels field
 of a unit as a list field — the vectors [`values-by-type`](../values-by-type/README.md) (`list:labels`) and
 [`row-check`](../row-check/README.md).
 

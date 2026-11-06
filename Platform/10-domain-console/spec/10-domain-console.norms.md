@@ -43,7 +43,7 @@ former ids is [`id-map.tsv`](../../common/id-map.tsv).
 
 ## N0 Vocabulary
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 N0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary)
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md). The rules of the module are [P/01.1 N0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary)
 (including the order of output arrays, scope — lessons 8–10).
 
 ## N1 Form
@@ -169,7 +169,7 @@ door:          GET /domain/shared at the domain console (view) → 200 {doc, del
                of the view not ok, sentence «rev 0 on 0 of T members» (T — the members of the view) with the tails of before; null in term and rev is not
                written (C10-SHARED-EMPTY-DELIVERY-01)
   declared:    {<sub>: [{name, type, schema?}]} — the elements domain.shared of the manifests of the catalogue, by name; schema — at the document
-               (КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §10a, added by М11/11; the late layer P/07 N1.6)
+               (CONSOLE-MODULE.md §10a, added by М11/11; the late layer P/07 N1.6)
 ```
 
 The document and the pointer are [chapter 8.9](../../08-domain/spec/08.9-domain.norms.md) N1.2; `view.shared` is chapter 8.9 N1.6; the declaration
@@ -322,7 +322,7 @@ session:  /session, /healthz — as at the cluster console (the gate-and-pass co
           of stage A 8–10, № 14); server_time and timezone of GET /session — the same lines of the contract: the clock of the domain console and TIMEZONE
           of the environment of its box, empty or not by the form — a start refusal, code 2 (the environment file contract «Environment variables»; ADR-0094 B6)
 module:   which doors the module calls in the mode domain, and that its nodes are member:<member>, domain — a property of the published module
-          (console.js — data of the specification; the late layer P/07 N1.6, the description — КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md §10a), not of implementations; the check is the module test at its
+          (console.js — data of the specification; the late layer P/07 N1.6, the description — CONSOLE-MODULE.md §10a), not of implementations; the check is the module test at its
           owner; the acceptance of the lesson — only the doors of the page
 ```
 

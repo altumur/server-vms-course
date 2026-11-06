@@ -25,7 +25,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 ## `worker.tsv`
 
-Чтение пульса воркера `<sub>/heartbeats/<имя>` по форме `Platform/03-worker/data/heartbeats.schema.json` и исходам
+Чтение пульса воркера `<sub>/heartbeats/<name>` по форме `Platform/03-worker/data/heartbeats.schema.json` и исходам
 `Platform/03-worker/data/heartbeats.outcomes.tsv` (урок P/03.4 N1.1; C08-HEARTBEAT-READER-99-VECTORS, решение «Архитектора» 2026-10-26). Читатели — консоль (`GET /{rows}`, `/servers`,
 `/metrics`, `/where`, door.pass, `/schema`), контроллер, дренаж, теневой отчёт домена. Те же правила файла; поля `case`,
 `key` (ключ объекта), `object`, `expect`, `note`.

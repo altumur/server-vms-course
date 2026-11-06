@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/events-merg
 
 The owner is [the event journal merge contract](../../contracts/events-merge.md) (lesson P/06, chapter 6.4; ADR-0091 addendum (21) item 3).
 The participants are the cluster console (`GET /events`, [P/06.4](../../../06-console/spec/06.4-console.norms.md)) and a subsystem worker
-that merges the journal itself. The bytes are written by «Спецификация»; the rows were composed by the text of the contract and checked by its oracle, not by the code of
+that merges the journal itself. The bytes are written by «Specification»; the rows were composed by the text of the contract and checked by its oracle, not by the code of
 implementations.
 
 ## `cases.tsv`

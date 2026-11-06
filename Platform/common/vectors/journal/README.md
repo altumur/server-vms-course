@@ -7,7 +7,7 @@ The owner is [the event journal contract](../../contracts/event-journal.md): `bu
 of P/05 (`05-resource/data/events-*.schema.json`: `events-unit`, `events-unit-alarms`, `events-audit`,
 `events-audit-alarms`, `events-console`, `events-console-alarms`, `events-mirror`). The participants are the writers and the readers
 of the trees of events and objects: the worker, the console, the controller, the resource ([P/05](../../../05-resource/spec/05-resource.norms.md)
-N1.1, N1.2, N1.4). The bytes are written by «Спецификация».
+N1.1, N1.2, N1.4). The bytes are written by «Specification».
 
 ## `bucket.tsv`
 

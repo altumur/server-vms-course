@@ -5,7 +5,7 @@ This English text is the source; the Russian translation `ru/vectors/heartbeat-r
 The owner is [the observation contract](../../contracts/observation.md) «Form», «Resource state» (stage C guess
 C04-DEP-OBS-HEARTBEAT-01, the Architect's decision 2026-10-25). The form is `Platform/05-resource/data/resource-heartbeat.schema.json`,
 the outcomes are `Platform/05-resource/data/resource-heartbeat.outcomes.tsv` (the family `platform/resources/<server>/heartbeat` of lesson
-P/05). The participants are the observers of `resource_state`: the controller and the console. The bytes are written by «Спецификация»; the expectations are obtained by the judge
+P/05). The participants are the observers of `resource_state`: the controller and the console. The bytes are written by «Specification»; the expectations are obtained by the judge
 of the family schemas of the skill (the reader mode, LAYERS.md §§ 6–7), not by the code of implementations.
 
 ## `cases.tsv`
@@ -16,7 +16,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | Field | Meaning |
 |---|---|
 | `object` | the heartbeat of a resource — a JSON object under the key `platform/resources/srv-a/heartbeat` |
-| `expect` | `{"readable": false}` — the whole object is unreadable (the outcome «объект целиком»: it does not confirm life); `{"readable": true, "fields": [<field>…]}` — the heartbeat is readable, for the listed fields (in the order of the rows of `outcomes.tsv`) their field outcome from `outcomes.tsv` applies (`build` — reads as `""`, `retention_garbled`, `retention_withheld` — as absent), an empty list — there are no field outcomes |
+| `expect` | `{"readable": false}` — the whole object is unreadable (the outcome «the whole object»: it does not confirm life); `{"readable": true, "fields": [<field>…]}` — the heartbeat is readable, for the listed fields (in the order of the rows of `outcomes.tsv`) their field outcome from `outcomes.tsv` applies (`build` — reads as `""`, `retention_garbled`, `retention_withheld` — as absent), an empty list — there are no field outcomes |
 
 18 rows: 11 readable (7 of them with a field outcome), 7 unreadable. The lexemes of time and of integers (OBS154-RAW-TIME-EXACT-01, the Architect's decision
 2026-10-26): the time `ts`, `usage_at` with `1e0`, `1e-400`, `-0` — not of the form (`codec.tsv` `time`, the reader); `usage` `100.0` is
@@ -37,7 +37,7 @@ Reading the heartbeat of a worker `<sub>/heartbeats/<name>` by the form `Platfor
 | `fields` | at `others: "readable"` — the fields with a field outcome in the order of the rows of `outcomes.tsv` (`build` — `""`, `schema` — `null` in processes, `pending_writes` — not stated); otherwise `[]` |
 
 19 rows: of the form; not an object, no `instance`, `status` not a list, `worker` ≠ the name in the key (the prose rule of P/03.4 N1.1, the outcome
-«объект целиком») — unreadable; an element without `phase`, with a non-integer `epoch`, `sealed` with `epoch`, `id` not by the grammar — a skip at
+«the whole object») — unreadable; an element without `phase`, with a non-integer `epoch`, `sealed` with `epoch`, `id` not by the grammar — a skip at
 `GET /{rows}`, unreadable to the others; `unreadable` with `why` — of the form; the field outcomes `build`, `schema`, `pending_writes`; the path `""`
 before `/status` — unreadable to all. The expectations — by the judge of the family schemas of the skill (the reader mode), the rule `worker` — by the prose.
 The lexemes (OBS154-RAW-TIME-EXACT-01): `ts`, `started`, `previous_hb` with `1e0`, `1e-400`, `-0` — unreadable to all; `freeing` `100.0` —

@@ -7,7 +7,7 @@ Ed25519) and the check at the holder by the row `door/keys`. The owner of the co
 [6.5](../../../06-console/spec/06.5-console.norms.md) (N3 «`/where/<id>`»: the console issues the token); the checker is the holder
 of the door, chapter [3.4](../../../03-worker/spec/03.4-worker.norms.md) N3 «the door token at the holder» (P/03.4-08). The package is common:
 one process writes the algorithm, others read (the Architect's decision of 2026-10-20, the review analysis of stage B 3–5: an Ed25519 signature
-without vectors is a silent divergence of implementations). The bytes are written by «Спецификация» (ADR-0083); the conformance of the product is by its
+without vectors is a silent divergence of implementations). The bytes are written by «Specification» (ADR-0083); the conformance of the product is by its
 acceptance against these tables (ADR-0080 addendum 16).
 
 ## Run
@@ -96,10 +96,10 @@ The rows `ok_query_token` and `ok_query_one_segment` are a control of the path w
 the signature covers the bytes of the claims part (the Architect's decision of 2026-10-20, the vectors door-token).
 
 The rows `key_small_order` and `sig_r_small_order` satisfy the equation [S]B = R + [k]A; the OpenSSL check (pyca cryptography) accepts them,
-the refusal is given only by the condition of the contract «A или R малого порядка — отказ» (the Architect's decision of 2026-10-20, the review analysis of stage B 6–7).
+the refusal is given only by the condition of the contract «A or R of small order — refusal» (the Architect's decision of 2026-10-20, the review analysis of stage B 6–7).
 
 The vectors were obtained by reference Ed25519 (RFC 8032) and JCS (RFC 8785, checked on [`jcs`](../../../01-store/vectors/jcs/README.md))
-by the contract, not by the code of implementations; on a divergence the contract is right, the vector is corrected by «Спецификация».
+by the contract, not by the code of implementations; on a divergence the contract is right, the vector is corrected by «Specification».
 
 ## Vector wire
 
