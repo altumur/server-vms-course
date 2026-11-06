@@ -297,7 +297,7 @@
   },
   "state_swept_total": {
    "$ref": "#/$defs/count",
-   "description": "state rows successfully deleted by the state sweep; required for the writer, zero when none"
+   "description": "cumulative state rows successfully deleted by this controller process; starts at zero; increments only on confirmed deletion; required for the writer"
   }
  },
  "propertyNames": {

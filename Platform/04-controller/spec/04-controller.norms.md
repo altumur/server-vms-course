@@ -28,12 +28,12 @@ Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow
 
 <!-- req: P/04-R002 -->
 
-**Time.** The time fields of the rows and objects of the lesson are time by [the canon of N0 of P/01.1](../../01-store/spec/01.1-store.norms.md#time-in-a-row): `<sub>/placement/<id>` — `at`; `platform/doors/<host>` — `since`, `at`; `platform/drain` — `at`; `platform/decommission/<host>` — `at`; `<sub>/decommissioned/<host>` — `asked_at`, `at`; `<sub>/controller/placement_intent` — `at`; `<sub>/want/<host>` — `at`; the object `<sub>/controller/pass` — `at`, `last_success`; the object `<sub>/snapshot/<worker>` — `ts`.
+**Time.** The time fields of the rows and objects of the lesson are time by [the canon of N0 of P/01.1](../../01-store/spec/01.1-store.norms.md#time-in-a-row): `<sub>/placement/<id>` — `at`; `platform/doors/<host>` — `since`, `at`; `platform/drain` — `at`; `platform/decommission/<host>` — `at`; `<sub>/decommissioned/<host>` — `asked_at`, `at`; `<sub>/decommission-pending/<host>` — `asked_at`, `at`; `<sub>/controller/placement_intent` — `at`; `<sub>/want/<host>` — `at`; the object `<sub>/controller/pass` — `at`, `last_success`; the object `<sub>/snapshot/<worker>` — `ts`.
 
 <!-- req: P/04-R003 -->
 
 **Data** ([catalogue](../../common/data/catalog.tsv)):
-- owns: `<sub>/placement/<id>`, `<sub>/workers/<name>`, `<sub>/want/<host>`, `<sub>/decommissioned/<host>`, `<sub>/controller/placement_turn`, `<sub>/controller/placement_intent`, `<sub>/controller/pass`, `<sub>/snapshot/<worker>`, `<sub>/snapshot/unplaced`, `<sub>/snapshot-tables/<table>`;
+- owns: `<sub>/placement/<id>`, `<sub>/workers/<name>`, `<sub>/want/<host>`, `<sub>/decommissioned/<host>`, `<sub>/decommission-pending/<host>`, `<sub>/controller/placement_turn`, `<sub>/controller/placement_intent`, `<sub>/controller/pass`, `<sub>/snapshot/<worker>`, `<sub>/snapshot/unplaced`, `<sub>/snapshot-tables/<table>`;
 - writes: `<sub>/slots/<name>` (cas), `<sub>/<manifest:unit.rows>/<id>` (delete), `<sub>/<manifest:domain.books.from>/<slot>` (delete), `<sub>/state/<name>/<id>` (delete), `<events root>/audit/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append), `<events root>/audit.alarms/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` (append), `<events or objects root>/<path>/%h<sha256>.name` (create), `<objects root>/<dir>/~lock` (create);
 - reads: `platform/manifest/<sub>`, `platform/manifest/<sub>/rev`, `<sub>/heartbeats/<name>`, `<sub>/slots/<name>`, `<sub>/holds/<place>`, `<sub>/<manifest:unit.rows>/<id>`, `<sub>/state/<name>/<id>`, `platform/schema`, `platform/resources/<server>/heartbeat`, `<sub>/policy`, `platform/servers/<host>`, `platform/doors/<host>`, `platform/drain`, `platform/decommission/<host>`, `<sub>/<manifest:tables>/<name>`, `/etc/w2c/tls/<role>/server.key`.
 
@@ -82,13 +82,25 @@ platform/decommission/<host>:           # the writer is the console
                  # an element: slots — a slot name P/03.2 N1.4, units — a unit id P/06.1 N1.3, holds — a place name P/03.2 N1.3;
                  # a count («0») is not an element (added by the pilot of the data family schemas, D7)
                  # names, not numbers (reconciliation of python and go 2026-10-18)
+<sub>/decommission-pending/<host>:     # unfinished controller progress, never the final decommission mark
+  state: prepared | cleaning | finalizing
+  request_index: <version>             # exact fixed platform/decommission/<host> index
+  asked_at, at: <time>                 # request at and plan acceptance time
+  manifest_rev: <revision>
+  remaining: [{name: <slot name>, index: <version>}, ...]  # JSON; original versions, no later substitution
+  from: [<owned from prefix>, ...]     # fixed full prefixes, each ending in /
+  released, skipped: [<slot name>, ...]
+  current: [<slot name>, ...]          # at most BATCH_WRITES - 1, the confirmed release chunk
+  cleanup_index: "" | <version>        # empty means the progress row's own index, before its first cleanup rewrite
+  slot_cursor, from_cursor: <count>    # next current slot and its next from prefix
+  units, holds: <lists>                # fixed final-mark metadata, same form as decommissioned
 <sub>/want/<host>:                      # the writer is the controller, cas with the guard placement_turn (N1.5); ADR-0084 and addendum (1)
   want:      <decimal 1…99>               # the absolute target of the number of role processes on the server, the base <prefix>-<server>-1 is included
   at:        <moment of the write>        # diagnostics; the terms — by the observation of the row version (N1.4 terms)
   by:        <controller instance>        # diagnostics; the authority — cas and the guard placement_turn
   why:       <non-empty reason>           # grammar N3 «shortage(), order()…»
   retiring?: <worker name>                # chosen for shrinking (N3 «shrink»)
-  # the row always exists for an installed role on a server of a manifest with grows: true (N3 «order row»); only the decommission
+  # the row exists, except while pending/finally decommissioned, for an installed role on a server of a manifest with grows: true (N3 «order row»); only the decommission
   # of the server and the removal of the role delete it; shrinking writes want 1, does not delete; the controller and the console read it (series workers_wanted P/06.5 N3 «/metrics — text»)
 ```
 
@@ -145,6 +157,8 @@ pass:
   near_waiting:         [<subsystem>…]   # only with placement.near whose near.sub is not in the manifest catalogue of this pass:
                         #   the affinity waits for its installation (N1.3 near; ADR-0091 addendum (27) item 6); otherwise there is no field
 ```
+
+The report writer always supplies expired_kept, snapshot_state_garbled and state_swept_total as non-negative integers; the first two count this pass, while state_swept_total counts confirmed deletions cumulatively from zero in this controller process. Readers remain compatible with old reports omitting these fields; a present field must have its type. A snapshot writer supplies exactly one admissible unit.rows array, including an empty array; readers retain their former compatibility. Reader tolerance does not permit a writer to omit required fields (ADR-0127 review P/04 C4).
 
 ### N1.3 Placement keys and their meaning
 
@@ -481,6 +495,49 @@ Outcomes of an unreadable row (the reader is a role; `*` — all readers of the 
 | the whole row | `<s>worker` | the decommission row of its own server is unreadable: at the start it does not take a name until it reads, the cause goes to the log without the value (P1; V7 item 3, row 6) | 0 | row | P/03.2 Н3 «старт()» шаг 3 |
 | the whole row | `console` | the whole row is unreadable: `/servers` — `decommissioned: null` (the general rule of output: a field with an unreadable source — null, if required) (the Architect's answer of 2026-10-25 to the questions of stage 3, G-03) | 0 | row | P/06.6 Н2.1; P/04 Н3 «decommission_server» |
 
+#### `<sub>/decommission-pending/<host>` — row
+
+Schema — [`decommission-pending.schema.json`](../data/decommission-pending.schema.json), outcomes — [`decommission-pending.outcomes.tsv`](../data/decommission-pending.outcomes.tsv); form version 1; norm — P/04 N1.1; N3 decommission_server; ADR-0127 review P/04 C2.
+
+| Key | Type and bounds | Requirement | Lesson | Meaning |
+|---|---|---|---|---|
+| `state` | string; one of: `prepared`, `cleaning`, `finalizing` | required |  | prepared: release the next original candidates; cleaning: remove contributions for the confirmed current release chunk; finalizing: publish the final mark last |
+| `request_index` | string; not one of: `""` | required |  | the immutable index of platform/decommission/\<host> for this plan |
+| `asked_at` | time (P/01.1 N0 «Time in a row») | required |  | at of the fixed console request |
+| `at` | time (P/01.1 N0 «Time in a row») | required |  | the controller time at plan acceptance |
+| `manifest_rev` | string; matching `[1-9][0-9]*` in full | required |  | the manifest revision used to freeze the owned from prefixes |
+| `remaining` | list, without repeats, element — map `{name, index}`; in `items` — a JSON text (x-encoding: json) | required |  | ordered immutable slot names and original observed versions still to release; never replace a version after conflict |
+| `remaining[]` | map `{name, index}` | optional |  |  |
+| `remaining[].name` | string; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | required |  | the name of the given-away slot, P/03.2 N1.4 |
+| `remaining[].index` | string; not one of: `""` | required |  | the exact opaque store version; compare only for equality |
+| `from` | list, without repeats, element — string; matching `[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31}/` in full | required |  | distinct ordered owned family prefixes from this manifest domain.books declarations; full prefixes including final slash; never a foreign subsystem |
+| `from[]` | string; matching `[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31}/` in full | optional |  |  |
+| `released` | list, without repeats, element — string; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | required |  | slot names confirmed released by this plan, in release order; historical names, never an authority to touch a later holder |
+| `released[]` | string; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | optional |  | the name of the given-away slot, P/03.2 N1.4 |
+| `skipped` | list, without repeats, element — string; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | required |  | original candidates whose version changed; never reread/adopt a newer version for release |
+| `skipped[]` | string; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | optional |  | the name of the given-away slot, P/03.2 N1.4 |
+| `current` | list, at most 63 items, without repeats, element — string; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | required |  | the current atomic release chunk; at most BATCH_WRITES-1 slots; exact shared release index from cleanup_index or the progress row index |
+| `current[]` | string; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | optional |  | the name of the given-away slot, P/03.2 N1.4 |
+| `cleanup_index` | string | required |  | empty only before the first progress rewrite of a confirmed release chunk: then the progress row index is the exact release index; otherwise its preserved value, never a later slot reread |
+| `slot_cursor` | integer; ≥ 0; ≤ 9007199254740991 | required |  | zero-based current slot being cleaned; compared with current length by the procedure |
+| `from_cursor` | integer; ≥ 0; ≤ 9007199254740991 | required |  | zero-based next from prefix for the current slot; conflict discards the remainder of this slot |
+| `units` | list, element — string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full | required |  | final mark metadata fixed before plan acceptance: ids of the removed units by the list rule of P/06.1 N1.2; "" — none |
+| `units[]` | string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full | optional |  | the id of the removed unit, P/06.1 N1.3 |
+| `holds` | list, element — string | required |  | final mark metadata fixed before plan acceptance: the hold places by the list rule of P/06.1 N1.2; "" — none |
+| `holds[]` | string | optional |  | the name of the hold place, P/03.2 N1.3 (`<sub>/holds/<place>`) |
+
+Rules:
+
+- `<root>`: if `state` — `prepared`: `current` — also any value; `cleanup_index` — also one of: `""`; `slot_cursor` — also one of: `0`; `from_cursor` — also one of: `0`; `remaining` — also any value.
+- `<root>`: if `state` — `finalizing`: `current` — also any value; `cleanup_index` — also one of: `""`; `slot_cursor` — also one of: `0`; `from_cursor` — also one of: `0`; `remaining` — also any value.
+- `<root>`: if `state` — `cleaning`: `current` — also any value; `from` — also any value.
+
+Outcomes of an unreadable row (the reader is a role; `*` — all readers of the family):
+
+| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
+|---|---|---|---|---|---|
+| the whole row | `<s>controller` | the progress row is unreadable: do not infer completion, recreate the plan, release slots or delete contributions; keep progress and final mark unchanged, record a step error and retry only after a readable source is restored | 0 | row | P/04 N1.1; N3 decommission_server, progress and recovery; ADR-0127 review P/04 C2 |
+
 #### `<sub>/controller/placement_turn` — row
 
 Schema — [`placement-turn.schema.json`](../data/placement-turn.schema.json), outcomes — [`placement-turn.outcomes.tsv`](../data/placement-turn.outcomes.tsv); form version 1; norm — P/04 N1.5.
@@ -589,7 +646,16 @@ Schema — [`controller-pass.schema.json`](../data/controller-pass.schema.json),
 | `raise_failed.<name>.times` | by the definition `count` | required |  | refusals in a row |
 | `near_waiting` | list, at least 1 items, without repeats, element — string; matching `[a-z][a-z0-9_-]{0,31}` in full | optional |  | the subsystems of placement.near.sub that are not in the manifest catalog of this pass: the affinity waits for their installation (N1.3 near; ADR-0091 addendum (27) item 6); otherwise there is no field |
 | `near_waiting[]` | string; matching `[a-z][a-z0-9_-]{0,31}` in full | optional |  |  |
+| `expired_kept` | by the definition `count` | optional |  | manual rows retained after ends removed them; required for the writer, zero when none |
+| `snapshot_state_garbled` | by the definition `count` | optional |  | unreadable state rows omitted from snapshot shards in this pass; required for the writer, zero when none |
+| `state_swept_total` | by the definition `count` | optional |  | cumulative state rows successfully deleted by this controller process; starts at zero; increments only on confirmed deletion; required for the writer |
 | `.<name>` | any value | optional |  | the implementation's own counters (N1.2 — MAY add) |
+
+Only at the writer (`$defs.writer`):
+
+| Key | Also |
+|---|---|
+| `<root>` |  |
 
 **`count`** — a counter ≥ 0
 
@@ -641,6 +707,7 @@ Only at the writer (`$defs.writer`):
 | Key | Also |
 |---|---|
 | `<root>` | at most 1 names (x-max-names) |
+| `.<name> (name)` | string; not one of: `platform`, `spec`, `manifest`, `next_id`, `slots`, `epoch`, `idem`, `policy`, `placement`, `workers`, `controller`, `decommissioned`, `decommission-pending`, `holds`, `requests`, `asked`, `sweep`, `servers`, `where`, `unplaceable`, `drain`, `events`, `marks`, `console`, `audit`, `session`, `mounts`, `healthz`, `changes`, `metrics`, `resources`, `schema`, `domain`, `api`, `heartbeats`, `contenders`, `snapshot`, `blobs`, `commands`, `state`, `folders`, `memberof`, `operations`, `opsteps`, `opdone`, `opcount`, `opbusy`, `operations-turn`, `operations-epoch`, `cluster`, `worker`, `ts`, `tables`, `snapshot-tables`; matching `[a-z][a-z0-9_-]{0,31}` in full |
 
 Outcomes of an unreadable object (the reader is a role; `*` — all readers of the family):
 
@@ -671,6 +738,7 @@ Only at the writer (`$defs.writer`):
 | Key | Also |
 |---|---|
 | `<root>` | at most 1 names (x-max-names) |
+| `.<name> (name)` | string; not one of: `platform`, `spec`, `manifest`, `next_id`, `slots`, `epoch`, `idem`, `policy`, `placement`, `workers`, `controller`, `decommissioned`, `decommission-pending`, `holds`, `requests`, `asked`, `sweep`, `servers`, `where`, `unplaceable`, `drain`, `events`, `marks`, `console`, `audit`, `session`, `mounts`, `healthz`, `changes`, `metrics`, `resources`, `schema`, `domain`, `api`, `heartbeats`, `contenders`, `snapshot`, `blobs`, `commands`, `state`, `folders`, `memberof`, `operations`, `opsteps`, `opdone`, `opcount`, `opbusy`, `operations-turn`, `operations-epoch`, `cluster`, `worker`, `ts`, `tables`, `snapshot-tables`; matching `[a-z][a-z0-9_-]{0,31}` in full |
 
 Outcomes of an unreadable object (the reader is a role; `*` — all readers of the family):
 
@@ -809,8 +877,8 @@ is ensured by their reconciliation and leases (P/03.3, P/03.2), not by one chang
 1. revision: read the manifest revision; placement rows without manifest_rev — stamp them with the own one (once);
    read the manifest catalogue (platform/manifest/*) — on every pass: the manifest near.sub has appeared — the affinity (N1.3 near)
    applies from this pass; it is absent — no affinity, near_waiting (ADR-0091 addendum (27) item 5)
-2. decommission of servers: execute platform/decommission/* for servers that stopped answering: release the slots, write
-   <sub>/decommissioned/<s>; the server answers — the request stands (N3 «decommission_server»)
+2. decommission of servers: resume pending or admit a stopped server by N3 decommission_server; release/cleanup in bounded chunks,
+   then publish <sub>/decommissioned/<s> only at finalization. Before admission a heard server leaves the request standing.
 3. slot fates (below); release → write the slot as released; names_given; alarms hung/unsure; an abandoned capture — remove the rows under it (below)
 4. place: remove the deleted (reason deleted) → remove by retire_when (by the acting state with retire_when.state) →
    remove by ends (the field ≠ never and ≤ the clock of the controller; reason ends) → sync of the assignments with the placements (diverged) →
@@ -876,7 +944,7 @@ A stamp of manifest_rev without a change of the target is a separate write with 
 placed (worker ≠ "")                                               → as is; do not reconsider
 retire_when (by the acting state with retire_when.state); ends ≠ never and ≤ the clock of the controller → none
 live worker, pool, keeper of the place with distinct — the pool contract (common/contracts/pool.md; moved there without a change
-      of behaviour, C06-SERVER-POLICY-33-01): live − released slots − the draining and the decommissioned servers − (requires: resource ∧
+      of behaviour, C06-SERVER-POLICY-33-01): live − released slots − the draining, pending and decommissioned servers − (requires: resource ∧
       resource silent) − retiring − number above want − unreadable assignment − (distinct: all except the keeper of the place)
 eligible = pool ∩ constraint ∩ spread_by ∩ affinity ∩ (the group is already at a worker → only it)
             ∩ (the worker holds an exclusive place → only the units bound to it; N1.3 affinity.exclusive)
@@ -1010,7 +1078,7 @@ The role grows on demand: the controller orders the number of processes of the r
 <!-- req: P/04-R050 -->
 
 ```
-order row:    on every server where the role is installed (the door row has room.<sub>, N1.1) — the row
+order row:    on every server where the role is installed and neither pending nor finally decommissioned (the door row has room.<sub>, N1.1) — the row
               <sub>/want/<host>; none — create want 1 by a write with cas "" and guard of the own version of placement_turn
 placeable = readable live unit rows, excluding deleted/tombstoned rows and every unit removed by ends or retire_when in step 4;
             a manual expired row may remain in the store, but it is outside this set. Apply this same set before grouping or weighing.
@@ -1074,7 +1142,7 @@ per label set:   the capacity of a worker without a named one — placement.capa
 candidate s:     the order row exists; the base <prefix>-<s>-1 is alive (otherwise no_base above: the server is not a candidate, R6);
                  free(s) > 0 (R14′); want(s) < 99 (otherwise the reason «<s> has no instance numbers left»,
                  the alarm workers.no_server); the labels of the server suit the set (constraint), requires: resource — the resource
-                 is not silent; not draining, not decommissioned; not «failed to raise» (RAISE_QUIET); servers: distinct — by the place
+                 is not silent; not draining, not decommission-pending or decommissioned; not «failed to raise» (RAISE_QUIET); servers: distinct — by the place
                  place_by: with place_by: server a server with a live worker of the role is not a candidate, with a heartbeat field the place of a new
                  process is unknown before its start — it does not restrict the choice of the server (R8)
 candidate order: smaller live(s) + in flight(s) — by heartbeats (R13′; not by the door), then the server name in UTF-8 bytes (review
@@ -1113,7 +1181,7 @@ shrink (step 9a):
              heartbeats, R13′), and after the move of the units of the victim the remaining suitable live ones have free ≥ per (hysteresis,
              R3); «no shortage» — there are no waiting: with servers: distinct the live ones without a place are not shrunk while there are waiting
              (ADR-0084 addendum (3) R16′, addendum (5) R16‴);
-             the reason for not shrinking — the first that fires in order: no victim (no_victim: only base ones, a number above
+             the reason for not shrinking — the first that fires in order: no victim (no_victim: no eligible live top, including only base ones, a number above
              want is not in the pool, R28), live ones without a place while there are waiting (placeless_with_waiting), there is a shortage or the hold time has not
              passed (no_shortage_long_enough), in flight (in_flight), hysteresis (hysteresis; no per — too); the words and
              the cases — the vector shrink-allowed (the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5)
@@ -1135,7 +1203,7 @@ shrink (step 9a):
 drain:       a server in platform/drain gets no new orders; its additional processes are shrunk one by one
              without the hold time and hysteresis (the units leave anyway, «server <s> draining»), want − 1 with an empty assignment
              of the victim, down to 1 (R7)
-decommission: step 2 — delete the order row of the server with cas and guard turn; the server gets no new orders (R7)
+decommission: step 2 — accepting pending deletes the order row with cas and turn/request guards; pending/final servers get no new orders (R7)
 ```
 
 <!-- req: P/04-R052 -->
@@ -1164,36 +1232,60 @@ one probe process per pass (ADR-0084 addendum (3) R16′, addendum (5) R16‴; r
 <!-- req: P/04-R054 -->
 
 ```
-console: the decommission request and its refusals, the row platform/decommission/<s>, the delete of platform/doors/<s> on its pass
-         and the withdrawal — chapter P/06.6 N3 «decommission_server(s) — the console side»
-controller (step 2): the server answers — the same rule as the console refusal 409 server answers (the resource, a worker or a slot of the server
-         are heard within the last LOST_AFTER by the observation contract; P/06.6 N3) → the request stands (standing): execute nothing,
-         check again on the next pass; a live server is not decommissioned (C04-DECOMMISSION-STANDING-01); except the remainder of contributions
-         with a standing mark — the line below;
-         the mark <sub>/decommissioned/<s> already stands and the request stands → at any answer of the server remove the remaining contributions of its slots:
-         a break between batches would otherwise leave contributions stale forever (ADR-0113 addendum (44) item 2, addendum (45) item 3); the slots of the server —
-         by the field server of the slot row (server = s, released = "true"), not by the slot list of the mark: by the list a repeat would remove the contribution
-         of a new holder; the guard — guards by <sub>/slots/<slot> with the version of this read, a refusal — as for the removal batch below;
-         server does not read or is absent — the slot is skipped, its rows are removed by the capture cleanup (P/03.7 N1.2 claim; addendum (45) item 4);
-         the server stopped answering and there is no mark <sub>/decommissioned/<s> → execute (the mark exists — only the remainder of contributions by the line
-         above, do not rewrite the mark and the slots: otherwise a slot already taken by a spare worker would be released again):
-         release the slots of the server, write <sub>/decommissioned/<s>, delete the order row <sub>/want/<s>; the workers of the server — outside the pool;
-         by the same batch remove the contributions <sub>/<from>/<slot> of each slot of the server of each book of the manifest with a from family (P/03.7 N1.2):
-         otherwise the contribution of a server removed forever would be stale forever (P/09.1 N1.2), and each new reader of the cluster would write reserves
-         until the sections arrive (ADR-0113 addendum (39)); no contribution row — skip; in the release batch a slot is written with cas, the contribution of its
-         slot is removed under the same cas: the batch is atomic, while P/01.1 rejects a guard on a key from writes (400 badrequest), and the mark
-         would never be written (ADR-0113 addendum (46) item 1); a refusal of the release batch (cas of a slot, of the mark, of the want row) — the whole batch
-         on the next pass; the limit of a batch is books × slots of the server: beyond BATCH_WRITES (P/01.1) the contributions are removed by the following
-         batches of the same pass, the decommission mark is already written, a worker of the server does not start; such a batch is under the guard of the slot
-         row: guards by <sub>/slots/<slot> with the version from the answer of the release batch, not by a re-read (addendum (45) item 1, addendum (46) item 2):
-         any capture changes the slot version, and the contribution of a new holder that took the name is not removed silently (addendum (44) item 1);
-         a refusal of the removal batch (409 conflict, 412 guard) — remove the rows of this slot from the batch, do not re-read and do not repeat
-         for them, the remainder — by the same pass without them; the P/01.1 rule «re-read and retry» does not apply to the removal batch
-         (addendum (45) item 1, addendum (46) item 3);
-         the units — leaving «server <s> decommissioned»; the holds are not let go; the hold row of the server does not read —
-         the place is not entered into holds of the mark, the reason goes into the journal (V7 item 3, the Architect's decision of 2026-10-28, on a proposal; line 26 of the list)
-withdrawal: the request row removed by the console → the controller removes the mark; the resource writes the door again with its heartbeat; the withdrawal
-         does not return the removed contributions: the worker writes them anew at start or at a capture with cleanup (P/03.7 N1.2 claim)
+console: request, 409 server answers, platform/decommission/<host>, door deletion and withdrawal remain P/06.6 N3.
+existing final mark and standing request: do not rewrite the mark or its slots. Only legacy remaining contributions may be
+  removed: freshly read a slot with server = s and released = "true", then delete its owned from rows under that exact slot
+  version. A missing/unreadable server field is skipped; 409/412 discards that slot's removals without a new slot read/retry.
+  This compatibility branch does not authorize a new implementation to publish an early final mark.
+0. Resume a readable pending row before admitting a new plan. Its fixed request_index must still be the current request.
+   Before mutation validate the progress invariants: remaining names are distinct and disjoint from released/skipped;
+   released and skipped are disjoint; current is an ordered subset of released. In cleaning, slot_cursor < len(current)
+   and from_cursor <= len(from); every from prefix belongs to this subsystem. The from list is frozen at acceptance from
+   the declared owned books, never rebuilt from a later manifest. A malformed progress plan is a step error: keep it,
+   do not infer completion, release/delete anything or replace it with a fresh plan. Schema readability alone is insufficient.
+   No pending/final row: the server is heard by the ordinary observation rule -> leave the request standing, no mutation;
+   otherwise completely read the request, owned slots and required metadata. An incomplete/unreadable source is not an empty list.
+   Fix the original readable slots with server = s as ordered {name,index}, the owned from prefixes, asked_at, manifest_rev,
+   units/holds metadata. Preflight every full key, the largest reachable serialized progress row and final mark, row weights,
+   and real batch-body ceiling. Reserve the P/01 wire index width for cleanup_index; never parse an opaque version.
+   An unrepresentable plan is a step error before any slot/order change, not a partial final mark.
+1. Accept pending with cas "" and delete an existing want row with its read cas in one conditional batch. Guards: the own
+   placement_turn version and the fixed request_index. Count both writes. State prepared has remaining candidates; no candidates
+   means finalizing. The pending server is outside the placement pool and gets no new orders/automatic want-row creation.
+   After acceptance continue only this frozen plan, also after a break or a later server answer; never add/adopt a new holder.
+2. Prepared: read each next candidate only to confirm its original index and obtain the unchanged readable slot items.
+   A different index (including absence) is obsolete: move its name to skipped, never substitute the new version for release.
+   A non-answer postpones the step; it is not obsolescence. Keep holder/gen/server/until, set released = "true"; never invent gen.
+   Write up to BATCH_WRITES - 1 slots with their original cas plus pending with its read cas, guarded by turn and request.
+   Atomically record their names in released/current and enter cleaning; the one returned batch index is the version of ALL
+   those released slots AND pending. After a lost answer, a cleaning row with empty cleanup_index carries that exact release
+   index as its own row index: no slot reread is needed. With no from families, the same batch advances directly to prepared
+   or finalizing with empty current/cursors. A refused release batch changes neither slots nor progress: barrier/re-read pending;
+   only discard candidates proved to have changed from their planned index, never retry a release against a newer slot version.
+   Persist skipped candidates under pending cas and turn/request guards; if none remain, advance directly to finalizing.
+3. Cleaning: process one current slot at a time, from prefixes in their fixed order, split across bounded batches.
+   Derive its authority from cleanup_index when non-empty, otherwise the current pending row index. Before ANY progress rewrite
+   preserve that exact authority in cleanup_index; a later pending index must not replace it. Delete existing contribution rows
+   by their read cas plus pending progress in one batch, guarded by turn, the fixed request and this slot's exact release index.
+   Count all deletes AND progress/service writes, all guards, row weights and the full body. No guard key is also a written key.
+   A confirmed missing contribution advances the cursor; an unknown read does not. A 409 conflict or 412 guard discards ALL
+   remaining removals for this slot, with no new slot read/retry. Record cursor advancement under turn/request guards; never
+   delete a new holder's contribution. Only confirmed cursor progress allows the next slot, then the next release chunk.
+   On finishing a slot, advance slot_cursor and reset from_cursor. On finishing the whole current chunk, clear current,
+   cleanup_index and both cursors, and set prepared if remaining is non-empty, otherwise finalizing, in a guarded progress write.
+4. Every prepared/cleanup/final batch fits BATCH_WRITES, BATCH_GUARDS and the actual body ceiling. If even one indivisible
+   operation plus required service writes cannot fit, record a step error and keep progress, never publish completion.
+   Renew the turn by the ordinary rule; an unknown write or lost turn stops further mutation behind the existing barrier.
+   A new holder re-reads pending after taking the turn and resumes its recorded phase, never restarts releases from slot names.
+5. Only after remaining is empty and the current chunk's eligible removals are confirmed or conservatively discarded, enter
+   finalizing. Atomically write the absent final <sub>/decommissioned/<host> mark from released/units/holds and asked_at (at = now),
+   delete pending by cas, and delete a remaining want by cas if necessary, with turn/request guards. Count EVERY service write.
+   The final mark is the LAST atomic step, never plan acceptance or merely the first released chunk. A failed/unknown final
+   batch proves no completion: use the barrier and confirm the actual pending/final state before continuing.
+6. A withdrawn/replaced request cancels its old pending row with cas and guards proving the current request state and own turn;
+   it does not roll back confirmed releases/deletes, invent a final mark, or authorize an old delayed batch for a new request.
+   Withdrawal removes an existing final mark as before. The resource publishes its door again; contributions return by normal
+   start/capture cleanup, not by rollback. A new request requires a new admission and fresh plan.
 ```
 
 <!-- req: P/04-R055 -->
@@ -1373,6 +1465,10 @@ Checked by reading and on the stand (workers with heartbeats are needed — sc. 
 the slot row — sc. 21; the margin and `hung` of a live silent worker with a unit and without — sc. 26, 27; `wait` before HUNG_MOVE_AFTER — sc. 42); the move through intent and the repair `sync` (except the recovery of intent by one holder, `sync` of one assignment and an unreadable intent — sc. 28–30); leaving by each reason (drain — sc. 33, the place does not admit — sc. 39); drain with live workers (except the move and `safe` — sc. 33); decommission with live workers, `gone: true`; a url group without a host (without a value and with an unreadable value, and with them `spread_by: zone` without a value — sc. 11; drain «assignment ∪ `status`» — sc. 07 of the acceptance of P/06.6); `fates` and `since`; presence only from the live heartbeat
 of the resource; the order, the withdrawal on deadline, the number above want and shrinking (ADR-0084), except the shrink condition by the input of the pass — with the branch «live ones without a place are not shrunk while there are waiting» with `servers: distinct` (R16′), which sc. 17 does not distinguish from the hysteresis; it is checked by the vector `shrink-allowed` (the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5); the delete by `delete_after`; `manifest_rev` and `manifest_behind` with two revisions of the manifest (the rows and the turn decided by a newer revision, without a change of the manifest — sc. 31, 32); the pass report.
 
+**ADR-0127 review obligations.** The 50 CALL seams retain the former 33 and add 17 review witnesses. M1 s34/s35 cover a known server with resource state unknown and no fresh worker: with assignments move, without assignments release. C1 s36/s37 compose top-number selection, wanted-place protection and the P/02 script stop plan; C3 s38 keeps an expired manual row stored while excluding it from waiting/weight/growth and the shrink timer. C2 s39-s45 observe bounded complete decommission, restart, new-holder guards and final-marker refusal/unknown; s46/s47 independently reject reserved unit.rows/table names through the regular loader, without changing P02 corpus 947 or canonical 220; s48-s50 reject semantically damaged progress before mutation. All are the existing controller-pass/fate ports, with actual IO observations defined in the forms README, not new commands or kit parts.
+
+C4 writer obligations and old-reader compatibility are separate in the data schemas and family-read vectors: all three pass counters are required non-negative values for writers, and a snapshot writer has exactly one admissible rows array, including []. The new pending family has writer/reader form and typed-key negatives; this is a review source delta, not a claim that the old roster was unchanged. Pure selectors and source/form checks do not prove OS stop, process recovery or a runtime acceptance result. Generator/runner implementation, regeneration of the linked P02 loader/rights and joint normgen+kit checks remain with coord103.
+
 ### Evidence outside TSV
 
 Scenarios 01–06 [of the acceptance of P/06.6](../../06-console/acceptance/6/README.md) (from М10/04) observe an empty pool and several refusals; they do not prove the other branches.
@@ -1431,7 +1527,7 @@ findings and window records refer to (ADR-0080 addendum 6):
 - [ ] **P/04-11** `names_given` is bound to the version of the slot row; only NAME_FATES and `wait` beyond the limit; a row with an unreadable gen is not included until the generation is recovered — the name of a released slot in `names_given`, an unreadable gen outside it — sc. 21; `wait` does not give the name before the limit — sc. 42; the binding to the version — checked by reading
 - [ ] **P/04-12** move/first addition/sync — one intent: remove all members from all assignments, complete placement, add to one target and only then idle; each change with cas and guard turn, 412 stops the attempt; `Moved` with an already different source target — the completion of an active intent (removal, row, addition, idle) — sc. 28, `sync` — sc. 29 [of the lesson acceptance](../acceptance/README.md); the rest is checked by reading
 - [ ] **P/04-13** leaving: the reasons in order, without a budget, a group whole or it stays; `silent` — only with `requires: resource` and a live worker, otherwise the fate of about 90 s — checked by reading: the heartbeat of a worker is read through the resource of its server, and the stand does not hold a live worker with a silent resource; the term of the fate — the drill `05-power-pull`; a released slot — the units without a place are removed (`worker: ""`); a capture in progress (`taking`) takes them away only after SLOT_TERM of an unchanged version — sc. 13; drain — sc. 33, the place does not admit (`admits: false`) — sc. 39; reachability — with a budget — checked by reading (acceptance P/03.4, sc. 03)
-- [ ] **P/04-14** order (ADR-0084): per — a positive observed capacity, otherwise a positive capacity.default, otherwise withheld without division; the shortage by label sets and weight minus the capacity in flight; the order row always, `want` 1…99 as an absolute target, cas and guard turn; the candidates (the base is alive, room, numbers, distinct by place_by, drain, decommission); the withdrawal on deadline `WANT_GRACE`, «failed to raise» `RAISE_QUIET`; shrinking — `SHRINK_AFTER`, hysteresis, the victim by the number as an integer in {2…want} (a number above want is not a victim; review of stage B 6–7, № 42), `retiring`, `SHRINK_BUDGET`, cancel; the alarms `workers.no_server`, `workers.raise_failed`; in flight — the numbers 2…want without a live process by heartbeats, the candidate and the share — by the door (`live.<sub>` by numbers, free once per pass), a number above want is outside the pool and is stopped by the script (R28), the withdrawal on deadline — by numbers (R27), `distinct` with the place from the heartbeat — a server without a live suitable one without a place, without a probe in flight (in flight(s) = 0; review of stage B 3–5, № 40), no more than one probe per pass, and `no free <place_by>` (R16‴), the capacity — the smallest positive one, the forms of `short[]` (ADR-0084 addendum (2)–(4) R13′–R28) — sc. 14–17 after P/05 (`@grow`), the vectors `order`, `shrink-victim`, `shrink-allowed` (the shrink condition and the order of the refusal reasons, including live ones without a place while there are waiting, R16′; the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5); the rest by reading
+- [ ] **P/04-14** order (ADR-0084): per — a positive observed capacity, otherwise a positive capacity.default, otherwise withheld without division; the shortage by label sets and weight minus the capacity in flight; the order row always, `want` 1…99 as an absolute target, cas and guard turn; the candidates (the base is alive, room, numbers, distinct by place_by, drain, decommission); the withdrawal on deadline `WANT_GRACE`, «failed to raise» `RAISE_QUIET`; shrinking — `SHRINK_AFTER`, hysteresis, only the live top number n=want(s)>1 per server; a protected top skips its whole server (a number above want is not a victim; review of stage B 6–7, № 42), `retiring`, `SHRINK_BUDGET`, cancel; the alarms `workers.no_server`, `workers.raise_failed`; in flight — the numbers 2…want without a live process by heartbeats, the candidate and the share — by the door (`live.<sub>` by numbers, free once per pass), a number above want is outside the pool and is stopped by the script (R28), the withdrawal on deadline — by numbers (R27), `distinct` with the place from the heartbeat — a server without a live suitable one without a place, without a probe in flight (in flight(s) = 0; review of stage B 3–5, № 40), no more than one probe per pass, and `no free <place_by>` (R16‴), the capacity — the smallest positive one, the forms of `short[]` (ADR-0084 addendum (2)–(4) R13′–R28) — sc. 14–17 after P/05 (`@grow`), the vectors `order`, `shrink-victim`, `shrink-allowed` (the shrink condition and the order of the refusal reasons, including live ones without a place while there are waiting, R16′; the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5); the rest by reading
 - [ ] **P/04-15** `delete_after` by the clock of the controller from the first look, a fresh check of the effective placement, `cas` of the unit and guard of the own turn, the journal (ADR-0067) — checked by reading
 - [ ] **P/04-16** `manifest_rev` on the row, the rule guard, `manifest_behind`, stamping of old rows (ADR-0068) — the stamp of a row without `manifest_rev`, the guard and `manifest_behind` for a row of a newer revision — sc. 31, a turn of a newer revision is not taken — sc. 32 [of the lesson acceptance](../acceptance/README.md); a change of the manifest and the stop with code 0 — checked by reading
 - [ ] **P/04-17** the pass report of N1.2 with the required fields; `fates` — only occupied slots not released, `since` — the entry into

@@ -78,7 +78,8 @@
    "x-codec": [
     "array"
    ],
-   "x-encoding": "json"
+   "x-encoding": "json",
+   "uniqueItems": true
   },
   "from": {
    "type": "array",
