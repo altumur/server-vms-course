@@ -2365,7 +2365,7 @@ components:
       description: 'Other folder and chain refusals keep the imported P/06.8 N4 vocabulary; domain identity, versions and repeat memory retain their explicit P/08 rules.'
       content:
         application/json:
-          schema: {$ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/FolderRefused'}
+          schema: {$ref: '#/components/schemas/DomainFolderError'}
     DomainFolderConditionRefused:
       description: 'Stale If-Match is RevisionMoved; a changed ancestor guard is the imported parent moved refusal of P/06.8 N4.'
       content:
@@ -2373,7 +2373,7 @@ components:
           schema:
             anyOf:
               - {$ref: '#/components/schemas/RevisionMoved'}
-              - {$ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/FolderRefused'}
+              - {$ref: '#/components/schemas/DomainFolderError'}
     RestoreTarget503:
       description: 'Existing standby/unavailable failures or occupied target restore exclusion, with no pending/restore/claim writes (P/08.8 N1.7; P08 review C1).'
       content:
@@ -3716,3 +3716,87 @@ components:
       properties:
         pointer: {$ref: '#/components/schemas/Pointer'}
         doc: {type: string}
+
+    DomainFolderError:
+      type: object
+      required:
+      - detail
+      - error
+      additionalProperties: false
+      properties:
+        detail:
+          type: string
+        error:
+          type: string
+          enum:
+          - Idempotency-Key required
+          - badkey
+          - not_json
+          - platform_field
+          - unknown field
+          - not_number
+          - type
+          - too_long
+          - enum
+          - bad_url
+          - blob
+          - labels
+          - required
+          - bad_id
+          - fixed
+          - If-Match is a unit revision
+          - a sealed value is not taken from outside — give the password itself
+          - sealing key required
+          - the body does not fill it in
+          - refused
+          - denied
+          - no such unit
+          - no such path
+          - exists
+          - conflict
+          - in flight
+          - row too large
+          - key reused
+          - store unavailable
+          - busy
+          - unavailable
+          - bad batch
+          - no anchor
+          - row moved
+          - batch too large
+          - no such row
+          - bad folder
+          - bad member
+          - too many members
+          - too many folders
+          - too deep
+          - no such folder
+          - no such parent
+          - parent gone
+          - folder moved
+          - parent moved
+          - no chain
+          - no membership
+          - folder gone
+          - leader moved
+          - bad operation
+          - too many steps
+          - too many operations
+          - no operations
+          - no such operation
+          - root busy
+          - operation done
+          - operation running
+          - nothing to retry
+        field:
+          $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField
+        fault:
+          type: string
+          enum:
+          - not_json
+          - not_number
+          - too_long
+          - bad_url
+          - must_match
+          - unique
+          - garbled
