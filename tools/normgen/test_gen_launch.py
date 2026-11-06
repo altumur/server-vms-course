@@ -214,7 +214,7 @@ class Frame(unittest.TestCase):
             self.assertNotIn('"net/http"', launch_go)
             frame = store / "internal/frame/frame.go"
             text = frame.read_text(encoding="utf-8")
-            self.assertIn("TEMPORARY FRAME ON net/http — REPLACE IT", text)
+            self.assertIn("TEMPORARY FRAME ON net/http -- REPLACE IT", text)
             self.assertNotIn("DO NOT EDIT", text)
             for a in ("P/01.1-R049", "P/01.1-R050", "P/01.1-R052", "P/01.1-R053", "P/01.1-R054"):
                 self.assertIn(f"req: {a}", text)

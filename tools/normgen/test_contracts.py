@@ -36,7 +36,7 @@ def adapter_fns():
 def lesson_mods():
     output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
     ready = output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
-    modules = [ready[slug] / "go" for slug in lesson.PROFILES]
+    modules = [ready[slug] / "go" for slug in output_lesson.PROFILES]
     missing = [str(path) for path in modules if not (path / "vectortests").is_dir()]
     if missing:
         raise AssertionError(f"missing prepared vector profiles: {missing}")
@@ -94,6 +94,9 @@ def build(mod, fn, adapter, contracts_src, tmp):
         shutil.rmtree(dst)
     shutil.copytree(mod, dst)
     module = (dst / "go.mod").read_text().split("\n")[0].split()[1]
+    # Preparation includes contracts; replace only this owned module copy so
+    # a contract mutant cannot inherit leftover files from the prepared runtime.
+    shutil.rmtree(dst / "contracts", ignore_errors=True)
     shutil.copytree(contracts_src, dst / "contracts")
     stub = dst / "vectoradapter" / f"{fn.lower()}.go"
     if stub.exists():
