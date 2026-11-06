@@ -328,13 +328,3 @@ The package [`trust-set`](../vectors/trust-set/README.md) — the trust set of t
 The package [`loopback`](../vectors/loopback/README.md) — the loopback threshold of the client of its own cluster (`loopback`, 31 rows; ADR-0075 addendum of 2026-10-26 (4) item 1). The substitution
 `host = SERVER_NAME` before step 1 of `peer` is not expressed by the package `peer` (the function does not change) — the acceptance of the client lessons checks it.
 
-## Correspondence to former lessons
-
-From P/01.3 N1.6 (stage B; formerly M10/11 N1.6, division M10/11-11): the blocks `cert`, `sig`, `kit`, `revoke`, `rotation`;
-P/01.3 keeps the roles that the store daemon admits (`roles`) and the peer check at `-raft` and `-api`.
-From M11/8 N1.6 — the rows `server` (the introduction) and `signed` (here «The server side: the class `signed`»; the Architect's decision of
-2026-10-20, ADR-0083 addendum (14) item 6); the row `stand` — in the part of the class `signed`; the class `role` — from P/10 N1.4 `server.role` (here «The server side: the class `role`»; C10-SDK-ROLE83, the Architect's decision of 2026-10-25).
-The section «The cluster kit, the domain roles, the center between clusters» — copies of the rows P/02.4 N1.2 (`W2C_TLS_DIR`), P/02.4 N1.6 and
-P/10 N1.4 `roles`, P/08.3 N1.6 `fingerprint`, `tls_ca`, `tls_ca_certs`, `Entry.ca` (from M11/8 N1.6) and the row `peer_role`
-— a reading of M11/8 N3 `peer(…, role, …)` for the doors of the holder and the relay (analysis of review of stage A 8–10, № 15; analysis
-of review of stage B 8–10, № 4).

@@ -40,7 +40,7 @@ the norm is right, the vector is corrected by the Specification.
 ## Source log
 
 The rows of `corrections.tsv` of the acceptance M11/11 about sc. 03 (the paths and numbers are the former ones, they are resolved by
-[`id-map.tsv`](../../../common/id-map.tsv)):
+`id-map.tsv` (historical record)):
 
 | date | sample | fix |
 |---|---|---|

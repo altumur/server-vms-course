@@ -28,7 +28,7 @@ history, the queue — by the eleven chapters of the lesson; pass the N5 accepta
 
 <!-- checklist-inventory:end -->
 
-The inventory is built from the readiness checklists below; all 89 full ids must occur exactly once. P/08.9-04 moved to P/10; see [`id-map.tsv`](../../common/id-map.tsv).
+The inventory is built from the readiness checklists below; all 89 full ids must occur exactly once. P/08.9-04 moved to P/10; see `id-map.tsv` (historical record).
 
 The lesson is assembled from lessons M11/1–12 (the holder side) (stage B,
 ADR-0083 addendum (1), (14)). The member agent and the relay — lesson P/09, the domain console — lesson P/10, the late layer of the cluster
@@ -114,7 +114,7 @@ by the recipient — P/03.7; the declarations `domain.*` — P/02.1; the domain 
 If the implementation is wrong — fix it and repeat the related checks. If the norm, the contract or the expectation diverge —
 report to the Specification the place, the counterexample and the proposed decision; the decision is reflected in the norm, the contract, the instructions and
 the affected acceptance. Do not carry a difference of the implementation into the canon silently; do not add a new mechanism only for the sake of
-an unsupported case. Record a change of the acceptance in `journal/corrections-<K>.tsv` of its chapter.
+an unsupported case. Record a change of the acceptance in `corrections-<K>.tsv` (historical correction record) of its chapter.
 
 ## What to create
 

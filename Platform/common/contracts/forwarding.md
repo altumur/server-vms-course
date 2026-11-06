@@ -277,13 +277,3 @@ a far transition is unchanged (guess of stage C FW-G01, the Architect's decision
 
 There are no vectors: forwarding is checked by the scenarios of the acceptances of chapter 6.7, of lesson P/10 and of lessons P/08–P/09. (ADR-0083 addendum (32) item 2)
 
-## Correspondence to former lessons
-
-From M11/8 (analysis of review of stage A 8–10, № 23 / decision 3): N1.3 — the line `via` (here «One hop»; `holds`, `to`,
-`view.url`, `CLUSTERS` stayed); N1.4 in full (here «Forwarding is one function»; in M11/8 — a pointer); N3 «accept by a console»
-(here «Accept by a console»). From M11/9 N1.10 — the line `header` (here «Client address»). The rule
-`X-W2C-Client` — by reference from [P/08.0](../../08-domain/spec/08.0-domain.norms.md) N1.8 `pass` (accepting) and from lesson P/10 (passing,
-N1.3; stage B, lesson 10). Parts of the norms M11/8-03, -04, -05,
--06 (chapter 6.7) and M11/9-09 — by `note` of the [id-map](../id-map.tsv).
-From M11/8 N1.2 — «The forwarding table» in full (here «Domain doors»; the Architect's decision of 2026-10-20, ADR-0083 addendum (14)
-item 5).

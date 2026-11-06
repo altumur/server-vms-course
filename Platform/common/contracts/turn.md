@@ -101,7 +101,3 @@ of one side over a turn row and its actions — take an empty or a given-up one,
 an unknown outcome of a write — of the target row and of one's own turn row, the giving up `holder ""`; placement, signer and operations forms. The console runs its own 16 operations cases with a fresh attempt holder, no manifest revision, not signer relabeling; the33 previous cases and their existing participants stay byte-identical. Capturing the turn is separate from P/06.9's operations-epoch CAS barrier, generation/ticket guards, two leaders and late IO. Races of two claimants and late writes of the old holder are
 acceptance scenarios of the participants (P/04, P/08.10, P/09.1, P/06.9) and reading. The exact owner/kind selector and narrow freshness comparison are [the wire form](../vectors/wire.md#turn-comparison), the Architect's decision under ADR-0127 P/06 C4.
 
-## Correspondence to former lessons
-
-From P/04 N1.5 (`constants`) and N3 «get and hold the placement turn» (steps 1–6, the barrier paragraph, «Races»); P/08.10 N1.7
-`turn` («the algorithm — placement_turn of the controller P/04 N3») — refer here (layout audit A-03).

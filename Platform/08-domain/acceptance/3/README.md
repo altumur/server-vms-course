@@ -18,7 +18,7 @@ The command scenarios of M11/03 sc. 10–13 (`agent-sig`, `seal-member`, `seal-m
 a road) are not moved: the same cases without a change of bytes are the vectors of the common contracts
 [`agent-sig`](../../../common/vectors/agent-sig/README.md), [`domain-envelopes`](../../../common/vectors/domain-envelopes/README.md)
 (`m1-open.tsv`, `m1-round.tsv`) and [`accept`](../../../common/vectors/accept/README.md); their inputs are removed together with the steps (the row of
-`journal/corrections-3.tsv`). The other scenarios of M11/03 are the acceptance of [chapter 8.1](../1/README.md) (04, 06–09); M11/04 sc. 02–04 —
+`corrections-3.tsv` (historical correction record)). The other scenarios of M11/03 are the acceptance of [chapter 8.1](../1/README.md) (04, 06–09); M11/04 sc. 02–04 —
 [chapter 9.2](../../../09-agent/acceptance/2/README.md), M11/08 — [chapter 6.7](../../../06-console/acceptance/7/README.md) (01–03), [lesson P/10](../../../10-domain-console/acceptance/README.md) (05), the vectors `peer` (06), M11/12 — chapters 8.10 and [9.1](../../../09-agent/acceptance/1/README.md).
 
 ## Stand
@@ -160,12 +160,6 @@ steps 5, 9, 11, sc. 22 step 4 — for the next pass of the view (`VIEW_EVERY` 3 
 Checked by reading (the norm of the chapter, N5): the CAS of the admission of a member, a failure between the writes of a generation, of `delta` and of the mark, `sign_failures`
 in the mark and the view, non-matching certificates `tls_ca_certs`, the union of the handshake at the role door (lesson P/10 N1.4). The knock and the checks
 of the holder on a relay packet — sc. 02, 03 of [the acceptance of chapter 9.2](../../../09-agent/acceptance/2/README.md).
-
-## `journal/corrections-3.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The logs of the acceptances of M11/03, M11/04, M11/08 and
-M11/12 as a whole, at the beginning of this log, with the former paths and numbers (they are resolved by `Platform/common/id-map.tsv`); then
-the rows of the move, the renaming and the removed command scenarios.
 
 ## Kit seams
 

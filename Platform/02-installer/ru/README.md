@@ -27,6 +27,5 @@ acceptance/1/                        приёмка главы 2.1 (README.md, v
 acceptance/2/, acceptance/3/         приёмка глав 2.2, 2.3 (README.md, puts.tsv, puts/)
 acceptance/5/                        приёмка главы 2.5 (README.md, scenarios.tsv, variants/)
 acceptance/1/seams.tsv, acceptance/4/seams.tsv  дополнительные швы ядра, команд и опроса для тестов пакета
-journal/corrections-<K>.tsv          журнал исправлений ИИ главы K — история, не вход; в выгрузку не входит
 ru/                                  для человека, в выгрузку не входит — лекция ru/02-installer.md, переводы английского текста тем же путём
 ```

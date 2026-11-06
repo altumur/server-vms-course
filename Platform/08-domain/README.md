@@ -40,7 +40,6 @@ data/refusal-words.tsv                the closed list of error words by the door
 vectors/<algorithm>/                  vectors: view (8.1), assemble (8.5), issue (8.7)
 acceptance/<K>/                       acceptance of chapter K: 1, 3 … 10 — chapters 8.1, 8.3–8.10 (README.md, scenarios.tsv; 3/inputs/);
                                       0/ and 2/ add only kit seams; the ordinary catalogue is unchanged (8.2 — common vectors, N5)
-journal/corrections-<K>.tsv           the log of AI corrections of chapter K (1, 3 … 10) — history, not an input; not in the export
 ru/                                   for people, not in the export — the lecture ru/08-domain.md, translations of the English text by the same path
 ```
 

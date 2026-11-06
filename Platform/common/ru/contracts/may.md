@@ -206,8 +206,3 @@ reads:     worker.reads: [domain/grants, platform/folders/, platform/memberof/] 
 источник этих случаев. Там же `covers.tsv` — 19 строк функции `covers(scope, ref, row)` сторожевой ([договор
 сторожевой](gate-and-pass.md) `scope`; C06-EVENTS-QUERY-UNKNOWN-138-10).
 
-## Соответствие прежним урокам
-
-Из M11/9 (решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 1; разбор ревью стадии A 8–10): N1.4 целиком (здесь
-«Функция `may`»; в M11/9 — указатель) и фраза N4 о словах `may` (здесь «Слова отказа»). Норма M11/9-05 (`may` по порядку)
-— по `note` [id-map](../../id-map.tsv).

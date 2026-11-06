@@ -142,7 +142,3 @@ epoch, `partial`, `lines_garbled` (ADR-0091 addendum (21) item 3); the visibilit
 an unreadable unit (`withheld`), a grant on the unit and on `*`, labels by `of`, labels `[]` (C06-EVENTS-LABEL-SOURCE-138-07). The liveness of a door row — the package [`fresh-age`](../vectors/fresh-age/README.md) (the boundary `LOST_AFTER`, the section «Live resources»);
 `from mirror`, races and late answers — by reading.
 
-## Correspondence to former lessons
-
-From P/06.4 N1.3 `merge` and N3 «merge (the console)» (formerly M10/8): the algorithm and the paragraph about the freshness of the door row — whole; P/06.4 has
-a reference here. New: the worker participant, `unknown`, a failure of reading an epoch (ADR-0091 addendum (20)–(27)).

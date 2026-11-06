@@ -75,13 +75,6 @@ Sc. 01 steps 10–16, 19 and sc. 03 steps 11–17 also observe the side of the m
 through the units door) — items of [chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) (P/09.1-07, -08) refer to them; the outcome of the scenario is the placement and the holder's edit
 (ADR-0083 addendum (13)).
 
-## `journal/corrections-6.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are `corrections.tsv`
-of the acceptance of M11/06 as a whole, at the beginning of the log, with the former paths and numbers (they are resolved by
-[`id-map.tsv`](../../../common/id-map.tsv)); the rows about scenarios of other chapters are the history of the source (the plan of the move of lesson 8,
-§ 3 «Journals»).
-
 ## Placement counter after the start (sc. 01, 10)
 
 The process `domain`, at its start and at each new taking of the queue `domain/signer-turn` — before the first answer to an agent — raises

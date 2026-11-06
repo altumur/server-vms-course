@@ -1,0 +1,11 @@
+{
+  "moved_files": 82,
+  "moved_bytes": 8181717,
+  "all_moves_byte_identical": true,
+  "changed_mirror_pairs": 140,
+  "mirror_errors": [],
+  "approved_class_blocks_unchanged": true,
+  "cyrillic_judge_tests": 20,
+  "full_source_check": "pending independently authored relocation readers",
+  "source_map_sha256": "c268109737d99c1adbc3980ab4221fb21bbd524460eff1191aeed8248fca0e3b"
+}

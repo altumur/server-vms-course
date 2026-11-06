@@ -12,7 +12,7 @@ M11/3 (`inputs/accept-*.json`, sc. 13) and
 M11/4 (`inputs/accept-*.json`, sc. 06 — the roads) without
 a change of bytes; `case` is the name of the input file (the numbers of lesson 4 start anew, the names differ), `note` is the lesson, the scenario and
 the step. The scenarios M11/03 sc. 13 and M11/04 sc. 06 and their inputs were removed by the move of lesson 8 (ADR-0083 addendum (14) item 17; the log is
-the acceptance of chapter P/08.3 (`Platform/08-domain/journal/corrections-3.tsv`, a log, not in the export)): the table is the only source of these cases.
+the acceptance of chapter P/08.3 (`corrections-3.tsv` (historical correction record), a log, not in the export)): the table is the only source of these cases.
 
 ## Run
 

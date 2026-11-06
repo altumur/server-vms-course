@@ -186,4 +186,4 @@ For all chapters: complete the implementation description and the checklists; do
 | The table contradicts the norm | pass an acceptance defect to the author of the norms; do not change the verdict for the sake of a green run |
 | The norm is incomplete or contradictory | describe the question with the input file and a reference to the section; agree on a change of the canon |
 | The rights outcome diverges from the norm | match the input and the outcome with N1–N4 of chapter 2.5, then with the acceptance file; report to «Specification» the place, a counterexample and the proposed solution |
-| After an AI correction a repeated wrong interpretation is found | write the sample and the clarification into `journal/corrections-<K>.tsv` of its chapter per ADR-0080 |
+| After an AI correction a repeated wrong interpretation is found | write the sample and the clarification into `corrections-<K>.tsv` (historical correction record) of its chapter per ADR-0080 |

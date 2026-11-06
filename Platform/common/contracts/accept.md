@@ -382,10 +382,3 @@ a knock larger than 256 KiB) are not expressed by the function «accept» — by
 The canonical JSON (RFC 8785, ADR-0072) that the contract relies on is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the form of RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 
-## Correspondence to former lessons
-
-From M11/3 (analysis of review of stage A 8–10, № 13 / decision 2): N3 «accept» in full (here «The function «accept»»; in M11/3 —
-a pointer). The norm M11/3-06 (acceptance: `same`, `same_sent_at`, `rebase`, `heard`) — by `note` of [id-map](../id-map.tsv);
-executed by 8.3 and 9.2. From M11/3 N5 and M11/4 N5 — the forms of the command `accept` and `exit` (here «The form of the function»; analysis of review
-of stage B 8–10, № 6). The sections «Generation, mark, limits», «The member's publication», «The answer `carry`: `every`» are copies of the rows of
-P/08.3 N1.3, N1.3a, N1.5, N1.6 `form` and P/09.1 N1.2 for the self-sufficiency of lesson P/09 (analysis of review of stage B 8–10, № 4).

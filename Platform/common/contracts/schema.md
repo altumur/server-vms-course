@@ -65,8 +65,3 @@ The package [`schema`](../vectors/schema/README.md): the function `check` — th
 «schema is newer» with the exact N, or «out of form» (C06-SCHEMA-WIDE-32-01, the Architect's decision of 2026-10-25). A read error and the slot renewal by the worker — by acceptance scenarios
 of the participants (P/06.6; a read error at the resource — sc. 18 of the acceptance of P/05, a start refusal — sc. 17) and by reading.
 
-## Correspondence to former lessons
-
-From P/06.6 N1.1a (`platform/schema`, `SCHEMA`, `BUILD`, `heartbeat`, `check`; the norm P/06.6-04 by `note` of [id-map](../id-map.tsv))
-and the common block N3 «start … — schema check» (P/06.6, P/03.2, P/04, P/05; formerly M10/10 N3, M10/10-01); they refer here
-(layout audit A-02).

@@ -16,7 +16,7 @@ refusals, the norms M10/4-14, -15, -20 and the acceptance of M10/04 are moved to
 freshness and the rule of the decision reader are [the observation contract](../../common/contracts/observation.md); the console side of
 «decommission_server» is P/06.6 (review of stage A 6–7, № 2). «P/0N» is a lesson of the module, «P/0N.K» is its chapter; «M10/N» without
 an address is a former lesson (the history of the move). Norm ids are
-`P/04-MM`; the map to former ids is [`id-map.tsv`](../../common/id-map.tsv).
+`P/04-MM`; the map to former ids is `id-map.tsv` (historical record).
 
 ## N0 Vocabulary
 
@@ -1547,22 +1547,3 @@ findings and window records refer to (ADR-0080 addendum 6):
 - [ ] **P/04-28** the exclusive place (N1.3 `affinity.exclusive`): the holder admits only the bound units, its capacity is outside the shortage count of the others; an order for the place — the server of the place, an empty `server_field` — without an order, `Sealed` by `place_error` of the live workers — `withheld`, no live ones — one ordinary order — the stand prepares neither an exclusive place nor a row of a place with a secret that does not open — by reading; scenarios of P/04 and P/03.2 — when the training subsystem gets such a place (a debt) (ADR-0091 addendum (9)–(10))
 - [ ] **P/04-23** the schema check at the start of the controller (the P/04 part of the row M10/10-01 by `note` of id-map; the schema row and the raise — [P/06.6](../../06-console/spec/06.6-console.norms.md) N1.1a): N3 «controller start — schema check» — no row — the own SCHEMA, not a number or above SCHEMA — do not start, code 2 before reading the manifest, a read error — wait — not a number and above SCHEMA, code 2 — sc. 23 [of the lesson acceptance](../acceptance/README.md); a read error — wait — sc. 25; «before the manifest is read» — checked by reading
 
-## Correspondence to former lessons
-
-The lesson is moved from M10/4 (stage B): N1.1–N1.5, N3 (all subsections except the procedures of the console doors), the rows of N4 and N5
-of the controller, items 1–8, 10 of «Implementation decides» (here items 1–9), the checklist items M10/4-01…13, -16…19, -21…23 (here
-P/04-01…20 by id-map); from M10/10 — N1.3 (the writer side, here N1.3a), N3 «snapshot — after the pass», items 4, 6 of «Implementation decides»
-(here items 10, 11), the item M10/10-04 (here P/04-21) and a part of M10/10-01 (the schema check at the start of the controller,
-here P/04-23); from M10/11 — N1.4 `moves`, `fresh_controller`, `stays`, `lost`, `store`, `return` (here N1.4a), N3 «pull the power», the row of N4 «the server did not return» and the item M10/11-08 (here P/04-22); from the acceptance of
-M10/05 — scenarios 07, 11–16. By the move of lesson 6: from the acceptance of M10/10 — sc. 03, 08 without the steps `/metrics` of the console
-(review of stage A 6–7, № 32); `resource_state` (N1.4) and the rule of the decision reader — into [the observation
-contract](../../common/contracts/observation.md), the console side of N3 «decommission_server» — into P/06.6 (analysis № 2). M10/4 normed what was told by `M10A_Platform/08-Controller-and-Worker.md` (steps 1–6:
-a controller without state, a write with `cas`, the mutator, live by change, assignments, fates and resource states),
-`M10A_Platform/10-SpecController-rows.md` (step 6-controller: the removal of the deleted), `M10A_Platform/11-SpecController-placement.md`
-(steps 1–18: the picture of the world, the constraint and the catalogue, the pool, the choice, preferences, the reason, two keys, the pass, the move,
-`/unplaceable`, the policy, places with `distinct`, resource states, two silences, leaving, reachability, rebalancing),
-`M11_Cluster/04-a-name-is-a-slot.md` (steps 4–8: who decides N, the proposal, adding and removing a worker, a crash, the decommission of a
-server), `M11_Cluster/09-two-instances-of-one-worker.md` (step 4: the order of the move), `M11_Cluster/10-the-controller.md`
-(steps 1, 2, 4, 5, 8: labels and the reason, capacity is the word of the worker, two controllers, what the controller does not do); M10/10 —
-`M10A_Platform/19-Snapshot-and-Limits.md` (steps on the snapshot shards); M10/11 — `M11_Cluster/08-pull-the-power.md` (two
-silences, terms) — these parts are here now. The weight (ADR-0078) and `manifest_rev` (ADR-0068) were not told by former lessons.

@@ -101,8 +101,3 @@ The package [`store-client`](../vectors/store-client/README.md): the outcome of 
 answer, a cut, a refused connection) → the outcome (the section «Outcomes and what the client does», `no_reply`). The wire (routes, parsing,
 codes at the inputs) is the acceptance of lesson 01 ([P/01.1 N5](../../01-store/spec/01.1-store.norms.md)).
 
-## Correspondence to former lessons
-
-From P/01.1 N1 (the fields `id` note, `index` note, `cas`, `guard`), N2 (the address, the answer forms, a damaged row), N2.1
-(query encoding), N3 «list» (prefix on «/»), «write» (the order for the caller, the repeat), «Replay by
-identifier», N4 (the column «What the caller does», the paragraph on a cut); they refer here.

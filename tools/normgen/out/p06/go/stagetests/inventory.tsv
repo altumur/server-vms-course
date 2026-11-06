@@ -5,6 +5,9 @@ step	stage	test	status	reason
 6.1/seams.tsv/s03-counter-history-unknown/1	unit_rows	TestUnitRows_S03CounterHistoryUnknown	translated	-
 6.1/seams.tsv/s04-window-ack-required/1	unit_rows	TestUnitRows_S04WindowAckRequired	translated	-
 6.1/seams.tsv/s05-body-list-cas-race/1	unit_rows	TestUnitRows_S05BodyListCasRace	translated	-
+6.1/seams.tsv/s06-review127-post-tombstone/1	unit_rows	TestUnitRows_S06Review127PostTombstone	translated	-
+6.1/seams.tsv/s07-review127-post-fresh/1	unit_rows	TestUnitRows_S07Review127PostFresh	translated	-
+6.1/seams.tsv/s08-review127-plan-unknown/1	unit_rows	TestUnitRows_S08Review127PlanUnknown	translated	-
 6.2/seams.tsv/s01-secret-mask-not-password/1	secrets	TestSecrets_S01SecretMaskNotPassword	translated	-
 6.2/seams.tsv/s02-secret-url-redaction/1	secrets	TestSecrets_S02SecretUrlRedaction	translated	-
 6.2/seams.tsv/s03-ring-unreadable-not-done/1	secrets	TestSecrets_S03RingUnreadableNotDone	translated	-

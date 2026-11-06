@@ -31,12 +31,6 @@ analysis by the Specification):
   the hold row is released (`released: "true"`, `by` as before) and the slot is released (N3 «stop by SIGTERM» step 4; chapter 3.2
   N3 «place» `release` — before the release of the slot; the steps do not distinguish the order of the two writes — by reading).
 
-## `journal/corrections-4.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
-of the acceptance of M10/05 (removed by the move), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are resolved by
-`Platform/common/id-map.tsv`; analysis of the review of stage B 3–5, № 30).
-
 ## Scenario boundaries
 
 Between scenarios the runner stops all the processes it started, resets the store (rows and objects) and the variables `$name`: each scenario begins with an empty store, there is no slot `w-1`, the console is restarted.

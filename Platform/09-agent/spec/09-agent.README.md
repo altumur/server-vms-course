@@ -8,7 +8,7 @@ This file is for the agent (or person) who writes code from the lesson. The expl
 
 Implement the process `domainagent` in the language `<LANG>`: the agent of a member and the relay mode — by the two chapters of the lesson; pass
 the N5 acceptance of the chapters and close their readiness checklists. 45 norms in all: P/09.1-01…36 and P/09.2-01…09; the correspondence to the former ids
-— [`id-map.tsv`](../../common/id-map.tsv). The lesson is assembled from lessons M11/3–12 (the agent and relay side) (stage B,
+— `id-map.tsv` (historical record). The lesson is assembled from lessons M11/3–12 (the agent and relay side) (stage B,
 ADR-0083 addendum (1), (14)). The holder side — lesson [P/08](../../08-domain/spec/08-domain.README.md), the domain console — lesson P/10,
 the late layer of the cluster console — [chapter 6.7](../../06-console/spec/06.7-console.norms.md), the worker on the domain — [chapter P/03.7](../../03-worker/spec/03.7-worker.norms.md).
 
@@ -64,7 +64,7 @@ by the recipient — P/03.7; the ports, the units and the box — P/02.4; the ri
 fix it and repeat the relevant checks. If the norm, the contract or the expectation disagree — report to «Specification»
 the place, a counterexample and the proposed solution; the solution is reflected in the norm, the contract, the instructions and the affected acceptance.
 Do not carry a difference of the implementation silently into the canon; do not add a new mechanism only for the sake of an unsupported case.
-Record a change of the acceptance in `journal/corrections-<K>.tsv` of the chapter.
+Record a change of the acceptance in `corrections-<K>.tsv` (historical correction record) of the chapter.
 
 ## What to create
 

@@ -275,12 +275,6 @@ This is a subject of a manual check of the specification and of a future check o
 Between scenarios the runner stops the processes, resets the store and the variables. After
 the last step, wait for the stop of all the created processes, then remove the state.
 
-## `journal/corrections.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
-of the acceptances of M10/10 and M10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
-resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (analysis of the review of stage B 6–7, № 18). The log of M10/08 is moved as a whole into the acceptance of chapter 6.4 (`Platform/06-console/journal/corrections-4.tsv`, a log, not in the export).
-
 ## Edges of `free_ask` on the first pass (sc. 24–28)
 
 The coverage audit of P/05, F04 (audit-kimi, commit c3336f837), after the clarification C05-PASS-FIRST-AT-START-01: the first pass of the resource is

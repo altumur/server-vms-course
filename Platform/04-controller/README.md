@@ -14,7 +14,6 @@ lifecycle.md                     flags, environment, exit codes, units
 data/<family>.schema.json        data families the lesson owns (JSON Schema 2020-12, ADR-0092; ADR-0088)
 vectors/<algorithm>/             vectors of the algorithms the lesson introduces
 acceptance/                      acceptance (README.md, scenarios.tsv)
-journal/corrections.tsv          the log of AI corrections — history, not an input; not in the export
 ru/                              for people, not in the export — the lecture ru/04-controller.md, translations of the English text by the same path
 ```
 

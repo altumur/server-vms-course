@@ -30,6 +30,5 @@ vectors/<algorithm>/                 vectors: rid, requests-body, request-digest
                                      resolve, key-families (6.7); op-step (6.9); fault, values-by-type (6.1) and secret-in, log-mask (6.2) — in common/vectors
 acceptance/1/ … acceptance/9/        acceptance of chapters 6.1–6.9 (README.md, scenarios.tsv; 5/inputs/, 5/probe-w.subsystem.yaml,
                                      5/probe-x.subsystem.yaml, 6/inputs/)
-journal/corrections-<K>.tsv          the log of AI corrections of chapter K (1–9) — history, not an input; not in the export
 ru/                                  for people, not in the export — the lecture ru/06-console.md, translations of the English text by the same path
 ```
