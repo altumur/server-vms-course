@@ -286,6 +286,18 @@
    },
    "minItems": 1,
    "uniqueItems": true
+  },
+  "expired_kept": {
+   "$ref": "#/$defs/count",
+   "description": "manual rows retained after ends removed them; required for the writer, zero when none"
+  },
+  "snapshot_state_garbled": {
+   "$ref": "#/$defs/count",
+   "description": "unreadable state rows omitted from snapshot shards in this pass; required for the writer, zero when none"
+  },
+  "state_swept_total": {
+   "$ref": "#/$defs/count",
+   "description": "state rows successfully deleted by the state sweep; required for the writer, zero when none"
   }
  },
  "propertyNames": {
@@ -319,7 +331,10 @@
      "short",
      "wants",
      "raise_failed",
-     "near_waiting"
+     "near_waiting",
+     "expired_kept",
+     "snapshot_state_garbled",
+     "state_swept_total"
     ]
    },
    {
@@ -1180,6 +1195,13 @@
    "description": "a slot name, P/03.2 N1.4",
    "type": "string",
    "pattern": "^(?:[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
+  },
+  "writer": {
+   "required": [
+    "expired_kept",
+    "snapshot_state_garbled",
+    "state_swept_total"
+   ]
   }
  }
 }

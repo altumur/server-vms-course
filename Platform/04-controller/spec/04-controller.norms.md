@@ -184,12 +184,12 @@ The form of the keys is P/02.1 (N1.2). Here — what each of them means for the 
 <sub>/snapshot/<worker> | <sub>/snapshot/unplaced:     # objects; the writer is the controller; the worker name unplaced is a refusal
   {cluster, worker: <name> | null, ts, <rows>: [{id, revision, <fields of snapshot:>, state?, worker, server}]}
           worker: the worker name of the shard; null — for the shard unplaced and for the shard of a gone worker (C04-SNAPSHOT-GONE-WORKER-01)
-cluster:  the installation name — CLUSTER of the environment (the environment file contract «Environment variables»; the name of a domain member, [P/08.1](../../../08-domain/spec/08.1-domain.norms.md) N1.1); not set — "local" (outside a domain)
+cluster:  the installation name — CLUSTER of the environment (the environment file contract «Environment variables»; the name of a domain member, [P/08.1](../../08-domain/spec/08.1-domain.norms.md) N1.1); not set — "local" (outside a domain)
 fields:   snapshot: of the manifest (P/02.1): no key — all fields except *_secret and blob; [] — no field (id, revision, worker, server
           remain); an author field server is also excluded by default; a secret, blob or server in an explicit list — the manifest does not load; addresses — with the mask
           P/06.2 N1.1a, the same as in the console output (password → ***)
           the declared fields of a unit do not include platform_fields P/06.1 N1.2, including deleted/worker: a load refusal P/02.1;
-          unit.rows not cluster/worker/ts: a collision with the envelope — the load refusal refused:value (P/02.1)
+          unit.rows not cluster/worker/ts: a collision with the envelope — the load refusal refused:form (P/02.1)
 state:    with a declared unit.state — an object {<name>: <value of the acting state>} (the row-check contract «Unit state» acts, the same rule
           as at the console P/06.1 N2 «Состояние в ответе»): the names — state.<name> of the snapshot list of the manifest; without the key snapshot —
           all states except cursor; [] — none; no acting one — no name, none at all — no state. A state row
@@ -202,7 +202,7 @@ garbled:  a unit row whose snapshot field does not read by its type by values_by
           the shard is published with the other units, a log line once per series and the counter `snapshot_rows_garbled` of the pass report
           N1.2 (P/01.1 N0 «Stability of output») (reconciliation of python and go М10/6–11, T7)
 ceiling:  before the write the controller judges L = 64 MiB of the resource door; max_bytes of the store is held by the store itself on put
-          ([P/05](../../../05-resource/spec/05-resource.norms.md) «хранилище объектов» — `TooLarge`), the controller does not count it itself;
+          ([P/05](../../05-resource/spec/05-resource.norms.md) «хранилище объектов» — `TooLarge`), the controller does not count it itself;
           TooLarge of the store gives the same outcome of N4 — the shard is not written, the former one is kept (C04-SNAPSHOT-CEILING-MAXBYTES-01, the decision of the Architect 2026-10-28).
           The size is the number of bytes of the full serialized object, including the envelope and the empty shards, with the actual
           notation of ts (its length is part of the size) (reconciliation of python and go М10/6–11, matched without a norm).
@@ -273,7 +273,7 @@ resource_state:     # the resource of a server — live | unreachable | unknown 
                     # (the controller, the console) by their monotonic clocks, the rules in order — the observation contract
                     # (common/contracts/observation.md «Resource state»; review of stage A 6–7, № 2);
                     # only silent excludes and moves
-process_presence:   # what the resource says about the process of a worker: the output of [P/05 N1.4](../../../05-resource/spec/05-resource.norms.md) `presence` by the key <sub>/<slot name> of its subsystem;
+process_presence:   # what the resource says about the process of a worker: the output of [P/05 N1.4](../../05-resource/spec/05-resource.norms.md) `presence` by the key <sub>/<slot name> of its subsystem;
                     # only from the heartbeat of a resource in the state live: a stale heartbeat with the word runs gives no presence, and the slot
                     # is judged by resource_state (reconciliation of python and go 2026-10-18); an absent one of the fields workers, running,
                     # unknown is an empty list (a partial set: running without workers — runs, workers without running — gone;
@@ -801,7 +801,7 @@ is ensured by their reconciliation and leases (P/03.3, P/03.2), not by one chang
 ```
 0. observation: update the memory of the seen heartbeats, slots and resources on the own clock; the objects of the cluster (heartbeats of workers
    and resources, reports) are read through the resource of the own server (the objects door of P/05, `scope`; ADR-0084 addendum (2) R17); without
-   a resource on the own server with `cluster://` — «unknown», not «absent» ([the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27);
+   a resource on the own server with `cluster://` — «unknown», not «absent» ([the object store client contract](../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27);
    seen for the first time = has just changed; get the placement turn by N3 above;
    busy → no changing pass, a retry after 5 s; mine → first complete an active intent;
    then a fresh look: the units, the placements, the assignments and the properties of the candidates;
@@ -814,7 +814,7 @@ is ensured by their reconciliation and leases (P/03.3, P/03.2), not by one chang
 3. slot fates (below); release → write the slot as released; names_given; alarms hung/unsure; an abandoned capture — remove the rows under it (below)
 4. place: remove the deleted (reason deleted) → remove by retire_when (by the acting state with retire_when.state) →
    remove by ends (the field ≠ never and ≤ the clock of the controller; reason ends) → sync of the assignments with the placements (diverged) →
-   each unplaced unit — choose (below), a group whole at its first member; each in its own attempt;
+   each unplaced unit from placeable (N3 shortage; deleted, ends and retire_when excluded) — choose (below), a group whole at its first member; each in its own attempt;
    the order of the unplaced — by id in UTF-8 bytes (a group — by the id of the first member); the same order for the moves of steps 5–7
    (added by the reconciliation of М11, cammeta-python 05 № 25)
 5. reachability: the units whose server no longer reaches their labels — a move within REACH_BUDGET;
@@ -972,8 +972,10 @@ of units by fate does not mean a permission to rewrite a damaged generation of t
 
 **Transitions of `release` (ADR-0080 addendum 12).** The branch `release` is reachable by the row «gone without assigned units»:
 a live resource tells about a process with one of `runs`, `gone`, `unlisted`, `unknown` (P/05 N1.4; `silent` is a state of the resource,
-not a presence), and each word, except this case, is intercepted by a row above. The two closing rows make
-the table complete and are not reached under the definitions of N1.
+not a presence), and the higher-priority rules still run first. The two closing rows are reachable when server/slot are known,
+the slot version has been observed unchanged for at least SLOT_TERM + LOST_AFTER, worker freshness is not confirmed, and resource_state
+is unknown: with assignments select move, without assignments enter the release procedure. This uses the existing closing-row policy, not the
+unreachable-resource delay of 900 seconds; unknown is not evidence of either silence or unreachability (review P/04 M1).
 
 <!-- req: P/04-R044 -->
 
@@ -1010,8 +1012,11 @@ The role grows on demand: the controller orders the number of processes of the r
 ```
 order row:    on every server where the role is installed (the door row has room.<sub>, N1.1) — the row
               <sub>/want/<host>; none — create want 1 by a write with cas "" and guard of the own version of placement_turn
-waiting = units without a placement ∪ units of the leaving ∪ out of reach; a group is one piece; those removed by retire_when and
-         unreadable unit rows (garbled) do not wait: an order will not place them (reconciliation of python and go 2026-10-18)
+placeable = readable live unit rows, excluding deleted/tombstoned rows and every unit removed by ends or retire_when in step 4;
+            a manual expired row may remain in the store, but it is outside this set. Apply this same set before grouping or weighing.
+waiting = placeable ∩ (units without a placement ∪ units of the leaving ∪ out of reach); a group is one piece.
+          Only these waiting units feed shortage, growth, the no-shortage timer and shrinking; retained expired rows and garbled rows
+          neither cause an order nor delay shrinking (the Architect decision on ADR-0127, review P/04 C3).
 live(s) = the live role processes of the server s (a live worker of N3 «choose»), including the base <prefix>-<s>-1 and the shrink victim
           (retiring): for «in flight» and «failed to raise» the victim is a live process, want includes it while it is alive; it is excluded
           from the placement pool (shrink); the number n of the name — as an integer (P/03.2 N1.4) (ADR-0084; cammeta-go М10-04 № 6)
@@ -1112,12 +1117,12 @@ shrink (step 9a):
              want is not in the pool, R28), live ones without a place while there are waiting (placeless_with_waiting), there is a shortage or the hold time has not
              passed (no_shortage_long_enough), in flight (in_flight), hysteresis (hysteresis; no per — too); the words and
              the cases — the vector shrink-allowed (the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5)
-  victim:    the worker of the role with the largest number n ∈ {2…want(s)} of its server s (as an integer); a live number above want(s) is not
+  victim:    only a live worker with n = want(s) > 1 of its server s is a candidate; select the largest eligible n (as an integer); a live number above want(s) is not
              a victim: the script stops it (R28), the end of shrinking does not extinguish it (ADR-0084 addendum (6); review
              of stage B 6–7, № 42); on equal numbers on different servers — the smaller name
              of the server in UTF-8 bytes first, as the order of candidates (stage A, A6); each of its units
              (a group — whole) passes choose(unit) on the pool without the victim; otherwise do not shrink, the reason is in the report
-  wanted:    the holder of a place with a row of places.wanted is not a victim, the next number is taken: a removed place would at once order a process, the role would go round in a circle of ordering and shrinking (C04-PLACE-WANTED-01)
+  wanted:    only the top ordered number n = want(s) of a server may be a victim. If that worker holds a place with a readable row of places.wanted, skip the entire server and consider the top candidate of another server, with the same number/server ordering. Never fall back to a lower number on that server: reducing want would stop its protected top process. A removed wanted place would at once order a process (C04-PLACE-WANTED-01; the Architect decision on ADR-0127, review P/04 C1).
   retiring:  write retiring = <victim> into the order row of its server (cas, guard turn); the victim is outside the pool of all steps
              (choose, move, home, reachability), and at a new holder of the turn — by the row; one victim per role at a time;
              in live(s) for «in flight» and «failed to raise» it stays while it is alive (cammeta-go М10-04 № 6)
@@ -1232,7 +1237,7 @@ by `note` of id-map; the row `platform/schema`, `SCHEMA` and the raise are P/06.
 <!-- req: P/04-R061 -->
 
 ```
-start: the schema contract «Check at start» ([the schema contract](../../../common/contracts/schema.md); moved there without a change; layout audit A-02, the Architect's decision of 2026-10-25)
+start: the schema contract «Check at start» ([the schema contract](../../common/contracts/schema.md); moved there without a change; layout audit A-02, the Architect's decision of 2026-10-25)
 ```
 
 ### table snapshot — after the unit snapshot

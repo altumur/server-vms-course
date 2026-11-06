@@ -1,0 +1,1104 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "type": "object",
+ "properties": {
+  "state": {
+   "type": "string",
+   "enum": [
+    "prepared",
+    "cleaning",
+    "finalizing"
+   ],
+   "description": "prepared: release the next original candidates; cleaning: remove contributions for the confirmed current release chunk; finalizing: publish the final mark last",
+   "x-codec": [
+    "string"
+   ]
+  },
+  "request_index": {
+   "type": "string",
+   "not": {
+    "enum": [
+     ""
+    ]
+   },
+   "description": "the immutable index of platform/decommission/<host> for this plan",
+   "x-codec": [
+    "string"
+   ]
+  },
+  "asked_at": {
+   "$ref": "#/$defs/common.time",
+   "description": "at of the fixed console request",
+   "x-codec": [
+    "time"
+   ]
+  },
+  "at": {
+   "$ref": "#/$defs/common.time",
+   "description": "the controller time at plan acceptance",
+   "x-codec": [
+    "time"
+   ]
+  },
+  "manifest_rev": {
+   "type": "string",
+   "pattern": "^(?:[1-9][0-9]*)$",
+   "description": "the manifest revision used to freeze the owned from prefixes",
+   "x-codec": [
+    "string"
+   ]
+  },
+  "remaining": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "name": {
+      "description": "the name of the given-away slot, P/03.2 N1.4",
+      "type": "string",
+      "pattern": "^(?:[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
+     },
+     "index": {
+      "type": "string",
+      "not": {
+       "enum": [
+        ""
+       ]
+      },
+      "description": "the exact opaque store version; compare only for equality"
+     }
+    },
+    "required": [
+     "name",
+     "index"
+    ],
+    "additionalProperties": false
+   },
+   "description": "ordered immutable slot names and original observed versions still to release; never replace a version after conflict",
+   "x-codec": [
+    "array"
+   ],
+   "x-encoding": "json"
+  },
+  "from": {
+   "type": "array",
+   "items": {
+    "type": "string",
+    "pattern": "^(?:[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31}/)$"
+   },
+   "uniqueItems": true,
+   "description": "distinct ordered owned family prefixes from this manifest domain.books declarations; full prefixes including final slash; never a foreign subsystem",
+   "x-codec": [
+    "array"
+   ]
+  },
+  "released": {
+   "type": "array",
+   "items": {
+    "description": "the name of the given-away slot, P/03.2 N1.4",
+    "type": "string",
+    "pattern": "^(?:[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
+   },
+   "uniqueItems": true,
+   "description": "slot names confirmed released by this plan, in release order; historical names, never an authority to touch a later holder",
+   "x-codec": [
+    "array"
+   ]
+  },
+  "skipped": {
+   "type": "array",
+   "items": {
+    "description": "the name of the given-away slot, P/03.2 N1.4",
+    "type": "string",
+    "pattern": "^(?:[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
+   },
+   "uniqueItems": true,
+   "description": "original candidates whose version changed; never reread/adopt a newer version for release",
+   "x-codec": [
+    "array"
+   ]
+  },
+  "current": {
+   "type": "array",
+   "items": {
+    "description": "the name of the given-away slot, P/03.2 N1.4",
+    "type": "string",
+    "pattern": "^(?:[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
+   },
+   "uniqueItems": true,
+   "maxItems": 63,
+   "description": "the current atomic release chunk; at most BATCH_WRITES-1 slots; exact shared release index from cleanup_index or the progress row index",
+   "x-codec": [
+    "array"
+   ]
+  },
+  "cleanup_index": {
+   "type": "string",
+   "description": "empty only before the first progress rewrite of a confirmed release chunk: then the progress row index is the exact release index; otherwise its preserved value, never a later slot reread",
+   "x-codec": [
+    "string"
+   ]
+  },
+  "slot_cursor": {
+   "$ref": "#/$defs/common.uint53",
+   "description": "zero-based current slot being cleaned; compared with current length by the procedure",
+   "x-codec": [
+    "integer"
+   ]
+  },
+  "from_cursor": {
+   "$ref": "#/$defs/common.uint53",
+   "description": "zero-based next from prefix for the current slot; conflict discards the remainder of this slot",
+   "x-codec": [
+    "integer"
+   ]
+  },
+  "units": {
+   "description": "final mark metadata fixed before plan acceptance: ids of the removed units by the list rule of P/06.1 N1.2; \"\" — none",
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/common.named_id",
+    "description": "the id of the removed unit, P/06.1 N1.3"
+   },
+   "x-codec": [
+    "array"
+   ]
+  },
+  "holds": {
+   "description": "final mark metadata fixed before plan acceptance: the hold places by the list rule of P/06.1 N1.2; \"\" — none",
+   "type": "array",
+   "items": {
+    "description": "the name of the hold place, P/03.2 N1.3 (`<sub>/holds/<place>`)",
+    "type": "string"
+   },
+   "x-codec": [
+    "array"
+   ]
+  }
+ },
+ "additionalProperties": false,
+ "required": [
+  "state",
+  "request_index",
+  "asked_at",
+  "at",
+  "manifest_rev",
+  "remaining",
+  "from",
+  "released",
+  "skipped",
+  "current",
+  "cleanup_index",
+  "slot_cursor",
+  "from_cursor",
+  "units",
+  "holds"
+ ],
+ "allOf": [
+  {
+   "if": {
+    "required": [
+     "state"
+    ],
+    "properties": {
+     "state": {
+      "enum": [
+       "prepared"
+      ]
+     }
+    }
+   },
+   "then": {
+    "properties": {
+     "current": {
+      "maxItems": 0
+     },
+     "cleanup_index": {
+      "enum": [
+       ""
+      ]
+     },
+     "slot_cursor": {
+      "enum": [
+       0
+      ]
+     },
+     "from_cursor": {
+      "enum": [
+       0
+      ]
+     },
+     "remaining": {
+      "minItems": 1
+     }
+    }
+   }
+  },
+  {
+   "if": {
+    "required": [
+     "state"
+    ],
+    "properties": {
+     "state": {
+      "enum": [
+       "finalizing"
+      ]
+     }
+    }
+   },
+   "then": {
+    "properties": {
+     "current": {
+      "maxItems": 0
+     },
+     "cleanup_index": {
+      "enum": [
+       ""
+      ]
+     },
+     "slot_cursor": {
+      "enum": [
+       0
+      ]
+     },
+     "from_cursor": {
+      "enum": [
+       0
+      ]
+     },
+     "remaining": {
+      "maxItems": 0
+     }
+    }
+   }
+  },
+  {
+   "if": {
+    "required": [
+     "state"
+    ],
+    "properties": {
+     "state": {
+      "enum": [
+       "cleaning"
+      ]
+     }
+    }
+   },
+   "then": {
+    "properties": {
+     "current": {
+      "minItems": 1
+     },
+     "from": {
+      "minItems": 1
+     }
+    }
+   }
+  }
+ ],
+ "$defs": {
+  "common.book_missing": {
+   "description": "who is missing in the book — [{member, why}] class server first, within by member in UTF-8 bytes, one per book (P/08.5 N1.3 missing); the order and «one per member» — a rule of the lesson, not the form",
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "member": {
+      "$ref": "#/$defs/common.domain_member",
+      "description": "the member because of which something is missing in the book"
+     },
+     "why": {
+      "description": "a closed list of words (P/08.5 N1.3 why); a member has one entry",
+      "type": "string",
+      "enum": [
+       "unseen",
+       "silent",
+       "never",
+       "no_copy",
+       "bad_contribution",
+       "secret_unopened"
+      ]
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "member",
+     "why"
+    ]
+   }
+  },
+  "common.book_row": {
+   "description": "a row of the assembled book (P/08.5 N1.3 result): the element \"\" — the JSON text {missing, missing_count}, the element `<key>` — the JSON text {entries} only with elements where the recipient is in to; at the holder the secrets of value — envelopes of the holder's ring enc:v2 (N1.3 at_rest), at the member — envelopes of the member's ring (P/09.1 N1.4 member_row); the keys of the elements — arbitrary",
+   "type": "object",
+   "properties": {
+    "": {
+     "description": "the JSON text {missing, missing_count} — the completeness of the book without keys",
+     "type": "object",
+     "properties": {
+      "missing": {
+       "$ref": "#/$defs/common.book_missing",
+       "description": "the first MISSING_SHOWN 500: class server first, within by member (P/08.5 N1.3 result)",
+       "maxItems": 500
+      },
+      "missing_count": {
+       "description": "all members in missing (P/08.5 N1.3 result)",
+       "$ref": "#/$defs/common.uint53"
+      },
+      "term": {
+       "description": "a book to: \"*\": the term of the write of the row",
+       "$ref": "#/$defs/common.pos53"
+      },
+      "rev": {
+       "description": "a book to: \"*\": the version of the row",
+       "$ref": "#/$defs/common.pos53"
+      },
+      "stale": {
+       "description": "a book to: \"*\" with stale: <member>/<server> — the worker of the book's subsystem is silent, the first MISSING_SHOWN 500 by UTF-8 bytes (P/08.5 N1.3 head)",
+       "type": "array",
+       "maxItems": 500,
+       "uniqueItems": true,
+       "items": {
+        "type": "string"
+       }
+      },
+      "stale_count": {
+       "description": "all such servers (P/08.5 N1.3 head)",
+       "$ref": "#/$defs/common.uint53"
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "missing",
+      "missing_count"
+     ],
+     "x-encoding": "json"
+    }
+   },
+   "propertyNames": {
+    "anyOf": [
+     {
+      "enum": [
+       ""
+      ]
+     },
+     {
+      "description": "key of the book — the value of the field key of the entry, a non-empty string (P/03.7 N1.2 entry)",
+      "type": "string",
+      "pattern": "^(?:[\\s\\S]+)$"
+     }
+    ]
+   },
+   "additionalProperties": {
+    "description": "the JSON text {entries}",
+    "type": "object",
+    "properties": {
+     "entries": {
+      "description": "the elements of the key for this recipient by (member, item) in UTF-8 bytes (N1.3 order — a rule of the lesson, not the form)",
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "member": {
+         "$ref": "#/$defs/common.domain_member",
+         "description": "the contributor member — from the origin of the report, not from the input"
+        },
+        "item": {
+         "description": "`<slot>/<item>` for a family, `<item>` for a single row",
+         "type": "string",
+         "pattern": "^(?:[\\s\\S]+)$"
+        },
+        "value": {
+         "description": "the input object as is; the secrets *_secret — ring envelopes (enc:v2), AAD — the row key 0x00 «/<row item>» + the JSON Pointer of the secret (N1.3 at_rest)",
+         "type": "object",
+         "x-opaque": true
+        }
+       },
+       "additionalProperties": false,
+       "required": [
+        "member",
+        "item",
+        "value"
+       ]
+      }
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "entries"
+    ],
+    "x-encoding": "json"
+   },
+   "required": [
+    ""
+   ]
+  },
+  "common.domain_backup_doc": {
+   "description": "the backup document (P/08.8 N1.5 document) — JCS {term, rev, holder, at, members, state, objects, raw?, backup_key_rev, holder_member_key?, issuer, kid, sig}, a closed set; one document at the holder (the object `domain/backups/rev-<rev>`) and at the keeper (the object domain/backup); the signature — by the issuer, the check — the function record of the term record contract (the kind «backup document»; the types — step 1, not_a_record). The document carries no domain: the issuer binds it to the domain (record steps 3–5)",
+   "type": "object",
+   "properties": {
+    "term": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "the holder's term"
+    },
+    "rev": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "the backup revision; grows only when the content changes (N1.5 rev)"
+    },
+    "holder": {
+     "$ref": "#/$defs/common.domain_member",
+     "description": "the name of the holder member (P/08.1 N1.1 member)"
+    },
+    "at": {
+     "description": "wall-clock seconds of the signature; a JSON number (record step 1: at — a number)",
+     "type": "number"
+    },
+    "members": {
+     "description": "the names of the member list, without repeats",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.domain_member",
+      "description": "the member's name"
+     },
+     "uniqueItems": true
+    },
+    "parts": {
+     "description": "part → {sha256, rev, key_rev} (P/08.8 N1.5a)",
+     "type": "object",
+     "additionalProperties": true
+    },
+    "counts": {
+     "description": "domain/member-count",
+     "type": "object",
+     "additionalProperties": true
+    },
+    "state": {
+     "description": "{<row key>: {<element>: <text>}} — the rows that the domain decided and that nobody else has (N1.5 state)",
+     "type": "object",
+     "properties": {},
+     "propertyNames": {
+      "description": "the key of a state row (N1.5 state)",
+      "type": "string"
+     },
+     "additionalProperties": {
+      "description": "{<element>: <text>}",
+      "type": "object",
+      "properties": {},
+      "propertyNames": {
+       "description": "the element of the row",
+       "type": "string"
+      },
+      "additionalProperties": {
+       "description": "the value of the element as stored (text); *_secret — an enc:v2 envelope of the backup key (N1.5 secrets)",
+       "type": "string"
+      }
+     }
+    },
+    "objects": {
+     "description": "`{<object key>: <JSON>}` — the shared document and the alarm history (N1.5 objects); only objects in the form of their family, as a value",
+     "type": "object",
+     "x-opaque": true
+    },
+    "raw": {
+     "description": "`{<object key>: <base64>}` — the objects of the copy not in the form of their family — not JSON or JSON not by the form, as bytes (N1.5 raw; C08-BACKUP-JSON-99, the Architect's decision of 2026-10-26)",
+     "type": "object",
+     "properties": {},
+     "propertyNames": {
+      "description": "the object key; a key — in objects or in raw, not in both (N1.5 raw; in both — record step 1, not_a_record)",
+      "type": "string"
+     },
+     "additionalProperties": {
+      "description": "base64 of the object's bytes, RFC 4648 §4, with padding; an object of 0 bytes — an empty string",
+      "type": "string",
+      "pattern": "^(?:([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?)$"
+     }
+    },
+    "backup_key_rev": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "the revision of the backup key (N1.5 backup_key)"
+    },
+    "holder_member_key": {
+     "description": "hex of the public key of the holder member, 32 bytes; the key of the former one in the list after a move (N1.2 former)",
+     "type": "string",
+     "pattern": "^(?:[0-9a-f]{64})$"
+    },
+    "issuer": {
+     "description": "hex of the issuer's public key, 32 bytes (the term record contract)",
+     "type": "string",
+     "pattern": "^(?:[0-9a-f]{64})$"
+    },
+    "kid": {
+     "description": "serial of the issuer — the first 16 characters of hex issuer; anything else — function record steps 3–5, not the form",
+     "type": "string"
+    },
+    "sig": {
+     "description": "base64url without = of the issuer's Ed25519 signature over UTF-8(JCS(doc without kid and sig)), 64 bytes; not base64url, not 64 bytes or does not match — function record step 5 (bad_signature), not the form",
+     "type": "string"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "term",
+    "rev",
+    "holder",
+    "at",
+    "members",
+    "state",
+    "objects",
+    "backup_key_rev",
+    "issuer",
+    "kid",
+    "sig"
+   ]
+  },
+  "common.domain_backup_pointer": {
+   "description": "the pair of the backup and its sum {term, rev, sha256} (P/08.8 N1.5 keepers): the holder's pointer domain/keepers/<member> and the keeper's row domain/backup-taken",
+   "type": "object",
+   "properties": {
+    "term": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "the term of the holder that issued the backup"
+    },
+    "rev": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "the backup revision"
+    },
+    "sha256": {
+     "$ref": "#/$defs/common.sha256_hex",
+     "description": "hex sha256 of the JCS text of the backup document"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "term",
+    "rev",
+    "sha256"
+   ]
+  },
+  "common.domain_member": {
+   "description": "the member's name — CLUSTER of its installation, 1–64 characters [a-z0-9-] (P/08.1 N1.1 member)",
+   "type": "string",
+   "pattern": "^(?:[a-z0-9-]{1,64})$"
+  },
+  "common.domain_member_entry": {
+   "description": "the member entry Entry (P/08.3 N1.1); by — only at admitted, Entry not larger than ENTRY_MAX 1240 bytes of JCS (P/08.10 N1.5) — checks of the lesson at the writer, not of the form",
+   "type": "object",
+   "properties": {
+    "how": {
+     "description": "where the member in the list comes from — \"admitted\" | \"holder\" | `\"held the domain until term <N>\"` (P/08.3 N1.1; the last two — P/08.8 N1.2)",
+     "type": "string",
+     "not": {
+      "enum": [
+       ""
+      ]
+     }
+    },
+    "since": {
+     "$ref": "#/$defs/common.time",
+     "description": "the holder's wall-clock seconds of the record"
+    },
+    "by": {
+     "description": "the person who admitted the member (P/08.4; before it — operator); only at admitted",
+     "type": "string"
+    },
+    "key": {
+     "$ref": "#/$defs/common.domain_member_key",
+     "description": "the key of the member admitted by the fingerprint; at holder — the key from the first report of its agent"
+    },
+    "revoked_keys": {
+     "description": "the former keys of this name, revoked; not more than the 4 latest (P/08.10 N1.5)",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.domain_member_key"
+     }
+    },
+    "ca": {
+     "description": "the member's CA fingerprints (sha256 DER), 1–2, ascending, without repeats (P/08.3 N1.6 Entry.ca)",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.sha256_hex"
+     },
+     "minItems": 1,
+     "uniqueItems": true,
+     "maxItems": 2
+    },
+    "class": {
+     "description": "server — a cluster with servers, camera — a camera cluster (P/08.3 N1.1)",
+     "type": "string",
+     "enum": [
+      "server",
+      "camera"
+     ]
+    },
+    "url": {
+     "description": "the entry address, not longer than 256 bytes (P/08.1 N1.4)",
+     "type": "string",
+     "maxLength": 256
+    },
+    "via": {
+     "description": "the member's relay (P/08.3 N1.2)",
+     "type": "string"
+    },
+    "batch": {
+     "description": "the admission batch (P/08.3 N1.1a)",
+     "type": "string"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "how",
+    "since"
+   ]
+  },
+  "common.domain_member_key": {
+   "description": "hex of the member's Ed25519 public key, 32 bytes (the member key P/09.1 N1.1 pub; Entry.key P/08.3 N1.1)",
+   "type": "string",
+   "pattern": "^(?:[0-9a-f]{64})$"
+  },
+  "common.domain_members_doc": {
+   "description": "doc of the holder's row domain/member-rows/<part> (P/08.3 N1.1) and of its copy domain/member-list/<part> at the member — JCS text (P/09.1 N1.1, N1.4)",
+   "type": "object",
+   "properties": {
+    "domain": {
+     "description": "the domain name (P/08.2 N1.1)",
+     "type": "string"
+    },
+    "part": {
+     "description": "part: 4 digits, 0000…4095 (P/08.3 N1.1)",
+     "type": "string",
+     "pattern": "^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$"
+    },
+    "rev": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "+1 on every write"
+    },
+    "term": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "the term of the holder that wrote the row (P/08.8 N1.1; installation — 1)"
+    },
+    "members": {
+     "description": "the entries of the members of this part, the holder is in the count of its own part (P/08.10 N1.5)",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/common.domain_member"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/common.domain_member_entry"
+     }
+    },
+    "issuer": {
+     "description": "hex of the issuer's public key",
+     "type": "string"
+    },
+    "kid": {
+     "description": "the first 16 characters of hex issuer",
+     "type": "string"
+    },
+    "sig": {
+     "description": "the issuer's signature over UTF-8(JCS(doc without kid and sig))",
+     "type": "string"
+    },
+    "gathered": {
+     "description": "a row of the gathering «from nothing»: the source of the part at the write, null — there is no source (P/08.8 N1.8a gathered)",
+     "anyOf": [
+      {
+       "type": "object",
+       "properties": {
+        "term": {
+         "$ref": "#/$defs/common.pos53"
+        },
+        "rev": {
+         "$ref": "#/$defs/common.pos53"
+        }
+       },
+       "additionalProperties": false,
+       "required": [
+        "term",
+        "rev"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "new": {
+     "description": "the names new of the part, the members of this row (P/08.8 N1.8a gathered)",
+     "type": "array",
+     "items": {
+      "type": "string",
+      "pattern": "^(?:[a-z0-9-]{1,64})$"
+     }
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "domain",
+    "part",
+    "rev",
+    "term",
+    "members",
+    "issuer",
+    "kid",
+    "sig"
+   ],
+   "x-encoding": "jcs"
+  },
+  "common.domain_outcome": {
+   "description": "the outcome of the edit — the JSON text of the element `<id>` of the outcomes row: at the holder domain/outcomes/<member> (P/08.6 N1.6), at the member domain/outcomes (P/09.1 N1.5 outcome)",
+   "type": "object",
+   "properties": {
+    "id": {
+     "description": "id of the edit (P/08.6 N1.4 id); equal to the element's name — a rule of the lesson (settle, P/08.6 N1.6)",
+     "type": "string",
+     "pattern": "^(?:e-[0-9a-f]{12})$"
+    },
+    "status": {
+     "description": "the response code of the member's console",
+     "type": "integer",
+     "x-integer": true
+    },
+    "result": {
+     "description": "performed (2xx) | conflict (412) | refused (another 4xx, except «in flight»)",
+     "type": "string",
+     "enum": [
+      "performed",
+      "conflict",
+      "refused"
+     ]
+    },
+    "error": {
+     "description": "detail of the response (no detail — its error) at status ≥ 400, without the values of secrets",
+     "type": "string"
+    },
+    "at": {
+     "$ref": "#/$defs/common.time",
+     "description": "the agent's wall-clock seconds"
+    },
+    "what": {
+     "description": "what of the edit (P/08.6 N1.4)",
+     "type": "string"
+    },
+    "kept_at": {
+     "$ref": "#/$defs/common.time",
+     "description": "at of the edit (P/08.6 N1.4 at)"
+    },
+    "made": {
+     "description": "id of the created unit: POST of the unit, the link with new or create (P/09.1 N1.5 made)",
+     "type": "string"
+    },
+    "by": {
+     "description": "the person of the edit: by of the edit; none — the viewer of the domain (P/08.6 N1.6)",
+     "type": "string"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "status",
+    "result",
+    "at",
+    "what",
+    "kept_at"
+   ],
+   "x-encoding": "json"
+  },
+  "common.domain_placement": {
+   "description": "the placement record — the holder's row `domain/placement/<sub>/<ref>` (P/08.6 N1.1) and its copy at the member `domain/placed/<sub>/<ref>` («the elements of the record as at the holder», P/09.1 N1.5 member)",
+   "type": "object",
+   "properties": {
+    "cluster": {
+     "$ref": "#/$defs/common.domain_member",
+     "description": "the executor member; required; \"\" — not by the form (the form of the door — 400, P/08.6 N1.1 form)"
+    },
+    "origin": {
+     "description": "the member owning the source; \"\" — none; origin — not an executor (P/08.6 N1.1 executors)",
+     "type": "string",
+     "pattern": "^(?:([a-z0-9-]{1,64})?)$"
+    },
+    "copies": {
+     "description": "the JCS text of an array of other executors, ascending, without repeats, without cluster; \"[]\" — none (the order and «without cluster» — rules of the lesson, not of the form)",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.domain_member",
+      "description": "another executor"
+     },
+     "uniqueItems": true,
+     "x-encoding": "jcs"
+    },
+    "reason": {
+     "description": "the operator's words; \"\" — none",
+     "type": "string"
+    },
+    "at": {
+     "$ref": "#/$defs/common.time",
+     "description": "wall-clock seconds of the domain process of the write"
+    },
+    "rev": {
+     "description": "the value of the counter domain/placement of this record, as decimal text (P/08.6 N1.1 rev)",
+     "type": "string",
+     "pattern": "^(?:[1-9][0-9]*)$"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "cluster",
+    "origin",
+    "copies",
+    "reason",
+    "at",
+    "rev"
+   ]
+  },
+  "common.domain_topology_doc": {
+   "description": "doc of the holder's row domain/topology (P/08.3 N1.2) and of its copy domain/member-topology at the member — JCS text (P/09.1 N1.4)",
+   "type": "object",
+   "properties": {
+    "rev": {
+     "$ref": "#/$defs/common.uint53",
+     "description": "0 — «never written»; +1 per write"
+    },
+    "centre": {
+     "$ref": "#/$defs/common.domain_member",
+     "description": "a member — the centre of the domain; none — there is no centre"
+    },
+    "star": {
+     "description": "star relays, ascending, without repeats",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.domain_member"
+     },
+     "uniqueItems": true
+    },
+    "via": {
+     "description": "member → the relay through which it reports; no member — directly",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/common.domain_member"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/common.domain_member"
+     }
+    },
+    "by": {
+     "description": "who wrote — the name proven by the gate",
+     "type": "string"
+    },
+    "at": {
+     "$ref": "#/$defs/common.time",
+     "description": "when written (the console's wall-clock seconds)"
+    },
+    "relays": {
+     "description": "who leads at least one member (P/08.3 N1.2)",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.domain_member"
+     },
+     "uniqueItems": true
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "rev",
+    "star"
+   ],
+   "x-encoding": "jcs"
+  },
+  "common.grants_doc": {
+   "description": "the JCS text {lines} of the grants row (P/08.4 N1.3); the member's copy carries it as it came (P/09.1 N1.4 member_copy)",
+   "type": "object",
+   "properties": {
+    "lines": {
+     "description": "lines by (subject, cap, sub, scope) in UTF-8 bytes, then until by number, without repeats by (subject, cap, sub, scope, until) — the order and the repeat — a rule of the row (P/08.4 N1.3 lines), not the form",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.grants_line"
+     }
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "lines"
+   ],
+   "x-encoding": "jcs"
+  },
+  "common.grants_line": {
+   "type": "object",
+   "properties": {
+    "subject": {
+     "description": "a person's name (N1.1), a subject of the name index (chapter 8.5 N1.7) or role:<role name> (N1.3a, up to 69 characters); the form of the name — N1.1 (N3 «grants» step 3)",
+     "anyOf": [
+      {
+       "$ref": "#/$defs/common.person_name"
+      },
+      {
+       "type": "string",
+       "pattern": "^(?:role:[^\u0000-    -     　:|()\"/]{1,64})$"
+      }
+     ]
+    },
+    "cap": {
+     "description": "none < view < edit < admin; none — only at a role row (ADR-0099 §1): a rule of the row, not the form",
+     "type": "string",
+     "enum": [
+      "none",
+      "view",
+      "edit",
+      "admin"
+     ]
+    },
+    "sub": {
+     "description": "the manifest name (P/02.1 N1.2 name) or platform; no field — the row is in force in all subsystems and in platform (ADR-0097 §1)",
+     "type": "string",
+     "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
+    },
+    "scope": {
+     "description": "`*` | `unit:<sub>/<id>` | `labels:<label>[,<label>…]` \\| `folder:<id>` (P/08.4 N1.3 scope): `<sub>` — the manifest name (P/02.1), `<id>` — by the identifier grammar P/06.1 N1.3 (named_id: not . and ..), labels — the label alphabet common/contracts/labels.md; labels without repeats — a rule of the row, not the form; `folder:<id>` — the folder id, 32 lowercase hex digits (P/06.8 N1.1)",
+     "type": "string",
+     "not": {
+      "type": "string",
+      "pattern": "^(?:unit:[a-z][a-z0-9_-]{0,31}/\\.\\.?)$"
+     },
+     "pattern": "^(?:\\*|unit:[a-z][a-z0-9_-]{0,31}/[^/\\\\|\",\u0000-\u001f-  ٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+|labels:[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}(,[A-Za-z0-9][A-Za-z0-9_.:-]{0,63})*|folder:[0-9a-f]{32})$"
+    },
+    "until": {
+     "$ref": "#/$defs/common.time",
+     "description": "0 — without a deadline; otherwise wall-clock seconds — the line is in force while now < until; an input with more than three fraction digits — rounding to thousandths (P/08.4 N1.3 until); compared by value (0 and 0.0 — one line)"
+    },
+    "by": {
+     "description": "the name proven by the gate at the write; a line matching by (subject, cap, scope, until) keeps its by",
+     "type": "string"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "subject",
+    "cap",
+    "scope",
+    "until",
+    "by"
+   ]
+  },
+  "common.named_id": {
+   "description": "unit id by a field (P/06.1 N1.3 named): non-empty; without / \\ | \" comma, control characters (Cc), line and paragraph separators (Zl, Zp) and digits outside 0–9 (non-ASCII Nd); the categories — Unicode 15.0.0",
+   "type": "string",
+   "not": {
+    "enum": [
+     ".",
+     ".."
+    ]
+   },
+   "pattern": "^(?:[^/\\\\|\",\u0000-\u001f-  ٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+)$"
+  },
+  "common.person_name": {
+   "description": "the person's name (P/08.4 N1.1 name): 1–64 characters without whitespace, control characters (U+0000–U+001F, U+007F) and : | ( ) \" /; not exactly break-glass; whitespace — the White_Space property of Unicode 15.0.0, written out as characters (the Architect's decision of 2026-10-20 on the questions of assembling lesson 8, item 3); «not a subject of the name index» — a check of the door (chapter 8.5 N1.7), not the form",
+   "type": "string",
+   "not": {
+    "enum": [
+     "break-glass"
+    ]
+   },
+   "pattern": "^(?:[^\u0000-    -     　:|()\"/]{1,64})$"
+  },
+  "common.pos53": {
+   "description": "an integer from 1 to 2^53 − 1",
+   "type": "integer",
+   "x-integer": true,
+   "minimum": 1,
+   "maximum": 9007199254740991
+  },
+  "common.sha256_hex": {
+   "description": "sha256 — 64 lowercase hex digits (P/02.3 N1.5)",
+   "type": "string",
+   "pattern": "^(?:[0-9a-f]{64})$"
+  },
+  "common.shared_doc": {
+   "description": "the shared document of the domain (P/08.9 N1.2 document) — JCS {domain, term, rev, at, by, shared, issuer, kid, sig}, a closed set; one document at the holder (the object `domain/shared-docs/rev-<rev>`) and at the member (the object domain/shared — a copy taken by the agent, P/09.1 N1.10); the signature — by the issuer, the check — the function record of the term record contract (the kind «shared document»)",
+   "type": "object",
+   "properties": {
+    "domain": {
+     "description": "the domain name (chapter 8.2, from М11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
+    },
+    "term": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "the holder's term (chapter 8.8, from М11/10 N1.1); the order — (term, rev), term is senior"
+    },
+    "rev": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "the edit number"
+    },
+    "at": {
+     "description": "wall-clock seconds of the signature",
+     "type": "number"
+    },
+    "by": {
+     "description": "the name proven by the gate; after a move — \"domain\"",
+     "type": "string"
+    },
+    "shared": {
+     "description": "`{<sub>: {<name>: <value>}}` — only what is declared P/02.1 N1.2b; subsystems and names ascending (JCS)",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/common.sub_name"
+     },
+     "additionalProperties": {
+      "description": "the values of the subsystem `<sub>` — the names of its domain.shared",
+      "type": "object",
+      "propertyNames": {
+       "type": "string"
+      },
+      "additionalProperties": {
+       "description": "the value of a field or a document declared by domain.shared of the manifest"
+      }
+     }
+    },
+    "issuer": {
+     "description": "hex of the issuer's public key (the term record contract, issuing_key_secret)",
+     "type": "string",
+     "pattern": "^(?:[0-9a-f]{64})$"
+    },
+    "kid": {
+     "description": "serial of the issuer — the first 16 characters of hex issuer; anything else — function record steps 3–5, not the form (REC-G01)",
+     "type": "string"
+    },
+    "sig": {
+     "description": "base64url without «=» of the issuer's Ed25519 signature over UTF-8(JCS(doc without kid and sig)), 64 bytes; anything else — function record step 5 (bad_signature), not the form (REC-G01)",
+     "type": "string"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "domain",
+    "term",
+    "rev",
+    "at",
+    "by",
+    "shared",
+    "issuer",
+    "kid",
+    "sig"
+   ]
+  },
+  "common.sub_name": {
+   "description": "the subsystem name (P/02.1 N1.2)",
+   "type": "string",
+   "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
+  },
+  "common.time": {
+   "description": "time N0 P/01.1 «Time in a row»",
+   "type": [
+    "string",
+    "number"
+   ],
+   "x-time": true
+  },
+  "common.uint53": {
+   "description": "an integer from 0 to 2^53 − 1",
+   "type": "integer",
+   "x-integer": true,
+   "minimum": 0,
+   "maximum": 9007199254740991
+  }
+ }
+}
