@@ -158,7 +158,7 @@ EXAMPLES = HERE / "examples"                # пример подключени�
 EXAMPLE_ORDER = ("writecheck", "door", "flags", "refusals", "families", "vectors", "stagetests", "launch", "admin")
 
 
-def connect_md(parts, module):
+def connect_md(parts, module, constants=None):
     """Справка подключения (ADR-0083 доп. (95) п. 2): по примеру на часть — файл kit/examples/<часть>.go, дословно."""
     out = ["", "## Connect: one example per part", "",
            "Read this, not the generated bodies: the signatures above and these examples are the whole API you need. "
@@ -167,6 +167,8 @@ def connect_md(parts, module):
         if part not in parts:
             continue
         text = (EXAMPLES / f"{part}.go").read_text(encoding="utf-8")
+        if part == "writecheck":
+            text = gen_flags.bind_p01(text, "example", constants is not None, error=KitError)
         text = text.replace('"kitmodule/internal/', f'"{module}/internal/').split("\n", 2)[2]   # без package example
         out += [f"### `{part}`", "", "```go", text.rstrip("\n"), "```", ""]
     return "\n".join(out)
@@ -203,10 +205,14 @@ def provenance(parts, files, judged):
     def output(*components):
         own = sorted((f["path"], f["sha256"]) for f in files if f["component"] in components and not f.get("editable"))
         return sha256("".join(f"{p}\t{h}\n" for p, h in own).encode())
+    consts = ROOT / gen_flags.P01_CONSTANTS
+    const_sources = (gen_checks.tsv_input.source_files(consts, root=ROOT)
+                     if L.key == lesson.DEFAULT and consts.is_file() else [])
+    const_generators = [NORMGEN / "gen_flags.py"] if const_sources else []
     table = {
-        "writecheck": (("normgen", "kit"), {"form": gen_checks.tsv_input.source_files(TABLE, root=ROOT) if TABLE.is_file() else [],
+        "writecheck": (("normgen", "kit"), {"form": (gen_checks.tsv_input.source_files(TABLE, root=ROOT) if TABLE.is_file() else []) + const_sources,
                                    "generator": NORMGEN / "gen_checks.py",
-                                   "generators": [NORMGEN / "gen_checks.py", NORMGEN / "tsv_input.py"],
+                                   "generators": [NORMGEN / "gen_checks.py", NORMGEN / "tsv_input.py"] + const_generators,
                                    "handwritten": [NORMGEN / "runtime/go/runtime.go", NORMGEN / "prims/go/prims.go"]
                                    + [HANDWRITTEN / sub / name for sub, name in KIT_FILES],
                                    "judge": NORMGEN / "test_gen_checks.py"}),
@@ -216,7 +222,7 @@ def provenance(parts, files, judged):
                                 "generator": NORMGEN / "gen_tests.py",
                                 "generators": [NORMGEN / p for p in ("gen_tests.py", "gen_stagetests.py", "gen_cmdtests.py",
                                                                     "gen_checks.py", "common_vectors.py", "wire.py",
-                                                                    "vector_consumers.py", "tsv_input.py", "gate.py")],
+                                                                    "vector_consumers.py", "tsv_input.py", "gate.py")] + const_generators,
                                 "judge": NORMGEN / "vector_judge.py"}),
         "stagetests": (("stagetests",), {"form": gen_tests.sources("stagetests") if L.key == lesson.DEFAULT else [L.form("stages.tsv"),
                                                L.path("acceptance/1/scenarios.tsv"),
@@ -360,6 +366,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
     kit_parts = (["writecheck"] if has_wc else []) + sorted(set(parts))
     parts_set = list(kit_parts)
     try:
+        constants = gen_flags.p01_constants(ROOT) if has_wc and L.key == lesson.DEFAULT else None
         tests = [(f, "vectors") for f in (gen_tests.kit_files(module, "vectors") if L.key == lesson.DEFAULT
                                            else gen_vectors.kit_files(module))] if "vectors" in parts else []
         if "stagetests" in parts:
@@ -417,11 +424,15 @@ def build(dst, module, parts=(), judged=None, seed=None):
         put("checks", name, (GENERATED / name).read_bytes(), origin, "normgen", source)
     for sub, name in KIT_FILES if has_wc else ():
         data = (HANDWRITTEN / sub / name).read_bytes()
+        if sub == "jsonstrict":
+            data = gen_flags.bind_p01(data.decode(), sub, constants is not None, error=KitError).encode()
         if PLACEHOLDER.encode() in data:
             data = data.replace(PLACEHOLDER.encode(), f'"{module}/internal/'.encode())
         elif sub == "writecheck":
             raise KitError(f"{sub}/{name}: no import {PLACEHOLDER}… to rewrite")
         put(sub, name, data, "handwritten", "kit", str((HANDWRITTEN / sub / name).relative_to(ROOT)))
+    if constants is not None:
+        put("jsonstrict", "constants.go", constants.encode(), "generated", "kit", "tools/normgen/gen_flags.py")
 
     contract_adapters = {}
     if "contracts" in parts:                           # общий пакет договоров: пакет и адаптеры векторов над ним
@@ -514,7 +525,16 @@ def build(dst, module, parts=(), judged=None, seed=None):
     stagetests_md = (gen_tests.KIT_MD_STAGETESTS if http else gen_cmdtests.KIT_MD) if "stagetests" in parts else ""
     if policy_root:
         stagetests_md += gen_policy_machines.KIT_MD
-    doc = ((KIT_MD if has_wc else KIT_MD_LESSON.replace("{lesson}", L.code).replace("{dir}", L.kit_dir))
+    base_md = KIT_MD
+    if constants is not None:
+        base_md = (base_md.replace("fixed by N2.1 (128)", "fixed by `forms/runtime-constants.tsv` (`jsonstrict.JsonDepth`)")
+                   .replace("deeper than 128", "deeper than `jsonstrict.JsonDepth`")
+                   .replace("const jsonstrict.Depth = 128", "const jsonstrict.Depth = jsonstrict.JsonDepth"))
+        base_md += ("\n`jsonstrict/constants.go` is generated by the existing runtime-constants class from "
+                    "`forms/runtime-constants.tsv`: `JsonDepth`, `HeaderBytes`, `BatchWrites`, `BatchGuards`. "
+                    "They are norm values, never environment settings. The base writecheck part includes them "
+                    "without requiring part flags; `flags` projects the same form when selected.\n")
+    doc = ((base_md if has_wc else KIT_MD_LESSON.replace("{lesson}", L.code).replace("{dir}", L.kit_dir))
            + ((gen_tests.kit_md() if L.key == lesson.DEFAULT else gen_vectors.KIT_MD) if "vectors" in parts else "")
            + stagetests_md + (gen_rollout.KIT_MD if rollout_files else "") + (KIT_DOOR_MD if openapi_sha else "")
            + (gen_door_lesson.kit_md() if door_lesson else "")
@@ -523,13 +543,13 @@ def build(dst, module, parts=(), judged=None, seed=None):
            + (gen_row_writes.KIT_MD if family_files and gen_row_writes.enabled() else "")
            + (gen_box.kit_md() if box_files else "")
            + (gen_manifest.kit_md() if loader_files else "")
-           + (gen_launch.KIT_MD if launch_files else "")
+           + (gen_launch.kit_md() if launch_files else "")
            + ((gen_versioned_doors if L.key == "08-domain" else gen_core).KIT_MD if core_files else "")
            + "".join(gen_machine.kit_md(p) for p in sorted(set(parts) & set(MACHINES)))
            + (KIT_CONTRACTS_MD if "contracts" in parts else "")).replace("{module}", module)
     if policy_root:
         doc = doc.replace("Standard library only, Go 1.22.", "Go 1.22; the closed policies use vendored cel-go v0.26.1 from Platform/common/versions.")
-    connect = connect_md(kit_parts, module) if L.key == lesson.DEFAULT else ""   # примеры частей — кодом P/01
+    connect = connect_md(kit_parts, module, constants) if L.key == lesson.DEFAULT else ""   # примеры частей — кодом P/01
     doc = (doc + connect + exported_md(internal, dst, module)).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)
     # Паспорт попытки (доп. (86) п. 3) считает порознь: по происхождению (generated | handwritten) и по части

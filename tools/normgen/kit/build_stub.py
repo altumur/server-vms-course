@@ -63,6 +63,8 @@ def build(dst, spec=None, go_build=False):
     cmd = store / "cmd/stubstore"
     cmd.mkdir(parents=True, exist_ok=True)
     src = (HERE / "stub/main.go").read_text(encoding="utf-8")
+    active = (build_kit.ROOT / build_kit.gen_flags.P01_CONSTANTS).is_file()
+    src = build_kit.gen_flags.bind_p01(src, "stub", active, error=build_kit.KitError)
     if '"kitmodule/internal/' not in src:
         raise build_kit.KitError("stub/main.go: no import kitmodule/internal/… to rewrite")
     (cmd / "main.go").write_text(src.replace('"kitmodule/internal/', f'"{MODULE}/internal/'), encoding="utf-8")
