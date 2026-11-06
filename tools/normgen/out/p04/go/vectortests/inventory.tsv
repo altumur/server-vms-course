@@ -1034,6 +1034,8 @@ common/values-by-type cases.tsv 82 read	translated
 04-controller/shrink-allowed cases.tsv 52	translated
 04-controller/shrink-allowed cases.tsv 53	translated
 04-controller/shrink-allowed cases.tsv 54	translated
+04-controller/shrink-allowed cases.tsv 55	translated
+04-controller/shrink-allowed cases.tsv 56	translated
 04-controller/shrink-victim cases.tsv 3	translated
 04-controller/shrink-victim cases.tsv 4	translated
 04-controller/shrink-victim cases.tsv 5	translated
@@ -1049,6 +1051,11 @@ common/values-by-type cases.tsv 82 read	translated
 04-controller/shrink-victim cases.tsv 15	translated
 04-controller/shrink-victim cases.tsv 16	translated
 04-controller/shrink-victim cases.tsv 17	translated
+04-controller/shrink-victim cases.tsv 18	translated
+04-controller/shrink-victim cases.tsv 19	translated
+04-controller/shrink-victim cases.tsv 20	translated
+04-controller/shrink-victim cases.tsv 21	translated
+04-controller/shrink-victim cases.tsv 22	translated
 common_crl_test.go	translated
 common_family_read_test.go	translated
 common_log_mask_test.go	translated

@@ -335,6 +335,7 @@
     "va/*",
     "va/controller/placement_intent",
     "va/controller/placement_turn",
+    "va/decommission-pending/*",
     "va/decommissioned/*",
     "va/placement/*",
     "va/slots/*",
@@ -344,6 +345,7 @@
    "write": [
     "va/controller/placement_intent",
     "va/controller/placement_turn",
+    "va/decommission-pending/*",
     "va/decommissioned/*",
     "va/placement/*",
     "va/slots/*",

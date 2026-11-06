@@ -765,11 +765,11 @@
    "type": "object",
    "properties": {
     "domain": {
-     "description": "the domain name (chapter 8.2, from М11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
+     "description": "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
     },
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "the holder's term (chapter 8.8, from М11/10 N1.1); the order — (term, rev), term is senior"
+     "description": "the holder's term (chapter 8.8, from M11/10 N1.1); the order — (term, rev), term is senior"
     },
     "rev": {
      "$ref": "#/$defs/common.pos53",
@@ -903,7 +903,83 @@
    ]
   },
   "writer": {
-   "x-max-names": 1
+   "x-max-names": 1,
+   "minProperties": 4,
+   "description": "Exactly one manifest unit.rows array in addition to cluster, worker and ts, including an empty array. Reader compatibility is unchanged.",
+   "propertyNames": {
+    "anyOf": [
+     {
+      "enum": [
+       "cluster",
+       "worker",
+       "ts"
+      ]
+     },
+     {
+      "description": "a name by N1.2, not from the list of forbidden table names and not `cluster`, `worker`, `ts`",
+      "type": "string",
+      "not": {
+       "enum": [
+        "platform",
+        "spec",
+        "manifest",
+        "next_id",
+        "slots",
+        "epoch",
+        "idem",
+        "policy",
+        "placement",
+        "workers",
+        "controller",
+        "decommissioned",
+        "decommission-pending",
+        "holds",
+        "requests",
+        "asked",
+        "sweep",
+        "servers",
+        "where",
+        "unplaceable",
+        "drain",
+        "events",
+        "marks",
+        "console",
+        "audit",
+        "session",
+        "mounts",
+        "healthz",
+        "changes",
+        "metrics",
+        "resources",
+        "schema",
+        "domain",
+        "api",
+        "heartbeats",
+        "contenders",
+        "snapshot",
+        "blobs",
+        "commands",
+        "state",
+        "folders",
+        "memberof",
+        "operations",
+        "opsteps",
+        "opdone",
+        "opcount",
+        "opbusy",
+        "operations-turn",
+        "operations-epoch",
+        "cluster",
+        "worker",
+        "ts",
+        "tables",
+        "snapshot-tables"
+       ]
+      },
+      "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
+     }
+    ]
+   }
   }
  }
 }

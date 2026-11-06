@@ -11,6 +11,7 @@
    (проверено мутантами, код держит правило стека В7): отказ пустого значения сверх схемы, слой 2 «4.0 → 4» (JCS и
    text() дают те же байты), x-opaque в проекции (внутри непрозрачных мест нет умолчаний схемы).
 """
+import json
 import os
 import shutil
 import subprocess
@@ -194,6 +195,50 @@ class Loader(unittest.TestCase):
         self.assertEqual(int(sums["verdicts"][1]), 947)
         self.assertEqual(int(sums["canonical"][1]), 220)
         self.assertEqual(int(sums["yaml-suite"][1]), 402)
+
+    def test_pending_reserved_rows_and_table_witnesses(self):
+        """Both accepted P04 witnesses must fail in the ordinary loader's form layer."""
+        names = {"s46-loader-reserved-pending-rows", "s47-loader-reserved-pending-table"}
+        cases = []
+        seams = ROOT / "Platform/04-controller/acceptance/seams.tsv"
+        for line in seams.read_text(encoding="utf-8").split("\n"):
+            cells = line.split("\t")
+            if cells[0] in names:
+                self.assertTrue(cells[2].startswith("CALL controller-pass "))
+                data = json.loads(cells[2].split(" ", 2)[2])
+                cases.append({"source": cells[0] + ".yaml", "yaml": data["manifest_yaml"]})
+        self.assertEqual({row["source"] for row in cases}, {name + ".yaml" for name in names})
+        self.assertEqual(len(cases), 2)
+        mod = self.copy("reserved-pending")
+        (mod / "witnesses.json").write_text(json.dumps(cases), encoding="utf-8")
+        cmd = mod / "cmd/reservedprobe"
+        cmd.mkdir(parents=True)
+        (cmd / "main.go").write_text(r'''package main
+import (
+    "encoding/json"
+    "fmt"
+    "os"
+    "strings"
+    "MODULE/manifest"
+)
+func main() {
+    data, err := os.ReadFile(os.Args[1]); if err != nil { panic(err) }
+    var cases []struct{ Source, Yaml string }
+    if err := json.Unmarshal(data, &cases); err != nil { panic(err) }
+    bad := false
+    for _, c := range cases {
+        _, refusal := manifest.Load(c.Source, []byte(c.Yaml))
+        if refusal == nil || refusal.Class != "form" || !strings.Contains(refusal.Message, c.Source) {
+            fmt.Printf("FAIL %s: %+v\n", c.Source, refusal); bad = true
+        } else { fmt.Printf("PASS %s\n", c.Source) }
+    }
+    if bad { os.Exit(1) }
+}
+'''.replace("MODULE", gen_manifest.L.go_module), encoding="utf-8")
+        done = subprocess.run(["go", "run", "./cmd/reservedprobe", "witnesses.json"], cwd=mod,
+                              capture_output=True, text=True, env=ENV)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertEqual(set(done.stdout.splitlines()), {"PASS " + c["source"] for c in cases})
 
     def test_mutants(self):
         mutants = [

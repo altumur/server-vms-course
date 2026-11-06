@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Acceptance of P/04: the controller — placement, the slot fate, ordering and shrinking, the snapshot on the stand testsub and testsub2 under the runner. Carried over from М10/05 (stage B), sc. 03, 08 — from М10/10 (without the console /metrics steps: they are chapter 6.5). Format — README.
+# Acceptance of P/04: the controller — placement, the slot fate, ordering and shrinking, the snapshot on the stand testsub and testsub2 under the runner. Carried over from M10/05 (stage B), sc. 03, 08 — from M10/10 (without the console /metrics steps: they are chapter 6.5). Format — README.
 03-snapshot	1	@start controller	ok
 03-snapshot	2	@start resource	ok
 03-snapshot	3	console POST /counters {"name": "s1", "start": 4, "labels": ["a"]}	201
@@ -428,7 +428,7 @@ scenario	step	request	expect
 34-retire-when-state	12	store GET /v1/get?key=testsub2/workers/t-1	200 {"items": {"units": ""}}
 34-retire-when-state	13	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"name": "t1", "born": "00000000000000000000000000000001"}}
 34-retire-when-state	14	store GET /v1/get?key=testsub2/state/result/t1	200 {"items": {"born": "00000000000000000000000000000001", "value": "{\"state\":\"done\"}"}}
-# 35-state-born-sweep (coverage audit of P/04, second pass, G04): the state row of t2 with someone else's born with a live unit row — orphaned: the sweep of step 8а removes it, state_swept_total 1; the unit row is untouched
+# 35-state-born-sweep (coverage audit of P/04, second pass, G04): the state row of t2 with someone else's born with a live unit row — orphaned: the sweep of step 8a removes it, state_swept_total 1; the unit row is untouched
 35-state-born-sweep	1	@start resource	ok
 35-state-born-sweep	2	@start controller testsub2	ok
 35-state-born-sweep	3	@as console store POST /v1/write {"id":"e35a","op":"put","key":"testsub2/tallies/t2","items":{"id":"t2","revision":"1","name":"t2","of":"c1","born":"00000000000000000000000000000002"},"cas":""}	200

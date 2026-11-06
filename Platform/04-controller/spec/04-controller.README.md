@@ -41,7 +41,7 @@ of escalation is in the section «On a discrepancy». Internal functions, types 
    For distinct apply the slot order of P/03.2 N1.4, including w-a/w-b and the equal numbers w-01/w-1.
    With equal free capacity a separate comparison by the full ASCII name is kept.
    The order of workers (ADR-0084): the row `<sub>/want/<host>` always, `want` is an absolute target, the capacity in flight is subtracted
-   from the shortage; the withdrawal by the deadline, the number above want, the shrinking with `retiring` and a budget — N3 «нехватка(), заказать()…»;
+   from the shortage; the withdrawal by the deadline, the number above want, the shrinking with `retiring` and a budget — N3 «shortage(), order()…»;
    the vectors [`order`](../vectors/order/README.md), [`shrink-victim`](../vectors/shrink-victim/README.md) and
    [`shrink-allowed`](../vectors/shrink-allowed/README.md) (the condition of shrinking and the order of the reasons of refusal; the Architect's decision of 2026-10-20, № 12 of the analysis of the review of stage B 3–5).
    In flight — the numbers 2…want without a live process by the heartbeats; the candidate and the share — by the door row (`room.<sub>`, `live.<sub>`
@@ -62,13 +62,13 @@ of escalation is in the section «On a discrepancy». Internal functions, types 
    Check names_given on a renewal between the judgment and the capture; do not replace an unknown gen with zero.
    The release of a readable row keeps holder/until/gen/server; a torn row with a readable gen is written wholly released and
    nobody's: released "true", holder "", until 0, gen as read, server — if it is readable, otherwise ""; gen is not readable —
-   do not change the row, do not grant a permission to capture (N3 «запись release»; the guess of stage C C04-TORN-01, the Architect's decision of 2026-10-23).
+   do not change the row, do not grant a permission to capture (N3 «write release»; the guess of stage C C04-TORN-01, the Architect's decision of 2026-10-23).
 6. Publish separate snapshot shards only after a successful reading of the source, mask the addresses, exclude
-   secrets/blob. Check an empty unplaced, a departed worker, a refusal of one shard (N1.3a, N3 «снимок»). Before the publication
+   secrets/blob. Check an empty unplaced, a departed worker, a refusal of one shard (N1.3a, N3 «snapshot»). Before the publication
    check the bytes of the whole serialization against the 64 MiB of the resource door; max_bytes is held by the store on put, its `TooLarge` is the
    same outcome (C04-SNAPSHOT-CEILING-MAXBYTES-01); exactly the limit / +1, an empty shard and the former shard after a refusal.
 7. Run the acceptance by its README: 37 scenarios / 533 steps in the order of the file (all — with the resource P/05 on
-   the server of the controller: the controller reads the objects of the cluster through the resource of its server, R17; without the resource — «не известно»,
+   the server of the controller: the controller reads the objects of the cluster through the resource of its server, R17; without the resource — «unknown»,
    P03-OBJECTS-DEFAULT-1FD).
    A repeated run also clears the POST claims and the id memory.
 8. Attach the evidence of reading per N5 for the branches not observable on the stand. The stand checks several cases with
