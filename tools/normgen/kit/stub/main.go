@@ -216,7 +216,7 @@ func (s *store) Status(c *call) apidoor.Answer {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return apidoor.Answer{Code: 200, Body: apidoor.Status{Id: "stub", State: "Leader", LeaderId: "stub", Commit: s.next,
-		Applied: s.next, Voters: []string{"stub"}, Members: map[string]string{}, MaxValue: s.maxValue}}
+		Applied: s.next, Voters: []string{"stub"}, Members: map[string]string{}, MaxValue: s.maxValue, MaxBody: s.maxBody}}
 }
 
 func (s *store) member(op apidoor.Op, c *call, body []byte, decode func(any) *apidoor.Violation) apidoor.Answer {
