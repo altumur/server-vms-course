@@ -159,7 +159,7 @@ def stub_comment(cmd, gram, rest, keys, cli, recover, flags):
         lines.append(f'//   spec/{NORMS_13.name} N2 Doors (the CLI):')
         lines += gen_core.wrap(f"req: {CLI_ANCHOR} — " + gen_core.plain(" ".join(said)), "//     ", "//       ")
     if cmd == "recover":
-        lines.append(f'//   spec/{NORMS_13.name} N3 Procedures: {RECOVER}»:')
+        lines.append(f'//   spec/{NORMS_13.name} N3 Procedures: «{RECOVER}»:')
         for a, t in recover:                            # Keep the whole procedure: its phases define recover's body.
             if gen_core.plain(t) != "---":
                 lines += gen_core.wrap(f"req: {a} — {gen_core.plain(t)}", "//     ", "//       ")
