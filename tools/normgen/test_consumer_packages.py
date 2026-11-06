@@ -1,5 +1,6 @@
 """Complete packages, owner union and form refusals through the full generation chain on spec103 pin7b96ff9f."""
 import copy
+import hashlib
 import importlib
 import io
 import json
@@ -111,6 +112,24 @@ class NewPin(unittest.TestCase):
         cls.root.mkdir()
         data = subprocess.check_output(['git','archive',PIN,'Platform','Source/tests/testdata'], cwd=ROOT)
         with tarfile.open(fileobj=io.BytesIO(data)) as t: t.extractall(cls.root, filter='data')
+        # Only this owned historical fixture gets canonical paths; keep the archive unchanged.
+        cls.historical_fixture_sha256 = {}
+        for name in ('testsub.subsystem.yaml', 'testsub2.subsystem.yaml'):
+            rel = 'Source/tests/testdata/' + name
+            donor = subprocess.check_output(['git','show',PIN+':'+rel], cwd=ROOT)
+            archived = (cls.root / rel).read_bytes()
+            digest = hashlib.sha256(donor).hexdigest()
+            if archived != donor or hashlib.sha256(archived).hexdigest() != digest:
+                raise AssertionError(f'historical fixture {PIN}:{rel}: archive byte/SHA mismatch')
+            target = cls.root / 'Platform/common/data/testsub' / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if target.exists() and target.read_bytes() != donor:
+                raise AssertionError(f'historical fixture {PIN}:{rel}: canonical target conflicts')
+            target.write_bytes(donor)
+            copied = target.read_bytes()
+            if copied != donor or hashlib.sha256(copied).hexdigest() != digest:
+                raise AssertionError(f'historical fixture {PIN}:{rel}: canonical byte/SHA mismatch')
+            cls.historical_fixture_sha256[name] = digest
         fixture=json.loads((HERE/'testdata/consumer-owners-8af61893a.json').read_text())
         assert fixture['source_commit']=='8af61893a7458054d8c79701f78b3b284e8573a8'
         cls.base={(r['package'],r['table']):set(r['lessons']) for r in fixture['tables']}

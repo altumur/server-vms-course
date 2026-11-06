@@ -164,7 +164,10 @@ def build(root, g, decls=None, lesson=None):
 
 def runtime_files(g, full=False):
     # P/02 remains byte-for-byte on its published runtime. Full grammar is explicitly selected by its caller.
-    schema = (g.HERE / "doorrt2/go/schema.go").read_text().split("// mediaType —", 1)[0]
+    schema = (g.HERE / "doorrt2/go/schema.go").read_text()
+    if schema.count("// mediaType ") != 1:
+        raise g.GenError("schema runtime boundary moved")
+    schema = schema.split("// mediaType ", 1)[0]
     if "func validate(" not in schema or "func DecodeRequest(" in schema:
         raise g.GenError("schema runtime boundary moved")
     schema = schema.replace("package apidoor", "package wirecheck").replace('\n\t"math"', '')

@@ -1,8 +1,8 @@
 """Judge for the vector wire form reader (wire.py), without Go.
 
 Run: /opt/check-env/lesson-spec/bin/python tools/normgen/test_wire.py [-v]   (requires cel_expr_python)
-Read the form from the course root, or WIRE_ROOT (an export with Platform/ and Source/tests/testdata/, or the
-spec103/vectors-wire branch) if it is not yet in main; otherwise skip the tests.
+Read the form from the course root, or WIRE_ROOT (an export with Platform/, including its canonical fixture data)
+if it is not yet in main; otherwise skip the tests.
 
 1. Parse the form and expand lesson 02 without errors; journal is an excluded layout.
 2. Each generated P/02 frame follows the expanded form (input, fixtures, case, variant). Cross-check shared
@@ -120,8 +120,6 @@ class Mutants(unittest.TestCase):
         cls.cel = wire.Cel()
         cls.tmp = Path(tempfile.mkdtemp(prefix="judge-wire-"))
         shutil.copytree(cls.src / "Platform", cls.tmp / "Platform")
-        if (cls.src / "Source/tests/testdata").is_dir():
-            shutil.copytree(cls.src / "Source/tests/testdata", cls.tmp / "Source/tests/testdata")
         cls.text = (cls.tmp / wire.FORM).read_text(encoding="utf-8")
 
     @classmethod

@@ -89,7 +89,7 @@ LOOPBACK = {"package": "common/loopback", "table": "cases.tsv", "surface": "vect
             "src": "loopback/README.md:32-36; runner c_resource_extras.py:30-47"}
 
 ROW_STATE = {"package": "common/row-check", "table": "state.tsv", "surface": "vectors", "fn": "RowCheck", "args": "cells",
-             "inputs": ["name", "unit", "state"], "files": {"testsub2.subsystem.yaml": "@root/Source/tests/testdata/testsub2.subsystem.yaml"},
+             "inputs": ["name", "unit", "state"], "files": {"testsub2.subsystem.yaml": "@root/Platform/common/data/testsub/testsub2.subsystem.yaml"},
              "compare": "value", "expect": value(),
              "src": "row-check/README.md:56-78; runner c_value_vectors.py:132-138,273-274"}
 
@@ -270,8 +270,8 @@ WIRE = {
         object_client("address.tsv"), object_client("read.tsv"),
         {"package": "common/row-check", "table": "cases.tsv", "surface": "vectors", "fn": "RowCheck", "args": "cells",
          "inputs": ["unit", "op", "body", "stored", "rows"],
-         "files": {"testsub.subsystem.yaml": "@root/Source/tests/testdata/testsub.subsystem.yaml",
-                   "testsub2.subsystem.yaml": "@root/Source/tests/testdata/testsub2.subsystem.yaml"},
+         "files": {"testsub.subsystem.yaml": "@root/Platform/common/data/testsub/testsub.subsystem.yaml",
+                   "testsub2.subsystem.yaml": "@root/Platform/common/data/testsub/testsub2.subsystem.yaml"},
          "select": by_col("unit", ("testsub2/tallies",), "only the console (the worker writes testsub2/tallies)"),
          "compare": "row",
          "expect": lambda r, d: (0, dict({"result": r["expect"]},
@@ -463,8 +463,8 @@ WIRE["06-console"] = [
      "src": "resource-state/README.md:16-40; runner c_state_vectors.py:17,29-34"},
     {"package": "common/row-check", "table": "cases.tsv", "surface": "vectors", "fn": "RowCheck", "args": "cells",
      "inputs": ["unit", "op", "body", "stored", "rows"],
-     "files": {"testsub.subsystem.yaml": "@root/Source/tests/testdata/testsub.subsystem.yaml",
-               "testsub2.subsystem.yaml": "@root/Source/tests/testdata/testsub2.subsystem.yaml"},
+     "files": {"testsub.subsystem.yaml": "@root/Platform/common/data/testsub/testsub.subsystem.yaml",
+               "testsub2.subsystem.yaml": "@root/Platform/common/data/testsub/testsub2.subsystem.yaml"},
      "compare": "row",
      "expect": lambda r, d: (0, dict({"result": r["expect"]},
                                      **({"row": json.loads(r["row"])} if r["expect"] == "ok" and r["row"] else {}),
@@ -568,8 +568,8 @@ def stand_subset(pkg, key, fn, doc, src):
 
 ACCEPT = {"package": "common/accept", "table": "cases.tsv", "surface": "vectors", "fn": "Accept", "args": "cells",
           "inputs": ["input"], "compare": "subset", "expect": or_exit2,
-          "files": {"testsub.subsystem.yaml": "@root/Source/tests/testdata/testsub.subsystem.yaml",
-                    "testsub2.subsystem.yaml": "@root/Source/tests/testdata/testsub2.subsystem.yaml"},
+          "files": {"testsub.subsystem.yaml": "@root/Platform/common/data/testsub/testsub.subsystem.yaml",
+                    "testsub2.subsystem.yaml": "@root/Platform/common/data/testsub/testsub2.subsystem.yaml"},
           "doc": "the acceptance of a member request: the object of expect (subset; @absent — no key, @any — any value)",
           "src": "accept/README.md:19-47; runner c_vector_packages.py:170-178, c_domain_packages.py:89-99"}
 
