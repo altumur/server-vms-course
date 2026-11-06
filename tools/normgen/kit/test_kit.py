@@ -1,18 +1,8 @@
-"""Проверка пакета Б P/01 (ADR-0083 доп. (86) п. 2): собранный build_kit.py пакет против оракула check_tables.
+"""Check the P/01 kit against the check_tables oracle (ADR-0083 addendum 86, item 2).
 
-Запуск: /Users/murat/w2c/venv-spec-domain/bin/python tools/normgen/kit/test_kit.py [-v]
-(нужны cel_expr_python оракула и go 1.22 в PATH; сети не нужно).
+Run kit/test_kit.py with cel_expr_python and Go 1.22 on PATH, without network. Build into an empty directory/module, check go build/vet/gofmt and file/manifest agreement. Stream every non-nopair write-checks probe as raw bytes and compare first refusal, body and lone paths with check_tables.decode/CEL. NORMGEN_KIT_MUTANTS adds randomized strict JSON, whitespace and raw/escaped UTF-8; every expected result comes from the oracle. Parse lesson JCS raw vectors identically.
 
-- build_kit.py собирает пакет в пустой каталог; go build, go vet, gofmt — в пустом модуле; манифест сходится с файлами;
-- все входы write-checks.probes.tsv (кроме nopair) сырыми байтами → writecheck даёт тот же первый отказ, тело и lone,
-  что оракул (check_tables.decode и таблица на cel-expr-python);
-- NORMGEN_KIT_MUTANTS мутаций входов (мутатор tools/normgen/test_gen_checks.py), текст — строгим JSON со случайными
-  пробелами и UTF-8 то сырым, то экранированным — тоже как оракул;
-- векторы JSON урока (Platform/01-store/vectors/jcs/canonical_json.tsv, колонка raw) разбираются, как у оракула;
-- отрицательные случаи Н2.1: повтор имени (и вложенный), BOM, NaN, Infinity, не UTF-8, глубина 128 и 129, синтаксис
-  RFC 8259; одиночный суррогат в key, items, guard.key, writes, guards и в лишнем поле; числа на границе int64 и binary64;
-- память: max RSS теста и дочерних процессов — не больше 1 ГБ (входы идут потоком, обвязка Go — один процесс).
-"""
+Negative N2.1 cases include duplicate names, nested duplicates, BOM, NaN, Infinity, invalid UTF-8, depth 128/129 and RFC 8259 syntax; lone surrogates in keys, items, guard.key, writes, guards and extra fields; int64/binary64 boundaries. Peak RSS for the streaming test and child processes must remain within1GB; one Go harness process handles the stream."""
 import base64
 import json
 import math
@@ -34,8 +24,8 @@ sys.path.insert(0, str(NORMGEN))
 sys.path.insert(0, str(ROOT / "skills/lesson-spec/scripts"))
 
 import build_kit  # noqa: E402
-import check_tables  # noqa: E402 — оракул
-import test_gen_checks as tg  # noqa: E402 — входы проб, мутатор, оракул на таблице
+import check_tables  # noqa: E402 -- oracle
+import test_gen_checks as tg  # noqa: E402 -- probe inputs, mutator and table oracle
 
 MODULE = "example.com/w2c/store"
 JCS = ROOT / "Platform/01-store/vectors/jcs/canonical_json.tsv"
@@ -46,7 +36,7 @@ GOENV = dict(os.environ, GOPROXY="off", GOFLAGS="-mod=mod", GOWORK="off", GOTOOL
 
 
 def canon(v):
-    """Значение Python → сравнимый вид: вид числа и знак нуля различаются."""
+    """Normalize Python values while preserving number kind and the sign of zero."""
     if v is None or type(v) is bool or type(v) is str:
         return (type(v).__name__, v)
     if type(v) is int:
@@ -59,7 +49,7 @@ def canon(v):
 
 
 def untag(v):
-    """Значение обвязки с метками → значение Python."""
+    """Decode tagged harness values to Python values."""
     if type(v) is dict:
         if "$int" in v:
             return int(v["$int"])
@@ -76,7 +66,7 @@ def has_surrogate(s):
 
 
 def strict_text(v, rng):
-    """Значение Python → строгий JSON: ±inf — ±1e400, строки то экранированы, то сырым UTF-8, пробелы случайны."""
+    """Serialize strict JSON with randomized whitespace/raw-or-escaped UTF-8; represent positive/negative infinity by +/-1e400."""
     if v is None:
         return "null"
     if v is True:
@@ -99,7 +89,7 @@ def strict_text(v, rng):
 
 
 class KitProc:
-    """Один долгоживущий процесс обвязки kitprobe: вход — строка JSON, ответ читается сразу (ничего не копится)."""
+    """Use one persistent kitprobe harness process: send one JSON line and read its response immediately without accumulation."""
 
     def __init__(self, exe, lims, allows):
         self.head = json.dumps({"lim": lims, "allow": allows})[1:-1]
@@ -161,7 +151,7 @@ class Kit(unittest.TestCase):
         if max(own, kids) * scale >= MAX_RSS:
             raise AssertionError("a process holds more than 1 GiB")
 
-    # ------------------------------------------------------------ помощники
+    # ------------------------------------------------------------ helpers
 
     def oracle_hit(self, sock, text):
         body, lone = check_tables.decode(text)
@@ -180,7 +170,7 @@ class Kit(unittest.TestCase):
         return r, hit
 
     def same_as_oracle(self, sock, text, raw=None):
-        """Сырые байты (по умолчанию UTF-8 текста) → тот же отказ, тело и lone, что у оракула; → ответ обвязки."""
+        """Send raw bytes (UTF-8 text by default), compare refusal/body/lone with the oracle, and return the harness response."""
         raw = text.encode("utf-8") if raw is None else raw
         body, lone, want = self.oracle_hit(sock, text)
         r, hit = self.got(sock, raw)
@@ -212,10 +202,10 @@ class Kit(unittest.TestCase):
             self.assertEqual(r["lone"], lone, where)
         return r
 
-    # ------------------------------------------------------------ сборка
+    # ------------------------------------------------------------ build
 
     def test_build(self):
-        """Пакет собран в пустом модуле (go build, go vet — в setUpClass), gofmt чист, манифест сходится с файлами."""
+        """Build/vet in an empty module during setUpClass; require clean gofmt and matching manifest/files."""
         self.assertEqual(self.gofmt, "", f"gofmt -l: {self.gofmt}")
         m = json.loads((self.dst / "kit.manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(m["module"], MODULE)
@@ -236,7 +226,7 @@ class Kit(unittest.TestCase):
         self.assertIn(f"{MODULE}/internal/writecheck", (self.dst / "KIT.md").read_text(encoding="utf-8"))
 
     def test_limits_match_table(self):
-        """writecheck.Limits — ровно имена #lim таблицы."""
+        """writecheck.Limits must contain exactly the table's #lim names."""
         table = check_tables.Table(tg.TABLE)
         src = (HERE / "go/writecheck/writecheck.go").read_text(encoding="utf-8")
         line = next(x for x in src.splitlines() if x.startswith("var Limits = []string{"))
@@ -249,17 +239,17 @@ class Kit(unittest.TestCase):
                 with self.assertRaises(build_kit.KitError):
                     build_kit.build(d, bad)
 
-    # ------------------------------------------------------------ пробы, мутанты, векторы
+    # ------------------------------------------------------------ probes, mutants, vectors
 
     def test_probes(self):
-        """Все входы probes.tsv, кроме nopair, сырыми байтами: как оракул."""
+        """All non-nopair probes run as raw bytes against the oracle."""
         for name, sock, text in self.probes:
             with self.subTest(name):
                 self.same_as_oracle(sock, text)
         print(f"\nprobes: {len(self.probes)}", file=sys.stderr)
 
     def test_mutants(self):
-        """Мутанты входов probes строгим JSON: как оракул; хоть раз — каждая строка таблицы первым отказом."""
+        """Strict-JSON probe mutants match the oracle and cover every table row as first refusal."""
         rng = random.Random(SEED)
         seen, total = set(), 0
         for name, sock, text in tg.mutants(self.probes, MUTANTS, SEED):
@@ -271,9 +261,9 @@ class Kit(unittest.TestCase):
         self.assertEqual(total, MUTANTS)
 
     def test_jcs_vectors(self):
-        """Векторы JSON урока (jcs, колонка raw): разбираются, тело как у оракула."""
+        """Parse lesson JCS raw vectors and compare bodies with the oracle."""
         count = 0
-        for line in JCS.read_text(encoding="utf-8").split("\n"):        # не splitlines: в ячейке есть U+2028 и т. п.
+        for line in JCS.read_text(encoding="utf-8").split("\n"):        # Do not use splitlines: cells may contain U+2028 and similar characters.
             if not line or line.startswith("#"):
                 continue
             raw = line.split("\t")[0]
@@ -283,7 +273,7 @@ class Kit(unittest.TestCase):
         self.assertGreater(count, 10)
         print(f"\njcs vectors: {count}", file=sys.stderr)
 
-    # ------------------------------------------------------------ Н2.1: отказы разбора
+    # ------------------------------------------------------------ N2.1 parse refusals
 
     PUT = b'{"op":"put","key":"acc/a","items":{}'
 
@@ -294,10 +284,10 @@ class Kit(unittest.TestCase):
         self.refused(self.PUT + b',"a":1,"\\u0061":2}', "duplicate_name")
         self.refused(self.PUT + b',"\\ud800":1,"\\ud800":2}', "duplicate_name")
         self.refused(self.PUT + b',"\xc3\xa9":1,"\\u00e9":2}', "duplicate_name")
-        # Разные имена RFC 8259, совпавшие после U+FFFD, — не повтор (как оракул); "a" и "A" — разные.
+        # Distinct RFC 8259 names that collide after U+FFFD are not duplicates, matching the oracle; a and A differ.
         self.same_as_oracle("writer", '{"op":"put","key":"acc/a","items":{},"\\ud800":1,"\\udbff":2,"\ufffd":3}')
         self.same_as_oracle("writer", '{"op":"put","key":"acc/a","items":{},"a":1,"A":2}')
-        # Одно имя в разных объектах — не повтор.
+        # The same name in different objects is not a duplicate.
         self.same_as_oracle("writer", '{"op":"put","key":"acc/a","items":{"key":"v"},"x":{"key":1}}')
 
     def test_bom_nan_infinity(self):
@@ -308,7 +298,7 @@ class Kit(unittest.TestCase):
         self.refused(self.PUT + b',"x":-Infinity}', "nan_or_infinity")
         self.refused(self.PUT + b',"x":[1,NaN]}', "nan_or_infinity")
         self.refused(b'{"op":"put","key":"acc/a","items":{},"not_after":Infinity}', "nan_or_infinity")
-        # BOM внутри строки — обычный символ U+FEFF.
+        # A BOM inside a string is ordinary U+FEFF data.
         self.same_as_oracle("writer", '{"op":"put","key":"acc/a","items":{"f":"\ufeff"}}')
 
     def test_not_utf8(self):
@@ -319,7 +309,7 @@ class Kit(unittest.TestCase):
                 self.refused(self.PUT + b',"' + bad + b'":1}', "utf8")
                 self.refused(b'{"op":"put","key":"acc/' + bad + b'","items":{}}', "utf8")
         self.refused(self.PUT + b"}\xe2\x82", "utf8")
-        # U+FFFF и U+10FFFF — UTF-8 и JSON (не символы, но RFC 8259 их допускает).
+        # U+FFFF/U+10FFFF are valid UTF-8/JSON noncharacters permitted by RFC 8259.
         self.same_as_oracle("writer", '{"op":"put","key":"acc/a","items":{"f":"\uffff\U0010ffff"}}')
 
     def test_depth(self):
@@ -329,7 +319,7 @@ class Kit(unittest.TestCase):
         def objects(k):
             return b'{"a":' * (k - 1) + b"{}" + b"}" * (k - 1)
 
-        # Корень — 1: лишнее поле с 127 вложенными массивами — глубина 128.
+        # Root depth is1: an extra field with127 nested arrays reaches depth 128.
         self.outcome(self.PUT + b',"x":' + arrays(127) + b"}", 0)
         self.outcome(self.PUT + b',"x":' + objects(127) + b"}", 0)
         self.outcome(self.PUT + b',"x":[' + objects(126) + b"]}", 0)
@@ -340,10 +330,10 @@ class Kit(unittest.TestCase):
         self.refused(arrays(129), "depth")
         self.outcome(objects(128), 2, "badrequest")
         self.refused(objects(129), "depth")
-        # Скаляры глубины не прибавляют; глубина 128 — как оракул.
+        # Scalars do not increase depth; depth 128 matches the oracle.
         text = '{"op":"put","key":"acc/a","items":{},"x":' + "[" * 127 + '"s",1,null' + "]" * 127 + "}"
         self.same_as_oracle("writer", text)
-        # Глубину мерят и в items: 128-й уровень — отказ строки items, 129-й — разбора.
+        # Measure items depth too: level 128 refuses items, level 129 refuses parsing.
         self.outcome(b'{"op":"put","key":"acc/a","items":{"f":' + arrays(126) + b"}}", 6, "badrequest")
         self.refused(b'{"op":"put","key":"acc/a","items":{"f":' + arrays(127) + b"}}", "depth")
 
@@ -359,26 +349,26 @@ class Kit(unittest.TestCase):
         for raw in cases:
             with self.subTest(raw=raw):
                 self.refused(raw)
-        # Пробелы RFC 8259 — пробел, TAB, LF, CR — где угодно между лексемами.
+        # RFC 8259 whitespace (space, TAB, LF, CR) is allowed between tokens.
         self.same_as_oracle("writer", ' \t\r\n{ "op" : "put" ,\n"key"\t:\r"acc/a", "items" : { } } \n')
         self.same_as_oracle("writer", '{"op":"put","key":"acc/a","items":{"f":"\\"\\\\\\/\\b\\f\\n\\r\\t\\u00e9"}}')
         self.same_as_oracle("writer", '{"op":"put","key":"acc/a","items":{"\\u00E9":"\\uABCD"}}')
-        # U+0000 — символ строки (Н2.1: %00 ключа допустим). Оракул здесь не судья: cel-expr-python обрезает строку
-        # на U+0000 (size("a\\u0000b") == 1), поэтому — прямо: вес 1 + 11 байт > ROW_CEILING 8, ключ с NUL проходит Н1.
+        # U+0000 is string data (N2.1 allows %00 in keys). Do not use the CEL oracle for this case: cel-expr-python
+        # truncates at NUL, yielding size(a\u0000b)=1. Assert directly:1+11 bytes exceeds ROW_CEILING8; N1 allows NUL keys.
         r = self.outcome(b'{"op":"put","key":"acc/a","items":{"f":"\\"\\\\\\/\\b\\f\\n\\r\\t\\u00e9\\u0000"}}', 13,
                          "toolarge")
         self.assertEqual(untag(r["refusal"]["fault"]), {"limit": 8, "key": "acc/a", "size": 12})
         self.assertEqual(untag(r["value"])["items"]["f"], "\"\\/\b\f\n\r\té\u0000")
         r = self.outcome(b'{"op":"put","key":"acc/\\u0000","items":{"\\u0000":"\\u0000"}}', 0, lone=[])
         self.assertEqual(untag(r["value"])["key"], "acc/\x00")
-        # Два ключа пакета, различные только после U+0000, — разные (строка 26 не отказывает).
+        # Keys differing only after U+0000 remain distinct; row 26 must not refuse.
         self.outcome(b'{"op":"batch","writes":[{"op":"delete","key":"acc/\\u0000a"},{"op":"delete","key":"acc/\\u0000b"}]}',
                      0)
-        # Корень не объект — не ошибка разбора: отказ строки 1 таблицы.
+        # A non-object root parses successfully and is refused by table row 1.
         for root in (b'"s"', b"1", b"null", b"true", b"[]", b"-0.5e-3"):
             self.outcome(root, 1, "badrequest")
 
-    # ------------------------------------------------------------ Н2.1: одиночный суррогат
+    # ------------------------------------------------------------ N2.1 lone surrogates
 
     def test_lone_surrogate(self):
         cases = [
@@ -398,7 +388,7 @@ class Kit(unittest.TestCase):
              21, ["/writes/1/items/k"]),
             ('{"op":"batch","writes":[{"op":"put","key":"acc/a","items":{}}],"guards":[{"key":"acc/\\udc00","index":""}]}',
              25, ["/guards/0/key"]),
-            # Пара — один символ, не одиночный; обратный порядок и разорванная пара — два одиночных.
+            # A valid pair is one character; reversed or separated pairs contain two lone surrogates.
             ('{"op":"put","key":"acc/\\ud83d\\ude00","items":{}}', 0, []),
             ('{"op":"put","key":"acc/\\uD83D\\uDE00","items":{"\\ud83d\\ude00":"\\ud83d\\ude00"}}', 0, []),
             ('{"op":"put","key":"acc/a","items":{},"x":"\\udbff\\udfff\\ud800\\udc00"}', 0, []),
@@ -414,7 +404,7 @@ class Kit(unittest.TestCase):
         r = self.outcome(b'{"op":"put","key":"acc/a","items":{},"x":"\\ud800\\u0041\\ud800\\ud800\\udc00"}', 0)
         self.assertEqual(untag(r["value"])["x"], "\ufffdA\ufffd\U00010000")
 
-    # ------------------------------------------------------------ числа
+    # ------------------------------------------------------------ numbers
 
     def number(self, literal, field="not_after"):
         raw = b'{"op":"put","key":"acc/a","items":{},"' + field.encode() + b'":' + literal + b"}"
@@ -422,7 +412,7 @@ class Kit(unittest.TestCase):
         return r, r["value"][("$map")][field] if r["value"] else None
 
     def test_numbers(self):
-        cases = [  # литерал, вид, значение, отказ строки not_after (11) или 0
+        cases = [  # Literal, kind, value and not_after row 11 refusal, or0.
             (b"0", "$int", "0", 0), (b"-0", "$int", "0", 0), (b"7", "$int", "7", 0),
             (b"9223372036854775807", "$int", "9223372036854775807", 0),
             (b"9223372036854775808", "$double", "9223372036854775808", 0),
@@ -449,18 +439,18 @@ class Kit(unittest.TestCase):
                 self.assertEqual(r["refusal"]["n"] if r["refusal"] else 0, n)
                 if len(literal) < 1000 and b"1E99" not in literal:
                     text = ('{"op":"put","key":"acc/a","items":{},"not_after":' + literal.decode() + "}")
-                    if not (literal.lstrip(b"-").isdigit() and len(literal) > 300):   # float(10**400) у оракула — OverflowError
+                    if not (literal.lstrip(b"-").isdigit() and len(literal) > 300):   # float(10**400) raises OverflowError in the oracle.
                         self.same_as_oracle("writer", text)
 
     def test_long_extra_fields(self):
-        """Числа и строки лишних полей не читаются при любой длине (Н2.1): принято, без ошибок."""
+        """Numbers/strings in extra fields are ignored at any length (N2.1): accepted without errors."""
         self.outcome(self.PUT + b',"n":' + b"1" * 300000 + b',"m":-' + b"7" * 200000 + b".5e-99999999"
                      + b',"s":"' + "é".encode() * 200000 + b'"}', 0)
         self.outcome(self.PUT + b',"x":[' + b",".join([b"1.5", b'"s"', b"null", b"{}"] * 50000) + b"]}", 0)
 
 
 class Fresh(unittest.TestCase):
-    """Свежесть № 1 и № 2 (ревью Codex С2): сборка сверяет копируемый выход со свежей генерацией, не с шапкой."""
+    """Freshness for generators1/2 (Codex C2): build compares copied output with a fresh generation, not only its header."""
 
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="normgen-fresh-"))
@@ -488,7 +478,7 @@ class Fresh(unittest.TestCase):
             self.assertIsNone(prov["judged"])
 
     def test_out_edited_header_kept(self):
-        """Подмена в out при прежней шапке (проба ревью: отказы отключены)."""
+        """Detect changed output despite an unchanged header, including disabled refusals."""
         copy = self.tmp / "normgen"
         shutil.copytree(NORMGEN / "out", copy / "out")
         f = copy / "out/p01-1/go/checks/checks.go"
@@ -499,7 +489,7 @@ class Fresh(unittest.TestCase):
         self.refuses(())
 
     def test_environment_only(self):
-        """Изменилась только ручная среда (runtime.go checks, doorrt) — форма и генератор прежние."""
+        """Detect a changed handwritten checks runtime or doorrt with unchanged form/generator."""
         import gen_checks
         import gen_door
         env = self.tmp / "env"
@@ -517,7 +507,7 @@ class Fresh(unittest.TestCase):
         self.refuses()
 
     def test_generator_only(self):
-        """Изменилась только логика генератора."""
+        """Detect a generator-logic-only change."""
         import gen_checks
         import gen_door
         old = gen_checks.go_module

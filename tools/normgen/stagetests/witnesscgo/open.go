@@ -1,8 +1,8 @@
-// Адаптер-свидетель судьи тестов этапов (ADR-0125 доп. (4) п. 6; договор ADR-0126 доп. (7) п. 5) над свидетелем c-go
-// P/01 (корень cammeta-c-go на b3c054d8, /home/pilot/witness): Open — его ядро (store.Open, store.ParseRights) в
-// cfg.DataDir; Core — apidoor.Handler[Ctx]: каждый метод пересобирает запрос к store.Door.Handle над ядром, ответ —
-// apidoor.AnswerOf. Кладётся в <копия свидетеля>/01-store/internal/coreadapter/open.go вместо заглушки пакета; не часть
-// пакета, из кода свидетеля в генераторы ничего не берётся. Часы свидетеля — его собственные (cfg.Now не подключён).
+// Stage-judge witness adapter over P/01 c-go (ADR-0125 addendum 4, item 6;ADR-0126 addendum 7, item 5).
+// Source:cammeta-c-go b3c054d8, /home/pilot/witness.Open uses store.Open/ParseRights in cfg.DataDir;Core
+// implements apidoor.Handler[Ctx] by reconstructing requests to store.Door.Handle and mapping responses
+// through AnswerOf.Install into a witness copy's01-store/internal/coreadapter/open.go, not the kit.
+// No witness implementation code enters generators.Witness clocks remain its own;cfg.Now is not wired.
 package coreadapter
 
 import (
@@ -43,12 +43,12 @@ func (w *witness) forward(c Ctx, method, target string, body []byte) (int, []byt
 	return resp.Code, resp.Body
 }
 
-// Ctx — контекст свидетеля: личность вызова и заголовки.
+// Ctx carries witness call identity and headers.
 type Ctx = *Request
 
 func (w *witness) Context(call Call, header map[string]string) Ctx { return &Request{Call: call, Header: header} }
 
-// answer — запрос к двери свидетеля, ответ — в apidoor.AnswerOf (схема OpenAPI операции).
+// answer requests the witness door and converts its response with the operation's AnswerOf schema.
 func (w *witness) answer(op apidoor.Op, c Ctx, method, target string, body []byte) apidoor.Answer {
 	code, raw := w.forward(c, method, target, body)
 	var v any = string(raw)
@@ -102,7 +102,7 @@ func (w *witness) Leave(c Ctx, b []byte) apidoor.Answer {
 }
 func (w *witness) Metrics(c Ctx) apidoor.Answer { return w.answer(apidoor.OpMetrics, c, "GET", "/metrics", nil) }
 
-// QueryRefused — свидетель сырого query уже не видит: 400 badrequest (шаги формы query сверяются отдельно).
+// QueryRefused cannot inspect raw query in the witness;return400badrequest.Query-form steps are checked separately.
 func (w *witness) QueryRefused(c Ctx, op apidoor.Op, e *apidoor.QueryError) apidoor.Answer {
 	a, _ := apidoor.Refuse(op, 400, "badrequest", "query: "+e.Param, nil)
 	return a

@@ -1,10 +1,4 @@
-"""Тесты части core (ADR-0083 доп. (95) п. 3, тот же принцип): gen_core.py — заготовка ядра, редактируемая моделью.
-
-Пакет со всеми частями собирается и проходит go vet; Open части core возвращает Store; Store — coreadapter.Core:
-Get — пустое хранилище (этап launch остаётся закрытым пакетом), Write/List — 503 «not implemented», Rights и главы
-1.3 — 503 «not in this stage»; тесты этапов идут и красные без паники; над каждым методом главы 1.1 — путь Н3 и
-якоря req; правка ядра не перетирается пересборкой; часть core без door или stagetests и устаревший выход — отказ.
-Только Linux (CT 103), Go 1.22."""
+"""Test editable gen_core scaffolds (ADR-0083 addendum 95, item 3). All-part kits must compile/vet; Open returns Store implementing coreadapter.Core. Get keeps the empty-store launch behavior; Write/List return503 not implemented; Rights/chapter 1.3 return503 not in this stage. Stage tests fail without panic. Verify N3/req comments, seed preservation, required door/stagetests and stale-output refusal. Linux CT103, Go 1.22 only."""
 import json
 import re
 import shutil
@@ -71,18 +65,18 @@ def build(dst):
 
 class SectionLabels(unittest.TestCase):
     def test_n_and_legacy_section_labels(self):
-        for stored in ("N3 Procedures", "Н3 Procedures"):
+        for stored in ("N3 Procedures", '\u041d3 Procedures'):
             sec = (stored, 2, [("P/01.1-R001", "the anchored text")])
-            for lookup in ("N3 Procedures", "Н3 Procedures"):
+            for lookup in ("N3 Procedures", '\u041d3 Procedures'):
                 with self.subTest(stored=stored, lookup=lookup):
                     self.assertIs(gen_core.find([sec], lookup), sec)
 
     def test_qualifier_and_ambiguity_keep_existing_rules(self):
         sec = ("N3 Procedures(extra)", 2, [])
-        self.assertIs(gen_core.find([sec], "Н3 Procedures"), sec)
-        for secs, name in [([("N30 Procedures", 2, [])], "Н3 Procedures"),
-                           ([("other Н3 Procedures", 2, [])], "other N3 Procedures"),
-                           ([("Н3 Procedures", 2, []), ("N3 Procedures", 2, [])], "N3 Procedures")]:
+        self.assertIs(gen_core.find([sec], '\u041d3 Procedures'), sec)
+        for secs, name in [([("N30 Procedures", 2, [])], '\u041d3 Procedures'),
+                           ([('other \u041d3 Procedures', 2, [])], "other N3 Procedures"),
+                           ([('\u041d3 Procedures', 2, []), ("N3 Procedures", 2, [])], "N3 Procedures")]:
             with self.subTest(sections=secs, name=name):
                 with self.assertRaises(gen_core.GenError):
                     gen_core.find(secs, name)
@@ -144,8 +138,7 @@ class Core(unittest.TestCase):
             self.assertRegex(self.core, rf"func \(s \*Store\) {name}\([^)]*\) apidoor.Answer {{\n\treturn notInStage\(")
 
     def test_identity_over_context(self):
-        """Над Context — места личности (якоря P/01.2 Н1.1, Н3 «check», P/01.1 Н2.1, «list»), порядок, заголовок, строки
-        refusals.tsv; тело Context — прежнее (не код решения)."""
+        """Context comments bind identity anchors from P/01.2 N1.1/check, P/01.1 parsing/list, ordering, header and refusals; Context's body is unchanged, not a solution."""
         m = re.search(r"((?://.*\n)+)func \(s \*Store\) Context\(call Call, header map\[string\]string\) Ctx \{\n"
                       r"\treturn &Request\{Call: call, Header: header\}\n\}", self.core)
         self.assertTrue(m)
@@ -164,7 +157,7 @@ class Core(unittest.TestCase):
         self.assertIn("**Context — the identity of the call: what to check.**", kit)
 
     def test_anchors_over_stubs(self):
-        """Над заглушками глав 1.2/1.3 — места норм (STUBS) и строки refusals.tsv двери; тело — notInStage."""
+        """Chapter1.2/1.3 stub comments include STUBS norm locations and door refusal rows; bodies remain notInStage."""
         texts = {}
         for name, refs in gen_core.STUBS.items():
             m = re.search(rf"((?://.*\n)+)func \(s \*Store\) {name}\(", self.core)
@@ -211,7 +204,7 @@ class Kit(unittest.TestCase):
             self.assertTrue(core.read_text(encoding="utf-8").endswith("// mine\n"))
 
     def test_one_operation_per_file(self):
-        """Правка одной операции файлом целиком не задевает другие; файлы — по методу, без DO NOT EDIT."""
+        """Replacing one operation's whole file leaves other methods intact; one editable file per method, without DO NOT EDIT."""
         with tempfile.TemporaryDirectory() as t:
             store = build(t)
             pkg = store / "internal/coreadapter"
@@ -231,8 +224,7 @@ class Kit(unittest.TestCase):
             self.assertEqual(done.returncode, 0, done.stderr)
 
     def test_seed(self):
-        """--seed: код модели посева (правленый editable, перенесённый метод) в пакет не идёт; нетронутая заглушка
-        прежнего пакета обновляется; посев с пакетом поверх (как копирует цикл) собирается."""
+        """--seed excludes edited/moved implementation code from kit replacement, refreshes untouched prior scaffolds and keeps the overlaid seeded package buildable."""
         with tempfile.TemporaryDirectory() as t:
             seed = build(Path(t) / "seed").parent
             pkg = seed / "01-store/internal/coreadapter"
@@ -262,7 +254,7 @@ class Kit(unittest.TestCase):
             self.assertEqual(done.returncode, 0, done.stderr)
 
     def test_legacy_core_file(self):
-        """Пакет до разнесения: все методы в core.go — заглушки по файлам не кладутся (двойного объявления нет)."""
+        """For older combined cores with every method in core.go, do not install duplicate per-method stubs."""
         with tempfile.TemporaryDirectory() as t:
             store = build(t)
             pkg = store / "internal/coreadapter"

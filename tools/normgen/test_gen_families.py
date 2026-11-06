@@ -1,5 +1,4 @@
-"""Тесты генератора № 5 (gen_families.py) и его судьи (family_judge.py): свежесть выхода, векторы семей, мутанты
-среды (судья их ловит), закрытый набор слов схемы, типизированная строка и ключ."""
+"""Test gen_families/family_judge freshness, vectors, detected runtime mutants, closed schema vocabulary, typed rows and keys."""
 import json
 import shutil
 import subprocess
@@ -32,21 +31,21 @@ class PlaceholderLabels(unittest.TestCase):
                                "".join(f"| `{label}` | `{expr}` | `1` | norm |\n" for label, expr in rows))
 
     def test_old_export_without_dictionary(self):
-        self.grammar([("<форма>", "^(?:[1-9][0-9]*)$")])
+        self.grammar([('<\u0444\u043e\u0440\u043c\u0430>', "^(?:[1-9][0-9]*)$")])
         grammar = gen_families.placeholders()
-        self.assertEqual(gen_families.template("canonical/<форма>", grammar)[1],
-                         ("", "<форма>", "^(?:[1-9][0-9]*)$"))
+        self.assertEqual(gen_families.template('canonical/<\u0444\u043e\u0440\u043c\u0430>', grammar)[1],
+                         ("", '<\u0444\u043e\u0440\u043c\u0430>', "^(?:[1-9][0-9]*)$"))
         with self.assertRaisesRegex(GenError, "no grammar"):
             gen_families.template("canonical/<form>", grammar)
 
     def test_dictionary_lookup_preserves_catalogue_key_and_grammar(self):
-        self.labels.write_text("ru\ten\nформа\tform\n")
-        for label in ("<форма>", "<form>"):
+        self.labels.write_text('ru\ten\n\u0444\u043e\u0440\u043c\u0430\tform\n')
+        for label in ('<\u0444\u043e\u0440\u043c\u0430>', "<form>"):
             with self.subTest(readme_label=label):
                 self.grammar([(label, "^(?:[1-9][0-9]*)$")])
                 grammar = gen_families.placeholders()
-                segs = gen_families.template("canonical/<форма>", grammar)
-                self.assertEqual(segs, [("canonical/", "", ""), ("", "<форма>", "^(?:[1-9][0-9]*)$")])
+                segs = gen_families.template('canonical/<\u0444\u043e\u0440\u043c\u0430>', grammar)
+                self.assertEqual(segs, [("canonical/", "", ""), ("", '<\u0444\u043e\u0440\u043c\u0430>', "^(?:[1-9][0-9]*)$")])
                 self.assertIsNotNone(gen_families.re.fullmatch(segs[1][2], "12"))
                 self.assertIsNone(gen_families.re.fullmatch(segs[1][2], "0"))
                 self.assertIsNone(gen_families.re.fullmatch(segs[1][2], "1/2"))
@@ -55,21 +54,21 @@ class PlaceholderLabels(unittest.TestCase):
 
     def test_dictionary_is_typed_and_unambiguous(self):
         self.grammar([("<form>", "^(?:[1-9][0-9]*)$")])
-        for text in ("en\tru\nform\tформа\n", "ru\ten\nформа\t\n",
-                     "ru\ten\nформа\tform\nформа\tother\n"):
+        for text in ('en\tru\nform\t\u0444\u043e\u0440\u043c\u0430\n', 'ru\ten\n\u0444\u043e\u0440\u043c\u0430\t\n',
+                     'ru\ten\n\u0444\u043e\u0440\u043c\u0430\tform\n\u0444\u043e\u0440\u043c\u0430\tother\n'):
             with self.subTest(dictionary=text):
                 self.labels.write_text(text)
                 with self.assertRaises(GenError):
                     gen_families.placeholders()
 
     def test_explicit_typed_grammars_take_priority_over_prose_labels(self):
-        self.grammar([("<форма>", "^(?:old)$"), ("<form>", "^(?:new)$")])
-        self.labels.write_text("ru\ten\nформа\tform\n")
-        self.assertEqual(gen_families.placeholders(), {"<форма>": "^(?:old)$", "<form>": "^(?:new)$"})
+        self.grammar([('<\u0444\u043e\u0440\u043c\u0430>', "^(?:old)$"), ("<form>", "^(?:new)$")])
+        self.labels.write_text('ru\ten\n\u0444\u043e\u0440\u043c\u0430\tform\n')
+        self.assertEqual(gen_families.placeholders(), {'<\u0444\u043e\u0440\u043c\u0430>': "^(?:old)$", "<form>": "^(?:new)$"})
 
     def test_ambiguous_missing_label_is_refused(self):
-        self.grammar([("<один>", "^(?:old)$"), ("<два>", "^(?:new)$")])
-        self.labels.write_text("ru\ten\nодин\tmissing\nдва\tmissing\n")
+        self.grammar([('<\u043e\u0434\u0438\u043d>', "^(?:old)$"), ('<\u0434\u0432\u0430>', "^(?:new)$")])
+        self.labels.write_text('ru\ten\n\u043e\u0434\u0438\u043d\tmissing\n\u0434\u0432\u0430\tmissing\n')
         with self.assertRaisesRegex(GenError, "conflicting grammars for alias <missing>"):
             gen_families.placeholders()
 
@@ -88,26 +87,26 @@ class PlaceholderLabels(unittest.TestCase):
 
     def test_identical_duplicate_rows_and_aliases_are_allowed(self):
         expr = "^(?:[a-z]+)$"
-        self.grammar([("<server>", expr), ("<server>", expr), ("<сервер>", expr)])
-        self.labels.write_text("ru\ten\nсервер\tserver\n")
+        self.grammar([("<server>", expr), ("<server>", expr), ('<\u0441\u0435\u0440\u0432\u0435\u0440>', expr)])
+        self.labels.write_text('ru\ten\n\u0441\u0435\u0440\u0432\u0435\u0440\tserver\n')
         grammar = gen_families.placeholders()
-        self.assertEqual(grammar, {"<server>": expr, "<сервер>": expr})
-        self.assertEqual(gen_families.template("<сервер>/<server>", grammar),
-                         [("", "<сервер>", expr), ("/", "", ""), ("", "<server>", expr)])
+        self.assertEqual(grammar, {"<server>": expr, '<\u0441\u0435\u0440\u0432\u0435\u0440>': expr})
+        self.assertEqual(gen_families.template('<\u0441\u0435\u0440\u0432\u0435\u0440>/<server>', grammar),
+                         [("", '<\u0441\u0435\u0440\u0432\u0435\u0440>', expr), ("/", "", ""), ("", "<server>", expr)])
 
     def test_legacy_distinct_types_are_not_merged_without_dictionary(self):
         host = r"^(?:[a-z]+(?:\.[a-z]+)*)$"
         server_name = r"^(?:[a-z]+(?:-[a-z]+)*)$"
-        self.grammar([("<сервер>", host), ("<server>", server_name)])
+        self.grammar([('<\u0441\u0435\u0440\u0432\u0435\u0440>', host), ("<server>", server_name)])
         grammar = gen_families.placeholders()
-        self.assertEqual(grammar, {"<сервер>": host, "<server>": server_name})
-        self.assertIsNotNone(gen_families.re.fullmatch(grammar["<сервер>"], "srv.example"))
+        self.assertEqual(grammar, {'<\u0441\u0435\u0440\u0432\u0435\u0440>': host, "<server>": server_name})
+        self.assertIsNotNone(gen_families.re.fullmatch(grammar['<\u0441\u0435\u0440\u0432\u0435\u0440>'], "srv.example"))
         self.assertIsNone(gen_families.re.fullmatch(grammar["<server>"], "srv.example"))
         self.assertIsNotNone(gen_families.re.fullmatch(grammar["<server>"], "srv-a"))
 
 
 def module_copy(t):
-    """Модуль выхода с пакетом families (без прочих пакетов: они не нужны обвесу)."""
+    """Create an output module containing families only; other packages are not needed by the harness."""
     dst = Path(t) / "mod"
     (dst / "families").mkdir(parents=True)
     (dst / "go.mod").write_text("module normgen/p01-1\n\ngo 1.22\n", encoding="utf-8")
@@ -147,7 +146,7 @@ class CanonicalInputs(unittest.TestCase):
     def test_canonical_unit_vocabulary_is_closed(self):
         self.keys.write_text("placeholder\tpattern\texample\tnorm\n<key>\t.+\tx\tnorm\n")
         for values in [("row", "field", "element"), ("row", "field", "item"),
-                       ("строка", "поле", "элемент"), ("row", "field", "field")]:
+                       ('\u0441\u0442\u0440\u043e\u043a\u0430', '\u043f\u043e\u043b\u0435', '\u044d\u043b\u0435\u043c\u0435\u043d\u0442'), ("row", "field", "field")]:
             with self.subTest(values=values):
                 self.units.write_text("unit\tmeaning\n" + "".join(x + "\tmeaning\n" for x in values))
                 if values == ("row", "field", "element"):
@@ -159,7 +158,7 @@ class CanonicalInputs(unittest.TestCase):
         with self.assertRaisesRegex(GenError, "missing canonical"):
             gen_families.unit_words()
         self.keys.unlink()
-        self.assertEqual(gen_families.unit_words(), {"row": "строка", "field": "поле", "element": "элемент"})
+        self.assertEqual(gen_families.unit_words(), {"row": '\u0441\u0442\u0440\u043e\u043a\u0430', "field": '\u043f\u043e\u043b\u0435', "element": '\u044d\u043b\u0435\u043c\u0435\u043d\u0442'})
 
 
 class Fresh(unittest.TestCase):
@@ -172,7 +171,7 @@ class Fresh(unittest.TestCase):
         self.assertEqual(files, {"families.go": "generated", "runtime.go": "handwritten"})
 
     def test_no_prose_of_outcomes(self):
-        """Исход словами (колонка outcome) в пакет не идёт: только путь, читатель, приоритет, единица."""
+        """Exclude outcome prose from generated code; retain only path, reader, priority and unit."""
         text = (OUT / "families/families.go").read_text(encoding="utf-8")
         self.assertNotIn("fenced", text)
         self.assertNotIn("does not count as a visible door", text)
@@ -192,7 +191,7 @@ class Fresh(unittest.TestCase):
 
 class Vectors(unittest.TestCase):
     def test_v7_instances(self):
-        """Свои экземпляры судьи, ожидание — стек В7 курса (не генератор)."""
+        """Independent judge cases use the course V7 stack as oracle, not the generator."""
         res = family_judge.judge(OUT, "01", runs=1, v7=True)
         self.assertEqual(res["failures"], [])
         self.assertGreater(res["cases"], 400)
@@ -204,9 +203,9 @@ class Vectors(unittest.TestCase):
         self.assertGreaterEqual(res["cases"], 100)
 
     def test_mutants_are_killed(self):
-        """Каждый мутант среды (слово кодека, слой 3, JSON Schema, ключ, исходы) роняет хотя бы одну строку векторов."""
-        # Эквивалентны на формах P/01 (не убиваются никаким экземпляром): предел писателя 2^53 − 1 перекрыт maximum
-        # у common.uint53; единица «поле» у /generation_at перекрыта приоритетом (1 < 2 строки пустого пути).
+        """Every runtime mutant affecting codec, layer3, JSON Schema, key or outcomes must fail at least one vector."""
+        # Equivalent on P/01 forms: common.uint53 maximum already enforces the writer's2^53-1 limit;
+        # field unit at /generation_at is shadowed by the empty-path row's higher priority (1<2).
         mutants = {
             "reader time as the writer": ("`^(0|[1-9][0-9]*)(\\.[0-9]+)?$`", "`^(0|[1-9][0-9]*)(\\.[0-9]{1,3})?$`"),
             "minimum ignored": ('p.Min != "" && cmp(v, p.Min) < 0', "false"),
@@ -270,7 +269,7 @@ class Closed(unittest.TestCase):
 
     def test_unknown_placeholder(self):
         with self.assertRaisesRegex(GenError, "no grammar"):
-            gen_families.template("platform/x/<нет>", gen_families.placeholders())
+            gen_families.template('platform/x/<\u043d\u0435\u0442>', gen_families.placeholders())
 
     def test_object_kind(self):
         with self.assertRaisesRegex(GenError, "only row"):

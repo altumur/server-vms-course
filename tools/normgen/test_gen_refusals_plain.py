@@ -1,6 +1,4 @@
-"""Тесты каталога отказов урока без двери (P/02: refusals.tsv на 15 колонок; ADR-0125 доп. (5)): out свежий, судья
-refusal_judge PASS на выходе и FAIL на мутантах пакета (код выхода, word, «exit !0», фрагмент лога); P/01 — прежний
-каталог с HTTP (его тесты — test_gen_refusals.py)."""
+"""Test P/02's15-column refusal catalog: freshness, judge PASS and code/word/exit!0/log-fragment mutants FAIL. P/01 retains its HTTP catalog tests."""
 import os
 import shutil
 import subprocess
@@ -44,7 +42,7 @@ class Plain(unittest.TestCase):
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
 
     def test_no_prose(self):
-        """Четыре колонки прозы (cause, outcome, diagnostic, caller) в код не идут."""
+        """Never emit the four prose columns cause, outcome, diagnostic, caller into code."""
         text = (self.mod / "refusals/refusals.go").read_text(encoding="utf-8")
         for word in ("Cause", "Outcome", "Diagnostic", "Caller"):
             self.assertNotIn(word + " ", text)

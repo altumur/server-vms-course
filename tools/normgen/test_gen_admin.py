@@ -1,6 +1,4 @@
-"""Тесты части `admin` (Архитектор 2026-11-05): out свежий, по YOURS-файлу на подкоманду формы с якорями норм, закрытый
-admin.go, launch: App.Admin nil → admin.Run, own.go до разбора флагов; судья admin_judge — PASS на пакете как есть и
-FAIL на мутантах (прежний «not implemented», код 2 вместо 1, own.go не подключён); --seed бережёт код модели."""
+"""Test admin freshness, one YOURS file per declared command with norm anchors, closed dispatcher, default launch dispatch and Own before flag parsing. Require the shipped kit to pass admin_judge and mutants to fail (old not implemented, exit 2 instead of1, unwired Own). --seed must preserve model code."""
 import contextlib
 import io
 import json
@@ -43,7 +41,7 @@ class DirectiveLabels(unittest.TestCase):
                 return gen_admin.render()[0]
 
     def test_old_and_new_labels_keep_dispatch_and_stub(self):
-        old, new = self.render_with("ключ"), self.render_with("key")
+        old, new = self.render_with('\u043a\u043b\u044e\u0447'), self.render_with("key")
         self.assertEqual(old, new)
         self.assertIn('"spoil-row": SpoilRow,', new["admin/own.go"])
         self.assertIn('return NotInStage("spoil-row", env)', new["admin/own.go"])
@@ -126,14 +124,14 @@ class Admin(unittest.TestCase):
         self.assertIn("copy: the backup copy", text["backup"])
         self.assertIn("floor: (platform/epoch_floor {floor, generation_at}); generation:", text["restore"])
         self.assertIn("req: P/01.3-R020 — ", text["recover"])
-        self.assertIn("| Isolation |", text["recover"])                # R026 — таблица фаз целиком, не первая строка
+        self.assertIn("| Isolation |", text["recover"])                # R026 is the full phase table, not just its first row.
         self.assertIn("«recover the store (no majority)»", text["recover"])
         self.assertIn("recover — a refusal, code 2", text["recover"])
         self.assertIn("req: P/01.3-R018 — The CLI `backup`", text["backup"])
         self.assertIn("GET `/v1/status`: `{id, state", text["status"])
         self.assertIn("req: P/01.2-R014 — `GET /v1/rights` returns", text["rights"])
         self.assertIn("leave — 409 refused («the last voter»)", text["leave"])
-        self.assertNotIn("join of its own id", text["recover"])          # box: только оговорки о своей подкоманде
+        self.assertNotIn("join of its own id", text["recover"])          # box includes only clauses about the current subcommand.
         own = (self.pkg / "own.go").read_text(encoding="utf-8")
         self.assertIn('"spoil-row": SpoilRow,', own)
         self.assertIn("the command `spoil-row` of «Stand»", own)

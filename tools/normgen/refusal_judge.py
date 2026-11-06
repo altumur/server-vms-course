@@ -1,18 +1,9 @@
-"""Судья части `refusals` (ADR-0125 № 4, доп. (1) п. 1): каталог отказов против приёмки и против двери.
+"""Judge refusal catalogs against the form, acceptance and door (ADR-0125 generator 4, addendum 1, item 1).
 
-Запуск (на CT 103): python tools/normgen/refusal_judge.py [--module-dir <каталог go.mod с refusals и door>] [--json итог]
+  python tools/normgen/refusal_judge.py [--module-dir <module-with-refusals-and-door>] [--json <result>]
+Default module: out/p01-1/go; stdlib and Go 1.22 suffice. Reread refusals.tsv independently and compare every harness-reported Spec's code, kind, fields, headers and log. Each acceptance chapters1..3 4xx/5xx JSON expectation must match a catalog code/kind: chapter 1.1 requires all mandatory fields plus optional fields, while1.2/1.3 use subsets. Every HTTP Spec must encode through apidoor.Refuse/Encode for at least one OpenAPI operation, with required/all fields and Retry-After where declared.
 
-Три вида проб (только stdlib и go 1.22; модуль по умолчанию — tools/normgen/out/p01-1/go):
-- каталог: собранный пакет refusals (обвес tools/normgen/refusals/harness печатает refusals.All) против таблицы
-  `forms/refusals.tsv`, прочитанной здесь заново: код, вид, поля, заголовки, лог;
-- приёмка (независимый вход): каждое ожидание отказа `<4xx|5xx> {json}` сценариев `acceptance/1..3` находит строку
-  каталога с тем же кодом и kind; поля ожидания — по правилу главы: 1.1 сравнивает тело целиком (поля = обязательные
-  строки плюс часть необязательных), 1.2 и 1.3 — подмножеством (поля ⊆ поля строки);
-- дверь: тело каждой строки http (обязательные поля; все поля) кодирует apidoor.Refuse + apidoor.Encode хотя бы у одной
-  операции OpenAPI, строка с Retry-After — с заголовком (две генерации — № 2 и № 4 — согласны).
-Отказы по шагам приёмки на заглушке двери — прогон раннера P/01.1 (судья части door), не здесь.
-Итог: `refusals: P/N PASS|FAIL`; код 0 — все прошли, 1 — нет, 2 — ошибка запуска судьи.
-"""
+Runner refusal steps on the door stub are the door judge's task. Result: refusals:P/N PASS|FAIL; exit 0=all pass, 1=failure, 2=judge startup error."""
 import argparse
 import json
 import re
@@ -25,11 +16,11 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum(5), item 2)
 L = lesson.CURRENT
 TABLE = L.form("refusals.tsv")
 ACCEPTANCE = L.path("acceptance")
-WHOLE = {"1"}                 # главы, где тело сравнивается целиком (README приёмки 1.1); прочие — подмножеством
+WHOLE = {"1"}                 # Chapters comparing full bodies (acceptance1.1 README); others use subsets.
 
 
 def read_table():
@@ -59,7 +50,7 @@ def harness(module_dir, work):
 
 
 def expectations():
-    """→ [(глава, сценарий, шаг, код, kind, поля)] — ожидания отказов приёмки."""
+    """Return acceptance refusal expectations as [(chapter, scenario, step, status, kind, fields)]."""
     out = []
     for ch in sorted(p.name for p in ACCEPTANCE.iterdir() if p.is_dir()):
         for line in (ACCEPTANCE / ch / "scenarios.tsv").read_text(encoding="utf-8").splitlines():
@@ -91,8 +82,7 @@ RUN_EXIT = re.compile(r"^exit (0|[1-9][0-9]*)(;|$)")
 
 
 def plain(a):
-    """Каталог урока без двери (P/02): закрытые колонки таблицы, прочитанной здесь заново, против пакета; каждое
-    ожидание `exit N` шага RUN швов приёмки (N ≠ 0) находит строку с этим кодом или «exit !0» (независимый вход)."""
+    """For non-HTTP P/02, compare independently reread closed catalog columns with the package; each nonzero RUN exit expectation must match that code or exit !0."""
     lines = [x for x in TABLE.read_text(encoding="utf-8").splitlines() if x and not x.startswith("#")]
     cols = lines[0].split("\t")
     rows = [dict(zip(cols, x.split("\t"))) for x in lines[1:]]
@@ -130,7 +120,7 @@ def plain(a):
         names = [x for x in logs if not x.startswith("«")]
         words = [x[1:-1] for x in logs if x.startswith("«")]
         want_word, want_any = ("" if r["word"] == "-" else r["word"]), []
-        if L.key != "02-installer":                     # P/03+: word — ячейка источника; токены `…` — проекция
+        if L.key != "02-installer":                     # P/03+: word retains the source cell; quoted tokens are a projection.
             toks = re.findall(r"`([^`]+)`", r["word"])
             plain_cell = re.sub(r"`[^`]+`|,|\s", "", r["word"]) == ""
             want_word, want_any = "", []
@@ -181,7 +171,7 @@ def main(argv=None):
         print("refusal_judge: go is not in PATH", file=sys.stderr)
         return 2
     head = next(x for x in TABLE.read_text(encoding="utf-8").splitlines() if x and not x.startswith("#"))
-    if "word" in head.split("\t"):                         # каталог урока без двери (P/02)
+    if "word" in head.split("\t"):                         # Non-HTTP lesson catalog (P/02).
         return plain(a)
     rows = read_table()
     with tempfile.TemporaryDirectory(prefix="refusal-judge-") as work:

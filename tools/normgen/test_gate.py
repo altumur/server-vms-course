@@ -1,4 +1,4 @@
-"""Общий разбор gate (tools/normgen/gate.py; ревью Codex С4) и его согласие с check_forms (skills/lesson-spec)."""
+"""Check shared gate.py parsing against check_forms (Codex C4)."""
 import sys
 import unittest
 from pathlib import Path
@@ -29,7 +29,7 @@ class Gate(unittest.TestCase):
                 gate.parse(bad)
 
     def test_form(self):
-        """Каждая ячейка gate формы P/01 разбирается; каждый её элемент принимает и check_forms."""
+        """Parse every P/01 gate cell and require check_forms to accept each element."""
         lines = [x.split("\t") for x in STAGES.read_text(encoding="utf-8").splitlines() if x and not x.startswith("#")]
         head = lines[0]
         for cells in lines[1:]:
@@ -38,7 +38,7 @@ class Gate(unittest.TestCase):
                 self.assertTrue(check_forms.GATE.fullmatch(c.text), c.text)
 
     def test_agrees_with_check_forms(self):
-        """Что отвергает check_forms поэлементно (пробел, пустой элемент, чужой вид), отвергает и gate.py."""
+        """Reject each invalid element that check_forms rejects: whitespace, empty elements and unknown kinds."""
         for item in ("", " build", "build ", "vectors:jcs x", "frob:1", "tests:1.1", "accept:1.1:a:seams"):
             self.assertIsNone(check_forms.GATE.fullmatch(item), item)
             with self.assertRaises(gate.GateError):
