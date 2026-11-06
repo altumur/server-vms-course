@@ -58,3 +58,4 @@ date	sample	fix	languages
 2026-11-01	40-deleted-about, шаг 10	расширение ожидания: revision в элементе ?deleted=1 (C06-DELETED-REVISION-01); реализацией ещё не прогнано	all
 2026-11-05	forms P/06; acceptance/1/seams.tsv; req anchors	ADR-0125доп5: форма входов/отказов/констант,11этапов,36CALLшвовв9главах. Исходные203Н4строки+14gate сохранены278проекциями,3ячейки6.7/4прочих; единственнаяAPIправка — точноеименованиесуществующейRevisionMovedschema. Всеобычныесценарии/семьи/векторыпрежние,kitwholeнеобъявлен,SUT0	all
 2026-11-06	ADR-0127 C1/M1: saved POST intent across takeover and first successful feed observation	Accepted source correction and explicit ordinary-code/HTTP probes; no runtime execution claimed	all
+2026-11-06	ADR-0127 P06 C3 numeric loader supplement	Separate9 real YAML inputs through existing P02.1 load entry; rows160-162 with4refused5ok; old947/220/21numeric preserved, source judge supplemental binding pending Architect, no native/SUT claim	all
