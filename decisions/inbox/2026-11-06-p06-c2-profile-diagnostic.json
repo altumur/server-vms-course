@@ -1,0 +1,13 @@
+{
+  "basis": "1a7f40f95ce2abaad3a715016967769bbd65dc45",
+  "path": "Platform/02-installer/forms/refusals.tsv",
+  "physical_line": 33,
+  "row": "2.3/14/put_profile_form",
+  "only_cell": "log",
+  "before": "profile,packet,bound,limit",
+  "after": "profile",
+  "before_sha256": "5b530a31733105ae15855a34bd754e2c497d64f10f4bbd6863588b31b8d835a6",
+  "after_sha256": "cbe0067a186a855328b991d50e1ae9be383a522e00893ae4d38cd2d435542ba2",
+  "reason": "Existing diagnostic prose requires packet/bound/B only for an oversized packet. A malformed profile may have no packet/bound, so the closed unconditional log cell names only profile. Conditional diagnostic prose, refusal/code/caller/form and all other cells unchanged.",
+  "limits": "Source clarification; no profile schema/cases/H/expect/checker/runtime changes."
+}

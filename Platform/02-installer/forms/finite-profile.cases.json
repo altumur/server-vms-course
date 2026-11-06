@@ -48,7 +48,10 @@
         "timestamp_dummy_bytes": 1,
         "timestamp_upper_bytes": 313,
         "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
-        "H": 6966
+        "H": 6966,
+        "metadata_skeleton_file": "finite-profile-skeletons/claim-acquire.json",
+        "metadata_skeleton_sha256": "5495d1bd07ffec9e8991ec6991b6222178bd695aefea6a0de22d4ac44f3336c2",
+        "metadata_skeleton_proof": "owned-context:metadata-proofs"
       },
       {
         "packet": "claim-intent-save",
@@ -70,7 +73,10 @@
         "timestamp_dummy_bytes": 1,
         "timestamp_upper_bytes": 313,
         "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
-        "H": 6966
+        "H": 6966,
+        "metadata_skeleton_file": "finite-profile-skeletons/claim-intent-save.json",
+        "metadata_skeleton_sha256": "5495d1bd07ffec9e8991ec6991b6222178bd695aefea6a0de22d4ac44f3336c2",
+        "metadata_skeleton_proof": "owned-context:metadata-proofs"
       },
       {
         "packet": "unit-delete-target",
@@ -92,7 +98,10 @@
         "timestamp_dummy_bytes": 1,
         "timestamp_upper_bytes": 313,
         "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
-        "H": 93743
+        "H": 93743,
+        "metadata_skeleton_file": "finite-profile-skeletons/unit-delete-target.json",
+        "metadata_skeleton_sha256": "044748e0747d269f491a20c1ed2e63d31483565fcdf0a0db95544dc9c39a0b87",
+        "metadata_skeleton_proof": "owned-context:metadata-proofs"
       },
       {
         "packet": "unit-delete-done",
@@ -114,7 +123,10 @@
         "timestamp_dummy_bytes": 1,
         "timestamp_upper_bytes": 313,
         "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
-        "H": 6966
+        "H": 6966,
+        "metadata_skeleton_file": "finite-profile-skeletons/unit-delete-done.json",
+        "metadata_skeleton_sha256": "5495d1bd07ffec9e8991ec6991b6222178bd695aefea6a0de22d4ac44f3336c2",
+        "metadata_skeleton_proof": "owned-context:metadata-proofs"
       },
       {
         "packet": "batch-unit-deletes-target",
@@ -136,7 +148,10 @@
         "timestamp_dummy_bytes": 1,
         "timestamp_upper_bytes": 313,
         "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
-        "H": 5957795
+        "H": 5957795,
+        "metadata_skeleton_file": "finite-profile-skeletons/batch-unit-deletes-target.json",
+        "metadata_skeleton_sha256": "b9efd8f4b30a86bfad9d86fe7ddbbd855c2bda9d6ff60fcf9548e314663927e1",
+        "metadata_skeleton_proof": "owned-context:metadata-proofs"
       },
       {
         "packet": "batch-unit-deletes-done",
@@ -158,7 +173,10 @@
         "timestamp_dummy_bytes": 1,
         "timestamp_upper_bytes": 313,
         "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
-        "H": 6966
+        "H": 6966,
+        "metadata_skeleton_file": "finite-profile-skeletons/batch-unit-deletes-done.json",
+        "metadata_skeleton_sha256": "5495d1bd07ffec9e8991ec6991b6222178bd695aefea6a0de22d4ac44f3336c2",
+        "metadata_skeleton_proof": "owned-context:metadata-proofs"
       },
       {
         "packet": "claim-takeover",
@@ -180,7 +198,10 @@
         "timestamp_dummy_bytes": 1,
         "timestamp_upper_bytes": 313,
         "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
-        "H": 6966
+        "H": 6966,
+        "metadata_skeleton_file": "finite-profile-skeletons/claim-takeover.json",
+        "metadata_skeleton_sha256": "5495d1bd07ffec9e8991ec6991b6222178bd695aefea6a0de22d4ac44f3336c2",
+        "metadata_skeleton_proof": "owned-context:metadata-proofs"
       },
       {
         "packet": "claim-cleanup",
@@ -202,7 +223,92 @@
         "timestamp_dummy_bytes": 1,
         "timestamp_upper_bytes": 313,
         "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
-        "H": 6960
+        "H": 6960,
+        "metadata_skeleton_file": "finite-profile-skeletons/claim-cleanup.json",
+        "metadata_skeleton_sha256": "8f798993d36cddad02365846e165d3001d851e0c2675828139f87df1d2df5d1a",
+        "metadata_skeleton_proof": "owned-context:metadata-proofs"
+      }
+    ],
+    "metadata": {
+      "key_utf8_bytes": 1024,
+      "version_digits": 20,
+      "id_hex_digits": 64,
+      "timestamp_json_bytes": 313,
+      "encoder": "compact-json-utf8",
+      "trailing_lf": 1
+    },
+    "metadata-proofs": [
+      {
+        "packet": "claim-acquire",
+        "file": "finite-profile-skeletons/claim-acquire.json",
+        "sha256": "5495d1bd07ffec9e8991ec6991b6222178bd695aefea6a0de22d4ac44f3336c2",
+        "bytes": 6344,
+        "encoding": "UTF-8",
+        "skeleton_trailing_lf": 0,
+        "note": "Independent conservative metadata skeleton only, not a target request or a production packet-set proof."
+      },
+      {
+        "packet": "claim-intent-save",
+        "file": "finite-profile-skeletons/claim-intent-save.json",
+        "sha256": "5495d1bd07ffec9e8991ec6991b6222178bd695aefea6a0de22d4ac44f3336c2",
+        "bytes": 6344,
+        "encoding": "UTF-8",
+        "skeleton_trailing_lf": 0,
+        "note": "Independent conservative metadata skeleton only, not a target request or a production packet-set proof."
+      },
+      {
+        "packet": "unit-delete-target",
+        "file": "finite-profile-skeletons/unit-delete-target.json",
+        "sha256": "044748e0747d269f491a20c1ed2e63d31483565fcdf0a0db95544dc9c39a0b87",
+        "bytes": 93139,
+        "encoding": "UTF-8",
+        "skeleton_trailing_lf": 0,
+        "note": "Independent conservative metadata skeleton only, not a target request or a production packet-set proof."
+      },
+      {
+        "packet": "unit-delete-done",
+        "file": "finite-profile-skeletons/unit-delete-done.json",
+        "sha256": "5495d1bd07ffec9e8991ec6991b6222178bd695aefea6a0de22d4ac44f3336c2",
+        "bytes": 6344,
+        "encoding": "UTF-8",
+        "skeleton_trailing_lf": 0,
+        "note": "Independent conservative metadata skeleton only, not a target request or a production packet-set proof."
+      },
+      {
+        "packet": "batch-unit-deletes-target",
+        "file": "finite-profile-skeletons/batch-unit-deletes-target.json",
+        "sha256": "b9efd8f4b30a86bfad9d86fe7ddbbd855c2bda9d6ff60fcf9548e314663927e1",
+        "bytes": 5958451,
+        "encoding": "UTF-8",
+        "skeleton_trailing_lf": 0,
+        "note": "Independent conservative metadata skeleton only, not a target request or a production packet-set proof."
+      },
+      {
+        "packet": "batch-unit-deletes-done",
+        "file": "finite-profile-skeletons/batch-unit-deletes-done.json",
+        "sha256": "5495d1bd07ffec9e8991ec6991b6222178bd695aefea6a0de22d4ac44f3336c2",
+        "bytes": 6344,
+        "encoding": "UTF-8",
+        "skeleton_trailing_lf": 0,
+        "note": "Independent conservative metadata skeleton only, not a target request or a production packet-set proof."
+      },
+      {
+        "packet": "claim-takeover",
+        "file": "finite-profile-skeletons/claim-takeover.json",
+        "sha256": "5495d1bd07ffec9e8991ec6991b6222178bd695aefea6a0de22d4ac44f3336c2",
+        "bytes": 6344,
+        "encoding": "UTF-8",
+        "skeleton_trailing_lf": 0,
+        "note": "Independent conservative metadata skeleton only, not a target request or a production packet-set proof."
+      },
+      {
+        "packet": "claim-cleanup",
+        "file": "finite-profile-skeletons/claim-cleanup.json",
+        "sha256": "8f798993d36cddad02365846e165d3001d851e0c2675828139f87df1d2df5d1a",
+        "bytes": 6336,
+        "encoding": "UTF-8",
+        "skeleton_trailing_lf": 0,
+        "note": "Independent conservative metadata skeleton only, not a target request or a production packet-set proof."
       }
     ]
   },

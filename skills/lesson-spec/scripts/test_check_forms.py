@@ -1,5 +1,6 @@
 """Мутации форм ADR-0125 P/01: каждая порча формы, прозы или OpenAPI даёт отказ check_forms."""
 import copy
+import hashlib
 import json
 import re
 import shutil
@@ -829,14 +830,23 @@ class WireTurn(unittest.TestCase):               # compare=turn — решени
         vectors = self.path.parent
         (vectors / "turn").unlink()                 # пакет turn и consumers.tsv — копии с предложенными строками
         shutil.copytree(ROOT / "Platform/common/vectors/turn", vectors / "turn")
+        # фикстура не зависит от того, активна ли C4 в ROOT: прежние 33 строки, 3 потребителя и wire без common/turn,
+        # затем строки предложения ровно один раз
         self.cases = vectors / "turn/cases.tsv"
-        self.cases.write_text(self.cases.read_text(encoding="utf-8").rstrip("\n") + "\n" + "\n".join(TURN_OPS_ROWS) + "\n",
-                              encoding="utf-8")
+        kept = [ln for ln in self.cases.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("operations-")]
+        self.assertEqual(len(kept), 2 + 33)
+        self.cases.write_text("\n".join(kept + TURN_OPS_ROWS) + "\n", encoding="utf-8")
         consumers = vectors / "consumers.tsv"
         text = consumers.read_text(encoding="utf-8")
         consumers.unlink()
-        line = "common/turn\tcases.tsv\t06-console\tcommon/vectors/turn/README.md: own operations turn; ADR-0127 P06 C4"
-        consumers.write_text(text.rstrip("\n") + "\n" + line + "\n", encoding="utf-8")
+        start = "common/turn\tcases.tsv\t06-console\t"
+        kept = [ln for ln in text.rstrip("\n").split("\n") if not ln.startswith(start)]
+        self.assertEqual(sum(ln.startswith("common/turn\t") for ln in kept), 3)
+        line = start + "common/vectors/turn/README.md: own operations turn; ADR-0127 P06 C4"
+        consumers.write_text("\n".join(kept + [line]) + "\n", encoding="utf-8")
+        self.good = "".join(ln for ln in self.good.splitlines(keepends=True)
+                            if not ln.startswith("common/turn\tcases.tsv\tvectors\t"))
+        self.path.write_text(self.good, encoding="utf-8")
 
     def tearDown(self):
         shutil.rmtree(self.tmp)
@@ -848,10 +858,15 @@ class WireTurn(unittest.TestCase):               # compare=turn — решени
         self.path.write_text(self.good.rstrip("\n") + "\n" + row + "\n", encoding="utf-8")
         return check_forms.check_wire(self.path)[0]
 
-    def case(self, old, new):                     # порча ожидания одной предложенной строки
-        text = self.cases.read_text(encoding="utf-8")
-        self.assertEqual(text.count(old), 1, old)
-        self.cases.write_text(text.replace(old, new), encoding="utf-8")
+    def case(self, name, old, new):               # порча ячейки expect одной строки по имени случая (note не читается)
+        lines = self.cases.read_text(encoding="utf-8").split("\n")
+        hit = [i for i, ln in enumerate(lines) if ln.split("\t")[0] == name]
+        self.assertEqual(len(hit), 1, name)
+        cells = lines[hit[0]].split("\t")
+        self.assertEqual(cells[2].count(old), 1, old)
+        cells[2] = cells[2].replace(old, new)
+        lines[hit[0]] = "\t".join(cells)
+        self.cases.write_text("\n".join(lines), encoding="utf-8")
 
     def test_proposed_row_passes(self):
         errors, stats = check_forms.check_wire(self.path)
@@ -868,21 +883,17 @@ class WireTurn(unittest.TestCase):               # compare=turn — решени
         self.assertTrue(any("is not one of" in e for e in errors), errors)
 
     def test_unknown_freshness_mark(self):
-        self.case('[{"write":{"holder":"@new"},"cas":""},"not_held"]', '[{"write":{"holder":"@fresh"},"cas":""},"not_held"]')
+        self.case("operations-take-conflict", '"@new"', '"@fresh"')
         self.assertTrue(any("unknown freshness mark '@fresh'" in e for e in self.check()))
 
     def test_same_before_new(self):
-        self.case('[{"write":{"holder":"@new"},"cas":""},"reread","not_held"]\tProposed C4 common turn obligation only; '
-                  'epoch barrier and real leader IO remain separate.\noperations-unknown-take-foreign',
-                  '[{"write":{"holder":"@same"},"cas":""},"reread","not_held"]\tProposed C4 common turn obligation only; '
-                  'epoch barrier and real leader IO remain separate.\noperations-unknown-take-foreign')
+        self.case("operations-unknown-take-foreign", '"@new"', '"@same"')
         self.assertTrue(any("@same before any @new" in e for e in self.check()))
 
     def test_holder_alias(self):
-        self.case('[{"write":{"holder":"@new"},"cas":""},"not_held"]', '[{"write":{"value":"@new"},"cas":""},"not_held"]')
+        self.case("operations-take-conflict", '{"holder":"@new"}', '{"value":"@new"}')
         self.assertTrue(any("outside holder (no alias)" in e for e in self.check()))
-        self.cases.write_text(self.cases.read_text(encoding="utf-8").replace('{"value":"@new"}', '{"holder":"@new"}'),
-                              encoding="utf-8")
+        self.case("operations-take-conflict", '{"value":"@new"}', '{"holder":"@new"}')
         alias = '{"column":"expect","decode":"json"}'
         errors = self.check(old=alias, new='{"object":{"holder":{"literal":"@new"}}}')
         self.assertTrue(any("no holder or value alias" in e for e in errors), errors)
@@ -905,6 +916,39 @@ class WireTurn(unittest.TestCase):               # compare=turn — решени
         self.assertTrue(any("markers must be []" in e for e in errors), errors)
 
 
+class TurnMatch(unittest.TestCase):              # compare=turn по меткам: @new всякий раз новая, @same — последняя @new
+    W = lambda holder, cas: {"write": {"holder": holder}, "cas": cas}   # noqa: E731
+
+    def test_two_attempts(self):
+        W = TurnMatch.W
+        expected = [W("@new", ""), "held", W("@same", 1), "stop", W("@new", ""), "held", W("@same", 3), "held"]
+        actual = [W("a1", ""), "held", W("a1", 1), "stop", W("a2", ""), "held", W("a2", 3), "held"]
+        self.assertEqual(check_forms.turn_match(expected, actual), [])
+        same = [W("a1", ""), "held", W("a1", 1), "stop", W("a1", ""), "held", W("a1", 3), "held"]
+        self.assertTrue(any("repeats an earlier @new" in e for e in check_forms.turn_match(expected, same)))
+        stale = [W("a1", ""), "held", W("a1", 1), "stop", W("a2", ""), "held", W("a1", 3), "held"]
+        self.assertTrue(any("is not the last @new" in e for e in check_forms.turn_match(expected, stale)))
+
+    def test_new_new_in_a_row(self):
+        W = TurnMatch.W
+        expected = [W("@new", ""), "reread", W("@new", "")]
+        self.assertEqual(check_forms.turn_match(expected, [W("a1", ""), "reread", W("a2", "")]), [])
+        self.assertTrue(any("repeats" in e for e in check_forms.turn_match(expected, [W("a1", ""), "reread", W("a1", "")])))
+
+    def test_exact_rest(self):
+        W = TurnMatch.W
+        expected = [W("@new", ""), "held", W("", 1), "done"]
+        self.assertEqual(check_forms.turn_match(expected, [W("a1", ""), "held", W("", 1), "done"]), [])
+        for bad in ([W("@new", ""), "held", W("", 1), "done"],              # литерал метки — не настоящая метка
+                    [W("a1", 0), "held", W("", 1), "done"],                  # cas "" — не 0
+                    [W("a1", ""), "held", W("a1", 1), "done"],               # holder "" сравнивается точно
+                    [W("a1", ""), "held", W("", True), "done"],              # boolean — не число
+                    [W("a1", ""), "held", W("", 1), "done", "extra"],
+                    [{"write": {"holder": "a1", "x": 1}, "cas": ""}, "held", W("", 1), "done"]):
+            self.assertTrue(check_forms.turn_match(expected, bad), bad)
+        self.assertEqual(check_forms.turn_match([W("box-a:1", 2)], [W("box-a:1", 2.0)]), [])   # литеральный holder signer
+
+
 FP_CASES = ROOT / "Platform/02-installer/forms/finite-profile.cases.json"
 
 
@@ -912,12 +956,15 @@ FP_CASES = ROOT / "Platform/02-installer/forms/finite-profile.cases.json"
 class FiniteProfile(unittest.TestCase):          # конечный профиль удаления P/06 C2 — решение «Архитектора» 2026-11-06
     FILES = ("Platform/02-installer/forms/finite-profile.cases.json", "Platform/02-installer/forms/finite-profile.schema.json",
              "Platform/06-console/forms/runtime-constants.tsv", "Platform/06-console/forms/deletion-body-witnesses.json")
+    SKELETONS = "Platform/02-installer/forms/finite-profile-skeletons"
 
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
         for f in self.FILES:
             (self.tmp / f).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(ROOT / f, self.tmp / f)
+        shutil.copytree(ROOT / self.SKELETONS, self.tmp / self.SKELETONS)
+        self.skel = self.tmp / self.SKELETONS
         self.path = self.tmp / self.FILES[0]
         self.wpath = self.tmp / self.FILES[3]
         self.good = json.loads(FP_CASES.read_text(encoding="utf-8"))
@@ -941,6 +988,7 @@ class FiniteProfile(unittest.TestCase):          # конечный профил
         errors, stats = check_forms.check_finite_profile(FP_CASES)
         self.assertEqual(errors, [])
         self.assertEqual(stats["finite_profile_cases"], 13)
+        self.assertEqual(stats["finite_profile_skeletons"], 8)
         self.assertEqual(self.errors(lambda d: None), [])
 
     def test_mutations(self):
@@ -963,8 +1011,8 @@ class FiniteProfile(unittest.TestCase):          # конечный профил
         bad = {
             "missing packet": (drop, "of the roster is missing"),
             "duplicate packet": (dup, "repeats"),
-            "wrong H (greater)": (setp("H", 93744), "!= recomputed 93743"),
-            "wrong H (less)": (setp("H", 93742), "!= recomputed 93743"),
+            "wrong H (greater)": (setp("H", 93744), "!= H 93743 assembled"),
+            "wrong H (less)": (setp("H", 93742), "!= H 93743 assembled"),
             "wrong n_folder": (setp("n_folder", 9), "n_folder 9 != descriptor 8"),
             "wrong n_guard": (setp("n_guard", 3), "n_guard 3 != descriptor 4"),
             "wrong n_claim": (setp("n_claim", 0, "claim-acquire"), "n_claim 0 != descriptor 1"),
@@ -982,11 +1030,11 @@ class FiniteProfile(unittest.TestCase):          # конечный профил
                                 "schema"),
             "context duplicate roster": (lambda d: d["owned_context"]["descriptor_packet_roster"].append("claim-acquire"),
                                          "roster: packet 'claim-acquire' repeats"),
-            "context descriptor H": (ctx_desc("H", 93742), "H 93742 != recomputed 93743"),
+            "context descriptor H": (ctx_desc("H", 93742), "H 93742 != H 93743 assembled"),
             "context skeleton": (ctx_desc("skeleton_entity_bytes", 93138), "the judge gives refused"),
             "context key_json": (ctx_desc("key_json_bytes", 6145), "6*key_utf8_bytes+2"),
             "context version 21": (ctx_desc("version_digits", 21), "version_digits 21"),
-            "context put_slots": (ctx_desc("put_slots", 9), "put_slots 9"),
+            "context put_slots": (ctx_desc("put_slots", 9), "put_slots/timestamp_slots"),
             "context counts": (lambda d: next(x for x in d["owned_context"]["descriptors"] if x["packet"] == tgt)
                                ["counts"].__setitem__("n_folder", 7), "the judge gives refused"),
             "context integer domain": (lambda d: d["owned_context"]["status"].__setitem__("max_body", 2 ** 53),
@@ -998,6 +1046,89 @@ class FiniteProfile(unittest.TestCase):          # конечный профил
         }
         for name, (mutate, needle) in bad.items():
             with self.subTest(name):
+                errors = self.errors(mutate)
+                self.assertTrue(any(needle in e for e in errors), errors)
+
+    def resign(self, d, packet, raw):
+        """Переписать байты скелета и согласованно его sha256, длину и числа в контексте."""
+        (self.skel / f"{packet}.json").write_bytes(raw)
+        sha = hashlib.sha256(raw).hexdigest()
+        pr = next(x for x in d["owned_context"]["metadata-proofs"] if x["packet"] == packet)
+        ds = next(x for x in d["owned_context"]["descriptors"] if x["packet"] == packet)
+        pr["sha256"] = ds["metadata_skeleton_sha256"] = sha
+        pr["bytes"] = ds["skeleton_entity_bytes"] = len(raw)
+
+    def test_byte_skeletons(self):                  # доработка по c34fc58c5: байты скелетов потребляются, числам не верим
+        tgt = "unit-delete-target"
+        raw = (self.skel / f"{tgt}.json").read_bytes()
+        k0, k1 = b"\\u0000" * 3, b"\\u0001" + b"\\u0000" * 2
+        self.assertIn(k1, raw)
+
+        def same_numbers_other_bytes(d):            # та же длина, sha согласован, ключ повторён
+            self.resign(d, tgt, raw.replace(k1, k0, 1))
+
+        def stale_sha(d):                           # байты подменены, заявленный sha прежний
+            (self.skel / f"{tgt}.json").write_bytes(raw.replace(k1, k0, 1))
+
+        def removed(d):
+            (self.skel / f"{tgt}.json").unlink()
+
+        def forged_numbers(d):                      # согласованно +1: длина, H дескриптора, H профилей, ожидание
+            ds = next(x for x in d["owned_context"]["descriptors"] if x["packet"] == tgt)
+            pr = next(x for x in d["owned_context"]["metadata-proofs"] if x["packet"] == tgt)
+            ds["skeleton_entity_bytes"] += 1
+            pr["bytes"] += 1
+            ds["H"] += 1
+            for c in d["cases"]:
+                for k in c["profile"].get("packets") or []:
+                    if isinstance(k, dict) and k.get("packet") == tgt:
+                        k["H"] += 1
+            d["expected_bounds"][tgt] += 1
+
+        def final_lf(d):                            # LF в скелете при согласованных sha и длине
+            self.resign(d, tgt, raw + b"\n")
+
+        def spaced(d):                              # не компактный кодек
+            self.resign(d, tgt, raw.replace(b'"op":"batch"', b'"op": "batch"', 1))
+
+        def items_not_empty(d):
+            self.resign(d, tgt, raw.replace(b'"items":{}', b'"items":{"a":1}', 1))
+
+        def ctx_meta(k, v):
+            return lambda d: d["owned_context"]["metadata"].__setitem__(k, v)
+
+        def dup_proof(d):
+            ps = d["owned_context"]["metadata-proofs"]
+            ps.append(copy.deepcopy(ps[0]))
+
+        def case_meta(k, v):
+            return lambda d: self.case(d, "bound-exact-B")["profile"]["metadata"].__setitem__(k, v)
+
+        bad = {
+            "other bytes, same numbers": (same_numbers_other_bytes, "skeleton keys repeat"),
+            "stale sha": (stale_sha, "!= declared"),
+            "skeleton removed": (removed, "does not resolve"),
+            "forged numbers": (forged_numbers, "skeleton has 93139 bytes"),
+            "final LF in skeleton": (final_lf, "final LF"),
+            "not compact": (spaced, "not exactly the compact-json-utf8"),
+            "items not empty": (items_not_empty, "items is not {}"),
+            "context LF 0": (ctx_meta("trailing_lf", 0), "metadata.trailing_lf 1 != owned_context.metadata 0"),
+            "context LF 2": (ctx_meta("trailing_lf", 2), "trailing_lf 2 is not 0 or 1"),
+            "context encoder": (ctx_meta("encoder", "json-ascii"), "encoder 'json-ascii' is not"),
+            "case LF differs": (case_meta("trailing_lf", 0), "the judge gives refused"),
+            "proofs section gone": (lambda d: d["owned_context"].pop("metadata-proofs"), "is not a list"),
+            "proof ref unresolvable": (lambda d: d["owned_context"]["descriptors"][0].__setitem__(
+                "metadata_skeleton_proof", "owned-context:metadata-proof"), "does not resolve to"),
+            "stale profile proof ref": (lambda d: self.case(d, "bound-exact-B")["profile"]["provenance"].__setitem__(
+                "metadata_skeleton_proof", "owned-context:descriptors"), "the judge gives refused"),
+            "proof repeats": (dup_proof, "more than one proof"),
+            "proof file elsewhere": (lambda d: d["owned_context"]["metadata-proofs"][0].__setitem__(
+                "file", "../finite-profile.schema.json"), "differ from its metadata-proofs record"),
+        }
+        for name, (mutate, needle) in bad.items():
+            with self.subTest(name):
+                shutil.rmtree(self.skel)
+                shutil.copytree(ROOT / self.SKELETONS, self.skel)
                 errors = self.errors(mutate)
                 self.assertTrue(any(needle in e for e in errors), errors)
 
