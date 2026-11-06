@@ -41,12 +41,12 @@ N1.7 `guard`):
 
 1. Read `<turn>`. If it is unreadable, the step is refused. If `manifest_rev` > mine, do not change anything: `manifest_behind`
    (`manifest_rev` is only in the turn of a subsystem, `placement_turn`; `domain/signer-turn` has no revision and it is not checked;
-   TURN-FORM-32-01, the Architect's decision of 2026-10-25).
+   TURN-FORM-32-01, the Architect's decision of 2026-10-25). The operations turn also has no `manifest_rev`; its own fresh-attempt holder rule is the Operations turn column, not the signer's stable instance.
 2. If there is no row, use `cas ""`. If `holder` is empty, use the cas of the read version. If `holder` is foreign and this version has
    not changed for ≥ `TURN_TERM` by my clock, use the cas of the read version. Otherwise the turn is busy: this pass does not change the
    placement; the next one tries again.
 3. Write `{holder: a new unique mark of this attempt, manifest_rev: mine}` with the chosen cas (`domain/signer-turn` — only
-   `{holder}`, TURN-FORM-32-01, the Architect's decision of 2026-10-25). On `conflict` the turn is not obtained; when confirmed,
+   `{holder}`, TURN-FORM-32-01, the Architect's decision of 2026-10-25; operations — only `{holder}` with a new attempt mark). On `conflict` the turn is not obtained; when confirmed,
    remember the version of turn and the time the request was sent.
 4. Every `TURN_RENEW`, between operations, rewrite one's own turn row with the cas of one's own version. When confirmed — a new
    guard and the start of one's own term from the sending; on `conflict` or a foreign `holder` — stop the writes.
@@ -55,8 +55,8 @@ N1.7 `guard`):
    current attempt.
 6. End of the pass: write `holder: ""` with the cas of one's own version; do not repeat on a conflict.
 
-**An unknown outcome of a write of one's own turn row** (the taking of step 3 or the renewal of step 4 applied or not, the answer lost) — both
-turns (C08-TURN-SELF-99, the Architect's decision of 2026-10-26; at the `domain` process — P/08.10 N3): it is not counted as a success; re-read `<turn>`: if `holder` is the mark of this attempt
+**An unknown outcome of a write of one's own turn row** (the taking of step 3 or the renewal of step 4 applied or not, the answer lost) — all
+three forms (C08-TURN-SELF-99, the Architect's decision of 2026-10-26; at the `domain` process — P/08.10 N3): it is not counted as a success; re-read `<turn>`: if `holder` is the mark of this attempt
 (at the turn of the `domain` process — this instance), confirm it by `cas` of the read version (confirmed — the turn is one's own, the
 version is remembered); otherwise (there is no row, `holder` is foreign or empty) the turn is not obtained in this attempt. The giving up
 of the subsystem turn (step 6) writes `{holder: "", manifest_rev: <mine>}` — the field is required by the form.
@@ -98,8 +98,8 @@ bounded by this.
 The package [`turn`](../vectors/turn/README.md) (C08-TURN-SELF-99, the Architect's decision of 2026-10-26): sequences of events
 of one side over a turn row and its actions — take an empty or a given-up one, one's own row of the `domain` process (`held`, not
 `busy`), a foreign live one — busy, a foreign one older than `TURN_TERM` — take, `manifest_rev` (step 1), renewal, the guard, 412, the barrier on
-an unknown outcome of a write — of the target row and of one's own turn row, the giving up `holder ""`; both kinds of turn. Races of two claimants and late writes of the old holder are
-acceptance scenarios of the participants (P/04, P/08.10) and reading.
+an unknown outcome of a write — of the target row and of one's own turn row, the giving up `holder ""`; placement, signer and operations forms. The console runs its own15 operations cases with a fresh attempt holder, no manifest revision, not signer relabeling; the33 previous cases and their existing participants stay byte-identical. Capturing the turn is separate from P/06.9's operations-epoch CAS barrier, generation/ticket guards, two leaders and late IO. Races of two claimants and late writes of the old holder are
+acceptance scenarios of the participants (P/04, P/08.10, P/09.1, P/06.9) and reading. The exact owner/kind selector and narrow freshness comparison are [the wire form](../vectors/wire.md#turn-comparison), the Architect's decision under ADR-0127 P/06 C4.
 
 ## Correspondence to former lessons
 
