@@ -83,6 +83,8 @@ def main(argv=None):
     ap.add_argument("--go-build", action="store_true")
     args = ap.parse_args(argv)
     try:
+        if build_kit.lesson.owns_output_root():
+            build_kit.prepare(("door",), profiles=(build_kit.L.slug,))
         m = build(args.dst, args.spec_version, args.go_build)
     except build_kit.KitError as exc:
         print(f"build_stub: {exc}", file=sys.stderr)
