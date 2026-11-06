@@ -44,8 +44,10 @@ class KitLessons(unittest.TestCase):
                 self.assertEqual(sorted(man["parts"]), sorted(parts))
                 self.assertEqual(sorted(man["provenance"]), sorted(parts))
                 for f in man["files"]:
-                    own = "impl/" in f["path"] or ("/lessonadapter/" in f["path"] and not f["path"].endswith("lessonadapter.go")) \
+                    own = (f["path"].startswith(lesson + "/internal/") and "impl/" in f["path"]) \
+                        or ("/lessonadapter/" in f["path"] and not f["path"].endswith("lessonadapter.go")) \
                         or ("/vectoradapter/" in f["path"] and not f["path"].endswith("vectoradapter.go"))
+                    own = own or (lesson == "03-worker" and f["path"] in (lesson + "/go.mod", lesson + "/go.sum"))
                     self.assertEqual(bool(f.get("editable")), own, f["path"])
                 kit_md = (dst / "KIT.md").read_text()
                 titles = ((("Part `vectors`", "P/06 uses the published canonical wire form" if lesson == "06-console"
@@ -60,7 +62,8 @@ class KitLessons(unittest.TestCase):
                 for title in titles:
                     self.assertIn(title, kit_md)
                 mod = dst / lesson
-                (mod / "go.mod").write_text(f"module {man['module']}\n\ngo 1.22\n")
+                if not (mod / "go.mod").exists():
+                    (mod / "go.mod").write_text(f"module {man['module']}\n\ngo 1.22\n")
                 done = subprocess.run(["go", "vet", "./..."], cwd=mod, capture_output=True, text=True, env=GOENV)
                 self.assertEqual(done.returncode, 0, done.stderr)
                 machines = [f"./internal/{p.replace('-', '')}/" for p in parts if p.startswith("slot-")]
