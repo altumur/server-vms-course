@@ -107,8 +107,10 @@ class GenFlags(unittest.TestCase):
         ]
         for old, new in cases:
             with self.subTest(new=new):
-                with self.assertRaises(GenError):
+                with self.assertRaises(GenError) as raised:
                     gen_flags.build(gen_flags.Table(mutate(TABLE, old, new)))
+                if "daemon,recover,recover" in new:
+                    self.assertIn("commands", str(raised.exception))
         with self.assertRaises(GenError):                                  # повтор флага
             gen_flags.Table(TABLE + TABLE.splitlines()[-1] + "\n")
 
@@ -123,6 +125,8 @@ class GenFlags(unittest.TestCase):
         helper = "tools/normgen/tsv_input.py"
         self.assertEqual(generators[helper], hashlib.sha256((ROOT / helper).read_bytes()).hexdigest())
         forms = {f["path"]: f["sha256"] for f in prov["form"]}
+        table = gen_flags.DEFAULT_TABLE.relative_to(ROOT).as_posix()
+        self.assertEqual(forms[table], hashlib.sha256((ROOT / table).read_bytes()).hexdigest())
         proof = "Platform/common/data/cell-json-sha256.tsv"
         self.assertEqual(forms[proof], hashlib.sha256((ROOT / proof).read_bytes()).hexdigest())
         self.assertTrue(any(f["path"].endswith("internal/flags/flags.go") and f["origin"] == "generated"

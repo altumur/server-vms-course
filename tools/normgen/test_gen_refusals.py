@@ -128,8 +128,10 @@ class GenRefusals(unittest.TestCase):
         ]
         for old, new in cases:
             with self.subTest(new=new):
-                with self.assertRaises(GenError):
+                with self.assertRaises(GenError) as raised:
                     gen_refusals.Table(mutate(TABLE, old, new))
+                if new.startswith("Retry-After 1"):
+                    self.assertIn("header 'Retry-After 1'", str(raised.exception))
 
     def test_kit_part_refusals(self):
         import build_kit
@@ -143,6 +145,8 @@ class GenRefusals(unittest.TestCase):
         helper = "tools/normgen/tsv_input.py"
         self.assertEqual(generators[helper], hashlib.sha256((root / helper).read_bytes()).hexdigest())
         forms = {f["path"]: f["sha256"] for f in prov["form"]}
+        table = gen_refusals.DEFAULT_TABLE.relative_to(root).as_posix()
+        self.assertEqual(forms[table], hashlib.sha256((root / table).read_bytes()).hexdigest())
         proof = "Platform/common/data/cell-json-sha256.tsv"
         self.assertEqual(forms[proof], hashlib.sha256((root / proof).read_bytes()).hexdigest())
         mod = dst / "01-store"
