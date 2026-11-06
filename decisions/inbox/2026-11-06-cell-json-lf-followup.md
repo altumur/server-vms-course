@@ -1,0 +1,11 @@
+# Cell-json LF-only follow-up to frozen88
+
+Baseline: `88f9879fd9b69ea6cbf2a1b7e342f2478484ac64`. coord103 independently supplied U+2028 and U+000B counterexamples. This defect was introduced in that author commit: `source_cells.table` used Python `splitlines()`, which split an undeclared cell at either character, reported a false width error on physical line 3, and returned its suffix as a different row on line 4. It was not a SUT result. Frozen88 history and map remain unchanged; this is a separate follow-up.
+
+All table parsing in the source validator now separates physical rows by LF only and columns by TAB only. Reading source tables, wire headers and the SHA proof preserves bytes without universal-newline normalization. U+2028, VT and CR inside an undeclared cell stay in that cell. Outer JSON decoding remains exactly once; inner JSON is not parsed or repaired by this source step. Marker grammar, typed key grammars, closed units/kinds and protocol words are unchanged.
+
+The two canonical regressions extend `Platform/common/vectors/source-cells/cases.json` from 29 to 31 cases. Each expects one row at physical line 3 with `plain=A<separator>B` and `payload=x`. `unmarked-sha256.tsv` records the exact source-text SHA and equal before/decoded UTF-8 SHA for each unmarked cell. The shared conformance test checks both raw and decoded bytes. A file-I/O regression also retains unmarked CR rather than converting it to a new row. The existing six tables and all 351 declared-cell SHA proofs retain their source bytes and values.
+
+`2026-11-06-cell-json-lf-source-map.tsv` contains exact before/after source lines; `2026-11-06-cell-json-lf-proof.json` records both old88 reproductions, the corrected rows, source/file hashes and the unchanged original byte-proof table. This addresses the class of physical line splitting, without a recursive decoder, alias, extra native command or runtime surface.
+
+Author checks: 44 source-form/key/mirror tests PASS; strict full `check_spec` includes VMS family-read. Generator/runner integration and joint normgen + kit GATE remain with coord103. Gen1 can separately use frozen88 unit/catalog/admin inputs, whose bytes this follow-up does not change. P/01's existing four-column headerless scenario form is a separate lesson adoption on top of this follow-up; its author draft is not the frozen common input.

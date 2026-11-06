@@ -52,3 +52,59 @@ func TestEpochsLeases_S18GuardOwnRenewal(t *testing.T) {
 		{n: 1, line: 22, kind: "call", name: "worker-slot-write", input: "{\"slot_reads\":[{\"index\":\"v1\",\"holder\":\"box1:1:abcdef\",\"gen\":7,\"released\":false},{\"index\":\"v2\",\"holder\":\"box1:1:abcdef\",\"gen\":7,\"released\":false}],\"write_replies\":[\"guard\",\"ok\"],\"own_term_open\":true}", expects: []expect{expect{call: "{\"guards\":[\"v1\",\"v2\"],\"name_lost\":false,\"confirmed_writes\":1}"}}},
 	})
 }
+
+// TestEpochsLeases_S23IssueEpochBelowMax — chapter 3.2, seams.tsv.
+func TestEpochsLeases_S23IssueEpochBelowMax(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 27, kind: "call", name: "worker-grant", input: "{\"epoch\":9007199254740990,\"floor\":0,\"issue_sent\":0,\"issue_answered\":1,\"confirm_sent\":2,\"assignment_confirmed\":true}", expects: []expect{expect{call: "{\"issued_epoch\":9007199254740991,\"issue_writes\":1}"}}},
+	})
+}
+
+// TestEpochsLeases_S24IssueEpochMax — chapter 3.2, seams.tsv.
+func TestEpochsLeases_S24IssueEpochMax(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 28, kind: "call", name: "worker-grant", input: "{\"epoch\":9007199254740991,\"floor\":0,\"issue_sent\":0,\"issue_answered\":1,\"confirm_sent\":2,\"assignment_confirmed\":true}", expects: []expect{expect{call: "{\"issue_writes\":0,\"launch_calls\":0}"}}},
+	})
+}
+
+// TestEpochsLeases_S25IssueEpochAboveMax — chapter 3.2, seams.tsv.
+func TestEpochsLeases_S25IssueEpochAboveMax(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 29, kind: "call", name: "worker-grant", input: "{\"epoch\":9007199254740992,\"floor\":0,\"issue_sent\":0,\"issue_answered\":1,\"confirm_sent\":2,\"assignment_confirmed\":true}", expects: []expect{expect{call: "{\"issue_writes\":0,\"launch_calls\":0}"}}},
+	})
+}
+
+// TestEpochsLeases_S26IssueEpochBeyondInt64 — chapter 3.2, seams.tsv.
+func TestEpochsLeases_S26IssueEpochBeyondInt64(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 30, kind: "call", name: "worker-grant", input: "{\"epoch\":9223372036854775808,\"floor\":0,\"issue_sent\":0,\"issue_answered\":1,\"confirm_sent\":2,\"assignment_confirmed\":true}", expects: []expect{expect{call: "{\"issue_writes\":0,\"launch_calls\":0}"}}},
+	})
+}
+
+// TestEpochsLeases_S27IssueFloorBelowMax — chapter 3.2, seams.tsv.
+func TestEpochsLeases_S27IssueFloorBelowMax(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 31, kind: "call", name: "worker-grant", input: "{\"epoch\":0,\"floor\":9007199254740990,\"issue_sent\":0,\"issue_answered\":1,\"confirm_sent\":2,\"assignment_confirmed\":true}", expects: []expect{expect{call: "{\"issued_epoch\":9007199254740991,\"issue_writes\":1}"}}},
+	})
+}
+
+// TestEpochsLeases_S28IssueFloorMax — chapter 3.2, seams.tsv.
+func TestEpochsLeases_S28IssueFloorMax(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 32, kind: "call", name: "worker-grant", input: "{\"epoch\":0,\"floor\":9007199254740991,\"issue_sent\":0,\"issue_answered\":1,\"confirm_sent\":2,\"assignment_confirmed\":true}", expects: []expect{expect{call: "{\"issue_writes\":0,\"launch_calls\":0}"}}},
+	})
+}
+
+// TestEpochsLeases_S29IssueFloorAboveMax — chapter 3.2, seams.tsv.
+func TestEpochsLeases_S29IssueFloorAboveMax(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 33, kind: "call", name: "worker-grant", input: "{\"epoch\":0,\"floor\":9007199254740992,\"issue_sent\":0,\"issue_answered\":1,\"confirm_sent\":2,\"assignment_confirmed\":true}", expects: []expect{expect{call: "{\"issue_writes\":0,\"launch_calls\":0}"}}},
+	})
+}
+
+// TestEpochsLeases_S30IssueFloorBeyondInt64 — chapter 3.2, seams.tsv.
+func TestEpochsLeases_S30IssueFloorBeyondInt64(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 34, kind: "call", name: "worker-grant", input: "{\"epoch\":0,\"floor\":9223372036854775808,\"issue_sent\":0,\"issue_answered\":1,\"confirm_sent\":2,\"assignment_confirmed\":true}", expects: []expect{expect{call: "{\"issue_writes\":0,\"launch_calls\":0}"}}},
+	})
+}

@@ -13,7 +13,8 @@
 #var same_box bool — former holder box equals this box, by the instance contract; only consulted for a readable occupied row.
 #var age double — seconds the same torn row VERSION has been observed on the monotonic clock. Version change resets age; never derive age from until.
 #var version string — version of the confirmed re-read, empty only for confirmed absence.
-#var gen int — readable generation, zero only for confirmed absence. The adapter decodes/encodes slot-family numbers without loss.
+#var gen_incrementable bool — verified on the exact readable generation BEFORE int conversion: true for absence, or 0 <= gen < 9007199254740991. Wide readable integers remain gen_readable=true but this is false. Never infer from a narrowed or rounded value.
+#var gen int — exact readable generation only when gen_incrementable; 0 for confirmed absence or an unused placeholder when false. The adapter retains the exact original separately; no gen arithmetic is reached on an exhausted eligible candidate.
 #var me string — this instance by common/contracts/instance.md.
 #var server string — this server; unknown is the reader tolerance, not permission for an invalid SERVER_NAME.
 #var wall double — wall seconds at the sending of a NEW write, written by P/01.1 N0 time codec.
@@ -35,14 +36,15 @@ n	state	condition	action	next	norm
 4	search	exists && !gen_readable	reject("unreadable_gen")	rejected	P/03.2-R022
 5	search	!exists	write(version, {"holder": me, "until": wall + 45.0, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
 6	search	!row_readable && age < TORN_STILL	reject("torn_young")	rejected	P/03.2-R022
-7	search	!row_readable && age >= TORN_STILL	write(version, {"holder": me, "until": wall + 45.0, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
-8	search	row_readable && row_free	write(version, {"holder": me, "until": wall + 45.0, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
-9	search	row_readable && permission_matches	write(version, {"holder": me, "until": wall + 45.0, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
-10	search	row_readable && given && first_start_right && same_box	write(version, {"holder": me, "until": wall + 45.0, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
-11	search	true	reject(given && !same_box ? "NameOnAnotherBox" : "occupied")	rejected	P/03.2-R022
-12	first_write	reply == "conflict" || reply == "guard" || reply == "badkey"	reject(reply)	rejected	P/03.2-R024
-13	first_write	reply == "unconfirmed"	wait()	first_write	P/03.2-R022
-14	first_write	reply == "ok"	-	cleanup	P/03.2-R024
-15	cleanup	reply == "conflict" || reply == "guard" || reply == "badkey"	reject(reply)	rejected	P/03.2-R024
-16	cleanup	reply == "unconfirmed"	wait()	cleanup	P/03.2-R022
-17	cleanup	reply == "ok" && cleanup_complete	live()	live	P/03.2-R024
+7	search	exists && gen_readable && !gen_incrementable && ((!row_readable && age >= TORN_STILL) || (row_readable && (row_free || permission_matches || (given && first_start_right && same_box))))	reject("generation_exhausted")	rejected	P/03.2-R011
+8	search	!row_readable && age >= TORN_STILL	write(version, {"holder": me, "until": wall + 45.0, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
+9	search	row_readable && row_free	write(version, {"holder": me, "until": wall + 45.0, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
+10	search	row_readable && permission_matches	write(version, {"holder": me, "until": wall + 45.0, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
+11	search	row_readable && given && first_start_right && same_box	write(version, {"holder": me, "until": wall + 45.0, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
+12	search	true	reject(given && !same_box ? "NameOnAnotherBox" : "occupied")	rejected	P/03.2-R022
+13	first_write	reply == "conflict" || reply == "guard" || reply == "badkey"	reject(reply)	rejected	P/03.2-R024
+14	first_write	reply == "unconfirmed"	wait()	first_write	P/03.2-R022
+15	first_write	reply == "ok"	-	cleanup	P/03.2-R024
+16	cleanup	reply == "conflict" || reply == "guard" || reply == "badkey"	reject(reply)	rejected	P/03.2-R024
+17	cleanup	reply == "unconfirmed"	wait()	cleanup	P/03.2-R022
+18	cleanup	reply == "ok" && cleanup_complete	live()	live	P/03.2-R024

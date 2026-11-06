@@ -1,4 +1,4 @@
-# Baseline 88f9879fd9b69ea6cbf2a1b7e342f2478484ac64; strings are ASCII JSON; all physical lines are split by LF only.
+# Baseline 34ee07d34d431c1f78fb04f24e91c17f6e34f42b; strings are ASCII JSON; all physical lines are split by LF only.
 path	locator	category	before_json	after_json	change
 Platform/08-domain/data/alarm-history.outcomes.tsv	4:path	table path	""	""	identity
 Platform/08-domain/data/alarm-history.outcomes.tsv	4:reader	table reader	"domain"	"domain"	identity

@@ -70,7 +70,9 @@ type In struct {
 	Age float64
 	// Version — #var version string: version of the confirmed re-read, empty only for confirmed absence.
 	Version string
-	// Gen — #var gen int: readable generation, zero only for confirmed absence. The adapter decodes/encodes slot-family numbers without loss.
+	// GenIncrementable — #var gen_incrementable bool: verified on the exact readable generation BEFORE int conversion: true for absence, or 0 <= gen < 9007199254740991. Wide readable integers remain gen_readable=true but this is false. Never infer from a narrowed or rounded value.
+	GenIncrementable bool
+	// Gen — #var gen int: exact readable generation only when gen_incrementable; 0 for confirmed absence or an unused placeholder when false. The adapter retains the exact original separately; no gen arithmetic is reached on an exhausted eligible candidate.
 	Gen int64
 	// Me — #var me string: this instance by common/contracts/instance.md.
 	Me string
@@ -142,69 +144,73 @@ func Step(s State, in In) (Move, bool, error) {
 			args := []any{"torn_young"}
 			return Move{Row: 6, Action: "reject", Proc: "", Args: args, Next: StateRejected, Norm: "P/03.2-R022"}, true, nil
 		}
-		if !(in.RowReadable) && (in.Age >= TornStill) { // n 7
-			args := []any{in.Version, map[string]any{"holder": in.Me, "until": (in.Wall + 45.0), "released": "taking", "gen": addInt(&err, in.Gen, 1), "server": in.Server}}
-			if err != nil {
-				return Move{}, false, err
-			}
-			return Move{Row: 7, Action: "write", Proc: "", Args: args, Next: StateFirstWrite, Norm: "P/03.2-R024"}, true, nil
+		if ((in.Exists && in.GenReadable) && !(in.GenIncrementable)) && ((!(in.RowReadable) && (in.Age >= TornStill)) || (in.RowReadable && ((in.RowFree || in.PermissionMatches) || ((in.Given && in.FirstStartRight) && in.SameBox)))) { // n 7
+			args := []any{"generation_exhausted"}
+			return Move{Row: 7, Action: "reject", Proc: "", Args: args, Next: StateRejected, Norm: "P/03.2-R011"}, true, nil
 		}
-		if in.RowReadable && in.RowFree { // n 8
+		if !(in.RowReadable) && (in.Age >= TornStill) { // n 8
 			args := []any{in.Version, map[string]any{"holder": in.Me, "until": (in.Wall + 45.0), "released": "taking", "gen": addInt(&err, in.Gen, 1), "server": in.Server}}
 			if err != nil {
 				return Move{}, false, err
 			}
 			return Move{Row: 8, Action: "write", Proc: "", Args: args, Next: StateFirstWrite, Norm: "P/03.2-R024"}, true, nil
 		}
-		if in.RowReadable && in.PermissionMatches { // n 9
+		if in.RowReadable && in.RowFree { // n 9
 			args := []any{in.Version, map[string]any{"holder": in.Me, "until": (in.Wall + 45.0), "released": "taking", "gen": addInt(&err, in.Gen, 1), "server": in.Server}}
 			if err != nil {
 				return Move{}, false, err
 			}
 			return Move{Row: 9, Action: "write", Proc: "", Args: args, Next: StateFirstWrite, Norm: "P/03.2-R024"}, true, nil
 		}
-		if ((in.RowReadable && in.Given) && in.FirstStartRight) && in.SameBox { // n 10
+		if in.RowReadable && in.PermissionMatches { // n 10
 			args := []any{in.Version, map[string]any{"holder": in.Me, "until": (in.Wall + 45.0), "released": "taking", "gen": addInt(&err, in.Gen, 1), "server": in.Server}}
 			if err != nil {
 				return Move{}, false, err
 			}
 			return Move{Row: 10, Action: "write", Proc: "", Args: args, Next: StateFirstWrite, Norm: "P/03.2-R024"}, true, nil
 		}
-		{ // n 11: true
+		if ((in.RowReadable && in.Given) && in.FirstStartRight) && in.SameBox { // n 11
+			args := []any{in.Version, map[string]any{"holder": in.Me, "until": (in.Wall + 45.0), "released": "taking", "gen": addInt(&err, in.Gen, 1), "server": in.Server}}
+			if err != nil {
+				return Move{}, false, err
+			}
+			return Move{Row: 11, Action: "write", Proc: "", Args: args, Next: StateFirstWrite, Norm: "P/03.2-R024"}, true, nil
+		}
+		{ // n 12: true
 			args := []any{func() string {
 				if in.Given && !(in.SameBox) {
 					return "NameOnAnotherBox"
 				}
 				return "occupied"
 			}()}
-			return Move{Row: 11, Action: "reject", Proc: "", Args: args, Next: StateRejected, Norm: "P/03.2-R022"}, true, nil
+			return Move{Row: 12, Action: "reject", Proc: "", Args: args, Next: StateRejected, Norm: "P/03.2-R022"}, true, nil
 		}
 	case StateFirstWrite:
-		if ((in.Reply == "conflict") || (in.Reply == "guard")) || (in.Reply == "badkey") { // n 12
+		if ((in.Reply == "conflict") || (in.Reply == "guard")) || (in.Reply == "badkey") { // n 13
 			args := []any{in.Reply}
-			return Move{Row: 12, Action: "reject", Proc: "", Args: args, Next: StateRejected, Norm: "P/03.2-R024"}, true, nil
+			return Move{Row: 13, Action: "reject", Proc: "", Args: args, Next: StateRejected, Norm: "P/03.2-R024"}, true, nil
 		}
-		if in.Reply == "unconfirmed" { // n 13
+		if in.Reply == "unconfirmed" { // n 14
 			args := []any{}
-			return Move{Row: 13, Action: "wait", Proc: "", Args: args, Next: StateFirstWrite, Norm: "P/03.2-R022"}, true, nil
+			return Move{Row: 14, Action: "wait", Proc: "", Args: args, Next: StateFirstWrite, Norm: "P/03.2-R022"}, true, nil
 		}
-		if in.Reply == "ok" { // n 14
+		if in.Reply == "ok" { // n 15
 			args := []any{}
-			return Move{Row: 14, Action: "", Proc: "FirstWriteToCleanup", Args: args, Next: StateCleanup, Norm: "P/03.2-R024"}, true, nil
+			return Move{Row: 15, Action: "", Proc: "FirstWriteToCleanup", Args: args, Next: StateCleanup, Norm: "P/03.2-R024"}, true, nil
 		}
 		return Move{}, false, nil
 	case StateCleanup:
-		if ((in.Reply == "conflict") || (in.Reply == "guard")) || (in.Reply == "badkey") { // n 15
+		if ((in.Reply == "conflict") || (in.Reply == "guard")) || (in.Reply == "badkey") { // n 16
 			args := []any{in.Reply}
-			return Move{Row: 15, Action: "reject", Proc: "", Args: args, Next: StateRejected, Norm: "P/03.2-R024"}, true, nil
+			return Move{Row: 16, Action: "reject", Proc: "", Args: args, Next: StateRejected, Norm: "P/03.2-R024"}, true, nil
 		}
-		if in.Reply == "unconfirmed" { // n 16
+		if in.Reply == "unconfirmed" { // n 17
 			args := []any{}
-			return Move{Row: 16, Action: "wait", Proc: "", Args: args, Next: StateCleanup, Norm: "P/03.2-R022"}, true, nil
+			return Move{Row: 17, Action: "wait", Proc: "", Args: args, Next: StateCleanup, Norm: "P/03.2-R022"}, true, nil
 		}
-		if (in.Reply == "ok") && in.CleanupComplete { // n 17
+		if (in.Reply == "ok") && in.CleanupComplete { // n 18
 			args := []any{}
-			return Move{Row: 17, Action: "live", Proc: "", Args: args, Next: StateLive, Norm: "P/03.2-R024"}, true, nil
+			return Move{Row: 18, Action: "live", Proc: "", Args: args, Next: StateLive, Norm: "P/03.2-R024"}, true, nil
 		}
 		return Move{}, false, nil
 	case StateLive:
@@ -228,7 +234,7 @@ type Actions interface {
 	Wait() error
 	// Live — #action live: return the live slot with final-write version; own local write term is measured from FIRST SEND of that final write, not this return.
 	Live() error
-	// FirstWriteToCleanup — the YOURS procedure of rows 14 (first_write → cleanup) at P/03.2-R024.
+	// FirstWriteToCleanup — the YOURS procedure of rows 15 (first_write → cleanup) at P/03.2-R024.
 	FirstWriteToCleanup(in In) error
 }
 

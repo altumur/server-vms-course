@@ -81,7 +81,8 @@ def answers(lesson):
 def fake_go(lesson, mutate=None):
     lines = ["package lessonadapter", "", "import (", '\t"bytes"', '\t"encoding/json"', '\t"errors"', '\t"fmt"',
              '\t"strings"', ")", "",
-             "func canon(in json.RawMessage) string {", "\tvar v any", "\t_ = json.Unmarshal(in, &v)",
+             "func canon(in json.RawMessage) string {", "\tvar v any",
+             "\tdec := json.NewDecoder(bytes.NewReader(in))", "\tdec.UseNumber()", "\t_ = dec.Decode(&v)",
              "\treturn canonValue(v)", "}", "",
              "func canonValue(v any) string {", "\tvar buf bytes.Buffer", "\tenc := json.NewEncoder(&buf)",
              "\tenc.SetEscapeHTML(false)", "\t_ = enc.Encode(v)", "\treturn strings.TrimSuffix(buf.String(), \"\\n\")", "}", "",
@@ -181,6 +182,26 @@ class Ports(unittest.TestCase):
                 self.assertNotIn("panic:", done.stdout)
                 self.assertEqual(set(res), self.expected_tests(lesson))
                 self.assertEqual({v for v in res.values()}, {"fail"})
+
+    def test_fake_preserves_wide_integer_inputs(self):
+        mod, _ = self.module("03-worker", "wide-integers", fake_go("03-worker"))
+        (mod / "lessonadapter/numbers_test.go").write_text('''package lessonadapter
+import (
+    "encoding/json"
+    "testing"
+)
+func TestWideIntegerInputs(t *testing.T) {
+    for _, n := range []string{"9007199254740991", "9007199254740992", "9007199254740993", "9223372036854775808", "9223372036854775809"} {
+        input := `{"epoch":` + n + `}`
+        if got := canon(json.RawMessage(input)); got != input {
+            t.Errorf("integer input changed: %s -> %s", input, got)
+        }
+    }
+}
+''', encoding="utf-8")
+        done = subprocess.run(["go", "test", "-count=1", "./lessonadapter/"], cwd=mod,
+                              capture_output=True, text=True, env=GOENV)
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
 
     def test_fake_green_and_mutants(self):
         for lesson in LESSONS:

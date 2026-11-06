@@ -1,0 +1,107 @@
+{
+  "baseline": "88f9879fd9b69ea6cbf2a1b7e342f2478484ac64",
+  "regressions": [
+    {
+      "case": "unmarked-U2028",
+      "source_text_sha256": "9756e54c792cca4a39da14aaf93147b891c0e658d44c7c65e670eeb1e5cc8256",
+      "before_utf8_sha256": "f2206859ec3fe60cbbaea8b948036bd1dc21c6338fd8b54466614cede5c36679",
+      "decoded_utf8_sha256": "f2206859ec3fe60cbbaea8b948036bd1dc21c6338fd8b54466614cede5c36679",
+      "old_rows": [
+        [
+          4,
+          {
+            "plain": "B",
+            "payload": "x"
+          }
+        ]
+      ],
+      "old_errors": [
+        "line 3: cell-json table has 1 cells, expected 2"
+      ],
+      "new_rows": [
+        [
+          3,
+          {
+            "plain": "A\u2028B",
+            "payload": "x"
+          }
+        ]
+      ],
+      "new_errors": []
+    },
+    {
+      "case": "unmarked-U000B",
+      "source_text_sha256": "dde9ddfddf5b49e7cb6d2a4204541a59ee227e10d3b072c734578f4c01f0c045",
+      "before_utf8_sha256": "4b21641edaacd3f14e7117569da0514c71aeab11770623832b5c23b379d07b58",
+      "decoded_utf8_sha256": "4b21641edaacd3f14e7117569da0514c71aeab11770623832b5c23b379d07b58",
+      "old_rows": [
+        [
+          4,
+          {
+            "plain": "B",
+            "payload": "x"
+          }
+        ]
+      ],
+      "old_errors": [
+        "line 3: cell-json table has 1 cells, expected 2"
+      ],
+      "new_rows": [
+        [
+          3,
+          {
+            "plain": "A\u000bB",
+            "payload": "x"
+          }
+        ]
+      ],
+      "new_errors": []
+    }
+  ],
+  "source_map_sha256": "2566ec5a5833006f8520c38dbdaafd177c7577866beb1042f6ad59b41454e7bd",
+  "source_map_records": 99,
+  "files": [
+    {
+      "path": "Platform/common/contracts/source-cells.md",
+      "before_sha256": "8fc9c1e79fee593c9c9792ac6244800f548156c0957e3cc88d0ef7af9ac4152b",
+      "after_sha256": "641435ae56f80e19113393c2599384c8ea6f9998592428248c5e3d9db22c364e"
+    },
+    {
+      "path": "Platform/common/ru/contracts/source-cells.md",
+      "before_sha256": "ebfa4375a72a921752e91de711198736bfae944e38de1109a5e7e9cc16670c6d",
+      "after_sha256": "dfd1ea5d27280bee5924b34dc9afe66ac372068368f41db4e1bbc8431dea1b2a"
+    },
+    {
+      "path": "Platform/common/vectors/source-cells/cases.json",
+      "before_sha256": "10654821f861a9c2c21d202f5b004621b69cc286179f81e3518e9d245c89c34f",
+      "after_sha256": "c90165b8e829fbdb94994bb9ff36c69dc317a7f4e1dc7e9d36d51fd84c005742"
+    },
+    {
+      "path": "Platform/common/vectors/source-cells/unmarked-sha256.tsv",
+      "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "after_sha256": "669b9d25c3d531d0fd16dd270f026e8e3b3fe3c71f5451c93501976d8d7c7821"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/source_cells.py",
+      "before_sha256": "78ede780ee7aedf14a578897692998631dceab896274e1e6b60baaff13cd795a",
+      "after_sha256": "2d4293fe1428af7f7ee595e37136c67d55ec877cdb0462b875c4d59fd38ae14f"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/test_source_cells.py",
+      "before_sha256": "b57cd4dff52f5d128ea469232c8b5a0b7d96e404df413d8ad47f69a57a4a5117",
+      "after_sha256": "9af2a3ac3a2968f6525030bf4c43f51c6718f070de6b605f6e72ad205fff7ed4"
+    }
+  ],
+  "existing_declared_proof_sha256": "6e6dc419a714f3e6b8c71085abf75d9e210d1ebf25d0b064a43c6185b6bcd53f",
+  "existing_declared_proof_unchanged": true,
+  "canonical_cases": 31,
+  "tests": 44,
+  "tests_status": "PASS",
+  "check_spec": "PASS with 62 exceptions",
+  "vms_family_read_rows": 832,
+  "canonical_inputs_unchanged": {
+    "Platform/common/data/key-placeholders.tsv": "432ecdafbd78569eb820e24ba2d21862497e310ba5d81467ae19a993c9638ee4",
+    "Platform/common/data/outcome-units.tsv": "85fc5d9b1e6ed227cd21149e7511f41ac6e29bc1a2e289df6d26462eb9a30f0a",
+    "Platform/common/data/catalog.tsv": "cdc38f0842c84e8b497e6893d5e1d308350e58f0be2d76b583abd513249169f7"
+  }
+}

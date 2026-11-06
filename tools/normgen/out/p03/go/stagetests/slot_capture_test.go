@@ -80,3 +80,31 @@ func TestSlotCapture_S11CaptureReplay(t *testing.T) {
 		{n: 1, line: 15, kind: "call", name: "worker-capture", input: "{\"name\":\"w-1\",\"instance\":\"box1:1:abcdef\",\"server\":\"srv-a\",\"prefix\":\"w\",\"given\":true,\"first_start\":false,\"slot\":null,\"names_given\":{},\"contributions\":[],\"first_write_replies\":[\"unavailable\",\"again\"],\"final_write_replies\":[\"ok\"]}", expects: []expect{expect{call: "{\"outcome\":\"live\",\"logical_slot_writes\":2,\"replay_same_id\":true,\"live_before_final_confirmation\":false}"}}},
 	})
 }
+
+// TestSlotCapture_S19CaptureGenBelowMax — chapter 3.2, seams.tsv.
+func TestSlotCapture_S19CaptureGenBelowMax(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 23, kind: "call", name: "worker-capture", input: "{\"name\":\"w-1\",\"instance\":\"box1:1:abcdef\",\"server\":\"srv-a\",\"prefix\":\"w\",\"given\":true,\"first_start\":false,\"slot\":{\"index\":\"7\",\"items\":{\"holder\":\"\",\"released\":\"true\",\"gen\":\"9007199254740990\",\"until\":\"0\",\"server\":\"srv-a\"}},\"names_given\":{},\"contributions\":[]}", expects: []expect{expect{call: "{\"outcome\":\"live\",\"final_gen\":\"9007199254740991\"}"}}},
+	})
+}
+
+// TestSlotCapture_S20CaptureGenMax — chapter 3.2, seams.tsv.
+func TestSlotCapture_S20CaptureGenMax(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 24, kind: "call", name: "worker-capture", input: "{\"name\":\"w-1\",\"instance\":\"box1:1:abcdef\",\"server\":\"srv-a\",\"prefix\":\"w\",\"given\":true,\"first_start\":false,\"slot\":{\"index\":\"7\",\"items\":{\"holder\":\"\",\"released\":\"true\",\"gen\":\"9007199254740991\",\"until\":\"0\",\"server\":\"srv-a\"}},\"names_given\":{},\"contributions\":[]}", expects: []expect{expect{call: "{\"outcome\":\"nobody\",\"writes\":[],\"gen_readable\":true,\"refusal\":\"generation_exhausted\",\"slot_gen_after\":\"9007199254740991\"}"}}},
+	})
+}
+
+// TestSlotCapture_S21CaptureGenAboveMax — chapter 3.2, seams.tsv.
+func TestSlotCapture_S21CaptureGenAboveMax(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 25, kind: "call", name: "worker-capture", input: "{\"name\":\"w-1\",\"instance\":\"box1:1:abcdef\",\"server\":\"srv-a\",\"prefix\":\"w\",\"given\":true,\"first_start\":false,\"slot\":{\"index\":\"7\",\"items\":{\"holder\":\"\",\"released\":\"true\",\"gen\":\"9007199254740992\",\"until\":\"0\",\"server\":\"srv-a\"}},\"names_given\":{},\"contributions\":[]}", expects: []expect{expect{call: "{\"outcome\":\"nobody\",\"writes\":[],\"gen_readable\":true,\"refusal\":\"generation_exhausted\",\"slot_gen_after\":\"9007199254740992\"}"}}},
+	})
+}
+
+// TestSlotCapture_S22CaptureGenBeyondInt64 — chapter 3.2, seams.tsv.
+func TestSlotCapture_S22CaptureGenBeyondInt64(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 26, kind: "call", name: "worker-capture", input: "{\"name\":\"w-1\",\"instance\":\"box1:1:abcdef\",\"server\":\"srv-a\",\"prefix\":\"w\",\"given\":true,\"first_start\":false,\"slot\":{\"index\":\"7\",\"items\":{\"holder\":\"\",\"released\":\"true\",\"gen\":\"9223372036854775808\",\"until\":\"0\",\"server\":\"srv-a\"}},\"names_given\":{},\"contributions\":[]}", expects: []expect{expect{call: "{\"outcome\":\"nobody\",\"writes\":[],\"gen_readable\":true,\"refusal\":\"generation_exhausted\",\"slot_gen_after\":\"9223372036854775808\"}"}}},
+	})
+}

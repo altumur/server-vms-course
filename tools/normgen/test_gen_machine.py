@@ -353,7 +353,6 @@ class MachineTests(unittest.TestCase):
         return out / "go"
 
     def test_lessons(self):
-        rnd = random.Random(20261105)
         for lesson, (slug, parts) in LESSONS.items():
             mod = self.fresh_out(lesson)
             for args in (["vet", "./..."], ["test", "-count=1", "./..."]):
@@ -363,7 +362,8 @@ class MachineTests(unittest.TestCase):
                 with self.subTest(part=part):
                     form = Form(form_path(ROOT, lesson, part).read_text(encoding="utf-8"))
                     oracle = Oracle(form)
-                    cases = inputs(form, rnd, N_RANDOM)
+                    # A new input of one machine must not change another machine's coverage.
+                    cases = inputs(form, random.Random(20261105), N_RANDOM)
                     got = Judge(lesson, part, mod).step(cases)
                     self.assertEqual(len(got), len(cases), "the driver dropped cases")
                     bad = disagreements(oracle, cases, got)
@@ -371,6 +371,40 @@ class MachineTests(unittest.TestCase):
                     hit = {oracle.run(s, e)[0] for s, e in cases if s in form.states()}
                     self.assertTrue({r["n"] for r in form.rows} <= hit, f"{part}: the judge's inputs miss rows "
                                     f"{sorted({r['n'] for r in form.rows} - hit)}")
+
+    def test_capture_exhaustion_priority(self):
+        mod = self.tmp / "capture-priority"
+        shutil.copytree(self.fresh_out("03-worker"), mod)
+        base = {"read_confirmed": True, "exists": True, "gen_readable": True, "row_readable": True, "row_free": True,
+                "gen_incrementable": False, "gen": 0, "version": "v7", "wall": 0,
+                "me": "box1:1:abcdef", "server": "srv-a"}
+        probes = [
+            ({}, 7, "generation_exhausted"),
+            ({"row_free": False, "permission_matches": True}, 7, "generation_exhausted"),
+            ({"row_free": False, "given": True, "first_start_right": True, "same_box": True},
+             7, "generation_exhausted"),
+            ({"row_readable": False, "age": 50.0}, 7, "generation_exhausted"),
+            ({"row_readable": False, "age": 49.999}, 6, "torn_young"),
+            ({"row_free": False, "given": True, "first_start_right": True}, 12, "NameOnAnotherBox"),
+            ({"row_free": False}, 12, "occupied"),
+            ({"gen_readable": False}, 4, "unreadable_gen"),
+            ({"exists": False, "gen_incrementable": True}, 5, 1),
+            ({"gen_incrementable": True, "gen": 9007199254740990}, 9, 9007199254740991),
+        ]
+        got = Judge("03-worker", "slot-capture", mod).step(
+            [("search", dict(base, **change)) for change, _, _ in probes])
+        self.assertEqual(len(got), len(probes))
+        for (_, row, value), move in zip(probes, got):
+            with self.subTest(row=row, value=value):
+                self.assertTrue(move["ok"])
+                self.assertFalse(move["err"])
+                self.assertEqual(move["row"], row)
+                if isinstance(value, str):
+                    self.assertEqual(move["next"], "rejected")
+                    self.assertEqual(move["args"], [["string", value]])
+                else:
+                    self.assertEqual(move["next"], "first_write")
+                    self.assertEqual(move["args"][1][1]["gen"], ["int", str(value)])
 
     def test_mutants(self):
         rnd = random.Random(7)
