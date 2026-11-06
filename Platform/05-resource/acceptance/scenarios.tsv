@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Acceptance of P/05: the stand testsub with the resource srv-a and the console. Carried over from М10/08 (sc. 01, 02, 08), М10/11 (sc. 01 → 09, 16) and М10/10 (sc. 10) (stage B). Format and directives — README.
+# Acceptance of P/05: the stand testsub with the resource srv-a and the console. Carried over from M10/08 (sc. 01, 02, 08), M10/11 (sc. 01 → 09, 16) and M10/10 (sc. 10) (stage B). Format and directives — README.
 01-objects-door	1	resource GET /v1/objects?prefix=testsub/heartbeats/&scope=local	200 {"server": "srv-a", "objects": {}}
 01-objects-door	2	resource GET /v1/objects?prefix=testsub/heartbeats/&scope=nowhere	400
 01-objects-door	3	resource GET /v1/objects/testsub/counters/c1?scope=local	403
@@ -171,7 +171,7 @@ scenario	step	request	expect
 28-free-ask-volume-profile	8	@until 60 resource GET /events?kind=free_ask.key_taken	200 {"events": [{"kind": "free_ask.key_taken"}]}
 28-free-ask-volume-profile	9	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "1", "volume": "b-c", "server": "srv-a", "at": "1700000000"}}
 28-free-ask-volume-profile	10	ASSERT $i1 == $i2	
-# 29-row-objects (coverage audit of P/05, second pass of Gemini, G01 item 1): the object door does not give out the row objects objects.rows (testsub2/marks/*) and commands/* of both subsystems — 403 even with a written row objects/<ключ>, on any scope; a prefix of row objects — 403; prefix=testsub2/ — a filter, 200 without them
+# 29-row-objects (coverage audit of P/05, second pass of Gemini, G01 item 1): the object door does not give out the row objects objects.rows (testsub2/marks/*) and commands/* of both subsystems — 403 even with a written row objects/<key>, on any scope; a prefix of row objects — 403; prefix=testsub2/ — a filter, 200 without them
 29-row-objects	1	admin POST /v1/write {"id":"72901","op":"put","key":"objects/testsub2/marks/m1","items":{"count":"1"},"cas":""}	200
 29-row-objects	2	admin POST /v1/write {"id":"72902","op":"put","key":"objects/testsub2/commands/r1","items":{"outcome":"expired"},"cas":""}	200
 29-row-objects	3	resource GET /v1/objects/testsub2/marks/m1?scope=local	403
@@ -260,12 +260,12 @@ scenario	step	request	expect
 37-retention-garbled	6	@append event testsub2.alarms/t1/e1 {"t": {now}, "kind": "probe.alarm", "id": "e1-74657374737562322e616c61726d73-7431-1-70726f6265-1", "class": "alarm"}	ok
 37-retention-garbled	7	@start resource	ok
 37-retention-garbled	8	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"retention_garbled": ["testsub", "testsub2"], "retention_withheld": {"testsub": "days_garbled", "testsub2": "days_garbled"}}
-# 38-holds-garbled-row (G06 part 2; the holds contract «Что держит строка»): the hold row testsub2/notches without a readable window (to not a number), not released — garbled_rows.notches 1 in the heartbeat after the first pass
+# 38-holds-garbled-row (G06 part 2; the holds contract «What a row holds»): the hold row testsub2/notches without a readable window (to not a number), not released — garbled_rows.notches 1 in the heartbeat after the first pass
 38-holds-garbled-row	1	admin POST /v1/write {"id":"73801","op":"put","key":"testsub2/notches/c1-1760700000-1760703600","items":{"of":"c1","from":"1760700000","to":"bad"},"cas":""}	200
 38-holds-garbled-row	2	@append event testsub2/t1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-7465737473756232-7431-1-70726f6265-1"}	ok
 38-holds-garbled-row	3	@start resource	ok
 38-holds-garbled-row	4	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"garbled_rows": {"notches": 1}}
-# 39-settings-unread (G06 part 3; N1.4 space, mirror, В7 item 3 П1): platform/space and platform/mirror with enabled out of form — the rows are unreadable: settings_unread [mirror, space], the relieve step is not executed — its own row free-* is not written
+# 39-settings-unread (G06 part 3; N1.4 space, mirror, V7 item 3 P1): platform/space and platform/mirror with enabled out of form — the rows are unreadable: settings_unread [mirror, space], the relieve step is not executed — its own row free-* is not written
 39-settings-unread	1	admin POST /v1/write {"id":"73901","op":"put","key":"platform/space","items":{"enabled":"maybe","high":"0.0000001","low":"0.00000001"},"cas":""}	200
 39-settings-unread	2	admin POST /v1/write {"id":"73902","op":"put","key":"platform/mirror","items":{"enabled":"maybe"},"cas":""}	200
 39-settings-unread	3	@start resource	ok
@@ -304,7 +304,7 @@ scenario	step	request	expect
 44-objects-door-family	2	resource GET /v1/objects/testsub2/tickets/t1?scope=local	200 {"id": "t1", "title": "check"}
 44-objects-door-family	3	resource GET /v1/objects?prefix=testsub2/tickets/&scope=local	200 {"server": "srv-a", "objects": {"testsub2/tickets/t1": {"server": "srv-a", "written": "@any", "size": 28}}}
 44-objects-door-family	4	resource GET /v1/objects/testsub/tickets/t1?scope=local	403
-# 45-gone-door (G02; C05-GONE-BODY-READ-01, C05-GONE-REWRITE-AT-WRITE-01; catalogue testsub and testsub2): the tombstone .gone/<ключ> at the deleter (put by @put object from inputs/, written 1700000100) — the ordinary listing does not show it, prefix=.gone/ and GET of the body — read only, PUT — 405; a copy older than the tombstone — 409, no key; newer — 204, the key with the original written, the tombstone removed by the same action
+# 45-gone-door (G02; C05-GONE-BODY-READ-01, C05-GONE-REWRITE-AT-WRITE-01; catalogue testsub and testsub2): the tombstone .gone/<key> at the deleter (put by @put object from inputs/, written 1700000100) — the ordinary listing does not show it, prefix=.gone/ and GET of the body — read only, PUT — 405; a copy older than the tombstone — 409, no key; newer — 204, the key with the original written, the tombstone removed by the same action
 45-gone-door	1	@put object .gone/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae inputs/gone-foo.json	ok
 45-gone-door	2	resource GET /v1/objects?prefix=testsub2/blobs/&scope=local	200 {"server": "srv-a", "objects": {}}
 45-gone-door	3	resource GET /v1/objects?prefix=.gone/&scope=local	200 {"server": "srv-a", "objects": {".gone/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"server": "srv-a"}}}

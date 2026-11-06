@@ -1,17 +1,17 @@
 # P/05 — the doors of the server resource: the HTTP contract. Canon — 05-resource.norms.md (N1.1, N1.3, N1.6, N2–N4). Paths and schemas
-# are carried over from the contract М10/8 (08-events-resource-requests.api.openapi.yaml; stage B, without a change of behaviour):
+# are carried over from the contract M10/8 (08-events-resource-requests.api.openapi.yaml; stage B, without a change of behaviour):
 # /v1/objects, /v1/objects/{key}, GET /events of the resource, /events/wait, /buckets/{sub}/{unit}, /events/{path}, /mirror/…,
 # /mirrored/…. The console doors (/marks, /{sub}/requests, /{sub}/asked/{sha16}, the merge GET and HEAD /events) — in
 # the contract P/06 (06-console.api.openapi.yaml, chapter 6.4); the response schemas of /events common to both doors (EventRow, UnitRef,
 # SafeSegment, ObjectKey, Sha256, Subsystem) — here, P/06 refers to them ($ref). PUT /v1/objects/{sub}/blobs/{digest}
-# (a body copy at the resource) — carried over from the contract М10/10 (the Specification's decision on V2 of the transfer); the console bytes door
+# (a body copy at the resource) — carried over from the contract M10/10 (the Specification's decision on V2 of the transfer); the console bytes door
 # PUT /{rows}/{id}/{blob_field} — P/06 (chapter 6.1).
 openapi: 3.1.0
 info:
   title: P/05 — the doors of the server resource
   version: '1'
   description: 'Canon — 05-resource.norms.md. N2 separates JSON, bytes and the absence of a body; the admission of roles and TLS — N2
-    «Допуск к дверям ресурса», P/02.4 N1.6 and the role certificate contract (ADR-0075); the internal API is not normed. The forms
+    «Resource door admission», P/02.4 N1.6 and the role certificate contract (ADR-0075); the internal API is not normed. The forms
     of an implementation may diverge: the contract does not claim that any implementation has been checked against it.'
 paths:
   /v1/objects:
@@ -53,7 +53,7 @@ paths:
           type: string
         description: The beginning of a relative key; emptiness is allowed. The check by N1.1, separate from the full
           key. The ordinary list does not show the tombstones .gone/; prefix=.gone/ — read only of the tombstones
-          {written, peers, acked} (N1.1 «Надгробия»; log of cammeta-go, lesson 10 № 2).
+          {written, peers, acked} (N1.1 «Tombstones»; log of cammeta-go, lesson 10 № 2).
       - name: scope
         in: query
         required: false
@@ -162,7 +162,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
           content:
             application/json:
               schema:
@@ -200,7 +200,7 @@ paths:
         type: string
         pattern: "^(?:sha256-[0-9a-f]{64})$"
     put:
-      summary: 'Resource door: accept a full copy of a blob (N1.1 «Тела у ресурса», N2; carried over from the contract М10/10)'
+      summary: 'Resource door: accept a full copy of a blob (N1.1 «Bodies at the resource», N2; carried over from the contract M10/10)'
       parameters:
       - name: Content-Length
         in: header
@@ -236,7 +236,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '405':
-          description: The method/family does not admit PUT; a key not of the blob form (uppercase hex, without sha256-) or a subsystem without a blob field — an ordinary object, it is written by the owner (N1.1 «Тела у ресурса» mirror)
+          description: The method/family does not admit PUT; a key not of the blob form (uppercase hex, without sha256-) or a subsystem without a blob field — an ordinary object, it is written by the owner (N1.1 «Bodies at the resource» mirror)
           content:
             application/json:
               schema:
@@ -290,7 +290,7 @@ paths:
   /events:
     x-route-priority: 70
     get:
-      summary: 'Resource: the local index (N1.3, N3 «запрос (ресурс)»); the console merge — the contract P/06 (chapter 6.4)'
+      summary: 'Resource: the local index (N1.3, N3 «query (resource)»); the console merge — the contract P/06 (chapter 6.4)'
       description: 'The order and the cut (cut, N1.3) — the same for the resource and for the console merge (chapter 6.4 N3 «merge»): before the cut
         remove duplicates by id; first class alarm, then observation; within a class by by (keep newest — descending, oldest —
         ascending), with equal time — id lexicographically by UTF-8 bytes; the first limit rows. truncated — the number
@@ -309,13 +309,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceDenied'
         '405':
-          description: The method is not supported (including HEAD and POST, N2) — without a body (the comparison of python and go М10/6–11, E17)
+          description: The method is not supported (including HEAD and POST, N2) — without a body (the comparison of python and go M10/6–11, E17)
         '503':
           description: Busy or there is no index
           content:
@@ -439,7 +439,7 @@ paths:
               schema:
                 const: '1'
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
           content:
             application/json:
               schema:
@@ -517,7 +517,7 @@ paths:
         '404':
           description: Wrong path/unknown unit; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
           content:
             application/json:
               schema:
@@ -579,7 +579,7 @@ paths:
         '500':
           description: Failed to prepare the full body/its sum; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
           content:
             application/json:
               schema:
@@ -629,7 +629,7 @@ paths:
         '500':
           description: A file/publication error; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
           content:
             application/json:
               schema:
@@ -673,7 +673,7 @@ paths:
         '404':
           description: There are no copies of this server; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
           content:
             application/json:
               schema:
@@ -719,7 +719,7 @@ paths:
         '500':
           description: Failed to read/check the copy; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
           content:
             application/json:
               schema:

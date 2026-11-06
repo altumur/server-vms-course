@@ -17,7 +17,7 @@
 - Лекция (`ru/05-resource.md`, для человека, в выгрузку не входит) объясняет причины и границы; [жизненный цикл](../lifecycle.md) — окружение, коды выхода.
 
 Объекты используют словарь хранилища P/01.1, роли — [P/02.4 N1.6](../../../02-installer/ru/spec/02.4-installer.norms.md) и
-договор сертификата роли. `PUT /v1/objects/<sub>/blobs/<digest>` — N1.1 «Тела у ресурса», N2; `restore` (`GET /mirrored/<server>`) — N1.4 «Восстановление бакетов».
+договор сертификата роли. `PUT /v1/objects/<sub>/blobs/<digest>` — N1.1 «Bodies at the resource», N2; `restore` (`GET /mirrored/<server>`) — N1.4 «Bucket restore».
 Внутренние функции,
 библиотеки и способ размещения обработчиков не предписаны.
 

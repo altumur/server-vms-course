@@ -18,7 +18,7 @@ Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 ## Form
 
 ```yaml
-tombstone: .gone/<object-key> at the deleter — an object {written, peers, acked}: written — the wall seconds of the deletion, peers —
+tombstone: .gone/<object-key> at the deleter — an object {written, peers, acked}: written = max(now, removed_written + 0.001) in wall seconds (one millisecond is one stamp unit of P/05 N1.1 `written`), peers —
            the neighbours of the ring that could have had a copy (the section «Neighbours»), acked — those who acknowledged, acked ⊆ peers (journal
            of cammeta-go, lesson 10 № 2); the object door has no DELETE; the door does not accept writes and deletes of .gone/
 listing:   an ordinary listing does not show .gone/; /v1/objects?prefix=.gone/ is a read-only listing of tombstones;
@@ -34,6 +34,8 @@ and of decommission requests (the section «Neighbours») — `Platform/05-resou
 `Platform/06-console/data/decommission.schema.json`, `Platform/06-console/data/decommission.outcomes.tsv`; the object door —
 GET of a copy (404 — an acknowledgement), the listing `prefix=.gone/`, 409 «deleted later» — the contract
 `Platform/05-resource/spec/05-resource.api.openapi.yaml` (layout audit, V-60; the Architect's decision of 2026-10-25).
+
+The deleter retains the `written` of the exact body version admitted for deletion. It computes the deletion stamp before removing that version, with exact millisecond arithmetic: it is strictly greater than the removed version even when the wall clock is equal or has moved backwards. The sweep mark and the monotonic grace are admission checks, not the deletion stamp (ADR-0127, review of P/05 C1).
 
 ## Neighbours (`peers`)
 
@@ -58,7 +60,7 @@ order:     the order of the elements of peers and acked is not normed; there are
 drop:      a neighbour once per 10 min (the resource pass, P/05 N3) reads the tombstones of the deleter — finds them by the listing prefix=.gone/, by the body
            (GET .gone/<object-key>) takes written of the deletion: written of the listing is the mark of the tombstone write, it grows with each
            appended acked and does not name the deletion (C05-GONE-BODY-READ-01) — and drops its own
-           copy older than written; a copy than which the tombstone of the deleter is newer is not accepted (P/05 N4, «deleted later» — 409)
+           copy older than written; a copy with source `written` strictly greater than the tombstone stays: the new write wins, and its source stamp is not raised on receipt. An existing copy is not a 404 acknowledgement. A copy than which the tombstone of the deleter is newer is not accepted (P/05 N4, «deleted later» — 409)
 ```
 
 ## Acknowledgement

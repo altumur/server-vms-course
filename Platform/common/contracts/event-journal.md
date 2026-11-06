@@ -149,6 +149,12 @@ of the full key permit is representable on disk. The layout of directories is by
   `<instance>.lock` (journal of cammeta-go, lesson 8 № 10; the Architect's decision). The step — sc. 08 steps 12–16 of the [acceptance of P/05](../../05-resource/acceptance/README.md): a bucket that
   the runner writes past the writer under the name of the norm is read by the resource.
 
+## Bucket write time
+
+A bucket's own `written` is its logical wall-clock write stamp in seconds of common.time, recorded on a successful append of its bytes by the writer. It is not the start/end of its ten-minute window, a line's optional `occurred`, nor filesystem `mtime`. It is retained with the bucket across restarts and reindexing; reads, cache eviction and touching a file do not refresh it. The implementation chooses the local persistence representation of this metadata, not a new event field or public HTTP field. An unreadable stamp is unknown: retain keeps that bucket and reports the read failure rather than inferring a stamp from the path or `mtime`.
+
+For `.mirror/<server>/…`, the copy's own `written` is its receiver's publication time from P/05-R034, unchanged on an identical repeat. Restore carries that copy's `written` to the restored local bucket; receipt of restore and reindexing do not give it a newer stamp. This is distinct from the source version stamp of a copied object body, which is preserved by `X-Written` (ADR-0127, review of P/05 C4).
+
 ## Retention of a tree
 
 The defaults of the retention of trees are from P/02.4 N1.9 (the forms of the rows `retention`, `alarms_retention`) and P/05 N3 «resource pass»

@@ -59,7 +59,7 @@ presence_lock:  <events root>/.workers/<sub>/<instance>.lock   # the components 
              room.<sub>, does not enter workers, running, live.<sub>; unknown — only a file that does not read (an error
              of open or read), not its content (analysis of the review of stage B 3–5, № 23), and a lock whose check cannot be
              completed: an error of flock other than «busy» (EWOULDBLOCK), or an error of fstat/stat other than ENOENT at stat (that is
-             a mismatch), — also unknown, like an unreadable file; do not touch the file (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7); one <sub>/<worker> has several files — runs, if at least one is busy;
+             a mismatch), — also unknown, like an unreadable file; do not touch the file (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7); one <sub>/<worker> has several readable named files — an unknown check takes priority, otherwise runs if at least one is busy;
              a gone file the resource MAY delete, holding its flock and after a matching comparison; there is no other source of presence (pid files, kill(pid, 0))
 presence:   the resource tells about the processes of its box by the heartbeat fields of P/05 N1.4 (`workers`, `running`, `unknown`; the words and their
             derivation — there too, the fate — P/04); how it learns — the presence lock above
@@ -75,6 +75,10 @@ The race «the worker between open and flock, the resource deletes the file»: t
 matched — gone, the resource deletes the file and releases the lock; the blocking flock of the worker gets the lock on the deleted file,
 its stat(path) is ENOENT, this is a mismatch: the worker closes and repeats from the start, a new file. The evidence is
 by reading: a test with the worker stopped between open and flock (analysis of the review of stage B 3–5, № 19).
+
+## An unknown role snapshot
+
+An error of open/read/flock/fstat/stat that cannot be associated with a slot from readable current lock content makes the presence snapshot of the whole role `<sub>` unknown. A successful directory listing does not make that file absent. Neither the instance in the path nor a prior snapshot supplies a slot name. The resource touches no such file and invents no `<sub>/<slot>` entry. It omits all three aggregate heartbeat fields `workers`, `running`, `unknown` for that scan, as with an incomplete directory scan: the current aggregate form cannot encode an unnamed role. It also omits `instances` derived from that incomplete snapshot. The controller therefore learns no presence from that heartbeat, including no `unlisted`/`gone` conclusion. The remaining heartbeat fields are published normally. `room.<sub>` is `"unknown"` and `live.<sub>` is absent for the affected role; other roles' independently complete room/live counts remain valid. If a current readable slot name is available, keep the existing named-unknown rules and the presence priority unknown → running → workers → unlisted; never let another busy file hide an unknown result for that slot (ADR-0127, review of P/05 C2).
 
 ## Count `room`
 
