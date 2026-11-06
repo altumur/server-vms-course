@@ -95,6 +95,12 @@ class DeclaredUnitPriority(unittest.TestCase):
 
 
 class Provenance(unittest.TestCase):
+    def test_other_lesson_has_no_writecheck_form(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parent / "kit"))
+        import build_kit
+        with patch.object(build_kit, "TABLE", ROOT / "Platform/03-worker/forms/write-checks.tsv"):
+            self.assertEqual(build_kit.provenance([], [], {}), {})
+
     def test_writecheck_pins_transport_and_physical_proofs(self):
         sys.path.insert(0, str(Path(__file__).resolve().parent / "kit"))
         import build_kit

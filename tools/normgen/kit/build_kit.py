@@ -202,7 +202,7 @@ def provenance(parts, files, judged):
         own = sorted((f["path"], f["sha256"]) for f in files if f["component"] in components and not f.get("editable"))
         return sha256("".join(f"{p}\t{h}\n" for p, h in own).encode())
     table = {
-        "writecheck": (("normgen", "kit"), {"form": gen_checks.tsv_input.source_files(TABLE, root=ROOT),
+        "writecheck": (("normgen", "kit"), {"form": gen_checks.tsv_input.source_files(TABLE, root=ROOT) if TABLE.is_file() else [],
                                    "generator": NORMGEN / "gen_checks.py",
                                    "generators": [NORMGEN / "gen_checks.py", NORMGEN / "tsv_input.py"],
                                    "handwritten": [NORMGEN / "runtime/go/runtime.go", NORMGEN / "prims/go/prims.go"]
