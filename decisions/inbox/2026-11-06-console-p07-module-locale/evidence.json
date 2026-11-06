@@ -1,0 +1,170 @@
+{
+  "base": "e07b32a5030c696d89c72444e760a86f6246c487",
+  "authorCheckNotIndependentJudge": true,
+  "parser": "acorn@8.15.0 / ES2022",
+  "artifacts": {
+    "Platform/07-console-module/module/console.js": {
+      "bytes": 312543,
+      "sha256": "05d167f53a4d91214f30188d5331f0f4afbd99bfa7e4ac349b98f423f1bec89e",
+      "rawCyrillic": false
+    },
+    "Platform/07-console-module/module/console.css": {
+      "bytes": 41676,
+      "sha256": "44d4045693f60fcf719e7c216352e9e4b7873b69c372ae35e37d010050bb4de6",
+      "rawCyrillic": false
+    },
+    "Platform/07-console-module/module/console.html": {
+      "bytes": 1063,
+      "sha256": "c3e33f59424b516e1778dc514712050692a1a9a07327267f6e37f6af4334fb76",
+      "rawCyrillic": false
+    }
+  },
+  "immutableWitnesses": {
+    "js": "9e0356451fcc3c143aacdc643da3881d57936dc91b3315eb6125c35f5a404c71",
+    "css": "049db5be822fd7e8a01f2345a9d787dcad136a941ed41c255763c05a1cdc7989",
+    "html": "639676470e26202738b14bc0bd8b8500ab8612e8ec85aad099578df7edf46968"
+  },
+  "canonicalTable": {
+    "path": "Platform/07-console-module/data/localization.tsv",
+    "movedFrom": "Platform/06-console/data/localization.tsv",
+    "sha256": "a5b3c4b9c1af6cfe40a72c80b58d2348a9e9517d7c36c0b6ad8a91bc807850e9",
+    "bytes": 44852,
+    "keys": 519,
+    "oldPathAbsent": true
+  },
+  "wordsAndBehavior": {
+    "normalizedTokenSha256": "746809445dadb0b81115f82b6da6783faeca0155cda5e67b09c7d6bf41aacbd0",
+    "tokensOutsideApprovedHoles": 50695,
+    "normalizedASTSha256": "255e39f67bfefe313b9282acc22857ba2eadba1e2e6598ce75aa23d35bdff2af",
+    "astAndRawTokensExactOutsideApprovedAreas": true,
+    "approvedAreas": [
+      "WORDS initializer",
+      "W initializer",
+      "fmt declaration move into mount",
+      "fmtDay initializer"
+    ],
+    "witnessDuplicateProperties": [
+      "en.glass",
+      "ru.glass"
+    ],
+    "generatedDuplicateProperties": [],
+    "decodedLeavesPerLanguage": 519,
+    "parameterizedKeys": 28,
+    "parameterOccurrencesPerLanguage": 37,
+    "rootKeys": 477,
+    "specialPropertyPaths": {
+      "kinds.server.decommission_requested": [
+        "kinds",
+        "server.decommission_requested"
+      ],
+      "n.late": [
+        "n",
+        "late"
+      ]
+    },
+    "glassLastWinsExact": true,
+    "loginAtFinalU0020Exact": true,
+    "formatters": {
+      "exactApprovedShapes": true,
+      "perMountLocale": true,
+      "selectedLocaleSnapshot": true,
+      "cases": 32,
+      "enLocale": "en-US",
+      "ruLocale": "ru-RU",
+      "fmtOptionsStillAbsent": true,
+      "fmtDayOptionsUnchanged": true,
+      "timeZoneNotAdded": true,
+      "secondsTimes1000Unchanged": true,
+      "dashAndEmptyPathsUnchanged": true,
+      "expressions": {
+        "fmt": {
+          "expressionSha256": "bc7ca53481f81457388fe6b9285843b7a58fbf878a60a1fd31b44904a3a282d5"
+        },
+        "fmtDay": {
+          "expressionSha256": "b05d316f4b0c5290ff617866de25e09816c17351c661ab44dcbd332b5a87a593"
+        }
+      }
+    },
+    "languageMatrix": [
+      {
+        "lang": null,
+        "browser": "ru-RU",
+        "expected": "en",
+        "actual": "en"
+      },
+      {
+        "lang": "en",
+        "browser": "ru-RU",
+        "expected": "en",
+        "actual": "en"
+      },
+      {
+        "lang": "ru",
+        "browser": "en-US",
+        "expected": "ru",
+        "actual": "ru"
+      },
+      {
+        "lang": "ru-RU",
+        "browser": "ru-RU",
+        "expected": "en",
+        "actual": "en"
+      },
+      {
+        "lang": "RU",
+        "browser": "ru-RU",
+        "expected": "en",
+        "actual": "en"
+      }
+    ]
+  },
+  "englishCaptionsExactWitness": true,
+  "russianEscapesDerivedFromRuOnly": true,
+  "cssNoncommentBytesExact": true,
+  "htmlMarkupAndInlineTokensExact": true,
+  "rejectedInputs": [
+    {
+      "name": "extra-key",
+      "rejected": true,
+      "reason": "TSV roster mismatch; missing=[]; extra=[\"notAnExistingKey\"]"
+    },
+    {
+      "name": "missing-key",
+      "rejected": true,
+      "reason": "TSV roster mismatch; missing=[\"unsaved\"]; extra=[]"
+    },
+    {
+      "name": "duplicate-key",
+      "rejected": true,
+      "reason": "duplicate TSV key: unsaved"
+    },
+    {
+      "name": "changed-parameter",
+      "rejected": true,
+      "reason": "parameter mismatch: newGroupIn"
+    },
+    {
+      "name": "loginAt-space",
+      "rejected": true,
+      "reason": "value mismatch: en.loginAt"
+    },
+    {
+      "name": "outside-WORDS-behavior",
+      "rejected": true,
+      "reason": "outside-approved-areas token drift"
+    },
+    {
+      "name": "unapproved-timezone",
+      "rejected": true,
+      "reason": "unapproved formatter: fmt"
+    },
+    {
+      "name": "generic-dot-split",
+      "rejected": true,
+      "reason": "dictionary structure mismatch: en.kinds.server.decommission_requested"
+    }
+  ],
+  "inlineCSP": [
+    "sha256-K6/bRB86z0QTI8XlLEzh/ToRbBk4CcB8zKVr/dHEMIw="
+  ]
+}

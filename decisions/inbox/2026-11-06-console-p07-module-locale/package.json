@@ -1,0 +1,13 @@
+{
+  "name": "p07-module-materialization-artifact",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "write": "node convert.mjs --write",
+    "check": "node convert.mjs --check"
+  },
+  "dependencies": {
+    "acorn": "8.15.0"
+  }
+}
