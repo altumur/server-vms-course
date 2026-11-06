@@ -249,7 +249,7 @@ tables:
       kind: {type: string, default: local, schema: {enum: [local, network, backup, edge, incidents]}}
       # the directory it is (`file://`), or the bucket's address (`s3://`) — never the key to it: a login or a credential anywhere in it is
       # refused (the platform's address rule; the twelfth review, blocker 10)
-      url: {type: url, required: true, credentials: {login: access_key, secret: access_secret}, secret_in: [param: [sig, signature, xamzsignature, accountkey, sharedaccesssignature], param: ['password*', 'passwd*', 'pwd*', 'secret*', '*password', '*passwd', '*pwd', '*secret', '*token'], nested: [src, url]], schemes: {file: {host: path}, s3: {}}}
+      url: {type: url, required: true, credentials: {login: access_key, secret: access_secret}, secret_in: [{param: [sig, signature, xamzsignature, accountkey, sharedaccesssignature]}, {param: ['password*', 'passwd*', 'pwd*', 'secret*', '*password', '*passwd', '*pwd', '*secret', '*token']}, {nested: [src, url]}], schemes: {file: {host: path}, s3: {}}}
       server: {type: string}                         # local, edge, a backup or incidents disk: whose; network: empty
       # its SIZE: the ring the engine formats it as — what lets one partition hold two volumes
       quota_bytes: {type: int, required: true, schema: {minimum: 1}}
@@ -280,7 +280,7 @@ tables:
         then:
           required: [server]
           properties: {url: {pattern: "^file://"}}
-          allOf: [not: {required: [access_key]}, not: {required: [access_secret]}]
+          allOf: [{not: {required: [access_key]}}, {not: {required: [access_secret]}}]
         else: {not: {required: [when]}}              # `when` is a card's: elsewhere it is a recording's
     journal: {written: archive.volume.declared, deleted: archive.volume.withdrawn}
   # Why a volume nobody holds needs a holder (`placement.places.wanted`, P/04 N3 «shortage()»): the platform does not know
