@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Internal finite deletion profile, proposed source form; not manifest keys",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["body_bytes", "row_weight_bytes", "folder_weight_bytes", "metadata", "packets", "provenance"],
+  "properties": {
+    "body_bytes": {"$ref": "#/$defs/positive"},
+    "row_weight_bytes": {"$ref": "#/$defs/positive"},
+    "folder_weight_bytes": {"$ref": "#/$defs/positive"},
+    "metadata": {
+      "type": "object", "additionalProperties": false,
+      "required": ["key_utf8_bytes", "version_digits", "id_hex_digits", "timestamp_json_bytes", "encoder", "trailing_lf"],
+      "properties": {
+        "key_utf8_bytes": {"const": 1024},
+        "version_digits": {"const": 20},
+        "id_hex_digits": {"const": 64},
+        "timestamp_json_bytes": {"const": 313},
+        "encoder": {"const": "compact-json-utf8"},
+        "trailing_lf": {"type": "integer", "enum": [0, 1]}
+      }
+    },
+    "packets": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["packet", "source", "H", "n_unit", "n_claim", "n_folder", "n_empty", "n_delete", "n_guard", "multiplicity_proof"],
+        "properties": {
+          "packet": {"type": "string", "minLength": 1},
+          "source": {"type": "string", "minLength": 1},
+          "H": {"$ref": "#/$defs/natural"},
+          "n_unit": {"$ref": "#/$defs/natural"},
+          "n_claim": {"$ref": "#/$defs/natural"},
+          "n_folder": {"$ref": "#/$defs/natural"},
+          "n_empty": {"$ref": "#/$defs/natural"},
+          "n_delete": {"$ref": "#/$defs/natural"},
+          "n_guard": {"$ref": "#/$defs/natural"},
+          "multiplicity_proof": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["store_limits", "catalogue", "procedure_descriptors", "complete_packet_roster", "metadata_skeleton_proof"],
+      "properties": {
+        "store_limits": {"type": "string", "minLength": 1},
+        "catalogue": {"type": "string", "minLength": 1},
+        "procedure_descriptors": {"type": "string", "minLength": 1},
+        "complete_packet_roster": {"type": "string", "minLength": 1},
+        "metadata_skeleton_proof": {"type": "string", "minLength": 1}
+      }
+    }
+  },
+  "$defs": {
+    "positive": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "natural": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+  },
+  "$comment": "Structural form only. Existing installer must additionally verify unique complete packet roster, exact provenance, multiplicity and H proofs, all existing row/key rules, and bound<=body_bytes for each packet. Missing bindings are not discharged by JSON Schema. Proposed positive integer cap is a finite source-form domain, not a new store flag ceiling."
+}

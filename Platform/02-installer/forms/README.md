@@ -39,6 +39,12 @@ preserved source cells. A specified code/word cannot be broadened merely because
 Examples (TABs in the actual TSV): `2.1 / 1 / load_text / call / - / word refused:text`; `2.3 / 2 / manifest_changed / process / exit 0`;
 `2.4 / 14 / secrets_unknown_family / cli / exit 1 / word unknown-row-form`. The exit-0 control outcome is not a failed installation.
 
+## Internal finite deletion profile
+
+`finite-profile.schema.json` is the exact approved1f00 internal typed record, not manifest keys, flags or acceptance.yaml. P02.3 N3 checks it after installation step6 before step7/all writes (including unchanged), and at Process start before doors. Missing/unreadable limits retain the existing refusal; an insufficient profile is `refused:form`.
+
+`finite-profile.cases.json` binds13 witnesses to those existing entries. Its owned_context is an independent finite synthetic universe of8 packet shapes and metadata skeleton proofs; it does not attest completeness of production procedures. The source judge must reject missing/duplicate packets, short H/multiplicities, unknown provenance and wrong effective limits. Schema acceptance and free strings do not prove this. Actual descriptors must additionally cover every emitted packet, mixed batches and other auxiliary families. The maximum sufficient bound of this owned universe is609947876 bytes: exact B passes, bound B+1 refuses before writes. Expected answers/bounds never enter the implementation input. The separate codec boundaries1048575/1048576/1048577 and stated V/LF are not successful profile installations at default B. The Architect authors the shared judge by exact source hash; source/form/codec checks are not installer/native/SUT execution or a pin update.
+
 ## Stage gates
 
 [`stages.tsv`](stages.tsv) is a plan, not a behavior norm (ADR-0126). `verdicts:2.1:*` selects the first column of `verdicts.tsv`;

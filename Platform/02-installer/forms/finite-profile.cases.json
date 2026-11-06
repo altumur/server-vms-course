@@ -1,0 +1,1860 @@
+{
+  "norm": "ADR-0127 P06 C2; P02.3 N3 steps6a/3a",
+  "kind": "owned finite descriptor form/arithmetic witnesses, not installed production profiles",
+  "schema": "finite-profile.schema.json",
+  "binding": {
+    "install": "P02.3 N3 Manifest change after step6 before step7 and all writes, including unchanged",
+    "start": "P02.3 N3 Process start3a before doors",
+    "input": "internal profile plus independently supplied effective store status, confirmed catalogue and finite procedure descriptor/proof context; expect never enters this input",
+    "failed_install": "exit2 refused:form and no row/part/view/mark write",
+    "missing_limits": "existing installation refusal; startup existing code1/code2 distinction",
+    "no_native_command": true,
+    "no_acceptance_yaml_keys": true
+  },
+  "owned_context": {
+    "status": {
+      "max_value": 524288,
+      "max_body": 609947876
+    },
+    "confirmed_catalogue": "owned synthetic fixture universe only",
+    "descriptor_packet_roster": [
+      "claim-acquire",
+      "claim-intent-save",
+      "unit-delete-target",
+      "unit-delete-done",
+      "batch-unit-deletes-target",
+      "batch-unit-deletes-done",
+      "claim-takeover",
+      "claim-cleanup"
+    ],
+    "descriptors": [
+      {
+        "packet": "claim-acquire",
+        "counts": {
+          "n_unit": 0,
+          "n_claim": 1,
+          "n_folder": 0,
+          "n_empty": 0,
+          "n_delete": 0,
+          "n_guard": 0
+        },
+        "skeleton_entity_bytes": 6344,
+        "put_slots": 1,
+        "key_utf8_bytes": 1024,
+        "key_json_bytes": 6146,
+        "version_digits": 20,
+        "id_hex_digits": 64,
+        "timestamp_slots": 2,
+        "timestamp_dummy_bytes": 1,
+        "timestamp_upper_bytes": 313,
+        "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
+        "H": 6966
+      },
+      {
+        "packet": "claim-intent-save",
+        "counts": {
+          "n_unit": 0,
+          "n_claim": 1,
+          "n_folder": 0,
+          "n_empty": 0,
+          "n_delete": 0,
+          "n_guard": 0
+        },
+        "skeleton_entity_bytes": 6344,
+        "put_slots": 1,
+        "key_utf8_bytes": 1024,
+        "key_json_bytes": 6146,
+        "version_digits": 20,
+        "id_hex_digits": 64,
+        "timestamp_slots": 2,
+        "timestamp_dummy_bytes": 1,
+        "timestamp_upper_bytes": 313,
+        "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
+        "H": 6966
+      },
+      {
+        "packet": "unit-delete-target",
+        "counts": {
+          "n_unit": 1,
+          "n_claim": 0,
+          "n_folder": 8,
+          "n_empty": 1,
+          "n_delete": 1,
+          "n_guard": 4
+        },
+        "skeleton_entity_bytes": 93139,
+        "put_slots": 10,
+        "key_utf8_bytes": 1024,
+        "key_json_bytes": 6146,
+        "version_digits": 20,
+        "id_hex_digits": 64,
+        "timestamp_slots": 2,
+        "timestamp_dummy_bytes": 1,
+        "timestamp_upper_bytes": 313,
+        "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
+        "H": 93743
+      },
+      {
+        "packet": "unit-delete-done",
+        "counts": {
+          "n_unit": 0,
+          "n_claim": 1,
+          "n_folder": 0,
+          "n_empty": 0,
+          "n_delete": 0,
+          "n_guard": 0
+        },
+        "skeleton_entity_bytes": 6344,
+        "put_slots": 1,
+        "key_utf8_bytes": 1024,
+        "key_json_bytes": 6146,
+        "version_digits": 20,
+        "id_hex_digits": 64,
+        "timestamp_slots": 2,
+        "timestamp_dummy_bytes": 1,
+        "timestamp_upper_bytes": 313,
+        "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
+        "H": 6966
+      },
+      {
+        "packet": "batch-unit-deletes-target",
+        "counts": {
+          "n_unit": 64,
+          "n_claim": 0,
+          "n_folder": 512,
+          "n_empty": 64,
+          "n_delete": 64,
+          "n_guard": 257
+        },
+        "skeleton_entity_bytes": 5958451,
+        "put_slots": 640,
+        "key_utf8_bytes": 1024,
+        "key_json_bytes": 6146,
+        "version_digits": 20,
+        "id_hex_digits": 64,
+        "timestamp_slots": 2,
+        "timestamp_dummy_bytes": 1,
+        "timestamp_upper_bytes": 313,
+        "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
+        "H": 5957795
+      },
+      {
+        "packet": "batch-unit-deletes-done",
+        "counts": {
+          "n_unit": 0,
+          "n_claim": 1,
+          "n_folder": 0,
+          "n_empty": 0,
+          "n_delete": 0,
+          "n_guard": 0
+        },
+        "skeleton_entity_bytes": 6344,
+        "put_slots": 1,
+        "key_utf8_bytes": 1024,
+        "key_json_bytes": 6146,
+        "version_digits": 20,
+        "id_hex_digits": 64,
+        "timestamp_slots": 2,
+        "timestamp_dummy_bytes": 1,
+        "timestamp_upper_bytes": 313,
+        "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
+        "H": 6966
+      },
+      {
+        "packet": "claim-takeover",
+        "counts": {
+          "n_unit": 0,
+          "n_claim": 1,
+          "n_folder": 0,
+          "n_empty": 0,
+          "n_delete": 0,
+          "n_guard": 0
+        },
+        "skeleton_entity_bytes": 6344,
+        "put_slots": 1,
+        "key_utf8_bytes": 1024,
+        "key_json_bytes": 6146,
+        "version_digits": 20,
+        "id_hex_digits": 64,
+        "timestamp_slots": 2,
+        "timestamp_dummy_bytes": 1,
+        "timestamp_upper_bytes": 313,
+        "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
+        "H": 6966
+      },
+      {
+        "packet": "claim-cleanup",
+        "counts": {
+          "n_unit": 0,
+          "n_claim": 0,
+          "n_folder": 0,
+          "n_empty": 0,
+          "n_delete": 1,
+          "n_guard": 0
+        },
+        "skeleton_entity_bytes": 6336,
+        "put_slots": 0,
+        "key_utf8_bytes": 1024,
+        "key_json_bytes": 6146,
+        "version_digits": 20,
+        "id_hex_digits": 64,
+        "timestamp_slots": 2,
+        "timestamp_dummy_bytes": 1,
+        "timestamp_upper_bytes": 313,
+        "H_derivation": "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)",
+        "H": 6960
+      }
+    ]
+  },
+  "expected_bounds": {
+    "claim-acquire": 6298430,
+    "claim-intent-save": 6298430,
+    "unit-delete-target": 9531089,
+    "unit-delete-done": 6298430,
+    "batch-unit-deletes-target": 609947876,
+    "batch-unit-deletes-done": 6298430,
+    "claim-takeover": 6298430,
+    "claim-cleanup": 6961
+  },
+  "max_bound": 609947876,
+  "cases": [
+    {
+      "case": "bound-exact-B",
+      "profile": {
+        "body_bytes": 609947876,
+        "row_weight_bytes": 524288,
+        "folder_weight_bytes": 65536,
+        "metadata": {
+          "key_utf8_bytes": 1024,
+          "version_digits": 20,
+          "id_hex_digits": 64,
+          "timestamp_json_bytes": 313,
+          "encoder": "compact-json-utf8",
+          "trailing_lf": 1
+        },
+        "packets": [
+          {
+            "packet": "claim-acquire",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-acquire"
+          },
+          {
+            "packet": "claim-intent-save",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-intent-save"
+          },
+          {
+            "packet": "unit-delete-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 93743,
+            "n_unit": 1,
+            "n_claim": 0,
+            "n_folder": 8,
+            "n_empty": 1,
+            "n_delete": 1,
+            "n_guard": 4,
+            "multiplicity_proof": "owned-descriptor:unit-delete-target"
+          },
+          {
+            "packet": "unit-delete-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:unit-delete-done"
+          },
+          {
+            "packet": "batch-unit-deletes-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 5957795,
+            "n_unit": 64,
+            "n_claim": 0,
+            "n_folder": 512,
+            "n_empty": 64,
+            "n_delete": 64,
+            "n_guard": 257,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-target"
+          },
+          {
+            "packet": "batch-unit-deletes-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-done"
+          },
+          {
+            "packet": "claim-takeover",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-takeover"
+          },
+          {
+            "packet": "claim-cleanup",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6960,
+            "n_unit": 0,
+            "n_claim": 0,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 1,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-cleanup"
+          }
+        ],
+        "provenance": {
+          "store_limits": "owned-context:status",
+          "catalogue": "owned-context:confirmed-catalogue",
+          "procedure_descriptors": "owned-context:descriptors",
+          "complete_packet_roster": "owned-context:descriptor-packet-roster",
+          "metadata_skeleton_proof": "owned-context:metadata-proofs"
+        }
+      },
+      "store_status": {
+        "max_value": 524288,
+        "max_body": 609947876
+      },
+      "expect": "ok"
+    },
+    {
+      "case": "bound-B-plus-one",
+      "profile": {
+        "body_bytes": 609947875,
+        "row_weight_bytes": 524288,
+        "folder_weight_bytes": 65536,
+        "metadata": {
+          "key_utf8_bytes": 1024,
+          "version_digits": 20,
+          "id_hex_digits": 64,
+          "timestamp_json_bytes": 313,
+          "encoder": "compact-json-utf8",
+          "trailing_lf": 1
+        },
+        "packets": [
+          {
+            "packet": "claim-acquire",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-acquire"
+          },
+          {
+            "packet": "claim-intent-save",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-intent-save"
+          },
+          {
+            "packet": "unit-delete-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 93743,
+            "n_unit": 1,
+            "n_claim": 0,
+            "n_folder": 8,
+            "n_empty": 1,
+            "n_delete": 1,
+            "n_guard": 4,
+            "multiplicity_proof": "owned-descriptor:unit-delete-target"
+          },
+          {
+            "packet": "unit-delete-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:unit-delete-done"
+          },
+          {
+            "packet": "batch-unit-deletes-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 5957795,
+            "n_unit": 64,
+            "n_claim": 0,
+            "n_folder": 512,
+            "n_empty": 64,
+            "n_delete": 64,
+            "n_guard": 257,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-target"
+          },
+          {
+            "packet": "batch-unit-deletes-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-done"
+          },
+          {
+            "packet": "claim-takeover",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-takeover"
+          },
+          {
+            "packet": "claim-cleanup",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6960,
+            "n_unit": 0,
+            "n_claim": 0,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 1,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-cleanup"
+          }
+        ],
+        "provenance": {
+          "store_limits": "owned-context:status",
+          "catalogue": "owned-context:confirmed-catalogue",
+          "procedure_descriptors": "owned-context:descriptors",
+          "complete_packet_roster": "owned-context:descriptor-packet-roster",
+          "metadata_skeleton_proof": "owned-context:metadata-proofs"
+        }
+      },
+      "store_status": {
+        "max_value": 524288,
+        "max_body": 609947875
+      },
+      "expect": "refused:form"
+    },
+    {
+      "case": "limit-one-above-bound",
+      "profile": {
+        "body_bytes": 609947877,
+        "row_weight_bytes": 524288,
+        "folder_weight_bytes": 65536,
+        "metadata": {
+          "key_utf8_bytes": 1024,
+          "version_digits": 20,
+          "id_hex_digits": 64,
+          "timestamp_json_bytes": 313,
+          "encoder": "compact-json-utf8",
+          "trailing_lf": 1
+        },
+        "packets": [
+          {
+            "packet": "claim-acquire",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-acquire"
+          },
+          {
+            "packet": "claim-intent-save",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-intent-save"
+          },
+          {
+            "packet": "unit-delete-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 93743,
+            "n_unit": 1,
+            "n_claim": 0,
+            "n_folder": 8,
+            "n_empty": 1,
+            "n_delete": 1,
+            "n_guard": 4,
+            "multiplicity_proof": "owned-descriptor:unit-delete-target"
+          },
+          {
+            "packet": "unit-delete-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:unit-delete-done"
+          },
+          {
+            "packet": "batch-unit-deletes-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 5957795,
+            "n_unit": 64,
+            "n_claim": 0,
+            "n_folder": 512,
+            "n_empty": 64,
+            "n_delete": 64,
+            "n_guard": 257,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-target"
+          },
+          {
+            "packet": "batch-unit-deletes-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-done"
+          },
+          {
+            "packet": "claim-takeover",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-takeover"
+          },
+          {
+            "packet": "claim-cleanup",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6960,
+            "n_unit": 0,
+            "n_claim": 0,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 1,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-cleanup"
+          }
+        ],
+        "provenance": {
+          "store_limits": "owned-context:status",
+          "catalogue": "owned-context:confirmed-catalogue",
+          "procedure_descriptors": "owned-context:descriptors",
+          "complete_packet_roster": "owned-context:descriptor-packet-roster",
+          "metadata_skeleton_proof": "owned-context:metadata-proofs"
+        }
+      },
+      "store_status": {
+        "max_value": 524288,
+        "max_body": 609947877
+      },
+      "expect": "ok"
+    },
+    {
+      "case": "negative-multiplicity",
+      "profile": {
+        "body_bytes": 609947876,
+        "row_weight_bytes": 524288,
+        "folder_weight_bytes": 65536,
+        "metadata": {
+          "key_utf8_bytes": 1024,
+          "version_digits": 20,
+          "id_hex_digits": 64,
+          "timestamp_json_bytes": 313,
+          "encoder": "compact-json-utf8",
+          "trailing_lf": 1
+        },
+        "packets": [
+          {
+            "packet": "claim-acquire",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": -1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-acquire"
+          },
+          {
+            "packet": "claim-intent-save",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-intent-save"
+          },
+          {
+            "packet": "unit-delete-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 93743,
+            "n_unit": 1,
+            "n_claim": 0,
+            "n_folder": 8,
+            "n_empty": 1,
+            "n_delete": 1,
+            "n_guard": 4,
+            "multiplicity_proof": "owned-descriptor:unit-delete-target"
+          },
+          {
+            "packet": "unit-delete-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:unit-delete-done"
+          },
+          {
+            "packet": "batch-unit-deletes-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 5957795,
+            "n_unit": 64,
+            "n_claim": 0,
+            "n_folder": 512,
+            "n_empty": 64,
+            "n_delete": 64,
+            "n_guard": 257,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-target"
+          },
+          {
+            "packet": "batch-unit-deletes-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-done"
+          },
+          {
+            "packet": "claim-takeover",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-takeover"
+          },
+          {
+            "packet": "claim-cleanup",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6960,
+            "n_unit": 0,
+            "n_claim": 0,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 1,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-cleanup"
+          }
+        ],
+        "provenance": {
+          "store_limits": "owned-context:status",
+          "catalogue": "owned-context:confirmed-catalogue",
+          "procedure_descriptors": "owned-context:descriptors",
+          "complete_packet_roster": "owned-context:descriptor-packet-roster",
+          "metadata_skeleton_proof": "owned-context:metadata-proofs"
+        }
+      },
+      "store_status": {
+        "max_value": 524288,
+        "max_body": 609947876
+      },
+      "expect": "refused:form"
+    },
+    {
+      "case": "integer-outside-domain",
+      "profile": {
+        "body_bytes": 9007199254740992,
+        "row_weight_bytes": 524288,
+        "folder_weight_bytes": 65536,
+        "metadata": {
+          "key_utf8_bytes": 1024,
+          "version_digits": 20,
+          "id_hex_digits": 64,
+          "timestamp_json_bytes": 313,
+          "encoder": "compact-json-utf8",
+          "trailing_lf": 1
+        },
+        "packets": [
+          {
+            "packet": "claim-acquire",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-acquire"
+          },
+          {
+            "packet": "claim-intent-save",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-intent-save"
+          },
+          {
+            "packet": "unit-delete-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 93743,
+            "n_unit": 1,
+            "n_claim": 0,
+            "n_folder": 8,
+            "n_empty": 1,
+            "n_delete": 1,
+            "n_guard": 4,
+            "multiplicity_proof": "owned-descriptor:unit-delete-target"
+          },
+          {
+            "packet": "unit-delete-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:unit-delete-done"
+          },
+          {
+            "packet": "batch-unit-deletes-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 5957795,
+            "n_unit": 64,
+            "n_claim": 0,
+            "n_folder": 512,
+            "n_empty": 64,
+            "n_delete": 64,
+            "n_guard": 257,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-target"
+          },
+          {
+            "packet": "batch-unit-deletes-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-done"
+          },
+          {
+            "packet": "claim-takeover",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-takeover"
+          },
+          {
+            "packet": "claim-cleanup",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6960,
+            "n_unit": 0,
+            "n_claim": 0,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 1,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-cleanup"
+          }
+        ],
+        "provenance": {
+          "store_limits": "owned-context:status",
+          "catalogue": "owned-context:confirmed-catalogue",
+          "procedure_descriptors": "owned-context:descriptors",
+          "complete_packet_roster": "owned-context:descriptor-packet-roster",
+          "metadata_skeleton_proof": "owned-context:metadata-proofs"
+        }
+      },
+      "store_status": {
+        "max_value": 524288,
+        "max_body": 9007199254740992
+      },
+      "expect": "refused:form"
+    },
+    {
+      "case": "boolean-is-not-integer",
+      "profile": {
+        "body_bytes": 609947876,
+        "row_weight_bytes": 524288,
+        "folder_weight_bytes": 65536,
+        "metadata": {
+          "key_utf8_bytes": 1024,
+          "version_digits": 20,
+          "id_hex_digits": 64,
+          "timestamp_json_bytes": 313,
+          "encoder": "compact-json-utf8",
+          "trailing_lf": 1
+        },
+        "packets": [
+          {
+            "packet": "claim-acquire",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": true,
+            "multiplicity_proof": "owned-descriptor:claim-acquire"
+          },
+          {
+            "packet": "claim-intent-save",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-intent-save"
+          },
+          {
+            "packet": "unit-delete-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 93743,
+            "n_unit": 1,
+            "n_claim": 0,
+            "n_folder": 8,
+            "n_empty": 1,
+            "n_delete": 1,
+            "n_guard": 4,
+            "multiplicity_proof": "owned-descriptor:unit-delete-target"
+          },
+          {
+            "packet": "unit-delete-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:unit-delete-done"
+          },
+          {
+            "packet": "batch-unit-deletes-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 5957795,
+            "n_unit": 64,
+            "n_claim": 0,
+            "n_folder": 512,
+            "n_empty": 64,
+            "n_delete": 64,
+            "n_guard": 257,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-target"
+          },
+          {
+            "packet": "batch-unit-deletes-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-done"
+          },
+          {
+            "packet": "claim-takeover",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-takeover"
+          },
+          {
+            "packet": "claim-cleanup",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6960,
+            "n_unit": 0,
+            "n_claim": 0,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 1,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-cleanup"
+          }
+        ],
+        "provenance": {
+          "store_limits": "owned-context:status",
+          "catalogue": "owned-context:confirmed-catalogue",
+          "procedure_descriptors": "owned-context:descriptors",
+          "complete_packet_roster": "owned-context:descriptor-packet-roster",
+          "metadata_skeleton_proof": "owned-context:metadata-proofs"
+        }
+      },
+      "store_status": {
+        "max_value": 524288,
+        "max_body": 609947876
+      },
+      "expect": "refused:form"
+    },
+    {
+      "case": "missing-provenance",
+      "profile": {
+        "body_bytes": 609947876,
+        "row_weight_bytes": 524288,
+        "folder_weight_bytes": 65536,
+        "metadata": {
+          "key_utf8_bytes": 1024,
+          "version_digits": 20,
+          "id_hex_digits": 64,
+          "timestamp_json_bytes": 313,
+          "encoder": "compact-json-utf8",
+          "trailing_lf": 1
+        },
+        "packets": [
+          {
+            "packet": "claim-acquire",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-acquire"
+          },
+          {
+            "packet": "claim-intent-save",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-intent-save"
+          },
+          {
+            "packet": "unit-delete-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 93743,
+            "n_unit": 1,
+            "n_claim": 0,
+            "n_folder": 8,
+            "n_empty": 1,
+            "n_delete": 1,
+            "n_guard": 4,
+            "multiplicity_proof": "owned-descriptor:unit-delete-target"
+          },
+          {
+            "packet": "unit-delete-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:unit-delete-done"
+          },
+          {
+            "packet": "batch-unit-deletes-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 5957795,
+            "n_unit": 64,
+            "n_claim": 0,
+            "n_folder": 512,
+            "n_empty": 64,
+            "n_delete": 64,
+            "n_guard": 257,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-target"
+          },
+          {
+            "packet": "batch-unit-deletes-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-done"
+          },
+          {
+            "packet": "claim-takeover",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-takeover"
+          },
+          {
+            "packet": "claim-cleanup",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6960,
+            "n_unit": 0,
+            "n_claim": 0,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 1,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-cleanup"
+          }
+        ],
+        "provenance": {
+          "store_limits": "owned-context:status",
+          "procedure_descriptors": "owned-context:descriptors",
+          "complete_packet_roster": "owned-context:descriptor-packet-roster",
+          "metadata_skeleton_proof": "owned-context:metadata-proofs"
+        }
+      },
+      "store_status": {
+        "max_value": 524288,
+        "max_body": 609947876
+      },
+      "expect": "refused:form"
+    },
+    {
+      "case": "missing-packet",
+      "profile": {
+        "body_bytes": 609947876,
+        "row_weight_bytes": 524288,
+        "folder_weight_bytes": 65536,
+        "metadata": {
+          "key_utf8_bytes": 1024,
+          "version_digits": 20,
+          "id_hex_digits": 64,
+          "timestamp_json_bytes": 313,
+          "encoder": "compact-json-utf8",
+          "trailing_lf": 1
+        },
+        "packets": [
+          {
+            "packet": "claim-acquire",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-acquire"
+          },
+          {
+            "packet": "claim-intent-save",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-intent-save"
+          },
+          {
+            "packet": "unit-delete-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:unit-delete-done"
+          },
+          {
+            "packet": "batch-unit-deletes-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 5957795,
+            "n_unit": 64,
+            "n_claim": 0,
+            "n_folder": 512,
+            "n_empty": 64,
+            "n_delete": 64,
+            "n_guard": 257,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-target"
+          },
+          {
+            "packet": "batch-unit-deletes-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-done"
+          },
+          {
+            "packet": "claim-takeover",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-takeover"
+          },
+          {
+            "packet": "claim-cleanup",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6960,
+            "n_unit": 0,
+            "n_claim": 0,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 1,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-cleanup"
+          }
+        ],
+        "provenance": {
+          "store_limits": "owned-context:status",
+          "catalogue": "owned-context:confirmed-catalogue",
+          "procedure_descriptors": "owned-context:descriptors",
+          "complete_packet_roster": "owned-context:descriptor-packet-roster",
+          "metadata_skeleton_proof": "owned-context:metadata-proofs"
+        }
+      },
+      "store_status": {
+        "max_value": 524288,
+        "max_body": 609947876
+      },
+      "expect": "refused:form"
+    },
+    {
+      "case": "duplicate-packet",
+      "profile": {
+        "body_bytes": 609947876,
+        "row_weight_bytes": 524288,
+        "folder_weight_bytes": 65536,
+        "metadata": {
+          "key_utf8_bytes": 1024,
+          "version_digits": 20,
+          "id_hex_digits": 64,
+          "timestamp_json_bytes": 313,
+          "encoder": "compact-json-utf8",
+          "trailing_lf": 1
+        },
+        "packets": [
+          {
+            "packet": "claim-acquire",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-acquire"
+          },
+          {
+            "packet": "claim-intent-save",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-intent-save"
+          },
+          {
+            "packet": "unit-delete-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 93743,
+            "n_unit": 1,
+            "n_claim": 0,
+            "n_folder": 8,
+            "n_empty": 1,
+            "n_delete": 1,
+            "n_guard": 4,
+            "multiplicity_proof": "owned-descriptor:unit-delete-target"
+          },
+          {
+            "packet": "unit-delete-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:unit-delete-done"
+          },
+          {
+            "packet": "batch-unit-deletes-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 5957795,
+            "n_unit": 64,
+            "n_claim": 0,
+            "n_folder": 512,
+            "n_empty": 64,
+            "n_delete": 64,
+            "n_guard": 257,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-target"
+          },
+          {
+            "packet": "batch-unit-deletes-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-done"
+          },
+          {
+            "packet": "claim-takeover",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-takeover"
+          },
+          {
+            "packet": "claim-cleanup",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6960,
+            "n_unit": 0,
+            "n_claim": 0,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 1,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-cleanup"
+          },
+          {
+            "packet": "claim-acquire",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-acquire"
+          }
+        ],
+        "provenance": {
+          "store_limits": "owned-context:status",
+          "catalogue": "owned-context:confirmed-catalogue",
+          "procedure_descriptors": "owned-context:descriptors",
+          "complete_packet_roster": "owned-context:descriptor-packet-roster",
+          "metadata_skeleton_proof": "owned-context:metadata-proofs"
+        }
+      },
+      "store_status": {
+        "max_value": 524288,
+        "max_body": 609947876
+      },
+      "expect": "refused:form"
+    },
+    {
+      "case": "short-H",
+      "profile": {
+        "body_bytes": 609947876,
+        "row_weight_bytes": 524288,
+        "folder_weight_bytes": 65536,
+        "metadata": {
+          "key_utf8_bytes": 1024,
+          "version_digits": 20,
+          "id_hex_digits": 64,
+          "timestamp_json_bytes": 313,
+          "encoder": "compact-json-utf8",
+          "trailing_lf": 1
+        },
+        "packets": [
+          {
+            "packet": "claim-acquire",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-acquire"
+          },
+          {
+            "packet": "claim-intent-save",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-intent-save"
+          },
+          {
+            "packet": "unit-delete-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 93742,
+            "n_unit": 1,
+            "n_claim": 0,
+            "n_folder": 8,
+            "n_empty": 1,
+            "n_delete": 1,
+            "n_guard": 4,
+            "multiplicity_proof": "owned-descriptor:unit-delete-target"
+          },
+          {
+            "packet": "unit-delete-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:unit-delete-done"
+          },
+          {
+            "packet": "batch-unit-deletes-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 5957795,
+            "n_unit": 64,
+            "n_claim": 0,
+            "n_folder": 512,
+            "n_empty": 64,
+            "n_delete": 64,
+            "n_guard": 257,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-target"
+          },
+          {
+            "packet": "batch-unit-deletes-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-done"
+          },
+          {
+            "packet": "claim-takeover",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-takeover"
+          },
+          {
+            "packet": "claim-cleanup",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6960,
+            "n_unit": 0,
+            "n_claim": 0,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 1,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-cleanup"
+          }
+        ],
+        "provenance": {
+          "store_limits": "owned-context:status",
+          "catalogue": "owned-context:confirmed-catalogue",
+          "procedure_descriptors": "owned-context:descriptors",
+          "complete_packet_roster": "owned-context:descriptor-packet-roster",
+          "metadata_skeleton_proof": "owned-context:metadata-proofs"
+        }
+      },
+      "store_status": {
+        "max_value": 524288,
+        "max_body": 609947876
+      },
+      "expect": "refused:form"
+    },
+    {
+      "case": "short-folder-multiplicity",
+      "profile": {
+        "body_bytes": 609947876,
+        "row_weight_bytes": 524288,
+        "folder_weight_bytes": 65536,
+        "metadata": {
+          "key_utf8_bytes": 1024,
+          "version_digits": 20,
+          "id_hex_digits": 64,
+          "timestamp_json_bytes": 313,
+          "encoder": "compact-json-utf8",
+          "trailing_lf": 1
+        },
+        "packets": [
+          {
+            "packet": "claim-acquire",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-acquire"
+          },
+          {
+            "packet": "claim-intent-save",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-intent-save"
+          },
+          {
+            "packet": "unit-delete-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 93743,
+            "n_unit": 1,
+            "n_claim": 0,
+            "n_folder": 7,
+            "n_empty": 1,
+            "n_delete": 1,
+            "n_guard": 4,
+            "multiplicity_proof": "owned-descriptor:unit-delete-target"
+          },
+          {
+            "packet": "unit-delete-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:unit-delete-done"
+          },
+          {
+            "packet": "batch-unit-deletes-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 5957795,
+            "n_unit": 64,
+            "n_claim": 0,
+            "n_folder": 512,
+            "n_empty": 64,
+            "n_delete": 64,
+            "n_guard": 257,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-target"
+          },
+          {
+            "packet": "batch-unit-deletes-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-done"
+          },
+          {
+            "packet": "claim-takeover",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-takeover"
+          },
+          {
+            "packet": "claim-cleanup",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6960,
+            "n_unit": 0,
+            "n_claim": 0,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 1,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-cleanup"
+          }
+        ],
+        "provenance": {
+          "store_limits": "owned-context:status",
+          "catalogue": "owned-context:confirmed-catalogue",
+          "procedure_descriptors": "owned-context:descriptors",
+          "complete_packet_roster": "owned-context:descriptor-packet-roster",
+          "metadata_skeleton_proof": "owned-context:metadata-proofs"
+        }
+      },
+      "store_status": {
+        "max_value": 524288,
+        "max_body": 609947876
+      },
+      "expect": "refused:form"
+    },
+    {
+      "case": "unknown-provenance-is-not-proof",
+      "profile": {
+        "body_bytes": 609947876,
+        "row_weight_bytes": 524288,
+        "folder_weight_bytes": 65536,
+        "metadata": {
+          "key_utf8_bytes": 1024,
+          "version_digits": 20,
+          "id_hex_digits": 64,
+          "timestamp_json_bytes": 313,
+          "encoder": "compact-json-utf8",
+          "trailing_lf": 1
+        },
+        "packets": [
+          {
+            "packet": "claim-acquire",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-acquire"
+          },
+          {
+            "packet": "claim-intent-save",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-intent-save"
+          },
+          {
+            "packet": "unit-delete-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 93743,
+            "n_unit": 1,
+            "n_claim": 0,
+            "n_folder": 8,
+            "n_empty": 1,
+            "n_delete": 1,
+            "n_guard": 4,
+            "multiplicity_proof": "owned-descriptor:unit-delete-target"
+          },
+          {
+            "packet": "unit-delete-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:unit-delete-done"
+          },
+          {
+            "packet": "batch-unit-deletes-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 5957795,
+            "n_unit": 64,
+            "n_claim": 0,
+            "n_folder": 512,
+            "n_empty": 64,
+            "n_delete": 64,
+            "n_guard": 257,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-target"
+          },
+          {
+            "packet": "batch-unit-deletes-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-done"
+          },
+          {
+            "packet": "claim-takeover",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-takeover"
+          },
+          {
+            "packet": "claim-cleanup",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6960,
+            "n_unit": 0,
+            "n_claim": 0,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 1,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-cleanup"
+          }
+        ],
+        "provenance": {
+          "store_limits": "owned-context:status",
+          "catalogue": "owned-context:confirmed-catalogue",
+          "procedure_descriptors": "owned-context:descriptors",
+          "complete_packet_roster": "trust-me",
+          "metadata_skeleton_proof": "owned-context:metadata-proofs"
+        }
+      },
+      "store_status": {
+        "max_value": 524288,
+        "max_body": 609947876
+      },
+      "expect": "refused:form"
+    },
+    {
+      "case": "profile-B-differs-from-effective-status",
+      "profile": {
+        "body_bytes": 609947877,
+        "row_weight_bytes": 524288,
+        "folder_weight_bytes": 65536,
+        "metadata": {
+          "key_utf8_bytes": 1024,
+          "version_digits": 20,
+          "id_hex_digits": 64,
+          "timestamp_json_bytes": 313,
+          "encoder": "compact-json-utf8",
+          "trailing_lf": 1
+        },
+        "packets": [
+          {
+            "packet": "claim-acquire",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-acquire"
+          },
+          {
+            "packet": "claim-intent-save",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-intent-save"
+          },
+          {
+            "packet": "unit-delete-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 93743,
+            "n_unit": 1,
+            "n_claim": 0,
+            "n_folder": 8,
+            "n_empty": 1,
+            "n_delete": 1,
+            "n_guard": 4,
+            "multiplicity_proof": "owned-descriptor:unit-delete-target"
+          },
+          {
+            "packet": "unit-delete-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:unit-delete-done"
+          },
+          {
+            "packet": "batch-unit-deletes-target",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 5957795,
+            "n_unit": 64,
+            "n_claim": 0,
+            "n_folder": 512,
+            "n_empty": 64,
+            "n_delete": 64,
+            "n_guard": 257,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-target"
+          },
+          {
+            "packet": "batch-unit-deletes-done",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:batch-unit-deletes-done"
+          },
+          {
+            "packet": "claim-takeover",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6966,
+            "n_unit": 0,
+            "n_claim": 1,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 0,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-takeover"
+          },
+          {
+            "packet": "claim-cleanup",
+            "source": "P06.1 N3 repeat memory/delete/batch; P06.8 N3 unit deletion",
+            "H": 6960,
+            "n_unit": 0,
+            "n_claim": 0,
+            "n_folder": 0,
+            "n_empty": 0,
+            "n_delete": 1,
+            "n_guard": 0,
+            "multiplicity_proof": "owned-descriptor:claim-cleanup"
+          }
+        ],
+        "provenance": {
+          "store_limits": "owned-context:status",
+          "catalogue": "owned-context:confirmed-catalogue",
+          "procedure_descriptors": "owned-context:descriptors",
+          "complete_packet_roster": "owned-context:descriptor-packet-roster",
+          "metadata_skeleton_proof": "owned-context:metadata-proofs"
+        }
+      },
+      "store_status": {
+        "max_value": 524288,
+        "max_body": 609947876
+      },
+      "expect": "refused:form"
+    }
+  ],
+  "limits": "Schema and arithmetic witnesses only; fixture descriptors are not a proof of production descriptor completeness. Missing/mixed/other-family production packets must be included and proved independently. Actual installer/runtime/native/SUT0; judge is Architect check_forms, pending exact source."
+}
