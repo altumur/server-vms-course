@@ -256,7 +256,133 @@ class Constants(unittest.TestCase):
             self.assertTrue(any(p == wire for p, _ in self.errors()))
 
 
+class FolderConstants(unittest.TestCase):
+    BINDINGS = (
+        ("Platform/06-console/data/folders.schema.json", "/$defs/writer/properties/members/maxItems", "FOLDERS_MEMBERS_MAX"),
+        ("Platform/06-console/data/memberof.schema.json", "/$defs/writer/properties/folders/maxItems", "FOLDERS_PER_UNIT_MAX"),
+    )
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.form = self.root / "Platform/06-console/forms/runtime-constants.tsv"
+        for rel in [self.form.relative_to(self.root), *(Path(row[0]) for row in self.BINDINGS)]:
+            target = self.root / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / rel, target)
+
+    def check(self):
+        return check_constants.check_p06_folder_constants(self.root)
+
+    def constant(self, name, value):
+        lines = self.form.read_text().split("\n")
+        at = next(i for i, line in enumerate(lines) if line.startswith(name + "\t"))
+        cells = lines[at].split("\t")
+        cells[1] = str(value)
+        lines[at] = "\t".join(cells)
+        self.form.write_text("\n".join(lines))
+
+    def test_actual_two_pointers_match_actual_source_and_are_read_only(self):
+        self.assertEqual(check_constants.P06_FOLDER_BINDINGS, self.BINDINGS)
+        before = {p: p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+        self.assertEqual(self.check(), ([], {"p06_folder_equalities": 2}))
+        self.assertEqual({p: p.read_bytes() for p in before}, before)
+
+    def test_each_missing_file_and_pointer_and_decoy_pointer_fail(self):
+        for rel, pointer, _ in self.BINDINGS:
+            path = self.root / rel
+            original = path.read_bytes()
+            with self.subTest(path=rel):
+                path.unlink()
+                self.assertTrue(any(p == path for p, _ in self.check()[0]))
+                path.write_bytes(original)
+                doc = json.loads(original)
+                parent, key = parent_at(doc, pointer)
+                value = parent.pop(key)
+                # A same-named root/read carrier is never the assigned writer pointer.
+                doc["maxItems"] = value
+                path.write_text(json.dumps(doc))
+                self.assertTrue(any(p == path and "missing numeric carrier " + pointer in m for p, m in self.check()[0]))
+                path.write_bytes(original)
+
+    def test_every_wrong_value_and_noninteger_type_fails(self):
+        for rel, pointer, _ in self.BINDINGS:
+            path = self.root / rel
+            original = path.read_bytes()
+            for wrong in (0, 1, "8", None, True, False, [], {}, 8.0, 1000.0):
+                with self.subTest(path=rel, value=wrong):
+                    doc = json.loads(original)
+                    parent, key = parent_at(doc, pointer)
+                    parent[key] = wrong
+                    path.write_text(json.dumps(doc))
+                    self.assertTrue(any(p == path and pointer in m for p, m in self.check()[0]))
+            path.write_bytes(original)
+
+    def test_actual_integer_type_does_not_accept_true_or_integral_decimal(self):
+        for rel, pointer, name in self.BINDINGS:
+            path = self.root / rel
+            original, form = path.read_bytes(), self.form.read_bytes()
+            self.constant(name, 1)
+            for wrong in (True, 1.0):
+                with self.subTest(path=rel, alias=wrong):
+                    doc = json.loads(original)
+                    parent, key = parent_at(doc, pointer)
+                    parent[key] = wrong
+                    path.write_text(json.dumps(doc))
+                    self.assertTrue(any(p == path and pointer in m for p, m in self.check()[0]))
+            path.write_bytes(original)
+            self.form.write_bytes(form)
+
+    def test_values_are_read_from_the_form_not_frozen_in_the_checker(self):
+        for rel, pointer, name in self.BINDINGS:
+            path = self.root / rel
+            original, form = path.read_bytes(), self.form.read_bytes()
+            self.constant(name, 13)
+            self.assertTrue(any(p == path and pointer in m for p, m in self.check()[0]))
+            doc = json.loads(original)
+            parent, key = parent_at(doc, pointer)
+            parent[key] = 13
+            path.write_text(json.dumps(doc))
+            self.assertEqual(self.check(), ([], {"p06_folder_equalities": 2}))
+            path.write_bytes(original)
+            self.form.write_bytes(form)
+
+    def test_single_required_rows_and_positive_unpadded_values(self):
+        original = self.form.read_text()
+        for _, _, name in self.BINDINGS:
+            row = next(line for line in original.split("\n") if line.startswith(name + "\t"))
+            variants = {"missing": original.replace(row + "\n", ""), "duplicate": original + row + "\n",
+                        "wrong unit": original.replace(row, row.replace("\tcount\t", "\tbytes\t"))}
+            for value in ("0", "-1", "true", "false", "1.0", "01", "١", ""):
+                cells = row.split("\t")
+                cells[1] = value
+                variants[value] = original.replace(row, "\t".join(cells))
+            for kind, data in variants.items():
+                with self.subTest(name=name, corrupt=kind):
+                    self.assertNotEqual(data, original)
+                    self.form.write_text(data)
+                    self.assertTrue(any(p == self.form for p, _ in self.check()[0]))
+            self.form.write_text(original)
+        self.form.unlink()
+        self.assertTrue(any(p == self.form for p, _ in self.check()[0]))
+
+
 class Integration(unittest.TestCase):
+    def test_p06_only_subject_errors_and_counts_reach_check_spec(self):
+        from check_spec import Check
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "Platform/06-console").mkdir(parents=True)
+            path = root / "Platform/06-console/data/folders.schema.json"
+            result = Check(root)
+            with patch("check_constants.check_p06_folder_constants", return_value=([(path, "folder subject mutant")],
+                                                                                {"p06_folder_equalities": 1})) as called:
+                result.check_forms()
+            called.assert_called_once_with(root)
+            self.assertTrue(any("folder subject mutant" in e for e in result.errors))
+            self.assertEqual(result.stats["p06_folder_equalities"], 1)
+
     def test_subject_failure_and_counts_reach_check_spec(self):
         from check_spec import Check
         with tempfile.TemporaryDirectory() as tmp:
