@@ -1242,6 +1242,8 @@ class Check:
 
     def read(self, path):
         try:
+            if path.suffix == ".tsv":
+                return path.read_bytes().decode("utf-8")
             return path.read_text(encoding="utf-8")
         except (OSError, UnicodeError) as exc:
             self.error(path, str(exc))
@@ -1585,7 +1587,7 @@ class Check:
                 else:
                     rows.append((line_no, [row[name] for name in columns]))
             return rows
-        for line_no, line in enumerate(text.splitlines(), 1):
+        for line_no, line in enumerate(text.split("\n"), 1):
             if not line or line.startswith("#"):
                 continue
             cols = line.split("\t")

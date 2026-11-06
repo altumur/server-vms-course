@@ -1,5 +1,5 @@
 {
-  "baseline": "88f9879fd9b69ea6cbf2a1b7e342f2478484ac64",
+  "baseline": "cac140972cfc4e949e2859adbe4afde10fa3c7ff",
   "request_cells": 345,
   "request_bytes_identical": true,
   "scenario_step_roster_identical": true,
@@ -30,8 +30,13 @@
   "final_source_form_key_mirror_forms_tests": 103,
   "final_tests_status": "PASS",
   "checker_unit_tests_previously_passed": 160,
-  "map_sha256": "377127f497ec60b0ea18a184bec5cd5cf9007e5b7099c78f36e64254b55ca888",
-  "map_records": 1067,
+  "source_cells_canonical_cases": 31,
+  "lf_regressions": "U2028/VT preserved at physical3; CR raw-file IO retained",
+  "final_tests": 265,
+  "final_tests_skip": 1,
+  "source_form_key_mirror_targeted_tests": 47,
+  "map_sha256": "59e0a657f9b66958e62bedb397d75d03eb9d183624d7db97fbd46826233b0ef1",
+  "map_records": 1083,
   "categories": {
     "source-metadata": 575,
     "source-form": 1,
@@ -39,7 +44,7 @@
     "wire-annotation": 3,
     "schema-description": 4,
     "human-mirror": 69,
-    "checker-code": 59,
+    "checker-code": 75,
     "protocol-identity": 11
   },
   "files": [
@@ -240,8 +245,8 @@
     },
     {
       "path": "Platform/common/contracts/source-cells.md",
-      "before_sha256": "8fc9c1e79fee593c9c9792ac6244800f548156c0957e3cc88d0ef7af9ac4152b",
-      "after_sha256": "9ad47d98c592a4b9cbdc82bb59cc5bee8a91de6ac172752f413d511cbae2ff5e"
+      "before_sha256": "641435ae56f80e19113393c2599384c8ea6f9998592428248c5e3d9db22c364e",
+      "after_sha256": "a292f59d74f24a3caf32c756aae1270cb76e0c49b73626305f6cb4c5781e9549"
     },
     {
       "path": "Platform/common/data/cell-json-sha256.tsv",
@@ -250,13 +255,13 @@
     },
     {
       "path": "Platform/common/ru/contracts/source-cells.md",
-      "before_sha256": "ebfa4375a72a921752e91de711198736bfae944e38de1109a5e7e9cc16670c6d",
-      "after_sha256": "18656262df0ca5d5dca155d3b1186480cd39b5dea7197376d041dcc689205878"
+      "before_sha256": "dfd1ea5d27280bee5924b34dc9afe66ac372068368f41db4e1bbc8431dea1b2a",
+      "after_sha256": "c71e184a625ec3ca6e9e0a0a5c6e47db761a100df776ac324f9b3750e36c085d"
     },
     {
       "path": "skills/lesson-spec/scripts/check_spec.py",
       "before_sha256": "23d0ccefcabf03f4368f7fa4786834706ba475c14d2f25aec660ffd4b6df313a",
-      "after_sha256": "2b01a4740454c1cd8996ba9fca3117cbeb370c305af99b2e2d154b86d6012c73"
+      "after_sha256": "4b15dfd0cd55c88ee8a8f029b218ea83705bfdb8f2688582bfa6f6d4f7791b8d"
     },
     {
       "path": "skills/lesson-spec/scripts/en_mirror.py",
@@ -265,8 +270,8 @@
     },
     {
       "path": "skills/lesson-spec/scripts/source_cells.py",
-      "before_sha256": "78ede780ee7aedf14a578897692998631dceab896274e1e6b60baaff13cd795a",
-      "after_sha256": "6902eba06688e1e78794ea2f5b6270d983b0cb31eeeb41fb33cb6f03e1c7843d"
+      "before_sha256": "2d4293fe1428af7f7ee595e37136c67d55ec877cdb0462b875c4d59fd38ae14f",
+      "after_sha256": "5877973ffae67b207378771bcb4b8cf53f30ada50b21d440ab05ba0289ba1caa"
     },
     {
       "path": "skills/lesson-spec/scripts/test_check_forms.py",
@@ -275,8 +280,8 @@
     },
     {
       "path": "skills/lesson-spec/scripts/test_source_cells.py",
-      "before_sha256": "b57cd4dff52f5d128ea469232c8b5a0b7d96e404df413d8ad47f69a57a4a5117",
-      "after_sha256": "25a9d4849a6a8e4eb0dee2d2f4cb30fd43e697f0f2e41e0e47bf8998a278c18d"
+      "before_sha256": "9af2a3ac3a2968f6525030bf4c43f51c6718f070de6b605f6e72ad205fff7ed4",
+      "after_sha256": "c9622c54f47e3004ed7d9d251811edb9f1533722182a821d470829d7d0738025"
     }
   ]
 }

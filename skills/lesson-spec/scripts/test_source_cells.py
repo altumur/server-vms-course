@@ -70,6 +70,18 @@ class SourceCells(unittest.TestCase):
             self.assertEqual(check.tsv(path, 4, SCENARIO_HEADER), [(3, ['first', '1', request, '400 {}'])])
             self.assertEqual(check.errors, [])
 
+    def test_checker_keeps_unmarked_line_separators(self):
+        from check_spec import Check
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / 'sample.tsv'
+            for separator in ('\u2028', '\v', '\r'):
+                plain = 'A' + separator + 'B'
+                path.write_bytes(('# cell-json: payload\nplain\tpayload\n' + plain + '\t"x"\n').encode())
+                check = Check(root)
+                self.assertEqual(check.tsv(path, 2, ['plain', 'payload']), [(3, [plain, 'x'])])
+                self.assertEqual(check.errors, [])
+
     def test_complete_byte_proof(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
