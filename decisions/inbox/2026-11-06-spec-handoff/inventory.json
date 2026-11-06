@@ -1,0 +1,498 @@
+{
+  "fetched_main": "394c7c40a0de6d8480a28764a063211140df7246",
+  "worktrees": [
+    {
+      "worktree": "/Users/murat/w2c/wt-spec-p06-constants-c6",
+      "branch": "spec/p06-constants-c6-023",
+      "head": "d09fc4e069d7ef34c893c780bc62476e050af26a",
+      "parents": [
+        "023399dea82d4ad904a9436deccea7c61b50a616"
+      ],
+      "tracked_dirty": "",
+      "untracked": [
+        {
+          "path": ".spec-check/check-spec-base023.log",
+          "bytes": 115378,
+          "sha256": "0d53258173c6ee73b11124742c2afca59db69eefcd5967271510f9d12e21341c",
+          "archive_member": "wt-spec-p06-constants-c6/.spec-check/check-spec-base023.log"
+        },
+        {
+          "path": ".spec-check/check-spec-source.log",
+          "bytes": 115378,
+          "sha256": "fdfe962defda7d176cc43b214e965d7b8fe93951ead3bc8948f13d8be19a8bc8",
+          "archive_member": "wt-spec-p06-constants-c6/.spec-check/check-spec-source.log"
+        }
+      ],
+      "ancestor_of_fetched_main": false,
+      "filesystem_after_inventory": "removed externally before HANDOFF archival; no removal performed by spec in this stop turn",
+      "remote_ref_checked_before_cleanup": true,
+      "ancestor_of_composed_023": false
+    },
+    {
+      "worktree": "/Users/murat/w2c/wt-spec-platform-canonical-paths",
+      "branch": "spec/platform-canonical-paths-e07",
+      "head": "c64498c848266b69933123db8ff2cff2b17ac6cd",
+      "parents": [
+        "36ba710b45bfeb6ef28baef6b9199f6c332017e1"
+      ],
+      "tracked_dirty": "",
+      "untracked": [
+        {
+          "path": ".spec-check/changed-document-link-check.json",
+          "bytes": 39,
+          "sha256": "0720bd83ae1ed302e7c70b65725fa300f3ee60a541a3838ddb2d3eecaf5e3530",
+          "archive_member": "wt-spec-platform-canonical-paths/.spec-check/changed-document-link-check.json"
+        },
+        {
+          "path": ".spec-check/check-spec-before-reader.log",
+          "bytes": 22374,
+          "sha256": "74b38c2e112730246846f1aa2ccb5d5c70f6e0f0b87625f29f7172468b9e281a",
+          "archive_member": "wt-spec-platform-canonical-paths/.spec-check/check-spec-before-reader.log"
+        },
+        {
+          "path": ".spec-check/cyrillic-final.log",
+          "bytes": 212,
+          "sha256": "42055716a1745dd78d868878a6e18da737110c3b5dfca393fddbae92dc1b1418",
+          "archive_member": "wt-spec-platform-canonical-paths/.spec-check/cyrillic-final.log"
+        },
+        {
+          "path": ".spec-check/diff-check-final.log",
+          "bytes": 104,
+          "sha256": "829ac10c2536d99d65e99cb14a6ef246e536590cdb5293142aecdc308a231efc",
+          "archive_member": null
+        }
+      ],
+      "ancestor_of_fetched_main": false,
+      "filesystem_after_inventory": "removed externally before HANDOFF archival; no removal performed by spec in this stop turn",
+      "remote_ref_checked_before_cleanup": true,
+      "ancestor_of_composed_023": true
+    },
+    {
+      "worktree": "/Users/murat/w2c/wt-spec-postjoint-path-plan",
+      "branch": "spec/postjoint-path-plan-638",
+      "head": "607cd6c578e766a4d7b807c945667c0626e4cc27",
+      "parents": [
+        "63811ddc9957251b9c6ac3d60777c0c9dbe94077"
+      ],
+      "tracked_dirty": "",
+      "untracked": [],
+      "ancestor_of_fetched_main": false,
+      "filesystem_after_inventory": "removed externally before HANDOFF archival; no removal performed by spec in this stop turn",
+      "remote_ref_checked_before_cleanup": true,
+      "ancestor_of_composed_023": false
+    },
+    {
+      "worktree": "/Users/murat/w2c/wt-spec-history-forward-mainf7",
+      "branch": "spec/0121-history-forward-mainf7",
+      "head": "63811ddc9957251b9c6ac3d60777c0c9dbe94077",
+      "parents": [
+        "d7ae33630aecc419190249cb4fba430c3c3dd100"
+      ],
+      "tracked_dirty": "",
+      "untracked": [
+        {
+          "path": ".spec-check/final-author-source-checks.json",
+          "bytes": 628,
+          "sha256": "3c2bbfe1b7181c81e710030b65fbdd8cf2ed0ab0144fb2b022e8189031bfc08d",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/forward-source-component-checks.json",
+          "bytes": 371,
+          "sha256": "5ff912f24ed9be7c5eb88f59745220b4b69214fabb4f35b9d5f37c87e372ad7b",
+          "archive_member": null
+        }
+      ],
+      "ancestor_of_fetched_main": false,
+      "filesystem_after_inventory": "removed externally before HANDOFF archival; no removal performed by spec in this stop turn",
+      "remote_ref_checked_before_cleanup": true,
+      "ancestor_of_composed_023": true
+    },
+    {
+      "worktree": "/Users/murat/w2c/wt-spec-p06-review-source",
+      "branch": "spec/0121-p06-review-source",
+      "head": "fb66713ba8baf4fd4c082ad0b4e3f6d460c124a1",
+      "parents": [
+        "01c2ef53920042ff4313807b3d2ef48ed05baf27"
+      ],
+      "tracked_dirty": "",
+      "untracked": [
+        {
+          "path": ".spec-check/p06-arch-joint-tests.log",
+          "bytes": 2440,
+          "sha256": "5d8a9c260237dcfd90745667f55f62a10f81b3f15ae7f3cb03b269a197c6402b",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-c2-active-source-check.log",
+          "bytes": 21475,
+          "sha256": "5650913fa71916dd1609c4cab8ef9b26e7ee0f0a3c9b1e5a574b1700d1570afa",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-c2-byte-skeleton-proof.json",
+          "bytes": 2571,
+          "sha256": "2ba3bcdd494a0ef24f5108eb63ad8070d047c901640125457dc59d576f74eb39",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-c2-form-preflight.json",
+          "bytes": 1586,
+          "sha256": "ec314124cb97861837d7f1e4374807d931aacd6de6b6270ed2cadf6b9969cd5a",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-c3-loader-proof.json",
+          "bytes": 3543,
+          "sha256": "81b6fc393da35da2dda8005fcd195b585014b97b9eadfc6f45cf4e47cfd4ab1c",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-c3-old947-proof.json",
+          "bytes": 373,
+          "sha256": "9f7ba2f9938d0dd763800ce4d2741b6c60b1b0e5da806e2c77ff0730c08e6672",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-c3-prejudge-source-check.log",
+          "bytes": 21897,
+          "sha256": "6d933b567bbcc07c5a4ce490ce855c36f8aacdc40ab26bf42bc3841c254d11e6",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-c4-arch-joint-source-check.log",
+          "bytes": 21475,
+          "sha256": "bd409db5ead5b12b05592942f1b5033ce20bf4522d74d8211020a87cecbcb9ba",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-c4-case49-proof.json",
+          "bytes": 2712,
+          "sha256": "05107007ad91a8774e3b841b11b5aac55fd90b99e5c9eedc22f3778656633a8a",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-c4-case49.json",
+          "bytes": 705,
+          "sha256": "ead73bf4f139332da772b7e475f951789f4cd04721cf07c824b8bd35e58a093f",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-c4-form-preflight.json",
+          "bytes": 543,
+          "sha256": "3dc6e3950a453bb25a02a13a588208ee94a92eef096cba066ba17b98f3a306a9",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-ce38-case49-tests.log",
+          "bytes": 184,
+          "sha256": "d3f2ee43a27114b4f935b56614ab8e45ba0f04b705f61e214fd22cd5f550a4d5",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-encoding-proof.json",
+          "bytes": 518224,
+          "sha256": "6ae5fff1a2562ec7b66577bb1b403fc5967da8599a890548f441020d103ee974",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-english-inventory.log",
+          "bytes": 4158,
+          "sha256": "f0667075f9f58b0d99b19df53fab14c434e1644092a993eef557d1c6301bf1fa",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-english-source-check-1.log",
+          "bytes": 21575,
+          "sha256": "4181cf546c07a99a2f81160bcbcde7d79baa8989e18387f7c293f7a5b95b6164",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-english-source-check-final.log",
+          "bytes": 21575,
+          "sha256": "4181cf546c07a99a2f81160bcbcde7d79baa8989e18387f7c293f7a5b95b6164",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-english-source-tests.log",
+          "bytes": 1095,
+          "sha256": "46d96c4697aedf122eb9553bb588ecc76f12b77d5ddee90fe3172f01ffe4ccad",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-first-language-check.json",
+          "bytes": 3534,
+          "sha256": "40644f03462fc5676752d43c54475806278a1414469d6cd15262232f1cb03d7d",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-local-audit.json",
+          "bytes": 513,
+          "sha256": "9b81a202dacdd8f45879f334e438b1b69034912c7189433069ef8d927a96d883",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-local-source-check.log",
+          "bytes": 21475,
+          "sha256": "fb2726a623241820a3af8e80f9933c2c6d72f8b991207c873c87697ea03e2c39",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-english.log",
+          "bytes": 141,
+          "sha256": "00342df6b5bafcacbfe3802418e6ba56726ad851b0af49012c646f26fb62bca0",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/go.mod",
+          "bytes": 28,
+          "sha256": "e75a894521ac62454d71e62448ea33a3e273f629ad372f79f9d93cc47cfa2da0",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_body_window.go",
+          "bytes": 999,
+          "sha256": "aae01c23473492de764bcf58f2b7796713b64eb93fc3cdf8584d2f1d23b475b1",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_callback.go",
+          "bytes": 932,
+          "sha256": "242be7e5808de70bcca0a762c1e5d1b21cf7bd5d7d225823c5ed3895f6eb972a",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_decommission.go",
+          "bytes": 935,
+          "sha256": "8d8f025eb568464c64a80b5eb2c2b3477bdb619ec8421bc6d2c2b0da33c3414a",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_folder_batch.go",
+          "bytes": 1020,
+          "sha256": "6234146b7079480485df18b78c09eefafbc599114f7b6990a2cfc0184dd9364d",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_folder_create.go",
+          "bytes": 893,
+          "sha256": "7a482787145e4589a99c263112877bcdd1ee7284a79c70897f124495a34d912f",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_forward.go",
+          "bytes": 971,
+          "sha256": "52fd1040741f4f5439aacd4b5dda963a7f78565cf1aa482fcec1593dcaaaf399",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_forward_credentials.go",
+          "bytes": 1020,
+          "sha256": "3a9121e696313e2a04c84742aee1546542aac83808e325d42081a5114cca28ce",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_gate.go",
+          "bytes": 1000,
+          "sha256": "1781c43ebd02a2a212f83f5c3da72315d3f9bb50e81076bbe63354a2cce9e1d5",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_labels.go",
+          "bytes": 844,
+          "sha256": "f059d71140841baec7dd60779e6e9d84cfd73a04e8f2905d818c6c28118f0e29",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_next_id.go",
+          "bytes": 874,
+          "sha256": "f8297ba23c90bbed270e8cd2072f4f72bc0af0e60975d97c4426491f8cdab82f",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_op_round.go",
+          "bytes": 928,
+          "sha256": "f32ca4c23d2133a5ed40ef0e0b7c91693019cebd03415da09911cc51360d0ac1",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_op_step.go",
+          "bytes": 901,
+          "sha256": "0a70413a140ebf34ea6333a63a4f047fd6c0bfc80ad861ada1a0f5006fb4ab02",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_op_step_batch.go",
+          "bytes": 956,
+          "sha256": "33418f177dc76999562cd63c5f156a35640c82dc7210680ab6b6683f84c3b06c",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_pass.go",
+          "bytes": 911,
+          "sha256": "5f2b7fea27369c28ffa08ed5729921760df2a8ebecd211ff9d4f7660a661c291",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_repeat.go",
+          "bytes": 1480,
+          "sha256": "c35edbbbdf22c16598aafe13d07b135ed86aaa42efa5dff21835771a07e2c25e",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_request.go",
+          "bytes": 881,
+          "sha256": "85c52246ebadca3c7e720381f597a878b5d3d7c601e4b63485080d3020bb4148",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_request_reaper.go",
+          "bytes": 1026,
+          "sha256": "fd6c9b604fd02dfcd6f32a4de2b02ca2254115c80d922aec1892054a23bd5e9c",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_schema_raise.go",
+          "bytes": 937,
+          "sha256": "98366e340c245bf8c7f7698f6a41e9cc800e7a0dc3da1900231ea0f352c6f8e4",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_secret_edit.go",
+          "bytes": 1015,
+          "sha256": "97de6bbd8d682a945a6f9d5fd49d407d12b59f7183f8896303140b095619f18a",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_shell.go",
+          "bytes": 907,
+          "sha256": "49e1e2046973c7b50074eb1dca067b449d2a12bee5966e6837c8e7ef522f8f11",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/console_where_memory.go",
+          "bytes": 968,
+          "sha256": "b4ed35aa83becc11042f83a4d47bb9bc8353f9fd8862c286b5970b4890ad53d2",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/lessonadapter/lessonadapter.go",
+          "bytes": 574,
+          "sha256": "0b0922c26bf17e883d7b8e5ec0476f6c2db82003282672a06284881e2b5dfcd3",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/stagetests/control_test.go",
+          "bytes": 1652,
+          "sha256": "6bfe72fa91e2eab13e85da8babb805cbbf095962ccebf391580f40eab7ef921d",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/stagetests/doc.go",
+          "bytes": 478,
+          "sha256": "3c4ff789c260bf553608bbb6a9e49d0fadbce0ba60c7ab4b5bd3a94cf02ada15",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/stagetests/engine_test.go",
+          "bytes": 6267,
+          "sha256": "99732d652765753a4f0110405be51194800144c684eb44040f52f4052e4414c6",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/stagetests/folders_test.go",
+          "bytes": 2114,
+          "sha256": "6f557a3ec931f37d83113337112c6f3b732288a54a8f54f56a41552ead42fa47",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/stagetests/gate_test.go",
+          "bytes": 1721,
+          "sha256": "b7563d32621cdb1d42650b35b18d32064eb42ce760dd2e78b9de138d6f3cb42e",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/stagetests/inventory.tsv",
+          "bytes": 5817,
+          "sha256": "7db782ce833cf01d4e3eb87a1b11f36c1c756a3d80f2fc39bb80028f2b736c0b",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/stagetests/late_domain_test.go",
+          "bytes": 10610,
+          "sha256": "db16934bccbfa1ef95f0aa3b7cc091b77678f6aa366d0cb618b71ed9673ba704",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/stagetests/observations_test.go",
+          "bytes": 1890,
+          "sha256": "c510f04b488d2df6ec66cd19796e3af78e66d19aa1f5f8473ff40b3c36701c20",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/stagetests/operations_test.go",
+          "bytes": 1900,
+          "sha256": "5e81db5daf8a190ae04e095a30de98ade0f165507a22ac6e869d89ea8499d847",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/stagetests/requests_events_test.go",
+          "bytes": 1917,
+          "sha256": "03da1b245d6de46ecf7c248d72e5a80596b222468b30e69e24262f011d25ba44",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/stagetests/secrets_test.go",
+          "bytes": 1421,
+          "sha256": "32729d2489eee5f9fc548bc9c17012cd1a34d25f365fabc99bb24639a055493d",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-preview-semantic-01c2/go/stagetests/unit_rows_test.go",
+          "bytes": 3717,
+          "sha256": "bc9a82c0a1983f406e45c142b17c0e3d55e97548fffc2cd4734867e88467e0c6",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-prose-initial.diff",
+          "bytes": 156766,
+          "sha256": "dbeb8a2ca6e4703ed89eee2fd41b62706e91d61e6199f15f358d9b15ac631fb5",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-text-translated-paths.json",
+          "bytes": 4912,
+          "sha256": "4d869eefadb26068219f833377b47100230f72dca97d7a9cc20ae21f19924068",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-ui-prejudge-source-check.log",
+          "bytes": 21897,
+          "sha256": "b3691fee24e503853390d2252a1b5783509ea3c461c8b9354d6ecbfa936da069",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-ui-proof.json",
+          "bytes": 161981,
+          "sha256": "629cbf158e6062ba13c9c5e672eb0b336da28931dc98be58de24b813059fee91",
+          "archive_member": null
+        },
+        {
+          "path": ".spec-check/p06-whitespace-check.json",
+          "bytes": 13982,
+          "sha256": "60275af7c15adc95dd282d4c838ba7598e43b6f6635f375b578a201463efcf3c",
+          "archive_member": null
+        }
+      ],
+      "ancestor_of_fetched_main": false,
+      "filesystem_after_inventory": "removed externally before HANDOFF archival; no removal performed by spec in this stop turn",
+      "remote_ref_checked_before_cleanup": true,
+      "ancestor_of_composed_023": true
+    }
+  ],
+  "stop_authority": "Owner stop via Architect, 2026-11-06; functions transferred to spec103; ADR-0083 (122) pending Architect record",
+  "paused_tsv_observation": "Read during handoff: no spec row yet in this Mac copy; owner stop instruction is effective; registry not edited by spec.",
+  "recovered_untracked_files": 5,
+  "untracked_files_removed_before_archival": 64,
+  "archive_sha256": "d4f691ea1cb601cab2c5b8ebdf91702b092fae79e4eb3293613cb8aa2ffa1a5f"
+}
