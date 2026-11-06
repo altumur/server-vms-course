@@ -189,3 +189,9 @@ A fresh stand, the resource `srv-a` by the first step; there are no rows `testsu
 - Steps 31–36 — the schema: `PUT` of the same version is a write, `revision` grows.
 
 The intended `revision` and the continuation of an intercepted claim — by reading: one console without controlled breaks does not create these branches.
+
+## Accepted ADR-0127 review: symmetric drain sources
+
+Use the ordinary GET /drain door with one active server and one schema-valid worker. Stop the placement writer after establishing the fixture so it cannot silently repopulate the controlled assignment. Use the existing authorized store writer with CAS for the assignment and the ordinary resource object path for a fresh valid heartbeat, pending_writes0; all other required sources are confirmed. In separate prepared cases, assignment[] with status[id=u1] gives units1/safe=false; assignment[u1] with status[] gives units1/safe=false; assignment[u1] with status[id=u1] gives units1, not2. No other worker or unplaced unit may distort these counts. The completely empty positive neighbor has no live unit rows, an empty assignment and status, confirmed sources and pending0: units0/safe=true. Unknown assignment/heartbeat uses the existing unavailable/lapse/unsaid rule and must not turn into that empty neighbor.
+
+Record the actual source versions, heartbeat bytes and HTTP body, including deduplication. This is a required real-HTTP/source probe, not a new CALL port, native command or proof supplied by this document. safe remains an observation and does not cancel the operator stop window.

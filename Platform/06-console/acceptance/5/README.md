@@ -173,3 +173,7 @@ Run 36 (Kimi): check both outcomes of the absence of v and the mounted /servers,
 R37 (Codex): check the root/mount catalogues: the name where is not loaded; two separate correct manifests with mount b and the family root b do not form an admissible catalogue. Repeat for unit.rows and a table (including a list table), both directions of the pair and root of each choice. For GET/HEAD of both mounted pages the sets of codes are the same, 200 is absent. The delegation list does not add GET of a single unit to the owner (chapter 6.1).
 
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
+
+## Accepted ADR-0127 review: source catalogue until restart
+
+For `GET /manifest/<sub>/source`, admit a changed stored manifest after console startup. Before restart the source door retains the launch catalogue's rev, served, sha256, manifest and secret_defaults; a newly installed subsystem absent from that catalogue stays404. A differing current store-row rev does not create an own503 or a per-request store read. Restart, then compare the new launch catalogue and served value. Keep independent ordinary busy/trust failures; they are not a revision-mismatch response. Inspect actual store calls if proving the no-read obligation. The frozen platform module and thirteen raw asset witnesses are unchanged.

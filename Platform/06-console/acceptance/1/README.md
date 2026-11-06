@@ -383,3 +383,9 @@ version, an object newer than the mark is not touched (controlled clocks are nee
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
 There are no sleeps. Waiting for an event is `@until`: sc. 17 step 11 waits for the log row `shelf.declared` after `@start resource`.
+
+## Accepted ADR-0127 review: POST continuation and feed observation
+
+The additional seams s06–s08 use the existing console-repeat port and ordinary claim/target code. For s06 write a real tombstone with revision5, admit the POST's planned revision6 and born under its claim CAS, perform the target commit, lose that reply, and stop before done. Another console first observes the unchanged pending version, waits30s on its monotonic clock, then takes it by CAS. The response is201 with that same revision6 and born, no second target write; an old executor's target attempt with its old claim guard gets412. s07 is the absent-row/revision1 positive neighbor. s08 loses the planning-save reply: no target call before a confirmed owned reread of that saved intent, then exactly one target write with the saved born. Record actual claim versions, target bytes and writes, not a case-selected result. The internal claim shape remains the implementation's choice.
+
+For the feed, control the ordinary observer's listing dependency: ten unconfirmed ticks after a row change, then one successful listing. No earlier tick invents an observation; at is the wall time of that first successful observation. Redeliver after a later clock advance and compare the same stored at. Do not assert an upper bound from another process's admission clock or call a successful parse a feed execution. These additional IO obligations require an actual implementation/stand; this source edit does not execute them.
