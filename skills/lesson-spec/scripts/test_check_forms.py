@@ -1398,6 +1398,10 @@ class CyrillicJudge(unittest.TestCase):
         self.put("Platform/01-store/ru/spec/norms.md", "Ж")
         self.put(check_cyrillic.LOCALIZATION, "key\ten\tru\na\tEnglish\tЖ\n")
         self.assertEqual(self.judge()[0], [])
+        old = self.put("Platform/06-console/data/localization.tsv", "key\ten\tru\na\tEnglish\tЖ\n")
+        self.assertTrue(any("Platform/06-console/data/localization.tsv" in e and "new/increased" in e
+                            for e in self.judge()[0]))
+        old.unlink()
         self.put(check_cyrillic.LOCALIZATION, "key\ten\tru\na\tЖ\tЖ\n")
         self.assertTrue(self.judge()[0])
 

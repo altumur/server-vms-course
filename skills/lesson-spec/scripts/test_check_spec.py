@@ -2268,6 +2268,7 @@ class CanonicalPlatformPaths(unittest.TestCase):
                               "# case\tverdict\nfirst\tok\nsecond\trefused\n")
         self.put(self.home / "first.subsystem.yaml", b"name: first\n")
         self.put(self.home / "second.subsystem.yaml", b"\xff\x00\t\r\n")
+        self.put(self.home / "README.md", "# Legacy witnesses\n[Index](spec_verdicts.tsv)\n")
 
     def put(self, name, data):
         path = self.root / name
@@ -2376,6 +2377,27 @@ class CanonicalPlatformPaths(unittest.TestCase):
                 with self.assertRaisesRegex(reader.SourceError, "required canonical course manifest"):
                     reader.accepted_inputs(self.root)
                 path.write_bytes(before)
+
+    def test_actual_module_file_expectations_reject_source_and_aliases(self):
+        table = self.root / "Platform/06-console/acceptance/5/scenarios.tsv"
+        for name in ("console.js", "console.css", "console.html"):
+            target = self.put(f"Platform/07-console-module/module/{name}", "owned bytes\n")
+            check = Check(self.root)
+            check.module_file_binding(table, 9, f"200 @file {target.relative_to(self.root)}")
+            self.assertEqual(check.errors, [])
+            for old in (f"Source/w2cplatform/{name}", name, f"Platform/06-console/module/{name}"):
+                with self.subTest(old=old):
+                    self.put(old, "existing old bytes do not rescue this input\n")
+                    check = Check(self.root)
+                    check.module_file_binding(table, 9, f"200 @file {old}")
+                    self.assertTrue(any("@file module input must be" in e for e in check.errors), check.errors)
+            target.unlink()
+            check = Check(self.root)
+            check.module_file_binding(table, 9, f"200 @file {target.relative_to(self.root)}")
+            self.assertTrue(any("missing canonical module input" in e for e in check.errors))
+        check = Check(self.root)
+        check.module_file_binding(table, 10, '200 {"opaque":"@file Source/w2cplatform/console.js"}')
+        self.assertEqual(check.errors, [])       # no grep of opaque JSON/test payloads
 
 
 if __name__ == "__main__":

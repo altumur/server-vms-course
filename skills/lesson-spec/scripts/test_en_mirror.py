@@ -314,6 +314,11 @@ class FullEnglishSource(unittest.TestCase):
             p.parent.mkdir(parents=True)
             p.write_text("key\ten\tru\nrefresh\tRefresh\tОбновить\n")
             self.assertEqual(en_mirror.full_english_errors(root, [p.relative_to(root)]), [])
+            old = root / "Platform/06-console/data/localization.tsv"
+            old.parent.mkdir(parents=True)
+            old.write_bytes(p.read_bytes())
+            self.assertEqual([path for path, _ in en_mirror.full_english_errors(root, [old.relative_to(root)])], [old])
+            old.unlink()
             p.write_text("key\ten\tru\nrefresh\tОбновить\tОбновить\n")
             self.assertTrue(en_mirror.full_english_errors(root, [p.relative_to(root)]))
             p.write_text("key\ten\tru\nrefresh\tRefresh\tОбновить\textra\n")

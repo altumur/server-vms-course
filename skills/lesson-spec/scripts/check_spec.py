@@ -1708,6 +1708,7 @@ class Check:
                 silenced += len(self.errors) - before
                 del self.errors[before:]
             self.refusal_word(path, line, expect)
+            self.module_file_binding(path, line, expect)
         # `@key(N)` repeats the key bytes of step N of the same scenario: that step exists and carries a writing
         # request (ACC-06-KEY-SHIFT-01, решение «Архитектора» 2026-10-29: a step inserted before it shifts the number).
         for line, scenario, n in keys:
@@ -1719,6 +1720,21 @@ class Check:
         if not steps:
             self.error(path, "empty scenarios table")
         return silenced
+
+    def module_file_binding(self, path, line, expect):
+        """Actual @file expectations bind canonical module bytes, never Source witnesses."""
+        if not Path(path).is_relative_to(self.root / "Platform"):
+            return
+        match = re.fullmatch(r"[1-5][0-9]{2} @file (\S+)", expect)
+        if match is None or Path(match[1]).name not in {"console.js", "console.css", "console.html"}:
+            return
+        canonical = Path("Platform/07-console-module/module") / Path(match[1]).name
+        target = self.root / canonical
+        if match[1] != canonical.as_posix():
+            self.error(path, f"line {line}: @file module input must be {canonical}; Source is a frozen witness")
+        elif not target.is_file() or target.resolve() != target.absolute():
+            self.error(path, f"line {line}: missing canonical module input {canonical} (no symlinks)")
+        self.stats["module_file_bindings"] += 1
 
     # The word of `error` in an expectation is a word of a closed table `data/refusal-words.tsv` (стандарт пробы, ADR-0083,
     # правка В-7). Judged against the union of the tables, not door by door: `@any`, `!contains`, `~`, `$имя` are not words.
@@ -2104,6 +2120,11 @@ class Check:
         try:
             for path in sorted(home.iterdir()):
                 if path.name == table.name or path.name in IGNORED:
+                    continue
+                if path.name == "README.md" and path.is_file():
+                    text = self.read(path)
+                    if text is not None:
+                        self.markdown(path, text)
                     continue
                 if path.name not in {f"{case}.subsystem.yaml" for case in seen}:
                     self.error(path, "unlisted legacy verdict input")
