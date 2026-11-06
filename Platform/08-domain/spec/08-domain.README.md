@@ -9,9 +9,28 @@ This file is for the agent (or person) who writes code from the lesson. The expl
 Implement the process `domain` of the domain holder in the language `<LANG>`: the door of the process, the domain trust, the acceptance of reports, the view and
 the shadow report, people and grants, books, placement and edits, the issue of tokens, the term and the move, the shared document and the alarm
 history, the queue — by the eleven chapters of the lesson; pass the N5 acceptance of the chapters and close their readiness checklists. 89 norms in all:
-P/08.0-01…04, P/08.1-01…11, P/08.2-01…11, P/08.3-01…13, P/08.4-01…09 and P/08.4-17 (ADR-0119), P/08.5-01…05, P/08.6-01…05, P/08.7-01…03,
-P/08.8-01…09, P/08.9-01…03 and P/08.9-05, -06 (the number 04 is empty: the alarm list at the holder went to lesson P/10 —
-[`id-map.tsv`](../../common/id-map.tsv)), P/08.10-01…03. The lesson is assembled from lessons M11/1–12 (the holder side) (stage B,
+
+<!-- checklist-inventory:begin -->
+
+| chapter | ids |
+|---|---|
+| 8.0 | `P/08.0-01`, `P/08.0-02`, `P/08.0-03`, `P/08.0-04` |
+| 8.1 | `P/08.1-01`, `P/08.1-02`, `P/08.1-03`, `P/08.1-04`, `P/08.1-05`, `P/08.1-06`, `P/08.1-07`, `P/08.1-08`, `P/08.1-09`, `P/08.1-10`, `P/08.1-11` |
+| 8.2 | `P/08.2-01`, `P/08.2-02`, `P/08.2-03`, `P/08.2-04`, `P/08.2-05`, `P/08.2-06`, `P/08.2-07`, `P/08.2-08`, `P/08.2-09`, `P/08.2-10`, `P/08.2-11` |
+| 8.3 | `P/08.3-01`, `P/08.3-02`, `P/08.3-03`, `P/08.3-04`, `P/08.3-05`, `P/08.3-06`, `P/08.3-07`, `P/08.3-08`, `P/08.3-09`, `P/08.3-10`, `P/08.3-11`, `P/08.3-12`, `P/08.3-13`, `P/08.3-14` |
+| 8.4 | `P/08.4-01`, `P/08.4-02`, `P/08.4-03`, `P/08.4-04`, `P/08.4-05`, `P/08.4-06`, `P/08.4-07`, `P/08.4-08`, `P/08.4-10`, `P/08.4-11`, `P/08.4-12`, `P/08.4-13`, `P/08.4-14`, `P/08.4-15`, `P/08.4-16`, `P/08.4-09`, `P/08.4-17` |
+| 8.5 | `P/08.5-01`, `P/08.5-02`, `P/08.5-03`, `P/08.5-04`, `P/08.5-05` |
+| 8.6 | `P/08.6-01`, `P/08.6-02`, `P/08.6-03`, `P/08.6-04`, `P/08.6-05` |
+| 8.7 | `P/08.7-01`, `P/08.7-02`, `P/08.7-03` |
+| 8.8 | `P/08.8-01`, `P/08.8-02`, `P/08.8-03`, `P/08.8-04`, `P/08.8-05`, `P/08.8-06`, `P/08.8-07`, `P/08.8-08`, `P/08.8-09`, `P/08.8-10`, `P/08.8-11` |
+| 8.9 | `P/08.9-01`, `P/08.9-02`, `P/08.9-03`, `P/08.9-05`, `P/08.9-06` |
+| 8.10 | `P/08.10-01`, `P/08.10-02`, `P/08.10-03` |
+
+<!-- checklist-inventory:end -->
+
+The inventory is built from the readiness checklists below; all 89 full ids must occur exactly once. P/08.9-04 moved to P/10; see [`id-map.tsv`](../../common/id-map.tsv).
+
+The lesson is assembled from lessons M11/1–12 (the holder side) (stage B,
 ADR-0083 addendum (1), (14)). The member agent and the relay — lesson P/09, the domain console — lesson P/10, the late layer of the cluster
 console — [chapter 6.7](../../06-console/spec/06.7-console.norms.md), the worker on the domain — [chapter P/03.7](../../03-worker/spec/03.7-worker.norms.md).
 

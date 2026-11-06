@@ -537,53 +537,176 @@ paths:
       - name: role
         in: path
         required: true
-        schema: {type: string}
+        schema: {$ref: '#/components/schemas/PersonName'}
     put:
       operationId: roleLines
-      summary: Rights of a role over the whole domain (chapter 8.4 N1.3a lines)
-      responses:
-        '200': {description: Written; the divergence goes through the pass}
-        '400': {$ref: '#/components/responses/BodyRefused'}
-  /domain/folders:
-    post:
-      operationId: folderCreate
-      summary: New domain folder (chapter 8.5 N1.8)
+      summary: Rights of a role over the whole domain (P/08.4 N1.3a)
       parameters:
-        - {name: Idempotency-Key, in: header, required: false, schema: {type: string, minLength: 1, maxLength: 200}}
+        - {$ref: '#/components/parameters/XW2CClient'}
+        - {$ref: '#/components/parameters/RepeatKey'}
+        - {$ref: '#/components/parameters/IfMatch'}
       requestBody:
         required: true
         content:
           application/json:
-            schema: {type: object, required: [name], additionalProperties: false, properties: {name: {type: string}, parent: {type: string}}}
+            schema:
+              type: object
+              required: [lines]
+              additionalProperties: false
+              properties:
+                lines: {type: array, items: {$ref: '#/components/schemas/GlobalRoleLine'}}
       responses:
-        '201': {description: Folder}
-        '400': {$ref: '#/components/responses/BodyRefused'}
-        '403': {description: Not a domain viewer with admin}
-        '404': {description: no such parent}
-        '409': {description: 'parent gone, too many folders'}
-        '503': {description: unavailable}
+        '200':
+          description: Written; cluster divergences are handled by the ordinary spread pass.
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [role, revision]
+                additionalProperties: false
+                properties:
+                  role: {$ref: '#/components/schemas/PersonName'}
+                  revision: {type: integer, minimum: 1}
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
+        '422': {$ref: '#/components/responses/KeyReused'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
+  /domain/folders:
+    post:
+      operationId: folderCreate
+      summary: New domain folder (P/08.5 N1.8); If-Match is ignored at creation.
+      parameters:
+        - {$ref: '#/components/parameters/XW2CClient'}
+        - {$ref: '#/components/parameters/RepeatKey'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              additionalProperties: false
+              properties:
+                name: {$ref: '#/components/schemas/DomainFolderName'}
+                parent: {type: string, pattern: '^(?:[0-9a-f]{32})?$', default: ''}
+      responses:
+        '201':
+          description: The new folder; a repeat with the same key returns the saved response.
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DomainFolderView'}
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
+        '422': {$ref: '#/components/responses/KeyReused'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
     get:
       operationId: foldersRead
-      summary: Tree of domain folders (answered by the domain console)
+      summary: Live domain folders (answered by the domain console).
       responses:
-        '200': {description: '{rev, folders}'}
+        '200':
+          description: Tree by id; every live folder carries its own row revision and index.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rev, folders]
+                additionalProperties: false
+                properties:
+                  rev:
+                    type: object
+                    required: [term, rev]
+                    additionalProperties: false
+                    properties:
+                      term: {type: integer, minimum: 1}
+                      rev: {type: integer, minimum: 0}
+                  folders: {type: array, items: {$ref: '#/components/schemas/DomainFolderView'}}
   /domain/folders/{folder}:
     parameters:
       - name: folder
         in: path
         required: true
-        schema: {type: string}
+        schema: {type: string, pattern: '^[0-9a-f]{32}$'}
     put:
       operationId: folderRename
-      summary: Name of a domain folder
+      summary: Rename a live domain folder; parent is immutable.
+      parameters:
+        - {$ref: '#/components/parameters/XW2CClient'}
+        - {$ref: '#/components/parameters/RepeatKey'}
+        - {$ref: '#/components/parameters/IfMatch'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              additionalProperties: false
+              properties:
+                name: {$ref: '#/components/schemas/DomainFolderName'}
       responses:
-        '200': {description: Folder}
-        '400': {$ref: '#/components/responses/BodyRefused'}
+        '200':
+          description: Folder after the write.
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DomainFolderView'}
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
+        '422': {$ref: '#/components/responses/KeyReused'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
     delete:
       operationId: folderDelete
-      summary: Tombstone of a domain folder
+      summary: Write the domain folder tombstone; the row and its index remain.
+      parameters:
+        - {$ref: '#/components/parameters/XW2CClient'}
+        - {$ref: '#/components/parameters/RepeatKey'}
+        - {$ref: '#/components/parameters/IfMatch'}
       responses:
-        '200': {description: Removed}
+        '200':
+          description: Tombstone written; ETag is its result row index.
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deleted]
+                additionalProperties: false
+                properties:
+                  deleted: {type: string, pattern: '^[0-9a-f]{32}$'}
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
+        '422': {$ref: '#/components/responses/KeyReused'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /domain/memberof/{member}/{sub}/{rows}/{id}:
     parameters:
       - {$ref: '#/components/parameters/Member'}
@@ -595,15 +718,49 @@ paths:
         schema: {type: string}
     get:
       operationId: memberofRead
-      summary: Membership of a unit in domain folders (answered by the domain console)
+      summary: Membership of a unit in domain folders (answered by the domain console).
       responses:
-        '200': {description: '{folders, index}'}
+        '200':
+          description: Confirmed absence is folders [] and index empty; no revision counter or ETag.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DomainMembershipView'}
     put:
       operationId: memberofWrite
-      summary: Membership of a unit in domain folders
+      summary: Replace membership atomically with its reverse indexes; an empty list deletes this row.
+      parameters:
+        - {$ref: '#/components/parameters/XW2CClient'}
+        - {$ref: '#/components/parameters/RepeatKey'}
+        - {$ref: '#/components/parameters/IndexIfMatch'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [folders]
+              additionalProperties: false
+              properties:
+                folders:
+                  type: array
+                  uniqueItems: true
+                  items: {type: string, pattern: '^[0-9a-f]{32}$'}
       responses:
-        '200': {description: Written}
-        '400': {$ref: '#/components/responses/BodyRefused'}
+        '200':
+          description: Current folders and membership row index; an empty list deletes it and returns index empty. No ETag.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DomainMembershipView'}
+        '412': {$ref: '#/components/responses/IndexMoved'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
+        '422': {$ref: '#/components/responses/KeyReused'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /api/members/{member}/{part}:
     parameters:
       - {$ref: '#/components/parameters/Member'}
@@ -1998,6 +2155,12 @@ components:
       schema:
         type: string
         pattern: "^(?:[1-9][0-9]*|\"(?:0|[1-9][0-9]{0,19})\")$"
+    IndexIfMatch:
+      name: If-Match
+      in: header
+      required: false
+      description: 'Optional quoted store index only (P/08.0 N1.9); "" means confirmed absent membership. No bare revision number. Replay precedes judging the condition.'
+      schema: {type: string, pattern: '^"(?:0|[1-9][0-9]{0,19})?"$'}
   headers:
     ETag:
       description: Index of the store row in double quotes, a strong tag of RFC 9110 (P/08.0 N1.9 «Versions»). The value is fit for If-Match.
@@ -2181,6 +2344,11 @@ components:
               cluster: {$ref: '#/components/schemas/MemberName'}
               what: {type: string}
               note: {type: string}
+    IndexMoved:
+      description: 'Membership If-Match differs from the confirmed row index; no revision counter (P/08.0 N1.9).'
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/IndexMoved'}
   schemas:
     TokenSealed:
       type: object
@@ -2244,6 +2412,7 @@ components:
             - called off
             - redo it on the new holder
             - If-Match is a unit revision
+            - If-Match is a store index
             - Idempotency-Key required
             - in flight
             - key reused
@@ -3008,6 +3177,52 @@ components:
     Scope:
       type: string
       pattern: "^(?:\\*|unit:[a-z][a-z0-9_-]{0,31}/[^\u000A\u000D\u2028\u2029]+|labels:[^,]+(?:,[^,]+)*|folder:[0-9a-f]{32})$"
+    GlobalRoleLine:
+      type: object
+      required: [cap, scope, until]
+      additionalProperties: false
+      description: 'Whole-domain role line: labels and unit scopes are forbidden, as on a role grant line (P/08.4 N1.3a).'
+      properties:
+        cap: {$ref: '#/components/schemas/LineCap'}
+        sub: {$ref: '#/components/schemas/SubName'}
+        scope: {type: string, pattern: '^(?:\*|folder:[0-9a-f]{32})$'}
+        until: {type: number, minimum: 0}
+    DomainFolderName:
+      type: string
+      minLength: 1
+      x-max-bytes: 255
+      description: 'Nonempty, at most FOLDER_NAME_MAX (255) UTF-8 bytes; the ordinary procedure checks the byte bound (P/06.8 N1.1).'
+    DomainFolderView:
+      type: object
+      required: [id, name, parent, revision, index]
+      additionalProperties: false
+      properties:
+        id: {type: string, pattern: '^[0-9a-f]{32}$'}
+        name: {$ref: '#/components/schemas/DomainFolderName'}
+        parent: {type: string, pattern: '^(?:[0-9a-f]{32})?$'}
+        revision: {type: integer, minimum: 0}
+        index: {type: string, pattern: '^(?:0|[1-9][0-9]{0,19})$'}
+    DomainMembershipView:
+      type: object
+      required: [folders, index]
+      additionalProperties: false
+      description: 'No synthetic revision. Empty folders remove the row; its confirmed absent index is the empty string.'
+      properties:
+        folders:
+          type: array
+          uniqueItems: true
+          items: {type: string, pattern: '^[0-9a-f]{32}$'}
+        index: {type: string, pattern: '^(?:0|[1-9][0-9]{0,19})?$'}
+    IndexMoved:
+      type: object
+      required: [error, field, index]
+      additionalProperties: false
+      properties:
+        error: {const: revision moved}
+        field: {const: /index}
+        index: {type: string, pattern: '^(?:0|[1-9][0-9]{0,19})?$'}
+        detail: {type: string}
+        row: {$ref: '#/components/schemas/DomainMembershipView'}
     Line:
       type: object
       required: [subject, cap, scope, until, by]
