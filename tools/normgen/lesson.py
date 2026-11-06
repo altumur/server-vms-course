@@ -32,15 +32,20 @@ def output_root():
     if _output_path is None:
         given = os.environ.get(OUTPUT_ENV)
         if given:
-            if not Path(given).is_absolute():
+            candidate = Path(given)
+            if not candidate.is_absolute():
                 raise LessonError(f"{OUTPUT_ENV} must be an absolute external directory")
-            _output_path = Path(given).resolve()
+            if candidate.is_symlink() or (candidate.exists() and not candidate.is_dir()):
+                raise LessonError(f"{OUTPUT_ENV} must be a regular directory, not a root symlink")
+            candidate = candidate.resolve()
         else:
             _temporary_output = tempfile.TemporaryDirectory(prefix="normgen-output-")
-            _output_path = Path(_temporary_output.name)
-            os.environ[OUTPUT_ENV] = str(_output_path)
-        if _output_path.is_relative_to(HERE):
+            candidate = Path(_temporary_output.name)
+        if candidate.is_relative_to(HERE):
             raise LessonError(f"{OUTPUT_ENV} must be outside tools/normgen; repository out is not an input")
+        _output_path = candidate
+        if not given:
+            os.environ[OUTPUT_ENV] = str(_output_path)
     return _output_path
 
 
