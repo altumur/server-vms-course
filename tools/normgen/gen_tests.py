@@ -959,8 +959,11 @@ def sources(part, root=ROOT):
         for d in PACKAGES.values():
             paths.append(root / d["dir"] / d["table"])
             paths.extend(root / d["dir"] / f for f in d["files"])
-        paths += [root / L.rel / "forms/write-checks.tsv", root / common_vectors.CONSUMERS,
-                  root / vector_consumers.LESSONS]
+        paths.append(root / L.rel / "forms/write-checks.tsv")
+        # Older exports use BEFORE_FORM and do not read either registry.
+        # When consumers is present, composition still requires lessons.tsv.
+        if (root / common_vectors.CONSUMERS).is_file():
+            paths += [root / common_vectors.CONSUMERS, root / vector_consumers.LESSONS]
         for name, table in common_vectors.composition(L.key, root):
             directory = root / "Platform/common/vectors" / name
             paths.append(directory / table)
