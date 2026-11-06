@@ -54,7 +54,7 @@ unplaceable: /unplaceable and /<sub>/unplaceable the module reads from all subsy
          reading: an unplaced unit of a subsystem outside opts.subsystems — as a row of the section (subsystem, id, reason) without a card
          and without actions; otherwise the unplaced units of the subsystems that the page does not show are visible nowhere (ADR-0112 addendum (23) item 1)
 changes: the feed GET /changes (P/06.1 N2 «Change feed»; ADR-0094 B2): the module takes a number before the first read of rows, then holds the request /changes?after=<number>&wait=15,
-         at most once a second. A reset or a message about a row of a subsystem of the page — the same load `order` at once, silently: the page sees the edit within a tick, not within poll_s.
+         a new request is issued at most once a second after an immediate return or a disconnect; this does not shorten the held wait=15 request. A reset or a message about a row of a subsystem of the page — the same load `order` at once, silently: the page sees the edit within a tick, not within poll_s.
          The message carries no value, so the module rereads the rows instead of applying the message; it need not compare revision.
          404 — the console has no feed: the module no longer calls it and lives by polling; another refusal or a dropped connection — the next attempt after poll_s, without the login window (polling raises it).
          Without `after` (no number yet) the answer counts as a reset. The holder page (N1.6 `holder`) does not call the feed: the domain console has none.
@@ -101,14 +101,14 @@ api:       console.api(method, path, body, opts?) → answer | throw {status, bo
            № 27); 401 → the login window.
            PUT, DELETE and tables the module does not replay automatically, even with a repeat memory of the door (P/06.1 N3 «repeat memory»): on an unknown outcome — a read first.
            A completed answer closes the action; a refusal before the memory of the request is handled by the contract of the owner, it is not cached as a success
-forms:     the unit form (unitForm) and the creation form: a refusal 400, 409, 412 with the field field of the body (JSON Pointer, P/06.1 N2 «Refusal: error and
+forms:     the unit form (unitForm) and the creation form: a 412 with body.row takes priority and uses the W.rowMoved screen below; other refusals 400, 409, 412 with the field field of the body (JSON Pointer, P/06.1 N2 «Refusal: error and
            field»; ADR-0094 B5) the module shows at the field: the first token of the pointer, parsed by RFC 6901 (~1 → /, ~0 → ~), is the name
            of a form element; the control gets aria-invalid="true", next to it an element .pc-field-err with the text of the refusal (detail, no
            detail — error), the control gets the focus. No such element in the form or no field in the body — the text in the common .pc-err, as
            before. A new submission removes the marks. The code does not parse the refusal: the word and field come as fields of the body
            the unit form (unitForm) sends PUT and DELETE with ifMatch — the revision of the shown row, always (ADR-0094 B4; ADR-0091 addendum (28) item 3): otherwise an edit would overwrite
-           someone else's silently. The refusal 412 — a screen instead of the text: in .pc-err the words W.rowMoved, next to it .pc-moved — the values of the form fields from body.row that differ from the input
-           (no body.row — only the words), and the button .pc-reread. The human's input stays: the module does not erase it. The button rereads the rows and draws the form anew, the input is reset
+           someone else's silently. A refusal 412 with body.row — a screen instead of the text: in .pc-err the words W.rowMoved, next to it .pc-moved — the values of the form fields from body.row that differ from the input
+           and the button .pc-reread. A refusal without body.row follows the field/common-error rule above. The human's input stays: the module does not erase it. The button rereads the rows and draws the form anew, the input is reset
 writes_via: a unit of a subsystem whose manifest (view P/02.2) carries unit.writes_via — the module offers neither a creation form nor
            «save» and «delete» in unitForm: the fields are read-only; a table with the word tables.<t>.writes_via — without a write form
            of a row. A human's session would get 403 writes via always (P/06.1 N1.1a; ADR-0119 addendum (10)); requests (P/06.4) and the other
@@ -180,7 +180,7 @@ writes:    /domain/* (forwarding contract «Domain doors»); login_url — POST 
            console forwards it to the domain — «Domain doors»)
 order:     /domain/shared/<sub>, /domain (+ /domain/alarms — P/10-06), /api/held
 never:     /api/backup (P/06.7-16)
-objects:   member:<m>, domain, person:<name>
+objects:   the reference roster is N1.5 objects; lessons 8 and 10 introduce its domain references
 events:    the field domain of refresh; the section access, having read its doors, emits refresh {access}
 adds:      the kinds member, domain of addTab; addBlock — member, domain; addTreeNodes — member, access (as in N1.5; ADR-0091
            addendum (24) item 6, addendum (27) item 3)
@@ -195,7 +195,7 @@ access:    people, grants, break-glass — /domain/users, /domain/grants, /domai
 held:      GET /api/held — the only door of the processes that the module reads: the signed public record of the holder
            {cluster, holder, term, keys, backup: {term, rev}} at the cluster console; backup — a pointer to the last copy at this
            member, comparable only by the pair {term, rev}; at a member the module shows «an old copy» when its pair lags behind
-           the pair of the holder, and «the holder no longer updates it» when the member is not in backup_holders; numbers — as they are
+           the holder pair term.backup of GET /domain (P/08.8 N1.3), and «the holder no longer updates it» when the member is absent from term.backup_holders of that same view. Compare pairs by term first, then rev at equal term (P/08.8, the largest (term, rev)); lagging means strictly smaller. Preserve the exact number representations
 holder:    with sections: [domain] the module learns the holder mode from the sections of the page: it does not load the units, /servers and
            /unplaceable, it takes the units by subsystems from the view /domain; /servers, /drain, /schema, /unplaceable, /metrics,
            /events are not needed at the holder — the module survives their absence
