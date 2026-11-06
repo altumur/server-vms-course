@@ -1,0 +1,73 @@
+{
+  "basis": "fdf88f4f0352fee3d914f1095b93edb416a8e59b",
+  "source_path": "Platform/common/vectors/family-read/04.tsv",
+  "before_table_sha256": "1faf65cdc57bcfbad8cdca1417f7bdf01aa88e596e6167e395d00422cec580ac",
+  "after_table_sha256": "c9909242044a4e8c662e1922559bc10a8dc24c939f45a41a1bb804a180eeb3ab",
+  "data_rows_before": 1436,
+  "data_rows_after": 1436,
+  "changed_cells": [
+    {
+      "path": "Platform/common/vectors/family-read/04.tsv",
+      "line": 1372,
+      "case": "04-review127-pending-prepared-writer",
+      "family": "<sub>/decommission-pending/<host>",
+      "mode": "writer",
+      "column": "note",
+      "before": "ADR-0127 P04 C2: prepared",
+      "after": "base",
+      "input_text_sha256": "34cdbf0dc8c742ded1c5f87d0703e4a84948dc743650aa329cc7bf76495d0a8b",
+      "other_cells_sha256": "fad4f38ca1af2557db06a268d70ce07df6df44731f5edb51f378f4a8ed9688a0"
+    },
+    {
+      "path": "Platform/common/vectors/family-read/04.tsv",
+      "line": 1373,
+      "case": "04-review127-pending-prepared-reader",
+      "family": "<sub>/decommission-pending/<host>",
+      "mode": "reader",
+      "column": "note",
+      "before": "ADR-0127 P04 C2: prepared",
+      "after": "base",
+      "input_text_sha256": "34cdbf0dc8c742ded1c5f87d0703e4a84948dc743650aa329cc7bf76495d0a8b",
+      "other_cells_sha256": "99d37f9968a4f7b11a4ab810a5fb221ec4e4215899a31453f3ce343ea475d5f4"
+    }
+  ],
+  "all_case_ids_and_order_unchanged": true,
+  "all_other_cells_byte_identical": true,
+  "restoring_two_notes_reproduces_exact_before_bytes": true,
+  "family_cases_before": 66,
+  "family_cases_after": 66,
+  "family_positive_before": 8,
+  "family_positive_after": 8,
+  "family_base_rows_before": 0,
+  "family_base_rows_after": {
+    "writer": "04-review127-pending-prepared-writer",
+    "reader": "04-review127-pending-prepared-reader"
+  },
+  "existing_v7_synthesis": {
+    "before_refusal": "family_judge: <sub>/decommission-pending/<host>: no base rows of both modes in the vectors",
+    "after_completed": true,
+    "lesson": "04",
+    "cases": 10400,
+    "pending_family_modes": {
+      "writer": 914,
+      "reader": 914
+    },
+    "seconds": 1.357,
+    "unmodified_helper": true,
+    "no_harness_or_native_execution": true
+  },
+  "python_source_family_judge": {
+    "rows": 1436,
+    "result": "PASS"
+  },
+  "delta_map": "decisions/inbox/2026-11-06-p04-pending-base-note-delta.tsv",
+  "delta_map_sha256": "ae77b26ce24f515966cb5b2b175699c9d9ef9c6b1fc00d9f378c462d3656139b",
+  "historical_maps_freezes_unchanged": true,
+  "source_rule_or_judge_weakening": false,
+  "helper_skill_tools_changes": false,
+  "P05_included": false,
+  "native_harness_runs": 0,
+  "SUT_runs": 0,
+  "full_normgen_or_KIT_run": false,
+  "export_or_runtime_changed": false
+}
