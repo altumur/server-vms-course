@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/jcs/README.
 
 The owner is lesson P/01 (the module design note, «Vectors»: the first contract that writes a JSON text is the store); the norm is ADR-0072
 (the canon of a signed document is RFC 8785 in full). It is read by everyone who signs or compares a JSON text by bytes: the body
-of a request and the digest ([P/06.4](../../../06-console/spec/06.4-console.norms.md) N1.5), the door token, the signatures of the domain (lessons М11).
+of a request and the digest ([P/06.4](../../../06-console/spec/06.4-console.norms.md) N1.5), the door token, the signatures of the domain (lessons M11).
 
 The package was moved from `Source/tests/testdata/canonical_json.tsv` (stage A) together with the vectors of lesson 6 (stage B; the review
 analysis of stage B 3–5, V5); the bytes of the table are as before.

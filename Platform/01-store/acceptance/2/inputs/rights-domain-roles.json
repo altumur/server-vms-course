@@ -1,5 +1,5 @@
 {
-  "comment": "Вход приёмки главы P/01.2 сц. 14 (не вывод генератора): роли домена domain, domainagent и testsubdomain с правами на domain/* — never пропускает delete под domain/ только ролью домена (C01-NEVER-DOMAIN-ROLE-01)",
+  "comment": "Acceptance input for P/01.2 scenario 14 (not generator output): domain roles domain, domainagent and testsubdomain with rights to domain/*; never permits delete under domain/ only for a domain role (C01-NEVER-DOMAIN-ROLE-01)",
   "roles": {
     "domain": {
       "group": "w2c-domain",

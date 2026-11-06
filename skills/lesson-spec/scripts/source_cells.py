@@ -85,15 +85,11 @@ def table(text, columns=None, positional=False):
 
 
 def wire_headers(root):
-    """The existing wire header declares names of positional source columns."""
+    """Existing wire bindings and the scenario form name positional columns."""
     wire = Path(root) / "Platform/common/vectors/wire.tsv"
-    if not wire.is_file():
-        return {}
-    lines = [line.split("\t") for line in wire.read_bytes().decode("utf-8").split("\n")
-             if line and not line.startswith("#")]
+    lines = ([line.split("\t") for line in wire.read_bytes().decode("utf-8").split("\n")
+              if line and not line.startswith("#")] if wire.is_file() else [])
     result = {}
-    if not lines:
-        return result
     for values in lines[1:]:
         row = dict(zip(lines[0], values))
         package = row["package"].split("/")
@@ -103,6 +99,14 @@ def wire_headers(root):
         if path in result and result[path] != value:
             raise ValueError(f"{path}: conflicting wire column declarations")
         result[path] = value
+    # The existing acceptance form already fixes these columns. It permits its
+    # traditional comment header and an ordinary header; neither is a data row.
+    for module in ("Platform", "VMS"):
+        for path in (Path(root) / module).glob("*/acceptance/**/scenarios.tsv"):
+            columns = ["scenario", "step", "request", "expect"]
+            first = next((line.split("\t") for line in path.read_bytes().decode("utf-8").split("\n")
+                          if line and not line.startswith("#")), [])
+            result[path.relative_to(root)] = (columns, first != columns)
     return result
 
 
