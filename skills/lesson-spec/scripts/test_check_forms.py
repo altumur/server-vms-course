@@ -1606,6 +1606,121 @@ class CyrillicJudge(unittest.TestCase):
         subprocess.run(["git", "-C", str(self.root), "add", "tools"], check=True, capture_output=True)
         self.assertTrue(self.judge()[0])
 
+    def export_git(self):
+        self.markers()
+        self.put(".gitignore", "ignored/\n__pycache__/\n")
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(self.root), "add", *check_cyrillic.EXPORT_MARKERS,
+                        ".gitignore"], check=True, capture_output=True)
+
+    def test_git_export_includes_untracked_ignored_hidden_and_new_homes(self):
+        self.export_git()
+        self.assertEqual(self.judge()[0], [])
+        for name in ("Platform/.new-house/untracked.md", ".new-house/model.data", ".hidden",
+                     "Platform/ignored/model.bin", "ignored/root.data",
+                     "Platform/__pycache__/model.data", "__pycache__/model.data",
+                     "Platform/.git/model.data", "Platform/.new-house/.git"):
+            with self.subTest(name=name):
+                path = self.put(name, "Ж")
+                for mode in (None, True):
+                    errors, stats = self.judge(export=mode)
+                    self.assertTrue(any(name + ": Cyrillic letters 1" in e for e in errors), errors)
+                    self.assertEqual(stats["cyrillic_export"], 1)
+                path.unlink()
+
+    def test_git_and_git_free_export_have_identical_disk_inventory(self):
+        self.export_git()
+        self.put("Platform/.new-house/untracked.md", b"\xff" + "Ж".encode())
+        self.put("ignored/model.data", "Ж")
+        with tempfile.TemporaryDirectory() as folder:
+            copy_root = Path(folder) / "export"
+            shutil.copytree(self.root, copy_root, ignore=shutil.ignore_patterns(".git"))
+            for mode in (None, True):
+                git_result = self.judge(export=mode)
+                disk_result = check_cyrillic.check(copy_root, self.debt, export=mode)
+                self.assertTrue(any("Platform/.new-house/untracked.md" in e for e in git_result[0]))
+                self.assertEqual(git_result, disk_result)
+                self.assertEqual(git_result[1]["cyrillic_non_utf8"], 1)
+
+    def test_git_export_cli_and_failed_shrink_leave_debt_bytes_unchanged(self):
+        self.export_git()
+        self.put("Platform/old.md", "English")
+        self.registry("debt\tPlatform/old.md\t1")
+        name = "Platform/.new-house/untracked.md"
+        self.put(name, "Ж")
+        before = self.debt.read_bytes()
+        for flags in ([], ["--export"]):
+            for shrink in ([], ["--shrink"]):
+                with self.subTest(flags=flags + shrink):
+                    self.debt.write_bytes(before)
+                    result = subprocess.run([sys.executable, "-B", str(Path(check_cyrillic.__file__)),
+                                             "--root", str(self.root), "--debt", str(self.debt),
+                                             *flags, *shrink], capture_output=True, text=True)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn(name + ": Cyrillic letters 1", result.stdout)
+                    self.assertEqual(self.debt.read_bytes(), before)
+
+    def test_git_export_keeps_only_declared_language_exceptions(self):
+        self.export_git()
+        self.put("VMS/new/notes.md", "Ж")
+        self.put("Platform/01-store/ru/new.md", "Ж")
+        self.put(check_cyrillic.LOCALIZATION, "key\ten\tru\na\tEnglish\tЖ\n")
+        self.assertEqual(self.judge()[0], [])
+        self.put(check_cyrillic.LOCALIZATION, "key\ten\tru\na\tЖ\tЖ\n")
+        self.assertTrue(any(check_cyrillic.LOCALIZATION in e for e in self.judge()[0]))
+
+    def test_export_worktree_git_file_is_metadata_but_untracked_data_is_not(self):
+        # A real worktree .git file contains Cyrillic in its local gitdir path.
+        donor = self.root / "donor-Ж"
+        donor.mkdir()
+        for name in check_cyrillic.EXPORT_MARKERS:
+            path = donor / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("0" * 40 + "\n")
+        subprocess.run(["git", "init", "-q", str(donor)], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(donor), "add", *check_cyrillic.EXPORT_MARKERS],
+                       check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(donor), "-c", "user.name=owned fixture",
+                        "-c", "user.email=fixture@invalid", "commit", "-qm", "owned markers"],
+                       check=True, capture_output=True)
+        export_root = self.root / "export"
+        subprocess.run(["git", "-C", str(donor), "worktree", "add", "--detach", str(export_root)],
+                       check=True, capture_output=True)
+        self.assertTrue((export_root / ".git").is_file())
+        self.assertIn("Ж", (export_root / ".git").read_text())
+        for mode in (None, True):
+            self.assertEqual(check_cyrillic.check(export_root, self.debt, export=mode)[0], [])
+        path = export_root / "untracked.data"
+        path.write_text("Ж")
+        for mode in (None, True):
+            errors, _ = check_cyrillic.check(export_root, self.debt, export=mode)
+            self.assertTrue(any("untracked.data: Cyrillic letters 1" in e for e in errors), errors)
+            self.assertFalse(any(".git:" in e for e in errors), errors)
+
+    def test_git_export_untracked_symlinks_and_fifo_still_fail(self):
+        self.export_git()
+        target = self.put("ignored/target.data", "English")
+        path = self.root / "Platform/alias"
+        for directory in (False, True):
+            with self.subTest(directory=directory):
+                path.symlink_to(target.parent if directory else target, target_is_directory=directory)
+                try:
+                    self.assertTrue(any("symlink" in e for e in self.judge()[0]))
+                finally:
+                    path.unlink()
+        os.mkfifo(path)
+        self.assertTrue(any("not a regular file" in e for e in self.judge()[0]))
+
+    def test_source_git_untracked_and_ignored_files_remain_outside_inventory(self):
+        self.export_git()
+        self.put("Platform/untracked.md", "Ж")
+        self.put("Platform/ignored/model.data", "Ж")
+        self.put("Platform/__pycache__/model.data", "Ж")
+        self.assertEqual(self.judge(export=False)[0], [])
+        subprocess.run(["git", "-C", str(self.root), "add", "Platform/untracked.md"],
+                       check=True, capture_output=True)
+        self.assertTrue(any("Platform/untracked.md" in e for e in self.judge(export=False)[0]))
+
     def test_git_free_export_scans_hidden_but_skips_metadata(self):
         self.put("Platform/__pycache__/cache.pyc", "Ж")
         self.put("Platform/.git/config", "Ж")

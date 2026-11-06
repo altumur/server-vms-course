@@ -132,19 +132,20 @@ def export_marker_errors(root):
 
 
 def source_files(root, *, export=False):
-    """Tracked source in a checkout; disk source in a Git-free export/fixture."""
+    """Tracked checkout source; all disk files in every export, including Git."""
     if not root.is_dir():
         raise OSError(f"source root is not a directory: {root}")
-    probe = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"],
-                           capture_output=True)
-    if probe.returncode == 0 and Path(os.fsdecode(probe.stdout).strip()).resolve() == root:
-        result = subprocess.run(["git", "-C", str(root), "ls-files", "-z", "--", *([] if export else SCOPES)], capture_output=True)
-        if result.returncode:
-            raise OSError("git ls-files failed")
-        return sorted({name for p in result.stdout.split(b"\0") if p
-                       and scoped(name := os.fsdecode(p), export=export)})
-    if (root / ".git").exists():
-        raise OSError("cannot determine Git root")
+    if not export:
+        probe = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+                               capture_output=True)
+        if probe.returncode == 0 and Path(os.fsdecode(probe.stdout).strip()).resolve() == root:
+            result = subprocess.run(["git", "-C", str(root), "ls-files", "-z", "--", *SCOPES], capture_output=True)
+            if result.returncode:
+                raise OSError("git ls-files failed")
+            return sorted({name for p in result.stdout.split(b"\0") if p
+                           and scoped(name := os.fsdecode(p), export=export)})
+        if (root / ".git").exists():
+            raise OSError("cannot determine Git root")
     names = []
     for scope in ((".",) if export else SCOPES):
         base = root / scope
@@ -165,11 +166,14 @@ def source_files(root, *, export=False):
             for name in dirs[:]:
                 path = Path(directory) / name
                 relative = path.relative_to(root).as_posix()
-                if name in {".git", "__pycache__"} or relative == "VMS" or mirror(relative + "/_"):
+                metadata = relative == ".git" if export else name in {".git", "__pycache__"}
+                if (metadata or
+                        relative == "VMS" or mirror(relative + "/_")):
                     dirs.remove(name)
                 elif path.is_symlink():
                     raise OSError(f"symlink directory: {path.relative_to(root)}")
-            names.extend((Path(directory) / name).relative_to(root).as_posix() for name in files)
+            names.extend((Path(directory) / name).relative_to(root).as_posix() for name in files
+                         if not (export and Path(directory) == root and name == ".git"))
     return sorted(name for name in names if scoped(name, export=export))
 
 
