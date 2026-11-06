@@ -87,7 +87,7 @@ active-source	VMS/02-rec/data/upstream-entry.copy.outcomes.tsv	fe9bb1bd0bbfd7447
 active-source	VMS/02-rec/data/upstream-entry.layers.tsv	40328a08955e7c3690d4e39526a3ffdb2b901394df2dd1c95f723f7fac1165af
 active-source	VMS/02-rec/data/upstream-entry.member.outcomes.tsv	05a6db92a420f09b16c222ee9a16beacd72c25ba54c355c795e8511ff5862806
 active-source	VMS/02-rec/data/upstream-entry.schema.json	af59f5a72744691754853ffe6a6a626c9ffd402e88fa68d95a711f6817332fbf
-active-source	VMS/02-rec/rec.subsystem.yaml	68e7d3b6aeb986d0f35377aeeefe651f967c17a0a2d1b277e871acad2bc24c0b
+active-source	VMS/02-rec/rec.subsystem.yaml	9e8eaaa07076b4fda129e0cec1d40d31bc55b58a2f7d484dd2ca655302ac214f
 human-ru	VMS/02-rec/ru/02-rec.md	f68fcf226d7fc69c59d8b411874a2d126e1f0a01d8e8bbe02955222002ea1498
 human-ru	VMS/02-rec/ru/README.md	55a22017341505481e5254b9ead6af3acb10f6955e8cf683a5ed468e220e0f69
 human-ru	VMS/02-rec/ru/acceptance/1/README.md	9f775a3ab8f71de13d695031c7fe1a92cc4ee4da9ca604a714b5916bb821f509
@@ -219,7 +219,7 @@ active-source	VMS/07-auto/acceptance/1/README.md	c51a72c9b08835e1514a03b9fc744f3
 active-source	VMS/07-auto/acceptance/1/scenarios.tsv	494a4c327a8114207d16a1e56429f7b009515e76959573ad40087fd0c5516ef6
 active-source	VMS/07-auto/acceptance/6/README.md	e8a6ec564b740511b1eb2a9d602bc66feeabeb196b6164deb73251223608e587
 active-source	VMS/07-auto/acceptance/6/scenarios.tsv	1ac0e115eabc0c9f35c666aab0554924535a4e5bb655afa0f5d2033724a1f585
-active-source	VMS/07-auto/auto.subsystem.yaml	b4034c39c131694320b99035c2c7252defa08d5518a0faba93d47593a6be9b48
+active-source	VMS/07-auto/auto.subsystem.yaml	0c3fffdfd7f9a9b7f7eb7cfb4ba32583d8163e32bdfb2aaf43ae9686817c1a8f
 active-source	VMS/07-auto/data/asks-entry.layers.tsv	2fe362473eeb6539b82c3c028918dfe011893197749ecbacffc69fbd2d8f230b
 active-source	VMS/07-auto/data/asks-entry.member.outcomes.tsv	feab67ff8e6e4959dbbef972f2d8cf8ee14a58413da51c575ec6495f8602fea6
 active-source	VMS/07-auto/data/asks-entry.schema.json	d321915bf2c30a31f5e1d570aae61420323bb5fa50d9b3e7b1570457bd7bda09
