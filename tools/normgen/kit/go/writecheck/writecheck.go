@@ -1,6 +1,6 @@
 // Package writecheck checks POST /v1/write before N3:strict jsonstrict parsing under P/01.1 N2.1, then
 // the generated write-checks.tsv checks table (ADR-0083 addendum 86, item 2).
-// Handwritten;build_kit.py rewrites kitmodule/internal imports.
+// Handwritten; build_kit.py rewrites internal package imports.
 package writecheck
 
 import (
