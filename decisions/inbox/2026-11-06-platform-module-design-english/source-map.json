@@ -1,0 +1,11 @@
+{
+  "base": "c6dfc960ae47a02cddfe39eebe3f3b766608c96e",
+  "path": "Platform/module-design.md",
+  "before_sha256": "d766688b09666d7052bea1930f1f03f8643e45d204d6ee571644a51a4a97b5d1",
+  "after_sha256": "c6ca414dc323eef870475da1e92f573d596a0054ffc03e5c0e29019d2d66acd4",
+  "scope": "Full English prose/tables; approved current history/layout paths replace former exported history locations; historical migration plans explicitly labelled.",
+  "preserved": [
+    "Ten owner lessons, reading-order dependency graph, vector owners/participants and accepted architectural decisions.",
+    "No active form, protocol, default, role, rights, source code or runtime change."
+  ]
+}
