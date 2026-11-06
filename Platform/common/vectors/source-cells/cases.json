@@ -339,5 +339,59 @@
     "columns": null,
     "positional": true,
     "valid": false
+  },
+  {
+    "case": "unmarked-U2028",
+    "text": "# cell-json: payload\nplain\tpayload\nA\u2028B\t\"x\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": true,
+    "declared": [
+      "payload"
+    ],
+    "rows": [
+      [
+        3,
+        {
+          "plain": "A\u2028B",
+          "payload": "x"
+        }
+      ]
+    ],
+    "unmarked_byte_proofs": [
+      {
+        "row": 3,
+        "column": "plain",
+        "before_sha256": "f2206859ec3fe60cbbaea8b948036bd1dc21c6338fd8b54466614cede5c36679",
+        "decoded_sha256": "f2206859ec3fe60cbbaea8b948036bd1dc21c6338fd8b54466614cede5c36679"
+      }
+    ]
+  },
+  {
+    "case": "unmarked-U000B",
+    "text": "# cell-json: payload\nplain\tpayload\nA\u000bB\t\"x\"\n",
+    "columns": null,
+    "positional": false,
+    "valid": true,
+    "declared": [
+      "payload"
+    ],
+    "rows": [
+      [
+        3,
+        {
+          "plain": "A\u000bB",
+          "payload": "x"
+        }
+      ]
+    ],
+    "unmarked_byte_proofs": [
+      {
+        "row": 3,
+        "column": "plain",
+        "before_sha256": "4b21641edaacd3f14e7117569da0514c71aeab11770623832b5c23b379d07b58",
+        "decoded_sha256": "4b21641edaacd3f14e7117569da0514c71aeab11770623832b5c23b379d07b58"
+      }
+    ]
   }
 ]
