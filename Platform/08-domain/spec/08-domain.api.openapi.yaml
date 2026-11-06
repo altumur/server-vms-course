@@ -2727,7 +2727,7 @@ components:
                 type: array
                 items: {$ref: '#/components/schemas/Outcome'}
               description: 'P/08.6 N1.6: {<member>: [<outcome>…]} — the row domain/outcomes/<member> by (at, id) descending'
-            url: {type: string, description: 'address of the domain console (DOMAIN_CONSOLE_URL of the process domain; read by the forwarding of the cluster console — chapter P/06.7)'}
+            url: {type: [string, 'null'], description: 'address of the domain console (DOMAIN_CONSOLE_URL of the process domain; read by the forwarding of the cluster console — chapter P/06.7)'}
             term: {description: P/08.8 N1.3}
             shared:
               $ref: '#/components/schemas/Delivery'

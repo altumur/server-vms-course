@@ -188,7 +188,7 @@ console:   консоль домена — дверь: проверяет лич
            строки держателя у неё нет (права domainconsole — чтение, P/02.5 N1.4)
 pass:      каждую дверь /domain/* консоли домена, кроме GET и HEAD и кроме door.pass воркеру на домене (N1.6), и
            POST /api/login (P/08.4 N1.2); двери людей P/08.4 N1.9 (/domain/users…, /domain/break-glass…) — при любом
-           методе, и GET (разбор ревью стадии A 8–10, № 2) —
+           методе, и GET (разбор ревью стадии A 8–10, № 2), а также GET/HEAD /domain/<sub>/books/<book>/*/<part> —
            процессу domain (SIGNER_URL своей коробки; к https:// — клиент своего кластера, договор сертификата роли
            own_client, роль domain): метод, путь с query, тело, Authorization, Idempotency-Key, If-Match
            как пришли, кроме первого cookie-перехода по договору пересылки «Первый cookie-переход к домену»; X-W2C-Client — адрес TCP-пира клиента: ставит консоль домена, когда, кому верит процесс и что
@@ -308,6 +308,8 @@ N1.6; консоль передаёт `Authorization` как пришёл (пл�
 
 **Второй вид `door.pass` на домене** (ADR-0094 B1, доп. (3) п. 1; [договор сторожевой и передачи](../../../common/ru/contracts/gate-and-pass.md) «Передача второго вида»). Манифест со вторым видом консоль домена передаёт так же: билет вместо `Authorization`, заголовки, типы ответа, `refusals`, поток. Билет выдаёт экземпляр консоли домена и помнит `jti`, `kid`, `exp` токена человека; `user`, закрытие запроса и закрытие потока при отзыве `jti`, выключении человека и на `exp` — по договору. Токен проверяется договором токена домена, а гранты — `domain/grants/domain` (N1.5). Клиент к воркеру — роли `domainconsole`, адресат — роль `<sub>domain`. Обратного вызова на домене пока нет: закрытый перечень [P/06.3](../../../06-console/ru/spec/06.3-console.norms.md) N1.9 не называет дверей `/domain/*`, поэтому заголовок `X-W2C-Pass-Ticket` консоль домена принимает только для отказа, 401; двери войдут в перечень с приращением прав (ADR-0094 доп. (11)).
 
+**Все hop пересылки.** [Политика передачи доменному воркеру](../../../common/ru/contracts/forwarding.md#политика-hop-передачи-доменному-воркеру) обязательна на каждой консоли пути, включая держателя и члена: digest подтверждённой политики, конечные сроки с исполнением нижних hop, буфер 4 MiB и потоки без обычного предела 5 секунд/1 MiB. Несовпадение — 503 без вызова воркера. После клиентских заголовков обрыв передаёт байты и закрытие, без нового тела `502`. Обычные платформенные пути сохраняют прежние пределы.
+
 **Заголовок адреса обратного вызова (G10-PASS-CALL-URL-01).** У этой передачи исходящий `X-W2C-Pass-Console` отсутствует как с комплектом роли, так и без него. Такой заголовок, пришедший извне, удаляется по `to_worker` договора сторожевой и передачи. `CONSOLE_CALL_PORT` называет слушатель обратного вызова консоли кластера; ни его URL, ни основной адрес `DOMAIN_CONSOLE_HOST/PORT` не являются адресом обратного вызова этого экземпляра консоли домена. Билет привязан к открытому запросу в памяти по договору выше; входящий `X-W2C-Pass-Ticket` в консоль домена получает отказ 401, как выше.
 
 ### N1.7 Страница держателя (M11/8 N1.8)
@@ -344,7 +346,9 @@ door:          GET /domain/alarms?since=&until= у консоли домена (
 answer:        200 {since, until, events, members, complete, sentence} — функция alarms (N3) на странице последнего отчёта
                каждого члена списка (держатель включён), истории (P/08.9 N1.9) и свидетелях
 member_state:  ok | silent | not_reporting | never | unreadable
-  silent:      последний отчёт старше LOST_AFTER (договор наблюдения «Свежесть», 45 с); silent_since = последний отчёт + LOST_AFTER
+  silent:      последний отчёт старше silent_after этого члена (договор наблюдения «Свежесть»): server — LOST_AFTER (45 с),
+               camera — 3 × every подтверждённой метки (нет every — REPORT_EVERY по договору приёма отчёта); retry_in здесь не используется;
+               silent_since = last_report + тот же silent_after
   not_reporting: silent, а свидетель слышал единицу члена позже последнего отчёта
   never:       отчёта не было ни разу
   unreadable:  страница не по форме P/09.1 N1.10 (у функции alarms — и вход "garbled")
@@ -356,7 +360,9 @@ witness:       domain.witness {report, member_field} (P/02.1 N1.2b): объек�
                не свидетель (добавлено сверкой M11, A2; сторона агента — P/09.1 N1.10); member_field — fixed поле единицы, несущее имя члена
                (отказ загрузки — P/02.1 N1.2b); alive_at = ts − units[член], alive_via = "<cluster>/<имя>"; свидетелей несколько —
                наибольший alive_at среди тех, что позже last_report; при равном — меньший alive_via в байтах UTF-8
-               (добавлено сверкой M11, A17)
+               (добавлено сверкой M11, A17); ts объекта воркера — его настенные часы. До вычисления alive_at, выбора и сравнения
+               равных значений сборщик сдвигает ts на received_at − sent_at того же подтверждённого отчёта, из которого взят свидетель.
+               Метка наблюдаемого члена, текущий сдвиг часов и другой отчёт для этого не используются
 clock:         часы домена строки тревог — [договор истории тревог](../../../common/ru/contracts/alarm-history.md) «Часы домена» (перенесено туда
                без изменения; аудит раскладки, решение «Архитектора» 2026-10-25, A-13)
 events_order:  по t убывая, затем member, id; строки истории — from_history: true
@@ -377,11 +383,13 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](../../spec/10-domain
 
 | Дверь | Кто отвечает | Успех | Отказы |
 |---|---|---|---|
-| GET `/domain`, `/domain/folders`, `/domain/folders/<id>/units`, `/domain/memberof/<член>/<sub>/<rows>/<id>`, `/domain/<sub>/<rows>`, `/domain/<sub>/kept/<имя>`, `/domain/relays/<ретранслятор>`, `/domain/<sub>/tables/<таблица>`, `/domain/shadow`, `/domain/members`, `/domain/topology`, `/domain/placement`, `/domain/placement/<sub>/<ref>`, `/domain/grants`, `/domain/shared` | консоль домена сама | N1.2 | N1.2, N4 |
+| GET `/domain`, `/domain/members/<member>`, `/domain/folders`, `/domain/folders/<id>/units`, `/domain/memberof/<член>/<sub>/<rows>/<id>`, `/domain/<sub>/<rows>`, `/domain/<sub>/kept/<имя>`, `/domain/relays/<ретранслятор>`, `/domain/<sub>/tables/<таблица>`, `/domain/shadow`, `/domain/members`, `/domain/topology`, `/domain/placement`, `/domain/placement/<sub>/<ref>`, `/domain/grants`, `/domain/shared` | консоль домена сама | N1.2 | N1.2, N4 |
 | GET `/domain/alarms` | консоль домена сама | N1.8 | 400; N4 |
 | прочие строки списка (правки, двери людей при любом методе, `POST /api/login`) | процесс `domain` — консоль передаёт (N1.3) | ответ процесса как пришёл (главы урока P/08) | N4; коды процесса — OpenAPI урока P/08 |
 | `/domain/<sub>/<сегмент door.pass>[/…]` | воркер на домене — консоль передаёт (N1.6) | ответ воркера как пришёл | [договор сторожевой и передачи](../../../common/ru/contracts/gate-and-pass.md) «Передача `door.pass`» |
 | GET `/`, `/index.html`, `/platform/console.js`, `/platform/console.css`, `/manifest`, `/mounts`, `/session`, `/healthz` | консоль домена сама | N1.7 | [P/06.5](../../../06-console/ru/spec/06.5-console.norms.md); `/session` — договор сторожевой и передачи |
+
+Каждой именованной паре method/path закрытого списка пересылки соответствует операция OpenAPI здесь, включая GET одного члена, POST edits и stranded edits, папки, членство, lines роли, GET части книги и POST verify. HEAD следует каждому GET. GET части книги идёт процессу domain, не воркеру; POST /domain/verify — к /api/verify с прежним допуском X-W2C-Ticket. Этот заголовок отличается от запрещённого callback X-W2C-Pass-Ticket. Формы запроса, успеха, условного 412, RepeatKey и отказы писателя — ссылки на владельцев P/08; консоль не изобретает иной схемы и не поглощает отказ писателя.
 
 Путь с сегментом `.` или `..` (в том числе в процент-форме) — 404 `not a domain route` до сторожевой, до передачи
 процессу и воркеру на домене (договор пересылки «Двери домена»).
@@ -410,10 +418,14 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](../../spec/10-domain
 N1.2b), она не читается или чтение не подтверждено — 503 `unavailable` всей двери, не пустой список; метка прочитана, а
 поколения `reports/<rev>` метки нет или оно не с её `sha256` — `page: "garbled"` (член `unreadable`, свидетели этого
 отчёта не берутся), не `page: null`: «страницы нет» — только у читаемого поколения без страницы.
+Сборщик всегда передаёт `silent_after` каждого члена по принятому классу Entry и подтверждённой метке, как в N1.8. Он переводит `ts` каждого свидетеля по сдвигу исходного отчёта до вызова функции; во входе нативной команды `ts` уже по часам домена. Функция повторно его не сдвигает.
 
 ```
 вход:   {now, since, until, lost_after, members: {<член>: {last_report: <часы домена> | null, received_at, sent_at, page: <P/09.1 N1.10> |
-         "garbled" | null, history: <P/08.9 N1.9> | null} | {reported: "garbled", page?, history?}}, witnesses: [{sub, name, ts, cluster, units}]}
+         "garbled" | null, history: <P/08.9 N1.9> | null, silent_after?} | {reported: "garbled", page?, history?, silent_after?}}, witnesses: [{sub, name, ts, cluster, units}]}
+silent_after?: конечное положительное JSON-число в обеих формах члена; если поля нет, берётся переданный положительный lost_after.
+   Совместимый вход не выводит из этого класс camera. Настоящий сборщик всегда передаёт значение для конкретного члена. Полный известный
+   вход, включая это поле, проверяется до шагов; неверное значение — код 2, в том числе при reported = "garbled".
 1. каждый член:
    reported = "garbled" (метка прочитана, не по форме) → unreadable; строки молчания и строк страницы этого члена нет,
                                                         known_until и silent_since нет (C10-REPORTED-OUTCOME-1D6, решение «Архитектора» 2026-10-25)
@@ -421,7 +433,7 @@ N1.2b), она не читается или чтение не подтвержд
    last_report нет, а page есть                       → вход не по форме (код 2): страница приходит только с отчётом
    page = "garbled" или не по форме P/09.1 N1.10      → unreadable; не по форме — и строка без id, class ≠ alarm, kind
                                                         пустой, unit не строка, from > to (добавлено сверкой M11, A15)
-   now − last_report > lost_after                     → silent; свидетель с ts − units[член] > last_report — not_reporting
+   now − last_report > (silent_after если есть, иначе lost_after) → silent; свидетель с ts − units[член] > last_report — not_reporting
    иначе                                              → ok
    page = null при last_report — страницы нет: строк страницы нет, не unreadable
 2. строки: страница (часы N1.8 clock) ∪ история (from_history, t как хранится) без повторов по same_line — есть в обеих,
@@ -466,14 +478,14 @@ N1.2b), она не читается или чтение не подтвержд
 Каталог [`acceptance/`](../acceptance/README.md): стенд нескольких кластеров главы 8.3 (`hold`, `m1`, `m2`, каталог
 `testsub`), сценарии 02 (из M11/11) и 05 (из M11/08) — номера и шаги прежние; 06–09 — аудит покрытия P/10 (audit-kimi
 290ae7697); 10–16 — его второй проход (audit-coverage-gemini 798e11a44); 17 — ADR-0094 B4; 18, 19 — двери `kept` и ретранслятора (новые сценарии 2026-11-02, `journal/corrections.tsv`). Список тревог — вектор
-[`vectors/alarms`](../vectors/alarms/README.md) (27 строк: 15 — бывший сц. 04 приёмки M11/11; 16 — C10-REPORTED-OUTCOME-1D6; 17–27 — второй проход аудита покрытия).
+[`vectors/alarms`](../vectors/alarms/README.md) (35 строк: 15 — бывший сц. 04 приёмки M11/11; 16 — C10-REPORTED-OUTCOME-1D6; 17–27 — второй проход аудита покрытия; 28–35 — ревью C1).
 
 ```yaml
 alarms:    вход — N3 alarms; вывод {events, members, complete, sentence}
 exit:      0 — вычислено; 2 — вход не по форме (строки alarms-15, alarms-17…23 — @exit 2: lost_after, имя члена, page без
            last_report, sent_at null у члена с отчётом, history с cut_before null, свидетель без ts, reported вместе с last_report,
            лишнее поле; прочие случаи — чтением; страница [], from > to, строка без id — 0 unreadable, строки alarms-24…26); коды выхода — по принципу «Стенда домена» общего README приёмки («Коды выхода команд-векторов»: 2 — форма доверенного входа, 0 со словом — документ другого кластера; решение «Архитектора» по сверке M11, H14).
-           Не по форме у alarms: имя члена не по грамматике члена, lost_after не > 0, history или свидетель не по форме P/08.9 N1.9
+           Не по форме у alarms: имя члена не по грамматике члена, lost_after не > 0, заданный silent_after не конечное положительное число (boolean и null — не числа), history или свидетель не по форме P/08.9 N1.9
            и N1.8 (history без cut_before или с cut_before null — тоже, P/08.9 N1.9 A13), страница-объект без received_at и sent_at,
            нет received_at или sent_at у члена с отчётом, history строкой, свидетель без ts, witnesses не список, now не
            число, лишнее поле; reported — не "garbled", или вместе с last_report, received_at, sent_at (C10-REPORTED-OUTCOME-1D6);

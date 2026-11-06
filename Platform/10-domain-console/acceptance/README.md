@@ -152,4 +152,6 @@ The returned JSON normalizes actual observations: `refused` means a non-success 
 
 ## Kit assistance seams
 
-[seams.tsv](seams.tsv) provides 39 CALL steps of 25 scenarios over ordinary implementation paths. The fixture/port contract is [forms/README.md](../forms/README.md); [stages.tsv](../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary scenarios of this directory, the vector `alarms`, the neighbours on the stands of lesson P/08 or the items checked by reading.
+[seams.tsv](seams.tsv) provides 82 CALL steps of 44 scenarios over ordinary implementation paths. The fixture/port contract is [forms/README.md](../forms/README.md); [stages.tsv](../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary scenarios of this directory, the vector `alarms`, the neighbours on the stands of lesson P/08 or the items checked by reading.
+
+The review adds eight alarms neighbours (35 rows total) and 34 effect CALL steps; the original 27 alarms rows and all 48 original CALL steps remain byte-exact. The forms README defines the real collector, own reads, closed-route dispatch and composed hop fixtures.

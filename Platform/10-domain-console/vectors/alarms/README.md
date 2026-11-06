@@ -30,7 +30,8 @@ Who performs it — the domain console (`10-domain-console`, P/10 N3 `alarms`, N
 - the members: `last_report` and `received_at` — the domain clock, `sent_at` — the member clock of the same report (at the vectors — `page.to`; with
   `page` not an object — a number, as `received_at`: `null` at a member with a report — code 2, H14, row 19), `page` — the page of P/09.1 N1.10 (`"garbled"` — does not read; `null` — none), `history` —
   the history object of P/08.9 N1.9; `reported: "garbled"` instead of `last_report`, `received_at`, `sent_at` — the mark is read, out of form (C10-REPORTED-OUTCOME-1D6);
-- `witnesses` — the witness objects `{sub, name, ts, cluster, units}` (the norms N1.8 `witness`).
+- `silent_after?` in each member — a finite positive number, overriding the supplied `lost_after`; without it the old native input retains `lost_after`. The collector always supplies the server/camera value from N1.8; no class is inferred by the function. Rows 28–30 exercise a camera alongside a server and both sides of the exact boundary. Rows 31–35 reject zero, negative, boolean, string and null overrides.
+- `witnesses` — the witness objects `{sub, name, ts, cluster, units}` (the norms N1.8 `witness`). Here `ts` is already normalized to the domain clock by the originating report, not the clock of the target member. The real collector's two offset directions are checked by CALL seams, not simulated by changing these native inputs.
 
 The names of the subsystems and the units in the input (`testsub`, `testsub/c1`) are data of the input: the vector does not depend on the bytes of the manifests of the catalogue.
 
@@ -41,7 +42,7 @@ of the acceptance of M11, at the rows 16–27 — the checked case and its norm 
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](cases.tsv), 27 rows: 19 computed, 8 `@exit 2` | `input` — the input of the command `alarms` as JSON text → `expect`: `{events, members, complete, sentence}` or a part of it |
+| [`cases.tsv`](cases.tsv), 35 rows: 22 computed, 13 `@exit 2` | `input` — the input of the command `alarms` as JSON text → `expect`: `{events, members, complete, sentence}` or a part of it |
 
 | Rows | What they check |
 |---|---|
@@ -74,3 +75,7 @@ Rows 17–27 — the second pass of the coverage audit of P/10 (audit-coverage-g
 were obtained by the command `alarms` of the frozen witnesses `cammeta-python` and `cammeta-go`
 (`cammeta domain-vector alarms`) — both give the expectation of each row; the witnesses do not know the field `reported` (row 16 is red
 at them), the code 2 of row 22 at them is «extra field», by the norm — `reported` together with `last_report`.
+
+## P/10 review neighbours
+
+Each member's `silent_after?` is a finite positive number; without it the supplied `lost_after` applies. The collector always supplies the server/camera threshold of N1.8; the function infers no class. Rows 28–30 check a camera alongside a server and the exact boundary; 31–35 reject zero, negative, boolean, string and null, including garbled. A witness input `ts` is already normalized to domain time using its originating report, never the target member's mark. Both offset directions of the actual collector are checked by CALL seams.

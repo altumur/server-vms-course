@@ -193,7 +193,7 @@ console:   the domain console is a door: it checks the identity and the grant (t
            the rows of the holder (the rights of domainconsole are reading, P/02.5 N1.4)
 pass:      every door /domain/* of the domain console, except GET and HEAD and except door.pass to the worker on the domain (N1.6), and
            POST /api/login (P/08.4 N1.2); the people doors of P/08.4 N1.9 (/domain/users…, /domain/break-glass…) — with any
-           method, GET too (review analysis of stage A 8–10, № 2) —
+           method, GET too (review analysis of stage A 8–10, № 2), and GET/HEAD /domain/<sub>/books/<book>/*/<part> —
            to the process domain (SIGNER_URL of its own box; to https:// — the client of its own cluster, the role certificate contract
            own_client, role domain): the method, the path with query, the body, Authorization, Idempotency-Key, If-Match
            as they came, except the first cookie transition under the forwarding contract «First cookie transition to the domain»; X-W2C-Client — the address of the client's TCP peer: the domain console sets it; when, whom the process trusts and what
@@ -317,6 +317,8 @@ N1.6; the console passes `Authorization` on as it came (the move plan of lesson 
 
 **The second kind of `door.pass` on the domain** (ADR-0094 B1, addendum (3) item 1; [the gate-and-pass contract](../../common/contracts/gate-and-pass.md) «Pass of the second kind»). The domain console passes a manifest with the second kind on in the same way: a ticket instead of `Authorization`, the headers, the answer types, `refusals`, the stream. The ticket is issued by an instance of the domain console, which remembers `jti`, `kid`, `exp` of the human's token; `user`, the closing of the request and the closing of the stream on a revocation of `jti`, on disabling the human and at `exp` — by the contract. The token is checked by the domain token contract, and the grants — by `domain/grants/domain` (N1.5). The client to the worker is of the role `domainconsole`, the addressee is the role `<sub>domain`. There is no callback on the domain yet: the closed list of [P/06.3](../../06-console/spec/06.3-console.norms.md) N1.9 names no doors `/domain/*`, therefore the domain console accepts the header `X-W2C-Pass-Ticket` only for a refusal, 401; the doors will enter the list with the increment of rights (ADR-0094 addendum (11)).
 
+**All forwarding hops.** The [domain worker pass hop policy](../../common/contracts/forwarding.md#domain-worker-pass-hop-policy) is mandatory at every console on this path, including the holder and member consoles: confirmed-policy digest, finite waits including downstream execution, 4 MiB finite buffering, and streams without the ordinary 5-second/1 MiB limit. A mismatch returns 503 without calling the worker. After exposing client headers a break propagates bytes and closure, never a new `502` body. Ordinary platform routes retain their normal limits.
+
 **Callback address header (G10-PASS-CALL-URL-01).** In this pass, the outgoing `X-W2C-Pass-Console` is absent, with or without a role kit. The same header received from outside is removed by `to_worker` of the gate-and-pass contract. `CONSOLE_CALL_PORT` names the callback listener of the cluster console; neither that URL nor the main `DOMAIN_CONSOLE_HOST/PORT` address is a callback address of this domain-console instance. The ticket remains bound to the open request in memory by the contract above; an incoming `X-W2C-Pass-Ticket` at the domain console is refused with 401 as above.
 
 <!-- req: P/10-R010 -->
@@ -355,7 +357,9 @@ door:          GET /domain/alarms?since=&until= at the domain console (view); th
 answer:        200 {since, until, events, members, complete, sentence} — the function alarms (N3) on the page of the last report
                of each member of the list (the holder included), on the history (P/08.9 N1.9) and on the witnesses
 member_state:  ok | silent | not_reporting | never | unreadable
-  silent:      the last report is older than LOST_AFTER (the observation contract «Freshness», 45 s); silent_since = the last report + LOST_AFTER
+  silent:      the last report is older than this member's silent_after (the observation contract «Freshness»): server — LOST_AFTER (45 s),
+               camera — 3 × every of its confirmed mark (absent every — REPORT_EVERY, by the report reception contract); retry_in is not used here;
+               silent_since = last_report + the same silent_after
   not_reporting: silent, and a witness heard a unit of the member later than the last report
   never:       there has never been a report
   unreadable:  the page is not by the form of P/09.1 N1.10 (at the function alarms — the input "garbled" too)
@@ -367,7 +371,9 @@ witness:       domain.witness {report, member_field} (P/02.1 N1.2b): the objects
                not a witness (added by the reconciliation of M11, A2; the agent's side — P/09.1 N1.10); member_field — the fixed field of the unit that carries the name of the member
                (the load refusal — P/02.1 N1.2b); alive_at = ts − units[member], alive_via = "<cluster>/<name>"; there are several witnesses —
                the largest alive_at among those later than last_report; on a tie — the smaller alive_via in UTF-8 bytes
-               (added by the reconciliation of M11, A17)
+               (added by the reconciliation of M11, A17); ts in the worker object is its wall time. Before computing alive_at and choosing
+               or breaking a tie, the collector shifts ts by received_at − sent_at of the same confirmed report that supplied this witness.
+               It never uses the mark of the member being witnessed, the current clock offset or another report
 clock:         the domain clock of the alarm rows — [the alarm history contract](../../common/contracts/alarm-history.md) «Domain clock» (moved there
                without a change; the layout audit, the Architect's decision of 2026-10-25, A-13)
 events_order:  by t descending, then member, id; the rows of the history — from_history: true
@@ -389,11 +395,13 @@ Who answers a row:
 
 | Door | Who answers | Success | Refusals |
 |---|---|---|---|
-| GET `/domain`, `/domain/folders`, `/domain/folders/<id>/units`, `/domain/memberof/<member>/<sub>/<rows>/<id>`, `/domain/<sub>/<rows>`, `/domain/<sub>/kept/<name>`, `/domain/relays/<relay>`, `/domain/<sub>/tables/<table>`, `/domain/shadow`, `/domain/members`, `/domain/topology`, `/domain/placement`, `/domain/placement/<sub>/<ref>`, `/domain/grants`, `/domain/shared` | the domain console itself | N1.2 | N1.2, N4 |
+| GET `/domain`, `/domain/members/<member>`, `/domain/folders`, `/domain/folders/<id>/units`, `/domain/memberof/<member>/<sub>/<rows>/<id>`, `/domain/<sub>/<rows>`, `/domain/<sub>/kept/<name>`, `/domain/relays/<relay>`, `/domain/<sub>/tables/<table>`, `/domain/shadow`, `/domain/members`, `/domain/topology`, `/domain/placement`, `/domain/placement/<sub>/<ref>`, `/domain/grants`, `/domain/shared` | the domain console itself | N1.2 | N1.2, N4 |
 | GET `/domain/alarms` | the domain console itself | N1.8 | 400; N4 |
 | the other rows of the list (edits, people doors with any method, `POST /api/login`) | the process `domain` — the console passes on (N1.3) | the answer of the process as it came (the chapters of lesson P/08) | N4; the codes of the process — the OpenAPI of lesson P/08 |
 | `/domain/<sub>/<door.pass segment>[/…]` | the worker on the domain — the console passes on (N1.6) | the answer of the worker as it came | [the gate-and-pass contract](../../common/contracts/gate-and-pass.md) «Pass of `door.pass`» |
 | GET `/`, `/index.html`, `/platform/console.js`, `/platform/console.css`, `/manifest`, `/mounts`, `/session`, `/healthz` | the domain console itself | N1.7 | [P/06.5](../../06-console/spec/06.5-console.norms.md); `/session` — the gate-and-pass contract |
+
+Every named method/path pair in the closed forwarding list has an OpenAPI operation here, including GET of one member, POST edits and stranded edits, folder/membership/role-line operations, the book-part GET and POST verify. HEAD follows every GET. The book-part GET reaches the process domain, not the worker; POST /domain/verify reaches /api/verify under its existing X-W2C-Ticket admission. The latter header is distinct from the forbidden X-W2C-Pass-Ticket callback. Request forms, success forms, conditional 412, RepeatKey and writer refusals are references to their P/08 owners; the domain console does not invent another schema or swallow a writer refusal.
 
 A path with a segment `.` or `..` (percent-encoded too) — 404 `not a domain route` before the gate, before the passing to
 the process and to the worker on the domain (the forwarding contract «Domain doors»).
@@ -424,10 +432,14 @@ the age of the console's observation; the members are the row `domain/member-row
 N1.2b), it does not read or the read is not confirmed — 503 `unavailable` of the whole door, not an empty list; the mark is read, and
 the generation `reports/<rev>` of the mark does not exist or it is not with its `sha256` — `page: "garbled"` (the member is `unreadable`, the witnesses of this
 report are not taken), not `page: null`: «no page» is only for a readable generation without a page.
+The collector always supplies each member's `silent_after` from its accepted Entry class and confirmed mark as in N1.8. It normalizes each witness's `ts` using the originating report's offset before passing it to the function; the native input's witness `ts` is already domain time. The function must not shift it again.
 
 ```
 input:  {now, since, until, lost_after, members: {<member>: {last_report: <domain clock> | null, received_at, sent_at, page: <P/09.1 N1.10> |
-         "garbled" | null, history: <P/08.9 N1.9> | null} | {reported: "garbled", page?, history?}}, witnesses: [{sub, name, ts, cluster, units}]}
+         "garbled" | null, history: <P/08.9 N1.9> | null, silent_after?} | {reported: "garbled", page?, history?, silent_after?}}, witnesses: [{sub, name, ts, cluster, units}]}
+silent_after?: a finite positive JSON number in either member form; when absent, use the supplied positive lost_after. This
+   compatibility input does not infer camera class. The real collector always supplies its member-specific value. Validate the complete
+   known input, including this field, before the steps; a malformed override is code 2, even on reported = "garbled".
 1. each member:
    reported = "garbled" (the mark is read, not by the form) → unreadable; there are no silence row and no page rows of this member,
                                                         no known_until and no silent_since (C10-REPORTED-OUTCOME-1D6, the Architect's decision of 2026-10-25)
@@ -435,7 +447,7 @@ input:  {now, since, until, lost_after, members: {<member>: {last_report: <domai
    no last_report, but a page                         → an input not by the form (code 2): a page comes only with a report
    page = "garbled" or not by the form of P/09.1 N1.10 → unreadable; not by the form is also a row without id, class ≠ alarm, kind
                                                         empty, unit not a string, from > to (added by the reconciliation of M11, A15)
-   now − last_report > lost_after                     → silent; a witness with ts − units[member] > last_report — not_reporting
+   now − last_report > (silent_after if present, else lost_after) → silent; a witness with ts − units[member] > last_report — not_reporting
    otherwise                                          → ok
    page = null with last_report — there is no page: there are no page rows, not unreadable
 2. rows: the page (the clock of N1.8 clock) ∪ the history (from_history, t as stored) without repeats by same_line — present in both,
@@ -482,14 +494,14 @@ The words of `peer` are [the `peer` contract](../../common/contracts/peer.md) «
 The catalogue [`acceptance/`](../acceptance/README.md): the stand of several clusters of chapter 8.3 (`hold`, `m1`, `m2`, the catalogue
 `testsub`), scenarios 02 (from M11/11) and 05 (from M11/08) — the numbers and steps are the former ones; 06–09 — the coverage audit of P/10 (audit-kimi
 290ae7697); 10–16 — its second pass (audit-coverage-gemini 798e11a44); 17 — ADR-0094 B4; 18, 19 — the `kept` and relay doors (new scenarios of 2026-11-02, `journal/corrections.tsv`). The alarm list is the vector
-[`vectors/alarms`](../vectors/alarms/README.md) (27 rows: 15 — the former sc. 04 of the acceptance of M11/11; 16 — C10-REPORTED-OUTCOME-1D6; 17–27 — the second pass of the coverage audit).
+[`vectors/alarms`](../vectors/alarms/README.md) (35 rows: 15 — the former sc. 04 of the acceptance of M11/11; 16 — C10-REPORTED-OUTCOME-1D6; 17–27 — the second pass of the coverage audit; 28–35 — review C1).
 
 ```yaml
 alarms:    the input — N3 alarms; the output {events, members, complete, sentence}
 exit:      0 — computed; 2 — an input not by the form (the rows alarms-15, alarms-17…23 — @exit 2: lost_after, a member name, page without
            last_report, sent_at null at a member with a report, history with cut_before null, a witness without ts, reported together with last_report,
            an extra field; the other cases — by reading; a page [], from > to, a row without id — 0 unreadable, the rows alarms-24…26); the exit codes are by the principle of «Domain stand» of the common README of acceptance («Exit codes of vector commands»: 2 — the form of a trusted input, 0 with a word — a document of another cluster; the Architect's decision on the reconciliation of M11, H14).
-           Not by the form at alarms: a member name not by the member grammar, lost_after not > 0, a history or a witness not by the form of P/08.9 N1.9
+           Not by the form at alarms: a member name not by the member grammar, lost_after not > 0, a present silent_after not a finite positive number (boolean and null are not numbers), a history or a witness not by the form of P/08.9 N1.9
            and N1.8 (a history without cut_before or with cut_before null — too, P/08.9 N1.9 A13), a page object without received_at and sent_at,
            no received_at or sent_at at a member with a report, a history as a string, a witness without ts, witnesses not a list, now not
            a number, an extra field; reported — not "garbled", or together with last_report, received_at, sent_at (C10-REPORTED-OUTCOME-1D6);
