@@ -1,20 +1,11 @@
-"""Генератор № 5 ADR-0125: чтение семей данных P/01 по их схемам — без модели (сужен доп. (1) п. 4 до валидаторов).
+"""Generate data-family readers from schemas, without a model (ADR-0125 generator 5, narrowed to validators by addendum (1), item 4).
 
-Читает каталог `Platform/common/data/catalog.tsv` (семьи урока-владельца со схемой), схему семьи
-`Platform/<NN-процесс>/data/<семья>.schema.json` (JSON Schema 2020-12 со словами слоя 3 `x-*`), сверяет с ней
-`<семья>.layers.tsv` (место, слово, значение — то же в схеме), берёт из `<семья>.outcomes.tsv` только путь, читателя,
-приоритет и единицу (исход словами — проза нормы, генератор его не читает), грамматику плейсхолдеров ключа — из
-`Platform/common/data/key-placeholders.tsv` (для старых выгрузок — первая таблица README). Единицы закрыты
-`data/outcome-units.tsv`; словарь `common/ru` не является входом. Строит пакет Go 1.22 на стандартной библиотеке:
-`families.go` (по *Family на семью, типизированная строка, Read<Семья>, Items, ключ) и ручную среду
-`famrt/go/runtime.go` (проход стека В7: кодек items, слой 3, JSON Schema, пути отказа, исходы по читателю).
+Read row families owned by the lesson from common/data/catalog.tsv; their JSON Schema 2020-12 and layer-3 x-* keywords; matching layers.tsv locations/keywords/values; and only path, reader, priority and unit from outcomes.tsv. Outcome prose is normative text, not generator input. Key grammar comes from key-placeholders.tsv, with the old README table only for historical exports. outcome-units.tsv closes the unit vocabulary; common/ru is not an input.
 
-Слова схемы вне поддержанного набора, семья не `row`, `*` в ключе или в пути исхода — отказ генератора (GenError):
-закрытый набор, а не молчаливый пропуск. Судья — `family_judge.py` (векторы `Platform/common/vectors/family-read/NN.tsv`)
-и `check_spec` (векторы против стека В7).
+Emit standard-library Go 1.22 families.go with *Family, typed rows, Read<Family>, Items and keys, plus famrt/go/runtime.go implementing V7 item codecs, layer3, JSON Schema, refusal paths and reader outcomes. Unknown schema keywords, non-row families and unsupported * in keys/outcomes raise GenError rather than silently dropping constraints. family_judge.py executes family-read/NN.tsv; check_spec compares vectors with V7.
 
-Запуск: python tools/normgen/gen_families.py [урок [каталог_выхода]] (урок по умолчанию 01).
-"""
+  python tools/normgen/gen_families.py [lesson [output-directory]]
+Default lesson: 01."""
 import hashlib
 import json
 import re
@@ -26,7 +17,7 @@ ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 
 from gen_checks import GenError, go_str, gofmt  # noqa: E402
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
 import tsv_input  # noqa: E402
 L = lesson.CURRENT
 
@@ -37,8 +28,8 @@ KEY_GRAMMARS = ROOT / "Platform/common/data/key-placeholders.tsv"
 OUTCOME_UNITS = ROOT / "Platform/common/data/outcome-units.tsv"
 PLATFORM = ROOT / "Platform"
 RUNTIME_FLAT = HERE / "famrt/go/runtime.go"
-RUNTIME_DOC = HERE / "famrt2/go/runtime.go"     # режим схемы данными (уроки кроме P/01; ADR-0125 доп. (5))
-DOC_MODE = L.key != lesson.DEFAULT                # P/01 — плоский режим байт в байт
+RUNTIME_DOC = HERE / "famrt2/go/runtime.go"     # Data-schema mode for lessons after P/01 (ADR-0125 addendum (5)).
+DOC_MODE = L.key != lesson.DEFAULT                # P/01 keeps its flat mode byte for byte.
 RUNTIME = RUNTIME_DOC if DOC_MODE else RUNTIME_FLAT
 JUDGE = HERE / "family_judge.py"
 DEFAULT_OUT = L.out
@@ -47,7 +38,7 @@ KIT_DIRS = ("families",)
 CATALOG_COLUMNS = ["key", "kind", "owner", "ops", "readers", "when", "version", "schema", "norm"]
 OUTCOME_COLUMNS = ["path", "reader", "outcome", "priority", "unit", "norm"]
 UNITS = ("row", "field", "element")
-LEGACY_UNITS = ("строка", "поле", "элемент")
+LEGACY_UNITS = ('\u0441\u0442\u0440\u043e\u043a\u0430', '\u043f\u043e\u043b\u0435', '\u044d\u043b\u0435\u043c\u0435\u043d\u0442')
 ROOT_WORDS = {"$schema", "type", "properties", "additionalProperties", "required", "$defs", "description"}
 PLACE_WORDS = {"$ref", "description", "type", "x-codec", "x-whole", "x-time", "x-integer", "minimum", "maximum",
                "x-max-bytes", "enum"}
@@ -56,7 +47,7 @@ DOC_WORDS = {"$schema", "$defs", "$ref", "description", "type", "enum", "const",
              "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "minItems", "maxItems", "uniqueItems", "items",
              "minProperties", "maxProperties", "properties", "patternProperties", "additionalProperties", "propertyNames",
              "required", "anyOf", "allOf", "oneOf", "not", "if", "then", "else", "x-codec", "x-encoding", "x-whole", "x-time",
-             "x-integer", "x-max-bytes", "x-max-names", "x-opaque"}     # слова, которые исполняет famrt2
+             "x-integer", "x-max-bytes", "x-max-names", "x-opaque"}     # Keywords executed by famrt2.
 GO_TYPE = {"integer": "int64", "time": "float64", "string": "string", "boolean": "bool", "number": "float64"}
 INT64 = (-(2 ** 63), 2 ** 63 - 1)
 
@@ -137,7 +128,7 @@ def placeholders():
                 raise GenError(f"{rel(PLACEHOLDER_LABELS)}: empty or duplicate ru label {row['ru']!r}")
             seen.add(row["ru"])
             ru, en = f"<{row['ru']}>", f"<{row['en']}>"
-            # README is typed data: explicit <сервер>/<server> and <ключ>/<key>
+            # README is typed data: distinguish legacy server/key spellings from their canonical typed names.
             # can denote different types. Prose labels never override those.
             if ru in explicit and en in explicit:
                 continue
@@ -150,8 +141,8 @@ def placeholders():
 
 
 def template(key, grammar):
-    """Шаблон ключа каталога → [(литерал, плейсхолдер, грамматика)]."""
-    if "*" in key and not DOC_MODE:         # режим схемы данными: «*» — плейсхолдер таблицы README (spec.PLACEHOLDER)
+    """Parse a catalog key template into [(literal, placeholder, grammar)]."""
+    if "*" in key and not DOC_MODE:         # In data-schema mode, '*' is a README placeholder (spec.PLACEHOLDER).
         raise GenError(f"{key}: «*» in a key template is outside the generator")
     segs = []
     for part in re.split(r"(<[^<>]+>|\*)", key):
@@ -171,8 +162,7 @@ def go_name(words):
 
 
 def family_name(key, full=False):
-    """Имя Go семьи: слова ключа без заполнителей; сегмент «*» — All. full — с заполнителями (только при совпадении
-    коротких имён двух семей урока): <a:b> → b, <a> → a, без букв ASCII → Part."""
+    """Derive a Go family name from non-placeholder key words; '*' becomes All. full includes placeholders to disambiguate duplicate short names: <a:b> -> b, <a> -> a, no ASCII letters -> Part."""
     k = re.sub(r"(^|/)\*(?=/|$)", r"\1all", key)
     if full:
         def word(m):
@@ -205,7 +195,7 @@ class Schema:
         return n
 
     def root(self):
-        """Корень схемы по цепочке локальных $ref (корень `{"$ref": "#/$defs/…"}` — узел, на который он указывает)."""
+        """Resolve the schema root through local refs; a root {$ref: '#/$defs/...'} denotes its target node."""
         node, seen = self.doc, set()
         while isinstance(node, dict) and isinstance(node.get("$ref"), str) and node["$ref"].startswith("#/"):
             ref = node["$ref"]
@@ -218,7 +208,7 @@ class Schema:
         return node
 
     def chain(self, node, where):
-        """[узлы] по цепочке $ref (место первым: его слова важнее)."""
+        """Return ref-chain nodes with the original location first, so its keywords take precedence."""
         out, seen = [], set()
         while True:
             if not isinstance(node, dict):
@@ -248,7 +238,7 @@ def word(chain, k, default=None):
 
 
 def check_layers(schema, path):
-    """layers.tsv — копия слов x-* схемы: каждое место есть в схеме, слово в нём — то же значение."""
+    """Validate layers.tsv as a copy of schema x-* keywords: every location and value must match."""
     rows = tsv(path, ["place", "layer", "word", "value"])
     for r in rows:
         n = schema.at(r["place"])
@@ -332,9 +322,7 @@ def load_family(row, grammar):
 
 
 def place(doc, pointer):
-    """Место схемы по пути исходов (правило В7, DIALECT § 9): → {номер сегмента «*»: имена properties того места} или
-    None — места нет. Цепочка места — само место, цель $ref и ветви allOf (then при if); «*» — любое имя автора
-    (additionalProperties, кроме объявленных properties) или любой элемент списка (items); x-opaque — любое имя."""
+    """Resolve an outcome location per V7 DIALECT section 9. Return {* segment index: declared property names} or None if absent. Follow the location, refs, allOf and conditional then branches. '*' denotes author-defined additional properties excluding declared ones, or array items; x-opaque allows any name."""
     def resolve(x, seen=()):
         out = []
         if not isinstance(x, dict):
@@ -390,12 +378,11 @@ def place(doc, pointer):
 
 
 def load_family_doc(row, grammar):
-    """Режим схемы данными: семья row со схемой как есть — её исполняет famrt2 (закрытый набор слов JSON Schema и
-    слои В7); генератор проверяет форму (корень — объект, layers.tsv — копия слов x-*, пути исходов — поля строки)."""
+    """Data-schema mode: famrt2 executes row schemas unchanged using its closed JSON Schema/V7 vocabulary. The generator checks an object root, copied layers.tsv keywords and row-field outcome paths."""
     key, kind = row["key"], row["kind"]
     if kind not in ("row", "object", "file"):
         raise GenError(f"{key}: kind {kind!r} — the schema mode reads row, object and file families")
-    file_cell, _, word_ = row["schema"].partition("#")   # #<слово> — только имя файла исходов (spec.load_family)
+    file_cell, _, word_ = row["schema"].partition("#")   # #<word> only identifies the outcomes filename (spec.load_family).
     schema_path = PLATFORM / file_cell
     if not schema_path.name.endswith(".schema.json") or not schema_path.is_file():
         raise GenError(f"{key}: schema {row['schema']!r} is not a file")
@@ -421,7 +408,7 @@ def load_family_doc(row, grammar):
             for e in x:
                 walk(e)
     walk(schema.doc)
-    if "x-file" in words:                          # LAYERS.md слой 3: экземпляр семьи — файл (смысл несёт kind file)
+    if "x-file" in words:                          # LAYERS.md layer3: family instances are files when kind=file carries that meaning.
         if kind != "file" or schema.doc.get("x-file") is not True or json.dumps(schema.doc).count('"x-file"') != 1:
             raise GenError(f"{rel(schema_path)}: x-file — only true, only at the root, only of a family of kind file")
         words.discard("x-file")
@@ -437,7 +424,7 @@ def load_family_doc(row, grammar):
         p = r["path"]
         wild = place(schema.doc, p) if p.startswith("/") else None
         if p and (not p.startswith("/") or (kind == "row" and wild is None)):
-            raise GenError(f"{rel(outcomes_path)}: path {p!r} — \"\" or a place of the row schema (В7: «*» — a name "
+            raise GenError(f'{rel(outcomes_path)}: path {p!r} -- empty path or a row-schema location (V7: * is a name '
                            f"or an item); object, file — a JSON Pointer")
         if not re.fullmatch(r"0|[1-9][0-9]*", r["priority"]) or r["unit"] not in units:
             raise GenError(f"{rel(outcomes_path)}: priority — an integer ≥ 0, unit — one of {units}")
@@ -517,7 +504,7 @@ def go_family(f):
            f"Norm: {go_str(f['norm'])},\nTemplate: []Seg{{{segs}}},\nProps: []Prop{{\n" + ",\n".join(props) + ",\n},\n"
            f"Required: {go_list(f['required'])}, Closed: {str(f['closed']).lower()},\n"
            f"Outcomes: []Outcome{{{outs}}}}}"]
-    # типизированная строка
+    # Typed row.
     fields = []
     for p in f["props"]:
         opt = p["name"] not in f["required"]
@@ -594,13 +581,13 @@ def generate(lesson=DEFAULT_LESSON, out=DEFAULT_OUT):
 
 
 def kit_files(out=DEFAULT_OUT):
-    """→ [(каталог в internal, имя, байты, происхождение, источник)]; GenError — out устарел."""
+    """Return [(internal directory, name, bytes, origin, source)]; stale output raises GenError."""
     files = []
     for name, text in sorted(render().items()):
         kept = Path(out) / "go/families" / name
         if not kept.is_file() or kept.read_text(encoding="utf-8") != text:
             raise GenError(f"{kept} is stale: run tools/normgen/gen_families.py")
-        origin, source = ("handwritten", rel(RUNTIME)) if name == "runtime.go" else ("generated", rel(kept))
+        origin, source = ("handwritten", rel(RUNTIME)) if name == "runtime.go" else ("generated", L.output_source(kept, out))
         files.append(("families", name, kept.read_bytes(), origin, source))
     return files
 
@@ -614,7 +601,7 @@ def sources(lesson=DEFAULT_LESSON):
 
 
 def provenance():
-    """Паспорт части (ADR-0125 доп. (1) п. 6 (а)): формы, генератор, ручная среда, судья — пути и sha256."""
+    """Part provenance (ADR-0125 addendum (1), item 6(a)): forms, generator, handwritten runtime and judge with paths/SHA256."""
     def entry(path):
         return {"path": rel(path), "sha256": sha(path)}
     return {"form": [entry(p) for p in sources()], "generator": entry(Path(__file__).resolve()),
@@ -674,7 +661,7 @@ outcome does is the prose of the norm (the column outcome of `<family>.outcomes.
 
 
 def kit_md():
-    """Справка части: режим схемы данными (уроки кроме P/01) — KIT_MD_DOC; P/01 — KIT_MD."""
+    """Use KIT_MD_DOC for data-schema lessons; KIT_MD for P/01."""
     return KIT_MD_DOC if DOC_MODE else KIT_MD
 
 

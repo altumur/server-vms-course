@@ -1,10 +1,10 @@
-// Ручная среда маршрутизации двери урока (ADR-0125 № 2, P/06 часть 3а): выбор операции по таблицам routes.go.
+// Handwritten lesson door router (ADR-0125 generator 2, P/06 part 3a), using routes.go operation tables.
 //
-// Путь делится на сегменты ("/" — ни одного; хвостовой "/" — пустой последний сегмент), каждый сегмент
-// декодируется из %XX. Шаблон совпадает, если совпали все литералы, значение каждого параметра прошло его схему и
-// каждый параметр класса каталога (sub, rows, table, pass) подтверждён каталогом реализации. Из совпавших шаблонов
-// остаются наиболее конкретные: на первой позиции, где ранги различаются, сильнее литерал (OpenAPI: конкретный путь
-// раньше шаблонного), затем параметр класса, подтверждённый каталогом, затем свободный параметр. Метода нет у пути — 405, если все операции пути объявляют 405, иначе 404.
+// Split paths into segments: '/' has none, a trailing slash adds an empty last segment; decode each %XX.
+// A template matches when literals, parameter schemas and implementation Catalog classes all match.
+// Catalog classes are sub, rows, table, pass. Keep the most concrete matches: compare the first differing
+// segment rank, literal first (OpenAPI concrete-before-template), then Catalog-confirmed class, then free
+// parameter. Missing method yields405 only if every path operation declares405, otherwise404.
 package apidoor
 
 import (
@@ -13,7 +13,7 @@ import (
 	"unicode/utf8"
 )
 
-// Catalog — каталог реализации (YOURS): какие имена загружены. sub "" — короткий путь (без префикса /{sub}).
+// Catalog is YOURS: loaded names. Empty sub denotes the short path without /{sub}.
 type Catalog interface {
 	Sub(name string) bool
 	Rows(sub, name string) bool
@@ -21,7 +21,7 @@ type Catalog interface {
 	Pass(sub, name string) bool
 }
 
-// Match — выбранная операция: параметры пути (декодированные), sub префикса или параметра sub ("" — нет).
+// Match contains the selected operation, decoded path parameters and prefix/parameter sub, or empty.
 type Match struct {
 	Op       Op
 	Params   map[string]string
@@ -29,8 +29,8 @@ type Match struct {
 	Prefixed bool
 }
 
-// RouteError — отказ маршрута: Code 404 или 405 (Allow — методы пути); Code 0 — неоднозначность (несколько
-// шаблонов равной конкретности подтверждены каталогом): ошибка каталога реализации, не ответ клиенту.
+// RouteError has Code404/405 and Allow methods, or Code0 for equal-concreteness ambiguity:
+// multiple Catalog-confirmed templates indicate an implementation catalog error, not a client response.
 type RouteError struct {
 	Code   int
 	Allow  []string
@@ -41,7 +41,7 @@ func (e *RouteError) Error() string { return e.Reason }
 
 type segment struct {
 	lit   string
-	param string // имя параметра; "" — литерал
+	param string // Parameter name; empty denotes a literal.
 }
 
 type template struct {
@@ -51,11 +51,11 @@ type template struct {
 }
 
 type paramCheck struct {
-	minLen, maxLen int // в символах; maxLen -1 — без предела
+	minLen, maxLen int // Character lengths; maxLen=-1 means unbounded.
 	rx             *regexp.Regexp
 	enum           []string
-	notEnum        []string         // not {enum} — запрещённые значения
-	notRx          []*regexp.Regexp // not {pattern} — запрещённые шаблоны
+	notEnum        []string         // not {enum}: forbidden values.
+	notRx          []*regexp.Regexp // not {pattern}: forbidden patterns.
 }
 
 func (c paramCheck) ok(v string) bool {
@@ -187,7 +187,7 @@ func (t template) match(segs []string, cat Catalog) (map[string]string, string, 
 	return params, sub, true
 }
 
-// rank — конкретность сегмента: литерал 2, параметр класса каталога (sub, rows, table, pass) 1, свободный 0.
+// Segment rank: literal2, Catalog class(sub, rows, table, pass)1, free parameter0.
 func rank(s segment) int {
 	switch {
 	case s.param == "":
@@ -198,7 +198,7 @@ func rank(s segment) int {
 	return 0
 }
 
-// moreConcrete — a конкретнее b: на первой позиции, где ранги различаются, у a ранг выше.
+// moreConcrete means a wins at the first segment with differing ranks.
 func moreConcrete(a, b template) int {
 	for i := range a.segs {
 		ra, rb := rank(a.segs[i]), rank(b.segs[i])
@@ -212,7 +212,7 @@ func moreConcrete(a, b template) int {
 	return 0
 }
 
-// Route — операция метода и пути запроса по таблицам OpenAPI урока и каталогу реализации.
+// Route selects the method/path operation using lesson OpenAPI tables and the implementation Catalog.
 func Route(method, path string, cat Catalog) (Match, *RouteError) {
 	segs, ok := splitPath(path)
 	if !ok {
@@ -255,7 +255,7 @@ func Route(method, path string, cat Catalog) (Match, *RouteError) {
 	h := best[0]
 	for _, b := range best {
 		if !b.t.prefixed {
-			h = b // короткий путь и префиксный вариант одного шаблона не совпадают одновременно; на всякий — короткий
+			h = b // Short/prefixed variants cannot match simultaneously; prefer short defensively.
 		}
 	}
 	m := strings.ToUpper(method)

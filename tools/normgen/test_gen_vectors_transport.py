@@ -56,7 +56,7 @@ class FallbackTransport(unittest.TestCase):
                 self.assertEqual(row["path"], '["feed_secret"]')
 
     def test_transport_once_preserves_inner_json_and_unmarked_quotes(self):
-        inner = json.dumps({"quoted": '"inner"', "escape": r"\u043a", "unicode": "камера"}, ensure_ascii=True)
+        inner = json.dumps({"quoted": '"inner"', "escape": r"\u043a", "unicode": '\u043a\u0430\u043c\u0435\u0440\u0430'}, ensure_ascii=True)
         expected = {"case": "one", "raw": inner, "quoted": '"literal"'}
         _, decl = self.table(["case", "raw", "quoted"], [expected], declared=("raw",))
         _, _, rows = g.read_table(self.root, decl)

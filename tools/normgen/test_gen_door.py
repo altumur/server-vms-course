@@ -1,23 +1,5 @@
-"""Сверка генератора № 2 ADR-0125 (tools/normgen/gen_door.py) с OpenAPI урока — свой судья (ADR-0125 доп. (1) п. 1).
-
-Запуск: /Users/murat/w2c/venv-spec-domain/bin/python tools/normgen/test_gen_door.py [-v]
-(нужны PyYAML и jsonschema — независимые загрузчик и валидатор, — и go 1.22 в PATH; сети не нужно).
-
-- загрузчик yamlsub = PyYAML на OpenAPI курса; конструкции вне подмножества — отказ;
-- out/p01-1/go/apidoor — ровно свежая генерация; go build, go vet, gofmt чисты;
-- покрытие: пути, методы, параметры query, тела запросов, коды и схемы ответов, заголовки — как в OpenAPI (читает PyYAML);
-- маршруты: каждый метод на каждом пути и чужие пути (декодирование, нормализация, абсолютная форма) — код и схема
-  отказа по OpenAPI;
-- проверки схем = jsonschema (Draft 2020-12; integer — запись без дробной части) на случайных значениях и мутантах;
-- ответы: каждое объявленное (операция, код, схема) — AnswerOf и Encode дают тело, равное значению и по схеме; поля —
-  в порядке properties, имена отображений — в порядке байтов; необъявленный код, схема, заголовок — отказ Encode;
-- Refuse — отказ по kind и полям в свою схему;
-- query: разбор = urllib.parse.parse_qsl (latin-1 — байты) и схема параметра;
-- сценарии приёмки 1.1: каждый ожидаемый ответ `<код> <JSON>` объявлен у операции и отвечает ровно одной её схеме
-  (ADR-0125 п. 1: «Сценарии приёмки 1.1 против сгенерированных форм ответов»);
-- мутации OpenAPI меняют выход и поведение двери.
-max RSS процесса теста и детей — не больше 1 ГБ (проверяется).
-"""
+"""Independently judge OpenAPI generation (ADR-0125 generator 2, addendum 1, item 1). Run test_gen_door.py with PyYAML, jsonschema and Go 1.22, without network. Compare yamlsub with PyYAML and reject unsupported YAML; require fresh output, build/vet/gofmt and full paths/methods/query/body/status/schema/header coverage. Test routes, foreign targets and decoding/normalization/absolute forms; compare schema checks to Draft 2020-12 jsonschema with lexical integer rules. Every declared response must round-trip AnswerOf/Encode with schema and field ordering; undeclared code/schema/header must refuse. Check Refuse, query parsing via latin1 parse_qsl, acceptance1.1 response uniqueness and behavior-changing OpenAPI mutants. Peak test/child RSS stays within1GB."""
+import lesson as output_lesson
 import base64
 import copy
 import json
@@ -44,13 +26,13 @@ import yamlsub  # noqa: E402
 import tsv_input  # noqa: E402 — source cells before the existing HTTP/schema checks
 
 SPEC = gen_door.DEFAULT_SPEC
-OUT = HERE / "out/p01-1"
+OUT = output_lesson.output_root() / 'p01-1'
 SCEN = ROOT / "Platform/01-store/acceptance/1/scenarios.tsv"
 GOENV = dict(os.environ, GOPROXY="off", GOFLAGS="-mod=mod", GOWORK="off", GOTOOLCHAIN="local")
 SEED = int(os.environ.get("NORMGEN_SEED", "20261104"))
 SAMPLES = int(os.environ.get("NORMGEN_DOOR_SAMPLES", "120"))
 MAX_RSS = 1 << 30
-# ADR-0125 доп. (1) п. 3: тело команды записи судит write-checks.tsv — этих схем у двери нет.
+# ADR-0125 addendum 1, item 3: write-checks.tsv judges write-command bodies; the door omits those schemas.
 EXCLUDED = {"Cmd", "BatchCmd", "BatchWrite", "BatchGuard"}
 METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "TRACE", "CONNECT", "get", "Post"]
 
@@ -67,7 +49,7 @@ def go(args, cwd):
 
 
 def build_probe(out, workdir):
-    """Обвязка doorprobe над модулем <out>/go (имя каталога out — p01-1)."""
+    """Build doorprobe against the <out>/go module, retaining the p01-1 output directory name."""
     hdir = Path(workdir) / "doorprobe"
     hdir.mkdir(parents=True, exist_ok=True)
     shutil.copy(HERE / "harness/doorprobe/main.go", hdir / "main.go")
@@ -96,7 +78,7 @@ class Probe:
         self.proc.stdout.close()
 
 
-# ---------------------------------------------------------------- независимое чтение OpenAPI (PyYAML)
+# ---------------------------------------------------------------- independent OpenAPI read (PyYAML)
 
 def op_name(path, method, n_methods):
     last = [p for p in path.split("/") if p][-1]
@@ -173,11 +155,11 @@ class Doc:
         return node
 
 
-# ---------------------------------------------------------------- значения по схеме
+# ---------------------------------------------------------------- schema-shaped values
 
 STRINGS = ["", "a", "1", "0", "01", "42", "18446744073709551615", "123456789012345678901", "/x", "a/../b", "..foo",
            "a/..", "x/./y", "acc/k", "door", "admin", "configstore", "configstore-door", "Leader", "Door", "Follower",
-           "Candidate", "Shutdown", "acc", "a-b_c.d", "-a", "A" * 128, "A" * 129, "é", "ключ", "a\u0000b", "a b",
+           "Candidate", "Shutdown", "acc", "a-b_c.d", "-a", "A" * 128, "A" * 129, "é", '\u043a\u043b\u044e\u0447', "a\u0000b", "a b",
            "badkey", "badrequest", "forbidden", "conflict", "expired", "early", "guard", "toolarge", "unavailable",
            "ambiguous", "refused", "put", "floor", "ab", "0a", "x" * 65, "f" * 64, "10.0.0.1:7000", "@"]
 NUMBERS = [0, 1, -1, 60, 61, 60.5, 61.5, 1.5, 1.0, 20.0, 2 ** 53, 9007194959773696, 9007194959773697, 2 ** 63 - 1,
@@ -187,7 +169,7 @@ KEYS = ["a", "b", "acc/x", "é", "s1", "zz"]
 
 
 def shaped(d, node, rnd, depth=0):
-    """Значение «по форме» узла схемы: часть подходит, часть нет — решает оракул."""
+    """Generate schema-shaped candidates, both potentially valid and invalid; only the oracle decides validity."""
     node = d.resolve(node)
     if depth > 6 or not isinstance(node, dict):
         return rnd.choice(POOL)
@@ -270,8 +252,7 @@ def mutants(value, rnd):
 
 
 def ordered_ok(d, node, raw):
-    """Порядок имён в записанном JSON (raw — разбор с object_pairs_hook=list): объект схемы — подпоследовательность
-    properties, отображение (additionalProperties без properties) — по байтам UTF-8."""
+    """Check raw object name order: declared object fields follow a properties subsequence; pure additionalProperties maps use UTF-8 byte order."""
     node = d.resolve(node)
     if isinstance(raw, list) and raw and isinstance(raw[0], tuple) or raw == [] and isinstance(node, dict) and \
             node.get("type") == "object":
@@ -300,11 +281,12 @@ def pairs_hook(pairs):
     return list(pairs)
 
 
-# ---------------------------------------------------------------- тесты
+# ---------------------------------------------------------------- tests
 
 class DoorBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.text = SPEC.read_text(encoding="utf-8")
         cls.d = Doc(yaml.safe_load(cls.text))
         cls.tmp = tempfile.TemporaryDirectory(prefix="normgen-door-")
@@ -330,7 +312,7 @@ class DoorBase(unittest.TestCase):
 
 class Loader(unittest.TestCase):
     def test_yaml_matches_pyyaml(self):
-        """yamlsub = PyYAML на всех OpenAPI курса (якоря и алиасы значений отображений — в подмножестве, P/10)."""
+        """Compare yamlsub with PyYAML for every course OpenAPI, including P/10 mapping-value anchors/aliases."""
         files = subprocess.run(["git", "ls-files", "*.openapi.yaml"], cwd=ROOT, capture_output=True,
                                text=True).stdout.split()
         self.assertGreater(len(files), 5)
@@ -351,7 +333,8 @@ class Loader(unittest.TestCase):
 
 class Generated(DoorBase):
     def test_out_up_to_date(self):
-        """tools/normgen/out/p01-1/go/apidoor — ровно свежая генерация; шапка несёт sha256 OpenAPI."""
+        """Require exact fresh apidoor output with the current OpenAPI SHA header."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for name in ("door.go", "runtime.go"):
             self.assertEqual((self.out / "go/apidoor" / name).read_bytes(), (OUT / "go/apidoor" / name).read_bytes(),
                              f"{name} is stale: run tools/normgen/gen_door.py")
@@ -360,13 +343,14 @@ class Generated(DoorBase):
         self.assertIn(hashlib.sha256(self.text.encode()).hexdigest(), (OUT / "go/apidoor/door.go").read_text()[:400])
 
     def test_build_vet_fmt(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         go(["build", "./..."], OUT / "go")
         go(["vet", "./..."], OUT / "go")
         fmt = subprocess.run(["gofmt", "-l", "apidoor"], cwd=OUT / "go", capture_output=True, text=True).stdout
         self.assertEqual(fmt, "")
 
     def test_coverage(self):
-        """Операции, query, тела, коды, схемы и заголовки двери — как в OpenAPI (PyYAML)."""
+        """Compare door operations, query, bodies, statuses, schemas and headers with independently parsed OpenAPI."""
         got = self.probe(cmd="table")["ops"]
         self.assertEqual([(o["method"], o["path"], o["op"]) for o in got],
                          [(o["method"], o["path"], o["op"]) for o in self.d.ops])
@@ -385,7 +369,7 @@ class Generated(DoorBase):
             self.assertFalse(self.probe(cmd="check", schema=n, json="null")["known"], n)
 
     def test_routes(self):
-        """Каждый метод на каждом пути; чужие пути — 404 со схемой 404; метод не своего пути — 405, если объявлен."""
+        """Test every method/path: foreign paths return404 with its schema; unsupported methods return405 when declared."""
         paths = {}
         for o in self.d.ops:
             paths.setdefault(o["path"], []).append(o)
@@ -417,7 +401,7 @@ class Generated(DoorBase):
         self.assertEqual(sum(self.valid(n, body) for n in declared["schemas"]), 1, where)
 
     def test_schema_checks(self):
-        """chk* = jsonschema на значениях по форме схем и их мутантах."""
+        """Compare chk* to jsonschema on schema-shaped values and mutants."""
         mismatches, total, valid = [], 0, 0
         for name in [n for n in self.d.schemas if n not in EXCLUDED] + list(self.d.inline):
             v = self.d.validator(name)
@@ -446,7 +430,7 @@ class Generated(DoorBase):
         return out
 
     def test_answers(self):
-        """Каждое объявленное (операция, код, схема): AnswerOf и Encode; тело = значение, по схеме, в порядке полей."""
+        """Every declared operation/status/schema must encode a value-equivalent, valid body in property order."""
         seen = 0
         for o in self.d.ops:
             for code, r in o["declared"].items():
@@ -459,7 +443,7 @@ class Generated(DoorBase):
                         got = self.probe(cmd="answer", op=o["op"], code=code, json=text)
                         where = f"{o['op']} {code} {name}: {text[:200]}"
                         if hits == 1 and "not representable" in got.get("answer_error", ""):
-                            # целое вне int64 или не точное в binary64 (поле number): дверь не обрезает молча
+                            # Reject integers outside int64 or values inexact in binary64 number fields instead of truncating silently.
                             self.assertFalse(representable(value, exact_float=True), where)
                             continue
                         if hits != 1:
@@ -484,7 +468,7 @@ class Generated(DoorBase):
         self.assertGreater(seen, 100)
 
     def test_undeclared(self):
-        """Encode отвергает код и схему, не объявленные у операции."""
+        """Encode must reject statuses and schemas not declared for the operation."""
         for o in self.d.ops:
             for other in self.d.ops:
                 for code, r in other["declared"].items():
@@ -501,7 +485,7 @@ class Generated(DoorBase):
                             self.assertIn("encode_error", got, f"{o['op']} {code} {name}")
 
     def test_refuse(self):
-        """Refuse(kind, поля) — в ту схему отказа, которой отвечает объект; иначе отказ."""
+        """Refuse selects the refusal schema matching kind+fields, otherwise refuses."""
         n = 0
         for o in self.d.ops:
             for code, r in o["declared"].items():
@@ -523,7 +507,7 @@ class Generated(DoorBase):
         self.assertGreater(n, 30)
 
     def test_query(self):
-        """Разбор query = parse_qsl (latin-1 — байты) + схема параметра; порядок: есть ли, повтор, UTF-8, схема."""
+        """Query parsing equals latin1 parse_qsl plus the parameter schema; check presence, repetition, UTF-8 then schema."""
         fixed = ["key=a", "", "key", "key=", "key=a&key=b", "key=a&&", "&&key=a", "key=a+b", "key=a%2Bb", "key=%zz",
                  "key=%", "key=%2", "key=%00", "key=%FF", "key=%C3%A9", "key=/x", "key=a/../b", "key=..foo", "x=1&key=a",
                  "key=a=b", "KEY=a", "key=a&x", "key=%2Fx", "key=%2e%2e/a", "key=%FF&key=%FF", "key&key", "k%65y=a",
@@ -581,7 +565,7 @@ class Generated(DoorBase):
         return out
 
     def test_acceptance_forms(self):
-        """Сценарии приёмки 1.1: ожидаемый ответ объявлен у операции и отвечает ровно одной её схеме."""
+        """Every acceptance1.1 response must be declared and match exactly one operation schema."""
         steps = 0
         columns = ("scenario", "step", "request", "expect")
         for _, row in tsv_input.read(SCEN, names=columns, positional=True, root=ROOT).rows:
@@ -617,7 +601,7 @@ class Generated(DoorBase):
         print(f"\nacceptance 1.1: {steps} steps against the door forms", file=sys.stderr)
 
     def test_decode_bodies(self):
-        """Decode<схема> тел запросов = jsonschema; собранное значение несёт поля входа."""
+        """Decode request bodies like jsonschema and retain their input fields in the constructed value."""
         for name in ("FloorCmd", "Join", "Leave"):
             for _ in range(SAMPLES):
                 base = shaped(self.d, self.d.node(name), self.rnd)
@@ -633,8 +617,7 @@ class Generated(DoorBase):
 
 
 def representable(value, exact_float=False):
-    """Целые значения в пределах int64 (и, с exact_float, точные в binary64) — то, что держат типы Go двери у integer
-    без предела в схеме и у number."""
+    """Use integers within int64 and, with exact_float, exact binary64; these fit unconstrained Go integer/number fields."""
     if isinstance(value, bool):
         return True
     if isinstance(value, int):
@@ -664,11 +647,11 @@ def string_bound(d, node, seen=None):
 
 
 class Kit(unittest.TestCase):
-    """Часть door пакета Б (build_kit --parts) и стенд заглушки (build_stub): сборка, манифест, дымовая проба демона.
-    Это не прогон приёмки (он — раннером на сервере): несколько запросов, что демон собран и отвечает дверью."""
+    """Smoke-test door kits and build_stub: build, manifest and a few daemon requests. This is not acceptance, which runs through the server runner."""
 
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         sys.path.insert(0, str(HERE / "kit"))
         import build_kit
         import build_stub
@@ -768,10 +751,11 @@ class Kit(unittest.TestCase):
 
 
 class Mutations(unittest.TestCase):
-    """Мутации OpenAPI: выход меняется, и дверь ведёт себя по мутанту."""
+    """OpenAPI mutants must change generated output and door behavior."""
 
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.tmp = tempfile.TemporaryDirectory(prefix="normgen-door-mut-")
         _, cls.doc = gen_door.load(SPEC)
         cls.base = (OUT / "go/apidoor/door.go").read_text(encoding="utf-8")
@@ -835,7 +819,7 @@ class Mutations(unittest.TestCase):
         self.assertIn("encode_error", got)
 
     def test_text_only(self):
-        """Мутации без пробы: выход меняется."""
+        """Mutations without probes must still change output."""
         def rename(d):
             s = d["components"]["schemas"]["Status"]
             s["properties"]["tls2"] = s["properties"].pop("tls")
@@ -848,7 +832,7 @@ class Mutations(unittest.TestCase):
                     probe=False)
 
     def test_ref_alias(self):
-        """Алиас $ref (с пометкой и без) — своя функция chk<имя>: выход собирается, проверка — как у цели (ревью Codex С3)."""
+        """Named ref aliases, with or without annotations, get their own chk<Name>; generated code builds and validation matches the target (Codex C3)."""
         def change(d):
             sch = d["components"]["schemas"]
             sch["AliasKey"] = {"$ref": "#/components/schemas/Key"}
@@ -860,7 +844,7 @@ class Mutations(unittest.TestCase):
             self.assertIsNotNone(p(cmd="check", schema=name, json="7")["violation"], name)
 
     def test_ref_alias_of_object_refused(self):
-        """Алиас объекта или союза — вне подмножества: отказ генератора, не некорректный Go."""
+        """Object/union aliases are unsupported: refuse generation rather than emitting invalid Go."""
         for k, target in enumerate(("Written", "Row")):
             doc = copy.deepcopy(self.doc)
             doc["components"]["schemas"]["Alias"] = {"$ref": f"#/components/schemas/{target}"}
@@ -868,7 +852,7 @@ class Mutations(unittest.TestCase):
                 gen_door.emit(doc, "mutant", "0" * 64, Path(self.tmp.name) / f"ra{k}" / "p01-1")
 
     def test_subset_refusals(self):
-        """Вне подмножества — отказ генератора, а не молчаливая потеря ограничения."""
+        """Unsupported constraints must refuse, never disappear silently."""
         cases = [
             lambda d: d["components"]["schemas"]["Version"].update(format="uint64"),
             lambda d: d["paths"].update({"/v1/x/{id}": d["paths"]["/v1/get"]}),

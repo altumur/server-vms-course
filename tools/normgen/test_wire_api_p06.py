@@ -1,4 +1,5 @@
 """Published P/06 API: canonical composition, complete positive control, exact raw transport and KIT provenance."""
+import lesson as output_lesson
 import base64
 import importlib
 import json
@@ -60,6 +61,7 @@ def positive_control(g):
 class CanonicalP06(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         import lesson
         cls.saved_lesson, cls.saved_env = lesson.CURRENT, os.environ.get('NORMGEN_LESSON')
         cls.addClassCleanup(cls.restore_lesson)
@@ -67,7 +69,7 @@ class CanonicalP06(unittest.TestCase):
         cls.tmp = tempfile.TemporaryDirectory(prefix='p06-canonical-api-')
         cls.addClassCleanup(cls.tmp.cleanup)
         cls.mod = Path(cls.tmp.name) / 'go'
-        shutil.copytree(HERE / 'out/p06/go', cls.mod)
+        shutil.copytree(output_lesson.output_root() / 'p06/go', cls.mod)
         fake, fns = positive_control(cls.g)
         known = cls.g.common_vectors.DECLS
         for fn in fns:
@@ -91,6 +93,7 @@ class CanonicalP06(unittest.TestCase):
             importlib.reload(cls.g)
 
     def test_active_api_and_fresh_output(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         g = self.g
         self.assertTrue(all(len(row) == 5 and all(isinstance(x, str) for x in row) for row in wire_api_p06.API_P06))
         decls, known = g.plan(ROOT)
@@ -98,14 +101,14 @@ class CanonicalP06(unittest.TestCase):
         covered = {tuple(d[k] for k in ('package', 'table', 'surface')) for d in decls}
         covered |= {(f'common/{name}', table, 'vectors') for name, table in known}
         self.assertEqual(covered, active)
-        self.assertEqual(len(active), 66)
-        self.assertEqual(len(self.runs), 3184)
+        self.assertEqual(len(active), 67)
+        self.assertEqual(len(self.runs), 3200)
         self.assertTrue(all(d['_form'] and d['_runs'] for d in decls))
         self.assertFalse(any(d['surface'] == 'stand:group-of' for d in decls))
         files, inv = g.build(ROOT)
-        self.assertEqual(sum(status == 'translated' for _, status in inv), 3184)
+        self.assertEqual(sum(status == 'translated' for _, status in inv), 3200)
         for rel, data in files.items():
-            self.assertEqual((HERE / 'out/p06' / rel).read_bytes(), data, rel)
+            self.assertEqual((output_lesson.output_root() / 'p06' / rel).read_bytes(), data, rel)
         self.assertIn('func GroupOf(input []byte) Answer', files['go/vectoradapter/groupof.go'].decode())
         self.assertIn('func FreshAgeStand(input []byte) Answer', files['go/vectoradapter/freshagestand.go'].decode())
 
@@ -115,7 +118,7 @@ class CanonicalP06(unittest.TestCase):
             self.assertIn('go/wirecheck/check.go', files)
             self.assertIn('P/06 uses the published canonical wire form', self.g.lesson_kit_md())
 
-    def test_all_3184_native_calls(self):
+    def test_all_3200_native_calls(self):
         done = subprocess.run(['go', 'test', '-count=1', '-json', './vectortests/'], cwd=self.mod,
                               env=GOENV, capture_output=True, text=True)
         results = {}
@@ -124,8 +127,9 @@ class CanonicalP06(unittest.TestCase):
                 continue
             event = json.loads(line)
             if event.get('Test') and event.get('Action') in ('pass', 'fail'):
+                self.assertNotIn(event['Test'], results, 'duplicate terminal native test')
                 results[event['Test']] = event['Action']
-        self.assertEqual(len(results), 3184, done.stderr + done.stdout[-2000:])
+        self.assertEqual(len(results), 3200, done.stderr + done.stdout[-2000:])
         self.assertEqual(done.returncode, 0, done.stderr + done.stdout[-4000:])
         self.assertEqual(set(results.values()), {'pass'})
 
@@ -144,7 +148,7 @@ class CanonicalP06(unittest.TestCase):
                                   env=GOENV, capture_output=True, text=True)
             self.assertEqual(done.returncode, 0, done.stderr)
             path = self.mod / 'probe.json'
-            for raw in (' [1.00e+02,9007199254740993,-0] ', '"данные"', 'panic'):
+            for raw in (' [1.00e+02,9007199254740993,-0] ', '"\u0434\u0430\u043d\u043d\u044b\u0435"', 'panic'):
                 frame = dict(format=1, package='common/group-of', table='cases.tsv', case='probe',
                              variant='', cells={'raw': raw}, files={})
                 path.write_text(json.dumps(frame, ensure_ascii=False))
@@ -163,8 +167,9 @@ class CanonicalP06(unittest.TestCase):
             self.fake.write_text(original)
 
     def test_contract_selection_keeps_stand_siblings_separate(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         import test_contracts
-        mod = HERE / 'out/p06/go'
+        mod = output_lesson.output_root() / 'p06/go'
         for package, cells_fn, stand_fn in [('common/fault', 'Fault', 'FaultStand'),
                                             ('common/fresh-age', 'FreshAge', 'FreshAgeStand'),
                                             ('common/door-token', 'DoorTokenIssue', 'DoorTokenIssueStand')]:

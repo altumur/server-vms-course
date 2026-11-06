@@ -1,20 +1,7 @@
-"""Судья gate `vectors:<пакет>` (ADR-0126 доп. (1) п. 1, доп. (3) п. 2): команда векторов реализации на входах,
-которые построил tools/normgen/gen_tests.py (ADR-0125 № 6). Только stdlib.
+"""Judge vectors:<package> gates against implementation vector commands (ADR-0126 addendum 1, item 1 and addendum 3, item 2), using gen_tests inputs and stdlib only.
 
-Запуск:
-  python tools/normgen/vector_judge.py --package jcs --cmd './bin/store vectors {input}' [--cwd <каталог профиля>]
-      [--cases <каталог>] [--specs <корень выгрузки>] [--timeout 20] [--json <итог.json>]
-
-- `--package` — аргумент gate (`jcs`, `rights-evaluator`) или полное имя пакета (`01-store/jcs`); входы — в
-  `tools/normgen/out/p01-1/vectors/<пакет>/` (`cases.tsv` и `line-<N>.json`), либо в `--cases`.
-- `--cmd` — шаблон команды профиля с `{input}` (как запись `vectors` профиля приёмки); исполняется `sh -c` в `--cwd`.
-  Каждый вход копируется в свой новый каталог (команда может класть временные файлы рядом с `{input}`).
-- Провод — единый провод команды векторов: stdout — один объект `{exit_code, stdout_b64, stderr_b64}`, внешний код 0.
-  Нативный исход сверяется с `cases.tsv`: код и stdout как одно значение JSON по значению (тип строго: 1 ≠ 1.0 ≠ true,
-  повтор имени и NaN — не JSON).
-- `--specs` — сверить sha256 таблиц-источников (`# source … sha256 …` в cases.tsv) с выгрузкой: входы не устарели.
-Итог: строка `vectors <пакет>: P/N PASS|FAIL`; код 0 — все строки прошли, 1 — нет, 2 — ошибка запуска судьи.
-"""
+  python tools/normgen/vector_judge.py --package jcs --cmd './bin/store vectors {input}' [--cwd <profile-directory>] [--cases <directory>] [--specs <export-root>] [--timeout 20] [--json <result.json>]
+Accept gate names or full package paths; inputs default to out/p01-1/vectors/<package>/cases.tsv and line-N.json. Execute the command template through sh -c in --cwd, copying each input to a fresh directory for sibling temporary files. Outer exit 0 must carry one {exit_code, stdout_b64, stderr_b64} object. Compare native exit and stdout as one JSON value with strict kinds:1 differs from1.0 and true; duplicate names/NaN are invalid. --specs validates cases.tsv source-table SHAs against the export. Result: vectors<package>:P/N PASS|FAIL; exits0=all pass, 1=failure, 2=judge startup error."""
 import argparse
 import base64
 import binascii
@@ -30,7 +17,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum(5), item 2)
 L = lesson.CURRENT
 CASES_ROOT = L.out / "vectors"
 ALIASES = {"jcs": "01-store/jcs", "rights-evaluator": "01-store/rights-evaluator", "write-checks": "01-store/write-checks"}
@@ -58,7 +45,7 @@ def strict_loads(text):
 
 
 def same(a, b):
-    """Равенство значений JSON с учётом вида: bool, int, float, str, list, dict различаются."""
+    """Compare JSON values with strict bool, int, float, str, list, dict kinds."""
     if type(a) is not type(b):
         return False
     if isinstance(a, float):
@@ -104,7 +91,7 @@ def read_cases(cases_dir):
 
 
 def judge_one(row, cmd, cwd, timeout, work):
-    """→ None (прошла) или причина."""
+    """Return None on success, otherwise a reason."""
     d = Path(tempfile.mkdtemp(prefix=row["case"] + "-", dir=work))
     path = d / "input.json"
     shutil.copyfile(row["input"], path)
@@ -142,9 +129,15 @@ def judge_one(row, cmd, cwd, timeout, work):
 
 
 def judge(package, cmd, cwd=".", cases=None, specs=None, timeout=20.0):
-    """→ (итог {package, passed, total, failed: [{case, reason}]}, ошибка запуска или None)."""
+    """Return (package/passed/total/failed-case report, startup error or None)."""
     package = ALIASES.get(package, package)
-    cases_dir = Path(cases) if cases else CASES_ROOT / package
+    if cases is None:
+        try:
+            cases_dir = lesson.ready_outputs(profiles=lesson.PROFILES)[L.slug] / "vectors" / package
+        except (lesson.LessonError, OSError) as exc:
+            return None, str(exc)
+    else:
+        cases_dir = Path(cases)
     if not (cases_dir / "cases.tsv").is_file():
         return None, f"no cases.tsv in {cases_dir}"
     sources, rows = read_cases(cases_dir)

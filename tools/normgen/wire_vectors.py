@@ -1,7 +1,7 @@
-"""Выход gen_vectors P/02 из wire.tsv; здесь только Go API адаптеров, не провод и не ожидания.
+"""P/02 gen_vectors output from wire.tsv; this module specifies only the adapters' Go API, not wiring or expectations.
 
-P/01 сохраняет прежний gen_tests; уроки без полной формы — wire_draft. Все запуски P/02 (включая общие)
-идут через wire.py, единую команду/стенд и проверку полного нативного ответа.
+P/01 keeps gen_tests; lessons without a complete form use wire_draft. Every P/02 run, including shared packages,
+uses wire.py, the unified command/stand and validation of the full native response.
 """
 import base64
 import hashlib
@@ -12,7 +12,7 @@ from pathlib import Path
 import common_vectors
 import wire
 
-# Сигнатуры Go — выбор пакета. Входы, фикстуры, ожидания, группировки и сравнения задаёт только wire.tsv.
+# Go signatures are a package choice. Only wire.tsv defines inputs, fixtures, expectations, grouping and comparisons.
 API_P02 = [
     ('02-installer/canonical', 'cases.tsv', 'stand:canonical', 'Canonical', 'source'),
     ('02-installer/exec', 'cases.tsv', 'stand:exec', 'Exec', 'input'),
@@ -164,7 +164,10 @@ def build(root, g, decls=None, lesson=None):
 
 def runtime_files(g, full=False):
     # P/02 remains byte-for-byte on its published runtime. Full grammar is explicitly selected by its caller.
-    schema = (g.HERE / "doorrt2/go/schema.go").read_text().split("// mediaType —", 1)[0]
+    schema = (g.HERE / "doorrt2/go/schema.go").read_text()
+    if schema.count("// mediaType ") != 1:
+        raise g.GenError("schema runtime boundary moved")
+    schema = schema.split("// mediaType ", 1)[0]
     if "func validate(" not in schema or "func DecodeRequest(" in schema:
         raise g.GenError("schema runtime boundary moved")
     schema = schema.replace("package apidoor", "package wirecheck").replace('\n\t"math"', '')

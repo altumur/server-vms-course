@@ -1,17 +1,5 @@
-"""Судья части 3б двери урока (gen_door_lesson.py; P/06): тела по схемам — Go Validate против оракула jsonschema.
-
-Запуск: /opt/check-env/lesson-spec/bin/python tools/normgen/test_gen_door_bodies.py [-v]   (jsonschema, referencing, go 1.22)
-
-1. out свежий.
-2. Сборка: для каждой схемы тела операции (запрос и ответы) вердикт оракула jsonschema (Draft 2020-12) по исходной схеме
-   OpenAPI (внешние $ref — реестр referencing по файлам 05, 08) равен вердикту по схеме сборки bodies.go.
-3. Проверка: на значениях судьи (образцы по схеме: допустимые кандидаты и их порча, плюс случайные) вердикт Go
-   Validate равен вердикту оракула по сборке, для каждой схемы сборки; есть и допустимые, и недопустимые значения.
-4. API: DecodeRequest / CheckResponse / EncodeResponse — объявленные media и коды, строгий JSON, default.
-5. Синтетическая сборка судьи: слова, решающие исход (unevaluatedProperties у схем урока равносилен — Unit открыт),
-   Go против оракула. 6. Мутанты ручной среды schema_rt.go (unevaluatedProperties, oneOf, integer, minLength в байтах,
-   required) — красные на сборке урока или синтетической.
-"""
+"""Judge lesson door bodies (part 3b, P/06): compare Go Validate with independent jsonschema. Require fresh output; verify combined bodies.go schemas against original OpenAPI with referencing for external P/05/P/08 refs. Judge candidates, mutants and random values must include valid and invalid examples for each combined schema. Check DecodeRequest/CheckResponse/EncodeResponse media, status, strict JSON and defaults. Synthetic schemas make otherwise-equivalent keywords observable; runtime mutants for unevaluatedProperties, oneOf, integer, byte-vs-character minLength and required must fail. Run test_gen_door_bodies.py with jsonschema, referencing and Go 1.22."""
+import lesson as output_lesson
 import copy
 import json
 import os
@@ -44,7 +32,7 @@ def tables_of(mod):
 
 
 class Gen:
-    """Образцы значений по схеме сборки: кандидаты допустимых и их порча (вердикт решает оракул, не генератор)."""
+    """Generate candidate valid values and corruptions from combined schemas; the oracle, not generator, decides validity."""
 
     def __init__(self, defs, rnd):
         self.defs, self.rnd = defs, rnd
@@ -78,7 +66,7 @@ class Gen:
         return out
 
     def pattern_samples(self, p):
-        """Грубые образцы под шаблон: классы символов и повторы — первые символы."""
+        """Make rough pattern samples from character classes/repetitions using their first characters."""
         q = p.strip("^$")
         q = re.sub(r"^\(\?:(.*)\)$", r"\1", q)
         cand = []
@@ -108,7 +96,7 @@ class Gen:
             for k in ("then", "else"):
                 if k in s:
                     out += self.values(s[k], depth + 1)[:2]
-        if "allOf" in s and depth < 4:                 # объект из частей allOf: свойства и обязательные всех частей
+        if "allOf" in s and depth < 4:                 # Merge properties and required names across allOf object parts.
             merged = {"properties": {}, "required": []}
             for part in s["allOf"]:
                 part = self.node(part)
@@ -161,7 +149,7 @@ class Gen:
                     drop.pop(s["required"][0], None)
                     out.append(drop)
                 out.append(dict(obj, zz_extra=1))
-                for k, ps in list(props.items())[:8]:     # вложенные значения: каждое свойство — своими образцами
+                for k, ps in list(props.items())[:8]:     # Generate separate samples for every nested property.
                     for sv in self.values(ps, depth + 1)[:6]:
                         out.append(dict(obj, **{k: sv}))
                 for k in list(obj)[:2]:
@@ -252,8 +240,8 @@ def cases_for(defs, rnd):
     return out
 
 
-# Синтетическая сборка судьи: схемы, где слово решает исход (у схем урока unevaluatedProperties равносилен — Unit
-# объявляет additionalProperties: true), и значения к ним.
+# Synthetic schemas make keywords observable: the lesson's open Unit makes unevaluatedProperties redundant
+# because additionalProperties:true is declared. Pair synthetic schemas with discriminating values.
 SYNTH = {
     "U1": {"allOf": [{"properties": {"a": {}}}], "unevaluatedProperties": False},
     "U2": {"anyOf": [{"properties": {"a": {}}, "required": ["a"]}, {"properties": {"b": {}}, "required": ["b"]}],
@@ -314,12 +302,13 @@ class DoorBodiesBase:
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def test_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for name in ("bodies.go", "schema_rt.go", "routes.go", "routes_rt.go"):
-            kept = HERE / "out" / self.SLUG / "go/apidoor" / name
+            kept = output_lesson.output_root() / self.SLUG / "go/apidoor" / name
             self.assertEqual(kept.read_bytes(), (self.fresh / "apidoor" / name).read_bytes(), f"{kept} is stale")
 
     def test_bundle_equals_source(self):
-        """Вердикт по схеме сборки = вердикт по исходной схеме OpenAPI (внешние $ref — файлы уроков)."""
+        """Require combined-schema verdicts to match original OpenAPI with external lesson refs."""
         from jsonschema import Draft202012Validator
         from referencing import Registry, Resource
         from referencing.jsonschema import DRAFT202012
@@ -328,24 +317,24 @@ class DoorBodiesBase:
         files = [spec] + [ROOT / "Platform" / f for f in ("05-resource/spec/05-resource.api.openapi.yaml",
                                                            "08-domain/spec/08-domain.api.openapi.yaml")]
         reg = Registry()
-        for f in sorted((ROOT / "Platform").rglob("*.api.openapi.yaml")):   # все OpenAPI выгрузки: внешние $ref
+        for f in sorted((ROOT / "Platform").rglob("*.api.openapi.yaml")):   # Resolve external refs through all export OpenAPI documents.
             try:
                 doc = yamlsub.load(f.read_text(encoding="utf-8"), f.name)
             except yamlsub.YamlError:
-                continue                                      # вне подмножества загрузчика — не из ссылок урока
+                continue                                      # Loader-unsupported constructs, not refs used by the lesson.
             reg = reg.with_resource(f.resolve().as_uri(), Resource(contents=doc, specification=DRAFT202012))
         check = oracle(self.defs)
         compared = 0
         for name, schema in self.defs.items():
             if "." in re.sub(r"^\d\d\.", "", name):
-                continue                                      # имя по указателю вне components/schemas — сверяет вердикт операций
-            if re.match(r"\d\d\.", name):                   # внешняя схема урока NN — его OpenAPI
+                continue                                      # A name from a pointer outside components/schemas is checked by operation verdicts.
+            if re.match(r"\d\d\.", name):                   # External schema for lessonNN comes from its OpenAPI.
                 cand = sorted((ROOT / "Platform").glob(f"{name[:2]}-*/spec/*.api.openapi.yaml"))
                 if not cand:
                     continue
                 ref = f"{cand[0].resolve().as_uri()}#/components/schemas/{name[3:]}"
             elif "." in name:
-                continue                                      # встроенные схемы тел — их сверяет вердикт операций
+                continue                                      # Operation verdicts also verify inline body schemas.
             else:
                 ref = f"{spec.resolve().as_uri()}#/components/schemas/{name}"
             v = Draft202012Validator({"$ref": ref}, registry=reg)
@@ -366,7 +355,7 @@ class DoorBodiesBase:
         self.assertGreater(len(got) - valid, len(got) // 10)
 
     def test_synthetic(self):
-        """Семантика проверщика на синтетической сборке: каждое слово решает исход хотя бы раз."""
+        """Use synthetic schemas where every checker keyword changes at least one verdict."""
         mod = synth_module(self.fresh, self.tmp / "synth")
         check = oracle(SYNTH)
         got = run_go(mod, SYNTH_CASES)
@@ -377,7 +366,7 @@ class DoorBodiesBase:
             self.assertEqual(verdicts, {True, False}, f"{name}: the values do not split it")
 
     def test_params(self):
-        """CheckParams против модели судьи: параметры query и header из OpenAPI, приведение текста, оракул jsonschema."""
+        """Compare CheckParams with an independent model of OpenAPI query/header coercion and jsonschema."""
         import yamlsub
         from jsonschema import Draft202012Validator
         from referencing import Registry, Resource
@@ -432,7 +421,7 @@ class DoorBodiesBase:
             op, place, name, raw, sch, base, req, lex = c
             t = node(sch, base).get("type") if isinstance(node(sch, base), dict) else None
             v = raw
-            if lex:                                       # x-query-lexeme: своя модель судьи (forms/README P/05)
+            if lex:                                       # Independent x-query-lexeme model from P/05 forms/README.
                 if not re.fullmatch(lex["pattern"], raw):
                     return False
                 text = raw.replace(lex.get("strip", "") or "\x00", "") if lex.get("strip") else raw
@@ -449,10 +438,10 @@ class DoorBodiesBase:
                         return False
                     v = raw
             elif t in ("number", "integer") and re.fullmatch(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?", raw):
-                from decimal import Decimal              # точно, как big.Rat у Go (1e-400 — не целое)
+                from decimal import Decimal              # Match Go big.Rat exactly:1e-400 is not an integer.
                 v = Decimal(raw) if any(ch in raw for ch in ".eE") else int(raw)
                 if isinstance(v, Decimal) and v == v.to_integral_value():
-                    v = int(v)                           # математически целое (1e3) — integer, как 2020-12
+                    v = int(v)                           # A mathematically integral value such as1e3 is integer per Draft 2020-12.
             elif t == "boolean" and raw in ("true", "false"):
                 v = raw == "true"
             ok = Draft202012Validator({"$ref": f"{Path(base).as_uri()}#" + ("" if "$ref" in sch else "")} if False else
@@ -464,7 +453,7 @@ class DoorBodiesBase:
         prog = ["package main", "", "import (", '\t"fmt"', "", f'\t"{(self.fresh / "go.mod").read_text().split()[1]}/apidoor"', ")", "",
                 "func main() {"]
         for op, place, name, raw, *_ in cases:
-            nm = name.lower() if place == "header" else name      # заголовок — без учёта регистра
+            nm = name.lower() if place == "header" else name      # Header names are case-insensitive.
             prog.append(f'\t{{ _, _, v := apidoor.CheckParam(apidoor.{op}, {json.dumps(place)}, {json.dumps(nm)}, '
                         f'[]string{{{json.dumps(raw)}}}); fmt.Println(v == nil) }}')
         prog.append("}")

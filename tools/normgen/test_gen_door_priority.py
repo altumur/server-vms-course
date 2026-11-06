@@ -1,15 +1,5 @@
-"""Судья маршрутизации двери по x-route-priority (gen_door_lesson.py, режим P/05-R057): своя модель судьи против Go Route.
-
-Запуск: /opt/check-env/lesson-spec/bin/python tools/normgen/test_gen_door_priority.py [-v]   (jsonschema, go 1.22)
-
-Модель судьи читает OpenAPI урока сама (x-route-priority, x-path-capture, x-path-decode, x-path-error) и выбирает
-по 4 правилам R057: литералы по сырым байтам, без декодирования пути целиком и без нормализации хвостового «/»;
-фильтр по методу до приоритета; 405 без тела при совпадении формы без метода, 404 без тела без совпадения; ошибка
-параметра (пусто, %2F, не UTF-8, вне схемы — оракул jsonschema) — x-path-error метода, без отката. Пробы: швы
-resource-route (s30–s37), операции урока с образцами, порча сегментов, случайные пути; роли door-roles.tsv.
-Мутанты среды (фильтр по методу после приоритета, декодирование до совпадения, без проверки UTF-8, остаток
-декодируется одним куском) — красные. «Пустой захват допустим» равносилен на схемах урока (ObjectKey minLength).
-"""
+"""Judge x-route-priority routing (P/05-R057) against an independent OpenAPI model of priority, capture, decode, error. Match literals as raw bytes without whole-path decoding or trailing-slash normalization; filter methods before priority; unmatched method/shape gives bodyless405/404. Invalid captured values use that method's x-path-error without fallback. Probe resource-route seams s30-s37, operation samples, corrupted/random paths and door roles. Method-filter ordering, early decoding, missing UTF-8 checks and whole-remainder decoding mutants must fail. Empty-capture allowance is equivalent under ObjectKey minLength. Run with jsonschema and Go 1.22."""
+import lesson as output_lesson
 import json
 import os
 import random
@@ -234,8 +224,9 @@ class Priority(unittest.TestCase):
         return e
 
     def test_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for name in ("routes.go", "routes_rt.go", "bodies.go", "schema_rt.go"):
-            kept = HERE / "out" / SLUG / "go/apidoor" / name
+            kept = output_lesson.output_root() / SLUG / "go/apidoor" / name
             self.assertEqual(kept.read_bytes(), (self.fresh / "apidoor" / name).read_bytes(), f"{kept} is stale")
 
     def test_seams_and_probes(self):

@@ -44,7 +44,7 @@ func Turn(table string, cells map[string]string, files map[string][]byte) Answer
 				if json.Unmarshal(st["read"], &r.Row) != nil {
 					return Answer{Code: 2, Value: "read: not a row"}
 				}
-				if r.Row["holder"] == "@same" { // the mark of this attempt
+				if r.Row["holder"] == "@same" { // substitute before the ordinary algorithm, never in its output
 					r.Row["holder"] = t.Mark()
 				}
 			}

@@ -88,18 +88,24 @@ def inputs(root=ROOT):
         if key not in ops:
             bad(f"not an OpenAPI operation: {key}")
         seen.add(key)
-        if r["revision"] not in ("doc.rev", "revision", "rev"):
-            bad("revision must be doc.rev|revision|rev")
+        if r["revision"] not in ("doc.rev", "revision", "rev", "-"):
+            bad("revision must be doc.rev|revision|rev|-")
         if r["etag"] not in ("true", "false"):
             bad("etag must be true|false")
         if (r["etag"] == "true") != ops[key]["etag"]:
             bad("etag differs from the OpenAPI success headers")
-        if r["if_match"] not in ("optional", "ignored", "base-rev"):
-            bad("if_match must be optional|ignored|base-rev")
+        if r["if_match"] not in ("optional", "optional-index", "ignored", "base-rev"):
+            bad("if_match must be optional|optional-index|ignored|base-rev")
         if r["if_match"] != "ignored" and not ops[key]["if_match"]:
             bad("If-Match is not declared in OpenAPI")
+        if r["if_match"] == "ignored" and ops[key]["if_match"]:
+            bad("ignored requires no declared If-Match in OpenAPI")
         if r["absent_revision"] not in ("0", "-"):
             bad("absent_revision must be 0|-")
+        if r["if_match"] == "optional-index" and r["absent_revision"] != "-":
+            bad("optional-index requires absent_revision=-")
+        if r["revision"] == "-" and (r["etag"] != "false" or r["if_match"] not in ("optional-index", "ignored")):
+            bad("revision=- requires etag=false and if_match=optional-index|ignored")
         norm = r["norm"].split(",")
         if len(set(norm)) != len(norm) or any(not ANCHOR.fullmatch(a) or a not in anchors for a in norm):
             bad("norm must be a comma-separated list of distinct existing P/08 req anchors")
@@ -144,18 +150,22 @@ const (
     DocumentRevision RevisionField = "doc.rev"
     RowRevision RevisionField = "revision"
     RevField RevisionField = "rev"
+    NoRevision RevisionField = "-"
 )
 type IfMatchMode string
 const (
     OptionalIfMatch IfMatchMode = "optional"
     IgnoredIfMatch IfMatchMode = "ignored"
     BaseRevisionIfMatch IfMatchMode = "base-rev"
+    OptionalIndexIfMatch IfMatchMode = "optional-index"
 )
 
 // VersionedDoor is metadata, not a store procedure. A selected RowTemplate uses path captures; <part> is
 // computed by the ordinary core, never a new path/environment parameter. Empty RowTemplate is not a key.
 // ETag means the quoted RESULT INDEX, not the revision, including creation and member deletion.
 // BaseRevisionIfMatch gives If-Match priority, falls back to base_rev and preserves the R006 incompatibility refusal.
+// OptionalIndexIfMatch names an optional result-index condition, with no absent logical revision default.
+// NoRevision means no logical revision field; it is distinct from the NoVersionRow creation selector.
 // AbsentRevisionZero applies only to a CONFIRMED absent selected row (per write for BatchVersionRows).
 // Unknown/unreadable reads, guards, identity, repeat memory and condition ordering remain the core's procedure.
 type VersionedDoor struct {
@@ -198,8 +208,9 @@ def render(root=ROOT, lesson_key=None):
     head = HEAD.split("package coreadapter", 1)
     text = head[0] + "".join(f"// {p.relative_to(root)} sha256 {sha(p)}\n" for p in sources)
     text += "package coreadapter" + head[1] + "\nvar versionedDoors = []VersionedDoor{\n"
-    revisions = {"doc.rev": "DocumentRevision", "revision": "RowRevision", "rev": "RevField"}
-    modes = {"optional": "OptionalIfMatch", "ignored": "IgnoredIfMatch", "base-rev": "BaseRevisionIfMatch"}
+    revisions = {"doc.rev": "DocumentRevision", "revision": "RowRevision", "rev": "RevField", "-": "NoRevision"}
+    modes = {"optional": "OptionalIfMatch", "ignored": "IgnoredIfMatch", "base-rev": "BaseRevisionIfMatch",
+             "optional-index": "OptionalIndexIfMatch"}
     for r in rows:
         text += (f"{{Method:{go_str(r['method'])}, Path:{go_str(r['path'])}, RowKind:{r['kind']}, "
                  f"RowTemplate:{go_str(r['template'])}, Revision:{revisions[r['revision']]}, "
@@ -225,7 +236,7 @@ def kit_files(module, out=L.out):
         if not path.is_file() or path.read_text(encoding="utf-8") != text:
             raise GenError(f"{path} is stale: run gen_versioned_doors.py --lesson 08-domain")
         sub, name = rel.rsplit("/", 1)
-        files.append((sub, name, path.read_bytes(), "generated", str(path.relative_to(ROOT)), False))
+        files.append((sub, name, path.read_bytes(), "generated", L.output_source(path, out), False))
     return files
 
 
@@ -252,6 +263,8 @@ the procedure: read/resolve the family row, compute `<part>`, compare conditions
 `NoVersionRow`, `SelectedVersionRow` and `BatchVersionRows` are different selectors; empty RowTemplate is never a key.
 Revision names the logical field. ETag=true means the quoted result index, including creation/member deletion;
 false means no success ETag. `BaseRevisionIfMatch` retains R006 priority/fallback/incompatibility refusals.
+`NoRevision` denotes no logical revision field (`-`), independently of the row selector. `OptionalIndexIfMatch`
+denotes an optional result-index condition and no absent revision default; neither token supplies a store procedure.
 `AbsentRevisionZero` supplies 0 only for confirmed absence, per write for a batch; unknown reads never become 0.
 This is the existing `core` part's metadata; it does not supply a P/08 core implementation or a new process input.
 '''

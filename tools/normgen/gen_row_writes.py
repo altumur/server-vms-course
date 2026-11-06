@@ -255,7 +255,7 @@ def render(root=ROOT):
 
 
 def generate(root=ROOT, out=None):
-    target = Path(out or HERE / "out/p03") / "go/families"
+    target = Path(out or lesson.output_root() / "p03") / "go/families"
     target.mkdir(parents=True, exist_ok=True)
     for name, text in render(root).items():
         (target / name).write_text(text)
@@ -273,7 +273,7 @@ def kit_files(out=None):
             raise GenError(f"{kept} is stale: run gen_row_writes.py --lesson 03-worker")
         origin = "handwritten" if name == "row_write_runtime.go" else "generated"
         source = RUNTIME if origin == "handwritten" else kept
-        result.append(("families", name, kept.read_bytes(), origin, source.relative_to(ROOT).as_posix()))
+        result.append(("families", name, kept.read_bytes(), origin, L.output_source(kept, out or L.out) if source == kept else source.relative_to(ROOT).as_posix()))
     return result
 
 

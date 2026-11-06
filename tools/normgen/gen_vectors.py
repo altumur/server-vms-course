@@ -1,20 +1,9 @@
-"""Генератор части vectors урока без своей двери (P/02; ADR-0125 доп. (5) п. 5 — полный состав урока).
+"""Generate lesson vectors and unified-command inputs (ADR-0125 addendum(5), item 5).
 
-Запуск: python3 tools/normgen/gen_vectors.py --lesson 02-installer [<out>]
+  python3 tools/normgen/gen_vectors.py --lesson 02-installer [<out>]
+The roster combines local stages.tsv vectors gates with common consumers.tsv packages. P/02 and P/06 use wire.tsv via wire.py for inputs, fixtures, expectations and comparisons; wire_vectors/wire_api_p06 declare Go signatures. Validate complete native responses, then compare/assert rules. Other lessons use wire_draft. journal/modes.tsv describes layout only.
 
-Состав — свои пакеты урока (stages.tsv: gate vectors:<пакет>) и общие по Platform/common/vectors/consumers.tsv.
-P/02 и P/06: входы, фикстуры, ожидания и сравнения — Platform/common/vectors/wire.tsv через wire.py;
-wire_vectors.py и wire_api_p06.py задают сигнатуры Go адаптеров. Тесты проверяют полный native ответ по форме,
-затем сравнения и assert. Прочие уроки используют wire_draft.py. journal/modes.tsv — layout, не исполняется.
-
-Провод двух видов: единая команда `bin/vectors {input}` (кадр {format, package, table, case, variant, cells, files} →
-{exit_code, stdout_b64, stderr_b64}) и команда стенда `bin/vectors stand <ключ> {input}` (свой код выхода, stdout —
-JSON одной строкой с LF или сырые байты). Адаптер — YOURS, по файлу на пакет: функция пакета → Answer{Code, Value, Raw}.
-
-Выход <out>/go: vectoradapter/ (vectoradapter.go — Answer, закрыт; заготовки — YOURS), vectortests/ (тест на строку:
-Test<Пакет>_<Таблица>_Line<N>), vectorcmd/, cmd/vectors/; <out>/vectors/<пакет>/<таблица>/ — входы судьи векторов.
-Судья — test_gen_vectors.py (заглушки — красное без паники; подставной адаптер по ожиданиям — зелёное; мутанты).
-"""
+The unified bin/vectors {input} command maps {format, package, table, case, variant, cells, files} frames to {exit_code, stdout_b64, stderr_b64}. Stand commands bin/vectors stand <key> {input} use native exits and single-line JSON+LF or raw stdout. One YOURS adapter file per package returns Answer{Code, Value, Raw}. Emit vectoradapter types/scaffolds, vectortests, vectorcmd, cmd/vectors and vectors/<package>/<table> judge inputs. test_gen_vectors.py checks default failures without panic, passing fixture adapters and mutants."""
 import base64
 import json
 import re
@@ -44,7 +33,7 @@ def camel(name):
 
 
 def go_bytes(b):
-    """Байты → строковый литерал Go: печатный ASCII как есть, прочее — \\xNN (BOM, NUL, не-UTF-8 — допустимы)."""
+    """Encode bytes as a Go string literal: printable ASCII unchanged, everything else as \\xNN, including BOM, NUL and invalid UTF-8."""
     out = ['"']
     for x in b:
         c = chr(x)
@@ -63,18 +52,18 @@ def gstr(s):
 
 
 def cell_value(c):
-    """Общее правило «Vectors»: ячейка — значение JSON, если это JSON; иначе — JSON-строка (слово, hex, маркер)."""
+    """Apply the Vectors rule: a cell is its JSON value if valid JSON, otherwise a JSON string (word, hex, marker)."""
     try:
         return json.loads(c)
     except ValueError:
         return c
 
 
-# До полной формы прочие уроки используют согласованную временную проекцию wire_draft.py.
+# Other lessons retain the agreed wire_draft.py projection until the complete form exists.
 WIRE = {}
 
 
-# Черновик провода P/03, P/04 — временная проекция до формы wire.tsv (wire_draft.py, источники — там).
+# P/03, P/04 temporary wire projection before wire.tsv; wire_draft.py records its sources.
 from wire_draft import WIRE as _WIRE_DRAFT, SKIP_LESSON  # noqa: E402
 
 WIRE.update(_WIRE_DRAFT)
@@ -109,7 +98,7 @@ def read_table(root, decl):
 
 
 def plan(root=ROOT):
-    """→ ([объявление], [(пакет, таблица) общих из common_vectors]) урока; пакет состава без объявления — GenError."""
+    """Return (declarations, common package/table pairs); roster packages without declarations raise GenError."""
     if L.key == "06-console":
         import wire_api_p06
         try:
@@ -133,7 +122,7 @@ def plan(root=ROOT):
     declared = {(d["package"], d["table"]) for d in decls}
     stages_path = Path(root) / L.rel / "forms/stages.tsv"
     stages = [ln.split("\t") for ln in stages_path.read_text(encoding="utf-8").split("\n")
-              if ln and not ln.startswith("#")] if stages_path.is_file() else [[]]   # урок до форм (P/06): этапов нет
+              if ln and not ln.startswith("#")] if stages_path.is_file() else [[]]   # Historical P/06 sources before forms have no stages.
     own = sorted({m for r in stages[1:] for m in re.findall(r"vectors:([a-z0-9-]+)", r[4])})
     for pkg in own:
         if not any(p == f"{L.key}/{pkg}" for p, _ in declared):
@@ -579,7 +568,7 @@ def go_vectorcmd(decls, known, bindings=None, full_wire=False):
                 variants.append(key)
                 cases.append(UNIFIED_CASE.replace("(*in.Table, cellmap", "(*in.Table, *in.Variant, cellmap")
                              % {"key": key, "fn": d["fn"]})
-            elif d["compare"] == "raw":                # сырой исход через кадр (creates-key: Raw — байты stdout)
+            elif d["compare"] == "raw":                # Framed raw outcome: creates-key Raw is stdout bytes.
                 cases.append(UNIFIED_CASE.replace("\t\tvalue = a.Value\n", "\t\treturn 0, a.Raw, nil, nil\n")
                              % {"key": key, "fn": d["fn"]})
             else:
@@ -593,7 +582,7 @@ def go_vectorcmd(decls, known, bindings=None, full_wire=False):
             else:
                 call = f"vectoradapter.{d['fn']}(data)"
             branch = f"\t\tcase {go_str(k)}:\n\t\t\ta = {call}\n"
-            if branch not in stand:                    # таблицы одного ключа стенда (door-token verify, place)
+            if branch not in stand:                    # Tables sharing one stand key (door-token verify/place).
                 stand.append(branch)
     for name, table in known:
         cd = common_vectors.DECLS[name]
@@ -608,9 +597,9 @@ def go_vectorcmd(decls, known, bindings=None, full_wire=False):
         cases.append(branch)
     body = VECTORCMD % {"imports": "\n".join(imports) + "\n", "want": "".join(want), "cases": "".join(cases),
                         "stand": "".join(stand), "extra": common_vectors.FAMILY_READ_GO if fam else ""}
-    if not stand:                                      # урок без стендов (P/05): data стенда не читается ни одной ветвью
+    if not stand:                                      # Lessons without stand calls (P/05) never read stand data.
         body = body.replace("\tdata, err := os.ReadFile(path)\n", "\tdata, err := os.ReadFile(path)\n\t_ = data\n", 1)
-    if variants:                                       # пакеты с половинами строки (values-by-type: write | read)
+    if variants:                                       # Packages with row halves, such as values-by-type write/read.
         old = '\tif *in.Variant != "" {\n\t\treturn 0, nil, nil, fmt.Errorf("variant %q, want \\"\\"", *in.Variant)\n\t}\n'
         if old not in body:
             raise GenError("vectorcmd template: the variant check moved")
@@ -830,7 +819,7 @@ func safe(f func() (any, error)) (v any, err error) {
 '''
 
 
-COMPARE_GO = r"""// Code generated by tools/normgen/gen_vectors.py; DO NOT EDIT.
+COMPARE_GO = r'''// Code generated by tools/normgen/gen_vectors.py; DO NOT EDIT.
 
 // The compare rules of the package READMEs beyond value/raw/sets (the draft wire of P/03, P/04, P/06; replaced by the form
 // Platform/common/vectors/wire.tsv when it is published).
@@ -838,6 +827,8 @@ package vectortests
 
 import (
 	"encoding/json"
+	"io"
+	"math/big"
 	"reflect"
 	"sort"
 	"strings"
@@ -911,7 +902,16 @@ func checkBy(t *testing.T, where string, f func() vectoradapter.Answer, code int
 	case compare == "secret":
 		secret(w, got, &errs)
 	case compare == "turn":
-		turn(w, got, &errs)
+		// This comparison retains numeric lexemes; the other draft comparisons
+		// keep their existing norm/decoded path unchanged.
+		encoded, err := json.Marshal(a.Value)
+		turnWant, wantOK := turnJSON(want)
+		turnGot, gotOK := turnJSON(string(encoded))
+		if err != nil || !wantOK || !gotOK {
+			errs = append(errs, "$: turn requires one JSON value")
+			break
+		}
+		turn(turnWant, turnGot, &errs)
 	case compare == "secret-domain":
 		secretDomain(w, got, &errs)
 	case strings.HasPrefix(compare, "round:"):
@@ -954,7 +954,7 @@ func subset(exp, act any, path string, errs *[]string) {
 				*errs = append(*errs, path+"."+k+": missing")
 				continue
 			}
-			if v == "@any" {                     // ключ есть, значение любое (общий словарь приёмки)
+			if v == "@any" {                     // Key is present;any value matches(the shared acceptance vocabulary).
 				continue
 			}
 			subset(v, av, path+"."+k, errs)
@@ -1157,8 +1157,8 @@ func secret(exp, act any, errs *[]string) {
 		*errs = append(*errs, "$.text: missing at a refusal")
 		return
 	}
-	// no-leak whole:true (решение «Архитектора»; secret-in README, Run п. 3): в тексте нет ни одного целого скрытого
-	// фрагмента raw длиной ≥ 4 байт UTF-8 (короче — не судится; отбор по длине — у генератора, secret_hidden).
+	// no-leak whole:true(Architect;secret-in README, Run item 3):text contains no complete hidden raw
+	// UTF-8 fragment of at least4 bytes;shorter fragments are excluded by generator secret_hidden.
 	hidden, _ := e["hidden"].([]any)
 	for _, h := range hidden {
 		if hs, _ := h.(string); len(hs) >= 4 && strings.Contains(text, hs) {
@@ -1167,8 +1167,8 @@ func secret(exp, act any, errs *[]string) {
 	}
 }
 
-// secretDomain — secret-in у процесса домена (README «Native outcome»): ключи только fault и text; fault судится
-// только пустотой (слово — своё); при непустом fault text есть и не повторяет целый скрытый фрагмент (no-leak whole).
+// secretDomain follows the domain secret-in native outcome:only fault/text keys;fault is checked only
+// for emptiness.Its nonempty form requires text without a complete hidden fragment(no-leak whole).
 func secretDomain(exp, act any, errs *[]string) {
 	e, _ := exp.(map[string]any)
 	a, ok := act.(map[string]any)
@@ -1205,8 +1205,8 @@ func secretDomain(exp, act any, errs *[]string) {
 	}
 }
 
-// round — круг конвертов domain-envelopes (spec "<поле>:<префикс>"): ожидание — подмножество, а поле — два разных
-// конверта с префиксом; не ok — подмножество.
+// round checks domain-envelopes field:prefix:subset expectation plus two different envelopes sharing
+// the prefix;non-ok responses use subset matching.
 func round(exp, act any, spec string, errs *[]string) {
 	subset(exp, act, "$", errs)
 	e, _ := exp.(map[string]any)
@@ -1224,6 +1224,52 @@ func round(exp, act any, spec string, errs *[]string) {
 	y, _ := env[1].(string)
 	if !strings.HasPrefix(x, prefix) || !strings.HasPrefix(y, prefix) || x == y {
 		*errs = append(*errs, "$."+field+": two distinct envelopes with the prefix "+prefix)
+	}
+}
+
+func turnJSON(text string) (any, bool) {
+	dec := json.NewDecoder(strings.NewReader(text))
+	dec.UseNumber()
+	var value, extra any
+	if dec.Decode(&value) != nil {
+		return nil, false
+	}
+	return value, dec.Decode(&extra) == io.EOF
+}
+
+// turnSame compares JSON numbers exactly by value without a Float64 fallback.
+func turnSame(want, got any) bool {
+	switch w := want.(type) {
+	case json.Number:
+		g, ok := got.(json.Number)
+		a, aOK := new(big.Rat).SetString(string(w))
+		b, bOK := new(big.Rat).SetString(string(g))
+		return ok && aOK && bOK && a.Cmp(b) == 0
+	case map[string]any:
+		g, ok := got.(map[string]any)
+		if !ok || len(w) != len(g) {
+			return false
+		}
+		for k, v := range w {
+			actual, has := g[k]
+			if !has || !turnSame(v, actual) {
+				return false
+			}
+		}
+		return true
+	case []any:
+		g, ok := got.([]any)
+		if !ok || len(w) != len(g) {
+			return false
+		}
+		for i, v := range w {
+			if !turnSame(v, g[i]) {
+				return false
+			}
+		}
+		return true
+	default:
+		return reflect.DeepEqual(want, got)
 	}
 }
 
@@ -1246,12 +1292,12 @@ func turn(exp, act any, errs *[]string) {
 				got, _ := aw["holder"].(string)
 				switch ww["holder"] {
 				case "@new":
-					if got == "" || seen[got] {
+					if got == "" || strings.HasPrefix(got, "@") || seen[got] {
 						*errs = append(*errs, "$["+strconvI(i)+"].write.holder: want a new mark, got "+show(aw["holder"]))
 						return
 					}
 					seen[got], current = true, got
-				case "@same":                    // только уже связанная метка текущей попытки (spec103, сверка п. 12)
+				case "@same":                    // Only a label already bound in the current attempt(spec103 comparison item 12).
 					if current == "" {
 						*errs = append(*errs, "$["+strconvI(i)+"].write.holder: @same before any @new — an unbound mark")
 						return
@@ -1276,7 +1322,7 @@ func turn(exp, act any, errs *[]string) {
 				w = cp
 			}
 		}
-		if !reflect.DeepEqual(ae[i], w) {
+		if !turnSame(w, ae[i]) {
 			*errs = append(*errs, "$["+strconvI(i)+"]: "+show(ae[i])+", want "+show(w))
 		}
 	}
@@ -1322,14 +1368,14 @@ func vbtWrite(exp, act any, errs *[]string) {
 		}
 	}
 }
-"""
+'''
 
 
 BASE_COMPARES = ("raw", "layer1", "sets", "value")
 
 
 def frames_of(d, rows, pdir):
-    """[(строка, cells, variant, cells кадра | None, (код, значение, сырые байты))]; frames — половины строки."""
+    """Return [(line, cells, variant, frame cells or None, (exit, value, raw bytes))]; frames represent row halves."""
     if d.get("_form"):
         by_line = dict(rows)
         return [(r.lines[0], by_line[r.lines[0]], r.variant, r.cells,
@@ -1338,7 +1384,7 @@ def frames_of(d, rows, pdir):
     out = []
     if d["compare"] == "sets":
         return out
-    if "whole" in d:                                   # один вызов на всю выбранную таблицу (group_by [])
+    if "whole" in d:                                   # One call for the whole selected table (group_by=[]).
         w = d["whole"]
         return [(rows[0][0], {"case": w["case"]}, "", {}, w["expect"](rows), None)]
     for no, r in rows:
@@ -1351,7 +1397,7 @@ def frames_of(d, rows, pdir):
 
 
 def fixture(root, pdir, spec, r):
-    """Фикстура: путь от каталога пакета или «@root/<путь от корня курса>»."""
+    """Resolve a fixture relative to its package directory or @root/<course-relative path>."""
     if spec.startswith("@root/"):
         return (Path(root) / spec[len("@root/"):]).read_bytes()
     return (pdir / spec.format(**r)).read_bytes()
@@ -1365,7 +1411,7 @@ def lesson_consumers(root):
 
 
 def build(root=ROOT):
-    """→ ({путь от out: байты}, опись [(пакет таблица строка, статус)])."""
+    """Return ({output-relative path: bytes}, [(package/table/line, status)] inventory)."""
     if L.key == "06-console":
         import wire_vectors
         try:
@@ -1398,9 +1444,9 @@ def build(root=ROOT):
             continue
         if d.get("per_list"):
             inv.append((f"{d['package']} {d['table']} (vectors, per list)", "translated"))
-            continue                                  # функция та же — её судит тест множеств stand-объявления
+            continue                                  # Same function; the stand-declaration set test judges it.
         pdir, path, rows = read_table(root, d)
-        if "select" in d:                             # выбор строк потребителя (README «Who performs it»)
+        if "select" in d:                             # Consumer row selection follows Who performs it.
             kept_rows = []
             for no, r in rows:
                 why = d["select"](r)
@@ -1414,7 +1460,7 @@ def build(root=ROOT):
         name = camel(d["package"].split("/", 1)[1]) + "_" + camel(d["table"].rsplit(".", 1)[0])
         if d["surface"] != "vectors" and any(x is not d and not x.get("per_list") and x["package"] == d["package"]
                                              and x["table"] == d["table"] for x in decls):
-            name += "_Stand"                           # у таблицы две поверхности (стенд и кадр) — свои тесты у каждой
+            name += "_Stand"                           # A table with stand and framed surfaces gets separate tests for each.
         out = [TESTS_HEAD % (rel, sha, GO_MODULE)]
         wire_rows = []
         if d["compare"] == "sets":
@@ -1479,7 +1525,7 @@ def build(root=ROOT):
             f"// Source {r} sha256 {hashlib.sha256((Path(root) / r).read_bytes()).hexdigest()}.\n" for r in rels if r)
     for fname, text in common_vectors.go_tests(L.key, root, go_str, head, GO_MODULE, known_only=True).items():
         if fname == "common_test.go":
-            continue                                   # помощники — в helpers_test.go
+            continue                                   # Shared helpers live in helpers_test.go.
         files[f"go/vectortests/{fname}"] = gofmt(text).encode("utf-8")
         inv.append((fname, "translated"))
     if uses_extra:
@@ -1536,7 +1582,7 @@ def kit_files(module, out=DEFAULT_OUT):
         sub, name = rel[3:].rsplit("/", 1)
         sub = "../cmd/vectors" if sub == "cmd/vectors" else sub
         own = sub == "vectoradapter" and name != "vectoradapter.go"
-        res.append((sub, name, data, "generated", str(kept.relative_to(ROOT)), own))
+        res.append((sub, name, data, "generated", L.output_source(kept, out), own))
     return res
 
 
@@ -1551,17 +1597,20 @@ def provenance():
                 (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src]))]
     generators = [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))]
     decls, known = plan(ROOT)
+    turn_sources = ([ROOT / "Platform/common/vectors/turn/README.md", ROOT / "Platform/common/contracts/turn.md"]
+                    if any(d["package"] == "common/turn" for d in decls) else [])
     if L.key == "06-console":
         import wire
         runs, _ = wire.expand(ROOT, L.key)
         paths = {package_dir(ROOT, r.binding.package) / r.binding.table for r in runs}
-        forms = sorted(paths | {ROOT / wire.FORM, ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS})
+        forms = sorted(paths | {ROOT / wire.FORM, ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS}
+                       | set(turn_sources))
         return {"form": entries(forms), "generator": entry(Path(__file__).resolve()), "generators": generators,
                 "handwritten": [entry(HERE / p) for p in ("wire_api_p06.py", "wire.py", "wire_vectors.py",
                     "vector_consumers.py", "common_vectors.py", "wirert/full/go/check.go", "doorrt2/go/schema.go")],
                 "judge": entry(HERE / "test_wire_api_p06.py"),
                 "judges": [entry(HERE / p) for p in ("test_gen_vectors_lessons.py", "test_wire_full.py",
-                    "test_wire_vectors.py", "test_contracts.py", "wire_fakes.py")]}
+                    "test_wire_vectors.py", "test_contracts.py", "wire_fakes.py", "test_turn_wire.py", "kit/test_p06_turn.py")]}
     if L.key == "02-installer":
         import wire_vectors
         runs, _ = wire_vectors.wire.expand(ROOT, L.key)
@@ -1571,7 +1620,7 @@ def provenance():
                 "handwritten": [entry(HERE / p) for p in ("wire.py", "wire_vectors.py", "vector_consumers.py", "wirert/go/check.go",
                                                           "doorrt2/go/schema.go")], "judge": entry(JUDGE),
                 "judges": [entry(HERE / p) for p in ("test_wire_vectors.py", "test_wire.py", "test_consumer_packages.py", "test_wire_full.py", "wire_fakes.py")]}
-    forms = sorted({read_table(ROOT, d)[1] for d in decls}) + [ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS]
+    forms = sorted({read_table(ROOT, d)[1] for d in decls}) + [ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS] + turn_sources
     if any(d.get("_form") for d in decls):
         forms.append(ROOT / "Platform/common/vectors/wire.tsv")
     hand = ["vector_consumers.py", "consumer_vectors.py"]
@@ -1580,7 +1629,8 @@ def provenance():
     return {"form": entries(forms), "generator": entry(Path(__file__).resolve()), "generators": generators,
             "handwritten": [entry(HERE / p) for p in hand], "judge": entry(JUDGE),
             "judges": [entry(HERE / p) for p in ("test_consumer_packages.py", "test_gen_vectors_lessons.py",
-                                                "test_wire_full.py", "wire_fakes.py")]}
+                                                "test_wire_full.py", "wire_fakes.py")
+                       + (("test_turn_wire.py",) if turn_sources else ())]}
 
 
 KIT_MD = """
@@ -1606,7 +1656,7 @@ KIT_MD_P02 = KIT_MD
 
 
 def lesson_kit_md():
-    """Справка части урока: у P/02 — прежний текст; у прочих — пакеты единой команды и ключи стенда из объявлений."""
+    """Preserve P/02 documentation; other lessons list unified packages and stand keys from declarations."""
     if L.key == "02-installer" or (L.key != "06-console" and L.key not in WIRE):
         return KIT_MD_P02
     decls, known = plan(ROOT)
@@ -1624,7 +1674,11 @@ def lesson_kit_md():
             "cell; stand adapters receive the argument file bytes. Native output is validated before comparisons\n"
             "and assertion ignores. Native refusals retain their published exit codes; a panic or an unimplemented\n"
             "adapter is an execution error. `common/family-read` uses the kit's `families`. Layouts and inactive\n"
-            "surfaces are listed as excluded, with their reasons, in `vectortests/inventory.tsv`.\n")
+            "surfaces are listed as excluded, with their reasons, in `vectortests/inventory.tsv`.\n"
+            "`common/turn` selects only operations for P/06. With part `contracts`, the ordinary Turn adapter\n"
+            "substitutes the current attempt label for input read `@same` before calling the turn algorithm.\n"
+            "Its output contains real labels; `compare=turn` checks fresh/current labels and every other value.\n"
+            "`held` proves turn capture only; operations-epoch, worker execution and real-IO duties remain separate.\n")
     return head + (
         "Build `go build -o bin/vectors ./cmd/vectors`. The profile maps each package of the lesson:\n"
         "`vectors: <package>: 'bin/vectors {input}'` (the unified command: " + ", ".join(unified) + ") and the stand keys\n"

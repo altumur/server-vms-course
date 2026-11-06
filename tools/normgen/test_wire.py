@@ -1,16 +1,17 @@
-"""Судья чтения формы провода векторов (wire.py) — без Go.
+"""Judge for the vector wire form reader (wire.py), without Go.
 
-Запуск: /opt/check-env/lesson-spec/bin/python tools/normgen/test_wire.py [-v]   (нужен cel_expr_python)
-Форма берётся из корня курса; пока её нет в main — из WIRE_ROOT (каталог с Platform/ и Source/tests/testdata/ выгрузки
-или ветки spec103/vectors-wire), иначе тесты пропускаются.
+Run: /opt/check-env/lesson-spec/bin/python tools/normgen/test_wire.py [-v]   (requires cel_expr_python)
+Read the form from the course root, or WIRE_ROOT (an export with Platform/ and Source/tests/testdata/, or the
+spec103/vectors-wire branch) if it is not yet in main; otherwise skip the tests.
 
-1. Форма разбирается; урок 02 раскрывается в запуски без ошибок; journal — layout, excluded.
-2. Каждый сгенерированный кадр P/02 следует раскрытой форме (вход, фикстуры, case, variant);
-   общие пакеты P/01/P/02 сверяются с независимым чтением common_vectors (ожидание, вход, фикстуры; family-read —
-   verdict подмножеством, paths множеством, outcome писателя значением и читателя множествами).
-3. Мутанты формы (повторный ключ JSON, чужой конструктор, неизвестное сравнение, два входа одного варианта на строку,
-   decode json у строкового домена, якорь нормы без заголовка, фикстура у stand, no-leak без целого min_bytes ≥ 1, whole вне no-leak или не булево, owner вне
-   consumers.tsv, when, различный в группе, повтор запуска) отвергаются WireError.
+1. Parse the form and expand lesson 02 without errors; journal is an excluded layout.
+2. Each generated P/02 frame follows the expanded form (input, fixtures, case, variant). Cross-check shared
+   P/01/P/02 packages with the independent common_vectors reader (expectation, input, fixtures; family-read uses
+   subset verdicts, a set of paths, value comparison for writer outcomes and sets for reader outcomes).
+3. Reject form mutants with WireError: duplicate JSON key, foreign constructor, unknown comparison, two inputs
+   of the same variant on a row, json decoding of a string domain, a norm anchor without a heading, a stand fixture,
+   no-leak without integer min_bytes ≥ 1, nonboolean whole or whole outside no-leak, an owner outside consumers.tsv,
+   when disagreeing within a group, and a duplicate run.
 """
 import json
 import os
@@ -111,7 +112,7 @@ class Form(unittest.TestCase):
 
 
 class Mutants(unittest.TestCase):
-    """Каждая правка одной ячейки формы — отказ разбора или раскрытия."""
+    """Each single-cell form mutation must fail parsing or expansion."""
 
     @classmethod
     def setUpClass(cls):
@@ -119,8 +120,10 @@ class Mutants(unittest.TestCase):
         cls.cel = wire.Cel()
         cls.tmp = Path(tempfile.mkdtemp(prefix="judge-wire-"))
         shutil.copytree(cls.src / "Platform", cls.tmp / "Platform")
-        if (cls.src / "Source/tests/testdata").is_dir():
-            shutil.copytree(cls.src / "Source/tests/testdata", cls.tmp / "Source/tests/testdata")
+        # Current export inputs have one canonical home, never a Source fallback.
+        for name in ("testsub", "testsub2"):
+            if not (cls.tmp / "Platform/common/data/testsub" / f"{name}.subsystem.yaml").is_file():
+                raise AssertionError(f"missing canonical testsub fixture: {name}")
         cls.text = (cls.tmp / wire.FORM).read_text(encoding="utf-8")
 
     @classmethod
@@ -153,6 +156,22 @@ class Mutants(unittest.TestCase):
         with self.assertRaises(wire.WireError):
             wire.expand(self.tmp, owner, self.cel)
 
+    def test_missing_current_canonical_fixture_never_falls_back_to_source(self):
+        for name in ('testsub', 'testsub2'):
+            canonical = self.tmp / 'Platform/common/data/testsub' / (name + '.subsystem.yaml')
+            original = canonical.read_bytes()
+            witness = self.tmp / 'Source/tests/testdata' / canonical.name
+            witness.parent.mkdir(parents=True, exist_ok=True)
+            witness.write_bytes(original)
+            wire.expand(self.tmp, '02-installer', self.cel)
+            try:
+                canonical.unlink()
+                with self.subTest(name=name), self.assertRaises(wire.WireError):
+                    wire.expand(self.tmp, '02-installer', self.cel)
+            finally:
+                canonical.write_bytes(original)
+                witness.unlink()
+
     def test_unchanged_is_accepted(self):
         wire.expand(self.tmp, "02-installer", self.cel)
 
@@ -174,7 +193,7 @@ class Mutants(unittest.TestCase):
         self.refused()
 
     def test_json_on_a_string_domain(self):
-        # backup-key: 64 hex — строка (decode text); json на такой ячейке — не JSON, отказ
+        # backup-key: 64 hex is a string (decode text); decoding that cell as json must fail.
         self.jedit("common/domain-backup-key", "cases.tsv", "vectors", "expect",
                    lambda v: v[0]["value"].__setitem__("decode", "json"))
         self.refused()
@@ -250,12 +269,12 @@ class Mutants(unittest.TestCase):
 
 class Leaks(unittest.TestCase):
     def test_fragment_and_whole(self):
-        self.assertEqual(wire.leaks("x=abcd", ["zzabcdzz"], 4), ["zzabcdzz"])         # фрагмент ≥ 4 байт
+        self.assertEqual(wire.leaks("x=abcd", ["zzabcdzz"], 4), ["zzabcdzz"])         # fragment ≥ 4 bytes
         self.assertEqual(wire.leaks("x=abc", ["zzabcdzz"], 4), [])
-        self.assertEqual(wire.leaks("x=abcd", ["zzabcdzz"], 4, whole=True), [])         # целиком нет
+        self.assertEqual(wire.leaks("x=abcd", ["zzabcdzz"], 4, whole=True), [])         # the whole secret is absent
         self.assertEqual(wire.leaks("x=zzabcdzz!", ["zzabcdzz"], 4, whole=True), ["zzabcdzz"])
-        self.assertEqual(wire.leaks("x=ab", ["ab"], 4, whole=True), [])                 # короткий не судится
-        self.assertEqual(wire.leaks("пароль", ["арол"], 8), ["арол"])                   # байты UTF-8
+        self.assertEqual(wire.leaks("x=ab", ["ab"], 4, whole=True), [])                 # shorter secrets are not judged
+        self.assertEqual(wire.leaks("\u043f\u0430\u0440\u043e\u043b\u044c", ["\u0430\u0440\u043e\u043b"], 8), ["\u0430\u0440\u043e\u043b"])  # UTF-8 bytes
 
 
 if __name__ == "__main__":

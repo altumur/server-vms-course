@@ -1,6 +1,5 @@
-"""Тесты каталога отказов урока без двери (P/02: refusals.tsv на 15 колонок; ADR-0125 доп. (5)): out свежий, судья
-refusal_judge PASS на выходе и FAIL на мутантах пакета (код выхода, word, «exit !0», фрагмент лога); P/01 — прежний
-каталог с HTTP (его тесты — test_gen_refusals.py)."""
+"""Test P/02's15-column refusal catalog: freshness, judge PASS and code/word/exit!0/log-fragment mutants FAIL. P/01 retains its HTTP catalog tests."""
+import lesson as output_lesson
 import os
 import shutil
 import subprocess
@@ -23,6 +22,7 @@ def judge(module_dir):
 class Plain(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.tmp = tempfile.TemporaryDirectory(prefix="refplain-")
         cls.out = Path(cls.tmp.name) / "out"
         done = subprocess.run([sys.executable, str(HERE / "gen_refusals.py"),
@@ -36,15 +36,16 @@ class Plain(unittest.TestCase):
         cls.tmp.cleanup()
 
     def test_out_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         self.assertEqual((self.mod / "refusals/refusals.go").read_bytes(),
-                         (HERE / "out/p02/go/refusals/refusals.go").read_bytes(), "run gen_refusals.py --lesson 02-installer")
+                         (output_lesson.output_root() / 'p02/go/refusals/refusals.go').read_bytes(), "run gen_refusals.py --lesson 02-installer")
 
     def test_judge_pass(self):
         done = judge(self.mod)
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
 
     def test_no_prose(self):
-        """Четыре колонки прозы (cause, outcome, diagnostic, caller) в код не идут."""
+        """Never emit the four prose columns cause, outcome, diagnostic, caller into code."""
         text = (self.mod / "refusals/refusals.go").read_text(encoding="utf-8")
         for word in ("Cause", "Outcome", "Diagnostic", "Caller"):
             self.assertNotIn(word + " ", text)

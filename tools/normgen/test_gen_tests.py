@@ -1,19 +1,5 @@
-"""Сверка генератора № 6 ADR-0125 (tools/normgen/gen_tests.py) — свой судья: покрытие и мутации векторов.
-
-Запуск: python3 tools/normgen/test_gen_tests.py [-v]   (нужен go 1.22 в PATH; сети не нужно; только stdlib).
-
-- tools/normgen/out/p01-1 (части gen_tests) — ровно то, что генератор строит сейчас;
-- покрытие: каждая строка-вектор jcs и rights-evaluator — ровно один тест `Test<Этап>_Line<N>` и ровно один вход
-  команды векторов с ячейками этой строки и без колонок ожидания; имена — по этапам stages.tsv;
-- мутация вектора меняет выход: правка одной строки меняет ровно её тест и её случай; рассогласованный вектор
-  (sha256 не от canonical, чужая роль, повтор с другим исходом, NaN) — отказ генератора;
-- Go: `go vet` на заглушке адаптера; на подставном адаптере (ответы из самих векторов) все тесты зелёные, на нём же
-  тесты из мутированного вектора падают ровно в мутированной строке; адаптеры-мутанты (канон = вход, «всё можно»)
-  роняют ровно строки, где это неверно;
-- команда векторов: vectorcmd на подставном адаптере под vector_judge.py — все случаи; мутированные случаи — ровно
-  один отказ; вход вне провода — внешний код 2;
-- память: max RSS теста и дочерних процессов — не больше 1 ГБ.
-"""
+"""Independently judge gen_tests coverage and vector mutations (ADR-0125 generator 6). Require exact fresh outputs; one Test<Stage>_Line<N> and one input-only command case per JCS/rights row. Mutating a row changes only its test/case; inconsistent SHA, unknown role, conflicting duplicate and NaN refuse. Vet scaffold modules; vector-derived fixture adapters pass while mutated rows fail exactly their test. Identity/allow-all adapter mutants fail precisely incorrect rows. vector_judge must pass fixture vectorcmd, fail exactly the mutated case and reject malformed transport with outer exit 2. Peak test/child RSS stays within1GB; Go 1.22, stdlib, no network."""
+import lesson as output_lesson
 import hashlib
 import json
 import os
@@ -34,7 +20,7 @@ import gen_tests  # noqa: E402
 import vector_judge  # noqa: E402
 from gen_checks import go_str  # noqa: E402
 
-OUT = HERE / "out/p01-1"
+OUT = output_lesson.output_root() / 'p01-1'
 PARTS = ("go/vectoradapter", "go/vectortests", "go/vectorcmd", "go/cmd/vectors", "go/jsonstrict", "go/writecheck",
          "go/stagetests", "go/coreadapter", "vectors")
 GOENV = dict(os.environ, GOPROXY="off", GOFLAGS="-mod=mod", GOWORK="off", GOTOOLCHAIN="local")
@@ -48,12 +34,12 @@ def go(args, cwd, env=None):
 
 
 def own(res):
-    """Тесты jcs и rights_eval (без общих пакетов TestCommon…: их заглушки красные)."""
+    """Run JCS/rights_eval tests only; unrelated TestCommon scaffolds are expected red."""
     return {n: a for n, a in res.items() if not n.startswith("TestCommon")}
 
 
 def copy_root(dst):
-    """Минимальный корень курса для генератора: векторы P/01, форма этапов, общие пакеты урока и их состав."""
+    """Create a minimal source root with P/01 vectors, stages and the lesson's common package roster."""
     shutil.copytree(ROOT / "Platform", Path(dst) / "Platform")
     return Path(dst)
 
@@ -73,8 +59,7 @@ def go_funcs(src):
 
 
 def fake_adapter():
-    """Подставной адаптер: ответы — из самих векторов (canonical для raw и для canonical; исход строки прав).
-    FAKE_MODE=identity — канон равен входу; FAKE_MODE=allow — всё разрешено (адаптеры-мутанты)."""
+    """Fixture adapter answers come from vector canonical/raw and rights outcomes. FAKE_MODE=identity returns input as canonical; allow permits everything."""
     jcs, _ = gen_tests.read_jcs(ROOT)
     rights, _, _ = gen_tests.read_rights(ROOT)
     canon = {}
@@ -126,7 +111,7 @@ func main() { os.Exit(vectorcmd.Main(os.Args[1:], os.Stdout, os.Stderr)) }
 
 
 def go_results(stdout):
-    """go test -json → {имя теста: pass | fail}."""
+    """Read go test -json as {test name:pass|fail}."""
     out = {}
     for line in stdout.splitlines():
         try:
@@ -141,17 +126,18 @@ def go_results(stdout):
 class GenTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.tmp = tempfile.TemporaryDirectory(prefix="normgen-tests-")
         cls.files = gen_tests.render(ROOT)
         cls.jcs, _ = gen_tests.read_jcs(ROOT)
         cls.rights, _, _ = gen_tests.read_rights(ROOT)
-        # модуль с подставным адаптером и командой векторов
+        # Module with fixture adapter and vector command.
         cls.mod = Path(cls.tmp.name) / "mod"
         (cls.mod / "cmd/vec").mkdir(parents=True)
         (cls.mod / "go.mod").write_text("module normgen/p01-1\n\ngo 1.22\n", encoding="utf-8")
         cls.write_parts(cls.mod, cls.files)
-        shutil.copytree(OUT / "go/families", cls.mod / "families")   # common/family-read — часть families (доп. (5) п. 5)
-        for stub in ("canonical.go", "rights.go"):                 # заглушки по файлу на функцию — вместо них подставной
+        shutil.copytree(OUT / "go/families", cls.mod / "families")   # common/family-read is implemented by families (addendum 5, item 5).
+        for stub in ("canonical.go", "rights.go"):                 # Replace the per-function scaffolds with the fixture adapter.
             (cls.mod / "vectoradapter" / stub).unlink()
         (cls.mod / "vectoradapter/vectoradapter.go").write_text(fake_adapter(), encoding="utf-8")
         (cls.mod / "cmd/vec/main.go").write_text(VEC_MAIN, encoding="utf-8")
@@ -166,15 +152,16 @@ class GenTests(unittest.TestCase):
 
     @staticmethod
     def write_parts(mod, files, only_tests=False):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for rel, data in files.items():
             if not rel.startswith("go/") or (only_tests and not rel.startswith("go/vectortests/")) or \
-                    rel.startswith(("go/stagetests/", "go/coreadapter/")):     # тесты этапов — test_gen_stagetests.py
+                    rel.startswith(("go/stagetests/", "go/coreadapter/")):     # Stage tests are covered by test_gen_stagetests.py.
                 continue
             target = Path(mod) / rel[3:]
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)
-        if not only_tests and not (Path(mod) / "checks").exists():   # writecheck (провод write-checks) импортирует checks
-            shutil.copytree(HERE / "out/p01-1/go/checks", Path(mod) / "checks")
+        if not only_tests and not (Path(mod) / "checks").exists():   # writecheck's vector transport imports checks.
+            shutil.copytree(output_lesson.output_root() / 'p01-1/go/checks', Path(mod) / "checks")
 
     def run_tests(self, mod, mode=""):
         done = go(["test", "-count=1", "-json", "./vectortests"], mod, {"FAKE_MODE": mode})
@@ -183,14 +170,16 @@ class GenTests(unittest.TestCase):
         return res
 
     def test_out_up_to_date(self):
-        """tools/normgen/out/p01-1 (части gen_tests) — ровно свежая генерация."""
+        """Require gen_tests-owned outputs to equal fresh generation exactly."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         kept = sorted(str(p.relative_to(OUT)) for part in PARTS for p in (OUT / part).rglob("*") if p.is_file())
         self.assertEqual(kept, sorted(self.files))
         for rel, data in self.files.items():
             self.assertEqual((OUT / rel).read_bytes(), data, f"{rel} is stale: run tools/normgen/gen_tests.py")
 
     def test_coverage(self):
-        """Каждая строка-вектор — ровно один тест и ровно один вход команды; имена — по этапам stages.tsv."""
+        """Every vector row has exactly one test and command input, named by stages.tsv."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         self.assertEqual(gen_tests.counts(ROOT), {"jcs": len(self.jcs), "rights-evaluator": len(self.rights)})
         jcs = dict(go_funcs(self.files["go/vectortests/jcs_test.go"].decode()))
         rights = dict(go_funcs(self.files["go/vectortests/rights_eval_test.go"].decode()))
@@ -214,7 +203,7 @@ class GenTests(unittest.TestCase):
                 doc = json.loads(self.files[f"{base}/line-{r[0]}.json"])
                 self.assertEqual(set(doc), {"format", "package", "table", "case", "variant", "cells", "files"})
                 self.assertEqual((doc["format"], doc["package"], doc["case"], doc["variant"]), (1, pkg, f"line-{r[0]}", ""))
-                self.assertEqual(doc["cells"], cells_of(r))  # только входные колонки, без ожидания
+                self.assertEqual(doc["cells"], cells_of(r))  # Input columns only, without expectations.
                 if pkg.endswith("jcs"):
                     self.assertEqual(doc["files"], {})
                     self.assertEqual(c["stdout"], {"canonical": r[2], "sha256": r[3]})
@@ -236,7 +225,7 @@ class GenTests(unittest.TestCase):
                 gen_tests.render(root)
 
     def test_gate_list(self):
-        """vectors: — элемент списка gate (ADR-0126 доп. (7) п. 3; ревью Codex С4): с build, в любом порядке."""
+        """vectors is a gate-list element alongside build in any order (ADR-0126 addendum 7, item 3; Codex C4)."""
         for gate_text in ("vectors:jcs;build", "build;vectors:jcs", "accept:1.1:01-absent;vectors:jcs;build"):
             with self.subTest(gate=gate_text), tempfile.TemporaryDirectory() as d:
                 root = copy_root(d)
@@ -252,7 +241,7 @@ class GenTests(unittest.TestCase):
                     gen_tests.read_stages(root)
 
     def mutated(self, d, which):
-        """Корень с одной мутированной строкой → (корень, имя теста, case)."""
+        """Create a source with one mutated row; return (root, test name, case)."""
         root = copy_root(d)
         if which == "jcs":
             no, raw, canonical, digest = self.jcs[0]
@@ -267,7 +256,7 @@ class GenTests(unittest.TestCase):
         return root, f"TestRightsEval_Line{no}", f"line-{no}"
 
     def test_mutation_changes_output(self):
-        """Мутация одной строки меняет ровно её тест и её случай (вход команды тот же)."""
+        """Changing one vector row changes only its test/case, not its command input."""
         for which, gofile, pkg in (("jcs", "jcs_test.go", "01-store/jcs"),
                                    ("rights", "rights_eval_test.go", "01-store/rights-evaluator")):
             with tempfile.TemporaryDirectory() as d:
@@ -282,7 +271,7 @@ class GenTests(unittest.TestCase):
                 old = self.files[f"{base}/cases.tsv"].decode().splitlines()
                 new = files[f"{base}/cases.tsv"].decode().splitlines()
                 diff = [(a, b) for a, b in zip(old, new) if a != b]
-                # строка «# source … sha256» таблицы и строка случая — больше ничего
+                # Only the table's source/SHA row and the case row.
                 self.assertEqual(len(diff), 2, diff)
                 self.assertTrue(diff[0][0].startswith("# source ") and diff[1][0].startswith(case + "\t"), diff)
 
@@ -309,7 +298,8 @@ class GenTests(unittest.TestCase):
                     gen_tests.render(root)
 
     def test_go_vet_on_stub(self):
-        """Заглушка адаптера (out): go vet всего модуля; тесты собираются и падают на «not implemented»."""
+        """Vet the scaffold module; tests compile and fail on not implemented."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         mod = Path(self.tmp.name) / "stub"
         (mod / "cmd/vec").mkdir(parents=True)
         (mod / "go.mod").write_text("module normgen/p01-1\n\ngo 1.22\n", encoding="utf-8")
@@ -323,7 +313,7 @@ class GenTests(unittest.TestCase):
         res = own(res)
         self.assertEqual(len(res), len(self.jcs) + len(self.rights))
         self.assertEqual(set(res.values()), {"fail"})
-        # общие пакеты (доп. (5) п. 5): family-read исполняет пакет (families) — зелёный на заглушке; прочие — заглушки
+        # Common family-read executes families and passes on scaffolds; other common adapters remain stubs.
         self.assertEqual({a for n, a in common.items() if n.startswith("TestCommonFamilyRead_")}, {"pass"})
         self.assertEqual({a for n, a in common.items() if not n.startswith("TestCommonFamilyRead_")}, {"fail"})
         self.assertEqual({n.split("_")[0] for n in common}, {"TestCommonCrl", "TestCommonRevoked", "TestCommonLogMask",
@@ -335,12 +325,12 @@ class GenTests(unittest.TestCase):
         res = own(self.run_tests(self.mod))
         self.assertEqual(len(res), len(self.jcs) + len(self.rights))
         self.assertEqual({n for n, a in res.items() if a != "pass"}, set())
-        # судья gate tests: по имени этапа видит только свои тесты
+        # A tests gate selects only tests bearing its stage name.
         done = go(["test", "-count=1", "-json", "-run", "^TestJcs_", "./..."], self.mod)
         self.assertEqual(set(go_results(done.stdout)), {f"TestJcs_Line{r[0]}" for r in self.jcs})
 
     def test_go_mutated_vector_kills_one(self):
-        """Тесты из мутированного вектора на адаптере по исходным векторам падают ровно в мутированной строке."""
+        """Mutated-vector tests on the original fixture adapter fail exactly the mutated row."""
         for which in ("jcs", "rights"):
             with tempfile.TemporaryDirectory() as d:
                 root, test, _ = self.mutated(d, which)
@@ -351,7 +341,7 @@ class GenTests(unittest.TestCase):
                 self.assertEqual({n for n, a in res.items() if a != "pass"}, {test})
 
     def test_go_adapter_mutants(self):
-        """Адаптер-мутант падает ровно на строках, где он неверен."""
+        """An adapter mutant fails exactly the rows where its behavior is wrong."""
         res = self.run_tests(self.mod, "identity")
         want = {f"TestJcs_Line{r[0]}" for r in self.jcs if r[1] != r[2]}
         self.assertTrue(want)
@@ -362,7 +352,7 @@ class GenTests(unittest.TestCase):
         self.assertEqual({n for n, a in res.items() if a != "pass" and n.startswith("TestRightsEval_")}, want)
 
     def test_vector_command(self):
-        """vectorcmd на подставном адаптере под vector_judge: все случаи обоих пакетов; --specs сверяет источники."""
+        """Run both fixture vectorcmd packages through vector_judge; --specs verifies sources."""
         for pkg, n in (("jcs", len(self.jcs)), ("rights-evaluator", len(self.rights))):
             result, err = vector_judge.judge(pkg, f"{self.vec} {{input}}", specs=str(ROOT))
             self.assertIsNone(err)
@@ -374,7 +364,8 @@ class GenTests(unittest.TestCase):
             self.assertIn("sha256", err)
 
     def test_vector_command_mutants(self):
-        """Мутированные случаи — ровно один отказ; адаптер-мутант — отказ на своих строках."""
+        """A mutated case fails exactly once; an adapter mutant fails its affected rows."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for which, pkg in (("jcs", "01-store/jcs"), ("rights", "01-store/rights-evaluator")):
             with tempfile.TemporaryDirectory() as d:
                 root, _, case = self.mutated(d, which)
@@ -390,7 +381,7 @@ class GenTests(unittest.TestCase):
         self.assertEqual({f["case"] for f in result["failed"]}, {f"line-{r[0]}" for r in self.rights if not r[4]})
 
     def test_vector_command_wire(self):
-        """Вход вне провода — внешний код 2, stdout пуст; верный — конверт {exit_code, stdout_b64, stderr_b64}."""
+        """Malformed transport returns outer exit 2 and empty stdout; valid input returns the native outcome envelope."""
         good = json.loads(self.files["vectors/01-store/jcs/line-10.json"])
         bad = [
             dict(good, extra=1),
@@ -417,9 +408,7 @@ class GenTests(unittest.TestCase):
                     self.assertEqual((done.returncode, done.stdout), (2, b""), (doc, done.stderr))
 
     def test_kit_part(self):
-        """build_kit --part vectors, --part stagetests (ADR-0126 доп. (7) п. 4): пути импорта переписаны, go vet в пустом
-        модуле, манифест — origin generated, части порознь; своё у реализации при повторной сборке не трогается;
-        без части — её каталогов нет; stagetests без door — отказ."""
+        """Build vectors/stagetests parts with rewritten imports, vet in an empty module and generated provenance per part. Rebuild preserves editable files; absent parts create no directories; stagetests without door refuses."""
         sys.path.insert(0, str(HERE / "kit"))
         import build_kit
         module = "example.com/w2c/store"
@@ -438,7 +427,7 @@ class GenTests(unittest.TestCase):
                          ["vectoradapter", "vectorcmd", "vectors", "vectortests"])
         self.assertEqual(sorted({f["path"].split("/")[2] for f in tests if f["component"] == "stagetests"}),
                          ["coreadapter", "stagetests"])
-        self.assertIn("01-store/cmd/vectors/main.go", [f["path"] for f in tests])   # бинарь векторов (ADR-0126 доп. (5))
+        self.assertIn("01-store/cmd/vectors/main.go", [f["path"] for f in tests])   # Vector binary (ADR-0126 addendum 5).
         done = go(["build", "-o", str(Path(self.tmp.name) / "kit-vectors"), "./cmd/vectors"], store)
         self.assertEqual(done.returncode, 0, done.stderr)
         for f in tests:
@@ -454,7 +443,7 @@ class GenTests(unittest.TestCase):
             self.assertIn(f"func {fn}(", text)
             self.assertNotIn("DO NOT EDIT", text)
         rights = (adapter / "rights.go").read_bytes()
-        own = adapter / "canonical.go"           # правка Canonical целиком файлом — LoadRights не задет
+        own = adapter / "canonical.go"           # Replacing the whole Canonical file must leave LoadRights unchanged.
         own.write_text('package vectoradapter\n\nfunc Canonical(raw []byte) ([]byte, error) { return raw, nil }\n'
                        '\n// mine\n', encoding="utf-8")
         m = build_kit.build(dst, module, ["door", "vectors", "stagetests", "families"])
@@ -462,7 +451,7 @@ class GenTests(unittest.TestCase):
         self.assertEqual((adapter / "rights.go").read_bytes(), rights)
         done = go(["vet", "./internal/vectoradapter/", "./internal/vectortests/"], store)
         self.assertEqual(done.returncode, 0, done.stderr)
-        # пакет до разнесения: обе функции в vectoradapter.go — заглушки по файлам не кладутся (двойного объявления нет)
+        # Older packages with both functions in vectoradapter.go must not receive duplicate per-function scaffolds.
         (adapter / "vectoradapter.go").write_text(
             "package vectoradapter\n\nfunc Canonical(raw []byte) ([]byte, error) { return raw, nil }\n\n"
             "func LoadRights(file []byte) (func(role, action, key string) bool, error) { return nil, nil }\n",
@@ -470,7 +459,7 @@ class GenTests(unittest.TestCase):
         own.unlink()
         (adapter / "rights.go").unlink()
         m = build_kit.build(dst, module, ["door", "vectors", "stagetests", "families"])
-        self.assertEqual(sorted(p.name for p in adapter.glob("*.go")), ["crl.go", "logmask.go", "revoked.go", "storeclient.go", "vectoradapter.go"])  # общие — не объявлены
+        self.assertEqual(sorted(p.name for p in adapter.glob("*.go")), ["crl.go", "logmask.go", "revoked.go", "storeclient.go", "vectoradapter.go"])  # Common packages are undeclared.
         self.assertNotIn("internal/vectoradapter", [f["path"].rsplit("/", 1)[0][len("01-store/"):] for f in m["files"]])
         other = Path(self.tmp.name) / "kit-plain"
         m = build_kit.build(other, module)
@@ -482,7 +471,8 @@ class GenTests(unittest.TestCase):
             build_kit.build(other, module, ["stagetests"])
 
     def test_write_checks_binary(self):
-        """cmd/vectors на пробах write-checks.probes.tsv — зелёный у vector_judge; мутант провода — красный."""
+        """vector_judge passes write-checks.probes.tsv through cmd/vectors and fails a transport mutant."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         mod = Path(self.tmp.name) / "wc"
         shutil.copytree(OUT / "go", mod)
         exe = Path(self.tmp.name) / "wc-vectors"

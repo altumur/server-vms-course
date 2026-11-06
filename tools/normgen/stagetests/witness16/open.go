@@ -1,7 +1,7 @@
-// Адаптер-свидетель судьи тестов этапов (ADR-0125 доп. (4) п. 6; договор ADR-0126 доп. (7) п. 5) над кодом 16-й
-// попытки MiniMax (p01-1-go-ct102-16-green): Open — её ядро и дверь в процессе; Core — apidoor.Handler[Ctx]: каждый
-// метод пересобирает запрос HTTP к её door.Handle, ответ — apidoor.AnswerOf. Кладётся в
-// <посев>/01-store/internal/coreadapter/open.go вместо заглушки; не часть пакета.
+// Stage-judge witness adapter (ADR-0125 addendum 4, item 6;ADR-0126 addendum 7, item 5) over MiniMax attempt 16
+// p01-1-go-ct102-16-green:Open returns its core/door in process;Core implements apidoor.Handler[Ctx].
+// Each method reconstructs an HTTP request to door.Handle and maps the response through AnswerOf.Install
+// as <seed>/01-store/internal/coreadapter/open.go instead of the scaffold;not part of the kit.
 package coreadapter
 
 import (
@@ -55,12 +55,12 @@ func (w *witness) forward(c Ctx, method, target string, body []byte) (int, []byt
 	return resp.StatusCode, b
 }
 
-// Ctx — контекст свидетеля: личность вызова и заголовки.
+// Ctx carries witness call identity and headers.
 type Ctx = *Request
 
 func (w *witness) Context(call Call, header map[string]string) Ctx { return &Request{Call: call, Header: header} }
 
-// answer — запрос к двери свидетеля, ответ — в apidoor.AnswerOf (схема OpenAPI операции).
+// answer requests the witness door and converts its response with the operation's AnswerOf schema.
 func (w *witness) answer(op apidoor.Op, c Ctx, method, target string, body []byte) apidoor.Answer {
 	code, raw := w.forward(c, method, target, body)
 	var v any = string(raw)
@@ -114,7 +114,7 @@ func (w *witness) Leave(c Ctx, b []byte) apidoor.Answer {
 }
 func (w *witness) Metrics(c Ctx) apidoor.Answer { return w.answer(apidoor.OpMetrics, c, "GET", "/metrics", nil) }
 
-// QueryRefused — свидетель сырого query уже не видит: 400 badrequest (шаги формы query сверяются отдельно).
+// QueryRefused cannot inspect raw query in the witness;return400badrequest.Query-form steps are checked separately.
 func (w *witness) QueryRefused(c Ctx, op apidoor.Op, e *apidoor.QueryError) apidoor.Answer {
 	a, _ := apidoor.Refuse(op, 400, "badrequest", "query: "+e.Param, nil)
 	return a

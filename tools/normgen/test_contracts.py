@@ -1,13 +1,15 @@
-"""Судья общего пакета договоров (tools/normgen/contracts; ADR-0125 доп. (5), опись генерации п. 1).
+"""Judge for shared contracts (tools/normgen/contracts; ADR-0125 addendum (5), generation inventory item 1).
 
-Запуск: python3 tools/normgen/test_contracts.py [-v]   (go 1.22)
+Run: python3 tools/normgen/test_contracts.py [-v]   (go 1.22)
 
-Пакет contracts — ручная среда «один раз на словарь» по Platform/common/contracts/*.md; адаптеры
-contracts/adapters/<функция>.go — функции vectoradapter над ним. Судья — общие векторы: для каждого урока, чьи векторы
-(out/pNN/go/vectortests, выход gen_vectors) зовут функцию адаптера, модуль урока собирается с contracts и адаптером
-вместо заглушки, и все тесты таблиц этой функции — зелёные (их набор — из самих тестов: вызовы vectoradapter.<Ф>).
-Мутант договора (ослабленная проверка) — красный хотя бы у одного урока.
+The contracts package is a handwritten runtime shared by a vocabulary, based on Platform/common/contracts/*.md.
+contracts/adapters/<function>.go exposes its vectoradapter functions. Shared vectors are the judge: for each lesson
+whose vectors (out/pNN/go/vectortests, produced by gen_vectors) call an adapter function, build the lesson module
+with contracts and that adapter replacing the stub. Every test for the function's tables must pass; the test set
+is read from vectoradapter.<Function> calls in the tests. A contract mutant that weakens validation must fail
+in at least one lesson.
 """
+import lesson as output_lesson
 import os
 import re
 import shutil
@@ -22,7 +24,7 @@ sys.path.insert(0, str(HERE / "contracts"))
 import kitside  # noqa: E402
 CONTRACTS = HERE / "contracts/go"
 ADAPTERS = HERE / "contracts/adapters"
-OUT = HERE / "out"
+OUT = output_lesson.output_root()
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 
 
@@ -32,7 +34,13 @@ def adapter_fns():
 
 
 def lesson_mods():
-    return sorted(p for p in OUT.glob("p*/go") if (p / "vectortests").is_dir())
+    output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
+    ready = output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
+    modules = [ready[slug] / "go" for slug in lesson.PROFILES]
+    missing = [str(path) for path in modules if not (path / "vectortests").is_dir()]
+    if missing:
+        raise AssertionError(f"missing prepared vector profiles: {missing}")
+    return modules
 
 
 def tests_calling(mod, fn):
@@ -199,7 +207,7 @@ class ContractsKit(unittest.TestCase):
             self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
 
     def test_kit_part(self):
-        """build_kit --part contracts: пакет internal/contracts и адаптеры над ним вместо заглушек; тесты таблиц — зелёные."""
+        """build_kit --part contracts: internal/contracts and its adapters replace stubs; table tests must pass."""
         import json
         import sys
         if not shutil.which("go"):
@@ -287,6 +295,7 @@ func TestMixed(t *testing.T) {
 
     def test_mutant(self):
         """The common vectors reject a reader that ignores whole-object outcomes."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         if not shutil.which("go"):
             self.skipTest("go is not in PATH")
         mod = OUT / "p04/go"
@@ -304,6 +313,7 @@ func TestMixed(t *testing.T) {
 
 class RecordEvents(unittest.TestCase):
     def test_mutants(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         if not shutil.which("go"):
             self.skipTest("go is not in PATH")
         mutations = [("Record", "p08", "record.go", "!ed25519.Verify(", "false && !ed25519.Verify("),
@@ -429,9 +439,9 @@ func TestEventsEdges(t *testing.T) {
 
 
 class NFKC(unittest.TestCase):
-    """NFKC пакета (адресный договор А4: таблицы Unicode 15.0.0) — свежесть таблиц gen_nfkc.py и равенство
-    unicodedata.normalize("NFKC") Python 3.12 (Unicode 15.0.0) на каждой кодовой точке и на случайных цепочках
-    из несоединяемых, составных, хангыля и знаков."""
+    """Package NFKC (address contract A4, Unicode 15.0.0 tables): gen_nfkc.py table freshness and equality with
+    Python 3.12 unicodedata.normalize("NFKC") (Unicode 15.0.0), for every code point and random sequences of
+    noncombining characters, composites, Hangul and marks."""
 
     def test_tables_fresh(self):
         import sys

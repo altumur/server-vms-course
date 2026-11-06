@@ -1,18 +1,5 @@
-"""Проверка генератора tools/normgen/gen_checks.py по оракулу skills/lesson-spec/scripts/check_tables.py.
-
-Запуск: /Users/murat/w2c/venv-spec-domain/bin/python tools/normgen/test_gen_checks.py [-v]
-(нужен cel_expr_python оракула и go 1.22 в PATH; сети не нужно).
-
-- сгенерированные модули в tools/normgen/out/p01-1 совпадают со свежей генерацией;
-- на всех входах probes.tsv цепочка (n, исход каждого шага) и первый отказ (n, check, code, kind, fault) Go и Python
-  совпадают с оракулом;
-- то же на MUTANTS мутациях входов probes (удалить поле, сменить тип, пустые и длинные строки, большие числа, null,
-  лишние поля, перестановка элементов списков, одиночные суррогаты, сокет);
-- выражения вне подмножества — отказ генератора с номером строки.
-Память: входы идут потоком по одному (оракул, модуль Python, один долгоживущий процесс Go построчно), CEL
-оракула компилируется один раз на строку таблицы (check_tables.Runner); тело мутанта — не больше MAX_BODY;
-max RSS процесса теста — не больше 1 ГБ (проверяется).
-"""
+"""Check gen_checks.py against the independent check_tables.py CEL oracle. Run test_gen_checks.py with cel_expr_python and Go 1.22, without network. Require fresh generated modules. For every probe and MUTANTS mutation, compare Go/Python step chains and first refusal n/check/code/kind/fault with the oracle. Mutations cover missing fields, types, empty/long strings, numbers, null, extra fields, list order, lone surrogates and sockets. Unsupported expressions must refuse with a row number. Stream one input at a time through the oracle, Python module and one persistent Go process; compile oracle CEL once per table row. Bound mutant bodies by MAX_BODY and peak test RSS by1GB."""
+import lesson as output_lesson
 import copy
 import importlib.util
 import json
@@ -33,20 +20,20 @@ ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "skills/lesson-spec/scripts"))
 
-import check_tables  # noqa: E402 — оракул
+import check_tables  # noqa: E402 -- oracle
 import gen_checks  # noqa: E402
 
-TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"                  # ADR-0124: формы — в forms/
+TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"                  # ADR-0124: forms live under forms/.
 PROBES = ROOT / "Platform/01-store/forms/write-checks.probes.tsv"
-OUT = HERE / "out/p01-1"
+OUT = output_lesson.output_root() / 'p01-1'
 MUTANTS = int(os.environ.get("NORMGEN_MUTANTS", "12000"))
 SEED = int(os.environ.get("NORMGEN_SEED", "20261104"))
 SEM_INPUTS = int(os.environ.get("NORMGEN_SEM_INPUTS", "4000"))
-MAX_BODY = 16 * 1024            # байт JSON тела мутанта: длинные строки есть (>1024 байт ключа), роста нет
-MAX_RSS = 1 << 30               # процесс теста держит не больше 1 ГБ
+MAX_BODY = 16 * 1024            # Mutant JSON byte bound permits long strings, including keys over1024 bytes, without unbounded growth.
+MAX_RSS = 1 << 30               # Test process memory stays within1GB.
 
 
-# ---------------------------------------------------------------- входы
+# ---------------------------------------------------------------- inputs
 
 def load_probes():
     lims, allows, probes = {}, [], []
@@ -64,7 +51,7 @@ def load_probes():
 
 
 def dump(v):
-    """JSON без потери вида числа: double всегда с . или e, ±inf — ±1e400 (так их читает обвязка Go)."""
+    """Serialize JSON preserving number kind: doubles always have '.' or exponent; represent infinities by +/-1e400 for the Go harness."""
     if v is None:
         return "null"
     if v is True:
@@ -86,7 +73,7 @@ def dump(v):
 
 
 def canon(v):
-    """Значение Python (оракул, модуль Python) → сравнимый вид с видом числа."""
+    """Normalize oracle/Python-module values for comparison with number kind retained."""
     if v is None:
         return ("null",)
     if type(v) is bool:
@@ -105,7 +92,7 @@ def canon(v):
 
 
 def canon_go(v):
-    """Значение с метками обвязки Go → тот же вид, что canon."""
+    """Normalize tagged Go harness values to the same shape as canon."""
     if type(v) is dict:
         if "$int" in v:
             return ("int", int(v["$int"]))
@@ -126,12 +113,12 @@ def norm_refusal(r, go=False):
     return (r["n"], r["check"], r["code"], r["kind"], fault, bool(r["fault_error"]))
 
 
-# ---------------------------------------------------------------- три исполнителя
+# ---------------------------------------------------------------- three executors
 
 class Oracle:
     def __init__(self, lims, allows, path=TABLE, form=True):
         table = check_tables.Table(path)
-        if form:                                   # синтетическая таблица семантики формы (пределы-литералы) не держит
+        if form:                                   # The synthetic semantics table does not enforce literal limits.
             assert not table.errors, table.errors
         table.errors = []
         self.runner = check_tables.Runner(table, lims, allows)
@@ -179,7 +166,7 @@ class PyRunner:
 
 
 def build_go(out, workdir):
-    """Собирает обвязку против сгенерированного модуля в out; → путь к исполняемому файлу."""
+    """Build the harness against the generated output module and return its binary path."""
     hdir = Path(workdir) / "harness"
     hdir.mkdir()
     shutil.copy(HERE / "harness/main.go", hdir / "main.go")
@@ -197,7 +184,7 @@ def build_go(out, workdir):
 
 
 class GoProc:
-    """Один долгоживущий процесс обвязки: вход — строка JSON, ответ читается сразу (ничего не копится)."""
+    """Use one persistent harness: send a JSON line and read its response immediately without accumulation."""
 
     def __init__(self, exe, lims, allows):
         self.head = json.dumps({"lim": lims, "allow": allows})[1:-1]
@@ -220,7 +207,7 @@ class GoProc:
         self.proc.stdout.close()
 
 
-# ---------------------------------------------------------------- мутации
+# ---------------------------------------------------------------- mutations
 
 FIELDS = ["op", "key", "items", "cas", "guard", "id", "not_after", "not_before", "writes", "guards", "index",
           "extra", "value", "f", "\ud800", "�"]
@@ -309,7 +296,7 @@ def mutate_once(rng, body):
 
 
 def mutants(probes, count, seed):
-    """Поток мутантов (генератор, ничего не копит); тело больше MAX_BODY байт JSON — мутация заново от входа."""
+    """Stream mutants without accumulation; if JSON exceeds MAX_BODY, retry mutation from the original input."""
     rng = random.Random(seed)
     bases = [(sock, json.loads(text)) for _, sock, text in probes]
     k = 0
@@ -327,13 +314,14 @@ def mutants(probes, count, seed):
         k += 1
 
 
-# ---------------------------------------------------------------- тесты
+# ---------------------------------------------------------------- tests
 
 class Trio(unittest.TestCase):
-    """Оракул, модуль Python и обвязка Go над одной таблицей; compare сверяет цепочку и первый отказ."""
+    """Run oracle, Python module and Go harness over the same table; compare chain and first refusal."""
 
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.tmp = tempfile.TemporaryDirectory(prefix="normgen-")
         cls.lims, allows, cls.probes = load_probes()
         cls.allows = [list(a) for a in allows]
@@ -354,8 +342,7 @@ class Trio(unittest.TestCase):
         cls.tmp.cleanup()
 
     def compare(self, decoded, label):
-        """decoded: поток (имя, sock, body, lone) — по одному входу, ничего не копится;
-        → ({n первого отказа: число входов}, {n: исходы}); расхождение — провал."""
+        """Stream decoded (name, sock, body, lone) inputs one at a time. Return first-refusal counts and outcomes by row; any mismatch fails."""
         stats = {"python": 0, "go": 0}
         mismatches, hits, statuses = [], {}, {}
         total = 0
@@ -390,9 +377,10 @@ def decode_all(inputs):
 
 class GenChecks(Trio):
     def test_out_up_to_date(self):
-        """tools/normgen/out/p01-1 — ровно то, что строит генератор сейчас."""
+        """Require out/p01-1 to match current generator output exactly."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         def files(root):
-            # только части gen_checks: рядом в out/p01-1 лежат выходы других генераторов (gen_tests — ADR-0125 № 6)
+            # Only gen_checks files: out/p01-1 also contains outputs from other generators such as gen_tests.
             mine = lambda rel: rel == Path("go/go.mod") or rel.parts[:2] == ("go", "checks") or rel.parts[0] == "python"
             return sorted(rel for p in root.rglob("*") if p.is_file() and "__pycache__" not in p.parts
                           and mine(rel := p.relative_to(root)))
@@ -404,11 +392,11 @@ class GenChecks(Trio):
                              f"{rel} is stale: run tools/normgen/gen_checks.py")
 
     def test_probes(self):
-        """Все входы probes.tsv: Go и Python = оракул."""
+        """All probes.tsv inputs: Go and Python equal the oracle."""
         self.compare(decode_all(self.probes), "probes")
 
     def test_mutants(self):
-        """MUTANTS мутаций входов probes: Go и Python = оракул; каждая строка таблицы — первый отказ хоть раз."""
+        """MUTANTS probe mutations: Go/Python equal the oracle, with every table row first-refusing at least once."""
         self.assertGreaterEqual(MUTANTS, 10000)
         hits, _ = self.compare(decode_all(mutants(self.probes, MUTANTS, SEED)), f"mutants (seed {SEED})")
         missing = [row["n"] for row in gen_checks.Table(TABLE.read_text(encoding="utf-8")).rows
@@ -416,8 +404,8 @@ class GenChecks(Trio):
         self.assertEqual(missing, [], "rows never hit first by mutants")
 
 
-# Выражения всего подмножества, не только ветви, достижимые в таблице (её охранные порядки прячут, например,
-# «ошибка || true», size() строки, int против double у 2^63, when не bool). Каждое — строка op * синтетической таблицы.
+# Cover the complete subset, including branches hidden by production table guards: error||true, size(string),
+# mixed int/double near2^63 and non-bool when. Each is an op* row in the synthetic table.
 SEMANTICS = [
     "body.a || true", "true || body.a", "body.a || false", "false || body.a", "body.a && false", "false && body.a",
     "body.a && true", "!body.a", "(body.a || body.b) && (body.b || body.a)", "!(body.a in body.b) || body.c",
@@ -462,7 +450,7 @@ def semantics_inputs(count, seed):
 
 
 class SubsetSemantics(Trio):
-    """Синтетическая таблица из SEMANTICS (шапка — таблицы P/01.1): Go и Python = оракул на случайных телах."""
+    """Check a synthetic SEMANTICS table with P/01.1 declarations: Go/Python equal the oracle on random bodies."""
 
     @classmethod
     def table_path(cls):
@@ -476,7 +464,7 @@ class SubsetSemantics(Trio):
 
     def test_semantics(self):
         _, statuses = self.compare(semantics_inputs(SEM_INPUTS, SEED), f"subset semantics ({len(SEMANTICS)} rows)")
-        # Постоянны по построению: true || x, x || true — true; false && x, x && false — false.
+        # Construction makes true||x and x||true true; false&&x and x&&false false.
         constant = {SEMANTICS.index(e) + 1 for e in ("body.a || true", "true || body.a", "body.a && false",
                                                     "false && body.a")}
         flat = [n for n in range(1, len(SEMANTICS) + 1) if len(statuses.get(n, ())) < 2 and n not in constant]
@@ -484,7 +472,7 @@ class SubsetSemantics(Trio):
 
 
 class OutOfSubset(unittest.TestCase):
-    """Выражение вне подмножества — отказ генератора с номером строки."""
+    """Unsupported expressions must refuse generation with the row number."""
     CASES = [
         ("when", "body.items.all(f, true)", "method all"),
         ("when", "int(body.key) > 0", "function int"),

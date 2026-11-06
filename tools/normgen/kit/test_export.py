@@ -1,8 +1,4 @@
-"""Тесты build_kit --export (Архитектор 2026-11-05): входы — Platform/ выгрузки из git, код — чистый HEAD курса; оба sha
-в манифесте и SOURCE.txt, без -dirty; правки в tools/normgen — отказ; дерево курса не меняется.
-
-Курс и выгрузка — временные git-репозитории: tools/normgen рабочего дерева (файлы git ls-files) и Platform/ выгрузки
-EXPORT из ~/cammeta-specs (или CAMMETA_SPECS)."""
+"""Test build_kit --export (Architect, 2026-11-05): Platform inputs come from the export Git commit, code from a clean course HEAD, both SHAs recorded without -dirty in the manifest and SOURCE.txt. Dirty tools/normgen refuses; the course tree stays unchanged. Temporary repositories contain tracked generator files and Platform from EXPORT in CAMMETA_SPECS or ~/cammeta-specs."""
 import hashlib
 import json
 import os
@@ -72,7 +68,7 @@ class Export(unittest.TestCase):
         self.assertNotIn("-dirty", src + json.dumps(self.manifest))
 
     def test_inputs_are_the_export(self):
-        """Шапка vectortests называет sha256 stages.tsv выгрузки, не курса."""
+        """The vectortests header must name the export's stages.tsv SHA, not the course's."""
         stages = (self.specs / "Platform/01-store/forms/stages.tsv").read_bytes()
         doc = (self.dst / "01-store/internal/vectortests/doc.go").read_text(encoding="utf-8")
         self.assertIn(hashlib.sha256(stages).hexdigest(), doc)

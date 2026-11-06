@@ -1,10 +1,10 @@
 package checks
 
-// Среда исполнения подмножества CEL для кода, построенного tools/normgen/gen_checks.py (ADR-0120 п. 2 (а)).
-// Генератор копирует этот файл в пакет рядом с checks.go; код таблицы зовёт только эти функции.
-// Значения CEL: nil (null), bool, int64, float64, string, []any, map[string]any, celType, *celErr.
-// Ошибка CEL — значение *celErr, а не паника: так её можно поглотить в && и || (false && ошибка = false).
-// Семантика сверена с cel-expr-python оракула skills/lesson-spec/scripts/check_tables.py.
+// CEL subset runtime for gen_checks.py output (ADR-0120, item 2(a)).
+// The generator copies this beside checks.go;table code calls only these functions.
+// CEL values:nil(null), bool, int64, float64, string, []any, map[string]any, celType, *celErr.
+// CEL errors are *celErr values, not panics, so boolean operators can absorb them(false&&error=false).
+// Semantics match check_tables.py's cel-expr-python oracle.
 
 import (
 	"fmt"
@@ -15,10 +15,10 @@ import (
 	"unicode/utf8"
 )
 
-// celErr — значение-ошибка CEL (status error оракула).
+// celErr is a CEL error value, the oracle's error status.
 type celErr struct{ msg string }
 
-// celType — значение типа: результат type() и имена типов.
+// celType is a type() result or type-name value.
 type celType string
 
 const (
@@ -90,7 +90,7 @@ func toDouble(v any) float64 {
 	return v.(float64)
 }
 
-// numCmp: -1, 0, 1; ok=false — несравнимо (NaN). int с int — точно; int с double — через double, как cel-cpp.
+// numCmp returns-1/0/1;ok=false for NaN/incomparability.Compare ints exactly, mixed int/double via double like cel-cpp.
 func numCmp(a, b any) (int, bool) {
 	ia, aInt := a.(int64)
 	ib, bInt := b.(int64)
@@ -115,7 +115,7 @@ func numCmp(a, b any) (int, bool) {
 	return 0, false
 }
 
-// eqv — равенство двух значений без ошибок (разнородное равенство CEL).
+// eqv compares non-error values using CEL heterogeneous equality.
 func eqv(a, b any) bool {
 	if isNum(a) && isNum(b) {
 		c, ok := numCmp(a, b)
@@ -243,7 +243,7 @@ func celIn(x, c any) any {
 		}
 		return false
 	case map[string]any:
-		// Ключ отображения — string, bool, int, double (ключи JSON — строки, прочие не найдутся); иное — ошибка.
+		// Map keys:string, bool, int, double.JSON keys are strings;other valid types miss.Other types error.
 		switch k := x.(type) {
 		case string:
 			_, found := cc[k]
@@ -265,7 +265,7 @@ func celNot(v any) any {
 	return noOverload("!", v)
 }
 
-// celOr — a || b, когда a уже не true: true поглощает ошибку с любой стороны.
+// celOr handles a||b when a is not true;true absorbs errors from either side.
 func celOr(a, b any) any {
 	if isTrue(b) {
 		return true
@@ -282,7 +282,7 @@ func celOr(a, b any) any {
 	return noOverload("||", a, b)
 }
 
-// celAnd — a && b, когда a уже не false: false поглощает ошибку с любой стороны.
+// celAnd handles a&&b when a is not false;false absorbs errors from either side.
 func celAnd(a, b any) any {
 	if isFalse(b) {
 		return false
@@ -487,7 +487,7 @@ func rangeErr(r any) any {
 	return noOverload("<iter_range>", r)
 }
 
-// predErr — ошибка шага exists: первая запомненная остаётся; не bool — тоже ошибка.
+// predErr keeps the first exists error;a non-bool result is also an error.
 func predErr(err, b any) any {
 	if err != nil {
 		return err

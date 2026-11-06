@@ -1,17 +1,5 @@
-"""Тесты части vectors P/03, P/04 (gen_vectors.py по черновику провода wire_draft.py; ADR-0125 доп. (5) п. 5).
-
-Запуск: python3 tools/normgen/test_gen_vectors_lessons.py [-v]   (go 1.22)
-
-1. out свежий; состав = consumers.tsv урока (каждая пара — объявление, пакет P/01 через common_vectors или excluded
-   с причиной); выбор строк — в описи excluded с причиной.
-2. Заглушки — всё красное без паники (кроме family-read — его читает часть families).
-3. Подставной адаптер — нативные ответы, выписанные судьёй из таблиц по правилу сравнения README («@absent» опущен,
-   «@new»/«@same» — метки, у отказа secret-in — текст без пароля): всё зелёное.
-4. Мутанты по правилам — красные: without (поле вне исключённого), secret с masked, vbt-write запечатанной, вызов на
-   таблицу (fault), стенд rid, subset (нет ключа), events (поле события), row (лишнее слово), secret (текст с
-   паролем), turn (пустая метка вместо новой), vbt-write (лишний ключ), fields (поле из списка), setarrays (повтор),
-   raw (байт), stand (код); поле вне списка fields — зелёное (правило не шире README).
-"""
+"""Test P/03/P/04 draft-wire vectors (ADR-0125 addendum 5, item 5). Require fresh output and consumers.tsv roster, with explicit exclusions for undeclared/selected-out rows. Scaffolds fail without panic except family-read. Judge-derived native fixture answers obey absent/new/same and secret-redaction rules. Each rule-specific mutant fails: without, masked secret, sealed values-by-type, whole-table fault, RID stand, subset, events, row, secret leak, turn label, extra writer key, fields, setarray duplicates, raw bytes and stand exit. Fields outside the declared fields list remain accepted so the judge is no broader than the README."""
+import lesson as output_lesson
 import copy
 import importlib
 import json
@@ -41,7 +29,7 @@ def gv(lesson_key):
 
 
 def native(compare, value, state):
-    """Ответ, удовлетворяющий правилу, — из ожидания."""
+    """Derive a rule-satisfying response from the expectation."""
     def drop_absent(v):
         if isinstance(v, dict):
             return {k: drop_absent(x) for k, x in v.items() if x != "@absent"}
@@ -60,7 +48,7 @@ def native(compare, value, state):
         return out
     if compare == "secret":
         out = {"fault": value["fault"], "text": "refused"} if value["fault"] else {"fault": ""}
-        if "masked" in value:                          # консоль: отображение и отказ
+        if "masked" in value:                          # Console mapping and refusal.
             out["masked"] = value["masked"]
         return out
     if compare == "secret-domain":
@@ -91,7 +79,7 @@ def native(compare, value, state):
 
 
 def fake_go(g, mut=None):
-    """Подставной адаптер урока: по функции пакета — карта входа в ответ; mut(decl, no, variant, answer) → answer."""
+    """Fixture lesson adapter maps package-function inputs to responses; mut(decl, no, variant, answer) transforms answers."""
     decls, _ = g.plan(ROOT)
     by_fn = {}
     for d in decls:
@@ -132,7 +120,7 @@ def fake_go(g, mut=None):
                     k = data.decode("utf-8")
                 entries.append((k, ans))
         uniq = {}
-        for k, a in entries:                           # строки с одинаковым входом: тот же ответ — один ключ
+        for k, a in entries:                           # Identical inputs with identical answers share one map key.
             if k in uniq and uniq[k] != a:
                 raise AssertionError(f"{fn}: two rows of one input give different answers: {k[:120]}")
             uniq[k] = a
@@ -166,7 +154,7 @@ def results(mod):
             panics += 1
         if e.get("Test") and e["Action"] in ("pass", "fail"):
             res[e["Test"]] = e["Action"]
-    res = {t: a for t, a in res.items() if not t.startswith("TestCommon")}   # пакеты P/01 — их судит судья P/01, P/02
+    res = {t: a for t, a in res.items() if not t.startswith("TestCommon")}   # P/01 packages are judged by their P/01/P/02 judges.
     return res, panics, done
 
 
@@ -184,7 +172,7 @@ class VectorsLessons(unittest.TestCase):
     def module(self, lesson_key, name, fake=None):
         slug = LESSONS[lesson_key]
         mod = self.tmp / f"{slug}-{name}"
-        shutil.copytree(HERE / "out" / slug / "go", mod)
+        shutil.copytree(output_lesson.output_root() / slug / "go", mod)
         if fake is not None:
             text, fns = fake
             for fn in fns:
@@ -193,12 +181,13 @@ class VectorsLessons(unittest.TestCase):
         return mod
 
     def test_fresh_and_composition(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for lesson_key, slug in LESSONS.items():
             with self.subTest(lesson=lesson_key):
                 g = gv(lesson_key)
                 files, inv = g.build(ROOT)
                 for rel, data in files.items():
-                    kept = HERE / "out" / slug / rel
+                    kept = output_lesson.output_root() / slug / rel
                     self.assertTrue(kept.is_file(), f"{kept} is missing")
                     self.assertEqual(kept.read_bytes(), data, f"{kept} is stale: run gen_vectors.py --lesson {lesson_key}")
                 decls, known = g.plan(ROOT)
@@ -262,7 +251,7 @@ class VectorsLessons(unittest.TestCase):
                                                    set_value(lambda v: dict(v, word="mutant") if v["result"] == "ok" and
                                                              False else (dict(v, result="refused") if v["result"] == "ok" else None))),
             ("03-worker", "secret-leak"): first("common/secret-in", "cases.tsv",
-                                                lambda a: None),  # заменяется ниже — нужен скрытый кусок
+                                                lambda a: None),  # Replaced below; a hidden fragment is required.
             ("03-worker", "vbt-extra"): first("common/values-by-type", "cases.tsv",
                                               set_value(lambda v: dict(v, extra=1) if v.get("status") == "ok" else None),
                                               variant="write"),
@@ -295,7 +284,7 @@ class VectorsLessons(unittest.TestCase):
         })
         g3 = gv("03-worker")
 
-        def leak(d, no, v, cmp, ans):                      # текст отказа повторяет пароль строки
+        def leak(d, no, v, cmp, ans):                      # Refusal text repeats the row's password.
             if leak.done or d["package"] != "common/secret-in" or cmp != "secret":
                 return ans
             pdir, path, rows = g3.read_table(ROOT, d)
@@ -304,11 +293,11 @@ class VectorsLessons(unittest.TestCase):
             if not r["fault"] or not hidden:
                 return ans
             leak.done = True
-            return dict(ans, value={"fault": r["fault"], "text": "bad " + hidden[0]})       # целый секрет — утечка
+            return dict(ans, value={"fault": r["fault"], "text": "bad " + hidden[0]})       # A complete secret is a leak.
         leak.done = False
         cases[("03-worker", "secret-leak")] = leak
 
-        def old_mark(d, no, v, cmp, ans):                  # «@new» — пустая метка вместо новой
+        def old_mark(d, no, v, cmp, ans):                  # Empty label instead of a fresh @new label.
             if old_mark.done or d["package"] != "common/turn":
                 return ans
             pdir, path, rows = gv("04-controller").read_table(ROOT, d)
@@ -330,7 +319,7 @@ class VectorsLessons(unittest.TestCase):
                 self.assertTrue(getattr(mut, "done", True), f"{name}: the mutant does not apply")
                 self.assertEqual(len(fails), 1, f"{name}: red {fails}")
 
-        # без fates (pool P/06): поле fates не судится — зелёное
+        # Missing fates is accepted: pool P/06 does not judge that field.
         fates_applied = []
         def change_fates(value):
             fates_applied.append(True)
@@ -338,7 +327,7 @@ class VectorsLessons(unittest.TestCase):
         fates = first("common/pool", "cases.tsv", set_value(change_fates))
         self.assertEqual(self.mutant("06-console", "without-fates", fates), [])
         self.assertTrue(fates_applied, "the ignored-field control must actually change a native answer")
-        # поле вне списка fields:state (takeable у slot P/04) — правило не шире README: зелёное
+        # A field outside fields:state (P/04 slot takeable) stays accepted; do not broaden the README rule.
         unlisted = first("common/slot", "cases.tsv", set_value(lambda v: dict(v, takeable="mutant") if "takeable" in v else None))
         self.assertEqual(self.mutant("04-controller", "fields-unlisted", unlisted), [])
 

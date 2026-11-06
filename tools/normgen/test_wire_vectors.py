@@ -1,6 +1,6 @@
-"""Независимые пробы нативного судьи wire.tsv: полный ответ, строгая рамка, сравнения, assert.
+"""Independent probes of the wire.tsv native judge: full response, strict framing, comparisons and assertions.
 
-Входы и вердикты ниже заданы вручную, без генерации по expected формы. Судья запускается в отдельном Go-модуле.
+Inputs and verdicts below are handwritten, not generated from the form's expected values. The judge runs in a separate Go module.
 """
 import base64
 import copy

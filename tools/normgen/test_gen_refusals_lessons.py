@@ -1,7 +1,7 @@
-"""Тесты части refusals уроков P/03, P/04 (gen_refusals.py, режим урока без двери; ADR-0125 доп. (5)): out свежий;
-судья refusal_judge.py — PASS; мутанты выхода в новых проекциях (поля и заголовки ответа импортированной двери у peer, word — названные исходы и ячейка,
-глава урока одной главой) — FAIL судьи; форма вне грамматики (fields/headers не у peer) — отказ генератора."""
+"""Test P/03/P/04 refusal projections: freshness, judge PASS, and FAIL for imported peer body/header, word-token/cell and single-chapter metadata mutants. Reject fields/headers outside peer grammar."""
+import lesson as output_lesson
 import csv
+import json
 import os
 import shutil
 import subprocess
@@ -38,20 +38,22 @@ class Refusals(unittest.TestCase):
                               capture_output=True, text=True)
 
     def test_fresh_and_judged(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for lesson, slug in LESSONS.items():
             out = self.tmp / f"fresh-{slug}"
             done = self.gen(lesson, out)
             self.assertEqual(done.returncode, 0, done.stderr)
-            kept = HERE / "out" / slug / "go/refusals/refusals.go"
+            kept = output_lesson.output_root() / slug / "go/refusals/refusals.go"
             self.assertEqual(kept.read_bytes(), (out / "go/refusals/refusals.go").read_bytes(), f"{kept} is stale")
-            done = judge(lesson, HERE / "out" / slug / "go")
+            done = judge(lesson, output_lesson.output_root() / slug / "go")
             self.assertEqual(done.returncode, 0, done.stdout[-1500:])
 
     def test_mutants(self):
-        src = (HERE / "out/p03/go/refusals/refusals.go").read_text(encoding="utf-8")
-        p04 = (HERE / "out/p04/go/refusals/refusals.go").read_text(encoding="utf-8")
-        p05 = (HERE / "out/p05/go/refusals/refusals.go").read_text(encoding="utf-8")
-        p06 = (HERE / "out/p06/go/refusals/refusals.go").read_text(encoding="utf-8")
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
+        src = (output_lesson.output_root() / 'p03/go/refusals/refusals.go').read_text(encoding="utf-8")
+        p04 = (output_lesson.output_root() / 'p04/go/refusals/refusals.go').read_text(encoding="utf-8")
+        p05 = (output_lesson.output_root() / 'p05/go/refusals/refusals.go').read_text(encoding="utf-8")
+        p06 = (output_lesson.output_root() / 'p06/go/refusals/refusals.go').read_text(encoding="utf-8")
         muts = {
             ("03-worker", "fields"): src.replace('Fields: []string{"error"}', "Fields: nil", 1),
             ("03-worker", "headers"): src.replace('{"Retry-After", "1"}', '{"Retry-After", "2"}', 1),
@@ -70,7 +72,7 @@ class Refusals(unittest.TestCase):
                 base = {"03-worker": src, "04-controller": p04, "05-resource": p05, "06-console": p06}[lesson]
                 self.assertNotEqual(text, base, f"{name}: the mutant does not apply")
                 mod = self.tmp / f"mut-{name}"
-                shutil.copytree(HERE / "out" / LESSONS[lesson] / "go", mod)
+                shutil.copytree(output_lesson.output_root() / LESSONS[lesson] / "go", mod)
                 (mod / "refusals/refusals.go").write_text(text, encoding="utf-8")
                 done = judge(lesson, mod)
                 self.assertEqual(done.returncode, 1, f"{name} survives: {done.stdout[-500:]}")
@@ -89,12 +91,13 @@ class Refusals(unittest.TestCase):
                 self.assertNotEqual(done.returncode, 0, f"{name}: accepted")
 
     def test_p09_stored_outcome_has_no_http_body(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         source = ROOT / "Platform/09-agent/forms/refusals.tsv"
         rows = list(csv.DictReader([s for s in source.read_text(encoding="utf-8").split("\n")
                                     if s and not s.startswith("#")], delimiter="\t"))
         row = next(r for r in rows if r["name"] == "agent_edit_conflict")
         self.assertEqual((row["surface"], row["code"], row["response_schema"]), ("call", "412", "-"))
-        src = (HERE / "out/p09/go/refusals/refusals.go").read_text(encoding="utf-8")
+        src = (output_lesson.output_root() / 'p09/go/refusals/refusals.go').read_text(encoding="utf-8")
         declaration = next(line for line in src.split("\n") if line.startswith("var AgentEditConflict = "))
         self.assertIn('Surface: "call", Exit: -1, AnyNonZero: false, Status: 412,', declaration)
         self.assertIn('Response: ""', declaration)
@@ -138,6 +141,149 @@ class Refusals(unittest.TestCase):
                 done = self.gen("09-agent", out, path)
                 self.assertNotEqual(done.returncode, 0, done.stderr)
 
+
+
+class OptionalP06Fields(unittest.TestCase):
+    """Independent actual source/OpenAPI roles; rendering only creates the subject."""
+    def setUp(self):
+        import yaml
+        import gen_refusals
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        self.yaml, self.gen = yaml, gen_refusals
+        self.tmp = tempfile.TemporaryDirectory(prefix='p06-refusal-fields-')
+        self.addCleanup(self.tmp.cleanup)
+        self.home = Path(self.tmp.name)
+        self.form = self.home / 'refusals.tsv'
+        self.api = self.home / 'api.yaml'
+        source = ROOT / 'Platform/06-console/forms/refusals.tsv'
+        self.rows = list(csv.DictReader((line for line in source.read_text().split('\n')
+                                        if line and not line.startswith('#')), delimiter='\t'))
+        self.names = list(self.rows[0])
+        self.name = 'c67_027_503_1'
+        selected = [row for row in self.rows if row['name'] == self.name]
+        self.assertEqual(len(selected), 1)
+        self.assertEqual(selected[0]['fields'], 'detail,error,supervision?')
+        self.api_text = (ROOT / 'Platform/06-console/spec/06-console.api.openapi.yaml').read_text()
+        self.doc = yaml.safe_load(self.api_text)
+        self.assertEqual(set(self.doc['components']['schemas']['VerifyUnavailable']['required']), {'detail', 'error'})
+        self.write()
+        change = patch.object(self.gen, 'L', SimpleNamespace(key='06-console', code='P/06',
+                               openapi=self.api, go_module='refusalprobe'))
+        change.start()
+        self.addCleanup(change.stop)
+
+    def write(self):
+        with self.form.open('w', newline='') as stream:
+            writer = csv.DictWriter(stream, fieldnames=self.names, delimiter='\t', lineterminator='\n')
+            writer.writeheader()
+            writer.writerows(self.rows)
+        # Preserve the published YAML subset; do not reserialize unrelated schemas.
+        start = self.api_text.index('    VerifyUnavailable:\n')
+        end = self.api_text.index('    ManifestSource:\n', start)
+        section = self.api_text[start:end]
+        required = self.doc['components']['schemas']['VerifyUnavailable']['required']
+        before = '      required:\n      - detail\n      - error\n'
+        self.assertEqual(section.count(before), 1)
+        after = '      required: ' + self.yaml.safe_dump(required, default_flow_style=True).strip() + '\n'
+        self.api.write_text(self.api_text[:start] + section.replace(before, after) + self.api_text[end:])
+
+    def selected(self):
+        return next(row for row in self.rows if row['name'] == self.name)
+
+    def wanted(self):
+        row = self.selected()
+        fields = row['fields'].split(',')
+        names, optional = [v.rstrip('?') for v in fields], [v[:-1] for v in fields if v.endswith('?')]
+        schema = self.doc['components']['schemas'][row['response_schema']]
+        self.assertLessEqual(set(names), set(schema['properties']))
+        self.assertEqual(set(names) - set(optional), set(schema['required']))
+        return names, optional
+
+    def compile_readback(self, source):
+        home = self.home / 'compiled'
+        (home / 'refusals').mkdir(parents=True, exist_ok=True)
+        (home / 'go.mod').write_text('module refusalprobe\n\ngo 1.22\n')
+        (home / 'refusals/refusals.go').write_text(source)
+        (home / 'main.go').write_text('''package main
+import("encoding/json";"os";"refusalprobe/refusals")
+func main(){json.NewEncoder(os.Stdout).Encode(map[string]any{"rows":refusals.All,"selected":refusals.ByName("c67_027_503_1")})}
+''')
+        done = subprocess.run(['go', 'build', '-o', str(home / 'probe'), '.'], cwd=home,
+                              env=ENV, capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0, 'checking compile error, not a kill: ' + done.stderr)
+        done = subprocess.run([str(home / 'probe')], cwd=home, capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0, 'checking execution error, not a kill: ' + done.stderr)
+        result = json.loads(done.stdout)
+        self.assertEqual([row['Name'] for row in result['rows']], [row['name'] for row in self.rows])
+        self.assertEqual(len({row['Name'] for row in result['rows']}), len(self.rows))
+        self.assertEqual(result['selected']['Name'], self.name)
+        self.assertEqual(result['selected']['Response'], 'VerifyUnavailable')
+        return result['selected']
+
+    def test_actual_and_coherent_required_optional_roles_compile(self):
+        for supervision_optional in (True, False):
+            self.selected()['fields'] = 'detail,error,supervision' + ('?' if supervision_optional else '')
+            required = self.doc['components']['schemas']['VerifyUnavailable']['required']
+            if not supervision_optional:
+                required.append('supervision')
+            self.write()
+            fields, optional = self.wanted()
+            got = self.compile_readback(self.gen.render(self.form)['refusals.go'])
+            self.assertEqual(got['Fields'], fields)
+            self.assertEqual(got.get('OptionalFields') or [], optional)
+
+    def test_required_only_projection_is_valid_and_keeps_full_openapi(self):
+        # Platform/06-console/forms/README.md:35 projects required direct
+        # properties; optional and conditional fields stay in the full OpenAPI.
+        schema_before = json.dumps(self.doc['components']['schemas']['VerifyUnavailable'], sort_keys=True)
+        self.selected()['fields'] = 'detail,error'
+        self.write()
+        fields, optional = self.wanted()
+        got = self.compile_readback(self.gen.render(self.form)['refusals.go'])
+        self.assertEqual(got['Fields'], ['detail', 'error'])
+        self.assertEqual(got.get('OptionalFields') or [], [])
+        self.assertEqual((fields, optional), (['detail', 'error'], []))
+        self.assertEqual(self.selected()['response_schema'], 'VerifyUnavailable')
+        self.assertEqual(json.dumps(self.doc['components']['schemas']['VerifyUnavailable'], sort_keys=True), schema_before)
+        supervision = self.doc['components']['schemas']['VerifyUnavailable']['properties']['supervision']
+        self.assertEqual(supervision['required'], ['unreadable'])
+        self.assertIs(supervision['properties']['unreadable']['const'], True)
+
+    def test_role_mismatches_malformed_duplicates_and_surfaces_refuse(self):
+        original = self.selected()['fields']
+        for fields in ('detail,error,supervision', 'detail?,error,supervision?', 'error,supervision?', 'detail,supervision?',
+                       'detail,error,supervision??', 'detail,error,?', 'detail,error,sup?ervision',
+                       'detail,error,supervision?,supervision', 'detail,error,supervision,supervision?',
+                       'detail,error,unknown?', 'detail,,error,supervision?'):
+            self.selected()['fields'] = fields
+            self.write()
+            with self.subTest(fields=fields), self.assertRaises(self.gen.GenError):
+                self.gen.render(self.form)
+        self.selected()['fields'] = original
+        for surface in ('call', 'cli', 'start', 'process', 'peer'):
+            self.selected()['surface'] = surface
+            self.write()
+            with self.subTest(surface=surface), self.assertRaises(self.gen.GenError):
+                self.gen.render(self.form)
+        self.selected()['surface'] = 'http'
+        self.selected()['response_schema'] = '-'
+        self.write()
+        with self.assertRaises(self.gen.GenError):
+            self.gen.render(self.form)
+
+    def test_compiled_field_role_mutants_are_semantic_disagreements(self):
+        fields, optional = self.wanted()
+        original = self.gen.render(self.form)['refusals.go']
+        line = next(line for line in original.split('\n') if 'Name: "c67_027_503_1"' in line)
+        for old, new in [('OptionalFields: []string{"supervision"}', 'OptionalFields: nil'),
+                         ('OptionalFields: []string{"supervision"}', 'OptionalFields: []string{"detail"}'),
+                         ('Fields: []string{"detail", "error", "supervision"}', 'Fields: []string{"detail", "error"}')]:
+            self.assertEqual(line.count(old), 1)
+            changed = original.replace(line, line.replace(old, new), 1)
+            self.assertNotEqual(changed, original)
+            got = self.compile_readback(changed)
+            self.assertNotEqual((got['Fields'], got.get('OptionalFields') or []), (fields, optional))
 
 if __name__ == "__main__":
     unittest.main()

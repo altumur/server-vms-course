@@ -1,5 +1,5 @@
 // Hand-written runtime of the part `loader` (tools/normgen/manifestrt/go; the kit copies it, DO NOT EDIT): layer of the
-// form (P/02.1 Н3 step 2) — JSON Schema 2020-12 by the pinned github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 over the
+// form (P/02.1 N3 step 2):JSON Schema2020-12 via pinned santhosh-tekuri/jsonschema/v6 v6.0.2 over the
 // embedded `02.1-installer.schema.json`; layer 2 (x-integer-place, LAYERS § 2) and the walk of the schema places
 // (the chain of a place: the place, the target of `$ref`, `allOf` with `$ref`; variants `allOf` of `if: {type}`/`then`).
 package manifest

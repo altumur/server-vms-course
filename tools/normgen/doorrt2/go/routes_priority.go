@@ -1,13 +1,13 @@
-// Ручная среда маршрутизации двери урока по x-route-priority (ADR-0125 № 2; P/05-R057 и его 4 правила): выбор
-// операции по таблицам routes.go. Копируется только уроку, у которого в OpenAPI есть x-route-priority.
+// Handwritten x-route-priority router (ADR-0125 generator 2; P/05-R057's four rules), using routes.go.
+// Copy only for lessons whose OpenAPI declares x-route-priority.
 //
-// Путь не декодируется целиком до совпадения: литералы сравниваются по сырым байтам сегментов, хвостовой «/» не
-// нормализуется, «%2F» не делит сегмент. Параметр segment берёт один сырой сегмент, remainder (только последним) —
-// сырой остаток пути целиком (пустой хвост и a//b — как есть). Из шаблонов, совпавших по форме, остаются те, у
-// которых есть метод запроса; из них — наименьший x-route-priority. Совпадение есть, метода нет — 405 без тела; нет
-// совпадения — 404 без тела. Затем параметры декодируются (x-path-decode percent-segment: каждый сегмент отдельно,
-// декодированный «/» недопустим) и проверяются по схеме; ошибка параметра — x-path-error[метод] без отката к другому
-// маршруту.
+// Do not decode the entire path before matching: compare literal segment bytes, keep trailing slashes
+// and do not split on %2F. segment captures one raw segment; final-only remainder captures the whole
+// raw suffix, including empty tails and a//b. From shape matches, retain the request method, then choose
+// minimum x-route-priority. Shape without method gives bodyless405; no match gives bodyless404.
+// Decode parameters afterward, each segment independently under percent-segment; decoded '/' is invalid.
+// Validate their schemas; failure uses the method's x-path-error without falling back to another
+// route.
 package apidoor
 
 import (
@@ -15,14 +15,14 @@ import (
 	"unicode/utf8"
 )
 
-// Match — выбранная операция и параметры пути (декодированные).
+// Match contains the selected operation and decoded path parameters.
 type Match struct {
 	Op     Op
 	Params map[string]string
 }
 
-// RouteError — отказ маршрута: Code 404 / 405 (Response "" — без тела) или ошибка параметра Param операции Op по
-// x-path-error (Code и Response — схема тела components/schemas или "" — без тела).
+// RouteError has Code404/405 (empty Response means no body), or Op/Param's x-path-error status and
+// component response schema name, again empty for no body.
 type RouteError struct {
 	Code     int
 	Response string
@@ -45,7 +45,7 @@ type prioTemplate struct {
 	priority int
 }
 
-// pathError — x-path-error параметра по методу: статус и схема тела ("" — без тела).
+// pathError maps a parameter/method to status and response schema, empty for no body.
 type pathError struct {
 	status   int
 	response string
@@ -55,7 +55,7 @@ func (t prioTemplate) shape(raw []string) (map[string]string, bool) {
 	params := map[string]string{}
 	for i, s := range t.segs {
 		if s.remainder {
-			if i >= len(raw) { // остаток — после своего «/»: «/v1/objects» не шаблон «/v1/objects/{key}»
+			if i >= len(raw) { // Remainder starts after its slash: /v1/objects does not match /v1/objects/{key}.
 				return nil, false
 			}
 			params[s.param] = strings.Join(raw[i:], "/")
@@ -75,7 +75,7 @@ func (t prioTemplate) shape(raw []string) (map[string]string, bool) {
 	return params, len(raw) == len(t.segs)
 }
 
-// decodeSegment — percent-segment: один сегмент, %XX → байт; декодированный «/» или неверный %XX — ошибка.
+// decodeSegment decodes one percent-segment; malformed %XX or decoded '/' errors.
 func decodeSegment(s string) (string, bool) {
 	d, ok := unescapeSegment(s)
 	if !ok || strings.Contains(d, "/") {
@@ -120,7 +120,7 @@ func hexDigit(c byte) (byte, bool) {
 	return 0, false
 }
 
-// Route — операция метода и сырого пути запроса (target без query) по правилам x-route-priority урока.
+// Route matches the request method and raw path without query under lesson x-route-priority rules.
 func Route(method, rawPath string) (Match, *RouteError) {
 	if !strings.HasPrefix(rawPath, "/") {
 		return Match{}, &RouteError{Code: 404, Reason: "not a request path"}
@@ -175,10 +175,10 @@ func Route(method, rawPath string) (Match, *RouteError) {
 			}
 		}
 		if ok && v == "" {
-			ok = false // пустой захват — ошибка параметра операции
+			ok = false // An empty capture is an operation parameter error.
 		}
 		if ok && !utf8.ValidString(dec) {
-			ok = false // значение параметра — строка UTF-8 (s32: %FF)
+			ok = false // Parameter values must be UTF-8 strings (s32:%FF).
 		}
 		if ok {
 			if name := pathSchemas[best.path][s.param]; name != "" && Validate(name, dec) != nil {
@@ -198,8 +198,8 @@ func Route(method, rawPath string) (Match, *RouteError) {
 	return Match{Op: op, Params: out}, nil
 }
 
-// Admitted — роль сертификата допущена к операции по door-roles.tsv (режим mtls): «*» — любая роль пакета;
-// «<sub>worker» — «<имя>worker» для имени загруженного каталога (isSub). Операция без строки таблицы — не допущена.
+// Admitted checks certificate roles against door-roles.tsv in mtls mode: '*' allows any kit role;
+// <sub>worker requires a loaded isSub name. An operation absent from the table is not admitted.
 func Admitted(op Op, role string, isSub func(string) bool) bool {
 	for _, r := range opRoles[op] {
 		switch {

@@ -1,12 +1,5 @@
-"""Тесты генератора № 4 ADR-0125 (tools/normgen/gen_refusals.py) и его судьи tools/normgen/refusal_judge.py.
-
-Запуск: python3 tools/normgen/test_gen_refusals.py [-v]  (go 1.22 в PATH; сети не нужно).
-
-- выход out/p01-1/go/refusals совпадает с тем, что генератор строит сейчас;
-- судья проходит на сгенерированном пакете и падает на мутантах (код, поле, заголовок, имя);
-- таблица вне формы — отказ генератора (GenError);
-- пакет Б с частями door и refusals собирается и проходит go vet; Check, LogLine, Exit ведут себя по каталогу.
-"""
+"""Test gen_refusals/refusal_judge (ADR-0125 generator 4): output freshness, judge PASS on generated code and FAIL on status/field/header/name mutants, malformed-table GenError, door+refusals kit build/vet, and Check/LogLine/Exit catalog behavior. Go 1.22, no network."""
+import lesson as output_lesson
 import hashlib
 import shutil
 import subprocess
@@ -22,7 +15,7 @@ sys.path.insert(0, str(HERE / "kit"))
 import gen_refusals  # noqa: E402
 from gen_checks import GenError  # noqa: E402
 
-OUT = HERE / "out/p01-1/go"
+OUT = output_lesson.output_root() / 'p01-1/go'
 TABLE = gen_refusals.DEFAULT_TABLE.read_text(encoding="utf-8")
 
 
@@ -88,15 +81,18 @@ class GenRefusals(unittest.TestCase):
         cls.tmp.cleanup()
 
     def test_out_is_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for name, text in gen_refusals.render().items():
             self.assertEqual((OUT / "refusals" / name).read_text(encoding="utf-8"), text, "run gen_refusals.py")
 
     def test_judge_passes(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         code, out = judge(OUT)
         self.assertEqual(code, 0, out[-3000:])
         self.assertRegex(out, r"refusals: (\d+)/\1 PASS")
 
     def test_judge_catches_mutants(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         mutants = [
             ('Name: "cas_mismatch", Surface: "http", Code: 409', 'Name: "cas_mismatch", Surface: "http", Code: 410'),
             ('Fields: []Field{{"index", false}, {"key", true}}', 'Fields: []Field{{"index", false}}'),

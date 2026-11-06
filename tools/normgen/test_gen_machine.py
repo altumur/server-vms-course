@@ -1,16 +1,5 @@
-"""Судья частей машин (gen_machine.py; slot-capture P/03, slot-fate и slot-release P/04; ADR-0125 доп. (5)).
-
-Запуск: /opt/check-env/lesson-spec/bin/python tools/normgen/test_gen_machine.py [-v]   (нужны cel_expr_python и go 1.22)
-
-1. out свежий: выход каждого урока с машинами равен свежему прогону генератора; go vet и go test пакета — зелёные.
-2. Оракул: судья сам читает форму (шапку #var/#const и строки) и сам строит входы — случайные и граничные (литералы и
-   #const ± шаг, уставки ЗАГЛАВНЫМИ — тоже случайные), независимо от перебора генератора; условия и аргументы считает
-   cel_expr_python; первая совпавшая строка состояния и её аргументы (с типами) должны совпасть с Go Step; переполнение
-   int в аргументе (ошибка CEL) — ошибка Step.
-3. Мутанты формы: отрицание условия строки, другое next, другой строковый литерал аргумента, обмен соседних строк
-   состояния. Мутант берётся, только если оракул находит вход, где его исход иной (не равносилен); выбор перехода
-   мутанта с тестами исходной формы (form_test.go) должен быть красным.
-"""
+"""Judge P/03 slot-capture and P/04 slot-fate/slot-release generators (ADR-0125 addendum 5). Require fresh output, vet and passing closed form tests. Independently reread #var/#const/rows, generate random/boundary inputs including settings, and evaluate conditions/arguments with cel_expr_python. Go Step must match the first state-row and typed arguments; argument integer overflow must error. Form mutants negate conditions, change next/string arguments or swap adjacent rows. Keep only mutants with an oracle-distinguishing input; their generated machine must fail original form tests. Run test_gen_machine.py with CEL and Go 1.22."""
+import lesson as output_lesson
 import json
 import math
 import os
@@ -39,7 +28,7 @@ def camel(name):
 
 
 class Form:
-    """Своё чтение формы судьи: #var, #const, строки (n, state, condition, action, next)."""
+    """Independently read machine #var/#const and n, state, condition, action, next rows."""
 
     def __init__(self, text):
         self.vars, self.consts, self.rows = {}, {}, []
@@ -75,7 +64,7 @@ class Oracle:
         self.const_values = {n: (float(v) if t == "double" else int(v)) for n, (t, v) in form.consts.items()}
 
     def run(self, state, env):
-        """→ (n | None, [(тип, значение)] | "overflow")."""
+        """Return (row-or-None, [(type, value)] or 'overflow')."""
         data = dict(env, **self.const_values)
         for r in self.form.rows:
             if r["state"] != state:
@@ -111,7 +100,7 @@ def tagged(x):
 
 
 def numbers(form):
-    """Числа формы: литералы условий и аргументов и #const."""
+    """Collect numeric literals from conditions/arguments and #const declarations."""
     out = {float(v) for _, v in form.consts.values()}
     for r in form.rows:
         for lit in re.findall(r"(?<![\w.\"])(\d+(?:\.\d+)?)(?![\w\"])", r["condition"] + " " + r["action"]):
@@ -128,7 +117,7 @@ def strings(form):
 
 
 def inputs(form, rnd, n):
-    """[(state, env)] — граничные и случайные входы судьи."""
+    """Return boundary/random judge inputs as [(state, env)]."""
     nums, strs = numbers(form), strings(form)
     out = []
     for _ in range(n):
@@ -156,7 +145,7 @@ def inputs(form, rnd, n):
                     if rnd.random() < 0.02:
                         v = INT_MAX - rnd.choice([0, 1])
                 env[name] = v
-        # уставки: иногда равны сравниваемому числу (граница по уставке)
+        # Settings sometimes equal the compared value to cover their boundaries.
         for name, (t, _) in form.vars.items():
             if name.isupper() and t == "double" and rnd.random() < 0.3:
                 for other, (ot, _) in form.vars.items():
@@ -243,7 +232,7 @@ def form_path(root, lesson, part):
 
 
 def go_double(v):
-    """repr Python → запись fmt.Sprint(float64) Go для сравнения."""
+    """Format Python numeric repr like Go fmt.Sprint(float64) for comparison."""
     x = float(v)
     if x == int(x) and abs(x) < 1e21:
         return str(int(x))
@@ -297,7 +286,7 @@ def disagreements(oracle, cases, got):
 
 
 def mutants(form):
-    """[(имя, текст формы)] — мутанты строк."""
+    """Return [(name, form text)] row mutants."""
     head = [ln for ln in form.text.split("\n") if ln.startswith("#") or ln.startswith("n\t")]
     rows = form.rows
     states = sorted({r["state"] for r in rows} | {r["next"] for r in rows})
@@ -340,11 +329,12 @@ class MachineTests(unittest.TestCase):
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def fresh_out(self, lesson):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         slug, _ = LESSONS[lesson]
         out = self.tmp / f"fresh-{slug}"
         done = gen(lesson, out)
         self.assertEqual(done.returncode, 0, done.stderr)
-        kept = HERE / "out" / slug / "go"
+        kept = output_lesson.output_root() / slug / "go"
         for p in sorted((out / "go").rglob("*")):
             if p.is_file() and p.name != "go.mod":
                 rel = p.relative_to(out / "go")
@@ -407,6 +397,7 @@ class MachineTests(unittest.TestCase):
                     self.assertEqual(move["args"][1][1]["gen"], ["int", str(value)])
 
     def test_mutants(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         rnd = random.Random(7)
         for lesson, (slug, parts) in LESSONS.items():
             for part in parts:
@@ -434,11 +425,11 @@ class MachineTests(unittest.TestCase):
                         fp.write_text(text, encoding="utf-8")
                         out = root / "out"
                         done = gen(lesson, out, root, [part])
-                        if done.returncode:            # генератор отверг мутанта (затенённая строка) — убит
+                        if done.returncode:            # A generator-rejected shadowing mutant is killed.
                             killed += 1
                             continue
                         pkg = part.replace("-", "")
-                        shutil.copy(HERE / "out" / slug / "go" / pkg / "form_test.go", out / "go" / pkg / "form_test.go")
+                        shutil.copy(output_lesson.output_root() / slug / "go" / pkg / "form_test.go", out / "go" / pkg / "form_test.go")
                         done = go(["test", "-count=1", f"./{pkg}/"], out / "go")
                         if done.returncode == 0:
                             survived += 1
@@ -448,8 +439,7 @@ class MachineTests(unittest.TestCase):
                 self.assertGreater(killed, len(form.rows), f"{part}: too few mutants")
 
     def test_kit(self):
-        """build_kit: части машин урока — пакет компилируется под модулем урока, тесты зелёные, impl — editable;
-        машина чужого урока — отказ."""
+        """Build machine kit parts: lesson module compiles, closed tests pass and impl files remain editable. Reject another lesson's machine."""
         for lesson, (slug, parts) in LESSONS.items():
             dst = self.tmp / f"kit-{slug}"
             cmd = [sys.executable, str(HERE / "kit/build_kit.py"), str(dst), "--lesson", lesson]
@@ -469,7 +459,8 @@ class MachineTests(unittest.TestCase):
         self.assertIn("no machine form slot-fate.tsv", done.stderr)
 
     def test_refusals(self):
-        """Генератор отвергает форму вне грамматики: необъявленная переменная, тип, затенённая строка, чужое состояние."""
+        """Reject forms with undeclared variables/types, shadowed rows or foreign states."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         lesson, part = "04-controller", "slot-release"
         text = form_path(ROOT, lesson, part).read_text(encoding="utf-8")
         bad = {

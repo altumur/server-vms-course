@@ -1,21 +1,11 @@
-"""Генератор части пакета `admin` (Архитектор 2026-11-05: MiniMax 30–32 на daemon_box не находит, куда писать
-backup/import): подкоманды admin_ops P/01.3 Н1.3 — закрытый диспетчер и по YOURS-заготовке на подкоманду.
+"""Generate the admin kit part: a closed dispatcher and one YOURS scaffold per P/01.3 N1.3 admin_ops subcommand (Architect, 2026-11-05; MiniMax 30-32 needed explicit backup/import implementation files).
 
-Запуск: python3 tools/normgen/gen_admin.py [<out>]   (по умолчанию tools/normgen/out/p01-1)
+  python3 tools/normgen/gen_admin.py [<out>]
+Default: tools/normgen/out/p01-1. Output: <out>/go/admin. admin.go is closed and defines Env, Run(f, env), and NotInStage. Run dispatches on f.Cmd; NotInStage prints `configstore <cmd>: not in this stage` and returns 1. Invalid flags return 2 in launch before Run.
 
-Выход <out>/go/admin (пакет admin модуля out/go):
-- admin.go — закрыт (DO NOT EDIT): Env, Run(f, env) — по f.Cmd вызывает функцию подкоманды, NotInStage(cmd, env) —
-  «configstore <cmd>: not in this stage», exit 1 (не 2: 2 — отказ формы флагов, его даёт launch до Run);
-- <подкоманда>.go — YOURS, пакет кладёт один раз (как coreadapter/<метод>.go; --seed бережёт): func <Имя>(f *flags.Flags,
-  env Env) int с телом NotInStage; над функцией — места норм: грамматика подкоманды и оговорки admin_ops (Н1.3), пункты
-  блока Н1.3 по таблице KEYS (copy, import, floor, box, repeat), предложения P/01.3-R018 о подкоманде, процедура Н3
-  «recover» (recover), дверь HTTP таблицы P/01.3-R016 или P/01.2 Н2 (status, join, leave, rights), флаги daemon-flags.tsv
-  с колонкой commands ∋ подкоманда, строки refusals.tsv по таблице REFUSALS;
-- own.go — YOURS: Own — карта своих команд профиля стенда (spoil-row …), launch.Main смотрит её до разбора флагов.
-Список подкоманд — колонка commands формы daemon-flags.tsv (кроме daemon); он должен совпасть с грамматикой admin_ops
-норм и с таблицами генератора — иначе отказ генератора. Подключение — в закрытом launch: App.Admin nil → admin.Run.
-Судья — admin_judge.py (подкоманда без реализации → «not in this stage» exit 1; флаг не по форме → 2) и test_gen_admin.py.
-"""
+Each <command>.go is YOURS, installed once and protected by --seed, with func <Name>(f *flags.Flags, env Env) int initially calling NotInStage. Its comments bind the command grammar, admin_ops clauses, KEYS-selected copy/import/floor/box/repeat clauses, relevant P/01.3-R018 sentences, the complete recover N3 procedure, the relevant HTTP door, command-specific flags and REFUSALS-selected rows. own.go provides the YOURS Own map for stand commands such as spoil-row, checked by launch.Main before parsing flags.
+
+The ordered roster comes from daemon-flags.tsv commands, excluding daemon. It must agree with admin_ops and the generator declarations or generation refuses. Closed launch uses admin.Run when App.Admin is nil. Judges: admin_judge.py and test_gen_admin.py; unimplemented commands return 1, invalid flags return 2."""
 import re
 import sys
 from pathlib import Path
@@ -23,8 +13,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
-import gen_core  # noqa: E402 — разбор норм, обёртка комментария, строки refusals.tsv
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import gen_core  # noqa: E402 -- norm parsing, comment wrapping and refusals.tsv rows
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
 import tsv_input  # noqa: E402 — source cells before command interpretation
 L = lesson.CURRENT
 
@@ -37,11 +27,11 @@ REFUSALS = L.form("refusals.tsv")
 COMMON = ROOT / "Platform/common/acceptance/README.md"
 JUDGE = HERE / "admin_judge.py"
 GO_MODULE = L.go_module
-BLOCK_ANCHOR = "P/01.3-R006"            # Н1.3 Store — блок yaml: daemon, copy, …, admin_ops, floor, import, box, repeat
+BLOCK_ANCHOR = "P/01.3-R006"            # N1.3 Store YAML block: daemon, copy, ..., admin_ops, floor, import, box, repeat.
 CLI_ANCHOR = "P/01.3-R018"              # CLI backup, restore/import, recover, admit
 RECOVER = "recover the store (no majority)"
 
-# Подкоманда → пункты блока Н1.3: (ключ, "all" — пункт целиком | "word" — только оговорки (через «;»), где названа подкоманда).
+# Subcommand -> N1.3 clauses: key plus all (whole clause) or word (semicolon clauses mentioning the command).
 KEYS = {
     "recover": [("box", "word")],
     "restore": [("copy", "all"), ("floor", "all"), ("box", "word")],
@@ -53,14 +43,14 @@ KEYS = {
     "backup": [("copy", "all")],
     "rights": [],
 }
-# Подкоманда → дверь HTTP, к которой она обращается через admin.sock: (файл норм, якорь, отбор как gen_core.STUBS).
+# Subcommand -> HTTP door called through admin.sock: norm file, anchor and gen_core.STUBS-style selector.
 DOORS = {
     "status": [(NORMS_13, "P/01.3-R016", "door:GET `/v1/status`")],
     "join": [(NORMS_13, "P/01.3-R016", "door:POST `/v1/join`")],
     "leave": [(NORMS_13, "P/01.3-R016", "door:POST `/v1/leave`")],
     "rights": [(NORMS_12, "P/01.2-R014", None)],
 }
-# Подкоманда → строки forms/refusals.tsv (по имени).
+# Subcommand -> named forms/refusals.tsv rows.
 REFUSAL_ROWS = {
     "recover": ("recover_box", "recover_isolated", "recover_upper", "recover_peers", "recovery_unsafe", "clock_early"),
     "restore": ("copy_input", "clock_early"),
@@ -72,7 +62,7 @@ REFUSAL_ROWS = {
     "backup": ("backup_inside_dir",),
     "rights": ("rights_not_loaded",),
 }
-# Свои команды профиля стенда: имя → (функция, строка таблицы директив общего README, которая её зовёт).
+# Stand-profile own commands: name -> (function, calling directive row in the common README).
 OWN = {"spoil-row": ("SpoilRow", "| `@spoil row <key>` / `@spoil row-index <key>` |")}
 LINE = gen_core.LINE
 
@@ -86,7 +76,7 @@ def go_name(cmd):
 
 
 def commands():
-    """Подкоманды формы daemon-flags.tsv по порядку появления в колонке commands (кроме daemon) и флаги каждой."""
+    """Return subcommands in first-appearance order from daemon-flags.tsv commands, excluding daemon, with their flags."""
     order, flags = [], {}
     try:
         table = tsv_input.read(FLAGS, root=ROOT)
@@ -107,7 +97,7 @@ def commands():
 
 
 def block():
-    """Блок yaml Н1.3 (якорь BLOCK_ANCHOR) → {ключ верхнего уровня: текст пункта одной строкой}."""
+    """Read the N1.3 YAML block at BLOCK_ANCHOR as {top-level key: single-line clause text}."""
     text = NORMS_13.read_text(encoding="utf-8")
     m = re.search(r"<!-- req: " + re.escape(BLOCK_ANCHOR) + r" -->\n```yaml\n(.*?)\n```", text, re.S)
     if not m:
@@ -115,10 +105,10 @@ def block():
     keys, cur = {}, None
     for line in m[1].split("\n"):
         k = re.match(r"^([a-z_]+):\s*(.*)$", line)
-        sub = re.match(r"^  ([a-z_]+):\s+(.*)$", line)     # подпункт (floor: generation, when, form, issue) — с меткой
+        sub = re.match(r"^  ([a-z_]+):\s+(.*)$", line)     # Label each subclause: floor generation, when, form, issue.
         if k:
             cur = k[1]
-            head = re.sub(r"^#\s*(.*)$", r"(\1)", k[2].strip())  # «# platform/epoch_floor {…}» — пояснение пункта
+            head = re.sub(r"^#\s*(.*)$", r"(\1)", k[2].strip())  # '# platform/epoch_floor {...}' explains the clause.
             keys[cur] = [head] if head else []
         elif sub and cur:
             keys[cur].append(f"; {sub[1]}: {sub[2].strip()}" if keys[cur] else f"{sub[1]}: {sub[2].strip()}")
@@ -128,7 +118,7 @@ def block():
 
 
 def grammar(admin_ops):
-    """admin_ops → ({подкоманда: её грамматика}, оговорки после грамматики)."""
+    """Parse admin_ops into ({subcommand: grammar}, clauses following the grammar)."""
     m = re.match(r"((?:[a-z]+[^|]*?\|\s*)+rights \[-groups\])\s*(.*)$", admin_ops)
     if not m:
         raise GenError(f"{NORMS_13.name}: admin_ops — no grammar «status | … | rights [-groups]»")
@@ -139,7 +129,7 @@ def grammar(admin_ops):
 
 
 def mentions(text, cmd):
-    """Оговорки текста (через «;»), где подкоманда названа словом."""
+    """Select semicolon-separated clauses mentioning the subcommand as a word."""
     return [c.strip() for c in text.split(";") if re.search(r"(?<![\w-])" + re.escape(cmd) + r"(?![\w-])", c)]
 
 
@@ -149,28 +139,28 @@ def anchor_items(path):
 
 def stub_comment(cmd, gram, rest, keys, cli, recover, flags):
     name = go_name(cmd)
-    lines = [f"// {name} — the subcommand `configstore {gram}` (P/01.3 Н1.3 admin_ops): exit 1 «not in this stage» until",
+    lines = [f'// {name} — the subcommand `configstore {gram}` (P/01.3 N1.3 admin_ops): exit 1 not in this stage until',
              "// your stage needs it; then replace the body (the signature stays: Run calls it). The flags are parsed",
              "// and checked by the form already (a flag out of form — code 2 before Run); f.Args — the positional words.",
-             "// By the norms:", f"//   spec/{NORMS_13.name} «Н1.3 Store» (req: {BLOCK_ANCHOR}):"]
+             "// By the norms:", f'//   spec/{NORMS_13.name} N1.3 Store (req: {BLOCK_ANCHOR}):']
     lines += gen_core.wrap(f"admin_ops: {gram}", "//     ", "//       ")
     for clause in mentions(rest, cmd):
         lines += gen_core.wrap(f"admin_ops: {clause}", "//     ", "//       ")
     for key, how in KEYS[cmd]:
         if key not in keys:
-            raise GenError(f"{NORMS_13.name}: Н1.3 has no item {key!r} (gen_admin KEYS {cmd})")
+            raise GenError(f'{NORMS_13.name}: N1.3 has no item {key!r} (gen_admin KEYS {cmd})')
         parts = [keys[key]] if how == "all" else mentions(keys[key], cmd)
         if not parts:
-            raise GenError(f"{NORMS_13.name}: Н1.3 {key!r} does not name {cmd!r} (gen_admin KEYS)")
+            raise GenError(f'{NORMS_13.name}: N1.3 {key!r} does not name {cmd!r} (gen_admin KEYS)')
         for p in parts:
             lines += gen_core.wrap(f"{key}: {p}", "//     ", "//       ")
     said = [s.strip() for s in re.split(r"(?<=\.) ", cli) if re.search(r"`(?:[a-z]+/)?" + re.escape(cmd) + r"\b", s)]
     if said:
-        lines.append(f"//   spec/{NORMS_13.name} «Н2 Doors» (the CLI):")
+        lines.append(f'//   spec/{NORMS_13.name} N2 Doors (the CLI):')
         lines += gen_core.wrap(f"req: {CLI_ANCHOR} — " + gen_core.plain(" ".join(said)), "//     ", "//       ")
     if cmd == "recover":
-        lines.append(f"//   spec/{NORMS_13.name} «Н3 Procedures» «{RECOVER}»:")
-        for a, t in recover:                            # процедура целиком: её фазы и есть тело recover
+        lines.append(f'//   spec/{NORMS_13.name} N3 Procedures: {RECOVER}»:')
+        for a, t in recover:                            # Keep the whole procedure: its phases define recover's body.
             if gen_core.plain(t) != "---":
                 lines += gen_core.wrap(f"req: {a} — {gen_core.plain(t)}", "//     ", "//       ")
     for path, anchor, sel in DOORS.get(cmd, []):
@@ -197,9 +187,9 @@ def stub_comment(cmd, gram, rest, keys, cli, recover, flags):
     return lines
 
 
-ADMIN = '''// Code generated by tools/normgen/gen_admin.py (kit part admin) from forms/daemon-flags.tsv sha256 {flags_sha}; DO NOT EDIT.
+ADMIN = r'''// Code generated by tools/normgen/gen_admin.py (kit part admin) from forms/daemon-flags.tsv sha256 {flags_sha}; DO NOT EDIT.
 
-// Package admin — the subcommands of admin_ops (P/01.3 Н1.3): Run calls your function of f.Cmd — one file per
+// Package admin implements admin_ops subcommands (P/01.3 N1.3):Run dispatches f.Cmd, one file per
 // subcommand ({files}: yours, the kit puts each once); own.go — your own commands of the stand profile, looked up by
 // launch.Main before the flags are parsed. launch.Main calls Run when App.Admin is nil.
 package admin
@@ -233,7 +223,7 @@ func runCopy(cmd string, f *flags.Flags, env Env) int {
     want := 0
     if cmd == "backup" { want = 1 }
     if len(f.Args) != want {
-        fmt.Fprintf(log, "configstore %s: want %d positional arguments\\n", cmd, want)
+        fmt.Fprintf(log, "configstore %s: want %d positional arguments\n", cmd, want)
         return 2
     }
     var err error
@@ -243,20 +233,20 @@ func runCopy(cmd string, f *flags.Flags, env Env) int {
     case "restore": err = env.Copy.Restore(f.From, f.Force)
     }
     if err != nil {
-        fmt.Fprintf(log, "configstore %s: %v\\n", cmd, err)
+        fmt.Fprintf(log, "configstore %s: %v\n", cmd, err)
         return 1
     }
     return 0
 }
 
 // NotInStageCode — the exit code of a subcommand without an implementation. Not 2: 2 is the start refusal of the flag
-// form (P/01.3 Н4), launch gives it before Run.
+// form (P/01.3 N4), checked by launch before Run.
 const NotInStageCode = 1
 
 // NotInStage — «configstore <cmd>: not in this stage» on Stderr, exit NotInStageCode: the body of a subcommand
 // before your stage writes it.
 func NotInStage(cmd string, env Env) int {
-	fmt.Fprintf(env.Stderr, "configstore %s: not in this stage\\n", cmd)
+	fmt.Fprintf(env.Stderr, "configstore %s: not in this stage\n", cmd)
 	return NotInStageCode
 }
 
@@ -265,7 +255,7 @@ func Run(f *flags.Flags, env Env) int {
 	switch f.Cmd {
 {cases}
 	}
-	fmt.Fprintf(env.Stderr, "configstore %s: not a subcommand of admin_ops\\n", f.Cmd)
+	fmt.Fprintf(env.Stderr, "configstore %s: not a subcommand of admin_ops\n", f.Cmd)
 	return 2
 }
 '''
@@ -296,7 +286,7 @@ var Own = map[string]func(args []string, env Env) int{
 
 
 def render():
-    """→ ({путь от go/: текст}, [(подкоманда, число строк комментария)])."""
+    """Return ({go/-relative path: text}, [(subcommand, comment line count)])."""
     try:
         lesson.require(L, "gen_admin (KEYS, DOORS, REFUSAL_ROWS, OWN)")
     except lesson.LessonError as exc:
@@ -307,7 +297,7 @@ def render():
     cmds, flags = commands()
     keys = block()
     if "admin_ops" not in keys:
-        raise GenError(f"{NORMS_13.name}: Н1.3 has no admin_ops")
+        raise GenError(f'{NORMS_13.name}: N1.3 has no admin_ops')
     gram, rest = grammar(keys["admin_ops"])
     if set(gram) != set(cmds):
         raise GenError(f"admin_ops grammar {sorted(gram)} != daemon-flags.tsv commands {sorted(cmds)}")
@@ -320,7 +310,7 @@ def render():
     cli = items[CLI_ANCHOR][1]
     rec = [s for s in gen_core.sections(NORMS_13.read_text(encoding="utf-8")) if s[0] == RECOVER]
     if len(rec) != 1 or not rec[0][2]:
-        raise GenError(f"{NORMS_13.name}: Н3 «{RECOVER}» — {len(rec)} found or no req anchors")
+        raise GenError(f'{NORMS_13.name}: N3 {RECOVER}» — {len(rec)} found or no req anchors')
     files, report = {}, []
     for cmd in cmds:
         if go_name(cmd) in ("Run", "NotInStage", "Env", "Own", "CopyOps"):
@@ -336,7 +326,7 @@ def render():
     common = COMMON.read_text(encoding="utf-8")
     entries, funcs = [], []
     for cmd, (fn, row) in OWN.items():
-        labels = (row, row.replace("<key>", "<ключ>"))
+        labels = (row, row.replace("<key>", '<\u043a\u043b\u044e\u0447>'))
         line = next((ln for ln in common.split("\n") if ln.startswith(labels)), None)
         if line is None:
             raise GenError(f"{COMMON.relative_to(ROOT)}: no directive row {row!r} (gen_admin OWN {cmd})")
@@ -371,7 +361,7 @@ def generate(out=DEFAULT_OUT):
 
 
 def kit_files(module, out=DEFAULT_OUT):
-    """→ [(каталог в internal, имя, байты, происхождение, источник, своё у реализации)]; GenError — out устарел."""
+    """Return [(internal directory, name, bytes, origin, source, editable)]; stale output raises GenError."""
     files = []
     for rel, text in sorted(render()[0].items()):
         kept = Path(out) / "go" / rel
@@ -379,12 +369,12 @@ def kit_files(module, out=DEFAULT_OUT):
             raise GenError(f"{kept} is stale: run tools/normgen/gen_admin.py")
         data = kept.read_bytes().replace(f'"{GO_MODULE}/'.encode(), f'"{module}/internal/'.encode())
         sub, name = rel.rsplit("/", 1)
-        files.append((sub, name, data, "generated", str(kept.relative_to(ROOT)), own(rel)))
+        files.append((sub, name, data, "generated", L.output_source(kept, out), own(rel)))
     return files
 
 
 def provenance():
-    """Паспорт части (ADR-0125 доп. (1) п. 6 (а)): формы, генератор, ручная среда (нет), судья."""
+    """Part provenance (ADR-0125 addendum (1), item 6(a)): forms, generator, no handwritten runtime, and judge."""
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": gen_core.sha(path)}
     paths = [p for src in (FLAGS, NORMS_13, NORMS_12, REFUSALS, COMMON) for p in

@@ -1,15 +1,5 @@
-"""Судья части 3а двери урока (gen_door_lesson.py; P/06): маршруты по OpenAPI — своя модель судьи против Go Route.
-
-Запуск: python3 tools/normgen/test_gen_door_lesson.py [-v]   (go 1.22)
-
-1. out свежий; каждая операция OpenAPI (путь, метод) — ровно одна Op с её методом, путём, параметрами, кодами ответов.
-2. Пробы: на каждую операцию — путь из образцов значений параметров (класс каталога — имя подставного каталога,
-   прочие — первое значение из словаря судьи, проходящее схему параметра), короткий и с префиксом /{sub}, если у пути
-   сервер {origin}/{sub}; отрицательные: неизвестный первый сегмент, неизвестное имя каталога, чужой метод (405 только
-   при 405 у всех операций пути), испорченное %XX, значение вне схемы. Ожидание — своя модель судьи (литерал >
-   параметр класса > свободный; каталог; схема), исполнение — Go Route на подставном каталоге.
-3. Мутанты таблиц routes.go: потерян префиксный вариант, all405, шаблон параметра, ранг класса — пробы красные.
-"""
+"""Judge lesson route generation (part 3a, P/06) against an independent OpenAPI model. Require fresh, one-to-one Op coverage and metadata for each method/path. Probe schema-valid parameter samples, short/prefixed variants, unknown segments/catalog names, foreign methods, malformed percent escapes and invalid values. Model literal>catalog-class>free-parameter precedence plus Catalog/schema checks; execute Go Route on a fixture Catalog. Mutants removing prefix variants, all405, parameter patterns or class rank must fail. Run test_gen_door_lesson.py with Go 1.22."""
+import lesson as output_lesson
 import json
 import os
 import random
@@ -34,7 +24,7 @@ import yamlsub  # noqa: E402
 
 
 class Model:
-    """Своя модель маршрутов судьи: OpenAPI → шаблоны и проверки параметров."""
+    """Independent route model: derive templates and parameter checks directly from OpenAPI."""
 
     def __init__(self, lesson):
         self.spec = ROOT / "Platform" / lesson / "spec" / f"{lesson}.api.openapi.yaml"
@@ -53,7 +43,7 @@ class Model:
                     continue
                 op = item[m]
                 prms = [self.deref(p, self.spec) for p in item.get("parameters", []) + op.get("parameters", [])]
-                for p, pbase in prms:                     # схема параметра — от файла, где параметр объявлен
+                for p, pbase in prms:                     # Resolve parameter schemas relative to their declaration document.
                     if p["in"] == "path":
                         checks[p["name"]] = self.schema(p["schema"], pbase)
                 codes = [str(c) for c in op["responses"]]
@@ -121,7 +111,7 @@ class Model:
         segs = []
         for s in raw:
             if re.search(r"%(?![0-9A-Fa-f]{2})", s):
-                return ("err", 404)                    # испорченное %XX
+                return ("err", 404)                    # Malformed percent escape.
             b = re.sub(rb"%([0-9A-Fa-f]{2})", lambda m: bytes([int(m[1], 16)]), s.encode("utf-8"))
             segs.append(b.decode("utf-8", "surrogateescape"))
         hits = []
@@ -255,10 +245,10 @@ def probes(model, rnd):
             path = "/" + "/".join((["testsub"] if pre else []) + vals)
             for meth in p["ops"]:
                 out.append((meth, path))
-            out.append(("TRACE", path))                       # чужой метод
+            out.append(("TRACE", path))                       # Unsupported method.
             bad = path.replace("/" + vals[0], "/zz-unknown", 1) if vals else "/zz-unknown"
             out.append(("GET", bad))
-    for p in model.paths:                             # границы схемы свободного параметра: minLength и на 1 короче
+    for p in model.paths:                             # Free-parameter minLength boundary and one character shorter.
         for k, seg in enumerate(p["segs"]):
             m = re.fullmatch(r"\{(.+)\}", seg)
             if not m or m[1] in CATALOG:
@@ -312,8 +302,9 @@ class DoorLessonBase:
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def test_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for name in ("routes.go", "routes_rt.go"):
-            kept = HERE / "out" / self.SLUG / "go/apidoor" / name
+            kept = output_lesson.output_root() / self.SLUG / "go/apidoor" / name
             self.assertEqual(kept.read_bytes(), (self.fresh / "apidoor" / name).read_bytes(), f"{kept} is stale")
 
     def test_ops(self):
@@ -334,7 +325,7 @@ class DoorLessonBase:
         want = {(p["path"], m, pre) for p in self.model.paths for m in p["ops"]
                 for pre in ((False, True) if p["prefixed"] else (False,))}
         missed = want - hit_ops
-        # пробы, затенённые более конкретным шаблоном или без образца, — допустимы, но не больше 10 %
+        # Allow at most10% probes shadowed by more-specific templates or lacking a sample.
         self.assertLessEqual(len(missed), len(want) // 10, f"probes reach too few operations: {sorted(missed)[:10]}")
         codes = {g.get("err") for g in got}
         self.assertIn(404, codes)
@@ -360,7 +351,7 @@ class DoorLessonBase:
         for p, tsegs, pre in self.model.templates():
             shapes.setdefault(tuple("{}" if re.fullmatch(r"\{.+\}", sg) else sg for sg in tsegs), []).append(tsegs)
 
-        def rows_vs_free(group):                       # ранг rows решает: {rows} и свободный параметр на одной позиции
+        def rows_vs_free(group):                       # rows rank matters when a catalog parameter and a free parameter share a position.
             for i in range(len(group[0])):
                 names = {sg for sg in (t[i] for t in group)}
                 if "{rows}" in names and any(re.fullmatch(r"\{(.+)\}", n) and n[1:-1] not in CATALOG for n in names):
@@ -370,10 +361,10 @@ class DoorLessonBase:
         for name, (f, text) in muts.items():
             if (name == "prefix-lost" and not prefixed) or (name == "rank" and not classes) \
                     or (name == "all405" and m405 is None):
-                continue                                   # на уроке без префикса и классов каталога — неприменим
+                continue                                   # Inapplicable to lessons without prefixes/catalog classes.
             base = src if f == "routes.go" else rt
             if name == "pattern" and text == base:
-                continue                                   # у урока нет свободного параметра с minLength 1 без шаблона
+                continue                                   # No free parameter with minLength1 and no pattern exists in this lesson.
             with self.subTest(mutant=name):
                 self.assertNotEqual(text, base, f"{name}: the mutant does not apply")
                 mod = self.tmp / f"mut-{name}"

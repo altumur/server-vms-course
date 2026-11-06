@@ -1,41 +1,13 @@
-"""Сборка пакета Б для P/01 (ADR-0083 доп. (86) п. 2): проверки Н2.1 и строгий разборщик JSON — в каталог попытки.
+"""Build the P/01 kit (ADR-0083 addendum 86, item 2).
 
-Запуск: python tools/normgen/kit/build_kit.py <dst> --module <путь импорта каталога <dst>/01-store> [--part vectors] [--part stagetests] [--part door]
-       [--part flags] [--part refusals] [--part families] [--part admin] [--part box]
+  python tools/normgen/kit/build_kit.py <dst> --module <import-path-to-dst/01-store> [--part <part> ...]
+Install checks, jsonstrict, writecheck under <dst>/01-store/internal. checks comes from out/p01-1/go/checks and must match write-checks.tsv; jsonstrict/writecheck come from kit/go with rewritten module imports. Replace closed component directories in full.
 
-Кладёт в <dst>/01-store/internal/:
-- checks/ — пакет, сгенерированный tools/normgen/gen_checks.py из Platform/01-store/forms/write-checks.tsv (берётся
-  из tools/normgen/out/p01-1/go/checks; sha256 таблицы в его шапке должен совпасть с таблицей сейчас);
-- jsonstrict/, writecheck/ — ручной пакет tools/normgen/kit/go (в writecheck путь "kitmodule/internal/" заменяется на
-  "<module>/internal/").
-Часть `flags` (--part flags; генератор № 3 ADR-0125 tools/normgen/gen_flags.py, судья flag_judge.py): flags/
-(заменяется целиком), паспорт формы, генератора и судьи — в provenance манифеста.
-Часть `refusals` (--part refusals; генератор № 4 ADR-0125 tools/normgen/gen_refusals.py, судья refusal_judge.py):
-refusals/ (заменяется целиком), паспорт — в provenance.
-Часть `families` (--part families; генератор № 5 ADR-0125 tools/normgen/gen_families.py, судья family_judge.py):
-families/ (заменяется целиком) — families.go из схем семей P/01 и ручная среда runtime.go; паспорт — в provenance.
-Часть `box` (--part box, нужны части door, flags, refusals и writecheck; tools/normgen/gen_box.py, судья
-test_gen_box.py): box/box.go и box/copy.go — закрыты (DO NOT EDIT): Status, Metrics, Join, Leave, Admit, Recover,
-StartRefusal box P/01.3 Н1.3 и формат копии (EncodeCopy, DecodeCopy, Upper, Floor, BackupTarget, ImportRepeated).
-Часть `admin` (--part admin, нужна часть flags; её требует launch; tools/normgen/gen_admin.py, судья admin_judge.py):
-admin/admin.go (закрыт: Env, Run, NotInStage) и по YOURS-файлу на подкоманду admin_ops и own.go (кладутся один раз).
-Часть `vectors` (--part vectors; ADR-0126 доп. (7) п. 4, генератор № 6 ADR-0125 tools/normgen/gen_tests.py): vectortests/,
-vectorcmd/, cmd/vectors (заменяются целиком) и заглушки адаптера vectoradapter/ (canonical.go, rights.go — по файлу на функцию) — их реализация правит; заглушка кладётся, только если её файла нет и её имя не объявлено в пакете.
-Часть `stagetests` (--part stagetests, нужна часть door; ADR-0125 доп. (3), (4), ADR-0126 доп. (7), gen_stagetests.py, судья
-scenario_judge.py): stagetests/ (заменяется целиком) и coreadapter/ — coreadapter.go пакета, open.go реализации (кладётся один раз).
-Часть `door` (--part door; генератор № 2 ADR-0125 tools/normgen/gen_door.py): door/ (заменяется целиком) — дверь из
-Platform/01-store/spec/01-store.api.openapi.yaml (tools/normgen/out/p01-1/go/apidoor → internal/apidoor, пакет apidoor — не затирает internal/door реализации; sha256 OpenAPI в шапке door.go
-должен совпасть с OpenAPI сейчас).
-Пишет <dst>/KIT.md (API для модели, английский) и <dst>/kit.manifest.json (пути, sha256, строки, происхождение).
---export <sha> [--specs <git cammeta-specs>] (Архитектор 2026-11-05): входы — Platform/ выгрузки на этом коммите (git
-archive из cammeta-specs), код генераторов и ручной пакет — tools/normgen чистого HEAD курса (git archive; правки в
-tools/normgen — отказ); во временном каталоге генераторы перегоняют out на входах выгрузки, сборка — там же; дерево
-курса не меняется. В манифесте commit (курс) и export (выгрузка), без -dirty; <dst>/SOURCE.txt — оба sha и команда.
---seed <дерево посева> (Архитектор 2026-11-05, 28-я — код 27-й): цикл копирует каталог пакета поверх посева целиком,
-поэтому своё реализации (editable) в пакет идёт, только если в посеве файла нет или он байт в байт тот, что положил
-прежний пакет (kit.manifest.json посева); код модели в пакет не идёт — манифест seed: kept, refreshed.
-Каталоги checks, jsonstrict, writecheck в <dst>/01-store/internal заменяются целиком; прочее в <dst> не трогается.
-"""
+Optional parts: flags/refusals/families with form/generator/judge provenance; box requires door, flags, refusals, writecheck; admin requires flags and supplies closed dispatch plus one-time editable command files; vectors supplies tests, command and one-time editable adapters; stagetests requires door and supplies tests/coreadapter with editable Open; door supplies generated apidoor independently of implementation-owned internal/door. launch requires admin and the connected door/flags/stagetests components. Write KIT.md with the model-facing English API and kit.manifest.json with paths, SHA256, line counts and origins.
+
+--export <sha> [--specs <cammeta-specs-repo>] reads Platform from that export and tools/normgen from a clean course HEAD via git archive. Dirty generator code refuses. Regenerate and build in a temporary tree without changing the course. Record clean course/export pins in the manifest and SOURCE.txt.
+
+--seed <tree> preserves implementation code when a cycle overlays the kit: install editable files only when absent or still byte-identical to the previous kit's manifest SHA. Record kept/refreshed files. Other destination content is untouched."""
 import argparse
 import os
 import hashlib
@@ -50,30 +22,30 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent.parent
 sys.path.insert(0, str(HERE.parent))
-import gen_tests  # noqa: E402 — часть tests
-import gen_flags  # noqa: E402 — часть flags
-import gen_refusals  # noqa: E402 — часть refusals
-import gen_checks  # noqa: E402 — свежесть writecheck
-import gen_door  # noqa: E402 — свежесть door
-import gen_launch  # noqa: E402 — часть launch
-import gen_core  # noqa: E402 — часть core
-import gen_versioned_doors  # noqa: E402 — метаданные существующей части core у P/08
-import gen_families  # noqa: E402 — часть families
+import gen_tests  # noqa: E402 -- tests part
+import gen_flags  # noqa: E402 -- flags part
+import gen_refusals  # noqa: E402 -- refusals part
+import gen_checks  # noqa: E402 -- writecheck freshness
+import gen_door  # noqa: E402 -- door freshness
+import gen_launch  # noqa: E402 -- launch part
+import gen_core  # noqa: E402 -- core part
+import gen_versioned_doors  # noqa: E402 -- P/08 metadata in the existing core part
+import gen_families  # noqa: E402 -- families part
 import gen_row_writes  # noqa: E402 — P03-only pure constructor overlay in the families part
 sys.path.insert(0, str(HERE.parent / "contracts"))
-import kitside  # noqa: E402 — стороны урока у адаптеров части contracts
+import kitside  # noqa: E402 -- lesson surfaces for contracts adapters
 sys.path.insert(0, str(HERE.parent / "contracts/gen"))
-import gen_heartbeat  # noqa: E402 — две чужие семьи читателя heartbeat
-import gen_admin  # noqa: E402 — часть admin
-import gen_box  # noqa: E402 — часть box
-import gen_manifest  # noqa: E402 — часть loader (P/02)
-import gen_cmdtests  # noqa: E402 — stagetests урока без HTTP (P/02)
+import gen_heartbeat  # noqa: E402 -- heartbeat reader's two externally owned families
+import gen_admin  # noqa: E402 -- admin part
+import gen_box  # noqa: E402 -- box part
+import gen_manifest  # noqa: E402 -- P/02 loader part
+import gen_cmdtests  # noqa: E402 -- non-HTTP lesson stagetests (P/02)
 import gen_policy_machines  # noqa: E402 — closed P/03 policies inside stagetests
-import gen_rollout  # noqa: E402 — часть rollout-poll (P/02)
-import gen_door_lesson  # noqa: E402 — дверь уроков после P/01 (P/06, часть 3а)
-import gen_machine  # noqa: E402 — части машин (slot-capture P/03, slot-fate и slot-release P/04)
-import gen_vectors  # noqa: E402 — часть vectors урока без двери (P/02)
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2): --lesson, по умолчанию 01-store
+import gen_rollout  # noqa: E402 -- P/02 rollout-poll part
+import gen_door_lesson  # noqa: E402 -- door for lessons after P/01 (P/06 part 3a)
+import gen_machine  # noqa: E402 -- P/03 slot-capture and P/04 slot-fate/slot-release machine parts
+import gen_vectors  # noqa: E402 -- vectors for a lesson without a door (P/02)
+import lesson  # noqa: E402 -- lesson selection (--lesson, default 01-store; ADR-0125 addendum 5, item 2)
 L = lesson.CURRENT
 TABLE = L.form("write-checks.tsv")
 GENERATED = L.out / "go/checks"
@@ -81,8 +53,8 @@ HANDWRITTEN = HERE / "go"
 PLACEHOLDER = '"kitmodule/internal/'
 MODULE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._~-]*(/[A-Za-z0-9._~-]+)*")
 
-# Файлы пакета checks: (имя, происхождение, исходник в репозитории). runtime.go и prims.go генератор копирует
-# из своих ручных файлов; checks.go строит по таблице.
+# checks files: (name, origin, repository source). The generator copies runtime.go and prims.go
+# from its handwritten sources and generates checks.go from the table.
 CHECKS_FILES = [
     ("checks.go", "generated", f"tools/normgen/out/{L.slug}/go/checks/checks.go"),
     ("runtime.go", "handwritten", "tools/normgen/runtime/go/runtime.go"),
@@ -92,7 +64,7 @@ KIT_FILES = [
     ("jsonstrict", "jsonstrict.go"),
     ("writecheck", "writecheck.go"),
 ]
-# Часть door: door.go строит gen_door.py по OpenAPI, runtime.go — копия его ручной среды.
+# Door: gen_door.py generates door.go from OpenAPI; runtime.go copies its handwritten runtime.
 OPENAPI = L.openapi
 DOOR = L.out / "go/apidoor"
 DOOR_FILES = [
@@ -114,21 +86,24 @@ def entry(path):
 
 
 def fresh_check(gen, src, sub, names):
-    """Весь копируемый выход части равен свежему прогону генератора (ревью Codex С2): шапка формы не доказывает,
-    что генератор, его ручная среда (runtime, prims, doorrt) и сам out не менялись. GenError, расхождение — KitError."""
-    with tempfile.TemporaryDirectory(prefix="kit-fresh-") as tmp:
-        out = Path(tmp) / L.slug
-        try:
-            gen.generate(src, out)
-        except gen.GenError as exc:
-            raise KitError(f"tools/normgen/{Path(gen.__file__).name}: {exc}") from None
-        for name in names:
-            kept = NORMGEN / "out" / L.slug / sub / name
-            new = (out / sub / name).read_bytes()
-            if not kept.is_file() or kept.read_bytes() != new:
-                raise KitError(f"{kept} differs from a fresh run of tools/normgen/"
-                               f"{Path(gen.__file__).name} (the form, the generator or its handwritten environment "
-                               f"changed, or out was edited): run the generator")
+    """Verify all copied output against a fresh generator run (Codex C2). A form SHA alone cannot prove generator, runtime/primitives or out freshness; generation failures and mismatches become KitError."""
+    # Preparation recorded exact source/code/runtime inputs and output hashes.
+    # Consumption validates that set, never repairs it by calling generate().
+    ready = checked_outputs()
+    for name in names:
+        if not (ready[L.slug] / sub / name).is_file():
+            raise KitError(f"prepared {L.slug}/{sub}/{name} is missing")
+
+
+def checked_outputs():
+    try:
+        value = lesson.output_manifest()
+        ready = lesson.ready_outputs(profiles=tuple(value["profiles"]))
+    except (lesson.LessonError, OSError) as exc:
+        raise KitError(str(exc)) from None
+    if L.slug not in ready:
+        raise KitError(f"prepared set does not contain {L.slug}")
+    return ready
 
 
 def sha256(data):
@@ -149,17 +124,17 @@ def git_head():
         return None
 
 
-MACHINES = ("slot-capture", "slot-fate", "slot-release")    # gen_machine.py: часть — форма машины урока forms/<часть>.tsv
-PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core", "families", "admin", "box", "loader", "rollout-poll") + MACHINES + ("contracts",)       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
-CONTRACTS = NORMGEN / "contracts"                    # общий пакет договоров (ручная среда; судья test_contracts.py)
+MACHINES = ("slot-capture", "slot-fate", "slot-release")    # gen_machine.py: each part uses the lesson's forms/<part>.tsv.
+PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core", "families", "admin", "box", "loader", "rollout-poll") + MACHINES + ("contracts",)       # Parts beyond writecheck (ADR-0126 addendum 2, item 1 names).
+CONTRACTS = NORMGEN / "contracts"                    # Shared contracts package: handwritten runtime judged by test_contracts.py.
 
 
-EXAMPLES = HERE / "examples"                # пример подключения на часть: Go-файл, его собирает kit/test_kit.py
+EXAMPLES = HERE / "examples"                # One Go connection example per part, compiled by kit/test_kit.py.
 EXAMPLE_ORDER = ("writecheck", "door", "flags", "refusals", "families", "vectors", "stagetests", "launch", "admin")
 
 
 def connect_md(parts, module):
-    """Справка подключения (ADR-0083 доп. (95) п. 2): по примеру на часть — файл kit/examples/<часть>.go, дословно."""
+    """Read each part's connection example verbatim from kit/examples/<part>.go (ADR-0083 addendum 95, item 2)."""
     out = ["", "## Connect: one example per part", "",
            "Read this, not the generated bodies: the signatures above and these examples are the whole API you need. "
            "Each example compiles against this kit (the kit's own test builds them).", ""]
@@ -167,7 +142,7 @@ def connect_md(parts, module):
         if part not in parts:
             continue
         text = (EXAMPLES / f"{part}.go").read_text(encoding="utf-8")
-        text = text.replace('"kitmodule/internal/', f'"{module}/internal/').split("\n", 2)[2]   # без package example
+        text = text.replace('"kitmodule/internal/', f'"{module}/internal/').split("\n", 2)[2]   # Omit package example.
         out += [f"### `{part}`", "", "```go", text.rstrip("\n"), "```", ""]
     return "\n".join(out)
 
@@ -177,7 +152,7 @@ BLOCK = re.compile(r"^(?:var|const) \(\n(.*?)^\)", re.M | re.S)
 
 
 def exported_md(internal, dst, module):
-    """Экспортируемые имена каждого пакета пакета Б (по исходникам, не по памяти): функции, типы, переменные, константы."""
+    """Read actual exported package functions, types, variables and constants from source rather than a remembered list."""
     out = ["## Exported names (by package)", ""]
     for pkg in sorted({p.parent for p in Path(dst).rglob("*.go") if not p.name.endswith("_test.go")}):
         names = set()
@@ -197,9 +172,7 @@ def exported_md(internal, dst, module):
 
 
 def provenance(parts, files, judged):
-    """Паспорт частей (ADR-0125 доп. (1) п. 6 (а); ревью Codex С2): формы, генератор, ручная среда, судья — пути и
-    sha256; output — sha256 набора скопированных файлов части (путь и sha256 каждого, по порядку), judged — ссылка на
-    результат суда этого выхода (--judged часть=ссылка; без неё — null: суд не назван)."""
+    """Record part provenance (ADR-0125 addendum 1, item 6(a); Codex C2): form, generator, runtime, judge paths/SHA256; output is an ordered path+SHA digest; judged is the optional --judged part=link, otherwise null."""
     def output(*components):
         own = sorted((f["path"], f["sha256"]) for f in files if f["component"] in components and not f.get("editable"))
         return sha256("".join(f"{p}\t{h}\n" for p, h in own).encode())
@@ -239,7 +212,7 @@ def provenance(parts, files, judged):
                          "output": output("contracts")}
         elif part == "door" and L.key != lesson.DEFAULT:
             out[part] = {**gen_door_lesson.provenance(), "output": output("door")}
-        elif part == "vectors" and L.key != lesson.DEFAULT:    # векторы прочих уроков — gen_vectors (P/06 с дверью тоже)
+        elif part == "vectors" and L.key != lesson.DEFAULT:    # Other lessons, including HTTP P/06, use gen_vectors.
             out[part] = {**gen_vectors.provenance(), "output": output("vectors")}
         elif part == "stagetests" and L.key != lesson.DEFAULT:
             out[part] = {**gen_cmdtests.provenance(), "output": output("stagetests")}
@@ -272,14 +245,12 @@ DECL = re.compile(rb"^(?:func (?:\(\w+ \*?(\w+)\) )?(\w+)\(|type (\w+) )", re.M)
 
 
 def declarations(data):
-    """Имена верхнего уровня Go-файла: функции, методы (Тип.имя), типы."""
+    """Read top-level Go declarations: functions, methods (Type.name) and types."""
     return {(f"{m[1].decode()}." if m[1] else "") + (m[2] or m[3]).decode() for m in DECL.finditer(data)}
 
 
 def own_taken(target, data):
-    """Заглушка реализации не кладётся, если её файл есть или её имя уже объявлено в другом файле пакета (реализация
-    перенесла функцию или собрала заглушки в один файл, как пакеты до разнесения по файлам): иначе — двойное
-    объявление, сборка ломается."""
+    """Do not install an implementation stub if its file exists or its declaration already lives in another package file. This supports moved/combined implementation functions and avoids duplicate declarations breaking the build."""
     if target.exists():
         return True
     mine = declarations(data)
@@ -290,9 +261,7 @@ def own_taken(target, data):
 
 
 def seed_rule(dst, seed):
-    """Посев (Архитектор 2026-11-05, 28-я — код 27-й): своё реализации (editable) пакет кладёт, только если файла в посеве
-    нет или он байт в байт тот, что положил прежний пакет (sha по kit.manifest.json посева: модель его не трогала);
-    иначе — код модели, файл в пакет не идёт. Без посева — own_taken по dst. → (taken(target, data), kept, refreshed)."""
+    """Seed rule (Architect, 2026-11-05, attempt 28 from27): install editable files only when absent from the seed or still byte-identical to their prior kit.manifest.json SHA. Otherwise retain model code. Without a seed, use own_taken on dst. Return (taken(target, data), kept, refreshed)."""
     kept, refreshed = [], []
     if seed is None:
         return (lambda target, data: own_taken(target, data)), kept, refreshed
@@ -319,13 +288,17 @@ def seed_rule(dst, seed):
 
 
 def build(dst, module, parts=(), judged=None, seed=None):
+    checked_outputs()  # Validate before any destination/seed copy; never prepare here.
+    declared = lesson.output_manifest()["parts"][L.slug]
+    if not set(parts) <= set(declared):
+        raise KitError("requested kit parts are absent from the prepared set")
     dst = Path(dst)
     if set(judged or {}) - set(("writecheck",) + PARTS):
         raise KitError(f"--judged: unknown parts {sorted(set(judged) - set(('writecheck',) + PARTS))}")
     if not MODULE.fullmatch(module) or "//" in module or module.endswith("/"):
         raise KitError(f"--module {module!r} is not a Go import path")
-    has_wc = TABLE.is_file()                          # часть writecheck — у урока с forms/write-checks.tsv (P/01)
-    http = L.openapi.is_file() and L.key == lesson.DEFAULT   # P/01: stagetests над apidoor; прочие (и P/05 с дверью) — gen_cmdtests
+    has_wc = TABLE.is_file()                          # writecheck exists for lessons with forms/write-checks.tsv (P/01).
+    http = L.openapi.is_file() and L.key == lesson.DEFAULT   # P/01 stagetests use apidoor; all other lessons, including HTTP P/05, use gen_cmdtests.
     table_sha = sha256(TABLE.read_bytes()) if has_wc else None
     if has_wc:
         fresh_check(gen_checks, TABLE, "go/checks", [n for n, _, _ in CHECKS_FILES])
@@ -359,6 +332,11 @@ def build(dst, module, parts=(), judged=None, seed=None):
                        "stage tests over apidoor.Handler (ADR-0083 addendum (95) item 3)")
     kit_parts = (["writecheck"] if has_wc else []) + sorted(set(parts))
     parts_set = list(kit_parts)
+    # Required producer/runtime/judge inputs must exist before touching dst/seed.
+    try:
+        provenance(parts_set, [], judged or {})
+    except OSError as exc:
+        raise KitError(f"prepared provenance dependency: {exc}") from None
     try:
         tests = [(f, "vectors") for f in (gen_tests.kit_files(module, "vectors") if L.key == lesson.DEFAULT
                                            else gen_vectors.kit_files(module))] if "vectors" in parts else []
@@ -377,8 +355,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
         admin_files = gen_admin.kit_files(module) if "admin" in parts else []
         box_files = gen_box.kit_files(module) if "box" in parts else []
         loader_files = gen_manifest.kit_files(module) if "loader" in parts else []
-        loader_root = gen_manifest.vendor(module) if "loader" in parts else []
-        policy_root = gen_policy_machines.vendor(module) if L.key == "03-worker" and "stagetests" in parts else []
+        loader_root = prepared_vendor(module) if "loader" in parts else []
+        policy_root = prepared_vendor(module) if L.key == "03-worker" and "stagetests" in parts else []
         loader_wired = gen_manifest.wired(module) if "loader" in parts else {}
         machine_files = [(p, f) for p in sorted(set(parts) & set(MACHINES)) for f in gen_machine.kit_files(p, module)]
     except (gen_machine.GenError, gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError, gen_launch.GenError,
@@ -398,7 +376,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
     taken, kept, refreshed = seed_rule(dst, seed)
 
     def put(rel_dir, name, data, origin, component, source):
-        target = Path(os.path.normpath(internal / rel_dir / name))      # ../cmd/vectors — рядом с internal
+        target = Path(os.path.normpath(internal / rel_dir / name))      # ../cmd/vectors sits alongside internal/.
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
         files.append({"path": str(target.relative_to(dst)), "sha256": sha256(data), "lines": lines(data),
@@ -424,30 +402,34 @@ def build(dst, module, parts=(), judged=None, seed=None):
         put(sub, name, data, "handwritten", "kit", str((HANDWRITTEN / sub / name).relative_to(ROOT)))
 
     contract_adapters = {}
-    if "contracts" in parts:                           # общий пакет договоров: пакет и адаптеры векторов над ним
-        for name, text in gen_heartbeat.render().items():
-            path = CONTRACTS / "go/heartbeat" / name
-            if not path.is_file() or path.read_text(encoding="utf-8") != text:
-                raise KitError("contracts heartbeat is stale: run contracts/gen/gen_heartbeat.py")
-        for f in sorted((CONTRACTS / "go").rglob("*.go")):
-            data = f.read_bytes()       # nfkc_tables.go — выход contracts/gen/gen_nfkc.py (таблицы Unicode 15.0.0)
-            origin = "generated" if data.startswith(b"// Code generated") else "handwritten"
-            put("contracts", str(f.relative_to(CONTRACTS / "go")), data, origin, "contracts", str(f.relative_to(ROOT)))
+    if "contracts" in parts:                           # Shared contracts package and its vector adapters.
+        contract_root = L.out / "go/contracts"
+        contract_files = sorted(contract_root.rglob("*.go"))
+        if not contract_files or not (contract_root / "contracts.go").is_file():
+            raise KitError("prepared contracts roster is empty/incomplete")
+        for f in contract_files:
+            data = f.read_bytes()       # nfkc_tables.go comes from contracts/gen/gen_nfkc.py (Unicode15.0.0).
+            rel = f.relative_to(contract_root).as_posix()
+            origin = "generated" if rel in ("nfkc_tables.go", "heartbeat/families.go") else "handwritten"
+            source = (L.output_source(f) if origin == "generated" else
+                      "tools/normgen/famrt2/go/runtime.go" if rel == "heartbeat/runtime.go" else
+                      str((CONTRACTS / "go" / rel).relative_to(ROOT)))
+            put("contracts", rel, data, origin, "contracts", source)
         for f in sorted((CONTRACTS / "adapters").glob("*.go")):
             fn = re.search(r"^func ([A-Z]\w*)\((?:table|input|file|raw)\b", f.read_text(), re.M)[1]
             contract_adapters[f"{fn.lower()}.go"] = f
     for (sub, name, data, origin, source, own), component in tests:
-        if sub == "vectoradapter" and name in contract_adapters:   # заглушка → адаптер над contracts (свой у реализации)
+        if sub == "vectoradapter" and name in contract_adapters:   # Replace the stub with a contracts-backed adapter, still implementation-owned.
             f = contract_adapters[name]
             data = kitside.fill(f.read_text(encoding="utf-8"), L.out / "go/vectortests").encode()
             data = data.replace(PLACEHOLDER.encode(), f'"{module}/internal/'.encode())
             origin, source = "handwritten", str(f.relative_to(ROOT))
         if core_files and (sub, name) == ("coreadapter", "open.go"):
-            continue                    # open.go — у части core: Open уже возвращает её ядро
+            continue                    # The core part's open.go already returns its core.
         if (sub, name) in loader_wired:
-            data, origin, component = loader_wired[sub, name], "generated", "loader"   # заготовка, подключённая к manifest
+            data, origin, component = loader_wired[sub, name], "generated", "loader"   # Scaffold wired to manifest.
         if own and taken(Path(os.path.normpath(internal / sub / name)), data):
-            continue                    # адаптер реализации не трогается
+            continue                    # Preserve the implementation adapter.
         put(sub, name, data, origin, component, source)
         if own:
             files[-1]["editable"] = True
@@ -466,21 +448,21 @@ def build(dst, module, parts=(), judged=None, seed=None):
         put(sub, name, data, origin, "rollout-poll", source)
     for part, (sub, name, data, origin, source, own) in machine_files:
         if own and taken(Path(os.path.normpath(internal / sub / name)), data):
-            continue                    # действия и процедуры машины — у реализации
+            continue                    # Machine actions and procedures belong to the implementation.
         put(sub, name, data, origin, part, source)
         if own:
             files[-1]["editable"] = True
     for sub, name, data, origin, source, own in admin_files:
         if own and taken(Path(os.path.normpath(internal / sub / name)), data):
-            continue                    # подкоманды реализации не трогаются
+            continue                    # Preserve implementation subcommands.
         put(sub, name, data, origin, "admin", source)
         if own:
             files[-1]["editable"] = True
     for sub, name, data, origin, source, own in box_files:
-        put(sub, name, data, origin, "box", source)          # закрыт целиком: заменяется
+        put(sub, name, data, origin, "box", source)          # Entirely closed: replace in full.
     for sub, name, data, origin, source, own in loader_files:
-        put(sub, name, data, origin, "loader", source)       # закрыт целиком: заменяется
-    for relp, data in loader_root:                          # корень модуля: go.mod, go.sum (свои после посева), vendor/
+        put(sub, name, data, origin, "loader", source)       # Entirely closed: replace in full.
+    for relp, data in loader_root:                          # Module root: go.mod/go.sum become implementation-owned after seeding, plus vendor/.
         sub, name = os.path.split(relp)
         sub = os.path.join("..", sub)
         own = relp in ("go.mod", "go.sum")
@@ -501,13 +483,13 @@ def build(dst, module, parts=(), judged=None, seed=None):
             files[-1]["editable"] = True
     for sub, name, data, origin, source, own in launch_files:
         if own and taken(Path(os.path.normpath(internal / sub / name)), data):
-            continue                    # main.go и рамка реализации не трогаются
+            continue                    # Preserve implementation main.go and frame.
         put(sub, name, data, origin, "launch", source)
         if own:
             files[-1]["editable"] = True
     for sub, name, data, origin, source, own in core_files:
         if own and taken(internal / sub / name, data):
-            continue                    # ядро реализации не трогается
+            continue                    # Preserve the implementation core.
         put(sub, name, data, origin, "core", source)
         if own:
             files[-1]["editable"] = True
@@ -529,11 +511,11 @@ def build(dst, module, parts=(), judged=None, seed=None):
            + (KIT_CONTRACTS_MD if "contracts" in parts else "")).replace("{module}", module)
     if policy_root:
         doc = doc.replace("Standard library only, Go 1.22.", "Go 1.22; the closed policies use vendored cel-go v0.26.1 from Platform/common/versions.")
-    connect = connect_md(kit_parts, module) if L.key == lesson.DEFAULT else ""   # примеры частей — кодом P/01
+    connect = connect_md(kit_parts, module) if L.key == lesson.DEFAULT else ""   # Part examples are P/01 code.
     doc = (doc + connect + exported_md(internal, dst, module)).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)
-    # Паспорт попытки (доп. (86) п. 3) считает порознь: по происхождению (generated | handwritten) и по части
-    # (normgen — генератор с его ручной средой runtime.go, prims.go; kit — ручной пакет jsonstrict, writecheck).
+    # Attempt provenance (addendum 86, item 3) counts separately by origin (generated|handwritten) and component:
+    # normgen is the generator and its runtime.go/prims.go; kit is handwritten jsonstrict/writecheck.
     totals, parts = {}, {}
     for f in files:
         totals[f["origin"]] = totals.get(f["origin"], 0) + f["lines"]
@@ -738,21 +720,23 @@ the body limit, the identity and the rights, the store.
 
 COURSE_ENV, EXPORT_ENV = "NORMGEN_KIT_COURSE", "NORMGEN_KIT_EXPORT"
 SPECS = Path(os.environ.get("CAMMETA_SPECS", Path.home() / "cammeta-specs"))
-# Порядок перегона out во временном каталоге: дверь и флаги — до core и launch (они читают их выход).
+# Temporary regeneration order: door and flags precede core and launch, which read their outputs.
 REGEN = ("gen_checks.py", "gen_door.py", "gen_flags.py", "gen_refusals.py", "gen_tests.py", "gen_stagetests.py",
          "gen_core.py", "gen_admin.py", "gen_box.py", "gen_launch.py", "gen_families.py")
-# Урок без своей двери (P/02): перегон по частям пакета — генераторы, объявленные для P/01, на нём отказывают.
+# Regenerate non-HTTP P/02 by selected parts: P/01-only producers refuse its inputs.
 PART_GENS = {"flags": ("gen_flags.py",), "refusals": ("gen_refusals.py",), "stagetests": ("gen_cmdtests.py",),
              "rollout-poll": ("gen_rollout.py",),
              "families": (("gen_families.py", "gen_row_writes.py") if L.key == "03-worker" else ("gen_families.py",)),
-             "vectors": ("gen_families.py", "gen_vectors.py"), "loader": ("gen_manifest.py",),
+             "vectors": (("gen_families.py", "gen_vectors.py")
+                         if gen_tests.common_vectors.uses_families(L.key) else ("gen_vectors.py",)),
+             "loader": ("gen_manifest.py",),
              "contracts": ("contracts/gen/gen_heartbeat.py",),
              "core": ("gen_versioned_doors.py",),
              **{m: ("gen_machine.py",) for m in MACHINES}, "door": ("gen_door_lesson.py",)}
 
 
 def regen(parts):
-    """Генераторы перегона: у P/01 — все (REGEN, порядок прежний), у прочих уроков — части parts по PART_GENS."""
+    """Choose regeneration producers: P/01 retains the complete REGEN order; other lessons select PART_GENS by parts."""
     if L.key == lesson.DEFAULT:
         return REGEN + (PART_GENS["contracts"] if "contracts" in parts else ())
     gens = []
@@ -763,6 +747,139 @@ def regen(parts):
     return tuple(gens)
 
 
+# Internal verification profiles, not the future line-delivery roster. The
+# queued removal of box/admin/handwritten loader is a separate coordinated change.
+PROFILE_PARTS = {
+    "p01-1": ("door", "flags", "refusals", "families", "vectors", "stagetests", "core", "admin", "box", "launch", "contracts"),
+    "p02": ("flags", "refusals", "families", "vectors", "stagetests", "loader", "rollout-poll", "contracts"),
+    "p03": ("flags", "refusals", "families", "vectors", "stagetests", "slot-capture", "contracts"),
+    "p04": ("flags", "refusals", "families", "vectors", "stagetests", "slot-fate", "slot-release", "contracts"),
+    "p05": ("door", "flags", "refusals", "families", "vectors", "stagetests", "contracts"),
+    "p06": ("door", "flags", "refusals", "families", "vectors", "stagetests", "contracts"),
+    "p08": ("door", "families", "vectors", "core", "contracts"),
+    "p09": ("door", "flags", "refusals", "families", "vectors", "stagetests", "contracts"),
+    "p10": ("door", "vectors", "contracts"),
+}
+
+
+def _copy_inputs(stage, inputs, source_root, code_root):
+    for group, root in (("code", Path(code_root)), ("source", Path(source_root))):
+        directories = []
+        for row in inputs[group]:
+            target = stage / row["path"]
+            if row["type"] == "directory":
+                target.mkdir(parents=True, exist_ok=True)
+                directories.append((target, row["mode"]))
+            else:
+                data = (root / row["path"]).read_bytes()
+                if sha256(data) != row["sha256"]:
+                    raise KitError(f"input changed while materializing {row['path']}")
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(data)
+                target.chmod(row["mode"])
+        for target, mode in reversed(directories):
+            target.chmod(mode)
+
+
+def _finish_output(parts):
+    """Prepare dependencies once; consumption reads these bytes, not vendor/render."""
+    if "contracts" in parts:
+        source = CONTRACTS / "go"
+        files = sorted(source.rglob("*.go"))
+        if not files or not (source / "contracts.go").is_file():
+            raise KitError("contracts source roster is empty/incomplete")
+        heartbeat = gen_heartbeat.render()
+        if set(heartbeat) != {"families.go", "runtime.go"}:
+            raise KitError("heartbeat projection is empty/incomplete")
+        for f in files:
+            rel = f.relative_to(source)
+            data = heartbeat[f.name].encode() if rel.parts[0] == "heartbeat" and f.name in heartbeat else f.read_bytes()
+            target = L.out / "go/contracts" / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data)
+    vendored = (gen_manifest.vendor(L.go_module) if "loader" in parts else
+                gen_policy_machines.vendor(L.go_module) if L.key == "03-worker" and "stagetests" in parts else [])
+    for rel, data in vendored:
+        target = L.out / "go" / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+    # Do not seal a set that cannot supply the declared provenance on consumption.
+    required = (["writecheck"] if TABLE.is_file() else []) + list(parts)
+    provenance(required, [], {})
+
+
+def prepare(parts=(), *, profiles=None, output_root=None, source_root=ROOT, code_root=ROOT, context=None):
+    """Explicit creation in an empty external root; never repairs an existing set.
+
+    Full verification: prepare(profiles=lesson.PROFILES). A selected/component or
+    historical/export set has its own root and identity, never a full-nine claim.
+    """
+    profiles = lesson._profiles((L.slug,) if profiles is None else profiles)
+    output_root = Path(output_root or lesson.output_root())
+    if not output_root.is_absolute() or output_root.is_symlink():
+        raise KitError("prepared output root must be an absolute regular directory")
+    output_root = output_root.resolve()
+    if output_root.is_relative_to(Path(code_root).resolve() / "tools/normgen"):
+        raise KitError("prepared output must be outside tools/normgen")
+    if output_root.exists() and any(output_root.iterdir()):
+        raise KitError("output root is not empty; create a new set explicitly")
+    context = dict(context or {"kind": "current" if set(profiles) == set(lesson.PROFILES) else "component"})
+    inputs = lesson.output_inputs(source_root, code_root, kind=context["kind"])
+    plans = {}
+    for slug in profiles:
+        selected = (parts[slug] if isinstance(parts, dict) else parts) or PROFILE_PARTS[slug]
+        if not selected or len(selected) != len(set(selected)) or any(p not in PARTS for p in selected):
+            raise KitError(f"invalid/empty parts for {slug}")
+        plans[slug] = tuple(selected)
+    output_root.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="normgen-inputs-") as tmp:
+        stage = Path(tmp)
+        _copy_inputs(stage, inputs, source_root, code_root)
+        normgen = stage / "tools/normgen"
+        for slug, selected in plans.items():
+            nn = "01" if slug == "p01-1" else slug[1:]
+            keys = [r.split("\t")[1] for r in (stage / "Platform/lessons.tsv").read_text().split("\n")
+                    if r and not r.startswith("#") and r.split("\t")[0] == nn]
+            if len(keys) != 1:
+                raise KitError(f"no unique source lesson for profile {slug}")
+            env = dict(os.environ, NORMGEN_LESSON=keys[0], NORMGEN_OUT=str(output_root), PYTHONDONTWRITEBYTECODE="1")
+            code = ("import sys;sys.path.insert(0,'kit');import build_kit as k;"
+                    f"parts={selected!r};"
+                    "import subprocess;"
+                    "gens=k.regen(parts);"
+                    "\nfor g in gens:\n"
+                    " if g=='contracts/gen/gen_heartbeat.py': continue\n"
+                    " r=subprocess.run([sys.executable,g],capture_output=True,text=True)\n"
+                    " if r.returncode: raise k.KitError(g+': '+(r.stderr or r.stdout))\n"
+                    " if k.NORMGEN.joinpath('out').exists(): raise k.KitError(g+': recreated repository out')\n"
+                    "k._finish_output(parts)\n")
+            done = subprocess.run([sys.executable, "-c", code], cwd=normgen, env=env, capture_output=True, text=True)
+            if done.returncode:
+                raise KitError(f"prepare {slug}: {(done.stderr or done.stdout).strip()}")
+        declared_parts = {slug: list(dict.fromkeys((["writecheck"] if slug == "p01-1" else []) + list(selected)))
+                          for slug, selected in plans.items()}
+    try:
+        return lesson.record_outputs(output_root, source_root=source_root, code_root=code_root,
+                                     profiles=profiles, parts=declared_parts, context=context, inputs=inputs)
+    except lesson.LessonError as exc:
+        raise KitError(str(exc)) from None
+
+
+def prepared_vendor(module):
+    """Read the prepared pinned vendor closure, rewriting only the module name."""
+    root = L.out / "go"
+    vendor = sorted((root / "vendor").rglob("*"))
+    files = [p for p in vendor if p.is_file()]
+    if not files or not (root / "vendor/modules.txt").is_file():
+        raise KitError("prepared vendor closure is empty/incomplete")
+    mod = (root / "go.mod").read_bytes()
+    if len(re.findall(rb"(?m)^module .+$", mod)) != 1:
+        raise KitError("prepared go.mod must have one module")
+    mod = re.sub(rb"(?m)^module .+$", ("module " + module).encode(), mod)
+    return [("go.mod", mod), ("go.sum", (root / "go.sum").read_bytes())] + [
+        (str(p.relative_to(root)), p.read_bytes()) for p in files]
+
+
 def git(*args, cwd):
     done = subprocess.run(["git", *args], cwd=cwd, capture_output=True)
     if done.returncode:
@@ -770,15 +887,16 @@ def git(*args, cwd):
     return done.stdout
 
 
-def unpack(repo, rev, path, into):
-    """git archive rev path из repo → into (байты коммита, без рабочего дерева)."""
-    tar = git("archive", "--format=tar", rev, "--", path, cwd=repo)
+def unpack(repo, rev, path, into, exclude=()):
+    """Extract committed path bytes from repo/rev into a directory with git archive, without the working tree."""
+    tar = git("archive", "--format=tar", rev, "--", path,
+              *(":(exclude)" + p for p in exclude), cwd=repo)
     done = subprocess.run(["tar", "-x", "-C", str(into)], input=tar, capture_output=True)
     if done.returncode:
         raise KitError(f"tar: {done.stderr.decode(errors='replace').strip()}")
 
 
-# Пути урока в справке (ADR-0125 доп. (5) п. 2); прочий текст справки — урока P/01.
+# Lesson paths in documentation (ADR-0125 addendum 5, item 2); other prose describes P/01.
 KIT_MD = KIT_MD.replace("Platform/01-store/", L.rel + "/").replace("`01-store/internal/`", f"`{L.kit_dir}/internal/`")
 KIT_DOOR_MD = KIT_DOOR_MD.replace("Platform/01-store/spec/01-store.api.openapi.yaml",
                                   str(L.openapi.relative_to(ROOT)))
@@ -794,7 +912,7 @@ with its sha256 and whether it is yours (`editable`). Standard library only, Go 
 
 
 def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT, seed=None):
-    """Пакет из чистого HEAD курса на входах выгрузки export (seed — посев, см. seed_rule). → манифест."""
+    """Build from a clean course HEAD using an export's inputs; seed follows seed_rule. Return the manifest."""
     dst = Path(dst).resolve()
     seed = Path(seed).resolve() if seed is not None else None
     if git("status", "--porcelain", "--", "tools/normgen", cwd=root).strip():
@@ -804,21 +922,28 @@ def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT
         sha = git("rev-parse", "--verify", f"{export}^{{commit}}", cwd=specs).decode().strip()
     except KitError as exc:
         raise KitError(f"--export {export}: not a commit of {specs}: {exc}") from None
-    with tempfile.TemporaryDirectory(prefix="kit-export-") as t:
+    with tempfile.TemporaryDirectory(prefix="kit-export-") as t, \
+            tempfile.TemporaryDirectory(prefix="kit-generated-") as generated:
         stage = Path(t)
-        unpack(root, course, "tools/normgen", stage)
+        unpack(root, course, "tools/normgen", stage, exclude=("tools/normgen/out",))
         unpack(specs, sha, "Platform", stage)
-        if git("ls-tree", "--name-only", sha, "Source/tests/testdata", cwd=specs).strip():
-            unpack(specs, sha, "Source/tests/testdata", stage)   # манифесты курса, на которые ссылаются векторы (P/02 canonical)
         gens = stage / "tools/normgen"
-        for g in regen(parts):
-            done = subprocess.run([sys.executable, g], cwd=gens, capture_output=True, text=True)
-            if done.returncode:
-                raise KitError(f"{g} on the export {sha[:9]}: {(done.stderr or done.stdout).strip()[-2000:]}")
+        env = dict(os.environ, NORMGEN_OUT=generated, PYTHONDONTWRITEBYTECODE="1",
+                   **{COURSE_ENV: course, EXPORT_ENV: sha})
+        context = {"kind": "export", "course_commit": course, "export_commit": sha}
+        creator = ("import os,sys;sys.path.insert(0,'kit');import build_kit as k;"
+                   f"k.prepare({tuple(parts)!r},profiles=({L.slug!r},),context={context!r});"
+                   "print(os.environ[k.lesson.OUTPUT_RECEIPT_ENV])")
+        done = subprocess.run([sys.executable, "-c", creator], cwd=gens, env=env, capture_output=True, text=True)
+        if done.returncode:
+            raise KitError(f"prepare export {sha[:9]}: {(done.stderr or done.stdout).strip()}")
+        receipt = done.stdout.removesuffix("\n")
+        if re.fullmatch(r"[0-9a-f]{64}", receipt) is None:
+            raise KitError("export creator did not return a strict creation receipt")
+        env[lesson.OUTPUT_RECEIPT_ENV] = receipt
         cmd = [sys.executable, str(gens / "kit/build_kit.py"), str(dst), "--module", module]
         cmd += sum((["--part", p] for p in parts), []) + sum((["--judged", f"{k}={v}"] for k, v in judged.items()), [])
         cmd += ["--seed", str(seed)] if seed is not None else []
-        env = dict(os.environ, **{COURSE_ENV: course, EXPORT_ENV: sha})
         done = subprocess.run(cmd, cwd=stage, capture_output=True, text=True, env=env)
         if done.returncode:
             raise KitError((done.stderr or done.stdout).strip())
@@ -858,6 +983,10 @@ def main(argv=None):
             return 1
         judged[part] = ref
     try:
+        if not args.export and lesson.owns_output_root():
+            # CLI creation is explicit here. build() itself only consumes a set.
+            # A caller-supplied NORMGEN_OUT is never recreated, even if invalid.
+            prepare(tuple(args.part), profiles=(L.slug,))
         manifest = (build_from_export(args.dst, args.module, args.part, judged, args.export, Path(args.specs),
                                       seed=args.seed)
                     if args.export else build(args.dst, args.module, args.part, judged, args.seed))

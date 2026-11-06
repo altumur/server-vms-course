@@ -1,15 +1,5 @@
-"""Судья части flags в режиме входов процесса (gen_flags.py; P/03, P/04 — $ОКРУЖЕНИЕ и <позиционный>; ADR-0125 доп. (5)).
-
-Запуск: /opt/check-env/lesson-spec/bin/python tools/normgen/test_gen_flags_inputs.py [-v]   (cel_expr_python, go 1.22)
-
-Своя модель формы судьи: процесс из колонки commands; позиционные <arg> по порядку формы (лишнее слово — отказ этим
-словом); $NAME — присутствие в окружении (пустое значение — тоже дано); тип string — любое значение, dir/file — непустое,
-number — конечная десятичная запись; флаг команды рядом со входами (P/06: --x, --x=v; bool — true | false; чужой и
-повтор — отказ именем флага); required (true | CEL), затем bad (CEL над f — данные значения — и cmd, оракул
-cel_expr_python), затем литеральные умолчания. Пробы — случайные окружения со значениями из словаря судьи (пары
-псевдонимов — то равные, то разные); исход Go Parse (отказ — имя входа; иначе Given и значения полей) — равен модели.
-Мутанты выхода (обрезанная проверка bad, потерянное умолчание, позиционный не той командой) — красные. out свежий.
-"""
+"""Judge process-input flags (P/03/P/04 environment and positionals, ADR-0125 addendum 5) with an independent form model. Select process from commands; consume positionals in form order and refuse extra words. Environment presence includes empty values; string permits any value, dir/file require nonempty, number requires finite decimal. P/06 command flags accept --x/--x=v and bool true/false; foreign/repeated flags refuse by name. Evaluate required, then bad through cel_expr_python over supplied f/cmd, then literal defaults. Random environments vary sample values and equal/different aliases. Compare Go Parse refusal names or Given/field values with the model; bad/default/wrong-command mutants must fail. Require freshness; run with CEL and Go 1.22."""
+import lesson as output_lesson
 import json
 import os
 import random
@@ -69,7 +59,7 @@ class Model:
         pos = [r["flag"] for r in rows if r["flag"].startswith("<") and cmd in r["commands"]]
         flags = {r["flag"]: r for r in rows if r["flag"].startswith("--") and cmd in r["commands"]}
         given, words, k = {}, [], 0
-        while k < len(args):                  # флаги команды (P/06): --x, --x=v; не bool без «=» — следующее слово
+        while k < len(args):                  # P/06 command flags: --x/--x=v; a non-bool without '=' consumes the next word.
             w = args[k]
             k += 1
             if not w.startswith("--"):
@@ -195,7 +185,7 @@ def probes(form, rnd, n):
     for _ in range(n):
         cmd = rnd.choice(form.procs + (["nosuch"] if rnd.random() < 0.03 else []))
         args = [rnd.choice(VALUES) for _ in range(rnd.choice([0, 0, 1, 1, 2]))]
-        for fl in flags:                               # флаги команды: с «=», без, повтор, чужой
+        for fl in flags:                               # Command flags with/without '=', duplicates and foreign flags.
             if rnd.random() < 0.6:
                 args.insert(rnd.randint(0, len(args)), rnd.choice([fl, fl, fl + "=true", fl + "=false", fl + "=yes", fl + "=1", fl + "=TRUE"]))
         if flags and rnd.random() < 0.05:
@@ -204,7 +194,7 @@ def probes(form, rnd, n):
         for name in names:
             if rnd.random() < 0.35:
                 env[name] = rnd.choice(VALUES)
-        if rnd.random() < 0.5:                       # пары псевдонимов: равные значения
+        if rnd.random() < 0.5:                       # Alias pairs with equal values.
             for a, b in (("OBJECTS", "PLATFORM_OBJECTS"), ("RESOURCE_ROOT", "EVENTS")):
                 if a in env and rnd.random() < 0.7:
                     env[b] = env[a]
@@ -263,9 +253,10 @@ class InputFlags(unittest.TestCase):
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def test_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for lesson, slug in LESSONS.items():
             for p in sorted((self.mods[lesson] / "flags").iterdir()):
-                kept = HERE / "out" / slug / "go/flags" / p.name
+                kept = output_lesson.output_root() / slug / "go/flags" / p.name
                 self.assertTrue(kept.is_file(), f"{kept} missing")
                 self.assertEqual(kept.read_bytes(), p.read_bytes(), f"{kept} is stale: run gen_flags.py --lesson {lesson}")
 
@@ -274,7 +265,7 @@ class InputFlags(unittest.TestCase):
         given = "box-a:00042:AbCdEf"
         cases = [("console", [], {}), ("console", [], {"INSTANCE_ID": ""}),
                  ("console", [], {"INSTANCE_ID": given}),
-                 ("console", [], {"INSTANCE_ID": "узел:00042:AbCdEf"}),
+                 ("console", [], {"INSTANCE_ID": '\u0443\u0437\u0435\u043b:00042:AbCdEf'}),
                  ("cleanup-window", ["--writers-stopped"], {"INSTANCE_ID": given}),
                  ("console", ["--instance-id=" + given], {})]
         cases = [(cmd, args, dict(env, CONSOLE_ROOT="/tmp/p06-ui") if cmd == "console" else env)
@@ -288,7 +279,7 @@ class InputFlags(unittest.TestCase):
         self.assertNotIn("InstanceID", got[0]["values"])
         self.assertNotIn("InstanceID", got[1]["values"])
         self.assertEqual(got[2]["values"]["InstanceID"], given)
-        self.assertEqual(got[3]["values"]["InstanceID"], "узел:00042:AbCdEf")
+        self.assertEqual(got[3]["values"]["InstanceID"], '\u0443\u0437\u0435\u043b:00042:AbCdEf')
         self.assertNotIn("$INSTANCE_ID", got[4]["given"])
         self.assertNotIn("InstanceID", got[4]["values"])
         self.assertEqual(got[5]["refused"], "--instance-id")
@@ -305,10 +296,10 @@ class InputFlags(unittest.TestCase):
                 bad = disagree(model, cases, got)
                 self.assertEqual(bad[:2], [], f"{lesson}: {len(bad)} of {len(cases)} disagree")
                 outcomes = {model.run(*c)["refused"] for c in cases}
-                for k, r in enumerate(form.rows):      # каждая проверка формы сработала хоть раз
+                for k, r in enumerate(form.rows):      # Every form check must fire at least once.
                     if r["bad"] and r["flag"].startswith("--"):
                         self.assertIn(r["flag"], outcomes, f"{lesson}: probes never refuse {r['flag']}")
-                    elif r["bad"]:                      # симметричные псевдонимы: отказ берёт первый, условие — оба
+                    elif r["bad"]:                      # Symmetric aliases: refusal names the first, while the condition covers both.
                         hit = any(model.cel_true(k, "bad", {"$" + n: v for n, v in e.items()}, c)
                                   for c, _, e in cases if r["flag"][1:] in e)
                         self.assertTrue(hit, f"{lesson}: bad of {r['flag']} is never true on the probes")
@@ -337,11 +328,11 @@ class InputFlags(unittest.TestCase):
                 try:
                     got = run_driver(mod, cases)
                 except AssertionError:
-                    continue                                # не собрался — убит
+                    continue                                # Compilation failure kills the mutant.
                 self.assertTrue(disagree(model, cases, got), f"{name} survives")
 
     def test_mutants_command_flags(self):
-        """P/06: флаг команды рядом со входами — чужой флаг, слово не true/false, повтор, отказ bad — красные."""
+        """P/06 input-adjacent command flags: foreign flags, non-bool words, repetition and bad refusals must fail."""
         rnd = random.Random(6)
         lesson = "06-console"
         form = Form(ROOT / "Platform" / lesson / "forms/daemon-flags.tsv")
@@ -367,8 +358,7 @@ class InputFlags(unittest.TestCase):
                 self.assertTrue(disagree(model, cases, got), f"{name} survives")
 
     def test_constants(self):
-        """runtime-constants.tsv (P/06) — constants.go части flags: своё чтение формы судьёй; const и Constants пакета
-        равны строкам (имя, значение, единица, якорь); якорь — есть в нормах урока; порченая форма — отказ генератора."""
+        """Independently read runtime-constants.tsv and compare every flags const/Constants name, value, unit, norm with its row. Verify norm anchors and reject corrupted forms."""
         for lesson, slug in LESSONS.items():
             form = ROOT / "Platform" / lesson / "forms/runtime-constants.tsv"
             got = self.mods[lesson] / "flags/constants.go"

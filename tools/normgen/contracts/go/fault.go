@@ -1,6 +1,6 @@
 package contracts
 
-// The closed dictionary of the word fault (common/vectors/fault, the owner P/06.1 Н2, Н4): the word and the HTTP code
+// The closed dictionary of the word fault (common/vectors/fault, the owner P/06.1 N2, N4): the word and the HTTP code
 // it comes with — 400, the body itself is wrong; 409, the refusal depends on the standing rows.
 var FaultWords = map[string]int{
 	"not_json":   400,

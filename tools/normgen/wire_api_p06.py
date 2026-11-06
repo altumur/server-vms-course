@@ -70,13 +70,18 @@ API_P06 = [
     ('common/secret-in', 'cases.tsv', 'vectors', 'SecretIn', 'cells'),
     ('common/slot-name', 'cases.tsv', 'vectors', 'SlotName', 'cells'),
     ('common/tombstone', 'cases.tsv', 'vectors', 'Tombstone', 'cells'),
+    ('common/turn', 'cases.tsv', 'vectors', 'Turn', 'cells'),
     ('common/values-by-type', 'cases.tsv', 'vectors', 'ValuesByType', 'cells+variant'),
 ]
 
 
 def declarations(root):
     """Select active API surfaces and forward shared expansion results to the lesson judges."""
-    decls = wire_vectors.declarations(root, lesson='06-console', api=API_P06)
+    # Pre-C4 exports have no console assignment of turn. Once assigned, the
+    # mapping remains mandatory: a missing binding must still fail closed.
+    assigned = wire_vectors.wire.consumers(root).get(('common/turn', 'cases.tsv'), ())
+    api = API_P06 if '06-console' in assigned else [row for row in API_P06 if row[:3] != ('common/turn', 'cases.tsv', 'vectors')]
+    decls = wire_vectors.declarations(root, lesson='06-console', api=api)
     runs, excluded = wire_vectors.wire.expand(root, '06-console')
     selected, omitted = defaultdict(list), defaultdict(list)
     for run in runs:

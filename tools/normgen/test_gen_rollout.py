@@ -1,6 +1,5 @@
-"""Тесты части rollout-poll (gen_rollout.py; P/02, ADR-0125 доп. (5)): out свежий; на заглушке poll всё красное без паники;
-на подставном poll (ответы, выписанные из самих трасс — машину генератор и судья не исполняют) всё зелёное; мутанты
-(состояние, слово отказа, отказ без результата) — красные; внутренние утверждения — в описи excluded."""
+"""Test rollout-poll freshness, all scaffold tests fail without panic, seam-derived fixture responses pass, and state/refusal-word/missing-result mutants fail. Internal assertions remain excluded; neither generator nor fixture judge implements the machine."""
+import lesson as output_lesson
 import json
 import os
 import shutil
@@ -41,7 +40,7 @@ func RolloutPoll(input json.RawMessage, events []Event) Poll {
 
 
 def answers():
-    """(вход, события до шага) → ожидаемое наблюдение — из самих трасс."""
+    """Map (input, event prefix) to the expected observation directly from traces."""
     out = {}
     rows = [ln.split("\t") for ln in TRACES.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("#")][1:]
     traces = {}
@@ -95,6 +94,7 @@ def results(mod):
 class Rollout(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.tmp = tempfile.TemporaryDirectory(prefix="rollout-")
         cls.out = Path(cls.tmp.name) / "out"
         env = dict(os.environ, NORMGEN_LESSON="02-installer")
@@ -120,12 +120,13 @@ class Rollout(unittest.TestCase):
         return t / "go"
 
     def test_out_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for rel in ("rollouttests/traces_test.go", "rollouttests/engine_test.go", "rollouttests/inventory.tsv"):
-            self.assertEqual((self.mod / rel).read_bytes(), (HERE / "out/p02/go" / rel).read_bytes(), rel)
+            self.assertEqual((self.mod / rel).read_bytes(), (output_lesson.output_root() / 'p02/go' / rel).read_bytes(), rel)
 
     def test_inventory(self):
         inv = (self.mod / "rollouttests/inventory.tsv").read_text(encoding="utf-8")
-        self.assertGreaterEqual(inv.count("\ttranslated\t"), len(answers()))   # одинаковые префиксы трасс — один ответ
+        self.assertGreaterEqual(inv.count("\ttranslated\t"), len(answers()))   # Identical trace prefixes must yield one answer.
         self.assertIn("\texcluded\tan internal variable of the machine", inv)
 
     def test_stub_red(self):

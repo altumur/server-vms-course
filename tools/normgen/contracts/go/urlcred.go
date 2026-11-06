@@ -6,8 +6,8 @@ import (
 	"unicode/utf8"
 )
 
-// The address contract (common/contracts/url-credentials.md, А1–А15): where the login and the password are in a url
-// value — the display (А14) and the refusal (А15) — and the reading of addresses in free text for the log mask
+// The address contract (common/contracts/url-credentials.md, A1–A15): where the login and the password are in a url
+// value — the display (A14) and the refusal (A15) — and the reading of addresses in free text for the log mask
 // (common/contracts/log-mask.md).
 
 // CommonWords — the common vocabulary common_words.
@@ -17,7 +17,7 @@ var CommonWords = []string{"password", "passwd", "pass", "pwd", "secret", "token
 // Mask — the display mask.
 const Mask = "***"
 
-// MaxNesting — the deepest level of a nested address that is read (А8).
+// MaxNesting — the deepest level of a nested address that is read (A8).
 const MaxNesting = 3
 
 const (
@@ -34,7 +34,7 @@ type finding struct {
 // isSpace — white_space of the person name contract (White_Space of Unicode 15.0.0).
 func isSpace(r rune) bool { return unicode.Is(unicode.White_Space, r) }
 
-// --- А4: the name of a pair ---
+// --- A4: the name of a pair ---
 
 var invisible = map[rune]bool{0xAD: true, 0x34F: true, 0x180E: true, 0xFEFF: true}
 
@@ -123,7 +123,7 @@ type pairName struct {
 	head  string
 }
 
-// readName — А4 steps 1–6.
+// readName — A4 steps 1–6.
 func readName(raw string) pairName {
 	s := strings.ToValidUTF8(DecodeFix(raw), "�")
 	s = NFKC(s)
@@ -171,7 +171,7 @@ func readName(raw string) pairName {
 	return n
 }
 
-// matchPattern — А5.
+// matchPattern — A5.
 func (n pairName) match(p string) bool {
 	p = strings.ToLower(p)
 	switch {
@@ -199,7 +199,7 @@ func contains(xs []string, x string) bool {
 	return false
 }
 
-// nameKind — А5: a secret, then a login, otherwise nothing.
+// nameKind — A5: a secret, then a login, otherwise nothing.
 func nameKind(raw string, rule *URLRule) int {
 	n := readName(raw)
 	for _, w := range CommonWords {
@@ -236,7 +236,7 @@ type scan struct {
 	t     string
 	level int
 	out   []finding
-	nest  []finding // the stretches of nested addresses (А8, А9)
+	nest  []finding // the stretches of nested addresses (A8, A9)
 }
 
 func (s *scan) add(kind, a, b int) {
@@ -290,7 +290,7 @@ func schemeChar(c byte) bool {
 	return isLetter(c) || c >= '0' && c <= '9' || c == '+' || c == '.' || c == '-'
 }
 
-// wordEnd — the end of the word without spaces from i (А10).
+// wordEnd — the end of the word without spaces from i (A10).
 func (s *scan) wordEnd(i, end int) int {
 	for j := i; j < end; {
 		r, n := utf8.DecodeRuneInString(s.t[j:])
@@ -302,7 +302,7 @@ func (s *scan) wordEnd(i, end int) int {
 	return end
 }
 
-// --- the parts of an address (А2) ---
+// --- the parts of an address (A2) ---
 
 type parts struct {
 	scheme                                     string
@@ -371,7 +371,7 @@ func (s *scan) address(a, end int) {
 	s.pairsAddress(pr, end)
 }
 
-// userinfo — А10 at the «://» at p.
+// userinfo — A10 at the «://» at p.
 func (s *scan) userinfo(p, end int) {
 	t := s.t
 	i := p + 3
@@ -407,7 +407,7 @@ func (s *scan) userinfo(p, end int) {
 	s.add(kindSecret, pw, at)
 }
 
-// port — А12 at the «://» at p.
+// port — A12 at the «://» at p.
 func (s *scan) port(p, end int) {
 	t := s.t
 	a := p + 3
@@ -448,7 +448,7 @@ func (s *scan) port(p, end int) {
 	}
 }
 
-// atSigns — А11а: each «@» after the first «://» outside authority.
+// atSigns — A11a: each «@» after the first «://» outside authority.
 func (s *scan) atSigns(pr parts, end int) {
 	t := s.t
 	for i := pr.auth1; i < end; i++ {
@@ -468,7 +468,7 @@ func (s *scan) atSigns(pr parts, end int) {
 	}
 }
 
-// regexes — А13 over the parts of the outer address.
+// regexes — A13 over the parts of the outer address.
 func (s *scan) regexes(pr parts, end int) {
 	for _, rx := range s.rule.Regexes {
 		if len(rx.Schemes) > 0 {
@@ -523,7 +523,7 @@ func (s *scan) regexes(pr parts, end int) {
 	}
 }
 
-// pair — one pair name=value at [na, nb) [va, vb) (vb — the end of the value by its part; ext — the end by А6).
+// pair — one pair name=value at [na, nb) [va, vb) (vb — the end of the value by its part; ext — the end by A6).
 func (s *scan) pair(na, nb, va, vb int) {
 	t := s.t
 	name, value := t[na:nb], t[va:vb]
@@ -553,7 +553,7 @@ func (s *scan) pair(na, nb, va, vb int) {
 	s.add(nameKind(name, s.rule), va, vb)
 }
 
-// hidden — А7(b): the decoded text cut by & and ; — the strongest kind of its pairs.
+// hidden — A7(b): the decoded text cut by & and ; — the strongest kind of its pairs.
 func (s *scan) hidden(dv string) int {
 	k := kindNone
 	for _, part := range strings.FieldsFunc(dv, func(r rune) bool { return r == '&' || r == ';' }) {
@@ -566,7 +566,7 @@ func (s *scan) hidden(dv string) int {
 	return k
 }
 
-// pairsAddress — А3 over an address; А6 for the end of a secret value; А8 (3), (4) for the segments with «%».
+// pairsAddress — A3 over an address; A6 for the end of a secret value; A8 (3), (4) for the segments with «%».
 func (s *scan) pairsAddress(pr parts, end int) {
 	t := s.t
 	r1 := end
@@ -599,7 +599,7 @@ func (s *scan) pairsAddress(pr parts, end int) {
 			}
 			if e := strings.IndexByte(t[p0:p1], '='); e >= 0 {
 				vb := p1
-				// А6: «/» right after the value and «;» or «&» before the next ? # or the end
+				// A6: «/» right after the value and «;» or «&» before the next ? # or the end
 				if vb == seg1 && seg1 < r1 && t[seg1] == '/' && nameKind(t[p0:p0+e], s.rule) == kindSecret {
 					stopAt := end
 					if k := strings.IndexAny(t[seg1:end], "?#"); k >= 0 {
@@ -643,7 +643,7 @@ func textNameChar(r rune) bool {
 	return r >= 0x80 || unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '.' || r == '-' || r == '%'
 }
 
-// textPairs — А1 pairs of text over [a, end): a name of letters, digits, _ . - % and non-ASCII before «=», a value to
+// textPairs — A1 pairs of text over [a, end): a name of letters, digits, _ . - % and non-ASCII before «=», a value to
 // & ; , or a space. skip — the positions of «=» that belong to an address of free text.
 func (s *scan) textPairs(a, end int, skip func(int) bool) {
 	t := s.t
@@ -675,7 +675,7 @@ func (s *scan) textPairs(a, end int, skip func(int) bool) {
 	}
 }
 
-// head — А11б: each «@» of the head [0, end).
+// head — A11b: each «@» of the head [0, end).
 func (s *scan) head(end int) {
 	t := s.t
 	for i := 0; i < end; i++ {
@@ -712,7 +712,7 @@ func (s *scan) value() {
 
 func maskSpans(t string, fs []finding) string { return maskWith(t, fs, nil) }
 
-// unparsable — a character that the grammar of RFC 3986 admits nowhere (А2).
+// unparsable — a character that the grammar of RFC 3986 admits nowhere (A2).
 func unparsable(t string) bool {
 	for _, r := range t {
 		if r < 0x20 || r == 0x7F || r == ' ' || strings.ContainsRune("\"<>\\^`{|}", r) {
@@ -722,8 +722,8 @@ func unparsable(t string) bool {
 	return false
 }
 
-// URLRead — the reading of a url value by its field rule: Masked — the display (А14); Fault — the credentials field
-// the refusal names ("" — the credentials do not refuse the value; А15).
+// URLRead — the reading of a url value by its field rule: Masked — the display (A14); Fault — the credentials field
+// the refusal names ("" — the credentials do not refuse the value; A15).
 type URLRead struct {
 	Masked string
 	Fault  string

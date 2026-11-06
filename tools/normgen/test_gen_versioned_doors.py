@@ -1,4 +1,5 @@
 """Independent TSV oracle and compiled-output mutants of P/08 core version metadata; P/01 core stays unchanged."""
+import lesson as output_lesson
 import csv
 import json
 import os
@@ -26,16 +27,19 @@ ROWS = [
     ["DELETE", "/domain/placement/{sub}/{ref}", "domain/placement/<sub>/<ref>", "rev", "false", "optional", "-"],
 ]
 NORMS = "P/08.0-R005,P/08.0-R006"
+COLUMNS = ["method", "path", "row", "revision", "etag", "if_match", "absent_revision", "norm"]
+FORM = Path("Platform/08-domain/forms/versioned-doors.tsv")
+API = Path("Platform/08-domain/spec/08-domain.api.openapi.yaml")
 
 
-def fixture(root):
+def fixture(root, rows=ROWS):
     import yaml
-    form, api = root / g.FORM, root / g.API
-    form.parent.mkdir(parents=True)
-    api.parent.mkdir(parents=True)
-    form.write_text("\t".join(g.COLUMNS) + "\n" + "\n".join("\t".join(r + [NORMS]) for r in ROWS) + "\n")
+    form, api = root / FORM, root / API
+    form.parent.mkdir(parents=True, exist_ok=True)
+    api.parent.mkdir(parents=True, exist_ok=True)
+    form.write_text("\t".join(COLUMNS) + "\n" + "\n".join("\t".join(r + [NORMS]) for r in rows) + "\n")
     paths = {}
-    for n, row in enumerate(ROWS):
+    for n, row in enumerate(rows):
         method, path, _, _, etag, mode, _ = row
         import re
         params = [{"name": name, "in": "path", "required": True, "schema": {"type": "string"}}
@@ -158,7 +162,7 @@ func TestMetadata(t *testing.T) {
         for col, value in [("revision", "doc.counter"), ("etag", "yes"), ("if_match", "mandatory"),
                            ("absent_revision", "1"), ("norm", "P/08.0-R999"), ("row", "domain/members/<unknown>")]:
             row = lines[1].split("\t")
-            row[g.COLUMNS.index(col)] = value
+            row[COLUMNS.index(col)] = value
             mutations[col] = "\n".join([lines[0], "\t".join(row)] + lines[2:]) + "\n"
         mutations["base-rev norm"] = original.replace("base-rev\t0\t" + NORMS, "base-rev\t0\tP/08.0-R005")
         for name, text in mutations.items():
@@ -167,6 +171,41 @@ func TestMetadata(t *testing.T) {
                 with self.assertRaises(g.GenError):
                     self.text()
         self.form.write_text(original)
+
+    def test_closed_new_modes_and_compiled_independent_oracle(self):
+        extra = ["PUT", "/domain/memberof/{member}/{sub}/{rows}/{id}", "domain/memberof/<member>/<sub>/<rows>/<id>", "-", "false", "optional-index", "-"]
+        rows = [list(r) for r in ROWS] + [extra]
+        self.form = fixture(self.root, rows)
+        done = probe(self.text(), Path(self.tmp.name) / "go")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertEqual(json.loads(done.stdout), oracle(self.form))
+        rows[5][3], rows[5][6] = "-", "-"  # Batch has no API If-Match and explicitly needs metadata.
+        fixture(self.root, rows)
+        done = probe(self.text(), Path(self.tmp.name) / "go")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertEqual(json.loads(done.stdout), oracle(self.form))
+
+    def test_new_mode_invalid_combinations_are_refused(self):
+        base = ["PUT", "/domain/memberof/{member}/{sub}/{rows}/{id}", "domain/memberof/<member>/<sub>/<rows>/<id>", "-", "false", "optional-index", "-"]
+        for field, value in (("absent_revision", "0"), ("etag", "true"), ("if_match", "optional"),
+                             ("if_match", "base-rev")):
+            rows = [list(r) for r in ROWS] + [list(base)]
+            rows[-1][COLUMNS.index(field)] = value
+            fixture(self.root, rows)  # API stays coherent where applicable; logical combination is still invalid.
+            with self.subTest(field=field, value=value), self.assertRaises(g.GenError):
+                self.text()
+        fixture(self.root, [list(r) for r in ROWS] + [list(base)])
+        original = self.form.read_text()
+        self.assertEqual(original.count("optional-index"), 1)
+        self.form.write_text(original.replace("optional-index", "ignored"))
+        with self.assertRaises(g.GenError):
+            self.text()  # Existing If-Match forbids ignored.
+        no_header = [list(r) for r in ROWS] + [list(base)]
+        no_header[-1][5] = "ignored"
+        fixture(self.root, no_header)
+        self.form.write_text(self.form.read_text().replace("ignored\t-\t" + NORMS, "optional-index\t-\t" + NORMS))
+        with self.assertRaises(g.GenError):
+            self.text()  # optional-index requires the API header.
 
     def test_refusal_leaves_output(self):
         out = Path(self.tmp.name) / "out"
@@ -182,19 +221,58 @@ func TestMetadata(t *testing.T) {
             g.render(self.root, "02-installer")
 
     def test_no_empty_source(self):
-        (self.root / g.API).write_text("openapi: 3.1.0\npaths: {}\n")
-        self.form.write_text("\t".join(g.COLUMNS) + "\n")
+        (self.root / API).write_text("openapi: 3.1.0\npaths: {}\n")
+        self.form.write_text("\t".join(COLUMNS) + "\n")
         with self.assertRaisesRegex(g.GenError, "no versioned operations"):
             self.text()
 
 
 class PublishedP08(unittest.TestCase):
-    @unittest.skipUnless((g.ROOT / g.FORM).is_file(), "P/08 form/checker has not been published in main yet")
+    def test_compiled_current_all24_fields_without_renderer_expected(self):
+        source = HERE.parents[1] / FORM
+        self.assertTrue(source.is_file(), "the published form is required")
+        wanted = oracle(source)
+        self.assertEqual(len(wanted), 24)
+        self.assertEqual(len({(r['Method'], r['Path']) for r in wanted}), 24)
+        selected = next(r for r in wanted if r['Method'] == 'PUT' and r['Path'] == '/domain/memberof/{member}/{sub}/{rows}/{id}')
+        self.assertEqual((selected['Revision'], selected['ETag'], selected['IfMatch'], selected['AbsentRevisionZero']),
+                         ('-', False, 'optional-index', False))
+        with tempfile.TemporaryDirectory(prefix='published-versioned-metadata-') as tmp:
+            text = g.render(HERE.parents[1], '08-domain')['coreadapter/versioned_doors.go']
+            done = probe(text, Path(tmp))
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(json.loads(done.stdout), wanted)
+
+    def test_current_new_mode_compiled_mutants_have_observable_metadata_disagreements(self):
+        source = HERE.parents[1] / FORM
+        wanted = oracle(source)
+        text = g.render(HERE.parents[1], '08-domain')['coreadapter/versioned_doors.go']
+        row = next(line for line in text.split('\n') if 'Path: "/domain/memberof/{member}/{sub}/{rows}/{id}"' in line)
+        mutants = [('Revision: NoRevision', 'Revision: RowRevision'),
+                   ('IfMatch: OptionalIndexIfMatch', 'IfMatch: OptionalIfMatch'),
+                   ('ETag: false', 'ETag: true'),
+                   ('AbsentRevisionZero: false', 'AbsentRevisionZero: true')]
+        with tempfile.TemporaryDirectory(prefix='published-versioned-mutants-') as tmp:
+            baseline = probe(text, Path(tmp))
+            self.assertEqual(baseline.returncode, 0, baseline.stderr)
+            self.assertEqual(json.loads(baseline.stdout), wanted)
+            for old, new in mutants:
+                with self.subTest(old=old):
+                    self.assertEqual(row.count(old), 1)
+                    changed = text.replace(row, row.replace(old, new, 1), 1)
+                    self.assertNotEqual(changed, text)
+                    done = probe(changed, Path(tmp))
+                    self.assertEqual(done.returncode, 0, 'checking compile/run error, not a kill: ' + done.stderr)
+                    actual = json.loads(done.stdout)
+                    self.assertEqual(len(actual), len(wanted))
+                    self.assertNotEqual(actual, wanted)
+
     def test_fresh_and_kit(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         if not shutil.which("go"):
             self.skipTest("go is not in PATH")
         env = dict(os.environ, NORMGEN_LESSON="08-domain")
-        kept = HERE / "out/p08/core/coreadapter/versioned_doors.go"
+        kept = output_lesson.output_root() / 'p08/core/coreadapter/versioned_doors.go'
         self.assertTrue(kept.is_file(), "run gen_versioned_doors.py --lesson 08-domain")
         with tempfile.TemporaryDirectory(prefix="versioned-kit-") as tmp:
             out = Path(tmp) / "out"

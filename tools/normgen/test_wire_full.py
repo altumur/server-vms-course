@@ -1,4 +1,5 @@
-"""Full wire 4f0cff2e: closed grammar, exact raw input, active surfaces, and all 3184 P/06 fixture calls."""
+"""Full wire 4f0cff2e: closed grammar, exact raw input, active surfaces, and all 3200 P/06 fixture calls."""
+import lesson as output_lesson
 import base64
 import copy
 import importlib
@@ -26,14 +27,15 @@ GOENV=dict(os.environ,GOFLAGS='-mod=mod',GOPROXY='off',GOWORK='off',GOTOOLCHAIN=
 class Grammar(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.bindings=wire.parse(ROOT)
         cls.ex=wire.Expander(ROOT)
 
     def test_full_registry_and_exclusions(self):
-        self.assertEqual(len(self.bindings),90)
+        self.assertEqual(len(self.bindings),91)
         runs,excluded=wire.expand(ROOT,'06-console')
-        self.assertEqual(len(runs),3184)
-        self.assertEqual(len({r.identity for r in runs}),3184)
+        self.assertEqual(len(runs),3200)
+        self.assertEqual(len({r.identity for r in runs}),3200)
         layouts={(e.binding.package,e.binding.table) for e in excluded if e.binding.surface=='layout'}
         self.assertEqual(layouts,{('common/journal','modes.tsv'),('06-console/requests-body','requests_body.tsv'),('common/fault','fault.tsv')})
         self.assertFalse(any(r.binding.package=='06-console/requests-body' for r in runs))
@@ -118,6 +120,7 @@ func main(){s:=bufio.NewScanner(os.Stdin);s.Buffer(make([]byte,4096),1<<20);for 
 class Native(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.tmp=tempfile.TemporaryDirectory(prefix='wire-full-native-');cls.mod=Path(cls.tmp.name)
         g=types.SimpleNamespace(HERE=HERE,gofmt=gofmt,GenError=RuntimeError)
         for rel,data in W.runtime_files(g,full=True).items():
@@ -192,6 +195,7 @@ var _ = fmt.Sprint
 class Render(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         import lesson
         saved,env=lesson.CURRENT,os.environ.get('NORMGEN_LESSON')
         lesson.CURRENT=lesson.get('06-console');os.environ['NORMGEN_LESSON']='06-console'
@@ -217,7 +221,7 @@ class Render(unittest.TestCase):
             for rel,data in files.items():
                 if rel.startswith('go/'):
                     p=cls.mod/rel[3:];p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
-            shutil.copytree(HERE/'out/p06/go/families',cls.mod/'families')
+            shutil.copytree(output_lesson.output_root() / 'p06/go/families',cls.mod/'families')
             (cls.mod/'go.mod').write_text('module normgen/p06\n\ngo 1.22\n')
             by={}
             for d in decls:
@@ -285,8 +289,11 @@ class Render(unittest.TestCase):
         self.assertTrue(self.assertNoInactive)
         done=subprocess.run(['go','test','-count=1','-json','./vectortests'],cwd=self.mod,env=GOENV,capture_output=True,text=True)
         events=[json.loads(s) for s in done.stdout.splitlines() if s.startswith('{')]
-        results={e['Test']:e['Action'] for e in events if e.get('Test') and e['Action'] in ('pass','fail')}
-        self.assertEqual(len(results),3184,done.stderr+done.stdout[-2000:])
+        terminals=[e for e in events if e.get('Test') and e['Action'] in ('pass','fail','skip')]
+        self.assertEqual(len({e['Test'] for e in terminals}),len(terminals),'duplicate terminal native test')
+        self.assertFalse(any(e['Action']=='skip' for e in terminals),'skipped native test')
+        results={e['Test']:e['Action'] for e in terminals}
+        self.assertEqual(len(results),3200,done.stderr+done.stdout[-2000:])
         self.assertEqual(done.returncode,0,done.stderr+done.stdout[-3000:])
         self.assertTrue(all(a=='pass' for a in results.values()))
 

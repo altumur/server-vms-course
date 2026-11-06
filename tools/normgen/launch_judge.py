@@ -1,20 +1,9 @@
-"""Судья части `launch` (ADR-0083 доп. (95) п. 3): пакет как есть (каркас и его пустое ядро) под раннером P/01.1.
+"""Judge the unmodified launch frame and empty core through the P/01.1 runner (ADR-0083 addendum 95, item 3).
 
-  python3 tools/normgen/launch_judge.py stand <dst> --spec-version <SHA выгрузки>   # каталог реализации для раннера
-  python3 tools/normgen/launch_judge.py job <in> --spec-version <SHA> [--acceptance <клон раннера>] [--specs <клон выгрузки>]
-  python3 tools/normgen/launch_judge.py judge <out/report> [--json итог]
-
-stand — пакет Б с частями door, flags, stagetests, launch (build_kit.build) как есть, ничего не правится:
-cmd/configstore/main.go — сгенерированный каркас, internal/coreadapter/open.go — заглушка пакета (ErrNotImplemented),
-на ней каркас отвечает своим пустым ядром launch.Empty (Get — всегда отсутствующая строка, прочее — 503); профиль 01-store/acceptance.yaml по справке KIT.md части launch (build
-`go build -o bin/configstore ./cmd/configstore`, store — `-id store1 -dir {data} -sockets {rundir} -rights {rights} -max-body
-{body_limit} -max-value {row_ceiling}`), assembly.yaml, SPEC_VERSION; <dst> — репозиторий Git (коммит делает stand).
-job — вход очереди CT 103: RUN.py (раннер all.py --only P/01.1 --build), acceptance, specs на --spec-version, impl.
-judge — мера этапа launch: gate accept:1.1:01-absent — сценарий 01-absent отчёта P-01.1-door.json целиком зелёный.
-Нет отчёта, нет сценария, шаг без исхода — провал (отсутствие исполнения — отрицательный исход). Прочие сценарии —
-сводкой, в меру не идут (их держит ядро модели).
-Итог: `launch: 01-absent PASS|FAIL (…)`; код 0 — PASS.
-"""
+  python3 tools/normgen/launch_judge.py stand <dst> --spec-version <export-SHA>
+  python3 tools/normgen/launch_judge.py job <in> --spec-version <SHA> [--acceptance <runner-clone>] [--specs <export-clone>]
+  python3 tools/normgen/launch_judge.py judge <out/report> [--json <result>]
+stand builds door, flags, stagetests, launch unchanged, with generated main and ErrNotImplemented Open. launch.Empty returns absent for Get, 503 otherwise. Write the launch KIT.md profile, build command, store flags, assembly and SPEC_VERSION into a Git repository committed by stand. job creates CT103 queue inputs with RUN.py invoking all.py --only P/01.1 --build and the pinned specs/implementation. judge requires the complete01-absent scenario to pass under accept:1.1:01-absent. Missing reports, scenarios or step outcomes fail; other scenarios are summarized but excluded because the model owns their core. Result: launch:01-absent PASS|FAIL; exit 0 means PASS."""
 import argparse
 import json
 import shutil
@@ -30,7 +19,7 @@ MODULE = "p01store/01-store"
 GATE = ("01-absent",)                      # forms/stages.tsv: launch — accept:1.1:01-absent
 PARTS = ("door", "flags", "stagetests", "launch", "admin")
 
-PROFILE = """# Судья части launch (tools/normgen/launch_judge.py, ADR-0083 доп. (95) п. 3): пакет как есть, пустое ядро каркаса.
+PROFILE = r'''# Launch judge: run the unchanged kit frame with its empty core through the P/01.1 runner.
 format: 2
 implementation: normgen-launch-frame
 module: 01-store
@@ -45,10 +34,10 @@ keys:
   request_line_limit: 8192
 artifacts:
   configstore: bin/configstore
-{vectors}"""
+{vectors}'''
 ASSEMBLY = "format: 1\nmodules:\n  01-store: 01-store/acceptance.yaml\n"
 
-RUN = """# Судья части launch (ADR-0083 доп. (95) п. 3): раннер P/01.1 --build на каркасе пакета с пустым ядром.
+RUN = r'''# Launch judge: run the unchanged kit frame with its empty core through the P/01.1 runner.
 import os, subprocess, sys
 here = os.path.dirname(os.path.abspath(__file__))
 tmp = os.environ.get('TMPDIR', '/tmp')
@@ -60,9 +49,9 @@ code = subprocess.call([sys.executable, '-I', '-B', os.path.join(here, 'acceptan
                         '--build', '--out', out], env=env, cwd=here)
 for name in sorted(os.listdir(out)) if os.path.isdir(out) else []:
     if name.endswith(('.json', '.txt')) and name not in ('inventory.json', 'commands.json'):
-        sys.stdout.write('\\n=== ' + name + '\\n' + open(os.path.join(out, name), encoding='utf-8').read() + '\\n')
+        sys.stdout.write('\n=== ' + name + '\n' + open(os.path.join(out, name), encoding='utf-8').read() + '\n')
 raise SystemExit(code)
-"""
+'''
 
 
 def git(args, cwd):
@@ -70,8 +59,7 @@ def git(args, cwd):
 
 
 def stand(dst, spec, kit=None, vectors=False):
-    """kit — готовый каталог пакета (копируется как есть), иначе build_kit.build; vectors — ещё bin/vectors и
-    vectors/write-checks профиля (gate vectors:write-checks этапа model)."""
+    """Copy an existing kit unchanged, otherwise call build_kit.build; vectors additionally builds bin/vectors and the profile's write-checks entry for the model-stage gate."""
     if len(spec) != 40:
         raise build_kit.KitError(f"--spec-version {spec!r}: a full 40-hex commit of cammeta-specs")
     dst = Path(dst)
@@ -107,7 +95,7 @@ def job(dst, spec, acceptance, specs, kit=None, vectors=False):
     git(["clone", "-q", str(acceptance), str(dst / "acceptance")], dst)
     git(["clone", "-q", str(specs), str(dst / "specs")], dst)
     git(["checkout", "-q", spec], dst / "specs")
-    stand(dst / "impl", spec, kit, vectors)        # specs — с .git: предпроверка раннера читает его метаданные
+    stand(dst / "impl", spec, kit, vectors)        # specs includes .git because runner preflight reads its metadata.
     return dst
 
 

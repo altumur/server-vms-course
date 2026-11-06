@@ -1,30 +1,12 @@
-"""Генератор № 2 ADR-0125 — дверь из OpenAPI урока (пилот P/01: `Platform/01-store/spec/01-store.api.openapi.yaml`).
+"""Generate an OpenAPI door (ADR-0125 generator 2), originally Platform/01-store/spec/01-store.api.openapi.yaml.
 
-Читает OpenAPI 3.1 (загрузчик подмножества YAML tools/normgen/yamlsub.py, только стандартная библиотека) и строит
-пакет Go 1.22 только на стандартной библиотеке `<out>/go/apidoor/`: `door.go` (сгенерирован) и `runtime.go` (копия ручной
-среды tools/normgen/doorrt/go/runtime.go). Механическая часть двери:
+Read OpenAPI 3.1 with the standard-library YAML subset loader yamlsub.py. Emit a standard-library Go 1.22 apidoor package: generated door.go and copied doorrt/go/runtime.go. Generate route/method dispatch; form-style query parsing with required/repeated/scalar checks; response types and JSON encoding in properties order with map keys in byte order and no extra fields; operation/status binding; *Fault types and Refuse construction; chk* schema checks and Decode* for requests outside write-checks.tsv; and Handler/Dispatch for handwritten IO.
 
-- маршруты и методы: таблица путь + метод → операция; неизвестный путь и неверный метод — отказ по OpenAPI (Route);
-- разбор query по схемам параметров (in: query, style form): обязательность, повтор скаляра, схема значения;
-- типы ответов (структуры Go из схем) и их запись в JSON: поля — в порядке properties, имена отображений — в порядке
-  байтов, без полей вне схемы; привязка ответа к операции и коду (Encode отвергает необъявленное);
-- типы тел отказов (*Fault) и их сборка из kind и полей (Refuse — для отказов writecheck пакета Б);
-- проверки схем (chk*) и разбор тел запросов, которые не судит write-checks.tsv (Decode*);
-- интерфейс к ручной части: Handler (по методу на операцию) и Dispatch.
+Do not generate N3 core logic, HTTP framing/N2.1 limits, identity or frame->route->identity->body ordering. Cmd/BatchCmd belong to write-checks.tsv and generator 1. description/summary prose is not interpreted.
 
-Не генерируется (ADR-0125 доп. (1) п. 2–4): ядро Н3, рамка HTTP и пределы Н2.1, личность, порядок «рамка → маршрут →
-личность → тело», тело команды записи (`Cmd`, `BatchCmd` судит `write-checks.tsv`, генератор № 1). Генератор не
-читает description, summary и прочие пояснения: где смысл только в них, генерации нет (список — в отчёте помощника).
+Form/HTTP rules: unknown paths use common 404 schemas or generation refuses; an unsupported method gives 405 if every operation of that path declares it, otherwise 404 (RFC 9110 15.5.6). Integers exclude fraction/exponent syntax, so 1.0 is not integer. minLength/maxLength/pattern require UTF-8; a bare query string accepts arbitrary bytes because OpenAPI declares no query encoding.
 
-Правила, которые генератор берёт не из прозы, а из формы и HTTP:
-- неизвестный путь — код 404 и схема 404, общая у всех операций (иначе отказ генератора);
-- метод, которого нет у пути, — 405, если все операции пути объявляют 405, иначе 404 (RFC 9110 §15.5.6);
-- `type: integer` — запись числа без дробной части и порядка (форма разбора тела Н2.1 пакета Б; 1.0 — не integer);
-- ограничения строки (minLength, maxLength, pattern) требуют UTF-8; голый `type: string` параметра query принимает
-  любые байты (OpenAPI не задаёт кодировку query).
-
-Запуск: python tools/normgen/gen_door.py [openapi.yaml [каталог_выхода]].
-"""
+  python tools/normgen/gen_door.py [openapi.yaml [output-directory]]"""
 import hashlib
 import json
 import re
@@ -37,14 +19,14 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import yamlsub  # noqa: E402
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
 L = lesson.CURRENT
 
 DEFAULT_SPEC = L.openapi
 DEFAULT_OUT = L.out
 RUNTIME = HERE / "doorrt/go/runtime.go"
-# ADR-0125 доп. (1) п. 3: «одна форма — один генератор». Тело команды записи судит write-checks.tsv; эти схемы и всё,
-# что достижимо только из них, генератор двери не обходит.
+# ADR-0125 addendum (1), item 3: one form, one generator. write-checks.tsv judges write-command bodies;
+# the door generator skips those schemas and everything reachable exclusively from them.
 WRITECHECK = ("Cmd", "BatchCmd")
 METHODS = ("get", "put", "post", "delete", "options", "head", "patch", "trace")
 ANNOTATIONS = {"description", "summary", "title", "$comment", "examples", "deprecated"}
@@ -58,7 +40,7 @@ UINT64_MAX = 2 ** 64 - 1
 
 
 class GenError(Exception):
-    """Отказ генератора: OpenAPI вне подмножества или форма противоречит себе."""
+    """Generation refusal: OpenAPI is outside the subset or the form contradicts itself."""
 
 
 def camel(name):
@@ -78,7 +60,7 @@ def go_raw(s):
 
 
 def go_value(v):
-    """Значение JSON const/enum → выражение Go (any)."""
+    """Convert a JSON const/enum value into a Go any expression."""
     if v is None:
         return "nil"
     if isinstance(v, bool):
@@ -96,7 +78,7 @@ def trivial(node):
     return isinstance(node, dict) and not (set(node) - ANNOTATIONS)
 
 
-# ---------------------------------------------------------------- модель OpenAPI
+# ---------------------------------------------------------------- OpenAPI model
 
 class Param:
     def __init__(self, name, required, schema):
@@ -126,7 +108,7 @@ class Spec:
         for key in comps:
             if key not in ("schemas", "responses", "parameters"):
                 raise GenError(f"{name}: components.{key} is not in the subset")
-        self.inline = {}               # имя → схема, написанная в ответе на месте
+        self.inline = {}               # Name -> inline response schema.
         self.ops = []
         names = set()
         for path, item in (doc.get("paths") or {}).items():
@@ -214,7 +196,7 @@ class Spec:
         return node
 
     def union_names(self, node, where):
-        """{$ref} или {oneOf: [{$ref}…]} → имена схем."""
+        """Extract schema names from {$ref} or {oneOf: [{$ref}, ...]}."""
         if set(node) - ANNOTATIONS == {"$ref"}:
             return [self.ref_name(node["$ref"], where)]
         if set(node) - ANNOTATIONS == {"oneOf"} and all(set(x) - ANNOTATIONS == {"$ref"} for x in node["oneOf"]):
@@ -250,7 +232,7 @@ class Spec:
         return Resp(code, media, schemas, headers)
 
     def walk(self, node, where):
-        """Ключи схемы — только известного подмножества: иначе ограничение потерялось бы молча."""
+        """Reject unknown schema keywords so a constraint cannot disappear silently."""
         if node is True or node is False:
             raise GenError(f"{where}: boolean schemas are not in the subset")
         if not isinstance(node, dict):
@@ -286,7 +268,7 @@ class Spec:
         return {**self.schemas, **self.inline}
 
     def excluded(self):
-        """Схемы, достижимые только из WRITECHECK."""
+        """Schemas reachable exclusively from WRITECHECK roots."""
         def refs(node, out):
             if isinstance(node, dict):
                 if "$ref" in node:
@@ -321,7 +303,7 @@ class Spec:
 
 
 def string_bound(spec, node, seen=None):
-    """Есть ли в схеме (с переходом по $ref) ограничение строки: minLength, maxLength, pattern."""
+    """Check whether the schema, following refs, has minLength, maxLength or pattern constraints."""
     seen = set() if seen is None else seen
     if isinstance(node, dict):
         if "$ref" in node:
@@ -339,7 +321,7 @@ def string_bound(spec, node, seen=None):
 
 
 def check_pattern(p, where):
-    """ECMA-262 и RE2 расходятся на \\s, \\w, \\b, обратных ссылках и просмотре: такие шаблоны — вне подмножества."""
+    """ECMA-262 and RE2 differ on \\s, \\w, \\b, backreferences and lookaround; reject those patterns."""
     q = p.replace(r"[\s\S]", "")
     if re.search(r"\\[sSwWbB1-9]|\(\?[=!<]", q):
         raise GenError(f"{where}: pattern {p!r} uses a construct where ECMA-262 and Go RE2 differ")
@@ -349,7 +331,7 @@ def check_pattern(p, where):
         raise GenError(f"{where}: pattern {p!r}: {exc}")
 
 
-# ---------------------------------------------------------------- типы Go
+# ---------------------------------------------------------------- Go types
 
 class Gen:
     def __init__(self, spec):
@@ -357,19 +339,19 @@ class Gen:
         self.schemas = spec.all_schemas()
         self.excluded = spec.excluded()
         self.names = [n for n in self.schemas if n not in self.excluded]
-        self.kinds = {}            # имя схемы → struct | union | variants | scalar
-        self.structs = {}          # имя типа Go → (схема, имя схемы для SchemaName, путь функции проверки)
-        self.unions = {}           # имя интерфейса → [имена типов-членов]
-        self.member_of = {}        # тип → [интерфейсы]
-        self.checks = []           # функции проверок (строки Go)
-        self.check_names = {}      # id(node) → имя функции
+        self.kinds = {}            # Schema name -> struct, union, variants or scalar.
+        self.structs = {}          # Go type name -> (schema, SchemaName name, checker function path).
+        self.unions = {}           # Interface name -> member type names.
+        self.member_of = {}        # Type -> interfaces.
+        self.checks = []           # Checker functions as Go source lines.
+        self.check_names = {}      # id(node) -> function name.
         self.regexps = []
-        self.builders = {}         # выражение типа Go → имя функции сборки (map, slice)
+        self.builders = {}         # Go type expression -> map/slice constructor function name.
         self.builder_src = []
         for n in self.names:
             self.kinds[n] = self.classify(n, self.schemas[n])
 
-    # классы схем
+    # Schema classes.
 
     def classify(self, name, s):
         where = f"schema {name}"
@@ -388,7 +370,7 @@ class Gen:
         raise GenError(f"{where}: neither an object, a union of references, object variants nor a scalar")
 
     def scalar_type(self, node, where, quiet=False):
-        """Схема скаляра → тип Go (string, int64, uint64, float64, bool) или None."""
+        """Map a scalar schema to a Go type (string, int64, uint64, float64, bool), or None."""
         node = self.spec.resolve(node, where)
         if "const" in node:
             c = node["const"]
@@ -420,8 +402,7 @@ class Gen:
         raise GenError(f"{where}: not a scalar of the subset")
 
     def ftype(self, node, owner, prop, where):
-        """Схема поля → описание типа: ("const", значение) | ("scalar", go) | ("struct", имя) | ("iface", имя) |
-        ("map", эл) | ("slice", эл) | ("any",)."""
+        """Describe a field type: ('const', value), ('scalar', go), ('struct', name), ('iface', name), ('map', element), ('slice', element), or ('any', )."""
         if trivial(node):
             return ("any",)
         if "$ref" in node and set(node) - ANNOTATIONS == {"$ref"}:
@@ -475,10 +456,10 @@ class Gen:
             raise GenError(f"{where}: Go type {tname} repeats")
         self.structs[tname] = (node, schema_name, where)
 
-    # проверки схем
+    # Schema checks.
 
     def chk(self, node, fname, where):
-        """Функция проверки узла схемы; → имя функции или None (узел без ограничений)."""
+        """Generate a schema-node checker and return its name, or None for an unconstrained node."""
         if trivial(node):
             return None
         if set(node) - ANNOTATIONS == {"$ref"}:
@@ -609,7 +590,7 @@ class Gen:
                            + "\n".join(body) + "\nreturn nil\n}")
         return fname
 
-    # сборка значения в тип (после проверки)
+    # Construct the typed value after validation.
 
     def conv(self, t, expr):
         k = t[0]
@@ -636,7 +617,7 @@ class Gen:
             return f"{self.builders[go]}({expr})"
         raise GenError(f"no conversion for {t}")
 
-    # запись JSON
+    # JSON encoding.
 
     def enc(self, t, expr, depth=0):
         k = t[0]
@@ -701,7 +682,7 @@ def struct_source(g, tname, node, schema_name, where):
             build.append(f"if y, ok := m[{go_str(p)}]; ok {{\nt := {g.conv(t, 'y')}\nx.{fname} = &t\n}}")
     doc = f"// {tname} — {where}."
     src = [doc, f"type {tname} struct {{"] + fields + ["}", ""]
-    src.append(f"// SchemaName — имя схемы OpenAPI.\nfunc ({tname}) SchemaName() string {{ return {go_str(schema_name)} }}\n")
+    src.append(f'// SchemaName returns the OpenAPI schema name.\nfunc ({tname}) SchemaName() string {{ return {go_str(schema_name)} }}\n')
     src.append(f"func (x {tname}) appendJSON(b []byte) []byte {{\nb = append(b, '{{')\n"
                + ("n := 0\n" if enc else "") + "\n".join(enc) + "\nreturn append(b, '}')\n}\n")
     if build:
@@ -712,21 +693,21 @@ def struct_source(g, tname, node, schema_name, where):
     return "\n".join(src)
 
 
-# ---------------------------------------------------------------- пакет
+# ---------------------------------------------------------------- package
 
 def build_go(spec, rel, sha):
     g = Gen(spec)
     types, bodies = [], {}
-    # проверки всех схем (кроме write-checks)
+    # Check all schemas except write-checks.
     for n in g.names:
         where = f"#/components/schemas/{n}" if n in spec.schemas else f"response {n}"
         got = g.chk(g.schemas[n], "chk" + n, where)
-        if got != "chk" + n:                 # алиас $ref, схема без ограничений, общий узел: своя функция по имени схемы
-            # (таблица checks, союзы и Decode зовут chk<имя>; ревью Codex С3)
+        if got != "chk" + n:                 # Named checker for a ref alias, unconstrained schema or shared node: checks, unions and Decode call chk<Name>
+            # by schema name (Codex review C3).
             g.checks.append(f"// chk{n} — {where}: " + (f"the alias of {got[3:]}" if got else "no constraint") + ".\n"
                             f"func chk{n}(v any, at string) *Violation {{\n"
                             + (f"return {got}(v, at)" if got else "_, _ = v, at\nreturn nil") + "\n}\n")
-    # типы
+    # Types.
     for n in g.names:
         kind, s = g.kinds[n], g.schemas[n]
         where = f"#/components/schemas/{n}" if n in spec.schemas else f"response {n}"
@@ -749,7 +730,7 @@ def build_go(spec, rel, sha):
         for m in members:
             g.member_of.setdefault(m, []).append(u)
     done = set()
-    while len(done) < len(g.structs):              # add_struct растёт при вложенных объектах
+    while len(done) < len(g.structs):              # add_struct grows when nested objects are discovered.
         for tname in list(g.structs):
             if tname not in done:
                 node, sname, where = g.structs[tname]
@@ -759,7 +740,7 @@ def build_go(spec, rel, sha):
                 done.add(tname)
     for u, members in g.unions.items():
         kind = g.kinds[u]
-        types.append(f"// {u} — одна из схем: {', '.join(members)}.\ntype {u} interface {{\nBody\nis{u}()\n}}\n")
+        types.append(f"// {u} -- one of these schemas: {', '.join(members)}.\ntype {u} interface {{\nBody\nis{u}()\n}}\n")
         if kind == "variants":
             fs = [g.check_names[id(b)] for b in g.schemas[u]["oneOf"]]
         else:
@@ -768,14 +749,14 @@ def build_go(spec, rel, sha):
         types.append(f"func build{u}(v any) {u} {{\n" + "\n".join(lines) + "\nreturn nil\n}\n")
     scalar_names = [n for n in g.names if g.kinds[n] == "scalar"]
     inline_types = []
-    for n in spec.inline:                          # схема ответа на месте: скаляр (text/plain и т. п.)
+    for n in spec.inline:                          # Inline scalar response schema, such as text/plain.
         if g.kinds[n] == "scalar":
             st = g.scalar_type(g.schemas[n], n)
             enc = "append(b, x...)" if st == "string" else None
             if enc is None:
                 raise GenError(f"response {n}: only a string scalar is in the subset")
-            inline_types.append(f"// {n} — тело ответа, схема на месте (response {n}).\ntype {n} string\n\n"
-                                f"// SchemaName — имя схемы.\nfunc ({n}) SchemaName() string {{ return {go_str(n)} }}\n\n"
+            inline_types.append(f'// {n} -- inline response-body schema (response {n}).\ntype {n} string\n\n'
+                                f'// SchemaName returns the schema name.\nfunc ({n}) SchemaName() string {{ return {go_str(n)} }}\n\n'
                                 f"func (x {n}) appendJSON(b []byte) []byte {{ return {enc} }}\n\n"
                                 f"func build{n}(v any) {n} {{ return {n}(v.(string)) }}\n")
 
@@ -792,16 +773,21 @@ def build_go(spec, rel, sha):
                 out.append(n)
         return out
 
-    # операции
-    ops_src = ["// Op — операция OpenAPI.\ntype Op int\n", "const ("]
+    # Operations.
+    ops_src = [r'''// Op identifies an OpenAPI operation.
+type Op int
+''', "const ("]
     for i, op in enumerate(spec.ops):
         ops_src.append(f"Op{op.name}" + (" Op = 1 + iota" if i == 0 else "") + f" // {op.method} {op.path}")
     ops_src.append(")\n")
-    ops_src.append("// String — имя операции.\nfunc (op Op) String() string {\nswitch op {\n"
+    ops_src.append(r'''// String returns the operation name.
+func (op Op) String() string {
+switch op {
+'''
                    + "".join(f"case Op{op.name}:\nreturn {go_str(op.name)}\n" for op in spec.ops)
                    + "}\nreturn \"Op(\" + strconv.Itoa(int(op)) + \")\"\n}\n")
 
-    # отказы маршрута
+    # Routing refusals.
     not_found = {(tuple(op.responses[404].schemas), op.responses[404].media) for op in spec.ops if 404 in op.responses}
     if len(not_found) != 1 or any(404 not in op.responses for op in spec.ops):
         raise GenError(f"{spec.name}: every operation must declare one and the same 404 (the answer for an unknown path)")
@@ -838,9 +824,10 @@ def build_go(spec, rel, sha):
             parts.append(f"{camel(p)}: {go_str(msg)}")
         return f"{schema}{{{', '.join(parts)}}}"
 
-    route = ["// Route — операция по методу и цели запроса (request-target, байты как пришли). Путь — до первого ?, "
-             "сравнивается с путями OpenAPI байт в байт;\n"
-             "// query — после ?, без разбора. Неизвестный путь и метод не своего пути — готовый отказ по OpenAPI.",
+    route = ['// Route selects by method and raw request-target bytes.The path before the first ? is '
+             r'''compared byte-for-byte with OpenAPI paths;
+'''
+             '// query is the unparsed suffix.Unknown paths or unsupported methods produce the declared OpenAPI refusal.',
              "func Route(method, target string) (Op, string, *Response) {",
              "path, query, _ := strings.Cut(target, \"?\")", "switch path {"]
     for path, ops in paths.items():
@@ -856,15 +843,16 @@ def build_go(spec, rel, sha):
     route.append("func routeRefusal(code int, media string, b Body) *Response {\n"
                  "return &Response{Code: code, Header: [][2]string{{\"Content-Type\", media}}, Body: b.appendJSON(nil)}\n}\n")
 
-    # Answer и таблица ответов
+    # Answer and response table.
     header_names = []
     for op in spec.ops:
         for r in op.responses.values():
             for h in r.headers:
                 if h not in header_names:
                     header_names.append(h)
-    answer = ["// Answer — ответ операции: код, тело сгенерированного типа (nil — ответ без тела) и заголовки, объявленные "
-              "OpenAPI\n// с постоянным значением (true — заголовок послать; допустим только там, где объявлен).",
+    answer = ['// Answer contains status, a generated body(nil for none) and headers declared by '
+              r'''OpenAPI
+// true enables a header only on operations declaring it.''',
               "type Answer struct {", "Code int", "Body Body"]
     for h in header_names:
         consts = sorted({str(op.responses[c].headers[h]) for op in spec.ops for c in op.responses
@@ -874,7 +862,7 @@ def build_go(spec, rel, sha):
         answer.append(f"{camel(h)} bool // {h}: {consts[0]}")
     answer.append("}\n")
     answer.append("type responseSpec struct {\nmedia string\njson bool\nschemas []string\nheaders []string\n}\n")
-    table = ["// responses — объявленные OpenAPI ответы: операция → код → тип содержимого, схемы, заголовки.",
+    table = ['// responses maps operation->status->declared media, schemas and headers.',
              "var responses = map[Op]map[int]responseSpec{"]
     for op in spec.ops:
         table.append(f"Op{op.name}: {{")
@@ -896,8 +884,9 @@ def build_go(spec, rel, sha):
     encode = [
         "func declared(names []string, name string) bool {\nfor _, n := range names {\nif n == name {\nreturn true\n}\n}\n"
         "return false\n}\n",
-        "// Encode — ответ на провод. Отвергает (ошибка, ничего не послано) код, схему тела и заголовок, не объявленные у "
-        "операции,\n// и тело вне своей схемы: дверь не шлёт ответа вне формы OpenAPI.",
+        '// Encode emits wire responses.Reject undeclared status, body schema or headers of the '
+        r'''operation,
+// and any body outside its schema; the door never sends responses outside the OpenAPI form.''',
         "func Encode(op Op, a Answer) (*Response, error) {",
         "spec, ok := responses[op][a.Code]",
         "if !ok {\nreturn nil, fmt.Errorf(\"door: %v: code %d is not declared\", op, a.Code)\n}",
@@ -917,8 +906,9 @@ def build_go(spec, rel, sha):
         hdr_lines,
         "return &Response{Code: a.Code, Header: header, Body: body}, nil",
         "}\n",
-        "// AnswerOf — ответ из значения JSON (значения проверок: map[string]any, string, int64, json.Number, …): схема — та из\n"
-        "// объявленных для (op, code), которой значение отвечает; ровно одна, иначе ошибка.",
+        r'''// AnswerOf builds a response from JSON values(map, string, int64, json.Number, ...), requiring exactly one
+'''
+        '// matching schema declared for(op, status);otherwise error.',
         "func AnswerOf(op Op, code int, v any) (Answer, error) {",
         "spec, ok := responses[op][code]",
         "if !ok {\nreturn Answer{}, fmt.Errorf(\"door: %v: code %d is not declared\", op, code)\n}",
@@ -930,7 +920,7 @@ def build_go(spec, rel, sha):
         "return Answer{Code: code, Body: b}, nil",
         "}\n",
     ]
-    # Refuse: только если у всех схем отказов (коды ≥ 400) есть kind (const) и error (string)
+    # Refuse requires every refusal schema (status >=400) to declare const kind and string error.
     fault_schemas = sorted({x for op in spec.ops for c, r in op.responses.items() if c >= 400 for x in expand(r.schemas)})
     for fs in fault_schemas:
         node = g.schemas[fs]
@@ -940,25 +930,29 @@ def build_go(spec, rel, sha):
             raise GenError(f"refusal schema {fs}: required kind (const) and error (string) — the generator builds "
                            f"Refuse on them")
     encode.append(
-        "// Refuse — отказ из kind, текста error и прочих полей (как writecheck.Refusal пакета Б: Code, Kind, Fault): схема — та\n"
-        "// из объявленных для (op, code), которой отвечает объект {kind, error, поля…}. Схемы отказов: "
+        r'''// Refuse selects a declared refusal schema matching kind, error and extra fields, as supplied by writecheck's
+'''
+        '// Code/Kind/Fault.Declared refusal schemas: '
         + ", ".join(fault_schemas) + ".\n"
         "func Refuse(op Op, code int, kind, msg string, fields map[string]any) (Answer, error) {\n"
         "m := make(map[string]any, len(fields)+2)\nfor k, x := range fields {\nm[k] = x\n}\n"
         "m[\"kind\"] = kind\nm[\"error\"] = msg\nreturn AnswerOf(op, code, m)\n}\n")
 
-    # таблицы проверок и сборки по имени схемы
-    check_tab = ["// checks — проверка схемы по имени (components/schemas и схемы ответов на месте).",
+    # Checker and constructor tables by schema name.
+    check_tab = ['// checks validates named components and inline response schemas.',
                  "var checks = map[string]func(any, string) *Violation{"]
-    build_tab = ["// builders — сборка тела ответа по имени схемы (после проверки).", "var builders = map[string]func(any) Body{"]
+    build_tab = ['// builders constructs typed response bodies after validation.', "var builders = map[string]func(any) Body{"]
     for n in g.names:
         check_tab.append(f"{go_str(n)}: chk{n},")
         if g.kinds[n] in ("struct", "variants") or n in spec.inline:
             build_tab.append(f"{go_str(n)}: func(v any) Body {{ return build{n}(v) }},")
     check_tab.append("}\n")
     build_tab.append("}\n")
-    check_tab.append("// CheckSchema — проверка значения JSON по схеме OpenAPI; ok — схема известна (Cmd, BatchCmd и их части судит\n"
-                     "// write-checks.tsv: их здесь нет).\nfunc CheckSchema(name string, v any) (e *Violation, ok bool) {\n"
+    check_tab.append(r'''// CheckSchema validates an OpenAPI schema;ok reports a known schema.Cmd/BatchCmd and their parts belong
+'''
+                     r'''// to write-checks.tsv and are absent here.
+func CheckSchema(name string, v any) (e *Violation, ok bool) {
+'''
                      "f, ok := checks[name]\nif !ok {\nreturn nil, false\n}\nreturn f(v, \"\"), true\n}\n")
 
     # query
@@ -977,21 +971,21 @@ def build_go(spec, rel, sha):
                           + (f"; schema {schema_name}" if schema_name else ""))
             value = (f"if e := {chkf}(vs[0], \"\"); e != nil {{\nreturn q, &QueryError{{Param: {go_str(p.name)}, "
                      f"Reason: QueryValue, Schema: {go_str(schema_name)}, Rule: e.Rule}}\n}}\n") if chkf else ""
-            if string_bound(spec, p.schema):         # ограничения строки где-либо в схеме — сначала UTF-8
+            if string_bound(spec, p.schema):         # Any string constraint anywhere in the schema requires UTF-8 first.
                 value = (f"if !utf8.ValidString(vs[0]) {{\nreturn q, &QueryError{{Param: {go_str(p.name)}, "
                          f"Reason: QueryValue, Schema: {go_str(schema_name)}, Rule: \"utf8\"}}\n}}\n") + value
             assign = f"q.{f} = vs[0]" if p.required else f"x := vs[0]\nq.{f} = &x"
             absent = (f"return q, &QueryError{{Param: {go_str(p.name)}, Reason: QueryAbsent}}" if p.required else "")
             steps.append(f"if vs := formValues(pairs, {go_str(p.name)}); len(vs) == 0 {{\n{absent}\n}} else if len(vs) > 1 {{\n"
                          f"return q, &QueryError{{Param: {go_str(p.name)}, Reason: QueryRepeated}}\n}} else {{\n{value}{assign}\n}}")
-        query.append(f"// {tname} — параметры query операции {op.name} ({op.method} {op.path}).\ntype {tname} struct {{\n"
+        query.append(f'// {tname} -- query parameters of operation {op.name} ({op.method} {op.path}).\ntype {tname} struct {{\n'
                      + "\n".join(fields) + "\n}\n")
-        query.append(f"// Parse{tname} — query по схемам параметров; параметры вне OpenAPI не читаются. Порядок — параметры по "
-                     f"OpenAPI,\n// у каждого: есть ли, не повторён ли, схема значения.\n"
+        query.append(f'// Parse{tname} -- query by parameter schemas; ignore undeclared parameters. Use parameter order from '
+                     f'OpenAPI,\n// For each parameter:presence, repetition, then value schema.\n'
                      f"func Parse{tname}(raw string) ({tname}, *QueryError) {{\nvar q {tname}\npairs := parseForm(raw)\n"
                      + "\n".join(steps) + "\nreturn q, nil\n}\n")
 
-    # тела запросов
+    # Request bodies.
     bodies_src = []
     body_types = []
     for op in spec.ops:
@@ -1003,17 +997,17 @@ def build_go(spec, rel, sha):
             if n not in body_types:
                 body_types.append(n)
     for n in body_types:
-        bodies_src.append(f"// Decode{n} — тело запроса по схеме {n}: v — значение JSON (разбор jsonstrict пакета Б или "
-                          f"encoding/json с UseNumber).\nfunc Decode{n}(v any) ({n}, *Violation) {{\n"
+        bodies_src.append(f'// Decode{n} -- request body by schema {n}: v is JSON from kit jsonstrict or '
+                          f'encoding/json with UseNumber).\nfunc Decode{n}(v any) ({n}, *Violation) {{\n'
                           f"if e := chk{n}(v, \"\"); e != nil {{\nreturn {n}{{}}, e\n}}\nx := build{n}(v)\n"
                           f"if !representable(v, x, true) {{\nreturn {n}{{}}, violation(\"\", \"representable\")\n}}\n"
                           f"return x, nil\n}}\n")
 
-    # сводка операций (для сверки и журнала)
-    summary = ["// Operation — операция OpenAPI: метод, путь, параметры query, схемы тела (Writecheck — судит write-checks.tsv).",
+    # Operation summary for verification and the journal.
+    summary = ['// Operation describes method, path, query parameters and body schemas;Writecheck schemas belong to write-checks.tsv.',
                "type Operation struct {\nOp Op\nMethod string\nPath string\nQuery []string\nBody []string\n"
                "BodyRequired bool\nWritecheck []string\n}\n",
-               "// Operations — в порядке OpenAPI.", "var Operations = []Operation{"]
+               '// Operations retain OpenAPI order.', "var Operations = []Operation{"]
     for op in spec.ops:
         q = ", ".join(go_str(p.name) for p in op.params)
         b = ", ".join(go_str(n) for n in op.body or [] if n not in g.excluded)
@@ -1022,15 +1016,18 @@ def build_go(spec, rel, sha):
                        f"Body: []string{{{b}}}, BodyRequired: {'true' if op.body_required else 'false'}, "
                        f"Writecheck: []string{{{w}}}}},")
     summary.append("}\n")
-    summary.append("// Declared — объявленные ответы операции: код → схемы (развёрнутые до типов тел) и заголовки.\n"
+    summary.append(r'''// Declared maps operation statuses to expanded body schemas and headers.
+'''
                    "func Declared(op Op) map[int][2][]string {\nout := map[int][2][]string{}\nfor code, s := range responses[op] {\n"
                    "out[code] = [2][]string{append([]string(nil), s.schemas...), append([]string(nil), s.headers...)}\n}\n"
                    "return out\n}\n")
 
-    # интерфейс к ручной части
-    handler = ["// Handler — ручная часть за дверью: метод на операцию OpenAPI (ядро Н3, личность, пределы — её дело). C — "
-               "контекст\n// вызова ручной части (сокет роли, заголовки, …): дверь его не читает. body — байты тела как "
-               "пришли (Cmd, BatchCmd —\n// writecheck пакета Б; прочие — Decode<схема> после jsonstrict).",
+    # Interface to handwritten code.
+    handler = ['// Handler is handwritten code behind the door, one method per operation(N3, identity and limits).C is the '
+               r'''call context
+// for handwritten code (socket role, headers, ...), not inspected by the door. body is the bytes as '''
+               r'''received (Cmd/BatchCmd use
+// kit writecheck; other schemas use Decode<Schema> after jsonstrict).''',
                "type Handler[C any] interface {"]
     for op in spec.ops:
         args = ["c C"]
@@ -1039,10 +1036,10 @@ def build_go(spec, rel, sha):
         if op.body is not None:
             args.append("body []byte")
         handler.append(f"{op.name}({', '.join(args)}) Answer // {op.method} {op.path}")
-    handler.append("// QueryRefused — ответ на query вне формы (какой отказ — OpenAPI формой не говорит).")
+    handler.append("// QueryRefused chooses the response to an invalid query;OpenAPI's form does not specify that choice.")
     handler.append("QueryRefused(c C, op Op, e *QueryError) Answer")
     handler.append("}\n")
-    handler.append("// Dispatch — разбор query операции и вызов её метода; маршрут (Route) и всё до него — у вызывающего.")
+    handler.append("// Dispatch parses an operation's query and calls its method;Route and earlier steps belong to the caller.")
     handler.append("func Dispatch[C any](h Handler[C], c C, op Op, query string, body []byte) Answer {")
     handler.append("switch op {")
     for op in spec.ops:
@@ -1061,13 +1058,18 @@ def build_go(spec, rel, sha):
     regex = ["var ("] + [f"{name} = regexp.MustCompile({go_raw(p)})" for name, p in g.regexps] + [")\n"]
     head = (f"// Code generated by tools/normgen/gen_door.py from {rel}; DO NOT EDIT.\n"
             f"// OpenAPI sha256 {sha}.\n\n"
-            "// Package apidoor — механическая часть двери из OpenAPI (ADR-0125, генератор № 2): маршруты и методы, разбор "
-            "query,\n// типы ответов и отказов и их запись, проверки схем, интерфейс к ручной части. Схемы Cmd, BatchCmd "
-            "судит\n// write-checks.tsv (writecheck пакета Б), не дверь (ADR-0125 доп. (1) п. 3).\npackage apidoor\n\n"
+            '// Package apidoor implements mechanical OpenAPI behavior(ADR-0125 generator 2):routes, methods, query '
+            r'''query,
+// response/refusal types and encoding, schema checks, and handwritten interfaces.Cmd/BatchCmd are checked by '''
+            r'''by
+// write-checks.tsv (kit writecheck), not the door (ADR-0125 addendum (1), item 3).
+package apidoor
+
+'''
             "import (\n\"encoding/json\"\n\"fmt\"\n\"regexp\"\n\"sort\"\n\"strconv\"\n\"strings\"\n\"unicode/utf8\"\n)\n\n"
             "var _ = json.Number(\"\")\nvar _ = sort.Strings\nvar _ = utf8.ValidString\n\n")
-    excluded_note = (f"// Схемы вне двери (только из {', '.join(WRITECHECK)}, судит write-checks.tsv): "
-                     f"{', '.join(sorted(g.excluded))}.\n// Скалярные схемы (только проверка): {', '.join(scalar_names)}.\n\n")
+    excluded_note = (f"// Schemas outside the door(reachable only from {', '.join(WRITECHECK)}, judged by write-checks.tsv): "
+                     f"{', '.join(sorted(g.excluded))}.\n// Scalar schemas(validation only): {', '.join(scalar_names)}.\n\n")
     parts = [head, excluded_note, "\n".join(ops_src), "\n".join(summary), "\n".join(route), "\n".join(answer),
              "\n".join(table), "\n".join(encode), "\n".join(query), "\n".join(bodies_src), "\n".join(handler),
              "\n".join(types), "\n".join(inline_types), "\n".join(g.builder_src), "\n".join(check_tab),
@@ -1102,7 +1104,7 @@ def load(path):
 
 
 def emit(doc, rel, sha, out, name="openapi"):
-    """Документ OpenAPI (уже загруженный) → пакет в <out>/go/apidoor; → сводка."""
+    """Generate <out>/go/apidoor from a loaded OpenAPI document and return its summary."""
     out = Path(out)
     spec = Spec(doc, name)
     src, stats = build_go(spec, rel, sha)
@@ -1138,7 +1140,7 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    if L.key != lesson.DEFAULT:                        # уроки после P/01 — gen_door_lesson.py (P/01 байт в байт)
+    if L.key != lesson.DEFAULT:                        # Lessons after P/01 use gen_door_lesson.py; P/01 remains byte-identical.
         import gen_door_lesson
         sys.exit(gen_door_lesson.main(sys.argv))
     sys.exit(main(sys.argv))

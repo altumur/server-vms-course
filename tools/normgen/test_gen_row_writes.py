@@ -1,4 +1,5 @@
 """GEN01: form errors, a compiled pure constructor, V7 oracle and runtime mutants."""
+import lesson as output_lesson
 import copy
 import hashlib
 import json
@@ -145,6 +146,7 @@ def expected(start=START, value=None):
 
 class Producer(unittest.TestCase):
     def test_exact_source_and_fresh_overlay(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         model = gen.load()
         self.assertEqual(len(model["declarations"]), 8)
         self.assertEqual(len(model["writes"]), 1)
@@ -157,7 +159,7 @@ class Producer(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(stats["row_write_bindings"], 4)
         for name, text in gen.render().items():
-            self.assertEqual((HERE / "out/p03/go/families" / name).read_text(), text, "run gen_row_writes.py --lesson 03-worker")
+            self.assertEqual((output_lesson.output_root() / 'p03/go/families' / name).read_text(), text, "run gen_row_writes.py --lesson 03-worker")
 
     def test_invalid_forms_and_type_bindings(self):
         original = (ROOT / gen.FORM).read_text()
@@ -294,7 +296,7 @@ class Runtime(unittest.TestCase):
 
     def test_unicode_jcs_and_writer_oracle(self):
         cases = []
-        values = [{"é": [True, None, "камера\u2028\v"], "a": "😀"}, [1, "x", None], "\\u0436", False, 7]
+        values = [{"é": [True, None, '\u043a\u0430\u043c\u0435\u0440\u0430\u2028\x0b'], "a": "😀"}, [1, "x", None], "\\u0436", False, 7]
         for value in values:
             c = request(Schemas={"result": {}}, Defs={});c["Input"]["value"] = value;cases.append(c)
         for c, got in zip(cases, self.invoke(cases)):
