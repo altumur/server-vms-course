@@ -1,7 +1,7 @@
 // Hand-written runtime of the part `loader` (tools/normgen/manifestrt/go; the kit copies it, DO NOT EDIT): layer 6 —
-// the projection of the canonical view (P/02.2 Н1.1, «Шаги урока 2»): sugar (tables, bound_to, in), the static defaults
-// (the annotation `default` of the schema, only inside a present parent or a parent with its own default — Р10), the
-// computed П1–П5, `x-ordered` — an array {"name": key, …} in author order (Р14), JSON values by the type of the place,
+// Canonical projection (P/02.2 N1.1, Lesson2 steps):sugar(tables, bound_to, in), static schema defaults
+// inside present parents or parents with defaults(R10), then
+// computed P1-P5, x-ordered arrays of {name:key, ...} in author order(R14), and values by their place's type,
 // JCS (ADR-0072).
 package manifest
 
@@ -17,7 +17,7 @@ func objAt(v any, keys ...string) *Obj {
 	return o
 }
 
-// fieldDescriptors — the descriptors of unit.fields.* and tables.*.fields.* (P/02.2 П4; sugar bound_to).
+// fieldDescriptors describes unit.fields.* and tables.*.fields.* (P/02.2 P4, bound_to sugar).
 func fieldDescriptors(t any) []*Obj {
 	var out []*Obj
 	if fs := objAt(t, "unit", "fields"); fs != nil {
@@ -111,7 +111,7 @@ func computed(t any) {
 	if !ok {
 		return
 	}
-	if _, ok := o.M["snapshot"]; !ok { // П1 (ADR-0091 item 3)
+	if _, ok := o.M["snapshot"]; !ok { // P1 (ADR-0091 item 3).
 		snap := []any{}
 		fs := unitFields(t)
 		for _, k := range fs.Keys {
@@ -130,7 +130,7 @@ func computed(t any) {
 		}
 		o.Set("snapshot", snap)
 	}
-	if ts, ok := o.M["tables"].(*Obj); ok { // П2
+	if ts, ok := o.M["tables"].(*Obj); ok { // P2.
 		for _, k := range ts.Keys {
 			if tbl, ok := ts.M[k].(*Obj); ok {
 				if j, ok := setDefault(tbl, "journal", newObj()).(*Obj); ok {
@@ -140,7 +140,7 @@ func computed(t any) {
 			}
 		}
 	}
-	if d, ok := o.M["display"].(*Obj); ok { // П3
+	if d, ok := o.M["display"].(*Obj); ok { // P3.
 		if _, has := d.M["form"]; !has {
 			names := []any{}
 			for _, k := range unitFields(t).Keys {
@@ -151,17 +151,17 @@ func computed(t any) {
 			d.Set("form", []any{f})
 		}
 	}
-	for _, f := range fieldDescriptors(t) { // П4
+	for _, f := range fieldDescriptors(t) { // P4.
 		setDefault(f, "default", nil)
 	}
-	for _, e := range secretItems(t) { // П5
+	for _, e := range secretItems(t) { // P5.
 		if _, ok := e.M["regex"]; ok {
 			setDefault(e, "decoded", true)
 		}
 	}
 }
 
-// project — the defaults of the schema inside a present parent (Р10); ordered — `x-ordered` as an array (Р14).
+// project applies defaults inside present parents(R10), with x-ordered arrays(R14).
 func (s *schemaSet) project(tree any, ordered bool) any {
 	var rec func(n *Obj, v any) any
 	rec = func(n *Obj, v any) any {
@@ -231,7 +231,7 @@ func (s *schemaSet) project(tree any, ordered bool) any {
 	return rec(s.root, tree)
 }
 
-// canonicalTree — sugar → defaults → П1–П5 → defaults and `x-ordered` (P/02.2 Н1.1, in order).
+// canonicalTree applies sugar->defaults->P1-P5->defaults/x-ordered in P/02.2 N1.1 order.
 func (s *schemaSet) canonicalTree(tree any) any {
 	t := deepCopy(tree)
 	sugar(t)

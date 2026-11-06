@@ -1,7 +1,4 @@
-"""Тесты режима схемы данными части families (P/02; famrt2; ADR-0125 доп. (5)): out свежий; судья family_judge
-(вектора 02.tsv и свои экземпляры против стека В7 курса, с мутациями внутри документов) — PASS на выходе и FAIL на
-мутантах ручной среды: имя не по форме без отсечения детей, uniqueItems не исполняется, JCS писателя не сверяется,
-anyOf не исполняется, x-max-names не исполняется; P/01 — плоский режим (test_gen_families.py)."""
+"""Test data-schema families mode (P/02, famrt2, ADR-0125 addendum 5): freshness and family_judge PASS on02.tsv plus independent V7 cases with nested document mutations. Require FAIL for invalid-name child traversal, missing uniqueItems/JCS/anyOf/x-max-names checks. P/01 flat mode stays in test_gen_families.py."""
 import os
 import shutil
 import subprocess
@@ -42,7 +39,7 @@ SYNTH = {
 SYNTH_ITEMS = [
     {"doc": '{"kind":"k"}'},
     {"doc": '{"kind":"k","a":{"v":1}}'},
-    {"doc": '{"kind":"k","Bad Name":{"v":"x","zz":1}}'},          # имя не по форме: дети не судятся
+    {"doc": '{"kind":"k","Bad Name":{"v":"x","zz":1}}'},          # An invalid name prevents judging its children.
     {"doc": '{"kind":"k","a":{"zz":1}}'},
     {"doc": '{"kind":"k","a":{"v":1},"b":{"v":2},"c":{"v":3}}'},  # x-max-names
     {"doc": '{"kind":"k","a":{"v":1.0}}'},
@@ -59,7 +56,7 @@ SYNTH_ITEMS = [
 
 
 def synth_mismatches(runtime):
-    """Сверка синтетической семьи (среда runtime) со стеком В7: [(режим, текст, ответ, ожидание)]."""
+    """Compare a synthetic runtime family with V7 as [(mode, text, response, expectation)]."""
     import json
     sys.path.insert(0, str(ROOT / "skills/lesson-spec/scripts"))
     from v7 import stack
@@ -97,8 +94,7 @@ def synth_mismatches(runtime):
 
 
 class Synthetic(unittest.TestCase):
-    """Синтетическая семья со всеми словами famrt2 против стека В7 курса: место отказа (в т. ч. имя не по форме без
-    детей), uniqueItems, anyOf, not, x-max-names, JCS писателя, кодек — независимо от корпуса урока."""
+    """Independently test every famrt2 keyword using a synthetic family: refusal paths, invalid names without child checks, uniqueItems, anyOf, not, x-max-names, writer JCS and codec, without relying on the lesson corpus."""
 
     def test_against_v7(self):
         self.assertEqual(synth_mismatches(HERE / "famrt2/go/runtime.go"), [])

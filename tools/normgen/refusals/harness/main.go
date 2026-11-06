@@ -1,5 +1,5 @@
-// Обвес судьи tools/normgen/refusal_judge.py (ADR-0125 № 4): каталог refusals.All одним JSON и пробы apidoor.Refuse —
-// тело каждой строки http в объявленную схему OpenAPI хотя бы одной операции (две генерации согласны).
+// refusal_judge harness (ADR-0125 generator 4):print refusals.All as JSON and test every HTTP Spec through
+// apidoor.Refuse against a declared schema of at least one operation, checking generator agreement.
 package main
 
 import (
@@ -11,10 +11,10 @@ import (
 )
 
 type probe struct {
-	Fields []string `json:"fields"` // поля пробы
-	Ints   []string `json:"ints"`   // из них целые
-	Ops    []string `json:"ops"`    // операции, где тело закодировано
-	Retry  bool     `json:"retry"`  // Retry-After принят хотя бы одной из них
+	Fields []string `json:"fields"` // Probe fields.
+	Ints   []string `json:"ints"`   // Integer fields among them.
+	Ops    []string `json:"ops"`    // Operations that encoded the body.
+	Retry  bool     `json:"retry"`  // Retry-After was accepted by at least one operation.
 	Body   string   `json:"body"`
 }
 
@@ -50,10 +50,10 @@ func main() {
 	_ = enc.Encode(out)
 }
 
-// try — все раскладки значений полей (целое, строка версии, строка ключа); первая, что кодируется хоть одной операцией.
+// try selects the first field-value arrangement(integer, version string, key string) encoding for any operation.
 func try(s *refusals.Spec, set []string) probe {
 	best := probe{Fields: set, Ints: []string{}, Ops: []string{}}
-	choices := []any{int64(4194364), "1", "testsub/k"} // целое; строка версии; строка ключа
+	choices := []any{int64(4194364), "1", "testsub/k"} // Integer, version string, key string.
 	total := 1
 	for range set {
 		total *= len(choices)

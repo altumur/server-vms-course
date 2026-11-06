@@ -1,10 +1,4 @@
-"""Тесты части launch (ADR-0083 доп. (95) пп. 2, 3): gen_launch.py, каркас демона пакета как есть (пустое ядро launch.Empty
-на заглушке coreadapter.Open), справка KIT.md.
-
-Каркас собирается в стенде launch_judge.stand и гоняется процессом: сокеты и их права, GET по сокету роли, 413,
-SIGTERM — код 0 и сокеты убраны; отказы кодом 2 — сборка без raft, FORMAT чужой и непомеченный каталог (байты не
-меняются), файл прав не по форме, унаследованный сокет с чужим именем; унаследованный admin принимается. Примеры
-справки kit/examples собираются в пакете со всеми частями (go vet). Только Linux (CT 103), Go 1.22."""
+"""Test the unmodified launch daemon, Empty core and KIT documentation (ADR-0083 addendum 95, items2/3). Build launch_judge.stand and run a process: check sockets/permissions, role-socket GET, 413, SIGTERM exit 0 and socket cleanup. Expect exit 2 for no-raft group startup, foreign FORMAT/unmarked directories without byte changes, invalid rights and unknown inherited sockets; inherited admin is accepted. Compile kit/examples and vet an all-part kit. Linux CT103, Go 1.22 only."""
 import http.client
 import json
 import os
@@ -54,7 +48,7 @@ def tree(d):
 class Launch(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.tmp = Path(tempfile.mkdtemp(prefix="nl-", dir="/tmp"))     # короткий путь: предел AF_UNIX
+        cls.tmp = Path(tempfile.mkdtemp(prefix="nl-", dir="/tmp"))     # Keep paths short for AF_UNIX limits.
         launch_judge.stand(cls.tmp / "stand", "0" * 40)
         store = cls.tmp / "stand/01-store"
         done = subprocess.run(["go", "build", "-o", str(cls.tmp / "cs"), "./cmd/configstore"], cwd=store,
@@ -114,7 +108,7 @@ class Launch(unittest.TestCase):
         p.terminate()
         self.assertEqual(p.wait(10), 0)
         self.assertEqual(sorted(os.listdir(run)), [])
-        p = self.start(d)                                  # свой FORMAT — снова старт
+        p = self.start(d)                                  # Own FORMAT permits another startup.
         self.wait_ready(p, run / "admin.sock")
         p.terminate()
         self.assertEqual(p.wait(10), 0)
@@ -152,7 +146,7 @@ class Launch(unittest.TestCase):
         (d / "data/junk").write_text("x")
         before = tree(d / "data")
         self.refused(d)
-        self.assertEqual(tree(d / "data"), before)                       # не помеченный — без изменений
+        self.assertEqual(tree(d / "data"), before)                       # Leave unmarked directories unchanged.
         (d / "data/FORMAT").write_text('{"format":"other","version":1,"impl":"x"}')
         before = tree(d / "data")
         self.assertIn("foreign FORMAT", self.refused(d))
@@ -173,7 +167,7 @@ class Launch(unittest.TestCase):
         s.listen(4)
 
         argv = [str(self.exe), "-id", "s1", "-dir", str(d / "data"), "-sockets", str(d / "run")]
-        fd = s.fileno()                                   # sh ставит его на fd 3 (sd_listen_fds: с 3)
+        fd = s.fileno()                                   # sh assigns fd3, where sd_listen_fds starts.
         sh = 'LISTEN_PID=$$ LISTEN_FDS=1 LISTEN_FDNAMES=%s exec "$@" 3<&%d' % (name, fd)
         p = subprocess.Popen(["sh", "-c", sh, "sh"] + argv, pass_fds=(fd,), stderr=subprocess.PIPE)
         return p, s
@@ -195,16 +189,14 @@ class Launch(unittest.TestCase):
         else:
             self.fail("the inherited admin socket does not answer")
         self.assertEqual(st, 200)
-        self.assertFalse((d / "run/admin.sock").exists())            # унаследованный не создаётся заново
+        self.assertFalse((d / "run/admin.sock").exists())            # Do not recreate an inherited socket.
         p.terminate()
         self.assertEqual(p.wait(10), 0)
         s.close()
 
 
 class Frame(unittest.TestCase):
-    """Рамка HTTP — файл реализации internal/frame/frame.go (ADR-0125 доп. (1) п. 2): launch без net/http; рамка
-    временная (пометка в шапке и KIT.md, якоря Н2.1); правка рамки работает в демоне и не перетирается; без
-    App.Frame — выход 1."""
+    """HTTP framing is implementation-owned internal/frame/frame.go (ADR-0125 addendum 1, item 2). launch has no net/http; its temporary frame is labeled and carries N2.1 anchors. Edits must affect the running daemon and survive rebuild; missing App.Frame exits1."""
     MOD = "example.com/w2c/store"
 
     def test_frame_is_yours(self):
@@ -227,7 +219,7 @@ class Frame(unittest.TestCase):
             doc = (dst / "KIT.md").read_text(encoding="utf-8")
             self.assertIn("is a temporary frame on `net/http`; the raw HTTP acceptance requires the strict parse of\n> "
                           "N2.1 — replace it.", doc)
-            # правка рамки: свой заголовок на каждом ответе — демон отвечает рамкой реализации
+            # Edit the frame to add a response header; the daemon must use that implementation frame.
             frame.write_text(text.replace("\t\tw.WriteHeader(code)", '\t\tw.Header().Set("X-Frame", "mine")\n\t\tw.WriteHeader(code)'),
                              encoding="utf-8")
             build_kit.build(dst, self.MOD, ["door", "flags", "refusals", "stagetests", "launch", "admin"])
@@ -256,7 +248,7 @@ class Frame(unittest.TestCase):
                 self.assertEqual(p.wait(10), 0)
                 p.stdout.close()
                 p.stderr.close()
-            # без App.Frame — выход 1 с причиной
+            # Missing App.Frame exits1 with a reason.
             main = store / "cmd/configstore/main.go"
             src = main.read_text(encoding="utf-8")
             start, end = src.index("\t\tFrame: func("), src.index("\t\t},\n", src.index("\t\tFrame: func(")) + 5
@@ -272,7 +264,7 @@ class Frame(unittest.TestCase):
 
 class Connect(unittest.TestCase):
     def test_examples_compile(self):
-        """Примеры справки KIT.md собираются в пакете со всеми частями."""
+        """Compile KIT.md connection examples with all kit parts."""
         with tempfile.TemporaryDirectory(prefix="nlc-") as t:
             dst = Path(t)
             mod = "example.com/w2c/store"

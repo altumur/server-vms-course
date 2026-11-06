@@ -1,6 +1,4 @@
-"""Тесты урока normgen (ADR-0125 доп. (5) п. 2): выбор урока (--lesson изымается из argv, NORMGEN_LESSON, по умолчанию
-01-store), пути урока по lessons.tsv, отказ генераторов с объявлением только P/01 на другом уроке — с именем урока;
-P/01 с --lesson 01-store даёт тот же out байт в байт, что без него."""
+"""Test lesson selection/paths (ADR-0125 addendum 5, item 2): remove --lesson from argv, then use environment/default; read lessons.tsv; reject unsupported lessons by name for P/01-only declarations. Explicit01-store must preserve default output byte for byte."""
 import os
 import subprocess
 import sys
@@ -13,7 +11,7 @@ sys.path.insert(0, str(HERE))
 import lesson  # noqa: E402
 
 PY = sys.executable
-# Генераторы с объявлением урока P/01 (таблицы мест норм, пакетов векторов, рамки): на другом уроке — отказ.
+# P/01-only norm/vector/frame declarations must reject another lesson.
 DECLARED_P01 = ("gen_core.py", "gen_admin.py", "gen_launch.py", "gen_tests.py")
 
 
@@ -39,11 +37,11 @@ class Select(unittest.TestCase):
         self.assertEqual(lesson.select(argv).key, "01-store")
         argv = ["gen", "--lesson", "02-installer", "out-dir"]
         self.assertEqual(lesson.select(argv).key, "02-installer")
-        self.assertEqual(argv, ["gen", "out-dir"])                 # позиционные аргументы генератора — прежние
+        self.assertEqual(argv, ["gen", "out-dir"])                 # Preserve generator positional arguments.
         argv = ["gen", "--lesson=05-resource"]
         self.assertEqual(lesson.select(argv).key, "05-resource")
         self.assertEqual(argv, ["gen"])
-        self.assertEqual(os.environ[lesson.ENV], "05-resource")   # дочерним процессам — тот же урок
+        self.assertEqual(os.environ[lesson.ENV], "05-resource")   # Child processes inherit the same lesson.
 
     def test_env(self):
         os.environ[lesson.ENV] = "03-worker"
@@ -69,7 +67,7 @@ class Select(unittest.TestCase):
 
 class Generators(unittest.TestCase):
     def test_p01_same_bytes(self):
-        """--lesson 01-store и NORMGEN_LESSON=01-store дают out, равный выходу без урока (out курса)."""
+        """Explicit --lesson 01-store and NORMGEN_LESSON=01-store produce the same bytes as the default course output."""
         for gen, rel in (("gen_core.py", "core/coreadapter/core.go"), ("gen_admin.py", "go/admin/import.go"),
                          ("gen_launch.py", "go/launch/launch.go")):
             with tempfile.TemporaryDirectory() as t:

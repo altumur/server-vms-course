@@ -1,4 +1,4 @@
-"""Привязки межурочных таблиц из wire.tsv; только Go API задаётся здесь, строки назначает consumers.tsv."""
+"""Cross-lesson wire.tsv table bindings. Only the Go API is declared here; consumers.tsv assigns rows."""
 import wire
 import wire_vectors
 

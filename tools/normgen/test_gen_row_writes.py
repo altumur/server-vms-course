@@ -294,7 +294,7 @@ class Runtime(unittest.TestCase):
 
     def test_unicode_jcs_and_writer_oracle(self):
         cases = []
-        values = [{"é": [True, None, "камера\u2028\v"], "a": "😀"}, [1, "x", None], "\\u0436", False, 7]
+        values = [{"é": [True, None, '\u043a\u0430\u043c\u0435\u0440\u0430\u2028\x0b'], "a": "😀"}, [1, "x", None], "\\u0436", False, 7]
         for value in values:
             c = request(Schemas={"result": {}}, Defs={});c["Input"]["value"] = value;cases.append(c)
         for c, got in zip(cases, self.invoke(cases)):

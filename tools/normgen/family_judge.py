@@ -1,18 +1,10 @@
-"""Судья части `families` (ADR-0125 № 5, доп. (1) п. 1): чтение семей сгенерированным пакетом против векторов семей.
+"""Judge the generated families part against family vectors (ADR-0125 generator 5, addendum (1), item 1).
 
-Запуск (на CT 103): python tools/normgen/family_judge.py [--module-dir <каталог go.mod с families>] [--lesson NN-<имя>]
-                    [--runs 3] [--json итог]
+  python tools/normgen/family_judge.py [--module-dir <families-module-directory>] [--lesson NN-name] [--runs 3] [--json <result>]
 
-Вход — таблица `Platform/common/vectors/family-read/<урок>.tsv` (case family key kind mode who text verdict paths outcome
-note; формат — README пакета): каждая строка идёт в обвес tools/normgen/families/harness (пакет families: Judge по ключу,
-OutcomesFor по ролям who), сравниваются вердикт, множество путей и исход у каждой роли — строго, как у раннера.
-Векторы — эталон диалекта с дельтами набора «Б»; их согласие со стеком В7 проверяет check_spec (family-read), не здесь.
-Проход повторяется --runs раз: порядок обхода map в Go случаен (README пакета, D18).
---v7 — второй вход: свои экземпляры судьи (лишний ключ, нестроковые значения, целое и время на границах, ключ не по
-шаблону, текст не JSON) поверх базовой строки векторов, ожидание — стек В7 курса (skills/lesson-spec/scripts/v7:
-stack.Family, spec.outcomes_for, шаблон ключа), а не генератор; нужен Python с jsonschema (/opt/check-env/lesson-spec).
-Итог: `families: P/<урок> N/M PASS|FAIL`; код 0 — все совпали, 1 — нет, 2 — ошибка запуска судьи.
-"""
+Each row of Platform/common/vectors/family-read/<lesson>.tsv (case, family, key, kind, mode, who, text, verdict, paths, outcome, note; see its README) is sent to families/harness. Compare Judge's verdict and path set, and OutcomesFor for every who role, exactly as the runner does. These vectors define the dialect with set-B deltas; check_spec, not this judge, verifies their agreement with the V7 stack. Repeat --runs times because Go map iteration is random (README D18).
+
+--v7 adds independent mutants: extra keys, non-string values, integer/time boundaries, malformed keys and non-JSON text. Expectations come from the course's Python V7 stack (stack.Family, spec.outcomes_for and key templates), not the generator. Requires jsonschema, available in /opt/check-env/lesson-spec. Result: `families: P/<lesson> N/M PASS|FAIL`; exits 0=all match, 1=mismatch, 2=judge startup error."""
 import argparse
 import json
 import shutil
@@ -24,7 +16,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
 L = lesson.CURRENT
 VECTORS = ROOT / "Platform/common/vectors/family-read"
 HEADER = ["case", "family", "key", "kind", "mode", "who", "text", "verdict", "paths", "outcome", "note"]
@@ -79,13 +71,11 @@ def compare(case, got):
 V7_SCRIPTS = ROOT / "skills/lesson-spec/scripts"
 
 
-DEEP_PER_FIELD = 80                                  # предел мутаций на поле (детерминированный порядок обхода)
+DEEP_PER_FIELD = 80                                  # Per-field mutation limit; traversal order is deterministic.
 
 
 def deep_texts(items, stack):
-    """Тексты строки с мутацией внутри JSON-документа поля: у объекта — удалить ключ, добавить лишний; у массива —
-    повтор первого элемента, пустой, без последнего; у листа — другой тип и граничные значения. Документ пишется
-    канонически (JCS) и с отступами — ожидание у обоих даёт стек В7."""
+    """Mutate field JSON documents: remove or add object keys; duplicate the first array element, empty it, or drop its last element; change leaf types and boundary values. Serialize both JCS and indented JSON; V7 supplies both expectations."""
     out = []
     for k, t in items.items():
         if not isinstance(t, str) or t[:1] not in ("{", "["):
@@ -101,7 +91,7 @@ def deep_texts(items, stack):
                 for key in list(x)[:6]:
                     muts.append((path, ("del", key)))
                 muts.append((path, ("add", "zz_extra")))
-                muts.append((path, ("badname", "!! not a name")))   # имя не по форме со значением не по схеме
+                muts.append((path, ("badname", "!! not a name")))   # Invalid key-template name combined with a value outside the schema.
                 for key in list(x)[:12]:
                     walk(x[key], path + [key])
             elif isinstance(x, list):
@@ -115,7 +105,7 @@ def deep_texts(items, stack):
                     muts.append((path, ("set", leaf)))
         walk(doc, [])
         per_op, picked = {}, []
-        for m in muts:                                    # предел — на вид операции: глубокие места не теряются
+        for m in muts:                                    # Limit each operation kind separately so deep paths remain covered.
             if per_op.get(m[1][0], 0) < DEEP_PER_FIELD // 2:
                 per_op[m[1][0]] = per_op.get(m[1][0], 0) + 1
                 picked.append(m)
@@ -169,9 +159,9 @@ def _has_huge(d):
 
 
 def v7_cases(lesson, base_rows):
-    """Свои экземпляры поверх базовой строки каждой семьи; ожидание — стек В7 (Python)."""
+    """Create independent cases over each family's base row; the Python V7 stack supplies expectations."""
     sys.path.insert(0, str(V7_SCRIPTS))
-    from v7 import spec, stack                       # noqa: E402 — стек В7 курса
+    from v7 import spec, stack                       # noqa: E402 -- course V7 stack
     catalog = spec.read_catalog(ROOT)
     templates, _ = spec.key_templates(ROOT, catalog)
     out = []
@@ -191,9 +181,9 @@ def v7_cases(lesson, base_rows):
                         '"-0"', '"01"', '"1e3"', '"1E400"', '"' + "9" * 400 + '"'):
                 texts.append("{" + ",".join(json.dumps(x) + ":" + (raw if x == k else json.dumps(v))
                                             for x, v in items.items()) + "}")
-        deep = []                                     # мутации внутри документов полей x-encoding (P/02):
+        deep = []                                     # Mutations inside x-encoding field documents (P/02):
         for seed in [r for r in base_rows if r["family"] == row["key"] and r["verdict"] == "ok"
-                     and r["mode"] == "writer"]:          # затравки — читаемые строки писателя с документами
+                     and r["mode"] == "writer"]:          # Seed from readable writer rows containing documents.
             try:
                 its = json.loads(seed["text"])
             except ValueError:

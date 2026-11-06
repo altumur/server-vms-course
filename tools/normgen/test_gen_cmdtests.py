@@ -1,7 +1,4 @@
-"""Тесты генератора тестов этапов урока без HTTP (gen_cmdtests.py; P/02, ADR-0125 доп. (5)): out свежий; на заглушках
-адаптера всё красное без паники; на подставном адаптере (Command — семантика w2cctl швов, Load — правила швов и оракул
-корпуса, LoadCatalogue и RolloutPoll — ответы, выписанные из самих швов) всё зелёное; мутанты адаптера и шва — красные;
-puts — в описи excluded с причиной."""
+"""Test non-HTTP gen_cmdtests output: freshness, all scaffold tests fail without panic, fixture adapter tests pass, adapter/seam mutants fail and puts remain explicitly excluded. Fixture Command models seam w2cctl semantics; Load uses seams/corpus oracle; LoadCatalogue/RolloutPoll return seam-declared answers."""
 import hashlib
 import json
 import os
@@ -135,7 +132,7 @@ var _ = base64.StdEncoding
 
 
 def answers():
-    """Ответы LoadCatalogue и RolloutPoll, выписанные из швов (ключ — вход в форме JSON адаптера)."""
+    """Read LoadCatalogue/RolloutPoll fixture answers from seams, keyed by adapter-input JSON."""
     cats, polls = {}, {}
     for f in sorted((ROOT / "Platform/02-installer/acceptance").glob("*/seams.tsv")):
         for line in f.read_text(encoding="utf-8").split("\n"):
@@ -342,7 +339,7 @@ class CmdTests(unittest.TestCase):
                 self.assertTrue(want <= red, f"mutant {why}: red {red}, want {want}")
 
     def test_seam_mutant(self):
-        """Ожидание шва, изменённое в копии корня, даёт красный тест ровно этого сценария."""
+        """Mutating a seam expectation in an alternate source root must fail exactly that scenario."""
         root = Path(self.tmp.name) / "root"
         shutil.copytree(ROOT / "Platform/02-installer", root / "Platform/02-installer")
         seams = root / "Platform/02-installer/acceptance/1/seams.tsv"

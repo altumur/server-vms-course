@@ -1,12 +1,6 @@
-"""Общие пакеты векторов урока для части vectors (ADR-0125 доп. (5) п. 5: полный состав урока; у P/01 не было пяти —
-crl, revoked, log-mask, store-client, family-read). Модуль генератора № 6 (gen_tests.py): чтение таблиц пакетов,
-заготовки адаптера (YOURS, по файлу на функцию), тесты `TestCommon<Пакет>_Line<N>`, ветви единой команды векторов
-(vectorcmd), входы и ожидания судьи vector_judge.py.
+"""Common vector packages for the lesson's vectors part (ADR-0125 addendum (5), item 5). P/01 previously lacked crl, revoked, log-mask, store-client and family-read. This module supports generator 6 (gen_tests.py): reading package tables, one YOURS adapter file per function, TestCommon<Package>_Line<N> tests, unified vectorcmd dispatch, and vector_judge.py inputs and expectations.
 
-Состав урока — форма «Спецификации» Platform/common/vectors/consumers.tsv (package, table, lesson, norm): строки урока.
-Нативный исход — разделы «Native outcome» README пакетов и общий провод «The unified command of a vector package»:
-код 0 и одно значение JSON. family-read исполняет пакет сам — часть families (families.ByKey(...).Judge), не модель.
-"""
+The lesson roster is declared by Platform/common/vectors/consumers.tsv (package, table, lesson, norm). Native outcomes follow each package README's Native outcome section and The unified command of a vector package: exit 0 and one JSON value. family-read executes the families part itself through families.ByKey(...).Judge, not the model."""
 import json
 from pathlib import Path
 import tsv_input
@@ -15,19 +9,19 @@ import vector_consumers
 
 COMMON = "Platform/common/vectors"
 
-# Состав урока — форма «Спецификации» Platform/common/vectors/consumers.tsv (package common/<имя>, table, lesson,
-# norm; ADR-0125 доп. (5) п. 5): строки урока по порядку формы. Пакет без объявления DECLS — отказ генератора.
+# The lesson roster comes from Platform/common/vectors/consumers.tsv (common/<name>, table, lesson,
+# norm; ADR-0125 addendum (5), item 5), in form order. Undeclared DECLS packages refuse generation.
 CONSUMERS = f"{COMMON}/consumers.tsv"
 CONSUMER_COLUMNS = ["package", "table", "lesson", "norm"]
-# Выгрузки до формы (4c101570, 00ab401a — пакеты P/01 -28…-34): прежнее объявление состава P/01 по «Who performs it»
-# README; с формой оно не читается (её строки P/01 те же пять — сверено 0c2e519ca).
+# Before the form existed (4c101570, 00ab401a: P/01 kits -28 through -34), Who performs it in the README
+# declared the P/01 roster. With the form, that fallback is unused; its five P/01 rows match (0c2e519ca).
 BEFORE_FORM = {
     "01-store": [("crl", "cases.tsv"), ("revoked", "cases.tsv"), ("log-mask", "cases.tsv"),
                  ("store-client", "cases.tsv"), ("family-read", "01.tsv")],
 }
 
-# Пакет → форма таблицы и функция адаптера. header None — таблица без шапки (поля по README); inputs — колонки входа
-# провода (cells); files — фикстуры (имя → путь от корня курса); expect — колонка ожидания и её чтение.
+# Package -> table shape and adapter. header=None means headerless, using README fields; inputs are wire
+# cells; files map fixture names to course-relative paths; expect identifies and reads the expectation column.
 DECLS = {
     "crl": dict(header=["case", "input", "expect", "note"], inputs=["input"], files={}, expect="json-or-bad",
                 go="CRL", adapter="crl.go",
@@ -105,8 +99,7 @@ def strict(text, where):
 
 
 def composition(lesson_key, root=None, known_only=False):
-    """[(пакет, таблица)] урока по consumers.tsv; пакет без объявления адаптера — CommonError с его именем (known_only —
-    только пакеты DECLS: прочие объявляет генератор урока, gen_vectors.py)."""
+    """Return the lesson's [(package, table)] from consumers.tsv. Missing adapter declarations raise CommonError naming the package. known_only selects DECLS packages; gen_vectors.py declares the rest."""
     root = Path(root) if root else Path(__file__).resolve().parent.parent.parent
     path = root / CONSUMERS
     if not path.is_file():
@@ -134,7 +127,7 @@ def composition(lesson_key, root=None, known_only=False):
 
 
 def read(root, name, table):
-    """Таблица пакета → (rel, текст, [(строка, {колонка: ячейка})]); форма по DECLS — иначе CommonError."""
+    """Read a package table as (rel, text, [(physical_line, {column: cell})]); validate DECLS or raise CommonError."""
     decl = DECLS[name]
     rel = f"{COMMON}/{name}/{table}"
     path = Path(root) / rel
@@ -151,7 +144,7 @@ def read(root, name, table):
 
 
 def expected(name, row, where):
-    """Ожидаемый нативный stdout (значение JSON) строки."""
+    """Return the row's expected native stdout as a JSON value."""
     kind = DECLS[name]["expect"]
     if kind == "json-or-bad":
         return "@bad" if row["expect"] == "@bad" else strict(row["expect"], f"{where}: expect")
@@ -187,7 +180,7 @@ import "errors"
 
 
 def adapters(lesson_key, known_only=False, root=None):
-    """{имя файла vectoradapter: текст Go} заготовок общих пакетов урока (без family-read — его исполняет пакет)."""
+    """Return {vectoradapter filename: Go scaffold} for common packages, excluding the kit-executed family-read."""
     return {DECLS[n]["adapter"]: ADAPTER_HEAD + DECLS[n]["doc"] for n, _ in composition(lesson_key, root=root, known_only=known_only)
             if DECLS[n]["adapter"]}
 
@@ -196,7 +189,7 @@ def uses_families(lesson_key):
     return any(n == "family-read" for n, _ in composition(lesson_key, known_only=True))
 
 
-# Ветви единой команды (vectorcmd.run): value — нативное значение JSON.
+# Unified vectorcmd.run dispatch: value is the native JSON value.
 VECTORCMD = {
     "crl": '''	case %(key)s:
 		v, err := vectoradapter.CRL([]byte(cell("input")))
@@ -349,7 +342,7 @@ TEST_CALL = {
 
 
 def go_tests(lesson_key, root, go_str, head, module, known_only=False):
-    """{имя файла vectortests: текст Go} — по тесту на строку общих пакетов урока; head(rel) — шапка с sha источника."""
+    """Return {vectortests filename: Go text}, one test per common row; head(rel) supplies its source SHA header."""
     comp = composition(lesson_key, root, known_only)
     if not comp:
         return {}
@@ -384,7 +377,7 @@ def go_tests(lesson_key, root, go_str, head, module, known_only=False):
 
 
 def wire_rows(lesson_key, root, known_only=False):
-    """[(пакет, таблица, rel, текст, [(строка, cells, files, ожидание JSON одной строкой)])] — входы команды векторов."""
+    """Return [(package, table, rel, text, [(line, cells, files, single-line expected JSON)])] for the vector command."""
     out = []
     for name, table in composition(lesson_key, root, known_only):
         rel, text, rows = read(root, name, table)

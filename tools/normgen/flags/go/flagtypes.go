@@ -1,11 +1,11 @@
 package flags
 
-// Закрытый словарь типов таблицы флагов (шапка forms/daemon-flags.tsv; ADR-0125 № 3), написан руками один раз;
-// генератор tools/normgen/gen_flags.py копирует файл в пакет рядом с flags.go. Каждый тип — разбор слова командной
-// строки в значение CEL (f[...] в required и bad) и в типизированное значение поля Flags.
+// Handwritten closed flag-type vocabulary from daemon-flags.tsv's header (ADR-0125 generator 3).
+// gen_flags.py copies it beside flags.go. Each type parses an argv word into a CEL value for required/bad
+// f[...] expressions and a typed Flags field.
 //
-// Значения CEL: path, dir, file, addr, id, duration, list:… — строка как дана; int:…, bytes:>0 и enum из одних целых —
-// int64; прочий enum — строка; bool — true.
+// CEL path/dir/file/addr/id/duration/list values retain their source strings; int, bytes and integer enums
+// use int64; other enums use strings; bool uses true.
 
 import (
 	"errors"
@@ -16,13 +16,13 @@ import (
 	"time"
 )
 
-// Member — элемент списка id@addr или id@addr/addr: id и адреса по порядку записи.
+// Member is one id@addr or id@addr/addr list element, with addresses in source order.
 type Member struct {
 	ID    string
 	Addrs []string
 }
 
-var memberID = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$`) // P/01.3 Н2: 1–128 ASCII, первый — буква или цифра
+var memberID = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$`) // P/01.3 N2:1..128 ASCII characters, starting with a letter or digit.
 
 func valNonEmpty(raw string) (string, error) {
 	if raw == "" {
@@ -31,8 +31,8 @@ func valNonEmpty(raw string) (string, error) {
 	return raw, nil
 }
 
-// valAddr — host:port по шапке формы (P/01.3-R031): хост непустой — имя, IPv4 или [IPv6]; порт — десятичное 1…65535
-// без ведущих нулей.
+// valAddr follows P/01.3-R031: nonempty hostname, IPv4 or bracketed IPv6; decimal port1..65535
+// without leading zeros.
 func valAddr(raw string) (string, error) {
 	host, port, err := net.SplitHostPort(raw)
 	if err != nil {
@@ -74,7 +74,7 @@ func valID(raw string) (string, error) {
 	return raw, nil
 }
 
-// typeInt — десятичное целое со знаком минус или без знака, без ведущих нулей, в границах [min, max] (hasMax — есть ли max).
+// typeInt parses optional-minus decimal integers without leading zeros within min/max; hasMax enables max.
 func valInt(raw string, min, max int64, hasMax bool) (int64, error) {
 	body := strings.TrimPrefix(raw, "-")
 	if !digits(body) || (len(body) > 1 && body[0] == '0') {
@@ -90,7 +90,7 @@ func valInt(raw string, min, max int64, hasMax bool) (int64, error) {
 	return n, nil
 }
 
-// typeBytes — bytes:>0: целое число байт > 0, десятичное, без суффиксов.
+// typeBytes implements bytes:>0:positive decimal byte count without suffixes.
 func valBytes(raw string) (int64, error) {
 	n, err := valInt(raw, 1, 0, false)
 	if err != nil {
@@ -99,7 +99,7 @@ func valBytes(raw string) (int64, error) {
 	return n, nil
 }
 
-// valDuration — длительность по шапке формы: [1-9][0-9]*(ms|s|m|h), больше 0 (5s, 250ms; не 1h30m, не 1.5s, не µs).
+// valDuration accepts positive [1-9][0-9]*(ms|s|m|h), such as5s/250ms, not1h30m, 1.5s or microseconds.
 func valDuration(raw string) (time.Duration, error) {
 	m := duration.FindStringSubmatch(raw)
 	if m == nil {
@@ -113,7 +113,7 @@ func valDuration(raw string) (time.Duration, error) {
 	return time.Duration(n) * unit, nil
 }
 
-// typeEnum — одно из значений; ints — все значения целые: значение CEL — int64.
+// typeEnum accepts a listed value; ints means every choice is integral and CEL receives int64.
 func valEnum(raw string, values []string, ints bool) (any, error) {
 	for _, v := range values {
 		if raw == v {
@@ -127,7 +127,7 @@ func valEnum(raw string, values []string, ints bool) (any, error) {
 	return nil, errors.New("not one of " + strings.Join(values, " | "))
 }
 
-// typeList — list:id@addr (addrs = 1) и list:id@addr/addr (addrs = 2): через запятую, не пуст, каждый элемент полный.
+// typeList parses a nonempty comma-separated list:id@addr(addrs1) or id@addr/addr(addrs2), with complete items.
 func valList(raw string, addrs int) ([]Member, error) {
 	if raw == "" {
 		return nil, errors.New("an empty list")

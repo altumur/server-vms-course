@@ -1,5 +1,5 @@
 // Hand-written runtime of the part `loader` (tools/normgen/manifestrt/go; the kit copies it, DO NOT EDIT): the strict
-// loader of P/02.1 Н3 `load(bytes, source)` and the canonical view of P/02.2 Н3 `build view`. The order of layers is
+// P/02.1 N3 load(bytes, source) and P/02.2 N3 build view. Layer order is
 // normative (ADR-0092): text → form → relations; relations only on a clean form. The forms are embedded by the
 // generator (forms.go: the schema, the relations, the scalar table of the export, byte for byte).
 package manifest
@@ -9,8 +9,8 @@ import (
 	"sync"
 )
 
-// Refusal — a refusal of the loader: Class is the layer (text | form | relations, P/02.1 Н4); Message names the
-// file; Path and Row are a hint (Н4).
+// Refusal reports the loader layer in Class(text|form|relations, P/02.1 N4);Message names the
+// file;Path/Row are hints (N4).
 type Refusal struct {
 	Class   string
 	Message string
@@ -46,7 +46,7 @@ func setup() error {
 	return initErr
 }
 
-// Load — P/02.1 Н3 load: the bytes of one manifest file → the manifest or the refusal (it names the file source).
+// Load implements P/02.1 N3:one manifest's bytes produce a manifest or a refusal naming source.
 // An error of the embedded forms or of a library (not of the input) is a refusal of the class "loader".
 func Load(source string, data []byte) (*Manifest, *Refusal) {
 	if err := setup(); err != nil {
@@ -64,11 +64,11 @@ func Load(source string, data []byte) (*Manifest, *Refusal) {
 	if len(numbers) > 0 {
 		p, _ := numbers[0][0].([]any)
 		return nil, &Refusal{Class: "form", Path: p, Message: fmt.Sprintf("%s: refused:form: %s: the number %v is "+
-			"outside the scalar table (P/02.1 Н1.1)", source, pathText(p), numbers[0][1])}
+			"outside the scalar table (P/02.1 \u041d1.1)", source, pathText(p), numbers[0][1])}
 	}
 	if len(empties) > 0 {
 		return nil, &Refusal{Class: "form", Path: empties[0], Message: fmt.Sprintf("%s: refused:form: %s: an empty "+
-			"value (P/02.1 Н1.1)", source, pathText(empties[0]))}
+			"value (P/02.1 \u041d1.1)", source, pathText(empties[0]))}
 	}
 	if err := schema.validate(v); err != nil {
 		return nil, &Refusal{Class: "form", Message: fmt.Sprintf("%s: refused:form: %v", source, err)}
@@ -88,7 +88,7 @@ func Load(source string, data []byte) (*Manifest, *Refusal) {
 	return &Manifest{Name: name, Tree: o}, nil
 }
 
-// Canonical — P/02.2 Н3 build view steps 1–2: the JCS bytes of the canonical view of an accepted manifest, or the
+// Canonical implements P/02.2 N3 steps1-2:JCS bytes of an accepted manifest's canonical view, or the
 // refusal of the load (the view is not built). The ceiling of the view row (step 3) is the caller's.
 func Canonical(source string, data []byte) ([]byte, *Refusal) {
 	m, r := Load(source, data)
