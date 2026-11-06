@@ -1,4 +1,4 @@
-# rights.reach.group без placement.group_by; норма М10/2 Н1.4; строка 60 references.tsv
+# rights.reach.group without placement.group_by; M10/2 N1.4; references.tsv row 60
 name: probe
 unit:
   rows: counters

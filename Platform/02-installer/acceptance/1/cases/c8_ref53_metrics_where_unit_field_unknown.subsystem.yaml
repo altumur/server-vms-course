@@ -1,4 +1,4 @@
-# ключ metrics[0].where не поле единицы (метрика без count); норма М10/2 Н1.4; строка 53 references.tsv
+# metrics[0].where has a key outside the unit fields (a metric without count); M10/2 N1.4; references.tsv row 53
 name: probe
 unit:
   rows: counters

@@ -1,4 +1,4 @@
-# heartbeat.door: status читается дверью единиц (P/06.7 Н1.6 pulse, ADR-0112 доп. (12) п. 3)
+# heartbeat.door: status is read by the units door (P/06.7 N1.6 pulse, ADR-0112 addendum (12) item 3)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

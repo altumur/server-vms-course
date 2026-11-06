@@ -1,4 +1,4 @@
-# near.of называет поле nosuch, которого у neart нет, при существующем поле в near.prefer (P/02.1 Н3, ADR-0091 доп. (26) п. 2)
+# near.of names nosuch, absent from neart, while near.prefer names an existing field (P/02.1 N3, ADR-0091 addendum (26) item 2)
 name: nearb
 unit:
   rows: nearbs

@@ -1,4 +1,4 @@
-# placement.ref_claim не из claims; норма М11/7 Н1.1; строка 93 references.tsv
+# placement.ref_claim is not in claims; M11/7 N1.1; references.tsv row 93
 name: probe
 unit:
   rows: counters

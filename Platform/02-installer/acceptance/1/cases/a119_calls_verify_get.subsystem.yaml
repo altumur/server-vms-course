@@ -1,4 +1,4 @@
-# GET domain/verify — вне перечня: дверь только запись (ADR-0119)
+# GET domain/verify is outside the list: this door is write-only (ADR-0119)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

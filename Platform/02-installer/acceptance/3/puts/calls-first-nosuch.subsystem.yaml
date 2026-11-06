@@ -1,4 +1,4 @@
-# сегмента нет в door.pass подсистемы (ADR-0112 доп. (3) п. 2)
+# The segment is absent from the subsystem door.pass (ADR-0112 addendum (3) item 2)
 name: callc
 unit:
   rows: callers

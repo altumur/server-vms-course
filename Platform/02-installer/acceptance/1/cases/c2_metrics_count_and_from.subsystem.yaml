@@ -1,4 +1,4 @@
-# у элемента и count, и from — ровно один из двух (P/06.5 Н3 «Ряды манифеста metrics[]»; C06-METRICS-DSL-33-01)
+# The element has both count and from: exactly one is required (P/06.5 N3 'Manifest series metrics[]'; C06-METRICS-DSL-33-01)
 name: probe
 unit:
   rows: counters

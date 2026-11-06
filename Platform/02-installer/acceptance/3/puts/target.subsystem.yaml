@@ -1,4 +1,4 @@
-# адресат заказа (ADR-0091 п. 1): именованный id, fixed cam, about по cam, необязательный секрет
+# An order target (ADR-0091 item 1): named id, fixed cam, about by cam, optional secret
 name: target
 unit:
   rows: things

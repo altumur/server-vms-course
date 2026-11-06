@@ -1,4 +1,4 @@
-# запись топологии в перечень не входит (P/06.3 Н1.9)
+# Writing topology is outside the list (P/06.3 N1.9)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

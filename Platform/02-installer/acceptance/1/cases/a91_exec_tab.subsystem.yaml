@@ -1,4 +1,4 @@
-# табуляция — не разделитель и не знак слова; ADR-0091 доп. (5) п. 2
+# A TAB is neither a separator nor an allowed word character; ADR-0091 addendum (5) item 2
 name: probe
 unit:
   rows: counters

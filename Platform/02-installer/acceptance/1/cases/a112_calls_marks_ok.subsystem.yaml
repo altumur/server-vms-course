@@ -1,4 +1,4 @@
-# POST /marks по билету (P/06.3 Н1.9, ADR-0112 доп. (13) п. 8)
+# POST /marks by ticket (P/06.3 N1.9, ADR-0112 addendum (13) item 8)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

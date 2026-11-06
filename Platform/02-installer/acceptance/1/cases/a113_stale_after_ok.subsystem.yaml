@@ -1,4 +1,4 @@
-# порог stale подсистемы: три периода пульса (P/09.1 Н1.2, ADR-0113 доп. (36))
+# The subsystem stale threshold is three heartbeat periods (P/09.1 N1.2, ADR-0113 addendum (36))
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

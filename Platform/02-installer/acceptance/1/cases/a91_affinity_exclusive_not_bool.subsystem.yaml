@@ -1,4 +1,4 @@
-# exclusive не bool; ADR-0091 доп. (10) п. 1
+# exclusive is not bool; ADR-0091 addendum (10) item 1
 name: probe
 unit:
   rows: counters

@@ -1,4 +1,4 @@
-# schema поля таблицы глубиной ровно 32 — граница, проходит; норма P/06.1 Н1.4; пара строки 25 references.tsv
+# A table field schema exactly 32 levels deep is accepted at the boundary; P/06.1 N1.4; pair for references.tsv row 25
 name: probe
 unit: {rows: counters, id: numeric}
 placement: {capacity: {default: 4}}

@@ -1,4 +1,4 @@
-# domain.shared: два документа одного имени; норма М11/11 Н1.1; строка 110 references.tsv
+# domain.shared has two documents with one name; M11/11 N1.1; references.tsv row 110
 name: probe
 unit:
   rows: counters

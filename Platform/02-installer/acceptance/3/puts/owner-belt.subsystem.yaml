@@ -1,4 +1,4 @@
-# подсистема owner-belt: её пользователь <dep>-owner-belt совпал бы с группой доли belt подсистемы owner
+# Subsystem owner-belt: user <dep>-owner-belt would collide with subsystem owner share belt group
 name: owner-belt
 unit: {rows: gear, id: numeric}
 placement: {capacity: {default: 1}}

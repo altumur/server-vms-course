@@ -1,4 +1,4 @@
-# GET manifest/<s>/<иное> — вне перечня (ADR-0116 доп. (6))
+# GET manifest/<s>/<other> is outside the list (ADR-0116 addendum (6))
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

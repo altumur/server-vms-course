@@ -721,7 +721,7 @@
      "type": "boolean"
     },
     "files": {
-     "description": "static files of the subsystem: paths relative to the directory of the manifest file, console address `/<sub>/<path>` (P/06.5 N2 «Статические файлы»); a file not read — `manifest put` refusal (P/02.3 N4)",
+     "description": "static files of the subsystem: paths relative to the directory of the manifest file, console address `/<sub>/<path>` (P/06.5 N2 «Static files of a subsystem»); a file not read — `manifest put` refusal (P/02.3 N4)",
      "x-default-text": "no files",
      "type": "array",
      "items": {
@@ -739,7 +739,7 @@
   },
   "metrics": {
    "$ref": "#/$defs/metrics",
-   "x-owner": "P/06.5 N1.2; N3 «Ряды манифеста metrics[]»"
+   "x-owner": "P/06.5 N1.2; N3 «Manifest series metrics[]»"
   },
   "domain": {
    "$ref": "#/$defs/domain",
@@ -911,15 +911,15 @@
    "type": "object",
    "properties": {
     "unit": {
-     "default": "единица",
+     "default": "unit",
      "$ref": "#/$defs/label"
     },
     "units": {
-     "default": "единица",
+     "default": "unit",
      "$ref": "#/$defs/label"
     },
     "units_count": {
-     "default": "единица",
+     "default": "unit",
      "type": "string"
     },
     "section": {
@@ -1663,7 +1663,7 @@
       ]
      },
      "from": {
-      "description": "`heartbeat.<path>` | `status.<path>` (P/06.5 N3 «Ряды манифеста metrics[]»)",
+      "description": "`heartbeat.<path>` | `status.<path>` (P/06.5 N3 «Manifest series metrics[]»)",
       "type": "string",
       "pattern": "^(?:(heartbeat|status)\\.[\\s\\S]+)$"
      },
@@ -2303,7 +2303,7 @@
        "type": "string"
       },
       "cut_at": {
-       "description": "only for a url field: for a field of another type — `refused:reference` (the type is a property of the target `group_by.field`, as for `unit.id`)",
+       "description": "only for a url field: for a field of another type — `refused:relations` (the type is a property of the target `group_by.field`, as for `unit.id`)",
        "enum": [
         "host"
        ]
@@ -2480,7 +2480,7 @@
      "type": "object",
      "properties": {
       "delete_after": {
-       "description": "only with named id, without fixed fields except id, `about` — only by id (ADR-0067)",
+       "description": "only with a named id (`numeric` — a refusal); `fixed` fields and `about` by any field are allowed since ADR-0091 item 1: for a table with `fixed` fields the controller physically deletes only the rows with `made`, the manual ones it takes off without deleting (P/04 N1.3)",
        "type": "integer",
        "x-integer-place": true,
        "minimum": 1,

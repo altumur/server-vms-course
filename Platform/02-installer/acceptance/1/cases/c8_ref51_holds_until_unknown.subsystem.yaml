@@ -1,4 +1,4 @@
-# holds.until называет необъявленное поле таблицы holds.table; норма М10/2 Н1.4 (holds.unit/since/until/released); строка 51 references.tsv
+# holds.until names an undeclared holds.table field; M10/2 N1.4 (holds.unit/since/until/released); references.tsv row 51
 name: probe
 unit: {rows: things, id: numeric}
 placement: {capacity: {default: 1}}

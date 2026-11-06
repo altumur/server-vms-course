@@ -1,4 +1,4 @@
-# дверь первого вида, как у live (ADR-0112 доп. (3) п. 2)
+# A first-kind door, as in live (ADR-0112 addendum (3) item 2)
 name: live
 unit:
   rows: streams

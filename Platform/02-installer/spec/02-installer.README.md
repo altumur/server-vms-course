@@ -164,8 +164,8 @@ For all chapters: complete the implementation description and the checklists; do
 
 ## Done when
 
-- [ ] *(2.1)* All 946 files give the verdict from the table: 202 `ok`, 744 `refused`; the sets of files and cases coincide.
-- [ ] *(2.3)* All 84 installations of `puts.tsv` give the code and rev from the table.
+- [ ] *(2.1)* All 947 files give the verdict from the table: 203 `ok`, 744 `refused`; the sets of files and cases coincide.
+- [ ] *(2.3)* All 87 installations of `puts.tsv` give the code and rev from the table.
 - [ ] *(2.1)* Refused files give an explanation with the source name; a crash or a partially loaded manifest is not counted.
 - [ ] *(2.1)* All cases of `classes.tsv` give their class-layer; the hints of `diagnostics.tsv` are written into the report (a divergence is not a failure); the package `yaml-suite`: `layer1` of each test matched.
 - [ ] *(2.1)* The sample of the acceptance README is run through the manifest installation, or the description names the reason for deviating from the SHOULD (P/02.1-12).
@@ -185,5 +185,5 @@ For all chapters: complete the implementation description and the checklists; do
 | A verdict did not match, the norm is unambiguous | fix the loader or its regular path, then repeat the case |
 | The table contradicts the norm | pass an acceptance defect to the author of the norms; do not change the verdict for the sake of a green run |
 | The norm is incomplete or contradictory | describe the question with the input file and a reference to the section; agree on a change of the canon |
-| The rights outcome diverges from the norm | match the input and the outcome with N1–N4 of chapter 2.5, then with the acceptance file; report to «Спецификация» the place, a counterexample and the proposed solution |
+| The rights outcome diverges from the norm | match the input and the outcome with N1–N4 of chapter 2.5, then with the acceptance file; report to «Specification» the place, a counterexample and the proposed solution |
 | After an AI correction a repeated wrong interpretation is found | write the sample and the clarification into `journal/corrections-<K>.tsv` of its chapter per ADR-0080 |

@@ -1,4 +1,4 @@
-# agg не из закрытого перечня (P/06.5 Н3 «Ряды манифеста metrics[]»; C06-METRICS-DSL-33-01)
+# agg is outside the closed list (P/06.5 N3 'Manifest series metrics[]'; C06-METRICS-DSL-33-01)
 name: probe
 unit:
   rows: counters

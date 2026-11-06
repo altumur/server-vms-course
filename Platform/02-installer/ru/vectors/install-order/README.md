@@ -4,7 +4,7 @@
 
 Владелец — глава [P/02.4](../../spec/02.4-installer.norms.md) установщика (N1.7 `install` `steps`, `order`; догадка стадии C
 I02-INSTALL-ORDER, решение «Архитектора» 2026-10-23). Участник — установщик (`install.sh`, шаг `manifest put`). Байты пишет
-«Спецификация».
+«Specification».
 
 ## `cases.tsv`
 

@@ -1,4 +1,4 @@
-# Expected effective rights of v8-worker-writes-deletes (P/02.5 Н1.4 rows console and <s>worker, Н3 step 2):
+# Expected effective rights of v8-worker-writes-deletes (P/02.5 N1.4 rows console and <s>worker, N3 step 2):
 # - gauges from worker.writes: vaworker writes, reads and deletes va/gauges/*; console does not write va/gauges/*, but reads and deletes it (delete:va/gauges/*);
 # - ordinary shelves table: console writes and deletes va/shelves/*; vaworker only reads;
 # - worker.deletes [items]: vaworker deletes va/items/* (delete:va/items/*) but does not write it; vacontroller without delete_after/ends does not delete.

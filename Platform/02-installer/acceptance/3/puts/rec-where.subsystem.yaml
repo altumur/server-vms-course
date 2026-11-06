@@ -1,4 +1,4 @@
-# адресат GET <s>/where, как rec (ADR-0112 доп. (1) п. 1)
+# A GET <s>/where target, as in rec (ADR-0112 addendum (1) item 1)
 name: rec
 unit:
   rows: recorders

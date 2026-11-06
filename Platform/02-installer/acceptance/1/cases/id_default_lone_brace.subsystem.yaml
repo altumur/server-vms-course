@@ -1,4 +1,4 @@
-# одиночная } в умолчании string при unit.id numeric; строка 124 references.tsv
+# A lone '}' in a string default with unit.id numeric; references.tsv row 124
 name: probe
 unit:
   rows: counters

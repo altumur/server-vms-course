@@ -1,4 +1,4 @@
-# worker.uses — доля другой подсистемы; ADR-0091 п. 5
+# worker.uses names another subsystem share; ADR-0091 item 5
 name: probe
 unit:
   rows: counters

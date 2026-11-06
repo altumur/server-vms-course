@@ -1,4 +1,4 @@
-# worker.uses без «<подсистема>.<доля>»; ADR-0091 п. 5
+# worker.uses lacks the <subsystem>.<share> form; ADR-0091 item 5
 name: probe
 unit:
   rows: counters

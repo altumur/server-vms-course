@@ -1,4 +1,4 @@
-# Expected effective rights of v9-asked-free-resource (P/02.5 Н1.4):
+# Expected effective rights of v9-asked-free-resource (P/02.5 N1.4):
 # - console writes vb/asked/* (vb has requests.per_person), not va/asked/* (va has no per_person);
 # - vbworker and vbcontroller do not read vb/asked/* (!vb/asked/*);
 # - resource writes/reads/deletes vb/requests/free-* (vb has requests.free: true), not vb/requests/r1 or va/requests/free-*;

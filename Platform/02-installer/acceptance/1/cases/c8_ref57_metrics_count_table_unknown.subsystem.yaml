@@ -1,4 +1,4 @@
-# metrics[0].count называет необъявленную таблицу; норма М10/2 Н1.4; строка 57 references.tsv
+# metrics[0].count names an undeclared table; M10/2 N1.4; references.tsv row 57
 name: probe
 unit:
   rows: counters

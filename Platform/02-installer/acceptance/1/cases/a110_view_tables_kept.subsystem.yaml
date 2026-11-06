@@ -1,4 +1,4 @@
-# таблица на домене: у члена её строк нет
+# A domain table: the member has no rows for it
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}, note: {type: string}, pic: {type: blob}}}
 placement: {capacity: {default: 1}}

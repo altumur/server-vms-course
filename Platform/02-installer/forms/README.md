@@ -65,7 +65,8 @@ to the acceptance directory. No shell is evaluated. These lexical rules match th
 * `CALL <name> <JSON>`: the name is `[a-z][a-z0-9-]*`; the JSON consumes the rest. Its expectation is JSON by the common acceptance rules
   (objects by subset, `{}` exactly empty, string bindings and markers), or a published `@absent` / `@exit 2`. This is test normalization,
   not a mandatory implementation API. A function with no published marker does not acquire one from this grammar.
-* `@file <stand path> inputs/<file>` or `@file <stand path> <JSON string>` writes those exact fixture/decoded UTF-8 bytes; expect `ok`.
+* `@file <stand path> inputs/<file>` or `@file <stand path> <JSON string>` writes those exact fixture/decoded UTF-8 bytes; it first creates the
+  missing directories of the stand path. Expect `ok`.
 * `@read <stand path>`: expect JSON for a parsed JSON file, `text <JSON string>` for exact UTF-8 bytes, or `@absent` for a missing file.
   An unreadable file fails. `text "$name"` binds the bytes first, then compares that same value on reuse. JSON strings in JSON mode are
   parsed JSON values; text mode never parses the file contents as JSON. There is no implicit empty value for absence or an IO error.
@@ -75,6 +76,17 @@ to the acceptance directory. No shell is evaluated. These lexical rules match th
   grammar. Prefix projection stops at an unsupported step; the inventory names all exclusions, and an empty selected projection is an error.
 
 Fixtures are owned synthetic data. A native command’s implementation-specific output is not constrained when its norm leaves it open.
+
+### Scenario layout
+
+A command called by RUN or CALL gets the layout of P/02.4 N1.2 with `PLATFORM_DIR` = `$data`: the stand layout of the
+[common acceptance](../../common/acceptance/README.md) with `{data}` = `$data`. For the placement check of the
+[secret files contract](../../common/contracts/secret-files.md) (`forbidden`, `layout`) the forbidden directories are exactly two:
+the store directory `$data/configstore` and the object root `$data/objects`; no copy directory is set. The adapter makes these two
+directories exist before it invokes a command (it creates them empty, an existing one is kept) and names them to the command by
+this layout; it looks for no other forbidden directory. A seam never requires a command to create a directory: every directory of a
+target path exists before the call — a root, one of these two directories, or a directory made by an earlier `@file` step of the
+same scenario. An absent directory of the path is a refusal of the command (`refuse` of the contract), not a fixture to repair.
 
 ### CALL normalization
 

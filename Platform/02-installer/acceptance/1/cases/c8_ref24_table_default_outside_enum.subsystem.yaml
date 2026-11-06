@@ -1,4 +1,4 @@
-# default поля таблицы не из его enum; норма М10/2 Н1.2а default; строка 24 references.tsv
+# A table field default is outside its enum; M10/2 N1.2a default; references.tsv row 24
 name: probe
 unit: {rows: counters, id: numeric}
 placement: {capacity: {default: 4}}

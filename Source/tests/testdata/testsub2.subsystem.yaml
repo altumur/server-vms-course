@@ -8,7 +8,7 @@
 name: testsub2
 slot: {prefix: t, name_env: TALLY_NAME}
 # its worker stops in 30 s at most (`stop_timeout`), and reads the pump's share — its own share, made by its part (ADR-0091
-# доп. (2) пп. 1, 4)
+# addendum (2) items 1, 4)
 worker: {exec: /usr/lib/testsub2/worker, reads: [testsub/counters/], requests: [testsub], uses: [testsub2.pump], stop_timeout: 30, writes: [gauges]}
 # its marks are rows of the store; the tickets a holder leaves for the holder of the counter, on another server, are
 # files its resource's door gives out (`resource.door_readable`)
@@ -50,14 +50,14 @@ unit:
     feed_secret: {type: string, bound_to: [feed]}
     keep_days:   {inherit: 7, type: int, merge: override}  # scalar inheritance witness, not an event-retention policy
     flags:       {type: list, inherit: [], merge: union}
-    # a tally may be kept until a time (`placement.ends`); 0 — for good (ADR-0091 п. 2)
+    # a tally may be kept until a time (`placement.ends`); 0 — for good (ADR-0091 item 2)
     until:       {type: float, default: 0}
     # the members a tally's book entries go to (domain.books `to`), and a secret its roll entry carries — sealed to the
-    # domain's book seal on the way, masked at every door (М11/5)
+    # domain's book seal on the way, masked at every door (M11/5)
     to:          {type: list}
     note_secret: {type: string}
   # what a tally's holder says of it, kept apart from the row: how its count ended, and how far it has counted — a
-  # row of the store under its epoch, `testsub2/state/<name>/<tally>` (ADR-0091 п. 3; was the field `state`)
+  # row of the store under its epoch, `testsub2/state/<name>/<tally>` (ADR-0091 item 3; was the field `state`)
   state:
     result:
       type: object
@@ -103,14 +103,14 @@ tables:
       released_at: {type: string}         # not empty: the notch holds nothing (`holds.released`)
     journal: {written: notch.cut, deleted: notch.cleared}
   # what a tally's holder measures, a row its worker writes whole; the console only reads it, and an operator may delete a
-  # row — the worker writes it again if it is still its own (P/06.1 Н1.6; запрос VMS «команды и строка устройства»)
+  # row — the worker writes it again if it is still its own (P/06.1 N1.6; VMS request «commands and the device row»)
   gauges:
     key: name
     fields:
       name:  {type: string, required: true}
       level: {type: int}
   # rows of a short life: the console's reaper takes a row whose version it has seen unchanged for delete_after seconds
-  # (P/06.4 Н3 `tables`); 35 outlasts one pass of 30 s, so a row is never taken at first sight
+  # (P/06.4 N3 `tables`); 35 outlasts one pass of 30 s, so a row is never taken at first sight
   scraps:
     key: name
     fields:
@@ -118,7 +118,7 @@ tables:
       note: {type: string}
     delete_after: 35
   # rows of its worker alone: read and written with the ticket of the request it serves, by the right of consequences;
-  # a person's door is closed to them (P/06.1 Н1.6 `service`; ADR-0094 доп. (15) п. 3)
+  # a person's door is closed to them (P/06.1 N1.6 `service`; ADR-0094 addendum (15) item 3)
   stash:
     key: name
     fields:
@@ -181,8 +181,8 @@ events:
   suppress:
     tally.tick: {window: 5, by: [unit]}
 snapshot: [name, of, mode, step, state.result]
-# the belt a tally's holder feeds, and a pump that runs beside the worker, with volumes of its own (ADR-0091 п. 4, 5);
-# the pump's share is made by the pump (`part`), which stops in 10 s (ADR-0091 доп. (2) пп. 1, 4)
+# the belt a tally's holder feeds, and a pump that runs beside the worker, with volumes of its own (ADR-0091 item 4, 5);
+# the pump's share is made by the pump (`part`), which stops in 10 s (ADR-0091 addendum (2) items 1, 4)
 shares:
   belt: {kind: socket}
   pump: {kind: dir, part: pump}
@@ -210,7 +210,7 @@ domain:
       grant: [testsub2worker]
       placement: {sub: testsub2, caller: origin, ref_claim: ref, target_fields: [cluster, copies], audience_claim: aud}
       unit: {sub: testsub, caller: poll_home, ref_claim: ref, target_fields: [centre], audience_claim: aud}
-    vault:                             # a kept token: the domain remembers its jti per unit, DELETE revokes it (P/08.2 Н1.6а)
+    vault:                             # a kept token: the domain remembers its jti per unit, DELETE revokes it (P/08.2 N1.6a)
       lifetime: 600
       keep: true
       claims: [aud, ref]
@@ -266,56 +266,56 @@ metrics:
   - {name: wait_seconds, from: heartbeat.wait, agg: histogram, type: histogram, buckets: [1.0, 5.0]}
 servers:
   show:
-    - {table: shelves, by: server, title: полки, columns: [name, kind, enabled]}
+    - {table: shelves, by: server, title: shelves, columns: [name, kind, enabled]}
   status:
-    - {field: jam, title: затор}
-    - {field: belt.state, title: лента}
-    - {field: shelved, title: счёты на полках, of: shelves}
+    - {field: jam, title: jam}
+    - {field: belt.state, title: belt}
+    - {field: shelved, title: counts on shelves, of: shelves}
 display:
-  unit: счёт
-  units: счёты
-  units_count: счётов                 # «12 счётов»
-  section: Счета
+  unit: count
+  units: counts
+  units_count: counts                 # «12 counts»
+  section: Counts
   events: false                       # the card has no journal tab of the module's
-  field_help: {of: счётчик, shelf: полка, lane: "полоса, по которой воркер ведёт счёт"}
-  kinds: {tally.tick: тик}
+  field_help: {of: counter, shelf: shelf, lane: "Lane counted by the worker"}
+  kinds: {tally.tick: tick}
   tree:
     group_by: zone
     nested_by: "/"
-    columns: [{field: name, width: 12}, {field: phase, title: фаза}]
+    columns: [{field: name, width: 12}, {field: phase, title: phase}]
     children: false
-    group_title: По зонам
-    group_hint: зоны → счёты
-    filter: имя счёта
-    no_group: Без зоны
-    contents_title: Состав зоны
-    group_word: зона
-    no_group_suffix: без зоны
-    pick_note: выберите счёт в дереве
-    new_root: Зона
-    new_sub: Подзона
-    add_here: Добавить счёт сюда
-    new_group_note: Зона создана — добавьте в неё счёт, иначе она не сохранится
-    remove: убрать из зоны
-    not_in: Не в зоне — попадёт в «без зоны».
-    add_to: Добавить в зону
-    no_others: других зон нет
-    new_group: Новая зона
-  general: Счёт
-  fields: {name: Имя, mode: Режим, id: ID}
+    group_title: By zone
+    group_hint: zones → counts
+    filter: count name
+    no_group: No zone
+    contents_title: Zone contents
+    group_word: zone
+    no_group_suffix: without a zone
+    pick_note: select a count in the tree
+    new_root: Zone
+    new_sub: Subzone
+    add_here: Add a count here
+    new_group_note: Zone created — add a count to it or it will not be saved
+    remove: remove from the zone
+    not_in: Outside a zone — it appears under No zone.
+    add_to: Add to zone
+    no_others: no other zones
+    new_group: New zone
+  general: Count
+  fields: {name: Name, mode: Mode, id: ID}
   # `lane` is no field of the row: its worker says it in the unit's status (form[].status), and its values are free words
-  options: {mode: {plain: тихо, loud: громко}, lane: {fast: быстрая, slow: медленная}}
+  options: {mode: {plain: quiet, loud: loud}, lane: {fast: fast, slow: slow}}
   form:
-    - {title: Счёт, state: true, fields: [name, mode]}
-    - title: Где
+    - {title: Count, state: true, fields: [name, mode]}
+    - title: Where
       placement: true
-      status: [{field: lane, since: lane_since, title: Полоса}]
+      status: [{field: lane, since: lane_since, title: Lane}]
       fields: [shelf, zone]
-      note: полка решает
+      note: the shelf decides
 console:
   running: tallies_running
   # its own page at /testsub2/ and its static files: the bytes lie beside this manifest at install, the stand takes them
-  # from Platform/06-console/acceptance/5/inputs/testsub2/ (ADR-0094 доп. (1), (3) п. 8; P/06.5 Н1.1 `mounted`, Н2)
+  # from Platform/06-console/acceptance/5/inputs/testsub2/ (ADR-0094 addendum (1), (3) item 8; P/06.5 N1.1 `mounted`, N2)
   shell: true
   # every extension, a nested name, an empty file, a file of two parts, names that only begin with `api`
   files: [api.js, apis/app.css, app.css, app.js, bundle.js, data.json, deep/er/Name_1-2.v3.js, empty.css, fonts/body.ttf, fonts/body.woff, fonts/body.woff2, logo.png, logo.svg]

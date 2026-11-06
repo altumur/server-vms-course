@@ -1,4 +1,4 @@
-# предел ожидания не целый (ADR-0094 B1)
+# The wait limit is not an integer (ADR-0094 B1)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

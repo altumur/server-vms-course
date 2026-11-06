@@ -1,4 +1,4 @@
-# имя free без дефиса — не префикс free- (ADR-0091 доп. (24) п. 5)
+# The name free without a dash does not have prefix free- (ADR-0091 addendum (24) item 5)
 name: free
 unit:
   rows: counters

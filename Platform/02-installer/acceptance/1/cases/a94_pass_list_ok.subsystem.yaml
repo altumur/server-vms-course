@@ -1,4 +1,4 @@
-# вид первый прежний рядом с видом вторым (ADR-0094 B1)
+# The former first kind beside the second kind (ADR-0094 B1)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

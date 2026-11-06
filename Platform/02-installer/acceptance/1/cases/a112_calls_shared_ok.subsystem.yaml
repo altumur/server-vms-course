@@ -1,4 +1,4 @@
-# двери ADR-0112 доп. (12) пп. 1, 3 (P/06.3 Н1.9)
+# The doors of ADR-0112 addendum (12) items 1 and 3 (P/06.3 N1.9)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

@@ -1,4 +1,4 @@
-# семья не читается дверью (domain.kept_read, P/02.1 Н1.4)
+# The door does not read this family (domain.kept_read, P/02.1 N1.4)
 name: keptp
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

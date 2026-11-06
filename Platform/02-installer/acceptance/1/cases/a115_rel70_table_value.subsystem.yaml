@@ -27,7 +27,7 @@ display:
   fields: {name: Name, start: Start}
   options:
     kind: {a: Alpha, b: Beta}
-    zones.mode: {auto: Авто}
+    zones.mode: {auto: Auto}
   form:
     - title: Main
       fields: [name, start, kind]

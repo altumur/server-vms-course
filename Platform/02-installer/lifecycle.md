@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/lifecycle.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
 
 The lifecycle contract of the installer `w2cctl` and its commands (ADR-0083 addendum (2) item 1): installation and upgrade, manifest installation,
-rights derivation, the certificate center, the on-demand workers script. Stage A — on top of the current norms of М10 and М11. The norms are not
+rights derivation, the certificate center, the on-demand workers script. Stage A — on top of the current norms of M10 and M11. The norms are not
 retold here: each line leads to its norm.
 
 Norms: [P/02.4](spec/02.4-installer.norms.md) (N1.1 units, N1.2 environment, N1.5 workers on demand, N1.6 certificates,
@@ -81,7 +81,7 @@ from the highest number (P/02.4 N1.5 rules 3).
 «Stand» — the [common acceptance README](../common/acceptance/README.md) (analysis of the review of stage B 3–5, № 33):
 - the command that loads one manifest file — `{file}` (P/02.1, the corpus `verdicts.tsv`);
 - `manifest-put {socket} {file}` — through `admin.sock`, the stand's manifests one by one before the first `@start`;
-- the rights derivation command — `{manifests}`, `{deployment}` (`dep`), `{file}`: `{rights}` of the acceptances moved from М10/4–11 (analysis of the review of stage B 3–5, № 34), and the variants of chapter 2.5.
+- the rights derivation command — `{manifests}`, `{deployment}` (`dep`), `{file}`: `{rights}` of the acceptances moved from M10/4–11 (analysis of the review of stage B 3–5, № 34), and the variants of chapter 2.5.
 
 ## Late chapters (domain)
 

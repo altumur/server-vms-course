@@ -1,4 +1,4 @@
-# поле единицы state без unit.state — допустимо; ADR-0091 п. 3
+# A unit field named state without unit.state is allowed; ADR-0091 item 3
 name: probe
 unit:
   rows: counters

@@ -1,4 +1,4 @@
-# действие названной единицы (договор сторожевой и передачи names)
+# An action of a named unit (the gate and pass contract, names)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}, rule: {type: json}}}
 placement: {capacity: {default: 1}}

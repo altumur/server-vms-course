@@ -1,35 +1,35 @@
-# What the worker script starts and stops on request (P/02.4 Н1.5 rules 2–4; ADR-0084 addendum (1) R1, R4, addendum (4) R26).
+# What the worker script starts and stops on request (P/02.4 N1.5 rules 2–4; ADR-0084 addendum (1) R1, R4, addendum (4) R26).
 # Form: the adjacent README. Stage A (A6).
 case	input	expect	note
-start-two	{"want": "3", "running": []}	{"start": [2, 3], "stop": []}	want 3 — два заказанных к базовому
-start-missing	{"want": "3", "running": [2]}	{"start": [3], "stop": []}	недостающий — наименьший свободный номер
-start-smallest-free	{"want": "3", "running": [3]}	{"start": [2], "stop": []}	свободен 2 — его первым
-start-gaps	{"want": "5", "running": [2, 4]}	{"start": [3, 5], "stop": []}	дыры заполняются наименьшими
-steady	{"want": "2", "running": [2]}	{"start": [], "stop": []}	цель достигнута — ничего
-stop-largest	{"want": "2", "running": [2, 5, 10]}	{"start": [], "stop": [5, 10]}	лишние — наибольшие номера
-stop-integer	{"want": "2", "running": [9, 10]}	{"start": [2], "stop": [9, 10]}	номер целым и номерами: 9 и 10 выше want — остановить оба, недостающий 2 — запустить (ADR-0084 доп. (4) Р26)
-want-one	{"want": "1", "running": [2, 3]}	{"start": [], "stop": [2, 3]}	want 1 — остаётся только базовый
-next-after-nine	{"want": "10", "running": [2, 3, 4, 5, 6, 7, 8, 9]}	{"start": [10], "stop": []}	после 9 — 10
-no-series	{"want": null, "running": [2, 3]}	{"start": [], "stop": []}	ряда нет — ничего не запускать и не останавливать (Р1)
-want-zero	{"want": "0", "running": [2]}	{"start": [], "stop": []}	значение вне 1…99 — ряд не читается: ничего
-want-hundred	{"want": "100", "running": [2]}	{"start": [], "stop": []}	вне 1…99: ничего
-want-leading-zero	{"want": "02", "running": [2]}	{"start": [], "stop": []}	ведущий ноль — не форма метрики М10/9: ряда нет, ничего
-want-fraction	{"want": "2.0", "running": [2]}	{"start": [], "stop": []}	дробь — не форма метрики М10/9: ряда нет, ничего
-console-silent	{"want": "3", "running": [], "console": "silent"}	{"start": [], "stop": []}	консоль молчит — молчание не повод (rules 2, Р1)
-console-silent-stop	{"want": "1", "running": [2, 3], "console": "silent"}	{"start": [], "stop": []}	и не останавливать при молчании
-reconcile-stale	{"want": "3", "running": [], "reconcile_age": "61"}	{"start": [], "stop": []}	сверка старше 60 с (rules 2)
-reconcile-never	{"want": "3", "running": [], "reconcile_age": "-1"}	{"start": [], "stop": []}	−1 — сверки не было (rules 2)
-reconcile-sixty	{"want": "3", "running": [], "reconcile_age": "60"}	{"start": [2, 3], "stop": []}	60 — ещё не старше (rules 2)
-reconcile-fraction-over	{"want": "3", "running": [], "reconcile_age": "60.5"}	{"start": [], "stop": []}	60.5 — дробь по форме значения ряда, старше 60 (rules 2; C02-RECONCILE-AGE-FORM-01)
-reconcile-fraction-under	{"want": "3", "running": [], "reconcile_age": "0.5"}	{"start": [2, 3], "stop": []}	0.5 — дробь по форме значения ряда, не старше (rules 2; C02-RECONCILE-AGE-FORM-01)
-reconcile-exponent	{"want": "3", "running": [], "reconcile_age": "1e1"}	{"start": [], "stop": []}	1e1 — не каноническая запись значения ряда (P/06.5 Н3: 10), не по форме (rules 2; C02-RECONCILE-AGE-FORM-01)
-memory-no-file	{"want": "3", "running": [], "memory": null}	{"start": [], "stop": []}	нет roles/<роль>.env — роль пропуск (rules 4)
-memory-zero-divisor	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "0", "CAPACITY": "4"}}	{"start": [], "stop": []}	делитель ноль — пропуск (rules 4)
-memory-negative	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "-8192", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [], "stop": []}	бюджет не положительный — пропуск
-memory-fraction	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "1024.0", "CAPACITY": "4"}}	{"start": [], "stop": []}	бюджет не целое — пропуск
-memory-capacity-zero	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "1024", "CAPACITY": "0"}}	{"start": [], "stop": []}	CAPACITY не > 0 — пропуск
-memory-room	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [2, 3], "stop": []}	потолок 8 выше цели — запуск как обычно
-memory-below-target	{"want": "5", "running": [], "memory": {"HOST_MEMORY_MB": "4096", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [2, 3, 4], "stop": []}	потолок 4 с базовым — к нему три, не четыре (rules 4)
-memory-only-base	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "1024", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [], "stop": []}	потолок 1 — только базовый, стартов нет
-memory-no-capacity	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "1024"}}	{"start": [], "stop": []}	нет CAPACITY — не целое > 0 — пропуск (rules 4; сверка М10/3–5, V2)
-hole-above	{"want": "3", "running": [2, 5]}	{"start": [3], "stop": [5]}	номера, не счёт: 5 выше want — остановить, 3 недостаёт — запустить, хотя работающих два (ADR-0084 доп. (4) Р26)
+start-two	{"want": "3", "running": []}	{"start": [2, 3], "stop": []}	want 3: two ordered workers beside the base worker
+start-missing	{"want": "3", "running": [2]}	{"start": [3], "stop": []}	Start the smallest missing free number
+start-smallest-free	{"want": "3", "running": [3]}	{"start": [2], "stop": []}	Number 2 is free: start it first
+start-gaps	{"want": "5", "running": [2, 4]}	{"start": [3, 5], "stop": []}	Fill gaps using the smallest numbers
+steady	{"want": "2", "running": [2]}	{"start": [], "stop": []}	The target is reached: no action
+stop-largest	{"want": "2", "running": [2, 5, 10]}	{"start": [], "stop": [5, 10]}	Excess workers have the largest numbers
+stop-integer	{"want": "2", "running": [9, 10]}	{"start": [2], "stop": [9, 10]}	Interpret numbers as integers: 9 and 10 exceed want, so stop both; start missing 2 (ADR-0084 addendum (4) R26)
+want-one	{"want": "1", "running": [2, 3]}	{"start": [], "stop": [2, 3]}	want 1: only the base worker remains
+next-after-nine	{"want": "10", "running": [2, 3, 4, 5, 6, 7, 8, 9]}	{"start": [10], "stop": []}	10 follows 9
+no-series	{"want": null, "running": [2, 3]}	{"start": [], "stop": []}	No row: neither start nor stop (R1)
+want-zero	{"want": "0", "running": [2]}	{"start": [], "stop": []}	A value outside 1..99 makes the row unreadable: no action
+want-hundred	{"want": "100", "running": [2]}	{"start": [], "stop": []}	Outside 1..99: no action
+want-leading-zero	{"want": "02", "running": [2]}	{"start": [], "stop": []}	A leading zero violates the M10/9 metric form: no row, no action
+want-fraction	{"want": "2.0", "running": [2]}	{"start": [], "stop": []}	A fraction violates the M10/9 metric form: no row, no action
+console-silent	{"want": "3", "running": [], "console": "silent"}	{"start": [], "stop": []}	A silent console is no reason to act (rules 2, R1)
+console-silent-stop	{"want": "1", "running": [2, 3], "console": "silent"}	{"start": [], "stop": []}	Do not stop workers during silence either
+reconcile-stale	{"want": "3", "running": [], "reconcile_age": "61"}	{"start": [], "stop": []}	Reconciliation is older than 60 s (rules 2)
+reconcile-never	{"want": "3", "running": [], "reconcile_age": "-1"}	{"start": [], "stop": []}	-1 means no reconciliation yet (rules 2)
+reconcile-sixty	{"want": "3", "running": [], "reconcile_age": "60"}	{"start": [2, 3], "stop": []}	60 is not older yet (rules 2)
+reconcile-fraction-over	{"want": "3", "running": [], "reconcile_age": "60.5"}	{"start": [], "stop": []}	60.5 is fractional per the row value form and older than 60 (rules 2; C02-RECONCILE-AGE-FORM-01)
+reconcile-fraction-under	{"want": "3", "running": [], "reconcile_age": "0.5"}	{"start": [2, 3], "stop": []}	0.5 is fractional per the row value form and not older (rules 2; C02-RECONCILE-AGE-FORM-01)
+reconcile-exponent	{"want": "3", "running": [], "reconcile_age": "1e1"}	{"start": [], "stop": []}	1e1 is not the canonical row value spelling (P/06.5 N3: 10), hence out of form (rules 2; C02-RECONCILE-AGE-FORM-01)
+memory-no-file	{"want": "3", "running": [], "memory": null}	{"start": [], "stop": []}	Missing roles/<role>.env: skip the role (rules 4)
+memory-zero-divisor	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "0", "CAPACITY": "4"}}	{"start": [], "stop": []}	A zero divisor: skip (rules 4)
+memory-negative	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "-8192", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [], "stop": []}	A non-positive budget: skip
+memory-fraction	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "1024.0", "CAPACITY": "4"}}	{"start": [], "stop": []}	A non-integer budget: skip
+memory-capacity-zero	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "1024", "CAPACITY": "0"}}	{"start": [], "stop": []}	CAPACITY is not > 0: skip
+memory-room	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [2, 3], "stop": []}	Ceiling 8 exceeds the target: start normally
+memory-below-target	{"want": "5", "running": [], "memory": {"HOST_MEMORY_MB": "4096", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [2, 3, 4], "stop": []}	Ceiling 4 includes the base worker: add three, not four (rules 4)
+memory-only-base	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "1024", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [], "stop": []}	Ceiling 1 permits only the base worker: no starts
+memory-no-capacity	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "1024"}}	{"start": [], "stop": []}	Absent CAPACITY is not an integer > 0: skip (rules 4; M10/3–5 reconciliation, V2)
+hole-above	{"want": "3", "running": [2, 5]}	{"start": [3], "stop": [5]}	Use numbers, not a count: 5 exceeds want, so stop it; 3 is missing, so start it despite two running workers (ADR-0084 addendum (4) R26)

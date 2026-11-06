@@ -1,4 +1,4 @@
-# worker.uses — своя доля без part; строка 91 references.tsv, ADR-0091 доп. (2) п. 4
+# worker.uses: its own share without part; references.tsv row 91, ADR-0091 addendum (2) item 4
 name: probe
 unit:
   rows: counters

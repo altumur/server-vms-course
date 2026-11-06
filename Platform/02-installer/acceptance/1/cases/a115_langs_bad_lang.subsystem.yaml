@@ -25,7 +25,7 @@ display:
   unit: counter
   units: counters
   langs:
-    Russian: {k.name: Имя}
+    Russian: {k.name: Name}
   fields: {name: Name, start: Start}
   options:
     kind: {a: Alpha, b: Beta}

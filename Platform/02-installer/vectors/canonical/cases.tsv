@@ -2,222 +2,223 @@
 # Row: case<TAB>input<TAB>expect<TAB>note; input is a manifest path from the layout root, expect is expect/<case>.json.
 # corpus-*, course-* rows and all expectations are built by the lesson-spec skill builder; rules: README.
 case	input	expect	note
-example-sections	Platform/02-installer/vectors/canonical/inputs/sections.subsystem.yaml	expect/example-sections.json	отсутствующий раздел без умолчания (`requests`) отсутствует; отсутствующие разделы с умолчанием (`display`, `lease`) — их умолчания (Н1.1 defaults)
-example-nested-key	Platform/02-installer/vectors/canonical/inputs/nested-key.subsystem.yaml	expect/example-nested-key.json	отсутствующий вложенный ключ внутри присутствующего родителя: `placement` без `headroom`, `weight`, `rebalance`; поле без `type` — `string`; `display` без `units_count`, `events` (Н1.1 defaults)
-example-sugar-tables	Platform/02-installer/vectors/canonical/inputs/sugar-tables.subsystem.yaml	expect/example-sugar-tables.json	сахар `tables: [shelves]` → `{shelves: {}}`, затем умолчание `fields` и П2 (Н1.1 sugar.tables)
-example-sugar-bound_to	Platform/02-installer/vectors/canonical/inputs/sugar-bound_to.subsystem.yaml	expect/example-sugar-bound_to.json	сахар `bound_to: feed` → `["feed"]` (Н1.1 sugar.bound_to)
-example-sugar-in	Platform/02-installer/vectors/canonical/inputs/sugar-in.subsystem.yaml	expect/example-sugar-in.json	сахар `in: query` → `["query"]` у элемента `secret_in` вида regex; сказанный `decoded: false` остаётся (Н1.1 sugar.in)
-example-p1-snapshot	Platform/02-installer/vectors/canonical/inputs/p1-snapshot.subsystem.yaml	expect/example-p1-snapshot.json	П1: нет `snapshot` — имена `unit.fields` в порядке автора без `*_secret`, `type: blob` и `server` (Н1.1 computed)
-example-p1-snapshot-empty	Platform/02-installer/vectors/canonical/inputs/p1-snapshot-empty.subsystem.yaml	expect/example-p1-snapshot-empty.json	П1: сказанный `snapshot: []` остаётся `[]` (Н1.1 computed)
-example-p1-snapshot-state	Platform/02-installer/vectors/canonical/inputs/p1-snapshot-state.subsystem.yaml	expect/example-p1-snapshot-state.json	П1: нет `snapshot` — поля, затем `state.<имя>` каждого `unit.state` в порядке автора, кроме `cursor` (ADR-0091 п. 3; V7-P022-SNAPSHOT-STATE-01)
-example-p2-journal	Platform/02-installer/vectors/canonical/inputs/p2-journal.subsystem.yaml	expect/example-p2-journal.json	П2: дан один ключ `journal.written` — `deleted` = `"<т>.deleted"`, сказанный остаётся (Н1.1 computed)
-example-p3-display-form	Platform/02-installer/vectors/canonical/inputs/p3-display-form.subsystem.yaml	expect/example-p3-display-form.json	П3: `display` без `form` — `[{fields: [<имена unit.fields в порядке автора>]}]`, без title (Н1.1 computed)
-example-p4-default	Platform/02-installer/vectors/canonical/inputs/p4-default.subsystem.yaml	expect/example-p4-default.json	П4: `default` описателя — сказанное значение; не сказан, сказан `inherit`, `type: blob` — `null`; у полей единицы и таблицы (Н1.1 computed)
-example-p5-decoded	Platform/02-installer/vectors/canonical/inputs/p5-decoded.subsystem.yaml	expect/example-p5-decoded.json	П5: элемент `secret_in` вида regex без `decoded` — `true` (Н1.1 computed)
-example-ordered	Platform/02-installer/vectors/canonical/inputs/ordered.subsystem.yaml	expect/example-ordered.json	ordered: `unit.fields` и `tables.<т>.fields` — массив `{name, …}` в порядке автора, не по алфавиту (Н1.1 ordered)
-example-sugared	Platform/02-installer/acceptance/2/puts/sugared.subsystem.yaml	expect/example-sugared.json	приёмка 2.2 сц. 07: сахар `tables: [shelves]` и `bound_to: feed`, без `snapshot` и `display` — П1, П3, П4 вместе (Н1.1)
-example-view-at-ceiling	Platform/02-installer/acceptance/2/puts/view-at-ceiling.subsystem.yaml	expect/example-view-at-ceiling.json	приёмка 2.2 сц. 06: вид 524201 байт — вес строки вида с rev из одной цифры ровно потолок 524288 (Н1.2 ceiling)
-corpus-a103_calls_book_ok	Platform/02-installer/acceptance/1/cases/a103_calls_book_ok.subsystem.yaml	expect/corpus-a103_calls_book_ok.json	принятый случай корпуса 2.1
-corpus-a103_names_action_ok	Platform/02-installer/acceptance/1/cases/a103_names_action_ok.subsystem.yaml	expect/corpus-a103_names_action_ok.json	принятый случай корпуса 2.1
-corpus-a103_places_wanted_ok	Platform/02-installer/acceptance/1/cases/a103_places_wanted_ok.subsystem.yaml	expect/corpus-a103_places_wanted_ok.json	принятый случай корпуса 2.1
-corpus-a103_scenario_member_ok	Platform/02-installer/acceptance/1/cases/a103_scenario_member_ok.subsystem.yaml	expect/corpus-a103_scenario_member_ok.json	принятый случай корпуса 2.1
-corpus-a110_calls_at_ok	Platform/02-installer/acceptance/1/cases/a110_calls_at_ok.subsystem.yaml	expect/corpus-a110_calls_at_ok.json	принятый случай корпуса 2.1
-corpus-a110_calls_view_ok	Platform/02-installer/acceptance/1/cases/a110_calls_view_ok.subsystem.yaml	expect/corpus-a110_calls_view_ok.json	принятый случай корпуса 2.1
-corpus-a110_edit_delete_ok	Platform/02-installer/acceptance/1/cases/a110_edit_delete_ok.subsystem.yaml	expect/corpus-a110_edit_delete_ok.json	принятый случай корпуса 2.1
-corpus-a110_edit_tables_ok	Platform/02-installer/acceptance/1/cases/a110_edit_tables_ok.subsystem.yaml	expect/corpus-a110_edit_tables_ok.json	принятый случай корпуса 2.1
-corpus-a110_token_day_no_keep_ok	Platform/02-installer/acceptance/1/cases/a110_token_day_no_keep_ok.subsystem.yaml	expect/corpus-a110_token_day_no_keep_ok.json	принятый случай корпуса 2.1
-corpus-a110_token_keep_ok	Platform/02-installer/acceptance/1/cases/a110_token_keep_ok.subsystem.yaml	expect/corpus-a110_token_keep_ok.json	принятый случай корпуса 2.1
-corpus-a110_view_tables_ok	Platform/02-installer/acceptance/1/cases/a110_view_tables_ok.subsystem.yaml	expect/corpus-a110_view_tables_ok.json	принятый случай корпуса 2.1
-corpus-a110_view_tables_rows_ok	Platform/02-installer/acceptance/1/cases/a110_view_tables_rows_ok.subsystem.yaml	expect/corpus-a110_view_tables_rows_ok.json	принятый случай корпуса 2.1
-corpus-a111_calls_requests_ok	Platform/02-installer/acceptance/1/cases/a111_calls_requests_ok.subsystem.yaml	expect/corpus-a111_calls_requests_ok.json	принятый случай корпуса 2.1
-corpus-a111_names_deep_ok	Platform/02-installer/acceptance/1/cases/a111_names_deep_ok.subsystem.yaml	expect/corpus-a111_names_deep_ok.json	принятый случай корпуса 2.1
-corpus-a112_calls_list_ok	Platform/02-installer/acceptance/1/cases/a112_calls_list_ok.subsystem.yaml	expect/corpus-a112_calls_list_ok.json	принятый случай корпуса 2.1
-corpus-a112_calls_marks_ok	Platform/02-installer/acceptance/1/cases/a112_calls_marks_ok.subsystem.yaml	expect/corpus-a112_calls_marks_ok.json	принятый случай корпуса 2.1
-corpus-a112_calls_shared_ok	Platform/02-installer/acceptance/1/cases/a112_calls_shared_ok.subsystem.yaml	expect/corpus-a112_calls_shared_ok.json	принятый случай корпуса 2.1
-corpus-a112_heartbeat_door_ok	Platform/02-installer/acceptance/1/cases/a112_heartbeat_door_ok.subsystem.yaml	expect/corpus-a112_heartbeat_door_ok.json	принятый случай корпуса 2.1
-corpus-a113_book_all_ok	Platform/02-installer/acceptance/1/cases/a113_book_all_ok.subsystem.yaml	expect/corpus-a113_book_all_ok.json	принятый случай корпуса 2.1
-corpus-a113_book_stale_ok	Platform/02-installer/acceptance/1/cases/a113_book_stale_ok.subsystem.yaml	expect/corpus-a113_book_stale_ok.json	принятый случай корпуса 2.1
-corpus-a113_calls_book_part_ok	Platform/02-installer/acceptance/1/cases/a113_calls_book_part_ok.subsystem.yaml	expect/corpus-a113_calls_book_part_ok.json	принятый случай корпуса 2.1
-corpus-a113_stale_after_ok	Platform/02-installer/acceptance/1/cases/a113_stale_after_ok.subsystem.yaml	expect/corpus-a113_stale_after_ok.json	принятый случай корпуса 2.1
-corpus-a115_display_table_field_ok	Platform/02-installer/acceptance/1/cases/a115_display_table_field_ok.subsystem.yaml	expect/corpus-a115_display_table_field_ok.json	принятый случай корпуса 2.1
-corpus-a115_display_tables_list_ok	Platform/02-installer/acceptance/1/cases/a115_display_tables_list_ok.subsystem.yaml	expect/corpus-a115_display_tables_list_ok.json	принятый случай корпуса 2.1
-corpus-a115_display_tables_ok	Platform/02-installer/acceptance/1/cases/a115_display_tables_ok.subsystem.yaml	expect/corpus-a115_display_tables_ok.json	принятый случай корпуса 2.1
-corpus-a115_events_kinds_ok	Platform/02-installer/acceptance/1/cases/a115_events_kinds_ok.subsystem.yaml	expect/corpus-a115_events_kinds_ok.json	принятый случай корпуса 2.1
-corpus-a115_hidden_ok	Platform/02-installer/acceptance/1/cases/a115_hidden_ok.subsystem.yaml	expect/corpus-a115_hidden_ok.json	принятый случай корпуса 2.1
-corpus-a115_hidden_required_default_ok	Platform/02-installer/acceptance/1/cases/a115_hidden_required_default_ok.subsystem.yaml	expect/corpus-a115_hidden_required_default_ok.json	принятый случай корпуса 2.1
-corpus-a115_items_ref_ok	Platform/02-installer/acceptance/1/cases/a115_items_ref_ok.subsystem.yaml	expect/corpus-a115_items_ref_ok.json	принятый случай корпуса 2.1
-corpus-a115_label_key_ok	Platform/02-installer/acceptance/1/cases/a115_label_key_ok.subsystem.yaml	expect/corpus-a115_label_key_ok.json	принятый случай корпуса 2.1
-corpus-a115_label_unit_key_ok	Platform/02-installer/acceptance/1/cases/a115_label_unit_key_ok.subsystem.yaml	expect/corpus-a115_label_unit_key_ok.json	принятый случай корпуса 2.1
-corpus-a115_langs_ok	Platform/02-installer/acceptance/1/cases/a115_langs_ok.subsystem.yaml	expect/corpus-a115_langs_ok.json	принятый случай корпуса 2.1
-corpus-a115_option_label_key_ok	Platform/02-installer/acceptance/1/cases/a115_option_label_key_ok.subsystem.yaml	expect/corpus-a115_option_label_key_ok.json	принятый случай корпуса 2.1
-corpus-a115_options_schema_enum_ok	Platform/02-installer/acceptance/1/cases/a115_options_schema_enum_ok.subsystem.yaml	expect/corpus-a115_options_schema_enum_ok.json	принятый случай корпуса 2.1
-corpus-a115_options_table_ok	Platform/02-installer/acceptance/1/cases/a115_options_table_ok.subsystem.yaml	expect/corpus-a115_options_table_ok.json	принятый случай корпуса 2.1
-corpus-a115_ref_label_ok	Platform/02-installer/acceptance/1/cases/a115_ref_label_ok.subsystem.yaml	expect/corpus-a115_ref_label_ok.json	принятый случай корпуса 2.1
-corpus-a115_route_rank_ok	Platform/02-installer/acceptance/1/cases/a115_route_rank_ok.subsystem.yaml	expect/corpus-a115_route_rank_ok.json	принятый случай корпуса 2.1
-corpus-a115_status_dot_ok	Platform/02-installer/acceptance/1/cases/a115_status_dot_ok.subsystem.yaml	expect/corpus-a115_status_dot_ok.json	принятый случай корпуса 2.1
-corpus-a115_table_hidden_items_ok	Platform/02-installer/acceptance/1/cases/a115_table_hidden_items_ok.subsystem.yaml	expect/corpus-a115_table_hidden_items_ok.json	принятый случай корпуса 2.1
-corpus-a116_calls_manifest_source_ok	Platform/02-installer/acceptance/1/cases/a116_calls_manifest_source_ok.subsystem.yaml	expect/corpus-a116_calls_manifest_source_ok.json	принятый случай корпуса 2.1
-corpus-a119_calls_verify_ok	Platform/02-installer/acceptance/1/cases/a119_calls_verify_ok.subsystem.yaml	expect/corpus-a119_calls_verify_ok.json	принятый случай корпуса 2.1
-corpus-a119_writes_via_ok	Platform/02-installer/acceptance/1/cases/a119_writes_via_ok.subsystem.yaml	expect/corpus-a119_writes_via_ok.json	принятый случай корпуса 2.1
-corpus-a119_writes_via_own_ok	Platform/02-installer/acceptance/1/cases/a119_writes_via_own_ok.subsystem.yaml	expect/corpus-a119_writes_via_own_ok.json	принятый случай корпуса 2.1
-corpus-a119_writes_via_table_ok	Platform/02-installer/acceptance/1/cases/a119_writes_via_table_ok.subsystem.yaml	expect/corpus-a119_writes_via_table_ok.json	принятый случай корпуса 2.1
-corpus-a119_writes_via_table_service_false_ok	Platform/02-installer/acceptance/1/cases/a119_writes_via_table_service_false_ok.subsystem.yaml	expect/corpus-a119_writes_via_table_service_false_ok.json	принятый случай корпуса 2.1
-corpus-a86_sub_manifest2	Platform/02-installer/acceptance/1/cases/a86_sub_manifest2.subsystem.yaml	expect/corpus-a86_sub_manifest2.json	принятый случай корпуса 2.1
-corpus-a91_affinity_exclusive_ok	Platform/02-installer/acceptance/1/cases/a91_affinity_exclusive_ok.subsystem.yaml	expect/corpus-a91_affinity_exclusive_ok.json	принятый случай корпуса 2.1
-corpus-a91_creates_ok	Platform/02-installer/acceptance/1/cases/a91_creates_ok.subsystem.yaml	expect/corpus-a91_creates_ok.json	принятый случай корпуса 2.1
-corpus-a91_ends_ok	Platform/02-installer/acceptance/1/cases/a91_ends_ok.subsystem.yaml	expect/corpus-a91_ends_ok.json	принятый случай корпуса 2.1
-corpus-a91_exec_ok	Platform/02-installer/acceptance/1/cases/a91_exec_ok.subsystem.yaml	expect/corpus-a91_exec_ok.json	принятый случай корпуса 2.1
-corpus-a91_shares_part_ok	Platform/02-installer/acceptance/1/cases/a91_shares_part_ok.subsystem.yaml	expect/corpus-a91_shares_part_ok.json	принятый случай корпуса 2.1
-corpus-a91_shares_parts_ok	Platform/02-installer/acceptance/1/cases/a91_shares_parts_ok.subsystem.yaml	expect/corpus-a91_shares_parts_ok.json	принятый случай корпуса 2.1
-corpus-a91_stop_timeout_bounds_ok	Platform/02-installer/acceptance/1/cases/a91_stop_timeout_bounds_ok.subsystem.yaml	expect/corpus-a91_stop_timeout_bounds_ok.json	принятый случай корпуса 2.1
-corpus-a91_unit_field_state_without_unit_state_ok	Platform/02-installer/acceptance/1/cases/a91_unit_field_state_without_unit_state_ok.subsystem.yaml	expect/corpus-a91_unit_field_state_without_unit_state_ok.json	принятый случай корпуса 2.1
-corpus-a91_unit_state_ok	Platform/02-installer/acceptance/1/cases/a91_unit_state_ok.subsystem.yaml	expect/corpus-a91_unit_state_ok.json	принятый случай корпуса 2.1
-corpus-a91_uses_ok	Platform/02-installer/acceptance/1/cases/a91_uses_ok.subsystem.yaml	expect/corpus-a91_uses_ok.json	принятый случай корпуса 2.1
-corpus-a94_console_empty_ok	Platform/02-installer/acceptance/1/cases/a94_console_empty_ok.subsystem.yaml	expect/corpus-a94_console_empty_ok.json	принятый случай корпуса 2.1
-corpus-a94_pass_list_ok	Platform/02-installer/acceptance/1/cases/a94_pass_list_ok.subsystem.yaml	expect/corpus-a94_pass_list_ok.json	принятый случай корпуса 2.1
-corpus-a94_pass_ticket_min_ok	Platform/02-installer/acceptance/1/cases/a94_pass_ticket_min_ok.subsystem.yaml	expect/corpus-a94_pass_ticket_min_ok.json	принятый случай корпуса 2.1
-corpus-a94_pass_ticket_ok	Platform/02-installer/acceptance/1/cases/a94_pass_ticket_ok.subsystem.yaml	expect/corpus-a94_pass_ticket_ok.json	принятый случай корпуса 2.1
-corpus-a94_table_delete_after_integral_ok	Platform/02-installer/acceptance/1/cases/a94_table_delete_after_integral_ok.subsystem.yaml	expect/corpus-a94_table_delete_after_integral_ok.json	принятый случай корпуса 2.1
-corpus-a94_table_delete_after_ok	Platform/02-installer/acceptance/1/cases/a94_table_delete_after_ok.subsystem.yaml	expect/corpus-a94_table_delete_after_ok.json	принятый случай корпуса 2.1
-corpus-a95_calls_ok	Platform/02-installer/acceptance/1/cases/a95_calls_ok.subsystem.yaml	expect/corpus-a95_calls_ok.json	принятый случай корпуса 2.1
-corpus-a95_ops_min_ok	Platform/02-installer/acceptance/1/cases/a95_ops_min_ok.subsystem.yaml	expect/corpus-a95_ops_min_ok.json	принятый случай корпуса 2.1
-corpus-a95_ops_ok	Platform/02-installer/acceptance/1/cases/a95_ops_ok.subsystem.yaml	expect/corpus-a95_ops_ok.json	принятый случай корпуса 2.1
-corpus-a96_sub_folders2	Platform/02-installer/acceptance/1/cases/a96_sub_folders2.subsystem.yaml	expect/corpus-a96_sub_folders2.json	принятый случай корпуса 2.1
-corpus-a96_tree_folders_false_ok	Platform/02-installer/acceptance/1/cases/a96_tree_folders_false_ok.subsystem.yaml	expect/corpus-a96_tree_folders_false_ok.json	принятый случай корпуса 2.1
-corpus-a96_tree_folders_ok	Platform/02-installer/acceptance/1/cases/a96_tree_folders_ok.subsystem.yaml	expect/corpus-a96_tree_folders_ok.json	принятый случай корпуса 2.1
-corpus-base	Platform/02-installer/acceptance/1/cases/base.subsystem.yaml	expect/corpus-base.json	принятый случай корпуса 2.1
-corpus-blob_required_false	Platform/02-installer/acceptance/1/cases/blob_required_false.subsystem.yaml	expect/corpus-blob_required_false.json	принятый случай корпуса 2.1
-corpus-block_scalar_hides_lease	Platform/02-installer/acceptance/1/cases/block_scalar_hides_lease.subsystem.yaml	expect/corpus-block_scalar_hides_lease.json	принятый случай корпуса 2.1
-corpus-bound_to_string	Platform/02-installer/acceptance/1/cases/bound_to_string.subsystem.yaml	expect/corpus-bound_to_string.json	принятый случай корпуса 2.1
-corpus-c2_crlf	Platform/02-installer/acceptance/1/cases/c2_crlf.subsystem.yaml	expect/corpus-c2_crlf.json	принятый случай корпуса 2.1
-corpus-c2_cut_at_host	Platform/02-installer/acceptance/1/cases/c2_cut_at_host.subsystem.yaml	expect/corpus-c2_cut_at_host.json	принятый случай корпуса 2.1
-corpus-c2_depth_64	Platform/02-installer/acceptance/1/cases/c2_depth_64.subsystem.yaml	expect/corpus-c2_depth_64.json	принятый случай корпуса 2.1
-corpus-c2_display_events_true	Platform/02-installer/acceptance/1/cases/c2_display_events_true.subsystem.yaml	expect/corpus-c2_display_events_true.json	принятый случай корпуса 2.1
-corpus-c2_form_fields_platform_id	Platform/02-installer/acceptance/1/cases/c2_form_fields_platform_id.subsystem.yaml	expect/corpus-c2_form_fields_platform_id.json	принятый случай корпуса 2.1
-corpus-c2_form_without_title	Platform/02-installer/acceptance/1/cases/c2_form_without_title.subsystem.yaml	expect/corpus-c2_form_without_title.json	принятый случай корпуса 2.1
-corpus-c2_leading_marker	Platform/02-installer/acceptance/1/cases/c2_leading_marker.subsystem.yaml	expect/corpus-c2_leading_marker.json	принятый случай корпуса 2.1
-corpus-c2_merge_override	Platform/02-installer/acceptance/1/cases/c2_merge_override.subsystem.yaml	expect/corpus-c2_merge_override.json	принятый случай корпуса 2.1
-corpus-c2_metrics_name_repeat	Platform/02-installer/acceptance/1/cases/c2_metrics_name_repeat.subsystem.yaml	expect/corpus-c2_metrics_name_repeat.json	принятый случай корпуса 2.1
-corpus-c2_null_upper	Platform/02-installer/acceptance/1/cases/c2_null_upper.subsystem.yaml	expect/corpus-c2_null_upper.json	принятый случай корпуса 2.1
-corpus-c2_plain_folded	Platform/02-installer/acceptance/1/cases/c2_plain_folded.subsystem.yaml	expect/corpus-c2_plain_folded.json	принятый случай корпуса 2.1
-corpus-c2_schema_known_keywords	Platform/02-installer/acceptance/1/cases/c2_schema_known_keywords.subsystem.yaml	expect/corpus-c2_schema_known_keywords.json	принятый случай корпуса 2.1
-corpus-c2_worker_deletes_own_rows	Platform/02-installer/acceptance/1/cases/c2_worker_deletes_own_rows.subsystem.yaml	expect/corpus-c2_worker_deletes_own_rows.json	принятый случай корпуса 2.1
-corpus-c3_about_sub_ok	Platform/02-installer/acceptance/1/cases/c3_about_sub_ok.subsystem.yaml	expect/corpus-c3_about_sub_ok.json	принятый случай корпуса 2.1
-corpus-c3_escape_ok	Platform/02-installer/acceptance/1/cases/c3_escape_ok.subsystem.yaml	expect/corpus-c3_escape_ok.json	принятый случай корпуса 2.1
-corpus-c3_near_by_ok	Platform/02-installer/acceptance/1/cases/c3_near_by_ok.subsystem.yaml	expect/corpus-c3_near_by_ok.json	принятый случай корпуса 2.1
-corpus-c3_schemes_ok	Platform/02-installer/acceptance/1/cases/c3_schemes_ok.subsystem.yaml	expect/corpus-c3_schemes_ok.json	принятый случай корпуса 2.1
-corpus-c3_tab_in_comment_ok	Platform/02-installer/acceptance/1/cases/c3_tab_in_comment_ok.subsystem.yaml	expect/corpus-c3_tab_in_comment_ok.json	принятый случай корпуса 2.1
-corpus-c4_dash_extra_spaces_ok	Platform/02-installer/acceptance/1/cases/c4_dash_extra_spaces_ok.subsystem.yaml	expect/corpus-c4_dash_extra_spaces_ok.json	принятый случай корпуса 2.1
-corpus-c4_indentless_ok	Platform/02-installer/acceptance/1/cases/c4_indentless_ok.subsystem.yaml	expect/corpus-c4_indentless_ok.json	принятый случай корпуса 2.1
-corpus-c4_key_quoted_in_json_ok	Platform/02-installer/acceptance/1/cases/c4_key_quoted_in_json_ok.subsystem.yaml	expect/corpus-c4_key_quoted_in_json_ok.json	принятый случай корпуса 2.1
-corpus-c4_plain_apostrophe_ok	Platform/02-installer/acceptance/1/cases/c4_plain_apostrophe_ok.subsystem.yaml	expect/corpus-c4_plain_apostrophe_ok.json	принятый случай корпуса 2.1
-corpus-c5_bool_required_tRuE_ok	Platform/02-installer/acceptance/1/cases/c5_bool_required_tRuE_ok.subsystem.yaml	expect/corpus-c5_bool_required_tRuE_ok.json	принятый случай корпуса 2.1
-corpus-c5_default_tilde_ok	Platform/02-installer/acceptance/1/cases/c5_default_tilde_ok.subsystem.yaml	expect/corpus-c5_default_tilde_ok.json	принятый случай корпуса 2.1
-corpus-c5_int_capacity_4bigE0	Platform/02-installer/acceptance/1/cases/c5_int_capacity_4bigE0.subsystem.yaml	expect/corpus-c5_int_capacity_4bigE0.json	принятый случай корпуса 2.1
-corpus-c5_int_capacity_4dot	Platform/02-installer/acceptance/1/cases/c5_int_capacity_4dot.subsystem.yaml	expect/corpus-c5_int_capacity_4dot.json	принятый случай корпуса 2.1
-corpus-c5_int_capacity_4dot0	Platform/02-installer/acceptance/1/cases/c5_int_capacity_4dot0.subsystem.yaml	expect/corpus-c5_int_capacity_4dot0.json	принятый случай корпуса 2.1
-corpus-c5_int_capacity_4e0	Platform/02-installer/acceptance/1/cases/c5_int_capacity_4e0.subsystem.yaml	expect/corpus-c5_int_capacity_4e0.json	принятый случай корпуса 2.1
-corpus-c5_int_capacity_4eplus0	Platform/02-installer/acceptance/1/cases/c5_int_capacity_4eplus0.subsystem.yaml	expect/corpus-c5_int_capacity_4eplus0.json	принятый случай корпуса 2.1
-corpus-c5_int_field_default_1dot0	Platform/02-installer/acceptance/1/cases/c5_int_field_default_1dot0.subsystem.yaml	expect/corpus-c5_int_field_default_1dot0.json	принятый случай корпуса 2.1
-corpus-c5_int_field_default_1e0	Platform/02-installer/acceptance/1/cases/c5_int_field_default_1e0.subsystem.yaml	expect/corpus-c5_int_field_default_1e0.json	принятый случай корпуса 2.1
-corpus-c5_int_field_f1_default_1dot0	Platform/02-installer/acceptance/1/cases/c5_int_field_f1_default_1dot0.subsystem.yaml	expect/corpus-c5_int_field_f1_default_1dot0.json	принятый случай корпуса 2.1
-corpus-c5_int_lease_1dot0	Platform/02-installer/acceptance/1/cases/c5_int_lease_1dot0.subsystem.yaml	expect/corpus-c5_int_lease_1dot0.json	принятый случай корпуса 2.1
-corpus-c5_int_lease_1e2	Platform/02-installer/acceptance/1/cases/c5_int_lease_1e2.subsystem.yaml	expect/corpus-c5_int_lease_1e2.json	принятый случай корпуса 2.1
-corpus-c5_key_0o7_word_ok	Platform/02-installer/acceptance/1/cases/c5_key_0o7_word_ok.subsystem.yaml	expect/corpus-c5_key_0o7_word_ok.json	принятый случай корпуса 2.1
-corpus-c5_key_0x10_word_ok	Platform/02-installer/acceptance/1/cases/c5_key_0x10_word_ok.subsystem.yaml	expect/corpus-c5_key_0x10_word_ok.json	принятый случай корпуса 2.1
-corpus-c5_key_question_mark	Platform/02-installer/acceptance/1/cases/c5_key_question_mark.subsystem.yaml	expect/corpus-c5_key_question_mark.json	принятый случай корпуса 2.1
-corpus-c5_rebalance_empty_ok	Platform/02-installer/acceptance/1/cases/c5_rebalance_empty_ok.subsystem.yaml	expect/corpus-c5_rebalance_empty_ok.json	принятый случай корпуса 2.1
-corpus-c5_value_next_line_flow	Platform/02-installer/acceptance/1/cases/c5_value_next_line_flow.subsystem.yaml	expect/corpus-c5_value_next_line_flow.json	принятый случай корпуса 2.1
-corpus-c5_value_next_line_plain	Platform/02-installer/acceptance/1/cases/c5_value_next_line_plain.subsystem.yaml	expect/corpus-c5_value_next_line_plain.json	принятый случай корпуса 2.1
-corpus-c5_value_next_line_quoted	Platform/02-installer/acceptance/1/cases/c5_value_next_line_quoted.subsystem.yaml	expect/corpus-c5_value_next_line_quoted.json	принятый случай корпуса 2.1
-corpus-c5_value_question_mark	Platform/02-installer/acceptance/1/cases/c5_value_question_mark.subsystem.yaml	expect/corpus-c5_value_question_mark.json	принятый случай корпуса 2.1
-corpus-c6_secrets_reads_with_slash_ok	Platform/02-installer/acceptance/1/cases/c6_secrets_reads_with_slash_ok.subsystem.yaml	expect/corpus-c6_secrets_reads_with_slash_ok.json	принятый случай корпуса 2.1
-corpus-c7_comment_deep_after_word	Platform/02-installer/acceptance/1/cases/c7_comment_deep_after_word.subsystem.yaml	expect/corpus-c7_comment_deep_after_word.json	принятый случай корпуса 2.1
-corpus-c7_comment_very_deep	Platform/02-installer/acceptance/1/cases/c7_comment_very_deep.subsystem.yaml	expect/corpus-c7_comment_very_deep.json	принятый случай корпуса 2.1
-corpus-c7_float_max_rounded_ok	Platform/02-installer/acceptance/1/cases/c7_float_max_rounded_ok.subsystem.yaml	expect/corpus-c7_float_max_rounded_ok.json	принятый случай корпуса 2.1
-corpus-c7_seq_block_scalars_ok	Platform/02-installer/acceptance/1/cases/c7_seq_block_scalars_ok.subsystem.yaml	expect/corpus-c7_seq_block_scalars_ok.json	принятый случай корпуса 2.1
-corpus-c7_seq_dash_scalar_below	Platform/02-installer/acceptance/1/cases/c7_seq_dash_scalar_below.subsystem.yaml	expect/corpus-c7_seq_dash_scalar_below.json	принятый случай корпуса 2.1
-corpus-c7_ufeff_middle_ok	Platform/02-installer/acceptance/1/cases/c7_ufeff_middle_ok.subsystem.yaml	expect/corpus-c7_ufeff_middle_ok.json	принятый случай корпуса 2.1
-corpus-c7_word_continuation_comment	Platform/02-installer/acceptance/1/cases/c7_word_continuation_comment.subsystem.yaml	expect/corpus-c7_word_continuation_comment.json	принятый случай корпуса 2.1
-corpus-c7_word_fold_blank_line	Platform/02-installer/acceptance/1/cases/c7_word_fold_blank_line.subsystem.yaml	expect/corpus-c7_word_fold_blank_line.json	принятый случай корпуса 2.1
-corpus-c7_word_fold_close_bracket	Platform/02-installer/acceptance/1/cases/c7_word_fold_close_bracket.subsystem.yaml	expect/corpus-c7_word_fold_close_bracket.json	принятый случай корпуса 2.1
-corpus-c8_options_enum_text_ok	Platform/02-installer/acceptance/1/cases/c8_options_enum_text_ok.subsystem.yaml	expect/corpus-c8_options_enum_text_ok.json	принятый случай корпуса 2.1
-corpus-c8_ref12_unit_schema_depth_32_ok	Platform/02-installer/acceptance/1/cases/c8_ref12_unit_schema_depth_32_ok.subsystem.yaml	expect/corpus-c8_ref12_unit_schema_depth_32_ok.json	принятый случай корпуса 2.1
-corpus-c8_ref25_table_field_schema_depth_32_ok	Platform/02-installer/acceptance/1/cases/c8_ref25_table_field_schema_depth_32_ok.subsystem.yaml	expect/corpus-c8_ref25_table_field_schema_depth_32_ok.json	принятый случай корпуса 2.1
-corpus-c8_ref26_table_schema_depth_32_ok	Platform/02-installer/acceptance/1/cases/c8_ref26_table_schema_depth_32_ok.subsystem.yaml	expect/corpus-c8_ref26_table_schema_depth_32_ok.json	принятый случай корпуса 2.1
-corpus-c8_ref47_unplaced_about_not_id	Platform/02-installer/acceptance/1/cases/c8_ref47_unplaced_about_not_id.subsystem.yaml	expect/corpus-c8_ref47_unplaced_about_not_id.json	принятый случай корпуса 2.1
-corpus-c8_word_hash_space	Platform/02-installer/acceptance/1/cases/c8_word_hash_space.subsystem.yaml	expect/corpus-c8_word_hash_space.json	принятый случай корпуса 2.1
-corpus-c9_word_hash_inside_ok	Platform/02-installer/acceptance/1/cases/c9_word_hash_inside_ok.subsystem.yaml	expect/corpus-c9_word_hash_inside_ok.json	принятый случай корпуса 2.1
-corpus-delete_after_with_about	Platform/02-installer/acceptance/1/cases/delete_after_with_about.subsystem.yaml	expect/corpus-delete_after_with_about.json	принятый случай корпуса 2.1
-corpus-display_fields_status_field	Platform/02-installer/acceptance/1/cases/display_fields_status_field.subsystem.yaml	expect/corpus-display_fields_status_field.json	принятый случай корпуса 2.1
-corpus-display_options_bool_enum	Platform/02-installer/acceptance/1/cases/display_options_bool_enum.subsystem.yaml	expect/corpus-display_options_bool_enum.json	принятый случай корпуса 2.1
-corpus-display_options_status_field	Platform/02-installer/acceptance/1/cases/display_options_status_field.subsystem.yaml	expect/corpus-display_options_status_field.json	принятый случай корпуса 2.1
-corpus-display_options_yes_key	Platform/02-installer/acceptance/1/cases/display_options_yes_key.subsystem.yaml	expect/corpus-display_options_yes_key.json	принятый случай корпуса 2.1
-corpus-display_word_On_Off_unquoted	Platform/02-installer/acceptance/1/cases/display_word_On_Off_unquoted.subsystem.yaml	expect/corpus-display_word_On_Off_unquoted.json	принятый случай корпуса 2.1
-corpus-door_routes_domain_ok	Platform/02-installer/acceptance/1/cases/door_routes_domain_ok.subsystem.yaml	expect/corpus-door_routes_domain_ok.json	принятый случай корпуса 2.1
-corpus-door_routes_names	Platform/02-installer/acceptance/1/cases/door_routes_names.subsystem.yaml	expect/corpus-door_routes_names.json	принятый случай корпуса 2.1
-corpus-door_routes_role_ok	Platform/02-installer/acceptance/1/cases/door_routes_role_ok.subsystem.yaml	expect/corpus-door_routes_role_ok.json	принятый случай корпуса 2.1
-corpus-f01_int_4dot0_ok	Platform/02-installer/acceptance/1/cases/f01_int_4dot0_ok.subsystem.yaml	expect/corpus-f01_int_4dot0_ok.json	принятый случай корпуса 2.1
-corpus-f02_int_1e1_ok	Platform/02-installer/acceptance/1/cases/f02_int_1e1_ok.subsystem.yaml	expect/corpus-f02_int_1e1_ok.json	принятый случай корпуса 2.1
-corpus-f05_int_at_min_ok	Platform/02-installer/acceptance/1/cases/f05_int_at_min_ok.subsystem.yaml	expect/corpus-f05_int_at_min_ok.json	принятый случай корпуса 2.1
-corpus-f06_int_at_max_ok	Platform/02-installer/acceptance/1/cases/f06_int_at_max_ok.subsystem.yaml	expect/corpus-f06_int_at_max_ok.json	принятый случай корпуса 2.1
-corpus-fields_affinity_known	Platform/02-installer/acceptance/1/cases/fields_affinity_known.subsystem.yaml	expect/corpus-fields_affinity_known.json	принятый случай корпуса 2.1
-corpus-fields_servers_show_known	Platform/02-installer/acceptance/1/cases/fields_servers_show_known.subsystem.yaml	expect/corpus-fields_servers_show_known.json	принятый случай корпуса 2.1
-corpus-float_finite_defaults	Platform/02-installer/acceptance/1/cases/float_finite_defaults.subsystem.yaml	expect/corpus-float_finite_defaults.json	принятый случай корпуса 2.1
-corpus-float_finite_inherit	Platform/02-installer/acceptance/1/cases/float_finite_inherit.subsystem.yaml	expect/corpus-float_finite_inherit.json	принятый случай корпуса 2.1
-corpus-id_default_numeric_ok	Platform/02-installer/acceptance/1/cases/id_default_numeric_ok.subsystem.yaml	expect/corpus-id_default_numeric_ok.json	принятый случай корпуса 2.1
-corpus-inherit_map	Platform/02-installer/acceptance/1/cases/inherit_map.subsystem.yaml	expect/corpus-inherit_map.json	принятый случай корпуса 2.1
-corpus-int_field_boundaries	Platform/02-installer/acceptance/1/cases/int_field_boundaries.subsystem.yaml	expect/corpus-int_field_boundaries.json	принятый случай корпуса 2.1
-corpus-json_default_map	Platform/02-installer/acceptance/1/cases/json_default_map.subsystem.yaml	expect/corpus-json_default_map.json	принятый случай корпуса 2.1
-corpus-lease_90	Platform/02-installer/acceptance/1/cases/lease_90.subsystem.yaml	expect/corpus-lease_90.json	принятый случай корпуса 2.1
-corpus-lease_absent	Platform/02-installer/acceptance/1/cases/lease_absent.subsystem.yaml	expect/corpus-lease_absent.json	принятый случай корпуса 2.1
-corpus-lease_forever	Platform/02-installer/acceptance/1/cases/lease_forever.subsystem.yaml	expect/corpus-lease_forever.json	принятый случай корпуса 2.1
-corpus-lease_forever_quoted	Platform/02-installer/acceptance/1/cases/lease_forever_quoted.subsystem.yaml	expect/corpus-lease_forever_quoted.json	принятый случай корпуса 2.1
-corpus-m49_int_2p53_minus_1_ok	Platform/02-installer/acceptance/1/cases/m49_int_2p53_minus_1_ok.subsystem.yaml	expect/corpus-m49_int_2p53_minus_1_ok.json	принятый случай корпуса 2.1
-corpus-m49_table_shelf_log_ok	Platform/02-installer/acceptance/1/cases/m49_table_shelf_log_ok.subsystem.yaml	expect/corpus-m49_table_shelf_log_ok.json	принятый случай корпуса 2.1
-corpus-m51_books_carried_ok	Platform/02-installer/acceptance/1/cases/m51_books_carried_ok.subsystem.yaml	expect/corpus-m51_books_carried_ok.json	принятый случай корпуса 2.1
-corpus-m51_books_merged_ok	Platform/02-installer/acceptance/1/cases/m51_books_merged_ok.subsystem.yaml	expect/corpus-m51_books_merged_ok.json	принятый случай корпуса 2.1
-corpus-m57_tokens_placement_ok	Platform/02-installer/acceptance/1/cases/m57_tokens_placement_ok.subsystem.yaml	expect/corpus-m57_tokens_placement_ok.json	принятый случай корпуса 2.1
-corpus-m57_tokens_scenario_ok	Platform/02-installer/acceptance/1/cases/m57_tokens_scenario_ok.subsystem.yaml	expect/corpus-m57_tokens_scenario_ok.json	принятый случай корпуса 2.1
-corpus-m57_tokens_unit_ok	Platform/02-installer/acceptance/1/cases/m57_tokens_unit_ok.subsystem.yaml	expect/corpus-m57_tokens_unit_ok.json	принятый случай корпуса 2.1
-corpus-m59_keys_ok	Platform/02-installer/acceptance/1/cases/m59_keys_ok.subsystem.yaml	expect/corpus-m59_keys_ok.json	принятый случай корпуса 2.1
-corpus-m59_names_no_grant_ok	Platform/02-installer/acceptance/1/cases/m59_names_no_grant_ok.subsystem.yaml	expect/corpus-m59_names_no_grant_ok.json	принятый случай корпуса 2.1
-corpus-m59_names_ok	Platform/02-installer/acceptance/1/cases/m59_names_ok.subsystem.yaml	expect/corpus-m59_names_ok.json	принятый случай корпуса 2.1
-corpus-m61_shared_ok	Platform/02-installer/acceptance/1/cases/m61_shared_ok.subsystem.yaml	expect/corpus-m61_shared_ok.json	принятый случай корпуса 2.1
-corpus-name_free_bare	Platform/02-installer/acceptance/1/cases/name_free_bare.subsystem.yaml	expect/corpus-name_free_bare.json	принятый случай корпуса 2.1
-corpus-profile_blob_64_ok	Platform/02-installer/acceptance/1/cases/profile_blob_64_ok.subsystem.yaml	expect/corpus-profile_blob_64_ok.json	принятый случай корпуса 2.1
-corpus-profile_blob_bytes_without_blob_ok	Platform/02-installer/acceptance/1/cases/profile_blob_bytes_without_blob_ok.subsystem.yaml	expect/corpus-profile_blob_bytes_without_blob_ok.json	принятый случай корпуса 2.1
-corpus-profile_rows_records_ok	Platform/02-installer/acceptance/1/cases/profile_rows_records_ok.subsystem.yaml	expect/corpus-profile_rows_records_ok.json	принятый случай корпуса 2.1
-corpus-profile_snapshot_default_ok	Platform/02-installer/acceptance/1/cases/profile_snapshot_default_ok.subsystem.yaml	expect/corpus-profile_snapshot_default_ok.json	принятый случай корпуса 2.1
-corpus-profile_table_id_ok	Platform/02-installer/acceptance/1/cases/profile_table_id_ok.subsystem.yaml	expect/corpus-profile_table_id_ok.json	принятый случай корпуса 2.1
-corpus-profile_table_key_quoted_ok	Platform/02-installer/acceptance/1/cases/profile_table_key_quoted_ok.subsystem.yaml	expect/corpus-profile_table_key_quoted_ok.json	принятый случай корпуса 2.1
-corpus-profile_unit_deleted_flag_ok	Platform/02-installer/acceptance/1/cases/profile_unit_deleted_flag_ok.subsystem.yaml	expect/corpus-profile_unit_deleted_flag_ok.json	принятый случай корпуса 2.1
-corpus-profile_unit_key_quoted_ok	Platform/02-installer/acceptance/1/cases/profile_unit_key_quoted_ok.subsystem.yaml	expect/corpus-profile_unit_key_quoted_ok.json	принятый случай корпуса 2.1
-corpus-profile_worker_writes_table_ok	Platform/02-installer/acceptance/1/cases/profile_worker_writes_table_ok.subsystem.yaml	expect/corpus-profile_worker_writes_table_ok.json	принятый случай корпуса 2.1
-corpus-r06_text_bool_ok	Platform/02-installer/acceptance/1/cases/r06_text_bool_ok.subsystem.yaml	expect/corpus-r06_text_bool_ok.json	принятый случай корпуса 2.1
-corpus-r37_named_delete_after	Platform/02-installer/acceptance/1/cases/r37_named_delete_after.subsystem.yaml	expect/corpus-r37_named_delete_after.json	принятый случай корпуса 2.1
-corpus-r37_requests_int_number	Platform/02-installer/acceptance/1/cases/r37_requests_int_number.subsystem.yaml	expect/corpus-r37_requests_int_number.json	принятый случай корпуса 2.1
-corpus-r37_requests_plain_string	Platform/02-installer/acceptance/1/cases/r37_requests_plain_string.subsystem.yaml	expect/corpus-r37_requests_plain_string.json	принятый случай корпуса 2.1
-corpus-r37_sub_where2	Platform/02-installer/acceptance/1/cases/r37_sub_where2.subsystem.yaml	expect/corpus-r37_sub_where2.json	принятый случай корпуса 2.1
-corpus-r37_table_int_template	Platform/02-installer/acceptance/1/cases/r37_table_int_template.subsystem.yaml	expect/corpus-r37_table_int_template.json	принятый случай корпуса 2.1
-corpus-r38_unit_minimal	Platform/02-installer/acceptance/1/cases/r38_unit_minimal.subsystem.yaml	expect/corpus-r38_unit_minimal.json	принятый случай корпуса 2.1
-corpus-r39_group_by_known_field	Platform/02-installer/acceptance/1/cases/r39_group_by_known_field.subsystem.yaml	expect/corpus-r39_group_by_known_field.json	принятый случай корпуса 2.1
-corpus-r40_console_table_secret_ok	Platform/02-installer/acceptance/1/cases/r40_console_table_secret_ok.subsystem.yaml	expect/corpus-r40_console_table_secret_ok.json	принятый случай корпуса 2.1
-corpus-requests_outcome_fetched_ok	Platform/02-installer/acceptance/1/cases/requests_outcome_fetched_ok.subsystem.yaml	expect/corpus-requests_outcome_fetched_ok.json	принятый случай корпуса 2.1
-corpus-requests_outcome_mark_ok	Platform/02-installer/acceptance/1/cases/requests_outcome_mark_ok.subsystem.yaml	expect/corpus-requests_outcome_mark_ok.json	принятый случай корпуса 2.1
-corpus-secrets_reader_domainconsole	Platform/02-installer/acceptance/1/cases/secrets_reader_domainconsole.subsystem.yaml	expect/corpus-secrets_reader_domainconsole.json	принятый случай корпуса 2.1
-corpus-secrets_readers_exact_prefix_ok	Platform/02-installer/acceptance/1/cases/secrets_readers_exact_prefix_ok.subsystem.yaml	expect/corpus-secrets_readers_exact_prefix_ok.json	принятый случай корпуса 2.1
-corpus-t07_block_plain_ok	Platform/02-installer/acceptance/1/cases/t07_block_plain_ok.subsystem.yaml	expect/corpus-t07_block_plain_ok.json	принятый случай корпуса 2.1
-corpus-t23_quoted_true_string	Platform/02-installer/acceptance/1/cases/t23_quoted_true_string.subsystem.yaml	expect/corpus-t23_quoted_true_string.json	принятый случай корпуса 2.1
-corpus-t27_escape_tab_ok	Platform/02-installer/acceptance/1/cases/t27_escape_tab_ok.subsystem.yaml	expect/corpus-t27_escape_tab_ok.json	принятый случай корпуса 2.1
-corpus-t31_last_line_spaces_ok	Platform/02-installer/acceptance/1/cases/t31_last_line_spaces_ok.subsystem.yaml	expect/corpus-t31_last_line_spaces_ok.json	принятый случай корпуса 2.1
-corpus-t32_trailing_spaces_ok	Platform/02-installer/acceptance/1/cases/t32_trailing_spaces_ok.subsystem.yaml	expect/corpus-t32_trailing_spaces_ok.json	принятый случай корпуса 2.1
-corpus-t33_flow_trailing_comma_ok	Platform/02-installer/acceptance/1/cases/t33_flow_trailing_comma_ok.subsystem.yaml	expect/corpus-t33_flow_trailing_comma_ok.json	принятый случай корпуса 2.1
-corpus-t33b_flow_map_trailing_comma_ok	Platform/02-installer/acceptance/1/cases/t33b_flow_map_trailing_comma_ok.subsystem.yaml	expect/corpus-t33b_flow_map_trailing_comma_ok.json	принятый случай корпуса 2.1
-corpus-unit_id_numeric	Platform/02-installer/acceptance/1/cases/unit_id_numeric.subsystem.yaml	expect/corpus-unit_id_numeric.json	принятый случай корпуса 2.1
-corpus-unplaced_delete_after_about_its_id	Platform/02-installer/acceptance/1/cases/unplaced_delete_after_about_its_id.subsystem.yaml	expect/corpus-unplaced_delete_after_about_its_id.json	принятый случай корпуса 2.1
-corpus-unplaced_delete_after_fixed_field	Platform/02-installer/acceptance/1/cases/unplaced_delete_after_fixed_field.subsystem.yaml	expect/corpus-unplaced_delete_after_fixed_field.json	принятый случай корпуса 2.1
-corpus-worker_writes_declared_list_ok	Platform/02-installer/acceptance/1/cases/worker_writes_declared_list_ok.subsystem.yaml	expect/corpus-worker_writes_declared_list_ok.json	принятый случай корпуса 2.1
-corpus-worker_writes_declared_ok	Platform/02-installer/acceptance/1/cases/worker_writes_declared_ok.subsystem.yaml	expect/corpus-worker_writes_declared_ok.json	принятый случай корпуса 2.1
-course-testsub	Source/tests/testdata/testsub.subsystem.yaml	expect/course-testsub.json	манифест курса
-course-testsub2	Source/tests/testdata/testsub2.subsystem.yaml	expect/course-testsub2.json	манифест курса
+example-sections	Platform/02-installer/vectors/canonical/inputs/sections.subsystem.yaml	expect/example-sections.json	An absent section without a default (requests) remains absent; absent sections with defaults (display, lease) take those defaults (N1.1 defaults)
+example-nested-key	Platform/02-installer/vectors/canonical/inputs/nested-key.subsystem.yaml	expect/example-nested-key.json	An absent nested key in a present parent: placement without headroom, weight, rebalance; a field without type is string; display without units_count, events (N1.1 defaults)
+example-sugar-tables	Platform/02-installer/vectors/canonical/inputs/sugar-tables.subsystem.yaml	expect/example-sugar-tables.json	Sugar tables: [shelves] becomes {shelves: {}}, followed by the fields default and P2 (N1.1 sugar.tables)
+example-sugar-bound_to	Platform/02-installer/vectors/canonical/inputs/sugar-bound_to.subsystem.yaml	expect/example-sugar-bound_to.json	Sugar bound_to: feed becomes ["feed"] (N1.1 sugar.bound_to)
+example-sugar-in	Platform/02-installer/vectors/canonical/inputs/sugar-in.subsystem.yaml	expect/example-sugar-in.json	Sugar in: query becomes ["query"] in a regex secret_in element; explicit decoded: false is retained (N1.1 sugar.in)
+example-p1-snapshot	Platform/02-installer/vectors/canonical/inputs/p1-snapshot.subsystem.yaml	expect/example-p1-snapshot.json	P1: absent snapshot takes unit.fields names in author order, excluding *_secret, type: blob and server (N1.1 computed)
+example-p1-snapshot-empty	Platform/02-installer/vectors/canonical/inputs/p1-snapshot-empty.subsystem.yaml	expect/example-p1-snapshot-empty.json	P1: explicit snapshot: [] remains [] (N1.1 computed)
+example-p1-snapshot-state	Platform/02-installer/vectors/canonical/inputs/p1-snapshot-state.subsystem.yaml	expect/example-p1-snapshot-state.json	P1: absent snapshot takes fields, then state.<name> of each unit.state in author order, except cursor (ADR-0091 item 3; V7-P022-SNAPSHOT-STATE-01)
+example-p2-journal	Platform/02-installer/vectors/canonical/inputs/p2-journal.subsystem.yaml	expect/example-p2-journal.json	P2: explicit journal.written gives deleted = "<t>.deleted"; an explicit value is retained (N1.1 computed)
+example-p3-display-form	Platform/02-installer/vectors/canonical/inputs/p3-display-form.subsystem.yaml	expect/example-p3-display-form.json	P3: display without form becomes [{fields: [<unit.fields names in author order>]}], without title (N1.1 computed)
+example-p4-default	Platform/02-installer/vectors/canonical/inputs/p4-default.subsystem.yaml	expect/example-p4-default.json	P4: a descriptor default is its explicit value; absent default, explicit inherit or type: blob gives null; for unit and table fields (N1.1 computed)
+example-p5-decoded	Platform/02-installer/vectors/canonical/inputs/p5-decoded.subsystem.yaml	expect/example-p5-decoded.json	P5: a regex secret_in element without decoded takes true (N1.1 computed)
+example-ordered	Platform/02-installer/vectors/canonical/inputs/ordered.subsystem.yaml	expect/example-ordered.json	ordered: unit.fields and tables.<t>.fields become arrays of {name, ...} in author order, not alphabetical order (N1.1 ordered)
+example-sugared	Platform/02-installer/acceptance/2/puts/sugared.subsystem.yaml	expect/example-sugared.json	Acceptance 2.2 scenario 07: tables: [shelves] and bound_to: feed sugar, absent snapshot and display: P1, P3, P4 together (N1.1)
+example-view-at-ceiling	Platform/02-installer/acceptance/2/puts/view-at-ceiling.subsystem.yaml	expect/example-view-at-ceiling.json	Acceptance 2.2 scenario 06: a 524201-byte view makes the view row with a one-digit rev weigh exactly the 524288 ceiling (N1.2 ceiling)
+corpus-a103_calls_book_ok	Platform/02-installer/acceptance/1/cases/a103_calls_book_ok.subsystem.yaml	expect/corpus-a103_calls_book_ok.json	accepted chapter 2.1 corpus case
+corpus-a103_names_action_ok	Platform/02-installer/acceptance/1/cases/a103_names_action_ok.subsystem.yaml	expect/corpus-a103_names_action_ok.json	accepted chapter 2.1 corpus case
+corpus-a103_places_wanted_ok	Platform/02-installer/acceptance/1/cases/a103_places_wanted_ok.subsystem.yaml	expect/corpus-a103_places_wanted_ok.json	accepted chapter 2.1 corpus case
+corpus-a103_scenario_member_ok	Platform/02-installer/acceptance/1/cases/a103_scenario_member_ok.subsystem.yaml	expect/corpus-a103_scenario_member_ok.json	accepted chapter 2.1 corpus case
+corpus-a110_calls_at_ok	Platform/02-installer/acceptance/1/cases/a110_calls_at_ok.subsystem.yaml	expect/corpus-a110_calls_at_ok.json	accepted chapter 2.1 corpus case
+corpus-a110_calls_view_ok	Platform/02-installer/acceptance/1/cases/a110_calls_view_ok.subsystem.yaml	expect/corpus-a110_calls_view_ok.json	accepted chapter 2.1 corpus case
+corpus-a110_edit_delete_ok	Platform/02-installer/acceptance/1/cases/a110_edit_delete_ok.subsystem.yaml	expect/corpus-a110_edit_delete_ok.json	accepted chapter 2.1 corpus case
+corpus-a110_edit_tables_ok	Platform/02-installer/acceptance/1/cases/a110_edit_tables_ok.subsystem.yaml	expect/corpus-a110_edit_tables_ok.json	accepted chapter 2.1 corpus case
+corpus-a110_token_day_no_keep_ok	Platform/02-installer/acceptance/1/cases/a110_token_day_no_keep_ok.subsystem.yaml	expect/corpus-a110_token_day_no_keep_ok.json	accepted chapter 2.1 corpus case
+corpus-a110_token_keep_ok	Platform/02-installer/acceptance/1/cases/a110_token_keep_ok.subsystem.yaml	expect/corpus-a110_token_keep_ok.json	accepted chapter 2.1 corpus case
+corpus-a110_view_tables_ok	Platform/02-installer/acceptance/1/cases/a110_view_tables_ok.subsystem.yaml	expect/corpus-a110_view_tables_ok.json	accepted chapter 2.1 corpus case
+corpus-a110_view_tables_rows_ok	Platform/02-installer/acceptance/1/cases/a110_view_tables_rows_ok.subsystem.yaml	expect/corpus-a110_view_tables_rows_ok.json	accepted chapter 2.1 corpus case
+corpus-a111_calls_requests_ok	Platform/02-installer/acceptance/1/cases/a111_calls_requests_ok.subsystem.yaml	expect/corpus-a111_calls_requests_ok.json	accepted chapter 2.1 corpus case
+corpus-a111_calls_requests_own_ok	Platform/02-installer/acceptance/1/cases/a111_calls_requests_own_ok.subsystem.yaml	expect/corpus-a111_calls_requests_own_ok.json	accepted chapter 2.1 corpus case
+corpus-a111_names_deep_ok	Platform/02-installer/acceptance/1/cases/a111_names_deep_ok.subsystem.yaml	expect/corpus-a111_names_deep_ok.json	accepted chapter 2.1 corpus case
+corpus-a112_calls_list_ok	Platform/02-installer/acceptance/1/cases/a112_calls_list_ok.subsystem.yaml	expect/corpus-a112_calls_list_ok.json	accepted chapter 2.1 corpus case
+corpus-a112_calls_marks_ok	Platform/02-installer/acceptance/1/cases/a112_calls_marks_ok.subsystem.yaml	expect/corpus-a112_calls_marks_ok.json	accepted chapter 2.1 corpus case
+corpus-a112_calls_shared_ok	Platform/02-installer/acceptance/1/cases/a112_calls_shared_ok.subsystem.yaml	expect/corpus-a112_calls_shared_ok.json	accepted chapter 2.1 corpus case
+corpus-a112_heartbeat_door_ok	Platform/02-installer/acceptance/1/cases/a112_heartbeat_door_ok.subsystem.yaml	expect/corpus-a112_heartbeat_door_ok.json	accepted chapter 2.1 corpus case
+corpus-a113_book_all_ok	Platform/02-installer/acceptance/1/cases/a113_book_all_ok.subsystem.yaml	expect/corpus-a113_book_all_ok.json	accepted chapter 2.1 corpus case
+corpus-a113_book_stale_ok	Platform/02-installer/acceptance/1/cases/a113_book_stale_ok.subsystem.yaml	expect/corpus-a113_book_stale_ok.json	accepted chapter 2.1 corpus case
+corpus-a113_calls_book_part_ok	Platform/02-installer/acceptance/1/cases/a113_calls_book_part_ok.subsystem.yaml	expect/corpus-a113_calls_book_part_ok.json	accepted chapter 2.1 corpus case
+corpus-a113_stale_after_ok	Platform/02-installer/acceptance/1/cases/a113_stale_after_ok.subsystem.yaml	expect/corpus-a113_stale_after_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_display_table_field_ok	Platform/02-installer/acceptance/1/cases/a115_display_table_field_ok.subsystem.yaml	expect/corpus-a115_display_table_field_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_display_tables_list_ok	Platform/02-installer/acceptance/1/cases/a115_display_tables_list_ok.subsystem.yaml	expect/corpus-a115_display_tables_list_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_display_tables_ok	Platform/02-installer/acceptance/1/cases/a115_display_tables_ok.subsystem.yaml	expect/corpus-a115_display_tables_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_events_kinds_ok	Platform/02-installer/acceptance/1/cases/a115_events_kinds_ok.subsystem.yaml	expect/corpus-a115_events_kinds_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_hidden_ok	Platform/02-installer/acceptance/1/cases/a115_hidden_ok.subsystem.yaml	expect/corpus-a115_hidden_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_hidden_required_default_ok	Platform/02-installer/acceptance/1/cases/a115_hidden_required_default_ok.subsystem.yaml	expect/corpus-a115_hidden_required_default_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_items_ref_ok	Platform/02-installer/acceptance/1/cases/a115_items_ref_ok.subsystem.yaml	expect/corpus-a115_items_ref_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_label_key_ok	Platform/02-installer/acceptance/1/cases/a115_label_key_ok.subsystem.yaml	expect/corpus-a115_label_key_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_label_unit_key_ok	Platform/02-installer/acceptance/1/cases/a115_label_unit_key_ok.subsystem.yaml	expect/corpus-a115_label_unit_key_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_langs_ok	Platform/02-installer/acceptance/1/cases/a115_langs_ok.subsystem.yaml	expect/corpus-a115_langs_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_option_label_key_ok	Platform/02-installer/acceptance/1/cases/a115_option_label_key_ok.subsystem.yaml	expect/corpus-a115_option_label_key_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_options_schema_enum_ok	Platform/02-installer/acceptance/1/cases/a115_options_schema_enum_ok.subsystem.yaml	expect/corpus-a115_options_schema_enum_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_options_table_ok	Platform/02-installer/acceptance/1/cases/a115_options_table_ok.subsystem.yaml	expect/corpus-a115_options_table_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_ref_label_ok	Platform/02-installer/acceptance/1/cases/a115_ref_label_ok.subsystem.yaml	expect/corpus-a115_ref_label_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_route_rank_ok	Platform/02-installer/acceptance/1/cases/a115_route_rank_ok.subsystem.yaml	expect/corpus-a115_route_rank_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_status_dot_ok	Platform/02-installer/acceptance/1/cases/a115_status_dot_ok.subsystem.yaml	expect/corpus-a115_status_dot_ok.json	accepted chapter 2.1 corpus case
+corpus-a115_table_hidden_items_ok	Platform/02-installer/acceptance/1/cases/a115_table_hidden_items_ok.subsystem.yaml	expect/corpus-a115_table_hidden_items_ok.json	accepted chapter 2.1 corpus case
+corpus-a116_calls_manifest_source_ok	Platform/02-installer/acceptance/1/cases/a116_calls_manifest_source_ok.subsystem.yaml	expect/corpus-a116_calls_manifest_source_ok.json	accepted chapter 2.1 corpus case
+corpus-a119_calls_verify_ok	Platform/02-installer/acceptance/1/cases/a119_calls_verify_ok.subsystem.yaml	expect/corpus-a119_calls_verify_ok.json	accepted chapter 2.1 corpus case
+corpus-a119_writes_via_ok	Platform/02-installer/acceptance/1/cases/a119_writes_via_ok.subsystem.yaml	expect/corpus-a119_writes_via_ok.json	accepted chapter 2.1 corpus case
+corpus-a119_writes_via_own_ok	Platform/02-installer/acceptance/1/cases/a119_writes_via_own_ok.subsystem.yaml	expect/corpus-a119_writes_via_own_ok.json	accepted chapter 2.1 corpus case
+corpus-a119_writes_via_table_ok	Platform/02-installer/acceptance/1/cases/a119_writes_via_table_ok.subsystem.yaml	expect/corpus-a119_writes_via_table_ok.json	accepted chapter 2.1 corpus case
+corpus-a119_writes_via_table_service_false_ok	Platform/02-installer/acceptance/1/cases/a119_writes_via_table_service_false_ok.subsystem.yaml	expect/corpus-a119_writes_via_table_service_false_ok.json	accepted chapter 2.1 corpus case
+corpus-a86_sub_manifest2	Platform/02-installer/acceptance/1/cases/a86_sub_manifest2.subsystem.yaml	expect/corpus-a86_sub_manifest2.json	accepted chapter 2.1 corpus case
+corpus-a91_affinity_exclusive_ok	Platform/02-installer/acceptance/1/cases/a91_affinity_exclusive_ok.subsystem.yaml	expect/corpus-a91_affinity_exclusive_ok.json	accepted chapter 2.1 corpus case
+corpus-a91_creates_ok	Platform/02-installer/acceptance/1/cases/a91_creates_ok.subsystem.yaml	expect/corpus-a91_creates_ok.json	accepted chapter 2.1 corpus case
+corpus-a91_ends_ok	Platform/02-installer/acceptance/1/cases/a91_ends_ok.subsystem.yaml	expect/corpus-a91_ends_ok.json	accepted chapter 2.1 corpus case
+corpus-a91_exec_ok	Platform/02-installer/acceptance/1/cases/a91_exec_ok.subsystem.yaml	expect/corpus-a91_exec_ok.json	accepted chapter 2.1 corpus case
+corpus-a91_shares_part_ok	Platform/02-installer/acceptance/1/cases/a91_shares_part_ok.subsystem.yaml	expect/corpus-a91_shares_part_ok.json	accepted chapter 2.1 corpus case
+corpus-a91_shares_parts_ok	Platform/02-installer/acceptance/1/cases/a91_shares_parts_ok.subsystem.yaml	expect/corpus-a91_shares_parts_ok.json	accepted chapter 2.1 corpus case
+corpus-a91_stop_timeout_bounds_ok	Platform/02-installer/acceptance/1/cases/a91_stop_timeout_bounds_ok.subsystem.yaml	expect/corpus-a91_stop_timeout_bounds_ok.json	accepted chapter 2.1 corpus case
+corpus-a91_unit_field_state_without_unit_state_ok	Platform/02-installer/acceptance/1/cases/a91_unit_field_state_without_unit_state_ok.subsystem.yaml	expect/corpus-a91_unit_field_state_without_unit_state_ok.json	accepted chapter 2.1 corpus case
+corpus-a91_unit_state_ok	Platform/02-installer/acceptance/1/cases/a91_unit_state_ok.subsystem.yaml	expect/corpus-a91_unit_state_ok.json	accepted chapter 2.1 corpus case
+corpus-a91_uses_ok	Platform/02-installer/acceptance/1/cases/a91_uses_ok.subsystem.yaml	expect/corpus-a91_uses_ok.json	accepted chapter 2.1 corpus case
+corpus-a94_console_empty_ok	Platform/02-installer/acceptance/1/cases/a94_console_empty_ok.subsystem.yaml	expect/corpus-a94_console_empty_ok.json	accepted chapter 2.1 corpus case
+corpus-a94_pass_list_ok	Platform/02-installer/acceptance/1/cases/a94_pass_list_ok.subsystem.yaml	expect/corpus-a94_pass_list_ok.json	accepted chapter 2.1 corpus case
+corpus-a94_pass_ticket_min_ok	Platform/02-installer/acceptance/1/cases/a94_pass_ticket_min_ok.subsystem.yaml	expect/corpus-a94_pass_ticket_min_ok.json	accepted chapter 2.1 corpus case
+corpus-a94_pass_ticket_ok	Platform/02-installer/acceptance/1/cases/a94_pass_ticket_ok.subsystem.yaml	expect/corpus-a94_pass_ticket_ok.json	accepted chapter 2.1 corpus case
+corpus-a94_table_delete_after_integral_ok	Platform/02-installer/acceptance/1/cases/a94_table_delete_after_integral_ok.subsystem.yaml	expect/corpus-a94_table_delete_after_integral_ok.json	accepted chapter 2.1 corpus case
+corpus-a94_table_delete_after_ok	Platform/02-installer/acceptance/1/cases/a94_table_delete_after_ok.subsystem.yaml	expect/corpus-a94_table_delete_after_ok.json	accepted chapter 2.1 corpus case
+corpus-a95_calls_ok	Platform/02-installer/acceptance/1/cases/a95_calls_ok.subsystem.yaml	expect/corpus-a95_calls_ok.json	accepted chapter 2.1 corpus case
+corpus-a95_ops_min_ok	Platform/02-installer/acceptance/1/cases/a95_ops_min_ok.subsystem.yaml	expect/corpus-a95_ops_min_ok.json	accepted chapter 2.1 corpus case
+corpus-a95_ops_ok	Platform/02-installer/acceptance/1/cases/a95_ops_ok.subsystem.yaml	expect/corpus-a95_ops_ok.json	accepted chapter 2.1 corpus case
+corpus-a96_sub_folders2	Platform/02-installer/acceptance/1/cases/a96_sub_folders2.subsystem.yaml	expect/corpus-a96_sub_folders2.json	accepted chapter 2.1 corpus case
+corpus-a96_tree_folders_false_ok	Platform/02-installer/acceptance/1/cases/a96_tree_folders_false_ok.subsystem.yaml	expect/corpus-a96_tree_folders_false_ok.json	accepted chapter 2.1 corpus case
+corpus-a96_tree_folders_ok	Platform/02-installer/acceptance/1/cases/a96_tree_folders_ok.subsystem.yaml	expect/corpus-a96_tree_folders_ok.json	accepted chapter 2.1 corpus case
+corpus-base	Platform/02-installer/acceptance/1/cases/base.subsystem.yaml	expect/corpus-base.json	accepted chapter 2.1 corpus case
+corpus-blob_required_false	Platform/02-installer/acceptance/1/cases/blob_required_false.subsystem.yaml	expect/corpus-blob_required_false.json	accepted chapter 2.1 corpus case
+corpus-block_scalar_hides_lease	Platform/02-installer/acceptance/1/cases/block_scalar_hides_lease.subsystem.yaml	expect/corpus-block_scalar_hides_lease.json	accepted chapter 2.1 corpus case
+corpus-bound_to_string	Platform/02-installer/acceptance/1/cases/bound_to_string.subsystem.yaml	expect/corpus-bound_to_string.json	accepted chapter 2.1 corpus case
+corpus-c2_crlf	Platform/02-installer/acceptance/1/cases/c2_crlf.subsystem.yaml	expect/corpus-c2_crlf.json	accepted chapter 2.1 corpus case
+corpus-c2_cut_at_host	Platform/02-installer/acceptance/1/cases/c2_cut_at_host.subsystem.yaml	expect/corpus-c2_cut_at_host.json	accepted chapter 2.1 corpus case
+corpus-c2_depth_64	Platform/02-installer/acceptance/1/cases/c2_depth_64.subsystem.yaml	expect/corpus-c2_depth_64.json	accepted chapter 2.1 corpus case
+corpus-c2_display_events_true	Platform/02-installer/acceptance/1/cases/c2_display_events_true.subsystem.yaml	expect/corpus-c2_display_events_true.json	accepted chapter 2.1 corpus case
+corpus-c2_form_fields_platform_id	Platform/02-installer/acceptance/1/cases/c2_form_fields_platform_id.subsystem.yaml	expect/corpus-c2_form_fields_platform_id.json	accepted chapter 2.1 corpus case
+corpus-c2_form_without_title	Platform/02-installer/acceptance/1/cases/c2_form_without_title.subsystem.yaml	expect/corpus-c2_form_without_title.json	accepted chapter 2.1 corpus case
+corpus-c2_leading_marker	Platform/02-installer/acceptance/1/cases/c2_leading_marker.subsystem.yaml	expect/corpus-c2_leading_marker.json	accepted chapter 2.1 corpus case
+corpus-c2_merge_override	Platform/02-installer/acceptance/1/cases/c2_merge_override.subsystem.yaml	expect/corpus-c2_merge_override.json	accepted chapter 2.1 corpus case
+corpus-c2_metrics_name_repeat	Platform/02-installer/acceptance/1/cases/c2_metrics_name_repeat.subsystem.yaml	expect/corpus-c2_metrics_name_repeat.json	accepted chapter 2.1 corpus case
+corpus-c2_null_upper	Platform/02-installer/acceptance/1/cases/c2_null_upper.subsystem.yaml	expect/corpus-c2_null_upper.json	accepted chapter 2.1 corpus case
+corpus-c2_plain_folded	Platform/02-installer/acceptance/1/cases/c2_plain_folded.subsystem.yaml	expect/corpus-c2_plain_folded.json	accepted chapter 2.1 corpus case
+corpus-c2_schema_known_keywords	Platform/02-installer/acceptance/1/cases/c2_schema_known_keywords.subsystem.yaml	expect/corpus-c2_schema_known_keywords.json	accepted chapter 2.1 corpus case
+corpus-c2_worker_deletes_own_rows	Platform/02-installer/acceptance/1/cases/c2_worker_deletes_own_rows.subsystem.yaml	expect/corpus-c2_worker_deletes_own_rows.json	accepted chapter 2.1 corpus case
+corpus-c3_about_sub_ok	Platform/02-installer/acceptance/1/cases/c3_about_sub_ok.subsystem.yaml	expect/corpus-c3_about_sub_ok.json	accepted chapter 2.1 corpus case
+corpus-c3_escape_ok	Platform/02-installer/acceptance/1/cases/c3_escape_ok.subsystem.yaml	expect/corpus-c3_escape_ok.json	accepted chapter 2.1 corpus case
+corpus-c3_near_by_ok	Platform/02-installer/acceptance/1/cases/c3_near_by_ok.subsystem.yaml	expect/corpus-c3_near_by_ok.json	accepted chapter 2.1 corpus case
+corpus-c3_schemes_ok	Platform/02-installer/acceptance/1/cases/c3_schemes_ok.subsystem.yaml	expect/corpus-c3_schemes_ok.json	accepted chapter 2.1 corpus case
+corpus-c3_tab_in_comment_ok	Platform/02-installer/acceptance/1/cases/c3_tab_in_comment_ok.subsystem.yaml	expect/corpus-c3_tab_in_comment_ok.json	accepted chapter 2.1 corpus case
+corpus-c4_dash_extra_spaces_ok	Platform/02-installer/acceptance/1/cases/c4_dash_extra_spaces_ok.subsystem.yaml	expect/corpus-c4_dash_extra_spaces_ok.json	accepted chapter 2.1 corpus case
+corpus-c4_indentless_ok	Platform/02-installer/acceptance/1/cases/c4_indentless_ok.subsystem.yaml	expect/corpus-c4_indentless_ok.json	accepted chapter 2.1 corpus case
+corpus-c4_key_quoted_in_json_ok	Platform/02-installer/acceptance/1/cases/c4_key_quoted_in_json_ok.subsystem.yaml	expect/corpus-c4_key_quoted_in_json_ok.json	accepted chapter 2.1 corpus case
+corpus-c4_plain_apostrophe_ok	Platform/02-installer/acceptance/1/cases/c4_plain_apostrophe_ok.subsystem.yaml	expect/corpus-c4_plain_apostrophe_ok.json	accepted chapter 2.1 corpus case
+corpus-c5_bool_required_tRuE_ok	Platform/02-installer/acceptance/1/cases/c5_bool_required_tRuE_ok.subsystem.yaml	expect/corpus-c5_bool_required_tRuE_ok.json	accepted chapter 2.1 corpus case
+corpus-c5_default_tilde_ok	Platform/02-installer/acceptance/1/cases/c5_default_tilde_ok.subsystem.yaml	expect/corpus-c5_default_tilde_ok.json	accepted chapter 2.1 corpus case
+corpus-c5_int_capacity_4bigE0	Platform/02-installer/acceptance/1/cases/c5_int_capacity_4bigE0.subsystem.yaml	expect/corpus-c5_int_capacity_4bigE0.json	accepted chapter 2.1 corpus case
+corpus-c5_int_capacity_4dot	Platform/02-installer/acceptance/1/cases/c5_int_capacity_4dot.subsystem.yaml	expect/corpus-c5_int_capacity_4dot.json	accepted chapter 2.1 corpus case
+corpus-c5_int_capacity_4dot0	Platform/02-installer/acceptance/1/cases/c5_int_capacity_4dot0.subsystem.yaml	expect/corpus-c5_int_capacity_4dot0.json	accepted chapter 2.1 corpus case
+corpus-c5_int_capacity_4e0	Platform/02-installer/acceptance/1/cases/c5_int_capacity_4e0.subsystem.yaml	expect/corpus-c5_int_capacity_4e0.json	accepted chapter 2.1 corpus case
+corpus-c5_int_capacity_4eplus0	Platform/02-installer/acceptance/1/cases/c5_int_capacity_4eplus0.subsystem.yaml	expect/corpus-c5_int_capacity_4eplus0.json	accepted chapter 2.1 corpus case
+corpus-c5_int_field_default_1dot0	Platform/02-installer/acceptance/1/cases/c5_int_field_default_1dot0.subsystem.yaml	expect/corpus-c5_int_field_default_1dot0.json	accepted chapter 2.1 corpus case
+corpus-c5_int_field_default_1e0	Platform/02-installer/acceptance/1/cases/c5_int_field_default_1e0.subsystem.yaml	expect/corpus-c5_int_field_default_1e0.json	accepted chapter 2.1 corpus case
+corpus-c5_int_field_f1_default_1dot0	Platform/02-installer/acceptance/1/cases/c5_int_field_f1_default_1dot0.subsystem.yaml	expect/corpus-c5_int_field_f1_default_1dot0.json	accepted chapter 2.1 corpus case
+corpus-c5_int_lease_1dot0	Platform/02-installer/acceptance/1/cases/c5_int_lease_1dot0.subsystem.yaml	expect/corpus-c5_int_lease_1dot0.json	accepted chapter 2.1 corpus case
+corpus-c5_int_lease_1e2	Platform/02-installer/acceptance/1/cases/c5_int_lease_1e2.subsystem.yaml	expect/corpus-c5_int_lease_1e2.json	accepted chapter 2.1 corpus case
+corpus-c5_key_0o7_word_ok	Platform/02-installer/acceptance/1/cases/c5_key_0o7_word_ok.subsystem.yaml	expect/corpus-c5_key_0o7_word_ok.json	accepted chapter 2.1 corpus case
+corpus-c5_key_0x10_word_ok	Platform/02-installer/acceptance/1/cases/c5_key_0x10_word_ok.subsystem.yaml	expect/corpus-c5_key_0x10_word_ok.json	accepted chapter 2.1 corpus case
+corpus-c5_key_question_mark	Platform/02-installer/acceptance/1/cases/c5_key_question_mark.subsystem.yaml	expect/corpus-c5_key_question_mark.json	accepted chapter 2.1 corpus case
+corpus-c5_rebalance_empty_ok	Platform/02-installer/acceptance/1/cases/c5_rebalance_empty_ok.subsystem.yaml	expect/corpus-c5_rebalance_empty_ok.json	accepted chapter 2.1 corpus case
+corpus-c5_value_next_line_flow	Platform/02-installer/acceptance/1/cases/c5_value_next_line_flow.subsystem.yaml	expect/corpus-c5_value_next_line_flow.json	accepted chapter 2.1 corpus case
+corpus-c5_value_next_line_plain	Platform/02-installer/acceptance/1/cases/c5_value_next_line_plain.subsystem.yaml	expect/corpus-c5_value_next_line_plain.json	accepted chapter 2.1 corpus case
+corpus-c5_value_next_line_quoted	Platform/02-installer/acceptance/1/cases/c5_value_next_line_quoted.subsystem.yaml	expect/corpus-c5_value_next_line_quoted.json	accepted chapter 2.1 corpus case
+corpus-c5_value_question_mark	Platform/02-installer/acceptance/1/cases/c5_value_question_mark.subsystem.yaml	expect/corpus-c5_value_question_mark.json	accepted chapter 2.1 corpus case
+corpus-c6_secrets_reads_with_slash_ok	Platform/02-installer/acceptance/1/cases/c6_secrets_reads_with_slash_ok.subsystem.yaml	expect/corpus-c6_secrets_reads_with_slash_ok.json	accepted chapter 2.1 corpus case
+corpus-c7_comment_deep_after_word	Platform/02-installer/acceptance/1/cases/c7_comment_deep_after_word.subsystem.yaml	expect/corpus-c7_comment_deep_after_word.json	accepted chapter 2.1 corpus case
+corpus-c7_comment_very_deep	Platform/02-installer/acceptance/1/cases/c7_comment_very_deep.subsystem.yaml	expect/corpus-c7_comment_very_deep.json	accepted chapter 2.1 corpus case
+corpus-c7_float_max_rounded_ok	Platform/02-installer/acceptance/1/cases/c7_float_max_rounded_ok.subsystem.yaml	expect/corpus-c7_float_max_rounded_ok.json	accepted chapter 2.1 corpus case
+corpus-c7_seq_block_scalars_ok	Platform/02-installer/acceptance/1/cases/c7_seq_block_scalars_ok.subsystem.yaml	expect/corpus-c7_seq_block_scalars_ok.json	accepted chapter 2.1 corpus case
+corpus-c7_seq_dash_scalar_below	Platform/02-installer/acceptance/1/cases/c7_seq_dash_scalar_below.subsystem.yaml	expect/corpus-c7_seq_dash_scalar_below.json	accepted chapter 2.1 corpus case
+corpus-c7_ufeff_middle_ok	Platform/02-installer/acceptance/1/cases/c7_ufeff_middle_ok.subsystem.yaml	expect/corpus-c7_ufeff_middle_ok.json	accepted chapter 2.1 corpus case
+corpus-c7_word_continuation_comment	Platform/02-installer/acceptance/1/cases/c7_word_continuation_comment.subsystem.yaml	expect/corpus-c7_word_continuation_comment.json	accepted chapter 2.1 corpus case
+corpus-c7_word_fold_blank_line	Platform/02-installer/acceptance/1/cases/c7_word_fold_blank_line.subsystem.yaml	expect/corpus-c7_word_fold_blank_line.json	accepted chapter 2.1 corpus case
+corpus-c7_word_fold_close_bracket	Platform/02-installer/acceptance/1/cases/c7_word_fold_close_bracket.subsystem.yaml	expect/corpus-c7_word_fold_close_bracket.json	accepted chapter 2.1 corpus case
+corpus-c8_options_enum_text_ok	Platform/02-installer/acceptance/1/cases/c8_options_enum_text_ok.subsystem.yaml	expect/corpus-c8_options_enum_text_ok.json	accepted chapter 2.1 corpus case
+corpus-c8_ref12_unit_schema_depth_32_ok	Platform/02-installer/acceptance/1/cases/c8_ref12_unit_schema_depth_32_ok.subsystem.yaml	expect/corpus-c8_ref12_unit_schema_depth_32_ok.json	accepted chapter 2.1 corpus case
+corpus-c8_ref25_table_field_schema_depth_32_ok	Platform/02-installer/acceptance/1/cases/c8_ref25_table_field_schema_depth_32_ok.subsystem.yaml	expect/corpus-c8_ref25_table_field_schema_depth_32_ok.json	accepted chapter 2.1 corpus case
+corpus-c8_ref26_table_schema_depth_32_ok	Platform/02-installer/acceptance/1/cases/c8_ref26_table_schema_depth_32_ok.subsystem.yaml	expect/corpus-c8_ref26_table_schema_depth_32_ok.json	accepted chapter 2.1 corpus case
+corpus-c8_ref47_unplaced_about_not_id	Platform/02-installer/acceptance/1/cases/c8_ref47_unplaced_about_not_id.subsystem.yaml	expect/corpus-c8_ref47_unplaced_about_not_id.json	accepted chapter 2.1 corpus case
+corpus-c8_word_hash_space	Platform/02-installer/acceptance/1/cases/c8_word_hash_space.subsystem.yaml	expect/corpus-c8_word_hash_space.json	accepted chapter 2.1 corpus case
+corpus-c9_word_hash_inside_ok	Platform/02-installer/acceptance/1/cases/c9_word_hash_inside_ok.subsystem.yaml	expect/corpus-c9_word_hash_inside_ok.json	accepted chapter 2.1 corpus case
+corpus-delete_after_with_about	Platform/02-installer/acceptance/1/cases/delete_after_with_about.subsystem.yaml	expect/corpus-delete_after_with_about.json	accepted chapter 2.1 corpus case
+corpus-display_fields_status_field	Platform/02-installer/acceptance/1/cases/display_fields_status_field.subsystem.yaml	expect/corpus-display_fields_status_field.json	accepted chapter 2.1 corpus case
+corpus-display_options_bool_enum	Platform/02-installer/acceptance/1/cases/display_options_bool_enum.subsystem.yaml	expect/corpus-display_options_bool_enum.json	accepted chapter 2.1 corpus case
+corpus-display_options_status_field	Platform/02-installer/acceptance/1/cases/display_options_status_field.subsystem.yaml	expect/corpus-display_options_status_field.json	accepted chapter 2.1 corpus case
+corpus-display_options_yes_key	Platform/02-installer/acceptance/1/cases/display_options_yes_key.subsystem.yaml	expect/corpus-display_options_yes_key.json	accepted chapter 2.1 corpus case
+corpus-display_word_On_Off_unquoted	Platform/02-installer/acceptance/1/cases/display_word_On_Off_unquoted.subsystem.yaml	expect/corpus-display_word_On_Off_unquoted.json	accepted chapter 2.1 corpus case
+corpus-door_routes_domain_ok	Platform/02-installer/acceptance/1/cases/door_routes_domain_ok.subsystem.yaml	expect/corpus-door_routes_domain_ok.json	accepted chapter 2.1 corpus case
+corpus-door_routes_names	Platform/02-installer/acceptance/1/cases/door_routes_names.subsystem.yaml	expect/corpus-door_routes_names.json	accepted chapter 2.1 corpus case
+corpus-door_routes_role_ok	Platform/02-installer/acceptance/1/cases/door_routes_role_ok.subsystem.yaml	expect/corpus-door_routes_role_ok.json	accepted chapter 2.1 corpus case
+corpus-f01_int_4dot0_ok	Platform/02-installer/acceptance/1/cases/f01_int_4dot0_ok.subsystem.yaml	expect/corpus-f01_int_4dot0_ok.json	accepted chapter 2.1 corpus case
+corpus-f02_int_1e1_ok	Platform/02-installer/acceptance/1/cases/f02_int_1e1_ok.subsystem.yaml	expect/corpus-f02_int_1e1_ok.json	accepted chapter 2.1 corpus case
+corpus-f05_int_at_min_ok	Platform/02-installer/acceptance/1/cases/f05_int_at_min_ok.subsystem.yaml	expect/corpus-f05_int_at_min_ok.json	accepted chapter 2.1 corpus case
+corpus-f06_int_at_max_ok	Platform/02-installer/acceptance/1/cases/f06_int_at_max_ok.subsystem.yaml	expect/corpus-f06_int_at_max_ok.json	accepted chapter 2.1 corpus case
+corpus-fields_affinity_known	Platform/02-installer/acceptance/1/cases/fields_affinity_known.subsystem.yaml	expect/corpus-fields_affinity_known.json	accepted chapter 2.1 corpus case
+corpus-fields_servers_show_known	Platform/02-installer/acceptance/1/cases/fields_servers_show_known.subsystem.yaml	expect/corpus-fields_servers_show_known.json	accepted chapter 2.1 corpus case
+corpus-float_finite_defaults	Platform/02-installer/acceptance/1/cases/float_finite_defaults.subsystem.yaml	expect/corpus-float_finite_defaults.json	accepted chapter 2.1 corpus case
+corpus-float_finite_inherit	Platform/02-installer/acceptance/1/cases/float_finite_inherit.subsystem.yaml	expect/corpus-float_finite_inherit.json	accepted chapter 2.1 corpus case
+corpus-id_default_numeric_ok	Platform/02-installer/acceptance/1/cases/id_default_numeric_ok.subsystem.yaml	expect/corpus-id_default_numeric_ok.json	accepted chapter 2.1 corpus case
+corpus-inherit_map	Platform/02-installer/acceptance/1/cases/inherit_map.subsystem.yaml	expect/corpus-inherit_map.json	accepted chapter 2.1 corpus case
+corpus-int_field_boundaries	Platform/02-installer/acceptance/1/cases/int_field_boundaries.subsystem.yaml	expect/corpus-int_field_boundaries.json	accepted chapter 2.1 corpus case
+corpus-json_default_map	Platform/02-installer/acceptance/1/cases/json_default_map.subsystem.yaml	expect/corpus-json_default_map.json	accepted chapter 2.1 corpus case
+corpus-lease_90	Platform/02-installer/acceptance/1/cases/lease_90.subsystem.yaml	expect/corpus-lease_90.json	accepted chapter 2.1 corpus case
+corpus-lease_absent	Platform/02-installer/acceptance/1/cases/lease_absent.subsystem.yaml	expect/corpus-lease_absent.json	accepted chapter 2.1 corpus case
+corpus-lease_forever	Platform/02-installer/acceptance/1/cases/lease_forever.subsystem.yaml	expect/corpus-lease_forever.json	accepted chapter 2.1 corpus case
+corpus-lease_forever_quoted	Platform/02-installer/acceptance/1/cases/lease_forever_quoted.subsystem.yaml	expect/corpus-lease_forever_quoted.json	accepted chapter 2.1 corpus case
+corpus-m49_int_2p53_minus_1_ok	Platform/02-installer/acceptance/1/cases/m49_int_2p53_minus_1_ok.subsystem.yaml	expect/corpus-m49_int_2p53_minus_1_ok.json	accepted chapter 2.1 corpus case
+corpus-m49_table_shelf_log_ok	Platform/02-installer/acceptance/1/cases/m49_table_shelf_log_ok.subsystem.yaml	expect/corpus-m49_table_shelf_log_ok.json	accepted chapter 2.1 corpus case
+corpus-m51_books_carried_ok	Platform/02-installer/acceptance/1/cases/m51_books_carried_ok.subsystem.yaml	expect/corpus-m51_books_carried_ok.json	accepted chapter 2.1 corpus case
+corpus-m51_books_merged_ok	Platform/02-installer/acceptance/1/cases/m51_books_merged_ok.subsystem.yaml	expect/corpus-m51_books_merged_ok.json	accepted chapter 2.1 corpus case
+corpus-m57_tokens_placement_ok	Platform/02-installer/acceptance/1/cases/m57_tokens_placement_ok.subsystem.yaml	expect/corpus-m57_tokens_placement_ok.json	accepted chapter 2.1 corpus case
+corpus-m57_tokens_scenario_ok	Platform/02-installer/acceptance/1/cases/m57_tokens_scenario_ok.subsystem.yaml	expect/corpus-m57_tokens_scenario_ok.json	accepted chapter 2.1 corpus case
+corpus-m57_tokens_unit_ok	Platform/02-installer/acceptance/1/cases/m57_tokens_unit_ok.subsystem.yaml	expect/corpus-m57_tokens_unit_ok.json	accepted chapter 2.1 corpus case
+corpus-m59_keys_ok	Platform/02-installer/acceptance/1/cases/m59_keys_ok.subsystem.yaml	expect/corpus-m59_keys_ok.json	accepted chapter 2.1 corpus case
+corpus-m59_names_no_grant_ok	Platform/02-installer/acceptance/1/cases/m59_names_no_grant_ok.subsystem.yaml	expect/corpus-m59_names_no_grant_ok.json	accepted chapter 2.1 corpus case
+corpus-m59_names_ok	Platform/02-installer/acceptance/1/cases/m59_names_ok.subsystem.yaml	expect/corpus-m59_names_ok.json	accepted chapter 2.1 corpus case
+corpus-m61_shared_ok	Platform/02-installer/acceptance/1/cases/m61_shared_ok.subsystem.yaml	expect/corpus-m61_shared_ok.json	accepted chapter 2.1 corpus case
+corpus-name_free_bare	Platform/02-installer/acceptance/1/cases/name_free_bare.subsystem.yaml	expect/corpus-name_free_bare.json	accepted chapter 2.1 corpus case
+corpus-profile_blob_64_ok	Platform/02-installer/acceptance/1/cases/profile_blob_64_ok.subsystem.yaml	expect/corpus-profile_blob_64_ok.json	accepted chapter 2.1 corpus case
+corpus-profile_blob_bytes_without_blob_ok	Platform/02-installer/acceptance/1/cases/profile_blob_bytes_without_blob_ok.subsystem.yaml	expect/corpus-profile_blob_bytes_without_blob_ok.json	accepted chapter 2.1 corpus case
+corpus-profile_rows_records_ok	Platform/02-installer/acceptance/1/cases/profile_rows_records_ok.subsystem.yaml	expect/corpus-profile_rows_records_ok.json	accepted chapter 2.1 corpus case
+corpus-profile_snapshot_default_ok	Platform/02-installer/acceptance/1/cases/profile_snapshot_default_ok.subsystem.yaml	expect/corpus-profile_snapshot_default_ok.json	accepted chapter 2.1 corpus case
+corpus-profile_table_id_ok	Platform/02-installer/acceptance/1/cases/profile_table_id_ok.subsystem.yaml	expect/corpus-profile_table_id_ok.json	accepted chapter 2.1 corpus case
+corpus-profile_table_key_quoted_ok	Platform/02-installer/acceptance/1/cases/profile_table_key_quoted_ok.subsystem.yaml	expect/corpus-profile_table_key_quoted_ok.json	accepted chapter 2.1 corpus case
+corpus-profile_unit_deleted_flag_ok	Platform/02-installer/acceptance/1/cases/profile_unit_deleted_flag_ok.subsystem.yaml	expect/corpus-profile_unit_deleted_flag_ok.json	accepted chapter 2.1 corpus case
+corpus-profile_unit_key_quoted_ok	Platform/02-installer/acceptance/1/cases/profile_unit_key_quoted_ok.subsystem.yaml	expect/corpus-profile_unit_key_quoted_ok.json	accepted chapter 2.1 corpus case
+corpus-profile_worker_writes_table_ok	Platform/02-installer/acceptance/1/cases/profile_worker_writes_table_ok.subsystem.yaml	expect/corpus-profile_worker_writes_table_ok.json	accepted chapter 2.1 corpus case
+corpus-r06_text_bool_ok	Platform/02-installer/acceptance/1/cases/r06_text_bool_ok.subsystem.yaml	expect/corpus-r06_text_bool_ok.json	accepted chapter 2.1 corpus case
+corpus-r37_named_delete_after	Platform/02-installer/acceptance/1/cases/r37_named_delete_after.subsystem.yaml	expect/corpus-r37_named_delete_after.json	accepted chapter 2.1 corpus case
+corpus-r37_requests_int_number	Platform/02-installer/acceptance/1/cases/r37_requests_int_number.subsystem.yaml	expect/corpus-r37_requests_int_number.json	accepted chapter 2.1 corpus case
+corpus-r37_requests_plain_string	Platform/02-installer/acceptance/1/cases/r37_requests_plain_string.subsystem.yaml	expect/corpus-r37_requests_plain_string.json	accepted chapter 2.1 corpus case
+corpus-r37_sub_where2	Platform/02-installer/acceptance/1/cases/r37_sub_where2.subsystem.yaml	expect/corpus-r37_sub_where2.json	accepted chapter 2.1 corpus case
+corpus-r37_table_int_template	Platform/02-installer/acceptance/1/cases/r37_table_int_template.subsystem.yaml	expect/corpus-r37_table_int_template.json	accepted chapter 2.1 corpus case
+corpus-r38_unit_minimal	Platform/02-installer/acceptance/1/cases/r38_unit_minimal.subsystem.yaml	expect/corpus-r38_unit_minimal.json	accepted chapter 2.1 corpus case
+corpus-r39_group_by_known_field	Platform/02-installer/acceptance/1/cases/r39_group_by_known_field.subsystem.yaml	expect/corpus-r39_group_by_known_field.json	accepted chapter 2.1 corpus case
+corpus-r40_console_table_secret_ok	Platform/02-installer/acceptance/1/cases/r40_console_table_secret_ok.subsystem.yaml	expect/corpus-r40_console_table_secret_ok.json	accepted chapter 2.1 corpus case
+corpus-requests_outcome_fetched_ok	Platform/02-installer/acceptance/1/cases/requests_outcome_fetched_ok.subsystem.yaml	expect/corpus-requests_outcome_fetched_ok.json	accepted chapter 2.1 corpus case
+corpus-requests_outcome_mark_ok	Platform/02-installer/acceptance/1/cases/requests_outcome_mark_ok.subsystem.yaml	expect/corpus-requests_outcome_mark_ok.json	accepted chapter 2.1 corpus case
+corpus-secrets_reader_domainconsole	Platform/02-installer/acceptance/1/cases/secrets_reader_domainconsole.subsystem.yaml	expect/corpus-secrets_reader_domainconsole.json	accepted chapter 2.1 corpus case
+corpus-secrets_readers_exact_prefix_ok	Platform/02-installer/acceptance/1/cases/secrets_readers_exact_prefix_ok.subsystem.yaml	expect/corpus-secrets_readers_exact_prefix_ok.json	accepted chapter 2.1 corpus case
+corpus-t07_block_plain_ok	Platform/02-installer/acceptance/1/cases/t07_block_plain_ok.subsystem.yaml	expect/corpus-t07_block_plain_ok.json	accepted chapter 2.1 corpus case
+corpus-t23_quoted_true_string	Platform/02-installer/acceptance/1/cases/t23_quoted_true_string.subsystem.yaml	expect/corpus-t23_quoted_true_string.json	accepted chapter 2.1 corpus case
+corpus-t27_escape_tab_ok	Platform/02-installer/acceptance/1/cases/t27_escape_tab_ok.subsystem.yaml	expect/corpus-t27_escape_tab_ok.json	accepted chapter 2.1 corpus case
+corpus-t31_last_line_spaces_ok	Platform/02-installer/acceptance/1/cases/t31_last_line_spaces_ok.subsystem.yaml	expect/corpus-t31_last_line_spaces_ok.json	accepted chapter 2.1 corpus case
+corpus-t32_trailing_spaces_ok	Platform/02-installer/acceptance/1/cases/t32_trailing_spaces_ok.subsystem.yaml	expect/corpus-t32_trailing_spaces_ok.json	accepted chapter 2.1 corpus case
+corpus-t33_flow_trailing_comma_ok	Platform/02-installer/acceptance/1/cases/t33_flow_trailing_comma_ok.subsystem.yaml	expect/corpus-t33_flow_trailing_comma_ok.json	accepted chapter 2.1 corpus case
+corpus-t33b_flow_map_trailing_comma_ok	Platform/02-installer/acceptance/1/cases/t33b_flow_map_trailing_comma_ok.subsystem.yaml	expect/corpus-t33b_flow_map_trailing_comma_ok.json	accepted chapter 2.1 corpus case
+corpus-unit_id_numeric	Platform/02-installer/acceptance/1/cases/unit_id_numeric.subsystem.yaml	expect/corpus-unit_id_numeric.json	accepted chapter 2.1 corpus case
+corpus-unplaced_delete_after_about_its_id	Platform/02-installer/acceptance/1/cases/unplaced_delete_after_about_its_id.subsystem.yaml	expect/corpus-unplaced_delete_after_about_its_id.json	accepted chapter 2.1 corpus case
+corpus-unplaced_delete_after_fixed_field	Platform/02-installer/acceptance/1/cases/unplaced_delete_after_fixed_field.subsystem.yaml	expect/corpus-unplaced_delete_after_fixed_field.json	accepted chapter 2.1 corpus case
+corpus-worker_writes_declared_list_ok	Platform/02-installer/acceptance/1/cases/worker_writes_declared_list_ok.subsystem.yaml	expect/corpus-worker_writes_declared_list_ok.json	accepted chapter 2.1 corpus case
+corpus-worker_writes_declared_ok	Platform/02-installer/acceptance/1/cases/worker_writes_declared_ok.subsystem.yaml	expect/corpus-worker_writes_declared_ok.json	accepted chapter 2.1 corpus case
+course-testsub	Source/tests/testdata/testsub.subsystem.yaml	expect/course-testsub.json	course manifest
+course-testsub2	Source/tests/testdata/testsub2.subsystem.yaml	expect/course-testsub2.json	course manifest

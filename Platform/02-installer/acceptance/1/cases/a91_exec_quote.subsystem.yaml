@@ -1,4 +1,4 @@
-# кавычка в слове — argv только разбиением по пробелу; ADR-0091 доп. (5) п. 2
+# A quote in a word: argv is split only by spaces; ADR-0091 addendum (5) item 2
 name: probe
 unit:
   rows: counters

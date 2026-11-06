@@ -1,4 +1,4 @@
-# shares и parts; доля части — группа пользователя части; ADR-0091 п. 5
+# shares and parts: a part share uses the part user group; ADR-0091 item 5
 name: probe
 unit:
   rows: counters

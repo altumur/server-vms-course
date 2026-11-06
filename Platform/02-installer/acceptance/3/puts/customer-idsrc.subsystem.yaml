@@ -1,4 +1,4 @@
-# key называет поле-источник id адресата (name)
+# key names the field supplying the target id (name)
 name: cust
 unit: {rows: orders, id: numeric}
 placement: {capacity: {default: 1}}

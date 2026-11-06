@@ -1,4 +1,4 @@
-# retire_when.state не имя unit.state; строка 36 references.tsv
+# retire_when.state is not a unit.state name; references.tsv row 36
 name: probe
 unit:
   rows: counters

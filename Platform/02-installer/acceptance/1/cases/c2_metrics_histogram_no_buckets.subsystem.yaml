@@ -1,4 +1,4 @@
-# agg: histogram без buckets (P/06.5 Н3 «Ряды манифеста metrics[]»; C06-METRICS-DSL-33-01)
+# agg: histogram without buckets (P/06.5 N3 'Manifest series metrics[]'; C06-METRICS-DSL-33-01)
 name: probe
 unit:
   rows: counters

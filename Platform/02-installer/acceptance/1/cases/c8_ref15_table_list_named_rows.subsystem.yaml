@@ -1,4 +1,4 @@
-# имя таблицы (список tables) совпадает с unit.rows; норма М10/2 Н1.2а (имя таблицы: не unit.rows); строка 15 references.tsv
+# A tables entry has the same name as unit.rows; M10/2 N1.2a (table names exclude unit.rows); references.tsv row 15
 name: probe
 unit: {rows: things, id: numeric}
 placement: {capacity: {default: 1}}

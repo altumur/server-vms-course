@@ -1,4 +1,4 @@
-# affinity.exclusive рядом со strict; ADR-0091 доп. (10) п. 1
+# affinity.exclusive beside strict; ADR-0091 addendum (10) item 1
 name: probe
 unit:
   rows: counters

@@ -1,4 +1,4 @@
-# маршрут с допуском по своему виду k2 (ADR-0091 доп. (14) п. 1)
+# A route admitted by its own kind k2 (ADR-0091 addendum (14) item 1)
 name: doorown
 unit:
   rows: doorowns

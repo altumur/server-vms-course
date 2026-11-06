@@ -1,4 +1,4 @@
-# ключ вне {name, role} у маршрута; ADR-0091 доп. (8) п. 3
+# A route key outside {name, role}; ADR-0091 addendum (8) item 3
 name: probe
 unit:
   rows: counters

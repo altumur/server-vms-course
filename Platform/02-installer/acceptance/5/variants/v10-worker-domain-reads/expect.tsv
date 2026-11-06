@@ -1,9 +1,9 @@
-# Expected effective rights of v10-worker-domain-reads (P/02.5 Н1.4 row <s>worker, Н3 step 3):
+# Expected effective rights of v10-worker-domain-reads (P/02.5 N1.4 row <s>worker, N3 step 3):
 # - domain/placed/va/ in worker.reads grants both domain/placed/va/* and domain/placement/va/*;
 # - its own book copy domain/va/tallies in worker.reads grants the exact key domain/va/tallies/local (default CLUSTER=local), not domain/va/tallies/other (C02-OWN-BOOK-HOLDER-01);
-# - assembled book sources `domain.books.<книга>.from`: va/notes/ grants write on va/notes/*; singleton row va/rolls grants write on va/rolls, not va/rolls/*;
+# - assembled book sources `domain.books.<book>.from`: va/notes/ grants write on va/notes/*; singleton row va/rolls grants write on va/rolls, not va/rolls/*;
 # - the controller removes book-source family contributions on server decommission: delete va/notes/* (ADR-0113 addendum (39)); not the singleton row va/rolls;
-# - conditional reads of vaworker (absent for vbworker): domain/shared (with domain.shared), domain/topology and domain/member-topology (with `domain.tokens.<вид>.unit`), domain/grants (with door.routes).
+# - conditional reads of vaworker (absent for vbworker): domain/shared (with domain.shared), domain/topology and domain/member-topology (with `domain.tokens.<kind>.unit`), domain/grants (with door.routes).
 role	action	key	expect
 vaworker	read	domain/placed/va/u1	allow
 vaworker	read	domain/placement/va/u1	allow

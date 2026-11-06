@@ -1,4 +1,4 @@
-# путь книги без имени — не дверь единиц
+# A book path without a name is not a units door
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

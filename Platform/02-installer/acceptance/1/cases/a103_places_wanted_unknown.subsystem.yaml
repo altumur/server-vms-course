@@ -1,4 +1,4 @@
-# таблицы причин нет
+# The reasons table does not exist
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement:

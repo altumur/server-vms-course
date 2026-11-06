@@ -1,4 +1,4 @@
-# Т15 (свод журналов, решение «Архитектора»): «- -» — вложенный список с пустым элементом; пустое значение — отказ value; норма P/02.1 Н1.1 blocks, Н4
+# T15 (journal summary, Architect decision): '- -' is a nested list with an empty element; an empty value is refused:form (formerly value); P/02.1 N1.1 blocks, N4
 name: probe
 unit:
   rows: counters

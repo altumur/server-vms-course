@@ -1,4 +1,4 @@
-# вид второй целиком: маршруты, обратный вызов, поток, предел ожидания, форма отказов (ADR-0094 B1) (ADR-0094 B1)
+# The complete second kind: routes, callback, stream, wait limit and refusal form (ADR-0094 B1) (ADR-0094 B1)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

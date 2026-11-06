@@ -1,4 +1,4 @@
-# person — не вид domain.tokens (грамматика вида); ADR-0091 доп. (14) п. 1, доп. (19) п. 1
+# person is not a domain.tokens kind (the kind grammar); ADR-0091 addenda (14) item 1 and (19) item 1
 name: probe
 unit:
   rows: counters

@@ -1,4 +1,4 @@
-# схема unit.state глубиной 33; строка 93 references.tsv
+# unit.state schema has depth 33; references.tsv row 93
 name: probe
 unit:
   rows: counters

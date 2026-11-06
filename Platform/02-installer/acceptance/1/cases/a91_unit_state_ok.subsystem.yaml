@@ -1,4 +1,4 @@
-# unit.state и snapshot со state.<имя>, retire_when по состоянию с delete_after; ADR-0091 п. 3; P/02.1 Н1.2а
+# unit.state and a snapshot with state.<name>, retire_when by state with delete_after; ADR-0091 item 3; P/02.1 N1.2a
 name: probe
 unit:
   rows: counters

@@ -1,4 +1,4 @@
-# вид в domain дважды — unique_items; ADR-0091 доп. (14) п. 1
+# A repeated domain kind violates unique_items; ADR-0091 addendum (14) item 1
 name: probe
 unit:
   rows: counters

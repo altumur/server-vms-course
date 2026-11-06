@@ -1,4 +1,4 @@
-# values при count — отказ (P/06.5 Н3 «Ряды манифеста metrics[]»; C06-METRICS-DSL-33-01)
+# values with count is refused (P/06.5 N3 'Manifest series metrics[]'; C06-METRICS-DSL-33-01)
 name: probe
 unit:
   rows: counters

@@ -1,4 +1,4 @@
-# scenario.ref_claim не из claims; норма М11/7 Н1.1; строка 97 references.tsv
+# scenario.ref_claim is not in claims; M11/7 N1.1; references.tsv row 97
 name: probe
 unit:
   rows: counters

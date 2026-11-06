@@ -27,7 +27,7 @@ display:
   fields: {name: Name, start: Start}
   options:
     kind: {a: Alpha, b: Beta}
-    zones.level: {'3': Третий}
+    zones.level: {'3': Third}
   form:
     - title: Main
       fields: [name, start, kind]

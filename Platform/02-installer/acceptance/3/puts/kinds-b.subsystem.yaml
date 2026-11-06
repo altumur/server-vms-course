@@ -1,4 +1,4 @@
-# тот же вид k1 у второй подсистемы — отказ каталога (P/02.1 Н3; ADR-0091 доп. (17) п. 5)
+# A second subsystem declares the same kind k1: catalogue refusal (P/02.1 N3; ADR-0091 addendum (17) item 5)
 name: kindb
 unit:
   rows: kindbs

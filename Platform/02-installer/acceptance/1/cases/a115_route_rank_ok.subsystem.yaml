@@ -1,4 +1,4 @@
-# rank маршрута двери (ADR-0115 доп. (19) п. 1)
+# A door route rank (ADR-0115 addendum (19) item 1)
 name: probe
 unit:
   rows: counters

@@ -1,4 +1,4 @@
-# таблицы и секреты в хранимой правке (P/08.6 Н1.3, Н1.3а)
+# Tables and secrets in a stored edit (P/08.6 N1.3, N1.3a)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}, key_secret: {type: string}}}
 placement: {capacity: {default: 1}}

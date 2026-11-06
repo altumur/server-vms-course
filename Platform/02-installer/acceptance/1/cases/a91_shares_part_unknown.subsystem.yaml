@@ -1,4 +1,4 @@
-# shares.<доля>.part не из parts; строка 121 references.tsv
+# shares.<share>.part is not in parts; references.tsv row 121
 name: probe
 unit:
   rows: counters

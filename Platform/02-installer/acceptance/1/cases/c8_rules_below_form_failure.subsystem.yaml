@@ -1,4 +1,4 @@
-# Р1 (ADR-0087 доп. (3)): правило элемента secret_in (один вид) при отказе формы ниже — param не список; норма P/06.2 Н1.1, М10/2 Н4
+# R1 (ADR-0087 addendum (3)): a secret_in element rule (one kind) with a lower form refusal: param is not a list; P/06.2 N1.1, M10/2 N4
 name: probe
 unit:
   rows: counters

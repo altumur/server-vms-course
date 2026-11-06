@@ -1,4 +1,4 @@
-# key worker.creates с :int — отказ: усечение склеивает значения; ADR-0091 п. 1
+# worker.creates key with :int is refused: truncation merges values; ADR-0091 item 1
 name: probe
 unit:
   rows: counters

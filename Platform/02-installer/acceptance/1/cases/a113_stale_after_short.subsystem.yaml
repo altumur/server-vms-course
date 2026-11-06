@@ -1,4 +1,4 @@
-# порог stale меньше трёх периодов пульса — отказ (ADR-0113 доп. (36))
+# A stale threshold below three heartbeat periods is refused (ADR-0113 addendum (36))
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

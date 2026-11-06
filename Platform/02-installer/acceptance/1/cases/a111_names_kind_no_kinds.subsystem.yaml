@@ -1,4 +1,4 @@
-# вид цели без перечня
+# The target kind without a list
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}, target: {type: json}, then: {type: json}}}
 placement: {capacity: {default: 1}}

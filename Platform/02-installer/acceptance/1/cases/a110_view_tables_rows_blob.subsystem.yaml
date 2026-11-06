@@ -1,4 +1,4 @@
-# blob в снимок не идёт
+# A blob is excluded from the snapshot
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}, note: {type: string}, pic: {type: blob}}}
 placement: {capacity: {default: 1}}

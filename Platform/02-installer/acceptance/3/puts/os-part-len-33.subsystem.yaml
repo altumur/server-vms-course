@@ -1,4 +1,4 @@
-# len(w2c-pbox-p12345678901234567890123) = 4 + 4 + 1 + 24 = 33 знака > 32 (P/02.4 Н1.1 users_groups names)
+# len(w2c-pbox-p12345678901234567890123) = 4 + 4 + 1 + 24 = 33 characters > 32 (P/02.4 N1.1 users_groups names)
 name: pbox
 unit: {rows: things, id: numeric}
 placement: {capacity: {default: 1}}

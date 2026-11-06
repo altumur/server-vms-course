@@ -1,4 +1,4 @@
-# servers.show[0].table не таблица из tables; норма М10/2 Н1.4; строка 61 references.tsv
+# servers.show[0].table is not declared in tables; M10/2 N1.4; references.tsv row 61
 name: probe
 unit:
   rows: counters

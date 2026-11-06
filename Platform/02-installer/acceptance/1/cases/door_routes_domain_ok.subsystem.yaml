@@ -1,5 +1,5 @@
-# door.routes: {name} — допуск token, {name, domain}, {name, role, domain}; виды — проверка каталога (Н3), не загрузчика; ADR-0091 доп. (14) п. 1
-# виды probe, tally — объявленные testsub стенда выборки manifest put (ACC-CORPUS-DOOR-DOMAIN-KIND-01)
+# door.routes: {name} is token admission, {name, domain}, {name, role, domain}; kinds are checked against the catalogue (N3), not by the loader; ADR-0091 addendum (14) item 1
+# probe and tally are declared by the manifest-put stand testsub (ACC-CORPUS-DOOR-DOMAIN-KIND-01)
 name: probe
 unit:
   rows: counters

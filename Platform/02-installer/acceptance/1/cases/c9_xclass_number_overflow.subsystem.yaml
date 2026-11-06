@@ -1,4 +1,4 @@
-# Ф1 (свод журналов, решение «Архитектора»): число вне пределов под узлом с x-class — класс этого узла, не value; норма P/02.1 Н1.1 числа, Н1.2а domain.names
+# F1 (journal summary, Architect decision): an out-of-bounds number under an x-class node uses that node class, not the former value class; P/02.1 N1.1 numbers, N1.2a domain.names
 name: probe
 unit:
   rows: counters

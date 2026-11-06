@@ -1,4 +1,4 @@
-# Р7 (Ф2): число вне float в значении json-поля, куда обход формы не заходит — refused:value; норма М10/2 Н1.1 (числа во всём документе)
+# R7 (F2): a number outside float in an opaque json-field value is refused:form (formerly refused:value); M10/2 N1.1 (numbers throughout the document)
 name: probe
 unit:
   rows: counters

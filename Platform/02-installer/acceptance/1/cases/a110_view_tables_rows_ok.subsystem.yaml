@@ -1,4 +1,4 @@
-# строки единиц и таблица мест в снимке (P/04 Н1.3б)
+# Unit rows and the places table in the snapshot (P/04 N1.3b)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement:

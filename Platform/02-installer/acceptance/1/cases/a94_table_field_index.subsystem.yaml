@@ -1,4 +1,4 @@
-# поле таблицы index — поле платформы строки таблицы; P/06.1 Н1.6 field_names, ADR-0094 B4
+# The table field index is a platform field of the table row; P/06.1 N1.6 field_names, ADR-0094 B4
 name: probe
 unit:
   rows: counters

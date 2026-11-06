@@ -673,7 +673,7 @@
      "type": "boolean"
     },
     "files": {
-     "description": "static files of the subsystem: paths relative to the directory of the manifest file, console address `/<sub>/<path>` (P/06.5 N2 «Статические файлы»); a file not read — `manifest put` refusal (P/02.3 N4)",
+     "description": "static files of the subsystem: paths relative to the directory of the manifest file, console address `/<sub>/<path>` (P/06.5 N2 «Static files of a subsystem»); a file not read — `manifest put` refusal (P/02.3 N4)",
      "type": "array",
      "items": {
       "description": "segments separated by `/`, each starts with a letter, a digit or `_` (hence no `..`, no absolute path and no empty segment); the extension is from a closed list, without `html`; not under `api/` — that is the route space of the mounted subsystem (ADR-0094 addendum (4) item 2, addendum (8) item 2)",
@@ -690,7 +690,7 @@
   },
   "metrics": {
    "$ref": "#/$defs/metrics",
-   "x-owner": "P/06.5 N1.2; N3 «Ряды манифеста metrics[]»"
+   "x-owner": "P/06.5 N1.2; N3 «Manifest series metrics[]»"
   },
   "domain": {
    "$ref": "#/$defs/domain",
@@ -1504,7 +1504,7 @@
       ]
      },
      "from": {
-      "description": "`heartbeat.<path>` | `status.<path>` (P/06.5 N3 «Ряды манифеста metrics[]»)",
+      "description": "`heartbeat.<path>` | `status.<path>` (P/06.5 N3 «Manifest series metrics[]»)",
       "type": "string",
       "pattern": "^(?:(heartbeat|status)\\.[\\s\\S]+)$"
      },
@@ -2001,7 +2001,7 @@
        "type": "string"
       },
       "cut_at": {
-       "description": "only for a url field: for a field of another type — `refused:reference` (the type is a property of the target `group_by.field`, as for `unit.id`)",
+       "description": "only for a url field: for a field of another type — `refused:relations` (the type is a property of the target `group_by.field`, as for `unit.id`)",
        "enum": [
         "host"
        ]
@@ -2151,7 +2151,7 @@
      "type": "object",
      "properties": {
       "delete_after": {
-       "description": "only with named id, without fixed fields except id, `about` — only by id (ADR-0067)",
+       "description": "only with a named id (`numeric` — a refusal); `fixed` fields and `about` by any field are allowed since ADR-0091 item 1: for a table with `fixed` fields the controller physically deletes only the rows with `made`, the manual ones it takes off without deleting (P/04 N1.3)",
        "type": "integer",
        "minimum": 1
       }

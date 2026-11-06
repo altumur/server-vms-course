@@ -1,4 +1,4 @@
-# имя маршрута повторено в двух формах; строка 82 references.tsv
+# A route name repeats in two forms; references.tsv row 82
 name: probe
 unit:
   rows: counters

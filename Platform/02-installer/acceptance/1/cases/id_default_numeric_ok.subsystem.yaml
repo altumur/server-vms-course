@@ -1,4 +1,4 @@
-# {id} в умолчании поля string при unit.id numeric — дверь подставляет id; запрос VMS № 1
+# {id} in a string field default with unit.id numeric: the door substitutes id; VMS request 1
 name: probe
 unit:
   rows: counters

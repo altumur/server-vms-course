@@ -1,4 +1,4 @@
-# снятие единицы доменом объявлено (P/08.6 Н1.3б)
+# Domain withdrawal of a unit is declared (P/08.6 N1.3b)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}, note: {type: string}}}
 placement: {capacity: {default: 1}}

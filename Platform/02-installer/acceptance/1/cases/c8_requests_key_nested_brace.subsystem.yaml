@@ -1,4 +1,4 @@
-# Р7 (О14): вложенная { в шаблоне requests.key — отказ; класс — после решения О14 свода журналов; норма М10/2 Н1.2а requests.key
+# R7 (O14): a nested '{' in requests.key is refused; the class follows journal-summary decision O14; M10/2 N1.2a requests.key
 name: probe
 unit:
   rows: counters

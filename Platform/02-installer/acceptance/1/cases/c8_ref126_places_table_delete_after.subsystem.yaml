@@ -1,4 +1,4 @@
-# placement.places.table называет таблицу с delete_after; строка 126 связей (ADR-0094 шаг 3б; решение «Архитектора» 2026-10-31)
+# placement.places.table names a table with delete_after; relation 126 (ADR-0094 step 3b; Architect decision 2026-10-31)
 name: probe
 unit: {rows: things, id: numeric}
 placement:

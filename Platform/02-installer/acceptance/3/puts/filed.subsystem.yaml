@@ -1,4 +1,4 @@
-# принятые имена console.files: все расширения, вложенные сегменты, имя лишь начинается с api, пустой файл (ADR-0094 B7)
+# Accepted console.files names: all extensions, nested segments, a name merely starting with api, an empty file (ADR-0094 B7)
 name: filed
 unit: {rows: things, id: numeric}
 placement: {capacity: {default: 1}}

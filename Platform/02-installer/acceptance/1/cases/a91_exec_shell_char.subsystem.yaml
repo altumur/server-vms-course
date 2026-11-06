@@ -1,4 +1,4 @@
-# знак оболочки $ в слове; ADR-0091 доп. (5) п. 2
+# The shell character '$' in a word; ADR-0091 addendum (5) item 2
 name: probe
 unit:
   rows: counters

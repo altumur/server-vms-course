@@ -1,4 +1,4 @@
-# цели и шаги вглубь (договор сторожевой и передачи names; ADR-0105 п. 4)
+# Nested targets and steps (the gate and pass contract, names; ADR-0105 item 4)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}, when: {type: json}, then: {type: json}}}
 placement: {capacity: {default: 1}}

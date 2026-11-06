@@ -1,4 +1,4 @@
-# роль повторена в role — unique_items; ADR-0091 доп. (8) п. 3
+# A repeated role violates unique_items; ADR-0091 addendum (8) item 3
 name: probe
 unit:
   rows: counters

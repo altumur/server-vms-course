@@ -1,4 +1,4 @@
-# нет worker.exec — обязателен у каждого манифеста; ADR-0091 доп. (5) п. 4
+# Missing worker.exec, required for every manifest; ADR-0091 addendum (5) item 4
 name: probe
 unit:
   rows: counters

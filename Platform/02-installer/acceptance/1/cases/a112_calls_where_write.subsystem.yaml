@@ -1,4 +1,4 @@
-# /where только чтение
+# /where is read-only
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

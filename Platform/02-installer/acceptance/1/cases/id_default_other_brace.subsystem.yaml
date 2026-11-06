@@ -1,4 +1,4 @@
-# иная подстановка {x} в умолчании string при unit.id numeric — закрыто, без экранирования; строка 124 references.tsv
+# Another substitution {x} in a string default with unit.id numeric: a closed spelling without escapes; references.tsv row 124
 name: probe
 unit:
   rows: counters

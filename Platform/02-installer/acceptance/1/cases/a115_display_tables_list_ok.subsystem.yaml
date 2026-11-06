@@ -24,7 +24,7 @@ snapshot: [name, start]
 display:
   unit: counter
   units: counters
-  tables: {zones: Зоны}
+  tables: {zones: Zones}
   fields: {name: Name, start: Start}
   options:
     kind: {a: Alpha, b: Beta}

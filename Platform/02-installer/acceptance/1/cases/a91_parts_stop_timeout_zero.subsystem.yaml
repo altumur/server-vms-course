@@ -1,4 +1,4 @@
-# parts.<часть>.stop_timeout 0 — ниже 1; ADR-0091 доп. (3) п. 4
+# parts.<part>.stop_timeout 0 is below 1; ADR-0091 addendum (3) item 4
 name: probe
 unit:
   rows: counters

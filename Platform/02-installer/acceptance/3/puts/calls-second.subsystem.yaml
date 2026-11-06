@@ -1,4 +1,4 @@
-# сегмент второго вида (ADR-0112 доп. (3) п. 2)
+# A second-kind segment (ADR-0112 addendum (3) item 2)
 name: callc
 unit:
   rows: callers

@@ -1,4 +1,4 @@
-# заказчик называет не unit.rows адресата
+# The customer does not name the target unit.rows
 name: cust
 unit: {rows: orders, id: numeric}
 placement: {capacity: {default: 1}}

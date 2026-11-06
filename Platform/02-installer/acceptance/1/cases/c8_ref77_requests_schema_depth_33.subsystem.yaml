@@ -1,4 +1,4 @@
-# requests.schema глубже 32 (33 вложенных отображения); норма P/06.1 Н1.4, М10/2 Н1.2а; строка 77 references.tsv
+# requests.schema exceeds depth 32 (33 nested mappings); P/06.1 N1.4, M10/2 N1.2a; references.tsv row 77
 name: probe
 unit:
   rows: counters

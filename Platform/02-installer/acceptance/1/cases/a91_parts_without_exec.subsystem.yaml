@@ -1,4 +1,4 @@
-# parts.<имя> без exec; ADR-0091 п. 5
+# parts.<name> without exec; ADR-0091 item 5
 name: probe
 unit:
   rows: counters

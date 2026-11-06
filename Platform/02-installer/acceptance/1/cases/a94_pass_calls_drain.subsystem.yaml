@@ -1,4 +1,4 @@
-# запись /drain вне перечня (ADR-0094 B1)
+# Writing /drain is outside the list (ADR-0094 B1)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

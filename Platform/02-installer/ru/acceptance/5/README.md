@@ -7,7 +7,7 @@
 [OpenAPI](../../../../01-store/spec/01-store.api.openapi.yaml) урока P/01.
 В файле 8 сценариев / 70 шагов (сц. 12 шаги 12–18 — `domainagent` не пишет `domain/root`, `view`, `shadow`, `backups/rev-1`, `shared-docs/rev-1`, `alarm-history/m1`, `idem/k1`, 403, C02-LOCAL-BINDING240-ROOT; мутационная проверка 7cecaf2 № 29, 49: строки допуска контроллера без delete, отрицание `idem` у воркера; сц. 13 — заказ и состояние, ADR-0091, сц. 02 шаг 8 — удаление строки `testsub2` контроллером теперь 200: у неё `retire_when.delete_after` и `ends`); роли и файл прав генерируются из `testsub` и `testsub2`
 (`Source/tests/testdata/testsub*.subsystem.yaml`) с именем развёртывания `testsub`.
-Сценарии и варианты манифестов перенесены из приёмки М10/6
+Сценарии и варианты манифестов перенесены из приёмки M10/6
 (стадия B) с прежними номерами, шагами и текстами. Сценарии 05–08 и 10 (оценщик, `never`, перечисление, страж, личность,
 `/v1/rights`) — в приёмке [P/01.2](../../../../01-store/ru/acceptance/2/README.md) (стадия B); номера оставшихся не менялись.
 
@@ -27,13 +27,13 @@
 сц. 12 — ещё `testsubdomain` и `domainagent` (роли домена файла прав `testsub`: у `testsub` есть `kept` и переносимая
 книга `tallies`, у `testsub2` книги только собираемые — роли `testsub2domain` нет и сокета нет).
 
-Сверка python и go М10/6–11 (R1–R5, R7): сц. 04 шаги 4–7 — ресурс читает сроки обеих манифестов (строк нет: `items:
+Сверка python и go M10/6–11 (R1–R5, R7): сц. 04 шаги 4–7 — ресурс читает сроки обеих манифестов (строк нет: `items:
 null`); сц. 12 — роли домена.
 
 ## `journal/corrections-5.tsv`
 
 Журнал исправлений ИИ (ADR-0080 доп. 1; ADR-0124: журнал, не вход, в выгрузку не входит): `date`, `sample`, `fix`, `languages`. Строки до переноса — из
-`corrections.tsv` приёмки М10/06 (сняты переносом урока 6, `e11928b21`), в начале этого журнала по сценариям главы, с прежними путями и номерами (их
+`corrections.tsv` приёмки M10/06 (сняты переносом урока 6, `e11928b21`), в начале этого журнала по сценариям главы, с прежними путями и номерами (их
 разрешает `Platform/common/id-map.tsv`); строки без сценария — во всех главах-наследниках (разбор ревью стадии B 6–7, № 18).
 
 ## Изоляция
@@ -50,7 +50,7 @@ null`); сц. 12 — роли домена.
 
 ## Варианты манифестов (`variants/`)
 
-Вывод прав по смыслу на манифестах вне стенда (сверка python и go М10/6–11: R2–R8, R10, R12; строка реестра e31e5c28).
+Вывод прав по смыслу на манифестах вне стенда (сверка python и go M10/6–11: R2–R8, R10, R12; строка реестра e31e5c28).
 Каталог `variants/<вариант>/` — файлы `*.subsystem.yaml` (каталог манифестов варианта, загружаются по главе 2.1) и ровно
 одно из: `expect.tsv` (вывод прав и пробы), `refused` (ожидаемый отказ генерации), `check.tsv` с каталогом `check/` (сверка
 `--check`); формы `refused` и `check.tsv` — решение «Архитектора» по вопросу формы (аудит Gemini P/02, свойства 24, 25).
@@ -74,14 +74,14 @@ null`); сц. 12 — роли домена.
 
 **`refused`:** UTF-8, LF; строки с `#` пропускаются; ровно одна прочая строка — `name` манифеста варианта, чьё объявление
 отказано. Раннер зовёт команду вывода прав, как в п. 1 выше: код ДОЛЖЕН быть `2`, файла прав по пути `{file}` нет (отказ
-генерации до файла, N4), stderr называет этот манифест — его `name` или его файл (N4: «имя объявления и манифест»);
+генерации до файла, N4), stderr называет этот манифест — его `name` или его файл (N4: «declaration name and manifest»);
 текст сверх этого не сравнивается. Хранилище не запускается, проб нет.
 
 **`check.tsv`:** UTF-8, LF, поля через TAB; строки с `#` пропускаются; заголовок `case	file	code`; дальше по строке на
 случай: `case` — `[a-z0-9_]+`, уникально; `file` — `check/<case>.rights`, файл прав; `code` — `0` (файл по смыслу
 равен сгенерированному) или `!0` (любой код, кроме 0). Раннер на каждую строку зовёт сверку прав реализации (`rights --check
 <file>`, N2, N3 «установить») — командой `stand.rights-check` профиля `02-installer` ([общий README приёмки](../../../../common/ru/acceptance/README.md),
-«Команда сверки прав»): `{manifests}` — каталог манифестов варианта, `{deployment}` = `dep`, `{file}` — `check/<case>.rights`;
+«Rights comparison command»): `{manifests}` — каталог манифестов варианта, `{deployment}` = `dep`, `{file}` — `check/<case>.rights`;
 исход — код, сравнивается с колонкой `code`. Нет ключа в профиле — случаи `check.tsv` не исполнены (не GREEN и не исход
 реализации) (решение «Архитектора» 2026-10-30, вопросы норм аудита Gemini, P/02 п. 3; C02-RIGHTS-CHECK-STAND-01). Сравнение по смыслу
 — N3 «установить»: набор ролей, у каждой `group` и множества образцов `read`, `write`, `delete` (нет `delete` — пустое
@@ -94,7 +94,7 @@ null`); сц. 12 — роли домена.
 | `v3-objects-rows` | `va` с `objects.rows: [marks/]` | `marks/` → `objects/va/marks/*` (R10) |
 | `v4-domain-kept` | `va` с `domain.kept: [ledger, badges/]` | `vadomain` пишет слот и `kept`; `domainagent` — по форме объявления и без слота и пульса воркера на домене (R4, R3) |
 | `v6-near-about-ref` | `va`; `vb` с `placement.near.sub: va`, `vc` с `about.sub: va`, `vd` с полем `ref: va/items` | контроллер читает строки `va` по каталогу (`placement`, `workers`, `slots`, `holds`, строки единиц, `policy`, `placement_turn`), не эпоху, `idem`, `next_id` и не пишет; обратной связи нет (решение «Архитектора» 2026-10-27; P/03 Go 084a3ee9, P/03.6 сц. 07) |
-| `v7-must-match` | `va` (поле `shelf` — `ref: va/shelves`, `must_match: {zone: zone}`; таблица `shelves`); `vb` с `worker.creates` на `va/items` (`key: "{code}"`); `vc` с таблицей `links`, поле `of` — `ref: va/items`, `must_match: {zone: zone}` | заказчик `vbworker` читает цели проверки строки — `va/shelves/*` (прямая ветвь) и `vc/links/*` (обратная ветвь `must_match`), пишет только `va/items/vb-*` без удаления; чужие строки `va/items` и прочие семьи `vc` — нет; контроллер `va` обратную семью не читает (аудит покрытия P/02, B07) | P/02.5 N1.4 `<s>worker` «чтения общей проверки строки»; договор проверки строки |
+| `v7-must-match` | `va` (поле `shelf` — `ref: va/shelves`, `must_match: {zone: zone}`; таблица `shelves`); `vb` с `worker.creates` на `va/items` (`key: "{code}"`); `vc` с таблицей `links`, поле `of` — `ref: va/items`, `must_match: {zone: zone}` | заказчик `vbworker` читает цели проверки строки — `va/shelves/*` (прямая ветвь) и `vc/links/*` (обратная ветвь `must_match`), пишет только `va/items/vb-*` без удаления; чужие строки `va/items` и прочие семьи `vc` — нет; контроллер `va` обратную семью не читает (аудит покрытия P/02, B07) | P/02.5 N1.4 `<s>worker` «reads of the common row check»; договор проверки строки |
 | `v8-worker-writes-deletes` | `va` с таблицами `shelves`, `gauges`, `worker.writes: [gauges]`, `worker.deletes: [items]` | таблица `worker.writes`: воркер пишет, читает и удаляет, консоль читает и только удаляет; обычная таблица: консоль пишет и удаляет, воркер только читает; `worker.deletes`: воркер удаляет строки единиц без записи, контроллер без `delete_after` — нет (аудит покрытия P/02, второй проход) | P/02.5 N1.4 `console`, `<s>worker`, N3 шаг 2 |
 | `v9-asked-free-resource` | `va` с `requests` без `per_person` и `free`; `vb` с `about.sub: va`, таблицами `notches` (`holds.table`) и `shelves`, `requests` с `per_person` и `free: true` | консоль пишет `vb/asked/*`, не `va/asked/*`; `!vb/asked/*` у воркера и контроллера `vb`; ресурс пишет, читает, удаляет `vb/requests/free-*`, не `vb/requests/<rid>` и не `va/requests/free-*`; ресурс читает таблицу `holds.table` (`vb/notches/*`) и строки единиц манифеста с `about` (`vb/things/*`), не прочие таблицы, не строки `va` без `about` и не семью места `<s>/holds/*` ни у `vb`, ни у `va` (договор удержаний; C02-RESOURCE-HOLDS-TABLE-01) (там же) | P/02.5 N1.4 общие правила, `console`, `resource` |
 | `v10-worker-domain-reads` | `va` с `worker.reads: [domain/placed/va/, domain/va/tallies]`, книгами `tallies` (переносимая), `notes` (`from: va/notes/`), `rolls` (`from: va/rolls`), `domain.shared`, видом токена с `unit`, `door.routes`; `vb` без них | `domain/placed/va/` даёт и `domain/placement/va/*`; копия своей книги — и точный ключ `domain/va/tallies/local` (`CLUSTER` не задан — `local`), не префикс; запись источников собираемых книг — префикс и точный ключ; `domain/shared`, `domain/topology`, `domain/member-topology`, `domain/grants` — только у `vaworker` (там же) | P/02.5 N1.4 `<s>worker`, N2, N3 шаг 3 (C02-OWN-BOOK-HOLDER-01) |
@@ -135,7 +135,7 @@ null`); сц. 12 — роли домена.
 
 ## Аудит покрытия P/02, второй проход (Gemini)
 
-Отчёт `АУДИТ-ПОКРЫТИЯ-GEMINI-P02.md` (ветка gemini/audit-coverage, c698f3291): вывод прав, что прежде проверялся чтением, —
+Отчёт the coverage audit Gemini P02 (for people) (ветка gemini/audit-coverage, c698f3291): вывод прав, что прежде проверялся чтением, —
 варианты `v8-worker-writes-deletes` (G04), `v9-asked-free-resource` (G05), `v10-worker-domain-reads` (G06),
 `v11-controller-cross-tables` (G07; отдельный вариант — манифесты `v6-near-about-ref` не меняются). Таблица вариантов выше.
 `--check` и отказы генератора до файла — формы «Архитектора» `check.tsv` и `refused` (выше): `v12-check-rights`,

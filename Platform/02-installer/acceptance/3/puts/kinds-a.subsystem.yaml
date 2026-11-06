@@ -1,4 +1,4 @@
-# вид k1 объявлен (ADR-0091 доп. (14) п. 1, доп. (17) п. 5)
+# Kind k1 is declared (ADR-0091 addenda (14) item 1 and (17) item 5)
 name: kinda
 unit:
   rows: kindas

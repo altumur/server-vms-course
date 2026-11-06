@@ -1,4 +1,4 @@
-# адресат перечня обратного вызова: строки, таблица, маршрут двери (ADR-0094 B1)
+# A callback-list target: rows, a table and a door route (ADR-0094 B1)
 name: neartd
 unit:
   rows: neartds

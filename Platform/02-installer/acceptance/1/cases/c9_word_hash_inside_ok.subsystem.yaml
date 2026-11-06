@@ -1,4 +1,4 @@
-# Т28 (свод журналов, решение «Архитектора»): «#» без пробела перед ним внутри слова — часть слова; норма P/02.1 Н1.1 comment
+# T28 (journal summary, Architect decision): '#' inside a word without a preceding space is part of the word; P/02.1 N1.1 comment
 name: probe
 unit:
   rows: counters

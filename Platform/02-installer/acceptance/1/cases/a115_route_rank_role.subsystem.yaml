@@ -1,4 +1,4 @@
-# rank у маршрута с role — отказ (ADR-0115 доп. (19), М ревью)
+# rank on a role route is refused (ADR-0115 addendum (19), minor review finding)
 name: probe
 unit:
   rows: counters

@@ -157,7 +157,7 @@ def generate(root):
             raise SourceError("%s: %s" % (VECTORS / "cases.tsv", exc))
     author = [(case, inp, note) for _, case, inp, _, note in rows if not case.startswith(GENERATED)]
     notes = {case: note for _, case, _, _, note in rows if case.startswith(GENERATED)}
-    gen = [(case, inp, notes.get(case) or ("принятый случай корпуса 2.1" if case.startswith("corpus-") else "манифест курса"))
+    gen = [(case, inp, notes.get(case) or ("accepted chapter 2.1 corpus case" if case.startswith("corpus-") else "course manifest"))
            for case, inp in accepted_inputs(root)]
     out, seen = [], set()
     for case, inp, note in author + gen:

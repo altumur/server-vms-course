@@ -1,4 +1,4 @@
-# поле единицы state при объявленном unit.state; строка 92 references.tsv
+# A unit field named state with unit.state declared; references.tsv row 92
 name: probe
 unit:
   rows: counters

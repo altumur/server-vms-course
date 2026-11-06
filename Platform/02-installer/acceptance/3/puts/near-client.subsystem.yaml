@@ -1,4 +1,4 @@
-# near.sub — neart, near.of и near.prefer — её поля (ADR-0091 доп. (26) п. 2)
+# near.sub is neart; near.of and near.prefer are its fields (ADR-0091 addendum (26) item 2)
 name: nearc
 unit:
   rows: nearcs

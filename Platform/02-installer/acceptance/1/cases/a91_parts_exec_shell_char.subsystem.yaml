@@ -1,4 +1,4 @@
-# parts.<часть>.exec — та же грамматика: ; в слове; ADR-0091 доп. (5) п. 2
+# parts.<part>.exec uses the same grammar: ';' in a word; ADR-0091 addendum (5) item 2
 name: probe
 unit:
   rows: counters

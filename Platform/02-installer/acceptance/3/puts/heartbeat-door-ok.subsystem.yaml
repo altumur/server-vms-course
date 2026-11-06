@@ -1,4 +1,4 @@
-# поле двери пульса (heartbeat.door, P/06.7 Н1.6 pulse)
+# A heartbeat door field (heartbeat.door, P/06.7 N1.6 pulse)
 name: hbd
 unit:
   rows: beats

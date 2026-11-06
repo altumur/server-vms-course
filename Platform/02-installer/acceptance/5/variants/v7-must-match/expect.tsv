@@ -1,4 +1,4 @@
-# Expected effective rights of v7-must-match (chapter 2.5 acceptance README, «Варианты манифестов»):
+# Expected effective rights of v7-must-match (chapter 2.5 acceptance README, «Manifest variants»):
 # role, action, key, allow | deny. Format: `role<TAB>action<TAB>key<TAB>expect`.
 # Requester vb creates va/items rows (worker.creates); common row validation (row-check contract) reads:
 # - targets of the destination's ref/must_match fields — va/shelves/* (forward branch);

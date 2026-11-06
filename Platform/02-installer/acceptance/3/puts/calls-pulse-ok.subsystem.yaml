@@ -1,4 +1,4 @@
-# записи двери пульса (P/06.3 Н1.9)
+# Heartbeat door entries (P/06.3 N1.9)
 name: callp
 unit:
   rows: callers
