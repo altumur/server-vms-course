@@ -74,6 +74,7 @@ class P01Source(unittest.TestCase):
             (gen_box, "KIT_MD"), (gen_core, "KIT_MD"), (gen_flags, "KIT_MD"),
             (gen_launch, "KIT_MD"), (gen_refusals, "KIT_MD"), (gen_tests, "KIT_MD"),
             (gen_tests, "KIT_MD_STAGETESTS")))
+        text += "\n".join(p.read_text() for p in sorted(build_kit.EXAMPLES.glob("*.go")))
         self.assertIsNone(re.search("[А-Яа-яЁё]", text))
         self.assertIn('P/01.2 N3 «check»', text)
 
