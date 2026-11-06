@@ -26,6 +26,10 @@ BOOK_SCHEMAS = (
     "shared-docs", "signer", "signer-pending", "signer-turn", "stranded", "topology", "users", "view", "view-rows",
 )
 BOOK_POINTER = "/$defs/common.book_row/properties//properties"
+P06_FOLDER_BINDINGS = (
+    ("Platform/06-console/data/folders.schema.json", "/$defs/writer/properties/members/maxItems", "FOLDERS_MEMBERS_MAX"),
+    ("Platform/06-console/data/memberof.schema.json", "/$defs/writer/properties/folders/maxItems", "FOLDERS_PER_UNIT_MAX"),
+)
 
 
 def schema_bindings():
@@ -169,6 +173,24 @@ class Judge:
             else:
                 self.stats["p08_form_equalities"] += 1
 
+    def folder_schemas(self):
+        """Two assigned P06 writer carriers, literal integer type (never bool)."""
+        for path, pointer, name in P06_FOLDER_BINDINGS:
+            expected = self.constant("06-console", name, "count")
+            node = self.document(path)
+            if node is None:
+                continue
+            try:
+                for key in pointer[1:].split("/"):
+                    node = node[key]
+            except (KeyError, TypeError):
+                self.error(path, f"missing numeric carrier {pointer}")
+                continue
+            if type(node) is not int or node != expected:
+                self.error(path, f"{pointer}: expected integer 06-console/{name}={expected}, got {node!r}")
+            else:
+                self.stats["p06_folder_equalities"] += 1
+
     def contract(self, path, keys, names, phrases):
         text = self.text(path)
         if text is None:
@@ -288,4 +310,10 @@ def check_p08_constants(root):
     judge.schemas()
     judge.contracts()
     judge.vectors()
+    return judge.errors, dict(judge.stats)
+
+
+def check_p06_folder_constants(root):
+    judge = Judge(root)
+    judge.folder_schemas()
     return judge.errors, dict(judge.stats)
