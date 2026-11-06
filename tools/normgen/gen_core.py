@@ -402,7 +402,7 @@ def render():
             items = pick(sec, how)
             if not items:
                 raise GenError(f"{NORMS.name}: «{sec[0]}» has no req anchors")
-            where = '\u041d3' if sec_name not in ('\u041d3 Procedures', '\u041d2.1 Request parsing') else ""
+            where = "N3" if sec_name not in ('\u041d3 Procedures', '\u041d2.1 Request parsing') else ""
             lines.append(f"//   spec/{NORMS.name} {where + ' ' if where else ''}«{sec[0]}»"
                          + (" (the query items)" if how == "query" else "") + ":")
             for anchor, text in items:
