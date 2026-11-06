@@ -1,6 +1,6 @@
 {
   "base": "7b785e5e2e93cf93b562a405650cce30c5733c2a",
-  "followup_parent": "4fbeb8ee68f3f8f675245745a025d6a0a23980a6",
+  "followup_parent": "40521d1f7c366a3126bbefc8d4535e1e7a3e73d4",
   "changes": [
     {
       "path": "Platform/08-domain/data/alarm-history.schema.json",
@@ -423,6 +423,11 @@
       "after_sha256": "1f3f94a6bc2b72f47465bb396e0647e05b2e311d659820cf23a06ee89442668d"
     },
     {
+      "path": "Platform/common/data/common.schema.json",
+      "before_sha256": "3d8e248426363088a7b1fae71143a84aff46c6edb55818b96e06b4679024f997",
+      "after_sha256": "2dc6559d1bde3ec161243ad113ef447d0e709532c57ac75ad2447c3aa2c681af"
+    },
+    {
       "path": "Platform/common/ru/contracts/accept.md",
       "before_sha256": "da30437d3ab1c780c570c42eb9ed09856431bb18ef2070b593a18d2ad2c3c8f6",
       "after_sha256": "3f01ba6d71bd8c13da6c0b1965485fb335d54893c41f5995ffde3b1eded8ec10"
@@ -502,13 +507,7 @@
   ],
   "schema_operational_trees_exact": true,
   "vectors_acceptance_OpenAPI_stages_bytes_exact": true,
-  "shared_scope_exactly_four_files": [
-    "Platform/common/contracts/accept.md",
-    "Platform/common/ru/contracts/accept.md",
-    "Platform/common/contracts/password-hash.md",
-    "Platform/common/ru/contracts/password-hash.md"
-  ],
-  "canonical_common_schema_byte_exact": true,
+  "canonical_common_schema_byte_exact": false,
   "password_hash_vectors": {
     "rows": 13,
     "byte_exact": true,
@@ -517,5 +516,19 @@
   "wire_cost_expansion": "600000",
   "no_new_alias_runtime_option_accepted_cost": true,
   "status": "SOURCE for subject checker; no full GATE/SUT claim",
-  "known_reader_dependency": "review103811949bb3 for relocated journal paths"
+  "known_reader_dependency": "review103811949bb3 for relocated journal paths",
+  "shared_contract_scope_exactly_four_files": [
+    "Platform/common/contracts/accept.md",
+    "Platform/common/ru/contracts/accept.md",
+    "Platform/common/contracts/password-hash.md",
+    "Platform/common/ru/contracts/password-hash.md"
+  ],
+  "canonical_common_validation_tree_exact": true,
+  "canonical_common_related_metadata": {
+    "path": "Platform/common/data/common.schema.json",
+    "pointer": "/$defs/common.domain_member_entry/description",
+    "map": "2026-11-06-runtime-constants-canonical-description-map.json"
+  },
+  "subject_carriers": 141,
+  "subject_equalities": 5
 }

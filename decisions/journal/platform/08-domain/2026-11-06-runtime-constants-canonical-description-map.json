@@ -1,0 +1,30 @@
+{
+  "parent": "40521d1f7c366a3126bbefc8d4535e1e7a3e73d4",
+  "assignment": "coord103 narrow related source scope, metadata only",
+  "path": "Platform/common/data/common.schema.json",
+  "pointer": "/$defs/common.domain_member_entry/description",
+  "before": "the member entry Entry (P/08.3 N1.1); by — only at admitted, Entry not larger than ENTRY_MAX 1240 bytes of JCS (P/08.10 N1.5) — checks of the lesson at the writer, not of the form",
+  "after": "the member entry Entry (P/08.3 N1.1); by — only at admitted, Entry not larger than ENTRY_MAX bytes of JCS (P/08.10 N1.5) — checks of the lesson at the writer, not of the form",
+  "before_file_sha256": "3d8e248426363088a7b1fae71143a84aff46c6edb55818b96e06b4679024f997",
+  "after_file_sha256": "2dc6559d1bde3ec161243ad113ef447d0e709532c57ac75ad2447c3aa2c681af",
+  "before_description_utf8_sha256": "f523f1d19f965021db0cf93cacfa606ac3a2f1d377678f814ac68ce9cd7795f8",
+  "after_description_utf8_sha256": "27f0edca6771c35c9faa37ac8b35d0ff12aa57467c35fb664d6874272f9457d8",
+  "only_this_json_pointer_changed": true,
+  "all_bytes_outside_description_exact": true,
+  "validation_keywords_tree_unchanged": true,
+  "canonical_book_row_entire_object_unchanged": true,
+  "canonical_read_only_carriers": [
+    {
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "value": 500,
+      "constant": "P08/MISSING_SHOWN"
+    },
+    {
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "value": 500,
+      "constant": "P08/MISSING_SHOWN"
+    }
+  ],
+  "fixtures_Source_VMS_tools_skills_untouched": true,
+  "no_value_protocol_or_schema_keyword_change": true
+}
