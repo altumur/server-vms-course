@@ -1,5 +1,5 @@
 {
-  "status": "closed reference accepted by review103 and applied to the four coord103-assigned shared files; canonical description proposal remains unapplied",
+  "status": "assigned four shared references applied; canonical member-entry description applied narrowly; canonical book-row keywords remain read-only",
   "base": "7b785e5e2e93cf93b562a405650cce30c5733c2a",
   "description": {
     "path": "Platform/common/data/common.schema.json",
@@ -7,7 +7,7 @@
     "before": "the member entry Entry (P/08.3 N1.1); by — only at admitted, Entry not larger than ENTRY_MAX 1240 bytes of JCS (P/08.10 N1.5) — checks of the lesson at the writer, not of the form",
     "after": "the member entry Entry (P/08.3 N1.1); by — only at admitted, Entry not larger than ENTRY_MAX bytes of JCS (P/08.10 N1.5) — checks of the lesson at the writer, not of the form",
     "validation_tree_unchanged": true,
-    "status": "proposal only; canonical common.schema.json untouched"
+    "status": "applied after exact coord103 assignment; this description only, no keyword change"
   },
   "password_hash_closed_reference": {
     "path": "Platform/common/contracts/password-hash.md",

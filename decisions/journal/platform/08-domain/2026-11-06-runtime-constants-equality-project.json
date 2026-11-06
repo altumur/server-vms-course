@@ -1,6 +1,6 @@
 {
   "base": "7b785e5e2e93cf93b562a405650cce30c5733c2a",
-  "status": "139 actual schema carriers and five existing cross-form equalities reviewed by review103; subject checker pending exact author SHA",
+  "status": "review103 CODE scope: 141 schema carriers, five equalities and accepted closed PBKDF2 reference; two canonical book-row keywords are read-only",
   "single_value_source": "runtime-constants.tsv row value",
   "schema_carriers": [
     {
@@ -975,6 +975,22 @@
       "constant": "MISSING_SHOWN",
       "owner": "08-domain",
       "value_observed": 500
+    },
+    {
+      "path": "Platform/common/data/common.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500,
+      "read_only_keyword": true
+    },
+    {
+      "path": "Platform/common/data/common.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500,
+      "read_only_keyword": true
     }
   ],
   "form_equalities": [
@@ -1017,6 +1033,5 @@
     "REVOKED_WORDS": "class selection of REVOKED_WORDS_CAMERA or REVOKED_WORDS_SERVER"
   },
   "non_numeric_schema_carriers": "PBKDF2 hash is sealed in the schema string; cost is a contract/vectors obligation, not a schema numeric constraint",
-  "schema_validation_tree_changes": false,
-  "additional_scope_pending": "Two canonical common.book_row missing/stale maxItems carriers proposed by review103 to coord103; not edited and not included in these 139"
+  "schema_validation_tree_changes": false
 }
