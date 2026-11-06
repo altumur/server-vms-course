@@ -67,6 +67,7 @@ import gen_admin  # noqa: E402 — часть admin
 import gen_box  # noqa: E402 — часть box
 import gen_manifest  # noqa: E402 — часть loader (P/02)
 import gen_cmdtests  # noqa: E402 — stagetests урока без HTTP (P/02)
+import gen_policy_machines  # noqa: E402 — closed P/03 policies inside stagetests
 import gen_rollout  # noqa: E402 — часть rollout-poll (P/02)
 import gen_door_lesson  # noqa: E402 — дверь уроков после P/01 (P/06, часть 3а)
 import gen_machine  # noqa: E402 — части машин (slot-capture P/03, slot-fate и slot-release P/04)
@@ -358,11 +359,12 @@ def build(dst, module, parts=(), judged=None, seed=None):
         box_files = gen_box.kit_files(module) if "box" in parts else []
         loader_files = gen_manifest.kit_files(module) if "loader" in parts else []
         loader_root = gen_manifest.vendor(module) if "loader" in parts else []
+        policy_root = gen_policy_machines.vendor(module) if L.key == "03-worker" and "stagetests" in parts else []
         loader_wired = gen_manifest.wired(module) if "loader" in parts else {}
         machine_files = [(p, f) for p in sorted(set(parts) & set(MACHINES)) for f in gen_machine.kit_files(p, module)]
     except (gen_machine.GenError, gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError, gen_launch.GenError,
             gen_core.GenError, gen_families.GenError, gen_admin.GenError, gen_box.GenError, gen_manifest.GenError, gen_cmdtests.GenError,
-            gen_rollout.GenError, gen_vectors.GenError, gen_versioned_doors.GenError) as exc:
+            gen_rollout.GenError, gen_vectors.GenError, gen_versioned_doors.GenError, gen_policy_machines.GenError) as exc:
         raise KitError(str(exc)) from None
     door_lesson = "door" in parts and L.key != lesson.DEFAULT
     try:
@@ -384,6 +386,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
                       "origin": origin, "component": component, "source": source})
 
     for sub in (("checks", "jsonstrict", "writecheck") if has_wc else ()) + \
+            (("workerpolicy", "../vendor") if policy_root else ()) + \
             (gen_rollout.KIT_DIRS if rollout_files else ()) + sum((gen_tests.PART_DIRS[p] for p in ("vectors", "stagetests") if p in parts), ()) + \
             (("apidoor",) if openapi_sha or door_lesson else ()) + (gen_flags.KIT_DIRS if flag_files else ()) + \
             (gen_refusals.KIT_DIRS if refusal_files else ()) + (("launch",) if launch_files else ()) + \
@@ -468,6 +471,15 @@ def build(dst, module, parts=(), judged=None, seed=None):
             "Platform/common/versions" + ("" if own else " (go mod vendor)"))
         if own:
             files[-1]["editable"] = True
+    for relp, data in policy_root:
+        sub, name = os.path.split(relp)
+        own = relp in ("go.mod", "go.sum")
+        if own and taken(Path(os.path.normpath(internal / ".." / relp)), data):
+            continue
+        put(os.path.join("..", sub), name, data, "vendored" if relp.startswith("vendor/") else "generated",
+            "stagetests", "Platform/common/versions" + (" (go mod vendor)" if relp.startswith("vendor/") else ""))
+        if own:
+            files[-1]["editable"] = True
     for sub, name, data, origin, source, own in launch_files:
         if own and taken(Path(os.path.normpath(internal / sub / name)), data):
             continue                    # main.go и рамка реализации не трогаются
@@ -481,6 +493,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
         if own:
             files[-1]["editable"] = True
     stagetests_md = (gen_tests.KIT_MD_STAGETESTS if http else gen_cmdtests.KIT_MD) if "stagetests" in parts else ""
+    if policy_root:
+        stagetests_md += gen_policy_machines.KIT_MD
     doc = ((KIT_MD if has_wc else KIT_MD_LESSON.replace("{lesson}", L.code).replace("{dir}", L.kit_dir))
            + ((gen_tests.kit_md() if L.key == lesson.DEFAULT else gen_vectors.KIT_MD) if "vectors" in parts else "")
            + stagetests_md + (gen_rollout.KIT_MD if rollout_files else "") + (KIT_DOOR_MD if openapi_sha else "")
@@ -493,6 +507,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
            + ((gen_versioned_doors if L.key == "08-domain" else gen_core).KIT_MD if core_files else "")
            + "".join(gen_machine.kit_md(p) for p in sorted(set(parts) & set(MACHINES)))
            + (KIT_CONTRACTS_MD if "contracts" in parts else "")).replace("{module}", module)
+    if policy_root:
+        doc = doc.replace("Standard library only, Go 1.22.", "Go 1.22; the closed policies use vendored cel-go v0.26.1 from Platform/common/versions.")
     connect = connect_md(kit_parts, module) if L.key == lesson.DEFAULT else ""   # примеры частей — кодом P/01
     doc = (doc + connect + exported_md(internal, dst, module)).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)
