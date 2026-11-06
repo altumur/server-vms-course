@@ -687,6 +687,9 @@ WIRE_COLUMNS = ["package", "table", "surface", "header", "inputs", "files", "exp
 WIRE_COMPARES = ("value", "subset", "raw", "set", "object-sets", "lines-value", "lines-subset")
 ASSERT_COMPARES = ("value", "subset", "raw", "set", "object-sets")          # без test — без lines (wire.md «assert»)
 ASSERT_TESTS = ("prefix", "absent", "no-leak")      # no-leak — решение «Архитектора» 2026-11-05 поверх wire.md
+TURN_COMPARE = "turn"            # решение «Архитектора» 2026-11-06 (P/06 C4): только привязка common/turn, вне WIRE_COMPARES
+TURN_BINDING = ("common/turn", "cases.tsv", "vectors")
+TURN_MARKS = ("@new", "@same")   # свежесть держателя: новая попытка / текущая попытка; прочие ячейки — точно
 NATIVE_WORDS = ("object", "array", "string", "number", "boolean", "null", "value", "bytes")
 JSON_TYPES = ("object", "array", "string", "number", "boolean", "null")
 FRAMES = ("json", "json-lf", "raw")
@@ -1319,7 +1322,10 @@ def _check_binding(r, root, platform, env, cel, owners_of, seen, err, stats):
             grouped_variants.add(mk["variant"])
         marks.append(mk)
     compare = r["compare"]
-    if compare in WIRE_COMPARES:
+    if compare == TURN_COMPARE:
+        compares = {v: TURN_COMPARE for v in variants}
+        _turn_form(r, inputs, expect, markers, err)
+    elif compare in WIRE_COMPARES:
         compares = {v: compare for v in variants}
     else:
         try:
@@ -1354,6 +1360,51 @@ def _check_binding(r, root, platform, env, cel, owners_of, seen, err, stats):
     if err.lines:                                          # строки судятся только по годной форме привязки
         return
     _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whens, owner_set, pkg, root, err, stats)
+
+
+def _turn_form(r, inputs, expect, markers, err):
+    """compare=turn (решение «Архитектора» 2026-11-06): только common/turn cases.tsv vectors; каждый вход выбран явным
+    CEL-селектором when; ожидание — сама колонка JSON без ignore, assert и подмен значения; markers пусты."""
+    if (r["package"], r["table"], r["surface"]) != TURN_BINDING:
+        err.add(f"compare turn is only for the binding {' '.join(TURN_BINDING)}")
+        return
+    if markers != []:
+        err.add("compare turn: markers must be []")
+    for i, d in enumerate(inputs if isinstance(inputs, list) else []):
+        if isinstance(d, dict) and not isinstance(d.get("when"), str):
+            err.add(f"compare turn: inputs[{i}] needs an explicit CEL selector when over owner and kind")
+    for i, e in enumerate(expect if isinstance(expect, list) else []):
+        if not isinstance(e, dict):
+            continue
+        if "ignore" in e or "assert" in e:
+            err.add(f"compare turn: expect[{i}] has no ignore or assert; every cell compares exactly")
+        v = e.get("value")
+        if not (isinstance(v, dict) and set(v) == {"column", "decode"} and v["decode"] == "json"):
+            err.add(f"compare turn: expect[{i}].value is exactly {{column, decode json}}, no holder or value alias")
+
+
+def _turn_marks(value, err, what, line):
+    """Свежесть в ожидании compare=turn: строка на «@» — только значение holder, только @new или @same, @same — после
+    @new того же случая; прочие значения сравниваются точно (литеральный holder подписанта — тоже)."""
+    seen_new = False
+
+    def walk(v, key):
+        nonlocal seen_new
+        if isinstance(v, dict):
+            for k, x in v.items():
+                walk(x, k)
+        elif isinstance(v, list):
+            for x in v:
+                walk(x, None)
+        elif isinstance(v, str) and v.startswith("@"):
+            if key != "holder":
+                err.add(f"{what}: freshness mark {v!r} outside holder (no alias)", line)
+            elif v not in TURN_MARKS:
+                err.add(f"{what}: unknown freshness mark {v!r}, not one of {list(TURN_MARKS)}", line)
+            elif v == "@same" and not seen_new:
+                err.add(f"{what}: @same before any @new of the case", line)
+            seen_new = seen_new or v == "@new"
+    walk(value, None)
 
 
 def _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whens, owner_set, pkg, root, err, stats):
@@ -1513,6 +1564,13 @@ def _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whe
                 err.add('console pool: ignore is exactly ["/fates"] with compare value (wire.md «P/06 transport»)', line)
             if v not in compares:
                 continue
+            if compares[v] == TURN_COMPARE and len(hit) == 1:
+                col = hit[0]["value"]["column"]
+                for no, row in group:
+                    try:
+                        _turn_marks(wire_json(row[col]), err, f"compare turn column {col}", no)
+                    except ValueError as exc:
+                        err.add(f"compare turn column {col}: not strict JSON: {str(exc)[:80]}", no)
             found = []
             for no, row in group:
                 first = next((k for k, mk in enumerate(marks) if mk["variant"] == v and (

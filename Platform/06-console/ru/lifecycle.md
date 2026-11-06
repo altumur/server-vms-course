@@ -52,7 +52,7 @@
 | `CLUSTER` | имя кластера | `local` | [P/02.4] N1.2 |
 | `TIMEZONE` | часовой пояс кластера: значение `timezone` в `/session`; из `w2c.env` (пишет установщик); пустое или не по форме — код 2 | `UTC` | [договор файла окружения](../../common/ru/contracts/env-file.md); [P/06.3] N2 |
 | `BUILD` | слово сборки в `/schema` | `dev` | [P/02.4] N1.2, [P/06.6] N2.3 |
-| `W2C_TLS_DIR` | корень комплектов; свой — `<W2C_TLS_DIR>/console` | `/etc/w2c/tls` | [P/02.4] N1.2, N1.6 |
+| `W2C_TLS_DIR` | корень комплектов; свой — `<W2C_TLS_DIR>/console`; явно переданное значение используется как есть | Linux `/etc/w2c/tls`; macOS `<W2C_BOX>/tls`, определяет общий договор окружения | [P/02.4] N1.2, N1.6 |
 | `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*`, `CLUSTERS` | домен (поздний слой урока 6 — [глава 6.7](spec/06.7-console.norms.md): `CLUSTERS` — N1.4, `SIGNER_URL` — N1.8, `DOMAIN_CA`/`RELAY_CA` — договор peer; `LOGIN_URL` — договор сторожевой `login_url`) | — | [P/02.4] N1.2 |
 | `W2C_ENV` | файл общих настроек | `/etc/w2c/w2c.env` | [P/02.4] N1.2 |
 

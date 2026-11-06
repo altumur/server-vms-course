@@ -1,0 +1,3 @@
+# INACTIVE: compare=turn needs an approved wire form; current closed compare list rejects it.
+package	table	surface	header	inputs	files	expect	compare	markers	native	norm
+common/turn	cases.tsv	vectors	case,input,expect,note	[{"variant":"","when":"(owner == \"04-controller\" && json(row[\"input\"])[\"kind\"] == \"placement\") || (owner in [\"08-domain\",\"09-agent\"] && json(row[\"input\"])[\"kind\"] == \"signer\") || (owner == \"06-console\" && json(row[\"input\"])[\"kind\"] == \"operations\")","cells":{"input":{"column":"input"}}}]	{}	[{"variant":"","code":0,"value":{"column":"expect","decode":"json"}}]	turn	[]	{"type":"array","frame":"json"}	common/vectors/turn/README.md#run

@@ -52,7 +52,7 @@ the subsystem file, what is read earlier wins; the files are read by parsing, no
 | `CLUSTER` | the cluster name | `local` | [P/02.4] N1.2 |
 | `TIMEZONE` | the time zone of the cluster: the value `timezone` in `/session`; from `w2c.env` (written by the installer); empty or out of form — code 2 | `UTC` | [the environment file contract](../common/contracts/env-file.md); [P/06.3] N2 |
 | `BUILD` | the build word in `/schema` | `dev` | [P/02.4] N1.2, [P/06.6] N2.3 |
-| `W2C_TLS_DIR` | the root of the kits; its own kit — `<W2C_TLS_DIR>/console` | `/etc/w2c/tls` | [P/02.4] N1.2, N1.6 |
+| `W2C_TLS_DIR` | the root of the kits; its own kit — `<W2C_TLS_DIR>/console`; an explicit value is used as given | Linux `/etc/w2c/tls`; macOS `<W2C_BOX>/tls`, resolved by the common environment contract | [P/02.4] N1.2, N1.6 |
 | `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*`, `CLUSTERS` | the domain (the late layer of lesson 6 — [chapter 6.7](spec/06.7-console.norms.md): `CLUSTERS` — N1.4, `SIGNER_URL` — N1.8, `DOMAIN_CA`/`RELAY_CA` — the peer contract; `LOGIN_URL` — the guard contract `login_url`) | — | [P/02.4] N1.2 |
 | `W2C_ENV` | the file of common settings | `/etc/w2c/w2c.env` | [P/02.4] N1.2 |
 

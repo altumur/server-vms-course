@@ -105,3 +105,9 @@ Then — the rows of the move of this chapter and of the history of the sources.
 | 15/2 | 35 s | time before an action: the domain has gone quiet — after the admission of members the next backup copy is not earlier than `BACKUP_EVERY` 30 s, it is brought by the pass of the agent 5 s; `$r` is the last copy (the silence is not to be observed: «копий больше не будет» is an absence) |
 
 The scenarios of the chapter have no other sleeps.
+
+## Accepted ADR-0127 review: own verify 503
+
+Use a real valid backend ticket and domain credential verification returning the checked user. With need present and an unreadable supervision input, the own response is503 VerifyUnavailable with detail, error=unavailable and supervision={unreadable:true}; unknown need is not200. Ordinary need unavailability without unreadable supervision may omit supervision. Compare the whole local schema; supervision=false, unreadable=false, an empty supervision object, a foreign role field and an extra response field are invalid. A known complete need result keeps the existing200 VerifyAnswer. Generic gate busy/trust and a non-200 answer actually forwarded from the domain are checked against their original forms under their own conditions, not generated as this local response.
+
+Schema probes of these positive and negative bodies are separate from the real HTTP/credential/roles checks. They do not run a domain, prove may, or create a new verify native command. ConsoleRefusal outside this operation remains byte-identical.
