@@ -1,0 +1,28 @@
+{
+  "status": "proposal only; shared files not edited yet",
+  "base": "7b785e5e2e93cf93b562a405650cce30c5733c2a",
+  "description": {
+    "path": "Platform/common/data/common.schema.json",
+    "pointer": "/$defs/common.domain_member_entry/description",
+    "before": "the member entry Entry (P/08.3 N1.1); by — only at admitted, Entry not larger than ENTRY_MAX 1240 bytes of JCS (P/08.10 N1.5) — checks of the lesson at the writer, not of the form",
+    "after": "the member entry Entry (P/08.3 N1.1); by — only at admitted, Entry not larger than ENTRY_MAX bytes of JCS (P/08.10 N1.5) — checks of the lesson at the writer, not of the form",
+    "validation_tree_unchanged": true
+  },
+  "password_hash_closed_reference": {
+    "path": "Platform/common/contracts/password-hash.md",
+    "block": "first yaml fence, form/hash entries",
+    "before_form": "pbkdf2-sha256$600000$<salt: 32 lowercase hex>$<key: 64 lowercase hex>",
+    "proposed_form": "pbkdf2-sha256$<PBKDF2_ITERATIONS>$<salt: 32 lowercase hex>$<key: 64 lowercase hex>",
+    "binding": "Only PBKDF2_ITERATIONS from Platform/08-domain/forms/runtime-constants.tsv. Expand to its unpadded ASCII decimal digits, never literal angle brackets or arbitrary iterations. The current encoding stays byte-exact pbkdf2-sha256$600000$... . No new accepted cost, wire alias, runtime option or decoder.",
+    "proposed_hash": "replace only the iteration operand 600000 by PBKDF2_ITERATIONS in the human algorithm sentence",
+    "producer_readonly_evidence": "Current tools/normgen Python grep has only vector bindings for password-hash, no form/hash extractor. Subject checker must judge this exact closed reference before source READY."
+  },
+  "accept_closed_references": {
+    "paths": [
+      "Platform/common/contracts/accept.md",
+      "Platform/common/ru/contracts/accept.md"
+    ],
+    "scope": "BATCH_LIMIT and KNOCKS source references in the relay batch limits block; use the existing positive integer rows from P08, no extra syntax/column/class; thresholds and wire payloads unchanged"
+  },
+  "schema_equality_project": "/home/pilot/spec103/p08-constants-equality-project.json"
+}

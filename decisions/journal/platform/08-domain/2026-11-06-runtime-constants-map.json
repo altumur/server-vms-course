@@ -1,0 +1,488 @@
+{
+  "base": "7b785e5e2e93cf93b562a405650cce30c5733c2a",
+  "changes": [
+    {
+      "path": "Platform/08-domain/data/alarm-history.schema.json",
+      "before_sha256": "9c38dbce59e2407cb9a29761eb64e8feb971962f3098879a2d0889b66f0826b0",
+      "after_sha256": "8fa0599619fb5f9b5aa165d5e1b3532066dc7462d8532c989c28309f6ece2f69"
+    },
+    {
+      "path": "Platform/08-domain/data/anywhere.schema.json",
+      "before_sha256": "45b1e24437a756c338aad7ef46f2cfaf4813a8bcce4726eaf50091c2c09f6d0c",
+      "after_sha256": "f4719bd3e7bb9ef445afc8ff6cff5fddff43c8cc2cfdcb85f49a9858f4704d39"
+    },
+    {
+      "path": "Platform/08-domain/data/backups.schema.json",
+      "before_sha256": "6b04dcfd5f06acccbf80d7122ef20c68ae3f37fe6a5207a4a56e567e3f6c7bd4",
+      "after_sha256": "b112fa2b72b42d9b520f435254cc2441df8db3d7742873af994d7937e85dcc62"
+    },
+    {
+      "path": "Platform/08-domain/data/batches.schema.json",
+      "before_sha256": "6f8ab3c6bc2a3b91416db62c3b7f1a0da2eab4a7e3020a22421ae9843e30471f",
+      "after_sha256": "6571f73a51fdd961a674d5cf2f118915deb674231041ce4155ac40e54d3d7a3a"
+    },
+    {
+      "path": "Platform/08-domain/data/book-all.schema.json",
+      "before_sha256": "517253dd477c6557d109b2d59210b00b56c6ec45455560cea23ef68e86c55007",
+      "after_sha256": "c44fcaeb2e4ca87556b018587bf1705a88d3238e60a18990486e7a8e3214a302"
+    },
+    {
+      "path": "Platform/08-domain/data/book-keys.schema.json",
+      "before_sha256": "86bd9995a1489d9ce1a79a4d7c04a5c82128402c06642f14f168da9cfc37decf",
+      "after_sha256": "b5e82513db8e2f4eb127516de7946a981d15b45fe87efede7c0f92e335be6453"
+    },
+    {
+      "path": "Platform/08-domain/data/book-part.schema.json",
+      "before_sha256": "7b9ed20539a6858fab1cfde7d4b2029334e1c09ae2970e8a490e3334381b570c",
+      "after_sha256": "64068e2779de7cc46ee7e26436d7f1a3d9c171baad7c8c1be011bfce4d4a4f1a"
+    },
+    {
+      "path": "Platform/08-domain/data/book-seal.schema.json",
+      "before_sha256": "df45633b23ffdbc7c7f5b2100763ffe577bc104534058e5b533d567d58e86c6b",
+      "after_sha256": "a786ec36e733d4f041c7f9d857ba40cdac264b033de1ddf4973afdaa123d4ba5"
+    },
+    {
+      "path": "Platform/08-domain/data/book.schema.json",
+      "before_sha256": "3c3b2484791a742394495ec77c4e8eac4b43504fef474dd47c89880c6b0edb32",
+      "after_sha256": "18e65836f66fa419fd8bc817ec26281c0aed64f179622d017dea30a82bb3fb0a"
+    },
+    {
+      "path": "Platform/08-domain/data/break-glass.schema.json",
+      "before_sha256": "d341e9a71b27868d89193305949308d641f7ceee75ccdee1139ec3d4ea65104f",
+      "after_sha256": "1025712ca40f183ed55db7c69ed61d5035b1ead90e5578c02358d36c8cfd1875"
+    },
+    {
+      "path": "Platform/08-domain/data/deleting.schema.json",
+      "before_sha256": "519d50024f65f1dc93482c0fb9bf5443d7ea31983d531503a9ed9c654408d868",
+      "after_sha256": "f831fe3c886ed9da72128cf4891cc5dd165ed8dce59d9b1471126faa54401a00"
+    },
+    {
+      "path": "Platform/08-domain/data/disabled.schema.json",
+      "before_sha256": "c9e8e32ae7666b9318910de7f1fe447f2e5f42723158583c07b51fd3b08960e0",
+      "after_sha256": "6c6144bb0612c77fe4ba263ab94b945b40919011e42b25bdb5782f47ca18d9db"
+    },
+    {
+      "path": "Platform/08-domain/data/domain-folders.schema.json",
+      "before_sha256": "54c9ba2aa0513c195049f77833af5248cf78f52107f6ef59564074dafb020dd3",
+      "after_sha256": "485da6cbb4a1d7573b7d56cdeb71cfe0f8c53dbede246b154d15d9be7a15a392"
+    },
+    {
+      "path": "Platform/08-domain/data/domain-memberof.schema.json",
+      "before_sha256": "ac3ecdc191e8110e743bf9b0ac01ab6772545c2d5c7ee9548f4a7caf53d09c23",
+      "after_sha256": "429b98cdcb4bb48d44baa6f1bfc42203072074aaabb5a2fb346fa0d9f5d12f80"
+    },
+    {
+      "path": "Platform/08-domain/data/folder-counts.schema.json",
+      "before_sha256": "8fd6829baf69fcb31ea7158314c6bb1bbe459c9b5a21e28bdd49f768f503e66f",
+      "after_sha256": "8b32e2c402c4c91d56bc45ac5561f9957a34fa2d11b880704444ce467b6f7a35"
+    },
+    {
+      "path": "Platform/08-domain/data/folder-log.schema.json",
+      "before_sha256": "4be61865737499c828892feb59e28fbaab7ba2fd3bd8d628067ba683dc98c246",
+      "after_sha256": "0be3637f4a6aef686afb3ef4f1daf8c3a5c9ee951a494b4e61ae71495cbfc5ac"
+    },
+    {
+      "path": "Platform/08-domain/data/folder-rev.schema.json",
+      "before_sha256": "3f6d05e3b207d15b8faf82069a05dc5cc52f780e88bf5a75e735a3b10ec664b2",
+      "after_sha256": "eaa071cc7040c3331aab7b5f47c6dfc828c46d4b87e0b57fcc4c7383070c25f5"
+    },
+    {
+      "path": "Platform/08-domain/data/folder-units-head.schema.json",
+      "before_sha256": "12ec54fda26d41a58ba0c67081ef935b8b273bc9a2374de4f0e07bf1c6748cfd",
+      "after_sha256": "ec3ae5c3ed262795a2d9c622d6586ed830200f712d7431c4de0c9f2763288333"
+    },
+    {
+      "path": "Platform/08-domain/data/folder-units.schema.json",
+      "before_sha256": "d6f8508dd16e7627e4c8718da5ffb09fce2ee5fa15f575c53de244770e9e1f42",
+      "after_sha256": "6987dc3d39060235fafd7f75591d15a06a3f5ef02cd0868e881c78eb8017d105"
+    },
+    {
+      "path": "Platform/08-domain/data/from-nothing.schema.json",
+      "before_sha256": "19ec0fac7e91ea10f9b4faafeeae36c5c75d0ee3682c1d90aba6d7616ddc0a46",
+      "after_sha256": "21841b47fd9670f0f67656ccf593b64f0f8323f6793c87dadaa2cd6fe43404d5"
+    },
+    {
+      "path": "Platform/08-domain/data/grants.schema.json",
+      "before_sha256": "d7ba604950c2b856916a4f919723af55fc83e6f54ab6f29007552ef1df9638ae",
+      "after_sha256": "d7982e6407273f666cef43eda7b294240d2d2d70b6e6ff3a3281789a82c257a2"
+    },
+    {
+      "path": "Platform/08-domain/data/groups.schema.json",
+      "before_sha256": "e673edf19d8cf6cc7f4cb45e61ec8541617719c403f7174783c8aad26aa58f86",
+      "after_sha256": "d353e591170259073600d07450e120094b6b39292783dfb2da793b425bf750bb"
+    },
+    {
+      "path": "Platform/08-domain/data/holder.schema.json",
+      "before_sha256": "7887a10d244b1e4795f1f4b966923e31f2e61a548c7bad377690c443ae7304c8",
+      "after_sha256": "17a6e1eefc7acece95a53cc74d6f3333fc18dd182b8fd6fe3960859b55fc0a4e"
+    },
+    {
+      "path": "Platform/08-domain/data/idem.schema.json",
+      "before_sha256": "e6836c7ac1e329a78d74daf2122f906df82c83f607a90818a7b741c3f76599f2",
+      "after_sha256": "a4db2180c2275cee8b7362430ea1943146a3540898d83c164f2f63c190b390c4"
+    },
+    {
+      "path": "Platform/08-domain/data/issued.schema.json",
+      "before_sha256": "8d458cd2b76473d1693dd2e5f20524be9e65a2fd85944a9bc63fac362fcdaee1",
+      "after_sha256": "34828d0e64f72abb31202af2ff37a53b840ac343649939cbb79ec3b0c9f5b03c"
+    },
+    {
+      "path": "Platform/08-domain/data/keepers.schema.json",
+      "before_sha256": "62f407875749f14cec0cf63afd693162eb5627b634b667f70767eddab8985ba9",
+      "after_sha256": "d3c6560c8cae98204551183e7f940829518ef183b107552a0aada2df218cf0dd"
+    },
+    {
+      "path": "Platform/08-domain/data/keys.schema.json",
+      "before_sha256": "0c1f14cda39a1eba71432b020512e1521d682a52deaf04a265667553df145a87",
+      "after_sha256": "a9b1c1bb917082d3c6ad3af883e2275f3a331a05f609ea30fc14bfc021c016cd"
+    },
+    {
+      "path": "Platform/08-domain/data/knocks.schema.json",
+      "before_sha256": "e80fbedca0e29b9a129d17df138f3d50dcbb218c6e99e074c1c87fac8f4e3590",
+      "after_sha256": "4030a51d2ba0861f40a5d7e6a2039018bcb2623c8c5139793091e6cfd8551672"
+    },
+    {
+      "path": "Platform/08-domain/data/member-ca-certs.schema.json",
+      "before_sha256": "1b6637f2b1c12536232e4b8c0ae41edca27941fc985dc76597cde859e64c4c56",
+      "after_sha256": "fa964076341d468efb3addb0078c7bd3e1ae7cc580d97cec99cdd022dfaef5e6"
+    },
+    {
+      "path": "Platform/08-domain/data/member-count.schema.json",
+      "before_sha256": "c5ae5e49363b6f553ca90c6be01fb4aa218e390547b2b4932365fa27958fdede",
+      "after_sha256": "b7de648d5e384986da1161a206cb80ef7f2ecba9cf9e299118fee82c62a9aef8"
+    },
+    {
+      "path": "Platform/08-domain/data/member-report-delta.schema.json",
+      "before_sha256": "1c05e16f6c6e38e412c4b2d6cb4ca36559ea404fbf7bda7ad26c7650346045bd",
+      "after_sha256": "4cf16a798342396844a7b4d8e21b14e53b955cf05a3bd7e374828d3d95af3bbd"
+    },
+    {
+      "path": "Platform/08-domain/data/member-report.schema.json",
+      "before_sha256": "7e5c5311123990fa669baaac0629d7bb723546807b73b8b34a1d91b88b31f420",
+      "after_sha256": "2b5323890135c4e0d2240f8562b0aa4ea696a1041c5caece1178cfde0fb2a219"
+    },
+    {
+      "path": "Platform/08-domain/data/member-reported.schema.json",
+      "before_sha256": "893fc24b1657e229236b538a8e1bb2bfa4d20933b0fa96a416ce4fef2313c3d9",
+      "after_sha256": "a94055c647440efe4a02534614ea1dd4a87a1d2235666439cb10e77e5b36cb27"
+    },
+    {
+      "path": "Platform/08-domain/data/member-tables.schema.json",
+      "before_sha256": "1ec0556ae1d0808ab9dd97fd0be9fd94abaf4e87a6ca771ec5b8a9dceebe5fa9",
+      "after_sha256": "5f53f615d3d8618b4fb13547ec3c1ee0adaca275993bcbd72ed5b34048eef38f"
+    },
+    {
+      "path": "Platform/08-domain/data/members.schema.json",
+      "before_sha256": "b5eb142a7cd8bfb9ed7f8de6d90a9a8c2a12c09f2ed7200c8332d4a89fa4ea1d",
+      "after_sha256": "57741f7c90ab1685ed51977298ae4a498ae2107d3ed1212f5b79fb1590f17141"
+    },
+    {
+      "path": "Platform/08-domain/data/move-ask.schema.json",
+      "before_sha256": "2b60ab273afe15fe1baa029fe6488e74f72acb5ccef0237225eaad0887c33b6e",
+      "after_sha256": "b2142db4f99fe345cd4db84eb29979e397ca4663279ca5753dd8aba67e185c1c"
+    },
+    {
+      "path": "Platform/08-domain/data/names-index.schema.json",
+      "before_sha256": "049ae2a76a517ad0e8311812eca3de18df8cbb1a396acfe45fb9e95f65cd8058",
+      "after_sha256": "0973c9dd36d64fbb2c7448502c9af57e3c958e95cd3e27b1634436bd8cc91f30"
+    },
+    {
+      "path": "Platform/08-domain/data/outcomes.schema.json",
+      "before_sha256": "e3fb125d470fd73b9e5bc5153bc86a896f760a684933c686d3cd4498a2f570f5",
+      "after_sha256": "a0b711bd4fc5f04d01229b88721946d5a555d29d71444876d766fca9d99c765a"
+    },
+    {
+      "path": "Platform/08-domain/data/partial.schema.json",
+      "before_sha256": "32496703e6c4e03a2b79b3c89fc3ccad36542721e0cf124144d4f6c68b3c6658",
+      "after_sha256": "d55248079530d9c198d52667a755f5260708d746b1fc046803b96fbc7cc35d0e"
+    },
+    {
+      "path": "Platform/08-domain/data/pending.schema.json",
+      "before_sha256": "8fd03ef5c551c84c3c2d1fe6f3d7ded650930e298f7be521fae071ec6ef8a42f",
+      "after_sha256": "6b6007863d94fc4c140b5d2b101e15651349802d069dad35741a52c7c30e3dfb"
+    },
+    {
+      "path": "Platform/08-domain/data/placement-record.schema.json",
+      "before_sha256": "c30bbe5ff1f6da70929d4342f42ab429071c4662ca83a626cc4cd00cdaad0e49",
+      "after_sha256": "3709ea07ad36b8fe3312f94d17c136b50305126e574d7b6afc3450a4b4710e33"
+    },
+    {
+      "path": "Platform/08-domain/data/placement.schema.json",
+      "before_sha256": "e5a073b0c743fb99051af077f9e47807be1b0f909f01ce6c11c288720508aee5",
+      "after_sha256": "901220dd720b88c3621bc2aeaf7be7e5645045e845aa958001136e1c64711ff8"
+    },
+    {
+      "path": "Platform/08-domain/data/ref-claims.schema.json",
+      "before_sha256": "6463d8c76bb29d49bdab23cb3856c89c2337ad2ab2e9be3c3d51ea028dc740c6",
+      "after_sha256": "03bd23555edb46fd7c671bb517052a1776938f7ba665a3d9ff534c41c5c4a247"
+    },
+    {
+      "path": "Platform/08-domain/data/relay-members.schema.json",
+      "before_sha256": "69b69ad2f4970a299e1d0536fd8af126631e783322075bbfc506fa954c276a2b",
+      "after_sha256": "7bb618718846a377634aea28a9505f8fc92b0862539e2b50fbad070be930469c"
+    },
+    {
+      "path": "Platform/08-domain/data/revoked.schema.json",
+      "before_sha256": "d29ad6382531d56a3381899ffb5d46383856d2e7268b81b0c81bf24aff1a5cc2",
+      "after_sha256": "21b5386e64f13b0044f7454fb3dd1706f842bca75f4ddc9cd50ecc7d6549fa3f"
+    },
+    {
+      "path": "Platform/08-domain/data/roles.schema.json",
+      "before_sha256": "70a0eb50fdb5f87c4fd04824edfefafb587cb1d2026ece4f0ae96ee8790c91a4",
+      "after_sha256": "c5066c5a8d5ea09cdf44c54278e512b364886a98a0264af80070ce59e6cf6b34"
+    },
+    {
+      "path": "Platform/08-domain/data/root.schema.json",
+      "before_sha256": "b9d34e5138eebf086de15f075d5eff29c6316e92e31322874dfd1440226df3e9",
+      "after_sha256": "7634a2fd4d13041410da42024d2de68cac3afc2382f6c5d9c2d7e3ce1fc602f8"
+    },
+    {
+      "path": "Platform/08-domain/data/shadow.schema.json",
+      "before_sha256": "366f1a501127c2199ed1ea8a2bd2680c4809e6e733a05537b7cbd37d49cd98f8",
+      "after_sha256": "51e5f3a08c8e4c94b9f1e06478294ff18a4df23f15790c406d4e717e52722299"
+    },
+    {
+      "path": "Platform/08-domain/data/shared-docs.schema.json",
+      "before_sha256": "fbf9b465dd96e63a63db9b30c0acaf5fa03c36ff3cd6945b754de2ed1d52c489",
+      "after_sha256": "e46ca0dc985f62fa5e4c0a3c103fc2dd1b84be67db0de62474601508540197d1"
+    },
+    {
+      "path": "Platform/08-domain/data/shared.schema.json",
+      "before_sha256": "36579eb9fd7e2a0f03eb924ea83c91283e3e59fb9f60d0b25a1b33bbc1d2847e",
+      "after_sha256": "e65f945d87a70b4e033df29e88fe1a15db90a19fd2956c530abc3ed1c78662e2"
+    },
+    {
+      "path": "Platform/08-domain/data/signer-pending.schema.json",
+      "before_sha256": "538bf7f6626377434aa59b70c5b65474182bf8fc68fea969724de2c543c1b366",
+      "after_sha256": "67278d301732bfb12be49aa744da48fbd61e54c0cabb60ebc298421ea78b16be"
+    },
+    {
+      "path": "Platform/08-domain/data/signer-turn.schema.json",
+      "before_sha256": "7690546ee5685fcc5953a2d4bebf2e450b9e94bfe80d79de5850440dd06a51e3",
+      "after_sha256": "2b27d74809ed619c3da82e343fdde62f36e0d67c2223e69b284aade1b1fc0b51"
+    },
+    {
+      "path": "Platform/08-domain/data/signer.schema.json",
+      "before_sha256": "cd593446cb8ed54f2238a169dfe40f3acaf2c3e9a902402e835caa13d117ea39",
+      "after_sha256": "d540d64788dfa5445232cf03a4e62701156eb0e55e3843fea28972f92a83de3e"
+    },
+    {
+      "path": "Platform/08-domain/data/stranded.schema.json",
+      "before_sha256": "5121898fbfe996822803726ce000ff7a566a743362806e851a07a47811950d98",
+      "after_sha256": "660e877cded059638b2c8c9c9f9459f3263c2fe5f3540d0654e0ede265db6cf6"
+    },
+    {
+      "path": "Platform/08-domain/data/topology.schema.json",
+      "before_sha256": "9fc57cc76e2dfb7e543dba889d9bc3aa0320ed21d060b17fbcfafcc24a2c2e23",
+      "after_sha256": "9b22dd27bfc06461b2210d66774f32388c6990126ddf44d0469eb41c6fe3b36e"
+    },
+    {
+      "path": "Platform/08-domain/data/users.schema.json",
+      "before_sha256": "c05e002f015c5d9c844ba817975f80496ca832388086ce41e23db9144cecd0b2",
+      "after_sha256": "0a96ed1148b142acf138257ef296f67b4bef965ec7d813cfc9e32593a91378f1"
+    },
+    {
+      "path": "Platform/08-domain/data/view-rows.schema.json",
+      "before_sha256": "cc0758b1016e187a662374dea5e0fe3ed14c03aaf46cf5b6ffee49c61192e9dd",
+      "after_sha256": "aef2b0f1e62b8845ba897a0e6a2a18aa990163cfad9d4cde30eb16fbd9e4fdd2"
+    },
+    {
+      "path": "Platform/08-domain/data/view.schema.json",
+      "before_sha256": "45708136ede727699d311fc6d2d9ceba1b663e41b1094ec8eea742fe857901c1",
+      "after_sha256": "924a7b19ae406dd7ecc26d78fec9ecabd02708df240d448cdf13a96120a25070"
+    },
+    {
+      "path": "Platform/08-domain/forms/README.md",
+      "before_sha256": "b1cf0546be16b0512feed7f4eab43434c1e888b1961edc7bd2664edf5693dee9",
+      "after_sha256": "4f74ca899cde006e21eac4c758c5bc29704d99596246290d30c933c5ff09b7b1"
+    },
+    {
+      "path": "Platform/08-domain/forms/refusals.tsv",
+      "before_sha256": "354c6e421a196d26e6524996ec5342fed7d8b45ff4421e827ad795dc202380b4",
+      "after_sha256": "5c6f5c90437bd9324eed3f079c9b73f97c9e1d55b466689ccd5e5478f07553ce"
+    },
+    {
+      "path": "Platform/08-domain/forms/runtime-constants.tsv",
+      "before_sha256": "d2a853f7214d1918c7deb1e92cd389199a1a1c41db7c39ca33258197863be4f9",
+      "after_sha256": "cc1d063be8e9c0c9f0c9e02ce0660f2ec6b221902ad89e6430281869c90d7477"
+    },
+    {
+      "path": "Platform/08-domain/ru/forms/README.md",
+      "before_sha256": "ba765ebcac8f3fc66b76faf784b92b7a6e298f53037bd1c279663d594e564df6",
+      "after_sha256": "caeb7f1329f653a333feb9515f7864d4dee8ebdf5eb5af13e8c05680cae9c6c8"
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.1-domain.norms.md",
+      "before_sha256": "a32ee33d5b611999993427865a258f17c049ddca5be6c7bfc4038aae305a7f35",
+      "after_sha256": "fee3f64a00c833bb416887fc8eef513e8aa7044fb032aa78184bc8eaf84180ac"
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.10-domain.norms.md",
+      "before_sha256": "b72ce94df0d16d426647524a70469f462cee4b77cb3ef8faee94756c1457fa2e",
+      "after_sha256": "a4e873117ab5982e28df00988174347ff70d04aed4cd5cd535fe97fc448be1b3"
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.2-domain.norms.md",
+      "before_sha256": "3b5e047a214c6ff6026558967f35ed3a072c460999a270d65b888c7b2e47d3f7",
+      "after_sha256": "d5f8d3d9c7a5884d280bddad5250d757b07c48735d83bab8f09e7a919fe120b0"
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.3-domain.norms.md",
+      "before_sha256": "f26d3dbbaea1d41617a5e8dcbd3ccc206da6afb00e0f1f0b54528c4596354bee",
+      "after_sha256": "a387a153f92abda562adb08c252b7a6e15a223854d7c786bf0a9ce787541c0ef"
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.4-domain.norms.md",
+      "before_sha256": "be5065c8bb08cdc17264ea3be3916c7d88ad60ff53dd561df08b0bd73a0196c8",
+      "after_sha256": "bb8982ca7eefa675f2f308c2663c0d50e4a9b6f9d3fb261b821f5aa6550707ff"
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.5-domain.norms.md",
+      "before_sha256": "778375b75f0e1baa5423689a92764f75dd052fb9010712fbeccbde07b89dc62c",
+      "after_sha256": "a2096afe9c1c5a54220c111088c02d8d8cbc814deab11fee67126b9266c4f227"
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.6-domain.norms.md",
+      "before_sha256": "f6db6796d1a91e5a1a4d8491162496bc2cd4b06dc8a237503804302f0d85164b",
+      "after_sha256": "baf4d2ede07d1acb3aebc36dcfac95902eda79f076585043da69d0dc970939b4"
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.7-domain.norms.md",
+      "before_sha256": "e73462a205d2c674c57ddcc28ce70de4875be5b96f39d969f8647c94bdd85e0a",
+      "after_sha256": "514ec6110115e8ccfdce05d5eb0c6303dd3bc6fb3aeca7a16c7c646678220d1f"
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.8-domain.norms.md",
+      "before_sha256": "b9a60120343399804061fe79b243efca5a606a0e47c7475ac736f41f208c9c83",
+      "after_sha256": "6ff9ac22a913226d8256e96a08790834d6ad09916cfbc05100ad1ad0c2692fe0"
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.9-domain.norms.md",
+      "before_sha256": "0e845255cd8f72e4278558eace85509847626981e7747d34af5701da8bc5de07",
+      "after_sha256": "57b31ab3f725838bf2aec671d12abe0e35fba4397a02c352aa15f41c82342c87"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.1-domain.norms.md",
+      "before_sha256": "0d1aa15d0e6418b880f5ee4e299ba11f9063cab6818a3435a8a85ab55549be0a",
+      "after_sha256": "908c7b89d9345482c02283e7b9fe2159ad9bea49e519fd024ee8a0d5252a2b71"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.10-domain.norms.md",
+      "before_sha256": "36f6940eee06d9a0001d05237d29df4df349f5f4cfbaf7e2023fec383957cff5",
+      "after_sha256": "ae72e6a19c1c15cac132ca4d7b9925736a5c7fdf673227324336ab4417e64209"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.2-domain.norms.md",
+      "before_sha256": "43f5e0d43f7005630a1e7da7a2027405cf93e706777729ef1ce741d0a98b0f73",
+      "after_sha256": "3f66d64541ab8e03fe2dcad1e9b16ecbf238fc6ad9b5c65c4265d9d2b2f0deba"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.3-domain.norms.md",
+      "before_sha256": "42e2346b978b79661e6d0ac73bc2654b023847452c5bf96d86ca6e57355cfe4b",
+      "after_sha256": "62e5df732718572e466d55cb3e94d3f5b7fa9b965e9e54a808df40f6dbca6610"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.4-domain.norms.md",
+      "before_sha256": "9fe8f9f2223295903c9c1e8a5e5efead5343a596ac518dabb92aecf5efa8d578",
+      "after_sha256": "026dfd761ecf58195b7bd456011cf1143b15e5bebd476dc5c2fdc3e4614a9a26"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.5-domain.norms.md",
+      "before_sha256": "8c111e669ec04d59426af391c43095c66ae8d95c43d229a8ade0fb7789cc47c5",
+      "after_sha256": "3c5ccb955c14cabb8d7dabbb44a40424e5e7f56c8a37b19e68bec68162ed0c85"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.6-domain.norms.md",
+      "before_sha256": "90b564d7e13e9248cbb1c8741cc19fc7515bb89f71ae1fbd14aa4659f1adae59",
+      "after_sha256": "dc0e422221e4254d3f7e84e7cebd37984c1e2240f10d157ae9eca37ceb6af1aa"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.7-domain.norms.md",
+      "before_sha256": "2927e9789e1d01a611fe5011c13ebcaacb884b2e815153d2f0fcb975366304b7",
+      "after_sha256": "dd84c57a97b41057e6b4dd8e13536b18b81bd4cd35d65e353d62f6b4f8bacc4f"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.8-domain.norms.md",
+      "before_sha256": "f8088ca77fda8970dd8c70bf6da3b90c39037c2b05b1330816b535e4b0490142",
+      "after_sha256": "bd05f890bc802085b4dd389730f00c35cb2b1a1adc8df2304ac863e7f5dd169e"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.9-domain.norms.md",
+      "before_sha256": "993f7ffe187ef207c49503f7a307edb6be30747c225fdeec140bc41cbbabd52e",
+      "after_sha256": "e032583b9e768f795bb86bc7a97f82f5a05d374f8eef03e5dc367b85f110b94e"
+    },
+    {
+      "path": "decisions/adr-norms.tsv",
+      "before_sha256": "241c76e72591aac66342c9a2d9b5e1e21a64cd87b6c52831a9ce8ca2dc6af81c",
+      "after_sha256": "85e188e215dabec61217fcd5a2a45716c546522b2274a09beb5d372282b462d8"
+    }
+  ],
+  "existing_values_unchanged": 26,
+  "new_rows": 25,
+  "schema_descriptions_only": [
+    "Platform/08-domain/data/alarm-history.schema.json",
+    "Platform/08-domain/data/anywhere.schema.json",
+    "Platform/08-domain/data/backups.schema.json",
+    "Platform/08-domain/data/batches.schema.json",
+    "Platform/08-domain/data/book-all.schema.json",
+    "Platform/08-domain/data/book-keys.schema.json",
+    "Platform/08-domain/data/book-part.schema.json",
+    "Platform/08-domain/data/book-seal.schema.json",
+    "Platform/08-domain/data/book.schema.json",
+    "Platform/08-domain/data/break-glass.schema.json",
+    "Platform/08-domain/data/deleting.schema.json",
+    "Platform/08-domain/data/disabled.schema.json",
+    "Platform/08-domain/data/domain-folders.schema.json",
+    "Platform/08-domain/data/domain-memberof.schema.json",
+    "Platform/08-domain/data/folder-counts.schema.json",
+    "Platform/08-domain/data/folder-log.schema.json",
+    "Platform/08-domain/data/folder-rev.schema.json",
+    "Platform/08-domain/data/folder-units-head.schema.json",
+    "Platform/08-domain/data/folder-units.schema.json",
+    "Platform/08-domain/data/from-nothing.schema.json",
+    "Platform/08-domain/data/grants.schema.json",
+    "Platform/08-domain/data/groups.schema.json",
+    "Platform/08-domain/data/holder.schema.json",
+    "Platform/08-domain/data/idem.schema.json",
+    "Platform/08-domain/data/issued.schema.json",
+    "Platform/08-domain/data/keepers.schema.json",
+    "Platform/08-domain/data/keys.schema.json",
+    "Platform/08-domain/data/knocks.schema.json",
+    "Platform/08-domain/data/member-ca-certs.schema.json",
+    "Platform/08-domain/data/member-count.schema.json",
+    "Platform/08-domain/data/member-report-delta.schema.json",
+    "Platform/08-domain/data/member-report.schema.json",
+    "Platform/08-domain/data/member-reported.schema.json",
+    "Platform/08-domain/data/member-tables.schema.json",
+    "Platform/08-domain/data/members.schema.json",
+    "Platform/08-domain/data/move-ask.schema.json",
+    "Platform/08-domain/data/names-index.schema.json",
+    "Platform/08-domain/data/outcomes.schema.json",
+    "Platform/08-domain/data/partial.schema.json",
+    "Platform/08-domain/data/pending.schema.json",
+    "Platform/08-domain/data/placement-record.schema.json",
+    "Platform/08-domain/data/placement.schema.json",
+    "Platform/08-domain/data/ref-claims.schema.json",
+    "Platform/08-domain/data/relay-members.schema.json",
+    "Platform/08-domain/data/revoked.schema.json",
+    "Platform/08-domain/data/roles.schema.json",
+    "Platform/08-domain/data/root.schema.json",
+    "Platform/08-domain/data/shadow.schema.json",
+    "Platform/08-domain/data/shared-docs.schema.json",
+    "Platform/08-domain/data/shared.schema.json",
+    "Platform/08-domain/data/signer-pending.schema.json",
+    "Platform/08-domain/data/signer-turn.schema.json",
+    "Platform/08-domain/data/signer.schema.json",
+    "Platform/08-domain/data/stranded.schema.json",
+    "Platform/08-domain/data/topology.schema.json",
+    "Platform/08-domain/data/users.schema.json",
+    "Platform/08-domain/data/view-rows.schema.json",
+    "Platform/08-domain/data/view.schema.json"
+  ],
+  "schema_operational_trees_exact": true,
+  "all_vectors_acceptance_OpenAPI_stages_bytes_exact": true,
+  "all_common_bytes_exact_pending_reserved_scope": true,
+  "other_lessons_Source_VMS_tools_skills_untouched": true,
+  "status": "candidate for review103; not SOURCE READY until reserved references and subject checker",
+  "known_structural_errors": "40 old journal-reader paths only; review103811949bb3 is separately assigned"
+}

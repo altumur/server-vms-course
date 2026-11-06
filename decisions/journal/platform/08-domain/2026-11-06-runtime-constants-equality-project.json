@@ -1,0 +1,1009 @@
+{
+  "base": "7b785e5e2e93cf93b562a405650cce30c5733c2a",
+  "status": "checker project for review103, not checker code and not yet an accepted new form",
+  "single_value_source": "runtime-constants.tsv row value",
+  "schema_carriers": [
+    {
+      "path": "Platform/08-domain/data/users.schema.json",
+      "pointer": "/properties/title/maxLength",
+      "constant": "GROUP_TITLE_MAX",
+      "owner": "08-domain",
+      "value_observed": 200
+    },
+    {
+      "path": "Platform/08-domain/data/groups.schema.json",
+      "pointer": "/properties/title/maxLength",
+      "constant": "GROUP_TITLE_MAX",
+      "owner": "08-domain",
+      "value_observed": 200
+    },
+    {
+      "path": "Platform/08-domain/data/roles.schema.json",
+      "pointer": "/properties/title/maxLength",
+      "constant": "GROUP_TITLE_MAX",
+      "owner": "08-domain",
+      "value_observed": 200
+    },
+    {
+      "path": "Platform/08-domain/data/groups.schema.json",
+      "pointer": "/properties/comment/maxLength",
+      "constant": "COMMENT_MAX",
+      "owner": "08-domain",
+      "value_observed": 2000
+    },
+    {
+      "path": "Platform/08-domain/data/roles.schema.json",
+      "pointer": "/properties/comment/maxLength",
+      "constant": "COMMENT_MAX",
+      "owner": "08-domain",
+      "value_observed": 2000
+    },
+    {
+      "path": "Platform/08-domain/data/domain-memberof.schema.json",
+      "pointer": "/$defs/writer/properties/folders/maxItems",
+      "constant": "FOLDERS_PER_UNIT_MAX",
+      "owner": "06-console",
+      "value_observed": 8
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/paths/~1domain~1users/post/requestBody/content/application~1json/schema/properties/title/maxLength",
+      "constant": "GROUP_TITLE_MAX",
+      "owner": "08-domain",
+      "value_observed": 200
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/paths/~1domain~1users~1{name}/put/requestBody/content/application~1json/schema/properties/title/maxLength",
+      "constant": "GROUP_TITLE_MAX",
+      "owner": "08-domain",
+      "value_observed": 200
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/paths/~1domain~1groups/post/requestBody/content/application~1json/schema/properties/title/maxLength",
+      "constant": "GROUP_TITLE_MAX",
+      "owner": "08-domain",
+      "value_observed": 200
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/paths/~1domain~1groups/post/requestBody/content/application~1json/schema/properties/comment/maxLength",
+      "constant": "COMMENT_MAX",
+      "owner": "08-domain",
+      "value_observed": 2000
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/paths/~1domain~1groups~1{name}/put/requestBody/content/application~1json/schema/properties/title/maxLength",
+      "constant": "GROUP_TITLE_MAX",
+      "owner": "08-domain",
+      "value_observed": 200
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/paths/~1domain~1groups~1{name}/put/requestBody/content/application~1json/schema/properties/comment/maxLength",
+      "constant": "COMMENT_MAX",
+      "owner": "08-domain",
+      "value_observed": 2000
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/paths/~1domain~1roles/post/requestBody/content/application~1json/schema/properties/title/maxLength",
+      "constant": "GROUP_TITLE_MAX",
+      "owner": "08-domain",
+      "value_observed": 200
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/paths/~1domain~1roles/post/requestBody/content/application~1json/schema/properties/comment/maxLength",
+      "constant": "COMMENT_MAX",
+      "owner": "08-domain",
+      "value_observed": 2000
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/paths/~1domain~1roles~1{name}/put/requestBody/content/application~1json/schema/properties/title/maxLength",
+      "constant": "GROUP_TITLE_MAX",
+      "owner": "08-domain",
+      "value_observed": 200
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/paths/~1domain~1roles~1{name}/put/requestBody/content/application~1json/schema/properties/comment/maxLength",
+      "constant": "COMMENT_MAX",
+      "owner": "08-domain",
+      "value_observed": 2000
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/components/schemas/RolePutFields/properties/title/maxLength",
+      "constant": "GROUP_TITLE_MAX",
+      "owner": "08-domain",
+      "value_observed": 200
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/components/schemas/RolePutFields/properties/comment/maxLength",
+      "constant": "COMMENT_MAX",
+      "owner": "08-domain",
+      "value_observed": 2000
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/components/schemas/PersonView/properties/title/maxLength",
+      "constant": "GROUP_TITLE_MAX",
+      "owner": "08-domain",
+      "value_observed": 200
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/components/schemas/GroupView/properties/title/maxLength",
+      "constant": "GROUP_TITLE_MAX",
+      "owner": "08-domain",
+      "value_observed": 200
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/components/schemas/GroupView/properties/comment/maxLength",
+      "constant": "COMMENT_MAX",
+      "owner": "08-domain",
+      "value_observed": 2000
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/components/schemas/RoleView/properties/title/maxLength",
+      "constant": "GROUP_TITLE_MAX",
+      "owner": "08-domain",
+      "value_observed": 200
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "pointer": "/components/schemas/RoleView/properties/comment/maxLength",
+      "constant": "COMMENT_MAX",
+      "owner": "08-domain",
+      "value_observed": 2000
+    },
+    {
+      "path": "Platform/08-domain/data/outcomes.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/outcomes.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/member-report-delta.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/member-report-delta.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/grants.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/grants.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/book-part.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/book-part.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/keys.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/keys.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/ref-claims.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/ref-claims.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/users.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/users.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/folder-rev.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/folder-rev.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/member-tables.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/member-tables.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/member-reported.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/member-reported.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/relay-members.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/relay-members.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/folder-log.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/folder-log.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/batches.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/batches.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/issued.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/issued.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/knocks.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/knocks.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/signer-pending.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/signer-pending.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/book.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/book.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/folder-units.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/folder-units.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/idem.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/idem.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/keepers.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/keepers.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/shared-docs.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/shared-docs.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/alarm-history.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/alarm-history.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/stranded.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/stranded.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/topology.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/topology.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/book-all.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/book-all.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/move-ask.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/move-ask.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/view-rows.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/view-rows.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/member-count.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/member-count.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/backups.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/backups.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/disabled.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/disabled.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/folder-units-head.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/folder-units-head.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/placement.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/placement.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/domain-folders.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/domain-folders.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/signer.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/signer.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/from-nothing.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/from-nothing.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/member-ca-certs.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/member-ca-certs.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/book-keys.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/book-keys.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/revoked.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/revoked.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/partial.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/partial.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/view.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/view.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/book-seal.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/book-seal.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/break-glass.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/break-glass.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/names-index.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/names-index.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/pending.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/pending.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/groups.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/groups.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/shadow.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/shadow.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/shared.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/shared.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/domain-memberof.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/domain-memberof.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/placement-record.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/placement-record.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/roles.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/roles.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/members.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/members.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/root.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/root.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/signer-turn.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/signer-turn.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/deleting.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/deleting.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/member-report.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/member-report.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/anywhere.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/anywhere.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/holder.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/holder.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/folder-counts.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/missing/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    },
+    {
+      "path": "Platform/08-domain/data/folder-counts.schema.json",
+      "pointer": "/$defs/common.book_row/properties//properties/stale/maxItems",
+      "constant": "MISSING_SHOWN",
+      "owner": "08-domain",
+      "value_observed": 500
+    }
+  ],
+  "form_equalities": [
+    [
+      "08-domain/SERVERS_MAX",
+      "08-domain/MISSING_SHOWN"
+    ],
+    [
+      "08-domain/BATCH_LIMIT",
+      "4*08-domain/BODY_LIMIT"
+    ]
+  ],
+  "foreign_names": {
+    "FOLDER_NAME_MAX": "06-console/forms/runtime-constants.tsv",
+    "FOLDERS_PER_UNIT_MAX": "06-console/forms/runtime-constants.tsv",
+    "FOLDERS_MEMBERS_MAX": "06-console/forms/runtime-constants.tsv",
+    "FOLDER_ROW_MAX": "06-console/forms/runtime-constants.tsv",
+    "LOST_AFTER": "common/contracts/observation.md",
+    "MARK_REFRESH": "derived LOST_AFTER/2 in common/contracts/observation.md",
+    "HISTORY_LINES": "common/contracts/alarm-history.md",
+    "TURN_TERM/TURN_RENEW": "common/contracts/turn.md",
+    "TOKEN_HOLDER_BODY/TOKEN_BODY": "common/contracts/local-token-door.md",
+    "FRESH_EVERY/SAY_EVERY": "09-agent/forms/runtime-constants.tsv"
+  },
+  "non_scalar_names": {
+    "BACKUP_EVERY": "max(BACKUP_EVERY_MIN, changed bytes/BACKUP_RATE)",
+    "MEMBERS_MAX": "actual per-section-row byte ceiling of P01/Status.max_value, not a fixed global member count",
+    "REVOKED_WORDS": "class selection of REVOKED_WORDS_CAMERA or REVOKED_WORDS_SERVER"
+  },
+  "non_numeric_schema_carriers": "PBKDF2 hash is sealed in the schema string; cost is a contract/vectors obligation, not a schema numeric constraint",
+  "schema_validation_tree_changes": false
+}
