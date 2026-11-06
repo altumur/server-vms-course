@@ -380,7 +380,7 @@ func May(in *MayInput) MayOutcome {
 			return allow
 		}
 	}
-	// step 6а
+	// step 6a
 	if in.Unit.Kind == "any" {
 		for _, l := range direct {
 			if capRank[l.Cap] >= need {
@@ -405,7 +405,7 @@ func May(in *MayInput) MayOutcome {
 			return allow
 		}
 	}
-	// step 7а, 7в
+	// step 7a, 7c
 	couldAny := false
 	for _, r := range live {
 		lv, ok, unreadable, could := roleLevel(groups[r], r, in, need)

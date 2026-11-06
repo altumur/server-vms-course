@@ -1,10 +1,10 @@
 // Package frame — the HTTP frame of the store daemon: YOURS (ADR-0125 addendum (1) item 2 — the HTTP frame and the
-// limits of P/01.1 Н2.1 are the hand part of the implementation). The kit puts this file once and never overwrites it.
+// limits of P/01.1 N2.1 are the hand part of the implementation). The kit puts this file once and never overwrites it.
 //
-// TEMPORARY FRAME ON net/http — REPLACE IT. net/http is softer than Н2.1: it accepts obs-fold, `#` in the target, a
+// TEMPORARY FRAME ON net/http -- REPLACE IT. net/http is softer than N2.1: it accepts obs-fold, `#` in the target, a
 // lone LF in a header, a request line or headers over HEADER_BYTES; it answers 414/431/505 and its own pages; it does
 // not send the early refusal with Connection: close and the drain before the body. The stage tests (in process) pass
-// over it; the raw HTTP acceptance (stage http) needs the strict parse of Н2.1 — your own reader of the connection
+// over it; the raw HTTP acceptance (stage http) needs the strict parse of N2.1 -- your own reader of the connection
 // (bufio over net.Conn), not net/http. The daemon (launch) needs only New, Serve and Shutdown with these signatures.
 //
 // @NORMS@

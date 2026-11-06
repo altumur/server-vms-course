@@ -1,5 +1,5 @@
 """The NFKC tables of the package contracts (Unicode 15.0.0, UAX #15) from unicodedata of Python 3.12: the full
-compatibility decompositions, the canonical combining classes and the primary composites (the address contract А4
+compatibility decompositions, the canonical combining classes and the primary composites (the address contract A4
 names NFKC by the tables of Unicode 15.0.0). Writes contracts/go/nfkc_tables.go; the judge test_contracts.py checks
 that the file is fresh and that NFKC of the package equals unicodedata.normalize("NFKC")."""
 import shutil

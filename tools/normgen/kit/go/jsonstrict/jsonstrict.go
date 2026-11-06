@@ -1,9 +1,9 @@
-// Package jsonstrict — строгий разбор JSON тела POST /v1/write по P/01.1 Н2.1 (ADR-0083 доп. (86) п. 2, пакет Б).
-// Написан руками один раз; сверка — tools/normgen/kit/test_kit.py (пробы write-checks.probes.tsv, векторы jcs урока).
+// Package jsonstrict parses POST /v1/write JSON per P/01.1 N2.1 (ADR-0083 addendum 86, item 2).
+// Handwritten once;test_kit.py checks write-checks probes and lesson JCS vectors.
 //
-// Норма: RFC 8259; повтор имени поля в любом объекте — отказ; глубина — объекты и массивы от корня, корень — 1;
-// BOM, NaN, Infinity, не UTF-8 — отказ; одиночный суррогат (\ud800) — строка с U+FFFD и JSON Pointer в lone.
-// Все отказы разбора — 400 badrequest. Значения — модель среды пакета checks:
+// RFC 8259:reject duplicate names in any object;count object/array depth from root1;reject BOM, NaN,
+// Infinity and invalid UTF-8. Replace lone surrogate escapes with U+FFFD and record their JSON Pointers.
+// Every parse refusal is400badrequest. Values follow the checks runtime model.
 // nil, bool, int64, float64, string, []any, map[string]any.
 package jsonstrict
 
@@ -16,20 +16,20 @@ import (
 	"unicode/utf8"
 )
 
-// Depth — JSON_DEPTH P/01.1 Н2.1: 128 вложенных объектов и массивов от корня, корень — 1; 129 — отказ.
+// Depth is P/01.1 N2.1 JSON_DEPTH:128 nested objects/arrays including root;129 refuses.
 const Depth = 128
 
-// Причины отказа (Error.Reason). Вызывающему их не цитируют (P/01.1 Н4: отказ не повторяет присланное) — только журнал.
+// Error.Reason is journal-only;do not quote supplied input back to callers (P/01.1 N4).
 const (
-	ReasonBOM       = "bom"             // тело начинается с EF BB BF
-	ReasonUTF8      = "utf8"            // байты тела — не UTF-8 (RFC 8259 §8.1)
-	ReasonNonFinite = "nan_or_infinity" // NaN, Infinity, -Infinity — не JSON
-	ReasonSyntax    = "syntax"          // иное нарушение грамматики RFC 8259, пустое тело, данные после значения
-	ReasonDuplicate = "duplicate_name"  // имя поля повторено в одном объекте (RFC 8259 §4)
-	ReasonDepth     = "depth"           // глубина больше предела
+	ReasonBOM       = "bom"             // Body starts with EF BB BF.
+	ReasonUTF8      = "utf8"            // Body bytes are not UTF-8 (RFC 8259 section8.1).
+	ReasonNonFinite = "nan_or_infinity" // NaN, Infinity and -Infinity are not JSON.
+	ReasonSyntax    = "syntax"          // Other RFC 8259 grammar violation, empty body or trailing data.
+	ReasonDuplicate = "duplicate_name"  // Duplicate field name within one object (RFC 8259 section4).
+	ReasonDepth     = "depth"           // Depth exceeds the limit.
 )
 
-// Error — отказ разбора: Code 400, Kind "badrequest" (P/01.1 Н2.1), причина и смещение в байтах тела.
+// Error is a400badrequest parse refusal with reason and byte offset (P/01.1 N2.1).
 type Error struct {
 	Code   int
 	Kind   string
@@ -43,12 +43,12 @@ func (e *Error) Error() string {
 
 var bom = []byte{0xEF, 0xBB, 0xBF}
 
-// Decode разбирает тело. value — прямо Body пакета checks: целое без '.', 'e', 'E' в пределах int64 — int64, иначе
-// float64 (переполнение binary64 — ±Inf, как 1e400: его отвергает проверка поля, а не разбор: числа лишних полей не
-// читаются, Н2.1); строки — с U+FFFD вместо каждого одиночного суррогата. lone — JSON Pointer (RFC 6901) каждой
-// строки с одиночным суррогатом, у имени поля — указатель объекта, где оно стоит; по возрастанию, без повторов;
-// nil — таких строк нет. Сегменты указателя — имена после замены на U+FFFD. depth — предел глубины (норма — Depth).
-// Отказ — value nil, lone nil, err не nil.
+// Decode returns checks-compatible Body values:int64 for lexical integers in range, otherwise float64.
+// Binary64 overflow yields infinity, rejected by field checks rather than parsing because extra-field
+// numbers are ignored under N2.1. Replace lone surrogates with U+FFFD. lone records each affected value's
+// RFC 6901 pointer, or containing-object pointer for a field name, sorted and deduplicated;nil if none.
+// Pointer names reflect surrogate replacement;depth limits nesting (normally Depth).
+// On refusal, value and lone are nil, err is nonnil.
 func Decode(body []byte, depth int) (value any, lone []string, err *Error) {
 	if bytes.HasPrefix(body, bom) {
 		return nil, nil, fail(0, ReasonBOM)
@@ -83,8 +83,8 @@ func fail(at int, reason string) *Error {
 	return &Error{Code: 400, Kind: "badrequest", Reason: reason, Offset: at}
 }
 
-// invalidUTF8 — смещение первого байта не по UTF-8 или -1. utf8 Go отвергает и суррогаты в UTF-8 (ED A0..BF),
-// и избыточные формы, и больше U+10FFFF.
+// invalidUTF8 returns the first invalid byte offset or-1. Go UTF-8 validation rejects surrogate encodings,
+// overlong sequences and code points above U+10FFFF.
 func invalidUTF8(b []byte) int {
 	if utf8.Valid(b) {
 		return -1
@@ -103,7 +103,7 @@ func invalidUTF8(b []byte) int {
 	return len(b)
 }
 
-// seg — сегмент пути от корня: имя (после замены суррогатов) или индекс массива.
+// seg is a root-relative path segment:surrogate-replaced name or array index.
 type seg struct {
 	name  string
 	index int
@@ -130,7 +130,7 @@ func (p *parser) ws() {
 	}
 }
 
-// pointer — JSON Pointer текущего пути: ~ → ~0, / → ~1.
+// pointer escapes the current JSON Pointer path:~->~0, /->~1.
 func (p *parser) pointer() string {
 	var sb strings.Builder
 	for _, s := range p.path {
@@ -144,7 +144,7 @@ func (p *parser) pointer() string {
 	return sb.String()
 }
 
-// value — значение в позиции p.i; level — число объемлющих объектов и массивов.
+// value reads at p.i;level counts enclosing objects/arrays.
 func (p *parser) value(level int) (any, *Error) {
 	if p.i >= len(p.b) {
 		return nil, fail(p.i, ReasonSyntax)
@@ -197,7 +197,7 @@ func (p *parser) object(level int) (any, *Error) {
 		p.i++
 		return out, nil
 	}
-	// Повтор судится по имени до замены суррогатов: "\ud800" и "\udbff" — разные имена RFC 8259, "a" и "a" — одно.
+	// Detect duplicates before surrogate replacement:distinct surrogate escapes are distinct RFC 8259 names.
 	seen := map[string]struct{}{}
 	for {
 		if p.i >= len(p.b) || p.b[p.i] != '"' {
@@ -229,8 +229,8 @@ func (p *parser) object(level int) (any, *Error) {
 		if e != nil {
 			return nil, e
 		}
-		// Разные имена с одиночными суррогатами могут совпасть после замены: остаётся последнее (как оракул
-		// check_tables.decode); такие имена всегда в lone, и строки таблицы, читающие этот объект, уже отвергают его.
+		// Different lone-surrogate names may collide after replacement;retain the last like check_tables.decode.
+		// Such names are always in lone, so table rows reading that object already refuse it.
 		out[name] = v
 		p.ws()
 		if p.i < len(p.b) && p.b[p.i] == ',' {
@@ -279,8 +279,8 @@ func (p *parser) array(level int) (any, *Error) {
 	}
 }
 
-// str — строка в позиции p.i (на '"'). raw — байты значения, одиночный суррогат записан тремя байтами WTF-8
-// (ED A0..BF xx): в UTF-8 тела таких байт нет, поэтому raw различает имена для проверки повтора; lone — был ли он.
+// str reads a quote at p.i. raw represents lone surrogates as three-byte WTF-8, which valid body UTF-8
+// cannot contain, retaining name identity for duplicate checks;lone records their presence.
 func (p *parser) str() (raw string, lone bool, err *Error) {
 	p.i++
 	start := p.i
@@ -384,7 +384,7 @@ func hex4(b []byte, at int) (int, bool) {
 	return u, true
 }
 
-// clean — raw с U+FFFD вместо каждого суррогата WTF-8.
+// clean replaces every raw WTF-8 surrogate with U+FFFD.
 func clean(raw string) string {
 	var sb strings.Builder
 	sb.Grow(len(raw))
@@ -406,7 +406,7 @@ func digits(b []byte, i int) int {
 	return i
 }
 
-// number — RFC 8259 §6: -?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?, длина любая.
+// number follows RFC 8259 section6 decimal syntax, without a length bound.
 func (p *parser) number() (any, *Error) {
 	b, start, i := p.b, p.i, p.i
 	if b[i] == '-' {
@@ -451,7 +451,7 @@ func (p *parser) number() (any, *Error) {
 			return n, nil
 		}
 	}
-	// Грамматика уже проверена: ошибка ParseFloat здесь — только ErrRange, значение тогда ±Inf или ±0.
+	// Grammar is already valid;ParseFloat errors here are only ErrRange, returning infinities or signed zero.
 	f, _ := strconv.ParseFloat(text, 64)
 	return f, nil
 }

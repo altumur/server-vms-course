@@ -84,7 +84,7 @@ type Prop struct {
 }
 
 // Outcome — a row of <family>.outcomes.tsv without its prose: the path (JSON Pointer, "" — the whole row), the reader
-// (a role or "*"), the priority (smaller — earlier), the unit (строка, поле, элемент).
+// (a role or '*'), priority (smaller first), and unit (row, field, element).
 type Outcome struct {
 	Path     string
 	Reader   string
@@ -165,7 +165,7 @@ func (f *Family) Readers() []string {
 }
 
 // OutcomesFor — the paths of the outcome rows that act at the reader for these refusal paths (DIALECT § 9, the V7 rule):
-// for each path the rows whose path is its prefix; when the deepest of them has the unit поле or элемент, only the
+// for each path, the rows whose path prefixes it; when the deepest unit is field or element, only the
 // deepest act, else all; of the rows of all paths act those of the least priority, in the order of the file.
 func (f *Family) OutcomesFor(paths []string, reader string) []string {
 	var own []Outcome

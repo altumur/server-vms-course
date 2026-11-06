@@ -1,8 +1,8 @@
 // Hand-written runtime of the part `loader` (tools/normgen/manifestrt/go; the kit copies it, DO NOT EDIT): layer 1 of
-// V7 (Platform/common/LAYERS.md § 4; P/02.1 Н1.1 `text`) — the pinned parser go.yaml.in/yaml/v3 v3.0.5 (nodes) and the
-// thin check. Based on the V7 Go stack of the course (skills/lesson-spec/scripts/v7/go/text.go): the same rules as v7/textv7.py (байты, TAB только в комментарии, один документ по байтам, корень — блочное
-// отображение с колонки 1, якорь, псевдоним, `<<`, тег, повтор ключа, ключ-коллекция, глубина > 64, Н1.1:95 и :46,
-// `{k:}`, скаляры по scalars.tsv по стилю узла).
+// V7 text layer (common/LAYERS section4, P/02.1 N1.1):pinned go.yaml.in/yaml/v3 v3.0.5 nodes plus the
+// thin V7 check, based on skills/lesson-spec/scripts/v7/go/text.go and matching v7/textv7.py:bytes, TAB only
+// in comments, one byte-delimited document, root block map at column1, anchors, aliases, merge, tags, duplicates,
+// collection keys, depth 64, N1.1:95/:46, {k:} and style-sensitive scalars.tsv rules.
 package manifest
 
 import (
@@ -38,7 +38,7 @@ var (
 	floatMax   float64
 )
 
-// loadScalars — таблица скаляров P/02.1 (`02.1-installer.scalars.tsv`): первая совпавшая строка сверху.
+// loadScalars reads P/02.1 scalars.tsv, selecting the first matching row from the top.
 // loadScalars — the scalar table of P/02.1 (`02.1-installer.scalars.tsv`, embedded): the first matching row from the top.
 func loadScalars(table string) error {
 	scalarRows = nil
@@ -93,14 +93,14 @@ func firstBad(s string) (rune, int) {
 
 const escapes = "0abt\tnvfre \"/\\N_LPxuU"
 
-// scanLine — лексика строки для тонкой проверки (как v7/textv7.py scan_line): колонка `#`, начинающего комментарий
-// (в начале строки или после пробела/TAB, вне кавычек), или -1; ошибка — `#` вплотную после закрывающей кавычки или
-// `]`/`}` (SU5Z), экранирование вне YAML 1.2.2 в двойных кавычках (HRE5).
+// scanLine matches v7/textv7.py lexical rules:return the comment-start # column outside quotes, at line
+// start or after space/TAB, or-1. Error on # immediately after a closing quote/bracket (SU5Z), or escapes
+// outside YAML1.2.2 in double quotes (HRE5).
 func scanLine(line string) (int, string, map[int]bool) {
 	rs := []rune(line)
 	q := ""
 	prev, esc := ' ', false
-	tabs := map[int]bool{} // байтовые колонки TAB экранирования `\<TAB>` в двойных кавычках (YAML 1.2.2, Н1.1)
+	tabs := map[int]bool{} // Byte columns of escaped TAB inside double quotes (YAML1.2.2, N1.1).
 	for i, c := range rs {
 		var nxt rune
 		if i+1 < len(rs) {
@@ -149,8 +149,8 @@ func scanLine(line string) (int, string, map[int]bool) {
 	return -1, "", tabs
 }
 
-// slashEscapes — `\/` в двойных кавычках → `/` (YAML 1.2.2 и Н1.1 допускают `\/`, go.yaml.in/yaml/v3 v3.0.5 — нет:
-// yaml-test-suite 3UYS, дефект D13); кавычки — по той же лексике, что scanLine.
+// slashEscapes maps escaped slash to slash in double quotes:YAML1.2.2/N1.1 permit it, but pinned yaml/v3
+// does not (yaml-test-suite3UYS, D13). Use the same quote lexing as scanLine.
 func slashEscapes(line string) string {
 	if !strings.Contains(line, `\/`) {
 		return line
@@ -190,8 +190,8 @@ func slashEscapes(line string) string {
 	return b.String()
 }
 
-// blockLeadingOK — блочный скаляр с заголовком на строке at (с 0): начальные пустые строки тела не глубже первой
-// строки содержимого (S98Z).
+// blockLeadingOK checks a block-scalar header at zero-based line at:leading empty body lines must not
+// be deeper than the first content line (S98Z).
 func blockLeadingOK(lines []string, at int) bool {
 	indent := func(s string) int { return len(s) - len(strings.TrimLeft(s, " ")) }
 	base := indent(lines[at])
@@ -252,7 +252,7 @@ func checkBytes(data []byte) (string, []string, *textRefused) {
 	}
 	text = strings.ReplaceAll(text, "\r\n", "\n")
 	if text != "" && !strings.HasSuffix(text, "\n") {
-		text += "\n" // обход D16: последняя строка без LF — с LF (значение по YAML 1.2.2)
+		text += "\n" // D16 workaround:append LF to the final unterminated line per YAML1.2.2 value semantics.
 	}
 	lines := strings.Split(text, "\n")
 	content := false
@@ -264,20 +264,20 @@ func checkBytes(data []byte) (string, []string, *textRefused) {
 		}
 		for t := 0; t < len(ln); t++ {
 			if ln[t] == '\t' && !escTabs[t] && (c < 0 || t < c) {
-				return "", nil, &textRefused{"tab", no, "TAB outside a comment (ADR-0092 п. 4)", nil}
+				return "", nil, &textRefused{"tab", no, "TAB outside a comment (ADR-0092 \u043f. 4)", nil}
 			}
 		}
 		if reDocEnd.MatchString(ln) {
-			return "", nil, &textRefused{"document", no, "`...` (Н1.1:46)", nil}
+			return "", nil, &textRefused{"document", no, "`...` (\u041d1.1:46)", nil}
 		}
 		if strings.HasPrefix(ln, "%") {
-			return "", nil, &textRefused{"document", no, "directive `%` (Н1.1:46)", nil}
+			return "", nil, &textRefused{"document", no, "directive `%` (\u041d1.1:46)", nil}
 		}
 		if reDocStart.MatchString(ln) {
 			if content {
 				return "", nil, &textRefused{"document", no, "second document or `---` after content", nil}
 			}
-			content = true // содержимое на строке `---` отказывают парсер или правило root
+			content = true // Parser or root rule rejects content on the --- line.
 			continue
 		}
 		if reDocShift.MatchString(ln) {
@@ -319,7 +319,7 @@ func (o *textOut) common(n *yaml.Node, path []any) *textRefused {
 	return nil
 }
 
-// spanOneLine — от знака открытия (строка, колонка с 1) до парного закрытия — на одной строке (Н1.1:95).
+// spanOneLine requires an opening delimiter and its matching close on one line (1-based positions, N1.1:95).
 func (o *textOut) spanOneLine(n *yaml.Node) bool {
 	ln := o.lines[n.Line-1]
 	runes := []rune(ln)
@@ -329,7 +329,7 @@ func (o *textOut) spanOneLine(n *yaml.Node) bool {
 	}
 	open := runes[i]
 	if !strings.ContainsRune("[{\"'", open) {
-		return true // пара `k: v` в потоковом списке — отображение без скобок, одной строкой по YAML
+		return true // A k:v pair in a flow list is an unbracketed mapping on one YAML line.
 	}
 	depth := 0
 	prev := ' '
@@ -386,7 +386,7 @@ func (o *textOut) node(n *yaml.Node, path []any, depth int) *textRefused {
 			return o.refuse("depth", n, "nesting deeper than 64", path)
 		}
 		if n.Style&yaml.FlowStyle != 0 && !o.spanOneLine(n) {
-			return o.refuse("rare", n, "flow collection on several lines (Н1.1:95)", path)
+			return o.refuse("rare", n, "flow collection on several lines (\u041d1.1:95)", path)
 		}
 		if n.Kind == yaml.SequenceNode {
 			o.tree.WriteByte('[')
@@ -422,7 +422,7 @@ func (o *textOut) mapping(n *yaml.Node, path []any, depth int) *textRefused {
 		}
 		before := strings.TrimRight(string([]rune(o.lines[k.Line-1])[:k.Column-1]), " \t")
 		if before == "?" || (strings.HasSuffix(before, "?") && strings.ContainsRune(" \t-[{,", []rune(before)[len([]rune(before))-2])) {
-			return o.refuse("rare", k, "complex key `? …` (Н1.1:95)", path)
+			return o.refuse("rare", k, "complex key `? \u2026` (\u041d1.1:95)", path)
 		}
 		if k.Style&(quoted|yaml.LiteralStyle|yaml.FoldedStyle) == 0 {
 			if k.Value == "<<" {
@@ -443,7 +443,7 @@ func (o *textOut) mapping(n *yaml.Node, path []any, depth int) *textRefused {
 		seen[k.Value] = true
 		if flow && v.Kind == yaml.ScalarNode && v.Style&(quoted|yaml.LiteralStyle|yaml.FoldedStyle) == 0 &&
 			v.Value == "" && v.Line == k.Line {
-			return o.refuse("flow", v, "`{k:}` — key without a value in a flow mapping (ADR-0092 п. 4)",
+			return o.refuse("flow", v, "`{k:}` \u2014 key without a value in a flow mapping (ADR-0092 \u043f. 4)",
 				with(path, k.Value))
 		}
 		if i > 0 {
@@ -461,15 +461,15 @@ func (o *textOut) mapping(n *yaml.Node, path []any, depth int) *textRefused {
 
 func (o *textOut) scalarStyle(n *yaml.Node, path []any) *textRefused {
 	if n.Style&quoted != 0 && !o.spanOneLine(n) {
-		return o.refuse("rare", n, "quoted string on several lines (Н1.1:95)", path)
+		return o.refuse("rare", n, "quoted string on several lines (\u041d1.1:95)", path)
 	}
 	if n.Style&(yaml.LiteralStyle|yaml.FoldedStyle) != 0 {
 		if strings.ContainsRune(n.Value, '\t') {
-			return o.refuse("tab", n, "TAB in a block scalar (ADR-0092 п. 4)", path)
+			return o.refuse("tab", n, "TAB in a block scalar (ADR-0092 \u043f. 4)", path)
 		}
 		head := string([]rune(o.lines[n.Line-1])[n.Column-1:])
 		if reIndent.MatchString(head) {
-			return o.refuse("rare", n, "explicit indentation indicator (Н1.1:95)", path)
+			return o.refuse("rare", n, "explicit indentation indicator (\u041d1.1:95)", path)
 		}
 		if !reHeader.MatchString(head) {
 			return o.refuse("lexis", n, "block scalar header without a space before a comment (X4QW)", path)
@@ -561,8 +561,8 @@ func jsonString(s string) string {
 	return b.String()
 }
 
-// flowDash — 26-е правило (V7-FLOW-DASH-01, сужение YAML 1.2.2): одиночный `-` простым скаляром в потоке ([-, a], [-],
-// {name: -}) — отказ text; до проверки корня, в порядке документа (как у Python — G5U8, YJV2).
+// flowDash applies V7-FLOW-DASH-01, rule 26 narrowing YAML1.2.2:plain standalone '-' in a flow collection
+// refuses text before the root check, in document order, matching Python G5U8/YJV2.
 func flowDash(n *yaml.Node, inFlow bool) *textRefused {
 	if n.Kind == yaml.MappingNode || n.Kind == yaml.SequenceNode {
 		inFlow = inFlow || n.Style&yaml.FlowStyle != 0
@@ -578,7 +578,7 @@ func flowDash(n *yaml.Node, inFlow bool) *textRefused {
 	return nil
 }
 
-// loadText — байты манифеста → (дерево JSON в порядке автора, numbers, empties) или отказ text.
+// loadText maps manifest bytes to an author-ordered JSON tree, numbers and empties, or a text refusal.
 func loadText(data []byte) (string, [][2]any, [][]any, *textRefused) {
 	text, lines, e := checkBytes(data)
 	if e != nil {

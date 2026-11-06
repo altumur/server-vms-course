@@ -1,23 +1,23 @@
-"""Черновик провода векторов P/03, P/04, P/06 для gen_vectors.WIRE — ВРЕМЕННАЯ ПРОЕКЦИЯ (ADR-0125 доп. (5) п. 5).
+"""Draft P/03, P/04, P/06 wiring for gen_vectors.WIRE: TEMPORARY PROJECTION (ADR-0125 addendum (5), item 5).
 
-Форма Platform/common/vectors/wire.tsv ещё не опубликована (spec103 2026-11-05: «черновик WIRE по каноническим README …
-пометь временной проекцией с точными источниками; после публикации общей формы черновик заменяется ею, без второго
-канона»). Объявления выписаны из README пакетов (Platform/common/vectors/<пакет>/README.md, Platform/0N-*/vectors/<пакет>/
-README.md), общего README приёмки («Vectors», «The unified command of a vector package», «Platform vector commands») и
-сверены с раннером cammeta-acceptance cc17c86 (c_*.py); источники — в `src` каждого объявления; сводка и открытые
-вопросы — /home/pilot/wire-p03p04-draft.md (на сверку spec103). Пакеты P/01 (crl, revoked, log-mask, store-client,
-family-read) идут через common_vectors.py, как у P/02.
+This draft predates publication of Platform/common/vectors/wire.tsv. spec103, 2026-11-05: mark the WIRE draft based
+on canonical READMEs as a temporary projection with exact sources; after publication the shared form replaces it,
+without a second canon. Declarations come from package READMEs (Platform/common/vectors/<package>/README.md and
+Platform/0N-*/vectors/<package>/README.md) and the common acceptance README ("Vectors", "The unified command of a
+vector package", "Platform vector commands"). They were cross-checked with cammeta-acceptance cc17c86 (c_*.py).
+Each declaration records its sources in src; /home/pilot/wire-p03p04-draft.md records the summary and open questions
+for spec103. P/01 packages crl, revoked, log-mask, store-client and family-read use common_vectors.py, as in P/02.
 
-Объявление — как у gen_vectors.WIRE: surface vectors | stand:<ключ>; inputs — cells; files — фикстуры (путь от пакета
-или «@root/<путь>»); select(r) — True или причина исключения строки; frames(r) — половины строки (values-by-type);
-expect(r, d) → (код, значение | None, сырые байты | None); compare — value | raw | subset | fields:<a,b> | setarrays |
-events | row | secret | turn | vbt-write (правила — README пакета, Go — gen_vectors.COMPARE_GO).
+Declarations follow gen_vectors.WIRE: surface vectors | stand:<key>; inputs are cells; files are fixtures with paths
+relative to the package or @root/<path>; select(r) returns True or an exclusion reason; frames(r) splits a
+values-by-type row into halves; expect(r, d) → (code, value | None, raw bytes | None). Comparisons are value | raw |
+subset | fields:<a,b> | setarrays | events | row | secret | turn | vbt-write (package README rules; Go in gen_vectors.COMPARE_GO).
 """
 import json
 
 
 def jv(c):
-    """Ячейка — значение JSON, если это JSON; иначе — JSON-строка (слово, маркер) — общее правило «Vectors»."""
+    """A cell is a JSON value if valid JSON, otherwise a string (word or marker): the common Vectors rule."""
     try:
         return json.loads(c)
     except ValueError:
@@ -49,7 +49,7 @@ def by_col(col, allowed, why="not this consumer (README «Who performs it»)"):
     return lambda r: True if r[col] in allowed else f"{col} {r[col]!r}: {why}"
 
 
-# --- общие объявления по пакету (урок добавляет выбор и сравнение) ---
+# --- shared package declarations (the lesson adds selection and comparison) ---
 
 def instance(table):
     return {"package": "common/instance", "table": table, "surface": "vectors", "fn": "Instance", "args": "cells",
@@ -89,7 +89,7 @@ LOOPBACK = {"package": "common/loopback", "table": "cases.tsv", "surface": "vect
             "src": "loopback/README.md:32-36; runner c_resource_extras.py:30-47"}
 
 ROW_STATE = {"package": "common/row-check", "table": "state.tsv", "surface": "vectors", "fn": "RowCheck", "args": "cells",
-             "inputs": ["name", "unit", "state"], "files": {"testsub2.subsystem.yaml": "@root/Source/tests/testdata/testsub2.subsystem.yaml"},
+             "inputs": ["name", "unit", "state"], "files": {"testsub2.subsystem.yaml": "@root/Platform/common/data/testsub/testsub2.subsystem.yaml"},
              "compare": "value", "expect": value(),
              "src": "row-check/README.md:56-78; runner c_value_vectors.py:132-138,273-274"}
 
@@ -115,13 +115,13 @@ def slot_name(ops):
 
 
 def secret_hidden(raw, masked):
-    """Скрытые части raw: подстроки, которые masked закрывает «***» (секция «Native outcome», п. 3), от 4 байт."""
+    """Hidden raw substrings replaced with '***' in masked (Native outcome, item 3), at least 4 bytes long."""
     parts, pos, hidden = masked.split("***"), 0, []
     if len(parts) == 1:
         return []
     for k, part in enumerate(parts):
         at = raw.find(part, pos) if k else (0 if raw.startswith(part) else -1)
-        if at < 0:                                     # проверку утечки не ослаблять (spec103, сверка п. 8)
+        if at < 0:                                     # do not weaken leak checks (spec103 cross-check, item 8)
             raise ValueError(f"secret-in: masked {masked!r} does not align with raw — the hidden parts are unknown")
         if k:
             gap = raw[pos:at]
@@ -136,7 +136,7 @@ def secret_hidden(raw, masked):
 
 
 def secret_in(item):
-    if item == "all":                                  # консоль: отображение и отказ (README «Who performs it»)
+    if item == "all":                                  # console: display and refusal (README "Who performs it")
         exp = lambda r, d: (0, {"masked": r["masked"], "fault": r["fault"],  # noqa: E731
                                 "hidden": secret_hidden(r["raw"], r["masked"])}, None)
         compare = "secret"
@@ -158,7 +158,7 @@ def values_by_type(halves, sealed=False):
     def frames(r):
         out = []
         if "@sealed" in (r["json"], r["row"]) and not sealed:
-            return out                                 # только консоль (README «Who performs it»)
+            return out                                 # console only (README "Who performs it")
         dirs = ["write", "read"] if r["dir"] == "both" else [r["dir"]]
         for v in dirs:
             if v not in halves:
@@ -167,7 +167,7 @@ def values_by_type(halves, sealed=False):
                 cell = r["row"]
                 if cell == "@absent":
                     exp = {"status": "absent"}
-                elif cell == "@sealed":                # консоль: конверт enc:v2:…, plaintext — открытие (README «Write»)
+                elif cell == "@sealed":                # console: enc:v2 envelope, plaintext is the opened value (README "Write")
                     exp = {"status": "ok", "sealed": True, "plaintext": json.loads(r["json"])}
                 elif cell.startswith("@refuse"):
                     exp = {"status": "refused"}
@@ -191,7 +191,7 @@ def values_by_type(halves, sealed=False):
     return {"package": "common/values-by-type", "table": "cases.tsv", "surface": "vectors", "fn": "ValuesByType",
             "args": "cells+variant", "inputs": ["type", "json", "row"], "frames": frames,
             "select": lambda r: True if sealed or "@sealed" not in (r["json"], r["row"]) else "@sealed: only the console seals",
-            "compare": "value", "expect": None,          # сравнение — у половины (frames)
+            "compare": "value", "expect": None,          # each half supplies its comparison (frames)
             "doc": "values by type, one frame per half of a row: write {type, json} → {status: ok, row} | {status: absent} | "
                    "{status: refused[, fault]}; read {type, row} → {status: ok, value} | {status: absent} | {status: unreadable}",
             "src": "values-by-type/README.md:15-24,42-80; runner c_value_vectors.py:139-159,219-238,335-366"}
@@ -232,7 +232,7 @@ SEALING = [
 
 
 def door_token_verify_input(r):
-    """README door-token «door-token-verify»: {keys, now — JSON ячеек; authorization, unit, holder, path — строки}."""
+    """door-token README, door-token-verify: keys and now are JSON cells; authorization, unit, holder and path are strings."""
     obj = {"keys": json.loads(r["keys"]), "now": json.loads(r["now"]), "authorization": r["authorization"],
            "unit": r["unit"], "holder": r["holder"], "path": r["path"]}
     return json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
@@ -270,8 +270,8 @@ WIRE = {
         object_client("address.tsv"), object_client("read.tsv"),
         {"package": "common/row-check", "table": "cases.tsv", "surface": "vectors", "fn": "RowCheck", "args": "cells",
          "inputs": ["unit", "op", "body", "stored", "rows"],
-         "files": {"testsub.subsystem.yaml": "@root/Source/tests/testdata/testsub.subsystem.yaml",
-                   "testsub2.subsystem.yaml": "@root/Source/tests/testdata/testsub2.subsystem.yaml"},
+         "files": {"testsub.subsystem.yaml": "@root/Platform/common/data/testsub/testsub.subsystem.yaml",
+                   "testsub2.subsystem.yaml": "@root/Platform/common/data/testsub/testsub2.subsystem.yaml"},
          "select": by_col("unit", ("testsub2/tallies",), "only the console (the worker writes testsub2/tallies)"),
          "compare": "row",
          "expect": lambda r, d: (0, dict({"result": r["expect"]},
@@ -295,13 +295,13 @@ WIRE = {
          "args": "input", "input": "input", "compare": "raw",
          "expect": lambda r, d: (0, None, r["expect"].encode("utf-8")),
          "doc": "the id of a created row (stand creates-key): stdout — the id bytes exactly, no LF, no JSON",
-         "src": "03-worker/vectors/creates-key/README.md:9-33; acceptance/README.md:40-49; spec103 сверка п. 1: stand — "
-                "канон"},
+         "src": "03-worker/vectors/creates-key/README.md:9-33; acceptance/README.md:40-49; spec103 cross-check item 1: stand is "
+                "canonical"},
         {"package": "03-worker/creates-key", "table": "cases.tsv", "surface": "vectors", "fn": "CreatesKeyCells",
          "args": "cells", "inputs": ["input"], "compare": "raw",
          "expect": lambda r, d: (0, None, r["expect"].encode("utf-8")),
          "doc": "the id of a created row through the unified command (cells input): Raw — the id bytes exactly",
-         "src": "spec103 сверка п. 1: совместимая привязка общего провода, исход raw"},
+         "src": "spec103 cross-check item 1: compatible shared-wire binding, raw outcome"},
     ],
     "04-controller": [
         {"package": "common/fresh-age", "table": "fresh.tsv", "surface": "vectors", "fn": "FreshAge", "args": "cells",
@@ -370,18 +370,18 @@ def value_pkg(pkg, fn, doc, src, table="cases.tsv", inputs=("input",), col="expe
 
 
 def rid_stand_input(r):
-    """rid README «Stand command»: {"rid": <лексема ячейки как есть>} — без повторного кодирования."""
+    """rid README, Stand command: {"rid": <unchanged cell lexeme>}, without re-encoding."""
     return ('{"rid":' + r["rid"] + "}").encode("utf-8")
 
 
 def digest_stand_input(r):
-    """request-digest README «Stand command»: {"sender": <слово>, "input": <текст ячейки как JSON-строка>}."""
+    """request-digest README, Stand command: sender is a word; input is the cell text encoded as a JSON string."""
     return json.dumps({"sender": r["sender"], "input": r["input"]}, ensure_ascii=False,
                       separators=(",", ":")).encode("utf-8")
 
 
 def said_read_input(r):
-    """said-id README «said-read»: {"fetched": <ячейка>, "rid": <ячейка>} — лексемы ячеек как есть."""
+    """said-id README, said-read: {"fetched": <cell>, "rid": <cell>}, retaining the cell lexemes."""
     return ('{"fetched":' + r["fetched"] + ',"rid":' + r["rid"] + "}").encode("utf-8")
 
 
@@ -463,8 +463,8 @@ WIRE["06-console"] = [
      "src": "resource-state/README.md:16-40; runner c_state_vectors.py:17,29-34"},
     {"package": "common/row-check", "table": "cases.tsv", "surface": "vectors", "fn": "RowCheck", "args": "cells",
      "inputs": ["unit", "op", "body", "stored", "rows"],
-     "files": {"testsub.subsystem.yaml": "@root/Source/tests/testdata/testsub.subsystem.yaml",
-               "testsub2.subsystem.yaml": "@root/Source/tests/testdata/testsub2.subsystem.yaml"},
+     "files": {"testsub.subsystem.yaml": "@root/Platform/common/data/testsub/testsub.subsystem.yaml",
+               "testsub2.subsystem.yaml": "@root/Platform/common/data/testsub/testsub2.subsystem.yaml"},
      "compare": "row",
      "expect": lambda r, d: (0, dict({"result": r["expect"]},
                                      **({"row": json.loads(r["row"])} if r["expect"] == "ok" and r["row"] else {}),
@@ -496,7 +496,7 @@ WIRE["06-console"] = [
      "doc": "the tombstone peers: {peers: [...]} (a set) | \"no_delete\"",
      "src": "tombstone/README.md:11-26; runner c_resource_vectors.py:21-22,90-203"},
     values_by_type(("write", "read"), sealed=True),
-    # свои пакеты урока
+    # the lesson's own packages
     value_pkg("06-console/contender-projection", "ContenderProjection", "the contender projection: {name_conflict, "
               "name_conflicts[, name_conflict_unreadable]}", "06-console/vectors/contender-projection/README.md:13-31"),
     value_pkg("06-console/key-families", "KeyFamilies", "the key families present: {<id>: [<key>…]} (order matters)",
@@ -534,17 +534,17 @@ WIRE["06-console"] = [
 ]
 
 
-# --- P/08, P/09, P/10 (процесс домена, агент, консоль домена): черновик по README, сверка с раннером 37b733b ---
+# --- P/08, P/09, P/10 (domain process, agent, domain console): README draft, runner cross-check 37b733b ---
 
 def env_open(r, d):
-    """x25519-open / m1-open: ячейка в кавычках — {result: ok, plain}; слово — {result: refused, reason}."""
+    """x25519-open / m1-open: a quoted cell means {result: ok, plain}; a word means {result: refused, reason}."""
     if r["expect"].startswith('"'):
         return (0, {"result": "ok", "plain": json.loads(r["expect"])}, None)
     return (0, {"result": "refused", "reason": r["expect"]}, None)
 
 
 def env_round(r, d):
-    """x25519-round / m1-round: ok — {result: ok, opened: [plain, plain], distinct: true}; иначе отказ со словом."""
+    """x25519-round / m1-round: ok means {result: ok, opened: [plain, plain], distinct: true}; otherwise refuse with the word."""
     if r["expect"] == "ok":
         p = json.loads(r["plain"])
         return (0, {"result": "ok", "opened": [p, p], "distinct": True}, None)
@@ -568,8 +568,8 @@ def stand_subset(pkg, key, fn, doc, src):
 
 ACCEPT = {"package": "common/accept", "table": "cases.tsv", "surface": "vectors", "fn": "Accept", "args": "cells",
           "inputs": ["input"], "compare": "subset", "expect": or_exit2,
-          "files": {"testsub.subsystem.yaml": "@root/Source/tests/testdata/testsub.subsystem.yaml",
-                    "testsub2.subsystem.yaml": "@root/Source/tests/testdata/testsub2.subsystem.yaml"},
+          "files": {"testsub.subsystem.yaml": "@root/Platform/common/data/testsub/testsub.subsystem.yaml",
+                    "testsub2.subsystem.yaml": "@root/Platform/common/data/testsub/testsub2.subsystem.yaml"},
           "doc": "the acceptance of a member request: the object of expect (subset; @absent — no key, @any — any value)",
           "src": "accept/README.md:19-47; runner c_vector_packages.py:170-178, c_domain_packages.py:89-99"}
 
@@ -755,13 +755,13 @@ WIRE["05-resource"] = [
      "inputs": ["op", "input"], "select": by_col("op", ("ack", "remove"), "peers: 06-console"),
      "compare": "setarrays", "expect": value(),
      "doc": "the tombstone of the resource: ack → the acknowledgements; remove → the removal decision (arrays as sets)",
-     "src": "tombstone/README.md:1-24 (the resource: ack and remove, P/05 Н1.1)"},
+     "src": "tombstone/README.md:1-24 (the resource: ack and remove, P/05 N1.1)"},
     value_pkg("05-resource/relieve", "Relieve", "the relieve step of the resource pass: cases.tsv → {action, free}; "
               "short.tsv → the heartbeat field short", "05-resource/vectors/relieve/README.md:5-30"),
     value_pkg("05-resource/relieve", "Relieve", "", "05-resource/vectors/relieve/README.md:20", table="short.tsv"),
 ]
 
-# Таблицы состава урока, которые пакет не исполняет (опись: excluded с причиной).
+# Lesson tables not executed by the package (inventory: excluded with a reason).
 _FAULT_LAYOUT = ("layout (as 03): the process speaks no fault.tsv word of its own refusals (fault README «Who performs "
                  "it»; no word in the lesson's norms); no native fault command")
 SKIP_LESSON = {

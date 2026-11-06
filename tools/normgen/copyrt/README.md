@@ -1,49 +1,49 @@
-# Соединение копии с хранилищем P/01
+# Connecting copies to the P/01 store
 
-`gen_box.py` берёт формат, ограничения и расчёт floor из P/01.1/P/01.3. Полная процедура над хранилищем находится в
-`go/*.go`: это закрытая **ручная среда пакета**, `origin: handwritten`. Кодек и формулы остаются `generated`.
-Норма F1/продолжения — опубликованный 809c168d1, вошедший в main1655; KIT выпускается на официальном export
-`32d2bb12d97ca8f2c32fba19723db78077b5bf94`. Файлы реализации линии среда и судья не читают.
-Для известной старой формы до 809 генератор сохраняет прежние примитивы box; новый исполнитель и его API не входят
-в такой пакет. Частично записанное правило F1 даёт ошибку, а не ослабленный перенос.
+`gen_box.py` reads the format, limits and floor calculation from P/01.1/P/01.3. The complete store procedure lives
+in `go/*.go`: this is the kit's closed **handwritten runtime**, with `origin: handwritten`. The codec and formulas
+remain `generated`. The F1/continuation rule was published in 809c168d1 and merged in main1655; its KIT uses official
+export `32d2bb12d97ca8f2c32fba19723db78077b5bf94`. Neither runtime nor judge reads a line's implementation files.
+For the known form preceding 809, the generator preserves the old box primitives and excludes the new executor/API.
+A partially specified F1 rule errors rather than allowing a weaker transfer.
 
-`CopyStorage.WithCopyLock` держит ту же блокировку, что обычные записи и пакет. В его callback работает `CopyTxn`:
+`CopyStorage.WithCopyLock` holds the same lock as ordinary writes and batches. Its callback receives `CopyTxn`:
 
-| Метод | Что делает хозяин хранилища |
+| Method | Store owner's responsibility |
 |---|---|
-| `Snapshot` | Читает фактические строки, верхний индекс и долговременный `ImportProgress` |
-| `BeginImport` | Одним барьером сохраняет progress и **новый F1 как первую запись строки**, поднимает индекс; источник не передаёт id/admission memory, хозяин сохраняет обычные метаданные своей операции floor |
-| `WriteImport` | Пишет предоставленную строку с её точной версией, без выделения новой версии через обычный put |
-| `FinishImport` | Сохраняет Done после проверки действительных строк процедурой пакета |
+| `Snapshot` | Read actual rows, the upper index and durable `ImportProgress` |
+| `BeginImport` | Persist progress and **the new F1 as the first row write** under one barrier, advancing the index; the source carries no id/admission memory, and the owner preserves its floor operation's ordinary metadata |
+| `WriteImport` | Write the supplied row at its exact version, without allocating a new version through ordinary put |
+| `FinishImport` | Persist Done after the kit procedure verifies the actual rows |
 
-Каждый успех означает пройденный обычный durability barrier. Ошибка может иметь неизвестный исход: после открытия
-`Snapshot` должен показать то, что действительно пережило остановку. `ImportProgress` содержит SHA-256 неизменного
-входа, base, фазу и весь первый F1, включая items/index/generation_at. Продолжение сверяет их и пропускает уже записанные
-строки. Оно не вычисляет новое поколение по изменившимся часам. Копийный floor участвует в upper/clock, но не переносится.
+Every success means the ordinary durability barrier has completed. Errors may have an unknown outcome: after reopening,
+`Snapshot` must expose what actually survived. `ImportProgress` contains the immutable input's SHA-256, base, phase and
+the complete first F1, including items/index/generation_at. Continuation compares them and skips already written rows;
+it never computes a new generation from a changed clock. The copy's floor contributes to upper/clock but is not copied.
 
-Нужная обвязка реализации:
+Implementation wiring:
 
-- Соединить перечисленные операции со своим форматом данных и барьерами. Пакет не выбирает этот формат.
-- Дать `CopyControl.Open(command)`: для backup — настоящий живой store через существующий admin-транспорт; для
-  import/restore box — исключительное открытие остановленной цели. Вернуть также close.
-- Соединить `admin.Env.Copy` с этим `CopyControl` через существующий `launch.App.Admin` → `admin.Run`. Для удалённого
-  backup можно реализовать тот же `admin.CopyOps` своим транспортом, вызывающим процедуру на живом store.
-- Задать настоящий Dir/оперативный ceiling и часы. У backup **нет** флага -dir: пустой `f.Dir` не заменяет каталог
-  живого daemon. У import/restore цель — `f.Dir`; нулевой ceiling использует нормативный default.
-- Читать progress при обычном открытии. `CopyStartAllowed` отказывает при незавершённой фазе: обвязка запуска
-  отображает это в `launch.Refusal`/код 2, HTTP-обвязка обычных reads/writes — в 503. Продолжение — отдельный путь.
-- Существующие YOURS Backup/Import/Restore остаются своими. Новые заготовки уже делегируют подключённому CopyOps;
-  старые изменённые заготовки могут вызвать тот же порт. Отсутствующий порт явно отказывает.
+- Connect these operations to your data format and barriers. The kit does not choose that format.
+- Supply `CopyControl.Open(command)`: backup opens the actual live store through its existing admin transport;
+  box import/restore exclusively opens a stopped target. Also return close.
+- Connect `admin.Env.Copy` to this `CopyControl` through existing `launch.App.Admin` -> `admin.Run`. Remote backup may
+  implement the same `admin.CopyOps` through a transport invoking the procedure on the live store.
+- Supply the actual Dir, effective ceiling and clock. Backup has **no** -dir flag: empty `f.Dir` does not stand for
+  the live daemon's directory. Import/restore targets `f.Dir`; a zero ceiling selects the normative default.
+- Read progress during ordinary open. `CopyStartAllowed` refuses an unfinished phase: startup maps this to
+  `launch.Refusal`/exit 2, and ordinary read/write HTTP handling maps it to 503. Continuation uses a separate path.
+- Existing YOURS Backup/Import/Restore remain implementation-owned. New scaffolds delegate to connected CopyOps;
+  older edited scaffolds may call the same port. A missing port explicitly refuses.
 
-`test_copy_storage.py` — внешний судья среды. Его файловый хозяин хранит действительное состояние с sync/rename,
-обычные Get/Put читают и меняют его, CLI идёт через обычные flags/admin. Судья выбирает все **51** обычную строку
-`daemon_copy` по stages.tsv, берёт входы `acceptance/3` и выполняет их; подготовка исходного store берётся из README
-P/01.3 (две реальные манифестные строки). Нормализованное ожидание сравнивается только после исполнения.
+`test_copy_storage.py` is the runtime's external judge. Its file-backed owner persists actual state with sync/rename;
+ordinary Get/Put read and modify that state, and CLI calls use ordinary flags/admin. The judge selects all **51**
+ordinary `daemon_copy` rows through stages.tsv and executes their acceptance/3 inputs. Source-store preparation comes
+from P/01.3's README: two actual manifest rows. It compares normalized expectations only after execution.
 
-Отдельный YOURS `CallSeam` соединяется с теми же нативными функциями хозяина. Он выполняет опубликованный
-`store-copy-floor`: restore → внешний backup → частичный import → повторное открытие → продолжение. Фактические
-записи, F1 и полнота дают наблюдение; ожидание в адаптер не передаётся. Живой DataDir fixture служит неизменным sentinel.
-Другие проверки покрывают отказ до мутации, потерянный ответ floor, неизменность входа/base, точные версии, id memory,
-режим 0600 и временные файлы. Пять исполняемых мутантов проверяют запрет переноса floor, продолжение, версии, индекс и ложный Done.
+A separate YOURS `CallSeam` connects to those same native owner functions. It executes published `store-copy-floor`:
+restore -> external backup -> partial import -> reopen -> continuation. Observations come from actual writes, F1 and
+completeness; expectations are never passed into the adapter. The live DataDir fixture is an immutable sentinel.
+Other checks cover refusal before mutation, a lost floor response, immutable input/base, exact versions, id memory,
+0600 mode and temporary files. Five executable mutants check floor non-transfer, continuation, versions, index and false Done.
 
-Это судья кода пакета на файловом порту. Зачёт реализации линии и попытки MiniMax39 остаётся за её раннером.
+This judges kit code through a file port. Acceptance of the line implementation and MiniMax39 remains with its runner.

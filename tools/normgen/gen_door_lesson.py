@@ -1,19 +1,9 @@
-"""Генератор № 2 ADR-0125 для уроков после P/01 (P/06, часть 3а): маршруты двери из OpenAPI урока.
+"""Generate OpenAPI door routes for lessons after P/01 (ADR-0125 generator 2; P/06 part 3a).
 
-Запуск: python3 tools/normgen/gen_door_lesson.py --lesson 06-console [<out>]   (gen_door.py на уроке ≠ 01-store передаёт сюда)
+  python3 tools/normgen/gen_door_lesson.py --lesson 06-console [<out>]
+gen_door.py delegates here when the lesson is not 01-store. Read spec/<lesson>.api.openapi.yaml via yamlsub, resolving external refs relative to the lesson document; description, summary and x-mounting prose is not interpreted.
 
-Источник — `spec/<урок>.api.openapi.yaml` (загрузчик yamlsub; внешние `$ref` — по относительному пути файла урока).
-Проза (description, summary, x-mounting) не читается. Выход <out>/go/apidoor/:
-- `routes.go` (сгенерирован): `Op` — операция на пару (путь, метод) в порядке OpenAPI; `Ops` — сведения: метод, путь,
-  `Prefixed` (у пути есть сервер `{origin}/{sub}` — тот же шаблон и с префиксом `/{sub}`), параметры (имя, место,
-  обязательность), ответы (код, media types, заголовки), media types тела запроса; таблицы маршрутизатора —
-  шаблоны, проверки параметров пути по схеме (minLength, maxLength, pattern, enum, const; `$ref` разворачивается),
-  пары путь+метод → операция, методы пути, «все операции пути объявляют 405»;
-- `routes_rt.go` — копия ручной среды `doorrt2/go/routes.go`: `Route(method, path, Catalog)`, `Catalog` (YOURS —
-  каталог загруженных имён: sub, rows, table, pass), `Match`, `RouteError`.
-Что генератор не делает (часть 3б): разбор и проверку тел по схемам, запись ответов (Encode), сборку тел отказов.
-Судья — test_gen_door_lesson.py (своя модель маршрутов по OpenAPI, пробы и мутанты).
-"""
+Emit go/apidoor/routes.go with Op in OpenAPI path/method order, Ops metadata (method, path, optional /{sub} prefix from {origin}/{sub}, parameters, requiredness, response status/media/headers and request media), router templates and path-schema checks (minLength, maxLength, pattern, enum, const, expanded refs), path/method dispatch, path methods and unanimous-405 metadata. Copy routes_rt.go from doorrt2/go/routes.go: Route(method, path, Catalog), Match and RouteError. The YOURS Catalog supplies loaded sub/rows/table/pass names. Part 3b body parsing/schema checks, Encode and refusal construction are outside this route generator. test_gen_door_lesson.py uses an independent OpenAPI route model, probes and mutants."""
 import hashlib
 import json
 import re
@@ -33,7 +23,7 @@ DEFAULT_OUT = L.out
 METHODS = ("get", "put", "post", "delete", "patch", "head", "options", "trace")
 RUNTIME = HERE / "doorrt2/go/routes.go"
 SCHEMA_RT = HERE / "doorrt2/go/schema.go"
-PRIORITY_RT = HERE / "doorrt2/go/routes_priority.go"   # режим x-route-priority (P/05-R057)
+PRIORITY_RT = HERE / "doorrt2/go/routes_priority.go"   # x-route-priority mode (P/05-R057).
 SCHEMA_WORDS = {"$ref", "type", "enum", "const", "allOf", "anyOf", "oneOf", "not", "if", "then", "else", "properties",
                 "patternProperties", "additionalProperties", "unevaluatedProperties", "propertyNames", "required",
                 "dependentRequired", "minProperties", "maxProperties", "items", "minItems", "maxItems", "uniqueItems",
@@ -56,7 +46,7 @@ def go_str(s):
 
 
 class Docs:
-    """Документ урока и внешние документы по `$ref`."""
+    """The lesson document and external ref documents."""
 
     def __init__(self, path):
         self.main = Path(path).resolve()
@@ -75,7 +65,7 @@ class Docs:
         return self.cache[path]
 
     def resolve(self, ref, base):
-        """→ (узел, файл узла)."""
+        """Return (node, node document)."""
         file, _, pointer = ref.partition("#")
         path = (Path(base).parent / file).resolve() if file else Path(base)
         node = self.load(path)
@@ -87,7 +77,7 @@ class Docs:
         return node, path
 
     def deref_list(self, item, op, base):
-        """Параметры пути и операции с их x-* словами (после разворота $ref)."""
+        """Read path parameters and operation x-* keywords after expanding refs."""
         return [self.deref(p, base)[0] for p in item.get("parameters", []) + op_raw(item, op).get("parameters", [])]
 
     def deref(self, node, base, seen=()):
@@ -100,7 +90,7 @@ class Docs:
 
 
 class Bundle:
-    """Схемы тел в одну сборку {"$defs": …}: компоненты урока — по имени, внешние — «NN.<имя>», встроенные — по месту."""
+    """Combine body schemas under $defs: lesson components retain names, external components use NN.<name>, inline schemas use their location."""
 
     def __init__(self, docs):
         self.docs, self.defs, self.names = docs, {}, {}
@@ -119,7 +109,7 @@ class Bundle:
             last = pointer.rstrip("/").split("/")[-1] if pointer else path.stem
             name = self.prefix(path) + (last if pointer.startswith("/components/schemas/") else
                                         pointer.strip("/").replace("/", "."))
-            name = re.sub(r"[/~]", "_", name.replace("~1", "_").replace("~0", "_"))   # имя — без «/» и «~» (JSON Pointer)
+            name = re.sub(r"[/~]", "_", name.replace("~1", "_").replace("~0", "_"))   # Names exclude '/' and '~' (JSON Pointer).
             if name in self.defs:
                 raise GenError(f"schema bundle: two schemas named {name}")
             self.names[key] = name
@@ -164,7 +154,7 @@ def op_raw(item, op):
 
 
 def param_check(docs, schema, base, where):
-    """Схема параметра пути → {minLen, maxLen, pattern, enum}; вне подмножества — GenError."""
+    """Convert a path-parameter schema to minLen, maxLen, pattern, enum; unsupported schemas raise GenError."""
     out = {"min": 0, "max": -1, "pattern": None, "enum": None, "not_enum": [], "not_pattern": []}
     node, base = docs.deref(schema, base)
     if not isinstance(node, dict):
@@ -189,7 +179,7 @@ def param_check(docs, schema, base, where):
         out["enum"] = [str(v) for v in node["enum"]]
     if "const" in node:
         out["enum"] = [str(node["const"])]
-    if "not" in node:                                  # запреты: not {enum} | not {pattern} | not {anyOf: [они]}
+    if "not" in node:                                  # Exclusions: not {enum}, not {pattern}, or not {anyOf: [those]}.
         neg = node["not"]
         items = neg["anyOf"] if isinstance(neg, dict) and set(neg) == {"anyOf"} else [neg]
         for it in items:
@@ -233,14 +223,14 @@ def prefixed(item):
     urls = [s.get("url", "") for s in servers]
     if not urls:
         return False
-    literal = [u for u in urls if "{" not in u]       # адрес-пример без переменных (P/09) — путь без префикса
+    literal = [u for u in urls if "{" not in u]       # A concrete server example without variables (P/09) gives an unprefixed path.
     if not set(urls) - set(literal) <= {"{origin}", "{origin}/{sub}"}:
         raise GenError(f"servers {urls}: only {{origin}}, {{origin}}/{{sub}} or literal example URLs")
     return "{origin}/{sub}" in urls
 
 
-bodies = []          # (req|resp, Op, код, media, схема, файл) — собирает build для bodies.go
-priority = []        # шаблоны режима x-route-priority — собирает build
+bodies = []          # build collects (req|resp, Op, status, media, schema, document) for bodies.go.
+priority = []        # build collects templates for x-route-priority mode.
 
 
 def build(root=ROOT):
@@ -295,7 +285,7 @@ def build(root=ROOT):
                 for media, mo in (r_node.get("content") or {}).items():
                     bodies.append(("resp", name, str(r_code), media, mo.get("schema"), r_base))
                     sch = mo.get("schema") or {}
-                    if isinstance(sch, dict) and "x-line-schema" in sch:      # x-ndjson: схема строки
+                    if isinstance(sch, dict) and "x-line-schema" in sch:      # x-ndjson declares the line schema.
                         bodies.append(("line", name, str(r_code), media, sch["x-line-schema"], r_base))
             for prm in item.get("parameters", []) + op.get("parameters", []):
                 prm, pbase = docs.deref(prm, spec)
@@ -303,7 +293,7 @@ def build(root=ROOT):
                     sch = prm.get("schema") or {}
                     sch_node = docs.deref(sch, pbase)[0] if isinstance(sch, dict) else {}
                     lex = prm.get("x-query-lexeme")
-                    if lex is not None:                # P/05-R022, R031: закрытое расширение query
+                    if lex is not None:                # P/05-R022, R031: closed query extension.
                         stype = sch_node.get("type") if isinstance(sch_node, dict) else None
                         want = {"number": "number", "integer": "integer", "uint64": "string"}.get(lex.get("parse"))
                         if prm["in"] != "query" or set(lex) - {"pattern", "parse", "strip"} or "pattern" not in lex \
@@ -326,7 +316,7 @@ def build(root=ROOT):
             path_ops.append(ops[-1])
         if not path_ops:
             continue
-        if "x-route-priority" in item:                 # режим P/05-R057: приоритет пути и захват/декодирование/ошибки
+        if "x-route-priority" in item:                 # P/05-R057 mode: path priority, capture/decoding/errors.
             caps, decs, errs, schemas = {}, {}, {}, {}
             for o in path_ops:
                 for prm in o["params"]:
@@ -365,7 +355,7 @@ def build(root=ROOT):
 
 
 def server_sub_check(docs, item, spec, path):
-    """Переменная sub сервера {origin}/{sub}: enum переменной или без ограничений (каталог судит имя)."""
+    """Read sub from server {origin}/{sub}: enum if declared, otherwise unconstrained; Catalog judges names."""
     for s in item.get("servers") or []:
         if s.get("url") == "{origin}/{sub}":
             var = (s.get("variables") or {}).get("sub") or {}
@@ -428,7 +418,7 @@ def go_source(ops, templates, checks, by_pm, methods_of, all405, rel, sha, roles
                                                for m, (st, rs) in es.items()) + "}" for n, es in t["errors"].items()) + "},")
         out += ["}", "", "var byPathMethod = map[string]Op{"]
         out += [f"\t{go_str(k)}: {v}," for k, v in by_pm.items()]
-        out += ["}", "", "// opRoles — door-roles.tsv: роли, допущенные к операции (режим mtls).",
+        out += ["}", "", '// opRoles maps door-roles.tsv operations to admitted mtls roles.',
                 "var opRoles = map[Op][]string{"]
         for op, rs in (roles or {}).items():
             out.append(f"\t{op}: {{" + ", ".join(go_str(r) for r in rs) + "},")
@@ -478,21 +468,21 @@ def bodies_source(docs, rel, sha):
         elif isinstance(schema, dict) and set(schema) == {"$ref"}:
             name = b.ref(schema["$ref"], base)[len("#/$defs/"):]
         else:
-            safe = media.replace("*", "any").replace("/", "_")     # имя сборки — без «/» (JSON Pointer $ref)
+            safe = media.replace("*", "any").replace("/", "_")     # Combined schema name excludes '/' for JSON Pointer refs.
             name = b.inline(f"{op}.{kind}.{code or 'body'}.{safe}", schema, base)
         if kind == "req":
             req.setdefault(op, {})[media] = name
         else:
             resp.setdefault(op, {}).setdefault(code, {})[media] = name
     path_schemas = {}
-    for t in priority:                                 # схемы параметров пути (режим x-route-priority)
+    for t in priority:                                 # Path-parameter schemas in x-route-priority mode.
         for name, (schema, base) in t["schemas"].items():
             if isinstance(schema, dict) and set(schema) == {"$ref"}:
                 path_schemas.setdefault(t["path"], {})[name] = b.ref(schema["$ref"], base)[len("#/$defs/"):]
             else:
                 safe = re.sub(r"[/{}~]", "_", t["path"])
                 path_schemas.setdefault(t["path"], {})[name] = b.inline(f"path{safe}.{name}", schema, base)
-    bundle = json.dumps({"$defs": b.defs}, ensure_ascii=True, sort_keys=True, separators=(",", ":"))  # BOM в Go — нельзя
+    bundle = json.dumps({"$defs": b.defs}, ensure_ascii=True, sort_keys=True, separators=(",", ":"))  # Go source cannot contain a BOM.
     out = [f"// Code generated by tools/normgen/gen_door_lesson.py from {rel} (sha256 {sha[:16]}); DO NOT EDIT.", "",
            "package apidoor", "",
            f"// bundle — the schemas of the bodies of the OpenAPI ({len(b.defs)}; external $ref inlined): data of schema_rt.go.",
@@ -506,20 +496,20 @@ def bodies_source(docs, rel, sha):
     for op, codes in resp.items():
         out.append(f"\t{op}: {{" + ", ".join(f"{go_str(c)}: {{" + ", ".join(f"{go_str(m)}: {go_str(n)}" for m, n in ms.items())
                                               + "}" for c, ms in codes.items()) + "},")
-    out += ["}", "", "// paramSchemas — параметры query и header операции: имя, место, обязательность, схема, умолчание (JSON).",
+    out += ["}", "", '// paramSchemas declares operation query/header names, locations, requiredness, schemas and JSON defaults.',
             "var paramSchemas = map[Op][]paramSpec{"]
     for op, ps in params.items():
         out.append(f"\t{op}: {{" + ", ".join(
             f"{{name: {go_str(n)}, in: {go_str(i)}, required: {str(r).lower()}, schema: {go_str(sn)}, def: {go_str(d)}"
             + (f", lexeme: &queryLexeme{{pattern: {go_str(lx['pattern'])}, parse: {go_str(lx['parse'])}, "
                f"strip: {go_str(lx.get('strip', ''))}}}" if lx else "") + "}" for n, i, r, sn, d, lx in ps) + "},")
-    out += ["}", "", "// ndjsonLines — схема строки тела application/x-ndjson ответа по коду (x-line-schema).",
+    out += ["}", "", '// ndjsonLines maps response status to application/x-ndjson line schemas(x-line-schema).',
             "var ndjsonLines = map[Op]map[string]string{"]
     for op, cs in lines.items():
         out.append(f"\t{op}: {{" + ", ".join(f"{go_str(c)}: {go_str(n)}" for c, n in cs.items()) + "},")
     out += ["}", ""]
     if priority:
-        out += ["// pathSchemas — схема параметра пути в сборке (режим x-route-priority).",
+        out += ['// pathSchemas stores combined path-parameter schemas for x-route-priority.',
                 "var pathSchemas = map[string]map[string]string{"]
         out += [f"\t{go_str(p)}: {{" + ", ".join(f"{go_str(n)}: {go_str(v)}" for n, v in ms.items()) + "},"
                 for p, ms in path_schemas.items()]
@@ -528,7 +518,7 @@ def bodies_source(docs, rel, sha):
 
 
 def read_roles(ops):
-    """forms/door-roles.tsv урока: method path roles norm → {Op: [роли]}; каждая строка — операция OpenAPI."""
+    """Read lesson door-roles.tsv (method, path, roles, norm) as {Op: roles}; every row must name an OpenAPI operation."""
     path = L.form("door-roles.tsv")
     if not path.is_file():
         return {}
@@ -580,7 +570,7 @@ def render(root=ROOT):
                 "routes_rt.go": gofmt(head.format("routes_priority.go") + PRIORITY_RT.read_text(encoding="utf-8")),
                 "bodies.go": gofmt(bodies_go),
                 "schema_rt.go": gofmt(head.format("schema.go") + SCHEMA_RT.read_text(encoding="utf-8"))}, len(ops), len(templates)
-    # операции без ответов с телом и без тела запроса — пустые записи (таблицы полны по Op)
+    # Operations without response or request bodies still get empty entries, keeping tables complete by Op.
     return {"routes.go": gofmt(go_source(ops, templates, checks, by_pm, methods_of, all405, rel, sha)),
             "routes_rt.go": gofmt(head.format("routes.go") + RUNTIME.read_text(encoding="utf-8")),
             "bodies.go": gofmt(bodies_go),
@@ -603,7 +593,7 @@ JUDGE = HERE / "test_gen_door_lesson.py"
 
 
 def kit_files(out=DEFAULT_OUT):
-    """→ [(каталог в internal, имя, байты, происхождение, источник)]; GenError — out устарел."""
+    """Return [(internal directory, name, bytes, origin, source)]; stale output raises GenError."""
     files, _, _ = render(ROOT)
     res = []
     for name, text in sorted(files.items()):
@@ -612,7 +602,8 @@ def kit_files(out=DEFAULT_OUT):
             raise GenError(f"{kept} is stale: run tools/normgen/gen_door_lesson.py --lesson {L.key}")
         origin, src = {"routes.go": ("generated", kept), "bodies.go": ("generated", kept),
                        "routes_rt.go": ("handwritten", RUNTIME), "schema_rt.go": ("handwritten", SCHEMA_RT)}[name]
-        res.append(("apidoor", name, kept.read_bytes(), origin, str(Path(src).relative_to(ROOT))))
+        source = L.output_source(kept, out) if origin == "generated" else str(Path(src).relative_to(ROOT))
+        res.append(("apidoor", name, kept.read_bytes(), origin, source))
     return res
 
 
@@ -636,7 +627,7 @@ def provenance():
 
 
 def kit_md():
-    """Справка части: что решает Catalog и какие группы шаблонов одной формы он различает (по таблицам урока)."""
+    """Document Catalog responsibilities and distinguish template groups of the same shape using lesson tables."""
     ops, templates, checks, by_pm, methods_of, all405, docs = build(ROOT)
     if priority:
         return KIT_MD_PRIORITY + KIT_MD_TAIL
