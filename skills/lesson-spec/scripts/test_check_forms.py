@@ -913,5 +913,38 @@ class WireTurn(unittest.TestCase):               # compare=turn — решени
         self.assertTrue(any("markers must be []" in e for e in errors), errors)
 
 
+class TurnMatch(unittest.TestCase):              # compare=turn по меткам: @new всякий раз новая, @same — последняя @new
+    W = lambda holder, cas: {"write": {"holder": holder}, "cas": cas}   # noqa: E731
+
+    def test_two_attempts(self):
+        W = TurnMatch.W
+        expected = [W("@new", ""), "held", W("@same", 1), "stop", W("@new", ""), "held", W("@same", 3), "held"]
+        actual = [W("a1", ""), "held", W("a1", 1), "stop", W("a2", ""), "held", W("a2", 3), "held"]
+        self.assertEqual(check_forms.turn_match(expected, actual), [])
+        same = [W("a1", ""), "held", W("a1", 1), "stop", W("a1", ""), "held", W("a1", 3), "held"]
+        self.assertTrue(any("repeats an earlier @new" in e for e in check_forms.turn_match(expected, same)))
+        stale = [W("a1", ""), "held", W("a1", 1), "stop", W("a2", ""), "held", W("a1", 3), "held"]
+        self.assertTrue(any("is not the last @new" in e for e in check_forms.turn_match(expected, stale)))
+
+    def test_new_new_in_a_row(self):
+        W = TurnMatch.W
+        expected = [W("@new", ""), "reread", W("@new", "")]
+        self.assertEqual(check_forms.turn_match(expected, [W("a1", ""), "reread", W("a2", "")]), [])
+        self.assertTrue(any("repeats" in e for e in check_forms.turn_match(expected, [W("a1", ""), "reread", W("a1", "")])))
+
+    def test_exact_rest(self):
+        W = TurnMatch.W
+        expected = [W("@new", ""), "held", W("", 1), "done"]
+        self.assertEqual(check_forms.turn_match(expected, [W("a1", ""), "held", W("", 1), "done"]), [])
+        for bad in ([W("@new", ""), "held", W("", 1), "done"],              # литерал метки — не настоящая метка
+                    [W("a1", 0), "held", W("", 1), "done"],                  # cas "" — не 0
+                    [W("a1", ""), "held", W("a1", 1), "done"],               # holder "" сравнивается точно
+                    [W("a1", ""), "held", W("", True), "done"],              # boolean — не число
+                    [W("a1", ""), "held", W("", 1), "done", "extra"],
+                    [{"write": {"holder": "a1", "x": 1}, "cas": ""}, "held", W("", 1), "done"]):
+            self.assertTrue(check_forms.turn_match(expected, bad), bad)
+        self.assertEqual(check_forms.turn_match([W("box-a:1", 2)], [W("box-a:1", 2.0)]), [])   # литеральный holder signer
+
+
 if __name__ == "__main__":
     unittest.main()
