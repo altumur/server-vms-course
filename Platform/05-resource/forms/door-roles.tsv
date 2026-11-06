@@ -4,14 +4,14 @@
 # The TLS chain, serial/revocation, role and CN/SAN checks remain common/contracts/role-certificate.md. The table is a pre-handler role check after operation matching, not a replacement for the TLS handshake.
 # A refused role uses ResourceDenied from the OpenAPI. A TLS failure has no invented HTTP status/body. Common404/405 routing remains the OpenAPI/prose rule.
 method	path	roles	norm
-GET	/v1/objects	*	P/05-R044; P/05 Н2 Admission to the resource doors; common/contracts/role-certificate.md
-GET	/v1/objects/{key}	*	P/05-R044; P/05 Н2 Admission to the resource doors; common/contracts/role-certificate.md
-PUT	/v1/objects/{key}	*	P/05-R044; P/05 Н2 Admission to the resource doors; common/contracts/role-certificate.md
-PUT	/v1/objects/{sub}/blobs/{digest}	*	P/05-R044; P/05 Н2 Admission to the resource doors; common/contracts/role-certificate.md
-GET	/events	console,resource,<sub>worker	P/05-R044; P/05 Н2 Admission to the resource doors; common/contracts/role-certificate.md
-GET	/events/wait	console,resource,<sub>worker	P/05-R044; P/05 Н2 Admission to the resource doors; common/contracts/role-certificate.md
-GET	/buckets/{sub}/{unit}	console,resource,<sub>worker	P/05-R044; P/05 Н2 Admission to the resource doors; common/contracts/role-certificate.md
-GET	/events/{path}	console,resource,<sub>worker	P/05-R044; P/05 Н2 Admission to the resource doors; common/contracts/role-certificate.md
-PUT	/mirror/{server}/{path}	resource	P/05-R044; P/05 Н2 Admission to the resource doors; common/contracts/role-certificate.md
-GET	/mirrored/{server}	console,resource,<sub>worker	P/05-R044; P/05 Н2 Admission to the resource doors; common/contracts/role-certificate.md
-GET	/mirrored/{server}/{path}	console,resource,<sub>worker	P/05-R044; P/05 Н2 Admission to the resource doors; common/contracts/role-certificate.md
+GET	/v1/objects	*	P/05-R044; P/05 N2 Admission to the resource doors; common/contracts/role-certificate.md
+GET	/v1/objects/{key}	*	P/05-R044; P/05 N2 Admission to the resource doors; common/contracts/role-certificate.md
+PUT	/v1/objects/{key}	*	P/05-R044; P/05 N2 Admission to the resource doors; common/contracts/role-certificate.md
+PUT	/v1/objects/{sub}/blobs/{digest}	*	P/05-R044; P/05 N2 Admission to the resource doors; common/contracts/role-certificate.md
+GET	/events	console,resource,<sub>worker	P/05-R044; P/05 N2 Admission to the resource doors; common/contracts/role-certificate.md
+GET	/events/wait	console,resource,<sub>worker	P/05-R044; P/05 N2 Admission to the resource doors; common/contracts/role-certificate.md
+GET	/buckets/{sub}/{unit}	console,resource,<sub>worker	P/05-R044; P/05 N2 Admission to the resource doors; common/contracts/role-certificate.md
+GET	/events/{path}	console,resource,<sub>worker	P/05-R044; P/05 N2 Admission to the resource doors; common/contracts/role-certificate.md
+PUT	/mirror/{server}/{path}	resource	P/05-R044; P/05 N2 Admission to the resource doors; common/contracts/role-certificate.md
+GET	/mirrored/{server}	console,resource,<sub>worker	P/05-R044; P/05 N2 Admission to the resource doors; common/contracts/role-certificate.md
+GET	/mirrored/{server}/{path}	console,resource,<sub>worker	P/05-R044; P/05 N2 Admission to the resource doors; common/contracts/role-certificate.md

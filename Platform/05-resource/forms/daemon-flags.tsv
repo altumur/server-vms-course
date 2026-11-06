@@ -23,7 +23,7 @@ $W2C_TLS_DIR	dir	-	Linux /etc/w2c/tls; macOS <W2C_BOX>/tls	false	resource		commo
 $W2C_ENV	file	/etc/w2c/w2c.env	/etc/w2c/w2c.env	false	resource		common/contracts/env-file.md; P/05 lifecycle Environment
 $W2C_BOX	dir	/opt/w2c	/opt/w2c	false	resource		common/contracts/env-file.md; P/05 lifecycle Environment
 $W2C_MANIFEST_REV	string	-	-	false	resource		common/contracts/env-file.md; P/05 lifecycle Environment
-$RESOURCE_HOST	string	127.0.0.1	127.0.0.1	false	resource		P/02.4 Н1.6 process; P/05 lifecycle Environment
-$RESOURCE_PORT	string	8090	8090	false	resource		P/05 lifecycle Environment; P/02.4 Н1.6
-$RESOURCE_URL	string	-	-	false	resource		P/05 Н1.4 door_row; common/contracts/role-certificate.md
-$RESOURCE_TLS	string	-	unset: loopback; 1: mtls with its role kit	false	resource		P/05 Н1.4 door; P/02.4 Н1.6
+$RESOURCE_HOST	string	127.0.0.1	127.0.0.1	false	resource		P/02.4 N1.6 process; P/05 lifecycle Environment
+$RESOURCE_PORT	string	8090	8090	false	resource		P/05 lifecycle Environment; P/02.4 N1.6
+$RESOURCE_URL	string	-	-	false	resource		P/05 N1.4 door_row; common/contracts/role-certificate.md
+$RESOURCE_TLS	string	-	unset: loopback; 1: mtls with its role kit	false	resource		P/05 N1.4 door; P/02.4 N1.6

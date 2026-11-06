@@ -1,0 +1,5 @@
+--- a/skills/lesson-spec/scripts/en_mirror.py
++++ b/skills/lesson-spec/scripts/en_mirror.py
+@@ -562 +562 @@
+-FULL_ENGLISH_DONE = ("Platform/common/", "NORMATIVE-TERMS.md", "Platform/01-store/", "Platform/02-installer/", "Platform/03-worker/", "Platform/04-controller/")
++FULL_ENGLISH_DONE = ("Platform/common/", "NORMATIVE-TERMS.md", "Platform/01-store/", "Platform/02-installer/", "Platform/03-worker/", "Platform/04-controller/", "Platform/05-resource/")

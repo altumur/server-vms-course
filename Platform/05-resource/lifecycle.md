@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/lifecycle.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
 
 The lifecycle contract of the process `resource` (ADR-0083 addendum (2) item 1). The rows refer to the norms of the lesson and do not
-retell them (stage B: the references to М10/8, М10/10, М10/11 are retargeted to P/05 and the common contracts).
+retell them (stage B: the references to M10/8, M10/10, M10/11 are retargeted to P/05 and the common contracts).
 
 [P/02.3]: ../02-installer/spec/02.3-installer.norms.md
 [P/02.4]: ../02-installer/spec/02.4-installer.norms.md
@@ -94,10 +94,10 @@ start refusal, code 2 ([P/02.4] N1.6 `process`; ADR-0075 addendum of 2026-10-26 
 The roots `{data}/config`, `objects`, `events` are created before the process start by the role start command of the profile — [the common
 acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) N1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
 
-- The command of the «Stand» with the substitutions `{rport}` — the door port, `{server}` — the server name (`srv-a`; at the stand of М11 —
+- The command of the «Stand» with the substitutions `{rport}` — the door port, `{server}` — the server name (`srv-a`; at the stand of M11 —
   `srv-<cluster>`) ([Stand] «Resource»).
 - `{data}` is `PLATFORM_DIR`: the stand sets `PLATFORM_DIR={data}`, `RESOURCE_PORT={rport}`, `SERVER_NAME`, `BOX_ID`;
-  the events root is `{data}/events`, there is no separate key ([Stand] «Один каталог данных»).
+  the events root is `{data}/events`, there is no separate key ([Stand] «One data directory»).
 
 ## Open
 

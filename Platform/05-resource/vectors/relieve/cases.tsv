@@ -1,4 +1,4 @@
-# A request to free space (P/05 Н1.4 free_ask, Н3 relieve; the VMS request freeing): the pass input → the resource's action with the row free-<server>-<volume>. Form — README.
+# A request to free space (P/05 N1.4 free_ask, N3 relieve; the VMS request freeing): the pass input → the resource's action with the row free-<server>-<volume>. Form — README.
 case	input	expect	note
 freeing-0	{"space":{"enabled":true,"high":0.85,"low":0.75},"volume":{"name":"events","used":900,"total":1000},"sub":"rec","server":"srv-a","heartbeats":[{"sub":"rec","server":"srv-a","live":true,"freeing":{"events":0}}]}	{"action":"write","free":150}	the worker answers freeing: 0 — need = used − total·low
 freeing-n	{"space":{"enabled":true,"high":0.85,"low":0.75},"volume":{"name":"events","used":900,"total":1000},"sub":"rec","server":"srv-a","heartbeats":[{"sub":"rec","server":"srv-a","live":true,"freeing":{"events":100}}]}	{"action":"write","free":50}	the worker answers freeing: N — need decreases by N

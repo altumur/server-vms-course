@@ -4,11 +4,11 @@ This English text is the source; the Russian translation `ru/acceptance/README.m
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the lesson is [`05-resource.norms.md`](../spec/05-resource.norms.md) N5. The scenarios were moved from the acceptance of
-М10/08 (01, 02, 08) and
-М10/11 (01 → 09, 16 — the Architect's decision on V2 of the plan of the move of lesson 6: a scenario belongs to the lesson whose norm it checks) and
-М10/10 (10; the Specification's decision on V2 of the move)
+M10/08 (01, 02, 08) and
+M10/11 (01 → 09, 16 — the Architect's decision on V2 of the plan of the move of lesson 6: a scenario belongs to the lesson whose norm it checks) and
+M10/10 (10; the Specification's decision on V2 of the move)
 (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers, the names of the scenarios and the steps are the former ones, except `09-resource-door`
-(in М10/11 — `01-resource-door`; the number 01 is taken by `01-objects-door` from М10/08). Sc. 17–23 are the coverage audit of P/05 (2026-10-30,
+(in M10/11 — `01-resource-door`; the number 01 is taken by `01-objects-door` from M10/08). Sc. 17–23 are the coverage audit of P/05 (2026-10-30,
 the drafts F01–F03, F05–F07 of the audit session; the section «Coverage audit» below); sc. 24–28 — F04 (the section «Edges of `free_ask`»); sc. 29–45 —
 the second pass of the coverage audit (Gemini; the section «Coverage audit of P/05, second pass (Gemini)»; sc. 44, 45 — its deferred drafts
 after the Architect's decisions of 2026-10-30 on the questions of the norms of the Gemini audit, P/05 items 1, 4).
@@ -38,7 +38,7 @@ requests and copies are not prepared. The build is schema 1.
 
 Sc. `20-door-room`, `23-object-ceiling`, 24–31, 37–41, 44 and 45 install the catalogue `testsub` and `testsub2` the same way as `10-body-copy` (the order —
 «Stand»; the runner installs `testsub2` when a step of the scenario names it).
-Sc. `10-body-copy` (the body copy at the resource, from М10/10; T10, T11) installs the catalogue `testsub` and `testsub2` (the order — «Stand»;
+Sc. `10-body-copy` (the body copy at the resource, from M10/10; T10, T11) installs the catalogue `testsub` and `testsub2` (the order — «Stand»;
 `testsub2` declares a blob field, `testsub` does not), starts the resource by step 1 (`@start resource`); the resource door `resource` with
 an admissible identity of a neighbour; the digest `sha256-190267417aed…` — of the bytes `peer-copy`. It needs neither the console nor the controller.
 
@@ -55,7 +55,7 @@ The format is [the dictionary of directives and doors of the «Stand» of the co
 In total 35 scenarios / 292 steps; sc. 29–45 (the second pass of the audit, below) — 128 steps; sc. 24–28 (the edges of `free_ask`, below) — 49 steps; the other 115: 86 HTTP (with @until; the Architect's decision of 2026-11-04 — by scenarios.tsv), four `@append event`, `@append event-raw`, 18 `@start`, `@sigkill`,
 `@cut`, `@mend`, `@sleep` and two ASSERT.
 
-Steps of the reconciliation of python and go М10/6–11 (2026-10-18):
+Steps of the reconciliation of python and go M10/6–11 (2026-10-18):
 - **01-objects-door/6–15** — the listing of the objects door — a filter by the families of the door (`prefix=testsub/` — 200 empty), `other/` — 403, an empty
   parameter and `%FF` — 400, the directory `testsub/heartbeats` — 403, `%FF` and U+2028 in a key — 400, `OPTIONS` and `PUT` of the listing —
   405 (E1, E4–E10).
@@ -77,7 +77,7 @@ E32 (an alarm of a subsystem — sc. 34), E44 and E45 (the band between the mark
 
 ## The presence lock (sc. 16-presence-lock)
 
-From the acceptance of М10/11 (the second pilot, N-1; catches B1): the resource and the worker `w-1` — in the heartbeat of the resource `running: [testsub/w-1]`;
+From the acceptance of M10/11 (the second pilot, N-1; catches B1): the resource and the worker `w-1` — in the heartbeat of the resource `running: [testsub/w-1]`;
 `@sigkill w-1` — the lock is free, `running: []`; a new start of the same name — `running` again. The norm is
 [the presence lock contract](../../common/contracts/presence-lock.md) (the owner is lesson P/05) and N1.4 `presence`; the heartbeat
 of the resource is read through the objects door (`resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local`). Step 1
@@ -96,9 +96,9 @@ The scenarios of the coverage audit of P/05 (2026-10-30); each expectation is fr
 - sc. 17-schema-refusal — the check of the schema at start (N3 «resource start — schema check»; [the schema contract](../../common/contracts/schema.md)
   «Check at start», «Boundary»): `platform/schema` with `version` 2 (above SCHEMA 1) and `x` (not an integer) — `@start resource`
   exits with code 2; there is no door row `platform/doors/srv-a` — the check of the schema goes before the first write (lifecycle
-  «Порядок старта»); with `version` 1 — the resource starts and writes the door row. The row is written by the door `admin` (the writer is the console by the role admin,
+  «Start order»); with `version` 1 — the resource starts and writes the door row. The row is written by the door `admin` (the writer is the console by the role admin,
   P/06.6 N1.1a); the values of a store row are strings (P/01.1);
-- sc. 18-schema-read-wait — an error of reading `platform/schema` is «ждать доступности, не начиная работы», not code 2 (the schema
+- sc. 18-schema-read-wait — an error of reading `platform/schema` is «wait for availability before beginning work», not code 2 (the schema
   contract): `@cut role resource store` before the start — the store is silent to the resource (the connections of the socket of the role `resource` hang without
   an answer); `@mend` closes the hanging connections — the resource gets a read error and, without exiting, reads again: the door row
   appears without a new `@start` (the deadline 90 s — the norm does not limit the repeat of the reading by a step). A resource that exited on a read
@@ -117,14 +117,14 @@ The scenarios of the coverage audit of P/05 (2026-10-30); each expectation is fr
   — 14, does not enter `live`; `t-srv-a-1` (n = 1, the base one) — 13, does not enter `live`. `testsub` has no role file — there are no elements
   `room.testsub`, `live.testsub`, they are not expected;
 - sc. 21-events-wait — the hint (N1.6): there are no rows under `want` — the wait answers by the deadline `{changed: false, seq}`; the row
-  `testsub/c1` of the kind `probe.tick` is appended — `since=0` («у клиента нет позиции») answers at once `{changed: true, seq,
+  `testsub/c1` of the kind `probe.tick` is appended — `since=0` («the client has no position») answers at once `{changed: true, seq,
   touched}` with exactly this triple; `seq` is monotonic (`ASSERT $s1 <= $s2`); the cursor `since=seq` without new rows — again
   `changed: false`. The outcomes `full`, `replaced` and the eviction require parallel waits — outside the TSV;
-- sc. 22-torn-tail — a torn tail (N1.3 «Нечитаемая строка бакета», N3 «query» step 3; the event journal contract `torn`;
+- sc. 22-torn-tail — a torn tail (N1.3 «Unreadable bucket line», N3 «query» step 3; the event journal contract `torn`;
   the event journal merge contract `partial`): a whole line is given out, `truncated` 0; a tail without LF — even a parsable JSON — is not
   a line: not in `events` and not in `truncated`, the answer is `partial: true`, there is no `lines_garbled` (the field is only when it is above 0). The tail
   is written last: the next append would be glued to it;
-- sc. 23-object-ceiling — the ceiling of the resource door (N1.1 «Потолки ресурса», N2 `PUT /v1/objects/<sub>/blobs/<digest>`, N4):
+- sc. 23-object-ceiling — the ceiling of the resource door (N1.1 «Resource ceilings», N2 `PUT /v1/objects/<sub>/blobs/<digest>`, N4):
   a body copy of exactly 64 MiB (67108864 bytes `x`, `@big`) — 204 and it is read (a GET of exactly the limit is permitted, N2); 67108865 bytes —
   413 — by reading (the section «The ceiling +1 byte — by reading» below). The names are the SHA-256 of the bodies; `X-Written` is a number; `testsub2` declares a blob field;
   the stand does not set `max_bytes` of the object store (0 — without a ceiling). On 413 the door MAY answer without reading the body to the end: the runner
@@ -136,16 +136,16 @@ of a real write, sc. 19; the bytes of the file of an ordinary object are the imp
 
 ## Coverage audit of P/05, second pass (Gemini) (sc. 29–45)
 
-The drafts G01–G08 of the audit session (Gemini, commit a1f4efe61), reconciled with the norm and with the current acceptance (the mark «новое» of the drafts is
+The drafts G01–G08 of the audit session (Gemini, commit a1f4efe61), reconciled with the norm and with the current acceptance (the mark «new» of the drafts is
 against the report of the first pass, not against the acceptance); large bundles are divided among scenarios. Each expectation is from the norm:
 
-- sc. 29-row-objects (G01 item 1) — the row objects (N1.1 `row_object`, `door`; N4 «строка-объект — 403»): `objects.rows` of `testsub2`
+- sc. 29-row-objects (G01 item 1) — the row objects (N1.1 `row_object`, `door`; N4 «row object — 403»): `objects.rows` of `testsub2`
   (`marks/*`) and `commands/*` of both subsystems (the manifests with `requests`) are not given out by the objects door even with a written store row
   `objects/<key>` (the door `admin` writes it bypassing the writer), on any `scope`; a `prefix` under which there are no keys of the families of the door —
   403; `prefix=testsub2/` — a filter: 200, there are no row objects in the listing;
 - sc. 30-copy-written-max (G01 item 2) — `written` of a body copy (N1.1 `written`, C05-COPY-WRITTEN-SOURCE-01): the copy keeps the `written`
   of the original (`X-Written`), one already lying there does not decrease: 1700000010, then 1700000005 — stays 1700000010, then 1700000020;
-- sc. 31-objects-cluster (G03) — two resources (N1.1 `cluster`, «Тела у ресурса» `mirror`; N2 `scope`, `X-Missing`; N1.4 `pass`):
+- sc. 31-objects-cluster (G03) — two resources (N1.1 `cluster`, «Bodies at the resource» `mirror`; N2 `scope`, `X-Missing`; N1.4 `pass`):
   `srv-b` — `@start resource on srv-b`; the body is put into `srv-a` through the copy door, then `srv-a` is restarted — its first pass at
   start (C05-PASS-FIRST-AT-START-01) copies the body to the ring neighbour `srv-b` (copies — 1, there is no row `platform/mirror`) with the original
   `written`; an equal `written` — the server with the larger name (`srv-b`) is chosen, in the listing and in the reading; the heartbeat of `srv-b` — only in `cluster`;
@@ -187,7 +187,7 @@ against the report of the first pass, not against the acceptance); large bundles
   the door gives out the object `testsub2/tickets/t1` (`@put object` from `inputs/ticket-t1.json`, 28 bytes): `GET` 200 with the body, in the listing
   `prefix=testsub2/tickets/` with `size` 28; `testsub` has no section `objects` — `testsub/tickets/t1` 403 (a key outside the families of the door, N4);
 - sc. 45-gone-door (G02) — the tombstone at the remover (N1.1 `written`, `door`; [the tombstone contract](../../common/contracts/tombstone.md)
-  `listing`, `rewrite`; N4 «удалено позже»; C05-GONE-BODY-READ-01, C05-GONE-REWRITE-AT-WRITE-01): the tombstone
+  `listing`, `rewrite`; N4 «deleted later»; C05-GONE-BODY-READ-01, C05-GONE-REWRITE-AT-WRITE-01): the tombstone
   `.gone/testsub2/blobs/sha256-2c26b46b…e7ae` (SHA-256 of the bytes `foo`) with `written` 1700000100 is put by `@put object` from
   `inputs/gone-foo.json`; the ordinary listing `testsub2/blobs/` does not show it — `{}`; `prefix=.gone/` — the listing of the tombstones, `GET` —
   the body `{written, peers, acked}`; `PUT` on `.gone/…` — 405 (a write of a non-blob); a body copy with `X-Written` 1700000050 (older than the
@@ -254,7 +254,7 @@ These are tasks of the implementation/stand, not checks already performed:
 A reading of the branches and the schema confirms only the corresponding order/form. Timers,
 processes, file barriers, network breaks and cryptographic identity require separate
 observations. The tombstone at the remover (the listing, the body, 409, the removal on a newer write) — sc. 45; the convergence of the body copies by the neighbours
-(N1.1 «Надгробия»: `drop`, `ack`, `remove`) and `restore` (N1.4 «Восстановление бакетов») — a stand with two resources, there is no scenario.
+(N1.1 «Tombstones»: `drop`, `ack`, `remove`) and `restore` (N1.4 «Bucket restore») — a stand with two resources, there is no scenario.
 
 Restore: a full empty list, a confirmed absence of copies, a 500 of the directory and a broken answer are distinguished; the last two
 leave the restoration incomplete and are repeated per N1.4. A new process does not reuse INSTANCE_ID.
@@ -278,8 +278,8 @@ the last step, wait for the stop of all the created processes, then remove the s
 ## `journal/corrections.tsv`
 
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
-of the acceptances of М10/10 and М10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
-resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (analysis of the review of stage B 6–7, № 18). The log of М10/08 is moved as a whole into the acceptance of chapter 6.4 (`Platform/06-console/journal/corrections-4.tsv`, a log, not in the export).
+of the acceptances of M10/10 and M10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
+resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (analysis of the review of stage B 6–7, № 18). The log of M10/08 is moved as a whole into the acceptance of chapter 6.4 (`Platform/06-console/journal/corrections-4.tsv`, a log, not in the export).
 
 ## Edges of `free_ask` on the first pass (sc. 24–28)
 
@@ -293,11 +293,11 @@ the profile `b-c`): the resource does not touch it (the same version) and writes
 
 ## The ceiling +1 byte — by reading (sc. 23; C05-CEILING-PLUS-ONE-READING-01, -02)
 
-`PUT` of a body of 64 MiB + 1 byte: the door answers 413 by `Content-Length` before reading the body (N1.1 «Потолки ресурса», OpenAPI) —
+`PUT` of a body of 64 MiB + 1 byte: the door answers 413 by `Content-Length` before reading the body (N1.1 «Resource ceilings», OpenAPI) —
 the early refusal of P/01.1 N2.1: a full answer with `Connection: close`, then the drain of what was sent. The volume and the deadline of the drain are a choice of the
 implementation (P/01.1 item 9 «Implementation decides»; the witness has 1 MiB), a body of 64 MiB exceeds it, and the door lawfully
 closes the connection with a break while the client is still sending: the answer 413 may not reach the client (the dry run of Go 2026-10-30:
-«транспорт»). The step «+1 → 413, no key» is removed from the scenario and is checked by reading: 413 by `Content-Length` before the body,
+«transport»). The step «+1 → 413, no key» is removed from the scenario and is checked by reading: 413 by `Content-Length` before the body,
 the answer before the drain, no key; exactly 64 MiB — 204 and the reading 200 — stay a scenario (as G09 item 4 of the audit of P/06).
 
 ## Kit seams

@@ -17,7 +17,7 @@ Give the platform objects, events and their reading; give the resource the clean
 - The lecture (`ru/05-resource.md`, for people, not in the export) explains the reasons and the boundaries; the [lifecycle](../lifecycle.md) — the environment, the exit codes.
 
 The objects use the store vocabulary of P/01.1, the roles — [P/02.4 N1.6](../../02-installer/spec/02.4-installer.norms.md) and
-the role certificate contract. `PUT /v1/objects/<sub>/blobs/<digest>` — N1.1 «Тела у ресурса», N2; `restore` (`GET /mirrored/<server>`) — N1.4 «Восстановление бакетов».
+the role certificate contract. `PUT /v1/objects/<sub>/blobs/<digest>` — N1.1 «Bodies at the resource», N2; `restore` (`GET /mirrored/<server>`) — N1.4 «Bucket restore».
 Internal functions,
 libraries and the way the handlers are placed are not prescribed.
 

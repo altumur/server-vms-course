@@ -133,7 +133,7 @@
   },
   "pass_started": {
    "$ref": "#/$defs/common.time",
-   "description": "the start of the current pass (N3 «проход ресурса»)"
+   "description": "the start of the current pass (N3 «resource pass»)"
   },
   "pass_stalled": {
    "description": "seconds, only while the pass is hung (PULSE_LIMIT)",
@@ -226,7 +226,7 @@
    "uniqueItems": true
   },
   "restore": {
-   "description": "`{<neighbour>: …}` — restoring buckets from copies of neighbours (N1.4 «Восстановление бакетов»); in every heartbeat (E39)",
+   "description": "`{<neighbour>: …}` — restoring buckets from copies of neighbours (N1.4 «Bucket restore»); in every heartbeat (E39)",
    "type": "object",
    "propertyNames": {
     "type": "string"
@@ -251,7 +251,7 @@
      },
      "restored": {
       "$ref": "#/$defs/common.uint53",
-      "description": "only the buckets actually pulled from this neighbour; a bucket already lying on the volume is not counted (N1.4 «Восстановление бакетов»)"
+      "description": "only the buckets actually pulled from this neighbour; a bucket already lying on the volume is not counted (N1.4 «Bucket restore»)"
      },
      "missing": {
       "$ref": "#/$defs/common.uint53"
@@ -1048,11 +1048,11 @@
    "type": "object",
    "properties": {
     "domain": {
-     "description": "the domain name (chapter 8.2, from М11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
+     "description": "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
     },
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "the holder's term (chapter 8.8, from М11/10 N1.1); the order — (term, rev), term is senior"
+     "description": "the holder's term (chapter 8.8, from M11/10 N1.1); the order — (term, rev), term is senior"
     },
     "rev": {
      "$ref": "#/$defs/common.pos53",
