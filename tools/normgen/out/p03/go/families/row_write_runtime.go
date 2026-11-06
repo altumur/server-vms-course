@@ -331,6 +331,9 @@ func CaptureStateStart(start json.RawMessage, spec StateSpec) (StartSnapshot, er
 	}
 	defs := map[string]json.RawMessage{}
 	for key, raw := range spec.Defs {
+		if !utf8.ValidString(key) {
+			return StartSnapshot{}, fmt.Errorf("row constructor: invalid scalar-UTF8 definition name")
+		}
 		owned := append([]byte(nil), raw...)
 		if _, err := rwObject(owned); err != nil {
 			return StartSnapshot{}, err

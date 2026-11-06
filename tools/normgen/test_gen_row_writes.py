@@ -101,6 +101,8 @@ func TestRowWriteJSONBoundary(t *testing.T){
  for _,raw:=range [][]byte{append(append([]byte(nil),start...),[]byte(` garbage`)...),[]byte(`{"sub":"x","sub":"x"}`)} {
   if _,err:=CaptureStateStart(raw,spec);err==nil{t.Fatal("invalid snapshot JSON accepted")}
  }
+ invalidKey:=StateSpec{Schemas:spec.Schemas,Defs:map[string]json.RawMessage{string([]byte{0xff}):json.RawMessage(`{}`)}}
+ if _,err:=CaptureStateStart(start,invalidKey);err==nil{t.Fatal("invalid Go definition key must not be rewritten by json.Marshal")}
 }
 func TestRowWriteSnapshotConcurrent(t *testing.T){
  start:=json.RawMessage(`{"sub":"testsub","unit":"u1","born":"","revision":3,"epoch":8,"epoch_index":"9007199254740993"}`)

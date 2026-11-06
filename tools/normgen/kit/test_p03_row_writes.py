@@ -29,6 +29,11 @@ class P03RowWritesKit(unittest.TestCase):
         cls.build()
         cls.manifest = json.loads((cls.kit / "kit.manifest.json").read_bytes())
         cls.mod = cls.kit / "03-worker"
+        cls.report = Path(os.environ["NORMGEN_ROW_WRITES_REPORT_DIR"]) if os.environ.get("NORMGEN_ROW_WRITES_REPORT_DIR") else None
+        if cls.report:
+            cls.report.mkdir(parents=True, exist_ok=True)
+            for name in ("kit.manifest.json", "SOURCE.txt", "KIT.md"):
+                (cls.report / name).write_bytes((cls.kit / name).read_bytes())
 
     @classmethod
     def build(cls):
@@ -43,6 +48,8 @@ class P03RowWritesKit(unittest.TestCase):
         self.assertEqual(man["export"], EXPORT)
         self.assertEqual(man["parts"], ["families", "stagetests"])
         paths = {f["path"]: f for f in man["files"]}
+        for path, entry in paths.items():
+            self.assertEqual(hashlib.sha256((self.kit / path).read_bytes()).hexdigest(), entry["sha256"], path)
         for name in ("row_writes.go", "row_write_runtime.go"):
             path = "03-worker/internal/families/" + name
             self.assertIn(path, paths)
@@ -62,6 +69,8 @@ class P03RowWritesKit(unittest.TestCase):
         self.assertIn("tools/normgen/gen_row_writes.py", generators)
         self.assertIn("tools/normgen/tsv_input.py", generators)
         self.assertIn("tools/normgen/rowwritert/go/runtime.go", {e["path"] for e in prov["handwritten"]})
+        for entry in prov["generators"] + prov["handwritten"]:
+            self.assertEqual(entry["sha256"], hashlib.sha256((ROOT / entry["path"]).read_bytes()).hexdigest(), entry["path"])
         self.assertIn("GEN01", (self.kit / "KIT.md").read_text())
         self.assertIn("not an SDK or stage verdict", (self.kit / "KIT.md").read_text())
         for args in (["go", "vet", "./..."], ["go", "test", "-run", "^$", "./..."]):
@@ -91,6 +100,8 @@ class P03RowWritesKit(unittest.TestCase):
                               cwd=self.mod, env=GOENV, capture_output=True, text=True)
         self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
         events = [json.loads(l) for l in done.stdout.split("\n") if l.startswith("{")]
+        if self.report:
+            (self.report / "default-s5.jsonl").write_text(done.stdout)
         results = [e["Action"] for e in events if e.get("Test") == names[0] and e["Action"] in ("pass", "fail", "skip")]
         self.assertEqual(results, ["fail"])
         self.assertNotIn("panic:", done.stdout + done.stderr)
