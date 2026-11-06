@@ -1,0 +1,159 @@
+{
+  "base": "023399dea82d4ad904a9436deccea7c61b50a616",
+  "constants": {
+    "before": 25,
+    "after": 27,
+    "all_old_values_units_anchors_unchanged": true,
+    "only_old_meaning_deltas": [
+      "FOLDERS_MEMBERS_MAX",
+      "FOLDERS_PER_UNIT_MAX"
+    ],
+    "new_rows": {
+      "AT_ROUTE_WAIT": {
+        "name": "AT_ROUTE_WAIT",
+        "value": "15",
+        "unit": "s",
+        "norm": "P/06.7-R008",
+        "meaning": "worker route deadline at the target console for N1.6, replacing the common PASS_WAIT only on this route; a normative budget, not a measurement"
+      },
+      "FORWARD_WAIT": {
+        "name": "FORWARD_WAIT",
+        "value": "20",
+        "unit": "s",
+        "norm": "P/06.7-R008",
+        "meaning": "forwarding deadline only for N1.6 member reads; other forwarding keeps the common forwarding contract"
+      }
+    }
+  },
+  "schema_equalities": [
+    {
+      "source_table": "Platform/06-console/forms/runtime-constants.tsv",
+      "name": "FOLDERS_MEMBERS_MAX",
+      "source_value": 1000,
+      "second_carrier": "Platform/06-console/data/folders.schema.json",
+      "json_pointer": "/$defs/writer/properties/members/maxItems",
+      "schema_value_unchanged": true,
+      "direction": "form row -> schema",
+      "subject_judge_owner": "review103; no judge change in this branch"
+    },
+    {
+      "source_table": "Platform/06-console/forms/runtime-constants.tsv",
+      "name": "FOLDERS_PER_UNIT_MAX",
+      "source_value": 8,
+      "second_carrier": "Platform/06-console/data/memberof.schema.json",
+      "json_pointer": "/$defs/writer/properties/folders/maxItems",
+      "schema_value_unchanged": true,
+      "direction": "form row -> schema",
+      "subject_judge_owner": "review103; no judge change in this branch"
+    }
+  ],
+  "FieldView_schema_checks": [
+    {
+      "case": "absent",
+      "expected_valid": true,
+      "actual_valid": true
+    },
+    {
+      "case": "true",
+      "expected_valid": true,
+      "actual_valid": true
+    },
+    {
+      "case": "false",
+      "expected_valid": true,
+      "actual_valid": true
+    },
+    {
+      "case": "null",
+      "expected_valid": false,
+      "actual_valid": false
+    },
+    {
+      "case": "number0",
+      "expected_valid": false,
+      "actual_valid": false
+    },
+    {
+      "case": "number1",
+      "expected_valid": false,
+      "actual_valid": false
+    },
+    {
+      "case": "string",
+      "expected_valid": false,
+      "actual_valid": false
+    },
+    {
+      "case": "object",
+      "expected_valid": false,
+      "actual_valid": false
+    },
+    {
+      "case": "array",
+      "expected_valid": false,
+      "actual_valid": false
+    },
+    {
+      "case": "other-key",
+      "expected_valid": false,
+      "actual_valid": false
+    },
+    {
+      "case": "required-default-absent",
+      "expected_valid": false,
+      "actual_valid": false
+    }
+  ],
+  "FieldView_schema_check_count": 11,
+  "protected_paths": [
+    "Source",
+    "VMS",
+    "tools",
+    "skills",
+    "Platform/common",
+    "Platform/01-store",
+    "Platform/02-installer",
+    "Platform/03-worker",
+    "Platform/04-controller",
+    "Platform/05-resource",
+    "Platform/08-domain",
+    "Platform/09-agent",
+    "Platform/10-domain-console",
+    "Platform/07-console-module/module",
+    "Platform/07-console-module/data"
+  ],
+  "all_protected_bytes_identical": true,
+  "all_acceptance_vectors_payload_proofs_unchanged": true,
+  "folders_schema_only_delta": "/properties/members/description N1.1 -> N1.3; all validation rules unchanged",
+  "section_moves": [
+    {
+      "path": "Platform/06-console/spec/06.7-console.norms.md",
+      "before": [
+        "N1.15/P06.7-R016",
+        "N1.14/P06.7-R017"
+      ],
+      "after": [
+        "N1.14/P06.7-R017",
+        "N1.15/P06.7-R016"
+      ],
+      "both_section_bodies_raw_identical": true
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.7-console.norms.md",
+      "before": [
+        "N1.15/P06.7-R016",
+        "N1.14/P06.7-R017"
+      ],
+      "after": [
+        "N1.14/P06.7-R017",
+        "N1.15/P06.7-R016"
+      ],
+      "both_section_bodies_raw_identical": true
+    }
+  ],
+  "limits": [
+    "One-off source/schema audit, not an independently authored subject judge.",
+    "review103 owns form-schema equality/judge integration.",
+    "No Go/model/native/SUT/module/installer/HTTP execution; no normgen/KIT, exporter, main, pins, runtime or queue."
+  ]
+}

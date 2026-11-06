@@ -1,0 +1,210 @@
+{
+  "base": "023399dea82d4ad904a9436deccea7c61b50a616",
+  "files": [
+    {
+      "path": "Platform/06-console/data/folders.schema.json",
+      "before_sha256": "e60758561dc1fd5fc4506102606e26349d023cad9374b4c968f4773da097666b",
+      "after_sha256": "1bac46471c16fd5bbaadb20a734c77f011c6c6d41668b083691608c34b8d5aeb",
+      "before_bytes": 29700,
+      "after_bytes": 29700,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/forms/README.md",
+      "before_sha256": "889fccbe08f54e56e38a861ac32aa94a2d7fa0758e1e72b9972e94cd86f03385",
+      "after_sha256": "e035604777b9b3684285834b2d4dccb764cc2335f2d415064759a6213a1005f0",
+      "before_bytes": 13133,
+      "after_bytes": 14086,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/forms/runtime-constants.tsv",
+      "before_sha256": "4e4b8db0a5ce0e057c9cc63ce1b90b4009586f8429aaff745aa0f31754ba53a8",
+      "after_sha256": "b2e87b526ca395b4fe6b80353dbfb6132ecfad562dd9cab7ed1e57015d7837a4",
+      "before_bytes": 2758,
+      "after_bytes": 3309,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/lifecycle.md",
+      "before_sha256": "82fc88486b0a74a929d690c28f068c5f4b898b2e99c012a83e9893b522b3d1b5",
+      "after_sha256": "8ba2ca846303a2442b264e5b406e440ed8d6ef5652f22e2787b34270924e91cc",
+      "before_bytes": 12140,
+      "after_bytes": 9131,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/ru/forms/README.md",
+      "before_sha256": "dcb3c819f14f9480bb8761ca10d45a659fcbab04cd34b138e79e1c7dbb337bd0",
+      "after_sha256": "02262e2a7d743b2e06ff5ea768fcaa567d0154a536d650a5b84fe170082c63bb",
+      "before_bytes": 21267,
+      "after_bytes": 22522,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/ru/lifecycle.md",
+      "before_sha256": "8772e22768322719b889664574293192062a0726b3da224ddc28f22ee994b1c8",
+      "after_sha256": "fd71dd05923a513302a4208c03d88958a427d84b121b7da1558b8574e31f3ad3",
+      "before_bytes": 15681,
+      "after_bytes": 12157,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
+      "before_sha256": "77e5b5341e1e1fbafdc846ec8f7e28b0844421ae8f59ce7ae3a2fbf182b4d5f8",
+      "after_sha256": "c53509ae4d7517dcaee7f662460d49a6a4e7540e63441cee5aaffcc75766e6b6",
+      "before_bytes": 148138,
+      "after_bytes": 148670,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.7-console.norms.md",
+      "before_sha256": "d33bfc71c0041557f1236d639697ce5700c8209aca703a27650ec7cca3039084",
+      "after_sha256": "faac405ffcb0130cfe460b187442faf1a4a5e993a054f6454cba781f1af23180",
+      "before_bytes": 79019,
+      "after_bytes": 79639,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.8-console.norms.md",
+      "before_sha256": "bb9d5f44e820dba0db65488b888c181f61e4fa40cbb56bfc4bd1dbec9fba844e",
+      "after_sha256": "830f79bf7b14efdb8ed8c6c1ce7850890d2ffa871fa697315d539e177029a893",
+      "before_bytes": 64713,
+      "after_bytes": 64804,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.9-console.norms.md",
+      "before_sha256": "87fbef5bcd40140c906f42568a2294a07cf78e5778de042daf694585ee142f72",
+      "after_sha256": "e4e7a5ba9c4c546eb766129cc40b5b6316d4416e87cb3c3ce1e745fde231a5b6",
+      "before_bytes": 65863,
+      "after_bytes": 65930,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/spec/06-console.api.openapi.yaml",
+      "before_sha256": "e85e1061552052830e85e592c17571d035918cea89352762e753803d1422e2fc",
+      "after_sha256": "79cb9d28884f0546f6c190246d516b7a615772e32ab4dcf1706ad957657bbf23",
+      "before_bytes": 387515,
+      "after_bytes": 387555,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/spec/06.5-console.norms.md",
+      "before_sha256": "e7a4839f1cedb2d5a8aba505f4b372543abe79d98b7cd1c8996bc20caa4ab135",
+      "after_sha256": "c15b2fe25f327b1aee1141565f9ea7854f1c870615dbee1ff2f3d8ce5ead4add",
+      "before_bytes": 115812,
+      "after_bytes": 116166,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/spec/06.7-console.norms.md",
+      "before_sha256": "c91613c450e701108e7b29b3518341e680edaccafb209f35f11bb7763ad7318a",
+      "after_sha256": "54a8e8d9f51ece8a5484ff18dc608fcebb2734de1a3ed2aca00b9298178c20f5",
+      "before_bytes": 63461,
+      "after_bytes": 63937,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/spec/06.8-console.norms.md",
+      "before_sha256": "af51f91af4d552246de7bb4849fecd4b5563668cb8801c6165918d2becf33b0c",
+      "after_sha256": "470a48438876fbabcc0fdf8470713e0f498a890ba3b19d36b6ab42dbbf8eef61",
+      "before_bytes": 48052,
+      "after_bytes": 48137,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/spec/06.9-console.norms.md",
+      "before_sha256": "5add39f0f1b7365417b06aff80da0189e70a2836753e0a90796bf3ec9437dbdf",
+      "after_sha256": "6e6ee854fb285c01359e7aff6aa7e8dde314e58b0ffaef0aa12aa4ee1bfe17a0",
+      "before_bytes": 51473,
+      "after_bytes": 51519,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/07-console-module/ru/spec/07-console-module.norms.md",
+      "before_sha256": "116fdf02aef6ecbe0512409c217df19701edd3b90d65caeb984ce362fc915e31",
+      "after_sha256": "62e0a9edf510b063a8524d478bfd1ef189852e9f3fb5c8bd971ff7514aa94c63",
+      "before_bytes": 68659,
+      "after_bytes": 70081,
+      "after_mode": "100644"
+    },
+    {
+      "path": "Platform/07-console-module/spec/07-console-module.norms.md",
+      "before_sha256": "b52c67b4a20cbabb9f9018454ab9d707f05cf24ffc6134d9b13d3ed5c0ec8fd4",
+      "after_sha256": "9b59ba5eef654a637b4916c891e1cd6e893687516d04ebc17a3b24914d6e8390",
+      "before_bytes": 52186,
+      "after_bytes": 53147,
+      "after_mode": "100644"
+    },
+    {
+      "path": "decisions/adr-norms.tsv",
+      "before_sha256": "ab7426d8af9a486297f29d6ed07b44607da367525b6d3ddbdfba286652ecb71b",
+      "after_sha256": "b32db70877155ba73effb39cb3fc19a9ae81187c9fca2e00c06daea44f9d4921",
+      "before_bytes": 446627,
+      "after_bytes": 448550,
+      "after_mode": "100644"
+    }
+  ],
+  "schema_constant_bindings": [
+    {
+      "source_table": "Platform/06-console/forms/runtime-constants.tsv",
+      "name": "FOLDERS_MEMBERS_MAX",
+      "source_value": 1000,
+      "second_carrier": "Platform/06-console/data/folders.schema.json",
+      "json_pointer": "/$defs/writer/properties/members/maxItems",
+      "schema_value_unchanged": true,
+      "direction": "form row -> schema",
+      "subject_judge_owner": "review103; no judge change in this branch"
+    },
+    {
+      "source_table": "Platform/06-console/forms/runtime-constants.tsv",
+      "name": "FOLDERS_PER_UNIT_MAX",
+      "source_value": 8,
+      "second_carrier": "Platform/06-console/data/memberof.schema.json",
+      "json_pointer": "/$defs/writer/properties/folders/maxItems",
+      "schema_value_unchanged": true,
+      "direction": "form row -> schema",
+      "subject_judge_owner": "review103; no judge change in this branch"
+    }
+  ],
+  "section_order": [
+    {
+      "path": "Platform/06-console/spec/06.7-console.norms.md",
+      "before": [
+        "N1.15/P06.7-R016",
+        "N1.14/P06.7-R017"
+      ],
+      "after": [
+        "N1.14/P06.7-R017",
+        "N1.15/P06.7-R016"
+      ],
+      "both_section_bodies_raw_identical": true
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.7-console.norms.md",
+      "before": [
+        "N1.15/P06.7-R016",
+        "N1.14/P06.7-R017"
+      ],
+      "after": [
+        "N1.14/P06.7-R017",
+        "N1.15/P06.7-R016"
+      ],
+      "both_section_bodies_raw_identical": true
+    }
+  ],
+  "historical_correspondence": "Not restored under ADR-0083 (113)/(115); old history stays immutable.",
+  "C6": {
+    "API_pointer": "/components/schemas/FieldView/properties/hidden",
+    "old": "absent in FieldView",
+    "new": {
+      "type": "boolean"
+    },
+    "required": false,
+    "default": "absent",
+    "required_and_closed_shape": "unchanged",
+    "all_other_parsed_OpenAPI": "identical to base",
+    "behaviour_debt": "P07 N5 v1showsHidden remains open; no module execution/byte edit"
+  }
+}

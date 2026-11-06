@@ -33,28 +33,9 @@ This English text is the source; the Russian translation `ru/lifecycle.md` (for 
 
 ## Environment
 
-The environment is assembled by the runner `w2c-run.sh` in the order of P/02.4 N1.2: the unit values → `roles/<W2C_ROLE>.env` → `w2c.env` →
-the subsystem file, what is read earlier wins; the files are read by parsing, not by `source` ([the environment file contract](../common/contracts/env-file.md); [02-installer/lifecycle.md](../02-installer/lifecycle.md)).
+The console input roster, types, requiredness, defaults and validation expressions are the rows for `console` in [forms/daemon-flags.tsv](forms/daemon-flags.tsv). The cleanup-window acknowledgement is a separate command row in that form. This section is not another default registry.
 
-| Variable | Meaning | Default | Norm |
-|---|---|---|---|
-| `W2C_ROLE` | the role `console`; not the role of the runner command — code 2 | set by the unit | [P/02.4] N1.2 |
-| `PLATFORM_STORE` | the store door — the role socket `configstore:///run/configstore/console.sock` | `file://<PLATFORM_DIR>/config` (the profile of a box of one implementation) | [P/02.4] N1.2 |
-| `PLATFORM_DIR` | the state root | `/data/platform` | [P/02.4] N1.2 |
-| `RESOURCE_ROOT` / `EVENTS` | the events root of its own server: the journal `audit/console` and the marks `console/<instance>` | `<PLATFORM_DIR>/events` | [P/02.4] N1.2, [P/06.4] N1.2 `writer` |
-| `OBJECTS` / `PLATFORM_OBJECTS` | the objects: the bodies `blob`, the cleanup marks | `<PLATFORM_DIR>/objects`; `cluster://` with configstore | [P/02.4] N1.2 |
-| `CONSOLE_ROOT` | the subsystem whose shell is served on `/`; empty or not from the catalogue — code 2 | — | [P/06.5] N1.1 `root` |
-| `CONSOLE_HOST`, `CONSOLE_PORT` | the console address — from `w2c.env` (written by the installer, the unit does not set it; one per box — the clients of their own console build the URL by it as well, [the role certificate contract](../common/contracts/role-certificate.md) `own_url`); TLS — by the role kit (`kit`) and on the loopback too, HTTP is not opened when there is a kit; `::1` — only by an explicit entry; the browser origin with a kit — `https://<SERVER_NAME>:<port>` in `CONSOLE_ORIGINS` (ADR-0075 addendum 2026-10-26 (2) item 3, (3) items 3–4, (5) item 2) | `127.0.0.1`, `8080` | [P/02.4] N1.2, N1.6 `console`, N1.7 `w2c_env` |
-| `CONSOLE_CALL_PORT` | the port of the callback listener, only with a kit and a manifest with `door.pass.calls`, [the role certificate contract](../common/contracts/role-certificate.md) «The callback leaf» | 8081 | [P/02.4] N1.7 `w2c_env`, ADR-0094 addendum (16) |
-| `SECRETS_KEY` | the ring path; set empty — unreadable, 503 | — (the installer layout: for the unit — `<PLATFORM_DIR>/etc/secrets/platform.key`; not set for the process — the development mode with a loud line, review analysis of stage A 6–7, № 19) | [P/06.2] N1.2, [P/02.4] N1.1 `dirs` |
-| `SERVER_NAME` | the server | the short hostname (`%l`) | [P/02.4] N1.2 |
-| `BOX_ID` | the box; the instance `<box>:<pid>:<6 hex>` | `BOX_ID`, otherwise `/etc/machine-id`, otherwise the hostname | [P/02.4] N1.2, [P/03.2] N3 «start()» step 2 |
-| `CLUSTER` | the cluster name | `local` | [P/02.4] N1.2 |
-| `TIMEZONE` | the time zone of the cluster: the value `timezone` in `/session`; from `w2c.env` (written by the installer); empty or out of form — code 2 | `UTC` | [the environment file contract](../common/contracts/env-file.md); [P/06.3] N2 |
-| `BUILD` | the build word in `/schema` | `dev` | [P/02.4] N1.2, [P/06.6] N2.3 |
-| `W2C_TLS_DIR` | the root of the kits; its own kit — `<W2C_TLS_DIR>/console`; an explicit value is used as given | Linux `/etc/w2c/tls`; macOS `<W2C_BOX>/tls`, resolved by the common environment contract | [P/02.4] N1.2, N1.6 |
-| `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*`, `CLUSTERS` | the domain (the late layer of lesson 6 — [chapter 6.7](spec/06.7-console.norms.md): `CLUSTERS` — N1.4, `SIGNER_URL` — N1.8, `DOMAIN_CA`/`RELAY_CA` — the peer contract; `LOGIN_URL` — the guard contract `login_url`) | — | [P/02.4] N1.2 |
-| `W2C_ENV` | the file of common settings | `/etc/w2c/w2c.env` | [P/02.4] N1.2 |
+The runner assembles the environment in the order of [P/02.4] N1.2; it parses files under [the environment file contract](../common/contracts/env-file.md), never by `source`. Each form row cites the contract that owns its activation and semantic checks, including listener/kit checks, ring placement, role, server and box identity. Cross-process `DOMAIN_*` and `RELAY_*` configuration belongs to its owning domain/agent process; this reference introduces no console input or flag.
 
 ## Flags
 
