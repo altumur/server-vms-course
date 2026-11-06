@@ -21,6 +21,7 @@ from pathlib import Path
 import yaml
 
 import gen_policy_machines as gen
+from test_gen_machine import CheckingError, complete_reports, complete_go_tests
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -49,11 +50,11 @@ def write_module(dst, files=None):
 DRIVER = r'''package main
 import("bufio";"encoding/json";"fmt";"os"; p "normgen/p03/workerpolicy")
 type event struct { T float64 `json:"t"`; Name string `json:"name"`; Payload json.RawMessage `json:"payload"` }
-type request struct { Name string `json:"name"`; IR json.RawMessage `json:"ir"`; Input json.RawMessage `json:"input"`; At float64 `json:"at"`; Events []event `json:"events"` }
+type request struct { Case int `json:"case"`; Name string `json:"name"`; IR json.RawMessage `json:"ir"`; Input json.RawMessage `json:"input"`; At float64 `json:"at"`; Events []event `json:"events"` }
 func main(){s:=bufio.NewScanner(os.Stdin); s.Buffer(make([]byte,4096),8<<20); for s.Scan(){ var q request; if e:=json.Unmarshal(s.Bytes(),&q);e!=nil{panic(e)}; var r *p.Run;var e error
 if len(q.IR)>0 {var prog *p.Program;prog,e=p.Compile(q.IR); if e==nil{r,e=prog.New(q.Input,q.At)}}else{r,e=p.Open(q.Name,q.Input,q.At)}
 obs:=[]p.Observation{}; if e==nil{obs=append(obs,r.Snapshot()); for _,ev:=range q.Events{var o p.Observation;o,e=r.Step(ev.T,ev.Name,ev.Payload);if e!=nil{break};obs=append(obs,o)}}
-msg:="";if e!=nil{msg=e.Error()}; b,_:=json.Marshal(map[string]any{"observations":obs,"error":msg});fmt.Println(string(b)) };if e:=s.Err();e!=nil{panic(e)}}
+msg:="";if e!=nil{msg=e.Error()}; b,_:=json.Marshal(map[string]any{"case":q.Case,"observations":obs,"error":msg});fmt.Println(string(b)) };if e:=s.Err();e!=nil{panic(e)}}
 '''
 
 
@@ -80,10 +81,21 @@ class PolicyMachines(unittest.TestCase):
         cls.tmp.cleanup()
 
     def run_driver(self, queries):
-        done = subprocess.run([str(self.exe)], input="".join(json.dumps(q) + "\n" for q in queries),
+        done = subprocess.run([str(self.exe)], input="".join(json.dumps(dict(q, case=i)) + "\n" for i, q in enumerate(queries)),
                               capture_output=True, text=True)
-        self.assertEqual(done.returncode, 0, done.stderr)
-        return [json.loads(line) for line in done.stdout.split("\n") if line]
+        if done.returncode:
+            raise CheckingError("policy driver failed: " + done.stderr)
+        return complete_reports(done.stdout, len(queries))
+
+    def test_driver_missing_partial_duplicate_and_failed_reports_are_checking_errors(self):
+        from unittest.mock import patch
+        queries = [{"name": "token-cache", "input": {}, "events": []}] * 2
+        samples = [(0, ''), (0, '{"case":0}\n'), (0, '{"case":0}\n{"case":0}\n'),
+                   (0, '{"case":0}\n{"case":1}\n{"case":2}\n'), (1, '')]
+        for code, text in samples:
+            done = subprocess.CompletedProcess([], code, text, "driver failed" if code else "")
+            with self.subTest(code=code, text=text), patch.object(subprocess, "run", return_value=done), self.assertRaises(CheckingError):
+                self.run_driver(queries)
 
     def test_fresh_and_declared_traces(self):
         output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
@@ -163,11 +175,10 @@ class PolicyMachines(unittest.TestCase):
                                                go_str(json.dumps(ir, ensure_ascii=False, separators=(",", ":"))))
                     self.assertNotEqual(patched, original)
                     (self.mod / "workerpolicy/programs.go").write_text(patched)
-                    done = subprocess.run(["go", "test", "-count=1", "-run", "TestDeclaredTraces/" + part,
+                    done = subprocess.run(["go", "test", "-json", "-count=1", "-run", "TestDeclaredTraces/" + part,
                                            "./workerpolicy"], cwd=self.mod, env=GOENV, capture_output=True, text=True)
-                    self.assertNotEqual(done.returncode, 0, done.stdout)
-                    self.assertNotIn("panic:", done.stdout + done.stderr)
-                    self.assertIn("--- FAIL:", done.stdout)
+                    failed = complete_go_tests(done, {"TestDeclaredTraces", "TestDeclaredTraces/" + part})
+                    self.assertTrue(failed, "policy mutant survives the original declared traces")
         finally:
             (self.mod / "workerpolicy/programs.go").write_text(original)
 

@@ -21,6 +21,73 @@ INT_MAX = 2 ** 63 - 1
 N_RANDOM = 3000
 
 
+class CheckingError(RuntimeError):
+    """An incomplete or failed check is neither a semantic mismatch nor a kill."""
+
+
+def complete_reports(text, count):
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise CheckingError(f"duplicate report key: {key}")
+            result[key] = value
+        return result
+
+    try:
+        def nonfinite(value):
+            raise CheckingError(f"non-JSON number in driver report: {value}")
+        rows = [json.loads(line, object_pairs_hook=unique, parse_constant=nonfinite)
+                for line in text.splitlines() if line]
+    except (ValueError, TypeError) as exc:
+        raise CheckingError(f"malformed driver report: {exc}") from exc
+    if type(count) is not int or count <= 0 or len(rows) != count:
+        raise CheckingError(f"incomplete driver report: {len(rows)}/{count}")
+    for i, row in enumerate(rows):
+        if type(row) is not dict or type(row.get("case")) is not int or row["case"] != i:
+            raise CheckingError(f"missing, duplicate or reordered driver case {i}")
+        row.pop("case")
+    return rows
+
+
+def complete_go_tests(done, expected):
+    """Require a normal terminal record for every original named Go test."""
+    try:
+        events = [json.loads(line) for line in done.stdout.splitlines() if line]
+    except (ValueError, TypeError) as exc:
+        raise CheckingError(f"malformed Go test report: {exc}") from exc
+    if not events or any(type(e) is not dict or type(e.get("Action")) is not str or
+                         type(e.get("Package")) is not str or not e["Package"] or
+                         (e.get("Test") is not None and type(e["Test"]) is not str) for e in events):
+        raise CheckingError("empty or malformed Go test report")
+    run = [e["Test"] for e in events if e.get("Action") == "run" and e.get("Test")]
+    terminal = [e for e in events if e.get("Action") in ("pass", "fail", "skip") and e.get("Test")]
+    names = [e["Test"] for e in terminal]
+    if (not expected or set(run) != set(expected) or set(names) != set(expected) or
+            len(run) != len(set(run)) or len(names) != len(set(names)) or
+            any(e["Action"] == "skip" for e in terminal)):
+        raise CheckingError("incomplete, extra, duplicate or skipped named Go test")
+    package = [e for e in events if not e.get("Test") and e.get("Action") in ("pass", "fail")]
+    failed = [e["Test"] for e in terminal if e["Action"] == "fail"]
+    combined = done.stdout + done.stderr
+    if (len(package) != 1 or package[0]["Action"] != ("fail" if failed else "pass") or
+            done.returncode != (1 if failed else 0) or
+            any(s in combined for s in ("[build failed]", "panic:", "fatal error:", "signal:", "test timed out"))):
+        raise CheckingError("Go compilation/start/runtime error or missing package completion")
+    return failed
+
+
+def shadowed_source_refusal(done):
+    if done.returncode == 0:
+        return False
+    if not done.stdout and re.fullmatch(
+            r"gen_machine: Platform/(?:03-worker|04-controller)/forms/[^/\n]+\.tsv: "
+            r"n [1-9][0-9]* is never the first match of [a-z_]+ over the enumerated inputs "
+            r"\(.+\) — a shadowed row\n?", done.stderr):
+        return True
+    raise CheckingError("generator failed, not a source-shadow refusal: " + done.stderr)
+
+
 def camel(name):
     if name.isupper():
         name = name.lower()
@@ -199,6 +266,7 @@ func main() {
 	enc := json.NewEncoder(os.Stdout)
 	for sc.Scan() {
 		var c struct {
+			Case  int
 			State string
 			In    m.In
 		}
@@ -206,7 +274,7 @@ func main() {
 			panic(err)
 		}
 		mv, ok, err := m.Step(m.State(c.State), c.In)
-		res := map[string]any{"ok": ok, "err": err != nil, "row": mv.Row, "next": string(mv.Next)}
+		res := map[string]any{"case": c.Case, "ok": ok, "err": err != nil, "row": mv.Row, "next": string(mv.Next)}
 		args := []any{}
 		for _, a := range mv.Args {
 			args = append(args, tag(a))
@@ -214,6 +282,7 @@ func main() {
 		res["args"] = args
 		enc.Encode(res)
 	}
+	if err := sc.Err(); err != nil { panic(err) }
 }
 '''
 
@@ -257,15 +326,17 @@ class Judge:
         d = self.mod / "cmd" / f"judge{self.pkg}"
         d.mkdir(parents=True, exist_ok=True)
         (d / "main.go").write_text(DRIVER % {"module": self.module, "pkg": self.pkg})
-        lines = "".join(json.dumps({"State": s, "In": {camel(k): v for k, v in env.items()}}) + "\n"
-                        for s, env in cases)
+        lines = "".join(json.dumps({"Case": i, "State": s, "In": {camel(k): v for k, v in env.items()}}) + "\n"
+                        for i, (s, env) in enumerate(cases))
         done = go(["run", f"./cmd/judge{self.pkg}"], self.mod, lines)
         if done.returncode:
-            raise AssertionError(f"driver: {done.stderr[-2000:]}")
-        return [json.loads(x) for x in done.stdout.split("\n") if x]
+            raise CheckingError(f"driver: {done.stderr[-2000:]}")
+        return complete_reports(done.stdout, len(cases))
 
 
 def disagreements(oracle, cases, got):
+    if not cases or len(cases) != len(got):
+        raise CheckingError(f"incomplete independent comparison: {len(got)}/{len(cases)}")
     bad = []
     states = set(oracle.form.states())
     for (state, env), g in zip(cases, got):
@@ -331,7 +402,7 @@ class MachineTests(unittest.TestCase):
     def fresh_out(self, lesson):
         output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         slug, _ = LESSONS[lesson]
-        out = self.tmp / f"fresh-{slug}"
+        out = Path(tempfile.mkdtemp(prefix=f"fresh-{slug}-", dir=self.tmp))
         done = gen(lesson, out)
         self.assertEqual(done.returncode, 0, done.stderr)
         kept = output_lesson.output_root() / slug / "go"
@@ -405,7 +476,7 @@ class MachineTests(unittest.TestCase):
                 oracle = Oracle(form)
                 cases = inputs(form, rnd, 1500)
                 base = [oracle.run(s, e) for s, e in cases if s in form.states()]
-                killed = survived = equivalent = 0
+                killed = survived = equivalent = rejected = 0
                 for name, text in mutants(form):
                     with self.subTest(part=part, mutant=name):
                         mform = Form(text)
@@ -422,20 +493,37 @@ class MachineTests(unittest.TestCase):
                         shutil.copy(ROOT / "Platform/lessons.tsv", root / "Platform/lessons.tsv")
                         for other in (ROOT / "Platform" / lesson / "forms").glob("*.tsv"):
                             shutil.copy(other, fp.parent / other.name)
-                        fp.write_text(text, encoding="utf-8")
+                        # A next-value compiler mutant must preserve the original
+                        # procedure interface, rather than rename its callbacks.
+                        next_mutant = re.fullmatch(r"n([1-9][0-9]*)-next", name)
+                        fp.write_text(form.text if next_mutant else text, encoding="utf-8")
                         out = root / "out"
                         done = gen(lesson, out, root, [part])
-                        if done.returncode:            # A generator-rejected shadowing mutant is killed.
-                            killed += 1
+                        if done.returncode:
+                            if not next_mutant and shadowed_source_refusal(done):
+                                rejected += 1
+                            else:
+                                raise CheckingError("generator failed, not a semantic kill: " + done.stderr)
                             continue
                         pkg = part.replace("-", "")
+                        if next_mutant:
+                            row = int(next_mutant[1])
+                            target = next(r["next"] for r in mform.rows if r["n"] == row)
+                            path = out / "go" / pkg / "machine.go"
+                            before = path.read_text()
+                            pattern = rf"(Move\{{Row: {row},[^\n]*?\bNext: )State[A-Za-z0-9_]+"
+                            changed, count = re.subn(pattern, lambda m: m[1] + "State(" + json.dumps(target) + ")", before)
+                            if count != 1 or changed == before:
+                                raise CheckingError(f"next mutant {name}: not one generated Move.Next")
+                            path.write_text(changed)
                         shutil.copy(output_lesson.output_root() / slug / "go" / pkg / "form_test.go", out / "go" / pkg / "form_test.go")
-                        done = go(["test", "-count=1", f"./{pkg}/"], out / "go")
-                        if done.returncode == 0:
+                        done = go(["test", "-json", "-count=1", f"./{pkg}/"], out / "go")
+                        failed = complete_go_tests(done, {"TestForm", "TestStates", "TestApply"})
+                        if not failed:
                             survived += 1
-                        self.assertNotEqual(done.returncode, 0, f"{part} mutant {name} survives the form tests")
+                        self.assertTrue(failed, f"{part} mutant {name} survives the original form tests")
                         killed += 1
-                print(f"\n{part}: mutants killed {killed}, survived {survived}, equivalent {equivalent}", file=sys.stderr)
+                print(f"\n{part}: semantic kills {killed}, source refusals {rejected}, survived {survived}, equivalent {equivalent}", file=sys.stderr)
                 self.assertGreater(killed, len(form.rows), f"{part}: too few mutants")
 
     def test_kit(self):
@@ -485,6 +573,70 @@ class MachineTests(unittest.TestCase):
                 done = gen(lesson, root / "out", root, [part])
                 self.assertNotEqual(done.returncode, 0, f"{name}: accepted")
                 self.assertIn("gen_machine:", done.stderr)
+
+
+class CheckingControls(unittest.TestCase):
+    def test_cardinality_identity_and_json_errors_are_not_comparisons(self):
+        good = [{"case": 0, "value": "same"}, {"case": 1, "value": "same"}]
+        encode = lambda rows: "".join(json.dumps(r) + "\n" for r in rows)
+        self.assertEqual(complete_reports(encode(good), 2), [{"value": "same"}, {"value": "same"}])
+        bad = [[], good[:1], good + [{"case": 2}], [good[0], good[0]], list(reversed(good)),
+               [{"case": False}, good[1]], [{"case": 0}, {"case": True}],
+               [{"case": 0}, {"case": 2}], [{"case": 0}, {}]]
+        for rows in bad:
+            with self.subTest(rows=rows), self.assertRaises(CheckingError):
+                complete_reports(encode(rows), 2)
+        for text in ('not json\n', '{"case":0,"case":0}\n'):
+            with self.subTest(text=text), self.assertRaises(CheckingError):
+                complete_reports(text, 1)
+
+    def test_independent_comparison_rejects_a_missing_tail_before_oracle(self):
+        for cases, got in [([("state", {})], []), ([], []), ([('state', {})], [{}, {}])]:
+            with self.subTest(counts=(len(cases), len(got))), self.assertRaises(CheckingError):
+                disagreements(None, cases, got)
+
+    def test_selector_driver_checks_exit_and_full_report(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory(prefix="selector-report-") as folder:
+            root = Path(folder)
+            (root / "go.mod").write_text("module fixture\n\ngo 1.22\n")
+            judge = Judge("03-worker", "slot-capture", root)
+            for code, text in [(1, ''), (0, ''), (0, '{"case":0}\n')]:
+                done = subprocess.CompletedProcess([], code, text, "failed" if code else "")
+                with self.subTest(code=code, text=text), patch(__name__ + ".go", return_value=done), self.assertRaises(CheckingError):
+                    judge.step([("admit", {}), ("search", {})])
+
+    def test_only_complete_named_normal_go_failure_is_semantic(self):
+        def done(code, events, stderr=""):
+            return subprocess.CompletedProcess([], code, "".join(json.dumps(dict(Package="fixture", **e)) + "\n"
+                                                                  for e in events), stderr)
+        run = {"Action": "run", "Test": "TestOriginal"}
+        passed = [run, {"Action": "pass", "Test": "TestOriginal"}, {"Action": "pass"}]
+        failed = [run, {"Action": "fail", "Test": "TestOriginal"}, {"Action": "fail"}]
+        self.assertEqual(complete_go_tests(done(0, passed), {"TestOriginal"}), [])
+        self.assertEqual(complete_go_tests(done(1, failed), {"TestOriginal"}), ["TestOriginal"])
+        for report in [done(0, []), done(1, [{"Action": "fail"}]), done(1, failed[:-1]),
+                       done(1, [run, run] + failed[1:]), done(1, failed, "panic: not semantic"),
+                       done(0, failed), done(1, passed),
+                       done(1, failed + [{"Action": "fail", "Test": "extra"}])]:
+            with self.subTest(report=report.stdout), self.assertRaises(CheckingError):
+                complete_go_tests(report, {"TestOriginal"})
+
+    def test_real_compile_and_missing_source_errors_are_not_kills(self):
+        if not shutil.which("go"):
+            raise CheckingError("Go is missing for actual checking-error controls")
+        with tempfile.TemporaryDirectory(prefix="actual-checking-error-") as folder:
+            root = Path(folder)
+            (root / "go.mod").write_text("module brokenfixture\n\ngo 1.22\n")
+            (root / "broken.go").write_text("package brokenfixture\nfunc broken( {\n")
+            done = go(["test", "-json", "./..."], root)
+            self.assertNotEqual(done.returncode, 0)
+            with self.assertRaises(CheckingError):
+                complete_go_tests(done, {"TestOriginal"})
+            done = gen("03-worker", root / "out", root, ["slot-capture"])
+            self.assertNotEqual(done.returncode, 0)
+            with self.assertRaises(CheckingError):
+                shadowed_source_refusal(done)
 
 
 if __name__ == "__main__":
