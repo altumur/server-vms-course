@@ -149,9 +149,13 @@ CYR = re.compile(r"[А-Яа-яЁё]")
 # Суффиксы шагов и метки ревью — латиницей и в источнике, и в переводе (ADR-0121 доп. (3) п. 3): 4a, 2b, A1, G-29, V7, P1;
 # кириллица там — нарушение правила «Кириллица в английском» ниже (разрешены только номера норм Н… и прежние уроки М10–М12).
 # Модуль, ещё не переведённый на латиницу меток, — прежнее разрешение (VMS — «Спецификация VMS»); список только сокращается.
-LABELS_PENDING = {"VMS"}
+LABELS_PENDING = {"VMS/11-backend/"}
+# Only the checked V01–V10, V12/common source slice; never whole-VMS readiness.
+VMS_ENGLISH_DONE = ("VMS/common/", "VMS/01-cam/", "VMS/02-rec/", "VMS/03-live/", "VMS/04-det/",
+                    "VMS/05-detjob/", "VMS/06-detedge/", "VMS/07-auto/", "VMS/08-exp/", "VMS/09-deploy/",
+                    "VMS/10-assist/", "VMS/12-psim/", "VMS/README.md")
 # Уроки, где номера разделов уже латиницей N… (ADR-0121 доп. (5) п. 1): Н<цифра> в источнике — отказ; список растёт до всех.
-NUMBERS_DONE = ("Platform/",)
+NUMBERS_DONE = ("Platform/",) + VMS_ENGLISH_DONE
 CYR_NUMBER = re.compile(r"(?<![\wА-Яа-яЁё])Н[0-9]")
 # Таблица меток ключей каталога — сырые ключи catalog.tsv (их читает читатель «Генераторов»): метки в ней — как в каталоге,
 # пока каталог не сменится вместе с генераторами (ADR-0121 доп. (5) п. 3).
@@ -281,9 +285,7 @@ STEP = re.compile(r"^[ \t>]*(?:[-*] )?[0-9]+[a-zа-яё]?[.)][ \t]", re.M)   # �
 STEPS_PENDING = {
     "Platform/02-installer/spec/02.1-installer.norms.md", "Platform/02-installer/spec/02.2-installer.norms.md",
     "Platform/02-installer/spec/02.3-installer.norms.md", "Platform/02-installer/spec/02.5-installer.norms.md",
-    "VMS/02-rec/spec/02.4-rec.norms.md", "VMS/05-detjob/spec/05.3-detjob.norms.md", "VMS/05-detjob/spec/05.4-detjob.norms.md",
-    "VMS/06-detedge/spec/06.2-detedge.norms.md", "VMS/07-auto/spec/07.3-auto.norms.md",
-    "VMS/11-backend/spec/11.2-backend.norms.md", "VMS/12-psim/spec/12.3-psim.norms.md",
+    "VMS/11-backend/spec/11.2-backend.norms.md",
 }
 
 
@@ -500,7 +502,7 @@ def compare(ru_text, en_text, ru_path, en_path, root):
                 else:
                     errors.append(f"{where}: {key} differ: ru {rf[key]}, en {ef[key]}")
     try:
-        legacy = Path(en_path).resolve().relative_to(root).parts[0] in LABELS_PENDING
+        legacy = Path(en_path).resolve().relative_to(root).as_posix().startswith(tuple(LABELS_PENDING))
     except ValueError:
         legacy = False
     allowed = ALLOWED_CYR + (LEGACY_LABELS if legacy else [])
@@ -560,7 +562,7 @@ def pairs(root):
 
 # ADR-0121 (6), (7): completed source slices contain no Cyrillic letters.
 # Grow this list only with the complete lesson/common source delivery.
-FULL_ENGLISH_DONE = ("Platform/common/", "Platform/01-store/", "Platform/02-installer/", "Platform/03-worker/", "Platform/04-controller/", "Platform/05-resource/", "Platform/06-console/", "Platform/07-console-module/", "README.md")
+FULL_ENGLISH_DONE = ("Platform/common/", "Platform/01-store/", "Platform/02-installer/", "Platform/03-worker/", "Platform/04-controller/", "Platform/05-resource/", "Platform/06-console/", "Platform/07-console-module/", "README.md") + VMS_ENGLISH_DONE
 LOCALIZATION = Path("Platform/07-console-module/data/localization.tsv")
 SOURCE_SUFFIXES = {".md", ".tsv", ".json", ".yaml", ".yml"}
 
@@ -599,7 +601,15 @@ def full_english_errors(root, prefixes=None):
 
     root = Path(root)
     errors = []
+    import check_cyrillic
+
     for path in english_sources(root, prefixes):
+        name = path.relative_to(root).as_posix()
+        if name in check_cyrillic.DEFERRED_FILES:
+            problem = check_cyrillic.deferred_file_error(root, name)
+            if problem:
+                errors.append((path, problem))
+            continue
         localization = path.relative_to(root) == LOCALIZATION
         header = False
         for number, line in enumerate(path.read_text(encoding="utf-8", errors="surrogateescape").splitlines(), 1):

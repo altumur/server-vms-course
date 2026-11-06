@@ -5,15 +5,15 @@ This English text is the source; the Russian translation `ru/spec/02-rec.obsd.co
 The contract of the part `obsd` of the subsystem `rec` — the socket protocol and the properties of the engine that the recorder (chapters
 V/02.3, V/02.4) and the archive door (V/02.5) rely on. This file is the canon; the norms of chapter [V/02.2](02.2-rec.norms.md) are what `rec` requires of the
 part (the service, the share, the environment, the timeouts, the engine version). The engine is ObjectStorage (tree `2bbee4a`, 2026-10-02) with the patches
-01–07 (V/02.2 Н1.4); the contract describes what is observable on the socket and in the volume, not the structure of the client.
+01–07 (V/02.2 N1.4); the contract describes what is observable on the socket and in the volume, not the structure of the client.
 
 ## Transport
 
-- A unix socket (`SOCK_STREAM`) — the socket of the share `rec.obsd` (V/02.2 Н1.2); the path MUST be shorter than `sun_path` (107 bytes on Linux, 103 on
+- A unix socket (`SOCK_STREAM`) — the socket of the share `rec.obsd` (V/02.2 N1.2); the path MUST be shorter than `sun_path` (107 bytes on Linux, 103 on
   macOS), otherwise the daemon does not start.
 - The daemon creates the socket `0660`; a peer of a foreign uid is admitted only if it is in the group `OBSD_CLIENT_GROUP` (Linux — any group
   of the process, macOS — the primary one); otherwise the connection is rejected.
-- A second daemon on the same socket does not start (the lock `<сокет>.lock`).
+- A second daemon on the same socket does not start (the lock `<socket>.lock`).
 
 ## Frame
 
@@ -34,7 +34,7 @@ u32 len | u32 id | u16 op | u16 flags | i32 status | u32 jsonLen | json[jsonLen]
 
 - The first frame of every connection is `HELLO` (op 1): the request `{proto: [1, 1], client, pid, session, logLevel}`, the answer
   `{proto, server, engine, pid, maxFrame}`. `client` is the process name (`[A-Za-z0-9._-]`); `session` is the client's session token, a string,
-  new for every session; `logLevel` is the word of `OBSD_LOG_LEVEL` (V/02.2 Н1.3), the client sends `warning`.
+  new for every session; `logLevel` is the word of `OBSD_LOG_LEVEL` (V/02.2 N1.3), the client sends `warning`.
 - A session ≠ a connection: handles belong to the session; a session may have several connections, any of them uses any of its
   handles. A repeated `HELLO` with the same token before `OBSD_SESSION_LINGER_MS` (3000 ms) expires — the same session; later, or
   after a restart of the daemon — a new empty session: the old handles answer `UNKNOWN_HANDLE` (`pid` in the `HELLO` answer is the sign
@@ -72,7 +72,7 @@ u32 len | u32 id | u16 op | u16 flags | i32 status | u32 jsonLen | json[jsonLen]
 | 32 | `FINISH_MEDIA` | `tail`: `writer:u64le streamLen:u16le stream`; `EMPTY_RESULT` — there was no open sequence |
 | 33 | `WRITER_FLUSH` | `{writer}` → `{}`: the tail goes to the medium, the block is not closed |
 | 34 | `WRITER_RESIZE` | `{writer, size}` → `{status}`; smaller than what is written — the oldest blocks are released in steps of `OBSD_RESIZE_STEP_MB` (1024), writing stands still meanwhile |
-| 35 | `WRITER_CLOSE` | `{writer}` → `{}` after the flush (up to 30 s); after the answer what was written is readable; how long the client waits for the answer — V/02.4 Н1.5 «конец закрытия» |
+| 35 | `WRITER_CLOSE` | `{writer}` → `{}` after the flush (up to 30 s); after the answer what was written is readable; how long the client waits for the answer — V/02.4 N1.5 «close deadline» |
 | 36 | `WRITER_ABANDON` | `{writer}` → `{}`: give up the volume without writing (no queue, no status, no index); the lock is removed only if it is still this writer's; the next mount may require a recovery |
 
 **`PUT_MEDIA`:** `OK` — taken; `SEQUENCE_LOST` — taken, but an earlier sequence is lost; `WRITER_STOPPED` — not
@@ -90,11 +90,11 @@ the client MUST NOT repeat such a request blindly. An answer with a non-zero sta
   → `3908988800000`; `1700000000.0005` → `p` = `1700000000000.5` → `3908988800001` (round half to even would give `…800000`);
   `1700000000.0006` → `3908988800001`. The vectors come with the VMS data family (the analysis of the V/01 review, question 5).
 - The SMPL record is big-endian: `"SMPL" major:u32 subtype:u32 flags:u32 begin:u64 end:u64 subLen:u32 bodyLen:u32 sub body`.
-  Video — `major = 2`; `subtype` — a FourCC in u32 LE (`H264`; `H265` is a form of the engine, the input of `rec` is only `H264`, V/02.4 Н1.2); `sub` — `width:u32le height:u32le`; `body` — an Annex B
+  Video — `major = 2`; `subtype` — a FourCC in u32 LE (`H264`; `H265` is a form of the engine, the input of `rec` is only `H264`, V/02.4 N1.2); `sub` — `width:u32le height:u32le`; `body` — an Annex B
   access unit, the codec parameters are in every key frame; `end` — `begin` + the buffer duration, if there is none — 40 ms.
 - Sound — `major = 3`; `subtype` — a FourCC in u32 LE (`AAC ` with a space); `sub` — `channels:u8 rate:u32le`; `body` — an AAC frame with an ADTS header; `end` — `begin` +
-  the frame duration; every frame is a key frame, flags 0. The frame type does not change inside a sequence (`SEQUENCE_TYPE_CHANGED`): sound is a stream of its own (V/02.3 Н1.1).
-  This is a requirement on the engine, not an observed property: it is confirmed on the first run with a live `obsd` (V/02.2 Н1.4).
+  the frame duration; every frame is a key frame, flags 0. The frame type does not change inside a sequence (`SEQUENCE_TYPE_CHANGED`): sound is a stream of its own (V/02.3 N1.1).
+  This is a requirement on the engine, not an observed property: it is confirmed on the first run with a live `obsd` (V/02.2 N1.4).
 - Flags: `NEED_KEY_FRAME = 1<<0`, `NEED_PREVIOUS_FRAME = 1<<3`; a key frame — neither of the two; a dependent frame —
   `NEED_KEY_FRAME`.
 
@@ -119,7 +119,7 @@ the client MUST NOT repeat such a request blindly. An answer with a non-zero sta
   a secret.
 - **Mount in a disappeared session:** a `VOLUME_MOUNT_RW` finished after its session disappeared detaches the
   writer at once (as in «Grace»). This is a requirement on the engine, not an observed property: it is confirmed on the first run with a live
-  `obsd` (V/02.2 Н1.4).
+  `obsd` (V/02.2 N1.4).
 - **Volume fence** (patch 07): before every block, status, release, deletion and resize the engine checks
   the volume lock by path; a writer with a foreign lock stops — `PUT_MEDIA` → `WRITER_STOPPED`, `detail` «volume lock
   lost»; a foreign lock file is never deleted. The lock of a dead daemon holds until it becomes stale (`lockRefreshSec`, 30 s).

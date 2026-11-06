@@ -7,33 +7,33 @@ scenario	step	request	expect
 01-no-device	5	POST /requests {"unit": "$c1", "action": "output"}	@oneof 202 {"queued": "@any"} | 200 {"answered": {"outcome": "refused", "error": "camera has no device"}}
 01-no-device	6	@until 30 GET /events?unit=cam/$c1&kind=command.failed	200 {"events": [{"kind": "command.failed", "of": "cam/1", "outcome": "refused", "action": "output", "error": "camera has no device"}, {"kind": "command.failed", "of": "cam/1", "outcome": "refused", "action": "output", "error": "camera has no device"}]}
 01-no-device	7	POST /requests {"unit": "$c1", "action": "output", "port": "@big(33)"}	400 {"error": "@any"}
-02-owner	1	@manual подставной драйвер с моделью на несколько видео (Drivers/Virtual такой не имеет): один блок на многоканальной — на строке ipsrv при любом relatedChannel	manual
-02-owner	2	@manual блок с relatedChannel в пределах channels — на камере этого индекса; блок с -1 и блок с индексом вне channels — на строке ipsrv; блок без поля — по индексу блока	manual
-02-owner	3	@manual блок канала без заведённой камеры детей не даёт и без warning; появилась основная строка без индекса — блок не решается, строки не тронуты, warning	manual
-02-owner	4	@manual выключенная камера хозяина не меняет; две строки с одним индексом — хозяин наименьший id; videos в cam/devices пишется при смене строк группы без описания	manual
-02-owner	5	@manual can камеры канала: rays, relays — списки номеров её детей, номера могут идти не с 1; output с port не из relays этой камеры — refused «no such output»	manual
-02-owner	6	@manual смена хозяина: выключенный выход остаётся выключенным; enabled: true в настройке нынешней строки включает его, строка gone остаётся	manual
-02-owner	7	@manual смена хозяина, перечень children отказал: выход выключен и на следующем проходе, где множество то же; перечень прошёл, родственная настройка найдена — выход выключен по ней	manual
-02-owner	8	@manual enabled: true в настройке строки, хозяин сменился, enabled: false в настройке новой строки, хозяин вернулся: выход выключен, позднейшее слово; at настройки равны или порчены при разных словах — выключен	manual
-03-norm	1	@manual подставной драйвер: норма open — замыкание даёт io.input value closed, размыкание value open; норма closed — размыкание даёт value closed, замыкание value open	manual
-03-norm	2	@manual выключенный sensor: события нет, inputs_off растёт; хозяин unlicensed: события нет, events_refused растёт	manual
-03-norm	3	@manual слово драйвера о контакте, которое реализация не переводит в open, closed: события нет, events_refused растёт; перевод — в описании реализации	manual
-04-units	1	@manual подставной драйвер с единицами (в Drivers/Virtual их нет; Drivers/OnvifAcfa — на живом контроллере): строки cam/device_units создаются от корня, CreateUnit получает owner и template, правка строки не перезапускает соединение	manual
-04-units	2	@manual шаблона нет в описании, parent ведёт в цикл, превышен maxCount: units_down слово refused, соседние единицы работают; SignalLost единицы — lost, Started снимает	manual
-04-units	3	@manual событие единицы: строка unit с unit, event как есть, phase у двухфазного; выключенная единица событий не пишет	manual
-04-units	4	@manual действие unit: performed с reply {action, n, operation}; no such unit, unit is off, no such operation, unit needs n and an operation; строка unlicensed — camera is not licensed	manual
-04-sound	1	@manual подставной драйвер со звуком: точка <live_url>/mic — первый mic камеры, /mic/<n> — mic устройства; кодек в rtpmap как у устройства; поток видео не меняется	manual
-04-sound	2	@manual enabled: false у mic — DESCRIBE 404; настройка не читается — 404; хозяин unlicensed — 404; открытая точка при каждом из них и при gone — клиент видит конец потока	manual
-04-sound	3	@manual POST /requests {"unit": "$c", "action": "talk", "port": 1} — performed, устройство получило Call; второй человек — refused «busy»; тот же — performed	manual
-04-sound	4	@manual talk без port, с чужим port, spk выключен — talk needs a port, no such speaker, speaker is disabled	manual
-04-sound	5	@manual маршрут talk не открыт 30 с — HangUp, занятость снята; маршрут оборван — HangUp; кадра нет 8 с без обрыва — HangUp; устройство положило трубку — маршрут закрыт	manual
-05-builtin	1	@manual подставной драйвер с аналитикой (в Drivers/Virtual её нет): строка cam/device_units type det — CreateVideoAnalytics с каналом и template, Start; enabled: false — Stop; событие — строка unit в бакете камеры, det_kind по detector-kinds.tsv, открытая фаза повторяется phase: still раз в 30 с	manual
-05-builtin	2	@manual детектора нет у канала, conflictDetectors у двух включённых строк, строка на ipsrv: units_down refused у большего n, соседние идут	manual
-05-builtin	3	@manual камера с одной replica и встроенным детектором: фаза idle, поток не читается, события идут	manual
-05-ptz	1	@manual подставной драйвер с телеметрией: can.ptz по индексу канала, нет ссылки — ложь; preset_save, preset_clear — performed, reply {action, n}; у камеры без телеметрии — this device has no telemetry; право edit на камеру, а не на группу	manual
-05-ptz	2	@manual строка cam/ptz_moves с растущим seq: MoveContinuous, ZoomContinuous, FocusContinuous; снятие строки — нулевая скорость каждой оси; повтора нет PTZ_LEASE — стоп; застанная при старте строка не движет	manual
-05-ptz	3	@manual завис вызов группы (Execute единицы, output): стоп камеры идёт; завис вызов телеметрии — стоп идёт мимо него	manual
-05-ptz	4	@manual SIGKILL держателя при движении: новый держатель при взятии эпохи шлёт стоп; от сбоя до стопа — не дольше 105 с	manual
+02-owner	1	@manual stub driver describing several video channels (Drivers/Virtual has none): one block on a multichannel device belongs to the ipsrv row for any relatedChannel	manual
+02-owner	2	@manual block with relatedChannel within channels belongs to the camera with that index; -1 or an index outside channels belongs to ipsrv; no field uses the block index	manual
+02-owner	3	@manual channel block without a created camera produces no children or warning; a main row without an index appears: block unresolved, rows unchanged, warning	manual
+02-owner	4	@manual a disabled camera does not change the owner; two rows with one index: smallest id owns it; videos in cam/devices is written on group-row changes without waiting for a description	manual
+02-owner	5	@manual channel camera can: rays and relays list its child numbers, which need not start at 1; output with port outside this camera's relays is refused «no such output»	manual
+02-owner	6	@manual owner change: a disabled output stays disabled; enabled: true in the current row settings enables it, the gone row remains	manual
+02-owner	7	@manual owner changes and children listing is refused: output stays disabled on the next pass with the same set; listing succeeds and related settings are found: output is disabled by those settings	manual
+02-owner	8	@manual enabled: true on a row, owner changes, enabled: false on the new row, owner returns: output disabled by the later decision; equal or corrupt settings at with conflicting decisions: disabled	manual
+03-norm	1	@manual stub driver: normal open maps closure to io.input value closed and opening to value open; normal closed maps opening to value closed and closure to value open	manual
+03-norm	2	@manual disabled sensor: no event, inputs_off grows; unlicensed owner: no event, events_refused grows	manual
+03-norm	3	@manual driver contact value not translated to open or closed: no event, events_refused grows; the translation is named in the implementation description	manual
+04-units	1	@manual stub driver with units (Drivers/Virtual has none; Drivers/OnvifAcfa uses a live controller): cam/device_units rows are created from the root, CreateUnit receives owner and template; editing a row does not restart the connection	manual
+04-units	2	@manual template absent from description, parent forms a cycle or maxCount exceeded: units_down says refused; neighbouring units work; unit SignalLost sets lost, Started clears it	manual
+04-units	3	@manual unit event: a unit row with unit and event as received, and phase for a two-phase event; a disabled unit writes no events	manual
+04-units	4	@manual unit action: performed with reply {action, n, operation}; no such unit, unit is off, no such operation, unit needs n and an operation; an unlicensed row gives camera is not licensed	manual
+04-sound	1	@manual stub driver with audio: <live_url>/mic is the camera's first mic, /mic/<n> is the device mic; rtpmap uses the device codec; video stream unchanged	manual
+04-sound	2	@manual mic enabled: false gives DESCRIBE 404; unreadable settings give 404; unlicensed owner gives 404; an open endpoint in each case, and on gone, ends the stream for the client	manual
+04-sound	3	@manual POST /requests {"unit": "$c", "action": "talk", "port": 1}: performed, device receives Call; another person is refused «busy», the same person gets performed	manual
+04-sound	4	@manual talk without port, with a foreign port or disabled spk: talk needs a port, no such speaker, speaker is disabled	manual
+04-sound	5	@manual talk route not opened for 30 s: HangUp and occupancy released; route broken: HangUp; no frame for 8 s without disconnect: HangUp; device hangs up: route closed	manual
+05-builtin	1	@manual stub driver with analytics (Drivers/Virtual has none): cam/device_units type det calls CreateVideoAnalytics with channel and template, then Start; enabled: false calls Stop; event writes a unit row in the camera bucket, det_kind by detector-kinds.tsv; open phase repeats as phase: still every 30 s	manual
+05-builtin	2	@manual detector absent on the channel, conflictDetectors on two enabled rows, or an ipsrv row: units_down refused for the greater n; neighbours continue	manual
+05-builtin	3	@manual camera with one replica and a built-in detector: idle phase, stream not read, events continue	manual
+05-ptz	1	@manual stub driver with PTZ: can.ptz by channel index, absent reference means false; preset_save and preset_clear give performed, reply {action, n}; camera without PTZ gives this device has no telemetry; edit right is on the camera, not the group	manual
+05-ptz	2	@manual cam/ptz_moves row with increasing seq: MoveContinuous, ZoomContinuous, FocusContinuous; deleting the row sets each axis speed to zero; no repeat for PTZ_LEASE means stop; a row found at startup does not move	manual
+05-ptz	3	@manual hung group call (unit Execute, output): camera stop proceeds; hung PTZ call: stop proceeds independently of it	manual
+05-ptz	4	@manual holder SIGKILL during movement: new holder sends stop when taking the epoch; failure-to-stop interval is at most 105 s	manual
 06-rule-state	1	POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
 06-rule-state	2	@start worker cam w-srv-a-1 on srv-a	ok
 06-rule-state	3	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "idle"}]}
@@ -54,5 +54,5 @@ scenario	step	request	expect
 06-rule-state	18	POST /requests {"unit": "$c1", "action": "disable", "disabled_by_rule": "7", "disabled_until": 1}	@oneof 202 {"queued": "@any"} | 200 {"answered": {"outcome": "performed"}}
 06-rule-state	19	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "idle"}]}
 06-rule-state	20	POST /rule_state {"camera": "$c1", "armed": true}	403 {"error": "@any"}
-06-rule-state	21	@manual срок вышел сам: камера выключена на 60 с, через срок фаза снова idle без правки строки; строка осталась, поля выключения те же: стенду не задать момент в теле просьбы	manual
-06-rule-state	22	@manual перезапуск держателя при выключенной камере: новый читает строку и камеру не запускает; строка порчена — камера идёт, warning: нужна запись мимо двери при живом держателе	manual
+06-rule-state	21	@manual deadline expires naturally: camera disabled for 60 s returns to idle after the deadline without a row edit; row and disabling fields remain; the stand cannot set the moment in the request body	manual
+06-rule-state	22	@manual holder restart while the camera is disabled: new holder reads the row and does not start it; corrupt row: camera runs with warning; requires a write past the door with a live holder	manual

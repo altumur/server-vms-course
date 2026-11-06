@@ -29,15 +29,15 @@ scenario	step	request	expect
 01-create	27	POST /scenarios {"name": "minutes-str", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "rec", "action": "record", "cam": "7", "minutes": "5"}]}	400 {"error": "@any"}
 01-create	28	POST /scenarios {"name": "port-str", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "output", "unit": "12", "port": "2"}]}	400 {"error": "@any"}
 02-key	1	POST /scenarios {"id": 7, "name": "k", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "platform_field", "field": "/id", "detail": "~id"}
-02-key	2	POST /scenarios {"name": "Дверь по пропуску", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	201 {"id": "$k", "name": "Дверь по пропуску"}
-02-key	3	PUT /scenarios/$k {"name": "Другое имя, тот же номер"}	200 {"id": "$k", "name": "Другое имя, тот же номер"}
+02-key	2	POST /scenarios {"name": "Door by pass", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	201 {"id": "$k", "name": "Door by pass"}
+02-key	3	PUT /scenarios/$k {"name": "Another name, same number"}	200 {"id": "$k", "name": "Another name, same number"}
 03-fields	1	POST /scenarios {"name": "sched", "start": "schedule", "run_at": {"days": [1, 5], "time": "23:30"}, "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	201 {"start": "schedule", "run_at": {"days": [1, 5], "time": "23:30"}, "when": []}
 03-fields	2	POST /scenarios {"name": "draft", "enabled": false, "start": "manual", "run_mode": "manual"}	201 {"enabled": false, "start": "manual", "run_mode": "manual", "when": [], "then": []}
 03-fields	3	POST /scenarios {"name": "bad-time", "run_at": {"days": [1], "time": "25:00"}}	400 {"error": "@any"}
 03-fields	4	POST /scenarios {"name": "bad-day", "run_at": {"days": [8], "time": "10:00"}}	400 {"error": "@any"}
 03-fields	5	POST /scenarios {"name": "bad-start", "start": "cron"}	400 {"error": "@any"}
 03-fields	6	POST /scenarios {"name": "bad-repeat", "repeat": "twice"}	400 {"error": "@any"}
-03-fields	7	POST /scenarios {"name": "mute", "log_only": true, "log_only_since": "2026-11-01", "owner": "admin", "purpose": "проверка", "run_as_role": "r1", "allow_chain": false}	201 {"log_only": true, "allow_chain": false}
+03-fields	7	POST /scenarios {"name": "mute", "log_only": true, "log_only_since": "2026-11-01", "owner": "admin", "purpose": "check", "run_as_role": "r1", "allow_chain": false}	201 {"log_only": true, "allow_chain": false}
 03-fields	8	POST /rule_marks {"scenario": "1", "mute": {"until": 1760003600}}	400 {"error": "@any"}
 03-fields	9	POST /scenarios {"name": "hidden", "hidden": "record"}	201 {"hidden": "record"}
 03-fields	10	POST /scenarios {"name": "bad-hidden", "hidden": "secret"}	400 {"error": "@any"}
@@ -52,13 +52,13 @@ scenario	step	request	expect
 05-conditions	3	POST /scenarios {"name": "extra-cond", "conditions": [{"kind": "time", "extra": 1}]}	400 {"error": "@any"}
 06-steps	1	POST /scenarios {"name": "wait", "then": [{"control": "wait", "sec": 5}, {"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	201 {"name": "wait"}
 06-steps	2	POST /scenarios {"name": "wait-event", "then": [{"control": "wait_event", "event": {"sub": "det", "kind": "motion"}, "sec": 30, "yes": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "no": []}]}	201 {"name": "wait-event"}
-06-steps	3	POST /scenarios {"name": "ask", "then": [{"control": "ask", "text": "Открыть?", "role": null, "sec": 60, "default": "no", "yes": [{"control": "wait", "sec": 1}], "no": []}]}	201 {"name": "ask"}
+06-steps	3	POST /scenarios {"name": "ask", "then": [{"control": "ask", "text": "Open?", "role": null, "sec": 60, "default": "no", "yes": [{"control": "wait", "sec": 1}], "no": []}]}	201 {"name": "ask"}
 06-steps	4	POST /scenarios {"name": "escalate", "then": [{"control": "escalate", "levels": [{"role": null, "via": "client", "wait_min": 5}], "stop": "ack"}]}	201 {"name": "escalate"}
 06-steps	5	POST /scenarios {"name": "two-levels", "then": [{"control": "ask", "text": "a", "role": null, "sec": 1, "default": "no", "no": [], "yes": [{"control": "wait_event", "yes": [{"control": "wait", "sec": 1}]}]}]}	201 {"name": "two-levels"}
 06-steps	6	POST /scenarios {"name": "three-levels", "then": [{"control": "ask", "text": "a", "role": null, "sec": 1, "default": "no", "no": [], "yes": [{"control": "wait_event", "yes": [{"control": "wait_event", "yes": [{"control": "wait", "sec": 1}]}]}]}]}	400 {"error": "@any"}
 06-steps	7	POST /scenarios {"name": "wait-no-sec", "then": [{"control": "wait"}]}	400 {"error": "@any"}
 06-steps	8	POST /scenarios {"name": "no-control", "then": [{"control": "sleep", "sec": 1}]}	400 {"error": "@any"}
-06-steps	9	POST /scenarios {"name": "arm", "then": [{"sub": "cam", "action": "arm", "unit": "7"}, {"sub": "cam", "action": "disarm", "unit": "7"}, {"sub": "cam", "action": "disable", "unit": "7", "minutes": 10}, {"sub": "auto", "action": "alarm", "target": {"include": [{"kind": "folder", "id": "ab12"}, {"kind": "device", "id": "7"}], "exclude": ["9"], "gone": [], "from_event": false}, "text": "Тревога", "priority": "high"}]}	201 {"name": "arm"}
+06-steps	9	POST /scenarios {"name": "arm", "then": [{"sub": "cam", "action": "arm", "unit": "7"}, {"sub": "cam", "action": "disarm", "unit": "7"}, {"sub": "cam", "action": "disable", "unit": "7", "minutes": 10}, {"sub": "auto", "action": "alarm", "target": {"include": [{"kind": "folder", "id": "ab12"}, {"kind": "device", "id": "7"}], "exclude": ["9"], "gone": [], "from_event": false}, "text": "Alarm", "priority": "high"}]}	201 {"name": "arm"}
 06-steps	10	POST /scenarios {"name": "disable-no-minutes", "then": [{"sub": "cam", "action": "disable", "unit": "7"}]}	400 {"error": "@any"}
 06-steps	11	POST /scenarios {"name": "chain", "then": [{"sub": "auto", "action": "runrule", "rule": 1}]}	201 {"name": "chain"}
 06-steps	12	POST /scenarios {"name": "no-subject", "enabled": false, "then": [{"sub": "ntf", "action": "email", "to": "a@b", "subject": "s"}]}	201 {"name": "no-subject"}
@@ -67,27 +67,27 @@ scenario	step	request	expect
 07-requests	3	POST /requests {"unit": "$s", "action": "retry", "fire": "$s-at-1800000000"}	202 {"queued": "@any"}
 07-requests	4	POST /requests {"unit": "$s", "action": "reboot"}	400 {"error": "@any"}
 07-requests	5	POST /requests {"unit": "$s", "action": "run", "port": 1}	400 {"error": "@any"}
-07-requests	6	POST /rule_marks {"scenario": "$s", "mute": {"since": 1760000000, "until": 1760003600, "by": "admin", "reason": "работы"}, "order": 3}	201 {"row": {"order": 3, "mute": {"by": "admin", "until": 1760003600}}}
+07-requests	6	POST /rule_marks {"scenario": "$s", "mute": {"since": 1760000000, "until": 1760003600, "by": "admin", "reason": "work"}, "order": 3}	201 {"row": {"order": 3, "mute": {"by": "admin", "until": 1760003600}}}
 07-requests	7	GET /scenarios/$s	200 {"revision": 1}
 07-requests	8	POST /chains {"target": "$s", "f": "00000000000000000000000000000000", "i": "0", "firing": "x", "level": 2, "moment": 1760000000, "started_by": "manual"}	403 {"error": "denied"}
 07-requests	9	POST /answers {"scenario": "$s", "fire": "f1", "step": "0", "user": "admin", "answer": "yes"}	2xx
-07-requests	10	@manual ответ на ask: член группы роли шага — ветка ответа; чужая роль и чужой user — answer.refused, answers_refused + 1, срок идёт; ответ после срока не действует; из двух действующих решает ранний at: стенд без воркеров	manual
-07-requests	11	@manual триггер det kind motion с целью камеры срабатывает на строке cam unit встроенного детектора с det_kind motion, begin и still, не на end; без det/units; events сработки несут sub det: стенд без воркеров и подставного драйвера с аналитикой	manual
-08-run	1	@manual стенд приёмки 1 без воркеров: сценарий с wait 30: рестарт вычислителя на ожидании — строка auto/state/runs/<id> цела, шаг после ожидания подан один раз, срок от конца ожидания; перезапуск до записи строки — курсор стоял, сработка решена заново	manual
-08-run	2	@manual стенд приёмки 1 без воркеров: wait_event: событие до until — ветка yes, срок от его occurred; без события — ветка no только при through ≥ until; при молчащем ресурсе ветка не решена	manual
-08-run	3	@manual стенд приёмки 1 без воркеров: repeat: при идущем запуске skip — fired result skip, busy false; restart — прежний снят, новый идёт; queue — идёт за прежним, сверх 16 — как skip	manual
-08-run	4	@manual стенд приёмки 1 без воркеров: новая revision на ожидании: запуск снят, шаг не подан, последняя строка fired — с waiting	manual
-08-run	5	@manual стенд приёмки 1 без воркеров: log_only: fired result watch, step would, просьбы нет; приглушение и окно обслуживания: result skip; просьба run при них идёт, условие time судит	manual
-08-run	6	@manual стенд приёмки 1 без воркеров: условие armed: строки cam/rule_state нет — не на охране; строка нечитаема — проверка cond.unread, а не «условие ложно»; online и recording по текущему состоянию	manual
-08-run	7	@manual стенд приёмки 1 без воркеров: цель-папка: новая камера в папке входит без правки сценария; exclude вычтен; папка нечитаема — шаг fail target.unread, не target.areaEmpty; gone — шаг fail, прочие идут, result part	manual
-08-run	8	@manual стенд приёмки 1 без воркеров: run_as_role: роль без права — шаг fail role.denied; роль admin — отказ	manual
-08-run	9	@manual стенд приёмки 1 без воркеров: run_at: момент в окне даёт одну сработку <id>-at-<m>, повтор после переезда — те же имена; момент простоя — кандидат при подъёме, просьба late	manual
-08-run	10	@manual стенд приёмки 1 без воркеров: retry: отказавшие шаги сработки поданы снова, именем <id>-retry-<rid>; отказов нет — refused nothing; log_only — refused logOnly; run выключенного — refused off	manual
-08-run	11	@manual стенд приёмки 1 без воркеров: POST /auto/test/<id>: черновик без строки, шаги would, просьб и заказов нет, branches выбирают ветку; log без scenario — 422 log_needs_scenario	manual
-08-run	12	@manual стенд приёмки 1 без воркеров: runrule: строка auto/chains/<target>-<f>-<i> записана один раз, цель запускается, taken стоит, повтор сработки — та же строка; allow_chain false — шаг fail chain.forbidden; уровень 6 — chain.max; приглушённая цель — fired skip	manual
-08-run	13	@manual стенд приёмки 1 без воркеров: приглушение на ожидании: строка rule_marks записана, revision сценария прежняя, запуск дошёл до конца, since не сдвинут; строка rule_marks нечитаема — проверка cond.unread, сработка не идёт	manual
-08-run	14	@manual рестарт держателя после ветки yes в пределах JOURNAL_BACK: сработка решена по done, ветки no нет; простой дольше JOURNAL_BACK: событие wait_event найдено, ветка yes; запуск из очереди: срок просьбы от начала: стенд без воркеров	manual
-08-run	15	@manual then [wait_event{yes, no}, c]: после ветки подан c; падение после записи ветки, до её первого шага: новый держатель идёт той же веткой, строка, легшая позже, ветку не меняет, срок просьбы тот же: стенд без воркеров	manual
-08-run	16	@manual цель-папка из одной камеры стала из двух, повтор сработки: той камере имя просьбы то же, again; элемент-камера с port и ребёнок relay того же номера — одна просьба; exclude камеры детей не вычитает: стенд без воркеров	manual
-08-run	17	@manual ask: ответ до срока — конец ожидания at, срок просьбы от него; нет ответа — ветка default, конец until; log_only: ждёт sec, строки ответа не читаются. escalate stop reset: событие open тех же cam и port кончает ожидание; run без события — конец по сроку; levels пусты — refused: стенд без воркеров	manual
-08-run	18	@manual runrule: падение между строкой runs цели и taken: второго запуска нет, taken стоит; цель в очереди — taken стоит; строка цепочки до правки цели, moment раньше since: fired skip chain.off, taken: стенд без воркеров	manual
+07-requests	10	@manual ask answer: member of the step role's group selects the answered branch; foreign role or foreign user: answer.refused, answers_refused + 1, deadline continues; late answer has no effect; earliest at wins among two valid answers; stand without workers	manual
+07-requests	11	@manual det kind motion trigger targeting a camera fires on a cam row of the built-in detector unit with det_kind motion, begin or still, not end; without det/units; firing events carry sub det; stand without workers or a stub analytics driver	manual
+08-run	1	@manual acceptance 1 stand without workers: scenario with wait 30; evaluator restart while waiting retains auto/state/runs/<id>, files the following step once with its deadline from wait end; restart before writing the row: cursor stood still, firing decided anew	manual
+08-run	2	@manual acceptance 1 stand without workers: wait_event event before until selects yes, deadline from its occurred; no event selects no only when through >= until; silent resource leaves the branch undecided	manual
+08-run	3	@manual acceptance 1 stand without workers: repeat during a run: skip gives fired result skip, busy false; restart removes the former run and starts a new one; queue runs after the former, above 16 behaves as skip	manual
+08-run	4	@manual acceptance 1 stand without workers: new revision while waiting removes the run and does not file the step; last fired row has waiting	manual
+08-run	5	@manual acceptance 1 stand without workers: log_only gives fired result watch, step would, no request; muting and maintenance window give result skip; a run request still proceeds and judges the time condition	manual
+08-run	6	@manual acceptance 1 stand without workers: armed condition with no cam/rule_state row means not armed; unreadable row gives cond.unread instead of a false condition; online and recording use current state	manual
+08-run	7	@manual acceptance 1 stand without workers: folder target includes a new camera without a scenario edit; exclude is subtracted; unreadable folder gives step fail target.unread, not target.areaEmpty; gone gives step fail, others continue, result part	manual
+08-run	8	@manual acceptance 1 stand without workers: run_as_role without the right gives step fail role.denied; admin role is refused	manual
+08-run	9	@manual acceptance 1 stand without workers: run_at moment within the window gives one firing <id>-at-<m>, a repeat after a move has the same names; a downtime moment is a candidate at startup with a late request	manual
+08-run	10	@manual acceptance 1 stand without workers: retry files failed steps again as <id>-retry-<rid>; no failures gives refused nothing; log_only gives refused logOnly; run of a disabled scenario gives refused off	manual
+08-run	11	@manual acceptance 1 stand without workers: POST /auto/test/<id> with a draft without a row gives would steps, no requests or orders, branches selects the branch; log without scenario gives 422 log_needs_scenario	manual
+08-run	12	@manual acceptance 1 stand without workers: runrule writes auto/chains/<target>-<f>-<i> once, starts the target and sets taken; repeat firing finds the same row; allow_chain false gives step fail chain.forbidden; level 6 gives chain.max; muted target gives fired skip	manual
+08-run	13	@manual acceptance 1 stand without workers: muting while waiting writes rule_marks, preserves scenario revision, lets the run finish and leaves since unchanged; unreadable rule_marks gives cond.unread and no firing	manual
+08-run	14	@manual holder restart after yes within JOURNAL_BACK: done decides the firing, no no branch; downtime longer than JOURNAL_BACK: wait_event event found, yes branch; queued run: request deadline from startup; stand without workers	manual
+08-run	15	@manual then [wait_event{yes, no}, c]: c is filed after the branch; crash after writing the branch but before its first step: new holder follows the same branch, a later row does not change it, request deadline unchanged; stand without workers	manual
+08-run	16	@manual folder target grows from one camera to two, firing repeated: same request name for the first camera, again; camera element with port and relay child of the same number produce one request; excluding a camera does not subtract its children; stand without workers	manual
+08-run	17	@manual ask answer before deadline: wait end is at and request deadline starts there; no answer: default branch, end until; log_only waits sec without reading answers. escalate stop reset: open event on the same cam and port ends waiting; run without event ends at deadline; empty levels gives refused; stand without workers	manual
+08-run	18	@manual runrule crash between writing target runs and taken: no second run, taken set; queued target: taken set; chain row predates target edit, moment before since: fired skip chain.off, taken; stand without workers	manual

@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/vectors/family-read/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 A table `NN.tsv` per VMS lesson that owns families of `VMS/common/data/catalog.tsv` (the Architect's decision on the VMS request
-«семьи в открытых местах», option A). A row: the family (`family`, `kind`, `place` — a row of the VMS catalog), a concrete key,
+families in open places, option A). A row: the family (`family`, `kind`, `place` — a row of the VMS catalog), a concrete key,
 the mode and the roles (`who`), the text of the platform family row (`text`, as in `Platform/common/vectors/family-read/`), the verdict and the refusal
 paths (from the root of the row), the outcome for each reader (`outcome`: role → paths of the rows of `outcomes.tsv` of the VMS family, the paths are from
 the value of the place). First the row is judged by the platform family, then by the VMS schema — the value in each instance of the place `place`.

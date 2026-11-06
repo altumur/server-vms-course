@@ -1832,8 +1832,8 @@ class VmsModuleTests(unittest.TestCase):
         (self.root / "VMS/09-deploy").mkdir()
         (self.root / "VMS/01-cam/cam.subsystem.yaml").write_text("name: cam\n", encoding="utf-8")
         (self.root / "VMS/common/lessons.tsv").write_text(
-            "# lesson\tdir\ttitle\tsubsystem\tstatus\n01\t01-cam\tКамера\tcam\tне переведён\n"
-            "09\t09-deploy\tРазвёртывание\t-\tне переведён\n", encoding="utf-8")
+            "# lesson\tdir\ttitle\tsubsystem\tstatus\n01\t01-cam\tКамера\tcam\tnot translated\n"
+            "09\t09-deploy\tРазвёртывание\t-\tnot translated\n", encoding="utf-8")
         (self.root / "VMS/common/data/catalog.tsv").write_text(
             "key\tkind\towner\tops\treaders\twhen\tversion\tschema\tnorm\tplace\n", encoding="utf-8")
         (self.root / "VMS/common/id-map.tsv").write_text("old\tnew\tchapter\tsubject\tnote\n", encoding="utf-8")
@@ -1856,6 +1856,24 @@ class VmsModuleTests(unittest.TestCase):
 
     def test_start_layout_passes(self):
         self.assertEqual(self.errors(), [])
+
+    def test_only_english_statuses_are_accepted(self):
+        path = self.root / "VMS/common/lessons.tsv"
+        original = path.read_text()
+        for status in ("translated", "not translated"):
+            path.write_text(original.replace("not translated", status))
+            self.assertEqual(self.errors(), [], status)
+        for status in ("переведён", "не переведён", "TRANSLATED", "translated ", ""):
+            path.write_text(original.replace("not translated", status))
+            self.assertTrue(any("status is one of" in e for e in self.errors()), status)
+
+    def test_idmap_stays_required_at_its_sole_original_path(self):
+        old = self.root / "VMS/common/id-map.tsv"
+        copy = self.root / "decisions/history/vms/id-map.tsv"
+        copy.parent.mkdir(parents=True)
+        copy.write_bytes(old.read_bytes())
+        old.unlink()
+        self.assertTrue(any("VMS/common/id-map.tsv: missing" in e for e in self.errors()))
 
     def test_manifest_outside_its_lesson(self):
         (self.root / "VMS/09-deploy/rec.subsystem.yaml").write_text("name: rec\n", encoding="utf-8")
@@ -1894,7 +1912,7 @@ class VmsLessonTests(unittest.TestCase):
         self.root = Path(self.temp.name).resolve()
         (self.root / "VMS/common").mkdir(parents=True)
         (self.root / "VMS/common/lessons.tsv").write_text(
-            "# lesson\tdir\ttitle\tsubsystem\tstatus\n01\t01-cam\tКамера\t-\tне переведён\n", encoding="utf-8")
+            "# lesson\tdir\ttitle\tsubsystem\tstatus\n01\t01-cam\tКамера\t-\tnot translated\n", encoding="utf-8")
         (self.root / "VMS/common/id-map.tsv").write_text(
             "old\tnew\tchapter\tsubject\tnote\nМ10B/01 ш.1\tV/01.1-01\t1.1\tкамера\t-\n", encoding="utf-8")
         (self.root / "decisions/inbox").mkdir(parents=True)
@@ -1934,7 +1952,7 @@ class VmsLessonTests(unittest.TestCase):
 
     def test_lesson_not_in_lessons_table(self):
         (self.root / "VMS/common/lessons.tsv").write_text(
-            "# lesson\tdir\ttitle\tsubsystem\tstatus\n02\t02-rec\tЗапись\t-\tне переведён\n", encoding="utf-8")
+            "# lesson\tdir\ttitle\tsubsystem\tstatus\n02\t02-rec\tЗапись\t-\tnot translated\n", encoding="utf-8")
         self.assertTrue(any("is not in VMS/common/lessons.tsv" in e for e in self.errors()), self.errors())
 
     def test_stub_without_request_link(self):
@@ -2092,25 +2110,52 @@ class LayoutTests(unittest.TestCase):
         self.assertTrue(any("decisions/journal/platform/01-store/corrections-2.tsv: line 4: expected 4 TSV columns" in e
                             for e in errors), errors)
 
-    def test_vms_journal_stays_in_lesson(self):
+    def vms_journal_fixture(self, name):
         import shutil
-        home = self.root / "VMS/01-cam"
+        home = self.root / "VMS" / name
         acceptance = home / "acceptance/1"
         shutil.copytree(self.dir / "acceptance/1", acceptance)
         shutil.copytree(self.dir / "ru/acceptance/1", home / "ru/acceptance/1")
         (home / "journal").mkdir()
-        path = home / "journal/corrections-1.tsv"
-        path.write_text("date\tsample\tfix\tlanguages\n")
-        history = self.root / "decisions/journal/vms/01-cam"
+        old = home / "journal/corrections-1.tsv"
+        old.write_text("date\tsample\tfix\tlanguages\n")
+        history = self.root / "decisions/journal/vms" / name
         history.mkdir(parents=True)
-        (history / path.name).write_text("broken history copy\n")
+        path = history / old.name
+        path.write_text("date\tsample\tfix\tlanguages\n2026-11-06\t01-case\tCorrection 17\tGo\n")
+        return acceptance, old, path
+
+    def test_vms_journal_reads_relocated_values_and_line_numbers(self):
+        acceptance, old, path = self.vms_journal_fixture("01-cam")
+        old.write_text("broken old copy\n")
         result = Check(self.root)
         result.acceptance(acceptance, "V/01", "1/")
         self.assertEqual(result.errors, [])
+        self.assertEqual(result.tsv(path, 4), [(1, ["date", "sample", "fix", "languages"]),
+                                              (2, ["2026-11-06", "01-case", "Correction 17", "Go"])])
+        path.write_text("date\tsample\tfix\tlanguages\n2026-11-06\t01-case\tmissing language\n")
+        result = Check(self.root)
+        result.acceptance(acceptance, "V/01", "1/")
+        self.assertTrue(any("decisions/journal/vms/01-cam/corrections-1.tsv: line 2" in e for e in result.errors),
+                        result.errors)
+
+    def test_vms_journal_has_no_old_path_fallback(self):
+        acceptance, old, path = self.vms_journal_fixture("01-cam")
         path.unlink()
         result = Check(self.root)
         result.acceptance(acceptance, "V/01", "1/")
-        self.assertTrue(any("VMS/01-cam/journal/corrections-1.tsv:" in e for e in result.errors), result.errors)
+        self.assertTrue(any("decisions/journal/vms/01-cam/corrections-1.tsv:" in e for e in result.errors), result.errors)
+
+    def test_excluded_v11_journal_keeps_its_original_path(self):
+        acceptance, old, path = self.vms_journal_fixture("11-backend")
+        path.write_text("broken unaccepted relocated copy\n")
+        result = Check(self.root)
+        result.acceptance(acceptance, "V/11", "1/")
+        self.assertEqual(result.errors, [])
+        old.unlink()
+        result = Check(self.root)
+        result.acceptance(acceptance, "V/11", "1/")
+        self.assertTrue(any("VMS/11-backend/journal/corrections-1.tsv:" in e for e in result.errors), result.errors)
 
     def test_source_does_not_link_ru_or_journal(self):
         (self.dir / "journal").mkdir()

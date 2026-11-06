@@ -1,7 +1,7 @@
 # Приёмка V/10.2 — дверь модели
 
-Норма главы — [`10.2-assist.norms.md`](../../spec/10.2-assist.norms.md) Н5 (и процесс модели, пульс — [`10.1-assist.norms.md`](../../spec/10.1-assist.norms.md)
-Н1.3, Н1.4). Стенд и словарь — [общий README приёмки VMS](../../../../common/ru/acceptance/README.md) поверх общего README
+Норма главы — [`10.2-assist.norms.md`](../../spec/10.2-assist.norms.md) N5 (и процесс модели, пульс — [`10.1-assist.norms.md`](../../spec/10.1-assist.norms.md)
+N1.3, N1.4). Стенд и словарь — [общий README приёмки VMS](../../../../common/ru/acceptance/README.md) поверх общего README
 платформы (выгрузка `7a875c75`).
 
 Текст производный от `acceptance/2/README.md`, руками не правится: источник — английский [`acceptance/2/README.md`](../../../acceptance/2/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
@@ -10,11 +10,11 @@
 
 Стенд VMS с манифестом `assist`: консоль — `CONSOLE_ROOT=assist` (дверь `console` — `/models`, `/where/<name>`), контроллер
 `assist`, ресурс сервера `srv-a`. Держатель модели запускается директивой `@start worker assist m-srv-a-1 on srv-a
-labels=assist-a` командой «Стенда» реализации (раздел «Решает реализация» инструкции урока): у сервера метка `assist-a`.
+labels=assist-a` командой «Стенда» реализации (part «Решает реализация» инструкции урока): у сервера метка `assist-a`.
 
 **Заглушка модели.** Файл подсистемы `assist` стенд пишет на сценарий (общий README приёмки VMS, «Файл подсистемы на
-стенде») до запуска держателя: `MODEL_COMMAND={model_stub} {spec}/VMS/10-assist/vectors/model-stub/<сценарий>.tsv` —
-файл ответов по имени сценария. `{model_stub}` — программа раннера `model-stub` по протоколу V/10.2 Н5, `{spec}` — корень
+стенде») до запуска держателя: `MODEL_COMMAND={model_stub} {spec}/VMS/10-assist/vectors/model-stub/<scenario>.tsv` —
+файл ответов по имени сценария. `{model_stub}` — программа раннера `model-stub` по протоколу V/10.2 N5, `{spec}` — корень
 спецификации; файлы — [`vectors/model-stub/`](../../vectors/model-stub/README.md). Переходные состояния держат барьеры
 файла ответов, а не скорость стенда: `loading` — `load hang` (`01-loading`); `queued` второго шага — после наблюдённого
 `running` первого, которого держит `hang` (`03-limits`). Весов и сервера модели на стенде нет.
@@ -32,6 +32,6 @@ labels=assist-a` командой «Стенда» реализации (раз�
 | `03-limits` | V/10.2-03, V/10.2-04, V/10.1-03, V/10.1-04 | первый шаг наблюдён `running`; второй — в очереди (`ahead: 0`); третий — 429 `too many steps`; отбой снимает второй; первый, которого владелец не спрашивает, через `ABANDON` — `cancelled` `abandoned`, счёт `steps.cancelled` (отбой) и `steps.abandoned` в пульсе; шаг дольше 30 с при `/health` 503 во время шага (`busy`) не перезапускает модель (`running`) |
 | `04-owner` | V/10.2-02 | Ann ставит шаг; Bob с тем же грантом на модель читает и отбивает его по id — 404 `no such step`; Ann (после ожидания своей `/session`) новым токеном читает свой шаг — `done` с ответом; шаг завершён и не выдан — живёт `KEEP_UNREAD` 120 с, сценарий укладывается в два ожидания `/session` по 30 с |
 
-Чтением (Н5 норм): `Connection: close`, `STEP_MAX`, `QUEUE_MAX`, `KEEP_UNREAD` (сроки дольше сценария), `context exceeded`, перезапуск процесса
+Чтением (N5 норм): `Connection: close`, `STEP_MAX`, `QUEUE_MAX`, `KEEP_UNREAD` (сроки дольше сценария), `context exceeded`, перезапуск процесса
 модели, `model did not load`, `model keeps failing`, 410 после смены держателя, деление кеша (общий префикс; данные — тот же `user` и `turn`), журнал `assist.step`
 без текстов, погашение процесса модели до отдачи слота, сокет 0700.

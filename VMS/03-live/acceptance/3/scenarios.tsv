@@ -1,17 +1,17 @@
 scenario	step	request	expect
 # Acceptance of V/03.3: the stream choice by size with two streams. Format — README.
-01-size	1	@manual стенд WHEP с воркером live и клиентом WebRTC: ?width=320&height=180 и ?width=640&height=360 — 201, в журнале live.view поток 640x360; ?width=641&height=360 — поток 1920x1080	manual
-01-size	2	@manual ?width=3840&height=2160 больше всех — самый крупный, 1920x1080	manual
-01-size	3	@manual ни resolution, ни size ни у одного потока (первый проход, источник не поднят) — основной	manual
-01-size	4	@manual ?stream=<прочий>&width=1920&height=1080 — названный поток, размер не судит; ?stream=&width=320&height=180 — выбор по размеру	manual
-01-size	5	@manual малый поток H.265, основной H.264, оффер только H.264, окно малое — малый отсеян, выбран основной; оффер только VP8 — основной, 400 bad offer	manual
-01-size	6	@manual раздача ref:<ref> с ?width=320&height=180 — основной поток, отказа нет	manual
-01-size	7	@manual ?width=320 без height, ?width=0&height=0, ?width=a&height=1, повтор width — 400 bad query	manual
-01-size	8	@manual малый поток держит другой сервер, приёмника нет: первый оффер — 404 not yet, проход отвергает спрос; следующий оффер того же окна — малый не кандидат, выбран основной, 201	manual
-02-sound	1	@manual живой драйвер со звуком G.711 и браузер: оффер с m=audio — ответ с PCMU, дорожка без перекодирования, один msid с видео	manual
-02-sound	2	@manual источник G.726, AAC — ответ с opus; источник L16, MPA — ответ с opus; иной кодек — видео идёт, в пульсе записка audio codec; оффер без m=audio — 201, без звука	manual
-02-sound	3	@manual шлюз на другом сервере, чем держатель: источник ingest, подписка с audio 0 — звук идёт, кодек из codec кадра; кадров звука нет к сроку — видео без звука, 201	manual
-02-sound	4	@manual камера без mic через приёмник: первый оффер ждёт AUDIO_WAIT, 201 без звука; следующий оффер — 201 без ожидания; появился кадр звука — следующий оффер со звуком	manual
-03-talk	1	@manual живой драйвер с spk, браузер: просьба talk, POST /talk/<cam>/1 — 201, Location, в журнале live.talk; устройство слышит звук кодеком из talk пульса	manual
-03-talk	2	@manual POST /talk без просьбы — 404 not yet; второй говорящий — 409 busy; нет spk — 404 no speaker; оффер без m=audio на отправку — 400 bad offer	manual
-03-talk	3	@manual DELETE /whep/session — 204, live.talk.ended, устройство получило HangUp; браузер молчит — шлюз шлёт кадры тишины, разговор держится; устройство положило трубку — сессия закрыта, why device	manual
+01-size	1	@manual WHEP stand with live worker and WebRTC client: ?width=320&height=180 and ?width=640&height=360 give 201 and live.view log stream 640x360; ?width=641&height=360 selects 1920x1080	manual
+01-size	2	@manual ?width=3840&height=2160 exceeds every stream: select the largest, 1920x1080	manual
+01-size	3	@manual no stream has resolution or size (first pass, source not started): select the main stream	manual
+01-size	4	@manual ?stream=<other>&width=1920&height=1080 selects the named stream without judging size; ?stream=&width=320&height=180 selects by size	manual
+01-size	5	@manual small stream H.265, main H.264, offer only H.264, small window: small stream excluded and main selected; offer only VP8: main, 400 bad offer	manual
+01-size	6	@manual ref:<ref> delivery with ?width=320&height=180 selects the main stream without refusal	manual
+01-size	7	@manual ?width=320 without height, ?width=0&height=0, ?width=a&height=1 or repeated width: 400 bad query	manual
+01-size	8	@manual small stream held by another server, no receiver: first offer gives 404 not yet and the pass rejects demand; next offer for the same window excludes the small stream, selects main, 201	manual
+02-sound	1	@manual live G.711 audio driver and browser: offer with m=audio answers with PCMU, no transcoding, one msid with video	manual
+02-sound	2	@manual G.726 or AAC source answers with opus; L16 or MPA source answers with opus; another codec: video continues with heartbeat note audio codec; offer without m=audio: 201 without audio	manual
+02-sound	3	@manual gateway on another server than the holder: ingest source, subscription with audio 0 carries audio using the frame codec; no audio frame by deadline: video without audio, 201	manual
+02-sound	4	@manual camera without mic through the receiver: first offer waits AUDIO_WAIT, 201 without audio; next offer: 201 without waiting; audio frame appears: next offer includes audio	manual
+03-talk	1	@manual live driver with spk and browser: talk request, POST /talk/<cam>/1 gives 201, Location and live.talk log; device hears audio in the codec from heartbeat talk	manual
+03-talk	2	@manual POST /talk without a request: 404 not yet; second speaker: 409 busy; no spk: 404 no speaker; offer without sending m=audio: 400 bad offer	manual
+03-talk	3	@manual DELETE /whep/session: 204, live.talk.ended, device receives HangUp; silent browser: gateway sends silence frames and the conversation remains; device hangs up: session closed, why device	manual

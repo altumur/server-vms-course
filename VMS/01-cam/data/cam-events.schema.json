@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "the words of the subsystem cam in an event row of a camera bucket (the open place of the Platform family events-unit — the root of the row, the fields beyond t, kind, id, of, class, occurred, v); the field type is set by the writing lesson — V/01.2 Н1.5; read by the console (/events, P/06.4 — as is) and the auto scenarios (V/07.2 Н1.3 — strictly)",
+ "description": "the words of the subsystem cam in an event row of a camera bucket (the open place of the Platform family events-unit — the root of the row, the fields beyond t, kind, id, of, class, occurred, v); the field type is set by the writing lesson — V/01.2 N1.5; read by the console (/events, P/06.4 — as is) and the auto scenarios (V/07.2 N1.3 — strictly)",
  "type": "object",
  "allOf": [
   {
@@ -20,7 +20,7 @@
       "type": "integer",
       "minimum": 1,
       "x-integer": true,
-      "description": "the device input in the numbering of V/01.4 Н1.1, from 1"
+      "description": "the device input in the numbering of V/01.4 N1.1, from 1"
      },
      "value": {
       "type": "string",
@@ -28,7 +28,7 @@
        "open",
        "closed"
       ],
-      "description": "closed — the start of the alarm, open — the end: relative to norm of the input (V/01.4 Н1.4а)"
+      "description": "closed — the start of the alarm, open — the end: relative to norm of the input (V/01.4 N1.4a)"
      }
     },
     "required": [
@@ -97,12 +97,12 @@
      },
      "camera": {
       "type": "string",
-      "description": "the field camera of the eventsrc row (V/01.1 Н1.1г)"
+      "description": "the field camera of the eventsrc row (V/01.1 N1.1d)"
      },
      "word": {
       "type": "string",
       "minLength": 1,
-      "description": "msg of the first matched element of words (V/01.2 Н1.5)"
+      "description": "msg of the first matched element of words (V/01.2 N1.5)"
      }
     },
     "required": [

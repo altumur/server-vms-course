@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "the licence decision of a member — value of an element of the row of the carried book domain/cam/licence/<member> (V/01.7 Н1.2 «книга»)",
+ "description": "the licence decision of a member — value of an element of the row of the carried book domain/cam/licence/<member> (V/01.7 N1.2 «book»)",
  "type": "object",
  "properties": {
   "state": {

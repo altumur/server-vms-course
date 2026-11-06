@@ -1,4 +1,4 @@
-# Unit templates by driver: the .rep template ↔ the kind of the row cam/device_units (V/01.1 Н1.2б). By DriverPack 2026-10-02, checked against a new version (ADR-0102 addendum (9) item 4). Read by backend when creating a unit (V/11.4 Н1.2).
+# Unit templates by driver: the .rep template ↔ the kind of the row cam/device_units (V/01.1 N1.2b). By DriverPack 2026-10-02, checked against a new version (ADR-0102 addendum (9) item 4). Read by backend when creating a unit (V/11.4 N1.2).
 # driver — the driver directory; vendor — the brand of the model, the first segment of the path of the address ipint://; parent — the template of the owner in the unitRef tree, «-» — the device root; type — the value of cam/device_units.type: the kind of the contract; controller — in the contract Device.type acfa with a parent.
 # The templates without type in .rep (13 of 54) and the templates of a door and a fence are assigned by meaning: they are checked against a new version together with the numbers.
 driver	vendor	parent	template	type

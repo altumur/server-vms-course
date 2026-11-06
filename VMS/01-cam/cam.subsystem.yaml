@@ -4,9 +4,9 @@
 # `cam/cameras/`, `cam/next_id`, `cam/workers/<w>`, `cam/placement/<id>`, `cam/slots/<w>`, `cam/epoch/<id>`,
 # `cam/idem/<key>`, `cam/devices/<host>` (what a held device raises and can do — its
 # holder's, V/01.4), `cam/children/<id>` and `cam/child_settings/<id>` (a device's inputs and outputs — the holder's
-# and the operator's, V/01.1 Н1.2а), `cam/device_units/<id>` and `cam/unit_next/<camera>` (the units of a device, which
-# the operator declares and the holder creates, V/01.1 Н1.2б), `cam/searches/<cluster>`, `cam/found/<h>`, `cam/probes/<id>`,
-# `cam/probe_replies/<id>` (a search of the network and «which model», V/01.8), `cam/rule_state/<id>` (what rules set on a camera, V/01.4 Н1.4д), and the object-store keys `cam/heartbeats/<w>` and `cam/snapshot`.
+# and the operator's, V/01.1 N1.2a), `cam/device_units/<id>` and `cam/unit_next/<camera>` (the units of a device, which
+# the operator declares and the holder creates, V/01.1 N1.2b), `cam/searches/<cluster>`, `cam/found/<h>`, `cam/probes/<id>`,
+# `cam/probe_replies/<id>` (a search of the network and «which model», V/01.8), `cam/rule_state/<id>` (what rules set on a camera, V/01.4 N1.4e), and the object-store keys `cam/heartbeats/<w>` and `cam/snapshot`.
 # It also prefixes every `/metrics` line (`cam_…`) and is the `<subsystem>` directory on the resource
 # (`<archive>/cam/<cam>/…`). The platform cuts the grants from it (P/02.1): the console's token gets `cam/cameras/*`,
 # `cam/next_id`, `cam/idem/*`, `cam/requests/*`, …;
@@ -21,22 +21,22 @@ slot: {prefix: w, name_env: WORKER_NAME}
 lease: {unconfirmed_max: forever}
 # No door tokens: a holder's door (V/01.5) admits processes by their role certificate, not a page by a token — no
 # `heartbeat.strings: [playback_key]`, no `secrets.readers: {door/signer: …}` (ADR-0075, window 2).
-# What the holder writes beside its claims: what a device it holds turned out to be (`cam/devices/<host>`, М10B Lesson
+# What the holder writes beside its claims: what a device it holds turned out to be (`cam/devices/<host>`, M10B Lesson
 # 25), the inputs and outputs it turned out to have (`cam/children/<id>`, ADR-0102) and what a search found (`cam/found/<h>`,
-# `cam/probe_replies/<id>`, V/01.8) — a discovery, not a decision — and what a request of a rule set on a camera (`cam/rule_state/<id>`, V/01.4 Н1.4д). Its token and a cluster's rights file are cut from this (`worker:`).
+# `cam/probe_replies/<id>`, V/01.8) — a discovery, not a decision — and what a request of a rule set on a camera (`cam/rule_state/<id>`, V/01.4 N1.4e). Its token and a cluster's rights file are cut from this (`worker:`).
 # Domain books (V/01.6, V/01.7): a member reads the copy `domain/<sub>/<book>`; the holder's cluster has no copy and
-# reads its own row `domain/<sub>/<book>/<CLUSTER>` — the rights generator grants that one row (P/02.5 Н1.4); only the
+# reads its own row `domain/<sub>/<book>/<CLUSTER>` — the rights generator grants that one row (P/02.5 N1.4); only the
 # copy is declared here, never a prefix.
-# Who consumes a stream (V/01.2 Н1.2в): the recordings and detectors of the camera, read as rows, and what the gateways ask for
+# Who consumes a stream (V/01.2 N1.2c): the recordings and detectors of the camera, read as rows, and what the gateways ask for
 # in their heartbeats: with nobody, the device stays held and the stream unread.
 # `creates`: the holder orders its camera's recording on the card of its server, `rec/recordings/cam-<cam>-<volume>`, once:
-# no `until` to renew, a renewal would restart the recording (V/01.6 Н1.7; ADR-0108 доп. (1)); `rec/volumes/` — to see that card.
+# no `until` to renew, a renewal would restart the recording (V/01.6 N1.7; ADR-0108 addendum. (1)); `rec/volumes/` — to see that card.
 worker: {exec: /usr/lib/cam/worker, writes: [devices, children, found, probe_replies, rule_state], creates: [{sub: rec, rows: recordings, key: "{cam}-{home}"}], reads: [rec/recordings/, rec/volumes/, det/units/, live/heartbeats/, domain/rec/primaries/, domain/rec/ingest/, domain/placed/rec/, domain/rec/polls, domain/cam/licence, domain/view, domain/member-list/, domain/view-rows/, domain/member-topology, domain/topology]}
-# The holder's frames on its own server (V/01.2 Н1.3): a share, `SHM_DIR` of the subsystem file (/run/vms-cam-shm), one
+# The holder's frames on its own server (V/01.2 N1.3): a share, `SHM_DIR` of the subsystem file (/run/vms-cam-shm), one
 # file per camera and holder epoch, `<id>-<epoch>.shm`, deleted by its writer, and a lower epoch's by the holder starting the unit (it has no writer); a subscriber on the same server
-# declares `worker.uses: [cam.shm]` (ADR-0091 п. 5) and takes the exact address from the pulse (`live_shm`).
+# declares `worker.uses: [cam.shm]` (ADR-0091 item. 5) and takes the exact address from the pulse (`live_shm`).
 shares: {shm: {kind: dir}}
-# A STREAM IS A UNIT, A CAMERA IS ITS MAIN STREAM (the owner's decision 2026-10-26, V/01.1 Н1.1а). A device gives a
+# A STREAM IS A UNIT, A CAMERA IS ITS MAIN STREAM (the owner's decision 2026-10-26, V/01.1 N1.1a). A device gives a
 # camera several streams — the full picture to record, a small one to watch, one for a detector — and each is a row
 # of its own here: its address, its holder, its fan-out. What belongs to the CAMERA — the place's name, the labels
 # and so the grants, the domain's `ref`, the device's commands, events and alarms — lives only in the main stream's
@@ -58,24 +58,24 @@ unit:
   # a new row takes the defaults; values are converted by type; `/spec` sends
   # `{name, type, default, required}` for each so the page builds its forms without knowing the VMS.
   fields:
-    # The name people know the camera by (V/01.1 Н1.1); without one, `cam<id>` — the door puts the issued id in place
-    # of `{id}` (P/02.1 Н1.3; the row check's «Подготовка полей» step 3).
-    name:                  {type: string, default: "cam{id}"}
-    # Which camera this stream is of: the main stream's id; empty — this row IS the camera (V/01.1 Н1.1а). Fixed: a
+    # The name people know the camera by (V/01.1 N1.1); without one, `cam<id>` — the door puts the issued id in place
+    # of `{id}` (P/02.1 N1.3; the row check's «Field preparation» step 3).
+    name: {type: string, default: "cam{id}"}
+    # Which camera this stream is of: the main stream's id; empty — this row IS the camera (V/01.1 N1.1a). Fixed: a
     # stream does not move to another camera. `must_match` keeps a stream and its main to one `type`: a stream is always
-    # `camera`, and a stream's `type` other than its main's is 409 `must_match` (V/01.1 Н1.1б). A main that is gone
+    # `camera`, and a stream's `type` other than its main's is 409 `must_match` (V/01.1 N1.1b). A main that is gone
     # passes the door (`ref` asks for no target); the holder holds no stream whose main is missing, is itself a stream
     # or has no picture (`reason: main`, V/01.2).
-    main:                  {type: string, fixed: true, ref: cam/cameras, must_match: {type: type}}
-    # The stream's name, any word the operator chooses: "main", "сетка", "детекция". A consumer is not told by it
+    main: {type: string, fixed: true, ref: cam/cameras, must_match: {type: type}}
+    # The stream's name, any word the operator chooses: "main", "grid", "detection". A consumer is not told by it
     # which stream to take — the user chooses it for a recording and a detector (`stream`), `live` by the viewer's window.
-    profile:               {type: string, default: "main"}
+    profile: {type: string, default: "main"}
     # the only required field: a create without it is refused. The worker passes it verbatim to its
     # DriverPack source; the course's worker accepts `driverpack://file/<name>` and refuses
     # `driverpack://<vendor>/…` as the real DriverPack's.
     # `type: url` is not decoration: it is what refuses `driverpack://root:hunter2@10.0.0.7/…` at the
     # door. This field IS in the snapshot below, and the snapshot leaves the cluster — a password pasted
-    # in here would reach М12's directory and every console screen, past a mask that only looks at
+    # in here would reach M12's directory and every console screen, past a mask that only looks at
     # `*_secret`. The credential goes in the two fields below instead.
     #
     # ONE CHANNEL, ONE CAMERA — and moving a camera about a device is an act on the device (the review's sixth
@@ -127,53 +127,53 @@ unit:
       required: true
       # cfw://local — the camera's own firmware (vmscam's row, opened by the camera's worker): no device with a host, no
       # group, as `file` under driverpack; a login in it is refused by the url rule, the rest (local, no path) the
-      # camera's worker checks (ADR-0053, «Архитектор» 2026-10-06; the course writes no such row, the line keeps one spec).
+      # camera's worker checks (ADR-0053, Architect 2026-10-06; the course writes no such row, the line keeps one spec).
       schemes: {driverpack: {host: path, none: [file]}, ipint: {fragment: none}, rtsp: {}, rtsps: {}, http: {}, https: {}, cfw: {none: [local]}}
       # One channel, one camera: no two cameras hold the same address in its one spelling (RFC 3986 — the platform's;
       # the review's sixth pass, major: `PUT /cameras/1 {"source": "…/ch/2"}` opened channel 2 as camera 1). Two
       # spellings the canon tells apart only by the scheme's default port — `rtsp://h/ch/1` and `rtsp://h:554/ch/1` —
-      # are the worker's to find: it opens the first and says «device busy» of the other in its heartbeat (V/01.2 Н1.2;
+      # are the worker's to find: it opens the first and says «device busy» of the other in its heartbeat (V/01.2 N1.2;
       # `…/ch/02` and `…/ch/2` are two channels).
       unique: canonical
       credentials: {login: cred_username, secret: cred_secret}
       secret_in:
-        - param: [user, usr, username, userid, login, loginuse, loginname, uname, account, '=accesskeyid', '=awsaccesskeyid']
-          login: [user, usr, username, userid, login, loginuse, loginname, uname, account, '=accesskeyid', '=awsaccesskeyid']
-        - param: [loginpas, loginpass, keyid, authkey, accesskey, secretkey, sig, signature, sid, session, sessionid]
-        - param: [pw, psd, psw, userpass, passcode, passphrase, authorization, cred, creds, privatekey, adminpass, streamkey, oauth]
-        - param: ['password*', 'passwd*', 'pwd*', 'psw*', 'secret*', '*password', '*passwd', '*pwd', '*secret', '*token']
-        - regex: '(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)'
-          in: path
-        - regex: '(?i)(?:^|[_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)'
-          in: query
-        - regex: '(?i)=[^=&;/#]*_(?P<name>password|passwd|pwd|pass|psw|psd)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)'
-          in: [path, query]
-        - regex: '(?i)=[^=&;/#]*_(?:user|usr|username|login|loginuse|uname)=(?P<login>[^_&;/#=]*)'
-          in: [path, query]
-        - regex: '(?i)(?:^|/)(?P<name>password|passwd|pwd|psw)/(?P<secret>[^/]+)'
-          in: path
-        - regex: '^/(?:[^/@]*@)?(?:\[[^\]/]*\]|[^/:\[@]*):(?P<secret>[^/@]*[^/@0-9²³¹⁰⁴-⁹₀-₉①-⑨][^/@]*)(?:/|$)'
-          in: path
-          schemes: [driverpack]
-        - regex: '^/[^/]*?:(?P<secret>[0-9]+)/[^?#]*@'
-          in: path
-          schemes: [driverpack]
-        - regex: '^/(?P<login>[^/:@]*)(?::(?P<secret>.*))?@'
-          in: path
-          schemes: [driverpack]
-        - nested: [src, url]
+      - param: [user, usr, username, userid, login, loginuse, loginname, uname, account, '=accesskeyid', '=awsaccesskeyid']
+        login: [user, usr, username, userid, login, loginuse, loginname, uname, account, '=accesskeyid', '=awsaccesskeyid']
+      - param: [loginpas, loginpass, keyid, authkey, accesskey, secretkey, sig, signature, sid, session, sessionid]
+      - param: [pw, psd, psw, userpass, passcode, passphrase, authorization, cred, creds, privatekey, adminpass, streamkey, oauth]
+      - param: ['password*', 'passwd*', 'pwd*', 'psw*', 'secret*', '*password', '*passwd', '*pwd', '*secret', '*token']
+      - regex: '(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)'
+        in: path
+      - regex: '(?i)(?:^|[_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)'
+        in: query
+      - regex: '(?i)=[^=&;/#]*_(?P<name>password|passwd|pwd|pass|psw|psd)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)'
+        in: [path, query]
+      - regex: '(?i)=[^=&;/#]*_(?:user|usr|username|login|loginuse|uname)=(?P<login>[^_&;/#=]*)'
+        in: [path, query]
+      - regex: '(?i)(?:^|/)(?P<name>password|passwd|pwd|psw)/(?P<secret>[^/]+)'
+        in: path
+      - regex: '^/(?:[^/@]*@)?(?:\[[^\]/]*\]|[^/:\[@]*):(?P<secret>[^/@]*[^/@0-9²³¹⁰⁴-⁹₀-₉①-⑨][^/@]*)(?:/|$)'
+        in: path
+        schemes: [driverpack]
+      - regex: '^/[^/]*?:(?P<secret>[0-9]+)/[^?#]*@'
+        in: path
+        schemes: [driverpack]
+      - regex: '^/(?P<login>[^/:@]*)(?::(?P<secret>.*))?@'
+        in: path
+        schemes: [driverpack]
+      - nested: [src, url]
     # the reconciler only starts enabled rows and stops what is disabled; the worker reports `phase:
     # pending` for a disabled camera. `PUT {"enabled": false}` bumps `revision` and the worker stops the
     # pipeline.
-    enabled:               {type: bool,   default: true}
+    enabled: {type: bool, default: true}
     # media retention is the RECORDING's (`retention_days` in rec.subsystem.yaml), not the camera's: a camera
     # may be written to several volumes with several ceilings.
-    # stored and carried in the snapshot; nothing in М10 reads it (no placement rule uses it).
-    priority:              {type: int,    default: 100}
+    # stored and carried in the snapshot; nothing in M10 reads it (no placement rule uses it).
+    priority: {type: int, default: 100}
     # where the camera is reachable from (`"vlan:cctv-a"`); the placement constraint below compares it
     # against the worker's server labels. Accepts a JSON list or a comma-separated string; stored
     # comma-joined.
-    labels:                {type: list}                       # where the camera is reachable from: "vlan:cctv-a"
+    labels: {type: list}                                      # where the camera is reachable from: "vlan:cctv-a"
     # No folders here: a folder is a record of the cluster's console (`platform/folders/<id>`, P/06.8; ADR-0096 §8, the
     # field and `shared: folders` went without a transfer, stands are reinstalled). The camera is a member of them; the
     # tree says so below (`display.tree.folders`). Placement stays with `labels`, and a folder carries nothing down.
@@ -188,13 +188,13 @@ unit:
     #
     # And it inherits by UNION (feedback AT): a kind the site declares an alarm is an alarm on every camera,
     # plus the camera's own. Override would let one camera's list silently drop the site's door contact.
-    alarms:                {type: list,   inherit: [], merge: union}   # kinds that are alarms on THIS device: "io.input,silent"
-    # the name a layer above (М12) knows the camera by; the worker copies it into each status entry, and it
+    alarms: {type: list, inherit: [], merge: union}                    # kinds that are alarms on THIS device: "io.input,silent"
+    # the name a layer above (M12) knows the camera by; the worker copies it into each status entry, and it
     # leaves the cluster in the snapshot.
     #
     # One name, one camera here; and changing it is the cluster's to decide, not the camera's administrator's — the
     # domain finds a camera by it (`unique` below, `rights.reach.cluster`; the same pass).
-    ref:                   {type: string, unique: true}       # the name a layer above knows it by (М12): one camera, one name
+    ref: {type: string, unique: true}                         # the name a layer above knows it by (M12): one camera, one name
     # The device's own credential. Two fields and not one, because they are not the same KIND of thing: a
     # login identifies and a password authenticates, and only the second has to be kept. The console
     # keeps the secret off every reply it sends. The worker hands both to the actuator as element
@@ -202,16 +202,16 @@ unit:
     # Not in the snapshot below: nothing above the cluster reads it, and the snapshot is one object with a
     # 64 MiB ceiling — a field nobody consumes is paid for by every camera. "Not a secret" is a reason not
     # to hide it, never a reason to publish it.
-    cred_username:         {type: string}                     # the device login
+    cred_username: {type: string}                             # the device login
     # `bound_to`: the address the password is FOR. An edit that changes `source` and sends no new password is refused —
     # the old one would go to whatever host the new address names; one that sends it empty keeps the stored one.
-    cred_secret:           {type: string, bound_to: [source]} # the device password: never in the snapshot, masked on the way out
+    cred_secret: {type: string, bound_to: [source]}           # the device password: never in the snapshot, masked on the way out
     # `always` (the default) or `on-demand`. A channel of an NVR kept only for its archive needs no live
     # pipeline: the worker still HOLDS the device — its session, its playback, its coverage — and reports the
     # camera as `held`. Thirty-two channels imported for their footage would otherwise be thirty-two streams
     # nobody watches. Any consumer opens the stream as for `always` — a viewer, a recording, a stream detector —
-    # and the camera falls back to `held` without one (V/01.2 Н1.2в; ADR-0103 доп. (7) п. 3, (8) п. 2).
-    live:                  {type: string, default: "always", enum: [always, on-demand]}
+    # and the camera falls back to `held` without one (V/01.2 N1.2c; ADR-0103 addendum. (7) item. 3, (8) item. 2).
+    live: {type: string, default: "always", enum: [always, on-demand]}
     # WHAT THIS ROW IS, and the reason the field exists at all: not every device has a picture. A recorder as a box, a
     # relay board, a point of sale, a door controller are IP devices integrated the same way, through the same
     # DriverPack, and they need everything a camera needs except the one thing the subsystem is named after — they are
@@ -220,31 +220,31 @@ unit:
     # So the unit of this subsystem is a DEVICE, and a camera is the common case. The word is the console contract's
     # `Device.type`, with no translation. `camera` has a picture: frames, recording and detectors are its alone. `ipsrv`,
     # `eventsrc`, `acfa` have none, and the one thing that changes is that the worker publishes no fan-out for them; what
-    # they give instead is events and commands through the same held connection (V/01.2 Н1.1, V/01.4 Н1.4б).
+    # they give instead is events and commands through the same held connection (V/01.2 N1.1, V/01.4 N1.4b).
     # Nothing else in the system needs a new branch, because everything else already asks the heartbeat rather than the
     # row: the recorder looks for `live_url` and does not find one, the gateway the same, the page the same. Fixed: a row
-    # does not turn into another kind of thing (V/01.1 Н1.1б).
+    # does not turn into another kind of thing (V/01.1 N1.1b).
     #
     # Deliberately NOT a list of capabilities. What a device can do — two inputs, one relay, PTZ — is a
     # DISCOVERY and belongs to the holder, not to the operator's row: the holder writes it in
-    # `cam/devices/<host>` and `cam/children/<id>` when it changes and says it per camera in its heartbeat (`can`) — М10B Lesson
+    # `cam/devices/<host>` and `cam/children/<id>` when it changes and says it per camera in its heartbeat (`can`) — M10B Lesson
     # 25, where automation checks a scenario against it. The row is what the operator declared; the device
     # row is what the process found. Inputs, outputs and sound hang on a `camera` or an `ipsrv` row, never on `eventsrc`
-    # or `acfa` (V/01.4 Н1.4а).
-    type:                  {type: string, enum: [camera, ipsrv, eventsrc, acfa], default: camera, fixed: true}
+    # or `acfa` (V/01.4 N1.4a).
+    type: {type: string, enum: [camera, ipsrv, eventsrc, acfa], default: camera, fixed: true}
     # Where the camera stands and where it looks, for people: nothing in the cluster reads them. `json`, a number or
     # null: null is «not said», which a `float` cannot say — 0 is a place. A camera's, and an `ipsrv` row's.
-    lat:                   {type: json, schema: {type: [number, "null"]}}
-    lon:                   {type: json, schema: {type: [number, "null"]}}
-    azimuth:               {type: json, schema: {type: [number, "null"]}}
+    lat: {type: json, schema: {type: [number, "null"]}}
+    lon: {type: json, schema: {type: [number, "null"]}}
+    azimuth: {type: json, schema: {type: [number, "null"]}}
     # The number shown in a tree («3.3.1»): for people, a camera's.
-    short:                 {type: string}
+    short: {type: string}
     # An `ipsrv` row's MAC, the operator's word: nobody here reads it. A camera's comes from a search and is not kept.
-    mac:                   {type: string}
+    mac: {type: string}
     # An `eventsrc` row's: the camera its lines are shown over, the words its lines are looked through for, and how the
-    # page shows them (V/01.1 Н1.1г). A row of another type keeps them unread. `ref` asks for no target: a camera that is
+    # page shows them (V/01.1 N1.1d). A row of another type keeps them unread. `ref` asks for no target: a camera that is
     # gone leaves the lines without a picture, not without a journal.
-    camera:                {type: string, ref: cam/cameras}
+    camera: {type: string, ref: cam/cameras}
     words:
       type: json
       schema:
@@ -254,84 +254,84 @@ unit:
           required: [msg]
           additionalProperties: false
           properties:
-            msg:   {type: string, minLength: 1}
+            msg: {type: string, minLength: 1}
             color: {type: string}
-            bg:    {type: string}
-    overlay_delay_ms:      {type: int, schema: {minimum: 0}}
-    overlay_duration_sec:  {type: int, schema: {minimum: 0}}
-    # A stream's picture and rate: settings of the DEVICE, which the holder hands the driver (V/01.2 Н1.2а); a stream's
+            bg: {type: string}
+    overlay_delay_ms: {type: int, schema: {minimum: 0}}
+    overlay_duration_sec: {type: int, schema: {minimum: 0}}
+    # A stream's picture and rate: settings of the DEVICE, which the holder hands the driver (V/01.2 N1.2a); a stream's
     # own, unlike the camera's fields above. Empty or 0 — the device's setting is not touched, the size comes from the
     # heartbeat. The door does not read an address, so the same setting in `source` too is the holder's refusal.
-    resolution:            {type: string, schema: {pattern: "^(?:[1-9][0-9]*x[1-9][0-9]*)?$"}}
-    fps:                   {type: int, schema: {minimum: 0}}
-    # The codec is no setting: the heartbeat says it, `codec`, by its `rtpmap` name, H264 or H265 (V/01.2 Н1.4).
+    resolution: {type: string, schema: {pattern: "^(?:[1-9][0-9]*x[1-9][0-9]*)?$"}}
+    fps: {type: int, schema: {minimum: 0}}
+    # The codec is no setting: the heartbeat says it, `codec`, by its `rtpmap` name, H264 or H265 (V/01.2 N1.4).
 # What a holder says of each DEVICE it has open, as the device said it: the kinds of event its units
 # raise, its video sources, whether it turns, its presets — what automation may point at — and the
 # device's own word for which device it is (`identity`), which tells two spellings of one box apart. A table the
 # worker writes (`worker.writes`) and the console shows (`GET /devices`): two writers, the holder's next word wins
-# (ADR-0012, «Архитектор» 2026-10-06: `writes` names only a unit's rows or a declared table).
+# (ADR-0012, Architect 2026-10-06: `writes` names only a unit's rows or a declared table).
 tables:
   devices:
     key: device
     fields:
-      device:   {type: string, required: true}       # the device's key: the host its sources name (`group_by`)
-      events:   {type: list}                         # the event kinds its units raise
+      device: {type: string, required: true}         # the device's key: the host its sources name (`group_by`)
+      events: {type: list}                           # the event kinds its units raise
       channels: {type: int, schema: {minimum: 0}}    # its video sources; 0 — none, no field — not said, which is not none
       # `{"<camera id>": <index>}`: the video channel of each main `camera` row of the host whose address says one (V/01.1
-      # Н1.1в). The door, the console and `backend` take no index from an address, so it reaches them here.
-      videos:   {type: json, schema: {type: object, additionalProperties: {type: integer, minimum: 0}}}
+      # N1.1c). The door, the console and `backend` take no index from an address, so it reaches them here.
+      videos: {type: json, schema: {type: object, additionalProperties: {type: integer, minimum: 0}}}
       resolutions: {type: list}                      # `<width>x<height>` the description names; no field — not said, typed by hand
-      ptz:      {type: bool, default: false}         # it turns
-      presets:  {type: int, default: 0}              # positions it can be asked to go to
-      # their names, where the driver has them (V/01.4 Н1.4): `{"<n>": "<name>"}`; no field — numbers up to `presets`
+      ptz: {type: bool, default: false}              # it turns
+      presets: {type: int, default: 0}               # positions it can be asked to go to
+      # their names, where the driver has them (V/01.4 N1.4): `{"<n>": "<name>"}`; no field — numbers up to `presets`
       preset_names: {type: json, schema: {type: object, additionalProperties: {type: string}}}
-      storage:  {type: bool, default: false}         # it has an archive of its own (`embeddedStorageRef`, V/01.1 Н1.2): not a volume of ours
+      storage: {type: bool, default: false}          # it has an archive of its own (`embeddedStorageRef`, V/01.1 N1.2): not a volume of ours
       identity: {type: string, schema: {maxLength: 200}}   # its serial number, MAC — not a capability, never leaves the cluster
   # What a device turned out to have besides pictures, one row an input, an output, a microphone or a speaker (ADR-0102):
   # a discovery, so the holder's. A device tells them as blocks, and a block hangs whole on one row of the host, its
-  # owner (V/01.4 Н1.4а): the camera of its video channel or the `ipsrv` row. A row is never taken away: one that stopped
+  # owner (V/01.4 N1.4a): the camera of its video channel or the `ipsrv` row. A row is never taken away: one that stopped
   # being so is `gone`, and the name the operator gave it outlives that in the table below.
   children:
     key: "{camera}-{type}-{number:int}"
     fields:
       camera: {type: string, required: true}         # the owner: the id of a main row of the host (`rights.unit_of`)
-      type:   {type: string, required: true, enum: [sensor, relay, mic, spk]}
+      type: {type: string, required: true, enum: [sensor, relay, mic, spk]}
       number: {type: int, required: true, schema: {minimum: 1}}       # `port` of `io.input` and of `output`: through all the device's blocks, from 1, each type its own
       device: {type: string, required: true}         # the host — what tells a holder its rows when the camera is gone
-      gone:   {type: bool, default: false}           # the owner or the number is no longer so; the row stays
-  # What the operator says of a row above, under the same key: one writer each (P/06.1 Н1.1), as with `rec/keeps`. No
-  # `enabled` here: the latest word among the rows of the same device, type and number decides (`at`, V/01.4 Н1.4а), so it has no default — a
+      gone: {type: bool, default: false}             # the owner or the number is no longer so; the row stays
+  # What the operator says of a row above, under the same key: one writer each (P/06.1 N1.1), as with `rec/keeps`. No
+  # `enabled` here: the latest word among the rows of the same device, type and number decides (`at`, V/01.4 N1.4a), so it has no default — a
   # name given to a row must not turn its output on. A row with no row above is allowed: a name set ahead of the device,
   # or left by a device that lost the input.
   child_settings:
     key: "{camera}-{type}-{number:int}"
     fields:
-      camera:  {type: string, required: true}        # `key` names these three: the door cuts the name from them
-      type:    {type: string, required: true, enum: [sensor, relay, mic, spk]}
-      number:  {type: int, required: true, schema: {minimum: 1}}
-      title:   {type: string}                        # not `name`: that is for a table keyed by it (P/06.1 Н1.6)
-      enabled: {type: bool}                          # off: an input raises no event, an output and a speaker refuse, a microphone gives no sound (V/01.4 Н1.4а)
-      norm:    {type: string, enum: [open, closed]}  # the contact's normal state; no field — `open` (V/01.4 Н1.4а)
-    stamp: [at]                                      # orders the `enabled` of different rows (V/01.4 Н1.4а)
-  # A unit of a device: a door, a reader, a zone, a fence, a relay under a door (V/01.1 Н1.2б). `.rep` says what MAY be
+      camera: {type: string, required: true}         # `key` names these three: the door cuts the name from them
+      type: {type: string, required: true, enum: [sensor, relay, mic, spk]}
+      number: {type: int, required: true, schema: {minimum: 1}}
+      title: {type: string}                          # not `name`: that is for a table keyed by it (P/06.1 N1.6)
+      enabled: {type: bool}                          # off: an input raises no event, an output and a speaker refuse, a microphone gives no sound (V/01.4 N1.4a)
+      norm: {type: string, enum: [open, closed]}     # the contact's normal state; no field — `open` (V/01.4 N1.4a)
+    stamp: [at]                                      # orders the `enabled` of different rows (V/01.4 N1.4a)
+  # A unit of a device: a door, a reader, a zone, a fence, a relay under a door (V/01.1 N1.2b). `.rep` says what MAY be
   # there, not what is, so unlike the table above the operator declares them, on a row of any type; the holder reads the
-  # table and creates them in the driver, from the root down (V/01.4 Н1.4б). `n` never comes back: a request or a rule
+  # table and creates them in the driver, from the root down (V/01.4 N1.4b). `n` never comes back: a request or a rule
   # waiting on a unit taken away must not land on the next one, so `unit_next` below goes up in the batch that adds it.
   device_units:
     key: "{camera}-{n:int}"
     fields:
-      camera:   {type: string, required: true}       # the row it hangs on, a main row (`rights.unit_of`)
-      n:        {type: int, required: true, schema: {minimum: 1}}    # its number on that row, never reused
-      # `det` — a detector that runs on the device (V/01.4 Н1.4в): no model of ours, no `det/units` row, and no stream asked for
-      type:     {type: string, required: true, enum: [acfa_sensor, acfa_lock, acfa_fence, relay, controller, det]}
+      camera: {type: string, required: true}         # the row it hangs on, a main row (`rights.unit_of`)
+      n: {type: int, required: true, schema: {minimum: 1}}           # its number on that row, never reused
+      # `det` — a detector that runs on the device (V/01.4 N1.4c): no model of ours, no `det/units` row, and no stream asked for
+      type: {type: string, required: true, enum: [acfa_sensor, acfa_lock, acfa_fence, relay, controller, det]}
       template: {type: string, required: true}       # the unit's id in the model's `.rep`; of a `det`, the detector's
-      address:  {type: string}                       # the device's word, passed as it is
-      parent:   {type: int, schema: {minimum: 1}}    # `n` of its owner on the same row; no field — the root
-      sensitivity: {type: int}                       # of a `det`, in the model's own range (V/01.1 Н1.2б)
-      zone:     {type: json}                         # of a `det`: {shape, points} in shares of the frame, the driver's `visualElement` (V/01.4 Н1.4в)
-      title:    {type: string}
-      enabled:  {type: bool, default: true}
-  # A person turning a camera now, one row a person and a camera (V/01.4 Н1.4г). A lease, not a request: a request is one more
+      address: {type: string}                        # the device's word, passed as it is
+      parent: {type: int, schema: {minimum: 1}}      # `n` of its owner on the same row; no field — the root
+      sensitivity: {type: int}                       # of a `det`, in the model's own range (V/01.1 N1.2b)
+      zone: {type: json}                             # of a `det`: {shape, points} in shares of the frame, the driver's `visualElement` (V/01.4 N1.4c)
+      title: {type: string}
+      enabled: {type: bool, default: true}
+  # A person turning a camera now, one row a person and a camera (V/01.4 N1.4d). A lease, not a request: a request is one more
   # call in the group's queue, and a stop must not stand behind a movement. Renewed by writing it (`seq`), stopped by taking
   # it away; a row left behind stops by its silence, and goes in a day.
   ptz_moves:
@@ -340,12 +340,12 @@ tables:
     fields:
       camera: {type: string, required: true}         # the camera: `edit` on it, not on its group (`rights`)
       person: {type: string, required: true, schema: {pattern: '^[^\s/\\|",:()]{1,64}$'}}   # a person's name, as a table key may carry it (no comma)
-      seq:    {type: int, required: true, schema: {minimum: 1}}   # goes up with every renewal: the same body is still a new write
+      seq: {type: int, required: true, schema: {minimum: 1}}      # goes up with every renewal: the same body is still a new write
       # speeds with a sign, in per cent of the model's own (`panSpeed`… in `.rep`); 0 — that axis stands
-      pan:    {type: int, default: 0, schema: {minimum: -100, maximum: 100}}
-      tilt:   {type: int, default: 0, schema: {minimum: -100, maximum: 100}}
-      zoom:   {type: int, default: 0, schema: {minimum: -100, maximum: 100}}
-      focus:  {type: int, default: 0, schema: {minimum: -100, maximum: 100}}
+      pan: {type: int, default: 0, schema: {minimum: -100, maximum: 100}}
+      tilt: {type: int, default: 0, schema: {minimum: -100, maximum: 100}}
+      zoom: {type: int, default: 0, schema: {minimum: -100, maximum: 100}}
+      focus: {type: int, default: 0, schema: {minimum: -100, maximum: 100}}
     stamp: [by, at]
   # The last `n` given out on a row. A table and not a field of the row: a field would bump `revision` and restart the
   # holder's connection for every door added.
@@ -353,27 +353,27 @@ tables:
     key: camera
     fields:
       camera: {type: string, required: true}
-      n:      {type: int, required: true, schema: {minimum: 0}}
+      n: {type: int, required: true, schema: {minimum: 0}}
   # A preset that went through us: its number and the operator's name, empty is allowed; older than the driver's name. A table
-  # and not a field of the row: a field would bump `revision` and restart the holder's connection for every label (V/11.4 Н1.16).
+  # and not a field of the row: a field would bump `revision` and restart the holder's connection for every label (V/11.4 N1.16).
   preset_labels:
     key: "{camera}-{n:int}"
     fields:
       camera: {type: string, required: true}
-      n:      {type: int, required: true, schema: {minimum: 1}}
-      label:  {type: string, default: ""}
-  # What rules set on a camera (V/01.4 Н1.4д): on guard, and off for a while. The holder's, which performs `arm`, `disarm`
+      n: {type: int, required: true, schema: {minimum: 1}}
+      label: {type: string, default: ""}
+  # What rules set on a camera (V/01.4 N1.4e): on guard, and off for a while. The holder's, which performs `arm`, `disarm`
   # and `disable`: a holder writes no row of `cam/cameras`, and a field there would bump `revision` and restart the
   # camera for every word of a rule. A table and not `unit.state`: an edit of the camera must not take the word back.
   # No row — never said: not on guard, not off.
   rule_state:
     key: camera
     fields:
-      camera:           {type: string, required: true}   # a main `camera` row (`rights.unit_of`)
-      armed:            {type: bool, default: false}     # on guard: read by a rule's condition and `Device.armed`
+      camera: {type: string, required: true}             # a main `camera` row (`rights.unit_of`)
+      armed: {type: bool, default: false}                # on guard: read by a rule's condition and `Device.armed`
       disabled_by_rule: {type: string}                   # the scenario that turned it off; no field — not off
-      disabled_at:      {type: float}                    # since when, the holder's clock
-      disabled_until:   {type: float}                    # off while now < this: nobody clears it when it passes
+      disabled_at: {type: float}                         # since when, the holder's clock
+      disabled_until: {type: float}                      # off while now < this: nobody clears it when it passes
   # A search of the cluster's networks (V/01.8): it has no unit and no holder and goes on every server, so it is no request
   # of `requests:` (P/06.4 asks for a unit) but one row a cluster, which `backend` writes with a person's ticket (a batch
   # with cas: a second search is refused there) and the base worker of every server reads. A new search replaces the row.
@@ -381,45 +381,45 @@ tables:
     key: cluster
     delete_after: 86400
     fields:
-      cluster:    {type: string, required: true, schema: {minLength: 1}}             # the name of the cluster: one search a cluster
-      search:     {type: string, required: true, schema: {pattern: "^[0-9a-f]{32}$"}}   # which search: a find names it
+      cluster: {type: string, required: true, schema: {minLength: 1}}                # the name of the cluster: one search a cluster
+      search: {type: string, required: true, schema: {pattern: "^[0-9a-f]{32}$"}}       # which search: a find names it
       started_at: {type: float, required: true}
-      until:      {type: float, required: true}                                      # started_at + SEARCH_TIME (V/01.8 Н1.1)
+      until: {type: float, required: true}                                           # started_at + SEARCH_TIME (V/01.8 N1.1)
       stopped_at: {type: float}                                                      # stopped by a person; no field — not stopped
   # What a search found, one row a device: a find, so a worker's table. Two servers that see one device write one row, the
-  # key does not name the search, so a device at its address keeps its candidateId from search to search (V/11.4 Н1.9). Only a find: no
+  # key does not name the search, so a device at its address keeps its candidateId from search to search (V/11.4 N1.9). Only a find: no
   # password, nothing is created from it.
   found:
     key: h
     delete_after: 86400
     fields:
-      h:        {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}  # SHA-256 hex of <mac>|<ip>:<port>
-      search:   {type: string, required: true, schema: {pattern: "^[0-9a-f]{32}$"}}  # the search that found it last
-      vendor:   {type: string, required: true}
-      model:    {type: string, required: true}
-      ip:       {type: string, required: true, schema: {minLength: 1}}
-      port:     {type: int, required: true, schema: {minimum: 0, maximum: 65535}}
-      mac:      {type: string}                                                       # no field — the driver did not say
-      support:  {type: string, required: true, enum: [ok, manual, bad]}              # a driver knows the model; not «logged in»
+      h: {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}         # SHA-256 hex of <mac>|<ip>:<port>
+      search: {type: string, required: true, schema: {pattern: "^[0-9a-f]{32}$"}}    # the search that found it last
+      vendor: {type: string, required: true}
+      model: {type: string, required: true}
+      ip: {type: string, required: true, schema: {minLength: 1}}
+      port: {type: int, required: true, schema: {minimum: 0, maximum: 65535}}
+      mac: {type: string}                                                            # no field — the driver did not say
+      support: {type: string, required: true, enum: [ok, manual, bad]}               # a driver knows the model; not «logged in»
       found_at: {type: float, required: true}                                        # the order of the result
-  # «Which model is at this address» (V/01.8 Н1.3): one row a question, by `backend`; every base worker asks its driver, since
+  # «Which model is at this address» (V/01.8 N1.3): one row a question, by `backend`; every base worker asks its driver, since
   # nobody knows which server's network the address is in, and answers in `probe_replies`.
   probes:
     key: id
     delete_after: 86400
     fields:
-      id:     {type: string, required: true, schema: {pattern: "^[0-9a-f]{32}$"}}
-      ip:     {type: string, required: true, schema: {minLength: 1}}
-      port:   {type: int, required: true, schema: {minimum: 1, maximum: 65535}}
+      id: {type: string, required: true, schema: {pattern: "^[0-9a-f]{32}$"}}
+      ip: {type: string, required: true, schema: {minLength: 1}}
+      port: {type: int, required: true, schema: {minimum: 1, maximum: 65535}}
       vendor: {type: string, required: true, schema: {minLength: 1}}
-      until:  {type: float, required: true}
+      until: {type: float, required: true}
   probe_replies:
     key: "{probe}-{server}"
     delete_after: 86400
     fields:
-      probe:  {type: string, required: true, schema: {pattern: "^[0-9a-f]{32}$"}}
+      probe: {type: string, required: true, schema: {pattern: "^[0-9a-f]{32}$"}}
       server: {type: string, required: true, schema: {minLength: 1}}
-      model:  {type: string}                                                         # no field — this server did not find out
+      model: {type: string}                                                          # no field — this server did not find out
 placement:
   # The controller reads a worker's capacity from the `capacity` field of its latest heartbeat (any age);
   # a worker that never said anything counts as `default`, 50 (a spec without `default` does not load).
@@ -427,11 +427,11 @@ placement:
   # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
   # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
   # (a camera's frames are its driver host's — ipintd — not this worker's: 0.09 MB a camera)
-  capacity:   {from: capacity, default: 50, unit_mb: 1, base_mb: 18}    # the worker's word, from its heartbeat; the default for one that said nothing
+  capacity: {from: capacity, default: 50, unit_mb: 1, base_mb: 18}      # the worker's word, from its heartbeat; the default for one that said nothing
   # The console exports the `headroom` heartbeat field of live workers as `cam_worker_headroom{worker,server}`
-  # and their sum as `cam_headroom` — what the autoscaler sums; the controller does not read it (P/04 Н1.3). The
+  # and their sum as `cam_headroom` — what the autoscaler sums; the controller does not read it (P/04 N1.3). The
   # worker computes it as its capacity less the units it holds.
-  headroom:   {from: headroom}                  # what the autoscaler sums
+  headroom: {from: headroom}                    # what the autoscaler sums
   # chosen by name from the platform's constraints (P/04): a worker is eligible for a camera only if the camera's `labels` ⊆ the
   # labels in the worker's heartbeat (from `LABELS`, the server's line in `/etc/w2c/w2c.env`). The placement reason names the labels
   # reached; the controller lists as unplaceable the cameras no live worker's labels can serve.
@@ -442,7 +442,7 @@ placement:
   # sessions", a channel that will not start, a stream that drops when the fifth is added — and nothing
   # in it points at a placement decision made on another server an hour earlier.
   #
-  # `device` is not a field: the device is the HOST the source names (`cut_at: host`, the platform's rule; «Архитектор»,
+  # `device` is not a field: the device is the HOST the source names (`cut_at: host`, the platform's rule; Architect,
   # 2026-10-06, one wire with the product): `rtsp://Nvr50:554/ch/1` and `rtsps://nvr50./x` are one box, whatever the
   # scheme, the port or the path; an IP in its one spelling (`[0:0::1]` is `::1`); a host that is neither a name nor an
   # IP (`nvr%2Ecorp`, `nvr_50`), like a row with no source, groups with nothing — what a half-created camera should do.
@@ -450,19 +450,19 @@ placement:
   # `driverpack://other/10.0.0.50/ch/1` are one NVR, `driverpack://acme` with no address is the vendor's, and
   # `driverpack://file/…` is a file — the only source with no group; a host nobody can tell is refused (ADR 0053). It was
   # the VMS's own parser of its addresses until the boundary's step 6, and `cut_at: ch` after.
-  group_by:   {field: source, cut_at: host}
+  group_by: {field: source, cut_at: host}
   # a worker records into the resource on its own server: every server runs its resource (`w2c-resource`) beside its
   # worker, and this is the live fact — a worker whose server's resource has gone silent is
   # not placed on; one that still lives has its cameras moved off on the controller's next pass, one silent with its
-  # resource goes by its fate, about 90 s (P/04 Н3).
-  requires:   resource                          # the worker's server must have a resource that answers
+  # resource goes by its fate, about 90 s (P/04 N3).
+  requires: resource                            # the worker's server must have a resource that answers
   # Among eligible workers the one with the largest `capacity − load`, strictly positive; ties to
   # the first in sorted order. The only tie-break the catalogue has.
-  tie_break:  most-free-capacity
+  tie_break: most-free-capacity
   # What nothing live has room for, the controller ORDERS: the row `cam/want/<server>` — how many camera workers that
-  # server runs (М10/4 «заказать», ADR-0084); the server's worker starter reads `cam_workers_wanted{server}` on
+  # server runs (M10/4 «order», ADR-0084); the server's worker starter reads `cam_workers_wanted{server}` on
   # `/metrics` and starts or stops `<dep>-camworker@w-<server>-<n>`. The controller starts nothing itself.
-  grows:      true
+  grows: true
   # the camera has no home of its own: it goes where its RECORDING is. The anchor of the pair is the
   # recording, because it writes to a disk and a disk does not move; the fan-out can be read from anywhere
   # over RTSP, so the camera is the one that can follow. Both together mean the recorder reads shared
@@ -475,24 +475,24 @@ placement:
   # and the other one reads the same fan-out over the network.
   # An affinity: the recorder running a recording OF this camera — and of two, the one homed on a STANDBY volume (an
   # enabled backup or a card): beside the primary, the worker falls with the primary's server and the backup loses its
-  # stream at exactly the moment it exists for (М10B Lesson 26; it was a hook of the subsystem until the boundary's
+  # stream at exactly the moment it exists for (M10B Lesson 26; it was a hook of the subsystem until the boundary's
   # step 6).
-  near:       {sub: rec, of: cam, prefer: {home.kind: [backup, edge], home.enabled: true}}
-  home:       near                              # …and, unlike a bare affinity, maintained: the controller follows it back
+  near: {sub: rec, of: cam, prefer: {home.kind: [backup, edge], home.enabled: true}}
+  home: near                                    # …and, unlike a bare affinity, maintained: the controller follows it back
   # Rebalancing stops when the spread in `load/capacity` between the most and least loaded workers
   # is under 10 %. Rebalance runs only when asked, never in the controller's pass.
-  rebalance:  {dead_band: 0.10}
+  rebalance: {dead_band: 0.10}
 # The fields the controller copies out of each row into `cam/snapshot` (object store), with
 # `id`, `revision`, `worker` and `server` added by the controller. Nine operator fields here; it is the
-# copy that leaves the cluster (М12), never the rows themselves. The controller publishes it in every
+# copy that leaves the cluster (M12), never the rows themselves. The controller publishes it in every
 # pass.
 # A COMMAND to a device, filed as a row for whoever holds it — `POST /requests {unit: <id>, action, …}` (the
 # boundary's step 6: it was the VMS's route on the platform's console). Not a call: the console does not
-# open devices, and the one process that has this device open is the worker that holds it (М10B, lesson 4). It writes
+# open devices, and the one process that has this device open is the worker that holds it (M10B, lesson 4). It writes
 # the row; the holder performs it on its next look, says so in its heartbeat, and the row is cleared. Named by its
 # `Idempotency-Key` (P/06.4; the body has no `id`): a retried click is the same command, not a second pulse (the platform review,
 # M17). Thirty seconds by default (`valid_for`): a door opened a minute after the button is an incident; at most ten
-# minutes — what the holder accepts (`most_valid`; V/01.4 Н1.1). The console stamps the group the rights were asked on
+# minutes — what the holder accepts (`most_valid`; V/01.4 N1.1). The console stamps the group the rights were asked on
 # (`group`, the device's host — `group_by`): the holder performs it only there — a camera moved onto a recorder in the ten
 # minutes a command may wait is not the camera the person had the right to command (the review's eighth pass).
 requests:
@@ -501,18 +501,18 @@ requests:
     required: [unit, action]
     additionalProperties: false
     properties:
-      unit:        {type: string}
-      action:      {enum: [output, preset, preset_save, preset_clear, unit, talk, arm, disarm, disable]}
+      unit: {type: string}
+      action: {enum: [output, preset, preset_save, preset_clear, unit, talk, arm, disarm, disable]}
       # an argument is a word of at most 32 characters or a whole number up to 2^53 − 1 (the product's cross-check of
       # the eleventh review; integers past 2^53 are no number a spec holds), at the door as
       # at the holder
-      port:        {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
-      state:       {type: string, enum: [open, closed, pulse]}
-      pulse_ms:    {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
-      n:           {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
-      operation:   {type: string, maxLength: 32}    # `unit`: an operation of the unit's template, as the device names it
+      port: {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+      state: {type: string, enum: [open, closed, pulse]}
+      pulse_ms: {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+      n: {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+      operation: {type: string, maxLength: 32}      # `unit`: an operation of the unit's template, as the device names it
       disabled_by_rule: {type: string, maxLength: 32}   # `disable`: the scenario's id
-      disabled_until:   {type: number}                  # `disable`: off until then; not later than now — on again (V/01.4 Н1.4д)
+      disabled_until: {type: number}                    # `disable`: off until then; not later than now — on again (V/01.4 N1.4e)
       valid_until: {type: number}
   valid_for: 30
   most_valid: 600
@@ -525,7 +525,7 @@ requests:
 # device (the seventh pass: the device performs it, no channel in it). An input or an output is its owner's: a row of
 # either table needs on that camera what the route needs, and naming one or turning it off is an operator's (`edit`).
 # A unit is its row's too, with no route of its own: adding or taking one away is an administrator's.
-# Turning a camera, and saving its presets, is that camera's: its channel moves, not the device (V/01.4 Н1.4г). So is what a rule
+# Turning a camera, and saving its presets, is that camera's: its channel moves, not the device (V/01.4 N1.4d). So is what a rule
 # sets on a camera (`arm`, `disarm`, `disable`): `rule_state` is read with `view` on it and written by no person.
 rights:
   unit_of: {children: camera, child_settings: camera, device_units: camera, unit_next: camera, ptz_moves: camera, rule_state: camera, preset_labels: camera}
@@ -539,10 +539,10 @@ rights:
 # The holder's door (V/01.5) admits processes by their role certificate only — class `mixed`, role routes, as at `rec`; no token routes.
 door:
   routes:
-    - {name: devices, role: [recworker, detjobworker, detedgeworker]}
-    - {name: recordings, role: [recworker, detjobworker, detedgeworker]}
-    - {name: playback, role: [recworker, detjobworker, detedgeworker]}
-    - {name: talk, role: [liveworker]}   # the sound of a conversation, gateway → holder → speaker (V/01.5 Н1.3); a stream, not a request
+  - {name: devices, role: [recworker, detjobworker, detedgeworker]}
+  - {name: recordings, role: [recworker, detjobworker, detedgeworker]}
+  - {name: playback, role: [recworker, detjobworker, detedgeworker]}
+  - {name: talk, role: [liveworker]}     # the sound of a conversation, gateway → holder → speaker (V/01.5 N1.3); a stream, not a request
 snapshot: [name, source, enabled, priority, labels, ref, live, main, profile]
 # Ordinary camera workers publish sources; recorders publish primaries and upstream (ADR-0074 C2/C3).
 # Ordinary autoworkers publish asks; role credentials are requested by each caller (C6).
@@ -551,10 +551,10 @@ snapshot: [name, source, enabled, priority, labels, ref, live, main, profile]
 domain:
   ref: ref
   # what the holder knows of a camera: its name, and whether it is on (domain.edit); `main` — a stream that carries a `ref`
-  # all the same (the module's form gives a stream its fields too; they are inert, V/01.1 Н1.1а) is told from a camera
+  # all the same (the module's form gives a stream its fields too; they are inert, V/01.1 N1.1a) is told from a camera
   # by the licence count (V/01.7)
   view: [name, enabled, main, type]
-  # What a backend on another member needs of this one (ADR-0110, V/11.3 Н1.2а): the words of a unit's heartbeat and the
+  # What a backend on another member needs of this one (ADR-0110, V/11.3 N1.2a): the words of a unit's heartbeat and the
   # rows behind `Device`. `ref` joins a camera to its recorder on another member; `rec/recordings` carries the same value.
   view_status: [device_state, codec, units_down]
   view_tables:
@@ -567,7 +567,7 @@ domain:
     preset_labels: [camera, n, label]
     rule_state: [camera, armed, disabled_by_rule, disabled_at, disabled_until]
   # What the domain's door lets through in a member's camera: whatever a backend on another member writes of a device
-  # (ADR-0110, V/11.4 Н1.13); `type` for a new row, `ref` — the camera's name in the domain. A kept edit is applied by the
+  # (ADR-0110, V/11.4 N1.13); `type` for a new row, `ref` — the camera's name in the domain. A kept edit is applied by the
   # member's agent and judged by the member's console, by the person who asked.
   edit: [name, type, main, ref, source, profile, enabled, priority, labels, alarms, cred_username, short, lat, lon, azimuth, mac, camera, words, overlay_delay_ms, overlay_duration_sec, resolution, fps]
   # A row of a table is written whole, so each list is all its fields (P/02.1, link 152).
@@ -576,20 +576,20 @@ domain:
     device_units: [camera, n, type, template, address, parent, sensitivity, zone, title, enabled]
     unit_next: [camera, n]
     preset_labels: [camera, n, label]
-  # Sealed to the member's key at the door (P/08.6 Н1.3а): the camera's password.
+  # Sealed to the member's key at the door (P/08.6 N1.3a): the camera's password.
   edit_secrets:
     cameras: [cred_secret]
   books:
     sources: {from: cam/sources/, key: ref, pick: unique, to: to}
-    # The licence decision (V/01.7): written by the subsystem's worker on the domain (`camdomain`, P/03.7 Н1.6) — per
+    # The licence decision (V/01.7): written by the subsystem's worker on the domain (`camdomain`, P/03.7 N1.6) — per
     # member, the refs of its cameras that the licence covers; a camera outside is kept, not served.
-    licence: {show: [units, licensed]}   # what the book's door shows: `backend` reads it for GET /licenses (V/11.3 Н1.3)
-  kept_read: [state-summary]             # the summary is read by `backend`: GET domain/cam/kept/state-summary (P/10 Н1.2а)
-  kept: [licence-count, state-summary]                  # the count of the licence's circle over the view's parts (V/01.7 Н1.2): the worker's on the domain, delivered to nobody
+    licence: {show: [units, licensed]}   # what the book's door shows: `backend` reads it for GET /licenses (V/11.3 N1.3)
+  kept_read: [state-summary]             # the summary is read by `backend`: GET domain/cam/kept/state-summary (P/10 N1.2a)
+  kept: [licence-count, state-summary]                  # the count of the licence's circle over the view's parts (V/01.7 N1.2): the worker's on the domain, delivered to nobody
   tokens:
     stream:
       # Ten years (ADR-0110, addition (9)): a silent domain does not stop a recording. The form is the same, the token
-      # is bound to `aud` and `ref`; the box keeps it sealed on its flash (V/01.6 Н1.3).
+      # is bound to `aud` and `ref`; the box keeps it sealed on its flash (V/01.6 N1.3).
       lifetime: 315360000
       keep: true
       claims: [aud, ref]
@@ -605,7 +605,7 @@ domain:
       claims: [aud, ref, by, acts, up]
       grant: [autoworker, recworker]
       scenario: {doc: auto, items: scenarios, name: name, enabled: enabled, trigger: when.camera, target: then.camera, member: when.member, act: then, placement: rec, ref_claim: ref, trigger_claim: by, acts_claim: acts, up_claim: up, audience_claim: aud}
-  # The VMS's key families of the domain, for the domain card's «Ключи» (their words: display.keys). A book is
+  # The VMS's key families of the domain, for the domain card's Keys (their words: display.keys). A book is
   # `<book>/<member>` at the holder and `<book>` in the member that carried it home. Issued keys are no rows here: a
   # book's entry carries its token sealed, `token_secret`, the domain's signer's (`tokens:` above; ADR-0010, its addition
   # of 2026-10-08); asks carried up wait in the relay's memory; the scenarios between cameras are `auto`'s document in
@@ -613,170 +613,170 @@ domain:
   # The fields whose domain-wide value the domain holds (the shared document; the platform resolves them and serves
   # them at GET /domain/shared/cam): one that inherits — the site's alarm kinds (added to the camera's own).
   shared:
-    - alarms
-    # The vendor's licence (V/01.7 Н1.1): a document of the shared settings, signed like any; the worker on the domain
+  - alarms
+    # The vendor's licence (V/01.7 N1.1): a document of the shared settings, signed like any; the worker on the domain
     # checks the vendor's signature and counts.
-    - name: licence
-      type: json
-      schema:
-        type: object
-        required: [domain, units, issued, expires, vendor_sig]
-        additionalProperties: false
-        properties:
-          domain: {type: string, minLength: 1}
-          units: {type: integer, minimum: 0}
-          issued: {type: number}
-          expires: {type: number}
-          vendor_sig: {type: string, minLength: 1}
+  - name: licence
+    type: json
+    schema:
+      type: object
+      required: [domain, units, issued, expires, vendor_sig]
+      additionalProperties: false
+      properties:
+        domain: {type: string, minLength: 1}
+        units: {type: integer, minimum: 0}
+        issued: {type: number}
+        expires: {type: number}
+        vendor_sig: {type: string, minLength: 1}
   keys:
-    - {id: sources, keys: [domain/cam/sources], prefix: domain/cam/sources/}
+  - {id: sources, keys: [domain/cam/sources], prefix: domain/cam/sources/}
 # The VMS's own numbers, declared (the boundary's step 6: they were the VMS's functions the platform's console
 # called). `cam_<name>`; the shapes are the platform's.
 metrics:
-  - {name: cameras_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
+- {name: cameras_running, from: status.phase, agg: count, equals: running, live: true}     # the running gauge (`console.running`)
   # The commands the holders performed, refused, let expire or could not say about, summed over their heartbeats.
-  - {name: commands_total, from: "heartbeat.command_counts.<outcome>", agg: sum, type: counter}
-  # The road to the device, per holder and by who asked (`by`: `auto` or `operator`; ends — P/03.4 Н1.1, W03-E05): from
+- {name: commands_total, from: "heartbeat.command_counts.<outcome>", agg: sum, type: counter}
+  # The road to the device, per holder and by who asked (`by`: `auto` or `operator`; ends — P/03.4 N1.1, W03-E05): from
   # the request's `at` to the holder's first sight of it (`event_to_device`) and to its outcome (`request_to_device`),
   # with the times the two clocks visibly disagreed; and from the first sight to the outcome, by the holder's clock alone.
-  - {name: event_to_device_seconds, from: "heartbeat.command_road.<by>", agg: histogram, buckets: [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}
-  - {name: event_to_device_skewed_total, from: "heartbeat.command_road.<by>.ahead", labels: {direction: ahead}, type: counter}
-  - {name: event_to_device_skewed_total, from: "heartbeat.command_road.<by>.behind", labels: {direction: behind}, type: counter}
-  - {name: request_to_device_seconds, from: "heartbeat.command_request.<by>", agg: histogram, buckets: [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}
-  - {name: request_to_device_skewed_total, from: "heartbeat.command_request.<by>.ahead", labels: {direction: ahead}, type: counter}
-  - {name: request_to_device_skewed_total, from: "heartbeat.command_request.<by>.behind", labels: {direction: behind}, type: counter}
-  - {name: request_seen_to_device_seconds, from: heartbeat.command_wait, agg: histogram, buckets: [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}
+- {name: event_to_device_seconds, from: "heartbeat.command_road.<by>", agg: histogram, buckets: [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}
+- {name: event_to_device_skewed_total, from: "heartbeat.command_road.<by>.ahead", labels: {direction: ahead}, type: counter}
+- {name: event_to_device_skewed_total, from: "heartbeat.command_road.<by>.behind", labels: {direction: behind}, type: counter}
+- {name: request_to_device_seconds, from: "heartbeat.command_request.<by>", agg: histogram, buckets: [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}
+- {name: request_to_device_skewed_total, from: "heartbeat.command_request.<by>.ahead", labels: {direction: ahead}, type: counter}
+- {name: request_to_device_skewed_total, from: "heartbeat.command_request.<by>.behind", labels: {direction: behind}, type: counter}
+- {name: request_seen_to_device_seconds, from: heartbeat.command_wait, agg: histogram, buckets: [0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0]}
   # What a holder's beat waits on (the review's eighth pass, minor) and what it found of its devices: a line for every
   # holder, 0 when unsaid.
-  - {name: devices_slow, from: heartbeat.devices_slow, default: 0}
-  - {name: commands_in_flight, from: heartbeat.commands_in_flight, default: 0}
-  - {name: device_identity_coincidences, from: heartbeat.identity_coincidences, default: 0}   # the ninth pass
-  - {name: devices_opening, from: heartbeat.devices_opening, default: 0}                      # the tenth pass
-  - {name: device_identity_changes_total, from: heartbeat.identity_changes, default: 0, type: counter}
-  - {name: device_events_refused_total, from: heartbeat.events_refused, default: 0, type: counter}
-  - {name: device_inputs_off_total, from: heartbeat.inputs_off, default: 0, type: counter}    # ADR-0102 доп. (1) п. 6
-  - {name: commands_reanswered_total, from: heartbeat.commands_reanswered, default: 0, type: counter}
-  - {name: door_reads_stuck, from: heartbeat.door_reads_stuck, default: 0}                    # the thirteenth pass, major 18
+- {name: devices_slow, from: heartbeat.devices_slow, default: 0}
+- {name: commands_in_flight, from: heartbeat.commands_in_flight, default: 0}
+- {name: device_identity_coincidences, from: heartbeat.identity_coincidences, default: 0}     # the ninth pass
+- {name: devices_opening, from: heartbeat.devices_opening, default: 0}                        # the tenth pass
+- {name: device_identity_changes_total, from: heartbeat.identity_changes, default: 0, type: counter}
+- {name: device_events_refused_total, from: heartbeat.events_refused, default: 0, type: counter}
+- {name: device_inputs_off_total, from: heartbeat.inputs_off, default: 0, type: counter}      # ADR-0102 addendum. (1) item. 6
+- {name: commands_reanswered_total, from: heartbeat.commands_reanswered, default: 0, type: counter}
+- {name: door_reads_stuck, from: heartbeat.door_reads_stuck, default: 0}                      # the thirteenth pass, major 18
   # The driver host's counts (heartbeat.driver, summed over a worker's hosts: the product's; a worker that runs its cameras
   # in-process says no `driver`, and has no line — `default` is a leaf's, in a map that is there): a device call not back,
   # a zombie, an opening left behind in a driver, an NVR replaced under its name, a card lane stuck — each was in the
-  # heartbeat alone, visible to no alert (the eleventh review; «Архитектор», 2026-10-06: one spec, the driver's name
+  # heartbeat alone, visible to no alert (the eleventh review; Architect, 2026-10-06: one spec, the driver's name
   # nowhere in it).
-  - {name: driver_zombies, from: heartbeat.driver.zombies, default: 0}
-  - {name: driver_openings_left_behind, from: heartbeat.driver.openings_left_behind, default: 0}
-  - {name: driver_device_calls_stuck, from: heartbeat.driver.device_calls.stuck, default: 0}
-  - {name: driver_device_calls_left, from: heartbeat.driver.device_calls.left, default: 0}
-  - {name: driver_device_calls_total, from: heartbeat.driver.device_calls.timed_out, labels: {outcome: timed_out}, default: 0, type: counter}
-  - {name: driver_device_calls_total, from: heartbeat.driver.device_calls.behind_stuck, labels: {outcome: behind_stuck}, default: 0, type: counter}
-  - {name: driver_device_calls_total, from: heartbeat.driver.device_calls.busy, labels: {outcome: busy}, default: 0, type: counter}
-  - {name: driver_device_id_stuck_total, from: heartbeat.driver.device_id_stuck, default: 0, type: counter}
-  - {name: driver_device_id_changes_total, from: heartbeat.driver.device_id_changes, default: 0, type: counter}
-  - {name: driver_device_ids_shared_total, from: heartbeat.driver.device_ids_shared, default: 0, type: counter}
-  - {name: driver_card_stuck, from: heartbeat.driver.card_stuck, default: 0}
-  - {name: driver_card_slow, from: heartbeat.driver.card_slow, default: 0}
-  - {name: driver_card_reads_refused_total, from: heartbeat.driver.card_reads_refused, default: 0, type: counter}
+- {name: driver_zombies, from: heartbeat.driver.zombies, default: 0}
+- {name: driver_openings_left_behind, from: heartbeat.driver.openings_left_behind, default: 0}
+- {name: driver_device_calls_stuck, from: heartbeat.driver.device_calls.stuck, default: 0}
+- {name: driver_device_calls_left, from: heartbeat.driver.device_calls.left, default: 0}
+- {name: driver_device_calls_total, from: heartbeat.driver.device_calls.timed_out, labels: {outcome: timed_out}, default: 0, type: counter}
+- {name: driver_device_calls_total, from: heartbeat.driver.device_calls.behind_stuck, labels: {outcome: behind_stuck}, default: 0, type: counter}
+- {name: driver_device_calls_total, from: heartbeat.driver.device_calls.busy, labels: {outcome: busy}, default: 0, type: counter}
+- {name: driver_device_id_stuck_total, from: heartbeat.driver.device_id_stuck, default: 0, type: counter}
+- {name: driver_device_id_changes_total, from: heartbeat.driver.device_id_changes, default: 0, type: counter}
+- {name: driver_device_ids_shared_total, from: heartbeat.driver.device_ids_shared, default: 0, type: counter}
+- {name: driver_card_stuck, from: heartbeat.driver.card_stuck, default: 0}
+- {name: driver_card_slow, from: heartbeat.driver.card_slow, default: 0}
+- {name: driver_card_reads_refused_total, from: heartbeat.driver.card_reads_refused, default: 0, type: counter}
 # What a page calls things (the console module reads it from /spec; the platform reads none of it).
 display:
-  section: Оборудование
-  unit: камера
-  units: камеры
-  units_count: камер
+  section: Equipment
+  unit: camera
+  units: cameras
+  units_count: cameras
   # The camera's card (the product's words, one card on both sides): its first tab, the fields' labels, the words for
   # `live`'s values, and the blocks of the form in order — the page module draws it; the platform checks each names a
   # field of the row and reads none of it.
-  general: Подключение
+  general: Connection
   fields:
-    enabled: Включена
-    name: Имя
-    ref: Короткое имя
+    enabled: Enabled
+    name: Name
+    ref: Short name
     id: ID
-    main: Камера
-    profile: Поток
-    resolution: Разрешение
-    fps: Кадров в секунду
-    source: Источник
-    cred_username: Логин устройства
-    cred_secret: Пароль устройства
-    live: Живой поток
-    priority: Приоритет
-    labels: Метки достижимости
-    alarms: Тревожные события
-    type: Вид устройства
-    short: Номер в дереве
-    mac: MAC-адрес
-    lat: Широта
-    lon: Долгота
-    azimuth: Азимут
-    camera: Камера титров
-    words: Слова
-    overlay_delay_ms: Задержка титров, мс
-    overlay_duration_sec: Показ титров, с
+    main: Camera
+    profile: Stream
+    resolution: Resolution
+    fps: Frames per second
+    source: Source
+    cred_username: Device login
+    cred_secret: Device password
+    live: Live stream
+    priority: Priority
+    labels: Reachability labels
+    alarms: Alarm events
+    type: Device kind
+    short: Tree number
+    mac: MAC address
+    lat: Latitude
+    lon: Longitude
+    azimuth: Azimuth
+    camera: Caption camera
+    words: Words
+    overlay_delay_ms: Caption delay, ms
+    overlay_duration_sec: Caption duration, s
   options:
     live:
-      always: Держать всегда
-      on-demand: По требованию
+      always: Always hold
+      on-demand: On demand
     type:
-      camera: Камера
-      ipsrv: IP-сервер
+      camera: Camera
+      ipsrv: IP server
       eventsrc: POS
-      acfa: СКУД
+      acfa: Access control
   form:
-    - title: Идентификация
-      state: true
-      fields: [enabled, name, ref, short, id, type]
-    - title: Подключение
-      fields: [source, cred_username, cred_secret, mac]
-      note: "Пароль хранится отдельно и не покидает кластер: в ответах он замаскирован, поле при правке пустое. Сменили источник — впишите пароль заново."
-    - title: Потоки
-      fields: [main, profile, resolution, fps]
-      note: "Поток камеры — своя строка: адрес, имя потока и камера (её основной поток). Имя, метки, папки, короткое имя и тревоги — только у основного потока: у прочих VMS их не читает, а метки потока лишь сужают, где его держат. Разрешение и кадры в секунду — настройка устройства, её меняет держатель; пусто — настройка не трогается. Поток для просмотра выбирает шлюз по размеру окна."
-    - title: Положение
-      fields: [lat, lon, azimuth]
-    - title: Титры
-      fields: [camera, words, overlay_delay_ms, overlay_duration_sec]
-      note: "Только у источника событий (POS): строки кассы показываются поверх видео этой камеры, в кадр они не вжигаются."
-    - title: Размещение
-      placement: true
-      fields: [live, priority, labels, alarms]
-      note: "Тревожные события — виды событий устройства, которые у этой камеры тревога. Метки решают, где может работать камера: её возьмёт воркер, чей сервер несёт все её метки. Пусто — любой сервер. Папки лежат только в дереве и на размещение не влияют."
+  - title: Identification
+    state: true
+    fields: [enabled, name, ref, short, id, type]
+  - title: Connection
+    fields: [source, cred_username, cred_secret, mac]
+    note: "The password is stored separately and never leaves the cluster: answers mask it and the edit field is empty. After changing the source, enter the password again."
+  - title: Streams
+    fields: [main, profile, resolution, fps]
+    note: "A camera stream has its own row: address, stream name and camera (its main stream). Name, labels, folders, short name and alarms belong only to the main stream: VMS ignores these fields on other streams, whose labels only narrow their placement. Resolution and frame rate are device settings changed by the holder; empty leaves the setting unchanged. The gateway selects a viewing stream by the window size."
+  - title: Position
+    fields: [lat, lon, azimuth]
+  - title: Captions
+    fields: [camera, words, overlay_delay_ms, overlay_duration_sec]
+    note: "Only for a POS event source: till lines are overlaid on this camera's video; they are not burned into the frame."
+  - title: Placement
+    placement: true
+    fields: [live, priority, labels, alarms]
+    note: "Alarm events are the device event kinds treated as alarms for this camera. Labels determine where the camera can run: a worker takes it when its server carries all its labels. Empty means any server. Folders belong only to the tree and do not affect placement."
   field_help:
-    main: "id основного потока камеры; пусто — эта строка и есть камера"
-    profile: "имя потока: main, сетка, детекция…"
-    resolution: "ширинаxвысота, например 1920x1080; пусто — настройка устройства"
-    fps: "кадров в секунду; 0 — настройка устройства"
-    short: "номер для показа в дереве: 3.3.1"
-    mac: "MAC-адрес устройства: только у IP-сервера"
-    camera: "id камеры, поверх видео которой идут строки POS"
-    words: 'слова и их цвета: [{"msg": "ВОЗВРАТ", "color": "#fff", "bg": "#c00"}]'
-    overlay_duration_sec: "0 — до следующей строки"
-    source: "адрес устройства (driverpack://производитель/адрес/ch/канал)"
-    labels: "сети, в которых виден адрес камеры (vlan:cctv-a)"
-    cred_username: логин устройства
-    cred_secret: пароль устройства
-    live: "живой поток: держать всегда или не открывать (только устройство)"
+    main: "id of the camera's main stream; empty means this row is the camera"
+    profile: "stream name: main, grid, detection..."
+    resolution: "widthxheight, for example 1920x1080; empty means the device setting"
+    fps: "frames per second; 0 means the device setting"
+    short: "display number in the tree: 3.3.1"
+    mac: "device MAC address: IP servers only"
+    camera: "id of the camera whose video carries POS lines"
+    words: 'words and their colours: [{"msg": "RETURN", "color": "#fff", "bg": "#c00"}]'
+    overlay_duration_sec: "0 means until the next line"
+    source: "device address (driverpack://vendor/address/ch/channel)"
+    labels: "networks where the camera address is reachable (vlan:cctv-a)"
+    cred_username: device login
+    cred_secret: device password
+    live: "live stream: always hold or do not open (device only)"
   kinds:
-    io.input: вход устройства
-    silent: камера молчит
-    text: строка кассы
-    unit: событие единицы
+    io.input: device input
+    silent: camera silent
+    text: till line
+    unit: unit event
   tree:
-    folders: true                    # the tree is the cluster's folders, a camera is their member (P/06.8 Н1.1)
-    group_title: По папкам
-    group_hint: Папки кластера → камеры
-    filter: Фильтр по имени, адресу…
-    no_group: Без папки
-    contents_title: Состав папки
-    group_word: папка
-    no_group_suffix: без папки
-    pick_note: "Папки — записи кластера и на размещение не влияют; размещение решают labels камеры."
-    new_root: Папка
-    new_sub: Подпапка
-    add_here: Добавить камеру сюда
+    folders: true                    # the tree is the cluster's folders, a camera is their member (P/06.8 N1.1)
+    group_title: By folders
+    group_hint: Cluster folders to cameras
+    filter: Filter by name, address...
+    no_group: No folder
+    contents_title: Folder contents
+    group_word: folder
+    no_group_suffix: no folder
+    pick_note: "Folders are cluster rows and do not affect placement; camera labels decide placement."
+    new_root: Folder
+    new_sub: Subfolder
+    add_here: Add a camera here
   # The words of the key families (domain.keys), by id; `absent` — what to say when the row is missing.
   keys:
     sources:
-      title: Книги источников
-      about: "Откуда кластер записи берёт поток каждой камеры и почему этой дорогой. domain/cam/sources/<кластер> — книги у держателя; domain/cam/sources — книга, которую агент кластера унёс домой."
+      title: Source books
+      about: "Where the recording cluster gets each camera stream and why this route is used. domain/cam/sources/<cluster> holds the books at the holder; domain/cam/sources is the book carried home by the cluster agent."
 
 console:
   # the name of the running gauge, one of `metrics:` above (`cam_cameras_running <n>`: status entries in phase
@@ -787,7 +787,7 @@ console:
 events:
   # Which of this subsystem's events collapse when they repeat. A storm is normal, not a fault, and the
   # only place a repeat costs nothing to recognise is the worker holding the device — one line before the
-  # write (М10A, урок 12).
+  # write (M10A, lesson 12).
   #
   # The first line of every window goes into the log immediately and unchanged: whatever the repeats are
   # worth, the first occurrence is the observation. What was swallowed is said when the window closes —

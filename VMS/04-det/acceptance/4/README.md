@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/4/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`04.4-det.norms.md`](../../spec/04.4-det.norms.md) Н5 (and of chapters 2, 3). The stand and the vocabulary are in [the common VMS
+The norm of the chapter is [`04.4-det.norms.md`](../../spec/04.4-det.norms.md) N5 (and of chapters 2, 3). The stand and the vocabulary are in [the common VMS
 acceptance README](../../../common/acceptance/README.md) on top of the common platform README (export `7a875c75`, the VMS pin).
 
 ## Preparation
@@ -12,7 +12,7 @@ The store, the cluster console, the controllers `cam` and `det`, the resource `s
 `cam` is mounted (`console2` — the prefix `/cam`). The camera holder and the detection worker are on `srv-a` (`@start worker`); the server
 labels are not set — the scenario's detectors have no labels (`labels: []`). The camera is the stand file `door.mp4`. The subsystem file of `cam` is
 set by the stand through `W2C_SUB_ENV` (the common VMS acceptance README): `MEDIA_DIR` with `door.mp4`, `SHM_DIR` — a stand directory (the frame
-share, V/01.2 Н1.3), therefore the detector on the holder's server goes through the share (`via: shm`). The scenario runs on a clean instance.
+share, V/01.2 N1.3), therefore the detector on the holder's server goes through the share (`via: shm`). The scenario runs on a clean instance.
 
 | Scenario | Norm | What it observes |
 |---|---|---|

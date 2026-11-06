@@ -1,6 +1,6 @@
-# The model stub of scenario 02-step (V/10.2 Н5): loaded at once, then a line per request in order.
+# The model stub of scenario 02-step (V/10.2 N5): loaded at once, then a line per request in order.
 load 0
-0	200	{"choices": [{"message": {"role": "assistant", "content": "готово"}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 12, "completion_tokens": 3}}
+0	200	{"choices": [{"message": {"role": "assistant", "content": "done"}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 12, "completion_tokens": 3}}
 hang	200	{}
 0	500	{"error": "stub"}
-0	200	{"choices": [{"message": {"role": "assistant", "content": "дальше"}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 30, "completion_tokens": 2}}
+0	200	{"choices": [{"message": {"role": "assistant", "content": "next"}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 30, "completion_tokens": 2}}

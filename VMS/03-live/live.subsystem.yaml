@@ -1,5 +1,5 @@
 # Live video, as the platform sees it: the SECOND subsystem. Its unit is a camera's live fan-out — "camera 7 is being
-# watched, from gateway g-2" — one per camera; which of its streams (V/01.1 Н1.1а) a viewer watches is said at the
+# watched, from gateway g-2" — one per camera; which of its streams (V/01.1 N1.1a) a viewer watches is said at the
 # gateway's door (`POST /whep/<cam>?stream=<id>`, V/03.3), each stream its own subscription,
 # created by its first viewer (`POST /live/streams`, a `view` of the camera — `rights.routes`) and deleted by the
 # gateway a grace period after the last one leaves. Its workers are gateways (`liveworker`):
@@ -12,14 +12,14 @@ name: live
 slot: {prefix: g, name_env: LIVE_NAME}
 # A gateway finds a camera's holder and its own cluster's ingests by their heartbeats (V/03.2: `cam/heartbeats/`,
 # `rec/heartbeats/` — another subsystem's heartbeats are read by declaration).
-# The gateway deletes a fan-out a grace period after its last viewer (`worker.deletes`, М10/2 Н1.2а, ADR-0067 доп.
+# The gateway deletes a fan-out a grace period after its last viewer (`worker.deletes`, M10/2 N1.2a, ADR-0067 addendum.
 # 2026-10-17): it never writes a unit row — `unit.rows` in `worker.writes` is refused by the loader.
 # The accounts book (V/03.6): a member reads the copy `domain/live/stream-accounts`; the domain-holder cluster has no copy
 # and reads its own row `domain/live/stream-accounts/<CLUSTER>` — the rights generator grants that one row, read and as
-# a secret reader (P/02.5 Н1.4, by the installer's CLUSTER). Only the copy is named here, never a prefix: the prefix holds
+# a secret reader (P/02.5 N1.4, by the installer's CLUSTER). Only the copy is named here, never a prefix: the prefix holds
 # every member's delivery, sealed by the holder's ring.
 worker: {exec: /usr/lib/live/worker, writes: [accounts], deletes: [streams], reads: [cam/heartbeats/, rec/heartbeats/, domain/live/stream-accounts, platform/memberof/, platform/folders/]}
-heartbeat: {strings: [rtsp]}          # the RTSP door's address (V/03.6 Н1.4), present only with the door
+heartbeat: {strings: [rtsp]}          # the RTSP door's address (V/03.6 N1.4), present only with the door
 # Cluster-owned accounts are served only by the gateway, never by generic table CRUD.
 tables: [accounts]
 about: {sub: cam, field: cam}   # a fan-out is about the camera it fans out: its events, grants and labels are the camera's
@@ -27,20 +27,20 @@ unit:
   rows: streams                      # live/streams/<cam>
   id: cam                            # named by the camera it fans out, never numbered — a grant on one camera names no other's
   fields:
-    cam:       {type: string, required: true, fixed: true}   # the VMS camera id, as the row's name and its `about`
-    labels:    {type: list}                     # where the viewers are: "public-address" for outside the LAN
-    grace:     {type: int, default: 60, schema: {minimum: 10, maximum: 3600}}   # seconds a gateway keeps the subscription after the last WHEP viewer; ≥ 10 s — the page's reconnect pause (V/03.1 Н1.1)
+    cam: {type: string, required: true, fixed: true}         # the VMS camera id, as the row's name and its `about`
+    labels: {type: list}                        # where the viewers are: "public-address" for outside the LAN
+    grace: {type: int, default: 60, schema: {minimum: 10, maximum: 3600}}       # seconds a gateway keeps the subscription after the last WHEP viewer; ≥ 10 s — the page's reconnect pause (V/03.1 N1.1)
 placement:
   # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
   # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
   # (a viewer on its own stream: its WebRTC element, DTLS, a queue — the worst case; ten viewers of one stream cost less)
-  capacity:   {from: capacity, default: 100, unit_mb: 2, base_mb: 48}   # viewers a gateway can carry — its own number, from its heartbeat
-  headroom:   {from: headroom}                  # what the autoscaler moves N on: viewers it could still take
+  capacity: {from: capacity, default: 100, unit_mb: 2, base_mb: 48}     # viewers a gateway can carry — its own number, from its heartbeat
+  headroom: {from: headroom}                    # what the autoscaler moves N on: viewers it could still take
   constraint: labels-subset                     # a stream's labels ⊆ the gateway's server's labels
-  tie_break:  most-free-capacity
-  grows:      true                              # short on a label set, the controller orders one more gateway on a server (`workers_wanted{server}`); by waiting fan-outs, not by viewers of a full one (V/03.1 Н1.3)
-  rebalance:  {dead_band: 0.10}
-  unplaced:   {delete_after: 30}                 # a stream nobody holds for 30 s goes — no gateway carries its labels, or none is left; its controller deletes it (ADR-0067)
+  tie_break: most-free-capacity
+  grows: true                                   # short on a label set, the controller orders one more gateway on a server (`workers_wanted{server}`); by waiting fan-outs, not by viewers of a full one (V/03.1 N1.3)
+  rebalance: {dead_band: 0.10}
+  unplaced: {delete_after: 30}                   # a stream nobody holds for 30 s goes — no gateway carries its labels, or none is left; its controller deletes it (ADR-0067)
 # Not a moment past its lease's end: a gateway writes nothing that carries an epoch — it holds a camera's stream and
 # hands it to viewers, and a fan-out that goes on under a lease nobody confirms is a second subscription to the camera
 # beside the gateway that took it over, not a duplicate anybody could mark. (The platform's default; said so it is
@@ -49,7 +49,7 @@ lease: {unconfirmed_max: off}
 # C5: local credentials, published contribution, and delivered book have distinct readers.
 secrets:
   # the holder cluster: the worker is the secret reader of its own row domain/live/stream-accounts/<CLUSTER> only if the
-  # copy is in secrets.reads (P/02.5 Н3 шаг 3, C02-OWN-BOOK-HOLDER-01; Kimi review V/03, question 1)
+  # copy is in secrets.reads (P/02.5 N3 step 3, C02-OWN-BOOK-HOLDER-01; Kimi review V/03, question 1)
   reads: [domain/live/stream-accounts]
   readers:
     live/accounts/: [worker]
@@ -70,21 +70,21 @@ rights:
 # gateway ↔ browser): `POST /whep/<cam>?stream=<id>` with the console's door token (no `stream` — the main one; a stream
 # not of this camera — 404 in words), `DELETE /whep/session/<id>` to hang up. `GET /live/where/<cam>` hands it out.
 door:
-  routes: [whep, talk, {name: frame, role: [expworker]}]   # `talk`: a conversation, browser → gateway → holder (V/03.3 Н1.2а); the token is a viewer's, the right to speak is the holder's; `frame`: one JPEG for an export (V/03.3 Н1.5)
+  routes: [whep, talk, {name: frame, role: [expworker]}]   # `talk`: a conversation, browser → gateway → holder (V/03.3 N1.2a); the token is a viewer's, the right to speak is the holder's; `frame`: one JPEG for an export (V/03.3 N1.5)
   pass: [accounts]
 metrics:
-  - {name: streams_live, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
+- {name: streams_live, from: status.phase, agg: count, equals: running, live: true}     # the running gauge (`console.running`)
 console:
   running: streams_live                # live_streams_live: fan-outs with a subscription set up (its source found; opened at the first viewer)
 # What a page calls a unit of it (the product's words, one spec on both sides).
 display:
-  unit: живой поток
-  units: живые потоки
-  units_count: живых потоков
+  unit: live stream
+  units: live streams
+  units_count: live streams
   fields:
-    cam: Камера
-    labels: Метки шлюзов
-    grace: Держать после зрителя, с
+    cam: Camera
+    labels: Gateway labels
+    grace: Keep after the viewer, s
   field_help:
-    labels: "где смотрят: public-address — снаружи сети"
-    grace: сколько секунд шлюз держит поток после последнего зрителя
+    labels: "viewing location: public-address means outside the network"
+    grace: seconds the gateway keeps the stream after the last viewer

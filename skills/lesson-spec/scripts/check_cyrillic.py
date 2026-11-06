@@ -7,6 +7,7 @@ No product imports, network access, or execution of source files.
 """
 
 import argparse
+import hashlib
 import os
 import re
 import stat
@@ -18,7 +19,10 @@ from pathlib import Path, PurePosixPath
 DEBT = Path(__file__).resolve().parents[1] / "cyrillic-debt.tsv"
 # Course-side canonical source and generator homes; an export is checked in full.
 # ADR-0083 (115): Source holds immutable witnesses, not canonical inputs.
-SCOPES = ("Platform", "tools/normgen")
+SCOPES = ("Platform", "VMS", "tools/normgen")
+# ADR-0083 (128): V11 is excluded; this sole historical map waits for V11.
+# No letter budget: only the exact source/data-base 2a197ab0a bytes may remain.
+DEFERRED_FILES = {"VMS/common/id-map.tsv": "051e5dd75360a2645e0f1035a0c745d6e688175ca8436b0597683fcaa33048b0"}
 EXPORT_MARKERS = ("Platform/COURSE_COMMIT", "VMS/COURSE_COMMIT")
 LOCALIZATION = "Platform/07-console-module/data/localization.tsv"
 HEADER = "kind\tpath\tletters"
@@ -33,8 +37,8 @@ LETTERS = re.compile("[" + "".join(chr(low) + "-" + chr(high) for low, high in L
 
 
 def deferred(name):
-    # VMS follows its own translation; its export marker is still mandatory.
-    return name == "VMS" or name.startswith("VMS/")
+    # The whole V11 tree is outside the accepted VMS translation.
+    return name == "VMS/11-backend" or name.startswith("VMS/11-backend/")
 
 
 def scoped(name, *, export=False):
@@ -46,8 +50,8 @@ def scoped(name, *, export=False):
 def mirror(name):
     # Module, common and lesson mirrors (ADR-0124); not a normgen escape hatch.
     parts = PurePosixPath(name).parts
-    return (len(parts) >= 3 and parts[:2] == ("Platform", "ru") or
-            len(parts) >= 4 and parts[0] == "Platform" and parts[2] == "ru" and
+    return (len(parts) >= 3 and parts[0] in {"Platform", "VMS"} and parts[1] == "ru" or
+            len(parts) >= 4 and parts[0] in {"Platform", "VMS"} and parts[2] == "ru" and
             (parts[1] == "common" or re.fullmatch(r"[0-9]{2}-[^/]+", parts[1]) is not None))
 
 
@@ -72,7 +76,7 @@ def load_debt(path, *, export=False):
             errors.append(f"{path}:{line}: expected kind, path, letters")
             continue
         kind, name, count = cells
-        if not safe_name(name, export=export) or mirror(name + "/_") or name in seen:
+        if not safe_name(name, export=export) or mirror(name + "/_") or name in DEFERRED_FILES or name in seen:
             errors.append(f"{path}:{line}: unsafe, excluded or duplicate path {name!r}")
             continue
         seen.add(name)
@@ -168,13 +172,28 @@ def source_files(root, *, export=False):
                 relative = path.relative_to(root).as_posix()
                 metadata = relative == ".git" if export else name in {".git", "__pycache__"}
                 if (metadata or
-                        relative == "VMS" or mirror(relative + "/_")):
+                        deferred(relative) or mirror(relative + "/_")):
                     dirs.remove(name)
                 elif path.is_symlink():
                     raise OSError(f"symlink directory: {path.relative_to(root)}")
             names.extend((Path(directory) / name).relative_to(root).as_posix() for name in files
                          if not (export and Path(directory) == root and name == ".git"))
     return sorted(name for name in names if scoped(name, export=export))
+
+
+def deferred_file_error(root, name, data=None):
+    """Exact historical bytes, never a Cyrillic allowance or a new budget."""
+    path = Path(root) / name
+    try:
+        if path.resolve() != path.absolute() or not stat.S_ISREG(path.stat().st_mode):
+            raise OSError("deferred history must be a regular file without symlinks")
+        if data is None:
+            data = path.read_bytes()
+    except OSError as exc:
+        return f"{name}: cannot read deferred historical file: {exc}"
+    if hashlib.sha256(data).hexdigest() != DEFERRED_FILES[name]:
+        return f"{name}: deferred historical bytes differ from source/data-base 2a197ab0a; no new budget"
+    return None
 
 
 def localization_text(text):
@@ -220,6 +239,12 @@ def scan(root, *, export=None):
         if mirror(name):
             continue
         path = root / name
+        if name in DEFERRED_FILES:
+            problem = deferred_file_error(root, name)
+            if problem:
+                errors.append(problem)
+            stats["cyrillic_deferred_files"] += 1
+            continue
         try:
             # Never follow a tracked symlink (or a replaced parent) outside source.
             if path.resolve() != path.absolute():
@@ -255,6 +280,8 @@ def check(root, debt_path=DEBT, *, shrink=False, declare_ready=(), export=None):
     for unit in sorted(ready | set(declare_ready)):
         if not safe_name(unit, export=export) or mirror(unit + "/_") or not (root / unit).is_dir() or (root / unit).resolve() != root / unit:
             errors.append(f"{unit}: ready unit must be an existing source directory in scope")
+        elif (unit == "VMS" or any(name == unit or name.startswith(unit + "/") for name in DEFERRED_FILES)):
+            errors.append(f"{unit}: ready unit includes excluded V11 or deferred historical source")
         elif any(name == unit or name.startswith(unit + "/") for name in counts):
             errors.append(f"{unit}: ready unit still has Cyrillic letters")
     for name, count in sorted(counts.items()):
@@ -290,7 +317,7 @@ def main():
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--debt", type=Path, default=DEBT)
     parser.add_argument("--export", action="store_true", default=None,
-                        help="check every export file (auto with nested COURSE_COMMIT), except VMS; require both equal pins")
+                        help="check every export file (auto with nested COURSE_COMMIT), except V11 and exact deferred history; require both equal pins")
     parser.add_argument("--shrink", action="store_true", help="only lower/remove existing debt")
     parser.add_argument("--ready", action="append", default=[], metavar="DIRECTORY", help="declare a clean unit ready (also shrinks)")
     args = parser.parse_args()
