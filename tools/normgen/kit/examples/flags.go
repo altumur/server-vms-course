@@ -7,7 +7,7 @@ import (
 	"kitmodule/internal/flags"
 )
 
-// parseDaemon — the command line of P/01.3 Н1.3 «Daemon flags»: a refusal is exit 2 with the flag named.
+// parseDaemon — the command line of P/01.3 N1.3 «Daemon flags»: a refusal is exit 2 with the flag named.
 func parseDaemon(args []string) (*flags.Flags, int) {
 	f, r := flags.ParseArgs(args, os.Getenv) // os.Args[1:]
 	if r != nil {

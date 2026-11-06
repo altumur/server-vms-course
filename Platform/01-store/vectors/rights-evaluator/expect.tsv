@@ -1,4 +1,4 @@
-# The rights evaluator vector: role, action, key → allow | deny by the rights file rights.json next to it (М10/6 Н1.2 pattern, Н1.3).
+# The rights evaluator vector: role, action, key → allow | deny by the rights file rights.json next to it (M10/6 N1.2 pattern, N1.3).
 # allow — only a confirmed success (read — 200 Row, write and delete — 200 Written); deny — 403 forbidden on the socket
 # of the role; anything else (5xx, a drop, another answer) is an undetermined outcome (README). Lines with # and empty lines are skipped; the first is the header.
 role	action	key	expect

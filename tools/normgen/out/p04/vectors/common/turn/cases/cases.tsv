@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/turn cases.tsv (gen_vectors.py); compare turn.
-# source Platform/common/vectors/turn/cases.tsv sha256 3b01fa9210443cc0dd3d21566e1eae79f22ba625128d4849450ba49d3b96a4be
+# source Platform/common/vectors/turn/cases.tsv sha256 ea768f504ed1f221b7b901ba2e7cef1002b2ad05116801475aeeca28f9156526
 case	input	exit	stdout
 line-3	line-3.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":""},"held"]
 line-4	line-4.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":3},"held"]

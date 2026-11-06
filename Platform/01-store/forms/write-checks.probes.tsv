@@ -24,7 +24,7 @@ n	case	sock	body
 2	only	writer	{"key": "acc/a"}
 2	nopair	writer	op outside the list: no later row applies to this command
 3	only	writer	{"op": "floor", "value": 3}
-3	nopair	writer	for floor after the socket — P/01.3 Н2, no rows of the table
+3	nopair	writer	for floor after the socket — P/01.3 N2, no rows of the table
 4	only	writer	{"op": "put", "items": {"f": "v"}}
 4	only	writer	{"op": "delete", "key": 7}
 4	pair	writer	{"op": "put", "items": "x"}

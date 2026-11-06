@@ -35,6 +35,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import gate  # noqa: E402 — общий разбор gate (ревью Codex С4)
 import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import tsv_input  # noqa: E402 — physical source rows and one outer decode
 L = lesson.CURRENT
 
 HERE = Path(__file__).resolve().parent
@@ -42,6 +43,7 @@ ROOT = HERE.parent.parent
 
 ENGINES = {"1.1": "runner/run.py", "1.3": "CALL seams"}
 CALLS = ("store-start-flags", "store-copy-floor")
+SCENARIO_COLUMNS = ("scenario", "step", "request", "expect")
 CALL = re.compile(r"CALL ([a-z][a-z0-9-]*) (.+)")
 # Переходное объявление: этап → [(глава, [сценарии], seams)] — только для этапа без элементов tests: в форме.
 TRANSITIONAL = {}       # форма P/01 несёт tests:<глава>:… (дельта 0125-p01-stages-seams, main 322d2cfb8)
@@ -66,19 +68,19 @@ def read_table(root, chapter, file):
     path = Path(root) / rel
     if not path.is_file():
         return {}, rel, None
+    # The existing tables use either a real four-column header or a comment
+    # header. Select that source form before parsing; decoded cells stay rows.
     data = path.read_bytes()
+    first = next((line for line in data.split(b"\n") if line and not line.startswith(b"#")), b"")
+    positional = first != b"scenario\tstep\trequest\texpect"
+    try:
+        source = tsv_input.read(path, names=SCENARIO_COLUMNS, positional=positional, root=root)
+    except tsv_input.TSVError as exc:
+        raise GenError(str(exc)) from None
     out = {}
-    for no, line in enumerate(data.decode("utf-8").split("\n"), 1):
-        line = line.rstrip("\r")
-        if not line.strip() or line.startswith("#"):
-            continue
-        cells = line.split("\t")
-        if cells[:3] == ["scenario", "step", "request"]:
-            continue
-        if len(cells) < 3:
-            raise GenError(f"{rel}:{no}: want scenario, step, request, expect")
-        out.setdefault(cells[0], []).append((cells[1], cells[2], cells[3] if len(cells) > 3 else "", no))
-    return out, rel, hashlib.sha256(data).hexdigest()
+    for no, row in source.rows:
+        out.setdefault(row["scenario"], []).append((row["step"], row["request"], row["expect"], no))
+    return out, rel, source.sha256
 
 
 def read_scenarios(root, chapter):

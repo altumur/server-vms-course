@@ -1,5 +1,5 @@
 {
-  "comment": "Готовый вход приёмки глав P/01.2 и P/01.3 (не вывод генератора): роли и образцы, нужные шагам, — подмножество вывода P/02.5 Н1.4 для testsub и testsub2, развёртывание testsub; правится только правкой приёмки",
+  "comment": "Ready acceptance input for chapters P/01.2 and P/01.3 (not generator output): the roles and patterns required by the steps are a subset of P/02.5 N1.4 output for testsub and testsub2, testsub deployment; changed only by an acceptance edit",
   "roles": {
     "console": {
       "group": "w2c-console",

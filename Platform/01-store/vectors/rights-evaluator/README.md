@@ -7,7 +7,7 @@ The owner is lesson P/01, chapter 1.2 (at stage A the norm is P/01.2 N1.2 `patte
 
 **Run.** The runner starts a fresh store with `rights.json` as `{rights}` («Stand» of the [common acceptance README](../../../common/acceptance/README.md); review analysis of stage B 3–5, № 33) and
 for each row makes a probe through the socket of the role: `read` — `GET /v1/get?key=<key>`, `write` — `POST /v1/write` `put`, `delete` —
-`POST /v1/write` `delete` (without `cas`; an absent row is deleted successfully, М10/1 N3). The outcome of the probe:
+`POST /v1/write` `delete` (without `cas`; an absent row is deleted successfully, M10/1 N3). The outcome of the probe:
 - `deny` — `403 forbidden`;
 - `allow` — only a confirmed success: for a read 200 of the form `Row` (including `{items: null, index: ""}`), for a write and a
   delete 200 `Written`;
@@ -26,7 +26,7 @@ The meaning of the evaluator is checked, not the bytes of the file (review of st
 - the rights of one action do not give another (`write`, `delete`): `delete` is its own list, the evaluator has no `delete = write`;
   an empty or absent `delete` — no deletes (P/01.2 N1.2).
 
-Reconciliation of python and go М10/6–11 («`*` в середине — буквально», both implementations); the Architect's decision by the log of
+Reconciliation of python and go M10/6–11 («`*` in the middle is literal», both implementations); the Architect's decision by the log of
 cammeta-go, lesson 6 № 2.
 
 ## Who executes

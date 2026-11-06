@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/presence-room cases.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/presence-room/cases.tsv sha256 6f382db404195c349eb7bb847b73d83ae3a5fe67f58001defb2d9098d1a23996
+# source Platform/common/vectors/presence-room/cases.tsv sha256 dbf4f8eba19c9b0275398900105a53f291de80cc2df3a437a9e185f768418113
 case	input	exit	stdout
 line-3	line-3.json	0	{"room":"13","live":"2,99"}
 line-4	line-4.json	0	{"room":"13","live":"2"}

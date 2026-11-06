@@ -39,7 +39,7 @@ import "normgen/p01-1/flags"
 //	    force allows only the clock going back, but not a repeat/lowering of the generation, a uint64 overflow or a
 //	    parallel recovery; form: floor in op: floor — a JSON integer without a fraction or an exponent (`20`, not `2.0e1`
 //	    and not `20.0`), 1 … 2^53 − 2^32; otherwise — 400 badrequest before writing (reconciliation of python and go
-//	    М10/6–11, B5); epochs are JSON integers < 2^53 (ADR-0070), so the floor leaves 2^32 numbers above itself:
+//	    M10/6–11, B5); epochs are JSON integers < 2^53 (ADR-0070), so the floor leaves 2^32 numbers above itself:
 //	    generation ≤ 2^21 − 1 (hours since 2026-01-01 suffice for ~239 years); a generation that would give more — a
 //	    refusal of recovery, as an overflow (added by the pilot of data family schemas, D6); issue: next_epoch =
 //	    max(current, floor) + 1 (P/03.2); an issue that read the floor before the raise can write a number below floor —
@@ -58,8 +58,8 @@ import "normgen/p01-1/flags"
 //	  -force bool
 //	  --from file, required: true
 //	the refusals — forms/refusals.tsv:
-//	  1.3 row 23 copy_input — exit !0 - (P/01.3 Н1.3 copy); with part refusals: refusals.CopyInput
-//	  1.3 row 24 clock_early — exit !0 - (P/01.3 Н3); with part refusals: refusals.ClockEarly
+//	  1.3 row 23 copy_input — exit !0 - (P/01.3 N1.3 copy); with part refusals: refusals.CopyInput
+//	  1.3 row 24 clock_early — exit !0 - (P/01.3 N3); with part refusals: refusals.ClockEarly
 func Restore(f *flags.Flags, env Env) int {
 	if env.Copy != nil {
 		return runCopy("restore", f, env)

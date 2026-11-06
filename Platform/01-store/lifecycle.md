@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/lifecycle.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
 
 The lifecycle contract of the store process `configstore` (ADR-0083 addendum (2) item 1): start, configuration, files on disk, exit codes,
-signals. Stage A — on top of the current norms of М10. The norms are not retold here: each line leads to its norm.
+signals. Stage A — on top of the current norms of M10. The norms are not retold here: each line leads to its norm.
 
 Norms: [P/02.4](../02-installer/spec/02.4-installer.norms.md) (N1.1 units, N1.2 environment,
 N3 «server start»), [P/01.3](spec/01.3-store.norms.md) (N1.3 daemon, N4), [P/04](../04-controller/spec/04-controller.norms.md) (N1.4a server refusal), [P/01.1](spec/01.1-store.norms.md) (door,
@@ -80,7 +80,7 @@ N1.9).
 «Stand» — the [common acceptance README](../common/acceptance/README.md) (analysis of the review of stage B 3–5, № 33):
 - the store command gets `{data}` (`PLATFORM_DIR`, the store — `{data}/configstore`), `{socket}` (`admin.sock`,
   the role sockets next to it), `{rights}`, `{body_limit}` → `-max-body`, `{row_ceiling}` → `-max-value`; it puts no manifests;
-- `{rights}`: in P/01.1 — the file of the role `acc`, in the acceptances moved from М10/4–11 — the rights derived from the stand's manifests by the rights derivation command;
+- `{rights}`: in P/01.1 — the file of the role `acc`, in the acceptances moved from M10/4–11 — the rights derived from the stand's manifests by the rights derivation command;
 - the directives `@restart store`, `@foreign store`, `@backup store`, `@import store`, the door `restored`;
 - a stand flag that switches off the barriers for speed is named by the implementation in its «Stand» command.
 

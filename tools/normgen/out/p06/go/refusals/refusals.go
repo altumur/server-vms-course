@@ -13,7 +13,7 @@ type Spec struct {
 	Surface    string   // call (a pure procedure), cli, start, process, peer, http (the lesson's own door)
 	Exit       int      // cli, start, process: the exit code fixed by the form; -1 — none fixed (see AnyNonZero)
 	AnyNonZero bool     // «exit !0»: any nonzero exit code (2 included) — the code is yours, never 0
-	Status     int      // http, peer: the HTTP status (peer — the imported door); 0 — none
+	Status     int      // peer/http: the door status; call: a stored outcome code fixed by the form; 0 — none
 	Word       string   // a fixed refusal/diagnostic token; "" — none
 	Log        []string // the log cell: the subjects or the diagnostic index of the row; no log line format
 	Words      []string // the fixed fragments «…» the diagnostic must carry

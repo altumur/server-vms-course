@@ -41,6 +41,7 @@ ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import gen_door  # noqa: E402
 import yamlsub  # noqa: E402
+import tsv_input  # noqa: E402 — source cells before the existing HTTP/schema checks
 
 SPEC = gen_door.DEFAULT_SPEC
 OUT = HERE / "out/p01-1"
@@ -582,11 +583,10 @@ class Generated(DoorBase):
     def test_acceptance_forms(self):
         """Сценарии приёмки 1.1: ожидаемый ответ объявлен у операции и отвечает ровно одной её схеме."""
         steps = 0
-        for line in SCEN.read_text(encoding="utf-8").splitlines():
-            if line.startswith("#") or not line.strip():
-                continue
-            cells = line.split("\t")
-            if len(cells) < 4 or not re.match(r"[A-Z]+ /", cells[2]) or not re.match(r"[0-9]{3}( |$)", cells[3]):
+        columns = ("scenario", "step", "request", "expect")
+        for _, row in tsv_input.read(SCEN, names=columns, positional=True, root=ROOT).rows:
+            cells = [row[name] for name in columns]
+            if not re.match(r"[A-Z]+ /", cells[2]) or not re.match(r"[0-9]{3}( |$)", cells[3]):
                 continue
             method, target = cells[2].split(" ")[:2]
             code_s, _, body = cells[3].partition(" ")

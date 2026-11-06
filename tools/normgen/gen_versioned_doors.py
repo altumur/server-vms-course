@@ -230,10 +230,15 @@ def kit_files(module, out=L.out):
 
 
 def provenance():
+    import tsv_input
+
     _, sources = inputs()
     def entry(p):
         return {"path": str(p.relative_to(ROOT)), "sha256": sha(p)}
+    sources = list(dict.fromkeys(p for src in sources for p in
+                                (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src])))
     return {"form": [entry(p) for p in sources], "generator": entry(Path(__file__).resolve()),
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
             "handwritten": [entry(HERE / "yamlsub.py"), entry(HERE / "gen_door_lesson.py"), entry(HERE / "gen_checks.py")],
             "judge": entry(JUDGE)}
 

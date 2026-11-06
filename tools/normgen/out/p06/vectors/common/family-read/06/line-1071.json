@@ -5,7 +5,7 @@
  "case": "a94_revision.016",
  "variant": "",
  "cells": {
-  "family": "platform/servers/<сервер>",
+  "family": "platform/servers/<host>",
   "key": "platform/servers/srv-a",
   "kind": "row",
   "mode": "reader",

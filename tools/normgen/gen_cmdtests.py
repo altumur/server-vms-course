@@ -373,7 +373,7 @@ def go_step(st):
     return "{" + ", ".join(parts) + "}"
 
 
-def build(root=ROOT):
+def _build(root=ROOT):
     """→ ({путь от go/: текст}, опись [(id шага, этап, тест, статус, причина)])."""
     stages_path = Path(root) / L.rel / "forms/stages.tsv"
     rows = [ln.split("\t") for ln in stages_path.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("#")]
@@ -439,6 +439,17 @@ def build(root=ROOT):
     inv = ["# Inventory of the stage tests of the lesson (gen_cmdtests.py): every selected step or case — translated or excluded.",
            "step\tstage\ttest\tstatus\treason"] + ["\t".join(map(str, r)) for r in inventory]
     files["go/stagetests/inventory.tsv"] = "\n".join(inv) + "\n"
+    return files, inventory
+
+
+def build(root=ROOT):
+    files, inventory = _build(root)
+    if L.key == "03-worker":
+        import gen_policy_machines
+        try:
+            files.update(gen_policy_machines.build(root))
+        except gen_policy_machines.GenError as exc:
+            raise GenError(str(exc)) from None
     return files, inventory
 
 
@@ -1514,10 +1525,14 @@ def generate(root=ROOT, out=DEFAULT_OUT):
     mod = out / "go/go.mod"
     if not mod.exists():
         mod.write_text(f"module {GO_MODULE}\n\ngo 1.22\n", encoding="utf-8")
+    if L.key == "03-worker":
+        import gen_policy_machines
+        for name, data in gen_policy_machines.module_files(GO_MODULE, root).items():
+            (out / "go" / name).write_bytes(data)
     return out, inventory
 
 
-KIT_DIRS = ("stagetests",)                     # заменяется целиком; lessonadapter — свой у реализации (кроме lessonadapter.go)
+KIT_DIRS = ("stagetests",) + (("workerpolicy",) if L.key == "03-worker" else ())
 JUDGE = HERE / "test_gen_cmdtests.py"
 
 
@@ -1538,14 +1553,26 @@ def kit_files(module, out=DEFAULT_OUT):
 
 def provenance():
     import hashlib
+    import tsv_input
 
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()}
     forms = [L.form("stages.tsv"), L.form("README.md")]
     forms += sorted((L.path("acceptance")).glob("*/seams.tsv")) + sorted((L.path("acceptance")).glob("*/verdicts.tsv"))
     forms += [L.path("acceptance/seams.tsv")]           # урок одной главой (P/04): швы без подкаталога
-    return {"form": [entry(f) for f in forms if Path(f).is_file()], "generator": entry(Path(__file__).resolve()),
-            "handwritten": [], "judge": entry(JUDGE)}
+    for table in sorted(L.path("acceptance").glob("*/verdicts.tsv")):
+        forms += [table.parent / "classes.tsv"] + sorted((table.parent / "cases").glob("*.subsystem.yaml"))
+    handwritten = []
+    if L.key == "03-worker":
+        import gen_policy_machines as policies
+        forms += policies.sources() + [ROOT / "Platform/common/versions/go.mod", ROOT / "Platform/common/versions/go.sum"]
+        handwritten = [policies.HERE / "gen_policy_machines.py", policies.HERE / "test_gen_policy_machines.py",
+                       policies.HERE / "policyrt/traces_test.go.txt", *sorted(policies.RUNTIME.glob("*.go"))]
+    forms = list(dict.fromkeys(p for src in forms if Path(src).is_file() for p in
+                              (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src])))
+    return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()),
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
+            "handwritten": [entry(p) for p in handwritten], "judge": entry(JUDGE)}
 
 
 KIT_MD = """

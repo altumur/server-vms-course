@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/record take.tsv (gen_vectors.py); compare subset.
-# source Platform/common/vectors/record/take.tsv sha256 a151fb2eeda874ad831ca60255524e727a56ac111fd24d5fc3e1fbccfdfb8873
+# source Platform/common/vectors/record/take.tsv sha256 9929b7cb810fce8b86501d9dd8bddc3685f23ec68e9efe51703322533625ead6
 case	input	exit	stdout
 line-5	line-5.json	0	{"result":"take"}
 line-6	line-6.json	0	{"result":"take"}

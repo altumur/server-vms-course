@@ -22,10 +22,10 @@ import "normgen/p01-1/apidoor"
 //	spec/01.3-store.norms.md «recover the store (no majority)»:
 //	  req: P/01.3-R023 — Those gone forever — `leave` at the leader; those who return after `leave` — `admit`.
 //	the refusals — forms/refusals.tsv:
-//	  1.3 row 1 service_body_form — 400 badrequest (P/01.3 Н2; P/01.1 Н2); with part refusals: refusals.ServiceBodyForm
-//	  1.3 row 2 service_body_limit — 413 toolarge (P/01.3 Н2); with part refusals: refusals.ServiceBodyLimit
-//	  1.3 row 12 join_role_socket — 403 forbidden (P/01.3 Н2); with part refusals: refusals.JoinRoleSocket
-//	  1.3 row 9 box_last_voter — 409 refused (P/01.3 Н1.3 box); with part refusals: refusals.BoxLastVoter
+//	  1.3 row 1 service_body_form — 400 badrequest (P/01.3 N2; P/01.1 N2); with part refusals: refusals.ServiceBodyForm
+//	  1.3 row 2 service_body_limit — 413 toolarge (P/01.3 N2); with part refusals: refusals.ServiceBodyLimit
+//	  1.3 row 12 join_role_socket — 403 forbidden (P/01.3 N2); with part refusals: refusals.JoinRoleSocket
+//	  1.3 row 9 box_last_voter — 409 refused (P/01.3 N1.3 box); with part refusals: refusals.BoxLastVoter
 func (s *Store) Leave(c Ctx, body []byte) apidoor.Answer {
 	return notInStage(apidoor.OpLeave)
 }

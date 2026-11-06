@@ -47,7 +47,7 @@ func effects(f *Family, paths []string) map[string]bool {
 func fields(f *Family, active map[string]bool) []string {
 	out := []string{}
 	for _, o := range f.Outcomes {
-		if o.Unit == "поле" && active[o.Path] {
+		if o.Unit == unitField && active[o.Path] {
 			out = append(out, strings.TrimPrefix(o.Path, "/"))
 		}
 	}

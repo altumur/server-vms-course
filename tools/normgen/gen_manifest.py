@@ -227,10 +227,16 @@ def kit_files(module, out=DEFAULT_OUT):
 
 
 def provenance():
+    import tsv_input
+
     def entry(path):
         return {"path": rel(path), "sha256": sha(path)}
-    return {"form": [entry(p) for p in (SCHEMA, RELATIONS, LAYERS, SCALARS, VERSIONS / "go.mod")],
+    forms = [SCHEMA, RELATIONS, LAYERS, SCALARS, VERSIONS / "go.mod", VERSIONS / "go.sum"]
+    forms = list(dict.fromkeys(p for src in forms for p in
+                              (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src])))
+    return {"form": [entry(p) for p in forms],
             "generator": entry(Path(__file__).resolve()),
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
             "handwritten": [entry(RUNTIME / n) for n in RUNTIME_FILES], "judge": entry(JUDGE)}
 
 

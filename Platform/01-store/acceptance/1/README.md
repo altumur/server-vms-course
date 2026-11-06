@@ -39,7 +39,7 @@ A change of `key`, `cas`, `guard`, `not_after` and `not_before` on a replay of `
 
 ## Coverage audit of P/01, second pass (sc. 30–32)
 
-The coverage audit session, second pass (Gemini, 2026-10-30, commit 6a5817f88, `АУДИТ-ПОКРЫТИЯ-GEMINI-P01.md`, G01–G03):
+The coverage audit session, second pass (Gemini, 2026-10-30, commit 6a5817f88, `coverage audit Gemini P01 (for people)`, G01–G03):
 - Sc. 30 — the replay fingerprint by value (N3 «write», «delete»): for `put` a reversed order of the fields of `items` and an absent
   `cas` instead of `cas: null` give the same fingerprint (`again`); `delete` under the `id` of a `put` write — 400. For `delete` under one `id`
   (`cas`, `guard`, `not_before`, `not_after`): `items` as an array and `1.0` instead of `1` — `again`; a different `key`, `cas` `""` and no

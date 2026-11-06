@@ -703,18 +703,24 @@ def kit_files(module, out=DEFAULT_OUT):
 
 
 def provenance():
+    import tsv_input
+
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": sha(path)}
     storage = facts()["copy_storage"]
-    return {"form": [entry(p) for p in (NORMS_13, NORMS_11, REFUSALS, OPENAPI, KEYS_README)],
+    def entries(sources):
+        return [entry(p) for p in dict.fromkeys(p for src in sources for p in
+                (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src]))]
+    return {"form": entries([NORMS_13, NORMS_11, REFUSALS, OPENAPI, KEYS_README]),
             "generator": entry(Path(__file__).resolve()), "handwritten": [entry(p) for p in COPY_RUNTIME.values()] if storage else [],
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
             "judge": entry(JUDGE), "judges": [entry(JUDGE), entry(COPY_JUDGE)] if storage else [entry(JUDGE)],
-            "judge_inputs": [entry(p) for p in (L.form("stages.tsv"),
+            "judge_inputs": entries([L.form("stages.tsv"),
                             *sorted(L.path("acceptance/3").glob("*.tsv")),
                             L.path("acceptance/3/README.md"),
                             *sorted(L.path("acceptance/3/inputs").glob("*.jsonl")),
                             ROOT / "Source/tests/testdata/testsub.subsystem.yaml",
-                            ROOT / "Source/tests/testdata/testsub2.subsystem.yaml")] if storage else []}
+                            ROOT / "Source/tests/testdata/testsub2.subsystem.yaml"]) if storage else []}
 
 
 KIT_MD = """
@@ -726,7 +732,7 @@ KIT_MD = """
 | `{module}/internal/box/copy.go` | kit (closed): the copy format — `EncodeCopy`, `DecodeCopy`, `Upper`, `Floor`, `BackupTarget`, `ImportRepeated` |
 | `{module}/internal/box/copy_storage.go`, `copy_validation.go`, `copy_import.go`, `copy_control.go` | handwritten kit environment (closed): `CopyStorage`, `ImportCopy`, `BackupCopy`, `CopyControl`, `CopyStartAllowed` |
 
-The store of a box (P/01.3 Н1.3 `box`) answers its service doors by the norm alone; you give it only the indices of
+The store of a box (P/01.3 N1.3 `box`) answers its service doors by the norm alone; you give it only the indices of
 your store. Wire it from your files (one line each), after your identity check (a role socket — 403 before the body):
 
 ```go
@@ -741,7 +747,7 @@ return box.Recover(logf)        // code 2 «this build has no raft»
 if code, refused := box.StartRefusal(f, logf); refused { return code }   // -group-size 3|5, -join, -door
 ```
 
-**The copy** (Н1.3 `copy`, `import`, `floor`; Н3 phases; `admin_ops` backup): implement `box.CopyStorage` over your actual
+**The copy** (N1.3 `copy`, `import`, `floor`; N3 phases; `admin_ops` backup): implement `box.CopyStorage` over your actual
 store. `WithCopyLock` excludes ordinary writers/batches for the whole callback. Inside it, `CopyTxn.Snapshot` reads actual
 rows and the index; `BeginImport` atomically makes the new F1 and progress durable and advances the index;
 `WriteImport` durably writes one supplied row with its exact version; `FinishImport` persists Done. Source replay/admission

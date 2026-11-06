@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/events-merge resource.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/events-merge/resource.tsv sha256 83b8805e250cd65e62207c60d106e479d5f0b2ff69947f1b139418d9ee371c31
+# source Platform/common/vectors/events-merge/resource.tsv sha256 0003923cf7438836571f3c956e2d1bf8b0673bdf775f5ee7172c180f481ed739
 case	input	exit	stdout
 line-3	line-3.json	0	{"events":[],"state":"live","truncated":0}
 line-4	line-4.json	0	{"events":[{"id":"c","subsystem":"testsub","unit":"testsub/c1","of":"testsub/c1","epoch":1,"t":30,"kind":"tick","server":"srv-a","bucket":"testsub/c1/e1/19700101T000000Z.events.jsonl","class":"observation"},{"id":"b","subsystem":"testsub","unit":"testsub/c1","of":"testsub/c1","epoch":1,"t":20,"kind":"tick","server":"srv-a","bucket":"testsub/c1/e1/19700101T000000Z.events.jsonl","class":"observation"},{"id":"a","subsystem":"testsub","unit":"testsub/c1","of":"testsub/c1","epoch":1,"t":10,"kind":"tick","server":"srv-a","bucket":"testsub/c1/e1/19700101T000000Z.events.jsonl","class":"observation"}],"state":"live","truncated":0}

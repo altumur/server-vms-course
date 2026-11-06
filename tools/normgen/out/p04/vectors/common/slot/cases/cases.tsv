@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/slot cases.tsv (gen_vectors.py); compare fields:state.
-# source Platform/common/vectors/slot/cases.tsv sha256 75909c7c7143f79d6ba0b78c4644d1c4288f07690d09eff9d03d8177f91932fd
+# source Platform/common/vectors/slot/cases.tsv sha256 ba1ffa7f3e543872ac8fc01f724813386ee371452be4019fb0182a267475c8d9
 case	input	exit	stdout
 line-3	line-3.json	0	{"state":"held"}
 line-4	line-4.json	0	{"state":"held"}
