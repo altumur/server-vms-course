@@ -1,4 +1,4 @@
-# id of an order row (P/03.6 Н1.6; ADR-0091 item 1). Form — README.
+# id of an order row (P/03.6 N1.6; ADR-0091 item 1). Form — README.
 case	input	expect	note
 hyphen-a	{"customer":"testsub","key":"{cam}-{kind}","fields":{"cam":{"type":"string","value":"7"},"kind":{"type":"string","value":"1-x"}}}	testsub-7-1%2Dx	pair hyphen: (7, 1-x)
 hyphen-b	{"customer":"testsub","key":"{cam}-{kind}","fields":{"cam":{"type":"string","value":"7-1"},"kind":{"type":"string","value":"x"}}}	testsub-7%2D1-x	pair hyphen: (7-1, x) — a different id

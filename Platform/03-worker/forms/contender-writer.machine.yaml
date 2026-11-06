@@ -1,0 +1,132 @@
+# Local contender-writer policy; actual capture, cadence and object IO remain with the ordinary core.
+machine: contender-writer
+norm: P/03.2-R012, P/03.2-R047
+states:
+- seeking
+- holding
+- quiet
+initial: seeking
+terminal: []
+input: {}
+types: {}
+const: {}
+vars:
+  ever_capture:
+    type: bool
+    init: false
+  episode_lost:
+    type: bool
+    init: false
+  phase:
+    type: string
+    init: ''
+  since:
+    type: double
+    init: 0.0
+timers: {}
+events:
+  observe:
+    withdrawn: bool
+    foreign: bool
+    due: bool
+    wall: double
+  acquired: {}
+  lost: {}
+env:
+- One process and its name-loss episode; acquired/lost are confirmed results of the ordinary capture and give_up_name
+  paths, not a substitute for them.
+- observe is supplied only while the process has no capture; foreign means the exact NameOnAnotherBox result, including
+  an unreleased foreign lapsed row.
+- The ordinary scheduler supplies due at CONTEND_EVERY and the current wall-clock seconds. No virtual-clock offset
+  or IO completion is inferred here.
+- publish arguments select state/since/at only. The ordinary object writer supplies identity, holder and other fields
+  from its checked snapshot and writes the full object.
+functions: {}
+actions:
+  choose_phase:
+    args:
+      selected: string
+      wall: double
+    set:
+      since: 'phase == selected ? since : wall'
+      phase: selected
+  clear_phase:
+    set:
+      phase: '""'
+  mark_acquired:
+    set:
+      ever_capture: 'true'
+      episode_lost: 'false'
+      phase: '""'
+  mark_lost:
+    set:
+      episode_lost: 'true'
+      phase: '""'
+  publish:
+    args:
+      selected: string
+      since_value: double
+      at_value: double
+    io: Write the ordinary contender object with these selected state/since/at values; no new IO primitive.
+  name_taken:
+    io: Emit the existing worker.name_taken event for this confirmed loss episode.
+  name_back:
+    io: Emit the existing worker.name_back event after this episode has had name_taken.
+invariants:
+  closed_phase: phase in ["", "refused", "nameless", "waiting"]
+  loss_requires_capture: '!episode_lost || ever_capture'
+transitions:
+- id: withdrawn-no-mark
+  event: observe
+  from:
+  - seeking
+  - quiet
+  if: withdrawn
+  do:
+  - clear_phase()
+  to: quiet
+- id: choose-refused-first
+  event: observe
+  from:
+  - seeking
+  - quiet
+  if: '!withdrawn'
+  do:
+  - 'choose_phase(foreign ? "refused" : (ever_capture ? "nameless" : "waiting"), wall)'
+- id: publish-when-due
+  event: observe
+  from:
+  - seeking
+  - quiet
+  if: '!withdrawn && due'
+  do:
+  - publish(phase, since, wall)
+  to: seeking
+- id: not-due-no-write
+  event: observe
+  from:
+  - seeking
+  - quiet
+  if: '!withdrawn && !due'
+  to: seeking
+- id: lost-once
+  event: lost
+  from: holding
+  do:
+  - mark_lost()
+  - name_taken()
+  to: seeking
+- id: back-only-after-loss
+  event: acquired
+  from: seeking
+  if: episode_lost
+  do:
+  - name_back()
+  - mark_acquired()
+  to: holding
+- id: first-capture-no-back
+  event: acquired
+  from: seeking
+  do:
+  - mark_acquired()
+  to: holding

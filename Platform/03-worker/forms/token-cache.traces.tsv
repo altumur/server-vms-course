@@ -1,0 +1,66 @@
+trace	step	t	event	expect
+cache-used-without-asking	0	0	input {}	state=loading; io=[]
+cache-used-without-asking	1	1	loaded {"opened":true,"handle":"old","jti":"old-jti"}	state=ready; io=[]
+cache-used-without-asking	2	2	demand {"day":10}	io=[["offer",["old"]]]
+cache-used-without-asking	3	3	advance	io=[]
+cache-used-without-asking	4	4	demand {"day":30000}	io=[["offer",["old"]]]
+unopened-is-no-file	0	0	input {}	state=loading; io=[]
+unopened-is-no-file	1	1	loaded {"opened":false,"handle":"","jti":""}	state=ready; io=[]
+unopened-is-no-file	2	2	demand {"day":10}	io=[["request",[""]]]; state=asking
+unopened-is-no-file	3	3	demand {"day":10}	io=[["wait",[]]]
+unopened-is-no-file	4	4	issued {"handle":"new","jti":"new-jti","day":10}	io=[["offer",["new"]]]; state=candidate
+unopened-is-no-file	5	5	accepted {"handle":"new"}	io=[["persist",["new"]]]; state=ready
+unknown-key-current-no-request	0	0	input {}	state=loading; io=[]
+unknown-key-current-no-request	1	1	loaded {"opened":true,"handle":"old","jti":"old-jti"}	state=ready; io=[]
+unknown-key-current-no-request	2	2	unknown_key {"handle":"old"}	io=[["wait",[]]]; state=ready
+unknown-key-current-no-request	3	3	demand {"day":10}	io=[["offer",["old"]]]
+expired-receiver-replaces-after-accept	0	0	input {}	state=loading; io=[]
+expired-receiver-replaces-after-accept	1	1	loaded {"opened":true,"handle":"old","jti":"old-jti"}	state=ready; io=[]
+expired-receiver-replaces-after-accept	2	2	expired {"handle":"old"}	io=[["request",[""]]]; state=asking
+expired-receiver-replaces-after-accept	3	3	issued {"handle":"new","jti":"new-jti","day":10}	io=[["offer",["new"]]]; var.current_handle="old"
+expired-receiver-replaces-after-accept	4	4	accepted {"handle":"new"}	io=[["persist",["new"]]]; var.current_handle="new"
+expired-receiver-replaces-after-accept	5	5	accepted {"handle":"new"}	io=[]
+revoked-word-exact	0	0	input {}	state=loading; io=[]
+revoked-word-exact	1	1	loaded {"opened":true,"handle":"old","jti":"old-jti"}	state=ready; io=[]
+revoked-word-exact	2	2	revoked {"handle":"old"}	io=[["request",["old-jti"]]]; var.revoked_word="old-jti"
+revoked-word-exact	3	3	issued {"handle":"new","jti":"new-jti","day":10}	io=[["offer",["new"]]]
+revoked-word-exact	4	4	accepted {"handle":"new"}	io=[["persist",["new"]]]; var.revoked_word=""
+same-jti-until-next-day	0	0	input {}	state=loading; io=[]
+same-jti-until-next-day	1	1	loaded {"opened":true,"handle":"old","jti":"old-jti"}	state=ready; io=[]
+same-jti-until-next-day	2	2	revoked {"handle":"old"}	io=[["request",["old-jti"]]]
+same-jti-until-next-day	3	3	issued {"handle":"same","jti":"old-jti","day":10}	io=[["same_jti_log",[10]]]; state=cooldown
+same-jti-until-next-day	4	4	demand {"day":10}	io=[["wait",[]]]
+same-jti-until-next-day	5	5	demand {"day":9}	io=[["wait",[]]]
+same-jti-until-next-day	6	6	demand {"day":11}	io=[["request",["old-jti"]]]; state=asking
+unknown-key-new-no-file-no-ask	0	0	input {}	state=loading; io=[]
+unknown-key-new-no-file-no-ask	1	1	loaded {"opened":true,"handle":"old","jti":"old-jti"}	state=ready; io=[]
+unknown-key-new-no-file-no-ask	2	2	expired {"handle":"old"}	io=[["request",[""]]]
+unknown-key-new-no-file-no-ask	3	3	issued {"handle":"new","jti":"new-jti","day":10}	io=[["offer",["new"]]]
+unknown-key-new-no-file-no-ask	4	4	unknown_key {"handle":"new"}	io=[["wait",[]]]; state=candidate
+unknown-key-new-no-file-no-ask	5	5	demand {"day":10}	io=[["offer",["new"]]]
+new-expired-before-first-accept	0	0	input {}	state=loading; io=[]
+new-expired-before-first-accept	1	1	loaded {"opened":true,"handle":"old","jti":"old-jti"}	state=ready; io=[]
+new-expired-before-first-accept	2	2	expired {"handle":"old"}	io=[["request",[""]]]
+new-expired-before-first-accept	3	3	issued {"handle":"new","jti":"new-jti","day":10}	io=[["offer",["new"]]]
+new-expired-before-first-accept	4	4	expired {"handle":"new"}	io=[["request",[""]]]; state=asking; var.current_handle="old"
+new-revoked-before-first-accept	0	0	input {}	state=loading; io=[]
+new-revoked-before-first-accept	1	1	loaded {"opened":true,"handle":"old","jti":"old-jti"}	state=ready; io=[]
+new-revoked-before-first-accept	2	2	expired {"handle":"old"}	io=[["request",[""]]]
+new-revoked-before-first-accept	3	3	issued {"handle":"new","jti":"new-jti","day":10}	io=[["offer",["new"]]]
+new-revoked-before-first-accept	4	4	revoked {"handle":"new"}	io=[["request",["new-jti"]]]; state=asking; var.current_handle="old"
+stale-recipient-results-do-not-promote	0	0	input {}	state=loading; io=[]
+stale-recipient-results-do-not-promote	1	1	loaded {"opened":true,"handle":"old","jti":"old-jti"}	state=ready; io=[]
+stale-recipient-results-do-not-promote	2	2	expired {"handle":"foreign"}	io=[]; state=ready
+stale-recipient-results-do-not-promote	3	3	expired {"handle":"old"}	io=[["request",[""]]]
+stale-recipient-results-do-not-promote	4	4	issued {"handle":"new","jti":"new-jti","day":10}	io=[["offer",["new"]]]
+stale-recipient-results-do-not-promote	5	5	accepted {"handle":"old"}	io=[]; state=candidate
+stale-recipient-results-do-not-promote	6	6	revoked {"handle":"old"}	io=[]; state=candidate
+issue-failure-keeps-old-memory	0	0	input {}	state=loading; io=[]
+issue-failure-keeps-old-memory	1	1	loaded {"opened":true,"handle":"old","jti":"old-jti"}	state=ready; io=[]
+issue-failure-keeps-old-memory	2	2	expired {"handle":"old"}	io=[["request",[""]]]
+issue-failure-keeps-old-memory	3	3	issue_failed {}	state=ready; io=[]; var.current_handle="old"; var.usable=false
+issue-failure-keeps-old-memory	4	4	demand {"day":10}	io=[["request",[""]]]
+same-jti-expired-is-not-revoked-word	0	0	input {}	state=loading; io=[]
+same-jti-expired-is-not-revoked-word	1	1	loaded {"opened":true,"handle":"old","jti":"old-jti"}	state=ready; io=[]
+same-jti-expired-is-not-revoked-word	2	2	expired {"handle":"old"}	io=[["request",[""]]]
+same-jti-expired-is-not-revoked-word	3	3	issued {"handle":"same","jti":"old-jti","day":10}	io=[["offer",["same"]]]; state=candidate
