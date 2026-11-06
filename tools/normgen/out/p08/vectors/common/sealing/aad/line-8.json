@@ -5,7 +5,7 @@
  "case": "unicode_row",
  "variant": "",
  "cells": {
-  "row_key": "testsub2/tallies/камера-1",
+  "row_key": "\"testsub2/tallies/\\u043a\\u0430\\u043c\\u0435\\u0440\\u0430-1\"",
   "path": "[\"feed_secret\"]"
  },
  "files": {}

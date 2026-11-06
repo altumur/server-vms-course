@@ -1,6 +1,7 @@
 """Тесты части refusals уроков P/03, P/04 (gen_refusals.py, режим урока без двери; ADR-0125 доп. (5)): out свежий;
 судья refusal_judge.py — PASS; мутанты выхода в новых проекциях (поля и заголовки ответа импортированной двери у peer, word — названные исходы и ячейка,
 глава урока одной главой) — FAIL судьи; форма вне грамматики (fields/headers не у peer) — отказ генератора."""
+import csv
 import os
 import shutil
 import subprocess
@@ -11,7 +12,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-LESSONS = {"03-worker": "p03", "04-controller": "p04", "05-resource": "p05", "06-console": "p06"}
+LESSONS = {"03-worker": "p03", "04-controller": "p04", "05-resource": "p05", "06-console": "p06", "09-agent": "p09"}
 ENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 
 
@@ -86,6 +87,56 @@ class Refusals(unittest.TestCase):
                 p.write_text(t, encoding="utf-8")
                 done = self.gen("03-worker", self.tmp / f"out-{name}", p)
                 self.assertNotEqual(done.returncode, 0, f"{name}: accepted")
+
+    def test_p09_stored_outcome_has_no_http_body(self):
+        source = ROOT / "Platform/09-agent/forms/refusals.tsv"
+        rows = list(csv.DictReader([s for s in source.read_text(encoding="utf-8").split("\n")
+                                    if s and not s.startswith("#")], delimiter="\t"))
+        row = next(r for r in rows if r["name"] == "agent_edit_conflict")
+        self.assertEqual((row["surface"], row["code"], row["response_schema"]), ("call", "412", "-"))
+        src = (HERE / "out/p09/go/refusals/refusals.go").read_text(encoding="utf-8")
+        declaration = next(line for line in src.split("\n") if line.startswith("var AgentEditConflict = "))
+        self.assertIn('Surface: "call", Exit: -1, AnyNonZero: false, Status: 412,', declaration)
+        self.assertIn('Response: ""', declaration)
+        schema = next(r["response_schema"] for r in rows if r["response_schema"] != "-")
+        for field, value in [("fields", "error"), ("headers", "Retry-After: 1"),
+                             ("response_schema", schema), ("surface", "cli"), ("surface", "start")]:
+            with self.subTest(field=field):
+                changed = [dict(r) for r in rows]
+                next(r for r in changed if r["name"] == row["name"])[field] = value
+                path = self.tmp / f"p09-call-{field}.tsv"
+                with path.open("w", encoding="utf-8", newline="") as stream:
+                    writer = csv.DictWriter(stream, fieldnames=list(rows[0]), delimiter="\t", lineterminator="\n")
+                    writer.writeheader()
+                    writer.writerows(changed)
+                done = self.gen("09-agent", self.tmp / ("bad-p09-" + field), path)
+                self.assertNotEqual(done.returncode, 0, done.stderr)
+
+    def test_p09_call_code_boundaries(self):
+        source = ROOT / "Platform/09-agent/forms/refusals.tsv"
+        rows = list(csv.DictReader([s for s in source.read_text(encoding="utf-8").split("\n")
+                                    if s and not s.startswith("#")], delimiter="\t"))
+        row = next(r for r in rows if r["name"] == "agent_edit_conflict")
+        valid = [100, 199, 200, 299, 300, 399, 400, 499, 500, 599]
+        path, out = self.tmp / "p09-code-bounds.tsv", self.tmp / "p09-code-bounds"
+        with path.open("w", encoding="utf-8", newline="") as stream:
+            writer = csv.DictWriter(stream, fieldnames=list(rows[0]), delimiter="\t", lineterminator="\n")
+            writer.writeheader()
+            writer.writerows(dict(row, name="edge_" + str(n), code=str(n)) for n in valid)
+        done = self.gen("09-agent", out, path)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        generated = (out / "go/refusals/refusals.go").read_text(encoding="utf-8")
+        for n in valid:
+            declaration = next(line for line in generated.split("\n") if line.startswith(f"var Edge{n} = "))
+            self.assertIn(f"Status: {n},", declaration)
+        for code in ["0", "99", "600", "999", "0100", "+100", "100.0"]:
+            with self.subTest(code=code):
+                with path.open("w", encoding="utf-8", newline="") as stream:
+                    writer = csv.DictWriter(stream, fieldnames=list(rows[0]), delimiter="\t", lineterminator="\n")
+                    writer.writeheader()
+                    writer.writerow(dict(row, code=code))
+                done = self.gen("09-agent", out, path)
+                self.assertNotEqual(done.returncode, 0, done.stderr)
 
 
 if __name__ == "__main__":

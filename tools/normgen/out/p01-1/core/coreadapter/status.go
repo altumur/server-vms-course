@@ -30,7 +30,7 @@ import "normgen/p01-1/apidoor"
 //	  req: P/01.3-R017 — The order of checks: the frame (framing, the body limit 1 MiB — 413) → route and method (404,
 //	    405) → identity (403) → body and membership (400, 409)
 //	the refusals — forms/refusals.tsv:
-//	  1.3 row 4 service_method — 405 badrequest (P/01.3 Н2); with part refusals: refusals.ServiceMethod
+//	  1.3 row 4 service_method — 405 badrequest (P/01.3 N2); with part refusals: refusals.ServiceMethod
 func (s *Store) Status(c Ctx) apidoor.Answer {
 	return notInStage(apidoor.OpStatus)
 }

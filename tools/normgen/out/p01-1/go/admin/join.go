@@ -20,14 +20,14 @@ import "normgen/p01-1/flags"
 //	  req: P/01.3-R016 — POST `/v1/join`: `{id, raft, api, force?}`, success 200 `{}`; 409 `{kind: refused, error}` — an
 //	    inadmissible membership; 403 — `ForbiddenFault` of chapter 1.1: it is called only by `admin.sock` and a daemon of
 //	    the group over mTLS of the role `configstore` (N1.3 `identity`); a role socket (`console.sock` and others) — 403
-//	    before parsing the membership (reconciliation of python and go М10/6–11, B1); empty `raft`, `api` — 400 before
+//	    before parsing the membership (reconciliation of python and go M10/6–11, B1); empty `raft`, `api` — 400 before
 //	    the membership (B4)
 //	the flags — forms/daemon-flags.tsv (commands ∋ join; f.<Field> of package flags):
 //	  -sockets dir
 //	  -force bool
 //	the refusals — forms/refusals.tsv:
-//	  1.3 row 10 join_parity — 409 refused (P/01.3 Н1.3 join); with part refusals: refusals.JoinParity
-//	  1.3 row 11 join_left — 403 forbidden (P/01.3 Н1.3 leave); with part refusals: refusals.JoinLeft
+//	  1.3 row 10 join_parity — 409 refused (P/01.3 N1.3 join); with part refusals: refusals.JoinParity
+//	  1.3 row 11 join_left — 403 forbidden (P/01.3 N1.3 leave); with part refusals: refusals.JoinLeft
 func Join(f *flags.Flags, env Env) int {
 	return NotInStage("join", env)
 }

@@ -15,7 +15,7 @@ import "normgen/p01-1/flags"
 //	  admin_ops: recover — locally on a stopped daemon (there is no leader, no majority — N3 «recover»), not through a
 //	    socket
 //	  box: recover — a refusal, code 2 («this build has no raft»): a box has no group, there is nothing to recover it
-//	    with, a copy — import (reconciliation of python and go М10/6–11, B15)
+//	    with, a copy — import (reconciliation of python and go M10/6–11, B15)
 //	spec/01.3-store.norms.md «Н2 Doors» (the CLI):
 //	  req: P/01.3-R018 — `recover` is a local procedure of a stopped daemon, not HTTP: the required `-isolated` and the
 //	    optional `-upper N` (N1.3 «Daemon flags», N3 step 0).
@@ -63,12 +63,12 @@ import "normgen/p01-1/flags"
 //	  -upper int:0..9007199254740991
 //	  -peers list:id@addr/addr, required: true
 //	the refusals — forms/refusals.tsv:
-//	  1.3 row 15 recover_box — exit 2 - (P/01.3 Н1.3 box; B15); with part refusals: refusals.RecoverBox
-//	  1.3 row 26 recover_isolated — exit !0 - (P/01.3 Н3 step 0; S02); with part refusals: refusals.RecoverIsolated
-//	  1.3 row 27 recover_upper — exit !0 - (P/01.3 Н3 step 0; S02); with part refusals: refusals.RecoverUpper
-//	  1.3 row 28 recover_peers — exit !0 - (P/01.3 Н3 recover); with part refusals: refusals.RecoverPeers
-//	  1.3 row 25 recovery_unsafe — exit !0 - (P/01.3 Н3); with part refusals: refusals.RecoveryUnsafe
-//	  1.3 row 24 clock_early — exit !0 - (P/01.3 Н3); with part refusals: refusals.ClockEarly
+//	  1.3 row 15 recover_box — exit 2 - (P/01.3 N1.3 box; B15); with part refusals: refusals.RecoverBox
+//	  1.3 row 26 recover_isolated — exit !0 - (P/01.3 N3 step 0; S02); with part refusals: refusals.RecoverIsolated
+//	  1.3 row 27 recover_upper — exit !0 - (P/01.3 N3 step 0; S02); with part refusals: refusals.RecoverUpper
+//	  1.3 row 28 recover_peers — exit !0 - (P/01.3 N3 recover); with part refusals: refusals.RecoverPeers
+//	  1.3 row 25 recovery_unsafe — exit !0 - (P/01.3 N3); with part refusals: refusals.RecoveryUnsafe
+//	  1.3 row 24 clock_early — exit !0 - (P/01.3 N3); with part refusals: refusals.ClockEarly
 func Recover(f *flags.Flags, env Env) int {
 	return NotInStage("recover", env)
 }

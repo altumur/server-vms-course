@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/domain-token cases.tsv (gen_vectors.py); compare subset.
-# source Platform/common/vectors/domain-token/cases.tsv sha256 be897e200df1725516487d072455ee4383cc7e2459ee9cd1aa7a49226c001809
+# source Platform/common/vectors/domain-token/cases.tsv sha256 bebb49842309d5dff284cfa9df0efff2d10bef59ae689d91c848d4d4f804ca05
 case	input	exit	stdout
 line-10	line-10.json	0	{"result":"ok","payload":{"sub":"alice","jti":"0123456789abcdef"}}
 line-11	line-11.json	0	{"result":"ok","payload":{"sub":"alice","jti":"0123456789abcdef"}}

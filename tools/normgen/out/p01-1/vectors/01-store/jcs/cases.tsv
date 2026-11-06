@@ -1,6 +1,6 @@
 # Inputs of the vector command for 01-store/jcs canonical_json.tsv (tools/normgen/gen_tests.py, ADR-0125 № 6).
 # Native outcome: code 0, {canonical, sha256} by value; stdout is compared as one JSON value by value (tools/normgen/vector_judge.py).
-# source Platform/01-store/vectors/jcs/canonical_json.tsv sha256 4ca93a4f7645b70a0f38a25b4305a5f24f6f7c04e42b8d00488539abd519a9dc
+# source Platform/01-store/vectors/jcs/canonical_json.tsv sha256 17bc96b81af30ab5a74e7f4b00032e2815da23c9b8f14f1133de70166681dd0a
 case	input	exit	stdout
 line-10	line-10.json	0	{"canonical":"{\"a\":1,\"b\":2}","sha256":"43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777"}
 line-11	line-11.json	0	{"canonical":"{\"label\":\"A&B <gate>\"}","sha256":"9bf7df596389c91cbd93e84379fb58b08fa8305b21e2acc71a65fc300a51c557"}

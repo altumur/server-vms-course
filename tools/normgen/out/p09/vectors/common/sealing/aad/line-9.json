@@ -5,7 +5,7 @@
  "case": "platform_row",
  "variant": "",
  "cells": {
-  "row_key": "platform/config/doors",
+  "row_key": "\"platform/config/doors\"",
   "path": "[\"doors\", \"console\", \"tls_key_secret\"]"
  },
  "files": {}

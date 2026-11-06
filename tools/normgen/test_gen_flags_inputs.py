@@ -23,7 +23,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-LESSONS = {"03-worker": "p03", "04-controller": "p04", "05-resource": "p05", "06-console": "p06"}
+LESSONS = {"03-worker": "p03", "04-controller": "p04", "05-resource": "p05", "06-console": "p06", "09-agent": "p09"}
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 NUMBER = re.compile(r"-?(0|[1-9][0-9]*)(\.[0-9]+)?")
 VALUES = ["", "a", "srv-a", "Bad_Name", "srv--a", "900", "1.5", "-3", "1e3", "0x10", "/data/x", "file:///x",
@@ -180,6 +180,18 @@ def probes(form, rnd, n):
     names = [r["flag"][1:] for r in form.rows if r["flag"].startswith("$")]
     flags = [r["flag"] for r in form.rows if r["flag"].startswith("--")]
     out = []
+    if {"RELAY_URL", "RELAY_MEMBER"} <= set(names):
+        # The P/09 conditional peer name needs an HTTPS road. Generic random
+        # strings cannot exercise that predicate or its comma-list boundary.
+        cmd = next(r["commands"][0] for r in form.rows if r["flag"] == "$RELAY_MEMBER")
+        env = {r["flag"][1:]: ("1" if r["type"] == "number" else "/data" if r["type"] in ("dir", "file") else "a")
+               for r in form.rows if r["flag"].startswith("$") and r["required"] == "true" and cmd in r["commands"]}
+        for url in ("http://relay-a", "https://relay-a", "http://relay-a,https://relay-b"):
+            for member in (None, "", "relay-member"):
+                supplied = dict(env, RELAY_URL=url)
+                if member is not None:
+                    supplied["RELAY_MEMBER"] = member
+                out.append((cmd, [], supplied))
     for _ in range(n):
         cmd = rnd.choice(form.procs + (["nosuch"] if rnd.random() < 0.03 else []))
         args = [rnd.choice(VALUES) for _ in range(rnd.choice([0, 0, 1, 1, 2]))]

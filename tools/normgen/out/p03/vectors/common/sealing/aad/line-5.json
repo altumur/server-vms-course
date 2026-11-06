@@ -5,7 +5,7 @@
  "case": "nested",
  "variant": "",
  "cells": {
-  "row_key": "testsub2/tallies/t1",
+  "row_key": "\"testsub2/tallies/t1\"",
   "path": "[\"settings\", \"a/b\", 0, \"password_secret\"]"
  },
  "files": {}

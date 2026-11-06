@@ -5,7 +5,7 @@
  "case": "06-0574",
  "variant": "",
  "cells": {
-  "family": "<sub>/asked/<sha16(имя)>",
+  "family": "<sub>/asked/<sha16(name)>",
   "key": "testsub/asked/0123456789abcdef",
   "kind": "row",
   "mode": "reader",

@@ -23,7 +23,7 @@ import "normgen/p01-1/flags"
 //	  -sockets dir
 //	  -groups bool
 //	the refusals — forms/refusals.tsv:
-//	  1.2 row 10 rights_not_loaded — 404 badrequest (P/01.2 Н2); with part refusals: refusals.RightsNotLoaded
+//	  1.2 row 10 rights_not_loaded — 404 badrequest (P/01.2 N2); with part refusals: refusals.RightsNotLoaded
 func Rights(f *flags.Flags, env Env) int {
 	return NotInStage("rights", env)
 }

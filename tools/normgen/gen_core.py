@@ -464,9 +464,15 @@ def kit_files(module, out=DEFAULT_OUT):
 
 def provenance():
     """Паспорт части (ADR-0125 доп. (1) п. 6 (а)): формы, генератор, ручная среда (нет), судья."""
+    import tsv_input
+
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": sha(path)}
-    return {"form": [entry(p) for p in (NORMS, OPENAPI, NORMS_12, NORMS_13, REFUSALS, ACCEPT_2)], "generator": entry(Path(__file__).resolve()),
+    sources = [NORMS, OPENAPI, NORMS_12, NORMS_13, REFUSALS, ACCEPT_2]
+    sources = list(dict.fromkeys(p for src in sources for p in
+                                (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src])))
+    return {"form": [entry(p) for p in sources], "generator": entry(Path(__file__).resolve()),
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
             "handwritten": [], "judge": entry(JUDGE)}
 
 

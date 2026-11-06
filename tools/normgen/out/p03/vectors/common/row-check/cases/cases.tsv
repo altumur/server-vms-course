@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/row-check cases.tsv (gen_vectors.py); compare row.
-# source Platform/common/vectors/row-check/cases.tsv sha256 eed228011cf1cf678f96a80f99ccd7dd819a442642611315eb358cdc7d40ac13
+# source Platform/common/vectors/row-check/cases.tsv sha256 919e53b900a489f394e601c12aef11ef10a4d3d22c1331260466fe39c06dc5fb
 case	input	exit	stdout
 line-3	line-3.json	0	{"result":"ok","row":{"mode":"plain","step":"1","weight":"1","active":"true","tags":"","mask":"","until":"0","rule":"@absent","keep_days":"@absent","flags":"@absent"}}
 line-4	line-4.json	0	{"result":"refused","word":"platform_field","field":"born"}

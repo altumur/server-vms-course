@@ -1553,19 +1553,25 @@ def kit_files(module, out=DEFAULT_OUT):
 
 def provenance():
     import hashlib
+    import tsv_input
 
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()}
     forms = [L.form("stages.tsv"), L.form("README.md")]
     forms += sorted((L.path("acceptance")).glob("*/seams.tsv")) + sorted((L.path("acceptance")).glob("*/verdicts.tsv"))
     forms += [L.path("acceptance/seams.tsv")]           # урок одной главой (P/04): швы без подкаталога
+    for table in sorted(L.path("acceptance").glob("*/verdicts.tsv")):
+        forms += [table.parent / "classes.tsv"] + sorted((table.parent / "cases").glob("*.subsystem.yaml"))
     handwritten = []
     if L.key == "03-worker":
         import gen_policy_machines as policies
         forms += policies.sources() + [ROOT / "Platform/common/versions/go.mod", ROOT / "Platform/common/versions/go.sum"]
         handwritten = [policies.HERE / "gen_policy_machines.py", policies.HERE / "test_gen_policy_machines.py",
                        policies.HERE / "policyrt/traces_test.go.txt", *sorted(policies.RUNTIME.glob("*.go"))]
-    return {"form": [entry(f) for f in forms if Path(f).is_file()], "generator": entry(Path(__file__).resolve()),
+    forms = list(dict.fromkeys(p for src in forms if Path(src).is_file() for p in
+                              (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src])))
+    return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()),
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
             "handwritten": [entry(p) for p in handwritten], "judge": entry(JUDGE)}
 
 

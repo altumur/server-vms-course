@@ -304,8 +304,8 @@ class PlainTable:
             elif code == "exit !0":
                 r["any"] = True
             elif re.fullmatch(r"[1-5][0-9]{2}", code):
-                if r["surface"] not in body_at:
-                    raise GenError(f"{where}: an HTTP status only at the surface {'/'.join(body_at)}")
+                if r["surface"] not in body_at + ("call",):
+                    raise GenError(f"{where}: a numeric outcome code only at the surface {'/'.join(body_at)}/call")
                 r["status"] = int(code)
             else:
                 raise GenError(f"{where}: code {code!r} — exit N, exit !0, NNN (peer) or -")
@@ -350,7 +350,7 @@ type Spec struct {
 	Surface string   // call (a pure procedure), cli (an operator command), start, process (a running process), peer
 	Exit    int      // cli, start, process: the exit code fixed by the form; -1 — none fixed (see AnyNonZero)
 	AnyNonZero bool  // «exit !0»: any nonzero exit code (2 included) — the code is yours, never 0
-	Status  int      // peer: the HTTP status of the peer's door (its owner is another lesson); 0 — none
+	Status  int      // peer/http: the door status; call: a stored outcome code fixed by the form; 0 — none
 	Word    string   // a fixed refusal/diagnostic token; "" — none
 	Log     []string // the subjects the diagnostic must name; it fixes no stdout/stderr format
 	Words   []string // the fixed fragments «…» the diagnostic must carry
@@ -478,9 +478,15 @@ def kit_files(out=DEFAULT_OUT):
 
 def provenance():
     """Паспорт части (ADR-0125 доп. (1) п. 6 (а)): форма, генератор, судья — пути и sha256."""
+    import tsv_input
+
     def entry(path):
         return {"path": str(path.relative_to(ROOT)), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
-    return {"form": entry(DEFAULT_TABLE), "generator": entry(Path(__file__).resolve()), "judge": entry(JUDGE)}
+    paths = tsv_input.source_files(DEFAULT_TABLE, root=ROOT)
+    if tsv_input.read(DEFAULT_TABLE, root=ROOT).columns == tuple(RESPONSE_COLUMNS):
+        paths.append(L.openapi)
+    return {"form": [entry(p) for p in dict.fromkeys(paths)], "generator": entry(Path(__file__).resolve()),
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))], "judge": entry(JUDGE)}
 
 
 KIT_MD = """
