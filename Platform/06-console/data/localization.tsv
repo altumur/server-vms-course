@@ -1,0 +1,520 @@
+key	en	ru
+unsaved	Unsaved changes of the selected object	Несохранённые изменения выбранного объекта
+discarded	Cancelled	Отменено
+newRoot	group	группа
+newSub	subgroup	подгруппа
+newGroupTop	A new group	Новая группа
+newGroupIn	A new group inside «{p}»	Новая группа внутри «{p}»
+groupNameEmpty	Give the group a name	Укажите имя группы
+groupExists	There is such a group already	Такая группа уже есть
+newGroupNoteT	The group is made — put a {u} in it, or it will not be kept	Группа создана — добавьте в неё: {u}, иначе она не сохранится
+addHereT	Add a {u} here	Добавить сюда: {u}
+noRows	No rows	Нет строк
+deleted	Deleted	Удалено
+slotTitle	Slot	Слот
+slotReleased	released	отпущен
+slotHung	hung	завис
+slotUnknown	alive or not — unknown	жив ли — неизвестно
+leaseTill	Lease until	Аренда до
+leaseGarbled	the term cannot be read	срок нечитаем
+volumesW	Places held	Держит места
+conflictHead	Name conflict: the name is held by {h}	Конфликт имени: имя держит {h}
+onMachine	on the machine	на машине
+slotNameless	waits for its name (nameless)	ждёт своё имя (без имени)
+slotRefused	refused: the name is taken	отказал: имя занято
+alreadyW	for	уже
+nameAdvice2	Such a process takes no new number: two processes under one name would write the same. Stop the extra process or give it another name.	Нового номера такой процесс не берёт: два процесса под одним именем писали бы одно и то же. Остановите лишний процесс или дайте ему другое имя.
+hungNote	The worker hung{s}: the server's resource says the process is alive, and there is no pulse. Its units are not moved, so that they never have two writers, until the limit (15 min by default).	Воркер завис{s}: ресурс сервера говорит, что процесс жив, а пульса нет. Единицы с него не переносятся, чтобы у них не оказалось двух писателей, — пока не выйдет предел (по умолчанию 15 мин).
+unknownNote	Whether the worker is alive is unknown{s}: no pulse, and the server's resource cannot say whether its process runs ({p}). Its units are not moved, so that they never have two writers, until the limit (15 min by default).	Жив ли воркер — неизвестно{s}: пульса нет, а ресурс сервера не может сказать, работает ли его процесс ({p}). Единицы с него не переносятся, чтобы у них не оказалось двух писателей, — пока не выйдет предел (по умолчанию 15 мин).
+garbledNote	The slot's lease term cannot be read.	У слота нечитаемый срок аренды.
+releasedNote	The slot is released by the controller: it gets no units, the name is free for a new process.	Слот отпущен контроллером: единиц он не получит, имя свободно для нового процесса.
+workersOutNote	Workers are retired by the controller. If the server will never come back, decommission it in the server's card.	Воркеры выводит контроллер. Если сервер не вернётся никогда, спишите его в карточке сервера.
+sinceW	since	с
+groupContents	Contents	Состав группы
+inNoGroupSuffix	in no group	без группы
+groupEmpty	Empty	Пусто
+pathW	Path	Путь
+insideW	inside	внутри
+pickTitle	Pick an object in the tree	Выберите объект в дереве
+serversInCluster	servers in the cluster	серверов в кластере
+serversN	Servers	Серверов
+resOnlineN	Resources online	Ресурсов на связи
+unitsOnServer	Units on a server	Юниты на сервере
+schemaVer	Store layout version	Версия раскладки хранилища
+buildsW	builds	сборки
+silentProcs	Silent: {p} — too early to raise the layout version.	Молчат: {p} — поднимать версию раскладки рано.
+drainingNow	Being drained	Выводится из эксплуатации
+canStop	may be stopped	можно останавливать
+notAllMoved	not everything has moved yet	ещё не всё уехало
+whyLabels	none of the {n} live workers covers the labels: {l}	ни один из {n} живых воркеров не покрывает метки: {l}
+whyLive	live workers it could go to: {n}	живых воркеров, куда это можно поставить: {n}
+notPlacing	Not placed	Не размещается
+noWorkerSuffix	without a worker	без воркера
+allPlaced	Everything is placed	Всё размещено
+serversNets	Servers' networks	Сети серверов
+noServers	No servers	Серверов нет
+unplacedNote	The controller places a unit at its next pass. If it stays here, see whether there is a live worker whose labels cover the unit's, and whether its server's resource answers.	Контроллер разместит единицу на следующем проходе. Если она висит здесь — смотрите, есть ли живой воркер, чьи метки покрывают её метки, и отвечает ли ресурс его сервера.
+srcConsole	set in the console	заданы в консоли
+srcUnknown	the row cannot be read	строка не читается
+srcNode	from the node's settings	из настройки узла
+unknownW	unknown	неизвестно
+centreTip	Centre: the top; units nobody records poll its receiver	Центр: верхний уровень; единицы, которые никто не пишет, опрашивают его приёмник
+starTip	Star relay: it cannot be dialled; it takes its members' data from the centre	Ретранслятор-звезда: до него не дозвониться, свои потоки он забирает из центра
+viaTip	Goes to the domain only through this relay	К домену ходит только через этот ретранслятор
+domSilentNote	The domain is silent: its view was updated {a} ago. Below is the last it saw — not «nothing there».	Домен молчит: его вид обновлялся {a} назад. Ниже — последнее, что он видел; это не «ничего нет».
+longAgo	long	давно
+listIncomplete	The list is incomplete: {m} have not published for long. What they carry is shown by their last publication.	Список неполный: {m} давно не публиковал(и). Их единицы показаны по последней публикации.
+holderIs	The domain's holder is	Держатель домена —
+viewAge	the view was updated	вид обновлён
+ago	ago	назад
+knockTimes	tried to publish {n} time(s), the last at {t}	пытался публиковаться {n} раз(а), последний раз {t}
+knockNote	The domain reads only its members. These clusters published through its agent but are not on the list: the domain does not read them until they are admitted.	Домен читает только своих членов. Эти кластеры его агентом публиковались, но в списке их нет: домен их не читает, пока их не примут.
+alarmsDay	for a day, newest first	за сутки, новые сверху
+holderHere	the domain's holder (this console)	держатель домена (эта консоль)
+domainPage	The domain's page	Страница домена
+domainPageNote	Edits of other clusters' units and decisions on which cluster carries what are the domain's:	Правки единиц других кластеров и решения «какой кластер что несёт» принимает домен:
+accessTab	Access	Доступ
+keysAsking	Asking the console what the domain keeps in the store.	Спрашиваем консоль, что домен держит в хранилище.
+keysFailed	Did not work	Не получилось
+bW	B	Б
+kbW	KB	КБ
+kVar	variable	переменная
+kFields	fields	поля
+kWithheld	kept back	не показана
+kIndex	index	индекс
+kEmpty	The row is empty.	Строка пуста.
+kObj	object	объект
+kKeys	keys	ключ(ей)
+kNone	no record	строки нет
+kNowEmpty	Empty now	Сейчас пусто
+keysIntro	Everything the domain keeps in its holder's store under domain/: variables — its decisions and books; objects — its view and what members sent. Read only.	Всё, что домен держит в хранилище держателя домена под domain/: переменные — его решения и книги, объекты — его вид и то, что прислали члены. Только чтение.
+kfMembers	Members of the domain	Члены домена
+kfMembersAbout	The domain's member list: who is admitted, how and since when.	Список членов домена: кто принят, как и с какого времени.
+kfMembersAbsent	No record: the domain keeps the list from its configuration. It appears at the first edit of the list — when a cluster is admitted or taken out.	Строки нет: домен держит список из своей конфигурации. Она появится при первой правке списка — когда кластер примут в домен или выведут из него.
+kfPublished	Members' publications	Публикации членов
+kfPublishedAbout	What each cluster's agent sent the domain itself: snapshots, heartbeats, the networks it sees. The domain does not call clusters — they publish.	Что агент каждого кластера сам прислал домену: снимки, сердцебиения, сети, которые кластер видит. Домен кластерам не звонит — они публикуются сами.
+kfReaches	The holder's networks	Сети держателя домена
+kfReachesAbout	The networks the domain's holder itself sees.	Сети, которые видит сам держатель домена.
+kfTopologyAbout	The centre and the relay each cluster goes to the domain through. Edited on the «Overview» tab.	Центр и через какой ретранслятор каждый кластер ходит к домену. Правится на закладке «Обзор».
+kfPending	Edits waiting	Правки в ожидании
+kfPendingAbout	Edits waiting for their cluster: the domain does not call it — the cluster's agent takes them itself.	Правки, которые ждут свой кластер: домен кластеру не звонит — агент кластера забирает их сам.
+kfOutcomes	Outcomes of edits	Итоги правок
+kfOutcomesAbout	How edits ended: each cluster's last answers.	Чем кончились правки: последние ответы каждого кластера.
+kfView	The domain's view	Вид домена
+kfViewAbout	The document the domain makes for people each pass: members, whether the list is complete, what they carry.	Документ, который домен составляет каждый проход для людей: члены, полнота списка, что они несут.
+kfOther	Other keys	Прочие ключи
+kfOtherAbout	Keys this page has no title for — as they lie in the store.	Ключи, для которых у этой страницы нет подписи, — как они лежат в хранилище.
+noReaches	has not said	сети не сообщал
+noOthers	No other clusters in the domain.	Других кластеров в домене нет.
+writeW	Write	Сохранить
+clusterW	Cluster	Кластер
+toDomain	To the domain	К домену
+seesNets	Sees networks	Видит сети
+relayFor	Relay for	Ретранслятор для
+behindBy	behind by	отстают на
+aheadBy	ahead by	спешат на
+memberNote	Every connection is opened by the cluster: it publishes its own and takes books and edits. The domain does not dial it.	Все соединения открывает кластер: публикует своё, забирает книги и правки. Домен его не набирает.
+inDomain	In the domain	В домене
+byConfigShort	In the domain by its configuration	В домене по конфигурации
+memberSub	A cluster of its own, in the domain	Отдельный кластер, в домене
+domPlaced	The domain is held by	Домен размещён:
+termW	term	срок
+backupKept	This cluster keeps a backup copy of the domain: rev {r} of term {t}.	Этот кластер хранит резервную копию домена: rev {r} срока {t}.
+noBackupKept	This cluster keeps no backup copy of the domain.	Резервной копии домена этот кластер не хранит.
+overview	Overview	Обзор
+serverCap	Server	Сервер
+resourceIs	Resource	Ресурс
+drainingBd	being drained	выводится из эксплуатации
+workersN	Workers	Воркеров
+diskFree	Disk free	Диск свободно
+diskTotal	Disk total	Диск всего
+buildW	Build	Сборка
+eventsOnDisk	Events on disk	События на диске
+gbW	GB	ГБ
+idle	idle by policy	простаивает по политике
+workerSilent	The worker does not answer	Воркер не отвечает
+loadW	Load	Нагрузка
+capW	Capacity	Ёмкость
+freeW	Free	Свободно
+labelsW	Labels	Метки
+labelsUnread	labels not read	метки не прочитаны
+idleNote	Idle by the policy servers: {p}: units are carried by one worker per server.	Простаивает по политике servers: {p}: единицы несёт один воркер на сервер.
+holdsW	Holds	Держит
+carriesNone	Carries nothing	Ничего не держит
+drainTitle	Drain	Вывод из эксплуатации
+decomTitle	Decommission	Списание сервера
+labelsTitle	Server's networks (labels)	Сети сервера (метки)
+stOff	Switched off	Выключена
+stUnplaced	Not placed	Не размещена
+stStale	Worker silent	Воркер молчит
+stFailed	Failed	Ошибка
+stRunning	Running	Работает
+stStarting	Starting	Запускается
+workerServer	Worker · server	Воркер · сервер
+state	State	Состояние
+whyAsking	Why here — asking the controller…	Почему здесь — спрашиваем у контроллера…
+notPlacedYet	Not placed anywhere yet.	Пока никуда не размещена.
+placement	Placement	Размещение
+noReason	Placement: the controller's decision is not recorded.	Размещение: контроллер не назвал причину.
+inNoGroup	In no group — it goes to «{g}».	Не в группе — попадёт в «{g}».
+noOtherGroups	no other groups	других групп нет
+newGroup	New group	Новая группа
+removeShort	Remove	Убрать
+workersCap	Workers	Воркеры
+theme	Theme	Тема
+dark	Dark	Тёмная
+light	Light	Светлая
+refreshNow	Refresh now	Обновить сейчас
+hint	Only the selected object is saved	Сохраняется только выбранный объект
+discard	Cancel	Отменить
+hwSection	Units	Объекты
+byGroups	By groups	По группам
+byGroupsHint	Groups from the list field → units	Группы из поля-списка → единицы
+byServers	By servers	По серверам
+byServersHint	Servers → workers and what they carry	Серверы → воркеры и то, что они несут
+filterPh	Filter by name…	Фильтр по имени…
+byName	By name…	По имени…
+noLink	no link	нет связи
+resOnline	{a} of {b} resources online	{a} из {b} ресурсов на связи
+subsystemW	subsystem	подсистема
+loginAt	Sign in at the domain's holder: 	Вход у держателя домена: 
+noHolder	This cluster knows no domain holder: only break-glass sign-in.	Держатель домена этому кластеру не известен: войти можно только аварийно.
+needLogin	sign in	нужно войти
+glassIntro	Break-glass sign-in — when the domain is unreachable. Every attempt and every action is an alarm in the journal.	Аварийный вход — когда домен недоступен. Каждая попытка и каждое действие — тревога в журнале.
+glassGo	Break-glass sign-in	Аварийный вход
+loginBtn	Sign in	Войти
+noConsole	No link with the console	Нет связи с консолью
+actions	Actions	Действия
+openIt	Open	Открыть
+loadCap	Load / capacity	Нагрузка / ёмкость
+srvShort	srv.	серв.
+goneW	gone	удалён
+units	units	единицы
+unit	unit	единица
+servers	servers	серверы
+journal	journal	журнал
+pick	Pick one	Выберите объект
+add	Add	Добавить
+save	Save	Сохранить
+enable	Enable	Включить
+disable	Disable	Выключить
+del	Delete	Удалить
+events	Events	События
+mark	Mark	Отметить
+markPh	what you saw	что вы увидели
+unplaced	unplaced	не размещена
+stale	last known state	последнее известное состояние
+workers	workers	воркеры
+noWorkers	no workers	воркеров нет
+notPlaceable	not placeable	размещать нельзя
+resource	resource	ресурс
+login	Sign in	Вход
+user	User	Пользователь
+password	Password	Пароль
+refused	refused	Отказано
+saved	Saved	Сохранено
+rowMoved	The row has changed since this form was drawn; nothing was written.	Строка изменилась, пока была открыта форма; правка не сохранена.
+reread	Read again	Перечитать
+every	every subsystem	все подсистемы
+deleteQ	Delete	Удалить
+setKeeps	set — empty keeps it	задан — пусто оставляет прежний
+notSet	not set	не задан
+noEvents	no events	событий нет
+policy	servers	серверы
+loading	…	…
+where	why here	почему здесь
+none	—	—
+worker	worker	воркер
+server	server	сервер
+labels	Labels: the networks the server is plugged into	Метки: сети, в которые включён сервер
+labelsConsole	set in the console — placement reads these	заданы в консоли — размещение читает их
+labelsNode	from the node's settings (LABELS / meta.labels): not set in the console	из настройки узла (LABELS / meta.labels): в консоли не задавались
+labelsUnknown	the server's labels row cannot be read: which labels hold is unknown; nothing is moved by labels meanwhile	строку меток сервера не прочитать: какие метки действуют, неизвестно; по меткам пока ничего не переносится
+nodeSays	the node says	узел говорит
+noLabels	none — the server reaches no network	нет — сервер не видит ни одной сети
+backToNode	Back to the node's labels	Вернуть метки узла
+labelsMove	units that need a label it loses move to a server that has it, a few a pass, or are left unplaced	единицы, которым нужна снятая метка, переедут на сервер с ней — по нескольку за проход — или станут неразмещёнными
+labelsLose	units on it it will no longer reach	единицы на нём, которых он больше не увидит
+labelsMoveUnknown	what would move could not be asked	что переедет, узнать не удалось
+movesN	moving {n}	переезжают {n}
+unitsLeft	units left	осталось единиц
+pendingWrites	unsaved writes	не сохранено
+pendingUnsaid	did not say how many writes they hold unsaved	не сказали, сколько у них несохранённого
+drainUnsafe	the drain is not safe	слив не безопасен
+drain	Drain	Вывести из эксплуатации
+drainOn	Being drained	Выводится
+drained	Drained: everything it carried is elsewhere — the machine may be stopped	Сервер выведен: всё, что он нёс, уже в другом месте — машину можно останавливать
+draining	Draining: some of it is still here	Сервер выводится: часть ещё на нём
+drainHelp	for a server that comes back (maintenance, upgrade): its units leave and it waits; a server that will not come back is decommissioned (below)	для сервера, который вернётся (обслуживание, обновление): единицы уходят, сервер ждёт возврата; сервер, который не вернётся, списывают (ниже)
+undrain	Back in service	Вернуть в работу
+otherDraining	another server is being drained	сейчас выводится другой сервер
+decom	Decommission	Списать сервер
+decomForever	for good: the server is out of placement, its slots are released, its units move, what it held is lost with it	навсегда: сервер исключается из размещения, его слоты отпускаются, единицы переезжают, то, что он держал, утрачено вместе с ним
+decomAsked	decommission requested	списание запрошено
+decomDone	decommissioned	списан
+decomBack	Give the server back	Вернуть сервер
+decomNo	cannot be decommissioned	списать нельзя
+decomAnswers	the server answers again — the decommission is not carried out	сервер снова отвечает — списание не исполняется
+gone	The server is physically gone (burnt, removed) — I confirm	Сервера физически больше нет (сгорел, вывезен) — подтверждаю
+goneNote	if the server is in fact alive behind a broken network, it sees the decommission and stops; it can be given back by withdrawing the decommission	если сервер на самом деле жив за обрывом сети, он увидит списание и остановится; вернуть его можно отменой списания
+doorQuiet	its door does not answer: whether it is alive is unknown	его дверь не отвечает: жив ли он, неизвестно
+goneMark	confirmed gone	подтверждено: сервера нет
+search	search	поиск
+allStates	all states	все состояния
+running	running	работают
+problems	with problems	с проблемами
+unplacedF	unplaced	не размещены
+favs	favourites	избранное
+star	Add to favourites	В избранное
+unstar	Remove from favourites	Убрать из избранного
+nothingFound	nothing found	ничего не найдено
+full	Full screen (Esc to leave)	На весь экран (Esc — назад)
+rail	Hide or show the sections	Скрыть или показать разделы
+general	General	Общее
+addItem	add	добавить
+remove	remove	убрать
+newUnit	New	Новая
+create	Create	Создать
+created	Created	Создано
+retry	Retry	Повторить
+group	group	группа
+noGroup	without a group	без группы
+renameGroup	Rename	Переименовать
+newName	New name	Новое имя
+addToGroup	Add to this group	Добавить в эту группу
+unitsIn	in it	в ней
+removeFrom	remove from the group	убрать из группы
+renamed	Renamed	Переименовано
+notAll	not done for	не сделано для
+pickUnit	Which	Что
+groupHelp	a group is a value of a list field: it exists while one unit carries it	группа — значение поля-списка: она есть, пока его несёт хоть одна единица
+retrying	Sending it again…	Отправляю ещё раз…
+done	Done	Выполнено
+sharedGroup	From the domain's shared settings (rev {r}): it is there with no unit in it	Из общих настроек домена (rev {r}): есть и без единиц
+logout	Sign out	Выйти
+glass	Break-glass password	Аварийный пароль
+glassWho	Who	Кто входит
+glassWhy	Why	Зачем
+glassPass	Break-glass password	Пароль аварийного входа
+glassOn	Break-glass session for 15 minutes: every action goes into the journal as an alarm	Аварийный вход на 15 минут: каждое действие попадает в журнал как тревога
+normal	Normal sign-in	Обычный вход
+open	open console	консоль открыта
+secretSet	set — an empty field keeps it; to change it, enter a new one	задан — пустое поле оставляет его; чтобы сменить, впишите новый
+secretUnset	not set	не задан
+decomLost	lost with the server	утрачено вместе с сервером
+decomPass	the controllers release its slots and move its units on their next pass	контроллеры отпустят слоты сервера и перенесут единицы на ближайшем проходе
+slot	Slot	Слот
+released	released	отпущен
+hung	hung	завис
+presence	alive or not — unknown	жив ли — неизвестно
+leaseUntil	lease until	аренда до
+holds	holds	держит
+garbled	the slot's lease cannot be read	у слота нечитаемый срок аренды
+hungSays	the server's resource says the process runs, and there is no heartbeat: its units are not moved, so they never get two writers, until the bound runs out (15 min by default)	ресурс сервера говорит, что процесс жив, а пульса нет: единицы не переносятся, чтобы у них не оказалось двух писателей, — пока не выйдет предел (по умолчанию 15 мин)
+presenceSays	no heartbeat, and the server's resource cannot say whether the process runs	пульса нет, а ресурс сервера не может сказать, работает ли процесс
+releasedSays	released by the controller: it gets no units; the name is free for a new process	отпущен контроллером: единиц не получит, имя свободно для нового процесса
+workersOut	workers are taken out by the controller; a server that will not come back is decommissioned on its card	воркеры выводит контроллер; сервер, который не вернётся, списывают в его карточке
+nameConflict	name conflict: held by	конфликт имени: имя держит
+nameless	waits for its name	ждёт своё имя
+refusedName	refused: the name is taken	отказал: имя занято
+nameAdvice	such a process takes no other number: stop the extra one or give it another name	нового номера такой процесс не берёт: остановите лишний или дайте ему другое имя
+boundAnew	is bound to a field you changed: enter it anew — the one kept was for the old value	привязан к полю, которое вы изменили: впишите его заново — прежний был для старого значения
+access	access	права
+people	people	люди
+clusters	clusters	кластеры
+domainWord	domain	домен
+view	view	смотреть
+edit	act	действовать
+admin	manage	управлять
+allUnits	all	все
+oneUnit	one	одна
+byLabels	with labels	с метками
+noGrants	no grants	прав нет
+grant	Grant	Дать право
+revoke	Revoke	Убрать
+newPerson	New person	Новый пользователь
+name	Name	Имя
+pass10	Password (10 characters or more)	Пароль (10 символов и больше)
+pass12	Password (12 characters or more)	Пароль (12 символов и больше)
+setPass	Password	Пароль
+disabledW	disabled	отключён
+off	Disable	Отключить
+on	Enable	Включить
+by	by	кто
+howOidc	the organisation's sign-in	вход через провайдера организации
+howPass	password	пароль
+glassSet	break-glass password set	аварийный пароль задан
+glassNone	no break-glass password	аварийного пароля нет
+who	Who	Кому
+what	What	Что
+onWhat	On what	На что
+scopeHelp	* — all; unit:<sub>/<id> — one; labels:a,b — those with these labels	* — все; unit:<подсистема>/<id> — одна; labels:a,b — с этими метками
+cancel	Cancel	Отмена
+ok	OK	OK
+grantNote	a cluster gets it with its agent's next pass; a token issued earlier lives out its hour	кластер получит его со следующим проходом агента; выданный раньше токен доживает свой час
+deletePerson	the person and all their grants on every cluster and on the domain are deleted; this cannot be undone	пользователь и все его права на всех кластерах и на домене будут удалены; это не отменить
+glassNote	keep it apart from the site's computers; every use is an alarm in the cluster's journal	храните его отдельно от компьютеров площадки; каждое использование — тревога в журнале кластера
+domain	domain	домен
+noDomain	this cluster is in no domain	этот кластер не в домене
+holder	holder	держатель
+thisCluster	this cluster	этот кластер
+term	term	срок
+backup	backup copy	резервная копия
+noBackup	this cluster keeps no backup copy of the domain	резервной копии домена этот кластер не держит
+move	Move the domain here	Перенести домен сюда
+moveHelp	when the holder is dead: the newest copy anyone keeps, on a larger term; a live holder hands it over from its own page	когда держатель умер: берётся самая новая копия, на новом сроке; живой держатель передаёт домен со своей страницы
+lastCopy	The newest copy	Новейшая копия
+copiesW	Copies the members keep	Копии у членов
+oldCopy	an old copy	старая копия
+notCarried	the holder no longer updates it	держатель её больше не обновляет
+copyGarbled	its row does not read	её строка не читается
+recoveryFile	The domain's recovery file	Файл восстановления домена
+moveBtn	Move here	Перенести сюда
+holderStolen	The old holder was stolen	Старый держатель украден
+stolenHelp	yes: what the domain's root issued before is revoked — the stolen holder's keys stop working	да: всё, что корень домена выдавал раньше, отзывается — ключи украденного держателя перестают действовать
+noRecovery	no recovery file chosen	файл восстановления не выбран
+members	members	члены
+publishes	publishes	публикует
+readHere	read in place	читается на месте
+never	never published	ещё не публиковал
+silentFor	silent	молчит
+domSilent	the domain is silent	домен молчит
+knocking	asking to join	просятся в домен
+admit	Admit	Принять
+fingerprint	key fingerprint	отпечаток ключа
+fpCheck	compare it with the fingerprint the server itself shows (member key in its agent's log); a mismatch means someone else	сверьте его с отпечатком, который показывает сам сервер (member key в логе его агента); не совпадает — это кто-то другой
+leave	Take out of the domain	Вывести из домена
+leaveHelp	from the next pass the domain does not read it; the cluster itself goes on working	со следующего прохода домен его не читает; сам кластер продолжает работать
+reaches	reaches	видит
+direct	to the domain directly	к домену напрямую
+via	via relay	через ретранслятор
+topology	topology	топология
+centre	centre	центр
+starW	star	звезда
+none2	none — the top is the holder	нет — верх это держатель домена
+rev	revision	ревизия
+notWritten	not written	не задавалась
+cancel2	Undo	Отменить
+topoHelp	who goes through whom is the network's policy, written by the operator in one record; what a cluster reaches, it says itself	кто через кого ходит — политика сети, её задаёт оператор одной правкой; что кластер видит, он сообщает сам
+alarms	alarms from every member	тревоги со всех членов
+noAlarms	no alarms	тревог нет
+keys	keys	ключи
+lastPub	last published	последняя публикация
+skew	clock vs the domain	часы относительно домена
+byList	by the member list, revision	по списку членов, ревизия
+byConfig	by the domain's configuration: no member list written yet	по конфигурации домена: списка членов ещё нет
+confirmQ	Are you sure?	Уверены?
+heard	last heard	последний раз слышен
+policyShared	every worker carries units, two on one server included	единицы несёт каждый воркер, два на одном сервере тоже
+policyDistinct	one worker per server carries units	единицы несёт один воркер на сервер
+kinds.server.decommission_requested	server decommission requested	запрошено списание сервера
+kinds.server.decommission_withdrawn	server decommission withdrawn	списание сервера отменено
+kinds.server.decommissioned	server decommissioned	сервер списан
+kinds.server.decommission_refused	server decommission refused	списание сервера отклонено
+kinds.worker.released_by_controller	the controller released a worker's slot	контроллер отпустил слот воркера
+kinds.worker.hung	worker hung	воркер завис
+kinds.worker.hung_moved	a hung worker's units moved	единицы зависшего воркера перенесены
+kinds.worker.retire_requested	worker retirement requested	запрошено списание воркера
+kinds.worker.name_taken	a worker's name was taken	имя воркера забрали
+kinds.worker.name_back	a worker got its name back	воркер вернул себе имя
+kinds.worker.name_conflict	worker name conflict	конфликт имени воркера
+kinds.worker.presence_unknown	whether a worker is alive is unknown	жив ли воркер — неизвестно
+kinds.worker.presence_unknown_moved	the units of a worker without a pulse moved	единицы воркера без пульса перенесены
+kinds.worker.slot_ahead	a worker's slot lease ran ahead	аренда слота воркера ушла вперёд
+kinds.session.debug_open	debug sign-in without a password is on	отладочный вход без пароля включён
+kinds.command	a command was performed	команда выполнена
+kinds.command.failed	a command was not performed	команда не выполнена
+domTerm	Holding	Размещение
+heldOn	The domain is held on	Домен размещён на
+restoredFrom	restored from backup rev {r} of {f}	восстановлен из копии rev {r} с {f}
+backupAtW	backup copy at	резервная копия у
+noBackupYet	nobody yet	пока ни у кого
+handOver	Hand the domain over…	Передать домен…
+handTo	To	Кому
+handBtn	Hand over	Передать
+handNote	For a few seconds edits are not taken; then the domain works there and this holder steps aside.	На несколько секунд правки не принимаются; затем домен работает там, а этот держатель отходит.
+handing	Handing over: the last copy goes to {t}…	Передача: последняя копия — на {t}…
+handed	Handed over	Передано
+notHanded	Not handed over	Не передано
+deposedNote	This holder was replaced: the domain is held by {h} at term {t}. Edits go there, not here:	Этот держатель заменён: домен держит {h} на сроке {t}. Правки туда, здесь они не принимаются:
+strandedHead	Not in term {t} — apply again?	Не вошло в срок {t} — применить заново?
+strandedNote	Only this holder held these: after its last backup copy. Nothing is applied by itself — a person decides.	Это держал только этот держатель: после его последней резервной копии. Само ничего не применяется — решает человек.
+nothingStranded	Nothing left behind: all this holder held is in term {t}.	Ничего не брошено: всё, что держал этот держатель, вошло в срок {t}.
+reapplyOn	Apply again at {h}	Применить заново на {h}
+redoOn	do it again at {h}	сделайте заново на {h}
+reapplied	The edit is saved again at the new holder	Правка снова сохранена на новом держателе
+editFor	edit for	правка для
+trustW	Trust	Доверие
+notInstalled	The domain is not installed: its door is open, nobody is asked who they are.	Домен не установлен: дверь открыта, никого не спрашивают, кто он.
+keysRev	Key set revision	Ревизия набора ключей
+rootFp	Root	Корень
+currentKey	Current key	Текущий ключ
+issuingW	Issuing keys	Ключи выдачи
+revokedW	revoked	отозваны
+holderKeys	The holder has the keys	Ключи у держателя
+yesW	yes	да
+noW	no	нет
+admittedKey	admitted	принят
+presentedKey	presents	предъявляет
+holdsRev	holds rev	держит rev
+rotating	rotation not finished	ротация не закончена
+rotationNote	A member whose revision is below the set's, or whose key is not the admitted one, has not finished the rotation.	Член, у которого ревизия ниже ревизии набора или предъявленный ключ не тот, что принят, ротацию не закончил.
+domUnits	Units	Единицы
+domUnitsNote	What the subsystems hold in the domain's clusters, by their manifests: the ref, the cluster, where it runs, its state.	Что подсистемы держат в кластерах домена — по их манифестам: ссылка, кластер, где работает, в каком состоянии.
+noUnitsDecl	no subsystem on the domain declared units	ни одна подсистема на домене не объявила единиц
+uLive	running	идёт
+uStale	worker silent — last known	воркер молчит — последнее известное
+uConfigured	configured, nobody holds it	настроена, никто не держит
+uSilent	cluster silent — last known	кластер молчит — последнее известное
+turnOn	Turn on	Включить
+turnOff	Turn off	Выключить
+sharedW	Shared settings	Общие настройки
+sharedNote	Settings of the site, not of one unit: one document of the domain each member's agent carries home and keeps — the domain may go, the settings stay where they are read. They are defaults: they are not written into the units' rows.	Настройки площадки, а не одной единицы: один документ домена, который агент каждого члена уносит домой и хранит у себя — домен может пропасть, настройки остаются там, где их читают. Это умолчания: в строки единиц они не пишутся.
+sharedRev	rev {r} · term {t} · {a}	rev {r} · срок {t} · {a}
+neverPub	never published yet	ещё ни разу не публиковались
+onePerLine	one a line	по одному на строку
+publishW	Publish	Опубликовать
+sfAdd	＋ Add	＋ Добавить
+sfDel	Remove	Убрать
+sfNotNumber	not a number	не число
+notJson	Not JSON, nothing sent —	Не JSON, ничего не отправлено —
+notJsonField	not JSON, nothing sent	не JSON, ничего не отправлено
+publishedRev	Published: rev {r}. The agents carry it on their next pass	Опубликовано: rev {r}. Агенты унесут его на следующем проходе
+noSharedDecl	no subsystem shares fields with the domain	ни одна подсистема не делит полей с доменом
+noShared	no shared settings here	общих настроек здесь нет
+notSetW	not set	не задано
+editsW	Edits for the clusters	Правки для кластеров
+editsNote	The domain calls no cluster: an edit waits here, the cluster's agent takes it on its next publication, applies it and sends back the outcome.	Домен не звонит кластерам: правка ждёт здесь, агент кластера забирает её при следующей публикации, применяет у себя и присылает исход.
+alarmTimesTip	how many times in the day	сколько раз за сутки
+waitsPub	waits for publication	ждёт публикации
+appliedW	applied	применена
+refusedStatus	refused {s}	отказ {s}
+takenAt	taken	принята
+noEdits	no edits	правок нет
+debugBadge	debug: no sign-in	отладка: вход без пароля
+debugTip	The door let you in without a password: a request from this machine, W2C_DEBUG_PERSON is set (a stand only, ADR-0050). Your rights are this person's.	Дверь впустила без пароля: запрос с этой машины, задан W2C_DEBUG_PERSON (только стенд, ADR-0050). Права — этого человека.
+n.late	late: after the deadline	поздно: после срока
+n.performed	performed	выполнена
+n.refusedW	refused	отказ
+n.expired	expired: nobody performed it in time	истекла: никто не выполнил вовремя
+n.unknownOutcome	whether it was performed is unknown	неизвестно, выполнена ли
+n.byW	by	кто:
+n.asPerson	as	как
+n.on	on	на
+n.silent	silent	молчит
+n.unitsN	units	единиц
+n.noTwoWriters	not moved, so that there are never two writers	не переносятся, чтобы не было двух писателей
+n.movedAfter	moved after	перенесены через
+n.holds	held by	держит
+n.leaseUntil	lease until	аренда до
+n.pastLimit	past the limit of	дальше предела
+n.server	server	сервер
+n.lost	lost	утрачены
+n.nameHeld	the name is held by	имя держит
+n.waits	this process waits for its name	этот процесс ждёт своё имя
+n.namedAgain	has its name again	снова с именем
+n.after	after	после
+n.nameless	without a name	без имени
+n.refused	refused	отказал
+n.min	min	мин
+n.s	s	с

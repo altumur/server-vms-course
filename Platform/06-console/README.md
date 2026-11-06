@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-A micromodule: the process console. What it norms and from where — the module design note `Platform/module-design.md` (for people, not in the export), the table «Уроки».
+A micromodule: the process console. What it norms and from where — the module design note `Platform/module-design.md` (for people, not in the export), the table «Lessons».
 
 The layout of the catalogue (ADR-0124: the English source on the canonical path, the Russian text for people in `ru/`). Chapter 6.7 — the late layer of the cluster console — was written by the move of lessons
 8–10 (review analysis of stage A 6–7, № 27; review analysis of stage B 8–10, № 22: M-15). The console has no library contract — it is a process with an HTTP door:

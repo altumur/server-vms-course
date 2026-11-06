@@ -1,0 +1,10 @@
+case	input	expect	relation	norm
+p06-c3-numeric-retire	numeric-loader/p06-c3-numeric-retire.subsystem.yaml	refused:relations	160	ADR-0127 P06 C3; P02.1 N2 load(bytes,file)
+p06-c3-numeric-ends	numeric-loader/p06-c3-numeric-ends.subsystem.yaml	refused:relations	162	ADR-0127 P06 C3; P02.1 N2 load(bytes,file)
+p06-c3-numeric-delete	numeric-loader/p06-c3-numeric-delete.subsystem.yaml	refused:relations	161	ADR-0127 P06 C3; P02.1 N2 load(bytes,file)
+p06-c3-fixed-ends	numeric-loader/p06-c3-fixed-ends.subsystem.yaml	ok	-	ADR-0127 P06 C3; P02.1 N2 load(bytes,file)
+p06-c3-fixed-retire	numeric-loader/p06-c3-fixed-retire.subsystem.yaml	ok	-	ADR-0127 P06 C3; P02.1 N2 load(bytes,file)
+p06-c3-fixed-delete	numeric-loader/p06-c3-fixed-delete.subsystem.yaml	refused:relations	161	ADR-0127 P06 C3; P02.1 N2 load(bytes,file)
+p06-c3-named-retire	numeric-loader/p06-c3-named-retire.subsystem.yaml	ok	-	ADR-0127 P06 C3; P02.1 N2 load(bytes,file)
+p06-c3-named-ends	numeric-loader/p06-c3-named-ends.subsystem.yaml	ok	-	ADR-0127 P06 C3; P02.1 N2 load(bytes,file)
+p06-c3-named-delete	numeric-loader/p06-c3-named-delete.subsystem.yaml	ok	-	ADR-0127 P06 C3; P02.1 N2 load(bytes,file)

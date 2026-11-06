@@ -1,0 +1,223 @@
+{
+  "base": "cceba945040073153eef8277d43eceafb942114a",
+  "files": [
+    {
+      "path": "Platform/common/contracts/turn.md",
+      "before_sha256": "12ce731b7972b02083fc787530b666a075e8a91116ef714c13652c8d1a0a27c5",
+      "after_sha256": "10d9265d8d807416853068da2f52ba9c163cf2d78b23095780de3d1294809aac",
+      "diff": [
+        "--- ",
+        "+++ ",
+        "@@ -98,7 +98,7 @@",
+        " The package [`turn`](../vectors/turn/README.md) (C08-TURN-SELF-99, the Architect's decision of 2026-10-26): sequences of events",
+        " of one side over a turn row and its actions \u2014 take an empty or a given-up one, one's own row of the `domain` process (`held`, not",
+        " `busy`), a foreign live one \u2014 busy, a foreign one older than `TURN_TERM` \u2014 take, `manifest_rev` (step 1), renewal, the guard, 412, the barrier on",
+        "-an unknown outcome of a write \u2014 of the target row and of one's own turn row, the giving up `holder \"\"`; placement, signer and operations forms. The console runs its own15 operations cases with a fresh attempt holder, no manifest revision, not signer relabeling; the33 previous cases and their existing participants stay byte-identical. Capturing the turn is separate from P/06.9's operations-epoch CAS barrier, generation/ticket guards, two leaders and late IO. Races of two claimants and late writes of the old holder are",
+        "+an unknown outcome of a write \u2014 of the target row and of one's own turn row, the giving up `holder \"\"`; placement, signer and operations forms. The console runs its own 16 operations cases with a fresh attempt holder, no manifest revision, not signer relabeling; the33 previous cases and their existing participants stay byte-identical. Capturing the turn is separate from P/06.9's operations-epoch CAS barrier, generation/ticket guards, two leaders and late IO. Races of two claimants and late writes of the old holder are",
+        " acceptance scenarios of the participants (P/04, P/08.10, P/09.1, P/06.9) and reading. The exact owner/kind selector and narrow freshness comparison are [the wire form](../vectors/wire.md#turn-comparison), the Architect's decision under ADR-0127 P/06 C4.",
+        " ",
+        " ## Correspondence to former lessons"
+      ]
+    },
+    {
+      "path": "Platform/common/ru/contracts/turn.md",
+      "before_sha256": "26dc3425e8914f5f951e166fc4a3e372ba67611280cf34d9ba000bef965f1192",
+      "after_sha256": "eba9bcc9a9d9af860db11ad96369c268e56c8d4f683f9c79812cf06d45d73904",
+      "diff": [
+        "--- ",
+        "+++ ",
+        "@@ -99,7 +99,7 @@",
+        " \u041f\u0430\u043a\u0435\u0442 [`turn`](../vectors/turn/README.md) (C08-TURN-SELF-99, \u0440\u0435\u0448\u0435\u043d\u0438\u0435 \u00ab\u0410\u0440\u0445\u0438\u0442\u0435\u043a\u0442\u043e\u0440\u0430\u00bb 2026-10-26): \u043f\u043e\u0441\u043b\u0435\u0434\u043e\u0432\u0430\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u0438 \u0441\u043e\u0431\u044b\u0442\u0438\u0439",
+        " \u043e\u0434\u043d\u043e\u0439 \u0441\u0442\u043e\u0440\u043e\u043d\u044b \u043d\u0430\u0434 \u0441\u0442\u0440\u043e\u043a\u043e\u0439 \u043e\u0447\u0435\u0440\u0435\u0434\u0438 \u0438 \u0435\u0451 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f \u2014 \u0432\u0437\u044f\u0442\u044c \u043f\u0443\u0441\u0442\u0443\u044e \u0438\u043b\u0438 \u043e\u0442\u0434\u0430\u043d\u043d\u0443\u044e, \u0441\u0432\u043e\u044f \u0441\u0442\u0440\u043e\u043a\u0430 \u043f\u0440\u043e\u0446\u0435\u0441\u0441\u0430 `domain` (`held`, \u043d\u0435",
+        " `busy`), \u0447\u0443\u0436\u0430\u044f \u0436\u0438\u0432\u0430\u044f \u2014 \u0437\u0430\u043d\u044f\u0442\u0430, \u0447\u0443\u0436\u0430\u044f \u0441\u0442\u0430\u0440\u0448\u0435 `TURN_TERM` \u2014 \u0432\u0437\u044f\u0442\u044c, `manifest_rev` (\u0448\u0430\u0433 1), \u043f\u0440\u043e\u0434\u043b\u0435\u043d\u0438\u0435, \u0441\u0442\u0440\u0430\u0436, 412, \u0431\u0430\u0440\u044c\u0435\u0440 \u043f\u0440\u0438",
+        "-\u043d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u043e\u043c \u0438\u0441\u0445\u043e\u0434\u0435 \u0437\u0430\u043f\u0438\u0441\u0438 \u2014 \u0446\u0435\u043b\u0435\u0432\u043e\u0439 \u0438 \u0441\u0432\u043e\u0435\u0439 \u0441\u0442\u0440\u043e\u043a\u0438 \u043e\u0447\u0435\u0440\u0435\u0434\u0438, \u043e\u0442\u0434\u0430\u0447\u0430 `holder \"\"`; \u0444\u043e\u0440\u043c\u044b placement, signer \u0438 operations. \u041a\u043e\u043d\u0441\u043e\u043b\u044c \u0438\u0441\u043f\u043e\u043b\u043d\u044f\u0435\u0442 \u0441\u0432\u043e\u043815 \u0441\u043b\u0443\u0447\u0430\u0435\u0432 operations \u0441\u043e \u0441\u0432\u0435\u0436\u0438\u043c holder \u043f\u043e\u043f\u044b\u0442\u043a\u0438, \u0431\u0435\u0437 \u0440\u0435\u0432\u0438\u0437\u0438\u0438 \u043c\u0430\u043d\u0438\u0444\u0435\u0441\u0442\u0430, \u043d\u0435 \u043f\u0435\u0440\u0435\u0438\u043c\u0435\u043d\u043e\u0432\u044b\u0432\u0430\u044f signer; \u043f\u0440\u0435\u0436\u043d\u0438\u043533 \u0441\u043b\u0443\u0447\u0430\u044f \u0438 \u0438\u0445 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a\u0438 \u043f\u043e\u0431\u0430\u0439\u0442\u043d\u043e \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u044b. \u0417\u0430\u0445\u0432\u0430\u0442 \u043e\u0447\u0435\u0440\u0435\u0434\u0438 \u043e\u0442\u0434\u0435\u043b\u0451\u043d \u043e\u0442 CAS-\u0431\u0430\u0440\u044c\u0435\u0440\u0430 operations-epoch, \u0441\u0442\u0440\u0430\u0436\u0435\u0439 generation/ticket, \u0434\u0432\u0443\u0445 \u043b\u0438\u0434\u0435\u0440\u043e\u0432 \u0438 \u043f\u043e\u0437\u0434\u043d\u0435\u0433\u043e IO P/06.9. \u0413\u043e\u043d\u043a\u0438 \u0434\u0432\u0443\u0445 \u043f\u0440\u0435\u0442\u0435\u043d\u0434\u0435\u043d\u0442\u043e\u0432 \u0438 \u043f\u043e\u0437\u0434\u043d\u0438\u0435 \u0437\u0430\u043f\u0438\u0441\u0438 \u0441\u0442\u0430\u0440\u043e\u0433\u043e \u0434\u0435\u0440\u0436\u0430\u0442\u0435\u043b\u044f \u2014",
+        "+\u043d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u043e\u043c \u0438\u0441\u0445\u043e\u0434\u0435 \u0437\u0430\u043f\u0438\u0441\u0438 \u2014 \u0446\u0435\u043b\u0435\u0432\u043e\u0439 \u0438 \u0441\u0432\u043e\u0435\u0439 \u0441\u0442\u0440\u043e\u043a\u0438 \u043e\u0447\u0435\u0440\u0435\u0434\u0438, \u043e\u0442\u0434\u0430\u0447\u0430 `holder \"\"`; \u0444\u043e\u0440\u043c\u044b placement, signer \u0438 operations. \u041a\u043e\u043d\u0441\u043e\u043b\u044c \u0438\u0441\u043f\u043e\u043b\u043d\u044f\u0435\u0442 \u0441\u0432\u043e\u0438 16 \u0441\u043b\u0443\u0447\u0430\u0435\u0432 operations \u0441\u043e \u0441\u0432\u0435\u0436\u0438\u043c holder \u043f\u043e\u043f\u044b\u0442\u043a\u0438, \u0431\u0435\u0437 \u0440\u0435\u0432\u0438\u0437\u0438\u0438 \u043c\u0430\u043d\u0438\u0444\u0435\u0441\u0442\u0430, \u043d\u0435 \u043f\u0435\u0440\u0435\u0438\u043c\u0435\u043d\u043e\u0432\u044b\u0432\u0430\u044f signer; \u043f\u0440\u0435\u0436\u043d\u0438\u043533 \u0441\u043b\u0443\u0447\u0430\u044f \u0438 \u0438\u0445 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a\u0438 \u043f\u043e\u0431\u0430\u0439\u0442\u043d\u043e \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u044b. \u0417\u0430\u0445\u0432\u0430\u0442 \u043e\u0447\u0435\u0440\u0435\u0434\u0438 \u043e\u0442\u0434\u0435\u043b\u0451\u043d \u043e\u0442 CAS-\u0431\u0430\u0440\u044c\u0435\u0440\u0430 operations-epoch, \u0441\u0442\u0440\u0430\u0436\u0435\u0439 generation/ticket, \u0434\u0432\u0443\u0445 \u043b\u0438\u0434\u0435\u0440\u043e\u0432 \u0438 \u043f\u043e\u0437\u0434\u043d\u0435\u0433\u043e IO P/06.9. \u0413\u043e\u043d\u043a\u0438 \u0434\u0432\u0443\u0445 \u043f\u0440\u0435\u0442\u0435\u043d\u0434\u0435\u043d\u0442\u043e\u0432 \u0438 \u043f\u043e\u0437\u0434\u043d\u0438\u0435 \u0437\u0430\u043f\u0438\u0441\u0438 \u0441\u0442\u0430\u0440\u043e\u0433\u043e \u0434\u0435\u0440\u0436\u0430\u0442\u0435\u043b\u044f \u2014",
+        " \u0441\u0446\u0435\u043d\u0430\u0440\u0438\u0438 \u043f\u0440\u0438\u0451\u043c\u043a\u0438 \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a\u043e\u0432 (P/04, P/08.10, P/09.1, P/06.9) \u0438 \u0447\u0442\u0435\u043d\u0438\u0435. \u0422\u043e\u0447\u043d\u044b\u0439 \u0441\u0435\u043b\u0435\u043a\u0442\u043e\u0440 owner/kind \u0438 \u0443\u0437\u043a\u043e\u0435 \u0441\u0440\u0430\u0432\u043d\u0435\u043d\u0438\u0435 \u0441\u0432\u0435\u0436\u0435\u0441\u0442\u0438 \u2014 [\u0444\u043e\u0440\u043c\u0430 \u043f\u0440\u043e\u0432\u043e\u0434\u0430](../vectors/wire.md#\u0441\u0440\u0430\u0432\u043d\u0435\u043d\u0438\u0435-turn), \u0440\u0435\u0448\u0435\u043d\u0438\u0435 \u0410\u0440\u0445\u0438\u0442\u0435\u043a\u0442\u043e\u0440\u0430 \u043f\u043e ADR-0127 P/06 C4.",
+        " ",
+        " ## \u0421\u043e\u043e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0438\u0435 \u043f\u0440\u0435\u0436\u043d\u0438\u043c \u0443\u0440\u043e\u043a\u0430\u043c"
+      ]
+    },
+    {
+      "path": "Platform/common/ru/vectors/turn/README.md",
+      "before_sha256": "f32c462dfb4acaeca758437dd58ce814ec9f23c403d60f1d930f77c439571dd3",
+      "after_sha256": "e6036456d25e42233b0fa8a2e42dc92a26de2bfad0cf01ce53f1482918b65f65",
+      "diff": [
+        "--- ",
+        "+++ ",
+        "@@ -34,18 +34,21 @@",
+        " \u043f\u0438\u0441\u0430\u0442\u044c \u0434\u043e \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0451\u043d\u043d\u043e\u0433\u043e \u043f\u0440\u043e\u0434\u043b\u0435\u043d\u0438\u044f; `stop` \u2014 \u043f\u0440\u0435\u043a\u0440\u0430\u0442\u0438\u0442\u044c \u0437\u0430\u043f\u0438\u0441\u0438; `reread` \u2014 \u043f\u0435\u0440\u0435\u0447\u0438\u0442\u0430\u0442\u044c (\u0431\u0430\u0440\u044c\u0435\u0440 \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0451\u043d \u0443 `placement`:",
+        " intent \u0438 \u0441\u0442\u0440\u043e\u043a\u0438; \u043d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u0438\u0441\u0445\u043e\u0434 \u0437\u0430\u043f\u0438\u0441\u0438 \u0441\u0432\u043e\u0435\u0439 \u0441\u0442\u0440\u043e\u043a\u0438 \u043e\u0447\u0435\u0440\u0435\u0434\u0438: \u043e\u0447\u0435\u0440\u0435\u0434\u044c, \u0438 \u0432 `read` `holder` `\"@same\"` \u2014 \u043c\u0435\u0442\u043a\u0430 \u044d\u0442\u043e\u0439 \u043f\u043e\u043f\u044b\u0442\u043a\u0438); `done` \u2014 \u043e\u0442\u0434\u0430\u0447\u0430 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0430, \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442 \u043d\u0435 \u043f\u043e\u0432\u0442\u043e\u0440\u044f\u0435\u0442\u0441\u044f.",
+        " ",
+        "-48 \u0441\u0442\u0440\u043e\u043a: \u043f\u0440\u0435\u0436\u043d\u0438\u043533 \u0441\u0442\u0440\u043e\u043a\u0438 \u043f\u043e\u0431\u0430\u0439\u0442\u043d\u043e \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u044b; `placement` \u2014 \u0432\u0437\u044f\u0442\u044c \u043f\u0443\u0441\u0442\u0443\u044e, \u043e\u0442\u0434\u0430\u043d\u043d\u0443\u044e, \u0447\u0443\u0436\u0443\u044e \u0441\u0442\u0430\u0440\u0448\u0435 `TURN_TERM` (45; 44.999 \u2014 \u0437\u0430\u043d\u044f\u0442\u0430), \u043f\u0435\u0440\u0432\u044b\u0439 \u0432\u0437\u0433\u043b\u044f\u0434, \u043d\u0438\u0436\u0435 \u0438 \u0432\u044b\u0448\u0435",
+        "+49 \u0441\u0442\u0440\u043e\u043a: \u043f\u0440\u0435\u0436\u043d\u0438\u043533 \u0441\u0442\u0440\u043e\u043a\u0438 \u043f\u043e\u0431\u0430\u0439\u0442\u043d\u043e \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u044b; `placement` \u2014 \u0432\u0437\u044f\u0442\u044c \u043f\u0443\u0441\u0442\u0443\u044e, \u043e\u0442\u0434\u0430\u043d\u043d\u0443\u044e, \u0447\u0443\u0436\u0443\u044e \u0441\u0442\u0430\u0440\u0448\u0435 `TURN_TERM` (45; 44.999 \u2014 \u0437\u0430\u043d\u044f\u0442\u0430), \u043f\u0435\u0440\u0432\u044b\u0439 \u0432\u0437\u0433\u043b\u044f\u0434, \u043d\u0438\u0436\u0435 \u0438 \u0432\u044b\u0448\u0435",
+        " `manifest_rev` (10 > 9 \u0447\u0438\u0441\u043b\u043e\u043c), \u043d\u0435\u0447\u0438\u0442\u0430\u0435\u043c\u0430\u044f, \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442 \u0437\u0430\u0445\u0432\u0430\u0442\u0430, \u043f\u0440\u043e\u0434\u043b\u0435\u043d\u0438\u0435 \u0438 \u0435\u0433\u043e \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442, \u0441\u0442\u0440\u0430\u0436 \u0434\u043e \u0438 \u043f\u043e\u0441\u043b\u0435 `TURN_TERM`, 412,",
+        " \u0431\u0430\u0440\u044c\u0435\u0440 (\u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0451\u043d, \u0431\u0435\u0437 \u043e\u0442\u0432\u0435\u0442\u0430, \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442), \u043e\u0442\u0434\u0430\u0447\u0430 `holder \"\"`, \u043d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u0438\u0441\u0445\u043e\u0434 \u0432\u0437\u044f\u0442\u0438\u044f (\u043f\u0440\u0438\u043c\u0435\u043d\u0435\u043d\u043e, \u043d\u0435\u0442 \u0441\u0442\u0440\u043e\u043a\u0438, \u0447\u0443\u0436\u043e\u0439) \u0438",
+        " \u043f\u0440\u043e\u0434\u043b\u0435\u043d\u0438\u044f; `signer` \u2014 \u0432\u0437\u044f\u0442\u044c \u043f\u0443\u0441\u0442\u0443\u044e, \u0441\u0432\u043e\u044f \u0441\u0442\u0440\u043e\u043a\u0430 (`held`, \u043d\u0435 `busy`) \u0438 \u0435\u0451",
+        " \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442, \u0447\u0443\u0436\u0430\u044f \u0436\u0438\u0432\u0430\u044f \u0438 \u0441\u0442\u0430\u0440\u0448\u0435 `TURN_TERM`, \u043e\u0442\u0434\u0430\u043d\u043d\u0430\u044f, \u043d\u0435\u0447\u0438\u0442\u0430\u0435\u043c\u0430\u044f, \u0441\u0442\u0440\u0430\u0436, \u043f\u0440\u043e\u0434\u043b\u0435\u043d\u0438\u0435, `SIGTERM`, \u043d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u0438\u0441\u0445\u043e\u0434 \u0432\u0437\u044f\u0442\u0438\u044f (\u0441\u0432\u043e\u044f, \u0447\u0443\u0436\u0430\u044f),",
+        " \u0431\u0430\u0440\u044c\u0435\u0440 \u0437\u0430\u043f\u0438\u0441\u0438 \u0441\u043e \u0441\u0442\u0440\u0430\u0436\u0435\u043c.",
+        " ",
+        "-15 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u043d\u044b\u0445 \u0441\u0442\u0440\u043e\u043a `operations` \u043f\u043e\u043a\u0440\u044b\u0432\u0430\u044e\u0442 \u0432\u0437\u044f\u0442\u0438\u0435 \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044e\u0449\u0435\u0439/\u043e\u0442\u0434\u0430\u043d\u043d\u043e\u0439/\u0441\u0442\u0430\u0440\u043e\u0439 \u0441\u0442\u0440\u043e\u043a\u0438, \u0437\u0430\u043d\u044f\u0442\u043e\u0441\u0442\u044c \u0436\u0438\u0432\u043e\u0439 \u0438 \u043f\u0440\u0438 \u043f\u0435\u0440\u0432\u043e\u043c \u0432\u0437\u0433\u043b\u044f\u0434\u0435, \u043d\u0435\u0447\u0438\u0442\u0430\u0435\u043c\u0443\u044e \u0444\u043e\u0440\u043c\u0443, \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442 \u0437\u0430\u0445\u0432\u0430\u0442\u0430, \u043f\u0440\u043e\u0434\u043b\u0435\u043d\u0438\u0435 \u0438 \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442, \u0432\u043e\u0437\u0440\u0430\u0441\u0442 \u0441\u0442\u0440\u0430\u0436\u0430/412, \u043e\u0442\u0434\u0430\u0447\u0443, \u043d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0435 \u0438\u0441\u0445\u043e\u0434\u044b \u0437\u0430\u0445\u0432\u0430\u0442\u0430/\u043f\u0440\u043e\u0434\u043b\u0435\u043d\u0438\u044f (\u0441\u0432\u043e\u044f, \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044e\u0449\u0430\u044f \u0438\u043b\u0438 \u0447\u0443\u0436\u0430\u044f). \u042d\u0442\u043e \u043e\u0431\u0449\u0430\u044f \u043e\u0431\u044f\u0437\u0430\u043d\u043d\u043e\u0441\u0442\u044c \u043e\u0447\u0435\u0440\u0435\u0434\u0438 \u043a\u043e\u043d\u0441\u043e\u043b\u0438 \u0441 \u043d\u043e\u0432\u044b\u043c holder \u043f\u043e\u043f\u044b\u0442\u043a\u0438. \u0421\u043b\u0443\u0447\u0430\u0438 signer \u043d\u0435 \u043f\u0435\u0440\u0435\u0438\u043c\u0435\u043d\u043e\u0432\u044b\u0432\u0430\u044e\u0442\u0441\u044f, \u0431\u0430\u0440\u044c\u0435\u0440 \u043f\u043b\u0430\u043d\u0430 placement \u0432 operations \u043d\u0435 \u043f\u0435\u0440\u0435\u043d\u043e\u0441\u0438\u0442\u0441\u044f. CAS-\u0431\u0430\u0440\u044c\u0435\u0440 operations-epoch, \u0441\u0442\u0440\u0430\u0436\u0438 \u043f\u043e\u043a\u043e\u043b\u0435\u043d\u0438\u044f/\u0431\u0438\u043b\u0435\u0442\u0430, \u0434\u0432\u0430 \u043b\u0438\u0434\u0435\u0440\u0430 \u0438 \u043f\u043e\u0437\u0434\u043d\u0438\u0439 IO \u043e\u0441\u0442\u0430\u044e\u0442\u0441\u044f \u043e\u0442\u0434\u0435\u043b\u044c\u043d\u044b\u043c\u0438 \u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u044b\u043c\u0438 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0430\u043c\u0438 P/06.9; `held` \u0434\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u0435\u0442 \u0442\u043e\u043b\u044c\u043a\u043e \u0437\u0430\u0445\u0432\u0430\u0442 \u043e\u0447\u0435\u0440\u0435\u0434\u0438.",
+        "+\u041f\u0435\u0440\u0432\u044b\u0435 15 \u0441\u0442\u0440\u043e\u043a `operations` \u043f\u043e\u043a\u0440\u044b\u0432\u0430\u044e\u0442 \u0432\u0437\u044f\u0442\u0438\u0435 \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044e\u0449\u0435\u0439/\u043e\u0442\u0434\u0430\u043d\u043d\u043e\u0439/\u0441\u0442\u0430\u0440\u043e\u0439 \u0441\u0442\u0440\u043e\u043a\u0438, \u0437\u0430\u043d\u044f\u0442\u043e\u0441\u0442\u044c \u0436\u0438\u0432\u043e\u0439 \u0438 \u043f\u0440\u0438 \u043f\u0435\u0440\u0432\u043e\u043c \u0432\u0437\u0433\u043b\u044f\u0434\u0435, \u043d\u0435\u0447\u0438\u0442\u0430\u0435\u043c\u0443\u044e \u0444\u043e\u0440\u043c\u0443, \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442 \u0437\u0430\u0445\u0432\u0430\u0442\u0430, \u043f\u0440\u043e\u0434\u043b\u0435\u043d\u0438\u0435 \u0438 \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442, \u0432\u043e\u0437\u0440\u0430\u0441\u0442 \u0441\u0442\u0440\u0430\u0436\u0430/412, \u043e\u0442\u0434\u0430\u0447\u0443, \u043d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0435 \u0438\u0441\u0445\u043e\u0434\u044b \u0437\u0430\u0445\u0432\u0430\u0442\u0430/\u043f\u0440\u043e\u0434\u043b\u0435\u043d\u0438\u044f (\u0441\u0432\u043e\u044f, \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044e\u0449\u0430\u044f \u0438\u043b\u0438 \u0447\u0443\u0436\u0430\u044f). \u042d\u0442\u043e \u043e\u0431\u0449\u0430\u044f \u043e\u0431\u044f\u0437\u0430\u043d\u043d\u043e\u0441\u0442\u044c \u043e\u0447\u0435\u0440\u0435\u0434\u0438 \u043a\u043e\u043d\u0441\u043e\u043b\u0438 \u0441 \u043d\u043e\u0432\u044b\u043c holder \u043f\u043e\u043f\u044b\u0442\u043a\u0438. \u0421\u043b\u0443\u0447\u0430\u0438 signer \u043d\u0435 \u043f\u0435\u0440\u0435\u0438\u043c\u0435\u043d\u043e\u0432\u044b\u0432\u0430\u044e\u0442\u0441\u044f, \u0431\u0430\u0440\u044c\u0435\u0440 \u043f\u043b\u0430\u043d\u0430 placement \u0432 operations \u043d\u0435 \u043f\u0435\u0440\u0435\u043d\u043e\u0441\u0438\u0442\u0441\u044f. CAS-\u0431\u0430\u0440\u044c\u0435\u0440 operations-epoch, \u0441\u0442\u0440\u0430\u0436\u0438 \u043f\u043e\u043a\u043e\u043b\u0435\u043d\u0438\u044f/\u0431\u0438\u043b\u0435\u0442\u0430, \u0434\u0432\u0430 \u043b\u0438\u0434\u0435\u0440\u0430 \u0438 \u043f\u043e\u0437\u0434\u043d\u0438\u0439 IO \u043e\u0441\u0442\u0430\u044e\u0442\u0441\u044f \u043e\u0442\u0434\u0435\u043b\u044c\u043d\u044b\u043c\u0438 \u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u044b\u043c\u0438 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0430\u043c\u0438 P/06.9; `held` \u0434\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u0435\u0442 \u0442\u043e\u043b\u044c\u043a\u043e \u0437\u0430\u0445\u0432\u0430\u0442 \u043e\u0447\u0435\u0440\u0435\u0434\u0438.",
+        " ",
+        " \u041e\u0442\u0434\u0430\u0447\u0430 `placement` \u043f\u0438\u0448\u0435\u0442 `manifest_rev` \u0441\u0432\u043e\u0435\u0439 \u0440\u0435\u0432\u0438\u0437\u0438\u0435\u0439 (\u0444\u043e\u0440\u043c\u0430 `placement-turn` \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u043e\u043b\u0435); \u043d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u0438\u0441\u0445\u043e\u0434 \u0437\u0430\u043f\u0438\u0441\u0438",
+        " \u0441\u0432\u043e\u0435\u0439 \u0441\u0442\u0440\u043e\u043a\u0438 \u043e\u0447\u0435\u0440\u0435\u0434\u0438 \u2014 \u0434\u043e\u0433\u043e\u0432\u043e\u0440 \u00ab\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u0438\u0441\u0445\u043e\u0434 \u0437\u0430\u043f\u0438\u0441\u0438 \u0441\u0432\u043e\u0435\u0439 \u0441\u0442\u0440\u043e\u043a\u0438 \u043e\u0447\u0435\u0440\u0435\u0434\u0438\u00bb (\u043e\u0431\u0430 \u043e\u0442\u0432\u0435\u0442\u0430 \u2014 C08-TURN-SELF-99, \u0440\u0435\u0448\u0435\u043d\u0438\u0435",
+        " \u00ab\u0410\u0440\u0445\u0438\u0442\u0435\u043a\u0442\u043e\u0440\u0430\u00bb 2026-10-26).",
+        "+",
+        "+",
+        "+\u0421\u043b\u0443\u0447\u0430\u043949, `operations-two-attempts-after-release`, \u2014 \u043f\u0440\u0438\u043d\u044f\u0442\u0430\u044f \u043f\u043e\u0441\u043b\u0435\u0434\u043e\u0432\u0430\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c12 \u0441\u043e\u0431\u044b\u0442\u0438\u0439 \u0441 \u0440\u043e\u0432\u043d\u043e `@new`, `@same`, \u043f\u0443\u0441\u0442\u044b\u043c-holder/done, `@new`, `@same`, \u043f\u0443\u0441\u0442\u044b\u043c-holder/done. \u041e\u0431\u0430 end \u043e\u0437\u043d\u0430\u0447\u0430\u044e\u0442 idle \u0431\u0435\u0437 \u043d\u0435\u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043d\u043d\u043e\u0439 \u0440\u0430\u0431\u043e\u0442\u044b, \u043d\u0435 SIGTERM. \u0421\u043e\u0445\u0440\u0430\u043d\u044f\u0435\u0442\u0441\u044f \u043e\u0434\u0438\u043d \u0436\u0438\u0432\u043e\u0439 process/Turn; \u0441\u043b\u0435\u0434\u0443\u044e\u0449\u0438\u0439 pass/capture \u043f\u043e\u0441\u043b\u0435 done \u043d\u0430\u0437\u043d\u0430\u0447\u0430\u0435\u0442 \u0432\u044b\u0437\u044b\u0432\u0430\u044e\u0449\u0438\u0439, \u043d\u0435 \u0432\u043d\u0443\u0442\u0440\u0435\u043d\u043d\u0438\u0439 retry. \u0412\u0441\u0435 \u043f\u0440\u0435\u0436\u043d\u0438\u0435 \u0441\u0432\u0435\u0436\u0438\u0435 \u043c\u0435\u0442\u043a\u0438 \u0441\u043e\u0445\u0440\u0430\u043d\u044f\u044e\u0442\u0441\u044f \u043f\u043e\u0441\u043b\u0435 release \u0432\u043d\u0443\u0442\u0440\u0438 \u0441\u043b\u0443\u0447\u0430\u044f: \u0432\u0442\u043e\u0440\u0430\u044f new \u043e\u0442\u043b\u0438\u0447\u0430\u0435\u0442\u0441\u044f \u043e\u0442 \u043f\u0435\u0440\u0432\u043e\u0439, same \u043e\u0442\u043d\u043e\u0441\u0438\u0442\u0441\u044f \u043a \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0435\u0439 new. \u0418\u0441\u0442\u043e\u0440\u0438\u044f \u043c\u0435\u0442\u043e\u043a \u0441\u0431\u0440\u0430\u0441\u044b\u0432\u0430\u0435\u0442\u0441\u044f \u0442\u043e\u043b\u044c\u043a\u043e \u043c\u0435\u0436\u0434\u0443 \u0441\u043b\u0443\u0447\u0430\u044f\u043c\u0438. \u0423 \u0432\u0442\u043e\u0440\u043e\u0433\u043e capture \u043d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u043e\u0442\u0432\u0435\u0442, \u0437\u0430\u0442\u0435\u043c \u043e\u0431\u044b\u0447\u043d\u043e\u0435 \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u0435 \u043f\u0440\u0438\u043d\u0430\u0434\u043b\u0435\u0436\u0430\u0449\u0435\u0439 \u0441\u0442\u0440\u043e\u043a\u0438 \u043f\u0435\u0440\u0435\u0447\u0438\u0442\u044b\u0432\u0430\u043d\u0438\u0435\u043c/CAS. \u0421\u0442\u0430\u0440\u044b\u043533+15 \u0441\u0442\u0440\u043e\u043a \u043f\u043e\u0431\u0430\u0439\u0442\u043d\u043e \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u044b. \u042d\u0442\u043e \u043e\u043f\u0443\u0431\u043b\u0438\u043a\u043e\u0432\u0430\u043d\u043d\u0430\u044f \u043e\u0431\u044f\u0437\u0430\u043d\u043d\u043e\u0441\u0442\u044c \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a\u0430, \u043d\u0435 \u0434\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c\u0441\u0442\u0432\u043e \u0438\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f Turn/native/operations \u0440\u0435\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u0435\u0439.",
+        " ",
+        " ## \u041f\u0440\u043e\u0433\u043e\u043d",
+        " "
+      ]
+    },
+    {
+      "path": "Platform/common/vectors/turn/README.md",
+      "before_sha256": "125f38bd16823b5475b464ce2a5379c6148be3463edf26d37ed74a45a74528b1",
+      "after_sha256": "2f71faa17ecfea540a803914326d7bf4a2ceeb35227dd68ec20d6eb0a9892b16",
+      "diff": [
+        "--- ",
+        "+++ ",
+        "@@ -34,18 +34,21 @@",
+        " write until a confirmed renewal; `stop` \u2014 cease the writes; `reread` \u2014 re-read (the barrier is confirmed at `placement`:",
+        " intent and the rows; an unknown outcome of the write of its own turn row: the turn, and in `read` `holder` `\"@same\"` \u2014 the mark of this attempt); `done` \u2014 the release is complete, the conflict does not repeat.",
+        " ",
+        "-48 rows: the existing33 rows are byte-identical; `placement` \u2014 take an empty one, a released one, a foreign one older than `TURN_TERM` (45; 44.999 \u2014 occupied), the first look, below and above",
+        "+49 rows: the existing33 rows are byte-identical; `placement` \u2014 take an empty one, a released one, a foreign one older than `TURN_TERM` (45; 44.999 \u2014 occupied), the first look, below and above",
+        " `manifest_rev` (10 > 9 as a number), an unreadable one, a capture conflict, a renewal and its conflict, the guard before and after `TURN_TERM`, 412,",
+        " the barrier (confirmed, without an answer, a conflict), the release `holder \"\"`, an unknown outcome of the taking (applied, no row, a foreign one) and",
+        " of the renewal; `signer` \u2014 take an empty one, its own row (`held`, not `busy`) and its",
+        " conflict, a foreign live one and one older than `TURN_TERM`, a released one, an unreadable one, the guard, the renewal, `SIGTERM`, an unknown outcome of the taking (its own, a foreign one),",
+        " the barrier of a write with the guard.",
+        " ",
+        "-The 15 added `operations` rows cover taking an absent/released/stale row, live and first-look busy, unreadable form, capture conflict, renewal and conflict, guard age/412, release, and unknown capture/renewal outcomes (own, absent or foreign). These are the common turn obligation of the console, with a new attempt holder. They do not rename signer cases or copy placement's plan barrier into operations. The operations-epoch CAS barrier, generation/ticket guards, two leaders and late IO remain P/06.9's separate mandatory acceptance duties; `held` proves only the turn capture.",
+        "+The first 15 `operations` rows cover taking an absent/released/stale row, live and first-look busy, unreadable form, capture conflict, renewal and conflict, guard age/412, release, and unknown capture/renewal outcomes (own, absent or foreign). These are the common turn obligation of the console, with a new attempt holder. They do not rename signer cases or copy placement's plan barrier into operations. The operations-epoch CAS barrier, generation/ticket guards, two leaders and late IO remain P/06.9's separate mandatory acceptance duties; `held` proves only the turn capture.",
+        " ",
+        " The release of `placement` writes `manifest_rev` with its own revision (the form `placement-turn` requires the field); an unknown outcome of the write",
+        " of its own turn row \u2014 the contract \u00abAn unknown outcome of a write of one's own turn row\u00bb (both answers \u2014 C08-TURN-SELF-99, the decision",
+        " of \u00abArchitect\u00bb 2026-10-26).",
+        "+",
+        "+",
+        "+Case49, `operations-two-attempts-after-release`, is the approved12-event sequence with exactly `@new`, `@same`, empty-holder/done, `@new`, `@same`, empty-holder/done. Both end events mean idle with no unfinished work, not SIGTERM. Keep one live process/Turn; the caller schedules its next pass/capture after done, not an internal retry. Preserve all earlier fresh labels across release within this case: the second new label differs from the first, and same refers to the latest new. Reset label history only between cases. The second capture has an unknown reply, then the ordinary owned reread/CAS confirmation. Old33+15 rows stay byte-identical. This is a published source obligation, not proof that a Turn/native/operations implementation executed it.",
+        " ",
+        " ## Run",
+        " "
+      ]
+    },
+    {
+      "path": "Platform/common/vectors/turn/cases.tsv",
+      "before_sha256": "f440c74238d0d56a693c7e7881cefe45a366fa5108a22a1847cd705384fc0175",
+      "after_sha256": "8279ddfbdab7b48c82d6e4cd4aa2e78861f5c208a44f74705506c857601791e0",
+      "diff": [
+        "--- ",
+        "+++ ",
+        "@@ -48,4 +48,5 @@",
+        " operations-unknown-take-lost\t{\"kind\":\"operations\",\"turn\":\"testsub/operations-turn\",\"me\":{},\"steps\":[{\"read\":null,\"seen\":0},{\"reply\":\"none\"},{\"read\":null,\"seen\":0}]}\t[{\"write\":{\"holder\":\"@new\"},\"cas\":\"\"},\"reread\",\"not_held\"]\tAccepted ADR-0127 C4 common turn obligation only; epoch barrier and real leader IO remain separate.",
+        " operations-unknown-take-foreign\t{\"kind\":\"operations\",\"turn\":\"testsub/operations-turn\",\"me\":{},\"steps\":[{\"read\":null,\"seen\":0},{\"reply\":\"none\"},{\"read\":{\"holder\":\"c-other\"},\"seen\":0,\"version\":1}]}\t[{\"write\":{\"holder\":\"@new\"},\"cas\":\"\"},\"reread\",\"not_held\"]\tAccepted ADR-0127 C4 common turn obligation only; epoch barrier and real leader IO remain separate.",
+        " operations-unknown-renew\t{\"kind\":\"operations\",\"turn\":\"testsub/operations-turn\",\"me\":{},\"steps\":[{\"read\":null,\"seen\":0},{\"reply\":\"ok\",\"version\":1},{\"renew\":true},{\"reply\":\"none\"},{\"read\":{\"holder\":\"@same\"},\"seen\":0,\"version\":2},{\"reply\":\"ok\",\"version\":3}]}\t[{\"write\":{\"holder\":\"@new\"},\"cas\":\"\"},\"held\",{\"write\":{\"holder\":\"@same\"},\"cas\":1},\"reread\",{\"write\":{\"holder\":\"@same\"},\"cas\":2},\"held\"]\tAccepted ADR-0127 C4 common turn obligation only; epoch barrier and real leader IO remain separate.",
+        "+operations-two-attempts-after-release\t{\"kind\":\"operations\",\"turn\":\"testsub/operations-turn\",\"me\":{},\"steps\":[{\"read\":null,\"seen\":0},{\"reply\":\"ok\",\"version\":1},{\"renew\":true},{\"reply\":\"ok\",\"version\":2},{\"end\":true},{\"reply\":\"ok\",\"version\":3},{\"read\":{\"holder\":\"\"},\"version\":3,\"seen\":0},{\"reply\":\"none\"},{\"read\":{\"holder\":\"@same\"},\"version\":4,\"seen\":0},{\"reply\":\"ok\",\"version\":5},{\"end\":true},{\"reply\":\"ok\",\"version\":6}]}\t[{\"write\":{\"holder\":\"@new\"},\"cas\":\"\"},\"held\",{\"write\":{\"holder\":\"@same\"},\"cas\":1},\"held\",{\"write\":{\"holder\":\"\"},\"cas\":2},\"done\",{\"write\":{\"holder\":\"@new\"},\"cas\":3},\"reread\",{\"write\":{\"holder\":\"@same\"},\"cas\":4},\"held\",{\"write\":{\"holder\":\"\"},\"cas\":5},\"done\"]\tADR-0127 P06 C4: one live Turn, idle release and caller next pass; new1/same1/new2/same2; no SIGTERM or new event.",
+        " "
+      ]
+    }
+  ],
+  "source_proof": {
+    "basis": "cceba945040073153eef8277d43eceafb942114a",
+    "approved_case_sha256": "b508cee70304b10531983238f0bbdc9839abb3247f92e38929c3fff495def056",
+    "events": 12,
+    "old48_byte_prefix": true,
+    "old48_sha256": "f440c74238d0d56a693c7e7881cefe45a366fa5108a22a1847cd705384fc0175",
+    "row_physical_line": 51,
+    "roster": {
+      "04-controller": [
+        "placement-take-empty",
+        "placement-take-released",
+        "placement-busy-live",
+        "placement-take-stale",
+        "placement-first-sight",
+        "placement-older-manifest",
+        "placement-manifest-behind",
+        "placement-unreadable",
+        "placement-take-conflict",
+        "placement-renew",
+        "placement-guard",
+        "placement-guard-412",
+        "placement-barrier",
+        "placement-barrier-no-reply",
+        "placement-barrier-conflict",
+        "placement-release",
+        "placement-unknown-take-applied",
+        "placement-unknown-take-lost",
+        "placement-unknown-take-foreign",
+        "placement-unknown-renew"
+      ],
+      "06-console": [
+        "operations-take-empty",
+        "operations-take-released",
+        "operations-busy-live",
+        "operations-take-stale",
+        "operations-first-sight",
+        "operations-unreadable",
+        "operations-take-conflict",
+        "operations-renew",
+        "operations-guard",
+        "operations-guard-412",
+        "operations-release",
+        "operations-unknown-take-applied",
+        "operations-unknown-take-lost",
+        "operations-unknown-take-foreign",
+        "operations-unknown-renew",
+        "operations-two-attempts-after-release"
+      ],
+      "08-domain": [
+        "signer-take-empty",
+        "signer-own-row",
+        "signer-own-row-conflict",
+        "signer-busy-live",
+        "signer-take-stale",
+        "signer-take-released",
+        "signer-unreadable",
+        "signer-guard",
+        "signer-renew",
+        "signer-release",
+        "signer-unknown-take",
+        "signer-barrier",
+        "signer-unknown-take-foreign"
+      ],
+      "09-agent": [
+        "signer-take-empty",
+        "signer-own-row",
+        "signer-own-row-conflict",
+        "signer-busy-live",
+        "signer-take-stale",
+        "signer-take-released",
+        "signer-unreadable",
+        "signer-guard",
+        "signer-renew",
+        "signer-release",
+        "signer-unknown-take",
+        "signer-barrier",
+        "signer-unknown-take-foreign"
+      ]
+    },
+    "form_selected": 62,
+    "check_wire": {
+      "wire_bindings": 91,
+      "wire_calls": 12284,
+      "wire_excluded": 750
+    },
+    "turn_match_only": {
+      "positive": "a1/a1/a2/a2 PASS",
+      "reuse_a1": "RED",
+      "stale_same_a1": "RED"
+    },
+    "mirror_pairs": 2,
+    "limits": "Source/form and synthetic expected-vs-actual comparison only; no Turn algorithm/native/operations/SUT execution, no CODE/GATE/pin."
+  },
+  "own_suite": {
+    "tests": 83,
+    "seconds": 202.739,
+    "status": "PASS",
+    "log_sha256": "d3f2ee43a27114b4f935b56614ab8e45ba0f04b705f61e214fd22cd5f550a4d5",
+    "test_inputs": "Working tree active blobs in this map plus exact ce38; final evidence/ledger does not change tested inputs"
+  },
+  "limits": "Source/forms and comparison only, no Turn/native/operations/SUT execution or full GATE/pin."
+}

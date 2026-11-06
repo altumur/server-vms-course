@@ -1,11 +1,11 @@
-# probe-x — третий манифест стенда главы 6.5 (прежде М10/9; разбор ревью стадии B 3–5, № 34): имя с «-», чтобы проверить metrics.prefix (М10/2 N2: «-» → «_»).
+# probe-x — third manifest of the chapter 6.5 stand (formerly M10/9; analysis of stage B 3–5 review, № 34): a name with «-», to check metrics.prefix (M10/2 N2: «-» → «_»).
 name: probe-x
-# label — умолчание с {id}: дверь подставляет выданный номер при создании (P/06.1 N1.2 шаг 3; запрос VMS № 1, сц. 18)
-# cost — поле веса placement.weight.field: целое < 1 — 400 «cost must be at least 1» (P/06.1 N4; аудит покрытия P/06, сц. 23)
+# label — default with {id}: the door substitutes the allocated number on creation (P/06.1 N1.2 step 3; request VMS № 1, sc. 18)
+# cost — weight field placement.weight.field: integer < 1 — 400 «cost must be at least 1» (P/06.1 N4; coverage audit P/06, sc. 23)
 unit: {rows: probes, id: numeric, fields: {label: {type: string, default: 'probe{id}'}, n: {type: int}, cost: {type: int, default: 1}}}
 placement: {capacity: {default: 1}, weight: {field: cost, default: 1}}
 worker: {exec: /usr/lib/probe-x/worker}
-# door.pass второго вида без живого воркера (ADR-0094 B1, сц. 32): маршрут глубже одного сегмента, форма отказов консоли — из манифеста
+# door.pass of the second kind without a live worker (ADR-0094 B1, sc. 32): a route deeper than one segment, console refusal form — from the manifest
 door:
   pass:
     routes: [api/v1]

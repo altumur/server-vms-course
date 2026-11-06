@@ -1,4 +1,4 @@
 # Outcomes of an unreadable row platform/memberof-gone/… (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domainagent	the whole row is unreadable: the key itself names the reference, the agent carries it into gone as is; log without the value	1	row	P/06.8 Н1.2а
+	domainagent	the whole row is unreadable: the key itself names the reference, the agent carries it into gone as is; log without the value	1	row	P/06.8 N1.2a

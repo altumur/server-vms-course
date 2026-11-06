@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Acceptance P/06.7: domain stand hold, m1, m2 (cluster-console forwarding, /domain/at, /domain/keys, book door, break-glass entry, /api/held and /api/backup); scenarios from М11/05, М11/08, М11/09, М11/10 (stage B). Format: README.
+# Acceptance P/06.7: domain stand hold, m1, m2 (cluster-console forwarding, /domain/at, /domain/keys, book door, break-glass entry, /api/held and /api/backup); scenarios from M11/05, M11/08, M11/09, M11/10 (stage B). Format: README.
 01-forward-to-holder	1	@domain	ok
 01-forward-to-holder	2	holder GET /domain	200 {"holder": "hold", "complete": true, "url": "@any"}
 01-forward-to-holder	3	member m1 console GET /domain	200 {"holder": "hold", "complete": true, "url": "@any"}
@@ -99,7 +99,7 @@ scenario	step	request	expect
 17-timezone-of-a-cluster	5	member hold console GET /session	200 {"timezone": "UTC", "server_time": "@time"}
 17-timezone-of-a-cluster	6	@env m1 TIMEZONE	ok
 17-timezone-of-a-cluster	7	member m1 console GET /session	200 {"timezone": "UTC", "server_time": "@time"}
-# 18-shell-login (ADR-0094 B7): testsub2 shell without identity gives 302 to login page, HEAD and file give 401; with a person — the page (P/06.5 N2 «Вход на оболочке»).
+# 18-shell-login (ADR-0094 B7): testsub2 shell without identity gives 302 to login page, HEAD and file give 401; with a person — the page (P/06.5 N2 «Sign-in on the shell»).
 18-shell-login	1	@domain	ok
 18-shell-login	2	@person -	ok
 18-shell-login	3	member m1 console GET /testsub2/	302 @empty @header Location: =/?return=/testsub2/

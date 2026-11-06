@@ -17,7 +17,7 @@
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "the row's write counter: 1 at creation, +1 on every write; only the console reads it, the writer always writes it (P/06.6 N2.1 «Версия строки»; ADR-0094 B4)",
+   "description": "the row's write counter: 1 at creation, +1 on every write; only the console reads it, the writer always writes it (P/06.6 N2.1 «Row revision»; ADR-0094 B4)",
    "x-whole": true,
    "x-codec": [
     "integer"
@@ -748,11 +748,11 @@
    "type": "object",
    "properties": {
     "domain": {
-     "description": "the domain name (chapter 8.2, from М11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
+     "description": "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
     },
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "the holder's term (chapter 8.8, from М11/10 N1.1); the order — (term, rev), term is senior"
+     "description": "the holder's term (chapter 8.8, from M11/10 N1.1); the order — (term, rev), term is senior"
     },
     "rev": {
      "$ref": "#/$defs/common.pos53",

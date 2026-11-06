@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/op-step/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/06.9 ([norms](../../spec/06.9-console.norms.md) N1.4, N2 «Пакет шага»; ADR-0095). The participants are the console leader (the expected version in the step call) and the subsystem (the step package key). The bytes are written by the Specification; the values were computed by the text of the norm, not by the code of implementations.
+The owner is chapter P/06.9 ([norms](../../spec/06.9-console.norms.md) N1.4, N2 «Step batch»; ADR-0095). The participants are the console leader (the expected version in the step call) and the subsystem (the step package key). The bytes are written by the Specification; the values were computed by the text of the norm, not by the code of implementations.
 There is no dry run by an implementation.
 
 ## `key.tsv`

@@ -1,0 +1,439 @@
+{
+  "git_diff_check_exit": 2,
+  "findings": 72,
+  "unexpected_whitespace": 0,
+  "structural_empty_tsv_cells": [
+    {
+      "path": "Platform/06-console/acceptance/1/scenarios.tsv",
+      "line": 212,
+      "old_line": 211,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/acceptance/1/scenarios.tsv",
+      "line": 299,
+      "old_line": 298,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/acceptance/1/scenarios.tsv",
+      "line": 380,
+      "old_line": 379,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/acceptance/1/scenarios.tsv",
+      "line": 444,
+      "old_line": 443,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/acceptance/1/scenarios.tsv",
+      "line": 453,
+      "old_line": 452,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/acceptance/1/scenarios.tsv",
+      "line": 513,
+      "old_line": 512,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 50,
+      "old_line": 49,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 51,
+      "old_line": 50,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 52,
+      "old_line": 51,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 53,
+      "old_line": 52,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 54,
+      "old_line": 53,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 55,
+      "old_line": 54,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 56,
+      "old_line": 55,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 57,
+      "old_line": 56,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 58,
+      "old_line": 57,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 59,
+      "old_line": 58,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 60,
+      "old_line": 59,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 61,
+      "old_line": 60,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 62,
+      "old_line": 61,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 63,
+      "old_line": 62,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 64,
+      "old_line": 63,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 65,
+      "old_line": 64,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 66,
+      "old_line": 65,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 67,
+      "old_line": 66,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 68,
+      "old_line": 67,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 69,
+      "old_line": 68,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 70,
+      "old_line": 69,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 71,
+      "old_line": 70,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 72,
+      "old_line": 71,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 73,
+      "old_line": 72,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 74,
+      "old_line": 73,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 75,
+      "old_line": 74,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 76,
+      "old_line": 75,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 77,
+      "old_line": 76,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 78,
+      "old_line": 77,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 79,
+      "old_line": 78,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 80,
+      "old_line": 79,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 81,
+      "old_line": 80,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 82,
+      "old_line": 81,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 84,
+      "old_line": 83,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 85,
+      "old_line": 84,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 86,
+      "old_line": 85,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 87,
+      "old_line": 86,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 88,
+      "old_line": 87,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 89,
+      "old_line": 88,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 90,
+      "old_line": 89,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 91,
+      "old_line": 90,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 92,
+      "old_line": 91,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 93,
+      "old_line": 92,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 94,
+      "old_line": 93,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 95,
+      "old_line": 94,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 96,
+      "old_line": 95,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 97,
+      "old_line": 96,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 98,
+      "old_line": 97,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 100,
+      "old_line": 99,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 101,
+      "old_line": 100,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 102,
+      "old_line": 101,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 103,
+      "old_line": 102,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 104,
+      "old_line": 103,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 105,
+      "old_line": 104,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 106,
+      "old_line": 105,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 107,
+      "old_line": 106,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 108,
+      "old_line": 107,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 109,
+      "old_line": 108,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 118,
+      "old_line": 117,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 120,
+      "old_line": 119,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 121,
+      "old_line": 120,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 122,
+      "old_line": 121,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 123,
+      "old_line": 122,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 124,
+      "old_line": 123,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 125,
+      "old_line": 124,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    },
+    {
+      "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+      "line": 126,
+      "old_line": 125,
+      "reason": "TSV empty final cell, terminal TAB preserved"
+    }
+  ]
+}

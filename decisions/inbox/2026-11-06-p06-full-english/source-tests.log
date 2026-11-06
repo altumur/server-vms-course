@@ -1,0 +1,19 @@
+..............................................................................F...............................................s................................................................................................................................
+======================================================================
+FAIL: test_real_seams_unchanged (test_source_cells.SeamsBinding.test_real_seams_unchanged)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/murat/w2c/wt-spec-p06-review-source/skills/lesson-spec/scripts/test_source_cells.py", line 182, in test_real_seams_unchanged
+    self.assertEqual(source_cells.table(text, columns, positional), ((), [], []))
+AssertionError: Tuples differ: (('request',), [(4, {'scenario': 's01-folde[1072 chars], []) != ((), [], [])
+
+First differing element 0:
+('request',)
+()
+
+Diff is 1328 characters long. Set self.maxDiff to None to see it.
+
+----------------------------------------------------------------------
+Ran 255 tests in 217.282s
+
+FAILED (failures=1, skipped=1)

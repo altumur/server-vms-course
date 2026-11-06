@@ -32,7 +32,7 @@ The format is [the dictionary of directives and doors](../../../common/acceptanc
 
 | Subject | Why not a scenario |
 |---|---|
-| the strict race «чтение — запись»: the guards of the unit and of the chain, the guard of the absence of the membership row, `412 parent moved` | the HTTP stand does not open the window between the read and the batch; the sequential orders — sc. 07, 08, 11 |
+| the strict race «read — write»: the guards of the unit and of the chain, the guard of the absence of the membership row, `412 parent moved` | the HTTP stand does not open the window between the read and the batch; the sequential orders — sc. 07, 08, 11 |
 | the rights of the table of N3 «folder rights», the rights of a folder row in a batch | a domain stand with grants is needed: the filter by the row `folder:` — the acceptance of chapter 8.4 sc. 33, the rights of the folder door — by reading |
 | `FOLDERS_MEMBERS_MAX`, `FOLDER_ROW_MAX`, the numbers of N1.3 | the boundary requires thousands of units; the numbers are computed |
 | an unconfirmed read: 503, the reaper removes nothing | a refusal of the store on the read of a particular key is needed |
@@ -49,3 +49,9 @@ The plan of the rights scenarios, when the norm `may` is entered (a domain stand
 ## `journal/corrections-8.tsv`
 
 The log of corrections of the scenarios of the chapter (ADR-0124: a log, not an input, not in the export), the format is as in the neighbouring chapters.
+
+## Static deletion profile and exact entity bytes (ADR-0127 C2)
+
+Before a folder-enabled profile is installed, use the existing P02.3 manifest put entry and effective Status.max_body/max_value, then its finite-profile validator before every installation write, including unchanged. The owned13 form/arithmetic witnesses are Platform/02-installer/forms/finite-profile.cases.json; missing/H/multiplicity/provenance negatives need the Architect's separate judge and do not become passing from JSON Schema alone. The actual implementation's complete descriptors and mixed-packet coverage must be proved separately. Declare a sufficient existing body_limit/row_ceiling for the actual stand; no acceptance.yaml key is invented and AssemblyError is not an installer refusal.
+
+The 6 codec witnesses in ../../forms/deletion-body-witnesses.json count whole compact UTF-8 entities:1048575/1048576/1048577, extra LF, alternative escaping and the own1380972-byte counterexample. The padded cases use V=1048576 rather than default524288; the sufficient whole-profile test is distinct from one favorable packet's size. Check actual emitted target/done/auxiliary requests and Content-Length or decoded chunk data when proving IO; HTTP framing is excluded. This source addition performs no such store/console run, changes no existing scenario/seam or native command, and does not introduce a mutation-time DELETE refusal.

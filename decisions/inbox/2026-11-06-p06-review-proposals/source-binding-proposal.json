@@ -1,0 +1,83 @@
+{
+  "status": "INACTIVE proposal; shared checker/reader unchanged",
+  "base": "c81dd35d5ff850c687c94d251cdc84269e28730d",
+  "exact_path": "Platform/06-console/acceptance/8/seams.tsv",
+  "columns": [
+    "scenario",
+    "step",
+    "request",
+    "expect"
+  ],
+  "positional": true,
+  "binding_before": "No source_cells wire_headers binding for this seams path",
+  "marker_grammar": "Existing common source-cells declaration unchanged",
+  "scope": "Only this exact path. No glob over all seams, no implicit header/data guess, no new decoder or recursive decode.",
+  "binding_delta": {
+    "path": "skills/lesson-spec/scripts/source_cells.py",
+    "entry": {
+      "Platform/06-console/acceptance/8/seams.tsv": [
+        [
+          "scenario",
+          "step",
+          "request",
+          "expect"
+        ],
+        true
+      ]
+    }
+  },
+  "reader_delta": "Matching exact source_table.wire_forms binding via reader owners through coord103; same four original columns; no runtime aliases.",
+  "required_checks": [
+    "existing unmarked source and four rows unchanged",
+    "valid declared first row retained at original+1 physical line",
+    "outer1decode leaves internal JSON quotes/backslashes",
+    "valid outer invalid inner passes to existing CALL semantic parser",
+    "invalid outer errors before build/dispatch",
+    "same binding independent of unrelated cwd; undeclared/unrelated paths unchanged",
+    "all marked column cells covered by before/decoded SHA; raw table SHA separate"
+  ],
+  "fixtures": [
+    {
+      "source": "# cell-json: request\n# owned positional source fixture\nowned-first\t1\t\"CALL console-folder-create {\\\"name\\\":\\\"\\u0436\\\"}\"\t{\"ok\":true}\n",
+      "expected": "valid; first data physical3",
+      "decoded_request": "CALL console-folder-create {\"name\":\"\u0436\"}",
+      "decoded_sha256": "6eddb902c055e34ac8117c0e012ac40daf230afc8c58d4f2eb64d9632e922e85"
+    },
+    {
+      "source": "# cell-json: request\n# owned positional source fixture\nowned-first\t1\t\"CALL console-folder-create {invalid-inner\"\t{\"ok\":true}\n",
+      "expected": "valid outer; invalid inner remains opaque",
+      "decoded_request": "CALL console-folder-create {invalid-inner",
+      "decoded_sha256": "29e6ed42e2f94991638951154eeb995c459b87b1094e5f9524268d2e7a1655e0"
+    },
+    {
+      "source": "# cell-json: request\n# owned positional source fixture\nowned-first\t1\tnot-json\t{\"ok\":true}\n",
+      "expected": "form error",
+      "decoded_request": null,
+      "decoded_sha256": null
+    },
+    {
+      "source": "# cell-json: request\n# owned positional source fixture\nowned-first\t1\tnull\t{\"ok\":true}\n",
+      "expected": "form error",
+      "decoded_request": null,
+      "decoded_sha256": null
+    },
+    {
+      "source": "# cell-json: request\n# owned positional source fixture\nowned-first\t1\t\"\\ud800\"\t{\"ok\":true}\n",
+      "expected": "form error",
+      "decoded_request": null,
+      "decoded_sha256": null
+    },
+    {
+      "source": "# cell-json: request,request\n# owned positional source fixture\nowned-first\t1\t\"CALL console-folder-create {\\\"name\\\":\\\"\\u0436\\\"}\"\t{\"ok\":true}\n",
+      "expected": "form error: duplicate declaration column",
+      "decoded_request": null,
+      "decoded_sha256": null
+    },
+    {
+      "source": "# cell-json: request\n# owned positional source fixture\nowned-first\t\"CALL console-folder-create {\\\"name\\\":\\\"\\u0436\\\"}\"\t{\"ok\":true}\n",
+      "expected": "form error: wrong width",
+      "decoded_request": null,
+      "decoded_sha256": null
+    }
+  ]
+}

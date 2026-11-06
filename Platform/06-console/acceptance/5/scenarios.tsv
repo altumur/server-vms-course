@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Acceptance P/06.5: testsub (root) and testsub2 (mounted) console observations without domain; sc. 01, 02, 04–12 from М10/09, 13–16 from М10/11, 03 and 17 from М10/10 (stage B; stage B 6–7 review analysis, № 22). Format: README.
+# Acceptance P/06.5: testsub (root) and testsub2 (mounted) console observations without domain; sc. 01, 02, 04–12 from M10/09, 13–16 from M10/11, 03 and 17 from M10/10 (stage B; stage B 6–7 review analysis, № 22). Format: README.
 01-page-and-module	1	GET /	200 ~PlatformConsole.mount
 01-page-and-module	2	GET /	200 @header Content-Security-Policy: ~script-src
 01-page-and-module	3	GET /platform/console.js?v=1	200 ~PlatformConsole
@@ -163,7 +163,7 @@ scenario	step	request	expect
 22-numeric-id	6	PUT /probe-x/probes/01 {"n": 1}	400 {"error": "badkey"}
 22-numeric-id	7	PUT /probe-x/probes/%32 {"n": 1}	200 {"id": "2", "n": 1, "revision": 2}
 22-numeric-id	8	PUT /probe-x/probes/1 {"n": 1}	404 {"error": "no such unit"}
-# 23-weight-field (P/06 coverage audit, G09 item 2; P/06.1 N3 «создать» step 4, N4): probe-x cost materializes default 1; POST/PUT of 0 or -1 gives 400 «cost must be at least 1» without fault; string or boolean gives not_number; refused PUT leaves the row unchanged.
+# 23-weight-field (P/06 coverage audit, G09 item 2; P/06.1 N3 «create» step 4, N4): probe-x cost materializes default 1; POST/PUT of 0 or -1 gives 400 «cost must be at least 1» without fault; string or boolean gives not_number; refused PUT leaves the row unchanged.
 23-weight-field	1	POST /probe-x/probes {}	201 {"id": "1", "cost": 1, "revision": 1}
 23-weight-field	2	POST /probe-x/probes {"cost": 0}	400 {"error": "type", "field": "/cost", "detail": "~cost must be at least 1", "fault": "@absent"}
 23-weight-field	3	POST /probe-x/probes {"cost": -1}	400 {"error": "type", "field": "/cost", "detail": "~cost must be at least 1", "fault": "@absent"}
@@ -186,7 +186,7 @@ scenario	step	request	expect
 24-where-door	11	GET /testsub2/where/ta	200 {"worker": "t-1", "door": "@absent"}
 24-where-door	12	store GET /v1/get?key=door/keys	200 {"index": "$kw"}
 24-where-door	13	@until 20 GET /events?kind=door.keys_conflict	200 {"events": [{"kind": "door.keys_conflict", "kid": "$kid"}]}
-# 25-slot-and-contenders (P/06 coverage audit, second Gemini pass, G08; N2 «Выдачи», N3 «/servers» «Соперники»): slot released "taking" gives released false and slot_taking; malformed slot gives slot_garbled, slot_until null, no released; contender mark under w-1 with another name gives name_conflict marked unreadable; search mark «-» is not a contender; name_conflicts 1.
+# 25-slot-and-contenders (P/06 coverage audit, second Gemini pass, G08; N2 «Issuance», N3 «/servers» «Contenders»): slot released "taking" gives released false and slot_taking; malformed slot gives slot_garbled, slot_until null, no released; contender mark under w-1 with another name gives name_conflict marked unreadable; search mark «-» is not a contender; name_conflicts 1.
 25-slot-and-contenders	1	@start resource	ok
 25-slot-and-contenders	2	@put object testsub/heartbeats/w-1 inputs/hb-w-1-labels.json	ok
 25-slot-and-contenders	3	@as testsubworker store POST /v1/write {"id":"73","op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"taking","gen":"1","server":"srv-a"},"cas":""}	200 {"index": "$s"}
