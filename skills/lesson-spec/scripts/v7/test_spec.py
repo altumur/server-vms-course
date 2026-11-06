@@ -43,7 +43,6 @@ MEANING_CLOSED_REFS = {
         "MISSING_SHOWN",
 }
 P08_MISSING_REGISTRY_COORDS = tuple(place for place, name in MEANING_CLOSED_REFS.items() if name == "MISSING_SHOWN")
-P08_MISSING_ACTUAL_COORDS = {(*place[:2], r'`\"\".missing`', "desc"): place for place in P08_MISSING_REGISTRY_COORDS}
 P08_MISSING_REGISTRY_SHA256 = "1c85896e4673aa6393c2b6da7b5c2553acc849b381525ad8ae429d9e84de35d2"
 P09_C4_MEANING_COORDS = (
     ("Platform/09-agent/spec/09.1-agent.norms.md", "`domain/member-key` — строка", "`pub`", "desc"),
@@ -582,14 +581,14 @@ class TestTree(unittest.TestCase):
                 section_ = k[1][len("#### "):] if k[1] else "-"
                 w = b.get((k[0], translated_address(k[1]), k[2]))
                 actual_place = (f, section_, k[2], "desc")
-                if actual_place in P08_MISSING_ACTUAL_COORDS or actual_place in P08_MISSING_REGISTRY_COORDS:
-                    self.assertIsNotNone(w, "required exact current escaped missing coordinate")
+                if actual_place in P08_MISSING_REGISTRY_COORDS:
+                    self.assertIsNotNone(w, "required exact current missing coordinate")
                 if w is None:
                     continue
                 n += 1
                 old = (v[2].replace("'", '"'), v[3], re.sub(r"(?:; )?класс отказа `\w+`$", "", v[4]))
                 for col, i in cells.items():
-                    place = P08_MISSING_ACTUAL_COORDS.get((f, section_, k[2], col), (f, section_, k[2], col))
+                    place = (f, section_, k[2], col)
                     observed = closed_meaning_description(TREE, place, w[2 + i])
                     if place in reg:
                         was, became, _ = reg[place]
