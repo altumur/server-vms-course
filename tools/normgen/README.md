@@ -1,151 +1,137 @@
-# tools/normgen — генераторы кода по формам (ADR-0120 п. 2 (а), ADR-0125, ADR-0126)
+# tools/normgen: code generators from forms (ADR-0120 item 2(a), ADR-0125, ADR-0126)
 
-Генераторы строят механическую часть урока из машинных форм без модели; у каждого — свой внешний судья
-(ADR-0125 доп. (1) п. 1). Генераторы — Python stdlib; выход — Go 1.22, только stdlib.
+Generators build a lesson's mechanical parts from machine-readable forms without a model. Each has an external judge
+(ADR-0125 addendum (1), item 1). Generators use Python stdlib; output uses Go 1.22 and stdlib.
 
-Происхождение конечного кода по SHA реализации и пакетов считает `code_origin.py`:
-[методика, входы и отчёт пробы ADR-0127](provenance/README.md). Учёт `generated`, ручного кода пакета и кода модели
-ведётся порознь для кода и тестов, по конечным байтам и `origin` манифеста.
+`code_origin.py` counts final-code origins from implementation and kit SHAs:
+[method, inputs and ADR-0127 probe report](provenance/README.md). Count `generated`, handwritten kit code and model
+code separately for code/tests, using final bytes and manifest `origin`.
 
-| № | Генератор | Форма | Выход (`out/p01-1/go/`) | Часть пакета | Судья |
+| No. | Generator | Form | Output (`out/p01-1/go/`) | Kit part | Judge |
 |---|---|---|---|---|---|
-| 1 | `gen_checks.py` | `forms/write-checks.tsv` | `checks/` (+ `python/checks.py`) | `writecheck` (с `kit/go`) | оракул `check_tables` (`test_gen_checks.py`) |
-| 2 | `gen_door.py` | `spec/01-store.api.openapi.yaml` | `door/` | `door` | раннер P/01.1 на заглушке `kit/build_stub.py` → `door_judge.py` |
-| 2 (P/06, P/08–P/10, 3а) | `gen_door_lesson.py --lesson 06-console` / `08-domain` / `09-agent` / `10-domain-console` (и `gen_door.py` на уроке ≠ P/01) | `spec/<урок>.api.openapi.yaml` (внешние `$ref` — по относительному пути: 05, 06, 08, общие контракты; YAML-якоря `&имя`/`*имя` — yamlsub; сервер-литерал без переменных — путь без префикса); проза (description, x-mounting) не читается | `apidoor/routes.go` — `Op` на (путь, метод), `Ops` (метод, путь, `Prefixed` — сервер `{origin}/{sub}`, параметры, ответы: код, media types, заголовки; media types тела), таблицы маршрутизатора (шаблоны, проверки параметров пути: minLength, maxLength, pattern, enum, const, not {enum, pattern}); `routes_rt.go` — ручная среда `doorrt2/go/routes.go`: `Route(method, path, Catalog)` — литерал > имя каталога (sub, rows, table, pass; `Catalog` — **реализации**) > свободный параметр; 405 — при 405 у всех операций пути | `door` (P/06) | `test_gen_door_lesson.py` — по подклассу на урок (P/06, P/08, P/09, P/10): своя модель маршрутов судьи по OpenAPI против Go `Route`: пробы на каждую операцию (короткий путь и `/{sub}`; 167 из 167), отрицательные (404, 405, %XX, границы схемы), мутанты таблиц (префикс, all405, схема, ранг) |
-| 2 (P/06, 3б) | `gen_door_lesson.py --lesson 06-console` | схемы тел запросов и ответов OpenAPI урока (внешние `$ref` 05, 08, общие контракты) | `apidoor/bodies.go` — сборка схем `$defs` (301: компоненты, `NN.<имя>` внешних, встроенные `<Op>.<req\|resp>.<код>.<media>`), таблицы схем тел запросов и ответов по коду и media; `schema_rt.go` — ручная среда `doorrt2/go/schema.go`: `Validate` (JSON Schema 2020-12, слова схем урока, `unevaluatedProperties`), `StrictJSON`, `DecodeRequest`, `CheckResponse`, `EncodeResponse` | `door` (P/06) | `test_gen_door_bodies.py` — оракул jsonschema 2020-12: Go `Validate` против оракула на значениях судьи (5797) и синтетической сборке; сборка против исходных схем (реестр referencing); API; мутанты проверщика |
-| 2 (P/05) | `gen_door_lesson.py --lesson 05-resource` — режим `x-route-priority` (P/05-R057) | OpenAPI урока: `x-route-priority`, `x-path-capture` (segment \| remainder), `x-path-decode` (percent-segment), `x-path-error` по методу; `forms/door-roles.tsv` | `routes.go` — шаблоны с приоритетом и захватом, декодирование, ошибки параметров, роли; `routes_rt.go` — ручная среда `doorrt2/go/routes_priority.go`: `Route(method, rawPath)` (литералы по сырым байтам, фильтр по методу до приоритета, 405/404 без тела, ошибка параметра — x-path-error без отката), `Admitted` (роли mtls); общее с P/06+: `CheckParam`/`CheckParams` (query, header по схемам, умолчания), x-ndjson по `x-line-schema` | `door` (P/05) | `test_gen_door_priority.py` — своя модель R057 судьи против Go `Route`: швы resource-route s30–s37, операции, порча сегментов (%2F, %FF, пусто, «//»), случайные пути, роли; мутанты среды; `test_gen_door_bodies.py` — и параметры (оракул jsonschema) |
-| contracts (все уроки) | ручная среда `contracts/go` (один раз на словарь, опись генерации п. 1) | `Platform/common/contracts/*.md` | `internal/contracts` — instance (GivenInstance, ResolveBox), slot-name (SlotOrder, NextName, RoleOf), labels (ValidLabel, LabelSetWrite, LabelTextRead, EnvLabels), event journal (EncodeComponent, FileName, Read/WriteHashedName, BucketName, AppendLine, ReadBucket); `contracts/adapters/*.go` — адаптеры векторов над ними (с частью `vectors` встают вместо заглушек, **реализации**) | `contracts` | `test_contracts.py` — общие векторы всех уроков-потребителей против адаптеров над contracts (334 теста), сборка части в пакете |
-| 3 | `gen_flags.py` | `forms/daemon-flags.tsv` | `flags/` | `flags` | `flag_judge.py` — пробы запуска демона |
-| 3 (P/02) | `gen_flags.py --lesson 02-installer` | `forms/operator-commands.tsv` (команда, процесс, префикс argv, позиционные — JSON Schema массива строк) и `forms/daemon-flags.tsv` (опции команд: string, number, file, bool; CEL над f и cmd) | `flags/` — `ParseArgv(process, argv)`, `Lookup`, `Parse`, `Commands`; отказ без кода выхода (код — у команды по refusals.tsv); написание опций и десятичная запись number — выбор пакета | `flags` | `cmdflag_judge.py` (своя модель форм, оракул CEL; мутанты — `test_gen_flags_cmd.py`) |
-| 4 | `gen_refusals.py` | `forms/refusals.tsv` | `refusals/` | `refusals` | `refusal_judge.py` — приёмка и `door.Refuse` |
-| 4 (P/02) | `gen_refusals.py --lesson 02-installer` | `forms/refusals.tsv` на 15 колонок (урок без двери: surface call/cli/start/process/peer, code exit N / exit !0 / NNN у peer / -, word, log) — только закрытые колонки, проза cause/outcome/diagnostic/caller в код не идёт | `refusals/` — `Spec{Exit, AnyNonZero, Status, Word, Log, Words}`, `ExitCode()` (1 за «exit !0» — выбор пакета) | `refusals` | `refusal_judge.py` (каталог против таблицы; каждое `exit N` шага RUN швов — в каталоге; мутанты — `test_gen_refusals_plain.py`) |
-| 3 (P/03–P/05) | `gen_flags.py --lesson 03-worker` / `04-controller` / `05-resource` | `forms/daemon-flags.tsv` входов процесса: `$NAME` — окружение, `<arg>` — позиционный (типы string, dir, file, number; CEL над f и cmd) | `flags/` — `Parse(cmd, args, getenv)`, `Inputs`, `Commands`; отказ без кода выхода; правило `default_text` и проверки контрактов — у адаптера (`Given`) | `flags` | `test_gen_flags_inputs.py` (своя модель, оракул CEL на 4000 пробах на урок, мутанты) |
-| 4 (P/03–P/05) | `gen_refusals.py --lesson 03-worker` / `04-controller` / `05-resource` | `forms/refusals.tsv` урока без двери: глава одной главой («4»); у `peer` — fields и headers ответа импортированной двери; `word` — сохранённая нормативная ячейка (spec103 2026-11-05); P/05 — колонка `response_schema` (схема components/schemas OpenAPI урока) и поверхность `http` своей двери | `refusals/` — `Spec` + `Fields`, `Headers`, `Named` (названные исходы `…`, индекс, не «любой из»), `WordCell` (ячейка дословно) | `refusals` | `refusal_judge.py` (P/03 56/56, P/04 18/18; то же правило своим чтением), `test_gen_refusals_lessons.py` (мутанты, отказы формы) |
-| stagetests (P/03–P/05) | `gen_cmdtests.py --lesson 03-worker` / `04-controller` / `05-resource` | `forms/stages.tsv` (`tests:<глава>:…:seams`), `acceptance/…/seams.tsv` (только `CALL <порт> <JSON>`), таблица «CALL port» `forms/README.md` | `stagetests/` (движок CALL: match/decode P/02, паника и ошибка порта — провал), `lessonadapter/` — `lessonadapter.go` закрыт, по файлу на порт — **реализации** (P/03 15, P/04 11) | `stagetests` | `test_gen_cmdtests_ports.py` (заглушки — красное без паники; подставной адаптер из швов — зелёное; мутанты) |
-| vectors (P/03–P/06, P/08–P/10) | `gen_vectors.py --lesson 03-worker` / `04-controller` / `05-resource` / `06-console` / `08-domain` / `09-agent` / `10-domain-console` | `Platform/common/vectors/consumers.tsv` урока; провод — **черновик** `wire_draft.py` (временная проекция до формы `wire.tsv`; источники — README пакетов, сверка с раннером; сводки `/home/pilot/wire-p03p04-draft.md`, `/home/pilot/wire-p06-draft.md`, `/home/pilot/wire-p0810-draft.md`; P/06 — вызов на таблицу (fault), `without:<поле>` (pool), secret с отображением; secret — no-leak whole: целый секрет ≥ 4 байт); свои пакеты creates-key, near-of, order, shrink-* | как у P/02 (`vectoradapter/` — по файлу на пакет **реализации**, `vectortests/`, `vectorcmd/`, `cmd/vectors/`); выбор строк потребителя (`select`) — в описи excluded с причиной; values-by-type — кадр на половину строки (variant write \| read); правила сравнения README — `vectortests/compare_test.go` (`checkBy`: subset, fields, setarrays, events, row, secret, turn, vbt-write) | `vectors` | `test_gen_vectors_lessons.py` (состав = consumers.tsv; заглушки — красное без паники; подставной адаптер по правилам — зелёное; 10 мутантов по правилам — красные ровно в своём тесте; поле вне fields — зелёное) |
-| 5 | `gen_families.py` | `common/data/catalog.tsv`, `01-store/data/<семья>.schema.json` (+ `layers.tsv` — сверка со схемой, `outcomes.tsv` — только путь, читатель, приоритет, единица), плейсхолдеры `common/data/README.md` | `families/` (`families.go`; ручная среда `famrt/go/runtime.go` — проход стека В7) | `families` | `family_judge.py` — векторы `common/vectors/family-read/01.tsv` и `--v7` свои экземпляры против стека В7 курса; `check_spec` — векторы против В7 |
-| 5 (P/02+) | `gen_families.py --lesson 02-installer` | семьи урока со схемой (`catalog.tsv`, `data/<семья>.schema.json`, `layers.tsv`, `outcomes.tsv`) — режим схемы данными (у всех уроков, кроме P/01) | `families/` — `families.go` (схема текстом, шаблон ключа, исходы), `runtime.go` — ручной исполнитель `famrt2/go/runtime.go`: закрытый набор JSON Schema 2020-12 с местами отказа диалекта, слои В7 (x-encoding json/jcs, x-codec, x-time, x-integer, x-whole, x-max-bytes, x-max-names, $defs.writer) | `families` | `family_judge.py` (02.tsv, `--v7` с мутациями внутри документов) и `test_gen_families_doc.py` (синтетическая семья против стека В7, мутанты среды) |
-| 6 | `gen_tests.py` (+ `common_vectors.py`) | `vectors/jcs`, `vectors/rights-evaluator`, `forms/stages.tsv`; общие пакеты урока `common/vectors/<пакет>` (состав — объявление `COMPOSITION`, до формы consumers.tsv; P/01: crl, revoked, log-mask `cases.tsv`, store-client, family-read `01.tsv`) | `vectortests/` (`TestCommon<Пакет>_Line<N>`), `vectorcmd/` (ветви пакетов; family-read — частью `families`, без кода модели), `vectoradapter/` (`canonical.go`, `rights.go`, `crl.go`, `revoked.go`, `logmask.go`, `storeclient.go` — заглушки реализации по файлу на функцию) | `vectors` (на уроке с family-read нужна `families`) | `vector_judge.py`, раннер `P/NN/vectors-<пакет>` |
-| 6 (P/02) | `gen_vectors.py --lesson 02-installer` + `wire_vectors.py` | `common/vectors/wire.tsv` через `wire.py`: входы, фикстуры, группы, маркеры, native, сравнения и assert; состав — stages.tsv и consumers.tsv; Python — `/opt/check-env/lesson-spec/bin/python` (CEL условий, jsonschema статической сверки) | `vectoradapter/` — прежние сигнатуры Go; `vectortests/` — тест на каждый запуск формы (1517), включая обе поверхности platform-lists; `wirecheck/` — строгий нативный ответ, полная native.schema до subset/assert, схема — среда двери без HTTP; `vectorcmd/`, `cmd/vectors`; journal modes — layout/excluded | `vectors` (нужна `families`) | `test_gen_vectors.py` (полная опись, заглушки, подставной адаптер, мутанты); `test_wire_vectors.py` — независимые пробы полной схемы, рамки, сравнений и assert, изменения формы и пропущенной привязки; `test_wire.py`; раннер `P/02/vectors-*`, `P/02.2/vectors`, `P/02.4/vectors` |
-| 2 + 3 | `gen_launch.py` | `forms/daemon-flags.tsv`, OpenAPI (через части `flags`, `door`) | `launch/`, `frame/` (рамка HTTP — **реализации**, временная на net/http, якоря Н2.1 в шапке), `cmd/configstore/` | `launch` (нужны `door`, `flags`, `stagetests`, `admin`) | раннер P/01.1 на пакете как есть (пустое ядро `launch.Empty` на заглушке `coreadapter.Open`) → `launch_judge.py` (этап `launch`: `01-absent`) |
-| 3 + Н1.3 | `gen_admin.py` | `forms/daemon-flags.tsv` (подкоманды — колонка commands), `spec/01.3-store.norms.md` (блок Н1.3 R006: admin_ops, copy, import, floor, box, repeat; R018; Н3 «recover»), `forms/refusals.tsv`, общий README приёмки (`@spoil row`) | `admin/` — `admin.go` закрыт (`Env`, `Run`, `NotInStage` — exit 1), по файлу на подкоманду и `own.go` (свои команды профиля: `spoil-row`) — **реализации**, кладутся один раз; `launch`: `App.Admin` nil → `admin.Run`, `admin.Own` — до разбора флагов | `admin` (нужна `flags`; её требует `launch`) | `admin_judge.py` (подкоманда без реализации — «not in this stage» exit 1, флаг вне формы и чужой команды — 2, `spoil-row` — 1) и `test_gen_admin.py` (якоря, мутанты, `--seed`) |
-| rollout-poll (P/02) | `gen_rollout.py --lesson 02-installer` | `forms/rollout-poll.traces.tsv` (машина `rollout-poll.machine.yaml` — норма; генератор её не исполняет) | `rollouttests/` — `TestRolloutPoll_Trace_<трасса>`, подтест на каждое `state=` (с отказом — `did=refuse` шага): события до шага → `lessonadapter.RolloutPoll`; внутренние утверждения (alive, need, target, …) — в описи excluded | `rollout-poll` (нужна `stagetests`) | `test_gen_rollout.py` (заглушка — красное; подставной poll по ответам трасс — зелёное; мутанты) |
-| машины (P/03, P/04) | `gen_machine.py --lesson 03-worker` / `04-controller` (общий: все `forms/*.tsv` с колонками `n state condition action next norm`) | форма машины: `# states:`, `Initial`, `#var` (bool, int, double, string; ЗАГЛАВНЫЕ — уставки), `#const`, `#action`; CEL условий и аргументов (разбор генератора № 1, перевод с типами); первая совпавшая строка состояния, нет совпадения — ждать, `-` — YOURS | `<пакет>/` — `machine.go` (закрыт: `State`, `In`, `Step(state, in) (Move, bool, error)` — выбор перехода, машину не исполняет; `Actions`, `Apply`), `form_test.go` (каждая пара «значение входа × исход» состояния; границы — #const и уставки ± шаг), `inventory.tsv`; `<пакет>impl/` — **реализации**: `actions.go` и по файлу на `#action` и на процедуру `-` (`first_write_to_cleanup.go` P/03.2-R024, `judge_to_release.go`, `consider_to_writing.go` P/04-R041) | `slot-capture`, `slot-fate`, `slot-release` | `test_gen_machine.py` — своё чтение формы, оракул cel_expr_python на случайных и граничных входах против Go `Step` (аргументы с типами, переполнение int); мутанты формы (отрицание, next, литерал, обмен строк; равносильные — по оракулу) красные на тестах исходной формы; отказы грамматики |
-| stagetests (P/02) | `gen_cmdtests.py --lesson 02-installer` | `forms/stages.tsv` (gate `tests:2.K:…:seams`, `verdicts:2.1:*`; `puts:` — excluded «needs the store of P/01 (runner corpus puts)», решение «Архитектора»), `acceptance/K/seams.tsv` (RUN, CALL command/load/load-catalogue/rollout-poll, @file, @read, @parallel — `forms/README.md` урока), `acceptance/1/verdicts.tsv` + `cases/` + `classes.tsv` | `stagetests/` (движок не по HTTP, `Test<Этап>_<Сценарий>`, `Test<Этап>_Verdicts`, `testdata/verdicts.jsonl` — случаи base64, `inventory.tsv`), `lessonadapter/` (`lessonadapter.go` — типы, закрыт; `command.go`, `load.go`, `catalogue.go`, `poll.go` — **реализации**) | `stagetests` | `test_gen_cmdtests.py` (заглушка — красное без паники; подставной адаптер — зелёное; мутанты адаптера и шва) |
-| 2 + Н3 | `gen_core.py` | `apidoor.Handler` (выход `gen_door`), `spec/01.1-store.norms.md` (якоря req разделов Н3, Н2.1; над `Context` — места личности: якоря P/01.2 Н1.1, Н3 «check», P/01.1 R050, R066, порядок P/01.3-07, заголовок, строки 403 `refusals.tsv`; над методами глав 1.2/1.3 — пункты Н2 норм 1.2/1.3, строка таблицы дверей P/01.3-R016 и строки `refusals.tsv` двери) | `out/p01-1/core/coreadapter/` (`core.go`, `open.go` и по файлу на метод `apidoor.Handler` — **реализации**, кладутся один раз; заглушка не кладётся, если её имя уже объявлено в пакете) | `core` (нужны `door`, `stagetests`) | `test_gen_core.py` (сборка, заглушки, тесты этапов красные без паники) и раннер на пакете (этап `launch` остаётся закрытым: `Get` заглушки — пустое хранилище) |
+| 1 | `gen_checks.py` | `forms/write-checks.tsv` | `checks/` (+ `python/checks.py`) | `writecheck` with `kit/go` | `check_tables` oracle through `test_gen_checks.py` |
+| 2 | `gen_door.py` | `spec/01-store.api.openapi.yaml` | `door/` | `door` | P/01.1 runner on `kit/build_stub.py`, then `door_judge.py` |
+| 2 (P/06, P/08-P/10, 3a) | `gen_door_lesson.py --lesson 06-console` / `08-domain` / `09-agent` / `10-domain-console`; `gen_door.py` delegates after P/01 | Lesson OpenAPI, relative external refs from 05/06/08/shared contracts, yamlsub mapping anchors/aliases; a literal server has no sub prefix. Ignore description/x-mounting prose | `apidoor/routes.go`: Op per path/method, Ops metadata (method, path, Prefixed from `{origin}/{sub}`, parameters, response statuses/media/headers, request media), router templates and minLength/maxLength/pattern/enum/const/not checks. Copied `doorrt2/go/routes.go` implements `Route(method, path, Catalog)`: literal > loaded catalog class (sub/rows/table/pass) > free parameter; 405 only when all path operations declare it | `door` (P/06) | `test_gen_door_lesson.py`, one subclass per lesson: independent OpenAPI route model, every operation and short/prefixed variant (167/167), 404/405/percent/schema-boundary negatives and prefix/all405/schema/rank mutants |
+| 2 (P/06, 3b) | `gen_door_lesson.py --lesson 06-console` | Request/response body schemas, with external 05/08/shared-contract refs | `apidoor/bodies.go`: combined `$defs` (301 components, external `NN.<name>`, inline `<Op>.<req\|resp>.<status>.<media>`), request/response schema tables by media/status; copied `doorrt2/go/schema.go`: Draft 2020-12 `Validate`, including unevaluatedProperties, plus StrictJSON/DecodeRequest/CheckResponse/EncodeResponse | `door` | `test_gen_door_bodies.py`: jsonschema oracle on judge values (5797) and synthetic schemas, original-versus-combined schemas through referencing, API and checker mutants |
+| 2 (P/05) | `gen_door_lesson.py --lesson 05-resource`, x-route-priority mode (P/05-R057) | OpenAPI priority, segment/remainder capture, percent-segment decode, per-method x-path-error, and door-roles.tsv | routes.go priority/capture/decoding/errors/roles; copied `doorrt2/go/routes_priority.go`: raw literal matching, method filtering before priority, bodyless 405/404 and parameter errors without fallback; Admitted for mtls roles. Shared CheckParam/CheckParams support query/header schemas/defaults; x-line-schema supports NDJSON | `door` | `test_gen_door_priority.py`: independent R057 model, resource-route s30-s37, operations, %2F/%FF/empty/double-slash corruptions, random paths, roles and runtime mutants. `test_gen_door_bodies.py` also checks parameters against jsonschema |
+| contracts (all lessons) | Handwritten `contracts/go`, once per vocabulary, inventory item 1 | `Platform/common/contracts/*.md` | internal/contracts: instance GivenInstance/ResolveBox; slot-name SlotOrder/NextName/RoleOf; labels ValidLabel/LabelSetWrite/LabelTextRead/EnvLabels; journal EncodeComponent/FileName/ReadHashedName/WriteHashedName/BucketName/AppendLine/ReadBucket. contracts/adapters supply implementation-owned vector adapters in place of scaffolds | `contracts` | `test_contracts.py`: vectors for every consumer through contracts adapters (334 tests), and kit-part build |
+| 3 | `gen_flags.py` | `forms/daemon-flags.tsv` | `flags/` | `flags` | `flag_judge.py` daemon startup probes |
+| 3 (P/02) | `gen_flags.py --lesson 02-installer` | operator-commands.tsv command/process/argv prefix/positional string-array schema; daemon-flags.tsv string/number/file/bool options with CEL f/cmd | flags ParseArgv/Lookup/Parse/Commands; refusals have no exit code because commands select it from refusals.tsv. Option spelling and decimal number syntax are kit conventions | `flags` | Independent-form/CEL `cmdflag_judge.py`; mutants in test_gen_flags_cmd.py |
+| 4 | `gen_refusals.py` | `forms/refusals.tsv` | `refusals/` | `refusals` | `refusal_judge.py`, acceptance and door.Refuse |
+| 4 (P/02) | `gen_refusals.py --lesson 02-installer` | 15-column refusals.tsv: call/cli/start/process/peer, exit N/!0, peer HTTP status or '-', word/log; cause/outcome/diagnostic/caller prose is not emitted | Spec Exit/AnyNonZero/Status/Word/Log/Words and ExitCode; kit convention maps !0 to 1 | `refusals` | refusal_judge compares the table and every seam RUN exit; test_gen_refusals_plain.py mutants |
+| 3 (P/03-P/05) | `gen_flags.py --lesson 03-worker` / `04-controller` / `05-resource` | Process inputs: environment `$NAME`, positional `<arg>`, string/dir/file/number, CEL f/cmd | Parse(cmd,args,getenv), Inputs/Commands, refusal without exit code; adapters own default_text and contract checks using Given | `flags` | test_gen_flags_inputs.py independent form/CEL model, 4000 probes per lesson and mutants |
+| 4 (P/03-P/05) | `gen_refusals.py --lesson 03-worker` / `04-controller` / `05-resource` | Single-chapter labels such as 4; peer fields/headers from imported doors; exact word cell (spec103, 2026-11-05). P/05 adds local http and response_schema from OpenAPI components | Spec plus Fields/Headers/Named (quoted outcome-token index, not any-of)/WordCell (verbatim cell) | `refusals` | refusal_judge: P/03 56/56, P/04 18/18 with independent reads; test_gen_refusals_lessons.py mutants/invalid forms |
+| stagetests (P/03-P/05) | `gen_cmdtests.py --lesson 03-worker` / `04-controller` / `05-resource` | stages.tsv tests gates, acceptance seams with CALL port JSON only, forms/README CALL port table | CALL engine using P/02 match/decode; port panic/error fails. Closed lessonadapter.go plus one implementation-owned file per port (P/03 15, P/04 11) | `stagetests` | test_gen_cmdtests_ports.py: scaffolds fail without panic, seam-derived fixtures pass, mutants fail |
+| vectors (P/03-P/06, P/08-P/10) | `gen_vectors.py` with the corresponding lesson | consumers.tsv plus temporary wire_draft.py projection until wire.tsv. Sources: package READMEs and runner comparison; reports `/home/pilot/wire-p03p04-draft.md`, `/home/pilot/wire-p06-draft.md`, `/home/pilot/wire-p0810-draft.md`. P/06 whole-table fault, pool without:<field>, mapped secret, whole-secret no-leak at least 4 bytes; local creates-key/near-of/order/shrink-* | Same vectoradapter/vectortests/vectorcmd/cmd-vectors layout as P/02; one implementation-owned file per package. Selected-out rows remain excluded with reasons. values-by-type uses write/read frames. compare_test.go checkBy implements subset/fields/setarrays/events/row/secret/turn/vbt-write | `vectors` | test_gen_vectors_lessons.py: exact consumer roster, default failures without panic, passing rule-derived fixture adapter; 10 mutants fail their own tests, fields outside fields remain accepted |
+| 5 | `gen_families.py` | catalog.tsv, 01-store/data family schema/layers/outcomes; only path/reader/priority/unit from outcomes; README key placeholders | families.go and handwritten famrt/go/runtime.go V7 traversal | `families` | family_judge on family-read/01.tsv and independent --v7 cases; check_spec compares vectors with V7 |
+| 5 (P/02+) | `gen_families.py --lesson 02-installer` | Lesson-owned schemas/catalog/layers/outcomes, data-schema mode for every lesson after P/01 | families.go stores schema text,key template,outcomes; copied famrt2 runtime executes closed Draft 2020-12/V7 keywords with dialect paths: x-encoding json/jcs,x-codec,x-time,x-integer,x-whole,x-max-bytes,x-max-names,$defs.writer | `families` | family_judge on 02.tsv and --v7 nested mutants; test_gen_families_doc.py synthetic-family V7 comparison/runtime mutants |
+| 6 | `gen_tests.py` + common_vectors.py | JCS,rights-evaluator,stages; pre-consumers COMPOSITION for common crl/revoked/log-mask cases.tsv,store-client,family-read01.tsv | TestCommon<Package>_Line<N>, unified vectorcmd, kit-executed family-read, implementation-owned per-function canonical/rights/crl/revoked/logmask/storeclient scaffolds | `vectors`, requiring families for family-read | vector_judge.py and P/NN/vectors-<package> runner targets |
+| 6 (P/02) | `gen_vectors.py --lesson 02-installer` + wire_vectors.py | wire.tsv via wire.py: inputs,fixtures,groups,markers,native,compare/assert; stages and consumers roster. Use check-env Python for CEL/jsonschema | Existing Go signatures; one test per form Run (1517), including both platform-lists surfaces; wirecheck validates full native.schema before subset/assert using body-schema runtime without HTTP; vectorcmd/cmd-vectors. Journal modes are layout/excluded | `vectors`, requiring families | test_gen_vectors.py roster/scaffolds/fixtures/mutants; test_wire_vectors.py independent full schema/frame/compare/assert,form mutations and missing bindings; test_wire.py and P/02 vectors runner targets |
+| 2 + 3 | `gen_launch.py` | daemon flags and OpenAPI through flags/door | launch, editable temporary net/http frame with N2.1 anchors, and editable cmd/configstore entrypoint | `launch`, requiring door/flags/stagetests/admin | P/01.1 runner on unchanged launch.Empty with scaffold Open, then launch_judge.py for 01-absent |
+| 3 + N1.3 | `gen_admin.py` | commands column, N1.3 R006 admin_ops/copy/import/floor/box/repeat,R018,N3 recover,refusals,and common @spoil row directive | Closed admin.go Env/Run/NotInStage(exit 1), one implementation-owned file per subcommand and own.go spoil-row. launch uses admin.Run for nil App.Admin and checks Own before flags | `admin`, requiring flags and required by launch | admin_judge: unimplemented command exit 1, invalid/foreign flags 2, spoil-row 1; test_gen_admin.py anchors/mutants/seed |
+| rollout-poll (P/02) | `gen_rollout.py --lesson 02-installer` | rollout-poll.traces.tsv; machine YAML is normative, not executed by the generator | TestRolloutPoll_Trace_<trace>, subtests per observable state and same-step did=refuse, passing event prefixes to lessonadapter.RolloutPoll; internal alive/need/target assertions excluded | `rollout-poll`, requiring stagetests | test_gen_rollout.py scaffold failures, passing trace-response fixture, failing mutants |
+| machines (P/03,P/04) | `gen_machine.py` for machine-column forms | n/state/condition/action/next/norm; states/Initial/#var/#const/#action; uppercase vars are settings. Generator1 CEL parser with typed lowering. First matching row, otherwise wait; '-' is YOURS | Closed machine.go State/In/Step transition selection,Actions/Apply; form tests cover input-value/outcome pairs and constant/setting boundaries; inventory. Editable impl actions.go and per-action/procedure files, including first_write_to_cleanup.go P/03.2-R024 and judge_to_release.go/consider_to_writing.go P/04-R041 | slot-capture/slot-fate/slot-release | test_gen_machine independently reads forms and evaluates random/boundary typed arguments/overflow with CEL; oracle-distinguishable condition/next/literal/order mutants fail original tests; invalid grammar refuses |
+| stagetests (P/02) | `gen_cmdtests.py --lesson 02-installer` | stages tests/verdicts gates, seams RUN/CALL command/load/load-catalogue/rollout-poll,@file/@read/@parallel; verdicts/cases/classes. puts explicitly needs P/01 store and runner | Non-HTTP engine, Test<Stage>_<Scenario>/Verdicts,base64 cases in verdicts.jsonl,inventory; closed lessonadapter types and implementation-owned command/load/catalogue/poll | `stagetests` | test_gen_cmdtests.py scaffold failures without panic, passing fixture adapter and failing adapter/seam mutants |
+| 2 + N3 | `gen_core.py` | Generated Handler signatures and P/01.1 N3/N2.1 req anchors. Context identity: P/01.2 Roles/check,P/01.1 R050/R066,P/01.3-07 order,header and 403 catalog rows. Chapter1.2/1.3 stubs bind N2 clauses,P/01.3-R016 doors and named refusals | out/p01-1/core/coreadapter core/open and one editable file per Handler method,installed once; do not add stubs for names already declared | `core`, requiring door/stagetests | test_gen_core.py build/scaffold failures without panic plus runner. Get's empty-store default keeps launch closed |
 
-Ручное — один раз на словарь: среда CEL `runtime/`, примитивы `#fn` `prims/` (Go и Python), типы флагов
-`flags/go/flagtypes.go`, среда двери `doorrt/`, пакет `kit/go` (`jsonstrict`, `writecheck`).
+Handwritten once per vocabulary: CEL runtime/ and #fn prims/ in Go/Python, flags/go/flagtypes.go, doorrt/, and
+kit/go jsonstrict/writecheck.
 
-## Пакет Б
+## Kit B
 
-`python3 kit/build_kit.py <dst> --module <путь импорта <dst>/01-store> [--part door] [--part flags] [--part refusals]
-[--part tests]` — части в `<dst>/01-store/internal/`, `KIT.md` и `kit.manifest.json` (`parts`, строки по
-происхождению и части, `provenance` — по каждой части sha256 форм, генератора, ручной среды и судьи, `output` —
-sha256 набора её файлов, `judged` — ссылка на суд этого выхода, `--judged часть=ссылка`). Каждый копируемый выход
-сверяется со свежим прогоном своего генератора (№ 1, № 2 — тоже, не по шапке): отставший от формы, генератора или
-ручной среды — отказ сборки, сначала перегенерировать.
+`python3 kit/build_kit.py <dst> --module <import-path-to-dst/01-store> [--part door] [--part flags] [--part refusals]
+[--part tests]` installs parts under `<dst>/01-store/internal/`, KIT.md and kit.manifest.json. The manifest records parts,
+line counts by origin/component, per-part form/generator/runtime/judge SHA256 provenance, an output file-set digest,
+and optional `judged` links through `--judged part=link`. Every copied output, including generators 1/2, must match a
+fresh generation rather than merely its header. Stale forms,producers or runtimes refuse build until regenerated.
 
-KIT.md — справка подключения (ADR-0083 доп. (95) п. 2): сигнатуры частей, по примеру подключения на часть
-(`kit/examples/<часть>.go` дословно; `test_gen_launch.py` собирает их в пакете) и экспортируемые имена каждого пакета
-(по исходникам). Справка идёт в голову задания вместо тела сгенерированного кода.
+KIT.md supplies connection signatures, verbatim examples from kit/examples/<part>.go (compiled by test_gen_launch.py)
+and actual exported names from source. The task receives this guide instead of generated implementation bodies.
 
-## Тесты и судьи — на Linux (CT 103)
+## Tests and judges run on Linux (CT 103)
 
-Тесты normgen и судьи идут на Linux, на CT 103 (пользователь `pilot`), не на маке: Go 1.22 на macOS собирает с
-примитивом `loopback` (пакет `net`) бинарь, который падает в dyld (нет `LC_UUID`).
+Run normgen tests/judges as pilot on CT 103. Go 1.22 on macOS links net/loopback binaries lacking LC_UUID, which fail in dyld.
 
-- Python с `cel_expr_python` (оракул CEL для `test_gen_checks.py` и `flag_judge.py`) — `/opt/check-env/lesson-spec/bin/python`.
-- Набор: `test_gen_checks.py`, `test_gen_tests.py`, `test_gen_door.py`, `test_gen_flags.py`, `test_gen_refusals.py`,
-  `test_gen_stagetests.py`, `test_gate.py`, `test_judges.py`, `test_gen_launch.py`, `test_gen_core.py`, `test_gen_families.py`, `test_gen_admin.py`, `test_lesson.py`, `test_gen_flags_cmd.py`, `test_gen_refusals_plain.py`, `test_gen_cmdtests.py`, `test_gen_rollout.py`, `test_gen_families_doc.py`, `test_gen_machine.py`, `test_gen_cmdtests_ports.py`, `test_gen_vectors_lessons.py`, `test_gen_door_lesson.py`, `test_gen_door_bodies.py`, `test_gen_door_priority.py`, `test_contracts.py`, `test_gen_refusals_lessons.py`, `test_gen_flags_inputs.py`, `kit/test_kit.py`, `kit/test_kit_p02.py`, `kit/test_kit_lessons.py`, `kit/test_export.py`; затем `skills/lesson-spec/scripts/check_spec.py`, `test_gen_vectors.py`.
-- Урок (ADR-0125 доп. (5) п. 2): `lesson.py` — `--lesson NN-<имя>` у каждого генератора, судьи и `build_kit` (или
-  `NORMGEN_LESSON`; по умолчанию `01-store`): пути урока, out (`out/p01-1` у P/01, `out/pNN` у прочих), модуль Go,
-  каталог и модуль пакета (`--module` по умолчанию из урока), нормы по главам. Объявления мест, сделанные для P/01
-  (`gen_core`, `gen_admin`, `gen_launch`, `gen_tests`), на другом уроке — отказ с именем урока; P/01 собирается байт
-  в байт как до обобщения.
-- Пакет попытки — только `build_kit.py <kit> --module … --part … --export <sha выгрузки>`: входы — `Platform/` выгрузки из git
-  `cammeta-specs` (`--specs`), код — чистый HEAD курса (правки в `tools/normgen` — отказ); `out` перегоняется во
-  временном каталоге, дерево курса не меняется; в `kit.manifest.json` — `commit` и `export`, `SOURCE.txt` пишется сам.
-- Пакет урока без двери (P/02): `build_kit.py <kit> --lesson 02-installer --part flags --part refusals --part stagetests
-  --part rollout-poll --export <sha>` — без writecheck (её форма — только P/01), stagetests — `gen_cmdtests.py`, перегон
-  `--export` — генераторы частей урока; модуль и каталог — из урока (`p02installer/02-installer`).
-- Пакеты P/03 и P/04: `build_kit.py <kit> --lesson 03-worker --part flags --part refusals --part stagetests --part
-  slot-capture --part families --part vectors --export <sha>` и `--lesson 04-controller … --part slot-fate --part
-  slot-release --part families --part vectors`; провод векторов — черновик wire_draft.py до формы wire.tsv.
-- Машины (P/03, P/04): `--part slot-capture` (P/03), `--part slot-fate --part slot-release` (P/04); машина чужого
-  урока — отказ (нет формы); `<пакет>impl` — реализации (правило посева, как у адаптеров).
-- Посев (код прошлой попытки) — ещё `--seed <work посева>`: цикл копирует пакет поверх посева целиком, поэтому своё
-  реализации (editable) идёт в пакет, только если в посеве файла нет или он байт в байт тот, что положил прежний пакет
-  (`kit.manifest.json` посева); код модели в пакет не идёт — манифест `seed`: `kept`, `refreshed`.
-- `gate.py` — общий разбор списка `gate` формы stages.tsv для генераторов (грамматика шапки формы, как у `check_forms`).
-- Судьи: отсутствие исполнения — отрицательный исход. Ожидаемый набор шагов — из сценариев и проекции, не из отчёта;
-  шаг без исхода, пустой или обрезанный отчёт, незавершённый `go test` — провал. Запуск демона у `flag_judge.py` —
-  готовность (`admin.sock` в `-sockets`); группа без соседей без готовности — «не проверено» с причиной.
-- `flag_judge.py --cmd <демон> [--stub] [--box]` — `--stub` для заглушки `flags/stub` (сверка значений), `--box` для
-  сборки без raft. Пробы пишут только во временный каталог.
-- Судья двери — раннер через очередь CT 103 (`/srv/cammeta-checks`, `check.py submit --env go --with-git`): во входе
-  `RUN.py`, раннер, клон выгрузки на коммите `--spec-version` и каталог `build_stub.py` как репозиторий Git; итог —
-  `door_judge.py <out/report>`.
-- Судья части `launch`: `launch_judge.py job <вход> --spec-version <SHA>` → очередь (`check.py submit … -- python3.12 RUN.py`)
-  → `launch_judge.py judge <out/report>`.
+- CEL Python: `/opt/check-env/lesson-spec/bin/python` with cel_expr_python for check/flag oracles.
+- Suites: test_gen_checks,tests,door,flags,refusals,stagetests,launch,core,families,admin; test_gate,test_judges,test_lesson;
+  command/input flags,plain/lesson refusals,cmdtests,rollout,data-schema families,machines,CALL ports,lesson vectors,
+  lesson door routes/bodies/priority,contracts; kit/test_kit.py,test_kit_p02.py,test_kit_lessons.py,test_export.py;
+  then skills/lesson-spec/scripts/check_spec.py and test_gen_vectors.py.
+- lesson.py selects --lesson NN-name or NORMGEN_LESSON,default01-store,for every generator,judge and build_kit.
+  Derive paths,out/modules,kit directory/default --module and chapter norms from lessons.tsv. P/01-only norm/vector/frame
+  declarations in gen_core/admin/launch/tests reject other lessons by name; explicit P/01 preserves pre-generalization bytes.
+- Attempt kits use only `build_kit.py <kit> --module ... --part ... --export <export-SHA>`. Inputs come from cammeta-specs
+  Platform at --specs; code comes from clean course HEAD. Dirty tools/normgen refuses. Regenerate in a temporary tree,
+  leave the course unchanged,record commit/export in the manifest and automatically write SOURCE.txt.
+- P/02: `build_kit.py <kit> --lesson 02-installer --part flags --part refusals --part stagetests --part rollout-poll
+  --export <sha>`. No writecheck; gen_cmdtests supplies stagetests. Regeneration selects lesson parts and module
+  p02installer/02-installer.
+- P/03: use --lesson 03-worker with flags,refusals,stagetests,slot-capture,families,vectors. P/04 uses04-controller,
+  slot-fate and slot-release. Their vector transport uses wire_draft.py until its full wire form.
+- A machine from another lesson refuses without its form. Machine impl files remain editable under the adapter seed rule.
+- --seed <previous-worktree> protects model code when a cycle copies a whole kit over a seed: emit editable files only
+  if absent or still equal to the prior kit manifest SHA. Record seed kept/refreshed lists.
+- gate.py parses stages.tsv gate lists using the same header grammar as check_forms.
+- Non-execution fails every judge. Expected steps come from scenarios/projection,not reports. Missing results,empty/truncated
+  reports and unfinished Go runs fail. flag_judge readiness means a live daemon listening on admin.sock under -sockets;
+  groups without peers are unverified with a reason rather than passed.
+- flag_judge.py --cmd <daemon> supports --stub for flags/stub value comparisons and --box for no-raft builds.
+  Probes write only inside temporary directories.
+- Door judging uses the CT103 queue (/srv/cammeta-checks,check.py submit --env go --with-git). Input contains RUN.py,
+  runner,export pinned by --spec-version and a build_stub implementation Git repository. Judge out/report with door_judge.py.
+- Launch judging: `launch_judge.py job <input> --spec-version <SHA>` -> queue `check.py submit ... -- python3.12 RUN.py`
+  -> `launch_judge.py judge <out/report>`.
 
-## Следующие части описи (пп. 3–5, сверка a17871069)
+## Subsequent inventory items (3-5, checkpoint a17871069)
 
-| Пункт | Что уже есть | Что брать дальше |
+| Item | Existing at this checkpoint | Next input needed |
 |---|---|---|
-| 3: тела за векторами | P/02 loader закрывает разбор манифеста и canonical; общий contracts — у «Генераторов-2»; остальные свои функции уроков всё ещё заготовки | Отдельный срез workers-script/install-order P/02 после формы алгоритма; векторы — внешний судья, не таблица ответов реализации. Без формы новую семантику из прозы генератор не выводит |
-| 4: constants/journal-kinds/steps | P/06 `forms/runtime-constants.tsv` (25 строк) уже читает gen_flags → flags/constants.go | Этот же словарь name/value/unit/norm можно применять к следующим урокам; байты форм — spec103. Для journal-kinds и упорядоченных steps полной формы ещё нет, генераторы не заявлены |
-| 5: forms P/06, P/08–P/10 | P/06 flags, refusals, stages, seams и runtime-constants уже есть; соответствующие генераторы/пакет в main | У P/08–P/10 forms отсутствуют на этой базе; нужна очередь spec103. row-checks P/06 и новые машины ждут своих форм. Полный wire P/06 ещё НЕ ГОТОВО, не переключать по частичным привязкам |
+| 3: vector-backed bodies | P/02 loader covers manifest parsing/canonical; shared contracts belongs to Generators-2; other local lesson functions remain scaffolds | Separate workers-script/install-order slice after an algorithm form. Vectors are an external judge,not an implementation response table; no new semantics are inferred from prose |
+| 4: constants/journal-kinds/steps | P/06 runtime-constants.tsv has25rows,read by gen_flags into flags/constants.go | Reuse name/value/unit/norm in later lessons with spec103-owned forms. Journal kinds/ordered steps lack a complete form; no generator is declared |
+| 5: P/06,P/08-P/10 forms | P/06 flags/refusals/stages/seams/constants and corresponding generators/kits are in main | At this checkpoint P/08-P/10 await spec103 forms; P/06 row-checks/new machines await theirs. Full P/06 wire was NOT READY and partial bindings must not switch it |
 
-P/02 на готовом wire переключён отдельно от P/01 (его gen_tests пока сохраняет прежний выход).
-Этот список фиксирует готовность входов; новые работы по пп. 3–5 распределяет coord103, общего contracts здесь нет.
+P/02's ready wire switched separately from P/01,whose gen_tests retained its output. This inventory records input
+readiness at its checkpoint. coord103 assigns subsequent items 3-5; shared contracts is outside that list.
 
-## Потребители пакетов и межурочные таблицы
+## Package consumers and cross-lesson tables
 
-`vector_consumers.py` читает `Platform/common/vectors/consumers.tsv` один раз по общим правилам всех генераторов:
-полный `package` `(common|NN-name)/name`, урок из `Platform/lessons.tsv`, существующие пакет и таблица. Повтор
-`(package, table, lesson)` — ошибка даже с другим norm; неверная строка чужого урока тоже ошибка, до отбора своего.
-Потребители таблицы — явные строки плюс урок каталога пакета. Поэтому свои таблицы не исчезают без явной строки;
-у `common` неявного урока нет. `common_vectors.composition` сохраняет прежний API пяти общих адаптеров и берёт свою
-проекцию этого полного состава; свои и межурочные пакеты идут через gen_tests/gen_vectors.
+vector_consumers.py reads consumers.tsv under common validation: full `(common|NN-name)/package`,lesson from lessons.tsv,
+existing package/table. Duplicate (package,table,lesson) refuses even with a different norm; invalid foreign-lesson rows
+also refuse before selection. Consumers are explicit rows union the package's owning lesson. Local tables therefore
+remain without explicit rows; common has no implicit owner. common_vectors.composition preserves the five common adapter
+APIs and projects this full roster; gen_tests/gen_vectors handle local and cross-lesson packages.
 
-`consumer_vectors.py` задаёт только Go API уже назначенных межурочных функций. На форме spec103
-`7b96ff9f84e8090e11922131bc77799f0a0b54e1` это JCS (02/03/06/08/09) и rid, request-digest, requests-body (03).
-Входы, ожидания, выбор строк и сравнения берутся из wire.tsv; P/02 получает отдельный JCS адаптер, не смешанный
-с canonical манифеста. Ни неизвестная привязка, ни отсутствующий Go API не пропускаются молча.
+consumer_vectors.py declares only assigned cross-lesson Go APIs. At spec103 `7b96ff9f84e8090e11922131bc77799f0a0b54e1`,
+these are JCS(02/03/06/08/09) and rid/request-digest/requests-body(03). Inputs,expectations,selection and comparisons come
+from wire.tsv. P/02 JCS has a separate adapter from manifest canonical. Missing bindings/APIs never disappear silently.
 
-Проверка `test_consumer_packages.py` извлекает именно этот пин во временный каталог, не меняя Platform рабочего
-дерева: текущая и новая формы, точные девять добавленных назначений, union владельца, отрицательные случаи,
-сборка и исполнение назначенных функций пяти уроков и мутанты. У worker исполняется только его проекция
-requests-body; layout/HTTP-долг консоли ей не закрывается. Для rid/template поддержаны CEL json и ignore /detail;
-native.schema проверяет полный ответ до удаления игнорируемого поля.
+test_consumer_packages.py extracts that exact pin to a temporary tree without changing Platform. Check current/new forms,
+the exact nine added assignments,owner union,negatives,compile/execution across five lessons and mutants. Worker executes
+only its requests-body projection; this does not close console layout/HTTP debt. rid/template supports CEL json and
+ignore /detail; native.schema checks the full response before ignored fields are removed.
 
-Выбор таблиц/поверхностей `wire.parse(..., keys=..., surfaces=...)` ограничивает грамматику используемого среза.
-Без выбора parse по-прежнему проверяет всю форму. Остальные частичные строки P/06 не переключают генерацию
-с прежнего wire_draft: полная грамматика P/06 (at, map, stand arg_file.json и прочее) и check_wire остаются следующим срезом после этого
-читателя. Пин 7b96ff9f не является выгрузкой и не объявляет весь P/06 готовым.
+wire.parse(...,keys=...,surfaces=...) limits grammar to a selected slice; without selection it validates the whole form.
+Other partial P/06 rows did not switch its prior wire_draft generation. Full at/map/stand arg_file.json grammar and
+check_wire followed this reader slice. Pin7b96ff9f is not an export or a claim of full P/06 readiness.
 
-## Полный исполнитель wire P/06 (форма 4f0cff2e)
+## Full P/06 wire executor (form 4f0cff2e)
 
-`wire.py` раскрывает все 90 привязок согласованной формы без чтения прозы: `at`, `map`, `arg_file.json`, точные
-фрагменты `raw-json`, CEL `json()` в when, явные group_by, whole, ignore в ожидании и в утверждении без test.
-Прямой marker.ignore запрещён; marker.assert.ignore разрешён. Layout и неактивные поверхности остаются excluded.
+wire.py expands all90bindings without prose:at,map,arg_file.json,exact raw-json fragments,CEL json() in when,explicit
+group_by,whole,ignore in expectations,and assertions without test. Direct marker.ignore refuses;marker.assert.ignore is
+allowed. Layout and inactive surfaces stay excluded.
 
-Общий интерфейс `wire_vectors`: `declarations(root, lesson="02-installer", api=API_P02)`,
-`build(root, g, decls=None, lesson=None)`, `render(root, g, decls, runs, excluded, known=(), scaffold=True)`.
-API содержит только package/table/surface/fn/args; входы, выбор, ожидания, рамки и проверки идут из формы.
-Покрытие API проверяется по действующим запускам: stand:group-of не требуется консоли, у неё работает vectors/raw.
-`go_vectorcmd(..., full_wire=True)` — явный общий режим, используемый полным рендером; args=input на vectors
-передаёт байты одной ячейки без JSON-пересборки. Варианты и наборы cells/files закрыты формой. StandResult отличает
-ошибку исполнения/панику от нормативного нативного exit; неотрицательные коды сохраняют stdout.
+Shared wire_vectors API:declarations(root,lesson="02-installer",api=API_P02),build(root,g,decls=None,lesson=None),
+render(root,g,decls,runs,excluded,known=(),scaffold=True). APIs contain only package/table/surface/fn/args;the form owns
+inputs,selection,expectations,frames and checks. Require declarations only for active Runs:console does not need
+stand:group-of because it uses vectors/raw. go_vectorcmd(...,full_wire=True) explicitly selects full rendering;vectors
+args=input forwards one cell's raw bytes without JSON reconstruction. The form closes variants/cells/files. StandResult
+distinguishes panic/non-execution from native exits;nonnegative codes retain stdout.
 
-Полный Go-судья — `wirert/full/go/check.go`; полный native/schema проверяется до ignore/compare/assert.
-Утверждения с decode json и ignore, вложенные указатели, whole/no-leak и сравнения JSON Lines имеют независимые
-пробы. Публичный выход P/02 сохраняет свой `wirert/go/check.go`, чтобы расширение общего исполнителя не меняло
-прежние байты на прежних входах. Наличие новой формы само по себе не включает canonical-режим другого урока.
+wirert/full/go/check.go validates full native/schema before ignore/compare/assert. Independent probes cover JSON decode,
+ignore,nested pointers,whole/no-leak and JSON Lines comparison. Published P/02 retains wirert/go/check.go so broader
+execution does not change old bytes for old inputs. A new form alone never enables another lesson's canonical mode.
 
-`test_wire_full.py` проверяет конструкции и мутанты, компилирует полный временный модуль P/06 через общий API и
-исполняет 3184 теста на ответах фикстур. Это суд исполнения/перевода формы, не реализация функций урока. Временный
-модуль не подменяет опубликованный out P/06. `frames_of` и судьи понимают `_form/_runs`; положительные ответы
-дополняются обязательными native-полями и отдельно проверяются jsonschema. Delta девяти назначений сравнивается
-с неизменной матрицей `testdata/consumer-owners-8af61893a.json`, не с изменяемым ROOT.
+test_wire_full.py tests constructs/mutants,compiles a temporary full P/06 module through the shared API and executes3184
+fixture-response tests. This judges form execution/translation,not lesson implementation,and does not replace published
+P/06 out. frames_of and judges understand _form/_runs;positive replies receive required native fields and separate
+jsonschema validation. The nine-assignment delta uses frozen testdata/consumer-owners-8af61893a.json rather than mutable ROOT.

@@ -1,11 +1,11 @@
-// stubstore — заглушка демона хранилища P/01 для внешнего судьи двери (ADR-0125 доп. (1) п. 1): пакет Б (door из
-// OpenAPI, writecheck из write-checks.tsv) за простой рамкой net/http и хранилище в памяти без смысла Н3. Это не
-// реализация урока: нет cas, guard, памяти id, времени допуска, долговечности, группы. Мера судьи — шаги приёмки P/01.1,
-// которые от ядра не зависят: формы ответов, коды отказов разбора, маршруты и методы. Написана руками; путь импорта
-// "kitmodule/" заменяет tools/normgen/kit/build_stub.py.
+// stubstore is the P/01 external door judge's daemon stub (ADR-0125 addendum 1, item 1):generated OpenAPI
+// door and write-checks behind net/http with an in-memory store. It does not implement N3 CAS, guards,
+// remembered IDs, admission time, durability or groups. Measure only core-independent P/01.1 acceptance
+// response forms, parse refusals, routes and methods. Handwritten;build_stub.py rewrites kitmodule/
+// imports.
 //
-// Запуск: stubstore -dir <каталог> -admin <путь admin.sock> -rights <файл прав> -max-body <байты> -max-value <байты>
-// Сокеты ролей (<роль>.sock по ролям файла прав) — рядом с admin.sock.
+// Run:stubstore -dir <directory> -admin <admin.sock> -rights <file> -max-body <bytes> -max-value <bytes>.
+// Rights-file role sockets sit beside admin.sock.
 package main
 
 import (
@@ -31,7 +31,7 @@ import (
 	"kitmodule/internal/writecheck"
 )
 
-// Пределы урока (P/01.1 Н1): BATCH_WRITES и BATCH_GUARDS — 64; ROW_CEILING — флаг -max-value.
+// P/01.1 N1 limits:BATCH_WRITES/BATCH_GUARDS64;ROW_CEILING comes from -max-value.
 const batchLimit = 64
 
 type rights struct {
@@ -54,15 +54,15 @@ type store struct {
 	maxBody  int64
 	maxValue int64
 	rights   rights
-	raw      any // файл прав как значение JSON (для /v1/rights)
+	raw      any // Rights file as JSON for /v1/rights.
 }
 
-// call — контекст вызова ручной части: роль сокета.
+// call holds handwritten-call context:socket role.
 type call struct {
 	sock string
 }
 
-// match — образец прав заглушки: «префикс*» или точный ключ (полная семантика P/01.2 Н1.3 — не дело заглушки).
+// Stub rights match:prefix* or exact key;full P/01.2 N1.3 semantics are outside the stub.
 func match(patterns []string, key string) bool {
 	for _, p := range patterns {
 		if strings.HasSuffix(p, "*") && strings.HasPrefix(key, strings.TrimSuffix(p, "*")) || p == key {
@@ -105,10 +105,10 @@ func refuse(op apidoor.Op, code int, kind, msg string, fields map[string]any) ap
 	return a
 }
 
-// Методы apidoor.Handler — ручная часть заглушки.
+// apidoor.Handler methods are the stub's handwritten part.
 
 func (s *store) Get(c *call, q apidoor.GetQuery) apidoor.Answer {
-	if len(q.Key) > 1024 { // Н1: предел ключа в байтах UTF-8 — не форма OpenAPI
+	if len(q.Key) > 1024 { // N1 UTF-8 key-byte limit is outside the OpenAPI form.
 		return refuse(apidoor.OpGet, 400, "badkey", "key too long", nil)
 	}
 	if !s.allowed(c.sock, "read", q.Key) {
@@ -245,8 +245,8 @@ func (s *store) Metrics(c *call) apidoor.Answer {
 	return apidoor.Answer{Code: 200, Body: apidoor.Metrics200("configstore_doors 1\n")}
 }
 
-// QueryRefused — какой отказ даёт query вне формы, OpenAPI говорит только словами (P/01.1 Н2.1): повтор и отсутствие —
-// badrequest, значение не по схеме Key (в том числе не UTF-8) — badkey.
+// QueryRefused follows P/01.1 N2.1 prose:repetition/missing values give badrequest;an invalid Key value
+// including invalid UTF-8 gives badkey.
 func (s *store) QueryRefused(c *call, op apidoor.Op, e *apidoor.QueryError) apidoor.Answer {
 	if e.Reason == apidoor.QueryValue && e.Schema == "Key" {
 		return refuse(op, 400, "badkey", "bad key", nil)
@@ -254,7 +254,7 @@ func (s *store) QueryRefused(c *call, op apidoor.Op, e *apidoor.QueryError) apid
 	return refuse(op, 400, "badrequest", "query out of form", nil)
 }
 
-// Рамка: net/http (не рамка Н2.1 — заглушка). Порядок: маршрут → личность → предел тела → операция.
+// Stub net/http framing is not strict N2.1. Order:route->identity->body limit->operation.
 
 type handler struct {
 	s    *store

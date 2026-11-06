@@ -1,6 +1,4 @@
-"""Тесты части vectors урока без двери (gen_vectors.py; P/02, ADR-0125 доп. (5) п. 5): out свежий; на заглушках всё
-красное без паники (кроме family-read — его читает часть families); на подставном адаптере (ответы раскрытого wire) всё зелёное; мутанты подставного адаптера (код, значение, сырые байты, слово кольца,
-layer1) — красные ровно в своей таблице; journal/modes.tsv — в описи excluded."""
+"""Test P/02 gen_vectors freshness, scaffold failures without panic except kit-executed family-read, fixture answers from expanded wire, and table-specific code/value/raw/ring-word/layer1 mutants. journal/modes.tsv stays excluded."""
 import json
 import os
 import shutil
@@ -27,7 +25,7 @@ def gv():
 
 
 def fake_go(mut=None):
-    """Подставной адаптер: по каждой функции пакета — ответ строки по её входу (ключ — таблица и вход)."""
+    """Fixture adapter maps each package function's table/input to its row answer."""
     g = gv()
     decls, _ = g.plan(ROOT)
     by_fn = {}

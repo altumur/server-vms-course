@@ -1,8 +1,8 @@
 package checks
 
-// Примитивы #fn таблиц проверок (ADR-0120 п. 2 (а)), написаны руками один раз; генератор копирует файл в пакет.
-// Имя примитива — prim + имя #fn в CamelCase; ответ (значение, ошибка), ошибка — ошибка CEL.
-// Аргументы уже проверены по типам объявления #fn. #fn без примитива здесь (allowed) — поле обратного вызова в Fns.
+// Handwritten #fn check primitives (ADR-0120, item 2(a)), copied by the generator.
+// prim+CamelCase(fn) returns (value, error);an error denotes a CEL error.
+// Arguments already match declared #fn types. Missing primitives such as allowed are Fns callbacks.
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// primKeyOk — Н1 row.key: не пуст, не начинается с /, нет сегмента .., не длиннее 1024 байт UTF-8.
+// primKeyOk checks N1 row.key:nonempty, no leading slash or '..' segment, at most1024 UTF-8 bytes.
 func primKeyOk(k string) (bool, error) {
 	if k == "" || strings.HasPrefix(k, "/") || len(k) > 1024 {
 		return false, nil
@@ -24,7 +24,7 @@ func primKeyOk(k string) (bool, error) {
 	return true, nil
 }
 
-// primWeight — Н1: сумма длин в байтах UTF-8 всех имён и значений items; не строка — ошибка.
+// primWeight sums all item name/value UTF-8 byte lengths;non-strings error.
 func primWeight(items map[string]any) (int64, error) {
 	var total int64
 	for name, value := range items {
@@ -37,13 +37,13 @@ func primWeight(items map[string]any) (int64, error) {
 	return total, nil
 }
 
-// primFinite — конечно в binary64 (1e400 — нет).
+// primFinite checks binary64 finiteness;1e400 is not finite.
 func primFinite(x float64) (bool, error) {
 	return !math.IsInf(x, 0) && !math.IsNaN(x), nil
 }
 
-// primLoopback — хост адреса host:port на петле: 127.0.0.0/8, ::1 или localhost (ADR-0125 доп. (2) п. 4).
-// IPv4 в форме ::ffff:a.b.c.d — как IPv4; зона (%lo) и прочие имена — не петля. Не host:port — ошибка CEL.
+// primLoopback accepts host:port on127/8, ::1 or localhost (ADR-0125 addendum 2, item 4).
+// Mapped IPv4 counts as IPv4;zones and other names are not loopback.Invalid host:port is a CEL error.
 func primLoopback(addr string) (bool, error) {
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {

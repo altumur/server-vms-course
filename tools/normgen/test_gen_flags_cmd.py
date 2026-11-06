@@ -1,6 +1,4 @@
-"""Тесты части flags урока с командами (P/02: forms/operator-commands.tsv; ADR-0125 доп. (5)): судья cmdflag_judge —
-PASS на пакете выхода и FAIL на мутантах пакета (короткий префикс команды, экспонента в number, условие required
-пропущено, верхняя граница позиционных снята, повтор опции разрешён); P/01 — прежний разбор без формы команд."""
+"""Test command-based flags from operator-commands.tsv (P/02). Require cmdflag_judge PASS on output and FAIL for short-prefix, exponent-number, missing-required, unbounded-positionals and duplicate-option mutants. P/01 keeps its existing parser without a command form."""
 import contextlib
 import io
 import os
@@ -62,7 +60,7 @@ class CommandFlags(unittest.TestCase):
 
     def test_mutants_killed(self):
         for old, new, why in (
-                # «кратчайший префикс» — равносилен на этой форме: вложенных префиксов у одного процесса нет
+                # Shortest-prefix selection is equivalent here: one process has no nested prefixes.
                 ("if argv[k] != w {", "if k == 0 && argv[k] != w {", "only the first word of the prefix"),
                 ("`^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$`", "`^-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][0-9]+)?$`", "exponent"),
                 ("&& isTrue(required", "&& false && isTrue(required", "required CEL ignored"),

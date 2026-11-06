@@ -1,24 +1,11 @@
-"""Генератор части пакета `core` (ADR-0083 доп. (95) п. 3, тот же принцип, что launch): заготовка ядра, РЕДАКТИРУЕМАЯ
-моделью (как vectoradapter).
+"""Generate the model-editable core scaffold, like vectoradapter (ADR-0083 addendum (95), item 3).
 
-Запуск: python3 tools/normgen/gen_core.py [<out>]   (по умолчанию tools/normgen/out/p01-1)
+  python3 tools/normgen/gen_core.py [<out>]
+Default: tools/normgen/out/p01-1. Emit under <out>/core/coreadapter, outside the Go module; its go/coreadapter/open.go is the stagetests stub. The kit installs the core files into internal/coreadapter once without overwriting implementation files.
 
-Выход в <out>/core/coreadapter — вне модуля <out>/go: там open.go — заглушка части stagetests; пакет кладёт оба файла
-в internal/coreadapter (пакет coreadapter части stagetests) один раз и не перетирает — они реализации:
-- core.go — тип Store (состояние, newStore, Context, Close); <операция>.go — по файлу на метод apidoor.Handler[Ctx]
-  (get.go, list.go, write.go, queryrefused.go, rights.go, status.go, join.go, leave.go, metrics.go: правка одной
-  операции не затирает другую — Qwen 18q, 23q на целом файле адаптера) по интерфейсу Handler выхода gen_door
-  (сигнатуры оттуда, не по памяти); над методом главы 1.1 — путь Н3 и якоря требований (req: P/01.1-RNNN, первая строка текста нормы) из
-  spec/01.1-store.norms.md; тела — 503 «not implemented» (Get — пустое хранилище: every key absent, как launch.Empty,
-  чтобы этап launch оставался закрытым пакетом); методы глав 1.2/1.3 — notInStage (NotInStage пакета), над ними места норм (STUBS: пункты Н2 и строка таблицы
-  дверей P/01.3-R016) и строки refusals.tsv двери (STUB_REFUSALS) — привязка мест, не код решения;
-- open.go — Open(Config) возвращает это ядро (вместо заглушки ErrNotImplemented части stagetests).
-Ядро лежит в пакете coreadapter: Ctx = *coreadapter.Request читает и каркас launch, отдельный пакет ядра дал бы цикл
-импорта (coreadapter.Open → core → coreadapter.Ctx).
-Таблица «операция → глава, разделы норм» — объявление этого генератора (OpenAPI формой её не говорит); генератор
-отказывает, если метод Handler не назван в таблице, раздел не найден в нормах или у раздела нет якорей.
-Судья — test_gen_core.py (сборка, тесты этапов идут и красные без паники, каркас: 01-absent) и раннер на пакете.
-"""
+core.go defines Store, its state, newStore, Context and Close. Each apidoor.Handler[Ctx] operation has its own file (get, list, write, queryrefused, rights, status, join, leave, metrics), with signatures read from gen_door's interface. Chapter 1.1 methods carry N3 locations and requirement anchors from the norms. Bodies return 503 not implemented except Get, which models an empty store, keeping launch closed. Chapters 1.2/1.3 call notInStage and carry STUBS-selected N2/door-table locations and STUB_REFUSALS rows, not solutions. open.go returns this core instead of ErrNotImplemented.
+
+The core stays in coreadapter because launch also reads Ctx=*coreadapter.Request; a separate core package would create an import cycle. The operation-to-chapter/section map belongs to this generator, not OpenAPI. Missing Handler mappings, norm sections or anchors refuse generation. test_gen_core.py checks build, failing stage tests without panic, and the launch 01-absent frame; the runner judges the kit."""
 import hashlib
 import re
 import shutil
@@ -29,7 +16,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
 L = lesson.CURRENT
 DEFAULT_OUT = L.out
 NORMS = L.norms("1")
@@ -38,38 +25,38 @@ DOOR = L.out / "go/apidoor/door.go"
 JUDGE = HERE / "test_gen_core.py"
 GO_MODULE = L.go_module
 
-# Операция Handler → (глава, [(раздел норм: заголовок или его начало до «(», отбор пунктов)]). Отбор "query" — пункты
-# раздела от «**Query.**» до следующего жирного пункта.
+# Handler operation -> (chapter, [(norm heading or prefix before '(', clause selector)]). The query selector
+# covers the section from **Query.** through the next bold clause.
 OPS = {
-    "Get": ("1.1", [("Н3 Procedures", "intro"), ("read", None)]),
+    "Get": ("1.1", [('\u041d3 Procedures', "intro"), ("read", None)]),
     "List": ("1.1", [("list", None)]),
     "Write": ("1.1", [("write", None), ("delete", None), ("write batch", None), ("Admission time", None),
                       ("Replay by identifier — store memory", None)]),
-    "QueryRefused": ("1.1", [("Н2.1 Request parsing", "query")]),
+    "QueryRefused": ("1.1", [('\u041d2.1 Request parsing', "query")]),
     "Rights": ("1.2", []),
     "Status": ("1.3", []),
     "Join": ("1.3", []),
     "Leave": ("1.3", []),
     "Metrics": ("1.3", []),
 }
-LINE = 116      # ширина строки комментария якоря
+LINE = 116      # Anchor comment line width.
 
-# Методы глав 1.2/1.3 → места норм над заглушкой: (файл норм, якорь, отбор) — None: пункт целиком; "door:<дверь>":
-# строка таблицы дверей P/01.3-R016; иначе выражение (группа 1). Объявление генератора, как OPS: OpenAPI мест не говорит.
+# Chapter 1.2/1.3 method -> stub norm locations (file, anchor, selector): None means the whole clause; door:<name>
+# selects a P/01.3-R016 door-table row; otherwise regex group 1. Like OPS, this map is absent from OpenAPI.
 
-# Личность вызова над Context (core.go): места норм, не код решения (Архитектор 2026-11-05: 26 — R38-06).
-# (файл норм, якорь, выражение отбора текста пункта или None — первая строка пункта).
+# Context identity comment locations in core.go, not solution code (Architect, 2026-11-05: 26 -> R38-06).
+# (Norm file, anchor, text-selection regex or None for the first clause line).
 NORMS_12 = L.norms("2")
 NORMS_13 = L.norms("3")
 REFUSALS = L.form("refusals.tsv")
 ACCEPT_2 = L.path("acceptance/2/README.md")
 IDENTITY = [
-    (NORMS_12, "Н1.1 «Roles» identity, box", "P/01.2-R006", r"\bbox:\s*(.*?)\s+doors:"),
-    (NORMS_12, "Н3 «check(role, action, key)» steps 1–3", "P/01.2-R017", None),
+    (NORMS_12, 'N1.1 Roles identity, box', "P/01.2-R006", r"\bbox:\s*(.*?)\s+doors:"),
+    (NORMS_12, 'N3 check(role, action, key) steps 1-3', "P/01.2-R017", None),
     (NORMS_12, None, "P/01.2-R018", None),
     (NORMS_12, None, "P/01.2-R019", None),
-    (NORMS, "Н2.1 «Request parsing» (a refusal before the body)", "P/01.1-R050", None),
-    (NORMS, "Н3 «list»", "P/01.1-R066", r"(Identity is checked before the operation.*?403 forbidden\.)"),
+    (NORMS, 'N2.1 Request parsing (a refusal before the body)', "P/01.1-R050", None),
+    (NORMS, 'N3 list', "P/01.1-R066", r"(Identity is checked before the operation.*?403 forbidden\.)"),
 ]
 ORDER = (NORMS_13, r"\*\*(P/01\.3-07)\*\*[^«]*the order «([^»]+)»")
 ROLE_HEADER = (ACCEPT_2, r"the name (X-[A-Za-z-]+) is a designation of the header of trusted role forwarding")
@@ -86,7 +73,7 @@ STUBS = {
               (NORMS_13, "P/01.3-R017", ORDER_13), (NORMS_13, "P/01.3-R023", None)],
     "Metrics": [(NORMS_13, "P/01.3-R015", None), (NORMS_13, "P/01.3-R016", "door:GET `/metrics`")],
 }
-# Строки forms/refusals.tsv (по имени) над заглушкой — отказы, которые называют эту дверь.
+# Named forms/refusals.tsv rows above each stub: the refusals mentioning that door.
 STUB_REFUSALS = {
     "Rights": ("rights_no_route", "rights_store_unavailable", "rights_not_admin", "rights_not_loaded",
                "forwarding_untrusted"),
@@ -116,7 +103,7 @@ def sha(path):
 
 
 def sections(text):
-    """→ [(заголовок без #, уровень, [(якорь, текст пункта)])] по порядку; текст до следующего якоря или заголовка."""
+    """Return [(heading without #, level, [(anchor, clause text)])] in order, ending text at the next anchor or heading."""
     out, cur, anchor, buf = [], None, None, []
 
     def flush():
@@ -140,8 +127,8 @@ def sections(text):
 
 
 def find(secs, name):
-    # номер раздела — Н… или N… (ADR-0121 доп. (5) п. 1: N0–N5 латиницей): имя в коде сверяется с обоими
-    lat = lambda x: re.sub(r"^Н(?=[0-9])", "N", x)    # noqa: E731
+    # Accept both legacy and Latin section markers (ADR-0121 addendum (5), item 1: Latin N0-N5).
+    lat = lambda x: re.sub('^\u041d(?=[0-9])', "N", x)    # noqa: E731
     hits = [s for s in secs if lat(s[0]) == lat(name) or lat(s[0]).startswith(lat(name) + "(")]
     if len(hits) != 1:
         raise GenError(f"{NORMS.name}: section {name!r} — {len(hits)} found, want 1")
@@ -150,7 +137,7 @@ def find(secs, name):
 
 def pick(sec, how):
     items = sec[2]
-    if how == "intro":                      # пункты раздела до его первого подраздела: у секций они свои
+    if how == "intro":                      # Clauses before a section's first subsection; subsections have their own clauses.
         return items
     if how == "query":
         start = [i for i, (_, t) in enumerate(items) if t.startswith("- **Query.**")]
@@ -191,7 +178,7 @@ def handler_methods(door):
 OP_CONST = {"Get": "OpGet", "List": "OpList", "Write": "OpWrite", "Rights": "OpRights", "Status": "OpStatus",
             "Join": "OpJoin", "Leave": "OpLeave", "Metrics": "OpMetrics"}
 
-CORE_HEAD = '''// Generated by tools/normgen/gen_core.py (kit part core) on spec/{norms_name} sha256 {norms_sha} and
+CORE_HEAD = r'''// Generated by tools/normgen/gen_core.py (kit part core) on spec/{norms_name} sha256 {norms_sha} and
 // spec/{openapi_name} sha256 {openapi_sha}. YOURS from here: the kit puts this file once and never
 // overwrites it — fill it (KIT.md «Part core: what to fill»). The state and the lifecycle are here; every operation of
 // apidoor.Handler is in its own file (get.go, list.go, write.go, …): edit one without rewriting the others.
@@ -204,7 +191,7 @@ import (
 	"{module}/apidoor"
 )
 
-// Store — your core of P/01.1 Н3: one store instance over cfg.DataDir. Every method of apidoor.Handler[Ctx] has its
+// Store is your P/01.1 N3 core:one instance over cfg.DataDir.Every apidoor.Handler[Ctx] method has its
 // own file with its signature from the door; above each method of chapter 1.1 — the path in the norms and the
 // requirement anchors (req: …) it must meet. Bodies answer 503 «not implemented» (Get — the empty store) until you write them.
 // Methods of chapters 1.2 and 1.3 answer 503 «not in this stage» (notInStage): replace them when your stage needs them.
@@ -238,8 +225,8 @@ func notImplemented(op apidoor.Op) apidoor.Answer {
 }
 '''
 
-GET_STUB = '''	// STUB — the empty store (every key absent), as the daemon frame's launch.Empty: keeps stage launch
-	// (accept:1.1:01-absent) green. Replace with read of Н3.
+GET_STUB = r'''	// STUB — the empty store (every key absent), as the daemon frame's launch.Empty: keeps stage launch
+	// (accept:1.1:01-absent) green.Replace it with an N3 read.
 	a, err := apidoor.AnswerOf(apidoor.OpGet, 200, map[string]any{"items": nil, "index": ""})
 	if err != nil {
 		return notImplemented(apidoor.OpGet)
@@ -281,7 +268,7 @@ def plain(text):
 
 
 def wrap(text, first, rest):
-    """Текст пункта целиком (без обрезки brief): строки комментария не шире LINE + отступ."""
+    """Wrap the complete clause, without brief truncation, within LINE plus indentation."""
     out, cur = [], first
     for w in text.split(" "):
         if len(cur) + len(w) + 1 > LINE + len(first) and cur.strip("/ "):
@@ -297,7 +284,7 @@ def anchored(path):
 
 
 def identity_comment():
-    """Комментарий над Context: личность вызова — якоря норм, порядок, заголовок, строки отказа refusals.tsv."""
+    """Build Context's identity comment from norm anchors, ordering, header and refusal rows."""
     lines = ["// Context — the identity of the call (KIT.md «Context — the identity of the call: what to check»): the socket",
              "// (Call.Sock: \"admin\" or a role) and the headers. Context cannot refuse: every method gets c — check c first, before",
              "// the body or the query is used (QueryRefused too: the query is parsed before your method). By the norms:"]
@@ -334,8 +321,7 @@ def identity_comment():
 
 
 def stub_comment(name, chapter):
-    """Комментарий над методом главы 1.2/1.3 (Архитектор 2026-11-05, 28-я — посев 27-й): места норм по STUBS, текст
-    пункта целиком (или отобранный выражением, или строка таблицы дверей); тело — notInStage, не код решения."""
+    """Comment above a chapter 1.2/1.3 stub (Architect, 2026-11-05, attempt 28 seeded from 27): STUBS norm locations, complete or selected clauses or door-table rows. Body remains notInStage, not a solution."""
     lines = [f"// {name} — chapter {chapter} (P/0{chapter}), not in the store core stage: 503 «not in this stage» until your",
              "// stage needs it; then replace the body (the signature stays: Store is a coreadapter.Core). Identity first —",
              "// Context (core.go). By the norms:"]
@@ -370,7 +356,7 @@ def stub_comment(name, chapter):
 
 
 def refusal_lines(names):
-    """Строки refusals.tsv по именам: «глава row N имя — код вид (норма); with part refusals: refusals.Имя»."""
+    """Describe named refusals.tsv rows: chapter, row N, name, code, kind, norm and the refusals.<Name> reference."""
     rows = {}
     for line in REFUSALS.read_text(encoding="utf-8").split("\n"):
         cols = line.split("\t")
@@ -387,7 +373,7 @@ def refusal_lines(names):
 
 
 def render():
-    """→ ({путь от core/: текст}, [(метод, глава, число якорей)])."""
+    """Return ({core/-relative path: text}, [(method, chapter, anchor count)])."""
     try:
         lesson.require(L, "gen_core (OPS, STUBS, IDENTITY)")
     except lesson.LessonError as exc:
@@ -416,17 +402,17 @@ def render():
             items = pick(sec, how)
             if not items:
                 raise GenError(f"{NORMS.name}: «{sec[0]}» has no req anchors")
-            where = "Н3" if sec_name not in ("Н3 Procedures", "Н2.1 Request parsing") else ""
+            where = '\u041d3' if sec_name not in ('\u041d3 Procedures', '\u041d2.1 Request parsing') else ""
             lines.append(f"//   spec/{NORMS.name} {where + ' ' if where else ''}«{sec[0]}»"
                          + (" (the query items)" if how == "query" else "") + ":")
             for anchor, text in items:
                 lines.append(f"//     req: {anchor} — {brief(text)}")
                 count += 1
         if name == "Write":
-            lines.append("//   the body first: writecheck.Check(body, c.Call.Sock, lim, allowed) — the form of Н2.1/Н1 "
+            lines.append('//   body first:writecheck.Check(body, c.Call.Sock, lim, allowed) applies the N2.1/N1 form '
                          "(KIT.md, writecheck)")
         if name == "QueryRefused":
-            lines.append("//   the refusal: Н4 «Refusals» and forms/refusals.tsv (code, kind) — apidoor.Refuse(op, 400, …)")
+            lines.append('//   refusal:N4 Refusals and refusals.tsv(code, kind), through apidoor.Refuse(op, 400, ...).')
         stub = GET_STUB if name == "Get" else f"\treturn notImplemented({op})"
         body.append((name, "\n".join(lines) + f"\n{sig} {{\n{stub}\n}}\n"))
         report.append((name, chapter, count))
@@ -450,7 +436,7 @@ def generate(out=DEFAULT_OUT):
 
 
 def kit_files(module, out=DEFAULT_OUT):
-    """→ [(каталог в internal, имя, байты, происхождение, источник, своё у реализации)]; GenError — out устарел."""
+    """Return [(internal directory, name, bytes, origin, source, editable)]; stale output raises GenError."""
     files = []
     for rel, text in sorted(render()[0].items()):
         kept = Path(out) / "core" / rel
@@ -463,7 +449,7 @@ def kit_files(module, out=DEFAULT_OUT):
 
 
 def provenance():
-    """Паспорт части (ADR-0125 доп. (1) п. 6 (а)): формы, генератор, ручная среда (нет), судья."""
+    """Part provenance (ADR-0125 addendum (1), item 6(a)): forms, generator, no handwritten runtime, and judge."""
     import tsv_input
 
     def entry(path):

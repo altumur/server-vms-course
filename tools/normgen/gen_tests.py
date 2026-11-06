@@ -1,27 +1,10 @@
-"""Генератор № 6 ADR-0125: тесты из векторов P/01 и вход команды векторов — без модели, по декларации пакетов.
+"""Generate P/01 vector tests and vector-command inputs from package declarations, without a model (ADR-0125 generator 6).
 
-Источники (только формы, проза README не читается — ADR-0125 доп. (1) п. 4):
-- `Platform/01-store/vectors/jcs/canonical_json.tsv` — строки `raw`, `canonical`, `sha256` без шапки;
-- `Platform/01-store/vectors/rights-evaluator/expect.tsv` (шапка `role action key expect`) и `rights.json` рядом;
-- `Platform/01-store/forms/stages.tsv` — имя этапа, чей `gate` — `vectors:<пакет>`: от него имя тестов
-  `Test<Этап>_…` (ADR-0126 доп. (1) п. 1, доп. (3) п. 2; `jcs` → `TestJcs_`, `rights_eval` → `TestRightsEval_`).
+Read headerless jcs/canonical_json.tsv raw/canonical/sha256; rights-evaluator/expect.tsv role/action/key/expect and rights.json; and stages.tsv vectors gates for Test<Stage> names. PACKAGES explicitly declares input columns, fixtures and native outcomes from package READMEs and the unified vector-command contract; there is no separate form for that declaration.
 
-Декларация пакетов (PACKAGES) — ручная выжимка README пакетов и единого провода команды векторов (общий README
-приёмки «The unified command of a vector package»): входные колонки, фикстуры, нативный исход. Формы у этого нет;
-это место — вопрос «Спецификации» (отчёт генератора).
+Emit out/p01-1, module normgen/p01-1, Go 1.22 stdlib: one YOURS canonical.go/rights.go adapter per function; one vectortest per row; vectorcmd and cmd/vectors for bin/vectors {input}; copied kit/go jsonstrict/writecheck so the output module builds; and vectors/<package>/line-N.json plus cases.tsv for vector_judge.py, including packages without Go tests. jcs/rights use adapters; write-checks executes the kit's writecheck directly from probes. build_kit rewrites normgen/p01-1 imports to the kit's module/internal.
 
-Выход в `tools/normgen/out/p01-1` (модуль `normgen/p01-1`, Go 1.22, только stdlib):
-- `go/vectoradapter/canonical.go`, `rights.go` — заглушки адаптера по файлу на функцию: договор, который реализует реализация (или свидетель);
-- `go/vectortests/` — тесты `Test<Этап>_Line<N>`, по одному на строку вектора; зовут только адаптер;
-- `go/vectorcmd/vectorcmd.go` — единый провод команды векторов: jcs, rights-evaluator — через адаптер, write-checks —
-  через writecheck (пробы `forms/write-checks.probes.tsv`); `go/cmd/vectors/main.go` — бинарь `bin/vectors {input}`
-  (ADR-0126 доп. (5)); `go/jsonstrict`, `go/writecheck` — копии ручного `kit/go`, чтобы модуль выхода собирался;
-- `vectors/<пакет>/line-<N>.json` и `cases.tsv` — входы команды векторов и ожидаемый нативный исход для судьи
-  `tools/normgen/vector_judge.py` (gate `vectors:<пакет>` без Go-тестов).
-Путь импорта `"normgen/p01-1/` в пакете Б заменяет `tools/normgen/kit/build_kit.py` на `"<module>/internal/`.
-
-Запуск: python tools/normgen/gen_tests.py [корень_курса [каталог_выхода]].
-"""
+  python tools/normgen/gen_tests.py [course-root [output-directory]]"""
 import base64
 import hashlib
 import json
@@ -33,13 +16,14 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 
-from gen_checks import camel, go_str, gofmt  # noqa: E402 — общие кирпичи генератора № 1
-import gen_stagetests  # noqa: E402 — тесты этапов из сценариев (ADR-0125 доп. (3))
-import gate  # noqa: E402 — общий разбор gate (ревью Codex С4)
+from gen_checks import camel, go_str, gofmt  # noqa: E402 -- shared generator 1 components
+import gen_stagetests  # noqa: E402 -- stage tests from scenarios (ADR-0125 addendum 3)
+import gate  # noqa: E402 -- shared gate parser (Codex review C4)
 import vector_consumers
-import common_vectors  # noqa: E402 — общие пакеты векторов урока (ADR-0125 доп. (5) п. 5)
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import common_vectors  # noqa: E402 -- common lesson vectors (ADR-0125 addendum(5), item 5)
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
 import tsv_input  # noqa: E402 — source transport inputs in P/01 provenance
+import gen_flags  # existing runtime-constants class
 L = lesson.CURRENT
 
 DEFAULT_OUT = L.out
@@ -48,21 +32,21 @@ STAGES = f"{L.rel}/forms/stages.tsv"
 ACTIONS = ("read", "write", "delete")
 HEX64 = re.compile(r"[0-9a-f]{64}")
 
-# Декларация: пакет единого провода (путь от Platform/ без vectors/), таблица, входные колонки (ключи `cells`),
-# входные фикстуры (ключи `files`), нативный исход. README пакетов: jcs «canonical_json.tsv» (cells={raw}, код 0 и
-# {canonical, sha256} по значению); rights-evaluator — README называет только пробы через сокет, нативной формы нет:
-# по общему правилу «A table whose package README names no native form» одна колонка ожидания `expect` — значение
-# колонки строкой JSON (`"allow"` | `"deny"`), код 0; файл прав — фикстура `rights.json`.
+# Declaration: unified-wire package (Platform-relative, excluding vectors/), table, input columns (cells),
+# fixtures (files), native outcome. jcs canonical_json.tsv uses cells={raw}, exit 0 and {canonical, sha256};
+# rights-evaluator's README specifies only socket probes, so the common fallback native form applies:
+# A table whose package README names no native form uses the single expect column as a JSON string
+# ('allow' or 'deny'), exit 0, and rights.json as a fixture.
 PACKAGES = {
     "jcs": {"package": "01-store/jcs", "dir": "Platform/01-store/vectors/jcs", "table": "canonical_json.tsv",
             "inputs": ["raw"], "files": [], "native": "code 0, {canonical, sha256} by value"},
     "rights-evaluator": {"package": "01-store/rights-evaluator", "dir": "Platform/01-store/vectors/rights-evaluator",
                          "table": "expect.tsv", "inputs": ["role", "action", "key"], "files": ["rights.json"],
                          "native": "code 0, \"allow\" | \"deny\""},
-    # write-checks — пробы таблицы проверок (ADR-0126 доп. (5)): провод драйвера раннера P/01/vectors-write-checks —
-    # cells {sock, body, lim, allow}: body — ячейка как есть, lim — объект #lim, allow — строки #allow; строки nopair
-    # (тело — проза) не входят; нативно {"n": 0} или {"n", "code", "kind"} первой нарушенной строки write-checks.tsv.
-    # Исполняет пакет (writecheck.Check: разбор Н2.1 + проверки checks), не адаптер модели.
+    # write-checks probes (ADR-0126 addendum 5) follow the P/01/vectors-write-checks runner driver:
+    # cells={sock, body, lim, allow}: body stays raw, lim is the #lim object, allow is #allow strings. Exclude nopair
+    # prose bodies. Native outcome is {n:0} or {n, code, kind} for the first violated write-checks row.
+    # The kit executes writecheck.Check (N2.1 parsing plus checks), not the model adapter.
     "write-checks": {"package": "01-store/write-checks", "dir": "Platform/01-store/forms",
                      "table": "write-checks.probes.tsv", "inputs": ["sock", "body", "lim", "allow"], "files": [],
                      "native": "code 0, {\"n\": 0} | {\"n\", \"code\", \"kind\"} of the first violated row"},
@@ -70,7 +54,7 @@ PACKAGES = {
 
 
 class GenError(Exception):
-    """Отказ генератора: вектор или форма этапов вне формы."""
+    """Generation refusal: invalid vector or stage form."""
 
 
 def sha256(data):
@@ -78,7 +62,7 @@ def sha256(data):
 
 
 def strict_json(text, where):
-    """JSON по RFC 8259 без NaN/Infinity и повторов имён — иначе GenError."""
+    """Read RFC 8259 JSON without NaN, Infinity or duplicate names; otherwise raise GenError."""
     def pairs(items):
         keys = [k for k, _ in items]
         if len(keys) != len(set(keys)):
@@ -94,7 +78,7 @@ def strict_json(text, where):
         raise GenError(f"{where}: not JSON: {exc}") from None
 
 
-# ---------------------------------------------------------------- источники
+# ---------------------------------------------------------------- sources
 
 class Source:
     def __init__(self, root, rel):
@@ -108,7 +92,7 @@ class Source:
 
 
 def read_stages(root):
-    """stages.tsv → {пакет vectors: имя этапа}; Source формы."""
+    """Read stages.tsv as {vector package: stage name}, with Source provenance."""
     src = Source(root, STAGES)
     rows = [line.split("\t") for line in src.text.split("\n") if line and not line.startswith("#")]
     if not rows or "stage" not in rows[0] or "gate" not in rows[0]:
@@ -123,7 +107,7 @@ def read_stages(root):
             checks = gate.parse(row.get("gate", ""), f"{STAGES}: {row['stage']}")
         except gate.GateError as exc:
             raise GenError(str(exc)) from None
-        for c in checks:                       # элементы vectors: списка gate (ADR-0126 доп. (7) п. 3)
+        for c in checks:                       # vectors elements of the gate list (ADR-0126 addendum(7), item 3).
             if c.kind != "vectors":
                 continue
             if c.package in by_pkg:
@@ -133,7 +117,7 @@ def read_stages(root):
 
 
 def read_jcs(root):
-    """canonical_json.tsv → [(строка файла, raw, canonical, sha256)]; сверка: sha256 — от canonical, оба — JSON."""
+    """Read canonical_json.tsv as [(physical line, raw, canonical, sha256)], checking both JSON texts and canonical SHA256."""
     decl = PACKAGES["jcs"]
     src = Source(root, f"{decl['dir']}/{decl['table']}")
     rows, seen = [], {}
@@ -163,7 +147,7 @@ def read_jcs(root):
 
 
 def read_rights(root):
-    """expect.tsv + rights.json → ([(строка файла, role, action, key, allow)], Source таблицы, Source файла прав)."""
+    """Read expect.tsv and rights.json as ([(line, role, action, key, allow)], table Source, rights Source)."""
     decl = PACKAGES["rights-evaluator"]
     src = Source(root, f"{decl['dir']}/{decl['table']}")
     rights = Source(root, f"{decl['dir']}/rights.json")
@@ -201,7 +185,7 @@ def read_rights(root):
 
 
 def read_probes(root):
-    """write-checks.probes.tsv + write-checks.tsv → ([(строка, sock, body, ожидание)], lim, allow, [Source])."""
+    """Read write-checks probes and form as ([(line, sock, body, expectation)], lim, allow, sources)."""
     decl = PACKAGES["write-checks"]
     src = Source(root, f"{decl['dir']}/{decl['table']}")
     table = Source(root, f"{decl['dir']}/write-checks.tsv")
@@ -284,14 +268,14 @@ import "errors"
 
 '''
 
-ADAPTER_CANONICAL = '''// Canonical returns the RFC 8785 (JCS) canonical text of the JSON text raw — the bytes the store compares and signs
-// (P/01.1 Н1 id; ADR-0072; vectors/jcs). An error means raw is not a JSON text.
+ADAPTER_CANONICAL = r'''// Canonical returns the RFC 8785 (JCS) canonical text of the JSON text raw — the bytes the store compares and signs
+// (P/01.1 N1 id;ADR-0072;vectors/jcs).An error means raw is not JSON text.
 func Canonical(raw []byte) ([]byte, error) {
 	return nil, errors.New("vectoradapter.Canonical: not implemented")
 }
 '''
 
-ADAPTER_RIGHTS = '''// LoadRights parses the bytes of a rights file (P/01.2 Н1.2) and returns its evaluator (P/01.2 Н1.3): allowed(role,
+ADAPTER_RIGHTS = r'''// LoadRights parses rights-file bytes(P/01.2 N1.2) and returns the N1.3 evaluator:allowed(role,
 // action, key) reports whether the role may do the action on the key; action is "read", "write" or "delete". The
 // returned function must be safe to call many times. An error means the file is not a rights file.
 func LoadRights(file []byte) (func(role, action, key string) bool, error) {
@@ -416,8 +400,8 @@ def go_rights_tests(rows, src, rights, stages_src, prefix):
     return gofmt("".join(out))
 
 
-VECTORCMD_GO = '''// Package vectorcmd — the unified command of a vector package (the common acceptance README, «The unified command of a
-// vector package»; the wire of the runner cammeta-acceptance, «Единая команда пакета векторов») for the packages of
+VECTORCMD_GO = r'''// Package vectorcmd — the unified command of a vector package (the common acceptance README, «The unified command of a
+// vector package, the cammeta-acceptance runner wire) for the packages of
 // P/01, on top of package vectoradapter (jcs, rights-evaluator — the model's code) and package writecheck (write-checks —
 // the kit's checks). Generated by tools/normgen/gen_tests.py (ADR-0125 № 6).
 //
@@ -478,21 +462,21 @@ func Main(args []string, stdout, stderr io.Writer) int {
 	}
 	data, err := os.ReadFile(args[0])
 	if err != nil {
-		fmt.Fprintf(stderr, "vectors: %%v\\n", err)
+		fmt.Fprintf(stderr, "vectors: %%v\n", err)
 		return 2
 	}
 	in, err := parse(data)
 	if err != nil {
-		fmt.Fprintf(stderr, "vectors: %%s: %%v\\n", args[0], err)
+		fmt.Fprintf(stderr, "vectors: %%s: %%v\n", args[0], err)
 		return 2
 	}
 	code, out, errOut, err := run(in)
 	if err != nil {
-		fmt.Fprintf(stderr, "vectors: %%s: %%v\\n", args[0], err)
+		fmt.Fprintf(stderr, "vectors: %%s: %%v\n", args[0], err)
 		return 2
 	}
 	enc, _ := json.Marshal(answer{code, base64.StdEncoding.EncodeToString(out), base64.StdEncoding.EncodeToString(errOut)})
-	stdout.Write(append(enc, '\\n'))
+	stdout.Write(append(enc, '\n'))
 	return 0
 }
 
@@ -545,7 +529,7 @@ func run(in *input) (code int, stdout, stderr []byte, err error) {
 		return 0, nil, nil, fmt.Errorf("package %%q table %%q is not a package of this command", *in.Package, *in.Table)
 	}
 	if *in.Variant != "" {
-		return 0, nil, nil, fmt.Errorf("variant %%q, want \\"\\"", *in.Variant)
+		return 0, nil, nil, fmt.Errorf("variant %%q, want \"\"", *in.Variant)
 	}
 	if keys(in.Cells) != shape[0] || keys(in.Files) != shape[1] {
 		return 0, nil, nil, fmt.Errorf("cells {%%s} files {%%s}, want cells {%%s} files {%%s}",
@@ -561,7 +545,7 @@ func run(in *input) (code int, stdout, stderr []byte, err error) {
 	}
 	defer func() {
 		if r := recover(); r != nil {
-			code, stdout, stderr, err = 1, nil, []byte(fmt.Sprintf("panic: %%v\\n", r)), nil
+			code, stdout, stderr, err = 1, nil, []byte(fmt.Sprintf("panic: %%v\n", r)), nil
 		}
 	}()
 	cell := func(name string) string { return *in.Cells[name] }
@@ -572,7 +556,7 @@ func run(in *input) (code int, stdout, stderr []byte, err error) {
 	enc := json.NewEncoder(&buf)
 	enc.SetEscapeHTML(false)
 	if err := enc.Encode(value); err != nil {
-		return 1, nil, []byte(err.Error() + "\\n"), nil
+		return 1, nil, []byte(err.Error() + "\n"), nil
 	}
 	return 0, buf.Bytes(), nil, nil
 }
@@ -655,7 +639,7 @@ func main() { os.Exit(vectorcmd.Main(os.Args[1:], os.Stdout, os.Stderr)) }
 def go_vectorcmd(sources, root=ROOT):
     packages, want, cases = [], [], []
     decls = [(name, decl, VECTORCMD_CASES[name]) for name, decl in PACKAGES.items()]
-    for name, table in common_vectors.composition(L.key, root):    # общие пакеты урока (ADR-0125 доп. (5) п. 5)
+    for name, table in common_vectors.composition(L.key, root):    # Common lesson vectors (ADR-0125 addendum(5), item 5).
         d = common_vectors.DECLS[name]
         decls.append((name, {"package": f"common/{name}", "table": table, "inputs": d["inputs"],
                              "files": list(d["files"]), "native": d["native"]}, common_vectors.VECTORCMD[name]))
@@ -674,7 +658,7 @@ def go_vectorcmd(sources, root=ROOT):
     return gofmt(go_head(sources) + "\n" + body)
 
 
-# ---------------------------------------------------------------- входы команды векторов
+# ---------------------------------------------------------------- vector-command inputs
 
 def wire_input(decl, no, cells, files):
     doc = {"format": 1, "package": decl["package"], "table": decl["table"], "case": f"line-{no}", "variant": "",
@@ -683,7 +667,7 @@ def wire_input(decl, no, cells, files):
 
 
 def cases_tsv(decl, sources, rows):
-    """rows: [(case, файл входа, нативный код, ожидаемый stdout — JSON одной строкой)]."""
+    """rows: [(case, input file, native exit, expected single-line JSON stdout)]."""
     head = [f"# Inputs of the vector command for {decl['package']} {decl['table']} (tools/normgen/gen_tests.py, ADR-0125 № 6).",
             f"# Native outcome: {decl['native']}; stdout is compared as one JSON value by value (tools/normgen/vector_judge.py)."]
     head += [f"# source {s.rel} sha256 {s.sha256}" for s in sources]
@@ -696,15 +680,19 @@ def compact(value):
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
 
 
-# ---------------------------------------------------------------- сборка
+# ---------------------------------------------------------------- assembly
 
 def render(root=ROOT):
-    """→ {путь относительно каталога выхода: байты}; GenError — источник вне формы."""
+    """Return {output-relative path: bytes}; malformed sources raise GenError."""
     try:
         lesson.require(L, "gen_tests (PACKAGES)")
     except lesson.LessonError as exc:
         raise GenError(str(exc)) from None
     root = Path(root)
+    try:
+        constants = gen_flags.p01_constants(root)
+    except gen_flags.GenError as exc:
+        raise GenError(str(exc)) from None
     try:
         assigned = vector_consumers.for_lesson(root, L.key) if (root / vector_consumers.FORM).is_file() else set()
         available = {(d["package"], d["table"]) for d in PACKAGES.values()}
@@ -729,13 +717,17 @@ def render(root=ROOT):
         "go/vectorcmd/vectorcmd.go": go_vectorcmd([jcs_src, rights_src] + probe_srcs, root).encode("utf-8"),
         "go/cmd/vectors/main.go": gofmt(go_head([]) + "\n" + MAIN_GO % {"module": GO_MODULE}).encode("utf-8"),
     }
-    # Копии ручного пакета kit/go (jsonstrict, writecheck): модуль выхода собирается сам по себе (vectorcmd импортирует
-    # writecheck); в пакет Б они идут из kit/go частью writecheck, не частью tests.
+    # Copy kit/go jsonstrict/writecheck so the output module builds standalone (vectorcmd imports writecheck).
+    # The kit installs them from kit/go as writecheck, not as tests.
     for sub in ("jsonstrict", "writecheck"):
         text = (HERE / "kit/go" / sub / f"{sub}.go").read_text(encoding="utf-8")
+        if sub == "jsonstrict":
+            text = gen_flags.bind_p01(text, sub, constants is not None, error=GenError)
         text = text.replace('"kitmodule/internal/', f'"{GO_MODULE}/')
         files[f"go/{sub}/{sub}.go"] = gofmt(f"// Code generated by tools/normgen/gen_tests.py: copy of tools/normgen/kit/go/"
                                             f"{sub}/{sub}.go; DO NOT EDIT.\n\n" + text).encode("utf-8")
+    if constants is not None:
+        files["go/jsonstrict/constants.go"] = constants.encode("utf-8")
     try:
         staged, _ = gen_stagetests.build(root)
     except gen_stagetests.GenError as exc:
@@ -776,7 +768,7 @@ def render(root=ROOT):
 
 
 def common(root, files):
-    """Общие пакеты векторов урока (common_vectors): заготовки адаптера, тесты TestCommon<Пакет>_Line<N>, входы судьи."""
+    """Common lesson vectors: adapter scaffolds, TestCommon<Package>_Line<N> tests and judge inputs via common_vectors."""
     for fname, text in common_vectors.adapters(L.key, root=root).items():
         files[f"go/vectoradapter/{fname}"] = gofmt(text).encode("utf-8")
 
@@ -795,11 +787,11 @@ def common(root, files):
         files[f"{base}/cases.tsv"] = cases_tsv(decl, [Source(root, rel)] + [Source(root, r) for r in fx_rels], rows)
 
 
-# ---------------------------------------------------------------- часть пакета Б `tests` (ADR-0126 доп. (2) п. 1)
+# ---------------------------------------------------------------- tests kit part (ADR-0126 addendum(2), item 1)
 
-# Части пакета Б (ADR-0126 доп. (7) п. 4): vectors — тесты векторов и команда векторов; stagetests — тесты этапов из
-# сценариев и адаптер ядра. Каталоги частей заменяются целиком (../cmd/vectors — <dst>/01-store/cmd/vectors); своё у
-# реализации (vectoradapter/, coreadapter/open.go) кладётся, только если его нет.
+# Kit parts (ADR-0126 addendum(7), item 4): vectors includes vector tests/command; stagetests includes scenarios
+# and the core adapter. Replace part directories entirely, including ../cmd/vectors; install editable
+# vectoradapter/ and coreadapter/open.go only when absent.
 PART_DIRS = {"vectors": ("vectortests", "vectorcmd", "../cmd/vectors"), "stagetests": ("stagetests",)}
 PART_OWN_DIRS = {"vectors": ("vectoradapter",), "stagetests": ("coreadapter",)}
 KIT_DIRS = PART_DIRS["vectors"] + PART_DIRS["stagetests"]
@@ -807,7 +799,7 @@ KIT_IMPORT = f'"{GO_MODULE}/'
 
 
 def kit_files(module, part="vectors", out=DEFAULT_OUT):
-    """→ [(каталог в internal, имя, байты, происхождение, источник, своё у реализации)] части; GenError — out устарел."""
+    """Return the part's [(internal directory, name, bytes, origin, source, editable)]; stale output raises GenError."""
     fresh = render(ROOT)
     dirs = {"cmd/vectors" if d == "../cmd/vectors" else d for d in PART_DIRS[part] + PART_OWN_DIRS[part]}
     parts = []
@@ -890,7 +882,7 @@ Each adapter file holds one function; its comment says the input and the native 
 
 
 def kit_md():
-    """Справка части vectors: общие пакеты урока — из common_vectors (их состав у урока)."""
+    """Document the lesson's common vector packages from common_vectors."""
     rows = []
     for name, table in common_vectors.composition(L.key):
         d = common_vectors.DECLS[name]
@@ -947,7 +939,7 @@ clock (what was written must read back), `@parallel K` — the next request K ti
 
 
 def counts(root=ROOT):
-    """→ {пакет: число строк-векторов} — для отчёта и сверки покрытия."""
+    """Return {package: vector-row count} for reporting and coverage checks."""
     return {"jcs": len(read_jcs(root)[0]), "rights-evaluator": len(read_rights(root)[0])}
 
 
@@ -960,6 +952,8 @@ def sources(part, root=ROOT):
             paths.append(root / d["dir"] / d["table"])
             paths.extend(root / d["dir"] / f for f in d["files"])
         paths.append(root / L.rel / "forms/write-checks.tsv")
+        if (root / gen_flags.P01_CONSTANTS).is_file():
+            paths.append(root / gen_flags.P01_CONSTANTS)
         # Older exports use BEFORE_FORM and do not read either registry.
         # When consumers is present, composition still requires lessons.tsv.
         if (root / common_vectors.CONSUMERS).is_file():
@@ -981,6 +975,8 @@ def sources(part, root=ROOT):
 def generate(root=ROOT, out=DEFAULT_OUT):
     out = Path(out)
     files = render(root)
+    if "go/jsonstrict/constants.go" not in files:
+        (out / "go/jsonstrict/constants.go").unlink(missing_ok=True)
     for sub in ("go/vectoradapter", "go/vectortests", "go/vectorcmd", "go/cmd/vectors", "go/stagetests", "go/coreadapter",
                 "vectors"):
         target = out / sub

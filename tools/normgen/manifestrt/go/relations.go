@@ -1,5 +1,5 @@
 // Hand-written runtime of the part `loader` (tools/normgen/manifestrt/go; the kit copies it, DO NOT EDIT): the relations
-// (P/02.1 Н3 step 3; LAYERS § 5, layer 7) — every row of the embedded `02.1-installer.relations.json` by the pinned
+// P/02.1 N3 step 3(LAYERS section5, layer7):every embedded relations.json row via the pinned
 // github.com/google/cel-go v0.26.1 with the extensions strings and two-var-comprehensions and the three functions of
 // layer 7: depth, template, text. A row gives a list of violations {p: path}; an execution error is a refusal, not
 // «the relation holds» (D5). Based on the V7 Go stack of the course (skills/lesson-spec/scripts/v7/go/main.go).

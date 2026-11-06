@@ -34,7 +34,7 @@ func copyRefuse(phase, format string, args ...any) error {
 
 var copyTimeRE = regexp.MustCompile(`^(0|[1-9][0-9]*)(\.[0-9]+)?$`)
 
-// readCopyTime applies P/01.1 Н0 reader grammar and the finite binary64 bound.
+// readCopyTime applies P/01.1 N0 reader grammar and the finite binary64 bound.
 // Exact rationals retain the arbitrary length fraction when comparing to the wall
 // clock. Only the writer's new generation_at is truncated to milliseconds.
 func readCopyTime(s string) (*big.Rat, bool) {

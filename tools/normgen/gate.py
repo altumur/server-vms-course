@@ -1,16 +1,12 @@
-"""Разбор `gate` формы stages.tsv (ADR-0126 доп. (1) п. 8, доп. (7) пп. 2, 3) — один для генераторов normgen.
+"""Shared normgen parser for stages.tsv gate cells (ADR-0126 addenda (1) item 8 and (7) items 2, 3).
 
-`gate` — список проверок через «;», этап закрыт, когда держатся все. Проверка — `<вид>:<аргумент>[:<аргумент>]` без
-пробелов (шапка формы): `tests:<глава>:<сценарии|*>[:seams]`, `accept:<глава>:<сценарии|*>`, `verdicts:<глава>:<случаи|*>`,
-`puts:<глава>:<случаи|*>` (P/02, ADR-0125 доп. (5)), `vectors:<пакет>`, `build`; глава — NN.K или NN (урок одной главой).
-Пустой элемент (`;;`, «;» в конце), пробел, неизвестный вид и повтор проверки — отказ (GateError), а не молчаливый
-пропуск: элемент, которого генератор не понял, не должен выпасть из этапа (ревью Codex С4). Грамматика — та же, что у
-`check_forms.gate_errors` (skills/lesson-spec): её сверяет test_gate.py.
-"""
+A gate is a semicolon-separated conjunction. Each check has no whitespace: <kind>:<argument>[:<argument>]. Kinds are tests:<chapter>:<scenarios|*>[:seams], accept:<chapter>:<scenarios|*>, verdicts:<chapter>:<cases|*>, puts:<chapter>:<cases|*> for P/02, vectors:<package>, and build. Chapters use NN.K or NN for a single-chapter lesson.
+
+Empty elements, trailing semicolons, whitespace, unknown kinds and duplicates raise GateError rather than silently dropping checks (Codex C4). test_gate.py verifies agreement with check_forms.gate_errors."""
 import re
 from dataclasses import dataclass
 
-CH = r"[0-9]+(?:\.[0-9]+)?"            # глава NN.K или урок одной главой NN (P/04; ADR-0125 доп. (5))
+CH = r"[0-9]+(?:\.[0-9]+)?"            # Chapter NN.K or single-chapter lesson NN (P/04; ADR-0125 addendum (5)).
 ITEM = re.compile(rf"tests:({CH}):(\*|[a-z0-9][a-z0-9-]*(?:,[a-z0-9][a-z0-9-]*)*)(:seams)?"
                   rf"|accept:({CH}):(\*|[a-z0-9][a-z0-9-]*(?:,[a-z0-9][a-z0-9-]*)*)"
                   r"|vectors:([a-z0-9][a-z0-9-]*)|build"
@@ -26,13 +22,13 @@ class Check:
     kind: str                 # tests | accept | vectors | build | verdicts | puts
     text: str
     chapter: str = None       # tests, accept, verdicts, puts
-    names: tuple = None       # tests, accept: имена сценариев; verdicts, puts: случаи (первая колонка); None — «*»
+    names: tuple = None       # tests/accept use scenario names; verdicts/puts use first-column case names; None denotes '*'.
     seams: bool = False       # tests: seams.tsv
     package: str = None       # vectors
 
 
 def parse(gate, where="gate"):
-    """Ячейка gate → [Check] в порядке ячейки."""
+    """Parse a gate cell into [Check] in cell order."""
     if gate == "":
         raise GateError(f"{where}: empty gate")
     out, seen = [], set()

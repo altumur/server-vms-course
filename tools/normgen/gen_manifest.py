@@ -1,22 +1,11 @@
-"""Генератор части `loader` (Архитектор 2026-11-05, ADR-0125 доп. (5), опись п. 2): строгий загрузчик манифеста
-P/02.1 и канонический вид P/02.2 по стандартным файлам урока — закрытый пакет Go `manifest`.
+"""Generate the closed P/02 loader part: strict P/02.1 manifest loading and P/02.2 canonical view (Architect, 2026-11-05; ADR-0125 addendum(5)).
 
-Запуск: python3 tools/normgen/gen_manifest.py [<out>]   (урок 02-installer; по умолчанию tools/normgen/out/p02)
+  python3 tools/normgen/gen_manifest.py [<out>]
+Always lesson02-installer; default out/p02. Architect optionA pins go.yaml.in/yaml/v3, santhosh-tekuri/jsonschema/v6 and cel-go through common/versions/go.mod. Embed export form bytes as data and validate their compatibility with manifestrt/go, based on the course V7 Go stack.
 
-Решение «Архитектора» (вариант А): библиотеки стека — закреплённые версии `Platform/common/versions/go.mod`
-(P/02.1 «Implementation decides» п. 1): go.yaml.in/yaml/v3 (слой 1), santhosh-tekuri/jsonschema/v6 (форма), cel-go
-(связи). Формы — данные: генератор кладёт в пакет байты выгрузки и проверяет их на то, что исполняет ручная среда
-(tools/normgen/manifestrt/go, основа — стек В7 курса skills/lesson-spec/scripts/v7/go):
-- `02.1-installer.scalars.tsv` — шапка, виды строк (null, true, false, int, float, nonfinite, string, limit), пределы;
-- `02.1-installer.schema.json` — слова `x-*` только известные (x-integer-place, x-opaque, x-ordered, x-complement-of —
-  переведено в стандарт; x-integer — в манифесте без действия сверх `type: integer`; справочные x-owner,
-  x-default-text, x-class), и каждое место слова слоя есть строкой `02.1-installer.layers.tsv`, и наоборот;
-- `02.1-installer.relations.json` — расширения ровно strings и two-var-comprehensions, функции ровно depth, template,
-  text с перегрузками среды, у каждой строки cel; обход D8 (DEFECTS.md): каждый `double(` — `double(dyn(`.
-Выход <out>/go/manifest: копия среды (text.go, value.go, form.go, relations.go, view.go, manifest.go), forms/ — байты
-форм, forms.go (embed); go.mod выхода — с require закреплённых версий, go.sum — копия versions/go.sum.
-Судья — test_gen_manifest.py: корпус verdicts 947 (и классы classes.tsv), canonical 220, yaml-suite 402, мутанты.
-"""
+Validate scalars.tsv headers/kinds/limits; known schema x-* keywords and exact layers.tsv correspondence; translate x-complement-of to standard JSON Schema while x-integer adds nothing beyond manifest type:integer. Preserve informational x-owner/x-default-text/x-class. Relations allow exactly strings and two-var-comprehensions extensions and depth/template/text overloads; D8 rewrites double( to double(dyn(.
+
+Emit runtime text/value/form/relations/view/manifest.go, embedded forms/ and forms.go, module requirements pinned by versions/go.mod and copied go.sum. test_gen_manifest.py runs947 verdicts with classes, 220canonical cases, 402yaml-suite cases and mutants."""
 import hashlib
 import json
 import re
@@ -28,7 +17,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import lesson  # noqa: E402
-L = lesson.get("02-installer")              # загрузчик — часть урока 02 при любом выбранном уроке
+L = lesson.get("02-installer")              # Loader always belongs to lesson02 regardless of the selected lesson.
 
 DEFAULT_OUT = L.out
 RUNTIME = HERE / "manifestrt/go"
@@ -176,7 +165,7 @@ var scalarsTSV string
 
 
 def render():
-    """→ {путь от <out>/go: байты}."""
+    """Return {output-go-relative path: bytes}."""
     check_scalars()
     check_schema()
     check_relations()
@@ -191,8 +180,7 @@ def render():
 
 
 def go_mod(out):
-    """go.mod выхода — versions/go.mod с именем модуля урока (go 1.22.0, toolchain go1.22.10: в этой форме go его не
-    переписывает), go.sum — копия versions/go.sum."""
+    """Use versions/go.mod with the lesson module name (go1.22.0/toolchain go1.22.10 avoids Go rewriting it) and copy versions/go.sum."""
     requires()
     text = (VERSIONS / "go.mod").read_text(encoding="utf-8")
     text = re.sub(r"^module .*$", f"module {L.go_module}", text, count=1, flags=re.M)
@@ -215,7 +203,7 @@ def generate(out=DEFAULT_OUT):
 
 
 def kit_files(module, out=DEFAULT_OUT):
-    """→ [(каталог в internal, имя, байты, происхождение, источник, своё у реализации)]; GenError — out устарел."""
+    """Return [(internal directory, name, bytes, origin, source, editable)]; stale output raises GenError."""
     files = []
     for relp, data in sorted(render().items()):
         kept = Path(out) / "go" / relp
@@ -248,8 +236,8 @@ def provenance():
     return result
 
 
-# Заготовки YOURS других частей, которые часть loader кладёт уже подключёнными (одна строка к пакету manifest);
-# они остаются своими у реализации: пакет кладёт их один раз и не перезаписывает (правило --seed build_kit).
+# Loader wires YOURS scaffolds for other parts to the manifest package.
+# They remain implementation-owned: install once without overwriting, following build_kit --seed rules.
 WIRED = {
     ("lessonadapter", "load.go"): '''// Generated by tools/normgen/gen_cmdtests.py, wired by the part loader (tools/normgen/gen_manifest.py). YOURS from
 // here: the kit puts this file once and never overwrites it.
@@ -306,13 +294,12 @@ func YamlSuite(table string, cells map[string]string, files map[string][]byte) A
 
 
 def wired(module):
-    """→ {(каталог в internal, имя): байты} подключённых заготовок."""
+    """Return {(internal directory, filename): bytes} for wired scaffolds."""
     return {k: v.replace("{module}", module).encode("utf-8") for k, v in WIRED.items()}
 
 
 def vendor(module):
-    """→ [(путь от корня модуля, байты)]: go.mod (модуль пакета), go.sum, vendor/ — `go mod vendor` закреплённых версий
-    из кеша модулей (без сети); GenError — кеш без нужных модулей."""
+    """Return module-root files: go.mod, go.sum and vendored pinned dependencies from the local module cache without network; missing modules raise GenError."""
     import subprocess
     import tempfile
     mod = re.sub(r"^module .*$", f"module {module}", (VERSIONS / "go.mod").read_text(encoding="utf-8"), count=1,

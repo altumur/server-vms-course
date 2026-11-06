@@ -1,16 +1,7 @@
-"""Стенд внешнего судьи двери (ADR-0125 доп. (1) п. 1): пакет Б с частями writecheck и door + заглушка демона
-tools/normgen/kit/stub (хранилище в памяти без смысла Н3) — каталог реализации для раннера приёмки P/01.1.
+"""Build the external door judge's stand (ADR-0125 addendum 1, item 1): writecheck+door and kit/stub, an in-memory store without N3 semantics, for the P/01.1 runner.
 
-Запуск: python tools/normgen/kit/build_stub.py <dst> [--spec-version <полный SHA выгрузки cammeta-specs>] [--go-build]
-
-Кладёт в <dst>: 01-store/ (пакет: build_kit.build, части writecheck и door, go.mod модуля stubstore, cmd/stubstore,
-acceptance.yaml формата 2), assembly.yaml (format 1, один модуль 01-store) и SPEC_VERSION. Раннер требует, чтобы <dst>
-был корнем репозитория Git (git init; git add -A; git commit — делает вызывающий). Ключи профиля: role_header —
-заголовок роли заглушки (X-Configstore-Role); request_line_limit 8192 — объявлен, но рамку заглушка не держит (net/http):
-пробы рамки P/01.1/extra — шаги, зависящие от ручной части, судьёй двери не засчитываются. --go-build собирает 01-store/bin/stubstore
-(иначе сборка — фаза build раннера: `go build -o bin/stubstore ./cmd/stubstore`). Прогон — только на сервере через
-очередь, не здесь.
-"""
+  python tools/normgen/kit/build_stub.py <dst> [--spec-version <full-export-SHA>] [--go-build]
+Create01-store with build_kit output, stubstore go.mod/cmd and format2 acceptance.yaml, plus format1 assembly.yaml and SPEC_VERSION. The caller initializes/commits the destination Git repository required by the runner. The stub uses X-Configstore-Role. request_line_limit8192 is declared but net/http does not enforce strict framing, so manual-frame extra probes are excluded from the door metric. --go-build builds bin/stubstore; otherwise the runner's build phase does so. Run only through the server queue, not here."""
 import argparse
 import subprocess
 import sys
@@ -24,8 +15,8 @@ MODULE = "stubstore"
 SPECS = Path("/Users/murat/w2c/cammeta-specs")
 GOENV_FLAGS = {"GOPROXY": "off", "GOFLAGS": "-mod=mod", "GOWORK": "off", "GOTOOLCHAIN": "local"}
 
-PROFILE = """# Заглушка двери P/01 (tools/normgen/kit/build_stub.py, ADR-0125 доп. (1) п. 1): пакет Б writecheck + door и хранилище
-# в памяти без смысла Н3. Не реализация урока: мера — шаги P/01.1, не зависящие от ядра.
+PROFILE = r'''# P/01 door stub: writecheck+door with an in-memory store, without N3 semantics.
+# Not a lesson implementation: measure only core-independent P/01.1 steps.
 format: 2
 implementation: normgen-door-stub
 module: 01-store
@@ -40,7 +31,7 @@ keys:
   request_line_limit: 8192
 artifacts:
   stubstore: bin/stubstore
-"""
+'''
 
 ASSEMBLY = "format: 1\nmodules:\n  01-store: 01-store/acceptance.yaml\n"
 
@@ -63,6 +54,8 @@ def build(dst, spec=None, go_build=False):
     cmd = store / "cmd/stubstore"
     cmd.mkdir(parents=True, exist_ok=True)
     src = (HERE / "stub/main.go").read_text(encoding="utf-8")
+    active = (build_kit.ROOT / build_kit.gen_flags.P01_CONSTANTS).is_file()
+    src = build_kit.gen_flags.bind_p01(src, "stub", active, error=build_kit.KitError)
     if '"kitmodule/internal/' not in src:
         raise build_kit.KitError("stub/main.go: no import kitmodule/internal/… to rewrite")
     (cmd / "main.go").write_text(src.replace('"kitmodule/internal/', f'"{MODULE}/internal/'), encoding="utf-8")
@@ -71,12 +64,12 @@ def build(dst, spec=None, go_build=False):
         raise build_kit.KitError(f"spec_version {sha!r}: a full 40-hex commit of cammeta-specs")
     (store / "acceptance.yaml").write_text(PROFILE.format(spec=sha), encoding="utf-8")
     (dst / "assembly.yaml").write_text(ASSEMBLY, encoding="utf-8")
-    (dst / "SPEC_VERSION").write_text(sha + "\n", encoding="utf-8")   # раннер: корень Git реализации несёт SPEC_VERSION
+    (dst / "SPEC_VERSION").write_text(sha + "\n", encoding="utf-8")   # Runner requires SPEC_VERSION at the implementation Git root.
     if go_build:
         import os
         env = dict(os.environ, **GOENV_FLAGS)
-        # macOS 26 dyld требует LC_UUID, внутренний компоновщик Go 1.22 его не пишет для бинаря с net: локально —
-        # внешний компоновщик; на сервере (Linux) сборка — командой build профиля как есть.
+        # macOS26 dyld requires LC_UUID, absent from Go 1.22's internal linker for net binaries; use the external
+        # linker locally. Linux uses the profile's build command unchanged.
         link = ["-ldflags=-linkmode=external"] if sys.platform == "darwin" else []
         for args in (["build", *link, "-o", "bin/stubstore", "./cmd/stubstore"], ["vet", "./..."]):
             done = subprocess.run(["go", *args], cwd=store, env=env, capture_output=True, text=True)

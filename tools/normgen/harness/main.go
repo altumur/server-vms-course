@@ -1,10 +1,10 @@
-// Обвязка проверки tools/normgen/test_gen_checks.py: один долгоживущий процесс; читает входы JSON построчно со stdin,
-// гоняет сгенерированный пакет checks и на каждую строку сразу пишет строку с цепочкой и отказом.
-// go.mod обвязки пишет тест (replace на каталог сгенерированного модуля).
+// Persistent check harness:read one JSON input from stdin, execute generated checks and immediately
+// return its chain and refusal.
+// The test writes go.mod with replace pointing to generated output.
 //
-// Вход строки: {"sock": s, "body": JSON тела, "lone": [указатели], "lim": {имя: int}, "allow": [[сокет, операция, префикс]]}.
-// Выход строки: {"chain": [[n, исход]], "check": отказ | null, "chain_hit": отказ | null}; значения fault — с метками
-// {"$int": "8"}, {"$double": "1.5"}, {"$map": {...}}, чтобы int и double не смешались в JSON.
+// Input:sock, body JSON, lone pointers, lim{name:int}, allow[[socket, action, prefix]].
+// Output:chain[[n, outcome]], check refusal|null, chain_hit refusal|null. Tag fault values as $int, $double,
+// or $map so JSON does not collapse integer/double distinctions.
 package main
 
 import (
@@ -27,7 +27,7 @@ type request struct {
 	Allow [][3]string
 }
 
-// decodeBody — JSON тела в значения пакета: число без . и e в пределах int64 — int64, иначе float64 (1e400 — +Inf).
+// decodeBody uses int64 for lexical integers in range, otherwise float64 (1e400 becomes+Inf).
 func decodeBody(raw json.RawMessage) (any, error) {
 	d := json.NewDecoder(bytes.NewReader(raw))
 	d.UseNumber()
@@ -126,7 +126,7 @@ func main() {
 				return false
 			}}}
 		hit := checks.Check(input)
-		// Chain — на свежем разборе: Check не должен менять вход, но сверка не полагается на это.
+		// Parse freshly for Chain:Check should not mutate inputs, but verification does not assume that.
 		body2, _ := decodeBody(req.Body)
 		input.Body = body2
 		steps, chainHit := checks.Chain(input)
@@ -138,7 +138,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, "harness:", err)
 			os.Exit(2)
 		}
-		// Процесс долгоживущий: ответ на строку уходит сразу, тест читает его до следующего входа.
+		// Persistent process:write each answer immediately;the test reads it before sending the next input.
 		if err := out.Flush(); err != nil {
 			fmt.Fprintln(os.Stderr, "harness:", err)
 			os.Exit(2)

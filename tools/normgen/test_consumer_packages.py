@@ -1,4 +1,4 @@
-"""Полные package, union владельца, отказы формы; вся цепочка генерации на пине spec103 7b96ff9f."""
+"""Complete packages, owner union and form refusals through the full generation chain on spec103 pin7b96ff9f."""
 import copy
 import importlib
 import io
