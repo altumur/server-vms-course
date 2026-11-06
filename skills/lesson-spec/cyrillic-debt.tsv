@@ -6,12 +6,11 @@ ready	Platform/03-worker	-
 ready	Platform/04-controller	-
 ready	Platform/05-resource	-
 ready	Platform/06-console	-
+ready	Platform/07-console-module	-
 ready	Platform/08-domain	-
 ready	Platform/09-agent	-
 ready	Platform/10-domain-console	-
 ready	Platform/common	-
-debt	Platform/07-console-module/README.md	5
-debt	Platform/07-console-module/spec/07-console-module.norms.md	247
 debt	Platform/lessons.tsv	138
 debt	Platform/module-design.md	17190
 debt	tools/normgen/README.md	9660
