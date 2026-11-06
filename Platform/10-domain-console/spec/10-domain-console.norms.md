@@ -545,7 +545,7 @@ The TLS stand ([`common/acceptance/tls/`](../../common/acceptance/tls/README.md)
 lesson, P/10-11: item 2 (9 rows of `holder`), item 7, «смена объединения» (2 probes), item 8 steps 2–5. The lesson gets the scenarios when
 the stand is ready (ADR-0083 addendum (9)).
 
-The machine-readable kit assistance is [stages.tsv](../forms/stages.tsv) and [the CALL seams](../acceptance/seams.tsv), with the port/fixture contract in [forms/README.md](../forms/README.md). This assistance does not replace the ordinary scenarios, vectors, neighbours, the TLS stand or reading of Н5.
+The machine-readable kit assistance is [stages.tsv](../forms/stages.tsv) and [the CALL seams](../acceptance/seams.tsv), with the port/fixture contract in [forms/README.md](../forms/README.md). This assistance does not replace the ordinary scenarios, vectors, neighbours, the TLS stand or reading of N5.
 
 ---
 
