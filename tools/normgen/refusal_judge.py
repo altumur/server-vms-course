@@ -84,7 +84,11 @@ RUN_EXIT = re.compile(r"^exit (0|[1-9][0-9]*)(;|$)")
 def plain(a):
     """For non-HTTP P/02, compare independently reread closed catalog columns with the package; each nonzero RUN exit expectation must match that code or exit !0."""
     lines = [x for x in TABLE.read_text(encoding="utf-8").splitlines() if x and not x.startswith("#")]
+    if len(lines) < 2:
+        raise ValueError("the refusal source has no catalogue rows")
     cols = lines[0].split("\t")
+    if len(cols) != len(set(cols)) or any(len(x.split("\t")) != len(cols) for x in lines[1:]):
+        raise ValueError("duplicate columns or malformed refusal source row")
     rows = [dict(zip(cols, x.split("\t"))) for x in lines[1:]]
     with tempfile.TemporaryDirectory(prefix="refusal-judge-") as work:
         hdir = Path(work) / "harness"
@@ -94,8 +98,10 @@ def plain(a):
                                      f"replace {L.go_module} => {Path(a.module_dir).resolve()}\n", encoding="utf-8")
         done = subprocess.run(["go", "run", "."], cwd=hdir, capture_output=True, text=True, timeout=300)
         if done.returncode:
-            raise SystemExit(f"refusal_judge: the harness: {done.stderr.strip()}")
+            raise ValueError(f"the harness failed: {done.stderr.strip()}")
         got = json.loads(done.stdout)
+        if type(got) is not list:
+            raise ValueError("the harness did not return a catalogue array")
     results = []
 
     def check(name, why):
@@ -126,7 +132,17 @@ def plain(a):
             want_word, want_any = "", []
             if toks and plain_cell:
                 want_word, want_any = (toks[0], []) if len(toks) == 1 else ("", toks)
-        want_fields = [] if r["fields"] == "-" else [x.strip() for x in r["fields"].split(",")]
+        want_fields, want_optional = [], []
+        for token in [] if r["fields"] == "-" else r["fields"].split(","):
+            field = re.fullmatch(r"([a-z][a-z0-9_]*)(\??)", token.strip())
+            if field is None or field[1] in want_fields:
+                raise ValueError(f"{r['name']}: malformed or duplicate field token")
+            if field[2] and not (L.key == "06-console" and r["surface"] == "http"
+                                 and r.get("response_schema", "-") != "-"):
+                raise ValueError(f"{r['name']}: optional field outside the P/06 response context")
+            want_fields.append(field[1])
+            if field[2]:
+                want_optional.append(field[1])
         want_headers = [] if r["headers"] == "-" else [[x.strip() for x in h.split(": ", 1)] for h in r["headers"].split(";")]
         diffs = [k for k, ok in (("chapter", g["Chapter"] == r["chapter"]), ("row", g["Row"] == int(r["row"])),
                                  ("surface", g["Surface"] == r["surface"]), ("exit", g["Exit"] == exit_),
@@ -134,6 +150,7 @@ def plain(a):
                                  ("word", g["Word"] == want_word), ("named", (g.get("Named") or []) == want_any),
                                  ("word_cell", L.key == "02-installer" or g.get("WordCell") == r["word"]),
                                  ("fields", (g.get("Fields") or []) == want_fields),
+                                 ("optional_fields", (g.get("OptionalFields") or []) == want_optional),
                                  ("headers", (g.get("Headers") or []) == want_headers),
                                  ("response", "response_schema" not in r or
                                   g.get("Response") == ("" if r["response_schema"] == "-" else r["response_schema"])),
@@ -176,9 +193,19 @@ def main(argv=None):
     if not shutil.which("go"):
         print("refusal_judge: go is not in PATH", file=sys.stderr)
         return 2
-    head = next(x for x in TABLE.read_text(encoding="utf-8").splitlines() if x and not x.startswith("#"))
+    try:
+        head = next((x for x in TABLE.read_text(encoding="utf-8").splitlines() if x and not x.startswith("#")), None)
+        if head is None:
+            raise ValueError("the refusal source has no header")
+    except (OSError, ValueError) as exc:
+        print(f"refusal_judge: checking error: {exc}", file=sys.stderr)
+        return 2
     if "word" in head.split("\t"):                         # Non-HTTP lesson catalog (P/02).
-        return plain(a)
+        try:
+            return plain(a)
+        except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
+            print(f"refusal_judge: checking error: {exc}", file=sys.stderr)
+            return 2
     rows = read_table()
     with tempfile.TemporaryDirectory(prefix="refusal-judge-") as work:
         got = harness(a.module_dir, work)

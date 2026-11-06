@@ -312,27 +312,61 @@ class DoorBodiesBase:
         from jsonschema import Draft202012Validator
         from referencing import Registry, Resource
         from referencing.jsonschema import DRAFT202012
+        from urllib.parse import unquote, urldefrag, urljoin, urlparse
         import yamlsub
         spec = ROOT / "Platform" / self.LESSON / "spec" / f"{self.LESSON}.api.openapi.yaml"
-        files = [spec] + [ROOT / "Platform" / f for f in ("05-resource/spec/05-resource.api.openapi.yaml",
-                                                           "08-domain/spec/08-domain.api.openapi.yaml")]
-        reg = Registry()
+        docs = {}
         for f in sorted((ROOT / "Platform").rglob("*.api.openapi.yaml")):   # Resolve external refs through all export OpenAPI documents.
             try:
-                doc = yamlsub.load(f.read_text(encoding="utf-8"), f.name)
+                docs[f.resolve()] = yamlsub.load(f.read_text(encoding="utf-8"), f.name)
             except yamlsub.YamlError:
                 continue                                      # Loader-unsupported constructs, not refs used by the lesson.
-            reg = reg.with_resource(f.resolve().as_uri(), Resource(contents=doc, specification=DRAFT202012))
+        origins, visited = {}, set()
+
+        def document(path):
+            if path not in docs:
+                docs[path] = yamlsub.load(path.read_text(encoding="utf-8"), path.name)
+            return docs[path]
+
+        def references(node, base):
+            if isinstance(node, dict):
+                if "$ref" in node:
+                    uri, fragment = urldefrag(urljoin(base.as_uri(), node["$ref"]))
+                    target = Path(unquote(urlparse(uri).path)).resolve()
+                    self.assertTrue(target.is_relative_to(ROOT / "Platform"), uri)
+                    pointer = unquote(fragment)
+                    value = document(target)
+                    for token in pointer.lstrip("/").split("/") if pointer else []:
+                        key = token.replace("~1", "/").replace("~0", "~")
+                        value = value[int(key)] if isinstance(value, list) else value[key]
+                    origin = target.as_uri() + "#" + pointer
+                    # A response wrapper is not a schema with the same leaf name.
+                    # Nested schema properties (such as MembersDoc/rev) are schemas.
+                    if target != spec and pointer.startswith("/components/schemas/"):
+                        name = target.parent.parent.name[:2] + "." + key
+                        origins.setdefault(name, set()).add(origin)
+                    if origin not in visited:
+                        visited.add(origin)
+                        references(value, target)
+                for value in node.values():
+                    references(value, base)
+            elif isinstance(node, list):
+                for value in node:
+                    references(value, base)
+
+        references(document(spec.resolve()), spec.resolve())
+        reg = Registry()
+        for path, doc in docs.items():
+            reg = reg.with_resource(path.as_uri(), Resource(contents=doc, specification=DRAFT202012))
         check = oracle(self.defs)
         compared = 0
         for name, schema in self.defs.items():
             if "." in re.sub(r"^\d\d\.", "", name):
                 continue                                      # A name from a pointer outside components/schemas is checked by operation verdicts.
             if re.match(r"\d\d\.", name):                   # External schema for lessonNN comes from its OpenAPI.
-                cand = sorted((ROOT / "Platform").glob(f"{name[:2]}-*/spec/*.api.openapi.yaml"))
-                if not cand:
-                    continue
-                ref = f"{cand[0].resolve().as_uri()}#/components/schemas/{name[3:]}"
+                candidates = origins.get(name, set())
+                self.assertEqual(len(candidates), 1, f"{name}: missing or ambiguous source schema origin: {candidates}")
+                ref = next(iter(candidates))
             elif "." in name:
                 continue                                      # Operation verdicts also verify inline body schemas.
             else:

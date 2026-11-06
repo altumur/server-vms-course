@@ -456,6 +456,10 @@ class MachineTests(unittest.TestCase):
         done = subprocess.run([sys.executable, str(HERE / "kit/build_kit.py"), str(self.tmp / "kit-x"), "--lesson",
                                "03-worker", "--part", "slot-fate"], capture_output=True, text=True)
         self.assertNotEqual(done.returncode, 0)
+        # The consumer refuses the unavailable part before any form is read.
+        # Keep the original source-negative proof on an explicit owned output.
+        done = gen("03-worker", self.tmp / "wrong-machine-source", ROOT, ["slot-fate"])
+        self.assertNotEqual(done.returncode, 0)
         self.assertIn("no machine form slot-fate.tsv", done.stderr)
 
     def test_refusals(self):

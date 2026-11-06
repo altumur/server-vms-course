@@ -186,23 +186,30 @@ class NewPin(unittest.TestCase):
     def historical_families(self, slug):
         # This named old source has its own creation/receipt. Never copy current
         # output into a historical test and label it as a matching source.
-        from kit import build_kit
         if not hasattr(self.__class__, '_family_sets'):
             self.__class__._family_sets = {}
         sets = self.__class__._family_sets
         if slug not in sets:
-            output = Path(self.tmp.name) / ('historical-families-' + slug)
-            previous = os.environ.get(output_lesson.OUTPUT_RECEIPT_ENV)
-            try:
-                build_kit.prepare(('families',), profiles=(slug,), output_root=output,
-                                  source_root=self.root, code_root=ROOT,
-                                  context={'kind': 'historical', 'source_pin': PIN})
-                held = os.environ[output_lesson.OUTPUT_RECEIPT_ENV]
-            finally:
-                if previous is None:
-                    os.environ.pop(output_lesson.OUTPUT_RECEIPT_ENV, None)
-                else:
-                    os.environ[output_lesson.OUTPUT_RECEIPT_ENV] = previous
+            output = Path(tempfile.mkdtemp(prefix='historical-families-' + slug + '-', dir=self.tmp.name))
+            # Imports and lesson selection stay in the creator process. Vectors
+            # supply the historical module closure; families alone have no go.mod.
+            creator = """import os,sys
+from pathlib import Path
+sys.path.insert(0,str(Path(sys.argv[3])/'tools/normgen'))
+sys.path.insert(0,str(Path(sys.argv[3])/'tools/normgen/kit'))
+import lesson,build_kit
+build_kit.prepare(('families','vectors'),profiles=(sys.argv[1],),
+                  source_root=Path(sys.argv[2]),code_root=Path(sys.argv[3]),
+                  output_root=Path(sys.argv[4]),context={'kind':'historical','source_pin':sys.argv[5]})
+print(os.environ[lesson.OUTPUT_RECEIPT_ENV])
+"""
+            done = subprocess.run([sys.executable, '-B', '-c', creator, slug, str(self.root), str(ROOT),
+                                   str(output), PIN], capture_output=True, text=True,
+                                  env=dict(GOENV, PYTHONDONTWRITEBYTECODE='1'))
+            self.assertEqual(done.returncode, 0, 'historical creator failed: ' + done.stderr)
+            held = done.stdout.removesuffix('\n')
+            self.assertEqual(len(held), 64, 'creator must return one held receipt')
+            self.assertTrue(all(c in '0123456789abcdef' for c in held), 'malformed creator receipt')
             sets[slug] = (output, held)
         output, held = sets[slug]
         ready = output_lesson.ready_outputs(output_root=output, source_root=self.root, code_root=ROOT,
