@@ -1,7 +1,4 @@
-"""Сборка пакетов P/03 и P/04 (build_kit --lesson 03-worker / 04-controller; ADR-0125 доп. (5)): части flags, refusals,
-stagetests, машины, families, vectors; пакет компилируется под модулем урока, go vet чист; закрытые тесты машин зелёные, тесты этапов —
-красные на заглушках (без паники); editable — ровно адаптер портов и действия машин; KIT.md — справка каждой части;
-чужая машина — отказ; P/01, P/02 не задеты (их тесты — test_kit, test_kit_p02)."""
+"""Build P/03/P/04 kits with flags, refusals, stagetests, machines, families, vectors (ADR-0125 addendum 5). Require lesson module compile/vet, passing closed machine tests, failing scaffold stage tests without panic, exactly port/action adapters marked editable, and documentation for every part. Reject foreign machines; P/01/P/02 keep their separate test_kit/test_kit_p02 coverage."""
 import json
 import os
 import shutil
@@ -19,7 +16,7 @@ KITS = {"03-worker": ["flags", "refusals", "stagetests", "slot-capture", "famili
         "06-console": ["flags", "refusals", "stagetests", "door", "families", "vectors"],
         "05-resource": ["flags", "refusals", "stagetests", "door", "families", "vectors"],
         "08-domain": ["door", "families", "vectors"], "09-agent": ["door", "families", "vectors"],
-        "10-domain-console": ["door", "vectors"]}      # P/08–P/10 до форм: дверь, семьи (у P/10 нет), векторы
+        "10-domain-console": ["door", "vectors"]}      # Historical P/08-P/10 before forms: door, families except P/10, and vectors.
 
 
 class KitLessons(unittest.TestCase):

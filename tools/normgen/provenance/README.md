@@ -1,9 +1,9 @@
-# Подсчёт происхождения конечного кода (ADR-0127 доп. (2) п. 1)
+# Counting final-code origins (ADR-0127 addendum (2), item 1)
 
-`../code_origin.py` считает физические строки конечного Git-снимка реализации. Вход — JSON с полными SHA коммитов
-реализации и пакетов, явным составом каталогов, исключениями, суффиксами кода и тестов. Python stdlib и Git;
-генераторы, раннер и код реализации не запускаются. Локальные каталоги репозиториев передаются через `--repo ALIAS=PATH`.
-Они не входят в отчёт, поэтому перенос репозитория на другую машину не меняет результат.
+`../code_origin.py` counts physical lines in a final implementation Git snapshot. Its JSON input pins full implementation
+and kit commit SHAs, an explicit directory scope, exclusions, and code/test suffixes. It uses Python stdlib and Git;
+it does not execute generators, runners or implementation code. Supply local repository directories through
+`--repo ALIAS=PATH`. They are excluded from the report, so moving a repository to another machine changes no results.
 
 ```sh
 python tools/normgen/code_origin.py \
@@ -15,44 +15,43 @@ python tools/normgen/code_origin.py \
   --format markdown > /tmp/probe1-origin.md
 ```
 
-В [probe1.json](probe1.json) закреплены все входы пробы 1. Пин пакета — коммит его импорта в реализацию: в нём лежат
-манифест и исходные байты пакета, в том числе ещё не изменённые editable-заготовки. Скрипт сверяет SHA-256 каждого
-учтённого пакетного файла с манифестом. Сам манифест получает SHA-256 в отчёте; его пины курса и выгрузки также
-переписываются в отчёт как метаданные. Для отдельного репозитория пакета укажите другой alias в `repo` и его полный
-коммит. `source_root` задаёт каталог файлов относительно корня Git-снимка пакета, `target_root` — каталог назначения
-относительно реализации; пути `files[].path` манифеста добавляются к ним. Путь самого манифеста всегда от корня снимка.
+[probe1.json](probe1.json) pins every input to probe 1. A kit pin is its import commit in the implementation, containing
+the manifest and original kit bytes, including unchanged editable scaffolds. The script verifies every counted kit file
+against its manifest SHA-256. The report records the manifest's own SHA-256 and its course/export pins as metadata.
+For a separate kit repository, supply another `repo` alias and full commit. `source_root` is relative to the kit Git root;
+`target_root` is relative to the implementation. Append manifest `files[].path` to those roots. The manifest's own path
+is always relative to its snapshot root.
 
-Алгоритм для каждого конечного файла:
+For each final file:
 
-1. Отбирается файл из `include_dirs` с одним из `suffixes`. Каталоги `exclude_dir_names` исключаются на любой глубине;
-   среди них обязательно `vendor`. `exclude_paths` исключает дополнительные поддеревья. Каждый файл считается один раз;
-   пересекающиеся включённые каталоги и владение нескольких пакетов одним путём — ошибка.
-2. По пути находится запись пакета. Если SHA-256 совпал с первоначальными байтами, берётся `origin` манифеста:
-   `generated` либо `handwritten`, в том числе для editable-файла. Совпавшая заготовка не становится кодом модели.
-3. Изменённый editable-файл целиком относится к `model`. Считаются его конечные строки, а не строки заготовки,
-   добавленные строки diff или число правок. Файл вне манифестов тоже относится к `model`: это остаточная категория
-   для собственного кода реализации, не вывод об авторстве по Git. Изменение закрытого файла останавливает подсчёт
-   с ошибкой, чтобы не приписать изменённые байты пакету.
-4. Для тестовых суффиксов (`_test.go` в пробе) суммы ведутся отдельно. Строка — LF, либо последняя непустая часть без
-   завершающего LF; пустой файл имеет ноль строк. Комментарии и пустые строки входят в сумму. Сведения `lines` манифеста
-   не используются. Удалённые пакетные файлы дают ноль конечных строк и перечисляются отдельно.
+1. Select a file under `include_dirs` matching `suffixes`. Exclude `exclude_dir_names` at every depth, necessarily
+   including `vendor`, and additional `exclude_paths` subtrees. Count each file once. Overlapping included directories
+   or multiple kits owning the same path are errors.
+2. Find its kit entry by path. If SHA-256 matches the original bytes, retain manifest `origin`, either `generated` or
+   `handwritten`, including editable files. An unchanged scaffold does not become model code.
+3. Attribute an entire changed editable file to `model`, using its final lines rather than scaffold lines, diff additions
+   or edit counts. Files outside kit manifests are also `model`: a residual category for implementation-owned code,
+   not Git-based authorship inference. A changed closed file stops counting with an error instead of attributing its
+   changed bytes to the kit.
+4. Count test suffixes separately (`_test.go` in the probe). A line ends at LF, with a final nonempty unterminated part
+   also counted; empty files have zero lines. Include comments and blank lines. Ignore manifest `lines` metadata.
+   Deleted kit files contribute zero final lines and are listed separately.
 
-Шапки `DO NOT EDIT`, `Code generated`, `YOURS` не определяют происхождение. `handwritten` пакета включает ручную среду
-и общие договоры, даже если они закрыты от изменений. Копии одного файла в разных модулях считаются порознь: мера
-описывает состав конечной реализации, а не число уникальных строк генератора или затраченный труд. Нечитаемый пин,
-неверный SHA, неизвестный `origin`, дубли, символические ссылки и нераскрытые submodule в составе дают ошибку.
+`DO NOT EDIT`, `Code generated` and `YOURS` headers do not determine origin. Kit `handwritten` includes runtimes and
+shared contracts even when closed to edits. Copies in distinct modules count separately: this measures final implementation
+composition, not unique generator lines or effort. Unreadable pins, incorrect SHAs, unknown origins, duplicates, symlinks
+and unexpanded submodules within the selected scope are errors.
 
-JSON содержит строки и количество файлов по трём слагаемым для кода и тестов, разрез по включённым каталогам,
-а также пофайловую опись: путь, Git blob, SHA-256, происхождение и основание (`unchanged_closed`,
-`unchanged_editable`, `changed_editable`, `outside_package`). Текст исходников в вывод не попадает.
-Порядок файлов фиксирован; времени запуска и содержимого рабочего дерева в выводе нет.
+JSON records line/file totals for all three origins separately for code and tests, per-included-directory totals and a
+file inventory: path, Git blob, SHA-256, origin and reason (`unchanged_closed`, `unchanged_editable`, `changed_editable`,
+`outside_package`). It emits no source text. File order is deterministic; execution time and working-tree contents are absent.
 
-[probe1-report.md](probe1-report.md) — Markdown-вывод на закреплённых входах: код **10107 / 8213 / 12481**,
-тесты **29312 / 0 / 39**. Отличие от первоначальной меры ревью — 17 неизменённых строк editable `open.go`, чей SHA
-совпал с пакетом; они сохраняют `generated`. Это решение «Архитектора», переданное через coord103 2026-11-05.
+[probe1-report.md](probe1-report.md) is the pinned-input Markdown report: code **10107 / 8213 / 12481** and tests
+**29312 / 0 / 39**. The difference from the initial review metric is 17 unchanged editable `open.go` lines whose SHA
+matches the kit; they retain `generated`. The Architect's decision was conveyed through coord103 on 2026-11-05.
 
-Судья: `python -m unittest discover -s tools/normgen -p test_code_origin.py -v`. Он создаёт свои Git-репозитории и
-проверяет ручной код с шапкой генератора, код генератора без шапки, обе разновидности неизменённых editable,
-изменённые editable, конечное число строк, тесты, vendor, исключения, перенос путей и независимость от грязного дерева.
-Порча закрытого файла, пакета или манифеста должна отвергаться. Числа пробы получены отдельным прогоном самого скрипта,
-а исходники линии в фикстуры судьи не копируются.
+Judge: `python -m unittest discover -s tools/normgen -p test_code_origin.py -v`. It creates independent Git repositories
+to test handwritten code with generated headers, generated code without headers, both unchanged editable origins,
+changed editables, final-line counting, tests, vendor, exclusions, path moves and independence from dirty working trees.
+Corrupt closed files, kits or manifests must refuse. Probe numbers come from a separate script run; line implementation
+sources are not copied into judge fixtures.

@@ -1,8 +1,8 @@
 // Package launch — the daemon frame of the store (kit part launch; ADR-0083 addendum (95) item 3, ADR-0125): the
-// command line by forms/daemon-flags.tsv (package flags), the FORMAT mark (P/01.3 Н1.3 format), the flat sockets
-// (Н1.3 sockets), on every socket your HTTP frame (App.Frame: internal/frame — yours, ADR-0125 addendum (1) item 2) over
+// command line by forms/daemon-flags.tsv (package flags), the FORMAT mark (P/01.3 N1.3 format), the flat sockets
+// (N1.3 sockets), on every socket your HTTP frame (App.Frame: internal/frame -- yours, ADR-0125 addendum (1) item 2) over
 // your Core (the same Open as the stage tests), SIGTERM — a clean stop. Yours: coreadapter.Open (the core),
-// internal/frame (the HTTP frame and the limits of Н2.1) and cmd/configstore/main.go (the mark, the hooks).
+// internal/frame (the HTTP frame and the limits of N2.1) and cmd/configstore/main.go (the mark, the hooks).
 package launch
 
 import (
@@ -29,10 +29,10 @@ import (
 	"normgen/p01-1/flags"
 )
 
-// RefuseCode — the exit code of a start refusal (P/01.3 Н4).
+// RefuseCode -- the exit code of a start refusal (P/01.3 N4).
 const RefuseCode = 2
 
-// Mark — the FORMAT mark of the data directory (P/01.3 Н1.3 format): format and version — your on-disk format,
+// Mark -- the FORMAT mark of the data directory (P/01.3 N1.3 format): format and version -- your on-disk format,
 // impl — the name of your implementation, only for the log.
 type Mark struct {
 	Format  string `json:"format"`
@@ -50,7 +50,7 @@ type App struct {
 	// identity of every request on it (Call.Sock); the frame calls coreadapter.Handle(c, cfg, Call{Sock: sock}, …).
 	Frame func(c coreadapter.Core, cfg coreadapter.Config, sock string) Frame
 	// Raft — the build has raft; false (a box): -group-size 3|5, -join, -door — code 2 «this build has no raft»
-	// (P/01.3 Н1.3 box).
+	// (P/01.3 N1.3 box).
 	Raft bool
 	// Start — optional: called once the sockets listen (an -api door, the group…); stop is called on SIGTERM.
 	Start func(f *flags.Flags, c coreadapter.Core) (stop func(), err error)
@@ -218,7 +218,7 @@ func (d *Daemon) Stop() {
 	})
 }
 
-// Roles — the role names of a rights file (P/01.2 Н1.2): the keys of "roles". Only what the sockets need; the form of
+// Roles are the rights file's roles keys (P/01.2 N1.2), only what sockets require;the form of
 // the file is your core's (Open gets the bytes).
 func Roles(file []byte) ([]string, error) {
 	var doc struct {
@@ -242,7 +242,7 @@ func Roles(file []byte) ([]string, error) {
 	return out, nil
 }
 
-// CheckFormat — the FORMAT mark (P/01.3 Н1.3 format): an empty or absent directory — FORMAT is written first (tmp +
+// CheckFormat maintains FORMAT (P/01.3 N1.3 format):empty/absent directories receive FORMAT first(tmp+
 // rename); otherwise FORMAT must be in form with your format and version; else Refusal (code 2) naming the directory
 // and the mark found; nothing is written or removed then.
 func CheckFormat(dir string, m Mark) error {
@@ -327,7 +327,7 @@ func writeMark(dir string, m Mark) error {
 	return nil
 }
 
-// Listen — the flat sockets (P/01.3 Н1.3 sockets): "admin" and every role. Inherited ones (LISTEN_PID, LISTEN_FDS,
+// Listen creates flat admin/role sockets (P/01.3 N1.3 sockets) or inherits LISTEN_PID/LISTEN_FDS,
 // LISTEN_FDNAMES) are taken by name — a name that is neither admin nor a role is Refusal (code 2); the rest are
 // created in dir: admin.sock 0600, <role>.sock 0660. → listeners and the paths created (Stop removes them).
 func Listen(dir string, roles []string, getenv func(string) string) (map[string]net.Listener, []string, error) {

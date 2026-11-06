@@ -1,26 +1,9 @@
-"""Общий генератор машин урока (ADR-0125 доп. (5); части slot-capture P/03, slot-fate и slot-release P/04).
+"""Generate lesson machines: P/03 slot-capture and P/04 slot-fate/slot-release (ADR-0125 addendum (5)).
 
-Запуск: python3 tools/normgen/gen_machine.py --lesson 03-worker [<часть>…] [--out <out>] [--root <корень курса>]
-(по умолчанию все машины урока, out — tools/normgen/out/pNN; --root — формы из другого дерева, для мутантов судьи)
+  python3 tools/normgen/gen_machine.py --lesson 03-worker [<part> ...] [--out <out>] [--root <course-root>]
+Default: all machines, out/pNN. --root permits alternate forms for judge mutants. A forms/<part>.tsv table declares n, state, condition, action, next, norm plus states, Initial, #var, #const and #action headers. Select the first matching row in the current state; no match waits without effect. An action '-' is a YOURS normative procedure, not a no-op. Conditions and arguments use generator 1's typed CEL parser: boolean operators, comparisons, +, ternary, literals and string-keyed maps. Unsupported syntax refuses with the form row. Integer addition is allowed only in arguments and reports CEL-style overflow.
 
-Форма машины — `forms/<часть>.tsv` урока с колонками `n state condition action next norm` (forms/README урока
-«Capture machine», «Machines»): шапка `# states: a,b,…` и `Initial[:] <состояние>`, `#var <имя> <тип> — …`,
-`#const <ИМЯ> <тип> = <литерал> — …`, `#action <имя>(<типы>) — …`; строка — один переход, берётся первая совпавшая строка
-текущего состояния; нет совпадения — ждать без эффекта; `action` `-` — процедура YOURS по `norm`, не noop. Условия и
-аргументы — подмножество CEL (разбор — Parser генератора № 1), переводится в Go с типами #var: `!`, `&&`, `||`, `==`,
-`!=`, `<`, `<=`, `>`, `>=`, `+`, `?:`, литералы и отображение со строковыми ключами (тип map<string,dyn>). Прочее — отказ
-генератора со строкой формы. Арифметика int — только в аргументах (переполнение — ошибка, как у CEL).
-
-Выход в <out>/go:
-- `<пакет>/machine.go` — закрыт: State, In (поле на #var), константы #const, `Step(state, in) (Move, bool, error)` — выбор
-  перехода по форме (машину не исполняет: события, чтения и эффекты — у core), `Actions` (метод на #action и на каждую
-  процедуру `-`), `Apply(a, in, m)` — вызов действия перехода; `<пакет>/form_test.go` — тесты по форме: на каждую пару
-  «значение переменной × исход» состояния (строка или «нет совпадения») — первый вход перебора с этим исходом; границы
-  чисел — из сравнений с #const и уставками (#var ЗАГЛАВНЫМИ: значение по умолчанию из описания); `<пакет>/inventory.tsv`;
-- `<пакет>impl/` — **YOURS**: `actions.go` (тип Actions) и по файлу на действие и на процедуру «-» (заготовка — ошибка
-  «not in this stage»); пакет кладёт каждый файл один раз.
-Входы тестов — тот же перебор, что видит судья (test_gen_machine.py: оракул cel_expr_python над формой, мутанты).
-"""
+Emit closed <package>/machine.go: State, In fields, constants, Step(state, in), Actions and Apply. Step selects a transition but does not execute events, reads or effects. Form tests cover the first enumerated input for each variable-value/outcome pair, including no match. Numeric boundaries come from constants and uppercase #var default descriptions. Emit inventory.tsv and YOURS <package>impl/actions.go plus one file per action or '-' procedure, installed once and initially returning not in this stage. test_gen_machine.py independently evaluates the form with cel_expr_python and mutants over the same enumeration."""
 import hashlib
 import itertools
 import re
@@ -62,7 +45,7 @@ def package(part):
     return part.replace("-", "")
 
 
-# ---------------------------------------------------------------- форма
+# ---------------------------------------------------------------- form
 
 class Machine:
     def __init__(self, part, text, rel):
@@ -154,7 +137,7 @@ class Machine:
             raise GenError(f"{rel}: Terminal {self.terminal_said} differs from the states without rows {self.terminal}")
         if self.initial in self.terminal:
             raise GenError(f"{rel}: initial {self.initial!r} has no rows")
-        self.procs = []                       # процедуры YOURS: (метод, state, next, norm, [n])
+        self.procs = []                       # YOURS procedures: (method, state, next, norm, row numbers).
         for row in self.rows:
             if row["act"] is None:
                 name = f"{camel(row['state'])}To{camel(row['next'])}"
@@ -174,7 +157,7 @@ class Machine:
         except _CelError as exc:
             raise GenError(str(exc)) from None
 
-    # типы
+    # Types.
     def type_of(self, node, where, cond=False):
         k, a = node.kind, node.args
         if k == "lit":
@@ -251,7 +234,7 @@ class Machine:
 
 
 def machine_forms(root=ROOT, lesson_=None):
-    """{часть: путь} — формы урока с колонками машины."""
+    """Return {part: path} for lesson forms with machine columns."""
     les = lesson_ or L
     out = {}
     for p in sorted((Path(root) / les.rel / "forms").glob("*.tsv")):
@@ -269,7 +252,7 @@ def read(part, root=ROOT):
     return Machine(part, p.read_text(encoding="utf-8"), str(p.relative_to(Path(root))))
 
 
-# ---------------------------------------------------------------- вычисление (перебор генератора)
+# ---------------------------------------------------------------- generator enumeration
 
 class Overflow(Exception):
     pass
@@ -302,7 +285,7 @@ def ev(m, node, env):
 
 
 def setting(m, name):
-    """Уставка (#var ЗАГЛАВНЫМИ): значение по умолчанию из описания «default N»; иначе 1."""
+    """For uppercase #var settings, read 'default N' from the description, otherwise use1."""
     t, doc = m.vars[name]
     d = re.search(r"\bdefault (\d+(?:\.\d+)?)", doc)
     v = float(d[1]) if d else 1.0
@@ -315,7 +298,7 @@ def enumerated(doc):
 
 
 def domains(m, state):
-    """{var: [значения]} перебора состояния и {var: значение} закреплённых."""
+    """Return {var: enumerated values} and {var: fixed value} for a state."""
     rows = [r for r in m.rows if r["state"] == state]
     cond_ids, arg_ids = set(), set()
     for r in rows:
@@ -390,7 +373,7 @@ def thresholds(m, node, name, settings):
 
 
 def outcome(m, state, env):
-    """→ (строка | None, аргументы | Overflow)."""
+    """Return (row or None, arguments or Overflow)."""
     for r in m.rows:
         if r["state"] == state and ev(m, r["cond_ast"], env):
             try:
@@ -401,7 +384,7 @@ def outcome(m, state, env):
 
 
 def cases(m):
-    """[(state, env, row|None, args)] — на каждую пару «значение переменной × исход» — первый вход перебора."""
+    """Return the first (state, env, row-or-None, args) for each variable-value/outcome pair."""
     out = []
     for state in m.from_states:
         dom, fixed = domains(m, state)
@@ -423,7 +406,7 @@ def cases(m):
     return out
 
 
-# ---------------------------------------------------------------- вывод Go
+# ---------------------------------------------------------------- Go output
 
 def go_value(v):
     if isinstance(v, bool):
@@ -440,7 +423,7 @@ def go_value(v):
 
 
 def go_expr(m, node, cond):
-    """Выражение Go; в аргументах сложение int — addInt(&err, …)."""
+    """Emit a Go expression; integer argument addition uses addInt(&err, ...)."""
     k, a = node.kind, node.args
     if k == "lit":
         return go_str(a[1]) if a[0] == "string" else ("true" if a[1] is True else "false" if a[1] is False
@@ -606,7 +589,7 @@ def snake(name):
 
 
 def go_impl(m, module):
-    """{имя файла: текст} пакета <пакет>impl — YOURS: actions.go (тип) и по файлу на действие и на процедуру «-»."""
+    """Return YOURS <package>impl files: actions.go type and one file per action or '-' procedure."""
     head = (f"// Generated by tools/normgen/gen_machine.py from {m.rel}. YOURS from here: the kit puts this file once\n"
             f"// and never overwrites it. Replace the body with your effect; keep the signature (core calls {m.pkg}.Apply).\n\n"
             f"package {m.pkg}impl\n\n")
@@ -670,7 +653,7 @@ def kit_dirs(part):
 
 
 def kit_files(part, module, out=DEFAULT_OUT):
-    """→ [(каталог в internal, имя, байты, происхождение, источник, своё у реализации)]; GenError — out устарел."""
+    """Return [(internal directory, name, bytes, origin, source, editable)]; stale output raises GenError."""
     _, _, files = build(part)
     res = []
     for rel, text in sorted(files.items()):

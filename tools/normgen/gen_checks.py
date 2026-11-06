@@ -1,22 +1,12 @@
-"""Генератор кода проверок по таблице формы ADR-0120 п. 2 (а) — пилот на P/01.1 Н2.1 (`write-checks.tsv`).
+"""Generate checks from the ADR-0120 item 2(a) form, originally P/01.1 N2.1 write-checks.tsv.
 
-Читает таблицу (шапка `#var`, `#lim`, `#fn`; колонки n id op group each check when code kind fault norm) и строит:
-- модуль Go 1.22 только на стандартной библиотеке: `<out>/go/checks/checks.go` (package checks) и рядом
-  `runtime.go` (среда CEL, tools/normgen/runtime/go) и `prims.go` (примитивы #fn, tools/normgen/prims/go);
-- модуль Python 3.12 только на стандартной библиотеке: `<out>/python/checks.py` (среда и примитивы вставлены в файл).
+Read #var/#lim/#fn declarations and columns n, id, op, group, each, check, when, code, kind, fault, norm. Emit a standard-library-only Go 1.22 module with go/checks/checks.go, runtime.go from runtime/go and prims.go from prims/go; emit standard-library-only Python 3.12 checks with the runtime and primitives embedded.
 
-`when` и `fault` переводятся из подмножества CEL в нативный код: свой разбор выражения и порождение операторов, без
-интерпретатора CEL. Подмножество — ровно то, что встречается в таблице: литералы (строки, int, double, bool, null,
-списки, отображения), идентификаторы, выбор поля, индекс, `!`, `&&`, `||`, `==`, `!=`, `<`, `<=`, `>`, `>=`, `in`,
-`?:`, `+`, `type()` и имена типов, `has()`, `size()`, `string()`, методы `matches` (шаблон — литерал), `startsWith`,
-`exists` (одна и две переменные). Всё прочее — отказ генератора с номером строки (GenError).
+Compile the form's CEL subset into native statements without a CEL interpreter: string/int/double/bool/null/list/map literals, identifiers, field/index access, !, &&, ||, comparisons, in, ?:, +, type/type names, has, size, string, literal-pattern matches, startsWith and one-/two-variable exists. Anything else raises a row-numbered GenError.
 
-Семантика — та, что у оракула skills/lesson-spec/scripts/check_tables.py на cel-expr-python: ошибка CEL — значение,
-`&&` и `||` поглощают её (false && ошибка = false, true || ошибка = true), `exists` — true, если хоть один шаг true,
-иначе ошибка, если хоть один шаг ошибка; `when` не bool — ошибка; строка с ошибкой в цепочке не нарушена.
+Semantics match check_tables.py's cel-expr-python oracle. CEL errors are values: false && error is false, true || error is true. exists returns true if any step is true, otherwise an error if any step errors. Non-bool when is an error; an errored row does not violate its chain.
 
-Запуск: python tools/normgen/gen_checks.py [таблица.tsv [каталог_выхода]].
-"""
+  python tools/normgen/gen_checks.py [table.tsv [output-directory]]"""
 import hashlib
 import re
 import shutil
@@ -28,11 +18,11 @@ import tsv_input
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
 L = lesson.CURRENT
-DEFAULT_TABLE = L.form("write-checks.tsv")          # ADR-0124: формы — в forms/
+DEFAULT_TABLE = L.form("write-checks.tsv")          # ADR-0124: forms live under forms/.
 DEFAULT_OUT = L.out
-COLUMNS = ["n", "id", "op", "group", "each", "check", "when", "code", "kind", "fault", "norm"]   # id — ADR-0122 доп. (1) п. 4
+COLUMNS = ["n", "id", "op", "group", "each", "check", "when", "code", "kind", "fault", "norm"]   # id follows ADR-0122 addendum (1), item 4.
 EACH = re.compile(r"([a-z]\w*), ([a-z]\w*) in (body(?:\.[a-z_]+)+)")
 FN_TYPES = {"string", "map", "double", "int", "bool", "list", "dyn"}
 TYPE_NAMES = ("bool", "int", "double", "string", "list", "map", "null_type", "type")
@@ -40,10 +30,10 @@ INT_MAX = 2 ** 63 - 1
 
 
 class GenError(Exception):
-    """Отказ генератора: таблица вне формы или выражение вне подмножества."""
+    """Generation refusal: invalid table form or expression outside the supported subset."""
 
 
-# ---------------------------------------------------------------- таблица
+# ---------------------------------------------------------------- table
 
 class Table:
     def __init__(self, text, name="table"):
@@ -80,7 +70,7 @@ class Table:
             if row["op"] != "*" and not re.fullmatch(r"[a-z]+(,[a-z]+)*", row["op"]):
                 raise GenError(f"{where}: op {row['op']!r} — * or a list of values")
             if not re.fullmatch(r"[a-z][a-z0-9_-]*", row["id"]) or row["id"] in ids:
-                raise GenError(f"{where}: id {row['id']!r} — [a-z][a-z0-9_-]*, unique (ADR-0122 доп. (1) п. 4)")
+                raise GenError(f"{where}: id {row['id']!r} -- [a-z][a-z0-9_-]*, unique (ADR-0122 addendum (1), item 4)")
             ids.add(row["id"])
             if not re.fullmatch(r"[a-z][a-z_]*", row["check"]):
                 raise GenError(f"{where}: check {row['check']!r} — a Latin name")
@@ -90,7 +80,7 @@ class Table:
                 raise GenError(f"{where}: group and each go together")
             if row["group"]:
                 if not EACH.fullmatch(row["each"]):
-                    raise GenError(f"{where}: each {row['each']!r} — «i, x in body.<поле>»")
+                    raise GenError(f"{where}: each {row['each']!r} -- i, x in body.<field>")
                 if row["group"] != last_group:
                     if row["group"] in seen:
                         raise GenError(f"{where}: group {row['group']} is not contiguous")
@@ -104,7 +94,7 @@ class Table:
             self.rows.append(row)
 
     def plan(self):
-        """[('row', row) | ('group', (i, x, path parts), rows)] — порядок цепочки, как Table.steps оракула."""
+        """Return [('row', row) | ('group', (i, x, path parts), rows)] in the oracle's Table.steps chain order."""
         out, k = [], 0
         while k < len(self.rows):
             row = self.rows[k]
@@ -121,7 +111,7 @@ class Table:
         return out
 
 
-# ---------------------------------------------------------------- разбор CEL
+# ---------------------------------------------------------------- CEL parsing
 
 TOKEN = re.compile(r"""
   (?P<ws>\s+)
@@ -329,10 +319,10 @@ class Parser:
         return "".join(out)
 
 
-# ---------------------------------------------------------------- шаблоны matches
+# ---------------------------------------------------------------- matches patterns
 
 def regex_for_python(pattern, fail):
-    """Проверка шаблона RE2 на малое подмножество, общее с re Python; → шаблон Python ($ → \\Z)."""
+    """Validate the small shared RE2/Python-re subset and return the Python pattern ($ -> \\Z)."""
     out, k, n = [], 0, len(pattern)
     escapable = set(".\\-/()[]{}*+?|^$")
     while k < n:
@@ -390,17 +380,17 @@ def regex_for_python(pattern, fail):
     return text
 
 
-# ---------------------------------------------------------------- перевод в операторы
-# Операнд: ('t', имя) | ('v', выражение переменной) | ('lit', вид, значение) | ('type', имя) | ('rx', номер)
-#          | ('str', строка) | ('keys', [строки]).
-# Оператор: ('set', t, помощник, [операнды]) | ('or'|'and', t, L, l, R, r) | ('cond', t, C, c, A, a, B, b)
+# ---------------------------------------------------------------- statement lowering
+# Operand: ('t', name) | ('v', variable expression) | ('lit', kind, value) | ('type', name) | ('rx', index)
+#          | ('str', string) | ('keys', [strings]).
+# Statement: ('set', t, helper, [operands]) | ('or'|'and', t, L, l, R, r) | ('cond', t, C, c, A, a, B, b).
 #           | ('exists', t, R, r, v1, v2 | None, P, p).
 
 class Module:
-    """Общее на модуль: шаблоны matches."""
+    """Module-wide matches patterns."""
 
     def __init__(self):
-        self.regexes = []          # [(шаблон RE2, шаблон Python)]
+        self.regexes = []          # [(RE2 pattern, Python pattern)]
 
     def regex(self, pattern, fail):
         py = regex_for_python(pattern, fail)
@@ -414,7 +404,7 @@ class Module:
 class Compiler:
     def __init__(self, table, module, where, bound):
         self.table, self.module, self.where = table, module, where
-        self.scopes = [bound]      # bound: имя CEL → выражение переменной
+        self.scopes = [bound]      # bound maps CEL names to variable expressions.
         self.t, self.c = 0, 0
         self.temps = []
 
@@ -443,7 +433,7 @@ class Compiler:
         return ("set", t, helper, ops), ("t", t)
 
     def compile(self, node):
-        """→ (операторы, операнд результата)."""
+        """Return (statements, result operand)."""
         kind, a = node.kind, node.args
         if kind == "lit":
             return [], ("lit", a[0], a[1])
@@ -562,7 +552,7 @@ def compile_expr(table, module, where, text, bound):
     return stmts, result, comp.temps
 
 
-# ---------------------------------------------------------------- вывод: Python
+# ---------------------------------------------------------------- Python output
 
 PY_HELPERS = {"eq": "_eq", "ne": "_ne", "lt": "_lt", "le": "_le", "gt": "_gt", "ge": "_ge", "in": "_in",
               "not": "_not", "select": "_sel", "has": "_has", "index": "_index", "size": "_size",
@@ -674,7 +664,7 @@ def py_fn_wrapper(name, args, result, doc, prim):
         lines.append("    if fn is None:")
         lines.append(f"        return CelError({name + ': no callback in fns'!r})")
         call = f"fn({', '.join(params)})"
-    lines += ["    try:", f"        return {call}", "    except Exception as exc:  # noqa: BLE001 — ошибка CEL",
+    lines += ["    try:", f"        return {call}", '    except Exception as exc:  # noqa: BLE001 -- CEL error',
               f"        return CelError(f\"{name}: {{exc}}\")"]
     return "\n".join(lines)
 
@@ -725,7 +715,7 @@ def py_driver(table):
     return "\n".join(lines)
 
 
-PY_API = '''
+PY_API = r'''
 
 class _Env:
     __slots__ = ("body", "sock", "lone", "lim", "fns")
@@ -758,17 +748,12 @@ def _cond_err(c):
 
 
 def check(body, sock, lone, lim, fns=None):
-    """Первый отказ таблицы или None (прошла).
-
-    body — тело после json.loads (строки — с U+FFFD вместо одиночного суррогата); sock — роль сокета; lone — JSON Pointer
-    строк с одиночным суррогатом; lim — {имя #lim: int}; fns — внешние #fn без примитива: {имя: функция}.
-    Отказ — {"n", "check", "code", "kind", "fault" (dict | None), "fault_error" (str | None)}.
-    """
+    'Return the first refusal or None. body is parsed JSON with lone surrogates replaced by U+FFFD; sock is the socket role; lone contains affected JSON Pointers; lim maps #lim names to ints; fns supplies external callbacks. Refusal fields:n,check,code,kind,fault(dict or None),fault_error(str or None).'
     return _run(_Env(body, sock, lone, lim, fns), False)[1]
 
 
 def chain(body, sock, lone, lim, fns=None):
-    """Вся цепочка без остановки: ([(n, "true" | "false" | "error")], первый отказ | None) — для сверки с оракулом."""
+    'Return the complete ([(n,true|false|error)],first refusal or None) for oracle comparison.'
     return _run(_Env(body, sock, lone, lim, fns), True)
 '''
 
@@ -777,12 +762,15 @@ def python_module(table, rel, module, compiled, prims):
     runtime = (HERE / "runtime/python/runtime.py").read_text(encoding="utf-8")
     prim_text = (HERE / "prims/python/prims.py").read_text(encoding="utf-8")
     parts = [f"# Code generated by tools/normgen/gen_checks.py from {rel}; DO NOT EDIT.\n"
-             f"# Таблица sha256 {table.sha256}.\n"
-             "# API: check(body, sock, lone, lim, fns) — первый отказ или None; chain(...) — вся цепочка.\n"
+             f'# Table sha256 {table.sha256}.\n'
+             r'''# API: check(body, sock, lone, lim, fns) returns the first refusal or None; chain(...) returns every step.
+'''
              "import re\n",
-             "# ---- среда CEL: tools/normgen/runtime/python/runtime.py\n" + runtime,
-             "# ---- примитивы #fn: tools/normgen/prims/python/prims.py\n" + prim_text,
-             "# ---- таблица"]
+             r'''# ---- CEL runtime: tools/normgen/runtime/python/runtime.py
+''' + runtime,
+             r'''# ---- #fn primitives: tools/normgen/prims/python/prims.py
+''' + prim_text,
+             '# ---- table']
     parts += [f"_RX{k} = re.compile({py!r})  # RE2 {re2!r}" for k, (re2, py) in enumerate(module.regexes, 1)]
     for name, (args, result, doc) in table.fns.items():
         parts.append(py_fn_wrapper(name, args, result, doc, name in prims))
@@ -797,7 +785,7 @@ def python_module(table, rel, module, compiled, prims):
     return "\n\n\n".join(parts).rstrip() + "\n" + PY_API
 
 
-# ---------------------------------------------------------------- вывод: Go
+# ---------------------------------------------------------------- Go output
 
 GO_HELPERS = {"eq": "celEq", "ne": "celNe", "lt": "celLt", "le": "celLe", "gt": "celGt", "ge": "celGe",
               "in": "celIn", "not": "celNot", "select": "celSelect", "has": "celHas", "index": "celIndex",
@@ -1022,45 +1010,45 @@ def go_driver(table):
     return "\n".join(lines)
 
 
-GO_API = '''
-// Fns — внешние #fn без примитива в prims.go: их даёт вызывающий.
+GO_API = r'''
+// Fns contains caller-supplied #fn callbacks without prims.go primitives.
 type Fns struct {
 %s}
 
-// Input — вход таблицы: тело уже разобрано как JSON по Н2.1.
+// Input contains the body already parsed as JSON under N2.1.
 type Input struct {
-	// Body — JSON тела: nil, bool, int64, float64, string, []any, map[string]any; число без . и e в пределах int64 —
-	// int64, иначе float64; строки — с U+FFFD вместо одиночного суррогата.
+	// Body values:nil, bool, int64, float64, string, []any, map[string]any;lexical integers in range use int64,
+	// otherwise float64.Replace lone surrogates with U+FFFD.
 	Body any
-	Sock string            // роль сокета вызывающего
-	Lone []string          // JSON Pointer каждой строки тела с одиночным суррогатом
-	Lim  map[string]int64  // параметры урока, имена #lim
+	Sock string            // Caller socket role.
+	Lone []string          // JSON Pointer for each body string containing a lone surrogate.
+	Lim  map[string]int64  // Lesson #lim parameters.
 	Fns  Fns
 }
 
-// Refusal — первый отказ: строка n, её check, code, kind и поля fault.
+// Refusal is the first violated row n with check, code, kind and fault fields.
 type Refusal struct {
 	N        int
 	Check    string
 	Code     int
 	Kind     string
-	Fault    map[string]any // nil — у строки нет fault
-	FaultErr string         // не пусто — fault не вычислился (ошибка CEL или не отображение)
+	Fault    map[string]any // nil when the row has no fault.
+	FaultErr string         // Nonempty when fault evaluation errors or returns a non-map.
 }
 
-// Step — шаг цепочки: строка n и исход её when: "true", "false" или "error".
+// Step is row n and its when outcome:true, false or error.
 type Step struct {
 	N      int
 	Status string
 }
 
-// Check — первый отказ таблицы или nil (команда идёт дальше).
+// Check returns the first refusal or nil to continue the command.
 func Check(in Input) *Refusal {
 	_, hit := run(in, false)
 	return hit
 }
 
-// Chain — вся цепочка без остановки и первый отказ — для сверки с оракулом.
+// Chain returns every step without stopping and the first refusal, for oracle comparison.
 func Chain(in Input) ([]Step, *Refusal) {
 	return run(in, true)
 }
@@ -1121,8 +1109,9 @@ def go_module(table, rel, module, compiled, prims):
             fields += (f"\t// {camel(name)} — #fn {name}({', '.join(args)}) -> {result} — {doc}\n"
                        f"\t{camel(name)} func({', '.join(GO_TYPES[a] for a in args)}) {GO_TYPES[result]}\n")
     parts = [f"// Code generated by tools/normgen/gen_checks.py from {rel}; DO NOT EDIT.\n"
-             f"// Таблица sha256 {table.sha256}.\n\n"
-             "// Package checks — порядок проверок таблицы ADR-0120 п. 2 (а): Check — первый отказ, Chain — вся цепочка.\n"
+             f'// Table sha256 {table.sha256}.\n\n'
+             r'''// Package checks follows the ADR-0120 item 2(a) table order:Check returns first refusal, Chain all steps.
+'''
              "package checks\n\n"
              + ('import "regexp"\n' if module.regexes else ""),
              GO_API.strip("\n") % fields]
@@ -1142,17 +1131,17 @@ def go_module(table, rel, module, compiled, prims):
     return "\n\n".join(parts) + "\n"
 
 
-# ---------------------------------------------------------------- сборка
+# ---------------------------------------------------------------- assembly
 
 def prims_present():
-    """Имена #fn, у которых есть примитив; примитив должен быть в обоих языках."""
+    """Return #fn names with primitives implemented in both languages."""
     py = set(re.findall(r"^def prim_([a-z_]+)\(", (HERE / "prims/python/prims.py").read_text(), re.M))
     go = set(re.findall(r"^func prim([A-Za-z]+)\(", (HERE / "prims/go/prims.go").read_text(), re.M))
     return py, go
 
 
 def build(table, rel="table"):
-    """→ (исходник Go checks.go, исходник Python checks.py); GenError — таблица вне подмножества."""
+    """Return (Go checks.go source, Python checks.py source); unsupported tables raise GenError."""
     py_prims, go_prims = prims_present()
     prims = set()
     for name in table.fns:

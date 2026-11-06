@@ -1,18 +1,9 @@
-"""Судья части flags урока с командами (P/02: forms/operator-commands.tsv + forms/daemon-flags.tsv; ADR-0125 доп. (5)).
+"""Judge for command-based flags (P/02: operator-commands.tsv and daemon-flags.tsv; ADR-0125 addendum (5)).
 
-Запуск (на CT 103, python с cel_expr_python — /opt/check-env/lesson-spec/bin/python):
-  python tools/normgen/cmdflag_judge.py --lesson 02-installer [--module-dir <каталог go.mod с пакетом flags>] [--json итог]
+On CT 103, use /opt/check-env/lesson-spec/bin/python with cel_expr_python:
+  python tools/normgen/cmdflag_judge.py --lesson 02-installer [--module-dir <flags-module-directory>] [--json <result>]
 
-Модель — своя, не из генератора: обе формы читаются здесь заново, `required` и `bad` вычисляет оракул CEL
-(cel_expr_python, как check_forms) над f (данные опции: number — числом, bool — true) и cmd. Пробы — из форм: по
-каждой команде база (обязательные опции и наименьшее число позиционных; значение строки подбирается так, чтобы `bad`
-был ложен), позиционных меньше и больше допустимого, опция вне формы, опция чужой команды, повтор, bool со значением,
-опция без значения, number вне десятичной записи (+1, 1e3, .5, inf, abc) и в записи `-name=value`, каждая обязательная
-опция пропущена, пары опций с условием `required`/`bad`, неизвестный префикс команды. Обвес (flags/cmdharness)
-печатает исход ParseArgv: отказ или команду, позиционные, данные опции и значения полей. Сравниваются исход (принято |
-отказ) и у принятых — команда, позиционные, данные опции, значения number. Отсутствие исполнения — отрицательный исход.
-Итог: `flags: P/NN N/N PASS|FAIL`; код 0 — PASS.
-"""
+The independent model rereads both forms. Like check_forms, its CEL oracle evaluates required and bad over f (numbers as numbers, booleans as true) and cmd. Per command, test a valid base with required options and minimum positionals, too few or too many positionals, unknown and foreign options, repeats, explicit bool values, missing option values, non-decimal numbers (+1, 1e3, .5, inf, abc), -name=value, each omitted required option, required/bad option pairs, and unknown command prefixes. Base strings are selected to make bad false. The flags/cmdharness prints ParseArgv's refusal or command, positionals, given options and field values. Compare acceptance/refusal and, for accepted inputs, command, positionals, given options and numeric values. Non-execution fails. Result: `flags: P/NN N/N PASS|FAIL`; exit 0 means PASS."""
 import argparse
 import itertools
 import json
@@ -26,7 +17,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
 L = lesson.CURRENT
 
 NUMBER = re.compile(r"-?(0|[1-9][0-9]*)(\.[0-9]+)?")
@@ -125,7 +116,7 @@ class Model:
         return ("ok", cmd, pos, sorted(f), numbers)
 
     def value(self, row, cmd, f):
-        """Значение опции по типу, при котором её bad ложен (если такое есть среди образцов)."""
+        """Choose a typed option sample whose bad predicate is false, if one exists."""
         if row["type"] == "bool":
             return None
         samples = {"number": ("1.5", "0", "85"), "file": ("/tmp/judge-file",)}.get(row["type"], STRING_SAMPLES)
@@ -166,7 +157,7 @@ class Model:
                     out.append((proc, rest + ([r["flag"]] if v is None else [r["flag"], v])))
                     if v is not None:
                         out.append((proc, rest + [f"{r['flag']}={v}"]))
-                        out.append((proc, rest + [r["flag"]]))            # без значения в конце
+                        out.append((proc, rest + [r["flag"]]))            # Missing final value.
                     else:
                         out.append((proc, rest + [f"{r['flag']}=true"]))
                 out.append((proc, rest + ([r["flag"]] * 2 if v is None else [r["flag"], v, r["flag"], v])))

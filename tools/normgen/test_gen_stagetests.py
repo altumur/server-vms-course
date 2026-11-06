@@ -1,15 +1,4 @@
-"""Тесты тестов этапов из сценариев (tools/normgen/gen_stagetests.py; ADR-0125 доп. (3), (4); ADR-0126 доп. (7)).
-
-Запуск: python3 tools/normgen/test_gen_stagetests.py [-v]  (go 1.22 в PATH).
-
-- выход out/p01-1/go/stagetests и coreadapter — свежая генерация; опись — все шаги выбранных сценариев;
-- выбор: элементы gate `tests:<глава>:<сценарии|*>[:seams]` (список через `;`) раньше переходного объявления;
-- перевод префиксом: директива стенда и отказ позднего этапа (403 по файлу прав — P/01.2) отсекают остаток; пустая
-  проекция, сценарий вне файла, одно имя в scenarios.tsv и seams.tsv, новое $имя в each/rest — отказ генератора;
-- движок (перенос runner/run.py) на подставном ядре: связывание, тип числа, лишние поля, error отказа, !contains,
-  порядок ключей /v1/list, ASSERT, несвязанное имя, класс статуса; швы — @clock ±N, @reopen, @parallel each | one…rest.
-Внешний судья на коде реализации — scenario_judge.py (раннер на том же коде).
-"""
+"""Test stage-test generation (ADR-0125 addenda3/4, ADR-0126 addendum 7). Require fresh stagetests/coreadapter and complete selected-step inventory. Gate tests selections precede transitional declarations. Stand directives and later-stage refusals truncate prefixes; reject empty projections, missing scenarios, scenario/seam duplicate names and new bindings in each/rest. Check fixture-core engine binding, number kinds, extra fields, error, !contains, list ordering, ASSERT, unbound names, status classes and clock/reopen/parallel seams. scenario_judge compares runner execution on identical implementation code. Go 1.22 required."""
 import json
 import shutil
 import subprocess
@@ -28,7 +17,7 @@ OUT = HERE / "out/p01-1"
 STAGES = (ROOT / "Platform/01-store/forms/stages.tsv").read_text(encoding="utf-8")
 REFUSALS = (ROOT / "Platform/01-store/forms/refusals.tsv").read_text(encoding="utf-8")
 
-# (сценарий, шаг, запрос, ожидание, ответ подставного ядра (код, тело) | None, исход подтеста | None — не переведён)
+# (scenario, step, request, expectation, fixture response(status, body) or None, subtest outcome or None if excluded).
 SCEN = [
     ("s1-bind", "1", 'POST /b1 {"a":1}', '200 {"index":"$a"}', (200, '{"index":"7"}'), "pass"),
     ("s1-bind", "2", "GET /b2", '200 {"index":"$a"}', (200, '{"index":"7"}'), "pass"),
@@ -273,7 +262,7 @@ def with_gate(gate):
         cells = line.split("\t")
         if len(cells) > 4 and cells[1] == "store_core":
             cells[4] = gate
-        elif len(cells) > 4 and cells[0] != "n":       # прочие этапы — без tests: (их сценариев нет в синтетике)
+        elif len(cells) > 4 and cells[0] != "n":       # Other stages have no tests gates because their scenarios are absent from the synthetic source.
             cells[4] = ";".join(p for p in cells[4].split(";") if not p.strip().startswith("tests:")) or "build"
         lines.append("\t".join(cells))
     return "\n".join(lines)
@@ -298,14 +287,14 @@ class StageTests(unittest.TestCase):
             self.assertEqual((OUT / rel).read_text(encoding="utf-8"), want, f"{rel}: run gen_tests.py")
         scenarios, _, _ = gen_stagetests.read_table(ROOT, "1.1", "scenarios.tsv")
         want = sum(len(scenarios[n]) for _, items in gen_stagetests.TRANSITIONAL.items() for _, ns, _ in items for n in ns)
-        if "tests:1.1:" not in STAGES:                     # переходное объявление, пока форма без tests:<глава>
+        if "tests:1.1:" not in STAGES:                     # Transitional declaration until tests:<chapter> enters the form.
             self.assertEqual(len(inventory), want)
         self.assertTrue(all(len(r) == 6 for r in inventory))
         for chapter in ("1.1", "1.3"):
             seams, _, _ = gen_stagetests.read_table(ROOT, chapter, "seams.tsv")
             selected = [r for r in inventory if r[0].startswith(chapter + "/seams.tsv/")]
             listed = {r[0].split("/")[2] for r in selected}
-            if seams:                                    # каждый сценарий швов формы — в описи, шаг в шаг
+            if seams:                                    # Every declared seam scenario appears step-for-step in inventory.
                 self.assertEqual(listed, set(seams))
                 self.assertEqual(len(selected), sum(len(seams[n]) for n in listed))
         stages = {r[1] for r in inventory}
@@ -322,9 +311,9 @@ class StageTests(unittest.TestCase):
         self.assertEqual(status["1.1/scenarios.tsv/s9-prefix/1"][3], "translated")
         self.assertEqual([status[f"1.1/scenarios.tsv/s9-prefix/{k}"][3] for k in "23"], ["excluded", "excluded"])
         self.assertIn("step 2", status["1.1/scenarios.tsv/s9-prefix/3"][5])
-        self.assertEqual(status["1.1/scenarios.tsv/s10-late/2"][3], "excluded")     # 403 по правам — этап rights
+        self.assertEqual(status["1.1/scenarios.tsv/s10-late/2"][3], "excluded")     # Rights-related403 belongs to the rights stage.
         self.assertIn("later stage", status["1.1/scenarios.tsv/s10-late/2"][5])
-        self.assertEqual(status["1.1/seams.tsv/m3-par/2"][4], "yes")                 # -race у теста с @parallel
+        self.assertEqual(status["1.1/seams.tsv/m3-par/2"][4], "yes")                 # @parallel tests require -race.
         self.assertEqual(status["1.1/scenarios.tsv/s9-prefix/1"][4], "no")
         self.assertIn("TestStoreCore_S9Prefix", files["go/stagetests/store_core_test.go"])
 
@@ -364,20 +353,20 @@ class StageTests(unittest.TestCase):
     def test_bad_selection_and_parallel_forms(self):
         root = synthetic_root(self.sub("bad-selection"), [c[:4] for c in SCEN], [c[:4] for c in SEAMS])
         bad = [
-            ("tests:1.1:s99", {}),                                            # сценария нет
-            ("tests:1.1:s9-prefix,s9-prefix", {}),                            # повтор
-            ("tests:store_core:1.1:s1-bind", {}),                             # вид не по доп. (7) п. 2
-            ("tests:1.1:s9-prefix; tests:1.1:m3-par:seams", {}),              # пробел после «;» (шапка формы)
-            ("tests:1.1:s9-prefix;", {}),                                     # пустой элемент
+            ("tests:1.1:s99", {}),                                            # Missing scenario.
+            ("tests:1.1:s9-prefix,s9-prefix", {}),                            # Duplicate.
+            ("tests:store_core:1.1:s1-bind", {}),                             # Kind outside addendum 7, item 2.
+            ("tests:1.1:s9-prefix; tests:1.1:m3-par:seams", {}),              # Whitespace after ';' violates the form header.
+            ("tests:1.1:s9-prefix;", {}),                                     # Empty element.
         ]
         for gate, tr in bad:
             with self.subTest(gate=gate), self.assertRaises(gen_stagetests.GenError):
                 gen_stagetests.build(root, stages_text=with_gate(gate), transitional=tr)
         empty = synthetic_root(self.sub("e"), [("s0", "1", "@restart store", "ok")])
-        with self.assertRaises(gen_stagetests.GenError):                   # пустая проекция
+        with self.assertRaises(gen_stagetests.GenError):                   # Empty projection.
             gen_stagetests.build(empty, stages_text=with_gate("tests:1.1:s0"), transitional={})
         clash = synthetic_root(self.sub("c"), [("m1-clock", "1", "GET /x", "200 {}")], [c[:4] for c in SEAMS])
-        with self.assertRaises(gen_stagetests.GenError):                   # одно имя в двух файлах
+        with self.assertRaises(gen_stagetests.GenError):                   # Same name in two files.
             gen_stagetests.build(clash, stages_text=with_gate("tests:1.1:m1-clock:seams"), transitional={})
         for seams in ([("p1", "1", "@parallel 2", "ok"), ("p1", "2", "GET /x", 'each 200 {"i":"$new"}')],
                       [("p1", "1", "@parallel 2", "ok"), ("p1", "2", "GET /x", 'one 200 {}; rest 200 {"i":"$new"}')],
@@ -389,7 +378,7 @@ class StageTests(unittest.TestCase):
                 gen_stagetests.build(r, stages_text=with_gate("tests:1.1:p1:seams"), transitional={})
 
     def test_at_is_data(self):
-        """«@» в ключах, значениях и ожидаемом теле — данные; директивы — по грамматике и позиции (ревью Codex С5)."""
+        """Treat @ in keys/values/bodies as data unless grammar and position declare a directive (Codex C5)."""
         scen = [
             ("a1", "1", 'POST /v1/write {"op":"put","key":"acc/a1/x@y","items":{"mail":"a@b.example"}}', '200 {"index":"$a"}'),
             ("a1", "2", "GET /v1/get?key=acc/a1/x@y", '200 {"items":{"mail":"a@b.example"},"index":"$a"}'),
@@ -407,10 +396,10 @@ class StageTests(unittest.TestCase):
             self.assertEqual(status[k][3], "translated", k)
         self.assertEqual(status["a1/4"][3], "excluded")
         self.assertIn("@time", status["a1/4"][5])
-        self.assertEqual(status["a1/5"][3], "excluded")                      # хвост после директивы
+        self.assertEqual(status["a1/5"][3], "excluded")                      # Suffix after a directive.
         self.assertEqual(status["a3/1"][3], "excluded")
         self.assertIn("@any", status["a3/1"][5])
-        with self.assertRaises(gen_stagetests.GenError):                     # @oneof первым шагом — пустая проекция
+        with self.assertRaises(gen_stagetests.GenError):                     # @oneof as the first step yields an empty projection.
             gen_stagetests.build(root, stages_text=with_gate("tests:1.1:a2"), transitional={})
 
     def test_engine_on_fake_core(self):

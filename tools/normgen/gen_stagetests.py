@@ -1,31 +1,10 @@
-"""Генератор № 6 ADR-0125, доп. (3), (4); ADR-0126 доп. (7): тесты этапов из сценариев — часть `stagetests` пакета Б.
+"""Generate stage tests from scenarios for the stagetests kit part (ADR-0125 generator 6, addenda3/4; ADR-0126 addendum 7).
 
-Источники: `Platform/01-store/acceptance/<глава>/scenarios.tsv` (раннер и тесты пакета) и `seams.tsv` (швы процесса —
-только тесты пакета), `forms/stages.tsv`, `forms/refusals.tsv`. Проза не читается.
+Read P/01 acceptance chapter scenarios.tsv/seams.tsv, stages.tsv and refusals.tsv, not prose. Gate tests:<chapter>:<scenarios|*>[:seams] select runner scenarios or process seams. A stage without tests gates may use the transitional generator declaration until its form is updated.
 
-Выбор сценариев (ADR-0126 доп. (7) пп. 2, 3): `gate` — список через `;`, элемент `tests:<глава>:<сценарии|*>[:seams]`
-(`:seams` — файл швов); имя этапа — строка формы. Пока форма не поправлена дельтой — переходное объявление
-TRANSITIONAL (параметр генератора), только для этапа без элементов `tests:` в форме.
+Translate each scenario prefix up to the first unsupported stand directive/expectation or later-stage refusal, excluding its suffix with a reason. A refusal is later-stage only when every matching chapter/status/kind refusal row is first introduced by a later stage's norms.
 
-Правила:
-- сценарий переводится префиксом (ADR-0125 доп. (4) п. 2): до первого шага, который процесс не исполняет (директива
-  стенда, форма ожидания вне движка, отказ позднего этапа — ADR-0126 доп. (7) п. 6); остаток исключён с причиной;
-- отказ позднего этапа: ожидание `<код> {"kind": …}`, у которого все строки `refusals.tsv` главы сценария с этим кодом и
-  kind нормированы главой урока, впервые названной в `norms` этапа с большим n (403 по файлу прав — P/01.2);
-- швы (`seams.tsv`, ADR-0126 доп. (7) п. 1, грамматика «Спецификации»): `@clock +N | -N` (секунды, накопительно; N — десятичное, доля до 9 знаков точно в наносекундах,
-  не отбрасывается ни в Config.Now, ни при @reopen — spec103 2026-11-05; часы
-  теста от T0 = 2000000000 с), `@reopen` (Close + Open с тем же DataDir и часами), `@parallel K` (K ≥ 2; следующий
-  шаг K раз одновременно; его ожидание `each <ож>` | `one <ож>; rest <ож>`, новые $имена — только в `one`);
-- опись `stagetests/inventory.tsv` — по id шага `<глава>/<файл>/<сценарий>/<шаг>`: переведён | исключён (причина),
-  колонка `race` (тест с `@parallel` — судья гоняет его с -race); пустая проекция этапа — отказ генератора;
-- сценарий — тест `Test<Этап>_<Сценарий>`, шаги — последовательные подтесты; сравнение — как у раннера (`runner/run.py`).
-
-Выход (`out/p01-1/go/`): `coreadapter/coreadapter.go` (пакет: Config, Call, Core, Handle, NotInStage),
-`coreadapter/open.go` (заглушка `Open` и `Ctx` — своё у реализации), YOURS `coreadapter/seams.go` (`CallSeam`,
-P/01.3 store-start-flags/store-copy-floor; ошибка/паника/неисполнение — FAIL, ожидания в адаптер не передаются),
-`stagetests/*_test.go`, `stagetests/doc.go`,
-`stagetests/inventory.tsv`.
-"""
+Seams support cumulative @clock +/-decimal seconds with exact nanoseconds through Config.Now and @reopen, starting atT0=2000000000; @reopen closes/opens the same DataDir and clock. @parallel K (K>=2) concurrently repeats the next step with each or one/rest expectations; only one may bind new names. Inventory IDs retain chapter/file/scenario/step, translated/excluded reason and race metadata. Execution goes through the kit engine and YOURS core adapter; keep unsupported suffixes explicit rather than treating them as passed. The judge uses independent expectations and failing mutants."""
 import hashlib
 import json
 import re
@@ -33,8 +12,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import gate  # noqa: E402 — общий разбор gate (ревью Codex С4)
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import gate  # noqa: E402 -- shared gate parser (Codex review C4)
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
 import tsv_input  # noqa: E402 — physical source rows and one outer decode
 L = lesson.CURRENT
 
@@ -45,11 +24,11 @@ ENGINES = {"1.1": "runner/run.py", "1.3": "CALL seams"}
 CALLS = ("store-start-flags", "store-copy-floor")
 SCENARIO_COLUMNS = ("scenario", "step", "request", "expect")
 CALL = re.compile(r"CALL ([a-z][a-z0-9-]*) (.+)")
-# Переходное объявление: этап → [(глава, [сценарии], seams)] — только для этапа без элементов tests: в форме.
-TRANSITIONAL = {}       # форма P/01 несёт tests:<глава>:… (дельта 0125-p01-stages-seams, main 322d2cfb8)
+# Transitional stage -> [(chapter, scenarios, seams)] only when that stage has no tests gates.
+TRANSITIONAL = {}       # P/01 carries tests:<chapter>:... in stages.tsv (0125-p01-stages-seams, main322d2cfb8).
 METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD")
 VAR = re.compile(r"\$[A-Za-z0-9_]+")
-CLOCK = re.compile(r"@clock [+-](0|[1-9][0-9]*)(\.[0-9]{1,9})?")     # секунды, десятичная доля до 1 нс (spec103)
+CLOCK = re.compile(r"@clock [+-](0|[1-9][0-9]*)(\.[0-9]{1,9})?")     # Decimal seconds with precision down to1ns (spec103).
 PARALLEL = re.compile(r"@parallel ([2-9]|[1-9][0-9]+)")
 ONE_REST = re.compile(r"one (.+?); rest (.+)")
 
@@ -84,17 +63,17 @@ def read_table(root, chapter, file):
 
 
 def read_scenarios(root, chapter):
-    """Совместимость: только scenarios.tsv."""
+    """Compatibility: scenarios.tsv only."""
     return read_table(root, chapter, "scenarios.tsv")
 
 
 def late_refusals(root, stages, chapter):
-    """{(код, kind): n этапа, чьи нормы впервые называют главу всех строк отказа} по refusals.tsv главы."""
+    """From chapter refusals.tsv, map (status, kind) to the earliest stage whose norms name every matching refusal row chapter."""
     path = Path(root) / L.rel / "forms/refusals.tsv"
     rows = [line.split("\t") for line in path.read_text(encoding="utf-8").split("\n")
             if line and not line.startswith("#")]
     head = rows[0]
-    first = {}                                   # «P/01.2» → наименьшее n этапа, в norms которого она есть
+    first = {}                                   # P/01.2 -> minimum stage n whose norms include it.
     for st in stages.values():
         for m in re.finditer(r"P/\d\d\.\d", st["norms"]):
             first[m[0]] = min(first.get(m[0], 10 ** 6), int(st["n"]))
@@ -106,12 +85,12 @@ def late_refusals(root, stages, chapter):
         m = re.match(r"P/\d\d\.\d", r["norm"])
         n = first.get(m[0], 0) if m else 0
         key = (int(r["code"]), r["kind"])
-        by[key] = min(by.get(key, 10 ** 6), n)   # поздний — только если поздние все строки
+        by[key] = min(by.get(key, 10 ** 6), n)   # A refusal is later-stage only if every matching row is later-stage.
     return by
 
 
 def step_blocker(chapter, step, seams, late, stage_n):
-    """Почему шаг не исполняется в процессе (None — исполняется)."""
+    """Explain why a step cannot execute in-process; None means executable."""
     st, req, exp, _ = step
     if chapter not in ENGINES:
         return f"the engine of chapter {chapter} is not ported yet"
@@ -135,7 +114,7 @@ def step_blocker(chapter, step, seams, late, stage_n):
     method = req.split(" ", 1)[0]
     if method not in METHODS:
         return f"step {st}: the stand directive or door {method!r}"
-    # в запросе директива одна — @big(N) (раннер run.py, README 01); прочий «@» — данные (ревью Codex С5)
+    # @big(N) is the only request directive (runner run.py, README01); other '@' characters are data (Codex C5).
     for e in (ONE_REST.fullmatch(exp).groups() if seams and ONE_REST.fullmatch(exp) else
               [exp[5:]] if seams and exp.startswith("each ") else [exp]):
         mark = expect_directive(e)
@@ -170,9 +149,7 @@ VALUE_MARK = re.compile(r"@[a-z]+")
 
 
 def expect_directive(e):
-    """Директива ожидания по грамматике и позиции (None — нет): вся ячейка с «@» (@oneof, @exit, @empty…), тело с «@»
-    или «~» (http_expect), строковое значение JSON целиком вида @имя (@time, @any, @absent — README 01). Строка с «@»
-    внутри («a@b», почта) — данные, движок сличает её как есть."""
+    """Recognize expectation directives by grammar and position: a whole @ cell (@oneof, @exit, @empty), a body beginning @ or ~ (http_expect), or a whole JSON-string value @name (@time, @any, @absent per README01). An embedded @ such as a@b or an email address is ordinary data compared unchanged."""
     if e.startswith("@"):
         return e.split(" ", 1)[0]
     body = e[4:]
@@ -195,7 +172,7 @@ def expect_directive(e):
 
 
 def check_parallel(name, steps):
-    """@parallel K: следующий шаг — запрос с ожиданием each | one…; rest; новые $имена — только в one."""
+    """Parse a parallel request with each or one/rest expectations; new bindings are allowed only in one."""
     bound = set()
     for k, (st, req, exp, _) in enumerate(steps):
         if PARALLEL.fullmatch(req):
@@ -221,19 +198,19 @@ def check_parallel(name, steps):
 
 
 def prefix(chapter, steps, seams, late, stage_n):
-    """→ (переведённые шаги, причина остатка | None)."""
+    """Return (translated steps, excluded-suffix reason or None)."""
     for k, step in enumerate(steps):
         why = step_blocker(chapter, step, seams, late, stage_n)
         if why:
             done = steps[:k]
-            if done and PARALLEL.fullmatch(done[-1][1]):     # @parallel без своего шага не переводится
+            if done and PARALLEL.fullmatch(done[-1][1]):     # Do not translate @parallel without its following step.
                 done = done[:-1]
             return done, why
     return steps, None
 
 
 def go_raw(s):
-    """Строковый литерал Go: печатное — как есть, прочее (управляющие, BOM, U+2028…) — \\uXXXX."""
+    """Encode a Go string literal: retain printable characters and escape controls, BOM and U+2028 as \\uXXXX."""
     out = ['"']
     for ch in s:
         o = ord(ch)
@@ -247,7 +224,7 @@ def go_raw(s):
 
 
 def stage_items(stage, gate_text, transitional):
-    """→ [(глава, [сценарии] | '*', seams)] — элементы tests: формы (общий разбор gate.py), иначе переходное объявление."""
+    """Read [(chapter, scenarios-or-'*', seams)] tests gates via gate.py, otherwise the transitional declaration."""
     try:
         checks = gate.parse(gate_text, f"stage {stage}")
     except gate.GateError as exc:
@@ -259,7 +236,7 @@ def stage_items(stage, gate_text, transitional):
 
 
 def build(root=ROOT, stages_text=None, transitional=TRANSITIONAL):
-    """→ ({путь в out: текст}, строки описи)."""
+    """Return ({output-relative path: text}, inventory rows)."""
     root = Path(root)
     stages_rel = f"{L.rel}/forms/stages.tsv"
     text = stages_text if stages_text is not None else (root / stages_rel).read_text(encoding="utf-8")
@@ -338,7 +315,7 @@ def build(root=ROOT, stages_text=None, transitional=TRANSITIONAL):
                      f"{var}[{go_raw(name)}][:{cnt}])",
                      "}", ""]
         files[f"go/stagetests/{stage}_test.go"] = "\n".join(body)
-    mod = "normgen/p01-1/", L.go_module + "/"                     # модуль выхода урока
+    mod = "normgen/p01-1/", L.go_module + "/"                     # Lesson output module.
     files["go/stagetests/engine_test.go"] = ENGINE_GO.replace(*mod)
     files["go/stagetests/doc.go"] = DOC_GO
     files["go/coreadapter/coreadapter.go"] = ADAPTER_GO.replace(*mod)
@@ -353,7 +330,7 @@ def build(root=ROOT, stages_text=None, transitional=TRANSITIONAL):
     return files, inventory
 
 
-ADAPTER_GO = '''// Code generated by tools/normgen/gen_stagetests.py (ADR-0125 addenda (3), (4); ADR-0126 addendum (7)); DO NOT EDIT.
+ADAPTER_GO = r'''// Code generated by tools/normgen/gen_stagetests.py (ADR-0125 addenda (3), (4); ADR-0126 addendum (7)); DO NOT EDIT.
 
 // Package coreadapter — the adapter of the stage tests (stagetests) to the store core of an implementation. The kit's
 // part: Config, Call, Core, Handle (apidoor.Route → Dispatch → Encode over your Core) and NotInStage. Yours (open.go):
@@ -376,7 +353,7 @@ var ErrNotImplemented = errors.New("coreadapter: not implemented")
 type Config struct {
 	BodyLimit  int64            // the read limit of the HTTP body (1048576 on the stand)
 	RowCeiling int64            // the row ceiling (524288 on the stand)
-	Rights     []byte           // the rights file (P/01.2 Н1.2): the role acc with read, write, delete on acc/*
+	Rights     []byte           // Rights file(P/01.2 N1.2):role acc has read/write/delete over acc/*.
 	Now        func() time.Time // the clock of the test: take every time of the core from it (seams @clock, its fraction too)
 	DataDir    string           // the data directory of the scenario: fresh per scenario; @reopen opens it again
 }
@@ -393,7 +370,7 @@ type Request struct {
 	Header map[string]string
 }
 
-// Core — one open store instance: your Handler over your core of Н3. Handle may be called concurrently
+// Core is one open store instance, implementing Handler over your N3 core.Handle may run concurrently
 // (seams @parallel): the core must hold that.
 type Core interface {
 	apidoor.Handler[Ctx]
@@ -401,7 +378,7 @@ type Core interface {
 	Close()
 }
 
-// Handle — one HTTP request in process: the body limit (413 before the route, Н2.1 order «frame → route → identity →
+// Handle performs one in-process HTTP request:body limit(413 before route) and N2.1 frame->route->identity->
 // body»), apidoor.Route, apidoor.Dispatch to c with c.Context(call, header), apidoor.Encode of the answer.
 func Handle(c Core, cfg Config, call Call, method, target string, header map[string]string, body []byte) (int, map[string]string, []byte) {
 	if body != nil && int64(len(body)) > cfg.BodyLimit {
@@ -449,7 +426,7 @@ func headers(h [][2]string) map[string]string {
 }
 '''
 
-OPEN_GO = '''// Package coreadapter: Open and Ctx — yours (ADR-0126 addendum (7) item 5). The kit puts this stub once and never
+OPEN_GO = r'''// Package coreadapter: Open and Ctx — yours (ADR-0126 addendum (7) item 5). The kit puts this stub once and never
 // overwrites it.
 package coreadapter
 
@@ -459,7 +436,7 @@ type Ctx = *Request
 
 // Open — a fresh core for cfg: your store in cfg.DataDir with the clock cfg.Now and the rights cfg.Rights. Return a
 // value that implements Core: Context, Close and apidoor.Handler[Ctx] (Get, List, Write, QueryRefused over your core
-// of Н3; embed NotInStage for Rights, Status, Join, Leave, Metrics until your stage needs them).
+// N3;embed NotInStage for Rights, Status, Join, Leave, Metrics until the stage needs them).
 func Open(cfg Config) (Core, error) {
 	return nil, ErrNotImplemented
 }
@@ -543,7 +520,7 @@ var (
 	callSeam   = coreadapter.CallSeam
 )
 
-// t0 — the clock of a seam scenario at the first Open: 2000000000 wall seconds («Спецификация», seams of P/01).
+// t0 starts a seam clock at first Open:2000000000 wall seconds per the P/01 seam specification.
 var t0 = time.Unix(2000000000, 0)
 
 // clock — the test clock: for seams.tsv t0 plus the accumulated @clock shifts; for scenarios.tsv the wall clock, as
@@ -699,7 +676,7 @@ func (sc *scenario) runStep(st step) []string {
 	var out []string
 	if code != 200 {
 		if o, ok := act.(*object); !ok || !isStr(o.get("error")) {
-			out = append(out, "body.error: a fault must carry an error string (Н2)")
+			out = append(out, "body.error: a fault must carry an error string (\u041d2)")
 		}
 	}
 	if strings.HasPrefix(name, "22-") && st.step == "1" { // runner/run.py: the optional size of sc. 22 step 1
@@ -866,7 +843,7 @@ func (sc *scenario) runParallel(st step, k int) []string {
 		var out []string
 		if r.code != 200 {
 			if o, ok := r.act.(*object); !ok || !isStr(o.get("error")) {
-				out = append(out, "body.error: a fault must carry an error string (Н2)")
+				out = append(out, "body.error: a fault must carry an error string (\u041d2)")
 			}
 		}
 		return append(out, checkResponse(r.code, r.act, expect, env, method, target)...)

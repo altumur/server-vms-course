@@ -1,12 +1,12 @@
-// Обвязка проверки tools/normgen/test_gen_door.py: один долгоживущий процесс над сгенерированным пакетом door; читает
-// команды JSON построчно со stdin и на каждую сразу пишет строку ответа. go.mod обвязки пишет тест (replace на каталог
-// сгенерированного модуля). Написана руками под операции P/01 (методы Handler — по операциям OpenAPI урока).
+// Persistent doorprobe for test_gen_door.py:read JSON commands from stdin and immediately emit replies.
+// The test writes go.mod with replace pointing at generated output. Handwritten handlers follow P/01
+// OpenAPI operations.
 //
-// Команды: {"cmd": "table"} — операции и объявленные ответы; {"cmd": "route", "method", "target"} — Route;
+// Commands:table lists operations/responses; route(method, target) calls Route;
 // {"cmd": "check", "schema", "json"} — CheckSchema; {"cmd": "answer", "op", "code", "json", "via_op"?, "via_code"?,
-// "retry"?} — AnswerOf(via) и Encode(op, code); {"cmd": "refuse", "op", "code", "kind", "msg", "fields"} — Refuse и
-// Encode; {"cmd": "dispatch", "op", "query"} — Dispatch с обработчиком, который возвращает разобранный query;
-// {"cmd": "decode", "schema", "json"} — Decode<схема> тела запроса.
+// optional retry passes through AnswerOf/Encode; refuse(op, code, kind, msg, fields) calls Refuse/Encode;
+// dispatch(op, query) returns the handler's parsed query;
+// decode(schema, json) calls the request body's Decode<Schema>.
 package main
 
 import (
@@ -68,7 +68,7 @@ func violation(e *apidoor.Violation) any {
 	return map[string]any{"at": e.At, "rule": e.Rule}
 }
 
-// record — что увидел обработчик probe: метод операции, разобранный query, отказ query.
+// record captures the probe handler's operation method, parsed query and query refusal.
 type record struct {
 	method string
 	query  map[string]any
@@ -77,7 +77,7 @@ type record struct {
 
 type probe struct{}
 
-// b64 — значение параметра query (string или *string — по обязательности в OpenAPI) в base64; nil — нет.
+// b64 encodes query string/*string values by OpenAPI requiredness; nil means absent.
 func b64(v any) any {
 	switch x := v.(type) {
 	case string:

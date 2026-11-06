@@ -1,6 +1,6 @@
-// Заглушка демона на пакете flags (ADR-0125 № 3, доп. (1) п. 1): судья tools/normgen/flag_judge.py гоняет на ней те же
-// пробы запуска, что и на собранном демоне реализации, и в режиме --stub сверяет ещё и разобранные значения.
-// Отказ — строка в stderr, {"refusal": флаг} в stdout, код flags.RefuseCode; иначе — поля Flags одним JSON, код 0.
+// Flags-backed daemon stub (ADR-0125 generator 3, addendum 1, item 1). flag_judge.py runs the real daemon's
+// startup probes here; --stub also compares parsed values.
+// Refusal:stderr line, stdout {refusal:flag}, exit RefuseCode; success:one Flags JSON object, exit 0.
 package main
 
 import (

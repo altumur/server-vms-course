@@ -1,19 +1,9 @@
-"""Генератор части пакета `rollout-poll` (P/02; ADR-0125 доп. (5) п. 1, своя форма урока): тесты по трассам машины.
+"""Generate rollout-poll trace tests for P/02 (ADR-0125 addendum(5), item 1).
 
-Запуск: python3 tools/normgen/gen_rollout.py --lesson 02-installer [<out>]
+  python3 tools/normgen/gen_rollout.py --lesson 02-installer [<out>]
+Read forms/rollout-poll.traces.tsv. The machine YAML is normative but is not executed for the implementation (Architect, 2026-11-05). Step0 supplies input JSON and optional const; timed self/status/commit/read_expired/advance events follow. Semicolon assertions on polling/passed/refused state become observations, including same-step did=refuse code/word. Feed the event prefix to YOURS lessonadapter.RolloutPoll and compare its normalized state/refusal. Internal alive/need/replied/target/reads/did/not assertions without refusal are excluded with reasons, since CALL normalization does not expose them.
 
-Источник — `forms/rollout-poll.traces.tsv` (машина `forms/rollout-poll.machine.yaml` — норма; генератор её не
-исполняет за модель — решение «Архитектора» 2026-11-05): трасса — шаг 0 `input <JSON>` (с необязательным `const`),
-затем внешние события в момент t (`self …`, `status …`, `commit …`, `read_expired …`, `advance`). Ожидание шага —
-утверждения через «; ». Тестом становится каждое наблюдаемое утверждение — `state=<polling|passed|refused>` (с отказом —
-`did=refuse <код> <слово>` того же шага): события трассы до этого шага подаются в lessonadapter.RolloutPoll (YOURS,
-часть stagetests), сравниваются состояние и отказ (forms/README «CALL normalization» rollout-poll). Утверждения о
-переменных машины (alive, need, replied, target.*, reads, did, not без refuse) — внутренние, не наблюдение нормализации:
-в описи excluded с причиной.
-
-Выход <out>/go/rollouttests/: `traces_test.go` (`TestRolloutPoll_Trace_<трасса>`, подтест на утверждение),
-`inventory.tsv`. Судья — test_gen_rollout.py (подставная машина: зелёное; мутанты — красное).
-"""
+Emit go/rollouttests/traces_test.go with trace/subassertion tests and inventory.tsv. test_gen_rollout.py checks a passing fixture machine and failing mutants."""
 import json
 import re
 import sys
@@ -81,7 +71,7 @@ def read_traces(root=ROOT):
 
 
 def observable(asserts, where):
-    """→ (state | None, (код, слово) | None, [внутренние утверждения])."""
+    """Return (state or None, (code, word) or None, internal assertions)."""
     state, refuse, internal = None, None, []
     for a in asserts:
         if a.startswith("state="):
@@ -107,7 +97,7 @@ def build(root=ROOT):
         state0, _, internal0 = observable([a.strip() for a in tr.get("step0", "").split(";") if a.strip()], f"{name} step 0")
         for a in internal0:
             inv.append((f"{name}/0/{a}", "excluded", INTERNAL))
-        if state0 is not None:                         # шаг 0 — до событий: свежий poll
+        if state0 is not None:                         # Step0 precedes events and starts a fresh poll.
             checks.append(f"\t\t{{step: 0, upto: 0, state: {go_str(state0)}, result: nil}},")
             inv.append((f"{name}/0/state={state0}", "translated", "-"))
             total += 1

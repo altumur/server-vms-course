@@ -1,16 +1,10 @@
-"""Генератор № 4 ADR-0125: каталог отказов хранилища из `Platform/01-store/forms/refusals.tsv` — без модели.
+"""Generate a refusal catalog without a model (ADR-0125 generator 4).
 
-Читает таблицу (колонки chapter row name surface code kind fields headers log norm; шапка — комментарии) и строит пакет
-Go 1.22 только на стандартной библиотеке `<out>/go/refusals/refusals.go`: по переменной *Spec на строку (имя — name в
-CamelCase), All, ByName, проверку полей тела (Check), строку лога и код выхода отказов запуска и CLI (LogLine, Exit).
+Read refusals.tsv columns chapter, row, name, surface, code, kind, fields, headers, log, norm under a comment header. Emit standard-library Go 1.22 go/refusals/refusals.go with a CamelCase *Spec per row, All, ByName, Check, LogLine and Exit.
 
-Роли трёх (ADR-0125 доп. (1) п. 5): форма тела — OpenAPI *Fault, её кодирует часть door (apidoor.Refuse); каталог — эта
-таблица; порядок и условия команды записи — write-checks.tsv (часть writecheck). Пакет тела не кодирует: он даёт
-код, вид, поля и заголовок для apidoor.Refuse и проверяет набор полей. Причина словами и «что делает вызывающий» — проза
-Н4, генератор её не читает (доп. (1) п. 4).
+Responsibilities remain separate (addendum(1), item 5): OpenAPI *Fault defines body shape and the door encodes it; this table defines catalog metadata; write-checks.tsv defines write-command conditions/order. This package supplies status, kind, fields, headers and validates the field set without encoding bodies. Reasons and caller behavior remain N4 prose and are not interpreted.
 
-Запуск: python tools/normgen/gen_refusals.py [таблица.tsv [каталог_выхода]].
-"""
+  python tools/normgen/gen_refusals.py [table.tsv [output-directory]]"""
 import hashlib
 import re
 import sys
@@ -22,14 +16,14 @@ sys.path.insert(0, str(HERE))
 
 from gen_checks import GenError, camel, go_str, gofmt  # noqa: E402
 
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
 L = lesson.CURRENT
 DEFAULT_TABLE = L.form("refusals.tsv")
 DEFAULT_OUT = L.out
 COLUMNS = ["chapter", "row", "name", "surface", "code", "kind", "fields", "headers", "log", "norm"]
 KIT_DIRS = ("refusals",)
 JUDGE = HERE / "refusal_judge.py"
-EXIT_ANY = 1          # «exit !0» — любой ненулевой; пакет отдаёт 1
+EXIT_ANY = 1          # exit !0 means any nonzero code; the kit returns1.
 
 
 class Table:
@@ -113,34 +107,34 @@ def go_spec(r):
             f"Log: {lst(r['log_names'])}, Words: {lst(r['log_words'])}, Norm: {go_str(r['norm'])}}}")
 
 
-GO_API = '''
-// Field — поле тела отказа помимо kind и error; Optional — «?» таблицы.
+GO_API = r'''
+// Field describes refusal-body fields besides kind/error;Optional represents the table's '?'.
 type Field struct {
 	Name     string
 	Optional bool
 }
 
-// Spec — строка каталога.
+// Spec is a catalog row.
 type Spec struct {
-	Chapter    string      // глава урока: 1.1, 1.2, 1.3
-	Row        int         // строка таблицы Н4 главы
-	Name       string      // условие; у строк write-checks.tsv — имя её check
-	Surface    string      // http (дверь), start (запуск демона), cli (команда администратора)
-	Code       int         // http — статус HTTP; start, cli — код выхода (2; «!0» — 1)
-	Kind       string      // http — слово kind на проводе; иначе ""
-	Fields     []Field     // http — поля тела помимо kind и error
-	Headers    [][2]string // http — заголовки ответа
-	RetryAfter bool        // среди Headers есть Retry-After (для apidoor.Answer.RetryAfter)
-	Log        []string    // start, cli — значения, которые называет лог
-	Words      []string    // start, cli — слова, которые лог несёт дословно
+	Chapter    string      // Lesson chapter:1.1, 1.2, 1.3.
+	Row        int         // Row within the chapter's N4 catalog.
+	Name       string      // Condition name, or write-checks.tsv check name.
+	Surface    string      // http door, start daemon, or cli admin command.
+	Code       int         // HTTP status or start/CLI exit code(2;!0 maps to1).
+	Kind       string      // HTTP kind token;empty on other surfaces.
+	Fields     []Field     // HTTP body fields besides kind/error.
+	Headers    [][2]string // HTTP response headers.
+	RetryAfter bool        // Headers includes Retry-After, for apidoor.Answer.RetryAfter.
+	Log        []string    // Start/CLI values named by the log.
+	Words      []string    // Start/CLI words carried literally by the log.
 	Norm       string
 }
 
-// ByName — строка каталога по имени; nil — нет такой.
+// ByName returns a named catalog row, or nil.
 func ByName(name string) *Spec { return byName[name] }
 
-// Check — набор полей тела отказа http: все обязательные есть, лишних нет, значения — целое (int, int64) или строка.
-// Тело кодирует apidoor.Refuse(op, s.Code, s.Kind, msg, values) по схеме *Fault OpenAPI.
+// Check requires all mandatory HTTP body fields, no extras, and integer(int/int64) or string values.
+// apidoor.Refuse(op, s.Code, s.Kind, msg, values) encodes the OpenAPI *Fault body.
 func (s *Spec) Check(values map[string]any) error {
 	if s.Surface != "http" {
 		return fmt.Errorf("refusal %s: surface %s has no body", s.Name, s.Surface)
@@ -167,8 +161,8 @@ func (s *Spec) Check(values map[string]any) error {
 	return nil
 }
 
-// LogLine — строка лога отказа start или cli: имя, слова Words дословно, затем name=value каждого данного значения.
-// Значение, которого нет в Log, — ошибка; при непустом Log нужно хотя бы одно (лог называет флаг или сокет и т. п.).
+// LogLine emits the start/CLI refusal name, literal Words and supplied name=value pairs.
+// Values outside Log error;nonempty Log requires at least one supplied value, for example flag/socket.
 func (s *Spec) LogLine(values map[string]string) (string, error) {
 	if s.Surface == "http" {
 		return "", fmt.Errorf("refusal %s: an http refusal has no log line", s.Name)
@@ -195,7 +189,7 @@ func (s *Spec) LogLine(values map[string]string) (string, error) {
 	return strings.Join(parts, " "), nil
 }
 
-// Exit — logf(строка лога) и код выхода s.Code; ошибка LogLine попадает в лог вместе с тем, что есть.
+// Exit logs LogLine and returns s.Code;LogLine errors are logged alongside available information.
 func (s *Spec) Exit(logf func(string), values map[string]string) int {
 	line, err := s.LogLine(values)
 	if err != nil {
@@ -218,32 +212,32 @@ func contains(xs []string, x string) bool {
 
 def go_module(table, rel):
     parts = [f"// Code generated by tools/normgen/gen_refusals.py from {rel}; DO NOT EDIT.\n"
-             f"// Таблица sha256 {table.sha256}.\n\n"
-             "// Package refusals — каталог отказов хранилища P/01.1–P/01.3 Н4 (ADR-0125 № 4).\n"
+             f'// Table sha256 {table.sha256}.\n\n'
+             r'''// Package refusals implements the P/01.1-P/01.3 N4 catalog(ADR-0125 generator 4).
+'''
              "package refusals\n\n"
              'import (\n"fmt"\n"strconv"\n"strings"\n)',
              GO_API.strip("\n")]
     parts += [go_spec(r) for r in table.rows]
-    parts.append("// All — строки каталога в порядке таблицы.\nvar All = []*Spec{" +
+    parts.append(r'''// All retains catalog table order.
+var All = []*Spec{''' +
                  ", ".join(r["var"] for r in table.rows) + "}")
     parts.append("var byName = map[string]*Spec{" + ", ".join(f"{go_str(r['name'])}: {r['var']}"
                                                               for r in table.rows) + "}")
     return "\n\n".join(parts) + "\n"
 
 
-# ---------------------------------------------------------------- каталог без HTTP (P/02: 15 колонок)
+# ---------------------------------------------------------------- catalog without HTTP (P/02, 15 columns)
 
 PLAIN_COLUMNS = ["chapter", "row", "name", "surface", "code", "kind", "fields", "headers", "log", "norm", "word",
                  "cause", "outcome", "diagnostic", "caller"]
 PLAIN_SURFACES = ("call", "cli", "start", "process", "peer")
-# P/05: дверь урока с телом-текстом ResourceError — колонка response_schema после word, поверхность http
+# P/05 has ResourceError text bodies: response_schema follows word on the http surface.
 RESPONSE_COLUMNS = PLAIN_COLUMNS[:11] + ["response_schema"] + PLAIN_COLUMNS[11:]
 
 
 class PlainTable:
-    """refusals.tsv урока без своей двери (P/02 forms README «Refusal catalogue»): генератор читает только закрытые
-    колонки (chapter, row, name, surface, code, word, log, norm); kind, fields, headers — «-»; четыре последние —
-    проза нормы, из неё ничего не выводится."""
+    """Read closed columns for lessons without a local door (P/02 Refusal catalogue): chapter, row, name, surface, code, word, log, norm. kind/fields/headers are '-'; final prose columns imply no generated behavior."""
 
     def __init__(self, text, name="refusals.tsv"):
         self.name = name
@@ -279,7 +273,7 @@ class PlainTable:
             if r["kind"] != "-":
                 raise GenError(f"{where}: kind is - (no HTTP Fault of the lesson)")
             r["field_list"] = []
-            if r["fields"] != "-":                 # поля тела ответа двери соседа (P/03 door_token_forbidden: error)
+            if r["fields"] != "-":                 # A neighboring door's response fields (P/03 door_token_forbidden:error).
                 if r["surface"] not in body_at:
                     raise GenError(f"{where}: fields only at the surface {'/'.join(body_at)} (no HTTP body of the lesson)")
                 r["field_list"] = [x.strip() for x in r["fields"].split(",")]
@@ -287,7 +281,7 @@ class PlainTable:
                         len(set(r["field_list"])) != len(r["field_list"]):
                     raise GenError(f"{where}: fields {r['fields']!r} — a comma list of names without repeats")
             r["header_list"] = []
-            if r["headers"] != "-":                # заголовки двери соседа (P/03 process_busy: Retry-After)
+            if r["headers"] != "-":                # A neighboring door's headers (P/03 process_busy:Retry-After).
                 if r["surface"] not in body_at:
                     raise GenError(f"{where}: headers only at the surface {'/'.join(body_at)}")
                 for h in r["headers"].split(";"):
@@ -312,18 +306,18 @@ class PlainTable:
             if r["surface"] == "peer" and (r["exit"] >= 0 or r["any"]):
                 raise GenError(f"{where}: a peer row has no exit code")
             r["word_any"], r["word_cell"] = [], r["word"]
-            if L.key != "02-installer" and r["word"] != "-":    # P/03+: word — сохранённая нормативная ячейка (spec103)
-                toks = re.findall(r"`([^`]+)`", r["word"])   # токен — и фраза: точный текст отказа (P/06.7)
+            if L.key != "02-installer" and r["word"] != "-":    # P/03+: word preserves the normative cell (spec103).
+                toks = re.findall(r"`([^`]+)`", r["word"])   # A token may also be a phrase: exact refusal text (P/06.7).
                 if toks and re.sub(r"`[^`]+`|,|\s", "", r["word"]) == "":
-                    # токены `…` — производный индекс: один токен | названные исходы
+                    # Quoted tokens form a derived index: one token or named outcomes.
                     r["word"], r["word_any"] = (toks[0], []) if len(toks) == 1 else ("-", toks)
                 else:
-                    r["word"] = "-"                                # проза ячейки — без проекции
+                    r["word"] = "-"                                # Preserve prose cells without projection.
             if r["word"] != "-" and not r["word"].strip():
                 raise GenError(f"{where}: word {r['word']!r} — one token or -")
             r["log_names"], r["log_words"] = [], []
             if r["log"] != "-":
-                items = re.findall(r"\s*(«[^«»]*»|[^,«»]+?)\s*(?:,|$)", r["log"])  # запятая внутри «…» — часть фрагмента
+                items = re.findall(r"\s*(«[^«»]*»|[^,«»]+?)\s*(?:,|$)", r["log"])  # Commas inside quoted fragments belong to those fragments.
                 for item in items:
                     if m := re.fullmatch(r"«([^«»]+)»", item):
                         r["log_words"].append(m[1])
@@ -334,18 +328,18 @@ class PlainTable:
             r["var"] = camel(r["name"])
             self.rows.append(r)
         self.headers = any(r["header_list"] or r["field_list"] for r in self.rows)
-        self.word_any = L.key != "02-installer"             # P/03+: Named и WordCell у каждой строки
+        self.word_any = L.key != "02-installer"             # P/03+: every row exposes Named and WordCell.
         whole = [r["chapter"] for r in self.rows if "." not in r["chapter"]]
         if whole and len(whole) != len(self.rows):
             raise GenError(f"{name}: chapters of a lesson in one chapter and of chapters NN.K together")
 
 
-PLAIN_API = """
+PLAIN_API = r'''
 // Spec — a row of the refusal catalogue of the lesson (forms/refusals.tsv; the closed columns only — the prose
 // columns cause, outcome, diagnostic, caller stay in the norm).
 type Spec struct {
 	Chapter string   // the chapter of the lesson: 2.1 … 2.5
-	Row     int      // the row of the Н4 catalogue of the chapter (two outcomes of one prose row — two Specs)
+	Row     int      // Row of the chapter's N4 catalog;two outcomes of one prose row produce two Specs.
 	Name    string   // the condition
 	Surface string   // call (a pure procedure), cli (an operator command), start, process (a running process), peer
 	Exit    int      // cli, start, process: the exit code fixed by the form; -1 — none fixed (see AnyNonZero)
@@ -371,11 +365,11 @@ func (s *Spec) ExitCode() (code int, ok bool) {
 	}
 	return 0, false
 }
-"""
+'''
 
 
 def response_schemas():
-    """Имена components/schemas OpenAPI урока (для колонки response_schema)."""
+    """Return lesson OpenAPI component schema names for response_schema."""
     import yamlsub
     doc = yamlsub.load(L.openapi.read_text(encoding="utf-8"), L.openapi.name)
     return set((doc.get("components") or {}).get("schemas") or {})
@@ -399,7 +393,7 @@ def go_headers(hs):
 
 
 def plain_api(table):
-    """API каталога: у P/02 — прежние байты; глава урока и поле Headers — по таблице."""
+    """Generate catalog API with byte-identical P/02 output; chapter and Headers follow the table."""
     api = PLAIN_API.strip("\n")
     chapters = list(dict.fromkeys(r["chapter"] for r in table.rows))
     if L.key != "02-installer":
@@ -428,7 +422,7 @@ def plain_api(table):
 
 def go_module_plain(table, rel):
     parts = [f"// Code generated by tools/normgen/gen_refusals.py from {rel}; DO NOT EDIT.\n"
-             f"// Таблица sha256 {table.sha256}.\n\n"
+             f'// Table sha256 {table.sha256}.\n\n'
              f"// Package refusals — the refusal catalogue of {L.code} (ADR-0125 № 4, addendum (5)): no HTTP body of the lesson.\n"
              "package refusals",
              plain_api(table)]
@@ -448,7 +442,7 @@ def render(table_path=DEFAULT_TABLE):
         rel = table_path.name
     text = table_path.read_text(encoding="utf-8")
     head = next((ln for ln in text.splitlines() if ln and not ln.startswith("#")), "")
-    if head.split("\t") in (PLAIN_COLUMNS, RESPONSE_COLUMNS):  # урок без своей двери (P/02) или с телом-текстом (P/05)
+    if head.split("\t") in (PLAIN_COLUMNS, RESPONSE_COLUMNS):  # Lesson without a local door (P/02) or with a text body (P/05).
         return {"refusals.go": gofmt(go_module_plain(PlainTable(text, table_path.name), rel))}
     table = Table(text, table_path.name)
     return {"refusals.go": gofmt(go_module(table, rel))}
@@ -459,14 +453,14 @@ def generate(table_path=DEFAULT_TABLE, out=DEFAULT_OUT):
     gdir.mkdir(parents=True, exist_ok=True)
     for name, text in render(table_path).items():
         (gdir / name).write_text(text, encoding="utf-8")
-    mod = Path(out) / "go/go.mod"                     # модуль выхода урока (у P/01 его пишет gen_tests)
+    mod = Path(out) / "go/go.mod"                     # Lesson output module; gen_tests writes it for P/01.
     if not mod.exists():
         mod.write_text(f"module {L.go_module}\n\ngo 1.22\n", encoding="utf-8")
     return gdir
 
 
 def kit_files(out=DEFAULT_OUT):
-    """→ [(каталог в internal, имя, байты, происхождение, источник)]; GenError — out устарел."""
+    """Return [(internal directory, name, bytes, origin, source)]; stale output raises GenError."""
     files = []
     for name, text in sorted(render().items()):
         kept = Path(out) / "go/refusals" / name
@@ -477,7 +471,7 @@ def kit_files(out=DEFAULT_OUT):
 
 
 def provenance():
-    """Паспорт части (ADR-0125 доп. (1) п. 6 (а)): форма, генератор, судья — пути и sha256."""
+    """Part provenance (ADR-0125 addendum (1), item 6(a)): form, generator and judge with paths/SHA256."""
     import tsv_input
 
     def entry(path):
@@ -527,7 +521,7 @@ func (s *Spec) Exit(logf func(string), values map[string]string) int // logs Log
 """
 
 
-KIT_MD = KIT_MD.replace("Platform/01-store/", L.rel + "/")      # пути урока; прочий текст — урока P/01
+KIT_MD = KIT_MD.replace("Platform/01-store/", L.rel + "/")      # Lesson paths; other text describes P/01.
 
 KIT_MD_PLAIN = """
 ## Part `refusals`: the refusal catalogue (generated from `forms/refusals.tsv`; the lesson has no HTTP door)
@@ -557,7 +551,7 @@ package carries only what the form fixes.
 
 
 def kit_md():
-    """Справка части: каталог без двери (15 колонок, P/02) — KIT_MD_PLAIN; иначе каталог P/01 с HTTP."""
+    """Use KIT_MD_PLAIN for a15-column catalog without a door (P/02), otherwise P/01 HTTP catalog documentation."""
     head = next((x for x in DEFAULT_TABLE.read_text(encoding="utf-8").splitlines() if x and not x.startswith("#")), "")
     return KIT_MD_PLAIN if head.split("\t") == PLAIN_COLUMNS else KIT_MD
 

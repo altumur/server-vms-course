@@ -257,36 +257,36 @@ def count(config, repos):
 
 
 def markdown(report):
-    out = ["# Происхождение кода: проба ADR-0127", "",
-           f"Реализация: `{report['implementation']['repo']}` / `{report['implementation']['commit']}`.", "",
-           "Снимки читаются из Git; рабочее дерево и шапки файлов не участвуют. Строка — LF, плюс последняя",
-           "непустая строка без LF; комментарии и пустые строки включены. Совпавший SHA editable сохраняет origin",
-           "манифеста; изменённый editable целиком относится к модели по конечным байтам. Изменённый закрытый файл — ошибка.", "",
-           "| Состав | generated | handwritten пакета | модель | всего |", "|---|---:|---:|---:|---:|"]
-    for kind, title in (("code", "Код"), ("tests", "Тесты")):
+    out = ['# Code origin: ADR-0127 probe', "",
+           f"Implementation: `{report['implementation']['repo']}` / `{report['implementation']['commit']}`.", "",
+           'Snapshots are read from Git; working trees and file headers are excluded. Count LF lines plus a final',
+           'nonempty unterminated line, including comments and blanks. An unchanged editable SHA retains manifest origin;',
+           'a changed editable file is entirely model-owned by final bytes. A changed closed file is an error.', "",
+           '| Scope | generated | handwritten kit | model | total |', "|---|---:|---:|---:|---:|"]
+    for kind, title in (("code", 'Code'), ("tests", 'Tests')):
         values = [report["totals"][kind][o]["lines"] for o in ORIGINS]
         out.append(f"| {title} | " + " | ".join(map(str, [*values, sum(values)])) + " |")
-    out.extend(["", "Включённые каталоги: " + ", ".join(f"`{p}`" for p in report["scope"]["include_dirs"]) + ".",
-                "Исключены каталоги с именами на любой глубине: " + ", ".join(f"`{p}`" for p in report["scope"]["exclude_dir_names"]) + ".",
-                "Дополнительные исключённые пути: " + (", ".join(f"`{p}`" for p in report["scope"]["exclude_paths"]) or "нет") + ".",
-                "Суффиксы: " + ", ".join(f"`{p}`" for p in report["scope"]["suffixes"]) + "; тесты: " + ", ".join(f"`{p}`" for p in report["scope"]["test_suffixes"]) + ".", "",
-                "| Каталог, код без тестов | generated | handwritten пакета | модель |", "|---|---:|---:|---:|"])
+    out.extend(["", 'Included directories: ' + ", ".join(f"`{p}`" for p in report["scope"]["include_dirs"]) + ".",
+                'Excluded directory names at any depth: ' + ", ".join(f"`{p}`" for p in report["scope"]["exclude_dir_names"]) + ".",
+                'Additional excluded paths: ' + (", ".join(f"`{p}`" for p in report["scope"]["exclude_paths"]) or 'none') + ".",
+                'Suffixes: ' + ", ".join(f"`{p}`" for p in report["scope"]["suffixes"]) + '; tests: ' + ", ".join(f"`{p}`" for p in report["scope"]["test_suffixes"]) + ".", "",
+                '| Directory, code excluding tests | generated | handwritten kit | model |', "|---|---:|---:|---:|"])
     for d, totals in report["by_directory"].items():
         out.append(f"| `{d}` | " + " | ".join(str(totals["code"][o]["lines"]) for o in ORIGINS) + " |")
-    out.extend(["", "Пины пакетов — коммиты импорта: содержат манифест и проверенные по его SHA-256 байты пакета.", ""])
+    out.extend(["", 'Kit pins are import commits containing the manifest and kit bytes verified against its SHA-256 entries.', ""])
     for p in report["packages"]:
-        out.extend([f"- `{p['id']}`: `{p['repo']}` / `{p['commit']}`; манифест `{p['manifest']}`;",
-                    f"  SHA-256 `{p['manifest_sha256']}`; курс `{p['course_commit']}`, выгрузка `{p['export']}`."])
+        out.extend([f"- `{p['id']}`: `{p['repo']}` / `{p['commit']}`; manifest `{p['manifest']}`;",
+                    f"  SHA-256 `{p['manifest_sha256']}`; course `{p['course_commit']}`, export `{p['export']}`."])
     reasons = {}
     for row in report["files"]:
         if row["reason"] == "unchanged_editable":
             reasons[row["path"]] = row
     if reasons:
-        out.extend(["", "Editable, оставшиеся байт в байт пакетными:", ""])
+        out.extend(["", 'Editable files still byte-identical to the kit:', ""])
         for p, row in reasons.items():
-            out.append(f"- `{p}`: {row['lines']} строк, `{row['origin']}` (SHA совпал).")
-    out.extend(["", f"Отсутствующих файлов пакета в выбранном составе: {len(report['missing_package_files'])}.",
-                "JSON-вывод содержит по каждому файлу итоговый SHA-256, Git blob, число строк и основание классификации.", ""])
+            out.append(f"- `{p}`: {row['lines']} lines, `{row['origin']}` (SHA matched).")
+    out.extend(["", f"Missing kit files within the selected scope: {len(report['missing_package_files'])}.",
+                "JSON output records each file's final SHA-256, Git blob, line count and classification reason.", ""])
     return "\n".join(out)
 
 

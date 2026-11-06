@@ -1,33 +1,15 @@
-"""Судья части `flags` (ADR-0125 № 3, доп. (1) п. 1): пробы запуска собранного демона по таблице «Daemon flags».
+"""Judge daemon startup against the Daemon flags form (ADR-0125 generator 3, addendum (1), item 1).
 
-Запуск (на CT 103, python с cel_expr_python — /opt/check-env/lesson-spec/bin/python):
-  python tools/normgen/flag_judge.py --cmd './bin/configstore' [--stub] [--cwd <каталог>] [--rights-file <файл>]
-      [--tls-dir <каталог>] [--ok-wait 5] [--json <итог.json>] [--fuzz N --seed S]
+Use /opt/check-env/lesson-spec/bin/python with cel_expr_python on CT 103:
+  python tools/normgen/flag_judge.py --cmd './bin/configstore' [--stub] [--cwd <directory>] [--rights-file <file>] [--tls-dir <directory>] [--ok-wait 5] [--json <result.json>] [--fuzz N --seed S]
 
-Модель — своя, не из генератора: таблица `Platform/01-store/forms/daemon-flags.tsv` читается заново, типы словаря
-шапки разбираются здесь же, `required` и `bad` вычисляет оракул CEL (cel_expr_python, как check_forms), `loopback` —
-примитив normgen (prims/python). Каждая проба — командная строка; ожидание — отказ запуска (код 2) или запуск.
+The independent model rereads daemon-flags.tsv and its header's types. As in check_forms, the CEL oracle evaluates required/bad; normgen's prims/python implements loopback. Each argv expects startup or a startup refusal with exit 2.
 
-Пробы:
-- по таблице: каждый флаг демона с годным значением (недостающие обязательные дописываются), неверные значения его
-  типа, флаг без значения, чужой флаг (`-no-such-flag`, снятый `-socket`), флаг другой команды, обязательные
-  (`required`) и отказы `bad`;
-- по сценариям приёмки главы 1.3: строки `@store-start` без `kit=` (ожидание `ok` или `@exit 2`) — независимый вход;
-- `--fuzz N` — ещё N случайных строк (только с `--stub`: сверка значений).
-Нормативные пробы гоняются всегда; пробы соглашений пакета (повтор флага, `-x=v`, `--`, подкоманды) — только с `--stub`.
+Form probes cover every daemon flag with valid typed values and missing required flags filled, invalid values, missing values, unknown or removed flags (-no-such-flag, -socket), other commands' flags, required and bad. Chapter 1.3 acceptance @store-start rows without kit= provide an independent source (ok or @exit 2). --fuzz N adds random argv only with --stub. Normative probes always run; kit conventions (duplicate flags, -x=v, --, subcommands) run only with --stub.
 
-Исход пробы на демоне: отказ — код 2 не позже 10 с; запуск — готовность: за `--ok-wait` с процесс жив и в каталоге
-`-sockets` пробы слушает `admin.sock` (его создаёт сам демон без юнитов, lifecycle.md; ревью Codex С1); затем SIGTERM,
-SIGKILL. Выход до готовности (код 0, 1, иной, сигнал) — провал. Проба, которая заведомо не даёт полного демона (группа
-без соседей: -join, -door/-voters, -group-size 3|5), без готовности — «не проверено» с причиной, не успех; код 2 на ней —
-провал. С `--stub` (заглушка tools/normgen/flags/stub) — ещё флаг отказа и все поля Flags; готовности у заглушки нет.
-`--box` — сборка без raft (ключ профиля store_build: box): проба запуска с флагами группы (-join, -door, -voters,
--bootstrap, -raft, -raft-bind, -group-size 3|5) может кончиться кодом 2 (Н4 1.3 box_no_raft) — исход «box_no_raft»,
-отдельно от успеха.
-Пробы с `-rights` / `-tls` на демоне требуют `--rights-file` / `--tls-dir` (содержимое — не форма), иначе пропущены.
-Итог: `flags: P/N PASS|FAIL` (не проверено, box_no_raft, пропуски — отдельно); код 0 — провалов нет и прошла
-хоть одна проба, 1 — иначе, 2 — ошибка запуска судьи.
-"""
+A real refusal must exit 2 within 10 seconds. Startup readiness requires the process to remain alive and listen on admin.sock under the probe's -sockets within --ok-wait; the daemon creates it without units per lifecycle.md (Codex C1). Then send SIGTERM/SIGKILL. Any exit before readiness fails. Groups without peers (-join, -door/-voters, group-size 3 or 5) may wait for a leader; missing readiness is unverified with a reason, not success, and exit 2 fails. The flags/stub additionally reports refusal flag and every Flags field without readiness. --box permits group flags to exit 2 under box_no_raft (N4 1.3), recorded separately from success.
+
+Real -rights/-tls probes require --rights-file/--tls-dir, otherwise they are skipped because contents are not specified by the form. Report pass/fail, unverified, box_no_raft and skips separately. Exit 0 requires no failures and at least one passed probe; 1 otherwise; 2 is judge startup failure."""
 import argparse
 import ipaddress
 import json
@@ -46,7 +28,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
 L = lesson.CURRENT
 TABLE = L.form("daemon-flags.tsv")
 SCENARIOS = L.path("acceptance/3/scenarios.tsv")
@@ -67,7 +49,7 @@ class Bad(Exception):
     pass
 
 
-# ---------------------------------------------------------------- модель
+# ---------------------------------------------------------------- model
 
 def read_table(path=TABLE):
     lines = Path(path).read_text(encoding="utf-8").splitlines()
@@ -84,7 +66,7 @@ def read_table(path=TABLE):
 
 
 def v_addr(s):
-    """host:port по шапке формы (P/01.3-R031): хост — имя, IPv4 или [IPv6], непустой; порт 1–65535 без ведущих нулей."""
+    """Parse host:port per the form header (P/01.3-R031): nonempty hostname, IPv4 or [IPv6], and port 1..65535 without leading zeros."""
     if s.startswith("["):
         end = s.find("]")
         if end < 0 or s[end + 1:end + 2] != ":":
@@ -126,7 +108,7 @@ def v_int(s, lo, hi):
 
 
 def v_duration(s):
-    """[1-9][0-9]*(ms|s|m|h), > 0 (шапка формы)."""
+    """Parse positive [1-9][0-9]*(ms|s|m|h), per the form header."""
     m = re.fullmatch(r"([1-9][0-9]*)(ms|s|m|h)", s, re.A)
     if not m or int(m[1]) * NS[m[2]] >= I64:
         raise Bad("duration")
@@ -134,7 +116,7 @@ def v_duration(s):
 
 
 def parse_value(t, raw):
-    """→ (значение CEL, значение поля); Bad — вне типа."""
+    """Return (CEL value, field value); raise Bad for values outside the type."""
     if t in ("path", "dir", "file"):
         if raw == "":
             raise Bad("empty")
@@ -215,7 +197,7 @@ class Model:
         return v.type() != self.cel.Type.ERROR and v.plain_value() is True
 
     def expect(self, argv, env):
-        """→ ("refuse", слово) | ("ok", поля)."""
+        """Return ('refuse', word) or ('ok', fields)."""
         if argv and argv[0] != "daemon" and argv[0] in self.commands:
             cmd, args = argv[0], argv[1:]
         else:
@@ -277,7 +259,7 @@ class Model:
                 later.append((fld, self.by[d[1:]]["field"]))
             elif d.startswith("$"):
                 val = env.get(d[1:], "")
-                if not val:                       # нет ни флага, ни переменной — отказ (refuse_start, Н4 1.3 стр. 6)
+                if not val:                       # Neither flag nor environment variable: refuse_start (N4 1.3, row 6).
                     return "refuse", r["flag"]
                 try:
                     fields[fld] = parse_value(r["type"], val)[1]
@@ -291,7 +273,7 @@ class Model:
         return "ok", fields
 
 
-# ---------------------------------------------------------------- пробы
+# ---------------------------------------------------------------- probes
 
 def free_port():
     with socket.socket() as s:
@@ -303,8 +285,8 @@ class Probes:
     def __init__(self, model, tmp, stub, rights, tls):
         self.m, self.tmp, self.stub, self.rights, self.tls = model, Path(tmp), stub, rights, tls
         self.out, self.k = [], 0
-        self.junk = str(self.tmp / "junk")   # значение-заглушка: только абсолютный путь во временном каталоге — демон,
-        # принявший чужой флаг (--dir как -dir), пишет туда, а не в каталог запуска
+        self.junk = str(self.tmp / "junk")   # Use an absolute path under the temporary directory as the stub value: a daemon that accepts the foreign
+        # --dir spelling as -dir writes there instead of into the invocation directory.
 
     def fresh(self):
         self.k += 1
@@ -314,7 +296,7 @@ class Probes:
 
     @staticmethod
     def without(argv, flag):
-        """argv без флага flag и его значения."""
+        """Remove flag and its value from argv."""
         out, k = [], 0
         while k < len(argv):
             if argv[k] == flag:
@@ -325,7 +307,7 @@ class Probes:
         return out
 
     def good(self, r):
-        """Годные значения типа флага (список слов)."""
+        """Return valid argv words for this flag's type."""
         t = r["type"]
         if r["flag"] == "-rights":
             return [self.rights] if self.rights else ([str(self.tmp / "rights.json")] if self.stub else [])
@@ -374,7 +356,7 @@ class Probes:
                          "normative": normative})
 
     def complete(self, argv, keep=None):
-        """Дописать обязательные флаги демона, которых требует модель, годными значениями (кроме keep)."""
+        """Fill model-required daemon flags with valid values, except keep."""
         for _ in range(8):
             kind, want = self.m.expect(argv, {"SERVER_NAME": "judge"})
             if kind == "ok" or want == keep or want not in self.m.by or want in argv:
@@ -542,13 +524,13 @@ class Probes:
             self.add(f"fuzz {k}", argv, normative=False, env=env)
 
 
-# ---------------------------------------------------------------- исполнение
+# ---------------------------------------------------------------- execution
 
 RAFT = ("-join", "-door", "-voters", "-bootstrap", "-raft", "-raft-bind")
 
 
 def raft_flags(argv):
-    """Проба с флагами группы: сборка без raft (store_build box) отказывает её кодом 2 (Н4 1.3 box_no_raft)."""
+    """A no-raft store_build=box rejects group flags with exit 2 (N4 1.3 box_no_raft)."""
     gs = [argv[k + 1] for k, a in enumerate(argv[:-1]) if a == "-group-size"]
     return any(a.split("=")[0] in RAFT for a in argv) or any(v in ("3", "5") for v in gs)
 
@@ -557,7 +539,7 @@ PEERS = ("-join", "-door", "-voters")
 
 
 def needs_peers(argv):
-    """Группа без соседей: полный демон заведомо не встаёт (ждёт лидера) — готовность не обязательна."""
+    """A group without peers waits for a leader, so full-daemon readiness is not required."""
     gs = [argv[k + 1] for k, a in enumerate(argv[:-1]) if a == "-group-size"]
     return any(a.split("=")[0] in PEERS for a in argv) or any(v in ("3", "5") for v in gs)
 
@@ -599,7 +581,7 @@ def stop(proc):
 
 
 def run(cmd, cwd, probe, stub, ok_wait, box=False):
-    """→ (исход, почему): pass | fail | unverified | box_no_raft."""
+    """Return (outcome, reason): pass, fail, unverified or box_no_raft."""
     argv = shlex.split(cmd) + probe["argv"]
     env = {k: v for k, v in os.environ.items() if k != "SERVER_NAME"}
     env.update(probe["env"])
@@ -618,7 +600,7 @@ def run(cmd, cwd, probe, stub, ok_wait, box=False):
             if not stub:
                 return "pass", None
         return stub_fields(probe, out, code)
-    # запуск настоящего демона: готовность — живой процесс и слушающий admin.sock в -sockets пробы
+    # A real daemon is ready only while alive and listening on admin.sock under the probe's -sockets.
     sock = sockets_dir(probe["argv"])
     deadline, ready = time.monotonic() + ok_wait, False
     while time.monotonic() < deadline:
