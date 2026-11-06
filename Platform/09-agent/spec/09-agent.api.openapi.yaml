@@ -335,6 +335,7 @@ components:
       allOf:
         - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Carry'
       required: [domain_age]
+      unevaluatedProperties: false
     RelayNothingBody:
       type: object
       required: [error, detail]
