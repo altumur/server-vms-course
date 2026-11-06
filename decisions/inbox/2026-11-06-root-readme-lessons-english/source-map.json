@@ -1,0 +1,82 @@
+{
+  "base": "a5bf9814263c39b142810e6b3584b7f36928a5ed",
+  "changes": [
+    {
+      "path": "README.md",
+      "before_sha256": "52e12d73601a3338361562e7ec9ae2961428e7fba84c36b1b6e094ed655217a5",
+      "after_sha256": "ebaf2b14a3600254c09df6f772ac60cc2fde7f690e9b8c72ec93b27f67f7c036",
+      "scope": "Full prose translation; non-ASCII link targets URI-encoded; P01/P02/P04 overview links point to English norms rather than ru lectures"
+    },
+    {
+      "path": "Platform/lessons.tsv",
+      "before_sha256": "51bfd533b36d32e6e16384c2154221c7c08b60558283332f154dd2ff0776f505",
+      "after_sha256": "6988f8a65bfec32661d18be5cf6f5fdd1ad55a1f56b69fb77d43e8024e7e98aa",
+      "title_cells": [
+        {
+          "line": 5,
+          "lesson": "01",
+          "before": "\u0425\u0440\u0430\u043d\u0438\u043b\u0438\u0449\u0435",
+          "after": "Store"
+        },
+        {
+          "line": 6,
+          "lesson": "02",
+          "before": "\u041c\u0430\u043d\u0438\u0444\u0435\u0441\u0442 \u0438 \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u0449\u0438\u043a",
+          "after": "Manifest and installer"
+        },
+        {
+          "line": 7,
+          "lesson": "03",
+          "before": "\u0412\u043e\u0440\u043a\u0435\u0440 (SDK)",
+          "after": "Worker (SDK)"
+        },
+        {
+          "line": 8,
+          "lesson": "04",
+          "before": "\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u043b\u0435\u0440",
+          "after": "Controller"
+        },
+        {
+          "line": 9,
+          "lesson": "05",
+          "before": "\u0420\u0435\u0441\u0443\u0440\u0441",
+          "after": "Resource"
+        },
+        {
+          "line": 10,
+          "lesson": "06",
+          "before": "\u041a\u043e\u043d\u0441\u043e\u043b\u044c \u043a\u043b\u0430\u0441\u0442\u0435\u0440\u0430",
+          "after": "Cluster console"
+        },
+        {
+          "line": 11,
+          "lesson": "07",
+          "before": "\u041c\u043e\u0434\u0443\u043b\u044c \u043a\u043e\u043d\u0441\u043e\u043b\u0438",
+          "after": "Console module"
+        },
+        {
+          "line": 12,
+          "lesson": "08",
+          "before": "\u041f\u0440\u043e\u0446\u0435\u0441\u0441 domain",
+          "after": "Domain process"
+        },
+        {
+          "line": 13,
+          "lesson": "09",
+          "before": "\u0410\u0433\u0435\u043d\u0442 (9.1) \u0438 \u0440\u0435\u0436\u0438\u043c \u0440\u0435\u0442\u0440\u0430\u043d\u0441\u043b\u044f\u0442\u043e\u0440\u0430 (9.2)",
+          "after": "Agent (9.1) and relay mode (9.2)"
+        },
+        {
+          "line": 14,
+          "lesson": "10",
+          "before": "\u041a\u043e\u043d\u0441\u043e\u043b\u044c \u0434\u043e\u043c\u0435\u043d\u0430",
+          "after": "Domain console"
+        }
+      ],
+      "other_columns_and_order_unchanged": true
+    }
+  ],
+  "limits": [
+    "Language-only; no process/unit/dir/delta_base rename, no new readiness or implementation claim."
+  ]
+}

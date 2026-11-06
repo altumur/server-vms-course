@@ -1,174 +1,174 @@
-# Курс Server VMS
+# Server VMS course
 
-Учебный материал: как из прибора, который владеет своей истиной, вырастить платформу — на одном сервере, затем на кластере, затем на домене из нескольких кластеров.
+Course material: how to grow an appliance that owns its own truth into a platform — first on one server, then on a cluster, then on a domain of several clusters.
 
-Первые два модуля курса — М8 (продукт поверх облачного архива) и М9 (тот же продукт как прибор) — вынесены в отдельный курс, **edge-vms-course**. Этот начинается там, где коробка перестаёт быть одной.
-
----
-
-## Устройство → Сервер → Кластер → Домен — и затем вендор
-
-Названия модулей — не украшение. Они отмечают, как одна идея трижды становится труднее, и курс выстроен вокруг неё: **где живёт истина о системе и сколько сущностей способны о ней разойтись.**
-
-|                      | Коробка знает                                                        | Истина живёт                                                 | Кто может разойтись                                      | Новая трудная задача                                                                                             |
-| -------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| **М9 · EdgeVMS**     | чем она *является*                                                   | в образе, который загрузился                                 | ничто — коробка есть то, что на неё прошили              | заменить ОС под работающим продуктом, не уничтожив записи                                                        |
-| **М10 · ServerVMS**  | какой ей *следует быть*                                              | в базе данных на коробке                                     | желаемое состояние и фактическое, внутри одного процесса | закрыть разрыв — и никогда не сохранять ту половину, которую нужно выводить заново                               |
-| **М11 · Cluster**    | какой ей следует быть, *в raft кластера, записано одним контроллером* | в heartbeat каждого воркера, с того сервера, где он работает  | **два экземпляра одного воркера**                        | пережить смерть сервера так, чтобы два писателя не дошли до одного архива                                        |
-| **М12A · Домен**, **М12B · DomainVMS** | какой ей следует быть, *и какой кластер её держит*                    | в raft каждого кластера, плюс каталог поверх кластеров        | кластеры — с каталогом                                   | слой, который обязан оставаться полезным, хотя ему разрешено лежать, — и честным, когда целый кластер недостижим  |
-| **М14 · VendorVMS**  | *— не область продукта —*                                            | нигде, где от неё зависел бы продукт                         | заказчик — с вендором                                    | **работать, когда вендор недостижим или исчез**                                                                  |
-
-**Каждая граница в этой таблице — сеть, которой вы перестали доверять, кроме одной: её задаёт администрирование.**
-
-**Кластер** — это серверы, стоящие достаточно близко, чтобы делить канал, на который вы поставите запись: одна LAN, обычно одна серверная. Это физика. **Домен** — это кластеры под одним каталогом, одним CA и одним набором операторов: одна инсталляция заказчика, которая может быть одним кластером или несколькими. Это администрирование. Кампус — один домен, три кластера, три площадки; облачное развёртывание — один домен, один кластер, пятьдесят площадок. **Площадки и кластеры связаны «многие ко многим» намеренно**, а арендованные серверы в облачном регионе — такой же кластер, как любой другой; именно это позволяет М13 предлагать устройство, облако и смешанный вариант из одной кодовой базы.
-
-Правило, которое делает эти два модуля по-настоящему разными, — и всё сказанное выше зависит от него:
-
-> **Работа переезжает внутри своего кластера и никогда — между кластерами.** Видео камер лежит на дисках этого кластера. Поэтому смерть целого кластера — не переезд, а событие большего масштаба, и задача домена (М12A) здесь — честно сообщить, что недостижимо, а не вылечить это.
-
-Это правило выбрано ради локальности архива, а заодно оказалось, что оно ставит эпоху отсечения на нужный масштаб: raft у каждого кластера свой. Когда два независимых рассуждения приходят к одной границе, граница обычно настоящая.
-
-### Три слова, которые курс держит порознь
-
-|              | Что это такое                                                                                                                                                                                                                                                                                              | Кто решает                  |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| ~~**Node**~~ | *выведено из обращения (12 сентября 2026).* Рекордер М9 — процесс со своей базой и своим диском, отличный от коробки. В форме М10 на сервере не нужно пятое слово: хранилища платформы, **ресурс** на её дисках и **воркеры**, которых туда поместил планировщик. Уроки 5–9 М9 сохраняют это слово как историю | —                           |
-| **Сервер**   | коробка с процессорами и дисками: реплика хранилищ кластера, **ресурс** (работа платформы на её дисках) и те **воркеры**, которых там держат юниты сервера, — и запасные, поднятые по недостаче | развёртывание: юниты и скрипт запасных |
-| **Площадка** | где камеры находятся физически. Единственное из трёх слов, которое называет оператор                                                                                                                                                                                                                       | здание заказчика            |
-
-**Воркер — не сервер**, и М9 строит ровно одну коробку, ни разу не нуждаясь в этом различии. Различие начинает работать с М11: единицы назначены на *имя воркера* в хранилище кластера, а не на процесс и не на сервер. Перезапущенный процесс читает то же назначение, а когда сервер умер, контроллер переписывает строки назначения его воркеров — и только их. На сервере остаются *ресурс* и места подсистем.
-
-**М8** стоит до начала этой прогрессии: он строит сам продукт вообще без локальной истины, потому что Kinesis держит и конфигурацию, и архив. Всё, что идёт после, — следствие того, что коробке приходится держать свою.
-
-**У EdgeVMS нет желаемого состояния.** Вы прошиваете образ, и контейнеры запускаются; фактическое состояние — единственное, какое есть. Вся работа М9 в том, чтобы сделать это безопасно заменяемым, — поэтому там четыре урока про атомарные обновления, откат и подписи и ни одного про камеры.
-
-**Рекордер вводит желание.** Строка, говорящая, что камера должна писать, — это не пишущая камера, и кто-то должен закрыть разрыв: пять уроков, в которых студент пишет этот цикл сверки руками, в масштабе, где оба конца помещаются в одном терминале. Правило, на котором он держится, проходит через всё сказанное выше: *желаемое состояние персистентно, фактическое выводится.* Сохраните второе — и вы построили кэш, который врёт.
-
-**В Cluster появляется вторая коробка — и оркестратора не появляется** (ADR 0021). От оркестратора кластеру было бы нужно хранилище, а не планировщик: единицы по воркерам раскладывает контроллер платформы, имя воркер берёт сам, записью по CAS, а процессы на каждом сервере одни и те же, и их держит `systemd`. Хранилище — платформы: демон `configstore` на каждом сервере, три демона — одна группа raft. Поворот модуля — в другом: **у единицы есть владелец**, два экземпляра одного воркера могут её захватить, а приостановленный процесс неотличим от мёртвого. Поэтому М11 — единственный модуль, где ошибка портит видео заказчика, а не останавливает сервис. Оркестратор остаётся формой поставки для площадок, где он уже стоит ([«Оркестратор как форма поставки»](./_notes-ru/orchestrator-as-a-delivery-form.md)).
-
-**Домен (М12A) — это то, что остаётся, когда кластер работает сам, и остаётся меньше, чем ожидалось.** Кластер переезжает, восстанавливается из своего хранилища объектов и отвечает на *где камера 7* из одного raft, строго согласованно, ничего не спрашивая выше. Только домену дано знать то, что со вторым кластером перестаёт быть знаемым: какой кластер держит камеру, какому кластеру отдать новую и **полон ли ответ** — потому что поперёк кластеров raft нет, есть только агрегация, частичная и с ограниченным отставанием. Домен — это каталог *каталогов*, который не может быть согласованным, и его честность на этот счёт и составляет модуль. Что на этом домене делает VMS, — отдельный модуль, М12B.
-
-**Каждому слою разрешено быть недоступным для слоя под ним**, а слой под ним кэширует то, что ему нужно, чтобы продолжать. Воркеры продолжают писать, когда каталог кластера лежит; кластеры продолжают писать — и продолжают редактироваться, — когда домен недостижим; и **домен продолжает работать при исчезнувшем вендоре**, и вот здесь это правило перестаёт быть одним решением среди прочих и становится свойством, которое можно обещать заказчику.
-
-**Домен — вершина продукта.** Один заказчик — один домен, и домен может быть размером со всё его хозяйство: три серверные или один облачный кластер, обслуживающий пятьдесят магазинов. В более ранних черновиках над ним был слой, державший корневой CA, федеративную личность, vault и инвентарь парка приборов; пункт за пунктом каждый оказался либо тем, что домен делает для себя сам, либо тем, что делает *вендор* поперёк заказчиков. Поэтому М14 — не пятая область. Это дальняя сторона границы; а причина, по которой в проекте нет вендорского корня над доменом доверия заказчика, проста: вендор, который может подписать ваш CA, — это вендор, который может выдать себя за вас.
-
-У правила есть острый край, и именно его стоит унести с собой: **всё, что слой кэширует сверху, может писать вечно и не должно удалять ничего.** Разрушительные операции истекают; запись — нет. Политика хранения принадлежит самому кластеру, так что устареть по ней он не может, — а вот право на использование и размещение приходят сверху, и они устареть могут.
-
-**М13 тоже не добавляет области, но по противоположной причине.** Наблюдаемость — это то, как вы видите те четыре, что у вас уже есть, и она доменного уровня: удалённый наблюдатель — ещё один доменный сервис, а его тезис (*молчащий кластер недостижим, а не сломан*) — это честность М12 насчёт неполных ответов, применённая к метрикам. Модуль идёт **до** вендора, потому что демо вендорского модуля — *вендор исчезает на тридцать дней* — показать можно только при уже установленной измерительной обвязке, а условие остановки его канарейки — правило алерта. Имени с VMS он не получает, потому что не строит ничего нового, что стоило бы назвать.
+The first two course modules — M8 (a product over a cloud archive) and M9 (the same product as an appliance) — moved to the separate **edge-vms-course**. This course begins where one box becomes several.
 
 ---
 
-## Дуга
+## Device → Server → Cluster → Domain — then the vendor
 
-Доведённая до поставки VMS — это семь слоёв в глубину. По модулю на слой, и каждый заканчивается чем-то работающим.
+The module names describe how the same idea becomes harder three times. The course is built around that idea: **where the truth about the system lives, and how many entities can disagree about it.**
 
-| Модуль | Слой, который он строит | Состояние |
+| | The box knows | Truth lives | Who can disagree | The new hard problem |
+|---|---|---|---|---|
+| **M9 · EdgeVMS** | what it *is* | in the image that booted | nobody: the box is what was flashed onto it | replace the OS under a working product without destroying recordings |
+| **M10 · ServerVMS** | what it *should be* | in the database on the box | desired and actual state inside one process | close the gap, and never persist the half that must be derived again |
+| **M11 · Cluster** | what it should be, *recorded in cluster raft by one controller* | in each worker's heartbeat from the server running it | **two instances of the same worker** | survive a server failure without letting two writers reach the same archive |
+| **M12A · Domain**, **M12B · DomainVMS** | what it should be, *and which cluster holds it* | in each cluster's raft, with a catalogue above the clusters | clusters and their catalogue | a layer that must remain useful while unavailable, and honest when an entire cluster is unreachable |
+| **M14 · VendorVMS** | *outside the product's scope* | nowhere on which the product depends | customer and vendor | **keep working when the vendor is unreachable or disappears** |
+
+**Every boundary in this table is a network you have stopped trusting, except one: administration defines it.**
+
+A **cluster** consists of servers close enough to share a recording channel: one LAN, usually one server room. That is a physical boundary. A **domain** consists of clusters under one catalogue, one CA and one set of operators: one customer installation with one cluster or several. That is an administrative boundary. A campus can be one domain, three clusters and three sites; a cloud deployment can be one domain, one cluster and fifty sites. **Sites and clusters intentionally have a many-to-many relationship.** Rented servers in a cloud region form a cluster like any other; this lets M13 offer appliance, cloud and mixed deployments from one codebase.
+
+The rule that makes these two modules different, and on which the explanation above depends:
+
+> **Work moves within its own cluster, never between clusters.** Camera video lives on that cluster's disks. An entire cluster failing is therefore a larger event than a move. The domain's task (M12A) is to report what is unreachable honestly, rather than repair it.
+
+The rule was chosen for archive locality. It also puts the fencing epoch at the right scale: every cluster has its own raft. Two independent arguments arriving at the same boundary are a useful sign that the boundary belongs there.
+
+### Three words the course keeps separate
+
+| | Meaning | Who decides |
 |---|---|---|
-| [**М10** — Платформа](./Platform) | То, что ничего не знает о видео: словарь хранилища, манифест подсистемы и строгий загрузчик, единицы и слоты, контроллер и размещение, воркер под слотом, права, секреты, события и ресурс, консоль, схема и дренаж, платформа на коробке и на кластере (`configstore` на raft, одни и те же юниты `systemd` на каждом сервере). Уроки-спецификации по ADR-0080: пять нормативных разделов и приёмка | **Перенесён** в [`Platform/`](./Platform) (стадия B, ADR-0083): уроки и каталог М10 сняты (конец стадии B) |
-| [**М10B** — ServerVMS](./М10B_ServerVMS) | Семь подсистем на этой платформе (`vms`, `rec`, `live`, `det`, `detjob`, `survey`, `auto`): `driverpacksrc`, архив на ObjectStorage, воркер, держащий камеру, регистратор, детекторы, шлюз живого видео, сценарии | **Написан** · 28 уроков |
-| [**М12A** — Домен](./М12A_Domain) | 4 · Несколько кластеров, один каталог каталогов<br>5 · Домен как собственный корень: регистрация, сроки жизни, личность, секреты домена<br>7 · Свой сервер обновлений и кластеры, которые он арендует для себя — служба платформы, `Source/w2cplatform/domain/` | **Написан** · 15 уроков |
-| [**М12B** — DomainVMS](./М12B_DomainVMS) | Что VMS добавляет на домене: книги источников и первичных, поток из другого кластера, камера, до которой никто не дотягивается, цепочка через ретранслятор — `Source/vms/domainpart/` | **Пишется** · 4 урока |
-| [**М13** — Observability](./М13_Observability) | 6 · Prometheus + логи — сбор того, что отдают М9–М12, у держателя домена | **Спроектирован** · 4 урока |
-| [**М14** — VendorVMS](./М14_VendorVMS) | *Не слой.* MASA, лицензионная система, публикация, хостинговый бизнес — и то, чего вендор не должен быть в состоянии сделать никогда | **Спроектирован** · 5 уроков |
+| ~~**Node**~~ | *retired on 12 September 2026*. The M9 recorder is a process with its own database and disk, distinct from the box. M10 needs no fifth server term: platform stores, a **resource** on its disks, and the **workers** placed there by the scheduler. M9 lessons 5–9 retain the word as history | — |
+| **Server** | a box with CPUs and disks: a cluster-store replica, a **resource** (the platform's work on those disks), the **workers** held there by the server's service units, and spares started for a shortage | deployment: service units and the spare-worker script |
+| **Site** | where the cameras are physically located; the only one of these terms named by the operator | the customer's building |
 
-**[GLOSSARY.md](./GLOSSARY.md)** точно определяет каждый термин, которым пользуется курс: воркер против сервера, желаемое состояние против фактического, эпоха и отсечение, а также аббревиатуры, которые иначе остались бы без объяснения.
+**A worker is not a server.** M9 builds one box and never needs that distinction. It starts to matter in M11: a unit is assigned to a *worker name* in the cluster store, not to a process or server. A restarted process reads the same assignment. When a server dies, the controller rewrites its workers' assignment rows, and only those rows. The *resource* and subsystem places stay with their server.
 
-**[COURSE-PLAN.md](./COURSE-PLAN.md)** несёт полное рассуждение: почему модули идут в этом порядке, что в каждом из них и какие два структурных предупреждения учтены по пути — концентрация лицензий (Nomad, Consul, Vault под BUSL одного вендора — и продукт не зависит ни от одного: кластер стоит без оркестратора, ADR 0021) и где живут секреты, раз в продукте нет менеджера секретов.
+**M8** precedes this progression: it builds the product without local truth because Kinesis holds both configuration and archive. Everything that follows comes from the box having to hold its own truth.
 
-**[ARCHITECTURE.md](./ARCHITECTURE.md)** — это система в её нынешнем виде: пять слов, что где работает, три хранилища, таблица доверия, матрица отказов, — а за этим четырнадцать шагов, которые к ней привели, по порядку, каждый с вопросом, который его вынудил, и с тем, что он убрал. Читайте его до модулей, если хотите сначала увидеть пункт назначения.
+**EdgeVMS has no desired state.** Flash an image and its containers start; actual state is the only state. M9 makes that safely replaceable, hence four lessons on atomic updates, rollback and signatures, and none on cameras.
 
-**[`_notes-ru/`](./_notes-ru/README.md) — не документация проекта, а записки поверх него.** Кто-то читал этот код и пересказывал своими словами, как система работает целиком: путь одной настройки, один сценарий до каждого HTTP-запроса, сравнение с Kubernetes. Полезны вторым заходом, после уроков. Где расходятся с кодом, прав код.
+**The recorder introduces desire.** A row saying a camera should record is not a recording camera. Someone must close the gap: five lessons build that reconciliation loop by hand, at a scale where both ends fit in one terminal. Its rule runs throughout the course: *desired state persists; actual state is derived*. Persist the latter and you have built a cache that lies.
 
----
+**Cluster introduces a second box without introducing an orchestrator** (ADR 0021). A cluster would need an orchestrator's store rather than its scheduler: the platform controller assigns units to workers, workers claim names by CAS, and `systemd` holds the same processes on every server. The platform owns the store: a `configstore` daemon per server, three daemons in one raft group. The module's turning point is elsewhere: **a unit has an owner**, two instances of one worker can claim it, and a paused process is indistinguishable from a dead one. M11 is therefore the course's one module where a mistake corrupts customer video rather than stops a service. An orchestrator remains a delivery form for sites that already have one ([Orchestrator as a delivery form](./_notes-ru/orchestrator-as-a-delivery-form.md)).
 
-## М10 и М10B — ServerVMS
+**The domain (M12A) is what remains once a cluster works independently, and less remains than expected.** A cluster moves work, restores from its own object store and answers *where is camera 7* from one strongly consistent raft without asking a higher layer. Only the domain can address the questions that become uncertain with a second cluster: which cluster holds a camera, which should receive a new one, and **whether an answer is complete**. There is no raft across clusters, only partial aggregation with bounded lag. The domain is a *catalogue of catalogues* that cannot be consistent; being honest about this is the module's subject. What VMS adds to that domain is a separate module, M12B.
 
-Рекордер, перестроенный на форму, к которой пришла М11, — **воркеры, ресурсы, один контроллер**, — и сначала прототипированный на одной коробке: без планировщика, без KVS и без базы данных. Со стороны GStreamer: `driverpacksrc` — источник, который играет файлы, чьи имена стоят вместо RTSP-адресов; архив на ObjectStorage — движке продукта, с которым рекордер говорит по сокету `obsd`, с эпохой в имени потока; затем контроллер VMS — платформенный `SpecController`, собранный из `vms.subsystem.yaml` (`w2c-controller@vms`), единственный писатель размещения, — и `vmsworker` — сам DriverPack в роли воркера. Результат — **контракт подсистемы**: манифест, воркер, префикс конфигурации и heartbeat, — который детекторы и шлюз реализуют точно так же и который платформа знает, не зная, что такое камера. Модуль разбит надвое по границе, которую проверяет тест: М10 — платформа, не знающая, что такое видео (с 2026-10-14 — одиннадцать уроков-спецификаций по ADR-0080, прежние М10A и М11_Cluster удалены); М10B — семь подсистем на ней.
+**Every layer may be unavailable to the layer below it.** The lower layer caches what it needs to continue. Workers keep recording while the cluster catalogue is down; clusters keep recording and remain editable while the domain is unreachable; **the domain keeps working when the vendor disappears**. At that point the rule becomes a property promised to the customer.
 
-- [Платформа (прежде М10 и М11)](./Platform/README.md) · [проектная записка](./Platform/module-design.md)
-- [М10B — подсистемы](./М10B_ServerVMS/README.md) · [проектная записка](./М10B_ServerVMS/module-design.md)
-- [`Source/`](./Source/README.md) — код модуля целиком: два хранилища платформы с CAS, выдача эпох и аренда, `driverpacksrc`, клиент ObjectStorage, `vmsworker`, `vmscontroller`, консоль, юниты systemd, личность через захват, события на ресурсе, видео в томе, ресурс как работа платформы и тестовые подсистемы `testsub` и `testsub2`, на которых платформа проверяет себя
-- Тот же контракт на Go — продукт `vmssubsystem` (отдельный репозиторий). Курс его не сопровождает и за ним не следует: уроки пишутся по `Source/`, а Go живёт своей жизнью в продукте
+**The domain is the top of the product.** One customer has one domain, spanning its whole estate: three server rooms, or a cloud cluster serving fifty shops. Earlier drafts put a root CA, federated identity, vault and appliance inventory above it. Each proved to be either something the domain does for itself or something the *vendor* does across customers. M14 is therefore not a fifth scope; it is the far side of a boundary. There is no vendor root above the customer's trust domain because a vendor able to sign your CA can impersonate you.
 
-Четыре документа лежат в корне и адресованы продукту, а не читателю уроков:
-[`ОБРАТНАЯ-СВЯЗЬ-ИЗ-ПРОДУКТА.md`](./ОБРАТНАЯ-СВЯЗЬ-ИЗ-ПРОДУКТА.md) — что вскрылось, когда код курса стал продуктом, и что из этого уже починено здесь; [`АВТОМАТИЗАЦИЯ-В-ПРОДУКТЕ.md`](./АВТОМАТИЗАЦИЯ-В-ПРОДУКТЕ.md) — спецификация переноса седьмой подсистемы в Go, с тем, что в продукте уже есть, чего нет, в каком порядке делать и чего делать не надо; [`СОБЫТИЯ-В-ПРОДУКТЕ.md`](./СОБЫТИЯ-В-ПРОДУКТЕ.md) — то же для пути события: класс трафика, направление предела, подавление у писателя, долговечность по классу и норматив на оператора; [`СОСТОЯНИЕ-ТРЕВОГИ.md`](./СОСТОЯНИЕ-ТРЕВОГИ.md) — принятое решение по квитированию тревог и почему работа по нему отложена до экрана оператора.
+The rule has a sharp edge: **anything a layer caches from above may keep recording forever and must not delete anything.** Destructive operations expire; recording does not. Retention policy belongs to the cluster and cannot become stale through an upper layer, whereas licensing and placement arrive from above and can become stale.
 
-## Кластер — главы P/01.3, P/02.4 и урок P/04
-
-Отдельного модуля у кластера больше нет: реплицированное хранилище — второй вариант развёртывания тех же норм, и его нормируют модуль «Платформа»: демон хранилища и группа raft — [P/01](./Platform/01-store/ru/01-store.md), глава 1.3; юниты на каждом сервере — [P/02](./Platform/02-installer/ru/02-installer.md), глава 2.4; отказ сервера — [P/04](./Platform/04-controller/ru/04-controller.md) (прежде урок М10/11 «Платформа на коробке и на кластере»; прежний М11_Cluster удалён 2026-10-14). Та же платформа — **контроллер, воркеры, ресурсы, консоль** — на нескольких серверах, и так, чтобы она пережила смерть любого из них. Код — `Source/w2cplatform/cluster/`, подсистемы он знает только по манифестам. Хранилище кластера — `configstore` платформы: демон на каждом сервере, три демона — одна группа raft; объекты — файлы в каталоге сервера писателя; процессы на каждом сервере одни и те же, их держит `systemd` (`w2c-*` — платформы, юниты воркеров — подсистем). **Оркестратора нет** (ADR 0021): от него кластеру было бы нужно хранилище, а не планировщик, — единицы раскладывает контроллер, а имя воркер берёт сам, записью по CAS.
-
-Единица назначена имени воркера в хранилище кластера, а не процессу и не серверу. Перезапущенный процесс читает то же назначение; когда сервер умер, контроллер раздаёт его единицы живым воркерам — переписывает строки назначения, и только их. Ресурс и места подсистем остаются при своих дисках: недоступны, пока сервер лежит, и не потеряны. Конфигурация хранилища не покидала, так что правка, сделанная во время отказа, уже на месте. Запасных воркеров по недостаче, которую насчитал контроллер, поднимает скрипт на хосте, а не контроллер.
-
-Решающий факт неочевиден: **двух писателей в один видеопоток нельзя слить.** Ничто сверху не может рассудить их после дела, и поэтому это единственный модуль курса, где ошибка портит видео заказчика, а не останавливает сервис. Ответ в том, что отсечению место у данных, а не в координаторе: слот по CAS и эпоха в имени потока, поэтому вернувшийся старый экземпляр отсечён дважды — на слоте и на каждой эпохе — и архив цел. Запретить зомби писать нельзя — можно только сделать его записи безвредными.
-
-**Сам по себе он — полноценный продукт:** один кластер на своём raft, не спрашивающий разрешения ни у кого выше. Заказчику с одним зданием больше ничего не нужно. Что на кластере добавляет VMS — бюджет камер, тома, дверь регистратора, таймлайн по томам, — урок [«VMS на кластере»](./М10B_ServerVMS/28-vms-on-the-cluster.md) М10B.
-
-- [P/02](./Platform/02-installer/ru/02-installer.md), глава 2.4, [P/01](./Platform/01-store/ru/01-store.md), глава 1.3, и [P/04](./Platform/04-controller/ru/04-controller.md) — юниты, пользователи, каталоги, группа raft, учение «выдерни питание» (прежде урок М10/11)
-- [Проектная записка «Платформы»](./Platform/module-design.md) — нарезка модуля по микромодулям
-- [`Source/w2cplatform/cluster/`](./Source/w2cplatform/cluster/README.md) — код модуля: хранилища кластера, каталог, права из манифестов, точка входа процессов платформы (тесты в `Source/tests/cluster/`, развёртывание в `Source/deploy/cluster/`, трассы стенда в `Source/traces/`)
-- [Оркестратор как форма поставки](./_notes-ru/orchestrator-as-a-delivery-form.md) и [Тонкий шов против провайдера](./_notes-ru/thin-seam-vs-provider.md) — записи о решениях прежнего модуля, перенесены в записки
-
-## М12A — Домен платформы
-
-Пятнадцать уроков, и они открываются с необычной позиции: **М11 уже работает.** Контроллер кластера владеет своей конфигурацией в своём raft, воркер переживает свой сервер, захватывая слот, и ничего выше кластера не спрашивается — так что этому модулю приходится обосновывать, зачем вообще нужен слой сверху. Ровно три вещи, которых кластер знать не может: где единица среди кластеров, какому кластеру отдать новую и полон ли ответ, — и это **каталог каталогов**, а не хранилище конфигурации.
-
-**Домен — служба платформы, а не VMS** (ADR 0024). Держатель и его срок, перенос, доверие, люди и права, аварийный доступ, правки, которые член уносит домой, и секреты всего этого — `Source/w2cplatform/domain/` и `Source/w2cplatform/trust/`, без единого импорта подсистемы; подсистему домен знает только по разделу `domain:` её манифеста (ADR 0010, ADR 0031). Примеры модуля — на подсистеме курса `testsub`, камеры VMS — помеченный пример.
-
-Это делает его первым слоем в курсе, которому **разрешено быть недоступным**, — и в большей мере, чем показалось сначала. Без него единицы кластеров работают, оператор по-прежнему может отредактировать единицу в консоли её собственного кластера, и **мёртвый сервер по-прежнему переезжает**, потому что М11 положил обе зависимости переезда внутрь кластера. Останавливается выбор кластера для новой единицы, поиск поперёк кластеров и выдача сертификатов и токенов.
-
-Форма, которая делает это модулем, а не главой, — кампус: **три серверные, три кластера, один заказчик, один каталог.** У каждого кластера своё хранилище, и между ними ничего не реплицируется. А когда целый кластер темнеет, задача домена — честность, а не восстановление: его единицы находятся в сети того кластера, поэтому **перебалансировать их куда-то ещё значило бы получить воркеров, не дотягивающихся до мёртвой сети, и спрятать настоящую неисправность.**
-
-Оказывается, это вообще не база данных: домен читает то, что каждый кластер публикует объектами, — снимок контроллера и heartbeat'ы воркеров — и спрашивает по `ref`, имени, которое назвал манифест и дал сам домен, а никогда по локальному идентификатору кластера. Шесть редакций записки решений двигались всё время в одну сторону, а седьмая убрала последнюю базу данных в продукте.
-
-Поскольку писатель своих строк — сам кластер, именно кластер и есть то, что должно быть достижимо и защищено: урок 4 даёт каждому потоку кластер↔домен **mTLS от собственного корня домена** — сертификат называет сервер, никогда воркера, — и этот корень принадлежит заказчику, самоподписан намеренно, и над ним ничего нет. Разрешения живут в собственном хранилище каждого кластера, куда их приносит агент домена, и несут срок истечения, вместо того чтобы их запрашивали. Воркер никогда не видит ни человека, ни токена, ни разрешения.
-
-**Дальше — домен, который заботится о себе сам.** Коробка регистрируется в домене (урок 6) и получает свой сертификат от подписывающего, принадлежащего самому домену; у корня появляются сроки жизни и учение по ротации (урок 7), потому что сверху никто ничего не перевыдаст; домен разворачивает кластер в собственном облачном аккаунте заказчика (урок 8) и доказывает, что воркер не может определить, где он работает. Свой сервер обновлений и свой кэш прав на использование (урок 5) — то, что позволяет ему работать при исчезнувшем вендоре, а это и есть весь предмет М14.
-
-**Вторая часть — члены маленькие, их сотни, и они часто выключены** (уроки 10–15): коробка — кластер из одного, правка для выключенного члена хранится и уносится домой, общие настройки — подписанный документ за указателем, тревоги сливаются из отчётов, держатель домена садится на одну из коробок со сроком полномочий и переносится по файлу восстановления. Последний урок запечатывает всё, что домен держит и несёт: секреты домена — кольцом платформы, резервная копия — ключом, которого нет у хранителей, член уносит только своё через дверь домена, запечатанное его ключом, а ключи домена держит один процесс — подписывающий, — и консоль домена не держит ни одного (ADR 0032).
-
-- [Остатки о VMS к М12](./М12A_Domain/README.md); домен платформы — уроки [P/08–P/10](./Platform/README.md)
-- [Где живут базы данных](./where-the-database-lives.md) — шесть редакций, пришедших к одной базе на весь проект, и седьмая, которая убрала и её, когда конфигурацией завладел контроллер кластера; правило хранения, защищающее видео заказчика
-- [`Source/w2cplatform/domain/`](./Source/w2cplatform/domain/) и [`trust/`](./Source/w2cplatform/trust/) — код модуля (тесты в `Source/tests/domain/`, `Source/tests/test_domain_platform.py`, `Source/tests/test_domain_secrets.py`; юниты `w2c-domain`, `w2c-domain-console`, `w2c-domainagent` в `Source/deploy/domain/systemd/`), построенный поверх `w2cplatform/cluster/` из М11, с настоящим контроллером и настоящими воркерами в каждом тесте: каталог каталогов, где неполнота — это результат, размещение по кластерам по достижимости, теневой режим с ключом по ref, модель чтения из heartbeat'ов и консоль, подписывающий со сроками жизни и ротацией корня, люди, которые никогда не доходят до воркера, кластерно-локальные разрешения, регистрация по ваучеру или по одобрению, право на использование с льготным периодом, держатель со сроком и перенос, секреты, запечатанные везде
-
-## М12B — DomainVMS
-
-Четыре урока о том, что **VMS добавляет на домене платформы**, — и только об этом: держатель, доверие, перенос и секреты уже построил М12A. VMS приходит на домен разделом `domain:` манифестов `vms` и `rec` и своим воркером на держателе (`python3 -m vms.domainpart`, юнит `vms-domainpart`), который пишет книги VMS под `domain/vms/…` и просит у подписывающего токены объявленных манифестом видов (`stream`, `ask`). Первый урок — этот вклад подсистемы целиком. Дальше три урока, каждый со своим вопросом: как регистратор пишет камеру другого кластера по книге источников, которую несёт агент, и продолжает писать при выключенном домене; как камера, до которой не дотягивается никто — ни домен, ни тот, кто её пишет, — сама толкает свой поток на приёмник кластера записи по книге первичных; и как поток и желание идут по цепочке «объект — ретранслятор — центр», когда каждый уровень звонит только наверх.
-
-- [Указатель уроков](./М12B_DomainVMS/README.md) — начните здесь
-- [`Source/vms/domainpart/`](./Source/vms/domainpart/) — код модуля (тесты в `Source/tests/domainvms/`)
-
-## М13 — Observability
-
-**Он не вводит наблюдаемость — он её собирает.** Каждый модуль ниже уже отдаёт сигналы, определённые там, где был введён отказ, которому они понадобились: лестница проверок здоровья и возраст spool из М9, `camera_silent_seconds` из М9, время переезда из М11, отставание реплики из М12. Шесть сигналов на всю VMS, и модуль начинается с инвентаризации, а не с установки чего-либо.
-
-Трудным его делает одна фраза: **в датацентре отсутствие новостей — плохая новость; на устройстве отсутствие новостей — *отсутствие новостей*.** Площадка, перестав отвечать, может быть сломана, у неё может лежать аплинк, а в здании может пропасть электричество — четыре разные проблемы для четырёх разных людей и одинаковый сигнал в каждом случае. Система мониторинга, которая не умеет отличить *сломано* от *недостижимо*, либо будит кого-нибудь при каждой перезагрузке роутера, либо молчит сквозь настоящую аварию, а на практике делает и то и другое.
-
-Это сталкивается с правилом, которое знают все: **мониторинг не должен делить домен отказа с тем, что он мониторит**, — потому что Prometheus забирает метрики сам, а забирать через канал, которому вы перестали доверять, нельзя. Развязка — два наблюдателя с разными задачами: локальный, который видит всё и умирает вместе с площадкой, и удалённый, чья единственная задача — отличить молчание от здоровья. То есть **подробности локальны, сводка доменная** — уже в четвёртый раз, и это то самое правило, которое предсказало появление четвёртого типа данных.
-
-Он несёт и вторую лицензионную находку курса, более острую, чем у Nomad: **Grafana, Loki, Tempo и Mimir — это AGPLv3**, а §6 срабатывает на самом факте поставки, изменён код или нет. Prometheus, VictoriaMetrics, Thanos, Cortex, OTel Collector и Grafana Alloy — Apache 2.0. Позиция курса: учить Prometheus и **не поставлять дашборд**, что и как продуктовое решение лучше, поскольку оператору не должны быть нужны две консоли.
-
-- [Проектная записка](./М13_Observability/module-design.md) — парадокс наблюдателя, что значит молчание, проектирование алертов и проблема AGPL
+**M13 adds no scope either, for the opposite reason.** Observability shows the four scopes already present and operates at domain level. Its remote observer is another domain service; *a silent cluster is unreachable, not broken* applies M12's honesty about incomplete answers to metrics. It comes **before** the vendor because the vendor demo — *the vendor disappears for thirty days* — requires instrumentation already in place, and its canary stops according to an alert rule. It gets no VMS name because it builds no new scope needing one.
 
 ---
 
-## М14 — VendorVMS
+## The progression
 
-Пять уроков и модуль другого рода: он не строит никакой области продукта, потому что домен — его вершина. Над доменом сидит не слой, а **вендор** — отдельная организация на дальней стороне границы, через которую продукт спроектирован работать только в одном направлении.
+A shipped VMS reaches seven layers deep. Each layer has a module, and each module ends with something working.
 
-Тезис — то свойство, которое корпоративные покупатели безопасности требуют по имени: **продукт должен работать, когда вендор недостижим или исчез.** Демо построено обратным ходом от него: домену год, и в дату, которую выбирает студент, вендор исчезает целиком. Тридцать дней ничто из работавшего не останавливается; то, чего *не может* произойти, перечислено, а не подразумевается; на тридцать первый день у лицензии кончается льготный период, и она деградирует ровно так, как записала М12.
+| Module | Layer it builds | State |
+|---|---|---|
+| [**M10** — Platform](./Platform) | What knows nothing about video: store vocabulary, subsystem manifest and strict loader, units and slots, controller and placement, a worker under a slot, rights, secrets, events and resource, console, schema and drain, platform on a box and cluster (`configstore` on raft, identical `systemd` units per server). Specification lessons under ADR-0080: five normative sections and acceptance | **Moved** to [`Platform/`](./Platform) in stage B, ADR-0083; the M10 lessons and directory were removed at the end of stage B |
+| [**M10B** — ServerVMS](./%D0%9C10B_ServerVMS) | Seven subsystems (`vms`, `rec`, `live`, `det`, `detjob`, `survey`, `auto`): `driverpacksrc`, ObjectStorage archive, camera-holding worker, recorder, detectors, live-video gateway and scenarios | **Written** · 28 lessons |
+| [**M12A** — Domain](./%D0%9C12A_Domain) | 4 · Several clusters, one catalogue of catalogues<br>5 · Domain as its own root: enrollment, lifetimes, identity and secrets<br>7 · Its own update server and clusters it rents for itself — a platform service, `Source/w2cplatform/domain/` | **Written** · 15 lessons |
+| [**M12B** — DomainVMS](./%D0%9C12B_DomainVMS) | What VMS adds to the domain: source and primary books, cross-cluster streams, unreachable cameras and a relay chain — `Source/vms/domainpart/` | **In progress** · 4 lessons |
+| [**M13** — Observability](./%D0%9C13_Observability) | 6 · Prometheus and logs: collecting M9–M12 signals at the domain holder | **Designed** · 4 lessons |
+| [**M14** — VendorVMS](./%D0%9C14_VendorVMS) | *Not a layer.* MASA, licensing, publishing, hosting, and what a vendor must never be able to do | **Designed** · 5 lessons |
 
-Модуль — зеркальное отражение всего курса до него. М9–М12 спрашивали, что продукт обязан делать; этот спрашивает, **что вендору позволено и чего он не должен быть в состоянии сделать никогда**: поручиться за своё железо, но никогда самостоятельно не присоединить коробку к домену; выдать право на использование, но никогда не остановить запись, отказав в нём; опубликовать пакет, но никогда не протолкнуть его на прибор; сдать кластер в аренду, но никогда не держать корень заказчика. Правая колонка — список того, что более ранние черновики этого курса вендору бы позволили.
+**[GLOSSARY.md](./GLOSSARY.md)** defines every course term precisely: worker versus server, desired versus actual state, epoch and fencing, and the abbreviations that would otherwise go unexplained.
 
-Что принадлежит вендору по-настоящему: **MASA** и десятилетнее обязательство, которое подразумевает её эксплуатация; **лицензионная система** — база данных, один ключ подписи и подписанный документ, который домен проверяет офлайн, привязанный к идентификатору домена, а не к какому-либо железу, считаемый при допуске и никогда — против камеры, которая уже пишет; подпись и публикация пакетов и их раскатка по заказчикам с канарейкой, которая останавливает себя сама; инвентарь для поддержки — на усмотрение заказчика; и хостинговый бизнес как коммерческая возможность, которую модуль обрисовывает, не принимая. **Настоящая область OpenBao наконец появляется здесь** — динамические учётные данные для вендора, держащего секреты многих заказчиков, — после того как всё остальное, что когда-то отдавали vault, было убрано выдачей машинам собственных личностей.
+**[COURSE-PLAN.md](./COURSE-PLAN.md)** gives the full argument: module order, contents, and two structural cautions — license concentration (Nomad, Consul and Vault under one vendor's BUSL; the product depends on none and the cluster runs without an orchestrator, ADR 0021), and where secrets live without a product secret manager.
 
-- [Проектная записка](./М14_VendorVMS/module-design.md) — односторонняя граница, MASA, лицензионная система, публикация и раскатка, хостинговый бизнес
+**[ARCHITECTURE.md](./ARCHITECTURE.md)** describes the current system: five terms, what runs where, three stores, trust and failure matrices; then the fourteen steps that led there, with each motivating question and what it removed. Read it before the modules for a view of the destination.
 
-## Как написаны эти уроки
+**[`_notes-ru/`](./_notes-ru/README.md) contains notes about the project, not its documentation.** Readers of the code describe the whole system in their own words: one setting's path, a scenario down to each HTTP request, a Kubernetes comparison. Useful on a second pass after the lessons. Where they disagree with code, the code is authoritative.
 
-Через каждый урок проходят два соглашения, и именно из-за них материал такой длины, какой он есть.
+---
 
-**Каждый шаг даёт результат, который можно увидеть.** Процесс, которому можно послать сигнал, контейнер, который можно осмотреть, конвейер, чей выход можно проиграть, страница, на которую можно посмотреть, — а не код, принимаемый на веру. Там, где зависимость установить не удалось, урок всё равно доказывает её логику как-нибудь иначе, а не объявляет её.
+## M10 and M10B — ServerVMS
 
-**Каждый урок заменяет заглушку из предыдущего.** `camera_sim.py` становится настоящим конвейером, `filesink` становится `kvssink`, поддельные клиенты становятся boto3, фикстуры становятся настоящими фрагментами. Ничто и никогда не отстоит больше чем на один слой от уже проверенного.
+The recorder rebuilt in M11's form — **workers, resources and one controller** — and first prototyped on one box without a scheduler, KVS or database. On the GStreamer side, `driverpacksrc` plays files whose names stand in for RTSP addresses; the archive uses the product's ObjectStorage engine through the `obsd` socket with an epoch in the stream name. Then come the VMS controller — platform `SpecController` assembled from `vms.subsystem.yaml` (`w2c-controller@vms`), the sole placement writer — and `vmsworker`, DriverPack as a worker. The result is a **subsystem contract**: manifest, worker, configuration prefix and heartbeat. Detectors and the gateway implement the same contract; the platform knows it without knowing cameras. A tested boundary splits the module: M10 is the video-independent platform (eleven specification lessons under ADR-0080 since 2026-10-14; former M10A and M11_Cluster removed), and M10B contains its seven subsystems.
 
-Решения записаны вместе с их ценой. Там, где выбор слаб — пропущенный критерий приёмки, отданная возможность, лицензия, на которую стоит взглянуть юристу, — документы это говорят, а не проходят мимо молча.
+- [Platform, formerly M10 and M11](./Platform/README.md) · [design note](./Platform/module-design.md)
+- [M10B — subsystems](./%D0%9C10B_ServerVMS/README.md) · [design note](./%D0%9C10B_ServerVMS/module-design.md)
+- [`Source/`](./Source/README.md) contains the module code: two CAS platform stores, epoch allocation and leases, `driverpacksrc`, ObjectStorage client, `vmsworker`, `vmscontroller`, console, systemd units, identity by claim, resource events, video in volumes, resource as platform work, and the `testsub`/`testsub2` subsystems used to test the platform
+- The Go version of that contract is the `vmssubsystem` product in a separate repository. The course neither maintains nor follows it: lessons follow `Source/`, while Go evolves in the product
+
+Four root documents address the product rather than the lesson reader:
+[Product feedback](./%D0%9E%D0%91%D0%A0%D0%90%D0%A2%D0%9D%D0%90%D0%AF-%D0%A1%D0%92%D0%AF%D0%97%D0%AC-%D0%98%D0%97-%D0%9F%D0%A0%D0%9E%D0%94%D0%A3%D0%9A%D0%A2%D0%90.md) records what turning course code into a product revealed and what is fixed here; [Product automation](./%D0%90%D0%92%D0%A2%D0%9E%D0%9C%D0%90%D0%A2%D0%98%D0%97%D0%90%D0%A6%D0%98%D0%AF-%D0%92-%D0%9F%D0%A0%D0%9E%D0%94%D0%A3%D0%9A%D0%A2%D0%95.md) specifies moving the seventh subsystem to Go, existing and missing parts, order and exclusions; [Product events](./%D0%A1%D0%9E%D0%91%D0%AB%D0%A2%D0%98%D0%AF-%D0%92-%D0%9F%D0%A0%D0%9E%D0%94%D0%A3%D0%9A%D0%A2%D0%95.md) covers traffic classes, limit direction, writer-side suppression, durability by class and operator requirements; [Alarm state](./%D0%A1%D0%9E%D0%A1%D0%A2%D0%9E%D0%AF%D0%9D%D0%98%D0%95-%D0%A2%D0%A0%D0%95%D0%92%D0%9E%D0%93%D0%98.md) records the accepted acknowledgement decision and why implementation awaits the operator screen.
+
+## Cluster — P/01.3, P/02.4 and P/04
+
+The cluster no longer has a separate module. A replicated store is a second deployment of the same Platform norms: daemon and raft group in [P/01](./Platform/01-store/spec/01.3-store.norms.md), chapter 1.3; per-server service units in [P/02](./Platform/02-installer/spec/02.4-installer.norms.md), chapter 2.4; server failure in [P/04](./Platform/04-controller/spec/04-controller.norms.md). This was M10/11, Platform on a box and cluster; former M11_Cluster was removed on 2026-10-14. The same **controller, workers, resources and console** run across servers and survive any one server's failure. Code lives in `Source/w2cplatform/cluster/` and knows subsystems only through manifests. A platform `configstore` daemon runs per server; three daemons form one raft group. Objects are files in the writer server's directory. `systemd` holds identical processes per server (`w2c-*` platform units, subsystem worker units). **There is no orchestrator** (ADR 0021): the controller places units and workers claim names by CAS.
+
+A unit is assigned to a worker name in the cluster store, not to a process or server. A restarted process reads the same assignment; after server death the controller gives its units to live workers by rewriting assignment rows only. Resource and subsystem places stay with their disks: unavailable while the server is down, not lost. Configuration never left the store, so edits made during the failure are already present. A host script, not the controller, starts spare workers for the controller's reported shortage.
+
+The decisive fact is easy to miss: **two writers into one video stream cannot be merged.** No upper layer can reconcile them after the fact. This is the one module where a mistake corrupts customer video instead of stopping service. Fencing belongs at the data, not the coordinator: a CAS slot and an epoch in the stream name fence a returning old instance twice, at the slot and each epoch, preserving the archive. A zombie cannot be prevented from writing; its writes can be made harmless.
+
+**This alone is a complete product:** one cluster on its own raft, asking no higher layer for permission. A customer with one building needs no more. [VMS on the cluster](./%D0%9C10B_ServerVMS/28-vms-on-the-cluster.md), M10B, adds camera budgets, volumes, the recorder door and a volume timeline.
+
+- [P/02 chapter 2.4](./Platform/02-installer/spec/02.4-installer.norms.md), [P/01 chapter 1.3](./Platform/01-store/spec/01.3-store.norms.md), [P/04](./Platform/04-controller/spec/04-controller.norms.md): service units, users, directories, raft group and the pull-the-power drill (formerly M10/11)
+- [Platform design note](./Platform/module-design.md): the micromodule split
+- [`Source/w2cplatform/cluster/`](./Source/w2cplatform/cluster/README.md): cluster stores, catalogue, manifest-derived rights, platform process entry point; tests in `Source/tests/cluster/`, deployment in `Source/deploy/cluster/`, stand traces in `Source/traces/`
+- [Orchestrator as a delivery form](./_notes-ru/orchestrator-as-a-delivery-form.md) and [Thin seam versus provider](./_notes-ru/thin-seam-vs-provider.md): decisions moved from the former module to notes
+
+## M12A — Platform domain
+
+Fifteen lessons start from an unusual premise: **M11 already works.** The cluster controller owns configuration in its raft, a worker survives its server by claiming a slot, and nothing asks a higher layer. This module must therefore justify that layer. A cluster cannot know three things: where a unit is among clusters, which should receive a new one, and whether an answer is complete. This is a **catalogue of catalogues**, not a configuration store.
+
+**The domain is a platform service, not VMS** (ADR 0024). Holder and term, move, trust, people and rights, emergency access, edits carried home by a member, and their secrets live in `Source/w2cplatform/domain/` and `Source/w2cplatform/trust/`, without a subsystem import. A domain knows a subsystem only by its manifest's `domain:` section (ADR 0010, ADR 0031). Examples use course subsystem `testsub`; VMS cameras are explicitly labelled examples.
+
+It is the course's first layer **allowed to be unavailable**, more extensively than first expected. Units continue working; an operator can edit one through its own cluster console; **work still moves after a server dies**, because M11 put both move dependencies inside the cluster. Choosing a cluster for a new unit, cross-cluster lookup, certificate issuance and token issuance stop.
+
+The campus makes this a module rather than a chapter: **three server rooms, three clusters, one customer, one catalogue.** Each cluster owns its store; nothing replicates between them. If a whole cluster goes dark, the domain owes honesty rather than recovery: its units are on that cluster's network. **Rebalancing elsewhere would create workers unable to reach the dead network and hide the real failure.**
+
+It turns out not to be a database: the domain reads the controller snapshot and worker heartbeats each cluster publishes as objects, querying by `ref`, a name declared by the manifest and assigned by the domain, never by a local cluster identifier. Six revisions of the decision note moved in one direction; the seventh removed the product's final database.
+
+The cluster writes its own rows, so it must be reachable and protected. Lesson 4 gives every cluster↔domain stream **mTLS from the domain's own root**. A certificate names a server, never a worker. The intentionally self-signed root belongs to the customer, with nothing above it. Grants arrive in each cluster's own store via the domain agent and carry expiration, rather than being queried. Workers never see a person, token or grant.
+
+**Then the domain looks after itself.** An appliance enrolls (lesson 6) and receives a certificate from the domain's own signer. Root lifetimes and rotation drills follow in lesson 7 because no higher layer will reissue anything. The domain deploys a cluster in the customer's cloud account (lesson 8), proving that a worker cannot tell where it runs. Its own update server and license cache (lesson 5) let it survive a disappeared vendor: M14's subject.
+
+**The second part covers hundreds of small, often powered-off members** (lessons 10–15). A box is a one-member cluster; edits for an offline member wait to be carried home; shared settings are a signed document behind a pointer; alarms merge from reports; the holder runs on a box for a term and moves using a recovery file. The final lesson seals everything the domain keeps and carries: domain secrets with the platform ring, backups with a key absent from backup holders, and each member's own data for transport through the domain door encrypted with that member's key. One process — the signer — holds domain keys; the domain console holds none (ADR 0032).
+
+- [Remaining M12 VMS material](./%D0%9C12A_Domain/README.md); the platform domain is [P/08–P/10](./Platform/README.md)
+- [Where the databases live](./where-the-database-lives.md): six revisions arriving at one database, a seventh removing it when cluster configuration acquired an owner, and the storage rule protecting customer video
+- [`Source/w2cplatform/domain/`](./Source/w2cplatform/domain/) and [`trust/`](./Source/w2cplatform/trust/): code over M11's `w2cplatform/cluster/`, with real controller and workers in each test. Tests: `Source/tests/domain/`, `Source/tests/test_domain_platform.py`, `Source/tests/test_domain_secrets.py`. Units `w2c-domain`, `w2c-domain-console`, `w2c-domainagent`: `Source/deploy/domain/systemd/`. Subjects include incomplete catalogue answers, reachability placement, ref-keyed shadow mode, heartbeat read models and console, signer lifetimes and root rotation, people never reaching workers, cluster-local grants, voucher/approval enrollment, licenses and grace periods, term and holder move, and sealed secrets
+
+## M12B — DomainVMS
+
+Four lessons cover **what VMS adds to the platform domain**. M12A already built holder, trust, move and secrets. VMS contributes the `domain:` sections of `vms` and `rec` manifests and a holder worker (`python3 -m vms.domainpart`, unit `vms-domainpart`). It writes VMS books under `domain/vms/…` and requests manifest-declared `stream`/`ask` tokens from the signer. The first lesson covers the whole subsystem contribution. The next three ask how a recorder reads another cluster's camera through agent-carried source books and keeps recording with the domain off; how a camera unreachable by both domain and recorder pushes its stream to the recording cluster receiver through primary books; and how streams and desired state traverse a site–relay–centre chain where every level calls only upward.
+
+- [Lesson index](./%D0%9C12B_DomainVMS/README.md): start here
+- [`Source/vms/domainpart/`](./Source/vms/domainpart/): module code, tests in `Source/tests/domainvms/`
+
+## M13 — Observability
+
+**It collects observability rather than introduces it.** Earlier modules already emit signals defined where their refusals were introduced: M9's health-check ladder and spool age, M9's `camera_silent_seconds`, M11's move duration, M12's replica lag. Six signals cover VMS; the module starts with inventory rather than installation.
+
+The hard part is one sentence: **in a data centre, no news is bad news; on an appliance, no news is *no news*.** A silent site may be broken, have a failed uplink, or have lost building power: four problems for four people with the same signal. Monitoring unable to distinguish *broken* from *unreachable* either wakes someone on every router restart or misses a real outage; in practice it does both.
+
+This meets a familiar rule: **monitoring must not share the monitored system's failure domain**. Prometheus pulls metrics, but pulling over a distrusted channel is unreliable. The solution is two observers with different jobs: a local one that sees everything and dies with the site, and a remote one whose sole job is to distinguish silence from health. **Details stay local; summaries are domain-wide**, the fourth occurrence of the rule that predicted a fourth data type.
+
+The module also records the course's second licensing concern, sharper than Nomad's: **Grafana, Loki, Tempo and Mimir use AGPLv3**, whose §6 applies on distribution whether or not code changed. Prometheus, VictoriaMetrics, Thanos, Cortex, OTel Collector and Grafana Alloy use Apache 2.0. The course's position is to teach Prometheus and **ship no dashboard**; operators should not need two consoles.
+
+- [Design note](./%D0%9C13_Observability/module-design.md): observer paradox, meaning of silence, alert design and AGPL
+
+---
+
+## M14 — VendorVMS
+
+Five lessons form a different module. The domain is already the product's top, so this builds no product scope. Above the domain is a **vendor**, a separate organization beyond a boundary the product crosses in only one direction.
+
+The thesis is a property enterprise security buyers request by name: **the product must work when the vendor is unreachable or disappears**. The demo works backward from it: the domain is a year old, and on a date chosen by the student the vendor disappears completely. Nothing already working stops for thirty days. What *cannot* happen is enumerated, not implied. On day thirty-one the license grace period ends and degrades exactly as M12 specifies.
+
+M9–M12 asked what the product must do; this module asks **what a vendor may do, and what it must never be able to do**: vouch for hardware but never enroll a box into a domain on its own; issue a license but never stop recording by withholding it; publish a package but never push it onto an appliance; rent a cluster but never hold a customer's root. The latter boundaries are capabilities earlier drafts would have allowed.
+
+What belongs to the vendor: **MASA** and its ten-year operating commitment; **licensing** — a database, one signing key and a document verified offline by the domain, bound to domain identity rather than hardware and checked on admission rather than against a recording camera; package signing, publishing and customer rollout with a self-stopping canary; customer-controlled support inventory; and hosting as a business option described rather than adopted. **OpenBao finally has a proper scope here**: dynamic credentials for a vendor holding many customers' secrets, after machine identities removed its earlier proposed duties.
+
+- [Design note](./%D0%9C14_VendorVMS/module-design.md): one-way boundary, MASA, licensing, publishing, rollout and hosting
+
+## How the lessons are written
+
+Two conventions shape every lesson and account for the material's length.
+
+**Every step produces an observable result.** A process to signal, a container to inspect, pipeline output to play, a page to view — rather than code accepted on trust. If a dependency cannot be installed, the lesson demonstrates its logic another way instead of asserting it.
+
+**Every lesson replaces a previous stub.** `camera_sim.py` becomes a real pipeline; `filesink` becomes `kvssink`; fake clients become boto3; fixtures become real fragments. Nothing stands more than one layer away from something already checked.
+
+Decisions include their costs. Missing acceptance criteria, surrendered capabilities and licenses needing legal review are stated explicitly.

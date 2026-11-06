@@ -11,7 +11,6 @@ ready	Platform/08-domain	-
 ready	Platform/09-agent	-
 ready	Platform/10-domain-console	-
 ready	Platform/common	-
-debt	Platform/lessons.tsv	138
 debt	Platform/module-design.md	17190
 debt	tools/normgen/README.md	9660
 debt	tools/normgen/admin_judge.py	537
