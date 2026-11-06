@@ -234,10 +234,18 @@ def provenance():
     forms = [SCHEMA, RELATIONS, LAYERS, SCALARS, VERSIONS / "go.mod", VERSIONS / "go.sum"]
     forms = list(dict.fromkeys(p for src in forms for p in
                               (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src])))
-    return {"form": [entry(p) for p in forms],
-            "generator": entry(Path(__file__).resolve()),
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
-            "handwritten": [entry(RUNTIME / n) for n in RUNTIME_FILES], "judge": entry(JUDGE)}
+    result = {"form": [entry(p) for p in forms],
+              "generator": entry(Path(__file__).resolve()),
+              "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
+              "handwritten": [entry(RUNTIME / n) for n in RUNTIME_FILES], "judge": entry(JUDGE)}
+    supplement = ROOT / "Platform/06-console/forms/numeric-loader.cases.tsv"
+    if supplement.is_file():
+        rows = tsv_input.read(supplement, names=("case", "input", "expect", "relation", "norm"), root=ROOT).rows
+        sources = [supplement] + [supplement.parent / row["input"] for _, row in rows]
+        sources = dict.fromkeys(p for src in sources for p in
+                                (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src]))
+        result["judge_inputs"] = [entry(p) for p in sources]
+    return result
 
 
 # Заготовки YOURS других частей, которые часть loader кладёт уже подключёнными (одна строка к пакету manifest);
