@@ -178,6 +178,8 @@ func Check(code int, output []byte, spec string) error {
 
 func compare(want, got any, rule string) bool {
 	switch rule {
+	case "turn":
+		return turnEqual(want, got)
 	case "value":
 		return equalJSONValue(want, got)
 	case "subset":
@@ -248,6 +250,61 @@ func compare(want, got any, rule string) bool {
 	}
 	return false
 }
+
+// turnEqual compares one complete response. Attempt history belongs to this call;
+// release, done, not_held and stop are ordinary values and never reset it.
+func turnEqual(want, got any) bool {
+	seen, current := map[string]bool{}, ""
+	var walk func(any, any) bool
+	walk = func(want, got any) bool {
+		switch w := want.(type) {
+		case map[string]any:
+			g, ok := got.(map[string]any)
+			if !ok || len(w) != len(g) {
+				return false
+			}
+			for k, v := range w {
+				actual, has := g[k]
+				if !has {
+					return false
+				}
+				mark, marked := v.(string)
+				if k == "holder" && marked && (mark == "@new" || mark == "@same") {
+					label, ok := actual.(string)
+					if !ok || label == "" || strings.HasPrefix(label, "@") {
+						return false
+					}
+					if mark == "@new" {
+						if seen[label] {
+							return false
+						}
+						seen[label], current = true, label
+					} else if current == "" || label != current {
+						return false
+					}
+				} else if !walk(v, actual) {
+					return false
+				}
+			}
+			return true
+		case []any:
+			g, ok := got.([]any)
+			if !ok || len(w) != len(g) {
+				return false
+			}
+			for i, v := range w {
+				if !walk(v, g[i]) {
+					return false
+				}
+			}
+			return true
+		default:
+			return equalJSONValue(want, got)
+		}
+	}
+	return walk(want, got)
+}
+
 func raw(v any) ([]byte, bool) {
 	switch x := v.(type) {
 	case []byte:

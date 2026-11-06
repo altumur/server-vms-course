@@ -3184,6 +3184,22 @@ common/values-by-type cases.tsv 76 vectors read	translated
 common/values-by-type cases.tsv 78 vectors read	translated
 common/values-by-type cases.tsv 81 vectors read	translated
 common/values-by-type cases.tsv 82 vectors read	translated
+common/turn cases.tsv 36 vectors	translated
+common/turn cases.tsv 37 vectors	translated
+common/turn cases.tsv 38 vectors	translated
+common/turn cases.tsv 39 vectors	translated
+common/turn cases.tsv 40 vectors	translated
+common/turn cases.tsv 41 vectors	translated
+common/turn cases.tsv 42 vectors	translated
+common/turn cases.tsv 43 vectors	translated
+common/turn cases.tsv 44 vectors	translated
+common/turn cases.tsv 45 vectors	translated
+common/turn cases.tsv 46 vectors	translated
+common/turn cases.tsv 47 vectors	translated
+common/turn cases.tsv 48 vectors	translated
+common/turn cases.tsv 49 vectors	translated
+common/turn cases.tsv 50 vectors	translated
+common/turn cases.tsv 51 vectors	translated
 06-console/requests-body requests_body.tsv	excluded: a layout test (wire.tsv)
 06-console/requests-body requests_body.tsv 49	excluded: no input declaration selects the line
 06-console/requests-body requests_body.tsv 50	excluded: no input declaration selects the line
@@ -3437,3 +3453,36 @@ common/tombstone cases.tsv 21	excluded: no input declaration selects the line
 common/tombstone cases.tsv 22	excluded: no input declaration selects the line
 common/tombstone cases.tsv 23	excluded: no input declaration selects the line
 common/tombstone cases.tsv 24	excluded: no input declaration selects the line
+common/turn cases.tsv 3	excluded: no input declaration selects the line
+common/turn cases.tsv 4	excluded: no input declaration selects the line
+common/turn cases.tsv 5	excluded: no input declaration selects the line
+common/turn cases.tsv 6	excluded: no input declaration selects the line
+common/turn cases.tsv 7	excluded: no input declaration selects the line
+common/turn cases.tsv 8	excluded: no input declaration selects the line
+common/turn cases.tsv 9	excluded: no input declaration selects the line
+common/turn cases.tsv 10	excluded: no input declaration selects the line
+common/turn cases.tsv 11	excluded: no input declaration selects the line
+common/turn cases.tsv 12	excluded: no input declaration selects the line
+common/turn cases.tsv 13	excluded: no input declaration selects the line
+common/turn cases.tsv 14	excluded: no input declaration selects the line
+common/turn cases.tsv 15	excluded: no input declaration selects the line
+common/turn cases.tsv 16	excluded: no input declaration selects the line
+common/turn cases.tsv 17	excluded: no input declaration selects the line
+common/turn cases.tsv 18	excluded: no input declaration selects the line
+common/turn cases.tsv 19	excluded: no input declaration selects the line
+common/turn cases.tsv 20	excluded: no input declaration selects the line
+common/turn cases.tsv 21	excluded: no input declaration selects the line
+common/turn cases.tsv 22	excluded: no input declaration selects the line
+common/turn cases.tsv 23	excluded: no input declaration selects the line
+common/turn cases.tsv 24	excluded: no input declaration selects the line
+common/turn cases.tsv 25	excluded: no input declaration selects the line
+common/turn cases.tsv 26	excluded: no input declaration selects the line
+common/turn cases.tsv 27	excluded: no input declaration selects the line
+common/turn cases.tsv 28	excluded: no input declaration selects the line
+common/turn cases.tsv 29	excluded: no input declaration selects the line
+common/turn cases.tsv 30	excluded: no input declaration selects the line
+common/turn cases.tsv 31	excluded: no input declaration selects the line
+common/turn cases.tsv 32	excluded: no input declaration selects the line
+common/turn cases.tsv 33	excluded: no input declaration selects the line
+common/turn cases.tsv 34	excluded: no input declaration selects the line
+common/turn cases.tsv 35	excluded: no input declaration selects the line

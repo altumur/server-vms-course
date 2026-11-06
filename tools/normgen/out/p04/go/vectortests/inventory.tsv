@@ -861,6 +861,22 @@ common/turn cases.tsv 28	excluded: kind 'signer': not this consumer (README «Wh
 common/turn cases.tsv 29	excluded: kind 'signer': not this consumer (README «Who performs it»)
 common/turn cases.tsv 30	excluded: kind 'signer': not this consumer (README «Who performs it»)
 common/turn cases.tsv 35	excluded: kind 'signer': not this consumer (README «Who performs it»)
+common/turn cases.tsv 36	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 37	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 38	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 39	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 40	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 41	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 42	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 43	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 44	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 45	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 46	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 47	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 48	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 49	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 50	excluded: kind 'operations': not this consumer (README «Who performs it»)
+common/turn cases.tsv 51	excluded: kind 'operations': not this consumer (README «Who performs it»)
 common/turn cases.tsv 3	translated
 common/turn cases.tsv 4	translated
 common/turn cases.tsv 5	translated

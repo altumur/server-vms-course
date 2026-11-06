@@ -4,11 +4,15 @@ import hashlib
 import json
 import re
 import shutil
+import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 import check_forms
+import check_cyrillic
 
 ROOT = Path(__file__).resolve().parents[3]
 LESSON = ROOT / "Platform/01-store"
@@ -1184,6 +1188,198 @@ class FiniteProfile(unittest.TestCase):          # конечный профил
                 self.wpath.write_text(json.dumps(d), encoding="utf-8")
                 errors = check_forms.check_deletion_body_witnesses(self.wpath)[0]
                 self.assertTrue(any(needle in e for e in errors), errors)
+
+
+class CyrillicJudge(unittest.TestCase):
+    """ADR-0121 (8): source mutations, the two exceptions and monotone debt."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        self.debt = self.root / "debt.tsv"
+        self.debt.write_text(check_cyrillic.HEADER + "\n", encoding="utf-8")
+
+    def put(self, name, text):
+        path = self.root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(text if isinstance(text, bytes) else text.encode("utf-8"))
+        return path
+
+    def judge(self, **kwargs):
+        return check_cyrillic.check(self.root, self.debt, **kwargs)
+
+    def registry(self, *rows):
+        self.debt.write_text(check_cyrillic.HEADER + "\n" + "\n".join(rows) + "\n", encoding="utf-8")
+
+    def test_requested_source_mutants(self):
+        for name in ("Platform/01-store/journal/corrections.tsv", "Platform/02-installer/data/test.shell.html",
+                     "tools/normgen/runtime/door.go", "Platform/explanations/notes.md",
+                     "Platform/.hidden/source.txt"):
+            with self.subTest(name=name):
+                path = self.put(name, "// Cyrillic: Ж\n")
+                self.assertTrue(any(name in e and "new/increased" in e for e in self.judge()[0]))
+                path.unlink()
+
+    def test_only_declared_mirror_homes_are_exempt(self):
+        for name in ("Platform/ru/README.md", "Platform/common/ru/wire.tsv", "Platform/01-store/ru/spec/norms.md"):
+            self.put(name, "Русский перевод")
+        self.assertEqual(self.judge()[0], [])
+        for name in ("tools/normgen/ru/code.go", "Platform/01-store/code/ru/code.go", "Platform/explanations/ru/note.md"):
+            with self.subTest(name=name):
+                path = self.put(name, "Ж")
+                self.assertTrue(self.judge()[0])
+                path.unlink()
+
+    def test_localization_ru_column_only_by_header(self):
+        for header, row in (("key\ten\tru", "hello\tHello\tПривет"),
+                            ("# ru\tkey\ten", "Привет\thello\tHello")):
+            self.put(check_cyrillic.LOCALIZATION, header + "\n" + row + "\n")
+            self.assertEqual(self.judge()[0], [])
+        for row in ("Ж\tHello\tПривет", "hello\tЖ\tПривет"):
+            self.put(check_cyrillic.LOCALIZATION, "key\ten\tru\n" + row + "\n")
+            self.assertTrue(self.judge()[0])
+
+    def test_localization_comments_headers_and_other_paths_are_not_exempt(self):
+        for text in ("# Ж\nkey\ten\tru\na\tb\tПривет\n", "key\ten\tru\tЖ\na\tb\tПривет\td\n"):
+            self.put(check_cyrillic.LOCALIZATION, text)
+            self.assertTrue(self.judge()[0])
+        (self.root / check_cyrillic.LOCALIZATION).unlink()
+        self.put("Platform/01-store/data/localization.tsv", "key\ten\tru\na\tb\tПривет\n")
+        self.assertTrue(self.judge()[0])
+
+    def test_localization_malformed_shape_fails_without_letters(self):
+        for text in ("", "key\ten\n", "key\ten\tru\tru\n", "key\ten\tru\na\tb\n",
+                     "# comment\na\tb\tc\n"):
+            with self.subTest(text=text):
+                self.put(check_cyrillic.LOCALIZATION, text)
+                self.assertTrue(self.judge()[0])
+
+    def test_unicode_letters_including_new_and_supplementary_blocks(self):
+        self.assertEqual(sum(high - low + 1 for low, high in check_cyrillic.LETTER_RANGES), 449)
+        letters = "Ж\u0481\u048a\u052f\u1c80\u1c89\u1c8a\u1d2b\u1d78\ua640\ua67f\ua69d\U0001e030\U0001e06d"
+        self.put("Platform/01-store/spec/norms.md", letters)
+        counts, errors, _ = check_cyrillic.scan(self.root)
+        self.assertEqual(errors, [])
+        self.assertEqual(sum(counts.values()), len(letters))
+        self.put("Platform/01-store/spec/norms.md", "Latin\u0482\u0483\u2de0é漢字")
+        self.assertEqual(self.judge()[0], [])             # Cyrillic signs/marks are not letters
+
+    def test_non_utf8_does_not_hide_valid_cyrillic(self):
+        self.put("tools/normgen/data.bin", b"\xff\x00" + "Ж".encode())
+        errors, stats = self.judge()
+        self.assertTrue(errors)
+        self.assertEqual(stats["cyrillic_non_utf8"], 1)
+
+    def test_existing_debt_is_exact_per_file(self):
+        self.put("Platform/01-store/a.md", "ЖЖ")
+        self.registry("debt\tPlatform/01-store/a.md\t2")
+        before = self.debt.read_bytes()
+        self.assertEqual(self.judge()[0], [])
+        self.assertEqual(self.debt.read_bytes(), before)    # default check is read-only
+        self.put("Platform/01-store/b.md", "Ж")
+        self.assertTrue(self.judge()[0])
+        (self.root / "Platform/01-store/b.md").unlink()
+        self.put("Platform/01-store/a.md", "ЖЖЖ")
+        self.assertTrue(self.judge()[0])
+
+    def test_shrink_lowers_and_removes_deleted_debt(self):
+        self.put("Platform/01-store/a.md", "Ж")
+        self.registry("debt\tPlatform/01-store/a.md\t2", "debt\tPlatform/01-store/deleted.md\t3")
+        self.assertEqual(len(self.judge()[0]), 2)
+        self.assertEqual(self.judge(shrink=True)[0], [])
+        self.assertEqual(check_cyrillic.load_debt(self.debt)[:2], ({"Platform/01-store/a.md": 1}, set()))
+        self.assertEqual(self.judge()[0], [])
+
+    def test_shrink_refuses_new_or_increased_debt_and_preserves_bytes(self):
+        self.put("Platform/01-store/a.md", "ЖЖ")
+        for row in ("debt\tPlatform/01-store/a.md\t1", "debt\tPlatform/01-store/other.md\t10"):
+            self.registry(row)
+            before = self.debt.read_bytes()
+            self.assertTrue(self.judge(shrink=True)[0])
+            self.assertEqual(self.debt.read_bytes(), before)
+
+    def test_missing_registry_cannot_be_bootstrapped_by_shrink(self):
+        self.debt.unlink()
+        self.assertTrue(self.judge(shrink=True)[0])
+        self.assertFalse(self.debt.exists())
+
+    def test_ready_clean_unit_stays_ready_and_cannot_acquire_debt(self):
+        self.put("Platform/01-store/a.md", "English")
+        self.assertEqual(self.judge(declare_ready=["Platform/01-store"])[0], [])
+        self.assertEqual(check_cyrillic.load_debt(self.debt)[1], {"Platform/01-store"})
+        self.assertEqual(self.judge(shrink=True)[0], [])
+        before = self.debt.read_bytes()
+        self.put("Platform/01-store/a.md", "Ж")
+        self.assertTrue(self.judge(shrink=True)[0])
+        self.assertEqual(self.debt.read_bytes(), before)
+
+    def test_ready_dirty_or_missing_or_excluded_unit_refused(self):
+        self.put("Platform/01-store/a.md", "Ж")
+        self.registry("debt\tPlatform/01-store/a.md\t1")
+        for unit in ("Platform/01-store", "Platform/missing", "Platform/01-store/a.md",
+                     "../Platform", "Platform/ru", "VMS/01-db"):
+            before = self.debt.read_bytes()
+            self.assertTrue(self.judge(declare_ready=[unit])[0], unit)
+            self.assertEqual(self.debt.read_bytes(), before)
+
+    def test_registry_malformed_duplicate_and_ready_debt_conflict(self):
+        for row in ("debt\t../escape\t1", "debt\tPlatform/a\t0", "debt\tPlatform/a\t١",
+                    "debt\tPlatform/a\t-1", "debt\tPlatform/a\t1\nready\tPlatform/a\t-",
+                    "debt\tPlatform/a\t1\ndebt\tPlatform/a\t2", "ready\tPlatform\t-\ndebt\tPlatform/a\t1",
+                    "debt\tPlatform/ru/a\t1", "debt\tPlatform//a\t1", "debt\tPlatform/a\\b\t1",
+                    "anything\tPlatform/a\t1"):
+            self.registry(row)
+            self.assertTrue(check_cyrillic.load_debt(self.debt)[2], row)
+        self.debt.write_text("wrong header\n")
+        self.assertTrue(self.judge()[0])
+
+    def test_checkout_uses_tracked_including_staged_hidden_source(self):
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True, capture_output=True)
+        self.put("Platform/untracked.md", "Ж")
+        self.assertEqual(self.judge()[0], [])
+        subprocess.run(["git", "-C", str(self.root), "add", "Platform"], check=True, capture_output=True)
+        self.assertTrue(self.judge()[0])
+        self.put("Platform/untracked.md", "English")
+        self.put("tools/normgen/.hidden.go", "// Ж")
+        self.assertEqual(self.judge()[0], [])
+        subprocess.run(["git", "-C", str(self.root), "add", "tools"], check=True, capture_output=True)
+        self.assertTrue(self.judge()[0])
+
+    def test_git_free_export_scans_hidden_but_skips_metadata(self):
+        self.put("Platform/__pycache__/cache.pyc", "Ж")
+        self.put("Platform/.git/config", "Ж")
+        self.assertEqual(self.judge()[0], [])
+        self.put("Platform/.source/x.txt", "Ж")
+        self.assertTrue(self.judge()[0])
+
+    def test_source_symlinks_fail_without_reading_target(self):
+        target = self.put("outside.txt", "secret Ж")
+        (self.root / "Platform").mkdir()
+        (self.root / "Platform/link.md").symlink_to(target)
+        self.assertTrue(self.judge()[0])
+
+    def test_special_file_and_missing_root_fail_without_hanging(self):
+        path = self.root / "Platform/data.pipe"
+        path.parent.mkdir()
+        os.mkfifo(path)
+        self.assertTrue(any("not a regular file" in e for e in self.judge()[0]))
+        self.assertTrue(check_cyrillic.check(self.root / "missing", self.debt)[0])
+
+    def test_invalid_localization_also_blocks_shrink(self):
+        self.put(check_cyrillic.LOCALIZATION, "key\ten\tru\na\tb\n")
+        before = self.debt.read_bytes()
+        self.assertTrue(self.judge(shrink=True)[0])
+        self.assertEqual(self.debt.read_bytes(), before)
+
+    def test_cli_default_is_read_only_and_fails_mutant(self):
+        self.put("Platform/01-store/journal/a.tsv", "Ж")
+        before = self.debt.read_bytes()
+        result = subprocess.run([sys.executable, "-B", str(Path(check_cyrillic.__file__)),
+                                 "--root", str(self.root), "--debt", str(self.debt)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("new/increased debt", result.stdout)
+        self.assertEqual(self.debt.read_bytes(), before)
 
 
 if __name__ == "__main__":

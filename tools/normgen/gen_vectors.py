@@ -838,6 +838,8 @@ package vectortests
 
 import (
 	"encoding/json"
+	"io"
+	"math/big"
 	"reflect"
 	"sort"
 	"strings"
@@ -911,7 +913,16 @@ func checkBy(t *testing.T, where string, f func() vectoradapter.Answer, code int
 	case compare == "secret":
 		secret(w, got, &errs)
 	case compare == "turn":
-		turn(w, got, &errs)
+		// This comparison retains numeric lexemes; the other draft comparisons
+		// keep their existing norm/decoded path unchanged.
+		encoded, err := json.Marshal(a.Value)
+		turnWant, wantOK := turnJSON(want)
+		turnGot, gotOK := turnJSON(string(encoded))
+		if err != nil || !wantOK || !gotOK {
+			errs = append(errs, "$: turn requires one JSON value")
+			break
+		}
+		turn(turnWant, turnGot, &errs)
 	case compare == "secret-domain":
 		secretDomain(w, got, &errs)
 	case strings.HasPrefix(compare, "round:"):
@@ -1227,6 +1238,52 @@ func round(exp, act any, spec string, errs *[]string) {
 	}
 }
 
+func turnJSON(text string) (any, bool) {
+	dec := json.NewDecoder(strings.NewReader(text))
+	dec.UseNumber()
+	var value, extra any
+	if dec.Decode(&value) != nil {
+		return nil, false
+	}
+	return value, dec.Decode(&extra) == io.EOF
+}
+
+// turnSame compares JSON numbers exactly by value without a Float64 fallback.
+func turnSame(want, got any) bool {
+	switch w := want.(type) {
+	case json.Number:
+		g, ok := got.(json.Number)
+		a, aOK := new(big.Rat).SetString(string(w))
+		b, bOK := new(big.Rat).SetString(string(g))
+		return ok && aOK && bOK && a.Cmp(b) == 0
+	case map[string]any:
+		g, ok := got.(map[string]any)
+		if !ok || len(w) != len(g) {
+			return false
+		}
+		for k, v := range w {
+			actual, has := g[k]
+			if !has || !turnSame(v, actual) {
+				return false
+			}
+		}
+		return true
+	case []any:
+		g, ok := got.([]any)
+		if !ok || len(w) != len(g) {
+			return false
+		}
+		for i, v := range w {
+			if !turnSame(v, g[i]) {
+				return false
+			}
+		}
+		return true
+	default:
+		return reflect.DeepEqual(want, got)
+	}
+}
+
 // turn — turn cases.tsv: actions one per event; write.holder "@new" — a new non-empty mark never seen before, "@same" —
 // the mark bound by an earlier "@new" (an unbound "@same" is an error); then by value.
 func turn(exp, act any, errs *[]string) {
@@ -1246,7 +1303,7 @@ func turn(exp, act any, errs *[]string) {
 				got, _ := aw["holder"].(string)
 				switch ww["holder"] {
 				case "@new":
-					if got == "" || seen[got] {
+					if got == "" || strings.HasPrefix(got, "@") || seen[got] {
 						*errs = append(*errs, "$["+strconvI(i)+"].write.holder: want a new mark, got "+show(aw["holder"]))
 						return
 					}
@@ -1276,7 +1333,7 @@ func turn(exp, act any, errs *[]string) {
 				w = cp
 			}
 		}
-		if !reflect.DeepEqual(ae[i], w) {
+		if !turnSame(w, ae[i]) {
 			*errs = append(*errs, "$["+strconvI(i)+"]: "+show(ae[i])+", want "+show(w))
 		}
 	}
@@ -1551,17 +1608,20 @@ def provenance():
                 (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src]))]
     generators = [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))]
     decls, known = plan(ROOT)
+    turn_sources = ([ROOT / "Platform/common/vectors/turn/README.md", ROOT / "Platform/common/contracts/turn.md"]
+                    if any(d["package"] == "common/turn" for d in decls) else [])
     if L.key == "06-console":
         import wire
         runs, _ = wire.expand(ROOT, L.key)
         paths = {package_dir(ROOT, r.binding.package) / r.binding.table for r in runs}
-        forms = sorted(paths | {ROOT / wire.FORM, ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS})
+        forms = sorted(paths | {ROOT / wire.FORM, ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS}
+                       | set(turn_sources))
         return {"form": entries(forms), "generator": entry(Path(__file__).resolve()), "generators": generators,
                 "handwritten": [entry(HERE / p) for p in ("wire_api_p06.py", "wire.py", "wire_vectors.py",
                     "vector_consumers.py", "common_vectors.py", "wirert/full/go/check.go", "doorrt2/go/schema.go")],
                 "judge": entry(HERE / "test_wire_api_p06.py"),
                 "judges": [entry(HERE / p) for p in ("test_gen_vectors_lessons.py", "test_wire_full.py",
-                    "test_wire_vectors.py", "test_contracts.py", "wire_fakes.py")]}
+                    "test_wire_vectors.py", "test_contracts.py", "wire_fakes.py", "test_turn_wire.py", "kit/test_p06_turn.py")]}
     if L.key == "02-installer":
         import wire_vectors
         runs, _ = wire_vectors.wire.expand(ROOT, L.key)
@@ -1571,7 +1631,7 @@ def provenance():
                 "handwritten": [entry(HERE / p) for p in ("wire.py", "wire_vectors.py", "vector_consumers.py", "wirert/go/check.go",
                                                           "doorrt2/go/schema.go")], "judge": entry(JUDGE),
                 "judges": [entry(HERE / p) for p in ("test_wire_vectors.py", "test_wire.py", "test_consumer_packages.py", "test_wire_full.py", "wire_fakes.py")]}
-    forms = sorted({read_table(ROOT, d)[1] for d in decls}) + [ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS]
+    forms = sorted({read_table(ROOT, d)[1] for d in decls}) + [ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS] + turn_sources
     if any(d.get("_form") for d in decls):
         forms.append(ROOT / "Platform/common/vectors/wire.tsv")
     hand = ["vector_consumers.py", "consumer_vectors.py"]
@@ -1580,7 +1640,8 @@ def provenance():
     return {"form": entries(forms), "generator": entry(Path(__file__).resolve()), "generators": generators,
             "handwritten": [entry(HERE / p) for p in hand], "judge": entry(JUDGE),
             "judges": [entry(HERE / p) for p in ("test_consumer_packages.py", "test_gen_vectors_lessons.py",
-                                                "test_wire_full.py", "wire_fakes.py")]}
+                                                "test_wire_full.py", "wire_fakes.py")
+                       + (("test_turn_wire.py",) if turn_sources else ())]}
 
 
 KIT_MD = """
@@ -1624,7 +1685,11 @@ def lesson_kit_md():
             "cell; stand adapters receive the argument file bytes. Native output is validated before comparisons\n"
             "and assertion ignores. Native refusals retain their published exit codes; a panic or an unimplemented\n"
             "adapter is an execution error. `common/family-read` uses the kit's `families`. Layouts and inactive\n"
-            "surfaces are listed as excluded, with their reasons, in `vectortests/inventory.tsv`.\n")
+            "surfaces are listed as excluded, with their reasons, in `vectortests/inventory.tsv`.\n"
+            "`common/turn` selects only operations for P/06. With part `contracts`, the ordinary Turn adapter\n"
+            "substitutes the current attempt label for input read `@same` before calling the turn algorithm.\n"
+            "Its output contains real labels; `compare=turn` checks fresh/current labels and every other value.\n"
+            "`held` proves turn capture only; operations-epoch, worker execution and real-IO duties remain separate.\n")
     return head + (
         "Build `go build -o bin/vectors ./cmd/vectors`. The profile maps each package of the lesson:\n"
         "`vectors: <package>: 'bin/vectors {input}'` (the unified command: " + ", ".join(unified) + ") and the stand keys\n"

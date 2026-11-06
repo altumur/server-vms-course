@@ -20,7 +20,9 @@ import vector_consumers
 FORM = "Platform/common/vectors/wire.tsv"
 CONSUMERS = "Platform/common/vectors/consumers.tsv"
 COLUMNS = ["package", "table", "surface", "header", "inputs", "files", "expect", "compare", "markers", "native", "norm"]
-COMPARES = {"value", "subset", "raw", "set", "object-sets", "lines-value", "lines-subset"}
+COMPARES = {"value", "subset", "raw", "set", "object-sets", "lines-value", "lines-subset", "turn"}
+TURN_BINDING = ("common/turn", "cases.tsv", "vectors")
+TURN_MARKS = ("@new", "@same")
 TYPES = {"object", "array", "string", "number", "boolean", "null", "value", "bytes"}
 FRAMES = {"json", "json-lf", "raw"}
 DECODES_CELL = {"cell", "json", "text"}
@@ -206,12 +208,13 @@ def check_value(v, where, *, group=False, prefix=False, in_object=False):
         raise WireError(f"{where}: no constructor in {sorted(v)}")
 
 
-def check_compare(c, where, variants):
+def check_compare(c, where, variants, *, turn=False):
+    allowed = COMPARES if turn else COMPARES - {"turn"}
     if isinstance(c, str):
-        if c not in COMPARES:
+        if c not in allowed:
             raise WireError(f"{where}: compare {c!r}")
         return
-    if not isinstance(c, dict) or set(c) - set(variants) or any(x not in COMPARES for x in c.values()):
+    if not isinstance(c, dict) or set(c) - set(variants) or any(not isinstance(x, str) or x not in allowed for x in c.values()):
         raise WireError(f"{where}: compare {c!r}")
 
 
@@ -239,7 +242,7 @@ def check_asserts(a, where, group, prefix=False):
             raise WireError(f"{w}: whole (a boolean) goes with no-leak only: {x!r}")
         if x.get("decode", "json") != "json":
             raise WireError(f"{w}: decode {x['decode']!r}")
-        if "compare" in x and (x["compare"] not in COMPARES or x["compare"].startswith("lines-")):
+        if "compare" in x and (x["compare"] not in COMPARES - {"turn"} or x["compare"].startswith("lines-")):
             raise WireError(f"{w}: compare {x['compare']!r}")
         if "value" in x:
             check_value(x["value"], w + ".value", group=group, prefix=prefix)
@@ -302,6 +305,49 @@ def parse(root, keys=None, surfaces=None):
         check_binding(root, b, w)
         out.append(b)
     return out
+
+
+def check_turn_binding(b, where):
+    """The approved whole-value comparison is not an assertion/marker alias."""
+    rules = [b.compare] if isinstance(b.compare, str) else list(b.compare.values()) if isinstance(b.compare, dict) else []
+    if "turn" not in rules:
+        return False
+    if b.key != TURN_BINDING:
+        raise WireError(f"{where}: compare turn is only for {TURN_BINDING}")
+    if b.markers != []:
+        raise WireError(f"{where}: compare turn requires markers []")
+    for d in b.inputs:
+        if not isinstance(d.get("when"), str):
+            raise WireError(f"{where}: compare turn requires explicit owner/kind when")
+    for e in b.expect:
+        if "ignore" in e or "assert" in e:
+            raise WireError(f"{where}: compare turn forbids ignore/assert")
+        v = e["value"]
+        if set(v) != {"column", "decode"} or v["decode"] != "json":
+            raise WireError(f"{where}: compare turn requires a column decoded as json, without aliases")
+    return True
+
+
+def check_turn_marks(value, where):
+    """Static expected marks; actual labels are judged only by the Go matcher."""
+    seen_new = False
+
+    def walk(v, key=None):
+        nonlocal seen_new
+        if isinstance(v, dict):
+            for k, child in v.items():
+                walk(child, k)
+        elif isinstance(v, list):
+            for child in v:
+                walk(child)
+        elif isinstance(v, str) and v.startswith("@"):
+            if key != "holder" or v not in TURN_MARKS:
+                raise WireError(f"{where}: unknown turn mark or mark outside holder: {v!r}")
+            if v == "@same" and not seen_new:
+                raise WireError(f"{where}: @same before any @new of the case")
+            seen_new = seen_new or v == "@new"
+
+    walk(value)
 
 
 def check_binding(root, b, w):
@@ -384,8 +430,21 @@ def check_binding(root, b, w):
             if "compare" in m:
                 check_compare(m["compare"], wm, variants)
             check_asserts(m.get("assert", []), wm, group, prefix=bool(m.get("prefix")))
-        check_compare(b.compare, w, variants)
+        turn = check_turn_binding(b, w)
+        check_compare(b.compare, w, variants, turn=turn)
         check_native(b.native, f"{w} native")
+        if turn:
+            # Validate every physical case before CEL owner/kind selection.
+            for no, row in read_rows(root, b):
+                data = strict_json(constant([(no, row)], "input", w), f"{w} line {no} turn input")
+                if not isinstance(data, dict) or data.get("kind") not in ("placement", "signer", "operations"):
+                    raise WireError(f"{w} line {no}: turn input kind must be placement, signer or operations")
+                for e in b.expect:
+                    column = e["value"]["column"]
+                    value = strict_json(constant([(no, row)], column, w), f"{w} line {no} turn expect")
+                    if not isinstance(value, list):
+                        raise WireError(f"{w} line {no}: turn expectation must be an array")
+                    check_turn_marks(value, f"{w} line {no}")
     norm, _, anc = b.norm.partition("#")
     md = root / "Platform" / norm
     if not norm.endswith(".md") or not md.is_file():

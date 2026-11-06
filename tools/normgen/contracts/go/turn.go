@@ -8,7 +8,8 @@ import (
 
 // Writer turn contract (common/contracts/turn.md): get and hold the turn — the actions of one side over its turn row,
 // event by event. Kind "placement" (a subsystem turn {holder, manifest_rev}, a new mark of each attempt) or "signer"
-// (the turn of the domain process and of the member agent {holder}, holder — the instance).
+// (the turn of the domain process and of the member agent {holder}, holder — the instance), or "operations"
+// (the console's {holder}, a fresh mark for each capture attempt, without a manifest revision).
 
 // TurnTerm, TurnRenew — seconds.
 const (
@@ -34,18 +35,18 @@ type TurnRead struct {
 	Seen       float64
 }
 
-// Turn — the side: Kind, Me (manifest_rev at placement, the instance at signer).
+// Turn — the side: Kind, Me (manifest_rev at placement, the instance at signer; unused at operations).
 type Turn struct {
 	Kind    string
 	Me      string
-	mark    string // the mark of the current attempt (placement)
+	mark    string // the mark of the current attempt (placement/operations)
 	version string // the version of my confirmed turn
 	pending string // the write in flight: take, renew, barrier, confirm, release
 	reread  bool   // the next read is a reread after an unknown outcome of my turn write
 	held    bool
 }
 
-// Mark — the mark of the current attempt (placement) or the instance (signer).
+// Mark — the mark of the current attempt (placement/operations) or the instance (signer).
 func (t *Turn) Mark() string {
 	if t.Kind == "signer" {
 		return t.Me
@@ -98,7 +99,7 @@ func (t *Turn) Read(r TurnRead) TurnAction {
 	default:
 		return TurnAction{Word: "busy"}
 	}
-	if t.Kind == "placement" {
+	if t.Kind == "placement" || t.Kind == "operations" {
 		t.newMark()
 	}
 	return t.write(t.Mark(), cas, "take")
