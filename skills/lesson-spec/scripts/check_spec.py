@@ -2181,6 +2181,16 @@ class Check:
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
+        for path in check_forms.finite_profile_forms(self.root):     # конечный профиль удаления P/06 C2 (P02.3 6a/3a)
+            errors, stats = check_forms.check_finite_profile(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
+        for path in check_forms.deletion_body_witness_forms(self.root):  # кодек-свидетели тела P/06.8 N1.3
+            errors, stats = check_forms.check_deletion_body_witnesses(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
         for path in check_forms.row_write_binding_forms(self.root):  # конструкторы записи строки (P03-GEN-01, ADR-0127 доп. (1) п. 3)
             errors, stats = check_forms.check_row_write_bindings(path)
             for message in errors:

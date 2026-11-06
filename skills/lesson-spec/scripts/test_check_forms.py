@@ -1,4 +1,6 @@
 """Мутации форм ADR-0125 P/01: каждая порча формы, прозы или OpenAPI даёт отказ check_forms."""
+import copy
+import json
 import re
 import shutil
 import tempfile
@@ -901,6 +903,122 @@ class WireTurn(unittest.TestCase):               # compare=turn — решени
     def test_turn_markers_empty(self):
         errors = self.check(old="\tturn\t[]\t", new='\tturn\t[{"variant":"","column":"expect","match":"[\\"busy\\"]"}]\t')
         self.assertTrue(any("markers must be []" in e for e in errors), errors)
+
+
+FP_CASES = ROOT / "Platform/02-installer/forms/finite-profile.cases.json"
+
+
+@unittest.skipUnless(FP_CASES.exists(), "источник C2 P/06 ещё не влит")
+class FiniteProfile(unittest.TestCase):          # конечный профиль удаления P/06 C2 — решение «Архитектора» 2026-11-06
+    FILES = ("Platform/02-installer/forms/finite-profile.cases.json", "Platform/02-installer/forms/finite-profile.schema.json",
+             "Platform/06-console/forms/runtime-constants.tsv", "Platform/06-console/forms/deletion-body-witnesses.json")
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        for f in self.FILES:
+            (self.tmp / f).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(ROOT / f, self.tmp / f)
+        self.path = self.tmp / self.FILES[0]
+        self.wpath = self.tmp / self.FILES[3]
+        self.good = json.loads(FP_CASES.read_text(encoding="utf-8"))
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def errors(self, mutate):
+        d = copy.deepcopy(self.good)
+        mutate(d)
+        self.path.write_text(json.dumps(d), encoding="utf-8")
+        return check_forms.check_finite_profile(self.path)[0]
+
+    def case(self, d, name):
+        return next(c for c in d["cases"] if c["case"] == name)
+
+    def packet(self, d, case, name):
+        return next(k for k in self.case(d, case)["profile"]["packets"] if k["packet"] == name)
+
+    def test_real_cases_pass(self):
+        errors, stats = check_forms.check_finite_profile(FP_CASES)
+        self.assertEqual(errors, [])
+        self.assertEqual(stats["finite_profile_cases"], 13)
+        self.assertEqual(self.errors(lambda d: None), [])
+
+    def test_mutations(self):
+        ok, tgt = "bound-exact-B", "unit-delete-target"
+
+        def drop(d):
+            ps = self.case(d, ok)["profile"]["packets"]
+            ps.remove(self.packet(d, ok, tgt))
+
+        def dup(d):
+            ps = self.case(d, ok)["profile"]["packets"]
+            ps.append(copy.deepcopy(ps[0]))
+
+        def setp(field, value, packet=tgt):
+            return lambda d: self.packet(d, ok, packet).__setitem__(field, value)
+
+        def ctx_desc(field, value, packet=tgt):
+            return lambda d: next(x for x in d["owned_context"]["descriptors"] if x["packet"] == packet).__setitem__(field, value)
+
+        bad = {
+            "missing packet": (drop, "of the roster is missing"),
+            "duplicate packet": (dup, "repeats"),
+            "wrong H (greater)": (setp("H", 93744), "!= recomputed 93743"),
+            "wrong H (less)": (setp("H", 93742), "!= recomputed 93743"),
+            "wrong n_folder": (setp("n_folder", 9), "n_folder 9 != descriptor 8"),
+            "wrong n_guard": (setp("n_guard", 3), "n_guard 3 != descriptor 4"),
+            "wrong n_claim": (setp("n_claim", 0, "claim-acquire"), "n_claim 0 != descriptor 1"),
+            "no multiplicity proof": (setp("multiplicity_proof", "owned-descriptor:claim-acquire"), "multiplicity_proof"),
+            "free provenance": (lambda d: self.case(d, ok)["profile"]["provenance"].__setitem__("catalogue", "trust-me"),
+                                "provenance.catalogue"),
+            "pass at bound > B": (lambda d: self.case(d, "bound-B-plus-one").__setitem__("expect", "ok"), "> B 609947875"),
+            "refused without reason": (lambda d: self.case(d, "limit-one-above-bound").__setitem__("expect", "refused:form"),
+                                       "the judge gives ok"),
+            "V not effective": (lambda d: self.case(d, ok)["profile"].__setitem__("row_weight_bytes", 524287),
+                                "row_weight_bytes"),
+            "F not FOLDER_ROW_MAX": (lambda d: self.case(d, ok)["profile"].__setitem__("folder_weight_bytes", 65535),
+                                     "FOLDER_ROW_MAX"),
+            "key beyond 1024": (lambda d: self.case(d, ok)["profile"]["metadata"].__setitem__("key_utf8_bytes", 1025),
+                                "schema"),
+            "context duplicate roster": (lambda d: d["owned_context"]["descriptor_packet_roster"].append("claim-acquire"),
+                                         "roster: packet 'claim-acquire' repeats"),
+            "context descriptor H": (ctx_desc("H", 93742), "H 93742 != recomputed 93743"),
+            "context skeleton": (ctx_desc("skeleton_entity_bytes", 93138), "the judge gives refused"),
+            "context key_json": (ctx_desc("key_json_bytes", 6145), "6*key_utf8_bytes+2"),
+            "context version 21": (ctx_desc("version_digits", 21), "version_digits 21"),
+            "context put_slots": (ctx_desc("put_slots", 9), "put_slots 9"),
+            "context counts": (lambda d: next(x for x in d["owned_context"]["descriptors"] if x["packet"] == tgt)
+                               ["counts"].__setitem__("n_folder", 7), "the judge gives refused"),
+            "context integer domain": (lambda d: d["owned_context"]["status"].__setitem__("max_body", 2 ** 53),
+                                       "outside 0..2^53-1"),
+            "expected bound": (lambda d: d["expected_bounds"].__setitem__(tgt, 9531088), "expected_bounds unit-delete-target"),
+            "max_bound": (lambda d: d.__setitem__("max_bound", 609947875), "max_bound"),
+            "no exact-B case": (lambda d: d["cases"].remove(self.case(d, ok)), "exactly B"),
+            "no B+1 case": (lambda d: d["cases"].remove(self.case(d, "bound-B-plus-one")), "B+1"),
+        }
+        for name, (mutate, needle) in bad.items():
+            with self.subTest(name):
+                errors = self.errors(mutate)
+                self.assertTrue(any(needle in e for e in errors), errors)
+
+    def test_body_witnesses(self):
+        errors, stats = check_forms.check_deletion_body_witnesses(self.wpath)
+        self.assertEqual(errors, [])
+        self.assertEqual(stats["deletion_body_witnesses"], 6)
+        good = json.loads(self.wpath.read_text(encoding="utf-8"))
+        bad = {
+            "limit+1 passes": (lambda d: d["witnesses"]["body_limit1"].__setitem__("within_body_limit", True), "within"),
+            "limit refuses": (lambda d: d["witnesses"]["body_limit0"].__setitem__("within_body_limit", False), "within"),
+            "no limit-1": (lambda d: d["witnesses"].pop("body_limit-1"), "1048575 bytes"),
+            "LF not +1": (lambda d: d["witnesses"]["same_JSON_plus_LF"].__setitem__("entity_bytes", 1048578), "LF witness"),
+        }
+        for name, (mutate, needle) in bad.items():
+            with self.subTest(name):
+                d = copy.deepcopy(good)
+                mutate(d)
+                self.wpath.write_text(json.dumps(d), encoding="utf-8")
+                errors = check_forms.check_deletion_body_witnesses(self.wpath)[0]
+                self.assertTrue(any(needle in e for e in errors), errors)
 
 
 if __name__ == "__main__":

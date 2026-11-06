@@ -1855,6 +1855,305 @@ def check_versioned_doors(path):
     return errors, {"versioned_doors": len(rows)}
 
 
+FP_SAFE = 2 ** 53 - 1                       # все целые профиля и статуса — в точной области binary64
+FP_COUNTS = ("n_unit", "n_claim", "n_folder", "n_empty", "n_delete", "n_guard")
+FP_KEY_MAX, FP_VERSION_MAX, FP_ID_MAX, FP_TIMESTAMP = 1024, 20, 64, 313      # P02.3 N3, profile-form README
+FP_ENCODER = "compact-json-utf8"
+FP_H = "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)"
+FP_PROVENANCE = {                           # поле провенанса → раздел owned_context, который его доказывает
+    "store_limits": ("owned-context:status", "status"),
+    "catalogue": ("owned-context:confirmed-catalogue", "confirmed_catalogue"),
+    "procedure_descriptors": ("owned-context:descriptors", "descriptors"),
+    "complete_packet_roster": ("owned-context:descriptor-packet-roster", "descriptor_packet_roster"),
+    "metadata_skeleton_proof": ("owned-context:metadata-proofs", "descriptors"),   # доказательства скелета — в дескрипторах
+}
+FP_OUTCOMES = ("ok", "refused:form")
+
+
+def finite_profile_forms(root):
+    return sorted(Path(root).glob("Platform/*/forms/finite-profile.cases.json"))
+
+
+def _fp_int(v):
+    return isinstance(v, int) and not isinstance(v, bool)
+
+
+def _fp_big(v, where, out):
+    """Каждое целое (не bool) ≤ 2^53−1 и ≥ 0."""
+    if isinstance(v, dict):
+        for k, x in v.items():
+            _fp_big(x, f"{where}/{k}", out)
+    elif isinstance(v, list):
+        for i, x in enumerate(v):
+            _fp_big(x, f"{where}/{i}", out)
+    elif _fp_int(v) and not 0 <= v <= FP_SAFE:
+        out.append(f"{where}: integer {v} outside 0..2^53-1")
+
+
+def _fp_folder_row_max(root):
+    path = Path(root) / "Platform/06-console/forms/runtime-constants.tsv"
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            cells = line.split("\t")
+            if cells[0] == "FOLDER_ROW_MAX" and len(cells) > 1 and cells[1].isdigit():
+                return int(cells[1])
+    return None
+
+
+def _fp_descriptor_H(d):
+    """H заново по метаданным дескриптора (profile-form README): скелет минус 2 на каждый put ({} вместо items), плюс
+    каждая отметка времени до верхней оценки 313; поле H дескриптора не берётся."""
+    return d["skeleton_entity_bytes"] - 2 * d["put_slots"] + d["timestamp_slots"] * (
+        d["timestamp_upper_bytes"] - d["timestamp_dummy_bytes"])
+
+
+def _fp_bound(H, c, V, F, lf):
+    return H + (c["n_unit"] + c["n_claim"]) * (12 * V + 7) + c["n_folder"] * (6 * F + 19) + 2 * c["n_empty"] + lf
+
+
+def _fp_context(ctx, F, err):
+    """Независимый контекст: перечень пакетов без дублей, ровно один дескриптор на пакет, метаданные в пределах, H
+    пересчитан. Возвращает {packet: (counts, H, descriptor)} годных дескрипторов."""
+    if not isinstance(ctx, dict):
+        err.append("owned_context is not an object")
+        return {}
+    roster = ctx.get("descriptor_packet_roster")
+    if not (isinstance(roster, list) and roster and all(isinstance(p, str) and p for p in roster)):
+        err.append("owned_context.descriptor_packet_roster is not a non-empty list of packet names")
+        roster = []
+    for p in sorted({p for p in roster if roster.count(p) > 1}):
+        err.append(f"owned_context roster: packet {p!r} repeats")
+    status = ctx.get("status")
+    if not (isinstance(status, dict) and all(_fp_int(status.get(k)) and status[k] > 0 for k in ("max_value", "max_body"))):
+        err.append("owned_context.status needs positive integers max_value and max_body")
+    out = {}
+    descs = ctx.get("descriptors") if isinstance(ctx.get("descriptors"), list) else []
+    names = [d.get("packet") for d in descs if isinstance(d, dict)]
+    for p in sorted({p for p in names if names.count(p) > 1}, key=str):
+        err.append(f"owned_context descriptors: packet {p!r} has more than one descriptor")
+    for p in roster:
+        if p not in names:
+            err.append(f"owned_context: roster packet {p!r} has no descriptor")
+    for d in descs:
+        p = d.get("packet") if isinstance(d, dict) else None
+        where = f"owned_context descriptor {p!r}"
+        if p not in roster:
+            err.append(f"{where}: not in the packet roster")
+            continue
+        n = len(err)
+        c = d.get("counts") if isinstance(d.get("counts"), dict) else {}
+        if set(c) != set(FP_COUNTS) or not all(_fp_int(c[k]) and c[k] >= 0 for k in c):
+            err.append(f"{where}: counts are not exactly {list(FP_COUNTS)} natural integers")
+            continue
+        nums = ("skeleton_entity_bytes", "put_slots", "key_utf8_bytes", "key_json_bytes", "version_digits",
+                "id_hex_digits", "timestamp_slots", "timestamp_dummy_bytes", "timestamp_upper_bytes", "H")
+        if not all(_fp_int(d.get(k)) and d[k] >= 0 for k in nums):
+            err.append(f"{where}: metadata {list(nums)} are not natural integers")
+            continue
+        if not 1 <= d["key_utf8_bytes"] <= FP_KEY_MAX:
+            err.append(f"{where}: key_utf8_bytes {d['key_utf8_bytes']} not in 1..{FP_KEY_MAX}")
+        if d["key_json_bytes"] != 6 * d["key_utf8_bytes"] + 2:
+            err.append(f"{where}: key_json_bytes {d['key_json_bytes']} != 6*key_utf8_bytes+2")
+        if not 0 <= d["version_digits"] <= FP_VERSION_MAX:
+            err.append(f"{where}: version_digits {d['version_digits']} > {FP_VERSION_MAX}")
+        if not 1 <= d["id_hex_digits"] <= FP_ID_MAX:
+            err.append(f"{where}: id_hex_digits {d['id_hex_digits']} not in 1..{FP_ID_MAX}")
+        if d["timestamp_upper_bytes"] != FP_TIMESTAMP or not 1 <= d["timestamp_dummy_bytes"] <= FP_TIMESTAMP:
+            err.append(f"{where}: timestamp_upper_bytes is not {FP_TIMESTAMP} or the dummy is outside 1..{FP_TIMESTAMP}")
+        puts = c["n_unit"] + c["n_claim"] + c["n_folder"] + c["n_empty"]
+        if d["put_slots"] != puts:
+            err.append(f"{where}: put_slots {d['put_slots']} != n_unit+n_claim+n_folder+n_empty {puts}")
+        keys = puts + c["n_delete"] + c["n_guard"]
+        if d["skeleton_entity_bytes"] < keys * d["key_json_bytes"]:
+            err.append(f"{where}: skeleton {d['skeleton_entity_bytes']} is below its {keys} full keys of "
+                       f"{d['key_json_bytes']} bytes")
+        if d.get("H_derivation") != FP_H:
+            err.append(f"{where}: H_derivation is not {FP_H!r}")
+        H = _fp_descriptor_H(d)
+        if d["H"] != H:
+            err.append(f"{where}: H {d['H']} != recomputed {H}")
+        if len(err) == n:
+            out[p] = (c, H, d)
+    return out
+
+
+def _fp_refusals(profile, status, ctx, descs, F, validator):
+    """Решение судьи по случаю, без expect: список причин отказа (пусто — профиль проходит)."""
+    why = [f"schema: {short(e.message, 120)}" for e in validator.iter_errors(profile)]
+    _fp_big(profile, "profile", why)
+    _fp_big(status, "store_status", why)
+    if not (isinstance(status, dict) and all(_fp_int(status.get(k)) and status[k] > 0 for k in ("max_value", "max_body"))):
+        why.append("store_status needs positive integers max_value and max_body")
+    if why:
+        return why
+    B, V = status["max_body"], status["max_value"]
+    if profile["body_bytes"] != B:
+        why.append(f"body_bytes {profile['body_bytes']} != effective max_body {B}")
+    if profile["row_weight_bytes"] != V:
+        why.append(f"row_weight_bytes {profile['row_weight_bytes']} != effective max_value {V}")
+    if F is None or profile["folder_weight_bytes"] != F:
+        why.append(f"folder_weight_bytes {profile['folder_weight_bytes']} != FOLDER_ROW_MAX {F}")
+    meta = profile["metadata"]
+    for p, (_, _, d) in descs.items():
+        for mk, dk in (("key_utf8_bytes", "key_utf8_bytes"), ("version_digits", "version_digits"),
+                       ("id_hex_digits", "id_hex_digits"), ("timestamp_json_bytes", "timestamp_upper_bytes")):
+            if meta[mk] != d[dk]:
+                why.append(f"metadata.{mk} {meta[mk]} != descriptor {p} {dk} {d[dk]}")
+    for field, (word, section) in FP_PROVENANCE.items():
+        if profile["provenance"][field] != word or section not in ctx:
+            why.append(f"provenance.{field} {profile['provenance'][field]!r} is not the proof {word!r}")
+    roster = ctx.get("descriptor_packet_roster") or []
+    names = [k["packet"] for k in profile["packets"]]
+    for p in sorted({p for p in names if names.count(p) > 1}):
+        why.append(f"packet {p!r} repeats")
+    for p in roster:
+        if p not in names:
+            why.append(f"packet {p!r} of the roster is missing")
+    lf = meta["trailing_lf"]
+    for k in profile["packets"]:
+        p = k["packet"]
+        if p not in descs:
+            why.append(f"packet {p!r} has no proved descriptor")
+            continue
+        c, H, _ = descs[p]
+        if k["multiplicity_proof"] != f"owned-descriptor:{p}":
+            why.append(f"packet {p}: multiplicity_proof {k['multiplicity_proof']!r} is not owned-descriptor:{p}")
+        if k["H"] != H:
+            why.append(f"packet {p}: H {k['H']} != recomputed {H}")
+        for n in FP_COUNTS:
+            if k[n] != c[n]:
+                why.append(f"packet {p}: {n} {k[n]} != descriptor {c[n]}")
+        bound = _fp_bound(H, c, V, F or 0, lf)
+        if bound > B:
+            why.append(f"packet {p}: bound {bound} > B {B}")
+    return why
+
+
+def check_finite_profile(path):
+    """ADR-0127 P/06 C2, P02.3 N3 шаги 6a/3a, P06.8 (решение «Архитектора» 2026-11-06): судья полноты и границы
+    конечного профиля удаления — то, что схема не доказывает. Контекст owned_context: перечень пакетов без дублей, по
+    одному дескриптору, метаданные в пределах (ключ ≤ 1024, 6K+2, версия ≤ 20 цифр, id ≤ 64, отметка 313), H заново по
+    скелету; expected_bounds и max_bound — по формуле. Каждый случай решается без expect: схема, целые ≤ 2^53−1,
+    B и V — действующий статус случая, F — FOLDER_ROW_MAX, провенанс — разделы контекста, пакеты ровно перечень,
+    H и кратности — пересчитанные, bound = H + (n_unit+n_claim)(12V+7) + n_folder(6F+19) + 2n_empty + LF ≤ B; решение
+    равно expect. Покрытие: проходит случай с bound ровно B и отказывает случай с одной причиной bound = B+1."""
+    import jsonschema
+    path = Path(path)
+    root = path.parents[3]
+    errors = []
+    try:
+        d = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        return [f"{path.name}: not JSON: {short(str(exc))}"], {"finite_profile_cases": 0}
+    try:
+        schema = json.loads((path.parent / d["schema"]).read_text(encoding="utf-8"))
+        jsonschema.Draft202012Validator.check_schema(schema)
+        validator = jsonschema.Draft202012Validator(schema)
+    except (KeyError, TypeError, OSError, ValueError, jsonschema.SchemaError) as exc:
+        return [f"{path.name}: schema is not a readable JSON Schema 2020-12: {short(str(exc))}"], {"finite_profile_cases": 0}
+    F = _fp_folder_row_max(root)
+    if F is None:
+        errors.append(f"{path.name}: FOLDER_ROW_MAX not found in Platform/06-console/forms/runtime-constants.tsv")
+    ctx = d.get("owned_context")
+    cerr = []
+    descs = _fp_context(ctx, F, cerr)
+    errors += [f"{path.name}: {m}" for m in cerr]
+    ctx = ctx if isinstance(ctx, dict) else {}
+    cases = d.get("cases") if isinstance(d.get("cases"), list) else []
+    if not cases:
+        errors.append(f"{path.name}: no cases")
+    seen, exact, plus_one, lfs = set(), False, False, set()
+    for i, case in enumerate(cases):
+        if not (isinstance(case, dict) and set(case) == {"case", "profile", "store_status", "expect"}):
+            errors.append(f"{path.name}: cases[{i}] is not exactly {{case, profile, store_status, expect}}")
+            continue
+        where = f"{path.name}: case {case['case']!r}"
+        if case["case"] in seen:
+            errors.append(f"{where}: repeats")
+        seen.add(case["case"])
+        if case["expect"] not in FP_OUTCOMES:
+            errors.append(f"{where}: expect {case['expect']!r} not in {list(FP_OUTCOMES)}")
+            continue
+        why = _fp_refusals(case["profile"], case["store_status"], ctx, descs, F, validator)
+        got = "refused:form" if why else "ok"
+        if got != case["expect"]:
+            errors.append(f"{where}: expect {case['expect']}, the judge gives {got}"
+                          + (f": {'; '.join(why[:3])}" if why else ""))
+            continue
+        status = case["store_status"]
+        top = None
+        if not why or all(" bound " in w for w in why):
+            p = case["profile"]
+            lfs.add(p["metadata"]["trailing_lf"]) if not why else None
+            top = max(_fp_bound(H, c, status["max_value"], F or 0, p["metadata"]["trailing_lf"])
+                      for c, H, _ in descs.values()) if descs else None
+        if top is not None and not why and top == status["max_body"]:
+            exact = True
+        if top is not None and why and top == status["max_body"] + 1:
+            plus_one = True
+    if cases and not exact:
+        errors.append(f"{path.name}: no ok case whose largest bound is exactly B")
+    if cases and not plus_one:
+        errors.append(f"{path.name}: no refused case whose only reason is the largest bound B+1")
+    exp = d.get("expected_bounds")
+    if len(lfs) > 1:
+        errors.append(f"{path.name}: ok cases disagree on trailing_lf {sorted(lfs)}")
+    status = ctx.get("status") if isinstance(ctx.get("status"), dict) else {}
+    if not isinstance(exp, dict) or set(exp) != set(ctx.get("descriptor_packet_roster") or []):
+        errors.append(f"{path.name}: expected_bounds keys are not the packet roster")
+    elif descs and lfs and _fp_int(status.get("max_value")) and F is not None:
+        lf = next(iter(lfs))
+        for p, (c, H, _) in descs.items():
+            b = _fp_bound(H, c, status["max_value"], F, lf)
+            if exp[p] != b:
+                errors.append(f"{path.name}: expected_bounds {p} {exp[p]} != recomputed {b}")
+        if d.get("max_bound") != max(exp.values(), key=lambda v: v if _fp_int(v) else -1):
+            errors.append(f"{path.name}: max_bound {d.get('max_bound')} is not the largest expected bound")
+    for k in ("owned_context", "expected_bounds", "max_bound"):     # случаи с целым вне области — свидетели отказа
+        _fp_big(d.get(k), f"{path.name}: {k}", errors)
+    return errors, {"finite_profile_cases": len(cases)}
+
+
+def deletion_body_witness_forms(root):
+    return sorted(Path(root).glob("Platform/*/forms/deletion-body-witnesses.json"))
+
+
+def check_deletion_body_witnesses(path):
+    """P06.8 N1.3 (решение «Архитектора» 2026-11-06): кодек-свидетели границы тела — entity_bytes = decoded_chunk;
+    within_body_limit ⇔ entity_bytes ≤ limit; есть limit−1, limit (проходят) и limit+1 (отказ), и тот же JSON с LF
+    на один байт длиннее своего без LF."""
+    path = Path(path)
+    errors = []
+    try:
+        d = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        return [f"{path.name}: not JSON: {short(str(exc))}"], {"deletion_body_witnesses": 0}
+    limit, ws = d.get("limit"), d.get("witnesses")
+    if not (_fp_int(limit) and limit > 0 and isinstance(ws, dict) and ws):
+        return [f"{path.name}: needs a positive integer limit and witnesses"], {"deletion_body_witnesses": 0}
+    sizes = {}
+    for name, w in ws.items():
+        b = w.get("entity_bytes") if isinstance(w, dict) else None
+        if not _fp_int(b):
+            errors.append(f"{path.name}: {name}: entity_bytes is not an integer")
+            continue
+        sizes.setdefault(b, []).append(name)
+        if w.get("decoded_chunk_entity_bytes") != b:
+            errors.append(f"{path.name}: {name}: decoded_chunk_entity_bytes != entity_bytes {b}")
+        if w.get("within_body_limit") is not (b <= limit):
+            errors.append(f"{path.name}: {name}: within_body_limit {w.get('within_body_limit')} but {b} vs limit {limit}")
+    for b in (limit - 1, limit, limit + 1):
+        if b not in sizes:
+            errors.append(f"{path.name}: no codec witness of {b} bytes (limit {limit} {b - limit:+d})")
+    lfed = [w for w in ws.values() if isinstance(w, dict) and w.get("trailing_LF") is True]
+    for w in lfed:
+        twins = [x for x in ws.values() if isinstance(x, dict) and x.get("trailing_LF") is False
+                 and x.get("ensure_ascii") == w.get("ensure_ascii") and x.get("put_weights") == w.get("put_weights")]
+        if not any(x.get("entity_bytes") == w.get("entity_bytes", 0) - 1 for x in twins):
+            errors.append(f"{path.name}: an LF witness of {w.get('entity_bytes')} bytes has no same JSON one byte shorter")
+    return errors, {"deletion_body_witnesses": len(ws)}
+
+
 RWB_COLUMNS = ["write", "key", "field", "source", "value", "guard_key", "guard_version", "norm"]
 RWB_SOURCES = ("start", "input", "const")
 RWB_TYPES = ("string", "boolean", "integer", "number", "object", "array", "dyn")
