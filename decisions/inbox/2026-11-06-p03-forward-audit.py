@@ -156,5 +156,7 @@ report=dict(published=PUBLISHED,author=AUTHOR,source_merge=SOURCE,merge_bases=so
             created_cells=created_cells,byte_proof=byte_proof,p03_mirror_pairs=pair_count,
             original_map_sha256=digest(get(SOURCE,mp)),original_preservation_unchanged=True,
             output_regeneration=False,runtime_green_claim=False,sut_runs=0,errors=[])
+# Recorded author checks, not tests re-executed by this source-only audit.
+report.update(json.loads(r'''{"check_spec":"PASS with 62 exceptions","focused_tests":{"tests":11,"status":"PASS","seconds":28.782,"skip":0,"meaning_registry":"PASS"},"log_sha256":{"p03-forward-check.log":"a40265af7fc3e069d8de3e22c410f3d8eb09b084b6cb5d59800267f02801f50f","p03-forward-focused.log":"d189d53fb041a94cdb9965c7b694d323acbe62c40c2268494af175e235da31d4","p03-forward-audit.log":"728c0efe9811e54eb9d63511386bcf759953f26c1ea39efdb2eeef37497acb5b"}}'''))
 REPORT.write_text(json.dumps(report,ensure_ascii=True,indent=2)+'\n')
 print(json.dumps({k:report[k] for k in ['source_merge','source_delta_files','forward_map_rows','forward_map_sha256','forward_map_basis','source_cell_count','source_cell_tables','p03_mirror_pairs']},indent=2))
