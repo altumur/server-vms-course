@@ -3592,7 +3592,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/GateOrRole401
+                - $ref: '#/components/schemas/GateOrRole401'
                 - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied
         '403':
           description: 'Transition 2: access refusal — the gate of the domain console (N1.5, error denied) or the
@@ -3602,7 +3602,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/GateOrRole403
+                - $ref: '#/components/schemas/GateOrRole403'
                 - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied
         '404':
           description: 'Transition 2: a path with a segment . or .. (including in percent form) — not a domain route,
@@ -3612,7 +3612,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/NotADomainRoute
+                - $ref: '#/components/schemas/NotADomainRoute'
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/DomainFolderError
         '408':
           description: 'Transition 2: The body is read too slowly (chapter 6.5 N4).. Transition 3: response 408 of
@@ -3697,7 +3697,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/GateOrRole401
+                - $ref: '#/components/schemas/GateOrRole401'
                 - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied
         '403':
           description: 'Transition 2: access refusal — the gate of the domain console (N1.5, error denied) or the
@@ -3707,7 +3707,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/GateOrRole403
+                - $ref: '#/components/schemas/GateOrRole403'
                 - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied
         '404':
           description: 'Transition 2: a path with a segment . or .. (including in percent form) — not a domain route,
@@ -3717,7 +3717,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/NotADomainRoute
+                - $ref: '#/components/schemas/NotADomainRoute'
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/DomainFolderError
         '408':
           description: 'Transition 2: The body is read too slowly (chapter 6.5 N4).. Transition 3: response 408 of
@@ -3792,7 +3792,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/GateOrRole401
+                - $ref: '#/components/schemas/GateOrRole401'
                 - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied
         '403':
           description: 'Transition 2: access refusal — the gate of the domain console (N1.5, error denied) or the
@@ -3802,7 +3802,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/GateOrRole403
+                - $ref: '#/components/schemas/GateOrRole403'
                 - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied
         '404':
           description: 'Transition 2: a path with a segment . or .. (including in percent form) — not a domain route,
@@ -3812,7 +3812,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/NotADomainRoute
+                - $ref: '#/components/schemas/NotADomainRoute'
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/DomainFolderError
         '408':
           description: 'Transition 2: The body is read too slowly (chapter 6.5 N4).. Transition 3: response 408 of
@@ -3934,7 +3934,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/GateOrRole401
+                - $ref: '#/components/schemas/GateOrRole401'
                 - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied
         '403':
           description: 'Transition 2: access refusal — the gate of the domain console (N1.5, error denied) or the
@@ -3944,7 +3944,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/GateOrRole403
+                - $ref: '#/components/schemas/GateOrRole403'
                 - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied
         '404':
           description: 'Transition 2: a path with a segment . or .. (including in percent form) — not a domain route,
@@ -3954,7 +3954,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/NotADomainRoute
+                - $ref: '#/components/schemas/NotADomainRoute'
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/DomainFolderError
         '408':
           description: 'Transition 2: The body is read too slowly (chapter 6.5 N4).. Transition 3: response 408 of
@@ -4038,7 +4038,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/GateOrRole401
+                - $ref: '#/components/schemas/GateOrRole401'
                 - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied
         '403':
           description: 'Transition 2: access refusal — the gate of the domain console (N1.5, error denied) or the
@@ -4048,7 +4048,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/GateOrRole403
+                - $ref: '#/components/schemas/GateOrRole403'
                 - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied
         '404':
           description: 'Transition 2: a path with a segment . or .. (including in percent form) — not a domain route,
@@ -4058,7 +4058,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/NotADomainRoute
+                - $ref: '#/components/schemas/NotADomainRoute'
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
         '408':
           description: 'Transition 2: The body is read too slowly (chapter 6.5 N4).. Transition 3: response 408 of
@@ -4139,7 +4139,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/GateOrRole401
+                - $ref: '#/components/schemas/GateOrRole401'
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
         '403':
           description: 'Transition 2: access refusal — the gate of the domain console (N1.5, error denied) or the
@@ -4149,7 +4149,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/GateOrRole403
+                - $ref: '#/components/schemas/GateOrRole403'
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
         '404':
           description: 'Transition 2: a path with a segment . or .. (including in percent form) — not a domain route,
@@ -4159,7 +4159,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/NotADomainRoute
+                - $ref: '#/components/schemas/NotADomainRoute'
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
         '408':
           $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody
@@ -4237,7 +4237,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/GateOrRole401
+                - $ref: '#/components/schemas/GateOrRole401'
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
         '403':
           description: 'Transition 2: access refusal — the gate of the domain console (N1.5, error denied) or the
@@ -4247,7 +4247,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: #/components/schemas/GateOrRole403
+                - $ref: '#/components/schemas/GateOrRole403'
                 - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied
         '404':
           $ref: '#/components/responses/NotADomainRoute'
