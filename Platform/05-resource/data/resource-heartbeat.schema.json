@@ -1167,6 +1167,33 @@
     "type": "string",
     "pattern": "^(?:[^/]+/[^/]+)$"
    }
+  },
+  "writer": {
+   "required": [
+    "door",
+    "waits",
+    "restore",
+    "mirror"
+   ],
+   "properties": {
+    "door": {
+     "if": {
+      "required": [
+       "mode"
+      ],
+      "properties": {
+       "mode": {
+        "const": "mtls"
+       }
+      }
+     },
+     "then": {
+      "required": [
+       "cert_until"
+      ]
+     }
+    }
+   }
   }
  }
 }

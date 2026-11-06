@@ -161,7 +161,7 @@ than which the tombstone of the deleter is newer is not accepted (N4, «deleted 
 
 ```yaml
 delete:   the tombstone .gone/<object-key> {written, peers, acked}, the neighbours peers, the reading by a neighbour, the confirmation 404 and the removal —
-          [the tombstone contract](../../../common/contracts/tombstone.md) (moved there without a change of behaviour; C06-BLOB-GC-33-01, the decision of the Architect of 2026-10-25);
+          [the tombstone contract](../../common/contracts/tombstone.md) (moved there without a change of behaviour; C06-BLOB-GC-33-01, the decision of the Architect of 2026-10-25);
           the objects door has no DELETE
 ```
 
@@ -215,6 +215,8 @@ retention:
             the console marks live no less than the longest tree; the holds (holds) keep buckets (the holds contract);
             mirror copies — an hour longer; what is removed — the journal events.removed
 ```
+
+**Retention deadline** (ADR-0127, review of P/05 C4). Use the bucket's own persisted logical `written` from the event-journal contract “Bucket write time”. First resolve term reads and holds conservatively; a hold or unknown dependency keeps the bucket. For a closed, unheld bucket with readable `written`, delete exactly when `now >= written + seconds`: normal `<sub>` uses `seconds = retention.days * 86400`; `<sub>.alarms` uses `alarms_retention.days * 86400`; `audit`/`audit.alarms` use their journal term; `console`/`console.alarms` use their term with the longest-tree floor. A mirror copy uses the corresponding tree's term plus `3600`, measured from its own copy `written`. Equality deletes; a time below the deadline keeps it. Neither window start/end nor filesystem `mtime` substitutes for `written`. Restore preserves the copy's `written`; it does not restart the retention clock. All usual conservative holds and read outcomes precede this predicate.
 
 <!-- req: P/05-R021 -->
 
@@ -275,7 +277,7 @@ resource:                                    # one process per server; without a
     # enter units: the unreadable does not widen (C05-UNITS-PULSE-GARBLED-01, the decision of the Architect of 2026-10-30, norm questions of the Gemini audit, P/05 item 3)
   workers:   [<sub>/<slot name>…] — all the slots that the resource knows about on its box; running: [<sub>/<slot name>…] — with a
              live process (it holds the presence lock, the content in form with a non-empty worker); unknown: [<sub>/<slot name>…] —
-             the presence did not read: the lock file does not read (review of stage B 3–5, № 23) or flock/stat of the lock gave an error,
+             the presence did not read and the slot is known from current readable content (otherwise the whole-role unknown snapshot below): the lock file does not read (review of stage B 3–5, № 23) or flock/stat of the lock gave an error,
              except «busy» and ENOENT of stat (the presence lock contract; (the decision of the Architect of 2026-10-20, review of stage B 6–7));
              instances: {<sub>/<slot name>: <instance>}; the key is with the subsystem: a slot name is unique only within its own
              subsystem (P/03.2 `<sub>/slots/<name>`), two subsystems with one `slot.prefix` have the same names; pass_stalled: <seconds>, only while the pass hangs (PULSE_LIMIT)
@@ -340,6 +342,10 @@ resource:                                    # one process per server; without a
 
 <!-- req: P/05-R026 -->
 
+**Writer and reader heartbeat forms** (ADR-0127, review of P/05 C3). The writer MUST include `door`, `waits`, `restore`, `mirror` and `units`. At initialization before any operations: `units = {}`, `restore = {}` if there are no necessary neighbours, `waits = {waiting:0, held:0, full:0, replaced:0, max:LONG_POLL_WAITERS}`, and the mirror counters `skipped`, `failed`, `peer_errors`, `lines_garbled` are zero. Existing necessary neighbours still have their actual restore entries, including incomplete ones; neutral values do not erase an error or a pending attempt. `door` always has its actual `addr` and `mode`; `mtls` additionally requires the actual server-certificate `cert_until`. The root schema remains the tolerant reader form for old incomplete heartbeats; `$defs.writer` strengthens only the writer. A reader does not synthesize successful operation or TLS state from an absent old field.
+
+**Unnamed presence uncertainty** (ADR-0127, review of P/05 C2). A current lock error without a readable slot name makes the whole role snapshot unknown, even after a successful listing and at cold start. Apply the presence-lock contract's “An unknown role snapshot”: omit `workers`, `running`, `unknown` and snapshot-derived `instances`, set the affected `room.<sub>` to `"unknown"`, omit its `live.<sub>`, keep independently complete room/live of other roles. Do not infer a slot from the filename, prior memory, or another lock; do not interpret the omission as `unlisted` or `gone`.
+
 The content of the presence lock is the family `presence-lock` of the lesson: [schema](../data/presence-lock.schema.json),
 [outcomes](../data/presence-lock.outcomes.tsv) (layers — [LAYERS](../../common/LAYERS.md)): an instance is `{key, file}`, the text of the file with `x-encoding: json` at the root
 (LAYERS § 6), the column `schema` of the catalogue row names the family, the section is «Data families» below; the meaning is [the presence
@@ -374,7 +380,7 @@ restore:    at start the resource pulls its closed buckets from the neighbours w
             the necessary neighbours — those whose readable heartbeats mirrors name this server; the local events are lost, and the heartbeats
             of the neighbours do not read or there is no heartbeat of a neighbour — all known server doors are necessary (platform/doors, door_row above),
             except its own: each is to answer with a full listing GET /mirrored/<me> (a full empty listing and 404 — there are no
-            copies); an unknown or unreadable door leaves the restore incomplete (log of cammeta-go, lesson 11 № 4);
+            copies, so that neighbour is complete); 404 of GET of an already listed bucket is a missing copy, not an empty listing: the attempt stays incomplete. A restored bucket keeps the listed copy's written as its own retention stamp, not the receive time or filesystem mtime; an unknown or unreadable door leaves the restore incomplete (log of cammeta-go, lesson 11 № 4);
             a skipped/unreadable neighbour leaves the restore incomplete; 500 of a listing and a broken answer by N2, N4 do not count as an empty full list. If there were never any neighbours, there is no remote restore;
             restored of the heartbeat — only the buckets actually pulled from this neighbour; a bucket already lying on the volume does not count
             (the decision of the Architect of 2026-10-31);
@@ -408,7 +414,7 @@ The answer is one of the closed forms WaitAnswer: `{changed:true, seq, touched:[
 of the resource; after a restart/an unknown sequence the client makes an ordinary pass.
 With full/replaced the client does not advance its cursor by seq, but returns to the ordinary pass.
 By default up to 16 waits (the deployment parameter LONG_POLL_WAITERS); a new wait when
-full is answered 200/full. A named client displaces its own former wait: 200/replaced.
+full is answered 200/full. First replace the former wait of the same verified CN and named client: it receives 200/replaced and releases its place; only then check capacity for the new wait. Thus at 16 pending waits a replacement is admitted and 16 remain; a different CN cannot free that place (ADR-0127, review of P/05 M2).
 A wait does not take the lane of 8 requests /events (N3 «query»); it holds its connection of the door until the answer
 (changed, term, full, replaced) or until the noticed departure of the client (no later than 1 s) — the «common lane» of N2 is the connection limit
 of the resource door («Implementation decides» item 10; C05-WAIT-COMMON-LANE-01).
@@ -543,6 +549,13 @@ Schema — [`resource-heartbeat.schema.json`](../data/resource-heartbeat.schema.
 | `mirror.peer_sum_refused` | integer; ≥ 0; ≤ 9007199254740991 | optional |  | an integer from 0 to 2^53 − 1 |
 | `mirror.pull_sum_bad` | integer; ≥ 0; ≤ 9007199254740991 | optional |  | an integer from 0 to 2^53 − 1 |
 | `mirror.unsummed` | integer; ≥ 0; ≤ 9007199254740991 | optional |  | an integer from 0 to 2^53 − 1 |
+
+Only at the writer (`$defs.writer`):
+
+| Key | Also |
+|---|---|
+| `<root>` |  |
+| `door` |  |
 
 **`disk`**
 
@@ -897,7 +910,7 @@ P/04). The order of the resource start — [life cycle](../lifecycle.md).
 <!-- req: P/05-R048 -->
 
 ```
-as the first step of the resource start, before reading the manifest (P/02.3): the schema contract «Check at start» ([the schema contract](../../../common/contracts/schema.md); moved there
+as the first step of the resource start, before reading the manifest (P/02.3): the schema contract «Check at start» ([the schema contract](../../common/contracts/schema.md); moved there
 without a change; layout audit A-02, the decision of the Architect of 2026-10-25; review of stage B 3–5, № 26)
 ```
 
@@ -949,7 +962,7 @@ retain:  for each tree: days = <sub>/retention | the default (tree.alarms — al
          each tree is kept by its own term (<sub> — retention, <sub>.alarms — alarms_retention); retention_withheld[<sub>]
          — one reason in the order: unknown → days_garbled → holds_unread; retention_garbled — a <sub> for which any term
          (retention or alarms_retention) is wrong, regardless of retention_withheld (R05-RETENTION-MIXED-51-01, the decision of the Architect of 2026-10-25);
-         remove the closed buckets older than days (the console marks — not earlier than the longest; holds keep — also the buckets
+         apply the inclusive deadline now >= written + seconds of N1.3 retention, only to closed buckets (the console marks — not earlier than the longest; holds keep — also the buckets
          of the units of other subsystems whose about names the held one, and the buckets of unknown units; what a row holds, the window,
          an incomplete declaration and unreadable rows — the holds contract common/contracts/holds.md, P/06.4 N1.5;
          the mirror copies — days + 1 h); the journal events.removed; index.forget
@@ -1082,7 +1095,7 @@ An implementation conforms to the lesson when every norm is fulfilled; a norm id
 - [ ] **P/05-02** the objects door of N2: the families `PLATFORM_DOOR`, the codes — sc. 01; the fresh copy, an equal `written` — the greater server, `missing`, `X-Missing` at 404 — sc. 31; `objects.door` of the manifest (`testsub2/tickets/*`; for a manifest without `objects` — 403) — sc. 44; the tombstones `.gone/` — read only (the listing `prefix=.gone/`, the body, `PUT` — 405) — sc. 45; spoiling the bytes of an object — the door gives it as it is — sc. 43; the listing is a filter, `*` is a subsystem of the catalogue, the grammar of the key and the parameters, `OPTIONS` — sc. 01; the case of the key — sc. 05 step 13 [of the acceptance of chapter 3.6](../../03-worker/acceptance/6/README.md); the service names with `~` outside the listing and not a key ([the event log contract](../../common/contracts/event-journal.md) «File names in shared trees», ADR-0083 addendum (16)): the directory lock `~lock` — sc. 19; the temporary name of the writer — by the same rule of traversal, checked by reading (the stand does not stop a write between temp and rename)
 - [ ] **P/05-03** the event line (the event log contract «The line and the bucket»): `t`, `kind`, `id`, `of` of the platform, `class` only for an alarm, without `v` — sc. 03 of the acceptance of chapter 6.4; checked by reading
 - [ ] **P/05-04** the bucket by `t`, 600 s, the epoch in the path, the alarm tree, `fsync` of alarms and of the journal (the event log contract) — checked by reading; a torn line — sc. 22 (reading by the index)
-- [ ] **P/05-05** the index: one per resource, without rebuild, the cache does not affect correctness; the query of N1.3 with `epoch_is`, the cut and `truncated` — sc. 02; sc. 03 of the acceptance of chapter 6.4; an id duplicate, the order `cut`, `keep`, `by=occurred`, `late`, `truncated` after deduplication, `HEAD /events` — 405 — sc. 35; `/events/{path}` 200 with `X-Sum`, 206 and 416 with `Content-Range`, `/buckets` of an unknown unit — 404 — sc. 36; the grammar of the parameters — sc. 02; the journal without `requests.journal`, BucketInfo JSON Lines, Range — sc. 04 of the acceptance of chapter 6.4; an unreadable bucket line and a file not in its place — 200 and `lines_garbled` (P/01.1 N0 «Stability of output») (sc. 08 steps 12–14; a finding of the move); a torn tail — `partial: true`, not in `events`/`truncated`, not `lines_garbled` — sc. 22; the class of a line by the tree, `subsystem` and `unit` of alarms without the suffix, `unit` with `.alarms` — 200 without matches — sc. 34
+- [ ] **P/05-05** the index: one per resource, without rebuild, the cache does not affect correctness; the query of N1.3 with `epoch_is`, the cut and `truncated` — sc. 02; sc. 03 of the acceptance of chapter 6.4; an id duplicate, the order `cut`, `keep`, `by=occurred`, `late`, `truncated` after deduplication, `HEAD /events` — 405 — sc. 35; `/events/{path}` 200 with `X-Sum`, 206 and 416 with `Content-Range`, `/buckets` of an unknown unit — 404 — sc. 36; the grammar of the parameters — sc. 02; the journal without `requests.journal`, BucketInfo JSON Lines, Range — sc. 04 of the acceptance of chapter 6.4; an unreadable bucket line and a file not in its place — 200 and `lines_garbled` (P/01.1 N0 «Stability of output») (sc. 08 steps 12–14; a finding of the move); a torn tail — `partial: true`, not in `events`/`truncated`, not `lines_garbled` — sc. 22; the class from the line's class field, absence means observation; .alarms selects writer layout and retention, never overrides class, `subsystem` and `unit` of alarms without the suffix, `unit` with `.alarms` — 200 without matches — sc. 34
 - [ ] **P/05-06** the term per subsystem: 365/1095, «not known» — do not remove, the floor of the marks, holds, the journal `events.removed` — checked by reading; the reasons in the heartbeat: a wrong `days` in `retention` and `alarms_retention` — `retention_garbled`, `retention_withheld: days_garbled` — sc. 37; a hold row without a readable window — `garbled_rows` — sc. 38
 - [ ] **P/05-07** the resource of N1.4: the heartbeat 10 s, the door row, its `room.<sub>` and `live.<sub>` (the numbers n ≥ 2 of the live locks, ADR-0084 addendum (3) R14′; review of stage B 3–5, № 26) by the live locks (ADR-0084; the presence lock contract «Счёт room»); the lock: the flock of the resource without waiting, ENOENT of stat — a mismatch, the delete of gone only after a matched comparison — checked by reading: a test with the worker stopped between open and flock (review of stage B 3–5, № 19); the content of the lock by the family presence-lock: empty or out of form at a busy one — a live one without a number (in `room.<sub>`, not in `workers`, `running`, `live.<sub>`), `unknown` — only an unreadable file — checked by reading (review of stage B 3–5, № 23); the pass of 600 s in the order of N3, `pass_stalled` — checked by reading; the field `door {addr, mode: loopback | mtls, cert_until}` in the heartbeat — sc. 20 (`cert_until` with mtls — checked by reading; review of stage B 3–5, № 28); `room.<sub>` and `live.<sub>` by the live locks: without workers, the number n ≥ 2, the base n = 1, a name without a number — sc. 20; the heartbeat fields `units`, `waits`, `restore`, `mirror` — sc. 05 step 12 of the acceptance of chapter 3.6; `units` of two units in ascending order of bytes — sc. 42; an unreadable worker heartbeat does not enter `units` (C05-UNITS-PULSE-GARBLED-01) — checked by reading; `mirrors` — sc. 33; `settings_unread` — sc. 39
 - [ ] **P/05-08** the disk marks by shares (no row `platform/space` — enabled 0.85/0.75 — checked by reading; disabled — its own row is removed, `short` 0 — sc. 40; between low and high with need > 0 it stands — sc. 41; the row does not read — `relieve` is not executed — sc. 39), the request `free-*` by the formula, the write with `cas` by the version of its own form, the removal under the mark only by `delete` with `cas` of the checked version (conflict — do not touch); volume without a hyphen by N1.4 `free_ask`, a row with `unit` or another's server/volume under its own key is not touched — the journal `free_ask.key_taken` (its own row and `short`, four edges of a foreign form — sc. 24–28); nobody executes or marks it; the resource itself deletes nothing except buckets — checked by reading
