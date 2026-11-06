@@ -1934,5 +1934,91 @@ class LayoutTests(unittest.TestCase):
         self.assertTrue(any("lives in forms/" in e for e in result.errors), result.errors)
 
 
+REPO = Path(__file__).resolve().parents[3]
+NUMERIC_TABLE = REPO / Check.NUMERIC_LOADER_TABLE
+
+
+@unittest.skipUnless(NUMERIC_TABLE.is_file(), "no numeric-loader witnesses of P/06 C3 in this tree")
+class NumericLoaderTests(unittest.TestCase):
+    """Дополнительная привязка свидетелей C3 урока P/06 к загрузчику P/02.1 (решение «Архитектора» 2026-11-06)."""
+
+    def setUp(self):
+        import shutil
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        for part in ("Platform/02-installer/spec", "Platform/06-console/forms"):
+            shutil.copytree(REPO / part, self.root / part)
+        self.table = self.root / Check.NUMERIC_LOADER_TABLE
+        self.base = self.root / Check.NUMERIC_LOADER_BASE
+
+    def judge(self):
+        from v7 import spec
+        check = Check(self.root)
+        extra = check.numeric_loader(self.base)
+        norms = self.root / "Platform/02-installer/spec/02.1-installer.norms.md"
+        errors, stats = spec.manifest_check(self.root, norms, None, self.base, self.root / "nowhere", {}, {}, [],
+                                            strict=True, extra=extra)
+        return check.errors + [m for _, m in errors], stats
+
+    def edit(self, old, new):
+        text = self.table.read_text(encoding="utf-8")
+        self.assertIn(old, text)
+        self.table.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+    def test_clean(self):
+        errors, stats = self.judge()
+        self.assertEqual([e for e in errors if "numeric" in e], [])
+        self.assertEqual(stats["numeric_loader_cases"], 9)
+        for no in Check.NUMERIC_LOADER_ROWS:
+            self.assertFalse(any(f"row {no}: no corpus case" in e for e in errors), errors)
+
+    def test_missing_table(self):
+        self.table.unlink()
+        errors, _ = self.judge()
+        self.assertTrue(any("witness table is missing" in e for e in errors), errors)
+
+    def test_missing_row(self):
+        text = self.table.read_text(encoding="utf-8")
+        self.table.write_text("".join(ln for ln in text.splitlines(True) if not ln.startswith("p06-c3-numeric-ends\t")),
+                              encoding="utf-8")
+        errors, _ = self.judge()
+        self.assertTrue(any("row of witness p06-c3-numeric-ends is missing" in e for e in errors), errors)
+        self.assertTrue(any("relation row 162 of P/02.1 has no refused witness" in e for e in errors), errors)
+        self.assertTrue(any("row 162: no corpus case" in e for e in errors), errors)
+
+    def test_missing_file(self):
+        (self.root / "Platform/06-console/forms/numeric-loader/p06-c3-named-ends.subsystem.yaml").unlink()
+        errors, _ = self.judge()
+        self.assertTrue(any("witness p06-c3-named-ends" in e and "missing" in e for e in errors), errors)
+
+    def test_ok_expected_for_refusal(self):
+        self.edit("refused:relations\t160\t", "ok\t-\t")
+        errors, _ = self.judge()
+        self.assertTrue(any("numeric loader: expected ok, got refused:relations" in e for e in errors), errors)
+
+    def test_refused_expected_for_ok(self):
+        self.edit("p06-c3-named-ends.subsystem.yaml\tok\t-\t",
+                  "p06-c3-named-ends.subsystem.yaml\trefused:relations\t162\t")
+        errors, _ = self.judge()
+        self.assertTrue(any("numeric loader: expected refused:relations, got ok" in e for e in errors), errors)
+
+    def test_wrong_row(self):
+        self.edit("refused:relations\t160\t", "refused:relations\t162\t")
+        errors, _ = self.judge()
+        self.assertTrue(any("refused by rows [160], expected exactly row 162" in e for e in errors), errors)
+
+    def test_silent_without_rows(self):
+        import json
+        p = Path(str(self.base) + ".relations.json")
+        rel = json.loads(p.read_text(encoding="utf-8"))
+        rel["rows"] = [r for r in rel["rows"] if r["no"] not in Check.NUMERIC_LOADER_ROWS]
+        p.write_text(json.dumps(rel, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        self.table.unlink()
+        check = Check(self.root)
+        self.assertEqual(check.numeric_loader(self.base), [])
+        self.assertEqual(check.errors, [])
+
+
 if __name__ == "__main__":
     unittest.main()

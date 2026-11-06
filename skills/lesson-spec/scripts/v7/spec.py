@@ -741,13 +741,17 @@ def relations_errors(rel, schema_doc):
 
 # ---------------------------------------------------------------- корпус P/02.1 и связи (форма манифеста)
 
-def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manifests, strict=False, implied=None):
+def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manifests, strict=False, implied=None,
+                   extra=None):
     """Глава со стандартными файлами формы манифеста: файлы годны, раздел «Форма» между маркерами — построенный,
     корпус — вердикт и класс (слой) строго, пути `diagnostics.tsv` — сведение (ADR-0092 п. 5), манифесты курса
     принимаются, строки связей держат случаи (строка — единственная причина отказа хоть одного случая; строго — со
     strict). implied — значения реестра исключений вида `implied` — «номер:путь» строки связей, чью пометку
     `x-implied-by` разрешило решение (перенумерация или иное выражение под тем же номером — красное, повторное ревью
-    Claude М-1); None — без реестра (тесты). → (ошибки, счёты; `implied_marked` — «номер:путь» помеченных строк)."""
+    Claude М-1); None — без реестра (тесты). extra — дополнительная привязка вне корпуса (свидетели C3 урока P/06,
+    решение «Архитектора» 2026-11-06): [(путь, ожидание, номер строки или None)] — ожидание `ok` или
+    `refused:relations`; отказ — ровно своей строкой, она тогда держится этим свидетелем; корпус и его счёт не
+    растут. → (ошибки, счёты; `implied_marked` — «номер:путь» помеченных строк)."""
     from v7 import schema as gen
     from v7 import section, stack, textv7
     errors, stats = [], {"form_cases": 0, "form_manifests": 0, "form_rows": 0, "form_rows_held": 0,
@@ -827,6 +831,25 @@ def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manif
             fired_sets.append(frozenset(got.get("rows", [])))
             if len(got.get("rows", [])) == 1:
                 held.add(got["rows"][0])
+    for path, expect, no in extra or []:
+        try:
+            got = loader.judge(path.read_bytes())
+        except OSError as exc:
+            errors.append((path, "numeric loader: witness unreadable: %s" % exc))
+            continue
+        except Exception as exc:                            # noqa: BLE001
+            errors.append((path, "numeric loader: loader failed: %r" % exc))
+            continue
+        stats["numeric_loader_cases"] = stats.get("numeric_loader_cases", 0) + 1
+        said = "ok" if got["verdict"] == "ok" else "%s:%s" % (got["verdict"], got["layer"])
+        if said != expect:
+            errors.append((path, "numeric loader: expected %s, got %s (rows %s, paths %s)"
+                           % (expect, said, got.get("rows", []), json.dumps(got["paths"], ensure_ascii=False)[:200])))
+        elif expect != "ok" and got.get("rows", []) != [no]:
+            errors.append((path, "numeric loader: refused by rows %s, expected exactly row %s"
+                           % (got.get("rows", []), no)))
+        elif expect != "ok":
+            held.add(no)
     for path in sorted(manifests):
         got = loader.judge(path.read_bytes())
         if got["verdict"] != "ok":
