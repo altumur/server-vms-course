@@ -56,7 +56,7 @@ The parameters `opts`, all optional:
 | Parameter | What |
 |---|---|
 | `sections` | which platform sections to show and in which order: `["units", "access", "journal"]` by default. Servers and the domain are not sections of the strip but the second layout of the units panel, «By servers», where the domain is the root (as in the former product console) |
-| `subsystems` | which manifests give units to the tree: by default all from `/mounts`; `[]` — none; the unplaced ones the section `unplaceable` reads at all subsystems of the catalogue, read-only (P/07 N1.4; ADR-0112 addendum (23)). A limit of the witness: the published `Source/w2cplatform/console.js` does not execute this rule (`[]` and the unplaced — only by `opts.subsystems`), the owner of the published common module bytes closes this open debt under P/07 N5 and «Implementation decides» item 6; generation lines keep the published bytes unchanged. A subsystem whose manifest says `about` (§7) is nested as nodes under the units of the parent; without `about` — a tree of its own. The shell may narrow the list |
+| `subsystems` | which manifests give units to the tree: by default all from `/mounts`; `[]` — none; the unplaced ones the section `unplaceable` reads at all subsystems of the catalogue, read-only (P/07 N1.4; ADR-0112 addendum (23)). A limit of the published canonical module [console.js](module/console.js): it does not execute this rule (`[]` and the unplaced — only by `opts.subsystems`), the owner of the published common module bytes closes this open debt under P/07 N5 and «Implementation decides» item 6; generation lines keep the published bytes unchanged. A subsystem whose manifest says `about` (§7) is nested as nodes under the units of the parent; without `about` — a tree of its own. The shell may narrow the list |
 | `lang` | Exact `"ru"` selects Russian platform captions and UI timestamp/date formatting; every other value, including omission, selects English. Captions are materialized from [data/localization.tsv](data/localization.tsv) into the existing WORDS shape of the same module. The browser language does not select a language; subject captions and protocol/data values remain unchanged. |
 | `poll_s` | the polling period of the page, 5 s by default; the module polls every `poll_s` (P/07 N1.4 `order`), it has no period of its own in browser memory; it learns of a row edit earlier — by the feed `GET /changes` (P/07 N1.4 `changes`) — and rereads the data at once |
 
@@ -260,7 +260,7 @@ The module is a library of the platform, the shell is a product page that calls 
 
 The rule of choice: if the general form lacks something for any subsystem, it is fixed in the module; `general` is taken only for the sake of the arrangement.
 
-**Appearance** (the owner's decision of 2026-10-04: the new console looks and works exactly like the former product console). The look of the module is the look of the product console, common to all pages: the header with counters from the gauges of the manifest and the user menu (theme, refresh rate, «Refresh», «Sign out»), the section strip, the tree panel with the layout, the filter, the star and «⋯», a resizable width, the footer «Cancel»/«Save», cards. The common styles are the module file `w2cplatform/console.css`, served by the platform next to `console.js`; the classes in it are neutral, the dictionary of §2 applies to the class names too. The styles of the subject tabs (video, archive, the camera card) remain in the product page. The page may override the theme, but it is obliged to nothing.
+**Appearance** (the owner's decision of 2026-10-04: the new console looks and works exactly like the former product console). The look of the module is the look of the product console, common to all pages: the header with counters from the gauges of the manifest and the user menu (theme, refresh rate, «Refresh», «Sign out»), the section strip, the tree panel with the layout, the filter, the star and «⋯», a resizable width, the footer «Cancel»/«Save», cards. The common styles are the canonical module file [console.css](module/console.css), served by the platform next to `console.js`; the classes in it are neutral, the dictionary of §2 applies to the class names too. The styles of the subject tabs (video, archive, the camera card) remain in the product page. The page may override the theme, but it is obliged to nothing.
 
 Everything that the shell has added the module places and repaints by its own polling, calling `render` again. The scroll and the focus inside the host are kept by the module (the same `paintInto` as now in the product).
 
@@ -268,7 +268,7 @@ Everything that the shell has added the module places and repaints by its own po
 
 This is the test of the contract.
 
-- **The platform page** (`w2cplatform/console.html` in the product, `Source/w2cplatform/console.html` in the course) — the three lines from §1 and nothing else. It adds nothing and works on any manifest.
+- **The platform page** ([console.html](module/console.html), the P/07 canon) — the three lines from §1 and nothing else. It adds nothing and works on any manifest.
 - **`testsub`** — a fictitious subsystem (`testsub.subsystem.yaml`, §2.3 of the boundary note). The test brings up the console with it only and opens the minimal page in jsdom. It checks:
   - the unit tree;
   - adding, editing and deleting;
