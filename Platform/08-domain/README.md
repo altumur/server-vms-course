@@ -2,9 +2,9 @@
 
 This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-A micromodule: the process domain of the holder. What it norms and from where — the module design note `Platform/module-design.md` (for people, not in the export), the table «Уроки».
+A micromodule: the process domain of the holder. What it norms and from where — the module design note `Platform/module-design.md` (for people, not in the export), the table «Lessons».
 
-The layout of the catalogue (ADR-0124: the English source on the canonical path, the Russian text for people in `ru/`). The lesson is assembled from the holder sides of lessons М11/1–12; the sides of the agent and
+The layout of the catalogue (ADR-0124: the English source on the canonical path, the Russian text for people in `ru/`). The lesson is assembled from the holder sides of lessons M11/1–12; the sides of the agent and
 of the relay — lesson P/09, of the domain console — lesson P/10, the late layer of the cluster console — [chapter 6.7](../06-console/spec/06.7-console.norms.md).
 The lesson has no library contract — it is a process with an HTTP door (`SIGNER_URL`). The common algorithms of the lesson are the contracts
 `common/contracts/` (`keys`, `domain-token`, `domain-envelopes`, `accept`, `may`, `record`, `ask-sig`) and their vectors

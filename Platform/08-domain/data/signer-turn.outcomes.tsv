@@ -1,4 +1,4 @@
 # Outcomes of an unreadable row domain/signer-turn (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domain	the whole row is unreadable: the domain process — waiting (every door — 503 standby), log; the turn is not taken and not prolonged, there is no CAS over an unreadable row (Н3 «turn of the domain process» step 1)	0	row	P/08.10 Н1.7 standby, Н3 «очередь процесса domain» шаг 1
+	domain	the whole row is unreadable: the domain process — waiting (every door — 503 standby), log; the turn is not taken and not prolonged, there is no CAS over an unreadable row (N3 «turn of the domain process» step 1)	0	row	P/08.10 N1.7 standby, N3 «the turn of the domain process domain» step 1
