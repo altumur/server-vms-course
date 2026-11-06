@@ -1,4 +1,4 @@
-# повтор маршрута (ADR-0094 B1)
+# A repeated route (ADR-0094 B1)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

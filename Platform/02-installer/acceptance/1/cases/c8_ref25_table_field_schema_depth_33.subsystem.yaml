@@ -1,4 +1,4 @@
-# schema поля таблицы глубиной 33 (> 32); норма М10/2 Н1.2а schema, P/06.1 Н1.4; строка 25 references.tsv
+# A table field schema has depth 33 (> 32); M10/2 N1.2a schema, P/06.1 N1.4; references.tsv row 25
 name: probe
 unit: {rows: counters, id: numeric}
 placement: {capacity: {default: 4}}

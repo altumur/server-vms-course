@@ -1,4 +1,4 @@
-# пустая карта (ADR-0094 B1)
+# An empty map (ADR-0094 B1)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

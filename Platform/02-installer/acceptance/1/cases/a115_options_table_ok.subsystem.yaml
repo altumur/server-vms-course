@@ -27,8 +27,8 @@ display:
   fields: {name: Name, start: Start}
   options:
     kind: {a: Alpha, b: Beta}
-    zones.mode: {on: Включён}
-    zones.level: {'1': Низкий, '2': Высокий}
+    zones.mode: {on: Enabled}
+    zones.level: {'1': Low, '2': High}
   form:
     - title: Main
       fields: [name, start, kind]

@@ -1,4 +1,4 @@
-# worker.creates без key; P/02.1 Н1.2а
+# worker.creates without key; P/02.1 N1.2a
 name: probe
 unit:
   rows: counters

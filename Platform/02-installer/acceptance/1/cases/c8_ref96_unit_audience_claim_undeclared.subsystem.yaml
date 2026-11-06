@@ -1,4 +1,4 @@
-# unit.audience_claim не из claims; норма М11/7 Н1.1; строка 96 references.tsv
+# unit.audience_claim is not in claims; M11/7 N1.1; references.tsv row 96
 name: probe
 unit:
   rows: counters

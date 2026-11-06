@@ -1,4 +1,4 @@
-# len(sub) = 18 → группа w2c-s12345678901234567controller ровно 32 знака (P/02.4 Н1.1 users_groups names)
+# len(sub) = 18 makes group w2c-s12345678901234567controller exactly 32 characters (P/02.4 N1.1 users_groups names)
 name: s12345678901234567
 unit: {rows: things, id: numeric}
 placement: {capacity: {default: 1}}

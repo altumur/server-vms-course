@@ -1,4 +1,4 @@
-# запись первого вида и GET <s>/where (ADR-0112 доп. (3) п. 2)
+# A first-kind write and GET <s>/where (ADR-0112 addendum (3) item 2)
 name: callc
 unit:
   rows: callers

@@ -1,4 +1,4 @@
-# rank вне перечня view, edit, admin — отказ
+# rank outside view, edit, admin is refused
 name: probe
 unit:
   rows: counters

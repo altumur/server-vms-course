@@ -1,4 +1,4 @@
-# POST /domain/verify по билету (P/06.3 Н1.9, ADR-0119)
+# POST /domain/verify by ticket (P/06.3 N1.9, ADR-0119)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

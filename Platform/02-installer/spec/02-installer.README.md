@@ -185,5 +185,5 @@ For all chapters: complete the implementation description and the checklists; do
 | A verdict did not match, the norm is unambiguous | fix the loader or its regular path, then repeat the case |
 | The table contradicts the norm | pass an acceptance defect to the author of the norms; do not change the verdict for the sake of a green run |
 | The norm is incomplete or contradictory | describe the question with the input file and a reference to the section; agree on a change of the canon |
-| The rights outcome diverges from the norm | match the input and the outcome with N1–N4 of chapter 2.5, then with the acceptance file; report to «Спецификация» the place, a counterexample and the proposed solution |
+| The rights outcome diverges from the norm | match the input and the outcome with N1–N4 of chapter 2.5, then with the acceptance file; report to «Specification» the place, a counterexample and the proposed solution |
 | After an AI correction a repeated wrong interpretation is found | write the sample and the clarification into `journal/corrections-<K>.tsv` of its chapter per ADR-0080 |

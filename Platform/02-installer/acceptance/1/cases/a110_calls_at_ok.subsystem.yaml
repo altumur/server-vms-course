@@ -1,4 +1,4 @@
-# чтение у другого члена по билету (P/06.3 Н1.9, ADR-0111 п. 15)
+# Read at another member by ticket (P/06.3 N1.9, ADR-0111 item 15)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

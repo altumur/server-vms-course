@@ -1,4 +1,4 @@
-# shares.<имя>.kind вне socket, dir; ADR-0091 п. 5
+# shares.<name>.kind is neither socket nor dir; ADR-0091 item 5
 name: probe
 unit:
   rows: counters

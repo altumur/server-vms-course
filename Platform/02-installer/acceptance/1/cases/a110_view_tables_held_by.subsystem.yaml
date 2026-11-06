@@ -1,4 +1,4 @@
-# held_by только у таблицы мест
+# held_by is allowed only for the places table
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}, note: {type: string}, pic: {type: blob}}}
 placement: {capacity: {default: 1}}

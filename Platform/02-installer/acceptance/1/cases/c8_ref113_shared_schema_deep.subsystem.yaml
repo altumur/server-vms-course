@@ -1,4 +1,4 @@
-# схема общего документа глубиной 33 (граница: 32 — ok); норма P/06.1 Н1.4; строка 113 references.tsv
+# The shared document schema has depth 33 (boundary: 32 is ok); P/06.1 N1.4; references.tsv row 113
 name: probe
 unit:
   rows: counters

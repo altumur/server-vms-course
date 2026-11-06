@@ -1,4 +1,4 @@
-# console.running не name метрики из metrics[]; норма М10/2 Н1.4; строка 78 references.tsv
+# console.running is not a metrics[] name; M10/2 N1.4; references.tsv row 78
 name: probe
 unit:
   rows: counters

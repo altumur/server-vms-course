@@ -1,4 +1,4 @@
-# первый сегмент маршрута — маршрут двери (ADR-0094 B1)
+# The first route segment is a door route (ADR-0094 B1)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

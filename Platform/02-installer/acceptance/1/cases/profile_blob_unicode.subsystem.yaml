@@ -17,7 +17,7 @@ unit:
       default: a
     labels:
       type: list
-    я:
+    "\u044f":
       type: blob
 placement:
   capacity:

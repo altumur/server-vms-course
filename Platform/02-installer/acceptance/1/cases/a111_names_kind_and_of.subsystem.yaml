@@ -1,4 +1,4 @@
-# вид цели вместе с постоянной подсистемой
+# The target kind together with a permanent subsystem
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}, target: {type: json}, then: {type: json}}}
 placement: {capacity: {default: 1}}

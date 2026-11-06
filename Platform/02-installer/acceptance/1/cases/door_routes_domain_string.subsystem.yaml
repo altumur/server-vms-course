@@ -1,4 +1,4 @@
-# domain не список; ADR-0091 доп. (14) п. 1
+# domain is not a list; ADR-0091 addendum (14) item 1
 name: probe
 unit:
   rows: counters

@@ -1,4 +1,4 @@
-# дверь книги без GET — отказ: только чтение
+# A book door without GET is refused: read-only
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

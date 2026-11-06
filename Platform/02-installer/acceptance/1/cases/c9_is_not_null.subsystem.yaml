@@ -1,4 +1,4 @@
-# Ф12 (свод журналов, решение «Архитектора»): ключ со значением null — is ложно, is_not истинно: merge: union у type: null — отказ и type, и merge; норма P/02.1 Н1.3
+# F12 (journal summary, Architect decision): a key with null makes is false and is_not true; merge: union with type: null fails both type and merge; P/02.1 N1.3
 name: probe
 unit:
   rows: counters

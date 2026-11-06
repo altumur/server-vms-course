@@ -1,7 +1,7 @@
 # Traces of rollout-poll.machine.yaml (ADR-0120 item 2 (b), addendum (5) item 4 (b)): step 0 — input (const may be overridden), then
 # external events at virtual time t; the executor raises tick, the reply and read deadlines and wait_expired itself. expect — assertions after the step,
 # separated by «;»: state, alive, need, replied (sets, comma separated), target.<v> (- — no target), reads (n:whom …), did (an event or io of the step, timers included),
-# not (no such event or io). Cases — ADR-0115 addenda (28)–(37), the Architect's remark 7, ADR-0120 addenda (5) item 4 (b), (c) and (6), the P/02 review С1 (two voters: -last without -allow-downtime, the flag) and М6 (a voter without an address)
+# not (no such event or io). Cases — ADR-0115 addenda (28)–(37), the Architect's remark 7, ADR-0120 addenda (5) item 4 (b), (c) and (6), the P/02 review S1 (two voters: -last without -allow-downtime, the flag) and M6 (a voter without an address)
 trace	step	t	event	expect
 healthy-under-write	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	state=polling
 healthy-under-write	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	did=tick 0; did=send_status 0; need=a; replied=a

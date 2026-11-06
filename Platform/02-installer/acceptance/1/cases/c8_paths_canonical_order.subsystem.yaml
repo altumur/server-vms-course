@@ -1,5 +1,5 @@
-# Р2 (ADR-0087 доп. (3)): два пути одного отказа — канонический порядок по байтам JSON Pointer; норма P/02.1 Н1.4, Н4.
-# Строка servers.show проверяется раньше about.field, путь /about/field меньше по байтам — в выводе он первый.
+# R2 (ADR-0087 addendum (3)): two refusal paths are ordered canonically by JSON Pointer bytes; P/02.1 N1.4, N4.
+# The servers.show row is checked before about.field, but /about/field sorts first by bytes in the output.
 name: probe
 unit:
   rows: counters

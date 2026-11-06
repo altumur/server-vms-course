@@ -1,4 +1,4 @@
-# не ASCII в слове; ADR-0091 доп. (5) п. 2
+# A non-ASCII character in a word; ADR-0091 addendum (5) item 2
 name: probe
 unit:
   rows: counters
@@ -7,4 +7,4 @@ unit:
     name: {type: string, required: true}
 placement:
   capacity: {default: 4}
-worker: {exec: '/usr/lib/probe/воркер'}
+worker: {exec: "/usr/lib/probe/\u0432\u043e\u0440\u043a\u0435\u0440"}

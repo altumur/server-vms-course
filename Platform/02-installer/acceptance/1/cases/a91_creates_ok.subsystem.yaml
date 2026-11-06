@@ -1,4 +1,4 @@
-# worker.creates к другой подсистеме, key — подстановки через «-», ADR-0091 п. 1 (доп. 5: без valid_for)
+# worker.creates targets another subsystem; key substitutions use a dash, ADR-0091 item 1 (addendum 5: no valid_for)
 name: probe
 unit:
   rows: counters

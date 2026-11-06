@@ -1,4 +1,4 @@
-# holds.table называет таблицу с delete_after; строка 125 связей (ADR-0094 шаг 3б; решение «Архитектора» 2026-10-31)
+# holds.table names a table with delete_after; relation 125 (ADR-0094 step 3b; Architect decision 2026-10-31)
 name: probe
 unit: {rows: things, id: numeric}
 placement: {capacity: {default: 1}}

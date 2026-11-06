@@ -1,4 +1,4 @@
-# статус простым целым: ключ читается не строкой (ADR-0094 B1)
+# The status key is a plain integer, not a string (ADR-0094 B1)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

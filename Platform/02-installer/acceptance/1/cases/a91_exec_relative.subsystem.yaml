@@ -1,4 +1,4 @@
-# первое слово не абсолютный путь; ADR-0091 доп. (5) п. 2
+# The first word is not an absolute path; ADR-0091 addendum (5) item 2
 name: probe
 unit:
   rows: counters

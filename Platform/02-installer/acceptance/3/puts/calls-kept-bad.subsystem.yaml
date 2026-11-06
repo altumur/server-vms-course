@@ -1,4 +1,4 @@
-# запись на необъявленную строку (P/06.3 Н1.9)
+# Write to an undeclared row (P/06.3 N1.9)
 name: callc
 unit:
   rows: callers

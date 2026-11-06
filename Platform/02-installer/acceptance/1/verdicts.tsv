@@ -1,4 +1,4 @@
-# Acceptance of P/02.1 «Манифест подсистемы и строгий загрузчик» (ADR-0080; moved from М10/2): loader verdicts.
+# Acceptance of P/02.1 «Subsystem manifest and strict loader» (ADR-0080; moved from M10/2): loader verdicts.
 # Row: case<TAB>verdict. case is cases/<case>.subsystem.yaml loaded alone as a subsystem manifest;
 # verdict is ok (loads) or refused (refusal naming the file); diagnostics are diagnostics.tsv and reading under N5. Rules: N1, N4;
 # this file is only the table. Origin: spec_verdicts.tsv (reviews 14 and 15, the Architect's verdicts, 2026-10-06),
@@ -422,7 +422,7 @@ m61_shared_ok	ok
 m61_shared_secret	refused
 m61_shared_twice	refused
 m61_witness_member_field_not_fixed	refused
-# c4_* — P/02.1 cammeta-python/cammeta-go reconciliation (2026-10-18): YAML structure, string keys, values (decision `decisions/inbox/2026-10-18-сверка-python-go-м10-1-2.md`, items 12–18).
+# c4_* — P/02.1 cammeta-python/cammeta-go reconciliation (2026-10-18): YAML structure, string keys, values (decision `Python and Go reconciliation (2026-10-18, former M10/1–2; for people)`, items 12–18).
 c4_block_less_indented	refused
 c4_block_more_indented_first	refused
 c4_block_tab_content_ok	refused

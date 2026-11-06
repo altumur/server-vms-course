@@ -1,4 +1,4 @@
-# владелец доли belt (ADR-0091 п. 5)
+# Owner of the belt share (ADR-0091 item 5)
 name: owner
 unit: {rows: things, id: numeric}
 placement: {capacity: {default: 1}}

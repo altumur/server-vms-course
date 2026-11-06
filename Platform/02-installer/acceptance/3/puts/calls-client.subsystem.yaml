@@ -1,4 +1,4 @@
-# заказчик перечня: все виды записей адресата (ADR-0094 B1)
+# A list customer: all kinds of target entries (ADR-0094 B1)
 name: callc
 unit:
   rows: callers

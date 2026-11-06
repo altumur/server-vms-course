@@ -5,7 +5,7 @@ This English text is the source; the Russian translation `ru/acceptance/2/README
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md). The norm of the chapter is
 [`02.2-installer.norms.md`](../../spec/02.2-installer.norms.md) N5; the write of the view is [chapter 2.3](../../spec/02.3-installer.norms.md)
 N3 «Manifest change» (the installer). `puts.tsv` has 9 installations; the installation files are in `puts/`. The window of chapter 2.2 is
-`decisions/inbox/2026-10-20-окно-главы-2.2-канонический-вид.md`, section 4 and the Architect's decision (item 8): the view is built before
+the chapter 2.2 canonical-view window of 2026-10-20, section 4 and the Architect's decision (item 8): the view is built before
 any write, a view above the ceiling is a refusal of the installation as a whole, the write order is row, view, mark last. The bytes of the view are
 the vectors [`canonical`](../../vectors/canonical/README.md); here — the wrapper, `rev`, «unchanged» and the boundary of the view ceiling.
 
@@ -13,7 +13,7 @@ the vectors [`canonical`](../../vectors/canonical/README.md); here — the wrapp
 
 The format of `puts.tsv` of [chapter 2.3](../3/README.md) with a fourth column `canonical` and with directives between files. The installation is
 the command `manifest-put {socket} {file}` of the section «Stand» of the common acceptance README; the store is an instance of the «Stand» with a row ceiling of
-524288 bytes (common README, «Параметры каждого экземпляра»).
+524288 bytes (common README, «Parameters of each instance»).
 
 **The form of the file.** UTF-8, lines separated by LF, fields by TAB. Lines starting with `#` and empty lines are skipped. The first
 line not skipped is the header `case<TAB>puts<TAB>expect<TAB>canonical`, then one line per case; exactly four fields.
@@ -60,12 +60,12 @@ of the view after a `cas` conflict — by reading per N5 of the chapter.
 |---|---|---|---|
 | 01 | `first` | the first installation of `testsub`: the row, the view and the mark rev 1; `manifest` — the vector `course-testsub` | P/02.2-04, P/02.3-01 |
 | 02 | `same_twice` | the same file again — «unchanged»: rev 1, the view is the former one | P/02.3 N3 «Manifest change» |
-| 03 | `view_deleted` | there is no view, the file is the same — not «unchanged»: the row rev 2, the view and the mark rev 2 | P/02.3 N3 («строка та же, а вида нет»); window 2.2, R12 |
+| 03 | `view_deleted` | there is no view, the file is the same — not «unchanged»: the row rev 2, the view and the mark rev 2 | P/02.3 N3 («same row, missing view»); window 2.2, R12 |
 | 04 | `view_spoiled` | the view is not equal to the projection, the file is the same — the view is rewritten, rev 2 | ibid. |
 | 05 | `view_over_ceiling` | the weight of the view row is 524289 — one byte above the ceiling, the manifest row (523609) fits: a refusal as a whole, code 2; the row, the view and the mark are the former rev 1 from `probe` | P/02.2 N3, N4; P/02.3 N4 (window 2.2, item 8) |
 | 06 | `view_at_ceiling` | the weight of the view row is exactly 524288 — the view is written, the row and the mark rev 2; the boundary of the domain of accepted manifests | P/02.2 N1.2 `ceiling` (ADR-0089 addendum (1) R11) |
 | 07 | `sugared` | the sugar `tables`, `bound_to`, without `snapshot` and `display` — the installer's view equals the vector | P/02.2-02, P/02.2-03 |
-| 08 | `rev_deleted` | there is no mark, the file is the same — «unchanged»: the row and the view are the former rev 1, the mark is brought up to date — rev 1, the `sha256` of the row (the Gemini audit P/02, property 13) | P/02.3 N3 «Manifest change» («метки нет … → довести»), P/02.3-03 |
+| 08 | `rev_deleted` | there is no mark, the file is the same — «unchanged»: the row and the view are the former rev 1, the mark is brought up to date — rev 1, the `sha256` of the row (the Gemini audit P/02, property 13) | P/02.3 N3 «Manifest change» («missing mark … → bring up to date»), P/02.3-03 |
 | 09 | `rev_spoiled` | the mark is not by the form (`rev` — `"x"`), the file is the same — a refusal, code 2, nothing is written: the row and the view are the former rev 1, the mark is the spoiled one (property 14) | P/02.3 N1.5 `rules`, [`manifest-rev.outcomes.tsv`](../../data/manifest-rev.outcomes.tsv) (the reader `admin`), P/02.3-01 |
 
 The weight of the view row is the sum of the bytes of the names and values of `items` (P/01.1 N1): `form` `"1"`, `rev` of one digit, `sha256` 64 characters,
@@ -106,8 +106,8 @@ the reader of the view (P/02.2-06 — by the readers' edits) — by reading per 
 
 ## The Gemini coverage audit P/02: the mark `/rev` (the Architect's forms)
 
-Properties 13 and 14 of the report `АУДИТ-ПОКРЫТИЯ-GEMINI-P02.md` (branch gemini/audit-coverage, c698f3291) — the directives `@rev-delete`,
+Properties 13 and 14 of the report the coverage audit Gemini P02 (for people) (branch gemini/audit-coverage, c698f3291) — the directives `@rev-delete`,
 `@rev-spoil` (the Architect's decision on the question of the form; check_spec dad80a80b), the cases 08 `rev_deleted` and 09 `rev_spoiled`.
-The refusal code on an unreadable mark is `2`: N1.5 of chapter 2.3 says «код ≠ 0», the table `expect` knows `0` and `2`, the refusals of
+The refusal code on an unreadable mark is `2`: N1.5 of chapter 2.3 says «code ≠ 0», the table `expect` knows `0` and `2`, the refusals of
 `manifest put` of N4 of chapter 2.3 are code 2. An unreadable row `platform/manifest/<name>` (the outcomes of `manifest-row.outcomes.tsv`) —
 still by reading: there is no directive for spoiling the row.

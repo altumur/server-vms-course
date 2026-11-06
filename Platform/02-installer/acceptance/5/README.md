@@ -7,7 +7,7 @@ The stand and the dictionary of directives and doors are in [the common acceptan
 [the OpenAPI](../../../01-store/spec/01-store.api.openapi.yaml) of lesson P/01.
 The file has 8 scenarios / 70 steps (sc. 12 steps 12–18 — `domainagent` does not write `domain/root`, `view`, `shadow`, `backups/rev-1`, `shared-docs/rev-1`, `alarm-history/m1`, `idem/k1`, 403, C02-LOCAL-BINDING240-ROOT; the mutation check 7cecaf2 № 29, 49: the admission rows of the controller without delete, the negation of `idem` at the worker; sc. 13 — the order and the state, ADR-0091, sc. 02 step 8 — the deletion of a row of `testsub2` by the controller is now 200: it has `retire_when.delete_after` and `ends`); the roles and the rights file are generated from `testsub` and `testsub2`
 (`Source/tests/testdata/testsub*.subsystem.yaml`) with the deployment name `testsub`.
-The scenarios and the manifest variants were moved from the acceptance of М10/6
+The scenarios and the manifest variants were moved from the acceptance of M10/6
 (stage B) with the former numbers, steps and texts. Scenarios 05–08 and 10 (the evaluator, `never`, listing, the guard, identity,
 `/v1/rights`) are in the acceptance of [P/01.2](../../../01-store/acceptance/2/README.md) (stage B); the numbers of the remaining ones did not change.
 
@@ -27,13 +27,13 @@ The roles of the scenarios: `console`, `testsubcontroller`, `testsubworker`, `te
 sc. 12 — also `testsubdomain` and `domainagent` (the domain roles of the rights file `testsub`: `testsub` has `kept` and a transferable
 book `tallies`, `testsub2` has only collected books — there is no role `testsub2domain` and no socket).
 
-The reconciliation of python and go М10/6–11 (R1–R5, R7): sc. 04 steps 4–7 — the resource reads the terms of both manifests (there are no rows: `items:
+The reconciliation of python and go M10/6–11 (R1–R5, R7): sc. 04 steps 4–7 — the resource reads the terms of both manifests (there are no rows: `items:
 null`); sc. 12 — the domain roles.
 
 ## `journal/corrections-5.tsv`
 
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from
-`corrections.tsv` of the acceptance of М10/06 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
+`corrections.tsv` of the acceptance of M10/06 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
 resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (review analysis of stage B 6–7, № 18).
 
 ## Isolation
@@ -50,7 +50,7 @@ an allowed read of an absent row returns Row with items null per chapter P/01.1.
 
 ## Manifest variants (`variants/`)
 
-The derivation of rights by meaning on manifests outside the stand (the reconciliation of python and go М10/6–11: R2–R8, R10, R12; registry line e31e5c28).
+The derivation of rights by meaning on manifests outside the stand (the reconciliation of python and go M10/6–11: R2–R8, R10, R12; registry line e31e5c28).
 The directory `variants/<variant>/` — the files `*.subsystem.yaml` (the manifest catalogue of the variant, loaded per chapter 2.1) and exactly
 one of: `expect.tsv` (the derivation of rights and probes), `refused` (an expected generation refusal), `check.tsv` with the directory `check/` (the comparison
 `--check`); the forms of `refused` and `check.tsv` are the Architect's decision on the question of the form (the Gemini audit P/02, properties 24, 25).
@@ -74,14 +74,14 @@ The order of lines does not matter: each probe is its own action on one fresh in
 
 **`refused`:** UTF-8, LF; lines with `#` are skipped; exactly one other line — the `name` of the manifest of the variant whose declaration
 is refused. The runner calls the rights derivation command as in item 1 above: the code MUST be `2`, there is no rights file at the path `{file}` (a generation refusal
-before the file, N4), stderr names this manifest — its `name` or its file (N4: «имя объявления и манифест»);
+before the file, N4), stderr names this manifest — its `name` or its file (N4: «declaration name and manifest»);
 the text beyond this is not compared. The store is not started, there are no probes.
 
 **`check.tsv`:** UTF-8, LF, fields separated by TAB; lines with `#` are skipped; the header `case	file	code`; then one line per
 case: `case` — `[a-z0-9_]+`, unique; `file` — `check/<case>.rights`, a rights file; `code` — `0` (the file by meaning
 equals the generated one) or `!0` (any code except 0). For each line the runner calls the rights comparison of the implementation (`rights --check
 <file>`, N2, N3 «install») — by the command `stand.rights-check` of the profile `02-installer` ([the common acceptance README](../../../common/acceptance/README.md),
-«Команда сверки прав»): `{manifests}` — the manifest catalogue of the variant, `{deployment}` = `dep`, `{file}` — `check/<case>.rights`;
+«Rights comparison command»): `{manifests}` — the manifest catalogue of the variant, `{deployment}` = `dep`, `{file}` — `check/<case>.rights`;
 the outcome is the code, compared with the column `code`. No key in the profile — the cases of `check.tsv` are not executed (neither GREEN nor an outcome of the
 implementation) (the Architect's decision of 2026-10-30, the norm questions of the Gemini audit, P/02 item 3; C02-RIGHTS-CHECK-STAND-01). The comparison by meaning
 is N3 «install»: the set of roles, for each one `group` and the sets of patterns `read`, `write`, `delete` (no `delete` — an empty
@@ -94,7 +94,7 @@ set); `comment`, order, repeats and spaces are not compared; a file not by the f
 | `v3-objects-rows` | `va` with `objects.rows: [marks/]` | `marks/` → `objects/va/marks/*` (R10) |
 | `v4-domain-kept` | `va` with `domain.kept: [ledger, badges/]` | `vadomain` writes the slot and `kept`; `domainagent` — by the form of the declaration and without the slot and the pulse of the worker on the domain (R4, R3) |
 | `v6-near-about-ref` | `va`; `vb` with `placement.near.sub: va`, `vc` with `about.sub: va`, `vd` with the field `ref: va/items` | the controller reads the rows of `va` by the catalogue (`placement`, `workers`, `slots`, `holds`, unit rows, `policy`, `placement_turn`), not the epoch, `idem`, `next_id`, and does not write; there is no reverse link (the Architect's decision of 2026-10-27; P/03 Go 084a3ee9, P/03.6 sc. 07) |
-| `v7-must-match` | `va` (the field `shelf` — `ref: va/shelves`, `must_match: {zone: zone}`; the table `shelves`); `vb` with `worker.creates` on `va/items` (`key: "{code}"`); `vc` with the table `links`, the field `of` — `ref: va/items`, `must_match: {zone: zone}` | the customer `vbworker` reads the targets of the row check — `va/shelves/*` (the direct branch) and `vc/links/*` (the reverse branch of `must_match`), writes only `va/items/vb-*` without deletion; foreign rows of `va/items` and the other families of `vc` — no; the controller of `va` does not read the reverse family (the coverage audit P/02, B07) | P/02.5 N1.4 `<s>worker` «чтения общей проверки строки»; the row check contract |
+| `v7-must-match` | `va` (the field `shelf` — `ref: va/shelves`, `must_match: {zone: zone}`; the table `shelves`); `vb` with `worker.creates` on `va/items` (`key: "{code}"`); `vc` with the table `links`, the field `of` — `ref: va/items`, `must_match: {zone: zone}` | the customer `vbworker` reads the targets of the row check — `va/shelves/*` (the direct branch) and `vc/links/*` (the reverse branch of `must_match`), writes only `va/items/vb-*` without deletion; foreign rows of `va/items` and the other families of `vc` — no; the controller of `va` does not read the reverse family (the coverage audit P/02, B07) | P/02.5 N1.4 `<s>worker` «reads of the common row check»; the row check contract |
 | `v8-worker-writes-deletes` | `va` with the tables `shelves`, `gauges`, `worker.writes: [gauges]`, `worker.deletes: [items]` | the table of `worker.writes`: the worker writes, reads and deletes, the console reads and only deletes; an ordinary table: the console writes and deletes, the worker only reads; `worker.deletes`: the worker deletes unit rows without a write, the controller without `delete_after` — no (the coverage audit P/02, second pass) | P/02.5 N1.4 `console`, `<s>worker`, N3 step 2 |
 | `v9-asked-free-resource` | `va` with `requests` without `per_person` and `free`; `vb` with `about.sub: va`, the tables `notches` (`holds.table`) and `shelves`, `requests` with `per_person` and `free: true` | the console writes `vb/asked/*`, not `va/asked/*`; `!vb/asked/*` at the worker and the controller of `vb`; the resource writes, reads, deletes `vb/requests/free-*`, not `vb/requests/<rid>` and not `va/requests/free-*`; the resource reads the table `holds.table` (`vb/notches/*`) and the unit rows of the manifest with `about` (`vb/things/*`), not other tables, not the rows of `va` without `about` and not the place family `<s>/holds/*` either at `vb` or at `va` (the holds contract; C02-RESOURCE-HOLDS-TABLE-01) (ibid.) | P/02.5 N1.4 the general rules, `console`, `resource` |
 | `v10-worker-domain-reads` | `va` with `worker.reads: [domain/placed/va/, domain/va/tallies]`, the books `tallies` (transferable), `notes` (`from: va/notes/`), `rolls` (`from: va/rolls`), `domain.shared`, a token kind with `unit`, `door.routes`; `vb` without them | `domain/placed/va/` gives also `domain/placement/va/*`; the copy of its own book — also the exact key `domain/va/tallies/local` (`CLUSTER` is not set — `local`), not a prefix; the write of the sources of collected books — a prefix and an exact key; `domain/shared`, `domain/topology`, `domain/member-topology`, `domain/grants` — only at `vaworker` (ibid.) | P/02.5 N1.4 `<s>worker`, N2, N3 step 3 (C02-OWN-BOOK-HOLDER-01) |
@@ -135,7 +135,7 @@ deletes its own, of a foreign manifest — 403, the controller — 403 (N1.4; th
 
 ## The coverage audit P/02, second pass (Gemini)
 
-The report `АУДИТ-ПОКРЫТИЯ-GEMINI-P02.md` (branch gemini/audit-coverage, c698f3291): the derivation of rights that was formerly checked by reading —
+The report the coverage audit Gemini P02 (for people) (branch gemini/audit-coverage, c698f3291): the derivation of rights that was formerly checked by reading —
 the variants `v8-worker-writes-deletes` (G04), `v9-asked-free-resource` (G05), `v10-worker-domain-reads` (G06),
 `v11-controller-cross-tables` (G07; a separate variant — the manifests of `v6-near-about-ref` do not change). The variant table is above.
 `--check` and the generator refusals before the file — the Architect's forms `check.tsv` and `refused` (above): `v12-check-rights`,

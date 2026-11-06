@@ -1,4 +1,4 @@
-# зарезервированное имя (02.1 name, ревью c69957eb7 М1)
+# A reserved name (02.1 name, review c69957eb7 M1)
 name: placement
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}, key_secret: {type: string}}}
 placement: {capacity: {default: 1}}

@@ -1,4 +1,4 @@
-# key называет поле list адресата
+# key names the target list field
 name: cust
 unit: {rows: orders, id: numeric}
 placement: {capacity: {default: 1}}

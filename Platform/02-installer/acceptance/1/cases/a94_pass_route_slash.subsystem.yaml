@@ -1,4 +1,4 @@
-# маршрут с начальной косой чертой (ADR-0094 B1)
+# A route with a leading slash (ADR-0094 B1)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

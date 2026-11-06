@@ -1,4 +1,4 @@
 # Outcomes of an unreadable row platform/space (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	resource	the row is unreadable: the relieve step is not executed, the defaults 0.85/0.75 are not substituted, the own free-* row is neither written nor removed; the cause goes to the heartbeat settings_unread: space (V7 item 3, row 21)	0	row	P/05 Н1.4 space, Н3 relieve
+	resource	the row is unreadable: the relieve step is not executed, the defaults 0.85/0.75 are not substituted, the own free-* row is neither written nor removed; the cause goes to the heartbeat settings_unread: space (V7 item 3, row 21)	0	row	P/05 N1.4 space, N3 relieve

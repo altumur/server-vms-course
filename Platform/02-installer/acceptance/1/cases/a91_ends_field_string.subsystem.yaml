@@ -1,4 +1,4 @@
-# ends.field — поле string, не int и не float; строка 37 references.tsv
+# ends.field is string, neither int nor float; references.tsv row 37
 name: probe
 unit:
   rows: counters

@@ -1,4 +1,4 @@
-# дверь второго вида: её routes не цель записи calls (ADR-0112 доп. (3) п. 2)
+# A second-kind door: its routes are not calls write targets (ADR-0112 addendum (3) item 2)
 name: secondk
 unit:
   rows: seconds

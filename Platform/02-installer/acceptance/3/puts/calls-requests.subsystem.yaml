@@ -1,4 +1,4 @@
-# a submission to another subsystem by ticket (P/06.3 Н1.9; P/02.1 Н3 «load_catalogue»)
+# a submission to another subsystem by ticket (P/06.3 N1.9; P/02.1 N3 «load_catalogue»)
 name: callq
 unit:
   rows: callers

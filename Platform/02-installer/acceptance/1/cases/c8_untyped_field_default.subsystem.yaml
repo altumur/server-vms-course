@@ -1,4 +1,4 @@
-# Р7 (Ф23): поле без type — string, default 5 не того типа — refused:value; норма М10/2 Н1.3 (type отсутствует = string)
+# R7 (F23): a field without type is string, so default 5 has the wrong type and is refused:form (formerly refused:value); M10/2 N1.3 (absent type means string)
 name: probe
 unit:
   rows: counters

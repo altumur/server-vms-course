@@ -1,4 +1,4 @@
-# unit.rows — state: ключи <sub>/state/… занимает состояние единицы; P/02.1 Н1.2а, ADR-0091 п. 3 (С-5)
+# unit.rows is state: unit state reserves the <sub>/state/... keys; P/02.1 N1.2a, ADR-0091 item 3 (S-5)
 name: probe
 unit:
   rows: state

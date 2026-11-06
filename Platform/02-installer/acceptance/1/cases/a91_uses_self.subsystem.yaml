@@ -1,4 +1,4 @@
-# worker.uses — доля своей подсистемы; строка 91 references.tsv
+# worker.uses names a share of its own subsystem; references.tsv row 91
 name: probe
 unit:
   rows: counters

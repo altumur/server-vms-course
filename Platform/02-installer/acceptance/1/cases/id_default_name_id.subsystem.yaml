@@ -1,4 +1,4 @@
-# {id} в умолчании при unit.id name; строка 122 references.tsv
+# {id} in a default with unit.id name; references.tsv row 122
 name: probe
 unit:
   rows: counters

@@ -1,4 +1,4 @@
-# поле единицы таблицы не в списке: строку некому судить
+# The table unit field is outside the list, leaving nobody to judge the row
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

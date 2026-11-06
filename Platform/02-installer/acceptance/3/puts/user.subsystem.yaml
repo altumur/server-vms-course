@@ -1,4 +1,4 @@
-# потребитель доли owner.belt
+# A consumer of share owner.belt
 name: user
 unit: {rows: stuff, id: numeric}
 placement: {capacity: {default: 1}}

@@ -1,4 +1,4 @@
-# worker.exec — абсолютный путь и слова через один пробел, разрешённые знаки; ADR-0091 доп. (5) п. 2
+# worker.exec: an absolute path and words separated by single spaces, using permitted characters; ADR-0091 addendum (5) item 2
 name: probe
 unit:
   rows: counters

@@ -1,4 +1,4 @@
-# поля нет в таблице
+# The table has no such field
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

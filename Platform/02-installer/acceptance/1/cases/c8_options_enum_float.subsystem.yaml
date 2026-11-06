@@ -1,4 +1,4 @@
-# В3 (ADR-0087 доп. (4)): дробные значения enum у string-поля (1e0, 1.50) — не строки, refused:value; норма М10/2 Н1.3 enum
+# V3 (ADR-0087 addendum (4)): numeric enum values (1e0, 1.50) of a string field are not strings, refused:form (formerly refused:value); M10/2 N1.3 enum
 name: probe
 unit:
   rows: counters

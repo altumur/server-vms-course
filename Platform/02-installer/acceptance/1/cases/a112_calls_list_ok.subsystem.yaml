@@ -1,4 +1,4 @@
-# новые записи перечня (ADR-0112 доп. (1) п. 1)
+# New list entries (ADR-0112 addendum (1) item 1)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

@@ -1,4 +1,4 @@
-# два пробела подряд — пустое слово; ADR-0091 доп. (5) п. 2
+# Two consecutive spaces make an empty word; ADR-0091 addendum (5) item 2
 name: probe
 unit:
   rows: counters

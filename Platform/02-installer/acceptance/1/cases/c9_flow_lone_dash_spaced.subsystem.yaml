@@ -1,4 +1,4 @@
-# Т16, ревью стадии B 1–2 п. 7, V7-FLOW-DASH-01: одиночный «-» в потоке с пробелами вокруг — отказ text (P/02.1 Н1.1 flow)
+# T16, stage B review 1–2 item 7, V7-FLOW-DASH-01: a lone flow '-' surrounded by spaces is refused:text (P/02.1 N1.1 flow)
 name: probe
 unit:
   rows: counters

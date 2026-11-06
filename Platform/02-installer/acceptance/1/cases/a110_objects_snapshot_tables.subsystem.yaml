@@ -1,4 +1,4 @@
-# семья платформы
+# A platform family
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

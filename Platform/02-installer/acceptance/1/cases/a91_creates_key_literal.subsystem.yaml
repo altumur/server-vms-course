@@ -1,4 +1,4 @@
-# key worker.creates с литералом кроме «-» между подстановками; ADR-0091 п. 1
+# worker.creates key has a literal other than '-' between substitutions; ADR-0091 item 1
 name: probe
 unit:
   rows: counters

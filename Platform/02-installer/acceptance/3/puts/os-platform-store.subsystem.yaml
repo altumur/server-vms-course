@@ -1,4 +1,4 @@
-# name: store → пользователь и группа <dep>-store при умолчании развёртывания w2c — w2c-store, группа платформы (P/02.4 Н1.1 users_groups names, dep)
+# name: store makes user and group <dep>-store; default deployment w2c gives w2c-store, a platform group (P/02.4 N1.1 users_groups names, dep)
 name: store
 unit: {rows: things, id: numeric}
 placement: {capacity: {default: 1}}

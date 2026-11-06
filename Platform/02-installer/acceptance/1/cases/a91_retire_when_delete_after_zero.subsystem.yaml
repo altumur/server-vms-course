@@ -1,4 +1,4 @@
-# retire_when.delete_after не целое ≥ 1; P/02.1 Н1.2а, ADR-0091 п. 1
+# retire_when.delete_after is not an integer >= 1; P/02.1 N1.2a, ADR-0091 item 1
 name: probe
 unit:
   rows: counters

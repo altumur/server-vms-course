@@ -1,4 +1,4 @@
-# {role} без name; ADR-0091 доп. (8) п. 3
+# {role} without name; ADR-0091 addendum (8) item 3
 name: probe
 unit:
   rows: counters

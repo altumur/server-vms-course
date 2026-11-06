@@ -1,4 +1,4 @@
-# В3 (ADR-0087 доп. (4)): enum строками '1e0', '1.50' и ключи display.options теми же строками — ok (text() строки — сама строка); норма М10/2 Н1.4
+# V3 (ADR-0087 addendum (4)): enum strings '1e0', '1.50' and matching display.options keys are ok (text() of a string is itself); M10/2 N1.4
 name: probe
 unit:
   rows: counters

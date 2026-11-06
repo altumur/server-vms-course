@@ -1,4 +1,4 @@
-# служебная таблица
+# A service table
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}, key_secret: {type: string}}}
 placement: {capacity: {default: 1}}

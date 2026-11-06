@@ -1,4 +1,4 @@
-# вид без keep ровно сутки — граница (ADR-0110 доп. (16) п. 3)
+# A kind without keep lives exactly one day: the boundary (ADR-0110 addendum (16) item 3)
 name: probe
 unit:
   rows: counters

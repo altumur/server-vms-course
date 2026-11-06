@@ -4,7 +4,7 @@
 
 Владелец — глава [P/02.1](../../spec/02.1-installer.norms.md) загрузчика (N1.3 `worker.exec`, определение `execLine`; ADR-0091
 доп. (4)–(6)). Участники — загрузчик (отказ манифеста с путём ключа) и раннер `w2c-run.sh` ([P/02.4](../../spec/02.4-installer.norms.md)
-N1.9: `worker`, `domainworker`, `part` исполняют argv сами, без оболочки). Байты пишет «Спецификация».
+N1.9: `worker`, `domainworker`, `part` исполняют argv сами, без оболочки). Байты пишет «Specification».
 
 ## `cases.tsv`
 

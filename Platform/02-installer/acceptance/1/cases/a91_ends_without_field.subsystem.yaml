@@ -1,4 +1,4 @@
-# ends без field; P/02.1 Н1.2а ends
+# ends without field; P/02.1 N1.2a ends
 name: probe
 unit:
   rows: counters

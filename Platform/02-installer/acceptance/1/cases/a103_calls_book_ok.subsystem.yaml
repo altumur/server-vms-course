@@ -1,4 +1,4 @@
-# дверь книги, только чтение (ADR-0103 п. 5, P/06.3 Н1.9)
+# A read-only book door (ADR-0103 item 5, P/06.3 N1.9)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

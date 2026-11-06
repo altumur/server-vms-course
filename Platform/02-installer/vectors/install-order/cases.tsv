@@ -1,12 +1,12 @@
-# Initial manifest installation order (P/02.4 Н1.7 install steps; stage C guess I02-INSTALL-ORDER). Form: README.
+# Initial manifest installation order (P/02.4 N1.7 install steps; stage C guess I02-INSTALL-ORDER). Form: README.
 case	input	expect	note
-testsub-pair	{"manifests":[{"name":"testsub2","requests":["testsub"],"near":"testsub"},{"name":"testsub","creates":["testsub2"],"uses":["testsub2.belt"]}],"installed":[]}	["testsub","testsub2"]	testsub2 просит testsub (ребро requests) и стоит рядом с ним (near порядка не задаёт, ADR-0091 доп. (26)); creates и uses testsub порядка не задают — их проверки ждут адресата
-by-name	{"manifests":[{"name":"beta"},{"name":"alpha"}],"installed":[]}	["alpha","beta"]	без связей — по имени, байтами
-chain	{"manifests":[{"name":"c","requests":["b"]},{"name":"b","near":"a"},{"name":"a"}],"installed":[]}	["a","b","c"]	c просит b — b раньше c; near b → a порядка не задаёт (ADR-0091 доп. (26)): a и b — по имени
-diamond	{"manifests":[{"name":"d","requests":["b","c"]},{"name":"c","near":"a"},{"name":"b","near":"a"},{"name":"a"}],"installed":[]}	["a","b","c","d"]	d просит b и c; near b, c → a порядка не задаёт (ADR-0091 доп. (26)); среди готовых — по имени
-creates-cycle	{"manifests":[{"name":"y","creates":["x"]},{"name":"x","creates":["y"],"uses":["y.s"]}],"installed":[]}	["x","y"]	взаимные creates и uses — не цикл: порядка не задают
-cycle	{"manifests":[{"name":"p","requests":["q"]},{"name":"q","requests":["p"]}],"installed":[]}	@exit 2	цикл requests в пустом хранилище — отказ установки кодом 2 до изменений (ADR-0091 доп. (27) п. 4: цикл — по requests)
-requests-near-pair	{"manifests":[{"name":"p","requests":["q"]},{"name":"q","near":"p"}],"installed":[]}	["q","p"]	p просит q, q стоит рядом с p — не цикл: near порядка не задаёт, порядок по requests (ADR-0091 доп. (26) п. 1, доп. (27) п. 4)
-cycle-installed	{"manifests":[{"name":"p","requests":["q"]},{"name":"q","requests":["p"]}],"installed":["q"]}	["p","q"]	q уже в хранилище: связь p → q к установленному порядка не задаёт, остаётся q просит p — не цикл
-outside	{"manifests":[{"name":"m","requests":["z"]}],"installed":[]}	["m"]	адресат вне установки — порядка не задаёт; есть ли он — проверка каталога P/02.1 Н3
-near-only	{"manifests":[{"name":"a","near":"b"},{"name":"b"}],"installed":[]}	["a","b"]	только near — порядка нет: a стоит рядом с b, но ставится по имени раньше (ADR-0091 доп. (26) п. 1, доп. (27) п. 4)
+testsub-pair	{"manifests":[{"name":"testsub2","requests":["testsub"],"near":"testsub"},{"name":"testsub","creates":["testsub2"],"uses":["testsub2.belt"]}],"installed":[]}	["testsub","testsub2"]	testsub2 requests testsub (requests edge) and is near it (near gives no order, ADR-0091 addendum (26)); testsub creates and uses give no order: their checks wait for the target
+by-name	{"manifests":[{"name":"beta"},{"name":"alpha"}],"installed":[]}	["alpha","beta"]	No edges: order names by bytes
+chain	{"manifests":[{"name":"c","requests":["b"]},{"name":"b","near":"a"},{"name":"a"}],"installed":[]}	["a","b","c"]	c requests b: b precedes c; near b to a gives no order (ADR-0091 addendum (26)): a and b sort by name
+diamond	{"manifests":[{"name":"d","requests":["b","c"]},{"name":"c","near":"a"},{"name":"b","near":"a"},{"name":"a"}],"installed":[]}	["a","b","c","d"]	d requests b and c; near b and c to a gives no order (ADR-0091 addendum (26)); ready entries sort by name
+creates-cycle	{"manifests":[{"name":"y","creates":["x"]},{"name":"x","creates":["y"],"uses":["y.s"]}],"installed":[]}	["x","y"]	Mutual creates and uses do not form a cycle: neither imposes an order
+cycle	{"manifests":[{"name":"p","requests":["q"]},{"name":"q","requests":["p"]}],"installed":[]}	@exit 2	A requests cycle in an empty store refuses installation with code 2 before changes (ADR-0091 addendum (27) item 4: cycles follow requests)
+requests-near-pair	{"manifests":[{"name":"p","requests":["q"]},{"name":"q","near":"p"}],"installed":[]}	["q","p"]	p requests q and q is near p: no cycle, since near gives no order; requests determines the order (ADR-0091 addendum (26) item 1, addendum (27) item 4)
+cycle-installed	{"manifests":[{"name":"p","requests":["q"]},{"name":"q","requests":["p"]}],"installed":["q"]}	["p","q"]	q is already installed: p to installed q gives no order, leaving q requests p, without a cycle
+outside	{"manifests":[{"name":"m","requests":["z"]}],"installed":[]}	["m"]	A target outside this installation gives no order; its existence is checked by the P/02.1 N3 catalogue check
+near-only	{"manifests":[{"name":"a","near":"b"},{"name":"b"}],"installed":[]}	["a","b"]	Near alone gives no order: a is near b but installs first by name (ADR-0091 addendum (26) item 1, addendum (27) item 4)

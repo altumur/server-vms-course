@@ -1,4 +1,4 @@
-# книга всем с pick: unique: строка не хранит проигравшего вклада (ADR-0113 доп. (9) п. 1)
+# An all-members book with pick: unique: the row retains no losing contribution (ADR-0113 addendum (9) item 1)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

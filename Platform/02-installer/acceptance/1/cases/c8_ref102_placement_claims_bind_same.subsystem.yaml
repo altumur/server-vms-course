@@ -1,4 +1,4 @@
-# placement: ref_claim и audience_claim — одно имя; норма М11/7 Н1.1; строка 102 references.tsv
+# placement: ref_claim and audience_claim have the same name; M11/7 N1.1; references.tsv row 102
 name: probe
 unit:
   rows: counters

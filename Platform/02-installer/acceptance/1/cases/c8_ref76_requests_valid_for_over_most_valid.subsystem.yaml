@@ -1,4 +1,4 @@
-# requests.valid_for больше requests.most_valid; норма М10/2 Н1.2а requests; строка 76 references.tsv
+# requests.valid_for exceeds requests.most_valid; M10/2 N1.2a requests; references.tsv row 76
 name: probe
 unit:
   rows: counters

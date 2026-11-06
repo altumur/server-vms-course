@@ -1,4 +1,4 @@
-# worker.creates к своей подсистеме; строка 89 references.tsv
+# worker.creates targets its own subsystem; references.tsv row 89
 name: probe
 unit:
   rows: counters

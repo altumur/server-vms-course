@@ -1,4 +1,4 @@
-# Expected effective variant rights (chapter 2.5 acceptance README, «Варианты манифестов»): role, action, key, allow | deny.
+# Expected effective variant rights (chapter 2.5 acceptance README, «Manifest variants»): role, action, key, allow | deny.
 role	action	key	expect
 console	write	va/items/u1	allow
 console	write	va/requests/r1	deny

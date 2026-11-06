@@ -1,4 +1,4 @@
-# перечень называет то, чего у адресата нет (ADR-0094 B1)
+# The list names an entry absent from the target (ADR-0094 B1)
 name: callc
 unit:
   rows: callers

@@ -1,4 +1,4 @@
-# placement.ends по полю float; never по умолчанию 0; ADR-0091 п. 2
+# placement.ends uses a float field; never defaults to 0; ADR-0091 item 2
 name: probe
 unit:
   rows: counters

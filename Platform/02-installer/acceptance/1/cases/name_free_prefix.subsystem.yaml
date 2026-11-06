@@ -1,4 +1,4 @@
-# имя подсистемы не начинается с free- (ADR-0091 доп. (24) п. 5): rid подателя <подсистема>.<ключ> иначе начался бы с free-
+# A subsystem name cannot start with free- (ADR-0091 addendum (24) item 5): otherwise caller rid <subsystem>.<key> would start with free-
 name: free-cam
 unit:
   rows: counters

@@ -1,4 +1,4 @@
-# книга всем: одна строка на домен (ADR-0113 доп. (9) п. 1)
+# An all-members book: one row per domain (ADR-0113 addendum (9) item 1)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

@@ -1,4 +1,4 @@
-# stale только у книги to: "*" (связь 157)
+# stale is allowed only on a book with to: "*" (relation 157)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

@@ -1,4 +1,4 @@
-# доля с part, своя доля части в worker.uses; ADR-0091 доп. (2) п. 4
+# A share with part, and the part own share in worker.uses; ADR-0091 addendum (2) item 4
 name: probe
 unit:
   rows: counters

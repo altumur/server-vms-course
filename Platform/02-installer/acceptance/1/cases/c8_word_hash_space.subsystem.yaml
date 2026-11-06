@@ -1,4 +1,4 @@
-# Р6 (ADR-0087 доп. (2)): «слово# c» — не комментарий, строка без ключа, refused:text; норма М10/2 Н1.1 comment
+# R6 (ADR-0087 addendum (2)): 'word# c' is not a comment; a keyless line is refused:text; M10/2 N1.1 comment
 name: probe
 unit:
   rows: counters

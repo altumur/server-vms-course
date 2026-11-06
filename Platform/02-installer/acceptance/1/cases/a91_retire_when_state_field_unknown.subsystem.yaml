@@ -1,4 +1,4 @@
-# retire_when.field не поле состояния retire_when.state; строка 35 references.tsv
+# retire_when.field is not a field of state retire_when.state; references.tsv row 35
 name: probe
 unit:
   rows: counters

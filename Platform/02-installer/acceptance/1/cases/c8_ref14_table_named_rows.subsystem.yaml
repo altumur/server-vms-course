@@ -1,4 +1,4 @@
-# имя таблицы (отображение tables) совпадает с unit.rows; норма М10/2 Н1.2а (имя таблицы: не unit.rows); строка 14 references.tsv
+# A tables mapping key has the same name as unit.rows; M10/2 N1.2a (table names exclude unit.rows); references.tsv row 14
 name: probe
 unit: {rows: things, id: numeric}
 placement: {capacity: {default: 1}}

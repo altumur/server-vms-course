@@ -1,4 +1,4 @@
-# door.routes: имя (допуск token) и {name, role}; ADR-0091 доп. (8) п. 3
+# door.routes: a name (token admission) and {name, role}; ADR-0091 addendum (8) item 3
 name: probe
 unit:
   rows: counters

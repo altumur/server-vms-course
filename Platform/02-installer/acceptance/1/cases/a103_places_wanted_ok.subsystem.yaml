@@ -1,4 +1,4 @@
-# таблица причин места (P/04 Н3 «нехватка()»)
+# The placement reasons table (P/04 N3 'shortage()')
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement:

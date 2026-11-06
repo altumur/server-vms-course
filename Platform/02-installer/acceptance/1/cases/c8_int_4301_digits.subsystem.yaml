@@ -1,4 +1,4 @@
-# Р6 (ADR-0087 доп. (2)): целое из 4301 цифры — refused:value без падения; норма М10/2 Н1.1 int
+# R6 (ADR-0087 addendum (2)): a 4301-digit integer is refused:form (formerly refused:value), without a crash; M10/2 N1.1 int
 name: probe
 unit:
   rows: counters

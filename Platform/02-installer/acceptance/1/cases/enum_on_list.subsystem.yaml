@@ -411,31 +411,31 @@ servers:
   show:
   - table: shelves
     by: server
-    title: полки
+    title: shelves
     columns:
     - name
     - kind
     - enabled
   status:
   - field: jam
-    title: затор
+    title: jam
   - field: belt.state
-    title: лента
+    title: belt
   - field: shelved
-    title: счёты на полках
+    title: counts on shelves
     of: shelves
 display:
-  unit: счёт
-  units: счёты
-  units_count: счётов
-  section: Счета
+  unit: count
+  units: counts
+  units_count: counts
+  section: Counts
   events: false
   field_help:
-    of: счётчик
-    shelf: полка
-    lane: полоса, по которой воркер ведёт счёт
+    of: counter
+    shelf: shelf
+    lane: Lane counted by the worker
   kinds:
-    tally.tick: тик
+    tally.tick: tick
   tree:
     group_by: zone
     nested_by: /
@@ -443,52 +443,52 @@ display:
     - field: name
       width: 12
     - field: phase
-      title: фаза
+      title: phase
     children: false
-    group_title: По зонам
-    group_hint: зоны → счёты
-    filter: имя счёта
-    no_group: Без зоны
-    contents_title: Состав зоны
-    group_word: зона
-    no_group_suffix: без зоны
-    pick_note: выберите счёт в дереве
-    new_root: Зона
-    new_sub: Подзона
-    add_here: Добавить счёт сюда
-    new_group_note: Зона создана — добавьте в неё счёт, иначе она не сохранится
-    remove: убрать из зоны
-    not_in: Не в зоне — попадёт в «без зоны».
-    add_to: Добавить в зону
-    no_others: других зон нет
-    new_group: Новая зона
-  general: Счёт
+    group_title: By zone
+    group_hint: zones → counts
+    filter: count name
+    no_group: No zone
+    contents_title: Zone contents
+    group_word: zone
+    no_group_suffix: without a zone
+    pick_note: select a count in the tree
+    new_root: Zone
+    new_sub: Subzone
+    add_here: Add a count here
+    new_group_note: Zone created — add a count to it or it will not be saved
+    remove: remove from the zone
+    not_in: Outside a zone — it appears under No zone.
+    add_to: Add to zone
+    no_others: no other zones
+    new_group: New zone
+  general: Count
   fields:
-    name: Имя
-    mode: Режим
+    name: Name
+    mode: Mode
     id: ID
   options:
     mode:
-      plain: тихо
-      loud: громко
+      plain: quiet
+      loud: loud
     lane:
-      fast: быстрая
-      slow: медленная
+      fast: fast
+      slow: slow
   form:
-  - title: Счёт
+  - title: Count
     state: true
     fields:
     - name
     - mode
-  - title: Где
+  - title: Where
     placement: true
     status:
     - field: lane
       since: lane_since
-      title: Полоса
+      title: Lane
     fields:
     - shelf
     - zone
-    note: полка решает
+    note: the shelf decides
 console:
   running: tallies_running

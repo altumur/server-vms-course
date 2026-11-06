@@ -1,4 +1,4 @@
-# два worker.creates к одной подсистеме; строка 90 references.tsv
+# Two worker.creates entries for one subsystem; references.tsv row 90
 name: probe
 unit:
   rows: counters

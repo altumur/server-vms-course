@@ -1,4 +1,4 @@
-# запись строки — полная замена: неполный список затёр бы поля
+# Writing a row replaces it completely: a partial field list would erase fields
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

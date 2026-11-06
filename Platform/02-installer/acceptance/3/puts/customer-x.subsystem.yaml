@@ -1,4 +1,4 @@
-# второй заказчик той же таблицы: префикс cust-x- вложен в cust-
+# A second customer of the same table: prefix cust-x- is nested under cust-
 name: cust-x
 unit: {rows: orders, id: numeric}
 placement: {capacity: {default: 1}}

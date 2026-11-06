@@ -1,4 +1,4 @@
-# near.prefer называет поле, которого у neart нет (ADR-0091 доп. (26) п. 2)
+# near.prefer names a field absent from neart (ADR-0091 addendum (26) item 2)
 name: nearb
 unit:
   rows: nearbs

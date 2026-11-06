@@ -1,4 +1,4 @@
-# адресат с unit.id: numeric — заказ к нему отвергается каталогом (ADR-0091 п. 1)
+# A target with unit.id: numeric: the catalogue refuses orders to it (ADR-0091 item 1)
 name: target
 unit:
   rows: things

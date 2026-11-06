@@ -1,4 +1,4 @@
-# {id} в умолчании поля не string (json); строка 123 references.tsv
+# {id} in the default of a non-string field (json); references.tsv row 123
 name: probe
 unit:
   rows: counters

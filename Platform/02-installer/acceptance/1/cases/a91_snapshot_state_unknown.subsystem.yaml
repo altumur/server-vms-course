@@ -1,4 +1,4 @@
-# snapshot называет state.<имя> вне unit.state; строка 28 references.tsv; ADR-0091 п. 3
+# snapshot names state.<name> outside unit.state; references.tsv row 28; ADR-0091 item 3
 name: probe
 unit:
   rows: counters

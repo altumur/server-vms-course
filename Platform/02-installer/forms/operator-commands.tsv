@@ -5,33 +5,33 @@
 # install.sh has its installation procedure, not a newly invented argv grammar. They are not redefined here.
 # The installer is not a service. No daemon command or process HTTP interface is introduced by this form.
 command	process	prefix	positionals	norm
-manifest-put	w2cctl	["manifest","put"]	{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}	P/02.3 Н3 Manifest change
-manifest-get	w2cctl	["manifest","get"]	{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}	P/02.4 Н1.9 manifest get
-manifest-status	w2cctl	["manifest","status"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 Н1.9
-rollout	w2cctl	["rollout"]	{"type":"array","items":{"type":"string"},"minItems":1}	P/02.4 Н1.9 rollout
-rights	w2cctl	["rights"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.5 Н2
-mirror	w2cctl	["mirror"]	{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}	P/02.4 Н1.9 mirror
-space	w2cctl	["space"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 Н1.9 space
-retention	w2cctl	["retention"]	{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}	P/02.4 Н1.9 retention
-tls-status	w2cctl	["tls","status"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 Н1.9 tls status
-secrets-new	w2cctl	["secrets","new"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":1}	P/02.4 Н1.9 secrets
-secrets-rotate	w2cctl	["secrets","rotate"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":1}	P/02.4 Н1.9 secrets
-secrets-seal	w2cctl	["secrets","seal"]	{"type":"array","items":{"type":"string"},"minItems":0}	P/02.4 Н1.9 secrets
-secrets-status	w2cctl	["secrets","status"]	{"type":"array","items":{"type":"string"},"minItems":0}	P/02.4 Н1.9 secrets
-ca-init	w2c-ca.sh	["init"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 Н1.6 ca
-ca-issue	w2c-ca.sh	["issue"]	{"type":"array","items":{"type":"string"},"minItems":2,"maxItems":2}	P/02.4 Н1.6 ca
-ca-revoke	w2c-ca.sh	["revoke"]	{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}	P/02.4 Н1.6 ca
-ca-crl	w2c-ca.sh	["crl"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 Н1.6 ca
-ca-own	w2c-ca.sh	["own"]	{"type":"array","items":{"type":"string"},"minItems":2,"maxItems":3}	P/02.4 Н1.6 ca
-run-configstore	w2c-run.sh	["configstore"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 Н1.9 w2c-run.sh
-run-controller	w2c-run.sh	["controller"]	{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}	P/02.4 Н1.9 w2c-run.sh
-run-console	w2c-run.sh	["console"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 Н1.9 w2c-run.sh
-run-resource	w2c-run.sh	["resource"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 Н1.9 w2c-run.sh
-run-domain	w2c-run.sh	["domain"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 Н1.9 w2c-run.sh
-run-domainconsole	w2c-run.sh	["domainconsole"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 Н1.9 w2c-run.sh
-run-domainagent	w2c-run.sh	["domainagent"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 Н1.9 w2c-run.sh
-run-worker	w2c-run.sh	["worker"]	{"type":"array","items":{"type":"string"},"minItems":2,"maxItems":2}	P/02.4 Н1.9 w2c-run.sh
-run-domainworker	w2c-run.sh	["domainworker"]	{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}	P/02.4 Н1.9 w2c-run.sh
-run-workers	w2c-run.sh	["workers"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 Н1.9 w2c-run.sh
-run-rights	w2c-run.sh	["rights"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 Н1.9 w2c-run.sh
-run-part	w2c-run.sh	["part"]	{"type":"array","items":{"type":"string"},"minItems":2,"maxItems":2}	P/02.4 Н1.9 w2c-run.sh
+manifest-put	w2cctl	["manifest","put"]	{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}	P/02.3 N3 Manifest change
+manifest-get	w2cctl	["manifest","get"]	{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}	P/02.4 N1.9 manifest get
+manifest-status	w2cctl	["manifest","status"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 N1.9
+rollout	w2cctl	["rollout"]	{"type":"array","items":{"type":"string"},"minItems":1}	P/02.4 N1.9 rollout
+rights	w2cctl	["rights"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.5 N2
+mirror	w2cctl	["mirror"]	{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}	P/02.4 N1.9 mirror
+space	w2cctl	["space"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 N1.9 space
+retention	w2cctl	["retention"]	{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}	P/02.4 N1.9 retention
+tls-status	w2cctl	["tls","status"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 N1.9 tls status
+secrets-new	w2cctl	["secrets","new"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":1}	P/02.4 N1.9 secrets
+secrets-rotate	w2cctl	["secrets","rotate"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":1}	P/02.4 N1.9 secrets
+secrets-seal	w2cctl	["secrets","seal"]	{"type":"array","items":{"type":"string"},"minItems":0}	P/02.4 N1.9 secrets
+secrets-status	w2cctl	["secrets","status"]	{"type":"array","items":{"type":"string"},"minItems":0}	P/02.4 N1.9 secrets
+ca-init	w2c-ca.sh	["init"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 N1.6 ca
+ca-issue	w2c-ca.sh	["issue"]	{"type":"array","items":{"type":"string"},"minItems":2,"maxItems":2}	P/02.4 N1.6 ca
+ca-revoke	w2c-ca.sh	["revoke"]	{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}	P/02.4 N1.6 ca
+ca-crl	w2c-ca.sh	["crl"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 N1.6 ca
+ca-own	w2c-ca.sh	["own"]	{"type":"array","items":{"type":"string"},"minItems":2,"maxItems":3}	P/02.4 N1.6 ca
+run-configstore	w2c-run.sh	["configstore"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 N1.9 w2c-run.sh
+run-controller	w2c-run.sh	["controller"]	{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}	P/02.4 N1.9 w2c-run.sh
+run-console	w2c-run.sh	["console"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 N1.9 w2c-run.sh
+run-resource	w2c-run.sh	["resource"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 N1.9 w2c-run.sh
+run-domain	w2c-run.sh	["domain"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 N1.9 w2c-run.sh
+run-domainconsole	w2c-run.sh	["domainconsole"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 N1.9 w2c-run.sh
+run-domainagent	w2c-run.sh	["domainagent"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 N1.9 w2c-run.sh
+run-worker	w2c-run.sh	["worker"]	{"type":"array","items":{"type":"string"},"minItems":2,"maxItems":2}	P/02.4 N1.9 w2c-run.sh
+run-domainworker	w2c-run.sh	["domainworker"]	{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":1}	P/02.4 N1.9 w2c-run.sh
+run-workers	w2c-run.sh	["workers"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 N1.9 w2c-run.sh
+run-rights	w2c-run.sh	["rights"]	{"type":"array","items":{"type":"string"},"minItems":0,"maxItems":0}	P/02.4 N1.9 w2c-run.sh
+run-part	w2c-run.sh	["part"]	{"type":"array","items":{"type":"string"},"minItems":2,"maxItems":2}	P/02.4 N1.9 w2c-run.sh

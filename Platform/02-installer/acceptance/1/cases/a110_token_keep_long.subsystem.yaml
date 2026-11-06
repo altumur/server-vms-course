@@ -1,4 +1,4 @@
-# срок вида keep больше KEEP_OLD: ключ не доживёт (ADR-0110 доп. (10) п. 2)
+# A kind keep exceeds KEEP_OLD: its key will not survive that long (ADR-0110 addendum (10) item 2)
 name: probe
 unit:
   rows: counters

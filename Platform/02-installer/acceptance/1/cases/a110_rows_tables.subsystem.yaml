@@ -1,4 +1,4 @@
-# имя tables занято дверью домена
+# The domain door reserves the name tables
 name: probe
 unit: {rows: tables, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

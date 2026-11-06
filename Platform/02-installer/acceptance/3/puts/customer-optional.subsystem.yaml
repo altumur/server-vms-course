@@ -1,4 +1,4 @@
-# key называет необязательное поле zone адресата
+# key names the target optional zone field
 name: cust
 unit: {rows: orders, id: numeric}
 placement: {capacity: {default: 1}}

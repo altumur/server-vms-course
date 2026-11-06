@@ -1,4 +1,4 @@
-# role пуст — min_items 1; ADR-0091 доп. (8) п. 3
+# role is empty: min_items 1; ADR-0091 addendum (8) item 3
 name: probe
 unit:
   rows: counters

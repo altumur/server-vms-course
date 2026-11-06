@@ -1,4 +1,4 @@
-# книга всем с головой молчащих (ADR-0113 доп. (31)–(33); связь 157)
+# An all-members book with the silent-members head (ADR-0113 addenda (31)–(33); relation 157)
 name: probe
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}
