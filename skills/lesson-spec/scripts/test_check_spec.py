@@ -981,6 +981,11 @@ class PlatformLessonTests(unittest.TestCase):
             (acceptance / "scenarios.tsv").write_text(
                 "# scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n")
         (self.spec / "01-store.api.openapi.yaml").write_text(self.API)
+        history = self.root / "decisions/history/platform"
+        history.mkdir(parents=True)
+        (history / "id-map.tsv").write_text(
+            "old\tnew\tchapter\tsubject\tnote\n"
+            "-\tP/01.1-01\t1.1\tx\t-\n-\tP/01.2-01\t1.2\tx\t-\n")
 
     API = '''openapi: 3.1.0
 info: {title: Store, version: "1"}
@@ -1082,6 +1087,8 @@ paths:
     def test_chapters_zero_and_two_digits(self):
         """Главы 0 и 10 (урок 8: 8.0, 8.10) разбираются и идут по номеру, не по строке."""
         for chapter in ("0", "10"):
+            with (self.root / "decisions/history/platform/id-map.tsv").open("a") as table:
+                table.write(f"-\tP/01.{chapter}-01\t1.{chapter}\tx\t-\n")
             (self.spec / f"01.{chapter}-store.norms.md").write_text(
                 "\n".join(f"## Н{i} Section" for i in range(6)) +
                 "\n## Решает реализация\n## Чеклист готовности\n" +
@@ -1214,6 +1221,9 @@ class FormSourceChapterTests(unittest.TestCase):
         (self.acceptance / "cases/good.subsystem.yaml").write_text("name: a\n")
         (self.acceptance / "cases/bad.subsystem.yaml").write_text("name: a\nzz: 1\n")
         (self.spec / "02-installer.api.openapi.yaml").write_text(PlatformLessonTests.API)
+        history = self.root / "decisions/history/platform"
+        history.mkdir(parents=True)
+        (history / "id-map.tsv").write_text("old\tnew\tchapter\tsubject\tnote\n-\tP/02.1-01\t2.1\tx\t-\n")
 
     def check(self):
         result = Check(self.root)
@@ -1291,6 +1301,11 @@ class FamiliesChapterTests(unittest.TestCase):
             (acceptance / "scenarios.tsv").write_text(
                 "# scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n")
         self.norms = self.spec / "03.2-worker.norms.md"
+        history = self.root / "decisions/history/platform"
+        history.mkdir(parents=True)
+        (history / "id-map.tsv").write_text(
+            "old\tnew\tchapter\tsubject\tnote\n"
+            "-\tP/03.1-01\t3.1\tx\t-\n-\tP/03.2-01\t3.2\tx\t-\n")
 
     def check(self):
         result = Check(self.root)
@@ -1603,7 +1618,9 @@ class PlatformCatalogTests(unittest.TestCase):
                               "".join(f"- [ ] **{i}** Example — проверяется чтением\n" for i in ids))
 
     def write_idmap(self, rows):
-        (self.root / "Platform/common/id-map.tsv").write_text(
+        history = self.root / "decisions/history/platform"
+        history.mkdir(parents=True, exist_ok=True)
+        (history / "id-map.tsv").write_text(
             "# id-map\nold\tnew\tchapter\tsubject\tnote\n" + "".join(f"{o}\t{n}\t3\tx\t-\n" for o, n in rows))
 
     def write_catalog(self, rows):
@@ -1623,6 +1640,42 @@ class PlatformCatalogTests(unittest.TestCase):
         result = self.check()
         self.assertEqual(result.errors, [])
         self.assertEqual((result.stats["data_roles"], result.stats["id_map_ids"]), (1, 2))
+
+    def test_id_map_values_and_line_numbers(self):
+        result = Check(self.root)
+        self.assertEqual(result.id_map_rows(), [
+            (3, {"old": "М10/9-01", "new": "P/03-01", "chapter": "3", "subject": "x", "note": "-"}),
+            (4, {"old": "М10/9-02", "new": "P/03-02", "chapter": "3", "subject": "x", "note": "-"}),
+        ])
+        self.assertEqual(result.errors, [])
+
+    def test_new_id_map_is_required_even_with_a_valid_old_copy(self):
+        path = self.root / "decisions/history/platform/id-map.tsv"
+        data = path.read_bytes()
+        (self.root / "Platform/common/id-map.tsv").write_bytes(data)
+        bad = {
+            "missing": None,
+            "empty": b"",
+            "comments only": b"# history\n",
+            "header only": b"old\tnew\tchapter\tsubject\tnote\n",
+            "wrong header": data.replace(b"subject", b"title", 1),
+            "broken row": data + b"old\tnew\tchapter\n",
+            "invalid UTF-8": data + b"\xff\n",
+        }
+        for what, content in bad.items():
+            with self.subTest(what=what):
+                if content is None:
+                    path.unlink()
+                else:
+                    path.write_bytes(content)
+                errors = self.check().errors
+                self.assertTrue(any("decisions/history/platform/id-map.tsv:" in e for e in errors), errors)
+        path.write_bytes(data)
+        self.assertEqual(self.check().errors, [])
+
+    def test_old_id_map_does_not_override_history(self):
+        (self.root / "Platform/common/id-map.tsv").write_text("broken old map\n")
+        self.assertEqual(self.check().errors, [])
 
     def test_data_names_what_the_process_reads_and_writes(self):
         self.write_norms(["- владеет: `w/own/<x>`."], ["P/03-01", "P/03-02"])
@@ -1662,7 +1715,7 @@ class PlatformCatalogTests(unittest.TestCase):
         self.write_idmap([("М10/9-01", "P/03-01"), ("М10/9-02", "P/03-02"), ("- (новая)", "P/03-03"),
                           ("М10/8-01", "P/03-04"), ("М10/8-01", "P/03.1-01"), ("М10/9-01", "P/03 сц. 01")])
         errors = "\n".join(self.check().errors)
-        self.assertIn("checklist id P/03-05 is not in the column new of Platform/common/id-map.tsv", errors)
+        self.assertIn("checklist id P/03-05 is not in the column new of decisions/history/platform/id-map.tsv", errors)
         self.assertIn("new P/03-03 is not in the checklist, and its old - (новая) is in no old lesson's checklist", errors)
         self.assertNotIn("P/03-04", errors)                    # М10/8-01 is still in the checklist of М10/8
         self.assertNotIn("P/03.1-01", errors)                  # another chapter
@@ -1942,7 +1995,7 @@ class VmsLessonTests(unittest.TestCase):
 
 class LayoutTests(unittest.TestCase):
     """ADR-0124 (доп. (1) п. 6): урок с `ru/` — новая раскладка. Лекция и переводы — в `ru/`, источник — на каноническом
-    пути, журнал — `journal/corrections-<глава>.tsv`; проверки урока читают русский перевод, источник не ссылается в
+    пути, журнал Platform — `decisions/journal/platform/<урок>/corrections-<глава>.tsv`; проверки читают русский перевод, источник не ссылается в
     `ru/` и `journal/`."""
 
     API = PlatformLessonTests.API
@@ -1957,9 +2010,10 @@ class LayoutTests(unittest.TestCase):
                 path.rename(ru / rel)                    # лекция — только для человека
             else:
                 (ru / rel).write_text(path.read_text())   # русский перевод тем же путём
+        self.journal = self.root / "decisions/journal/platform/01-store"
+        self.journal.mkdir(parents=True)
         for chapter in ("1", "2"):
-            (self.dir / "journal").mkdir(exist_ok=True)
-            (self.dir / "acceptance" / chapter / "corrections.tsv").rename(self.dir / f"journal/corrections-{chapter}.tsv")
+            (self.dir / "acceptance" / chapter / "corrections.tsv").rename(self.journal / f"corrections-{chapter}.tsv")
         self.lesson = ru / "01-store.md"
 
     def check(self):
@@ -1981,14 +2035,51 @@ class LayoutTests(unittest.TestCase):
         self.assertTrue(errors and all("ru/spec/01.1-store.norms.md" in e or "P/01.1" in e for e in errors), errors)
 
     def test_log_lives_in_journal(self):
-        (self.dir / "journal/corrections-2.tsv").unlink()
-        self.assertTrue(any("journal/corrections-2.tsv" in e for e in self.check().errors))
+        (self.dir / "journal").mkdir()
         (self.dir / "journal/corrections-2.tsv").write_text("date\tsample\tfix\tlanguages\n")
+        (self.journal / "corrections-2.tsv").unlink()
+        self.assertTrue(any("decisions/journal/platform/01-store/corrections-2.tsv" in e for e in self.check().errors))
+        (self.journal / "corrections-2.tsv").write_text("date\tsample\tfix\tlanguages\n")
         (self.dir / "acceptance/1/corrections.tsv").write_text("date\tsample\tfix\tlanguages\n")
         errors = self.check().errors
-        self.assertTrue(any("the log lives in Platform/01-store/journal/corrections-1.tsv" in e for e in errors), errors)
+        self.assertTrue(any("the log lives in decisions/journal/platform/01-store/corrections-1.tsv" in e for e in errors), errors)
+
+    def test_history_log_values_and_physical_line_numbers(self):
+        path = self.journal / "corrections-2.tsv"
+        path.write_text("# history\ndate\tsample\tfix\tlanguages\n2026-11-06\t02-пример\tПравка 17\tGo, Python\n")
+        result = self.check()
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.tsv(path, 4, ["date", "sample", "fix", "languages"]),
+                         [(3, ["2026-11-06", "02-пример", "Правка 17", "Go, Python"])])
+        with path.open("a") as log:
+            log.write("2026-11-06\t02-пример\tmissing languages\n")
+        errors = self.check().errors
+        self.assertTrue(any("decisions/journal/platform/01-store/corrections-2.tsv: line 4: expected 4 TSV columns" in e
+                            for e in errors), errors)
+
+    def test_vms_journal_stays_in_lesson(self):
+        import shutil
+        home = self.root / "VMS/01-cam"
+        acceptance = home / "acceptance/1"
+        shutil.copytree(self.dir / "acceptance/1", acceptance)
+        shutil.copytree(self.dir / "ru/acceptance/1", home / "ru/acceptance/1")
+        (home / "journal").mkdir()
+        path = home / "journal/corrections-1.tsv"
+        path.write_text("date\tsample\tfix\tlanguages\n")
+        history = self.root / "decisions/journal/vms/01-cam"
+        history.mkdir(parents=True)
+        (history / path.name).write_text("broken history copy\n")
+        result = Check(self.root)
+        result.acceptance(acceptance, "V/01", "1/")
+        self.assertEqual(result.errors, [])
+        path.unlink()
+        result = Check(self.root)
+        result.acceptance(acceptance, "V/01", "1/")
+        self.assertTrue(any("VMS/01-cam/journal/corrections-1.tsv:" in e for e in result.errors), result.errors)
 
     def test_source_does_not_link_ru_or_journal(self):
+        (self.dir / "journal").mkdir()
+        (self.dir / "journal/corrections-1.tsv").write_text("date\tsample\tfix\tlanguages\n")
         result = Check(self.root)
         source = self.dir / "spec/01.1-store.norms.md"
         result.markdown(source, "[lecture](../ru/01-store.md), [log](../journal/corrections-1.tsv)\n")
@@ -2025,6 +2116,22 @@ class LayoutTests(unittest.TestCase):
 
 REPO = Path(__file__).resolve().parents[3]
 NUMERIC_TABLE = REPO / Check.NUMERIC_LOADER_TABLE
+
+
+class PlatformHistoryMapTests(unittest.TestCase):
+    def test_published_map_preserves_all_cells_and_line_numbers(self):
+        import csv
+        path = REPO / "decisions/history/platform/id-map.tsv"
+        physical = [(n, line) for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
+                    if line and not line.startswith("#")]
+        expected = list(csv.DictReader((line for _, line in physical), delimiter="\t"))
+        result = Check(REPO)
+        rows = result.id_map_rows()
+        self.assertEqual(result.errors, [])
+        self.assertEqual([row for _, row in rows], expected)
+        self.assertEqual([n for n, _ in rows], [n for n, _ in physical[1:]])
+        ids = {row["new"] for _, row in rows if re.fullmatch(r"P/[0-9]{2}(?:\.[0-9]+)?-[0-9]+", row["new"])}
+        self.assertEqual(len(ids), 532)
 
 
 @unittest.skipUnless(NUMERIC_TABLE.is_file(), "no numeric-loader witnesses of P/06 C3 in this tree")
