@@ -11,24 +11,6 @@ the topology, the placements, the grants, the shared document, the alarm list an
 the people doors and the login, serves the holder's page and passes the routes `door.pass` to the worker on the domain; at the entrance it holds the role door
 of TLS (`server.role`), «accept by a console» and the gate by `domain/grants/domain`. The process writes no rows of its own.
 
-The lesson is moved (stage B, ADR-0083 addendum (1): without a change of behaviour) from the lessons M11 — by doors and parts of norms (the move plan
-of lesson 10, § 2):
-- M11/1 — N2 and the N4 rows of the view doors (here N1.2a);
-- M11/3 — N1.8 `console` and the console side of the line `pass` (here
-  N1.3), the N2 row `GET /domain/members` (N1.2b);
-- M11/4 — the N2 row `GET /domain/topology` (N1.2c); M11/6 — the N2 rows `GET /domain/placement`,
-  `/domain/placement/<sub>/<ref>` (N1.2d) (the lessons are removed by commit 9; the former text is in Git);
-- M11/8 — N1.6 `roles` and `server.role` (here N1.4), N1.7
-  (N1.6), N1.8 (N1.7), the domain console side of N3 «accept by a console» (N1.4; the text is the forwarding contract), the N2 and N4 rows
-  of the domain console, sc. 05 of acceptance;
-- M11/9 — N1.5 `body_unit`, `session` at the domain console
-  (N1.5), N1.9 `pass` (N1.3a), the N2 row `GET /domain/grants` (N1.2e);
-- M11/11 — N1.6 `door` (N1.2f), N1.8 in full (N1.8),
-  N3 `alarms`, the N2 and N4 rows of the domain console, N5 `alarms` and `exit` in the part of `alarms`, sc. 02 and 04 (the vector `alarms`),
-  «Implementation decides» item 1 in the part of `alarms`;
-- M11/12 N1.8 — the domain console side at start (the text is [P/02.4 N1.12](../../02-installer/spec/02.4-installer.norms.md);
-  here N1.1).
-
 What is not here and where it is: the content of the view and of the shadow report — [chapter 8.1](../../08-domain/spec/08.1-domain.norms.md); the execution
 of edits, the check of the identity and the grant at the process and the answers `deposed`, `frozen`, `standby` — the chapters of lesson
 [P/08](../../08-domain/spec/08.0-domain.norms.md) by door (transition 3); the forwarding of the cluster console, its refusals, the doors that
@@ -36,10 +18,6 @@ the cluster console answers itself (`/domain/move`, `/api/held`, `/api/backup`, 
 `at`, `/domain/shared/<sub>`), — chapter P/06.7 of the late layer and [the forwarding contract](../../common/contracts/forwarding.md); the gate
 and the passing of `door.pass` as a whole — [the gate-and-pass contract](../../common/contracts/gate-and-pass.md) (owner P/06; this lesson is a
 participant); the alarm history — [chapter 8.9](../../08-domain/spec/08.9-domain.norms.md) N1.9.
-
-The numbers of the subsections are new (the place of the source is in the brackets of the heading). A reference «P/0N[.K]» is a lesson or a chapter of the module; «chapter
-8.K», «chapter 9.K» are the chapters of lessons P/08, P/09; «M11/N» is the lesson M11 (the history of the move). Norm ids are `P/10-MM`; the map to
-former ids is `id-map.tsv` (historical record).
 
 <!-- req: P/10-R001 -->
 ## N0 Vocabulary
@@ -592,22 +570,3 @@ the parts «(part)» by `note` of id-map (historical record) (the move of lesson
 - [ ] **P/10-15** the start (N1.1): the reader's side of the manifest row (P/02.3 N3), the schema check (P/06.6 N3), readiness — the port (the domain console part of the line M11/12-08; the text is P/02.4 N1.12) — by reading (the move plan of lesson 10, V9)
 - [ ] **P/10-16** `door.pass` of the second kind on the domain (N1.6): the ticket remembers `jti`, `kid`, `exp`, the stream is closed on a revocation, on disabling and at `exp`, two tokens, one revoked — the ticket of the first is 401, of the second works; the ticket header on the domain — 401 — by reading: the stand has no worker on the domain
 - [ ] **P/10-17** the row version at the read doors N1.2 (ADR-0094 B4): `ETag` of the doors of one row, `index` and `versions` of the lists; the headers of the version and of the memory through forwarding and passing — sc. 17
-
-## Correspondence to former lessons
-
-The lesson is moved (stage B, commit 10 of the move of 8–10). From M11/1 — N2 and the N4 rows of the view doors and the item M11/1-08 (here N1.2a,
-P/10-01); from M11/3 — N1.8 `console` and the console side of `pass` (here N1.3; the item M11/3-12 → P/10-02, the part of 8.0 — P/08.0-01),
-the N2 row `GET /domain/members` (N1.2b, part of M11/3-02 → P/10-07); from M11/4 — the N2 row `GET /domain/topology` (N1.2c,
-part of M11/4-02 → P/10-08); from M11/6 — the N2 rows `GET /domain/placement*` (N1.2d, part of M11/6-01 → P/10-09); from M11/8 —
-N1.6 `roles`, `server.role` (N1.4, part of M11/8-08 → P/10-11), N1.7 (N1.6, M11/8-10 → P/10-03), N1.8 (N1.7, M11/8-11 →
-P/10-04), the domain console side of N3 «accept by a console» (N1.4, part of M11/8-05 → P/10-10), the N2 and N4 rows of the domain
-console, sc. 05; from M11/9 — N1.5 `body_unit`, `session` (N1.5, part of M11/9-06 → P/10-13), N1.9 `pass` (N1.3a,
-M11/9-13 → P/10-05), the N2 row `GET /domain/grants` (N1.2e, part of M11/9-04 → P/10-12); from M11/11 — N1.6 `door` (N1.2f, part of
-M11/11-06 → P/10-14), N1.8 and N3 `alarms` (N1.8, N3; M11/11-08 → P/10-06, formerly P/08.9-04 — the number is free), the N2 and N4 rows
-of the domain console, N5 `alarms`, `exit` in the part of `alarms`, sc. 02 and 04 (the vector `alarms`), «Implementation decides» item 1 in the part of
-`alarms`; from M11/12 — N1.8 in the part of the domain console (N1.1, part of M11/12-08 → P/10-15). The references «lesson N» of the moved text
-are written as the addresses of the chapters of lessons P/08, P/09, of the contracts and of the subsections of this lesson; «the holder's console» — «the domain console»
-(the report of Claude 2c5e07dcc, L-5). The door of «Wait» and «Identity» is the forwarding contract (ADR-0083 addendum (14) item 5). M11 normed
-what `M12A_Domain/03-the-api-and-what-it-refuses.md` told (step 5 — the domain console), `M12A_Domain/04-who-may-call-it.md`
-(step 6 — the gate of the console and the domain doors) and `M12A_Domain/13-alarms-from-every-member.md` (steps 1–7, the list at the holder).
-ADR-0032, ADR-0061, ADR-0074 C5, ADR-0075. The historical sources are kept in Git.

@@ -1,0 +1,9 @@
+# P/08–P/10: historical correspondence removed
+
+ADR-0083 addendum (113), item 4. The author source is composed by ordinary merges of canonical `8aa97cde7788d334410690528506795f824a7e20`, relocation `33cec9cd957ce2292fa4bf7b648c3fe813bb001c`, and main `dcbea4262b37a46d3c06408b1fbc15573796f00a`. The approved checker 036 is included; `check_cyrillic.py --shrink` passed at both composition steps.
+
+Removed the former-lesson correspondence sections and introductory migration maps from the 14 norm sources and their Russian mirrors. Current lesson boundaries and contract owners are retained without former lesson ids. All requirement ids, scenario gates, checklists and normative bodies are preserved. The N5 provenance column of P/09.1 is removed; P/08.2 keeps its coverage descriptions with no former scenario-number labels. Apart from those two paired metadata tables, every byte from N0 (or its preceding req anchor) through the last checklist before the historical section is preserved. The two additional kit-seam notices are retained. No protocol, schema, acceptance, vector, form, Source, tooling, runtime, pin or SUT change is made by this author delta.
+
+The map records the exact before/after SHA-256 per norm file, with the own-delta baseline. Historical journals are the approved byte-exact relocation, not the cancelled translation draft 28f9. Full joint normgen/KIT validation and publication remain with coord103.
+
+Author validation: 28 before/after hashes and anchor sequences, 24 exact normative bodies, four provenance-only N5 tables, and 14 mirror pairs pass; `git diff --check` and `--shrink` pass. The full structural run is RED only on 40 old journal reader paths after the approved relocation; no mirror/link/own-data errors. The relocation reader is assigned to review103. This is source readiness, not a full GATE or SUT result.
