@@ -1,0 +1,286 @@
+{
+  "baseline": "68674e199e4e9a914f6e608e89e65f8c929d77b9",
+  "lesson": "09-agent",
+  "common_source": "88f9879fd9b69ea6cbf2a1b7e342f2478484ac64",
+  "composition_base": "68674e199e4e9a914f6e608e89e65f8c929d77b9",
+  "ready_g09_joint": "0c7c21b3bffa4ece5b699c891fb3439106eb406a",
+  "counts": {
+    "files": 117,
+    "source_files": 107,
+    "changed_files": 68,
+    "changed_lines": 673,
+    "unchanged_files": 49,
+    "tsv_data_rows": 913,
+    "acceptance_vector_tables": 6,
+    "schemas_and_openapi": 28
+  },
+  "source_map_entries": 700,
+  "protocol_map_entries": 1239,
+  "protocol_changed": [],
+  "schema_annotation_changes": [
+    [
+      "Platform/09-agent/data/agent-turn.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/agent-turn.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/agent.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/agent.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/alarms.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/alarms.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/backup-refused.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/backup-refused.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/backup-taken.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/backup-taken.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/backup.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/backup.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/book-copy.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/book-copy.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/book-want.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/book-want.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/grants.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/grants.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/join.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/join.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/member-key.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/member-key.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/member-list.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/member-list.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/member-topology.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/member-topology.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/member-want.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/member-want.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/member.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/member.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/outcomes.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/outcomes.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/placed-record.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/placed-record.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/placed.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/placed.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/reached.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/reached.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/reaches.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/reaches.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/relay-for.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/relay-for.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/roles.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/roles.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/servers.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/servers.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/shared-copy.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/shared-copy.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/data/shared-refused.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/09-agent/data/shared-refused.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+      "/tags/1/description"
+    ],
+    [
+      "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+      "/paths/~1api~1tokens~1{member}~1{sub}~1{kind}/post/responses/502/description"
+    ]
+  ],
+  "acceptance_vector_preservation": [
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv",
+      "rows": 4,
+      "before_sha256": "a7b06ac3c4bf541f60c376a465b0be84b3b693277861e54be13040f9782c3b03",
+      "after_sha256": "a7b06ac3c4bf541f60c376a465b0be84b3b693277861e54be13040f9782c3b03",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/scenarios.tsv",
+      "rows": 252,
+      "before_sha256": "c9dc6a3f90920d002002b7f5e286a12f88e8575230efdd716f6c0fa5162b1b0a",
+      "after_sha256": "3799cb737b94c219bd22209453d12dd6876e08d3baa3ddcbc64bb3e26d8eccc9",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/seams.tsv",
+      "rows": 38,
+      "before_sha256": "dd85461246bea8eff7eb3c8452eec7469d489e7945f1ed14d32f29fb2f2c66cc",
+      "after_sha256": "dd85461246bea8eff7eb3c8452eec7469d489e7945f1ed14d32f29fb2f2c66cc",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/09-agent/acceptance/2/scenarios.tsv",
+      "rows": 62,
+      "before_sha256": "c71409d361570648defef6b34beb598a7b41da2324be5e37e78fc582b6e83280",
+      "after_sha256": "7c32a89cafab9381a1e904ca849ff552ed2aa32ba324083dcd6c72dca0a4550a",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/09-agent/acceptance/2/seams.tsv",
+      "rows": 8,
+      "before_sha256": "d6bd5fa7e45dc0136c45f847a78c99264e0287734f7c68ce1a13cb5c0e13cdbc",
+      "after_sha256": "d6bd5fa7e45dc0136c45f847a78c99264e0287734f7c68ce1a13cb5c0e13cdbc",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/09-agent/vectors/follow/cases.tsv",
+      "rows": 21,
+      "before_sha256": "ca0c2a9fada733ef20fb2ce9690c50a8780d7098a5da5ccdecc700ce5fab42d7",
+      "after_sha256": "acc1be331913184212b205ec68cc71170c07e24c04cf938b056e0eafba05a796",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    }
+  ],
+  "errors": [],
+  "limits": "Author source audit only. READY G09 source is retained by the composition baseline. Owners generator/runner code slices and joint normgen/KIT remain pending; not a runtime, SUT, export or pin result.",
+  "map_sha256": {
+    "2026-11-06-full-english-protocol-map.tsv": "0ab27cee28f83b8a0b3acf3d59921650d70dc906521cc6d966f88b1bbd3f3792",
+    "2026-11-06-full-english-source-map.tsv": "f83877c779ffd1833f4922ebd6645fbfc1ef9c6d090a8bb353285070c154b7ae"
+  }
+}

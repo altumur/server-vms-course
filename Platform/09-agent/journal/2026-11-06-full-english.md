@@ -1,0 +1,7 @@
+# P/09 English source: translation-only author stage
+
+The baseline is `68674e199e4e9a914f6e608e89e65f8c929d77b9`: the complete P08 author source, including the agreed common34 composition and READY G09 joint. This stage only translates remaining source explanations, descriptions and historical procedure/reference labels. It does not close the subsequent accepted P09 review corrections.
+
+The adjacent full-english source/protocol maps provide ASCII JSON before/after values. The preservation JSON verifies all 28 schema/OpenAPI validation trees excluding annotations, all six acceptance/vector table rosters and physical lines, all non-note executable cells, and all declared enum/default/const and protocol values. No protocol value changes. The 46 existing CALLs, complete topology-body copy, exact placed.at numeric lexemes and full-body anywhere hash obligations are retained. The source contains no Cyrillic letters; the human mirrors retain their language, with Latin historical reference identifiers shared with the source. Families are rebuilt in both languages from the same translated descriptions.
+
+No generated output, shared tool, checker, runner, implementation pin or runtime is changed. The full P09 author source will also carry C1-C5/M1 from its accepted review, in separate semantic changes and a classified map. Related code/checker composition, full normgen/KIT, export and delivery remain with coord103. This intermediate author stage is not a lesson freeze or SUT acceptance.
