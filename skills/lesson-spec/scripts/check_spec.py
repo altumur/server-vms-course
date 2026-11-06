@@ -2331,6 +2331,12 @@ class Check:
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
+        if (self.root / "Platform/08-domain").is_dir():
+            import check_constants
+            errors, stats = check_constants.check_p08_constants(self.root)
+            for path, message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
         for path in check_forms.versioned_door_forms(self.root):     # версии дверей P/08.0 Н1.9 (forms/README)
             errors, stats = check_forms.check_versioned_doors(path)
             for message in errors:
