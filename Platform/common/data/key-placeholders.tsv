@@ -1,0 +1,52 @@
+# Canonical typed key grammars; the human translation dictionary is not a generation input.
+placeholder	pattern	example	norm
+<sub>	^(?:[a-z][a-z0-9_-]{0,31})$	testsub	the subsystem name P/02.1 N1.2 (reserved words and `free-…` are not judged by the key)
+<form>	^(?:[1-9][0-9]*)$	1	P/02.2 N1.2
+<id>	^(?:[^/.][^/]*|\.[^/.][^/]*|\.\.[^/]+)$	t1	the unit id P/06.1 N1.3 (numeric and named) and the participant id P/01.3 N1.3: a non-empty component, not `.` and not `..`
+<name>	^(?:[^/.][^/]*|\.[^/.][^/]*|\.\.[^/]+)$	w-1	by families — the table below; the key — the union: a non-empty component, not `.` and not `..`
+<worker>	^(?:[a-z]{1,8}-[a-z0-9]+(?:-[a-z0-9]+)*)$	w-1	the slot name P/03.2 N1.4; P/04 N1.3a
+<slot>	^(?:[a-z]{1,8}-[a-z0-9]+(?:-[a-z0-9]+)*)$	w-1	the slot name P/03.2 N1.4; P/03.7 N1.2
+<box>	^(?:[^/:.][^/:]*|\.[^/:.][^/:]*|\.\.[^/:]+)$	box-a	the instance contract `box`
+<place>	^(?:[^/.][^/]*|\.[^/.][^/]*|\.\.[^/]+)$	sh7	P/03.2 N1.3; P/06.1 N1.6
+<host>	^(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)$	srv-a	the host name RFC 1123 P/06.6 N2.1 and `SERVER_NAME` (its subset)
+<server>	^(?:[a-z0-9]+(?:-[a-z0-9]+)*)$	srv-a	`SERVER_NAME` — the environment file contract; P/05 N1.4
+<volume>	^(?:[A-Za-z0-9_]{1,64})$	events	P/05 N1.4 free_ask
+<rid>	^(?:[^/.][^/]*|\.[^/.][^/]*|\.\.[^/]+)$	r-0123456789abcdef	the contract of a request and its mark `rid` (`free-…` is not judged by the key)
+<sha16(name)>	^(?:[0-9a-f]{16})$	0123456789abcdef	P/06.4 N1.5
+<key>	^(?:[^/]+)$	k1	P/06.1 N1.1, N3 «create»
+<i>	^(?:0|[1-9][0-9]*)$	0	the step number of an operation from zero: P/06.9 N1.2
+<root>	^(?:[^/.][^/]*|\.[^/.][^/]*|\.\.[^/]+)$	testsub.c1	the target root of an operation: P/06.9 N1.3
+<hex>	^(?:[0-9a-f]{64})$	e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855	P/06.1 N1.5
+<manifest:unit.rows>	^(?:[a-z][a-z0-9_-]{0,31})$	counters	P/02.1 `unit.rows`; P/06.1 N1.1
+<manifest:tables>	^(?:[a-z][a-z0-9_-]{0,31})$	shelves	P/02.1 N1.2a `tableName`
+<manifest:domain.books>	^(?:[a-z0-9][a-z0-9_-]*)$	notes	P/02.1 `domain.books`
+<book>	^(?:[a-z0-9][a-z0-9_-]*)$	notes	P/08.5 N1.7
+<manifest:domain.books.from>	^(?:[a-z][a-z0-9_-]{0,31})$	notes	`from` without `<sub>/` and the final `/`: P/02.1 `domain.books`; P/03.7 N1.2
+<manifest:domain.kept>	^(?:[^/]+)$	ledger	P/02.1 `domain.kept`; P/03.7 N1.6
+<manifest:objects.rows>	^(?:[^/]+(?:/[^/]+)*)$	marks	P/02.1 relation 84; P/05 N1.1
+<manifest:domain.witness.report>	^(?:[^/]+)$	witness	P/10 N1.8
+*	^(?:[^/]+(?:/[^/]+)*)$	x	any key under the prefix: non-empty components
+<member>	^(?:[a-z0-9-]{1,64})$	m1	P/08.1 N1.1
+<kind>	^(?:[a-z][a-z0-9_-]{0,31})$	stream	the key `domain.tokens`: P/08.2 N1.6a
+<sha16>	^(?:[0-9a-f]{16})$	0123456789abcdef	the first 16 characters of the hex sha256 of the UTF-8 value: P/08.2 N1.6a
+<relay>	^(?:[a-z0-9-]{1,64})$	m1	the member name: P/08.3 N1.2
+<part>	^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$	0123	the first 12 bits of the SHA-256 of the member name: P/08.3 N1.1
+<table>	^(?:[a-z][a-z0-9_-]{0,31})$	shelves	the key `domain.view_tables`: P/02.1, P/04 N1.3b
+<cluster>	^(?:[a-z0-9-]{1,64})$	m1	the member name: P/08.4 N1.3
+<rev>	^(?:[1-9][0-9]*)$	7	P/08.3 N1.3; P/08.8 N1.5; P/08.9 N1.2
+<ref>	^(?:[^/]+)$	t1	the value of `domain.ref`: P/08.1 N1.2
+<events root>	^(?:(?:/[^/]+)+)$	/data/platform/events	the environment file contract; the event journal contract
+<events or objects root>	^(?:(?:/[^/]+)+)$	/data/platform/objects	P/05 N1.1
+<objects root>	^(?:(?:/[^/]+)+)$	/data/platform/objects	P/05 N1.1
+<domain recovery file>	^(?:(?:/[^/]+)+)$	/root/domain-recovery	P/02.4 N3 «domain installation»; P/08.2 N1.1
+<unit>	^(?:[^/]+)$	t1	the event journal contract; P/05 N1.2
+<epoch>	^(?:0|[1-9][0-9]*)$	3	the event journal contract
+<YYYYMMDDTHHMMSSZ>	^(?:[0-9]{8}T[0-9]{6}Z)$	20261023T000000Z	the event journal contract
+<role>	^(?:[a-z][a-z0-9_-]{0,63})$	console	P/01.2 N1.1
+<instance>	^(?:[^/]+)$	box-a%3a4242%3a0a1b2c	the instance contract; the event journal contract
+<tree>	^(?:[^/]+)$	testsub	the event journal contract; P/05 N1.6
+<object-key>	^(?:[^/]+(?:/[^/]+)*)$	testsub/blobs/sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855	P/05 N1.1 «Tombstones»
+<path>	^(?:[^/]+(?:/[^/]+)*)$	testsub/marks	P/05 N1.1
+<dir>	^(?:[^/]+(?:/[^/]+)*)$	testsub/marks	P/05 N1.1
+<sha256>	^(?:[0-9a-f]{64})$	e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855	the event journal contract «File names in shared trees»; P/02.3 N1.5
+<n>	^(?:0|[1-9][0-9]*)$	0	P/02.3 N1.5

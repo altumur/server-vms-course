@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/6/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
-The norm of the chapter is [`06.6-console.norms.md`](../../spec/06.6-console.norms.md) Н5. The scenarios were moved from the acceptances of
+The norm of the chapter is [`06.6-console.norms.md`](../../spec/06.6-console.norms.md) N5. The scenarios were moved from the acceptances of
 М10/04 (01–07),
 М10/10 (01 → 08, 02 → 10, 09, 12) and
 М10/11 (03 → 11) (stage B, ADR-0083 addendum (1): without
@@ -22,15 +22,15 @@ a repeat of a transport attempt — the same key and body.
 
 Full answers are additionally checked by [the contract of the lesson](../../spec/06-console.api.openapi.yaml): the mandatory fields,
 their types and the absence of extra fields; for `POST /counters` — by chapter 6.1. `2xx` does not widen the normative list of codes:
-the drain operations by Н2 return 200. The success of the deletion of labels/decommission `{}` is not equal to the absence of a body. For the codes without a body in
-the table the form of the full answer of Н2 is checked all the same.
+the drain operations by N2 return 200. The success of the deletion of labels/decommission `{}` is not equal to the absence of a body. For the codes without a body in
+the table the form of the full answer of N2 is checked all the same.
 
 ## Sc. 01–07: one instance without workers
 
 The scenarios are executed sequentially on one instance: 02 uses u1 from 01, 07 — u1 from 01. The state is not
 reset between them.
 
-A separate store and a new console without a domain, access only from the loopback by chapter 6.3 Н1.3 `open` (there are no keys — only from the
+A separate store and a new console without a domain, access only from the loopback by chapter 6.3 N1.3 `open` (there are no keys — only from the
 loopback, the name operator). The current testsub from the common testdata is loaded: unit.id = name, rows = counters,
 placement.servers has the effective default shared (the key is not set in testsub). Its controller works, and the resource `srv-a` — by the first step of sc. 01 (`@start resource`: the console reads the heartbeats through the objects door
 of the resource of its own server; C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29); there are no workers, ordered processes and background
@@ -52,14 +52,14 @@ with an empty pool the placement row may not appear at all.
 Sc. 07 — the units of a drain. There is no worker, it is forged: step 1 writes the slot row `w-1` by the role `testsubworker` (`@as`),
 step 2 puts the heartbeat `inputs/hb-w-1-no-status.json` with `status: []` (`@put object`). The controller assigns `d1` and `u1` to
 `w-1`. The drain of `srv-a` counts the units by the assignment ∪ `status[].id`: `units: 2`, `safe: false`, although `status` is empty
-(Н2.2, reconciliation of python and go М10/3–5, P8).
+(N2.2, reconciliation of python and go М10/3–5, P8).
 
 Sc. 01 — an unplaced unit and 404 where; 02 — its presence in unplaceable; 03 — the policy;
 04 — one active drain; 05 — a refusal of the form of labels earlier than the check of the server, and an unknown server;
-06 — an unknown server at decommission; 04, steps 11–13 — a server name not by the grammar of Н2.1 — 400. They do not check the choice in a live pool, races, safe with pending_writes,
+06 — an unknown server at decommission; 04, steps 11–13 — a server name not by the grammar of N2.1 — 400. They do not check the choice in a live pool, races, safe with pending_writes,
 the decommission of a live/never heard resource, the issue of door, the forecast of a change of labels. A successful change of labels — only in the replay memory (sc. 05 steps 7–13).
-The replay memory of the write doors (Н2.1) — sc. 03 steps 8–12, 04 steps 15–22, 05 steps 7–13, 08 steps 7–9, 13 steps 17–20.
-For these branches use the evidence table of Н5. The success of the schema does not prove the rights,
+The replay memory of the write doors (N2.1) — sc. 03 steps 8–12, 04 steps 15–22, 05 steps 7–13, 08 steps 7–9, 13 steps 17–20.
+For these branches use the evidence table of N5. The success of the schema does not prove the rights,
 the change of state, the deadline or the execution of a request by the controller.
 
 ## Sc. 08–16: a fresh stand per scenario
@@ -90,7 +90,7 @@ Reconciliation of python and go М10/6–11 (sc. 08–12 and the added steps):
 - Sc. 12 — the number forms of the heartbeat of the worker `w-1` without a live worker: the slot row and the heartbeats `@put object` from `inputs/`
   (`hb-w-1-pending-0.json` — the reference: `safe: true`; `-pending-missing`, `-pending-fraction` (`1000.0`), `-pending-minus-zero`,
   `-pending-2p63` — `pending_unsaid`; `-schema-fraction` (`1.0`) — `schema: null`; `-build-number` (`5`) — `build: null`, not known, P1; V7 item 3 row 14).
-  Each `@put object` changes the version of the heartbeat — the console sees it alive (Н1.2: a stale heartbeat would also give
+  Each `@put object` changes the version of the heartbeat — the console sees it alive (N1.2: a stale heartbeat would also give
   `pending_unsaid`, so steps 4 and 21 are the reference of freshness; freshness — [the observation contract](../../../common/contracts/observation.md))
   (reconciliation of python and go М10/6–11, T1, T3, T4, T27). Before each input not by the form, except the first one, — again
   `-pending-0` and `@until` until `safe: true` (steps 8–9, 12–13, 16–17): otherwise the expectation `pending_unsaid` of the next input
@@ -98,18 +98,18 @@ Reconciliation of python and go М10/6–11 (sc. 08–12 and the added steps):
   (analysis of the review of stage B 6–7, № 21).
 
 Sc. 10 after DELETE removes only the drain: d1 remains unplaced, would_strand.testsub=[d1], the counters 0 and safe=true;
-the full answer keeps the same keys would_strand/subsystems by Н2.2. Sc. 11 (`/schema` after an update) is
-evidence and P/02.4-08: the resource is under the key `resource/srv-a` (Н2.3).
+the full answer keeps the same keys would_strand/subsystems by N2.2. Sc. 11 (`/schema` after an update) is
+evidence and P/02.4-08: the resource is under the key `resource/srv-a` (N2.3).
 
-By reading: the query version is only ASCII [1-9][0-9]* whole; reconcile all the reasons of 409 of the schema raise (Н3 «raise_schema»,
-Н4).
+By reading: the query version is only ASCII [1-9][0-9]* whole; reconcile all the reasons of 409 of the schema raise (N3 «raise_schema»,
+N4).
 
 ## Coverage audit of P/06, second pass (Gemini)
 
 Sc. 13–16 (`audit-coverage-gemini` 0a5ae79f9) — the stand of sc. 08–12: fresh per scenario, the resource `srv-a` by the first step, without
 the controller and workers. Rows bypassing the writer — through the store door by the role of the owner: the slot — `testsubworker` (as in sc. 07, 09),
 the rows of the console (`testsub/policy`, `platform/drain`, `platform/schema`, `platform/servers/srv-a`) — `console`.
-- Sc. 13 — the decommission of a server, the console side (Н3 «decommission_server»). A live `srv-a` (step 2 waits for `resource: live`): 409 `server
+- Sc. 13 — the decommission of a server, the console side (N3 «decommission_server»). A live `srv-a` (step 2 waits for `resource: live`): 409 `server
   answers`, `may_confirm_gone: false`, `gone: true` does not bypass it. `srv-b` is known only by the slot row `w-1` (step 5; the resource
   `srv-b` was never heard): while the slot is fresh — 409 `may_confirm_gone: false` also with `gone` (step 6 — the first observation of the version of
   the slot by this console); `@sleep 46` — the version of the slot does not change for longer than LOST_AFTER 45 s, there is no fresh evidence: without `gone`
@@ -118,9 +118,9 @@ the rows of the console (`testsub/policy`, `platform/drain`, `platform/schema`, 
   the withdrawal — 200 `{}`, there is no row, `server.decommission_withdrawn`. The execution by the controller and the removal of the door row — by reading.
 - Sc. 14 — the row `testsub/policy` not by the form (`servers: bogus`) after `distinct`: `GET /policy` — the default of the manifest
   `shared`, not a refusal and not the earlier value (the outcome `console` of the family `policy`); the row `platform/drain` not by the form (`server:
-  bad/srv`) — `GET /drain` 503 `unavailable` (the outcome of the family `drain`, Н4).
+  bad/srv`) — `GET /drain` 503 `unavailable` (the outcome of the family `drain`, N4).
 - Sc. 15 — `platform/schema` with `version: "x"` at a working console: `GET /schema` — `version: null`, `schema_unknown: true`;
-  `PUT /schema?version=1` — 409 «mend the row first» (Н3 «raise_schema» step 2), the row is the earlier one. A refusal of the start of the console with
+  `PUT /schema?version=1` — 409 «mend the row first» (N3 «raise_schema» step 2), the row is the earlier one. A refusal of the start of the console with
   such a row — by reading (as before).
 - Sc. 16 — `platform/servers/srv-a` with a label not by the alphabet (`bad label`): `/servers` — `labels: null`, `labels_source: null`;
   the series `testsub_servers_labels_unread 1` (the acceptance README of chapter 6.5 «Ряды»; the outcome of the family `server-labels`).
@@ -137,7 +137,7 @@ The heartbeats of the worker `w-1` for `@put object` (the object write command o
 - `POST /drain` with server=srv-a: the full answer `{draining: "srv-a"}`; `DELETE`: `{draining: ""}`.
   The opposite bodies do not pass the schema even with a correct following GET.
 - The full answers of labels and drain are checked by the whole grammar of a subsystem name
-  [P/02.1 Н1.2](../../../02-installer/spec/02.1-installer.norms.md#н12-document),
+  [P/02.1 N1.2](../../../02-installer/spec/02.1-installer.norms.md#n12-document),
   including the whole closed list of reserved names. For each word check the refusal
   in the prefix of UnitRef (would_move and will_move), in the key of each of the maps would_strand/subsystems
   and in the field subsystem; for example, platform/u1, domain/u1, events/u1 and the key events are inadmissible.
@@ -151,7 +151,7 @@ The heartbeats of the worker `w-1` for `@put object` (the object write command o
   or `""`: `a/b` and a backslash are rejected by the schema, `box-a` and an empty string are admissible.
   This does not change POST (only a non-empty name) and DELETE (only an empty string).
 - Where.worker, a non-null Where.directory and each element of SubsystemDrain.pending_unsaid have the form of a slot name
-  [P/03.2 Н1.4](../../../03-worker/spec/03.2-worker.norms.md).
+  [P/03.2 N1.4](../../../03-worker/spec/03.2-worker.norms.md).
   Admissible are `w-1`, `w-server-12`, a prefix of eight letters and a long admissible suffix;
   not admitted are `""`, `w`, `w-`, `w--1`, `W-1`, `w/1`, `w_1` and a final line feed.
   The schema checks the common grammar; the correspondence to slot.prefix of a particular manifest is checked
@@ -162,7 +162,7 @@ of the author are not a performed stand test.
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
-One sleep: sc. 13 step 7, 46 s — time before an action: the version of the slot `srv-b` does not change for longer than LOST_AFTER 45 s ([the observation contract](../../../common/contracts/observation.md) «Свежесть»), only then the server is not «слышен» and `may_confirm_gone` can be `true` (Н3 «decommission_server»). Waiting for an event is `@until`: sc. 02 step 2 (the reason in `/unplaceable` after a pass), 07 steps 4–5, 09 step 6
+One sleep: sc. 13 step 7, 46 s — time before an action: the version of the slot `srv-b` does not change for longer than LOST_AFTER 45 s ([the observation contract](../../../common/contracts/observation.md) «Свежесть»), only then the server is not «слышен» and `may_confirm_gone` can be `true` (N3 «decommission_server»). Waiting for an event is `@until`: sc. 02 step 2 (the reason in `/unplaceable` after a pass), 07 steps 4–5, 09 step 6
 (the assignment by a pass of the controller), 10 step 8 (the journal in the index of the resource), 11 step 3 (the heartbeat of the resource in `processes`), 12
 steps 4, 5 and the odd 7–25 (the console sees the new heartbeat; the even 6–24 — `@put object`; analysis of the review of stage B 6–7, № 21, № 22), 13 steps 2, 15, 16 (a live resource, the decommission journal in the index of the resource), 16 step 3 (`/servers` by the labels row).
 
@@ -183,7 +183,7 @@ result; this directory does not run them itself.
 
 A fresh stand, the resource `srv-a` by the first step; there are no rows `testsub/policy`, `platform/drain`, `platform/servers/srv-a`, `platform/schema` before the scenario. Step 25 waits until the server becomes known, hence `@until`.
 
-- Steps 2–15 — the policy: no row — `revision: 0`, a condition — 412 without `row`; a creation without a condition; a condition by `revision` and by the index; 412 with `row`; step 10 — the index of the row is read by the store door: the body of `GET /policy` carries `revision`, the index is `ETag`, and an expectation of a header `$имя` does not bind; steps 13–14 — the replay memory earlier than the condition.
+- Steps 2–15 — the policy: no row — `revision: 0`, a condition — 412 without `row`; a creation without a condition; a condition by `revision` and by the index; 412 with `row`; step 10 — the index of the row is read by the store door: the body of `GET /policy` carries `revision`, the index is `ETag`, and an expectation of a header `$name` does not bind; steps 13–14 — the replay memory earlier than the condition.
 - Steps 16–24 — the drain: `POST` of the same server and `DELETE` without a drain do not move `revision` (steps 19–20, 23–24).
 - Steps 25–30 — the labels: a removed row counts anew.
 - Steps 31–36 — the schema: `PUT` of the same version is a write, `revision` grows.

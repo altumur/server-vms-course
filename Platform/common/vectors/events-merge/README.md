@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/events-merg
 
 The owner is [the event journal merge contract](../../contracts/events-merge.md) (lesson P/06, chapter 6.4; ADR-0091 addendum (21) item 3).
 The participants are the cluster console (`GET /events`, [P/06.4](../../../06-console/spec/06.4-console.norms.md)) and a subsystem worker
-that merges the journal itself. The bytes are written by «Спецификация»; the rows were composed by the text of the contract and checked by its oracle, not by the code of
+that merges the journal itself. The bytes are written by «Specification»; the rows were composed by the text of the contract and checked by its oracle, not by the code of
 implementations.
 
 ## `cases.tsv`
@@ -16,12 +16,12 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | Field | Meaning |
 |---|---|
 | `participant` | `"console"` or `{"worker": [<sub>…]}` — the subsystems whose epoch rows are declared in `worker.reads` |
-| `query` | `{limit?, keep?}` — as at the request of P/05 Н1.3 (the defaults 1000, `newest`); none — the defaults |
+| `query` | `{limit?, keep?}` — as at the request of P/05 N1.3 (the defaults 1000, `newest`); none — the defaults |
 | `policies` | `{<sub>: fenced \| earlier-run}` — `older_epochs` of the manifest; none — `fenced` |
 | `epochs` | `{<sub>: {<unit id>: <epoch>} \| "did not answer"}` — what the participant read in `<sub>/epoch/*`; at the worker — only the declared ones |
 | `grant` | the `view` scopes of the caller of the console — `*`, `unit:<sub>/<id>`, `labels:<label>[,…]` (the contract `may` step 7); none — `["*"]` |
 | `units` | `{<sub>/<id>: [<label>…] \| "@unreadable"}` — the labels of the unit rows as read (the field `labels` declared in `unit.fields`; `"@unreadable"` — the row is unreadable or the read is not confirmed); there is no unit — there are no labels (`[]`) |
-| `resources` | `{<server>: <resource answer> \| "did not answer" \| "silent" \| {"said": <state>}}` — the live resources and their outcomes; the answer is `{events, state, truncated, partial?, lines_garbled?}` of P/05 Н1.3 |
+| `resources` | `{<server>: <resource answer> \| "did not answer" \| "silent" \| {"said": <state>}}` — the live resources and their outcomes; the answer is `{events, state, truncated, partial?, lines_garbled?}` of P/05 N1.3 |
 
 **Output** — the answer of the contract `{events, state, truncated, partial?, lines_garbled?, complete, incomplete, withheld?}`. `expect` is a subset:
 `events` — an array of rows in the order of output, at each the listed fields are compared (`id`, `epoch_is`, `fenced`; `"@absent"` —

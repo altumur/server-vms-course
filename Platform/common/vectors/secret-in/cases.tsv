@@ -5,8 +5,8 @@
 # spellings, the final form), then the product's (its tables before it — secret-keys.tsv, a
 # name in http://10.0.0.5/videostream.cgi?channel=1&<name>=hunter2xyz, and secret-sources.tsv, which ipintd still
 # reads — and its tests of the rule). Addresses only: a text that is no field's value is testdata/log_mask.tsv.
-# Owner: «Спецификация»; the product's conformance — its own acceptance against this table (ADR-0080 addendum 16, ADR-0083).
-# The norm — М10/7 Н1.1а (А1–А15).
+# Owner: «Specification»; the product's conformance — its own acceptance against this table (ADR-0080 addendum 16, ADR-0083).
+# The norm — M10/7 N1.1a (A1–A15).
 #
 # A cell is read byte for byte between TABs, nothing is unescaped: a TAB or a line break inside a value cannot be
 # written, and no row needs one; `\t`, `\n` in a cell are two characters.
@@ -447,19 +447,19 @@ cam.source	AKIA:hunter2xyz@https://s3.example.com/eu/bucket	AKIA:***@https://s3.
 cam.source	/mnt/a@https://h/x	/mnt/a@https://h/x	cred_username	…a login before it, an address after
 rec.volumes.url	AKIA:hunter2xyz@https://s3.example.com/eu/bucket	AKIA:***@https://s3.example.com/eu/bucket	access_secret	an '@' before the first '://': a login and a password before it, whatever follows
 rec.volumes.url	/mnt/a@https://h/x	/mnt/a@https://h/x	access_key	…a login before it, an address after
-# Rows the acceptance of М10/7 holds and this table lacked (stage A parity check against the norm, 2026-10-18):
+# Rows the acceptance of M10/7 holds and this table lacked (stage A parity check against the norm, 2026-10-18):
 cam.source	http://h/x?a=1#pwd=hunter2	http://h/x?a=1#pwd=***	cred_secret	a pair in the fragment after a query is read on its own (A3)
 cam.source	/mnt/x?pwd=hunter2	/mnt/x?pwd=***	cred_secret	a value with no :// is read as text: its pairs too (A1)
 rec.volumes.url	/mnt/x?pwd=hunter2	/mnt/x?pwd=***	access_secret	a value with no :// is read as text: its pairs too (A1)
 cam.source	https://hub.ex'ample/x?token=hunter2	https://hub.ex'ample/x?token=***	cred_secret	' is a sub-delim of RFC 3986: a field's address does not end at it, and the token after it is a password (A2; reconciliation M10/6-11, S4)
 cam.source	http://10.0.0.5/x?pwd=Hun<ter2	http://10.0.0.5/x?pwd=***	cred_secret	< is outside RFC 3986: the url does not parse; the mask runs to the end of the pair's value (A2, A6; S4)
 rec.volumes.url	http://h/x?a=<b>	http://h/x?a=<b>	access_secret	a character outside RFC 3986 and no password: the url does not parse, refused by the secret's field (A2, A15; S4)
-# stage A review SA1-21, SA1-23: the empty secret value (А6), a name that decodes to «=» (А7), a nested address after «%3A//» (А8 (4))
-cam.source	http://10.0.0.5/videostream.cgi?usr=admin&pwd=	http://10.0.0.5/videostream.cgi?usr=admin&pwd=	cred_secret	a secret pair with an empty value refuses too, the shown value stays empty (А6)
-cam.source	rtsp://10.0.0.5/live?pass%3Dhunter2xyz=1	rtsp://10.0.0.5/live?***	cred_secret	a name that decodes holding «=» is read as a pair: the name goes with the value (А7)
-cam.source	rtsp://10.0.0.5/x%3A//admin%3Ahunter2xyz%40h/s	rtsp://10.0.0.5/***	cred_secret	a segment that decodes ending in «:» before «//» starts a nested address to «?»: masked whole (А8 (4))
-cam.source	rtsp://10.0.0.5/live?pwd=ab%zz	rtsp://10.0.0.5/live?pwd=***	cred_secret	a «%» without two hex digits stays a character: the pair is still a password, shown *** (А4 step 1; URLC-UTF8-01)
-cam.source	rtsp://10.0.0.5/live?p%FFwd=x	rtsp://10.0.0.5/live?p%FFwd=x		invalid UTF-8 after decoding reads as U+FFFD: «p�wd» is no password name (А4 step 1; URLC-UTF8-01)
+# stage A review SA1-21, SA1-23: the empty secret value (A6), a name that decodes to «=» (A7), a nested address after «%3A//» (A8 (4))
+cam.source	http://10.0.0.5/videostream.cgi?usr=admin&pwd=	http://10.0.0.5/videostream.cgi?usr=admin&pwd=	cred_secret	a secret pair with an empty value refuses too, the shown value stays empty (A6)
+cam.source	rtsp://10.0.0.5/live?pass%3Dhunter2xyz=1	rtsp://10.0.0.5/live?***	cred_secret	a name that decodes holding «=» is read as a pair: the name goes with the value (A7)
+cam.source	rtsp://10.0.0.5/x%3A//admin%3Ahunter2xyz%40h/s	rtsp://10.0.0.5/***	cred_secret	a segment that decodes ending in «:» before «//» starts a nested address to «?»: masked whole (A8 (4))
+cam.source	rtsp://10.0.0.5/live?pwd=ab%zz	rtsp://10.0.0.5/live?pwd=***	cred_secret	a «%» without two hex digits stays a character: the pair is still a password, shown *** (A4 step 1; URLC-UTF8-01)
+cam.source	rtsp://10.0.0.5/live?p%FFwd=x	rtsp://10.0.0.5/live?p%FFwd=x		invalid UTF-8 after decoding reads as U+FFFD: «p�wd» is no password name (A4 step 1; URLC-UTF8-01)
 cam.source	cfw://local	cfw://local		host: authority with none: [local] needs no path (url-credentials «Schemes»; URLC-HOST-01)
 cam.source	driverpack://file	driverpack://file		no credentials in it: fault empty; its bad_url (host: path needs a path) is by url-credentials «Schemes», outside this table (URLC-HOST-01, URLC-VECTORS-02)
 cam.source	rtsp://10.0.0.5:99999/live	rtsp://10.0.0.5:99999/live		a port is *DIGIT, no TCP bound (URLC-HOST-01)

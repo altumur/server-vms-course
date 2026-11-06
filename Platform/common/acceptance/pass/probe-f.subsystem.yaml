@@ -1,4 +1,4 @@
-# probe-f — дверь первого вида стенда передачи (ADR-0112 доп. (3) п. 1): воркера играет подставной воркер раннера.
+# probe-f is the first-kind door of the pass stand (ADR-0112 addendum (3) item 1); the runner substitutes the worker.
 name: probe-f
 unit: {rows: fthings, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}

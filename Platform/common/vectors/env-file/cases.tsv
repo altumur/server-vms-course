@@ -1,4 +1,4 @@
-# A line of the environment file (the environment file contract common/contracts/env-file.md; P/02.4 Н1.2; the edges B19; C04-ENV-01). The form — README.
+# A line of the environment file (the environment file contract common/contracts/env-file.md; P/02.4 N1.2; the edges B19; C04-ENV-01). The form — README.
 case	line	expect	note
 plain	"A=1"	["A","1"]	KEY=VALUE
 underscore-name	"_A1=v"	["_A1","v"]	KEY — [A-Za-z_][A-Za-z0-9_]*

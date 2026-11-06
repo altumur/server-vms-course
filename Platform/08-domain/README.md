@@ -39,9 +39,9 @@ data/<family>.schema.json, .layers.tsv, .outcomes.tsv
 data/refusal-words.tsv                the closed list of error words by the doors of the process (ADR-0094 B5)
 vectors/<algorithm>/                  vectors: view (8.1), assemble (8.5), issue (8.7)
 acceptance/<K>/                       acceptance of chapter K: 1, 3 … 10 — chapters 8.1, 8.3–8.10 (README.md, scenarios.tsv; 3/inputs/);
-                                      0/ and 2/ add only kit seams; the ordinary catalogue is unchanged (8.2 — common vectors, Н5)
+                                      0/ and 2/ add only kit seams; the ordinary catalogue is unchanged (8.2 — common vectors, N5)
 journal/corrections-<K>.tsv           the log of AI corrections of chapter K (1, 3 … 10) — history, not an input; not in the export
 ru/                                   for people, not in the export — the lecture ru/08-domain.md, translations of the English text by the same path
 ```
 
-Chapter 8.0 has no ordinary scenario catalogue: its outcomes are checked by chapters 8.3, 8.8 and 8.10 and reading (Н5). Added [kit seams](forms/README.md#seams-and-stages), including seam-only acceptance/0 and acceptance/2, assist development and do not replace those obligations.
+Chapter 8.0 has no ordinary scenario catalogue: its outcomes are checked by chapters 8.3, 8.8 and 8.10 and reading (N5). Added [kit seams](forms/README.md#seams-and-stages), including seam-only acceptance/0 and acceptance/2, assist development and do not replace those obligations.

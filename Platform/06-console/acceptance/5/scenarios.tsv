@@ -138,7 +138,7 @@ scenario	step	request	expect
 19-place-held-no-row	6	GET /testsub2/where/shelves/s9?unit=ta	200 {"worker": "t-1", "place": "s9", "server": "srv-a"}
 19-place-held-no-row	7	store POST /v1/write {"id":"d2","op":"put","key":"testsub2/holds/s8","items":{"by":"t-1","holder":"box:1:ffffff","until":"9999999999","released":"false","gen":"1"},"cas":""}	200
 19-place-held-no-row	8	GET /testsub2/where/shelves/s8?unit=ta	404 {"unreachable": "s8@?"}
-# 20-failover-measured (P/06 coverage audit, G05): w-1 stops by SIGTERM (last heartbeat, then slot release — P/03.4 Н3); a new instance under the same name finds its heartbeat (previous_*): started ≥ previous_hb — measured lapse, failovers_unmeasured 0.
+# 20-failover-measured (P/06 coverage audit, G05): w-1 stops by SIGTERM (last heartbeat, then slot release — P/03.4 N3); a new instance under the same name finds its heartbeat (previous_*): started ≥ previous_hb — measured lapse, failovers_unmeasured 0.
 20-failover-measured	1	@start resource	ok
 20-failover-measured	2	@start worker w-1	ok
 20-failover-measured	3	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "instance": "$i1", "previous_instance": "@absent"}
@@ -154,7 +154,7 @@ scenario	step	request	expect
 21-failover-unmeasured	4	@start worker w-1	ok
 21-failover-unmeasured	5	@until 60 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "previous_instance": "acc:9:0f0f0f", "previous_server": "srv-a"}
 21-failover-unmeasured	6	@until 20 GET /metrics	200 ~testsub_failovers_unmeasured 1 ~testsub_failover_seconds{kind="last",worker="w-1"} -1
-# 22-numeric-id (P/06 coverage audit, G09 item 1; P/06.1 Н1.3 numeric): probe-x starts at number 1, next_id counter {n}; tombstone does not return a number; path 01 gives 400 badkey, %32 is unit 2.
+# 22-numeric-id (P/06 coverage audit, G09 item 1; P/06.1 N1.3 numeric): probe-x starts at number 1, next_id counter {n}; tombstone does not return a number; path 01 gives 400 badkey, %32 is unit 2.
 22-numeric-id	1	POST /probe-x/probes {}	201 {"id": "1", "label": "probe1", "revision": 1}
 22-numeric-id	2	@as console store GET /v1/get?key=probe-x/next_id	200 {"items": {"n": "1"}}
 22-numeric-id	3	DELETE /probe-x/probes/1	200 {"deleted": "1"}
@@ -163,7 +163,7 @@ scenario	step	request	expect
 22-numeric-id	6	PUT /probe-x/probes/01 {"n": 1}	400 {"error": "badkey"}
 22-numeric-id	7	PUT /probe-x/probes/%32 {"n": 1}	200 {"id": "2", "n": 1, "revision": 2}
 22-numeric-id	8	PUT /probe-x/probes/1 {"n": 1}	404 {"error": "no such unit"}
-# 23-weight-field (P/06 coverage audit, G09 item 2; P/06.1 Н3 «создать» step 4, Н4): probe-x cost materializes default 1; POST/PUT of 0 or -1 gives 400 «cost must be at least 1» without fault; string or boolean gives not_number; refused PUT leaves the row unchanged.
+# 23-weight-field (P/06 coverage audit, G09 item 2; P/06.1 N3 «создать» step 4, N4): probe-x cost materializes default 1; POST/PUT of 0 or -1 gives 400 «cost must be at least 1» without fault; string or boolean gives not_number; refused PUT leaves the row unchanged.
 23-weight-field	1	POST /probe-x/probes {}	201 {"id": "1", "cost": 1, "revision": 1}
 23-weight-field	2	POST /probe-x/probes {"cost": 0}	400 {"error": "type", "field": "/cost", "detail": "~cost must be at least 1", "fault": "@absent"}
 23-weight-field	3	POST /probe-x/probes {"cost": -1}	400 {"error": "type", "field": "/cost", "detail": "~cost must be at least 1", "fault": "@absent"}
@@ -172,7 +172,7 @@ scenario	step	request	expect
 23-weight-field	6	PUT /probe-x/probes/1 {"cost": 0}	400 {"error": "type", "field": "/cost", "detail": "~cost must be at least 1", "fault": "@absent"}
 23-weight-field	7	@as console store GET /v1/get?key=probe-x/probes/1	200 {"items": {"cost": "1", "revision": "1"}}
 23-weight-field	8	PUT /probe-x/probes/1 {"cost": 2}	200 {"cost": 2, "revision": 2}
-# 24-where-door (P/06 coverage audit, second Gemini pass, G07; Н3 «/where/<id>»): a unit on a live worker with a door (testsub2 door.routes) gets /where door with a door1. token; console creates door/signer (sealed seed); another value under its own kid in door/keys gives no door, leaves row unchanged, alarms door.keys_conflict {kid}.
+# 24-where-door (P/06 coverage audit, second Gemini pass, G07; N3 «/where/<id>»): a unit on a live worker with a door (testsub2 door.routes) gets /where door with a door1. token; console creates door/signer (sealed seed); another value under its own kid in door/keys gives no door, leaves row unchanged, alarms door.keys_conflict {kid}.
 24-where-door	1	@start resource	ok
 24-where-door	2	@start controller testsub2	ok
 24-where-door	3	@start worker testsub2 t-1	ok
@@ -186,7 +186,7 @@ scenario	step	request	expect
 24-where-door	11	GET /testsub2/where/ta	200 {"worker": "t-1", "door": "@absent"}
 24-where-door	12	store GET /v1/get?key=door/keys	200 {"index": "$kw"}
 24-where-door	13	@until 20 GET /events?kind=door.keys_conflict	200 {"events": [{"kind": "door.keys_conflict", "kid": "$kid"}]}
-# 25-slot-and-contenders (P/06 coverage audit, second Gemini pass, G08; Н2 «Выдачи», Н3 «/servers» «Соперники»): slot released "taking" gives released false and slot_taking; malformed slot gives slot_garbled, slot_until null, no released; contender mark under w-1 with another name gives name_conflict marked unreadable; search mark «-» is not a contender; name_conflicts 1.
+# 25-slot-and-contenders (P/06 coverage audit, second Gemini pass, G08; N2 «Выдачи», N3 «/servers» «Соперники»): slot released "taking" gives released false and slot_taking; malformed slot gives slot_garbled, slot_until null, no released; contender mark under w-1 with another name gives name_conflict marked unreadable; search mark «-» is not a contender; name_conflicts 1.
 25-slot-and-contenders	1	@start resource	ok
 25-slot-and-contenders	2	@put object testsub/heartbeats/w-1 inputs/hb-w-1-labels.json	ok
 25-slot-and-contenders	3	@as testsubworker store POST /v1/write {"id":"73","op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"taking","gen":"1","server":"srv-a"},"cas":""}	200 {"index": "$s"}
@@ -321,7 +321,7 @@ scenario	step	request	expect
 32-pass-second-kind	11	GET /probe-x/metrics	200 ~probe_x_passed_calls_total 0
 32-pass-second-kind	12	GET /metrics	200 ~probe_x_passed_calls_total 0
 32-pass-second-kind	13	GET /metrics	200 !contains testsub_passed_calls_total
-# 33-writes-via (ADR-0119 addenda (10), (11); P/06.1 Н1.1а): probe-w manifest unit rows items and table log are written only by probe-x through a ticket; a session gets 403 writes via on create/edit/delete/table/batch-row (whole batch, no writes); check before row read: PUT/DELETE of an absent row gives 403, not 404; unmarked free table is open; reads unchanged. Ticket half: pass stand, reading until it is executable (P/06.1-35).
+# 33-writes-via (ADR-0119 addenda (10), (11); P/06.1 N1.1a): probe-w manifest unit rows items and table log are written only by probe-x through a ticket; a session gets 403 writes via on create/edit/delete/table/batch-row (whole batch, no writes); check before row read: PUT/DELETE of an absent row gives 403, not 404; unmarked free table is open; reads unchanged. Ticket half: pass stand, reading until it is executable (P/06.1-35).
 33-writes-via	1	@start resource	ok
 33-writes-via	2	POST /probe-w/items {"name": "a"}	403 {"error": "writes via"}
 33-writes-via	3	store GET /v1/get?key=probe-w/items/a	200 {"items": null}

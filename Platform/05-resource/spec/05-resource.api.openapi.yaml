@@ -1,17 +1,17 @@
-# P/05 — the doors of the server resource: the HTTP contract. Canon — 05-resource.norms.md (Н1.1, Н1.3, Н1.6, Н2–Н4). Paths and schemas
+# P/05 — the doors of the server resource: the HTTP contract. Canon — 05-resource.norms.md (N1.1, N1.3, N1.6, N2–N4). Paths and schemas
 # are carried over from the contract М10/8 (08-events-resource-requests.api.openapi.yaml; stage B, without a change of behaviour):
 # /v1/objects, /v1/objects/{key}, GET /events of the resource, /events/wait, /buckets/{sub}/{unit}, /events/{path}, /mirror/…,
 # /mirrored/…. The console doors (/marks, /{sub}/requests, /{sub}/asked/{sha16}, the merge GET and HEAD /events) — in
 # the contract P/06 (06-console.api.openapi.yaml, chapter 6.4); the response schemas of /events common to both doors (EventRow, UnitRef,
 # SafeSegment, ObjectKey, Sha256, Subsystem) — here, P/06 refers to them ($ref). PUT /v1/objects/{sub}/blobs/{digest}
-# (a body copy at the resource) — carried over from the contract М10/10 (the Specification's decision on В2 of the transfer); the console bytes door
+# (a body copy at the resource) — carried over from the contract М10/10 (the Specification's decision on V2 of the transfer); the console bytes door
 # PUT /{rows}/{id}/{blob_field} — P/06 (chapter 6.1).
 openapi: 3.1.0
 info:
   title: P/05 — the doors of the server resource
   version: '1'
-  description: 'Canon — 05-resource.norms.md. Н2 separates JSON, bytes and the absence of a body; the admission of roles and TLS — Н2
-    «Допуск к дверям ресурса», P/02.4 Н1.6 and the role certificate contract (ADR-0075); the internal API is not normed. The forms
+  description: 'Canon — 05-resource.norms.md. N2 separates JSON, bytes and the absence of a body; the admission of roles and TLS — N2
+    «Допуск к дверям ресурса», P/02.4 N1.6 and the role certificate contract (ADR-0075); the internal API is not normed. The forms
     of an implementation may diverge: the contract does not claim that any implementation has been checked against it.'
 paths:
   /v1/objects:
@@ -51,9 +51,9 @@ paths:
         required: false
         schema:
           type: string
-        description: The beginning of a relative key; emptiness is allowed. The check by Н1.1, separate from the full
+        description: The beginning of a relative key; emptiness is allowed. The check by N1.1, separate from the full
           key. The ordinary list does not show the tombstones .gone/; prefix=.gone/ — read only of the tombstones
-          {written, peers, acked} (Н1.1 «Надгробия»; log of cammeta-go, lesson 10 № 2).
+          {written, peers, acked} (N1.1 «Надгробия»; log of cammeta-go, lesson 10 № 2).
       - name: scope
         in: query
         required: false
@@ -147,7 +147,7 @@ paths:
           - cluster
           default: local
     put:
-      summary: Only the refusal of PUT of a non-blob; the full door PUT /v1/objects/{sub}/blobs/{digest} — Н2
+      summary: Only the refusal of PUT of a non-blob; the full door PUT /v1/objects/{sub}/blobs/{digest} — N2
       responses:
         '400':
           description: Wrong key/scope
@@ -162,7 +162,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '403':
-          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
@@ -200,7 +200,7 @@ paths:
         type: string
         pattern: "^(?:sha256-[0-9a-f]{64})$"
     put:
-      summary: 'Resource door: accept a full copy of a blob (Н1.1 «Тела у ресурса», Н2; carried over from the contract М10/10)'
+      summary: 'Resource door: accept a full copy of a blob (N1.1 «Тела у ресурса», N2; carried over from the contract М10/10)'
       parameters:
       - name: Content-Length
         in: header
@@ -236,7 +236,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '405':
-          description: The method/family does not admit PUT; a key not of the blob form (uppercase hex, without sha256-) or a subsystem without a blob field — an ordinary object, it is written by the owner (Н1.1 «Тела у ресурса» mirror)
+          description: The method/family does not admit PUT; a key not of the blob form (uppercase hex, without sha256-) or a subsystem without a blob field — an ordinary object, it is written by the owner (N1.1 «Тела у ресурса» mirror)
           content:
             application/json:
               schema:
@@ -290,8 +290,8 @@ paths:
   /events:
     x-route-priority: 70
     get:
-      summary: 'Resource: the local index (Н1.3, Н3 «запрос (ресурс)»); the console merge — the contract P/06 (chapter 6.4)'
-      description: 'The order and the cut (cut, Н1.3) — the same for the resource and for the console merge (chapter 6.4 Н3 «merge»): before the cut
+      summary: 'Resource: the local index (N1.3, N3 «запрос (ресурс)»); the console merge — the contract P/06 (chapter 6.4)'
+      description: 'The order and the cut (cut, N1.3) — the same for the resource and for the console merge (chapter 6.4 N3 «merge»): before the cut
         remove duplicates by id; first class alarm, then observation; within a class by by (keep newest — descending, oldest —
         ascending), with equal time — id lexicographically by UTF-8 bytes; the first limit rows. truncated — the number
         of matching rows unique by id that remain after this cut (analysis of review of stage B 6–7, № 32).'
@@ -303,19 +303,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResourceEvents'
         '400':
-          description: Wrong parameters (Н1.3, Н2, Н3 «query»)
+          description: Wrong parameters (N1.3, N2, N3 «query»)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '403':
-          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceDenied'
         '405':
-          description: The method is not supported (including HEAD and POST, Н2) — without a body (the comparison of python and go М10/6–11, E17)
+          description: The method is not supported (including HEAD and POST, N2) — without a body (the comparison of python and go М10/6–11, E17)
         '503':
           description: Busy or there is no index
           content:
@@ -439,7 +439,7 @@ paths:
               schema:
                 const: '1'
         '403':
-          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
@@ -517,7 +517,7 @@ paths:
         '404':
           description: Wrong path/unknown unit; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
@@ -579,7 +579,7 @@ paths:
         '500':
           description: Failed to prepare the full body/its sum; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
@@ -629,7 +629,7 @@ paths:
         '500':
           description: A file/publication error; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
@@ -673,7 +673,7 @@ paths:
         '404':
           description: There are no copies of this server; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
@@ -719,7 +719,7 @@ paths:
         '500':
           description: Failed to read/check the copy; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
@@ -727,7 +727,7 @@ paths:
 components:
   schemas:
     SubsystemName:
-      description: The name of a loaded subsystem by P/02.1 Н1.2 (the original; the contract P/06 refers to it, $ref).
+      description: The name of a loaded subsystem by P/02.1 N1.2 (the original; the contract P/06 refers to it, $ref).
       type: string
       minLength: 1
       maxLength: 32
@@ -775,14 +775,14 @@ components:
       minLength: 1
       pattern: "^(?:(?:[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.\\.[^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+)(?:/(?:[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.\\.[^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+))*)$"
       description: A non-empty relative key; each segment is non-empty and not a dot or two dots. The check of the meaning of the key
-        — Н1.1; the schema does not check the symbolic links of the disk. All components and the full path with the root must fit
+        — N1.1; the schema does not check the symbolic links of the disk. All components and the full path with the root must fit
         into the declared file profile (the event log contract «File names in shared trees»); otherwise 400 before the file operation.
     UnitRef:
       type: string
       minLength: 3
       pattern: "^(?:[a-z][a-z0-9_-]{0,31}(?:\\.alarms)?/[^/|\",\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+)$"
       description: A full reference <tree>/<unit>, also console/<instance> and audit/<role>; the instance is limited in advance by the profile of the event log contract. Without exact . and ..
-        in the second part; for the addressee of a unit UnitId applies additionally (the contract P/06, chapter 6.1 Н1.3); existence is checked where
+        in the second part; for the addressee of a unit UnitId applies additionally (the contract P/06, chapter 6.1 N1.3); existence is checked where
         the route requires it.
       not:
         pattern: "^(?:[\\s\\S]*/\\.{1,2})$"
@@ -868,7 +868,7 @@ components:
           description: 'As read: a string parsed by the form line of the event log contract is given out as is (the reader''s form;
             stage C guess R05-G02, the Architect''s decision of 2026-10-23). The writer''s duty is the canon
             e1-<hex of the tree>-<hex of the unit>-<epoch>-<hex of the instance>-<number> (hex UTF-8, epoch and number decimal), the generation and
-            the absence of a repeated number — the event log contract (Н1.2).'
+            the absence of a repeated number — the event log contract (N1.2).'
         subsystem:
           type: string
           minLength: 1
@@ -912,7 +912,7 @@ components:
       description: The subsystem fields are open; the listed platform fields have these types and are not overridden. of
         is empty only for a platform row without an addressee. All JSON numbers are finite. epoch_is and fenced are set by the merger —
         the console or the worker by the event log merge contract (the resource has none of them); unknown — only for the worker;
-        consistency of epoch_is/fenced — Н1.3.
+        consistency of epoch_is/fenced — N1.3.
     ResourceEventRow:
       description: A row of the resource response — without epoch_is and fenced (they are set by the merger, the event log merge contract).
       type: object
@@ -943,7 +943,7 @@ components:
         partial:
           const: true
         lines_garbled:
-          description: The number of skipped unreadable bucket lines and misplaced files (Н1.3; P/01.1 Н0 «Stability of output»); the field is absent when nothing is skipped.
+          description: The number of skipped unreadable bucket lines and misplaced files (N1.3; P/01.1 N0 «Stability of output»); the field is absent when nothing is skipped.
           type: integer
           minimum: 1
     WaitPart:

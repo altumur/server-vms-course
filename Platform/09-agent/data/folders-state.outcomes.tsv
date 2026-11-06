@@ -1,5 +1,5 @@
 # Outcomes of an unreadable row domain/folders-state (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	console	the whole object is unreadable: a copy may have existed, not read is not absent: a write of the folders door — 503 `{error: "unavailable"}`, nothing is written, reading — as before; the log without the value	1	строка	P/06.8 Н1.2а
-	domainagent	the whole object is unreadable: the agent — the report object is not taken, the holder keeps the previous value; rewrites it in the next pass; the log	1	строка	P/09.1 Н1.5
+	console	the whole object is unreadable: a copy may have existed, not read is not absent: a write of the folders door — 503 `{error: "unavailable"}`, nothing is written, reading — as before; the log without the value	1	row	P/06.8 Н1.2а
+	domainagent	the whole object is unreadable: the agent — the report object is not taken, the holder keeps the previous value; rewrites it in the next pass; the log	1	row	P/09.1 Н1.5

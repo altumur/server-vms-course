@@ -3,10 +3,10 @@
 This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
-The norm of the chapter is [`06.3-console.norms.md`](../../spec/06.3-console.norms.md) Н5. The scenario was moved from the acceptance of
+The norm of the chapter is [`06.3-console.norms.md`](../../spec/06.3-console.norms.md) N5. The scenario was moved from the acceptance of
 М10/09 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the numbers of the scenario and of the steps are the former ones. The other scenarios of М10/09 are the acceptance of [chapter 6.5](../5/README.md). The forms of foreign
-doors belong to their owners; the common codes and the parsing of a console request are [chapter 6.5](../../spec/06.5-console.norms.md) Н2.
+doors belong to their owners; the common codes and the parsing of a console request are [chapter 6.5](../../spec/06.5-console.norms.md) N2.
 
 ## Preparation
 
@@ -35,7 +35,7 @@ Step 03/1 — `login_url` without `LOGIN_URL` is `/api/login` (reconciliation 2 
 
 The domain login, closed `grants`, `via` of a proven identity, the order of `identity`, `need` before the body, Origin by the cookie, the log
 `access.denied`, the emergency login and the debug identity are checked by a separate stand (the domain stand: the acceptance P/08.4, sc. 14 of chapter 6.7) and by a module test, not by this TSV
-(the norms of the chapter, Н5, «Проверяются чтением»).
+(the norms of the chapter, N5, «Проверяются чтением»).
 
 Additional check of the class of errors of run 36 (Kimi), by reading: without a domain every path, including the open one and /session,
 is closed outside the loopback; after an identity the cookie checks Origin before the grant. Check the emergency login.

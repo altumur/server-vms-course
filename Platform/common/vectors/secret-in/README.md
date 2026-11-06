@@ -2,12 +2,12 @@
 
 This English text is the source; the Russian translation `ru/vectors/secret-in/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is chapter [P/06.2](../../../06-console/spec/06.2-console.norms.md) of the console (Н1.1 `url_field`, `common_words`, `mask`; Н1.1а A1–A15;
-Н3 «read_address»; Н4 the row «a password or a login in an address»). The participants are the loader [P/02.1](../../../02-installer/spec/02.1-installer.norms.md)
-(the declarations `credentials` and `secret_in` of a field `type: url`, Н1.2а) and [P/02.4](../../../02-installer/spec/02.4-installer.norms.md)
-(address parsing). The bytes are written by «Спецификация»; the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16,
+The owner is chapter [P/06.2](../../../06-console/spec/06.2-console.norms.md) of the console (N1.1 `url_field`, `common_words`, `mask`; N1.1a A1–A15;
+N3 «read_address»; N4 the row «a password or a login in an address»). The participants are the loader [P/02.1](../../../02-installer/spec/02.1-installer.norms.md)
+(the declarations `credentials` and `secret_in` of a field `type: url`, N1.2a) and [P/02.4](../../../02-installer/spec/02.4-installer.norms.md)
+(address parsing). The bytes are written by «Specification»; the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16,
 ADR-0083). Moved from `Source/tests/testdata/secret_in.tsv` byte for byte (stage B, the move of lesson 6, the Architect's decision
-on V8 of the plan of lesson 6); the head of the file is English, as it was: `М10/7 Н1.1а` in it is the former address of chapter P/06.2 Н1.1а.
+on V8 of the plan of lesson 6); the head of the file is English, as it was: `M10/7 N1.1a` in it is the former address of chapter P/06.2 N1.1a.
 
 ## `cases.tsv`
 
@@ -18,32 +18,32 @@ between TABs, nothing is unescaped: `\t`, `\n` in a cell are two characters. Fiv
 |---|---|
 | `field` | by whose rule the row is read: `cam.source` or `rec.volumes.url`; a field the reader does not know is a wrong row, not a skip |
 | `raw` | the address as written |
-| `masked` | the display (Н1.1а A14): every password is `***` where it stands; the login — as written |
+| `masked` | the display (N1.1a A14): every password is `***` where it stands; the login — as written |
 | `fault` | the refusal of the value as a value of the field (A15): empty — the credentials do not refuse it; otherwise — the field of `credentials` that the refusal names (`cred_secret`, `access_secret` — a password; `cred_username`, `access_key` — a login only) |
 | `note` | why the row exists |
 
 The declarations of the two fields are vector data, not a reference to the VMS catalog (ADR-0001): the file
 [`fields.yaml`](fields.yaml) next to it (moved from the acceptance of chapter 6.2 byte for byte; stage C guess URLC-SOURCE-01, the Architect's decision 2026-10-23; the key is the name from the column `field`, the value is the declaration
-of the field by the form of P/02.1 Н1.2а). The rule of the catalog for nested addresses (A8) is the union of the rules of these two fields with the common
-dictionary Н1.1 `common_words`.
+of the field by the form of P/02.1 N1.2a). The rule of the catalog for nested addresses (A8) is the union of the rules of these two fields with the common
+dictionary N1.1 `common_words`.
 
 ## Run
 
 A side reads each row by the rule of the named field:
 1. the display equals `masked`, byte for byte;
 2. the refusal is empty or names the field from `fault`;
-3. the text of the refusal does not contain the value of the password: Н4, a refusal does not repeat the value. The password value of a row is the substring of `raw`
+3. the text of the refusal does not contain the value of the password: N4, a refusal does not repeat the value. The password value of a row is the substring of `raw`
    that `masked` covers with `***` (with several — each one); a password shorter than 4 bytes is not checked by this item — such
    characters the text of a refusal may carry without a leak (the reading of the commits of «cammeta-acceptance» 2026-10-20).
 
 The package checks the display and the refusal by the credentials (`fault` — a field of `credentials` or empty), including the refusal of an address that does not
 parse by RFC 3986 (a character outside the grammar of A2, a non-numeric port) — it names `credentials.secret` (A15). Outside the package are
-only the refusals of a parsed address by the «Схемам» of [the address contract](../../contracts/url-credentials.md) (a scheme not from `schemes`,
+only the refusals of a parsed address by the «Schemes» of [the address contract](../../contracts/url-credentials.md) (a scheme not from `schemes`,
 no host, at `host: path` no path): the credentials do not give them, `bad_url` is the url step of the row check; such a row has
 an empty `fault` (stage C guess URLC-VECTORS-02, a refinement, the Architect's decision 2026-10-23).
 
 A log line that is not a value of a field — the vectors [`../log-mask/`](../log-mask/README.md) ([the log mask contract](../../contracts/log-mask.md)).
-Who performs it — by the items of the run: the display (item 1) — the console (`06-console`, P/06.2 Н3 «read_address», Н1.4) and the controller (`04-controller`, P/04 Н1.3а — the addresses of the snapshot with the same mask); the refusal (items 2–3) — the unit door of the console (`06-console`, P/06.1, P/06.2 Н4) and the customer's library (`03-worker`, P/03.6 Н1.6 — the url step of the row check); finding a password in an address — the process `domain` (`08-domain`, P/08.9 Н1.3 «Edit» step 4: item 2 — whether `fault` is empty, its refusal word is its own). The loader (`02-installer`, P/02.1 Н1.2а) checks only the declarations of the fields and does not perform the rows (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
+Who performs it — by the items of the run: the display (item 1) — the console (`06-console`, P/06.2 N3 «read_address», N1.4) and the controller (`04-controller`, P/04 N1.3a — the addresses of the snapshot with the same mask); the refusal (items 2–3) — the unit door of the console (`06-console`, P/06.1, P/06.2 N4) and the customer's library (`03-worker`, P/03.6 N1.6 — the url step of the row check); finding a password in an address — the process `domain` (`08-domain`, P/08.9 N1.3 «Edit» step 4: item 2 — whether `fault` is empty, its refusal word is its own). The loader (`02-installer`, P/02.1 N1.2a) checks only the declarations of the fields and does not perform the rows (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
 
 ## Native outcome
 
@@ -64,8 +64,8 @@ perform the runner does not compare; there are no extra keys.
 
 ## What the vector does not cover
 
-The refusal at the unit door (400 `fault: bad_url`, the order of refusals Н3 step 2) — scenario 04 of [the acceptance of chapter 6.2](../../../06-console/acceptance/2/README.md);
-the grammar of the url itself (schemes, host) — [P/02.1 Н1.2а](../../../02-installer/spec/02.1-installer.norms.md) `schemes` and the vectors
+The refusal at the unit door (400 `fault: bad_url`, the order of refusals N3 step 2) — scenario 04 of [the acceptance of chapter 6.2](../../../06-console/acceptance/2/README.md);
+the grammar of the url itself (schemes, host) — [P/02.1 N1.2a](../../../02-installer/spec/02.1-installer.norms.md) `schemes` and the vectors
 [`group-of`](../group-of/README.md).
 
 ## Vector wire

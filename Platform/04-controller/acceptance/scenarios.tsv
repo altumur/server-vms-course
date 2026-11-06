@@ -361,7 +361,7 @@ scenario	step	request	expect
 29-sync-diverged	9	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"diverged": 1}
 29-sync-diverged	10	@until 30 store GET /v1/get?key=testsub/workers/w-1	200 {"items": {"units": "c1", "rev": "3"}}
 29-sync-diverged	11	store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
-# 30-intent-unreadable (coverage audit of P/04, second pass, G01): the intent row out of the form of Н1.5 (state broken) — the controller refuses the placement change (ok false), c1 with a live w-1 is not placed, does not rewrite the row; the row restored (idle by cas) — c1 placed
+# 30-intent-unreadable (coverage audit of P/04, second pass, G01): the intent row out of the form of N1.5 (state broken) — the controller refuses the placement change (ok false), c1 with a live w-1 is not placed, does not rewrite the row; the row restored (idle by cas) — c1 placed
 30-intent-unreadable	1	@start resource	ok
 30-intent-unreadable	2	@start worker w-1	ok
 30-intent-unreadable	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}

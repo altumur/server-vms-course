@@ -10,7 +10,7 @@
 
 ```text
 README.md                                этот файл
-spec/07-console-module.norms.md          нормы (одна глава; Н2 — договор библиотеки)
+spec/07-console-module.norms.md          нормы (одна глава; N2 — договор библиотеки)
 spec/07-console-module.README.md         инструкция реализации
 ru/                                      для человека, в выгрузку не входит — лекция ru/07-console-module.md, переводы английского текста тем же путём
 ```

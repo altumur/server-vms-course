@@ -1,4 +1,4 @@
-# Reading fetched: rid is reported if among the names separated by «,» there is rid or SaidID(rid) (P/03.4 Н1.1 `said_id` read). The form — the README beside.
+# Reading fetched: rid is reported if among the names separated by «,» there is rid or SaidID(rid) (P/03.4 N1.1 `said_id` read). The form — the README beside.
 case	fetched	rid	reported	note
 exact	"cmd-1"	"cmd-1"	true	the name equals rid
 second	"cmd-1,cmd-2"	"cmd-2"	true	rid — the second name

@@ -4,8 +4,8 @@
 
 Владелец — общий [договор сертификата роли](../../contracts/role-certificate.md) `revoke` (`file`, `bad_file`; догадка
 стадии C S01, решение «Архитектора» 2026-10-23). Участники — двери, которые проверяют TLS-пира: демон хранилища
-([P/01.3](../../../../01-store/ru/spec/01.3-store.norms.md) Н1.6), дверь роли консоли домена ([P/10](../../../../10-domain-console/ru/spec/10-domain-console.norms.md)
-Н1.4), дверь воркера на домене ([P/03.7](../../../../03-worker/ru/spec/03.7-worker.norms.md) Н1.6), слушатель `SIGNER_URL`. Байты пишет
+([P/01.3](../../../../01-store/ru/spec/01.3-store.norms.md) N1.6), дверь роли консоли домена ([P/10](../../../../10-domain-console/ru/spec/10-domain-console.norms.md)
+N1.4), дверь воркера на домене ([P/03.7](../../../../03-worker/ru/spec/03.7-worker.norms.md) N1.6), слушатель `SIGNER_URL`. Байты пишет
 «Спецификация».
 
 ## `cases.tsv`

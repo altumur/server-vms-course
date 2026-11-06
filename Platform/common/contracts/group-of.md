@@ -4,13 +4,13 @@ This English text is the source; the Russian translation `ru/contracts/group-of.
 
 A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
 in chapters; the stage C guess W03-GROUP-01, the Architect's decision of 2026-10-23). The owner is lesson
-[P/04](../../04-controller/spec/04-controller.norms.md) (Н1.3 `group_by`; ADR-0011, ADR-0053). Participants: the controller —
-the placement of a group whole on one worker (P/04 Н1.3, Н3); the worker — the stamp `group` of a request submitted by the worker, and one
-unfinished action call per group ([P/03.6](../../03-worker/spec/03.6-worker.norms.md) Н1.5, Н3); the unit door — the refusal
-of the source by the url step of [the row check](row-check.md). The rules are moved from P/04 Н1.3 `group_by` and the header of the vectors
+[P/04](../../04-controller/spec/04-controller.norms.md) (N1.3 `group_by`; ADR-0011, ADR-0053). Participants: the controller —
+the placement of a group whole on one worker (P/04 N1.3, N3); the worker — the stamp `group` of a request submitted by the worker, and one
+unfinished action call per group ([P/03.6](../../03-worker/spec/03.6-worker.norms.md) N1.5, N3); the unit door — the refusal
+of the source by the url step of [the row check](row-check.md). The rules are moved from P/04 N1.3 `group_by` and the header of the vectors
 [`group-of`](../vectors/group-of/README.md) without a change of behaviour.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Group
 

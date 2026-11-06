@@ -1,4 +1,4 @@
-# The judgment of a slot row judge(row, age) → the state (the slot contract common/contracts/slot.md «States», «Сроки»; C140-SLOT-TIME-01). The form — README.
+# The judgment of a slot row judge(row, age) → the state (the slot contract common/contracts/slot.md «States», «Terms»; C140-SLOT-TIME-01). The form — README.
 case	input	expect	note
 held	{"row":{"holder":"box:1:aaaaaa","until":"1760000045","released":"false","gen":"1"},"age":0}	{"state":"held"}	readable, holder not empty, released false, gen ≥ 1, age < SLOT_TERM
 held-boundary	{"row":{"holder":"box:1:aaaaaa","until":"1760000045","released":"false","gen":"1"},"age":44.999}	{"state":"held"}	age 44.999 < SLOT_TERM 45 — held

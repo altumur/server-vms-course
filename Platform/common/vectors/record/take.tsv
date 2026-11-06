@@ -1,4 +1,4 @@
-# The function take (the term record contract, «The members row»): take(keys, row, part, have) → take | same | older | refused <слово>.
+# The function take (the term record contract, «The members row»): take(keys, row, part, have) → take | same | older | refused <word>.
 # input — {keys, row, part, have}: have — the copy of the part {doc} or null. The keys — as cases.tsv.
 # A row: case<TAB>input<TAB>expect<TAB>note.
 case	input	expect	note

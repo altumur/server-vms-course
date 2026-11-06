@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/vectors/object-client/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 The owner is [the object store client contract](../../contracts/object-client.md) (lesson P/05; C10-OBJECT-ADDRESS-32, the Architect's decision
-of 2026-10-25). The participants are the platform processes that write and read objects. The bytes are written by «Спецификация».
+of 2026-10-25). The participants are the platform processes that write and read objects. The bytes are written by «Specification».
 
 ## `address.tsv`
 
@@ -12,7 +12,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 read at an access to the objects of the cluster: the object of the row, `null` — there is no row, `"@unreadable"` — not readable by the form,
 `"@none"` — the store did not answer. **Output** — `{kind: file | cluster, dir, door?, resource?}`: the directory of the write; at
 `cluster` — the read door of the cluster `resource` (an explicit address or the `url` of the door row; `"@unknown"` — the read of the objects of the cluster is
-«не известно» (not known)) and `door` — the key of the read door row, when the address is by it; or `@exit 2` — a refusal of start. 15 rows: a bare
+«not known» (not known)) and `door` — the key of the read door row, when the address is by it; or `@exit 2` — a refusal of start. 15 rows: a bare
 `file://`, an absolute and a non-absolute path, `cluster://` with `resource` (empty and a name before «?»), another scheme; `resource` empty,
 repeated, with percent-encoding (OBJECT135-URL-01); a bare `cluster://` and `cluster://<name>` — the door by the door row of its own
 server; no row, not readable, the store did not answer — `"@unknown"`, not a refusal of start; an explicit `resource` overrides the door

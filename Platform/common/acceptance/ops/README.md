@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/ops/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The scenarios of `door.pass.operations`: the acceptance with the memory of the caller, the leader, the generation, the step batch (ADR-0095; the norms — [P/06.9](../../../06-console/spec/06.9-console.norms.md) Н1.1–Н1.6, Н2, Н3, [the writer turn contract](../../contracts/turn.md), the batch door and the replay memory — [P/06.1](../../../06-console/spec/06.1-console.norms.md) Н2, Н3, the ticket — [the gate-and-pass contract](../../contracts/gate-and-pass.md) «Pass of the second kind»). What is checked without an operation step goes in the [acceptance 6.9](../../../06-console/acceptance/9/README.md), sc. 01, 02.
+The scenarios of `door.pass.operations`: the acceptance with the memory of the caller, the leader, the generation, the step batch (ADR-0095; the norms — [P/06.9](../../../06-console/spec/06.9-console.norms.md) N1.1–N1.6, N2, N3, [the writer turn contract](../../contracts/turn.md), the batch door and the replay memory — [P/06.1](../../../06-console/spec/06.1-console.norms.md) N2, N3, the ticket — [the gate-and-pass contract](../../contracts/gate-and-pass.md) «Pass of the second kind»). What is checked without an operation step goes in the [acceptance 6.9](../../../06-console/acceptance/9/README.md), sc. 01, 02.
 
 **There is no dry run by an implementation.** Not a single step is executed: the values are computed from the text of the norm. New scenarios enter the pin of the lines only by a runner release, after a run against an implementation; each red step is analysed by the question «norm or data», as on the [stand of the pass of the second kind](../pass/README.md#executability).
 
@@ -10,13 +10,13 @@ The scenarios of `door.pass.operations`: the acceptance with the memory of the c
 
 | № | Scenario | Norms |
 |---|---|---|
-| 03 | `03-accept-repeat`: two executors of one key, a lost 202 on a fall of the worker, a repeat on another instance of `backend`, the same `id`, a repeat of the key after the completion: one operation, the steps are executed once | Н3 «accept», Н4 |
-| 07 | `07-restart-with-outcome`: the leader is killed, the generation is rewritten, there is an outcome, the step is not executed again | Н3 «leader», «step» step 4; the turn contract steps 2, 3 |
-| 07 | `07-restart-no-outcome`: the leader is stopped, the generation is rewritten, there is no outcome, a new call of the same step | Н3 «leader» step 5, «step»; `ticket` step 1 |
-| 07 | `07-lost-batch-answer`: a lost answer of the batch, a repeat with the same key: the saved answer, not 412 | Н2 «Step batch»; P/06.1 Н3 «batch» |
-| 07 | `07-late-batch`: the leader on a process pause, another took the turn, a cancel, a late batch — `412 leader moved`, the outcome stays `cancel` | Н2 «Step batch», Н3 «finish», «Races» |
+| 03 | `03-accept-repeat`: two executors of one key, a lost 202 on a fall of the worker, a repeat on another instance of `backend`, the same `id`, a repeat of the key after the completion: one operation, the steps are executed once | N3 «accept», N4 |
+| 07 | `07-restart-with-outcome`: the leader is killed, the generation is rewritten, there is an outcome, the step is not executed again | N3 «leader», «step» step 4; the turn contract steps 2, 3 |
+| 07 | `07-restart-no-outcome`: the leader is stopped, the generation is rewritten, there is no outcome, a new call of the same step | N3 «leader» step 5, «step»; `ticket` step 1 |
+| 07 | `07-lost-batch-answer`: a lost answer of the batch, a repeat with the same key: the saved answer, not 412 | N2 «Step batch»; P/06.1 N3 «batch» |
+| 07 | `07-late-batch`: the leader on a process pause, another took the turn, a cancel, a late batch — `412 leader moved`, the outcome stays `cancel` | N2 «Step batch», N3 «finish», «Races» |
 
-`step_key` in `Idempotency-Key` is computed by the definition of Н2 and checked against [`op-step/key.tsv`](../../../06-console/vectors/op-step/key.tsv). The `id` of the operations are random, written as they are.
+`step_key` in `Idempotency-Key` is computed by the definition of N2 and checked against [`op-step/key.tsv`](../../../06-console/vectors/op-step/key.tsv). The `id` of the operations are random, written as they are.
 
 ## Preparation
 
@@ -26,14 +26,14 @@ In sc. 03 the instance `backend` is a repeated submission of `@pass-worker` of t
 
 ## Two consoles
 
-`console#2` is the console of another server: there is one console per server ([P/02.5](../../../02-installer/spec/02.5-installer.norms.md) Н1.5), so the copy has its own `PLATFORM_DIR`, port and role socket, while the store and the ring are common. The ticket lives at the instance that issued it (`ticket` step 1), so the door `socket m1#2` leads to copy 2, a foreign ticket there is 401.
+`console#2` is the console of another server: there is one console per server ([P/02.5](../../../02-installer/spec/02.5-installer.norms.md) N1.5), so the copy has its own `PLATFORM_DIR`, port and role socket, while the store and the ring are common. The ticket lives at the instance that issued it (`ticket` step 1), so the door `socket m1#2` leads to copy 2, a foreign ticket there is 401.
 
 - `07-restart-with-outcome`, `07-restart-no-outcome`: the leader is copy 1, copy 2 starts in the middle of a call and after the first is stopped becomes the leader; the new ticket goes to it.
 - `07-late-batch`: the late batch goes by the ticket of the previous leader, so the previous leader is copy 2. Copy 1 is frozen until the acceptance and does not contend for the turn. Step 9 puts the operation on pause: the call of copy 2 plays to the end, and the new leader does not call the step, so the cancel does not wait for its call `OPS_STEP_WAIT`; step 24 holds this. `OPS_STEP_WAIT` is shorter than `TURN_TERM`, so the turn gives up the write through `admin.sock`: otherwise the ticket would die earlier than the new holder.
 
 ## Timings
 
-The bounds of `@until` are derived from the constants of the norm: `OPS_TICK` 5, `OPS_STEP_WAIT` 30 (P/06.9 Н1.6), `TURN_TERM` 45 (the turn contract).
+The bounds of `@until` are derived from the constants of the norm: `OPS_TICK` 5, `OPS_STEP_WAIT` 30 (P/06.9 N1.6), `TURN_TERM` 45 (the turn contract).
 
 | Timing, s | From where | Where |
 |---|---|---|
@@ -69,15 +69,15 @@ Sc. 04–06, 08–13 of the [plan](../../../06-console/acceptance/9/README.md#pl
 
 | № | Scenario | Norms |
 |---|---|---|
-| 04 | occupancy: the root of an unfinished operation, including one on pause, — 409 `root busy`, nothing is written; two acceptances without common roots both pass; two steps over one root | Н1.3 |
-| 05 | versions: `fail → set`, `ok → fail → set` over one root, the same cases in `retry-failed`, a foreign edit between steps | Н1.4 |
-| 06 | a pause in the middle of a step: the step plays to the end, the next is not started; resume; cancel: the remaining ones `cancel`, the executed ones stayed; a cancel on pause; 409 for a completed one and `retry-failed` for an unfinished one | Н3 |
-| 08 | the token validity: at `exp` the operation goes on pause; a request of the author with a new token rebinds and removes `expired`; a request of a non-author does not rebind; a human pause stays | Н3 «rebind» |
-| 09 | rights: the person is switched off in the middle of an operation: the step whose `may` refused — `fail`, the remaining ones `cancel`; `kid` retired — a cancel; a revocation on pause — a cancel, `resume` after `exp + 60` — 409; without `view` — 404; without `edit` — `pause` 403; a callback after the end of the call — 401; a ticket for the outcome of a foreign step — 403 | Н2, Н3 «round» |
-| 10 | a poisonous step: `OPS_STEP_TRIES` failed calls, the outcome `fail not_run`, the operation goes on; the series `<sub>_op_step_retries_total`, `<sub>_op_step_poisoned_total` | Н3 «step» |
-| 11 | secrets: a raw read of the store — there is no open value anywhere, the step `ok` and `cancel` have no sealed one either, for `fail` the sealed one lies until `OPS_KEEP` and `retry-failed` uses it; after a change of the ring the body of an unfinished operation opens; the value did not open — `fail not_run` | Н1.2, Н3 |
-| 12 | the server leaf: on a stand with TLS the leaf of another instance — there is no call | Н2 |
-| 13 | the limits of steps and operations, the weight of the acceptance batch; the reaper removes a completed operation after `OPS_KEEP`, bodies without a record and hanging `opbusy` | Н1.6, Н3 «operations reaper» |
+| 04 | occupancy: the root of an unfinished operation, including one on pause, — 409 `root busy`, nothing is written; two acceptances without common roots both pass; two steps over one root | N1.3 |
+| 05 | versions: `fail → set`, `ok → fail → set` over one root, the same cases in `retry-failed`, a foreign edit between steps | N1.4 |
+| 06 | a pause in the middle of a step: the step plays to the end, the next is not started; resume; cancel: the remaining ones `cancel`, the executed ones stayed; a cancel on pause; 409 for a completed one and `retry-failed` for an unfinished one | N3 |
+| 08 | the token validity: at `exp` the operation goes on pause; a request of the author with a new token rebinds and removes `expired`; a request of a non-author does not rebind; a human pause stays | N3 «rebind» |
+| 09 | rights: the person is switched off in the middle of an operation: the step whose `may` refused — `fail`, the remaining ones `cancel`; `kid` retired — a cancel; a revocation on pause — a cancel, `resume` after `exp + 60` — 409; without `view` — 404; without `edit` — `pause` 403; a callback after the end of the call — 401; a ticket for the outcome of a foreign step — 403 | N2, N3 «round» |
+| 10 | a poisonous step: `OPS_STEP_TRIES` failed calls, the outcome `fail not_run`, the operation goes on; the series `<sub>_op_step_retries_total`, `<sub>_op_step_poisoned_total` | N3 «step» |
+| 11 | secrets: a raw read of the store — there is no open value anywhere, the step `ok` and `cancel` have no sealed one either, for `fail` the sealed one lies until `OPS_KEEP` and `retry-failed` uses it; after a change of the ring the body of an unfinished operation opens; the value did not open — `fail not_run` | N1.2, N3 |
+| 12 | the server leaf: on a stand with TLS the leaf of another instance — there is no call | N2 |
+| 13 | the limits of steps and operations, the weight of the acceptance batch; the reaper removes a completed operation after `OPS_KEEP`, bodies without a record and hanging `opbusy` | N1.6, N3 «operations reaper» |
 
 The change of the ring of sc. 11 stays by reading forever: there is no directive for it.
 

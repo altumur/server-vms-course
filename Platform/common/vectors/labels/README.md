@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/labels/READ
 
 The owner is lesson P/06 through [the label alphabet contract](../../contracts/labels.md) (`label`, `set` `output`, `text`, `read`;
 stage C guesses L01–L03, the Architect's decision 2026-10-23). The participants are those who read labels by the contract: the console (the labels field
-of a unit, the label doors of a server), the controller (`labels-subset`), grants by labels. The bytes are written by «Спецификация». The labels field
+of a unit, the label doors of a server), the controller (`labels-subset`), grants by labels. The bytes are written by «Specification». The labels field
 of a unit as a list field — the vectors [`values-by-type`](../values-by-type/README.md) (`list:labels`) and
 [`row-check`](../row-check/README.md).
 
@@ -32,7 +32,7 @@ as the set `{a}` (the constraint `labels-subset`) the package does not express �
 Who performs it — by `op`: `env_labels` — the worker (`03-worker`, the contract `env`); `label` — those who read labels by the contract:
 the controller (`04-controller`), the console (`06-console`), grants by labels (`08-domain`) and the worker (`03-worker`: each label
 of `LABELS` — by the alphabet); `set_write` — the console (`06-console`: the label row of a server, the labels field of a unit; the heartbeat labels
-the worker writes as a comma-separated string — P/03.4 Н1.1, the family `heartbeats`; C03-PULSE-LABELS-STRING-01); `text_read` — the controller (`04-controller`) and the console (`06-console`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-26).
+the worker writes as a comma-separated string — P/03.4 N1.1, the family `heartbeats`; C03-PULSE-LABELS-STRING-01); `text_read` — the controller (`04-controller`) and the console (`06-console`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-26).
 
 ## Native outcome
 

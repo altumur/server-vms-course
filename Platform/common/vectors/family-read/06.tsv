@@ -29,44 +29,44 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 06-0028	<sub>/policy	testsub/policy	row	reader	["<s>controller", "console"]	{"servers":"a,,b"}	refused	["/servers"]	{"<s>controller": [""], "console": [""]}	item servers: record 'a,,b'
 06-0029	<sub>/policy	testsub/policy	row	writer	["console"]	{"servers":" 1"}	refused	["/servers"]	[]	item servers: record ' 1'
 06-0030	<sub>/policy	testsub/policy	row	reader	["<s>controller", "console"]	{"servers":" 1"}	refused	["/servers"]	{"<s>controller": [""], "console": [""]}	item servers: record ' 1'
-06-0031	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A"}	ok	[]	[]	base
-06-0032	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A"}	ok	[]	{"<s>controller": [], "console": []}	base
-06-0033	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	null	refused	[""]	[]	root null
-06-0034	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	null	refused	[""]	{"<s>controller": [""], "console": [""]}	root null
-06-0035	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{}	refused	["/labels"]	[]	: without required labels
-06-0036	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{}	refused	["/labels"]	{"<s>controller": [""], "console": [""]}	: without required labels
-06-0037	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":{"zz":1}}	refused	["/labels"]	[]	labels: wrong type
-06-0038	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":{"zz":1}}	refused	["/labels"]	{"<s>controller": [""], "console": [""]}	labels: wrong type
-06-0039	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A,A"}	refused	["/labels/1"]	[]	labels: duplicate item
-06-0040	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A,A"}	refused	["/labels/1"]	{"<s>controller": [""], "console": [""]}	labels: duplicate item
-06-0041	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":""}	ok	[]	[]	labels: empty list
-06-0042	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":""}	ok	[]	{"<s>controller": [], "console": []}	labels: empty list
-06-0043	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"[[]]"}	refused	["/labels/0"]	[]	labels/0: wrong type
-06-0044	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"[[]]"}	refused	["/labels/0"]	{"<s>controller": [""], "console": [""]}	labels/0: wrong type
-06-0045	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A\n"}	refused	["/labels/0"]	[]	labels/0: trailing \n
-06-0046	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A\n"}	refused	["/labels/0"]	{"<s>controller": [""], "console": [""]}	labels/0: trailing \n
-06-0047	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"[\"\"]"}	refused	["/labels/0"]	[]	labels/0: pattern violated
-06-0048	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"[\"\"]"}	refused	["/labels/0"]	{"<s>controller": [""], "console": [""]}	labels/0: pattern violated
-06-0049	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A !"}	refused	["/labels/0"]	[]	labels/0: pattern violated (space)
-06-0050	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A !"}	refused	["/labels/0"]	{"<s>controller": [""], "console": [""]}	labels/0: pattern violated (space)
-06-0051	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"1.0"}	ok	[]	[]	item labels: record '1.0'
-06-0052	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"1.0"}	ok	[]	{"<s>controller": [], "console": []}	item labels: record '1.0'
-06-0053	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"x"}	ok	[]	[]	item labels: record 'x'
-06-0054	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"x"}	ok	[]	{"<s>controller": [], "console": []}	item labels: record 'x'
-06-0055	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"True"}	ok	[]	[]	item labels: record 'True'
-06-0056	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"True"}	ok	[]	{"<s>controller": [], "console": []}	item labels: record 'True'
-06-0057	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"1e0"}	ok	[]	[]	item labels: record '1e0'
-06-0058	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"1e0"}	ok	[]	{"<s>controller": [], "console": []}	item labels: record '1e0'
-06-0059	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"[1"}	refused	["/labels"]	[]	item labels: record '[1'
-06-0060	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"[1"}	refused	["/labels"]	{"<s>controller": [""], "console": [""]}	item labels: record '[1'
-06-0061	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"{"}	refused	["/labels/0"]	[]	item labels: record '{'
-06-0062	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"{"}	refused	["/labels/0"]	{"<s>controller": [""], "console": [""]}	item labels: record '{'
-06-0063	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"{\"b\":1,\"a\":2}"}	refused	["/labels/0", "/labels/1"]	[]	item labels: record '{"b":1,"a":2}'
-06-0064	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"{\"b\":1,\"a\":2}"}	refused	["/labels/0", "/labels/1"]	{"<s>controller": [""], "console": [""]}	item labels: record '{"b":1,"a":2}'
-06-0065	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"a,,b"}	refused	["/labels"]	[]	item labels: record 'a,,b'
-06-0066	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"a,,b"}	refused	["/labels/1"]	{"<s>controller": [""], "console": [""]}	item labels: record 'a,,b'
-06-0067	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":" 1"}	refused	["/labels/0"]	[]	item labels: record ' 1'
-06-0068	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":" 1"}	refused	["/labels/0"]	{"<s>controller": [""], "console": [""]}	item labels: record ' 1'
+06-0031	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A"}	ok	[]	[]	base
+06-0032	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A"}	ok	[]	{"<s>controller": [], "console": []}	base
+06-0033	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	null	refused	[""]	[]	root null
+06-0034	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	null	refused	[""]	{"<s>controller": [""], "console": [""]}	root null
+06-0035	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{}	refused	["/labels"]	[]	: without required labels
+06-0036	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{}	refused	["/labels"]	{"<s>controller": [""], "console": [""]}	: without required labels
+06-0037	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":{"zz":1}}	refused	["/labels"]	[]	labels: wrong type
+06-0038	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":{"zz":1}}	refused	["/labels"]	{"<s>controller": [""], "console": [""]}	labels: wrong type
+06-0039	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A,A"}	refused	["/labels/1"]	[]	labels: duplicate item
+06-0040	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A,A"}	refused	["/labels/1"]	{"<s>controller": [""], "console": [""]}	labels: duplicate item
+06-0041	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":""}	ok	[]	[]	labels: empty list
+06-0042	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":""}	ok	[]	{"<s>controller": [], "console": []}	labels: empty list
+06-0043	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"[[]]"}	refused	["/labels/0"]	[]	labels/0: wrong type
+06-0044	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"[[]]"}	refused	["/labels/0"]	{"<s>controller": [""], "console": [""]}	labels/0: wrong type
+06-0045	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A\n"}	refused	["/labels/0"]	[]	labels/0: trailing \n
+06-0046	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A\n"}	refused	["/labels/0"]	{"<s>controller": [""], "console": [""]}	labels/0: trailing \n
+06-0047	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"[\"\"]"}	refused	["/labels/0"]	[]	labels/0: pattern violated
+06-0048	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"[\"\"]"}	refused	["/labels/0"]	{"<s>controller": [""], "console": [""]}	labels/0: pattern violated
+06-0049	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A !"}	refused	["/labels/0"]	[]	labels/0: pattern violated (space)
+06-0050	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A !"}	refused	["/labels/0"]	{"<s>controller": [""], "console": [""]}	labels/0: pattern violated (space)
+06-0051	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"1.0"}	ok	[]	[]	item labels: record '1.0'
+06-0052	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"1.0"}	ok	[]	{"<s>controller": [], "console": []}	item labels: record '1.0'
+06-0053	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"x"}	ok	[]	[]	item labels: record 'x'
+06-0054	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"x"}	ok	[]	{"<s>controller": [], "console": []}	item labels: record 'x'
+06-0055	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"True"}	ok	[]	[]	item labels: record 'True'
+06-0056	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"True"}	ok	[]	{"<s>controller": [], "console": []}	item labels: record 'True'
+06-0057	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"1e0"}	ok	[]	[]	item labels: record '1e0'
+06-0058	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"1e0"}	ok	[]	{"<s>controller": [], "console": []}	item labels: record '1e0'
+06-0059	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"[1"}	refused	["/labels"]	[]	item labels: record '[1'
+06-0060	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"[1"}	refused	["/labels"]	{"<s>controller": [""], "console": [""]}	item labels: record '[1'
+06-0061	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"{"}	refused	["/labels/0"]	[]	item labels: record '{'
+06-0062	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"{"}	refused	["/labels/0"]	{"<s>controller": [""], "console": [""]}	item labels: record '{'
+06-0063	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"{\"b\":1,\"a\":2}"}	refused	["/labels/0", "/labels/1"]	[]	item labels: record '{"b":1,"a":2}'
+06-0064	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"{\"b\":1,\"a\":2}"}	refused	["/labels/0", "/labels/1"]	{"<s>controller": [""], "console": [""]}	item labels: record '{"b":1,"a":2}'
+06-0065	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"a,,b"}	refused	["/labels"]	[]	item labels: record 'a,,b'
+06-0066	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"a,,b"}	refused	["/labels/1"]	{"<s>controller": [""], "console": [""]}	item labels: record 'a,,b'
+06-0067	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":" 1"}	refused	["/labels/0"]	[]	item labels: record ' 1'
+06-0068	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":" 1"}	refused	["/labels/0"]	{"<s>controller": [""], "console": [""]}	item labels: record ' 1'
 06-0069	platform/drain	platform/drain	row	writer	["console"]	{"server":"","at":"1"}	ok	[]	[]	base
 06-0070	platform/drain	platform/drain	row	reader	["<s>controller", "console"]	{"server":"","at":"1"}	ok	[]	{"<s>controller": [], "console": []}	base
 06-0071	platform/drain	platform/drain	row	writer	["console"]	null	refused	[""]	[]	root null
@@ -125,108 +125,108 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 06-0124	platform/drain	platform/drain	row	reader	["<s>controller", "console"]	{"server":"","at":"a,,b"}	refused	["/at"]	{"<s>controller": [""], "console": [""]}	item at: record 'a,,b'
 06-0125	platform/drain	platform/drain	row	writer	["console"]	{"server":"","at":" 1"}	refused	["/at"]	[]	item at: record ' 1'
 06-0126	platform/drain	platform/drain	row	reader	["<s>controller", "console"]	{"server":"","at":" 1"}	refused	["/at"]	{"<s>controller": [""], "console": [""]}	item at: record ' 1'
-06-0127	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a"}	ok	[]	[]	base
-06-0128	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	base
-06-0129	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	null	refused	[""]	[]	root null
-06-0130	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	null	refused	[""]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	root null
-06-0131	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"at":"1","why":"a"}	refused	["/by"]	[]	: without required by
-06-0132	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"at":"1","why":"a"}	refused	["/by"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	: without required by
-06-0133	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","why":"a"}	refused	["/at"]	[]	: without required at
-06-0134	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	: without required at
-06-0135	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1"}	refused	["/why"]	[]	: without required why
-06-0136	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1"}	refused	["/why"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	: without required why
-06-0137	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"true"}	ok	[]	[]	: optional gone
-06-0138	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"true"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	: optional gone
-06-0139	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"","at":"1","why":"a"}	ok	[]	[]	by: wrong type
-06-0140	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	by: wrong type
-06-0141	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a\n","at":"1","why":"a"}	ok	[]	[]	by: trailing \n
-06-0142	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a\n","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	by: trailing \n
-06-0143	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"","why":"a"}	refused	["/at"]	[]	at: wrong type
-06-0144	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	at: wrong type
-06-0145	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1\n","why":"a"}	refused	["/at"]	[]	at: trailing \n
-06-0146	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1\n","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	at: trailing \n
-06-0147	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1e0","why":"a"}	refused	["/at"]	[]	at: time 1e0
-06-0148	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1e0","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	at: time 1e0
-06-0149	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"-1","why":"a"}	refused	["/at"]	[]	at: time -1
-06-0150	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"-1","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	at: time -1
-06-0151	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1.0001","why":"a"}	refused	["/at"]	[]	at: time 1.0001
-06-0152	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1.0001","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	at: time 1.0001
-06-0153	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":""}	ok	[]	[]	why: wrong type
-06-0154	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":""}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	why: wrong type
-06-0155	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a\n"}	ok	[]	[]	why: trailing \n
-06-0156	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a\n"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	why: trailing \n
-06-0157	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"1.0","at":"1","why":"a"}	ok	[]	[]	item by: record '1.0'
-06-0158	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"1.0","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record '1.0'
-06-0159	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"x","at":"1","why":"a"}	ok	[]	[]	item by: record 'x'
-06-0160	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"x","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record 'x'
-06-0161	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"True","at":"1","why":"a"}	ok	[]	[]	item by: record 'True'
-06-0162	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"True","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record 'True'
-06-0163	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"1e0","at":"1","why":"a"}	ok	[]	[]	item by: record '1e0'
-06-0164	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"1e0","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record '1e0'
-06-0165	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"[1","at":"1","why":"a"}	ok	[]	[]	item by: record '[1'
-06-0166	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"[1","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record '[1'
-06-0167	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"{","at":"1","why":"a"}	ok	[]	[]	item by: record '{'
-06-0168	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"{","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record '{'
-06-0169	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"{\"b\":1,\"a\":2}","at":"1","why":"a"}	ok	[]	[]	item by: record '{"b":1,"a":2}'
-06-0170	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"{\"b\":1,\"a\":2}","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record '{"b":1,"a":2}'
-06-0171	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a,,b","at":"1","why":"a"}	ok	[]	[]	item by: record 'a,,b'
-06-0172	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a,,b","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record 'a,,b'
-06-0173	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":" 1","at":"1","why":"a"}	ok	[]	[]	item by: record ' 1'
-06-0174	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":" 1","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record ' 1'
-06-0175	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1.0","why":"a"}	ok	[]	[]	item at: record '1.0'
-06-0176	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1.0","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item at: record '1.0'
-06-0177	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"x","why":"a"}	refused	["/at"]	[]	item at: record 'x'
-06-0178	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"x","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item at: record 'x'
-06-0179	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"True","why":"a"}	refused	["/at"]	[]	item at: record 'True'
-06-0180	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"True","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item at: record 'True'
-06-0181	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"[1","why":"a"}	refused	["/at"]	[]	item at: record '[1'
-06-0182	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"[1","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item at: record '[1'
-06-0183	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"{","why":"a"}	refused	["/at"]	[]	item at: record '{'
-06-0184	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"{","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item at: record '{'
-06-0185	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"{\"b\":1,\"a\":2}","why":"a"}	refused	["/at"]	[]	item at: record '{"b":1,"a":2}'
-06-0186	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"{\"b\":1,\"a\":2}","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item at: record '{"b":1,"a":2}'
-06-0187	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"a,,b","why":"a"}	refused	["/at"]	[]	item at: record 'a,,b'
-06-0188	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"a,,b","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item at: record 'a,,b'
-06-0189	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":" 1","why":"a"}	refused	["/at"]	[]	item at: record ' 1'
-06-0190	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":" 1","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item at: record ' 1'
-06-0191	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"1.0"}	ok	[]	[]	item why: record '1.0'
-06-0192	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"1.0"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record '1.0'
-06-0193	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"x"}	ok	[]	[]	item why: record 'x'
-06-0194	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"x"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record 'x'
-06-0195	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"True"}	ok	[]	[]	item why: record 'True'
-06-0196	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"True"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record 'True'
-06-0197	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"1e0"}	ok	[]	[]	item why: record '1e0'
-06-0198	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"1e0"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record '1e0'
-06-0199	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"[1"}	ok	[]	[]	item why: record '[1'
-06-0200	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"[1"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record '[1'
-06-0201	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"{"}	ok	[]	[]	item why: record '{'
-06-0202	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"{"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record '{'
-06-0203	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"{\"b\":1,\"a\":2}"}	ok	[]	[]	item why: record '{"b":1,"a":2}'
-06-0204	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"{\"b\":1,\"a\":2}"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record '{"b":1,"a":2}'
-06-0205	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a,,b"}	ok	[]	[]	item why: record 'a,,b'
-06-0206	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a,,b"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record 'a,,b'
-06-0207	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":" 1"}	ok	[]	[]	item why: record ' 1'
-06-0208	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":" 1"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record ' 1'
-06-0209	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"1.0"}	refused	["/gone"]	[]	item gone: record '1.0'
-06-0210	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"1.0"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record '1.0'
-06-0211	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"x"}	refused	["/gone"]	[]	item gone: record 'x'
-06-0212	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"x"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record 'x'
-06-0213	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"True"}	refused	["/gone"]	[]	item gone: record 'True'
-06-0214	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"True"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record 'True'
-06-0215	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"1e0"}	refused	["/gone"]	[]	item gone: record '1e0'
-06-0216	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"1e0"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record '1e0'
-06-0217	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"[1"}	refused	["/gone"]	[]	item gone: record '[1'
-06-0218	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"[1"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record '[1'
-06-0219	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"{"}	refused	["/gone"]	[]	item gone: record '{'
-06-0220	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"{"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record '{'
-06-0221	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"{\"b\":1,\"a\":2}"}	refused	["/gone"]	[]	item gone: record '{"b":1,"a":2}'
-06-0222	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"{\"b\":1,\"a\":2}"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record '{"b":1,"a":2}'
-06-0223	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"a,,b"}	refused	["/gone"]	[]	item gone: record 'a,,b'
-06-0224	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"a,,b"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record 'a,,b'
-06-0225	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":""}	refused	["/gone"]	[]	item gone: record ''
-06-0226	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":""}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record ''
-06-0227	platform/decommission/<сервер>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":" 1"}	refused	["/gone"]	[]	item gone: record ' 1'
-06-0228	platform/decommission/<сервер>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":" 1"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record ' 1'
+06-0127	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a"}	ok	[]	[]	base
+06-0128	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	base
+06-0129	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	null	refused	[""]	[]	root null
+06-0130	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	null	refused	[""]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	root null
+06-0131	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"at":"1","why":"a"}	refused	["/by"]	[]	: without required by
+06-0132	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"at":"1","why":"a"}	refused	["/by"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	: without required by
+06-0133	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","why":"a"}	refused	["/at"]	[]	: without required at
+06-0134	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	: without required at
+06-0135	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1"}	refused	["/why"]	[]	: without required why
+06-0136	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1"}	refused	["/why"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	: without required why
+06-0137	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"true"}	ok	[]	[]	: optional gone
+06-0138	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"true"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	: optional gone
+06-0139	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"","at":"1","why":"a"}	ok	[]	[]	by: wrong type
+06-0140	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	by: wrong type
+06-0141	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a\n","at":"1","why":"a"}	ok	[]	[]	by: trailing \n
+06-0142	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a\n","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	by: trailing \n
+06-0143	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"","why":"a"}	refused	["/at"]	[]	at: wrong type
+06-0144	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	at: wrong type
+06-0145	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1\n","why":"a"}	refused	["/at"]	[]	at: trailing \n
+06-0146	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1\n","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	at: trailing \n
+06-0147	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1e0","why":"a"}	refused	["/at"]	[]	at: time 1e0
+06-0148	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1e0","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	at: time 1e0
+06-0149	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"-1","why":"a"}	refused	["/at"]	[]	at: time -1
+06-0150	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"-1","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	at: time -1
+06-0151	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1.0001","why":"a"}	refused	["/at"]	[]	at: time 1.0001
+06-0152	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1.0001","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	at: time 1.0001
+06-0153	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":""}	ok	[]	[]	why: wrong type
+06-0154	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":""}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	why: wrong type
+06-0155	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a\n"}	ok	[]	[]	why: trailing \n
+06-0156	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a\n"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	why: trailing \n
+06-0157	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"1.0","at":"1","why":"a"}	ok	[]	[]	item by: record '1.0'
+06-0158	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"1.0","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record '1.0'
+06-0159	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"x","at":"1","why":"a"}	ok	[]	[]	item by: record 'x'
+06-0160	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"x","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record 'x'
+06-0161	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"True","at":"1","why":"a"}	ok	[]	[]	item by: record 'True'
+06-0162	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"True","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record 'True'
+06-0163	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"1e0","at":"1","why":"a"}	ok	[]	[]	item by: record '1e0'
+06-0164	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"1e0","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record '1e0'
+06-0165	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"[1","at":"1","why":"a"}	ok	[]	[]	item by: record '[1'
+06-0166	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"[1","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record '[1'
+06-0167	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"{","at":"1","why":"a"}	ok	[]	[]	item by: record '{'
+06-0168	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"{","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record '{'
+06-0169	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"{\"b\":1,\"a\":2}","at":"1","why":"a"}	ok	[]	[]	item by: record '{"b":1,"a":2}'
+06-0170	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"{\"b\":1,\"a\":2}","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record '{"b":1,"a":2}'
+06-0171	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a,,b","at":"1","why":"a"}	ok	[]	[]	item by: record 'a,,b'
+06-0172	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a,,b","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record 'a,,b'
+06-0173	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":" 1","at":"1","why":"a"}	ok	[]	[]	item by: record ' 1'
+06-0174	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":" 1","at":"1","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item by: record ' 1'
+06-0175	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1.0","why":"a"}	ok	[]	[]	item at: record '1.0'
+06-0176	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1.0","why":"a"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item at: record '1.0'
+06-0177	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"x","why":"a"}	refused	["/at"]	[]	item at: record 'x'
+06-0178	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"x","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item at: record 'x'
+06-0179	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"True","why":"a"}	refused	["/at"]	[]	item at: record 'True'
+06-0180	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"True","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item at: record 'True'
+06-0181	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"[1","why":"a"}	refused	["/at"]	[]	item at: record '[1'
+06-0182	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"[1","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item at: record '[1'
+06-0183	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"{","why":"a"}	refused	["/at"]	[]	item at: record '{'
+06-0184	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"{","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item at: record '{'
+06-0185	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"{\"b\":1,\"a\":2}","why":"a"}	refused	["/at"]	[]	item at: record '{"b":1,"a":2}'
+06-0186	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"{\"b\":1,\"a\":2}","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item at: record '{"b":1,"a":2}'
+06-0187	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"a,,b","why":"a"}	refused	["/at"]	[]	item at: record 'a,,b'
+06-0188	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"a,,b","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item at: record 'a,,b'
+06-0189	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":" 1","why":"a"}	refused	["/at"]	[]	item at: record ' 1'
+06-0190	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":" 1","why":"a"}	refused	["/at"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item at: record ' 1'
+06-0191	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"1.0"}	ok	[]	[]	item why: record '1.0'
+06-0192	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"1.0"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record '1.0'
+06-0193	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"x"}	ok	[]	[]	item why: record 'x'
+06-0194	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"x"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record 'x'
+06-0195	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"True"}	ok	[]	[]	item why: record 'True'
+06-0196	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"True"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record 'True'
+06-0197	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"1e0"}	ok	[]	[]	item why: record '1e0'
+06-0198	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"1e0"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record '1e0'
+06-0199	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"[1"}	ok	[]	[]	item why: record '[1'
+06-0200	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"[1"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record '[1'
+06-0201	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"{"}	ok	[]	[]	item why: record '{'
+06-0202	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"{"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record '{'
+06-0203	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"{\"b\":1,\"a\":2}"}	ok	[]	[]	item why: record '{"b":1,"a":2}'
+06-0204	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"{\"b\":1,\"a\":2}"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record '{"b":1,"a":2}'
+06-0205	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a,,b"}	ok	[]	[]	item why: record 'a,,b'
+06-0206	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a,,b"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record 'a,,b'
+06-0207	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":" 1"}	ok	[]	[]	item why: record ' 1'
+06-0208	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":" 1"}	ok	[]	{"<s>controller": [], "<s>worker": [], "console": [], "resource": []}	item why: record ' 1'
+06-0209	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"1.0"}	refused	["/gone"]	[]	item gone: record '1.0'
+06-0210	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"1.0"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record '1.0'
+06-0211	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"x"}	refused	["/gone"]	[]	item gone: record 'x'
+06-0212	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"x"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record 'x'
+06-0213	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"True"}	refused	["/gone"]	[]	item gone: record 'True'
+06-0214	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"True"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record 'True'
+06-0215	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"1e0"}	refused	["/gone"]	[]	item gone: record '1e0'
+06-0216	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"1e0"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record '1e0'
+06-0217	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"[1"}	refused	["/gone"]	[]	item gone: record '[1'
+06-0218	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"[1"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record '[1'
+06-0219	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"{"}	refused	["/gone"]	[]	item gone: record '{'
+06-0220	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"{"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record '{'
+06-0221	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"{\"b\":1,\"a\":2}"}	refused	["/gone"]	[]	item gone: record '{"b":1,"a":2}'
+06-0222	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"{\"b\":1,\"a\":2}"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record '{"b":1,"a":2}'
+06-0223	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":"a,,b"}	refused	["/gone"]	[]	item gone: record 'a,,b'
+06-0224	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":"a,,b"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record 'a,,b'
+06-0225	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":""}	refused	["/gone"]	[]	item gone: record ''
+06-0226	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":""}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record ''
+06-0227	platform/decommission/<host>	platform/decommission/srv-a	row	writer	["console"]	{"by":"a","at":"1","why":"a","gone":" 1"}	refused	["/gone"]	[]	item gone: record ' 1'
+06-0228	platform/decommission/<host>	platform/decommission/srv-a	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a","gone":" 1"}	refused	["/gone"]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	item gone: record ' 1'
 06-0229	door/signer	door/signer	row	writer	["console", "admin"]	{"kid":"a","seed_secret":"a"}	ok	[]	[]	base
 06-0230	door/signer	door/signer	row	reader	["admin", "console"]	{"kid":"a","seed_secret":"a"}	ok	[]	{"admin": [], "console": []}	base
 06-0231	door/signer	door/signer	row	writer	["console", "admin"]	null	refused	[""]	[]	root null
@@ -515,102 +515,102 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 06-0514	<sub>/requests/<rid>	testsub/requests/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","filed":""}	ok	[]	{"<s>worker": [], "console": []}	item filed: record ''
 06-0515	<sub>/requests/<rid>	testsub/requests/r-0123456789abcdef	row	writer	["console", "<s>worker"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","filed":" 1"}	ok	[]	[]	item filed: record ' 1'
 06-0516	<sub>/requests/<rid>	testsub/requests/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","filed":" 1"}	ok	[]	{"<s>worker": [], "console": []}	item filed: record ' 1'
-06-0517	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1"}	ok	[]	[]	base
-06-0518	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1"}	ok	[]	{"console": []}	base
-06-0519	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	null	refused	[""]	[]	root null
-06-0520	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	null	refused	[""]	{"console": [""]}	root null
-06-0521	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"by":"a","at":"1"}	refused	["/rids"]	[]	: without required rids
-06-0522	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"by":"a","at":"1"}	refused	["/rids"]	{"console": [""]}	: without required rids
-06-0523	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","at":"1"}	refused	["/by"]	[]	: without required by
-06-0524	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","at":"1"}	refused	["/by"]	{"console": [""]}	: without required by
-06-0525	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a"}	refused	["/at"]	[]	: without required at
-06-0526	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a"}	refused	["/at"]	{"console": [""]}	: without required at
-06-0527	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":{"zz":1},"by":"a","at":"1"}	refused	["/rids"]	[]	rids: wrong type
-06-0528	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":{"zz":1},"by":"a","at":"1"}	refused	["/rids"]	{"console": [""]}	rids: wrong type
-06-0529	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a,a","by":"a","at":"1"}	ok	[]	[]	rids: duplicate item
-06-0530	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a,a","by":"a","at":"1"}	ok	[]	{"console": []}	rids: duplicate item
-06-0531	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"","by":"a","at":"1"}	ok	[]	[]	rids: empty list
-06-0532	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"","by":"a","at":"1"}	ok	[]	{"console": []}	rids: empty list
-06-0533	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"[[]]","by":"a","at":"1"}	refused	["/rids/0"]	[]	rids/0: wrong type
-06-0534	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"[[]]","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	rids/0: wrong type
-06-0535	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a\n","by":"a","at":"1"}	refused	["/rids/0"]	[]	rids/0: trailing \n
-06-0536	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a\n","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	rids/0: trailing \n
-06-0537	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"[\"\"]","by":"a","at":"1"}	refused	["/rids/0"]	[]	rids/0: pattern violated
-06-0538	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"[\"\"]","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	rids/0: pattern violated
-06-0539	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a !","by":"a","at":"1"}	ok	[]	[]	rids/0: pattern violated (space)
-06-0540	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a !","by":"a","at":"1"}	ok	[]	{"console": []}	rids/0: pattern violated (space)
-06-0541	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":".","by":"a","at":"1"}	refused	["/rids/0"]	[]	rids/0: not_enum word
-06-0542	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":".","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	rids/0: not_enum word
-06-0543	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"free-","by":"a","at":"1"}	refused	["/rids/0"]	[]	rids/0: not_pattern match
-06-0544	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"free-","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	rids/0: not_pattern match
-06-0545	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé","by":"a","at":"1"}	refused	["/rids/0"]	[]	rids/0: max_bytes
-06-0546	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	rids/0: max_bytes
-06-0547	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"","at":"1"}	ok	[]	[]	by: wrong type
-06-0548	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"","at":"1"}	ok	[]	{"console": []}	by: wrong type
-06-0549	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a\n","at":"1"}	ok	[]	[]	by: trailing \n
-06-0550	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a\n","at":"1"}	ok	[]	{"console": []}	by: trailing \n
-06-0551	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":""}	refused	["/at"]	[]	at: wrong type
-06-0552	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":""}	refused	["/at"]	{"console": [""]}	at: wrong type
-06-0553	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1\n"}	refused	["/at"]	[]	at: trailing \n
-06-0554	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1\n"}	refused	["/at"]	{"console": [""]}	at: trailing \n
-06-0555	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1e0"}	refused	["/at"]	[]	at: time 1e0
-06-0556	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1e0"}	refused	["/at"]	{"console": [""]}	at: time 1e0
-06-0557	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"-1"}	refused	["/at"]	[]	at: time -1
-06-0558	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"-1"}	refused	["/at"]	{"console": [""]}	at: time -1
-06-0559	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1.0001"}	refused	["/at"]	[]	at: time 1.0001
-06-0560	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1.0001"}	ok	[]	{"console": []}	at: time 1.0001
-06-0561	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"1.0","by":"a","at":"1"}	ok	[]	[]	item rids: record '1.0'
-06-0562	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"1.0","by":"a","at":"1"}	ok	[]	{"console": []}	item rids: record '1.0'
-06-0563	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"x","by":"a","at":"1"}	ok	[]	[]	item rids: record 'x'
-06-0564	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"x","by":"a","at":"1"}	ok	[]	{"console": []}	item rids: record 'x'
-06-0565	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"True","by":"a","at":"1"}	ok	[]	[]	item rids: record 'True'
-06-0566	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"True","by":"a","at":"1"}	ok	[]	{"console": []}	item rids: record 'True'
-06-0567	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"1e0","by":"a","at":"1"}	ok	[]	[]	item rids: record '1e0'
-06-0568	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"1e0","by":"a","at":"1"}	ok	[]	{"console": []}	item rids: record '1e0'
-06-0569	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"[1","by":"a","at":"1"}	refused	["/rids"]	[]	item rids: record '[1'
-06-0570	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"[1","by":"a","at":"1"}	refused	["/rids"]	{"console": [""]}	item rids: record '[1'
-06-0571	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"{","by":"a","at":"1"}	ok	[]	[]	item rids: record '{'
-06-0572	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"{","by":"a","at":"1"}	ok	[]	{"console": []}	item rids: record '{'
-06-0573	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"{\"b\":1,\"a\":2}","by":"a","at":"1"}	refused	["/rids/0", "/rids/1"]	[]	item rids: record '{"b":1,"a":2}'
-06-0574	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"{\"b\":1,\"a\":2}","by":"a","at":"1"}	refused	["/rids/0", "/rids/1"]	{"console": [""]}	item rids: record '{"b":1,"a":2}'
-06-0575	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a,,b","by":"a","at":"1"}	refused	["/rids"]	[]	item rids: record 'a,,b'
-06-0576	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a,,b","by":"a","at":"1"}	refused	["/rids/1"]	{"console": [""]}	item rids: record 'a,,b'
-06-0577	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":" 1","by":"a","at":"1"}	ok	[]	[]	item rids: record ' 1'
-06-0578	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":" 1","by":"a","at":"1"}	ok	[]	{"console": []}	item rids: record ' 1'
-06-0579	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"1.0","at":"1"}	ok	[]	[]	item by: record '1.0'
-06-0580	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"1.0","at":"1"}	ok	[]	{"console": []}	item by: record '1.0'
-06-0581	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"x","at":"1"}	ok	[]	[]	item by: record 'x'
-06-0582	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"x","at":"1"}	ok	[]	{"console": []}	item by: record 'x'
-06-0583	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"True","at":"1"}	ok	[]	[]	item by: record 'True'
-06-0584	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"True","at":"1"}	ok	[]	{"console": []}	item by: record 'True'
-06-0585	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"1e0","at":"1"}	ok	[]	[]	item by: record '1e0'
-06-0586	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"1e0","at":"1"}	ok	[]	{"console": []}	item by: record '1e0'
-06-0587	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"[1","at":"1"}	ok	[]	[]	item by: record '[1'
-06-0588	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"[1","at":"1"}	ok	[]	{"console": []}	item by: record '[1'
-06-0589	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"{","at":"1"}	ok	[]	[]	item by: record '{'
-06-0590	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"{","at":"1"}	ok	[]	{"console": []}	item by: record '{'
-06-0591	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"{\"b\":1,\"a\":2}","at":"1"}	ok	[]	[]	item by: record '{"b":1,"a":2}'
-06-0592	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"{\"b\":1,\"a\":2}","at":"1"}	ok	[]	{"console": []}	item by: record '{"b":1,"a":2}'
-06-0593	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a,,b","at":"1"}	ok	[]	[]	item by: record 'a,,b'
-06-0594	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a,,b","at":"1"}	ok	[]	{"console": []}	item by: record 'a,,b'
-06-0595	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":" 1","at":"1"}	ok	[]	[]	item by: record ' 1'
-06-0596	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":" 1","at":"1"}	ok	[]	{"console": []}	item by: record ' 1'
-06-0597	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1.0"}	ok	[]	[]	item at: record '1.0'
-06-0598	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1.0"}	ok	[]	{"console": []}	item at: record '1.0'
-06-0599	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"x"}	refused	["/at"]	[]	item at: record 'x'
-06-0600	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"x"}	refused	["/at"]	{"console": [""]}	item at: record 'x'
-06-0601	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"True"}	refused	["/at"]	[]	item at: record 'True'
-06-0602	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"True"}	refused	["/at"]	{"console": [""]}	item at: record 'True'
-06-0603	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"[1"}	refused	["/at"]	[]	item at: record '[1'
-06-0604	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"[1"}	refused	["/at"]	{"console": [""]}	item at: record '[1'
-06-0605	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"{"}	refused	["/at"]	[]	item at: record '{'
-06-0606	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"{"}	refused	["/at"]	{"console": [""]}	item at: record '{'
-06-0607	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"{\"b\":1,\"a\":2}"}	refused	["/at"]	[]	item at: record '{"b":1,"a":2}'
-06-0608	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"{\"b\":1,\"a\":2}"}	refused	["/at"]	{"console": [""]}	item at: record '{"b":1,"a":2}'
-06-0609	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"a,,b"}	refused	["/at"]	[]	item at: record 'a,,b'
-06-0610	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"a,,b"}	refused	["/at"]	{"console": [""]}	item at: record 'a,,b'
-06-0611	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":" 1"}	refused	["/at"]	[]	item at: record ' 1'
-06-0612	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":" 1"}	refused	["/at"]	{"console": [""]}	item at: record ' 1'
+06-0517	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1"}	ok	[]	[]	base
+06-0518	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1"}	ok	[]	{"console": []}	base
+06-0519	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	null	refused	[""]	[]	root null
+06-0520	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	null	refused	[""]	{"console": [""]}	root null
+06-0521	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"by":"a","at":"1"}	refused	["/rids"]	[]	: without required rids
+06-0522	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"by":"a","at":"1"}	refused	["/rids"]	{"console": [""]}	: without required rids
+06-0523	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","at":"1"}	refused	["/by"]	[]	: without required by
+06-0524	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","at":"1"}	refused	["/by"]	{"console": [""]}	: without required by
+06-0525	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a"}	refused	["/at"]	[]	: without required at
+06-0526	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a"}	refused	["/at"]	{"console": [""]}	: without required at
+06-0527	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":{"zz":1},"by":"a","at":"1"}	refused	["/rids"]	[]	rids: wrong type
+06-0528	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":{"zz":1},"by":"a","at":"1"}	refused	["/rids"]	{"console": [""]}	rids: wrong type
+06-0529	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a,a","by":"a","at":"1"}	ok	[]	[]	rids: duplicate item
+06-0530	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a,a","by":"a","at":"1"}	ok	[]	{"console": []}	rids: duplicate item
+06-0531	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"","by":"a","at":"1"}	ok	[]	[]	rids: empty list
+06-0532	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"","by":"a","at":"1"}	ok	[]	{"console": []}	rids: empty list
+06-0533	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"[[]]","by":"a","at":"1"}	refused	["/rids/0"]	[]	rids/0: wrong type
+06-0534	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"[[]]","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	rids/0: wrong type
+06-0535	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a\n","by":"a","at":"1"}	refused	["/rids/0"]	[]	rids/0: trailing \n
+06-0536	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a\n","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	rids/0: trailing \n
+06-0537	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"[\"\"]","by":"a","at":"1"}	refused	["/rids/0"]	[]	rids/0: pattern violated
+06-0538	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"[\"\"]","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	rids/0: pattern violated
+06-0539	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a !","by":"a","at":"1"}	ok	[]	[]	rids/0: pattern violated (space)
+06-0540	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a !","by":"a","at":"1"}	ok	[]	{"console": []}	rids/0: pattern violated (space)
+06-0541	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":".","by":"a","at":"1"}	refused	["/rids/0"]	[]	rids/0: not_enum word
+06-0542	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":".","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	rids/0: not_enum word
+06-0543	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"free-","by":"a","at":"1"}	refused	["/rids/0"]	[]	rids/0: not_pattern match
+06-0544	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"free-","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	rids/0: not_pattern match
+06-0545	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé","by":"a","at":"1"}	refused	["/rids/0"]	[]	rids/0: max_bytes
+06-0546	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	rids/0: max_bytes
+06-0547	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"","at":"1"}	ok	[]	[]	by: wrong type
+06-0548	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"","at":"1"}	ok	[]	{"console": []}	by: wrong type
+06-0549	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a\n","at":"1"}	ok	[]	[]	by: trailing \n
+06-0550	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a\n","at":"1"}	ok	[]	{"console": []}	by: trailing \n
+06-0551	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":""}	refused	["/at"]	[]	at: wrong type
+06-0552	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":""}	refused	["/at"]	{"console": [""]}	at: wrong type
+06-0553	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1\n"}	refused	["/at"]	[]	at: trailing \n
+06-0554	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1\n"}	refused	["/at"]	{"console": [""]}	at: trailing \n
+06-0555	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1e0"}	refused	["/at"]	[]	at: time 1e0
+06-0556	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1e0"}	refused	["/at"]	{"console": [""]}	at: time 1e0
+06-0557	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"-1"}	refused	["/at"]	[]	at: time -1
+06-0558	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"-1"}	refused	["/at"]	{"console": [""]}	at: time -1
+06-0559	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1.0001"}	refused	["/at"]	[]	at: time 1.0001
+06-0560	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1.0001"}	ok	[]	{"console": []}	at: time 1.0001
+06-0561	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"1.0","by":"a","at":"1"}	ok	[]	[]	item rids: record '1.0'
+06-0562	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"1.0","by":"a","at":"1"}	ok	[]	{"console": []}	item rids: record '1.0'
+06-0563	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"x","by":"a","at":"1"}	ok	[]	[]	item rids: record 'x'
+06-0564	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"x","by":"a","at":"1"}	ok	[]	{"console": []}	item rids: record 'x'
+06-0565	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"True","by":"a","at":"1"}	ok	[]	[]	item rids: record 'True'
+06-0566	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"True","by":"a","at":"1"}	ok	[]	{"console": []}	item rids: record 'True'
+06-0567	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"1e0","by":"a","at":"1"}	ok	[]	[]	item rids: record '1e0'
+06-0568	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"1e0","by":"a","at":"1"}	ok	[]	{"console": []}	item rids: record '1e0'
+06-0569	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"[1","by":"a","at":"1"}	refused	["/rids"]	[]	item rids: record '[1'
+06-0570	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"[1","by":"a","at":"1"}	refused	["/rids"]	{"console": [""]}	item rids: record '[1'
+06-0571	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"{","by":"a","at":"1"}	ok	[]	[]	item rids: record '{'
+06-0572	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"{","by":"a","at":"1"}	ok	[]	{"console": []}	item rids: record '{'
+06-0573	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"{\"b\":1,\"a\":2}","by":"a","at":"1"}	refused	["/rids/0", "/rids/1"]	[]	item rids: record '{"b":1,"a":2}'
+06-0574	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"{\"b\":1,\"a\":2}","by":"a","at":"1"}	refused	["/rids/0", "/rids/1"]	{"console": [""]}	item rids: record '{"b":1,"a":2}'
+06-0575	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a,,b","by":"a","at":"1"}	refused	["/rids"]	[]	item rids: record 'a,,b'
+06-0576	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a,,b","by":"a","at":"1"}	refused	["/rids/1"]	{"console": [""]}	item rids: record 'a,,b'
+06-0577	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":" 1","by":"a","at":"1"}	ok	[]	[]	item rids: record ' 1'
+06-0578	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":" 1","by":"a","at":"1"}	ok	[]	{"console": []}	item rids: record ' 1'
+06-0579	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"1.0","at":"1"}	ok	[]	[]	item by: record '1.0'
+06-0580	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"1.0","at":"1"}	ok	[]	{"console": []}	item by: record '1.0'
+06-0581	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"x","at":"1"}	ok	[]	[]	item by: record 'x'
+06-0582	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"x","at":"1"}	ok	[]	{"console": []}	item by: record 'x'
+06-0583	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"True","at":"1"}	ok	[]	[]	item by: record 'True'
+06-0584	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"True","at":"1"}	ok	[]	{"console": []}	item by: record 'True'
+06-0585	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"1e0","at":"1"}	ok	[]	[]	item by: record '1e0'
+06-0586	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"1e0","at":"1"}	ok	[]	{"console": []}	item by: record '1e0'
+06-0587	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"[1","at":"1"}	ok	[]	[]	item by: record '[1'
+06-0588	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"[1","at":"1"}	ok	[]	{"console": []}	item by: record '[1'
+06-0589	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"{","at":"1"}	ok	[]	[]	item by: record '{'
+06-0590	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"{","at":"1"}	ok	[]	{"console": []}	item by: record '{'
+06-0591	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"{\"b\":1,\"a\":2}","at":"1"}	ok	[]	[]	item by: record '{"b":1,"a":2}'
+06-0592	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"{\"b\":1,\"a\":2}","at":"1"}	ok	[]	{"console": []}	item by: record '{"b":1,"a":2}'
+06-0593	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a,,b","at":"1"}	ok	[]	[]	item by: record 'a,,b'
+06-0594	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a,,b","at":"1"}	ok	[]	{"console": []}	item by: record 'a,,b'
+06-0595	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":" 1","at":"1"}	ok	[]	[]	item by: record ' 1'
+06-0596	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":" 1","at":"1"}	ok	[]	{"console": []}	item by: record ' 1'
+06-0597	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1.0"}	ok	[]	[]	item at: record '1.0'
+06-0598	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1.0"}	ok	[]	{"console": []}	item at: record '1.0'
+06-0599	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"x"}	refused	["/at"]	[]	item at: record 'x'
+06-0600	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"x"}	refused	["/at"]	{"console": [""]}	item at: record 'x'
+06-0601	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"True"}	refused	["/at"]	[]	item at: record 'True'
+06-0602	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"True"}	refused	["/at"]	{"console": [""]}	item at: record 'True'
+06-0603	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"[1"}	refused	["/at"]	[]	item at: record '[1'
+06-0604	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"[1"}	refused	["/at"]	{"console": [""]}	item at: record '[1'
+06-0605	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"{"}	refused	["/at"]	[]	item at: record '{'
+06-0606	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"{"}	refused	["/at"]	{"console": [""]}	item at: record '{'
+06-0607	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"{\"b\":1,\"a\":2}"}	refused	["/at"]	[]	item at: record '{"b":1,"a":2}'
+06-0608	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"{\"b\":1,\"a\":2}"}	refused	["/at"]	{"console": [""]}	item at: record '{"b":1,"a":2}'
+06-0609	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"a,,b"}	refused	["/at"]	[]	item at: record 'a,,b'
+06-0610	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"a,,b"}	refused	["/at"]	{"console": [""]}	item at: record 'a,,b'
+06-0611	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":" 1"}	refused	["/at"]	[]	item at: record ' 1'
+06-0612	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":" 1"}	refused	["/at"]	{"console": [""]}	item at: record ' 1'
 06-0613	objects/<sub>/commands/<rid>	objects/testsub/commands/r-0123456789abcdef	row	writer	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	ok	[]	[]	base
 06-0614	objects/<sub>/commands/<rid>	objects/testsub/commands/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	ok	[]	{"<s>worker": [], "console": []}	base
 06-0615	objects/<sub>/commands/<rid>	objects/testsub/commands/r-0123456789abcdef	row	writer	["<s>worker", "console"]	null	refused	[""]	[]	root null
@@ -1047,10 +1047,10 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 06-1046	<sub>/sweep	testsub/sweep	row	reader	["console"]	{"digests":" 1"}	refused	["/digests/0"]	{"console": [""]}	item digests: record ' 1'
 06-a09_max_bytes.writer	platform/drain	platform/drain	row	writer	["console"]	{"server":"ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé","at":"1"}	refused	["/server"]	[]	a09_max_bytes.writer
 06-a09_max_bytes.reader	platform/drain	platform/drain	row	reader	["<s>controller", "console"]	{"server":"ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé","at":"1"}	refused	["/server"]	{"<s>controller": [""], "console": [""]}	a09_max_bytes.reader
-06-a10_not_pattern.writer	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"free-","by":"a","at":"1"}	refused	["/rids/0"]	[]	a10_not_pattern.writer
-06-a10_not_pattern.reader	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"free-","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	a10_not_pattern.reader
-06-p0001	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A,A,A"}	refused	["/labels/1", "/labels/2"]	[]	labels: three equal items (uniqueItems: each item equal to an earlier one)
-06-p0002	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A,A,A"}	refused	["/labels/1", "/labels/2"]	{"<s>controller": [""], "console": [""]}	labels: three equal items (uniqueItems: each item equal to an earlier one)
+06-a10_not_pattern.writer	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"free-","by":"a","at":"1"}	refused	["/rids/0"]	[]	a10_not_pattern.writer
+06-a10_not_pattern.reader	<sub>/asked/<sha16(name)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"free-","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	a10_not_pattern.reader
+06-p0001	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A,A,A"}	refused	["/labels/1", "/labels/2"]	[]	labels: three equal items (uniqueItems: each item equal to an earlier one)
+06-p0002	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A,A,A"}	refused	["/labels/1", "/labels/2"]	{"<s>controller": [""], "console": [""]}	labels: three equal items (uniqueItems: each item equal to an earlier one)
 06-p0003	objects/<sub>/commands/<rid>	objects/testsub/commands/r-0123456789abcdef	row	writer	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a","outcome":"performed","ended_at":"1","error":"x"}	refused	["/error"]	[]	error: forbidden by outcome performed (schema false under then — place of the key, D3)
 06-p0004	objects/<sub>/commands/<rid>	objects/testsub/commands/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a","outcome":"performed","ended_at":"1","error":"x"}	refused	["/error"]	{"<s>worker": [""], "console": [""]}	error: forbidden by outcome performed (schema false under then — place of the key, D3)
 a94_revision.001	<sub>/policy	testsub/policy	row	writer	["console"]	{"servers":"shared","revision":"1"}	ok	[]	[]	add: revision 1
@@ -1063,16 +1063,16 @@ a94_revision.007	<sub>/policy	testsub/policy	row	writer	["console"]	{"servers":"
 a94_revision.008	<sub>/policy	testsub/policy	row	reader	["<s>controller", "console"]	{"servers":"shared","revision":"x"}	refused	["/revision"]	{"<s>controller": ["/revision"], "console": ["/revision"]}	add: revision not a number
 a94_revision.009	<sub>/policy	testsub/policy	row	writer	["console"]	{"servers":"shared","revision":"1.5"}	refused	["/revision"]	[]	add: revision as a fraction
 a94_revision.010	<sub>/policy	testsub/policy	row	reader	["<s>controller", "console"]	{"servers":"shared","revision":"1.5"}	refused	["/revision"]	{"<s>controller": ["/revision"], "console": ["/revision"]}	add: revision as a fraction
-a94_revision.011	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A","revision":"1"}	ok	[]	[]	add: revision 1
-a94_revision.012	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A","revision":"1"}	ok	[]	{"<s>controller": [], "console": []}	add: revision 1
-a94_revision.013	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A","revision":"7"}	ok	[]	[]	add: revision 7
-a94_revision.014	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A","revision":"7"}	ok	[]	{"<s>controller": [], "console": []}	add: revision 7
-a94_revision.015	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A","revision":"0"}	refused	["/revision"]	[]	add: revision 0 — below the bound
-a94_revision.016	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A","revision":"0"}	refused	["/revision"]	{"<s>controller": ["/revision"], "console": ["/revision"]}	add: revision 0 — below the bound
-a94_revision.017	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A","revision":"x"}	refused	["/revision"]	[]	add: revision not a number
-a94_revision.018	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A","revision":"x"}	refused	["/revision"]	{"<s>controller": ["/revision"], "console": ["/revision"]}	add: revision not a number
-a94_revision.019	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A","revision":"1.5"}	refused	["/revision"]	[]	add: revision as a fraction
-a94_revision.020	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A","revision":"1.5"}	refused	["/revision"]	{"<s>controller": ["/revision"], "console": ["/revision"]}	add: revision as a fraction
+a94_revision.011	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A","revision":"1"}	ok	[]	[]	add: revision 1
+a94_revision.012	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A","revision":"1"}	ok	[]	{"<s>controller": [], "console": []}	add: revision 1
+a94_revision.013	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A","revision":"7"}	ok	[]	[]	add: revision 7
+a94_revision.014	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A","revision":"7"}	ok	[]	{"<s>controller": [], "console": []}	add: revision 7
+a94_revision.015	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A","revision":"0"}	refused	["/revision"]	[]	add: revision 0 — below the bound
+a94_revision.016	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A","revision":"0"}	refused	["/revision"]	{"<s>controller": ["/revision"], "console": ["/revision"]}	add: revision 0 — below the bound
+a94_revision.017	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A","revision":"x"}	refused	["/revision"]	[]	add: revision not a number
+a94_revision.018	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A","revision":"x"}	refused	["/revision"]	{"<s>controller": ["/revision"], "console": ["/revision"]}	add: revision not a number
+a94_revision.019	platform/servers/<host>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A","revision":"1.5"}	refused	["/revision"]	[]	add: revision as a fraction
+a94_revision.020	platform/servers/<host>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A","revision":"1.5"}	refused	["/revision"]	{"<s>controller": ["/revision"], "console": ["/revision"]}	add: revision as a fraction
 a94_revision.021	platform/drain	platform/drain	row	writer	["console"]	{"server":"","at":"1","revision":"1"}	ok	[]	[]	add: revision 1
 a94_revision.022	platform/drain	platform/drain	row	reader	["<s>controller", "console"]	{"server":"","at":"1","revision":"1"}	ok	[]	{"<s>controller": [], "console": []}	add: revision 1
 a94_revision.023	platform/drain	platform/drain	row	writer	["console"]	{"server":"","at":"1","revision":"7"}	ok	[]	[]	add: revision 7
@@ -1093,28 +1093,28 @@ a94_revision.037	platform/schema	platform/schema	row	writer	["console"]	{"versio
 a94_revision.038	platform/schema	platform/schema	row	reader	["<s>controller", "<s>domain", "<s>worker", "console", "domainconsole", "resource"]	{"version":"1","at":"1","revision":"x"}	refused	["/revision"]	{"<s>controller": ["/revision"], "<s>domain": ["/revision"], "<s>worker": ["/revision"], "console": ["/revision"], "domainconsole": ["/revision"], "resource": ["/revision"]}	add: revision not a number
 a94_revision.039	platform/schema	platform/schema	row	writer	["console"]	{"version":"1","at":"1","revision":"1.5"}	refused	["/revision"]	[]	add: revision as a fraction
 a94_revision.040	platform/schema	platform/schema	row	reader	["<s>controller", "<s>domain", "<s>worker", "console", "domainconsole", "resource"]	{"version":"1","at":"1","revision":"1.5"}	refused	["/revision"]	{"<s>controller": ["/revision"], "<s>domain": ["/revision"], "<s>worker": ["/revision"], "console": ["/revision"], "domainconsole": ["/revision"], "resource": ["/revision"]}	add: revision as a fraction
-06-rights-8001	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"testsub/counters/c1"}	ok	[]	[]	base
-06-rights-8002	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"testsub/counters/c1"}	ok	[]	{"console": [], "domainagent": []}	base
-06-rights-8003	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"","deleted":"true"}	ok	[]	[]	tombstone
-06-rights-8004	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"","deleted":"true"}	ok	[]	{"console": [], "domainagent": []}	tombstone
-06-rights-8005	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"Подъезд","parent":"fedcba9876543210fedcba9876543210","members":"testsub/counters/c1"}	ok	[]	[]	a folder under a parent
-06-rights-8006	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"Подъезд","parent":"fedcba9876543210fedcba9876543210","members":"testsub/counters/c1"}	ok	[]	{"console": [], "domainagent": []}	a folder under a parent
+06-rights-8001	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"","members":"testsub/counters/c1"}	ok	[]	[]	base
+06-rights-8002	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"","members":"testsub/counters/c1"}	ok	[]	{"console": [], "domainagent": []}	base
+06-rights-8003	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"","members":"","deleted":"true"}	ok	[]	[]	tombstone
+06-rights-8004	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"","members":"","deleted":"true"}	ok	[]	{"console": [], "domainagent": []}	tombstone
+06-rights-8005	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"fedcba9876543210fedcba9876543210","members":"testsub/counters/c1"}	ok	[]	[]	a folder under a parent
+06-rights-8006	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"fedcba9876543210fedcba9876543210","members":"testsub/counters/c1"}	ok	[]	{"console": [], "domainagent": []}	a folder under a parent
 06-rights-8007	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"","parent":"","members":"testsub/counters/c1"}	refused	["/name"]	[]	/name: empty
 06-rights-8008	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"","parent":"","members":"testsub/counters/c1"}	refused	["/name"]	{"console": [""], "domainagent": [""]}	/name: empty
-06-rights-8009	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"Подъезд","parent":"p1","members":"testsub/counters/c1"}	refused	["/parent"]	[]	/parent: not an id
-06-rights-8010	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"Подъезд","parent":"p1","members":"testsub/counters/c1"}	refused	["/parent"]	{"console": [""], "domainagent": [""]}	/parent: not an id
-06-rights-8011	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"c1"}	refused	["/members/0"]	[]	/members: a reference not by the form
-06-rights-8012	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"c1"}	refused	["/members/0"]	{"console": [""], "domainagent": [""]}	/members: a reference not by the form
-06-rights-8013	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"testsub/counters/c1,testsub/counters/c1"}	refused	["/members/1"]	[]	/members: a repeat
-06-rights-8014	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"testsub/counters/c1,testsub/counters/c1"}	refused	["/members/1"]	{"console": [""], "domainagent": [""]}	/members: a repeat
-06-rights-8015	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"testsub/counters/c1","deleted":"yes"}	refused	["/deleted"]	[]	/deleted: a word
-06-rights-8016	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"testsub/counters/c1","deleted":"yes"}	refused	["/deleted"]	{"console": [""], "domainagent": [""]}	/deleted: a word
-06-rights-8017	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"testsub/counters/c1","x":"1"}	refused	["/x"]	[]	an extra key
-06-rights-8018	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"testsub/counters/c1","x":"1"}	refused	["/x"]	{"console": [""], "domainagent": [""]}	an extra key
+06-rights-8009	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"p1","members":"testsub/counters/c1"}	refused	["/parent"]	[]	/parent: not an id
+06-rights-8010	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"p1","members":"testsub/counters/c1"}	refused	["/parent"]	{"console": [""], "domainagent": [""]}	/parent: not an id
+06-rights-8011	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"","members":"c1"}	refused	["/members/0"]	[]	/members: a reference not by the form
+06-rights-8012	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"","members":"c1"}	refused	["/members/0"]	{"console": [""], "domainagent": [""]}	/members: a reference not by the form
+06-rights-8013	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"","members":"testsub/counters/c1,testsub/counters/c1"}	refused	["/members/1"]	[]	/members: a repeat
+06-rights-8014	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"","members":"testsub/counters/c1,testsub/counters/c1"}	refused	["/members/1"]	{"console": [""], "domainagent": [""]}	/members: a repeat
+06-rights-8015	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"","members":"testsub/counters/c1","deleted":"yes"}	refused	["/deleted"]	[]	/deleted: a word
+06-rights-8016	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"","members":"testsub/counters/c1","deleted":"yes"}	refused	["/deleted"]	{"console": [""], "domainagent": [""]}	/deleted: a word
+06-rights-8017	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"","members":"testsub/counters/c1","x":"1"}	refused	["/x"]	[]	an extra key
+06-rights-8018	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"","members":"testsub/counters/c1","x":"1"}	refused	["/x"]	{"console": [""], "domainagent": [""]}	an extra key
 06-rights-8019	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"parent":"","members":"testsub/counters/c1"}	refused	["/name"]	[]	/name: absent
 06-rights-8020	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"parent":"","members":"testsub/counters/c1"}	refused	["/name"]	{"console": [""], "domainagent": [""]}	/name: absent
-06-rights-8021	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"Подъезд","parent":""}	refused	["/members"]	[]	/members: absent
-06-rights-8022	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"Подъезд","parent":""}	refused	["/members"]	{"console": [""], "domainagent": [""]}	/members: absent
+06-rights-8021	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":""}	refused	["/members"]	[]	/members: absent
+06-rights-8022	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":""}	refused	["/members"]	{"console": [""], "domainagent": [""]}	/members: absent
 06-rights-8025	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub/counters/c1	row	writer	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	ok	[]	[]	base
 06-rights-8026	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub/counters/c1	row	reader	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	ok	[]	{"console": [], "domainagent": []}	base
 06-rights-8027	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub/counters/c1	row	writer	["console", "domainagent"]	{"folders":""}	refused	["/folders"]	[]	/folders: empty
@@ -1195,14 +1195,14 @@ a94_revision.040	platform/schema	platform/schema	row	reader	["<s>controller", "<
 06-rights-8124	<sub>/opcount/<id>	testsub/opcount/0123456789abcdef0123456789abcdef	row	reader	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0","x":"1"}	refused	["/x"]	{"console": [""]}	an extra key
 06-rights-8125	<sub>/opcount/<id>	testsub/opcount/0123456789abcdef0123456789abcdef	row	writer	["console"]	{"done":"2","ok":"1","cancelled":"0"}	refused	["/failed"]	[]	/failed: absent
 06-rights-8126	<sub>/opcount/<id>	testsub/opcount/0123456789abcdef0123456789abcdef	row	reader	["console"]	{"done":"2","ok":"1","cancelled":"0"}	refused	["/failed"]	{"console": [""]}	/failed: absent
-06-rights-8131	<sub>/opbusy/<корень>	testsub/opbusy/testsub.c1	row	writer	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	ok	[]	[]	base
-06-rights-8132	<sub>/opbusy/<корень>	testsub/opbusy/testsub.c1	row	reader	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	ok	[]	{"console": []}	base
-06-rights-8133	<sub>/opbusy/<корень>	testsub/opbusy/testsub.c1	row	writer	["console"]	{"operation":"o1"}	refused	["/operation"]	[]	/operation: not an id
-06-rights-8134	<sub>/opbusy/<корень>	testsub/opbusy/testsub.c1	row	reader	["console"]	{"operation":"o1"}	refused	["/operation"]	{"console": [""]}	/operation: not an id
-06-rights-8135	<sub>/opbusy/<корень>	testsub/opbusy/testsub.c1	row	writer	["console"]	{"operation":"0123456789abcdef0123456789abcdef","x":"1"}	refused	["/x"]	[]	an extra key
-06-rights-8136	<sub>/opbusy/<корень>	testsub/opbusy/testsub.c1	row	reader	["console"]	{"operation":"0123456789abcdef0123456789abcdef","x":"1"}	refused	["/x"]	{"console": [""]}	an extra key
-06-rights-8137	<sub>/opbusy/<корень>	testsub/opbusy/testsub.c1	row	writer	["console"]	{}	refused	["/operation"]	[]	/operation: absent
-06-rights-8138	<sub>/opbusy/<корень>	testsub/opbusy/testsub.c1	row	reader	["console"]	{}	refused	["/operation"]	{"console": [""]}	/operation: absent
+06-rights-8131	<sub>/opbusy/<root>	testsub/opbusy/testsub.c1	row	writer	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	ok	[]	[]	base
+06-rights-8132	<sub>/opbusy/<root>	testsub/opbusy/testsub.c1	row	reader	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	ok	[]	{"console": []}	base
+06-rights-8133	<sub>/opbusy/<root>	testsub/opbusy/testsub.c1	row	writer	["console"]	{"operation":"o1"}	refused	["/operation"]	[]	/operation: not an id
+06-rights-8134	<sub>/opbusy/<root>	testsub/opbusy/testsub.c1	row	reader	["console"]	{"operation":"o1"}	refused	["/operation"]	{"console": [""]}	/operation: not an id
+06-rights-8135	<sub>/opbusy/<root>	testsub/opbusy/testsub.c1	row	writer	["console"]	{"operation":"0123456789abcdef0123456789abcdef","x":"1"}	refused	["/x"]	[]	an extra key
+06-rights-8136	<sub>/opbusy/<root>	testsub/opbusy/testsub.c1	row	reader	["console"]	{"operation":"0123456789abcdef0123456789abcdef","x":"1"}	refused	["/x"]	{"console": [""]}	an extra key
+06-rights-8137	<sub>/opbusy/<root>	testsub/opbusy/testsub.c1	row	writer	["console"]	{}	refused	["/operation"]	[]	/operation: absent
+06-rights-8138	<sub>/opbusy/<root>	testsub/opbusy/testsub.c1	row	reader	["console"]	{}	refused	["/operation"]	{"console": [""]}	/operation: absent
 06-rights-8143	<sub>/operations-turn	testsub/operations-turn	row	writer	["console"]	{"holder":"box-a:42:0a1b2c-1"}	ok	[]	[]	base
 06-rights-8144	<sub>/operations-turn	testsub/operations-turn	row	reader	["console"]	{"holder":"box-a:42:0a1b2c-1"}	ok	[]	{"console": []}	base
 06-rights-8145	<sub>/operations-turn	testsub/operations-turn	row	writer	["console"]	{"holder":"box-a:42:0a1b2c-1","x":"1"}	refused	["/x"]	[]	an extra key
@@ -1225,12 +1225,12 @@ c06_memberof_gone.005	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	pla
 c06_memberof_gone.006	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/c1	row	reader	["domainagent"]	{	refused	[""]	{"domainagent": [""]}	not JSON
 06-k0001	<sub>/policy	/policy	row	writer	["console"]	{"servers":"shared"}	refused	[""]	[]	catalog key: <sub> ""
 06-k0002	<sub>/policy	/policy	row	reader	["<s>controller", "console"]	{"servers":"shared"}	refused	[""]	{"<s>controller": [""], "console": [""]}	catalog key: <sub> ""
-06-k0003	platform/servers/<сервер>	platform/servers/	row	writer	["console"]	{"labels":"A"}	refused	[""]	[]	catalog key: <сервер> ""
-06-k0004	platform/servers/<сервер>	platform/servers/	row	reader	["<s>controller", "console"]	{"labels":"A"}	refused	[""]	{"<s>controller": [""], "console": [""]}	catalog key: <сервер> ""
+06-k0003	platform/servers/<host>	platform/servers/	row	writer	["console"]	{"labels":"A"}	refused	[""]	[]	catalog key: <host> ""
+06-k0004	platform/servers/<host>	platform/servers/	row	reader	["<s>controller", "console"]	{"labels":"A"}	refused	[""]	{"<s>controller": [""], "console": [""]}	catalog key: <host> ""
 06-k0005	platform/drain	platform/drainx	row	writer	["console"]	{"server":"","at":"1"}	refused	[""]	[]	catalog key: literal
 06-k0006	platform/drain	platform/drainx	row	reader	["<s>controller", "console"]	{"server":"","at":"1"}	refused	[""]	{"<s>controller": [""], "console": [""]}	catalog key: literal
-06-k0007	platform/decommission/<сервер>	platform/decommission/	row	writer	["console"]	{"by":"a","at":"1","why":"a"}	refused	[""]	[]	catalog key: <сервер> ""
-06-k0008	platform/decommission/<сервер>	platform/decommission/	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a"}	refused	[""]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	catalog key: <сервер> ""
+06-k0007	platform/decommission/<host>	platform/decommission/	row	writer	["console"]	{"by":"a","at":"1","why":"a"}	refused	[""]	[]	catalog key: <host> ""
+06-k0008	platform/decommission/<host>	platform/decommission/	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a"}	refused	[""]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	catalog key: <host> ""
 06-k0009	door/signer	door/signerx	row	writer	["console", "admin"]	{"kid":"a","seed_secret":"a"}	refused	[""]	[]	catalog key: literal
 06-k0010	door/signer	door/signerx	row	reader	["admin", "console"]	{"kid":"a","seed_secret":"a"}	refused	[""]	{"admin": [""], "console": [""]}	catalog key: literal
 06-k0011	door/keys	door/keysx	row	writer	["console"]	{}	refused	[""]	[]	catalog key: literal
@@ -1241,10 +1241,10 @@ c06_memberof_gone.006	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	pla
 06-k0016	<sub>/requests/<rid>	testsub/requests/	row	writer	["console", "<s>worker"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	catalog key: <rid> ""
 06-k0017	<sub>/requests/<rid>	/requests/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <sub> ""
 06-k0018	<sub>/requests/<rid>	testsub/requests/	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <rid> ""
-06-k0019	<sub>/asked/<sha16(имя)>	/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	[]	catalog key: <sub> ""
-06-k0020	<sub>/asked/<sha16(имя)>	testsub/asked/	row	writer	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	[]	catalog key: <sha16(имя)> ""
-06-k0021	<sub>/asked/<sha16(имя)>	/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
-06-k0022	<sub>/asked/<sha16(имя)>	testsub/asked/	row	reader	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	{"console": [""]}	catalog key: <sha16(имя)> ""
+06-k0019	<sub>/asked/<sha16(name)>	/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0020	<sub>/asked/<sha16(name)>	testsub/asked/	row	writer	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	[]	catalog key: <sha16(name)> ""
+06-k0021	<sub>/asked/<sha16(name)>	/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+06-k0022	<sub>/asked/<sha16(name)>	testsub/asked/	row	reader	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	{"console": [""]}	catalog key: <sha16(name)> ""
 06-k0023	objects/<sub>/commands/<rid>	objects//commands/r-0123456789abcdef	row	writer	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	[]	catalog key: <sub> ""
 06-k0024	objects/<sub>/commands/<rid>	objects/testsub/commands/	row	writer	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	[]	catalog key: <rid> ""
 06-k0025	objects/<sub>/commands/<rid>	objects//commands/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <sub> ""
@@ -1253,8 +1253,8 @@ c06_memberof_gone.006	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	pla
 06-k0028	platform/schema	platform/schemax	row	reader	["<s>controller", "<s>domain", "<s>worker", "console", "domainconsole", "resource"]	{"version":"1","at":"1"}	refused	[""]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""], "domainconsole": [""], "resource": [""]}	catalog key: literal
 06-k0029	<sub>/sweep	/sweep	row	writer	["console"]	{"digests":"sha256-0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	catalog key: <sub> ""
 06-k0030	<sub>/sweep	/sweep	row	reader	["console"]	{"digests":"sha256-0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
-06-k0031	platform/folders/<id>	platform/folders/	row	writer	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"testsub/counters/c1"}	refused	[""]	[]	catalog key: <id> ""
-06-k0032	platform/folders/<id>	platform/folders/	row	reader	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"testsub/counters/c1"}	refused	[""]	{"console": [""], "domainagent": [""]}	catalog key: <id> ""
+06-k0031	platform/folders/<id>	platform/folders/	row	writer	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"","members":"testsub/counters/c1"}	refused	[""]	[]	catalog key: <id> ""
+06-k0032	platform/folders/<id>	platform/folders/	row	reader	["console", "domainagent"]	{"name":"\u041f\u043e\u0434\u044a\u0435\u0437\u0434","parent":"","members":"testsub/counters/c1"}	refused	[""]	{"console": [""], "domainagent": [""]}	catalog key: <id> ""
 06-k0033	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof//counters/t1	row	writer	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <sub> ""
 06-k0034	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub//t1	row	writer	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <manifest:unit.rows> ""
 06-k0035	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub/counters/	row	writer	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <id> ""
@@ -1281,10 +1281,10 @@ c06_memberof_gone.006	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	pla
 06-k0056	<sub>/opcount/<id>	testsub/opcount/	row	writer	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0"}	refused	[""]	[]	catalog key: <id> ""
 06-k0057	<sub>/opcount/<id>	/opcount/t1	row	reader	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
 06-k0058	<sub>/opcount/<id>	testsub/opcount/	row	reader	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0"}	refused	[""]	{"console": [""]}	catalog key: <id> ""
-06-k0059	<sub>/opbusy/<корень>	/opbusy/testsub.c1	row	writer	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <sub> ""
-06-k0060	<sub>/opbusy/<корень>	testsub/opbusy/	row	writer	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <корень> ""
-06-k0061	<sub>/opbusy/<корень>	/opbusy/testsub.c1	row	reader	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
-06-k0062	<sub>/opbusy/<корень>	testsub/opbusy/	row	reader	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	{"console": [""]}	catalog key: <корень> ""
+06-k0059	<sub>/opbusy/<root>	/opbusy/testsub.c1	row	writer	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0060	<sub>/opbusy/<root>	testsub/opbusy/	row	writer	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <root> ""
+06-k0061	<sub>/opbusy/<root>	/opbusy/testsub.c1	row	reader	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+06-k0062	<sub>/opbusy/<root>	testsub/opbusy/	row	reader	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	{"console": [""]}	catalog key: <root> ""
 06-k0063	<sub>/operations-turn	/operations-turn	row	writer	["console"]	{"holder":"box-a:42:0a1b2c-1"}	refused	[""]	[]	catalog key: <sub> ""
 06-k0064	<sub>/operations-turn	/operations-turn	row	reader	["console"]	{"holder":"box-a:42:0a1b2c-1"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
 06-k0065	<sub>/operations-epoch	/operations-epoch	row	writer	["console"]	{"n":"1"}	refused	[""]	[]	catalog key: <sub> ""

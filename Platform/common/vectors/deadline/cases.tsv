@@ -1,5 +1,5 @@
-# The record of the sent deadline valid_until (the contract of the request and its mark «Request» valid_until; P/06.4 Н3 «file a request» step 1).
-# A row: case<TAB>input<TAB>expect<TAB>note. input — the text of the value valid_until from the body (JSON); expect — {"written": <text Н0>} or {"status": 400, "error": "bad deadline"}.
+# The record of the sent deadline valid_until (the contract of the request and its mark «Request» valid_until; P/06.4 N3 «file a request» step 1).
+# A row: case<TAB>input<TAB>expect<TAB>note. input — the text of the value valid_until from the body (JSON); expect — {"written": <text N0>} or {"status": 400, "error": "bad deadline"}.
 case	input	expect	note
 zero	0	{"written":"0"}	deadline 0 — already passed, written 0 (C47-DEADLINE-VECTORS-01)
 minus-one	-1	{"written":"0"}	negative — 0 (C47-DEADLINE-VECTORS-01)
@@ -13,4 +13,4 @@ null	null	{"status":400,"error":"bad deadline"}	not a number — 400 (C47-DEADLI
 string	"5"	{"status":400,"error":"bad deadline"}	a string — 400, even though digits (C47-DEADLINE-VECTORS-01)
 bool	true	{"status":400,"error":"bad deadline"}	bool — 400 (C47-DEADLINE-VECTORS-01)
 array	[]	{"status":400,"error":"bad deadline"}	a list — 400 (C47-DEADLINE-VECTORS-01)
-overflow	1e400	{"status":400,"error":"bad deadline"}	a number outside binary64 (overflow) — cannot be written as a time: 400 (the canon P/01.1 Н0, MAY-UNTIL-D8-01; C137-SCHEMA-TIME-01)
+overflow	1e400	{"status":400,"error":"bad deadline"}	a number outside binary64 (overflow) — cannot be written as a time: 400 (the canon P/01.1 N0, MAY-UNTIL-D8-01; C137-SCHEMA-TIME-01)

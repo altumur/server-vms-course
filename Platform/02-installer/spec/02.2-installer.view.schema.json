@@ -2,34 +2,34 @@
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "title": "canonical view of a subsystem manifest, form 1",
  "description": "the root is a mapping with a closed set of sections",
- "x-owner": "P/02.1 Н1.2",
+ "x-owner": "P/02.1 N1.2",
  "type": "object",
  "properties": {
   "name": {
    "$ref": "#/$defs/subName",
-   "x-owner": "P/02.1 Н1.2"
+   "x-owner": "P/02.1 N1.2"
   },
   "unit": {
-   "x-owner": "P/06.1 Н1.1",
+   "x-owner": "P/06.1 N1.1",
    "type": "object",
    "properties": {
     "rows": {
      "$ref": "#/$defs/rowsName",
-     "x-owner": "P/06.1 Н1.1"
+     "x-owner": "P/06.1 N1.1"
     },
     "id": {
-     "description": "`numeric` or a non-secret field of type string (Н1.4)",
-     "x-owner": "P/06.1 Н1.3",
+     "description": "`numeric` or a non-secret field of type string (N1.4)",
+     "x-owner": "P/06.1 N1.3",
      "type": "string"
     },
     "fields": {
      "$ref": "#/$defs/unitFields",
-     "x-owner": "P/06.1 Н1.2",
+     "x-owner": "P/06.1 N1.2",
      "x-default": true
     },
     "state": {
-     "description": "unit state — name → schema of the row `<sub>/state/<имя>/<unit>` (ADR-0091 item 3); `cursor` — the cursor of the unit",
-     "x-owner": "P/03.6 Н1.7",
+     "description": "unit state — name → schema of the row `<sub>/state/<name>/<unit>` (ADR-0091 item 3); `cursor` — the cursor of the unit",
+     "x-owner": "P/03.6 N1.7",
      "type": "object",
      "propertyNames": {
       "$ref": "#/$defs/name"
@@ -39,8 +39,8 @@
      }
     },
     "writes_via": {
-     "description": "the rows are written only by the named subsystems with a ticket; a session, the emergency login and other tickets — 403 writes via; a write by the right of consequences is outside the word (P/06.1 Н1.1а, ADR-0119 addendum (10), (11))",
-     "x-owner": "P/06.1 Н1.1а",
+     "description": "the rows are written only by the named subsystems with a ticket; a session, the emergency login and other tickets — 403 writes via; a write by the right of consequences is outside the word (P/06.1 N1.1a, ADR-0119 addendum (10), (11))",
+     "x-owner": "P/06.1 N1.1a",
      "type": "array",
      "items": {
       "$ref": "#/$defs/subName"
@@ -58,20 +58,20 @@
   },
   "placement": {
    "$ref": "#/$defs/placement",
-   "x-owner": "P/04 Н1.3"
+   "x-owner": "P/04 N1.3"
   },
   "tables": {
    "$ref": "#/$defs/tables",
-   "x-owner": "P/06.1 Н1.6",
+   "x-owner": "P/06.1 N1.6",
    "x-default": true
   },
   "requests": {
    "$ref": "#/$defs/requests",
-   "x-owner": "P/06.4 Н1.5"
+   "x-owner": "P/06.4 N1.5"
   },
   "holds": {
    "description": "all keys are optional",
-   "x-owner": "P/06.4 Н1.5",
+   "x-owner": "P/06.4 N1.5",
    "type": "object",
    "properties": {
     "table": {
@@ -103,7 +103,7 @@
    "additionalProperties": false
   },
   "events": {
-   "x-owner": "P/03.6 Н1.2; P/06.4 Н1.2",
+   "x-owner": "P/03.6 N1.2; P/06.4 N1.2",
    "x-default": true,
    "type": "object",
    "properties": {
@@ -153,7 +153,7 @@
     },
     "kinds": {
      "description": "event kind → `{severity}`; the label of the kind is `display.kinds` (ADR-0115 addendum (3) item 6)",
-     "x-owner": "P/03.6 Н1.2",
+     "x-owner": "P/03.6 N1.2",
      "type": "object",
      "propertyNames": {
       "type": "string"
@@ -184,7 +184,7 @@
    ]
   },
   "about": {
-   "x-owner": "P/05 Н1.2; P/06.1 Н1.3",
+   "x-owner": "P/05 N1.2; P/06.1 N1.3",
    "type": "object",
    "properties": {
     "sub": {
@@ -203,8 +203,8 @@
    ]
   },
   "snapshot": {
-   "description": "list of fields without `*_secret`, blob and `server` and the states `state.<имя>`; `[]` — none",
-   "x-owner": "P/04 Н1.3а",
+   "description": "list of fields without `*_secret`, blob and `server` and the states `state.<name>`; `[]` — none",
+   "x-owner": "P/04 N1.3a",
    "x-step": "P1",
    "type": "array",
    "items": {
@@ -213,48 +213,48 @@
   },
   "rights": {
    "$ref": "#/$defs/rights",
-   "x-owner": "P/06.3 Н1.5",
+   "x-owner": "P/06.3 N1.5",
    "x-default": true
   },
   "secrets": {
    "$ref": "#/$defs/secrets",
-   "x-owner": "P/02.5 Н1.3",
+   "x-owner": "P/02.5 N1.3",
    "x-default": true
   },
   "worker": {
-   "x-owner": "P/02.5 Н1.4; P/06.4 Н1.5",
+   "x-owner": "P/02.5 N1.4; P/06.4 N1.5",
    "type": "object",
    "properties": {
     "exec": {
      "$ref": "#/$defs/execLine",
-     "description": "the program of the subsystem's worker — the service unit of the cluster worker and of the worker on the domain runs it through the runner (`w2c-run.sh worker`, `domainworker`; P/02.4 Н1.1, Н1.12), the slot is the last argument for the cluster (ADR-0091 addendum (4), (5))",
-     "x-owner": "P/02.4 Н1.1"
+     "description": "the program of the subsystem's worker — the service unit of the cluster worker and of the worker on the domain runs it through the runner (`w2c-run.sh worker`, `domainworker`; P/02.4 N1.1, N1.12), the slot is the last argument for the cluster (ADR-0091 addendum (4), (5))",
+     "x-owner": "P/02.4 N1.1"
     },
     "writes": {
      "$ref": "#/$defs/strList",
-     "description": "own tables, not `unit.rows`; a table with a declared `*_secret` field — refusal: its rows are written only by the worker, the console has no write to them, and the console ring does not see them: a change of the ring would leave them under the old key (P/06.2 Н3 «reseal at start»); the list form declares no fields, its secrets are resealed by the worker itself (P/03.4 Н1.6 `list_secret`)",
-     "x-owner": "P/02.5 Н1.4",
+     "description": "own tables, not `unit.rows`; a table with a declared `*_secret` field — refusal: its rows are written only by the worker, the console has no write to them, and the console ring does not see them: a change of the ring would leave them under the old key (P/06.2 N3 «reseal at start»); the list form declares no fields, its secrets are resealed by the worker itself (P/03.4 N1.6 `list_secret`)",
+     "x-owner": "P/02.5 N1.4",
      "x-default": true
     },
     "reads": {
      "$ref": "#/$defs/grantList",
-     "description": "`<семья>/<имя>` or prefixes with `/`",
-     "x-owner": "P/02.5 Н1.4"
+     "description": "`<family>/<name>` or prefixes with `/`",
+     "x-owner": "P/02.5 N1.4"
     },
     "requests": {
      "$ref": "#/$defs/strList",
-     "description": "other subsystems (the own one — refusal; whether it accepts — catalogue, Н3)",
-     "x-owner": "P/06.4 Н1.5"
+     "description": "other subsystems (the own one — refusal; whether it accepts — catalogue, N3)",
+     "x-owner": "P/06.4 N1.5"
     },
     "deletes": {
      "$ref": "#/$defs/strList",
      "description": "families of the units of this manifest — only `unit.rows` (ADR-0067 addendum 2026-10-17)",
-     "x-owner": "P/02.5 Н1.4",
+     "x-owner": "P/02.5 N1.4",
      "x-default": true
     },
     "creates": {
-     "description": "unit rows of another subsystem that the worker of this one creates and renews (ADR-0091 item 1); the addressee, its `unit.rows` and the `key` fields — a catalogue check (Н3)",
-     "x-owner": "P/03.6 Н1.6",
+     "description": "unit rows of another subsystem that the worker of this one creates and renews (ADR-0091 item 1); the addressee, its `unit.rows` and the `key` fields — a catalogue check (N3)",
+     "x-owner": "P/03.6 N1.6",
      "type": "array",
      "items": {
       "type": "object",
@@ -268,7 +268,7 @@
         "description": "`unit.rows` of the addressee"
        },
        "key": {
-        "description": "substitutions `{поле}` of the addressee joined by `-`, without `:int` (P/03.6 Н1.6 `key`)",
+        "description": "substitutions `{field}` of the addressee joined by `-`, without `:int` (P/03.6 N1.6 `key`)",
         "type": "string",
         "pattern": "^(?:\\{[^{}:]+\\}(-\\{[^{}:]+\\})*)$"
        }
@@ -282,8 +282,8 @@
      }
     },
     "uses": {
-     "description": "shares of other subsystems `<подсистема>.<доля>` (their `shares`; catalogue, Н3) — the group of the share in the service unit of the worker",
-     "x-owner": "P/02.4 Н1.1",
+     "description": "shares of other subsystems `<subsystem>.<share>` (their `shares`; catalogue, N3) — the group of the share in the service unit of the worker",
+     "x-owner": "P/02.4 N1.1",
      "type": "array",
      "items": {
       "type": "string",
@@ -293,7 +293,7 @@
     },
     "stop_timeout": {
      "description": "stop seconds of the worker's service unit — `TimeoutStopSec` (macOS — `ExitTimeOut`); the upper bound 50 is one rule for all workers (ADR-0091 addendum (2) item 1, addendum (3) item 4)",
-     "x-owner": "P/02.4 Н1.1",
+     "x-owner": "P/02.4 N1.1",
      "x-default": true,
      "type": "integer",
      "minimum": 20,
@@ -309,7 +309,7 @@
    ]
   },
   "slot": {
-   "x-owner": "P/03.2 Н1.4",
+   "x-owner": "P/03.2 N1.4",
    "x-default": true,
    "type": "object",
    "properties": {
@@ -329,7 +329,7 @@
    ]
   },
   "lease": {
-   "x-owner": "P/03.2 Н1.6",
+   "x-owner": "P/03.2 N1.6",
    "x-default": true,
    "type": "object",
    "properties": {
@@ -369,12 +369,12 @@
    ]
   },
   "heartbeat": {
-   "x-owner": "P/03.4 Н1.1",
+   "x-owner": "P/03.4 N1.1",
    "x-default": true,
    "type": "object",
    "properties": {
     "strings": {
-     "description": "names of heartbeat fields, not from `platform_strings` of P/03.4 Н1.1",
+     "description": "names of heartbeat fields, not from `platform_strings` of P/03.4 N1.1",
      "x-default": true,
      "type": "array",
      "items": {
@@ -393,7 +393,7 @@
      }
     },
     "door": {
-     "description": "heartbeat fields that the door `GET /<sub>/heartbeats` returns (P/06.7 Н1.6 pulse): fields of the subsystem, not of the heartbeat family of P/03.4 Н1.1 and not secret; no key — no door",
+     "description": "heartbeat fields that the door `GET /<sub>/heartbeats` returns (P/06.7 N1.6 pulse): fields of the subsystem, not of the heartbeat family of P/03.4 N1.1 and not secret; no key — no door",
      "type": "array",
      "items": {
       "type": "string",
@@ -446,14 +446,14 @@
        ]
       }
      },
-     "x-owner": "P/06.7 Н1.6"
+     "x-owner": "P/06.7 N1.6"
     },
     "stale_after": {
-     "description": "the stale threshold of the subsystem's heartbeats at the agent, s (P/09.1 Н1.2 stale): not less than three heartbeat periods HEARTBEAT_EVERY 10 s (P/03.4 Н1.1); no key — LOST_AFTER 45 s",
+     "description": "the stale threshold of the subsystem's heartbeats at the agent, s (P/09.1 N1.2 stale): not less than three heartbeat periods HEARTBEAT_EVERY 10 s (P/03.4 N1.1); no key — LOST_AFTER 45 s",
      "type": "integer",
      "x-integer": true,
      "minimum": 30,
-     "x-owner": "P/09.1 Н1.2"
+     "x-owner": "P/09.1 N1.2"
     }
    },
    "additionalProperties": false,
@@ -462,7 +462,7 @@
    ]
   },
   "objects": {
-   "x-owner": "P/05 Н1.1",
+   "x-owner": "P/05 N1.1",
    "type": "object",
    "properties": {
     "rows": {
@@ -478,7 +478,7 @@
   },
   "shares": {
    "description": "shared parts of the subsystem for workers of other subsystems (ADR-0091 item 5): name → kind",
-   "x-owner": "P/02.4 Н1.1",
+   "x-owner": "P/02.4 N1.1",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/name"
@@ -505,7 +505,7 @@
   },
   "parts": {
    "description": "parts of the subsystem with their own service and user (ADR-0091 item 5): name → service",
-   "x-owner": "P/02.4 Н1.1",
+   "x-owner": "P/02.4 N1.1",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/name"
@@ -518,7 +518,7 @@
       "description": "command of the part's service — the same grammar as `worker.exec` (ADR-0091 addendum (5) item 2)"
      },
      "volumes": {
-      "description": "volumes: mount points `…/<часть>/volumes/<n>` (ADR-0091 item 4)",
+      "description": "volumes: mount points `…/<part name>/volumes/<n>` (ADR-0091 item 4)",
       "x-default": true,
       "type": "boolean"
      },
@@ -538,13 +538,13 @@
    }
   },
   "door": {
-   "x-owner": "P/06.5 Н3; P/06.5 Н1.8",
+   "x-owner": "P/06.5 N3; P/06.5 N1.8",
    "x-default": true,
    "type": "object",
    "properties": {
     "routes": {
      "description": "routes of the process door — the first segment of the request path, byte for byte (the door token contract; the Architect's decision of 2026-10-20); an element is a name (admission `token`: a door token) or `{name, role?, domain?, rank?}` (admission by a role certificate, class `mixed` of the role certificate contract, and/or by a domain token; ADR-0091 addendum (7), (8), (14))",
-     "x-owner": "P/06.5 Н3; P/03.4 Н1.7",
+     "x-owner": "P/06.5 N3; P/03.4 N1.7",
      "x-default": true,
      "type": "array",
      "items": {
@@ -584,7 +584,7 @@
            "uniqueItems": true
           },
           "domain": {
-           "description": "kinds of domain tokens that admit to the route (P/03.4 Н1.7 door_admission domain); each kind is declared in domain.tokens of a subsystem of the catalogue, otherwise `refused:catalogue` (Н3; ADR-0091 addendum (14) item 1)",
+           "description": "kinds of domain tokens that admit to the route (P/03.4 N1.7 door_admission domain); each kind is declared in domain.tokens of a subsystem of the catalogue, otherwise `refused:catalogue` (N3; ADR-0091 addendum (14) item 1)",
            "type": "array",
            "items": {
             "type": "string",
@@ -599,8 +599,8 @@
            "uniqueItems": true
           },
           "rank": {
-           "description": "route rank: the token of the door `/where` carries the route only if the person's rank on the unit is not lower (P/06.5 Н3); no key — `view`; only for a route with admission `token` — without `role` and `domain` (ADR-0115 addendum (19) item 1)",
-           "x-owner": "P/06.5 Н3",
+           "description": "route rank: the token of the door `/where` carries the route only if the person's rank on the unit is not lower (P/06.5 N3); no key — `view`; only for a route with admission `token` — without `role` and `domain` (ADR-0115 addendum (19) item 1)",
+           "x-owner": "P/06.5 N3",
            "enum": [
             "view",
             "edit",
@@ -618,7 +618,7 @@
      }
     },
     "pass": {
-     "x-owner": "P/06.5 Н1.8",
+     "x-owner": "P/06.5 N1.8",
      "x-default": true,
      "type": [
       "array",
@@ -653,15 +653,15 @@
   },
   "servers": {
    "$ref": "#/$defs/servers",
-   "x-owner": "P/06.5 Н1.2"
+   "x-owner": "P/06.5 N1.2"
   },
   "display": {
    "$ref": "#/$defs/display",
-   "x-owner": "P/06.5 Н1.2",
+   "x-owner": "P/06.5 N1.2",
    "x-default": true
   },
   "console": {
-   "x-owner": "P/06.5 Н1.2",
+   "x-owner": "P/06.5 N1.2",
    "type": "object",
    "properties": {
     "running": {
@@ -669,11 +669,11 @@
      "type": "string"
     },
     "shell": {
-     "description": "`true` — the console serves the shell `<sub>.shell.html` of this subsystem, a mounted one (P/06.5 Н1.1 `mounted`); no file next to the manifest — `manifest put` refusal (P/02.3 Н4)",
+     "description": "`true` — the console serves the shell `<sub>.shell.html` of this subsystem, a mounted one (P/06.5 N1.1 `mounted`); no file next to the manifest — `manifest put` refusal (P/02.3 N4)",
      "type": "boolean"
     },
     "files": {
-     "description": "static files of the subsystem: paths relative to the directory of the manifest file, console address `/<sub>/<путь>` (P/06.5 Н2 «Статические файлы»); a file not read — `manifest put` refusal (P/02.3 Н4)",
+     "description": "static files of the subsystem: paths relative to the directory of the manifest file, console address `/<sub>/<path>` (P/06.5 N2 «Статические файлы»); a file not read — `manifest put` refusal (P/02.3 N4)",
      "type": "array",
      "items": {
       "description": "segments separated by `/`, each starts with a letter, a digit or `_` (hence no `..`, no absolute path and no empty segment); the extension is from a closed list, without `html`; not under `api/` — that is the route space of the mounted subsystem (ADR-0094 addendum (4) item 2, addendum (8) item 2)",
@@ -690,7 +690,7 @@
   },
   "metrics": {
    "$ref": "#/$defs/metrics",
-   "x-owner": "P/06.5 Н1.2; Н3 «Ряды манифеста metrics[]»"
+   "x-owner": "P/06.5 N1.2; N3 «Ряды манифеста metrics[]»"
   },
   "domain": {
    "$ref": "#/$defs/domain",
@@ -716,11 +716,11 @@
  ],
  "$defs": {
   "book": {
-   "description": "`{}` — a portable book: written by the worker of the subsystem on the domain (P/03.7 Н1.6); `{show}` — the same book with showing; `{from, key, pick, to, show?, stale?}` — a book assembled from the rows of members",
+   "description": "`{}` — a portable book: written by the worker of the subsystem on the domain (P/03.7 N1.6); `{show}` — the same book with showing; `{from, key, pick, to, show?, stale?}` — a book assembled from the rows of members",
    "type": "object",
    "properties": {
     "from": {
-     "description": "`<sub>/<строка>` — a single row, or `<sub>/<строка>/` — a family of rows under slots; `<sub>` is the own subsystem",
+     "description": "`<sub>/<row>` — a single row, or `<sub>/<row>/` — a family of rows under slots; `<sub>` is the own subsystem",
      "type": "string",
      "pattern": "^(?:[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31}/?)$"
     },
@@ -740,7 +740,7 @@
      ]
     },
     "to": {
-     "description": "name of a non-secret input field by the `name` grammar, not `key`: a member or a list of members — the recipients of the element; \"*\" — a book for all (P/08.5 Н1.3 to_all) (review of stage A 8–10, № 42; the Architect's decision of 2026-10-20)",
+     "description": "name of a non-secret input field by the `name` grammar, not `key`: a member or a list of members — the recipients of the element; \"*\" — a book for all (P/08.5 N1.3 to_all) (review of stage A 8–10, № 42; the Architect's decision of 2026-10-20)",
      "type": "string",
      "not": {
       "type": "string",
@@ -749,7 +749,7 @@
      "pattern": "^(?:\\*|[a-z][a-z0-9_-]{0,31})$"
     },
     "show": {
-     "description": "what the door sees (P/06.7 Н1.1)",
+     "description": "what the door sees (P/06.7 N1.1)",
      "type": "array",
      "items": {
       "type": "string",
@@ -762,7 +762,7 @@
      "uniqueItems": true
     },
     "stale": {
-     "description": "book to: \"*\": the head carries the servers whose worker of this subsystem is silent (P/08.5 Н1.3 head; ADR-0113 addendum (31)–(33))",
+     "description": "book to: \"*\": the head carries the servers whose worker of this subsystem is silent (P/08.5 N1.3 head; ADR-0113 addendum (31)–(33))",
      "type": "boolean"
     }
    },
@@ -770,14 +770,14 @@
   },
   "boundTo": {
    "description": "list of field names of this row, not secrets (a single name is normalized by the sugar step `bound_to`)",
-   "x-owner": "P/06.2 Н1.1",
+   "x-owner": "P/06.2 N1.1",
    "type": "array",
    "items": {
     "type": "string"
    }
   },
   "credentials": {
-   "x-owner": "P/06.2 Н1.1",
+   "x-owner": "P/06.2 N1.1",
    "type": "object",
    "properties": {
     "login": {
@@ -825,7 +825,7 @@
      "description": "field name → hint"
     },
     "options": {
-     "description": "field → `{значение: строка}`",
+     "description": "field → `{value: string}`",
      "type": "object",
      "propertyNames": {
       "type": "string"
@@ -891,7 +891,7 @@
     },
     "keys": {
      "description": "id of a domain key family → label",
-     "x-owner": "P/06.7 Н1.11",
+     "x-owner": "P/06.7 N1.11",
      "type": "object",
      "propertyNames": {
       "type": "string"
@@ -928,7 +928,7 @@
        "type": "string"
       },
       "folders": {
-       "description": "`true` — the page tree is built by the folders of the cluster, and the units of `unit.rows` can be their members (P/06.8 Н1.1; P/06.5 Н1.2 `tree`)",
+       "description": "`true` — the page tree is built by the folders of the cluster, and the units of `unit.rows` can be their members (P/06.8 N1.1; P/06.5 N1.2 `tree`)",
        "type": "boolean"
       },
       "columns": {
@@ -1016,7 +1016,7 @@
     },
     "tables": {
      "description": "table name → label of the kind (`name_key` psim): a string or `{key, text}`, translations — `display.langs`; the name is a table of `tables` (ADR-0115 addendum (11))",
-     "x-owner": "P/06.5 Н1.2",
+     "x-owner": "P/06.5 N1.2",
      "type": "object",
      "propertyNames": {
       "type": "string"
@@ -1039,16 +1039,16 @@
    "type": "object",
    "properties": {
     "ref": {
-     "x-owner": "P/08.1 Н1.2",
+     "x-owner": "P/08.1 N1.2",
      "type": "string"
     },
     "view": {
      "$ref": "#/$defs/nonSecretList",
-     "x-owner": "P/08.1 Н1.4"
+     "x-owner": "P/08.1 N1.4"
     },
     "view_status": {
      "$ref": "#/$defs/nonSecretList",
-     "x-owner": "P/08.1 Н1.4"
+     "x-owner": "P/08.1 N1.4"
     },
     "view_pulse": {
      "allOf": [
@@ -1066,11 +1066,11 @@
        }
       }
      ],
-     "x-owner": "P/08.1 Н1.4",
-     "description": "heartbeat fields; `stale` is a platform word in `pulse.<sub>` of the view (P/08.1 Н1.4)"
+     "x-owner": "P/08.1 N1.4",
+     "description": "heartbeat fields; `stale` is a platform word in `pulse.<sub>` of the view (P/08.1 N1.4)"
     },
     "view_tables": {
-     "x-owner": "P/08.1 Н1.4а",
+     "x-owner": "P/08.1 N1.4a",
      "x-class": "reference",
      "type": "object",
      "propertyNames": {
@@ -1082,14 +1082,14 @@
     },
     "edit": {
      "$ref": "#/$defs/nonSecretList",
-     "x-owner": "P/08.6 Н1.3"
+     "x-owner": "P/08.6 N1.3"
     },
     "edit_delete": {
-     "x-owner": "P/08.6 Н1.3б",
+     "x-owner": "P/08.6 N1.3b",
      "type": "boolean"
     },
     "edit_tables": {
-     "x-owner": "P/08.6 Н1.3",
+     "x-owner": "P/08.6 N1.3",
      "x-class": "reference",
      "type": "object",
      "propertyNames": {
@@ -1100,7 +1100,7 @@
      }
     },
     "edit_secrets": {
-     "x-owner": "P/08.6 Н1.3а",
+     "x-owner": "P/08.6 N1.3a",
      "x-class": "reference",
      "type": "object",
      "propertyNames": {
@@ -1116,24 +1116,24 @@
     },
     "kept": {
      "$ref": "#/$defs/strList",
-     "x-owner": "P/03.7 Н1.6"
+     "x-owner": "P/03.7 N1.6"
     },
     "kept_read": {
      "$ref": "#/$defs/strList",
      "description": "domain.kept rows that the domain console door reads: exact names, not families",
-     "x-owner": "P/10 Н1.2а"
+     "x-owner": "P/10 N1.2a"
     },
     "tables": {
      "$ref": "#/$defs/strList",
-     "x-owner": "P/03.7 Н1.6"
+     "x-owner": "P/03.7 N1.6"
     },
     "reports": {
      "$ref": "#/$defs/strList",
-     "x-owner": "P/09.1 Н1.2"
+     "x-owner": "P/09.1 N1.2"
     },
     "shared": {
      "description": "an element is a name of a unit field (not a secret; it inherits or is `display.tree.group_by`) or a document `{name, type: json, schema}`: name is not a name of a unit field, the value of the document is checked by schema",
-     "x-owner": "P/08.9 Н1.2",
+     "x-owner": "P/08.9 N1.2",
      "type": "array",
      "items": {
       "type": [
@@ -1186,7 +1186,7 @@
      "uniqueItems": true
     },
     "keys": {
-     "x-owner": "P/06.7 Н1.11",
+     "x-owner": "P/06.7 N1.11",
      "type": "array",
      "items": {
       "type": "object",
@@ -1219,7 +1219,7 @@
      }
     },
     "names": {
-     "x-owner": "P/08.5 Н1.7",
+     "x-owner": "P/08.5 N1.7",
      "type": "object",
      "propertyNames": {
       "type": "string",
@@ -1251,7 +1251,7 @@
      "x-owner": "P/08.7",
      "type": "object",
      "propertyNames": {
-      "description": "token kind; the kind is unique in the catalogue (Н3, `refused:catalogue`)",
+      "description": "token kind; the kind is unique in the catalogue (N3, `refused:catalogue`)",
       "type": "string",
       "not": {
        "enum": [
@@ -1265,7 +1265,7 @@
      }
     },
     "witness": {
-     "x-owner": "P/10 Н1.8",
+     "x-owner": "P/10 N1.8",
      "type": "object",
      "properties": {
       "report": {
@@ -1292,7 +1292,7 @@
   },
   "fieldEnum": {
    "description": "values of the field type; only for string and bool",
-   "x-owner": "P/06.1 Н3",
+   "x-owner": "P/06.1 N3",
    "type": "array",
    "minItems": 1,
    "uniqueItems": true
@@ -1303,7 +1303,7 @@
   },
   "fieldType": {
    "description": "a `*_secret` field — only string",
-   "x-owner": "P/06.1 Н1.2",
+   "x-owner": "P/06.1 N1.2",
    "enum": [
     "string",
     "int",
@@ -1337,7 +1337,7 @@
   },
   "jsonSchemaLite": {
    "description": "JSON Schema 2020-12; the keywords are the list `names.key` of this definition (anything else is value), depth ≤ 32 (review of stage A 6–7, № 11)",
-   "x-owner": "P/02.1 Н1.2",
+   "x-owner": "P/02.1 N1.2",
    "type": "object",
    "properties": {
     "properties": {
@@ -1435,7 +1435,7 @@
   },
   "label": {
    "description": "a string or `{key, text}`: the translation key by `display.langs` and the text if there is no translation (ADR-0115 addendum (2) item 3)",
-   "x-owner": "P/06.5 Н1.2",
+   "x-owner": "P/06.5 N1.2",
    "type": [
     "object",
     "string"
@@ -1475,8 +1475,8 @@
    }
   },
   "langs": {
-   "description": "language → `{ключ: текст}`; the generator puts translations here; a key absent in the language — the `text` of the label applies (ADR-0115 addendum (2) item 3)",
-   "x-owner": "P/06.5 Н1.2",
+   "description": "language → `{key: text}`; the generator puts translations here; a key absent in the language — the `text` of the label applies (ADR-0115 addendum (2) item 3)",
+   "x-owner": "P/06.5 N1.2",
    "type": "object",
    "propertyNames": {
     "type": "string",
@@ -1504,7 +1504,7 @@
       ]
      },
      "from": {
-      "description": "`heartbeat.<путь>` | `status.<путь>` (P/06.5 Н3 «Ряды манифеста metrics[]»)",
+      "description": "`heartbeat.<path>` | `status.<path>` (P/06.5 N3 «Ряды манифеста metrics[]»)",
       "type": "string",
       "pattern": "^(?:(heartbeat|status)\\.[\\s\\S]+)$"
      },
@@ -1576,7 +1576,7 @@
       "x-opaque": true
      },
      "count": {
-      "description": "`table <таблица этого манифеста>`",
+      "description": "`table <table of this manifest>`",
       "type": "string",
       "pattern": "^(?:table [a-z][a-z0-9_-]{0,31})$"
      },
@@ -1621,8 +1621,8 @@
    }
   },
   "mustMatch": {
-   "description": "`{<поле цели>: <поле этой строки>}`; the keys are not checked",
-   "x-owner": "P/06.1 Н1.3",
+   "description": "`{<target field>: <field of this row>}`; the keys are not checked",
+   "x-owner": "P/06.1 N1.3",
    "type": "object",
    "propertyNames": {
     "type": "string"
@@ -1646,7 +1646,7 @@
    }
   },
   "passCall": {
-   "description": "a callback door from the closed list of P/06.3 Н1.9: `<s>/<имя>` — unit rows, a table, `policy`, `next_id` or a door route of subsystem `<s>`; the prefix `GET ` — read only; `console/batch`, `changes`, `folders`; `<s>/operations`; `<s>/requests`; `marks`; `GET <s>/where`; `GET <s>/heartbeats`; the door `door.pass` of the first kind; `servers/labels`; `GET manifest|servers|events|session|schema`; `GET manifest/<s>/source` (ADR-0116 addendum (6)); domain doors: `GET domain/users|groups|roles|grants`, `domain/batch`, `domain/verify` (ADR-0119), `domain/shared`, `GET domain/shared/<s>`, `GET domain/topology`; the book door: `GET domain/<s>/books/<книга>`; a book section for all: `GET domain/<s>/books/<книга>/*`; a kept row: `GET domain/<s>/kept/<имя>`",
+   "description": "a callback door from the closed list of P/06.3 N1.9: `<s>/<name>` — unit rows, a table, `policy`, `next_id` or a door route of subsystem `<s>`; the prefix `GET ` — read only; `console/batch`, `changes`, `folders`; `<s>/operations`; `<s>/requests`; `marks`; `GET <s>/where`; `GET <s>/heartbeats`; the door `door.pass` of the first kind; `servers/labels`; `GET manifest|servers|events|session|schema`; `GET manifest/<s>/source` (ADR-0116 addendum (6)); domain doors: `GET domain/users|groups|roles|grants`, `domain/batch`, `domain/verify` (ADR-0119), `domain/shared`, `GET domain/shared/<s>`, `GET domain/topology`; the book door: `GET domain/<s>/books/<book>`; a book section for all: `GET domain/<s>/books/<book>/*`; a kept row: `GET domain/<s>/kept/<name>`",
    "type": "string",
    "anyOf": [
     {
@@ -1720,7 +1720,7 @@
    "pattern": "^(?:[a-z][a-z0-9_-]{0,31}(?:/[a-z][a-z0-9_-]{0,31})*)$"
   },
   "passTicket": {
-   "description": "the second kind: a ticket per request instead of a person's credential (P/06.5 Н1.8, the gate-and-pass contract)",
+   "description": "the second kind: a ticket per request instead of a person's credential (P/06.5 N1.8, the gate-and-pass contract)",
    "type": "object",
    "properties": {
     "routes": {
@@ -1802,7 +1802,7 @@
      ]
     },
     "operations": {
-     "description": "group operations of the subsystem (P/06.9 Н1.1): the step call route, own limits, a service table",
+     "description": "group operations of the subsystem (P/06.9 N1.1): the step call route, own limits, a service table",
      "type": "object",
      "properties": {
       "step": {
@@ -1810,9 +1810,9 @@
        "description": "the step call route; does not lie under `routes`: unavailable to the browser"
       },
       "limits": {
-       "description": "own limits, not above the ceilings of P/06.9 Н1.6",
+       "description": "own limits, not above the ceilings of P/06.9 N1.6",
        "default": {},
-       "x-default-text": "the ceilings of P/06.9 Н1.6",
+       "x-default-text": "the ceilings of P/06.9 N1.6",
        "type": "object",
        "properties": {
         "steps": {
@@ -1843,7 +1843,7 @@
        "additionalProperties": false
       },
       "service": {
-       "description": "the operations table is a service table: doors only with a ticket, a person sees their own operation (P/06.9 Н2)",
+       "description": "the operations table is a service table: doors only with a ticket, a person sees their own operation (P/06.9 N2)",
        "default": false,
        "x-default-text": "`false`",
        "type": "boolean"
@@ -1879,13 +1879,13 @@
        "minimum": 0
       },
       "unit_mb": {
-       "x-owner": "P/03.4 Н1.2",
+       "x-owner": "P/03.4 N1.2",
        "type": "number",
        "exclusiveMinimum": 0
       },
       "base_mb": {
-       "description": "the memory budget is the one formula of P/03.4 Н1.2 `memory`, the check is P/03.4 Н3 «start() — the budget step»",
-       "x-owner": "P/03.4 Н1.2",
+       "description": "the memory budget is the one formula of P/03.4 N1.2 `memory`, the check is P/03.4 N3 «start() — the budget step»",
+       "x-owner": "P/03.4 N1.2",
        "x-default": true,
        "type": "number",
        "minimum": 0
@@ -1980,7 +1980,7 @@
        ]
       },
       "wanted": {
-       "description": "table: a row with the name of the place — the place needs a holder (P/04 Н3 «shortage()»)",
+       "description": "table: a row with the name of the place — the place needs a holder (P/04 N3 «shortage()»)",
        "type": "string"
       }
      },
@@ -2063,7 +2063,7 @@
        "x-opaque": true
       },
       "exclusive": {
-       "description": "exclusive place: the holder of a binding place (by `strict`) accepts only units bound to it and takes no other places (P/04 Н1.3, P/03.2 Н3; ADR-0091 addendum (9) item 6, addendum (10) items 1–2)",
+       "description": "exclusive place: the holder of a binding place (by `strict`) accepts only units bound to it and takes no other places (P/04 N1.3, P/03.2 N3; ADR-0091 addendum (9) item 6, addendum (10) items 1–2)",
        "x-default": true,
        "type": "boolean"
       }
@@ -2177,8 +2177,8 @@
    ]
   },
   "refTarget": {
-   "description": "`<подсистема>/<семья>`, both parts are names by Н1.2; the loader does not look for the target",
-   "x-owner": "P/06.1 Н1.3",
+   "description": "`<subsystem>/<family>`, both parts are names by N1.2; the loader does not look for the target",
+   "x-owner": "P/06.1 N1.3",
    "type": "string",
    "pattern": "^(?:[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31})$"
   },
@@ -2212,12 +2212,12 @@
      "minimum": 0
     },
     "key": {
-     "description": "rid template with at least one `{…}` (Н1.4): without a substitution all requests would get one id",
+     "description": "rid template with at least one `{…}` (N1.4): without a substitution all requests would get one id",
      "type": "string",
      "pattern": "^(?:[\\s\\S]*\\{[^{}]+\\}[\\s\\S]*)$"
     },
     "outcome": {
-     "description": "the meaning is P/06.4 Н1.5 (`mark`), chapter 3.6 (the append of `fetched`), ADR-0054 addendum 2026-10-17; `fetched` requires `requests.key` (Н1.4)",
+     "description": "the meaning is P/06.4 N1.5 (`mark`), chapter 3.6 (the append of `fetched`), ADR-0054 addendum 2026-10-17; `fetched` requires `requests.key` (N1.4)",
      "x-default": true,
      "enum": [
       "mark",
@@ -2278,7 +2278,7 @@
      "type": "boolean"
     },
     "unit_of": {
-     "description": "`{таблица: поле таблицы}`",
+     "description": "`{table: field of the table}`",
      "type": "object",
      "propertyNames": {
       "type": "string"
@@ -2404,7 +2404,7 @@
    ]
   },
   "rowsName": {
-   "description": "a name by Н1.2, not from the list of forbidden table names and not `cluster`, `worker`, `ts`",
+   "description": "a name by N1.2, not from the list of forbidden table names and not `cluster`, `worker`, `ts`",
    "type": "string",
    "not": {
     "enum": [
@@ -2467,7 +2467,7 @@
   },
   "schemes": {
    "description": "scheme name → `{host?, fragment?, none?}`; the meaning is the address contract «Schemes» (URLC-HOST-01)",
-   "x-owner": "договор адреса url-credentials «Schemes»; P/06.2 Н1.1",
+   "x-owner": "the address contract url-credentials «Schemes»; P/06.2 N1.1",
    "type": "object",
    "propertyNames": {
     "type": "string",
@@ -2485,7 +2485,7 @@
       ]
      },
      "fragment": {
-      "description": "`none`: `#` is an ordinary character, not the start of a fragment (P/06.2 Н1.1а A2)",
+      "description": "`none`: `#` is an ordinary character, not the start of a fragment (P/06.2 N1.1a A2)",
       "enum": [
        "none"
       ]
@@ -2502,7 +2502,7 @@
    }
   },
   "secretIn": {
-   "x-owner": "P/06.2 Н1.1",
+   "x-owner": "P/06.2 N1.1",
    "type": "array",
    "items": {
     "description": "an element of exactly one kind: `{param, login?}`, `{regex, in?, schemes?, decoded?}` or `{nested}`",
@@ -2593,7 +2593,7 @@
     },
     "reads": {
      "$ref": "#/$defs/grantList",
-     "description": "`<семья>/<имя>` or prefixes with `/`, as in `worker.reads`"
+     "description": "`<family>/<name>` or prefixes with `/`, as in `worker.reads`"
     }
    },
    "additionalProperties": false,
@@ -2638,7 +2638,7 @@
       "type": "object",
       "properties": {
        "field": {
-        "description": "a path in the heartbeat; the first segment is not a heartbeat key of the platform (P/03.4 Н1.1)",
+        "description": "a path in the heartbeat; the first segment is not a heartbeat key of the platform (P/03.4 N1.1)",
         "type": "string",
         "not": {
          "type": "string",
@@ -2678,7 +2678,7 @@
    }
   },
   "subName": {
-   "description": "not one of the 36 reserved words and does not start with `free-` (the submitter's rid `<подсистема>.<ключ>` would otherwise start with `free-`, which the rid grammar forbids; ADR-0091 addendum (24) item 5); the name is the first segment of all keys of the subsystem `<name>/…` and of its place on the domain",
+   "description": "not one of the 36 reserved words and does not start with `free-` (the submitter's rid `<subsystem>.<key>` would otherwise start with `free-`, which the rid grammar forbids; ADR-0091 addendum (24) item 5); the name is the first segment of all keys of the subsystem `<name>/…` and of its place on the domain",
    "type": "string",
    "not": {
     "anyOf": [
@@ -2758,11 +2758,11 @@
    "type": "object",
    "properties": {
     "key": {
-     "description": "a non-secret string field or a template `{поле}` / `{поле:int}` (Н1.4)",
+     "description": "a non-secret string field or a template `{field}` / `{field:int}` (N1.4)",
      "type": "string"
     },
     "fields": {
-     "description": "a field by the table «Поле»; the fields `held_by`, `garbled`, `by`, `at`, `made_at`, `revision`, `index` are forbidden",
+     "description": "a field by the table «Field»; the fields `held_by`, `garbled`, `by`, `at`, `made_at`, `revision`, `index` are forbidden",
      "x-default": true,
      "type": "array",
      "items": {
@@ -2821,12 +2821,12 @@
        },
        "hidden": {
         "description": "the field is not shown by the form; the door writes and returns the value like the others (ADR-0115 item 2.2)",
-        "x-owner": "P/06.5 Н1.2",
+        "x-owner": "P/06.5 N1.2",
         "type": "boolean"
        },
        "items": {
         "description": "for `type: list`: `ref` of each element is a form hint, the list of values is taken by reading the family; the platform does not judge the value by it (ADR-0115 addendum (2) item 5, addendum (3) item 5)",
-        "x-owner": "P/06.5 Н1.2",
+        "x-owner": "P/06.5 N1.2",
         "type": "object",
         "properties": {
          "ref": {
@@ -2840,7 +2840,7 @@
        },
        "ref_label": {
         "description": "name of a field of the target row of `ref` or `items.ref` — the label of the value in the form; the loader does not look for the target field (ADR-0115 addendum (5) item 2, addendum (6) item 2)",
-        "x-owner": "P/06.5 Н1.2",
+        "x-owner": "P/06.5 N1.2",
         "type": "string",
         "minLength": 1
        }
@@ -2888,12 +2888,12 @@
      ]
     },
     "service": {
-     "description": "service table of the worker: only with a ticket (P/06.1 Н1.6 `service`)",
+     "description": "service table of the worker: only with a ticket (P/06.1 N1.6 `service`)",
      "type": "boolean"
     },
     "writes_via": {
-     "description": "the rows are written only by the named subsystems with a ticket; a session, the emergency login and other tickets — 403 writes via; a write by the right of consequences is outside the word (P/06.1 Н1.1а, ADR-0119 addendum (10), (11))",
-     "x-owner": "P/06.1 Н1.1а",
+     "description": "the rows are written only by the named subsystems with a ticket; a session, the emergency login and other tickets — 403 writes via; a write by the right of consequences is outside the word (P/06.1 N1.1a, ADR-0119 addendum (10), (11))",
+     "x-owner": "P/06.1 N1.1a",
      "type": "array",
      "items": {
       "$ref": "#/$defs/subName"
@@ -2902,7 +2902,7 @@
      "uniqueItems": true
     },
     "delete_after": {
-     "description": "row term in seconds; the console reaper removes the row (P/06.4 Н3 `tables`)",
+     "description": "row term in seconds; the console reaper removes the row (P/06.4 N3 `tables`)",
      "type": "integer",
      "minimum": 1,
      "maximum": 9007199254740991
@@ -2940,12 +2940,12 @@
       ]
      },
      "then": false,
-     "description": "service already admits only a ticket of its own subsystem (P/06.1 Н1.6)"
+     "description": "service already admits only a ticket of its own subsystem (P/06.1 N1.6)"
     }
    ]
   },
   "tableName": {
-   "description": "a name by Н1.2, not from the list of forbidden table names",
+   "description": "a name by N1.2, not from the list of forbidden table names",
    "type": "string",
    "not": {
     "enum": [
@@ -3022,9 +3022,9 @@
      "exclusiveMinimum": 0
     },
     "keep": {
-     "description": "the token lies sealed on the worker's medium (P/03.7 Н1.5 keep; ADR-0110 addendum (9))",
+     "description": "the token lies sealed on the worker's medium (P/03.7 N1.5 keep; ADR-0110 addendum (9))",
      "type": "boolean",
-     "x-owner": "P/03.7 Н1.5"
+     "x-owner": "P/03.7 N1.5"
     },
     "claims": {
      "type": "array",
@@ -3057,7 +3057,7 @@
      "type": "object",
      "properties": {
       "sub": {
-       "description": "subsystem of the assignment records (P/08.6 Н1.1)",
+       "description": "subsystem of the assignment records (P/08.6 N1.1)",
        "type": "string"
       },
       "caller": {
@@ -3139,7 +3139,7 @@
      "type": "object",
      "properties": {
       "doc": {
-       "description": "subsystem of the shared document (P/08.9 Н1.2: `shared.<doc>`)",
+       "description": "subsystem of the shared document (P/08.9 N1.2: `shared.<doc>`)",
        "type": "string"
       },
       "items": {
@@ -3215,7 +3215,7 @@
     "type": "object",
     "properties": {
      "name": {
-      "description": "author's key: not from `platform_fields` of P/06.1 Н1.2",
+      "description": "author's key: not from `platform_fields` of P/06.1 N1.2",
       "type": "string",
       "not": {
        "enum": [
@@ -3239,27 +3239,27 @@
       "x-default": true
      },
      "required": {
-      "x-owner": "P/06.1 Н3",
+      "x-owner": "P/06.1 N3",
       "x-default": true,
       "type": "boolean"
      },
      "fixed": {
-      "x-owner": "P/06.1 Н1.3",
+      "x-owner": "P/06.1 N1.3",
       "x-default": true,
       "type": "boolean"
      },
      "default": {
       "description": "one value of the field type: for float an integer is admissible, list — a list of strings, json — any JSON value (a mapping for string — refusal); null — no default; from `enum`, if there is one",
-      "x-owner": "P/06.1 Н1.2",
+      "x-owner": "P/06.1 N1.2",
       "x-step": "P4"
      },
      "inherit": {
       "description": "like `default`; the last link of the inheritance chain; only for a unit field",
-      "x-owner": "P/06.1 Н1.2"
+      "x-owner": "P/06.1 N1.2"
      },
      "merge": {
       "description": "reduction of the inheritance chain; only with `inherit`; `union` — only for `type: list`",
-      "x-owner": "P/06.7 Н1.14",
+      "x-owner": "P/06.7 N1.14",
       "enum": [
        "union",
        "override"
@@ -3269,8 +3269,8 @@
       "$ref": "#/$defs/fieldEnum"
      },
      "unique": {
-      "description": "`canonical` — comparison by the canonical form of the URL (P/06.1 Н1.3), only for url; not for list",
-      "x-owner": "P/06.1 Н1.3",
+      "description": "`canonical` — comparison by the canonical form of the URL (P/06.1 N1.3), only for url; not for list",
+      "x-owner": "P/06.1 N1.3",
       "type": [
        "string",
        "boolean"
@@ -3308,7 +3308,7 @@
      },
      "schema": {
       "$ref": "#/$defs/jsonSchemaLite",
-      "x-owner": "P/06.1 Н1.2; P/06.1 Н1.6"
+      "x-owner": "P/06.1 N1.2; P/06.1 N1.6"
      },
      "bound_to": {
       "$ref": "#/$defs/boundTo",
@@ -3325,12 +3325,12 @@
      },
      "hidden": {
       "description": "the field is not shown by the form; the door writes and returns the value like the others (ADR-0115 item 2.2)",
-      "x-owner": "P/06.5 Н1.2",
+      "x-owner": "P/06.5 N1.2",
       "type": "boolean"
      },
      "items": {
       "description": "for `type: list`: `ref` of each element is a form hint, the list of values is taken by reading the family; the platform does not judge the value by it (ADR-0115 addendum (2) item 5, addendum (3) item 5)",
-      "x-owner": "P/06.5 Н1.2",
+      "x-owner": "P/06.5 N1.2",
       "type": "object",
       "properties": {
        "ref": {
@@ -3344,7 +3344,7 @@
      },
      "ref_label": {
       "description": "name of a field of the target row of `ref` or `items.ref` — the label of the value in the form; the loader does not look for the target field (ADR-0115 addendum (5) item 2, addendum (6) item 2)",
-      "x-owner": "P/06.5 Н1.2",
+      "x-owner": "P/06.5 N1.2",
       "type": "string",
       "minLength": 1
      }

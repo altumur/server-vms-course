@@ -1,6 +1,6 @@
-# The round of x25519:v1 (the domain envelopes contract, «Конверт x25519:v1» seal): the implementation seals plain to book_seal twice with the context
+# The round of x25519:v1 (the domain envelopes contract, «Envelope x25519:v1» seal): the implementation seals plain to book_seal twice with the context
 # and opens both envelopes with the seed seed_hex. ok — both opened into plain and the envelopes differ (new eph and nonce); otherwise the sealing word.
-# plain — a JSON string. The rows — the acceptance inputs of М11/2 inputs/seal-round-*.json, the expectations — sc. 11.
+# plain — a JSON string. The rows — the acceptance inputs of M11/2 inputs/seal-round-*.json, the expectations — sc. 11.
 # A row: case<TAB>book_seal_hex<TAB>seed_hex<TAB>plain<TAB>member<TAB>source_path<TAB>item<TAB>pointer<TAB>expect<TAB>note.
 case	book_seal_hex	seed_hex	plain	member	source_path	item	pointer	expect	note
 seal-round-01	bcd5fdec0a3585c7b8793b352a0322a72c6aa1801c1874dac9e7cebfc2c8f970	1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a	"s3cret-ü"	m1	testsub2/notes/n1	a1	/feed/token_secret	ok	round: two own envelopes differ and both open

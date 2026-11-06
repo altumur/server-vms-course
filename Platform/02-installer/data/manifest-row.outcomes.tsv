@@ -1,43 +1,43 @@
 # Outcomes of an unreadable row platform/manifest/<sub> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-/yaml	<s>controller	at start: loading is refused — does not start, code 2	0	строка	P/02.3 Н3 «Process start» шаг 3
-/yaml	<s>domain	at start: loading is refused — does not start, code 2	0	строка	P/02.3 Н3 «Process start» шаг 3
-/yaml	<s>worker	at start: loading is refused — does not start, code 2	0	строка	P/02.3 Н3 «Process start» шаг 3
-/yaml	admin	manifest put: refusal, writes nothing	0	строка	P/02.3 Н1.5 rules
-/yaml	console	at start: loading is refused — does not start, code 2	0	строка	P/02.3 Н3 «Process start» шаг 3
-/yaml	domain	at start: loading is refused — does not start, code 2	0	строка	P/02.3 Н3 «Process start» шаг 3
-/yaml	domainconsole	at start: loading is refused — does not start, code 2	0	строка	P/02.3 Н3 «Process start» шаг 3
-/yaml	resource	at start: loading is refused — does not start, code 2	0	строка	P/02.3 Н3 «Process start» шаг 3
-/sha256	<s>controller	at start: «sha256 does not match» — does not start, code 2	0	строка	P/02.3 Н1.5 sha256, Н3 «Process start» шаг 2
-/sha256	<s>domain	at start: «sha256 does not match» — does not start, code 2	0	строка	P/02.3 Н1.5 sha256, Н3 «Process start» шаг 2
-/sha256	<s>worker	at start: «sha256 does not match» — does not start, code 2	0	строка	P/02.3 Н1.5 sha256, Н3 «Process start» шаг 2
-/sha256	admin	manifest put: refusal, writes nothing	0	строка	P/02.3 Н1.5 rules
-/sha256	console	at start: «sha256 does not match» — does not start, code 2	0	строка	P/02.3 Н1.5 sha256, Н3 «Process start» шаг 2
-/sha256	domain	at start: «sha256 does not match» — does not start, code 2	0	строка	P/02.3 Н1.5 sha256, Н3 «Process start» шаг 2
-/sha256	domainconsole	at start: «sha256 does not match» — does not start, code 2	0	строка	P/02.3 Н1.5 sha256, Н3 «Process start» шаг 2
-/sha256	resource	at start: «sha256 does not match» — does not start, code 2	0	строка	P/02.3 Н1.5 sha256, Н3 «Process start» шаг 2
-/rev	<s>controller	at start: does not start, code 2	0	строка	P/02.3 Н1.5 rules, Н4
-/rev	<s>domain	at start: does not start, code 2	0	строка	P/02.3 Н1.5 rules, Н4
-/rev	<s>worker	at start: does not start, code 2	0	строка	P/02.3 Н1.5 rules, Н4
-/rev	admin	manifest put: refusal, writes nothing	0	строка	P/02.3 Н1.5 rules
-/rev	console	at start: does not start, code 2	0	строка	P/02.3 Н1.5 rules, Н4
-/rev	domain	at start: does not start, code 2	0	строка	P/02.3 Н1.5 rules, Н4
-/rev	domainconsole	at start: does not start, code 2	0	строка	P/02.3 Н1.5 rules, Н4
-/rev	resource	at start: does not start, code 2	0	строка	P/02.3 Н1.5 rules, Н4
-/files	<s>controller	this reader does not read the field files: the row is in effect	0	поле	P/02.3 Н1.5 rules
-/files	<s>domain	this reader does not read the field files: the row is in effect	0	поле	P/02.3 Н1.5 rules
-/files	<s>worker	this reader does not read the field files: the row is in effect	0	поле	P/02.3 Н1.5 rules
-/files	admin	manifest put: as other files — not «no changes», a new revision with the field by the files next to it	0	поле	P/02.3 Н3 «Manifest change»
-/files	console	the static files door and each file — 503 unavailable, the other doors serve	0	поле	P/06.5 Н2 «Статические файлы»
-/files	domain	this reader does not read the field files: the row is in effect	0	поле	P/02.3 Н1.5 rules
-/files	domainconsole	this reader does not read the field files: the row is in effect	0	поле	P/02.3 Н1.5 rules
-/files	resource	this reader does not read the field files: the row is in effect	0	поле	P/02.3 Н1.5 rules
-	<s>controller	the whole row is unreadable: at start — does not start, code 2, without restart	1	строка	P/02.3 Н3 «Process start», Н4
-	<s>domain	the whole row is unreadable: at start — does not start, code 2, without restart	1	строка	P/02.3 Н3 «Process start», Н4
-	<s>worker	the whole row is unreadable: at start — does not start, code 2, without restart	1	строка	P/02.3 Н3 «Process start», Н4
-	admin	the whole row is unreadable: manifest put — refusal, writes nothing, code ≠ 0; the operator fixes the row	1	строка	P/02.3 Н1.5 rules, Н4
-	console	the whole row is unreadable: at start — does not start, code 2, without restart	1	строка	P/02.3 Н3 «Process start», Н4
-	domain	the whole row is unreadable: at start — does not start, code 2, without restart	1	строка	P/02.3 Н3 «Process start», Н4
-	domainconsole	the whole row is unreadable: at start — does not start, code 2, without restart	1	строка	P/02.3 Н3 «Process start», Н4
-	resource	the whole row is unreadable: at start — does not start, code 2, without restart	1	строка	P/02.3 Н3 «Process start», Н4
+/yaml	<s>controller	at start: loading is refused — does not start, code 2	0	row	P/02.3 Н3 «Process start» шаг 3
+/yaml	<s>domain	at start: loading is refused — does not start, code 2	0	row	P/02.3 Н3 «Process start» шаг 3
+/yaml	<s>worker	at start: loading is refused — does not start, code 2	0	row	P/02.3 Н3 «Process start» шаг 3
+/yaml	admin	manifest put: refusal, writes nothing	0	row	P/02.3 Н1.5 rules
+/yaml	console	at start: loading is refused — does not start, code 2	0	row	P/02.3 Н3 «Process start» шаг 3
+/yaml	domain	at start: loading is refused — does not start, code 2	0	row	P/02.3 Н3 «Process start» шаг 3
+/yaml	domainconsole	at start: loading is refused — does not start, code 2	0	row	P/02.3 Н3 «Process start» шаг 3
+/yaml	resource	at start: loading is refused — does not start, code 2	0	row	P/02.3 Н3 «Process start» шаг 3
+/sha256	<s>controller	at start: «sha256 does not match» — does not start, code 2	0	row	P/02.3 Н1.5 sha256, Н3 «Process start» шаг 2
+/sha256	<s>domain	at start: «sha256 does not match» — does not start, code 2	0	row	P/02.3 Н1.5 sha256, Н3 «Process start» шаг 2
+/sha256	<s>worker	at start: «sha256 does not match» — does not start, code 2	0	row	P/02.3 Н1.5 sha256, Н3 «Process start» шаг 2
+/sha256	admin	manifest put: refusal, writes nothing	0	row	P/02.3 Н1.5 rules
+/sha256	console	at start: «sha256 does not match» — does not start, code 2	0	row	P/02.3 Н1.5 sha256, Н3 «Process start» шаг 2
+/sha256	domain	at start: «sha256 does not match» — does not start, code 2	0	row	P/02.3 Н1.5 sha256, Н3 «Process start» шаг 2
+/sha256	domainconsole	at start: «sha256 does not match» — does not start, code 2	0	row	P/02.3 Н1.5 sha256, Н3 «Process start» шаг 2
+/sha256	resource	at start: «sha256 does not match» — does not start, code 2	0	row	P/02.3 Н1.5 sha256, Н3 «Process start» шаг 2
+/rev	<s>controller	at start: does not start, code 2	0	row	P/02.3 Н1.5 rules, Н4
+/rev	<s>domain	at start: does not start, code 2	0	row	P/02.3 Н1.5 rules, Н4
+/rev	<s>worker	at start: does not start, code 2	0	row	P/02.3 Н1.5 rules, Н4
+/rev	admin	manifest put: refusal, writes nothing	0	row	P/02.3 Н1.5 rules
+/rev	console	at start: does not start, code 2	0	row	P/02.3 Н1.5 rules, Н4
+/rev	domain	at start: does not start, code 2	0	row	P/02.3 Н1.5 rules, Н4
+/rev	domainconsole	at start: does not start, code 2	0	row	P/02.3 Н1.5 rules, Н4
+/rev	resource	at start: does not start, code 2	0	row	P/02.3 Н1.5 rules, Н4
+/files	<s>controller	this reader does not read the field files: the row is in effect	0	field	P/02.3 Н1.5 rules
+/files	<s>domain	this reader does not read the field files: the row is in effect	0	field	P/02.3 Н1.5 rules
+/files	<s>worker	this reader does not read the field files: the row is in effect	0	field	P/02.3 Н1.5 rules
+/files	admin	manifest put: as other files — not «no changes», a new revision with the field by the files next to it	0	field	P/02.3 Н3 «Manifest change»
+/files	console	the static files door and each file — 503 unavailable, the other doors serve	0	field	P/06.5 Н2 «Статические файлы»
+/files	domain	this reader does not read the field files: the row is in effect	0	field	P/02.3 Н1.5 rules
+/files	domainconsole	this reader does not read the field files: the row is in effect	0	field	P/02.3 Н1.5 rules
+/files	resource	this reader does not read the field files: the row is in effect	0	field	P/02.3 Н1.5 rules
+	<s>controller	the whole row is unreadable: at start — does not start, code 2, without restart	1	row	P/02.3 Н3 «Process start», Н4
+	<s>domain	the whole row is unreadable: at start — does not start, code 2, without restart	1	row	P/02.3 Н3 «Process start», Н4
+	<s>worker	the whole row is unreadable: at start — does not start, code 2, without restart	1	row	P/02.3 Н3 «Process start», Н4
+	admin	the whole row is unreadable: manifest put — refusal, writes nothing, code ≠ 0; the operator fixes the row	1	row	P/02.3 Н1.5 rules, Н4
+	console	the whole row is unreadable: at start — does not start, code 2, without restart	1	row	P/02.3 Н3 «Process start», Н4
+	domain	the whole row is unreadable: at start — does not start, code 2, without restart	1	row	P/02.3 Н3 «Process start», Н4
+	domainconsole	the whole row is unreadable: at start — does not start, code 2, without restart	1	row	P/02.3 Н3 «Process start», Н4
+	resource	the whole row is unreadable: at start — does not start, code 2, without restart	1	row	P/02.3 Н3 «Process start», Н4

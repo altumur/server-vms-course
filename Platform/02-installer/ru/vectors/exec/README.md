@@ -2,9 +2,9 @@
 
 Текст производный от `vectors/exec/README.md`, руками не правится: источник — английский [`vectors/exec/README.md`](../../../vectors/exec/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
-Владелец — глава [P/02.1](../../spec/02.1-installer.norms.md) загрузчика (Н1.3 `worker.exec`, определение `execLine`; ADR-0091
+Владелец — глава [P/02.1](../../spec/02.1-installer.norms.md) загрузчика (N1.3 `worker.exec`, определение `execLine`; ADR-0091
 доп. (4)–(6)). Участники — загрузчик (отказ манифеста с путём ключа) и раннер `w2c-run.sh` ([P/02.4](../../spec/02.4-installer.norms.md)
-Н1.9: `worker`, `domainworker`, `part` исполняют argv сами, без оболочки). Байты пишет «Спецификация».
+N1.9: `worker`, `domainworker`, `part` исполняют argv сами, без оболочки). Байты пишет «Спецификация».
 
 ## `cases.tsv`
 

@@ -1,4 +1,4 @@
-# The merge and pruning of domain/revoked at a member (the domain key set contract «Отзывы», merge, prune; KEYS-G01): {own, answer, now} → the jtis of the written row. The form — README.
+# The merge and pruning of domain/revoked at a member (the domain key set contract «Revocations», merge, prune; KEYS-G01): {own, answer, now} → the jtis of the written row. The form — README.
 case	input	expect	note
 dup-own	{"own":"x:100,x:200","answer":null,"now":161}	"x:200"	a repeated jti in its own row — the largest exp: a repeat does not shorten a revocation (x:100 at now 161 would be pruned)
 dup-answer	{"own":"","answer":"x:200,x:100","now":161}	"x:200"	a repeated jti in the answer — the largest exp

@@ -4,12 +4,12 @@ This English text is the source; the Russian translation `ru/vectors/keys/README
 
 The vectors of [the domain key set contract](../../contracts/keys.md): the function `keys(pinned, held, offered)` — accept the set
 `domain/keys` signed by the root, only forward. The owner is lesson P/08, chapter 8.2; the function is performed by the member's agent (9.1),
-the cluster console ([P/06.3](../../../06-console/spec/06.3-console.norms.md) «Ключи есть» (keys exist)) and the process `domain` at a move and at
-following (the review analysis of stage A 8–10, № 13 / decision 2; ADR-0083 addendum (13)). The bytes are written by «Спецификация» (ADR-0083);
+the cluster console ([P/06.3](../../../06-console/spec/06.3-console.norms.md) «Keys exist» (keys exist)) and the process `domain` at a move and at
+following (the review analysis of stage A 8–10, № 13 / decision 2; ADR-0083 addendum (13)). The bytes are written by «Specification» (ADR-0083);
 the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
-The rows were transferred from the inputs of the command `keys` of the acceptance of М11/2
-(`inputs/keys-*.json`, sc. 01–03) without a change of bytes; `case` is the name of the input file. The scenarios М11/02 sc. 01–03 and their inputs
+The rows were transferred from the inputs of the command `keys` of the acceptance of M11/2
+(`inputs/keys-*.json`, sc. 01–03) without a change of bytes; `case` is the name of the input file. The scenarios M11/02 sc. 01–03 and their inputs
 were removed by the move of lesson 8 (ADR-0083 addendum (14) item 17; the log is [the README of the package `domain-token`](../domain-token/README.md#source-log)): the table is the only source
 of these cases.
 
@@ -36,7 +36,7 @@ of the acceptance.
 | [`revoked.tsv`](revoked.tsv), 7 rows | `input` — `{own, answer, now}`: the member's own row `jtis`, the `jtis` of the holder's answer or `null`, the wall seconds; `expect` — the `jtis` of the row that the agent writes (`merge`, `repeat`, `prune` of the contract; `TOKEN_SKEW` 60; KEYS-G01) |
 
 The vectors were checked by reference Ed25519 (RFC 8032), X25519 (RFC 7748) and JCS (RFC 8785) against the text of the contract, not against the code
-of implementations; on a divergence the contract is right, the vector is corrected by «Спецификация».
+of implementations; on a divergence the contract is right, the vector is corrected by «Specification».
 
 ## Vector wire
 

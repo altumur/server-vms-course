@@ -1,4 +1,4 @@
 # Outcomes of an unreadable row domain/move-ask (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domain	the whole row is unreadable: the move does not refuse, the row is rewritten by CAS on the version read, the cause goes to the log without the value (P2; C08-MOVE-BY-FILE-01)	0	строка	P/08.8 Н1.8 шаг 4a
+	domain	the whole row is unreadable: the move does not refuse, the row is rewritten by CAS on the version read, the cause goes to the log without the value (P2; C08-MOVE-BY-FILE-01)	0	row	P/08.8 Н1.8 шаг 4a

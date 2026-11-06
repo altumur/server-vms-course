@@ -4,9 +4,9 @@ events-root	<PLATFORM_DIR>/events	dir	2771	w2c	w2c-events	the events root — pa
 resource-root	<RESOURCE_ROOT>	dir	2771	w2c	w2c-events	RESOURCE_ROOT set explicitly is itself the events root: the same 2771, the trees under it — 2770/2750 (EJ-G12)
 workers-dir	<PLATFORM_DIR>/events/.workers	dir	2771	-	w2c-events	the path to the locks — passage for others without reading (PL-G03)
 workers-sub	<PLATFORM_DIR>/events/.workers/testsub	dir	2775	-	w2c-events	the subsystem's directory of locks — listing and reading for others (the workers' script), the group writes (PL-G02)
-lock-file	<PLATFORM_DIR>/events/.workers/testsub/<экземпляр>.lock	file	0644	<пользователь воркера>	w2c-events	the lock file — reading for others (PL-G02)
+lock-file	<PLATFORM_DIR>/events/.workers/testsub/<instance>.lock	file	0644	<worker user>	w2c-events	the lock file — reading for others (PL-G02)
 tree-dir	<PLATFORM_DIR>/events/testsub	dir	2770	-	w2c-events	the tree's directory — more than one user of the group writes and deletes (EJ-L02)
 unit-dir	<PLATFORM_DIR>/events/testsub/c1	dir	2770	-	w2c-events	the unit's directory — the writer creates, the resource deletes
-bucket-one-writer	<PLATFORM_DIR>/events/testsub/c1/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	0640	<пользователь воркера>	w2c-events	the unit's bucket — one writer
+bucket-one-writer	<PLATFORM_DIR>/events/testsub/c1/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	0640	<worker user>	w2c-events	the unit's bucket — one writer
 audit-bucket	<PLATFORM_DIR>/events/audit/console/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	0640	w2c	w2c-events	the role's journal — the processes of one user
 audit-resource-bucket	<PLATFORM_DIR>/events/audit/resource/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	0640	w2c	w2c-events	the resource journal bucket; processes of this role share one writing user

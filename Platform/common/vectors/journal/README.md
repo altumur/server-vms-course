@@ -7,7 +7,7 @@ The owner is [the event journal contract](../../contracts/event-journal.md): `bu
 of P/05 (`05-resource/data/events-*.schema.json`: `events-unit`, `events-unit-alarms`, `events-audit`,
 `events-audit-alarms`, `events-console`, `events-console-alarms`, `events-mirror`). The participants are the writers and the readers
 of the trees of events and objects: the worker, the console, the controller, the resource ([P/05](../../../05-resource/spec/05-resource.norms.md)
-Н1.1, Н1.2, Н1.4). The bytes are written by «Спецификация».
+N1.1, N1.2, N1.4). The bytes are written by «Specification».
 
 ## `bucket.tsv`
 
@@ -59,7 +59,7 @@ the objects client contract: `03-worker`, `04-controller`, `06-console`, `08-dom
 `years.tsv`, `append.tsv` and `names.tsv` the rows `write-*` — the writers of the roots of events and objects: the worker (`03-worker`,
 `observe`), the console (`06-console`, the journal and the marks) and every role with its own journal `audit` (`04-controller`,
 `05-resource`, `08-domain`, `09-agent`, `10-domain-console`); `modes.tsv` — the creator of the path of the row: the roots
-(`events-root`, `resource-root`) — the installer (`02-installer`, P/02.4 Н1.2), `.workers`, the lock and the tree `testsub`
+(`events-root`, `resource-root`) — the installer (`02-installer`, P/02.4 N1.2), `.workers`, the lock and the tree `testsub`
 (`workers-dir`, `workers-sub`, `lock-file`, `tree-dir`, `unit-dir`, `bucket-one-writer`) — the worker (`03-worker`),
 `audit-bucket` — the console (`06-console`); `audit-resource-bucket` — the resource (`05-resource`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-26).
 

@@ -58,7 +58,7 @@ scenario	step	request	expect
 10-table-secret	2	store GET /v1/get?key=testsub2/shelves/sh1	200 {"items": {"feed_secret": "~enc:v2:", "feed_user": "u"}}
 10-table-secret	3	console GET /shelves	200 {"shelves": [{"name": "sh1", "feed": "https://hub.example/a", "feed_user": "u", "feed_secret": "@absent"}]}
 10-table-secret	4	console GET /shelves/sh1	200 {"name": "sh1", "feed_user": "u", "feed_secret": "@absent"}
-# 11-reseal-at-start (P/06 coverage audit, second Gemini pass, G04; Н3 «перезапечатать при старте»): plaintext secrets of a unit row, table row and seed_secret of door/signer written outside the console become enc:v2: envelopes after restart; unit revision is unchanged; door/keys gets the signer's kid and its seed's public key.
+# 11-reseal-at-start (P/06 coverage audit, second Gemini pass, G04; N3 «перезапечатать при старте»): plaintext secrets of a unit row, table row and seed_secret of door/signer written outside the console become enc:v2: envelopes after restart; unit revision is unchanged; door/keys gets the signer's kid and its seed's public key.
 11-reseal-at-start	1	@as console store POST /v1/write {"id":"21","op":"put","key":"testsub2/tallies/t11","items":{"id":"t11","revision":"1","name":"t11","of":"c1","feed":"https://hub.example/k","feed_secret":"plain11"},"cas":""}	200
 11-reseal-at-start	2	@as console store POST /v1/write {"id":"22","op":"put","key":"testsub2/shelves/sh11","items":{"name":"sh11","zone":"z1","feed":"https://hub.example/s","feed_secret":"plain-s11","by":"operator","at":"1000"},"cas":""}	200
 11-reseal-at-start	3	@as console store POST /v1/write {"id":"23","op":"put","key":"door/signer","items":{"kid":"k-acc","seed_secret":"1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f"},"cas":""}	200

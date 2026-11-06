@@ -1,4 +1,4 @@
-# The freshness of a contender's mark: the age of the observed version → fresh at CONTENDER_FRESH = 300 s (the observation contract «Свежесть метки соперника»; C06-CONTENDER-FRESH-33-01). The form — README beside it.
+# The freshness of a contender's mark: the age of the observed version → fresh at CONTENDER_FRESH = 300 s (the observation contract «Freshness of a contender mark»; C06-CONTENDER-FRESH-33-01). The form — README beside it.
 case	age	fresh	note
 first-look	0	true	first look — age 0: fresh (the field at is not an input)
 below-int	299	true	CONTENDER_FRESH − 1: fresh

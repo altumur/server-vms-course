@@ -46,9 +46,8 @@ def keys(root):
     """Столбец key пакета family-read (V7-FAMILY-KEY-PLACEHOLDER-01): пока у курса нет таблицы плейсхолдеров README
     каталога — черновик навыка; пока у пакета прежний заголовок — построитель шага 6 на месте."""
     from v7 import transition
-    readme = root / spec.KEYS_README
-    if not readme.is_file():
-        shutil.copy(HERE / "keys-readme.draft.md", readme)
+    if not (root / spec.KEYS_TABLE).is_file():
+        raise AssertionError("the canonical typed key table is required")
     head = (root / spec.FAMILY_READ / "01.tsv").read_text(encoding="utf-8").split("\n", 1)[0].split("\t")
     if head != spec.FR_HEADER:
         transition.family_keys(root)
@@ -181,16 +180,16 @@ class TestSchemaPlaces(unittest.TestCase):
         return spec.load_outcomes(p, self.DOC)
 
     def test_outcomes_reader(self):
-        out = self.outcomes([["", "console", "x", "1", "строка", "N"], ["", "<s>worker", "y", "1", "строка", "N"],
-                             ["/a/b", "*", "z", "0", "поле", "N"]])
+        out = self.outcomes([["", "console", "x", "1", "row", "N"], ["", "<s>worker", "y", "1", "row", "N"],
+                             ["/a/b", "*", "z", "0", "field", "N"]])
         self.assertEqual(spec.readers_of(out), ["console", "<s>worker"])
         self.assertEqual([o.path for o in spec.outcomes_for(out, ["/a/b"], "console")], ["/a/b"])
         self.assertEqual([o.outcome for o in spec.outcomes_for(out, ["/zz"], "<s>worker")], ["y"])
-        for bad in ([["", "*", "x", "1", "строка", "N"]],                                   # пустой путь — не *
-                    [["", "console", "x", "1", "строка", "N"], ["", "console", "y", "1", "строка", "N"]],
-                    [["", "nobody", "x", "1", "строка", "N"]],                              # не роль
-                    [["", "console", "x", "1", "строка", "N"], ["/a/b/c", "*", "x", "1", "поле", "N"]],
-                    [["/a/b", "*", "x", "1", "поле", "N"]]):                                # нет пустого пути
+        for bad in ([["", "*", "x", "1", "row", "N"]],                                   # пустой путь — не *
+                    [["", "console", "x", "1", "row", "N"], ["", "console", "y", "1", "row", "N"]],
+                    [["", "nobody", "x", "1", "row", "N"]],                              # не роль
+                    [["", "console", "x", "1", "row", "N"], ["/a/b/c", "*", "x", "1", "field", "N"]],
+                    [["/a/b", "*", "x", "1", "field", "N"]]):                                # нет пустого пути
             with self.assertRaises(spec.SpecError):
                 self.outcomes(bad)
 
@@ -400,9 +399,9 @@ class TestTree(unittest.TestCase):
         cat = spec.read_catalog(root)
         errors, _ = spec.family_read(root, cat)
         self.assertTrue(any("V7 stack gives refused ['']" in m for _, m in errors), errors[:2])
-        readme = root / "Platform/common/ru" / spec.KEYS_README.relative_to("Platform/common")   # таблица — у ru/ (ADR-0124)
+        readme = root / spec.KEYS_TABLE
         readme.write_text("\n".join(ln for ln in readme.read_text(encoding="utf-8").split("\n")
-                                     if not ln.startswith("| `<sub>`")), encoding="utf-8")
+                                     if not ln.startswith("<sub>\t")), encoding="utf-8")
         errors, _ = spec.family_read(root, cat)
         self.assertTrue(any("placeholder <sub> is not in the table" in m for _, m in errors), errors[:2])
 
@@ -477,8 +476,24 @@ class TestTree(unittest.TestCase):
         cells = {"need": 0, "owner": 1, "desc": 2}
         diff, used, n, translated = [], {}, 0, 0
 
-        def neutral(text):                      # что перевод не меняет: код, числа, ссылки на нормы
-            return sorted(re.findall(r"`[^`]*`|Н[0-9.]+[а-я]?|P/[0-9.]+|ADR-[0-9]+|[0-9]+", text))
+        # Historical table keys use the old placeholder spelling. Compare their
+        # translated addresses, while retaining original registry coordinates.
+        import csv
+        dictionary = ROOT / "Platform/common/ru/placeholders.tsv"
+        labels = {r['ru']: r['en'] for r in csv.DictReader(
+            (line for line in dictionary.read_text().splitlines() if line and not line.startswith('#')), delimiter='\t')}
+        labels.update({'сервер': 'host', 'ключ': 'object-key'})
+
+        def translated_address(value):
+            return re.sub(r'<([^<>]+)>', lambda m: '<' + labels.get(m[1], m[1]) + '>', value)
+
+        def neutral(text):                      # что перевод не меняет: форма кода, числа, ссылки на нормы
+            # ADR-0121 доп. (5): номера Н… → N… (суффикс по порядку буквы), слова в коде переведены — у `…` сверяется
+            # форма (знаки и числа), а не слова
+            text = re.sub(r"Н([0-9.]+)([а-з]?)", lambda m: "N" + m.group(1) + ("abcdefgh"["абвгдежз".index(m.group(2))]
+                                                                              if m.group(2) else ""), text)
+            out = re.findall(r"`[^`]*`|N[0-9.]+[a-h]?|P/[0-9.]+|ADR-[0-9]+|[0-9]+", text)
+            return sorted(re.sub(r"[A-Za-zА-Яа-яЁё_]+(?:[ -]+[A-Za-zА-Яа-яЁё_]+)*", "w", x) if x.startswith("`") else x for x in out)
         for f in files:
             a = rows(git("show", "%s:%s" % (tag, f)))
             if not a:
@@ -487,7 +502,7 @@ class TestTree(unittest.TestCase):
             ru = TREE / parts[0] / parts[1] / "ru" / Path(*parts[2:])
             b = rows((ru if ru.is_file() else TREE / f).read_text(encoding="utf-8"))
             for k, v in a.items():
-                w = b.get(k)
+                w = b.get((k[0], translated_address(k[1]), k[2]))
                 if w is None:
                     continue
                 n += 1
@@ -497,13 +512,14 @@ class TestTree(unittest.TestCase):
                     place = (f, section_, k[2], col)
                     if place in reg:
                         was, became, _ = reg[place]
-                        used[place] = w[2 + i] in (became, was) and old[i] == was
+                        used[place] = w[2 + i] in (translated_address(became), was) and old[i] == was
                     elif old[i] != w[2 + i]:
                         if re.search("[А-Яа-яЁё]", old[i]) and neutral(old[i]) == neutral(w[2 + i]):
                             translated += 1        # перевод ADR-0121: код, числа и ссылки те же; смысл — ревью перевода
                             continue
                         diff.append((f, section_, k[2], col, old[i][:80], w[2 + i][:80]))
         self.assertGreater(n, 1500)
+        self.maxDiff = None
         self.assertEqual(diff, [], "расхождение смысла без строки v7/sections-meaning-deltas.tsv")
         stale = [place for place in reg if not used.get(place)]
         self.assertEqual(stale, [], "строка реестра: места нет, «было» не то или ячейка ни «было», ни «стало»")
@@ -580,18 +596,18 @@ class TestTree(unittest.TestCase):
         self.assertEqual(len(bad), 2, bad)
 
     def test_schema_word(self):
-        """V7-DOMAIN-SLOT-PULSE-SCHEMA-01: `<схема>.schema.json#<слово>` — та же схема, исходы `<схема>.<слово>.outcomes.tsv`;
+        """V7-DOMAIN-SLOT-PULSE-SCHEMA-01: `<schema>.schema.json#<word>` — та же схема, исходы `<schema>.<word>.outcomes.tsv`;
         нет файла исходов слова — красное; слово не по грамматике — красное; читатели строки — по своему файлу."""
         sys.path.insert(0, str(HERE.parent))
         import check_spec
         root = self.copy()
         cat = root / spec.CATALOG
         lines = cat.read_text(encoding="utf-8").split("\n")
-        i = next(i for i, ln in enumerate(lines) if ln.startswith("<sub>/slots/<имя>\t"))
-        lines.insert(i + 1, lines[i].replace("<sub>/slots/<имя>", "<sub>/probe/<имя>", 1)
+        i = next(i for i, ln in enumerate(lines) if ln.startswith("<sub>/slots/<name>\t"))
+        lines.insert(i + 1, lines[i].replace("<sub>/slots/<name>", "<sub>/probe/<name>", 1)
                      .replace("03-worker/data/slots.schema.json", "03-worker/data/slots.schema.json#probe"))
         cat.write_text("\n".join(lines), encoding="utf-8")
-        row = next(r for r in spec.read_catalog(root) if r["key"] == "<sub>/probe/<имя>")
+        row = next(r for r in spec.read_catalog(root) if r["key"] == "<sub>/probe/<name>")
         self.assertTrue(spec.is_v7_family(row))
         with self.assertRaisesRegex(spec.SpecError, "slots.probe.outcomes.tsv: no outcomes file"):
             spec.load_family(root, row)
@@ -686,11 +702,11 @@ class TestTree(unittest.TestCase):
         (data / "probe.layers.tsv").write_text(gen.layer_table(doc), encoding="utf-8")
         (data / "probe.outcomes.tsv").write_text(
             "path\treader\toutcome\tpriority\tunit\tnorm\n"
-            "\tliveworker\tпульс не читается\t1\tстрока\tV/01.2 Н1.4\n"
-            "/status\t*\tэлемент не читается\t1\tэлемент\tV/01.2 Н1.4\n", encoding="utf-8")
+            "\tliveworker\tпульс не читается\t1\trow\tV/01.2 Н1.4\n"
+            "/status\t*\tэлемент не читается\t1\telement\tV/01.2 Н1.4\n", encoding="utf-8")
         cat = root / vms.CATALOG
         head = "\t".join(vms.FIELDS) + "\n"
-        row = ["cam/heartbeats/<имя>", "object", "V/01.2", "put=camworker(свой пульс)", "liveworker", "-", "1",
+        row = ["cam/heartbeats/<name>", "object", "V/01.2", "put=camworker(свой пульс)", "liveworker", "-", "1",
                "VMS/01-cam/data/probe.schema.json", "V/01.2 Н1.4", ""]
 
         def run(r=row):
@@ -716,7 +732,7 @@ class TestTree(unittest.TestCase):
         lines = table.read_text(encoding="utf-8").split("\n")
         self.assertTrue(any("/probe_n x-integer" in ln and "\trefused\t" in ln for ln in lines))
         for bad, want in (
-                (dict(enumerate(row)) | {0: "rec/heartbeats/<имя>"}, "<sub> of <sub>/heartbeats/<имя> is rec, not cam"),
+                (dict(enumerate(row)) | {0: "rec/heartbeats/<name>"}, "<sub> of <sub>/heartbeats/<name> is rec, not cam"),
                 (dict(enumerate(row)) | {9: "/stood_in"}, "is closed"),
                 (dict(enumerate(row)) | {4: "liveworker, recworker"}, "no outcome of the whole value (empty path) for "
                                                                      "the reader recworker"),
@@ -749,18 +765,18 @@ class TestTree(unittest.TestCase):
         (data / "probe-io.layers.tsv").write_text(gen.layer_table(doc), encoding="utf-8")
         (data / "probe-io.outcomes.tsv").write_text(
             "path\treader\toutcome\tpriority\tunit\tnorm\n"
-            "\tautoworker\tсобытие не читается\t1\tстрока\tV/01.2 Н1.4\n", encoding="utf-8")
+            "\tautoworker\tсобытие не читается\t1\trow\tV/01.2 Н1.4\n", encoding="utf-8")
         cat = root / vms.CATALOG
         rows = [[k, "file", "V/01.2", "append=camworker", "autoworker", "-", "1",
                  "VMS/01-cam/data/probe-io.schema.json", "V/01.2 Н1.4", ""] for k in (
-            "<корень событий>/cam/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl",
-            "<корень событий>/cam.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl")]
+            "<events root>/cam/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl",
+            "<events root>/cam.alarms/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl")]
         cat.write_text("".join("\t".join(r) + "\n" for r in [vms.FIELDS] + rows), encoding="utf-8")
         # Дерево тревог: `cam.alarms` — не литерал `<sub>` (грамматика `[a-z][a-z0-9_-]{0,31}`), семья — `<sub>.alarms`.
         _, judges = vms.check_rows(root)
         self.assertEqual(sorted(j.prow["key"] for j in judges.values()), [
-            "<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl",
-            "<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl"])
+            "<events root>/<sub>.alarms/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl",
+            "<events root>/<sub>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl"])
         self.assertEqual(vms.sample_string({"pattern": "^(?:https?://[\\s\\S]*)$"}), "http://")
         self.assertEqual(vms.sample_string({"pattern": "^(?:\\d{4}-[a-z]{2,})$", "minLength": 8}), "1111-aaaaaaaa")
         vms.build_tables(root)
@@ -1013,8 +1029,8 @@ class TestStack(unittest.TestCase):
         """Единица исходов: отказ ниже строки с единицей `поле`/`элемент` делает нечитаемым только её место; у
         читателя — его строки и `*`."""
         O = spec.Outcome
-        rows = [O("", "console", "строка нечитаема", 2, "строка", "n"), O("", "admin", "иначе", 2, "строка", "n"),
-                O("/a", "*", "поле a пропущено", 1, "поле", "n"), O("/b", "*", "b — строка целиком", 3, "строка", "n")]
+        rows = [O("", "console", "строка нечитаема", 2, "row", "n"), O("", "admin", "иначе", 2, "row", "n"),
+                O("/a", "*", "поле a пропущено", 1, "field", "n"), O("/b", "*", "b — строка целиком", 3, "row", "n")]
         got = lambda paths, r: [o.outcome for o in spec.outcomes_for(rows, paths, r)]   # noqa: E731
         self.assertEqual(got(["/a/x"], "console"), ["поле a пропущено"])
         self.assertEqual(got(["/b/x"], "console"), ["строка нечитаема"])

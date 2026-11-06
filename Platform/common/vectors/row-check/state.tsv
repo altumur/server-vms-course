@@ -1,5 +1,5 @@
 # The state of a unit (the row check contract «Unit state» acts, unreadable; the form state.schema.json by the family judge in the mode
-# of the reader, value — by the schema unit.state.<имя> of the manifest testsub2; STATE169-VECTORS-01). The form — README.
+# of the reader, value — by the schema unit.state.<name> of the manifest testsub2; STATE169-VECTORS-01). The form — README.
 case	name	unit	state	expect	note
 acts	"result"	{"born":"0123456789abcdef0123456789abcdef","revision":"3"}	{"born":"0123456789abcdef0123456789abcdef","revision":"3","epoch":"2","value":"{\"state\":\"done\"}"}	{"acts":true,"unreadable":false,"value":{"state":"done"}}	a live row, born and revision equal, value by the schema — acts
 acts-other-epoch	"result"	{"born":"0123456789abcdef0123456789abcdef","revision":"3"}	{"born":"0123456789abcdef0123456789abcdef","revision":"3","epoch":"9","value":"{\"state\":\"done\"}"}	{"acts":true,"unreadable":false,"value":{"state":"done"}}	the epoch is not compared on reading — the result survives a move

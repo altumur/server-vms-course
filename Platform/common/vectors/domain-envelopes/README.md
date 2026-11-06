@@ -5,13 +5,13 @@ This English text is the source; the Russian translation `ru/vectors/domain-enve
 The vectors of [the domain envelopes contract](../../contracts/domain-envelopes.md): the opening and the round of the envelopes `x25519:v1` (the contribution
 of a member to the book acceptance key) and `m1` (the holder's answer to a member). The package is common: one process seals, another opens
 (the agent and the holder are different lessons and, on the matrix stand, different implementations; review analysis of stage A 8–10, № 12; ADR-0083
-addendum (13)). The bytes are written by «Спецификация» (ADR-0083); the conformance of the product is by its acceptance against these tables (ADR-0080 addendum 16).
+addendum (13)). The bytes are written by «Specification» (ADR-0083); the conformance of the product is by its acceptance against these tables (ADR-0080 addendum 16).
 
-The rows were transferred from the inputs of the vector commands of the acceptance of М11 without a change of bytes: `x25519-*` — from
-М11/2 (`inputs/seal-*.json`, sc. 08–11), `m1-*` — from
-М11/3 (`inputs/seal-member-*.json`, sc. 11–12); `case` is
-the name of the input file. The scenarios М11/02 sc. 08–11 and М11/03 sc. 11, 12 and their inputs were removed by the move of lesson 8 (ADR-0083 addendum (14)
-item 17; the logs — [the README of the package `domain-token`](../domain-token/README.md#source-log) (М11/02), the acceptance of chapter P/08.3 (`Platform/08-domain/journal/corrections-3.tsv`, a log, not in the export)): the tables are the only source of these cases.
+The rows were transferred from the inputs of the vector commands of the acceptance of M11 without a change of bytes: `x25519-*` — from
+M11/2 (`inputs/seal-*.json`, sc. 08–11), `m1-*` — from
+M11/3 (`inputs/seal-member-*.json`, sc. 11–12); `case` is
+the name of the input file. The scenarios M11/02 sc. 08–11 and M11/03 sc. 11, 12 and their inputs were removed by the move of lesson 8 (ADR-0083 addendum (14)
+item 17; the logs — [the README of the package `domain-token`](../domain-token/README.md#source-log) (M11/02), the acceptance of chapter P/08.3 (`Platform/08-domain/journal/corrections-3.tsv`, a log, not in the export)): the tables are the only source of these cases.
 
 ## Run
 
@@ -23,8 +23,8 @@ the process `domain` (`08-domain`: the assembly of a book, the target of the tra
 the sealer: `x25519-round.tsv` — the agent of a member (`09-agent`) and the process `domain` (`08-domain`, `keys_sealed`),
 `m1-round.tsv` — the process `domain` (`08-domain`); the relay only carries envelopes — it performs no tables (ACC-VECTORS-CONNECT-02, the Architect's decision 2026-10-26).
 
-The commands and the output forms are the same as at the former acceptance of М11: `seal`, `seal-round` — [P/08.2](../../../08-domain/spec/08.2-domain.norms.md)
-Н5 (formerly М11/2 Н5); `seal-member`, `seal-member-round` — the table below (formerly М11/3 Н5, removed by the move of lesson 8; the input
+The commands and the output forms are the same as at the former acceptance of M11: `seal`, `seal-round` — [P/08.2](../../../08-domain/spec/08.2-domain.norms.md)
+N5 (formerly M11/2 N5); `seal-member`, `seal-member-round` — the table below (formerly M11/3 N5, removed by the move of lesson 8; the input
 of `seal-member` — `{seed, sealed}`, of `seal-member-round` — `{key, seed, plain}`; review analysis of stage B 8–10, № 22, Claude
 M-1); the comparison — a subset of fields, the cell `expect` sets `result` (and the value or the refusal word) (the reading of the commits
 of «cammeta-acceptance» 2026-10-20):
@@ -37,7 +37,7 @@ of «cammeta-acceptance» 2026-10-20):
 | `m1-round.tsv` | `seal-member-round` | `{result: ok, sealed: [<m1>, <m1>], opened: [<plain>, <plain>], distinct}` |
 
 At the rounds `ok` — both envelopes opened into `plain` and differ (`distinct: true`); the form of the envelopes — by the contract: `envelopes` —
-«Конверт `x25519:v1`», `sealed` — «Конверт m1».
+«Envelope `x25519:v1`», `sealed` — «Envelope m1».
 
 ## Keys
 
@@ -69,9 +69,9 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 
 ## Candidates
 
-- `keys_sealed` of the holder's transfer (`x25519:v1` to the `seal` of the target with AAD `take|<to>`, [P/08.8](../../../08-domain/spec/08.8-domain.norms.md) Н1.7 step 5) —
+- `keys_sealed` of the holder's transfer (`x25519:v1` to the `seal` of the target with AAD `take|<to>`, [P/08.8](../../../08-domain/spec/08.8-domain.norms.md) N1.7 step 5) —
   there are no vectors, it is checked by the stand of chapter 8.8; a package candidate.
 - The sealing of `m1` by the holder with the answer `carry` (the content of `sealed`) — there are no vectors: the round and the stand of chapter 8.3.
 
 The vectors are checked by reference X25519 (RFC 7748), HKDF-SHA256 (RFC 5869) and AES-256-GCM by the text of the contract, not by the code
-of implementations; on a discrepancy the contract is right, «Спецификация» corrects the vector.
+of implementations; on a discrepancy the contract is right, «Specification» corrects the vector.

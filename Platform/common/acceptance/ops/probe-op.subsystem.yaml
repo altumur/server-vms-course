@@ -1,4 +1,4 @@
-# probe-op — манифест стенда групповых операций (ADR-0095, P/06.9): воркера играет подставной воркер раннера, поэтому манифест не влияет на testsub и testsub2.
+# probe-op is the group-operations stand manifest (ADR-0095, P/06.9); the runner substitutes the worker, so this manifest does not affect testsub or testsub2.
 name: probe-op
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}, note: {type: string}}}
 placement: {capacity: {default: 1}}
