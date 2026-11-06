@@ -236,6 +236,7 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 		"common/secret-in cases.tsv":                {"*", "*"},
 		"common/slot-name cases.tsv":                {"*", "*"},
 		"common/tombstone cases.tsv":                {"*", "*"},
+		"common/turn cases.tsv":                     {"*", "*"},
 		"common/values-by-type cases.tsv":           {"*", "*"},
 		"common/crl cases.tsv":                      {"*", "*"},
 		"common/family-read 06.tsv":                 {"*", "*"},
@@ -432,6 +433,9 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 	case "common/tombstone cases.tsv":
 		a := vectoradapter.Tombstone(*in.Table, cellmap, files)
 		return wireAnswer(a, false)
+	case "common/turn cases.tsv":
+		a := vectoradapter.Turn(*in.Table, cellmap, files)
+		return wireAnswer(a, false)
 	case "common/values-by-type cases.tsv":
 		a := vectoradapter.ValuesByType(*in.Table, *in.Variant, cellmap, files)
 		return wireAnswer(a, false)
@@ -586,6 +590,7 @@ func wireShape(pkg, variant, cells, files string) bool {
 		"common/secret-in cases.tsv\x00":                {{"field,raw", "fields.yaml"}},
 		"common/slot-name cases.tsv\x00":                {{"input,op", ""}},
 		"common/tombstone cases.tsv\x00":                {{"input,op", ""}},
+		"common/turn cases.tsv\x00":                     {{"input", ""}},
 		"common/values-by-type cases.tsv\x00write":      {{"json,type", ""}},
 		"common/values-by-type cases.tsv\x00read":       {{"row,type", ""}},
 		"common/crl cases.tsv\x00":                      {{"input", ""}},

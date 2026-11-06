@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/turn",
+ "table": "cases.tsv",
+ "case": "operations-take-stale",
+ "variant": "",
+ "cells": {
+  "input": "{\"kind\":\"operations\",\"turn\":\"testsub/operations-turn\",\"me\":{},\"steps\":[{\"read\":{\"holder\":\"c-old\"},\"seen\":45,\"version\":3},{\"reply\":\"ok\",\"version\":4}]}"
+ },
+ "files": {}
+}

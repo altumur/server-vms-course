@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/turn",
+ "table": "cases.tsv",
+ "case": "operations-unknown-renew",
+ "variant": "",
+ "cells": {
+  "input": "{\"kind\":\"operations\",\"turn\":\"testsub/operations-turn\",\"me\":{},\"steps\":[{\"read\":null,\"seen\":0},{\"reply\":\"ok\",\"version\":1},{\"renew\":true},{\"reply\":\"none\"},{\"read\":{\"holder\":\"@same\"},\"seen\":0,\"version\":2},{\"reply\":\"ok\",\"version\":3}]}"
+ },
+ "files": {}
+}

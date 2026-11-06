@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/turn",
+ "table": "cases.tsv",
+ "case": "operations-unknown-take-applied",
+ "variant": "",
+ "cells": {
+  "input": "{\"kind\":\"operations\",\"turn\":\"testsub/operations-turn\",\"me\":{},\"steps\":[{\"read\":null,\"seen\":0},{\"reply\":\"none\"},{\"read\":{\"holder\":\"@same\"},\"seen\":0,\"version\":1},{\"reply\":\"ok\",\"version\":2}]}"
+ },
+ "files": {}
+}

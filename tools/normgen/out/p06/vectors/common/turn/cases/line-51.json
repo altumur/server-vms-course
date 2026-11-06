@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/turn",
+ "table": "cases.tsv",
+ "case": "operations-two-attempts-after-release",
+ "variant": "",
+ "cells": {
+  "input": "{\"kind\":\"operations\",\"turn\":\"testsub/operations-turn\",\"me\":{},\"steps\":[{\"read\":null,\"seen\":0},{\"reply\":\"ok\",\"version\":1},{\"renew\":true},{\"reply\":\"ok\",\"version\":2},{\"end\":true},{\"reply\":\"ok\",\"version\":3},{\"read\":{\"holder\":\"\"},\"version\":3,\"seen\":0},{\"reply\":\"none\"},{\"read\":{\"holder\":\"@same\"},\"version\":4,\"seen\":0},{\"reply\":\"ok\",\"version\":5},{\"end\":true},{\"reply\":\"ok\",\"version\":6}]}"
+ },
+ "files": {}
+}
