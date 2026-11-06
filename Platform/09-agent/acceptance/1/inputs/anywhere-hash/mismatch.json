@@ -1,0 +1,22 @@
+{
+  "fixture": "anywhere_hash",
+  "initial": {
+    "items": {
+      "doc": "{\"older\":0}",
+      "as_of": "50"
+    },
+    "index": "73",
+    "taken_sha256": "1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c"
+  },
+  "attempts": [
+    {
+      "body": "{\"as_of\":100,\"doc\":{\"ann\":0,\"élise\":120}}",
+      "advertised": {
+        "as_of": 100,
+        "sha256": "a5f22518241c045551a3bab1b0c768ec5c8707e00c773d53c9866a4f0177767b"
+      },
+      "received_at": 100,
+      "domain_age": 0
+    }
+  ]
+}
