@@ -1,0 +1,27 @@
+{
+  "base": "73096723594e9abcf35aa5ca0a9e86fa8bb1b1de",
+  "source_diff": "exactly one item7 line per EN/RU source",
+  "modified_req": "P/01.1-R145",
+  "unit_normalization": "LF, strip trailing spaces, one final LF",
+  "old_unit_sha256": "76f289ef2d899e45f643bb643a85564817a74624981be79f36b4f9a19fde31df",
+  "new_unit_sha256": "1fc8c16e0cc30fda07e163d279c6facdb502097ef4431be91985e7d8a163e2f9",
+  "unaffected_req_units_count": 145,
+  "unaffected_req_units_byte_exact": true,
+  "all_old_history_files_byte_exact": 15,
+  "flags/constants/schemas/seams/stages/CEL/common/P02/tools/skills/out/Source/VMS": "unchanged; checked by complete changed-path roster",
+  "new_values_or_tests_or_grammar": false,
+  "other_numeric_contexts": [
+    {
+      "path": "Platform/01-store/forms/daemon-flags.tsv",
+      "classification": "authoritative default5s, unchanged"
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.md:124",
+      "classification": "@sleep6 fixture explanation, pre-edit declared, unchanged"
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/3/README.md:125",
+      "classification": "@sleep6 fixture explanation, pre-edit declared, unchanged"
+    }
+  ]
+}
