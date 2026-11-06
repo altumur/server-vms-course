@@ -61,7 +61,7 @@ Without workers there is no placement; the counter c4 is created only in 04. The
 - **Static files and the shell of `testsub2` (sc. 26–28; ADR-0094 B7).** The bytes lie in `inputs/testsub2/`: the files of the list
   `console.files` of the manifest and `testsub2.shell.html`. The stand puts them next to the manifest before `manifest-put` (common README, «Manifests»).
   The files are acceptance data: the fonts are not real (magic and all byte values), `logo.svg` carries a script, `bundle.js` is 300045 bytes, two
-  parts of `FILE_PART`, the second is shorter, a text with non-ASCII at the boundary is not aligned; `empty.css` is empty, it has no parts; `api.js` and
+  parts of `FILE_PART` (262144 and 37901 bytes), the second is shorter. Its filler is ASCII; this fixture checks byte-part framing, not a split within a multibyte character; `empty.css` is empty, it has no parts; `api.js` and
   `apis/app.css` are names that only begin with `api`, next to the prohibition of `api/`. The manifest `probe-x` does not carry the word `console.shell`: on
   it sc. 06 steps 4–5 and sc. 27 steps 13–14 see a mounted subsystem without a page.
   Sc. 26 steps with `store` read by the role `console` the field `files` and the part rows of `bundle.js` (the form — P/02.3 N1.5; `<n>` from 0, there is no part 2);

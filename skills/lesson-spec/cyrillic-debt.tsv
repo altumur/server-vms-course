@@ -4,6 +4,7 @@ ready	Platform/01-store	-
 ready	Platform/03-worker	-
 ready	Platform/04-controller	-
 ready	Platform/05-resource	-
+ready	Platform/06-console	-
 ready	Platform/08-domain	-
 ready	Platform/09-agent	-
 ready	Platform/10-domain-console	-
@@ -13,8 +14,6 @@ debt	Platform/02-installer/acceptance/3/puts/pagedok-alt.shell.html	46
 debt	Platform/02-installer/acceptance/3/puts/pagedok.shell.html	34
 debt	Platform/02-installer/acceptance/5/variants/v13-refused-idem-read/refused	109
 debt	Platform/02-installer/acceptance/5/variants/v14-refused-secrets-reads-nested/refused	108
-debt	Platform/06-console/acceptance/5/inputs/testsub2/app.js	1
-debt	Platform/06-console/acceptance/5/inputs/testsub2/bundle.js	25425
 debt	Platform/07-console-module/README.md	5
 debt	Platform/07-console-module/spec/07-console-module.norms.md	247
 debt	Platform/lessons.tsv	138
