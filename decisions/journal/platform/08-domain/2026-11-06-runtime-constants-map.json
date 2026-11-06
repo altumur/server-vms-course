@@ -1,5 +1,6 @@
 {
   "base": "7b785e5e2e93cf93b562a405650cce30c5733c2a",
+  "followup_parent": "4fbeb8ee68f3f8f675245745a025d6a0a23980a6",
   "changes": [
     {
       "path": "Platform/08-domain/data/alarm-history.schema.json",
@@ -49,7 +50,7 @@
     {
       "path": "Platform/08-domain/data/break-glass.schema.json",
       "before_sha256": "d341e9a71b27868d89193305949308d641f7ceee75ccdee1139ec3d4ea65104f",
-      "after_sha256": "1025712ca40f183ed55db7c69ed61d5035b1ead90e5578c02358d36c8cfd1875"
+      "after_sha256": "669d424676bec17ecac631bb20cb30cc02efb3fddec72a21acaa5e43ee720f88"
     },
     {
       "path": "Platform/08-domain/data/deleting.schema.json",
@@ -279,7 +280,7 @@
     {
       "path": "Platform/08-domain/data/users.schema.json",
       "before_sha256": "c05e002f015c5d9c844ba817975f80496ca832388086ce41e23db9144cecd0b2",
-      "after_sha256": "0a96ed1148b142acf138257ef296f67b4bef965ec7d813cfc9e32593a91378f1"
+      "after_sha256": "5769c8b995e1063705c8b2a51c152e27b0bf91cb0b43185235814b0200e8505b"
     },
     {
       "path": "Platform/08-domain/data/view-rows.schema.json",
@@ -294,7 +295,7 @@
     {
       "path": "Platform/08-domain/forms/README.md",
       "before_sha256": "b1cf0546be16b0512feed7f4eab43434c1e888b1961edc7bd2664edf5693dee9",
-      "after_sha256": "4f74ca899cde006e21eac4c758c5bc29704d99596246290d30c933c5ff09b7b1"
+      "after_sha256": "ce702d9e0111c73b500a0e697c78ec91ea419d4cc6efab63bd1696e095ca6a75"
     },
     {
       "path": "Platform/08-domain/forms/refusals.tsv",
@@ -309,7 +310,7 @@
     {
       "path": "Platform/08-domain/ru/forms/README.md",
       "before_sha256": "ba765ebcac8f3fc66b76faf784b92b7a6e298f53037bd1c279663d594e564df6",
-      "after_sha256": "caeb7f1329f653a333feb9515f7864d4dee8ebdf5eb5af13e8c05680cae9c6c8"
+      "after_sha256": "df41580774cb06e85a090f4db7d00e75f9d8990de04d1104731301354065c05f"
     },
     {
       "path": "Platform/08-domain/ru/spec/08.1-domain.norms.md",
@@ -334,7 +335,7 @@
     {
       "path": "Platform/08-domain/ru/spec/08.4-domain.norms.md",
       "before_sha256": "be5065c8bb08cdc17264ea3be3916c7d88ad60ff53dd561df08b0bd73a0196c8",
-      "after_sha256": "bb8982ca7eefa675f2f308c2663c0d50e4a9b6f9d3fb261b821f5aa6550707ff"
+      "after_sha256": "f5b29842fd7721910710ac3377f2accb70d5f9d2186e7b6214d11f893a271385"
     },
     {
       "path": "Platform/08-domain/ru/spec/08.5-domain.norms.md",
@@ -384,7 +385,7 @@
     {
       "path": "Platform/08-domain/spec/08.4-domain.norms.md",
       "before_sha256": "9fe8f9f2223295903c9c1e8a5e5efead5343a596ac518dabb92aecf5efa8d578",
-      "after_sha256": "026dfd761ecf58195b7bd456011cf1143b15e5bebd476dc5c2fdc3e4614a9a26"
+      "after_sha256": "877045e0c6a9145837c8972b6c6d9653f5012819673b13f5ba0dbcc8416d3c9b"
     },
     {
       "path": "Platform/08-domain/spec/08.5-domain.norms.md",
@@ -412,9 +413,29 @@
       "after_sha256": "e032583b9e768f795bb86bc7a97f82f5a05d374f8eef03e5dc367b85f110b94e"
     },
     {
+      "path": "Platform/common/contracts/accept.md",
+      "before_sha256": "9b255767fd92361995aec4b101c20ce4e660c3537a8ccd3961e615ffa51402f8",
+      "after_sha256": "0ded199cab5d9c84be5abc65a4097f6bd869710459567ff01deae088ff1442db"
+    },
+    {
+      "path": "Platform/common/contracts/password-hash.md",
+      "before_sha256": "6a395ae4538720a7e77b301702e8ba5afd3b6aa60128ba2368f28ce714b1679b",
+      "after_sha256": "1f3f94a6bc2b72f47465bb396e0647e05b2e311d659820cf23a06ee89442668d"
+    },
+    {
+      "path": "Platform/common/ru/contracts/accept.md",
+      "before_sha256": "da30437d3ab1c780c570c42eb9ed09856431bb18ef2070b593a18d2ad2c3c8f6",
+      "after_sha256": "3f01ba6d71bd8c13da6c0b1965485fb335d54893c41f5995ffde3b1eded8ec10"
+    },
+    {
+      "path": "Platform/common/ru/contracts/password-hash.md",
+      "before_sha256": "78eb54a96e718276b5ce881505ea443b63f826f2f584eec499046e8047bb23e9",
+      "after_sha256": "f4b3e82f2444b0599fd747073f7f8ca9468c691e91b4514dcda2a5811669cb4f"
+    },
+    {
       "path": "decisions/adr-norms.tsv",
       "before_sha256": "241c76e72591aac66342c9a2d9b5e1e21a64cd87b6c52831a9ce8ca2dc6af81c",
-      "after_sha256": "85e188e215dabec61217fcd5a2a45716c546522b2274a09beb5d372282b462d8"
+      "after_sha256": "f44e232eb8bc0f9a2bbb295ffe5f2d97bfbe3fb1b8f3818d5eb4ccfee7077dc8"
     }
   ],
   "existing_values_unchanged": 26,
@@ -480,9 +501,21 @@
     "Platform/08-domain/data/view.schema.json"
   ],
   "schema_operational_trees_exact": true,
-  "all_vectors_acceptance_OpenAPI_stages_bytes_exact": true,
-  "all_common_bytes_exact_pending_reserved_scope": true,
-  "other_lessons_Source_VMS_tools_skills_untouched": true,
-  "status": "candidate for review103; not SOURCE READY until reserved references and subject checker",
-  "known_structural_errors": "40 old journal-reader paths only; review103811949bb3 is separately assigned"
+  "vectors_acceptance_OpenAPI_stages_bytes_exact": true,
+  "shared_scope_exactly_four_files": [
+    "Platform/common/contracts/accept.md",
+    "Platform/common/ru/contracts/accept.md",
+    "Platform/common/contracts/password-hash.md",
+    "Platform/common/ru/contracts/password-hash.md"
+  ],
+  "canonical_common_schema_byte_exact": true,
+  "password_hash_vectors": {
+    "rows": 13,
+    "byte_exact": true,
+    "sha256": "a485e8d50c03e61c55f8d643a9a81625c51d037c82899a106bd6acb1dfa44077"
+  },
+  "wire_cost_expansion": "600000",
+  "no_new_alias_runtime_option_accepted_cost": true,
+  "status": "SOURCE for subject checker; no full GATE/SUT claim",
+  "known_reader_dependency": "review103811949bb3 for relocated journal paths"
 }

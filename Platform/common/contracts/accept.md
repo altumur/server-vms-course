@@ -354,13 +354,15 @@ Moved from [P/09.2](../../09-agent/spec/09.2-agent.norms.md) N1.4 (`BATCH_LIMIT`
 are read by the relay (it writes the batch, P/09.2 N3) and by the holder (it accepts it, [P/08.3](../../08-domain/spec/08.3-domain.norms.md)
 N3 «the holder on `POST /api/relay/<relay>`», N4) — they have references here (C08-G05, the Architect's decision of 2026-10-25).
 
+`BATCH_LIMIT` and `KNOCKS` have one numeric source: the uniquely named rows of the [P/08 form](../../08-domain/forms/runtime-constants.tsv). In the following block the names denote those row values; `KNOCKS + 1` is the next stranger after the memory is full. The formula `BATCH_LIMIT = 4 × BODY_LIMIT` is unchanged; there is no new setting or wire field.
+
 ```yaml
-BATCH_LIMIT:   64 MiB     # = 4 × BODY_LIMIT (the section «Generation, mark, limits»); a body of POST /api/relay/<relay>
+BATCH_LIMIT:   the P/08 form value     # = 4 × BODY_LIMIT (the section «Generation, mark, limits»); a body of POST /api/relay/<relay>
                           # larger — 413 before parsing; the entries — in the order of the member names; a member larger than BODY_LIMIT is not sent (log)
-KNOCKS:        32 knocks, a knock body at most 256 KiB, with the field row — 768 KiB: the section row up to 512 KiB; at the relay — 32 strangers in memory, the last one from a name
-               replaces the former; stranger 33 evicts the oldest knock (by the reception time); the evicted one learns of it
+KNOCKS:        the P/08 form value; a knock body at most 256 KiB, with the field row — 768 KiB: the section row up to 512 KiB; at the relay — KNOCKS strangers in memory, the last one from a name
+               replaces the former; stranger KNOCKS + 1 evicts the oldest knock (by the reception time); the evicted one learns of it
                only by the holder's knocking (the section «The knock») — there is no new refusal
-holder:        at the holder, more than 32 knocks in a batch — those beyond the first 32 by name are skipped without a write; a knock with a body
+holder:        at the holder, more than KNOCKS knocks in a batch — those beyond the first KNOCKS by name are skipped without a write; a knock with a body
                larger than 256 KiB, with the field row — larger than 768 KiB — skipped without a write (as a knock out of form, P/08.3 N3 step 3); the batch lives; 413 — only
                a whole batch larger than BATCH_LIMIT
 answer:        the holder's answer to the client of the agent and of the relay (carry on POST and GET /api/carry, RelayAnswer on

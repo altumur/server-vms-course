@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "pwhash_secret": {
-   "description": "the same form as pwhash_secret of the person row (N1.1): pbkdf2-sha256$600000$<salt: 32 hex>$<key: 64 hex> of the break-glass password (≥ GLASS_MIN); in the row — a ring envelope, the hash form — of the opened value",
+   "description": "the same form as pwhash_secret of the person row (N1.1): pbkdf2-sha256$<PBKDF2_ITERATIONS>$<salt: 32 hex>$<key: 64 hex> of the break-glass password (≥ GLASS_MIN); in the row — a ring envelope, the hash form — of the opened value",
    "type": "string",
    "x-codec": [
     "string"

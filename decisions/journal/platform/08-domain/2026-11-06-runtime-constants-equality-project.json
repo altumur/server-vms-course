@@ -1,6 +1,6 @@
 {
   "base": "7b785e5e2e93cf93b562a405650cce30c5733c2a",
-  "status": "checker project for review103, not checker code and not yet an accepted new form",
+  "status": "139 actual schema carriers and five existing cross-form equalities reviewed by review103; subject checker pending exact author SHA",
   "single_value_source": "runtime-constants.tsv row value",
   "schema_carriers": [
     {
@@ -985,6 +985,18 @@
     [
       "08-domain/BATCH_LIMIT",
       "4*08-domain/BODY_LIMIT"
+    ],
+    [
+      "08-domain/BOOK_PARTS_PASS",
+      "09-agent/BOOK_PARTS_PASS"
+    ],
+    [
+      "08-domain/REPORT_EVERY",
+      "09-agent/REPORT_EVERY"
+    ],
+    [
+      "08-domain/BODY_LIMIT",
+      "09-agent/BODY_LIMIT"
     ]
   ],
   "foreign_names": {
@@ -1005,5 +1017,6 @@
     "REVOKED_WORDS": "class selection of REVOKED_WORDS_CAMERA or REVOKED_WORDS_SERVER"
   },
   "non_numeric_schema_carriers": "PBKDF2 hash is sealed in the schema string; cost is a contract/vectors obligation, not a schema numeric constraint",
-  "schema_validation_tree_changes": false
+  "schema_validation_tree_changes": false,
+  "additional_scope_pending": "Two canonical common.book_row missing/stale maxItems carriers proposed by review103 to coord103; not edited and not included in these 139"
 }

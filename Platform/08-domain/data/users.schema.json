@@ -20,7 +20,7 @@
    ]
   },
   "pwhash_secret": {
-   "description": "pbkdf2-sha256$600000$<salt: 32 hex>$<key: 64 hex> — PBKDF2-HMAC-SHA256 of the UTF-8 password, salt — 16 random bytes, key — 32 bytes; a secret by the suffix (P/02.1 N1.3a) — in the row a ring envelope of the holder, the hash form — of the opened value",
+   "description": "pbkdf2-sha256$<PBKDF2_ITERATIONS>$<salt: 32 hex>$<key: 64 hex> — PBKDF2-HMAC-SHA256 of the UTF-8 password, salt — 16 random bytes, key — 32 bytes; a secret by the suffix (P/02.1 N1.3a) — in the row a ring envelope of the holder, the hash form — of the opened value",
    "type": "string",
    "x-codec": [
     "string"

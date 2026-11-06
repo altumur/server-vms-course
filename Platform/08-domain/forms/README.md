@@ -12,6 +12,8 @@ The form is the sole source of locally owned fixed values. VIEW_MEMBERS, REPORT_
 
 Foreign timing and token limits use [the turn contract](../../common/contracts/turn.md), [the local token door contract](../../common/contracts/local-token-door.md), and [P/09 runtime constants](../../09-agent/forms/runtime-constants.tsv) for FRESH_EVERY and SAY_EVERY. A name such as ENTRY_MAX or SERVERS_MAX in a diagnostic template denotes the unpadded decimal form value; its identifier is never emitted as a new wire word. The diagnostic bytes at the current values are unchanged.
 
+In the password hash format, `<PBKDF2_ITERATIONS>` is a closed metavariable bound to exactly one row of this form. It and the hash operand of the [password hash contract](../../common/contracts/password-hash.md) use the value as unpadded ASCII decimal digits; the identifier is never a wire literal, new alias or additional accepted cost.
+
 ## Refusal catalogue
 
 [refusals.tsv](refusals.tsv) preserves all 154 original N4 rows, plus two explicit first-admin operator failures from N1.9, as 178 original projections plus six explicit review refusal projections (184 total). Four-cell source rows retain cause/outcome/diagnostic/caller exactly; the third cell of 8.1 was Body. Three-cell tables in 8.4, 8.7, 8.8 and 8.9 retain word/outcome/cause, with diagnostic/caller `-`. Word is the original normative cell: its indexed tokens are not an arbitrary choice of error or reason. A projection applies under the original condition and operation.
