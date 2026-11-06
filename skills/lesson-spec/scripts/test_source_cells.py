@@ -176,10 +176,63 @@ class SeamsBinding(unittest.TestCase):               # Architect 2026-11-06: one
                 self.assertNotIn(moved, source_cells.wire_headers(root))
                 self.assertTrue(source_cells.errors(root, [other]))
 
-    def test_real_seams_unchanged(self):
+    # The frozen English P/06 slice activates cell-json in the real seams table (spec, origin/spec/0121-p06-review-source
+    # fb66713ba, parent 01c2ef539; decisions/inbox/2026-11-06-p06-full-english/seams8-four-cells.json). Exactly four
+    # cells are marked: the request of the four data lines. The declaration shifts the former physical lines 3–6 to 4–7.
+    # Per cell: physical line, scenario, SHA-256 of the raw (JSON-encoded) source cell, SHA-256 of the decoded request
+    # (= before_sha256 of the former raw cell = the proof row), SHA-256 of the unmarked expect cell.
+    SEAMS_CELLS = (
+        (4, 's01-folder-name-255-bytes', '191482b241484e40ff213486783ef4663d9395b41a09b49076fbb72597b44489',
+         'e8060e5363c50a8ae0f401f3da310bd8c8797b2c238177a46560e787683e4981',
+         'a41460504223dc6ff2280cfe85b7ffe1c8b8efea617ec73fb34dc30f26362f00'),
+        (5, 's02-folder-name-256-bytes', '7e959239dd759112b27457b2b28bba282e29ef9b5289a4369fb7ef4b777c2d43',
+         'd28e3d2e69eaa57c9a473a9230a53e0ef4e2b0a87a1d9518420c327190f8f93e',
+         'ac8e85b1b386072ad4caba57a0a49cf6ddecdf1fc73706c95ad0847004799b58'),
+        (6, 's03-parent-guard-race', '7394671a68964f3affe5cf22a293cc57e56335e59acd9c2b7088131e38ee8787',
+         '94b7936182baa5484f31cfaab2ca4f8e3a4b40d0857ec1d9159722a12063bc1e',
+         '5c87d7d2161608b789b4321222e56bf8769f1c3bc182921ac9a1ec3f7594cf84'),
+        (7, 's04-membership-key-too-long', '88c608ca6e07f4ad021227850043bec1375700414c6d725f03d024a2424f552b',
+         'b5c9a6cf771703e9d77dcaeb9305911009f7232d66435c3fee63fc1fcd24daa9',
+         'c0cadec3604415fb97e9abcec72585c52cdb111c3c82af4ab5508af33507ceb9'),
+    )
+
+    def test_real_seams_four_marked_cells(self):
+        def sha(text):
+            return hashlib.sha256(text.encode()).hexdigest()
         text = (ROOT / SEAMS).read_bytes().decode('utf-8')
+        lines = text.split('\n')
         columns, positional = source_cells.wire_headers(ROOT)[Path(SEAMS)]
-        self.assertEqual(source_cells.table(text, columns, positional), ((), [], []))
+        self.assertEqual((columns, positional), (['scenario', 'step', 'request', 'expect'], True))
+        names, rows, errors = source_cells.table(text, columns, positional)
+        self.assertEqual((names, errors), (('request',), []))
+        # one declaration first, the two former comment lines after it, then exactly the four data lines
+        self.assertEqual(lines[0], '# cell-json: request')
+        self.assertEqual([n for n, line in enumerate(lines, 1) if line.startswith('#')], [1, 2, 3])
+        self.assertEqual([n for n, line in enumerate(lines, 1) if line and not line.startswith('#')],
+                         [cell[0] for cell in self.SEAMS_CELLS])
+        self.assertEqual(lines[-1], '')
+        self.assertEqual([line for line, _ in rows], [cell[0] for cell in self.SEAMS_CELLS])
+        # the proof rows of this table: exactly the four request cells, before = decoded
+        manifest = (ROOT / 'Platform/common/data/cell-json-sha256.tsv').read_bytes().decode('utf-8')
+        proof = {}
+        for line in manifest.split('\n'):
+            cells = line.split('\t')
+            if cells[0] == SEAMS:
+                self.assertNotIn((cells[1], cells[2]), proof)
+                proof[(cells[1], cells[2])] = tuple(cells[3:])
+        self.assertEqual(set(proof), {(str(cell[0]), 'request') for cell in self.SEAMS_CELLS})
+        for (number, scenario, source_sha, decoded_sha, expect_sha), (line, row) in zip(self.SEAMS_CELLS, rows):
+            with self.subTest(line=number):
+                raw = lines[number - 1].split('\t')
+                self.assertEqual(len(raw), 4)
+                self.assertEqual(sha(raw[2]), source_sha)                 # the marked source cell, byte-exact
+                self.assertEqual(json.loads(raw[2]), row['request'])      # decoded once, by the existing decoder
+                self.assertEqual(sha(row['request']), decoded_sha)        # = the former raw cell before marking
+                self.assertEqual(proof[(str(number), 'request')], (decoded_sha, decoded_sha))
+                with self.assertRaises(ValueError):                       # no second decoding: the value is not JSON
+                    source_cells.decode(row['request'])
+                self.assertEqual(row, dict(scenario=raw[0], step=raw[1], request=row['request'], expect=raw[3]))
+                self.assertEqual((raw[0], raw[1], sha(raw[3])), (scenario, '1', expect_sha))   # unmarked cells untouched
 
 
 if __name__ == '__main__':
