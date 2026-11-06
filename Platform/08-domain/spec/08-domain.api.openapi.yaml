@@ -597,7 +597,7 @@ paths:
               additionalProperties: false
               properties:
                 name: {$ref: '#/components/schemas/DomainFolderName'}
-                parent: {type: string, pattern: '^(?:[0-9a-f]{32})?$', default: ''}
+                parent: {type: string, pattern: '^(?:(?:[0-9a-f]{32})?)$', default: ''}
       responses:
         '201':
           description: The new folder; a repeat with the same key returns the saved response.
@@ -642,7 +642,7 @@ paths:
       - name: folder
         in: path
         required: true
-        schema: {type: string, pattern: '^[0-9a-f]{32}$'}
+        schema: {type: string, pattern: '^(?:[0-9a-f]{32})$'}
     put:
       operationId: folderRename
       summary: Rename a live domain folder; parent is immutable.
@@ -697,7 +697,7 @@ paths:
                 required: [deleted]
                 additionalProperties: false
                 properties:
-                  deleted: {type: string, pattern: '^[0-9a-f]{32}$'}
+                  deleted: {type: string, pattern: '^(?:[0-9a-f]{32})$'}
         '412': {$ref: '#/components/responses/DomainFolderConditionRefused'}
         '400': {$ref: '#/components/responses/DomainFolderRefused'}
         '401': {$ref: '#/components/responses/Denied'}
@@ -745,7 +745,7 @@ paths:
                 folders:
                   type: array
                   uniqueItems: true
-                  items: {type: string, pattern: '^[0-9a-f]{32}$'}
+                  items: {type: string, pattern: '^(?:[0-9a-f]{32})$'}
       responses:
         '200':
           description: Current folders and membership row index; an empty list deletes it and returns index empty. No ETag.
@@ -2172,7 +2172,7 @@ components:
       in: header
       required: false
       description: 'Optional quoted store index only (P/08.0 N1.9); "" means confirmed absent membership. No bare revision number. Replay precedes judging the condition.'
-      schema: {type: string, pattern: '^"(?:0|[1-9][0-9]{0,19})?"$'}
+      schema: {type: string, pattern: '^(?:"(?:0|[1-9][0-9]{0,19})?")$'}
   headers:
     ETag:
       description: Index of the store row in double quotes, a strong tag of RFC 9110 (P/08.0 N1.9 «Versions»). The value is fit for If-Match.
@@ -3254,9 +3254,9 @@ components:
       required: [id, name, parent, revision, index]
       additionalProperties: false
       properties:
-        id: {type: string, pattern: '^[0-9a-f]{32}$'}
+        id: {type: string, pattern: '^(?:[0-9a-f]{32})$'}
         name: {$ref: '#/components/schemas/DomainFolderName'}
-        parent: {type: string, pattern: '^(?:[0-9a-f]{32})?$'}
+        parent: {type: string, pattern: '^(?:(?:[0-9a-f]{32})?)$'}
         revision: {type: integer, minimum: 0}
         index: {type: string, pattern: '^(?:0|[1-9][0-9]{0,19})$'}
     DomainMembershipView:
@@ -3268,8 +3268,8 @@ components:
         folders:
           type: array
           uniqueItems: true
-          items: {type: string, pattern: '^[0-9a-f]{32}$'}
-        index: {type: string, pattern: '^(?:0|[1-9][0-9]{0,19})?$'}
+          items: {type: string, pattern: '^(?:[0-9a-f]{32})$'}
+        index: {type: string, pattern: '^(?:(?:0|[1-9][0-9]{0,19})?)$'}
     IndexMoved:
       type: object
       required: [error, field, index]
@@ -3277,7 +3277,7 @@ components:
       properties:
         error: {const: revision moved}
         field: {const: /index}
-        index: {type: string, pattern: '^(?:0|[1-9][0-9]{0,19})?$'}
+        index: {type: string, pattern: '^(?:(?:0|[1-9][0-9]{0,19})?)$'}
         detail: {type: string}
         row: {$ref: '#/components/schemas/DomainMembershipView'}
     Line:
