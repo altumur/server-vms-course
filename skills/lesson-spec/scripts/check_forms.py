@@ -1795,3 +1795,203 @@ def check_versioned_doors(path):
     for key in sorted(k for k, (etag, if_match) in ops.items() if (etag or if_match) and k not in seen):
         errors.append(f"{path.name}: {key[0]} {key[1]}: the OpenAPI operation declares ETag or If-Match, but has no row")
     return errors, {"versioned_doors": len(rows)}
+
+
+RWB_COLUMNS = ["write", "key", "field", "source", "value", "guard_key", "guard_version", "norm"]
+RWB_SOURCES = ("start", "input", "const")
+RWB_TYPES = ("string", "boolean", "integer", "number", "object", "array", "dyn")
+RWB_WRITE = re.compile(r"[a-z][a-z0-9-]*")
+RWB_DECL = re.compile(r"#(start|input)(?:\s.*)?")                        # строка-объявление; прочие `#` — комментарий
+RWB_DECL_LINE = re.compile(r"#(start|input) ((?:/(?:[^~/\s]|~[01])*)+) ([a-z]+)")
+RWB_FIELD = re.compile(r"/(?:[^~/]|~[01])+")                            # ровно один токен — непосредственное свойство
+RWB_SEG = r"\{[^{}/]*(?:/[^{}/]*)*\}|[A-Za-z0-9._-]+"
+RWB_TEMPLATE = re.compile(rf"(?:{RWB_SEG})(?:/(?:{RWB_SEG}))*")
+RWB_PLACE = re.compile(r"\{(start|input):((?:/(?:[^~/{}]|~[01])*)+)\}")
+RWB_GUARD_VERSION = re.compile(r"(start|input):((?:/(?:[^~/]|~[01])*)+)")
+RWB_JSON_TYPE = {bool: "boolean", int: "integer", float: "number", str: "string", dict: "object", list: "array",
+                 type(None): "null"}
+
+
+def row_write_binding_forms(root):
+    return sorted(Path(root).glob("Platform/*/forms/row-write-bindings.tsv"))
+
+
+def _rwb_template(text, decls):
+    """Шаблон key/guard_key → (сегменты, ошибки): сегмент — буквальный или ("place", source, pointer) к объявленной string."""
+    if not RWB_TEMPLATE.fullmatch(text):
+        return None, [f"template {text!r} is not literal segments and whole-segment {{start:/p}}/{{input:/p}}"]
+    segs, errors = [], []
+    for seg in re.findall(RWB_SEG, text):
+        if not seg.startswith("{"):
+            segs.append(seg)
+            continue
+        m = RWB_PLACE.fullmatch(seg)
+        if not m:
+            errors.append(f"placeholder {seg} is not {{start:/pointer}} or {{input:/pointer}}")
+        elif decls.get((m[1], m[2])) != "string":
+            errors.append(f"placeholder {seg} does not read a declared #{m[1]} string")
+        segs.append(("place", seg))
+    return segs, errors
+
+
+def _rwb_families(lesson):
+    """Строки каталога данных платформы → [(сегменты ключа, путь схемы или None, ключ)]."""
+    catalog = lesson.parent / "common/data/catalog.tsv"
+    if not catalog.is_file():
+        return []
+    out = []
+    for line in catalog.read_text(encoding="utf-8").splitlines():
+        cols = line.split("\t")
+        if line.startswith("#") or len(cols) < 8 or cols[0] == "key":
+            continue
+        schema = cols[7] if cols[7].endswith(".schema.json") else None
+        out.append((cols[0].split("/"), lesson.parent / schema if schema else None, cols[0]))
+    return out
+
+
+def _rwb_match(segs, family):
+    """Шаблон формы совпадает с ключом семьи: placeholder — только целый сегмент `<…>`, буквальный — равный буквальный
+    или экземпляр сегмента семьи (`<…>` внутри сегмента — непустая часть без `/`)."""
+    if len(segs) != len(family):
+        return False
+    for s, f in zip(segs, family):
+        whole = re.fullmatch(r"<[^<>]+>", f) is not None
+        if isinstance(s, tuple):
+            if not whole:
+                return False
+        elif not re.fullmatch("".join(re.escape(p) if i % 2 == 0 else "[^/]+"
+                                      for i, p in enumerate(re.split(r"(<[^<>]+>)", f))), s):
+            return False
+    return True
+
+
+def _rwb_schema_type(schema, prop):
+    """Тип свойства схемы (с локальным `$ref` на `#/$defs/…`) → множество типов JSON или None (любой)."""
+    seen = 0
+    while isinstance(prop, dict) and "type" not in prop and str(prop.get("$ref", "")).startswith("#/$defs/") and seen < 16:
+        prop = (schema.get("$defs") or {}).get(prop["$ref"][len("#/$defs/"):]) or {}
+        seen += 1
+    t = prop.get("type") if isinstance(prop, dict) else None
+    return None if t is None else set(t if isinstance(t, list) else [t])
+
+
+def _rwb_compatible(declared, types):
+    if declared == "dyn" or types is None:
+        return True
+    return declared in types or (declared == "integer" and "number" in types)
+
+
+def check_row_write_bindings(path):
+    """ADR-0127 доп. (1) п. 3, проект P03-GEN-01 (грамматика утверждена «Архитектором» 2026-11-06): конструкторы записи
+    строки семьи — key/items/guard из снимка старта и аргумента, без выражений. Шапка ровно RWB_COLUMNS; объявления
+    `#start /p тип`, `#input /p тип` (тип из RWB_TYPES, путь не повторяется). write — [a-z][a-z0-9-]*; (write, field)
+    уникальны; key, guard_key, guard_version одинаковы в строках одного write. key — шаблон из буквальных сегментов и
+    целосегментных {start:/p}/{input:/p} к объявленным string, совпадает с ключом ровно одной семьи каталога со схемой;
+    field — JSON Pointer к непосредственному свойству items этой схемы, обязательные покрыты, чужие запрещены. source
+    start|input|const: value — объявленный путь своего source (тип совместим с типом свойства, dyn — любой) или строгое
+    JSON-значение. guard_key — шаблон или `-`; guard_version — start:/p или input:/p к объявленной string или `-`; обе
+    `-` или обе заполнены. norm — непустой список без повторов существующих якорей требований урока."""
+    path = Path(path)
+    lesson = path.parent.parent
+    errors, rows = read(path, RWB_COLUMNS)
+    decls = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not RWB_DECL.fullmatch(line):
+            continue
+        m = RWB_DECL_LINE.fullmatch(line)
+        if not m or m[3] not in RWB_TYPES:
+            errors.append(f"{path.name}: declaration {line!r} is not #start|#input /pointer {'|'.join(RWB_TYPES)}")
+            continue
+        if (m[1], m[2]) in decls:
+            errors.append(f"{path.name}: declaration #{m[1]} {m[2]} repeats")
+        decls[(m[1], m[2])] = m[3]
+    anchors = set()
+    for norms in (lesson / "spec").glob("*.norms.md"):
+        anchors |= set(ANCHOR.findall(norms.read_text(encoding="utf-8")))
+    number = lesson.name[:2]
+    families = _rwb_families(lesson)
+    writes, seen = {}, set()
+    for r in rows:
+        where = f"{path.name}: {r['write']} {r['field']}"
+        if not RWB_WRITE.fullmatch(r["write"]):
+            errors.append(f"{where}: write {r['write']!r} is not [a-z][a-z0-9-]*")
+        if (r["write"], r["field"]) in seen:
+            errors.append(f"{where}: (write, field) repeats")
+        seen.add((r["write"], r["field"]))
+        writes.setdefault(r["write"], []).append(r)
+        if not RWB_FIELD.fullmatch(r["field"]):
+            errors.append(f"{where}: field {r['field']!r} is not a JSON Pointer to one direct property")
+        if r["source"] not in RWB_SOURCES:
+            errors.append(f"{where}: source {r['source']!r} not in {list(RWB_SOURCES)}")
+        elif r["source"] == "const":
+            try:
+                wire_json(r["value"])
+            except ValueError:
+                errors.append(f"{where}: const value {short(r['value'])} is not one strict JSON value")
+        elif not r["value"].startswith("/") or (r["source"], r["value"]) not in decls:
+            errors.append(f"{where}: value {short(r['value'])} is not a declared #{r['source']} pointer")
+        norm = r["norm"].split(",")
+        if not r["norm"] or len(norm) != len(set(norm)):
+            errors.append(f"{where}: norm {r['norm']!r} is not a non-empty list without repeats")
+        for n in norm if r["norm"] else []:
+            g = REQ.fullmatch(n)
+            if not g or g[1] != number:
+                errors.append(f"{where}: norm {n!r} is not a requirement anchor of this lesson")
+            elif n not in anchors:
+                errors.append(f"{where}: norm {n} has no anchor in the norms of the lesson")
+    for write, group in writes.items():
+        where = f"{path.name}: {write}"
+        first = group[0]
+        for column in ("key", "guard_key", "guard_version"):
+            if any(r[column] != first[column] for r in group):
+                errors.append(f"{where}: {column} differs between the rows of one write")
+        segs, errs = _rwb_template(first["key"], decls)
+        errors += [f"{where}: key: {e}" for e in errs]
+        gk, gv = first["guard_key"], first["guard_version"]
+        if (gk == "-") != (gv == "-"):
+            errors.append(f"{where}: guard_key and guard_version are both - or both filled")
+        if gk != "-":
+            errors += [f"{where}: guard_key: {e}" for e in _rwb_template(gk, decls)[1]]
+        if gv != "-":
+            m = RWB_GUARD_VERSION.fullmatch(gv)
+            if not m or decls.get((m[1], m[2])) != "string":
+                errors.append(f"{where}: guard_version {gv!r} is not start:/p or input:/p to a declared string")
+        if segs is None:
+            continue
+        found = [f for f in families if _rwb_match(segs, f[0])]
+        if len(found) != 1:
+            errors.append(f"{where}: key {first['key']!r} matches {len(found)} families of the catalog, not one"
+                          + (f" ({', '.join(f[2] for f in found)})" if found else ""))
+            continue
+        schema_path, family = found[0][1], found[0][2]
+        if schema_path is None or not schema_path.is_file():
+            errors.append(f"{where}: family {family} has no schema of items")
+            continue
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        props = schema.get("properties") or {}
+        named = set()
+        for r in group:
+            if not RWB_FIELD.fullmatch(r["field"]):
+                continue
+            name = r["field"][1:].replace("~1", "/").replace("~0", "~")
+            named.add(name)
+            if name not in props:
+                errors.append(f"{where}: field {r['field']} is not a property of {family} ({schema_path.name})")
+                continue
+            types = _rwb_schema_type(schema, props[name])
+            if r["source"] == "const":
+                try:
+                    v = wire_json(r["value"])
+                except ValueError:
+                    continue
+                jt = RWB_JSON_TYPE[type(v)]
+                if types is not None and jt not in types and not (jt == "integer" and "number" in types):
+                    errors.append(f"{where}: field {r['field']}: const {jt} against schema type {sorted(types)}")
+            elif (r["source"], r["value"]) in decls:
+                declared = decls[(r["source"], r["value"])]
+                if not _rwb_compatible(declared, types):
+                    errors.append(f"{where}: field {r['field']}: declared {declared} against schema type {sorted(types)}")
+        missing = [p for p in schema.get("required") or [] if p not in named]
+        if missing:
+            errors.append(f"{where}: required properties of {family} not bound: {missing}")
+    return errors, {"row_write_bindings": len(rows)}
