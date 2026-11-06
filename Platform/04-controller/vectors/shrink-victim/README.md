@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/shrink-victim/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson P/04 ([norms](../../spec/04-controller.norms.md) N3 «сократить()», `victim`; ADR-0084 addendum (1) R4, addendum (6); P/03.2 N1.4 the grammar of the name). The participant is
+The owner is lesson P/04 ([norms](../../spec/04-controller.norms.md) N3 «shrink()», `victim`; ADR-0084 addendum (1) R4, addendum (6); P/03.2 N1.4 the grammar of the name). The participant is
 `<s>controller`. The bytes are written by the Specification (ADR-0083, stage A, A6).
 
 ## `cases.tsv`
@@ -18,7 +18,7 @@ P/04 N1.4).
 Comparison — JSON by value.
 
 Equal numbers on different servers — the smaller name of the server in UTF-8 bytes first, as the order of the candidates (N3
-«сократить», the victim). Not covered: the check «каждая единица жертвы проходит выбрать()» — by an acceptance step and by reading.
+«shrink», the victim). Not covered: the check «each unit of the victim passes choose()» — by an acceptance step and by reading.
 
 ## Input not by form (R22)
 
@@ -29,6 +29,6 @@ an integer 1…99 or with a leading zero; a repeat of a name; `want` is not an o
 
 ## Who executes
 
-Who executes it is the controller (`04-controller`: the victim of shrinking, P/04 N3 «сократить», `victim`) — all the rows. The server script (`02-installer`) does not choose the victim: it stops the numbers above the ready `want` by its own rule (P/02.4 N1.5 `rules` 3, the vectors `workers-script`); the worker (`03-worker`) sees the ready `retiring` (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who executes it is the controller (`04-controller`: the victim of shrinking, P/04 N3 «shrink», `victim`) — all the rows. The server script (`02-installer`) does not choose the victim: it stops the numbers above the ready `want` by its own rule (P/02.4 N1.5 `rules` 3, the vectors `workers-script`); the worker (`03-worker`) sees the ready `retiring` (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 Review ADR-0127 P/04 C1 also requires the composed seams s36/s37: run the actual victim choice, retiring/move/end decision and the existing P/02 server-script reconciliation, observing the target and physically selected stop number. The wanted(3), empty(2), want=3 case must keep want=3 and stop neither process; with another eligible server, only its top process is stopped. A pure victim vector alone does not establish that composition.

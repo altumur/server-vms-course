@@ -2,8 +2,8 @@
 
 This English text is the source; the Russian translation `ru/vectors/order/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson P/04 ([norms](../../spec/04-controller.norms.md) N3 «нехватка(), заказать(), снять заказ, сократить()»: `in_flight`, `per`, `need`, `candidate`,
-`order`, `order_row`; ADR-0084 and addendum (1) R2, R6, R9, addendum (2)–(3) R13′–R22; cammeta-go М10-04 № 5). The participant is `<s>controller`. The bytes are written by
+The owner is lesson P/04 ([norms](../../spec/04-controller.norms.md) N3 «shortage(), order(), withdraw the order, shrink()»: `in_flight`, `per`, `need`, `candidate`,
+`order`, `order_row`; ADR-0084 and addendum (1) R2, R6, R9, addendum (2)–(3) R13′–R22; cammeta-go M10-04 № 5). The participant is `<s>controller`. The bytes are written by
 the Specification (ADR-0083, stage A, A6).
 
 ## `cases.tsv`
@@ -18,7 +18,7 @@ byte, nothing is expanded. Four fields: `case`, `input` and `expect` — JSON te
 - `waiting` — Σ of the weights of the waiting ones, `groups` — the number of groups for which there is no place anywhere;
 - `servers` — `{<server>: {want, live, room, base?, numbers?, door?, placeless?, drained?, quiet?}}`: `want` — the order row, `live` — live(s)
   by the heartbeats (with the base and the victim), `room` — `room.<sub>`, `base` — the base `-1` is alive (no field — `true`), `drained` —
-  a drain or a decommission, `quiet` — «не поднял» in the window `RAISE_QUIET`. `numbers` — the numbers of the live processes of the role by the heartbeats
+  a drain or a decommission, `quiet` — «failed to raise» in the window `RAISE_QUIET`. `numbers` — the numbers of the live processes of the role by the heartbeats
   (the base `1` if it is alive; `live` of them); no field — consecutive: `1…live` with `base: true`, otherwise `2…live + 1`. `in_flight(s)` =
   `|{2…want} ∖ numbers|` — by numbers, not by a count (R13′, ADR-0084 addendum (4) R26; analysis of the review of stage A 3–5, № 6); with consecutive numbers —
   `max(0, (want − 1) − ordered)`. `door` — the list `live.<sub>` of the door row: the numbers n ≥ 2 of the live locks; no field —
@@ -42,7 +42,7 @@ need: 0, orders: {}, withheld: 0, why: "no positive capacity estimate"}` (R20; `
 **Several sets** — an input with `sets: [{labels, waiting, groups}]` instead of `waiting` and `groups`; all the servers and workers
 of the input suit each set. A label set is a set: the canonical writing is the unique labels in ascending order separated by
 commas, a repeat collapses (R21). The sets go in the order of the UTF-8 bytes of the canonical writing (the empty one first); a set takes the free, `in_flight` and `room` only up to its need, the rest goes to the next one (N3
-«порядок наборов», cammeta-go М10-04 № 7). The output — `{sets: {<canonical record>: {per, processes, in_flight, need,
+«set order», cammeta-go M10-04 № 7). The output — `{sets: {<canonical record>: {per, processes, in_flight, need,
 withheld}}, orders, withheld}`: the `in_flight` of a set — how much capacity in flight it took, `orders` — the final `want` of the servers,
 `withheld` — the sum over the sets.
 
@@ -59,7 +59,7 @@ no units and does not enter `workers`; an unreadable door row — `door: null`. 
 
 ## Who executes
 
-Who executes it is the controller (`04-controller`: the shortage, `in_flight`, `free(s)`, the candidates and the shares, P/04 N3 «нехватка(), заказать()») — all the rows. Only read the ready result: the resource (`05-resource`, writes `room`/`live` of the door row, P/05 N1.4 `door_row`), the server script (`02-installer`, P/02.4 N1.5) and the console (`06-console`, the series `workers_wanted`/`workers_withheld`, P/06.5 N3 «/metrics — text») (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who executes it is the controller (`04-controller`: the shortage, `in_flight`, `free(s)`, the candidates and the shares, P/04 N3 «shortage(), order()») — all the rows. Only read the ready result: the resource (`05-resource`, writes `room`/`live` of the door row, P/05 N1.4 `door_row`), the server script (`02-installer`, P/02.4 N1.5) and the console (`06-console`, the series `workers_wanted`/`workers_withheld`, P/06.5 N3 «/metrics — text») (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## What the vector does not cover
 
