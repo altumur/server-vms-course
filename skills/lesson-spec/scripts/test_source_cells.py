@@ -19,6 +19,26 @@ class SourceCells(unittest.TestCase):
                 if case['valid']:
                     self.assertEqual(list(names), case['declared'])
                     self.assertEqual([[n, row] for n, row in rows], case['rows'])
+                    for proof in case.get('unmarked_byte_proofs', []):
+                        header = case['text'].split('\n')[1].split('\t')
+                        before = case['text'].split('\n')[proof['row'] - 1].split('\t')[header.index(proof['column'])]
+                        after = dict(rows)[proof['row']][proof['column']]
+                        self.assertEqual(hashlib.sha256(before.encode()).hexdigest(), proof['before_sha256'])
+                        self.assertEqual(hashlib.sha256(after.encode()).hexdigest(), proof['decoded_sha256'])
+                        self.assertEqual(before.encode(), after.encode())
+
+    def test_unmarked_carriage_return_is_not_normalized_by_file_io(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / 'Platform/common/vectors/sample/cases.tsv'
+            path.parent.mkdir(parents=True)
+            path.write_bytes(b'# cell-json: payload\nplain\tpayload\nA\rB\t"x"\n')
+            manifest = root / 'Platform/common/data/cell-json-sha256.tsv'
+            manifest.parent.mkdir(parents=True)
+            sha = hashlib.sha256(b'x').hexdigest()
+            manifest.write_text('table\tline\tcolumn\tbefore_sha256\tdecoded_sha256\n'
+                                + f'{path.relative_to(root)}\t3\tpayload\t{sha}\t{sha}\n')
+            self.assertEqual(source_cells.errors(root, [path]), [])
 
     def test_no_declaration_leaves_raw_table_alone(self):
         self.assertEqual(source_cells.table('raw\nplain\n'), ((), [], []))

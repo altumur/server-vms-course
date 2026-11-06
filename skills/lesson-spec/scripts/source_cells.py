@@ -35,7 +35,7 @@ def table(text, columns=None, positional=False):
     Headerless tables obtain their column names from the existing wire form.
     Physical line numbers and all undeclared source cells stay unchanged.
     """
-    lines = text.splitlines()
+    lines = text.split("\n")
     declarations = [(n, line) for n, line in enumerate(lines, 1)
                     if re.match(r"^\s*#\s*cell-json\b", line)]
     if not declarations:
@@ -87,8 +87,8 @@ def table(text, columns=None, positional=False):
 def wire_headers(root):
     """Existing wire bindings and the scenario form name positional columns."""
     wire = Path(root) / "Platform/common/vectors/wire.tsv"
-    lines = ([line.split("\t") for line in wire.read_text().splitlines() if line and not line.startswith("#")]
-             if wire.is_file() else [])
+    lines = ([line.split("\t") for line in wire.read_bytes().decode("utf-8").split("\n")
+              if line and not line.startswith("#")] if wire.is_file() else [])
     result = {}
     for values in lines[1:]:
         row = dict(zip(lines[0], values))
@@ -104,7 +104,7 @@ def wire_headers(root):
     for module in ("Platform", "VMS"):
         for path in (Path(root) / module).glob("*/acceptance/**/scenarios.tsv"):
             columns = ["scenario", "step", "request", "expect"]
-            first = next((line.split("\t") for line in path.read_text().split("\n")
+            first = next((line.split("\t") for line in path.read_bytes().decode("utf-8").split("\n")
                           if line and not line.startswith("#")), [])
             result[path.relative_to(root)] = (columns, first != columns)
     return result
@@ -120,7 +120,7 @@ def errors(root, paths):
     except ValueError as exc:
         return [(root / "Platform/common/vectors/wire.tsv", str(exc))]
     for path in paths:
-        text = path.read_text(encoding="utf-8", errors="surrogateescape")
+        text = path.read_bytes().decode("utf-8", errors="surrogateescape")
         columns, positional = forms.get(path.relative_to(root), (None, False))
         names, rows, problems = table(text, columns, positional)
         found.extend((path, problem) for problem in problems)
@@ -132,7 +132,7 @@ def errors(root, paths):
     manifest = root / "Platform/common/data/cell-json-sha256.tsv"
     if not manifest.is_file():
         return found + ([(manifest, "missing cell-json byte-preservation proof")] if actual else [])
-    lines = [(n, line.split("\t")) for n, line in enumerate(manifest.read_text().splitlines(), 1)
+    lines = [(n, line.split("\t")) for n, line in enumerate(manifest.read_bytes().decode("utf-8").split("\n"), 1)
              if line and not line.startswith("#")]
     header = ["table", "line", "column", "before_sha256", "decoded_sha256"]
     if not lines or lines[0][1] != header:
