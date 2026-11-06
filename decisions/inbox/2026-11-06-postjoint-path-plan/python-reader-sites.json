@@ -1,0 +1,1505 @@
+[
+  {
+    "repository": "course",
+    "path": "Source/tests/cluster/test_policies.py",
+    "line": 172,
+    "scope": "test_the_domain_has_a_role_and_its_keys_are_read_by_that_role_alone",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "168:     assert all(s.name + \"domain\" not in r.roles for s in SPECS)\n169:     from tests.catalog_fixture import isolated_catalog\n170:     from w2cplatform.spec import SubsystemSpec\n171:     with isolated_catalog():\n172:         spec = SubsystemSpec.load(os.path.join(frozen_testdata(), \"testsub.subsystem.yaml\"))\n173:         generic = Rights(roles([spec], \"test\"))\n174:         assert generic.allows(\"testsubdomain\", \"write\", \"domain/testsub/ledger\")\n175:         assert not generic.allows(\"testsubdomain\", \"write\", \"domain/keys\")\n176:         assert not generic.allows(\"testsubdomain\", \"read\", \"domain/signer\")\n177:     assert not r.allows(\"domain\", \"write\", \"cam/cameras/7\")"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/conftest.py",
+    "line": 172,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "168: #\n169: # testsub's unit is a named COUNTER a worker keeps (`testsub/counters/<name>`); testsub2's is a TALLY about one of them,\n170: # kept on a shelf (`testsub2/tallies/<name>`, `testsub2/shelves/<name>`) \u2014 the second says every key the platform reads\n171: # (`test_spec_rule.py`). A mechanism of the platform is proved on them: if it works here, it works without the product.\n172: TESTDATA = str(frozen_testdata())\n173: TESTSUB = os.path.join(TESTDATA, \"testsub.subsystem.yaml\")\n174: TESTSUB2 = os.path.join(TESTDATA, \"testsub2.subsystem.yaml\")\n175: _SPECS: dict = {}\n176: "
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/domain/test_foreign_data.py",
+    "line": 75,
+    "scope": "test_a_torn_relay_bundle_is_its_members_silence_and_the_rest_of_the_domain_is_answered_and_its_books_written",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "71:     from pathlib import Path\n72:     from w2cplatform.spec import SubsystemSpec, SpecController\n73:     from w2cplatform.domain.signer_service import Holder\n74:     from w2cplatform.domain.api import ConsoleAPI\n75:     data = frozen_testdata()\n76:     with isolated_catalog(data / \"testsub.subsystem.yaml\", data / \"testsub2.subsystem.yaml\"):\n77:         spec = SubsystemSpec.load(data / \"testsub.subsystem.yaml\")\n78:         wall = Clock(10_000.0)\n79:         fed = Federation()\n80:         north, _ = make_cluster(\"north\", domain=True)"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/domain/test_lesson9_pending.py",
+    "line": 145,
+    "scope": "test_an_address_with_a_password_is_refused_before_it_is_kept_carried_or_reported",
+    "call": "(frozen_testdata() / 'testsub.subsystem.yaml').read_text()",
+    "category": "Source-frozen-witness",
+    "context": "141:     from unittest.mock import patch\n142:     import yaml\n143:     from w2cplatform import catalog\n144:     from w2cplatform.spec import SubsystemSpec\n145:     raw = yaml.safe_load((frozen_testdata() / 'testsub.subsystem.yaml').read_text())\n146:     raw[\"unit\"][\"fields\"][\"endpoint\"] = {\"type\": \"url\", \"secret_in\": [\n147:         {\"param\": [\"signature\"]},\n148:         {\"regex\": r\"(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)\", \"in\": \"path\"},\n149:         {\"regex\": r\"(?i)(?:^|/)(?P<name>password|passwd|pwd|psw)/(?P<secret>[^/]+)\", \"in\": \"path\"}]}\n150:     credential_spec = SubsystemSpec.from_dict(raw)"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/domain/test_lesson9_pending.py",
+    "line": 145,
+    "scope": "test_an_address_with_a_password_is_refused_before_it_is_kept_carried_or_reported",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "141:     from unittest.mock import patch\n142:     import yaml\n143:     from w2cplatform import catalog\n144:     from w2cplatform.spec import SubsystemSpec\n145:     raw = yaml.safe_load((frozen_testdata() / 'testsub.subsystem.yaml').read_text())\n146:     raw[\"unit\"][\"fields\"][\"endpoint\"] = {\"type\": \"url\", \"secret_in\": [\n147:         {\"param\": [\"signature\"]},\n148:         {\"regex\": r\"(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?P<name>password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?:_[^_=&;/#]+=|[&;/#]|$)\", \"in\": \"path\"},\n149:         {\"regex\": r\"(?i)(?:^|/)(?P<name>password|passwd|pwd|psw)/(?P<secret>[^/]+)\", \"in\": \"path\"}]}\n150:     credential_spec = SubsystemSpec.from_dict(raw)"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/domain/test_members.py",
+    "line": 52,
+    "scope": "test_a_box_the_registrar_admits_is_a_member_the_next_pass_reads",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "48:     \"\"\"Admission is followed by the platform without a subsystem domain worker.\"\"\"\n49:     from pathlib import Path\n50:     from tests.catalog_fixture import isolated_catalog\n51:     from w2cplatform.spec import SubsystemSpec, SpecController\n52:     path = frozen_testdata() / 'testsub.subsystem.yaml'\n53:     with isolated_catalog(path):\n54:         spec = SubsystemSpec.load(path)\n55:         wall = Clock(1000.0)\n56:         fed, north, signer, members = _domain(wall)\n57:         vendor = Manufacturer(\"vendor\", now=wall)"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/storage_acceptance.py",
+    "line": 169,
+    "scope": "steps",
+    "call": "frozen_testdata(SHARED.relative_to(SOURCE / \"tests/testdata\")).read_text(encoding=\"utf-8\")",
+    "category": "Source-frozen-witness",
+    "context": "165: def steps(call):\n166:     sys.path.insert(0, str(SOURCE))\n167:     from tests.frozen_data import frozen_testdata\n168:     records, bindings, previous = [], {}, None\n169:     shared = frozen_testdata(SHARED.relative_to(SOURCE / \"tests/testdata\")).read_text(encoding=\"utf-8\")\n170:     for number, fields in enumerate(csv.reader(shared.splitlines(), delimiter=\"\\t\"), 1):\n171:         if not fields or fields[0].startswith(\"#\"):\n172:             continue\n173:         scenario, step, operation, expected = fields\n174:         if scenario != previous:"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/storage_acceptance.py",
+    "line": 169,
+    "scope": "steps",
+    "call": "frozen_testdata(SHARED.relative_to(SOURCE / \"tests/testdata\"))",
+    "category": "Source-frozen-witness",
+    "context": "165: def steps(call):\n166:     sys.path.insert(0, str(SOURCE))\n167:     from tests.frozen_data import frozen_testdata\n168:     records, bindings, previous = [], {}, None\n169:     shared = frozen_testdata(SHARED.relative_to(SOURCE / \"tests/testdata\")).read_text(encoding=\"utf-8\")\n170:     for number, fields in enumerate(csv.reader(shared.splitlines(), delimiter=\"\\t\"), 1):\n171:         if not fields or fields[0].startswith(\"#\"):\n172:             continue\n173:         scenario, step, operation, expected = fields\n174:         if scenario != previous:"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_agent_console_signature.py",
+    "line": 31,
+    "scope": "site",
+    "call": "(frozen_testdata() / \"testsub.subsystem.yaml\").read_text()",
+    "category": "Source-frozen-witness",
+    "context": "30: def site():\n31:     raw = yaml.safe_load((frozen_testdata() / \"testsub.subsystem.yaml\").read_text())\n32:     specs = [SubsystemSpec.from_dict({**json.loads(json.dumps(raw).replace(\"testsub/\", sub+\"/\")), \"name\": sub}) for sub in (\"testsub\", \"testsub2\")]\n33:     wall, vars_ = Clock(), FakeVariables()\n34:     key = MemberKey.load_or_make(vars_)\n35:     vars_.put(\"domain/members\", {\"doc\": json.dumps({\"rev\": 1, \"members\": {\"north\": {\"key\": key.pub, \"seal\": key.seal_pub}}})})\n36:     with patch.object(catalog, \"_loaded\", {s.name: s for s in specs}), patch.object(catalog, \"_derived\", {}):"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_agent_console_signature.py",
+    "line": 31,
+    "scope": "site",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "30: def site():\n31:     raw = yaml.safe_load((frozen_testdata() / \"testsub.subsystem.yaml\").read_text())\n32:     specs = [SubsystemSpec.from_dict({**json.loads(json.dumps(raw).replace(\"testsub/\", sub+\"/\")), \"name\": sub}) for sub in (\"testsub\", \"testsub2\")]\n33:     wall, vars_ = Clock(), FakeVariables()\n34:     key = MemberKey.load_or_make(vars_)\n35:     vars_.put(\"domain/members\", {\"doc\": json.dumps({\"rev\": 1, \"members\": {\"north\": {\"key\": key.pub, \"seal\": key.seal_pub}}})})\n36:     with patch.object(catalog, \"_loaded\", {s.name: s for s in specs}), patch.object(catalog, \"_derived\", {}):"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_base_worker.py",
+    "line": 21,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "17: from w2cplatform.journal import Journal\n18: from w2cplatform.spec import RESERVED_NAMES, SubsystemSpec\n19: from w2cplatform.worker import SERVER_UNSAID, Worker\n20: \n21: TESTSUB2 = os.path.join(frozen_testdata(), \"testsub2.subsystem.yaml\")\n22: SOURCE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))\n23: \n24: \n25: def _testsub2_without(key: str) -> SubsystemSpec:"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_book_merge.py",
+    "line": 16,
+    "scope": "spec",
+    "call": "(frozen_testdata() / f\"{sub}.subsystem.yaml\").read_text()",
+    "category": "Source-frozen-witness",
+    "context": "15: def spec(sub=\"testsub\", **overrides):\n16:     raw = yaml.safe_load((frozen_testdata() / f\"{sub}.subsystem.yaml\").read_text())\n17:     rule = {\"from\": f\"{sub}/counts/\", \"key\": \"ref\", \"pick\": \"all\", \"to\": \"to\"}\n18:     rule.update(overrides)\n19:     raw[\"domain\"][\"books\"] = {\"counts\": rule}\n20:     # This test installs a different book set; names attached to the removed\n21:     # fixture books do not belong to this synthetic collection contract."
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_book_merge.py",
+    "line": 50,
+    "scope": "test_loader_refuses_partial_rules_unknown_operators_and_foreign_or_unsafe_paths",
+    "call": "(frozen_testdata() / 'testsub.subsystem.yaml').read_text()",
+    "category": "Source-frozen-witness",
+    "context": "49: def test_loader_refuses_partial_rules_unknown_operators_and_foreign_or_unsafe_paths():\n50:     base = yaml.safe_load((frozen_testdata() / 'testsub.subsystem.yaml').read_text())\n51:     good = {\"from\": \"testsub/counts/\", \"key\": \"ref\", \"pick\": \"unique\", \"to\": \"to\"}\n52:     invalid = [{k: v for k, v in good.items() if k != omitted} for omitted in good]\n53:     for key, values in {\n54:         \"from\": (None, True, [], \"\", \"testsub/\", \"testsub//counts\", \"testsub/counts//\", \"testsub/../counts\",\n55:                  \"testsub/./counts\", \"other/counts\", \"domain/testsub/counts\", \"https://host/row\", \"testsub/*\"),"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_book_merge.py",
+    "line": 74,
+    "scope": "test_carried_books_stay_separate_from_collected_books",
+    "call": "(frozen_testdata() / 'testsub.subsystem.yaml').read_text()",
+    "category": "Source-frozen-witness",
+    "context": "73: def test_carried_books_stay_separate_from_collected_books():\n74:     raw = yaml.safe_load((frozen_testdata() / 'testsub.subsystem.yaml').read_text())\n75:     assert SubsystemSpec.from_dict(raw).domain.merged == {}\n76:     raw[\"domain\"][\"books\"] = [\"counts\"]\n77:     assert SubsystemSpec.from_dict(raw).domain.merged == {}"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_book_merge.py",
+    "line": 16,
+    "scope": "spec",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "15: def spec(sub=\"testsub\", **overrides):\n16:     raw = yaml.safe_load((frozen_testdata() / f\"{sub}.subsystem.yaml\").read_text())\n17:     rule = {\"from\": f\"{sub}/counts/\", \"key\": \"ref\", \"pick\": \"all\", \"to\": \"to\"}\n18:     rule.update(overrides)\n19:     raw[\"domain\"][\"books\"] = {\"counts\": rule}\n20:     # This test installs a different book set; names attached to the removed\n21:     # fixture books do not belong to this synthetic collection contract."
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_book_merge.py",
+    "line": 50,
+    "scope": "test_loader_refuses_partial_rules_unknown_operators_and_foreign_or_unsafe_paths",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "49: def test_loader_refuses_partial_rules_unknown_operators_and_foreign_or_unsafe_paths():\n50:     base = yaml.safe_load((frozen_testdata() / 'testsub.subsystem.yaml').read_text())\n51:     good = {\"from\": \"testsub/counts/\", \"key\": \"ref\", \"pick\": \"unique\", \"to\": \"to\"}\n52:     invalid = [{k: v for k, v in good.items() if k != omitted} for omitted in good]\n53:     for key, values in {\n54:         \"from\": (None, True, [], \"\", \"testsub/\", \"testsub//counts\", \"testsub/counts//\", \"testsub/../counts\",\n55:                  \"testsub/./counts\", \"other/counts\", \"domain/testsub/counts\", \"https://host/row\", \"testsub/*\"),"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_book_merge.py",
+    "line": 74,
+    "scope": "test_carried_books_stay_separate_from_collected_books",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "73: def test_carried_books_stay_separate_from_collected_books():\n74:     raw = yaml.safe_load((frozen_testdata() / 'testsub.subsystem.yaml').read_text())\n75:     assert SubsystemSpec.from_dict(raw).domain.merged == {}\n76:     raw[\"domain\"][\"books\"] = [\"counts\"]\n77:     assert SubsystemSpec.from_dict(raw).domain.merged == {}"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_book_names.py",
+    "line": 21,
+    "scope": "spec",
+    "call": "(frozen_testdata() / f\"{sub}.subsystem.yaml\").read_text()",
+    "category": "Source-frozen-witness",
+    "context": "20: def spec(sub=\"testsub\", *, show=()):\n21:     raw = yaml.safe_load((frozen_testdata() / f\"{sub}.subsystem.yaml\").read_text())\n22:     raw[\"domain\"][\"books\"] = {\"counts\": {\"from\": f\"{sub}/counts/\", \"key\": \"name\", \"pick\": \"unique\", \"to\": \"to\"}}\n23:     if show:\n24:         raw[\"domain\"][\"books\"][\"counts\"][\"show\"] = list(show)\n25:     raw[\"domain\"][\"names\"] = {\"counts/\": {\"exclusive_with\": \"domain/users\", \"grant\": \"view\"}}\n26:     return SubsystemSpec.from_dict(raw)"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_book_names.py",
+    "line": 57,
+    "scope": "test_names_accept_collected_books_without_kept_and_refuse_carried_books",
+    "call": "(frozen_testdata() / f\"{sub}.subsystem.yaml\").read_text()",
+    "category": "Source-frozen-witness",
+    "context": "54: def test_names_accept_collected_books_without_kept_and_refuse_carried_books():\n55:     for sub in (\"testsub\", \"testsub2\"):\n56:         assert \"counts/\" in spec(sub).domain.names and \"counts/\" not in spec(sub).domain.kept\n57:         raw = yaml.safe_load((frozen_testdata() / f\"{sub}.subsystem.yaml\").read_text())\n58:         raw[\"domain\"][\"books\"] = {\"counts\": {}}\n59:         raw[\"domain\"][\"names\"] = {\"counts/\": {\"exclusive_with\": \"domain/users\", \"grant\": \"view\"}}\n60:         raises(ValueError, lambda: SubsystemSpec.from_dict(raw))"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_book_names.py",
+    "line": 21,
+    "scope": "spec",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "20: def spec(sub=\"testsub\", *, show=()):\n21:     raw = yaml.safe_load((frozen_testdata() / f\"{sub}.subsystem.yaml\").read_text())\n22:     raw[\"domain\"][\"books\"] = {\"counts\": {\"from\": f\"{sub}/counts/\", \"key\": \"name\", \"pick\": \"unique\", \"to\": \"to\"}}\n23:     if show:\n24:         raw[\"domain\"][\"books\"][\"counts\"][\"show\"] = list(show)\n25:     raw[\"domain\"][\"names\"] = {\"counts/\": {\"exclusive_with\": \"domain/users\", \"grant\": \"view\"}}\n26:     return SubsystemSpec.from_dict(raw)"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_book_names.py",
+    "line": 57,
+    "scope": "test_names_accept_collected_books_without_kept_and_refuse_carried_books",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "54: def test_names_accept_collected_books_without_kept_and_refuse_carried_books():\n55:     for sub in (\"testsub\", \"testsub2\"):\n56:         assert \"counts/\" in spec(sub).domain.names and \"counts/\" not in spec(sub).domain.kept\n57:         raw = yaml.safe_load((frozen_testdata() / f\"{sub}.subsystem.yaml\").read_text())\n58:         raw[\"domain\"][\"books\"] = {\"counts\": {}}\n59:         raw[\"domain\"][\"names\"] = {\"counts/\": {\"exclusive_with\": \"domain/users\", \"grant\": \"view\"}}\n60:         raises(ValueError, lambda: SubsystemSpec.from_dict(raw))"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_boundary.py",
+    "line": 55,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "51: \n52: HERE = os.path.dirname(os.path.abspath(__file__))\n53: ROOT = os.path.dirname(HERE)                                  # the code root, `Source/`\n54: DEBT = os.path.join(HERE, \"boundary_debt.txt\")\n55: TESTSUB = os.path.join(frozen_testdata(), \"testsub.subsystem.yaml\")\n56: \n57: PLATFORM_TREE = \"w2cplatform\"                                  # walked whole, every subpackage\n58: SUBSYSTEM_PACKAGES = (\"vms\", \"gstvms\")                         # what the platform must not reach (`Source/<name>/`)\n59: UNIT_SPECS = (\"vms/cam.subsystem.yaml\",)                      # camera vocabulary fixture; package and spec names differ (ADR-0079)"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_boundary.py",
+    "line": 320,
+    "scope": "_platform_path",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "319: def _platform_path(relative):\n320:     return (frozen_testdata() / relative[len(\"tests/testdata/\"):]\n321:             if relative.startswith(\"tests/testdata/\") else os.path.join(ROOT, relative))"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_boundary.py",
+    "line": 1033,
+    "scope": "test_the_testsub_spec_is_nobodys_but_the_platforms",
+    "call": "open(TESTSUB, encoding=\"utf-8\")",
+    "category": "Source-frozen-witness",
+    "context": "1030: def test_the_testsub_spec_is_nobodys_but_the_platforms():\n1031:     \"\"\"`testsub.subsystem.yaml` has nothing of the product in it, and the platform reads it as it reads any spec.\"\"\"\n1032:     from w2cplatform.spec import SubsystemSpec\n1033:     text = open(TESTSUB, encoding=\"utf-8\").read()\n1034:     assert not any(words_in(line) for line in text.splitlines())\n1035:     spec = SubsystemSpec.load(TESTSUB)\n1036:     assert spec.name == \"testsub\" and set(spec.fields) >= {\"name\", \"start\", \"labels\"}"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_canonical_json_table.py",
+    "line": 17,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "13: import os\n14: \n15: from tests.productdir import SOURCE, product_file\n16: \n17: TABLE = os.path.join(frozen_testdata(), \"canonical_json.tsv\")\n18: \n19: \n20: def _rows():\n21:     \"\"\"(line, input, canon, sha256) of every row.\"\"\""
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_console_page.py",
+    "line": 100,
+    "scope": "test_a_subsystem_with_a_page_beside_its_spec_is_shown_with_it_and_one_without_with_the_platforms",
+    "call": "open(os.path.join(d, name), \"w\")",
+    "category": "Source-frozen-witness",
+    "context": "96:     other name beside the spec \u2014 another subsystem's, a bare `shell.html` \u2014 is not its page.\"\"\"\n97:     spec, d = testsub(), tempfile.mkdtemp(prefix=\"shell-\")\n98:     own = os.path.join(d, \"testsub.shell.html\")\n99:     for name in (\"shell.html\", \"testsub2.shell.html\"):\n100:         with open(os.path.join(d, name), \"w\") as f:\n101:             f.write(\"<!doctype html><title>not its own</title>\")\n102:     was = (dict(catalog._loaded), dict(catalog._files))\n103:     try:\n104:         catalog._files.pop(spec.name, None)\n105:         assert page_of(spec) == PAGE                     # built in code: nobody's file, so nobody's page"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_console_page.py",
+    "line": 110,
+    "scope": "test_a_subsystem_with_a_page_beside_its_spec_is_shown_with_it_and_one_without_with_the_platforms",
+    "call": "open(own, \"w\")",
+    "category": "Source-frozen-witness",
+    "context": "106:         catalog.register(spec, TESTSUB)\n107:         assert page_of(spec) == PAGE                     # a directory with no page of its own\n108:         catalog.register(spec, os.path.join(d, \"testsub.subsystem.yaml\"))\n109:         assert page_of(spec) == PAGE                     # pages beside it, none of its name\n110:         with open(own, \"w\") as f:\n111:             f.write(\"<!doctype html><title>its own</title><script>mine()</script>\")\n112:         assert page_of(spec) == own\n113:         box = Box()\n114:         with Served(SpecConsole(console_ctl(box), marks_root=box.resource_root, wall=box.wall)) as call:\n115:             status, headers, body = _get(call.base + \"/\")"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_console_page.py",
+    "line": 135,
+    "scope": "test_only_the_consoles_root_serves_a_page_and_a_mounted_subsystem_none",
+    "call": "open(os.path.join(d, f\"{name}.shell.html\"), \"w\")",
+    "category": "Source-frozen-witness",
+    "context": "131:     from w2cplatform.host import spec_console\n132:     from tests.conftest import testsub2\n133:     d = tempfile.mkdtemp(prefix=\"shell-\")\n134:     for name in (\"testsub\", \"testsub2\"):\n135:         with open(os.path.join(d, f\"{name}.shell.html\"), \"w\") as f:\n136:             f.write(f\"<!doctype html><title>{name}'s own</title><script>mine()</script>\")\n137:     was = (dict(catalog._loaded), dict(catalog._files))\n138:     box = Box()\n139:     try:\n140:         catalog.register(testsub(), os.path.join(d, \"testsub.subsystem.yaml\"))"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_console_page.py",
+    "line": 150,
+    "scope": "test_only_the_consoles_root_serves_a_page_and_a_mounted_subsystem_none",
+    "call": "open(own, \"rb\")",
+    "category": "Source-frozen-witness",
+    "context": "146:         try:\n147:             own = os.path.join(d, \"testsub.shell.html\")\n148:             for path in (\"/\", \"/index.html\"):\n149:                 status, headers, body = _get(base + path)\n150:                 assert status == 200 and body == open(own, \"rb\").read(), (path, status)\n151:                 assert headers[\"Content-Security-Policy\"] == page_csp(own)\n152:             for path in (\"/testsub2/\", \"/testsub2/index.html\", \"/testsub2\"):\n153:                 status, _, body = _get(base + path)\n154:                 assert status == 404 and b\"the page is the console root's\" in body, (path, status, body[:200])\n155:             assert _get(base + \"/testsub2/spec\")[0] == 200                      # the mount's routes are its own"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_credentials.py",
+    "line": 865,
+    "scope": "_testsub2",
+    "call": "open(os.path.join(frozen_testdata(), \"testsub2.subsystem.yaml\"),\n              encoding=\"utf-8\")",
+    "category": "Source-frozen-witness",
+    "context": "861:     \"\"\"`testsub2`'s spec, built here from its file: nobody's catalogue (`SubsystemSpec.from_dict`). `nested`: the pairs\n862:     its unit's `feed` says hold an address, in place of the file's (`[via]`).\"\"\"\n863:     import os\n864:     import yaml\n865:     with open(os.path.join(frozen_testdata(), \"testsub2.subsystem.yaml\"),\n866:               encoding=\"utf-8\") as f:\n867:         d = yaml.safe_load(f)\n868:     if nested is not None:\n869:         feed = d[\"unit\"][\"fields\"][\"feed\"]\n870:         feed[\"secret_in\"] = [{\"nested\": nested} if \"nested\" in e else e for e in feed[\"secret_in\"]]\n871:     return SubsystemSpec.from_dict(d)"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_credentials.py",
+    "line": 865,
+    "scope": "_testsub2",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "861:     \"\"\"`testsub2`'s spec, built here from its file: nobody's catalogue (`SubsystemSpec.from_dict`). `nested`: the pairs\n862:     its unit's `feed` says hold an address, in place of the file's (`[via]`).\"\"\"\n863:     import os\n864:     import yaml\n865:     with open(os.path.join(frozen_testdata(), \"testsub2.subsystem.yaml\"),\n866:               encoding=\"utf-8\") as f:\n867:         d = yaml.safe_load(f)\n868:     if nested is not None:\n869:         feed = d[\"unit\"][\"fields\"][\"feed\"]\n870:         feed[\"secret_in\"] = [{\"nested\": nested} if \"nested\" in e else e for e in feed[\"secret_in\"]]"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_domain_books.py",
+    "line": 21,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "17: import yaml\n18: \n19: sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))\n20: \n21: TESTSUB = os.path.join(frozen_testdata(), \"testsub.subsystem.yaml\")\n22: \n23: \n24: def _base() -> dict:\n25:     with open(TESTSUB, encoding=\"utf-8\") as f:"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_domain_platform.py",
+    "line": 19,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "15: import tempfile\n16: \n17: sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))\n18: \n19: TESTSUB = os.path.join(frozen_testdata(), \"testsub.subsystem.yaml\")\n20: \n21: \n22: class Clock:\n23:     def __init__(self, t: float = 1_757_500_000.0): self.t = t"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_domain_platform.py",
+    "line": 1601,
+    "scope": "test_a_witness_names_a_member_by_the_field_that_carries_its_name_and_the_spec_must_declare_it_fixed",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "1597:     from w2cplatform import specyaml\n1598:     from w2cplatform.domain import declared\n1599:     from w2cplatform.domain.alarms import DomainAlarms\n1600:     from w2cplatform.spec import SubsystemSpec\n1601:     t2 = os.path.join(frozen_testdata(), \"testsub2.subsystem.yaml\")\n1602:     s2 = SubsystemSpec.load(t2)\n1603:     assert (s2.domain.witness, s2.domain.member_field) == (\"seen\", \"of\")\n1604:     assert \"testsub2/seen/\" in declared.witnesses()\n1605:     base = specyaml.loads(open(t2, encoding=\"utf-8\"))\n1606:     for bad in (\"seen\", {\"report\": \"seen\"}, {\"report\": \"seen\", \"member_field\": \"nope\"},"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_domain_platform.py",
+    "line": 1605,
+    "scope": "test_a_witness_names_a_member_by_the_field_that_carries_its_name_and_the_spec_must_declare_it_fixed",
+    "call": "open(t2, encoding=\"utf-8\")",
+    "category": "Source-frozen-witness",
+    "context": "1601:     t2 = os.path.join(frozen_testdata(), \"testsub2.subsystem.yaml\")\n1602:     s2 = SubsystemSpec.load(t2)\n1603:     assert (s2.domain.witness, s2.domain.member_field) == (\"seen\", \"of\")\n1604:     assert \"testsub2/seen/\" in declared.witnesses()\n1605:     base = specyaml.loads(open(t2, encoding=\"utf-8\"))\n1606:     for bad in (\"seen\", {\"report\": \"seen\"}, {\"report\": \"seen\", \"member_field\": \"nope\"},\n1607:                 {\"report\": \"seen\", \"member_field\": \"mode\"}, {\"report\": \"Seen!\", \"member_field\": \"of\"},\n1608:                 {\"report\": \"seen\", \"member_field\": \"of\", \"via\": \"x\"}):\n1609:         try:\n1610:             SubsystemSpec.from_dict({**base, \"domain\": {**base[\"domain\"], \"witness\": bad}})"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_fault_table.py",
+    "line": 14,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "10: import os\n11: \n12: from tests.productdir import SOURCE, product_file\n13: \n14: DATA = str(frozen_testdata())\n15: TABLE = os.path.join(DATA, \"fault.tsv\")\n16: \n17: \n18: def _rows() -> dict[str, int]:"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_group_of_table.py",
+    "line": 22,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "18: from w2cplatform import specyaml\n19: \n20: from tests.productdir import SOURCE\n21: \n22: TABLE = os.path.join(frozen_testdata(), \"group_of.tsv\")\n23: VMS = os.path.join(SOURCE, \"vms\", \"cam.subsystem.yaml\")\n24: TESTSUB2 = os.path.join(frozen_testdata(), \"testsub2.subsystem.yaml\")\n25: NONE = (\"(none)\", \"<none>\")\n26: "
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_group_of_table.py",
+    "line": 24,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "20: from tests.productdir import SOURCE\n21: \n22: TABLE = os.path.join(frozen_testdata(), \"group_of.tsv\")\n23: VMS = os.path.join(SOURCE, \"vms\", \"cam.subsystem.yaml\")\n24: TESTSUB2 = os.path.join(frozen_testdata(), \"testsub2.subsystem.yaml\")\n25: NONE = (\"(none)\", \"<none>\")\n26: \n27: \n28: def _table() -> tuple[dict, dict, list]:"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_holder_requests.py",
+    "line": 210,
+    "scope": "test_no_spec_names_the_request_familys_kinds_among_its_own",
+    "call": "glob.glob(os.path.join(root, \"vms\", \"*.subsystem.yaml\"))",
+    "category": "Source-frozen-witness",
+    "context": "206: def test_no_spec_names_the_request_familys_kinds_among_its_own():\n207:     \"\"\"`command` and `command.failed` are the platform's words: the console module has them, as it has `server.*` and\n208:     `worker.*`. A subsystem's `display.kinds` names only what its own units raise.\"\"\"\n209:     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))\n210:     paths = glob.glob(os.path.join(root, \"vms\", \"*.subsystem.yaml\")) + glob.glob(\n211:         os.path.join(frozen_testdata(), \"*.subsystem.yaml\"))\n212:     assert paths\n213:     for p in paths:\n214:         kinds = (SubsystemSpec.load(p).display or {}).get(\"kinds\") or {}\n215:         assert not {COMMAND, COMMAND_FAILED} & set(kinds), (p, sorted(kinds))"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_holder_requests.py",
+    "line": 210,
+    "scope": "test_no_spec_names_the_request_familys_kinds_among_its_own",
+    "call": "glob.glob(\n        os.path.join(frozen_testdata(), \"*.subsystem.yaml\"))",
+    "category": "Source-frozen-witness",
+    "context": "206: def test_no_spec_names_the_request_familys_kinds_among_its_own():\n207:     \"\"\"`command` and `command.failed` are the platform's words: the console module has them, as it has `server.*` and\n208:     `worker.*`. A subsystem's `display.kinds` names only what its own units raise.\"\"\"\n209:     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))\n210:     paths = glob.glob(os.path.join(root, \"vms\", \"*.subsystem.yaml\")) + glob.glob(\n211:         os.path.join(frozen_testdata(), \"*.subsystem.yaml\"))\n212:     assert paths\n213:     for p in paths:\n214:         kinds = (SubsystemSpec.load(p).display or {}).get(\"kinds\") or {}\n215:         assert not {COMMAND, COMMAND_FAILED} & set(kinds), (p, sorted(kinds))"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_holder_requests.py",
+    "line": 211,
+    "scope": "test_no_spec_names_the_request_familys_kinds_among_its_own",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "207:     \"\"\"`command` and `command.failed` are the platform's words: the console module has them, as it has `server.*` and\n208:     `worker.*`. A subsystem's `display.kinds` names only what its own units raise.\"\"\"\n209:     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))\n210:     paths = glob.glob(os.path.join(root, \"vms\", \"*.subsystem.yaml\")) + glob.glob(\n211:         os.path.join(frozen_testdata(), \"*.subsystem.yaml\"))\n212:     assert paths\n213:     for p in paths:\n214:         kinds = (SubsystemSpec.load(p).display or {}).get(\"kinds\") or {}\n215:         assert not {COMMAND, COMMAND_FAILED} & set(kinds), (p, sorted(kinds))"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_host.py",
+    "line": 16,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "12: \n13: from w2cplatform import host\n14: from w2cplatform.resource import heartbeat_key, resources_seen, space_total\n15: \n16: TESTDATA = str(frozen_testdata())\n17: \n18: \n19: class _Lines(logging.Handler):\n20:     def __init__(self):"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_member_edits.py",
+    "line": 32,
+    "scope": "site",
+    "call": "(frozen_testdata() / \"testsub.subsystem.yaml\").read_text()",
+    "category": "Source-frozen-witness",
+    "context": "31: def site(vars_=None, fields=None):\n32:     raw = yaml.safe_load((frozen_testdata() / \"testsub.subsystem.yaml\").read_text())\n33:     raw[\"unit\"][\"fields\"].update(fields or {})\n34:     specs = [SubsystemSpec.from_dict({**json.loads(json.dumps(raw).replace(\"testsub/\", sub+\"/\")), \"name\": sub}) for sub in (\"testsub\", \"testsub2\")]\n35:     wall, vars_ = Clock(), FakeVariables() if vars_ is None else vars_\n36:     key = MemberKey.load_or_make(vars_)\n37:     vars_.put(\"domain/members\", {\"doc\": json.dumps({\"rev\": 1, \"members\": {\"north\": {\"key\": key.pub, \"seal\": key.seal_pub}}})})"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_member_edits.py",
+    "line": 32,
+    "scope": "site",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "31: def site(vars_=None, fields=None):\n32:     raw = yaml.safe_load((frozen_testdata() / \"testsub.subsystem.yaml\").read_text())\n33:     raw[\"unit\"][\"fields\"].update(fields or {})\n34:     specs = [SubsystemSpec.from_dict({**json.loads(json.dumps(raw).replace(\"testsub/\", sub+\"/\")), \"name\": sub}) for sub in (\"testsub\", \"testsub2\")]\n35:     wall, vars_ = Clock(), FakeVariables() if vars_ is None else vars_\n36:     key = MemberKey.load_or_make(vars_)\n37:     vars_.put(\"domain/members\", {\"doc\": json.dumps({\"rev\": 1, \"members\": {\"north\": {\"key\": key.pub, \"seal\": key.seal_pub}}})})"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_member_resolver.py",
+    "line": 49,
+    "scope": "site",
+    "call": "(frozen_testdata() / 'testsub.subsystem.yaml').read_text()",
+    "category": "Source-frozen-witness",
+    "context": "48: def site():\n49:     raw = yaml.safe_load((frozen_testdata() / 'testsub.subsystem.yaml').read_text())\n50:     raw[\"unit\"][\"fields\"][\"serial\"] = {\"type\": \"string\", \"required\": True}\n51:     raw[\"domain\"][\"ref\"] = \"serial\"\n52:     raw[\"snapshot\"].append(\"serial\")\n53:     specs = [SubsystemSpec.from_dict({**json.loads(json.dumps(raw).replace(\"testsub/\", sub + \"/\")), \"name\": sub})\n54:              for sub in (\"testsub\", \"testsub2\")]"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_member_resolver.py",
+    "line": 49,
+    "scope": "site",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "48: def site():\n49:     raw = yaml.safe_load((frozen_testdata() / 'testsub.subsystem.yaml').read_text())\n50:     raw[\"unit\"][\"fields\"][\"serial\"] = {\"type\": \"string\", \"required\": True}\n51:     raw[\"domain\"][\"ref\"] = \"serial\"\n52:     raw[\"snapshot\"].append(\"serial\")\n53:     specs = [SubsystemSpec.from_dict({**json.loads(json.dumps(raw).replace(\"testsub/\", sub + \"/\")), \"name\": sub})\n54:              for sub in (\"testsub\", \"testsub2\")]"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_place_follows.py",
+    "line": 14,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "10: from w2cplatform.spec import SubsystemSpec\n11: from w2cplatform.worker import Worker\n12: from tests.conftest import Box\n13: \n14: TESTSUB2 = os.path.join(frozen_testdata(), \"testsub2.subsystem.yaml\")\n15: \n16: \n17: def _spec(server_field: str):\n18:     spec = SubsystemSpec.load(TESTSUB2)"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_platform_lists.py",
+    "line": 15,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "11: from tests.productdir import SOURCE, product_file\n12: from w2cplatform import spec\n13: from w2cplatform.secrets import PLATFORM_SECRET_READERS\n14: \n15: TABLE = os.path.join(frozen_testdata(), \"platform_lists.tsv\")\n16: # `secret_readers`: the platform's own secret rows and their readers, a word `<row or prefix>=<role>` each \u2014 `<row>=`\n17: # for a row nobody of the platform reads (the product's `PlatformSecretReaders`; ADR-0066's addition of 2026-10-10)\n18: READERS = {f\"{row}={r}\" for row, roles in PLATFORM_SECRET_READERS.items() for r in (roles or (\"\",))}\n19: LISTS = {\"heartbeat_strings\": spec.PLATFORM_HEARTBEAT_STRINGS, \"secret_roles\": spec.SECRET_ROLES,"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_request_door_r14.py",
+    "line": 27,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "23: from w2cplatform.console import SpecConsole\n24: from w2cplatform.spec import SubsystemSpec\n25: from w2cplatform.worker import RequestRefused, Worker\n26: \n27: TESTDATA = str(frozen_testdata())\n28: \n29: \n30: def _spec(key: bool = True, per_person: bool = True):\n31:     \"\"\"testsub2 as its file says it, or \u2014 built here, the spec's bytes are \u00ab\u041f\u0430\u0440\u0438\u0442\u0435\u0442\u00bb's \u2014 with the body's `id` naming a"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_requests_body_table.py",
+    "line": 19,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "15: import os\n16: \n17: from tests.productdir import SOURCE, product_file\n18: \n19: TABLE = os.path.join(frozen_testdata(), \"requests_body.tsv\")\n20: ABSENT, EMPTY = \"<absent>\", \"<empty>\"\n21: FIELDS = (\"request\", \"json\")\n22: \n23: "
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_secret_in_table.py",
+    "line": 21,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "17: import os\n18: \n19: from tests.productdir import SOURCE, product_file\n20: \n21: TABLE = os.path.join(frozen_testdata(), \"secret_in.tsv\")\n22: SPECS = os.path.join(SOURCE, \"vms\")\n23: COLUMNS = (\"field\", \"raw\", \"masked\", \"fault\", \"note\")\n24: \n25: "
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_secret_in_table.py",
+    "line": 201,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "197:         else:\n198:             os.environ[\"W2C_PRODUCT_DIR\"] = was\n199: \n200: \n201: LOG_MASK = os.path.join(frozen_testdata(), \"log_mask.tsv\")\n202: \n203: \n204: def test_free_text_is_said_with_every_credential_in_it_hidden_as_its_table_says():\n205:     \"\"\"`secrets.mask_text` \u2014 a log line, an error a driver said, a request it logged, a JSON document: no field of any"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_secret_in_table.py",
+    "line": 175,
+    "scope": "test_the_product_is_read_as_its_main_holds_it_and_never_as_a_working_tree_being_edited",
+    "call": "open(os.path.join(root, \"testdata\", \"secret_in.tsv\"), \"w\")",
+    "category": "Source-frozen-witness",
+    "context": "171:     root = tempfile.mkdtemp(prefix=\"product-\")\n172:     git = [\"git\", \"-C\", root, \"-c\", \"user.email=t@t\", \"-c\", \"user.name=t\"]\n173:     subprocess.run(git + [\"init\", \"-q\", \"-b\", \"main\"], check=True)\n174:     os.makedirs(os.path.join(root, \"testdata\"))\n175:     with open(os.path.join(root, \"testdata\", \"secret_in.tsv\"), \"w\") as f:\n176:         f.write(\"committed\\n\")\n177:     subprocess.run(git + [\"add\", \"testdata/secret_in.tsv\"], check=True)\n178:     subprocess.run(git + [\"commit\", \"-q\", \"-m\", \"t\"], check=True)\n179:     with open(os.path.join(root, \"testdata\", \"secret_in.tsv\"), \"w\") as f:\n180:         f.write(\"half edited\\n\")"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_secret_in_table.py",
+    "line": 179,
+    "scope": "test_the_product_is_read_as_its_main_holds_it_and_never_as_a_working_tree_being_edited",
+    "call": "open(os.path.join(root, \"testdata\", \"secret_in.tsv\"), \"w\")",
+    "category": "Source-frozen-witness",
+    "context": "175:     with open(os.path.join(root, \"testdata\", \"secret_in.tsv\"), \"w\") as f:\n176:         f.write(\"committed\\n\")\n177:     subprocess.run(git + [\"add\", \"testdata/secret_in.tsv\"], check=True)\n178:     subprocess.run(git + [\"commit\", \"-q\", \"-m\", \"t\"], check=True)\n179:     with open(os.path.join(root, \"testdata\", \"secret_in.tsv\"), \"w\") as f:\n180:         f.write(\"half edited\\n\")\n181:     with open(os.path.join(root, \"testdata\", \"new.tsv\"), \"w\") as f:\n182:         f.write(\"not yet\\n\")\n183:     was = os.environ.get(\"W2C_PRODUCT_DIR\")\n184:     was_ref = productdir.REF"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_secret_in_table.py",
+    "line": 181,
+    "scope": "test_the_product_is_read_as_its_main_holds_it_and_never_as_a_working_tree_being_edited",
+    "call": "open(os.path.join(root, \"testdata\", \"new.tsv\"), \"w\")",
+    "category": "Source-frozen-witness",
+    "context": "177:     subprocess.run(git + [\"add\", \"testdata/secret_in.tsv\"], check=True)\n178:     subprocess.run(git + [\"commit\", \"-q\", \"-m\", \"t\"], check=True)\n179:     with open(os.path.join(root, \"testdata\", \"secret_in.tsv\"), \"w\") as f:\n180:         f.write(\"half edited\\n\")\n181:     with open(os.path.join(root, \"testdata\", \"new.tsv\"), \"w\") as f:\n182:         f.write(\"not yet\\n\")\n183:     was = os.environ.get(\"W2C_PRODUCT_DIR\")\n184:     was_ref = productdir.REF\n185:     os.environ[\"W2C_PRODUCT_DIR\"] = root\n186:     productdir.REF = \"main\"              # the synthetic checkout owns its ref, independent of the run's snapshot"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_spec_declarations.py",
+    "line": 138,
+    "scope": "test_a_group_is_the_host_an_address_names_in_one_spelling_and_a_scheme_declares_where_its_host_stands",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "134:     assert url_host(\"m://hub/a:b%40h/x\", hub) == url_host(\"m://hub/a:b@h:80/x\", hub) == \"h\"   # a login set aside\n135:     assert url_host(\"m://hub/a:b/c@h/x\", hub) == url_host(\"m://hub/h:pw/x\", hub) == \"\"   # a port no number: a login's\n136:     assert url_host(\"m://hub/a:b%40h%2Ecorp/x\", hub) == \"\"                     # a host only decoding makes is none\n137:     # testsub2: a tally's feed by its host \u2014 a mirror's in its path, and the shelf's own copy (`local`) none\n138:     spec = SubsystemSpec.load(os.path.join(frozen_testdata(), \"testsub2.subsystem.yaml\"))\n139:     assert spec.group_of(\"https://Feed.Example/t1\") == spec.group_of(\"sftp://feed.example:22/t2\") == \"feed.example\"\n140:     assert spec.group_of(\"mirror://hub/feed.example/t3#x@y\") == \"feed.example\"\n141:     assert spec.group_of(\"mirror://local/t4\") == \"\" == spec.group_of(\"\")\n142:     # ADR 0053: with `cut_at: host` there is no unit without a group but the ones `none` says \u2014 a host nobody can tell is\n143:     # refused at write, in words that do not repeat it; `local` is the lawful exception, and a value not given asks nothing"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_spec_flow.py",
+    "line": 15,
+    "scope": "<module>",
+    "call": "glob.glob(os.path.join(SOURCE, \"vms\", \"*.subsystem.yaml\"))",
+    "category": "Source-frozen-witness",
+    "context": "11: \n12: import yaml\n13: \n14: SOURCE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))\n15: SPECS = sorted(glob.glob(os.path.join(SOURCE, \"vms\", \"*.subsystem.yaml\"))\n16:                + glob.glob(os.path.join(frozen_testdata(), \"*.subsystem.yaml\")))\n17: _OPEN = (yaml.FlowMappingStartToken, yaml.FlowSequenceStartToken)\n18: _CLOSE = (yaml.FlowMappingEndToken, yaml.FlowSequenceEndToken)\n19: "
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_spec_flow.py",
+    "line": 16,
+    "scope": "<module>",
+    "call": "glob.glob(os.path.join(frozen_testdata(), \"*.subsystem.yaml\"))",
+    "category": "Source-frozen-witness",
+    "context": "12: import yaml\n13: \n14: SOURCE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))\n15: SPECS = sorted(glob.glob(os.path.join(SOURCE, \"vms\", \"*.subsystem.yaml\"))\n16:                + glob.glob(os.path.join(frozen_testdata(), \"*.subsystem.yaml\")))\n17: _OPEN = (yaml.FlowMappingStartToken, yaml.FlowSequenceStartToken)\n18: _CLOSE = (yaml.FlowMappingEndToken, yaml.FlowSequenceEndToken)\n19: \n20: "
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_spec_flow.py",
+    "line": 16,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "12: import yaml\n13: \n14: SOURCE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))\n15: SPECS = sorted(glob.glob(os.path.join(SOURCE, \"vms\", \"*.subsystem.yaml\"))\n16:                + glob.glob(os.path.join(frozen_testdata(), \"*.subsystem.yaml\")))\n17: _OPEN = (yaml.FlowMappingStartToken, yaml.FlowSequenceStartToken)\n18: _CLOSE = (yaml.FlowMappingEndToken, yaml.FlowSequenceEndToken)\n19: \n20: "
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_spec_keys.py",
+    "line": 16,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "12: from w2cplatform import catalog, runtime\n13: from w2cplatform.secrets import NO_RULES, SecretRules, address_refusal, hide_in_url, is_credential_param\n14: from w2cplatform.spec import Refused, SubsystemSpec\n15: \n16: TESTDATA = str(frozen_testdata())\n17: CAP = {\"capacity\": {\"from\": \"capacity\", \"default\": 4}}\n18: \n19: \n20: def _spec(**over):"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_spec_keys.py",
+    "line": 470,
+    "scope": "test_worker_requests_names_subsystems_of_the_catalogue_that_take_requests",
+    "call": "open(os.path.join(d, \"filer.subsystem.yaml\"), \"w\", encoding=\"utf-8\")",
+    "category": "Source-frozen-witness",
+    "context": "466:             _refused(lambda spec=spec: SpecController(spec, box.vars, box.objects, wall=box.wall), words)\n467:     with in_catalogue(one):\n468:         catalog.requests_known(_spec(worker={\"requests\": [\"testsub\"]}))          # a family there: it files to it\n469:     d, files = tempfile.mkdtemp(), dict(catalog._files)\n470:     with open(os.path.join(d, \"filer.subsystem.yaml\"), \"w\", encoding=\"utf-8\") as f:     # a filer to testsub\u2026\n471:         f.write(\"name: filer\\nworker: {requests: [testsub]}\\nunit: {rows: items, id: name, fields: {name: {type: string, \"\n472:                 \"required: true}}}\\nplacement: {capacity: {from: capacity, default: 4}}\\n\")\n473:     try:\n474:         with in_catalogue():\n475:             catalog._loaded.clear()"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_spec_keys.py",
+    "line": 477,
+    "scope": "test_worker_requests_names_subsystems_of_the_catalogue_that_take_requests",
+    "call": "shutil.copy(os.path.join(TESTDATA, \"testsub.subsystem.yaml\"), d)",
+    "category": "Source-frozen-witness",
+    "context": "473:     try:\n474:         with in_catalogue():\n475:             catalog._loaded.clear()\n476:             _refused(lambda: catalog.load_dir(d), \"worker.requests names 'testsub', which is no subsystem\")\n477:         shutil.copy(os.path.join(TESTDATA, \"testsub.subsystem.yaml\"), d)       # \u2026and with testsub beside, loads\n478:         with in_catalogue():\n479:             catalog._loaded.clear()\n480:             assert [s.name for s in catalog.load_dir(d)] == [\"filer\", \"testsub\"]\n481:     finally:\n482:         catalog._files.clear()"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_spec_re2.py",
+    "line": 22,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "18: from w2cplatform.schema import re2_fault\n19: from w2cplatform.spec import SubsystemSpec\n20: \n21: HERE = os.path.dirname(os.path.abspath(__file__))\n22: TESTDATA = str(frozen_testdata())\n23: BS = \"\\\\\"\n24: \n25: # (pattern, the construct its refusal names) \u2014 Python compiles every one of them, Go none (the last two it reads otherwise)\n26: NOT_RE2 = ("
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_spec_rule.py",
+    "line": 19,
+    "scope": "<module>",
+    "call": "glob.glob(os.path.join(frozen_testdata(), \"testsub*.subsystem.yaml\"))",
+    "category": "Source-frozen-witness",
+    "context": "15: from w2cplatform import metrics\n16: from w2cplatform.spec import SubsystemSpec\n17: \n18: HERE = os.path.dirname(os.path.abspath(__file__))\n19: TESTSUBS = sorted(glob.glob(os.path.join(frozen_testdata(), \"testsub*.subsystem.yaml\")))\n20: # The subsystems the code root ships: every spec in a package beside the tests (the product's, by whatever name).\n21: ROOT = os.path.dirname(HERE)\n22: PRODUCT = sorted(p for p in glob.glob(os.path.join(ROOT, \"*\", \"*.subsystem.yaml\")) if not p.startswith(HERE + os.sep))\n23: "
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_spec_rule.py",
+    "line": 19,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "15: from w2cplatform import metrics\n16: from w2cplatform.spec import SubsystemSpec\n17: \n18: HERE = os.path.dirname(os.path.abspath(__file__))\n19: TESTSUBS = sorted(glob.glob(os.path.join(frozen_testdata(), \"testsub*.subsystem.yaml\")))\n20: # The subsystems the code root ships: every spec in a package beside the tests (the product's, by whatever name).\n21: ROOT = os.path.dirname(HERE)\n22: PRODUCT = sorted(p for p in glob.glob(os.path.join(ROOT, \"*\", \"*.subsystem.yaml\")) if not p.startswith(HERE + os.sep))\n23: "
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_spec_rule.py",
+    "line": 22,
+    "scope": "<module>",
+    "call": "glob.glob(os.path.join(ROOT, \"*\", \"*.subsystem.yaml\"))",
+    "category": "Source-frozen-witness",
+    "context": "18: HERE = os.path.dirname(os.path.abspath(__file__))\n19: TESTSUBS = sorted(glob.glob(os.path.join(frozen_testdata(), \"testsub*.subsystem.yaml\")))\n20: # The subsystems the code root ships: every spec in a package beside the tests (the product's, by whatever name).\n21: ROOT = os.path.dirname(HERE)\n22: PRODUCT = sorted(p for p in glob.glob(os.path.join(ROOT, \"*\", \"*.subsystem.yaml\")) if not p.startswith(HERE + os.sep))\n23: \n24: # Where a spec's keys are NAMES (a field, a table, an event kind) \u2014 one `*` for all of them \u2014, and where it writes words or\n25: # a document the platform passes on whole (not walked): the loader's own (`speckeys.py`), so the walk here is its walk.\n26: from w2cplatform.speckeys import NAMED, OPAQUE  # noqa: E402"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_spec_verdicts.py",
+    "line": 15,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "11: \n12: from w2cplatform import catalog\n13: from w2cplatform.spec import SubsystemSpec\n14: \n15: TESTDATA = str(frozen_testdata())\n16: \n17: \n18: def _table() -> list[tuple[str, str]]:\n19:     rows = []"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_spec_verdicts.py",
+    "line": 20,
+    "scope": "_table",
+    "call": "open(os.path.join(TESTDATA, \"spec_verdicts.tsv\"), encoding=\"utf-8\")",
+    "category": "Source-frozen-witness",
+    "context": "18: def _table() -> list[tuple[str, str]]:\n19:     rows = []\n20:     with open(os.path.join(TESTDATA, \"spec_verdicts.tsv\"), encoding=\"utf-8\") as f:\n21:         for line in f:\n22:             line = line.rstrip(\"\\n\")\n23:             if not line or line.startswith(\"#\"):\n24:                 continue\n25:             case, verdict = line.split(\"\\t\")"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_spec_yaml.py",
+    "line": 17,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "13: \n14: from w2cplatform import specyaml\n15: from w2cplatform.spec import SubsystemSpec\n16: \n17: TESTDATA = str(frozen_testdata())\n18: SPECS = [os.path.join(TESTDATA, f) for f in (\"testsub.subsystem.yaml\", \"testsub2.subsystem.yaml\")] + \\\n19:     [os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), \"vms\", f) for f in\n20:      (\"cam.subsystem.yaml\", \"rec.subsystem.yaml\", \"live.subsystem.yaml\", \"det.subsystem.yaml\", \"detjob.subsystem.yaml\",\n21:       \"survey.subsystem.yaml\", \"auto.subsystem.yaml\")]"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_strict_place.py",
+    "line": 16,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "12: from w2cplatform.spec import SubsystemSpec\n13: from w2cplatform.worker import Worker\n14: from tests.conftest import Box\n15: \n16: TESTSUB2 = os.path.join(frozen_testdata(), \"testsub2.subsystem.yaml\")\n17: \n18: \n19: def _spec(lease: str):\n20:     spec = SubsystemSpec.load(TESTSUB2)"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_token_requests.py",
+    "line": 29,
+    "scope": "raw_spec",
+    "call": "(frozen_testdata() / f\"{sub}.subsystem.yaml\").read_text()",
+    "category": "Source-frozen-witness",
+    "context": "28: def raw_spec(sub=\"testsub\"):\n29:     raw = yaml.safe_load((frozen_testdata() / f\"{sub}.subsystem.yaml\").read_text())\n30:     raw[\"domain\"][\"tokens\"] = {\"tally\": {\"lifetime\": 60, \"claims\": [\"ref\", \"aud\"],\n31:         \"grant\": [f\"{sub}worker\"], \"placement\": {\"sub\": sub, \"caller\": \"origin\", \"ref_claim\": \"ref\",\n32:             \"target_fields\": [\"cluster\", \"copies\"], \"audience_claim\": \"aud\"}}}\n33:     return raw"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_token_requests.py",
+    "line": 29,
+    "scope": "raw_spec",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "28: def raw_spec(sub=\"testsub\"):\n29:     raw = yaml.safe_load((frozen_testdata() / f\"{sub}.subsystem.yaml\").read_text())\n30:     raw[\"domain\"][\"tokens\"] = {\"tally\": {\"lifetime\": 60, \"claims\": [\"ref\", \"aud\"],\n31:         \"grant\": [f\"{sub}worker\"], \"placement\": {\"sub\": sub, \"caller\": \"origin\", \"ref_claim\": \"ref\",\n32:             \"target_fields\": [\"cluster\", \"copies\"], \"audience_claim\": \"aud\"}}}\n33:     return raw"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_units_about.py",
+    "line": 37,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "33: from w2cplatform.variables import FileVariables\n34: from tests.conftest import stamped\n35: \n36: HERE = os.path.dirname(os.path.abspath(__file__))\n37: TESTSUB = os.path.join(frozen_testdata(), \"testsub.subsystem.yaml\")\n38: \n39: # A second subsystem, ABOUT testsub's counters: a tally is about one counter, and its notes (a table) are each about\n40: # one counter too.\n41: TALLY = {\"name\": \"tally\", \"about\": {\"sub\": \"testsub\", \"field\": \"counter\"},"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_unplaced_delete.py",
+    "line": 17,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "13: from w2cplatform.spec import SpecController, SubsystemSpec\n14: from w2cplatform.variables import Forbidden\n15: from tests.conftest import Box\n16: \n17: TESTSUB = os.path.join(frozen_testdata(), \"testsub.subsystem.yaml\")\n18: \n19: \n20: def _raw() -> dict:\n21:     with open(TESTSUB, encoding=\"utf-8\") as f:"
+  },
+  {
+    "repository": "course",
+    "path": "Source/tests/test_where_place.py",
+    "line": 14,
+    "scope": "<module>",
+    "call": "frozen_testdata()",
+    "category": "Source-frozen-witness",
+    "context": "10: import tempfile\n11: import urllib.error\n12: import urllib.request\n13: \n14: TESTDATA = str(frozen_testdata())\n15: \n16: \n17: def _get(base, path, token=None):\n18:     headers = {\"Authorization\": f\"Bearer {token}\"} if token else {}"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-codex-2026-10-30/\u0420\u0415\u0412\u042c\u042e-ACCEPT-FILES-55a6c9e-Codex-probe.py",
+    "line": 26,
+    "scope": "<module>",
+    "call": "(specs / 'Platform/common/vectors/accept/README.md').read_text()",
+    "category": "history-preserve",
+    "context": "22: import c_vector_protocol as wire\n23: \n24: specs = Path(sys.argv[2])\n25: out = Path(os.environ['CHECK_OUT'])\n26: readme = (specs / 'Platform/common/vectors/accept/README.md').read_text()\n27: declared = re.findall(r'\\| `(testsub2?)` \\| .*? \\| `([0-9a-f]{64})` \\|', readme)\n28: assert len(declared) == 2\n29: wanted = {name + '.subsystem.yaml': digest for name, digest in declared}\n30: raws = {name: (specs / 'Source/tests/testdata' / name).read_bytes() for name in wanted}"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-codex-2026-10-30/\u0420\u0415\u0412\u042c\u042e-ACCEPT-FILES-55a6c9e-Codex-probe.py",
+    "line": 30,
+    "scope": "<module>",
+    "call": "(specs / 'Source/tests/testdata' / name).read_bytes()",
+    "category": "history-preserve",
+    "context": "26: readme = (specs / 'Platform/common/vectors/accept/README.md').read_text()\n27: declared = re.findall(r'\\| `(testsub2?)` \\| .*? \\| `([0-9a-f]{64})` \\|', readme)\n28: assert len(declared) == 2\n29: wanted = {name + '.subsystem.yaml': digest for name, digest in declared}\n30: raws = {name: (specs / 'Source/tests/testdata' / name).read_bytes() for name in wanted}\n31: assert all(hashlib.sha256(raws[name]).hexdigest() == digest for name, digest in wanted.items())\n32: snapshot, accept, controls = {}, {}, {}\n33: def typed(value):\n34:     if isinstance(value, dict):"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-codex-2026-10-30/\u0420\u0415\u0412\u042c\u042e-ACCEPT-FILES-55a6c9e-Codex-probe.py",
+    "line": 112,
+    "scope": "<module>",
+    "call": "shutil.copyfile(specs / 'Platform/common/vectors/accept/cases.tsv', folder / 'cases.tsv')",
+    "category": "history-preserve",
+    "context": "108:     # Missing/empty/non-UTF8 public fixture must be rejected before any command.\n109:     broken = root / 'broken'\n110:     folder = broken / 'Platform/common/vectors/accept'\n111:     folder.mkdir(parents=True)\n112:     shutil.copyfile(specs / 'Platform/common/vectors/accept/cases.tsv', folder / 'cases.tsv')\n113:     data = broken / 'Source/tests/testdata'\n114:     data.mkdir(parents=True)\n115:     (data / 'testsub.subsystem.yaml').write_bytes(raws['testsub.subsystem.yaml'])\n116:     for mode, raw in [('missing', None), ('empty', b' \\r\\n'), ('non_utf8', b'\\xff')]:"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-codex-2026-10-30/\u0420\u0415\u0412\u042c\u042e-ACCEPT-FILES-55a6c9e-Codex-probe.py",
+    "line": 71,
+    "scope": "<module>",
+    "call": "(Path(sys.argv[1])/'SPEC_VERSION').read_text()",
+    "category": "history-preserve",
+    "context": "67: sealed = all('Source/tests/testdata/' + name in sources for name in wanted)\n68: controls['fixtures_in_sources'] = sealed\n69: parts = {owner: SimpleNamespace(doc=dict(keys={}, vectors={'common/accept': 'PLAN-ONLY'}))\n70:          for owner in ('08-domain', '09-agent')}\n71: plans = c_targets.plan(SimpleNamespace(specs=specs, spec_version=(Path(sys.argv[1])/'SPEC_VERSION').read_text().strip(),\n72:                                        parts=parts), ['P/08/vectors-accept', 'P/09/vectors-accept'])\n73: assert len(plans) == 2\n74: for plan in plans:\n75:     supplied = {item['path']: item['sha256'] for item in plan['inputs']}"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-codex-2026-10-30/\u0420\u0415\u0412\u042c\u042e-STORE-A-f7e4b38-Codex-probe.py",
+    "line": 70,
+    "scope": "controls",
+    "call": "report_file.read_text()",
+    "category": "history-preserve",
+    "context": "66:         config, report_file = root / 'config.json', root / 'bridge.json'\n67:         config.write_text(json.dumps(dict(specs=str(micro), parts={'01-store': profile})))\n68:         with patch.dict(os.environ), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):\n69:             code = c_store.main(['--driver', 'store-rights', '--config', str(config), '--json', str(report_file)])\n70:         exported = json.loads(report_file.read_text())\n71:         (out / 'bridge-report.json').write_text(json.dumps(exported, ensure_ascii=False, indent=2)+'\\n')\n72:         target = dict(driver='store-rights', inputs=[c_targets.source(acc / 'scenarios.tsv', micro)],\n73:                       not_executed_scenarios={'13-rights-file': reason})\n74:         covered = c_execute.coverage(target, exported)\n75:         assert code == 1 and exported['green'] is False and exported['classification'] == 'stand'"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-codex-2026-10-30/\u0420\u0415\u0412\u042c\u042e-STORE-A-f7e4b38-Codex-probe.py",
+    "line": 37,
+    "scope": "controls",
+    "call": "prelude.read_text()",
+    "category": "history-preserve",
+    "context": "33:             command = ('printf \"%s\\\\n\" '+flag+' > '+shlex.quote(str(prelude))+' && exec '\n34:                        + shlex.join([sys.executable, '-I', '-B', str(observer), str(observed),\n35:                                      '--implicit-rights', '/actual rights']))\n36:             subprocess.run(command, shell=True, check=True, timeout=5)\n37:             original_argv, original_prelude = json.loads(observed.read_text()), prelude.read_text()\n38:             reason = store_audit.scenario_reason(['@rights store none'], command, None)\n39:             attempts = {}\n40:             for name, value in (('none', None), ('file', '/replacement rights')):\n41:                 try:\n42:                     rewritten = store_audit.rights_command(command, value)"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-codex-2026-10-30/\u0420\u0415\u0412\u042c\u042e-STORE-A-f7e4b38-Codex-probe.py",
+    "line": 37,
+    "scope": "controls",
+    "call": "observed.read_text()",
+    "category": "history-preserve",
+    "context": "33:             command = ('printf \"%s\\\\n\" '+flag+' > '+shlex.quote(str(prelude))+' && exec '\n34:                        + shlex.join([sys.executable, '-I', '-B', str(observer), str(observed),\n35:                                      '--implicit-rights', '/actual rights']))\n36:             subprocess.run(command, shell=True, check=True, timeout=5)\n37:             original_argv, original_prelude = json.loads(observed.read_text()), prelude.read_text()\n38:             reason = store_audit.scenario_reason(['@rights store none'], command, None)\n39:             attempts = {}\n40:             for name, value in (('none', None), ('file', '/replacement rights')):\n41:                 try:\n42:                     rewritten = store_audit.rights_command(command, value)"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-codex-2026-10-30/\u0420\u0415\u0412\u042c\u042e-STORE-A-f7e4b38-Codex-probe.py",
+    "line": 49,
+    "scope": "controls",
+    "call": "prelude.read_text()",
+    "category": "history-preserve",
+    "context": "45:                 else:\n46:                     subprocess.run(rewritten, shell=True, check=True, timeout=5)\n47:                     attempts[name] = dict(safety_pass=False,\n48:                                           actual_argv_unchanged=json.loads(observed.read_text()) == original_argv,\n49:                                           unrelated_prelude_changed=prelude.read_text() != original_prelude,\n50:                                           actual_argv=json.loads(observed.read_text()), rewritten=rewritten)\n51:             result['rights_prelude_'+variant] = dict(safety_pass=bool(reason) and all(a['safety_pass'] for a in attempts.values()),\n52:                                                      scenario_reason=reason, attempts=attempts)\n53: \n54:         # A real bridge invocation with only a legitimately unexecuted scenario: no process is launched."
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-codex-2026-10-30/\u0420\u0415\u0412\u042c\u042e-STORE-A-f7e4b38-Codex-probe.py",
+    "line": 50,
+    "scope": "controls",
+    "call": "observed.read_text()",
+    "category": "history-preserve",
+    "context": "46:                     subprocess.run(rewritten, shell=True, check=True, timeout=5)\n47:                     attempts[name] = dict(safety_pass=False,\n48:                                           actual_argv_unchanged=json.loads(observed.read_text()) == original_argv,\n49:                                           unrelated_prelude_changed=prelude.read_text() != original_prelude,\n50:                                           actual_argv=json.loads(observed.read_text()), rewritten=rewritten)\n51:             result['rights_prelude_'+variant] = dict(safety_pass=bool(reason) and all(a['safety_pass'] for a in attempts.values()),\n52:                                                      scenario_reason=reason, attempts=attempts)\n53: \n54:         # A real bridge invocation with only a legitimately unexecuted scenario: no process is launched.\n55:         # Its raw engine report is valid against the capability plan; exported bytes must stay compatible."
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-codex-2026-10-30/\u0420\u0415\u0412\u042c\u042e-STORE-A-f7e4b38-Codex-probe.py",
+    "line": 48,
+    "scope": "controls",
+    "call": "observed.read_text()",
+    "category": "history-preserve",
+    "context": "44:                     attempts[name] = dict(safety_pass=True, reason=str(error))\n45:                 else:\n46:                     subprocess.run(rewritten, shell=True, check=True, timeout=5)\n47:                     attempts[name] = dict(safety_pass=False,\n48:                                           actual_argv_unchanged=json.loads(observed.read_text()) == original_argv,\n49:                                           unrelated_prelude_changed=prelude.read_text() != original_prelude,\n50:                                           actual_argv=json.loads(observed.read_text()), rewritten=rewritten)\n51:             result['rights_prelude_'+variant] = dict(safety_pass=bool(reason) and all(a['safety_pass'] for a in attempts.values()),\n52:                                                      scenario_reason=reason, attempts=attempts)\n53: "
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-\u0432\u0435\u0442\u043e\u043a-\u0440\u0435\u0432\u044c\u044e-2026-11-03/codex-review-repinc768-6f8aa2d/\u0420\u0415\u0412\u042c\u042e-ACCEPT-FILES-55a6c9e-Codex-probe.py",
+    "line": 26,
+    "scope": "<module>",
+    "call": "(specs / 'Platform/common/vectors/accept/README.md').read_text()",
+    "category": "history-preserve",
+    "context": "22: import c_vector_protocol as wire\n23: \n24: specs = Path(sys.argv[2])\n25: out = Path(os.environ['CHECK_OUT'])\n26: readme = (specs / 'Platform/common/vectors/accept/README.md').read_text()\n27: declared = re.findall(r'\\| `(testsub2?)` \\| .*? \\| `([0-9a-f]{64})` \\|', readme)\n28: assert len(declared) == 2\n29: wanted = {name + '.subsystem.yaml': digest for name, digest in declared}\n30: raws = {name: (specs / 'Source/tests/testdata' / name).read_bytes() for name in wanted}"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-\u0432\u0435\u0442\u043e\u043a-\u0440\u0435\u0432\u044c\u044e-2026-11-03/codex-review-repinc768-6f8aa2d/\u0420\u0415\u0412\u042c\u042e-ACCEPT-FILES-55a6c9e-Codex-probe.py",
+    "line": 30,
+    "scope": "<module>",
+    "call": "(specs / 'Source/tests/testdata' / name).read_bytes()",
+    "category": "history-preserve",
+    "context": "26: readme = (specs / 'Platform/common/vectors/accept/README.md').read_text()\n27: declared = re.findall(r'\\| `(testsub2?)` \\| .*? \\| `([0-9a-f]{64})` \\|', readme)\n28: assert len(declared) == 2\n29: wanted = {name + '.subsystem.yaml': digest for name, digest in declared}\n30: raws = {name: (specs / 'Source/tests/testdata' / name).read_bytes() for name in wanted}\n31: assert all(hashlib.sha256(raws[name]).hexdigest() == digest for name, digest in wanted.items())\n32: snapshot, accept, controls = {}, {}, {}\n33: def typed(value):\n34:     if isinstance(value, dict):"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-\u0432\u0435\u0442\u043e\u043a-\u0440\u0435\u0432\u044c\u044e-2026-11-03/codex-review-repinc768-6f8aa2d/\u0420\u0415\u0412\u042c\u042e-ACCEPT-FILES-55a6c9e-Codex-probe.py",
+    "line": 112,
+    "scope": "<module>",
+    "call": "shutil.copyfile(specs / 'Platform/common/vectors/accept/cases.tsv', folder / 'cases.tsv')",
+    "category": "history-preserve",
+    "context": "108:     # Missing/empty/non-UTF8 public fixture must be rejected before any command.\n109:     broken = root / 'broken'\n110:     folder = broken / 'Platform/common/vectors/accept'\n111:     folder.mkdir(parents=True)\n112:     shutil.copyfile(specs / 'Platform/common/vectors/accept/cases.tsv', folder / 'cases.tsv')\n113:     data = broken / 'Source/tests/testdata'\n114:     data.mkdir(parents=True)\n115:     (data / 'testsub.subsystem.yaml').write_bytes(raws['testsub.subsystem.yaml'])\n116:     for mode, raw in [('missing', None), ('empty', b' \\r\\n'), ('non_utf8', b'\\xff')]:"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-\u0432\u0435\u0442\u043e\u043a-\u0440\u0435\u0432\u044c\u044e-2026-11-03/codex-review-repinc768-6f8aa2d/\u0420\u0415\u0412\u042c\u042e-ACCEPT-FILES-55a6c9e-Codex-probe.py",
+    "line": 71,
+    "scope": "<module>",
+    "call": "(Path(sys.argv[1])/'SPEC_VERSION').read_text()",
+    "category": "history-preserve",
+    "context": "67: sealed = all('Source/tests/testdata/' + name in sources for name in wanted)\n68: controls['fixtures_in_sources'] = sealed\n69: parts = {owner: SimpleNamespace(doc=dict(keys={}, vectors={'common/accept': 'PLAN-ONLY'}))\n70:          for owner in ('08-domain', '09-agent')}\n71: plans = c_targets.plan(SimpleNamespace(specs=specs, spec_version=(Path(sys.argv[1])/'SPEC_VERSION').read_text().strip(),\n72:                                        parts=parts), ['P/08/vectors-accept', 'P/09/vectors-accept'])\n73: assert len(plans) == 2\n74: for plan in plans:\n75:     supplied = {item['path']: item['sha256'] for item in plan['inputs']}"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-\u0432\u0435\u0442\u043e\u043a-\u0440\u0435\u0432\u044c\u044e-2026-11-03/codex-review-repinc768-6f8aa2d/\u0420\u0415\u0412\u042c\u042e-REPINC768-Codex-run.py",
+    "line": 77,
+    "scope": "<module>",
+    "call": "(ROOT/'specs.ls-tree').read_bytes()",
+    "category": "history-preserve",
+    "context": "73:     assert sorted(k for k in set(bridge_spec)|set(new_spec) if bridge_spec.get(k)!=new_spec.get(k))==[\n74:         'COURSE_COMMIT','Platform/01-store/acceptance/1/scenarios.tsv','Platform/01-store/spec/01.1-store.norms.md','Platform/01-store/spec/01.3-store.norms.md']\n75:     specs=work/'specs'\n76:     def git(*args,input=None):return subprocess.check_output(['git','-C',str(specs),*args],input=input,stderr=subprocess.PIPE).strip()\n77:     git('init','-q');names=b''.join(line.split(b'\\t',1)[1]+b'\\0' for line in filter(None,(ROOT/'specs.ls-tree').read_bytes().split(b'\\0')))\n78:     git('add','-f','--pathspec-from-file=-','--pathspec-file-nul',input=names)\n79:     assert git('write-tree').decode()=='706e29b831d8c4383ee7cc18a42cd39dc21df787'\n80:     assert git('hash-object','-w','-t','commit','--stdin',input=(ROOT/'specs.commit').read_bytes()).decode()==PIN\n81:     git('update-ref','HEAD',PIN)"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-\u0432\u0435\u0442\u043e\u043a-\u0440\u0435\u0432\u044c\u044e-2026-11-03/codex-review-repinc768-6f8aa2d/\u0420\u0415\u0412\u042c\u042e-STORE-A-f7e4b38-Codex-probe.py",
+    "line": 70,
+    "scope": "controls",
+    "call": "report_file.read_text()",
+    "category": "history-preserve",
+    "context": "66:         config, report_file = root / 'config.json', root / 'bridge.json'\n67:         config.write_text(json.dumps(dict(specs=str(micro), parts={'01-store': profile})))\n68:         with patch.dict(os.environ), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):\n69:             code = c_store.main(['--driver', 'store-rights', '--config', str(config), '--json', str(report_file)])\n70:         exported = json.loads(report_file.read_text())\n71:         (out / 'bridge-report.json').write_text(json.dumps(exported, ensure_ascii=False, indent=2)+'\\n')\n72:         target = dict(driver='store-rights', inputs=[c_targets.source(acc / 'scenarios.tsv', micro)],\n73:                       not_executed_scenarios={'13-rights-file': reason})\n74:         covered = c_execute.coverage(target, exported)\n75:         assert code == 1 and exported['green'] is False and exported['classification'] == 'stand'"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-\u0432\u0435\u0442\u043e\u043a-\u0440\u0435\u0432\u044c\u044e-2026-11-03/codex-review-repinc768-6f8aa2d/\u0420\u0415\u0412\u042c\u042e-STORE-A-f7e4b38-Codex-probe.py",
+    "line": 37,
+    "scope": "controls",
+    "call": "prelude.read_text()",
+    "category": "history-preserve",
+    "context": "33:             command = ('printf \"%s\\\\n\" '+flag+' > '+shlex.quote(str(prelude))+' && exec '\n34:                        + shlex.join([sys.executable, '-I', '-B', str(observer), str(observed),\n35:                                      '--implicit-rights', '/actual rights']))\n36:             subprocess.run(command, shell=True, check=True, timeout=5)\n37:             original_argv, original_prelude = json.loads(observed.read_text()), prelude.read_text()\n38:             reason = store_audit.scenario_reason(['@rights store none'], command, None)\n39:             attempts = {}\n40:             for name, value in (('none', None), ('file', '/replacement rights')):\n41:                 try:\n42:                     rewritten = store_audit.rights_command(command, value)"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-\u0432\u0435\u0442\u043e\u043a-\u0440\u0435\u0432\u044c\u044e-2026-11-03/codex-review-repinc768-6f8aa2d/\u0420\u0415\u0412\u042c\u042e-STORE-A-f7e4b38-Codex-probe.py",
+    "line": 37,
+    "scope": "controls",
+    "call": "observed.read_text()",
+    "category": "history-preserve",
+    "context": "33:             command = ('printf \"%s\\\\n\" '+flag+' > '+shlex.quote(str(prelude))+' && exec '\n34:                        + shlex.join([sys.executable, '-I', '-B', str(observer), str(observed),\n35:                                      '--implicit-rights', '/actual rights']))\n36:             subprocess.run(command, shell=True, check=True, timeout=5)\n37:             original_argv, original_prelude = json.loads(observed.read_text()), prelude.read_text()\n38:             reason = store_audit.scenario_reason(['@rights store none'], command, None)\n39:             attempts = {}\n40:             for name, value in (('none', None), ('file', '/replacement rights')):\n41:                 try:\n42:                     rewritten = store_audit.rights_command(command, value)"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-\u0432\u0435\u0442\u043e\u043a-\u0440\u0435\u0432\u044c\u044e-2026-11-03/codex-review-repinc768-6f8aa2d/\u0420\u0415\u0412\u042c\u042e-STORE-A-f7e4b38-Codex-probe.py",
+    "line": 49,
+    "scope": "controls",
+    "call": "prelude.read_text()",
+    "category": "history-preserve",
+    "context": "45:                 else:\n46:                     subprocess.run(rewritten, shell=True, check=True, timeout=5)\n47:                     attempts[name] = dict(safety_pass=False,\n48:                                           actual_argv_unchanged=json.loads(observed.read_text()) == original_argv,\n49:                                           unrelated_prelude_changed=prelude.read_text() != original_prelude,\n50:                                           actual_argv=json.loads(observed.read_text()), rewritten=rewritten)\n51:             result['rights_prelude_'+variant] = dict(safety_pass=bool(reason) and all(a['safety_pass'] for a in attempts.values()),\n52:                                                      scenario_reason=reason, attempts=attempts)\n53: \n54:         # A real bridge invocation with only a legitimately unexecuted scenario: no process is launched."
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-\u0432\u0435\u0442\u043e\u043a-\u0440\u0435\u0432\u044c\u044e-2026-11-03/codex-review-repinc768-6f8aa2d/\u0420\u0415\u0412\u042c\u042e-STORE-A-f7e4b38-Codex-probe.py",
+    "line": 50,
+    "scope": "controls",
+    "call": "observed.read_text()",
+    "category": "history-preserve",
+    "context": "46:                     subprocess.run(rewritten, shell=True, check=True, timeout=5)\n47:                     attempts[name] = dict(safety_pass=False,\n48:                                           actual_argv_unchanged=json.loads(observed.read_text()) == original_argv,\n49:                                           unrelated_prelude_changed=prelude.read_text() != original_prelude,\n50:                                           actual_argv=json.loads(observed.read_text()), rewritten=rewritten)\n51:             result['rights_prelude_'+variant] = dict(safety_pass=bool(reason) and all(a['safety_pass'] for a in attempts.values()),\n52:                                                      scenario_reason=reason, attempts=attempts)\n53: \n54:         # A real bridge invocation with only a legitimately unexecuted scenario: no process is launched.\n55:         # Its raw engine report is valid against the capability plan; exported bytes must stay compatible."
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0430\u0440\u0445\u0438\u0432-\u0432\u0435\u0442\u043e\u043a-\u0440\u0435\u0432\u044c\u044e-2026-11-03/codex-review-repinc768-6f8aa2d/\u0420\u0415\u0412\u042c\u042e-STORE-A-f7e4b38-Codex-probe.py",
+    "line": 48,
+    "scope": "controls",
+    "call": "observed.read_text()",
+    "category": "history-preserve",
+    "context": "44:                     attempts[name] = dict(safety_pass=True, reason=str(error))\n45:                 else:\n46:                     subprocess.run(rewritten, shell=True, check=True, timeout=5)\n47:                     attempts[name] = dict(safety_pass=False,\n48:                                           actual_argv_unchanged=json.loads(observed.read_text()) == original_argv,\n49:                                           unrelated_prelude_changed=prelude.read_text() != original_prelude,\n50:                                           actual_argv=json.loads(observed.read_text()), rewritten=rewritten)\n51:             result['rights_prelude_'+variant] = dict(safety_pass=bool(reason) and all(a['safety_pass'] for a in attempts.values()),\n52:                                                      scenario_reason=reason, attempts=attempts)\n53: "
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/check_spec.py",
+    "line": 1917,
+    "scope": "manifest_schema",
+    "call": "(self.root / VMS_DIR).glob(\"[0-9][0-9]-*/*.subsystem.yaml\")",
+    "category": "judge-review103",
+    "context": "1913:         # Every subsystem manifest of the course must load too, not only the corpus (ADR-0085 \u0434\u043e\u043f. (1), \u04203).\n1914:         # Corpora (cases/, spec_verdicts/) hold refused manifests on purpose; only the manifests subsystems ship are\n1915:         # checked here. The VMS manifests are checked in VMS/ (their canon since the start, ADR-0090 \u0434\u043e\u043f. (6) \u043f. 8);\n1916:         # Source/vms/ holds the frozen witness's bytes and is never form-checked.\n1917:         manifests = [*(self.root / VMS_DIR).glob(\"[0-9][0-9]-*/*.subsystem.yaml\"),\n1918:                      *(self.root / \"Source\" / \"tests\" / \"testdata\").glob(\"*.subsystem.yaml\")]\n1919:         for path in sorted(manifests):\n1920:             try:\n1921:                 got = runner.judge(path.read_bytes())\n1922:             except Exception as exc:"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/check_spec.py",
+    "line": 1918,
+    "scope": "manifest_schema",
+    "call": "(self.root / \"Source\" / \"tests\" / \"testdata\").glob(\"*.subsystem.yaml\")",
+    "category": "judge-review103",
+    "context": "1914:         # Corpora (cases/, spec_verdicts/) hold refused manifests on purpose; only the manifests subsystems ship are\n1915:         # checked here. The VMS manifests are checked in VMS/ (their canon since the start, ADR-0090 \u0434\u043e\u043f. (6) \u043f. 8);\n1916:         # Source/vms/ holds the frozen witness's bytes and is never form-checked.\n1917:         manifests = [*(self.root / VMS_DIR).glob(\"[0-9][0-9]-*/*.subsystem.yaml\"),\n1918:                      *(self.root / \"Source\" / \"tests\" / \"testdata\").glob(\"*.subsystem.yaml\")]\n1919:         for path in sorted(manifests):\n1920:             try:\n1921:                 got = runner.judge(path.read_bytes())\n1922:             except Exception as exc:\n1923:                 self.error(path, f\"form schema: runner failed: {exc!r}\")"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/check_spec.py",
+    "line": 1999,
+    "scope": "form_source",
+    "call": "(self.root / VMS_DIR).glob(\"[0-9][0-9]-*/*.subsystem.yaml\")",
+    "category": "judge-review103",
+    "context": "1995:                                      f\"got {json.dumps(got['paths'], ensure_ascii=False)} ({why})\")\n1996:                 elif not set(lines_) <= set(got[\"lines\"]):\n1997:                     self.error(path, f\"form source: lines expected {lines_}, got {got['lines']}\")\n1998:             self.stats[\"form_cases\"] += 1\n1999:         manifests = [*(self.root / VMS_DIR).glob(\"[0-9][0-9]-*/*.subsystem.yaml\"),\n2000:                      *(self.root / \"Source\" / \"tests\" / \"testdata\").glob(\"*.subsystem.yaml\")]\n2001:         for path in sorted(manifests):\n2002:             got = loader.judge(path.read_bytes())\n2003:             if got[\"verdict\"] != \"ok\":\n2004:                 why = f\"layer {got['layer']}\" + (f\": {got['why'][0]}\" if got[\"why\"] else \"\")"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/check_spec.py",
+    "line": 2000,
+    "scope": "form_source",
+    "call": "(self.root / \"Source\" / \"tests\" / \"testdata\").glob(\"*.subsystem.yaml\")",
+    "category": "judge-review103",
+    "context": "1996:                 elif not set(lines_) <= set(got[\"lines\"]):\n1997:                     self.error(path, f\"form source: lines expected {lines_}, got {got['lines']}\")\n1998:             self.stats[\"form_cases\"] += 1\n1999:         manifests = [*(self.root / VMS_DIR).glob(\"[0-9][0-9]-*/*.subsystem.yaml\"),\n2000:                      *(self.root / \"Source\" / \"tests\" / \"testdata\").glob(\"*.subsystem.yaml\")]\n2001:         for path in sorted(manifests):\n2002:             got = loader.judge(path.read_bytes())\n2003:             if got[\"verdict\"] != \"ok\":\n2004:                 why = f\"layer {got['layer']}\" + (f\": {got['why'][0]}\" if got[\"why\"] else \"\")\n2005:                 self.error(path, f\"form source: course manifest refused {got['class']} ({why})\")"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/check_spec.py",
+    "line": 2002,
+    "scope": "form_source",
+    "call": "path.read_bytes()",
+    "category": "judge-review103",
+    "context": "1998:             self.stats[\"form_cases\"] += 1\n1999:         manifests = [*(self.root / VMS_DIR).glob(\"[0-9][0-9]-*/*.subsystem.yaml\"),\n2000:                      *(self.root / \"Source\" / \"tests\" / \"testdata\").glob(\"*.subsystem.yaml\")]\n2001:         for path in sorted(manifests):\n2002:             got = loader.judge(path.read_bytes())\n2003:             if got[\"verdict\"] != \"ok\":\n2004:                 why = f\"layer {got['layer']}\" + (f\": {got['why'][0]}\" if got[\"why\"] else \"\")\n2005:                 self.error(path, f\"form source: course manifest refused {got['class']} ({why})\")\n2006:             self.stats[\"form_manifests\"] += 1\n2007:         held = held_rows(results)"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/check_spec.py",
+    "line": 2027,
+    "scope": "form_v7",
+    "call": "(self.root / VMS_DIR).glob(\"[0-9][0-9]-*/*.subsystem.yaml\")",
+    "category": "judge-review103",
+    "context": "2023:             from v7.spec import manifest_check\n2024:         except ImportError as exc:\n2025:             self.error(norms, f\"the standard files need the \u04127 stack, missing: {exc}; run: {V7_INSTALL}\")\n2026:             return\n2027:         manifests = [*(self.root / VMS_DIR).glob(\"[0-9][0-9]-*/*.subsystem.yaml\"),\n2028:                      *(self.root / \"Source\" / \"tests\" / \"testdata\").glob(\"*.subsystem.yaml\")]\n2029:         try:\n2030:             implied = {value for (lesson, kind, value) in self.registry if kind == \"implied\"}\n2031:             extra = self.numeric_loader(base)\n2032:             errors, stats = manifest_check(self.root, norms, text, base, acceptance, verdicts, classes, manifests,"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/check_spec.py",
+    "line": 2028,
+    "scope": "form_v7",
+    "call": "(self.root / \"Source\" / \"tests\" / \"testdata\").glob(\"*.subsystem.yaml\")",
+    "category": "judge-review103",
+    "context": "2024:         except ImportError as exc:\n2025:             self.error(norms, f\"the standard files need the \u04127 stack, missing: {exc}; run: {V7_INSTALL}\")\n2026:             return\n2027:         manifests = [*(self.root / VMS_DIR).glob(\"[0-9][0-9]-*/*.subsystem.yaml\"),\n2028:                      *(self.root / \"Source\" / \"tests\" / \"testdata\").glob(\"*.subsystem.yaml\")]\n2029:         try:\n2030:             implied = {value for (lesson, kind, value) in self.registry if kind == \"implied\"}\n2031:             extra = self.numeric_loader(base)\n2032:             errors, stats = manifest_check(self.root, norms, text, base, acceptance, verdicts, classes, manifests,\n2033:                                            self.strict_coverage, implied, extra)"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/check_spec.py",
+    "line": 1901,
+    "scope": "manifest_schema",
+    "call": "path.read_bytes()",
+    "category": "judge-review103",
+    "context": "1897:             return\n1898:         for case, expected in sorted(verdicts.items()):\n1899:             path = cases / f\"{case}.subsystem.yaml\"\n1900:             try:\n1901:                 got = runner.judge(path.read_bytes())\n1902:             except OSError:\n1903:                 continue                                 # verdicts() has named the missing case\n1904:             except Exception as exc:\n1905:                 self.error(path, f\"form schema: runner failed: {exc!r}\")\n1906:                 continue"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/check_spec.py",
+    "line": 1921,
+    "scope": "manifest_schema",
+    "call": "path.read_bytes()",
+    "category": "judge-review103",
+    "context": "1917:         manifests = [*(self.root / VMS_DIR).glob(\"[0-9][0-9]-*/*.subsystem.yaml\"),\n1918:                      *(self.root / \"Source\" / \"tests\" / \"testdata\").glob(\"*.subsystem.yaml\")]\n1919:         for path in sorted(manifests):\n1920:             try:\n1921:                 got = runner.judge(path.read_bytes())\n1922:             except Exception as exc:\n1923:                 self.error(path, f\"form schema: runner failed: {exc!r}\")\n1924:                 continue\n1925:             if got[\"verdict\"] != \"ok\":\n1926:                 why = f\"layer {got['layer']}\" + (f\": {got['errors'][0]}\" if got[\"errors\"] else \"\")"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/check_spec.py",
+    "line": 1979,
+    "scope": "form_source",
+    "call": "path.read_bytes()",
+    "category": "judge-review103",
+    "context": "1975:         results = []\n1976:         for case, expected in sorted(verdicts.items()):\n1977:             path = acceptance / \"cases\" / f\"{case}.subsystem.yaml\"\n1978:             try:\n1979:                 got = loader.judge(path.read_bytes())\n1980:             except OSError:\n1981:                 continue                                    # verdicts() has named the missing case\n1982:             except Exception as exc:\n1983:                 self.error(path, f\"form source: loader failed: {exc!r}\")\n1984:                 continue"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/test_canonical.py",
+    "line": 277,
+    "scope": "test_vector_errors",
+    "call": "(vec / \"cases.tsv\").read_text()",
+    "category": "judge-review103",
+    "context": "273:         vec = self.root / VECTORS\n274:         (vec / \"expect/corpus-one.json\").write_bytes(b\"{}\")\n275:         self.assertTrue(any(\"differs from the built view\" in m for m in self.messages()))\n276:         generate(self.root)\n277:         text = (vec / \"cases.tsv\").read_text()\n278:         (vec / \"cases.tsv\").write_text(\"\\n\".join(l for l in text.split(\"\\n\") if not l.startswith(\"course-sub\")))\n279:         (vec / \"expect/course-sub.json\").unlink()\n280:         self.assertTrue(any(\"no vector for the accepted input Source/tests/testdata/sub.subsystem.yaml\" in m\n281:                             for m in self.messages()))\n282:         (vec / \"notes.txt\").write_text(\"x\")"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/test_canonical.py",
+    "line": 202,
+    "scope": "setUp",
+    "call": "shutil.copy(str(COURSE / SOURCE) + s, str(self.root / SOURCE) + s)",
+    "category": "judge-review103",
+    "context": "198:         self.addCleanup(self.temp.cleanup)\n199:         self.root = Path(self.temp.name).resolve()\n200:         (self.root / SOURCE).parent.mkdir(parents=True)\n201:         for s in SUFFIXES:\n202:             shutil.copy(str(COURSE / SOURCE) + s, str(self.root / SOURCE) + s)\n203:         cases = self.root / CORPUS / \"cases\"\n204:         cases.mkdir(parents=True)\n205:         (self.root / CORPUS / \"verdicts.tsv\").write_text(\"# c\\none\\tok\\ntwo\\tok\\nbad\\trefused\\n\")\n206:         (cases / \"one.subsystem.yaml\").write_text(manifest(\"    a: {}\"))\n207:         (cases / \"two.subsystem.yaml\").write_text(manifest(\"    a: {type: int}\", \"tables: [t]\\n\"))"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/v7/test_spec.py",
+    "line": 37,
+    "scope": "setUpModule",
+    "call": "shutil.copytree(ROOT / d, TREE / d, ignore=shutil.ignore_patterns(\"__pycache__\", \".DS_Store\"))",
+    "category": "judge-review103",
+    "context": "33:     \"\"\"\u041a\u043e\u043f\u0438\u044f Platform/, VMS/ \u0438 \u043c\u0430\u043d\u0438\u0444\u0435\u0441\u0442\u043e\u0432 \u043a\u0443\u0440\u0441\u0430 \u0441 \u043f\u0430\u043a\u0435\u0442\u043e\u043c \u043f\u0435\u0440\u0435\u0445\u043e\u0434\u0430 (\u0435\u0441\u043b\u0438 \u043a\u0443\u0440\u0441 \u0435\u0449\u0451 \u043d\u0430 \u0434\u0438\u0430\u043b\u0435\u043a\u0442\u0435) \u2014 \u043e\u0434\u043d\u0430 \u043d\u0430 \u043c\u043e\u0434\u0443\u043b\u044c.\"\"\"\n34:     global TREE\n35:     TREE = Path(tempfile.mkdtemp(prefix=\"v7-tree-\"))\n36:     for d in (\"Platform\", \"VMS\", \"Source/tests/testdata\"):\n37:         shutil.copytree(ROOT / d, TREE / d, ignore=shutil.ignore_patterns(\"__pycache__\", \".DS_Store\"))\n38:     if (TREE / \"Platform/02-installer/spec/02.1-installer.form.yaml\").is_file():     # \u043a\u0443\u0440\u0441 \u0435\u0449\u0451 \u043d\u0430 \u0434\u0438\u0430\u043b\u0435\u043a\u0442\u0435\n39:         from v7 import transition\n40:         with contextlib.redirect_stdout(io.StringIO()):\n41:             transition.main([\"--root\", str(TREE)])\n42:     keys(TREE)"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/v7/test_spec.py",
+    "line": 250,
+    "scope": "manifest",
+    "call": "norms.read_text(encoding=\"utf-8\")",
+    "category": "judge-review103",
+    "context": "246:                         if ln and not ln.startswith(\"#\"))\n247:         classes = dict(ln.split(\"\\t\") for ln in (acc / \"classes.tsv\").read_text(encoding=\"utf-8\").split(\"\\n\")\n248:                        if ln and not ln.startswith(\"#\"))\n249:         norms = spec_dir / \"02.1-installer.norms.md\"\n250:         return spec.manifest_check(root, norms, norms.read_text(encoding=\"utf-8\"), spec_dir / \"02.1-installer\", acc,\n251:                                    verdicts, classes, sorted((root / \"Source/tests/testdata\").glob(\"*.subsystem.yaml\")),\n252:                                    strict=False)"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/v7/test_spec.py",
+    "line": 251,
+    "scope": "manifest",
+    "call": "(root / \"Source/tests/testdata\").glob(\"*.subsystem.yaml\")",
+    "category": "judge-review103",
+    "context": "247:         classes = dict(ln.split(\"\\t\") for ln in (acc / \"classes.tsv\").read_text(encoding=\"utf-8\").split(\"\\n\")\n248:                        if ln and not ln.startswith(\"#\"))\n249:         norms = spec_dir / \"02.1-installer.norms.md\"\n250:         return spec.manifest_check(root, norms, norms.read_text(encoding=\"utf-8\"), spec_dir / \"02.1-installer\", acc,\n251:                                    verdicts, classes, sorted((root / \"Source/tests/testdata\").glob(\"*.subsystem.yaml\")),\n252:                                    strict=False)"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/v7/test_spec.py",
+    "line": 245,
+    "scope": "manifest",
+    "call": "(acc / \"verdicts.tsv\").read_text(encoding=\"utf-8\")",
+    "category": "judge-review103",
+    "context": "242:     def manifest(self, root):\n243:         spec_dir = root / \"Platform/02-installer/spec\"\n244:         acc = root / \"Platform/02-installer/acceptance/1\"\n245:         verdicts = dict(ln.split(\"\\t\") for ln in (acc / \"verdicts.tsv\").read_text(encoding=\"utf-8\").split(\"\\n\")\n246:                         if ln and not ln.startswith(\"#\"))\n247:         classes = dict(ln.split(\"\\t\") for ln in (acc / \"classes.tsv\").read_text(encoding=\"utf-8\").split(\"\\n\")\n248:                        if ln and not ln.startswith(\"#\"))\n249:         norms = spec_dir / \"02.1-installer.norms.md\"\n250:         return spec.manifest_check(root, norms, norms.read_text(encoding=\"utf-8\"), spec_dir / \"02.1-installer\", acc,"
+  },
+  {
+    "repository": "course",
+    "path": "skills/lesson-spec/scripts/v7/test_spec.py",
+    "line": 247,
+    "scope": "manifest",
+    "call": "(acc / \"classes.tsv\").read_text(encoding=\"utf-8\")",
+    "category": "judge-review103",
+    "context": "243:         spec_dir = root / \"Platform/02-installer/spec\"\n244:         acc = root / \"Platform/02-installer/acceptance/1\"\n245:         verdicts = dict(ln.split(\"\\t\") for ln in (acc / \"verdicts.tsv\").read_text(encoding=\"utf-8\").split(\"\\n\")\n246:                         if ln and not ln.startswith(\"#\"))\n247:         classes = dict(ln.split(\"\\t\") for ln in (acc / \"classes.tsv\").read_text(encoding=\"utf-8\").split(\"\\n\")\n248:                        if ln and not ln.startswith(\"#\"))\n249:         norms = spec_dir / \"02.1-installer.norms.md\"\n250:         return spec.manifest_check(root, norms, norms.read_text(encoding=\"utf-8\"), spec_dir / \"02.1-installer\", acc,\n251:                                    verdicts, classes, sorted((root / \"Source/tests/testdata\").glob(\"*.subsystem.yaml\")),\n252:                                    strict=False)"
+  },
+  {
+    "repository": "course",
+    "path": "tools/normgen/gen_box.py",
+    "line": 719,
+    "scope": "provenance",
+    "call": "L.path(\"acceptance/3\").glob(\"*.tsv\")",
+    "category": "generator-owner",
+    "context": "715:             \"generator\": entry(Path(__file__).resolve()), \"handwritten\": [entry(p) for p in COPY_RUNTIME.values()] if storage else [],\n716:             \"generators\": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],\n717:             \"judge\": entry(JUDGE), \"judges\": [entry(JUDGE), entry(COPY_JUDGE)] if storage else [entry(JUDGE)],\n718:             \"judge_inputs\": entries([L.form(\"stages.tsv\"),\n719:                             *sorted(L.path(\"acceptance/3\").glob(\"*.tsv\")),\n720:                             L.path(\"acceptance/3/README.md\"),\n721:                             *sorted(L.path(\"acceptance/3/inputs\").glob(\"*.jsonl\")),\n722:                             ROOT / \"Source/tests/testdata/testsub.subsystem.yaml\",\n723:                             ROOT / \"Source/tests/testdata/testsub2.subsystem.yaml\"]) if storage else []}"
+  },
+  {
+    "repository": "course",
+    "path": "tools/normgen/gen_box.py",
+    "line": 721,
+    "scope": "provenance",
+    "call": "L.path(\"acceptance/3/inputs\").glob(\"*.jsonl\")",
+    "category": "generator-owner",
+    "context": "717:             \"judge\": entry(JUDGE), \"judges\": [entry(JUDGE), entry(COPY_JUDGE)] if storage else [entry(JUDGE)],\n718:             \"judge_inputs\": entries([L.form(\"stages.tsv\"),\n719:                             *sorted(L.path(\"acceptance/3\").glob(\"*.tsv\")),\n720:                             L.path(\"acceptance/3/README.md\"),\n721:                             *sorted(L.path(\"acceptance/3/inputs\").glob(\"*.jsonl\")),\n722:                             ROOT / \"Source/tests/testdata/testsub.subsystem.yaml\",\n723:                             ROOT / \"Source/tests/testdata/testsub2.subsystem.yaml\"]) if storage else []}"
+  },
+  {
+    "repository": "course",
+    "path": "tools/normgen/kit/build_kit.py",
+    "line": 809,
+    "scope": "build_from_export",
+    "call": "unpack(root, course, \"tools/normgen\", stage)",
+    "category": "generator-owner",
+    "context": "805:     except KitError as exc:\n806:         raise KitError(f\"--export {export}: not a commit of {specs}: {exc}\") from None\n807:     with tempfile.TemporaryDirectory(prefix=\"kit-export-\") as t:\n808:         stage = Path(t)\n809:         unpack(root, course, \"tools/normgen\", stage)\n810:         unpack(specs, sha, \"Platform\", stage)\n811:         if git(\"ls-tree\", \"--name-only\", sha, \"Source/tests/testdata\", cwd=specs).strip():\n812:             unpack(specs, sha, \"Source/tests/testdata\", stage)   # \u043c\u0430\u043d\u0438\u0444\u0435\u0441\u0442\u044b \u043a\u0443\u0440\u0441\u0430, \u043d\u0430 \u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u0441\u0441\u044b\u043b\u0430\u044e\u0442\u0441\u044f \u0432\u0435\u043a\u0442\u043e\u0440\u044b (P/02 canonical)\n813:         gens = stage / \"tools/normgen\"\n814:         for g in regen(parts):"
+  },
+  {
+    "repository": "course",
+    "path": "tools/normgen/kit/build_kit.py",
+    "line": 810,
+    "scope": "build_from_export",
+    "call": "unpack(specs, sha, \"Platform\", stage)",
+    "category": "generator-owner",
+    "context": "806:         raise KitError(f\"--export {export}: not a commit of {specs}: {exc}\") from None\n807:     with tempfile.TemporaryDirectory(prefix=\"kit-export-\") as t:\n808:         stage = Path(t)\n809:         unpack(root, course, \"tools/normgen\", stage)\n810:         unpack(specs, sha, \"Platform\", stage)\n811:         if git(\"ls-tree\", \"--name-only\", sha, \"Source/tests/testdata\", cwd=specs).strip():\n812:             unpack(specs, sha, \"Source/tests/testdata\", stage)   # \u043c\u0430\u043d\u0438\u0444\u0435\u0441\u0442\u044b \u043a\u0443\u0440\u0441\u0430, \u043d\u0430 \u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u0441\u0441\u044b\u043b\u0430\u044e\u0442\u0441\u044f \u0432\u0435\u043a\u0442\u043e\u0440\u044b (P/02 canonical)\n813:         gens = stage / \"tools/normgen\"\n814:         for g in regen(parts):\n815:             done = subprocess.run([sys.executable, g], cwd=gens, capture_output=True, text=True)"
+  },
+  {
+    "repository": "course",
+    "path": "tools/normgen/kit/build_kit.py",
+    "line": 825,
+    "scope": "build_from_export",
+    "call": "(dst / \"kit.manifest.json\").read_text(encoding=\"utf-8\")",
+    "category": "generator-owner",
+    "context": "821:         env = dict(os.environ, **{COURSE_ENV: course, EXPORT_ENV: sha})\n822:         done = subprocess.run(cmd, cwd=stage, capture_output=True, text=True, env=env)\n823:         if done.returncode:\n824:             raise KitError((done.stderr or done.stdout).strip())\n825:     manifest = json.loads((dst / \"kit.manifest.json\").read_text(encoding=\"utf-8\"))\n826:     built = \" \".join([\"python3 tools/normgen/kit/build_kit.py <kit> --module\", module]\n827:                      + [f\"--part {p}\" for p in parts] + [f\"--export {sha}\"] + ([\"--seed <seed>\"] if seed else []))\n828:     sd = manifest.get(\"seed\")\n829:     seeded = (f\"seed {seed}: the files of the model kept, not in the kit ({len(sd['kept'])}): {' '.join(sd['kept'])}; \"\n830:               f\"the untouched stubs of the former kit refreshed ({len(sd['refreshed'])}): {' '.join(sd['refreshed'])}\\n\""
+  },
+  {
+    "repository": "course",
+    "path": "tools/normgen/kit/build_kit.py",
+    "line": 812,
+    "scope": "build_from_export",
+    "call": "unpack(specs, sha, \"Source/tests/testdata\", stage)",
+    "category": "generator-owner",
+    "context": "808:         stage = Path(t)\n809:         unpack(root, course, \"tools/normgen\", stage)\n810:         unpack(specs, sha, \"Platform\", stage)\n811:         if git(\"ls-tree\", \"--name-only\", sha, \"Source/tests/testdata\", cwd=specs).strip():\n812:             unpack(specs, sha, \"Source/tests/testdata\", stage)   # \u043c\u0430\u043d\u0438\u0444\u0435\u0441\u0442\u044b \u043a\u0443\u0440\u0441\u0430, \u043d\u0430 \u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u0441\u0441\u044b\u043b\u0430\u044e\u0442\u0441\u044f \u0432\u0435\u043a\u0442\u043e\u0440\u044b (P/02 canonical)\n813:         gens = stage / \"tools/normgen\"\n814:         for g in regen(parts):\n815:             done = subprocess.run([sys.executable, g], cwd=gens, capture_output=True, text=True)\n816:             if done.returncode:\n817:                 raise KitError(f\"{g} on the export {sha[:9]}: {(done.stderr or done.stdout).strip()[-2000:]}\")"
+  },
+  {
+    "repository": "course",
+    "path": "tools/normgen/test_consumer_packages.py",
+    "line": 113,
+    "scope": "setUpClass",
+    "call": "tarfile.open(fileobj=io.BytesIO(data))",
+    "category": "generator-owner",
+    "context": "109:         cls.tmp = tempfile.TemporaryDirectory(prefix='consumer-pin-')\n110:         cls.root = Path(cls.tmp.name)/'specs'\n111:         cls.root.mkdir()\n112:         data = subprocess.check_output(['git','archive',PIN,'Platform','Source/tests/testdata'], cwd=ROOT)\n113:         with tarfile.open(fileobj=io.BytesIO(data)) as t: t.extractall(cls.root, filter='data')\n114:         fixture=json.loads((HERE/'testdata/consumer-owners-8af61893a.json').read_text())\n115:         assert fixture['source_commit']=='8af61893a7458054d8c79701f78b3b284e8573a8'\n116:         cls.base={(r['package'],r['table']):set(r['lessons']) for r in fixture['tables']}\n117:         cls.new = C.read(cls.root)"
+  },
+  {
+    "repository": "course",
+    "path": "tools/normgen/test_consumer_packages.py",
+    "line": 114,
+    "scope": "setUpClass",
+    "call": "(HERE/'testdata/consumer-owners-8af61893a.json').read_text()",
+    "category": "generator-owner",
+    "context": "110:         cls.root = Path(cls.tmp.name)/'specs'\n111:         cls.root.mkdir()\n112:         data = subprocess.check_output(['git','archive',PIN,'Platform','Source/tests/testdata'], cwd=ROOT)\n113:         with tarfile.open(fileobj=io.BytesIO(data)) as t: t.extractall(cls.root, filter='data')\n114:         fixture=json.loads((HERE/'testdata/consumer-owners-8af61893a.json').read_text())\n115:         assert fixture['source_commit']=='8af61893a7458054d8c79701f78b3b284e8573a8'\n116:         cls.base={(r['package'],r['table']):set(r['lessons']) for r in fixture['tables']}\n117:         cls.new = C.read(cls.root)"
+  },
+  {
+    "repository": "course",
+    "path": "tools/normgen/test_copy_storage.py",
+    "line": 690,
+    "scope": "test_published_51_steps_through_actual_commands_and_files",
+    "call": "(ROOT / \"Platform/01-store/forms/stages.tsv\").open()",
+    "category": "generator-owner",
+    "context": "688:     def test_published_51_steps_through_actual_commands_and_files(self):\n689:         import gate\n690:         with (ROOT / \"Platform/01-store/forms/stages.tsv\").open() as stream:\n691:             stages = list(csv.DictReader((line for line in stream if not line.startswith(\"#\")), delimiter=\"\\t\"))\n692:         stage = next(row for row in stages if row[\"stage\"] == \"daemon_copy\")\n693:         names = set()\n694:         for item in gate.parse(stage[\"gate\"]):\n695:             if item.kind == \"accept\" and item.chapter == \"1.3\":"
+  },
+  {
+    "repository": "course",
+    "path": "tools/normgen/test_copy_storage.py",
+    "line": 699,
+    "scope": "test_published_51_steps_through_actual_commands_and_files",
+    "call": "(inputs / \"scenarios.tsv\").open()",
+    "category": "generator-owner",
+    "context": "695:             if item.kind == \"accept\" and item.chapter == \"1.3\":\n696:                 self.assertIsNotNone(item.names, \"use the exact published ordinary scenarios, not a guessed wildcard\")\n697:                 names.update(item.names)\n698:         inputs = ROOT / \"Platform/01-store/acceptance/3\"\n699:         with (inputs / \"scenarios.tsv\").open() as stream:\n700:             steps = [row for row in csv.DictReader((line for line in stream if not line.startswith(\"#\")), delimiter=\"\\t\")\n701:                      if row[\"scenario\"] in names]\n702:         self.assertEqual(len(steps), 51)\n703:         self.assertEqual({row[\"scenario\"] for row in steps}, names)\n704:         with tempfile.TemporaryDirectory(prefix=\"normgen-copy-51-\") as tmp:"
+  },
+  {
+    "repository": "course",
+    "path": "tools/normgen/test_copy_storage.py",
+    "line": 711,
+    "scope": "test_published_51_steps_through_actual_commands_and_files",
+    "call": "(inputs / \"seams.tsv\").open()",
+    "category": "generator-owner",
+    "context": "707:             (mod / \"box/copy_scenarios_test.go\").write_text(SCENARIO_TEST, encoding=\"utf-8\")\n708:             (mod / \"coreadapter/seams.go\").write_text(SEAM_BRIDGE, encoding=\"utf-8\")\n709:             fixture = mod / \"public-copy-steps.json\"\n710:             manifests = {name: str(ROOT / \"Source/tests/testdata\" / f\"{name}.subsystem.yaml\") for name in (\"testsub\", \"testsub2\")}\n711:             with (inputs / \"seams.tsv\").open() as stream:\n712:                 seam = next(row.split(\"\\t\") for row in stream if row.startswith(\"s10-import-floor-resume\\t\"))\n713:             fixture.write_text(json.dumps({\"Steps\": steps, \"InputDir\": str(inputs / \"inputs\"), \"Manifests\": manifests,\n714:                                            \"SeamRequest\": seam[2], \"SeamExpect\": seam[3].strip()}), encoding=\"utf-8\")\n715:             env = dict(ENV, COPY_JUDGE_SCENARIOS=str(fixture))\n716:             done = subprocess.run([\"go\", \"test\", \"-race\", \"-count=1\", \"-json\", \"./box\"], cwd=mod,"
+  },
+  {
+    "repository": "course",
+    "path": "tools/normgen/test_wire.py",
+    "line": 121,
+    "scope": "setUpClass",
+    "call": "shutil.copytree(cls.src / \"Platform\", cls.tmp / \"Platform\")",
+    "category": "generator-owner",
+    "context": "117:     def setUpClass(cls):\n118:         cls.src = need()\n119:         cls.cel = wire.Cel()\n120:         cls.tmp = Path(tempfile.mkdtemp(prefix=\"judge-wire-\"))\n121:         shutil.copytree(cls.src / \"Platform\", cls.tmp / \"Platform\")\n122:         if (cls.src / \"Source/tests/testdata\").is_dir():\n123:             shutil.copytree(cls.src / \"Source/tests/testdata\", cls.tmp / \"Source/tests/testdata\")\n124:         cls.text = (cls.tmp / wire.FORM).read_text(encoding=\"utf-8\")"
+  },
+  {
+    "repository": "course",
+    "path": "tools/normgen/test_wire.py",
+    "line": 124,
+    "scope": "setUpClass",
+    "call": "(cls.tmp / wire.FORM).read_text(encoding=\"utf-8\")",
+    "category": "generator-owner",
+    "context": "120:         cls.tmp = Path(tempfile.mkdtemp(prefix=\"judge-wire-\"))\n121:         shutil.copytree(cls.src / \"Platform\", cls.tmp / \"Platform\")\n122:         if (cls.src / \"Source/tests/testdata\").is_dir():\n123:             shutil.copytree(cls.src / \"Source/tests/testdata\", cls.tmp / \"Source/tests/testdata\")\n124:         cls.text = (cls.tmp / wire.FORM).read_text(encoding=\"utf-8\")"
+  },
+  {
+    "repository": "course",
+    "path": "tools/normgen/test_wire.py",
+    "line": 123,
+    "scope": "setUpClass",
+    "call": "shutil.copytree(cls.src / \"Source/tests/testdata\", cls.tmp / \"Source/tests/testdata\")",
+    "category": "generator-owner",
+    "context": "119:         cls.cel = wire.Cel()\n120:         cls.tmp = Path(tempfile.mkdtemp(prefix=\"judge-wire-\"))\n121:         shutil.copytree(cls.src / \"Platform\", cls.tmp / \"Platform\")\n122:         if (cls.src / \"Source/tests/testdata\").is_dir():\n123:             shutil.copytree(cls.src / \"Source/tests/testdata\", cls.tmp / \"Source/tests/testdata\")\n124:         cls.text = (cls.tmp / wire.FORM).read_text(encoding=\"utf-8\")"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/all.py",
+    "line": 62,
+    "scope": "runs",
+    "call": "specs.testdata()",
+    "category": "runner-runtime",
+    "context": "58:         return out\n59:     obj = roles(*[k for k in (\"object-put\", \"object-spoil\") if k in st])   # README 01 @put / @spoil object\n60:     obj += roles(*[k for k in (\"spec-put\", \"backup\", \"import\") if k in st])  # README 01 \u00ab\u0421\u0442\u0435\u043d\u0434\u00bb: spec-put, \u043a\u043e\u043f\u0438\u0438\n61:     obj += roles(*[k for k in (\"rights\", \"ring\") if k in st])   # README 01 \u00ab\u0421\u0442\u0435\u043d\u0434\u00bb: {rights} (1c5f867), \u043a\u043e\u043b\u044c\u0446\u043e (e9ad7fb)\n62:     td = specs.testdata()\n63:     lim = [\"--request-line-limit\", str(keys[\"request_line_limit\"])] if \"request_line_limit\" in keys else []\n64:     role = [\"--role\", keys.get(\"role\", \"acc\")]\n65:     header = [\"--role-header\", keys[\"role_header\"]] if \"role_header\" in keys else []\n66:     style = [\"--path-style\", keys.get(\"path_style\", \"json\")]\n67:     out = []"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/body_vectors.py",
+    "line": 29,
+    "scope": "fixture",
+    "call": "Path(specs.subsystem(\"testsub\")).read_text()",
+    "category": "runner-runtime",
+    "context": "27: def fixture(folder):\n28:     \"\"\"\u041c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u044f \u0441\u0435\u043c\u0435\u0439\u0441\u0442\u0432\u0430, \u043f\u0440\u044f\u043c\u043e \u0437\u0430\u0434\u0430\u043d\u043d\u043e\u0433\u043e README \u043f\u0430\u043a\u0435\u0442\u0430, \u0431\u0435\u0437 \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u0434\u0430\u043d\u043d\u044b\u0445 \u0441\u043f\u0435\u0446\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u0438.\"\"\"\n29:     text = Path(specs.subsystem(\"testsub\")).read_text()\n30:     text, count = re.subn(r\"^  fields:\\n\", \"  fields:\\n    doc: {type: json}\\n\", text, count=1, flags=re.M)\n31:     if count != 1:\n32:         raise ValueError(\"requests-body: no unit.fields in testsub\")\n33:     schema = (\"requests:\\n  schema:\\n    type: object\\n    required: [unit, v]\\n\"\n34:               \"    additionalProperties: false\\n    properties:\\n\""
+  },
+  {
+    "repository": "runner",
+    "path": "runner/body_vectors.py",
+    "line": 29,
+    "scope": "fixture",
+    "call": "specs.subsystem(\"testsub\")",
+    "category": "runner-runtime",
+    "context": "27: def fixture(folder):\n28:     \"\"\"\u041c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u044f \u0441\u0435\u043c\u0435\u0439\u0441\u0442\u0432\u0430, \u043f\u0440\u044f\u043c\u043e \u0437\u0430\u0434\u0430\u043d\u043d\u043e\u0433\u043e README \u043f\u0430\u043a\u0435\u0442\u0430, \u0431\u0435\u0437 \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u0434\u0430\u043d\u043d\u044b\u0445 \u0441\u043f\u0435\u0446\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u0438.\"\"\"\n29:     text = Path(specs.subsystem(\"testsub\")).read_text()\n30:     text, count = re.subn(r\"^  fields:\\n\", \"  fields:\\n    doc: {type: json}\\n\", text, count=1, flags=re.M)\n31:     if count != 1:\n32:         raise ValueError(\"requests-body: no unit.fields in testsub\")\n33:     schema = (\"requests:\\n  schema:\\n    type: object\\n    required: [unit, v]\\n\"\n34:               \"    additionalProperties: false\\n    properties:\\n\""
+  },
+  {
+    "repository": "runner",
+    "path": "runner/c_installer.py",
+    "line": 337,
+    "scope": "put_case",
+    "call": "shutil.copyfile(original, work / original.name)",
+    "category": "runner-runtime",
+    "context": "333:         # Each row starts with YAML only, even when the export has adjacent HTML.\n334:         for action, token in actions:\n335:             if action == 'put':\n336:                 original = specs / data.ROOT / 'acceptance' / chapter / 'puts' / (token + '.subsystem.yaml')\n337:                 shutil.copyfile(original, work / original.name)\n338:         if chapter == '3':                            # README 2.3 \u00ab\u0424\u0430\u0439\u043b\u044b \u043f\u0435\u0440\u0435\u0447\u043d\u044f\u00bb: every install reads them beside the manifest\n339:             listed = specs / c_targets.TESTSUB2_FILES\n340:             if listed.is_dir():\n341:                 listed_copy = work\n342:                 stand_setup.lay_files(listed, work)"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/c_installer.py",
+    "line": 348,
+    "scope": "put_case",
+    "call": "shutil.copyfile(source, work / (name + '.shell.html'))",
+    "category": "runner-runtime",
+    "context": "344:             if action != 'put':\n345:                 key = 'platform/manifest/' + name\n346:                 if action == 'shell-put':\n347:                     source = specs / data.ROOT / 'acceptance/3/puts' / (token + '.shell.html')\n348:                     shutil.copyfile(source, work / (name + '.shell.html'))\n349:                 elif action == 'rev-max':\n350:                     for suffix in ('', '/rev', '/canonical/1'):\n351:                         previous = row(inst, key + suffix)\n352:                         if previous['items'] is None: return ['row missing before rev-max directive']\n353:                         write(inst, dict(op='put', key=key + suffix, cas=previous['index'],"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/c_installer.py",
+    "line": 391,
+    "scope": "put_case",
+    "call": "(specs / case['canonical']['expect_file']).read_bytes()",
+    "category": "runner-runtime",
+    "context": "387:                 # README 2.2 \u043f. 2: the key of the refused row \u2014 the marker after @rev-spoil, otherwise the view.\n388:                 marker = index > 0 and actions[index - 1][0] == 'rev-spoil'\n389:                 if chapter == '2' and 'platform/manifest/' + name + ('/rev' if marker else '/canonical/1') not in text:\n390:                     errors.append('refusal stderr does not name ' + ('marker' if marker else 'canonical') + ' key')\n391:         canonical = None if chapter == '3' else {'bytes': (specs / case['canonical']['expect_file']).read_bytes() if case['canonical'] else None}\n392:         return errors + installed_errors(inst, name, case['rev'], canonical, spoiled if case['want_code'] == 2 else None)\n393:     finally:\n394:         try:\n395:             inst.close()\n396:         finally:"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/c_installer.py",
+    "line": 331,
+    "scope": "put_case",
+    "call": "evidence.glob('put-files-*')",
+    "category": "runner-runtime",
+    "context": "327:             return errors, kind\n328:         name, errors, spoiled = None, [], None\n329:         chapter = case.get('chapter', case['source'].split('/acceptance/')[1].split('/')[0])\n330:         actions = data.put_actions(case['tokens'], chapter)\n331:         work = evidence / ('put-files-' + str(len(list(evidence.glob('put-files-*')))))\n332:         work.mkdir()\n333:         # Each row starts with YAML only, even when the export has adjacent HTML.\n334:         for action, token in actions:\n335:             if action == 'put':\n336:                 original = specs / data.ROOT / 'acceptance' / chapter / 'puts' / (token + '.subsystem.yaml')"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/c_installer.py",
+    "line": 385,
+    "scope": "put_case",
+    "call": "shell.read_bytes()",
+    "category": "runner-runtime",
+    "context": "381:             if want == 2:\n382:                 text = err.decode('utf-8', 'replace')\n383:                 # \u041d4 (02.3 :251): a shell with an on\u2026= attribute is refused by naming the shell file, not the manifest.\n384:                 shell = work / (name + '.shell.html')\n385:                 named = shell if shell.exists() and shell_handler(shell.read_bytes()) else path\n386:                 if named.name not in text: errors.append('refusal stderr does not name file')\n387:                 # README 2.2 \u043f. 2: the key of the refused row \u2014 the marker after @rev-spoil, otherwise the view.\n388:                 marker = index > 0 and actions[index - 1][0] == 'rev-spoil'\n389:                 if chapter == '2' and 'platform/manifest/' + name + ('/rev' if marker else '/canonical/1') not in text:\n390:                     errors.append('refusal stderr does not name ' + ('marker' if marker else 'canonical') + ' key')"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/c_installer.py",
+    "line": 358,
+    "scope": "put_case",
+    "call": "open(filled[-1], 'wb')",
+    "category": "runner-runtime",
+    "context": "354:                                          items=dict(previous['items'], rev='9007199254740991')))\n355:                 elif action == 'file-fill':                   # README 2.3: the size is the subject, any bytes will do\n356:                     filled.append(work / token[0])\n357:                     filled[-1].parent.mkdir(parents=True, exist_ok=True)\n358:                     with open(filled[-1], 'wb') as out:\n359:                         out.truncate(token[1])\n360:                 elif action == 'view-delete': write(inst, dict(op='delete', key=key + '/canonical/1'))\n361:                 elif action == 'rev-delete': write(inst, dict(op='delete', key=key + '/rev'))\n362:                 elif action == 'rev-spoil':\n363:                     previous = row(inst, key + '/rev')"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/c_installer_data.py",
+    "line": 353,
+    "scope": "sources",
+    "call": "file(root, 'Source/tests/testdata/testsub.subsystem.yaml')",
+    "category": "runner-runtime",
+    "context": "349:         for key in ('file', 'expect_file'):\n350:             if key in case: paths.add(case[key])\n351:         if case.get('canonical'):\n352:             paths.update((case['canonical']['file'], case['canonical']['expect_file'], case['canonical']['source']))\n353:     if driver == 'installer-sample': paths.add(file(root, 'Source/tests/testdata/testsub.subsystem.yaml'))\n354:     if driver == 'installer-put': paths.update(file(root, name) for name in c_targets.testsub2_files(root))\n355:     return sorted(paths)"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/c_installer_data.py",
+    "line": 354,
+    "scope": "sources",
+    "call": "file(root, name)",
+    "category": "runner-runtime",
+    "context": "350:             if key in case: paths.add(case[key])\n351:         if case.get('canonical'):\n352:             paths.update((case['canonical']['file'], case['canonical']['expect_file'], case['canonical']['source']))\n353:     if driver == 'installer-sample': paths.add(file(root, 'Source/tests/testdata/testsub.subsystem.yaml'))\n354:     if driver == 'installer-put': paths.update(file(root, name) for name in c_targets.testsub2_files(root))\n355:     return sorted(paths)"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/c_store.py",
+    "line": 287,
+    "scope": "_main",
+    "call": "Path(a.config).read_text(encoding=\"utf-8\")",
+    "category": "runner-runtime",
+    "context": "283:     a = ap.parse_args(argv)\n284:     out = Path(a.json); evidence = out.parent / (out.stem + \"-processes\")\n285:     evidence.mkdir()\n286:     diagnostic_secrets.current().evidence.update((out, evidence, out.with_suffix(\".diagnostics\")))\n287:     config = json.loads(Path(a.config).read_text(encoding=\"utf-8\"))\n288:     diagnostic_secrets.current().authorize_public_ids(config.get('public_report_ids', ()))\n289:     os.environ[\"CAMMETA_SPECS\"] = config[\"specs\"]\n290:     if a.driver == 'store-group':\n291:         module, args = 'store_group', ['--config', a.config, '--json', str(out)]\n292:     elif a.driver == 'system-power':"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/c_store.py",
+    "line": 522,
+    "scope": "_main",
+    "call": "out.read_text(encoding='utf-8')",
+    "category": "runner-runtime",
+    "context": "518:         finally:\n519:             subprocess.Popen = popen\n520:             signal.signal(signal.SIGTERM, previous)\n521:     if control_failures:\n522:         try: report = json.loads(out.read_text(encoding='utf-8'))\n523:         except (OSError, ValueError): report = {}\n524:         report.update(green=False, classification='stand' if any(f['classification']=='stand' for f in control_failures) else 'data',\n525:                       control_failures=control_failures)\n526:         prepare.write(out, report); code = 1\n527:     if cleanup_errors:"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/c_store.py",
+    "line": 529,
+    "scope": "_main",
+    "call": "out.read_text(encoding=\"utf-8\")",
+    "category": "runner-runtime",
+    "context": "525:                       control_failures=control_failures)\n526:         prepare.write(out, report); code = 1\n527:     if cleanup_errors:\n528:         try:\n529:             report = json.loads(out.read_text(encoding=\"utf-8\"))\n530:         except (OSError, ValueError):\n531:             report = {}\n532:         report.update(green=False, classification=\"stand\", cleanup_error=cleanup_errors)\n533:         prepare.write(out, report); code = 1\n534:     return code"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/c_value_vectors.py",
+    "line": 272,
+    "scope": "rows",
+    "call": "files.copy()",
+    "category": "runner-runtime",
+    "context": "268:                 value = row_data(driver, name, r, owner, list_types)\n269:                 variants = typed_rows(r, owner) if value is None else [dict(value[0], variant='')] if value[1] else []\n270:             except (ValueError, UnicodeError) as error:\n271:                 raise c_targets.DataError(f'{source}:{line}: {error}') from error\n272:             input_files = files.copy()\n273:             if driver == 'vector-row-check' and name == 'state.tsv':\n274:                 input_files = {k:v for k,v in files.items() if k == 'testsub2.subsystem.yaml'}\n275:             for value in variants:\n276:                 selected.append(dict(package=definition['package'], owner=owner, source=source,\n277:                                      table=name, table_sha256=digest, case=case, line=line,"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/c_value_vectors.py",
+    "line": 278,
+    "scope": "rows",
+    "call": "input_files.copy()",
+    "category": "runner-runtime",
+    "context": "274:                 input_files = {k:v for k,v in files.items() if k == 'testsub2.subsystem.yaml'}\n275:             for value in variants:\n276:                 selected.append(dict(package=definition['package'], owner=owner, source=source,\n277:                                      table=name, table_sha256=digest, case=case, line=line,\n278:                                      files=input_files.copy(), **value))\n279:     if not selected:\n280:         if (driver == 'vector-row-check' and owner == '04-controller' and\n281:                 not any(Path(p).name == 'state.tsv' for p in tables(definition, root))):\n282:             # Before state.tsv was published,04 has no assigned table. This is\n283:             # not damaged data and must not break an unrelated target's catalog."
+  },
+  {
+    "repository": "runner",
+    "path": "runner/stand.py",
+    "line": 316,
+    "scope": "put_specs",
+    "call": "open(path, 'rb')",
+    "category": "runner-runtime",
+    "context": "312:             door = self.store('admin')\n313:             evidence = []\n314:             for name in self.spec_names:\n315:                 path = os.path.join(self.specdir, name + '.subsystem.yaml')\n316:                 with open(path, 'rb') as f:\n317:                     raw = f.read()\n318:                 items = dict(yaml=raw.decode('utf-8'), sha256=hashlib.sha256(raw).hexdigest(), rev='1')\n319:                 body = dict(op='put', key='platform/manifest/' + name, items=items, cas='')\n320:                 reply = door.request('POST', '/v1/write', json.dumps(body).encode('utf-8'))\n321:                 try:"
+  },
+  {
+    "repository": "runner",
+    "path": "runner/stand.py",
+    "line": 330,
+    "scope": "put_specs",
+    "call": "open(os.path.join(self.workdir, 'stand-manifest-rows.json'), 'w', encoding='utf-8')",
+    "category": "runner-runtime",
+    "context": "326:                     raise SystemExit('stand manifest row %s: expected 200 with index, got %d %s' %\n327:                                      (name, reply.status, diagnostic_secrets.clip(reply.body, 200)))\n328:                 evidence.append(dict(source='Source/tests/testdata/' + name + '.subsystem.yaml',\n329:                                      path=body['key'], sha256=items['sha256'], revision=1, status=reply.status))\n330:                 with open(os.path.join(self.workdir, 'stand-manifest-rows.json'), 'w', encoding='utf-8') as f:\n331:                     json.dump(dict(kind='stand_manifest_rows', rows=evidence), f, ensure_ascii=False, indent=1)\n332:             return\n333:         tmpl = getattr(self.a, \"spec_put\", None)\n334:         if not tmpl:\n335:             raise SystemExit(\"the implementation names no spec-put command (README 01 \u00ab\u0421\u0442\u0435\u043d\u0434\u00bb, stand key spec-put)\")"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_c_body_http.py",
+    "line": 66,
+    "scope": "setUp",
+    "call": "helper.read_bytes()",
+    "category": "runner-test",
+    "context": "62:         modules = {}\n63:         for owner in ('01-store', '02-installer', '06-console'):\n64:             part = self.impl / owner\n65:             part.mkdir()\n66:             (part / 'fixture_door.py').write_bytes(helper.read_bytes())\n67:             cmd = shlex.join([sys.executable, str(part / 'fixture_door.py')])\n68:             log = ' --log ' + shlex.quote(str(self.root / 'calls.jsonl'))\n69:             commands = ({'store': cmd + ' store --socket {socket}' + log} if owner == '01-store' else\n70:                         {'console': cmd + ' console --port {port}' + log} if owner == '06-console' else\n71:                         {key: cmd + ' ' + mode + ' --file {file}' + log"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_c_domain_stand.py",
+    "line": 368,
+    "scope": "test_profile_commands_run_only_in_the_selected_owner_with_lossless_input",
+    "call": "out.read_text()",
+    "category": "runner-test",
+    "context": "364:         out = self.root / 'wire.json'\n365:         with contextlib.redirect_stdout(io.StringIO()):\n366:             self.assertEqual(package_cli.main(['--config', str(config), '--owner', '08-domain',\n367:                 '--driver', 'vector-accept', '--json', str(out)]), 0)\n368:         report = json.loads(out.read_text())\n369:         self.assertEqual(report['cases'], [1, 1])\n370:         self.assertTrue(report['vectors'][0]['executed'])\n371:         script.write_text(\"\"\"import sys\n372: payload=open(sys.argv[1]).read()\n373: if payload=='{}': raise SystemExit(2)"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_c_domain_stand.py",
+    "line": 390,
+    "scope": "test_profile_commands_run_only_in_the_selected_owner_with_lossless_input",
+    "call": "out.read_text()",
+    "category": "runner-test",
+    "context": "386:             out = self.root / f'command-{index}.json'\n387:             with contextlib.redirect_stdout(io.StringIO()):\n388:                 self.assertEqual(sdk.main(['--config', str(config), '--owner', target.owner, '--driver', target.driver,\n389:                                          '--json', str(out)]), 0)\n390:             self.assertEqual(json.loads(out.read_text())['cases'], [2, 2])"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_c_execution.py",
+    "line": 456,
+    "scope": "test_daemon_inventory_seals_import_files_rights_and_both_manifests",
+    "call": "p.read_text()",
+    "category": "runner-test",
+    "context": "452:         c=self.composition(\"A\",installer=True)\n453:         base=self.specs/\"Platform/01-store/acceptance/3\"\n454:         (base/\"inputs\").mkdir();(base/\"inputs/fixture.jsonl\").write_text('{\"index\":\"1\"}\\n')\n455:         p=base/\"scenarios.tsv\"\n456:         p.write_text(p.read_text().replace(\"store GET /metrics\",\"@import store inputs/fixture.jsonl\"))\n457:         inputs={r[\"path\"]:r for r in c_targets.plan(c,[\"P/01.3\"])[0][\"inputs\"]}\n458:         self.assertTrue({\"Platform/01-store/acceptance/3/inputs/fixture.jsonl\",\n459:                          \"Platform/01-store/acceptance/2/inputs/rights.json\",\n460:                          \"Source/tests/testdata/testsub.subsystem.yaml\",\n461:                          \"Source/tests/testdata/testsub2.subsystem.yaml\"}<=set(inputs))"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_manifest_files.py",
+    "line": 133,
+    "scope": "test_store_only_manifest_row_needs_no_console_files",
+    "call": "Path(folder, 'testsub2.subsystem.yaml').read_bytes()",
+    "category": "runner-test",
+    "context": "129:         with tempfile.TemporaryDirectory() as folder, patch.object(standmod.specs, 'path', side_effect=AssertionError):\n130:             source = self.root / 'testsub2.subsystem.yaml'\n131:             source.write_bytes(b'name: testsub2\\r\\n')\n132:             self.assertEqual(standmod.lay_manifest(str(source), folder, with_files=False), 'testsub2')\n133:             self.assertEqual(Path(folder, 'testsub2.subsystem.yaml').read_bytes(), source.read_bytes())\n134:             self.assertFalse(Path(folder, 'bundle.js').exists())"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_manifest_files.py",
+    "line": 133,
+    "scope": "test_store_only_manifest_row_needs_no_console_files",
+    "call": "source.read_bytes()",
+    "category": "runner-test",
+    "context": "129:         with tempfile.TemporaryDirectory() as folder, patch.object(standmod.specs, 'path', side_effect=AssertionError):\n130:             source = self.root / 'testsub2.subsystem.yaml'\n131:             source.write_bytes(b'name: testsub2\\r\\n')\n132:             self.assertEqual(standmod.lay_manifest(str(source), folder, with_files=False), 'testsub2')\n133:             self.assertEqual(Path(folder, 'testsub2.subsystem.yaml').read_bytes(), source.read_bytes())\n134:             self.assertFalse(Path(folder, 'bundle.js').exists())"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_process_audit_c.py",
+    "line": 119,
+    "scope": "test_actual_bridge_passes_worker_grant_then_filters_the_next_controller",
+    "call": "out.read_text()",
+    "category": "runner-test",
+    "context": "115:         first,second=[r['env'] for r in self.captured()]\n116:         self.assertEqual(first['INSTANCE_ID'],'bad');self.assertIsNone(second['INSTANCE_ID'])\n117:         for row in (first,second):\n118:             self.assertIsNone(row['PRIVATE_CALLER']);self.assertIsNone(row['CAMMETA_SPECS']);self.assertIsNone(row['PYTHONPATH'])\n119:         self.assertTrue(json.loads(out.read_text())['green'])"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_stand_0106_audit.py",
+    "line": 43,
+    "scope": "test_file_compares_the_complete_bytes_including_lf",
+    "call": "asset.read_bytes()",
+    "category": "runner-test",
+    "context": "39:         with tempfile.TemporaryDirectory() as folder:\n40:             asset = Path(folder) / 'module.js'\n41:             asset.write_bytes(b'own fixture\\x00\\xff\\n')\n42:             with patch.object(l09.specs, 'path', return_value=str(asset)):\n43:                 for body, valid in ((asset.read_bytes(), True), (asset.read_bytes().rstrip(), False),\n44:                                     (asset.read_bytes() + b'x', False)):\n45:                     why = []\n46:                     l09.check(None, '/', 'GET', 200, {}, body,\n47:                               '200 @file Source/w2cplatform/console.js', {}, why, door='resource')\n48:                     self.assertEqual(not why, valid)"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_stand_0106_audit.py",
+    "line": 44,
+    "scope": "test_file_compares_the_complete_bytes_including_lf",
+    "call": "asset.read_bytes()",
+    "category": "runner-test",
+    "context": "40:             asset = Path(folder) / 'module.js'\n41:             asset.write_bytes(b'own fixture\\x00\\xff\\n')\n42:             with patch.object(l09.specs, 'path', return_value=str(asset)):\n43:                 for body, valid in ((asset.read_bytes(), True), (asset.read_bytes().rstrip(), False),\n44:                                     (asset.read_bytes() + b'x', False)):\n45:                     why = []\n46:                     l09.check(None, '/', 'GET', 200, {}, body,\n47:                               '200 @file Source/w2cplatform/console.js', {}, why, door='resource')\n48:                     self.assertEqual(not why, valid)"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_stand_0106_audit.py",
+    "line": 43,
+    "scope": "test_file_compares_the_complete_bytes_including_lf",
+    "call": "asset.read_bytes()",
+    "category": "runner-test",
+    "context": "39:         with tempfile.TemporaryDirectory() as folder:\n40:             asset = Path(folder) / 'module.js'\n41:             asset.write_bytes(b'own fixture\\x00\\xff\\n')\n42:             with patch.object(l09.specs, 'path', return_value=str(asset)):\n43:                 for body, valid in ((asset.read_bytes(), True), (asset.read_bytes().rstrip(), False),\n44:                                     (asset.read_bytes() + b'x', False)):\n45:                     why = []\n46:                     l09.check(None, '/', 'GET', 200, {}, body,\n47:                               '200 @file Source/w2cplatform/console.js', {}, why, door='resource')\n48:                     self.assertEqual(not why, valid)"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_store_audit.py",
+    "line": 239,
+    "scope": "test_daemon_seeds_two_exact_manifest_rows_over_admin_socket",
+    "call": "(SPEC / 'Source/tests/testdata' / (name + '.subsystem.yaml')).read_bytes()",
+    "category": "runner-test",
+    "context": "235:         st = self.manifest_stand()\n236:         rows = [json.loads(line) for line in (Path(st.data) / 'writes.jsonl').read_text().splitlines()]\n237:         self.assertEqual(len(rows), 2)\n238:         for row, name in zip(rows, ('testsub', 'testsub2')):\n239:             raw = (SPEC / 'Source/tests/testdata' / (name + '.subsystem.yaml')).read_bytes()\n240:             self.assertEqual(row['path'], '/v1/write')\n241:             command = row['command']\n242:             self.assertEqual(command, dict(op='put', key='platform/manifest/' + name, cas='',\n243:                 items=dict(yaml=raw.decode('utf-8'), sha256=hashlib.sha256(raw).hexdigest(), rev='1')))\n244:             self.assertEqual(command['items']['yaml'].encode('utf-8'), raw)"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_store_audit.py",
+    "line": 245,
+    "scope": "test_daemon_seeds_two_exact_manifest_rows_over_admin_socket",
+    "call": "(Path(st.workdir) / 'stand-manifest-rows.json').read_text()",
+    "category": "runner-test",
+    "context": "241:             command = row['command']\n242:             self.assertEqual(command, dict(op='put', key='platform/manifest/' + name, cas='',\n243:                 items=dict(yaml=raw.decode('utf-8'), sha256=hashlib.sha256(raw).hexdigest(), rev='1')))\n244:             self.assertEqual(command['items']['yaml'].encode('utf-8'), raw)\n245:         evidence = json.loads((Path(st.workdir) / 'stand-manifest-rows.json').read_text())\n246:         self.assertEqual([r['path'] for r in evidence['rows']], [r['command']['key'] for r in rows])\n247:         out = self.root / 'captured'; out.mkdir()\n248:         c_store.capture_process_files(st.workdir, out)\n249:         self.assertTrue(list(out.glob('*-stand-manifest-rows.json')))"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_store_audit.py",
+    "line": 249,
+    "scope": "test_daemon_seeds_two_exact_manifest_rows_over_admin_socket",
+    "call": "out.glob('*-stand-manifest-rows.json')",
+    "category": "runner-test",
+    "context": "245:         evidence = json.loads((Path(st.workdir) / 'stand-manifest-rows.json').read_text())\n246:         self.assertEqual([r['path'] for r in evidence['rows']], [r['command']['key'] for r in rows])\n247:         out = self.root / 'captured'; out.mkdir()\n248:         c_store.capture_process_files(st.workdir, out)\n249:         self.assertTrue(list(out.glob('*-stand-manifest-rows.json')))"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_store_audit.py",
+    "line": 535,
+    "scope": "test_both_skips_through_real_bridge_finalize_and_coverage",
+    "call": "output.read_text()",
+    "category": "runner-test",
+    "context": "531:                        '02-installer':dict(cwd=str(root),keys={},stand={'manifest-put':'unused'})}\n532:                 config=root/'config.json';output=root/'result.json';config.write_text(json.dumps(dict(specs=str(specs),parts=parts)))\n533:                 with patch.dict(os.environ),contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):\n534:                     result=c_store.main(['--driver',driver,'--config',str(config),'--json',str(output)])\n535:                 exported=json.loads(output.read_text());reason=scenario_status.reason(code)\n536:                 self.assertEqual(result,1);self.assertFalse(exported['green']);self.assertEqual(exported['classification'],'stand')\n537:                 self.assertEqual(exported['not_executed_scenarios'],{name:reason})\n538:                 self.assertEqual((exported['total_steps'],exported['passed_steps']),(0,0))\n539:                 self.assertTrue(all(r['ok'] is None and r['not_executed'] is True for r in exported['scenarios'][name]))\n540:                 target=dict(driver=driver,inputs=[c_targets.source(acc/'scenarios.tsv',specs)],not_executed_scenarios={name:reason})"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_store_audit.py",
+    "line": 236,
+    "scope": "test_daemon_seeds_two_exact_manifest_rows_over_admin_socket",
+    "call": "(Path(st.data) / 'writes.jsonl').read_text()",
+    "category": "runner-test",
+    "context": "234:     def test_daemon_seeds_two_exact_manifest_rows_over_admin_socket(self):\n235:         st = self.manifest_stand()\n236:         rows = [json.loads(line) for line in (Path(st.data) / 'writes.jsonl').read_text().splitlines()]\n237:         self.assertEqual(len(rows), 2)\n238:         for row, name in zip(rows, ('testsub', 'testsub2')):\n239:             raw = (SPEC / 'Source/tests/testdata' / (name + '.subsystem.yaml')).read_bytes()\n240:             self.assertEqual(row['path'], '/v1/write')\n241:             command = row['command']"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_vms_jsdom.py",
+    "line": 86,
+    "scope": "test_exported_vectors_and_real_module_panel_are_green",
+    "call": "(self.specs / \"VMS/01-cam/cam.shell.html\").read_bytes()",
+    "category": "runner-test",
+    "context": "82:             self.assertEqual(len(suites[suite]), len(rows))\n83:             self.assertEqual([c[\"id\"] for c in suites[suite]],\n84:                              [str(n + 1) if suite == \"text\" else r[\"id\"] for n, r in enumerate(rows)])\n85:         self.assertIn(\"Source/w2cplatform/console.js\", report[\"inputs\"])\n86:         shell = (self.specs / \"VMS/01-cam/cam.shell.html\").read_bytes()\n87:         self.assertEqual(report[\"inputs\"][\"VMS/01-cam/cam.shell.html\"],\n88:                          {\"sha256\": hashlib.sha256(shell).hexdigest(), \"bytes\": len(shell)})\n89:         self.assertEqual(report[\"SUT\"], 0)\n90:         self.assertEqual(report[\"spec_version\"], (vms_jsdom.HERE / \"vms-jsdom/SPEC_VERSION\").read_text().strip())\n91:         if os.environ.get(\"CHECK_OUT\"):"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_vms_jsdom.py",
+    "line": 81,
+    "scope": "test_exported_vectors_and_real_module_panel_are_green",
+    "call": "(self.specs / \"VMS/10-assist/vectors\" / filename).read_text()",
+    "category": "runner-test",
+    "context": "77:         suites = {s: [c for c in report[\"cases\"] if c[\"suite\"] == s] for s in (\"harness\", \"text\", \"plan-check\", \"turn\", \"apply\", \"panel\")}\n78:         self.assertTrue(all(suites.values()))\n79:         for suite, filename in ((\"text\", \"plan-check/text.json\"), (\"plan-check\", \"plan-check/cases.json\"),\n80:                                 (\"turn\", \"turn/cases.json\"), (\"apply\", \"apply/cases.json\")):\n81:             rows = json.loads((self.specs / \"VMS/10-assist/vectors\" / filename).read_text())\n82:             self.assertEqual(len(suites[suite]), len(rows))\n83:             self.assertEqual([c[\"id\"] for c in suites[suite]],\n84:                              [str(n + 1) if suite == \"text\" else r[\"id\"] for n, r in enumerate(rows)])\n85:         self.assertIn(\"Source/w2cplatform/console.js\", report[\"inputs\"])\n86:         shell = (self.specs / \"VMS/01-cam/cam.shell.html\").read_bytes()"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_vms_jsdom.py",
+    "line": 90,
+    "scope": "test_exported_vectors_and_real_module_panel_are_green",
+    "call": "(vms_jsdom.HERE / \"vms-jsdom/SPEC_VERSION\").read_text()",
+    "category": "runner-test",
+    "context": "86:         shell = (self.specs / \"VMS/01-cam/cam.shell.html\").read_bytes()\n87:         self.assertEqual(report[\"inputs\"][\"VMS/01-cam/cam.shell.html\"],\n88:                          {\"sha256\": hashlib.sha256(shell).hexdigest(), \"bytes\": len(shell)})\n89:         self.assertEqual(report[\"SUT\"], 0)\n90:         self.assertEqual(report[\"spec_version\"], (vms_jsdom.HERE / \"vms-jsdom/SPEC_VERSION\").read_text().strip())\n91:         if os.environ.get(\"CHECK_OUT\"):\n92:             (Path(os.environ[\"CHECK_OUT\"]) / \"jsdom-exported-report.json\").write_text(\n93:                 json.dumps(report, ensure_ascii=False, indent=2) + \"\\n\")"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_vms_stand.py",
+    "line": 434,
+    "scope": "test_process_bridge_executes_steps_and_retires_every_child",
+    "call": "out.read_text()",
+    "category": "runner-test",
+    "context": "430:             conf = folder / 'config.json'; conf.write_text(json.dumps(cfg))\n431:             out = folder / 'result.json'\n432:             run = subprocess.run([sys.executable, '-B', str(ROOT / 'runner/c_store.py'), '--config', str(conf), '--driver', 'vms-01.2', '--json', str(out)], capture_output=True, text=True, timeout=30)\n433:             self.assertEqual(run.returncode, 0, run.stdout + run.stderr + (out.read_text() if out.exists() else ''))\n434:             report = json.loads(out.read_text())\n435:             self.assertTrue(report['green'])\n436:             self.assertEqual((report['passed_steps'], report['total_steps']), (2, 2))\n437:             registry = json.loads((folder / 'result-processes/children.json').read_text())\n438:             self.assertGreaterEqual(len(registry), 7)\n439:             self.assertTrue(all(r['cleanup_complete'] and r['code'] is not None for r in registry), registry)"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_vms_stand.py",
+    "line": 437,
+    "scope": "test_process_bridge_executes_steps_and_retires_every_child",
+    "call": "(folder / 'result-processes/children.json').read_text()",
+    "category": "runner-test",
+    "context": "433:             self.assertEqual(run.returncode, 0, run.stdout + run.stderr + (out.read_text() if out.exists() else ''))\n434:             report = json.loads(out.read_text())\n435:             self.assertTrue(report['green'])\n436:             self.assertEqual((report['passed_steps'], report['total_steps']), (2, 2))\n437:             registry = json.loads((folder / 'result-processes/children.json').read_text())\n438:             self.assertGreaterEqual(len(registry), 7)\n439:             self.assertTrue(all(r['cleanup_complete'] and r['code'] is not None for r in registry), registry)"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_vms_stand.py",
+    "line": 422,
+    "scope": "test_process_bridge_executes_steps_and_retires_every_child",
+    "call": "src.read_bytes()",
+    "category": "runner-test",
+    "context": "418:             for sub in ('cam',):\n419:                 src = SPEC / vms_targets.manifest(sub)\n420:                 dest = spec / vms_targets.manifest(sub)\n421:                 dest.parent.mkdir(parents=True, exist_ok=True)\n422:                 dest.write_bytes(src.read_bytes())\n423:             (spec / 'Source/tests/testdata').mkdir(parents=True)\n424:             for n in ('1', '2'):\n425:                 (spec / 'Platform/06-console/acceptance' / n).mkdir(parents=True)\n426:             base = spec / 'VMS/01-cam/acceptance/2'\n427:             base.mkdir(parents=True)"
+  },
+  {
+    "repository": "runner",
+    "path": "tests/test_vms_stand.py",
+    "line": 433,
+    "scope": "test_process_bridge_executes_steps_and_retires_every_child",
+    "call": "out.read_text()",
+    "category": "runner-test",
+    "context": "429:             cfg = config(); cfg['specs'] = str(spec)\n430:             conf = folder / 'config.json'; conf.write_text(json.dumps(cfg))\n431:             out = folder / 'result.json'\n432:             run = subprocess.run([sys.executable, '-B', str(ROOT / 'runner/c_store.py'), '--config', str(conf), '--driver', 'vms-01.2', '--json', str(out)], capture_output=True, text=True, timeout=30)\n433:             self.assertEqual(run.returncode, 0, run.stdout + run.stderr + (out.read_text() if out.exists() else ''))\n434:             report = json.loads(out.read_text())\n435:             self.assertTrue(report['green'])\n436:             self.assertEqual((report['passed_steps'], report['total_steps']), (2, 2))\n437:             registry = json.loads((folder / 'result-processes/children.json').read_text())\n438:             self.assertGreaterEqual(len(registry), 7)"
+  }
+]

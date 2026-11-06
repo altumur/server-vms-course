@@ -1,0 +1,272 @@
+[
+  {
+    "path": "Source/tests/console/boot.js",
+    "line": 8,
+    "text": "  const page=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"vms\",\"cam.shell.html\"),\"utf8\"),mod=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/holder-page.test.js",
+    "line": 9,
+    "text": "const MOD=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-access.test.js",
+    "line": 4,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-calls.test.js",
+    "line": 6,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-card-markup.test.js",
+    "line": 8,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-changes.test.js",
+    "line": 5,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-children.test.js",
+    "line": 4,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-command-words.test.js",
+    "line": 6,
+    "text": "const PAGE=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.html\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-command-words.test.js",
+    "line": 7,
+    "text": "const MOD=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-contract.test.js",
+    "line": 5,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-debug.test.js",
+    "line": 4,
+    "text": "const PAGE=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.html\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-debug.test.js",
+    "line": 5,
+    "text": "const MOD=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-domain.test.js",
+    "line": 4,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-drain.test.js",
+    "line": 4,
+    "text": "const PAGE=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.html\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-drain.test.js",
+    "line": 5,
+    "text": "const MOD=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-form-if-match.test.js",
+    "line": 5,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-form-json.test.js",
+    "line": 5,
+    "text": "const PAGE=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.html\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-form-json.test.js",
+    "line": 6,
+    "text": "const MOD=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-form.test.js",
+    "line": 5,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-groups.test.js",
+    "line": 4,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-journal-late.test.js",
+    "line": 5,
+    "text": "const PAGE=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.html\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-journal-late.test.js",
+    "line": 6,
+    "text": "const MOD=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-keys.test.js",
+    "line": 5,
+    "text": "const PAGE=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.html\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-keys.test.js",
+    "line": 6,
+    "text": "const MOD=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-labels-unread.test.js",
+    "line": 5,
+    "text": "const PAGE=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.html\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-labels-unread.test.js",
+    "line": 6,
+    "text": "const MOD=fs.readFileSync(process.env.MODULE_FILE||path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-local-groups.test.js",
+    "line": 5,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-may.test.js",
+    "line": 7,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-nested.test.js",
+    "line": 4,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-page-adds.test.js",
+    "line": 14,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-page-calls.test.js",
+    "line": 9,
+    "text": "const PAGE=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.html\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-page-calls.test.js",
+    "line": 10,
+    "text": "const MOD=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-poll.test.js",
+    "line": 5,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-refresh-event.test.js",
+    "line": 5,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-refusal-field.test.js",
+    "line": 5,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-retry.test.js",
+    "line": 9,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-return.test.js",
+    "line": 3,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-servers.test.js",
+    "line": 5,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-session.test.js",
+    "line": 4,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-shared-groups.test.js",
+    "line": 5,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-shared-schema.test.js",
+    "line": 6,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-show.test.js",
+    "line": 5,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-steady-tabs.test.js",
+    "line": 5,
+    "text": "const PAGE=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.html\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-steady-tabs.test.js",
+    "line": 6,
+    "text": "const MOD=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-tree-nodes.test.js",
+    "line": 7,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-tree.test.js",
+    "line": 5,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-unplaced.test.js",
+    "line": 4,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-view.test.js",
+    "line": 4,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-words.test.js",
+    "line": 12,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/module-worker-table.test.js",
+    "line": 3,
+    "text": "const SRC=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/platform-page.test.js",
+    "line": 5,
+    "text": "const PAGE=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.html\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/platform-page.test.js",
+    "line": 6,
+    "text": "const MOD=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/shell-volumes.test.js",
+    "line": 9,
+    "text": "const MOD=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  },
+  {
+    "path": "Source/tests/console/shell-xss-sweep.test.js",
+    "line": 9,
+    "text": "const MOD=fs.readFileSync(path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\"),\"utf8\");"
+  }
+]

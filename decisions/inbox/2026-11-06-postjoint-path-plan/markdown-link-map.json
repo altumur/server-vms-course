@@ -1,0 +1,3632 @@
+[
+  {
+    "repository": "course",
+    "path": "CONSOLE-MODULE.md",
+    "line": 61,
+    "old_url": "Platform/06-console/data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "new_resolved": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "data/localization.tsv",
+    "category": "course-control-or-root-doc"
+  },
+  {
+    "repository": "course",
+    "path": "CONSOLE-MODULE.md",
+    "line": 171,
+    "old_url": "Platform/06-console/data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "new_resolved": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "data/localization.tsv",
+    "category": "course-control-or-root-doc"
+  },
+  {
+    "repository": "course",
+    "path": "CONSOLE-MODULE.md",
+    "line": 313,
+    "old_url": "Platform/06-console/data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "new_resolved": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "data/localization.tsv",
+    "category": "course-control-or-root-doc"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/01-store/ru/spec/01.1-store.norms.md",
+    "line": 11,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/01-store/ru/spec/01.2-store.norms.md",
+    "line": 13,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+    "line": 15,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/01-store/spec/01.1-store.norms.md",
+    "line": 14,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/01-store/spec/01.2-store.norms.md",
+    "line": 14,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/01-store/spec/01.3-store.norms.md",
+    "line": 16,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/02-installer/ru/spec/02.1-installer.norms.md",
+    "line": 25,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/02-installer/ru/spec/02.2-installer.norms.md",
+    "line": 15,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/02-installer/ru/spec/02.3-installer.norms.md",
+    "line": 19,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/02-installer/ru/spec/02.4-installer.norms.md",
+    "line": 24,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/02-installer/ru/spec/02.5-installer.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/02-installer/spec/02.1-installer.norms.md",
+    "line": 30,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/02-installer/spec/02.2-installer.norms.md",
+    "line": 15,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/02-installer/spec/02.3-installer.norms.md",
+    "line": 19,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/02-installer/spec/02.4-installer.norms.md",
+    "line": 24,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/02-installer/spec/02.5-installer.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/03-worker/ru/spec/03.1-worker.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/03-worker/ru/spec/03.2-worker.norms.md",
+    "line": 29,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/03-worker/ru/spec/03.3-worker.norms.md",
+    "line": 20,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/03-worker/ru/spec/03.4-worker.norms.md",
+    "line": 20,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/03-worker/ru/spec/03.5-worker.norms.md",
+    "line": 22,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/03-worker/ru/spec/03.6-worker.norms.md",
+    "line": 26,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/03-worker/ru/spec/03.7-worker.norms.md",
+    "line": 25,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/03-worker/spec/03.1-worker.norms.md",
+    "line": 19,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/03-worker/spec/03.2-worker.norms.md",
+    "line": 31,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/03-worker/spec/03.3-worker.norms.md",
+    "line": 22,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/03-worker/spec/03.4-worker.norms.md",
+    "line": 22,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/03-worker/spec/03.5-worker.norms.md",
+    "line": 24,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/03-worker/spec/03.6-worker.norms.md",
+    "line": 28,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/03-worker/spec/03.7-worker.norms.md",
+    "line": 27,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/04-controller/ru/spec/04-controller.norms.md",
+    "line": 23,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/04-controller/spec/04-controller.norms.md",
+    "line": 25,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/05-resource/ru/spec/05-resource.norms.md",
+    "line": 24,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/05-resource/spec/05-resource.norms.md",
+    "line": 26,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/forms/README.md",
+    "line": 19,
+    "old_url": "../data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "new_resolved": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "../../07-console-module/data/localization.tsv",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/ru/forms/README.md",
+    "line": 19,
+    "old_url": "../../data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "new_resolved": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "../../../07-console-module/data/localization.tsv",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/ru/spec/06.1-console.norms.md",
+    "line": 30,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/ru/spec/06.2-console.norms.md",
+    "line": 26,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/ru/spec/06.3-console.norms.md",
+    "line": 26,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/ru/spec/06.4-console.norms.md",
+    "line": 32,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
+    "line": 29,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
+    "line": 218,
+    "old_url": "../../data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "new_resolved": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "../../../07-console-module/data/localization.tsv",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/ru/spec/06.6-console.norms.md",
+    "line": 26,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/ru/spec/06.7-console.norms.md",
+    "line": 45,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/ru/spec/06.8-console.norms.md",
+    "line": 20,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/ru/spec/06.9-console.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/spec/06.1-console.norms.md",
+    "line": 32,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/spec/06.2-console.norms.md",
+    "line": 28,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/spec/06.3-console.norms.md",
+    "line": 27,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/spec/06.4-console.norms.md",
+    "line": 34,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/spec/06.5-console.norms.md",
+    "line": 32,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/spec/06.5-console.norms.md",
+    "line": 234,
+    "old_url": "../data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "new_resolved": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "../../07-console-module/data/localization.tsv",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/spec/06.6-console.norms.md",
+    "line": 28,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/spec/06.7-console.norms.md",
+    "line": 47,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/spec/06.8-console.norms.md",
+    "line": 22,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/06-console/spec/06.9-console.norms.md",
+    "line": 20,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/07-console-module/ru/07-console-module.md",
+    "line": 3,
+    "old_url": "../../../ru/CONSOLE-MODULE.md",
+    "resolved_old": "ru/CONSOLE-MODULE.md",
+    "new_resolved": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "proposed_url": "CONSOLE-MODULE.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/07-console-module/ru/spec/07-console-module.README.md",
+    "line": 23,
+    "old_url": "../../../../ru/CONSOLE-MODULE.md",
+    "resolved_old": "ru/CONSOLE-MODULE.md",
+    "new_resolved": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "proposed_url": "../CONSOLE-MODULE.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/07-console-module/ru/spec/07-console-module.norms.md",
+    "line": 15,
+    "old_url": "../../../../ru/CONSOLE-MODULE.md",
+    "resolved_old": "ru/CONSOLE-MODULE.md",
+    "new_resolved": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "proposed_url": "../CONSOLE-MODULE.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/07-console-module/ru/spec/07-console-module.norms.md",
+    "line": 23,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/07-console-module/ru/spec/07-console-module.norms.md",
+    "line": 172,
+    "old_url": "../../../../ru/CONSOLE-MODULE.md",
+    "resolved_old": "ru/CONSOLE-MODULE.md",
+    "new_resolved": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "proposed_url": "../CONSOLE-MODULE.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/07-console-module/ru/spec/07-console-module.norms.md",
+    "line": 233,
+    "old_url": "../../../../ru/CONSOLE-MODULE.md",
+    "resolved_old": "ru/CONSOLE-MODULE.md",
+    "new_resolved": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "proposed_url": "../CONSOLE-MODULE.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/07-console-module/spec/07-console-module.README.md",
+    "line": 23,
+    "old_url": "../../../CONSOLE-MODULE.md",
+    "resolved_old": "CONSOLE-MODULE.md",
+    "new_resolved": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "proposed_url": "../CONSOLE-MODULE.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/07-console-module/spec/07-console-module.norms.md",
+    "line": 15,
+    "old_url": "../../../CONSOLE-MODULE.md",
+    "resolved_old": "CONSOLE-MODULE.md",
+    "new_resolved": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "proposed_url": "../CONSOLE-MODULE.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/07-console-module/spec/07-console-module.norms.md",
+    "line": 23,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/07-console-module/spec/07-console-module.norms.md",
+    "line": 172,
+    "old_url": "../../../CONSOLE-MODULE.md",
+    "resolved_old": "CONSOLE-MODULE.md",
+    "new_resolved": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "proposed_url": "../CONSOLE-MODULE.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/07-console-module/spec/07-console-module.norms.md",
+    "line": 233,
+    "old_url": "../../../CONSOLE-MODULE.md",
+    "resolved_old": "CONSOLE-MODULE.md",
+    "new_resolved": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "proposed_url": "../CONSOLE-MODULE.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/spec/08.0-domain.norms.md",
+    "line": 28,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/spec/08.1-domain.norms.md",
+    "line": 32,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/spec/08.10-domain.norms.md",
+    "line": 26,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/spec/08.2-domain.norms.md",
+    "line": 33,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/spec/08.3-domain.norms.md",
+    "line": 42,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/spec/08.4-domain.norms.md",
+    "line": 32,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/spec/08.5-domain.norms.md",
+    "line": 34,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/spec/08.6-domain.norms.md",
+    "line": 26,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/spec/08.7-domain.norms.md",
+    "line": 33,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/spec/08.8-domain.norms.md",
+    "line": 29,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/spec/08.9-domain.norms.md",
+    "line": 33,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/vectors/assemble/README.md",
+    "line": 41,
+    "old_url": "../../../../../Source/tests/testdata/testsub.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub.subsystem.yaml",
+    "proposed_url": "../../../../common/data/testsub/testsub.subsystem.yaml",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/vectors/assemble/README.md",
+    "line": 42,
+    "old_url": "../../../../../Source/tests/testdata/testsub2.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub2.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub2.subsystem.yaml",
+    "proposed_url": "../../../../common/data/testsub/testsub2.subsystem.yaml",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/vectors/issue/README.md",
+    "line": 35,
+    "old_url": "../../../../../Source/tests/testdata/testsub.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub.subsystem.yaml",
+    "proposed_url": "../../../../common/data/testsub/testsub.subsystem.yaml",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/vectors/issue/README.md",
+    "line": 36,
+    "old_url": "../../../../../Source/tests/testdata/testsub2.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub2.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub2.subsystem.yaml",
+    "proposed_url": "../../../../common/data/testsub/testsub2.subsystem.yaml",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/vectors/view/README.md",
+    "line": 44,
+    "old_url": "../../../../../Source/tests/testdata/testsub.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub.subsystem.yaml",
+    "proposed_url": "../../../../common/data/testsub/testsub.subsystem.yaml",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/ru/vectors/view/README.md",
+    "line": 45,
+    "old_url": "../../../../../Source/tests/testdata/testsub2.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub2.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub2.subsystem.yaml",
+    "proposed_url": "../../../../common/data/testsub/testsub2.subsystem.yaml",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/spec/08.0-domain.norms.md",
+    "line": 30,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/spec/08.1-domain.norms.md",
+    "line": 34,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/spec/08.10-domain.norms.md",
+    "line": 28,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/spec/08.2-domain.norms.md",
+    "line": 35,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/spec/08.3-domain.norms.md",
+    "line": 44,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/spec/08.4-domain.norms.md",
+    "line": 34,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/spec/08.5-domain.norms.md",
+    "line": 36,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/spec/08.6-domain.norms.md",
+    "line": 28,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/spec/08.7-domain.norms.md",
+    "line": 35,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/spec/08.8-domain.norms.md",
+    "line": 31,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/spec/08.9-domain.norms.md",
+    "line": 35,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/vectors/assemble/README.md",
+    "line": 41,
+    "old_url": "../../../../Source/tests/testdata/testsub.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub.subsystem.yaml",
+    "proposed_url": "../../../common/data/testsub/testsub.subsystem.yaml",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/vectors/assemble/README.md",
+    "line": 42,
+    "old_url": "../../../../Source/tests/testdata/testsub2.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub2.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub2.subsystem.yaml",
+    "proposed_url": "../../../common/data/testsub/testsub2.subsystem.yaml",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/vectors/issue/README.md",
+    "line": 35,
+    "old_url": "../../../../Source/tests/testdata/testsub.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub.subsystem.yaml",
+    "proposed_url": "../../../common/data/testsub/testsub.subsystem.yaml",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/vectors/issue/README.md",
+    "line": 36,
+    "old_url": "../../../../Source/tests/testdata/testsub2.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub2.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub2.subsystem.yaml",
+    "proposed_url": "../../../common/data/testsub/testsub2.subsystem.yaml",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/vectors/view/README.md",
+    "line": 44,
+    "old_url": "../../../../Source/tests/testdata/testsub.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub.subsystem.yaml",
+    "proposed_url": "../../../common/data/testsub/testsub.subsystem.yaml",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/08-domain/vectors/view/README.md",
+    "line": 45,
+    "old_url": "../../../../Source/tests/testdata/testsub2.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub2.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub2.subsystem.yaml",
+    "proposed_url": "../../../common/data/testsub/testsub2.subsystem.yaml",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/09-agent/ru/spec/09.1-agent.norms.md",
+    "line": 68,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/09-agent/ru/spec/09.2-agent.norms.md",
+    "line": 40,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/09-agent/spec/09.1-agent.norms.md",
+    "line": 70,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/09-agent/spec/09.2-agent.norms.md",
+    "line": 40,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+    "line": 46,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../common/ru/NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+    "line": 47,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../common/NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/accept.md",
+    "line": 25,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/agent-signature.md",
+    "line": 24,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/alarm-history.md",
+    "line": 14,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/ask-sig.md",
+    "line": 20,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/domain-backup-key.md",
+    "line": 13,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/domain-envelopes.md",
+    "line": 26,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/domain-founding.md",
+    "line": 23,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/domain-token.md",
+    "line": 26,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/door-token.md",
+    "line": 21,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/env-file.md",
+    "line": 13,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/event-journal.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/events-merge.md",
+    "line": 14,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/forwarding.md",
+    "line": 27,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/gate-and-pass.md",
+    "line": 28,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/group-of.md",
+    "line": 13,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/holds.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/instance.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/keys.md",
+    "line": 30,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/labels.md",
+    "line": 13,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/local-token-door.md",
+    "line": 19,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/log-mask.md",
+    "line": 15,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/may.md",
+    "line": 30,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/object-client.md",
+    "line": 16,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/observation.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/password-hash.md",
+    "line": 12,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/peer.md",
+    "line": 34,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/person-name.md",
+    "line": 15,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/pool.md",
+    "line": 16,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/presence-lock.md",
+    "line": 14,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/record.md",
+    "line": 26,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/request-mark.md",
+    "line": 22,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/role-certificate.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/row-check.md",
+    "line": 15,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/schema.md",
+    "line": 20,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/sealing.md",
+    "line": 13,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/secret-files.md",
+    "line": 13,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/slot-name.md",
+    "line": 12,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/slot.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/store-client.md",
+    "line": 14,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/tombstone.md",
+    "line": 16,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/turn.md",
+    "line": 19,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/contracts/url-credentials.md",
+    "line": 15,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/accept.md",
+    "line": 25,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/agent-signature.md",
+    "line": 24,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/alarm-history.md",
+    "line": 14,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/ask-sig.md",
+    "line": 20,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/domain-backup-key.md",
+    "line": 13,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/domain-envelopes.md",
+    "line": 26,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/domain-founding.md",
+    "line": 23,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/domain-token.md",
+    "line": 26,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/door-token.md",
+    "line": 21,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/env-file.md",
+    "line": 13,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/event-journal.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/events-merge.md",
+    "line": 14,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/forwarding.md",
+    "line": 27,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/gate-and-pass.md",
+    "line": 28,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/group-of.md",
+    "line": 13,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/holds.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/instance.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/keys.md",
+    "line": 30,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/labels.md",
+    "line": 13,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/local-token-door.md",
+    "line": 19,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/log-mask.md",
+    "line": 15,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/may.md",
+    "line": 30,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/object-client.md",
+    "line": 16,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/observation.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/password-hash.md",
+    "line": 12,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/peer.md",
+    "line": 34,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/person-name.md",
+    "line": 15,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/pool.md",
+    "line": 16,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/presence-lock.md",
+    "line": 14,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/record.md",
+    "line": 26,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/request-mark.md",
+    "line": 21,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/role-certificate.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/row-check.md",
+    "line": 15,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/schema.md",
+    "line": 20,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/sealing.md",
+    "line": 13,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/secret-files.md",
+    "line": 13,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/slot-name.md",
+    "line": 12,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/slot.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/store-client.md",
+    "line": 14,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/tombstone.md",
+    "line": 16,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/turn.md",
+    "line": 19,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/contracts/url-credentials.md",
+    "line": 15,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/vectors/accept/README.md",
+    "line": 33,
+    "old_url": "../../../../../Source/tests/testdata/testsub.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub.subsystem.yaml",
+    "proposed_url": "../../../data/testsub/testsub.subsystem.yaml",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/ru/vectors/accept/README.md",
+    "line": 34,
+    "old_url": "../../../../../Source/tests/testdata/testsub2.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub2.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub2.subsystem.yaml",
+    "proposed_url": "../../../data/testsub/testsub2.subsystem.yaml",
+    "category": "Platform-mirror"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/vectors/accept/README.md",
+    "line": 33,
+    "old_url": "../../../../Source/tests/testdata/testsub.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub.subsystem.yaml",
+    "proposed_url": "../../data/testsub/testsub.subsystem.yaml",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "Platform/common/vectors/accept/README.md",
+    "line": 34,
+    "old_url": "../../../../Source/tests/testdata/testsub2.subsystem.yaml",
+    "resolved_old": "Source/tests/testdata/testsub2.subsystem.yaml",
+    "new_resolved": "Platform/common/data/testsub/testsub2.subsystem.yaml",
+    "proposed_url": "../../data/testsub/testsub2.subsystem.yaml",
+    "category": "Platform-source"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/ru/spec/01.1-cam.norms.md",
+    "line": 19,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/ru/spec/01.2-cam.norms.md",
+    "line": 21,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/ru/spec/01.3-cam.norms.md",
+    "line": 20,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/ru/spec/01.4-cam.norms.md",
+    "line": 21,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/ru/spec/01.5-cam.norms.md",
+    "line": 20,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/ru/spec/01.6-cam.norms.md",
+    "line": 21,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/ru/spec/01.7-cam.norms.md",
+    "line": 20,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/ru/spec/01.8-cam.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/spec/01.1-cam.norms.md",
+    "line": 19,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/spec/01.2-cam.norms.md",
+    "line": 21,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/spec/01.3-cam.norms.md",
+    "line": 20,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/spec/01.4-cam.norms.md",
+    "line": 22,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/spec/01.5-cam.norms.md",
+    "line": 20,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/spec/01.6-cam.norms.md",
+    "line": 21,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/spec/01.7-cam.norms.md",
+    "line": 20,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/01-cam/spec/01.8-cam.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/ru/spec/02.1-rec.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/ru/spec/02.2-rec.norms.md",
+    "line": 20,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/ru/spec/02.3-rec.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/ru/spec/02.4-rec.norms.md",
+    "line": 19,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/ru/spec/02.5-rec.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/ru/spec/02.6-rec.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/ru/spec/02.7-rec.norms.md",
+    "line": 19,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/ru/spec/02.8-rec.norms.md",
+    "line": 20,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/ru/spec/02.9-rec.norms.md",
+    "line": 21,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/spec/02.1-rec.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/spec/02.2-rec.norms.md",
+    "line": 20,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/spec/02.3-rec.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/spec/02.4-rec.norms.md",
+    "line": 19,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/spec/02.5-rec.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/spec/02.6-rec.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/spec/02.7-rec.norms.md",
+    "line": 19,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/spec/02.8-rec.norms.md",
+    "line": 20,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/02-rec/spec/02.9-rec.norms.md",
+    "line": 21,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/03-live/ru/spec/03.1-live.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/03-live/ru/spec/03.2-live.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/03-live/ru/spec/03.3-live.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/03-live/ru/spec/03.4-live.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/03-live/ru/spec/03.5-live.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/03-live/ru/spec/03.6-live.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/03-live/spec/03.1-live.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/03-live/spec/03.2-live.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/03-live/spec/03.3-live.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/03-live/spec/03.4-live.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/03-live/spec/03.5-live.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/03-live/spec/03.6-live.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/04-det/ru/spec/04.1-det.norms.md",
+    "line": 16,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/04-det/ru/spec/04.2-det.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/04-det/ru/spec/04.3-det.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/04-det/ru/spec/04.4-det.norms.md",
+    "line": 16,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/04-det/spec/04.1-det.norms.md",
+    "line": 16,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/04-det/spec/04.2-det.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/04-det/spec/04.3-det.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/04-det/spec/04.4-det.norms.md",
+    "line": 16,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/05-detjob/ru/spec/05.1-detjob.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/05-detjob/ru/spec/05.2-detjob.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/05-detjob/ru/spec/05.3-detjob.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/05-detjob/ru/spec/05.4-detjob.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/05-detjob/spec/05.1-detjob.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/05-detjob/spec/05.2-detjob.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/05-detjob/spec/05.3-detjob.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/05-detjob/spec/05.4-detjob.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/06-detedge/ru/spec/06.1-detedge.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/06-detedge/ru/spec/06.2-detedge.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/06-detedge/ru/spec/06.3-detedge.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/06-detedge/ru/spec/06.4-detedge.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/06-detedge/spec/06.1-detedge.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/06-detedge/spec/06.2-detedge.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/06-detedge/spec/06.3-detedge.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/06-detedge/spec/06.4-detedge.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/07-auto/ru/spec/07.1-auto.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/07-auto/ru/spec/07.2-auto.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/07-auto/ru/spec/07.3-auto.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/07-auto/ru/spec/07.4-auto.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/07-auto/ru/spec/07.5-auto.norms.md",
+    "line": 19,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/07-auto/ru/spec/07.6-auto.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/07-auto/spec/07.1-auto.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/07-auto/spec/07.2-auto.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/07-auto/spec/07.3-auto.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/07-auto/spec/07.4-auto.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/07-auto/spec/07.5-auto.norms.md",
+    "line": 19,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/07-auto/spec/07.6-auto.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/08-exp/ru/spec/08.6-exp.norms.md",
+    "line": 19,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/08-exp/ru/spec/08.7-exp.norms.md",
+    "line": 16,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/08-exp/ru/spec/08.8-exp.norms.md",
+    "line": 16,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/08-exp/ru/spec/08.9-exp.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/08-exp/spec/08.6-exp.norms.md",
+    "line": 19,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/08-exp/spec/08.7-exp.norms.md",
+    "line": 16,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/08-exp/spec/08.8-exp.norms.md",
+    "line": 16,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/08-exp/spec/08.9-exp.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/09-deploy/ru/spec/09.1-deploy.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/09-deploy/ru/spec/09.2-deploy.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/09-deploy/ru/spec/09.3-deploy.norms.md",
+    "line": 16,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/09-deploy/ru/spec/09.4-deploy.norms.md",
+    "line": 16,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/09-deploy/spec/09.1-deploy.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/09-deploy/spec/09.2-deploy.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/09-deploy/spec/09.3-deploy.norms.md",
+    "line": 16,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/09-deploy/spec/09.4-deploy.norms.md",
+    "line": 16,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/10-assist/ru/spec/10.1-assist.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/10-assist/ru/spec/10.2-assist.norms.md",
+    "line": 20,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/10-assist/spec/10.1-assist.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/10-assist/spec/10.2-assist.norms.md",
+    "line": 20,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.1-backend.norms.md",
+    "line": 19,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.10-backend.norms.md",
+    "line": 20,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.11-backend.norms.md",
+    "line": 21,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.12-backend.norms.md",
+    "line": 15,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.13-backend.norms.md",
+    "line": 15,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.14-backend.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.15-backend.norms.md",
+    "line": 16,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.15-backend.norms.md",
+    "line": 85,
+    "old_url": "../../../../ru/CONSOLE-MODULE.md",
+    "resolved_old": "ru/CONSOLE-MODULE.md",
+    "new_resolved": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "proposed_url": "../../../../Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.16-backend.norms.md",
+    "line": 15,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.17-backend.norms.md",
+    "line": 16,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.18-backend.norms.md",
+    "line": 16,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.19-backend.norms.md",
+    "line": 19,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.2-backend.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.20-backend.norms.md",
+    "line": 15,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.3-backend.norms.md",
+    "line": 19,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.4-backend.norms.md",
+    "line": 17,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.5-backend.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.6-backend.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.7-backend.norms.md",
+    "line": 20,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.8-backend.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/ru/spec/11.9-backend.norms.md",
+    "line": 15,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.1-backend.norms.md",
+    "line": 19,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.10-backend.norms.md",
+    "line": 20,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.11-backend.norms.md",
+    "line": 21,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.12-backend.norms.md",
+    "line": 15,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.13-backend.norms.md",
+    "line": 15,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.14-backend.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.15-backend.norms.md",
+    "line": 16,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.15-backend.norms.md",
+    "line": 85,
+    "old_url": "../../../CONSOLE-MODULE.md",
+    "resolved_old": "CONSOLE-MODULE.md",
+    "new_resolved": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "proposed_url": "../../../Platform/07-console-module/CONSOLE-MODULE.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.16-backend.norms.md",
+    "line": 15,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.17-backend.norms.md",
+    "line": 16,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.18-backend.norms.md",
+    "line": 16,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.19-backend.norms.md",
+    "line": 19,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.2-backend.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.20-backend.norms.md",
+    "line": 15,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.3-backend.norms.md",
+    "line": 19,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.4-backend.norms.md",
+    "line": 17,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.5-backend.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.6-backend.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.7-backend.norms.md",
+    "line": 20,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.8-backend.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/11-backend/spec/11.9-backend.norms.md",
+    "line": 15,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/12-psim/ru/spec/12.1-psim.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/12-psim/ru/spec/12.2-psim.norms.md",
+    "line": 16,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/12-psim/ru/spec/12.3-psim.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/12-psim/ru/spec/12.4-psim.norms.md",
+    "line": 18,
+    "old_url": "../../../../ru/NORMATIVE-TERMS.md",
+    "resolved_old": "ru/NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../../Platform/common/ru/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/12-psim/spec/12.1-psim.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/12-psim/spec/12.2-psim.norms.md",
+    "line": 16,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/12-psim/spec/12.3-psim.norms.md",
+    "line": 20,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "VMS/12-psim/spec/12.4-psim.norms.md",
+    "line": 18,
+    "old_url": "../../../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../../../Platform/common/NORMATIVE-TERMS.md",
+    "category": "VMS-paused"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0420\u0415\u0412\u042c\u042e-\u0423\u0420\u041e\u041a\u0410-P07-Codex.md",
+    "line": 47,
+    "old_url": "../../../Source/w2cplatform/console.js",
+    "resolved_old": "Source/w2cplatform/console.js",
+    "new_resolved": "Platform/07-console-module/module/console.js",
+    "proposed_url": "../../../Platform/07-console-module/module/console.js",
+    "category": "history-preserve"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0420\u0415\u0412\u042c\u042e-\u0423\u0420\u041e\u041a\u0410-P07-Codex.md",
+    "line": 57,
+    "old_url": "../../../Source/w2cplatform/console.js",
+    "resolved_old": "Source/w2cplatform/console.js",
+    "new_resolved": "Platform/07-console-module/module/console.js",
+    "proposed_url": "../../../Platform/07-console-module/module/console.js",
+    "category": "history-preserve"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0420\u0415\u0412\u042c\u042e-\u0423\u0420\u041e\u041a\u0410-P07-Codex.md",
+    "line": 67,
+    "old_url": "../../../Source/w2cplatform/console.js",
+    "resolved_old": "Source/w2cplatform/console.js",
+    "new_resolved": "Platform/07-console-module/module/console.js",
+    "proposed_url": "../../../Platform/07-console-module/module/console.js",
+    "category": "history-preserve"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0420\u0415\u0412\u042c\u042e-\u0423\u0420\u041e\u041a\u0410-P07-Codex.md",
+    "line": 77,
+    "old_url": "../../../Source/w2cplatform/console.js",
+    "resolved_old": "Source/w2cplatform/console.js",
+    "new_resolved": "Platform/07-console-module/module/console.js",
+    "proposed_url": "../../../Platform/07-console-module/module/console.js",
+    "category": "history-preserve"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0420\u0415\u0412\u042c\u042e-\u0423\u0420\u041e\u041a\u0410-P07-Codex.md",
+    "line": 87,
+    "old_url": "../../../Source/w2cplatform/console.js",
+    "resolved_old": "Source/w2cplatform/console.js",
+    "new_resolved": "Platform/07-console-module/module/console.js",
+    "proposed_url": "../../../Platform/07-console-module/module/console.js",
+    "category": "history-preserve"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0420\u0415\u0412\u042c\u042e-\u0423\u0420\u041e\u041a\u0410-P07-Codex.md",
+    "line": 97,
+    "old_url": "../../../Source/w2cplatform/console.js",
+    "resolved_old": "Source/w2cplatform/console.js",
+    "new_resolved": "Platform/07-console-module/module/console.js",
+    "proposed_url": "../../../Platform/07-console-module/module/console.js",
+    "category": "history-preserve"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0420\u0415\u0412\u042c\u042e-\u0423\u0420\u041e\u041a\u0410-P07-Codex.md",
+    "line": 107,
+    "old_url": "../../../Source/w2cplatform/console.js",
+    "resolved_old": "Source/w2cplatform/console.js",
+    "new_resolved": "Platform/07-console-module/module/console.js",
+    "proposed_url": "../../../Platform/07-console-module/module/console.js",
+    "category": "history-preserve"
+  },
+  {
+    "repository": "course",
+    "path": "decisions/inbox/\u0440\u0435\u0432\u044c\u044e/\u0420\u0415\u0412\u042c\u042e-\u0423\u0420\u041e\u041a\u0410-P07-Codex.md",
+    "line": 127,
+    "old_url": "../../../Source/w2cplatform/console.js",
+    "resolved_old": "Source/w2cplatform/console.js",
+    "new_resolved": "Platform/07-console-module/module/console.js",
+    "proposed_url": "../../../Platform/07-console-module/module/console.js",
+    "category": "history-preserve"
+  },
+  {
+    "repository": "course",
+    "path": "ru/CONSOLE-MODULE.md",
+    "line": 5,
+    "old_url": "../CONSOLE-MODULE.md",
+    "resolved_old": "CONSOLE-MODULE.md",
+    "new_resolved": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "proposed_url": "../CONSOLE-MODULE.md",
+    "category": "course-control-or-root-doc"
+  },
+  {
+    "repository": "course",
+    "path": "ru/CONSOLE-MODULE.md",
+    "line": 61,
+    "old_url": "../Platform/06-console/data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "new_resolved": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "../data/localization.tsv",
+    "category": "course-control-or-root-doc"
+  },
+  {
+    "repository": "course",
+    "path": "ru/CONSOLE-MODULE.md",
+    "line": 171,
+    "old_url": "../Platform/06-console/data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "new_resolved": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "../data/localization.tsv",
+    "category": "course-control-or-root-doc"
+  },
+  {
+    "repository": "course",
+    "path": "ru/CONSOLE-MODULE.md",
+    "line": 313,
+    "old_url": "../Platform/06-console/data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "new_resolved": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "../data/localization.tsv",
+    "category": "course-control-or-root-doc"
+  },
+  {
+    "repository": "course",
+    "path": "ru/NORMATIVE-TERMS.md",
+    "line": 3,
+    "old_url": "../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "new_resolved": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md",
+    "category": "course-control-or-root-doc"
+  }
+]

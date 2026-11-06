@@ -1,0 +1,15 @@
+{
+  "source_pin": "63811ddc9957251b9c6ac3d60777c0c9dbe94077",
+  "phase": "READONLY report publication only",
+  "tracked_source_changes": false,
+  "source_or_CODE_moves": 0,
+  "new_judge_or_parser_code": 0,
+  "product_sync": 0,
+  "Go_model_native_SUT_execution": 0,
+  "exports_pins_runtime_queue_actions": 0,
+  "operator_limit": "Current CT103 exact operator source requested; historical local exporter not attested as current.",
+  "source_worktree_status": [
+    "?? .spec-check/"
+  ],
+  "postjoint_gate": "Root publishes current joint before any active relocation/C6/constants work."
+}

@@ -1,0 +1,973 @@
+{
+  "phase": "READONLY plan only; no source/code moves, no execution",
+  "source_pin": "63811ddc9957251b9c6ac3d60777c0c9dbe94077",
+  "policy_pin": "e587819a6672efe78b5e6115383076b6bba6710c",
+  "runner_pin": "94b64212c11129c0c90bf8a0f39fcd15175e97af",
+  "planned_file_roster": 149,
+  "initial_copy_identity_proofs": [
+    {
+      "path": "NORMATIVE-TERMS.md",
+      "sha256": "e0a11be8c3dac88ef90a0e2f9bff0271706fbef49e0754e9b76bdaf43b7bbffc",
+      "bytes": 1322,
+      "mode": "100644"
+    },
+    {
+      "path": "ru/NORMATIVE-TERMS.md",
+      "sha256": "7af417347bcf8446dd89cf451d83903abb1d9897872da1afd864cc3d41464a01",
+      "bytes": 2039,
+      "mode": "100644"
+    },
+    {
+      "path": "CONSOLE-MODULE.md",
+      "sha256": "85832f7a64a9cbff171eee38510f504b6369e03d9807de0551dd2d249ab73d97",
+      "bytes": 54303,
+      "mode": "100644"
+    },
+    {
+      "path": "ru/CONSOLE-MODULE.md",
+      "sha256": "5cd9a725ff49de684529b2af43966be985d9790310626992f05506b57ec5b139",
+      "bytes": 74923,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/testsub.subsystem.yaml",
+      "sha256": "fc3bf70585646b078a8812edd0c92cd5c7d0c2e364b689273c5fd229aed7355b",
+      "bytes": 4269,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/testsub2.subsystem.yaml",
+      "sha256": "e4bfd9e0035dba5839018625bba20f7214176004fc2d0cb4f8d640015d915dbb",
+      "bytes": 15141,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts.tsv",
+      "sha256": "1b7e2a4c957c89c7df8a579c29301133bbd153281a90c089c03cb1cefdcdcd3a",
+      "bytes": 7284,
+      "mode": "100644"
+    },
+    {
+      "path": "Platform/06-console/data/localization.tsv",
+      "sha256": "a5b3c4b9c1af6cfe40a72c80b58d2348a9e9517d7c36c0b6ad8a91bc807850e9",
+      "bytes": 44852,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/w2cplatform/console.js",
+      "sha256": "9e0356451fcc3c143aacdc643da3881d57936dc91b3315eb6125c35f5a404c71",
+      "bytes": 261122,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/w2cplatform/console.css",
+      "sha256": "049db5be822fd7e8a01f2345a9d787dcad136a941ed41c255763c05a1cdc7989",
+      "bytes": 41920,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/w2cplatform/console.html",
+      "sha256": "639676470e26202738b14bc0bd8b8500ab8612e8ec85aad099578df7edf46968",
+      "bytes": 1097,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/about_field_not_fixed_nowitness.subsystem.yaml",
+      "sha256": "bed6b4fb03ee2a1be564470b17b57ebb015d65dcdcbae4c88ec99bb3b88e7f8c",
+      "bytes": 8135,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/anchor_alias_display_keys.subsystem.yaml",
+      "sha256": "97062f6147d87c74db44012a2d15da86a1d75f1338d76e0c7e6b2bf772ceb077",
+      "bytes": 887,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/anchor_merge_key.subsystem.yaml",
+      "sha256": "aad30b66eb3d9575498c78986de2dd13ad2c740440f4e1883e04cceefcc2f768",
+      "bytes": 892,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/base.subsystem.yaml",
+      "sha256": "977ddc858668f3193dbcc619441dd4fbd3fe41293eec4942b48125491110c8f2",
+      "bytes": 867,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/block_scalar_hides_lease.subsystem.yaml",
+      "sha256": "1d1b968cd6953c625509d03733e76c28dd6409aa1529f294d37b2632e0b88902",
+      "bytes": 878,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/block_scalar_hides_tail.subsystem.yaml",
+      "sha256": "284a20a7c2f8b51b77fa368373c34edda0c4cbfb87f8bb4d998f23bf5ac8b9d4",
+      "bytes": 902,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/bom_utf8.subsystem.yaml",
+      "sha256": "56c69f1b02831a84e846c4a9d30f34c2bfbca69b86257f44e095af0691f91c20",
+      "bytes": 870,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/bound_to_string.subsystem.yaml",
+      "sha256": "4840b408076d6c6f351e920cc4ae9ba2394fdc0c7736cd871a651c05c280808f",
+      "bytes": 8225,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/capacity_default_float.subsystem.yaml",
+      "sha256": "68806134f24b2c0057d27cd84fd430458628169bcecf7b4a99b73938a9bd9ce5",
+      "bytes": 8235,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/capacity_default_string.subsystem.yaml",
+      "sha256": "66563248ac27fc0cd9942d883067abcecd5fbfd1a7fa3886d9d20a9f099d1b7d",
+      "bytes": 8235,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/capacity_default_true.subsystem.yaml",
+      "sha256": "79cc2a4ed94c515251af05a21f4a49cd16fcd53b79b1499841316791537d3e94",
+      "bytes": 8236,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/dead_band_word.subsystem.yaml",
+      "sha256": "cb5c5c1de31e33c18949f52866067c02bba5c3b77562f8f313e393f1d5982a73",
+      "bytes": 8234,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/deep_block_500.subsystem.yaml",
+      "sha256": "a9d303f40146d3323949fecfc175eab2909686da5a7c3ef516e930764a03f422",
+      "bytes": 255888,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/deep_flow_200.subsystem.yaml",
+      "sha256": "db1bd7f160f81c5542786c9a475c58f9cb1dc2a761ccc866d84d22bd56412c66",
+      "bytes": 1873,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/deep_flow_5000.subsystem.yaml",
+      "sha256": "3f65180636337730027258bbc9e1712107a024fcd258bde2adbfb478067d28c6",
+      "bytes": 25873,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/default_map_string.subsystem.yaml",
+      "sha256": "f0f6f1fb913c291ecc00ea257aece3370b46c688838bacbae9276f1a86439aad",
+      "bytes": 8261,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/delete_after_with_about.subsystem.yaml",
+      "sha256": "bfd7b947c35f5fce009f3e98aa8e2fc105da2dc712c867f9aed6252918aa3c7a",
+      "bytes": 970,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_actions_nested.subsystem.yaml",
+      "sha256": "563790e80c8cb448d6d3043265f636673433254a6db97d7909300357cc6b272d",
+      "bytes": 894,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_events_word.subsystem.yaml",
+      "sha256": "552290bac88511169a96c6370dbdfd343de17e56cc174ecd333173a55f1ebb0a",
+      "bytes": 8232,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_field_help_not_in_fields.subsystem.yaml",
+      "sha256": "c14071961a395e2a5c86d5762ad902b9ff60958d36d698f846bdbb1c74a8c63b",
+      "bytes": 896,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_field_not_in_fields.subsystem.yaml",
+      "sha256": "f74ab5f98a1807242ea722b1aa47be0ecf70749729afc5fba812b375cc6ac80f",
+      "bytes": 878,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_fields_nested_map.subsystem.yaml",
+      "sha256": "94e0a8ff1afbb745962c72d07e9aefce2556b74ec94b85206ad7106283216dfd",
+      "bytes": 868,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_fields_platform_key_age.subsystem.yaml",
+      "sha256": "b3e1dd791bb67e4ba277640d43c47f1ff3f92f0007669751ea227307ed79bab4",
+      "bytes": 877,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_fields_platform_key_epoch.subsystem.yaml",
+      "sha256": "065fe6ef64f0efba23bad3aa869a9dd4fc67068d3b3bad3fe6a06c941024bcd6",
+      "bytes": 881,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_fields_status_field.subsystem.yaml",
+      "sha256": "bdba93b5e927176a14e6ac45c872fa74148b4e9bcf5007730e300b816afc1781",
+      "bytes": 879,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_form_fields_status_field.subsystem.yaml",
+      "sha256": "633769c6724670758790bf3958b2e235d19db666b00c35585236d0c92c1a357f",
+      "bytes": 873,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_form_fields_unknown.subsystem.yaml",
+      "sha256": "b05a681fbe659c2146a3af77aaf814c0a7cb9c7a3455963247e2c3464602dfd7",
+      "bytes": 875,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_form_unknown_key.subsystem.yaml",
+      "sha256": "3a619a3219e405b43a1fe3ba08b95ae01662145799c0607abed4f2cf91504d10",
+      "bytes": 885,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_kinds_nested.subsystem.yaml",
+      "sha256": "33ce3da32e29f1bab45b1c4735644b24adeecda69e4a6d8e95cb805253e601ac",
+      "bytes": 893,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_options_bool_enum.subsystem.yaml",
+      "sha256": "d00fcd5d30dac0378989f9a5bebce793df915da54ad852e24d74a4f74f3e3e49",
+      "bytes": 954,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_options_field_without_enum.subsystem.yaml",
+      "sha256": "26bc4a3fd7923d16a1b26c256ec213f851d2dc890ff7022940ca381186dd0049",
+      "bytes": 888,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_options_not_a_field.subsystem.yaml",
+      "sha256": "7ca19e8fcd09cee7c71b25b5e05a8970ae0ab04e889368111979f752927ef396",
+      "bytes": 886,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_options_not_in_enum.subsystem.yaml",
+      "sha256": "c4c8103ea5697a9dfce8f6723ca23e642510c390326b6caa2f8fcb2099b6fb47",
+      "bytes": 877,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_options_platform_key_server.subsystem.yaml",
+      "sha256": "b39a8251daa73c12cedf3d6371d9ff5b19e903cf72216123e15d38364366218c",
+      "bytes": 889,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_options_status_field.subsystem.yaml",
+      "sha256": "384fb11787a45378854a423e6b66c8ca894485d504406be150ba09adb5ad936c",
+      "bytes": 884,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_options_yes_key.subsystem.yaml",
+      "sha256": "8d0a6d3af5062671939b000208738b9822981b2eaa3da7031ae1e8b9ee9ad383",
+      "bytes": 882,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_tree_column_unknown.subsystem.yaml",
+      "sha256": "0231e3f9a85c311a604eeac605a1bcd603f38f8c02f7797e8b8f08523b961ef4",
+      "bytes": 914,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_tree_group_by_unknown.subsystem.yaml",
+      "sha256": "05c6ef280045c90a19923ab073a9faf7f4430f319e576347c94936c29d71d7f3",
+      "bytes": 894,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_tree_word_erase.subsystem.yaml",
+      "sha256": "9eed8ef5268c1ff6ef05b49a60a2922d4ca3053e3e6fe40d47a93206262400f9",
+      "bytes": 902,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_unknown_section.subsystem.yaml",
+      "sha256": "6dfc89eaf2ab17c105235e96018ad4e2b094227a85c52ba6d314fcbdf9dada16",
+      "bytes": 881,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_word_On_Off_unquoted.subsystem.yaml",
+      "sha256": "3d4a716d6378de92847a25c8863210886068caa820e9a9fc9bbcf312515b08b4",
+      "bytes": 863,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/display_word_not_string.subsystem.yaml",
+      "sha256": "831f5383b5a0881655c60a34de8458f9e1c1995c38aecfab886ed0ce3d08f691",
+      "bytes": 866,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/door_routes_dup.subsystem.yaml",
+      "sha256": "bcf74fe9cc2539c156efef22131c9c678ffaa63adea18ecf33605f95dc60f64d",
+      "bytes": 8233,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/dup_block_hides_unknown.subsystem.yaml",
+      "sha256": "c4cb6c6f26d1d57367b55e29953d20034b34c28e25baceec01824c9ae3f60701",
+      "bytes": 891,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/dup_key_in_flow_map.subsystem.yaml",
+      "sha256": "1663bd6bca6964c65d6765e8fec7444cdcaf0f5ebae00202c8de65e412a19762",
+      "bytes": 893,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/dup_key_lease_value.subsystem.yaml",
+      "sha256": "d835b4e4e26b43283a1f95b6a7c3f1162fce25648f4d2bdcff0a06a5fd4ae609",
+      "bytes": 901,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/dup_top_key_name.subsystem.yaml",
+      "sha256": "e4223ca62656c7675cd181784730478080aa8424b6f5b90ababe72152f711b23",
+      "bytes": 879,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/enum_default_not_in_enum.subsystem.yaml",
+      "sha256": "8af2ac04f276262cafdd4830d6e0c36a408dbed27fb272ecc8361cec3fb5ecdb",
+      "bytes": 867,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/enum_on_list.subsystem.yaml",
+      "sha256": "9cb2d0f3f67b93ab9fb33c33f89a5b5cb743f84974622068bacbb16a73b0a0fe",
+      "bytes": 8265,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/fields_affinity_known.subsystem.yaml",
+      "sha256": "5e80dccbc61476f6a1bc61726e336f4afaa666e650b56b576dc5b013386a91ca",
+      "bytes": 1100,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/fields_affinity_server_field_unknown.subsystem.yaml",
+      "sha256": "e203238fa40ebbb4bccd52826b57a2a4cf3fde9f4c1b6aa1f5c444a76a10c94a",
+      "bytes": 1077,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/fields_affinity_strict_unknown.subsystem.yaml",
+      "sha256": "ba62075fe38ce6925eecd54b89cab7c73767b0d9e63e12de306ce059909ec765",
+      "bytes": 1077,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/fields_derived_items_unknown.subsystem.yaml",
+      "sha256": "367b4d76c683e86b4526dd0720cdc187e5cfb63a97658715a6bfc87711c131c3",
+      "bytes": 1077,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/fields_holds_unknown.subsystem.yaml",
+      "sha256": "35d2c5c5114333db84ba69120ef7c709177e8d417f113efae39d5e2f79a2c548",
+      "bytes": 1072,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/fields_metrics_unless_where_unknown.subsystem.yaml",
+      "sha256": "aedd5b791738f24f7b5eee369339ed5c216a7d2de8ba66185c476340774faa9d",
+      "bytes": 1111,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/fields_metrics_where_unknown.subsystem.yaml",
+      "sha256": "6d27d991e0d7f1aa4ec076a5ae60de66b1be862fbefe996f49b6222b157f11a3",
+      "bytes": 1087,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/fields_places_server_field_unknown.subsystem.yaml",
+      "sha256": "15620b8d397ce355f9066ef3e7111622937477c541bd44c0f08b1af44e7db13d",
+      "bytes": 1083,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/fields_places_where_unknown.subsystem.yaml",
+      "sha256": "1e434005b947f140412ef83aae6fcf1a1bbfd3590892113e5bf70eca958c3bb4",
+      "bytes": 1081,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/fields_rights_unit_of_unknown.subsystem.yaml",
+      "sha256": "558ce72333db1acc3bf57c2308d3355a09ccbca757cc6aa7e1e350a90eea1a7e",
+      "bytes": 1045,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/fields_servers_show_by_unknown.subsystem.yaml",
+      "sha256": "239d3382d7e9d888bde5dadf73ec9f9ad4fcb269fe3acbc3d7e75e5e3feaed9a",
+      "bytes": 1077,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/fields_servers_show_columns_unknown.subsystem.yaml",
+      "sha256": "6a5010e83841aeecd0cf48502fddb9f515f031bfe92b357b0257407911df0e79",
+      "bytes": 1099,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/fields_servers_show_known.subsystem.yaml",
+      "sha256": "3024b487ee934e6397bb28c602cb6e82d5a74219b0c87fe6dc08e2fd66ea040b",
+      "bytes": 1100,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/group_by_unknown_field.subsystem.yaml",
+      "sha256": "c60cfb8316fe820a7b9df84b2a4fb629e81034036f2f9048594c7f7f67baf1bd",
+      "bytes": 895,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/hb_worker.subsystem.yaml",
+      "sha256": "36b38afce7a321eaf5798d8400358e1e96e187c3280e1500cf0c54228a9a0d00",
+      "bytes": 8244,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/inherit_map.subsystem.yaml",
+      "sha256": "2b63cb17df7f5a0793d91555d4a3a1431661b4068d77518261e899d596ce17fc",
+      "bytes": 906,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/inherit_map_string.subsystem.yaml",
+      "sha256": "b7a9a9645674f500cc108afe0020685bcf1459a36945de8d77ec01575d28be8e",
+      "bytes": 8261,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/json_default_map.subsystem.yaml",
+      "sha256": "d707770a24b1f374eb8c9cf127c6911175d43cce34a4bac97a0183fb769dcc22",
+      "bytes": 906,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/key_true_yaml11.subsystem.yaml",
+      "sha256": "1d1d83e57282fd53bfde579ee3a0185fbdf63f94b6f57a4464cae2fdd5aaca5e",
+      "bytes": 873,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_.inf.subsystem.yaml",
+      "sha256": "e54e8e7e25c9a0210c03411006362f665e16c2ade4b58501c8d06240f58efe35",
+      "bytes": 868,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_1.0e308.subsystem.yaml",
+      "sha256": "69b2d8e160056bcd5c7c22873a04f1a60a0d0c06b14a0b7638d8abc0f6d19cb1",
+      "bytes": 872,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_1_000.subsystem.yaml",
+      "sha256": "8e00ca1588d2dbdb33bbf3dc4a27c7e1291923028854e94afd6bddbd5f4e0d8f",
+      "bytes": 869,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_1e308.subsystem.yaml",
+      "sha256": "531aca00b4a71e71c4b3f6f0ccd1c683b52d64319b35ada3870d010f5fa08b3d",
+      "bytes": 869,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_90.subsystem.yaml",
+      "sha256": "441bab5e7ef13e0c852bdbd5c3cb73655028ee573da7456b6a11c8ab5248c10a",
+      "bytes": 866,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_90_quoted.subsystem.yaml",
+      "sha256": "51bc8ba62b6d29b8c20911346a3b9ba350d8f004734dd5de5e5b751ee1e831a9",
+      "bytes": 868,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_90s.subsystem.yaml",
+      "sha256": "7f047da64c8925b1195bd9946d5c77d1c387f72f797d16f17e5f6213750886ad",
+      "bytes": 867,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_Infinity.subsystem.yaml",
+      "sha256": "ccca6b2961832cb2550a71cc265461d275df66c1778bc4b9416ea23a8592fb90",
+      "bytes": 872,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_OFF.subsystem.yaml",
+      "sha256": "7352ca55551ed9f08e6f23c4feaaef76e289911663d577ebb9af93e4393e7bb9",
+      "bytes": 867,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_absent.subsystem.yaml",
+      "sha256": "80485591eeb98393bbbb374375b21a1b55668cd31bb11ecdb2a0f246b34934fb",
+      "bytes": 838,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_empty_map.subsystem.yaml",
+      "sha256": "045335c4c08f350425f88a00e29bd2eb500df340162adfccad0c3ead8eec6ffd",
+      "bytes": 847,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_false.subsystem.yaml",
+      "sha256": "26c0d65008d2eeeffaf918562adef19e4f9b883cda9804a225bd03e0b5b622fe",
+      "bytes": 869,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_forever.subsystem.yaml",
+      "sha256": "1d19be1fd12160af1c34e51fc83802783131f9118cd453929c978657972cca35",
+      "bytes": 871,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_forever_quoted.subsystem.yaml",
+      "sha256": "b77b524e5eda98b8ee143c47b010dba57adf19d53208c15af15720a27376b090",
+      "bytes": 873,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_hex_0x10.subsystem.yaml",
+      "sha256": "889c4012a0e07727d8fd478d645c18751190dd182c581142e87e83fed9724103",
+      "bytes": 868,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_huge_int.subsystem.yaml",
+      "sha256": "17649a6533e07c1a79b6771fb0408c093be8dcc20443d5e63f14fe373016444c",
+      "bytes": 887,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_inf.subsystem.yaml",
+      "sha256": "9316daf5020e935bfc5d6ff0c5af12ab5575baf2584dc8ed3b05f31858babfab",
+      "bytes": 867,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_minus1.subsystem.yaml",
+      "sha256": "ac681293d2b8dd75c0757c210bbfc31cab5a84b88b4fefd3506679f1c9e80099",
+      "bytes": 866,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_nan.subsystem.yaml",
+      "sha256": "ba2acdb4217a5f142f16d873c17d505e0c8edaaa8c6533066d4061e1bc0fb196",
+      "bytes": 867,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_no.subsystem.yaml",
+      "sha256": "f8a877914c2cf21ef4f690ce962e0e16a1f3220087b551a542b823ab269f0c56",
+      "bytes": 866,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_null.subsystem.yaml",
+      "sha256": "485c8c196d4fd48f83d8e811c8889c06902a5f6f2d941149c0ea9559844c3e0e",
+      "bytes": 844,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_true.subsystem.yaml",
+      "sha256": "f36fc84b9a201a06f744543a58e1e511460f08c835412865f70b10ee56fcd3ec",
+      "bytes": 868,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/lease_zero.subsystem.yaml",
+      "sha256": "6af68bb173cff310f9b4be6c85659fd538a705a323651215ed521145c12d72d8",
+      "bytes": 865,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/multiline_plain_scalar.subsystem.yaml",
+      "sha256": "71964ff1957c4d8b7e161760f3cfdcb2b259c4d51ac38572224e07ae9df273f8",
+      "bytes": 896,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/non_utf8_in_comment.subsystem.yaml",
+      "sha256": "2fa224a01a54f231a527470e27ed43ec95107cc82a6abab8835d9464b4b5fe6a",
+      "bytes": 880,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/non_utf8_in_word.subsystem.yaml",
+      "sha256": "2b6eef707798f09c96b6af462e12b98c3e983dd7f2b4b006142694a562588b49",
+      "bytes": 868,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/nul_byte_in_word.subsystem.yaml",
+      "sha256": "905d6f897c939aab3580b7847a1d80a2ee76f2c9fd551d76bfaddee8b81cf9f9",
+      "bytes": 868,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/objects_rows_heartbeats.subsystem.yaml",
+      "sha256": "c85a533ea98c8116c601821a5852ee1d8febdf3ff643fefbdbc912f061752ec6",
+      "bytes": 8250,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/overindent_hides_tail.subsystem.yaml",
+      "sha256": "0411cc43af233ef7c57c803524106c255c68e67847af80fd455cd5c17d48f92c",
+      "bytes": 898,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/requests_key_stray_brace.subsystem.yaml",
+      "sha256": "bdd6cc17519a338025894ad0aab3b0b3f99794bad0c04ba81c8d5f43fd96b2b9",
+      "bytes": 884,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/requests_key_unknown_field.subsystem.yaml",
+      "sha256": "5da91063dae6298df74c361e409b61f3581cd207ce2829dc54d2aae36c88e158",
+      "bytes": 885,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/requests_stamp_group_without_group_by.subsystem.yaml",
+      "sha256": "ae1208f731d693dafc46523f67c3a785aafa8a8b223e7b113b7ea6acb2435203",
+      "bytes": 884,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/requests_unknown_key.subsystem.yaml",
+      "sha256": "6aef852b107b9633aec003106f7440890528eaa0ea7f6688350f6ac1dafd95f8",
+      "bytes": 883,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/requests_unknown_stamp.subsystem.yaml",
+      "sha256": "582bffd7116d212d655388bd8957a78ddf4aec1c7c2a147a2961d75051b2518c",
+      "bytes": 886,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/required_true_string.subsystem.yaml",
+      "sha256": "36c04fb8687d63364af3edf1c0f238d4761c5b5f6eff8fec9c0825c3e9387529",
+      "bytes": 8235,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/required_yes.subsystem.yaml",
+      "sha256": "953f12ca199670fa2ca4d10ea2c5f7459497c524d988a43f0041ebbcaebd8390",
+      "bytes": 8234,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/requires_nothing.subsystem.yaml",
+      "sha256": "40bd68f4edaaafd4cbdffa619a50d71ad78a778a67f35feede24b8931747de17",
+      "bytes": 8232,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/retire_when_unknown_field.subsystem.yaml",
+      "sha256": "5926a55e4c3e41b684f79686bfef2fb597cdea19dbb1371ed1d5a873c1265baf",
+      "bytes": 907,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/rows_servers.subsystem.yaml",
+      "sha256": "756991336975b663c1894ca158a8dab4c1bd18390a5f89de9b17d772c11d6f16",
+      "bytes": 8233,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/rows_where.subsystem.yaml",
+      "sha256": "94c9783df9f0a2dbaa4f031f116566a89467694f28d4b6b47589093d84f7785b",
+      "bytes": 8231,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/secrets_reader_domainconsole.subsystem.yaml",
+      "sha256": "aab334d0b20a4c7298ad9460856b23b9e7cf5d759186b3aa8b0d7d1034c7d42a",
+      "bytes": 8239,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/servers_both.subsystem.yaml",
+      "sha256": "521d07c098da88b489ab8d79e07c4683e0573408962febfd8ae4a04316ab4f1e",
+      "bytes": 8229,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/slot_prefix_digit.subsystem.yaml",
+      "sha256": "14c49a5500bce4555020cf2e6d787ef7b7d2a445b907930b0149b0685eec4c92",
+      "bytes": 8234,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/slot_prefix_long.subsystem.yaml",
+      "sha256": "af6edeb116d16afe9602dd6d710877c1b901e931acca5d940be42b2d154ae843",
+      "bytes": 8242,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/snapshot_unknown_field.subsystem.yaml",
+      "sha256": "edefb8061de7e3cb9c6071a893238f55d33208871b6b4770d6474c37092e7b48",
+      "bytes": 868,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/spread_by_not_string.subsystem.yaml",
+      "sha256": "a27f60b9553a70e9f779d258937e135c147eb75782f1c411c0a674943fa72377",
+      "bytes": 882,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/spread_by_unknown_field.subsystem.yaml",
+      "sha256": "e3539a580633f9c51812c36444b5e325067fc7537588c82ba95aa8cc55cd8b75",
+      "bytes": 887,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/status_worker.subsystem.yaml",
+      "sha256": "503fa9f8e83636c3b694e77578774e674b7096b0989e6c38634731d8bab22bdf",
+      "bytes": 8264,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/tab_indent.subsystem.yaml",
+      "sha256": "026af3219f5fab0294cdd131bb971e8f208bcbb4e54de7671b070571b962400b",
+      "bytes": 866,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/table_events_shadow.subsystem.yaml",
+      "sha256": "60470e1a40cc997c0c3114ca05791e7fce31764df1264e0d6374a6acc4303f8a",
+      "bytes": 8302,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/table_field_fixed.subsystem.yaml",
+      "sha256": "bbe7782bac291fcd17412f83cff01188811486f5089a1c9b25e8622104f58a4a",
+      "bytes": 8253,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/table_field_inherit.subsystem.yaml",
+      "sha256": "6edef069bdb1af4b607b03e4efc6fc85508719fdbef03157dc59a82921a4a50b",
+      "bytes": 8252,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/table_marks.subsystem.yaml",
+      "sha256": "35d065166d20a01596f931b6793780bbae4a96127e21f11518909082a53e1410",
+      "bytes": 8301,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/table_metrics_shadow.subsystem.yaml",
+      "sha256": "93e6a018cf5a372ac7d1889d5c535f3f00aead2b4e70c73143bd431bdaba0aec",
+      "bytes": 8303,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/table_servers.subsystem.yaml",
+      "sha256": "7e519c2a1dfd457fef592aedd8e2ffe8a13fe08800a744082b9e9412ac5ab214",
+      "bytes": 8303,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/tie_break_random.subsystem.yaml",
+      "sha256": "edf67919e6b4bcd55079afd3e082fc9d4075b2a5039d08d0eee9e251ad3f94f3",
+      "bytes": 8221,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/type_text.subsystem.yaml",
+      "sha256": "a2e7c3148c0d533b39f1958e12b7b3863e5d3a5329c471731b47129501a68fa5",
+      "bytes": 8231,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/unit_id_nosuch.subsystem.yaml",
+      "sha256": "ba2d2366b550c31879f8a5e482962fe29a4fc77b994eb17c39822fc180193bb2",
+      "bytes": 8235,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/unit_id_numeric.subsystem.yaml",
+      "sha256": "ef5accb37758798b2d6435b8c92fa3e9e84a1b042020f4899e7b776730f654a0",
+      "bytes": 870,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/unknown_depth1.subsystem.yaml",
+      "sha256": "e7a8308d36557ab29736a8d86d04793012b01af8bcdaa8b393576575bcf54acb",
+      "bytes": 876,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/unknown_depth2.subsystem.yaml",
+      "sha256": "cd0eba132de8fed0a89261185f3b31b74ddbabe9dcabbacef39e29fe426eb46e",
+      "bytes": 880,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/unknown_depth3.subsystem.yaml",
+      "sha256": "8f681d25469ac652b803ea3d1ee157ba799a1424daf9630085a06774fc3d1ab2",
+      "bytes": 879,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/unknown_depth4.subsystem.yaml",
+      "sha256": "b2a951f479168ce8d6098febf170e9211aaae980dba0005102dd295d2f33ffc8",
+      "bytes": 883,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/unknown_in_lease.subsystem.yaml",
+      "sha256": "eb8501202d4e75d9bbbc370c7be9cf3bbb3d8baadc836f4ec31de0ba842b3514",
+      "bytes": 877,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/unplaced_delete_after_about_its_id.subsystem.yaml",
+      "sha256": "c29f2053a2d63ee9735efd159b835db6bb5439b740add67accb191bbfa8c3204",
+      "bytes": 944,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/unplaced_delete_after_fixed_field.subsystem.yaml",
+      "sha256": "f82690234b1ed787f81ced2c88cd2e4cab0020519018ccec7d79425f7c06ebb9",
+      "bytes": 913,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/worker_reads_bare.subsystem.yaml",
+      "sha256": "e12dc7513e82891f0cd74bf92cb6c72bdd2ae472684fd5876fe00edea4dad578",
+      "bytes": 8224,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/worker_requests_itself.subsystem.yaml",
+      "sha256": "54e65abb14f4d938ee7544aa4a9a0151f691d86ed9b0a977d160dbdb49ab58a3",
+      "bytes": 895,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/yaml_list_toplevel.subsystem.yaml",
+      "sha256": "25f2bb669e33041967c7ff7343c260b3e288bef9147ef86237d32a7bd7fd8ade",
+      "bytes": 8,
+      "mode": "100644"
+    },
+    {
+      "path": "Source/tests/testdata/spec_verdicts/yaml_two_documents.subsystem.yaml",
+      "sha256": "63f15e7dce54de12c9a9f04c4bebdfc771fc9da7790f236a60bbcbcf5ecafb86",
+      "bytes": 884,
+      "mode": "100644"
+    }
+  ],
+  "verdict_corpus": {
+    "files": 138,
+    "rows": 138,
+    "outcomes": {
+      "refused": 119,
+      "ok": 19
+    },
+    "table_sha256": "1b7e2a4c957c89c7df8a579c29301133bbd153281a90c089c03cb1cefdcdcd3a",
+    "case_set_equal": true,
+    "independent_loader_execution": false
+  },
+  "reference_files_by_category": {
+    "course-control-or-root-doc": 122,
+    "Platform-source": 117,
+    "Platform-mirror": 109,
+    "Source-frozen-witness": 52,
+    "console-test-spec-owner": 44,
+    "VMS-paused": 150,
+    "history-preserve": 154,
+    "judge-review103": 13,
+    "generator-owner": 8,
+    "runner-history-doc": 3,
+    "runner-runtime": 11,
+    "runner-test": 15
+  },
+  "reference_lines_by_category": {
+    "course-control-or-root-doc": 1267,
+    "Platform-source": 150,
+    "Platform-mirror": 135,
+    "Source-frozen-witness": 133,
+    "console-test-spec-owner": 54,
+    "VMS-paused": 152,
+    "history-preserve": 831,
+    "judge-review103": 30,
+    "generator-owner": 18,
+    "runner-history-doc": 10,
+    "runner-runtime": 29,
+    "runner-test": 30
+  },
+  "markdown_links": 363,
+  "python_IO_sites": 167,
+  "console_loader_sites": 54,
+  "console_loader_files": 44,
+  "machine_table_rows": 10,
+  "no_Source_implementation_inspection": "Console implementation assets hash-only; no Source implementation logic reviewed or executed. Read-only literal/AST path inventory and test/reader contexts only.",
+  "product_repository_not_read_or_synced": true,
+  "limitations": [
+    "Source base638, not the unpublished future composed joint; revalidate every SHA after joint.",
+    "Local exporter7fec8deacf409d467e557706909f8436ffdac038 is historical only, not current CT103 operator.",
+    "Runner94b is the published Git input; no unpublished CT state/exports/markers were attested.",
+    "References in decisions/history and Source witnesses are classified separately and must not be mass-rewritten.",
+    "Generated outputs and frozen base64 audit snapshots are not migration source; owners regenerate or preserve them by pin."
+  ],
+  "moved_document_all_relative_links": 18,
+  "target_path_collisions": [],
+  "primary_Platform_mapped_Markdown": {
+    "files": 179,
+    "occurrences": 195
+  },
+  "machine_rows_requiring_path_change": 8,
+  "machine_row_false_positives_preserved": [
+    {
+      "path": "Platform/06-console/acceptance/5/scenarios.tsv",
+      "line": 240
+    },
+    {
+      "path": "Platform/common/acceptance/system/scenarios.tsv",
+      "line": 79
+    }
+  ]
+}

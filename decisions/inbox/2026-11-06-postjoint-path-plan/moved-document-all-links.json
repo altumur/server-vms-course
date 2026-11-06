@@ -1,0 +1,182 @@
+[
+  {
+    "path": "ru/NORMATIVE-TERMS.md",
+    "new_document": "Platform/common/ru/NORMATIVE-TERMS.md",
+    "line": 3,
+    "old_url": "../NORMATIVE-TERMS.md",
+    "resolved_old": "NORMATIVE-TERMS.md",
+    "old_target_exists": true,
+    "new_target": "Platform/common/NORMATIVE-TERMS.md",
+    "proposed_url": "../NORMATIVE-TERMS.md"
+  },
+  {
+    "path": "CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "line": 1,
+    "old_url": "Platform/07-console-module/spec/07-console-module.norms.md",
+    "resolved_old": "Platform/07-console-module/spec/07-console-module.norms.md",
+    "old_target_exists": true,
+    "new_target": "Platform/07-console-module/spec/07-console-module.norms.md",
+    "proposed_url": "spec/07-console-module.norms.md"
+  },
+  {
+    "path": "CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "line": 1,
+    "old_url": "Platform/06-console/spec/06.5-console.norms.md",
+    "resolved_old": "Platform/06-console/spec/06.5-console.norms.md",
+    "old_target_exists": true,
+    "new_target": "Platform/06-console/spec/06.5-console.norms.md",
+    "proposed_url": "../06-console/spec/06.5-console.norms.md"
+  },
+  {
+    "path": "CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "line": 35,
+    "old_url": "Platform/07-console-module/spec/07-console-module.norms.md",
+    "resolved_old": "Platform/07-console-module/spec/07-console-module.norms.md",
+    "old_target_exists": true,
+    "new_target": "Platform/07-console-module/spec/07-console-module.norms.md",
+    "proposed_url": "spec/07-console-module.norms.md"
+  },
+  {
+    "path": "CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "line": 61,
+    "old_url": "Platform/06-console/data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "old_target_exists": true,
+    "new_target": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "data/localization.tsv"
+  },
+  {
+    "path": "CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "line": 171,
+    "old_url": "Platform/06-console/data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "old_target_exists": true,
+    "new_target": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "data/localization.tsv"
+  },
+  {
+    "path": "CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "line": 295,
+    "old_url": "Platform/common/contracts/forwarding.md",
+    "resolved_old": "Platform/common/contracts/forwarding.md",
+    "old_target_exists": true,
+    "new_target": "Platform/common/contracts/forwarding.md",
+    "proposed_url": "../common/contracts/forwarding.md"
+  },
+  {
+    "path": "CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "line": 295,
+    "old_url": "Platform/08-domain/spec/08.8-domain.norms.md",
+    "resolved_old": "Platform/08-domain/spec/08.8-domain.norms.md",
+    "old_target_exists": true,
+    "new_target": "Platform/08-domain/spec/08.8-domain.norms.md",
+    "proposed_url": "../08-domain/spec/08.8-domain.norms.md"
+  },
+  {
+    "path": "CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "line": 313,
+    "old_url": "Platform/06-console/data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "old_target_exists": true,
+    "new_target": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "data/localization.tsv"
+  },
+  {
+    "path": "ru/CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "line": 1,
+    "old_url": "../Platform/07-console-module/ru/spec/07-console-module.norms.md",
+    "resolved_old": "Platform/07-console-module/ru/spec/07-console-module.norms.md",
+    "old_target_exists": true,
+    "new_target": "Platform/07-console-module/ru/spec/07-console-module.norms.md",
+    "proposed_url": "spec/07-console-module.norms.md"
+  },
+  {
+    "path": "ru/CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "line": 1,
+    "old_url": "../Platform/06-console/ru/spec/06.5-console.norms.md",
+    "resolved_old": "Platform/06-console/ru/spec/06.5-console.norms.md",
+    "old_target_exists": true,
+    "new_target": "Platform/06-console/ru/spec/06.5-console.norms.md",
+    "proposed_url": "../../06-console/ru/spec/06.5-console.norms.md"
+  },
+  {
+    "path": "ru/CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "line": 5,
+    "old_url": "../CONSOLE-MODULE.md",
+    "resolved_old": "CONSOLE-MODULE.md",
+    "old_target_exists": true,
+    "new_target": "Platform/07-console-module/CONSOLE-MODULE.md",
+    "proposed_url": "../CONSOLE-MODULE.md"
+  },
+  {
+    "path": "ru/CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "line": 35,
+    "old_url": "../Platform/07-console-module/ru/spec/07-console-module.norms.md",
+    "resolved_old": "Platform/07-console-module/ru/spec/07-console-module.norms.md",
+    "old_target_exists": true,
+    "new_target": "Platform/07-console-module/ru/spec/07-console-module.norms.md",
+    "proposed_url": "spec/07-console-module.norms.md"
+  },
+  {
+    "path": "ru/CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "line": 61,
+    "old_url": "../Platform/06-console/data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "old_target_exists": true,
+    "new_target": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "../data/localization.tsv"
+  },
+  {
+    "path": "ru/CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "line": 171,
+    "old_url": "../Platform/06-console/data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "old_target_exists": true,
+    "new_target": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "../data/localization.tsv"
+  },
+  {
+    "path": "ru/CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "line": 295,
+    "old_url": "../Platform/common/ru/contracts/forwarding.md",
+    "resolved_old": "Platform/common/ru/contracts/forwarding.md",
+    "old_target_exists": true,
+    "new_target": "Platform/common/ru/contracts/forwarding.md",
+    "proposed_url": "../../common/ru/contracts/forwarding.md"
+  },
+  {
+    "path": "ru/CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "line": 295,
+    "old_url": "../Platform/08-domain/ru/spec/08.8-domain.norms.md",
+    "resolved_old": "Platform/08-domain/ru/spec/08.8-domain.norms.md",
+    "old_target_exists": true,
+    "new_target": "Platform/08-domain/ru/spec/08.8-domain.norms.md",
+    "proposed_url": "../../08-domain/ru/spec/08.8-domain.norms.md"
+  },
+  {
+    "path": "ru/CONSOLE-MODULE.md",
+    "new_document": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+    "line": 313,
+    "old_url": "../Platform/06-console/data/localization.tsv",
+    "resolved_old": "Platform/06-console/data/localization.tsv",
+    "old_target_exists": true,
+    "new_target": "Platform/07-console-module/data/localization.tsv",
+    "proposed_url": "../data/localization.tsv"
+  }
+]
