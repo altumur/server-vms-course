@@ -1,0 +1,32 @@
+{
+  "baseline": "cac140972cfc4e949e2859adbe4afde10fa3c7ff",
+  "map_sha256": "ef693be72c0e7268045967056daa4d09fa9d110d2618e22ec2f543d3bf907218",
+  "files": [
+    {
+      "path": "CONSOLE-MODULE.md",
+      "before_sha256": "62b416e00e9c7ce9c84555f03658b0b7980d0822b26b4c08b4af5672bbd2c743",
+      "after_sha256": "e5314bee344edc182fa58f7838ac49cd9ecaa5a7dabbdf43c0d725c9476196f3",
+      "changed_lines": [
+        9,
+        270,
+        309
+      ],
+      "public_code_spans_identical": true
+    },
+    {
+      "path": "ru/CONSOLE-MODULE.md",
+      "before_sha256": "f116b5a893c739c0d7012b9346b00f9223ad292f9a0edc2ea605ae110a79349c",
+      "after_sha256": "0f9a148e903fdc16608b234b2a402f49b3182a6a5de140d1405ba45ec3f5cc44",
+      "changed_lines": [
+        9,
+        270,
+        309
+      ],
+      "public_code_spans_identical": true
+    }
+  ],
+  "source_lines_changed": 3,
+  "mirror_lines_changed": 3,
+  "public_assets_changed": 0,
+  "additional_source_changes": 0
+}
