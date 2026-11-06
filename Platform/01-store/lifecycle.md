@@ -22,7 +22,7 @@ durability barriers), [P/01.2](spec/01.2-store.norms.md) (rights file, role sock
 ## Environment
 
 The daemon's configuration is set by flags (below): the file `configstore.env` is read by the runner, which builds the flags from it. The daemon itself reads
-only the systemd environment — the passed sockets (`LISTEN_FDS`, `LISTEN_FDNAMES`) and the watchdog (`NOTIFY_SOCKET`): a passed
+SERVER_NAME for the non-group name fallback when -id is absent, and the systemd environment — the passed sockets (`LISTEN_FDS`, `LISTEN_FDNAMES`) and the watchdog (`NOTIFY_SOCKET`): a passed
 socket cannot be replaced by a flag (P/01.3 N1.3 `sockets`).
 The order of the runner's environment files — the unit's values → `roles/<W2C_ROLE>.env` → `w2c.env` → `configstore.env`
 (P/02.4 N1.2; [02-installer/lifecycle.md](../02-installer/lifecycle.md)).
@@ -34,9 +34,11 @@ The order of the runner's environment files — the unit's values → `roles/<W2
 | `LISTEN_FDS`, `LISTEN_FDNAMES` | inherited sockets (`sd_listen_fds`); read by the daemon itself | — | P/01.3 N1.3 `sockets` |
 | `NOTIFY_SOCKET` | the systemd watchdog | — | P/02.4 N1.2 |
 
+The daemon itself reads `SERVER_NAME` only when `-id` is absent and the non-group name fallback of the [flag form](forms/daemon-flags.tsv) applies. The launcher sets the environment by P/02.4; the daemon does not infer a hostname on its own. An explicit `-id` does not require this fallback; neither source gives the existing `start_flags` refusal.
+
 ## Flags
 
-The closed table «Daemon flags» — [P/01.3 N1.3](spec/01.3-store.norms.md), machine form [`forms/daemon-flags.tsv`](forms/daemon-flags.tsv):
+The flag purposes — [P/01.3 N1.3](spec/01.3-store.norms.md), machine form [`forms/daemon-flags.tsv`](forms/daemon-flags.tsv):
 `-dir` (required), `-id`, `-sockets`, `-rights`, `-tls`, `-raft`, `-raft-bind`, `-api`, `-bootstrap`, `-join`,
 `-group-size`, `-force`, `-isolated`, `-upper`, `-peers` (the last three — only for `recover`), `-door`, `-voters`, `-tuning`, `-leader-wait`, `-max-value`, `-max-body`, `-max-conns`,
 `-api-conns`, `-api-per-address`, `-index-base`, `-groups` (only for `rights`), `--from` (only for `restore`, `import`). A flag outside the table is a start refusal, code 2. The administrative commands —

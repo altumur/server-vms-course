@@ -1,0 +1,6 @@
+# P/01 numeric source; existing runtime-constants class, literal TAB. Not flags or environment settings.
+name	value	unit	norm	meaning
+JSON_DEPTH	128	count	P/01.1-R048	Nested objects/arrays from the root; root object counts one, including extra fields.
+HEADER_BYTES	65536	bytes	P/01.1-R053	Sum of header field-line bytes without CRLF or the final empty line; exact limit passes.
+BATCH_WRITES	64	count	P/01.1-R019	Maximum writes under the owning caller exemptions; exact limit passes, one more is out of form.
+BATCH_GUARDS	64	count	P/01.1-R019	Maximum guards under the owning caller exemptions; exact limit passes, one more is out of form.
