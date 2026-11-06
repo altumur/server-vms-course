@@ -38,3 +38,24 @@ func TestUnitRows_S05BodyListCasRace(t *testing.T) {
 		{n: 1, line: 7, kind: "call", name: "console-body-window", input: "{\"writers_stopped\":true,\"grace_observed_s\":300,\"list_cas\":\"conflict_before_first_delete\"}", expects: []expect{expect{call: "{\"exit_code\":2,\"deleted_bodies\":0}"}}},
 	})
 }
+
+// TestUnitRows_S06Review127PostTombstone — chapter 6.1, seams.tsv.
+func TestUnitRows_S06Review127PostTombstone(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 8, kind: "call", name: "console-repeat", input: "{\"first\":\"successful_create_over_tombstone\",\"retry\":\"same_key_same_body\",\"tombstone_revision\":5,\"target_reply\":\"lost_after_commit\",\"done_claim\":\"not_written\",\"pending_unchanged_s\":30,\"old_executor_late_write\":true}", expects: []expect{expect{call: "{\"status\":201,\"revision\":6,\"extra_target_writes\":0,\"target_matches_saved_born\":true,\"old_guard_refused\":true}"}}},
+	})
+}
+
+// TestUnitRows_S07Review127PostFresh — chapter 6.1, seams.tsv.
+func TestUnitRows_S07Review127PostFresh(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 9, kind: "call", name: "console-repeat", input: "{\"first\":\"successful_create_without_row\",\"retry\":\"same_key_same_body\",\"target_reply\":\"lost_after_commit\",\"done_claim\":\"not_written\",\"pending_unchanged_s\":30}", expects: []expect{expect{call: "{\"status\":201,\"revision\":1,\"extra_target_writes\":0,\"target_matches_saved_born\":true}"}}},
+	})
+}
+
+// TestUnitRows_S08Review127PlanUnknown — chapter 6.1, seams.tsv.
+func TestUnitRows_S08Review127PlanUnknown(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 10, kind: "call", name: "console-repeat", input: "{\"first\":\"pending_plan_save_lost_reply\",\"retry\":\"same_key_same_body\",\"target_before_confirmed_plan\":false,\"planning_reread\":\"confirmed_owned\",\"pending_unchanged_s\":30}", expects: []expect{expect{call: "{\"status\":201,\"target_writes_before_confirmed_plan\":0,\"target_writes\":1,\"target_matches_saved_born\":true}"}}},
+	})
+}

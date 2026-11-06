@@ -10,7 +10,12 @@ import "encoding/json"
 // never answer a case from its expected output. An error is «cannot answer», never a normal refusal.
 //
 // Run the regular keyed write path over real pending/done claim rows; compare target writes after the retry,
-// excluding claim/diagnostic writes. Bodies differ only at one valid customer field.
+// excluding claim/diagnostic writes. Bodies differ only at one valid customer field. For the ADR-0127 POST
+// continuation cases, perform the first real target write over the declared tombstone or absent row, lose its
+// reply and stop before done; observe the unchanged pending version for 30 s and take it with another console.
+// Read intended revision/born through the implementation's real claim codec, not a newly required public claim
+// schema. A late old executor uses its former guard. For unknown planning-save outcome, no target call occurs
+// before a confirmed owned reread; compare actual target bytes to the saved intent.
 func ConsoleRepeat(input json.RawMessage) (json.RawMessage, error) {
 	return nil, ErrNotImplemented("console-repeat")
 }

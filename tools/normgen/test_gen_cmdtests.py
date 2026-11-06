@@ -2,6 +2,7 @@
 адаптера всё красное без паники; на подставном адаптере (Command — семантика w2cctl швов, Load — правила швов и оракул
 корпуса, LoadCatalogue и RolloutPoll — ответы, выписанные из самих швов) всё зелёное; мутанты адаптера и шва — красные;
 puts — в описи excluded с причиной."""
+import hashlib
 import json
 import os
 import shutil
@@ -10,6 +11,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -202,6 +204,61 @@ def results(mod):
         if e.get("Test") and "/" not in e["Test"] and e["Action"] in ("pass", "fail"):
             res[e["Test"]] = e["Action"]
     return res, panics, done
+
+
+class SeamTransport(unittest.TestCase):
+    def test_rooted_positional_source_cells(self):
+        import gen_cmdtests as g
+
+        with tempfile.TemporaryDirectory() as tmp, patch.object(g, "L", g.lesson.get(P02)):
+            root = Path(tmp)
+            table = root / "Platform/02-installer/acceptance/1/seams.tsv"
+            proof = root / "Platform/common/data/cell-json-sha256.tsv"
+            table.parent.mkdir(parents=True)
+            proof.parent.mkdir(parents=True)
+            columns = ("scenario", "step", "request", "expect")
+            payload = {"source": "demo.yaml", "text": 'quoted "value"; \u044f %25\tfirst\nnext'}
+            request = "CALL load " + json.dumps(payload, ensure_ascii=False)
+            expected = '{"verdict":"ok"}'
+            read_expect = "text " + json.dumps(payload["text"], ensure_ascii=False)
+
+            def write(first=request):
+                rows = [(4, ("encoded", "1", first, expected)),
+                        (6, ("encoded", "2", "@read $data/result", read_expect))]
+                lines = ["# cell-json: request,expect", "# " + "\t".join(columns), ""]
+                proofs = ["table\tline\tcolumn\tbefore_sha256\tdecoded_sha256"]
+                for no, cells in rows:
+                    lines.append("\t".join(json.dumps(c, ensure_ascii=True) if i >= 2 else c
+                                           for i, c in enumerate(cells)))
+                    lines.append("")
+                    for name, value in zip(columns[2:], cells[2:]):
+                        digest = hashlib.sha256(value.encode("utf-8")).hexdigest()
+                        proofs.append(f"{table.relative_to(root)}\t{no}\t{name}\t{digest}\t{digest}")
+                table.write_text("\n".join(lines), encoding="utf-8")
+                proof.write_text("\n".join(proofs) + "\n", encoding="utf-8")
+
+            write()
+            path, scenarios = g.read_seams(root, "2.1")
+            self.assertEqual(path, table)
+            self.assertEqual(scenarios["encoded"], [(4, "1", request, expected),
+                                                   (6, "2", "@read $data/result", read_expect)])
+            steps = g.stage_steps(root, "2.1", "encoded", scenarios["encoded"])
+            self.assertEqual(steps[0]["input"].encode("utf-8"), request[5:].partition(" ")[2].encode("utf-8"))
+            self.assertEqual(steps[1]["value"], payload["text"])
+            self.assertEqual([s["line"] for s in steps], [4, 6])
+
+            proof.write_text(proof.read_text().split("\n", 1)[0] + "\n", encoding="utf-8")
+            with self.assertRaisesRegex(g.GenError, "byte proof"):
+                g.read_seams(root, "2.1")
+            write()
+            table.write_text(table.read_text().replace(json.dumps(request, ensure_ascii=True), "false", 1),
+                             encoding="utf-8")
+            with self.assertRaisesRegex(g.GenError, "JSON string"):
+                g.read_seams(root, "2.1")
+            write('CALL load {"broken":')
+            _, scenarios = g.read_seams(root, "2.1")
+            with self.assertRaisesRegex(g.GenError, "not JSON"):
+                g.stage_steps(root, "2.1", "encoded", scenarios["encoded"])
 
 
 @unittest.skipUnless((ROOT / "Platform/02-installer/acceptance/1/verdicts.tsv").is_file(), "no P/02 acceptance")
