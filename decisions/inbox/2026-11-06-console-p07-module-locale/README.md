@@ -47,24 +47,34 @@ No locale fetch, endpoint, URL alias, storage preference, public API, feature or
 
 ## Parity and permitted behavior change
 
-The author verifier uses Acorn 8.15.0 / ES2022 to parse the witness and new module. Exactly two AST
-subtrees are replaced with comparison markers: the `WORDS` initializer and the `W` language selector.
-The target selector is separately required to match the approved expression. Every other AST node
-and raw noncomment token must match. Comment changes therefore cannot hide another behavior change.
+The author verifier uses Acorn 8.15.0 / ES2022 to parse the witness and new module. Exactly four areas
+are exempted: the `WORDS` initializer, the `W` language selector, the `fmt` declaration moved into `mount`,
+and the `fmtDay` initializer. The moved `fmt` declaration is removed from both comparison streams;
+its exact target shape and position immediately after `mount`'s `W` are checked separately.
+The selector and both formatter expressions must match their exact approved shapes. Every other AST
+node and raw noncomment token must match. Comment changes cannot hide another behavior change.
 CSS bytes outside comments match; HTML markup and inline JS tokens match outside comments.
 
 The verifier decodes literal properties without executing the module. It compares the complete
 519-key EN/RU leaf rosters against both the TSV and effective witness values. Dotted event names remain
-whole keys of `kinds`; `n` is the other nested object. Every substitution name and occurrence count is
+whole keys of `kinds`; `n` is the other nested object. Actual property-path arrays are also compared,
+so a generic dot split cannot masquerade as the same flattened key. All other 477 keys stay at the root.
+Every substitution name and occurrence count is
 preserved. Duplicate witness properties use their final value; generated properties have no duplicates.
 The final `glass` values and final U+0020 in both `loginAt` captions are preserved exactly.
 
-Six rejection probes cover an extra key, missing key, duplicate key, changed parameter, trimmed
-`loginAt` and a code-token change outside the approved holes. The language expression is exercised
+Eight rejection probes cover an extra key, missing key, duplicate key, changed parameter, trimmed
+`loginAt`, a code-token change outside the approved areas, an added timezone and a generic event-name
+dot split. The language expression is exercised
 against explicit languages and a Russian browser setting.
 
-`fmt` and `fmtDay` are byte-identical expressions to their witnesses. Their scope is pending spec103;
-this delivery changes neither formatter, timezone nor protocol time. C6, A1, folder writes, `ifMatch`,
+The formatter extension was approved by coord103 after spec103's decision. `fmt` is inside each `mount`;
+both formatters use that mount's already selected `W`: explicit RU gives `ru-RU`, otherwise `en-US`.
+`fmt` still has no formatting-options argument. `fmtDay` keeps day/month/hour/minute `2-digit` and
+`hour12: false`. There is no `timeZone` option. The `t * 1000`, falsy-input dash and constructor behavior
+are preserved. Thirty-two formatter probes interleave EN/RU mounts, also after the caller mutates its
+original opts object, and check the exact locale, milliseconds and option arguments.
+Timezone and protocol time are unchanged. C6, A1, folder writes, `ifMatch`,
 other module debts and the public API are outside this delivery.
 
 ## Evidence and integration
@@ -72,7 +82,7 @@ other module debts and the public API are outside this delivery.
 - `comments.json`: 31 source-line hashes and English comment replacements; no old dictionary copy.
 - `map.json`: every TSV key maps to its witness/canonical literal lines, decoded-value hashes and parameters.
 - `evidence.json`: immutable witness hashes, canonical hashes, AST/token parity, locale matrix, negative
-  probes, unchanged formatters and the new inline CSP hash.
+  probes, exact formatter scope/arguments and the new inline CSP hash.
 - `reproduction.json`: byte-identical repeated conversion.
 
 These are author checks, not review103's independent judge or the full CT 103 GATE.

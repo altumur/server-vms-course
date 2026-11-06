@@ -4,8 +4,8 @@
   "parser": "acorn@8.15.0 / ES2022",
   "artifacts": {
     "Platform/07-console-module/module/console.js": {
-      "bytes": 312509,
-      "sha256": "37bfbc44151b0a2afff77cf547ab9adb132b665b2d196bb8209c520674d30ef7",
+      "bytes": 312543,
+      "sha256": "05d167f53a4d91214f30188d5331f0f4afbd99bfa7e4ac349b98f423f1bec89e",
       "rawCyrillic": false
     },
     "Platform/07-console-module/module/console.css": {
@@ -33,10 +33,16 @@
     "oldPathAbsent": true
   },
   "wordsAndBehavior": {
-    "normalizedTokenSha256": "efaea6c0bc2f7782f0c76af0e3a111cae378a01f183c062786302d0a2fdb6535",
-    "tokensOutsideApprovedHoles": 50765,
-    "normalizedASTSha256": "406e15d5208de345dd266a80e3119c8d006d77f0a85d6ecde6b2f826a5bc8759",
-    "astAndRawTokensExactOutsideTwoHoles": true,
+    "normalizedTokenSha256": "746809445dadb0b81115f82b6da6783faeca0155cda5e67b09c7d6bf41aacbd0",
+    "tokensOutsideApprovedHoles": 50695,
+    "normalizedASTSha256": "255e39f67bfefe313b9282acc22857ba2eadba1e2e6598ce75aa23d35bdff2af",
+    "astAndRawTokensExactOutsideApprovedAreas": true,
+    "approvedAreas": [
+      "WORDS initializer",
+      "W initializer",
+      "fmt declaration move into mount",
+      "fmtDay initializer"
+    ],
     "witnessDuplicateProperties": [
       "en.glass",
       "ru.glass"
@@ -45,16 +51,38 @@
     "decodedLeavesPerLanguage": 519,
     "parameterizedKeys": 28,
     "parameterOccurrencesPerLanguage": 37,
+    "rootKeys": 477,
+    "specialPropertyPaths": {
+      "kinds.server.decommission_requested": [
+        "kinds",
+        "server.decommission_requested"
+      ],
+      "n.late": [
+        "n",
+        "late"
+      ]
+    },
     "glassLastWinsExact": true,
     "loginAtFinalU0020Exact": true,
     "formatters": {
-      "fmt": {
-        "unchanged": true,
-        "expressionSha256": "921df7f86cd109d46de0fb075b97d3fcc1f1ddd63e1684b034d9c702785f9af9"
-      },
-      "fmtDay": {
-        "unchanged": true,
-        "expressionSha256": "42de078d44d9ab5b45858d4bd1d4cf3f0828aceaf81cf16fa720e9593ac83805"
+      "exactApprovedShapes": true,
+      "perMountLocale": true,
+      "selectedLocaleSnapshot": true,
+      "cases": 32,
+      "enLocale": "en-US",
+      "ruLocale": "ru-RU",
+      "fmtOptionsStillAbsent": true,
+      "fmtDayOptionsUnchanged": true,
+      "timeZoneNotAdded": true,
+      "secondsTimes1000Unchanged": true,
+      "dashAndEmptyPathsUnchanged": true,
+      "expressions": {
+        "fmt": {
+          "expressionSha256": "bc7ca53481f81457388fe6b9285843b7a58fbf878a60a1fd31b44904a3a282d5"
+        },
+        "fmtDay": {
+          "expressionSha256": "b05d316f4b0c5290ff617866de25e09816c17351c661ab44dcbd332b5a87a593"
+        }
       }
     },
     "languageMatrix": [
@@ -123,7 +151,17 @@
     {
       "name": "outside-WORDS-behavior",
       "rejected": true,
-      "reason": "outside-WORDS/selector token drift"
+      "reason": "outside-approved-areas token drift"
+    },
+    {
+      "name": "unapproved-timezone",
+      "rejected": true,
+      "reason": "unapproved formatter: fmt"
+    },
+    {
+      "name": "generic-dot-split",
+      "rejected": true,
+      "reason": "dictionary structure mismatch: en.kinds.server.decommission_requested"
     }
   ],
   "inlineCSP": [

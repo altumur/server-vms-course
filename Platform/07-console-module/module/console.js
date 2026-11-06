@@ -1074,7 +1074,6 @@
   const isSecret = name => /_secret$/.test(name);
   const MASK = "***";
   const sleep = ms => new Promise(ok => setTimeout(ok, ms));
-  const fmt = t => (t ? new Date(t * 1000).toLocaleString() : "—");
 
 
   // The console's icons: 16×16 drawings in the current colour. A page adds its own by name (addIcons) — its
@@ -1109,6 +1108,7 @@
     // subsystem; the domain's card is the page.
     const domainOnly = Array.isArray(opts.sections) && opts.sections.includes("domain") && !opts.sections.includes("units");
     const W = opts.lang === "ru" ? WORDS.ru : WORDS.en;
+    const fmt = t => (t ? new Date(t * 1000).toLocaleString(W === WORDS.ru ? "ru-RU" : "en-US") : "—");
     const C = { version: VERSION };
     const IC = { logo: "◉", funnel: svgIc(ICONS.funnel), search: svgIc(ICONS.search) };
     const pageIcons = {};
@@ -3031,7 +3031,7 @@
     // The worker's slot — diagnostics only: the operator acts on servers, the controller on slots.
     // A worker's slot, for diagnosis (the operator decommissions SERVERS; workers are the controller's): released or
     // not, the lease's end, the volumes its process holds, hung or of unknown life — and a name another process holds.
-    const fmtDay = t => t ? new Date(t * 1000).toLocaleString(W === WORDS.ru ? "ru-RU" : undefined, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }) : "—";
+    const fmtDay = t => t ? new Date(t * 1000).toLocaleString(W === WORDS.ru ? "ru-RU" : "en-US", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }) : "—";
     function slotHtml(w) {
       const c = w.name_conflict;
       const conflict = c ? `<div class="nt err" style="margin-top:8px">${h(W.conflictHead.replace("{h}", c.holder || "—"))}${c.holder_box ? " " + h(W.onMachine) + " " + h(c.holder_box) : ""}.${(c.contenders || []).map(x => `<br>· ${h(x.state === "nameless" ? W.slotNameless : x.state === "refused" ? W.slotRefused : x.state || "")} — ${h(x.hostname || x.box || "?")}${x.server ? " (" + h(x.server) + ")" : ""}${x.for_s != null ? ", " + h(W.alreadyW) + " " + h(dur(x.for_s)) : ""}`).join("")}<br>${h(W.nameAdvice2)}</div>` : "";
