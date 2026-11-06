@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/turn",
+ "table": "cases.tsv",
+ "case": "operations-renew",
+ "variant": "",
+ "cells": {
+  "input": "{\"kind\":\"operations\",\"turn\":\"testsub/operations-turn\",\"me\":{},\"steps\":[{\"read\":null,\"seen\":0},{\"reply\":\"ok\",\"version\":1},{\"renew\":true},{\"reply\":\"ok\",\"version\":2},{\"renew\":true},{\"reply\":\"conflict\"}]}"
+ },
+ "files": {}
+}

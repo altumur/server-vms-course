@@ -98,12 +98,12 @@ class CanonicalP06(unittest.TestCase):
         covered = {tuple(d[k] for k in ('package', 'table', 'surface')) for d in decls}
         covered |= {(f'common/{name}', table, 'vectors') for name, table in known}
         self.assertEqual(covered, active)
-        self.assertEqual(len(active), 66)
-        self.assertEqual(len(self.runs), 3184)
+        self.assertEqual(len(active), 67)
+        self.assertEqual(len(self.runs), 3200)
         self.assertTrue(all(d['_form'] and d['_runs'] for d in decls))
         self.assertFalse(any(d['surface'] == 'stand:group-of' for d in decls))
         files, inv = g.build(ROOT)
-        self.assertEqual(sum(status == 'translated' for _, status in inv), 3184)
+        self.assertEqual(sum(status == 'translated' for _, status in inv), 3200)
         for rel, data in files.items():
             self.assertEqual((HERE / 'out/p06' / rel).read_bytes(), data, rel)
         self.assertIn('func GroupOf(input []byte) Answer', files['go/vectoradapter/groupof.go'].decode())
@@ -115,7 +115,7 @@ class CanonicalP06(unittest.TestCase):
             self.assertIn('go/wirecheck/check.go', files)
             self.assertIn('P/06 uses the published canonical wire form', self.g.lesson_kit_md())
 
-    def test_all_3184_native_calls(self):
+    def test_all_3200_native_calls(self):
         done = subprocess.run(['go', 'test', '-count=1', '-json', './vectortests/'], cwd=self.mod,
                               env=GOENV, capture_output=True, text=True)
         results = {}
@@ -125,7 +125,7 @@ class CanonicalP06(unittest.TestCase):
             event = json.loads(line)
             if event.get('Test') and event.get('Action') in ('pass', 'fail'):
                 results[event['Test']] = event['Action']
-        self.assertEqual(len(results), 3184, done.stderr + done.stdout[-2000:])
+        self.assertEqual(len(results), 3200, done.stderr + done.stdout[-2000:])
         self.assertEqual(done.returncode, 0, done.stderr + done.stdout[-4000:])
         self.assertEqual(set(results.values()), {'pass'})
 

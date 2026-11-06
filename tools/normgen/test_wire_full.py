@@ -1,4 +1,4 @@
-"""Full wire 4f0cff2e: closed grammar, exact raw input, active surfaces, and all 3184 P/06 fixture calls."""
+"""Full wire 4f0cff2e: closed grammar, exact raw input, active surfaces, and all 3200 P/06 fixture calls."""
 import base64
 import copy
 import importlib
@@ -30,10 +30,10 @@ class Grammar(unittest.TestCase):
         cls.ex=wire.Expander(ROOT)
 
     def test_full_registry_and_exclusions(self):
-        self.assertEqual(len(self.bindings),90)
+        self.assertEqual(len(self.bindings),91)
         runs,excluded=wire.expand(ROOT,'06-console')
-        self.assertEqual(len(runs),3184)
-        self.assertEqual(len({r.identity for r in runs}),3184)
+        self.assertEqual(len(runs),3200)
+        self.assertEqual(len({r.identity for r in runs}),3200)
         layouts={(e.binding.package,e.binding.table) for e in excluded if e.binding.surface=='layout'}
         self.assertEqual(layouts,{('common/journal','modes.tsv'),('06-console/requests-body','requests_body.tsv'),('common/fault','fault.tsv')})
         self.assertFalse(any(r.binding.package=='06-console/requests-body' for r in runs))
@@ -286,7 +286,7 @@ class Render(unittest.TestCase):
         done=subprocess.run(['go','test','-count=1','-json','./vectortests'],cwd=self.mod,env=GOENV,capture_output=True,text=True)
         events=[json.loads(s) for s in done.stdout.splitlines() if s.startswith('{')]
         results={e['Test']:e['Action'] for e in events if e.get('Test') and e['Action'] in ('pass','fail')}
-        self.assertEqual(len(results),3184,done.stderr+done.stdout[-2000:])
+        self.assertEqual(len(results),3200,done.stderr+done.stdout[-2000:])
         self.assertEqual(done.returncode,0,done.stderr+done.stdout[-3000:])
         self.assertTrue(all(a=='pass' for a in results.values()))
 

@@ -6,6 +6,8 @@ package vectortests
 
 import (
 	"encoding/json"
+	"io"
+	"math/big"
 	"reflect"
 	"sort"
 	"strings"
@@ -79,7 +81,16 @@ func checkBy(t *testing.T, where string, f func() vectoradapter.Answer, code int
 	case compare == "secret":
 		secret(w, got, &errs)
 	case compare == "turn":
-		turn(w, got, &errs)
+		// This comparison retains numeric lexemes; the other draft comparisons
+		// keep their existing norm/decoded path unchanged.
+		encoded, err := json.Marshal(a.Value)
+		turnWant, wantOK := turnJSON(want)
+		turnGot, gotOK := turnJSON(string(encoded))
+		if err != nil || !wantOK || !gotOK {
+			errs = append(errs, "$: turn requires one JSON value")
+			break
+		}
+		turn(turnWant, turnGot, &errs)
 	case compare == "secret-domain":
 		secretDomain(w, got, &errs)
 	case strings.HasPrefix(compare, "round:"):
@@ -395,6 +406,52 @@ func round(exp, act any, spec string, errs *[]string) {
 	}
 }
 
+func turnJSON(text string) (any, bool) {
+	dec := json.NewDecoder(strings.NewReader(text))
+	dec.UseNumber()
+	var value, extra any
+	if dec.Decode(&value) != nil {
+		return nil, false
+	}
+	return value, dec.Decode(&extra) == io.EOF
+}
+
+// turnSame compares JSON numbers exactly by value without a Float64 fallback.
+func turnSame(want, got any) bool {
+	switch w := want.(type) {
+	case json.Number:
+		g, ok := got.(json.Number)
+		a, aOK := new(big.Rat).SetString(string(w))
+		b, bOK := new(big.Rat).SetString(string(g))
+		return ok && aOK && bOK && a.Cmp(b) == 0
+	case map[string]any:
+		g, ok := got.(map[string]any)
+		if !ok || len(w) != len(g) {
+			return false
+		}
+		for k, v := range w {
+			actual, has := g[k]
+			if !has || !turnSame(v, actual) {
+				return false
+			}
+		}
+		return true
+	case []any:
+		g, ok := got.([]any)
+		if !ok || len(w) != len(g) {
+			return false
+		}
+		for i, v := range w {
+			if !turnSame(v, g[i]) {
+				return false
+			}
+		}
+		return true
+	default:
+		return reflect.DeepEqual(want, got)
+	}
+}
+
 // turn — turn cases.tsv: actions one per event; write.holder "@new" — a new non-empty mark never seen before, "@same" —
 // the mark bound by an earlier "@new" (an unbound "@same" is an error); then by value.
 func turn(exp, act any, errs *[]string) {
@@ -414,7 +471,7 @@ func turn(exp, act any, errs *[]string) {
 				got, _ := aw["holder"].(string)
 				switch ww["holder"] {
 				case "@new":
-					if got == "" || seen[got] {
+					if got == "" || strings.HasPrefix(got, "@") || seen[got] {
 						*errs = append(*errs, "$["+strconvI(i)+"].write.holder: want a new mark, got "+show(aw["holder"]))
 						return
 					}
@@ -444,7 +501,7 @@ func turn(exp, act any, errs *[]string) {
 				w = cp
 			}
 		}
-		if !reflect.DeepEqual(ae[i], w) {
+		if !turnSame(w, ae[i]) {
 			*errs = append(*errs, "$["+strconvI(i)+"]: "+show(ae[i])+", want "+show(w))
 		}
 	}

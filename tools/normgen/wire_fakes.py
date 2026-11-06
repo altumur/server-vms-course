@@ -91,6 +91,28 @@ def native_value(run):
     failures = []
     for choice in alternatives:
         value = complete(run.value, choice)
+        if run.compare == 'turn':
+            # Judge-only positive control: concrete labels, never a production turn algorithm.
+            current, serial = None, 0
+
+            def labels(v):
+                nonlocal current, serial
+                if isinstance(v, dict):
+                    out = {}
+                    for k, child in v.items():
+                        if k == 'holder' and child in wire.TURN_MARKS:
+                            if child == '@new':
+                                serial += 1
+                                current = f'fixture-attempt-{serial}'
+                            if current is None:
+                                raise AssertionError('unbound turn mark in judge control')
+                            out[k] = current
+                        else:
+                            out[k] = labels(child)
+                    return out
+                return [labels(child) for child in v] if isinstance(v, list) else v
+
+            value = labels(value)
         for a in run.asserts:
             if a.test == 'absent':
                 value = put(value, a.pointer, remove=True)

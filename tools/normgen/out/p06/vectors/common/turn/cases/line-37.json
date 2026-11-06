@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/turn",
+ "table": "cases.tsv",
+ "case": "operations-take-released",
+ "variant": "",
+ "cells": {
+  "input": "{\"kind\":\"operations\",\"turn\":\"testsub/operations-turn\",\"me\":{},\"steps\":[{\"read\":{\"holder\":\"\"},\"seen\":0,\"version\":3},{\"reply\":\"ok\",\"version\":4}]}"
+ },
+ "files": {}
+}
