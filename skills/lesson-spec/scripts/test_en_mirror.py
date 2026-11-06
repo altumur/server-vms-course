@@ -182,7 +182,7 @@ class Layouts(unittest.TestCase):
         self.assertIn((RU3, EN3), pairs)
         self.assertIn((ROOT / "Platform/01-store/ru/lifecycle.md", ROOT / "Platform/01-store/lifecycle.md"), pairs)
         self.assertIn((ROOT / "VMS/ru/README.md", ROOT / "VMS/README.md"), pairs)   # мелкий дом: README модуля
-        self.assertIn((ROOT / "ru/NORMATIVE-TERMS.md", ROOT / "NORMATIVE-TERMS.md"), pairs)   # мелкий дом: корень
+        self.assertIn((ROOT / "Platform/common/ru/NORMATIVE-TERMS.md", ROOT / "Platform/common/NORMATIVE-TERMS.md"), pairs)   # общий канон
         self.assertFalse([p for p in pairs if p[1].parent == ROOT and p[1].name.startswith("ГРАНИЦА")])   # записки — не пары
         for ru, en in pairs:                           # каждая пара — одной из двух раскладок
             self.assertTrue(en.parent.name == "en" and en.name.endswith(".en.md") and ru.name == en.name[:-6] + ".md"
@@ -206,7 +206,7 @@ class Layouts(unittest.TestCase):
                          "Platform/01-store/spec/01.1-store.norms.md#time-in-a-row")
         self.assertEqual(en_mirror.as_source("Platform/02-installer/spec/02.1-installer.norms.md#x", ROOT),
                          "Platform/02-installer/spec/02.1-installer.norms.md#x")
-        self.assertEqual(en_mirror.as_source("ru/NORMATIVE-TERMS.md", ROOT), "NORMATIVE-TERMS.md")
+        self.assertEqual(en_mirror.as_source("Platform/common/ru/NORMATIVE-TERMS.md", ROOT), "Platform/common/NORMATIVE-TERMS.md")
         self.assertEqual(en_mirror.as_source("VMS/ru/README.md", ROOT), "VMS/README.md")
         self.assertIsNone(en_mirror.home_of(ROOT / "ARCHITECTURE.md", ROOT))         # записка курса — не источник
         self.assertEqual(en_mirror.home_of(ROOT / "Platform/README.md", ROOT), (ROOT / "Platform", Path("README.md")))   # модуль с ru/
@@ -265,6 +265,26 @@ class Layouts(unittest.TestCase):
 
 
 class FullEnglishSource(unittest.TestCase):
+    def test_moved_documents_use_only_platform_homes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            expected = []
+            for home, name in (("common", "NORMATIVE-TERMS.md"), ("07-console-module", "CONSOLE-MODULE.md")):
+                en = root / "Platform" / home / name
+                ru = en.parent / "ru" / name
+                ru.parent.mkdir(parents=True)
+                en.write_text("# Contract\n")
+                ru.write_text(f"# Контракт\n\nпроизводный от `{name}`, руками не правится\n")
+                expected.append((ru, en))
+                relative = ru.relative_to(root).as_posix()
+                self.assertEqual(en_mirror.as_source(relative, root), en.relative_to(root).as_posix())
+                self.assertEqual(en_mirror.compare(ru.read_text(), en.read_text(), ru, en, root), [])
+                en.write_text("# Contract\n\nЖ\n")
+            self.assertEqual(set(en_mirror.pairs(root)), set(expected))
+            self.assertEqual({p for p, _ in en_mirror.full_english_errors(root)}, {en for _, en in expected})
+            self.assertNotIn("NORMATIVE-TERMS.md", en_mirror.FULL_ENGLISH_DONE)
+            self.assertNotIn("CONSOLE-MODULE.md", en_mirror.FULL_ENGLISH_DONE)
+
     def test_quotes_code_and_machine_values_are_not_exempt(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -294,6 +314,11 @@ class FullEnglishSource(unittest.TestCase):
             p.parent.mkdir(parents=True)
             p.write_text("key\ten\tru\nrefresh\tRefresh\tОбновить\n")
             self.assertEqual(en_mirror.full_english_errors(root, [p.relative_to(root)]), [])
+            old = root / "Platform/06-console/data/localization.tsv"
+            old.parent.mkdir(parents=True)
+            old.write_bytes(p.read_bytes())
+            self.assertEqual([path for path, _ in en_mirror.full_english_errors(root, [old.relative_to(root)])], [old])
+            old.unlink()
             p.write_text("key\ten\tru\nrefresh\tОбновить\tОбновить\n")
             self.assertTrue(en_mirror.full_english_errors(root, [p.relative_to(root)]))
             p.write_text("key\ten\tru\nrefresh\tRefresh\tОбновить\textra\n")

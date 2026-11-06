@@ -16,12 +16,11 @@ from collections import Counter
 from pathlib import Path, PurePosixPath
 
 DEBT = Path(__file__).resolve().parents[1] / "cyrillic-debt.tsv"
-# Course-side source homes. README.md of cammeta-specs is maintained there,
-# not copied from the unrelated course README; an export is checked in full.
-# Export source list reviewed against cammeta-specs 6f6c6799:tools/export.sh.
-SCOPES = ("Platform", "tools/normgen", "CONSOLE-MODULE.md", "NORMATIVE-TERMS.md", "Source/tests/testdata")
-CONSOLE_BYTES = {f"Source/w2cplatform/console.{suffix}" for suffix in ("js", "css", "html")}
-LOCALIZATION = "Platform/06-console/data/localization.tsv"
+# Course-side canonical source and generator homes; an export is checked in full.
+# ADR-0083 (115): Source holds immutable witnesses, not canonical inputs.
+SCOPES = ("Platform", "tools/normgen")
+EXPORT_MARKERS = ("Platform/COURSE_COMMIT", "VMS/COURSE_COMMIT")
+LOCALIZATION = "Platform/07-console-module/data/localization.tsv"
 HEADER = "kind\tpath\tletters"
 # Unicode 17.0.0, Script=Cyrillic AND General_Category=L* (449 letters).
 # https://www.unicode.org/Public/17.0.0/ucd/Scripts.txt
@@ -34,8 +33,8 @@ LETTERS = re.compile("[" + "".join(chr(low) + "-" + chr(high) for low, high in L
 
 
 def deferred(name):
-    # VMS follows its translation; published console bytes await the owner's word.
-    return name == "VMS" or name.startswith("VMS/") or name in CONSOLE_BYTES
+    # VMS follows its own translation; its export marker is still mandatory.
+    return name == "VMS" or name.startswith("VMS/")
 
 
 def scoped(name, *, export=False):
@@ -96,16 +95,40 @@ def load_debt(path, *, export=False):
 def export_mode(root, explicit=None):
     if explicit is not None:
         return explicit
-    marker = root / "COURSE_COMMIT"
-    if marker.exists() or marker.is_symlink():
+    markers = (*EXPORT_MARKERS, "COURSE_COMMIT")
+    if any((root / name).exists() or (root / name).is_symlink() for name in markers):
         return True
     # A deleted tracked marker must not narrow the check back to course scope.
     try:
-        result = subprocess.run(["git", "-C", str(root), "ls-files", "--error-unmatch", "--", "COURSE_COMMIT"],
+        result = subprocess.run(["git", "-C", str(root), "ls-files", "-z", "--", *markers],
                                 capture_output=True)
-        return result.returncode == 0
+        return result.returncode == 0 and bool(result.stdout)
     except OSError:
         return False                       # source_files reports a missing Git tool
+
+
+def export_marker_errors(root):
+    """Two operator pins, exact full Git hash + LF; no root alias or symlinks."""
+    errors, values = [], []
+    legacy = root / "COURSE_COMMIT"
+    if legacy.exists() or legacy.is_symlink():
+        errors.append("COURSE_COMMIT: root marker is forbidden; use both nested markers")
+    for name in EXPORT_MARKERS:
+        path = root / name
+        try:
+            if path.resolve() != path.absolute() or not stat.S_ISREG(path.stat().st_mode):
+                raise OSError("marker must be a regular file without symlinks")
+            data = path.read_bytes()
+        except OSError as exc:
+            errors.append(f"{name}: cannot read export marker: {exc}")
+            continue
+        if re.fullmatch(rb"[0-9a-f]{40}\n", data) is None:
+            errors.append(f"{name}: expected full 40 lowercase hex course commit followed by one LF")
+        else:
+            values.append(data)
+    if len(values) == 2 and values[0] != values[1]:
+        errors.append("Platform/COURSE_COMMIT and VMS/COURSE_COMMIT differ")
+    return errors
 
 
 def source_files(root, *, export=False):
@@ -221,6 +244,8 @@ def check(root, debt_path=DEBT, *, shrink=False, declare_ready=(), export=None):
     root, debt_path = Path(root).resolve(), Path(debt_path)
     export = export_mode(root, export)
     debt, ready, errors = load_debt(debt_path, export=export)
+    if export:
+        errors.extend(export_marker_errors(root))
     counts, scan_errors, stats = scan(root, export=export)
     errors.extend(scan_errors)
     for unit in sorted(ready | set(declare_ready)):
@@ -261,7 +286,7 @@ def main():
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--debt", type=Path, default=DEBT)
     parser.add_argument("--export", action="store_true", default=None,
-                        help="check every export file (auto when COURSE_COMMIT exists or is tracked), except VMS and published console bytes")
+                        help="check every export file (auto with nested COURSE_COMMIT), except VMS; require both equal pins")
     parser.add_argument("--shrink", action="store_true", help="only lower/remove existing debt")
     parser.add_argument("--ready", action="append", default=[], metavar="DIRECTORY", help="declare a clean unit ready (also shrinks)")
     args = parser.parse_args()

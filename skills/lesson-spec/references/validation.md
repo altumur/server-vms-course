@@ -9,29 +9,62 @@
 ENV="uv run --no-project --python 3.12 --with-requirements skills/lesson-spec/scripts/requirements.txt"
 # все уроки курса (Platform/lessons.tsv) — без аргументов; итог не зависит от маски оболочки
 $ENV python skills/lesson-spec/scripts/check_spec.py [--strict-coverage]
-# выгрузка cammeta-specs: --root — её корень, реестр — того же коммита курса
-S=/Users/murat/w2c/cammeta-specs
-$ENV python skills/lesson-spec/scripts/check_spec.py --root $S \
-  --exceptions <(git show "$(cat $S/COURSE_COMMIT)":skills/lesson-spec/exceptions.tsv)
+# source-proof: полный checkout курса на exact SHA из обеих вложенных меток выгрузки
+COURSE_SOURCE=/home/pilot/<exact-course-checkout>
+$ENV python skills/lesson-spec/scripts/check_spec.py --root "$COURSE_SOURCE" \
+  --exceptions "$COURSE_SOURCE/skills/lesson-spec/exceptions.tsv" \
+  --cyrillic-debt "$COURSE_SOURCE/skills/lesson-spec/cyrillic-debt.tsv"
+# export-proof: отдельная копия реестра того же source SHA; исходный реестр не меняется
+EXPORT_TREE=/home/pilot/<export-checkout>
+EXPORT_DEBT=/tmp/<owned-export-debt.tsv>
+cp "$COURSE_SOURCE/skills/lesson-spec/cyrillic-debt.tsv" "$EXPORT_DEBT"
+$ENV python skills/lesson-spec/scripts/check_cyrillic.py --root "$EXPORT_TREE" \
+  --debt "$EXPORT_DEBT" --export --shrink
+$ENV python skills/lesson-spec/scripts/check_cyrillic.py --root "$EXPORT_TREE" \
+  --debt "$EXPORT_DEBT" --export
 ```
 
-`--root` — корень раскладки (по умолчанию текущий каталог), `--exceptions` — реестр (по умолчанию
-`exceptions.tsv` навыка). Для выгрузки реестр берётся того же коммита курса, что её `COURSE_COMMIT`:
-строка реестра для файла, которого в выгрузке ещё нет, даёт «stale exception». Без аргументов проверяются все
+`check_spec --root` принимает **полный источник курса**, по умолчанию текущий каталог; `--exceptions` — реестр
+(по умолчанию `exceptions.tsv` навыка). `--root <export>` явно даёт FAIL: выгрузка `Platform/` + `VMS/` не содержит
+`decisions/history/platform/id-map.tsv`, журналов и замороженных свидетелей. Отсутствие или порча карты в source
+остаётся ошибкой; нет отката к старому пути, пустой карте или пропуска history-проверок. Историю не нужно добавлять
+в выгрузку. Без аргументов проверяются все
 уроки `Platform/lessons.tsv`, у которых есть лекция; аргументы — отдельные уроки (частичный прогон: число
 исключений у него своё). Окружение сверяется с `scripts/requirements.txt` первым делом: пакет не установлен или
 не той версии — ошибка `environment: <пакет> …, pinned …` с командой установки, а не пропуск проверки; итог
 одного дерева в любом окружении — один. `regress` — для [схемы формы](#схема-формы-манифеста-adr-0085) (ADR-0085):
 пары ADR-0085 нет ни у одной главы курса, но её проверку держат тесты скрипта.
 
+Для root GATE нужны **оба** доказательства на одном exact SHA курса:
+
+- Source-proof: полный checkout (Git HEAD, отсутствие правок проверяемых файлов и используемый код судьи записаны
+  в отчёт) на SHA из `Platform/COURSE_COMMIT` и `VMS/COURSE_COMMIT`. Обычный полный `check_spec` с его реестрами,
+  строгой картой истории и журналами; сохраняются отдельные счётчики active corpus `verdicts=947`,
+  `canonical_vectors=220`, `numeric_loader_cases=9`, `id_map_ids=532`. Числа относятся к назначенному current joint;
+  новый срез требует собственного отчёта, а не наследования PASS.
+- Export-proof: равные метки — каждая ровно 40 строчных hex-цифр и один LF; корневого `COURSE_COMMIT` нет.
+  Они связывают выгрузку с source-proof, но сами не доказывают содержимое. Root GATE независимо сверяет **весь**
+  retained roster из Git exact source с экспортом: каждый путь, mode/type/blob, длину и SHA-256 фактических байтов;
+  отсутствие, добавление, подмена и утечки за пределы разрешённого состава — FAIL. В составе только `Platform/**`
+  и `VMS/**` без человеческих `ru/` и истории, плюс две созданные оператором вложенные метки. `Source/`, корневые
+  записки/псевдонимы, exporter README и прежние debt-файлы не экспортируются. Отдельно выполняется полный судья
+  кириллицы с `--export`. Пустой каталог с двумя метками не является успешным export-proof.
+
+Эти два отчёта и точные команды/хеши сохраняет coord103 в root GATE. Кириллический судья не заменяет проверку
+retained roster, а `check_spec` не выдаёт усечённый PASS для выгрузки. Пути и ссылки судятся по канону:
+`Platform/common/NORMATIVE-TERMS.md`, `Platform/07-console-module/CONSOLE-MODULE.md` и ровно два
+`Platform/common/data/testsub/testsub{,2}.subsystem.yaml`. Старые копии `Source/` — неизменяемые свидетели,
+а не резервный вход. Перенесённый legacy-корпус — отдельная структурная сверка индекса
+`Platform/02-installer/acceptance/1/spec_verdicts/spec_verdicts.tsv`: без заголовка, две колонки `case/verdict`,
+138 строк/файлов (19 `ok`, 119 `refused` на назначенном срезе). `legacy_spec_verdicts` не входит в `verdicts`,
+не заменяет active corpus 947 и сам по себе не доказывает поведение загрузчика.
+
 ## Кириллица во всей платформе — ADR-0121 доп. (8)
 
 Каждый вызов `check_spec`, включая выбор отдельных уроков, отдельно запускает
-`scripts/check_cyrillic.py`. В **курсе** проверяются весь `Platform/**`, `tools/normgen/**`,
-`CONSOLE-MODULE.md`, `NORMATIVE-TERMS.md` и `Source/tests/testdata/**`.
-Это сохраняет полный охват домов исходника, включая файлы, не попавшие в текущую выгрузку.
-Состав источников сверялся с `cammeta-specs` `6f6c6799:tools/export.sh`;
-для работы судьи скрипт экспорта не требуется и не запускается.
+`scripts/check_cyrillic.py`. В **курсе** проверяются весь `Platform/**` и `tools/normgen/**`.
+Перенесённые записки, testsub и корпус теперь входят в `Platform/**`; `Source/` — замороженный свидетель.
+Для работы судьи скрипт экспорта не требуется и не запускается.
 В Git читаются
 отслеживаемые файлы текущего дерева (включая добавленные в индекс); неотслеживаемый
 файл нужно сначала добавить в индекс. В выгрузке без Git читается дерево на диске,
@@ -39,17 +72,18 @@ $ENV python skills/lesson-spec/scripts/check_spec.py --root $S \
 Файлы читаются как байты без исполнения; символические ссылки и специальные файлы — ошибка.
 Невалидные байты UTF-8 не скрывают корректно закодированные кириллические буквы рядом с ними.
 
-**Выгрузка** распознаётся по существующему или отслеживаемому `COURSE_COMMIT`:
+**Выгрузка** распознаётся по любой существующей или отслеживаемой вложенной метке
+`Platform/COURSE_COMMIT` / `VMS/COURSE_COMMIT`; старый корневой маркер тоже включает полный охват, но даёт FAIL:
 в ней проверяется **каждый файл**, а не белый список имён — в том числе корневой
 `README.md`, `.gitignore`, метаданные и любой новый дом. Удаление отслеживаемого
-`COURSE_COMMIT` не сужает охват. Для каталога без маркера можно явно выбрать
-`check_cyrillic.py --export`; это не требуется для обычного `check_spec --root <выгрузка>`.
-README выгрузки поддерживается отдельно в `cammeta-specs`; README курса экспортёр
-не копирует, поэтому он не заменяет проверку README выгрузки и в охват курса не входит.
+вложенной метки не сужает охват. Для каталога без маркеров обязателен явный
+`check_cyrillic.py --export`: отсутствие обоих маркеров в этом режиме — FAIL.
+Обычный `check_spec --root <выгрузка>` — FAIL контекста source-proof. Наличие старого README, дополнительных
+каталогов и скрытых файлов не сужает обход: новый состав проверяет отдельное доказательство roster.
 
 Постоянных исключения два: зеркала `Platform/ru/**`, `Platform/common/ru/**`,
 `Platform/NN-*/ru/**` и **ячейки данных** колонки `ru` точного файла
-`Platform/06-console/data/localization.tsv`. Заголовок последнего обязан однозначно
+`Platform/07-console-module/data/localization.tsv`. Заголовок последнего обязан однозначно
 называть `key`, `en`, `ru`; обычный и `# `-заголовок допустимы, порядок колонок не важен.
 Комментарии, остальные колонки и неоднозначная форма не получают исключения.
 Произвольный вложенный `ru/` и `tools/normgen/ru/` зеркалами не считаются.
@@ -87,13 +121,12 @@ python skills/lesson-spec/scripts/check_cyrillic.py --ready Platform/01-store
 запись выполняется атомарной заменой только после успешной проверки всего охвата.
 Для другого среза передайте его реестр `--cyrillic-debt` в `check_spec` (`--debt` в отдельном судье).
 Выгрузка исключает журналы и другие файлы курса: для её проверки нужна отдельная **копия** реестра
-того же `COURSE_COMMIT`, сокращённая `--root <выгрузка> --debt <копия> --shrink`.
+того же SHA обеих вложенных `COURSE_COMMIT`, сокращённая `--root <выгрузка> --debt <копия> --shrink`.
 Сокращение копии не изменяет реестр курса; новый долг в выгрузке по-прежнему запрещён.
 VMS этим судьёй пока не проверяется — включение после перевода по ADR-0121 доп. (8) п. 5.
-Это относится и к полной проверке выгрузки. Временное исключение до слова владельца —
-ровно опубликованные `Source/w2cplatform/console.js`, `console.css`, `console.html`.
-Остальные `console.*`, файлы с теми же именами в других домах и каталоги, названные
-`console.js`, исключения не получают.
+Это относится и к полной проверке выгрузки. Канонические байты нового модуля
+`Platform/07-console-module/module/console.{js,css,html}` проверяются целиком, включая строки и комментарии.
+Замороженные файлы `Source/w2cplatform/console.*` не являются каноном или исключением выгрузки.
 `cyrillic_export=1` в COUNTS обозначает полный охват выгрузки.
 Расширение охвата само не создаёт нового долга: кириллица в новых путях даёт FAIL,
 в том числе при `--shrink`; словарь долга автоматически не увеличивается.
@@ -235,7 +268,7 @@ id чеклиста — ошибка (строка статуса уходит �
 |---|---|
 | Сборка: слова диалекта, `pattern` в подмножестве § 4 (повтор ≤ 1000), каждый путь правила и отношения — место формы, ключи правила — ключи отображения, регулярное выражение отношения — строка в кавычках, `ordered` — у отображения имён со значением-объектом без `name`, `scalars.tsv` согласна со слоем текста. Ошибка сборки — ошибка файла формы | Смысл источника против прозы урока |
 | Раздел: построенный текст стоит в нормах главы байт в байт между строками `<!-- form:begin -->` и `<!-- form:end -->` (одна пара); вписать — `python skills/lesson-spec/scripts/form_source/build.py <нормы главы>` | Связующий текст урока вокруг раздела |
-| Корпус главы через построенный загрузчик: вердикт (`verdicts.tsv`), класс (`classes.tsv`), множество путей и обязательные строки (`diagnostics.tsv`); все манифесты курса (`VMS/<NN-sub>/` — канон VMS, ADR-0090 доп. (6) п. 8; `Source/tests/testdata/`) — `ok`; `Source/vms/` формой не проверяется — байты свидетеля, заморожены списком `tools/vms-boundary/source-vms.sha256` | Диагностика случаев вне `diagnostics.tsv` |
+| Корпус главы через построенный загрузчик: вердикт (`verdicts.tsv`), класс (`classes.tsv`), множество путей и обязательные строки (`diagnostics.tsv`); все манифесты курса (`VMS/<NN-sub>/` — канон VMS, ADR-0090 доп. (6) п. 8; ровно два `Platform/common/data/testsub/testsub{,2}.subsystem.yaml`) — `ok`; `Source/vms/` формой не проверяется — байты свидетеля, заморожены списком `tools/vms-boundary/source-vms.sha256` | Диагностика случаев вне `diagnostics.tsv` |
 | Покрытие `references.tsv`: строка держится, если без неё меняется вердикт или класс хоть одного случая (`form_rows_held` из `form_rows` в `COUNTS`); с `--strict-coverage` недержащаяся строка — ошибка | — |
 
 Числа — `form_cases`, `form_manifests`, `form_rows`, `form_rows_held` в `COUNTS`. Канонический вид — следующий раздел.
@@ -262,7 +295,7 @@ python skills/lesson-spec/scripts/form_source/build_canonical.py vectors   # cas
 | Что проверяется | Что остаётся ручным |
 |---|---|
 | Переход: нет ни `spec/02.2-installer.norms.md`, ни `vectors/canonical/`, ни `acceptance/2/` урока 2 — проверка пропускается, `canonical=absent` в `COUNTS`; иначе `canonical=present` | — |
-| Каждый шаг `STEPS` находит свои места в форме главы 2.1; построенная схема проходит метасхему 2020-12; вид каждого `ok` случая корпуса 2.1 и каждого манифеста курса, идущего в векторы (`Source/tests/testdata/`), проходит схему, без повтора `name` (`canonical_views`) | Согласие шагов с прозой норм 2.2 |
+| Каждый шаг `STEPS` находит свои места в форме главы 2.1; построенная схема проходит метасхему 2020-12; вид каждого `ok` случая корпуса 2.1 и каждого манифеста курса, идущего в векторы (`Platform/common/data/testsub/testsub{,2}.subsystem.yaml`), проходит схему, без повтора `name` (`canonical_views`) | Согласие шагов с прозой норм 2.2 |
 | Раздел: если в нормах главы 2.2 есть строки `<!-- canonical:begin -->` и `<!-- canonical:end -->` (одна пара), текст между ними — построенный байт в байт; без маркеров (переход) — не ошибка, `canonical_section=absent` в `COUNTS`. | Связующий текст норм |
 | Векторы `vectors/canonical/`: только `README.md` (обязателен), `cases.tsv`, `expect/`, `inputs/`. `cases.tsv` — заголовок `case<TAB>input<TAB>expect<TAB>note`; `case` уникален, `[A-Za-z0-9][A-Za-z0-9_.-]*`; `input` — путь файла манифеста от корня раскладки (без `..`), загрузчик 2.1 его принимает; `expect` — ровно `expect/<case>.json`, байты — построенный вид (JCS, без перевода строки). Каждый принятый вход корпуса и курса — вход хотя бы одной строки; лишний файл `expect/`, `inputs/` — ошибка (`canonical_vectors`) | Строки-примеры по правилам записки умолчаний — чтением |
 | Проба мутаций: снять каждый `default` и каждый `ordered` источника, пропустить каждый шаг; мутант, на котором все векторы дают прежние байты, выжил (`canonical_mutants`, `canonical_mutants_killed`); с `--strict-coverage` выживший — ошибка: нужна строка-пример | — |

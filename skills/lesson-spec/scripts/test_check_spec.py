@@ -575,6 +575,10 @@ properties:
 """
 
     def add_schema(self, verdicts="valid\tok\nextra\trefused\n", classes="extra\tkey\n"):
+        home = self.root / "Platform/common/data/testsub"
+        home.mkdir(parents=True)
+        for name in ("testsub", "testsub2"):
+            (home / f"{name}.subsystem.yaml").write_text(f"name: {name}\n")
         (self.spec / "01-example.schema.yaml").write_text(self.SCHEMA)
         (self.spec / "01-example.references.tsv").write_text("path\tcheck\tclass\tnorm\n")
         (self.acceptance / "cases").mkdir()
@@ -921,7 +925,10 @@ class CyrillicIntegrationTests(unittest.TestCase):
     def test_export_root_checks_new_homes_in_the_check_spec_cli(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "COURSE_COMMIT").write_text("0123456789\n")
+            for name in ("Platform/COURSE_COMMIT", "VMS/COURSE_COMMIT"):
+                path = root / name
+                path.parent.mkdir()
+                path.write_text("0123456789abcdef0123456789abcdef01234567\n")
             (root / "README.md").write_text("Ж")
             source = root / "new-published-home/input.tsv"
             source.parent.mkdir()
@@ -932,6 +939,7 @@ class CyrillicIntegrationTests(unittest.TestCase):
                                      "--root", str(root), "--cyrillic-debt", str(debt), "missing.md"],
                                     capture_output=True, text=True)
             self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertIn("check_spec requires the full course source at the exact nested COURSE_COMMIT", result.stdout)
             self.assertIn("README.md: Cyrillic letters 1, debt 0", result.stdout)
             self.assertIn("new-published-home/input.tsv: Cyrillic letters 1, debt 0", result.stdout)
             self.assertIn("cyrillic_export=1", result.stdout)
@@ -1238,6 +1246,15 @@ class FormSourceChapterTests(unittest.TestCase):
         (self.acceptance / "verdicts.tsv").write_text("good\tok\nbad\trefused\n")
         (self.acceptance / "cases/good.subsystem.yaml").write_text("name: a\n")
         (self.acceptance / "cases/bad.subsystem.yaml").write_text("name: a\nzz: 1\n")
+        legacy = self.acceptance / "spec_verdicts"
+        legacy.mkdir()
+        (legacy / "spec_verdicts.tsv").write_text("legacy-ok\tok\nlegacy-no\trefused\n")
+        (legacy / "legacy-ok.subsystem.yaml").write_text("name: a\n")
+        (legacy / "legacy-no.subsystem.yaml").write_bytes(b"\xff")
+        home = self.root / "Platform/common/data/testsub"
+        home.mkdir(parents=True)
+        for name, value in (("testsub", "a"), ("testsub2", "b")):
+            (home / f"{name}.subsystem.yaml").write_text(f"name: {value}\n")
         (self.spec / "02-installer.api.openapi.yaml").write_text(PlatformLessonTests.API)
         history = self.root / "decisions/history/platform"
         history.mkdir(parents=True)
@@ -2232,6 +2249,155 @@ class NumericLoaderTests(unittest.TestCase):
         check = Check(self.root)
         self.assertEqual(check.numeric_loader(self.base), [])
         self.assertEqual(check.errors, [])
+
+
+class CanonicalPlatformPaths(unittest.TestCase):
+    """Owned new-home fixtures: Source bytes never rescue missing canonical input."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        for name in ("Platform/common/NORMATIVE-TERMS.md", "Platform/07-console-module/CONSOLE-MODULE.md"):
+            self.put(name, "# Canonical\n")
+        for name in ("testsub", "testsub2"):
+            self.put(f"Platform/common/data/testsub/{name}.subsystem.yaml", f"name: {name}\n")
+            self.put(f"Source/tests/testdata/{name}.subsystem.yaml", b"immutable witness, not YAML\xff")
+        self.home = self.root / "Platform/02-installer/acceptance/1/spec_verdicts"
+        self.table = self.put("Platform/02-installer/acceptance/1/spec_verdicts/spec_verdicts.tsv",
+                              "# case\tverdict\nfirst\tok\nsecond\trefused\n")
+        self.put(self.home / "first.subsystem.yaml", b"name: first\n")
+        self.put(self.home / "second.subsystem.yaml", b"\xff\x00\t\r\n")
+        self.put(self.home / "README.md", "# Legacy witnesses\n[Index](spec_verdicts.tsv)\n")
+
+    def put(self, name, data):
+        path = self.root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data if isinstance(data, bytes) else data.encode())
+        return path
+
+    def test_new_canonical_manifests_only_and_missing_never_falls_back(self):
+        check = Check(self.root)
+        paths = check.course_manifests()
+        self.assertEqual(check.errors, [])
+        self.assertEqual([p.relative_to(self.root).as_posix() for p in paths],
+                         [f"Platform/common/data/testsub/{name}.subsystem.yaml" for name in ("testsub", "testsub2")])
+        for path in paths:
+            with self.subTest(path=path):
+                before = path.read_bytes()
+                path.unlink()
+                broken = Check(self.root)
+                self.assertEqual(len(broken.course_manifests()), 1)
+                self.assertTrue(any(str(path.relative_to(self.root)) in e for e in broken.errors), broken.errors)
+                path.write_bytes(before)
+
+    def test_manifest_extra_and_symlink_rejected(self):
+        extra = self.put("Platform/common/data/testsub/third.subsystem.yaml", "name: third\n")
+        check = Check(self.root)
+        check.course_manifests()
+        self.assertTrue(any("unexpected canonical" in e for e in check.errors))
+        extra.unlink()
+        path = self.root / "Platform/common/data/testsub/testsub.subsystem.yaml"
+        path.unlink()
+        path.symlink_to(self.root / "Source/tests/testdata/testsub.subsystem.yaml")
+        check = Check(self.root)
+        check.course_manifests()
+        self.assertTrue(any("without symlinks" in e for e in check.errors))
+
+    def test_new_documents_required_and_root_alias_forbidden(self):
+        check = Check(self.root)
+        check.canonical_layout()
+        self.assertEqual(check.errors, [])
+        for name in ("NORMATIVE-TERMS.md", "CONSOLE-MODULE.md"):
+            with self.subTest(name=name):
+                alias = self.put(name, "# Legacy\n")
+                check = Check(self.root)
+                check.canonical_layout()
+                self.assertTrue(any("legacy root document" in e for e in check.errors))
+                alias.unlink()
+        path = self.root / "Platform/common/NORMATIVE-TERMS.md"
+        path.unlink()
+        self.put("NORMATIVE-TERMS.md", "# Old home cannot rescue the new one\n")
+        check = Check(self.root)
+        check.canonical_layout()
+        self.assertTrue(any("Platform/common/NORMATIVE-TERMS.md" in e and "required canonical" in e
+                            for e in check.errors))
+
+    def test_legacy_roster_headerless_first_row_and_opaque_bytes(self):
+        before = {p.name: p.read_bytes() for p in self.home.iterdir()}
+        check = Check(self.root)
+        check.legacy_spec_verdicts()
+        self.assertEqual(check.errors, [])
+        self.assertEqual(check.stats["legacy_spec_verdicts"], 2)
+        self.assertEqual(check.stats["verdicts"], 0)       # never replaces the active P02 corpus
+        self.assertEqual({p.name: p.read_bytes() for p in self.home.iterdir()}, before)
+        (self.home / "first.subsystem.yaml").unlink()
+        check = Check(self.root)
+        check.legacy_spec_verdicts()
+        self.assertTrue(any("first.subsystem.yaml: missing legacy" in e for e in check.errors), check.errors)
+
+    def test_legacy_roster_corruption_and_old_index_do_not_pass(self):
+        good = self.table.read_bytes()
+        for data in (b"", b"case\tverdict\nfirst\tok\nsecond\trefused\n",
+                     good + b"first\tok\n", good.replace(b"first\tok", b"first\tmaybe"),
+                     b"../first\tok\n", b"first\tok\textra\n"):
+            with self.subTest(data=data):
+                self.table.write_bytes(data)
+                check = Check(self.root)
+                check.legacy_spec_verdicts()
+                self.assertTrue(check.errors)
+        self.table.unlink()
+        self.put("Source/tests/testdata/spec_verdicts.tsv", good)
+        check = Check(self.root)
+        check.legacy_spec_verdicts()
+        self.assertTrue(any("spec_verdicts/spec_verdicts.tsv" in e for e in check.errors), check.errors)
+
+    def test_legacy_extra_file_and_duplicate_subdirectory_fail(self):
+        for name in ("unlisted.subsystem.yaml", "spec_verdicts/nested.subsystem.yaml"):
+            with self.subTest(name=name):
+                path = self.put(self.home / name, b"opaque")
+                check = Check(self.root)
+                check.legacy_spec_verdicts()
+                self.assertTrue(any("unlisted legacy" in e for e in check.errors), check.errors)
+                path.unlink()
+                if path.parent != self.home:
+                    path.parent.rmdir()
+
+    def test_both_canonical_vector_readers_require_the_new_two_files(self):
+        from form_source import vectors as dialect
+        from v7 import vectors as standard
+        expected = [(f"course-{name}", f"Platform/common/data/testsub/{name}.subsystem.yaml")
+                    for name in ("testsub", "testsub2")]
+        for reader in (dialect, standard):
+            with self.subTest(reader=reader.__name__):
+                self.assertEqual(reader.accepted_inputs(self.root), expected)
+                path = self.root / expected[0][1]
+                before = path.read_bytes()
+                path.unlink()
+                with self.assertRaisesRegex(reader.SourceError, "required canonical course manifest"):
+                    reader.accepted_inputs(self.root)
+                path.write_bytes(before)
+
+    def test_actual_module_file_expectations_reject_source_and_aliases(self):
+        table = self.root / "Platform/06-console/acceptance/5/scenarios.tsv"
+        for name in ("console.js", "console.css", "console.html"):
+            target = self.put(f"Platform/07-console-module/module/{name}", "owned bytes\n")
+            check = Check(self.root)
+            check.module_file_binding(table, 9, f"200 @file {target.relative_to(self.root)}")
+            self.assertEqual(check.errors, [])
+            for old in (f"Source/w2cplatform/{name}", name, f"Platform/06-console/module/{name}"):
+                with self.subTest(old=old):
+                    self.put(old, "existing old bytes do not rescue this input\n")
+                    check = Check(self.root)
+                    check.module_file_binding(table, 9, f"200 @file {old}")
+                    self.assertTrue(any("@file module input must be" in e for e in check.errors), check.errors)
+            target.unlink()
+            check = Check(self.root)
+            check.module_file_binding(table, 9, f"200 @file {target.relative_to(self.root)}")
+            self.assertTrue(any("missing canonical module input" in e for e in check.errors))
+        check = Check(self.root)
+        check.module_file_binding(table, 10, '200 {"opaque":"@file Source/w2cplatform/console.js"}')
+        self.assertEqual(check.errors, [])       # no grep of opaque JSON/test payloads
 
 
 if __name__ == "__main__":

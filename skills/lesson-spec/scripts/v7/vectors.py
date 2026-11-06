@@ -32,7 +32,8 @@ ACCEPTANCE = LESSON / "acceptance/2"
 VECTORS = LESSON / "vectors/canonical"
 # Манифесты курса в векторах платформы: testsub*. Манифесты VMS (канон — VMS/<NN-sub>/, ADR-0090 доп. (6) п. 8) —
 # материал уроков VMS, в векторы платформы не идут.
-COURSE_MANIFESTS = (Path("Source/tests/testdata"),)
+COURSE_MANIFESTS = (Path("Platform/common/data/testsub/testsub.subsystem.yaml"),
+                    Path("Platform/common/data/testsub/testsub2.subsystem.yaml"))
 HEADER = ["case", "input", "expect", "note"]
 CASE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*")
 GENERATED = ("corpus-", "course-")
@@ -98,9 +99,11 @@ def accepted_inputs(root):
         for _, (case, verdict) in _tsv(verdicts.read_text(encoding="utf-8"), 2):
             if verdict == "ok":
                 out.append(("corpus-" + case, (CORPUS / "cases" / (case + ".subsystem.yaml")).as_posix()))
-    for d in COURSE_MANIFESTS:
-        for p in sorted((root / d).glob("*.subsystem.yaml")):
-            out.append(("course-" + p.name[:-len(".subsystem.yaml")], (d / p.name).as_posix()))
+    for relative in COURSE_MANIFESTS:
+        path = root / relative
+        if not path.is_file() or path.resolve() != path.absolute():
+            raise SourceError("required canonical course manifest (regular file without symlinks): %s" % relative)
+        out.append(("course-" + path.name[:-len(".subsystem.yaml")], relative.as_posix()))
     return sorted(out)
 
 
@@ -244,6 +247,11 @@ class Chapter:
             self.stats["canonical"] = "absent"
             return self
         self.stats["canonical"] = "present"
+        try:
+            accepted_inputs(self.root)       # required canonical manifests, before any view/corpus work
+        except SourceError as exc:
+            self.error(COURSE_MANIFESTS[0].parent, "canonical: %s" % exc)
+            return self
         try:
             self.ld = loader(self.root)
         except SourceError as exc:
