@@ -2,10 +2,10 @@
  "format": 1,
  "package": "03-worker/creates-key",
  "table": "cases.tsv",
- "case": "int-neg",
+ "case": "url",
  "variant": "",
  "cells": {
-  "input": "{\"customer\":\"testsub\",\"key\":\"{cam}-{n}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"},\"n\":{\"type\":\"int\",\"value\":-3}}}"
+  "input": "{\"customer\":\"testsub\",\"key\":\"{src}\",\"fields\":{\"src\":{\"type\":\"url\",\"value\":\"rtsp://h/x?a=1\"}}}"
  },
  "files": {}
 }

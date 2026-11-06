@@ -2,10 +2,10 @@
  "format": 1,
  "package": "03-worker/creates-key",
  "table": "cases.tsv",
- "case": "plain",
+ "case": "hyphen-b",
  "variant": "",
  "cells": {
-  "input": "{\"customer\":\"testsub\",\"key\":\"{cam}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"}}}"
+  "input": "{\"customer\":\"testsub\",\"key\":\"{cam}-{kind}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7-1\"},\"kind\":{\"type\":\"string\",\"value\":\"x\"}}}"
  },
  "files": {}
 }

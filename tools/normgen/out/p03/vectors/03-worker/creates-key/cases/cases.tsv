@@ -1,7 +1,6 @@
 # Inputs of the vector command for 03-worker/creates-key cases.tsv (gen_vectors.py); compare raw.
-# source Platform/03-worker/vectors/creates-key/cases.tsv sha256 270113e961496cdf6f5503a3485d4336759e6ea1de0bdc522c2ac9d3fa9a0120
+# source Platform/03-worker/vectors/creates-key/cases.tsv sha256 865f4374fa2ef35adc4297b54fe817e02404297449cde89870cb173c93480215
 case	input	exit	stdout
-line-3	line-3.json	0	null
 line-4	line-4.json	0	null
 line-5	line-5.json	0	null
 line-6	line-6.json	0	null
@@ -17,3 +16,4 @@ line-15	line-15.json	0	null
 line-16	line-16.json	0	null
 line-17	line-17.json	0	null
 line-18	line-18.json	0	null
+line-19	line-19.json	0	null

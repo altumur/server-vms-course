@@ -1183,7 +1183,6 @@ common/values-by-type cases.tsv 80 write	translated
 common/values-by-type cases.tsv 81 read	translated
 common/values-by-type cases.tsv 82 write	translated
 common/values-by-type cases.tsv 82 read	translated
-03-worker/creates-key cases.tsv 3	translated
 03-worker/creates-key cases.tsv 4	translated
 03-worker/creates-key cases.tsv 5	translated
 03-worker/creates-key cases.tsv 6	translated
@@ -1199,7 +1198,7 @@ common/values-by-type cases.tsv 82 read	translated
 03-worker/creates-key cases.tsv 16	translated
 03-worker/creates-key cases.tsv 17	translated
 03-worker/creates-key cases.tsv 18	translated
-03-worker/creates-key cases.tsv 3	translated
+03-worker/creates-key cases.tsv 19	translated
 03-worker/creates-key cases.tsv 4	translated
 03-worker/creates-key cases.tsv 5	translated
 03-worker/creates-key cases.tsv 6	translated
@@ -1215,6 +1214,7 @@ common/values-by-type cases.tsv 82 read	translated
 03-worker/creates-key cases.tsv 16	translated
 03-worker/creates-key cases.tsv 17	translated
 03-worker/creates-key cases.tsv 18	translated
+03-worker/creates-key cases.tsv 19	translated
 common_crl_test.go	translated
 common_family_read_test.go	translated
 common_log_mask_test.go	translated

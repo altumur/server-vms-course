@@ -2,10 +2,10 @@
  "format": 1,
  "package": "03-worker/creates-key",
  "table": "cases.tsv",
- "case": "unreserved",
+ "case": "plain",
  "variant": "",
  "cells": {
-  "input": "{\"customer\":\"testsub\",\"key\":\"{cam}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"A_z.0~\"}}}"
+  "input": "{\"customer\":\"testsub\",\"key\":\"{cam}\",\"fields\":{\"cam\":{\"type\":\"string\",\"value\":\"7\"}}}"
  },
  "files": {}
 }

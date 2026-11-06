@@ -162,6 +162,48 @@ class FallbackTransport(unittest.TestCase):
         self.assertEqual(by_case["tab"], r'"/usr/lib/cam/worker\t-v"')
         self.assertEqual(by_case["newline"], r'"/usr/lib/cam/worker\n-v"')
 
+    def test_actual_p03_creates_key_preserves_stand_and_cells_bytes(self):
+        decls = [d for d in g.WIRE["03-worker"] if d["package"] == "03-worker/creates-key"]
+        self.assertEqual({d["surface"] for d in decls}, {"stand:creates-key", "vectors"})
+        registry = g.ROOT / "Platform/common/data/cell-json-sha256.tsv"
+        proof_rows = [line.split("\t") for line in registry.read_text().split("\n")
+                      if line and not line.startswith("#")][1:]
+        proofs = {(r[0], int(r[1]), r[2]): r[3:] for r in proof_rows}
+        surfaces = {}
+        for decl in decls:
+            pdir, path, rows = g.read_table(g.ROOT, decl)
+            self.assertEqual([line for line, _ in rows], list(range(4, 20)))
+            self.assertEqual(decl["compare"], "raw")
+            rel = path.relative_to(g.ROOT).as_posix()
+            for line, row in rows:
+                with self.subTest(surface=decl["surface"], case=row["case"]):
+                    before, decoded = proofs[rel, line, "input"]
+                    self.assertEqual(hashlib.sha256(row["input"].encode("utf-8")).hexdigest(), before)
+                    self.assertEqual(before, decoded)
+            frames = g.frames_of(decl, rows, pdir)
+            self.assertEqual(len(frames), 16)
+            for _, row, _, _, (code, value, raw), _ in frames:
+                self.assertEqual((code, value, raw), (0, None, row["expect"].encode("utf-8")))
+            surfaces[decl["surface"]] = rows
+        self.assertEqual(surfaces["stand:creates-key"], surfaces["vectors"])
+        by_case = {row["case"]: row for _, row in surfaces["vectors"]}
+        unicode = by_case["upper-hex"]
+        self.assertIn(bytes.fromhex("d0bad0b0d0bc"), unicode["input"].encode("utf-8"))
+        self.assertEqual(unicode["expect"], "testsub-%D0%BA%D0%B0%D0%BC")
+        self.assertEqual(json.loads(by_case["percent"]["input"])["fields"]["cam"]["value"], "a b/c%")
+        self.assertEqual(by_case["percent"]["expect"], "testsub-a%20b%2Fc%25")
+        self.assertEqual(by_case["hyphen-a"]["expect"], "testsub-7-1%2Dx")
+        self.assertEqual(by_case["hyphen-b"]["expect"], "testsub-7%2D1-x")
+        # Valid outer transport must still fail when its recorded byte proof is wrong.
+        sample = by_case["upper-hex"]["input"]
+        _, decl = self.table(["case", "input"], [{"case": "upper-hex", "input": sample}], declared=("input",))
+        self.assertEqual(g.read_table(self.root, decl)[2][0][1]["input"], sample)
+        proof = self.root / "Platform/common/data/cell-json-sha256.tsv"
+        sha = hashlib.sha256(sample.encode("utf-8")).hexdigest()
+        proof.write_text(proof.read_text().replace(sha, "0" * 64))
+        with self.assertRaises(g.GenError):
+            g.read_table(self.root, decl)
+
 
 if __name__ == "__main__":
     unittest.main()
