@@ -30,7 +30,10 @@ Session: Спецификация VMS"}
 expect refused "ветка main, а не vms/<тема>" VMS/01-cam/cam.subsystem.yaml
 git checkout -q -b vms/probe
 for p in Platform/a.md skills/b.md decisions/README.md decisions/inbox/2026-10-22-разбор.md Source/vms/x.py \
-         Source/w2cplatform/c.py CLAUDE.md СЕССИИ.md ХОД-Архитектор.md; do
+         Source/w2cplatform/c.py CLAUDE.md СЕССИИ.md ХОД-Архитектор.md \
+         decisions/history/platform/id-map.tsv decisions/journal/platform/01-store/corrections-1.tsv \
+         decisions/history/vms-extra/a.tsv decisions/journal/vms-extra/a.tsv \
+         decisions/history/vms decisions/journal/vms; do
   expect refused "закрытый путь $p" "$p"
 done
 expect refused "открытый путь без трейлера" VMS/01-cam/cam.subsystem.yaml "проба без трейлера"
@@ -38,7 +41,8 @@ expect refused "чужой трейлер" VMS/01-cam/cam.subsystem.yaml "про
 
 Session: Архитектор"
 for p in VMS/01-cam/cam.subsystem.yaml М10B_ServerVMS/01.md ХОД-Спецификация-VMS.md \
-         decisions/inbox/2026-10-23-запрос-vms-проба.md decisions/inbox/2026-10-23-решение-владельца-vms-проба.md; do
+         decisions/inbox/2026-10-23-запрос-vms-проба.md decisions/inbox/2026-10-23-решение-владельца-vms-проба.md \
+         decisions/history/vms/old-id-maps.tsv decisions/journal/vms/01-cam/corrections-1.tsv; do
   expect ok "белый список $p" "$p"
 done
 if git push -q origin vms/probe 2>"$tmp/err"; then echo "ok    pre-push: чистый диапазон проходит"; else echo "FAIL  pre-push чистого диапазона"; cat "$tmp/err"; fails=$((fails+1)); fi

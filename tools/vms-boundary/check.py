@@ -18,7 +18,8 @@ import unicodedata
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-OPEN = ("VMS/", "М10B_ServerVMS/", "М12A_Domain/", "М12B_DomainVMS/", "М13_Observability/", "М14_VendorVMS/")
+OPEN = ("VMS/", "М10B_ServerVMS/", "М12A_Domain/", "М12B_DomainVMS/", "М13_Observability/", "М14_VendorVMS/",
+        "decisions/history/vms/", "decisions/journal/vms/")  # ADR-0083 (128): только история VMS
 INBOX = re.compile(r"decisions/inbox/[0-9]{4}-[0-9]{2}-[0-9]{2}-(?:запрос-vms|решение-владельца-vms)-[^/]+\.md")
 REVIEW = re.compile(r"decisions/inbox/ревью/РЕВЬЮ-[^/]+-spec-vms\.md")   # отчёты второго ревьювера «Спецификации VMS» (2026-11-03)
 FROZEN = "Source/vms/"
