@@ -18,6 +18,8 @@ class CheckSpecTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name).resolve()
+        self.cyrillic_debt = self.root / "cyrillic-debt.tsv"
+        self.cyrillic_debt.write_text("kind\tpath\tletters\n")
         self.module = self.root / "М12A_Example"
         self.spec = self.module / "spec"
         self.spec.mkdir(parents=True)
@@ -58,7 +60,8 @@ components:
 
     def cli(self):
         return subprocess.run([sys.executable, str(Path(__file__).with_name("check_spec.py")),
-                               "--root", str(self.root), str(self.lesson)], capture_output=True, text=True)
+                               "--root", str(self.root), "--cyrillic-debt", str(self.cyrillic_debt),
+                               str(self.lesson)], capture_output=True, text=True)
 
     def assert_cli(self, code, message=None):
         result = self.cli()
@@ -906,11 +909,50 @@ properties:
         registry = self.root / "exceptions.tsv"
         registry.write_text("М12A_Example/01\tno-openapi\t-\tADR\n")
         result = subprocess.run([sys.executable, str(Path(__file__).with_name("check_spec.py")), "--root",
-                                 str(self.root), "--exceptions", str(registry), str(self.lesson)],
+                                 str(self.root), "--exceptions", str(registry),
+                                 "--cyrillic-debt", str(self.cyrillic_debt), str(self.lesson)],
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("EXCEPTION М12A_Example/01 no-openapi -: ADR", result.stdout)
         self.assertIn("PASS with 1 exceptions", result.stdout)
+
+
+class CyrillicIntegrationTests(unittest.TestCase):
+    def test_global_judge_in_check_spec_cli_even_with_explicit_lesson(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "tools/normgen/runtime/door.go"
+            source.parent.mkdir(parents=True)
+            source.write_text("// Ж\n")
+            debt = root / "debt.tsv"
+            debt.write_text("kind\tpath\tletters\n")
+            result = subprocess.run([sys.executable, "-B", str(Path(__file__).with_name("check_spec.py")),
+                                     "--root", str(root), "--cyrillic-debt", str(debt), "missing.md"],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertIn("tools/normgen/runtime/door.go: Cyrillic letters 1, debt 0", result.stdout)
+            self.assertIn("cyrillic_debt_files=0", result.stdout)
+
+    def test_check_stats_debt_and_ready_are_not_exception_count(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "Platform/01-store").mkdir(parents=True)
+            (root / "Platform/01-store/README.md").write_text("English\n")
+            source = root / "Platform/notes.md"
+            source.write_text("ЖЖ")
+            debt = root / "debt.tsv"
+            debt.write_text("kind\tpath\tletters\nready\tPlatform/01-store\t-\ndebt\tPlatform/notes.md\t2\n")
+            check = Check(root)
+            check.check_cyrillic(debt)
+            self.assertEqual(check.errors, [])
+            self.assertEqual(check.excepted, [])
+            self.assertEqual(check.stats["cyrillic_debt_files"], 1)
+            self.assertEqual(check.stats["cyrillic_debt_letters"], 2)
+            self.assertEqual(check.stats["cyrillic_ready"], 1)
+            source.write_text("English")
+            stale = Check(root)
+            stale.check_cyrillic(debt)
+            self.assertTrue(any("shrink debt explicitly" in error for error in stale.errors))
 
 
 class PlatformLessonTests(unittest.TestCase):
