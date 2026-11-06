@@ -29,6 +29,8 @@ The runner goes as the human `root` (the first administrator — chapter 8.4, th
   and the list is full again (steps 09, 10).
 - **Scenario 05** — the doors of the holder page (the norms N1.7). The calls of the module in the mode `domain` are checked by the test of the module at its
   owner ([P/07](../../07-console-module/spec/07-console-module.norms.md) N1.6), not by this acceptance.
+
+Scenario 05 compares the JavaScript response bytes with the same [P/07 console.js](../../07-console-module/module/console.js) as the cluster console, at the existing synchronous `/platform/console.js?v=1`. The unchanged requests, statuses and headers remain mandatory. This byte-publication check does not replace the module-owner tests of UI language and date rendering; no locale fetch, new route or version is introduced.
 - **Scenario 06** — there is no view (the norms N1.2a, N1.2b, N1.2c, N1.2f, N4 `no domain here`): `@start domain` without `@install domain` —
   the process `domain` without a signer row does not lead the holder pass and does not write the view ([P/08.10](../../08-domain/spec/08.10-domain.norms.md)
   N1.7 `no_signer`), there are no traces of the domain in the store of `hold` — the gate `open`: the runner calls from the loopback without a token, the identity —
