@@ -98,7 +98,7 @@ func TestSlotFates_S13FateUnreachableBoundary(t *testing.T) {
 // TestSlotFates_S14FateNoPermissionBadGen — chapter 4, seams.tsv.
 func TestSlotFates_S14FateNoPermissionBadGen(t *testing.T) {
 	runSeam(t, []step{
-		{n: 1, line: 18, kind: "call", name: "controller-fate", input: "{\"age\":90,\"slot_readable\":true,\"worker_fresh\":false,\"resource\":\"silent\",\"presence\":\"runs\",\"assigned\":true,\"server_known\":true,\"gen_readable\":false,\"version\":\"v1\",\"HUNG_MOVE_AFTER\":900}", expects: []expect{expect{call: "{\"fate\":\"move\",\"permission_version\":\"\",\"slot_writes\":0}"}}},
+		{n: 1, line: 18, kind: "call", name: "controller-fate", input: "{\"age\":90,\"slot_readable\":false,\"worker_fresh\":false,\"resource\":\"silent\",\"presence\":\"runs\",\"assigned\":true,\"server_known\":true,\"gen_readable\":false,\"version\":\"v1\",\"slot\":{\"holder\":\"box1:1:abcdef\",\"gen\":\"broken\",\"server\":\"srv-a\",\"released\":\"false\",\"until\":\"1\"},\"HUNG_MOVE_AFTER\":900}", expects: []expect{expect{call: "{\"fate\":\"move\",\"permission_version\":\"\",\"slot_writes\":0}"}}},
 	})
 }
 
@@ -113,5 +113,19 @@ func TestSlotFates_S15ReleaseCasRace(t *testing.T) {
 func TestSlotFates_S16ReleaseUnreadableGen(t *testing.T) {
 	runSeam(t, []step{
 		{n: 1, line: 20, kind: "call", name: "controller-fate", input: "{\"age\":100,\"slot_readable\":false,\"worker_fresh\":false,\"resource\":\"live\",\"presence\":\"gone\",\"assigned\":false,\"server_known\":true,\"gen_readable\":false,\"version\":\"v1\",\"HUNG_MOVE_AFTER\":900}", expects: []expect{expect{call: "{\"permission_version\":\"\",\"slot_writes\":0}"}}},
+	})
+}
+
+// TestSlotFates_S34FateResourceNeverSeenAssigned — chapter 4, seams.tsv.
+func TestSlotFates_S34FateResourceNeverSeenAssigned(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 38, kind: "call", name: "controller-fate", input: "{\"age\":90,\"slot_readable\":true,\"worker_fresh\":false,\"resource\":\"unknown\",\"presence\":\"unknown\",\"server_known\":true,\"gen_readable\":true,\"version\":\"v1\",\"HUNG_MOVE_AFTER\":900,\"assigned\":true}", expects: []expect{expect{call: "{\"fate\":\"move\",\"permission_version\":\"v1\",\"slot_writes\":0}"}}},
+	})
+}
+
+// TestSlotFates_S35FateResourceNeverSeenEmpty — chapter 4, seams.tsv.
+func TestSlotFates_S35FateResourceNeverSeenEmpty(t *testing.T) {
+	runSeam(t, []step{
+		{n: 1, line: 39, kind: "call", name: "controller-fate", input: "{\"age\":90,\"slot_readable\":true,\"worker_fresh\":false,\"resource\":\"unknown\",\"presence\":\"unknown\",\"server_known\":true,\"gen_readable\":true,\"version\":\"v1\",\"HUNG_MOVE_AFTER\":900,\"assigned\":false,\"slot\":{\"holder\":\"box1:1:abcdef\",\"gen\":\"7\",\"until\":\"1\",\"released\":\"false\",\"server\":\"srv-a\"},\"release_reply\":{\"index\":\"v2\"}}", expects: []expect{expect{call: "{\"fate\":\"release\",\"permission_version\":\"v2\",\"slot_writes\":1,\"release_items\":{\"holder\":\"box1:1:abcdef\",\"gen\":\"7\",\"until\":\"1\",\"released\":\"true\",\"server\":\"srv-a\"}}"}}},
 	})
 }

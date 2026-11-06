@@ -16,6 +16,8 @@ step	stage	test	status	reason
 4/seams.tsv/s14-fate-no-permission-bad-gen/1	slot_fates	TestSlotFates_S14FateNoPermissionBadGen	translated	-
 4/seams.tsv/s15-release-cas-race/1	slot_fates	TestSlotFates_S15ReleaseCasRace	translated	-
 4/seams.tsv/s16-release-unreadable-gen/1	slot_fates	TestSlotFates_S16ReleaseUnreadableGen	translated	-
+4/seams.tsv/s34-fate-resource-never-seen-assigned/1	slot_fates	TestSlotFates_S34FateResourceNeverSeenAssigned	translated	-
+4/seams.tsv/s35-fate-resource-never-seen-empty/1	slot_fates	TestSlotFates_S35FateResourceNeverSeenEmpty	translated	-
 4/seams.tsv/s17-admission-capacity/1	placement_admission	TestPlacementAdmission_S17AdmissionCapacity	translated	-
 4/seams.tsv/s18-intent-removals-before-add/1	placement_admission	TestPlacementAdmission_S18IntentRemovalsBeforeAdd	translated	-
 4/seams.tsv/s19-intent-unknown-barrier/1	placement_admission	TestPlacementAdmission_S19IntentUnknownBarrier	translated	-
@@ -25,6 +27,18 @@ step	stage	test	status	reason
 4/seams.tsv/s23-delete-cas-then-state/1	cleanup	TestCleanup_S23DeleteCasThenState	translated	-
 4/seams.tsv/s24-sweep-unit-guard/1	cleanup	TestCleanup_S24SweepUnitGuard	translated	-
 4/seams.tsv/s25-made-delete-early/1	cleanup	TestCleanup_S25MadeDeleteEarly	translated	-
+4/seams.tsv/s39-decommission-62-slots/1	cleanup	TestCleanup_S39Decommission62Slots	translated	-
+4/seams.tsv/s40-decommission-63-slots/1	cleanup	TestCleanup_S40Decommission63Slots	translated	-
+4/seams.tsv/s41-decommission-65-contributions/1	cleanup	TestCleanup_S41Decommission65Contributions	translated	-
+4/seams.tsv/s42-decommission-restart-before-cleanup/1	cleanup	TestCleanup_S42DecommissionRestartBeforeCleanup	translated	-
+4/seams.tsv/s43-decommission-new-holder/1	cleanup	TestCleanup_S43DecommissionNewHolder	translated	-
+4/seams.tsv/s44-decommission-final-refusal/1	cleanup	TestCleanup_S44DecommissionFinalRefusal	translated	-
+4/seams.tsv/s45-decommission-final-reply-lost/1	cleanup	TestCleanup_S45DecommissionFinalReplyLost	translated	-
+4/seams.tsv/s46-loader-reserved-pending-rows/1	cleanup	TestCleanup_S46LoaderReservedPendingRows	translated	-
+4/seams.tsv/s47-loader-reserved-pending-table/1	cleanup	TestCleanup_S47LoaderReservedPendingTable	translated	-
+4/seams.tsv/s48-decommission-bad-progress-duplicate-remaining-name/1	cleanup	TestCleanup_S48DecommissionBadProgressDuplicateRemainingName	translated	-
+4/seams.tsv/s49-decommission-bad-progress-cursor-past-chunk/1	cleanup	TestCleanup_S49DecommissionBadProgressCursorPastChunk	translated	-
+4/seams.tsv/s50-decommission-bad-progress-foreign-from-prefix/1	cleanup	TestCleanup_S50DecommissionBadProgressForeignFromPrefix	translated	-
 4/seams.tsv/s26-snapshot-error-keeps-data/1	snapshots	TestSnapshots_S26SnapshotErrorKeepsData	translated	-
 4/seams.tsv/s27-snapshot-byte-boundary/1	snapshots	TestSnapshots_S27SnapshotByteBoundary	translated	-
 4/seams.tsv/s28-snapshot-over-boundary/1	snapshots	TestSnapshots_S28SnapshotOverBoundary	translated	-
@@ -32,4 +46,7 @@ step	stage	test	status	reason
 4/seams.tsv/s30-table-too-large-stub/1	snapshots	TestSnapshots_S30TableTooLargeStub	translated	-
 4/seams.tsv/s31-table-unchanged-no-rewrite/1	snapshots	TestSnapshots_S31TableUnchangedNoRewrite	translated	-
 4/seams.tsv/s32-want-grace-restarts/1	growth_shrink	TestGrowthShrink_S32WantGraceRestarts	translated	-
+4/seams.tsv/s36-shrink-wanted-top-prefix/1	growth_shrink	TestGrowthShrink_S36ShrinkWantedTopPrefix	translated	-
+4/seams.tsv/s37-shrink-wanted-other-server/1	growth_shrink	TestGrowthShrink_S37ShrinkWantedOtherServer	translated	-
+4/seams.tsv/s38-growth-ended-manual-row/1	growth_shrink	TestGrowthShrink_S38GrowthEndedManualRow	translated	-
 4/seams.tsv/s33-pass-report-partial-failure/1	pass_report	TestPassReport_S33PassReportPartialFailure	translated	-
