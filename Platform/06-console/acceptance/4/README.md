@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/4/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
-The norm of the chapter is [`06.4-console.norms.md`](../../spec/06.4-console.norms.md) Н5. The scenarios were moved from the acceptance of
+The norm of the chapter is [`06.4-console.norms.md`](../../spec/06.4-console.norms.md) N5. The scenarios were moved from the acceptance of
 М10/08 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the numbers of scenarios and steps are the former ones. Scenarios 05 (a request with a holder) and 07 (the append) of М10/08 are in
 [the acceptance of chapter 3.6](../../../03-worker/acceptance/6/README.md); 01, 02, 08 of М10/08 (the objects door, the events query, the paths
@@ -30,7 +30,7 @@ platform/mirror and platform/space are not set; requests for release and for a c
 console — the door of the console testsub from the loopback, access to operations and units is allowed;
 resource — the door of the resource srv-a with an admissible identity; store — the door of the store with reading of
 testsub/ and objects/testsub/. If the deployment uses TLS, issue the corresponding
-certificates and roles per P/02.4 Н1.6 (`w2c-ca.sh issue <server> <role>`, the kit `kit`) and the address rule of P/02.4 Н1.6;
+certificates and roles per P/02.4 N1.6 (`w2c-ca.sh issue <server> <role>`, the kit `kit`) and the address rule of P/02.4 N1.6;
 these scenarios do not replace the check of TLS refusals.
 Do not accelerate the deadlines and parameters of testsub: valid_for=30, most_valid=600; the ordinary
 ticks of the holder and the reaper are expected, settle=60 by default.
@@ -60,14 +60,14 @@ the last step wait for the stop of all the created processes, then delete the st
 Sc. 08–10 (`audit-coverage-gemini` 0a5ae79f9) — likewise, each on its own empty stand.
 - Sc. 08 — `testsub2` (the append, `requests.key` `{unit}-{from:int}-{to:int}`, `per_person` 3): a body with the same rid `t1-0-1`
   and a different digest (the field `action` is part of the digest of the kind worker) — 409 `exists`, the row is the earlier one (without `action`), the rid is in the accounting
-  (Н3 «file a request» steps 3–4); the accounting of the person `operator` is `testsub2/asked/06e55b633481f7bb` (`sha256("operator")[:16]`),
-  the role `console` reads and writes it; `DELETE` of the accounting — 200 `{cleared: true}` (OpenAPI `Cleared`), there is no row, a repeat — 404 (Н4);
-  an accounting read not by the form (`at: "x"`) — 429 without a change of the accounting and without a request row (Н3 step 3, the outcome of the family `asked`).
+  (N3 «file a request» steps 3–4); the accounting of the person `operator` is `testsub2/asked/06e55b633481f7bb` (`sha256("operator")[:16]`),
+  the role `console` reads and writes it; `DELETE` of the accounting — 200 `{cleared: true}` (OpenAPI `Cleared`), there is no row, a repeat — 404 (N4);
+  an accounting read not by the form (`at: "x"`) — 429 without a change of the accounting and without a request row (N3 step 3, the outcome of the family `asked`).
 - Sc. 09 — `testsub` (the ordinary profile, rid `r-<sha16(Idempotency-Key)>`; the key is set by `@header`, so the rid is known before
-  the filing): the marks `objects/testsub/commands/<rid>` are put by the role `testsubworker` bypassing the holder before the filing (Н3 step 2: the mark
+  the filing): the marks `objects/testsub/commands/<rid>` are put by the role `testsubworker` bypassing the holder before the filing (N3 step 2: the mark
   is already there). Another `unit` — 409 `spent`; a mark not by the form (`digest` is not 64 hex) — 409 `spent`, the mark is the earlier one; the same `unit`
   and digest with the outcome `expired` (the form `no_begun`) — 200 `answered` with this mark; there is no request row in any case.
-  The keys and the rids (`sha256(ключ)[:16]`, computed by python): `acc-spent-other` — `r-7f0cd6bacd621c87`, `acc-spent-garbled` —
+  The keys and the rids (`sha256(key)[:16]`, computed by python): `acc-spent-other` — `r-7f0cd6bacd621c87`, `acc-spent-garbled` —
   `r-7c4c0556d5a0c07c`, `acc-answered` — `r-bebf2f46796986bd`; the digest of the body `{"unit": "c4", "add": 1}` of the kind client is
   sha256 JCS `{"add":1,"unit":"c4"}` = `e83c1a0bfffbff5eb0a0de9119b1ab36a9591b374b4a655621da34e02f85a969` (the rule — the vectors
   `request-digest`).
@@ -92,7 +92,7 @@ the vectors [`reap`](../../vectors/reap/README.md): there is no holder on the st
 ## Deadline of table rows (sc. 12)
 
 ADR-0094 step 3b. The table `scraps` of the manifest `testsub2`: `delete_after` 35, the fields `name`, `note`; `shelves` has no deadline key. The deadline is not
-waited for shorter and is not forged: the age judges the observed version, not the stamp (P/06.4 Н3 `tables`), so the technique with the old
+waited for shorter and is not forged: the age judges the observed version, not the stamp (P/06.4 N3 `tables`), so the technique with the old
 `at` of sc. 11 is not here. The tick of the reaper is 30 s, the first pass after the write (the moment `t1`) comes not later than 30 s.
 - Step 4 — `@sleep 31`: the first pass has surely happened. A reaper that removes the row at the first look gives 404 at step 5.
 - Step 6 writes `s2` anew: a new version. Step 7 waits for the removal of `s1` — the pass `t1 + 60`: at `t1 + 30` the age 30 is less than the deadline.
@@ -108,7 +108,7 @@ an extra element of the expected array. An expectation of a single code does not
 A repeat of a variable inside expect compares its temporary value.
 $rid from queued in 04 is a string substituted without change into the store path.
 The directives are not sent to the server as HTTP. The full answer is additionally checked by the contract of its owner:
-the store — P/01.1, the units — chapter 6.1, the doors of the resource — P/05 Н2, the other doors — Н2 of the chapter. In particular, answered
+the store — P/01.1, the units — chapter 6.1, the doors of the resource — P/05 N2, the other doors — N2 of the chapter. In particular, answered
 with @any in the TSV is still bound to be a full mark of one of the three forms of AnsweredMark.
 
 ## Evidence outside TSV
@@ -123,7 +123,7 @@ free space are in [the acceptance of P/05](../../../05-resource/acceptance/READM
 | Requests | Two contenders for begun: no more than one call; a lost answer of put_new: zero calls by assumption. A foreign unit/digest is not overwritten; unknown does not start a repeat |
 | Outcome and cleanup | An old CAS of the reaper does not overwrite performed. A late answer replaces unknown with late. An error of publishing the mark leaves the row; the console does not delete the mark |
 | Accounting and repeat | Competing filings, per_person; a break after the reserve before the row: a repeat creates the row through steps 4–5, one asked does not give 202; an unavailable read → 503, a damaged read form → 429. A reserves the rid, B accepts the repeat, A gets a definite refusal: the reserve remains, a new C at limit 1 is refused. The same at 409/an unknown outcome; age alone does not release a non-empty accounting; after kept the old rid is not reused |
-| Request action | A body with a field `action` from `requests.elsewhere` the reaper neither marks nor removes; `reach.requests` requires `edit` on the group only for a request with this `action` (the norms of the chapter Н1.5 `action`; analysis of the review of stage A 6–7, № 14) — in the ordinary profile by reading (the stand has no manifest of the ordinary profile with `elsewhere`); at `testsub2` (the append profile) a body with `action: recount` is an append: fetched of the holder, the console removes the row after settle — sc. 07 steps 34–36 of the acceptance of chapter 3.6 (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7); `reach.requests` requires a domain — analysis of the review of stage B 6–7, № 20 |
+| Request action | A body with a field `action` from `requests.elsewhere` the reaper neither marks nor removes; `reach.requests` requires `edit` on the group only for a request with this `action` (the norms of the chapter N1.5 `action`; analysis of the review of stage A 6–7, № 14) — in the ordinary profile by reading (the stand has no manifest of the ordinary profile with `elsewhere`); at `testsub2` (the append profile) a body with `action: recount` is an append: fetched of the holder, the console removes the row after settle — sc. 07 steps 34–36 of the acceptance of chapter 3.6 (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7); `reach.requests` requires a domain — analysis of the review of stage B 6–7, № 20 |
 
 Reading of the branches and the schema confirm only the corresponding order/form. Timers,
 processes, file barriers, network breaks and the cryptographic identity require separate

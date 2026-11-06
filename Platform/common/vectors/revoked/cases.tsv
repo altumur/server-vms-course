@@ -8,7 +8,7 @@ upper	"ABCDEF\nff\n"	["ff", "abcdef"]	case does not matter
 same-value	"ab\n00AB\n"	["ab"]	a repeat by value — one serial, not an error
 zero	"0\n000\n"	["0"]	zero — «0»
 decimal-looking	"123\n"	["123"]	there is no decimal notation: 123 — the serial 0x123
-skip	"# отозваны 2026-10-23\n\nab\n#cd\n"	["ab"]	an empty line and a line with «#» — skipped
+skip	"# \u043e\u0442\u043e\u0437\u0432\u0430\u043d\u044b 2026-10-23\n\nab\n#cd\n"	["ab"]	an empty line and a line with «#» — skipped
 bad-0x	"0xab\n"	@bad	«0x» — an invalid line: the file is invalid as a whole
 bad-space	"ab \n"	@bad	a space — an invalid line
 bad-leading-space-comment	" # x\nab\n"	@bad	«#» not at the start of a line — an invalid line

@@ -1,5 +1,5 @@
 # The mask at the input (the log mask contract «Mask at the input» mask_in; the white-space ones — the human name contract white_space): the value
-# of a secret field sent for a write → a mask (a write refusal, P/06.2 Н4) or a value. The form — README.
+# of a secret field sent for a write → a mask (a write refusal, P/06.2 N4) or a value. The form — README.
 case	value	expect	note
 three-stars	"***"	{"mask": true}	the log mask and the secret display mask (`***`, the vectors log-mask and secret-in) at the input — a refusal
 four-stars	"****"	{"mask": true}	more than three characters of the set — a mask

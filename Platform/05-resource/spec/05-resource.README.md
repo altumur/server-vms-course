@@ -10,14 +10,14 @@ Give the platform objects, events and their reading; give the resource the clean
 
 ## Inputs and their priority
 
-- The canon is the [norms](05-resource.norms.md), the definitions of Н0 — per P/01.1; the file contracts are
+- The canon is the [norms](05-resource.norms.md), the definitions of N0 — per P/01.1; the file contracts are
   [the event journal](../../common/contracts/event-journal.md) and [the presence lock](../../common/contracts/presence-lock.md).
-- The [HTTP contract](05-resource.api.openapi.yaml) expresses Н2.
+- The [HTTP contract](05-resource.api.openapi.yaml) expresses N2.
 - The [acceptance](../acceptance/README.md) sets the preparation and the observations.
 - The lecture (`ru/05-resource.md`, for people, not in the export) explains the reasons and the boundaries; the [lifecycle](../lifecycle.md) — the environment, the exit codes.
 
-The objects use the store vocabulary of P/01.1, the roles — [P/02.4 Н1.6](../../02-installer/spec/02.4-installer.norms.md) and
-the role certificate contract. `PUT /v1/objects/<sub>/blobs/<digest>` — Н1.1 «Тела у ресурса», Н2; `restore` (`GET /mirrored/<server>`) — Н1.4 «Восстановление бакетов».
+The objects use the store vocabulary of P/01.1, the roles — [P/02.4 N1.6](../../02-installer/spec/02.4-installer.norms.md) and
+the role certificate contract. `PUT /v1/objects/<sub>/blobs/<digest>` — N1.1 «Тела у ресурса», N2; `restore` (`GET /mirrored/<server>`) — N1.4 «Восстановление бакетов».
 Internal functions,
 libraries and the way the handlers are placed are not prescribed.
 
@@ -31,7 +31,7 @@ are different boundaries of confirmation; one does not prove another.
 
 ## Order of work
 
-1. Separate a file and a row object. Check put_new and CAS per Н1.1, the ban on giving out
+1. Separate a file and a row object. Check put_new and CAS per N1.1, the ban on giving out
    row objects through the files door, equal written and missing. Do not turn the absence of a server's answer
    into a proof of the absence of an object.
 2. Write an event under the epoch. The identifier distinguishes processes, boxes and restarts;
@@ -40,11 +40,11 @@ are different boundaries of confirmation; one does not prove another.
 3. Build the query over the files: the parameters, the candidates, the filter, the priority of alarms,
    limit and truncated. The same query with an empty cache and after its eviction gives the same
    result with unchanged files. A torn tail gives partial, not an event line.
-4. Make wait per Н1.6: four closed answers, the identity on eviction, the queue and
+4. Make wait per N1.6: four closed answers, the identity on eviction, the queue and
    the timeout. The client continues the periodic pass on the loss of the hint, on overflow
    or on a restart of the resource.
 5. Perform the resource pass. An unknown reading of retention/holds gives no right to remove;
-   free_ask contains no unit and matches by server/volume. The volume name is ASCII A-Z/a-z/0-9/_ of length 1–64, without a hyphen (Н1.4 `free_ask`); another volume does not publish a request and is diagnosed. The removal uses CAS of the version
+   free_ask contains no unit and matches by server/volume. The volume name is ASCII A-Z/a-z/0-9/_ of length 1–64, without a hyphen (N1.4 `free_ask`); another volume does not publish a request and is diagnosed. The removal uses CAS of the version
    on which the form and the owner of the row were checked. The mirror is published after the check of the full body
    and the sum; a failure keeps the former copy.
    The door row carries, next to `room.<sub>`, the list `live.<sub>` — the numbers n ≥ 2 of the live locks of the same snapshot (the presence
@@ -57,11 +57,11 @@ are different boundaries of confirmation; one does not prove another.
 
 | Norm | Possible error | Check |
 |---|---|---|
-| Н1.1/Н2 | prefix checked as a key; traversal got through decoding | An empty prefix is admissible; an empty key segment, a dot, two dots, a backslash and control characters are not |
-| Н1.2/Н1.3 | The event fields overwrote the metadata; a PID repeated on another box | The fields of the platform are protected; id distinguishes the instances |
-| Н1.3 | bool taken for integer, NaN for a number, a truncation for the incompleteness of the sources | Finite numbers, an integer limit; distinct truncated/partial |
-| Н1.6/Н2 | JSONL wrapped in an array; wait returned events | Check the form, the types and the absence of extra fields |
-| Н2 | After the headers a second JSON refusal is given | A break stays a break; an incomplete copy is not published |
+| N1.1/N2 | prefix checked as a key; traversal got through decoding | An empty prefix is admissible; an empty key segment, a dot, two dots, a backslash and control characters are not |
+| N1.2/N1.3 | The event fields overwrote the metadata; a PID repeated on another box | The fields of the platform are protected; id distinguishes the instances |
+| N1.3 | bool taken for integer, NaN for a number, a truncation for the incompleteness of the sources | Finite numbers, an integer limit; distinct truncated/partial |
+| N1.6/N2 | JSONL wrapped in an array; wait returned events | Check the form, the types and the absence of extra fields |
+| N2 | After the headers a second JSON refusal is given | A break stays a break; an incomplete copy is not published |
 
 ## Done when
 

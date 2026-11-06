@@ -3,15 +3,15 @@
 This English text is the source; the Russian translation `ru/acceptance/2/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
-The norm of the chapter is [`03.2-worker.norms.md`](../../spec/03.2-worker.norms.md) Н5. The scenarios were moved from the acceptance of
+The norm of the chapter is [`03.2-worker.norms.md`](../../spec/03.2-worker.norms.md) N5. The scenarios were moved from the acceptance of
 М10/05 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the numbers of scenarios and steps are the former ones, except sc. 04 and 08: the first step is `@start resource`, the former ones are shifted by one (P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Sc. 02, 06 are the acceptance of chapter 3.3, sc. 03 — of chapter 3.4, the rest — [P/04](../../../04-controller/acceptance/README.md).
 
 The scenarios run on a stand of the `testsub` processes of the implementation: the store, the console `testsub`, the controller `testsub` and the workers
 `testsub` (the training worker of counters), which the runner controls. The catalogue of the stand is two manifests, `testsub` and `testsub2`, in the order of
 the section «Stand» of the common acceptance README (reconciliation of python and go М10/3–5, item 24): the worker of one manifest does not touch the rows
-of the other on capture and cleanup. The training worker `testsub` reports the started counter by the element `status` with `phase: running` (chapter 3.4 Н1.1
-`phase`) and one word of the subsystem `n` — the value of the counter (chapter 3.4 Н1.1 `status`; the second pilot, `N-7`). Observation — rows
+of the other on capture and cleanup. The training worker `testsub` reports the started counter by the element `status` with `phase: running` (chapter 3.4 N1.1
+`phase`) and one word of the subsystem `n` — the value of the counter (chapter 3.4 N1.1 `status`; the second pilot, `N-7`). Observation — rows
 through the store door P/01.1 and units through the console door P/06.1; the heartbeat (an object) is not read here. The controller of the stand is
 a neighbour by contract (the data catalogue, the life cycle of P/04), not the norms of the chapter (the plan of the move of lesson 3, V2).
 
@@ -25,7 +25,7 @@ the floor of epochs — `op: floor`, sc. 26, 27), the directives `@start` (with 
 the expectation is a subset of fields.
 
 The processes are started per the section «Stand» of the common acceptance README (the commands of roles, the environment of the worker); the read role of
-the store without a rights file (P/01.2 Н1.2) — with full rights on `testsub/` and `testsub2/`.
+the store without a rights file (P/01.2 N1.2) — with full rights on `testsub/` and `testsub2/`.
 
 The stand begins with an empty store and without workers; the runner stops everything it started after the last step of
 a scenario. One scenario takes no longer than 3 minutes.
@@ -39,7 +39,7 @@ In total 28 scenarios / 263 steps: 01-start (8), 04-two-copies (12), 05-sigkill 
 33-claim-clears-contributions (9), 34-foreign-place-torn-hold (11), 44-place-holder-pulse-unreadable (14).
 
 **Scenarios of 2026-10-18** (reconciliation of python and go М10/3–5):
-- sc. 08 step 8 — `rows` of the units door (P/06.1 Н2): an element of a live heartbeat with `phase: running`, `worker`,
+- sc. 08 step 8 — `rows` of the units door (P/06.1 N2): an element of a live heartbeat with `phase: running`, `worker`,
   `worker_state: live`; an empty `rows` with a live worker — FAIL;
 - sc. 08 — the workers of two manifests: `t-1` `testsub2` (the name is also in `TALLY_NAME`, the dictionary `@start`), the slots are held, `gen` 1
   does not grow — an endless capture with a catalogue of two manifests is visible;
@@ -53,92 +53,92 @@ In total 28 scenarios / 263 steps: 01-start (8), 04-two-copies (12), 05-sigkill 
 
 **Scenarios of 2026-10-30** (coverage audit of P/03, audit-kimi `ba6666f13`, `fe341f708`). The rows that are not written by the console,
 the runner puts and spoils through the door `admin` (full rights, the dictionary of the common acceptance README) — a write bypassing the writer, as the unit row
-of sc. 12 of the acceptance of chapter 3.3; `cas` is not set where the writer itself rewrites the row (a write on top, P/01.1 Н1
+of sc. 12 of the acceptance of chapter 3.3; `cas` is not set where the writer itself rewrites the row (a write on top, P/01.1 N1
 `cas`), — there is no race with the renewal. Sc. 09, 11 wait for the start refusal by the expectation `@exit 2` (the dictionary, `@start worker`).
 - sc. 14 — an existing row `w-1` with an unreadable `gen` (released, `holder` empty): the worker with a given name does not
   rewrite it either at once or after `TORN_STILL` 50 s ([the slot contract](../../../common/contracts/slot.md) «Сроки»), no name —
-  no heartbeat (Н1.4 the paragraph «У отсутствующей строки…», Н3 «capture», the table of transitions);
+  no heartbeat (N1.4 the paragraph «У отсутствующей строки…», N3 «capture», the table of transitions);
 - sc. 15 — readable free rows: without `released` and with an empty `holder` (`gen` 7 → 8), a released one with a foreign `holder`
-  (`gen` 3 → 4); the capture writes its own `server` (Н3 «capture», the table of transitions; analysis of the review of stage B 3–5, № 6);
+  (`gen` 3 → 4); the capture writes its own `server` (N3 «capture», the table of transitions; analysis of the review of stage B 3–5, № 6);
 - sc. 16 — an occupied unreleased row of the box `otherbox`: NameOnAnotherBox — the row is the same, no heartbeat, no `worker.name_taken`
-  (Н3 «nobody and getting the name back», Н4);
+  (N3 «nobody and getting the name back», N4);
 - sc. 17 — a torn row (`until` not by the form) with a readable `gen`: not touched for 12 s, after `TORN_STILL` captured with
-  `gen` 8 (Н3 «capture», the table of transitions);
+  `gen` 8 (N3 «capture», the table of transitions);
 - sc. 18 — epoch rows before the issue: `2^53 − 1` and not a number; after the assignment of units both rows are of the same version — the issue
-  is refused before the write, 0 is not substituted (Н1.5, Н3 «take_epoch(id)», Н4);
+  is refused before the write, 0 is not substituted (N1.5, N3 «take_epoch(id)», N4);
 - sc. 19, 20 — the row `platform/schema` with `version` 2 (SCHEMA of the build 1, [the schema contract](../../../common/contracts/schema.md)):
   before the start — a start refusal with code 2, no slot; on the go — after a renewal the worker exits, the slot is not released (`released`
-  as before, the version of the row does not change), there is no heartbeat any more (Н3 «schema check by the worker»);
+  as before, the version of the row does not change), there is no heartbeat any more (N3 «schema check by the worker»);
 - sc. 21 — the row `platform/decommission/srv-a` before the start: no name, no heartbeat, no contender marks (the listing of the objects
-  door is empty); the row is removed — a new worker takes the name (Н3 «start()» step 3, Н1.4а);
-- sc. 22 — start refusals with code 2: the name from the unit names a foreign server (`w-srv-b-1`, Н3 «start()» step `2c`), `INSTANCE_ID` and
+  door is empty); the row is removed — a new worker takes the name (N3 «start()» step 3, N1.4a);
+- sc. 22 — start refusals with code 2: the name from the unit names a foreign server (`w-srv-b-1`, N3 «start()» step `2c`), `INSTANCE_ID` and
   `BOX_ID` not by the grammar ([the instance contract](../../../common/contracts/instance.md) `forms`, `sources`), `SERVER_NAME`
   not by the grammar ([the environment file contract](../../../common/contracts/env-file.md)); no slots; `w-srv-a-1` — the name of its own
   server — is taken;
 - sc. 23 — the own place `sh1` (the shelf names `srv-a`; `testsub2`: `places.lease: strict`, `lease.unconfirmed_max: 600`):
   the hold row is torn (`gen` not a number) — the worker does not rewrite it and holds the place longer than the strict window `CLOSE_BY`
-  50 s: its own place is held for `WRITE_WINDOW` + `unconfirmed_max` (Н3 «place: take, hold, let go», Н1.3 `own_place`;
+  50 s: its own place is held for `WRITE_WINDOW` + `unconfirmed_max` (N3 «place: take, hold, let go», N1.3 `own_place`;
   the outcomes `holds.outcomes.tsv`).
 
 **Scenario of 2026-10-30** (coverage audit of P/03 C11, audit-kimi `7f03ff89b`; the directives `@cut role`/`@mend role` — the dictionary of the common
 acceptance README):
-- sc. 24 — silence of the store for the role `testsubworker` (P/02.5 Н1.4): the runner's proxy accepts the connections of the worker and does not
-  forward bytes for 10 s — longer than the lease step `LEASE_EVERY` ≈ 8.3 s (Н1.2: at least one renewal and one confirmation go into
-  silence) and shorter than the lease window of 25 s from the last confirmed request (Н1.6: it was no earlier than ≈ 8.3 s before
-  the cut, the window stays open another ≈ 6.7 s after the mend). The store did not answer — «still mine» (Н3 «renew», Н4 «продление слота: хранилище не ответило»):
+- sc. 24 — silence of the store for the role `testsubworker` (P/02.5 N1.4): the runner's proxy accepts the connections of the worker and does not
+  forward bytes for 10 s — longer than the lease step `LEASE_EVERY` ≈ 8.3 s (N1.2: at least one renewal and one confirmation go into
+  silence) and shorter than the lease window of 25 s from the last confirmed request (N1.6: it was no earlier than ≈ 8.3 s before
+  the cut, the window stays open another ≈ 6.7 s after the mend). The store did not answer — «still mine» (N3 «renew», N4 «продление слота: хранилище не ответило»):
   the slot is the same (`holder`, `gen` 1, `released` false); after `@mend` — a renewal by the same holder
   (`until` changed, `gen` as before — not a new capture), the lease is confirmed (the heartbeat element has no `lease`, chapter 3.4
-  Н1.1), the epoch of the unit has the same version and number (not released and not issued anew, Н3 «lease_step()» step 4, «take_epoch»),
+  N1.1), the epoch of the unit has the same version and number (not released and not issued anew, N3 «lease_step()» step 4, «take_epoch»),
   the placement is as before. Not checked in the TSV (depends on a choice of the implementation): the count `store_errors` — the deadline of waiting for an answer
   of the client and the repeats inside a logical call are decided by the implementation ([the store client contract](../../../common/contracts/store-client.md)
-  `wait`; Н1.6 «Сетевые повторы внутри него»); the stand-in heartbeat `stood_in` — whether a step gets stuck longer than STALL 12.5 s also
-  depends on this deadline (chapter 3.4 Н3 «stand_in()»); silence longer than the window and `unconfirmed_max` — by reading (Н5 of the norms).
+  `wait`; N1.6 «Сетевые повторы внутри него»); the stand-in heartbeat `stood_in` — whether a step gets stuck longer than STALL 12.5 s also
+  depends on this deadline (chapter 3.4 N3 «stand_in()»); silence longer than the window and `unconfirmed_max` — by reading (N5 of the norms).
 
 **Coverage audit of P/03, second pass (Gemini)** (2026-10-30, the report `gemini/audit-coverage` `fad5fa2ba`, the drafts G01–G05;
 analysis by the Specification). The rows that are not written by the worker, the runner puts through the door `admin`, as in sc. 14–23; the floor of epochs — by the service
-write `op: floor` of the door `admin` (the dictionary of the common acceptance README, P/01.3 Н1.3 `floor`): the floor is an integer, at the stand
+write `op: floor` of the door `admin` (the dictionary of the common acceptance README, P/01.3 N1.3 `floor`): the floor is an integer, at the stand
 `1 << 32` = 4294967296 and `2 << 32` = 8589934592 (the form of the floor of P/01.3 — the generation `<< 32`; the epochs are computed: `max(0, 4294967296) + 1`
 = 4294967297, `max(4294967297, 8589934592) + 1` = 8589934593). The scenario names the box of the contender marks by the environment
-`BOX_ID=box1` (the dictionary, `@start worker … <NAME>=<value>`): the key of the mark is `<sub>/contenders/<name>/<box>` (Н1.4а).
-- sc. 26 — the floor before the start: the first epoch of the unit is `max(0, пол) + 1`; the floor raised on the go above the epoch — the lease step
-  confirms the lease by reading the floor, an epoch below the floor — `lost`, the unit is stopped and the epoch is released (Н3 «confirm»,
-  «lease_step()» steps 2, 4); the next pass takes a new `max(текущая, пол) + 1`, the heartbeat element — `running` under it
-  (Н1.5, Н3 «take_epoch(id)»; chapter 3.4 Н1.1 `status`);
+`BOX_ID=box1` (the dictionary, `@start worker … <NAME>=<value>`): the key of the mark is `<sub>/contenders/<name>/<box>` (N1.4a).
+- sc. 26 — the floor before the start: the first epoch of the unit is `max(0, floor) + 1`; the floor raised on the go above the epoch — the lease step
+  confirms the lease by reading the floor, an epoch below the floor — `lost`, the unit is stopped and the epoch is released (N3 «confirm»,
+  «lease_step()» steps 2, 4); the next pass takes a new `max(current, floor) + 1`, the heartbeat element — `running` under it
+  (N1.5, N3 «take_epoch(id)»; chapter 3.4 N1.1 `status`);
 - sc. 27 — the floor row is spoiled before the start (`@spoil row`: the body is not readable, the outcome of the family `epoch_floor` at `<s>worker` —
-  «строка целиком нечитаема»): the unit is assigned, the issue of the epoch is refused, the floor is not substituted by 0 — there is no epoch row (Н3
+  «строка целиком нечитаема»): the unit is assigned, the issue of the epoch is refused, the floor is not substituted by 0 — there is no epoch row (N3
   «take_epoch(id)»; P/01.3 `epoch_floor.outcomes.tsv`). Without the command `spoil-row` at the implementation — the scenario is not_executed
   (the dictionary);
 - sc. 28 — the contender marks of two states «there was no own capture»: the given name `w-1` with an unreadable `gen` — there is no candidate
   without NameOnAnotherBox, the mark `waiting` with the sought name and its holder `""`; `w-2` is occupied by an unreleased row of the box
-  `otherbox` — `refused` with `holder` and `holder_box`; no `worker.name_taken` — neither has lost a name (Н1.4а,
-  Н3 «nobody and getting the name back», Н4);
+  `otherbox` — `refused` with `holder` and `holder_box`; no `worker.name_taken` — neither has lost a name (N1.4a,
+  N3 «nobody and getting the name back», N4);
 - sc. 29 — a second copy `w-1` of the same box took the name (sc. 04): the first one has the mark `nameless` (`instance` — its own,
   `holder` — the displacing one, `holder_box` — the same box), one `worker.name_taken`; the displacing copy is stopped by
   `@sigterm` — the slot is released, the first copy returns the name by a capture (`gen` 3, `holder` — its instance) and writes
-  `worker.name_back` — after the `name_taken` of this episode (Н3 «nobody and getting the name back» `воссоединиться()`; the event journal
+  `worker.name_back` — after the `name_taken` of this episode (N3 «nobody and getting the name back» `rejoin()`; the event journal
   contract `journal`);
 - sc. 30 — readable free rows that are not in sc. 15: `released: "taking"` of a foreign box (an unfinished capture —
   free for capture, the slot contract `taking`) — `gen` 4 → 5; `released: "false"` with an empty `holder` — `gen` 6 → 7;
-  the capture writes its own `server` (Н3 «capture», the table of transitions);
+  the capture writes its own `server` (N3 «capture», the table of transitions);
 - sc. 31 — the decommission mark of the subsystem `testsub/decommissioned/srv-a` (the form of P/04 `decommissioned`): the worker `testsub` is
   nobody, there is no slot, heartbeat or contender marks; the worker `testsub2` of the same server takes the name — the mark of a foreign subsystem
-  does not concern it (Н3 «start()» step 3: `<sub>/decommissioned/<my server>`); the mark is removed — a new worker takes the name, as in
+  does not concern it (N3 «start()» step 3: `<sub>/decommissioned/<my server>`); the mark is removed — a new worker takes the name, as in
   sc. 21;
 - sc. 32 — the row `platform/decommission/srv-a` is not readable by its form (`at: "x"`): no name, no heartbeat; the row is
-  removed — the same worker takes the name (Н3 «start()» step 3 «пока она не прочтётся»; `decommission.outcomes.tsv` `<s>worker` —
+  removed — the same worker takes the name (N3 «start()» step 3 «пока она не прочтётся»; `decommission.outcomes.tsv` `<s>worker` —
   «остаётся никем до читаемой строки»);
 - sc. 33 — the capture of the released slot `t-1` of the former holder `otherbox`: before `released: "false"` the worker deletes under the guard
   the contributions of the predecessor by each `from` of the books of the manifest (`testsub2/notes/t-1`, `testsub2/rolls/t-1`: there is no row or there is
   no element of the predecessor in it — `@oneof`: the training writer of contributions `testsub2` may already have written its own row under the slot,
-  the norms of chapter 3.6 Н5); the contribution of a foreign slot
-  `testsub2/notes/t-2` is of the same version (Н3 «capture» step 4; [chapter 3.7](../../spec/03.7-worker.norms.md) Н1.2 `claim`);
+  the norms of chapter 3.6 N5); the contribution of a foreign slot
+  `testsub2/notes/t-2` is of the same version (N3 «capture» step 4; [chapter 3.7](../../spec/03.7-worker.norms.md) N1.2 `claim`);
 - sc. 34 — a foreign place `sh1` with a torn hold row (`gen` not a number, `by: t-9`): the worker does not take it either at once or
-  after `45 + HOLD_SKEW` (the row is of the same version after 62 s); a free shelf `sh2` appeared — it takes it (Н3 «место»
-  `взять_место`: the torn ones — skip; `holds.outcomes.tsv` `<s>worker`).
+  after `45 + HOLD_SKEW` (the row is of the same version after 62 s); a free shelf `sh2` appeared — it takes it (N3 «место»
+  `take_slot`: the torn ones — skip; `holds.outcomes.tsv` `<s>worker`).
 
 Not taken from the second pass (the analysis is in the commit): the check of `W2C_MANIFEST_REV` at the start (the stand starts the worker not
-by the runner `w2c-run.sh`, the variable is not set — the program does not check, Н3 «start()» step 1, C03-MANIFEST-REV-UNSET-01;
-P/02.3 Н3 step 4 — the system acceptance, sc. 08 `@manual`).
+by the runner `w2c-run.sh`, the variable is not set — the program does not check, N3 «start()» step 1, C03-MANIFEST-REV-UNSET-01;
+P/02.3 N3 step 4 — the system acceptance, sc. 08 `@manual`).
 
 **Scenario 44** (the draft G05c of the second pass of Gemini `fad5fa2ba`, rewritten into the form of acceptance by the Architect's decision of
 2026-10-30, the questions of norms of the Gemini audit, P/03 item 1; C03-PLACE-PULSE-LIVE-ROW-01):
@@ -146,7 +146,7 @@ P/02.3 Н3 step 4 — the system acceptance, sc. 08 `@manual`).
   version (`holder` — the instance of `t-2`, not `released`), its heartbeat is spoiled by `@spoil object` (the writer is stopped). The worker
   `t-1` of the same server is the taker: the place of another name is not taken at once, it waits `45 + HOLD_SKEW` without changes of the row by
   its own clock from the first look. 30 s after the capture of the slot by `t-1` the row is still in effect — the heartbeat of the holder is read,
-  it is unreadable: the place is not taken, the row is of the same version (an unreadable heartbeat is not «пульс не свеж», Н3 «место» `взять_место`;
+  it is unreadable: the place is not taken, the row is of the same version (an unreadable heartbeat is not «пульс не свеж», N3 «место» `take_slot`;
   `heartbeats.outcomes.tsv` `<s>worker`). The row has stood for 50 s — it is no longer in effect by itself: the place is free by the row,
   the heartbeat is not read — `t-1` takes `sh1` (`gen` 2, `by: t-1`, a new `holder`) and names the shelf in the heartbeat. The draft expected
   the opposite (the place is not taken even after 60 s) — by the decision this is wrong.
@@ -159,7 +159,7 @@ of the acceptance of М10/05 (removed by the move), at the beginning of this log
 
 ## Scenario boundaries
 
-Between scenarios the runner stops all the processes it started, resets the store (rows and objects) and the variables `$имя`: each scenario begins with an empty store, there is no slot `w-1`, the console is restarted.
+Between scenarios the runner stops all the processes it started, resets the store (rows and objects) and the variables `$name`: each scenario begins with an empty store, there is no slot `w-1`, the console is restarted.
 
 ## Exact preparation and completion
 
@@ -171,7 +171,7 @@ the read role of the store has access to testsub/ and testsub2/. The preparation
 
 All the workers of a scenario have the constant BOX_ID of the stand and server = srv-a, except `@start worker … on <server>` (the dictionary of the common acceptance README; analysis of the review of stage B 3–5, № 33) and the environment `<NAME>=<value>` of sc. 22; each copy gets a new
 instance. The name is passed by the substitution `{name}` of the directive (the common acceptance README, «Stand»; analysis of the review of stage B 3–5, № 33). A decreasing memory budget is not provoked: the chosen
-CAPACITY/WORKER_MEMORY_MB must satisfy Н1.2 of chapter 3.4. The ordinary configuration of testsub uses
+CAPACITY/WORKER_MEMORY_MB must satisfy N1.2 of chapter 3.4. The ordinary configuration of testsub uses
 safe defaults; the parameters of the stand-in and of the deadlines are not accelerated for the sake of the test.
 
 @start confirms the start of the process, the readiness of the slot is checked by the following @until.
@@ -187,7 +187,7 @@ and only then deletes the state. A parallel scenario uses other ports and direct
 
 The TSV header and comments are skipped. The step numbers are continuous inside a scenario.
 @until repeats only the nested request and the comparison up to the limit; an exhausted limit — FAIL.
-The directive ASSERT compares bound values: `$имя` is bound at its first appearance, then compared.
+The directive ASSERT compares bound values: `$name` is bound at its first appearance, then compared.
 The new bindings of variables of each comparison attempt are first temporary: they become common only
 after the match of the code and of the whole expect. A repeat of a variable inside expect is compared with its temporary
 value. A failure of any field, type, array element or code discards all the new bindings of this
@@ -204,7 +204,7 @@ The scenarios observe rows and HTTP answers, not the contents of the heartbeat o
 of a unit. A change of the epoch/assignment by itself does not prove that the old process has stopped working.
 05-sigkill proves the invariance of the row during the observed 20 s after the crash,
 not the common boundary of 90 s: the controller may get a reliable gone earlier. The other evidence is
-Н5 of the norms, including another box and the closing of the place writer.
+N5 of the norms, including another box and the closing of the place writer.
 
 ## Checks outside TSV after run 25
 
@@ -243,7 +243,7 @@ the data, and the change of revision waits for a confirmation; after it the rest
 
 ## Additional check of the class of errors of run 36 (Kimi)
 
-By reading, reconcile all the producers of marks: NameOnAnotherBox gives refused; another case of the absence of a candidate — waiting until one's own first capture and nameless after the loss of the former one. The priority of refused is kept. The check of a schema above the build on renewal gives fenced without rejoin (Н3 «schema check by the worker»; the owner of the schema row — P/06.6).
+By reading, reconcile all the producers of marks: NameOnAnotherBox gives refused; another case of the absence of a candidate — waiting until one's own first capture and nameless after the loss of the former one. The priority of refused is kept. The check of a schema above the build on renewal gives fenced without rejoin (N3 «schema check by the worker»; the owner of the schema row — P/06.6).
 
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
 
@@ -255,13 +255,13 @@ Moved from the acceptance README of М10/03 with the move of lesson 6 (stage B):
 ### Additional checks R29 — slot, epoch, guard, holds
 
 For each case — a separate instance with testsub, empty rows and claim memory, the needed rights and a store with
-a full key limit of 1024 UTF-8 bytes; there is no narrower file limit (P/06.1 Н1.3).
+a full key limit of 1024 UTF-8 bytes; there is no narrower file limit (P/06.1 N1.3).
 
 | Preparation and action | Expected outcome |
 |---|---|
 | The name w- + 1007/1008 letters (the full testsub/slots/… — 1023/1024), then w- + 1009 letters (1025) | The first two pass the limit of the string key and are captured; the last one — a refusal of the candidate without the first write. A given name stays nobody, the automatic search checks the next candidate; an error of a newly computed name ends the search |
 | Badkey after the first write of the capture; separately on renewal; separately at the target key of a write under the slot | The capture does not give out a live slot and does not roll back what was confirmed; the renewal loses the name; the target write is refused, the key error by itself does not prove the loss of the slot |
-| Badkey at the guard key; separately at the issue/confirmation of the epoch; separately at holds | The guard does not admit the write; the issue of the epoch does not start the unit, the confirmation — fenced; the taking of holds is refused, the renewal loses the place per [P/03.2 Н3 «place: take, hold, let go»](../../spec/03.2-worker.norms.md); the refusal does not turn into silent |
+| Badkey at the guard key; separately at the issue/confirmation of the epoch; separately at holds | The guard does not admit the write; the issue of the epoch does not start the unit, the confirmation — fenced; the taking of holds is refused, the renewal loses the place per [P/03.2 N3 «place: take, hold, let go»](../../spec/03.2-worker.norms.md); the refusal does not turn into silent |
 
 ### Counterexamples of run 23 — slot and lease
 
@@ -269,7 +269,7 @@ For slots and the lease — a worker and controlled clocks/delays.
 
 | Norm | Initial state and intervention | Expected observation |
 |---|---|---|
-| P/03.2-02 | The preferred name is held by a live instance of another box | NameOnAnotherBox: the process is nobody, the mark refused (without `worker.name_taken` — it is only on the loss of the name, [P/03.2 Н3 «nobody and getting the name back»](../../spec/03.2-worker.norms.md)), another name is not taken |
+| P/03.2-02 | The preferred name is held by a live instance of another box | NameOnAnotherBox: the process is nobody, the mark refused (without `worker.name_taken` — it is only on the loss of the name, [P/03.2 N3 «nobody and getting the name back»](../../spec/03.2-worker.norms.md)), another name is not taken |
 | P/03.2-02 | B on its first start takes the given name from A of the same box; A after the loss searches for its name again | A stays nobody: the right of the first start is not restored; the live slot of B is not rewritten |
 | P/03.2-01, -02 | gen = bad, the row is still for 50 s; separately — gen = 7 and a torn until, also 50 s; separately — an absent row | unreadable gen: the candidate is refused, the row does not change (also on a release by the controller); readable gen: a new 8; absence: the first 1 |
 | P/03.2-05 | the write is prepared with the guard v1; one's own renewal gives v2 with the same holder/gen; separately — v2 was written by another holder | in both cases the late write gets 412 and changes nothing; the re-read keeps the name in the first case and fences off in the second; the repeat uses a fresh check, not the old guard |
@@ -315,7 +315,7 @@ These are the checks P/03.2-01, -02, -03; the 53 HTTP steps of the units door do
 | There is a digit suffix of 100 nines and its variant with a leading zero; a process without a name has reached a new name | The numbers are equal, the order distinguishes the full names; the new suffix — 1 and 100 zeros, without overflow. w-0 and leading zeros do not change the admissible grammar |
 
 Also checked are the positive neighbouring transitions: the process takes a free slot;
-the first start on its own box keeps the right of Н3; a repeated search does not get such a right;
+the first start on its own box keeps the right of N3; a repeated search does not get such a right;
 a fresh names_given permits an occupied slot, a stale one does not. Both writes of the capture
 and the guard of the cleanup are applied; the table of admission does not make them one atomic operation.
 
@@ -326,12 +326,12 @@ NameOnAnotherBox includes an occupied unreleased lapsed row of another box; the 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
 Waiting for an event is `@until`: sc. 01 step 4 waits for the first renewal after step 3 (`until` ≠ `$u0`), step 6 — for the second
-(`until` ≠ `$u1`; LEASE_EVERY ≈ 8.3 s, Н1.2 of the chapter; review of stage B 1–2, item 3). The remaining sleeps are a check of absence or the time before an action; the length is the smallest by the deadlines of Н1.2:
+(`until` ≠ `$u1`; LEASE_EVERY ≈ 8.3 s, N1.2 of the chapter; review of stage B 1–2, item 3). The remaining sleeps are a check of absence or the time before an action; the length is the smallest by the deadlines of N1.2:
 
 | Sc./step | Sleep | Reason |
 |---|---|---|
 | 04/11, 10/11 | 12 s | absence: the displaced copy does not take the name back; a repeat of the name search — once per CONTEND_EVERY 10 s |
-| 05/6 | 20 s | absence: after SIGKILL the slot is not released and not renewed (the deadline is named in Н5, sc. 05) |
+| 05/6 | 20 s | absence: after SIGKILL the slot is not released and not renewed (the deadline is named in N5, sc. 05) |
 | 08/9 | 12 s | absence: `gen` does not grow — a repeated capture would be visible within a lease step ≈ 8.3 s |
 | 09/3 | 12 s | absence: there are no slots under the wrong name — by this deadline the capture at the start would already have passed (a correct worker holds the slot by the step `@until 20`) |
 | 10/14 | 12 s | absence: there is no second row `worker.name_taken` — a repeat of the mark would come after CONTEND_EVERY 10 s |
@@ -347,7 +347,7 @@ Waiting for an event is `@until`: sc. 01 step 4 waits for the first renewal afte
 | 23/11 | 60 s | absence: the place is held even after the strict window — a strict one is released by `CLOSE_BY` 50 s from the last confirmation (≤ 8.3 s before the spoiling), the heartbeat — after HEARTBEAT_EVERY 10 s; together with 23/8 — 72 s |
 | 24/9 | 10 s | time of silence: longer than the lease step LEASE_EVERY ≈ 8.3 s (the renewal goes into silence) and shorter than the lease window of 25 s minus the step (25 − 8.3 ≈ 16.7 s): the lease does not expire before the mend |
 | 27/9, 31/6, 32/4 | 12 s | absence: there is no epoch row — the worker sees the assignment within LEASE_EVERY ≈ 8.3 s and the pass POLL ~2 s (as 18/10); there is no slot — the capture at the start and the repeat of the search (CONTEND_EVERY 10 s) would have passed (as 21/4) |
-| 34/5 | 12 s | absence: the worker would have taken a free place at the first lease step after the capture of the slot (≈ 8.3 s; Н3 «lease_step()» step 6) |
+| 34/5 | 12 s | absence: the worker would have taken a free place at the first lease step after the capture of the slot (≈ 8.3 s; N3 «lease_step()» step 6) |
 | 34/7 | 50 s | absence: the foreign place is free, having stood without changes 45 + HOLD_SKEW = 50 s by the clock of the taker; together with 34/5 — 62 s: and the torn one is not taken after this deadline either |
 
 SDK tests at the seams are in [seams.tsv](seams.tsv); their adapter contract is [forms/README.md](../../forms/README.md). They supplement the process scenarios and do not change the counts above or replace a reading witness they do not execute.

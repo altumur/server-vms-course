@@ -265,7 +265,7 @@ scenario	step	request	expect
 38-holds-garbled-row	2	@append event testsub2/t1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-7465737473756232-7431-1-70726f6265-1"}	ok
 38-holds-garbled-row	3	@start resource	ok
 38-holds-garbled-row	4	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"garbled_rows": {"notches": 1}}
-# 39-settings-unread (G06 part 3; Н1.4 space, mirror, В7 item 3 П1): platform/space and platform/mirror with enabled out of form — the rows are unreadable: settings_unread [mirror, space], the relieve step is not executed — its own row free-* is not written
+# 39-settings-unread (G06 part 3; N1.4 space, mirror, В7 item 3 П1): platform/space and platform/mirror with enabled out of form — the rows are unreadable: settings_unread [mirror, space], the relieve step is not executed — its own row free-* is not written
 39-settings-unread	1	admin POST /v1/write {"id":"73901","op":"put","key":"platform/space","items":{"enabled":"maybe","high":"0.0000001","low":"0.00000001"},"cas":""}	200
 39-settings-unread	2	admin POST /v1/write {"id":"73902","op":"put","key":"platform/mirror","items":{"enabled":"maybe"},"cas":""}	200
 39-settings-unread	3	@start resource	ok

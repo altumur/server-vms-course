@@ -7,7 +7,7 @@
 P/05 (`05-resource/data/events-*.schema.json`: `events-unit`, `events-unit-alarms`, `events-audit`,
 `events-audit-alarms`, `events-console`, `events-console-alarms`, `events-mirror`). Участники — писатели и читатели
 деревьев событий и объектов: воркер, консоль, контроллер, ресурс ([P/05](../../../../05-resource/ru/spec/05-resource.norms.md)
-Н1.1, Н1.2, Н1.4). Байты пишет «Спецификация».
+N1.1, N1.2, N1.4). Байты пишет «Спецификация».
 
 ## `bucket.tsv`
 
@@ -59,7 +59,7 @@ name_file}`: исходный компонент и нынешнее содер�
 `years.tsv`, `append.tsv` и `names.tsv` строки `write-*` — писатели корней событий и объектов: воркер (`03-worker`,
 `observe`), консоль (`06-console`, журнал и отметки) и каждая роль со своим журналом `audit` (`04-controller`,
 `05-resource`, `08-domain`, `09-agent`, `10-domain-console`); `modes.tsv` — создатель пути строки: корни
-(`events-root`, `resource-root`) — установщик (`02-installer`, P/02.4 Н1.2), `.workers`, замок и дерево `testsub`
+(`events-root`, `resource-root`) — установщик (`02-installer`, P/02.4 N1.2), `.workers`, замок и дерево `testsub`
 (`workers-dir`, `workers-sub`, `lock-file`, `tree-dir`, `unit-dir`, `bucket-one-writer`) — воркер (`03-worker`),
 `audit-bucket` — консоль (`06-console`); `audit-resource-bucket` — ресурс (`05-resource`) (ACC-VECTORS-CONNECT-03: строку исполняет роль, чья норма вызывает её функцию; решение «Архитектора» 2026-10-26).
 

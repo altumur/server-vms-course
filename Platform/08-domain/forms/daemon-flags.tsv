@@ -4,24 +4,24 @@
 # $NAME remains environment. Empty bad never waives the imported role, instance, box/server, alias, ring, catalogue, kit, port, address or trust rules.
 # Environment/file precedence and W2C_ROLE presence are enforced by the launcher contract; this table does not invent new process-start failures for operation-time unknown inputs.
 flag	type	default	default_text	required	commands	bad	norm
-$W2C_ROLE	string	-	the unit supplies domain; the launcher requires the unit role	false	domain	f["$W2C_ROLE"] != "domain"	common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$PLATFORM_DIR	dir	/data/platform	/data/platform	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$PLATFORM_STORE	string	-	file://<PLATFORM_DIR>/config; the unit uses the domain role socket	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$OBJECTS	string	-	file://; with configstore: cluster://; aliases must agree	false	domain	"$OBJECTS" in f && "$PLATFORM_OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$PLATFORM_OBJECTS	string	-	file://; with configstore: cluster://; aliases must agree	false	domain	"$OBJECTS" in f && "$PLATFORM_OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$RESOURCE_ROOT	dir	-	<PLATFORM_DIR>/events; aliases must agree	false	domain	"$RESOURCE_ROOT" in f && "$EVENTS" in f && f["$RESOURCE_ROOT"] != f["$EVENTS"]	common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$EVENTS	dir	-	<PLATFORM_DIR>/events; aliases must agree	false	domain	"$RESOURCE_ROOT" in f && "$EVENTS" in f && f["$RESOURCE_ROOT"] != f["$EVENTS"]	common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$SECRETS_KEY	string	-	<PLATFORM_DIR>/etc/secrets/platform.key; placement/rights/readability by the secret-files contract	false	domain		P/08.2 Н1.3–Н1.4; common/contracts/secret-files.md; lifecycle.md: Directories and files
-$SIGNER_HOST	string	0.0.0.0	0.0.0.0; an implicit wildcard without a kit refuses start, explicit nonloopback without a kit logs loudly	false	domain		P/02.4 Н1.6 process, Н1.12; P/08.0 Н1.6; lifecycle.md: Environment
-$SIGNER_PORT	string	8445	8445; port spelling and listener validation by the cited norm	false	domain		P/02.4 Н1.6, Н1.12; lifecycle.md: Environment
-$SIGNER_URL	string	http://localhost:8445	http://localhost:8445 on the single-box stand; a holder URL reaching any holder node	false	domain		P/08.8 Н1.1; P/08.10 Н1.7; common/contracts/record.md; lifecycle.md: Environment
-$DOMAIN_CONSOLE_URL	string	-	absent: no known domain-console door; with a kit own-client https/name rules apply	false	domain		P/08.1 Н1.4 url; common/contracts/forwarding.md; lifecycle.md: Environment
-$CLUSTER	string	local	local	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2; P/08.1 Н1.1
-$CLUSTERS	string	-	absent/empty: empty list; malformed input remains unconfirmed at its operation, not an invented empty list	false	domain		P/08.8 Н1.6–Н1.8; common/contracts/forwarding.md; common/contracts/env-file.md: CLUSTERS
-$BOX_ID	string	-	nonempty BOX_ID; otherwise machine-id, then hostname, by the box resolver	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2; common/contracts/instance.md
-$SERVER_NAME	string	-	short hostname; validate the supplied name by the environment contract	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$INSTANCE_ID	string	-	absent or empty: computed <box>:<pid>:<6hex>; supplied nonempty: preserve the accepted spelling	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2; common/contracts/instance.md; P/08.10 Н1.7
-$W2C_TLS_DIR	dir	-	Linux /etc/w2c/tls; macOS <W2C_BOX>/tls; own kit domain	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2; P/02.4 Н1.6
+$W2C_ROLE	string	-	the unit supplies domain; the launcher requires the unit role	false	domain	f["$W2C_ROLE"] != "domain"	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$PLATFORM_DIR	dir	/data/platform	/data/platform	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$PLATFORM_STORE	string	-	file://<PLATFORM_DIR>/config; the unit uses the domain role socket	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$OBJECTS	string	-	file://; with configstore: cluster://; aliases must agree	false	domain	"$OBJECTS" in f && "$PLATFORM_OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$PLATFORM_OBJECTS	string	-	file://; with configstore: cluster://; aliases must agree	false	domain	"$OBJECTS" in f && "$PLATFORM_OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$RESOURCE_ROOT	dir	-	<PLATFORM_DIR>/events; aliases must agree	false	domain	"$RESOURCE_ROOT" in f && "$EVENTS" in f && f["$RESOURCE_ROOT"] != f["$EVENTS"]	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$EVENTS	dir	-	<PLATFORM_DIR>/events; aliases must agree	false	domain	"$RESOURCE_ROOT" in f && "$EVENTS" in f && f["$RESOURCE_ROOT"] != f["$EVENTS"]	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$SECRETS_KEY	string	-	<PLATFORM_DIR>/etc/secrets/platform.key; placement/rights/readability by the secret-files contract	false	domain		P/08.2 N1.3–N1.4; common/contracts/secret-files.md; lifecycle.md: Directories and files
+$SIGNER_HOST	string	0.0.0.0	0.0.0.0; an implicit wildcard without a kit refuses start, explicit nonloopback without a kit logs loudly	false	domain		P/02.4 N1.6 process, N1.12; P/08.0 N1.6; lifecycle.md: Environment
+$SIGNER_PORT	string	8445	8445; port spelling and listener validation by the cited norm	false	domain		P/02.4 N1.6, N1.12; lifecycle.md: Environment
+$SIGNER_URL	string	http://localhost:8445	http://localhost:8445 on the single-box stand; a holder URL reaching any holder node	false	domain		P/08.8 N1.1; P/08.10 N1.7; common/contracts/record.md; lifecycle.md: Environment
+$DOMAIN_CONSOLE_URL	string	-	absent: no known domain-console door; with a kit own-client https/name rules apply	false	domain		P/08.1 N1.4 url; common/contracts/forwarding.md; lifecycle.md: Environment
+$CLUSTER	string	local	local	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 N1.2; P/08.1 N1.1
+$CLUSTERS	string	-	absent/empty: empty list; malformed input remains unconfirmed at its operation, not an invented empty list	false	domain		P/08.8 N1.6–N1.8; common/contracts/forwarding.md; common/contracts/env-file.md: CLUSTERS
+$BOX_ID	string	-	nonempty BOX_ID; otherwise machine-id, then hostname, by the box resolver	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 N1.2; common/contracts/instance.md
+$SERVER_NAME	string	-	short hostname; validate the supplied name by the environment contract	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$INSTANCE_ID	string	-	absent or empty: computed <box>:<pid>:<6hex>; supplied nonempty: preserve the accepted spelling	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 N1.2; common/contracts/instance.md; P/08.10 N1.7
+$W2C_TLS_DIR	dir	-	Linux /etc/w2c/tls; macOS <W2C_BOX>/tls; own kit domain	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 N1.2; P/02.4 N1.6
 $W2C_ENV	file	/etc/w2c/w2c.env	/etc/w2c/w2c.env; the launcher reads it, never sources it	false	domain		common/contracts/env-file.md: Files and reading order
-$BUILD	string	dev	dev	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2; common/contracts/schema.md
-<name>	string	-	the required person name for the implementation-chosen first-admin invocation	true	first-admin	f["<name>"] == ""	P/08.4 Н1.9 first-admin; P/08.4 Н1.1 name; lifecycle.md: Open
+$BUILD	string	dev	dev	false	domain		common/contracts/env-file.md: Environment variables; P/02.4 N1.2; common/contracts/schema.md
+<name>	string	-	the required person name for the implementation-chosen first-admin invocation	true	first-admin	f["<name>"] == ""	P/08.4 N1.9 first-admin; P/08.4 N1.1 name; lifecycle.md: Open

@@ -4,15 +4,15 @@ This English text is the source; the Russian translation `ru/contracts/log-mask.
 
 A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): all processes of the platform write the mask into the log — the console,
 the worker, the resource, the domain processes; a contract, not copies in chapters; the stage C guess C06-LOG-MASK-33-01, the
-Architect's decision of 2026-10-25). The owner is chapter [P/06.2](../../06-console/spec/06.2-console.norms.md) of the console (Н1.4 `never`
-`log`). The participants are all processes of the platform that write a log (id-map: М10/7-08 → P/06.2-05, «все процессы»). The parsing
+Architect's decision of 2026-10-25). The owner is chapter [P/06.2](../../06-console/spec/06.2-console.norms.md) of the console (N1.4 `never`
+`log`). The participants are all processes of the platform that write a log (id-map: M10/7-08 → P/06.2-05, «all processes»). The parsing
 of an address, of pairs and the field rule are [the address contract](url-credentials.md) (A1–A15); here is the function masking free text
 as a whole.
 
-Moved from P/06.2 Н1.4 `log` and the lines of the address contract about free text (A1, A2) without a change of behaviour; P/06.2 and
+Moved from P/06.2 N1.4 `log` and the lines of the address contract about free text (A1, A2) without a change of behaviour; P/06.2 and
 the address contract refer here.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Function
 
@@ -43,7 +43,7 @@ pair:      a pair `name=value` with a secret name — by the address contract A1
 json:      a JSON pair `"name": value` with a secret name (spaces around `:` are admissible): the scalar of the value, a string — up to its
            closing unescaped quote, is replaced by "***"; an empty string stays empty; a scalar is one token
            of JSON (a number, true, false, null), the character after it stays: {"password": 1234;} → {"password": "***";} (reconciliation of python
-           and go М10/6–11, S18)
+           and go M10/6–11, S18)
 address:   an address in the text — by the address contract A1–A15 (a password in userinfo, in a pair, in the head, in a nested address — the mask where
            it stands; the login is shown as written); in free text an address ends at a space, a quote, `\`, `<`
            or `>` (A2)
@@ -60,18 +60,18 @@ value, a Digest hash, pairs without a secret name, an address without a password
 ## Where it applies
 
 Every line of the journal (log) of a process of the platform. The places where there is no secret at all are the block `never` below, moved from
-[P/06.2](../../06-console/spec/06.2-console.norms.md) Н1.4 without a change (layout audit, the Architect's decision of 2026-10-25, B-30): the journal `audit`, the heartbeat, the snapshot,
+[P/06.2](../../06-console/spec/06.2-console.norms.md) N1.4 without a change (layout audit, the Architect's decision of 2026-10-25, B-30): the journal `audit`, the heartbeat, the snapshot,
 argv and the text of a refusal contain no values — this is a rule of the places of writing, not a mask.
 
 ```yaml
 never:
   reply:     201/200/GET — the mask at any depth; tables — the field is absent
   idem:      the copy of an answer for a repeat — with the mask
-  snapshot:  addresses — with the mask; the exclusion of *_secret fields and the load refusal — P/02.1 Н1.3а
-  domain:    an edit of a member with *_secret at any depth — 400; the load refusal — P/02.1 Н1.3а
+  snapshot:  addresses — with the mask; the exclusion of *_secret fields and the load refusal — P/02.1 N1.3a
+  domain:    an edit of a member with *_secret at any depth — 400; the load refusal — P/02.1 N1.3a
   journal:   field names, not values
   heartbeat: the envelope, not the value; the status element of a unit tells by the field why "the password does not open: <cause
-             open_without P/03.5 Н1.2>", not the password (reconciliation of python and go М10/6–11, S19; when — P/03.5 Н3 «open»)
+             open_without P/03.5 N1.2>", not the password (reconciliation of python and go M10/6–11, S19; when — P/03.5 N3 «open»)
   log:       the log mask — this contract: the headers Authorization and
              Proxy-Authorization (Basic/Bearer), pairs with a secret name (`name=value` and a JSON pair), addresses (moved
              there without a change of behaviour; C06-LOG-MASK-33-01)
@@ -81,13 +81,13 @@ never:
 
 ## Mask at the input
 
-From P/06.2 Н1.1 `mask_in` without a change (layout audit, the Architect's decision of 2026-10-25, A-21); the white-space characters are [the person name contract](person-name.md)
-«White space» (`white_space`). The refusal of a write with such a value is P/06.2 Н4.
+From P/06.2 N1.1 `mask_in` without a change (layout audit, the Architect's decision of 2026-10-25, A-21); the white-space characters are [the person name contract](person-name.md)
+«White space» (`white_space`). The refusal of a write with such a value is P/06.2 N4.
 
 ```yaml
 mask_in: a value of ≥ 3 characters of the set «* ＊ ∗ ⁎ ✱ • ● ∙ · ⋅ ◦ ○ ⚫» (white-space characters at the edges do not count — any characters
          of the set white_space of the person name contract: space, tab, U+00A0 and others; "\t***" and " ***" — a mask) — a refusal;
-         a***b — a password (reconciliation of python and go М10/6–11, S12)
+         a***b — a password (reconciliation of python and go M10/6–11, S12)
 ```
 
 ## Vectors
@@ -100,6 +100,6 @@ Architect's decision of 2026-10-27; the catalogue rule — the field declaration
 
 ## Correspondence to former lessons
 
-From P/06.2 Н1.4 `log` (the norm P/06.2-05 — by `note` of [id-map](../id-map.tsv); formerly М10/7 Н1.4 `log` and the common table
+From P/06.2 N1.4 `log` (the norm P/06.2-05 — by `note` of [id-map](../id-map.tsv); formerly M10/7 N1.4 `log` and the common table
 `Source/tests/testdata/log_mask.tsv`, the bytes of the package coincide with it) and the address contract A1, A2 (free text); they
 refer here. The package is moved from `Platform/06-console/vectors/log-mask/` (C06-LOG-MASK-33-01).

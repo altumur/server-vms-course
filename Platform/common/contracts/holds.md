@@ -4,18 +4,18 @@ This English text is the source; the Russian translation `ru/contracts/holds.md`
 
 A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies in
 chapters; the stage C guess R05-G06, the Architect's decision of 2026-10-23). The owner is lesson P/06, [chapter 6.4](../../06-console/spec/06.4-console.norms.md)
-Н1.5 `holds`. The rows of the hold table are written by the table door of the console ([P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.6); the holds
-are read by the resource in the term pass ([P/05](../../05-resource/spec/05-resource.norms.md) Н3 «resource pass» `retain`; the rights —
-[P/02.5](../../02-installer/spec/02.5-installer.norms.md) Н1.4, the row `resource`: «the table `holds`, the rows of manifests with
+N1.5 `holds`. The rows of the hold table are written by the table door of the console ([P/06.1](../../06-console/spec/06.1-console.norms.md) N1.6); the holds
+are read by the resource in the term pass ([P/05](../../05-resource/spec/05-resource.norms.md) N3 «resource pass» `retain`; the rights —
+[P/02.5](../../02-installer/spec/02.5-installer.norms.md) N1.4, the row `resource`: «the table `holds`, the rows of manifests with
 `about`»). The form of the section in the manifest and the reference checks by the loader are [P/02.1](../../02-installer/spec/02.1-installer.norms.md)
-Н1.2 `holds`, references 50–54. Decisions (for the human): ADR-0057
+N1.2 `holds`, references 50–54. Decisions (for the human): ADR-0057
 (the addendum of 2026-10-10 — `released`), ADR-0091 item 8 (the hold «about»).
 
-Moved from P/06.4 Н1.5 `holds` and `about` without a change of behaviour; added are the rules of reading the window and the addressee with an incomplete
-declaration and unreadable rows — in them the rule «an unknown read is not equal to absence» applies (P/05 Н1.3 `retention`
+Moved from P/06.4 N1.5 `holds` and `about` without a change of behaviour; added are the rules of reading the window and the addressee with an incomplete
+declaration and unreadable rows — in them the rule «an unknown read is not equal to absence» applies (P/05 N1.3 `retention`
 `rule`): what is not read reliably is held.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -29,7 +29,7 @@ heartbeat — the family `resource-heartbeat`: `Platform/05-resource/data/resour
 holds:      a section of the manifest <M>: {table, unit, since, until, longest?, released?} — names: table — a table of the manifest
             (tables.<table>), unit, since, until, released — fields of this table; longest — seconds, a number > 0
   complete: the declaration is complete when table, unit, since and until are named; longest and released are optional
-            (ADR-0057: longest?, released?); the loader accepts the section without them too (P/02.1 Н1.2: all keys are optional)
+            (ADR-0057: longest?, released?); the loader accepts the section without them too (P/02.1 N1.2: all keys are optional)
   partial:  the declaration is incomplete — the holds of the manifest are not read: the resource removes nothing by term in the trees of the addressee
             (below); a manifest without the section holds has no holds
 addressee:  A — the subsystem of the addressee: about.sub of the manifest <M> if <M> declares about, otherwise <M> itself
@@ -71,14 +71,14 @@ The row is not released (`released` above):
 | the addressee — not | all buckets of the trees of the addressee |
 
 Holds — the bucket is not removed by term (`retain`); the other term rules (days, the floor of the console marks, the hour of mirror copies —
-P/05 Н1.3 `retention`, Н3 `retain`) apply to the buckets that no row holds. A row whose addressee or window is not read
-and which is not released is counted in `garbled_rows.<table>` of the resource heartbeat (P/05 Н1.4).
+P/05 N1.3 `retention`, N3 `retain`) apply to the buckets that no row holds. A row whose addressee or window is not read
+and which is not released is counted in `garbled_rows.<table>` of the resource heartbeat (P/05 N1.4).
 
 ## Reading the table
 
 The resource reads the rows `<M>/<table>/` by a store listing in every term pass. The listing is not received whole (a store
 error, a cut, a rights refusal) — the holds are not read: remove nothing in the trees of the addressee in this pass, the reason in the
-heartbeat (P/05 Н4, the row «retention: … holds failed to read»). An empty complete listing — there are no holds.
+heartbeat (P/05 N4, the row «retention: … holds failed to read»). An empty complete listing — there are no holds.
 
 ## Vectors
 
@@ -90,5 +90,5 @@ by reading; the removal by term too: the stand does not wait out the term of buc
 
 ## Correspondence to former lessons
 
-From P/06.4 Н1.5 (`holds`, `about`): the declaration, `released`, the window, `longest`, the hold «about» (the norm P/06.4-08 — by `note` of
-[id-map](../id-map.tsv)). P/06.4 Н1.5 and P/05 Н3 `retain` refer here.
+From P/06.4 N1.5 (`holds`, `about`): the declaration, `released`, the window, `longest`, the hold «about» (the norm P/06.4-08 — by `note` of
+[id-map](../id-map.tsv)). P/06.4 N1.5 and P/05 N3 `retain` refer here.

@@ -1,0 +1,13 @@
+# P/09 kit assistance is not full process/domainstand acceptance; every stage is kit=-.
+n	stage	goal	norms	gate	weight	kit	parts	depends	when
+1	foundation	Process inputs, catalogue families, refusal catalogue and constants	P/09.1-R002; forms/daemon-flags.tsv; forms/refusals.tsv; forms/runtime-constants.tsv	build	2	-	flags,refusals,families	-	true
+2	join_keys	Actual admission, root pinning and member-key reads	P/09.1-R003; P/09.1-R010; P/09.1-R015	tests:9.1:s1-no-road,s2-https-relay-member,s3-join-same-another,s4-key-pair:seams	4	-	stagetests	1	true
+3	turn	Standby, token service, guarded writes and mutable-object/release races	P/09.1-R016; P/09.1-R018	tests:9.1:s5-standby-token,s6-unknown-guard,s7-object-race,s8-release-race:seams	5	-	stagetests	2	true
+4	publication	Confirmed base, contribution liveness and real envelope reuse	P/09.1-R004; P/09.1-R019	tests:9.1:s9-prior-confirmed,s10-prior-deleted,s11-slot-race,s12-seal-reuse-rotation,s13-no-book-seal,s14-ring-unopened:seams	5	-	vectors,stagetests	3	true
+5	carry	Trust precedes confirmation; actual home failure, m1 and freshness	P/09.1-R007; P/09.1-R019	tests:9.1:s15-trusted-home-failure,s16-rejected-carry,s17-m1-unopened,s18-relay-age,s30-placed-at-exponent,s31-placed-at-digits,s32-placed-at-upper-exponent,s33-placed-at-trailing-zero,s34-placed-at-nonnumeric,s35-anywhere-hash-as-of,s36-anywhere-hash-jcs,s37-anywhere-hash-doc-only,s38-anywhere-hash-mismatch:seams	5	-	families,stagetests	4	true
+6	edits	Unconfirmed outcomes and common-path serialization	P/09.1-R008	tests:9.1:s19-outcomes-unreadable,s20-same-path:seams	4	-	stagetests	5	true
+7	local_token	Real local token reply validation and no-queue relay mapping	P/09.1-R009; P/09.1-R014	tests:9.1:s21-token-request-id,s22-token-relay-no-answer:seams	4	-	door,stagetests	6	true
+8	following	Fixed own-term evidence and actual road fallback	P/09.1-R011; P/09.1-R021	tests:9.1:s23-own-term-boundary,s24-road-fallback:seams	5	-	vectors,stagetests	7	true
+9	copies	Real checksum refusal, deferred cleanup and alarm assembly failure	P/09.1-R012; P/09.1-R013; P/09.1-R024; P/09.1-R025	tests:9.1:s25-backup-checksum,s26-shared-cleanup,s27-shared-unknown,s28-alarm-retain,s29-alarm-no-prior:seams	5	-	families,stagetests	8	true
+10	relay	Real first batch, shared reception, late-answer memory and token bytes	P/09.2-R002; P/09.2-R007; P/09.2-R008	tests:9.2:s1-body-before-signature,s2-first-answer,s3-empty-first-batch,s4-heard-body-hash,s5-late-batch,s6-busy-base,s7-token-bytes,s8-memory-restart:seams	6	-	door,stagetests	9	true
+11	complete_agent	All ordinary process scenarios, assigned vectors, neighbours and reading	P/09.1-R027; P/09.2-R010; common/vectors/consumers.tsv	accept:9.1:*;accept:9.2:*	6	-	-	10	true

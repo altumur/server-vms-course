@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/trust-set/R
 
 The owner is [the role certificate contract](../../contracts/role-certificate.md) «The server side: the class `role`» (`trust_set`,
 `unreadable`; stage C guess C10-SDK-ROLE83, the Architect's decision 2026-10-25). The participant is the domain console (the role door,
-lesson P/10). The bytes are written by «Спецификация»; the rows are by the text of the contract.
+lesson P/10). The bytes are written by «Specification»; the rows are by the text of the contract.
 
 The certificates in the vectors are replaced by their fingerprints: the sha256 hex of the DER of the certificate (the contract `fingerprint`); instead of the DER — the strings
 `sha256("w2c test ca <word>")`. A side reconciles its set function over the fingerprints; PEM parsing and the handshake are the contract
@@ -26,4 +26,4 @@ Entry.ca not of the form), 3 `check` (its own centre, a member's centre, a forei
 ## Run
 
 Without a stand: a side gives the input to its trust set function (the reads of the rows are replaced by the input) and to the leaf check.
-Who performs it — the domain console (`10-domain-console`: the role door computes the trust set and checks the leaf, P/10 Н1.4 `server.role`). The cluster console (`06-console`) is only a client of this door and does not compute the set (P/06.7 Н1.4 `holds`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
+Who performs it — the domain console (`10-domain-console`: the role door computes the trust set and checks the leaf, P/10 N1.4 `server.role`). The cluster console (`06-console`) is only a client of this door and does not compute the set (P/06.7 N1.4 `holds`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).

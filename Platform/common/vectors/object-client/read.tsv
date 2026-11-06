@@ -1,4 +1,4 @@
-# The class of the outcome of reading an object by the resource door (the contract common/contracts/object-client.md «Исходы»; C10-OBJECT-ADDRESS-32). The form — README.
+# The class of the outcome of reading an object by the resource door (the contract common/contracts/object-client.md «Outcomes»; C10-OBJECT-ADDRESS-32). The form — README.
 case	input	expect	note
 found	{"reply":{"status":200,"X-Missing":null}}	"object"	200 — the object
 absent-full	{"reply":{"status":404,"X-Missing":null}}	"absent"	404 without X-Missing — the poll is complete: no object

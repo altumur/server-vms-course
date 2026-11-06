@@ -4,30 +4,30 @@ This English text is the source; the Russian translation `ru/contracts/may.md` (
 
 A common contract of the module «Platform» (ADR-0083 addendum (13) and addendum (14): a common algorithm of several processes is a contract, not
 copies in chapters; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 1; analysis of review of stage A 8–10). The owner is lesson
-P/08, [chapter 8.4](../../08-domain/spec/08.4-domain.norms.md) (Н1.4 is a pointer here): people, grants and
+P/08, [chapter 8.4](../../08-domain/spec/08.4-domain.norms.md) (N1.4 is a pointer here): people, grants and
 the right by grants. The function `may` is performed by:
 
 | Who | Where | `grants`, `as_of`, `disabled` |
 |---|---|---|
-| the cluster console ([P/06.3](../../06-console/spec/06.3-console.norms.md) Н1.3 `identity` step 3, `need`; chapter 6.7 — a session with grants) | [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.9 `cluster`, `session` (effective lines — step 5) | the copy of `domain/grants` of this cluster and its `as_of`; `domain/disabled` of this store |
-| the domain console ([lesson P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.5) and the process `domain` (8.4) | [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.5 `domain`; Н3 «people door» step 2, «grants» step 1 | `domain/grants/domain`, `as_of` — `null`; `roles` — from the role and group rows of the holder (P/08.4 Н1.3 `roles_at_holder`) |
+| the cluster console ([P/06.3](../../06-console/spec/06.3-console.norms.md) N1.3 `identity` step 3, `need`; chapter 6.7 — a session with grants) | [P/06.7](../../06-console/spec/06.7-console.norms.md) N1.9 `cluster`, `session` (effective lines — step 5) | the copy of `domain/grants` of this cluster and its `as_of`; `domain/disabled` of this store |
+| the domain console ([lesson P/10](../../10-domain-console/spec/10-domain-console.norms.md) N1.5) and the process `domain` (8.4) | [P/08.4](../../08-domain/spec/08.4-domain.norms.md) N1.5 `domain`; N3 «people door» step 2, «grants» step 1 | `domain/grants/domain`, `as_of` — `null`; `roles` — from the role and group rows of the holder (P/08.4 N1.3 `roles_at_holder`) |
 
-Where the cluster console gets the input `roles` — the copy of the role table `domain/roles` and its tie with the copy of the grants: [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.9 `cluster`, [the gate-and-pass contract](gate-and-pass.md) «The gate with grants» (ADR-0098 §4).
+Where the cluster console gets the input `roles` — the copy of the role table `domain/roles` and its tie with the copy of the grants: [P/06.7](../../06-console/spec/06.7-console.norms.md) N1.9 `cluster`, [the gate-and-pass contract](gate-and-pass.md) «The gate with grants» (ADR-0098 §4).
 
 Step 5 (effective lines) is also read by the delivery of a book by grant ([P/08.5](../../08-domain/spec/08.5-domain.norms.md)
-Н1.3 `grant`) and by the name index (P/08.5 Н1.7 `delivery`): `sub` is the subsystem of the book, only the direct group; the `role:` lines and
+N1.3 `grant`) and by the name index (P/08.5 N1.7 `delivery`): `sub` is the subsystem of the book, only the direct group; the `role:` lines and
 the role table do not take part (ADR-0097 §4, ADR-0098 §4); the console module computes a hint by the same groups and tiers
-([P/07](../../07-console-module/spec/07-console-module.norms.md) Н1.5 `may`), the server always checks.
+([P/07](../../07-console-module/spec/07-console-module.norms.md) N1.5 `may`), the server always checks.
 
-Steps 1–8 are moved from М11/9 Н1.4 (input, output) and Н4 (the words of `may`); the step numbers are the former ones, steps 4a, 7a–7c were added by ADR-0098–ADR-0100. The
-owner keeps: the grant line ([P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.3: `lines`, `line`, the ranks of `cap` — `none < view < edit < admin`, `sub`, `scope`,
-`until`, `GRANT_LIFETIME`, `unreadable` — the value and the input rule are repeated below, «The function `may`»; the member's copy — [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.4), the check at the process
-`domain` and what the door answers on `deny` (P/08.4 Н1.5: 403 `denied`, `detail` at `stale`), the break-glass account at the holder
-(P/08.4 Н1.6); the gate with grants and the break-glass entry at the cluster console — P/06.7 Н1.9, Н1.10, at the domain console — P/10 Н1.5. The reference
-«Н1.6» in the moved text is М11/9 Н1.6, now P/06.7 Н1.10 (the break-glass session of the console); `rank` is the order of `cap` of
-P/08.4 Н1.3; labels — the [labels alphabet contract](labels.md).
+Steps 1–8 are moved from M11/9 N1.4 (input, output) and N4 (the words of `may`); the step numbers are the former ones, steps 4a, 7a–7c were added by ADR-0098–ADR-0100. The
+owner keeps: the grant line ([P/08.4](../../08-domain/spec/08.4-domain.norms.md) N1.3: `lines`, `line`, the ranks of `cap` — `none < view < edit < admin`, `sub`, `scope`,
+`until`, `GRANT_LIFETIME`, `unreadable` — the value and the input rule are repeated below, «The function `may`»; the member's copy — [P/09.1](../../09-agent/spec/09.1-agent.norms.md) N1.4), the check at the process
+`domain` and what the door answers on `deny` (P/08.4 N1.5: 403 `denied`, `detail` at `stale`), the break-glass account at the holder
+(P/08.4 N1.6); the gate with grants and the break-glass entry at the cluster console — P/06.7 N1.9, N1.10, at the domain console — P/10 N1.5. The reference
+«N1.6» in the moved text is M11/9 N1.6, now P/06.7 N1.10 (the break-glass session of the console); `rank` is the order of `cap` of
+P/08.4 N1.3; labels — the [labels alphabet contract](labels.md).
 
-Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -35,7 +35,7 @@ Inputs of the function: `grants` — the copy of `domain/grants` of a member, an
 
 ## The function `may`
 
-From М11/9 Н1.4 «The right — the function `may`»:
+From M11/9 N1.4 «The right — the function `may`»:
 
 ```yaml
 input:     {grants: <doc {lines}> | null, as_of: <count> | null, disabled: [<name>…], user, glass, cap, unit, now,
@@ -51,24 +51,24 @@ input:     {grants: <doc {lines}> | null, as_of: <count> | null, disabled: [<nam
            a folder as the object of a write — unit {sub: platform, id: <F>, labels: [], chains: [[F, ancestors of F]]}; unit: and labels: do not
            cover it, only tiers 3 and 4 (ADR-0097 §5); creating a root folder — unit "*"
   disabled: the row domain/disabled is read only while domain/holder of its own store names this cluster, otherwise [] : the row of a former holder is stale and is not updated; no term record or it is unreadable — the row is read, the stricter way: a former holder always has the record, it is absent only before `claim` and in a break of admission; the condition is common to all readers (C08-DISABLED-FORMER-01, C08-DISABLED-NO-RECORD-01)
-  glass:   true — a session of the break-glass entry (Н1.6); for it the caller reads neither grants nor disabled (step 1 decides earlier) —
+  glass:   true — a session of the break-glass entry (N1.6); for it the caller reads neither grants nor disabled (step 1 decides earlier) —
            their unreadability does not stop it (C06-GLASS-UNREADABLE-01, the Architect's decision of 2026-10-28)
-  until:   until of a grant line — the same finiteness check as for now and as_of (the time canon P/01.1 Н0: the value is finite in
+  until:   until of a grant line — the same finiteness check as for now and as_of (the time canon P/01.1 N0: the value is finite in
            binary64); does not fit — the input is out of form, code 2, before step 1 (glass); at the reader of the grants document —
            a grant line out of form, an outcome of the family grants (MAY-UNTIL-D8-01, the Architect's decision of 2026-10-25)
-  sub:     a subsystem name (the grammar P/02.1 Н1.2 name), platform or null; no field — null. The subsystem of the check, not of the unit:
+  sub:     a subsystem name (the grammar P/02.1 N1.2 name), platform or null; no field — null. The subsystem of the check, not of the unit:
            a check of the subsystem testsub2 over a unit of testsub — unit {sub: testsub, id: c1}, sub: testsub2. Who names it and how — the gate-and-pass contract
-           «Subsystem of the check»; null — only the pre-check before the body and the reading «любой грант» (ADR-0097 §2)
+           «Subsystem of the check»; null — only the pre-check before the body and the reading «any grant» (ADR-0097 §2)
   roles:   a table {<name>: [{role, until, at}…]}, expanded by the caller down to the pointer «person → roles»; null or no field —
            the member has no table: role lines do not apply, this is a checked absence; "unreadable" — the copy of the table does not read,
            the fingerprint did not match or as_of of the table did not pass step 4 (ADR-0098 §4). One role of a person twice (directly and through
            a group) — one element: the later until (0 — later than all) (ADR-0098 §4)
-    at:    from what moment the admin assignment applies: at the cluster console — admin_at of the table, at the holder — the same rule (P/08.4 Н1.3б);
+    at:    from what moment the admin assignment applies: at the cluster console — admin_at of the table, at the holder — the same rule (P/08.4 N1.3b);
            for other roles 0, nobody reads their at
   unread:  which role groups the caller saw incomplete: [{role: <R>, sub?: <S>}…] — a line of this role is out of form, the subject
            did read (sub — if it read too: then only in this sub); "all" — the subject of the line did not read: incomplete are all
            role groups of the document; no field — []. The caller drops an unreadable line (lines_in) but does not lose the sign (ADR-0099 §2)
-  anywhere: {<person>: <until>} — who has a grant in any cluster of the domain (P/08.4 Н1.3 anywhere); only for step 6 and only at the door
+  anywhere: {<person>: <until>} — who has a grant in any cluster of the domain (P/08.4 N1.3 anywhere); only for step 6 and only at the door
            door.pass of the second kind and at the view doors of the domain; no field — {}
   as_role: a role name: a check of an action as a role, there is no person (ADR-0105 item 4; the section «Action as a role»); no field — a person
   iat:     iat of the request token; on the path of a ticket and of an operation step — iat of the ticket record, the token is the same (the gate-and-pass contract «Pass of the second kind»); null — only sessions without a token: glass, the debug identity; no field — null; needed only by step 4a:
@@ -133,25 +133,25 @@ The direct group only adds up lines, it has no exceptions. `none` occurs only in
 (step 4a) and forms no groups: exceptions of other roles do not act on it (ADR-0100 §1). Step 7b also applies when there are no matching
 `role:` lines: an unreadable table could carry an `admin` assignment (ADR-0100 §1). Lists give `withheld` instead of `unavailable` (P/06.4).
 
-The constant and the input of lines (from P/08.4 Н1.3 `GRANT_LIFETIME`, `unreadable` and Н5 `exit` without a change of behaviour; the owner of the
+The constant and the input of lines (from P/08.4 N1.3 `GRANT_LIFETIME`, `unreadable` and N5 `exit` without a change of behaviour; the owner of the
 text is P/08.4; analysis of review of stage B 8–10, № 4, Claude `S-7`):
 
 ```yaml
 GRANT_LIFETIME: 86400   # s — step 4: a member's copy older than as_of + GRANT_LIFETIME gives no rights
-lines_in:       the function gets only lines of lines in the form of P/08.4 Н1.3 (the family files — Platform/09-agent/data/grants.schema.json,
+lines_in:       the function gets only lines of lines in the form of P/08.4 N1.3 (the family files — Platform/09-agent/data/grants.schema.json,
                 grants.outcomes.tsv; C04-DEP-OBS-HEARTBEAT-01): an unreadable line is dropped by the caller before the
-                call — a skip with diagnostics at the member's door over the copy from the holder's answer (P/08.4 Н1.3 unreadable;
-                the copy — P/09.1 Н1.4 member_copy, holder_copy); a line out of form in the input of the function — the input is out of form, exit
-                code 2, not a skip (P/08.4 Н5 exit). There is no contradiction between «is skipped» (Н1.3) and «2, not a skip» (Н5): the skip
+                call — a skip with diagnostics at the member's door over the copy from the holder's answer (P/08.4 N1.3 unreadable;
+                the copy — P/09.1 N1.4 member_copy, holder_copy); a line out of form in the input of the function — the input is out of form, exit
+                code 2, not a skip (P/08.4 N5 exit). There is no contradiction between «is skipped» (N1.3) and «2, not a skip» (N5): the skip
                 is at the caller, code 2 is at the function
 ```
 
-Which input is out of form (the `grants` lines are a trusted input) — the README of the vectors [`may`](../vectors/may/README.md) «Form of the input of the command `may`» (MAY-G01/G02); the exit codes of the command `may` are a copy of [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н5 `exit` (layout audit, the Architect's decision of 2026-10-25, B-14):
+Which input is out of form (the `grants` lines are a trusted input) — the README of the vectors [`may`](../vectors/may/README.md) «Form of the input of the command `may`» (MAY-G01/G02); the exit codes of the command `may` are a copy of [P/08.4](../../08-domain/spec/08.4-domain.norms.md) N5 `exit` (layout audit, the Architect's decision of 2026-10-25, B-14):
 
 ```yaml
-exit:      0 — computed; 2 — the input is out of form; exit codes follow the principle of the vocabulary of «Domain stand» («Коды выхода команд-векторов»: 2 — the form
-           of a trusted input, 0 with a word — a document of another cluster; the Architect's decision on the М11 reconciliation, H14):
-           the grants lines of may are a trusted input (a copy already parsed by Н1.3), so a line out of form is 2, not a skip
+exit:      0 — computed; 2 — the input is out of form; exit codes follow the principle of the vocabulary of «Domain stand» («Exit codes of vector commands»: 2 — the form
+           of a trusted input, 0 with a word — a document of another cluster; the Architect's decision on the M11 reconciliation, H14):
+           the grants lines of may are a trusted input (a copy already parsed by N1.3), so a line out of form is 2, not a skip
 ```
 
 ## Judgement by target
@@ -160,15 +160,15 @@ The domain door judges a record of a cluster by the grant of this cluster, not b
 
 ```yaml
 wide:      may(grants = domain/grants/domain, cap = view, unit = "*", sub = null) = allow — a viewer of the domain: no filter, the answer is whole;
-           the group of the manager line (P/08.4 Н1.3в manager) does not count here: it gives no rights in clusters
+           the group of the manager line (P/08.4 N1.3c manager) does not count here: it gives no rights in clusters
 gate:      the entry of the view doors: wide, or may(grants = null, unit = null, cap = view, sub = null, anywhere = the row domain/anywhere of the holder);
            otherwise 403 by refusal; the row exists but does not read, and wide was not enough — 503 unavailable
 target:    a record of cluster C: may(grants = domain/grants/C, as_of = null, disabled and roles — at the holder, as for the row domain, iat — of the token,
            sub — the subsystem of the record); no row domain/grants/C — grants = null
 read:      each record is judged separately, cap = view:
-  unit:    {sub, id, labels, about?, chains} — from the view (P/08.1 Н1.4): labels — Unit.labels, none — [] and the input is incomplete; about — Unit.about and the unit with this id in
-           the same copy: found — {sub, id, labels}, not found — "unknown"; a manifest without about has no field; chains — from domain/memberof and domain/folders (P/08.5 Н1.8), does not read — "unknown"
-  row:     a row of a table snapshot (P/04 Н1.3б): a unit row — {sub, id: key, labels, about?} from the fields of the snapshot row, as unit above; a table in rights.unit_of —
+  unit:    {sub, id, labels, about?, chains} — from the view (P/08.1 N1.4): labels — Unit.labels, none — [] and the input is incomplete; about — Unit.about and the unit with this id in
+           the same copy: found — {sub, id, labels}, not found — "unknown"; a manifest without about has no field; chains — from domain/memberof and domain/folders (P/08.5 N1.8), does not read — "unknown"
+  row:     a row of a table snapshot (P/04 N1.3b): a unit row — {sub, id: key, labels, about?} from the fields of the snapshot row, as unit above; a table in rights.unit_of —
            unit of the unit from its field (link 150 keeps the field in the list), no value — unit = "*"; otherwise unit = null, as GET of a table at the console
   allow:   the record is in the answer; deny — no record; unavailable — no record, the count withheld of the answer
   partial: deny with an incomplete input (no labels, about or chains "unknown"), and the person has in C an effective line labels:, folder: or unit: not on
@@ -178,7 +178,7 @@ write:     an edit of a record of cluster C: wide with cap = admin and unit = "*
            Judgement before the search: the person has no edit line in any cluster — 403 before find; a cluster is found, the judgement did not pass — 403 without names of
            clusters; contested and executors name clusters only to a viewer of the domain. This is a rough check: scopes, about, chains, routes, unit_of, names the domain does not count, it has no lines of the member.
            The exact judgement is at the member's console on application, by the person whose edit it is; a refusal is the outcome refused
-           (P/09.1 Н1.5; P/08.6 Н1.4). One judgement per edit, whatever entry it came through
+           (P/09.1 N1.5; P/08.6 N1.4). One judgement per edit, whatever entry it came through
 cost:      may is computed per record, but the input changes only with the cluster and the person: with the memory of the door pass grants need not be recomputed
 ```
 
@@ -191,16 +191,16 @@ input:     as_role: R; user — "", glass — false, disabled — [], iat — nu
 steps:     steps 1, 2, 4a do not apply; steps 3, 4 — as they are; step 5: there is no direct group, one role group R with until 0; then tiers, steps 6, 7a, 7c, 8; step 7b does not apply
 admin:     R = admin → deny no_grant: the built-in role has no lines, step 4a is only for a person (ADR-0100 §1)
 who:       the worker in its own process, grants — the copy of domain/grants of the cluster, as_of — its own; no row or older than GRANT_LIFETIME — a refusal, as for a person: the action is not executed, a journal line
-reads:     worker.reads: [domain/grants, platform/folders/, platform/memberof/] (P/02.5 Н3 step 3); chains and about are assembled by the worker, as by the gate
+reads:     worker.reads: [domain/grants, platform/folders/, platform/memberof/] (P/02.5 N3 step 3); chains and about are assembled by the worker, as by the gate
 ```
 
 ## Refusal words
 
-From М11/9 Н4: the words of `may`: `disabled`, `stale`, `no_grant`. The outcome `unavailable` is not a refusal word of `may`: the door answers 503 `{error: "unavailable"}`.
+From M11/9 N4: the words of `may`: `disabled`, `stale`, `no_grant`. The outcome `unavailable` is not a refusal word of `may`: the door answers 503 `{error: "unavailable"}`.
 
 ## Vectors
 
-The package [`may`](../vectors/may/README.md): 126 lines (`may-role-*` — the input `as_role`, ADR-0105 item 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, roles, tiers, step 4a); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); of the first 26: 24 are inputs of the command `may` of the acceptance of М11/9 (sc. 07) without a change of values, except `labels: []` at the unit of
+The package [`may`](../vectors/may/README.md): 126 lines (`may-role-*` — the input `as_role`, ADR-0105 item 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, roles, tiers, step 4a); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); of the first 26: 24 are inputs of the command `may` of the acceptance of M11/9 (sc. 07) without a change of values, except `labels: []` at the unit of
 `may-24` (the Architect's decision of 2026-10-20; the README of the package);
 one of them, `may-24`, is an input out of form (`@exit 2`; analysis of review of stage B 8–10, № 22); `may-25` — `subject` "" (`@exit 2`, MAY-G03); `may-26` — `until` does not fit in binary64 (`@exit 2`, MAY-UNTIL-D8-01). The scenario and the inputs were removed by the move of lesson 8 — the table is the only
 source of these cases. There is also `covers.tsv` — 19 lines of the function `covers(scope, ref, row)` of the gate ([the gate
@@ -208,6 +208,6 @@ contract](gate-and-pass.md) `scope`; C06-EVENTS-QUERY-UNKNOWN-138-10).
 
 ## Correspondence to former lessons
 
-From М11/9 (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 1; analysis of review of stage A 8–10): Н1.4 whole (here
-«The function `may`»; in М11/9 — a pointer) and the phrase of Н4 about the words of `may` (here «Refusal words»). The norm М11/9-05 (`may` in order)
+From M11/9 (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 1; analysis of review of stage A 8–10): N1.4 whole (here
+«The function `may`»; in M11/9 — a pointer) and the phrase of N4 about the words of `may` (here «Refusal words»). The norm M11/9-05 (`may` in order)
 — by `note` of [id-map](../id-map.tsv).

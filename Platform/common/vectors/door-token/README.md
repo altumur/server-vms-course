@@ -4,10 +4,10 @@ This English text is the source; the Russian translation `ru/vectors/door-token/
 
 The vectors of [the door token contract](../../contracts/door-token.md): the issuing of `door1.<kid>.<claims>.<sig>` (claims in JCS, the signature
 Ed25519) and the check at the holder by the row `door/keys`. The owner of the contract is lesson P/06, chapter
-[6.5](../../../06-console/spec/06.5-console.norms.md) (Н3 «`/where/<id>`»: the console issues the token); the checker is the holder
-of the door, chapter [3.4](../../../03-worker/spec/03.4-worker.norms.md) Н3 «the door token at the holder» (P/03.4-08). The package is common:
+[6.5](../../../06-console/spec/06.5-console.norms.md) (N3 «`/where/<id>`»: the console issues the token); the checker is the holder
+of the door, chapter [3.4](../../../03-worker/spec/03.4-worker.norms.md) N3 «the door token at the holder» (P/03.4-08). The package is common:
 one process writes the algorithm, others read (the Architect's decision of 2026-10-20, the review analysis of stage B 3–5: an Ed25519 signature
-without vectors is a silent divergence of implementations). The bytes are written by «Спецификация» (ADR-0083); the conformance of the product is by its
+without vectors is a silent divergence of implementations). The bytes are written by «Specification» (ADR-0083); the conformance of the product is by its
 acceptance against these tables (ADR-0080 addendum 16).
 
 ## Run
@@ -19,12 +19,12 @@ Without a stand: the console runs `issue.tsv` through its issuing function, the 
   is deterministic: the same seed and the same string give the same signature.
 - `verify.tsv` — check(`keys`, `authorization`, `now`, `unit`, `holder`, `path`) gives `ok` and the read claims, equal
   to the column `claims` by JSON value (not by text), or `forbidden` (the reading of the commits of «cammeta-acceptance» 2026-10-20).
-Who performs is by the table: `issue.tsv` — the console (`06-console`, issues the token in `/where/<id>` and `/where/<table>/<place>`, P/06.5 Н3); `verify.tsv` and `place.tsv` — the worker (`03-worker`, the holder of the door checks the token, P/03.4 Н3 «the door token at the holder», Н1.7 `door_admission` `token`). The console does not check the token, the worker does not issue it; the domain agent does not read `door/keys` (the catalogue: the readers are the console and `<s>worker`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who performs is by the table: `issue.tsv` — the console (`06-console`, issues the token in `/where/<id>` and `/where/<table>/<place>`, P/06.5 N3); `verify.tsv` and `place.tsv` — the worker (`03-worker`, the holder of the door checks the token, P/03.4 N3 «the door token at the holder», N1.7 `door_admission` `token`). The console does not check the token, the worker does not issue it; the domain agent does not read `door/keys` (the catalogue: the readers are the console and `<s>worker`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Stand command `door-token-issue`
 
 The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../acceptance/README.md);
-chapter 6.5 Н3): a template with `{input}` — the path of a file with an object of exactly `{seed_hex, kid, now, claims}` of a row of `issue.tsv`:
+chapter 6.5 N3): a template with `{input}` — the path of a file with an object of exactly `{seed_hex, kid, now, claims}` of a row of `issue.tsv`:
 `seed_hex`, `kid` — the strings of the cells, `now` — the number of the cell, `claims` — the lexeme of the cell as it is (the order of fields, `routes` and
 the numeric lexemes are not re-derived; the row `number_form` with an exponent at `expires` is a valid input of issuing, the form of the checking
 side does not apply to issuing). The seed, `kid` and the time are from the row, not the clock and not the stand's own secrets. The answer is exactly
@@ -35,7 +35,7 @@ of issuing with code 0 — the published rows are computable. stdout is exactly 
 ## Stand command `door-token-verify`
 
 The key `stand` of the profile `03-worker` (the section «Layout by processes» of [the common acceptance README](../../acceptance/README.md);
-P/03.4 Н5): a template with `{input}` — the path of a file into which the runner writes one JSON object of the input of a row: for `verify.tsv` —
+P/03.4 N5): a template with `{input}` — the path of a file into which the runner writes one JSON object of the input of a row: for `verify.tsv` —
 `{keys, authorization, now, unit, holder, path}` (`keys` — the value of the column as JSON, `authorization` and `path` — strings
 byte for byte, an empty string `authorization` — there is no header, `now` — a number), for `place.tsv` — the cell `input` as it is
 (`place_units` instead of `unit`; the column `claims` — as for `verify.tsv`). stdout is exactly one JSON object in UTF-8 and LF: `{"result":"ok","claims":{…}}` — the claims
@@ -47,7 +47,7 @@ the Architect of 2026-10-23).
 
 The Ed25519 seed is 32 bytes `sha256("w2c test <word>")` (as the keys of [the sealing vectors](../sealing/README.md)); the tables do not name the words
 of derivation — the seed and the public key are fixed as bytes, an implementation takes them from here and does not derive them
-anew (`SA67-Б3`). The seed is what the row `door/signer` holds in `seed_secret` (64 lowercase hex); the public key is the value
+anew (`SA67-B3`). The seed is what the row `door/signer` holds in `seed_secret` (64 lowercase hex); the public key is the value
 of the row `door/keys` under the same `kid`.
 
 | kid in the vectors | seed_hex | public key (door/keys) |
@@ -65,14 +65,14 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 
 | File | Input → expectation |
 |---|---|
-| [`issue.tsv`](issue.tsv), 7 rows | `seed_hex`, `kid`, `now`, `claims` — an object `{user, unit, holder, routes, expires}` as JSON text, as passed to the issuer (`expires` = `now` + 120) → `claims_jcs` — its RFC 8785 form (UTF-8), `token` — `door1.<kid>.<base64url без «=» claims_jcs>.<base64url без «=» подписи над ASCII «door1.<kid>.<claims>»>`. Cases: an ordinary one, the order of fields (the same token), the order of `routes` (an array is not sorted), Cyrillic and a character outside the BMP, escaping, a number with an exponent, a `kid` of 32 characters |
+| [`issue.tsv`](issue.tsv), 7 rows | `seed_hex`, `kid`, `now`, `claims` — an object `{user, unit, holder, routes, expires}` as JSON text, as passed to the issuer (`expires` = `now` + 120) → `claims_jcs` — its RFC 8785 form (UTF-8), `token` — `door1.<kid>.<base64url without «=» of claims_jcs>.<base64url without «=» of the signature over ASCII «door1.<kid>.<claims>»>`. Cases: an ordinary one, the order of fields (the same token), the order of `routes` (an array is not sorted), Cyrillic and a character outside the BMP, escaping, a number with an exponent, a `kid` of 32 characters |
 | [`verify.tsv`](verify.tsv), 89 rows: 17 `ok`, 72 `forbidden` (5 — DT-G01, 6 — DT-G02; a separator HTAB and several headers `Authorization` cannot be expressed by a TSV row — by reading) | `keys` — the value of the row `door/keys` as JSON text; `authorization` — the header `Authorization` whole, empty — there is no header (formerly the column `token`; at most rows — `Bearer <token>`; (the Architect's decision of 2026-10-20, the review analysis of stage B 6–7)); `now`; `unit`, `holder` — the holder's own (`unit` — `<sub>/<id>`, `holder` — the `instance` of its heartbeat); `path` — the target of the request to the holder's door: the URL path, at some rows with a query (`?t=<token>`); the first segment of the URL path without the query is compared with the elements of `routes` (the review analysis of stage B 6–7, № 9) → `ok` and `claims` (the text of the claims part) or `forbidden` (the column `claims` is empty) |
 | [`place.tsv`](place.tsv), 4 rows: 2 `ok`, 2 `forbidden` | `input` — `{keys, authorization, now, holder, path, place_units}`: `place_units` — the units whose data lie in the holder's place, the list is built by the subsystem (the data have not landed yet — there is no unit, unless the door norm named it, DT-PLACE-NOT-YET-01); the place token is the contract «The place token» (ADR-0091 addendum (7), (8)) → `expect` and `claims` — the read claims at `ok` as JSON text, compared by value; at `forbidden` empty (the reading of «cammeta-acceptance» 2026-10-23) |
 
 ## Refusals
 
 A refusal of the check is one word `forbidden`, the answer of the holder's door 403 with the body `{"error": "forbidden"}` without a reason ([P/03.4](../../../03-worker/spec/03.4-worker.norms.md)
-Н4, [the contract](../../contracts/door-token.md) «Keys `door/keys`») (the Architect's decision of 2026-10-20, the vectors door-token). The order of the checks
+N4, [the contract](../../contracts/door-token.md) «Keys `door/keys`») (the Architect's decision of 2026-10-20, the vectors door-token). The order of the checks
 the vector does not fix: the reason is not visible in the answer. The refusal rows are by the check list of the contract:
 
 | Check of the contract | Rows |
@@ -96,10 +96,10 @@ The rows `ok_query_token` and `ok_query_one_segment` are a control of the path w
 the signature covers the bytes of the claims part (the Architect's decision of 2026-10-20, the vectors door-token).
 
 The rows `key_small_order` and `sig_r_small_order` satisfy the equation [S]B = R + [k]A; the OpenSSL check (pyca cryptography) accepts them,
-the refusal is given only by the condition of the contract «A или R малого порядка — отказ» (the Architect's decision of 2026-10-20, the review analysis of stage B 6–7).
+the refusal is given only by the condition of the contract «A or R of small order — refusal» (the Architect's decision of 2026-10-20, the review analysis of stage B 6–7).
 
 The vectors were obtained by reference Ed25519 (RFC 8032) and JCS (RFC 8785, checked on [`jcs`](../../../01-store/vectors/jcs/README.md))
-by the contract, not by the code of implementations; on a divergence the contract is right, the vector is corrected by «Спецификация».
+by the contract, not by the code of implementations; on a divergence the contract is right, the vector is corrected by «Specification».
 
 ## Vector wire
 

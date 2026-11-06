@@ -2159,6 +2159,10 @@ class Check:
         ссылок, кодов и слов отказов (`en_mirror.compare`), иначе отказ. Пары — по раскладке урока: `X` ↔ `ru/X` (ADR-0124)
         или `en/<имя>.en.md` ↔ `<имя>.md` (ADR-0121); в `ru/` без источника — только лекция."""
         import en_mirror
+        for path, message in en_mirror.full_english_errors(self.root):
+            self.error(path, message)
+        for path, message in en_mirror.source_cell_errors(self.root):
+            self.error(path, message)
         for ru, en in en_mirror.pairs(self.root):
             texts = self.read(en), ru.is_file() and self.read(ru)
             if not ru.is_file():

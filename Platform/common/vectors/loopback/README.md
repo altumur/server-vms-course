@@ -6,7 +6,7 @@ The owner is [the role certificate contract](../../contracts/role-certificate.md
 (ADR-0075 addendum 2026-10-26 (3) item 1, (4) item 1, (5) item 1). The participants are the clients of the door of their own cluster (`own_client` of the contract):
 the agent to its console, the workers script, the cluster console at transition 2 and in the forwarding to the signer, the client of the resource door.
 The threshold decides whether to substitute `SERVER_NAME` into the `host` of the function [`peer`](../peer/README.md) before step 1; the function `peer` itself and
-its package do not change from this. The bytes are written by «Спецификация»; the rows are by the text of the contract.
+its package do not change from this. The bytes are written by «Specification»; the rows are by the text of the contract.
 
 ## `cases.tsv`
 
@@ -18,7 +18,7 @@ in any notation without a zone), `"ip"` (another IP literal by step 1 of `peer`,
 `0.0.0.0`, `::`) or `"name"` (otherwise: `localhost`, `127.1`, a notation with leading zeros); or `@exit 2` — an input not of the form (not
 an object, no `url`, `url` not a string or not a URL with a scheme and a non-empty host). Code 2 is the outcome of the function on an input not of the form;
 at a client such a URL is the `bad_url` of the contract: from the environment — a refusal of start, code 2; from a store row — as if there were no field
-(the review of the norms of ADR-0075 Kimi 80ee2b775, Н6).
+(the review of the norms of ADR-0075 Kimi 80ee2b775, N6).
 
 31 rows: a v4 loopback (including the boundary and the scheme `http`), leading zeros, three parts, a part outside 0–255, a hexadecimal
 notation — a name; an IP outside the loopback, `0.0.0.0`; v6 `::1` in three notations — a loopback; with a zone, `::ffff:127.0.0.1`, `::`, another v6 — `ip`;

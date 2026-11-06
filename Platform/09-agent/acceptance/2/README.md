@@ -4,14 +4,14 @@ This English text is the source; the Russian translation `ru/acceptance/2/README
 
 The stand, the dictionary of directives and doors — [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
 the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (the stand of several clusters; formerly — the М11 dictionary of the acceptance README
-of М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is [`09.2-agent.norms.md`](../../spec/09.2-agent.norms.md) Н5. Scenarios
+of М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is [`09.2-agent.norms.md`](../../spec/09.2-agent.norms.md) N5. Scenarios
 02–04 were moved from the acceptance of М11/04 (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers, names and steps are
 the former ones, the number 01 is empty (sc. 01 of М11/04 — the acceptance of [chapter 8.3](../../../08-domain/acceptance/3/README.md) sc. 15). In total 5
 scenarios / 62 steps (sc. 06 — the coverage audit of P/09, the second pass, below). There are no inputs: the inputs `accept-*` were removed from sc. 06 of М11/04 — the same cases are in the package
 [`accept`](../../../common/vectors/accept/README.md).
 
 The division (the appendix of the plan of the move of lesson 8): the outcome of all three scenarios is the door, the package and the relay pass. The neighbours on
-the stand: the holder on the relay package and the knock ([P/08.3](../../../08-domain/spec/08.3-domain.norms.md) Н3 «the holder on `POST /api/relay/<relay>`»;
+the stand: the holder on the relay package and the knock ([P/08.3](../../../08-domain/spec/08.3-domain.norms.md) N3 «the holder on `POST /api/relay/<relay>`»;
 P/08.3-07, P/08.3-13), the acceptance and the topology (chapter 8.3), `join` and `domain/reached` of the agent of a member behind a
 relay (chapter 9.1: P/09.1-05, P/09.1-21, P/09.1-24), the silence of a member in the view (chapter 8.1).
 
@@ -31,17 +31,17 @@ of the stranger whom the holder learned of from a knock that came in a relay pac
 - Sc. 02 steps 11–14 (the mutation check 2026-10-18): the relay checks the member signature — with the agent clock 400 s
   ahead the member behind the relay is `silent`, although the relay is alive; with the right clock — `ok` again.
 - Sc. 02 steps 15–21: under `@cut relay` `domain/reached` does not grow. Step 16 binds `$c` — `as_of` of the holder view right
-  after the cut; `ts` of the mark is the moment of the last answer of the holder (`domain_age` — Н1.4 of the chapter; `fresh` — chapter 9.1), not
+  after the cut; `ts` of the mark is the moment of the last answer of the holder (`domain_age` — N1.4 of the chapter; `fresh` — chapter 9.1), not
   later than the cut, so step 21 compares `$t2` with `$c`, not with `$t1`: the former comparison of two reads caught the write, delayed by
   FRESH_EVERY, of the last value before the cut (the reconciliation of М11 01–04, sc. 04/02 step 20 of the mix).
 
-- Sc. 05 `relay-moves` (DOM-AGENT-TURN-01, -02, the owner's consent 2026-10-26; chapter 9.2 Н1.1 `door`, P/09.1 Н1.13): two relay agents (`@start agent relay
+- Sc. 05 `relay-moves` (DOM-AGENT-TURN-01, -02, the owner's consent 2026-10-26; chapter 9.2 N1.1 `door`, P/09.1 N1.13): two relay agents (`@start agent relay
   second`), `RELAY_URL` of the member `m2` — their doors in order; SIGTERM of the active relay agent — the waiting one takes the queue and
   opens the door, the member goes by the next address, the reports through the relay continue.
 
 ## Coverage audit of P/09, the second pass (Gemini)
 
-- Sc. 06 `token-through-relay` (`audit-coverage-gemini` cc36de538, draft G05; Н1.1 `not_author`, Н2 `POST
+- Sc. 06 `token-through-relay` (`audit-coverage-gemini` cc36de538, draft G05; N1.1 `not_author`, N2 `POST
   /api/tokens/<member>/…`; [the local token door contract](../../../common/contracts/local-token-door.md) `no_queue`).
   The preparation is as in sc. 02, steps 1–7. The placement `c1` (`cluster: m1`, `origin: m2`) — as in sc. 01
   of [the acceptance of chapter 8.7](../../../08-domain/acceptance/7/README.md). The request of the worker `m2` through the local door of its agent goes
@@ -62,4 +62,8 @@ result; this directory does not run them itself.
 
 | Sc./step | Sleep | Reason |
 |---|---|---|
-| 02/17 + 02/19 | 70 + 15 s | absence: under `@cut relay` `domain/reached` does not grow; a new value would be written no later than `FRESH_EVERY` 60 s (chapter 9.1, `fresh`) after an answer by another road, and another road would open after `ROAD_QUIET` 15 s ([P/08.3](../../../08-domain/spec/08.3-domain.norms.md) Н1.3а) and the agent pass 5 s — no less than 80 s in all |
+| 02/17 + 02/19 | 70 + 15 s | absence: under `@cut relay` `domain/reached` does not grow; a new value would be written no later than `FRESH_EVERY` 60 s (chapter 9.1, `fresh`) after an answer by another road, and another road would open after `ROAD_QUIET` 15 s ([P/08.3](../../../08-domain/spec/08.3-domain.norms.md) N1.3a) and the agent pass 5 s — no less than 80 s in all |
+
+## Kit assistance seams
+
+[seams.tsv](seams.tsv) provides 8 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.

@@ -12,9 +12,9 @@ These forms express the existing controller norms (ADR-0125 addendum (5)); no co
 Alias checks run before defaults. Empty `bad` does not remove imported validation. The launcher parses environment files, the process consumes them.
 
 [refusals.tsv](refusals.tsv) has `chapter row name surface code kind fields headers log norm word cause outcome diagnostic caller`.
-The separator is literal TAB, without CSV quoting. Chapter is `4`; the four final cells preserve all former Н4 cells in source order.
+The separator is literal TAB, without CSV quoting. Chapter is `4`; the four final cells preserve all former N4 cells in source order.
 `start` is process start, `call` a controller procedure, `peer` an imported console door. A fixed code supplements the normative outcome;
-`-` adds no machine projection. `kind` is `-`: the console's error is not a controller HTTP Fault. Н4 refers to the form, without a second table.
+`-` adds no machine projection. `kind` is `-`: the console's error is not a controller HTTP Fault. N4 refers to the form, without a second table.
 
 ## Machines
 

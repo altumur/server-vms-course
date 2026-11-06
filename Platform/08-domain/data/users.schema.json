@@ -4,7 +4,7 @@
  "properties": {
   "name": {
    "$ref": "#/$defs/common.person_name",
-   "description": "name of the person — the same as <имя> of the key; not a subject of the names index (a check of the door, chapter 8.5 Н1.7)",
+   "description": "name of the person — the same as <name> of the key; not a subject of the names index (a check of the door, chapter 8.5 N1.7)",
    "x-codec": [
     "string"
    ]
@@ -20,21 +20,21 @@
    ]
   },
   "pwhash_secret": {
-   "description": "pbkdf2-sha256$600000$<соль: 32 hex>$<ключ: 64 hex> — PBKDF2-HMAC-SHA256 of the UTF-8 password, salt — 16 random bytes, key — 32 bytes; a secret by the suffix (P/02.1 Н1.3а) — in the row a ring envelope of the holder, the hash form — of the opened value",
+   "description": "pbkdf2-sha256$600000$<salt: 32 hex>$<key: 64 hex> — PBKDF2-HMAC-SHA256 of the UTF-8 password, salt — 16 random bytes, key — 32 bytes; a secret by the suffix (P/02.1 N1.3a) — in the row a ring envelope of the holder, the hash form — of the opened value",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "disabled": {
-   "description": "whether the person is disabled; every edit — then domain/disabled (Н3 «people door» step 9)",
+   "description": "whether the person is disabled; every edit — then domain/disabled (N3 «people door» step 9)",
    "type": "boolean",
    "x-codec": [
     "boolean"
    ]
   },
   "title": {
-   "description": "display name, 0..200 characters; no field — \"\" (P/08.4 Н1.1)",
+   "description": "display name, 0..200 characters; no field — \"\" (P/08.4 N1.1)",
    "type": "string",
    "maxLength": 200,
    "x-codec": [
@@ -57,7 +57,7 @@
    ]
   },
   "pw_by": {
-   "description": "name of the one who last set the password (P/08.4 Н1.1, Н1.3в password); no field — «set not by an administrator»",
+   "description": "name of the one who last set the password (P/08.4 N1.1, N1.3c password); no field — «set not by an administrator»",
    "type": "string",
    "x-codec": [
     "string"
@@ -79,7 +79,7 @@
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "write counter of the row: 1 at creation, +1 per write; read only by the domain process and the domain console, the writer always writes it (P/08.0 Н1.9 «Versions»; ADR-0094 B4)",
+   "description": "write counter of the row: 1 at creation, +1 per write; read only by the domain process and the domain console, the writer always writes it (P/08.0 N1.9 «Versions»; ADR-0094 B4)",
    "x-whole": true,
    "x-codec": [
     "integer"
@@ -97,7 +97,7 @@
  ],
  "$defs": {
   "common.book_missing": {
-   "description": "who is missing in the book — [{member, why}] class server first, within by member in UTF-8 bytes, one per book (P/08.5 Н1.3 missing); the order and «one per member» — a rule of the lesson, not the form",
+   "description": "who is missing in the book — [{member, why}] class server first, within by member in UTF-8 bytes, one per book (P/08.5 N1.3 missing); the order and «one per member» — a rule of the lesson, not the form",
    "type": "array",
    "items": {
     "type": "object",
@@ -107,7 +107,7 @@
       "description": "the member because of which something is missing in the book"
      },
      "why": {
-      "description": "a closed list of words (P/08.5 Н1.3 why); a member has one entry",
+      "description": "a closed list of words (P/08.5 N1.3 why); a member has one entry",
       "type": "string",
       "enum": [
        "unseen",
@@ -127,7 +127,7 @@
    }
   },
   "common.book_row": {
-   "description": "a row of the assembled book (P/08.5 Н1.3 result): the element \"\" — the JSON text {missing, missing_count}, the element `<key>` — the JSON text {entries} only with elements where the recipient is in to; at the holder the secrets of value — envelopes of the holder's ring enc:v2 (Н1.3 at_rest), at the member — envelopes of the member's ring (P/09.1 Н1.4 member_row); the keys of the elements — arbitrary",
+   "description": "a row of the assembled book (P/08.5 N1.3 result): the element \"\" — the JSON text {missing, missing_count}, the element `<key>` — the JSON text {entries} only with elements where the recipient is in to; at the holder the secrets of value — envelopes of the holder's ring enc:v2 (N1.3 at_rest), at the member — envelopes of the member's ring (P/09.1 N1.4 member_row); the keys of the elements — arbitrary",
    "type": "object",
    "properties": {
     "": {
@@ -136,11 +136,11 @@
      "properties": {
       "missing": {
        "$ref": "#/$defs/common.book_missing",
-       "description": "the first MISSING_SHOWN 500: class server first, within by member (P/08.5 Н1.3 result)",
+       "description": "the first MISSING_SHOWN 500: class server first, within by member (P/08.5 N1.3 result)",
        "maxItems": 500
       },
       "missing_count": {
-       "description": "all members in missing (P/08.5 Н1.3 result)",
+       "description": "all members in missing (P/08.5 N1.3 result)",
        "$ref": "#/$defs/common.uint53"
       },
       "term": {
@@ -152,7 +152,7 @@
        "$ref": "#/$defs/common.pos53"
       },
       "stale": {
-       "description": "a book to: \"*\" with stale: <член>/<сервер> — the worker of the book's subsystem is silent, the first MISSING_SHOWN 500 by UTF-8 bytes (P/08.5 Н1.3 head)",
+       "description": "a book to: \"*\" with stale: <member>/<server> — the worker of the book's subsystem is silent, the first MISSING_SHOWN 500 by UTF-8 bytes (P/08.5 N1.3 head)",
        "type": "array",
        "maxItems": 500,
        "uniqueItems": true,
@@ -161,7 +161,7 @@
        }
       },
       "stale_count": {
-       "description": "all such servers (P/08.5 Н1.3 head)",
+       "description": "all such servers (P/08.5 N1.3 head)",
        "$ref": "#/$defs/common.uint53"
       }
      },
@@ -181,7 +181,7 @@
       ]
      },
      {
-      "description": "key of the book — the value of the field key of the entry, a non-empty string (P/03.7 Н1.2 entry)",
+      "description": "key of the book — the value of the field key of the entry, a non-empty string (P/03.7 N1.2 entry)",
       "type": "string",
       "pattern": "^(?:[\\s\\S]+)$"
      }
@@ -192,7 +192,7 @@
     "type": "object",
     "properties": {
      "entries": {
-      "description": "the elements of the key for this recipient by (member, item) in UTF-8 bytes (Н1.3 order — a rule of the lesson, not the form)",
+      "description": "the elements of the key for this recipient by (member, item) in UTF-8 bytes (N1.3 order — a rule of the lesson, not the form)",
       "type": "array",
       "items": {
        "type": "object",
@@ -202,12 +202,12 @@
          "description": "the contributor member — from the origin of the report, not from the input"
         },
         "item": {
-         "description": "`<слот>/<item>` for a family, `<item>` for a single row",
+         "description": "`<slot>/<item>` for a family, `<item>` for a single row",
          "type": "string",
          "pattern": "^(?:[\\s\\S]+)$"
         },
         "value": {
-         "description": "the input object as is; the secrets *_secret — ring envelopes (enc:v2), AAD — the row key 0x00 «/<item строки>» + the JSON Pointer of the secret (Н1.3 at_rest)",
+         "description": "the input object as is; the secrets *_secret — ring envelopes (enc:v2), AAD — the row key 0x00 «/<row item>» + the JSON Pointer of the secret (N1.3 at_rest)",
          "type": "object",
          "x-opaque": true
         }
@@ -232,7 +232,7 @@
    ]
   },
   "common.domain_backup_doc": {
-   "description": "the backup document (P/08.8 Н1.5 document) — JCS {term, rev, holder, at, members, state, objects, raw?, backup_key_rev, holder_member_key?, issuer, kid, sig}, a closed set; one document at the holder (the object `domain/backups/rev-<rev>`) and at the keeper (the object domain/backup); the signature — by the issuer, the check — the function record of the term record contract (the kind «документ резервной копии»; the types — step 1, not_a_record). The document carries no domain: the issuer binds it to the domain (record steps 3–5)",
+   "description": "the backup document (P/08.8 N1.5 document) — JCS {term, rev, holder, at, members, state, objects, raw?, backup_key_rev, holder_member_key?, issuer, kid, sig}, a closed set; one document at the holder (the object `domain/backups/rev-<rev>`) and at the keeper (the object domain/backup); the signature — by the issuer, the check — the function record of the term record contract (the kind «backup document»; the types — step 1, not_a_record). The document carries no domain: the issuer binds it to the domain (record steps 3–5)",
    "type": "object",
    "properties": {
     "term": {
@@ -241,11 +241,11 @@
     },
     "rev": {
      "$ref": "#/$defs/common.pos53",
-     "description": "the backup revision; grows only when the content changes (Н1.5 rev)"
+     "description": "the backup revision; grows only when the content changes (N1.5 rev)"
     },
     "holder": {
      "$ref": "#/$defs/common.domain_member",
-     "description": "the name of the holder member (P/08.1 Н1.1 member)"
+     "description": "the name of the holder member (P/08.1 N1.1 member)"
     },
     "at": {
      "description": "wall-clock seconds of the signature; a JSON number (record step 1: at — a number)",
@@ -261,7 +261,7 @@
      "uniqueItems": true
     },
     "parts": {
-     "description": "part → {sha256, rev, key_rev} (P/08.8 Н1.5а)",
+     "description": "part → {sha256, rev, key_rev} (P/08.8 N1.5a)",
      "type": "object",
      "additionalProperties": true
     },
@@ -271,15 +271,15 @@
      "additionalProperties": true
     },
     "state": {
-     "description": "{<ключ строки>: {<элемент>: <текст>}} — the rows that the domain decided and that nobody else has (Н1.5 state)",
+     "description": "{<row key>: {<element>: <text>}} — the rows that the domain decided and that nobody else has (N1.5 state)",
      "type": "object",
      "properties": {},
      "propertyNames": {
-      "description": "the key of a state row (Н1.5 state)",
+      "description": "the key of a state row (N1.5 state)",
       "type": "string"
      },
      "additionalProperties": {
-      "description": "{<элемент>: <текст>}",
+      "description": "{<element>: <text>}",
       "type": "object",
       "properties": {},
       "propertyNames": {
@@ -287,22 +287,22 @@
        "type": "string"
       },
       "additionalProperties": {
-       "description": "the value of the element as stored (text); *_secret — an enc:v2 envelope of the backup key (Н1.5 secrets)",
+       "description": "the value of the element as stored (text); *_secret — an enc:v2 envelope of the backup key (N1.5 secrets)",
        "type": "string"
       }
      }
     },
     "objects": {
-     "description": "`{<ключ объекта>: <JSON>}` — the shared document and the alarm history (Н1.5 objects); only objects in the form of their family, as a value",
+     "description": "`{<object key>: <JSON>}` — the shared document and the alarm history (N1.5 objects); only objects in the form of their family, as a value",
      "type": "object",
      "x-opaque": true
     },
     "raw": {
-     "description": "`{<ключ объекта>: <base64>}` — the objects of the copy not in the form of their family — not JSON or JSON not by the form, as bytes (Н1.5 raw; C08-BACKUP-JSON-99, the Architect's decision of 2026-10-26)",
+     "description": "`{<object key>: <base64>}` — the objects of the copy not in the form of their family — not JSON or JSON not by the form, as bytes (N1.5 raw; C08-BACKUP-JSON-99, the Architect's decision of 2026-10-26)",
      "type": "object",
      "properties": {},
      "propertyNames": {
-      "description": "the object key; a key — in objects or in raw, not in both (Н1.5 raw; in both — record step 1, not_a_record)",
+      "description": "the object key; a key — in objects or in raw, not in both (N1.5 raw; in both — record step 1, not_a_record)",
       "type": "string"
      },
      "additionalProperties": {
@@ -313,10 +313,10 @@
     },
     "backup_key_rev": {
      "$ref": "#/$defs/common.pos53",
-     "description": "the revision of the backup key (Н1.5 backup_key)"
+     "description": "the revision of the backup key (N1.5 backup_key)"
     },
     "holder_member_key": {
-     "description": "hex of the public key of the holder member, 32 bytes; the key of the former one in the list after a move (Н1.2 former)",
+     "description": "hex of the public key of the holder member, 32 bytes; the key of the former one in the list after a move (N1.2 former)",
      "type": "string",
      "pattern": "^(?:[0-9a-f]{64})$"
     },
@@ -350,7 +350,7 @@
    ]
   },
   "common.domain_backup_pointer": {
-   "description": "the pair of the backup and its sum {term, rev, sha256} (P/08.8 Н1.5 keepers): the holder's pointer domain/keepers/<член> and the keeper's row domain/backup-taken",
+   "description": "the pair of the backup and its sum {term, rev, sha256} (P/08.8 N1.5 keepers): the holder's pointer domain/keepers/<member> and the keeper's row domain/backup-taken",
    "type": "object",
    "properties": {
     "term": {
@@ -374,16 +374,16 @@
    ]
   },
   "common.domain_member": {
-   "description": "the member's name — CLUSTER of its installation, 1–64 characters [a-z0-9-] (P/08.1 Н1.1 member)",
+   "description": "the member's name — CLUSTER of its installation, 1–64 characters [a-z0-9-] (P/08.1 N1.1 member)",
    "type": "string",
    "pattern": "^(?:[a-z0-9-]{1,64})$"
   },
   "common.domain_member_entry": {
-   "description": "the member entry Entry (P/08.3 Н1.1); by — only at admitted, Entry not larger than ENTRY_MAX 1240 bytes of JCS (P/08.10 Н1.5) — checks of the lesson at the writer, not of the form",
+   "description": "the member entry Entry (P/08.3 N1.1); by — only at admitted, Entry not larger than ENTRY_MAX 1240 bytes of JCS (P/08.10 N1.5) — checks of the lesson at the writer, not of the form",
    "type": "object",
    "properties": {
     "how": {
-     "description": "where the member in the list comes from — \"admitted\" | \"holder\" | `\"held the domain until term <N>\"` (P/08.3 Н1.1; the last two — P/08.8 Н1.2)",
+     "description": "where the member in the list comes from — \"admitted\" | \"holder\" | `\"held the domain until term <N>\"` (P/08.3 N1.1; the last two — P/08.8 N1.2)",
      "type": "string",
      "not": {
       "enum": [
@@ -404,14 +404,14 @@
      "description": "the key of the member admitted by the fingerprint; at holder — the key from the first report of its agent"
     },
     "revoked_keys": {
-     "description": "the former keys of this name, revoked; not more than the 4 latest (P/08.10 Н1.5)",
+     "description": "the former keys of this name, revoked; not more than the 4 latest (P/08.10 N1.5)",
      "type": "array",
      "items": {
       "$ref": "#/$defs/common.domain_member_key"
      }
     },
     "ca": {
-     "description": "the member's CA fingerprints (sha256 DER), 1–2, ascending, without repeats (P/08.3 Н1.6 Entry.ca)",
+     "description": "the member's CA fingerprints (sha256 DER), 1–2, ascending, without repeats (P/08.3 N1.6 Entry.ca)",
      "type": "array",
      "items": {
       "$ref": "#/$defs/common.sha256_hex"
@@ -421,7 +421,7 @@
      "maxItems": 2
     },
     "class": {
-     "description": "server — a cluster with servers, camera — a camera cluster (P/08.3 Н1.1)",
+     "description": "server — a cluster with servers, camera — a camera cluster (P/08.3 N1.1)",
      "type": "string",
      "enum": [
       "server",
@@ -429,16 +429,16 @@
      ]
     },
     "url": {
-     "description": "the entry address, not longer than 256 bytes (P/08.1 Н1.4)",
+     "description": "the entry address, not longer than 256 bytes (P/08.1 N1.4)",
      "type": "string",
      "maxLength": 256
     },
     "via": {
-     "description": "the member's relay (P/08.3 Н1.2)",
+     "description": "the member's relay (P/08.3 N1.2)",
      "type": "string"
     },
     "batch": {
-     "description": "the admission batch (P/08.3 Н1.1а)",
+     "description": "the admission batch (P/08.3 N1.1a)",
      "type": "string"
     }
    },
@@ -449,20 +449,20 @@
    ]
   },
   "common.domain_member_key": {
-   "description": "hex of the member's Ed25519 public key, 32 bytes (the member key P/09.1 Н1.1 pub; Entry.key P/08.3 Н1.1)",
+   "description": "hex of the member's Ed25519 public key, 32 bytes (the member key P/09.1 N1.1 pub; Entry.key P/08.3 N1.1)",
    "type": "string",
    "pattern": "^(?:[0-9a-f]{64})$"
   },
   "common.domain_members_doc": {
-   "description": "doc of the holder's row domain/member-rows/<раздел> (P/08.3 Н1.1) and of its copy domain/member-list/<раздел> at the member — JCS text (P/09.1 Н1.1, Н1.4)",
+   "description": "doc of the holder's row domain/member-rows/<part> (P/08.3 N1.1) and of its copy domain/member-list/<part> at the member — JCS text (P/09.1 N1.1, N1.4)",
    "type": "object",
    "properties": {
     "domain": {
-     "description": "the domain name (P/08.2 Н1.1)",
+     "description": "the domain name (P/08.2 N1.1)",
      "type": "string"
     },
     "part": {
-     "description": "part: 4 digits, 0000…4095 (P/08.3 Н1.1)",
+     "description": "part: 4 digits, 0000…4095 (P/08.3 N1.1)",
      "type": "string",
      "pattern": "^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$"
     },
@@ -472,10 +472,10 @@
     },
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "the term of the holder that wrote the row (P/08.8 Н1.1; installation — 1)"
+     "description": "the term of the holder that wrote the row (P/08.8 N1.1; installation — 1)"
     },
     "members": {
-     "description": "the entries of the members of this part, the holder is in the count of its own part (P/08.10 Н1.5)",
+     "description": "the entries of the members of this part, the holder is in the count of its own part (P/08.10 N1.5)",
      "type": "object",
      "propertyNames": {
       "$ref": "#/$defs/common.domain_member"
@@ -497,7 +497,7 @@
      "type": "string"
     },
     "gathered": {
-     "description": "a row of the gathering «from nothing»: the source of the part at the write, null — there is no source (P/08.8 Н1.8а gathered)",
+     "description": "a row of the gathering «from nothing»: the source of the part at the write, null — there is no source (P/08.8 N1.8a gathered)",
      "anyOf": [
       {
        "type": "object",
@@ -521,7 +521,7 @@
      ]
     },
     "new": {
-     "description": "the names new of the part, the members of this row (P/08.8 Н1.8а gathered)",
+     "description": "the names new of the part, the members of this row (P/08.8 N1.8a gathered)",
      "type": "array",
      "items": {
       "type": "string",
@@ -543,11 +543,11 @@
    "x-encoding": "jcs"
   },
   "common.domain_outcome": {
-   "description": "the outcome of the edit — the JSON text of the element `<id>` of the outcomes row: at the holder domain/outcomes/<член> (P/08.6 Н1.6), at the member domain/outcomes (P/09.1 Н1.5 outcome)",
+   "description": "the outcome of the edit — the JSON text of the element `<id>` of the outcomes row: at the holder domain/outcomes/<member> (P/08.6 N1.6), at the member domain/outcomes (P/09.1 N1.5 outcome)",
    "type": "object",
    "properties": {
     "id": {
-     "description": "id of the edit (P/08.6 Н1.4 id); equal to the element's name — a rule of the lesson (settle, P/08.6 Н1.6)",
+     "description": "id of the edit (P/08.6 N1.4 id); equal to the element's name — a rule of the lesson (settle, P/08.6 N1.6)",
      "type": "string",
      "pattern": "^(?:e-[0-9a-f]{12})$"
     },
@@ -574,19 +574,19 @@
      "description": "the agent's wall-clock seconds"
     },
     "what": {
-     "description": "what of the edit (P/08.6 Н1.4)",
+     "description": "what of the edit (P/08.6 N1.4)",
      "type": "string"
     },
     "kept_at": {
      "$ref": "#/$defs/common.time",
-     "description": "at of the edit (P/08.6 Н1.4 at)"
+     "description": "at of the edit (P/08.6 N1.4 at)"
     },
     "made": {
-     "description": "id of the created unit: POST of the unit, the link with new or create (P/09.1 Н1.5 made)",
+     "description": "id of the created unit: POST of the unit, the link with new or create (P/09.1 N1.5 made)",
      "type": "string"
     },
     "by": {
-     "description": "the person of the edit: by of the edit; none — the viewer of the domain (P/08.6 Н1.6)",
+     "description": "the person of the edit: by of the edit; none — the viewer of the domain (P/08.6 N1.6)",
      "type": "string"
     }
    },
@@ -602,15 +602,15 @@
    "x-encoding": "json"
   },
   "common.domain_placement": {
-   "description": "the placement record — the holder's row `domain/placement/<sub>/<ref>` (P/08.6 Н1.1) and its copy at the member `domain/placed/<sub>/<ref>` («the elements of the record as at the holder», P/09.1 Н1.5 member)",
+   "description": "the placement record — the holder's row `domain/placement/<sub>/<ref>` (P/08.6 N1.1) and its copy at the member `domain/placed/<sub>/<ref>` («the elements of the record as at the holder», P/09.1 N1.5 member)",
    "type": "object",
    "properties": {
     "cluster": {
      "$ref": "#/$defs/common.domain_member",
-     "description": "the executor member; required; \"\" — not by the form (the form of the door — 400, P/08.6 Н1.1 form)"
+     "description": "the executor member; required; \"\" — not by the form (the form of the door — 400, P/08.6 N1.1 form)"
     },
     "origin": {
-     "description": "the member owning the source; \"\" — none; origin — not an executor (P/08.6 Н1.1 executors)",
+     "description": "the member owning the source; \"\" — none; origin — not an executor (P/08.6 N1.1 executors)",
      "type": "string",
      "pattern": "^(?:([a-z0-9-]{1,64})?)$"
     },
@@ -633,7 +633,7 @@
      "description": "wall-clock seconds of the domain process of the write"
     },
     "rev": {
-     "description": "the value of the counter domain/placement of this record, as decimal text (P/08.6 Н1.1 rev)",
+     "description": "the value of the counter domain/placement of this record, as decimal text (P/08.6 N1.1 rev)",
      "type": "string",
      "pattern": "^(?:[1-9][0-9]*)$"
     }
@@ -649,7 +649,7 @@
    ]
   },
   "common.domain_topology_doc": {
-   "description": "doc of the holder's row domain/topology (P/08.3 Н1.2) and of its copy domain/member-topology at the member — JCS text (P/09.1 Н1.4)",
+   "description": "doc of the holder's row domain/topology (P/08.3 N1.2) and of its copy domain/member-topology at the member — JCS text (P/09.1 N1.4)",
    "type": "object",
    "properties": {
     "rev": {
@@ -687,7 +687,7 @@
      "description": "when written (the console's wall-clock seconds)"
     },
     "relays": {
-     "description": "who leads at least one member (P/08.3 Н1.2)",
+     "description": "who leads at least one member (P/08.3 N1.2)",
      "type": "array",
      "items": {
       "$ref": "#/$defs/common.domain_member"
@@ -703,11 +703,11 @@
    "x-encoding": "jcs"
   },
   "common.grants_doc": {
-   "description": "the JCS text {lines} of the grants row (P/08.4 Н1.3); the member's copy carries it as it came (P/09.1 Н1.4 member_copy)",
+   "description": "the JCS text {lines} of the grants row (P/08.4 N1.3); the member's copy carries it as it came (P/09.1 N1.4 member_copy)",
    "type": "object",
    "properties": {
     "lines": {
-     "description": "lines by (subject, cap, sub, scope) in UTF-8 bytes, then until by number, without repeats by (subject, cap, sub, scope, until) — the order and the repeat — a rule of the row (P/08.4 Н1.3 lines), not the form",
+     "description": "lines by (subject, cap, sub, scope) in UTF-8 bytes, then until by number, without repeats by (subject, cap, sub, scope, until) — the order and the repeat — a rule of the row (P/08.4 N1.3 lines), not the form",
      "type": "array",
      "items": {
       "$ref": "#/$defs/common.grants_line"
@@ -724,7 +724,7 @@
    "type": "object",
    "properties": {
     "subject": {
-     "description": "a person's name (Н1.1), a subject of the name index (chapter 8.5 Н1.7) or role:<имя роли> (Н1.3а, up to 69 characters); the form of the name — Н1.1 (Н3 «grants» step 3)",
+     "description": "a person's name (N1.1), a subject of the name index (chapter 8.5 N1.7) or role:<role name> (N1.3a, up to 69 characters); the form of the name — N1.1 (N3 «grants» step 3)",
      "anyOf": [
       {
        "$ref": "#/$defs/common.person_name"
@@ -746,12 +746,12 @@
      ]
     },
     "sub": {
-     "description": "the manifest name (P/02.1 Н1.2 name) or platform; no field — the row is in force in all subsystems and in platform (ADR-0097 §1)",
+     "description": "the manifest name (P/02.1 N1.2 name) or platform; no field — the row is in force in all subsystems and in platform (ADR-0097 §1)",
      "type": "string",
      "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
     },
     "scope": {
-     "description": "`*` | `unit:<sub>/<id>` | `labels:<метка>[,<метка>…]` \\| `folder:<id>` (P/08.4 Н1.3 scope): `<sub>` — the manifest name (P/02.1), `<id>` — by the identifier grammar P/06.1 Н1.3 (named_id: not . and ..), labels — the label alphabet common/contracts/labels.md; labels without repeats — a rule of the row, not the form; `folder:<id>` — the folder id, 32 lowercase hex digits (P/06.8 Н1.1)",
+     "description": "`*` | `unit:<sub>/<id>` | `labels:<label>[,<label>…]` \\| `folder:<id>` (P/08.4 N1.3 scope): `<sub>` — the manifest name (P/02.1), `<id>` — by the identifier grammar P/06.1 N1.3 (named_id: not . and ..), labels — the label alphabet common/contracts/labels.md; labels without repeats — a rule of the row, not the form; `folder:<id>` — the folder id, 32 lowercase hex digits (P/06.8 N1.1)",
      "type": "string",
      "not": {
       "type": "string",
@@ -761,7 +761,7 @@
     },
     "until": {
      "$ref": "#/$defs/common.time",
-     "description": "0 — without a deadline; otherwise wall-clock seconds — the line is in force while now < until; an input with more than three fraction digits — rounding to thousandths (P/08.4 Н1.3 until); compared by value (0 and 0.0 — one line)"
+     "description": "0 — without a deadline; otherwise wall-clock seconds — the line is in force while now < until; an input with more than three fraction digits — rounding to thousandths (P/08.4 N1.3 until); compared by value (0 and 0.0 — one line)"
     },
     "by": {
      "description": "the name proven by the gate at the write; a line matching by (subject, cap, scope, until) keeps its by",
@@ -778,7 +778,7 @@
    ]
   },
   "common.named_id": {
-   "description": "unit id by a field (P/06.1 Н1.3 named): non-empty; without / \\ | \" comma, control characters (Cc), line and paragraph separators (Zl, Zp) and digits outside 0–9 (non-ASCII Nd); the categories — Unicode 15.0.0",
+   "description": "unit id by a field (P/06.1 N1.3 named): non-empty; without / \\ | \" comma, control characters (Cc), line and paragraph separators (Zl, Zp) and digits outside 0–9 (non-ASCII Nd); the categories — Unicode 15.0.0",
    "type": "string",
    "not": {
     "enum": [
@@ -789,7 +789,7 @@
    "pattern": "^(?:[^/\\\\|\",\u0000-\u001f-  ٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+)$"
   },
   "common.person_name": {
-   "description": "the person's name (P/08.4 Н1.1 name): 1–64 characters without whitespace, control characters (U+0000–U+001F, U+007F) and : | ( ) \" /; not exactly break-glass; whitespace — the White_Space property of Unicode 15.0.0, written out as characters (the Architect's decision of 2026-10-20 on the questions of assembling lesson 8, item 3); «not a subject of the name index» — a check of the door (chapter 8.5 Н1.7), not the form",
+   "description": "the person's name (P/08.4 N1.1 name): 1–64 characters without whitespace, control characters (U+0000–U+001F, U+007F) and : | ( ) \" /; not exactly break-glass; whitespace — the White_Space property of Unicode 15.0.0, written out as characters (the Architect's decision of 2026-10-20 on the questions of assembling lesson 8, item 3); «not a subject of the name index» — a check of the door (chapter 8.5 N1.7), not the form",
    "type": "string",
    "not": {
     "enum": [
@@ -806,20 +806,20 @@
    "maximum": 9007199254740991
   },
   "common.sha256_hex": {
-   "description": "sha256 — 64 lowercase hex digits (P/02.3 Н1.5)",
+   "description": "sha256 — 64 lowercase hex digits (P/02.3 N1.5)",
    "type": "string",
    "pattern": "^(?:[0-9a-f]{64})$"
   },
   "common.shared_doc": {
-   "description": "the shared document of the domain (P/08.9 Н1.2 document) — JCS {domain, term, rev, at, by, shared, issuer, kid, sig}, a closed set; one document at the holder (the object `domain/shared-docs/rev-<rev>`) and at the member (the object domain/shared — a copy taken by the agent, P/09.1 Н1.10); the signature — by the issuer, the check — the function record of the term record contract (the kind «общий документ»)",
+   "description": "the shared document of the domain (P/08.9 N1.2 document) — JCS {domain, term, rev, at, by, shared, issuer, kid, sig}, a closed set; one document at the holder (the object `domain/shared-docs/rev-<rev>`) and at the member (the object domain/shared — a copy taken by the agent, P/09.1 N1.10); the signature — by the issuer, the check — the function record of the term record contract (the kind «shared document»)",
    "type": "object",
    "properties": {
     "domain": {
-     "description": "the domain name (chapter 8.2, from М11/2 Н1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
+     "description": "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
     },
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "the holder's term (chapter 8.8, from М11/10 Н1.1); the order — (term, rev), term is senior"
+     "description": "the holder's term (chapter 8.8, from M11/10 N1.1); the order — (term, rev), term is senior"
     },
     "rev": {
      "$ref": "#/$defs/common.pos53",
@@ -834,7 +834,7 @@
      "type": "string"
     },
     "shared": {
-     "description": "`{<sub>: {<имя>: <значение>}}` — only what is declared P/02.1 Н1.2б; subsystems and names ascending (JCS)",
+     "description": "`{<sub>: {<name>: <value>}}` — only what is declared P/02.1 N1.2b; subsystems and names ascending (JCS)",
      "type": "object",
      "propertyNames": {
       "$ref": "#/$defs/common.sub_name"
@@ -878,12 +878,12 @@
    ]
   },
   "common.sub_name": {
-   "description": "the subsystem name (P/02.1 Н1.2)",
+   "description": "the subsystem name (P/02.1 N1.2)",
    "type": "string",
    "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
   },
   "common.time": {
-   "description": "time Н0 P/01.1 «Time in a row»",
+   "description": "time N0 P/01.1 «Time in a row»",
    "type": [
     "string",
     "number"

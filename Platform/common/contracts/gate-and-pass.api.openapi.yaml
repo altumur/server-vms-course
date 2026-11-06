@@ -1,7 +1,7 @@
 # The gate-and-pass contract (gate-and-pass.md) — the common forms of its bodies. Only components: the contract has no doors; these
 # schemas are referenced by the contracts of the cluster console (P/06), the process domain (P/08) and the domain console (P/10) — one form per wire,
 # no copies. Taken out of the OpenAPI of lesson 6 by the move of lesson 10 (stage B): the refusal form of the gate is needed by the process domain too
-# (P/08.4 Н1.5), and a reference 08 → 06 together with the doors of the late-layer chapter 6.7 (06 → 08) would give a cycle between the files.
+# (P/08.4 N1.5), and a reference 08 → 06 together with the doors of the late-layer chapter 6.7 (06 → 08) would give a cycle between the files.
 openapi: 3.1.0
 info:
   title: Gate and pass — common forms
@@ -13,8 +13,8 @@ components:
       type: object
       required: [detail, error]
       additionalProperties: false
-      description: 'A refusal of the gate `{detail, error: denied}` (the contract «The gate» refusal; P/06.3 Н4 denied): 401 — there is no
-        identity, 403 — there is no grant; at a door of the process domain — P/08.4 Н1.5'
+      description: 'A refusal of the gate `{detail, error: denied}` (the contract «The gate» refusal; P/06.3 N4 denied): 401 — there is no
+        identity, 403 — there is no grant; at a door of the process domain — P/08.4 N1.5'
       properties:
         detail:
           type: string
@@ -23,7 +23,7 @@ components:
     RefusalField:
       type: string
       pattern: "^(?:(?:/(?:[^~/]|~[01])*)+)$"
-      description: 'The path of the refusal field — a JSON Pointer RFC 6901 from the root of the JSON body of the request, only at 400, 409, 412 (P/06.1 Н2 «Refusal:
+      description: 'The path of the refusal field — a JSON Pointer RFC 6901 from the root of the JSON body of the request, only at 400, 409, 412 (P/06.1 N2 «Refusal:
         `error` and `field`», ADR-0094 B5). A refusal of the whole body, of a header, of the query or of a path segment goes without field.'
     Unavailable:
       type: object
@@ -31,7 +31,7 @@ components:
       additionalProperties: false
       description: 'The rule «Unreadable row» of the section «Refusals of the gate»: a row of the domain that the access check reads for
         this session exists but does not read — 503 `{error: unavailable, detail?}`; detail — by side (at the cluster console
-        it is mandatory, P/06.5 Н4 ConsoleRefusal); at the doors of the process domain (P/08) and of the domain console (P/10) with the gate'
+        it is mandatory, P/06.5 N4 ConsoleRefusal); at the doors of the process domain (P/08) and of the domain console (P/10) with the gate'
       properties:
         error:
           const: unavailable

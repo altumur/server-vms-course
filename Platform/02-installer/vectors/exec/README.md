@@ -2,9 +2,9 @@
 
 This English text is the source; the Russian translation `ru/vectors/exec/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter [P/02.1](../../spec/02.1-installer.norms.md) of the loader (Н1.3 `worker.exec`, the definition `execLine`; ADR-0091
+The owner is chapter [P/02.1](../../spec/02.1-installer.norms.md) of the loader (N1.3 `worker.exec`, the definition `execLine`; ADR-0091
 addendum (4)–(6)). The participants are the loader (a refusal of the manifest with the key path) and the runner `w2c-run.sh` ([P/02.4](../../spec/02.4-installer.norms.md)
-Н1.9: `worker`, `domainworker`, `part` execute argv themselves, without a shell). The bytes are written by the Specification.
+N1.9: `worker`, `domainworker`, `part` execute argv themselves, without a shell). The bytes are written by the Specification.
 
 ## `cases.tsv`
 

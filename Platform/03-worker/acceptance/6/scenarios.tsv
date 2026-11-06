@@ -52,7 +52,7 @@ scenario	step	request	expect
 07-append-by-data	34	console POST /testsub2/requests {"unit": "t1", "from": 8, "to": 8, "action": "recount"}	@oneof 202 {"queued": "t1-8-8"} | 200 {"answered": "@any"}
 07-append-by-data	35	@until 30 store GET /v1/get?key=objects/testsub2/marks/t1	200 {"items": {"count": "6", "ranges": "0-3,7-8"}}
 07-append-by-data	36	@until 90 store GET /v1/get?key=testsub2/requests/t1-8-8	200 {"items": null}
-# 08-orders (ADR-0091 item 1): the training customer testsub (Н5) — a counter with start ≥ 1000 orders testsub2/tallies/testsub-<id>; an occupied row is not written; a restart of the worker — a new event, renewal; outcomes in the heartbeat
+# 08-orders (ADR-0091 item 1): the training customer testsub (N5) — a counter with start ≥ 1000 orders testsub2/tallies/testsub-<id>; an occupied row is not written; a restart of the worker — a new event, renewal; outcomes in the heartbeat
 08-orders	1	@start controller	ok
 08-orders	2	@start worker w-1	ok
 08-orders	3	@as console store POST /v1/write {"id":"a3","op":"put","key":"testsub2/tallies/testsub-c9","items":{"id":"testsub-c9","revision":"1","name":"testsub-c9","of":"c9"},"cas":""}	200

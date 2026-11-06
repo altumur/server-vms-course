@@ -1,4 +1,4 @@
-# Acceptance P/02.2: manifest put installations with a canonical view (Н3; window 2.2, item 8). Row: case<TAB>puts<TAB>expect<TAB>canonical.
+# Acceptance P/02.2: manifest put installations with a canonical view (N3; window 2.2, item 8). Row: case<TAB>puts<TAB>expect<TAB>canonical.
 # puts lists space-separated `puts/<имя>.subsystem.yaml` files with @view-delete and @view-spoil directives between them; expect is the code
 # of the final installation and the resulting rev of platform/manifest/<name>; canonical is the vectors/canonical case (manifest bytes of the view)
 # or «-» (no view). Rules: README.

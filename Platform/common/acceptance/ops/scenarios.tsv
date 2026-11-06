@@ -43,7 +43,7 @@ scenario	step	request	expect
 03-accept-repeat	41	@pass-step-none op-1 10	ok
 03-accept-repeat	42	member m1 store GET /v1/get?key=probe-op/things/n1	200 {"items": {"revision": "2", "note": "a"}}
 03-accept-repeat	43	member m1 store GET /v1/get?key=probe-op/things/n2	200 {"items": {"revision": "2", "note": "b"}}
-# Sc. 07: leader killed, outcome committed — step is not re-executed. Leader is replica 1, the only console; replica 2 starts during the call and takes the role socket (README, «Две консоли»).
+# Sc. 07: leader killed, outcome committed — step is not re-executed. Leader is replica 1, the only console; replica 2 starts during the call and takes the role socket (README, «Two consoles»).
 07-restart-with-outcome	1	@domain m1	ok
 07-restart-with-outcome	2	@pass-worker m1 probe-op op-1	ok
 07-restart-with-outcome	3	member m1 console POST /probe-op/things {"name": "n1"}	201 {"id": "n1", "revision": 1, "index": "$v1"}
@@ -91,7 +91,7 @@ scenario	step	request	expect
 07-lost-batch-answer	10	@pass-step-answer a 200 application/json {}	ok
 07-lost-batch-answer	11	@until 15 member m1 console GET /probe-op/operations/397ea0c089bf374de2d338d7f85907a5	200 {"id": "397ea0c089bf374de2d338d7f85907a5", "by": "root", "state": "done", "finished_at": "@time", "total": 1, "done": 1, "ok": 1, "failed": 0, "cancelled": 0, "items": [{"state": "ok", "version": "2"}]}
 07-lost-batch-answer	12	@pass-seen op-1	ok {"requests": 1}
-# Sc. 07: process-paused leader, another holds the turn, cancellation — late batch refused by generation guard. Leader is replica 2; replica 1 frozen before admission; stand supplies the turn (README, «Сроки»).
+# Sc. 07: process-paused leader, another holds the turn, cancellation — late batch refused by generation guard. Leader is replica 2; replica 1 frozen before admission; stand supplies the turn (README, «Terms»).
 07-late-batch	1	@domain m1	ok
 07-late-batch	2	@pass-worker m1 probe-op op-1	ok
 07-late-batch	3	member m1 console POST /probe-op/things {"name": "n1"}	201 {"id": "n1", "revision": 1, "index": "$v1"}

@@ -4,13 +4,13 @@ This English text is the source; the Russian translation `ru/contracts/sealing.m
 
 A common contract of the module «Platform» (ADR-0083 addendum (5): a contract that several processes read lies in
 `Platform/common/`; the Architect's decision on the review of stage B 1–2, item 4). The owner is lesson [P/06](../../06-console/spec/06.2-console.norms.md),
-chapter 6.2 Н1.2 «The envelope and the key ring» (moved from М10/7 Н1.2; ADR-0083 addendum (29) item 9: the line names the owner lesson of the norm; the library by the contract is written by the session `common` of the generation). Readers: the installer — the commands `w2cctl secrets`
-([P/02.4 Н1.9](../../02-installer/spec/02.4-installer.norms.md)), the worker — opening (chapter P/03.5), the console —
+chapter 6.2 N1.2 «The envelope and the key ring» (moved from M10/7 N1.2; ADR-0083 addendum (29) item 9: the line names the owner lesson of the norm; the library by the contract is written by the session `common` of the generation). Readers: the installer — the commands `w2cctl secrets`
+([P/02.4 N1.9](../../02-installer/spec/02.4-installer.norms.md)), the worker — opening (chapter P/03.5), the console —
 sealing and resealing ([chapter P/06.2](../../06-console/spec/06.2-console.norms.md)),
-the domain processes (М11). Moved from М10/7 Н1.2 without a change of behaviour: what to seal, who holds the key, rotation, the mode
+the domain processes (M11). Moved from M10/7 N1.2 without a change of behaviour: what to seal, who holds the key, rotation, the mode
 without a key and the idempotency fingerprint stay in the norms of the reading lessons.
 
-Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
 
 ## Envelope
 
@@ -47,10 +47,10 @@ This corrects the AAD bytes of the former profile; the form of the envelope `enc
 
 ```yaml
 ring_file:                                   # SECRETS_KEY=<path>; the default is the installer layout: the unit is given
-                                             # <PLATFORM_DIR>/etc/secrets/platform.key (P/02.4 Н1.1); not set for a process —
+                                             # <PLATFORM_DIR>/etc/secrets/platform.key (P/02.4 N1.1); not set for a process —
                                              # development mode (no_key below; analysis of the review of stage A 6–7, № 19)
   line:    <kid> <64 hex>                    # 32 bytes of key; the first key entry is the current one; empty lines and separate comment lines are skipped;
-                                             # a BOM U+FEFF at the start of the file is skipped and does not enter the kid (reconciliation of python and go М10/6–11, agreed)
+                                             # a BOM U+FEFF at the start of the file is skipped and does not enter the kid (reconciliation of python and go M10/6–11, agreed)
   mode:    0640 root:w2c-secrets; the directory is not accessible to others; the file is NOT inside a directory of the store, of the objects or of their copies
            (the list — the secret files contract forbidden layout: copies — only the given ones; STAND-FORBIDDEN-DIRS-01, the Architect's decision of 2026-10-27)
   link:    the placement — [the secret files placement contract](secret-files.md): the file itself is a regular one, not a symbolic link;
@@ -58,16 +58,16 @@ ring_file:                                   # SECRETS_KEY=<path>; the default i
            S-005, the Architect's decision of 2026-10-23)
 ```
 
-Three states of the ring at a holder (from P/06.2 Н1.2 `no_key` without change; layout audit, the Architect's decision of 2026-10-25, B-22); what the door
-of the holder does with each is the norm of its lesson (the console — P/06.2 Н1.2, Н4; the common row check — [the row check contract](row-check.md) «Ring boundary»;
-the worker — P/03.5 Н1.2 `open_without`):
+Three states of the ring at a holder (from P/06.2 N1.2 `no_key` without change; layout audit, the Architect's decision of 2026-10-25, B-22); what the door
+of the holder does with each is the norm of its lesson (the console — P/06.2 N1.2, N4; the common row check — [the row check contract](row-check.md) «Ring boundary»;
+the worker — P/03.5 N1.2 `open_without`):
 
 ```yaml
 no_key:
   unset:       SECRETS_KEY is not set → development mode with a loud log line (not an envelope, the values are open — by the norm of the lesson);
-               SECRETS_KEY="" (set empty) is not development mode but unreadable below (reconciliation of python and go М10/6–11, S11)
+               SECRETS_KEY="" (set empty) is not development mode but unreadable below (reconciliation of python and go M10/6–11, S11)
   unreadable:  set but not readable (an empty or a wrong file included — «Ring file» below) — this is not the mode without a key;
-               what refuses is at the lesson (the console: all POST/PUT of units — 503 unavailable, P/06.2 Н1.2)
+               what refuses is at the lesson (the console: all POST/PUT of units — 503 unavailable, P/06.2 N1.2)
   open:        set and readable — the envelope enc:v2 by this contract
 ```
 
@@ -89,10 +89,10 @@ the implementation cannot represent the result, the command refuses before chang
 
 ## Reseal a value
 
-Moved from [P/06.2](../../06-console/spec/06.2-console.norms.md) Н3 «reseal at start» (what is done with one value)
+Moved from [P/06.2](../../06-console/spec/06.2-console.norms.md) N3 «reseal at start» (what is done with one value)
 without new behaviour; which rows are walked, `cas` by the read version, races and the order of the ring holders — there and in
-[P/02.5](../../02-installer/spec/02.5-installer.norms.md) Н1.3, by reference (guess of stage C C06-RESEAL-33-01, the Architect's decision of 2026-10-25). The walk at
-the console (its own rows at start, P/06.2 Н3) and at the installer (`w2cctl secrets seal` by prefixes, [P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.9) differs —
+[P/02.5](../../02-installer/spec/02.5-installer.norms.md) N1.3, by reference (guess of stage C C06-RESEAL-33-01, the Architect's decision of 2026-10-25). The walk at
+the console (its own rows at start, P/06.2 N3) and at the installer (`w2cctl secrets seal` by prefixes, [P/02.4](../../02-installer/spec/02.4-installer.norms.md) N1.9) differs —
 there is no common rule of the walk, it stays with each; what is common is what is done with one value, below (layout audit B-22).
 
 ```yaml
@@ -107,7 +107,7 @@ untouched: enc:v1 (a dead format, ADR-0003; at the reader «?»), enc:v2 not by 
            key and the field path (without the value); reseal the other fields of the row, do not skip the row, do not interrupt the start
            (the Architect's decision of 2026-10-25)
 unreadable: the value of a json field is not JSON or the row is out of form — skip the row: a log line with the key and the cause, the row does not
-           change (P/06.2 Н3, reconciliation S8)
+           change (P/06.2 N3, reconciliation S8)
 ```
 
 ## Vectors
@@ -117,6 +117,6 @@ C06-RESEAL-33-01). (ADR-0083 addendum (32) item 2)
 
 ## Correspondence to former lessons
 
-From М10/7 Н1.2 (stage B, review of stage B 1–2 item 4): the blocks `envelope` and `ring_file` (`line`, `mode`), the paragraphs about the AAD path
-and about the grammar of the ring file. Parts of the norms М10/7-03 (the envelope and AAD; chapter P/03.5) and М10/7-04 (the form of the ring file — here; the ring, `rotate` and
+From M10/7 N1.2 (stage B, review of stage B 1–2 item 4): the blocks `envelope` and `ring_file` (`line`, `mode`), the paragraphs about the AAD path
+and about the grammar of the ring file. Parts of the norms M10/7-03 (the envelope and AAD; chapter P/03.5) and M10/7-04 (the form of the ring file — here; the ring, `rotate` and
 resealing — chapter P/06.2) — by `note` of [id-map](../id-map.tsv) (analysis of the review of stage B 6–7, № 23).

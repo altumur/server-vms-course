@@ -1,4 +1,4 @@
 # Outcomes of an unreadable value of an element of the account book: the copy at a member `domain/live/stream-accounts`, schema `stream-accounts-entry.schema.json#copy` (V/03.6 Н1.4); the path is from value; the outcomes reveal no secrets. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-	liveworker	an account element not in form or the password envelope did not open: not read, rather than absent — the element read last since the start; none such — the account does not play; the log without values, the other elements go on	1	элемент	V/03.6 Н1.4, Н4
-	domainagent	does not judge value: the elements of the copy — as received from the holder, the secrets — envelopes of the member's keyring (P/09.1 Н1.4 member_row)	1	элемент	P/09.1 Н1.4
+	liveworker	an account element not in form or the password envelope did not open: not read, rather than absent — the element read last since the start; none such — the account does not play; the log without values, the other elements go on	1	element	V/03.6 Н1.4, Н4
+	domainagent	does not judge value: the elements of the copy — as received from the holder, the secrets — envelopes of the member's keyring (P/09.1 Н1.4 member_row)	1	element	P/09.1 Н1.4

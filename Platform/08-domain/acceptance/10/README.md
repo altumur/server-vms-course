@@ -3,16 +3,16 @@
 This English text is the source; the Russian translation `ru/acceptance/10/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are [the common acceptance README](../../../common/acceptance/README.md), the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand)
-(a stand of several clusters; formerly the dictionary of the М11 README of the acceptance М11/01). The norm of the chapter is
-[`08.10-domain.norms.md`](../../spec/08.10-domain.norms.md) Н5. The scenarios were moved from the acceptance of М11/12 (04, 05) (stage B,
-ADR-0083 addendum (1): without a change of behaviour); the numbers, the names of the scenarios and the steps are the former ones. The other scenarios of М11/12: 01, 03,
+(a stand of several clusters; formerly the dictionary of the M11 README of the acceptance M11/01). The norm of the chapter is
+[`08.10-domain.norms.md`](../../spec/08.10-domain.norms.md) N5. The scenarios were moved from the acceptance of M11/12 (04, 05) (stage B,
+ADR-0083 addendum (1): without a change of behaviour); the numbers, the names of the scenarios and the steps are the former ones. The other scenarios of M11/12: 01, 03,
 06 — [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md), 02 — [chapter 8.3](../3/README.md) (17) (the plan of the move of lesson 8, the appendix). Scenarios 07, 08 are
 the coverage audit of P/08; 09, 10 — the coverage audit of P/08, the second pass of Gemini. There are no vectors: the chapter introduces no new functions.
 
 ## Stand
 
-The preparation is as the «Preparation of each scenario» of the acceptance of [chapter 8.3](../3/README.md) (formerly the acceptance README of М11/03,
-«Подготовка каждого сценария 01–09»), the catalog `testsub`. The doors `holder`, `member`, `resource`, `signer`, `signer2` and
+The preparation is as the «Preparation of each scenario» of the acceptance of [chapter 8.3](../3/README.md) (formerly the acceptance README of M11/03,
+«Setup of each scenario 01–09»), the catalog `testsub`. The doors `holder`, `member`, `resource`, `signer`, `signer2` and
 the directives `@domain`, `@start domain`, `@start agent`, `@install domain`, `@start domain second`, `@on`, `@freeze`, `@thaw` are the dictionary of the
 «Domain stand» and the common dictionary of directives of the common acceptance README. The runner goes as the human `root` (chapter 8.4). The clock is not accelerated: `LOST_AFTER` 45 s,
 `REPORT_EVERY` 5 s, `MARK_REFRESH` 22.5 s, `TURN_TERM` 45 s.
@@ -24,13 +24,13 @@ the directives `@domain`, `@start domain`, `@start agent`, `@install domain`, `@
 - **Scenario 05.** `SERVERS_MAX`: the runner puts `domain/member-count` with `servers` 499 as a row
   through `admin.sock`; the acceptance of `m1` gives member 500 — 200, the acceptance of `m2` — 409 `too many servers`. Both sides of the ceiling.
 
-- **Scenario 07** (the coverage audit of P/08, audit-kimi 1e9929d51). `ENTRY_MAX` over all Entries (Н1.5 `every_entry`): the stand
+- **Scenario 07** (the coverage audit of P/08, audit-kimi 1e9929d51). `ENTRY_MAX` over all Entries (N1.5 `every_entry`): the stand
   is brought up by hand, like sc. 05 (`@domain` would accept `m1` itself); `domain/member-rows/<part>` is rewritten as a row through `admin.sock` —
   the record `f01991` of the section of `m1` (3232) with a `by` of 1300 characters `x` (Entry 1336 bytes JCS > 1240; the field `by` is not limited by the form, the limit is a check of the
   writer). The acceptance of `m1` — 409 «… would exceed 1240 bytes» (the name in the text is not compared: step 6 «admit a member» names
-  the accepted one, Н1.5 — the member with the large Entry), `m1` is not written; the leaving of `f01991` (the record without it passes the check) — 200; the acceptance of
+  the accepted one, N1.5 — the member with the large Entry), `m1` is not written; the leaving of `f01991` (the record without it passes the check) — 200; the acceptance of
   `m1` — 200.
-- **Scenario 08** (the coverage audit of P/08). The freshness of the queue (Н1.7 `fresh_turn`): without agents, two copies of `domain`; the first
+- **Scenario 08** (the coverage audit of P/08). The freshness of the queue (N1.7 `fresh_turn`): without agents, two copies of `domain`; the first
   is frozen by `@on hold @freeze domain#1` (SIGSTOP; the freeze limit of 120 s is the dictionary of the «Stand»). After 20 s the second is still
   standby: the last renewal of the first is no earlier than `TURN_RENEW` (10 s) before the freeze, and an unchanged version is no more than 30 s, with
   a margin against `TURN_TERM` 45 s. Then the second takes the queue (`@until 60`: no later than 45 s from the first look at the version plus
@@ -38,12 +38,12 @@ the directives `@domain`, `@start domain`, `@start agent`, `@install domain`, `@
   (alive, number 1) — 503 `standby` (`@until`: the norm does not limit the answer window of the door); the second answers 200. During the
   freeze the door `signer` is not touched — a request to the frozen copy would hang.
 - **Scenario 09** (the coverage audit of P/08, the second pass of Gemini, the draft G11 `e32df6f8b`, rewritten). `ENTRY_MAX` over all Entries at the administrator's edit
-  `Entry.ca` (Н1.5 `every_entry`): the stand is brought up by hand without the agent of `m1`; `domain/member-rows/<part>` is rewritten through `admin.sock`
+  `Entry.ca` (N1.5 `every_entry`): the stand is brought up by hand without the agent of `m1`; `domain/member-rows/<part>` is rewritten through `admin.sock`
   — `hold` as before, `f01991` of 1336 bytes JCS (like sc. 07) and `m1` without a key (Entry `{by, how, since}` — of the form). `POST
   /domain/members/m1/ca` — 409 «… would exceed 1240 bytes», `m1` has no `Entry.ca`. Then `f01991` with five `revoked_keys`
   (`11…11`…`55…55`, 64 hex; Entry 392 bytes) — the same edit of `m1` passes and trims the `revoked_keys` of the foreign Entry to the four
-  last ones (Н1.5 `revoked_keys`, `every_entry`).
-- **Scenario 10** (the coverage audit of P/08, the second pass of Gemini). An unreadable queue at the start (Н3 «the turn of the domain process» step 1): `@stop domain`, the row
+  last ones (N1.5 `revoked_keys`, `every_entry`).
+- **Scenario 10** (the coverage audit of P/08, the second pass of Gemini). An unreadable queue at the start (N3 «the turn of the domain process» step 1): `@stop domain`, the row
   `domain/signer-turn` is rewritten through `admin.sock` not of the form (`{turn: "1"}` — no `holder`), `@start domain` —
   the process is standby: the login 503 `standby` (`@until`: the process is coming up), the row is as before — it does not rewrite it.
 
@@ -52,8 +52,8 @@ Not taken from the draft G11: `on_accept` with a large foreign Entry — not 409
 at the other doors of the process without `domain/signer` (C08-TURN-WITHOUT-SIGNER-01) — the dictionary has no door of the process `domain` not on
 `hold` (`signer` is only `hold`); its answer on the merits is `POST /api/take`, sc. 16 of [the acceptance of chapter 8.8](../8/README.md).
 
-By reading: `whole too large` (Н1.5), a holder `url` of several nodes and an unknown outcome of a write with the guard (Н1.7),
-the price (Н1.9).
+By reading: `whole too large` (N1.5), a holder `url` of several nodes and an unknown outcome of a write with the guard (N1.7),
+the price (N1.9).
 
 ## scenarios.tsv
 
@@ -64,7 +64,7 @@ In total 6 scenarios / 56 steps.
 ## `journal/corrections-10.tsv`
 
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
-of the acceptance of М11/12: about the scenarios of the chapter (04, 05) and without a scenario — at the beginning of the log, as a whole, with the former paths and numbers (they
+of the acceptance of M11/12: about the scenarios of the chapter (04, 05) and without a scenario — at the beginning of the log, as a whole, with the former paths and numbers (they
 are resolved by `Platform/common/id-map.tsv`). Implementations and their runners check their own result; this directory does not
 run them itself.
 

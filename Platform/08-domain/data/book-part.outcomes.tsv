@@ -1,7 +1,7 @@
-# Outcomes of an unreadable row domain/<sub>/<книга>/*/<раздел> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row domain/<sub>/<book>/*/<part> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domain	the whole row is unreadable: the assembly rewrites it in the next round; GET /api/book — 503 unavailable, carry does not name the book	0	строка	P/08.5 Н1.3 to_all
-	console	the whole row is unreadable: the book door — 503 {error: "unavailable"}	0	строка	P/06.7 Н1.1
-	domainagent	the whole row is unreadable: the agent rewrites the copy with the next answer of the door, does not send the book_parts field of this section	0	строка	P/09.1 Н1.4 book_want
-	<s>worker	the whole row is unreadable: an action that needs the book is not performed in this pass, the cause goes to the log	0	строка	P/08.5 Н1.4
+	domain	the whole row is unreadable: the assembly rewrites it in the next round; GET /api/book — 503 unavailable, carry does not name the book	0	row	P/08.5 N1.3 to_all
+	console	the whole row is unreadable: the book door — 503 {error: "unavailable"}	0	row	P/06.7 N1.1
+	domainagent	the whole row is unreadable: the agent rewrites the copy with the next answer of the door, does not send the book_parts field of this section	0	row	P/09.1 N1.4 book_want
+	<s>worker	the whole row is unreadable: an action that needs the book is not performed in this pass, the cause goes to the log	0	row	P/08.5 N1.4

@@ -1,9 +1,9 @@
 # The slot name: the order, the next number, the number of a role's process (the contract common/contracts/slot-name.md; POOL-ORDER-51-01).
 # A row: case<TAB>op<TAB>input<TAB>expect<TAB>note. The form — the package's README.
 case	op	input	expect	note
-order-example	order	{"prefix":"w","names":["w-srv-a-1","w-b","w-10","w-2","w-a","w-1","w-01","w-0"]}	["w-0","w-01","w-1","w-2","w-10","w-a","w-b","w-srv-a-1"]	the example of P/03.2 Н1.4: the numeric ones by the number (on equality — by the name: w-01 before w-1), then the others by the name; w-srv-a-1 — the second group
+order-example	order	{"prefix":"w","names":["w-srv-a-1","w-b","w-10","w-2","w-a","w-1","w-01","w-0"]}	["w-0","w-01","w-1","w-2","w-10","w-a","w-b","w-srv-a-1"]	the example of P/03.2 N1.4: the numeric ones by the number (on equality — by the name: w-01 before w-1), then the others by the name; w-srv-a-1 — the second group
 order-big	order	{"prefix":"w","names":["w-18446744073709551616","w-18446744073709551615","w-9","w-a"]}	["w-9","w-18446744073709551615","w-18446744073709551616","w-a"]	a suffix longer than 64 bits — a number without overflow
-order-prefix	order	{"prefix":"w","names":["w-ab","w-a","w-a-b"]}	["w-a","w-a-b","w-ab"]	«по имени» — ASCII bytes; an own prefix before its continuation (w-a < w-a-b < w-ab)
+order-prefix	order	{"prefix":"w","names":["w-ab","w-a","w-a-b"]}	["w-a","w-a-b","w-ab"]	«by name» — ASCII bytes; an own prefix before its continuation (w-a < w-a-b < w-ab)
 next-basic	next	{"prefix":"w","names":["w-1","w-3","w-a","w-srv-a-9"]}	"w-4"	the next — <prefix>-<max+1> by the numeric suffixes; the other names do not take part
 next-none	next	{"prefix":"w","names":["w-a","w-srv-a-1"]}	"w-1"	no numeric ones — max = 0, the next w-1
 next-leading-zero	next	{"prefix":"w","names":["w-007"]}	"w-8"	leading zeros — the number 7; the new one without leading zeros

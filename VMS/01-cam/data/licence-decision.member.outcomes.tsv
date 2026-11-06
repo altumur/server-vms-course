@@ -1,4 +1,4 @@
 # Outcomes of an unreadable licence decision — value of the element decision: the row `domain/cam/licence/<member>` at the domain holder, schema `licence-decision.schema.json#member` (V/01.7 Н1.2, Н1.3); the path is from value. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-	camworker	a decision is expected but is unreadable: holds by the last decision read since the start; none read — the cameras do not start, unlicensed «решение лицензии не читается», not «unlimited»	1	строка	V/01.7 Н1.3, Н3 «Применение», Н4
-	camdomain	the member's former decision is unreadable (the element decision or its value not in form, the store did not answer): not read, rather than absent — do not rewrite the member's row on this pass, log it; the next pass — again	1	строка	V/01.7 Н1.2, Н3 «Счёт», Н4
+	camworker	a decision is expected but is unreadable: holds by the last decision read since the start; none read — the cameras do not start, unlicensed «решение лицензии не читается», not «unlimited»	1	row	V/01.7 Н1.3, Н3 «Применение», Н4
+	camdomain	the member's former decision is unreadable (the element decision or its value not in form, the store did not answer): not read, rather than absent — do not rewrite the member's row on this pass, log it; the next pass — again	1	row	V/01.7 Н1.2, Н3 «Счёт», Н4

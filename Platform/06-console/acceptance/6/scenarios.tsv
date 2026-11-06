@@ -122,7 +122,7 @@ scenario	step	request	expect
 12-pulse-number-forms	25	@put object testsub/heartbeats/w-1 inputs/hb-w-1-build-number.json	ok
 12-pulse-number-forms	26	@until 10 console GET /schema	200 {"processes": {"testsub/w-1": {"schema": 1, "build": null}}}
 12-pulse-number-forms	27	console DELETE /drain	2xx
-# 13-decommission-flow (P/06 coverage audit, second Gemini pass, G09; Н3 «вывести_сервер», console side): live srv-a gives 409 server answers, may_confirm_gone false even with gone; srv-b known only by slot: fresh slot gives 409 false even with gone; after LOST_AFTER without version change — 409 may_confirm_gone true, with gone — 202 warning and request row; retry — 202, row/log unchanged; withdraw — 200 {}, no row; journal requested once, then withdrawn.
+# 13-decommission-flow (P/06 coverage audit, second Gemini pass, G09; N3 «вывести_сервер», console side): live srv-a gives 409 server answers, may_confirm_gone false even with gone; srv-b known only by slot: fresh slot gives 409 false even with gone; after LOST_AFTER without version change — 409 may_confirm_gone true, with gone — 202 warning and request row; retry — 202, row/log unchanged; withdraw — 200 {}, no row; journal requested once, then withdrawn.
 13-decommission-flow	1	@start resource	ok
 13-decommission-flow	2	@until 20 console GET /servers	200 {"servers": {"srv-a": {"resource": "live"}}}
 13-decommission-flow	3	console POST /servers/srv-a/decommission {"why": "live box"}	409 {"error": "server answers", "server": "srv-a", "may_confirm_gone": false}

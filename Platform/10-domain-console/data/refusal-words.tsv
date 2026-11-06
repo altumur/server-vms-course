@@ -1,21 +1,21 @@
-# The closed list of error words of the own doors of the domain console (ADR-0094 B5): the read doors, /domain/alarms. The rules — Н4; the format of field — P/06.1 Н2. Transition 3 — the words of the process domain, P/08 data/refusal-words.tsv, as they came.
+# The closed list of error words of the own doors of the domain console (ADR-0094 B5): the read doors, /domain/alarms. The rules — N4; the format of field — P/06.1 N2. Transition 3 — the words of the process domain, P/08 data/refusal-words.tsv, as they came.
 # door — view /domain, /domain/shadow, /domain/members, /domain/topology, /domain/<sub>/<rows>, /domain/shared; placement /domain/placement…;
 # alarms /domain/alarms; * — every own door. The words of the peer and pass contracts — their sections. field — as in the table of P/06; the own doors have no bodies, there is no field.
 door	code	error	field	norm
-view	400	refused	-	Н4
-view	404	no domain here	-	Н4
-view	404	not in the directory	-	Н4
-view	404	no such member	-	Н4
-view	404	not reported yet	-	Н4
-placement	404	refused	-	Н4
-alarms	400	refused	-	Н1.8 door; Н4
-*	400	denied	-	P/06.5 Н4
-*	400	refused	-	P/06.5 Н2
-*	401	denied	-	Н4
-*	403	denied	-	Н4
-*	404	not a domain route	-	Н4
-*	404	no such path	-	P/06.5 Н2
-*	408	denied	-	P/06.5 Н4
-*	413	denied	-	P/06.5 Н4
-*	503	unavailable	-	Н4
+view	400	refused	-	N4
+view	404	no domain here	-	N4
+view	404	not in the directory	-	N4
+view	404	no such member	-	N4
+view	404	not reported yet	-	N4
+placement	404	refused	-	N4
+alarms	400	refused	-	N1.8 door; N4
+*	400	denied	-	P/06.5 N4
+*	400	refused	-	P/06.5 N2
+*	401	denied	-	N4
+*	403	denied	-	N4
+*	404	not a domain route	-	N4
+*	404	no such path	-	P/06.5 N2
+*	408	denied	-	P/06.5 N4
+*	413	denied	-	P/06.5 N4
+*	503	unavailable	-	N4
 *	502	did not answer	-	договор пересылки

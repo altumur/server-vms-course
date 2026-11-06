@@ -1,3 +1,3 @@
 # Outcomes of an unreadable value of an element of the source book: the row `domain/cam/sources/<member>` at the domain holder, schema `sources-entry.schema.json#member` (V/01.6 Н1.2); the path is from value. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-	recworker	value of a camera element not in form: not read, rather than absent — the recording waiting, reason in the book's words («not in the source book …»), the other elements of the book go on	1	элемент	V/02.9 Н1.2, Н4
+	recworker	value of a camera element not in form: not read, rather than absent — the recording waiting, reason in the book's words («not in the source book …»), the other elements of the book go on	1	element	V/02.9 Н1.2, Н4

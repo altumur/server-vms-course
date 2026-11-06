@@ -1,4 +1,4 @@
-# yaml-suite vectors: layer 1 on yaml-test-suite (ADR-0092 item 2; set «Б», the section «слой 1 сужает YAML 1.2.2»)
+# yaml-suite vectors: layer 1 on yaml-test-suite (ADR-0092 item 2; set «B», the section «layer 1 narrows YAML 1.2.2»)
 
 This English text is the source; the Russian translation `ru/vectors/yaml-suite/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
@@ -10,9 +10,9 @@ The acceptance runs without a network: the inputs are in the package, `inputs/<i
 `expect.tsv`: `id<TAB>suite<TAB>layer1<TAB>rule`:
 - `id` — the path of the test directory in the archive, the input — `inputs/<id>.yaml`;
 - `suite` — the expectation of the suite: `error` (the input is outside YAML 1.2.2) or `ok`;
-- `layer1` — the outcome of layer 1 of the manifest (the YAML 1.2.2 parser and the thin check of Н1.1): `ok` or `refused`; `refused` at
-  `suite` = `ok` — a narrowing of YAML 1.2.2 by the norm (a rule of the thin check or an input outside the subset of Н1.1), approved
-  by set «Б»;
+- `layer1` — the outcome of layer 1 of the manifest (the YAML 1.2.2 parser and the thin check of N1.1): `ok` or `refused`; `refused` at
+  `suite` = `ok` — a narrowing of YAML 1.2.2 by the norm (a rule of the thin check or an input outside the subset of N1.1), approved
+  by set «B»;
 - `rule` — the rule of the thin check that refused first (`parser` — a refusal of the parser; `-` — at `ok`); a hint, not a norm.
 The answer of an implementation to a row is the JSON `{"layer1": "ok"|"refused"}`, optionally with `"rule"`: only
 `layer1` is compared strictly (anything else is red, ADR-0092 item 2); `rule` is a hint, like the `diagnostics.tsv` of the corpus: into the report, without a failure

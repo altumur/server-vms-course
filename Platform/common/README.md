@@ -23,10 +23,10 @@ LAYERS.md                  the layers of V7: the standard JSON Schema 2020-12 an
 versions/                  the pinned versions of the standard libraries and the YAML parsers: README, go.mod, go.sum, requirements.txt
 vectors/README.md          the index of all vectors by owner lessons (the vectors themselves are in the directory of the owner)
 vectors/sealing/           the vectors of the sealing contract (common, without an owner lesson)
-vectors/domain-envelopes/  the vectors of the domain envelopes contract (former inputs of the acceptance of М11/2, М11/3)
-vectors/domain-token/      the vectors of the domain token contract (former inputs of the acceptance of М11/2 token-*)
+vectors/domain-envelopes/  the vectors of the domain envelopes contract (former inputs of the acceptance of M11/2, M11/3)
+vectors/domain-token/      the vectors of the domain token contract (former inputs of the acceptance of M11/2 token-*)
 vectors/{keys,agent-sig,accept,record,ask-sig,may,peer}/  the vectors of the common domain contracts: the key set, the agent signature,
-                           the report admission, the term record, the request signature, the right may, the client peer (former inputs of the acceptance of М11;
+                           the report admission, the term record, the request signature, the right may, the client peer (former inputs of the acceptance of M11;
                            review analysis of stage B 8–10, № 22)
 contracts/gate-and-pass.api.openapi.yaml  the common body forms of the gate-and-pass contract (Denied; referenced by P/06, P/08, P/10)
 acceptance/README.md       the common acceptance stand: the dictionary of directives and doors, the domain stand

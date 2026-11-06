@@ -4,9 +4,9 @@ This English text is the source; the Russian translation `ru/LAYERS.md` (for peo
 
 The form of the manifest (P/02.1), the canonical view (P/02.2) and the forms of the data families (the catalogue `Platform/common/data/`) the course
 writes in standard files: JSON Schema 2020-12 — the form, CEL — the relations of the manifest. What the standard does not express is held by
-seven layers of our own; each implementation executes them, the places are the layer tables next to the schemas (ADR-0092 «Свой остаток»). This
+seven layers of our own; each implementation executes them, the places are the layer tables next to the schemas (ADR-0092 «Our own remainder»). This
 file replaces `DIALECT.md` (ADR-0087; removed by the transition to V7, behind the tag `dialect-reference-dc94d0fd1`). A new word `x-*`
-and a new rule of a layer are decided by the Architect (ADR-0087 addendum (5), ADR-0092 «Что заменяется»); the description is written by «Спецификация».
+and a new rule of a layer are decided by the Architect (ADR-0087 addendum (5), ADR-0092 «What is replaced»); the description is written by «Specification».
 
 ## 1. Files
 
@@ -15,7 +15,7 @@ and a new rule of a layer are decided by the Architect (ADR-0087 addendum (5), A
 | `*.schema.json` | the form: JSON Schema 2020-12 in the words of the standard and the marks `x-*` (§ 3) | the manifest — `02-installer/spec/02.1-installer.schema.json`; the view — `02.2-installer.view.schema.json`; a family — `NN-<process>/data/<family>.schema.json` |
 | `*.relations.json` | the relations of the manifest: CEL rows with a number `no` (§ 5) | `02-installer/spec/02.1-installer.relations.json` |
 | `*.layers.tsv` | the places of the marks `x-*` of a schema: `place<TAB>layer<TAB>word<TAB>value` (a place is a JSON Pointer in the schema; the root is the empty pointer `""`); the rows are all and only the places of the words with a layer of § 3; the table does not carry `x-owner`, `x-default-text`, `x-class`; the view schema has no table (`x-step`, `x-default`, `x-unique-by` — in the schema itself), `x-implied-by` — at the relation row (V7-LAYERS-ROOT-HASH-01) | next to the schema |
-| `02.1-installer.scalars.tsv` | the table of the plain scalars of the manifest (P/02.1 Н1.1) | next to the form of the manifest |
+| `02.1-installer.scalars.tsv` | the table of the plain scalars of the manifest (P/02.1 N1.1) | next to the form of the manifest |
 | `common/data/codec.tsv` | the codec of the store rows: a logical type → the notation in `items` and in JSON (layer 3) | `Platform/common/data/` |
 | `<family>.outcomes.tsv` | the outcomes of an unreadable row or object by readers (§ 7) | next to the schema of the family |
 | `common/versions/` | the pinned versions of the standard libraries and the YAML parsers: [README](versions/README.md), `go.mod`, `go.sum`, `requirements.txt` (ADR-0092 item 9) | `Platform/common/versions/` |
@@ -29,12 +29,12 @@ are built from these files and stand in the norms byte for byte (ADR-0087 item 3
 
 | Layer | What | Where the norm is |
 |---|---|---|
-| 1 | the text of the manifest: the YAML 1.2.2 parser of the pinned version and the fine check (§ 4) | P/02.1 Н1.1 |
-| 2 | the integers of the manifest: the bounds ±(2^53 − 1), a value with an integer value is an integer, in the tree it is cast to an integer (`4.0` → `4`) | P/02.1 Н1.2, Н3 step 2 |
+| 1 | the text of the manifest: the YAML 1.2.2 parser of the pinned version and the fine check (§ 4) | P/02.1 N1.1 |
+| 2 | the integers of the manifest: the bounds ±(2^53 − 1), a value with an integer value is an integer, in the tree it is cast to an integer (`4.0` → `4`) | P/02.1 N1.2, N3 step 2 |
 | 3 | the codec of the family rows: `items`, time, `max_bytes`, names beyond the limit, the whole sign of the writer and the reader by the exact decimal value of the notation | `codec.tsv`, § 6 |
 | 4 | the place of a refusal where the library does not give it — by the full table of § 6 «Place of refusal» (`required`, `additionalProperties: false` — the path of the key, not of the parent; `propertyNames` — the place of the parent object and the name; `uniqueItems` — the place of each element equal to an earlier one: `[a, a, a]` → `/1`, `/2`); the path of the families is normative (PY-JS-02) | § 6 |
 | 5 | the full match of `pattern` and `patternProperties` (§ 3 «Expression») | § 3 |
-| 6 | the projection of the canonical view — the full algorithm of P/02.2 Н1.1: sugar, defaults (static — the annotation `default`, computed — the rules of P/02.2), P1–P5, `x-ordered`, scalars by the node type | P/02.2 Н1.1 |
+| 6 | the projection of the canonical view — the full algorithm of P/02.2 N1.1: sugar, defaults (static — the annotation `default`, computed — the rules of P/02.2), P1–P5, `x-ordered`, scalars by the node type | P/02.2 N1.1 |
 | 7 | relations: three CEL functions — `depth`, `template`, `text`; the other rows are pure CEL | § 5 |
 
 ## 3. Schema words
@@ -47,7 +47,7 @@ of a static default, `description`; the place of refusal of each — § 6). The 
 | Word | Layer | What the implementation executes |
 |---|---|---|
 | `x-integer-place` | 2 | an integer place of the manifest: an integer by value, the bounds ±(2^53 − 1), the cast to an integer |
-| `x-time` | 3 | time per the canon of P/01.1 Н0: the notation of the writer is strict, of the reader tolerant |
+| `x-time` | 3 | time per the canon of P/01.1 N0: the notation of the writer is strict, of the reader tolerant |
 | `x-whole` | 3 | the whole sign — both for the writer and for the reader: an integer by the exact decimal value of the notation |
 | `x-integer` | 3 | an integer by the exact decimal value of the notation |
 | `x-max-bytes` | 3 | the limit of the bytes of a value in the notation |
@@ -63,7 +63,7 @@ of a static default, `description`; the place of refusal of each — § 6). The 
 | `x-complement-of` | 5 | the expression is the complement of the named one (translated by hand, ADR-0092 item 12) |
 | `x-implied-by` | 7 | the relation row follows from the named rows (`[16, 17]`): it is executed like the others; in the coverage a group mutation instead of a single mutant (V7-IMPLIED-ROW-EXEC-01) |
 | `x-owner`, `x-default-text` | — | reference marks of a norm section (the owner lesson, the default in words); they give no checks |
-| `x-class` | — | the refusal class of the former dialect — only for the reconciliation of the set «А»; the refusal class by the norm is a layer (P/02.1 Н4) |
+| `x-class` | — | the refusal class of the former dialect — only for the reconciliation of the set «A»; the refusal class by the norm is a layer (P/02.1 N4) |
 
 **Expression** (`pattern`, `patternProperties`) — a portable subset: ECMA-262 in the mode `u` intersected with RE2 — without
 lookahead and lookbehind, without backreferences; a character is written as the character itself in the JSON string (not `\x{HHHH}`). The match is
@@ -71,22 +71,22 @@ full: the expression is read as `^(?:…)$`, `$` does not match before the last 
 any character (`[\s\S]`). The compilation in both engines is held by `check_spec` (ADR-0092 item 14).
 
 **The writer and the reader of families** — one schema file: the constraints of the writer are in `$defs.writer`; the writer checks
-`allOf: [схема, $defs.writer]`, the reader — the schema (ADR-0092 item 15). The writer writes strictly, the reader reads tolerantly.
+`allOf: [schema, $defs.writer]`, the reader — the schema (ADR-0092 item 15). The writer writes strictly, the reader reads tolerantly.
 
 ## 4. Layer 1: the fine check of the text
 
-The rules — P/02.1 Н1.1 `text` (ADR-0092 addendum (2): the list is closed, each rule has a corpus case): `bytes`, `tab`,
+The rules — P/02.1 N1.1 `text` (ADR-0092 addendum (2): the list is closed, each rule has a corpus case): `bytes`, `tab`,
 `document`, `refused`, `rare`, `flow`, `escape`, `comment`, `block`, `parser`. One document is counted by bytes, not by
 the answer of the parser.
 
 The workarounds of the defects of the pinned parsers are not rules (the outcome is as by the norm of YAML 1.2.2, they give no refusal of their own):
-- **D13** (`go.yaml.in/yaml/v3`): the parser refuses `\/` in double quotes, YAML 1.2.2 and Н1.1 admit it — layer 1 on Go
+- **D13** (`go.yaml.in/yaml/v3`): the parser refuses `\/` in double quotes, YAML 1.2.2 and N1.1 admit it — layer 1 on Go
   replaces `\/` with `/` in double quotes before parsing;
 - **D16** (both parsers): a last line of spaces without a line feed after a block scalar gives a value without
   the final `\n` — layer 1 appends LF to the end of a text without LF before parsing.
 
 The other known defects of the pinned versions and their workarounds — [the list of library defects](versions/DEFECTS.md) (ADR-0092 item 9):
-each has a vector row on which the answer is different without the workaround, or «страж».
+each has a vector row on which the answer is different without the workaround, or «guard».
 
 **The package `yaml-suite`** ([`vectors/yaml-suite/`](vectors/yaml-suite/README.md)) — the outcome of layer 1 on each test of
 yaml-test-suite `data-2022-01-17` (the inputs are in the package, acceptance without a network); `layer1` is checked strictly, the rule is a summary.
@@ -95,8 +95,8 @@ yaml-test-suite `data-2022-01-17` (the inputs are in the package, acceptance wit
 
 A row of `relations.json` is a CEL expression over the tree of the loader: an absent value and `has` take the static
 default `default` of the form; the computed defaults, P1–P5 and `x-ordered` are not applied to the relation tree (ADR-0092 layer 6).
-The relations are checked only with a clean form; the refusal is `refused:relations` (P/02.1 Н3, Н4). A row is one expression over
-the variable `doc` (the tree of the loader), the result is a list of violations `{p: путь}`, nested by the number of iterated
+The relations are checked only with a clean form; the refusal is `refused:relations` (P/02.1 N3, N4). A row is one expression over
+the variable `doc` (the tree of the loader), the result is a list of violations `{p: path}`, nested by the number of iterated
 segments of the path of the row. The CEL extensions are the standard `strings` and `two-var-comprehensions`; our own functions are
 `depth(dyn) → int` (the depth of a value), `template(dyn, list, list, bool) → bool` (the substitutions of a template),
 `text(list) → list` (values as text). A CEL execution error is not «the relation holds»: the implementation refuses with words rather than
@@ -121,7 +121,7 @@ of this family: a refusal on the empty path `""` (the instance whole), the value
 of the empty path of `<family>.outcomes.tsv` (V7-FAMILY-KEY-PLACEHOLDER-01). The path `/key` does not fit for this: it is the path of the field
 `key` of the value (P/08 `member-report`, `member-report-delta`, `member-reported`; for an open root — any name).
 
-**Place of refusal** is normative and does not depend on the library; the rule is set by the stack of V7 — the set «А» and the vectors
+**Place of refusal** is normative and does not depend on the library; the rule is set by the stack of V7 — the set «A» and the vectors
 `family-read` stand on it (V7-APPLICATOR-PATH-01):
 
 | Word or layer | Place of refusal |
@@ -149,15 +149,15 @@ A row: `path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm`.
   all readers; the pair `(path, reader)` does not repeat;
 - `outcome` — what this reader does when it meets the unreadable (in the words of the norm of the owner lesson);
 - `priority` — an integer, smaller earlier (the choice — below);
-- `unit` — the unit of unreadability (`строка`, `поле`, `элемент`): a refusal below it does not make the containing node unreadable;
+- `unit` — the unit of unreadability (the closed vocabulary [outcome-units.tsv](data/outcome-units.tsv): `row`, `field`, `element`): a refusal below it does not make the containing node unreadable;
 - `norm` — the address of the norm.
 
 **Choice of the outcome** of a reader R by the set of refusal paths (V7-OUTCOME-SELECT-01; a rule of the stack of V7):
 1. the rows of R — with `reader` = R or `*`;
 2. for each refusal path q — the covering rows: their `path` is a prefix of q (the empty one covers everything; the segment `*` — any name
    outside the keys of `properties` of that place or any element);
-3. of them — the rows of the greatest depth; if among them there is a row with `unit` `поле` or `элемент`, only these
-   deepest ones act; otherwise (all the deepest are `строка`) — all the rows covering q, the less deep ones too;
+3. of them — the rows of the greatest depth; if among them there is a row with `unit` `field` or `element`, only these
+   deepest ones act; otherwise (all the deepest are `row`) — all the rows covering q, the less deep ones too;
 4. the rows of all paths are united; the rows with the smallest `priority` act, equal ones — all, in the order of the file; there is no refusal
    path or not a single row — there is no outcome.
 
@@ -171,4 +171,4 @@ of the [gate-and-pass contract](contracts/gate-and-pass.md).
 
 A row: `kind<TAB>pattern<TAB>norm`; the first one that matches from the top, only for a plain scalar (a quoted one and a block one are a string).
 `kind`: `null`, `true`, `false`, `int`, `float`, `nonfinite`, `string`. The rows `limit<TAB>int_max=N` and
-`limit<TAB>float_max=X` are the limits: outside them and `nonfinite` — `refused:form` on the path of the value (P/02.1 Н1.1).
+`limit<TAB>float_max=X` are the limits: outside them and `nonfinite` — `refused:form` on the path of the value (P/02.1 N1.1).

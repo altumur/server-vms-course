@@ -1,4 +1,4 @@
-# Acceptance P/02.3: sequential manifest put installations (Н3 «Смена манифеста»). Row: case<TAB>puts<TAB>expect.
+# Acceptance P/02.3: sequential manifest put installations (N3 «Смена манифеста»). Row: case<TAB>puts<TAB>expect.
 # puts lists space-separated `puts/<имя>.subsystem.yaml` files installed in order into one fresh store; expect is the return code
 # of the final installation and the resulting rev of platform/manifest/<name> for the final file («-» means no row). Rules: README.
 case	puts	expect
@@ -9,7 +9,7 @@ other_rows	probe other-rows	2 -
 self_table	self-table	2 -
 other_table	with-table ledger	2 -
 prefix_clash	a-b a_b	2 -
-# ADR-0091: catalogue checks of worker.creates, worker.uses and OS names (P/02.1 Н3 «загрузить_каталог»).
+# ADR-0091: catalogue checks of worker.creates, worker.uses and OS names (P/02.1 N3 «загрузить_каталог»).
 creates_ok	target customer	0 1
 creates_no_target	customer	0 1
 target_after_customer	customer target	0 1
@@ -26,7 +26,7 @@ uses_ok	owner user	0 1
 uses_no_share	owner-noshare user	2 -
 uses_no_owner	user	0 1
 os_name_clash	owner owner-belt	2 -
-# ADR-0091 addenda (14), (17), (18) item 6: domain token kinds in the catalogue — duplicate kind and door route kind (P/02.1 Н3 «загрузить_каталог»).
+# ADR-0091 addenda (14), (17), (18) item 6: domain token kinds in the catalogue — duplicate kind and door route kind (P/02.1 N3 «загрузить_каталог»).
 kind_dup	kinds-a kinds-b	2 -
 door_domain_kind_other	kinds-a door-k	0 1
 door_domain_kind_missing	door-k	2 -
@@ -47,7 +47,7 @@ shell_onclick	paged @shell-put paged paged	2 1
 shell_same_twice	pagedok @shell-put pagedok pagedok pagedok	0 2
 shell_changed	pagedok @shell-put pagedok pagedok @shell-put pagedok-alt pagedok	0 3
 shell_script_text	pagedok @shell-put pagedtext pagedok	0 2
-# P/02 coverage audit, second pass (Gemini): worker.requests, worker.creates rule 4 (default), near.of, deferred worker.uses, OS names (P/02.1 Н3 «загрузить_каталог», P/02.4 Н1.1 users_groups names).
+# P/02 coverage audit, second pass (Gemini): worker.requests, worker.creates rule 4 (default), near.of, deferred worker.uses, OS names (P/02.1 N3 «загрузить_каталог», P/02.4 N1.1 users_groups names).
 requests_ok	req-target req-caller	0 1
 requests_missing_target	req-caller	2 -
 requests_target_no_requests	req-target-noreq req-caller	2 -
@@ -64,7 +64,7 @@ os_name_part_len_33	os-part-len-33	2 -
 os_name_platform_clash	os-platform-store	2 -
 os_name_part_share_clash	os-part-share-clash	2 -
 os_name_part_share_bound_ok	os-part-share-ok	0 1
-# ADR-0094 B7: console.files beside the manifest and the declared shell (P/02.3 Н3, Н4).
+# ADR-0094 B7: console.files beside the manifest and the declared shell (P/02.3 N3, N4).
 files_ok	filed	0 1
 files_same_twice	filed filed	0 1
 files_missing	filed-missing	2 -

@@ -6,7 +6,7 @@
   ссылки источника — в источник (`Y`, английский якорь): при сверке цель перевода `<урок>/ru/Y#якорь` читается как
   `<урок>/Y#английский-якорь` по парам заголовков `Y` и `ru/Y` (один к одному). Построенные блоки сверяются по
   разрешённым целям ссылок: у источника и перевода глубина путей разная. Мелкие дома — корень курса
-  (`НОРМАТИВНЫЕ-СЛОВА.md`, `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`; доп. (1) п. 4) и каталог модуля (`VMS/README.md`) с `ru/`:
+  (`NORMATIVE-TERMS.md`, `CONSOLE-MODULE.md`; доп. (1) п. 4) и каталог модуля (`VMS/README.md`) с `ru/`:
   пара — свой файл `X` ↔ `ru/X`; прочие файлы рядом (записки курса, `Platform/lessons.tsv`) — не источники.
 - Прежняя (ADR-0121): английский `<каталог>/en/<имя>.en.md` — источник (нормы — в `spec/en/`); русский
   `<каталог>/<имя>.md` — производный, с пометкой «производный от en, руками не правится».
@@ -26,7 +26,7 @@
 Чеклист: id `P/…-MM` — те же, в том же порядке. Кириллица в английском — только в `code`, «…», номерах `Н…`, целях
 ссылок, именах файлов, прежних уроков (`М10A_Platform/…`, `М10/11`) и id ревью (`А1`): русские слова там — нарушение.
 Блоки `families`, `form`, `canonical` (sections.py): в раскладке ADR-0124 источник несёт английский блок, перевод —
-русский (ADR-0121 доп. (3) п. 1); сверка построчно — форма строки, `code` (метки по словарю `Platform/common/placeholders.tsv`),
+русский (ADR-0121 доп. (3) п. 1); сверка построчно — форма строки, `code` (метки по словарю `Platform/common/ru/placeholders.tsv`),
 числа, цели ссылок. В прежней раскладке — байт в байт.
 """
 import os
@@ -150,7 +150,7 @@ CYR = re.compile(r"[А-Яа-яЁё]")
 # Модуль, ещё не переведённый на латиницу меток, — прежнее разрешение (VMS — «Спецификация VMS»); список только сокращается.
 LABELS_PENDING = {"VMS"}
 # Уроки, где номера разделов уже латиницей N… (ADR-0121 доп. (5) п. 1): Н<цифра> в источнике — отказ; список растёт до всех.
-NUMBERS_DONE = ("Platform/01-store/",)
+NUMBERS_DONE = ("Platform/", "NORMATIVE-TERMS.md", "CONSOLE-MODULE.md")
 CYR_NUMBER = re.compile(r"(?<![\wА-Яа-яЁё])Н[0-9]")
 # Таблица меток ключей каталога — сырые ключи catalog.tsv (их читает читатель «Генераторов»): метки в ней — как в каталоге,
 # пока каталог не сменится вместе с генераторами (ADR-0121 доп. (5) п. 3).
@@ -364,12 +364,12 @@ def resolved(block, path, root):
     return LINK.sub(one, block)
 
 
-PLACEHOLDERS = Path("Platform/common/placeholders.tsv")   # словарь меток ru → en (ADR-0121 доп. (3) пп. 1, 4)
+PLACEHOLDERS = Path("Platform/common/ru/placeholders.tsv")   # словарь меток ru → en (ADR-0121 доп. (3) пп. 1, 4)
 _LABELS = {}
 
 
 def labels(root):
-    """The dictionary of placeholder labels `Platform/common/placeholders.tsv` → {ru: en}; empty without the file."""
+    """The dictionary of placeholder labels `Platform/common/ru/placeholders.tsv` → {ru: en}; empty without the file."""
     key = str(Path(root).resolve())
     if key not in _LABELS:
         out = {}
@@ -555,6 +555,75 @@ def pairs(root):
         if not any(en.is_relative_to(h) for h in homes):
             out.append((en.parent.parent / en.name.replace(".en.md", ".md"), en))
     yield from sorted(out, key=lambda p: p[1])
+
+
+# ADR-0121 (6), (7): completed source slices contain no Cyrillic letters.
+# Grow this list only with the complete lesson/common source delivery.
+FULL_ENGLISH_DONE = ("Platform/common/", "NORMATIVE-TERMS.md")
+LOCALIZATION = Path("Platform/06-console/data/localization.tsv")
+SOURCE_SUFFIXES = {".md", ".tsv", ".json", ".yaml", ".yml"}
+
+
+def english_sources(root, prefixes=None):
+    """All machine-readable files of completed slices, including vector journal/.
+
+    ru/ and the lesson's own journal/ are human mirrors/history. A vector package
+    named journal is source; matching every directory named journal would hide it.
+    """
+    root = Path(root)
+    found = set()
+    for prefix in FULL_ENGLISH_DONE if prefixes is None else prefixes:
+        path = root / prefix
+        for item in ([path] if path.is_file() else path.rglob("*")):
+            if not item.is_file() or item.suffix not in SOURCE_SUFFIXES:
+                continue
+            parts = item.relative_to(root).parts
+            if len(parts) >= 3 and parts[0] in MODULES and parts[2] in {"ru", "journal", "explanations"}:
+                continue
+            found.add(item)
+    return sorted(found)
+
+
+def full_english_errors(root, prefixes=None):
+    """[(path, message)]: no code/quote/filename exemption; only UI ru cells.
+
+    Escaped Unicode test inputs are still valid Unicode values. This check judges
+    source letters, without changing JSON or YAML payload bytes/semantics.
+    """
+    import unicodedata
+
+    def cyrillic(text):
+        return any(ord(ch) > 127 and unicodedata.category(ch).startswith("L")
+                   and "CYRILLIC" in unicodedata.name(ch, "") for ch in text)
+
+    root = Path(root)
+    errors = []
+    for path in english_sources(root, prefixes):
+        localization = path.relative_to(root) == LOCALIZATION
+        header = False
+        for number, line in enumerate(path.read_text(encoding="utf-8", errors="surrogateescape").splitlines(), 1):
+            judged = line
+            if localization and line and not line.startswith("#"):
+                cells = line.split("\t")
+                if not header:
+                    header = True
+                    if cells != ["key", "en", "ru"]:
+                        errors.append((path, f"line {number}: localization header must be key<TAB>en<TAB>ru"))
+                elif len(cells) != 3:
+                    errors.append((path, f"line {number}: localization has {len(cells)} cells, expected 3"))
+                else:
+                    judged = "\t".join(cells[:2])
+            if cyrillic(judged):
+                errors.append((path, f"line {number}: Cyrillic letter in a fully English source (ADR-0121 (6), (7)); "
+                                     "only the console localization ru column is exempt"))
+    return errors
+
+
+def source_cell_errors(root):
+    """Source cell-json is a shared form, independent of lesson translation order."""
+    import source_cells
+    paths = english_sources(root, ("Platform/", "VMS/"))
+    return source_cells.errors(Path(root), [path for path in paths if path.suffix == ".tsv"])
 
 
 def lesson_kinds(ru_path):

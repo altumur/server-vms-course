@@ -1,4 +1,4 @@
 # Outcomes of an unreadable row domain/issued/… (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domain	the whole row is unreadable: the revocation door — 503 unavailable, the jti is unknown; the issue rewrites it by the version read; log without the value	1	строка	P/08.2 Н1.6а
+	domain	the whole row is unreadable: the revocation door — 503 unavailable, the jti is unknown; the issue rewrites it by the version read; log without the value	1	row	P/08.2 N1.6a
