@@ -23,6 +23,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import tsv_input
 L = lesson.CURRENT
 SCENARIOS = L.path("acceptance/1/scenarios.tsv")
 CORE = re.compile(r'"(cas|guard|guards|id|not_after|not_before|again)"\s*:|"kind":\s*"(conflict|guard|expired|early)"')
@@ -30,15 +31,14 @@ CORE = re.compile(r'"(cas|guard|guards|id|not_after|not_before|again)"\s*:|"kind
 
 def expected_steps(path):
     """→ [(сценарий, [(шаг, текст запроса и ожидания)])] в порядке таблицы."""
+    path = Path(path)
+    first = next((line for line in path.read_bytes().split(b"\n")
+                  if line and not line.startswith(b"#")), b"")
+    source = tsv_input.read(path, names=("scenario", "step", "request", "expect"),
+                            positional=first != b"scenario\tstep\trequest\texpect", root=ROOT)
     out = {}
-    for line in Path(path).read_text(encoding="utf-8").split("\n"):
-        line = line.rstrip("\r")
-        if not line.strip() or line.startswith("#"):
-            continue
-        cells = line.split("\t")
-        if cells[:3] == ["scenario", "step", "request"] or len(cells) < 3:
-            continue
-        out.setdefault(cells[0], []).append((cells[1], "\t".join(cells[2:4])))
+    for _, row in source.rows:
+        out.setdefault(row["scenario"], []).append((row["step"], row["request"] + "\t" + row["expect"]))
     return list(out.items())
 
 
@@ -53,7 +53,11 @@ def main(argv=None):
     ap.add_argument("--json")
     a = ap.parse_args(argv)
     errs = []
-    expected = expected_steps(a.scenarios)
+    try:
+        expected = expected_steps(a.scenarios)
+    except (OSError, tsv_input.TSVError) as exc:
+        expected = []
+        errs.append(f"scenario source {a.scenarios} unreadable: {exc}")
     got = {}
     path = Path(a.report) / "P-01.1-door.json"
     door = {}
