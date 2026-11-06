@@ -1,7 +1,0 @@
-case	input	exit	stdout
-line-3	line-3.json	0	true
-line-4	line-4.json	0	true
-line-5	line-5.json	0	true
-line-6	line-6.json	0	true
-line-7	line-7.json	0	false
-line-8	line-8.json	0	false

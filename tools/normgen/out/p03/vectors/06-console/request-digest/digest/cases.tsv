@@ -1,5 +1,0 @@
-case	input	exit	stdout
-line-25	line-25.json	0	{"canonical": "{\"from\":\"1\",\"to\":\"2\"}", "sha256": "43b3d94566323558c36734b307ab637f3ccb2061bf371ff9cdfbe11e3745c0d9"}
-line-26	line-26.json	0	{"canonical": "{\"from\":\"1\",\"to\":\"2\"}", "sha256": "43b3d94566323558c36734b307ab637f3ccb2061bf371ff9cdfbe11e3745c0d9"}
-line-27	line-27.json	0	{"canonical": "{\"f\":\"1.5\",\"n\":\"5\"}", "sha256": "690b88e0089a62b4146ddd2fe3ebd2a32af2bceadf6fb12ecccb14e485d9615f"}
-line-28	line-28.json	0	{"canonical": "{\"add\":\"{\\\"a\\\":1}\"}", "sha256": "b3701c5b9e17fabfbdfe3b57abd7ae43c17f769f8708a581f2d0c1170e40a5c9"}

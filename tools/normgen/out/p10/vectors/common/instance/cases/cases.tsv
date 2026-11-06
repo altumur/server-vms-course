@@ -1,8 +1,0 @@
-# Inputs of the vector command for common/instance cases.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/instance/cases.tsv sha256 fb659deea273a2c4d979114af1a29b0b305ab4c88f665b476c420a669c3395c6
-case	input	exit	stdout
-line-4	line-4.json	0	{"instance":"w:7:abcdef"}
-line-5	line-5.json	0	{"instance":"w:007:ABCDEF"}
-line-6	line-6.json	0	"@refuse"
-line-7	line-7.json	0	"@refuse"
-line-8	line-8.json	0	"@refuse"

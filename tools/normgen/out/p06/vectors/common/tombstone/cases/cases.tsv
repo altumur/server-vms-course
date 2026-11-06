@@ -1,9 +1,0 @@
-case	input	exit	stdout
-line-4	line-4.json	0	{"peers": ["srv-b", "srv-c"]}
-line-5	line-5.json	0	{"peers": ["srv-b"]}
-line-6	line-6.json	0	{"peers": ["srv-b", "srv-c"]}
-line-7	line-7.json	0	{"peers": ["srv-a", "srv-b"]}
-line-8	line-8.json	0	{"peers": ["srv-b"]}
-line-9	line-9.json	0	{"peers": []}
-line-10	line-10.json	0	"no_delete"
-line-11	line-11.json	0	"no_delete"

@@ -6,3 +6,6 @@ __pycache__/
 
 # М9 signing keys — never commit
 М9_EdgeVMS/edgevms/pki/out/
+
+# Generated normgen output is created in temporary directories (ADR-0121 (12)).
+/tools/normgen/out/

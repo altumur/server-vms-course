@@ -1,2 +1,0 @@
-case	input	exit	stdout
-line-11	line-11.json	0	{"not_json": 400, "not_number": 400, "too_long": 400, "bad_url": 400, "must_match": 409, "unique": 409, "garbled": 409}

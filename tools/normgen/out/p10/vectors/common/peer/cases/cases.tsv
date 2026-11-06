@@ -1,7 +1,0 @@
-# Inputs of the vector command for common/peer cases.tsv (gen_vectors.py); compare subset.
-# source Platform/common/vectors/peer/cases.tsv sha256 80e69d001cdd3959208d2470548174e07057ddc4f67bfa519549c64d7a4e3ab9
-case	input	exit	stdout
-line-15	line-15.json	0	{"result":"refused","reason":"no_role"}
-line-16	line-16.json	0	{"result":"refused","reason":"no_role"}
-line-17	line-17.json	0	{"result":"refused","reason":"wrong_role"}
-line-30	line-30.json	0	{"result":"refused","reason":"no_role"}

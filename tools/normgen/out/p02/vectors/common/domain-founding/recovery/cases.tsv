@@ -1,8 +1,0 @@
-case	input	exit	stdout
-line-3	line-3.json	0	{"domain": "d1", "root_pub": "24f0d13f1a4c0f0c79dc1ce27599744f68bb35b381082c76ea566b3aee92b9ac", "fingerprint": "310cec8e25344c17"}
-line-4	line-4.json	0	"@refuse"
-line-5	line-5.json	0	"@refuse"
-line-6	line-6.json	0	"@refuse"
-line-7	line-7.json	0	"@refuse"
-line-8	line-8.json	0	"@refuse"
-line-9	line-9.json	0	{"domain": "d1", "root_pub": "24f0d13f1a4c0f0c79dc1ce27599744f68bb35b381082c76ea566b3aee92b9ac", "fingerprint": "310cec8e25344c17"}
