@@ -852,6 +852,84 @@ class CyrillicJudge(unittest.TestCase):
                 self.assertTrue(any(name in e and "new/increased" in e for e in self.judge()[0]))
                 path.unlink()
 
+    def test_additional_course_export_sources_are_checked(self):
+        for name in ("CONSOLE-MODULE.md", "NORMATIVE-TERMS.md", "Source/tests/testdata/spec_verdicts.tsv",
+                     "Source/tests/testdata/new/case.json"):
+            with self.subTest(name=name):
+                path = self.put(name, "Ж")
+                self.assertTrue(any(name in e and "new/increased" in e for e in self.judge()[0]))
+                path.unlink()
+
+    def test_course_readme_is_not_the_export_readme(self):
+        self.put("README.md", "Course notes: Ж")
+        self.assertEqual(self.judge()[0], [])
+        self.put("COURSE_COMMIT", "0123456789\n")
+        errors, stats = self.judge()
+        self.assertTrue(any("README.md: Cyrillic letters" in e for e in errors))
+        self.assertEqual(stats["cyrillic_export"], 1)
+
+    def test_export_checks_all_homes_and_hidden_files_not_only_known_roots(self):
+        self.put("COURSE_COMMIT", "0123456789\n")
+        for name in ("README.md", ".gitignore", "tools/new-contract.txt", "Source/new/input.tsv",
+                     "changes/old/tasks.md", "new-published-home/schema.yaml"):
+            with self.subTest(name=name):
+                path = self.put(name, "Ж")
+                self.assertTrue(any(name in e and "new/increased" in e for e in self.judge()[0]))
+                path.unlink()
+
+    def test_export_vms_and_only_the_three_published_console_files_are_deferred(self):
+        self.put("COURSE_COMMIT", "0123456789\n")
+        for name in ("VMS/01-camera/spec/norms.md", *sorted(check_cyrillic.CONSOLE_BYTES)):
+            self.put(name, "Ж")
+        self.assertEqual(self.judge()[0], [])
+        for name in ("Source/w2cplatform/console.py", "Source/w2cplatform/console.js.extra", "elsewhere/console.js"):
+            with self.subTest(name=name):
+                path = self.put(name, "Ж")
+                self.assertTrue(self.judge()[0])
+                path.unlink()
+        # The exception names published files; it must not exempt whole directories.
+        (self.root / "Source/w2cplatform/console.js").unlink()
+        self.put("Source/w2cplatform/console.js/other.txt", "Ж")
+        self.assertTrue(self.judge()[0])
+
+    def test_export_exceptions_preserve_mirrors_and_only_localization_ru(self):
+        self.put("COURSE_COMMIT", "0123456789\n")
+        self.put("Platform/01-store/ru/spec/norms.md", "Ж")
+        self.put(check_cyrillic.LOCALIZATION, "key\ten\tru\na\tEnglish\tЖ\n")
+        self.assertEqual(self.judge()[0], [])
+        self.put(check_cyrillic.LOCALIZATION, "key\ten\tru\na\tЖ\tЖ\n")
+        self.assertTrue(self.judge()[0])
+
+    def test_explicit_export_without_marker_and_read_only_cli(self):
+        self.put("new-published-home/data.txt", "Ж")
+        self.assertEqual(self.judge()[0], [])
+        self.assertTrue(self.judge(export=True)[0])
+        before = self.debt.read_bytes()
+        result = subprocess.run([sys.executable, "-B", str(Path(check_cyrillic.__file__)),
+                                 "--root", str(self.root), "--debt", str(self.debt), "--export"],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("new-published-home/data.txt", result.stdout)
+        self.assertEqual(self.debt.read_bytes(), before)
+
+    def test_deleted_tracked_export_marker_does_not_narrow_scope(self):
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True, capture_output=True)
+        marker = self.put("COURSE_COMMIT", "0123456789\n")
+        self.put("README.md", "Ж")
+        subprocess.run(["git", "-C", str(self.root), "add", "COURSE_COMMIT", "README.md"], check=True, capture_output=True)
+        marker.unlink()
+        errors, stats = self.judge()
+        self.assertTrue(any("README.md" in e for e in errors))
+        self.assertEqual(stats["cyrillic_export"], 1)
+
+    def test_new_scope_shrink_cannot_add_debt_or_lower_old_debt_at_the_same_time(self):
+        self.put("Platform/01-store/old.md", "English")
+        self.registry("debt\tPlatform/01-store/old.md\t1")
+        self.put("CONSOLE-MODULE.md", "Ж")
+        before = self.debt.read_bytes()
+        self.assertTrue(self.judge(shrink=True)[0])
+        self.assertEqual(self.debt.read_bytes(), before)
+
     def test_only_declared_mirror_homes_are_exempt(self):
         for name in ("Platform/ru/README.md", "Platform/common/ru/wire.tsv", "Platform/01-store/ru/spec/norms.md"):
             self.put(name, "Русский перевод")
