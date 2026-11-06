@@ -191,9 +191,9 @@ The module takes subject captions, field hints and kind captions from `display` 
 5. **The unplaced.** The card «Unplaced» from `/unplaceable`: why each unit has no place and which labels the servers have.
 6. **Table.** Not done: the former product console had no table view with mass editing (only the styles remained), so it is not part of «exactly like it». If the owner wants it, it is a new function of the module: a second layout of the tree with columns from `display.tree.columns`, sorting and mass editing of the manifest fields through the general form.
 7. **Folders.** A subsystem with `display.tree.folders: true` gets a tree of the cluster folders (P/06.8; P/07 N1.5 `tree`). A folder node is an object with `ref` `folder:<id>` and a card of its own: the name, the parent, the contents in order. Actions:
-   - rename — one write `PUT /folders/<id> {name}`: the field of the units is not touched;
+   - rename — one own module write `PUT /folders/<id> {name}` with `If-Match` containing the quoted store index (P/06.8 N2): the field of the units is not touched;
    - create a folder and a subfolder — `POST /folders`; an empty folder lives on the server, not in the browser;
-   - add a unit and remove it — `PUT /folders/<id> {members}`, the contents as a whole; a new unit goes to the end;
+   - add a unit and remove it — the own module write `PUT /folders/<id> {members}` with the same quoted-index `If-Match`, the contents as a whole; a new unit goes to the end;
    - delete — `DELETE /folders/<id>`: the units remain, the subfolders disappear at once;
    - «no group» — a special node for the units outside folders.
 

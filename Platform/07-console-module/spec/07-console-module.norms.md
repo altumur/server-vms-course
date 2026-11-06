@@ -84,6 +84,8 @@ ready:     pc.ready — a promise (Promise), no new call: it resolves with the p
 objects:   ref: unit:<sub>/<id> | server:<s> | worker:<sub>/<w> | member:<m> | domain | person:<name> | group:<sub>/<field>/<path> | folder:<id>
            | <prefix>:<…> of the shell (the module only stores it)
 api:       console.api(method, path, body, opts?) → answer | throw {status, body, retry}
+           the closed door list and the ifMatch type below apply to page calls through console.api; the module
+           makes its own writes by N1.4 writes (ADR-0129 addendum (7))
            opts.ifMatch — an integer ≥ 1 (revision, P/06.1 N2 «Versions») → the header If-Match; only at the doors that read it (others
            would write without CAS): PUT and DELETE of a unit row /<rows>/<id>; POST /<t> and DELETE /<t>/<name> of a subsystem table;
            PUT /policy; POST and DELETE /drain; PUT and DELETE /servers/<s>/labels; PUT /schema (ADR-0094 B4); PUT and DELETE /domain/placement/<sub>/<ref>: revision — the rev of the record, P/08.6 N2 (features "placement.if-match", C07-PLACEMENT-IF-MATCH-01). The module recognizes a table by
@@ -145,8 +147,8 @@ adds:      addSection{id, label, icon, after, off, render}, addTab(kind, {id, la
            item 2, addendum (24) item 2, addendum (25) item 2)
 tree:      display.tree.folders: true — the tree of the section is built from GET /folders: a node folder:<id> per live folder, the parent — parent, the children — subfolders, then the members of this subsystem in the order of members;
            the name of the folder — name; an empty folder — a node with zero units, not a filter in the browser; a unit outside folders — a special node, as «no group»;
-           a member of another subsystem or a unit that the module does not see gives no node; a rename — one write PUT /folders/<id> {name}, with If-Match by index (P/06.8 N2);
-           create a folder and a subfolder — POST /folders; add and remove a unit — PUT /folders/<id> {members}, the member list whole, the order as before, a new unit at the end;
+           a member of another subsystem or a unit that the module does not see gives no node; a rename — one write PUT /folders/<id> {name}, with If-Match containing the quoted store index (P/06.8 N2), not the integer api.opts.ifMatch of a page call;
+           create a folder and a subfolder — POST /folders; add and remove a unit — PUT /folders/<id> {members}, the member list whole, the order as before, a new unit at the end, with the same quoted-index If-Match;
            the rights of the buttons — may(admin, …) as for the other writes, a refusal of the server — as for all doors (P/06.8 N3 «folder rights»);
            without display.tree.folders — the tree by group_by, as before
 return:    after a login through the module window (password or emergency login) the module reads the parameter return of the page address: a value exactly /<sub>/,

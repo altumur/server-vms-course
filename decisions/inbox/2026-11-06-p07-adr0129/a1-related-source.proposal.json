@@ -23,5 +23,7 @@
   "limits": [
     "No P06 form or judge change; no new command/port/class/alias.",
     "A2-A5 can be delivered independently; A1 is not claimed closed."
-  ]
+  ],
+  "closed_by": "ADR-0129 addendum (7), Architect 2026-11-06: own folder requests use existing quoted-index If-Match; public console.api list/type apply only to page calls.",
+  "status": "closed; original proposal not activated"
 }

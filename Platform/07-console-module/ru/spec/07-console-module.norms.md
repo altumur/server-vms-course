@@ -84,6 +84,8 @@ ready:     pc.ready — обещание (Promise), нового вызова н
 objects:   ref: unit:<sub>/<id> | server:<s> | worker:<sub>/<w> | member:<m> | domain | person:<name> | group:<sub>/<поле>/<путь> | folder:<id>
            | <prefix>:<…> оболочки (модуль только хранит)
 api:       console.api(method, path, body, opts?) → ответ | throw {status, body, retry}
+           закрытый список дверей и тип ifMatch ниже — для вызовов страниц через console.api; собственные
+           записи модуль делает по writes N1.4 (ADR-0129 доп. (7))
            opts.ifMatch — целое ≥ 1 (revision, P/06.1 N2 «Версии») → заголовок If-Match; только у дверей, которые его читают (иные
            записали бы без CAS): PUT и DELETE строки единицы /<rows>/<id>; POST /<t> и DELETE /<t>/<имя> таблицы подсистемы;
            PUT /policy; POST и DELETE /drain; PUT и DELETE /servers/<s>/labels; PUT /schema (ADR-0094 B4); PUT и DELETE /domain/placement/<sub>/<ref>: revision — rev записи, P/08.6 N2 (features "placement.if-match", C07-PLACEMENT-IF-MATCH-01). Таблицу модуль узнаёт по
@@ -145,8 +147,8 @@ adds:      addSection{id, label, icon, after, off, render}, addTab(kind, {id, la
            п. 2, доп. (24) п. 2, доп. (25) п. 2)
 tree:      display.tree.folders: true — дерево раздела строится из GET /folders: узел folder:<id> на живую папку, родитель — parent, дети — подпапки, затем члены этой подсистемы по порядку members;
            имя папки — name; пустая папка — узел с нулём единиц, а не фильтр в браузере; единица вне папок — особый узел, как «без группы»;
-           член другой подсистемы или единица, которой модуль не видит, не даёт узла; переименование — одна запись PUT /folders/<id> {name}, с If-Match по index (P/06.8 N2);
-           создать папку и подпапку — POST /folders; добавить и снять единицу — PUT /folders/<id> {members}, состав целиком, порядок прежний, новая единица в конец;
+           член другой подсистемы или единица, которой модуль не видит, не даёт узла; переименование — одна запись PUT /folders/<id> {name}, с If-Match, содержащим индекс хранилища в кавычках (P/06.8 N2), а не целочисленный api.opts.ifMatch вызова страницы;
+           создать папку и подпапку — POST /folders; добавить и снять единицу — PUT /folders/<id> {members}, состав целиком, порядок прежний, новая единица в конец, с тем же If-Match индексом в кавычках;
            права кнопок — may(admin, …) как у прочих записей, отказ сервера — как у всех дверей (P/06.8 N3 «права папки»);
            без display.tree.folders — дерево по group_by, как прежде
 return:    после входа окном модуля (пароль или аварийный вход) модуль читает параметр return адреса страницы: значение ровно /<sub>/,
