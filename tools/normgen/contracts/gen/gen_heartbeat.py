@@ -16,7 +16,8 @@ SCRIPT = r'''
 import json
 import gen_families as g
 
-keys = {"<sub>/heartbeats/<имя>", "platform/resources/<server>/heartbeat"}
+keys = {"<sub>/heartbeats/<name>" if g.KEY_GRAMMARS.is_file() else "<sub>/heartbeats/<имя>",
+        "platform/resources/<server>/heartbeat"}
 fams = [f for nn in ("03", "05") for f in g.families(nn) if f["key"] in keys]
 assert g.DOC_MODE and {f["key"] for f in fams} == keys
 generated = g.gofmt(g.go_module(fams, "03+P/05"))
@@ -39,10 +40,16 @@ def sources():
     done = subprocess.run([sys.executable, "-c", '''
 import json
 import gen_families as g
-keys = {"<sub>/heartbeats/<имя>", "platform/resources/<server>/heartbeat"}
+keys = {"<sub>/heartbeats/<name>" if g.KEY_GRAMMARS.is_file() else "<sub>/heartbeats/<имя>",
+        "platform/resources/<server>/heartbeat"}
 fams = [f for nn in ("03", "05") for f in g.families(nn) if f["key"] in keys]
-paths = [g.CATALOG, g.KEYS_README, g.RUNTIME_DOC, g.HERE / "gen_families.py", g.HERE / "gen_checks.py"]
+paths = [g.CATALOG] + g.grammar_sources()
+if g.OUTCOME_UNITS.is_file():
+    paths.append(g.OUTCOME_UNITS)
+paths += [g.RUNTIME_DOC, g.HERE / "gen_families.py", g.HERE / "gen_checks.py", g.HERE / "tsv_input.py"]
 paths += [p for f in fams for p in f["sources"] if p is not None]
+paths = [p for src in paths for p in
+         (g.tsv_input.source_files(src, root=g.ROOT) if src.suffix == ".tsv" else [src])]
 print(json.dumps([str(p) for p in dict.fromkeys(paths)]))
 '''], cwd=NORMGEN, env=dict(os.environ, NORMGEN_LESSON="03-worker"),
                           capture_output=True, text=True, check=True)

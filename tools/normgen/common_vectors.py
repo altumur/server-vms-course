@@ -9,6 +9,7 @@ crl, revoked, log-mask, store-client, family-read). Модуль генерат�
 """
 import json
 from pathlib import Path
+import tsv_input
 
 import vector_consumers
 
@@ -139,25 +140,14 @@ def read(root, name, table):
     path = Path(root) / rel
     if not path.is_file():
         raise CommonError(f"no {rel}")
-    text = path.read_text(encoding="utf-8")
-    rows, header = [], decl["header"]
-    seen_header = header is None
-    for no, line in enumerate(text.split("\n"), 1):
-        if not line or line.startswith("#"):
-            continue
-        cells = line.split("\t")
-        if not seen_header:
-            if cells != header:
-                raise CommonError(f"{rel}:{no}: header {cells}, want {header}")
-            seen_header = True
-            continue
-        cols = header or decl["fields"]
-        if len(cells) != len(cols):
-            raise CommonError(f"{rel}:{no}: {len(cells)} cells, want {len(cols)} ({', '.join(cols)})")
-        rows.append((no, dict(zip(cols, cells))))
-    if not rows:
+    header = decl["header"]
+    try:
+        source = tsv_input.read(path, names=header or decl["fields"], positional=header is None, root=root)
+    except tsv_input.TSVError as exc:
+        raise CommonError(str(exc)) from None
+    if not source.rows:
         raise CommonError(f"{rel}: no vectors")
-    return rel, text, rows
+    return rel, source.text, source.rows
 
 
 def expected(name, row, where):

@@ -125,6 +125,22 @@ class Contracts(unittest.TestCase):
             self.assertEqual((CONTRACTS / "heartbeat" / name).read_text(encoding="utf-8"), text,
                              "run tools/normgen/contracts/gen/gen_heartbeat.py")
 
+    def test_common_heartbeat_sources(self):
+        sys.path.insert(0, str(HERE / "contracts/gen"))
+        import gen_heartbeat
+        root = HERE.parent.parent
+        paths = set(gen_heartbeat.sources())
+        self.assertIn(root / "Platform/common/data/key-placeholders.tsv", paths)
+        self.assertIn(root / "Platform/common/data/outcome-units.tsv", paths)
+        self.assertIn(root / "Platform/common/data/cell-json-sha256.tsv", paths)
+        self.assertIn(HERE / "tsv_input.py", paths)
+        self.assertFalse(any("/common/ru/" in p.as_posix() for p in paths))
+        generated = gen_heartbeat.render()["families.go"]
+        self.assertIn('const unitField = "field"', generated)
+        self.assertTrue('Key: "<sub>/heartbeats/<name>"' in generated, "worker heartbeat selector")
+        self.assertTrue('Key: "platform/resources/<server>/heartbeat"' in generated, "resource heartbeat selector")
+        self.assertEqual(generated.count('&Family{Key:'), 2)
+
     def test_vectors(self):
         covered = 0
         for fn, adapter in adapter_fns().items():

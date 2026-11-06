@@ -25,6 +25,7 @@ ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import gen_core  # noqa: E402 — разбор норм, обёртка комментария, строки refusals.tsv
 import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import tsv_input  # noqa: E402 — source cells before command interpretation
 L = lesson.CURRENT
 
 DEFAULT_OUT = L.out
@@ -87,20 +88,21 @@ def go_name(cmd):
 def commands():
     """Подкоманды формы daemon-flags.tsv по порядку появления в колонке commands (кроме daemon) и флаги каждой."""
     order, flags = [], {}
-    rows = [line.split("\t") for line in FLAGS.read_text(encoding="utf-8").split("\n") if line and not line.startswith("#")]
-    head, rows = rows[0], rows[1:]
-    col = {name: i for i, name in enumerate(head)}
+    try:
+        table = tsv_input.read(FLAGS, root=ROOT)
+    except tsv_input.TSVError as exc:
+        raise GenError(str(exc)) from None
     for need in ("flag", "type", "required", "commands"):
-        if need not in col:
+        if need not in table.columns:
             raise GenError(f"{FLAGS.name}: no column {need!r}")
-    for r in rows:
-        for cmd in r[col["commands"]].split(","):
+    for _, r in table.rows:
+        for cmd in r["commands"].split(","):
             if cmd == "daemon":
                 continue
             if cmd not in flags:
                 order.append(cmd)
                 flags[cmd] = []
-            flags[cmd].append((r[col["flag"]], r[col["type"]], r[col["required"]]))
+            flags[cmd].append((r["flag"], r["type"], r["required"]))
     return order, flags
 
 
@@ -385,8 +387,11 @@ def provenance():
     """Паспорт части (ADR-0125 доп. (1) п. 6 (а)): формы, генератор, ручная среда (нет), судья."""
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": gen_core.sha(path)}
-    return {"form": [entry(p) for p in (FLAGS, NORMS_13, NORMS_12, REFUSALS, COMMON)],
-            "generator": entry(Path(__file__).resolve()), "handwritten": [], "judge": entry(JUDGE)}
+    paths = [p for src in (FLAGS, NORMS_13, NORMS_12, REFUSALS, COMMON) for p in
+             (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src])]
+    return {"form": [entry(p) for p in dict.fromkeys(paths)], "generator": entry(Path(__file__).resolve()),
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
+            "handwritten": [], "judge": entry(JUDGE)}
 
 
 KIT_MD = """
