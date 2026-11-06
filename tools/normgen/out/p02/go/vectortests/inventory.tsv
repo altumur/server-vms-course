@@ -236,7 +236,7 @@ table	status
 02-installer/canonical cases.tsv 221 stand:canonical	translated
 02-installer/canonical cases.tsv 222 stand:canonical	translated
 02-installer/canonical cases.tsv 223 stand:canonical	translated
-02-installer/exec cases.tsv 3 stand:exec	translated
+02-installer/canonical cases.tsv 224 stand:canonical	translated
 02-installer/exec cases.tsv 4 stand:exec	translated
 02-installer/exec cases.tsv 5 stand:exec	translated
 02-installer/exec cases.tsv 6 stand:exec	translated
@@ -255,6 +255,7 @@ table	status
 02-installer/exec cases.tsv 19 stand:exec	translated
 02-installer/exec cases.tsv 20 stand:exec	translated
 02-installer/exec cases.tsv 21 stand:exec	translated
+02-installer/exec cases.tsv 22 stand:exec	translated
 02-installer/install-order cases.tsv 3 stand:install-order	translated
 02-installer/install-order cases.tsv 4 stand:install-order	translated
 02-installer/install-order cases.tsv 5 stand:install-order	translated

@@ -15,7 +15,7 @@ P/02.1 и канонический вид P/02.2 по стандартным ф�
   text с перегрузками среды, у каждой строки cel; обход D8 (DEFECTS.md): каждый `double(` — `double(dyn(`.
 Выход <out>/go/manifest: копия среды (text.go, value.go, form.go, relations.go, view.go, manifest.go), forms/ — байты
 форм, forms.go (embed); go.mod выхода — с require закреплённых версий, go.sum — копия versions/go.sum.
-Судья — test_gen_manifest.py: корпус verdicts 946 (и классы classes.tsv), canonical 219, yaml-suite 402, мутанты.
+Судья — test_gen_manifest.py: корпус verdicts 947 (и классы classes.tsv), canonical 220, yaml-suite 402, мутанты.
 """
 import hashlib
 import json
@@ -250,7 +250,7 @@ package lessonadapter
 
 import "{module}/internal/manifest"
 
-// Load runs the regular loader of P/02.1 Н3 (the part loader: internal/manifest — text → form → relations) on exactly
+// Load runs the regular loader of P/02.1 N3 (the part loader: internal/manifest — text → form → relations) on exactly
 // the bytes of one manifest file; the refusal names the file, its Class is the layer.
 func Load(source string, text []byte) Loaded {
 	m, r := manifest.Load(source, text)
@@ -267,7 +267,7 @@ package vectoradapter
 
 import "{module}/internal/manifest"
 
-// Canonical — 02-installer/canonical cases.tsv (stand:canonical): the JCS bytes of the canonical view (P/02.2 Н1.1)
+// Canonical — 02-installer/canonical cases.tsv (stand:canonical): the JCS bytes of the canonical view (P/02.2 N1.1)
 // of the manifest file (internal/manifest); a refusal of the load — code 2 (the view is not built).
 func Canonical(source string, text []byte) Answer {
 	b, r := manifest.Canonical(source, text)
@@ -334,24 +334,24 @@ KIT_MD = """
 
 | File | Origin |
 |---|---|
-| `{module}/internal/manifest/` | kit (closed): `Load`, `Canonical`, `Layer1` — P/02.1 Н3 load and P/02.2 Н3 build view |
+| `{module}/internal/manifest/` | kit (closed): `Load`, `Canonical`, `Layer1` — P/02.1 N3 load and P/02.2 N3 build view |
 | `{module}/internal/manifest/forms/` | the standard files of P/02.1 byte for byte (schema, relations, scalars) |
 | `go.mod`, `go.sum`, `vendor/` | the pinned libraries of `Platform/common/versions` (P/02.1 «Implementation decides» item 1): go.yaml.in/yaml/v3 v3.0.5, santhosh-tekuri/jsonschema/v6 v6.0.2, cel-go v0.26.1 — vendored, no network |
 | `internal/lessonadapter/load.go`, `internal/vectoradapter/canonical.go`, `yamlsuite.go` | **yours**, already wired to `manifest` |
 
-The loader is the whole of P/02.1 Н3 `load`: layer 1 (the pinned YAML parser and the thin check of Н1.1, with the
+The loader is the whole of P/02.1 N3 `load`: layer 1 (the pinned YAML parser and the thin check of N1.1, with the
 workarounds of DEFECTS.md), the form (JSON Schema 2020-12 and the layer words), the relations (the CEL rows of
 `relations.json` and the functions depth, template, text) — in the normative order text → form → relations. A refusal has
-`Class` (`text` | `form` | `relations`) and a `Message` that names the file; the path is a hint (Н4).
+`Class` (`text` | `form` | `relations`) and a `Message` that names the file; the path is a hint (N4).
 
 ```go
 func Load(source string, data []byte) (*manifest.Manifest, *manifest.Refusal)   // Manifest{Name, Tree}
-func Canonical(source string, data []byte) ([]byte, *manifest.Refusal)       // JCS bytes of the view (P/02.2 Н1.1)
+func Canonical(source string, data []byte) ([]byte, *manifest.Refusal)       // JCS bytes of the view (P/02.2 N1.1)
 func Layer1(data []byte) (rule, message string, refused bool)                  // layer 1 alone (yaml-suite)
 ```
 
 Use the same `manifest.Load` wherever your installer reads a manifest (`manifest put`, the catalogue): the
-catalogue checks over several manifests (P/02.1 Н3 `load_catalogue`) are **yours** (`lessonadapter.LoadCatalogue`).
+catalogue checks over several manifests (P/02.1 N3 `load_catalogue`) are **yours** (`lessonadapter.LoadCatalogue`).
 Keep `go.mod` with these requirements; if you add a module, run `go mod vendor` again.
 """
 

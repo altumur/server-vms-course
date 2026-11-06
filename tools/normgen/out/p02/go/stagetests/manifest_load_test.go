@@ -4,7 +4,7 @@ package stagetests
 
 import "testing"
 
-// TestManifestLoad_Verdicts — chapter 2.1, verdicts.tsv: 946 cases (testdata/verdicts.jsonl).
+// TestManifestLoad_Verdicts — chapter 2.1, verdicts.tsv: 947 cases (testdata/verdicts.jsonl).
 func TestManifestLoad_Verdicts(t *testing.T) {
 	runVerdicts(t, "2.1")
 }

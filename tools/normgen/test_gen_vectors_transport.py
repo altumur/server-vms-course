@@ -1,4 +1,4 @@
-"""Byte proofs for the lesson vector fallback TSV reader; semantic JSON stays downstream."""
+"""Byte proofs for lesson vector TSV transport; semantic JSON stays downstream."""
 import hashlib
 import json
 import tempfile
@@ -129,6 +129,38 @@ class FallbackTransport(unittest.TestCase):
             _, _, actual = g.read_table(self.root, decl)
         read_rows.assert_called_once_with(self.root, binding)
         self.assertIs(actual, rows)
+
+    def test_actual_p02_exec_form_preserves_all_lexical_json_bytes(self):
+        import wire
+
+        runs, excluded = wire.expand(g.ROOT, "02-installer")
+        selected = [run for run in runs if run.binding.package == "02-installer/exec"]
+        self.assertEqual(len(selected), 19)
+        self.assertFalse([row for row in excluded if row.binding.package == "02-installer/exec"])
+        decl = {"_form": True, "_runs": selected}
+        _, path, rows = g.read_table(g.ROOT, decl)
+        self.assertEqual([line for line, _ in rows], list(range(4, 23)))
+        self.assertEqual([run.lines for run in selected], [[line] for line, _ in rows])
+        registry = g.ROOT / "Platform/common/data/cell-json-sha256.tsv"
+        proofs = [line.split("\t") for line in registry.read_text().split("\n")
+                  if line and not line.startswith("#")][1:]
+        proofs = {(row[0], int(row[1]), row[2]): row[3:] for row in proofs}
+        rel = path.relative_to(g.ROOT).as_posix()
+        for run, (line, row) in zip(selected, rows):
+            with self.subTest(case=row["case"]):
+                before, decoded = proofs[rel, line, "exec"]
+                raw = row["exec"].encode("utf-8")
+                self.assertEqual(hashlib.sha256(raw).hexdigest(), before)
+                self.assertEqual(before, decoded)
+                self.assertEqual(run.arg, raw)
+                self.assertEqual(run.value["result"], "refused" if row["expect"] == "@refuse" else "ok")
+        by_case = {row["case"]: row["exec"] for _, row in rows}
+        self.assertEqual(by_case["one-word"], '"/usr/lib/cam/worker"')
+        self.assertEqual(by_case["non-ascii"].encode("utf-8"),
+                         b'"/usr/lib/cam/' + bytes.fromhex("d0b2d0bed180d0bad0b5d180") + b'"')
+        self.assertEqual(by_case["quote"], r'"/usr/lib/cam/worker \"a b\""')
+        self.assertEqual(by_case["tab"], r'"/usr/lib/cam/worker\t-v"')
+        self.assertEqual(by_case["newline"], r'"/usr/lib/cam/worker\n-v"')
 
 
 if __name__ == "__main__":

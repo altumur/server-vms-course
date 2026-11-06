@@ -857,6 +857,7 @@ step	stage	test	status	reason
 2.1/verdicts.tsv/a111_names_kind_no_kinds	manifest-load	TestManifestLoad_Verdicts/a111_names_kind_no_kinds	translated	-
 2.1/verdicts.tsv/a111_names_kind_and_of	manifest-load	TestManifestLoad_Verdicts/a111_names_kind_and_of	translated	-
 2.1/verdicts.tsv/a111_calls_requests_ok	manifest-load	TestManifestLoad_Verdicts/a111_calls_requests_ok	translated	-
+2.1/verdicts.tsv/a111_calls_requests_own_ok	manifest-load	TestManifestLoad_Verdicts/a111_calls_requests_own_ok	translated	-
 2.1/verdicts.tsv/a111_calls_requests_read	manifest-load	TestManifestLoad_Verdicts/a111_calls_requests_read	translated	-
 2.1/verdicts.tsv/a110_edit_delete_ok	manifest-load	TestManifestLoad_Verdicts/a110_edit_delete_ok	translated	-
 2.1/verdicts.tsv/a110_edit_delete_no_edit	manifest-load	TestManifestLoad_Verdicts/a110_edit_delete_no_edit	translated	-

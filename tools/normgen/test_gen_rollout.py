@@ -146,6 +146,36 @@ class Rollout(unittest.TestCase):
             res, _ = results(self.fake((old, new)))
             self.assertTrue(any(a == "fail" for a in res.values()), f"mutant survived: {why}")
 
+    def test_review_traces_and_downtime_input(self):
+        """The five review traces execute their observable checks; changing the flag loses exactly its three traces."""
+        mod = self.fake()
+        res, panics = results(mod)
+        new_checks = {
+            "TestRolloutPoll_Trace_TwoVotersLastRefused/step6",
+            "TestRolloutPoll_Trace_TwoVotersLastRefused/step9",
+            "TestRolloutPoll_Trace_TwoVotersLastDowntimePasses/step1",
+            "TestRolloutPoll_Trace_TwoVotersDowntimePasses/step1",
+            "TestRolloutPoll_Trace_DowntimeThreeVotersPolls/step1",
+            "TestRolloutPoll_Trace_DowntimeThreeVotersPolls/step3",
+            "TestRolloutPoll_Trace_VoterWithoutAddress/step7",
+            "TestRolloutPoll_Trace_VoterWithoutAddress/step8",
+        }
+        self.assertTrue(new_checks <= set(res), new_checks - set(res))
+        self.assertTrue(all(res[name] == "pass" for name in new_checks))
+        self.assertEqual(panics, 0)
+        path = mod / "lessonadapter/fake.go"
+        text = path.read_text()
+        self.assertIn("string(input)", text)
+        path.write_text(text.replace("string(input)",
+            r'strings.Replace(string(input), "\"allow_downtime\": true", "\"allow_downtime\": false", 1)', 1))
+        mutant, panics = results(mod)
+        self.assertEqual({name.split("/")[0] for name, action in mutant.items() if action == "fail"}, {
+            "TestRolloutPoll_Trace_TwoVotersLastDowntimePasses",
+            "TestRolloutPoll_Trace_TwoVotersDowntimePasses",
+            "TestRolloutPoll_Trace_DowntimeThreeVotersPolls",
+        })
+        self.assertEqual(panics, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

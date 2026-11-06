@@ -49,6 +49,44 @@ class Plain(unittest.TestCase):
         for word in ("Cause", "Outcome", "Diagnostic", "Caller"):
             self.assertNotIn(word + " ", text)
 
+    def test_review_restart_and_fixed_exit_catalogue(self):
+        """Independent Go probes of the review's restart/corruption split and fixed/nonzero exit codes."""
+        probe = self.mod / "refusals/review_test.go"
+        probe.write_text('''package refusals
+import "testing"
+func TestReviewCatalogue(t *testing.T) {
+    for _, want := range []struct{name, chapter string; row, code int; any bool}{
+        {"view_reader_not_published", "2.2", 3, 1, false},
+        {"view_reader_unreadable", "2.2", 3, 2, false},
+        {"manifest_start_unavailable", "2.3", 1, 1, false},
+        {"manifest_start", "2.3", 1, 2, false},
+        {"process_environment", "2.4", 8, 2, false},
+        {"process_budget_rights", "2.4", 8, 1, true},
+        {"address_without_tls", "2.4", 17, 2, false},
+        {"install_domain_server", "2.4", 22, 2, false},
+    } { t.Run(want.name, func(t *testing.T) {
+        got := ByName(want.name)
+        if got == nil { t.Fatal("missing catalogue condition") }
+        code, ok := got.ExitCode()
+        if got.Chapter != want.chapter || got.Row != want.row || code != want.code || !ok || got.AnyNonZero != want.any {
+            t.Fatalf("%+v exit %d,%v", got, code, ok)
+        }
+    }) }
+    for name, word := range map[string]string{"view_reader_not_published":"not published", "view_reader_unreadable":"corruption"} {
+        got := ByName(name)
+        if len(got.Log) != 1 || got.Log[0] != "key" || len(got.Words) != 1 || got.Words[0] != word {
+            t.Fatalf("diagnostic %s: %+v", name, got)
+        }
+    }
+}
+''')
+        try:
+            done = subprocess.run(["go", "test", "-count=1", "./refusals/"], cwd=self.mod,
+                                  capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        finally:
+            probe.unlink()
+
     def mutant(self, old, new):
         t = Path(tempfile.mkdtemp(dir=self.tmp.name))
         shutil.copytree(self.mod, t / "go")

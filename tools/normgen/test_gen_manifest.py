@@ -4,8 +4,8 @@
 закреплённых версий Platform/common/versions/go.mod — без сети)
 
 1. out свежий: out/p02/go/manifest и go.mod, go.sum равны свежему прогону генератора; go vet пакета чистый.
-2. Корпус: каждый случай Platform/02-installer/acceptance/1/verdicts.tsv (946) — вердикт ok/refused, у случаев
-   classes.tsv — класс отказа (text | form | relations); векторы canonical (219) — байты вида равны expect/<case>.json;
+2. Корпус: каждый случай Platform/02-installer/acceptance/1/verdicts.tsv (947) — вердикт ok/refused, у случаев
+   classes.tsv — класс отказа (text | form | relations); векторы canonical (220) — байты вида равны expect/<case>.json;
    пакет yaml-suite (402) — исход слоя 1 равен колонке layer1.
 3. Мутанты ручной среды (по одной правке): каждый даёт хотя бы одно расхождение с данными. Данные урока не различают
    (проверено мутантами, код держит правило стека В7): отказ пустого значения сверх схемы, слой 2 «4.0 → 4» (JCS и
@@ -191,8 +191,8 @@ class Loader(unittest.TestCase):
         self.assertEqual(bad, [])
         for k, (got, total) in ((k, v[:2]) for k, v in sums.items()):
             self.assertEqual(got, total, k)
-        self.assertEqual(int(sums["verdicts"][1]), 946)
-        self.assertEqual(int(sums["canonical"][1]), 219)
+        self.assertEqual(int(sums["verdicts"][1]), 947)
+        self.assertEqual(int(sums["canonical"][1]), 220)
         self.assertEqual(int(sums["yaml-suite"][1]), 402)
 
     def test_mutants(self):
