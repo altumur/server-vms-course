@@ -58,7 +58,7 @@
       ]
      },
      "lease": {
-      "description": "the unit's lease is not confirmed (chapter 3.2 N1.6 silent); otherwise there is no field (VMS request «пульс и битая строка»)",
+      "description": "the unit's lease is not confirmed (chapter 3.2 N1.6 silent); otherwise there is no field (VMS request «heartbeat and a garbled row»)",
       "type": "string",
       "enum": [
        "unconfirmed"
@@ -226,7 +226,7 @@
    "type": "string"
   },
   "url": {
-   "description": "the door url — a platform string (platform_strings N1.1; added М10/9, P/06.5 N3 «`/where/<id>`»); host, scheme and binding — N1.7 door_address (ADR-0091 addendum (7), (8))",
+   "description": "the door url — a platform string (platform_strings N1.1; added M10/9, P/06.5 N3 «`/where/<id>`»); host, scheme and binding — N1.7 door_address (ADR-0091 addendum (7), (8))",
    "type": "string"
   },
   "fetched": {
@@ -265,7 +265,7 @@
    ]
   },
   "was_fenced": {
-   "description": "whether this instance has been fenced since its start (N3 «отсечён»); P/06.5 series worker_fenced{worker} (VMS request «пульс и битая строка»)",
+   "description": "whether this instance has been fenced since its start (N3 «fenced»); P/06.5 series worker_fenced{worker} (VMS request «heartbeat and a garbled row»)",
    "type": "boolean"
   },
   "store_errors": {
@@ -1243,11 +1243,11 @@
    "type": "object",
    "properties": {
     "domain": {
-     "description": "the domain name (chapter 8.2, from М11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
+     "description": "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
     },
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "the holder's term (chapter 8.8, from М11/10 N1.1); the order — (term, rev), term is senior"
+     "description": "the holder's term (chapter 8.8, from M11/10 N1.1); the order — (term, rev), term is senior"
     },
     "rev": {
      "$ref": "#/$defs/common.pos53",

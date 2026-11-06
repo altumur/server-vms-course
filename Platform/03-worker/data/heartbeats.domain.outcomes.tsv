@@ -1,5 +1,5 @@
-# Outcomes of an unreadable object domain/<sub>/heartbeat — the heartbeat of the worker on the domain (P/03.7 Н1.6 heartbeat; the form of the heartbeat —
-# heartbeats.schema.json, chapter 3.4 Н1.1). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable object domain/<sub>/heartbeat — the heartbeat of the worker on the domain (P/03.7 N1.6 heartbeat; the form of the heartbeat —
+# heartbeats.schema.json, chapter 3.4 N1.1). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domainconsole	the heartbeat of the worker on the domain is unreadable or not in the form of chapter 3.4 Н1.1 (`worker` — not `domain/<sub>/worker`) — «not heard»: door.pass — 503 `{error: "unavailable", detail: "no worker of <sub> with a door is heard"}`, not passed to the worker; does not touch the object	0	row	P/03.7 Н1.6 heartbeat; P/10 Н1.6 address, absent
+	domainconsole	the heartbeat of the worker on the domain is unreadable or not in the form of chapter 3.4 N1.1 (`worker` — not `domain/<sub>/worker`) — «not heard»: door.pass — 503 `{error: "unavailable", detail: "no worker of <sub> with a door is heard"}`, not passed to the worker; does not touch the object	0	row	P/03.7 N1.6 heartbeat; P/10 N1.6 address, absent

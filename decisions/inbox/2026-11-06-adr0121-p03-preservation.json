@@ -1,0 +1,752 @@
+{
+  "baseline": "f5108651a59b5a5cbd202f1b0ad26572012457ee",
+  "agreed_source": "34ee07d34d431c1f78fb04f24e91c17f6e34f42b",
+  "call_rows_identical": 55,
+  "guard_string": "9007199254740993",
+  "machine_capture_trace_bindings_unchanged": true,
+  "rollout_unchanged": true,
+  "identity_files": [
+    {
+      "path": "Platform/03-worker/forms/row-write-bindings.tsv",
+      "sha256": "d7d63acc0efc2420c83d4704638e4f6e380f0cd2cec073219ee2cf79830b7afc"
+    },
+    {
+      "path": "Platform/03-worker/forms/contender-writer.machine.yaml",
+      "sha256": "a450c9aede69a8dbc2562eac284e4ee2fb58c2c4cfba56608a226b2779da0aa0"
+    },
+    {
+      "path": "Platform/03-worker/forms/contender-writer.traces.tsv",
+      "sha256": "ebd049d8fbe70cb530f75521c16479075c15d87f72c84db9dfc206e20eac7aa8"
+    },
+    {
+      "path": "Platform/03-worker/forms/token-cache.machine.yaml",
+      "sha256": "426cb57b63844c4e61a8e5cfbfe028af2b47617152cecbb6cfacf6bf0a1cccbc"
+    },
+    {
+      "path": "Platform/03-worker/forms/token-cache.traces.tsv",
+      "sha256": "2ee43d96c1811e01b28305d0a00196f1e39f6b71510a98ba5cbb3236319ea11c"
+    },
+    {
+      "path": "Platform/03-worker/forms/slot-capture.tsv",
+      "sha256": "69f85e6a39beb24161cf8b95d0f56e7980b625f90d663fbd9688bb9661226fc8"
+    },
+    {
+      "path": "Platform/03-worker/forms/stages.tsv",
+      "sha256": "6d0daa0f4f6d2e39fbe43751304b495f892ebac750097372ac1e279f2a70b360"
+    },
+    {
+      "path": "Platform/03-worker/forms/daemon-flags.tsv",
+      "sha256": "59ffb82822b002061ab0beffd079b65a4a623cf85cd742f740f3c07d4488db68"
+    },
+    {
+      "path": "Platform/03-worker/data/state.layers.tsv",
+      "sha256": "a9cbd55f87c9275d8e81c39f6eeb0187572311eefb826a60161b06368510b53f"
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.layers.tsv",
+      "sha256": "9c8ae85b4858e528a546ab2a6c980c8acfc23b213750aa290f9b207b60956095"
+    },
+    {
+      "path": "Platform/03-worker/data/heartbeats.layers.tsv",
+      "sha256": "0912cbdf0d7e15c86d9ce2584734ab0e08cd1058e29af664870a3dd1ab002b10"
+    },
+    {
+      "path": "Platform/03-worker/data/holds.layers.tsv",
+      "sha256": "414980ecee234ca8e10bc2253dfc454a85d1b068c66797c8869eceb1c0b516c1"
+    },
+    {
+      "path": "Platform/03-worker/data/epoch.layers.tsv",
+      "sha256": "e0069bfc568b74dac723006f5b93513c138585c1b972413eaa8a3283f0763810"
+    },
+    {
+      "path": "Platform/03-worker/data/slots.layers.tsv",
+      "sha256": "ba88093c917c33390b47b633d70612c886b9e059967bc85902c88bc37ed6b24d"
+    },
+    {
+      "path": "Platform/03-worker/data/heartbeats.domain.outcomes.tsv",
+      "sha256": "c1a6dd8a777dab96a6aeb1cc7dada76c4d0b8fa0b14c416ce9069109fee0b115"
+    },
+    {
+      "path": "Platform/03-worker/data/slots.domain.outcomes.tsv",
+      "sha256": "b140f7e85dc22295e550f55c6f2d38687c5d707160af6e9384a89ed5e55c0ff0"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/7/seams.tsv",
+      "sha256": "27ddc5093331aa6a8f52779d23c6c947a1a2dc6017033a541f073e8ace7e9752"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/6/seams.tsv",
+      "sha256": "8962b7da77bb5cbe3e460bc8026046694bde0d900d6774c8df6277d2a81f7bfe"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/1/seams.tsv",
+      "sha256": "3cba22166e4ede06f1a12199929acc7117c4112087e14a75a0e0b5ac1df1c79b"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/4/seams.tsv",
+      "sha256": "736a1cbccd1a0bfbcaa2dcd9d9d7e8d2956d872100c2d7ac7bc4e9694192f5af"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/3/seams.tsv",
+      "sha256": "c974ea9a7c41048b68e0ad31cf9e430ec9125c8bda3929a5ca58941c21cf1123"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/2/seams.tsv",
+      "sha256": "a2bb3745c150be4728d4037d8674126a2b15416b203bacab15fa6cd76fbc8dee"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/5/seams.tsv",
+      "sha256": "f81dcbf7de525a57644bf6d72780dd54adb98fdf77b4298c9355257664b98376"
+    }
+  ],
+  "field_changes": [
+    [
+      "Platform/03-worker/forms/refusals.tsv",
+      "data-row=5/column=12",
+      "slot: renewal `conflict` and `holder \u2260 \u044f` (the holder is not me)",
+      "slot: renewal `conflict` and `holder \u2260 me` (the holder is not me)"
+    ],
+    [
+      "Platform/03-worker/forms/refusals.tsv",
+      "data-row=16/column=13",
+      "fenced, give_up_name() (`\u043e\u0442\u0434\u0430\u0442\u044c_\u0438\u043c\u044f()`), exit with code 2 \u2014 without a restart (`RestartPreventExitStatus=2`, P/02.4 N1.1)",
+      "fenced, give_up_name() (`release_name()`), exit with code 2 \u2014 without a restart (`RestartPreventExitStatus=2`, P/02.4 N1.1)"
+    ],
+    [
+      "Platform/03-worker/forms/refusals.tsv",
+      "data-row=41/column=13",
+      "401 `{error: <\u0441\u043b\u043e\u0432\u043e>, detail}` (`not_a_token` when absent); `no_revocations` \u2014 503",
+      "401 `{error: <word>, detail}` (`not_a_token` when absent); `no_revocations` \u2014 503"
+    ],
+    [
+      "Platform/03-worker/forms/refusals.tsv",
+      "data-row=55/column=12",
+      "[domain token contract](../../common/contracts/domain-token.md) \u00ab\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430\u00bb, steps 9\u201310; \u00abRefusal words\u00bb (V1)",
+      "[domain token contract](../../common/contracts/domain-token.md) \u00abThe check\u00bb, steps 9\u201310; \u00abRefusal words\u00bb (V1)"
+    ],
+    [
+      "Platform/03-worker/data/state.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description",
+      "the domain name (chapter 8.2, from \u041c11/2 N1.1); another JSON type or \u2260 the domain of the set \u2014 function record step 2 (another_domain), not the form (REC-G01)",
+      "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or \u2260 the domain of the set \u2014 function record step 2 (another_domain), not the form (REC-G01)"
+    ],
+    [
+      "Platform/03-worker/data/state.schema.json",
+      "/$defs/common.shared_doc/properties/term/description",
+      "the holder's term (chapter 8.8, from \u041c11/10 N1.1); the order \u2014 (term, rev), term is senior",
+      "the holder's term (chapter 8.8, from M11/10 N1.1); the order \u2014 (term, rev), term is senior"
+    ],
+    [
+      "Platform/03-worker/data/epoch.outcomes.tsv",
+      "data-row=2/column=6",
+      "P/03.2 N3 \u00abtake_epoch(id)\u00bb, \u00abconfirm\u00bb, N1.6 fenced, N4; \u0434\u043e\u0433\u043e\u0432\u043e\u0440 \u0441\u043b\u0438\u044f\u043d\u0438\u044f \u0441\u043e\u0431\u044b\u0442\u0438\u0439 failed",
+      "P/03.2 N3 \u00abtake_epoch(id)\u00bb, \u00abconfirm\u00bb, N1.6 fenced, N4; event merge contract failed"
+    ],
+    [
+      "Platform/03-worker/data/epoch.outcomes.tsv",
+      "data-row=3/column=6",
+      "P/06.4 N3; \u0434\u043e\u0433\u043e\u0432\u043e\u0440 \u0441\u043b\u0438\u044f\u043d\u0438\u044f \u0441\u043e\u0431\u044b\u0442\u0438\u0439 failed",
+      "P/06.4 N3; event merge contract failed"
+    ],
+    [
+      "Platform/03-worker/data/epoch.outcomes.tsv",
+      "data-row=5/column=6",
+      "P/03.2 N3 \u00abtake_epoch(id)\u00bb, \u00abconfirm\u00bb, N1.6 fenced, N4; \u0434\u043e\u0433\u043e\u0432\u043e\u0440 \u0441\u043b\u0438\u044f\u043d\u0438\u044f \u0441\u043e\u0431\u044b\u0442\u0438\u0439 failed",
+      "P/03.2 N3 \u00abtake_epoch(id)\u00bb, \u00abconfirm\u00bb, N1.6 fenced, N4; event merge contract failed"
+    ],
+    [
+      "Platform/03-worker/data/epoch.outcomes.tsv",
+      "data-row=6/column=6",
+      "P/06.4 N3; \u0434\u043e\u0433\u043e\u0432\u043e\u0440 \u0441\u043b\u0438\u044f\u043d\u0438\u044f \u0441\u043e\u0431\u044b\u0442\u0438\u0439 failed",
+      "P/06.4 N3; event merge contract failed"
+    ],
+    [
+      "Platform/03-worker/data/holds.schema.json",
+      "/properties/by/description",
+      "the name of the holder's slot \u2014 whose place it is (N1.3); by it the place \u00abfollows the name\u00bb (N3 \u00ab\u043c\u0435\u0441\u0442\u043e\u00bb)",
+      "the name of the holder's slot \u2014 whose place it is (N1.3); by it the place \u00abfollows the name\u00bb (N3 \u00abplace\u00bb)"
+    ],
+    [
+      "Platform/03-worker/data/holds.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description",
+      "the domain name (chapter 8.2, from \u041c11/2 N1.1); another JSON type or \u2260 the domain of the set \u2014 function record step 2 (another_domain), not the form (REC-G01)",
+      "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or \u2260 the domain of the set \u2014 function record step 2 (another_domain), not the form (REC-G01)"
+    ],
+    [
+      "Platform/03-worker/data/holds.schema.json",
+      "/$defs/common.shared_doc/properties/term/description",
+      "the holder's term (chapter 8.8, from \u041c11/10 N1.1); the order \u2014 (term, rev), term is senior",
+      "the holder's term (chapter 8.8, from M11/10 N1.1); the order \u2014 (term, rev), term is senior"
+    ],
+    [
+      "Platform/03-worker/data/slots.outcomes.tsv",
+      "data-row=2/column=6",
+      "P/04 N3 \u00abfate\u00bb \u0437\u0430\u043f\u0438\u0441\u044c release; P/04-10, P/04-11",
+      "P/04 N3 \u00abfate\u00bb write release; P/04-10, P/04-11"
+    ],
+    [
+      "Platform/03-worker/data/slots.outcomes.tsv",
+      "data-row=3/column=6",
+      "P/03.2 N1.4 torn, \u0430\u0431\u0437\u0430\u0446 \u00ab\u0423 \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044e\u0449\u0435\u0439 \u0441\u0442\u0440\u043e\u043a\u0438\u2026\u00bb, N3 \u00abcapture\u00bb, \u00abrenew\u00bb, \u00abwrite_under_slot\u00bb, N4",
+      "P/03.2 N1.4 torn, paragraph \u00abAn absent row\u2026\u00bb, N3 \u00abcapture\u00bb, \u00abrenew\u00bb, \u00abwrite_under_slot\u00bb, N4"
+    ],
+    [
+      "Platform/03-worker/data/slots.outcomes.tsv",
+      "data-row=4/column=6",
+      "P/03.2 N1.4 torn, \u0430\u0431\u0437\u0430\u0446 \u00ab\u0423 \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044e\u0449\u0435\u0439 \u0441\u0442\u0440\u043e\u043a\u0438\u2026\u00bb, N3 \u00abcapture\u00bb, \u00abrenew\u00bb, \u00abwrite_under_slot\u00bb, N4",
+      "P/03.2 N1.4 torn, paragraph \u00abAn absent row\u2026\u00bb, N3 \u00abcapture\u00bb, \u00abrenew\u00bb, \u00abwrite_under_slot\u00bb, N4"
+    ],
+    [
+      "Platform/03-worker/data/slots.outcomes.tsv",
+      "data-row=6/column=3",
+      "the slot is unreadable \u2014 \u00abthe slot is held\u00bb is not proven: the family row `<sub>/<\u0441\u0442\u0440\u043e\u043a\u0430>/<\u0441\u043b\u043e\u0442>` does not go into the report",
+      "the slot is unreadable \u2014 \u00abthe slot is held\u00bb is not proven: the family row `<sub>/<row>/<slot>` does not go into the report"
+    ],
+    [
+      "Platform/03-worker/data/slots.outcomes.tsv",
+      "data-row=7/column=6",
+      "P/04 N3 \u00abfate\u00bb \u0437\u0430\u043f\u0438\u0441\u044c release",
+      "P/04 N3 \u00abfate\u00bb write release"
+    ],
+    [
+      "Platform/03-worker/data/slots.outcomes.tsv",
+      "data-row=11/column=3",
+      "the slot is unreadable \u2014 \u00abthe slot is held\u00bb is not proven: the family row `<sub>/<\u0441\u0442\u0440\u043e\u043a\u0430>/<\u0441\u043b\u043e\u0442>` does not go into the report",
+      "the slot is unreadable \u2014 \u00abthe slot is held\u00bb is not proven: the family row `<sub>/<row>/<slot>` does not go into the report"
+    ],
+    [
+      "Platform/03-worker/data/slots.outcomes.tsv",
+      "data-row=12/column=6",
+      "P/04 N3 \u00abfate\u00bb \u0437\u0430\u043f\u0438\u0441\u044c release; P/04-10, P/04-11",
+      "P/04 N3 \u00abfate\u00bb write release; P/04-10, P/04-11"
+    ],
+    [
+      "Platform/03-worker/data/slots.outcomes.tsv",
+      "data-row=16/column=3",
+      "the slot is unreadable \u2014 \u00abthe slot is held\u00bb is not proven: the family row `<sub>/<\u0441\u0442\u0440\u043e\u043a\u0430>/<\u0441\u043b\u043e\u0442>` does not go into the report",
+      "the slot is unreadable \u2014 \u00abthe slot is held\u00bb is not proven: the family row `<sub>/<row>/<slot>` does not go into the report"
+    ],
+    [
+      "Platform/03-worker/data/heartbeats.schema.json",
+      "/properties/status/items/properties/lease/description",
+      "the unit's lease is not confirmed (chapter 3.2 N1.6 silent); otherwise there is no field (VMS request \u00ab\u043f\u0443\u043b\u044c\u0441 \u0438 \u0431\u0438\u0442\u0430\u044f \u0441\u0442\u0440\u043e\u043a\u0430\u00bb)",
+      "the unit's lease is not confirmed (chapter 3.2 N1.6 silent); otherwise there is no field (VMS request \u00abheartbeat and a garbled row\u00bb)"
+    ],
+    [
+      "Platform/03-worker/data/heartbeats.schema.json",
+      "/properties/url/description",
+      "the door url \u2014 a platform string (platform_strings N1.1; added \u041c10/9, P/06.5 N3 \u00ab`/where/<id>`\u00bb); host, scheme and binding \u2014 N1.7 door_address (ADR-0091 addendum (7), (8))",
+      "the door url \u2014 a platform string (platform_strings N1.1; added M10/9, P/06.5 N3 \u00ab`/where/<id>`\u00bb); host, scheme and binding \u2014 N1.7 door_address (ADR-0091 addendum (7), (8))"
+    ],
+    [
+      "Platform/03-worker/data/heartbeats.schema.json",
+      "/properties/was_fenced/description",
+      "whether this instance has been fenced since its start (N3 \u00ab\u043e\u0442\u0441\u0435\u0447\u0451\u043d\u00bb); P/06.5 series worker_fenced{worker} (VMS request \u00ab\u043f\u0443\u043b\u044c\u0441 \u0438 \u0431\u0438\u0442\u0430\u044f \u0441\u0442\u0440\u043e\u043a\u0430\u00bb)",
+      "whether this instance has been fenced since its start (N3 \u00abfenced\u00bb); P/06.5 series worker_fenced{worker} (VMS request \u00abheartbeat and a garbled row\u00bb)"
+    ],
+    [
+      "Platform/03-worker/data/heartbeats.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description",
+      "the domain name (chapter 8.2, from \u041c11/2 N1.1); another JSON type or \u2260 the domain of the set \u2014 function record step 2 (another_domain), not the form (REC-G01)",
+      "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or \u2260 the domain of the set \u2014 function record step 2 (another_domain), not the form (REC-G01)"
+    ],
+    [
+      "Platform/03-worker/data/heartbeats.schema.json",
+      "/$defs/common.shared_doc/properties/term/description",
+      "the holder's term (chapter 8.8, from \u041c11/10 N1.1); the order \u2014 (term, rev), term is senior",
+      "the holder's term (chapter 8.8, from M11/10 N1.1); the order \u2014 (term, rev), term is senior"
+    ],
+    [
+      "Platform/03-worker/data/holds.outcomes.tsv",
+      "data-row=3/column=3",
+      "a torn place: \u0432\u0437\u044f\u0442\u044c_\u043c\u0435\u0441\u0442\u043e \u2014 skip, the candidate is not taken; \u0434\u0435\u0440\u0436\u0430\u0442\u044c (renewal of the hold) of its own place \u2014 the renewal is not confirmed: the row is not rewritten, the place is held within the window, as when the store is silent (N3 \u00ab\u043c\u0435\u0441\u0442\u043e\u00bb \u0434\u0435\u0440\u0436\u0430\u0442\u044c: strict \u2014 while confirmed < WRITE_WINDOW, close by CLOSE_BY; own and not strict \u2014 < WRITE_WINDOW + unconfirmed_max); the window has run out \u2192 leave_place, the subsystem closes the writer (analysis of review of stage B 3\u20135, \u2116 5)",
+      "a torn place: take_place \u2014 skip, the candidate is not taken; hold (renewal of the hold) of its own place \u2014 the renewal is not confirmed: the row is not rewritten, the place is held within the window, as when the store is silent (N3 \u00abplace\u00bb hold: strict \u2014 while confirmed < WRITE_WINDOW, close by CLOSE_BY; own and not strict \u2014 < WRITE_WINDOW + unconfirmed_max); the window has run out \u2192 leave_place, the subsystem closes the writer (analysis of review of stage B 3\u20135, \u2116 5)"
+    ],
+    [
+      "Platform/03-worker/data/holds.outcomes.tsv",
+      "data-row=4/column=6",
+      "\u0434\u043e\u0433\u043e\u0432\u043e\u0440 \u043d\u0430\u0431\u043b\u044e\u0434\u0435\u043d\u0438\u044f \u00abHold of a place\u00bb unknown; P/06.5 N3; P/06.1 N1.6",
+      "observation contract \u00abHold of a place\u00bb unknown; P/06.5 N3; P/06.1 N1.6"
+    ],
+    [
+      "Platform/03-worker/data/epoch.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description",
+      "the domain name (chapter 8.2, from \u041c11/2 N1.1); another JSON type or \u2260 the domain of the set \u2014 function record step 2 (another_domain), not the form (REC-G01)",
+      "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or \u2260 the domain of the set \u2014 function record step 2 (another_domain), not the form (REC-G01)"
+    ],
+    [
+      "Platform/03-worker/data/epoch.schema.json",
+      "/$defs/common.shared_doc/properties/term/description",
+      "the holder's term (chapter 8.8, from \u041c11/10 N1.1); the order \u2014 (term, rev), term is senior",
+      "the holder's term (chapter 8.8, from M11/10 N1.1); the order \u2014 (term, rev), term is senior"
+    ],
+    [
+      "Platform/03-worker/data/heartbeats.outcomes.tsv",
+      "data-row=5/column=3",
+      "an element of status[] out of form \u2014 the single list (analysis of review of stage B 6\u20137, \u2116 15; the form status.items alongside): no id or phase; for a phase not sealed and not unreadable, no epoch, observed_revision or revision; for phase sealed, no why or revision, or there is epoch or observed_revision (W03-G02); for phase unreadable, no why, or there is epoch or observed_revision (W03-G05); id not by the grammar of the unit id (the row check contract); phase not a string; epoch, revision not a whole number \u2265 1; observed_revision not a whole number \u2265 0 (1.0, 1e0, -0.0 \u2014 not a whole number) \u2014 the unit \u00ab\u044d\u043b\u0435\u043c\u0435\u043d\u0442\u00bb only at the console `GET /{rows}`: it skips the element, the other elements of the heartbeat go into rows (P/06.1 N2 \u00abrows\u00bb; observed_revision \u2014 an integer by RunningUnit: a change of behaviour, analysis of review of stage A 6\u20137, \u2116 13); the domain's shadow report \u2014 a live reader of the objects of a member's copy from the store (the holder's pass): there is no claim for the element (P/08.1 N1.6 claim, N1.4; the pure view function receives what has already been read \u2014 the Architect's decision of 2026-10-20 (Go \u041c11-01 \u2116 7; family heartbeats, analysis of review of stage B 6\u20137, \u2116 14, \u2116 15)); the other readers \u2014 as a wholly unreadable heartbeat (row \"\"; the current behaviour): the console `/servers`, `/metrics`, `/where`, door.pass (a live worker with a door), `/schema` (processes) and \u00abheard\u00bb of the server decommission, the controller, the drain (analysis of review of stage B 6\u20137, \u2116 14); `status` itself not a list \u2014 the whole heartbeat is unreadable (row \"\"); the path \"\" acts before `/status`: in a wholly unreadable heartbeat nobody reads the elements, `GET /{rows}` neither",
+      "an element of status[] out of form \u2014 the single list (analysis of review of stage B 6\u20137, \u2116 15; the form status.items alongside): no id or phase; for a phase not sealed and not unreadable, no epoch, observed_revision or revision; for phase sealed, no why or revision, or there is epoch or observed_revision (W03-G02); for phase unreadable, no why, or there is epoch or observed_revision (W03-G05); id not by the grammar of the unit id (the row check contract); phase not a string; epoch, revision not a whole number \u2265 1; observed_revision not a whole number \u2265 0 (1.0, 1e0, -0.0 \u2014 not a whole number) \u2014 the unit \u00abelement\u00bb only at the console `GET /{rows}`: it skips the element, the other elements of the heartbeat go into rows (P/06.1 N2 \u00abrows\u00bb; observed_revision \u2014 an integer by RunningUnit: a change of behaviour, analysis of review of stage A 6\u20137, \u2116 13); the domain's shadow report \u2014 a live reader of the objects of a member's copy from the store (the holder's pass): there is no claim for the element (P/08.1 N1.6 claim, N1.4; the pure view function receives what has already been read \u2014 the Architect's decision of 2026-10-20 (Go M11-01 \u2116 7; family heartbeats, analysis of review of stage B 6\u20137, \u2116 14, \u2116 15)); the other readers \u2014 as a wholly unreadable heartbeat (row \"\"; the current behaviour): the console `/servers`, `/metrics`, `/where`, door.pass (a live worker with a door), `/schema` (processes) and \u00abheard\u00bb of the server decommission, the controller, the drain (analysis of review of stage B 6\u20137, \u2116 14); `status` itself not a list \u2014 the whole heartbeat is unreadable (row \"\"); the path \"\" acts before `/status`: in a wholly unreadable heartbeat nobody reads the elements, `GET /{rows}` neither"
+    ],
+    [
+      "Platform/03-worker/data/heartbeats.outcomes.tsv",
+      "data-row=5/column=6",
+      "P/06.1 N2 \u00abrows\u00bb; P/06.5 N2 \u00ab\u0412\u044b\u0434\u0430\u0447\u0438\u00bb, N1.8; P/06.6 N2.3, N3 \u00ab\u0432\u044b\u0432\u0435\u0441\u0442\u0438_\u0441\u0435\u0440\u0432\u0435\u0440\u00bb; P/08.1 N1.6 claim; \u0440\u0430\u0437\u0431\u043e\u0440 \u0440\u0435\u0432\u044c\u044e \u0441\u0442\u0430\u0434\u0438\u0438 A 6\u20137, \u2116 13; \u0440\u0430\u0437\u0431\u043e\u0440 \u0440\u0435\u0432\u044c\u044e \u0441\u0442\u0430\u0434\u0438\u0438 B 6\u20137, \u2116 14",
+      "P/06.1 N2 \u00abrows\u00bb; P/06.5 N2 \u00abOutputs\u00bb, N1.8; P/06.6 N2.3, N3 \u00abdecommission_server\u00bb; P/08.1 N1.6 claim; review analysis of stage A 6\u20137, \u2116 13; review analysis of stage B 6\u20137, \u2116 14"
+    ],
+    [
+      "Platform/03-worker/data/heartbeats.outcomes.tsv",
+      "data-row=7/column=6",
+      "P/03.2 N3 \u00ab\u0432\u0437\u044f\u0442\u044c_\u043c\u0435\u0441\u0442\u043e\u00bb; P/03.4 N1.1 previous_hb",
+      "P/03.2 N3 \u00abtake_place\u00bb; P/03.4 N1.1 previous_hb"
+    ],
+    [
+      "Platform/03-worker/data/heartbeats.outcomes.tsv",
+      "data-row=8/column=6",
+      "P/06.5 N2 \u00ab\u0412\u044b\u0434\u0430\u0447\u0438\u00bb; P/01.1 N0 \u00ab\u0423\u0441\u0442\u043e\u0439\u0447\u0438\u0432\u043e\u0441\u0442\u044c \u0432\u044b\u0434\u0430\u0447\u0438\u00bb; P/06.6 N1.2 server_of",
+      "P/06.5 N2 \u00abOutputs\u00bb; P/01.1 N0 \u00abStability of output\u00bb; P/06.6 N1.2 server_of"
+    ],
+    [
+      "Platform/03-worker/data/contenders.outcomes.tsv",
+      "data-row=3/column=6",
+      "P/06.5 N3 \u00ab/servers\u00bb \u00ab\u0421\u043e\u043f\u0435\u0440\u043d\u0438\u043a\u0438\u00bb",
+      "P/06.5 N3 \u00ab/servers\u00bb \u00abContenders\u00bb"
+    ],
+    [
+      "Platform/03-worker/data/contenders.schema.json",
+      "/properties/since/description",
+      "the moment of entering the state; kept within one state; the form of the time is not named by the norm \u00ab\u0412\u0440\u0435\u043c\u044f\u00bb",
+      "the moment of entering the state; kept within one state; the form of the time is not named by the norm \u00abTime\u00bb"
+    ],
+    [
+      "Platform/03-worker/data/contenders.schema.json",
+      "/properties/at/description",
+      "the moment the mark was written (rewritten every CONTEND_EVERY); for the reader \u2014 display, freshness by version (the observation contract \u00ab\u0421\u0432\u0435\u0436\u0435\u0441\u0442\u044c \u043c\u0435\u0442\u043a\u0438 \u0441\u043e\u043f\u0435\u0440\u043d\u0438\u043a\u0430\u00bb); the form of the time is not named by the norm \u00ab\u0412\u0440\u0435\u043c\u044f\u00bb",
+      "the moment the mark was written (rewritten every CONTEND_EVERY); for the reader \u2014 display, freshness by version (the observation contract \u00abFreshness of a contender mark\u00bb); the form of the time is not named by the norm \u00abTime\u00bb"
+    ],
+    [
+      "Platform/03-worker/data/contenders.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description",
+      "the domain name (chapter 8.2, from \u041c11/2 N1.1); another JSON type or \u2260 the domain of the set \u2014 function record step 2 (another_domain), not the form (REC-G01)",
+      "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or \u2260 the domain of the set \u2014 function record step 2 (another_domain), not the form (REC-G01)"
+    ],
+    [
+      "Platform/03-worker/data/contenders.schema.json",
+      "/$defs/common.shared_doc/properties/term/description",
+      "the holder's term (chapter 8.8, from \u041c11/10 N1.1); the order \u2014 (term, rev), term is senior",
+      "the holder's term (chapter 8.8, from M11/10 N1.1); the order \u2014 (term, rev), term is senior"
+    ],
+    [
+      "Platform/03-worker/data/slots.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description",
+      "the domain name (chapter 8.2, from \u041c11/2 N1.1); another JSON type or \u2260 the domain of the set \u2014 function record step 2 (another_domain), not the form (REC-G01)",
+      "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or \u2260 the domain of the set \u2014 function record step 2 (another_domain), not the form (REC-G01)"
+    ],
+    [
+      "Platform/03-worker/data/slots.schema.json",
+      "/$defs/common.shared_doc/properties/term/description",
+      "the holder's term (chapter 8.8, from \u041c11/10 N1.1); the order \u2014 (term, rev), term is senior",
+      "the holder's term (chapter 8.8, from M11/10 N1.1); the order \u2014 (term, rev), term is senior"
+    ]
+  ],
+  "creates_key_payloads": [
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 3,
+      "after_line": 4,
+      "column": "input",
+      "case": "hyphen-a",
+      "before_sha256": "1a1252688a73025fe01e1b2881ecd4ee58a152ea75af30298fe35d08c7b480ba",
+      "decoded_sha256": "1a1252688a73025fe01e1b2881ecd4ee58a152ea75af30298fe35d08c7b480ba"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 4,
+      "after_line": 5,
+      "column": "input",
+      "case": "hyphen-b",
+      "before_sha256": "f9fa96d1e59d9b2b4df111c3f1b3285a31bd3697125f852b7018829be6f56eaf",
+      "decoded_sha256": "f9fa96d1e59d9b2b4df111c3f1b3285a31bd3697125f852b7018829be6f56eaf"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 5,
+      "after_line": 6,
+      "column": "input",
+      "case": "plain",
+      "before_sha256": "53eae52ba797a160740854e44d8933b552145825c482e99e4defa85d0c09bab0",
+      "decoded_sha256": "53eae52ba797a160740854e44d8933b552145825c482e99e4defa85d0c09bab0"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 6,
+      "after_line": 7,
+      "column": "input",
+      "case": "unreserved",
+      "before_sha256": "e43a49f824d581a46414be9484e3459a50ca5d8e5f68835d347dde1ec222e28a",
+      "decoded_sha256": "e43a49f824d581a46414be9484e3459a50ca5d8e5f68835d347dde1ec222e28a"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 7,
+      "after_line": 8,
+      "column": "input",
+      "case": "percent",
+      "before_sha256": "b4822196200ffb5253a7b9539352076cd5d03c01032ce786c652218fea811966",
+      "decoded_sha256": "b4822196200ffb5253a7b9539352076cd5d03c01032ce786c652218fea811966"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 8,
+      "after_line": 9,
+      "column": "input",
+      "case": "upper-hex",
+      "before_sha256": "78ca55030411a0b3624aa3021a660dba8e081c0359084d1666d3bcce46ef5384",
+      "decoded_sha256": "78ca55030411a0b3624aa3021a660dba8e081c0359084d1666d3bcce46ef5384"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 9,
+      "after_line": 10,
+      "column": "input",
+      "case": "pct2d",
+      "before_sha256": "f82c78547e7fd2f921f10a33b66c7584a299166e8c1794be1f953764a3061350",
+      "decoded_sha256": "f82c78547e7fd2f921f10a33b66c7584a299166e8c1794be1f953764a3061350"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 10,
+      "after_line": 11,
+      "column": "input",
+      "case": "url",
+      "before_sha256": "bba3300be2698585001568d9adbfd0a3716e1dd74088ff3442b75a867c1e3233",
+      "decoded_sha256": "bba3300be2698585001568d9adbfd0a3716e1dd74088ff3442b75a867c1e3233"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 11,
+      "after_line": 12,
+      "column": "input",
+      "case": "int-neg",
+      "before_sha256": "25f0f30d7ca1a127d621d9ca03c0a1d3f15979e849a57972610bf1c27b6343e7",
+      "decoded_sha256": "25f0f30d7ca1a127d621d9ca03c0a1d3f15979e849a57972610bf1c27b6343e7"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 12,
+      "after_line": 13,
+      "column": "input",
+      "case": "bool",
+      "before_sha256": "4bc3b895a3384a6c2626dd0723f8c88cd211bea65e506a32860b2bdc33686618",
+      "decoded_sha256": "4bc3b895a3384a6c2626dd0723f8c88cd211bea65e506a32860b2bdc33686618"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 13,
+      "after_line": 14,
+      "column": "input",
+      "case": "float-half",
+      "before_sha256": "7c3d9115589ea2b7cd82d51fdd93775f3f7a9376856eb78937cb7fde0c83fddf",
+      "decoded_sha256": "7c3d9115589ea2b7cd82d51fdd93775f3f7a9376856eb78937cb7fde0c83fddf"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 14,
+      "after_line": 15,
+      "column": "input",
+      "case": "float-other",
+      "before_sha256": "262851da8c6e09928f0c7163c5a787a67aa6bcb010a1f54750f5a1e802107b43",
+      "decoded_sha256": "262851da8c6e09928f0c7163c5a787a67aa6bcb010a1f54750f5a1e802107b43"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 15,
+      "after_line": 16,
+      "column": "input",
+      "case": "float-small",
+      "before_sha256": "1dd0959aa1aa5993f8ce13dad69255e88ea7893eab1792d29347978eab114f23",
+      "decoded_sha256": "1dd0959aa1aa5993f8ce13dad69255e88ea7893eab1792d29347978eab114f23"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 16,
+      "after_line": 17,
+      "column": "input",
+      "case": "float-big",
+      "before_sha256": "85a7ecd0979870f4dc9fefc7aa40ef32139a38201730c7df311cf488f2c0ea09",
+      "decoded_sha256": "85a7ecd0979870f4dc9fefc7aa40ef32139a38201730c7df311cf488f2c0ea09"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 17,
+      "after_line": 18,
+      "column": "input",
+      "case": "float-minus-zero",
+      "before_sha256": "ca7b4f0860a11cedfe43390b8fcad7ceba717748845592a9872775f957e24b60",
+      "decoded_sha256": "ca7b4f0860a11cedfe43390b8fcad7ceba717748845592a9872775f957e24b60"
+    },
+    {
+      "table": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_line": 18,
+      "after_line": 19,
+      "column": "input",
+      "case": "float-tie",
+      "before_sha256": "018d869aab9de75275e78ae97f4ce943df03a56539857d4053286133f838aa65",
+      "decoded_sha256": "018d869aab9de75275e78ae97f4ce943df03a56539857d4053286133f838aa65"
+    }
+  ],
+  "total_source_cell_proofs": 731,
+  "source_cell_tables": 9,
+  "english_errors": 0,
+  "mirror_errors": 0,
+  "source_cell_errors": 0,
+  "map_sha256": "850fe4203d906f6bd174f9b259b7d65ebecc3b4c979b69b45f4024816f31252d",
+  "map_records": 988,
+  "categories": {
+    "source-text": 340,
+    "diagnostic-text": 8,
+    "mirror-reference": 134,
+    "field-value": 41,
+    "cell-json-byte-payload": 16,
+    "protocol-identity": 449
+  },
+  "changed_files": [
+    {
+      "path": "Platform/03-worker/README.md",
+      "before_sha256": "e83fc046729f5a9662e01bda3d3941202ecda861ed4ebe694137700bfb6a1952",
+      "after_sha256": "f8ab4f666cac350724b9502051a816d377fece9d2a884a4fbf2dccbc5db5b66e"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/2/README.md",
+      "before_sha256": "b6d1579d787e078e8c777c42d23a19fd3013df2bbb107ad4f1aa5f87e8bdc26a",
+      "after_sha256": "28239298ebdd792d1530352c2e36ca7c3bf2900d8234c0f33c6368a3efb350f2"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/2/scenarios.tsv",
+      "before_sha256": "54bd32a238bef6fda92b53c77901ad667725f107b70858f2479bfefdcb42352b",
+      "after_sha256": "4251a1be4a8a1c5ba3febd3c37fbc469beb17d7de07d43f738ffb91f7e186d73"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/3/README.md",
+      "before_sha256": "4122b953930b1d7025eaccaf02319f6964ea0ddb502f72d266a1e6e959e6a4ff",
+      "after_sha256": "7770c89ddd2cc47b53693eae4a58a091e75a635d8aff166e85aed08d44daa051"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/3/scenarios.tsv",
+      "before_sha256": "875f5a95ac28b19c8019a78f4be23db42810af61f9e096dcda1e52fa61702534",
+      "after_sha256": "998544947d5eab9841100bea402914b43fc7f751077c5dc735a0f94c793acb63"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/4/README.md",
+      "before_sha256": "4b0e573172fc4b98f4de367ea2636ca42ed8c627c3b836d51fc15e42c423b9b4",
+      "after_sha256": "ff84c5a8ddd548c9bf8a91bb8b821ec40c3de047670e3314dfcfd61c86a0b85f"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/4/scenarios.tsv",
+      "before_sha256": "d091e3f5d3424fbd60c43a3e00433e6d89c4cf62e68e43f0e9fc62f25342329d",
+      "after_sha256": "4586c2428cfa384b7aaf10b1951918e031b0f6df5df52842357de2ea93316b70"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/6/README.md",
+      "before_sha256": "6e183f0441e1e84444b1f7f0cfd6cec4702327894776a48eb635631f3bf8e052",
+      "after_sha256": "e8e2cf1dca0cdac0ee2f9aa57d4502626f92773570c9ecc46275e31d534ef689"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/6/scenarios.tsv",
+      "before_sha256": "6264a3231f49ff4493571ceec2a0e22967a3699efdac7c789e3c4a94c2154336",
+      "after_sha256": "65a3a6bbabe1529908b164baecdd71f2367888b84ae08f7e8ea46ae9c3fe2471"
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.outcomes.tsv",
+      "before_sha256": "fe50514bc084e4553421c1793de9461e382cec776dd98b9be4fddf20729889d5",
+      "after_sha256": "c3fb8bb35bec1aa6bd2e9f6fb9a49e40806c317d573b07a759813965164a2ebf"
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "before_sha256": "8e5aae8c8ea7aba785c5c99a5dd2b394b4266e96e906914995de26630a12dc4d",
+      "after_sha256": "af3035d9b6fcd75915ca2377d5c7399326d228b78c1b3af1c26d23bdd296f006"
+    },
+    {
+      "path": "Platform/03-worker/data/epoch.outcomes.tsv",
+      "before_sha256": "5eec79ff39d266ef6514fa9f698b763786d94be61756211338edc06e1f2bd1cc",
+      "after_sha256": "4e0cc3675d86c33e6b7107d27ce40fed3b48b2e5e8e8b3aab1aff81489689f49"
+    },
+    {
+      "path": "Platform/03-worker/data/epoch.schema.json",
+      "before_sha256": "c2b045bde42dfa7ece5a1fdd037ec7fbd23b2f79b34629e761100bfbd381c0c4",
+      "after_sha256": "751f0675e14aa9eb3a18830ea9827cd98acfe3a146c3ea2ba2e64b67cf86809b"
+    },
+    {
+      "path": "Platform/03-worker/data/heartbeats.outcomes.tsv",
+      "before_sha256": "7992f6b12f8efef7e92acd5303318fac5ddc85fea556dd933fbb74b10e10d43c",
+      "after_sha256": "abb21331c205c7d8fa49732c012fd1283e7a26f4675e27b9a02b340669658563"
+    },
+    {
+      "path": "Platform/03-worker/data/heartbeats.schema.json",
+      "before_sha256": "1e0359c0324b6b3abd650ff924f1d6f8e8838b7c8dc5162bc0c198f7961060dd",
+      "after_sha256": "d2c4484a939afe996473420369c4c21ca38685d233132973ce417cacd28ffc98"
+    },
+    {
+      "path": "Platform/03-worker/data/holds.outcomes.tsv",
+      "before_sha256": "9dbe0a20bc06806225dad7291d63085b1feae5c432e508840748be4fe637c7e5",
+      "after_sha256": "2c3e875368696b39ba895929f587f348f684779a0e9b964ac63c1479c77b2442"
+    },
+    {
+      "path": "Platform/03-worker/data/holds.schema.json",
+      "before_sha256": "e50873788ff02052eebf0e4cf581b6581d8ae02384f173074edd5519dc59d45f",
+      "after_sha256": "df75f85d45ba0b309b50950dc94412b5ccce65bc0df5cd7695beaa9716ceabba"
+    },
+    {
+      "path": "Platform/03-worker/data/slots.outcomes.tsv",
+      "before_sha256": "ac3de17129993b5c2a04fb5567437a8911b8b1867572696ae1a9bca59de1a26a",
+      "after_sha256": "fa42c3d306cd8a5f0503655c4dc76e0221f47480cd2fddb339b90e290920fb66"
+    },
+    {
+      "path": "Platform/03-worker/data/slots.schema.json",
+      "before_sha256": "26f9eb1a0c991e6663ebf7881dfa8090618c8fb2dfa512643f03828eeafcae2c",
+      "after_sha256": "906ff6c5fc854a6fa9a5678cd8be02a0d27a95c9c26af57cb215b8d029104df4"
+    },
+    {
+      "path": "Platform/03-worker/data/state.outcomes.tsv",
+      "before_sha256": "26c259cd1d7b206b08f6b2d2bb2f792569b695b9976f06bb3c5521b85b05c94e",
+      "after_sha256": "79e3cf7137e299305c719fa2b5c865d5b0c3e27f7a1c933279fbb78486189b0b"
+    },
+    {
+      "path": "Platform/03-worker/data/state.schema.json",
+      "before_sha256": "575f1b0a778b508ee6478e8dee3319484d8e2f79b6d2f114d5af03f29d47b6c6",
+      "after_sha256": "89da37cd9b98c2887a8df72787c5a4d32da23d7842360c1d6760119f8d05c265"
+    },
+    {
+      "path": "Platform/03-worker/forms/refusals.tsv",
+      "before_sha256": "6736a2315278c9175ebda4569bacf1c1ab0f4505c06d3f11e77e6893c04e82af",
+      "after_sha256": "d138e314358c2a2e56b289c0b0504523fc73abeffea0a241d92bdc0aea0c2f74"
+    },
+    {
+      "path": "Platform/03-worker/ru/03-worker.md",
+      "before_sha256": "61894db542ce3be76875e6638aa47136c3aca10235dd0d69c5236eee4628282b",
+      "after_sha256": "61e547c8d09558e176ae62fdcbfe842519308941385846e7de9fd30749414816"
+    },
+    {
+      "path": "Platform/03-worker/ru/README.md",
+      "before_sha256": "f0e435a585ee82e737b09b663ceb21ebf2ab5eb613fe0a4587196ace23c5d728",
+      "after_sha256": "bee7670989debb7aa3b1ff3107a7f8a696248164a6d673dd93720497208a3060"
+    },
+    {
+      "path": "Platform/03-worker/ru/acceptance/2/README.md",
+      "before_sha256": "1eef46b8186537b5b0a3cce4553cccd6fba13290f070db00d551dcf99dc81ff6",
+      "after_sha256": "7786fba2578715d580650bfda6a560dd5066345c1f8fb74a3ddea7f87916edb3"
+    },
+    {
+      "path": "Platform/03-worker/ru/acceptance/3/README.md",
+      "before_sha256": "878b7f35eca9fb8801ddde192a40f8076c193fa2de2662519a70c51deb97b2d9",
+      "after_sha256": "b0ca6e3c195bc73d3ea74218b36da3ae4a90449a784a7d367557624bc36f5758"
+    },
+    {
+      "path": "Platform/03-worker/ru/acceptance/4/README.md",
+      "before_sha256": "043847bae7f44bf702215f7abb48cadda65c9e80246f5a531b283e34681ec034",
+      "after_sha256": "9b79f674c2ec757e6d0c42f40f7b046e38505d3cc2d1f133d6ddc1b8914b3a23"
+    },
+    {
+      "path": "Platform/03-worker/ru/acceptance/6/README.md",
+      "before_sha256": "de5fd9ed6ff51386031fc32dc1b5433495a62b1e466058ffb38c24e36e2f0f4a",
+      "after_sha256": "b88605eebd8ceeb15b6625c5b9419d1c8908fa0960312a9dae9decad62459a03"
+    },
+    {
+      "path": "Platform/03-worker/ru/spec/03-worker.README.md",
+      "before_sha256": "67e1665f5da254a4ce6f0a6c472fb8b301b9ca1b915a628f3c8afa3dcb08e9f8",
+      "after_sha256": "97859179d2cb31134daf5a9d245c51c079ab9fd8a704268fe8114423cc6783cc"
+    },
+    {
+      "path": "Platform/03-worker/ru/spec/03.1-worker.norms.md",
+      "before_sha256": "9e209918f69276048a869f21ed0788c728e777fcf2766654ca1ac42a4b156022",
+      "after_sha256": "08724165762f6deb82981602b9b42c9d22c20856c5f7d0472d7c976dfc84536a"
+    },
+    {
+      "path": "Platform/03-worker/ru/spec/03.2-worker.norms.md",
+      "before_sha256": "f86dacf019624739d1acaa54e6dabb32b02dee587f87c1526f1dc44de86d06cf",
+      "after_sha256": "aeb702bc171b4757f7eea12d374d27c96af5443b51beef76cca29c532f1fe1ea"
+    },
+    {
+      "path": "Platform/03-worker/ru/spec/03.3-worker.norms.md",
+      "before_sha256": "5f779baed84b3ed43a377a9ccf9373cde3eb5a066fd65006095afc14c2cda72c",
+      "after_sha256": "82d33753931902e681ded6a11ff74b05a6f01a976067a50674e223078a8032e4"
+    },
+    {
+      "path": "Platform/03-worker/ru/spec/03.4-worker.norms.md",
+      "before_sha256": "0f763f0af844685d29e75fc95ba5d71a9fdf11cba6d1bd169f4d32699b6f90db",
+      "after_sha256": "5b3365f4278ab9c5590ae075e75b217788bfe544868c4d7b75ef2f82d9622ce5"
+    },
+    {
+      "path": "Platform/03-worker/ru/spec/03.5-worker.norms.md",
+      "before_sha256": "29b27edc45f62814bbbe3b71673ee6c8dbbc54a60ebc1cc608fe5a9b3004cb38",
+      "after_sha256": "e296bbaf22d06cd081d7a6afb21fa4f00fb11fd16b20e19c4c018cb0e8b296f2"
+    },
+    {
+      "path": "Platform/03-worker/ru/spec/03.6-worker.norms.md",
+      "before_sha256": "d06f0b2cc8e6aefa185daf7cef29d79e76b32d1cdbc465d1b8a12707841f77a8",
+      "after_sha256": "a90c873d2530d2922d23866a200406bfa4c43c3ea3c121e820bbd244d78fc39e"
+    },
+    {
+      "path": "Platform/03-worker/ru/spec/03.7-worker.norms.md",
+      "before_sha256": "04e95f95f315528f00eefb0ee24a7cafdfa5b4c84b34d7a9fc7b2013ec7270f4",
+      "after_sha256": "cf0582aabc0e9694657c56073f9440c791dec4bc7ed1f06b57962148bcc7b66c"
+    },
+    {
+      "path": "Platform/03-worker/spec/03-worker.README.md",
+      "before_sha256": "187a6da8389313cc374ed1f01e151ffa34114e686d19886e269742a8fb8fcde4",
+      "after_sha256": "f13b1f22b4ebb39b0c658d01c2d56d73c7d33b5e0915db1646ce15cbf9e993e0"
+    },
+    {
+      "path": "Platform/03-worker/spec/03.1-worker.norms.md",
+      "before_sha256": "4fdb9b936c536ba81f76cae8d71a7418c2aed09fc122ebe424c6155c065144e6",
+      "after_sha256": "b0567585353e84b49ac9ff880313e67711390541a0abd16b849e8dc8bd06e5ee"
+    },
+    {
+      "path": "Platform/03-worker/spec/03.2-worker.norms.md",
+      "before_sha256": "4f5d62afeae9692155a77dca2e89b610b05a5223131b7dc673867b663b910fe7",
+      "after_sha256": "f63b1c203370e50bcfb4d94af4086f59c3ac683402a29ccbf82f46c73a50c35f"
+    },
+    {
+      "path": "Platform/03-worker/spec/03.3-worker.norms.md",
+      "before_sha256": "bac34b67222fbac2bbcfa51352237942a8fc97f1e1b662ca459f0f0b631d3b1b",
+      "after_sha256": "85c02828013adfa9d3269e655dcc09fd4d5f4ace175ba2185e4a1aca54bc1aef"
+    },
+    {
+      "path": "Platform/03-worker/spec/03.4-worker.norms.md",
+      "before_sha256": "3f03789416235fc24d7c49e84fe27e03f24d9fff4c61a57d5559b4c25619c17b",
+      "after_sha256": "4f441bc27615e7d4734ed16e9ee62c72462c5153bec166c4e79b83b1c61ec0fc"
+    },
+    {
+      "path": "Platform/03-worker/spec/03.5-worker.norms.md",
+      "before_sha256": "13cf9bcfc7b2d4b184dfded01d70b15635b253c66b2d0c7244836b906988ae3f",
+      "after_sha256": "bf173327ac5e3a367ca8560f52fd33d56cbced3e12d4921b349c73e48d9ebd0e"
+    },
+    {
+      "path": "Platform/03-worker/spec/03.6-worker.norms.md",
+      "before_sha256": "a7f01eb8618c421a0936b9e52c70c59b6b2bbf1ababdcc241f677729cfd21a58",
+      "after_sha256": "7dd15119affff12cc2f698de5aed83fff5b1d7a8061c48bc16b0da6b8cb9d26c"
+    },
+    {
+      "path": "Platform/03-worker/spec/03.7-worker.norms.md",
+      "before_sha256": "12331d502fc8a31ce6bd26f6f8774927cb01591c6adf3cb9325d0f5ee7137aa8",
+      "after_sha256": "1b83da55941f1599382c99ea667ec6111785f6f68813314570e551232ca548a4"
+    },
+    {
+      "path": "Platform/03-worker/vectors/creates-key/cases.tsv",
+      "before_sha256": "dde06509aa2aa0525d071a241f03c56c8f020baadebc13c8d8f461022d13e8f9",
+      "after_sha256": "865f4374fa2ef35adc4297b54fe817e02404297449cde89870cb173c93480215"
+    },
+    {
+      "path": "Platform/common/data/cell-json-sha256.tsv",
+      "before_sha256": "d7c21c57b6bca61621a61e9f0a83e42d09d59187be8dd53a16494e565f6f2598",
+      "after_sha256": "1ca12820ebf7e229aaa17563b073d6fb16d1db1536cae3f669e3b919daea9516"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/en_mirror.py",
+      "before_sha256": "fbe70a70f28d1b6511d55622de76dc0ba53502867b9f98fc4e03e2b346bddab4",
+      "after_sha256": "d9dcf0b424ad8d82c063cf87ebd87ff4fb686844f49ad6fccdb69f34c316d27a"
+    }
+  ],
+  "check_spec": "PASS with 62 exceptions",
+  "skills_tests": 310,
+  "skills_tests_skip": 1,
+  "skills_tests_status": "PASS"
+}

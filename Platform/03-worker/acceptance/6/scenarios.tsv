@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Acceptance of P/03.6: the testsub stand with the resource srv-a; scenarios 05 and 07 moved from М10/08 (stage B). Format — README.
+# Acceptance of P/03.6: the testsub stand with the resource srv-a; scenarios 05 and 07 moved from M10/08 (stage B). Format — README.
 05-request-performed	1	@start controller	ok
 05-request-performed	2	@start worker w-1	ok
 05-request-performed	3	console POST /counters {"name": "c5", "start": 1}	201
