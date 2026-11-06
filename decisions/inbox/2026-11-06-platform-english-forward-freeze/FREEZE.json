@@ -1,0 +1,73 @@
+{
+  "source_head": "d7ae33630aecc419190249cb4fba430c3c3dd100",
+  "branch": "spec/0121-history-forward-mainf7",
+  "integration_parents": {
+    "main": "f7f734def6afd011d6a5fa51f866846feec6fe1c",
+    "reader_code": "9fbaa453b6bf0b1f4dc37d8c3b88a0ca31398379",
+    "canonical_source": "8aa97cde7788d334410690528506795f824a7e20",
+    "approved_cyrillic_judge": "036f7590f39cd9d62db6d24b07ed3e83352a00f8"
+  },
+  "maps": [
+    {
+      "path": "decisions/inbox/2026-11-06-p02-english-raw-assets/source-map.json",
+      "sha256": "945d2a7e0701df49a7f1b3b994b2990e968480a80767112d81fd65e760f2dcc2"
+    },
+    {
+      "path": "decisions/inbox/2026-11-06-p06-ascii-raw-assets/source-map.json",
+      "sha256": "0db3539021a9cf744ead47fbbe7cdce0c09d2fe468094a18e75faed8258c5a65"
+    },
+    {
+      "path": "decisions/inbox/2026-11-06-p07-adr0129/source-map.json",
+      "sha256": "590d9138404bd191058c4854a1aebabd4bd1f482bb8e5c8b8e6b9598b54ed15f"
+    },
+    {
+      "path": "decisions/inbox/2026-11-06-p07-full-english/source-map.json",
+      "sha256": "14bcd3207ad0f43973edf739bc6518eee844eba7974decbda77ae57e555fdb0e"
+    },
+    {
+      "path": "decisions/inbox/2026-11-06-p07-review127-semantic/source-map.json",
+      "sha256": "9b22f5eb443895f542d6e936cc926cc981cd20e368b5a37402cbab11a2b59f4d"
+    },
+    {
+      "path": "decisions/inbox/2026-11-06-platform-history-relocation/source-map.json",
+      "sha256": "c268109737d99c1adbc3980ab4221fb21bbd524460eff1191aeed8248fca0e3b"
+    },
+    {
+      "path": "decisions/inbox/2026-11-06-platform-module-design-english/source-map.json",
+      "sha256": "b9c8e006b52aba98b13290d4422fc38f89b4bc243bfe15a202fb5853072e8a17"
+    },
+    {
+      "path": "decisions/inbox/2026-11-06-root-readme-lessons-english/source-map.json",
+      "sha256": "d33c1ad9855d28f27f913ac1a39889776b3e13435134be74f2668adb31b68223"
+    },
+    {
+      "path": "decisions/inbox/2026-11-06-source-testdata-english/source-map.json",
+      "sha256": "f0dec6b5b6ddbf7fd72111fc6371ba21d7ac6317f3700418d37764cdf1297e41"
+    },
+    {
+      "path": "decisions/inbox/2026-11-06-p07-adr0129/a1-closure-source-map.json",
+      "sha256": "cbbdd1ec77ff27b4b51b2dd9f3a2739f252e8fa61298e83bab635db785b8e958"
+    }
+  ],
+  "source_checks_sha256": "3c2bbfe1b7181c81e710030b65fbdd8cf2ed0ab0144fb2b022e8189031bfc08d",
+  "historical_files_byte_exact": 82,
+  "historical_bytes": 8181717,
+  "Platform_remaining_Cyrillic_files": 0,
+  "root_remaining_Cyrillic_files": 0,
+  "Source_testdata_remaining_Cyrillic_files": 0,
+  "P07_readiness_ids_preserved": 8,
+  "C6": "proposal-only; no API edit",
+  "P07_A1": "closed by ADR-0129 (7); original batch proposal never activated",
+  "protected": [
+    "P01 max_body schema/scenarios and machine inputs exact canonical8aa.",
+    "P02 947 corpus/220 canonical and finite profile schema exact canonical8aa; captions in Source witnesses intentionally translated as mapped.",
+    "Old cell-json proof1855/16, UI519 and common turn49 exact canonical8aa.",
+    "Source/w2cplatform and VMS trees byte-exact canonical8aa."
+  ],
+  "limits": [
+    "Source component checks only; full source checker requires review103 relocation readers, then root single joint normgen+KIT.",
+    "No Go/model/native/SUT execution, generated output edits, main/export/pin/runtime or queue action.",
+    "Normgen Cyrillic debt remains Generator-owned: 280 files/139852 letters; Platform ready does not declare normgen ready.",
+    "ADR0129 constants work remains queued until P06 joint is merged."
+  ]
+}
