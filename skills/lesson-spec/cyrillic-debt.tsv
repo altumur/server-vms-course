@@ -1,5 +1,7 @@
 # ADR-0121 (8): per-file Cyrillic letter debt; only shrink or declare a clean unit ready.
 kind	path	letters
+ready	tools/normgen/contracts	-
+ready	tools/normgen/wirert	-
 debt	Platform/01-store/journal/corrections-1.tsv	3685
 debt	Platform/01-store/journal/corrections-2.tsv	1600
 debt	Platform/01-store/journal/corrections-3.tsv	1941
@@ -300,17 +302,6 @@ debt	tools/normgen/cmdflag_judge.py	739
 debt	tools/normgen/code_origin.py	658
 debt	tools/normgen/common_vectors.py	1010
 debt	tools/normgen/consumer_vectors.py	60
-debt	tools/normgen/contracts/gen/gen_heartbeat.py	6
-debt	tools/normgen/contracts/gen/gen_nfkc.py	1
-debt	tools/normgen/contracts/go/fault.go	2
-debt	tools/normgen/contracts/go/fieldrules.go	5
-debt	tools/normgen/contracts/go/heartbeat/read.go	1
-debt	tools/normgen/contracts/go/heartbeat/runtime.go	11
-debt	tools/normgen/contracts/go/may.go	3
-debt	tools/normgen/contracts/go/peer.go	1
-debt	tools/normgen/contracts/go/record.go	1
-debt	tools/normgen/contracts/go/storeclient.go	1
-debt	tools/normgen/contracts/go/urlcred.go	30
 debt	tools/normgen/copyrt/README.md	2522
 debt	tools/normgen/copyrt/go/validation.go	1
 debt	tools/normgen/door_judge.py	892
@@ -530,7 +521,6 @@ debt	tools/normgen/scenario_judge.py	959
 debt	tools/normgen/stagetests/witness16/open.go	295
 debt	tools/normgen/stagetests/witnesscgo/open.go	387
 debt	tools/normgen/test_consumer_packages.py	51
-debt	tools/normgen/test_contracts.py	526
 debt	tools/normgen/test_gate.py	143
 debt	tools/normgen/test_gen_admin.py	224
 debt	tools/normgen/test_gen_box.py	505
@@ -563,14 +553,6 @@ debt	tools/normgen/test_gen_vectors_transport.py	6
 debt	tools/normgen/test_judges.py	319
 debt	tools/normgen/test_lesson.py	318
 debt	tools/normgen/test_p01_source.py	6
-debt	tools/normgen/test_wire.py	695
-debt	tools/normgen/test_wire_api_p06.py	6
-debt	tools/normgen/test_wire_vectors.py	144
 debt	tools/normgen/vector_consumers.py	262
 debt	tools/normgen/vector_judge.py	605
-debt	tools/normgen/wire.py	1303
-debt	tools/normgen/wire_draft.py	1055
-debt	tools/normgen/wire_vectors.py	235
-debt	tools/normgen/wirert/full/go/check.go	122
-debt	tools/normgen/wirert/go/check.go	122
 debt	tools/normgen/yamlsub.py	1070
