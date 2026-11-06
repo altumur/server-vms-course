@@ -8,7 +8,17 @@ This English text is the source; `ru/forms/README.md` is its Russian translation
 
 `$INSTANCE_ID` is the existing common instance override: absent or empty selects the ordinary box/pid/random resolver; a supplied nonempty value is accepted or refused by the instance contract and preserved byte for byte. It is environment, with no new CLI flag or new configuration rule.
 
-[runtime-constants.tsv](runtime-constants.tsv) is the numeric source of its 25 declared constants. Header is `name value unit norm meaning`, literal TAB. Name is unique `[A-Z][A-Z0-9_]*`; value is a positive JSON integer, no quotes; unit is `count|s|bytes`; norm is an existing req anchor of its owning chapter; meaning is text. No expression language or new environment knob is introduced. The cited procedure owns dependent formulas and conditional use: in particular OPS_KEEP cannot undercut the subsystem acceptance-memory term. These literals may be emitted with core; they do not declare a wholly generated stage.
+[runtime-constants.tsv](runtime-constants.tsv) is the numeric source of its 27 declared constants. Header is `name value unit norm meaning`, literal TAB. Name is unique `[A-Z][A-Z0-9_]*`; value is a positive JSON integer, no quotes; unit is `count|s|bytes`; norm is an existing req anchor of its owning chapter; meaning is text. No expression language or new environment knob is introduced. The cited procedure owns dependent formulas and conditional use: in particular OPS_KEEP cannot undercut the subsystem acceptance-memory term. These literals may be emitted with core; they do not declare a wholly generated stage.
+
+The numeric source of each folder bound is its row of `runtime-constants.tsv`. JSON Schema is a second machine carrier with the same value, not an independent default. The equality is a `check_spec` obligation (ADR-0129 addendum (5) item 1); prose and dependent formulas refer to the row name.
+
+| Source row | Second carrier JSON pointer |
+|---|---|
+| `FOLDERS_MEMBERS_MAX` | `data/folders.schema.json#/$defs/writer/properties/members/maxItems` |
+| `FOLDERS_PER_UNIT_MAX` | `data/memberof.schema.json#/$defs/writer/properties/folders/maxItems` |
+
+`AT_ROUTE_WAIT` and the local `FORWARD_WAIT` apply only to P/06.7 N1.6. Other forwarding waits and `FORWARD_MAX` remain declared by the [forwarding contract](../../common/contracts/forwarding.md); `PASS_WAIT`, `GLASS_SESSION` and `GLASS_SESSIONS_MAX` remain declared by the [gate-and-pass contract](../../common/contracts/gate-and-pass.md). These references do not copy foreign constants into this form.
+
 
 ## Numeric loader supplement
 

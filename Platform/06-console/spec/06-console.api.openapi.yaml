@@ -6898,6 +6898,8 @@ components:
           type: boolean
         fixed:
           type: boolean
+        hidden:
+          type: boolean
         bound_to:
           type: array
           items:

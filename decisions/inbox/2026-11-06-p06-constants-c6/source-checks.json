@@ -1,0 +1,59 @@
+{
+  "base": "023399dea82d4ad904a9436deccea7c61b50a616",
+  "strict_source_check": {
+    "status": "RED on unchanged pending integration errors; not whole GREEN",
+    "exit_code_base": 1,
+    "exit_code_source": 1,
+    "base_errors": 527,
+    "source_errors": 527,
+    "new_errors": 0,
+    "removed_errors": 0,
+    "error_lines_exact_equal": true,
+    "exceptions_exact_equal": true,
+    "exceptions": 62,
+    "error_groups": {
+      "Platform/02-installer/acceptance/1/spec_verdicts": 1,
+      "Platform/02-installer/vectors/canonical/cases.tsv": 2,
+      "Platform/06-console/ru/spec/06.5-console.norms.md": 1,
+      "Platform/07-console-module/data/localization.tsv": 517,
+      "Platform/06-console/forms/README.md": 1,
+      "Platform/06-console/spec/06.5-console.norms.md": 1,
+      "Platform/07-console-module/CONSOLE-MODULE.md": 2,
+      "Platform": 1,
+      "Platform/07-console-module": 1
+    }
+  },
+  "logs": {
+    "base023": {
+      "counts": "COUNTS anchored_files=47 canonical=present canonical_mutants=67 canonical_mutants_killed=67 canonical_puts=12 canonical_section=present canonical_vectors=220 canonical_views=205 catalog_rows=172 check_probes=86 check_rows=34 checklist_inventories=1 count_phrases=570 cyrillic_debt_files=260 cyrillic_debt_letters=135582 cyrillic_export=0 cyrillic_non_utf8=10 cyrillic_ready=14 cyrillic_scanned_files=12986 daemon_flags=202 data_paragraphs=39 data_roles=10 deletion_body_witnesses=6 diagnostics=51 door_roles=11 english_mirrors=393 families_with_section=149 families_without_section=0 family_outcomes=405 family_read=present family_read_rows=10714 family_read_tables=8 family_schemas=149 finite_profile_cases=13 finite_profile_skeletons=8 form_cases=947 form_diagnostics_differ=1 form_manifests=12 form_rows=159 form_rows_held=158 form_rows_implied=1 id_map_ids=532 layer_words=19 lessons=10 library_defect_vectors=57 library_defects=24 local_links=10030 local_refs=2744 machine_traces=64 norm_ids=532 numeric_loader_cases=9 openapi=6 openapi_cross_refs=760 openapi_patterns=170 operator_commands=30 outcome_readers=313 p08_closed_contracts=4 p08_form_equalities=5 p08_password_vectors=13 p08_schema_equalities=141 path_param_routes=17 process_names=9 puts_cases=87 refusal_cause_names=59 refusal_chapters=38 refusal_rows=756 req_anchors=931 route_priorities=10 row_write_bindings=4 runtime_constants=97 scenarios=496 schema_needed=152 seam_steps=687 stage_rows=91 steps=5469 stub_scanned_files=231 verdicts=947 versioned_doors=24 vms_catalog_rows=24 vms_families=24 vms_family_read_rows=832 vms_family_read_tables=7 vms_frozen=56 vms_lessons=12 vms_lessons_checked=12 vms_manifests=10 vms_table_rows=570 wire_bindings=91 wire_calls=12284 wire_excluded=750",
+      "log": "check-spec-base023.log.gz",
+      "raw_bytes": 115378,
+      "raw_sha256": "0d53258173c6ee73b11124742c2afca59db69eefcd5967271510f9d12e21341c",
+      "gzip_sha256": "04a64eb44b9abb53f90b3c3387424d3c7f082c92480cd917789a64df782415e4"
+    },
+    "source": {
+      "counts": "COUNTS anchored_files=47 canonical=present canonical_mutants=67 canonical_mutants_killed=67 canonical_puts=12 canonical_section=present canonical_vectors=220 canonical_views=205 catalog_rows=172 check_probes=86 check_rows=34 checklist_inventories=1 count_phrases=570 cyrillic_debt_files=260 cyrillic_debt_letters=135582 cyrillic_export=0 cyrillic_non_utf8=10 cyrillic_ready=14 cyrillic_scanned_files=12986 daemon_flags=202 data_paragraphs=39 data_roles=10 deletion_body_witnesses=6 diagnostics=51 door_roles=11 english_mirrors=393 families_with_section=149 families_without_section=0 family_outcomes=405 family_read=present family_read_rows=10714 family_read_tables=8 family_schemas=149 finite_profile_cases=13 finite_profile_skeletons=8 form_cases=947 form_diagnostics_differ=1 form_manifests=12 form_rows=159 form_rows_held=158 form_rows_implied=1 id_map_ids=532 layer_words=19 lessons=10 library_defect_vectors=57 library_defects=24 local_links=10014 local_refs=2744 machine_traces=64 norm_ids=532 numeric_loader_cases=9 openapi=6 openapi_cross_refs=760 openapi_patterns=170 operator_commands=30 outcome_readers=313 p08_closed_contracts=4 p08_form_equalities=5 p08_password_vectors=13 p08_schema_equalities=141 path_param_routes=17 process_names=9 puts_cases=87 refusal_cause_names=59 refusal_chapters=38 refusal_rows=756 req_anchors=931 route_priorities=10 row_write_bindings=4 runtime_constants=99 scenarios=496 schema_needed=152 seam_steps=687 stage_rows=91 steps=5469 stub_scanned_files=231 verdicts=947 versioned_doors=24 vms_catalog_rows=24 vms_families=24 vms_family_read_rows=832 vms_family_read_tables=7 vms_frozen=56 vms_lessons=12 vms_lessons_checked=12 vms_manifests=10 vms_table_rows=570 wire_bindings=91 wire_calls=12284 wire_excluded=750",
+      "log": "check-spec-source.log.gz",
+      "raw_bytes": 115378,
+      "raw_sha256": "fdfe962defda7d176cc43b214e965d7b8fe93951ead3bc8948f13d8be19a8bc8",
+      "gzip_sha256": "495ba70c789de1df1e46e13cc355cc7f3a7d3a3ff7412e72f053a829b0500d2d"
+    }
+  },
+  "direct_source_proof": {
+    "constant_rows_before": 25,
+    "constant_rows_after": 27,
+    "schema_equalities": 2,
+    "FieldView_cases": 11,
+    "unchanged_other_parsed_OpenAPI": true,
+    "moved_14_15_sections_raw_equal": true,
+    "no_added_or_removed_req_ids": true
+  },
+  "source_only_limits": [
+    "One-off source/schema audit, not an independently authored subject judge.",
+    "review103 owns form-schema equality/judge integration.",
+    "No Go/model/native/SUT/module/installer/HTTP execution; no normgen/KIT, exporter, main, pins, runtime or queue."
+  ],
+  "judge_followup": "review103 should bind runtime-constants FOLDERS_MEMBERS_MAX and FOLDERS_PER_UNIT_MAX to the two JSON pointers in source-map.json. This branch does not supply the judge or claim its mutation coverage.",
+  "cyrillic_status": "Same pending new-path locale diagnostics as base; debt registry/ready classes unchanged. No Cyrillic added outside ru mirrors.",
+  "diff_check": "PASS on this delta; no tools/skills/Source/VMS/module/locale changes."
+}

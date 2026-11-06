@@ -1,0 +1,17 @@
+{
+  "base": "023399dea82d4ad904a9436deccea7c61b50a616",
+  "branch": "spec/p06-constants-c6-023",
+  "scope": "ADR0129 (2)10-13/(5)1 P06 plus approved C6 FieldView.hidden and P07 N5 open debt",
+  "source_paths": 18,
+  "constant_rows": 27,
+  "source_only": true,
+  "new_native_commands_classes_roles_aliases": 0,
+  "reader_Gate_owner": "review103/coord103; source delivery to Architect",
+  "artifacts": {
+    "check-spec-base023.log.gz": "04a64eb44b9abb53f90b3c3387424d3c7f082c92480cd917789a64df782415e4",
+    "check-spec-source.log.gz": "495ba70c789de1df1e46e13cc355cc7f3a7d3a3ff7412e72f053a829b0500d2d",
+    "source-checks.json": "b671b6550d8076d7dc035b8bf68bad5ca2cbb0ea284cf0943ccb209642649b64",
+    "source-map.json": "ff69974e1aa387a3bcf5ce572d31d5e818bce2fb362a05fabe351669e7938a47",
+    "source-proof.json": "ecf2858ccac3adbf082cefacff9bf918a9f9dec6c528c68a0308a156daac8540"
+  }
+}
