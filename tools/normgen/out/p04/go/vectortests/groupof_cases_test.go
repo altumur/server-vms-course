@@ -13,753 +13,729 @@ var _ = vectoradapter.NotImplemented
 
 // Platform/common/vectors/group-of/cases.tsv:45
 func TestGroupOf_Cases_Line45(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:45", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://10.0.0.50/ch/1\"")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:45", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://10.0.0.50/ch/1")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:46
 func TestGroupOf_Cases_Line46(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:46", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://10.0.0.50:554/ch/2\"")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:46", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://10.0.0.50:554/ch/2")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:47
 func TestGroupOf_Cases_Line47(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:47", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"ipint://u:p@10.0.0.50:8000/Acme/N8\""))
+		return vectoradapter.GroupOf([]byte("ipint://u:p@10.0.0.50:8000/Acme/N8"))
 	}, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:48
 func TestGroupOf_Cases_Line48(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:48", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"http://10.0.0.50/videostream.cgi\""))
-	}, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:48", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("http://10.0.0.50/videostream.cgi")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:49
 func TestGroupOf_Cases_Line49(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:49", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://10.0.0.50\"")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:49", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://10.0.0.50")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:50
 func TestGroupOf_Cases_Line50(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:50", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"rtsp://admin:pw@10.0.0.50:554/stream\""))
+		return vectoradapter.GroupOf([]byte("rtsp://admin:pw@10.0.0.50:554/stream"))
 	}, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:51
 func TestGroupOf_Cases_Line51(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:51", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://NVR-1/ch/1\"")) }, 0, "{\"group\": \"nvr-1\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:51", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://NVR-1/ch/1")) }, 0, "{\"group\": \"nvr-1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:52
 func TestGroupOf_Cases_Line52(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:52", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr-1./ch/1\"")) }, 0, "{\"group\": \"nvr-1\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:52", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr-1./ch/1")) }, 0, "{\"group\": \"nvr-1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:53
 func TestGroupOf_Cases_Line53(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:53", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://Cam.Example.COM./s\"")) }, 0, "{\"group\": \"cam.example.com\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:53", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://Cam.Example.COM./s")) }, 0, "{\"group\": \"cam.example.com\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:54
 func TestGroupOf_Cases_Line54(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:54", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[2001:DB8:0:0::1]/s\"")) }, 0, "{\"group\": \"2001:db8::1\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:54", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[2001:DB8:0:0::1]/s")) }, 0, "{\"group\": \"2001:db8::1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:55
 func TestGroupOf_Cases_Line55(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:55", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[2001:db8::1]:554/s\"")) }, 0, "{\"group\": \"2001:db8::1\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:55", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[2001:db8::1]:554/s")) }, 0, "{\"group\": \"2001:db8::1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:56
 func TestGroupOf_Cases_Line56(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:56", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[fe80::1%25eth0]/s\"")) }, 0, "{\"group\": \"fe80::1\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:56", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[fe80::1%25eth0]/s")) }, 0, "{\"group\": \"fe80::1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:57
 func TestGroupOf_Cases_Line57(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:57", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[::ffff:10.0.0.50]/s\"")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:57", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[::ffff:10.0.0.50]/s")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:58
 func TestGroupOf_Cases_Line58(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:58", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr%2Ecorp/s\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:58", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr%2Ecorp/s")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:59
 func TestGroupOf_Cases_Line59(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:59", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr_1/s\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:59", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr_1/s")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:60
 func TestGroupOf_Cases_Line60(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:60", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://010.0.0.50/s\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:60", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://010.0.0.50/s")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:61
 func TestGroupOf_Cases_Line61(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:61", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://10.1/s\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:61", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://10.1/s")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:62
 func TestGroupOf_Cases_Line62(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:62", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://0x0a.0.0.1/s\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:62", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://0x0a.0.0.1/s")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:63
 func TestGroupOf_Cases_Line63(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:63", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://\\u0436.example/s\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:63", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://\xd0\xb6.example/s")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:64
 func TestGroupOf_Cases_Line64(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:64", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp:///s\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:64", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp:///s")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:65
 func TestGroupOf_Cases_Line65(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:65", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://cam:hunter2/\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:65", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://cam:hunter2/")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:66
 func TestGroupOf_Cases_Line66(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:66", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"ipint://cam7#@nvr50/Acme/N8\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:66", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("ipint://cam7#@nvr50/Acme/N8")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:67
 func TestGroupOf_Cases_Line67(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:67", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"ipint://u:C#pass@nvr50:8000/Acme/N8\""))
+		return vectoradapter.GroupOf([]byte("ipint://u:C#pass@nvr50:8000/Acme/N8"))
 	}, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:68
 func TestGroupOf_Cases_Line68(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:68", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://acme/10.0.0.50/ch/17\""))
-	}, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:68", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://acme/10.0.0.50/ch/17")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:69
 func TestGroupOf_Cases_Line69(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:69", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://ACME/10.0.0.50/ch/2\""))
-	}, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:69", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://ACME/10.0.0.50/ch/2")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:70
 func TestGroupOf_Cases_Line70(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:70", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://acme/10.0.0.51/ch/1\""))
-	}, 0, "{\"group\": \"10.0.0.51\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:70", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://acme/10.0.0.51/ch/1")) }, 0, "{\"group\": \"10.0.0.51\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:71
 func TestGroupOf_Cases_Line71(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:71", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://other/10.0.0.50/ch/1\""))
-	}, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:71", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://other/10.0.0.50/ch/1")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:72
 func TestGroupOf_Cases_Line72(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:72", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://acme/[fe80::1%25eth0]:80/x\""))
+		return vectoradapter.GroupOf([]byte("driverpack://acme/[fe80::1%25eth0]:80/x"))
 	}, 0, "{\"group\": \"fe80::1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:73
 func TestGroupOf_Cases_Line73(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:73", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://acme/admin:Hunter2xyz@[FE80::1]:80/ch/1\""))
+		return vectoradapter.GroupOf([]byte("driverpack://acme/admin:Hunter2xyz@[FE80::1]:80/ch/1"))
 	}, 0, "{\"group\": \"fe80::1\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:74
 func TestGroupOf_Cases_Line74(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:74", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1\""))
+		return vectoradapter.GroupOf([]byte("driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1"))
 	}, 0, "{\"group\": \"10.0.0.5\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:75
 func TestGroupOf_Cases_Line75(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:75", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"driverpack://acme\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:75", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://acme")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:76
 func TestGroupOf_Cases_Line76(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:76", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"driverpack://file/h.mp4\"")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:76", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://file/h.mp4")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:77
 func TestGroupOf_Cases_Line77(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:77", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"driverpack://file/gate.mp4\"")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:77", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://file/gate.mp4")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:78
 func TestGroupOf_Cases_Line78(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:78", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"file:///media/a.mp4\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:78", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("file:///media/a.mp4")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:79
 func TestGroupOf_Cases_Line79(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:79", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"/media/a.mp4\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:79", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("/media/a.mp4")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:80
 func TestGroupOf_Cases_Line80(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:80", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://file/x\"")) }, 0, "{\"group\": \"file\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:80", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://file/x")) }, 0, "{\"group\": \"file\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:81
 func TestGroupOf_Cases_Line81(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:81", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"driverpack://FILE/x\"")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:81", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://FILE/x")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:82
 func TestGroupOf_Cases_Line82(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:82", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"driverpack://file:1/x\"")) }, 0, "{\"group\": \"x\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:82", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://file:1/x")) }, 0, "{\"group\": \"x\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:83
 func TestGroupOf_Cases_Line83(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:83", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"driverpack://acme/[::1]x/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:83", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://acme/[::1]x/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:84
 func TestGroupOf_Cases_Line84(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:84", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"driverpack://acme?x/10.0.0.5\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:84", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://acme?x/10.0.0.5")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:85
 func TestGroupOf_Cases_Line85(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:85", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://local/x\"")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:85", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://local/x")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:86
 func TestGroupOf_Cases_Line86(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:86", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://LOCAL/x\"")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:86", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://LOCAL/x")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:87
 func TestGroupOf_Cases_Line87(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:87", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://local:1/x\"")) }, 0, "{\"group\": \"x\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:87", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://local:1/x")) }, 0, "{\"group\": \"x\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:88
 func TestGroupOf_Cases_Line88(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:88", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://acme/10.0.0.5/y\"")) }, 0, "{\"group\": \"10.0.0.5\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:88", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://acme/10.0.0.5/y")) }, 0, "{\"group\": \"10.0.0.5\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:89
 func TestGroupOf_Cases_Line89(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:89", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://acme/10.0.0.5:9000/y\"")) }, 0, "{\"group\": \"10.0.0.5\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:89", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://acme/10.0.0.5:9000/y")) }, 0, "{\"group\": \"10.0.0.5\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:90
 func TestGroupOf_Cases_Line90(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:90", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://acme/NVR-1./y\"")) }, 0, "{\"group\": \"nvr-1\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:90", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://acme/NVR-1./y")) }, 0, "{\"group\": \"nvr-1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:91
 func TestGroupOf_Cases_Line91(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:91", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://acme/[2001:DB8::1]/y\"")) }, 0, "{\"group\": \"2001:db8::1\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:91", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://acme/[2001:DB8::1]/y")) }, 0, "{\"group\": \"2001:db8::1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:92
 func TestGroupOf_Cases_Line92(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:92", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"mirror://acme/[fe80::1%25eth0]:80/y\""))
+		return vectoradapter.GroupOf([]byte("mirror://acme/[fe80::1%25eth0]:80/y"))
 	}, 0, "{\"group\": \"fe80::1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:93
 func TestGroupOf_Cases_Line93(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:93", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://other/10.0.0.5/z\"")) }, 0, "{\"group\": \"10.0.0.5\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:93", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://other/10.0.0.5/z")) }, 0, "{\"group\": \"10.0.0.5\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:94
 func TestGroupOf_Cases_Line94(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:94", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://acme\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:94", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://acme")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:95
 func TestGroupOf_Cases_Line95(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:95", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://acme/h#frag/x\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:95", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://acme/h#frag/x")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:96
 func TestGroupOf_Cases_Line96(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:96", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://acme/10.0.0.5#frag\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:96", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://acme/10.0.0.5#frag")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:97
 func TestGroupOf_Cases_Line97(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:97", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://acme/u:p@10.0.0.5/y\"")) }, 0, "{\"group\": \"10.0.0.5\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:97", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://acme/u:p@10.0.0.5/y")) }, 0, "{\"group\": \"10.0.0.5\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:98
 func TestGroupOf_Cases_Line98(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:98", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://acme/nvr_1/y\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:98", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://acme/nvr_1/y")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:99
 func TestGroupOf_Cases_Line99(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:99", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://acme/010.0.0.5/y\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:99", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://acme/010.0.0.5/y")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:100
 func TestGroupOf_Cases_Line100(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:100", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://acme/[::1]x/y\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:100", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://acme/[::1]x/y")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:101
 func TestGroupOf_Cases_Line101(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:101", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror:///10.0.0.5/y\"")) }, 0, "{\"group\": \"10.0.0.5\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:101", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror:///10.0.0.5/y")) }, 0, "{\"group\": \"10.0.0.5\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:102
 func TestGroupOf_Cases_Line102(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:102", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://local/x\"")) }, 0, "{\"group\": \"local\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:102", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://local/x")) }, 0, "{\"group\": \"local\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:103
 func TestGroupOf_Cases_Line103(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:103", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://h/x#frag\"")) }, 0, "{\"group\": \"h\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:103", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://h/x#frag")) }, 0, "{\"group\": \"h\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:104
 func TestGroupOf_Cases_Line104(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:104", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"nosuch://10.0.0.5/\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:104", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("nosuch://10.0.0.5/")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:105
 func TestGroupOf_Cases_Line105(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:105", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://admin:pw/x@h/\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:105", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://admin:pw/x@h/")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:106
 func TestGroupOf_Cases_Line106(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:106", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr50/ch/1\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:106", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr50/ch/1")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:107
 func TestGroupOf_Cases_Line107(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:107", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"http://nvr50:8080/snap.jpg\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:107", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("http://nvr50:8080/snap.jpg")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:108
 func TestGroupOf_Cases_Line108(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:108", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"ipint://nvr50/Acme/N8\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:108", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("ipint://nvr50/Acme/N8")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:109
 func TestGroupOf_Cases_Line109(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:109", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr50:554/ch/2\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:109", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr50:554/ch/2")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:110
 func TestGroupOf_Cases_Line110(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:110", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr50\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:110", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr50")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:111
 func TestGroupOf_Cases_Line111(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:111", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr50?channel=1\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:111", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr50?channel=1")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:112
 func TestGroupOf_Cases_Line112(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:112", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr50:/ch/1\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:112", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr50:/ch/1")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:113
 func TestGroupOf_Cases_Line113(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:113", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://NVR50/ch/1\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:113", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://NVR50/ch/1")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:114
 func TestGroupOf_Cases_Line114(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:114", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"RTSP://Nvr50/ch/1\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:114", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("RTSP://Nvr50/ch/1")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:115
 func TestGroupOf_Cases_Line115(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:115", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr50./ch/1\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:115", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr50./ch/1")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:116
 func TestGroupOf_Cases_Line116(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:116", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"http://Cam.Example.COM.:80\"")) }, 0, "{\"group\": \"cam.example.com\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:116", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("http://Cam.Example.COM.:80")) }, 0, "{\"group\": \"cam.example.com\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:117
 func TestGroupOf_Cases_Line117(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:117", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://10.0.0.50./ch/1\"")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:117", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://10.0.0.50./ch/1")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:118
 func TestGroupOf_Cases_Line118(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:118", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[::1]/ch/1\"")) }, 0, "{\"group\": \"::1\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:118", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[::1]/ch/1")) }, 0, "{\"group\": \"::1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:119
 func TestGroupOf_Cases_Line119(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:119", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[0:0::1]:554/ch/1\"")) }, 0, "{\"group\": \"::1\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:119", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[0:0::1]:554/ch/1")) }, 0, "{\"group\": \"::1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:120
 func TestGroupOf_Cases_Line120(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:120", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[2001:DB8:0:0::1]/x\"")) }, 0, "{\"group\": \"2001:db8::1\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:120", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[2001:DB8:0:0::1]/x")) }, 0, "{\"group\": \"2001:db8::1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:121
 func TestGroupOf_Cases_Line121(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:121", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[::ffff:10.0.0.50]/x\"")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:121", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[::ffff:10.0.0.50]/x")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:122
 func TestGroupOf_Cases_Line122(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:122", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[fe80::1%25eth0]/x\"")) }, 0, "{\"group\": \"fe80::1\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:122", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[fe80::1%25eth0]/x")) }, 0, "{\"group\": \"fe80::1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:123
 func TestGroupOf_Cases_Line123(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:123", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"rtsp://admin:hunter2@nvr50/ch/1\""))
-	}, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:123", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://admin:hunter2@nvr50/ch/1")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:124
 func TestGroupOf_Cases_Line124(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:124", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"ipint://admin:pa@ss@nvr50/Acme/N8\""))
-	}, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:124", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("ipint://admin:pa@ss@nvr50/Acme/N8")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:125
 func TestGroupOf_Cases_Line125(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:125", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://cam7#@nvr50/ch/1\"")) }, 0, "{\"group\": \"cam7\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:125", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://cam7#@nvr50/ch/1")) }, 0, "{\"group\": \"cam7\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:126
 func TestGroupOf_Cases_Line126(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:126", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr%2Ecorp/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:126", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr%2Ecorp/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:127
 func TestGroupOf_Cases_Line127(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:127", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr%2ecorp/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:127", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr%2ecorp/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:128
 func TestGroupOf_Cases_Line128(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:128", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr_50/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:128", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr_50/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:129
 func TestGroupOf_Cases_Line129(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:129", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr 50/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:129", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr 50/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:130
 func TestGroupOf_Cases_Line130(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:130", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://-nvr/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:130", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://-nvr/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:131
 func TestGroupOf_Cases_Line131(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:131", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr..corp/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:131", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr..corp/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:132
 func TestGroupOf_Cases_Line132(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:132", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr\\u00e9/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:132", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr\xc3\xa9/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:133
 func TestGroupOf_Cases_Line133(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:133", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://010.0.0.50/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:133", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://010.0.0.50/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:134
 func TestGroupOf_Cases_Line134(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:134", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://10.1/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:134", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://10.1/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:135
 func TestGroupOf_Cases_Line135(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:135", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://0x0a.0.0.1/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:135", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://0x0a.0.0.1/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:136
 func TestGroupOf_Cases_Line136(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:136", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://256.0.0.1/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:136", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://256.0.0.1/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:137
 func TestGroupOf_Cases_Line137(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:137", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[10.0.0.1]/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:137", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[10.0.0.1]/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:138
 func TestGroupOf_Cases_Line138(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:138", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[fe80::1%eth0]/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:138", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[fe80::1%eth0]/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:139
 func TestGroupOf_Cases_Line139(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:139", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[::1/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:139", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[::1/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:140
 func TestGroupOf_Cases_Line140(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:140", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[::1]x/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:140", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[::1]x/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:141
 func TestGroupOf_Cases_Line141(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:141", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://cam:hunter2/ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:141", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://cam:hunter2/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:142
 func TestGroupOf_Cases_Line142(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:142", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr50/ch/%zz\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:142", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr50/ch/%zz")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:143
 func TestGroupOf_Cases_Line143(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:143", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp:///ch/1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:143", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp:///ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:144
 func TestGroupOf_Cases_Line144(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:144", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"nvr50\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:144", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("nvr50")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:145
 func TestGroupOf_Cases_Line145(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:145", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"ftp://nvr50/a\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:145", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("ftp://nvr50/a")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:146
 func TestGroupOf_Cases_Line146(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:146", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://acme/10.0.0.50/ch/18\""))
-	}, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:146", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://acme/10.0.0.50/ch/18")) }, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:147
 func TestGroupOf_Cases_Line147(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:147", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://acme/10.0.0.50:8080/ch/1\""))
+		return vectoradapter.GroupOf([]byte("driverpack://acme/10.0.0.50:8080/ch/1"))
 	}, 0, "{\"group\": \"10.0.0.50\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:148
 func TestGroupOf_Cases_Line148(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:148", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"driverpack://acme/NVR-1./ch/1\"")) }, 0, "{\"group\": \"nvr-1\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:148", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://acme/NVR-1./ch/1")) }, 0, "{\"group\": \"nvr-1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:149
 func TestGroupOf_Cases_Line149(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:149", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://acme/[fe80::1%25eth0]/ch/1\""))
+		return vectoradapter.GroupOf([]byte("driverpack://acme/[fe80::1%25eth0]/ch/1"))
 	}, 0, "{\"group\": \"fe80::1\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:150
 func TestGroupOf_Cases_Line150(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:150", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"driverpack://acme/\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:150", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://acme/")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:151
 func TestGroupOf_Cases_Line151(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:151", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"driverpack://file/clips/a.mp4\"")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:151", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://file/clips/a.mp4")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:152
 func TestGroupOf_Cases_Line152(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:152", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"driverpack://file\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:152", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://file")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:153
 func TestGroupOf_Cases_Line153(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:153", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://FILE./clips/a.mp4\""))
-	}, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:153", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://FILE./clips/a.mp4")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:154
 func TestGroupOf_Cases_Line154(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:154", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://acme/nvr%2Ecorp/ch/1\""))
-	}, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:154", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("driverpack://acme/nvr%2Ecorp/ch/1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:155
 func TestGroupOf_Cases_Line155(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:155", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://acme/admin:Hunter2@10.0.0.5/ch/1\""))
+		return vectoradapter.GroupOf([]byte("driverpack://acme/admin:Hunter2@10.0.0.5/ch/1"))
 	}, 0, "{\"group\": \"10.0.0.5\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:156
 func TestGroupOf_Cases_Line156(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:156", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://acme/10.0.0.5:hunter2/ch/1\""))
+		return vectoradapter.GroupOf([]byte("driverpack://acme/10.0.0.5:hunter2/ch/1"))
 	}, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:157
 func TestGroupOf_Cases_Line157(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:157", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://acme/admin:pa/ss@10.0.0.5/ch/1\""))
+		return vectoradapter.GroupOf([]byte("driverpack://acme/admin:pa/ss@10.0.0.5/ch/1"))
 	}, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:158
 func TestGroupOf_Cases_Line158(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:158", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"driverpack://acme/admin:X%40nvr%2Ecorp/ch/1\""))
+		return vectoradapter.GroupOf([]byte("driverpack://acme/admin:X%40nvr%2Ecorp/ch/1"))
 	}, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:159
 func TestGroupOf_Cases_Line159(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:159", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://hub1/Feed.Example/a\"")) }, 0, "{\"group\": \"feed.example\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:159", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://hub1/Feed.Example/a")) }, 0, "{\"group\": \"feed.example\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:160
 func TestGroupOf_Cases_Line160(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:160", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"mirror://hub2/feed.example:21/b\""))
-	}, 0, "{\"group\": \"feed.example\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:160", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://hub2/feed.example:21/b")) }, 0, "{\"group\": \"feed.example\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:161
 func TestGroupOf_Cases_Line161(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:161", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"mirror://hub1/feed.example/c#d\""))
-	}, 0, "{\"group\": \"feed.example\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:161", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://hub1/feed.example/c#d")) }, 0, "{\"group\": \"feed.example\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:162
 func TestGroupOf_Cases_Line162(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:162", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://hub1\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:162", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://hub1")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:163
 func TestGroupOf_Cases_Line163(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:163", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://LOCAL./x\"")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:163", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://LOCAL./x")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:164
 func TestGroupOf_Cases_Line164(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:164", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://hub1/h%2Ecorp/x\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:164", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://hub1/h%2Ecorp/x")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:165
 func TestGroupOf_Cases_Line165(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:165", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://h/x#@evil/\"")) }, 0, "{\"group\": \"h\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:165", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://h/x#@evil/")) }, 0, "{\"group\": \"h\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:166
 func TestGroupOf_Cases_Line166(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:166", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"cfw://local\"")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:166", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("cfw://local")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:167
 func TestGroupOf_Cases_Line167(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:167", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"cfw://user:pw@local\"")) }, 0, "{\"group\": \"local\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:167", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("cfw://user:pw@local")) }, 0, "{\"group\": \"local\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:168
 func TestGroupOf_Cases_Line168(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:168", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr50/ch^1\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:168", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr50/ch^1")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:169
 func TestGroupOf_Cases_Line169(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:169", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr50/a{b}/c\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:169", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr50/a{b}/c")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:170
 func TestGroupOf_Cases_Line170(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:170", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://nvr50/a\\\\b\"")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:170", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://nvr50/a\\b")) }, 0, "{\"group\": \"nvr50\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:171
 func TestGroupOf_Cases_Line171(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:171", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://hub.ex'ample/x\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:171", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://hub.ex'ample/x")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:172
 func TestGroupOf_Cases_Line172(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:172", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://cam.0x50/x\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:172", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://cam.0x50/x")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:173
 func TestGroupOf_Cases_Line173(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:173", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"cfw://[::ffff:10.0.0.5]/x\"")) }, 0, "{\"group\": \"10.0.0.5\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:173", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("cfw://[::ffff:10.0.0.5]/x")) }, 0, "{\"group\": \"10.0.0.5\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:174
 func TestGroupOf_Cases_Line174(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:174", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"rtsp://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.example/x\""))
+		return vectoradapter.GroupOf([]byte("rtsp://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.example/x"))
 	}, 0, "{\"group\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.example\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:175
 func TestGroupOf_Cases_Line175(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:175", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"rtsp://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.example/x\""))
+		return vectoradapter.GroupOf([]byte("rtsp://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.example/x"))
 	}, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:176
 func TestGroupOf_Cases_Line176(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:176", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"rtsp://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc.ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd/x\""))
+		return vectoradapter.GroupOf([]byte("rtsp://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc.ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd/x"))
 	}, 0, "{\"group\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc.ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:177
 func TestGroupOf_Cases_Line177(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:177", func() vectoradapter.Answer {
-		return vectoradapter.GroupOf([]byte("\"rtsp://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc.dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd/x\""))
+		return vectoradapter.GroupOf([]byte("rtsp://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc.dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd/x"))
 	}, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:178
 func TestGroupOf_Cases_Line178(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:178", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"\"")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:178", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:179
 func TestGroupOf_Cases_Line179(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:179", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://:80/10.0.0.5/y\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:179", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://:80/10.0.0.5/y")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:180
 func TestGroupOf_Cases_Line180(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:180", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"mirror://u@/10.0.0.5/y\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:180", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("mirror://u@/10.0.0.5/y")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:181
 func TestGroupOf_Cases_Line181(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:181", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"cfw://[FE80::1%25Eth0]/x\"")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:181", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("cfw://[FE80::1%25Eth0]/x")) }, 0, "{\"group\": \"\", \"fault\": \"\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:182
 func TestGroupOf_Cases_Line182(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:182", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[fe80::1%25]/x\"")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:182", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[fe80::1%25]/x")) }, 0, "{\"group\": \"\", \"fault\": \"bad_url\"}", nil, "fields:group")
 }
 
 // Platform/common/vectors/group-of/cases.tsv:183
 func TestGroupOf_Cases_Line183(t *testing.T) {
-	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:183", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("\"rtsp://[fe80::1%25Eth%30]/x\"")) }, 0, "{\"group\": \"fe80::1\", \"fault\": \"\"}", nil, "fields:group")
+	checkBy(t, "Platform/common/vectors/group-of/cases.tsv:183", func() vectoradapter.Answer { return vectoradapter.GroupOf([]byte("rtsp://[fe80::1%25Eth%30]/x")) }, 0, "{\"group\": \"fe80::1\", \"fault\": \"\"}", nil, "fields:group")
 }

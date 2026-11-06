@@ -14,622 +14,622 @@ var _ = vectoradapter.NotImplemented
 // Platform/common/vectors/door-token/verify.tsv:7 ok_basic
 func TestDoorToken_Verify_Line7(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:7", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\",\\\"play\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"admin\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\", \"play\"], \"unit\": \"testsub/u1\", \"user\": \"admin\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:8 ok_second_route
 func TestDoorToken_Verify_Line8(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:8", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/play\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\",\\\"play\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"admin\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/play\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\", \"play\"], \"unit\": \"testsub/u1\", \"user\": \"admin\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:9 ok_last_second
 func TestDoorToken_Verify_Line9(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:9", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454519,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\",\\\"play\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"admin\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454519,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\", \"play\"], \"unit\": \"testsub/u1\", \"user\": \"admin\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:10 ok_unicode
 func TestDoorToken_Verify_Line10(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:10", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi_QutCw0LzQtdGA0LAtMSIsInVzZXIiOiLQvtC_0LXRgNCw0YLQvtGAINCB0LvQutCwIPCfjqUifQ.BE-Va5sTqD0-FI-DadaBQt2pqrRANy1P3HZW18mY7tFV6FKkQu0NO7oUkci6yIhTI0pfLuxnTvbW0-Id8VjGAw\",\"unit\":\"\\\"testsub/\\\\u043a\\\\u0430\\\\u043c\\\\u0435\\\\u0440\\\\u0430-1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\"],\\\"unit\\\":\\\"testsub/\xd0\xba\xd0\xb0\xd0\xbc\xd0\xb5\xd1\x80\xd0\xb0-1\\\",\\\"user\\\":\\\"\xd0\xbe\xd0\xbf\xd0\xb5\xd1\x80\xd0\xb0\xd1\x82\xd0\xbe\xd1\x80 \xd0\x81\xd0\xbb\xd0\xba\xd0\xb0 \xf0\x9f\x8e\xa5\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi_QutCw0LzQtdGA0LAtMSIsInVzZXIiOiLQvtC_0LXRgNCw0YLQvtGAINCB0LvQutCwIPCfjqUifQ.BE-Va5sTqD0-FI-DadaBQt2pqrRANy1P3HZW18mY7tFV6FKkQu0NO7oUkci6yIhTI0pfLuxnTvbW0-Id8VjGAw\",\"unit\":\"testsub/\xd0\xba\xd0\xb0\xd0\xbc\xd0\xb5\xd1\x80\xd0\xb0-1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\"], \"unit\": \"testsub/\xd0\xba\xd0\xb0\xd0\xbc\xd0\xb5\xd1\x80\xd0\xb0-1\", \"user\": \"\xd0\xbe\xd0\xbf\xd0\xb5\xd1\x80\xd0\xb0\xd1\x82\xd0\xbe\xd1\x80 \xd0\x81\xd0\xbb\xd0\xba\xd0\xb0 \xf0\x9f\x8e\xa5\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:11 ok_escapes
 func TestDoorToken_Verify_Line11(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:11", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhXCJiXFxjL2RcdTAwMWYifQ.cO1aB0y_DptflkZ9PoiqDX-hphCKfyuKocVyzUlnd8PTxzrmwJuZ26egwzeKrlKk6yep5LWovpD0V3xoyt5fCQ\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"a\\\\\\\"b\\\\\\\\c/d\\\\u001f\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhXCJiXFxjL2RcdTAwMWYifQ.cO1aB0y_DptflkZ9PoiqDX-hphCKfyuKocVyzUlnd8PTxzrmwJuZ26egwzeKrlKk6yep5LWovpD0V3xoyt5fCQ\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\"], \"unit\": \"testsub/u1\", \"user\": \"a\\\"b\\\\c/d\\u001f\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:12 ok_second_kid
 func TestDoorToken_Verify_Line12(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:12", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\",\"c2-0123456789-abcdefghijklmnopqr\":\"3a42558c6b12b6e1dbcfc146e59401bffa3bd524e151493b65e2817e248d2428\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c2-0123456789-abcdefghijklmnopqr.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.lhXRhklcoJGHM4EhKLGqWM-eyn0zujR-4I01USHlf3ORKvESxrxaujyv4zFNoQK0WUmmxqATdiiFo5N7kXBgBQ\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/play/a/b\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\",\\\"play\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"admin\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\",\"c2-0123456789-abcdefghijklmnopqr\":\"3a42558c6b12b6e1dbcfc146e59401bffa3bd524e151493b65e2817e248d2428\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c2-0123456789-abcdefghijklmnopqr.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.lhXRhklcoJGHM4EhKLGqWM-eyn0zujR-4I01USHlf3ORKvESxrxaujyv4zFNoQK0WUmmxqATdiiFo5N7kXBgBQ\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/play/a/b\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\", \"play\"], \"unit\": \"testsub/u1\", \"user\": \"admin\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:13 expired_boundary
 func TestDoorToken_Verify_Line13(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:13", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454520,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454520,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:14 expired_after
 func TestDoorToken_Verify_Line14(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:14", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454521,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454521,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:15 unknown_kid
 func TestDoorToken_Verify_Line15(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:15", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c2-0123456789-abcdefghijklmnopqr\":\"3a42558c6b12b6e1dbcfc146e59401bffa3bd524e151493b65e2817e248d2428\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c2-0123456789-abcdefghijklmnopqr\":\"3a42558c6b12b6e1dbcfc146e59401bffa3bd524e151493b65e2817e248d2428\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:16 empty_keys
 func TestDoorToken_Verify_Line16(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:16", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:17 foreign_key
 func TestDoorToken_Verify_Line17(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:17", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"3a42558c6b12b6e1dbcfc146e59401bffa3bd524e151493b65e2817e248d2428\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"3a42558c6b12b6e1dbcfc146e59401bffa3bd524e151493b65e2817e248d2428\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:18 forged_signer
 func TestDoorToken_Verify_Line18(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:18", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.WViw6m7emwK7pk9EQcoLayN8cknd8BK5nEVbImtaLKfCkrDiwhNQQ4Lnj8eW1Y-nRMxnKOHgoP1-gIRC2TNNBQ\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.WViw6m7emwK7pk9EQcoLayN8cknd8BK5nEVbImtaLKfCkrDiwhNQQ4Lnj8eW1Y-nRMxnKOHgoP1-gIRC2TNNBQ\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:19 keys_upper_hex
 func TestDoorToken_Verify_Line19(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:19", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865E70360600CB7DD29ABC35426A83480F2D4039240F75D4D1BA2BCF894EA0DB\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865E70360600CB7DD29ABC35426A83480F2D4039240F75D4D1BA2BCF894EA0DB\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:20 keys_short_hex
 func TestDoorToken_Verify_Line20(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:20", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:21 keys_not_object
 func TestDoorToken_Verify_Line21(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:21", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":[\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"],\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":[\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"],\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:22 sig_bit
 func TestDoorToken_Verify_Line22(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:22", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.t9scOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.t9scOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:23 sig_last_bit
 func TestDoorToken_Verify_Line23(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:23", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6hg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6hg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:24 sig_short
 func TestDoorToken_Verify_Line24(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:24", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:25 sig_s_not_reduced
 func TestDoorToken_Verify_Line25(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:25", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6NqVeETJZWhDhl2xMIdupJYBHAhBah1jDfp-HzsvZ6Fg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6NqVeETJZWhDhl2xMIdupJYBHAhBah1jDfp-HzsvZ6Fg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:26 key_small_order
 func TestDoorToken_Verify_Line26(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:26", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"0100000000000000000000000000000000000000000000000000000000000000\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.WGZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmYBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"0100000000000000000000000000000000000000000000000000000000000000\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.WGZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmYBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:27 sig_r_small_order
 func TestDoorToken_Verify_Line27(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:27", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM2YWn0K02GSuH4IoIKU4P3g06Kv6oeQTZpj7pvcOzCg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM2YWn0K02GSuH4IoIKU4P3g06Kv6oeQTZpj7pvcOzCg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:28 sig_padded
 func TestDoorToken_Verify_Line28(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:28", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg==\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg==\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:29 claims_swapped
 func TestDoorToken_Verify_Line29(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:29", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicGxheSIsInJlYWQiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicGxheSIsInJlYWQiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:30 three_parts
 func TestDoorToken_Verify_Line30(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:30", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:31 five_parts
 func TestDoorToken_Verify_Line31(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:31", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg.x\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg.x\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:32 prefix_door2
 func TestDoorToken_Verify_Line32(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:32", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door2.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.r2wKc30wMJryov-P8nt7H51JGaR3VrSE9fSSgZVSK6vquDTGwLUjv3e06FxtgY21A9NN9WH5HyTBlXdM89EPAA\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door2.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.r2wKc30wMJryov-P8nt7H51JGaR3VrSE9fSSgZVSK6vquDTGwLUjv3e06FxtgY21A9NN9WH5HyTBlXdM89EPAA\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:33 prefix_upper
 func TestDoorToken_Verify_Line33(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:33", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer DOOR1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ra98mxMe0R1I2kgtbRqtD0gXEuMvV0YMhAwk6iqHCuUKBtU3W3qLAuG6OvzG-0lZSgnf_r9_mZEOo3SQAe7IDQ\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer DOOR1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ra98mxMe0R1I2kgtbRqtD0gXEuMvV0YMhAwk6iqHCuUKBtU3W3qLAuG6OvzG-0lZSgnf_r9_mZEOo3SQAe7IDQ\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:34 token_empty
 func TestDoorToken_Verify_Line34(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:34", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer \",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer \",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:35 other_unit
 func TestDoorToken_Verify_Line35(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:35", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u2\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u2\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:36 other_sub
 func TestDoorToken_Verify_Line36(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:36", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub2/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub2/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:37 other_holder
 func TestDoorToken_Verify_Line37(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:37", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-0000aa\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-0000aa\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:38 route_not_in_routes
 func TestDoorToken_Verify_Line38(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:38", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/write/x\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/write/x\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:39 route_segment_prefix
 func TestDoorToken_Verify_Line39(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:39", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/reader/x\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/reader/x\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:40 route_second_segment
 func TestDoorToken_Verify_Line40(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:40", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/x/read\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/x/read\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:41 route_root
 func TestDoorToken_Verify_Line41(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:41", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:42 route_case
 func TestDoorToken_Verify_Line42(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:42", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/Read/x\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/Read/x\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:43 route_percent
 func TestDoorToken_Verify_Line43(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:43", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/re%61d/x\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/re%61d/x\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:44 sig_trailing_bits
 func TestDoorToken_Verify_Line44(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:44", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bh\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bh\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:45 claims_trailing_bits
 func TestDoorToken_Verify_Line45(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:45", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifR.3WLo4_LNz9c-nY0HGUwKavgHBZi40wYbrwq4ig7j9GsDCmont_lwfKe1fsbJ-k3QZ6Qk5b0QCjnzQUfWfuHvDg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifR.3WLo4_LNz9c-nY0HGUwKavgHBZi40wYbrwq4ig7j9GsDCmont_lwfKe1fsbJ-k3QZ6Qk5b0QCjnzQUfWfuHvDg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:46 claims_std_base64
 func TestDoorToken_Verify_Line46(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:46", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbj8/In0.vl0Rsgkj4kPBHjSWHG0ESQVbSySbXEOzylo4XwSnq5yDC1hh2rqfjwYguz0-UrW8nasPD8MM3uu0iLlamFtpCw\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbj8/In0.vl0Rsgkj4kPBHjSWHG0ESQVbSySbXEOzylo4XwSnq5yDC1hh2rqfjwYguz0-UrW8nasPD8MM3uu0iLlamFtpCw\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:47 claims_padded
 func TestDoorToken_Verify_Line47(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:47", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ==.1EZHzZY6UkYtvKSdM0JM_cLmcCHc1d9bMChG70rDnfcVc0Yi1o9CKMDtdl5qAUM0wOoyX44ejJF_CIsv050uAA\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ==.1EZHzZY6UkYtvKSdM0JM_cLmcCHc1d9bMChG70rDnfcVc0Yi1o9CKMDtdl5qAUM0wOoyX44ejJF_CIsv050uAA\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:48 claims_not_json
 func TestDoorToken_Verify_Line48(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:48", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.bm90IGpzb24.5eiRhJsqY5teF9zLHfBvQTuYU5yGgFjXlUIODE0EqiuUQMnV_zrzAxHxNGgUqXoduWZAE_tKyROlKY-Uv7lWDA\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.bm90IGpzb24.5eiRhJsqY5teF9zLHfBvQTuYU5yGgFjXlUIODE0EqiuUQMnV_zrzAxHxNGgUqXoduWZAE_tKyROlKY-Uv7lWDA\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:49 missing_expires
 func TestDoorToken_Verify_Line49(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:49", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbiJ9.T3HxNJLjR4_4NoCYxs5BIaWRvQyeYLveswfwlgSEhk5yNCV9nqMRHFxn064blwmshoxqBzyJuxSBkMTAPccbDQ\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbiJ9.T3HxNJLjR4_4NoCYxs5BIaWRvQyeYLveswfwlgSEhk5yNCV9nqMRHFxn064blwmshoxqBzyJuxSBkMTAPccbDQ\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:50 missing_unit
 func TestDoorToken_Verify_Line50(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:50", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1c2VyIjoiYWRtaW4ifQ.s41FVIUCkfQOip3G-4T0C90R78sr6QFwvJ_4DIY-0dFP4HO7yKtl1_Zz1g0wITiPYvuU9Aig09XZg6q1W2rCAA\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1c2VyIjoiYWRtaW4ifQ.s41FVIUCkfQOip3G-4T0C90R78sr6QFwvJ_4DIY-0dFP4HO7yKtl1_Zz1g0wITiPYvuU9Aig09XZg6q1W2rCAA\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:51 missing_holder
 func TestDoorToken_Verify_Line51(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:51", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbiJ9.Q7nk_PBQWccPs0W_ThGqeq_xjFDcji6xqoFMgjOc7gdaQHsz49zG_dRq37yTAKlYxelClsBixOz_YVMu4UMLDg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbiJ9.Q7nk_PBQWccPs0W_ThGqeq_xjFDcji6xqoFMgjOc7gdaQHsz49zG_dRq37yTAKlYxelClsBixOz_YVMu4UMLDg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:52 missing_routes
 func TestDoorToken_Verify_Line52(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:52", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbiJ9.GBvFw5dAWtKBmsDk1WmfOp8PT3kZwzXqN0jxW8VO14RkBbRS4SieWzvp8rG8IRXg9g6MUj3JabgZJ5D7GgP8DA\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbiJ9.GBvFw5dAWtKBmsDk1WmfOp8PT3kZwzXqN0jxW8VO14RkBbRS4SieWzvp8rG8IRXg9g6MUj3JabgZJ5D7GgP8DA\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:53 missing_user
 func TestDoorToken_Verify_Line53(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:53", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSJ9.QhHRalMZzru2Ba4Jr4xG28kWYyIH5Fg19xQTplCQBjD4VZ0DlBLIDB1912S9MYqUI1VVoSQhhKBjE35Q9pmOCA\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSJ9.QhHRalMZzru2Ba4Jr4xG28kWYyIH5Fg19xQTplCQBjD4VZ0DlBLIDB1912S9MYqUI1VVoSQhhKBjE35Q9pmOCA\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:54 user_number
 func TestDoorToken_Verify_Line54(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:54", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOjQyfQ.P3q4c43JJx5SAdvoA3mwcBQPLsu6Jfw-tQ92u3zcULv96phMPmReePwI9Ra7p_lxq2mkjKZbZa_mAOeZnRWcDg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOjQyfQ.P3q4c43JJx5SAdvoA3mwcBQPLsu6Jfw-tQ92u3zcULv96phMPmReePwI9Ra7p_lxq2mkjKZbZa_mAOeZnRWcDg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:55 unit_number
 func TestDoorToken_Verify_Line55(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:55", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoxLCJ1c2VyIjoiYWRtaW4ifQ.-ypObLvKXm5FkJwmUEIxiy-h0cyFzQCTnoAIQmaJVbw01nUzr6xjxuXtwITFQ9EeSUnd5JmdguahvV0nm7MZAA\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoxLCJ1c2VyIjoiYWRtaW4ifQ.-ypObLvKXm5FkJwmUEIxiy-h0cyFzQCTnoAIQmaJVbw01nUzr6xjxuXtwITFQ9EeSUnd5JmdguahvV0nm7MZAA\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:56 holder_null
 func TestDoorToken_Verify_Line56(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:56", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOm51bGwsInJvdXRlcyI6WyJyZWFkIl0sInVuaXQiOiJ0ZXN0c3ViL3UxIiwidXNlciI6ImFkbWluIn0.c9MUdhSzoMF7KFrIv4YMX4YildGRvwEhb6aBK1Nup0_7dndX0-zcloAPItBkyLgZYNnbuyvJgbKYyTvkJhr_Dw\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOm51bGwsInJvdXRlcyI6WyJyZWFkIl0sInVuaXQiOiJ0ZXN0c3ViL3UxIiwidXNlciI6ImFkbWluIn0.c9MUdhSzoMF7KFrIv4YMX4YildGRvwEhb6aBK1Nup0_7dndX0-zcloAPItBkyLgZYNnbuyvJgbKYyTvkJhr_Dw\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:57 routes_not_array
 func TestDoorToken_Verify_Line57(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:57", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOiJyZWFkIiwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.9xIu4uFceJjxGSIh8F9qNwxJ3X0CpB70-327EmYmzAV3M30Zw7nRunVfYxlJV7ls8R2aw8DEJ_FG18dO6LaGDg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOiJyZWFkIiwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.9xIu4uFceJjxGSIh8F9qNwxJ3X0CpB70-327EmYmzAV3M30Zw7nRunVfYxlJV7ls8R2aw8DEJ_FG18dO6LaGDg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:58 routes_item_number
 func TestDoorToken_Verify_Line58(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:58", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsN10sInVuaXQiOiJ0ZXN0c3ViL3UxIiwidXNlciI6ImFkbWluIn0.E7j2VeZbR643nyyMxfNc2rVEnBdyeMc1MqFqyFzhEubTrBbzSEOz9vNi5nCgcY6hSFXellLoJtWporjeu6H8DQ\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsN10sInVuaXQiOiJ0ZXN0c3ViL3UxIiwidXNlciI6ImFkbWluIn0.E7j2VeZbR643nyyMxfNc2rVEnBdyeMc1MqFqyFzhEubTrBbzSEOz9vNi5nCgcY6hSFXellLoJtWporjeu6H8DQ\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:59 routes_dup
 func TestDoorToken_Verify_Line59(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:59", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInJlYWQiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.BqJPoXlSmUZ-P78zj7trl9Ee3_K09VLkn5N-bnVyIOVdpTw2GWODksRhxPxt2HGRbdy4ZRZ-HrSLbgPblJL5DA\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInJlYWQiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.BqJPoXlSmUZ-P78zj7trl9Ee3_K09VLkn5N-bnVyIOVdpTw2GWODksRhxPxt2HGRbdy4ZRZ-HrSLbgPblJL5DA\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:60 expires_string
 func TestDoorToken_Verify_Line60(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:60", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoiMTc5MjQ1NDUyMCIsImhvbGRlciI6IncxLTdmM2MyYSIsInJvdXRlcyI6WyJyZWFkIl0sInVuaXQiOiJ0ZXN0c3ViL3UxIiwidXNlciI6ImFkbWluIn0.KvviGdK1kS8RTOUsSjZBa60vQLK11h_JZ085Es8bco66JzL0WhlWir_W6Wg1FqHMO6waPUc3f1d3SZBnWRJwDg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoiMTc5MjQ1NDUyMCIsImhvbGRlciI6IncxLTdmM2MyYSIsInJvdXRlcyI6WyJyZWFkIl0sInVuaXQiOiJ0ZXN0c3ViL3UxIiwidXNlciI6ImFkbWluIn0.KvviGdK1kS8RTOUsSjZBa60vQLK11h_JZ085Es8bco66JzL0WhlWir_W6Wg1FqHMO6waPUc3f1d3SZBnWRJwDg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:61 expires_float
 func TestDoorToken_Verify_Line61(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:61", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLjUsImhvbGRlciI6IncxLTdmM2MyYSIsInJvdXRlcyI6WyJyZWFkIl0sInVuaXQiOiJ0ZXN0c3ViL3UxIiwidXNlciI6ImFkbWluIn0.kcdU-pIYyi1pEHDamk6tgIkJgmKOKvohFWU7cRyX6VZxRHQ948tbYdTykilW3PIoK74HtU5F0E6KBAuU-EGZDA\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLjUsImhvbGRlciI6IncxLTdmM2MyYSIsInJvdXRlcyI6WyJyZWFkIl0sInVuaXQiOiJ0ZXN0c3ViL3UxIiwidXNlciI6ImFkbWluIn0.kcdU-pIYyi1pEHDamk6tgIkJgmKOKvohFWU7cRyX6VZxRHQ948tbYdTykilW3PIoK74HtU5F0E6KBAuU-EGZDA\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:62 expires_over_2_53
 func TestDoorToken_Verify_Line62(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:62", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjo5MDA3MTk5MjU0NzQwOTkyLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbiJ9.i0pJRV7cGNQeZugo8ECvbUOhqyv4m7xTGuG-Y5drcr_rGETPN1iGR0KGk5MQQRGiIB3wPkcmOSl9cYPzy_eHDw\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjo5MDA3MTk5MjU0NzQwOTkyLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbiJ9.i0pJRV7cGNQeZugo8ECvbUOhqyv4m7xTGuG-Y5drcr_rGETPN1iGR0KGk5MQQRGiIB3wPkcmOSl9cYPzy_eHDw\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:63 ok_expires_max
 func TestDoorToken_Verify_Line63(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:63", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjo5MDA3MTk5MjU0NzQwOTkxLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbiJ9.hzM8pT3zYUeJPPAab7zNzjA2-re2ARr-wOf3VGHCOFxN1n74rk_gwdJVWLy2PJR01HJCnSakFezqyyS6FXoOCw\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":9007199254740991,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"admin\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjo5MDA3MTk5MjU0NzQwOTkxLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbiJ9.hzM8pT3zYUeJPPAab7zNzjA2-re2ARr-wOf3VGHCOFxN1n74rk_gwdJVWLy2PJR01HJCnSakFezqyyS6FXoOCw\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 9007199254740991, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\"], \"unit\": \"testsub/u1\", \"user\": \"admin\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:64 routes_item_slash
 func TestDoorToken_Verify_Line64(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:64", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInJlYWQveCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbiJ9.TgNQPmVCmo-Rmth52cTRwD4MSOiDK5K-cNqkpAKlaVtQ1-sjQbVRcQLrXZu1VDPTjcNaVOKCB9tcYP9P7nPHCA\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInJlYWQveCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbiJ9.TgNQPmVCmo-Rmth52cTRwD4MSOiDK5K-cNqkpAKlaVtQ1-sjQbVRcQLrXZu1VDPTjcNaVOKCB9tcYP9P7nPHCA\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:65 routes_item_upper
 func TestDoorToken_Verify_Line65(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:65", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsIlJlYWQiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.9ouUsAmYBLxSOs9sX-uP97sE0yvFXjd_lu-jmVQ8mc9ucOxS9cFnhcRM8k7ZuC-fjE3IT4fwQD9at9VPEO7iCA\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsIlJlYWQiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.9ouUsAmYBLxSOs9sX-uP97sE0yvFXjd_lu-jmVQ8mc9ucOxS9cFnhcRM8k7ZuC-fjE3IT4fwQD9at9VPEO7iCA\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:66 expires_point_zero
 func TestDoorToken_Verify_Line66(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:66", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLjAsImhvbGRlciI6IncxLTdmM2MyYSIsInJvdXRlcyI6WyJyZWFkIl0sInVuaXQiOiJ0ZXN0c3ViL3UxIiwidXNlciI6ImFkbWluIn0.4VCDgCwj5Tgc2TGBbT__T1iDXudeepc0gmKH9Zq1UQ3IJQI0-K6H1Qqx-g_tru7-XZyOqel-BUTEcwjb6iXvBw\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLjAsImhvbGRlciI6IncxLTdmM2MyYSIsInJvdXRlcyI6WyJyZWFkIl0sInVuaXQiOiJ0ZXN0c3ViL3UxIiwidXNlciI6ImFkbWluIn0.4VCDgCwj5Tgc2TGBbT__T1iDXudeepc0gmKH9Zq1UQ3IJQI0-K6H1Qqx-g_tru7-XZyOqel-BUTEcwjb6iXvBw\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:67 expires_exponent
 func TestDoorToken_Verify_Line67(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:67", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxLjc5MjQ1NDUyRTksImhvbGRlciI6IncxLTdmM2MyYSIsInJvdXRlcyI6WyJyZWFkIl0sInVuaXQiOiJ0ZXN0c3ViL3UxIiwidXNlciI6ImFkbWluIn0.wpt-Ng6mpNc0RtSYLC2g1nlPtDlmN-V3YhVgYhp_5uOSzKJK5TjjtzqPKLMUk2BDVHfDtHg68CodOYD2H-g_Ag\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxLjc5MjQ1NDUyRTksImhvbGRlciI6IncxLTdmM2MyYSIsInJvdXRlcyI6WyJyZWFkIl0sInVuaXQiOiJ0ZXN0c3ViL3UxIiwidXNlciI6ImFkbWluIn0.wpt-Ng6mpNc0RtSYLC2g1nlPtDlmN-V3YhVgYhp_5uOSzKJK5TjjtzqPKLMUk2BDVHfDtHg68CodOYD2H-g_Ag\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:68 extra_field
 func TestDoorToken_Verify_Line68(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:68", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbiIsIngiOjF9.6vtC65tzqpHorUnw5SueXIHhEytJZ61_rKXLms2V8KXa7Iz0y2roW1eqYrLjKBnXqlGnBIMbtvDKlWXFXyNWAA\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1pbiIsIngiOjF9.6vtC65tzqpHorUnw5SueXIHhEytJZ61_rKXLms2V8KXa7Iz0y2roW1eqYrLjKBnXqlGnBIMbtvDKlWXFXyNWAA\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:69 claims_not_jcs
 func TestDoorToken_Verify_Line69(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:69", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJ1c2VyIjogImFkbWluIiwgInVuaXQiOiAidGVzdHN1Yi91MSIsICJob2xkZXIiOiAidzEtN2YzYzJhIiwgInJvdXRlcyI6IFsicmVhZCJdLCAiZXhwaXJlcyI6IDE3OTI0NTQ1MjB9.gHCMAuB6FwrecucNdnHWv-YJ-w-FFznr9Ra9X8LDbQATqaE0pdRdS1x2rDa9hASW2-u2_gUC466g56wyi53ICA\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"user\\\": \\\"admin\\\", \\\"unit\\\": \\\"testsub/u1\\\", \\\"holder\\\": \\\"w1-7f3c2a\\\", \\\"routes\\\": [\\\"read\\\"], \\\"expires\\\": 1792454520}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJ1c2VyIjogImFkbWluIiwgInVuaXQiOiAidGVzdHN1Yi91MSIsICJob2xkZXIiOiAidzEtN2YzYzJhIiwgInJvdXRlcyI6IFsicmVhZCJdLCAiZXhwaXJlcyI6IDE3OTI0NTQ1MjB9.gHCMAuB6FwrecucNdnHWv-YJ-w-FFznr9Ra9X8LDbQATqaE0pdRdS1x2rDa9hASW2-u2_gUC466g56wyi53ICA\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"user\": \"admin\", \"unit\": \"testsub/u1\", \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\"], \"expires\": 1792454520}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:70 claims_dup_key
 func TestDoorToken_Verify_Line70(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:70", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MiIsInVuaXQiOiJ0ZXN0c3ViL3UxIiwidXNlciI6ImFkbWluIn0.Dh7pcrP6RMxQji_Ikzz8aEeUL5AqXDh-VFXLuEeq6qb7_-EKAlrj2LY56GK5AyaE6YkbJbQAqBaPdNaS6TBzDw\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MiIsInVuaXQiOiJ0ZXN0c3ViL3UxIiwidXNlciI6ImFkbWluIn0.Dh7pcrP6RMxQji_Ikzz8aEeUL5AqXDh-VFXLuEeq6qb7_-EKAlrj2LY56GK5AyaE6YkbJbQAqBaPdNaS6TBzDw\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:71 claims_name_case
 func TestDoorToken_Verify_Line71(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:71", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJVc2VyIjoiYWRtaW4iLCJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSJ9.eXtHMylPKKS5n65SHnn-OZ0-Xm92Np9VN2wnVfxJrgIx_p-deqvEs-SlV6z8hiQxhEyBT52lqZ_Ujmuvm4gTBQ\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJVc2VyIjoiYWRtaW4iLCJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSJ9.eXtHMylPKKS5n65SHnn-OZ0-Xm92Np9VN2wnVfxJrgIx_p-deqvEs-SlV6z8hiQxhEyBT52lqZ_Ujmuvm4gTBQ\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:72 claims_bad_utf8
 func TestDoorToken_Verify_Line72(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:72", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG3_aW4ifQ.N6rPKEfgN1MHLqDTLyTiYkqIcTybLJgo3cTsNNgydUPwy9Dv6rY21nGcWGVE79krLkarON3QSA0KpRZj2Hw0Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG3_aW4ifQ.N6rPKEfgN1MHLqDTLyTiYkqIcTybLJgo3cTsNNgydUPwy9Dv6rY21nGcWGVE79krLkarON3QSA0KpRZj2Hw0Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:73 keys_bad_other_entry
 func TestDoorToken_Verify_Line73(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:73", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\",\"old\":\"XYZ\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\",\"old\":\"XYZ\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:74 ok_query_token
 func TestDoorToken_Verify_Line74(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:74", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\",\\\"play\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"admin\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\", \"play\"], \"unit\": \"testsub/u1\", \"user\": \"admin\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:75 ok_query_one_segment
 func TestDoorToken_Verify_Line75(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:75", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/play?t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\",\\\"play\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"admin\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/play?t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\", \"play\"], \"unit\": \"testsub/u1\", \"user\": \"admin\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:76 route_query_only
 func TestDoorToken_Verify_Line76(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:76", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/?read\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/?read\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:77 route_in_query
 func TestDoorToken_Verify_Line77(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:77", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/write?r=/read/x\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/write?r=/read/x\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:78 claims_lone_surrogate
 func TestDoorToken_Verify_Line78(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:78", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1cdWQ4MDBpbiJ9.JypPwmh69jqExH6TjX4ZRU3s0WM5ERZSR3JJFGuCY-9u6BUaSNT4T-dsMFCSs2bMox_-wo6JdGT-4RkIAkCgBQ\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG1cdWQ4MDBpbiJ9.JypPwmh69jqExH6TjX4ZRU3s0WM5ERZSR3JJFGuCY-9u6BUaSNT4T-dsMFCSs2bMox_-wo6JdGT-4RkIAkCgBQ\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:79 claims_noncharacter
 func TestDoorToken_Verify_Line79(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:79", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG3vv79pbiJ9.8enYR8cR0DA111pH7q9-g81ZzM_q1l0AUrwkkeroDuyrkgPdaq0fNk42QdBlDoO_VVlQbJtAQaa-z-KewSWHAg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCJdLCJ1bml0IjoidGVzdHN1Yi91MSIsInVzZXIiOiJhZG3vv79pbiJ9.8enYR8cR0DA111pH7q9-g81ZzM_q1l0AUrwkkeroDuyrkgPdaq0fNk42QdBlDoO_VVlQbJtAQaa-z-KewSWHAg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:80 query_t_repeated
 func TestDoorToken_Verify_Line80(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:80", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg&t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg&t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:81 no_token
 func TestDoorToken_Verify_Line81(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:81", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:82 ok_auth_not_bearer_query
 func TestDoorToken_Verify_Line82(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:82", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Basic YWRtaW46eA==\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\",\\\"play\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"admin\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Basic YWRtaW46eA==\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\", \"play\"], \"unit\": \"testsub/u1\", \"user\": \"admin\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:83 auth_not_bearer_no_query
 func TestDoorToken_Verify_Line83(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:83", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Basic door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Basic door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:84 ok_bearer_over_query
 func TestDoorToken_Verify_Line84(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:84", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=x\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\",\\\"play\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"admin\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=x\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\", \"play\"], \"unit\": \"testsub/u1\", \"user\": \"admin\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:85 ok_scheme_lower
 func TestDoorToken_Verify_Line85(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:85", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\",\\\"play\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"admin\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"bearer door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\", \"play\"], \"unit\": \"testsub/u1\", \"user\": \"admin\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:86 ok_scheme_upper
 func TestDoorToken_Verify_Line86(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:86", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"BEARER door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\",\\\"play\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"admin\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"BEARER door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\", \"play\"], \"unit\": \"testsub/u1\", \"user\": \"admin\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:87 bearer_empty_with_query
 func TestDoorToken_Verify_Line87(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:87", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"Bearer\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:88 ok_query_percent_decoded
 func TestDoorToken_Verify_Line88(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:88", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=door1%2Ec1%2EeyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ%2EttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\",\\\"play\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"admin\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=door1%2Ec1%2EeyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ%2EttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\", \"play\"], \"unit\": \"testsub/u1\", \"user\": \"admin\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:89 query_bad_percent
 func TestDoorToken_Verify_Line89(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:89", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=%ZZ\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=%ZZ\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:90 ok_query_other_field
 func TestDoorToken_Verify_Line90(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:90", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?x=1&t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\",\\\"play\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"admin\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?x=1&t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\", \"play\"], \"unit\": \"testsub/u1\", \"user\": \"admin\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:91 ok_query_field_no_eq
 func TestDoorToken_Verify_Line91(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:91", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?flag&t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
-	}, 0, "{\"result\": \"ok\", \"claims\": \"{\\\"expires\\\":1792454520,\\\"holder\\\":\\\"w1-7f3c2a\\\",\\\"routes\\\":[\\\"read\\\",\\\"play\\\"],\\\"unit\\\":\\\"testsub/u1\\\",\\\"user\\\":\\\"admin\\\"}\"}", nil, "value")
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?flag&t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
+	}, 0, "{\"result\": \"ok\", \"claims\": {\"expires\": 1792454520, \"holder\": \"w1-7f3c2a\", \"routes\": [\"read\", \"play\"], \"unit\": \"testsub/u1\", \"user\": \"admin\"}}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:92 query_semicolon
 func TestDoorToken_Verify_Line92(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:92", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg;x=1\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg;x=1\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:93 query_plus_space
 func TestDoorToken_Verify_Line93(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:93", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=+door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t=+door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:94 query_bad_utf8
 func TestDoorToken_Verify_Line94(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:94", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?x=%FF&t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?x=%FF&t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }
 
 // Platform/common/vectors/door-token/verify.tsv:95 query_t_no_eq_repeated
 func TestDoorToken_Verify_Line95(t *testing.T) {
 	check(t, "Platform/common/vectors/door-token/verify.tsv:95", func() vectoradapter.Answer {
-		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"\\\"testsub/u1\\\"\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t&t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
+		return vectoradapter.DoorToken([]byte("{\"keys\":{\"c1\":\"865e70360600cb7dd29abc35426a83480f2d4039240f75d4d1ba2bcf894ea0db\"},\"now\":1792454400,\"authorization\":\"\",\"unit\":\"testsub/u1\",\"holder\":\"w1-7f3c2a\",\"path\":\"/read/1792454400?t&t=door1.c1.eyJleHBpcmVzIjoxNzkyNDU0NTIwLCJob2xkZXIiOiJ3MS03ZjNjMmEiLCJyb3V0ZXMiOlsicmVhZCIsInBsYXkiXSwidW5pdCI6InRlc3RzdWIvdTEiLCJ1c2VyIjoiYWRtaW4ifQ.ttscOIneROOdbTwqn627trflW35xjO2XhMWZcATUaA6g1WEnMjNELGLI43ApfAs1YBHAhBah1jDfp-HzsvZ6Bg\"}"))
 	}, 0, "{\"result\": \"forbidden\"}", nil, "value")
 }

@@ -9,7 +9,7 @@
   "envelope": "x25519:v1:Q9ZHlWf0IuvK2Ln0CBvMcIKul55ZtnI5ihqhB_9BR2Y:AAECAwQFBgcICQoL:VCar7W8tA2vwYJPkODGqoA",
   "member": "m1",
   "source_path": "testsub2/notes/n1",
-  "item": "\"a1\"",
+  "item": "a1",
   "pointer": "/feed/token_secret"
  },
  "files": {}

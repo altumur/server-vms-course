@@ -14,111 +14,111 @@ var _ = vectoradapter.NotImplemented
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:7 seal-01-opens
 func TestDomainEnvelopes_X25519Open_Line7(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:7", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\"a1\"", "pointer": "/feed/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "a1", "pointer": "/feed/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"ok\", \"plain\": \"s3cret-\xc3\xbc\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:8 seal-02-empty-plain
 func TestDomainEnvelopes_X25519Open_Line8(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:8", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:Q9ZHlWf0IuvK2Ln0CBvMcIKul55ZtnI5ihqhB_9BR2Y:AAECAwQFBgcICQoL:VCar7W8tA2vwYJPkODGqoA", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\"a1\"", "pointer": "/feed/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:Q9ZHlWf0IuvK2Ln0CBvMcIKul55ZtnI5ihqhB_9BR2Y:AAECAwQFBgcICQoL:VCar7W8tA2vwYJPkODGqoA", "member": "m1", "source_path": "testsub2/notes/n1", "item": "a1", "pointer": "/feed/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"ok\", \"plain\": \"\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:9 seal-03-another-book-seal
 func TestDomainEnvelopes_X25519Open_Line9(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:9", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "7aa6f54ef18e05f623a4a0b502b1d177683400a6c087bda5fbe5d0404f28eb1f", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\"a1\"", "pointer": "/feed/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "7aa6f54ef18e05f623a4a0b502b1d177683400a6c087bda5fbe5d0404f28eb1f", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "a1", "pointer": "/feed/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"refused\", \"reason\": \"does_not_open\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:10 seal-04-another-member
 func TestDomainEnvelopes_X25519Open_Line10(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:10", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m2", "source_path": "testsub2/notes/n1", "item": "\"a1\"", "pointer": "/feed/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m2", "source_path": "testsub2/notes/n1", "item": "a1", "pointer": "/feed/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"refused\", \"reason\": \"does_not_open\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:11 seal-05-another-source
 func TestDomainEnvelopes_X25519Open_Line11(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:11", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n2", "item": "\"a1\"", "pointer": "/feed/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n2", "item": "a1", "pointer": "/feed/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"refused\", \"reason\": \"does_not_open\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:12 seal-06-another-item
 func TestDomainEnvelopes_X25519Open_Line12(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:12", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\"a2\"", "pointer": "/feed/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "a2", "pointer": "/feed/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"refused\", \"reason\": \"does_not_open\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:13 seal-07-another-pointer
 func TestDomainEnvelopes_X25519Open_Line13(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:13", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\"a1\"", "pointer": "/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "a1", "pointer": "/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"refused\", \"reason\": \"does_not_open\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:14 seal-08-version-v2
 func TestDomainEnvelopes_X25519Open_Line14(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:14", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v2:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\"a1\"", "pointer": "/feed/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v2:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "a1", "pointer": "/feed/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"refused\", \"reason\": \"not_v1\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:15 seal-09-padding
 func TestDomainEnvelopes_X25519Open_Line15(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:15", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g=", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\"a1\"", "pointer": "/feed/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g=", "member": "m1", "source_path": "testsub2/notes/n1", "item": "a1", "pointer": "/feed/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"refused\", \"reason\": \"not_an_envelope\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:16 seal-10-four-parts
 func TestDomainEnvelopes_X25519Open_Line16(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:16", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\"a1\"", "pointer": "/feed/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL", "member": "m1", "source_path": "testsub2/notes/n1", "item": "a1", "pointer": "/feed/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"refused\", \"reason\": \"not_an_envelope\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:17 seal-11-short-nonce
 func TestDomainEnvelopes_X25519Open_Line17(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:17", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQo:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\"a1\"", "pointer": "/feed/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQo:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "a1", "pointer": "/feed/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"refused\", \"reason\": \"not_an_envelope\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:18 seal-12-zero-eph
 func TestDomainEnvelopes_X25519Open_Line18(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:18", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\"a1\"", "pointer": "/feed/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "a1", "pointer": "/feed/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"refused\", \"reason\": \"not_an_envelope\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:19 seal-13-ct-flipped
 func TestDomainEnvelopes_X25519Open_Line19(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:19", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:j-Z8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\"a1\"", "pointer": "/feed/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:j-Z8u4r71vD1e-mWejY10TnEq_n_z0w17g", "member": "m1", "source_path": "testsub2/notes/n1", "item": "a1", "pointer": "/feed/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"refused\", \"reason\": \"does_not_open\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:20 seal-14-short-ct
 func TestDomainEnvelopes_X25519Open_Line20(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:20", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:AAAAAAAAAAAAAAAAAAAA", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\"a1\"", "pointer": "/feed/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:AAAAAAAAAAAAAAAAAAAA", "member": "m1", "source_path": "testsub2/notes/n1", "item": "a1", "pointer": "/feed/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"refused\", \"reason\": \"not_an_envelope\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:21 seal-15-unicode-context
 func TestDomainEnvelopes_X25519Open_Line21(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:21", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:0qx82jVfrWfnNSLLVnXclkWqpel9RmhdV2SxC2csKnI:AAECAwQFBgcICQoL:7Ge_1-75_Vi9xEaVePCXeb8", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\"\\u043a\\u043b\\u044e\\u0447/a~b\"", "pointer": "/a~1b/0/x_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:0qx82jVfrWfnNSLLVnXclkWqpel9RmhdV2SxC2csKnI:AAECAwQFBgcICQoL:7Ge_1-75_Vi9xEaVePCXeb8", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\xd0\xba\xd0\xbb\xd1\x8e\xd1\x87/a~b", "pointer": "/a~1b/0/x_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"ok\", \"plain\": \"x\"}", nil, "subset")
 }
 
 // Platform/common/vectors/domain-envelopes/x25519-open.tsv:22 seal-16-noncanonical-ct
 func TestDomainEnvelopes_X25519Open_Line22(t *testing.T) {
 	checkBy(t, "Platform/common/vectors/domain-envelopes/x25519-open.tsv:22", func() vectoradapter.Answer {
-		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17h", "member": "m1", "source_path": "testsub2/notes/n1", "item": "\"a1\"", "pointer": "/feed/token_secret"}, map[string][]byte{})
+		return vectoradapter.DomainEnvelopes("x25519-open.tsv", map[string]string{"seed_hex": "1eb2dc62053b3f42b95612f6a2d1b20c9b60097dd9b46e1325457e39ffc5be8a", "envelope": "x25519:v1:4MSp2lem8nV51TvA1uwNRc3_GgYZAlGCT2udfCKSDE0:AAECAwQFBgcICQoL:juZ8u4r71vD1e-mWejY10TnEq_n_z0w17h", "member": "m1", "source_path": "testsub2/notes/n1", "item": "a1", "pointer": "/feed/token_secret"}, map[string][]byte{})
 	}, 0, "{\"result\": \"refused\", \"reason\": \"not_an_envelope\"}", nil, "subset")
 }
