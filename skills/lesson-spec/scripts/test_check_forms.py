@@ -827,14 +827,23 @@ class WireTurn(unittest.TestCase):               # compare=turn — решени
         vectors = self.path.parent
         (vectors / "turn").unlink()                 # пакет turn и consumers.tsv — копии с предложенными строками
         shutil.copytree(ROOT / "Platform/common/vectors/turn", vectors / "turn")
+        # фикстура не зависит от того, активна ли C4 в ROOT: прежние 33 строки, 3 потребителя и wire без common/turn,
+        # затем строки предложения ровно один раз
         self.cases = vectors / "turn/cases.tsv"
-        self.cases.write_text(self.cases.read_text(encoding="utf-8").rstrip("\n") + "\n" + "\n".join(TURN_OPS_ROWS) + "\n",
-                              encoding="utf-8")
+        kept = [ln for ln in self.cases.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("operations-")]
+        self.assertEqual(len(kept), 2 + 33)
+        self.cases.write_text("\n".join(kept + TURN_OPS_ROWS) + "\n", encoding="utf-8")
         consumers = vectors / "consumers.tsv"
         text = consumers.read_text(encoding="utf-8")
         consumers.unlink()
-        line = "common/turn\tcases.tsv\t06-console\tcommon/vectors/turn/README.md: own operations turn; ADR-0127 P06 C4"
-        consumers.write_text(text.rstrip("\n") + "\n" + line + "\n", encoding="utf-8")
+        start = "common/turn\tcases.tsv\t06-console\t"
+        kept = [ln for ln in text.rstrip("\n").split("\n") if not ln.startswith(start)]
+        self.assertEqual(sum(ln.startswith("common/turn\t") for ln in kept), 3)
+        line = start + "common/vectors/turn/README.md: own operations turn; ADR-0127 P06 C4"
+        consumers.write_text("\n".join(kept + [line]) + "\n", encoding="utf-8")
+        self.good = "".join(ln for ln in self.good.splitlines(keepends=True)
+                            if not ln.startswith("common/turn\tcases.tsv\tvectors\t"))
+        self.path.write_text(self.good, encoding="utf-8")
 
     def tearDown(self):
         shutil.rmtree(self.tmp)
@@ -846,10 +855,15 @@ class WireTurn(unittest.TestCase):               # compare=turn — решени
         self.path.write_text(self.good.rstrip("\n") + "\n" + row + "\n", encoding="utf-8")
         return check_forms.check_wire(self.path)[0]
 
-    def case(self, old, new):                     # порча ожидания одной предложенной строки
-        text = self.cases.read_text(encoding="utf-8")
-        self.assertEqual(text.count(old), 1, old)
-        self.cases.write_text(text.replace(old, new), encoding="utf-8")
+    def case(self, name, old, new):               # порча ячейки expect одной строки по имени случая (note не читается)
+        lines = self.cases.read_text(encoding="utf-8").split("\n")
+        hit = [i for i, ln in enumerate(lines) if ln.split("\t")[0] == name]
+        self.assertEqual(len(hit), 1, name)
+        cells = lines[hit[0]].split("\t")
+        self.assertEqual(cells[2].count(old), 1, old)
+        cells[2] = cells[2].replace(old, new)
+        lines[hit[0]] = "\t".join(cells)
+        self.cases.write_text("\n".join(lines), encoding="utf-8")
 
     def test_proposed_row_passes(self):
         errors, stats = check_forms.check_wire(self.path)
@@ -866,21 +880,17 @@ class WireTurn(unittest.TestCase):               # compare=turn — решени
         self.assertTrue(any("is not one of" in e for e in errors), errors)
 
     def test_unknown_freshness_mark(self):
-        self.case('[{"write":{"holder":"@new"},"cas":""},"not_held"]', '[{"write":{"holder":"@fresh"},"cas":""},"not_held"]')
+        self.case("operations-take-conflict", '"@new"', '"@fresh"')
         self.assertTrue(any("unknown freshness mark '@fresh'" in e for e in self.check()))
 
     def test_same_before_new(self):
-        self.case('[{"write":{"holder":"@new"},"cas":""},"reread","not_held"]\tProposed C4 common turn obligation only; '
-                  'epoch barrier and real leader IO remain separate.\noperations-unknown-take-foreign',
-                  '[{"write":{"holder":"@same"},"cas":""},"reread","not_held"]\tProposed C4 common turn obligation only; '
-                  'epoch barrier and real leader IO remain separate.\noperations-unknown-take-foreign')
+        self.case("operations-unknown-take-foreign", '"@new"', '"@same"')
         self.assertTrue(any("@same before any @new" in e for e in self.check()))
 
     def test_holder_alias(self):
-        self.case('[{"write":{"holder":"@new"},"cas":""},"not_held"]', '[{"write":{"value":"@new"},"cas":""},"not_held"]')
+        self.case("operations-take-conflict", '{"holder":"@new"}', '{"value":"@new"}')
         self.assertTrue(any("outside holder (no alias)" in e for e in self.check()))
-        self.cases.write_text(self.cases.read_text(encoding="utf-8").replace('{"value":"@new"}', '{"holder":"@new"}'),
-                              encoding="utf-8")
+        self.case("operations-take-conflict", '{"value":"@new"}', '{"holder":"@new"}')
         alias = '{"column":"expect","decode":"json"}'
         errors = self.check(old=alias, new='{"object":{"holder":{"literal":"@new"}}}')
         self.assertTrue(any("no holder or value alias" in e for e in errors), errors)
@@ -901,6 +911,39 @@ class WireTurn(unittest.TestCase):               # compare=turn — решени
     def test_turn_markers_empty(self):
         errors = self.check(old="\tturn\t[]\t", new='\tturn\t[{"variant":"","column":"expect","match":"[\\"busy\\"]"}]\t')
         self.assertTrue(any("markers must be []" in e for e in errors), errors)
+
+
+class TurnMatch(unittest.TestCase):              # compare=turn по меткам: @new всякий раз новая, @same — последняя @new
+    W = lambda holder, cas: {"write": {"holder": holder}, "cas": cas}   # noqa: E731
+
+    def test_two_attempts(self):
+        W = TurnMatch.W
+        expected = [W("@new", ""), "held", W("@same", 1), "stop", W("@new", ""), "held", W("@same", 3), "held"]
+        actual = [W("a1", ""), "held", W("a1", 1), "stop", W("a2", ""), "held", W("a2", 3), "held"]
+        self.assertEqual(check_forms.turn_match(expected, actual), [])
+        same = [W("a1", ""), "held", W("a1", 1), "stop", W("a1", ""), "held", W("a1", 3), "held"]
+        self.assertTrue(any("repeats an earlier @new" in e for e in check_forms.turn_match(expected, same)))
+        stale = [W("a1", ""), "held", W("a1", 1), "stop", W("a2", ""), "held", W("a1", 3), "held"]
+        self.assertTrue(any("is not the last @new" in e for e in check_forms.turn_match(expected, stale)))
+
+    def test_new_new_in_a_row(self):
+        W = TurnMatch.W
+        expected = [W("@new", ""), "reread", W("@new", "")]
+        self.assertEqual(check_forms.turn_match(expected, [W("a1", ""), "reread", W("a2", "")]), [])
+        self.assertTrue(any("repeats" in e for e in check_forms.turn_match(expected, [W("a1", ""), "reread", W("a1", "")])))
+
+    def test_exact_rest(self):
+        W = TurnMatch.W
+        expected = [W("@new", ""), "held", W("", 1), "done"]
+        self.assertEqual(check_forms.turn_match(expected, [W("a1", ""), "held", W("", 1), "done"]), [])
+        for bad in ([W("@new", ""), "held", W("", 1), "done"],              # литерал метки — не настоящая метка
+                    [W("a1", 0), "held", W("", 1), "done"],                  # cas "" — не 0
+                    [W("a1", ""), "held", W("a1", 1), "done"],               # holder "" сравнивается точно
+                    [W("a1", ""), "held", W("", True), "done"],              # boolean — не число
+                    [W("a1", ""), "held", W("", 1), "done", "extra"],
+                    [{"write": {"holder": "a1", "x": 1}, "cas": ""}, "held", W("", 1), "done"]):
+            self.assertTrue(check_forms.turn_match(expected, bad), bad)
+        self.assertEqual(check_forms.turn_match([W("box-a:1", 2)], [W("box-a:1", 2.0)]), [])   # литеральный holder signer
 
 
 if __name__ == "__main__":

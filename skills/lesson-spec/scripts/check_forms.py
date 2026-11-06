@@ -1407,6 +1407,42 @@ def _turn_marks(value, err, what, line):
     walk(value, None)
 
 
+def turn_match(expected, actual):
+    """Сравнение compare=turn одного случая (решение «Архитектора» 2026-11-06): структура и все ячейки — точно, кроме
+    значения holder с меткой. @new — настоящая метка попытки, не литерал «@…» и не равная ни одной прежней @new случая;
+    @same — равна последней @new. Возвращает список расхождений (пустой — совпало)."""
+    news, out = [], []
+
+    def walk(e, a, at):
+        if isinstance(e, dict):
+            if not isinstance(a, dict) or set(a) != set(e):
+                out.append(f"{at or '/'}: keys {sorted(a) if isinstance(a, dict) else type(a).__name__} != {sorted(e)}")
+                return
+            for k in e:
+                sub = f"{at}/{k}"
+                if k == "holder" and e[k] in TURN_MARKS:
+                    if not isinstance(a[k], str) or not a[k] or a[k].startswith("@"):
+                        out.append(f"{sub}: {a[k]!r} is not a real attempt label")
+                    elif e[k] == "@new":
+                        if a[k] in news:
+                            out.append(f"{sub}: @new {a[k]!r} repeats an earlier @new of the case")
+                        news.append(a[k])
+                    elif not news or a[k] != news[-1]:
+                        out.append(f"{sub}: @same {a[k]!r} is not the last @new {news[-1] if news else None!r}")
+                else:
+                    walk(e[k], a[k], sub)
+        elif isinstance(e, list):
+            if not isinstance(a, list) or len(a) != len(e):
+                out.append(f"{at or '/'}: array length differs")
+                return
+            for i, (x, y) in enumerate(zip(e, a)):
+                walk(x, y, f"{at}/{i}")
+        elif type(e) is not type(a) and not (type(e) in (int, float) and type(a) in (int, float)) or e != a:
+            out.append(f"{at or '/'}: {a!r} != {e!r}")
+    walk(expected, actual, "")
+    return out
+
+
 def _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whens, owner_set, pkg, root, err, stats):
     """По каждой строке и потребителю: выбор, группы, ровно одно ожидание и native, файлы, run identity."""
     def ev(w, row, owner, line):
