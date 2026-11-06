@@ -1,0 +1,2 @@
+COUNTS cyrillic_debt_files=260 cyrillic_debt_letters=135582 cyrillic_export=0 cyrillic_non_utf8=10 cyrillic_ready=14 cyrillic_scanned_files=12983
+PASS Cyrillic letters only; translation semantics remain separate
