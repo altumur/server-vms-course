@@ -44,7 +44,7 @@ chapter row name surface code kind fields headers log norm word cause outcome di
 
 ### Раскладка сценария
 
-Команда, вызванная RUN или CALL, получает раскладку P/02.4 Н1.2 с `PLATFORM_DIR` = `$data`: раскладку стенда
+Команда, вызванная RUN или CALL, получает раскладку P/02.4 N1.2 с `PLATFORM_DIR` = `$data`: раскладку стенда
 [общей приёмки](../../../common/ru/acceptance/README.md) с `{data}` = `$data`. Для проверки размещения по
 [договору секретных файлов](../../../common/ru/contracts/secret-files.md) (`forbidden`, `layout`) запретных каталогов ровно два:
 каталог хранилища `$data/configstore` и корень объектов `$data/objects`; каталоги копий не заданы. Адаптер обеспечивает эти два

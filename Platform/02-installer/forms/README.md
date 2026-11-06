@@ -79,7 +79,7 @@ Fixtures are owned synthetic data. A native command’s implementation-specific 
 
 ### Scenario layout
 
-A command called by RUN or CALL gets the layout of P/02.4 Н1.2 with `PLATFORM_DIR` = `$data`: the stand layout of the
+A command called by RUN or CALL gets the layout of P/02.4 N1.2 with `PLATFORM_DIR` = `$data`: the stand layout of the
 [common acceptance](../../common/acceptance/README.md) with `{data}` = `$data`. For the placement check of the
 [secret files contract](../../common/contracts/secret-files.md) (`forbidden`, `layout`) the forbidden directories are exactly two:
 the store directory `$data/configstore` and the object root `$data/objects`; no copy directory is set. The adapter makes these two
