@@ -651,6 +651,8 @@ PASS_STREAMS_MAX: 256         # passes as a stream of one instance at once: each
 PASS_TICKET_CHECK: 5          # s; the term within which an open stream notices a revocation, a disabling and exp
 ```
 
+**Domain pass across consoles.** For the domain path, the [forwarding hop policy](forwarding.md#domain-worker-pass-hop-policy) fixes the confirmed manifest descriptor, `X-W2C-Pass-Policy`, finite complete-answer budgets at every hop, 4 MiB buffering, and unbounded stream time/body. This is a narrow exception to ordinary forwarding. The second-kind 504 before worker headers and refusal mapping above remain; after client headers only bytes and closure are possible. It creates no domain callback or credential.
+
 **One worker per server.** A ticket is bound to the leaf of the server, and the leaf is one per role and server: a second worker with a callback on the same server would share it. Therefore the controller's order for such a subsystem does not raise `want` of the server above 1 ([P/04](../../04-controller/spec/04-controller.norms.md) N3 «shortage(), order()…»).
 
 **Races.** Two callbacks of one ticket at once are independent, the edits are judged by `cas` and `If-Match`. The request closes in the middle of a callback — a call that has passed `ticket` runs to its end: one write is atomic, and the next call gets 401, so the worker stops the translation and writes nothing more. A disabling and a revocation are seen by the next call or by the stream check: the window is `PASS_TICKET_CHECK` and the delay of the copy at the cluster: at a member a revocation goes by the copy of `domain/revoked`, a disabling — by the copy of grants, so the ticket of a disabled person is not removed there until the end of the request, but `may` refuses it.
@@ -659,10 +661,3 @@ PASS_TICKET_CHECK: 5          # s; the term within which an open stream notices 
 
 There are no vectors: the gate, `/session`, the rights by the body, the break-glass entry and the pass are checked by the scenarios of the acceptances of chapters 6.3, 6.5, 6.7, of lesson P/10 and of chapter 8.4, the pass of the second kind — by the stand [`acceptance/pass/`](../acceptance/pass/README.md); the check of the break-glass password — by the package [`password-hash`](../vectors/password-hash/README.md) of the password hash contract. (ADR-0083 addendum (32) item 2) The coverage of a grant `scope` against a unit row is the function `covers` of the package [`may`](../vectors/may/README.md) (`covers.tsv`; C06-EVENTS-QUERY-UNKNOWN-138-10).
 
-## Correspondence to former lessons
-
-From P/06.3 (analysis of review of stage A 8–10, № 14 / decision 3; formerly M10/9 N1.3): N1.3 — the block `gate`, `open_routes`, `session`
-in full (here «The gate»; in P/06.3 N1.3 — a pointer and a paragraph about request parsing). From P/06.5 N1.8 (formerly M10/11 N1.8):
-the block `manifest`, `rule`, `codes` (here «Pass of `door.pass`»; the definition of «a live worker with a door» stayed in P/06.5 N1.8). Parts of the norms
-P/06.3-02, P/06.3-03 and P/06.5-12 — by `note` of the [id-map](../id-map.tsv); the domain console — M11/8-10 (`door.pass` on the domain,
-P/10-03), M11/8-11 (the holder's page, P/10-04) and M11/9-06 (the gate with grants; the part of the domain console — P/10-13, of the cluster console — P/06.7-11).

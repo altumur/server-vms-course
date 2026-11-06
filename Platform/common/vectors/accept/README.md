@@ -12,7 +12,7 @@ M11/3 (`inputs/accept-*.json`, sc. 13) and
 M11/4 (`inputs/accept-*.json`, sc. 06 — the roads) without
 a change of bytes; `case` is the name of the input file (the numbers of lesson 4 start anew, the names differ), `note` is the lesson, the scenario and
 the step. The scenarios M11/03 sc. 13 and M11/04 sc. 06 and their inputs were removed by the move of lesson 8 (ADR-0083 addendum (14) item 17; the log is
-the acceptance of chapter P/08.3 (`Platform/08-domain/journal/corrections-3.tsv`, a log, not in the export)): the table is the only source of these cases.
+the acceptance of chapter P/08.3 (`corrections-3.tsv` (historical correction record), a log, not in the export)): the table is the only source of these cases.
 
 ## Run
 
@@ -30,7 +30,7 @@ witnesses and contributions (`accept-36`…`accept-39`) — `["testsub", "testsu
 
 | Manifest | File | sha256 |
 |---|---|---|
-| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
+| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `fc3bf70585646b078a8812edd0c92cd5c7d0c2e364b689273c5fd229aed7355b` |
 | `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `e4bfd9e0035dba5839018625bba20f7214176004fc2d0cb4f8d640015d915dbb` |
 
 The bytes of `testsub2` changed on 2026-11-04 (the roadmap 4.5): the token kind `vault` with `keep: true` was added to `domain.tokens`, then the comments of the header were rewritten without the names of test files; the fields on which the expectations of this table depend were not touched — a recheck by the oracle is not needed.

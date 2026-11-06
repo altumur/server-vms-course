@@ -53,7 +53,3 @@ The package [`slot`](../vectors/slot/README.md): the judgement judge(row, age) â
 of heartbeat freshness is the package [`fresh-age`](../vectors/fresh-age/README.md) of the observation contract; the transitions are acceptance scenarios of P/03.2,
 P/04 and reading.
 
-## Correspondence to former lessons
-
-From P/03.2 N1.4 (`states`, `constants` â€” `SLOT_TERM`, `TORN_STILL`); the lease step `RENEW_EVERY` stays with the worker (P/03.2
-N1.4, N1.2). The readers P/04, P/06.5, P/09.1 refer here (layout audit A-04).

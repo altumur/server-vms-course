@@ -663,7 +663,7 @@ class VersionedDoors(unittest.TestCase):                # P/08 versioned-doors.t
     def test_real_form_clean(self):
         errors, stats = check_forms.check_versioned_doors(ROOT / "Platform/08-domain/forms/versioned-doors.tsv")
         self.assertEqual(errors, [])
-        self.assertEqual(stats["versioned_doors"], 19)
+        self.assertEqual(stats["versioned_doors"], 24)
         self.assertEqual(self.errors(self.good), [])
 
     def test_mutations(self):
@@ -689,10 +689,44 @@ class VersionedDoors(unittest.TestCase):                # P/08 versioned-doors.t
             "norm form": self.cell("PUT", "/domain/users/{name}", "norm", "P/08.0 Н1.9"),
             "norm empty": self.cell("PUT", "/domain/users/{name}", "norm", ""),
             "base-rev without R006": self.cell("PUT", "/domain/topology", "norm", "P/08.0-R005"),
+            "optional-index with absent 0": self.cell("PUT", "/domain/grants/{cluster}", "if_match", "optional-index"),
+            "revision - with etag true": self.cell("PUT", "/domain/users/{name}", "revision", "-"),
+            "revision - with if_match optional": self.cell("DELETE", "/domain/users/{name}", "revision", "-"),
+            "revision - with base-rev": self.both("PUT", "/domain/topology",
+                                                   {"revision": "-", "etag": "false", "absent_revision": "-"}),
         }
         for what, text in bad.items():
             self.assertNotEqual(text, self.good, what)
             self.assertTrue(self.errors(text), what)
+
+    def both(self, method, path, values):
+        line = self.line(method, path)
+        cells = line.split("\t")
+        for column, value in values.items():
+            cells[check_forms.VDOOR_COLUMNS.index(column)] = value
+        return self.good.replace(line + "\n", "\t".join(cells) + "\n")
+
+    def test_new_values_pass(self):                     # решение «Архитектора» 2026-11-06: `-` и optional-index
+        ok = {
+            "optional-index": self.cell("PUT", "/domain/users/{name}", "if_match", "optional-index"),
+            "revision - optional-index": self.both("DELETE", "/domain/users/{name}",
+                                                   {"revision": "-", "if_match": "optional-index"}),
+            "revision - ignored": self.cell("POST", "/domain/batch", "revision", "-"),
+        }
+        for what, text in ok.items():
+            self.assertNotEqual(text, self.good, what)
+            self.assertEqual(self.errors(text), [], what)
+
+    def test_new_rules_alone(self):                     # каждое новое правило даёт ровно свою ошибку
+        cases = {
+            "needs absent_revision -": self.cell("PUT", "/domain/grants/{cluster}", "if_match", "optional-index"),
+            "needs etag false": self.both("PUT", "/domain/users/{name}", {"revision": "-", "if_match": "optional-index"}),
+            "needs if_match optional-index or ignored": self.cell("DELETE", "/domain/users/{name}", "revision", "-"),
+        }
+        for what, text in cases.items():
+            errors = self.errors(text)
+            self.assertEqual(len(errors), 1, (what, errors))
+            self.assertIn(what, errors[0])
 
     def test_openapi_side(self):                        # новая операция с If-Match без строки формы — отказ
         text = self.api.read_text(encoding="utf-8")
@@ -1154,8 +1188,6 @@ class FiniteProfile(unittest.TestCase):          # конечный профил
                 self.wpath.write_text(json.dumps(d), encoding="utf-8")
                 errors = check_forms.check_deletion_body_witnesses(self.wpath)[0]
                 self.assertTrue(any(needle in e for e in errors), errors)
-
-
 class CyrillicJudge(unittest.TestCase):
     """ADR-0121 (8): source mutations, the two exceptions and monotone debt."""
 

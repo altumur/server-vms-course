@@ -89,7 +89,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 Строки `corrections.tsv` приёмки M11/02 до переноса и строки переноса — для пакетов `keys`, `domain-token`,
 `domain-envelopes` (каталог приёмки M11/02 снят переносом урока 8; пути и номера — прежние, их разрешает
-[`id-map.tsv`](../../../id-map.tsv)):
+`id-map.tsv` (historical record)):
 
 | date | sample | fix |
 |---|---|---|
@@ -102,7 +102,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | 2026-10-19 | 03 шаг 8, 07 шаг 6, 11 шаг 2; inputs keys-21, token-29, seal-round-02 | сверка M11 01–04 (S1, T3): book_seal малого порядка — no_book_seal и not_an_envelope у seal-round, exp отзыва не конечное — no_revocations |
 | 2026-10-20 | перенос | сценарии 04-token-keys, 05-token-form, 06-token-clock, 07-token-revoked, 12-token-kind-and-audience из M11/02 (стадия B) — строки векторов common/vectors/domain-token/cases.tsv (29), входы inputs/token-*.json — ячейки input без изменения байтов; ожидания сверены оракулом по тексту договора токена домена «Проверка» |
 | 2026-10-20 | перенос | сценарии 01-key-set-forward, 02-key-set-root, 03-key-set-form, 08-envelope-opens, 09-envelope-does-not-open, 10-envelope-form, 11-seal-round из M11/02 сняты (стадия B): те же случаи — common/vectors/keys (21), common/vectors/domain-envelopes x25519-open.tsv (16), x25519-round.tsv (2) (план переноса урока 8 V1; решение «Архитектора», ADR-0083 доп. (14), п. 17) |
-| 2026-10-20 | история M11/02 | строки corrections.tsv приёмки M11/02 до переноса — целиком в начале журнала, с прежними путями и номерами (их разрешает Platform/common/id-map.tsv) |
+| 2026-10-20 | история M11/02 | строки corrections.tsv приёмки M11/02 до переноса — целиком в начале журнала, с прежними путями и номерами (их разрешает историческая карта id) |
 | 2026-10-20 | token-30, token-31 | разбор ревью стадии B 8–10, № 13 (п. 7 записки о планах 8–10, правка 0c9521c66): expect без ключа cluster и cluster: null при kind ≠ person — @exit 2; вход — token-18 с изменённым expect |
 | 2026-10-23 | token-32 | догадка стадии C DT-G03, решение «Архитектора» 2026-10-23: expect — закрытая форма, незнакомый ключ — @exit 2; вход — token-18 с лишним ключом audience_clam |
 | 2026-10-30 | +token-44-expect-empty-audience-claim, token-45-keys-no-current | аудит покрытия P/08, второй проход Gemini (G02, e32df6f8b): кандидаты пакета — `audience_claim` пустой и `keys` не по форме — `@exit 2`; вход — token-18 с одной правкой; ожидания — вывод свидетелей cammeta-python и cammeta-go; повтор вида в `expect.kind` остаётся кандидатом |

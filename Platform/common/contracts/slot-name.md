@@ -65,7 +65,3 @@ the next number, the number of a role process and «not a role process» (a serv
 the package [`pool`](../vectors/pool/README.md) is the package of the common contract pool, executed by common; this contract is a participant there
 (the pool order, the keeper, «number above want»; V-59; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25).
 
-## Correspondence to former lessons
-
-From P/03.2 N1.4 «The order of names and the next number» — whole; P/03.2, P/04 and the pool contract refer here. The Architect's answers
-of 2026-10-25 (POOL-ORDER-51-01) on the form of the name of a role process are the section «Role process name and its number».

@@ -1789,8 +1789,8 @@ def check_runtime_constants(path):
 
 
 VDOOR_COLUMNS = ["method", "path", "row", "revision", "etag", "if_match", "absent_revision", "norm"]
-VDOOR_REVISIONS = ("doc.rev", "revision", "rev")
-VDOOR_IF_MATCH = ("optional", "ignored", "base-rev")
+VDOOR_REVISIONS = ("doc.rev", "revision", "rev", "-")      # `-` — счётчика нет (решение «Архитектора» 2026-11-06)
+VDOOR_IF_MATCH = ("optional", "optional-index", "ignored", "base-rev")   # optional-index — If-Match только с индексом
 VDOOR_ROW = re.compile(r"[a-z][a-z0-9-]*(?:/(?:[a-z][a-z0-9-]*|<[a-z][a-z0-9-]*>))*")
 VDOOR_BASE_REV_NORM = "P/08.0-R006"          # base-rev без P/08.0-R006 в norm — отказ (forms/README «Versioned doors»)
 
@@ -1830,8 +1830,10 @@ def check_versioned_doors(path):
     Колонки ровно VDOOR_COLUMNS (source нет); (method, path) — операция OpenAPI урока, не повторяется; каждая операция
     OpenAPI с ETag в ответе или If-Match в параметрах — строка формы; etag=true ⇔ ETag в ответе, if_match=ignored ⇔ нет
     If-Match. row — `-`, `writes[]` или шаблон семьи, где `<имя>` — захват пути операции или `<part>`; revision
-    doc.rev|revision|rev; etag true|false; if_match optional|ignored|base-rev; absent_revision 0|-; norm — непустой список
-    без повторов якорей требований урока, существующих в его нормах; base-rev — с P/08.0-R006."""
+    doc.rev|revision|rev|-; etag true|false; if_match optional|optional-index|ignored|base-rev; absent_revision 0|-; norm —
+    непустой список без повторов якорей требований урока, существующих в его нормах; base-rev — с P/08.0-R006.
+    Решение «Архитектора» 2026-11-06: optional-index ⇒ absent_revision `-`; revision `-` ⇒ etag false и if_match
+    optional-index|ignored. Голое число в If-Match запрещает норма, форма судит лишь значение колонки."""
     path = Path(path)
     lesson = path.parent.parent
     head = next((ln for ln in path.read_text(encoding="utf-8").splitlines() if not ln.startswith("#")), "").split("\t")
@@ -1885,6 +1887,14 @@ def check_versioned_doors(path):
                 errors.append(f"{where}: norm {n!r} is not a requirement anchor of this lesson")
             elif n not in anchors:
                 errors.append(f"{where}: norm {n} has no anchor in the norms of the lesson")
+        if r["if_match"] == "optional-index" and r["absent_revision"] != "-":
+            errors.append(f"{where}: if_match optional-index needs absent_revision -, not {r['absent_revision']!r}")
+        if r["revision"] == "-":
+            if r["etag"] != "false":
+                errors.append(f"{where}: revision - (no counter) needs etag false, not {r['etag']!r}")
+            if r["if_match"] not in ("optional-index", "ignored"):
+                errors.append(f"{where}: revision - (no counter) needs if_match optional-index or ignored, "
+                              f"not {r['if_match']!r}")
         if r["if_match"] == "base-rev" and VDOOR_BASE_REV_NORM not in norm:
             errors.append(f"{where}: if_match base-rev needs {VDOOR_BASE_REV_NORM} in norm")
     for key in sorted(k for k, (etag, if_match) in ops.items() if (etag or if_match) and k not in seen):

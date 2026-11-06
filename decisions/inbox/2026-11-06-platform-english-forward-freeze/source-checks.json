@@ -1,0 +1,18 @@
+{
+  "source_head": "d7ae33630aecc419190249cb4fba430c3c3dd100",
+  "mirror_pairs": 252,
+  "mirror_errors": [],
+  "cell_form_and_byte_proof_errors": [],
+  "Platform_cyrillic": {},
+  "Source_testdata_cyrillic": [],
+  "root_cyrillic": [],
+  "scan_errors": [],
+  "protected_inputs_byte_exact": {
+    "Platform/common/data/cell-json-sha256.tsv": true,
+    "Platform/common/vectors/turn/cases.tsv": true,
+    "Platform/06-console/data/localization.tsv": true
+  },
+  "frozen_Source_implementation_and_VMS": true,
+  "full_source_gate": "not claimed: relocation-reader follow-up owned by review103",
+  "native_SUT_Go_model_execution": 0
+}

@@ -5,18 +5,18 @@ This English text is the source; the Russian translation `ru/acceptance/README.m
 The stand, the dictionary of directives and doors — [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors) and its
 section [«Domain stand»](../../common/acceptance/README.md#domain-stand) (the door `holder` — the domain console on `hold`, the doors
 `member`, the directives `@domain`, `@person`, `@stop agent`, `@start agent`; the plan of lesson 10 V10). The norm of the lesson is
-[`10-domain-console.norms.md`](../spec/10-domain-console.norms.md) N5. The scenarios were moved from the acceptances of М11/08 (sc. 05) and
-М11/11 (sc. 02) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers of the scenarios and the steps are the former ones; sc. 06–09 —
-the coverage audit of P/10 (audit-kimi 290ae7697), the numbers — after the largest number of the sources (М11/08 sc. 05); sc. 10–16 —
+[`10-domain-console.norms.md`](../spec/10-domain-console.norms.md) N5. The scenarios were moved from the acceptances of M11/08 (sc. 05) and
+M11/11 (sc. 02) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers of the scenarios and the steps are the former ones; sc. 06–09 —
+the coverage audit of P/10 (audit-kimi 290ae7697), the numbers — after the largest number of the sources (M11/08 sc. 05); sc. 10–16 —
 the second pass (Gemini, the section below); sc. 17–19 — after it (the section «Scenarios 17–19»). Scenario 04
-of the acceptance of М11/11 (the command `alarms`) — the vector [`vectors/alarms`](../vectors/alarms/README.md) (27 rows). The other scenarios
-of М11/08 and М11/11 — at their chapters (the cluster console — chapter P/06.7; the shared document — [the acceptance of chapter 8.9](../../08-domain/acceptance/9/README.md);
+of the acceptance of M11/11 (the command `alarms`) — the vector [`vectors/alarms`](../vectors/alarms/README.md) (27 rows). The other scenarios
+of M11/08 and M11/11 — at their chapters (the cluster console — chapter P/06.7; the shared document — [the acceptance of chapter 8.9](../../08-domain/acceptance/9/README.md);
 the agent side — [the acceptance of chapter 9.1](../../09-agent/acceptance/1/README.md)). The forms of foreign doors — their owners.
 
 ## Stand
 
 The preparation is as the acceptance README of [chapter 8.3](../../08-domain/acceptance/3/README.md) («Preparation of each scenario», from
-М11/03: the clusters `hold`, `m1`, `m2`, the catalogue `testsub`); at sc. 02 — with a declaration of the shared in `testsub`, as the acceptance README of
+M11/03: the clusters `hold`, `m1`, `m2`, the catalogue `testsub`); at sc. 02 — with a declaration of the shared in `testsub`, as the acceptance README of
 [chapter 8.9](../../08-domain/acceptance/9/README.md):
 - `domain.shared: [step, marks, {rounds}]`;
 - `step` — `int` with `inherit: 1`;
@@ -32,18 +32,18 @@ The runner goes as the human `root` (the first administrator — chapter 8.4, th
 - **Scenario 06** — there is no view (the norms N1.2a, N1.2b, N1.2c, N1.2f, N4 `no domain here`): `@start domain` without `@install domain` —
   the process `domain` without a signer row does not lead the holder pass and does not write the view ([P/08.10](../../08-domain/spec/08.10-domain.norms.md)
   N1.7 `no_signer`), there are no traces of the domain in the store of `hold` — the gate `open`: the runner calls from the loopback without a token, the identity —
-  `operator` (`@person`: «до домена заголовка нет»; step 2 confirms it). Every door of the view — 404 `no domain here`;
+  `operator` (`@person`: «the header is absent before the domain»; step 2 confirms it). Every door of the view — 404 `no domain here`;
   at the door of the subsystem rows — after the manifest checks (`testsub` has `domain.ref`, `counters` are its rows).
 - **Scenario 07** — the view and the shadow exist but do not read (N1.2a, N1.2b, N1.2f, N4 `unavailable`): the process `domain` is stopped
   (the only writer of `domain/view` and `domain/shadow` — the data catalogue), then the object is spoiled by `@spoil object` — 503
   `unavailable`, not 404, at `GET /domain`, `/domain/members`, `/domain/testsub/counters`, `/domain/shared`; then the shadow — 503
   at `/domain/shadow`. The step does not ask for the topology: its door reads the row `domain/topology`, N1.2c does not name an unreadable view.
-- **Scenario 08** — a break of the passing (N1.3 `pass`, N4 «слова договора пересылки `answer`»): the process `domain` is stopped,
+- **Scenario 08** — a break of the passing (N1.3 `pass`, N4 «the words of the forwarding contract `answer`»): the process `domain` is stopped,
   the domain console is alive; an edit (`PUT /domain/topology`) and the door of people (`GET /domain/users` — `GET` is passed too, N1.3a) — 502
-  `did not answer` («сеть», [the forwarding contract](../../common/contracts/forwarding.md) «Forwarding is one function» `answer`);
+  `did not answer` («network», [the forwarding contract](../../common/contracts/forwarding.md) «Forwarding is one function» `answer`);
   its own read door (`GET /domain`) answers. After `@restart domain` and the readiness of the process (the login `signer`, as sc. 04 of the acceptance of
   [chapter 8.10](../../08-domain/acceptance/10/README.md)) the same edit — 200 `rev: 1`: the broken one is not applied.
-- **Scenario 09** — silence (N1.3 `pass`): the process `domain` is frozen (`@on hold @freeze domain`, the pause ≈ the term «Ожидание»
+- **Scenario 09** — silence (N1.3 `pass`): the process `domain` is frozen (`@on hold @freeze domain`, the pause ≈ the term «Wait»
   of the row `PUT /domain/topology` — 5 s, the freeze limit 120 s) — 502 `did not answer` (no answer within `FORWARD_WAIT`). The edit under
   silence is one the process would refuse (`via: {m1: m1}` — 409 «through itself», P/08.3 N1.2): should it read it after `@thaw`,
   there is no write; the control — the edit `base_rev: 0` gives `rev: 1`. That the 502 does not come earlier than the term — by reading (the acceptance does not measure
@@ -103,7 +103,7 @@ the spoiling it is stopped (`@on hold @sigterm domain`, as sc. 07), the domain c
 ## Scenarios 17–19
 
 Sc. 17 — ADR-0094 B4 (the version of the row at the read doors); sc. 18, 19 — the doors `GET /domain/<sub>/kept/<name>` and
-`GET /domain/relays/<relay>` (the journal `journal/corrections.tsv`, 2026-11-02); the numbers — after sc. 16.
+`GET /domain/relays/<relay>` (the journal `corrections.tsv` (historical correction record), 2026-11-02); the numbers — after sc. 16.
 
 - **Scenario 17** — the version of the row at the read doors (N1.2; [P/08.0](../../08-domain/spec/08.0-domain.norms.md) N1.9): the index of `versions` and of the record equals the index of the store row (steps 10–13); steps 14–18 go through the door `member m1 console`: `If-Match`, `Idempotency-Key` and `ETag` pass the cluster console and the domain console ([the forwarding contract](../../common/contracts/forwarding.md) `pass`, `answer`). Step 14 waits (`@until 30`) until `GET /domain/topology` through the door `member m1 console` gives 200 `rev: 1`. The stand does not bind the value of `ETag`: it judges the quotes of the header.
 - **Scenario 18** — the door of a `kept` row (N1.2a; [P/06.2](../../06-console/spec/06.2-console.norms.md) N1.4): the row
@@ -125,14 +125,6 @@ and the section «Domain stand»: a subset of the fields, `~` — a substring, `
 
 The subset of expect does not replace the check of the full HTTP form of the OpenAPI of the lesson: check the required fields, the types, the Content-Type.
 
-## `journal/corrections.tsv`
-
-The journal of the AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows of the journals of the acceptances of М11/08 and М11/11 about
-the scenarios and the inputs of the lesson — as they are (the plan of the move of lesson 10, § 3 «corrections.tsv»: from М11/08 — the row 2026-10-18 about
-sc. 05; from М11/11 — R41-16, № 52–54, «класс record и сумм», `04-alarms 11–14`, `03-resolve 11, 04-alarms 15`,
-`04-alarms 6`; the paths of the old rows — `11/…`, `NN-<name> <step>` — are resolved by [id-map](../../common/id-map.tsv)); the rows about
-sc. 04 — also in «Журнал источника» of the vector `alarms`; the last row — the move.
-
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
 There are no sleeps: the waits for events — `@until` by a sign (sc. 02 steps 04, 05, 09, 10; sc. 07 step 3; the readiness of the process `domain` —
@@ -149,3 +141,9 @@ sc. 08 step 7, sc. 09 step 5; the raise of the placement counter at start — sc
 `guard=ok` uses a valid unsafe writer operation, `PUT /domain/topology` with a matching base revision and valid body. For debug its local guards are valid and the writer is in the ordinary serving state, so the independent writer refusal is 401. `guard=csrf` makes only the **original** unsafe cookie request's Origin invalid. `guard=need` chooses a declared domain forwarding operation whose ordinary need resolution refuses under its published rule; `guard=may` keeps a valid resolved need but removes its necessary grant. These cases execute the relevant ordinary guard and retain its original refusal; they prescribe no new HTTP code. Identity failure likewise uses the ordinary guard. Fixture interventions may alter confirmed input data or I/O, never substitute the final guard decision.
 
 The returned JSON normalizes actual observations: `refused` means a non-success response; `forward_calls` counts outgoing requests from the first console; `writer_calls` counts actual entry to the writer; `cookie_out`, `x_user_out` and `ticket_out` record the presence of those actual outgoing headers; `bearer_set` records creation of a Bearer by this hop; `authorization_unchanged` compares the actual presented/outgoing header bytes; `session_token_equal` compares the outgoing Bearer token to the exact token proved by this cookie session; `other_session_used` compares it to the unrelated session's distinct token. For a refusal before forwarding the header-presence/creation observations are false. No token bytes are printed. A panic, unrelated failure, omitted handler or precomputed expected answer fails the seam. The ordinary scenarios, existing worker/ticket rules and full stand remain mandatory.
+
+## Kit assistance seams
+
+[seams.tsv](seams.tsv) provides 82 CALL steps of 44 scenarios over ordinary implementation paths. The fixture/port contract is [forms/README.md](../forms/README.md); [stages.tsv](../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary scenarios of this directory, the vector `alarms`, the neighbours on the stands of lesson P/08 or the items checked by reading.
+
+The review adds eight alarms neighbours (35 rows total) and 34 effect CALL steps; the original 27 alarms rows and all 48 original CALL steps remain byte-exact. The forms README defines the real collector, own reads, closed-route dispatch and composed hop fixtures.

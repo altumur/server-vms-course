@@ -1026,6 +1026,53 @@ paths:
         result = self.library_lesson(acceptance=True)
         self.assertTrue(any("stale exception no-acceptance" in e for e in result.errors), result.errors)
 
+    INVENTORY = ("# Instructions\n\n### Checklist inventory, 2 ids\n<!-- checklist-inventory:begin -->\n"
+                 "| chapter | ids |\n|---|---|\n| P/01.1 | `P/01.1-01` |\n| P/01.2 | `P/01.2-01` |\n"
+                 "<!-- checklist-inventory:end -->\n")
+
+    def inventory_errors(self, text):
+        self.readme.write_text(text)
+        return [e for e in self.check().errors if "checklist inventory" in e]
+
+    def test_checklist_inventory(self):
+        """Опись чеклистов instruction (решение «Архитектора» 2026-11-06): без блока — ничего; блок = все id."""
+        self.assertEqual(self.inventory_errors("# Instructions\n"), [])
+        self.assertEqual(self.inventory_errors(self.INVENTORY), [])
+        self.assertEqual(self.check().errors, [])          # маркеры блока — не «unsupported raw HTML»
+        self.assertEqual(self.check().stats["checklist_inventories"], 1)
+        bad = {
+            "missing id": self.INVENTORY.replace("| P/01.2 | `P/01.2-01` |\n", ""),
+            "foreign id": self.INVENTORY.replace("`P/01.2-01`", "`P/01.2-01`, `P/01.2-02`").replace("2 ids", "3 ids"),
+            "repeat": self.INVENTORY.replace("`P/01.2-01` |", "`P/01.2-01`, `P/01.2-01` |").replace("2 ids", "3 ids"),
+            "range": self.INVENTORY.replace("`P/01.2-01`", "`P/01.2-01…02`"),
+            "no backticks": self.INVENTORY.replace("`P/01.2-01`", "P/01.2-01"),
+            "wrong chapter": self.INVENTORY.replace("| P/01.2 |", "| P/01.1 |"),
+            "wrong chapter, short form": self.INVENTORY.replace("| P/01.2 |", "| 1.1 |"),
+            "count": self.INVENTORY.replace("2 ids", "3 ids"),
+            "no end": self.INVENTORY.replace("<!-- checklist-inventory:end -->\n", ""),
+            "three cells": self.INVENTORY.replace("| P/01.2 | `P/01.2-01` |", "| P/01.2 | `P/01.2-01` | x |"),
+        }
+        for what, text in bad.items():
+            self.assertNotEqual(text, self.INVENTORY, what)
+            self.assertTrue(self.inventory_errors(text), what)
+
+    def test_checklist_inventory_en_ru(self):
+        """ADR-0124: блок источника и перевода равны по id; блок только в одном языке — ошибка."""
+        import shutil
+        (self.dir / "ru").mkdir()
+        shutil.copytree(self.spec, self.dir / "ru/spec")
+        shutil.copy(self.lesson, self.dir / "ru/01-store.md")
+        self.lesson = self.dir / "ru/01-store.md"
+        ru = self.dir / "ru/spec/01-store.README.md"
+        self.readme.write_text(self.INVENTORY)
+        ru.write_text(self.INVENTORY)
+        errors = lambda: [e for e in self.check().errors if "checklist inventory" in e]   # noqa: E731
+        self.assertEqual(errors(), [])
+        ru.write_text("# Инструкция\n")
+        self.assertTrue(any("missing here" in e for e in errors()), errors())
+        ru.write_text(self.INVENTORY.replace("| P/01.2 | `P/01.2-01` |\n", ""))
+        self.assertTrue(any("differ from the source" in e for e in errors()), errors())
+
     def test_two_chapters_pass(self):
         result = self.check()
         self.assertEqual(result.errors, [])

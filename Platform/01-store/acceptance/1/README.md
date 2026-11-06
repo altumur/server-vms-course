@@ -26,10 +26,6 @@ memory does not forget by time alone (P/01.1-11), equality and both sides of fra
 restart (P/01.1-31). They run only through the adapter of kit B (the directives `@clock`, `@reopen`, `@parallel` — the
 header of the file); the runner does not read the file. The stages — `store_core` (`@clock`, `@parallel`) and `durable` (`@reopen`) of `forms/stages.tsv`, by `tests:1.1:<scenarios>:seams` in their `gate`.
 
-## `journal/corrections-1.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample` (a sample of a generation error), `fix` (which line of the lesson was clarified), `languages`. Empty: no error has repeated so far.
-
 ## Additional check of the class of errors of run 36 (Kimi)
 
 A replay of delete with the same id and different items (none/null/number/object/array) must match by op/key/cas/guard. A change of key/cas/guard is a different fingerprint. Compare versions only for equality: uniqueness does not mean a numeric order. Sc.17 also sends arbitrary bytes or no body by the common grammar of POST.

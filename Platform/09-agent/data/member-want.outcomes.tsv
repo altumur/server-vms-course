@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row domain/member-want/<раздел> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row domain/member-want/<part> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domainagent	the whole row is unreadable: the agent — counts it as a request: reads the section by the door, removes the row (Н1.4 member_want)	0	row	P/09.1 Н1.4 member_want
+	domainagent	the whole row is unreadable: the agent — counts it as a request: reads the section by the door, removes the row (N1.4 member_want)	0	row	P/09.1 N1.4 member_want

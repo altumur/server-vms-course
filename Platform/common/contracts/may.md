@@ -206,8 +206,3 @@ one of them, `may-24`, is an input out of form (`@exit 2`; analysis of review of
 source of these cases. There is also `covers.tsv` — 19 lines of the function `covers(scope, ref, row)` of the gate ([the gate
 contract](gate-and-pass.md) `scope`; C06-EVENTS-QUERY-UNKNOWN-138-10).
 
-## Correspondence to former lessons
-
-From M11/9 (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 1; analysis of review of stage A 8–10): N1.4 whole (here
-«The function `may`»; in M11/9 — a pointer) and the phrase of N4 about the words of `may` (here «Refusal words»). The norm M11/9-05 (`may` in order)
-— by `note` of [id-map](../id-map.tsv).

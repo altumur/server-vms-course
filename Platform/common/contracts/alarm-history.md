@@ -76,7 +76,3 @@ of the holder (`write`: creation with `cut_before` 0, no repeats by `same_line`,
 nothing removed, equal `t` at the boundary `HISTORY_LINES`); `same` — also `t_src` 990/990.0, absent/`null` (AH-SAME52-01, AH-CUT52-01).
 The merge of the page and the history is the package `alarms` of lesson P/10.
 
-## Correspondence to former lessons
-
-From P/08.9 N1.9 (the block whole; the norm P/08.9 — by `note` of [id-map](../id-map.tsv)) and P/10 N3 `alarms` step 2 (a repeat in
-a page); they refer here (C10-ALARM-SAME-LINE83).

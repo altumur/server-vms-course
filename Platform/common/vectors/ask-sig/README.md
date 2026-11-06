@@ -10,7 +10,7 @@ addendum 16).
 
 The rows were transferred from the inputs of the command `ask-sig` of the acceptance of M11/10
 (`inputs/ask-sig-*.json`, sc. 07) without a change of bytes; `case` is the name of the input file. Scenario 07 of the acceptance of M11/10 and its inputs
-were removed by the move of lesson 8 (ADR-0083 addendum (14) item 17; the log — the acceptance of chapter P/08.8 (`Platform/08-domain/journal/corrections-8.tsv`, a log, not in the export)):
+were removed by the move of lesson 8 (ADR-0083 addendum (14) item 17; the log — the acceptance of chapter P/08.8 (`corrections-8.tsv` (historical correction record), a log, not in the export)):
 the table is the only source of these cases.
 
 ## Run

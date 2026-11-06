@@ -22,3 +22,8 @@ POST	/domain/batch	writes[]	revision	false	ignored	0	P/08.0-R005,P/08.0-R006
 PUT	/domain/placement/{sub}/{ref}	domain/placement/<sub>/<ref>	rev	true	optional	0	P/08.0-R005,P/08.0-R006
 DELETE	/domain/placement/{sub}/{ref}	domain/placement/<sub>/<ref>	rev	false	optional	-	P/08.0-R005,P/08.0-R006
 PUT	/domain/shared	domain/shared	doc.rev	true	base-rev	0	P/08.0-R005,P/08.0-R006
+PUT	/domain/roles/{role}/lines	domain/roles/<role>	revision	true	optional	-	P/08.0-R005,P/08.0-R006,P/08.4-R015
+POST	/domain/folders	-	revision	true	ignored	-	P/08.0-R005,P/08.0-R006,P/08.5-R007
+PUT	/domain/folders/{folder}	domain/folders/<folder>	revision	true	optional	-	P/08.0-R005,P/08.0-R006,P/08.5-R007
+DELETE	/domain/folders/{folder}	domain/folders/<folder>	revision	true	optional	-	P/08.0-R005,P/08.0-R006,P/08.5-R007
+PUT	/domain/memberof/{member}/{sub}/{rows}/{id}	domain/memberof/<member>/<sub>/<rows>/<id>	-	false	optional-index	-	P/08.0-R005,P/08.0-R006,P/08.5-R007

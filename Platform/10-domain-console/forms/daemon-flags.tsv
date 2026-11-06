@@ -1,0 +1,25 @@
+# P/10 process environment; literal TAB, no CLI spelling is introduced.
+#var f map<string,dyn> — supplied values before defaults
+#var cmd string — domainconsole
+# Empty bad does not waive contextual launcher, alias, instance, kit, listener, own-client or gate rules.
+flag	type	default	default_text	required	commands	bad	norm
+$W2C_ROLE	string	-	the unit supplies domainconsole; the launcher requires the unit role	false	domainconsole	f["$W2C_ROLE"] != "domainconsole"	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$PLATFORM_DIR	dir	/data/platform	/data/platform	false	domainconsole		common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$PLATFORM_STORE	string	-	file://<PLATFORM_DIR>/config; the unit uses the domain role socket	false	domainconsole		common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$OBJECTS	string	-	file://; with configstore: cluster://; aliases must agree	false	domainconsole	"$OBJECTS" in f && "$PLATFORM_OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$PLATFORM_OBJECTS	string	-	file://; with configstore: cluster://; aliases must agree	false	domainconsole	"$OBJECTS" in f && "$PLATFORM_OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$RESOURCE_ROOT	dir	-	<PLATFORM_DIR>/events; aliases must agree	false	domainconsole	"$RESOURCE_ROOT" in f && "$EVENTS" in f && f["$RESOURCE_ROOT"] != f["$EVENTS"]	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$EVENTS	dir	-	<PLATFORM_DIR>/events; aliases must agree	false	domainconsole	"$RESOURCE_ROOT" in f && "$EVENTS" in f && f["$RESOURCE_ROOT"] != f["$EVENTS"]	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$CLUSTER	string	local	local	false	domainconsole		P/10-R003; common/contracts/env-file.md
+$BOX_ID	string	-	nonempty BOX_ID; otherwise machine-id, then hostname, by the box resolver	false	domainconsole		common/contracts/env-file.md: Environment variables; P/02.4 N1.2; common/contracts/instance.md
+$SERVER_NAME	string	-	short hostname; validate the supplied name by the environment contract	false	domainconsole		common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$INSTANCE_ID	string	-	absent or empty: computed <box>:<pid>:<6hex>; supplied nonempty: preserve the accepted spelling	false	domainconsole		P/10-R003; common/contracts/instance.md; common/contracts/env-file.md
+$W2C_TLS_DIR	dir	-	Linux /etc/w2c/tls; macOS <W2C_BOX>/tls; own kit domainconsole	false	domainconsole		common/contracts/env-file.md: Environment variables; P/02.4 N1.2; P/02.4 N1.6
+$W2C_ENV	file	/etc/w2c/w2c.env	/etc/w2c/w2c.env; the launcher reads it, never sources it	false	domainconsole		common/contracts/env-file.md: Files and reading order
+$BUILD	string	dev	dev	false	domainconsole		common/contracts/env-file.md: Environment variables; P/02.4 N1.2; common/contracts/schema.md
+$DOMAIN_CONSOLE_HOST	string	0.0.0.0	implicit wildcard requires the domainconsole kit; explicit-address/TLS rules remain P02.4 N1.6	false	domainconsole		P/10-R003; lifecycle.md: Environment; P/02.4 N1.6
+$DOMAIN_CONSOLE_PORT	string	8444	domain operator listener; common port grammar and listener validation remain mandatory	false	domainconsole		P/10-R003; lifecycle.md: Environment
+$SIGNER_URL	string	http://localhost:8445	own-box domain writer; own-client/role-kit name and TLS checks apply	false	domainconsole		P/10-R005; lifecycle.md: Environment; common/contracts/role-certificate.md
+$LOGIN_URL	string	/api/login	login_url in the session; forwarding and people-entry guards remain mandatory	false	domainconsole		P/10-R008; lifecycle.md: Environment; common/contracts/gate-and-pass.md
+$TIMEZONE	string	UTC	IANA-name spelling only; no zone-database lookup, an empty/out-of-form value refuses startup with code 2	false	domainconsole	!f["$TIMEZONE"].matches("^[A-Za-z][A-Za-z0-9_+-]*(/[A-Za-z][A-Za-z0-9_+-]*)*$")	P/10-R010; common/contracts/env-file.md
+$W2C_DEBUG_PERSON	string	-	absent: debug identity off; only the original TCP loopback/request-without-credential guards apply	false	domainconsole		P/10-R008; common/contracts/env-file.md; common/contracts/gate-and-pass.md

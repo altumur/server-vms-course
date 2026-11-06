@@ -2,10 +2,10 @@
 # of lesson 8 § 4). Chapters refer to their paths (the description of each path names its chapter): 8.3 — /api/member/{member},
 # /api/carry/{member}, /api/relay/{relay}, /domain/members, /domain/members/{name}, /domain/members/{member}/ca,
 # /domain/topology; 8.4 — /api/login, /domain/users, /domain/users/{name}, /domain/groups, /domain/groups/{name}, /domain/roles,
-# /domain/roles/{name}, /domain/batch, /domain/grants/{cluster}, /domain/break-glass,
+# /domain/roles/{name}, /domain/roles/{role}/lines, /domain/batch, /domain/grants/{cluster}, /domain/break-glass,
 # /domain/break-glass/{cluster}, /domain/revoke; 8.6 — /domain/placement/{sub}/{ref}, /domain/{sub}/{rows},
 # /domain/{sub}/{rows}/{ref}; 8.7 — /api/tokens/{member}/{sub}/{kind}; 8.8 — /api/prepare, /api/take, /domain/move,
-# /domain/handover, /domain/stranded/apply; 8.9 — /domain/shared. Chapters 8.0, 8.1, 8.2, 8.5, 8.10 have no paths of their own: 8.0 —
+# /domain/handover, /domain/stranded/apply; 8.9 — /domain/shared; 8.5 — /domain/folders and /domain/memberof. Chapters 8.0, 8.1, 8.2, 8.10 have no paths of their own: 8.0 —
 # the X-W2C-Client parameter and the answers deposed, frozen, standby; 8.1 — the schemas of the view and of the shadow report (the domain console serves them,
 # lesson P/10 refers by $ref), the input and output of the view command; 8.10 — 409 and 413 of the ceilings at the paths of 8.3, 503 standby at every door.
 # The process's own doors (class signed: /api/member, /api/carry, /api/relay, /api/tokens) — 4 operations; the doors that are passed
@@ -16,7 +16,7 @@
 # 401/403 of its own check of identity and grant (chapter 8.4 N1.5), 409 deposed (chapter 8.8), 503 frozen (chapter 8.8) and standby
 # (chapter 8.10); the codes of transitions 1 and 2 (forwarding by the cluster console, acceptance and passing by the domain console: 404, 502, 400/408/413
 # of reading the body, the gate of the console) — OpenAPI 06 (chapter 6.7) and 10, not listed here; there is no Forwarded answer.
-# Merged from the contracts М11/1, М11/3, М11/4, М11/6, М11/7, М11/8, М11/9, М11/10, М11/11 (the domain process side) — stage B,
+# Merged from the contracts M11/1, M11/3, M11/4, M11/6, M11/7, M11/8, M11/9, M11/10, M11/11 (the domain process side) — stage B,
 # without a change of behaviour; the contract is brought to the norms of the chapters (check of the contract against the norms of P/08, move of lesson 8): Publication —
 # fields outside the delta no stricter than 8.3 N1.2 out_of_delta; MembersDoc — with term (8.3 N1.1; the form of the row, not a door answer),
 # MembersAnswer {rev, members} — the 200 answer of the member doors 8.3 N2 (addition of the Architect to № 8 of the analysis of review of stage B 8–10),
@@ -79,7 +79,7 @@ paths:
           $ref: '#/components/responses/RefusedPlain'
         '409':
           description: 'rebase, same_sent_at or not_ready (the report intake contract); deposed of a displaced holder with the record of the new one
-            (P/08.8 N1.6; added in М11/10); the record of the first key of the holder (P/08.3 N3 «the holder in the list» step 2) would break
+            (P/08.8 N1.6; added in M11/10); the record of the first key of the holder (P/08.3 N3 «the holder in the list» step 2) would break
             every_entry — {error: refused, detail: "the entry of <member> would exceed 1240 bytes"} without reason, no mark
             (P/08.10 N1.5; C08-MEMBER-409-ENTRY-01)'
           content:
@@ -103,7 +103,7 @@ paths:
                         not: {required: [reason]}
                   - $ref: '#/components/schemas/Deposed'
         '413':
-          description: 'Body larger than BODY_LIMIT — {error: denied} before parsing (C08-BODY-DENIED-01); a whole generation larger than BODY_LIMIT — {error: "whole too large"} (P/08.10 N1.5; added in М11/12)'
+          description: 'Body larger than BODY_LIMIT — {error: denied} before parsing (C08-BODY-DENIED-01); a whole generation larger than BODY_LIMIT — {error: "whole too large"} (P/08.10 N1.5; added in M11/12)'
           content:
             application/json:
               schema:
@@ -142,7 +142,7 @@ paths:
         '503':
           $ref: '#/components/responses/StandbyOrUnavailable'
   /api/relay/{relay}:
-    description: 'Chapter 8.3 N2, N3 «держатель на POST /api/relay» (the holder side; the relay side — P/09.2 N2, N3).'
+    description: 'Chapter 8.3 N2, N3 «the holder on POST /api/relay» (the holder side; the relay side — P/09.2 N2, N3).'
     parameters:
       - name: relay
         in: path
@@ -203,7 +203,7 @@ paths:
       responses:
         '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
-          description: 'Answer sealed to the member in envelope m1; the content — the domain envelopes contract «Содержимое sealed»'
+          description: 'Answer sealed to the member in envelope m1; the content — the domain envelopes contract «Content of sealed»'
           content:
             application/json:
               schema: {$ref: '#/components/schemas/TokenSealed'}
@@ -212,7 +212,7 @@ paths:
         '403': {$ref: '#/components/responses/TokenRefused'}
         '404': {$ref: '#/components/responses/TokenRefused'}
         '409':
-          description: 'no_centre (N3 «issue») or deposed of a displaced holder (P/08.8 N1.6; added in М11/10)'
+          description: 'no_centre (N3 «issue») or deposed of a displaced holder (P/08.8 N1.6; added in M11/10)'
           content:
             application/json:
               schema:
@@ -265,6 +265,7 @@ paths:
     post:
       operationId: login
       summary: Login of a person (N1.2)
+      description: 'iat is the confirmed credential read time before unlocked PBKDF2; exp=iat+TOKEN_LIFETIME. A too-long issuance refuses with 401 refused and asks for a new request, never a refreshed iat (P08 review C5).'
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
       requestBody:
@@ -537,53 +538,176 @@ paths:
       - name: role
         in: path
         required: true
-        schema: {type: string}
+        schema: {$ref: '#/components/schemas/PersonName'}
     put:
       operationId: roleLines
-      summary: Rights of a role over the whole domain (chapter 8.4 N1.3a lines)
-      responses:
-        '200': {description: Written; the divergence goes through the pass}
-        '400': {$ref: '#/components/responses/BodyRefused'}
-  /domain/folders:
-    post:
-      operationId: folderCreate
-      summary: New domain folder (chapter 8.5 N1.8)
+      summary: Rights of a role over the whole domain (P/08.4 N1.3a)
       parameters:
-        - {name: Idempotency-Key, in: header, required: false, schema: {type: string, minLength: 1, maxLength: 200}}
+        - {$ref: '#/components/parameters/XW2CClient'}
+        - {$ref: '#/components/parameters/RepeatKey'}
+        - {$ref: '#/components/parameters/IfMatch'}
       requestBody:
         required: true
         content:
           application/json:
-            schema: {type: object, required: [name], additionalProperties: false, properties: {name: {type: string}, parent: {type: string}}}
+            schema:
+              type: object
+              required: [lines]
+              additionalProperties: false
+              properties:
+                lines: {type: array, items: {$ref: '#/components/schemas/GlobalRoleLine'}}
       responses:
-        '201': {description: Folder}
-        '400': {$ref: '#/components/responses/BodyRefused'}
-        '403': {description: Not a domain viewer with admin}
-        '404': {description: no such parent}
-        '409': {description: 'parent gone, too many folders'}
-        '503': {description: unavailable}
+        '200':
+          description: Written; cluster divergences are handled by the ordinary spread pass.
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [role, revision]
+                additionalProperties: false
+                properties:
+                  role: {$ref: '#/components/schemas/PersonName'}
+                  revision: {type: integer, minimum: 1}
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
+        '422': {$ref: '#/components/responses/KeyReused'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
+  /domain/folders:
+    post:
+      operationId: folderCreate
+      summary: New domain folder (P/08.5 N1.8); If-Match is ignored at creation.
+      parameters:
+        - {$ref: '#/components/parameters/XW2CClient'}
+        - {$ref: '#/components/parameters/RepeatKey'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              additionalProperties: false
+              properties:
+                name: {$ref: '#/components/schemas/DomainFolderName'}
+                parent: {type: string, pattern: '^(?:(?:[0-9a-f]{32})?)$', default: ''}
+      responses:
+        '201':
+          description: The new folder; a repeat with the same key returns the saved response.
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DomainFolderView'}
+        '412': {$ref: '#/components/responses/DomainFolderRefused'}
+        '400': {$ref: '#/components/responses/DomainFolderRefused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/DomainFolderRefused'}
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '409': {$ref: '#/components/responses/DomainFolderRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
+        '422': {$ref: '#/components/responses/KeyReused'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
     get:
       operationId: foldersRead
-      summary: Tree of domain folders (answered by the domain console)
+      summary: Live domain folders (answered by the domain console).
       responses:
-        '200': {description: '{rev, folders}'}
+        '200':
+          description: Tree by id; every live folder carries its own row revision and index.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rev, folders]
+                additionalProperties: false
+                properties:
+                  rev:
+                    type: object
+                    required: [term, rev]
+                    additionalProperties: false
+                    properties:
+                      term: {type: integer, minimum: 1}
+                      rev: {type: integer, minimum: 0}
+                  folders: {type: array, items: {$ref: '#/components/schemas/DomainFolderView'}}
   /domain/folders/{folder}:
     parameters:
       - name: folder
         in: path
         required: true
-        schema: {type: string}
+        schema: {type: string, pattern: '^(?:[0-9a-f]{32})$'}
     put:
       operationId: folderRename
-      summary: Name of a domain folder
+      summary: Rename a live domain folder; parent is immutable.
+      parameters:
+        - {$ref: '#/components/parameters/XW2CClient'}
+        - {$ref: '#/components/parameters/RepeatKey'}
+        - {$ref: '#/components/parameters/IfMatch'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              additionalProperties: false
+              properties:
+                name: {$ref: '#/components/schemas/DomainFolderName'}
       responses:
-        '200': {description: Folder}
-        '400': {$ref: '#/components/responses/BodyRefused'}
+        '200':
+          description: Folder after the write.
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DomainFolderView'}
+        '412': {$ref: '#/components/responses/DomainFolderConditionRefused'}
+        '400': {$ref: '#/components/responses/DomainFolderRefused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/DomainFolderRefused'}
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '409': {$ref: '#/components/responses/DomainFolderRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
+        '422': {$ref: '#/components/responses/KeyReused'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
     delete:
       operationId: folderDelete
-      summary: Tombstone of a domain folder
+      summary: Write the domain folder tombstone; the row and its index remain.
+      parameters:
+        - {$ref: '#/components/parameters/XW2CClient'}
+        - {$ref: '#/components/parameters/RepeatKey'}
+        - {$ref: '#/components/parameters/IfMatch'}
       responses:
-        '200': {description: Removed}
+        '200':
+          description: Tombstone written; ETag is its result row index.
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deleted]
+                additionalProperties: false
+                properties:
+                  deleted: {type: string, pattern: '^(?:[0-9a-f]{32})$'}
+        '412': {$ref: '#/components/responses/DomainFolderConditionRefused'}
+        '400': {$ref: '#/components/responses/DomainFolderRefused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/DomainFolderRefused'}
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '409': {$ref: '#/components/responses/DomainFolderRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
+        '422': {$ref: '#/components/responses/KeyReused'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /domain/memberof/{member}/{sub}/{rows}/{id}:
     parameters:
       - {$ref: '#/components/parameters/Member'}
@@ -595,15 +719,49 @@ paths:
         schema: {type: string}
     get:
       operationId: memberofRead
-      summary: Membership of a unit in domain folders (answered by the domain console)
+      summary: Membership of a unit in domain folders (answered by the domain console).
       responses:
-        '200': {description: '{folders, index}'}
+        '200':
+          description: Confirmed absence is folders [] and index empty; no revision counter or ETag.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DomainMembershipView'}
     put:
       operationId: memberofWrite
-      summary: Membership of a unit in domain folders
+      summary: Replace membership atomically with its reverse indexes; an empty list deletes this row.
+      parameters:
+        - {$ref: '#/components/parameters/XW2CClient'}
+        - {$ref: '#/components/parameters/RepeatKey'}
+        - {$ref: '#/components/parameters/IndexIfMatch'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [folders]
+              additionalProperties: false
+              properties:
+                folders:
+                  type: array
+                  uniqueItems: true
+                  items: {type: string, pattern: '^(?:[0-9a-f]{32})$'}
       responses:
-        '200': {description: Written}
-        '400': {$ref: '#/components/responses/BodyRefused'}
+        '200':
+          description: Current folders and membership row index; an empty list deletes it and returns index empty. No ETag.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DomainMembershipView'}
+        '412': {$ref: '#/components/responses/IndexMoved'}
+        '400': {$ref: '#/components/responses/DomainFolderRefused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/DomainFolderRefused'}
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '409': {$ref: '#/components/responses/DomainFolderRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
+        '422': {$ref: '#/components/responses/KeyReused'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /api/members/{member}/{part}:
     parameters:
       - {$ref: '#/components/parameters/Member'}
@@ -929,7 +1087,7 @@ paths:
         - $ref: '#/components/parameters/XW2CClient'
       requestBody:
         required: false
-        description: 'The body is empty or {}; anything else — 400 (N1.3; added by the М11 check, A1)'
+        description: 'The body is empty or {}; anything else — 400 (N1.3; added by the M11 check, A1)'
         content:
           application/json:
             schema: {type: object, maxProperties: 0, additionalProperties: false}
@@ -1328,6 +1486,7 @@ paths:
                 assigned:
                   type: array
                   items: {$ref: '#/components/schemas/RoleAssigned'}
+                supervision: {$ref: '#/components/schemas/RoleSupervision'}
       responses:
         '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
@@ -1378,6 +1537,7 @@ paths:
                 assigned:
                   type: array
                   items: {$ref: '#/components/schemas/RoleAssigned'}
+                supervision: {$ref: '#/components/schemas/RoleSupervision'}
       responses:
         '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
@@ -1432,7 +1592,7 @@ paths:
         '412': {$ref: '#/components/responses/RevisionMoved'}
         '503': {$ref: '#/components/responses/Refused503'}
   /domain/batch:
-    description: 'Chapter 8.4 N1.9 pass, N2 «Пакетная дверь», N1.3c batch_diff (ADR-0098 §6).'
+    description: 'Chapter 8.4 N1.9 pass, N2 «Batch door», N1.3c batch_diff (ADR-0098 §6).'
     post:
       operationId: domainBatch
       summary: People, groups, roles and grants of one snapshot — one write (N2)
@@ -1461,7 +1621,16 @@ paths:
                       op: {enum: [put, delete]}
                       name: {type: string}
                       cas: {type: string, description: 'index from GET of this row; "" — creation.'}
-                      fields: {type: object, additionalProperties: true, description: 'Open: the fields — the bodies of the door of its kind (P/08.4 N2 «Пакетная дверь»).'}
+                      fields: {type: object, additionalProperties: true, description: 'Open: the fields — the bodies of the door of its kind (P/08.4 N2 «Batch door»).'}
+                    allOf:
+                      - if:
+                          required: [kind, op]
+                          properties:
+                            kind: {const: role}
+                            op: {const: put}
+                        then:
+                          properties:
+                            fields: {$ref: '#/components/schemas/RolePutFields'}
       responses:
         '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
@@ -1701,7 +1870,7 @@ paths:
         '400': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/Standby'}
+        '503': {$ref: '#/components/responses/RestoreTarget503'}
   /api/take:
     description: 'Chapter 8.8 N1.7 take, N2; passed to the process of the target by the cluster console (forwarding to the signer).'
     post:
@@ -1739,7 +1908,7 @@ paths:
         '400': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/Refused503'}
+        '503': {$ref: '#/components/responses/RestoreTarget503'}
   /domain/move:
     description: 'Chapter 8.8 N1.8, N2; passed to the process of the target by the cluster console (forwarding to the signer) — the process does not read X-W2C-Client
       here; identity and the admin grant of the target cluster are checked by the cluster console (OpenAPI of lesson 6 POST /domain/move;
@@ -1763,7 +1932,7 @@ paths:
                 recovery: {type: string, description: Text of the recovery file of chapter 8.2 N1.1.}
                 stolen: {type: boolean}
                 copy: {$ref: '#/components/schemas/Pair'}
-                why: {type: string, minLength: 1, pattern: "^(?:[\\s\\S]*[^\u0009\u000A\u000B\u000C\u000D    -     　﻿][\\s\\S]*)$", description: 'At least one non-whitespace character (N1.8 copy; added by the М11 check, H18). Without copy — permission to move «from nothing», when no backup has been received (N1.8 step 6; added by the Quint model of М11, ER).'}
+                why: {type: string, minLength: 1, pattern: "^(?:[\\s\\S]*[^\u0009\u000A\u000B\u000C\u000D    -     　﻿][\\s\\S]*)$", description: 'At least one non-whitespace character (N1.8 copy; added by the M11 check, H18). Without copy — permission to move «from nothing», when no backup has been received (N1.8 step 6; added by the Quint model of M11, ER).'}
       responses:
         '408': {$ref: '#/components/responses/BodyRefused'}
         '413': {$ref: '#/components/responses/BodyRefused'}
@@ -1793,7 +1962,7 @@ paths:
                   sealed:
                     type: array
                     minItems: 1
-                    description: 'N1.8 step 7: the state items whose secret did not open — not restored; by (key, item). None such — no field (added by the М11 check, H15).'
+                    description: 'N1.8 step 7: the state items whose secret did not open — not restored; by (key, item). None such — no field (added by the M11 check, H15).'
                     items:
                       type: object
                       required: [key, item, why]
@@ -1805,7 +1974,7 @@ paths:
         '400': {$ref: '#/components/responses/Refused'}
         '403': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
-        '503': {$ref: '#/components/responses/Refused503'}
+        '503': {$ref: '#/components/responses/RestoreTarget503'}
   /domain/handover:
     description: 'Chapter 8.8 N1.7, N2; passed to the process by the domain console (chapter 8.0 N1.8).'
     post:
@@ -1998,6 +2167,12 @@ components:
       schema:
         type: string
         pattern: "^(?:[1-9][0-9]*|\"(?:0|[1-9][0-9]{0,19})\")$"
+    IndexIfMatch:
+      name: If-Match
+      in: header
+      required: false
+      description: 'Optional quoted store index only (P/08.0 N1.9); "" means confirmed absent membership. No bare revision number. Replay precedes judging the condition.'
+      schema: {type: string, pattern: '^(?:"(?:0|[1-9][0-9]{0,19})?")$'}
   headers:
     ETag:
       description: Index of the store row in double quotes, a strong tag of RFC 9110 (P/08.0 N1.9 «Versions»). The value is fit for If-Match.
@@ -2040,7 +2215,7 @@ components:
               - $ref: '#/components/schemas/Refusal'
               - $ref: '#/components/schemas/Executors'
     RefusedWord:
-      description: 'Refusal of the agent doors with a word (P/08.3 N4): {error: refused, reason, detail} — at 400 not_a_publication, at 401 a word of the agent signature contract (added by the М11 reconciliation)'
+      description: 'Refusal of the agent doors with a word (P/08.3 N4): {error: refused, reason, detail} — at 400 not_a_publication, at 401 a word of the agent signature contract (added by the M11 reconciliation)'
       content:
         application/json:
           schema:
@@ -2052,7 +2227,7 @@ components:
                   reason: {type: string, minLength: 1}
                 required: [reason, detail]
     RefusedPlain:
-      description: 'Refusal of the agent doors without a word (P/08.3 N4): {error: refused, detail} (added by the М11 reconciliation)'
+      description: 'Refusal of the agent doors without a word (P/08.3 N4): {error: refused, detail} (added by the M11 reconciliation)'
       content:
         application/json:
           schema:
@@ -2063,7 +2238,7 @@ components:
                   error: {const: refused}
                 required: [detail]
     DeposedAgent:
-      description: 'Deposed holder on a request of an agent or a relay — {error: deposed, holder} (P/08.8 N1.6; added by М11/10)'
+      description: 'Deposed holder on a request of an agent or a relay — {error: deposed, holder} (P/08.8 N1.6; added by M11/10)'
       content:
         application/json:
           schema: {$ref: '#/components/schemas/Deposed'}
@@ -2080,7 +2255,7 @@ components:
         application/json:
           schema: {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied'}
     Standby:
-      description: 'Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby; added by М11/12)'
+      description: 'Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby; added by M11/12)'
       content:
         application/json:
           schema: {$ref: '#/components/schemas/StandbyBody'}
@@ -2096,7 +2271,7 @@ components:
       description: 'standby of the process domain (P/08.10 N1.7) or unavailable — a row without which the door does not answer exists, but is not
         readable: at doors with the gate — the access check row (P/08.4 N1.5; rule «Unreadable row» of the gate-and-pass
         contract); /api/login — the row of the person (P/08.4 N1.2 check); /api/tokens — the topology (P/08.7 N3
-        «issue» step 4a); /api/carry — the member list, the mark, the key set, the revocations (P/08.3 N3 «accept»); /api/relay — the rows of the relay batch (P/08.3 N3 «держатель на POST /api/relay» step 0); form Unavailable of the contract'
+        «issue» step 4a); /api/carry — the member list, the mark, the key set, the revocations (P/08.3 N3 «accept»); /api/relay — the rows of the relay batch (P/08.3 N3 «the holder on POST /api/relay» step 0); form Unavailable of the contract'
       content:
         application/json:
           schema:
@@ -2128,7 +2303,7 @@ components:
               - {$ref: '#/components/schemas/StandbyBody'}
               - {$ref: '#/components/schemas/NotStandby'}
     StandbyOrExhausted:
-      description: 'standby (P/08.10 N1.7), the generation number is exhausted — {error: refused, reason: rev_exhausted, detail} (report intake contract, step 7; added by the М11 reconciliation, A18) — or unavailable: the mark is not readable, the read of the mark or of the generation is incomplete, the write did not pass before the mark (P/08.3 N3 «accept»; G-29, C08-ACCEPT-PARTIAL-READ-01)'
+      description: 'standby (P/08.10 N1.7), the generation number is exhausted — {error: refused, reason: rev_exhausted, detail} (report intake contract, step 7; added by the M11 reconciliation, A18) — or unavailable: the mark is not readable, the read of the mark or of the generation is incomplete, the write did not pass before the mark (P/08.3 N3 «accept»; G-29, C08-ACCEPT-PARTIAL-READ-01)'
       content:
         application/json:
           schema:
@@ -2181,12 +2356,39 @@ components:
               cluster: {$ref: '#/components/schemas/MemberName'}
               what: {type: string}
               note: {type: string}
+    IndexMoved:
+      description: 'Membership If-Match differs from the confirmed row index; no revision counter (P/08.0 N1.9).'
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/IndexMoved'}
+    DomainFolderRefused:
+      description: 'Other folder and chain refusals keep the imported P/06.8 N4 vocabulary; domain identity, versions and repeat memory retain their explicit P/08 rules.'
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/DomainFolderError'}
+    DomainFolderConditionRefused:
+      description: 'Stale If-Match is RevisionMoved; a changed ancestor guard is the imported parent moved refusal of P/06.8 N4.'
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - {$ref: '#/components/schemas/RevisionMoved'}
+              - {$ref: '#/components/schemas/DomainFolderError'}
+    RestoreTarget503:
+      description: 'Existing standby/unavailable failures or occupied target restore exclusion, with no pending/restore/claim writes (P/08.8 N1.7; P08 review C1).'
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - {$ref: '#/components/schemas/StandbyBody'}
+              - {$ref: '#/components/schemas/RestoreBusyBody'}
+              - {$ref: '#/components/schemas/Refusal'}
   schemas:
     TokenSealed:
       type: object
       required: [sealed]
       additionalProperties: false
-      description: 'Answer of the token door of the holder — the token sealed to the member by an envelope m1 (domain envelopes contract «Содержимое sealed»); the relay carries it byte for byte (P/09.2)'
+      description: 'Answer of the token door of the holder — the token sealed to the member by an envelope m1 (domain envelopes contract «Content of sealed»); the relay carries it byte for byte (P/09.2)'
       properties:
         sealed: {type: string, pattern: "^(?:m1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+)$"}
     # --- common refusal forms of the process (chapter 8.0 N4; 8.8; 8.10) ---
@@ -2223,6 +2425,8 @@ components:
             - no such group
             - no such role
             - unknown member
+            - unknown role
+            - role referenced
             - bad batch
             - admin only
             - builtin
@@ -2244,6 +2448,7 @@ components:
             - called off
             - redo it on the new holder
             - If-Match is a unit revision
+            - If-Match is a store index
             - Idempotency-Key required
             - in flight
             - key reused
@@ -2254,7 +2459,7 @@ components:
         field: {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField'}
         holder:
           $ref: '#/components/schemas/HolderRecord'
-          description: 'at 409 deposed — the term record document of the new holder as an object (P/08.8 N1.6; added by М11/10)'
+          description: 'at 409 deposed — the term record document of the new holder as an object (P/08.8 N1.6; added by M11/10)'
     RevisionMoved:
       type: object
       required: [detail, error, field, revision]
@@ -2288,7 +2493,7 @@ components:
       type: object
       required: [error, holder]
       additionalProperties: false
-      description: 'Refusal of a deposed holder (P/08.8 N1.6 refusal; added by М11/10): to an agent report — without detail, to an edit and
+      description: 'Refusal of a deposed holder (P/08.8 N1.6 refusal; added by M11/10): to an agent report — without detail, to an edit and
         to a login of people — with detail «<n> held the domain at term N; <h> holds it at term M — edits go there», when its own
         term is unknown — «<n> held the domain at an earlier term; <h> holds it at term M — edits go there» (P/08.8 N1.6; C08-DEPOSED-DETAIL-N-01)'
       properties:
@@ -2522,7 +2727,7 @@ components:
                 type: array
                 items: {$ref: '#/components/schemas/Outcome'}
               description: 'P/08.6 N1.6: {<member>: [<outcome>…]} — the row domain/outcomes/<member> by (at, id) descending'
-            url: {type: string, description: 'address of the domain console (DOMAIN_CONSOLE_URL of the process domain; read by the forwarding of the cluster console — chapter P/06.7)'}
+            url: {type: [string, 'null'], description: 'address of the domain console (DOMAIN_CONSOLE_URL of the process domain; read by the forwarding of the cluster console — chapter P/06.7)'}
             term: {description: P/08.8 N1.3}
             shared:
               $ref: '#/components/schemas/Delivery'
@@ -2603,7 +2808,7 @@ components:
                       type: ['integer', 'null']
                       minimum: 1
                       maximum: 9007199254740991
-                      description: rev of the mark reported (chapter 8.3 N1.3) or null — no mark; greater than 2^53 − 1 — input not in form (code 2; added by the М11 reconciliation, V7).
+                      description: rev of the mark reported (chapter 8.3 N1.3) or null — no mark; greater than 2^53 − 1 — input not in form (code 2; added by the M11 reconciliation, V7).
                     objects:
                       type: object
                       additionalProperties: true
@@ -2657,14 +2862,14 @@ components:
       type: object
       required: [doc]
       additionalProperties: false
-      description: 'Row domain/keys of the holder as is — domain key set contract «Набор domain/keys» (P/08.2; family keys)'
+      description: 'Row domain/keys of the holder as is — domain key set contract «The set domain/keys» (P/08.2; family keys)'
       properties:
         doc: {type: string}
     RevokedRow:
       type: object
       required: [jtis]
       additionalProperties: false
-      description: 'Row domain/revoked of the holder as is — domain key set contract «Отзывы domain/revoked» (P/08.2; family revoked)'
+      description: 'Row domain/revoked of the holder as is — domain key set contract «Revocations domain/revoked» (P/08.2; family revoked)'
       properties:
         jtis:
           type: string
@@ -2699,9 +2904,9 @@ components:
           description: 'P/08.6 N1.5: elements of the row domain/outcomes of the member — {<id>: <outcome>}, the outcome as a JSON object.'
           additionalProperties: {$ref: '#/components/schemas/Outcome'}
         tls_ca:
-          description: 'Outside the delta (out_of_delta): form — a list of strings, fingerprints of ca.pem and ca.next.pem of the cluster ascending (P/08.3 N1.6); not a list of strings — the field is not taken; length, repetition and fingerprint form are checked by the holder (on_accept), a mismatch — journal domain.member.ca.refused, the report is accepted (the decision of the Architect on the М11 reconciliation, D10).'
+          description: 'Outside the delta (out_of_delta): form — a list of strings, fingerprints of ca.pem and ca.next.pem of the cluster ascending (P/08.3 N1.6); not a list of strings — the field is not taken; length, repetition and fingerprint form are checked by the holder (on_accept), a mismatch — journal domain.member.ca.refused, the report is accepted (the decision of the Architect on the M11 reconciliation, D10).'
         tls_ca_certs:
-          description: 'Outside the delta (out_of_delta): form — a list of strings, PEM of the certificates of the centres of tls_ca in the same order, sha256(DER) — the fingerprint at the same place; only together with tls_ca (P/08.3 N1.6); not a list of strings — the field is not taken, the rest — on_accept (М11 reconciliation, D10).'
+          description: 'Outside the delta (out_of_delta): form — a list of strings, PEM of the certificates of the centres of tls_ca in the same order, sha256(DER) — the fingerprint at the same place; only together with tls_ca (P/08.3 N1.6); not a list of strings — the field is not taken, the rest — on_accept (M11 reconciliation, D10).'
         sign_failures:
           description: 'Outside the delta (out_of_delta): form — {domain?: integer ≥ 1, console?: integer ≥ 1}, not empty — requests that the agent has not sent since start because it could not sign them (P/08.3 N1.6a; the agent side — P/09.1 N1.12); not in it — the field is not taken.'
         members_rev:
@@ -2738,14 +2943,14 @@ components:
             memberof: {type: object, additionalProperties: {type: array, items: {type: string}}}
         cluster: {$ref: '#/components/schemas/MemberName'}
         rev: {type: integer, minimum: 0}
-        every: {type: number, minimum: 1, maximum: 3600, description: 'No field — the agent keeps the former value (report intake contract «Ответ carry: every»).'}
+        every: {type: number, minimum: 1, maximum: 3600, description: 'No field — the agent keeps the former value (report intake contract «The answer carry: every»).'}
         keys: {$ref: '#/components/schemas/KeysRow'}
         revoked: {$ref: '#/components/schemas/RevokedRow'}
         members:
           type: object
           required: [doc]
           additionalProperties: false
-          description: 'Row domain/member-rows/<part> (MembersDoc as text) — only to a lagging one: members_rev of the publication is absent or not equal to (term, rev) of the holder (P/08.3 N1.4a; added by М11/12); at GET /api/carry — always; no field — no changes.'
+          description: 'Row domain/member-rows/<part> (MembersDoc as text) — only to a lagging one: members_rev of the publication is absent or not equal to (term, rev) of the holder (P/08.3 N1.4a; added by M11/12); at GET /api/carry — always; no field — no changes.'
           properties:
             doc: {type: string}
         holder:
@@ -2793,12 +2998,12 @@ components:
         relayed:
           type: object
           description: 'Names — by MemberName at the writer (relay P/09.2); the holder refuses a name not by the grammar in
-            refused[<name as received>], the batch lives on (P/08.3 N3 «держатель на POST /api/relay» step 2, H1) — so the schema
+            refused[<name as received>], the batch lives on (P/08.3 N3 «the holder on POST /api/relay» step 2, H1) — so the schema
             of the batch does not judge names (C08-RELAY-BATCH-FORM-01)'
           additionalProperties:
             type: object
             additionalProperties: true
-            description: 'Publication (Publication; whole or a change against rev of this route). Open on purpose: a publication not in form — refused[member], not a refusal of the batch (P/08.3 N3 «держатель на POST /api/relay» step 2).'
+            description: 'Publication (Publication; whole or a change against rev of this route). Open on purpose: a publication not in form — refused[member], not a refusal of the batch (P/08.3 N3 «the holder on POST /api/relay» step 2).'
         knocks:
           type: object
           description: 'The writer (relay P/09.2 N1.4 knocks) writes a knock like this: the name — MemberName, the value — {publication:
@@ -2966,7 +3171,7 @@ components:
       properties:
         base_rev: {type: integer, minimum: 0}
         centre:
-          description: 'centre; "" or null removes the centre (P/08.3 N1.2 centre; added by the М11 reconciliation, T2)'
+          description: 'centre; "" or null removes the centre (P/08.3 N1.2 centre; added by the M11 reconciliation, T2)'
           anyOf:
             - {$ref: '#/components/schemas/MemberName'}
             - {const: ''}
@@ -3008,6 +3213,73 @@ components:
     Scope:
       type: string
       pattern: "^(?:\\*|unit:[a-z][a-z0-9_-]{0,31}/[^\u000A\u000D\u2028\u2029]+|labels:[^,]+(?:,[^,]+)*|folder:[0-9a-f]{32})$"
+    RoleSupervision:
+      type: object
+      description: 'Subsystem to supervisor role. POST omission/{} means none; PUT omission preserves, {} clears, a nonempty object replaces. Null is invalid. Self-reference is allowed; other roles require existence/version guards; builtin admin refuses changes.'
+      propertyNames: {$ref: '#/components/schemas/SubName'}
+      additionalProperties: {$ref: '#/components/schemas/PersonName'}
+    RolePutFields:
+      type: object
+      additionalProperties: false
+      description: 'Role fields of a batch put; same supervision and reference guards over the final snapshot as ordinary role POST/PUT. No name field: BatchWrite.name supplies it.'
+      properties:
+        title: {type: string, maxLength: 200}
+        comment: {type: string, maxLength: 2000}
+        assigned: {type: array, items: {$ref: '#/components/schemas/RoleAssigned'}}
+        supervision: {$ref: '#/components/schemas/RoleSupervision'}
+    RestoreBusyBody:
+      type: object
+      required: [error, detail]
+      additionalProperties: false
+      properties:
+        error: {const: refused}
+        detail: {const: 'a move is under way here already: seconds, not minutes'}
+    GlobalRoleLine:
+      type: object
+      required: [cap, scope, until]
+      additionalProperties: false
+      description: 'Whole-domain role line: labels and unit scopes are forbidden, as on a role grant line (P/08.4 N1.3a).'
+      properties:
+        cap: {$ref: '#/components/schemas/LineCap'}
+        sub: {$ref: '#/components/schemas/SubName'}
+        scope: {type: string, pattern: '^(?:\*|folder:[0-9a-f]{32})$'}
+        until: {type: number, minimum: 0}
+    DomainFolderName:
+      type: string
+      minLength: 1
+      x-max-bytes: 255
+      description: 'Nonempty, at most FOLDER_NAME_MAX (255) UTF-8 bytes; the ordinary procedure checks the byte bound (P/06.8 N1.1).'
+    DomainFolderView:
+      type: object
+      required: [id, name, parent, revision, index]
+      additionalProperties: false
+      properties:
+        id: {type: string, pattern: '^(?:[0-9a-f]{32})$'}
+        name: {$ref: '#/components/schemas/DomainFolderName'}
+        parent: {type: string, pattern: '^(?:(?:[0-9a-f]{32})?)$'}
+        revision: {type: integer, minimum: 0}
+        index: {type: string, pattern: '^(?:0|[1-9][0-9]{0,19})$'}
+    DomainMembershipView:
+      type: object
+      required: [folders, index]
+      additionalProperties: false
+      description: 'No synthetic revision. Empty folders remove the row; its confirmed absent index is the empty string.'
+      properties:
+        folders:
+          type: array
+          uniqueItems: true
+          items: {type: string, pattern: '^(?:[0-9a-f]{32})$'}
+        index: {type: string, pattern: '^(?:(?:0|[1-9][0-9]{0,19})?)$'}
+    IndexMoved:
+      type: object
+      required: [error, field, index]
+      additionalProperties: false
+      properties:
+        error: {const: revision moved}
+        field: {const: /index}
+        index: {type: string, pattern: '^(?:(?:0|[1-9][0-9]{0,19})?)$'}
+        detail: {type: string}
+        row: {$ref: '#/components/schemas/DomainMembershipView'}
     Line:
       type: object
       required: [subject, cap, scope, until, by]
@@ -3072,7 +3344,7 @@ components:
       properties:
         lines:
           type: array
-          items: {type: object, additionalProperties: true}
+          items: {$ref: '#/components/schemas/GlobalRoleLine'}
           description: Rights of the role over the whole domain (chapter 8.4 N1.3a lines).
         lines_at: {type: number}
         name: {$ref: '#/components/schemas/PersonName'}
@@ -3081,6 +3353,7 @@ components:
         assigned:
           type: array
           items: {$ref: '#/components/schemas/RoleAssigned'}
+        supervision: {$ref: '#/components/schemas/RoleSupervision'}
         at: {type: number}
         by: {type: string}
         revision: {type: integer, minimum: 0}
@@ -3310,7 +3583,7 @@ components:
     # --- chapter 8.8: term record, backup copy, stranded ---
     HolderRecord:
       type: object
-      description: 'Document domain/holder (P/08.8 N1.1); form — term record contract «Запись срока», types — function record step 1.'
+      description: 'Document domain/holder (P/08.8 N1.1); form — term record contract «The term record», types — function record step 1.'
       required: [domain, term, holder, url, at, issuer, kid, sig]
       additionalProperties: false
       properties:
@@ -3363,7 +3636,7 @@ components:
         key: {type: string}
         value:
           type: ['string', 'null']
-          description: 'The value of the element as stored; a secret changed — "<secret: differs>"; null — the element is absent in the state of the deposed one (deletion, and for a secret); "" — an empty value (P/08.8 N1.6 stranded; the decision of the Architect on cammeta-go М11-10 № 16).'
+          description: 'The value of the element as stored; a secret changed — "<secret: differs>"; null — the element is absent in the state of the deposed one (deletion, and for a secret); "" — an empty value (P/08.8 N1.6 stranded; the decision of the Architect on cammeta-go M11-10 № 16).'
     # --- chapter 8.9: shared document ---
     SharedDoc:
       type: object
@@ -3443,3 +3716,87 @@ components:
       properties:
         pointer: {$ref: '#/components/schemas/Pointer'}
         doc: {type: string}
+
+    DomainFolderError:
+      type: object
+      required:
+      - detail
+      - error
+      additionalProperties: false
+      properties:
+        detail:
+          type: string
+        error:
+          type: string
+          enum:
+          - Idempotency-Key required
+          - badkey
+          - not_json
+          - platform_field
+          - unknown field
+          - not_number
+          - type
+          - too_long
+          - enum
+          - bad_url
+          - blob
+          - labels
+          - required
+          - bad_id
+          - fixed
+          - If-Match is a unit revision
+          - a sealed value is not taken from outside — give the password itself
+          - sealing key required
+          - the body does not fill it in
+          - refused
+          - denied
+          - no such unit
+          - no such path
+          - exists
+          - conflict
+          - in flight
+          - row too large
+          - key reused
+          - store unavailable
+          - busy
+          - unavailable
+          - bad batch
+          - no anchor
+          - row moved
+          - batch too large
+          - no such row
+          - bad folder
+          - bad member
+          - too many members
+          - too many folders
+          - too deep
+          - no such folder
+          - no such parent
+          - parent gone
+          - folder moved
+          - parent moved
+          - no chain
+          - no membership
+          - folder gone
+          - leader moved
+          - bad operation
+          - too many steps
+          - too many operations
+          - no operations
+          - no such operation
+          - root busy
+          - operation done
+          - operation running
+          - nothing to retry
+        field:
+          $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField
+        fault:
+          type: string
+          enum:
+          - not_json
+          - not_number
+          - too_long
+          - bad_url
+          - must_match
+          - unique
+          - garbled

@@ -17,7 +17,7 @@ lock and the count `room` are [the presence lock contract](../../common/contract
 3–5, № 9): the lesson is the owner of both. The request of N1.5, the merge, the reaper, the submission and the console doors are [chapter 6.4](../../06-console/spec/06.4-console.norms.md) (P/06);
 repeat suppression and the execution of requests are [chapter 3.6](../../03-worker/spec/03.6-worker.norms.md). «P/0N» is a lesson of the
 module, «P/0N.K» is its chapter; «M10/N» without an address is a former lesson (the history of the move). Norm ids are `P/05-MM`;
-the map to former ids is [`id-map.tsv`](../../common/id-map.tsv).
+the map to former ids is `id-map.tsv` (historical record).
 
 ## N0 Vocabulary
 
@@ -1109,18 +1109,3 @@ An implementation conforms to the lesson when every norm is fulfilled; a norm id
 - [ ] **P/05-15** the resource ceilings (N1.1 «Resource ceilings»; part of M10/10-06): 64 MiB at the resource door — the refusal 413, not a truncation; `limit` of `/events` — sc. 02; a body copy of exactly 64 MiB — 204 and the read 200 — sc. 23, +1 byte — 413 without a write — checked by reading (413 before reading the body; the door is not obliged to drain beyond its volume — the client can get a break, P/01.1 N2.1 and item 9; C05-CEILING-PLUS-ONE-READING-01, -02); GET of an object larger than 64 MiB and `max_bytes` of the object store — checked by reading (the acceptance README, evidence outside TSV)
 - [ ] **P/05-16** the request to free space: the addressee — the workers of the subsystem on the server `<server>`, `<volume>` — the volume of the resource, `Σ freeing` — over the live heartbeats of this subsystem on this server for this volume (N1.4 `free_ask`, N3 `relieve`) — the vectors [`relieve`](../vectors/relieve/README.md): the answer `freeing: 0` and `freeing: N` (the VMS request freeing)
 
-## Correspondence to former lessons
-
-The lesson is moved from M10/8 (stage B): N1.1 (the paragraph «File names in shared trees» — to the event log contract), N1.2 without
-suppression (`line`, `bucket`, `class`, `journal`, `writer` and the paragraph about the id — to the event log contract; the index line —
-here), N1.3 without `merge`, N1.4 (`presence_lock` and `room` — to the presence lock contract), N1.6 without the form `answered`, the resource
-doors of N2, N3 «write an event» (without the suppression step; since the review of stage B 3–5, V1 — to the event log contract,
-the section «Writing a line»), «query (resource)», «resource pass», the resource rows of N4 and N5,
-items 1–3, 5, 6, 9 and part of item 8 of «Implementation decides» (here — items 1–7), the checklist items M10/8-01…04, 07, 09…12, 18 (here
-P/05-01…10). From M10/10: N1.5 `delete` (here N1.1 «Tombstones», M10/10-09 → P/05-11), N1.5 `mirror`, the ceiling rows of N1.4,
-the copy door rows of N2 and N4, sc. 10 of the acceptance (here N1.1 «Bodies at the resource»; parts M10/10-07 → P/05-14, -06 → P/05-15, -08 —
-in P/05-14) and the schema check at the resource start (N3, part of M10/10-01 → P/05-13). From M10/11: N1.4 `restore` (here N1.4 «Bucket restore», M10/11-09 → P/05-12) and
-`presence` (to the presence lock contract). M10/8 normed what `M10A_Platform/04-ObjectStore.md`,
-`12-Events.md`, `13-EventDatabase.md`, `14-Resource.md` and `M11_Cluster/06-…`, `07-…` told (the list —
-«Correspondence to former lessons» of M10/8); their parts about the resource, objects, events and the index are normed by this lesson, about requests and the merge — by M10/8 (now chapter P/06.4). By the move of lesson 6: from the acceptance of M10/11 — sc. 16 (the presence
-lock; the Architect's decision on V2 of the plan of the move of lesson 6).

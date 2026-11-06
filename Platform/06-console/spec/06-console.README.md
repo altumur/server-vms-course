@@ -97,7 +97,7 @@ the related checks. If the norm, the contract or the expectation diverge — rep
 the origin relative to the original slice and the proposed decision; the decision is reflected in the norm, the contract, the instructions and
 the affected acceptance. Do not carry a difference of the implementation into the canon silently; an arbitrary refusal does not replace a missing norm, do not add a new
 mechanism only for the sake of an unsupported case. Record a change of the acceptance or a recurring error of its interpretation
-in `journal/corrections-<K>.tsv` of the chapter; do not leave a new rule only in the instructions.
+in `corrections-<K>.tsv` (historical correction record) of the chapter; do not leave a new rule only in the instructions.
 
 ## What to create
 

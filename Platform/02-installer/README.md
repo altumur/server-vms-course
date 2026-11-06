@@ -27,6 +27,5 @@ acceptance/1/                        acceptance of chapter 2.1 (README.md, verdi
 acceptance/2/, acceptance/3/         acceptance of chapters 2.2, 2.3 (README.md, puts.tsv, puts/)
 acceptance/5/                        acceptance of chapter 2.5 (README.md, scenarios.tsv, variants/)
 acceptance/1/seams.tsv, acceptance/4/seams.tsv  supplementary core/command/poll seams for kit stagetests
-journal/corrections-<K>.tsv          the log of AI corrections of chapter K — history, not an input; not in the export
 ru/                                  for people, not in the export — the lecture ru/02-installer.md, translations of the English text by the same path
 ```

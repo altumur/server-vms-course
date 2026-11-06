@@ -1,14 +1,14 @@
-# Lessons of module «Платформа»: number is the owner's address (P/NN), directory is `NN-<процесс>`; process is the lesson process name (role and
+# Lessons of module Platform: number is the owner's address (P/NN), directory is `NN-<process>`; process is the lesson process name (role and
 # w2c-run.sh runner argument), unit is its unit in P/02.4 N1.1 («-» means none); delta_base is the course SHA from which the lesson is edited
 # by deltas (ADR-0122 addendum (1) item 7); «-» follows ADR-0114. Read by check_spec.
 # lesson	dir	title	process	unit	delta_base
-01	01-store	Хранилище	configstore	configstore.service	725653954
-02	02-installer	Манифест и установщик	w2cctl	-	-
-03	03-worker	Воркер (SDK)	<sub>worker	<dep>-<sub>worker@.service	-
-04	04-controller	Контроллер	<sub>controller	w2c-controller@.service	-
-05	05-resource	Ресурс	resource	w2c-resource.service	-
-06	06-console	Консоль кластера	console	w2c-console.service	-
-07	07-console-module	Модуль консоли	-	-	-
-08	08-domain	Процесс domain	domain	w2c-domain.service	-
-09	09-agent	Агент (9.1) и режим ретранслятора (9.2)	domainagent	w2c-domainagent.service	-
-10	10-domain-console	Консоль домена	domainconsole	w2c-domainconsole.service	-
+01	01-store	Store	configstore	configstore.service	725653954
+02	02-installer	Manifest and installer	w2cctl	-	-
+03	03-worker	Worker (SDK)	<sub>worker	<dep>-<sub>worker@.service	-
+04	04-controller	Controller	<sub>controller	w2c-controller@.service	-
+05	05-resource	Resource	resource	w2c-resource.service	-
+06	06-console	Cluster console	console	w2c-console.service	-
+07	07-console-module	Console module	-	-	-
+08	08-domain	Domain process	domain	w2c-domain.service	-
+09	09-agent	Agent (9.1) and relay mode (9.2)	domainagent	w2c-domainagent.service	-
+10	10-domain-console	Domain console	domainconsole	w2c-domainconsole.service	-

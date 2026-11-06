@@ -11,7 +11,7 @@ one signature is checked by three processes (the review analysis of stage A 8–
 The rows were transferred from the inputs of the command `agent-sig` of the acceptance of
 M11/3 (`inputs/agent-sig-*.json`, sc. 10) without
 a change of bytes; `case` is the name of the input file. The scenario M11/03 sc. 10 and its inputs were removed by the move of lesson 8 (ADR-0083 addendum (14)
-item 17; the log is the acceptance of chapter P/08.3 (`Platform/08-domain/journal/corrections-3.tsv`, a log, not in the export)): the table is the only source of these cases.
+item 17; the log is the acceptance of chapter P/08.3 (`corrections-3.tsv` (historical correction record), a log, not in the export)): the table is the only source of these cases.
 
 ## Run
 

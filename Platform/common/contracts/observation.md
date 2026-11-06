@@ -219,16 +219,3 @@ contender: a contender mark <sub>/contenders/<name>/<box> (contenders.schema.jso
 
 The packages [`fresh-age`](../vectors/fresh-age/README.md) (the freshness bound: age → fresh), [`hold-state`](../vectors/hold-state/README.md) (an effective hold of a place; C06-WHERE-PLACE-HOLD-33-01), [`resource-state`](../vectors/resource-state/README.md) (the resource state by the history of observation) and [`heartbeat-read`](../vectors/heartbeat-read/README.md) (reading a heartbeat by the form and the outcomes: for a resource — correct and incorrect `retention_*`, the outcome of a field and of the whole object, C04-DEP-OBS-HEARTBEAT-01; for a worker — `worker.tsv`: the whole object, an element of `status[]` by readers, `worker` ≠ the name of the key, the outcomes of fields, C08-HEARTBEAT-READER-99-VECTORS), [`contender-fresh`](../vectors/contender-fresh/README.md) (the freshness bound of a contender mark: age → fresh; C06-CONTENDER-FRESH-33-01). (ADR-0083 addendum (32) item 2)
 
-## Correspondence to former lessons
-
-From P/04 N1.4 (the move of lesson 6, review of stage A 6–7, № 2): the block `resource_state` (here «Resource state») and
-the meaning of the freshness `LOST_AFTER` (here «Freshness»; the value of the constant is here since layout audit A-01, its role in the terms of the judge — P/04 N1.4); from P/04 N1.4 — ALIVE_EVERY (A-10); from P/03.2 N3 and P/04 N3 — «Server decommissioned» (A-18); from P/08.1 N1.3 — `member_state` (A-15); from P/04 N1.5 — the rule
-of the reader of the decision (the paragraphs «An active intent is an accepted common decision…», «An unreadable turn/intent row…» in the part of the readers);
-from M10/9 N3 «`/where/<id>`» — the choice of target/reason at an active intent
-(chapter 6.5); from P/03.2 N1.4 — the definition of the age of the observed version (by reference); from P/03.2 N1.2, N1.4a — `CONTENDER_FRESH` and the freshness
-of a contender mark (C06-CONTENDER-FRESH-33-01). Parts of norms by `note` of
-[id-map](../id-map.tsv): P/04-04 (life by the change of the heartbeat, the first look), P/04-10 (`resource_state`), P/04-01 (the double
-read of intent), P/06.5-04 (`ServerRow.resource`, `WorkerRow.state`), P/06.5-05 (`/where`), P/06.6-02 (server decommissioning),
-P/06.6-04 (the live processes of `/schema`). The freshness bound — the vector [`fresh-age`](../vectors/fresh-age/README.md) (review
-of stage B 6–7, № 20); the age and the resource state — by the history of observation on the clock of the observer: the acceptance steps of P/04,
-P/06.5, P/06.6 and reading.

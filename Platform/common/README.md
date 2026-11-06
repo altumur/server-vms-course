@@ -34,9 +34,6 @@ acceptance/system/         end-to-end scenarios of several micromodules
 acceptance/pass/           the pass of the second kind with the stand-in worker of the runner
 acceptance/ops/            the stand of group operations door.pass.operations (ADR-0095)
 acceptance/tls/            the TLS stand and the fourth cluster — acceptance data of lessons 8–10
-journal/corrections-<K>.tsv  the correction log of the acceptance K (system, pass, ops) — history, not an input; not in the export
-id-map.tsv                 the old id of a norm, scenario, step, vector → the new one
-manifest-rename.tsv        the transition table of ADR-0086: names with the word spec → manifest
 ru/                        for people, not in the export — translations of the English text by the same path
 ```
 

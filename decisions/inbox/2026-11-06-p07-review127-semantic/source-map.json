@@ -1,0 +1,32 @@
+{
+  "base": "866c71db99a81ce6c1cad9e37b7951cc384c16e0",
+  "changes": [
+    {
+      "path": "Platform/07-console-module/spec/07-console-module.norms.md",
+      "before_sha256": "210bf493cf859a0d4b77a387425c2677b0443bb8ac88f1331c5a35833ed35259",
+      "after_sha256": "b3208e76c1e825dc16ee533adf437440218a02a40fb047766bd2a4bfde1a6eab"
+    },
+    {
+      "path": "Platform/07-console-module/ru/spec/07-console-module.norms.md",
+      "before_sha256": "dafe56253e028b7a3b8d6204ee32e88fbc90c42bb2d9bb9ce2d96c592c1016ae",
+      "after_sha256": "b6b81ada50d3fea80852003efd644198ebceba0a1bc59677ca8c6bd39aab98de"
+    },
+    {
+      "path": "CONSOLE-MODULE.md",
+      "before_sha256": "65b4f63dbabea508f22bc0d4c1bc0f6d78536a5758f4d5b6c364306885c46a05",
+      "after_sha256": "f94efb5c4caf445400eb163e8772ccc38f50a46bb36adc8f830e7d1facc9ea74"
+    },
+    {
+      "path": "ru/CONSOLE-MODULE.md",
+      "before_sha256": "78f3662a81e24976efee2524794b8e97d4fda0d6cb476b42f7b67a5c9be71979",
+      "after_sha256": "7ace9db0b555caa6fd7bcfe6e1c74e2d7be30e19cf726663d75049c017d600a0"
+    }
+  ],
+  "readiness_ids_preserved": 8,
+  "mirror_pairs_passed": 2,
+  "review": "Accepted ADR-0127 P/07 C1-C5/C7/M1/M2; C6 proposal-only",
+  "limits": [
+    "Source criteria and published-byte-owner debt, not module execution.",
+    "No Source assets, closed API, module profile, commands, ports or classes changed."
+  ]
+}
