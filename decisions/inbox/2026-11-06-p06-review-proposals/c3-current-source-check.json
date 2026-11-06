@@ -1,0 +1,394 @@
+{
+  "scope": "9 inactive proposed witnesses on unchanged c81 Python source validator; not product loader/SUT or new rules",
+  "results": [
+    {
+      "case": "p06-c3-numeric-retire",
+      "current_c81_source_judge": {
+        "verdict": "ok",
+        "layer": null,
+        "paths": [],
+        "rows": [],
+        "tree": {
+          "name": "probe",
+          "unit": {
+            "rows": "units",
+            "id": "numeric",
+            "fields": {
+              "name": {
+                "type": "string",
+                "required": true
+              },
+              "until": {
+                "type": "float"
+              },
+              "retired": {
+                "type": "bool"
+              }
+            }
+          },
+          "placement": {
+            "capacity": {
+              "default": 1
+            },
+            "retire_when": {
+              "field": "retired",
+              "in": [
+                true
+              ],
+              "delete_after": 1
+            }
+          },
+          "worker": {
+            "exec": "/usr/lib/probe/worker"
+          }
+        }
+      },
+      "proposed_expect_after_approval": "refused:relations"
+    },
+    {
+      "case": "p06-c3-numeric-ends",
+      "current_c81_source_judge": {
+        "verdict": "ok",
+        "layer": null,
+        "paths": [],
+        "rows": [],
+        "tree": {
+          "name": "probe",
+          "unit": {
+            "rows": "units",
+            "id": "numeric",
+            "fields": {
+              "name": {
+                "type": "string",
+                "required": true
+              },
+              "until": {
+                "type": "float"
+              },
+              "retired": {
+                "type": "bool"
+              }
+            }
+          },
+          "placement": {
+            "capacity": {
+              "default": 1
+            },
+            "ends": {
+              "field": "until",
+              "never": 0
+            }
+          },
+          "worker": {
+            "exec": "/usr/lib/probe/worker"
+          }
+        }
+      },
+      "proposed_expect_after_approval": "refused:relations"
+    },
+    {
+      "case": "p06-c3-numeric-delete",
+      "current_c81_source_judge": {
+        "verdict": "ok",
+        "layer": null,
+        "paths": [],
+        "rows": [],
+        "tree": {
+          "name": "probe",
+          "unit": {
+            "rows": "units",
+            "id": "numeric",
+            "fields": {
+              "name": {
+                "type": "string",
+                "required": true
+              },
+              "until": {
+                "type": "float"
+              },
+              "retired": {
+                "type": "bool"
+              }
+            }
+          },
+          "placement": {
+            "capacity": {
+              "default": 1
+            }
+          },
+          "worker": {
+            "exec": "/usr/lib/probe/worker",
+            "deletes": [
+              "units"
+            ]
+          }
+        }
+      },
+      "proposed_expect_after_approval": "refused:relations"
+    },
+    {
+      "case": "p06-c3-fixed-ends",
+      "current_c81_source_judge": {
+        "verdict": "ok",
+        "layer": null,
+        "paths": [],
+        "rows": [],
+        "tree": {
+          "name": "probe",
+          "unit": {
+            "rows": "units",
+            "id": "numeric",
+            "fields": {
+              "name": {
+                "type": "string",
+                "required": true
+              },
+              "until": {
+                "type": "float"
+              },
+              "retired": {
+                "type": "bool"
+              },
+              "pin": {
+                "type": "string",
+                "fixed": true
+              }
+            }
+          },
+          "placement": {
+            "capacity": {
+              "default": 1
+            },
+            "ends": {
+              "field": "until",
+              "never": 0
+            }
+          },
+          "worker": {
+            "exec": "/usr/lib/probe/worker"
+          }
+        }
+      },
+      "proposed_expect_after_approval": "ok"
+    },
+    {
+      "case": "p06-c3-fixed-retire",
+      "current_c81_source_judge": {
+        "verdict": "ok",
+        "layer": null,
+        "paths": [],
+        "rows": [],
+        "tree": {
+          "name": "probe",
+          "unit": {
+            "rows": "units",
+            "id": "numeric",
+            "fields": {
+              "name": {
+                "type": "string",
+                "required": true
+              },
+              "until": {
+                "type": "float"
+              },
+              "retired": {
+                "type": "bool"
+              },
+              "pin": {
+                "type": "string",
+                "fixed": true
+              }
+            }
+          },
+          "placement": {
+            "capacity": {
+              "default": 1
+            },
+            "retire_when": {
+              "field": "retired",
+              "in": [
+                true
+              ],
+              "delete_after": 1
+            }
+          },
+          "worker": {
+            "exec": "/usr/lib/probe/worker"
+          }
+        }
+      },
+      "proposed_expect_after_approval": "ok"
+    },
+    {
+      "case": "p06-c3-fixed-delete",
+      "current_c81_source_judge": {
+        "verdict": "ok",
+        "layer": null,
+        "paths": [],
+        "rows": [],
+        "tree": {
+          "name": "probe",
+          "unit": {
+            "rows": "units",
+            "id": "numeric",
+            "fields": {
+              "name": {
+                "type": "string",
+                "required": true
+              },
+              "until": {
+                "type": "float"
+              },
+              "retired": {
+                "type": "bool"
+              },
+              "pin": {
+                "type": "string",
+                "fixed": true
+              }
+            }
+          },
+          "placement": {
+            "capacity": {
+              "default": 1
+            }
+          },
+          "worker": {
+            "exec": "/usr/lib/probe/worker",
+            "deletes": [
+              "units"
+            ]
+          }
+        }
+      },
+      "proposed_expect_after_approval": "refused:relations"
+    },
+    {
+      "case": "p06-c3-named-retire",
+      "current_c81_source_judge": {
+        "verdict": "ok",
+        "layer": null,
+        "paths": [],
+        "rows": [],
+        "tree": {
+          "name": "probe",
+          "unit": {
+            "rows": "units",
+            "id": "name",
+            "fields": {
+              "name": {
+                "type": "string",
+                "required": true
+              },
+              "until": {
+                "type": "float"
+              },
+              "retired": {
+                "type": "bool"
+              }
+            }
+          },
+          "placement": {
+            "capacity": {
+              "default": 1
+            },
+            "retire_when": {
+              "field": "retired",
+              "in": [
+                true
+              ],
+              "delete_after": 1
+            }
+          },
+          "worker": {
+            "exec": "/usr/lib/probe/worker"
+          }
+        }
+      },
+      "proposed_expect_after_approval": "ok"
+    },
+    {
+      "case": "p06-c3-named-ends",
+      "current_c81_source_judge": {
+        "verdict": "ok",
+        "layer": null,
+        "paths": [],
+        "rows": [],
+        "tree": {
+          "name": "probe",
+          "unit": {
+            "rows": "units",
+            "id": "name",
+            "fields": {
+              "name": {
+                "type": "string",
+                "required": true
+              },
+              "until": {
+                "type": "float"
+              },
+              "retired": {
+                "type": "bool"
+              }
+            }
+          },
+          "placement": {
+            "capacity": {
+              "default": 1
+            },
+            "ends": {
+              "field": "until",
+              "never": 0
+            }
+          },
+          "worker": {
+            "exec": "/usr/lib/probe/worker"
+          }
+        }
+      },
+      "proposed_expect_after_approval": "ok"
+    },
+    {
+      "case": "p06-c3-named-delete",
+      "current_c81_source_judge": {
+        "verdict": "ok",
+        "layer": null,
+        "paths": [],
+        "rows": [],
+        "tree": {
+          "name": "probe",
+          "unit": {
+            "rows": "units",
+            "id": "name",
+            "fields": {
+              "name": {
+                "type": "string",
+                "required": true
+              },
+              "until": {
+                "type": "float"
+              },
+              "retired": {
+                "type": "bool"
+              }
+            }
+          },
+          "placement": {
+            "capacity": {
+              "default": 1
+            }
+          },
+          "worker": {
+            "exec": "/usr/lib/probe/worker",
+            "deletes": [
+              "units"
+            ]
+          }
+        }
+      },
+      "proposed_expect_after_approval": "ok"
+    }
+  ],
+  "product_native_runs": 0,
+  "SUT_runs": 0
+}

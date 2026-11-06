@@ -3,21 +3,21 @@
 This English text is the source; the Russian translation `ru/acceptance/4/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly — the М11 dictionary of the acceptance README of
-М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
-[`08.4-domain.norms.md`](../../spec/08.4-domain.norms.md) N5. Scenarios 01, 02, 04, 08, 09, 10 were moved from the acceptance of М11/09
+the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly — the M11 dictionary of the acceptance README of
+M11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
+[`08.4-domain.norms.md`](../../spec/08.4-domain.norms.md) N5. Scenarios 01, 02, 04, 08, 09, 10 were moved from the acceptance of M11/09
 (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones (there is one source, the numbers do not collide).
 In total 33 scenarios / 498 steps (sc. 23 — versions and the replay memory, ADR-0094 B3, B4; sc. 21, 22 — the feed `GET /changes` under a grant, ADR-0094 B2; sc. 24–37 — the increment of rights ADR-0097–ADR-0100, **there is no dry run by an implementation**, and the steps of sc. 02, 17 are rewritten for the role `admin`; sc. 13–15 — the coverage audit of P/08, audit-kimi 1e9929d51; sc. 16–19 — the coverage audit of P/08, the second pass of Gemini; sc. 12 `pass-need` — 9 steps, `need` of the route `door.pass` at the cluster console, C06-PASS-NEED-51-01; sc. 11 `events-view` — 10 steps, the visibility of `GET /events` under a narrow grant, C06-EVENTS-VIEW-33-01; steps 01/22–24 — the White_Space boundary of a name, the review analysis of stage B 8–10, № 18; steps 01/25–26 — `GET /drain` with a narrow grant — 403: the drain requires `view` on `*`, C06-DRAIN-VISIBILITY-33-01; steps 01/27–33 — `POST /marks` without the grant `edit` — 403 before the body, a narrow `edit unit:` — one's own unit 2xx, a foreign one 403, C06-BODYEDIT-SCOPE-33-01).
 
 The function `may` without a stand is the vectors [`may`](../../../common/vectors/may/README.md) (106 rows; the owner is chapter 8.4).
-The scenario М11/09 07 (`07-may`, 24 steps) is the same cases, it is not moved (the Architect's decision 2026-10-20 on the plans
-8–10, item 1; the row of `journal/corrections-4.tsv`). The other scenarios of М11/09 are at the neighbours: 03 (`break-glass`) and 06 (`domain-keys`) —
+The scenario M11/09 07 (`07-may`, 24 steps) is the same cases, it is not moved (the Architect's decision 2026-10-20 on the plans
+8–10, item 1; the row of `corrections-4.tsv` (historical correction record)). The other scenarios of M11/09 are at the neighbours: 03 (`break-glass`) and 06 (`domain-keys`) —
 [the acceptance of chapter 6.7](../../../06-console/acceptance/7/README.md) (14, 06); 05 (`names-index`) — [chapter 8.5](../5/README.md) (number 11).
 
 ## Stand
 
 The preparation is as the acceptance of [chapter 8.5](../5/README.md) (formerly the acceptance README of
-М11/05): the catalogue `testsub` and `testsub2`, the counter
+M11/05): the catalogue `testsub` and `testsub2`, the counter
 `c1-<cluster>` and the shelf `sh1` on each cluster, the training writer of contributions. The doors `holder`, `member`, `signer` and the directives
 `@domain`, `@person`, `@stop agent` — the section «Domain stand» of the common acceptance README.
 
@@ -30,7 +30,7 @@ The preparation is as the acceptance of [chapter 8.5](../5/README.md) (formerly 
 - Scenario 30 step 17 writes `domain/roles/admin` past the door (an unreadable row, `name` not by the form), step 19 restores it.
 - Scenarios 01, 02 write the grants rows as a whole and therefore repeat the row of `root`.
 - Scenario 01 step 12 — `until` with seven fraction digits at the input is stored rounded to thousandths: 4102444800.1234565 →
-  4102444800.123 (N1.3 until; the Architect's decision on the М11 reconciliation, P8).
+  4102444800.123 (N1.3 until; the Architect's decision on the M11 reconciliation, P8).
 - Scenario 01 steps 22–24 — the boundary of white space in the name of a person (N1.1 `name`, the property White_Space; the edit `f31941fb2`):
   again on behalf of `root` (`@person root …`), the name `a\u0085b` (U+0085 is white space) — 400 `bad name`, as `a|b` of steps 7–8;
   `a\ufeffb` (U+FEFF is not white space) — by the other rules, 201. In `request` and `expect` the character is written by JSON escaping
@@ -52,13 +52,13 @@ The preparation is as the acceptance of [chapter 8.5](../5/README.md) (formerly 
   `domain/disabled` is still `["ann"]`, the grant of `ann` is not removed (the reconciliation of subjects without a name: the row exists, but is unreadable —
   the person exists, C08-GRANTS-ORPHAN-01). `DELETE` deletes the unreadable row too, removes the grant (`grants_changed: ["m1"]`);
   then `domain/disabled` is `[]` (the reconciliation by the flags of the rows of people), the login of `ann` — an ordinary 401. The norm does not name an edit `PUT` of an unreadable
-  row (N3 «people door» step 7: «нет — 404» against the rule «Unreadable row») — there is no step.
+  row (N3 «people door» step 7: «absent — 404» against the rule «Unreadable row») — there is no step.
 - Scenario 14 — the common ceiling (N1.10 `ceiling`, the contract of the gate and the forwarding «Attempt limit»): the names `n1`–`n4` with
   five failures each (the key is the pair (address, name): the fifth failure of each key still passes, `per_address` does not fire) — 20
-  refusals of all keys; a fresh name `n5` — the first attempt passes (401: «не чаще одной попытки в 60 с» does not yet act for a key without an attempt),
+  refusals of all keys; a fresh name `n5` — the first attempt passes (401: «no more than one attempt in 60 s» does not yet act for a key without an attempt),
   the second right after it — 429 `too many attempts`. `Retry-After` is not compared in the TSV (the number of seconds is not
   predicted). The steps are logins in a row, the ceiling window of 60 s does not expire.
-- Scenario 15 — the cluster in the grants path byte for byte (N1.3, the М11 reconciliation, P13): `PUT /domain/grants/m%31` — 400 `bad name`
+- Scenario 15 — the cluster in the grants path byte for byte (N1.3, the M11 reconciliation, P13): `PUT /domain/grants/m%31` — 400 `bad name`
   (`%` is not in the grammar of a member), the row `m1` is the former one (the rejected edit has `view`), there is no row `m%31`.
 
 An equal answer time to an unknown and a wrong one, the log and the limit band by the address of the client from the domain console (not by its
@@ -109,14 +109,14 @@ The format is the dictionary of the «Stand» and the section «Domain stand» o
 | 37 | `versions-groups-roles` | 20 | the versions and the memory of groups, roles, a batch; there is no dry run |
 
 Sc. 09 — the deletion mark `domain/deleting/<name>`: the mark is written directly into the holder's store, the pass reconciliation (chapter 8.4 N3,
-«Обрыв шага 9») removes the grant rows by it and deletes it; a break of `DELETE` after the row of the person — by reading (the stand debt
-item 3, ADR-0083 addendum (9)). Sc. 10 (the М11 reconciliation, P1, P3) — a mark of any form: `a|b` (a name not by the grammar) and `aa` with
+«Interrupted step 9») removes the grant rows by it and deletes it; a break of `DELETE` after the row of the person — by reading (the stand debt
+item 3, ADR-0083 addendum (9)). Sc. 10 (the M11 reconciliation, P1, P3) — a mark of any form: `a|b` (a name not by the grammar) and `aa` with
 non-empty `items` are removed by the pass, the pass does not stall; the mark `zz` without a person — an edit of a grant with the line `zz` 409
 `being deleted` and `POST` 409 `exists` before the checks of names. Steps 7–8 go right after the writing of the mark: the window is up to the nearest
 pass (3 s), the reconciliation removes the mark not earlier; after the removal (step 9) the name is free — 201.
 
 Sc. 16–19 (the coverage audit of P/08, the second pass of Gemini, the draft G04 `e32df6f8b`, rewritten):
-- sc. 16 — `until` of a grant line by value (N1.3 `lines`, the М11 reconciliation, P7, P9): a line without `until` and with `until: 0.0` are one
+- sc. 16 — `until` of a grant line by value (N1.3 `lines`, the M11 reconciliation, P7, P9): a line without `until` and with `until: 0.0` are one
   line, a repeat — 400 `bad line`; `4102444800.0011` and `4102444800.0014` round to thousandths into `4102444800.001` — a repeat,
   400; a positive `0.0001` that would round into 0 is written `0.001` (C08-UNTIL-REWRITE-01); the lines of the answer are by
   `subject` (`ann` before `root`).
@@ -138,12 +138,6 @@ Sc. 21, 22 — the feed `GET /changes` of the member console under a narrow gran
 Sc. 23 — the versions and the replay memory of the doors of people ([chapter 8.0](../../spec/08.0-domain.norms.md) N1.9). The `revision` of the first administrator is 1: the row is written by `first-admin`. Step 11 repeats step 10 with the former `If-Match`: the answer from memory, `revision` 3 in the row did not move (step 13). Step 12 — another password under the same key: the fingerprint sees the password.
 Step 14: `<key>` — `sha256("root" ‖ 0x00 ‖ "PUT" ‖ 0x00 ‖ "/domain/users/ann" ‖ 0x00 ‖ "u-r1")`; neither the fingerprint nor the body carries the password. Steps 16, 19 — a repeat of a creation and of a deletion: without the memory these are 409 `exists` and 404. Step 20 goes with a new key: 404. For the grants `$g` is the `revision` of the row `m1` after the preparation `@start domain`.
 Step 25: there is no row `c9`, the condition — 412 with `revision: 0`. The break-glass account of `m1` is set here for the first time, therefore `revision` 1.
-
-## `journal/corrections-4.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The log of the acceptance of М11/09 is moved here
-as a whole, as it is (the paths of the old rows — `09/…` and the names of the scenarios of М11/09 — are resolved by [id-map](../../../common/id-map.tsv));
-the rows of 2026-10-20 are the move, the removed scenario 07 and the edit of the input `may-24` of the package `common/vectors/may`.
 
 ## Kit seams
 

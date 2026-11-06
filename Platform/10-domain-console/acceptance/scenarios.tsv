@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Acceptance P/10: stand hold, m1, m2 — domain console: alarms with a silent member (sc. 02 from М11/11) and holder page (sc. 05 from М11/08); scenario numbers/steps unchanged (stage B); 06–09 — P/10 coverage audit: view-door refusals, 502 forwarding after process domain break/silence; 10–16 — second Gemini pass: HEAD/row-door parameters, unreadable read-door/gate rows, alarm-window grammar, reported mark, ./.. segments, X-User; 17 — read-door row version (ADR-0094 B4); 18, 19 — kept-row and relays doors. Format: README.
+# Acceptance P/10: stand hold, m1, m2 — domain console: alarms with a silent member (sc. 02 from M11/11) and holder page (sc. 05 from M11/08); scenario numbers/steps unchanged (stage B); 06–09 — P/10 coverage audit: view-door refusals, 502 forwarding after process domain break/silence; 10–16 — second Gemini pass: HEAD/row-door parameters, unreadable read-door/gate rows, alarm-window grammar, reported mark, ./.. segments, X-User; 17 — read-door row version (ADR-0094 B4); 18, 19 — kept-row and relays doors. Format: README.
 02-silent-member	1	@domain	ok
 02-silent-member	2	@stop agent m2	ok
 02-silent-member	3	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 4}}}	200 {"rev": 1}
@@ -13,7 +13,7 @@ scenario	step	request	expect
 02-silent-member	11	member m1 console @header X-Agent-Signature: 1760000000000.AAAA GET /events?class=alarm	401
 05-the-holders-page	1	@domain	ok
 05-the-holders-page	2	holder GET /	200 @header Content-Type: ~text/html
-05-the-holders-page	3	holder GET /platform/console.js?v=1	200 @file Source/w2cplatform/console.js
+05-the-holders-page	3	holder GET /platform/console.js?v=1	200 @file Platform/07-console-module/module/console.js
 05-the-holders-page	4	holder GET /manifest	200 {"name": "", "rows": null}
 05-the-holders-page	5	holder GET /mounts	200 {"root": "", "mounts": {"testsub": "@any"}}
 05-the-holders-page	6	holder GET /session	200 {"open": false, "user": "root", "login_url": "/api/login", "server_time": "@time", "timezone": "UTC"}

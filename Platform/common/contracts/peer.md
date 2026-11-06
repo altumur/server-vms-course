@@ -31,7 +31,7 @@ of lesson M11/8 (N1.6 — P/06.7 N1.7 and the lines of this contract, N3 — P/0
 [the role certificate contract](role-certificate.md) `sig`. The form of the function is the input of a row of the package [`peer`](../vectors/peer/README.md) (formerly the command `peer` of the acceptance of M11/8 N5):
 `{chain: [<PEM>…], fingerprints: [<hex>…], role, host, now}` → `{result: ok}` | `{result: refused, reason}`.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Client and first contact
 
@@ -94,8 +94,3 @@ From M11/8 N4: the words of `peer`: `ip_address`, `bad_chain`, `foreign_ca`, `ex
 
 The package [`peer`](../vectors/peer/README.md): 31 rows — 25 inputs of the command `peer` of the acceptance of M11/8 (sc. 06) without a change of values, row 27 — a rearranged chain → `bad_chain` (step 4; analysis of the review of stage B 8–10, № 10) and rows 28–32 of the coverage audit of P/09 (second pass): `127.1` — a name, `::1` — `ip_address`, an empty chain before empty fingerprints — `bad_chain`, a trailing dot of host — `wrong_name`, an input without fields — `@exit 2`.
 
-## Correspondence to former lessons
-
-From M11/8 (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 2; analysis of the review of stage A 8–10, № 7): the lines `client` and
-`first` of N1.6 (here «Client and first contact»; in M11/8 — a pointer), N3 «peer» whole (here «The function `peer`») and the phrase of N4
-on the words of `peer` (here «Refusal words»). The norm M11/8-09 (`peer` and the first contact of a CA) — by `note` of [id-map](../id-map.tsv).

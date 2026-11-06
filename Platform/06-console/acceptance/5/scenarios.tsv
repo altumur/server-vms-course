@@ -1,14 +1,14 @@
 scenario	step	request	expect
-# Acceptance P/06.5: testsub (root) and testsub2 (mounted) console observations without domain; sc. 01, 02, 04–12 from М10/09, 13–16 from М10/11, 03 and 17 from М10/10 (stage B; stage B 6–7 review analysis, № 22). Format: README.
+# Acceptance P/06.5: testsub (root) and testsub2 (mounted) console observations without domain; sc. 01, 02, 04–12 from M10/09, 13–16 from M10/11, 03 and 17 from M10/10 (stage B; stage B 6–7 review analysis, № 22). Format: README.
 01-page-and-module	1	GET /	200 ~PlatformConsole.mount
 01-page-and-module	2	GET /	200 @header Content-Security-Policy: ~script-src
 01-page-and-module	3	GET /platform/console.js?v=1	200 ~PlatformConsole
 01-page-and-module	4	GET /platform/console.css?v=1	200
 01-page-and-module	5	GET /platform/console.js?v=2	404 {"error": "no such version"}
 01-page-and-module	6	GET /healthz	200 {"ok": true}
-01-page-and-module	7	GET /	200 @file Source/w2cplatform/console.html
-01-page-and-module	8	GET /platform/console.js?v=1	200 @file Source/w2cplatform/console.js
-01-page-and-module	9	GET /platform/console.css?v=1	200 @file Source/w2cplatform/console.css
+01-page-and-module	7	GET /	200 @file Platform/07-console-module/module/console.html
+01-page-and-module	8	GET /platform/console.js?v=1	200 @file Platform/07-console-module/module/console.js
+01-page-and-module	9	GET /platform/console.css?v=1	200 @file Platform/07-console-module/module/console.css
 01-page-and-module	10	GET /platform/console.js?v=%31	200 ~PlatformConsole
 01-page-and-module	11	GET /platform/console.js?%76=1	200 ~PlatformConsole
 02-manifest-and-mounts	1	@start resource	ok
@@ -163,7 +163,7 @@ scenario	step	request	expect
 22-numeric-id	6	PUT /probe-x/probes/01 {"n": 1}	400 {"error": "badkey"}
 22-numeric-id	7	PUT /probe-x/probes/%32 {"n": 1}	200 {"id": "2", "n": 1, "revision": 2}
 22-numeric-id	8	PUT /probe-x/probes/1 {"n": 1}	404 {"error": "no such unit"}
-# 23-weight-field (P/06 coverage audit, G09 item 2; P/06.1 N3 «создать» step 4, N4): probe-x cost materializes default 1; POST/PUT of 0 or -1 gives 400 «cost must be at least 1» without fault; string or boolean gives not_number; refused PUT leaves the row unchanged.
+# 23-weight-field (P/06 coverage audit, G09 item 2; P/06.1 N3 «create» step 4, N4): probe-x cost materializes default 1; POST/PUT of 0 or -1 gives 400 «cost must be at least 1» without fault; string or boolean gives not_number; refused PUT leaves the row unchanged.
 23-weight-field	1	POST /probe-x/probes {}	201 {"id": "1", "cost": 1, "revision": 1}
 23-weight-field	2	POST /probe-x/probes {"cost": 0}	400 {"error": "type", "field": "/cost", "detail": "~cost must be at least 1", "fault": "@absent"}
 23-weight-field	3	POST /probe-x/probes {"cost": -1}	400 {"error": "type", "field": "/cost", "detail": "~cost must be at least 1", "fault": "@absent"}
@@ -186,7 +186,7 @@ scenario	step	request	expect
 24-where-door	11	GET /testsub2/where/ta	200 {"worker": "t-1", "door": "@absent"}
 24-where-door	12	store GET /v1/get?key=door/keys	200 {"index": "$kw"}
 24-where-door	13	@until 20 GET /events?kind=door.keys_conflict	200 {"events": [{"kind": "door.keys_conflict", "kid": "$kid"}]}
-# 25-slot-and-contenders (P/06 coverage audit, second Gemini pass, G08; N2 «Выдачи», N3 «/servers» «Соперники»): slot released "taking" gives released false and slot_taking; malformed slot gives slot_garbled, slot_until null, no released; contender mark under w-1 with another name gives name_conflict marked unreadable; search mark «-» is not a contender; name_conflicts 1.
+# 25-slot-and-contenders (P/06 coverage audit, second Gemini pass, G08; N2 «Issuance», N3 «/servers» «Contenders»): slot released "taking" gives released false and slot_taking; malformed slot gives slot_garbled, slot_until null, no released; contender mark under w-1 with another name gives name_conflict marked unreadable; search mark «-» is not a contender; name_conflicts 1.
 25-slot-and-contenders	1	@start resource	ok
 25-slot-and-contenders	2	@put object testsub/heartbeats/w-1 inputs/hb-w-1-labels.json	ok
 25-slot-and-contenders	3	@as testsubworker store POST /v1/write {"id":"73","op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"taking","gen":"1","server":"srv-a"},"cas":""}	200 {"index": "$s"}
@@ -241,10 +241,10 @@ scenario	step	request	expect
 26-static-files	41	GET /app.js	404 {"error": "no such path"}
 26-static-files	42	GET /testsub/app.js	404 {"error": "no such path"}
 26-static-files	43	GET /testsub2/manifest	200 {"name": "testsub2"}
-26-static-files	44	@as console store GET /v1/get?key=platform/manifest/testsub2	200 {"items": {"files": "~\"app.js\":{\"sha256\":\"2463ed644b363d27904937c4913ce74fc4262bcbf0c39d0d15e123a82834de5c\",\"size\":85} ~\"bundle.js\":{\"sha256\":\"532e4792f7486760ebe4a4d5b4ed3908e823361f52ad41de7da30135cd00e40f\",\"size\":300045}"}}
-26-static-files	45	store GET /v1/get?key=platform/manifest/testsub2/files/532e4792f7486760ebe4a4d5b4ed3908e823361f52ad41de7da30135cd00e40f/0	200 {"items": {"data": "~Ly8gbGluZSAwMDAwMDAgb2YgYSBmaWxlIGhlYXZp"}}
-26-static-files	46	store GET /v1/get?key=platform/manifest/testsub2/files/532e4792f7486760ebe4a4d5b4ed3908e823361f52ad41de7da30135cd00e40f/1	200 {"items": {"data": "~IDAwNDQ0MyBvZiBhIGZpbGUgaGVhdmllciB0aGFu"}}
-26-static-files	47	store GET /v1/get?key=platform/manifest/testsub2/files/532e4792f7486760ebe4a4d5b4ed3908e823361f52ad41de7da30135cd00e40f/2	200 {"items": null}
+26-static-files	44	@as console store GET /v1/get?key=platform/manifest/testsub2	200 {"items": {"files": "~\"app.js\":{\"sha256\":\"c98e08db2334a4617d95a11f2d09db007275f7d3019997e6e3fe1b2cfa25d6c7\",\"size\":84} ~\"bundle.js\":{\"sha256\":\"340e9212a9040583c3a35f00ae00d7a35c47f21d4e4b29384fd5490b7bb9555c\",\"size\":300045}"}}
+26-static-files	45	store GET /v1/get?key=platform/manifest/testsub2/files/340e9212a9040583c3a35f00ae00d7a35c47f21d4e4b29384fd5490b7bb9555c/0	200 {"items": {"data": "~Ly8gbGluZSAwMDAwMDAgb2YgYSBmaWxlIGhlYXZp"}}
+26-static-files	46	store GET /v1/get?key=platform/manifest/testsub2/files/340e9212a9040583c3a35f00ae00d7a35c47f21d4e4b29384fd5490b7bb9555c/1	200 {"items": {"data": "~IDAwNDQ0MyBvZiBhIGZpbGUgaGVhdmllciB0aGFu"}}
+26-static-files	47	store GET /v1/get?key=platform/manifest/testsub2/files/340e9212a9040583c3a35f00ae00d7a35c47f21d4e4b29384fd5490b7bb9555c/2	200 {"items": null}
 27-mounted-shell	1	GET /testsub2/	200 @file Platform/06-console/acceptance/5/inputs/testsub2/testsub2.shell.html
 27-mounted-shell	2	GET /testsub2/index.html	200 @file Platform/06-console/acceptance/5/inputs/testsub2/testsub2.shell.html
 27-mounted-shell	3	GET /testsub2/	200 @header Content-Type: ~text/html
@@ -260,7 +260,7 @@ scenario	step	request	expect
 27-mounted-shell	13	GET /probe-x/	404 {"error": "is mounted"}
 27-mounted-shell	14	GET /probe-x/index.html	404 {"error": "is mounted"}
 27-mounted-shell	15	GET /	200 @header Content-Security-Policy: ~frame-ancestors 'self'
-28-file-unreadable	1	@as admin store POST /v1/write {"id":"b701","op":"put","key":"platform/manifest/testsub2/files/2463ed644b363d27904937c4913ce74fc4262bcbf0c39d0d15e123a82834de5c/0","items":{"data":"!!"}}	200
+28-file-unreadable	1	@as admin store POST /v1/write {"id":"b701","op":"put","key":"platform/manifest/testsub2/files/c98e08db2334a4617d95a11f2d09db007275f7d3019997e6e3fe1b2cfa25d6c7/0","items":{"data":"!!"}}	200
 28-file-unreadable	2	@as admin store POST /v1/write {"id":"b702","op":"put","key":"platform/manifest/testsub2/files/b1413fee893387ff968c519e28ed7276943da332422fb68b5974704433bcecb3/0","items":{"data":"eA=="}}	200
 28-file-unreadable	3	@as admin store POST /v1/write {"id":"b703","op":"delete","key":"platform/manifest/testsub2/files/cede323d88e91ccd2840a202814ed8f8ee8449b3aa20640c7061d52b316360d9/0"}	200
 28-file-unreadable	4	@restart console	ok

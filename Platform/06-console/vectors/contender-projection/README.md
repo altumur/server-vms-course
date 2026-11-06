@@ -2,10 +2,10 @@
 
 This English text is the source; the Russian translation `ru/vectors/contender-projection/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/06.5 ([norms](../../spec/06.5-console.norms.md) N3 «/servers» «Соперники»; stage C guess
+The owner is chapter P/06.5 ([norms](../../spec/06.5-console.norms.md) N3 «/servers» «Contenders»; stage C guess
 C06-CONTENDER-PROJECTION-33-01, the Architect's decision of 2026-10-25). The participant is the cluster console (`/servers`
 `WorkerRow.name_conflict`, the series `<sub>_name_conflicts` of `/metrics`). The freshness of a mark is the [observation contract](../../../common/contracts/observation.md)
-«Свежесть метки соперника» (the boundary is the package [`contender-fresh`](../../../common/vectors/contender-fresh/README.md)). The bytes
+«Freshness of a contender mark» (the boundary is the package [`contender-fresh`](../../../common/vectors/contender-fresh/README.md)). The bytes
 are written by the Specification; the rows follow the text of the norm, the rule is there, not here.
 
 ## `cases.tsv`
@@ -27,7 +27,7 @@ the key segment (an unreadable fresh mark — a conflict with the flag), a name 
 ## Run
 
 Without a stand: the side gives the input to its own computation of `name_conflict` and `name_conflicts` (the reads of the marks and the clock are replaced by the input).
-Who executes it is the console (`06-console`: `WorkerRow.name_conflict` and the series `<sub>_name_conflicts`, P/06.5 N3 «/servers» «Соперники»). The controller (`04-controller`) does not execute it: it does not read the contender marks, the field `name_conflicts` of its pass report is its own count and does not enter the console series (P/06.5 N3 «/metrics — text»); the marks are written by the worker (`03-worker`, P/03.2 N1.4a) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who executes it is the console (`06-console`: `WorkerRow.name_conflict` and the series `<sub>_name_conflicts`, P/06.5 N3 «/servers» «Contenders»). The controller (`04-controller`) does not execute it: it does not read the contender marks, the field `name_conflicts` of its pass report is its own count and does not enter the console series (P/06.5 N3 «/metrics — text»); the marks are written by the worker (`03-worker`, P/03.2 N1.4a) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Vector wire
 

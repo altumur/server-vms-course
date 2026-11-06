@@ -30,9 +30,12 @@ def arguments():
     parser.add_argument("lessons", nargs="*",
                         help="module/NN-slug.md; only the new shared-spec layout; none — every Platform lesson of "
                              "Platform/lessons.tsv and every VMS/NN-*/NN-*.md lesson, strictly (one result for one tree, whatever the shell globs)")
-    parser.add_argument("--root", type=Path, default=Path.cwd(), help="repository root, default cwd")
+    parser.add_argument("--root", type=Path, default=Path.cwd(),
+                        help="complete course source root, default cwd; exports require a separate identity proof")
     parser.add_argument("--exceptions", type=Path, default=EXCEPTIONS,
                         help="registry of allowed deviations, default the skill's exceptions.tsv")
+    parser.add_argument("--cyrillic-debt", type=Path, default=SCRIPTS.parent / "cyrillic-debt.tsv",
+                        help="ADR-0121 (8) per-file debt for this source snapshot")
     parser.add_argument("--strict-coverage", action="store_true",
                         help="every references.tsv row of a form source must be the sole cause of a corpus case")
     return parser
@@ -212,7 +215,8 @@ def references(document, external=None, place=lambda where: where):
 # Built sections between their markers: the form of ADR-0087, the data families of ADR-0088 and the form of the
 # canonical view of ADR-0089 (chapter 2.2).
 FORM_MARKERS = {"<!-- form:begin -->", "<!-- form:end -->", "<!-- families:begin -->", "<!-- families:end -->",
-                "<!-- canonical:begin -->", "<!-- canonical:end -->"}
+                "<!-- canonical:begin -->", "<!-- canonical:end -->",
+                "<!-- checklist-inventory:begin -->", "<!-- checklist-inventory:end -->"}   # опись чеклистов (2026-11-06)
 # Acceptance chapters whose puts.tsv (and puts/) the script checks (form_source.vectors.Chapter.puts): chapter 2.2 with
 # the view column, chapter 2.3 in three columns.
 PUTS_CHAPTERS = {("P/02", "2/"), ("P/02", "3/")}
@@ -466,8 +470,11 @@ PROCESS_ROLES = {
 MANIFEST_FORMS = {"unit.rows", "tables", "objects.rows", "domain.books.from", "domain.kept"}
 # id-map of the old norms (ADR-0083, module-design «Прослеживаемость»): the column `new` holds checklist ids P/NN[.K]-MM
 # (and scenario and vector addresses, which these checks do not read).
-IDMAP = Path("Platform/common/id-map.tsv")
+IDMAP = Path("decisions/history/platform/id-map.tsv")
 IDMAP_FIELDS = ["old", "new", "chapter", "subject", "note"]
+TESTSUB = Path("Platform/common/data/testsub")
+TESTSUB_FILES = ("testsub.subsystem.yaml", "testsub2.subsystem.yaml")
+LEGACY_VERDICTS = Path("Platform/02-installer/acceptance/1/spec_verdicts")
 # The VMS module (ADR-0090 доп. (1) «Условия старта», доп. (2)): its lessons, data catalog and id-map are read from
 # VMS/common/; a lesson's manifest is VMS/NN-<имя>/<subsystem>.subsystem.yaml. The bytes of Source/vms/ are the frozen
 # witness's (доп. (6) п. 8, (7) п. 4): after the start nobody edits them, the list of their sha256 is recorded at the
@@ -501,6 +508,8 @@ def chapter_key(path):
 # Номер главы — 0, 1–99 (главы 8.0 и 8.10 урока 8).
 CHAPTER = r"(?:0|[1-9][0-9]?)"
 NORM_ID = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]+|[PV]/[0-9]{2}(?:\." + CHAPTER + r")?)-[0-9]+"
+INVENTORY_BEGIN = "<!-- checklist-inventory:begin -->"   # опись чеклистов в instruction (решение 2026-11-06)
+INVENTORY_END = "<!-- checklist-inventory:end -->"
 # A section of an old lesson that moved keeps only a pointer: its text starts with «Перенесено в»; «Остаётся здесь» —
 # part of it stays.
 MOVED_SECTION = re.compile(r"^Перенесено в\b")
@@ -1081,7 +1090,7 @@ class Check:
         self.stats["data_roles"] += 1
 
     def id_map_rows(self, table=IDMAP):
-        """Platform/common/id-map.tsv (or the VMS one) → [(line, {column: value})]; empty without the file. Read once."""
+        """Platform history (or the VMS map) → [(line, {column: value})]. The Platform map is required; cached."""
         if table != IDMAP:
             if table not in self.vms_idmap:
                 path = self.root / table
@@ -1090,8 +1099,14 @@ class Check:
             return self.vms_idmap[table]
         if self.idmap is None:
             path = self.root / IDMAP
-            rows = self.tsv(path, len(IDMAP_FIELDS), IDMAP_FIELDS) if path.exists() else []
-            self.idmap = [(line, dict(zip(IDMAP_FIELDS, cols))) for line, cols in rows]
+            rows = self.tsv(path, len(IDMAP_FIELDS))
+            self.idmap = []
+            if not rows or rows[0][1] != IDMAP_FIELDS:
+                self.error(path, f"expected header {' '.join(IDMAP_FIELDS)}")
+            else:
+                self.idmap = [(line, dict(zip(IDMAP_FIELDS, cols))) for line, cols in rows[1:]]
+                if not self.idmap:
+                    self.error(path, "expected at least one id-map row")
         return self.idmap
 
     # The checklist of a moved chapter against id-map (разбор ревью стадии B 3–5, №36): each id of the checklist is a
@@ -1547,6 +1562,82 @@ class Check:
                 if int(said) != len(ids):
                     mismatch(said, len(ids), "checklist ids")
 
+    # The checklist inventory of the instruction (решение «Архитектора» 2026-11-06, P/08): a block between
+    # INVENTORY_BEGIN and INVENTORY_END with the table `| chapter | ids |`; every id in full, in backticks, no ranges.
+    # The ids of the block are the ids of all checklists of the lesson, once each; a count said in the block or in the
+    # line before it matches; the source and the translation (ADR-0124) hold one set. A lesson without the block in
+    # either file owes nothing.
+    def inventory_block(self, path, text, key):
+        """→ (ids in order, chapter of each id) or None without the block."""
+        begin, end = text.find(INVENTORY_BEGIN), text.find(INVENTORY_END)
+        if begin < 0 and end < 0:
+            return None
+        if begin < 0 or end < begin or text.count(INVENTORY_BEGIN) != 1 or text.count(INVENTORY_END) != 1:
+            self.error(path, "checklist inventory: expected one begin marker and one end marker after it")
+            return None
+        body = text[begin + len(INVENTORY_BEGIN):end]
+        before = [ln for ln in text[:begin].splitlines() if ln.strip()][-1:]
+        before = [ln for ln in before if ln.lstrip().startswith("#")]      # the heading of the block, if right above
+        ids, rows, said = [], 0, []
+        for line in [*before, *body.splitlines()]:
+            stripped = line.strip()
+            if not stripped.startswith("|"):
+                said += re.findall(r"(?<![\w/.-])(\d+)\s+(?:ids?(?!\w)|id-\w*|пункт\w*|норм\w*|items?(?!\w))",
+                                   stripped)
+                continue
+            cells = [c.strip() for c in stripped.strip("|").split("|")]
+            if len(cells) != 2:
+                self.error(path, f"checklist inventory: a row of the table | chapter | ids | has {len(cells)} cells")
+                continue
+            if cells == ["chapter", "ids"] or re.fullmatch(r":?-+:?", cells[0]):
+                continue
+            rows += 1
+            chapter = re.match(r"`?(?:[PV]/)?(?:[0-9]{1,2}\.)?(" + CHAPTER + r")`?(?!\S)", cells[0])   # P/08.0, 08.0, 8.0, 0
+            prefix = f"{key}.{chapter[1]}-" if chapter else None
+            tokens = re.findall(r"`([^`]*)`", cells[1])
+            if re.sub(r"`[^`]*`", "", cells[1]).strip(" ,;") or not tokens:
+                self.error(path, f"checklist inventory: chapter {cells[0]}: ids must be full ids in backticks, "
+                                 f"separated by commas, got {cells[1]!r}")
+            for token in tokens:
+                if not re.fullmatch(NORM_ID, token):
+                    self.error(path, f"checklist inventory: `{token}` is not a full checklist id (no ranges)")
+                    continue
+                if prefix and not token.startswith(prefix):
+                    self.error(path, f"checklist inventory: {token} is not an id of chapter {cells[0]}")
+                ids.append(token)
+        if not rows:
+            self.error(path, "checklist inventory: no rows in the table | chapter | ids |")
+        for value, count in Counter(ids).items():
+            if count != 1:
+                self.error(path, f"checklist inventory: {value} repeats")
+        for number in said:
+            self.stats["count_phrases"] += 1
+            if int(number) != len(ids):
+                self.error(path, f"checklist inventory: says {number} ids, the block lists {len(ids)}")
+        return ids
+
+    def checklist_inventory(self, source, translation, key, all_ids):
+        blocks = {}
+        for path in dict.fromkeys([source, translation]):
+            text = self.read(path) if path.exists() else None
+            blocks[path] = self.inventory_block(path, text, key) if text is not None else None
+        if all(b is None for b in blocks.values()):
+            return
+        self.stats["checklist_inventories"] += 1
+        wanted = set(all_ids)
+        for path, ids in blocks.items():
+            if ids is None:
+                self.error(path, "checklist inventory: the block is missing here, the other language has it")
+                continue
+            for value in sorted(wanted - set(ids)):
+                self.error(path, f"checklist inventory: checklist id {value} is not listed")
+            for value in sorted(set(ids) - wanted):
+                self.error(path, f"checklist inventory: {value} is in no checklist of the lesson")
+        listed = [set(ids) for ids in blocks.values() if ids is not None]
+        if len(listed) == 2 and listed[0] != listed[1]:
+            self.error(translation, "checklist inventory: the ids differ from the source "
+                                    f"({sorted(listed[0] ^ listed[1])})")
+
     # Every directive a scenario uses is in a stand dictionary («Словарь директив»): the shared one of the Platform
     # module and the module's own (README of lesson 1), which adds only its new directives.
     def directives(self, table, stands):
@@ -1617,6 +1708,7 @@ class Check:
                 silenced += len(self.errors) - before
                 del self.errors[before:]
             self.refusal_word(path, line, expect)
+            self.module_file_binding(path, line, expect)
         # `@key(N)` repeats the key bytes of step N of the same scenario: that step exists and carries a writing
         # request (ACC-06-KEY-SHIFT-01, решение «Архитектора» 2026-10-29: a step inserted before it shifts the number).
         for line, scenario, n in keys:
@@ -1628,6 +1720,21 @@ class Check:
         if not steps:
             self.error(path, "empty scenarios table")
         return silenced
+
+    def module_file_binding(self, path, line, expect):
+        """Actual @file expectations bind canonical module bytes, never Source witnesses."""
+        if not Path(path).is_relative_to(self.root / "Platform"):
+            return
+        match = re.fullmatch(r"[1-5][0-9]{2} @file (\S+)", expect)
+        if match is None or Path(match[1]).name not in {"console.js", "console.css", "console.html"}:
+            return
+        canonical = Path("Platform/07-console-module/module") / Path(match[1]).name
+        target = self.root / canonical
+        if match[1] != canonical.as_posix():
+            self.error(path, f"line {line}: @file module input must be {canonical}; Source is a frozen witness")
+        elif not target.is_file() or target.resolve() != target.absolute():
+            self.error(path, f"line {line}: missing canonical module input {canonical} (no symlinks)")
+        self.stats["module_file_bindings"] += 1
 
     # The word of `error` in an expectation is a word of a closed table `data/refusal-words.tsv` (стандарт пробы, ADR-0083,
     # правка В-7). Judged against the union of the tables, not door by door: `@any`, `!contains`, `~`, `$имя` are not words.
@@ -1833,8 +1940,7 @@ class Check:
         # Corpora (cases/, spec_verdicts/) hold refused manifests on purpose; only the manifests subsystems ship are
         # checked here. The VMS manifests are checked in VMS/ (their canon since the start, ADR-0090 доп. (6) п. 8);
         # Source/vms/ holds the frozen witness's bytes and is never form-checked.
-        manifests = [*(self.root / VMS_DIR).glob("[0-9][0-9]-*/*.subsystem.yaml"),
-                     *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
+        manifests = self.course_manifests()
         for path in sorted(manifests):
             try:
                 got = runner.judge(path.read_bytes())
@@ -1915,8 +2021,7 @@ class Check:
                 elif not set(lines_) <= set(got["lines"]):
                     self.error(path, f"form source: lines expected {lines_}, got {got['lines']}")
             self.stats["form_cases"] += 1
-        manifests = [*(self.root / VMS_DIR).glob("[0-9][0-9]-*/*.subsystem.yaml"),
-                     *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
+        manifests = self.course_manifests()
         for path in sorted(manifests):
             got = loader.judge(path.read_bytes())
             if got["verdict"] != "ok":
@@ -1943,12 +2048,12 @@ class Check:
         except ImportError as exc:
             self.error(norms, f"the standard files need the В7 stack, missing: {exc}; run: {V7_INSTALL}")
             return
-        manifests = [*(self.root / VMS_DIR).glob("[0-9][0-9]-*/*.subsystem.yaml"),
-                     *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
+        manifests = self.course_manifests()
         try:
             implied = {value for (lesson, kind, value) in self.registry if kind == "implied"}
+            extra = self.numeric_loader(base)
             errors, stats = manifest_check(self.root, norms, text, base, acceptance, verdicts, classes, manifests,
-                                           self.strict_coverage, implied)
+                                           self.strict_coverage, implied, extra)
         except ImportError as exc:
             self.error(norms, f"the standard files need the В7 stack, missing: {exc}; run: {V7_INSTALL}")
             return
@@ -1966,6 +2071,133 @@ class Check:
                 self.used.add((key, kind, value))
                 self.error(base, f"stale exception implied {key} {value}: no relation row {value} with x-implied-by")
         self.stats.update(stats)
+
+    def course_manifests(self):
+        """Canonical manifests only; a missing new home must not turn a glob empty."""
+        paths = []
+        for name in TESTSUB_FILES:
+            path = self.root / TESTSUB / name
+            if not path.is_file() or path.resolve() != path.absolute():
+                self.error(path, "required canonical course manifest (regular file without symlinks)")
+            else:
+                paths.append(path)
+        home = self.root / TESTSUB
+        if home.is_dir():
+            for path in sorted(home.glob("*.subsystem.yaml")):
+                if path.name not in TESTSUB_FILES:
+                    self.error(path, "unexpected canonical course manifest; expected exactly testsub and testsub2")
+        return [*(self.root / VMS_DIR).glob("[0-9][0-9]-*/*.subsystem.yaml"), *paths]
+
+    def canonical_layout(self):
+        """ADR-0083 (115): root notes and frozen Source copies are not aliases."""
+        for name in ("Platform/common/NORMATIVE-TERMS.md", "Platform/07-console-module/CONSOLE-MODULE.md"):
+            path = self.root / name
+            if not path.is_file() or path.resolve() != path.absolute():
+                self.error(path, "required canonical document (regular file without symlinks)")
+        for name in ("NORMATIVE-TERMS.md", "CONSOLE-MODULE.md", "ru/NORMATIVE-TERMS.md", "ru/CONSOLE-MODULE.md"):
+            path = self.root / name
+            if path.exists() or path.is_symlink():
+                self.error(path, "legacy root document is forbidden; use its Platform canonical home")
+
+    def legacy_spec_verdicts(self):
+        """Relocated headerless roster, separate from P02's active corpus and canonical vectors."""
+        home = self.root / LEGACY_VERDICTS
+        table = home / "spec_verdicts.tsv"
+        rows = self.tsv(table, 2)
+        seen = set()
+        for line, (case, verdict) in rows:
+            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", case) or case in seen:
+                self.error(table, f"line {line}: invalid or duplicate legacy case {case!r}")
+                continue
+            seen.add(case)
+            if verdict not in {"ok", "refused"}:
+                self.error(table, f"line {line}: legacy verdict is ok or refused")
+            path = home / f"{case}.subsystem.yaml"
+            if not path.is_file() or path.resolve() != path.absolute():
+                self.error(path, "missing legacy verdict input (regular file without symlinks)")
+        if not seen:
+            self.error(table, "empty legacy verdict roster")
+        try:
+            for path in sorted(home.iterdir()):
+                if path.name == table.name or path.name in IGNORED:
+                    continue
+                if path.name == "README.md" and path.is_file():
+                    text = self.read(path)
+                    if text is not None:
+                        self.markdown(path, text)
+                    continue
+                if path.name not in {f"{case}.subsystem.yaml" for case in seen}:
+                    self.error(path, "unlisted legacy verdict input")
+        except OSError as exc:
+            self.error(home, str(exc))
+        self.stats["legacy_spec_verdicts"] += len(seen)
+
+    # The numeric-loader witnesses of P/06 C3 (решение «Архитектора» 2026-11-06): a separate binding outside the corpus
+    # of P/02.1 — each row of numeric-loader.cases.tsv is loaded by the same loader as the corpus, refused exactly by
+    # its own relation row (which it then holds) or ok. Silent while P/02.1 declares none of the rows; once it declares
+    # any, the table, each of the nine named rows and each witness file must be there. → [(path, expect, no)].
+    NUMERIC_LOADER_BASE = "Platform/02-installer/spec/02.1-installer"
+    NUMERIC_LOADER_TABLE = "Platform/06-console/forms/numeric-loader.cases.tsv"
+    NUMERIC_LOADER_ROWS = (160, 161, 162)
+    NUMERIC_LOADER_CASES = ("p06-c3-numeric-retire", "p06-c3-numeric-ends", "p06-c3-numeric-delete",
+                            "p06-c3-fixed-ends", "p06-c3-fixed-retire", "p06-c3-fixed-delete",
+                            "p06-c3-named-retire", "p06-c3-named-ends", "p06-c3-named-delete")
+
+    def numeric_loader(self, base):
+        if Path(base).resolve() != (self.root / self.NUMERIC_LOADER_BASE).resolve():
+            return []
+        try:
+            rel = json.loads(Path(str(base) + ".relations.json").read_text(encoding="utf-8"))
+            declared = {r.get("no") for r in rel.get("rows", []) if isinstance(r, dict)} & set(self.NUMERIC_LOADER_ROWS)
+        except (OSError, ValueError, AttributeError):
+            return []                                    # manifest_check names the broken relations file
+        table = self.root / self.NUMERIC_LOADER_TABLE
+        if not declared and not table.exists():
+            return []
+        if not table.is_file():
+            self.error(table, f"numeric loader: P/02.1 declares relation rows {sorted(declared)}, their witness "
+                              "table is missing (решение «Архитектора» 2026-11-06)")
+            return []
+        header = ["case", "input", "expect", "relation", "norm"]
+        out, seen, refused = [], set(), set()
+        for line_no, (case, input_, expect, relation, _norm) in self.tsv(table, 5, header):
+            where = f"line {line_no}"
+            if case not in self.NUMERIC_LOADER_CASES:
+                self.error(table, f"{where}: case {case!r} is not one of the nine witnesses of P/06 C3")
+                continue
+            if case in seen:
+                self.error(table, f"{where}: case {case} repeated")
+                continue
+            seen.add(case)
+            if input_ != f"numeric-loader/{case}.subsystem.yaml":
+                self.error(table, f"{where}: input of {case} is numeric-loader/{case}.subsystem.yaml, got {input_!r}")
+                continue
+            if expect == "ok":
+                if relation != "-":
+                    self.error(table, f"{where}: an ok witness names no relation row, got {relation!r}")
+                    continue
+                no = None
+            elif expect == "refused:relations":
+                if relation not in {str(n) for n in self.NUMERIC_LOADER_ROWS}:
+                    self.error(table, f"{where}: a refused witness names one of rows {list(self.NUMERIC_LOADER_ROWS)}, "
+                                      f"got {relation!r}")
+                    continue
+                no = int(relation)
+                refused.add(no)
+            else:
+                self.error(table, f"{where}: expect is ok or refused:relations, got {expect!r}")
+                continue
+            path = table.parent / input_
+            if not path.is_file():
+                self.error(path, f"numeric loader: witness {case} of {table.name} is missing")
+                continue
+            out.append((path, expect, no))
+        for case in self.NUMERIC_LOADER_CASES:
+            if case not in seen:
+                self.error(table, f"numeric loader: the row of witness {case} is missing")
+        for no in sorted(declared - refused):
+            self.error(table, f"numeric loader: relation row {no} of P/02.1 has no refused witness")
+        return out
 
     # Completeness of the unreadable outcomes (решение владельца 2026-10-28, PLAN-TRANSITION п. 1.3): each family of
     # the catalog with a schema names the outcome «the whole row is unreadable» (empty path) for each of its readers —
@@ -2176,8 +2408,24 @@ class Check:
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
+        if (self.root / "Platform/08-domain").is_dir():
+            import check_constants
+            errors, stats = check_constants.check_p08_constants(self.root)
+            for path, message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
         for path in check_forms.versioned_door_forms(self.root):     # версии дверей P/08.0 Н1.9 (forms/README)
             errors, stats = check_forms.check_versioned_doors(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
+        for path in check_forms.finite_profile_forms(self.root):     # конечный профиль удаления P/06 C2 (P02.3 6a/3a)
+            errors, stats = check_forms.check_finite_profile(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
+        for path in check_forms.deletion_body_witness_forms(self.root):  # кодек-свидетели тела P/06.8 N1.3
+            errors, stats = check_forms.check_deletion_body_witnesses(path)
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
@@ -2216,6 +2464,13 @@ class Check:
             for message in errors:
                 self.error(lesson, message)
             self.stats["req_anchors"] = self.stats.get("req_anchors", 0) + stats["req_anchors"]
+
+    def check_cyrillic(self, debt_path=None):
+        """All Platform and normgen bytes, independently of the selected lessons."""
+        import check_cyrillic
+        errors, stats = check_cyrillic.check(self.root, debt_path or check_cyrillic.DEBT)
+        self.errors.extend(errors)
+        self.stats.update(stats)
 
     def library_defects(self):
         if not self.v7:
@@ -2442,8 +2697,10 @@ class Check:
             self.markdown(readme, text)
         home = acceptance.parent.parent if entry else acceptance.parent
         moved = (home / "ru").is_dir() and home.parent in (self.root / "Platform", self.root / VMS_DIR)
-        # ADR-0124 доп. (1) п. 8 (2): the log of a lesson in the new layout is journal/corrections-<глава>.tsv, not an input
-        log = home / "journal" / (f"corrections-{entry.rstrip('/')}.tsv" if entry else "corrections.tsv") if moved \
+        # ADR-0121 (9): Platform logs are history; VMS keeps the ADR-0124 layout until its relocation.
+        journal = self.root / "decisions/journal/platform" / home.name if home.parent == self.root / "Platform" \
+            else home / "journal"
+        log = journal / (f"corrections-{entry.rstrip('/')}.tsv" if entry else "corrections.tsv") if moved \
             else acceptance / "corrections.tsv"
         if moved and (acceptance / "corrections.tsv").exists():
             self.error(acceptance / "corrections.tsv", f"the log lives in {self.name(log)} (ADR-0124 доп. (1) п. 8 (2))")
@@ -2451,6 +2708,10 @@ class Check:
         supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "classes.tsv", "cases",
                      "en",                     # en/README.en.md — английский источник README (ADR-0121), сверка english_mirrors
                      "seams.tsv"}              # швы процесса (ADR-0126 доп. (7) п. 1) — check_forms.check_seams
+        legacy = acceptance == self.root / LEGACY_VERDICTS.parent
+        if legacy:
+            supported.add("spec_verdicts")
+            self.legacy_spec_verdicts()
         puts = (key, entry) in PUTS_CHAPTERS
         if puts:
             supported |= {"puts.tsv", "puts"}
@@ -2472,7 +2733,7 @@ class Check:
                     own_format = True
                 elif item.name not in supported:
                     self.error(item, "unsupported acceptance entry; add a format-specific check")
-                elif item.name not in ("cases", "puts", "en") and not item.is_file():
+                elif item.name not in ("cases", "puts", "en", "spec_verdicts") and not item.is_file():
                     self.error(item, "acceptance table/document must be a file")
         except OSError as exc:
             self.error(acceptance, str(exc))
@@ -2811,6 +3072,7 @@ class Check:
         for path, text in texts.items():
             self.counts(path, text, key, all_ids, totals["scenarios"], path == instructions, totals["verdicts"],
                         total_choices or None, lecture=path == lesson)
+        self.checklist_inventory(spec / f"{stem}.README.md", instructions, key, all_ids)
         self.stale(key, acceptance)
         self.stats["lessons"] += 1
 
@@ -3010,6 +3272,19 @@ def environment():
 def main():
     args = arguments().parse_args()
     check = Check(args.root, args.exceptions, args.strict_coverage)
+    import check_cyrillic
+    if check_cyrillic.export_mode(check.root):
+        check.error(check.root, "check_spec requires the full course source at the exact nested COURSE_COMMIT; "
+                               "an export omits history and frozen witnesses. Run source check_spec and the "
+                               "separate export identity/roster proof plus check_cyrillic --export; see validation.md")
+        check.check_cyrillic(args.cyrillic_debt)
+        for error in check.errors:
+            print("ERROR", error)
+        print("COUNTS", " ".join(f"{key}={value}" for key, value in sorted(check.stats.items())))
+        print("FAIL source proof requires the complete course tree; no export checks were silently skipped")
+        return 1
+    if (check.root / LESSONS).is_file():
+        check.canonical_layout()
     for name, got, want in environment():
         check.error(REQUIREMENTS, f"environment: {name} {got or 'is missing'}, pinned {want}; run: {SCHEMA_INSTALL}")
     names = args.lessons or [lecture_of(check.root / "Platform" / row["dir"]).relative_to(check.root).as_posix()
@@ -3045,6 +3320,7 @@ def main():
     check.check_tables()
     check.check_machines()
     check.check_forms()
+    check.check_cyrillic(args.cyrillic_debt)
     for error in check.errors:
         print("ERROR", error)
     for line in check.excepted:

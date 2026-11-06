@@ -1,0 +1,106 @@
+{
+  "base": "5b3329b9323166807a60cf6d64077bac48a25b1d",
+  "source_changes": [
+    {
+      "path": "Platform/02-installer/acceptance/3/puts/paged.shell.html",
+      "before_sha256": "9d49535dd9e566d8373a53ac309cd255cbf01d24b030bf921d66c2423146a277",
+      "after_sha256": "9172fcb4ffe9a57d9bc81d1f2b512dd3d9308f3b86ff0d54855b50c2e2150562",
+      "before_bytes": 260,
+      "after_bytes": 212,
+      "replacements": [
+        [
+          "lang=\"ru\"",
+          "lang=\"en\""
+        ],
+        [
+          "\u0421\u0447\u0451\u0442\u0447\u0438\u043a\u0438",
+          "Counters"
+        ],
+        [
+          "\u0421\u0442\u0440\u0430\u043d\u0438\u0446\u0430 \u043f\u043e\u0434\u0441\u0438\u0441\u0442\u0435\u043c\u044b paged.",
+          "Subsystem paged page."
+        ],
+        [
+          "\u041e\u0431\u043d\u043e\u0432\u0438\u0442\u044c",
+          "Refresh"
+        ]
+      ],
+      "markup_structure_unchanged_except_language": true
+    },
+    {
+      "path": "Platform/02-installer/acceptance/3/puts/pagedok.shell.html",
+      "before_sha256": "98925996f05a2fe104e26942bac73ecb27fbc00486d9428c3dbaa7af37fb10be",
+      "after_sha256": "ad483816a71f36180fb1eff50cc87baef066d4d8a3b316da82bfc5103dc85afe",
+      "before_bytes": 203,
+      "after_bytes": 164,
+      "replacements": [
+        [
+          "lang=\"ru\"",
+          "lang=\"en\""
+        ],
+        [
+          "\u0421\u0447\u0451\u0442\u0447\u0438\u043a\u0438",
+          "Counters"
+        ],
+        [
+          "\u0421\u0442\u0440\u0430\u043d\u0438\u0446\u0430 \u043f\u043e\u0434\u0441\u0438\u0441\u0442\u0435\u043c\u044b pagedok.",
+          "Subsystem pagedok page."
+        ]
+      ],
+      "markup_structure_unchanged_except_language": true
+    },
+    {
+      "path": "Platform/02-installer/acceptance/3/puts/pagedok-alt.shell.html",
+      "before_sha256": "ee08af4763373629210d9216162f8bfe6bd1ce5446f7091b908f40bba37383ac",
+      "after_sha256": "bdde474a4809cf5de16f3ecca916f26ae594e790b2b0f301522b7e7a89f1a165",
+      "before_bytes": 230,
+      "after_bytes": 183,
+      "replacements": [
+        [
+          "lang=\"ru\"",
+          "lang=\"en\""
+        ],
+        [
+          "\u0421\u0447\u0451\u0442\u0447\u0438\u043a\u0438",
+          "Counters"
+        ],
+        [
+          "\u0421\u0442\u0440\u0430\u043d\u0438\u0446\u0430 \u043f\u043e\u0434\u0441\u0438\u0441\u0442\u0435\u043c\u044b pagedok, \u0438\u043d\u0430\u044f \u0440\u0435\u0434\u0430\u043a\u0446\u0438\u044f.",
+          "Subsystem pagedok page, alternate edition."
+        ]
+      ],
+      "markup_structure_unchanged_except_language": true
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v13-refused-idem-read/refused",
+      "before_sha256": "00985630cc0b0ed3e052f1259b96c9da8a40c65f7fad25116ab4050263ab31da",
+      "after_sha256": "cfe0d963324cad451a165630d12dd4202e84c8b328a520a10b8eba177b093475",
+      "before_bytes": 346,
+      "after_bytes": 254,
+      "effective_name_and_physical_line_unchanged": true
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v14-refused-secrets-reads-nested/refused",
+      "before_sha256": "1a7d13df3b5ba289e6fd714efb143903b9a8d488709bed3c1eebf976f2d46611",
+      "after_sha256": "86f71aae9e10fec9f333ce4b74045917621798d7c5a2d1f386933c60e7cfb4ad",
+      "before_bytes": 373,
+      "after_bytes": 286,
+      "effective_name_and_physical_line_unchanged": true
+    }
+  ],
+  "old_hash_bindings_in_active_Platform": [],
+  "preserved": [
+    "All puts.tsv sequence/expected outcomes and revs are byte-identical.",
+    "The paged forbidden onmouseover attribute is unchanged; pagedok-alt remains a distinct shell revision.",
+    "Both refused files retain the sole effective name vb at the same physical line.",
+    "P/02 corpus947/canonical220/rights and P/03 are unchanged."
+  ],
+  "dependencies": [
+    "The existing installer shell reads compare actual input bytes and calculate hashes; no literal old shell SHA is present in active Platform source.",
+    "Generator owners must regenerate actual dependent outputs on this source pin."
+  ],
+  "limits": [
+    "Raw language byte changes, not byte-preserving escaping.",
+    "No installer/native/runtime/SUT execution, generated outputs, export, pin or main action."
+  ]
+}

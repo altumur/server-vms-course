@@ -33,7 +33,7 @@ def setUpModule():
     """Копия Platform/, VMS/ и манифестов курса с пакетом перехода (если курс ещё на диалекте) — одна на модуль."""
     global TREE
     TREE = Path(tempfile.mkdtemp(prefix="v7-tree-"))
-    for d in ("Platform", "VMS", "Source/tests/testdata"):
+    for d in ("Platform", "VMS"):
         shutil.copytree(ROOT / d, TREE / d, ignore=shutil.ignore_patterns("__pycache__", ".DS_Store"))
     if (TREE / "Platform/02-installer/spec/02.1-installer.form.yaml").is_file():     # курс ещё на диалекте
         from v7 import transition
@@ -248,7 +248,8 @@ class TestTree(unittest.TestCase):
                        if ln and not ln.startswith("#"))
         norms = spec_dir / "02.1-installer.norms.md"
         return spec.manifest_check(root, norms, norms.read_text(encoding="utf-8"), spec_dir / "02.1-installer", acc,
-                                   verdicts, classes, sorted((root / "Source/tests/testdata").glob("*.subsystem.yaml")),
+                                   verdicts, classes, [root / "Platform/common/data/testsub" / name
+                                                       for name in ("testsub.subsystem.yaml", "testsub2.subsystem.yaml")],
                                    strict=False)
 
     def test_manifest_clean(self):

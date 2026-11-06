@@ -20,15 +20,11 @@ The format is the dictionary of directives and doors of the common acceptance RE
 
 ## `seams.tsv` — scenarios over the seams of the process (ADR-0125 addendum (4) item 7)
 
-[`seams.tsv`](seams.tsv) — six scenarios of the properties of the core that the checklist checks «by reading»: the `id`
+[`seams.tsv`](seams.tsv) — the original six scenarios plus the six additions below, covering the properties of the core that the checklist checks «by reading»: the `id`
 memory does not forget by time alone (P/01.1-11), equality and both sides of fractional admission-time bounds for put, delete and batch
 (P/01.1-25), the admission time retains its fraction when clocks go back and after a restart (P/01.1-26), concurrent CAS of one row (P/01.1-15), a batch whole after a
 restart (P/01.1-31). They run only through the adapter of kit B (the directives `@clock`, `@reopen`, `@parallel` — the
 header of the file); the runner does not read the file. The stages — `store_core` (`@clock`, `@parallel`) and `durable` (`@reopen`) of `forms/stages.tsv`, by `tests:1.1:<scenarios>:seams` in their `gate`.
-
-## `journal/corrections-1.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample` (a sample of a generation error), `fix` (which line of the lesson was clarified), `languages`. Empty: no error has repeated so far.
 
 ## Additional check of the class of errors of run 36 (Kimi)
 
@@ -129,3 +125,17 @@ Probes of the framing and of the request line (N2.1, reconciliation of python an
 - a truncated body: `Content-Length: 50`, 20 bytes and a half-close of the write side; chunked without the last chunk — no answer; then
   a `GET` over a new connection sees the previous value of the row;
 - no `Host`, two `Host`, `Host: a b/c` — as with an ordinary `Host`; `HEAD /v1/get?key=acc/x` — `404` without a body.
+
+## ADR-0129 core clarification witnesses
+
+The original six seam scenarios and all 73 steps remain byte-exact. Added six scenarios use only the existing HTTP, @clock and @reopen grammar. s7 and s8 check the four admitted refusals expired, early, guard and conflict for single writes and batches: advance the clock, refuse, immediately move the clock back, read the unchanged rows/list, then admit a probe above the old clock but below the refused record's admitted time. The refused identifier is then reused with a corrected condition. Zero business effects therefore coexist with retained admission metadata. s9 repeats this distinction across ordinary Close/Open for a single expired write and a guarded batch; it is a graceful restart witness, not a power-cut or consensus witness.
+
+s10 keeps the initial clock at 2000000000. The valid raw bound 1999999999.99999999 is lower as an exact decimal rational but equals that clock in binary64: not_after admits equality, not_before refuses it, for put/delete/batch. s11 changes both bound spellings on applied put/delete/batch replays: 9007199254740992 and 9007199254740993 round to the same binary64, as do 1.00000000000000001 and 1.0. The next representable values 9007199254740994 and 1.0000000000000002 give different fingerprints and badrequest. The request bytes must not be normalized before the actual store parses them. The CALL engine's exact-number comparison is not a replacement store fingerprint. s12 distinguishes the nonempty string version "0" from the absent marker "" in single/batch CAS and guards.
+
+Already covered and unchanged: scenario 35 steps 8–9 choose the first failing guard in both source-list orders, steps 10–11 do the same for CAS; scenario 36 step 3 reorders guards on a successful replay without changing its fingerprint. R116 and scenario 31 steps 1–4 already prove that a successful absent delete leaves read index "" and admits a later create-once; scenario 34 steps 7–8 covers batch deletion of an absent row. No duplicate witnesses are added for these obligations.
+
+Opaque versions do not expose the allocator's count. The new HTTP probes observe unchanged rows/list and a reusable refused id; they do not infer zero version issuance by subtracting or ordering index strings. R089/R132's no-issued-version obligation remains subject to the existing reading check. No snapshot/effects form, new port, native command, implementation or handwritten core is supplied. These are source witnesses awaiting the ordinary implementation adapter, not executed SUT results.
+
+## Replay and last admission metadata
+
+s13–s15 use put/delete/batch with the former id: clock +100, successful replay, immediately −100, then a not_after probe between the former and replay admission times gives expired. A second +200/replay/−200/ordinary reopen/probe sequence checks durability. There is no read between replay and rollback/reopen/probe that could mask lost admission metadata. The original answers and versions remain, the probe row is absent, and a deleted row has no visible version. All three cases are gated by durable because they include @reopen; former steps and store_core gates are unchanged. These are source witnesses, not executed SUT acceptance.

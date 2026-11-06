@@ -1,0 +1,438 @@
+{
+  "base": "f0e038d57b4d8301c6a7ebe1a03a1f9ebc85680a",
+  "english": "103016b88",
+  "status": "author source audit; no runtime/SUT/full generator gate",
+  "checks": [
+    {
+      "name": "Closed forwarding method/path set complete",
+      "pass": true,
+      "claimed": 63,
+      "missing": []
+    },
+    {
+      "name": "Unique operationId",
+      "pass": true,
+      "count": 50
+    },
+    {
+      "name": "Existing operation retained parameters /domain",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /domain",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/relays/{relay}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/{sub}/kept/{name}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/{sub}/tables/{table}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/{sub}/{rows}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /domain/{sub}/{rows}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained parameters /domain/{sub}/{rows}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained post /domain/{sub}/{rows}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/shadow",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /domain/shadow",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/members",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /domain/members",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained post /domain/members",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained post /domain/partial/close",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/folders/{id}/units",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/batches",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained post /domain/batches",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained delete /domain/batches/{name}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained delete /domain/issued/{sub}/{kind}/{ref}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/topology",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /domain/topology",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained put /domain/topology",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/placement",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /domain/placement",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/placement/{sub}/{ref}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /domain/placement/{sub}/{ref}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained parameters /domain/placement/{sub}/{ref}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained put /domain/placement/{sub}/{ref}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained delete /domain/placement/{sub}/{ref}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/grants",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /domain/grants",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/shared",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /domain/shared",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained put /domain/shared",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/alarms",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /domain/alarms",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /manifest",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /manifest",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /mounts",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /mounts",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained $ref /",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained $ref /index.html",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained $ref /platform/console.js",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained $ref /platform/console.css",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained $ref /session",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained $ref /healthz",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained post /api/login",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained parameters /domain/members/{name}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained delete /domain/members/{name}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained parameters /domain/members/{member}/ca",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained post /domain/members/{member}/ca",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained parameters /domain/{sub}/{rows}/{ref}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained put /domain/{sub}/{rows}/{ref}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained delete /domain/{sub}/{rows}/{ref}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/users",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /domain/users",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained post /domain/users",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained parameters /domain/users/{name}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained put /domain/users/{name}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained delete /domain/users/{name}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/groups",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /domain/groups",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained post /domain/groups",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained parameters /domain/groups/{name}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained put /domain/groups/{name}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained delete /domain/groups/{name}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/roles",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /domain/roles",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained post /domain/roles",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained parameters /domain/roles/{name}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained put /domain/roles/{name}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained delete /domain/roles/{name}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained post /domain/batch",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained parameters /domain/grants/{cluster}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained put /domain/grants/{cluster}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained get /domain/break-glass",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained head /domain/break-glass",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained parameters /domain/break-glass/{cluster}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained put /domain/break-glass/{cluster}",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained post /domain/revoke",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained post /domain/handover",
+      "pass": true
+    },
+    {
+      "name": "Existing operation retained post /domain/stranded/apply",
+      "pass": true
+    },
+    {
+      "name": "No dynamic pass operation removed",
+      "pass": true
+    },
+    {
+      "name": "Exact old row prefix Platform/10-domain-console/acceptance/seams.tsv",
+      "pass": true,
+      "before": 48,
+      "after": 82
+    },
+    {
+      "name": "Exact old row prefix Platform/10-domain-console/vectors/alarms/cases.tsv",
+      "pass": true,
+      "before": 28,
+      "after": 36
+    },
+    {
+      "name": "M1 exactly one assigned semantic pointer",
+      "pass": true
+    },
+    {
+      "name": "Storage writer View byte-level node unchanged",
+      "pass": true
+    },
+    {
+      "name": "M1 exact null union",
+      "pass": true
+    },
+    {
+      "name": "Served URL neighbour \"https://domainconsole.example\"",
+      "pass": true,
+      "expected_valid": true,
+      "errors": []
+    },
+    {
+      "name": "Served URL neighbour null",
+      "pass": true,
+      "expected_valid": true,
+      "errors": []
+    },
+    {
+      "name": "Served URL neighbour true",
+      "pass": true,
+      "expected_valid": false,
+      "errors": [
+        "True is not of type 'string', 'null'"
+      ]
+    },
+    {
+      "name": "Served URL neighbour 7",
+      "pass": true,
+      "expected_valid": false,
+      "errors": [
+        "7 is not of type 'string', 'null'"
+      ]
+    },
+    {
+      "name": "Served URL neighbour {}",
+      "pass": true,
+      "expected_valid": false,
+      "errors": [
+        "{} is not of type 'string', 'null'"
+      ]
+    },
+    {
+      "name": "P08/P09/catalog scope preserved",
+      "pass": true,
+      "files": 421,
+      "changed": []
+    },
+    {
+      "name": "Ordinary process scenario table exact",
+      "pass": true
+    },
+    {
+      "name": "Every CALL selected and translated",
+      "pass": true,
+      "translated": 82,
+      "excluded": 0,
+      "generated_in_memory_files": 19
+    }
+  ],
+  "passed": 100,
+  "failed": 0,
+  "source_endpoint": "d731181d0c3739dd2e70553ae046b7eb8edb5693"
+}

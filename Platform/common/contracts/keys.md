@@ -27,7 +27,7 @@ subsections are the former ones); «lesson N» — lesson M11/N, their addresses
 «lesson 3 N1.6 from_carry» — P/09.1 N1.4 `from_carry`, «lesson 7» (the kind token) — P/08.7, «lesson 9» (the revocation of a person) — P/08.4,
 «lesson 10» (the issuing holder) — P/08.8 (analysis of review of stage B 8–10, № 22; Kimi SB810-07).
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -204,10 +204,3 @@ of the acceptance of M11/2) through the function `token`.
 The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 
-## Correspondence to former lessons
-
-From M11/2 (analysis of review of stage A 8–10, № 13 / decision 2): N1.2 — the rows `row`, `doc`, `writer_forms`, `only_forward` (here
-«The set»; in N1.2 — a pointer, `rev`, `emergency`, `clocks` stayed); N1.6 — the block `domain/revoked` (here «Revocations»;
-`OLD_KEYS` stayed); N3 «keys» — steps 1–8 and the paragraph about the refusal (here «The function `keys`»). From M11/3 N1.6 — a part of the row
-`from_carry` about `revoked` (here `merge`). Parts of the norms M11/2-02, -04, -06 and M11/3-09 — by `note` of [id-map](../id-map.tsv);
-the catalogue row `domain/revoked` (participant `domainagent`) — a merge by jti (analysis of review of stage A 8–10, № 3).

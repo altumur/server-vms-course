@@ -94,11 +94,6 @@ view of rev 10 weighs 978 (one more digit of `rev`). The installer checks the we
 step 14a), so the last installation refuses before the parts, the row and the mark. The same boundary reached through a `cas` conflict of two
 installers (the full catalogue read with rev 8, another installer writes rev 9 first) is checked by reading: the table installs sequentially.
 
-## `journal/corrections-2.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample` (a sample of a generation error), `fix` (which line of the chapter was clarified),
-`languages`. The line 2026-10-23 is the shift of the weight boundaries after `worker.exec` (finding of cammeta-c-go I02-G01).
-
 ## Checks by reading
 
 The order of the writes in time (row — view — mark), the `cas` repeat of the view, a cluster of one process (P/02.4 N1.10, R15) and

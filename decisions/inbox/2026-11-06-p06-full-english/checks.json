@@ -1,0 +1,84 @@
+{
+  "base": "01c2ef53920042ff4313807b3d2ef48ed05baf27",
+  "scope": "P06 language source only",
+  "source_check": {
+    "command": "python -B skills/lesson-spec/scripts/check_spec.py --strict-coverage",
+    "exit": 0,
+    "verdict": "PASS with 62 exceptions structural checks only; semantic review and implementation acceptance remain separate",
+    "counts": "COUNTS anchored_files=43 canonical=present canonical_mutants=67 canonical_mutants_killed=67 canonical_puts=12 canonical_section=present canonical_vectors=220 canonical_views=205 catalog_rows=172 check_probes=86 check_rows=34 count_phrases=570 daemon_flags=182 data_paragraphs=39 data_roles=10 deletion_body_witnesses=6 diagnostics=51 door_roles=11 english_mirrors=390 families_with_section=149 families_without_section=0 family_outcomes=405 family_read=present family_read_rows=10714 family_read_tables=8 family_schemas=149 finite_profile_cases=13 finite_profile_skeletons=8 form_cases=947 form_diagnostics_differ=1 form_manifests=12 form_rows=159 form_rows_held=158 form_rows_implied=1 id_map_ids=532 layer_words=19 lessons=10 library_defect_vectors=57 library_defects=24 local_links=10230 local_refs=2549 machine_traces=64 norm_ids=532 numeric_loader_cases=9 openapi=6 openapi_cross_refs=587 openapi_patterns=154 operator_commands=30 outcome_readers=313 path_param_routes=17 process_names=9 puts_cases=87 refusal_chapters=37 refusal_rows=716 req_anchors=914 route_priorities=10 row_write_bindings=4 runtime_constants=64 scenarios=496 schema_needed=152 seam_steps=427 stage_rows=82 steps=5469 stub_scanned_files=231 verdicts=947 versioned_doors=19 vms_catalog_rows=24 vms_families=24 vms_family_read_rows=832 vms_family_read_tables=7 vms_frozen=56 vms_lessons=12 vms_lessons_checked=12 vms_manifests=10 vms_table_rows=570 wire_bindings=91 wire_calls=12284 wire_excluded=750",
+    "log_sha256": "4181cf546c07a99a2f81160bcbcde7d79baa8989e18387f7c293f7a5b95b6164"
+  },
+  "unit_tests": {
+    "command": "python -B -m unittest test_check_forms test_source_cells test_check_spec",
+    "cwd": "skills/lesson-spec/scripts",
+    "tests": 255,
+    "seconds": 217.282,
+    "failures": 1,
+    "skips": 1,
+    "passed": 253,
+    "forms": {
+      "tests": 76,
+      "failures": 0
+    },
+    "sourcecells": {
+      "tests": 11,
+      "failures": 1
+    },
+    "spec": {
+      "tests": 168,
+      "failures": 0,
+      "skips": 1
+    },
+    "sole_failure": "test_source_cells.SeamsBinding.test_real_seams_unchanged requires no marker at real seams8; pending assigned review-claude update",
+    "log_sha256": "46d96c4697aedf122eb9553bb588ecc76f12b77d5ddee90fe3172f01ffe4ccad",
+    "not_green": true
+  },
+  "direct_checks": {
+    "source_english_prefix": "Platform/06-console/",
+    "cyrillic_errors_outside_localization_ru": 0,
+    "mirrors": 31,
+    "mirror_errors": 0,
+    "global_cell_proof_errors": 0,
+    "added_cells": 1124,
+    "added_tables": 7,
+    "total_proof_cells": 1855,
+    "total_proof_tables": 16
+  },
+  "preview": {
+    "before": {
+      "actual": true,
+      "translated": 57,
+      "excluded": 0
+    },
+    "after": {
+      "actual": true,
+      "exit": 1,
+      "inventory_emitted": false,
+      "reason": "gen_cmdtests.read_seams raw outer JSON string, first seams8 request",
+      "log_sha256": "00342df6b5bafcacbfe3802418e6ba56726ad851b0af49012c646f26fb62bca0"
+    },
+    "selected_roster_decoded_identity": 57,
+    "port_gate_pass_execution": 0
+  },
+  "whitespace": {
+    "unexpected": 0,
+    "preserved_terminal_tsv_empty_cells": 72,
+    "git_diff_check_exit": 2
+  },
+  "pending_dependencies": [
+    "Gen2 existing common source reader adoption in gen_cmdtests.read_seams",
+    "review-claude exact four-cell activation test replacing pre-activation real_seams_unchanged",
+    "Architect review/apply proposed FULL_ENGLISH_DONE completion entry"
+  ],
+  "limits": {
+    "Go_native": 0,
+    "model": 0,
+    "SUT": 0,
+    "normgen_full": false,
+    "KIT": false,
+    "CODE_assigned": false,
+    "exports": false,
+    "pins": false,
+    "wire_bytes_translated": false
+  }
+}

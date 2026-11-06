@@ -19,7 +19,7 @@ the chapter 2.2 canonical-view window of 2026-10-20 (section 5, the Architect's 
 
 Inputs of the rows:
 - `corpus-<case>` — each accepted case of the corpus of chapter 2.1 (`acceptance/1/verdicts.tsv`, verdict `ok`);
-- `course-<name>` — each manifest of the course `Source/tests/testdata/*.subsystem.yaml`;
+- `course-<name>` — each manifest of the course `Platform/common/data/testsub/*.subsystem.yaml`;
 - `example-<rule>` — one row per rule of N1.1 (the canonical-view defaults note of 2026-10-19,
   section 5): a section without a default and with a default, a nested key, sugar ×3, P1 (and a stated `snapshot: []`), P2–P5,
   `ordered`. The input of an example row is a small manifest that changes one rule against the minimal one; what it shows is

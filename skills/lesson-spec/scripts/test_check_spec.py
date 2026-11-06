@@ -18,6 +18,8 @@ class CheckSpecTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name).resolve()
+        self.cyrillic_debt = self.root / "cyrillic-debt.tsv"
+        self.cyrillic_debt.write_text("kind\tpath\tletters\n")
         self.module = self.root / "М12A_Example"
         self.spec = self.module / "spec"
         self.spec.mkdir(parents=True)
@@ -58,7 +60,8 @@ components:
 
     def cli(self):
         return subprocess.run([sys.executable, str(Path(__file__).with_name("check_spec.py")),
-                               "--root", str(self.root), str(self.lesson)], capture_output=True, text=True)
+                               "--root", str(self.root), "--cyrillic-debt", str(self.cyrillic_debt),
+                               str(self.lesson)], capture_output=True, text=True)
 
     def assert_cli(self, code, message=None):
         result = self.cli()
@@ -572,6 +575,10 @@ properties:
 """
 
     def add_schema(self, verdicts="valid\tok\nextra\trefused\n", classes="extra\tkey\n"):
+        home = self.root / "Platform/common/data/testsub"
+        home.mkdir(parents=True)
+        for name in ("testsub", "testsub2"):
+            (home / f"{name}.subsystem.yaml").write_text(f"name: {name}\n")
         (self.spec / "01-example.schema.yaml").write_text(self.SCHEMA)
         (self.spec / "01-example.references.tsv").write_text("path\tcheck\tclass\tnorm\n")
         (self.acceptance / "cases").mkdir()
@@ -906,11 +913,72 @@ properties:
         registry = self.root / "exceptions.tsv"
         registry.write_text("М12A_Example/01\tno-openapi\t-\tADR\n")
         result = subprocess.run([sys.executable, str(Path(__file__).with_name("check_spec.py")), "--root",
-                                 str(self.root), "--exceptions", str(registry), str(self.lesson)],
+                                 str(self.root), "--exceptions", str(registry),
+                                 "--cyrillic-debt", str(self.cyrillic_debt), str(self.lesson)],
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("EXCEPTION М12A_Example/01 no-openapi -: ADR", result.stdout)
         self.assertIn("PASS with 1 exceptions", result.stdout)
+
+
+class CyrillicIntegrationTests(unittest.TestCase):
+    def test_export_root_checks_new_homes_in_the_check_spec_cli(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("Platform/COURSE_COMMIT", "VMS/COURSE_COMMIT"):
+                path = root / name
+                path.parent.mkdir()
+                path.write_text("0123456789abcdef0123456789abcdef01234567\n")
+            (root / "README.md").write_text("Ж")
+            source = root / "new-published-home/input.tsv"
+            source.parent.mkdir()
+            source.write_text("Ж")
+            debt = root / "debt.tsv"
+            debt.write_text("kind\tpath\tletters\n")
+            result = subprocess.run([sys.executable, "-B", str(Path(__file__).with_name("check_spec.py")),
+                                     "--root", str(root), "--cyrillic-debt", str(debt), "missing.md"],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertIn("check_spec requires the full course source at the exact nested COURSE_COMMIT", result.stdout)
+            self.assertIn("README.md: Cyrillic letters 1, debt 0", result.stdout)
+            self.assertIn("new-published-home/input.tsv: Cyrillic letters 1, debt 0", result.stdout)
+            self.assertIn("cyrillic_export=1", result.stdout)
+
+    def test_global_judge_in_check_spec_cli_even_with_explicit_lesson(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "tools/normgen/runtime/door.go"
+            source.parent.mkdir(parents=True)
+            source.write_text("// Ж\n")
+            debt = root / "debt.tsv"
+            debt.write_text("kind\tpath\tletters\n")
+            result = subprocess.run([sys.executable, "-B", str(Path(__file__).with_name("check_spec.py")),
+                                     "--root", str(root), "--cyrillic-debt", str(debt), "missing.md"],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertIn("tools/normgen/runtime/door.go: Cyrillic letters 1, debt 0", result.stdout)
+            self.assertIn("cyrillic_debt_files=0", result.stdout)
+
+    def test_check_stats_debt_and_ready_are_not_exception_count(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "Platform/01-store").mkdir(parents=True)
+            (root / "Platform/01-store/README.md").write_text("English\n")
+            source = root / "Platform/notes.md"
+            source.write_text("ЖЖ")
+            debt = root / "debt.tsv"
+            debt.write_text("kind\tpath\tletters\nready\tPlatform/01-store\t-\ndebt\tPlatform/notes.md\t2\n")
+            check = Check(root)
+            check.check_cyrillic(debt)
+            self.assertEqual(check.errors, [])
+            self.assertEqual(check.excepted, [])
+            self.assertEqual(check.stats["cyrillic_debt_files"], 1)
+            self.assertEqual(check.stats["cyrillic_debt_letters"], 2)
+            self.assertEqual(check.stats["cyrillic_ready"], 1)
+            source.write_text("English")
+            stale = Check(root)
+            stale.check_cyrillic(debt)
+            self.assertTrue(any("shrink debt explicitly" in error for error in stale.errors))
 
 
 class PlatformLessonTests(unittest.TestCase):
@@ -939,6 +1007,11 @@ class PlatformLessonTests(unittest.TestCase):
             (acceptance / "scenarios.tsv").write_text(
                 "# scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n")
         (self.spec / "01-store.api.openapi.yaml").write_text(self.API)
+        history = self.root / "decisions/history/platform"
+        history.mkdir(parents=True)
+        (history / "id-map.tsv").write_text(
+            "old\tnew\tchapter\tsubject\tnote\n"
+            "-\tP/01.1-01\t1.1\tx\t-\n-\tP/01.2-01\t1.2\tx\t-\n")
 
     API = '''openapi: 3.1.0
 info: {title: Store, version: "1"}
@@ -984,6 +1057,53 @@ paths:
         result = self.library_lesson(acceptance=True)
         self.assertTrue(any("stale exception no-acceptance" in e for e in result.errors), result.errors)
 
+    INVENTORY = ("# Instructions\n\n### Checklist inventory, 2 ids\n<!-- checklist-inventory:begin -->\n"
+                 "| chapter | ids |\n|---|---|\n| P/01.1 | `P/01.1-01` |\n| P/01.2 | `P/01.2-01` |\n"
+                 "<!-- checklist-inventory:end -->\n")
+
+    def inventory_errors(self, text):
+        self.readme.write_text(text)
+        return [e for e in self.check().errors if "checklist inventory" in e]
+
+    def test_checklist_inventory(self):
+        """Опись чеклистов instruction (решение «Архитектора» 2026-11-06): без блока — ничего; блок = все id."""
+        self.assertEqual(self.inventory_errors("# Instructions\n"), [])
+        self.assertEqual(self.inventory_errors(self.INVENTORY), [])
+        self.assertEqual(self.check().errors, [])          # маркеры блока — не «unsupported raw HTML»
+        self.assertEqual(self.check().stats["checklist_inventories"], 1)
+        bad = {
+            "missing id": self.INVENTORY.replace("| P/01.2 | `P/01.2-01` |\n", ""),
+            "foreign id": self.INVENTORY.replace("`P/01.2-01`", "`P/01.2-01`, `P/01.2-02`").replace("2 ids", "3 ids"),
+            "repeat": self.INVENTORY.replace("`P/01.2-01` |", "`P/01.2-01`, `P/01.2-01` |").replace("2 ids", "3 ids"),
+            "range": self.INVENTORY.replace("`P/01.2-01`", "`P/01.2-01…02`"),
+            "no backticks": self.INVENTORY.replace("`P/01.2-01`", "P/01.2-01"),
+            "wrong chapter": self.INVENTORY.replace("| P/01.2 |", "| P/01.1 |"),
+            "wrong chapter, short form": self.INVENTORY.replace("| P/01.2 |", "| 1.1 |"),
+            "count": self.INVENTORY.replace("2 ids", "3 ids"),
+            "no end": self.INVENTORY.replace("<!-- checklist-inventory:end -->\n", ""),
+            "three cells": self.INVENTORY.replace("| P/01.2 | `P/01.2-01` |", "| P/01.2 | `P/01.2-01` | x |"),
+        }
+        for what, text in bad.items():
+            self.assertNotEqual(text, self.INVENTORY, what)
+            self.assertTrue(self.inventory_errors(text), what)
+
+    def test_checklist_inventory_en_ru(self):
+        """ADR-0124: блок источника и перевода равны по id; блок только в одном языке — ошибка."""
+        import shutil
+        (self.dir / "ru").mkdir()
+        shutil.copytree(self.spec, self.dir / "ru/spec")
+        shutil.copy(self.lesson, self.dir / "ru/01-store.md")
+        self.lesson = self.dir / "ru/01-store.md"
+        ru = self.dir / "ru/spec/01-store.README.md"
+        self.readme.write_text(self.INVENTORY)
+        ru.write_text(self.INVENTORY)
+        errors = lambda: [e for e in self.check().errors if "checklist inventory" in e]   # noqa: E731
+        self.assertEqual(errors(), [])
+        ru.write_text("# Инструкция\n")
+        self.assertTrue(any("missing here" in e for e in errors()), errors())
+        ru.write_text(self.INVENTORY.replace("| P/01.2 | `P/01.2-01` |\n", ""))
+        self.assertTrue(any("differ from the source" in e for e in errors()), errors())
+
     def test_two_chapters_pass(self):
         result = self.check()
         self.assertEqual(result.errors, [])
@@ -993,6 +1113,8 @@ paths:
     def test_chapters_zero_and_two_digits(self):
         """Главы 0 и 10 (урок 8: 8.0, 8.10) разбираются и идут по номеру, не по строке."""
         for chapter in ("0", "10"):
+            with (self.root / "decisions/history/platform/id-map.tsv").open("a") as table:
+                table.write(f"-\tP/01.{chapter}-01\t1.{chapter}\tx\t-\n")
             (self.spec / f"01.{chapter}-store.norms.md").write_text(
                 "\n".join(f"## Н{i} Section" for i in range(6)) +
                 "\n## Решает реализация\n## Чеклист готовности\n" +
@@ -1124,7 +1246,19 @@ class FormSourceChapterTests(unittest.TestCase):
         (self.acceptance / "verdicts.tsv").write_text("good\tok\nbad\trefused\n")
         (self.acceptance / "cases/good.subsystem.yaml").write_text("name: a\n")
         (self.acceptance / "cases/bad.subsystem.yaml").write_text("name: a\nzz: 1\n")
+        legacy = self.acceptance / "spec_verdicts"
+        legacy.mkdir()
+        (legacy / "spec_verdicts.tsv").write_text("legacy-ok\tok\nlegacy-no\trefused\n")
+        (legacy / "legacy-ok.subsystem.yaml").write_text("name: a\n")
+        (legacy / "legacy-no.subsystem.yaml").write_bytes(b"\xff")
+        home = self.root / "Platform/common/data/testsub"
+        home.mkdir(parents=True)
+        for name, value in (("testsub", "a"), ("testsub2", "b")):
+            (home / f"{name}.subsystem.yaml").write_text(f"name: {value}\n")
         (self.spec / "02-installer.api.openapi.yaml").write_text(PlatformLessonTests.API)
+        history = self.root / "decisions/history/platform"
+        history.mkdir(parents=True)
+        (history / "id-map.tsv").write_text("old\tnew\tchapter\tsubject\tnote\n-\tP/02.1-01\t2.1\tx\t-\n")
 
     def check(self):
         result = Check(self.root)
@@ -1202,6 +1336,11 @@ class FamiliesChapterTests(unittest.TestCase):
             (acceptance / "scenarios.tsv").write_text(
                 "# scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n")
         self.norms = self.spec / "03.2-worker.norms.md"
+        history = self.root / "decisions/history/platform"
+        history.mkdir(parents=True)
+        (history / "id-map.tsv").write_text(
+            "old\tnew\tchapter\tsubject\tnote\n"
+            "-\tP/03.1-01\t3.1\tx\t-\n-\tP/03.2-01\t3.2\tx\t-\n")
 
     def check(self):
         result = Check(self.root)
@@ -1514,7 +1653,9 @@ class PlatformCatalogTests(unittest.TestCase):
                               "".join(f"- [ ] **{i}** Example — проверяется чтением\n" for i in ids))
 
     def write_idmap(self, rows):
-        (self.root / "Platform/common/id-map.tsv").write_text(
+        history = self.root / "decisions/history/platform"
+        history.mkdir(parents=True, exist_ok=True)
+        (history / "id-map.tsv").write_text(
             "# id-map\nold\tnew\tchapter\tsubject\tnote\n" + "".join(f"{o}\t{n}\t3\tx\t-\n" for o, n in rows))
 
     def write_catalog(self, rows):
@@ -1534,6 +1675,42 @@ class PlatformCatalogTests(unittest.TestCase):
         result = self.check()
         self.assertEqual(result.errors, [])
         self.assertEqual((result.stats["data_roles"], result.stats["id_map_ids"]), (1, 2))
+
+    def test_id_map_values_and_line_numbers(self):
+        result = Check(self.root)
+        self.assertEqual(result.id_map_rows(), [
+            (3, {"old": "М10/9-01", "new": "P/03-01", "chapter": "3", "subject": "x", "note": "-"}),
+            (4, {"old": "М10/9-02", "new": "P/03-02", "chapter": "3", "subject": "x", "note": "-"}),
+        ])
+        self.assertEqual(result.errors, [])
+
+    def test_new_id_map_is_required_even_with_a_valid_old_copy(self):
+        path = self.root / "decisions/history/platform/id-map.tsv"
+        data = path.read_bytes()
+        (self.root / "Platform/common/id-map.tsv").write_bytes(data)
+        bad = {
+            "missing": None,
+            "empty": b"",
+            "comments only": b"# history\n",
+            "header only": b"old\tnew\tchapter\tsubject\tnote\n",
+            "wrong header": data.replace(b"subject", b"title", 1),
+            "broken row": data + b"old\tnew\tchapter\n",
+            "invalid UTF-8": data + b"\xff\n",
+        }
+        for what, content in bad.items():
+            with self.subTest(what=what):
+                if content is None:
+                    path.unlink()
+                else:
+                    path.write_bytes(content)
+                errors = self.check().errors
+                self.assertTrue(any("decisions/history/platform/id-map.tsv:" in e for e in errors), errors)
+        path.write_bytes(data)
+        self.assertEqual(self.check().errors, [])
+
+    def test_old_id_map_does_not_override_history(self):
+        (self.root / "Platform/common/id-map.tsv").write_text("broken old map\n")
+        self.assertEqual(self.check().errors, [])
 
     def test_data_names_what_the_process_reads_and_writes(self):
         self.write_norms(["- владеет: `w/own/<x>`."], ["P/03-01", "P/03-02"])
@@ -1573,7 +1750,7 @@ class PlatformCatalogTests(unittest.TestCase):
         self.write_idmap([("М10/9-01", "P/03-01"), ("М10/9-02", "P/03-02"), ("- (новая)", "P/03-03"),
                           ("М10/8-01", "P/03-04"), ("М10/8-01", "P/03.1-01"), ("М10/9-01", "P/03 сц. 01")])
         errors = "\n".join(self.check().errors)
-        self.assertIn("checklist id P/03-05 is not in the column new of Platform/common/id-map.tsv", errors)
+        self.assertIn("checklist id P/03-05 is not in the column new of decisions/history/platform/id-map.tsv", errors)
         self.assertIn("new P/03-03 is not in the checklist, and its old - (новая) is in no old lesson's checklist", errors)
         self.assertNotIn("P/03-04", errors)                    # М10/8-01 is still in the checklist of М10/8
         self.assertNotIn("P/03.1-01", errors)                  # another chapter
@@ -1853,7 +2030,7 @@ class VmsLessonTests(unittest.TestCase):
 
 class LayoutTests(unittest.TestCase):
     """ADR-0124 (доп. (1) п. 6): урок с `ru/` — новая раскладка. Лекция и переводы — в `ru/`, источник — на каноническом
-    пути, журнал — `journal/corrections-<глава>.tsv`; проверки урока читают русский перевод, источник не ссылается в
+    пути, журнал Platform — `decisions/journal/platform/<урок>/corrections-<глава>.tsv`; проверки читают русский перевод, источник не ссылается в
     `ru/` и `journal/`."""
 
     API = PlatformLessonTests.API
@@ -1868,9 +2045,10 @@ class LayoutTests(unittest.TestCase):
                 path.rename(ru / rel)                    # лекция — только для человека
             else:
                 (ru / rel).write_text(path.read_text())   # русский перевод тем же путём
+        self.journal = self.root / "decisions/journal/platform/01-store"
+        self.journal.mkdir(parents=True)
         for chapter in ("1", "2"):
-            (self.dir / "journal").mkdir(exist_ok=True)
-            (self.dir / "acceptance" / chapter / "corrections.tsv").rename(self.dir / f"journal/corrections-{chapter}.tsv")
+            (self.dir / "acceptance" / chapter / "corrections.tsv").rename(self.journal / f"corrections-{chapter}.tsv")
         self.lesson = ru / "01-store.md"
 
     def check(self):
@@ -1892,14 +2070,51 @@ class LayoutTests(unittest.TestCase):
         self.assertTrue(errors and all("ru/spec/01.1-store.norms.md" in e or "P/01.1" in e for e in errors), errors)
 
     def test_log_lives_in_journal(self):
-        (self.dir / "journal/corrections-2.tsv").unlink()
-        self.assertTrue(any("journal/corrections-2.tsv" in e for e in self.check().errors))
+        (self.dir / "journal").mkdir()
         (self.dir / "journal/corrections-2.tsv").write_text("date\tsample\tfix\tlanguages\n")
+        (self.journal / "corrections-2.tsv").unlink()
+        self.assertTrue(any("decisions/journal/platform/01-store/corrections-2.tsv" in e for e in self.check().errors))
+        (self.journal / "corrections-2.tsv").write_text("date\tsample\tfix\tlanguages\n")
         (self.dir / "acceptance/1/corrections.tsv").write_text("date\tsample\tfix\tlanguages\n")
         errors = self.check().errors
-        self.assertTrue(any("the log lives in Platform/01-store/journal/corrections-1.tsv" in e for e in errors), errors)
+        self.assertTrue(any("the log lives in decisions/journal/platform/01-store/corrections-1.tsv" in e for e in errors), errors)
+
+    def test_history_log_values_and_physical_line_numbers(self):
+        path = self.journal / "corrections-2.tsv"
+        path.write_text("# history\ndate\tsample\tfix\tlanguages\n2026-11-06\t02-пример\tПравка 17\tGo, Python\n")
+        result = self.check()
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.tsv(path, 4, ["date", "sample", "fix", "languages"]),
+                         [(3, ["2026-11-06", "02-пример", "Правка 17", "Go, Python"])])
+        with path.open("a") as log:
+            log.write("2026-11-06\t02-пример\tmissing languages\n")
+        errors = self.check().errors
+        self.assertTrue(any("decisions/journal/platform/01-store/corrections-2.tsv: line 4: expected 4 TSV columns" in e
+                            for e in errors), errors)
+
+    def test_vms_journal_stays_in_lesson(self):
+        import shutil
+        home = self.root / "VMS/01-cam"
+        acceptance = home / "acceptance/1"
+        shutil.copytree(self.dir / "acceptance/1", acceptance)
+        shutil.copytree(self.dir / "ru/acceptance/1", home / "ru/acceptance/1")
+        (home / "journal").mkdir()
+        path = home / "journal/corrections-1.tsv"
+        path.write_text("date\tsample\tfix\tlanguages\n")
+        history = self.root / "decisions/journal/vms/01-cam"
+        history.mkdir(parents=True)
+        (history / path.name).write_text("broken history copy\n")
+        result = Check(self.root)
+        result.acceptance(acceptance, "V/01", "1/")
+        self.assertEqual(result.errors, [])
+        path.unlink()
+        result = Check(self.root)
+        result.acceptance(acceptance, "V/01", "1/")
+        self.assertTrue(any("VMS/01-cam/journal/corrections-1.tsv:" in e for e in result.errors), result.errors)
 
     def test_source_does_not_link_ru_or_journal(self):
+        (self.dir / "journal").mkdir()
+        (self.dir / "journal/corrections-1.tsv").write_text("date\tsample\tfix\tlanguages\n")
         result = Check(self.root)
         source = self.dir / "spec/01.1-store.norms.md"
         result.markdown(source, "[lecture](../ru/01-store.md), [log](../journal/corrections-1.tsv)\n")
@@ -1932,6 +2147,257 @@ class LayoutTests(unittest.TestCase):
         result = Check(self.root)
         result.check_tables()
         self.assertTrue(any("lives in forms/" in e for e in result.errors), result.errors)
+
+
+REPO = Path(__file__).resolve().parents[3]
+NUMERIC_TABLE = REPO / Check.NUMERIC_LOADER_TABLE
+
+
+class PlatformHistoryMapTests(unittest.TestCase):
+    def test_published_map_preserves_all_cells_and_line_numbers(self):
+        import csv
+        path = REPO / "decisions/history/platform/id-map.tsv"
+        physical = [(n, line) for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
+                    if line and not line.startswith("#")]
+        expected = list(csv.DictReader((line for _, line in physical), delimiter="\t"))
+        result = Check(REPO)
+        rows = result.id_map_rows()
+        self.assertEqual(result.errors, [])
+        self.assertEqual([row for _, row in rows], expected)
+        self.assertEqual([n for n, _ in rows], [n for n, _ in physical[1:]])
+        ids = {row["new"] for _, row in rows if re.fullmatch(r"P/[0-9]{2}(?:\.[0-9]+)?-[0-9]+", row["new"])}
+        self.assertEqual(len(ids), 532)
+
+
+@unittest.skipUnless(NUMERIC_TABLE.is_file(), "no numeric-loader witnesses of P/06 C3 in this tree")
+class NumericLoaderTests(unittest.TestCase):
+    """Дополнительная привязка свидетелей C3 урока P/06 к загрузчику P/02.1 (решение «Архитектора» 2026-11-06)."""
+
+    def setUp(self):
+        import shutil
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        for part in ("Platform/02-installer/spec", "Platform/06-console/forms"):
+            shutil.copytree(REPO / part, self.root / part)
+        self.table = self.root / Check.NUMERIC_LOADER_TABLE
+        self.base = self.root / Check.NUMERIC_LOADER_BASE
+
+    def judge(self):
+        from v7 import spec
+        check = Check(self.root)
+        extra = check.numeric_loader(self.base)
+        norms = self.root / "Platform/02-installer/spec/02.1-installer.norms.md"
+        errors, stats = spec.manifest_check(self.root, norms, None, self.base, self.root / "nowhere", {}, {}, [],
+                                            strict=True, extra=extra)
+        return check.errors + [m for _, m in errors], stats
+
+    def edit(self, old, new):
+        text = self.table.read_text(encoding="utf-8")
+        self.assertIn(old, text)
+        self.table.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+    def test_clean(self):
+        errors, stats = self.judge()
+        self.assertEqual([e for e in errors if "numeric" in e], [])
+        self.assertEqual(stats["numeric_loader_cases"], 9)
+        for no in Check.NUMERIC_LOADER_ROWS:
+            self.assertFalse(any(f"row {no}: no corpus case" in e for e in errors), errors)
+
+    def test_missing_table(self):
+        self.table.unlink()
+        errors, _ = self.judge()
+        self.assertTrue(any("witness table is missing" in e for e in errors), errors)
+
+    def test_missing_row(self):
+        text = self.table.read_text(encoding="utf-8")
+        self.table.write_text("".join(ln for ln in text.splitlines(True) if not ln.startswith("p06-c3-numeric-ends\t")),
+                              encoding="utf-8")
+        errors, _ = self.judge()
+        self.assertTrue(any("row of witness p06-c3-numeric-ends is missing" in e for e in errors), errors)
+        self.assertTrue(any("relation row 162 of P/02.1 has no refused witness" in e for e in errors), errors)
+        self.assertTrue(any("row 162: no corpus case" in e for e in errors), errors)
+
+    def test_missing_file(self):
+        (self.root / "Platform/06-console/forms/numeric-loader/p06-c3-named-ends.subsystem.yaml").unlink()
+        errors, _ = self.judge()
+        self.assertTrue(any("witness p06-c3-named-ends" in e and "missing" in e for e in errors), errors)
+
+    def test_ok_expected_for_refusal(self):
+        self.edit("refused:relations\t160\t", "ok\t-\t")
+        errors, _ = self.judge()
+        self.assertTrue(any("numeric loader: expected ok, got refused:relations" in e for e in errors), errors)
+
+    def test_refused_expected_for_ok(self):
+        self.edit("p06-c3-named-ends.subsystem.yaml\tok\t-\t",
+                  "p06-c3-named-ends.subsystem.yaml\trefused:relations\t162\t")
+        errors, _ = self.judge()
+        self.assertTrue(any("numeric loader: expected refused:relations, got ok" in e for e in errors), errors)
+
+    def test_wrong_row(self):
+        self.edit("refused:relations\t160\t", "refused:relations\t162\t")
+        errors, _ = self.judge()
+        self.assertTrue(any("refused by rows [160], expected exactly row 162" in e for e in errors), errors)
+
+    def test_silent_without_rows(self):
+        import json
+        p = Path(str(self.base) + ".relations.json")
+        rel = json.loads(p.read_text(encoding="utf-8"))
+        rel["rows"] = [r for r in rel["rows"] if r["no"] not in Check.NUMERIC_LOADER_ROWS]
+        p.write_text(json.dumps(rel, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        self.table.unlink()
+        check = Check(self.root)
+        self.assertEqual(check.numeric_loader(self.base), [])
+        self.assertEqual(check.errors, [])
+
+
+class CanonicalPlatformPaths(unittest.TestCase):
+    """Owned new-home fixtures: Source bytes never rescue missing canonical input."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        for name in ("Platform/common/NORMATIVE-TERMS.md", "Platform/07-console-module/CONSOLE-MODULE.md"):
+            self.put(name, "# Canonical\n")
+        for name in ("testsub", "testsub2"):
+            self.put(f"Platform/common/data/testsub/{name}.subsystem.yaml", f"name: {name}\n")
+            self.put(f"Source/tests/testdata/{name}.subsystem.yaml", b"immutable witness, not YAML\xff")
+        self.home = self.root / "Platform/02-installer/acceptance/1/spec_verdicts"
+        self.table = self.put("Platform/02-installer/acceptance/1/spec_verdicts/spec_verdicts.tsv",
+                              "# case\tverdict\nfirst\tok\nsecond\trefused\n")
+        self.put(self.home / "first.subsystem.yaml", b"name: first\n")
+        self.put(self.home / "second.subsystem.yaml", b"\xff\x00\t\r\n")
+        self.put(self.home / "README.md", "# Legacy witnesses\n[Index](spec_verdicts.tsv)\n")
+
+    def put(self, name, data):
+        path = self.root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data if isinstance(data, bytes) else data.encode())
+        return path
+
+    def test_new_canonical_manifests_only_and_missing_never_falls_back(self):
+        check = Check(self.root)
+        paths = check.course_manifests()
+        self.assertEqual(check.errors, [])
+        self.assertEqual([p.relative_to(self.root).as_posix() for p in paths],
+                         [f"Platform/common/data/testsub/{name}.subsystem.yaml" for name in ("testsub", "testsub2")])
+        for path in paths:
+            with self.subTest(path=path):
+                before = path.read_bytes()
+                path.unlink()
+                broken = Check(self.root)
+                self.assertEqual(len(broken.course_manifests()), 1)
+                self.assertTrue(any(str(path.relative_to(self.root)) in e for e in broken.errors), broken.errors)
+                path.write_bytes(before)
+
+    def test_manifest_extra_and_symlink_rejected(self):
+        extra = self.put("Platform/common/data/testsub/third.subsystem.yaml", "name: third\n")
+        check = Check(self.root)
+        check.course_manifests()
+        self.assertTrue(any("unexpected canonical" in e for e in check.errors))
+        extra.unlink()
+        path = self.root / "Platform/common/data/testsub/testsub.subsystem.yaml"
+        path.unlink()
+        path.symlink_to(self.root / "Source/tests/testdata/testsub.subsystem.yaml")
+        check = Check(self.root)
+        check.course_manifests()
+        self.assertTrue(any("without symlinks" in e for e in check.errors))
+
+    def test_new_documents_required_and_root_alias_forbidden(self):
+        check = Check(self.root)
+        check.canonical_layout()
+        self.assertEqual(check.errors, [])
+        for name in ("NORMATIVE-TERMS.md", "CONSOLE-MODULE.md"):
+            with self.subTest(name=name):
+                alias = self.put(name, "# Legacy\n")
+                check = Check(self.root)
+                check.canonical_layout()
+                self.assertTrue(any("legacy root document" in e for e in check.errors))
+                alias.unlink()
+        path = self.root / "Platform/common/NORMATIVE-TERMS.md"
+        path.unlink()
+        self.put("NORMATIVE-TERMS.md", "# Old home cannot rescue the new one\n")
+        check = Check(self.root)
+        check.canonical_layout()
+        self.assertTrue(any("Platform/common/NORMATIVE-TERMS.md" in e and "required canonical" in e
+                            for e in check.errors))
+
+    def test_legacy_roster_headerless_first_row_and_opaque_bytes(self):
+        before = {p.name: p.read_bytes() for p in self.home.iterdir()}
+        check = Check(self.root)
+        check.legacy_spec_verdicts()
+        self.assertEqual(check.errors, [])
+        self.assertEqual(check.stats["legacy_spec_verdicts"], 2)
+        self.assertEqual(check.stats["verdicts"], 0)       # never replaces the active P02 corpus
+        self.assertEqual({p.name: p.read_bytes() for p in self.home.iterdir()}, before)
+        (self.home / "first.subsystem.yaml").unlink()
+        check = Check(self.root)
+        check.legacy_spec_verdicts()
+        self.assertTrue(any("first.subsystem.yaml: missing legacy" in e for e in check.errors), check.errors)
+
+    def test_legacy_roster_corruption_and_old_index_do_not_pass(self):
+        good = self.table.read_bytes()
+        for data in (b"", b"case\tverdict\nfirst\tok\nsecond\trefused\n",
+                     good + b"first\tok\n", good.replace(b"first\tok", b"first\tmaybe"),
+                     b"../first\tok\n", b"first\tok\textra\n"):
+            with self.subTest(data=data):
+                self.table.write_bytes(data)
+                check = Check(self.root)
+                check.legacy_spec_verdicts()
+                self.assertTrue(check.errors)
+        self.table.unlink()
+        self.put("Source/tests/testdata/spec_verdicts.tsv", good)
+        check = Check(self.root)
+        check.legacy_spec_verdicts()
+        self.assertTrue(any("spec_verdicts/spec_verdicts.tsv" in e for e in check.errors), check.errors)
+
+    def test_legacy_extra_file_and_duplicate_subdirectory_fail(self):
+        for name in ("unlisted.subsystem.yaml", "spec_verdicts/nested.subsystem.yaml"):
+            with self.subTest(name=name):
+                path = self.put(self.home / name, b"opaque")
+                check = Check(self.root)
+                check.legacy_spec_verdicts()
+                self.assertTrue(any("unlisted legacy" in e for e in check.errors), check.errors)
+                path.unlink()
+                if path.parent != self.home:
+                    path.parent.rmdir()
+
+    def test_both_canonical_vector_readers_require_the_new_two_files(self):
+        from form_source import vectors as dialect
+        from v7 import vectors as standard
+        expected = [(f"course-{name}", f"Platform/common/data/testsub/{name}.subsystem.yaml")
+                    for name in ("testsub", "testsub2")]
+        for reader in (dialect, standard):
+            with self.subTest(reader=reader.__name__):
+                self.assertEqual(reader.accepted_inputs(self.root), expected)
+                path = self.root / expected[0][1]
+                before = path.read_bytes()
+                path.unlink()
+                with self.assertRaisesRegex(reader.SourceError, "required canonical course manifest"):
+                    reader.accepted_inputs(self.root)
+                path.write_bytes(before)
+
+    def test_actual_module_file_expectations_reject_source_and_aliases(self):
+        table = self.root / "Platform/06-console/acceptance/5/scenarios.tsv"
+        for name in ("console.js", "console.css", "console.html"):
+            target = self.put(f"Platform/07-console-module/module/{name}", "owned bytes\n")
+            check = Check(self.root)
+            check.module_file_binding(table, 9, f"200 @file {target.relative_to(self.root)}")
+            self.assertEqual(check.errors, [])
+            for old in (f"Source/w2cplatform/{name}", name, f"Platform/06-console/module/{name}"):
+                with self.subTest(old=old):
+                    self.put(old, "existing old bytes do not rescue this input\n")
+                    check = Check(self.root)
+                    check.module_file_binding(table, 9, f"200 @file {old}")
+                    self.assertTrue(any("@file module input must be" in e for e in check.errors), check.errors)
+            target.unlink()
+            check = Check(self.root)
+            check.module_file_binding(table, 9, f"200 @file {target.relative_to(self.root)}")
+            self.assertTrue(any("missing canonical module input" in e for e in check.errors))
+        check = Check(self.root)
+        check.module_file_binding(table, 10, '200 {"opaque":"@file Source/w2cplatform/console.js"}')
+        self.assertEqual(check.errors, [])       # no grep of opaque JSON/test payloads
 
 
 if __name__ == "__main__":

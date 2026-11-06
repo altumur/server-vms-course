@@ -111,8 +111,3 @@ and doors of the section «Three-server cluster stand» and of the dictionary; s
 
 Sc. 05 — the boundary of the common README: each run gets new directories and ports of all three servers. The drills 07, 08 are executed on a real box and have no runner boundaries: each one — on its own test box, the original directories are saved before the start.
 
-## `journal/corrections-system.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
-of the acceptance of M10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
-resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (review analysis of stage B 6–7, № 18).

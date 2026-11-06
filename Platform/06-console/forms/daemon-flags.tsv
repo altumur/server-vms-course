@@ -7,27 +7,27 @@
 # Empty bad does not waive imported catalogue, role, ring placement, server, box, address, kit or trust checks.
 # Cross-process DOMAIN_* and RELAY_* in the lifecycle are configured at their owning domain/agent process, not invented as console inputs.
 flag	type	default	default_text	required	commands	bad	norm
-$W2C_ROLE	string	-	the unit supplies console	false	console	f["$W2C_ROLE"] != "console"	common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$PLATFORM_STORE	string	-	file://<PLATFORM_DIR>/config; the unit uses the console role socket	false	console		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$PLATFORM_DIR	dir	/data/platform	/data/platform	false	console		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$RESOURCE_ROOT	dir	-	<PLATFORM_DIR>/events; aliases must agree when both supplied	false	console	"$RESOURCE_ROOT" in f && "$EVENTS" in f && f["$RESOURCE_ROOT"] != f["$EVENTS"]	common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$EVENTS	dir	-	<PLATFORM_DIR>/events; aliases must agree when both supplied	false	console	"$RESOURCE_ROOT" in f && "$EVENTS" in f && f["$RESOURCE_ROOT"] != f["$EVENTS"]	common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$OBJECTS	string	-	<PLATFORM_DIR>/objects; cluster:// with configstore; aliases must agree	false	console	"$OBJECTS" in f && "$PLATFORM_OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$PLATFORM_OBJECTS	string	-	<PLATFORM_DIR>/objects; cluster:// with configstore; aliases must agree	false	console	"$OBJECTS" in f && "$PLATFORM_OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$CONSOLE_ROOT	string	-	a loaded subsystem with the console shell; no empty default	true	console	f["$CONSOLE_ROOT"] == ""	P/06.5 Н1.1 root; lifecycle.md: Environment
-$CONSOLE_HOST	string	127.0.0.1	127.0.0.1; listener activation/address/kit checks by the cited contract	false	console		P/02.4 Н1.6; common/contracts/role-certificate.md; lifecycle.md: Environment
-$CONSOLE_PORT	string	8080	8080; listener activation/address/kit checks by the cited contract	false	console		P/02.4 Н1.6; common/contracts/role-certificate.md; lifecycle.md: Environment
-$CONSOLE_CALL_PORT	string	8081	8081; listener activation/address/kit checks by the cited contract	false	console		P/02.4 Н1.6; common/contracts/role-certificate.md; lifecycle.md: Environment
-$SECRETS_KEY	string	-	absent: development mode with a loud line; explicitly empty: unreadable ring, not absent	false	console		P/06.2 Н1.2; common/contracts/secret-files.md; lifecycle.md: Environment
-$SERVER_NAME	string	-	short hostname; validate by the environment contract	false	console		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$INSTANCE_ID	string	-	absent or empty: computed instance; supplied nonempty: preserve the accepted spelling	false	console		common/contracts/env-file.md: Environment variables; common/contracts/instance.md; P/06.4 Н1.2
-$BOX_ID	string	-	machine-id, otherwise hostname; instance is derived, not an input PID or random suffix	false	console		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2; common/contracts/instance.md
-$CLUSTER	string	local	local	false	console		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$TIMEZONE	string	UTC	UTC; supplied empty or bad spelling: exit2	false	console	!f["$TIMEZONE"].matches("^[A-Za-z][A-Za-z0-9_+-]*(/[A-Za-z][A-Za-z0-9_+-]*)*$")	common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
-$BUILD	string	dev	dev	false	console		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2; P/06.6 Н2.3
-$W2C_TLS_DIR	dir	/etc/w2c/tls	/etc/w2c/tls; own kit console	false	console		common/contracts/env-file.md: Environment variables; P/02.4 Н1.2
+$W2C_ROLE	string	-	the unit supplies console	false	console	f["$W2C_ROLE"] != "console"	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$PLATFORM_STORE	string	-	file://<PLATFORM_DIR>/config; the unit uses the console role socket	false	console		common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$PLATFORM_DIR	dir	/data/platform	/data/platform	false	console		common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$RESOURCE_ROOT	dir	-	<PLATFORM_DIR>/events; aliases must agree when both supplied	false	console	"$RESOURCE_ROOT" in f && "$EVENTS" in f && f["$RESOURCE_ROOT"] != f["$EVENTS"]	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$EVENTS	dir	-	<PLATFORM_DIR>/events; aliases must agree when both supplied	false	console	"$RESOURCE_ROOT" in f && "$EVENTS" in f && f["$RESOURCE_ROOT"] != f["$EVENTS"]	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$OBJECTS	string	-	<PLATFORM_DIR>/objects; cluster:// with configstore; aliases must agree	false	console	"$OBJECTS" in f && "$PLATFORM_OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$PLATFORM_OBJECTS	string	-	<PLATFORM_DIR>/objects; cluster:// with configstore; aliases must agree	false	console	"$OBJECTS" in f && "$PLATFORM_OBJECTS" in f && f["$OBJECTS"] != f["$PLATFORM_OBJECTS"]	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$CONSOLE_ROOT	string	-	a loaded subsystem with the console shell; no empty default	true	console	f["$CONSOLE_ROOT"] == ""	P/06.5 N1.1 root; lifecycle.md: Environment
+$CONSOLE_HOST	string	127.0.0.1	127.0.0.1; listener activation/address/kit checks by the cited contract	false	console		P/02.4 N1.6; common/contracts/role-certificate.md; lifecycle.md: Environment
+$CONSOLE_PORT	string	8080	8080; listener activation/address/kit checks by the cited contract	false	console		P/02.4 N1.6; common/contracts/role-certificate.md; lifecycle.md: Environment
+$CONSOLE_CALL_PORT	string	8081	8081; listener activation/address/kit checks by the cited contract	false	console		P/02.4 N1.6; common/contracts/role-certificate.md; lifecycle.md: Environment
+$SECRETS_KEY	string	-	absent: development mode with a loud line; explicitly empty: unreadable ring, not absent	false	console		P/06.2 N1.2; common/contracts/secret-files.md; lifecycle.md: Environment
+$SERVER_NAME	string	-	short hostname; validate by the environment contract	false	console		common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$INSTANCE_ID	string	-	absent or empty: computed instance; supplied nonempty: preserve the accepted spelling	false	console		common/contracts/env-file.md: Environment variables; common/contracts/instance.md; P/06.4 N1.2
+$BOX_ID	string	-	machine-id, otherwise hostname; instance is derived, not an input PID or random suffix	false	console		common/contracts/env-file.md: Environment variables; P/02.4 N1.2; common/contracts/instance.md
+$CLUSTER	string	local	local	false	console		common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$TIMEZONE	string	UTC	UTC; supplied empty or bad spelling: exit2	false	console	!f["$TIMEZONE"].matches("^[A-Za-z][A-Za-z0-9_+-]*(/[A-Za-z][A-Za-z0-9_+-]*)*$")	common/contracts/env-file.md: Environment variables; P/02.4 N1.2
+$BUILD	string	dev	dev	false	console		common/contracts/env-file.md: Environment variables; P/02.4 N1.2; P/06.6 N2.3
+$W2C_TLS_DIR	dir	-	Linux /etc/w2c/tls; macOS <W2C_BOX>/tls; use the common environment resolver; own kit console	false	console		common/contracts/env-file.md: Environment variables; P/02.4 N1.2
 $W2C_ENV	file	/etc/w2c/w2c.env	/etc/w2c/w2c.env; launcher parses it, never source	false	console		common/contracts/env-file.md: Files and reading order
-$LOGIN_URL	string	/api/login	/api/login if absent	false	console		common/contracts/gate-and-pass.md: login_url; P/06.3 Н2
-$SIGNER_URL	string	-	absent: no signer here, 404 at the forwarding door, not a startup refusal	false	console		P/06.7 Н1.8
-$CLUSTERS	string	-	absent or empty: an empty list; a malformed list stays an unreadable input of the operation	false	console		P/06.7 Н1.4; common/contracts/env-file.md: CLUSTERS
---writers-stopped	bool	false	required acknowledgement of the exclusive maintenance window	true	cleanup-window	f["--writers-stopped"] != true	P/06.1 Н2 Sweep window command; lifecycle.md: The cleanup window command
+$LOGIN_URL	string	/api/login	/api/login if absent	false	console		common/contracts/gate-and-pass.md: login_url; P/06.3 N2
+$SIGNER_URL	string	-	absent: no signer here, 404 at the forwarding door, not a startup refusal	false	console		P/06.7 N1.8
+$CLUSTERS	string	-	absent or empty: an empty list; a malformed list stays an unreadable input of the operation	false	console		P/06.7 N1.4; common/contracts/env-file.md: CLUSTERS
+--writers-stopped	bool	false	required acknowledgement of the exclusive maintenance window	true	cleanup-window	f["--writers-stopped"] != true	P/06.1 N2 Sweep window command; lifecycle.md: The cleanup window command

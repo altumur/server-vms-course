@@ -12,7 +12,7 @@ contract](log-mask.md) `space`, `mask_in`).
 
 Moved from P/08.4 N1.1 `name` without a change of behaviour; P/08.4 and the participant contracts refer here.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -44,7 +44,3 @@ There is no package of its own; a participant is the package [`may`](../vectors/
 a participant there (`subject` by this form; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25), and the acceptance of
 [chapter 8.4](../../08-domain/acceptance/4/README.md) (sc. 01, the white-space boundary U+0085 and U+FEFF).
 
-## Correspondence to former lessons
-
-From P/08.4 N1.1 `name` (the norm P/08.4 — by `note` of [id-map](../id-map.tsv)); P/08.4, the domain token contract `person`, the right
-contract `subject`, the log mask contract `space` and `mask_in` refer here (layout audit A-20).

@@ -4,12 +4,12 @@ This English text is the source; the Russian translation `ru/acceptance/1/README
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`06.1-console.norms.md`](../../spec/06.1-console.norms.md) N5. The scenarios were moved from the acceptance of
-М10/03 (01–14, all) and
-М10/10 (04, 05, 06, 07, 11 → 15–19) (stage B,
-ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones, except the scenarios of М10/10: their numbers 04–07 and 11 are taken
-by scenarios of М10/03, they got the next free ones (`15-blob`, `16-ceilings`, `17-tables`, `18-table-ref`,
-`19-table-feed`; the rows of `journal/corrections-1.tsv`). In all 46 scenarios / 514 steps: 11 — the service table (46, ADR-0094 B1, below), 79 — the feed (41–45, ADR-0094 B2, below), 65 — versions (38–40, ADR-0094 B4, below), 95 — the batch door (33–37, ADR-0094 B9, below), 100 — the units door (01–14), 56 — bodies and
-tables (15–19), 16 — the order row and the unit state (20, ADR-0091), 6 — the deletion of a row of a worker table (21, the VMS request «команды и строка устройства»),
+M10/03 (01–14, all) and
+M10/10 (04, 05, 06, 07, 11 → 15–19) (stage B,
+ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones, except the scenarios of M10/10: their numbers 04–07 and 11 are taken
+by scenarios of M10/03, they got the next free ones (`15-blob`, `16-ceilings`, `17-tables`, `18-table-ref`,
+`19-table-feed`; the rows of `corrections-1.tsv` (historical correction record)). In all 46 scenarios / 514 steps: 11 — the service table (46, ADR-0094 B1, below), 79 — the feed (41–45, ADR-0094 B2, below), 65 — versions (38–40, ADR-0094 B4, below), 95 — the batch door (33–37, ADR-0094 B9, below), 100 — the units door (01–14), 56 — bodies and
+tables (15–19), 16 — the order row and the unit state (20, ADR-0091), 6 — the deletion of a row of a worker table (21, the VMS request «commands and device row»),
 48 — the coverage audit of P/06 (22–27, below), 38 — its second pass (Gemini; 28–32, below).
 
 The full forms of the answers are [the OpenAPI of the lesson](../../spec/06-console.api.openapi.yaml) (the paths `/{rows}`, `/{rows}/{id}`,
@@ -18,7 +18,7 @@ the acceptance of [chapter P/03.2](../../../03-worker/acceptance/2/README.md).
 
 ## Preparation and order: scenarios 01–14 (the units door)
 
-The scenarios go through the units door of the console of the subsystem `testsub` (`Source/tests/testdata/testsub.subsystem.yaml`, the same one as
+The scenarios go through the units door of the console of the subsystem `testsub` (`Platform/common/data/testsub/testsub.subsystem.yaml`, the same one as
 the product's): the rows `counters`, `id: name`.
 
 For each full run the runner creates a separate instance of the store and of the console, loads `testsub`
@@ -36,7 +36,7 @@ the table requests are to fit in it. The limit itself stays a choice of the impl
 Scenarios 01–14 are 100 steps. Scenarios 03 and 14 run **each on its own clean instance** (the preparation above): their steps 03/8 and
 14/8 read the whole list `GET /counters`, and the door does not narrow the read to one unit (N2), so the expectation does not depend on the order of
 the scenarios. The other 12 run sequentially **on one instance**, without cleanup between them. Scenario 14 is
-the condition `If-Match` of PUT and DELETE (P/08.6: the domain agent applies an edit from the revision that the domain saw), steps 11–23 — the replay memory of these doors before the condition (N3 «память повторов»). Scenario 13 is
+the condition `If-Match` of PUT and DELETE (P/08.6: the domain agent applies an edit from the revision that the domain saw), steps 11–23 — the replay memory of these doors before the condition (N3 «replay memory»). Scenario 13 is
 the limits of the component `Idempotency-Key` (200 bytes of UTF-8, not `..`, without `/`) of the first row of the table «Additional checks»,
 moved into the TSV by the mutation check 7cecaf2 (№ 16, 17); `@header Idempotency-Key:` replaces the runner's key.
 Scenario 02 creates `c2`, which scenarios 04 and 11 address. The binding of variables acts
@@ -72,7 +72,7 @@ The right `view` on the unit `about`, `row` and the mask without the right — t
 
 ## The feed (sc. 41–45; ADR-0094 B2)
 
-`GET /changes` (N2 «Change feed», N3 «лента») by an open console, the stand is as for scenarios 15–32 below. Each scenario runs **on its own new instance of the console and the store**: the feed remembers the rows of the previous scenario, and an empty store under a live console would give messages about their removal. The controller, the workers and the row reaper do not write, so `changes` is judged whole: the length and the order of the array.
+`GET /changes` (N2 «Change feed», N3 «feed») by an open console, the stand is as for scenarios 15–32 below. Each scenario runs **on its own new instance of the console and the store**: the feed remembers the rows of the previous scenario, and an empty store under a live console would give messages about their removal. The controller, the workers and the row reaper do not write, so `changes` is judged whole: the length and the order of the array.
 
 The tick is asynchronous to the write: a message is waited for by `@until`, not by the first answer. The first `GET /changes` of a scenario is `@until` too: before the first tick the door answers 503. Messages with one `after` accumulate, so `@until` with the former `after` waits for the whole array. There is one subscriber in a scenario, the requests go one by one: the waking of the waiting one and the feed band — by reading (N5). The form of the long poll is judged by the dictionary: the feed requires no new directives.
 
@@ -126,7 +126,7 @@ of `tallies` is a string, it does not require the counter to exist; likewise sc.
   `values_by_type` list), an edit of `start` does not touch them, after `@restart console` the listing and the rows are the same.
 - Sc. 26 — the state row `testsub2/state/result/t1` with `born` and `revision` of the live row (past the holder — `@as
   testsub2worker`, as sc. 20): a `value` not by the schema `unit.state.result` (`state` not from `enum`) does not act, there is no `state` in
-  the listing; the same row with a `value` by the schema acts (N2 «Состояние в ответе»).
+  the listing; the same row with a `value` by the schema acts (N2 «State in the response»).
 - Sc. 27 — PUT of `marks` of one element of 524288 bytes: the body ≈ 524310 bytes is less than the body limit of the stand (1 MiB), the weight
   of the prepared row is greater than the ceiling 524288 — 413 `row too large` without `fault`, the row and the `revision` are the former ones (N3 «edit»
   step 6, N4). The words of `detail` are a choice of the implementation («Implementation decides» item 4), the TSV does not compare them.
@@ -141,7 +141,7 @@ past the writer — through the store door, as sc. 20, 26: the state and the hol
   P/03.6 N1.7 `cursor`): both state rows with `born` and `revision` of the live row act (step 6); an edit of the row (`revision`
   2) removes the `result` of the former `revision`, the cursor stays (step 8); a cursor with another `born` does not act — there is no `state` (step 10).
 - Sc. 29 — an edit of the fields removes the blob digest by an empty string (the row check contract `values_by_type` blob:
-  «лишь прежний дайджест строки или "" (снять)»): 200, `revision` + 1, `""` in the row; the former digest after the removal is no longer the former
+  «only the previous row digest or "" (remove)»): 200, `revision` + 1, `""` in the row; the former digest after the removal is no longer the former
   digest of the row, 400 (R2; N3 «edit», «Races»).
 - Sc. 30 — the bytes door removes the digest of its bytes from the list `testsub2/sweep` (N3 «put_body» step 2), the second
   mark stays; the list is unreadable as a whole (`digests` not by the form, the outcome of the row `console` of the family `sweep`) — the door does not
@@ -157,7 +157,7 @@ past the writer — through the store door, as sc. 20, 26: the state and the hol
   is distinguished from «no hold» — `/where/shelves/sh1` 503 (chapter 6.5 N3 «`/where/<table>/<place>`») and the series
   `testsub2_shelves_open` 1 → 0 (`unheld`: an unreadable hold does not count the place as free).
 
-Details of the steps (reconciliation of python and go М10/6–11):
+Details of the steps (reconciliation of python and go M10/6–11):
 - Sc. 15 steps 7–8 — the words of 404 of the bytes door (T26); steps 11–12 — another method on it is 405 (T9); step 13 — `If-Match`
   is not read by the bytes door.
 - Sc. 16 steps 1, 3 — the words of the ceilings: `detail` «… the ceiling is 4000» (T24), `detail` «… this door takes at most …» (T25);
@@ -198,15 +198,9 @@ In scenario 01 the runner additionally saves the **full** answer of step 1. At s
 match it whole (the order of the fields of an object does not matter, the order of arrays matters). This checks the promised
 repeat, including the fields not named in the expectation of step 2. Step 3 with a different body under the former key checks 422.
 
-## `journal/corrections-1.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
-of the acceptances of М10/03 and М10/10 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
-resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (review analysis of stage B 6–7, № 18).
-
 ## Additional checks R29-01…03
 
-These are separate cases P/06.1-01, 09, 11 (formerly М10/3-01, 09, 19); they are not in the main TSV. For each case
+These are separate cases P/06.1-01, 09, 11 (formerly M10/3-01, 09, 19); they are not in the main TSV. For each case
 create a separate instance with testsub, empty rows and claim memory, the needed rights
 and a store with a full key limit of 1024 UTF-8 bytes; there is no narrower file limit (N1.3). Do not count the schema check as a run of these scenarios.
 
@@ -236,7 +230,7 @@ owner form; the presence of a file does not prove the correctness of the referen
 ## Checks outside the sequential HTTP file
 
 The status of all the checks of the README outside `scenarios.tsv` (this section, «Additional checks», the counterexamples of runs) is
-«проверяется чтением»: the subject is the transitions of the implementation under a named intervention; the evidence is a test of the implementation
+«checked by reading»: the subject is the transitions of the implementation under a named intervention; the evidence is a test of the implementation
 with controlled clocks and two consoles on a common store of P/01.1, or a code analysis. The stand of the section «Stand»
 of the common acceptance README does not execute them: it has no controlled clocks and no two consoles.
 
@@ -320,7 +314,7 @@ This is a subject of a check of the norms/data and of a future stand, not a perf
 
 ## Probes of the reconciliation of python and go (2026-10-18)
 
-The probes of the README are `decisions/inbox/2026-10-18-сверка-python-go-м10-3-5.md`; the expectation is the norms of the chapter.
+The probes of the README are `decisions/inbox/2026-10-18-%D1%81%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-python-go-%D0%BC10-3-5.md`; the expectation is the norms of the chapter.
 
 | Probe | Expectation |
 |---|---|
@@ -338,7 +332,7 @@ The probes of the README are `decisions/inbox/2026-10-18-сверка-python-go-
 
 ## Bodies and tables: probes outside TSV
 
-From the acceptance of М10/10 (runs 33–37, R36); the subject is the reading of the norms and a future stand, not an execution of an implementation.
+From the acceptance of M10/10 (runs 33–37, R36); the subject is the reading of the norms and a future stand, not an execution of an implementation.
 
 For 400 of a table check the full text and structured refusals. The common TextRefusal/FormRefusal overlap without fault,
 so anyOf, not oneOf; check all local oneOf for an overlap of the branches.
@@ -378,8 +372,14 @@ a language coercion. Check ±0.5, ±7.9, ±(2^53−1), 1e16, 1e21 and the canoni
 
 The cleanup with grace — the phases of N3 and the codes of the window command of N2: without `--writers-stopped` nothing is deleted, the grace of 300 s of an unchanged
 version, an object newer than the mark is not touched (controlled clocks are needed, the common acceptance README «Stand»). They are checked by reading (reconciliation of python and go
-М10/6–11): T16 — `null` at a json field of a table and T23 — `made_at` (the tables of `testsub2` have no json field and no `made_at`).
+M10/6–11): T16 — `null` at a json field of a table and T23 — `made_at` (the tables of `testsub2` have no json field and no `made_at`).
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
 There are no sleeps. Waiting for an event is `@until`: sc. 17 step 11 waits for the log row `shelf.declared` after `@start resource`.
+
+## Accepted ADR-0127 review: POST continuation and feed observation
+
+The additional seams s06–s08 use the existing console-repeat port and ordinary claim/target code. For s06 write a real tombstone with revision5, admit the POST's planned revision6 and born under its claim CAS, perform the target commit, lose that reply, and stop before done. Another console first observes the unchanged pending version, waits30s on its monotonic clock, then takes it by CAS. The response is201 with that same revision6 and born, no second target write; an old executor's target attempt with its old claim guard gets412. s07 is the absent-row/revision1 positive neighbor. s08 loses the planning-save reply: no target call before a confirmed owned reread of that saved intent, then exactly one target write with the saved born. Record actual claim versions, target bytes and writes, not a case-selected result. The internal claim shape remains the implementation's choice.
+
+For the feed, control the ordinary observer's listing dependency: ten unconfirmed ticks after a row change, then one successful listing. No earlier tick invents an observation; at is the wall time of that first successful observation. Redeliver after a later clock advance and compare the same stored at. Do not assert an upper bound from another process's admission clock or call a successful parse a feed execution. These additional IO obligations require an actual implementation/stand; this source edit does not execute them.

@@ -12,7 +12,7 @@ M11/3 (`inputs/accept-*.json`, сц. 13) и
 M11/4 (`inputs/accept-*.json`, сц. 06 — дороги) без
 изменения байтов; `case` — имя файла входа (номера урока 4 начинаются заново, имена различны), `note` — урок, сценарий и
 шаг. Сценарии M11/03 сц. 13 и M11/04 сц. 06 и их входы сняты переносом урока 8 (ADR-0083 доп. (14) п. 17; журнал —
-приёмка главы P/08.3 (`Platform/08-domain/journal/corrections-3.tsv`, журнал, в выгрузку не входит)): таблица — единственный источник этих случаев.
+приёмка главы P/08.3 (`corrections-3.tsv` (historical correction record), журнал, в выгрузку не входит)): таблица — единственный источник этих случаев.
 
 ## Прогон
 
@@ -30,8 +30,8 @@ Kimi SB810-06): у строк уроков 3 и 4 `catalog` — `["testsub"]`, �
 
 | Манифест | Файл | sha256 |
 |---|---|---|
-| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
-| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `e4bfd9e0035dba5839018625bba20f7214176004fc2d0cb4f8d640015d915dbb` |
+| `testsub` | [`Platform/common/data/testsub/testsub.subsystem.yaml`](../../../data/testsub/testsub.subsystem.yaml) | `fc3bf70585646b078a8812edd0c92cd5c7d0c2e364b689273c5fd229aed7355b` |
+| `testsub2` | [`Platform/common/data/testsub/testsub2.subsystem.yaml`](../../../data/testsub/testsub2.subsystem.yaml) | `e4bfd9e0035dba5839018625bba20f7214176004fc2d0cb4f8d640015d915dbb` |
 
 Байты `testsub2` сменились 2026-11-04 (дорожная карта 4.5): добавлен вид токена `vault` с `keep: true` в `domain.tokens`, затем переписаны комментарии шапки без имён файлов тестов; поля, от которых зависят ожидания этой таблицы, не тронуты — перепроверка оракулом не нужна.
 

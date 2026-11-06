@@ -20,7 +20,7 @@ The forms of the rows that this contract names are in the families of lesson P/0
 (`Platform/08-domain/data/holder.schema.json`, `Platform/08-domain/data/holder.outcomes.tsv`) and [the term
 record contract](record.md).
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Common rules of forms
 

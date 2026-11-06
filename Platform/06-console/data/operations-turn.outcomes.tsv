@@ -1,4 +1,4 @@
 # Outcomes of an unreadable row <sub>/operations-turn (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	console	the whole row is unreadable: step 1 of the writer turn contract — a refusal of the step, in this tick the leader leads no operations; the doors work	0	row	договор очереди писателя; P/06.9 Н3 «leader»
+	console	the whole row is unreadable: step 1 of the writer turn contract — a refusal of the step, in this tick the leader leads no operations; the doors work	0	row	writer turn contract; P/06.9 N3 «leader»

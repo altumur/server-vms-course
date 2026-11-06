@@ -1,14 +1,54 @@
 """Мутации форм ADR-0125 P/01: каждая порча формы, прозы или OpenAPI даёт отказ check_forms."""
+import copy
+import hashlib
+import json
 import re
 import shutil
+import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 import check_forms
+import check_cyrillic
 
 ROOT = Path(__file__).resolve().parents[3]
 LESSON = ROOT / "Platform/01-store"
+
+
+# Frozen prose witness from ec48a8949, before the form became the sole source.
+LEGACY_FLAG_PROSE = r'''**Daemon flags** — a closed set (the store pilot, A3, A8). A flag outside the table is a start refusal, code 2. The machine form of the table — [`forms/daemon-flags.tsv`](../forms/daemon-flags.tsv) (ADR-0125): type, default, required, commands; `check_spec` checks that it agrees with this table.
+
+| Flag | Type | Default | Meaning |
+|---|---|---|---|
+| `-dir` | path | none: required, without it a start refusal, code 2 | the data directory of the daemon; the mark `FORMAT` (`format` above); also of `recover`, `restore`, `import` — they write into the directory of a stopped daemon on a box (ADR-0125 addendum (2) item 1) |
+| `-id` | member id (N2) | in a group (`-join`, `-door`, `-group-size 3` or `5`) none: required; otherwise — `SERVER_NAME` (P/02.4 N1.2) | the member name in `members`, `voters`, `leader_id`; also of `recover` |
+| `-sockets` | directory path | `/run/configstore` | the socket directory, flat (`sockets` above); the commands `status`, `join`, `leave`, `admit`, `backup`, `restore`, `import`, `rights` find `admin.sock` by it, `recover` does not (ADR-0125 addendum (2) item 1) |
+| `-rights` | file path | none: without it — only `admin.sock` (chapter 1.2 N1.2) | the rights file |
+| `-tls` | directory path | none: required with -join or a non-loopback -api/-raft | the root of the certificate kits (N1.6), mTLS of `-raft` and `-api` |
+| `-raft` | `host:port` | none | the raft address that the daemon names to its partners |
+| `-raft-bind` | `host:port` | `-raft` | the address on which the daemon listens for raft, if it differs from the named one |
+| `-api` | `host:port` | none: without it there is no service HTTP door for partners | the address of the service doors of N2 for partners; the value of `members` and `leader` in `/v1/status`; without `-api` the member is not in `members` (the map can be `{}`; C01-STATUS-MEMBERS-NOAPI, the Architect's decision of 2026-10-26) |
+| `-bootstrap` | no value | off | the first server of the group (`join` above); with `-join` — a start refusal |
+| `-join` | `host:port` | none | the `-api` address of a group member through which the daemon joins (`join` above); always with `-tls` |
+| `-group-size` | `1` \| `3` \| `5` | `1` | the declared group size, the same on all servers |
+| `-force` | no value | off | joining at a transitional evenness (`join` above), also of the command `join`; for `restore`, `import`, `recover` — only the clock refusal |
+| `-isolated` | no value | off | only for `recover`, required: the operator confirms that the former group and the writers are isolated and nothing was handed out above upper (N3 step 0); without it `recover` is a refusal before changes (guess of stage C S02, the Architect's decision of 2026-10-23) |
+| `-upper` | integer 0 … 2^53 − 1 | none | only for `recover`: the bound of the lost tail of epochs known to the operator; it only raises the computed upper (`floor.generation`): upper := max(computed, N); N below the computed one — a refusal before changes (guess of stage C S02, the Architect's decision of 2026-10-23) |
+| `-peers` | a comma-separated list `id@<raft host:port>/<api host:port>` | none: required for `recover` | only for `recover`: the recovered membership — the remaining members, the one being recovered (`-id`) among them; the id and both addresses are required for each: raft — the address of the raft membership, api — the value of `members` in `/v1/status`; any other notation — a refusal before changes (guess of stage C S03, the Architect's decision of 2026-10-23) |
+| `-door` | no value | off | a door without a vote (`door` above) |
+| `-voters` | a comma-separated list `id@host:port` | none: required with `-door`, without it a start refusal, code 2 | the voters for a door without a vote: the id and the `-api` address |
+| `-tuning` | `default` \| `lan` \| `slow` | `default` | the raft timing profile (`tuning` above) |
+| `-leader-wait` | duration | `5s` | the leader wait (`leader_wait` above) |
+| `-max-value` | bytes, > 0 (`0` and not a number — a start refusal, code 2; reconciliation of python and go M10/6–11, B7) | `512KiB` | the row ceiling (chapter 1.1 N4, `{row_ceiling}` of «Stand») |
+| `-max-body` | bytes, > 0 (as `-max-value`) | `1MiB` | the read limit of the HTTP body of `POST /v1/write` (chapter 1.1 N2, `{body_limit}` of «Stand»), separately from the row ceiling `-max-value` (log of cammeta-python, lesson 11 № 24) |
+| `-max-conns`, `-api-conns`, `-api-per-address` | integer > 0 | 64, 32, 8 | connection limits (below) |
+| `-index-base` | integer ≥ 0 | 0 | for `import`: the version base (`import` above) |
+| `-groups` | no value | off | only for `rights` (`admin_ops` above; ADR-0125 addendum (2) item 1) |
+| `--from` | file path | none: required for `restore`, `import` | only for `restore`, `import`: the input — the backup copy (`copy` above; `admin_ops` above; ADR-0125 addendum (2) item 1) |
+'''
 
 
 class Forms(unittest.TestCase):
@@ -33,35 +73,47 @@ class Forms(unittest.TestCase):
     def refusals(self):
         return check_forms.check_refusals(self.lesson / "forms/refusals.tsv")[0]
 
+    def legacy_flag_prose(self):
+        (self.lesson / "spec/00-legacy.norms.md").write_text(LEGACY_FLAG_PROSE, encoding="utf-8")
+
+    def test_legacy_flag_prose_passes(self):
+        self.legacy_flag_prose()
+        self.assertEqual(self.flags(), [])
+
     def test_clean(self):
         self.assertEqual(self.flags(), [])
         self.assertEqual(self.refusals(), [])
 
     def test_flag_missing(self):
+        self.legacy_flag_prose()
         text = (self.lesson / "forms/daemon-flags.tsv").read_text(encoding="utf-8")
         line = next(x for x in text.split("\n") if x.startswith("-tuning\t"))
         self.edit("forms/daemon-flags.tsv", line + "\n", "")
         self.assertTrue(self.flags())
 
     def test_flag_default(self):
+        self.legacy_flag_prose()
         self.edit("forms/daemon-flags.tsv", "\t524288\t512KiB\t", "\t524289\t512KiB\t")
         self.assertTrue(self.flags())
         self.edit("forms/daemon-flags.tsv", "\t524289\t512KiB\t", "\t1048576\t1MiB\t")
         self.assertTrue(self.flags())                          # the prose writes 512KiB
 
     def test_flag_required_and_cel(self):
+        self.legacy_flag_prose()
         self.edit("forms/daemon-flags.tsv", "-isolated\tbool\tfalse\toff\ttrue\t", "-isolated\tbool\tfalse\toff\tfalse\t")
         self.assertTrue(self.flags())
         self.edit("forms/daemon-flags.tsv", '"-join" in f\tP/01.3 N1.3 join', '"-join" in\tP/01.3 N1.3 join')
         self.assertTrue(self.flags())
 
     def test_flag_type_and_commands(self):
+        self.legacy_flag_prose()
         self.edit("forms/daemon-flags.tsv", "-tuning\tenum:default|lan|slow\t", "-tuning\tenum:default|lan|fast\t")
         self.assertTrue(self.flags())
         self.edit("forms/daemon-flags.tsv", "\trecover\t\tP/01.3 N3 recover", "\tdaemon\t\tP/01.3 N3 recover")
         self.assertTrue(self.flags())
 
     def test_two_hyphens_only_from(self):               # --from — имя прозы; иное с двумя дефисами — отказ
+        self.legacy_flag_prose()
         self.edit("forms/daemon-flags.tsv", "--from\tfile\t", "--input\tfile\t")
         self.assertTrue(self.flags())
 
@@ -128,6 +180,91 @@ class Forms(unittest.TestCase):
     def test_write_checks_agree(self):
         self.edit("forms/refusals.tsv", "1.1\t1\tkey_rules\thttp\t400\tbadkey\t", "1.1\t1\tkey_rules\thttp\t400\tbadrequest\t")
         self.assertTrue(self.refusals())
+
+    def test_typed_catalogue_without_outcome_is_complete(self):
+        path = self.lesson / "forms/refusals.tsv"
+        head = next(line for line in path.read_text().splitlines() if line and not line.startswith("#"))
+        self.assertNotIn("outcome", head.split("\t"))
+        errors, stats = check_forms.check_refusals(path)
+        self.assertEqual(errors, [])
+        self.assertEqual(stats, {"refusal_rows": 59, "refusal_chapters": 3, "refusal_cause_names": 59})
+
+    def test_typed_causes_missing_unknown_repeated_or_hidden(self):
+        path = self.lesson / "spec/01.1-store.norms.md"
+        good = path.read_text()
+        line = next(line for line in good.splitlines() if line.startswith("- `ambiguous_barrier`:"))
+        for replacement in ("", line.replace("`ambiguous_barrier`:", "`invented_refusal`:"), line + "\n" + line,
+                            "```md\n" + line + "\n```", "> " + line):
+            with self.subTest(replacement=replacement[:60]):
+                path.write_text(good.replace(line, replacement))
+                self.assertTrue(self.refusals())
+
+    def test_typed_cause_and_caller_are_required(self):
+        path = self.lesson / "spec/01.2-store.norms.md"
+        good = path.read_text()
+        line = next(line for line in good.splitlines() if line.startswith("- `list_form`:"))
+        for replacement in ("- `list_form`: Caller action: fix the request.",
+                            "- `list_form`: malformed input. Caller action:",
+                            "- `list_form`: malformed input. Caller action: .",
+                            "- `list_form`: malformed input without caller action."):
+            with self.subTest(replacement=replacement):
+                path.write_text(good.replace(line, replacement))
+                self.assertTrue(any("cause and Caller action" in e for e in self.refusals()))
+
+    def test_typed_catalogue_requires_a_real_n4_reference(self):
+        path = self.lesson / "spec/01.1-store.norms.md"
+        good = path.read_text()
+        link = "[`forms/refusals.tsv`](../forms/refusals.tsv)"
+        self.assertEqual(good.count(link), 1)
+        for replacement in ("`forms/refusals.tsv`", "[`forms/refusals.tsv`](../other/refusals.tsv)",
+                            "\n\n```md\n" + link + "\n```\n\n", "\n\n> " + link + "\n\n"):
+            with self.subTest(replacement=replacement):
+                path.write_text(good.replace(link, replacement))
+                self.assertTrue(self.refusals())
+
+    def test_typed_catalogue_detects_a_whole_missing_chapter(self):
+        path = self.lesson / "forms/refusals.tsv"
+        path.write_text("\n".join(line for line in path.read_text().splitlines() if not line.startswith("1.2\t")) + "\n")
+        self.assertTrue(any("01.2-store.norms.md" in e and "not in this chapter's catalogue" in e
+                            for e in self.refusals()))
+
+    def test_typed_catalogue_validates_code_fields_cells_and_cause_groups(self):
+        path = self.lesson / "forms/refusals.tsv"
+        good = path.read_text()
+        row = next(line for line in good.splitlines() if line.startswith("1.1\t9\tguard_mismatch\t"))
+        cases = {"row": "x", "code": "exit 2", "fields": "key,key", "kind": "", "headers": "", "norm": ""}
+        head = check_forms.REF_COLUMNS
+        for column, value in cases.items():
+            with self.subTest(column=column):
+                cells = row.split("\t")
+                cells[head.index(column)] = value
+                path.write_text(good.replace(row, "\t".join(cells)))
+                self.assertTrue(self.refusals())
+        path.write_text(good.replace("1.1\t9\tguard_mismatch\t", "1.1\t8\tguard_mismatch\t"))
+        self.assertTrue(any("cause group is 9" in e for e in self.refusals()))
+
+    def test_typed_required_fields_cannot_be_dropped_or_made_optional(self):
+        path = self.lesson / "forms/refusals.tsv"
+        good = path.read_text()
+        for fields in ("-", "key,index?", "key?,index"):
+            with self.subTest(fields=fields):
+                path.write_text(good.replace("\tguard\tkey,index\t", "\tguard\t" + fields + "\t"))
+                self.assertTrue(any("required OpenAPI fields" in e for e in self.refusals()))
+
+    def test_typed_code_kind_requires_an_actual_openapi_response(self):
+        import yaml
+        path = self.lesson / "spec/01-store.api.openapi.yaml"
+        good = path.read_text()
+        for bad_ref in ("#/components/responses/Conflict", "#/components/responses/Missing"):
+            with self.subTest(ref=bad_ref):
+                doc = yaml.safe_load(good)
+                doc["paths"]["/v1/write"]["post"]["responses"]["412"] = {"$ref": bad_ref}
+                path.write_text(yaml.safe_dump(doc))
+                self.assertTrue(any("412 guard is not in the OpenAPI responses" in e for e in self.refusals()))
+        doc = yaml.safe_load(good)
+        doc["components"]["responses"]["Guard"] = {"$ref": "#/components/responses/Guard"}
+        path.write_text(yaml.safe_dump(doc))
+        self.assertTrue(any("412 guard is not in the OpenAPI responses" in e for e in self.refusals()))
 
 
 class FormsAllLessons(unittest.TestCase):         # ADR-0125 доп. (5): грамматика форм для уроков кроме P/01
@@ -656,7 +793,7 @@ class VersionedDoors(unittest.TestCase):                # P/08 versioned-doors.t
     def test_real_form_clean(self):
         errors, stats = check_forms.check_versioned_doors(ROOT / "Platform/08-domain/forms/versioned-doors.tsv")
         self.assertEqual(errors, [])
-        self.assertEqual(stats["versioned_doors"], 19)
+        self.assertEqual(stats["versioned_doors"], 24)
         self.assertEqual(self.errors(self.good), [])
 
     def test_mutations(self):
@@ -682,10 +819,44 @@ class VersionedDoors(unittest.TestCase):                # P/08 versioned-doors.t
             "norm form": self.cell("PUT", "/domain/users/{name}", "norm", "P/08.0 Н1.9"),
             "norm empty": self.cell("PUT", "/domain/users/{name}", "norm", ""),
             "base-rev without R006": self.cell("PUT", "/domain/topology", "norm", "P/08.0-R005"),
+            "optional-index with absent 0": self.cell("PUT", "/domain/grants/{cluster}", "if_match", "optional-index"),
+            "revision - with etag true": self.cell("PUT", "/domain/users/{name}", "revision", "-"),
+            "revision - with if_match optional": self.cell("DELETE", "/domain/users/{name}", "revision", "-"),
+            "revision - with base-rev": self.both("PUT", "/domain/topology",
+                                                   {"revision": "-", "etag": "false", "absent_revision": "-"}),
         }
         for what, text in bad.items():
             self.assertNotEqual(text, self.good, what)
             self.assertTrue(self.errors(text), what)
+
+    def both(self, method, path, values):
+        line = self.line(method, path)
+        cells = line.split("\t")
+        for column, value in values.items():
+            cells[check_forms.VDOOR_COLUMNS.index(column)] = value
+        return self.good.replace(line + "\n", "\t".join(cells) + "\n")
+
+    def test_new_values_pass(self):                     # решение «Архитектора» 2026-11-06: `-` и optional-index
+        ok = {
+            "optional-index": self.cell("PUT", "/domain/users/{name}", "if_match", "optional-index"),
+            "revision - optional-index": self.both("DELETE", "/domain/users/{name}",
+                                                   {"revision": "-", "if_match": "optional-index"}),
+            "revision - ignored": self.cell("POST", "/domain/batch", "revision", "-"),
+        }
+        for what, text in ok.items():
+            self.assertNotEqual(text, self.good, what)
+            self.assertEqual(self.errors(text), [], what)
+
+    def test_new_rules_alone(self):                     # каждое новое правило даёт ровно свою ошибку
+        cases = {
+            "needs absent_revision -": self.cell("PUT", "/domain/grants/{cluster}", "if_match", "optional-index"),
+            "needs etag false": self.both("PUT", "/domain/users/{name}", {"revision": "-", "if_match": "optional-index"}),
+            "needs if_match optional-index or ignored": self.cell("DELETE", "/domain/users/{name}", "revision", "-"),
+        }
+        for what, text in cases.items():
+            errors = self.errors(text)
+            self.assertEqual(len(errors), 1, (what, errors))
+            self.assertIn(what, errors[0])
 
     def test_openapi_side(self):                        # новая операция с If-Match без строки формы — отказ
         text = self.api.read_text(encoding="utf-8")
@@ -815,6 +986,660 @@ class RowWriteBindings(unittest.TestCase):              # P/03 row-write-binding
         for what, text in bad.items():
             self.assertNotEqual(text, RWB_GOOD, what)
             self.assertTrue(self.errors(text), what)
+
+
+TURN_WIRE_ROW = 'common/turn\tcases.tsv\tvectors\tcase,input,expect,note\t[{"variant":"","when":"(owner == \\"04-controller\\" && json(row[\\"input\\"])[\\"kind\\"] == \\"placement\\") || (owner in [\\"08-domain\\",\\"09-agent\\"] && json(row[\\"input\\"])[\\"kind\\"] == \\"signer\\") || (owner == \\"06-console\\" && json(row[\\"input\\"])[\\"kind\\"] == \\"operations\\")","cells":{"input":{"column":"input"}}}]\t{}\t[{"variant":"","code":0,"value":{"column":"expect","decode":"json"}}]\tturn\t[]\t{"type":"array","frame":"json"}\tcommon/vectors/turn/README.md#run'   # decisions/inbox/2026-11-06-p06-review-proposals/c4-wire-row.proposed.tsv (391efde0d)
+TURN_OPS_ROWS = ['operations-take-empty\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"ok","version":1}]}\t[{"write":{"holder":"@new"},"cas":""},"held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-take-released\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":{"holder":""},"seen":0,"version":3},{"reply":"ok","version":4}]}\t[{"write":{"holder":"@new"},"cas":3},"held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-busy-live\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":{"holder":"c-old"},"seen":44.999,"version":3}]}\t["busy"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-take-stale\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":{"holder":"c-old"},"seen":45,"version":3},{"reply":"ok","version":4}]}\t[{"write":{"holder":"@new"},"cas":3},"held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-first-sight\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":{"holder":"c-old"},"seen":0,"version":3}]}\t["busy"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-unreadable\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":"@unreadable","seen":0}]}\t["refused"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-take-conflict\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"conflict"}]}\t[{"write":{"holder":"@new"},"cas":""},"not_held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-renew\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"ok","version":1},{"renew":true},{"reply":"ok","version":2},{"renew":true},{"reply":"conflict"}]}\t[{"write":{"holder":"@new"},"cas":""},"held",{"write":{"holder":"@same"},"cas":1},"held",{"write":{"holder":"@same"},"cas":2},"stop"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-guard\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"ok","version":1},{"target":true,"age":44.999},{"target":true,"age":45}]}\t[{"write":{"holder":"@new"},"cas":""},"held",{"guard":{"key":"testsub/operations-turn","index":1}},"wait"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-guard-412\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"ok","version":1},{"target":true,"age":1},{"target_reply":"412"}]}\t[{"write":{"holder":"@new"},"cas":""},"held",{"guard":{"key":"testsub/operations-turn","index":1}},"stop"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-release\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"ok","version":1},{"end":true},{"reply":"conflict"}]}\t[{"write":{"holder":"@new"},"cas":""},"held",{"write":{"holder":""},"cas":1},"done"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-unknown-take-applied\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"none"},{"read":{"holder":"@same"},"seen":0,"version":1},{"reply":"ok","version":2}]}\t[{"write":{"holder":"@new"},"cas":""},"reread",{"write":{"holder":"@same"},"cas":1},"held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-unknown-take-lost\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"none"},{"read":null,"seen":0}]}\t[{"write":{"holder":"@new"},"cas":""},"reread","not_held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-unknown-take-foreign\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"none"},{"read":{"holder":"c-other"},"seen":0,"version":1}]}\t[{"write":{"holder":"@new"},"cas":""},"reread","not_held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.', 'operations-unknown-renew\t{"kind":"operations","turn":"testsub/operations-turn","me":{},"steps":[{"read":null,"seen":0},{"reply":"ok","version":1},{"renew":true},{"reply":"none"},{"read":{"holder":"@same"},"seen":0,"version":2},{"reply":"ok","version":3}]}\t[{"write":{"holder":"@new"},"cas":""},"held",{"write":{"holder":"@same"},"cas":1},"reread",{"write":{"holder":"@same"},"cas":2},"held"]\tProposed C4 common turn obligation only; epoch barrier and real leader IO remain separate.']   # там же c4-turn-cases.proposed.tsv: 15 строк operations
+
+
+class WireTurn(unittest.TestCase):               # compare=turn — решение «Архитектора» 2026-11-06 (P/06 C4)
+    def setUp(self):
+        Wire.setUp(self)
+        vectors = self.path.parent
+        (vectors / "turn").unlink()                 # пакет turn и consumers.tsv — копии с предложенными строками
+        shutil.copytree(ROOT / "Platform/common/vectors/turn", vectors / "turn")
+        # фикстура не зависит от того, активна ли C4 в ROOT: прежние 33 строки, 3 потребителя и wire без common/turn,
+        # затем строки предложения ровно один раз
+        self.cases = vectors / "turn/cases.tsv"
+        kept = [ln for ln in self.cases.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("operations-")]
+        self.assertEqual(len(kept), 2 + 33)
+        self.cases.write_text("\n".join(kept + TURN_OPS_ROWS) + "\n", encoding="utf-8")
+        consumers = vectors / "consumers.tsv"
+        text = consumers.read_text(encoding="utf-8")
+        consumers.unlink()
+        start = "common/turn\tcases.tsv\t06-console\t"
+        kept = [ln for ln in text.rstrip("\n").split("\n") if not ln.startswith(start)]
+        self.assertEqual(sum(ln.startswith("common/turn\t") for ln in kept), 3)
+        line = start + "common/vectors/turn/README.md: own operations turn; ADR-0127 P06 C4"
+        consumers.write_text("\n".join(kept + [line]) + "\n", encoding="utf-8")
+        self.good = "".join(ln for ln in self.good.splitlines(keepends=True)
+                            if not ln.startswith("common/turn\tcases.tsv\tvectors\t"))
+        self.path.write_text(self.good, encoding="utf-8")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def check(self, row=TURN_WIRE_ROW, old=None, new=None):
+        if old is not None:
+            self.assertEqual(row.count(old), 1, old)
+            row = row.replace(old, new)
+        self.path.write_text(self.good.rstrip("\n") + "\n" + row + "\n", encoding="utf-8")
+        return check_forms.check_wire(self.path)[0]
+
+    def case(self, name, old, new):               # порча ячейки expect одной строки по имени случая (note не читается)
+        lines = self.cases.read_text(encoding="utf-8").split("\n")
+        hit = [i for i, ln in enumerate(lines) if ln.split("\t")[0] == name]
+        self.assertEqual(len(hit), 1, name)
+        cells = lines[hit[0]].split("\t")
+        self.assertEqual(cells[2].count(old), 1, old)
+        cells[2] = cells[2].replace(old, new)
+        lines[hit[0]] = "\t".join(cells)
+        self.cases.write_text("\n".join(lines), encoding="utf-8")
+
+    def test_proposed_row_passes(self):
+        errors, stats = check_forms.check_wire(self.path)
+        self.assertEqual(errors, [])
+        self.assertEqual(self.check(), [])
+        calls = check_forms.check_wire(self.path)[1]["wire_calls"] - stats["wire_calls"]
+        self.assertEqual(calls, 20 + 2 * 13 + 15)           # 04 — placement, 08 и 09 — signer, 06 — operations
+
+    def test_turn_only_common_turn(self):
+        other = Wire.row(self, "common/crl", "cases.tsv", "vectors")
+        errors = self.check(other.replace("\tvalue\t", "\tturn\t"))
+        self.assertTrue(any("compare turn is only for the binding" in e for e in errors), errors)
+        errors = self.check(other.replace("\tvalue\t", '\t{"":"turn"}\t'))      # и картой вариантов — вне списка
+        self.assertTrue(any("is not one of" in e for e in errors), errors)
+
+    def test_unknown_freshness_mark(self):
+        self.case("operations-take-conflict", '"@new"', '"@fresh"')
+        self.assertTrue(any("unknown freshness mark '@fresh'" in e for e in self.check()))
+
+    def test_same_before_new(self):
+        self.case("operations-unknown-take-foreign", '"@new"', '"@same"')
+        self.assertTrue(any("@same before any @new" in e for e in self.check()))
+
+    def test_holder_alias(self):
+        self.case("operations-take-conflict", '{"holder":"@new"}', '{"value":"@new"}')
+        self.assertTrue(any("outside holder (no alias)" in e for e in self.check()))
+        self.case("operations-take-conflict", '{"value":"@new"}', '{"holder":"@new"}')
+        alias = '{"column":"expect","decode":"json"}'
+        errors = self.check(old=alias, new='{"object":{"holder":{"literal":"@new"}}}')
+        self.assertTrue(any("no holder or value alias" in e for e in errors), errors)
+
+    def test_ignore_turn_field(self):
+        errors = self.check(old='"code":0,', new='"code":0,"ignore":["/0/write/holder"],')
+        self.assertTrue(any("no ignore or assert" in e for e in errors), errors)
+
+    def test_selector_not_cel(self):
+        when = TURN_WIRE_ROW.split('"when":', 1)[1].split(',"cells"', 1)[0]
+        errors = self.check(old=when, new='{"owner":"06-console","kind":"operations"}')
+        self.assertTrue(any("when is not a CEL string" in e for e in errors), errors)
+        errors = self.check(old=when, new='"owner = 06-console"')
+        self.assertTrue(any("does not compile" in e for e in errors), errors)
+        errors = self.check(old='"variant":"","when":' + when + ',', new='"variant":"",')
+        self.assertTrue(any("explicit CEL selector" in e for e in errors), errors)
+
+    def test_turn_markers_empty(self):
+        errors = self.check(old="\tturn\t[]\t", new='\tturn\t[{"variant":"","column":"expect","match":"[\\"busy\\"]"}]\t')
+        self.assertTrue(any("markers must be []" in e for e in errors), errors)
+
+
+class TurnMatch(unittest.TestCase):              # compare=turn по меткам: @new всякий раз новая, @same — последняя @new
+    W = lambda holder, cas: {"write": {"holder": holder}, "cas": cas}   # noqa: E731
+
+    def test_two_attempts(self):
+        W = TurnMatch.W
+        expected = [W("@new", ""), "held", W("@same", 1), "stop", W("@new", ""), "held", W("@same", 3), "held"]
+        actual = [W("a1", ""), "held", W("a1", 1), "stop", W("a2", ""), "held", W("a2", 3), "held"]
+        self.assertEqual(check_forms.turn_match(expected, actual), [])
+        same = [W("a1", ""), "held", W("a1", 1), "stop", W("a1", ""), "held", W("a1", 3), "held"]
+        self.assertTrue(any("repeats an earlier @new" in e for e in check_forms.turn_match(expected, same)))
+        stale = [W("a1", ""), "held", W("a1", 1), "stop", W("a2", ""), "held", W("a1", 3), "held"]
+        self.assertTrue(any("is not the last @new" in e for e in check_forms.turn_match(expected, stale)))
+
+    def test_new_new_in_a_row(self):
+        W = TurnMatch.W
+        expected = [W("@new", ""), "reread", W("@new", "")]
+        self.assertEqual(check_forms.turn_match(expected, [W("a1", ""), "reread", W("a2", "")]), [])
+        self.assertTrue(any("repeats" in e for e in check_forms.turn_match(expected, [W("a1", ""), "reread", W("a1", "")])))
+
+    def test_exact_rest(self):
+        W = TurnMatch.W
+        expected = [W("@new", ""), "held", W("", 1), "done"]
+        self.assertEqual(check_forms.turn_match(expected, [W("a1", ""), "held", W("", 1), "done"]), [])
+        for bad in ([W("@new", ""), "held", W("", 1), "done"],              # литерал метки — не настоящая метка
+                    [W("a1", 0), "held", W("", 1), "done"],                  # cas "" — не 0
+                    [W("a1", ""), "held", W("a1", 1), "done"],               # holder "" сравнивается точно
+                    [W("a1", ""), "held", W("", True), "done"],              # boolean — не число
+                    [W("a1", ""), "held", W("", 1), "done", "extra"],
+                    [{"write": {"holder": "a1", "x": 1}, "cas": ""}, "held", W("", 1), "done"]):
+            self.assertTrue(check_forms.turn_match(expected, bad), bad)
+        self.assertEqual(check_forms.turn_match([W("box-a:1", 2)], [W("box-a:1", 2.0)]), [])   # литеральный holder signer
+
+
+FP_CASES = ROOT / "Platform/02-installer/forms/finite-profile.cases.json"
+
+
+@unittest.skipUnless(FP_CASES.exists(), "источник C2 P/06 ещё не влит")
+class FiniteProfile(unittest.TestCase):          # конечный профиль удаления P/06 C2 — решение «Архитектора» 2026-11-06
+    FILES = ("Platform/02-installer/forms/finite-profile.cases.json", "Platform/02-installer/forms/finite-profile.schema.json",
+             "Platform/06-console/forms/runtime-constants.tsv", "Platform/06-console/forms/deletion-body-witnesses.json")
+    SKELETONS = "Platform/02-installer/forms/finite-profile-skeletons"
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        for f in self.FILES:
+            (self.tmp / f).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(ROOT / f, self.tmp / f)
+        shutil.copytree(ROOT / self.SKELETONS, self.tmp / self.SKELETONS)
+        self.skel = self.tmp / self.SKELETONS
+        self.path = self.tmp / self.FILES[0]
+        self.wpath = self.tmp / self.FILES[3]
+        self.good = json.loads(FP_CASES.read_text(encoding="utf-8"))
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def errors(self, mutate):
+        d = copy.deepcopy(self.good)
+        mutate(d)
+        self.path.write_text(json.dumps(d), encoding="utf-8")
+        return check_forms.check_finite_profile(self.path)[0]
+
+    def case(self, d, name):
+        return next(c for c in d["cases"] if c["case"] == name)
+
+    def packet(self, d, case, name):
+        return next(k for k in self.case(d, case)["profile"]["packets"] if k["packet"] == name)
+
+    def test_real_cases_pass(self):
+        errors, stats = check_forms.check_finite_profile(FP_CASES)
+        self.assertEqual(errors, [])
+        self.assertEqual(stats["finite_profile_cases"], 13)
+        self.assertEqual(stats["finite_profile_skeletons"], 8)
+        self.assertEqual(self.errors(lambda d: None), [])
+
+    def test_mutations(self):
+        ok, tgt = "bound-exact-B", "unit-delete-target"
+
+        def drop(d):
+            ps = self.case(d, ok)["profile"]["packets"]
+            ps.remove(self.packet(d, ok, tgt))
+
+        def dup(d):
+            ps = self.case(d, ok)["profile"]["packets"]
+            ps.append(copy.deepcopy(ps[0]))
+
+        def setp(field, value, packet=tgt):
+            return lambda d: self.packet(d, ok, packet).__setitem__(field, value)
+
+        def ctx_desc(field, value, packet=tgt):
+            return lambda d: next(x for x in d["owned_context"]["descriptors"] if x["packet"] == packet).__setitem__(field, value)
+
+        bad = {
+            "missing packet": (drop, "of the roster is missing"),
+            "duplicate packet": (dup, "repeats"),
+            "wrong H (greater)": (setp("H", 93744), "!= H 93743 assembled"),
+            "wrong H (less)": (setp("H", 93742), "!= H 93743 assembled"),
+            "wrong n_folder": (setp("n_folder", 9), "n_folder 9 != descriptor 8"),
+            "wrong n_guard": (setp("n_guard", 3), "n_guard 3 != descriptor 4"),
+            "wrong n_claim": (setp("n_claim", 0, "claim-acquire"), "n_claim 0 != descriptor 1"),
+            "no multiplicity proof": (setp("multiplicity_proof", "owned-descriptor:claim-acquire"), "multiplicity_proof"),
+            "free provenance": (lambda d: self.case(d, ok)["profile"]["provenance"].__setitem__("catalogue", "trust-me"),
+                                "provenance.catalogue"),
+            "pass at bound > B": (lambda d: self.case(d, "bound-B-plus-one").__setitem__("expect", "ok"), "> B 609947875"),
+            "refused without reason": (lambda d: self.case(d, "limit-one-above-bound").__setitem__("expect", "refused:form"),
+                                       "the judge gives ok"),
+            "V not effective": (lambda d: self.case(d, ok)["profile"].__setitem__("row_weight_bytes", 524287),
+                                "row_weight_bytes"),
+            "F not FOLDER_ROW_MAX": (lambda d: self.case(d, ok)["profile"].__setitem__("folder_weight_bytes", 65535),
+                                     "FOLDER_ROW_MAX"),
+            "key beyond 1024": (lambda d: self.case(d, ok)["profile"]["metadata"].__setitem__("key_utf8_bytes", 1025),
+                                "schema"),
+            "context duplicate roster": (lambda d: d["owned_context"]["descriptor_packet_roster"].append("claim-acquire"),
+                                         "roster: packet 'claim-acquire' repeats"),
+            "context descriptor H": (ctx_desc("H", 93742), "H 93742 != H 93743 assembled"),
+            "context skeleton": (ctx_desc("skeleton_entity_bytes", 93138), "the judge gives refused"),
+            "context key_json": (ctx_desc("key_json_bytes", 6145), "6*key_utf8_bytes+2"),
+            "context version 21": (ctx_desc("version_digits", 21), "version_digits 21"),
+            "context put_slots": (ctx_desc("put_slots", 9), "put_slots/timestamp_slots"),
+            "context counts": (lambda d: next(x for x in d["owned_context"]["descriptors"] if x["packet"] == tgt)
+                               ["counts"].__setitem__("n_folder", 7), "the judge gives refused"),
+            "context integer domain": (lambda d: d["owned_context"]["status"].__setitem__("max_body", 2 ** 53),
+                                       "outside 0..2^53-1"),
+            "expected bound": (lambda d: d["expected_bounds"].__setitem__(tgt, 9531088), "expected_bounds unit-delete-target"),
+            "max_bound": (lambda d: d.__setitem__("max_bound", 609947875), "max_bound"),
+            "no exact-B case": (lambda d: d["cases"].remove(self.case(d, ok)), "exactly B"),
+            "no B+1 case": (lambda d: d["cases"].remove(self.case(d, "bound-B-plus-one")), "B+1"),
+        }
+        for name, (mutate, needle) in bad.items():
+            with self.subTest(name):
+                errors = self.errors(mutate)
+                self.assertTrue(any(needle in e for e in errors), errors)
+
+    def resign(self, d, packet, raw):
+        """Переписать байты скелета и согласованно его sha256, длину и числа в контексте."""
+        (self.skel / f"{packet}.json").write_bytes(raw)
+        sha = hashlib.sha256(raw).hexdigest()
+        pr = next(x for x in d["owned_context"]["metadata-proofs"] if x["packet"] == packet)
+        ds = next(x for x in d["owned_context"]["descriptors"] if x["packet"] == packet)
+        pr["sha256"] = ds["metadata_skeleton_sha256"] = sha
+        pr["bytes"] = ds["skeleton_entity_bytes"] = len(raw)
+
+    def test_byte_skeletons(self):                  # доработка по c34fc58c5: байты скелетов потребляются, числам не верим
+        tgt = "unit-delete-target"
+        raw = (self.skel / f"{tgt}.json").read_bytes()
+        k0, k1 = b"\\u0000" * 3, b"\\u0001" + b"\\u0000" * 2
+        self.assertIn(k1, raw)
+
+        def same_numbers_other_bytes(d):            # та же длина, sha согласован, ключ повторён
+            self.resign(d, tgt, raw.replace(k1, k0, 1))
+
+        def stale_sha(d):                           # байты подменены, заявленный sha прежний
+            (self.skel / f"{tgt}.json").write_bytes(raw.replace(k1, k0, 1))
+
+        def removed(d):
+            (self.skel / f"{tgt}.json").unlink()
+
+        def forged_numbers(d):                      # согласованно +1: длина, H дескриптора, H профилей, ожидание
+            ds = next(x for x in d["owned_context"]["descriptors"] if x["packet"] == tgt)
+            pr = next(x for x in d["owned_context"]["metadata-proofs"] if x["packet"] == tgt)
+            ds["skeleton_entity_bytes"] += 1
+            pr["bytes"] += 1
+            ds["H"] += 1
+            for c in d["cases"]:
+                for k in c["profile"].get("packets") or []:
+                    if isinstance(k, dict) and k.get("packet") == tgt:
+                        k["H"] += 1
+            d["expected_bounds"][tgt] += 1
+
+        def final_lf(d):                            # LF в скелете при согласованных sha и длине
+            self.resign(d, tgt, raw + b"\n")
+
+        def spaced(d):                              # не компактный кодек
+            self.resign(d, tgt, raw.replace(b'"op":"batch"', b'"op": "batch"', 1))
+
+        def items_not_empty(d):
+            self.resign(d, tgt, raw.replace(b'"items":{}', b'"items":{"a":1}', 1))
+
+        def ctx_meta(k, v):
+            return lambda d: d["owned_context"]["metadata"].__setitem__(k, v)
+
+        def dup_proof(d):
+            ps = d["owned_context"]["metadata-proofs"]
+            ps.append(copy.deepcopy(ps[0]))
+
+        def case_meta(k, v):
+            return lambda d: self.case(d, "bound-exact-B")["profile"]["metadata"].__setitem__(k, v)
+
+        bad = {
+            "other bytes, same numbers": (same_numbers_other_bytes, "skeleton keys repeat"),
+            "stale sha": (stale_sha, "!= declared"),
+            "skeleton removed": (removed, "does not resolve"),
+            "forged numbers": (forged_numbers, "skeleton has 93139 bytes"),
+            "final LF in skeleton": (final_lf, "final LF"),
+            "not compact": (spaced, "not exactly the compact-json-utf8"),
+            "items not empty": (items_not_empty, "items is not {}"),
+            "context LF 0": (ctx_meta("trailing_lf", 0), "metadata.trailing_lf 1 != owned_context.metadata 0"),
+            "context LF 2": (ctx_meta("trailing_lf", 2), "trailing_lf 2 is not 0 or 1"),
+            "context encoder": (ctx_meta("encoder", "json-ascii"), "encoder 'json-ascii' is not"),
+            "case LF differs": (case_meta("trailing_lf", 0), "the judge gives refused"),
+            "proofs section gone": (lambda d: d["owned_context"].pop("metadata-proofs"), "is not a list"),
+            "proof ref unresolvable": (lambda d: d["owned_context"]["descriptors"][0].__setitem__(
+                "metadata_skeleton_proof", "owned-context:metadata-proof"), "does not resolve to"),
+            "stale profile proof ref": (lambda d: self.case(d, "bound-exact-B")["profile"]["provenance"].__setitem__(
+                "metadata_skeleton_proof", "owned-context:descriptors"), "the judge gives refused"),
+            "proof repeats": (dup_proof, "more than one proof"),
+            "proof file elsewhere": (lambda d: d["owned_context"]["metadata-proofs"][0].__setitem__(
+                "file", "../finite-profile.schema.json"), "differ from its metadata-proofs record"),
+        }
+        for name, (mutate, needle) in bad.items():
+            with self.subTest(name):
+                shutil.rmtree(self.skel)
+                shutil.copytree(ROOT / self.SKELETONS, self.skel)
+                errors = self.errors(mutate)
+                self.assertTrue(any(needle in e for e in errors), errors)
+
+    def test_body_witnesses(self):
+        errors, stats = check_forms.check_deletion_body_witnesses(self.wpath)
+        self.assertEqual(errors, [])
+        self.assertEqual(stats["deletion_body_witnesses"], 6)
+        good = json.loads(self.wpath.read_text(encoding="utf-8"))
+        bad = {
+            "limit+1 passes": (lambda d: d["witnesses"]["body_limit1"].__setitem__("within_body_limit", True), "within"),
+            "limit refuses": (lambda d: d["witnesses"]["body_limit0"].__setitem__("within_body_limit", False), "within"),
+            "no limit-1": (lambda d: d["witnesses"].pop("body_limit-1"), "1048575 bytes"),
+            "LF not +1": (lambda d: d["witnesses"]["same_JSON_plus_LF"].__setitem__("entity_bytes", 1048578), "LF witness"),
+        }
+        for name, (mutate, needle) in bad.items():
+            with self.subTest(name):
+                d = copy.deepcopy(good)
+                mutate(d)
+                self.wpath.write_text(json.dumps(d), encoding="utf-8")
+                errors = check_forms.check_deletion_body_witnesses(self.wpath)[0]
+                self.assertTrue(any(needle in e for e in errors), errors)
+class CyrillicJudge(unittest.TestCase):
+    """ADR-0121 (8): source mutations, the two exceptions and monotone debt."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        self.debt = self.root / "debt.tsv"
+        self.debt.write_text(check_cyrillic.HEADER + "\n", encoding="utf-8")
+
+    def put(self, name, text):
+        path = self.root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(text if isinstance(text, bytes) else text.encode("utf-8"))
+        return path
+
+    def markers(self):
+        for name in check_cyrillic.EXPORT_MARKERS:
+            self.put(name, "0123456789abcdef0123456789abcdef01234567\n")
+
+    def judge(self, **kwargs):
+        return check_cyrillic.check(self.root, self.debt, **kwargs)
+
+    def registry(self, *rows):
+        self.debt.write_text(check_cyrillic.HEADER + "\n" + "\n".join(rows) + "\n", encoding="utf-8")
+
+    def test_requested_source_mutants(self):
+        for name in ("Platform/01-store/journal/corrections.tsv", "Platform/02-installer/data/test.shell.html",
+                     "tools/normgen/runtime/door.go", "Platform/explanations/notes.md",
+                     "Platform/.hidden/source.txt"):
+            with self.subTest(name=name):
+                path = self.put(name, "// Cyrillic: Ж\n")
+                self.assertTrue(any(name in e and "new/increased" in e for e in self.judge()[0]))
+                path.unlink()
+
+    def test_additional_course_export_sources_are_checked(self):
+        for name in ("Platform/07-console-module/CONSOLE-MODULE.md", "Platform/common/NORMATIVE-TERMS.md",
+                     "Platform/02-installer/acceptance/1/spec_verdicts/spec_verdicts.tsv",
+                     "Platform/common/data/testsub/new/case.json"):
+            with self.subTest(name=name):
+                path = self.put(name, "Ж")
+                self.assertTrue(any(name in e and "new/increased" in e for e in self.judge()[0]))
+                path.unlink()
+
+    def test_course_readme_is_not_the_export_readme(self):
+        self.put("README.md", "Course notes: Ж")
+        self.assertEqual(self.judge()[0], [])
+        self.markers()
+        errors, stats = self.judge()
+        self.assertTrue(any("README.md: Cyrillic letters" in e for e in errors))
+        self.assertEqual(stats["cyrillic_export"], 1)
+
+    def test_export_checks_all_homes_and_hidden_files_not_only_known_roots(self):
+        self.markers()
+        for name in ("README.md", ".gitignore", "tools/new-contract.txt", "Source/new/input.tsv",
+                     "changes/old/tasks.md", "new-published-home/schema.yaml"):
+            with self.subTest(name=name):
+                path = self.put(name, "Ж")
+                self.assertTrue(any(name in e and "new/increased" in e for e in self.judge()[0]))
+                path.unlink()
+
+    def test_export_vms_is_deferred_but_canonical_console_bytes_are_checked(self):
+        self.markers()
+        self.put("VMS/01-camera/spec/norms.md", "Ж")
+        self.assertEqual(self.judge()[0], [])
+        for name in ("Platform/07-console-module/module/console.js", "Platform/07-console-module/module/console.css",
+                     "Platform/07-console-module/module/console.html", "Source/w2cplatform/console.js", "elsewhere/console.js"):
+            with self.subTest(name=name):
+                path = self.put(name, "Ж")
+                self.assertTrue(self.judge()[0])
+                path.unlink()
+        # The exception names published files; it must not exempt whole directories.
+        self.put("Platform/07-console-module/module/console.js/other.txt", "Ж")
+        self.assertTrue(self.judge()[0])
+
+    def test_export_exceptions_preserve_mirrors_and_only_localization_ru(self):
+        self.markers()
+        self.put("Platform/01-store/ru/spec/norms.md", "Ж")
+        self.put(check_cyrillic.LOCALIZATION, "key\ten\tru\na\tEnglish\tЖ\n")
+        self.assertEqual(self.judge()[0], [])
+        old = self.put("Platform/06-console/data/localization.tsv", "key\ten\tru\na\tEnglish\tЖ\n")
+        self.assertTrue(any("Platform/06-console/data/localization.tsv" in e and "new/increased" in e
+                            for e in self.judge()[0]))
+        old.unlink()
+        self.put(check_cyrillic.LOCALIZATION, "key\ten\tru\na\tЖ\tЖ\n")
+        self.assertTrue(self.judge()[0])
+
+    def test_explicit_export_without_marker_and_read_only_cli(self):
+        self.put("new-published-home/data.txt", "Ж")
+        self.assertEqual(self.judge()[0], [])
+        self.assertTrue(self.judge(export=True)[0])
+        before = self.debt.read_bytes()
+        result = subprocess.run([sys.executable, "-B", str(Path(check_cyrillic.__file__)),
+                                 "--root", str(self.root), "--debt", str(self.debt), "--export"],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("new-published-home/data.txt", result.stdout)
+        self.assertEqual(self.debt.read_bytes(), before)
+
+    def test_deleted_tracked_export_marker_does_not_narrow_scope(self):
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True, capture_output=True)
+        self.markers()
+        self.put("README.md", "Ж")
+        subprocess.run(["git", "-C", str(self.root), "add", *check_cyrillic.EXPORT_MARKERS, "README.md"], check=True, capture_output=True)
+        for name in check_cyrillic.EXPORT_MARKERS:
+            (self.root / name).unlink()
+        errors, stats = self.judge()
+        self.assertTrue(any("README.md" in e for e in errors))
+        self.assertEqual(sum("cannot read export marker" in e for e in errors), 2)
+        self.assertEqual(stats["cyrillic_export"], 1)
+
+    def test_new_scope_shrink_cannot_add_debt_or_lower_old_debt_at_the_same_time(self):
+        self.put("Platform/01-store/old.md", "English")
+        self.registry("debt\tPlatform/01-store/old.md\t1")
+        self.put("Platform/07-console-module/CONSOLE-MODULE.md", "Ж")
+        before = self.debt.read_bytes()
+        self.assertTrue(self.judge(shrink=True)[0])
+        self.assertEqual(self.debt.read_bytes(), before)
+
+    def test_nested_export_markers_are_exact_equal_full_pins(self):
+        self.markers()
+        self.assertEqual(self.judge()[0], [])
+        first, second = [self.root / name for name in check_cyrillic.EXPORT_MARKERS]
+        good = first.read_bytes()
+        for path in (first, second):
+            for bad in (b"0123456789\n", good[:-1], good + b"\n", good.replace(b"\n", b"\r\n"),
+                        good.upper(), b"g" * 40 + b"\n", b" " + good):
+                with self.subTest(path=path, bad=bad):
+                    path.write_bytes(bad)
+                    self.assertTrue(any("expected full 40" in e for e in self.judge()[0]))
+            path.write_bytes(good)
+            path.unlink()
+            self.assertTrue(any("cannot read export marker" in e for e in self.judge()[0]))
+            path.write_bytes(good)
+        second.write_bytes(b"f" * 40 + b"\n")
+        self.assertTrue(any("COURSE_COMMIT differ" in e for e in self.judge()[0]))
+        second.write_bytes(good)
+        self.put("COURSE_COMMIT", good)
+        self.assertTrue(any("root marker is forbidden" in e for e in self.judge()[0]))
+
+    def test_export_missing_both_markers_and_symlinks_fail_explicitly(self):
+        self.assertTrue(any("cannot read export marker" in e for e in self.judge(export=True)[0]))
+        self.markers()
+        path = self.root / check_cyrillic.EXPORT_MARKERS[0]
+        before = path.read_bytes()
+        path.unlink()
+        target = self.put("pin.txt", before)
+        path.symlink_to(target)
+        self.assertTrue(any("without symlinks" in e for e in self.judge()[0]))
+
+    def test_legacy_root_marker_cannot_select_an_accepted_layout(self):
+        self.put("COURSE_COMMIT", "0123456789abcdef0123456789abcdef01234567\n")
+        errors, stats = self.judge()
+        self.assertEqual(stats["cyrillic_export"], 1)
+        self.assertTrue(any("root marker is forbidden" in e for e in errors))
+        self.assertEqual(sum("cannot read export marker" in e for e in errors), 2)
+
+    def test_frozen_source_and_old_root_notes_are_not_canonical_scope(self):
+        for name in ("Source/tests/testdata/testsub.subsystem.yaml", "Source/w2cplatform/console.js",
+                     "NORMATIVE-TERMS.md", "CONSOLE-MODULE.md"):
+            self.put(name, "Ж")
+        self.assertEqual(self.judge()[0], [])
+
+    def test_only_declared_mirror_homes_are_exempt(self):
+        for name in ("Platform/ru/README.md", "Platform/common/ru/wire.tsv", "Platform/01-store/ru/spec/norms.md"):
+            self.put(name, "Русский перевод")
+        self.assertEqual(self.judge()[0], [])
+        for name in ("tools/normgen/ru/code.go", "Platform/01-store/code/ru/code.go", "Platform/explanations/ru/note.md"):
+            with self.subTest(name=name):
+                path = self.put(name, "Ж")
+                self.assertTrue(self.judge()[0])
+                path.unlink()
+
+    def test_localization_ru_column_only_by_header(self):
+        for header, row in (("key\ten\tru", "hello\tHello\tПривет"),
+                            ("# ru\tkey\ten", "Привет\thello\tHello")):
+            self.put(check_cyrillic.LOCALIZATION, header + "\n" + row + "\n")
+            self.assertEqual(self.judge()[0], [])
+        for row in ("Ж\tHello\tПривет", "hello\tЖ\tПривет"):
+            self.put(check_cyrillic.LOCALIZATION, "key\ten\tru\n" + row + "\n")
+            self.assertTrue(self.judge()[0])
+
+    def test_localization_comments_headers_and_other_paths_are_not_exempt(self):
+        for text in ("# Ж\nkey\ten\tru\na\tb\tПривет\n", "key\ten\tru\tЖ\na\tb\tПривет\td\n"):
+            self.put(check_cyrillic.LOCALIZATION, text)
+            self.assertTrue(self.judge()[0])
+        (self.root / check_cyrillic.LOCALIZATION).unlink()
+        self.put("Platform/01-store/data/localization.tsv", "key\ten\tru\na\tb\tПривет\n")
+        self.assertTrue(self.judge()[0])
+
+    def test_localization_malformed_shape_fails_without_letters(self):
+        for text in ("", "key\ten\n", "key\ten\tru\tru\n", "key\ten\tru\na\tb\n",
+                     "# comment\na\tb\tc\n"):
+            with self.subTest(text=text):
+                self.put(check_cyrillic.LOCALIZATION, text)
+                self.assertTrue(self.judge()[0])
+
+    def test_unicode_letters_including_new_and_supplementary_blocks(self):
+        self.assertEqual(sum(high - low + 1 for low, high in check_cyrillic.LETTER_RANGES), 449)
+        letters = "Ж\u0481\u048a\u052f\u1c80\u1c89\u1c8a\u1d2b\u1d78\ua640\ua67f\ua69d\U0001e030\U0001e06d"
+        self.put("Platform/01-store/spec/norms.md", letters)
+        counts, errors, _ = check_cyrillic.scan(self.root)
+        self.assertEqual(errors, [])
+        self.assertEqual(sum(counts.values()), len(letters))
+        self.put("Platform/01-store/spec/norms.md", "Latin\u0482\u0483\u2de0é漢字")
+        self.assertEqual(self.judge()[0], [])             # Cyrillic signs/marks are not letters
+
+    def test_non_utf8_does_not_hide_valid_cyrillic(self):
+        self.put("tools/normgen/data.bin", b"\xff\x00" + "Ж".encode())
+        errors, stats = self.judge()
+        self.assertTrue(errors)
+        self.assertEqual(stats["cyrillic_non_utf8"], 1)
+
+    def test_existing_debt_is_exact_per_file(self):
+        self.put("Platform/01-store/a.md", "ЖЖ")
+        self.registry("debt\tPlatform/01-store/a.md\t2")
+        before = self.debt.read_bytes()
+        self.assertEqual(self.judge()[0], [])
+        self.assertEqual(self.debt.read_bytes(), before)    # default check is read-only
+        self.put("Platform/01-store/b.md", "Ж")
+        self.assertTrue(self.judge()[0])
+        (self.root / "Platform/01-store/b.md").unlink()
+        self.put("Platform/01-store/a.md", "ЖЖЖ")
+        self.assertTrue(self.judge()[0])
+
+    def test_shrink_lowers_and_removes_deleted_debt(self):
+        self.put("Platform/01-store/a.md", "Ж")
+        self.registry("debt\tPlatform/01-store/a.md\t2", "debt\tPlatform/01-store/deleted.md\t3")
+        self.assertEqual(len(self.judge()[0]), 2)
+        self.assertEqual(self.judge(shrink=True)[0], [])
+        self.assertEqual(check_cyrillic.load_debt(self.debt)[:2], ({"Platform/01-store/a.md": 1}, set()))
+        self.assertEqual(self.judge()[0], [])
+
+    def test_shrink_refuses_new_or_increased_debt_and_preserves_bytes(self):
+        self.put("Platform/01-store/a.md", "ЖЖ")
+        for row in ("debt\tPlatform/01-store/a.md\t1", "debt\tPlatform/01-store/other.md\t10"):
+            self.registry(row)
+            before = self.debt.read_bytes()
+            self.assertTrue(self.judge(shrink=True)[0])
+            self.assertEqual(self.debt.read_bytes(), before)
+
+    def test_missing_registry_cannot_be_bootstrapped_by_shrink(self):
+        self.debt.unlink()
+        self.assertTrue(self.judge(shrink=True)[0])
+        self.assertFalse(self.debt.exists())
+
+    def test_ready_clean_unit_stays_ready_and_cannot_acquire_debt(self):
+        self.put("Platform/01-store/a.md", "English")
+        self.assertEqual(self.judge(declare_ready=["Platform/01-store"])[0], [])
+        self.assertEqual(check_cyrillic.load_debt(self.debt)[1], {"Platform/01-store"})
+        self.assertEqual(self.judge(shrink=True)[0], [])
+        before = self.debt.read_bytes()
+        self.put("Platform/01-store/a.md", "Ж")
+        self.assertTrue(self.judge(shrink=True)[0])
+        self.assertEqual(self.debt.read_bytes(), before)
+
+    def test_ready_dirty_or_missing_or_excluded_unit_refused(self):
+        self.put("Platform/01-store/a.md", "Ж")
+        self.registry("debt\tPlatform/01-store/a.md\t1")
+        for unit in ("Platform/01-store", "Platform/missing", "Platform/01-store/a.md",
+                     "../Platform", "Platform/ru", "VMS/01-db"):
+            before = self.debt.read_bytes()
+            self.assertTrue(self.judge(declare_ready=[unit])[0], unit)
+            self.assertEqual(self.debt.read_bytes(), before)
+
+    def test_registry_malformed_duplicate_and_ready_debt_conflict(self):
+        for row in ("debt\t../escape\t1", "debt\tPlatform/a\t0", "debt\tPlatform/a\t١",
+                    "debt\tPlatform/a\t-1", "debt\tPlatform/a\t1\nready\tPlatform/a\t-",
+                    "debt\tPlatform/a\t1\ndebt\tPlatform/a\t2", "ready\tPlatform\t-\ndebt\tPlatform/a\t1",
+                    "debt\tPlatform/ru/a\t1", "debt\tPlatform//a\t1", "debt\tPlatform/a\\b\t1",
+                    "anything\tPlatform/a\t1"):
+            self.registry(row)
+            self.assertTrue(check_cyrillic.load_debt(self.debt)[2], row)
+        self.debt.write_text("wrong header\n")
+        self.assertTrue(self.judge()[0])
+
+    def test_checkout_uses_tracked_including_staged_hidden_source(self):
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True, capture_output=True)
+        self.put("Platform/untracked.md", "Ж")
+        self.assertEqual(self.judge()[0], [])
+        subprocess.run(["git", "-C", str(self.root), "add", "Platform"], check=True, capture_output=True)
+        self.assertTrue(self.judge()[0])
+        self.put("Platform/untracked.md", "English")
+        self.put("tools/normgen/.hidden.go", "// Ж")
+        self.assertEqual(self.judge()[0], [])
+        subprocess.run(["git", "-C", str(self.root), "add", "tools"], check=True, capture_output=True)
+        self.assertTrue(self.judge()[0])
+
+    def test_git_free_export_scans_hidden_but_skips_metadata(self):
+        self.put("Platform/__pycache__/cache.pyc", "Ж")
+        self.put("Platform/.git/config", "Ж")
+        self.assertEqual(self.judge()[0], [])
+        self.put("Platform/.source/x.txt", "Ж")
+        self.assertTrue(self.judge()[0])
+
+    def test_source_symlinks_fail_without_reading_target(self):
+        target = self.put("outside.txt", "secret Ж")
+        (self.root / "Platform").mkdir()
+        (self.root / "Platform/link.md").symlink_to(target)
+        self.assertTrue(self.judge()[0])
+
+    def test_special_file_and_missing_root_fail_without_hanging(self):
+        path = self.root / "Platform/data.pipe"
+        path.parent.mkdir()
+        os.mkfifo(path)
+        self.assertTrue(any("not a regular file" in e for e in self.judge()[0]))
+        self.assertTrue(check_cyrillic.check(self.root / "missing", self.debt)[0])
+
+    def test_invalid_localization_also_blocks_shrink(self):
+        self.put(check_cyrillic.LOCALIZATION, "key\ten\tru\na\tb\n")
+        before = self.debt.read_bytes()
+        self.assertTrue(self.judge(shrink=True)[0])
+        self.assertEqual(self.debt.read_bytes(), before)
+
+    def test_cli_default_is_read_only_and_fails_mutant(self):
+        self.put("Platform/01-store/journal/a.tsv", "Ж")
+        before = self.debt.read_bytes()
+        result = subprocess.run([sys.executable, "-B", str(Path(check_cyrillic.__file__)),
+                                 "--root", str(self.root), "--debt", str(self.debt)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("new/increased debt", result.stdout)
+        self.assertEqual(self.debt.read_bytes(), before)
 
 
 if __name__ == "__main__":

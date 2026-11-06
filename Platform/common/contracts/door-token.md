@@ -18,7 +18,7 @@ of the answer), the signer `door/signer` and its envelope are in the owner's nor
 [`door-keys`](../../06-console/data/door-keys.schema.json) with the outcome table next to it. JCS is RFC 8785 (ADR-0072; the vectors
 [`jcs`](../../01-store/vectors/jcs/README.md) of lesson P/01).
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -125,10 +125,3 @@ holder door that checks the token).
 The canonical JSON (RFC 8785, ADR-0072) on which the contract rests is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
 
-## Correspondence to former lessons
-
-From P/06.5 (analysis of the review of stage B 3–5, V1; formerly M10/9 N3 «`/where/<id>`»): the block «Door token — bytes» — the row `token`
-(here «Token») and the row `door/keys` about the writer; the row `door/signer` stays in P/06.5 N3. From P/03.4 N3 «the door token at the
-holder» (formerly a part of M10/9-09): the row `door/keys` about the checker and the phrase of «Races» (here «Keys `door/keys`»; both
-halves of the row `door/keys` are merged into one, as in the source M10/9). Parts of the norms by `note` of [id-map](../id-map.tsv): P/06.5-05
-(the bytes of the token, `door/keys`), P/03.4-08 (the check at the holder).

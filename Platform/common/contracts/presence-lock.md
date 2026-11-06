@@ -11,7 +11,7 @@ processes (P/05 N1.4 `workers`, `running`, `unknown`, `presence`) and the count 
 and the layout of `PLATFORM_DIR`». Moved from M10/8 N1.4 (`presence_lock`, `room`) and M10/11 N1.4 (`presence`) without a change of
 behaviour; the derivation of the presence words from the fields of the resource heartbeat — P/05 N1.4 `presence`.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -108,8 +108,3 @@ live:      next to every room.<sub> — the element live.<sub>: the numbers n �
 
 The package [`presence-room`](../vectors/presence-room/README.md) (the count `room`); the modes of the directories and files of the locks are the rows of `modes.tsv` of the package [`journal`](../vectors/journal/README.md) (together with the event journal). (ADR-0083 addendum (32) item 2)
 
-## Correspondence to former lessons
-
-From M10/8 N1.4 (stage B, analysis of the review of stage A 3–5, № 9): `presence_lock` whole and `room` (at P/05 N1.4 `room` is
-a reference here); from M10/11 N1.4 — `presence`. Part of the norm M10/8-10 (the lock and the count `room`; P/05-07) — by `note` of
-[id-map](../id-map.tsv); the worker's side (step 2b «start()» of M10/5) — chapter P/03.2, a part of M10/5 by the id-map of lesson 3.

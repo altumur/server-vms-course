@@ -23,7 +23,7 @@ reports) — P/09.1 N3 and P/08.3 N2, «lesson 11» (the shared document) — P/
 SB810-07); `keys` — the accepted set ([the domain key set contract](keys.md)). What is common to the forms — the [domain founding contract](domain-founding.md)
 «Common rules of forms» (layout audit, B-03).
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -178,9 +178,3 @@ there is a consumer: following calls `record` (layout audit, V-49; CM-RECORD-VEC
 The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 
-## Correspondence to former lessons
-
-From M11/10 (analysis of review of stage A 8–10, № 13 / decision 2): N1.1 — the row `domain/holder` with the block `doc` (here «The term
-record»; `claim` and `check` stayed); N3 «record» — the paragraph about the kinds and steps 1–6 (here «The function `record`»); N4 — the phrase about the words of
-`record` (here «Refusal words»). Parts of the norms M11/10-01 (the term record and `record`) and M11/11-04 (the check of the shared document) —
-by `note` of [id-map](../id-map.tsv).

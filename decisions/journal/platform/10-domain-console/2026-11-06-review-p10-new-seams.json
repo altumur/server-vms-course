@@ -1,0 +1,27 @@
+{
+  "new_steps": 34,
+  "new_cases": [
+    "s26-member-silence",
+    "s27-witness-report-clock",
+    "s28-member-and-served-reads",
+    "s29-closed-route-dispatch",
+    "s30-hop-finite-budget",
+    "s31-hop-stream",
+    "s32-hop-policy-refusal",
+    "s33-hop-path-bytes",
+    "s34-hop-response-boundary",
+    "s35-ordinary-forward-limits"
+  ],
+  "path_policy_fixture": {
+    "descriptor": {
+      "sub": "testsub",
+      "method": "GET",
+      "path_b64": "YXBpL2ElMkZi",
+      "kind": 2,
+      "wait": 10,
+      "stream": false,
+      "max_bytes": 4194304
+    },
+    "sha256": "c5b465d361781c60e582244158d7f69eef2201d0542099489217824afff0eb39"
+  }
+}

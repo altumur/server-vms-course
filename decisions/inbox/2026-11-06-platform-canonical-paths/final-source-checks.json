@@ -1,0 +1,98 @@
+{
+  "base": "e07b32a5030c696d89c72444e760a86f6246c487",
+  "source_parent": "36ba710b45bfeb6ef28baef6b9199f6c332017e1",
+  "raw_copies": {
+    "count": 141,
+    "all_bytes_modes_equal_to_frozen_Source": true
+  },
+  "archives": {
+    "count": 2,
+    "all_original_bytes_equal": true
+  },
+  "protected_trees": {
+    "Source/": {
+      "files": 827,
+      "all_modes_and_raw_bytes_identical_to_base": true
+    },
+    "tools/": {
+      "files": 9961,
+      "all_modes_and_raw_bytes_identical_to_base": true
+    },
+    "skills/": {
+      "files": 433,
+      "all_modes_and_raw_bytes_identical_to_base": true
+    }
+  },
+  "url_only": {
+    "VMS_files": 150,
+    "VMS_links": 152,
+    "B_files": 4,
+    "B_links": 4,
+    "all_expected_before_after_SHA_verified": true
+  },
+  "frozen_tables": [
+    {
+      "path": "Platform/common/data/cell-json-sha256.tsv",
+      "sha256": "64050a2241c84b386590e9393190afdd8a058f40350fe571f3b4fd5d3f01983d"
+    },
+    {
+      "path": "Platform/common/vectors/source-cells/unmarked-sha256.tsv",
+      "sha256": "669b9d25c3d531d0fd16dd270f026e8e3b3fe3c71f5451c93501976d8d7c7821"
+    },
+    {
+      "path": "Platform/common/vectors/turn/cases.tsv",
+      "sha256": "8279ddfbdab7b48c82d6e4cd4aa2e78861f5c208a44f74705506c857601791e0"
+    },
+    {
+      "path": "Platform/06-console/data/localization.tsv",
+      "sha256": "a5b3c4b9c1af6cfe40a72c80b58d2348a9e9517d7c36c0b6ad8a91bc807850e9"
+    },
+    {
+      "path": "Platform/common/data/catalog.tsv",
+      "sha256": "f109b87bb5837eb8f8fac8cf0d4caca61779493d36731b76cf6276d3d48cdc4f"
+    }
+  ],
+  "machine_tables": {
+    "tables": 2,
+    "changed_cells": 4,
+    "other_cells_order_and_counts_identical": true
+  },
+  "verdict_corpus": {
+    "headerless_rows": 138,
+    "files": 138,
+    "ok": 19,
+    "refused": 119,
+    "inventory_only_not_loader_execution": true
+  },
+  "mirror_and_cell_forms": {
+    "pairs": 393,
+    "mirror_errors": [],
+    "cell_errors": []
+  },
+  "local_file_links": {
+    "checked": 9128,
+    "missing": []
+  },
+  "strict_check_spec": {
+    "status": "RED before review103 reader integration",
+    "exit_code": 1,
+    "exceptions": 62,
+    "errors": [
+      "ERROR Platform/02-installer/acceptance/1/spec_verdicts: unsupported acceptance entry; add a format-specific check",
+      "ERROR Platform/02-installer/vectors/canonical/cases.tsv: canonical: no vector for the accepted input Source/tests/testdata/testsub.subsystem.yaml (rebuild: cd skills/lesson-spec/scripts && python -m v7.vectors)",
+      "ERROR Platform/02-installer/vectors/canonical/cases.tsv: canonical: no vector for the accepted input Source/tests/testdata/testsub2.subsystem.yaml (rebuild: cd skills/lesson-spec/scripts && python -m v7.vectors)"
+    ],
+    "raw_log": "check-spec-before-reader.log",
+    "raw_log_sha256": "74b38c2e112730246846f1aa2ccb5d5c70f6e0f0b87625f29f7172468b9e281a"
+  },
+  "diff_check": {
+    "inherited_warning": "spec_verdicts/lease_absent.subsystem.yaml:35 new blank line at EOF",
+    "reason": "intentional raw copy identity; no trimming"
+  },
+  "execution_limits": [
+    "No helper/judge edits; review103 owns new readers.",
+    "No normgen/KIT/full joint/export/pin/main/runtime/queue changes.",
+    "No Go/model/native/product/SUT/JS execution; no product synchronization.",
+    "Console module and locale relocation are separate Console-owner work, not implemented here."
+  ]
+}

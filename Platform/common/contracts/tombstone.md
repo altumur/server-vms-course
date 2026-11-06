@@ -13,7 +13,7 @@ of a neighbour, appends acknowledgements and removes the tombstone (P/05 N1.1 «
 Moved from P/05 N1.1 «Tombstones» (formerly M10/10 N1.5 `delete`) without a change of behaviour; new is the rule `peers`
 (the section «Neighbours»): formerly the source and the completeness of the list were not named.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -94,7 +94,3 @@ remove or keep. The tombstone at the deleter — the listing `prefix=.gone/`, th
 sc. 45 of the acceptance of P/05 (the tombstone is put by `@put object`); the dropping of a copy by a neighbour — reading; a stand with two resources — system
 acceptance (P/05-11 — sc. 45 and by reading).
 
-## Correspondence to former lessons
-
-From P/05 N1.1 «Tombstones» (the block `delete`; the norm P/05-11 — by `note` of [id-map](../id-map.tsv)) and the line of P/06.1 N1.5
-`delete`; they refer here. The section «Neighbours» is a new rule (C06-BLOB-GC-33-01 / IF-OBJECT-TOMBSTONE63-PEERS-01).

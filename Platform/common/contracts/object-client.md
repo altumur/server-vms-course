@@ -13,7 +13,7 @@ Moved from P/05 N1.1 (`api`, `ops`, `cluster`, `written`, the key and the prefix
 door, `scope`, refusals) without a change of behaviour; the door side (request parsing, admission, the layout on disk, limits) is in
 P/05, P/05 refers here.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -105,8 +105,3 @@ cluster:// — the door by the door row of its own server, no row, does not read
 resource overrides the row, P03-OBJECTS-DEFAULT-1FD); `read.tsv` — the class of the read outcome: the code, `X-Missing`, no
 answer → the object, absent, unknown, a refusal.
 
-## Correspondence to former lessons
-
-From P/05 N1.1 (`api`, `rule`, `ops`, `writer`, `cluster`, `written`, the key and the prefix, the listing, the FS error) and N2 (`scope`,
-404 and `X-Missing`, refusals); they have references here (C10-OBJECT-ADDRESS-32). The layout on disk (`disk`), the door families (`door`),
-the limits and the parsing of a door request are in P/05.

@@ -1,0 +1,423 @@
+{
+  "status": "Accepted source codec witnesses only; not finite-profile installation successes",
+  "base": "c81dd35d5ff850c687c94d251cdc84269e28730d",
+  "limit": 1048576,
+  "serializer": "UTF-8; ensure_ascii=False; compact comma/colon; allow_nan=False; no BOM; no LF unless flagged",
+  "packet_shape": {
+    "op": "batch",
+    "writes": [
+      {
+        "op": "put",
+        "key": "testsub/units/u",
+        "items": {
+          "id": "u",
+          "revision": "2",
+          "born": "b",
+          "deleted": "1",
+          "note": "",
+          "quoted": "",
+          "utf8": "\u0436"
+        },
+        "cas": "1"
+      },
+      {
+        "op": "put",
+        "key": "platform/folders/00000000000000000000000000000000",
+        "items": {
+          "name": "F",
+          "parent": "",
+          "members": "testsub/units/000000000000000000000000000000000000000000000"
+        },
+        "cas": "1"
+      },
+      {
+        "op": "put",
+        "key": "platform/folders/00000000000000000000000000000001",
+        "items": {
+          "name": "F",
+          "parent": "",
+          "members": "testsub/units/000000000000000000000000000000000000000000000"
+        },
+        "cas": "1"
+      },
+      {
+        "op": "put",
+        "key": "platform/folders/00000000000000000000000000000002",
+        "items": {
+          "name": "F",
+          "parent": "",
+          "members": "testsub/units/000000000000000000000000000000000000000000000"
+        },
+        "cas": "1"
+      },
+      {
+        "op": "put",
+        "key": "platform/folders/00000000000000000000000000000003",
+        "items": {
+          "name": "F",
+          "parent": "",
+          "members": "testsub/units/000000000000000000000000000000000000000000000"
+        },
+        "cas": "1"
+      },
+      {
+        "op": "put",
+        "key": "platform/folders/00000000000000000000000000000004",
+        "items": {
+          "name": "F",
+          "parent": "",
+          "members": "testsub/units/000000000000000000000000000000000000000000000"
+        },
+        "cas": "1"
+      },
+      {
+        "op": "put",
+        "key": "platform/folders/00000000000000000000000000000005",
+        "items": {
+          "name": "F",
+          "parent": "",
+          "members": "testsub/units/000000000000000000000000000000000000000000000"
+        },
+        "cas": "1"
+      },
+      {
+        "op": "put",
+        "key": "platform/folders/00000000000000000000000000000006",
+        "items": {
+          "name": "F",
+          "parent": "",
+          "members": "testsub/units/000000000000000000000000000000000000000000000"
+        },
+        "cas": "1"
+      },
+      {
+        "op": "put",
+        "key": "platform/folders/00000000000000000000000000000007",
+        "items": {
+          "name": "F",
+          "parent": "",
+          "members": "testsub/units/000000000000000000000000000000000000000000000"
+        },
+        "cas": "1"
+      },
+      {
+        "op": "delete",
+        "key": "platform/memberof/testsub/units/u",
+        "cas": "1"
+      },
+      {
+        "op": "put",
+        "key": "platform/memberof-gone/testsub/units/u",
+        "items": {},
+        "cas": ""
+      }
+    ],
+    "guards": [
+      {
+        "key": "testsub/idem/attempt",
+        "index": "1"
+      },
+      {
+        "key": "platform/memberof/parent/units/p",
+        "index": "1"
+      }
+    ],
+    "id": "p06-c2-example"
+  },
+  "witnesses": {
+    "escaping_counterexample": {
+      "entity_bytes": 1380972,
+      "sha256": "ef0384f85567310100471173830a0ed85e585ddb73a8e592075d1064a5014342",
+      "trailing_LF": false,
+      "ensure_ascii": false,
+      "put_weights": [
+        450041,
+        59957,
+        59957,
+        59957,
+        59957,
+        59957,
+        59957,
+        59957,
+        59957,
+        0
+      ],
+      "keys": [
+        "testsub/units/u",
+        "platform/folders/00000000000000000000000000000000",
+        "platform/folders/00000000000000000000000000000001",
+        "platform/folders/00000000000000000000000000000002",
+        "platform/folders/00000000000000000000000000000003",
+        "platform/folders/00000000000000000000000000000004",
+        "platform/folders/00000000000000000000000000000005",
+        "platform/folders/00000000000000000000000000000006",
+        "platform/folders/00000000000000000000000000000007",
+        "platform/memberof/testsub/units/u",
+        "platform/memberof-gone/testsub/units/u"
+      ],
+      "guards": [
+        {
+          "key": "testsub/idem/attempt",
+          "index": "1"
+        },
+        {
+          "key": "platform/memberof/parent/units/p",
+          "index": "1"
+        }
+      ],
+      "writes": 11,
+      "guard_count": 2,
+      "within_body_limit": false,
+      "HTTP_framing_bytes_counted_as_entity": false,
+      "content_length_wire_bytes": 1381073,
+      "chunked_data_and_delimiters_bytes": 1380987,
+      "decoded_chunk_entity_bytes": 1380972
+    },
+    "body_limit-1": {
+      "entity_bytes": 1048575,
+      "sha256": "24f2e2d8d38e9c9170e38ac24d40489c87874b8c32b53057fe821db335ab1d04",
+      "trailing_LF": false,
+      "ensure_ascii": false,
+      "put_weights": [
+        1046684,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        0
+      ],
+      "keys": [
+        "testsub/units/u",
+        "platform/folders/00000000000000000000000000000000",
+        "platform/folders/00000000000000000000000000000001",
+        "platform/folders/00000000000000000000000000000002",
+        "platform/folders/00000000000000000000000000000003",
+        "platform/folders/00000000000000000000000000000004",
+        "platform/folders/00000000000000000000000000000005",
+        "platform/folders/00000000000000000000000000000006",
+        "platform/folders/00000000000000000000000000000007",
+        "platform/memberof/testsub/units/u",
+        "platform/memberof-gone/testsub/units/u"
+      ],
+      "guards": [
+        {
+          "key": "testsub/idem/attempt",
+          "index": "1"
+        },
+        {
+          "key": "platform/memberof/parent/units/p",
+          "index": "1"
+        }
+      ],
+      "writes": 11,
+      "guard_count": 2,
+      "within_body_limit": true,
+      "HTTP_framing_bytes_counted_as_entity": false,
+      "content_length_wire_bytes": 1048676,
+      "chunked_data_and_delimiters_bytes": 1048589,
+      "decoded_chunk_entity_bytes": 1048575,
+      "client_PUT_body_bytes": 1046678
+    },
+    "body_limit0": {
+      "entity_bytes": 1048576,
+      "sha256": "dbf54d1731d364a524d62e6108b80a0e521ba48b53181541d1674078cc767eaa",
+      "trailing_LF": false,
+      "ensure_ascii": false,
+      "put_weights": [
+        1046685,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        0
+      ],
+      "keys": [
+        "testsub/units/u",
+        "platform/folders/00000000000000000000000000000000",
+        "platform/folders/00000000000000000000000000000001",
+        "platform/folders/00000000000000000000000000000002",
+        "platform/folders/00000000000000000000000000000003",
+        "platform/folders/00000000000000000000000000000004",
+        "platform/folders/00000000000000000000000000000005",
+        "platform/folders/00000000000000000000000000000006",
+        "platform/folders/00000000000000000000000000000007",
+        "platform/memberof/testsub/units/u",
+        "platform/memberof-gone/testsub/units/u"
+      ],
+      "guards": [
+        {
+          "key": "testsub/idem/attempt",
+          "index": "1"
+        },
+        {
+          "key": "platform/memberof/parent/units/p",
+          "index": "1"
+        }
+      ],
+      "writes": 11,
+      "guard_count": 2,
+      "within_body_limit": true,
+      "HTTP_framing_bytes_counted_as_entity": false,
+      "content_length_wire_bytes": 1048677,
+      "chunked_data_and_delimiters_bytes": 1048591,
+      "decoded_chunk_entity_bytes": 1048576,
+      "client_PUT_body_bytes": 1046679
+    },
+    "same_JSON_plus_LF": {
+      "entity_bytes": 1048577,
+      "sha256": "b114016d0da58168252089c2a55339a10f90e724b3b2b7d83c37227e0f67eb4e",
+      "trailing_LF": true,
+      "ensure_ascii": false,
+      "put_weights": [
+        1046685,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        0
+      ],
+      "keys": [
+        "testsub/units/u",
+        "platform/folders/00000000000000000000000000000000",
+        "platform/folders/00000000000000000000000000000001",
+        "platform/folders/00000000000000000000000000000002",
+        "platform/folders/00000000000000000000000000000003",
+        "platform/folders/00000000000000000000000000000004",
+        "platform/folders/00000000000000000000000000000005",
+        "platform/folders/00000000000000000000000000000006",
+        "platform/folders/00000000000000000000000000000007",
+        "platform/memberof/testsub/units/u",
+        "platform/memberof-gone/testsub/units/u"
+      ],
+      "guards": [
+        {
+          "key": "testsub/idem/attempt",
+          "index": "1"
+        },
+        {
+          "key": "platform/memberof/parent/units/p",
+          "index": "1"
+        }
+      ],
+      "writes": 11,
+      "guard_count": 2,
+      "within_body_limit": false,
+      "HTTP_framing_bytes_counted_as_entity": false,
+      "content_length_wire_bytes": 1048678,
+      "chunked_data_and_delimiters_bytes": 1048592,
+      "decoded_chunk_entity_bytes": 1048577
+    },
+    "same_value_ASCII_escapes": {
+      "entity_bytes": 1048580,
+      "sha256": "e4db7f6e5c67c04664c95ce5baf8a1193f7025b261d45abd8fe55f93ba21be73",
+      "trailing_LF": false,
+      "ensure_ascii": true,
+      "put_weights": [
+        1046685,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        0
+      ],
+      "keys": [
+        "testsub/units/u",
+        "platform/folders/00000000000000000000000000000000",
+        "platform/folders/00000000000000000000000000000001",
+        "platform/folders/00000000000000000000000000000002",
+        "platform/folders/00000000000000000000000000000003",
+        "platform/folders/00000000000000000000000000000004",
+        "platform/folders/00000000000000000000000000000005",
+        "platform/folders/00000000000000000000000000000006",
+        "platform/folders/00000000000000000000000000000007",
+        "platform/memberof/testsub/units/u",
+        "platform/memberof-gone/testsub/units/u"
+      ],
+      "guards": [
+        {
+          "key": "testsub/idem/attempt",
+          "index": "1"
+        },
+        {
+          "key": "platform/memberof/parent/units/p",
+          "index": "1"
+        }
+      ],
+      "writes": 11,
+      "guard_count": 2,
+      "within_body_limit": false,
+      "HTTP_framing_bytes_counted_as_entity": false,
+      "content_length_wire_bytes": 1048681,
+      "chunked_data_and_delimiters_bytes": 1048595,
+      "decoded_chunk_entity_bytes": 1048580
+    },
+    "body_limit1": {
+      "entity_bytes": 1048577,
+      "sha256": "179c51b89296c419564486cc981eb68bb35dd0fa47c82e1f1a59dec817efd78d",
+      "trailing_LF": false,
+      "ensure_ascii": false,
+      "put_weights": [
+        1046686,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        77,
+        0
+      ],
+      "keys": [
+        "testsub/units/u",
+        "platform/folders/00000000000000000000000000000000",
+        "platform/folders/00000000000000000000000000000001",
+        "platform/folders/00000000000000000000000000000002",
+        "platform/folders/00000000000000000000000000000003",
+        "platform/folders/00000000000000000000000000000004",
+        "platform/folders/00000000000000000000000000000005",
+        "platform/folders/00000000000000000000000000000006",
+        "platform/folders/00000000000000000000000000000007",
+        "platform/memberof/testsub/units/u",
+        "platform/memberof-gone/testsub/units/u"
+      ],
+      "guards": [
+        {
+          "key": "testsub/idem/attempt",
+          "index": "1"
+        },
+        {
+          "key": "platform/memberof/parent/units/p",
+          "index": "1"
+        }
+      ],
+      "writes": 11,
+      "guard_count": 2,
+      "within_body_limit": false,
+      "HTTP_framing_bytes_counted_as_entity": false,
+      "content_length_wire_bytes": 1048678,
+      "chunked_data_and_delimiters_bytes": 1048592,
+      "decoded_chunk_entity_bytes": 1048577,
+      "client_PUT_body_bytes": 1046680
+    }
+  },
+  "product_native_runs": 0,
+  "SUT_runs": 0,
+  "limits": "Default row ceiling524288 is not the V1048576 explicitly used for the three padded byte-boundary examples. Every actual LF adds one byte. Own1380972 is not reviewer1380980. No native/SUT/HTTP execution."
+}

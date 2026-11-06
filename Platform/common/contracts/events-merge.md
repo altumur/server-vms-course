@@ -11,7 +11,7 @@ admission — the section «The participant» `admission`) and the epoch rows of
 limits do not change (ADR-0091 addendum (21) item 1, addendum (23) items 3–5, addendum (24) item 4, addendum (25) item 4, addendum (27) item 2). The index is
 P/05 N1.3; the form of the row and of the answer — the section «Form», the query and the cut `cut` — «The resource query and answer» below; the hint `/events/wait` is at the resources (P/05 N1.6), the console has none.
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -142,7 +142,3 @@ epoch, `partial`, `lines_garbled` (ADR-0091 addendum (21) item 3); the visibilit
 an unreadable unit (`withheld`), a grant on the unit and on `*`, labels by `of`, labels `[]` (C06-EVENTS-LABEL-SOURCE-138-07). The liveness of a door row — the package [`fresh-age`](../vectors/fresh-age/README.md) (the boundary `LOST_AFTER`, the section «Live resources»);
 `from mirror`, races and late answers — by reading.
 
-## Correspondence to former lessons
-
-From P/06.4 N1.3 `merge` and N3 «merge (the console)» (formerly M10/8): the algorithm and the paragraph about the freshness of the door row — whole; P/06.4 has
-a reference here. New: the worker participant, `unknown`, a failure of reading an epoch (ADR-0091 addendum (20)–(27)).

@@ -1,0 +1,118 @@
+{
+  "base": "62751995ba14646dac48d482d5dc394ecd9a87c2",
+  "report": "517c1d2cd8273eb8ca04f92f4fe5a12bb405b3d9",
+  "report_sha256": "f474b2db2fa6cd5ba2ceca90df692995d236c3778b62352143028b7313dde966",
+  "modified_req": [
+    "P/01.1-R088",
+    "P/01.1-R090",
+    "P/01.1-R132"
+  ],
+  "other_req_and_unanchored_text_exact": true,
+  "ordinary_scenarios": {
+    "path": "Platform/01-store/acceptance/1/scenarios.tsv",
+    "steps": 345,
+    "byte_exact": true,
+    "sha256": "a60cbcd2c429cc6464daa228320097ce6d15d26253239e34602f6fd1bf31bcde"
+  },
+  "seams": {
+    "old_cases": 6,
+    "old_steps": 73,
+    "old_entire_file_exact_prefix": true,
+    "new_cases": {
+      "s7-admitted-single-refusals": 34,
+      "s8-admitted-batch-refusals": 34,
+      "s9-reopen-refused-admission": 20,
+      "s10-binary64-boundary": 11,
+      "s11-binary64-fingerprint": 15,
+      "s12-zero-version-not-absence": 14
+    },
+    "new_steps": 128,
+    "total_steps": 201
+  },
+  "stages_only_case_selectors_appended": true,
+  "stage_final_empty_when_preserved": true,
+  "arithmetic_checks": {
+    "equal_boundary": true,
+    "same_after": true,
+    "different_after": true,
+    "same_before": true,
+    "different_before": true
+  },
+  "unchanged_scope": [
+    "all other P01 source, OpenAPI, write-checks, vectors",
+    "Source,VMS,common,P02-P10",
+    "skills,tools,out",
+    "P06 related source588/Englishfb (not imported)"
+  ],
+  "artifacts": [
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "base_blob": "6a6e6396fde48ca52fd60b1dadaadfcfb816b30a",
+      "result_blob": "b513371c2a1859b6e86b6008e374950b1ee68c41",
+      "before_sha256": "03f962021e09a1b4df5f958fe44dbea96a732648db3431eb7aa87671d73a50e4",
+      "after_sha256": "8a5ed1637aa78219b75f680b3ca0e8351459c2005ed10e4fccd0b84d84e3e5e1"
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.1-store.norms.md",
+      "base_blob": "deb03250d5147e51e9003daa2b3b02d642bfa39d",
+      "result_blob": "45b0e5f3ea24a819aff8d8176a1f2ca7211414e8",
+      "before_sha256": "ef453f332d7419820a1559c98d31828e8b7c08fa53c80a3c18d1277d26a1238c",
+      "after_sha256": "1696731cf98adbfb2ecc0707717b0ba0bf36365436c2593ec246671283740223"
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/seams.tsv",
+      "base_blob": "03f5a6b6ae45ec14aa99d17365a6cf1a9631e6c2",
+      "result_blob": "0ebefda02630f637d230b58c8d284ffbe462ea26",
+      "before_sha256": "d717b76be360aa3e8d2df2d3fe67011cbf3b9e73c01951463a3fab33fd538922",
+      "after_sha256": "4bc077a6a0bea9f3c9a9d79fe860a2bcbfe823d3b1d8935a497c7ccf7acf9f68"
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/README.md",
+      "base_blob": "9ec7a5933f66a7eb99557a5090998329b4065939",
+      "result_blob": "0b6562128868b8e893973d04efb0c5a62608530a",
+      "before_sha256": "249deee1e60934b95a1a31d97e5192e5dfdc1c4ec3993965641990c91a1c6227",
+      "after_sha256": "24eaaaf59c79a0cca5410d257a6c6ddcf51e7bc95a3773fe6dd5b85dc83f5bc0"
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/1/README.md",
+      "base_blob": "1a1aeb48b381a49e90810c2bb3368c36ac7df95c",
+      "result_blob": "643bcff4d38ea7e0aaa9c32ef7abdad7e133b0f6",
+      "before_sha256": "75bbf60f3670a701b694d45e11149a511ef63adfd0d828fe713be9057f7e8e16",
+      "after_sha256": "930bb275fadeda802424250dfc66c15e5cfda3f75d512c7d5ffb2aa85f0b5fc7"
+    },
+    {
+      "path": "Platform/01-store/forms/stages.tsv",
+      "base_blob": "a8930f21e1bf2550806b12d170ef477d2d92f7c7",
+      "result_blob": "61a2973ed9f133f06adc7591d9204f5c32d14f79",
+      "before_sha256": "00b8de10314e13fdd197bff2c46ba631a03e3216034b42ccb368ecddeea73394",
+      "after_sha256": "5c441b855263fed140ff3820928e9dd99ac45cee5c3f83befa7be415538ba8f9"
+    },
+    {
+      "path": "Platform/01-store/journal/corrections-1.tsv",
+      "base_blob": "10da15185d41606041c55a25f0f8074d22c2c4c5",
+      "result_blob": "418a62969e45648d7ccb0c218b9a7da462045d57",
+      "before_sha256": "66f18af305bb18c39ae47e3b732775ab3ca33ffc25a246caa5574682974c55c0",
+      "after_sha256": "fbd495325793c94730715a333e03f82334aaf49cf66f2fafbfe5195813fcdb98"
+    },
+    {
+      "path": "decisions/adr-norms.tsv",
+      "base_blob": "fdc5c22a6b9a9017312c074365cb010d164615ea",
+      "result_blob": "b2c46c3feeb6ae9f678aa3858a34b8ed1df90ffc",
+      "before_sha256": "ce9bc784671fa0a9cbc183bb69ff56a3d7d7d65ede0f3afb8ee87bafd39c61b0",
+      "after_sha256": "da335d40f78aa2f2cc320c3d6c147526a7fe8871b67652c1660c028896446019"
+    },
+    {
+      "path": "decisions/changes/registry.tsv",
+      "base_blob": "f1ecc4cf8c3768499a5803d8a5197e7f8c6cfe4c",
+      "result_blob": "f48e968cbf6054c69ba9b3b86fd72ff0c70bcd4a",
+      "before_sha256": "7536b71ad438276cc733fd8ce8ab852174469108f385179747d358494e478800",
+      "after_sha256": "81578d0402b295de5f009dc2eac7ebca37002bd8c9466493e1ec2afe9e6d1a98"
+    }
+  ],
+  "map": {
+    "path": "Platform/01-store/journal/2026-11-06-adr0129-core-clarify-map.tsv",
+    "sha256": "25b30c71c6312a31430a16f76bd6a8fddaed05188a9e18a00df7f290df0bcd41",
+    "hunks": 16
+  },
+  "limits": "Source validation only; existing grammar; no new form/port/core algorithm/reference implementation; old witnesses retained; no SUT/full normgen/KIT claim"
+}

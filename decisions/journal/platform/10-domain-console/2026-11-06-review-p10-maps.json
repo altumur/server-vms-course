@@ -1,0 +1,275 @@
+{
+  "source_endpoint": "d731181d0c3739dd2e70553ae046b7eb8edb5693",
+  "translation_baseline": "f0e038d57b4d8301c6a7ebe1a03a1f9ebc85680a",
+  "translation_source": "103016b88",
+  "review_baseline": "103016b88",
+  "lesson": "P/10",
+  "common_map_sha256": "d2b792adb1cd0f9782835a57f8911e486fef32c331d854895d760982f4ba92e5",
+  "coverage": "Exact reconstruction of every changed non-journal lesson file from English source to reviewed source; all protocol table cells except named explanatory columns, plus enum/const/default declarations, compare original composition to final source. Both present-null and absent entries are distinguished by change column. lf-lines:i:j means zero-based half-open range of LF-delimited lines, keeping each terminating LF; i=j is insertion. Protocol classification is checked against the intermediate translation snapshot.",
+  "decisions": [
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "M1"
+  ],
+  "files": [
+    {
+      "path": "Platform/10-domain-console/README.md",
+      "baseline_sha256": "e740ecf0da03ccd29ddeb90a07956b01472df4bd25a0d3849a3f4bdf342e967c",
+      "english_sha256": "d219dcfddbf168c4c7c2313a213aa1432d87603d234346cc0283817ddb0e6318",
+      "final_sha256": "d219dcfddbf168c4c7c2313a213aa1432d87603d234346cc0283817ddb0e6318",
+      "review_changed": false,
+      "physical_lines": 21
+    },
+    {
+      "path": "Platform/10-domain-console/acceptance/README.md",
+      "baseline_sha256": "486ff59392624787f010db673821b0e8c31219e49b8af720311b981cbbdd18e6",
+      "english_sha256": "eb1fef876dca1e589184229e04070fbc98d3e082a04ed805602fdc81a22ead64",
+      "final_sha256": "60b7531dd8783aa18e639de1427855da26e1e73c8e35d5b124aea730e0da6448",
+      "review_changed": true,
+      "physical_lines": 158
+    },
+    {
+      "path": "Platform/10-domain-console/acceptance/scenarios.tsv",
+      "baseline_sha256": "d06f3c96ce8300f057ee44a316ed347b76d632dfb1535ee71c177b0c8b5274d4",
+      "english_sha256": "5548c77051cc72f2c70e78f769f8dba8e02799dadc5481ecc3ac1997ed358eea",
+      "final_sha256": "5548c77051cc72f2c70e78f769f8dba8e02799dadc5481ecc3ac1997ed358eea",
+      "review_changed": false,
+      "physical_lines": 166
+    },
+    {
+      "path": "Platform/10-domain-console/acceptance/seams.tsv",
+      "baseline_sha256": "770b93086460b4da98cb00905861c543968b9b3ed5c6e3cb82813c0811150575",
+      "english_sha256": "770b93086460b4da98cb00905861c543968b9b3ed5c6e3cb82813c0811150575",
+      "final_sha256": "fc10b1e7adf915d410bab72376c4dc02ad3a2f4e58d3dcd77ac53fa895bc3def",
+      "review_changed": true,
+      "physical_lines": 90
+    },
+    {
+      "path": "Platform/10-domain-console/data/refusal-words.tsv",
+      "baseline_sha256": "ad3d165e2606933680bfffaedcb540f8dfb4a1bbb6f787fe91edee6b4e369992",
+      "english_sha256": "a3d516b203b1c526611283e1686e691d5b2f90dfb8b4ed27339a59eaa043ceda",
+      "final_sha256": "a3d516b203b1c526611283e1686e691d5b2f90dfb8b4ed27339a59eaa043ceda",
+      "review_changed": false,
+      "physical_lines": 22
+    },
+    {
+      "path": "Platform/10-domain-console/forms/README.md",
+      "baseline_sha256": "feb1b304dbe9b97336ac0406a8cfb5591722419b75a8c42d027e137f4904e6a8",
+      "english_sha256": "feb1b304dbe9b97336ac0406a8cfb5591722419b75a8c42d027e137f4904e6a8",
+      "final_sha256": "db15332448a21906480ae6d4c00f5de0b093ce79f35cddfc4d302314ca1250d6",
+      "review_changed": true,
+      "physical_lines": 60
+    },
+    {
+      "path": "Platform/10-domain-console/forms/daemon-flags.tsv",
+      "baseline_sha256": "59c2fb0764c8638e85e3dfab2aa262e4e9370a013b31b3887426d5e77416e3be",
+      "english_sha256": "94b852266cafbbd0318a1630af687d3dfaedf99fba7cb75cc4213915e87cbddd",
+      "final_sha256": "94b852266cafbbd0318a1630af687d3dfaedf99fba7cb75cc4213915e87cbddd",
+      "review_changed": false,
+      "physical_lines": 26
+    },
+    {
+      "path": "Platform/10-domain-console/forms/refusals.tsv",
+      "baseline_sha256": "0507084d564cadee0aa3ec07653675b2c760f7515586f311f0db1bf5b57ca60b",
+      "english_sha256": "9537f51e091fdc756e86e6f1457184d8a802bcb67096170e98f85c6cd19d7aa2",
+      "final_sha256": "a471ad79b307f4a9e9af61e8d497fa2eb358ba4bd213e60fb794243abcb5d565",
+      "review_changed": true,
+      "physical_lines": 36
+    },
+    {
+      "path": "Platform/10-domain-console/forms/runtime-constants.tsv",
+      "baseline_sha256": "10312965f39be845cd85cbbe23911a0ab9ead7fb2daf43ad3f86e3a2ee0692d6",
+      "english_sha256": "10312965f39be845cd85cbbe23911a0ab9ead7fb2daf43ad3f86e3a2ee0692d6",
+      "final_sha256": "10312965f39be845cd85cbbe23911a0ab9ead7fb2daf43ad3f86e3a2ee0692d6",
+      "review_changed": false,
+      "physical_lines": 7
+    },
+    {
+      "path": "Platform/10-domain-console/forms/stages.tsv",
+      "baseline_sha256": "03df1c2628896c671a5f7672d199e7363bd9a1cfaee7d7bc18f9719bfdfd8ad9",
+      "english_sha256": "03df1c2628896c671a5f7672d199e7363bd9a1cfaee7d7bc18f9719bfdfd8ad9",
+      "final_sha256": "7689e606b199aac727e796dc18a7af1f3f6627e1afa8ad49213a484c0fdaa5d3",
+      "review_changed": true,
+      "physical_lines": 16
+    },
+    {
+      "path": "Platform/10-domain-console/lifecycle.md",
+      "baseline_sha256": "270cd6d8016dc9444d71e0f6ba18b13f4ce83bc60a6bd9ecd1f89d51ff74caae",
+      "english_sha256": "56cee30789e5f8ba3f92a79c5e037b12c15df275aa3bf02e3e5ede556cd24ca2",
+      "final_sha256": "56cee30789e5f8ba3f92a79c5e037b12c15df275aa3bf02e3e5ede556cd24ca2",
+      "review_changed": false,
+      "physical_lines": 75
+    },
+    {
+      "path": "Platform/10-domain-console/ru/10-domain-console.md",
+      "baseline_sha256": "7d5836e284ff72290a27e3b7f5117bfffe86f25119dc46d8cd40095945200c0f",
+      "english_sha256": "7d5836e284ff72290a27e3b7f5117bfffe86f25119dc46d8cd40095945200c0f",
+      "final_sha256": "7d5836e284ff72290a27e3b7f5117bfffe86f25119dc46d8cd40095945200c0f",
+      "review_changed": false,
+      "physical_lines": 127
+    },
+    {
+      "path": "Platform/10-domain-console/ru/README.md",
+      "baseline_sha256": "9250b0624749306fe724308b79abf5557045960d3446c6302252c8c2c6c848c1",
+      "english_sha256": "9250b0624749306fe724308b79abf5557045960d3446c6302252c8c2c6c848c1",
+      "final_sha256": "9250b0624749306fe724308b79abf5557045960d3446c6302252c8c2c6c848c1",
+      "review_changed": false,
+      "physical_lines": 21
+    },
+    {
+      "path": "Platform/10-domain-console/ru/acceptance/README.md",
+      "baseline_sha256": "a81120d5561f16ff238e5ce0d879a5880e89f1d538bdaff848576e677114a2b0",
+      "english_sha256": "40ec49a6833ed334c8aba129bf3320dc2eb335259fd1e32d7cf907086c7032fc",
+      "final_sha256": "766a85d50cbd1a0ae76ed000d3b71de88a5626332d3ba42b8f5c2ccb4f975806",
+      "review_changed": true,
+      "physical_lines": 158
+    },
+    {
+      "path": "Platform/10-domain-console/ru/forms/README.md",
+      "baseline_sha256": "c99733ee2ff85ea221f28c2c4ecb07475bddb881de289be924a4ef318d702abb",
+      "english_sha256": "c99733ee2ff85ea221f28c2c4ecb07475bddb881de289be924a4ef318d702abb",
+      "final_sha256": "137abed7cf0a060c8c020a490e7a5bc2071790bafeb009598f28a274f741f610",
+      "review_changed": true,
+      "physical_lines": 59
+    },
+    {
+      "path": "Platform/10-domain-console/ru/lifecycle.md",
+      "baseline_sha256": "3e6fd72c1786036293e9c09a248f33adbfca4bd168307ae86fa45e4c69cf17a8",
+      "english_sha256": "3e6fd72c1786036293e9c09a248f33adbfca4bd168307ae86fa45e4c69cf17a8",
+      "final_sha256": "3e6fd72c1786036293e9c09a248f33adbfca4bd168307ae86fa45e4c69cf17a8",
+      "review_changed": false,
+      "physical_lines": 75
+    },
+    {
+      "path": "Platform/10-domain-console/ru/spec/10-domain-console.README.md",
+      "baseline_sha256": "172ef96822c6cadef073db57b1a073b8627d456f9b27122acba9247d941e5d1d",
+      "english_sha256": "96be08b298f5f147e2323b672cb0b1897cdfab9f349ee2ed6320001a750409e9",
+      "final_sha256": "96be08b298f5f147e2323b672cb0b1897cdfab9f349ee2ed6320001a750409e9",
+      "review_changed": false,
+      "physical_lines": 93
+    },
+    {
+      "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+      "baseline_sha256": "488077937f86c07ac1c98750d92470ee955b81fcfacf8d8fa464ed9dd82188e1",
+      "english_sha256": "f95ba42ca3f6f24726bbe5a25f2d6db0aa57b211ba35fd4cf19e76843483a21a",
+      "final_sha256": "eada4a2deb2bf1be4e077a00e149e5988360643d2593cf4ba35cd89217e67d61",
+      "review_changed": true,
+      "physical_lines": 597
+    },
+    {
+      "path": "Platform/10-domain-console/ru/vectors/alarms/README.md",
+      "baseline_sha256": "584739177f11e3448cfce993f9f145306b9fb71f27f83d86e410b48001ce34dc",
+      "english_sha256": "9622060016ec8ea8367868175fe08dd0e1ca63bb22c86708c9d0ca5b3d6f814f",
+      "final_sha256": "bdb4a754b0c17dea167392ac22a83f4f876bd164999106da342ba098c05da2ec",
+      "review_changed": true,
+      "physical_lines": 81
+    },
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.README.md",
+      "baseline_sha256": "bec639fb963aaac4d122fdb300bd831c558eafbfdb7a1803f9e324ccf4b06a4a",
+      "english_sha256": "105b8f840ec8eafcf241fbb18b07682dc3bb4d1e6838866da28dd9d883cdf40d",
+      "final_sha256": "105b8f840ec8eafcf241fbb18b07682dc3bb4d1e6838866da28dd9d883cdf40d",
+      "review_changed": false,
+      "physical_lines": 92
+    },
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+      "baseline_sha256": "deddeb9c94e6417884f23f9012a3c5a00eb7aa3d818fa593e349f828f1c02e55",
+      "english_sha256": "b60780fd4cfa932d86608a07d0ab33fe73fd85f1ee9410ebcb1e2463a77da313",
+      "final_sha256": "4c7923209b1851f79a08ed7dbd777bf9833d3cc90718c3182a78f870c379e375",
+      "review_changed": true,
+      "physical_lines": 4644
+    },
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+      "baseline_sha256": "791f098d055072f5fd640631e3fe2fcd677e855dabd10407f9fb3a13506f4654",
+      "english_sha256": "c8c108c6280791388ef9b702afe6757445b7d8617f806b3b92ba2bd03113fa9e",
+      "final_sha256": "56924f80a21bd1eed6519f336cc9caaf87ca1fae7c8276425151324c7e19fc8a",
+      "review_changed": true,
+      "physical_lines": 614
+    },
+    {
+      "path": "Platform/10-domain-console/vectors/alarms/README.md",
+      "baseline_sha256": "8056afb5f25d3f6334444b5e99f3073395d03e28bdcfe6a719eeee50b9101457",
+      "english_sha256": "5f29dc3db8b095efbf52048954219d68bbd2a2533f5e55c519b2ac0dcf9b3f0f",
+      "final_sha256": "56a0aaca6cf4dea2537ea3c94b3b4dc3d68a7750d33c04494ea7a282486d6bdb",
+      "review_changed": true,
+      "physical_lines": 82
+    },
+    {
+      "path": "Platform/10-domain-console/vectors/alarms/cases.tsv",
+      "baseline_sha256": "a562d9049092982b45c2fb79d249e1bf26b58e797c5f2f67425e8ab60d257231",
+      "english_sha256": "c4c27a7de770238c3243f44b0b6a2b6b34c9d13e30c4b37341b841a17f5aa380",
+      "final_sha256": "e63524704b38c736648fec95d208e62f3b794e022dbbc83c39ea3eb33af5ffde",
+      "review_changed": true,
+      "physical_lines": 43
+    }
+  ],
+  "maps": [
+    {
+      "path": "Platform/10-domain-console/journal/2026-11-06-review-p10-source-map.tsv",
+      "sha256": "1941b6a25b138b54d9dc0890f153a77090d66aaab28f45a0b68b5a21a6e53a19",
+      "rows": 75
+    },
+    {
+      "path": "Platform/10-domain-console/journal/2026-11-06-review-p10-schema-map.tsv",
+      "sha256": "938bf27b422536cb6f3c1a3e0659a2e6bc82570411fedd7bc1bb7cc0075f1abb",
+      "rows": 20
+    },
+    {
+      "path": "Platform/10-domain-console/journal/2026-11-06-review-p10-protocol-map.tsv",
+      "sha256": "b976e99fbec00586056e6011473b25595bffd017d2260c4ac0ca851d47c395c2",
+      "rows": 1780
+    }
+  ],
+  "protocol_counts": {
+    "identity": 1598,
+    "added": 172,
+    "changed": 10
+  },
+  "protocol_classifications": {
+    "identity": 1598,
+    "accepted-review": 179,
+    "english-translation": 3
+  },
+  "review_source_hunks": 75,
+  "schema_changes": 20,
+  "seams": [
+    {
+      "path": "Platform/10-domain-console/acceptance/seams.tsv",
+      "before": 48,
+      "after": 82,
+      "old_rows_exact_prefix": true
+    }
+  ],
+  "stage_structure_unchanged_except_case_additions_and_false_own_families_metadata": true,
+  "old_alarms_rows_unchanged_since_translation": true,
+  "new_alarms_rows": 8,
+  "ordinary_scenarios_unchanged_since_translation": true,
+  "new_native_commands": 0,
+  "new_kit_parts": 0,
+  "translation_maps": "Earlier full-english maps remain valid only for BASE -> ENGLISH, not for the subsequent accepted semantic corrections.",
+  "limits": "Author source evidence only; related checker/generator/runner composition and full normgen/KIT remain pending. No runtime/SUT/export/pin claim.",
+  "related_map": "2026-11-06-review-p10-related-map.json",
+  "related_map_scope": "Exactly four assigned common files plus the single related ServedView.url type pointer; not duplicated as P10-only preservation",
+  "audit": {
+    "path": "Platform/10-domain-console/journal/2026-11-06-review-p10-audit.json",
+    "sha256": "186b3d6e6ac2a2306151c496008d22bc467359c70c85fb2f3c118a3248780e55",
+    "checks_passed": 100
+  },
+  "related_map_sha256": "1006ff765b560f43cf78f2629b537333307dfd08e4d3046019d5b847914331a6",
+  "author_source_gate": {
+    "source_endpoint": "d731181d0c3739dd2e70553ae046b7eb8edb5693",
+    "strict_check_spec": "PASS with 62 exceptions",
+    "test_check_forms": 63,
+    "test_check_spec": 162,
+    "test_check_spec_skipped": 1,
+    "test_en_mirror": 36,
+    "test_source_cells": 8,
+    "generator_preview_translated": 82,
+    "generator_preview_excluded": 0,
+    "no_full_normgen_or_kit_run": true
+  }
+}

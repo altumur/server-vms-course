@@ -14,6 +14,45 @@ RU3 = ROOT / "Platform/01-store/ru/spec/01.3-store.norms.md"
 EN3 = ROOT / "Platform/01-store/spec/01.3-store.norms.md"
 
 
+# Owned examples of the inline/code/table syntax used before C23b (ec48a8949).
+# They are parser witnesses; test_pair_agrees reads the actual published pair.
+OWNED_REFUSALS = ((400, "badkey"), (400, "badrequest"), (403, "forbidden"), (409, "conflict"),
+                  (409, "expired"), (409, "early"), (412, "guard"), (413, "toolarge"),
+                  (503, "unavailable"), (409, "refused"), (503, "ambiguous"))
+OWNED_RU = '''# Фикстура синтаксиса
+
+производный от `spec/01.1-store.norms.md`, руками не правится
+
+## N1 Форма
+
+`JSON_DEPTH` = 128 вложенных объектов и массивов.
+
+```yaml
+BATCH_WRITES: 64             # предел записей пакета; ровно на пределе — проходит, на один больше — badrequest
+```
+
+## N4 Отказы
+
+| Причина | Код | `kind` и поля | Действие |
+|---|---|---|---|
+''' + "".join(f"| причина | {code} | `{kind}` | действие |\n" for code, kind in OWNED_REFUSALS)
+OWNED_EN = '''# Syntax fixture
+
+## N1 Form
+
+`JSON_DEPTH` = 128 nested objects and arrays.
+
+```yaml
+BATCH_WRITES: 64             # the limit of batch writes; exactly at the limit — passes, one more — badrequest
+```
+
+## N4 Refusals
+
+| Cause | Code | `kind` and fields | Caller |
+|---|---|---|---|
+''' + "".join(f"| condition | {code} | `{kind}` | action |\n" for code, kind in OWNED_REFUSALS)
+
+
 class Mirror(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -23,10 +62,15 @@ class Mirror(unittest.TestCase):
     def compare(self, ru=None, en=None):
         return en_mirror.compare(self.ru if ru is None else ru, self.en if en is None else en, RU, EN, ROOT)
 
-    def mutated(self, old, new, which="en"):
-        text = self.en if which == "en" else self.ru
+    def mutated(self, old, new, which="en", *, owned=False):
+        ru, en = (OWNED_RU, OWNED_EN) if owned else (self.ru, self.en)
+        if owned:
+            self.assertEqual(self.compare(ru=ru, en=en), [])
+        text = en if which == "en" else ru
         self.assertEqual(text.count(old), 1, old)
-        errors = self.compare(**{which: text.replace(old, new)})
+        self.assertNotEqual(old, new)
+        changed = text.replace(old, new)
+        errors = self.compare(ru=changed if which == "ru" else ru, en=changed if which == "en" else en)
         self.assertTrue(errors, f"no refusal for {old!r} → {new!r}")
         return errors
 
@@ -35,9 +79,10 @@ class Mirror(unittest.TestCase):
         self.assertIn((RU, EN), list(en_mirror.pairs(ROOT)))
 
     def test_kinds_from_n4(self):
-        self.assertEqual(en_mirror.kinds_of(self.ru), {"badkey", "badrequest", "forbidden", "conflict", "expired",
-                                                      "early", "guard", "toolarge", "unavailable", "refused",
-                                                      "ambiguous"})
+        expected = {"badkey", "badrequest", "forbidden", "conflict", "expired", "early", "guard", "toolarge",
+                    "unavailable", "refused", "ambiguous"}
+        self.assertEqual(en_mirror.kinds_of(OWNED_RU), expected)
+        self.mutated("`early`", "`expired`", owned=True)
 
     def test_code(self):
         self.mutated("then the door MUST answer `404 {kind: badrequest}`", "then the door MUST answer `405 {kind: badrequest}`")
@@ -57,7 +102,7 @@ class Mirror(unittest.TestCase):
         self.mutated("[P/08.4](../../08-domain/spec/08.4-domain.norms.md)", "[P/08.4](../../08-domain/spec/08.3-domain.norms.md)")
 
     def test_code_span_dropped(self):
-        self.mutated("`JSON_DEPTH` = 128", "JSON_DEPTH = 128")
+        self.mutated("`JSON_DEPTH` = 128", "JSON_DEPTH = 128", owned=True)
 
     def test_table_row(self):
         self.mutated("| 40 | batch rights:", "| 39b | x | y |\n| 40 | batch rights:")
@@ -66,7 +111,7 @@ class Mirror(unittest.TestCase):
         self.mutated("- [ ] **P/01.1-31** batch", "- [ ] **P/01.1-32** batch")
 
     def test_section(self):
-        self.mutated("## Correspondence to former lessons", "### Correspondence to former lessons")
+        self.mutated("## Implementation decides", "### Implementation decides")
 
     def test_heading_number(self):
         self.mutated("### N2.1 Request parsing", "### N2.2 Request parsing")
@@ -78,15 +123,19 @@ class Mirror(unittest.TestCase):
 
     def test_code_block_value(self):                    # ADR-0120 доп. (5) п. 7: значение без смены размеров
         self.mutated("    ceiling: 524288          # 512 KiB", "    ceiling: 524289          # 512 KiB")
-        self.mutated("BATCH_WRITES: 64             # the limit", "BATCH_WRITES: 65             # the limit")
+        self.mutated("BATCH_WRITES: 64             # the limit", "BATCH_WRITES: 65             # the limit", owned=True)
 
     def test_code_block_untranslated_part(self):        # вне комментария — только перевод русской прозы
         self.mutated("      - does not start with \"/\"", "      - does not start with \"\\\\\"")
-        self.mutated("BATCH_WRITES: 64             # the limit", "BATCH_LIMIT: 64              # the limit")
+        self.mutated("BATCH_WRITES: 64             # the limit", "BATCH_LIMIT: 64              # the limit", owned=True)
 
     def test_code_block_comment_free(self):             # комментарий переводится свободно
-        text = self.en.replace("# the limit of batch writes;", "# how many writes a batch carries;")
-        self.assertEqual(self.compare(en=text), [])
+        self.assertEqual(self.compare(ru=OWNED_RU, en=OWNED_EN), [])
+        before = "# the limit of batch writes;"
+        self.assertEqual(OWNED_EN.count(before), 1)
+        text = OWNED_EN.replace(before, "# how many writes a batch carries;")
+        self.assertNotEqual(text, OWNED_EN)
+        self.assertEqual(self.compare(ru=OWNED_RU, en=text), [])
 
     def test_link_inside_code_span(self):               # «](…)» в регулярке внутри кода — не ссылка
         ru = self.ru + "\nШаблон `[a-z](?:[a-z0-9]{0,61})` — имя.\n"
@@ -104,7 +153,7 @@ class Mirror(unittest.TestCase):
         self.mutated("| 02 | a creation with", "| 03 | a creation with")
 
     def test_prose_number(self):
-        self.mutated("`JSON_DEPTH` = 128 nested", "`JSON_DEPTH` = 127 nested")
+        self.mutated("`JSON_DEPTH` = 128 nested", "`JSON_DEPTH` = 127 nested", owned=True)
 
     def test_number_notation(self):                     # «0,5» ≡ «0.5», «250 000» ≡ «250,000» ≡ «250000»
         self.assertEqual(en_mirror.numbers("0,5 с, 250 000 записей", "ru"), ["0.5", "250000"])
@@ -133,7 +182,7 @@ class Layouts(unittest.TestCase):
         self.assertIn((RU3, EN3), pairs)
         self.assertIn((ROOT / "Platform/01-store/ru/lifecycle.md", ROOT / "Platform/01-store/lifecycle.md"), pairs)
         self.assertIn((ROOT / "VMS/ru/README.md", ROOT / "VMS/README.md"), pairs)   # мелкий дом: README модуля
-        self.assertIn((ROOT / "ru/NORMATIVE-TERMS.md", ROOT / "NORMATIVE-TERMS.md"), pairs)   # мелкий дом: корень
+        self.assertIn((ROOT / "Platform/common/ru/NORMATIVE-TERMS.md", ROOT / "Platform/common/NORMATIVE-TERMS.md"), pairs)   # общий канон
         self.assertFalse([p for p in pairs if p[1].parent == ROOT and p[1].name.startswith("ГРАНИЦА")])   # записки — не пары
         for ru, en in pairs:                           # каждая пара — одной из двух раскладок
             self.assertTrue(en.parent.name == "en" and en.name.endswith(".en.md") and ru.name == en.name[:-6] + ".md"
@@ -157,7 +206,7 @@ class Layouts(unittest.TestCase):
                          "Platform/01-store/spec/01.1-store.norms.md#time-in-a-row")
         self.assertEqual(en_mirror.as_source("Platform/02-installer/spec/02.1-installer.norms.md#x", ROOT),
                          "Platform/02-installer/spec/02.1-installer.norms.md#x")
-        self.assertEqual(en_mirror.as_source("ru/NORMATIVE-TERMS.md", ROOT), "NORMATIVE-TERMS.md")
+        self.assertEqual(en_mirror.as_source("Platform/common/ru/NORMATIVE-TERMS.md", ROOT), "Platform/common/NORMATIVE-TERMS.md")
         self.assertEqual(en_mirror.as_source("VMS/ru/README.md", ROOT), "VMS/README.md")
         self.assertIsNone(en_mirror.home_of(ROOT / "ARCHITECTURE.md", ROOT))         # записка курса — не источник
         self.assertEqual(en_mirror.home_of(ROOT / "Platform/README.md", ROOT), (ROOT / "Platform", Path("README.md")))   # модуль с ru/
@@ -216,6 +265,26 @@ class Layouts(unittest.TestCase):
 
 
 class FullEnglishSource(unittest.TestCase):
+    def test_moved_documents_use_only_platform_homes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            expected = []
+            for home, name in (("common", "NORMATIVE-TERMS.md"), ("07-console-module", "CONSOLE-MODULE.md")):
+                en = root / "Platform" / home / name
+                ru = en.parent / "ru" / name
+                ru.parent.mkdir(parents=True)
+                en.write_text("# Contract\n")
+                ru.write_text(f"# Контракт\n\nпроизводный от `{name}`, руками не правится\n")
+                expected.append((ru, en))
+                relative = ru.relative_to(root).as_posix()
+                self.assertEqual(en_mirror.as_source(relative, root), en.relative_to(root).as_posix())
+                self.assertEqual(en_mirror.compare(ru.read_text(), en.read_text(), ru, en, root), [])
+                en.write_text("# Contract\n\nЖ\n")
+            self.assertEqual(set(en_mirror.pairs(root)), set(expected))
+            self.assertEqual({p for p, _ in en_mirror.full_english_errors(root)}, {en for _, en in expected})
+            self.assertNotIn("NORMATIVE-TERMS.md", en_mirror.FULL_ENGLISH_DONE)
+            self.assertNotIn("CONSOLE-MODULE.md", en_mirror.FULL_ENGLISH_DONE)
+
     def test_quotes_code_and_machine_values_are_not_exempt(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -245,6 +314,11 @@ class FullEnglishSource(unittest.TestCase):
             p.parent.mkdir(parents=True)
             p.write_text("key\ten\tru\nrefresh\tRefresh\tОбновить\n")
             self.assertEqual(en_mirror.full_english_errors(root, [p.relative_to(root)]), [])
+            old = root / "Platform/06-console/data/localization.tsv"
+            old.parent.mkdir(parents=True)
+            old.write_bytes(p.read_bytes())
+            self.assertEqual([path for path, _ in en_mirror.full_english_errors(root, [old.relative_to(root)])], [old])
+            old.unlink()
             p.write_text("key\ten\tru\nrefresh\tОбновить\tОбновить\n")
             self.assertTrue(en_mirror.full_english_errors(root, [p.relative_to(root)]))
             p.write_text("key\ten\tru\nrefresh\tRefresh\tОбновить\textra\n")

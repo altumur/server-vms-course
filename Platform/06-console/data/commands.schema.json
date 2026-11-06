@@ -80,7 +80,7 @@
    ]
   },
   "error": {
-   "description": "the reason, ≤ 200 Unicode code points (the request contract «Метка», the error limit) — MUST at refused and unknown, absent at performed and expired",
+   "description": "the reason, ≤ 200 Unicode code points (the request contract «Mark», the error limit) — MUST at refused and unknown, absent at performed and expired",
    "type": "string",
    "pattern": "^(?:[\\s\\S]{0,200})$",
    "x-codec": [
@@ -1315,11 +1315,11 @@
    "type": "object",
    "properties": {
     "domain": {
-     "description": "the domain name (chapter 8.2, from М11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
+     "description": "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
     },
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "the holder's term (chapter 8.8, from М11/10 N1.1); the order — (term, rev), term is senior"
+     "description": "the holder's term (chapter 8.8, from M11/10 N1.1); the order — (term, rev), term is senior"
     },
     "rev": {
      "$ref": "#/$defs/common.pos53",

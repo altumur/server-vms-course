@@ -8,7 +8,7 @@ This file is for the agent (or person) who writes code from the lesson. The expl
 
 Implement the process `domainagent` in the language `<LANG>`: the agent of a member and the relay mode — by the two chapters of the lesson; pass
 the N5 acceptance of the chapters and close their readiness checklists. 45 norms in all: P/09.1-01…36 and P/09.2-01…09; the correspondence to the former ids
-— [`id-map.tsv`](../../common/id-map.tsv). The lesson is assembled from lessons М11/3–12 (the agent and relay side) (stage B,
+— `id-map.tsv` (historical record). The lesson is assembled from lessons M11/3–12 (the agent and relay side) (stage B,
 ADR-0083 addendum (1), (14)). The holder side — lesson [P/08](../../08-domain/spec/08-domain.README.md), the domain console — lesson P/10,
 the late layer of the cluster console — [chapter 6.7](../../06-console/spec/06.7-console.norms.md), the worker on the domain — [chapter P/03.7](../../03-worker/spec/03.7-worker.norms.md).
 
@@ -23,7 +23,7 @@ the late layer of the cluster console — [chapter 6.7](../../06-console/spec/06
 
 ## Inputs and their priority
 
-- The canon is the norms of chapters [9.1](09.1-agent.norms.md) and [9.2](09.2-agent.norms.md), including N0, the paragraphs «Данные», the order of N3 and
+- The canon is the norms of chapters [9.1](09.1-agent.norms.md) and [9.2](09.2-agent.norms.md), including N0, the paragraphs «Data», the order of N3 and
   the refusals of N4. The input and the output of the acceptance commands — N5 of the chapters.
 - The common algorithms are contracts; the chapters refer to them and do not repeat them: [the agent signature](../../common/contracts/agent-signature.md)
   (the agent signs — chapter 9.1, the owner; the relay verifies — chapter 9.2),
@@ -42,7 +42,7 @@ the late layer of the cluster console — [chapter 6.7](../../06-console/spec/06
   of the publication, of the holder's answer, of the token request and of the package — the original is in [the OpenAPI of the process
   `domain`](../../08-domain/spec/08-domain.api.openapi.yaml) (`Publication`, `Carry`, `HolderAsk`, `Batch`,
   `RelayAnswer`): the relay door refers to them, the agent calls the holder doors by it.
-- The forms of the rows and objects of the lesson are the family schemas `../data/*.schema.json` (the paragraphs «Данные» of the chapters; ADR-0088); the forms shared by
+- The forms of the rows and objects of the lesson are the family schemas `../data/*.schema.json` (the paragraphs «Data» of the chapters; ADR-0088); the forms shared by
   a holder row and its copy at the agent — the common definitions (`common/data/common.schema.json` for reference; each
   family schema is self-contained, ADR-0092).
 - The acceptance of the chapters checks the norms: [9.1](../acceptance/1/README.md), [9.2](../acceptance/2/README.md). The stand of several
@@ -61,10 +61,10 @@ chapter or lesson the rule belongs to: the agent of a member — chapter 9.1 and
 the envelope `m1` at the holder, the issue of a token, the term and the shared document at the holder — lesson P/08; the topology doors and the alarm list
 — lesson P/10; `/api/held`, `/api/backup` and the book door of the cluster console — chapter 6.7; the contribution under a slot and the token check
 by the recipient — P/03.7; the ports, the units and the box — P/02.4; the rights of the role `domainagent` — P/02.5. If the implementation is wrong —
-fix it and repeat the relevant checks. If the norm, the contract or the expectation disagree — report to «Спецификация»
+fix it and repeat the relevant checks. If the norm, the contract or the expectation disagree — report to «Specification»
 the place, a counterexample and the proposed solution; the solution is reflected in the norm, the contract, the instructions and the affected acceptance.
 Do not carry a difference of the implementation silently into the canon; do not add a new mechanism only for the sake of an unsupported case.
-Record a change of the acceptance in `journal/corrections-<K>.tsv` of the chapter.
+Record a change of the acceptance in `corrections-<K>.tsv` (historical correction record) of the chapter.
 
 ## What to create
 
@@ -113,7 +113,7 @@ relies on the agent pass.
 9. The acceptance of the shared document; the alarm page and the front.
 10. The ceilings of the agent: `domain/agent`, `sign_failures`, `too_large`; the agent in the process.
 11. The stand: the scenarios of [the acceptance of the chapter](../acceptance/1/README.md) and the agent side in the scenarios of the chapters of lesson P/08
-    («Соседи на стенде» of N5 of the chapter).
+    («Neighbours on the stand» of N5 of the chapter).
 
 ### Chapter 9.2 — the relay mode
 
@@ -163,7 +163,7 @@ Run the vectors and the acceptance scenarios separately, with the preparation th
 
 ### The agent writes only at its own member
 
-The rows and objects of chapter 9.1 are written only by the agent of its own cluster (the paragraph «Данные» of [chapter 9.1](09.1-agent.norms.md)); the holder
+The rows and objects of chapter 9.1 are written only by the agent of its own cluster (the paragraph «Data» of [chapter 9.1](09.1-agent.norms.md)); the holder
 rows are written by the process `domain` (lesson P/08). In foreign rows — `domain/keys`, `domain/revoked`,
 `domain/break-glass/<member>`, `domain/holder`, the row `domain/shared` — the agent is a participant, and at the holder cluster it writes none
 of them while that cluster holds the term (N1.4 `holder_cluster`). The relay mode has no rows of its own: the memory is in the process.
@@ -187,13 +187,13 @@ the ways of checking are recorded: for each id — a specific piece of evidence 
 the commands and the stand, the observations and the limitations. The data of past runs do not replace the preparation of a new one.
 
 - **9.1.** The acceptance scenarios of the chapter (`acceptance/1/`: 01, 03–08, 11, 13–25, 27) pass; the packages `agent-sig`, `peer`,
-  `follow` give their rows; the agent side in the scenarios of chapters 8.3–8.10 and 9.2 («Соседи на стенде» of N5) — too. The description of the
+  `follow` give their rows; the agent side in the scenarios of chapters 8.3–8.10 and 9.2 («Neighbours on the stand» of N5) — too. The description of the
   implementation names items 1–10 «Implementation decides» of the chapter: the commands `peer`, `follow`; `join` and the launch of the agent;
   `W2C_WALL_OFFSET`; the networks `domain/reaches`; the envelope memory; the holder's edits at itself; the assembly of the alarm page; the TLS client;
   the components of the process of a cluster of one; the writes to the medium per day. The checklist P/09.1-01…36 is closed; the items
-  «проверяется чтением» are named separately.
+  «checked by reading» are named separately.
 - **9.2.** The acceptance scenarios of the chapter 02–06 pass. The description of the implementation names the relay door and the memory
-  («Implementation decides» of the chapter, item 1). The checklist P/09.2-01…09 is closed; the items «проверяется чтением» (P/09.2-04, -05, -07;
+  («Implementation decides» of the chapter, item 1). The checklist P/09.2-01…09 is closed; the items «checked by reading» (P/09.2-04, -05, -07;
   the memory after a restart) are named separately.
 
 The success of a TSV confirms only the branches it observes. It does not prove TLS between clusters, the agent in the process, a race of

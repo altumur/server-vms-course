@@ -1,0 +1,32 @@
+{
+  "base": "9d2b12491e37068b13ab571bd80b1b12146757a7",
+  "adopted": [
+    "A2",
+    "A3",
+    "A4",
+    "A5"
+  ],
+  "changes": [
+    {
+      "path": "Platform/07-console-module/spec/07-console-module.norms.md",
+      "before_sha256": "ee0f7fdf67387a13451f2868a707e4c8855b8ac7307ffc558618856ba3fa2e2b",
+      "after_sha256": "9f83446e5152d0c6fe13722fd4fc1eb3b75ffa55eea52b6ae23b6ccfc8e447a3"
+    },
+    {
+      "path": "Platform/07-console-module/ru/spec/07-console-module.norms.md",
+      "before_sha256": "145ff9d2559b58692f09ef592d5e92d408677b050fbb3f173489f2c49fbd28e9",
+      "after_sha256": "166905c402d03bac0a48ceb74800e05054a1022d06112b6147c40ee4f71d8206"
+    },
+    {
+      "path": "CONSOLE-MODULE.md",
+      "before_sha256": "64123535f309202ac9d3347e454e53e4910132df900f8a870b10c73d72a90a68",
+      "after_sha256": "4700712c7549a28646b6a017fac4fb370d0be30bd9fbf9653c83bc2baa2abc53"
+    },
+    {
+      "path": "ru/CONSOLE-MODULE.md",
+      "before_sha256": "278afd776495b02226372e613f05a81e1e9a73bea955f1c5c67ba5055cfa59a6",
+      "after_sha256": "66503b0dde5fb0fc4fb23e410376236d4d8cb74ddf2aa53e686c1f09c846df8e"
+    }
+  ],
+  "A1": "Related-source contradiction requires Architect decision; not activated by inventing a new wire form."
+}

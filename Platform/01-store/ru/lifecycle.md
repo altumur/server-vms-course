@@ -22,7 +22,7 @@ N3 «старт сервера»), [P/01.3](spec/01.3-store.norms.md) (N1.3 де
 ## Окружение
 
 Настройку демона задают флаги (ниже): файл `configstore.env` читает раннер и собирает из него флаги. Сам демон читает
-только окружение systemd — переданные сокеты (`LISTEN_FDS`, `LISTEN_FDNAMES`) и сторожа (`NOTIFY_SOCKET`): переданный
+SERVER_NAME для умолчания имени вне группы, когда -id отсутствует, и окружение systemd — переданные сокеты (`LISTEN_FDS`, `LISTEN_FDNAMES`) и сторожа (`NOTIFY_SOCKET`): переданный
 сокет флагом не заменить (P/01.3 N1.3 `sockets`).
 Порядок файлов окружения раннера — значения юнита → `roles/<W2C_ROLE>.env` → `w2c.env` → `configstore.env`
 (P/02.4 N1.2; [02-installer/lifecycle.md](../../02-installer/ru/lifecycle.md)).
@@ -34,9 +34,11 @@ N3 «старт сервера»), [P/01.3](spec/01.3-store.norms.md) (N1.3 де
 | `LISTEN_FDS`, `LISTEN_FDNAMES` | унаследованные сокеты (`sd_listen_fds`); читает сам демон | — | P/01.3 N1.3 `sockets` |
 | `NOTIFY_SOCKET` | сторож systemd | — | P/02.4 N1.2 |
 
+`SERVER_NAME` читает и сам демон, только если `-id` отсутствует и используется умолчание имени вне группы по [форме флагов](../forms/daemon-flags.tsv). Запускатель задаёт окружение по P/02.4; демон не выводит имя из hostname самостоятельно. Явный `-id` не требует этого запасного значения; без обоих источников действует существующий отказ `start_flags`.
+
 ## Флаги
 
-Закрытая таблица «Флаги демона» — [P/01.3 N1.3](spec/01.3-store.norms.md), машинная форма [`forms/daemon-flags.tsv`](../forms/daemon-flags.tsv):
+Назначение флагов — [P/01.3 N1.3](spec/01.3-store.norms.md), машинная форма [`forms/daemon-flags.tsv`](../forms/daemon-flags.tsv):
 `-dir` (обязателен), `-id`, `-sockets`, `-rights`, `-tls`, `-raft`, `-raft-bind`, `-api`, `-bootstrap`, `-join`,
 `-group-size`, `-force`, `-isolated`, `-upper`, `-peers` (три последних — только у `recover`), `-door`, `-voters`, `-tuning`, `-leader-wait`, `-max-value`, `-max-body`, `-max-conns`,
 `-api-conns`, `-api-per-address`, `-index-base`, `-groups` (только у `rights`), `--from` (только у `restore`, `import`). Флаг вне таблицы — отказ старта, код 2. Административные команды —

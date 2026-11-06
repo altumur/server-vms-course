@@ -18,7 +18,7 @@ The acceptance runner:
 - counts `ok` when the loading returned a manifest;
 - checks that the set of files in `cases/` equals the set of rows of the table: an extra file or an extra row — a mismatch;
 - the verdict and the exit code are strict (ADR-0092 item 5); for the cases of `classes.tsv` it checks the refusal class; the information of `diagnostics.tsv` is a hint: the runner writes it into the report without a failure;
-- SHOULD run a sample through the manifest installation path (`manifest put` of the implementation, chapter 2.3 N3): all cases with the verdict `ok`, one refusal per each class `refused:<class>` from `classes.tsv` (the first by case name) and all installations of `puts.tsv` (chapter 2.3); the verdicts of the other cases are checked by the loading mode (the decision ADR-0080 addendum (17) item 2). An accepted file lands as the row `platform/manifest/<name>`; a refused one is not put into the store, the return code is non-zero. The installation checks the candidate in the full catalogue, and six accepted files name `testsub` in the catalogue checks: `bound_to_string`, `blob_required_false`, `secrets_reader_domainconsole` (`worker.requests: [testsub]`), `m49_table_shelf_log_ok`, `c6_secrets_reads_with_slash_ok`, `c3_near_by_ok`; therefore the run through `manifest put` is done in a store where `testsub` is already installed (`Source/tests/testdata/testsub.subsystem.yaml`). In an empty store these six files correctly get `refused:catalogue` (review of stage B 1–2, item 13).
+- SHOULD run a sample through the manifest installation path (`manifest put` of the implementation, chapter 2.3 N3): all cases with the verdict `ok`, one refusal per each class `refused:<class>` from `classes.tsv` (the first by case name) and all installations of `puts.tsv` (chapter 2.3); the verdicts of the other cases are checked by the loading mode (the decision ADR-0080 addendum (17) item 2). An accepted file lands as the row `platform/manifest/<name>`; a refused one is not put into the store, the return code is non-zero. The installation checks the candidate in the full catalogue, and six accepted files name `testsub` in the catalogue checks: `bound_to_string`, `blob_required_false`, `secrets_reader_domainconsole` (`worker.requests: [testsub]`), `m49_table_shelf_log_ok`, `c6_secrets_reads_with_slash_ok`, `c3_near_by_ok`; therefore the run through `manifest put` is done in a store where `testsub` is already installed (`Platform/common/data/testsub/testsub.subsystem.yaml`). In an empty store these six files correctly get `refused:catalogue` (review of stage B 1–2, item 13).
 
 The rules by which the verdicts are set are the norms of the chapter N1 (text, document, field, references) and N4; they are not here, so that there are not two versions of one norm (ADR-0003). Origin: the common table `spec_verdicts.tsv` (reviews 14 and 15, the Architect's verdicts of 2026-10-06), moved here on 2026-10-14 with eight new cases; both sides remove the former place in their own windows.
 
@@ -59,10 +59,6 @@ lines are not cases. Each `case` occurs once and has `refused` in `verdicts.tsv`
 
 For the other cases the verdict table checks acceptance/refusal and the source name; the implementation SHOULD give the path and the line
 per N4 of the norms — as a hint.
-
-## `journal/corrections-1.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample` (a sample of a generation error), `fix` (which line of the lesson was clarified), `languages`. Empty — no error has repeated so far.
 
 ## Additional check of string field names (R36-01)
 

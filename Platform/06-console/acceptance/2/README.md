@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/acceptance/2/README
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`06.2-console.norms.md`](../../spec/06.2-console.norms.md) N5. The scenarios, the fields file and the text below were moved from
-the acceptance of М10/07 whole (stage B, ADR-0083 addendum (1):
+the acceptance of M10/07 whole (stage B, ADR-0083 addendum (1):
 without a change of behaviour); the numbers of the scenarios and the steps are the former ones; the common tables `secret_in.tsv` and `log_mask.tsv` are the vectors
 of the chapter [`secret-in`](../../../common/vectors/secret-in/README.md) and [`log-mask`](../../../common/vectors/log-mask/README.md). Two vector tables,
 the fields file and the scenario file; the chapter adds no paths of its own — the units door of chapter 6.1 and the store door.
@@ -32,12 +32,6 @@ of `secret-in`, the value is the declaration of the field in the form of P/02.1.
 ## scenarios.tsv
 
 The units door of `testsub2` (the rows `tallies`; the tables door `shelves` — sc. 10; the console root `CONSOLE_ROOT=testsub2`, the common acceptance README «Stand») and the store door; the format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) (`console`, `store`, `@key`, `@as`, a subset of fields). The implementation is started with a key ring (`SECRETS_KEY`), the manifests `testsub` and `testsub2`, an empty store; the resource `srv-a` is the first step of sc. 01, 05, 09 (the processes are restarted between scenarios; `@start resource`: `GET /tallies` reads the heartbeats through the objects door of the resource of its server; C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29); the store rows are read by a role with the right to read `testsub2/` (for example, `testsub2worker`), sc. 06 — by a role without the right (`testsubworker`). The field `of` of `tallies` is the name of a counter of `testsub`; before the scenarios the runner creates the counter `c1` in `testsub`.
-
-## `journal/corrections-2.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from
-`corrections.tsv` of the acceptance of М10/07 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
-resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (review analysis of stage B 6–7, № 18).
 
 ## Scenario boundaries
 
@@ -75,14 +69,14 @@ Sc. 11 (`audit-coverage-gemini` 0a5ae79f9) — resealing at start (N3 «reseal a
 The file does not write the rows `door/signer`, `door/keys` before sc. 11: `/where` is not called in the scenarios of the chapter. Resealing under
 the former kid — by reading: the stand has one ring.
 
-## Reconciliation of python and go М10/6–11
+## Reconciliation of python and go M10/6–11
 
 - Sc. 02 steps 5–6: a mask with a Unicode whitespace character at the edge (`\t***`, `\u00a0***`) — 400 (N1.1 `mask_in`, S12).
 - Sc. 04 steps 9–14:
   - unparsable urls (`https'://`, a space before `://`, `https:%3A//`) — 400 `bad_url` (S3);
   - `'` in the host name does not cut the address: `token` after it is a password (A2, S4);
   - a password in the nested address `via` and in the pair `who`, hidden by escaping, — a refusal without the login field `feed_user`
-    (A8 «Вид», A7, A15; S16).
+    (A8 «View», A7, A15; S16).
 - Sc. 07: the json field `rule` of the manifest `testsub2` with nested `pw_secret`.
   - A permutation of the elements `cams` without passwords: in the answer and in the store row there are no secrets, the password of A does not go to B
     (N3 step 3, S1).

@@ -23,7 +23,7 @@ the claims of the token — [chapter 8.7](../../08-domain/spec/08.7-domain.norms
 in the moved text is lesson M11/N, their addresses now: «lesson 7» (the worker token) — P/08.7, «lesson 9» (the person token) —
 P/08.4 (analysis of review of stage B 8–10, № 22); «N1.x» in the steps — the chapters of P/08.2 (formerly of lesson M11/2; the numbers of the subsections are the former ones).
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -136,15 +136,3 @@ An implementation passes them with its own function, without a stand.
 The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 
-## Correspondence to former lessons
-
-From M11/2 (analysis of review of stage B 3–5, V1): N1.6 — the row `token` (`header`, `payload`, `sig`), `TOKEN_SKEW` and the paragraph
-«The check of a token is the function `token`…» (here «The token»; `domain/revoked` — now [the domain key set contract](keys.md) «Revocations», `OLD_KEYS` — P/08.2 N1.6); N3
-«`token(keys, revoked, now, token)`» — steps 1–11 with the comment `expect` and the paragraph about the boundary (here «The check»); N4 — the rows
-about the token (here «Refusal words»). A part of the norm M11/2-05 (the order of the check) and M11/2-06 (an unreadable row of revocations —
-«nothing to check with») — now P/08.2-05, P/08.2-06 — by `note` of [id-map](../id-map.tsv); the readers — P/03.7-03, P/06.3 N1.3. The steps refer to the norms of M11/2
-(«N1.6», now P/08.2 N1.6) as to the owner: the references and the step numbers are the former ones, P/03.7 N4 and the vectors
-[`domain-token`](../vectors/domain-token/README.md) refer to them (formerly the acceptance of M11/2 sc. 12).
-A change of behaviour after the move: the required key `cluster` in `expect` (`null` — only with `kind: person`), step 10 at
-`cluster: null`, the table of checkers with their `expect` (the gates of the cluster and domain consoles formerly called `token` without
-`expect`) (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10).

@@ -22,7 +22,7 @@ N1.5. References in the moved text: «N1.2» — the section «The member's publ
 limits» (P/08.3 N1.3); «N1.5» — the section «The answer `carry`»; «N2» — P/08.3 N2; «lesson 4 N1.3» — the section «Generation, mark, limits»
 `ROAD_QUIET` (P/08.3 N1.3a).
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -354,13 +354,15 @@ Moved from [P/09.2](../../09-agent/spec/09.2-agent.norms.md) N1.4 (`BATCH_LIMIT`
 are read by the relay (it writes the batch, P/09.2 N3) and by the holder (it accepts it, [P/08.3](../../08-domain/spec/08.3-domain.norms.md)
 N3 «the holder on `POST /api/relay/<relay>`», N4) — they have references here (C08-G05, the Architect's decision of 2026-10-25).
 
+`BATCH_LIMIT` and `KNOCKS` have one numeric source: the uniquely named rows of the [P/08 form](../../08-domain/forms/runtime-constants.tsv). In the following block the names denote those row values; `KNOCKS + 1` is the next stranger after the memory is full. The formula `BATCH_LIMIT = 4 × BODY_LIMIT` is unchanged; there is no new setting or wire field.
+
 ```yaml
-BATCH_LIMIT:   64 MiB     # = 4 × BODY_LIMIT (the section «Generation, mark, limits»); a body of POST /api/relay/<relay>
+BATCH_LIMIT:   the P/08 form value     # = 4 × BODY_LIMIT (the section «Generation, mark, limits»); a body of POST /api/relay/<relay>
                           # larger — 413 before parsing; the entries — in the order of the member names; a member larger than BODY_LIMIT is not sent (log)
-KNOCKS:        32 knocks, a knock body at most 256 KiB, with the field row — 768 KiB: the section row up to 512 KiB; at the relay — 32 strangers in memory, the last one from a name
-               replaces the former; stranger 33 evicts the oldest knock (by the reception time); the evicted one learns of it
+KNOCKS:        the P/08 form value; a knock body at most 256 KiB, with the field row — 768 KiB: the section row up to 512 KiB; at the relay — KNOCKS strangers in memory, the last one from a name
+               replaces the former; stranger KNOCKS + 1 evicts the oldest knock (by the reception time); the evicted one learns of it
                only by the holder's knocking (the section «The knock») — there is no new refusal
-holder:        at the holder, more than 32 knocks in a batch — those beyond the first 32 by name are skipped without a write; a knock with a body
+holder:        at the holder, more than KNOCKS knocks in a batch — those beyond the first KNOCKS by name are skipped without a write; a knock with a body
                larger than 256 KiB, with the field row — larger than 768 KiB — skipped without a write (as a knock out of form, P/08.3 N3 step 3); the batch lives; 413 — only
                a whole batch larger than BATCH_LIMIT
 answer:        the holder's answer to the client of the agent and of the relay (carry on POST and GET /api/carry, RelayAnswer on
@@ -382,10 +384,3 @@ a knock larger than 256 KiB) are not expressed by the function «accept» — by
 The canonical JSON (RFC 8785, ADR-0072) that the contract relies on is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the form of RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 
-## Correspondence to former lessons
-
-From M11/3 (analysis of review of stage A 8–10, № 13 / decision 2): N3 «accept» in full (here «The function «accept»»; in M11/3 —
-a pointer). The norm M11/3-06 (acceptance: `same`, `same_sent_at`, `rebase`, `heard`) — by `note` of [id-map](../id-map.tsv);
-executed by 8.3 and 9.2. From M11/3 N5 and M11/4 N5 — the forms of the command `accept` and `exit` (here «The form of the function»; analysis of review
-of stage B 8–10, № 6). The sections «Generation, mark, limits», «The member's publication», «The answer `carry`: `every`» are copies of the rows of
-P/08.3 N1.3, N1.3a, N1.5, N1.6 `form` and P/09.1 N1.2 for the self-sufficiency of lesson P/09 (analysis of review of stage B 8–10, № 4).

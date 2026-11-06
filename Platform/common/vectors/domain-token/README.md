@@ -89,7 +89,7 @@ the vector.
 
 The rows of `corrections.tsv` of the acceptance of M11/02 before the move and the rows of the move — for the packages `keys`, `domain-token`,
 `domain-envelopes` (the acceptance directory of M11/02 is removed by the move of lesson 8; the paths and numbers are the former ones, they are resolved by
-[`id-map.tsv`](../../id-map.tsv)):
+`id-map.tsv` (historical record)):
 
 | date | sample | fix |
 |---|---|---|
@@ -102,7 +102,7 @@ The rows of `corrections.tsv` of the acceptance of M11/02 before the move and th
 | 2026-10-19 | 03 step 8, 07 step 6, 11 step 2; inputs keys-21, token-29, seal-round-02 | reconciliation of M11 01–04 (S1, T3): a book_seal of small order — no_book_seal and not_an_envelope at seal-round, the exp of a revocation not finite — no_revocations |
 | 2026-10-20 | the move | the scenarios 04-token-keys, 05-token-form, 06-token-clock, 07-token-revoked, 12-token-kind-and-audience from M11/02 (stage B) — the vector rows common/vectors/domain-token/cases.tsv (29), the inputs inputs/token-*.json — the input cells without a change of bytes; the expectations reconciled by an oracle against the text of the domain token contract «The check» |
 | 2026-10-20 | the move | the scenarios 01-key-set-forward, 02-key-set-root, 03-key-set-form, 08-envelope-opens, 09-envelope-does-not-open, 10-envelope-form, 11-seal-round from M11/02 are removed (stage B): the same cases — common/vectors/keys (21), common/vectors/domain-envelopes x25519-open.tsv (16), x25519-round.tsv (2) (the plan of the move of lesson 8 V1; the Architect's decision, ADR-0083 addendum (14), item 17) |
-| 2026-10-20 | the history of M11/02 | the rows of corrections.tsv of the acceptance of M11/02 before the move — whole at the beginning of the log, with the former paths and numbers (they are resolved by Platform/common/id-map.tsv) |
+| 2026-10-20 | the history of M11/02 | the rows of corrections.tsv of the acceptance of M11/02 before the move — whole at the beginning of the log, with the former paths and numbers (they are resolved by the historical id map) |
 | 2026-10-20 | token-30, token-31 | review analysis of stage B 8–10, № 13 (item 7 of the note on the plans 8–10, the edit 0c9521c66): expect without the key cluster and cluster: null at kind ≠ person — @exit 2; the input — token-18 with a changed expect |
 | 2026-10-23 | token-32 | stage C guess DT-G03, the Architect's decision 2026-10-23: expect is a closed form, an unknown key — @exit 2; the input — token-18 with an extra key audience_clam |
 | 2026-10-30 | +token-44-expect-empty-audience-claim, token-45-keys-no-current | the coverage audit of P/08, the second pass of Gemini (G02, e32df6f8b): package candidates — `audience_claim` empty and `keys` not of the form — `@exit 2`; the input — token-18 with one edit; the expectations — the output of the witnesses cammeta-python and cammeta-go; a repeated kind in `expect.kind` stays a candidate |

@@ -12,7 +12,7 @@ as a whole.
 Moved from P/06.2 N1.4 `log` and the lines of the address contract about free text (A1, A2) without a change of behaviour; P/06.2 and
 the address contract refer here.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Function
 
@@ -98,8 +98,3 @@ Architect's decision of 2026-10-27; the catalogue rule — the field declaration
 [`secret-in`](../vectors/secret-in/README.md) of the address contract. The journal, the heartbeat, the snapshot, argv without values — by reading
 (P/06.2-05).
 
-## Correspondence to former lessons
-
-From P/06.2 N1.4 `log` (the norm P/06.2-05 — by `note` of [id-map](../id-map.tsv); formerly M10/7 N1.4 `log` and the common table
-`Source/tests/testdata/log_mask.tsv`, the bytes of the package coincide with it) and the address contract A1, A2 (free text); they
-refer here. The package is moved from `Platform/06-console/vectors/log-mask/` (C06-LOG-MASK-33-01).

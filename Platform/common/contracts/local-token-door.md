@@ -16,7 +16,7 @@ Moved from M11/7 N1.2 (the block `door`, `body`, `request`, `TOKEN_BODY`, `answe
 «Implementation decides» item 1). ADR-0080 item 2 («the mechanics of a side» is decided by the implementation) does not apply to this door: the door
 connects processes of different implementations on one box, and the witnesses already differ in the socket name.
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -141,11 +141,3 @@ The path of the socket at start («The role socket» inherit: stale, live, anoth
 these are system calls over the file system of the box, not a function of data, and the stand puts no files into `AGENT_TOKEN_DIR`
 (LTD-STALE-PATH-33-01).
 
-## Correspondence to former lessons
-
-From M11/7 (analysis of review of stage A 8–10, № 1 / decision 1): N1.2 whole (here «The door»; in M11/7 — a pointer) and the rows of N4
-«at the agent» — 401/404/400, 502 `invalid token reply`, 503 `unavailable` (here «Refusals»). From M11/12 N1.8 — the row
-`local_door` (do not take the ports 8444–8447; here «An open question»); the former «choice of the implementation» and the TCP default `8448`
-are removed by decision 1. The norm is P/09.1-10 (M11/7-02; `note` of [id-map](../id-map.tsv)); the participant is P/03.7-04. From M11/12
-N1.3 `tokens` — the section «The call in the process» (the Architect's decision on the move plans of 8–10, item 4).
-The contract has no vectors: the door is checked by sc. 01, 02 of the [acceptance of chapter 8.7](../../08-domain/acceptance/7/README.md) (M11/7-02 → P/09.1-10).

@@ -19,7 +19,7 @@ of the rows — the families of the owner [`requests`](../../06-console/data/req
 [`commands`](../../06-console/data/commands.schema.json) (`objects/<sub>/commands/<rid>`) with the tables of outcomes next to
 them ([catalogue](../data/catalog.tsv)). A reference «P/0N[.K] NM» is a norm of a lesson or of a chapter of the module.
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -261,12 +261,3 @@ The packages are at the owner (P/06.4); the other states and `kept` have no vect
 The canonical JSON (RFC 8785, ADR-0072) that the contract relies on — the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
 
-## Correspondence to former lessons
-
-From P/06.4 (review of stage B 3–5, V1; formerly M10/8): N1.5 — the blocks `<sub>/requests/<rid>`, `action`, `rid`, `manifest`,
-`mark` (with `kept`) and the paragraph on the vectors; N1.6 — the paragraph on the forms of the mark (here «Three forms of the mark»; the door `answered` stays in
-P/06.4 N1.6 with a reference here); N3 «States of an executed request and its mark» whole; «Races» of the procedure «reaper». The references inside
-the moved text («N1.5», «chapter 3.6», «chapter 6.3», «N2», «by N3») are written with the full address (P/06.4 …, P/03.6 …,
-P/06.3 …). Parts of norms by `note` of [id-map](../id-map.tsv): P/06.4-03 (removal by settle, cleanup of the mark after `kept`),
-P/06.4-06 (the request N1.5, `filed`, `action`), P/06.4-07 (append, the console side), P/03.6-03 (the holder), P/03.6-04
-(append, the holder side). The vectors — the packages of P/06.4 (section «Vectors»).

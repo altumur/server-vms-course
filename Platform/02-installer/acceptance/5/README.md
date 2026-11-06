@@ -6,7 +6,7 @@ The stand and the dictionary of directives and doors are in [the common acceptan
 [`02.5-installer.norms.md`](../../spec/02.5-installer.norms.md) N5, the full bodies of the two routes are
 [the OpenAPI](../../../01-store/spec/01-store.api.openapi.yaml) of lesson P/01.
 The file has 8 scenarios / 70 steps (sc. 12 steps 12–18 — `domainagent` does not write `domain/root`, `view`, `shadow`, `backups/rev-1`, `shared-docs/rev-1`, `alarm-history/m1`, `idem/k1`, 403, C02-LOCAL-BINDING240-ROOT; the mutation check 7cecaf2 № 29, 49: the admission rows of the controller without delete, the negation of `idem` at the worker; sc. 13 — the order and the state, ADR-0091, sc. 02 step 8 — the deletion of a row of `testsub2` by the controller is now 200: it has `retire_when.delete_after` and `ends`); the roles and the rights file are generated from `testsub` and `testsub2`
-(`Source/tests/testdata/testsub*.subsystem.yaml`) with the deployment name `testsub`.
+(`Platform/common/data/testsub/testsub*.subsystem.yaml`) with the deployment name `testsub`.
 The scenarios and the manifest variants were moved from the acceptance of M10/6
 (stage B) with the former numbers, steps and texts. Scenarios 05–08 and 10 (the evaluator, `never`, listing, the guard, identity,
 `/v1/rights`) are in the acceptance of [P/01.2](../../../01-store/acceptance/2/README.md) (stage B); the numbers of the remaining ones did not change.
@@ -29,12 +29,6 @@ book `tallies`, `testsub2` has only collected books — there is no role `testsu
 
 The reconciliation of python and go M10/6–11 (R1–R5, R7): sc. 04 steps 4–7 — the resource reads the terms of both manifests (there are no rows: `items:
 null`); sc. 12 — the domain roles.
-
-## `journal/corrections-5.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from
-`corrections.tsv` of the acceptance of M10/06 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
-resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (review analysis of stage B 6–7, № 18).
 
 ## Isolation
 

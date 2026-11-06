@@ -9,6 +9,7 @@
 глав (число строк, код, вид, поля), `kind` и поля — в `*Fault` OpenAPI урока, код и вид каждой проверки `write-checks.tsv`
 есть в каталоге, а строка с именем проверки — с тем же кодом и видом.
 """
+import hashlib
 import json
 import os
 import re
@@ -186,6 +187,103 @@ def openapi_schemas(lesson):
     return out
 
 
+def typed_refusal_causes(path, norms, section, rows):
+    """N4 names causes/caller actions; the typed catalogue owns the outcomes (ADR-0129 (2) item 8)."""
+    from markdown_it import MarkdownIt
+    from urllib.parse import unquote, urlsplit
+
+    errors, groups, stack = [], [], []
+    linked = False
+    for token in MarkdownIt("commonmark").parse(section):
+        if token.type == "inline":
+            for child in token.children or []:
+                if child.type == "link_open" and "blockquote_open" not in stack:
+                    target = urlsplit(child.attrGet("href") or "")
+                    if not target.scheme and not target.netloc and \
+                            (norms.parent / unquote(target.path)).resolve() == path.resolve():
+                        linked = True
+            if stack == ["bullet_list_open", "list_item_open", "paragraph_open"]:
+                match = re.fullmatch(r"(`[^`]+`(?:,\s*`[^`]+`)*)\s*:\s*(.*?)\s*Caller action:\s*(.*)",
+                                     token.content, re.S)
+                if not match or not all(s.strip(" \t\r\n.;:") for s in match.group(2, 3)):
+                    errors.append(f"{path.name}: {norms.name}: expected refusal names, cause and Caller action in N4 item")
+                else:
+                    groups.append(re.findall(r"`([^`]+)`", match[1]))
+        if token.nesting == 1:
+            stack.append(token.type)
+        elif token.nesting == -1:
+            stack.pop()
+    if not linked:
+        errors.append(f"{path.name}: {norms.name}: N4 needs a Markdown reference to forms/{path.name}")
+    by_name = {r["name"]: r for r in rows}
+    seen = set()
+    for number, names in enumerate(groups, 1):
+        for name in names:
+            if name in seen:
+                errors.append(f"{path.name}: {norms.name}: repeated N4 refusal cause {name}")
+            seen.add(name)
+            if name not in by_name:
+                errors.append(f"{path.name}: {norms.name}: N4 refusal cause {name} is not in this chapter's catalogue")
+            elif by_name[name]["row"] != str(number):
+                errors.append(f"{path.name}: {norms.name}: refusal {name}: row {by_name[name]['row']!r}, "
+                              f"N4 cause group is {number}")
+    for name in sorted(set(by_name) - seen):
+        errors.append(f"{path.name}: {norms.name}: missing N4 refusal cause/caller for {name}")
+    for r in rows:
+        where = f"{path.name}: {norms.name}: {r['name']}"
+        if any(not r[c].strip() for c in REF_COLUMNS):
+            errors.append(f"{where}: typed catalogue cells must be nonempty (use - where absent)")
+        if r["surface"] == "http" and not re.fullmatch(r"[1-5][0-9]{2}", r["code"]):
+            errors.append(f"{where}: an http refusal needs an HTTP code")
+        fields = r["fields"].split(",") if r["fields"] != "-" else []
+        if len({f.rstrip('?') for f in fields}) != len(fields) or \
+                any(not re.fullmatch(r"[a-z][a-z0-9_]*\??", f) for f in fields):
+            errors.append(f"{where}: fields must be distinct field names with optional ?")
+    return errors
+
+
+def openapi_refusal_pairs(lesson):
+    """HTTP code/kind pairs carried by actual responses, including local refs and schema alternatives."""
+    pairs = set()
+    for api in (lesson / "spec").glob("*.api.openapi.yaml"):
+        doc = yaml.safe_load(api.read_text(encoding="utf-8")) or {}
+
+        def resolve(node, seen):
+            while isinstance(node, dict) and "$ref" in node:
+                ref = node["$ref"]
+                if not isinstance(ref, str) or not ref.startswith("#/") or ref in seen:
+                    return {}, seen
+                seen = seen | {ref}
+                node = doc
+                try:
+                    for key in ref[2:].split("/"):
+                        node = node[key.replace("~1", "/").replace("~0", "~")]
+                except (KeyError, TypeError):
+                    return {}, seen
+            return node if isinstance(node, dict) else {}, seen
+
+        def kinds(node, seen=frozenset()):
+            node, seen = resolve(node, seen)
+            props = node.get("properties") or {}
+            field = props.get("kind") if isinstance(props, dict) else None
+            kind = field.get("const") if isinstance(field, dict) else None
+            found = {kind} if isinstance(kind, str) else set()
+            for key in ("oneOf", "anyOf", "allOf"):
+                for child in node.get(key, []):
+                    found |= kinds(child, seen)
+            return found
+
+        for item in doc.get("paths", {}).values():
+            for method, operation in item.items():
+                if method not in {"get", "put", "post", "delete", "patch", "head", "options", "trace"}:
+                    continue
+                for code, response in operation.get("responses", {}).items():
+                    response, seen = resolve(response, frozenset())
+                    for media in response.get("content", {}).values():
+                        pairs |= {(str(code), kind) for kind in kinds(media.get("schema", {}), seen)}
+    return pairs
+
+
 def check_refusals(path):
     path = Path(path)
     lesson = path.parent.parent
@@ -207,7 +305,14 @@ def check_refusals(path):
         if r["surface"] != "http" and r["kind"] != "-":
             errors.append(f"{where}: kind of a {r['surface']} refusal is -")
     number = re.match(r"([0-9]{2})-", lesson.name)[1].lstrip("0") if re.match(r"[0-9]{2}-", lesson.name) else ""
-    for chapter in sorted({r["chapter"] for r in rows}):
+    chapters = {r["chapter"] for r in rows}
+    # Source references also discover a chapter removed wholesale from the catalogue.
+    for norms in english_norms(lesson):
+        match = re.fullmatch(r"[0-9]{2}(?:\.([0-9]+))?-[^.]+\.norms\.md", norms.name)
+        if match and f"forms/{path.name}" in norms.read_text(encoding="utf-8"):
+            chapters.add(number + ("." + match[1] if match[1] else ""))
+    typed_names = set()
+    for chapter in sorted(chapters):
         if "." in chapter:
             norms = sorted((lesson / "spec").glob(f"{lesson.name[:2]}.{chapter.split('.')[1]}-*.norms.md"))
             mine_ok = chapter.startswith(number + ".")
@@ -230,6 +335,10 @@ def check_refusals(path):
         if not prose:
             # Н4 — ссылка на форму (ADR-0125 доп. (1) п. 5, доп. (5)): ячейки нормы — колонки формы
             section = "\n".join(lines[start:end])
+            if "outcome" not in (rows[0] if rows else {}):
+                errors.extend(typed_refusal_causes(path, norms[0], section, mine))
+                typed_names.update(r["name"] for r in mine)
+                continue
             if f"forms/{path.name}" not in section or "outcome" not in (rows[0] if rows else {}):
                 errors.append(f"{path.name}: chapter {chapter}: Н4 of {norms[0].name} has no table and no reference to "
                               f"forms/{path.name} with the columns {REF_EXTRA}")
@@ -272,6 +381,7 @@ def check_refusals(path):
                     errors.append(f"{where}: fields {missing} not in the prose cell")
     kinds = fault_kinds(lesson)
     schemas = openapi_schemas(lesson)
+    pairs = openapi_refusal_pairs(lesson) if typed_names else set()
     for r in rows:
         if r["surface"] != "http":
             continue
@@ -301,6 +411,16 @@ def check_refusals(path):
             missing = [f.rstrip("?") for f in r["fields"].split(",") if f.rstrip("?") not in kinds[r["kind"]]]
             if missing:
                 errors.append(f"{where}: fields {missing} not in the OpenAPI schemas of kind {r['kind']}")
+        if r["name"] in typed_names and r["kind"] in kinds:
+            if (r["code"], r["kind"]) not in pairs:
+                errors.append(f"{where}: HTTP code/kind {r['code']} {r['kind']} is not in the OpenAPI responses")
+            required = [set(s.get("required") or []) - {"kind", "error"} for s in schemas.values()
+                        if isinstance(s, dict) and isinstance(s.get("properties", {}).get("kind"), dict)
+                        and s["properties"]["kind"].get("const") == r["kind"]]
+            declared = {f for f in r["fields"].split(",") if f != "-" and not f.endswith("?")}
+            missing = set.intersection(*required) - declared if required else set()
+            if missing:
+                errors.append(f"{where}: required OpenAPI fields {sorted(missing)} are not required in the catalogue")
     catalogue = {(r["code"], r["kind"]) for r in rows}
     by_name = {r["name"]: r for r in rows}
     for table in sorted((lesson / "forms").glob("*-checks.tsv")):
@@ -316,6 +436,8 @@ def check_refusals(path):
             if r and (r["code"], r["kind"]) != (w["code"], w["kind"]):
                 errors.append(f"{path.name}: {r['name']}: {r['code']} {r['kind']}, {table.name} says {w['code']} {w['kind']}")
     stats["refusal_chapters"] = len({r["chapter"] for r in rows})
+    if typed_names:
+        stats["refusal_cause_names"] = len(typed_names)
     return errors, stats
 
 
@@ -687,6 +809,9 @@ WIRE_COLUMNS = ["package", "table", "surface", "header", "inputs", "files", "exp
 WIRE_COMPARES = ("value", "subset", "raw", "set", "object-sets", "lines-value", "lines-subset")
 ASSERT_COMPARES = ("value", "subset", "raw", "set", "object-sets")          # без test — без lines (wire.md «assert»)
 ASSERT_TESTS = ("prefix", "absent", "no-leak")      # no-leak — решение «Архитектора» 2026-11-05 поверх wire.md
+TURN_COMPARE = "turn"            # решение «Архитектора» 2026-11-06 (P/06 C4): только привязка common/turn, вне WIRE_COMPARES
+TURN_BINDING = ("common/turn", "cases.tsv", "vectors")
+TURN_MARKS = ("@new", "@same")   # свежесть держателя: новая попытка / текущая попытка; прочие ячейки — точно
 NATIVE_WORDS = ("object", "array", "string", "number", "boolean", "null", "value", "bytes")
 JSON_TYPES = ("object", "array", "string", "number", "boolean", "null")
 FRAMES = ("json", "json-lf", "raw")
@@ -1319,7 +1444,10 @@ def _check_binding(r, root, platform, env, cel, owners_of, seen, err, stats):
             grouped_variants.add(mk["variant"])
         marks.append(mk)
     compare = r["compare"]
-    if compare in WIRE_COMPARES:
+    if compare == TURN_COMPARE:
+        compares = {v: TURN_COMPARE for v in variants}
+        _turn_form(r, inputs, expect, markers, err)
+    elif compare in WIRE_COMPARES:
         compares = {v: compare for v in variants}
     else:
         try:
@@ -1354,6 +1482,87 @@ def _check_binding(r, root, platform, env, cel, owners_of, seen, err, stats):
     if err.lines:                                          # строки судятся только по годной форме привязки
         return
     _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whens, owner_set, pkg, root, err, stats)
+
+
+def _turn_form(r, inputs, expect, markers, err):
+    """compare=turn (решение «Архитектора» 2026-11-06): только common/turn cases.tsv vectors; каждый вход выбран явным
+    CEL-селектором when; ожидание — сама колонка JSON без ignore, assert и подмен значения; markers пусты."""
+    if (r["package"], r["table"], r["surface"]) != TURN_BINDING:
+        err.add(f"compare turn is only for the binding {' '.join(TURN_BINDING)}")
+        return
+    if markers != []:
+        err.add("compare turn: markers must be []")
+    for i, d in enumerate(inputs if isinstance(inputs, list) else []):
+        if isinstance(d, dict) and not isinstance(d.get("when"), str):
+            err.add(f"compare turn: inputs[{i}] needs an explicit CEL selector when over owner and kind")
+    for i, e in enumerate(expect if isinstance(expect, list) else []):
+        if not isinstance(e, dict):
+            continue
+        if "ignore" in e or "assert" in e:
+            err.add(f"compare turn: expect[{i}] has no ignore or assert; every cell compares exactly")
+        v = e.get("value")
+        if not (isinstance(v, dict) and set(v) == {"column", "decode"} and v["decode"] == "json"):
+            err.add(f"compare turn: expect[{i}].value is exactly {{column, decode json}}, no holder or value alias")
+
+
+def _turn_marks(value, err, what, line):
+    """Свежесть в ожидании compare=turn: строка на «@» — только значение holder, только @new или @same, @same — после
+    @new того же случая; прочие значения сравниваются точно (литеральный holder подписанта — тоже)."""
+    seen_new = False
+
+    def walk(v, key):
+        nonlocal seen_new
+        if isinstance(v, dict):
+            for k, x in v.items():
+                walk(x, k)
+        elif isinstance(v, list):
+            for x in v:
+                walk(x, None)
+        elif isinstance(v, str) and v.startswith("@"):
+            if key != "holder":
+                err.add(f"{what}: freshness mark {v!r} outside holder (no alias)", line)
+            elif v not in TURN_MARKS:
+                err.add(f"{what}: unknown freshness mark {v!r}, not one of {list(TURN_MARKS)}", line)
+            elif v == "@same" and not seen_new:
+                err.add(f"{what}: @same before any @new of the case", line)
+            seen_new = seen_new or v == "@new"
+    walk(value, None)
+
+
+def turn_match(expected, actual):
+    """Сравнение compare=turn одного случая (решение «Архитектора» 2026-11-06): структура и все ячейки — точно, кроме
+    значения holder с меткой. @new — настоящая метка попытки, не литерал «@…» и не равная ни одной прежней @new случая;
+    @same — равна последней @new. Возвращает список расхождений (пустой — совпало)."""
+    news, out = [], []
+
+    def walk(e, a, at):
+        if isinstance(e, dict):
+            if not isinstance(a, dict) or set(a) != set(e):
+                out.append(f"{at or '/'}: keys {sorted(a) if isinstance(a, dict) else type(a).__name__} != {sorted(e)}")
+                return
+            for k in e:
+                sub = f"{at}/{k}"
+                if k == "holder" and e[k] in TURN_MARKS:
+                    if not isinstance(a[k], str) or not a[k] or a[k].startswith("@"):
+                        out.append(f"{sub}: {a[k]!r} is not a real attempt label")
+                    elif e[k] == "@new":
+                        if a[k] in news:
+                            out.append(f"{sub}: @new {a[k]!r} repeats an earlier @new of the case")
+                        news.append(a[k])
+                    elif not news or a[k] != news[-1]:
+                        out.append(f"{sub}: @same {a[k]!r} is not the last @new {news[-1] if news else None!r}")
+                else:
+                    walk(e[k], a[k], sub)
+        elif isinstance(e, list):
+            if not isinstance(a, list) or len(a) != len(e):
+                out.append(f"{at or '/'}: array length differs")
+                return
+            for i, (x, y) in enumerate(zip(e, a)):
+                walk(x, y, f"{at}/{i}")
+        elif type(e) is not type(a) and not (type(e) in (int, float) and type(a) in (int, float)) or e != a:
+            out.append(f"{at or '/'}: {a!r} != {e!r}")
+    walk(expected, actual, "")
+    return out
 
 
 def _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whens, owner_set, pkg, root, err, stats):
@@ -1513,6 +1722,13 @@ def _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whe
                 err.add('console pool: ignore is exactly ["/fates"] with compare value (wire.md «P/06 transport»)', line)
             if v not in compares:
                 continue
+            if compares[v] == TURN_COMPARE and len(hit) == 1:
+                col = hit[0]["value"]["column"]
+                for no, row in group:
+                    try:
+                        _turn_marks(wire_json(row[col]), err, f"compare turn column {col}", no)
+                    except ValueError as exc:
+                        err.add(f"compare turn column {col}: not strict JSON: {str(exc)[:80]}", no)
             found = []
             for no, row in group:
                 first = next((k for k, mk in enumerate(marks) if mk["variant"] == v and (
@@ -1694,8 +1910,8 @@ def check_runtime_constants(path):
 
 
 VDOOR_COLUMNS = ["method", "path", "row", "revision", "etag", "if_match", "absent_revision", "norm"]
-VDOOR_REVISIONS = ("doc.rev", "revision", "rev")
-VDOOR_IF_MATCH = ("optional", "ignored", "base-rev")
+VDOOR_REVISIONS = ("doc.rev", "revision", "rev", "-")      # `-` — счётчика нет (решение «Архитектора» 2026-11-06)
+VDOOR_IF_MATCH = ("optional", "optional-index", "ignored", "base-rev")   # optional-index — If-Match только с индексом
 VDOOR_ROW = re.compile(r"[a-z][a-z0-9-]*(?:/(?:[a-z][a-z0-9-]*|<[a-z][a-z0-9-]*>))*")
 VDOOR_BASE_REV_NORM = "P/08.0-R006"          # base-rev без P/08.0-R006 в norm — отказ (forms/README «Versioned doors»)
 
@@ -1735,8 +1951,10 @@ def check_versioned_doors(path):
     Колонки ровно VDOOR_COLUMNS (source нет); (method, path) — операция OpenAPI урока, не повторяется; каждая операция
     OpenAPI с ETag в ответе или If-Match в параметрах — строка формы; etag=true ⇔ ETag в ответе, if_match=ignored ⇔ нет
     If-Match. row — `-`, `writes[]` или шаблон семьи, где `<имя>` — захват пути операции или `<part>`; revision
-    doc.rev|revision|rev; etag true|false; if_match optional|ignored|base-rev; absent_revision 0|-; norm — непустой список
-    без повторов якорей требований урока, существующих в его нормах; base-rev — с P/08.0-R006."""
+    doc.rev|revision|rev|-; etag true|false; if_match optional|optional-index|ignored|base-rev; absent_revision 0|-; norm —
+    непустой список без повторов якорей требований урока, существующих в его нормах; base-rev — с P/08.0-R006.
+    Решение «Архитектора» 2026-11-06: optional-index ⇒ absent_revision `-`; revision `-` ⇒ etag false и if_match
+    optional-index|ignored. Голое число в If-Match запрещает норма, форма судит лишь значение колонки."""
     path = Path(path)
     lesson = path.parent.parent
     head = next((ln for ln in path.read_text(encoding="utf-8").splitlines() if not ln.startswith("#")), "").split("\t")
@@ -1790,11 +2008,438 @@ def check_versioned_doors(path):
                 errors.append(f"{where}: norm {n!r} is not a requirement anchor of this lesson")
             elif n not in anchors:
                 errors.append(f"{where}: norm {n} has no anchor in the norms of the lesson")
+        if r["if_match"] == "optional-index" and r["absent_revision"] != "-":
+            errors.append(f"{where}: if_match optional-index needs absent_revision -, not {r['absent_revision']!r}")
+        if r["revision"] == "-":
+            if r["etag"] != "false":
+                errors.append(f"{where}: revision - (no counter) needs etag false, not {r['etag']!r}")
+            if r["if_match"] not in ("optional-index", "ignored"):
+                errors.append(f"{where}: revision - (no counter) needs if_match optional-index or ignored, "
+                              f"not {r['if_match']!r}")
         if r["if_match"] == "base-rev" and VDOOR_BASE_REV_NORM not in norm:
             errors.append(f"{where}: if_match base-rev needs {VDOOR_BASE_REV_NORM} in norm")
     for key in sorted(k for k, (etag, if_match) in ops.items() if (etag or if_match) and k not in seen):
         errors.append(f"{path.name}: {key[0]} {key[1]}: the OpenAPI operation declares ETag or If-Match, but has no row")
     return errors, {"versioned_doors": len(rows)}
+
+
+FP_SAFE = 2 ** 53 - 1                       # все целые профиля и статуса — в точной области binary64
+FP_COUNTS = ("n_unit", "n_claim", "n_folder", "n_empty", "n_delete", "n_guard")
+FP_KEY_MAX, FP_VERSION_MAX, FP_ID_MAX, FP_TIMESTAMP = 1024, 20, 64, 313      # P02.3 N3, profile-form README
+FP_ENCODER = "compact-json-utf8"
+FP_META = ("key_utf8_bytes", "version_digits", "id_hex_digits", "timestamp_json_bytes", "encoder", "trailing_lf")
+FP_H = "skeleton_entity_bytes-2*put_slots+timestamp_slots*(timestamp_upper_bytes-timestamp_dummy_bytes)"
+FP_PROOFS = "metadata-proofs"               # owned_context["metadata-proofs"]: по записи на пакет, байты скелета
+FP_PROOF_KEYS = {"packet", "file", "sha256", "bytes", "encoding", "skeleton_trailing_lf", "note"}
+FP_PROVENANCE = {                           # поле провенанса → ссылка и раздел owned_context, который её доказывает
+    "store_limits": ("owned-context:status", "status"),
+    "catalogue": ("owned-context:confirmed-catalogue", "confirmed_catalogue"),
+    "procedure_descriptors": ("owned-context:descriptors", "descriptors"),
+    "complete_packet_roster": ("owned-context:descriptor-packet-roster", "descriptor_packet_roster"),
+    "metadata_skeleton_proof": ("owned-context:metadata-proofs", FP_PROOFS),
+}
+FP_SKELETON_TOP = ("op", "writes", "guards", "id", "not_after", "not_before")
+FP_TIMESTAMPS = ("not_after", "not_before")
+FP_OUTCOMES = ("ok", "refused:form")
+
+
+def finite_profile_forms(root):
+    return sorted(Path(root).glob("Platform/*/forms/finite-profile.cases.json"))
+
+
+def _fp_int(v):
+    return isinstance(v, int) and not isinstance(v, bool)
+
+
+def _fp_big(v, where, out):
+    """Каждое целое (не bool) ≤ 2^53−1 и ≥ 0."""
+    if isinstance(v, dict):
+        for k, x in v.items():
+            _fp_big(x, f"{where}/{k}", out)
+    elif isinstance(v, list):
+        for i, x in enumerate(v):
+            _fp_big(x, f"{where}/{i}", out)
+    elif _fp_int(v) and not 0 <= v <= FP_SAFE:
+        out.append(f"{where}: integer {v} outside 0..2^53-1")
+
+
+def _fp_folder_row_max(root):
+    path = Path(root) / "Platform/06-console/forms/runtime-constants.tsv"
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            cells = line.split("\t")
+            if cells[0] == "FOLDER_ROW_MAX" and len(cells) > 1 and cells[1].isdigit():
+                return int(cells[1])
+    return None
+
+
+def _fp_compact(value):
+    """Кодек compact-json-utf8: компактные «,» «:», UTF-8 без BOM, обязательные экранирования, без NaN; LF — отдельно."""
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+
+def _fp_skeleton(raw, d, meta, where, err):
+    """Байтовый скелет пакета: ровно компактный JSON контекстного кодека без BOM и финального LF; форма batch
+    (op, writes put/delete, guards, id, not_after, not_before), каждый ключ — key_utf8_bytes UTF-8 и key_json_bytes в
+    JSON, все ключи разные, items каждого put — {}, cas/index — version_digits цифр, id — id_hex_digits строчного hex,
+    отметки — числа; счёт put/delete/guard — по кратностям дескриптора. H собирается из байтов:
+    len − 2·puts + Σ(313 − длина отметки). Возвращает (H, len, puts, отметок, длина пустышки) или None."""
+    n = len(err)
+    if meta.get("encoder") != FP_ENCODER:
+        err.append(f"{where}: context encoder {meta.get('encoder')!r} is not {FP_ENCODER!r}")
+        return None
+    if raw.startswith(b"\xef\xbb\xbf") or raw.endswith(b"\n"):
+        err.append(f"{where}: skeleton bytes have a BOM or a final LF")
+    try:
+        doc = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError) as exc:
+        err.append(f"{where}: skeleton is not UTF-8 JSON: {short(str(exc))}")
+        return None
+    if _fp_compact(doc) != raw:
+        err.append(f"{where}: skeleton bytes are not exactly the compact-json-utf8 encoding of their value")
+    if not (isinstance(doc, dict) and tuple(doc) == FP_SKELETON_TOP and doc["op"] == "batch"
+            and isinstance(doc["writes"], list) and isinstance(doc["guards"], list)):
+        err.append(f"{where}: skeleton is not exactly {{{', '.join(FP_SKELETON_TOP)}}} with op batch")
+        return None
+    digits = re.compile(rf"[0-9]{{{d['version_digits']}}}")
+    keys, puts, deletes = [], 0, 0
+    for i, w in enumerate(doc["writes"]):
+        if isinstance(w, dict) and w.get("op") == "put" and tuple(w) == ("op", "key", "items", "cas"):
+            puts += 1
+            if w["items"] != {}:
+                err.append(f"{where}: writes[{i}] items is not {{}}")
+        elif isinstance(w, dict) and w.get("op") == "delete" and tuple(w) == ("op", "key", "cas"):
+            deletes += 1
+        else:
+            err.append(f"{where}: writes[{i}] is not a put {{op,key,items,cas}} or delete {{op,key,cas}}")
+            continue
+        keys.append(w["key"])
+        if not (isinstance(w["cas"], str) and digits.fullmatch(w["cas"])):
+            err.append(f"{where}: writes[{i}] cas is not {d['version_digits']} decimal digits")
+    for i, g in enumerate(doc["guards"]):
+        if not (isinstance(g, dict) and tuple(g) == ("key", "index") and isinstance(g["index"], str)
+                and digits.fullmatch(g["index"])):
+            err.append(f"{where}: guards[{i}] is not {{key, index}} with {d['version_digits']} digits")
+            continue
+        keys.append(g["key"])
+    for i, k in enumerate(keys):
+        if not (isinstance(k, str) and len(k.encode("utf-8")) == d["key_utf8_bytes"] == meta.get("key_utf8_bytes")
+                and len(_fp_compact(k)) == d["key_json_bytes"]):
+            err.append(f"{where}: key {i} is not {d['key_utf8_bytes']} UTF-8 bytes and {d['key_json_bytes']} JSON bytes")
+    if len(set(k for k in keys if isinstance(k, str))) != len(keys):
+        err.append(f"{where}: skeleton keys repeat")
+    if not (isinstance(doc["id"], str) and re.fullmatch(rf"[0-9a-f]{{{d['id_hex_digits']}}}", doc["id"])):
+        err.append(f"{where}: id is not {d['id_hex_digits']} lowercase hex")
+    stamps = [len(_fp_compact(doc[t])) for t in FP_TIMESTAMPS if _fp_int(doc[t]) and doc[t] >= 0]
+    if len(stamps) != len(FP_TIMESTAMPS):
+        err.append(f"{where}: not_after/not_before are not natural integer dummies")
+    c = d["counts"]
+    if puts != c["n_unit"] + c["n_claim"] + c["n_folder"] + c["n_empty"] or deletes != c["n_delete"] \
+            or len(doc["guards"]) != c["n_guard"]:
+        err.append(f"{where}: skeleton has {puts} puts, {deletes} deletes, {len(doc['guards'])} guards, "
+                   f"not the descriptor counts")
+    if len(err) != n:
+        return None
+    H = len(raw) - 2 * puts + sum(meta["timestamp_json_bytes"] - s for s in stamps)
+    return H, len(raw), puts, len(stamps), (stamps[0] if len(set(stamps)) == 1 else None)
+
+
+def _fp_bound(H, c, V, F, lf):
+    return H + (c["n_unit"] + c["n_claim"]) * (12 * V + 7) + c["n_folder"] * (6 * F + 19) + 2 * c["n_empty"] + lf
+
+
+def _fp_context_meta(ctx, err):
+    meta = ctx.get("metadata")
+    if not (isinstance(meta, dict) and tuple(sorted(meta)) == tuple(sorted(FP_META))):
+        err.append(f"owned_context.metadata is not exactly {list(FP_META)}")
+        return {}
+    want = {"key_utf8_bytes": FP_KEY_MAX, "version_digits": FP_VERSION_MAX, "id_hex_digits": FP_ID_MAX,
+            "timestamp_json_bytes": FP_TIMESTAMP, "encoder": FP_ENCODER}
+    for k, v in want.items():
+        if meta[k] != v or isinstance(meta[k], bool):
+            err.append(f"owned_context.metadata.{k} {meta[k]!r} is not {v!r}")
+    if not (_fp_int(meta["trailing_lf"]) and meta["trailing_lf"] in (0, 1)):
+        err.append(f"owned_context.metadata.trailing_lf {meta['trailing_lf']!r} is not 0 or 1")
+    return meta
+
+
+def _fp_context(ctx, F, base, err):
+    """Независимый контекст: перечень пакетов без дублей, ровно один дескриптор и одна запись metadata-proofs на пакет,
+    метаданные контекста (кодек, LF, пределы); файл скелета читается, sha256 и длина — заявленные в записи и в
+    дескрипторе, H собирается из байтов и сверяется с числами дескриптора. Возвращает {packet: (counts, H, desc)}."""
+    if not isinstance(ctx, dict):
+        err.append("owned_context is not an object")
+        return {}
+    roster = ctx.get("descriptor_packet_roster")
+    if not (isinstance(roster, list) and roster and all(isinstance(p, str) and p for p in roster)):
+        err.append("owned_context.descriptor_packet_roster is not a non-empty list of packet names")
+        roster = []
+    for p in sorted({p for p in roster if roster.count(p) > 1}):
+        err.append(f"owned_context roster: packet {p!r} repeats")
+    status = ctx.get("status")
+    if not (isinstance(status, dict) and all(_fp_int(status.get(k)) and status[k] > 0 for k in ("max_value", "max_body"))):
+        err.append("owned_context.status needs positive integers max_value and max_body")
+    meta = _fp_context_meta(ctx, err)
+    proofs = ctx.get(FP_PROOFS) if isinstance(ctx.get(FP_PROOFS), list) else None
+    if proofs is None:
+        err.append(f"owned_context[{FP_PROOFS!r}] is not a list")
+        proofs = []
+    pnames = [x.get("packet") if isinstance(x, dict) else None for x in proofs]
+    for p in sorted({p for p in pnames if pnames.count(p) > 1}, key=str):
+        err.append(f"owned_context {FP_PROOFS}: packet {p!r} has more than one proof")
+    for p in roster:
+        if p not in pnames:
+            err.append(f"owned_context {FP_PROOFS}: roster packet {p!r} has no proof")
+    for p in pnames:
+        if p not in roster:
+            err.append(f"owned_context {FP_PROOFS}: proof {p!r} is not a roster packet")
+    proof_of = {x["packet"]: x for x in proofs if isinstance(x, dict) and pnames.count(x.get("packet")) == 1}
+    out = {}
+    descs = ctx.get("descriptors") if isinstance(ctx.get("descriptors"), list) else []
+    names = [d.get("packet") for d in descs if isinstance(d, dict)]
+    for p in sorted({p for p in names if names.count(p) > 1}, key=str):
+        err.append(f"owned_context descriptors: packet {p!r} has more than one descriptor")
+    for p in roster:
+        if p not in names:
+            err.append(f"owned_context: roster packet {p!r} has no descriptor")
+    for d in descs:
+        p = d.get("packet") if isinstance(d, dict) else None
+        where = f"owned_context descriptor {p!r}"
+        if p not in roster:
+            err.append(f"{where}: not in the packet roster")
+            continue
+        n = len(err)
+        c = d.get("counts") if isinstance(d.get("counts"), dict) else {}
+        if set(c) != set(FP_COUNTS) or not all(_fp_int(c[k]) and c[k] >= 0 for k in c):
+            err.append(f"{where}: counts are not exactly {list(FP_COUNTS)} natural integers")
+            continue
+        nums = ("skeleton_entity_bytes", "put_slots", "key_utf8_bytes", "key_json_bytes", "version_digits",
+                "id_hex_digits", "timestamp_slots", "timestamp_dummy_bytes", "timestamp_upper_bytes", "H")
+        if not all(_fp_int(d.get(k)) and d[k] >= 0 for k in nums):
+            err.append(f"{where}: metadata {list(nums)} are not natural integers")
+            continue
+        if not 1 <= d["key_utf8_bytes"] <= FP_KEY_MAX:
+            err.append(f"{where}: key_utf8_bytes {d['key_utf8_bytes']} not in 1..{FP_KEY_MAX}")
+        if d["key_json_bytes"] != 6 * d["key_utf8_bytes"] + 2:
+            err.append(f"{where}: key_json_bytes {d['key_json_bytes']} != 6*key_utf8_bytes+2")
+        if not 0 <= d["version_digits"] <= FP_VERSION_MAX:
+            err.append(f"{where}: version_digits {d['version_digits']} > {FP_VERSION_MAX}")
+        if not 1 <= d["id_hex_digits"] <= FP_ID_MAX:
+            err.append(f"{where}: id_hex_digits {d['id_hex_digits']} not in 1..{FP_ID_MAX}")
+        if d["timestamp_upper_bytes"] != FP_TIMESTAMP:
+            err.append(f"{where}: timestamp_upper_bytes is not {FP_TIMESTAMP}")
+        if d.get("H_derivation") != FP_H:
+            err.append(f"{where}: H_derivation is not {FP_H!r}")
+        if d.get("metadata_skeleton_proof") != FP_PROVENANCE["metadata_skeleton_proof"][0]:
+            err.append(f"{where}: metadata_skeleton_proof {d.get('metadata_skeleton_proof')!r} does not resolve to "
+                       f"owned_context[{FP_PROOFS!r}]")
+        pr = proof_of.get(p)
+        if pr is None:
+            err.append(f"{where}: no single {FP_PROOFS} record")
+            continue
+        if set(pr) != FP_PROOF_KEYS or pr["encoding"] != "UTF-8" or pr["skeleton_trailing_lf"] != 0 \
+                or isinstance(pr["skeleton_trailing_lf"], bool):
+            err.append(f"{where}: proof record is not exactly {sorted(FP_PROOF_KEYS)} with UTF-8 and skeleton_trailing_lf 0")
+            continue
+        if d.get("metadata_skeleton_file") != pr["file"] or d.get("metadata_skeleton_sha256") != pr["sha256"]:
+            err.append(f"{where}: metadata_skeleton_file/sha256 differ from its {FP_PROOFS} record")
+        f = pr["file"]
+        target = (base / f).resolve() if isinstance(f, str) else None
+        if target is None or base.resolve() not in target.parents or not target.is_file():
+            err.append(f"{where}: skeleton file {f!r} does not resolve under {base.name}/")
+            continue
+        raw = target.read_bytes()
+        sha = hashlib.sha256(raw).hexdigest()
+        if sha != pr["sha256"]:
+            err.append(f"{where}: skeleton sha256 {sha} != declared {pr['sha256']}")
+        if len(raw) != pr["bytes"] or len(raw) != d["skeleton_entity_bytes"]:
+            err.append(f"{where}: skeleton has {len(raw)} bytes, declared {pr['bytes']} and {d['skeleton_entity_bytes']}")
+        got = _fp_skeleton(raw, d, meta, where, err) if meta else None
+        if got is None:
+            continue
+        H, size, puts, slots, dummy = got
+        if (d["put_slots"], d["timestamp_slots"], d["timestamp_dummy_bytes"]) != (puts, slots, dummy):
+            err.append(f"{where}: put_slots/timestamp_slots/timestamp_dummy_bytes are not the skeleton's "
+                       f"{puts}/{slots}/{dummy}")
+        if d["H"] != H:
+            err.append(f"{where}: H {d['H']} != H {H} assembled from the skeleton bytes")
+        if len(err) == n:
+            out[p] = (c, H, d)
+    return out
+
+
+def _fp_refusals(profile, status, ctx, descs, F, validator):
+    """Решение судьи по случаю, без expect: список причин отказа (пусто — профиль проходит)."""
+    why = [f"schema: {short(e.message, 120)}" for e in validator.iter_errors(profile)]
+    _fp_big(profile, "profile", why)
+    _fp_big(status, "store_status", why)
+    if not (isinstance(status, dict) and all(_fp_int(status.get(k)) and status[k] > 0 for k in ("max_value", "max_body"))):
+        why.append("store_status needs positive integers max_value and max_body")
+    if why:
+        return why
+    B, V = status["max_body"], status["max_value"]
+    if profile["body_bytes"] != B:
+        why.append(f"body_bytes {profile['body_bytes']} != effective max_body {B}")
+    if profile["row_weight_bytes"] != V:
+        why.append(f"row_weight_bytes {profile['row_weight_bytes']} != effective max_value {V}")
+    if F is None or profile["folder_weight_bytes"] != F:
+        why.append(f"folder_weight_bytes {profile['folder_weight_bytes']} != FOLDER_ROW_MAX {F}")
+    meta, cmeta = profile["metadata"], ctx.get("metadata") if isinstance(ctx.get("metadata"), dict) else {}
+    for k in FP_META:                         # кодек, LF и пределы случая — из независимого контекста
+        if meta[k] != cmeta.get(k):
+            why.append(f"metadata.{k} {meta[k]!r} != owned_context.metadata {cmeta.get(k)!r}")
+    for field, (word, section) in FP_PROVENANCE.items():
+        if profile["provenance"][field] != word or section not in ctx:
+            why.append(f"provenance.{field} {profile['provenance'][field]!r} does not resolve to owned_context[{section!r}]")
+    roster = ctx.get("descriptor_packet_roster") or []
+    names = [k["packet"] for k in profile["packets"]]
+    for p in sorted({p for p in names if names.count(p) > 1}):
+        why.append(f"packet {p!r} repeats")
+    for p in roster:
+        if p not in names:
+            why.append(f"packet {p!r} of the roster is missing")
+    lf = cmeta.get("trailing_lf", meta["trailing_lf"])
+    for k in profile["packets"]:
+        p = k["packet"]
+        if p not in descs:
+            why.append(f"packet {p!r} has no proved descriptor")
+            continue
+        c, H, _ = descs[p]
+        if k["multiplicity_proof"] != f"owned-descriptor:{p}":
+            why.append(f"packet {p}: multiplicity_proof {k['multiplicity_proof']!r} is not owned-descriptor:{p}")
+        if k["H"] != H:
+            why.append(f"packet {p}: H {k['H']} != H {H} assembled from the skeleton bytes")
+        for n in FP_COUNTS:
+            if k[n] != c[n]:
+                why.append(f"packet {p}: {n} {k[n]} != descriptor {c[n]}")
+        bound = _fp_bound(H, c, V, F or 0, lf)
+        if bound > B:
+            why.append(f"packet {p}: bound {bound} > B {B}")
+    return why
+
+
+def check_finite_profile(path):
+    """ADR-0127 P/06 C2, P02.3 N3 шаги 6a/3a, P06.8 (решение «Архитектора» 2026-11-06, доработка по c34fc58c5): судья
+    полноты и границы конечного профиля удаления — то, что схема не доказывает. Контекст owned_context: перечень пакетов
+    без дублей, по дескриптору и записи metadata-proofs на пакет, метаданные контекста (compact-json-utf8, LF 0/1,
+    ключ ≤ 1024, версия ≤ 20 цифр, id ≤ 64, отметка 313); байтовые скелеты читаются (sha256, длина, точный компактный
+    UTF-8, форма, ключи), H собирается из байтов и сверяется с числами; expected_bounds и max_bound — по формуле с LF
+    контекста. Каждый случай решается без expect: схема, целые ≤ 2^53−1, B и V — статус случая, F — FOLDER_ROW_MAX,
+    кодек/LF/пределы — как в контексте, провенанс — разделы контекста, пакеты ровно перечень, H и кратности —
+    пересчитанные, bound = H + (n_unit+n_claim)(12V+7) + n_folder(6F+19) + 2n_empty + LF ≤ B; решение равно expect.
+    Покрытие: проходит случай с bound ровно B и отказывает случай с одной причиной bound = B+1."""
+    import jsonschema
+    path = Path(path)
+    root = path.parents[3]
+    errors = []
+    try:
+        d = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        return [f"{path.name}: not JSON: {short(str(exc))}"], {"finite_profile_cases": 0}
+    try:
+        schema = json.loads((path.parent / d["schema"]).read_text(encoding="utf-8"))
+        jsonschema.Draft202012Validator.check_schema(schema)
+        validator = jsonschema.Draft202012Validator(schema)
+    except (KeyError, TypeError, OSError, ValueError, jsonschema.SchemaError) as exc:
+        return [f"{path.name}: schema is not a readable JSON Schema 2020-12: {short(str(exc))}"], {"finite_profile_cases": 0}
+    F = _fp_folder_row_max(root)
+    if F is None:
+        errors.append(f"{path.name}: FOLDER_ROW_MAX not found in Platform/06-console/forms/runtime-constants.tsv")
+    ctx = d.get("owned_context")
+    cerr = []
+    descs = _fp_context(ctx, F, path.parent, cerr)
+    errors += [f"{path.name}: {m}" for m in cerr]
+    ctx = ctx if isinstance(ctx, dict) else {}
+    cmeta = ctx.get("metadata") if isinstance(ctx.get("metadata"), dict) else {}
+    lf = cmeta.get("trailing_lf") if cmeta.get("trailing_lf") in (0, 1) else None
+    cases = d.get("cases") if isinstance(d.get("cases"), list) else []
+    if not cases:
+        errors.append(f"{path.name}: no cases")
+    seen, exact, plus_one = set(), False, False
+    for i, case in enumerate(cases):
+        if not (isinstance(case, dict) and set(case) == {"case", "profile", "store_status", "expect"}):
+            errors.append(f"{path.name}: cases[{i}] is not exactly {{case, profile, store_status, expect}}")
+            continue
+        where = f"{path.name}: case {case['case']!r}"
+        if case["case"] in seen:
+            errors.append(f"{where}: repeats")
+        seen.add(case["case"])
+        if case["expect"] not in FP_OUTCOMES:
+            errors.append(f"{where}: expect {case['expect']!r} not in {list(FP_OUTCOMES)}")
+            continue
+        why = _fp_refusals(case["profile"], case["store_status"], ctx, descs, F, validator)
+        got = "refused:form" if why else "ok"
+        if got != case["expect"]:
+            errors.append(f"{where}: expect {case['expect']}, the judge gives {got}"
+                          + (f": {'; '.join(why[:3])}" if why else ""))
+            continue
+        status = case["store_status"]
+        if descs and lf is not None and (not why or all(" bound " in w for w in why)):
+            top = max(_fp_bound(H, c, status["max_value"], F or 0, lf) for c, H, _ in descs.values())
+            exact = exact or (not why and top == status["max_body"])
+            plus_one = plus_one or (bool(why) and top == status["max_body"] + 1)
+    if cases and not exact:
+        errors.append(f"{path.name}: no ok case whose largest bound is exactly B")
+    if cases and not plus_one:
+        errors.append(f"{path.name}: no refused case whose only reason is the largest bound B+1")
+    exp = d.get("expected_bounds")
+    status = ctx.get("status") if isinstance(ctx.get("status"), dict) else {}
+    if not isinstance(exp, dict) or set(exp) != set(ctx.get("descriptor_packet_roster") or []):
+        errors.append(f"{path.name}: expected_bounds keys are not the packet roster")
+    elif lf is not None and _fp_int(status.get("max_value")) and F is not None:
+        for p in exp:
+            if p not in descs:
+                errors.append(f"{path.name}: expected_bounds {p}: no proved descriptor to recompute it")
+                continue
+            c, H, _ = descs[p]
+            b = _fp_bound(H, c, status["max_value"], F, lf)
+            if exp[p] != b:
+                errors.append(f"{path.name}: expected_bounds {p} {exp[p]} != recomputed {b}")
+        if d.get("max_bound") != max(exp.values(), key=lambda v: v if _fp_int(v) else -1):
+            errors.append(f"{path.name}: max_bound {d.get('max_bound')} is not the largest expected bound")
+    for k in ("owned_context", "expected_bounds", "max_bound"):     # случаи с целым вне области — свидетели отказа
+        _fp_big(d.get(k), f"{path.name}: {k}", errors)
+    return errors, {"finite_profile_cases": len(cases), "finite_profile_skeletons": len(descs)}
+
+
+def deletion_body_witness_forms(root):
+    return sorted(Path(root).glob("Platform/*/forms/deletion-body-witnesses.json"))
+
+
+def check_deletion_body_witnesses(path):
+    """P06.8 N1.3 (решение «Архитектора» 2026-11-06): кодек-свидетели границы тела — entity_bytes = decoded_chunk;
+    within_body_limit ⇔ entity_bytes ≤ limit; есть limit−1, limit (проходят) и limit+1 (отказ), и тот же JSON с LF
+    на один байт длиннее своего без LF."""
+    path = Path(path)
+    errors = []
+    try:
+        d = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        return [f"{path.name}: not JSON: {short(str(exc))}"], {"deletion_body_witnesses": 0}
+    limit, ws = d.get("limit"), d.get("witnesses")
+    if not (_fp_int(limit) and limit > 0 and isinstance(ws, dict) and ws):
+        return [f"{path.name}: needs a positive integer limit and witnesses"], {"deletion_body_witnesses": 0}
+    sizes = {}
+    for name, w in ws.items():
+        b = w.get("entity_bytes") if isinstance(w, dict) else None
+        if not _fp_int(b):
+            errors.append(f"{path.name}: {name}: entity_bytes is not an integer")
+            continue
+        sizes.setdefault(b, []).append(name)
+        if w.get("decoded_chunk_entity_bytes") != b:
+            errors.append(f"{path.name}: {name}: decoded_chunk_entity_bytes != entity_bytes {b}")
+        if w.get("within_body_limit") is not (b <= limit):
+            errors.append(f"{path.name}: {name}: within_body_limit {w.get('within_body_limit')} but {b} vs limit {limit}")
+    for b in (limit - 1, limit, limit + 1):
+        if b not in sizes:
+            errors.append(f"{path.name}: no codec witness of {b} bytes (limit {limit} {b - limit:+d})")
+    lfed = [w for w in ws.values() if isinstance(w, dict) and w.get("trailing_LF") is True]
+    for w in lfed:
+        twins = [x for x in ws.values() if isinstance(x, dict) and x.get("trailing_LF") is False
+                 and x.get("ensure_ascii") == w.get("ensure_ascii") and x.get("put_weights") == w.get("put_weights")]
+        if not any(x.get("entity_bytes") == w.get("entity_bytes", 0) - 1 for x in twins):
+            errors.append(f"{path.name}: an LF witness of {w.get('entity_bytes')} bytes has no same JSON one byte shorter")
+    return errors, {"deletion_body_witnesses": len(ws)}
 
 
 RWB_COLUMNS = ["write", "key", "field", "source", "value", "guard_key", "guard_version", "norm"]

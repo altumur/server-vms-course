@@ -13,7 +13,7 @@ of the console, about which P/04 was silent, — four answers of the Architect o
 beyond the pool (`constraint`, `spread_by`, `affinity`, the group, the home, capacity and order) — still P/04 N3 «choose», the line
 «eligible» and below.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -104,10 +104,3 @@ decommission, order), resources, the manifest; the output — the pool, the keep
 — the package of the common contract slot-name, executed by common; this contract is a participant there (slot order —
 the keeper on equal load; V-44; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25).
 
-## Correspondence to former lessons
-
-From P/04 N3 «choose» (the lines «live worker», «pool», «keeper»), P/06.5 N2 (the lines `WorkerRow.idle_by_policy`,
-`ServerRow.placeable`, `why`); they have references here. The Architect's answers of 2026-10-25 (C06-SERVER-POLICY-33-01): (1) `idle_by_policy`
-— among the live of the pool, the place `""` is not a place; (2) the load of the keeper — one definition with «free»; (3) an unreadable assignment — outside
-the pool at the console too; (4) `placeable` — a live worker of the pool, without labels and capacity. The course witness in (1), (2), (4) diverged from the norm
-(all heartbeats, the number of units, a check of the server only) — the norm is here, the witness is not a model.

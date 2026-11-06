@@ -1,0 +1,107 @@
+{
+  "baseline": "f0e038d57b4d8301c6a7ebe1a03a1f9ebc85680a",
+  "lesson": "10-domain-console",
+  "common_source": "88f9879fd9b69ea6cbf2a1b7e342f2478484ac64",
+  "composition_base": "f0e038d57b4d8301c6a7ebe1a03a1f9ebc85680a",
+  "ready_g09_joint": "0c7c21b3bffa4ece5b699c891fb3439106eb406a",
+  "counts": {
+    "files": 24,
+    "source_files": 16,
+    "changed_files": 16,
+    "changed_lines": 267,
+    "tsv_data_rows": 319,
+    "acceptance_vector_tables": 3,
+    "unchanged_files": 8,
+    "schemas_and_openapi": 1
+  },
+  "source_map_entries": 266,
+  "protocol_map_entries": 503,
+  "protocol_changed": [
+    [
+      "Platform/10-domain-console/forms/refusals.tsv",
+      "11:word",
+      "table word",
+      "\"([P/06.5](../../06-console/spec/06.5-console.norms.md) \\u041d4)\"",
+      "\"([P/06.5](../../06-console/spec/06.5-console.norms.md) N4)\"",
+      "mapped"
+    ],
+    [
+      "Platform/10-domain-console/forms/refusals.tsv",
+      "12:word",
+      "table word",
+      "\"([P/06.5](../../06-console/spec/06.5-console.norms.md) \\u041d4)\"",
+      "\"([P/06.5](../../06-console/spec/06.5-console.norms.md) N4)\"",
+      "mapped"
+    ],
+    [
+      "Platform/10-domain-console/forms/refusals.tsv",
+      "13:word",
+      "table word",
+      "\"([P/06.5](../../06-console/spec/06.5-console.norms.md) \\u041d4)\"",
+      "\"([P/06.5](../../06-console/spec/06.5-console.norms.md) N4)\"",
+      "mapped"
+    ]
+  ],
+  "schema_annotation_changes": [
+    [
+      "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+      "/paths/~1domain~1users/get/responses/503/description"
+    ],
+    [
+      "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+      "/paths/~1domain~1groups/get/responses/503/description"
+    ],
+    [
+      "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+      "/paths/~1domain~1roles/get/responses/503/description"
+    ],
+    [
+      "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+      "/paths/~1domain~1break-glass/get/responses/503/description"
+    ],
+    [
+      "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+      "/paths/~1domain~1stranded~1apply/post/responses/503/description"
+    ],
+    [
+      "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+      "/paths/~1domain~1{sub}~1{pass}/description"
+    ],
+    [
+      "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+      "/components/schemas/GrantsView/properties/versions/description"
+    ]
+  ],
+  "acceptance_vector_preservation": [
+    {
+      "path": "Platform/10-domain-console/acceptance/scenarios.tsv",
+      "rows": 163,
+      "before_sha256": "d06f3c96ce8300f057ee44a316ed347b76d632dfb1535ee71c177b0c8b5274d4",
+      "after_sha256": "5548c77051cc72f2c70e78f769f8dba8e02799dadc5481ecc3ac1997ed358eea",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/10-domain-console/acceptance/seams.tsv",
+      "rows": 48,
+      "before_sha256": "770b93086460b4da98cb00905861c543968b9b3ed5c6e3cb82813c0811150575",
+      "after_sha256": "770b93086460b4da98cb00905861c543968b9b3ed5c6e3cb82813c0811150575",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/10-domain-console/vectors/alarms/cases.tsv",
+      "rows": 27,
+      "before_sha256": "a562d9049092982b45c2fb79d249e1bf26b58e797c5f2f67425e8ab60d257231",
+      "after_sha256": "c4c27a7de770238c3243f44b0b6a2b6b34c9d13e30c4b37341b841a17f5aa380",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    }
+  ],
+  "errors": [],
+  "limits": "Author source audit only. READY G09 source is retained by the composition baseline. Owners generator/runner code slices and joint normgen/KIT remain pending; not a runtime, SUT, export or pin result.",
+  "map_sha256": {
+    "2026-11-06-full-english-protocol-map.tsv": "004114f9435edd5d0e7bffdae2ac7140546bcb1548642d6e2774bb658305a090",
+    "2026-11-06-full-english-source-map.tsv": "6399c020ef4194e65f620a408917ecd847b8065ea3523ddf258361f16e79391d"
+  }
+}

@@ -1,20 +1,20 @@
-# The function resolve (P/06.7 Н1.14, Н3 resolve, Н5 resolve): resolve(field, unit, domain) → {value, from} | {groups, from}.
+# The function resolve (P/06.7 N1.14, N3 resolve, N5 resolve): resolve(field, unit, domain) → {value, from} | {groups, from}.
 # input — the input of the command resolve as JSON text: field — {name, type, inherit?, merge?, document?, group_by?}, unit — the value of the row
 # of the unit (no key — no value), domain — {term, rev, value} of the value in the document or null. expect — a subset of the output or «@exit 2» (the input is out of form).
-# The rows — the acceptance inputs of М11/11 inputs/resolve-*.json, sc. 03 (taken over by the move of lesson 10).
+# The rows — the acceptance inputs of M11/11 inputs/resolve-*.json, sc. 03 (taken over by the move of lesson 10).
 # A row: case<TAB>input<TAB>expect<TAB>note.
 case	input	expect	note
-resolve-01-unit-own	{"field":{"name":"step","type":"int","inherit":1},"unit":3,"domain":{"term":1,"rev":3,"value":5}}	{"value":3,"from":"unit"}	М11/11 sc. 03-resolve step 1
-resolve-02-domain	{"field":{"name":"step","type":"int","inherit":1},"domain":{"term":1,"rev":3,"value":5}}	{"value":5,"from":"domain term 1 rev 3"}	М11/11 sc. 03-resolve step 2
-resolve-03-manifest	{"field":{"name":"step","type":"int","inherit":1},"domain":null}	{"value":1,"from":"manifest"}	М11/11 sc. 03-resolve step 3
-resolve-04-union	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine","site"],"domain":{"term":1,"rev":3,"value":["site","east"]}}	{"value":["east","mine","site"],"from":"unit + domain term 1 rev 3"}	М11/11 sc. 03-resolve step 4
-resolve-05-union-no-unit	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"domain":{"term":1,"rev":3,"value":["east"]}}	{"value":["east"],"from":"domain term 1 rev 3"}	М11/11 sc. 03-resolve step 5
-resolve-06-union-no-domain	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine"],"domain":null}	{"value":["mine"],"from":"unit"}	М11/11 sc. 03-resolve step 6
-resolve-07-document	{"field":{"name":"rounds","type":"json","document":true},"domain":{"term":1,"rev":3,"value":[{"counter":"c1","every":5}]}}	{"value":[{"counter":"c1","every":5}],"from":"domain term 1 rev 3"}	М11/11 sc. 03-resolve step 7
-resolve-08-document-none	{"field":{"name":"rounds","type":"json","document":true},"domain":null}	{"value":null,"from":"none"}	М11/11 sc. 03-resolve step 8
-resolve-09-groups	{"field":{"name":"folder","type":"string","group_by":true},"domain":{"term":1,"rev":3,"value":["east","west"]}}	{"groups":["east","west"],"from":"domain term 1 rev 3"}	М11/11 sc. 03-resolve step 9
-resolve-10-override-list	{"field":{"name":"marks","type":"list","inherit":[],"merge":"override"},"unit":["mine"],"domain":{"term":1,"rev":3,"value":["site"]}}	{"value":["mine"],"from":"unit"}	М11/11 sc. 03-resolve step 10
-resolve-11-term-zero	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine","site"],"domain":{"term":0,"rev":3,"value":["site","east"]}}	@exit 2	М11/11 sc. 03-resolve step 11
-resolve-12-no-inherit	{"field":{"name":"step","type":"int"},"domain":null}	@exit 2	a field without inherit, not document and not group_by — out of the form of the common section of P/02.1 (Н3 resolve pre; C06-RESOLVE-ABSENT-INHERIT-91-01)
-resolve-13-union-not-string	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine",1],"domain":{"term":1,"rev":3,"value":["site"]}}	@exit 2	union: an element of the list is not a string — out of form (type list; Н5 exit; C06-RESOLVE-UNION-FORM-01)
-resolve-14-rev-over	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine"],"domain":{"term":1,"rev":9007199254740992,"value":["site"]}}	@exit 2	rev greater than 2^53 − 1 — out of form (Н5 exit; C06-RESOLVE-UNION-FORM-01)
+resolve-01-unit-own	{"field":{"name":"step","type":"int","inherit":1},"unit":3,"domain":{"term":1,"rev":3,"value":5}}	{"value":3,"from":"unit"}	M11/11 sc. 03-resolve step 1
+resolve-02-domain	{"field":{"name":"step","type":"int","inherit":1},"domain":{"term":1,"rev":3,"value":5}}	{"value":5,"from":"domain term 1 rev 3"}	M11/11 sc. 03-resolve step 2
+resolve-03-manifest	{"field":{"name":"step","type":"int","inherit":1},"domain":null}	{"value":1,"from":"manifest"}	M11/11 sc. 03-resolve step 3
+resolve-04-union	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine","site"],"domain":{"term":1,"rev":3,"value":["site","east"]}}	{"value":["east","mine","site"],"from":"unit + domain term 1 rev 3"}	M11/11 sc. 03-resolve step 4
+resolve-05-union-no-unit	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"domain":{"term":1,"rev":3,"value":["east"]}}	{"value":["east"],"from":"domain term 1 rev 3"}	M11/11 sc. 03-resolve step 5
+resolve-06-union-no-domain	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine"],"domain":null}	{"value":["mine"],"from":"unit"}	M11/11 sc. 03-resolve step 6
+resolve-07-document	{"field":{"name":"rounds","type":"json","document":true},"domain":{"term":1,"rev":3,"value":[{"counter":"c1","every":5}]}}	{"value":[{"counter":"c1","every":5}],"from":"domain term 1 rev 3"}	M11/11 sc. 03-resolve step 7
+resolve-08-document-none	{"field":{"name":"rounds","type":"json","document":true},"domain":null}	{"value":null,"from":"none"}	M11/11 sc. 03-resolve step 8
+resolve-09-groups	{"field":{"name":"folder","type":"string","group_by":true},"domain":{"term":1,"rev":3,"value":["east","west"]}}	{"groups":["east","west"],"from":"domain term 1 rev 3"}	M11/11 sc. 03-resolve step 9
+resolve-10-override-list	{"field":{"name":"marks","type":"list","inherit":[],"merge":"override"},"unit":["mine"],"domain":{"term":1,"rev":3,"value":["site"]}}	{"value":["mine"],"from":"unit"}	M11/11 sc. 03-resolve step 10
+resolve-11-term-zero	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine","site"],"domain":{"term":0,"rev":3,"value":["site","east"]}}	@exit 2	M11/11 sc. 03-resolve step 11
+resolve-12-no-inherit	{"field":{"name":"step","type":"int"},"domain":null}	@exit 2	a field without inherit, not document and not group_by — out of the form of the common section of P/02.1 (N3 resolve pre; C06-RESOLVE-ABSENT-INHERIT-91-01)
+resolve-13-union-not-string	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine",1],"domain":{"term":1,"rev":3,"value":["site"]}}	@exit 2	union: an element of the list is not a string — out of form (type list; N5 exit; C06-RESOLVE-UNION-FORM-01)
+resolve-14-rev-over	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine"],"domain":{"term":1,"rev":9007199254740992,"value":["site"]}}	@exit 2	rev greater than 2^53 − 1 — out of form (N5 exit; C06-RESOLVE-UNION-FORM-01)

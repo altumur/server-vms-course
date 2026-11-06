@@ -1,4 +1,4 @@
-# Key families of the domain (P/06.7 Н1.11 families): families(decls, present) → {<id>: [<ключ>…]}.
+# Key families of the domain (P/06.7 N1.11 families): families(decls, present) → {<id>: [<key>…]}.
 # decls — domain.keys of the catalogue's manifests as JSON text {<sub>: [{id, keys?, prefix?}]}; present — the keys of the rows under domain/
 # of this store, a JSON array (the order does not matter). expect — families: the union of the keys of an id over all manifests, without repeats,
 # ascending by the bytes of UTF-8 (C06-DOMAIN-KEY-FAMILIES-168-21). A row: case<TAB>decls<TAB>present<TAB>expect<TAB>note.

@@ -4,15 +4,15 @@ This English text is the source; the Russian translation `ru/acceptance/9/README
 
 The stand and the dictionary of directives and doors are [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) and its
 section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (the doors `holder`, `member`, the directives `@domain`, `@person`; the plan of lesson 8 V5). The norm of the chapter is
-[`08.9-domain.norms.md`](../../spec/08.9-domain.norms.md) N5. Scenario 01 was moved from the acceptance of М11/11 (stage B, ADR-0083
-addendum (1): without a change of behaviour); the numbers of the scenario and of the steps are the former ones; scenario 07 is the coverage audit of P/08 (the numbers 02–06 belong to the scenarios of М11/11 in neighbouring acceptances). The other scenarios of М11/11 are lesson P/10 (02 — the list of
+[`08.9-domain.norms.md`](../../spec/08.9-domain.norms.md) N5. Scenario 01 was moved from the acceptance of M11/11 (stage B, ADR-0083
+addendum (1): without a change of behaviour); the numbers of the scenario and of the steps are the former ones; scenario 07 is the coverage audit of P/08 (the numbers 02–06 belong to the scenarios of M11/11 in neighbouring acceptances). The other scenarios of M11/11 are lesson P/10 (02 — the list of
 alarms; the vectors `alarms` — 04), [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md) (05; 06 → 14) and the cluster console (the vectors [`resolve`](../../../06-console/vectors/resolve/README.md) — 03, chapter P/06.7); lesson P/10 is [the acceptance](../../../10-domain-console/acceptance/README.md)
 and the vector [`alarms`](../../../10-domain-console/vectors/alarms/README.md). The forms of foreign doors are for their
 owners.
 
 ## Stand
 
-The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Preparation of each scenario», from М11/03: the clusters `hold`, `m1`,
+The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Preparation of each scenario», from M11/03: the clusters `hold`, `m1`,
 `m2`, the catalog `testsub`), with a declaration of the shared in `testsub`:
 - `domain.shared: [step, marks, {rounds}]`;
 - `step` is an `int` with `inherit: 1`;
@@ -48,18 +48,12 @@ The format is [the dictionary of directives and doors of the «Stand» of the co
 and the section «Domain stand»: a subset of fields, `~` is a substring. In total 4 scenarios / 46 steps.
 
 Sc. 08 (the coverage audit of P/08, the second pass of Gemini, the draft G10 `e32df6f8b`, rewritten): the removal of the last field of a subsystem (`null`) removes the
-subsystem itself too — `doc.shared` is exactly `{}` (N1.3 `order` step 5: «пустая подсистема — снять»); the pointer `domain/shared` is spoiled
+subsystem itself too — `doc.shared` is exactly `{}` (N1.3 `order` step 5: «empty subsystem — remove»); the pointer `domain/shared` is spoiled
 past the door (`doc` is not JSON) — the edit 503 `unavailable`, the row is as before (the outcomes of `domain/shared`, G-38). Not taken from the draft:
-a replay of `null` of an absent field «без новой `rev`»: step 5 gives a new document with `rev + 1` for each edit, the shared document has no rule
-«то же содержимое — без записи» (a question of the norm, if it is needed).
+a replay of `null` of an absent field «without a new `rev`»: step 5 gives a new document with `rev + 1` for each edit, the shared document has no rule
+«the same content — without a write» (a question of the norm, if it is needed).
 
 A subset of expect does not replace the check of the full HTTP form of the OpenAPI of the lesson: check the mandatory fields, types, Content-Type.
-
-## `journal/corrections-9.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The log of the acceptance of М11/11 is moved here
-as a whole, the rows as they are (the plan of lesson 8 § 3 «Журналы»: the log of the source goes into each directory that takes its scenarios;
-the paths of the old rows — `11/…`, `NN-<name> <step>` — are resolved by [id-map](../../../common/id-map.tsv)); the last row is the move.
 
 ## Kit seams
 

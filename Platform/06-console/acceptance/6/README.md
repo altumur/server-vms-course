@@ -4,12 +4,12 @@ This English text is the source; the Russian translation `ru/acceptance/6/README
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`06.6-console.norms.md`](../../spec/06.6-console.norms.md) N5. The scenarios were moved from the acceptances of
-М10/04 (01–07),
-М10/10 (01 → 08, 02 → 10, 09, 12) and
-М10/11 (03 → 11) (stage B, ADR-0083 addendum (1): without
-a change of behaviour); the numbers and the steps are the former ones, except the coinciding numbers: `08-schema` (in М10/10 — `01-schema`; the number 01
-is taken by `01-unplaced` from М10/04), `10-drain-strand` (in М10/10 — `02-drain-strand`; 02 is taken by `02-unplaceable`),
-`11-schema-processes` (in М10/11 — `03-schema-processes`; 03 is taken by `03-policy`). 17 scenarios / 195 steps (sc. 17 — versions of the settings snapshots, ADR-0094 B4; sc. 13–16 — the second pass of the coverage audit of P/06, Gemini; sc. 01, 08, 10, 12 — the first step `@start resource` by C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29; sc. 09 — the first step `@start resource`: the console and the controller read the heartbeat of the worker through the objects door of the resource of their own server, without the resource «не известно», [the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27; the steps 04/14 and 05/6 — the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7; the step 05/5 — analysis of the review of stage B 6–7, № 40; sc. 12: steps 9–10,
+M10/04 (01–07),
+M10/10 (01 → 08, 02 → 10, 09, 12) and
+M10/11 (03 → 11) (stage B, ADR-0083 addendum (1): without
+a change of behaviour); the numbers and the steps are the former ones, except the coinciding numbers: `08-schema` (in M10/10 — `01-schema`; the number 01
+is taken by `01-unplaced` from M10/04), `10-drain-strand` (in M10/10 — `02-drain-strand`; 02 is taken by `02-unplaceable`),
+`11-schema-processes` (in M10/11 — `03-schema-processes`; 03 is taken by `03-policy`). 17 scenarios / 195 steps (sc. 17 — versions of the settings snapshots, ADR-0094 B4; sc. 13–16 — the second pass of the coverage audit of P/06, Gemini; sc. 01, 08, 10, 12 — the first step `@start resource` by C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29; sc. 09 — the first step `@start resource`: the console and the controller read the heartbeat of the worker through the objects door of the resource of their own server, without the resource «unknown», [the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27; the steps 04/14 and 05/6 — the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7; the step 05/5 — analysis of the review of stage B 6–7, № 40; sc. 12: steps 9–10,
 13–14, 17–18 were added — analysis of the review of stage B 6–7, № 21).
 
 ## scenarios.tsv
@@ -17,7 +17,7 @@ is taken by `01-unplaced` from М10/04), `10-drain-strand` (in М10/10 — `02-d
 The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors):
 the doors `console`, `console2`, `resource`, `store`; the directives `@start controller`, `@start resource`, `@as`, `@put object`,
 `@spoil object`, `@until`, `@sleep` (sc. 13), `@big(N)`; the expectation is an exact code or `2xx`/`4xx` and a subset of fields. A request without a door
-prefix (sc. 01–07, the former acceptance of М10/04) goes to the console `testsub` — the door of the lesson P/06; `Idempotency-Key` — per the dictionary,
+prefix (sc. 01–07, the former acceptance of M10/04) goes to the console `testsub` — the door of the lesson P/06; `Idempotency-Key` — per the dictionary,
 a repeat of a transport attempt — the same key and body.
 
 Full answers are additionally checked by [the contract of the lesson](../../spec/06-console.api.openapi.yaml): the mandatory fields,
@@ -37,10 +37,10 @@ of the resource of its own server; C06-PULSE-LAPSE-503-03, the Architect's decis
 writers. The servers srv-b, srv-nobody are unknown.
 The creation of a drain does not declare a server known for the operations labels/decommission.
 
-«Пусто» refers to the application rows and objects, placements, assignments, slots, policy,
+«Empty» refers to the application rows and objects, placements, assignments, slots, policy,
 platform/servers, platform/doors, platform/drain, the requests and notes of decommission,
 the POST replay claims and the id memory of the store. The manifest, its mark and the necessary configuration data
-are installed by the preparation and are not removed by the word «пусто». A new run/a parallel run gets
+are installed by the preparation and are not removed by the word «empty». A new run/a parallel run gets
 its own state, without shared directories and ports.
 
 Between 01 and 02 the controller must complete at least one pass after the creation of u1.
@@ -52,7 +52,7 @@ with an empty pool the placement row may not appear at all.
 Sc. 07 — the units of a drain. There is no worker, it is forged: step 1 writes the slot row `w-1` by the role `testsubworker` (`@as`),
 step 2 puts the heartbeat `inputs/hb-w-1-no-status.json` with `status: []` (`@put object`). The controller assigns `d1` and `u1` to
 `w-1`. The drain of `srv-a` counts the units by the assignment ∪ `status[].id`: `units: 2`, `safe: false`, although `status` is empty
-(N2.2, reconciliation of python and go М10/3–5, P8).
+(N2.2, reconciliation of python and go M10/3–5, P8).
 
 Sc. 01 — an unplaced unit and 404 where; 02 — its presence in unplaceable; 03 — the policy;
 04 — one active drain; 05 — a refusal of the form of labels earlier than the check of the server, and an unknown server;
@@ -72,7 +72,7 @@ The start interface is the section «Stand» of the common acceptance README, wi
 `@start resource` are the role commands of the controller `testsub` and of the resource of the server `srv-a` (the substitutions `{data}`, `{socket}`,
 `{manifest}`, at the resource `{rport}`); the resource is ready when it listens on `{rport}` and there is the row `platform/doors/srv-a`.
 `console …` and `console2 …` are one console on `{port}`, the second is the prefix `/testsub2`. `store …` without `@as` is the store door
-`admin.sock` (`{socket}` — the door with full rights, [the common acceptance README](../../../common/acceptance/README.md) «Сокеты ролей»):
+`admin.sock` (`{socket}` — the door with full rights, [the common acceptance README](../../../common/acceptance/README.md) «Role sockets»):
 step 14 of sc. 04 and step 10 of sc. 05 read `platform/drain` and `platform/servers/srv-a` outside the subsystem prefix; `@as <role>` — the role socket until the end of the scenario.
 
 Before each scenario stop the processes of the previous one, create separate empty row/object stores and clear
@@ -81,7 +81,7 @@ there is no domain, requests come from the loopback. The background controller/r
 platform/schema, the runner does not write it (reading of the commits «cammeta-acceptance» 2026-10-20). For each POST that creates a unit the runner issues a fresh Idempotency-Key, kept only for
 the replays of the same step.
 
-Reconciliation of python and go М10/6–11 (sc. 08–12 and the added steps):
+Reconciliation of python and go M10/6–11 (sc. 08–12 and the added steps):
 - Sc. 08 step 6 — a schema version without an upper bound of the form: greater than its own SCHEMA — 409, not 400.
 - Sc. 10 steps 8–10 — the drain journal through `/events` of the console (the resource — from step 1, C06-PULSE-LAPSE-503-03): `drain.started`, `drain.ended`,
   there is no other kind (`drain.cleared`) (T22).
@@ -92,7 +92,7 @@ Reconciliation of python and go М10/6–11 (sc. 08–12 and the added steps):
   `-pending-2p63` — `pending_unsaid`; `-schema-fraction` (`1.0`) — `schema: null`; `-build-number` (`5`) — `build: null`, not known, P1; V7 item 3 row 14).
   Each `@put object` changes the version of the heartbeat — the console sees it alive (N1.2: a stale heartbeat would also give
   `pending_unsaid`, so steps 4 and 21 are the reference of freshness; freshness — [the observation contract](../../../common/contracts/observation.md))
-  (reconciliation of python and go М10/6–11, T1, T3, T4, T27). Before each input not by the form, except the first one, — again
+  (reconciliation of python and go M10/6–11, T1, T3, T4, T27). Before each input not by the form, except the first one, — again
   `-pending-0` and `@until` until `safe: true` (steps 8–9, 12–13, 16–17): otherwise the expectation `pending_unsaid` of the next input
   would coincide with the earlier state, and a console that sees a new heartbeat with a delay would pass the step by the old heartbeat
   (analysis of the review of stage B 6–7, № 21).
@@ -123,14 +123,14 @@ the rows of the console (`testsub/policy`, `platform/drain`, `platform/schema`, 
   `PUT /schema?version=1` — 409 «mend the row first» (N3 «raise_schema» step 2), the row is the earlier one. A refusal of the start of the console with
   such a row — by reading (as before).
 - Sc. 16 — `platform/servers/srv-a` with a label not by the alphabet (`bad label`): `/servers` — `labels: null`, `labels_source: null`;
-  the series `testsub_servers_labels_unread 1` (the acceptance README of chapter 6.5 «Ряды»; the outcome of the family `server-labels`).
+  the series `testsub_servers_labels_unread 1` (the acceptance README of chapter 6.5 «Rows»; the outcome of the family `server-labels`).
 
 ## Inputs `inputs/`
 
 The heartbeats of the worker `w-1` for `@put object` (the object write command of the «Stand», bypassing the writer): `hb-w-1-no-status.json` (sc. 07,
-09; from the acceptances of М10/04 and М10/10 — the bytes coincide), `hb-w-1-pending-0.json`, `hb-w-1-pending-missing.json`,
+09; from the acceptances of M10/04 and M10/10 — the bytes coincide), `hb-w-1-pending-0.json`, `hb-w-1-pending-missing.json`,
 `hb-w-1-pending-fraction.json`, `hb-w-1-pending-minus-zero.json`, `hb-w-1-pending-2p63.json`, `hb-w-1-schema-fraction.json`,
-`hb-w-1-build-number.json` (sc. 12; from the acceptance of М10/10, the registry row e31e5c28).
+`hb-w-1-build-number.json` (sc. 12; from the acceptance of M10/10, the registry row e31e5c28).
 
 ## Separate checks of full answers
 
@@ -162,7 +162,7 @@ of the author are not a performed stand test.
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
-One sleep: sc. 13 step 7, 46 s — time before an action: the version of the slot `srv-b` does not change for longer than LOST_AFTER 45 s ([the observation contract](../../../common/contracts/observation.md) «Свежесть»), only then the server is not «слышен» and `may_confirm_gone` can be `true` (N3 «decommission_server»). Waiting for an event is `@until`: sc. 02 step 2 (the reason in `/unplaceable` after a pass), 07 steps 4–5, 09 step 6
+One sleep: sc. 13 step 7, 46 s — time before an action: the version of the slot `srv-b` does not change for longer than LOST_AFTER 45 s ([the observation contract](../../../common/contracts/observation.md) «Freshness»), only then the server is not «heard» and `may_confirm_gone` can be `true` (N3 «decommission_server»). Waiting for an event is `@until`: sc. 02 step 2 (the reason in `/unplaceable` after a pass), 07 steps 4–5, 09 step 6
 (the assignment by a pass of the controller), 10 step 8 (the journal in the index of the resource), 11 step 3 (the heartbeat of the resource in `processes`), 12
 steps 4, 5 and the odd 7–25 (the console sees the new heartbeat; the even 6–24 — `@put object`; analysis of the review of stage B 6–7, № 21, № 22), 13 steps 2, 15, 16 (a live resource, the decommission journal in the index of the resource), 16 step 3 (`/servers` by the labels row).
 
@@ -171,13 +171,6 @@ steps 4, 5 and the odd 7–25 (the console sees the new heartbeat; the even 6–
 Sc. 01–07 — one instance, the state is not reset between them. Before sc. 08–16 the runner stops the processes,
 resets the store (rows and objects) and the variables. After the last step wait for the stop of all the created processes,
 then delete the state.
-
-## `journal/corrections-6.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
-of the acceptances of М10/04, М10/10 and М10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
-resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (analysis of the review of stage B 6–7, № 18). The implementations and their runners check their own
-result; this directory does not run them itself.
 
 ## Sc. 17: versions of the settings snapshots (ADR-0094 B4)
 
@@ -189,3 +182,9 @@ A fresh stand, the resource `srv-a` by the first step; there are no rows `testsu
 - Steps 31–36 — the schema: `PUT` of the same version is a write, `revision` grows.
 
 The intended `revision` and the continuation of an intercepted claim — by reading: one console without controlled breaks does not create these branches.
+
+## Accepted ADR-0127 review: symmetric drain sources
+
+Use the ordinary GET /drain door with one active server and one schema-valid worker. Stop the placement writer after establishing the fixture so it cannot silently repopulate the controlled assignment. Use the existing authorized store writer with CAS for the assignment and the ordinary resource object path for a fresh valid heartbeat, pending_writes0; all other required sources are confirmed. In separate prepared cases, assignment[] with status[id=u1] gives units1/safe=false; assignment[u1] with status[] gives units1/safe=false; assignment[u1] with status[id=u1] gives units1, not2. No other worker or unplaced unit may distort these counts. The completely empty positive neighbor has no live unit rows, an empty assignment and status, confirmed sources and pending0: units0/safe=true. Unknown assignment/heartbeat uses the existing unavailable/lapse/unsaid rule and must not turn into that empty neighbor.
+
+Record the actual source versions, heartbeat bytes and HTTP body, including deduplication. This is a required real-HTTP/source probe, not a new CALL port, native command or proof supplied by this document. safe remains an observation and does not cancel the operator stop window.

@@ -1,0 +1,30 @@
+{
+  "base": "e28a8905e1af71829111d56b76e360931b6b1b02",
+  "decision": "ADR-0129 addendum (7)",
+  "changes": [
+    {
+      "path": "Platform/07-console-module/spec/07-console-module.norms.md",
+      "before_sha256": "9f83446e5152d0c6fe13722fd4fc1eb3b75ffa55eea52b6ae23b6ccfc8e447a3",
+      "after_sha256": "466e688c70d8b9031691574c58118f5266bf67c92e31c9c1ba471a3c09f85938"
+    },
+    {
+      "path": "Platform/07-console-module/ru/spec/07-console-module.norms.md",
+      "before_sha256": "166905c402d03bac0a48ceb74800e05054a1022d06112b6147c40ee4f71d8206",
+      "after_sha256": "dd2e2906a71a158a4e30b804927960a6b0216bda5b8f21490b40407d4c48223e"
+    },
+    {
+      "path": "CONSOLE-MODULE.md",
+      "before_sha256": "4700712c7549a28646b6a017fac4fb370d0be30bd9fbf9653c83bc2baa2abc53",
+      "after_sha256": "85832f7a64a9cbff171eee38510f504b6369e03d9807de0551dd2d249ab73d97"
+    },
+    {
+      "path": "ru/CONSOLE-MODULE.md",
+      "before_sha256": "66503b0dde5fb0fc4fb23e410376236d4d8cb74ddf2aa53e686c1f09c846df8e",
+      "after_sha256": "5cd9a725ff49de684529b2af43966be985d9790310626992f05506b57ec5b139"
+    }
+  ],
+  "preserved": [
+    "P06.8 N2 and P07 N1.4 writes byte-identical to parent.",
+    "No public api path/type widening; no batch form; C6 still proposal-only."
+  ]
+}

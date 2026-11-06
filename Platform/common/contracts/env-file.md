@@ -10,7 +10,7 @@ step 4); the role processes get their environment from the runner (lifecycle of 
 parsing; ACC-VECTORS-CONNECT-04). Moved from P/02.4 N1.2 together with the edges B19 without a change of behaviour; files and reading order, variables, `CLUSTERS` and
 the unit constants are the sections below (layout audit, the Architect's decision of 2026-10-25, A-07, A-09, A-16, A-17, B-26).
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Grammar
 

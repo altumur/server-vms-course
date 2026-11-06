@@ -7,8 +7,8 @@ This file is for the agent (or the human) who writes code by the lesson. The exp
 ## Task
 
 Implement the process `domainconsole` on the holder's box in the language `<LANG>`; pass the acceptance of N5 and close the readiness
-checklist. There are 17 norms in all: P/10-01…17; the map to former ids is [`id-map.tsv`](../../common/id-map.tsv). The lesson is assembled from
-the lessons М11/1, 3, 4, 6, 8, 9, 11, 12 (the domain console side) (stage B, ADR-0083 addendum (1), (14)). The process `domain` is
+checklist. There are 17 norms in all: P/10-01…17; the map to former ids is `id-map.tsv` (historical record). The lesson is assembled from
+the lessons M11/1, 3, 4, 6, 8, 9, 11, 12 (the domain console side) (stage B, ADR-0083 addendum (1), (14)). The process `domain` is
 lesson [P/08](../../08-domain/spec/08-domain.README.md), the agent is lesson [P/09](../../09-agent/spec/09-agent.README.md), the forwarding
 of the cluster console is chapter P/06.7.
 
@@ -38,8 +38,8 @@ decides» of the norms.
 
 **On a divergence.** Name the norm id, the input, the initial state, the expected and the obtained outcome. An implementation defect is
 an output that does not match the expectation on an acceptance input. An acceptance defect is an expectation that diverges from the norm. A norm gap is an input
-for which the norm gives no unambiguous outcome: record the place and a counterexample and hand it to «Спецификации» with a proposal.
-The instructions introduce no new refusal. Record a change of acceptance in `journal/corrections.tsv` of the lesson.
+for which the norm gives no unambiguous outcome: record the place and a counterexample and hand it to «Specification» with a proposal.
+The instructions introduce no new refusal. Record a change of acceptance in `corrections.tsv` (historical correction record) of the lesson.
 
 ## What to create
 
@@ -62,6 +62,8 @@ This is a suggested order, not a mandatory structure of the code.
 5. The holder's page and `door.pass` on the domain.
 6. The stand: scenarios 02, 05–19 of the [acceptance of the lesson](../acceptance/README.md) and the domain console side in the scenarios of the chapters of lesson P/08
    (the table of neighbours on the stand of N5).
+
+The machine-readable plan of this order is [forms/stages.tsv](../forms/stages.tsv), with the CALL ports in [forms/README.md](../forms/README.md); its kit [seams](../acceptance/seams.tsv) supplement the scenarios of step 6 and the reading, they do not replace them.
 
 ## Pitfalls of the language and the library
 

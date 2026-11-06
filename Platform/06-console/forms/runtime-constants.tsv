@@ -5,12 +5,12 @@ name	value	unit	norm	meaning
 CHANGES_TICK	1	s	P/06.1-R030	s; the listing tick
 CHANGES_HISTORY	256	count	P/06.1-R030	messages in the history of the instance; the oldest are evicted
 CHANGES_WAIT	25	s	P/06.1-R030	s; the ceiling of the parameter wait
-CHANGES_SUBSCRIBERS_MAX	256	count	P/06.1-R030	door requests at once: the size of the feed lane (chapter 6.5 Н2)
+CHANGES_SUBSCRIBERS_MAX	256	count	P/06.1-R030	door requests at once: the size of the feed lane (chapter 6.5 N2)
 FOLDER_NAME_MAX	255	bytes	P/06.8-R006	bytes of UTF-8
-FOLDERS_DEPTH_MAX	8	count	P/06.8-R006	FOLDERS_DEPTH_MAX + 1 ≤ BATCH_GUARDS (P/01.1 Н1, 64): the chain guards and the unit guard fit into the door's batch
-FOLDERS_PER_UNIT_MAX	8	count	P/06.8-R006	FOLDERS_PER_UNIT_MAX × (FOLDERS_DEPTH_MAX − 1) + 8 ≤ BATCH_GUARDS: the folderIds step at full length fits into the door's batch
-FOLDERS_MEMBERS_MAX	1000	count	P/06.8-R006	members in a folder row
-FOLDER_ROW_MAX	65536	bytes	P/06.8-R006	bytes: the weight of a folder row (keys + values, as the store ceiling of P/06.1 Н1.4)
+FOLDERS_DEPTH_MAX	8	count	P/06.8-R006	FOLDERS_DEPTH_MAX + 1 ≤ BATCH_GUARDS (P/01.1 N1, 64): the chain guards and the unit guard fit into the door's batch
+FOLDERS_PER_UNIT_MAX	8	count	P/06.8-R006	FOLDERS_PER_UNIT_MAX × (FOLDERS_DEPTH_MAX − 1) + 8 ≤ BATCH_GUARDS: the folderIds step at full length fits into the door's batch; this row is the numeric source, data/memberof.schema.json#/$defs/writer/properties/folders/maxItems is its second carrier
+FOLDERS_MEMBERS_MAX	1000	count	P/06.8-R006	members in a folder row; this row is the numeric source, data/folders.schema.json#/$defs/writer/properties/members/maxItems is its second carrier
+FOLDER_ROW_MAX	65536	bytes	P/06.8-R006	bytes: the weight of a folder row (keys + values, as the store ceiling of P/06.1 N1.4)
 FOLDERS_REAP_EVERY	60	s	P/06.8-R006	s, the period of the folder reaper
 FOLDERS_TRIES	5	count	P/06.8-R006	repeats of the procedure on a conflict of its own row; exhausted — 503 store unavailable
 OPS_STEPS_MAX	1000	count	P/06.9-R008	steps in an operation; the ceiling and the default
@@ -27,3 +27,5 @@ CLEAR_EVERY	2	s	P/06.4-R005	period/age of the request procedures; units seconds
 SWEEP_EVERY	30	s	P/06.4-R005	period/age of the request procedures; units seconds
 REAP_AFTER	60	s	P/06.4-R005	period/age of the request procedures; units seconds
 VERIFY_UNITS_MAX	256	count	P/06.7-R016	maximum units per second-person verification
+AT_ROUTE_WAIT	15	s	P/06.7-R008	worker route deadline at the target console for N1.6, replacing the common PASS_WAIT only on this route; a normative budget, not a measurement
+FORWARD_WAIT	20	s	P/06.7-R008	forwarding deadline only for N1.6 member reads; other forwarding keeps the common forwarding contract

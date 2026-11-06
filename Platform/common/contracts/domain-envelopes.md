@@ -23,7 +23,7 @@ report) — P/09.1 N1.2, «lesson 4» (the relay) — P/09.2, «lesson 5» (the 
 — P/08.5 N1.3 and P/02.1 N1.2b (analysis of the review of stage B 8–10, № 22; Kimi SB810-07); «lesson 2 N1.5» in the section `m1` is the section
 «Envelope `x25519:v1`» of this contract. The JSON Pointer path follows [the sealing contract](sealing.md) «AAD path».
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -137,10 +137,3 @@ cases. An implementation passes them with its own function, without a stand. `ke
 The canonical JSON (RFC 8785, ADR-0072) on which the contract rests is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
 
-## Correspondence to former lessons
-
-From M11/2 (analysis of the review of stage A 8–10, № 12): N1.5 whole (here «Envelope `x25519:v1`»; in M11/2 — a pointer) and the line of N3
-«`seal` / `open`» (the order of checks). From M11/3: the block `envelope_m1` and the paragraph of refusals of N1.5 (here «Envelope `m1`»), the line
-`sealed?` of the answer (here «Content of `sealed`»; in `carry` of M11/3 — a pointer). From M11/5 N1.4 and M11/9 N1.3, N1.6 — the forms of the fields
-`books`, `grants`, `break_glass` (in the sources — a pointer, the meaning of the field stays there). Parts of the norms M11/2-08, M11/2-09 and
-M11/3-09 — by `note` of [id-map](../id-map.tsv); vectors — the rows of id-map of the contract and of the package.

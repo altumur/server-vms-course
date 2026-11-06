@@ -17,7 +17,7 @@ without a change of behaviour. What a door answers to a refusal (401 at `/api/ba
 who the member is and whose key — are the norms of the doors (P/08.8 N1.7, N2; P/06.7 N1.13). The agent signature `X-Agent-Signature` is another contract
 ([the agent signature contract](agent-signature.md)). References in the moved text are of lesson M11/10 (N1.7, N1.8 — the same numbers of chapter P/08.8; N1.9 — P/06.7 N1.13).
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -72,8 +72,3 @@ The package [`ask-sig`](../vectors/ask-sig/README.md) (analysis of the review of
 of the acceptance of M11/10 (sc. 07) without a change of bytes; one of them is an input out of form (`@exit 2`; analysis of the review of stage B 8–10, № 22); row 13 — the field `member` at the top level, `@exit 2` (question 2 of the same analysis). The scenario and the inputs were removed
 by the move of lesson 8 — the table is the only source of these cases. Rows 14–26 — `move`, row 27 — `backup` with an extra `body_sha256`.
 
-## Correspondence to former lessons
-
-From M11/10 (analysis of the review of stage A 8–10, № 13 / decision 2): N3 «ask-sig» whole (here «Signature and check»; in M11/10 —
-a pointer) and the phrase of N4 on the words of `ask-sig` (here «Refusal words»). The norm M11/10-10 (`ask-sig` and `GET /api/backup`; the door —
-6.7) — by `note` of [id-map](../id-map.tsv).

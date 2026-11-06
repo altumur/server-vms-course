@@ -1,0 +1,191 @@
+{
+  "base": "e07b32a5030c696d89c72444e760a86f6246c487",
+  "replacements": [
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 3,
+      "sourceLineSha256": "3a016237e2b9f5ae51238d061ab561031140f042e5840b39cc83480eeb95a260",
+      "replacement": "// The contract is the course's CONSOLE-MODULE.md; this file is version 1 of it."
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 388,
+      "sourceLineSha256": "fa676e36d14575edf53e0f98ee5d214ff95f398040666e103e5f26b88035b1eb",
+      "replacement": "    // card.closed {ref}: the card a person looked at is gone — another selection, no selection, the page leaving (P/07 N1.5"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 389,
+      "sourceLineSha256": "90e88695574e69ce36efe362fe3e94c15665e9ec5af88231886246b2255b0ad7",
+      "replacement": "    // events; ADR-0091 addendum (22), (24)). A shell card says it too, its ref as the page made it."
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 393,
+      "sourceLineSha256": "ebaab021c1e432be8aa0c9b309d9f69283b6b4abe95bb67a2f781f2b5f301036",
+      "replacement": "    // pc.ready: settled once the module is mounted and /manifest was read; a 401 waits for the login (P/07 N1.5 ready;"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 394,
+      "sourceLineSha256": "a0d6e18cc75de9aa49c256885d052ac75d22faf6072bda38d43ac67b85efd4fc",
+      "replacement": "    // ADR-0091 addendum (24) item 1, addendum (27) item 1)"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 398,
+      "sourceLineSha256": "d70ac489ccf2ce20af2be19128ac20e53613f5ccca5634f32b88a2d2b2852bcb",
+      "replacement": "    // -- requests: one Idempotency-Key per action (P/07 N1.5 api) ------------------------------------------------"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 430,
+      "sourceLineSha256": "f3bc84a4fcce4029e0f5ed937aaec421fcf9476a3f1f9ea0c4152b184b8f374a",
+      "replacement": "          // 412: the unit's revision moved under the page's ifMatch — its body as is, never repeated (ADR-0091 addendum (28), (29))"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 451,
+      "sourceLineSha256": "2307c3d67f9c485adf3878cb2bdd71211836171a678402b06f295c0ef37321f0",
+      "replacement": "    // P/06.6 (P/06.1 N2 «Versions»). Any other door would write without CAS; any other method, path, field of opts or value"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 452,
+      "sourceLineSha256": "ebdbe8857aab4d0524717b05548140e7f31d679ba7ecb3a613047ef4c98e2534",
+      "replacement": "    // is refused before a request (P/07 N1.5 api; ADR-0091 addendum (28), (29); ADR-0094 B4). /manifest does not name the tables:"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 536,
+      "sourceLineSha256": "140d3448040f2c41b30c42a85ffaacc892224e0e6ccd6c3106fb03f0e9175d98",
+      "replacement": "    // -- rights: a hint by the session's grants (P/07 N1.5 may; the rule — contract may.md) -------------------------"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 610,
+      "sourceLineSha256": "494e37971d833de917f0da6641ca32a34e333aa092b104bbd16e87867f17a3a0",
+      "replacement": "    // on the tab it had (P/07 N1.5 adds; ADR-0091 addendum (22), (24), (25))"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 634,
+      "sourceLineSha256": "23d7517d22a3b4ce8b0070ad2a5e8ba239209b0327cafcf0672b7e6a6c1731c9",
+      "replacement": "    // The console's look is the product console's, one for every page (the course's CONSOLE-MODULE.md,"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 1506,
+      "sourceLineSha256": "36f36daa423a9db03384f4bf52f1d3630d1f843351a168a2c289027d649336a9",
+      "replacement": "    // or no `field` — false, and the caller writes it in the form's common line (P/07 N1.5 `forms`)."
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 1512,
+      "sourceLineSha256": "348697d3c67b780bc385f5d1803033b8bcca87ce2f23dd150e57d071de1418a4",
+      "replacement": "    // only «Read again» redraws it (P/07 N1.5 forms; ADR-0094 B4)."
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 2019,
+      "sourceLineSha256": "0b3cb991b469aeb5030d5894dea2e09835c9512d8c97e84316abe3010325dc79",
+      "replacement": "    // A form by a shared document's schema (P/07 N1.6 schema): an object — its properties, an array — its items with"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 2070,
+      "sourceLineSha256": "4d6551b7b46e89daf4850bceb1cdb2a17c0b4289f57882ec2c4672b2538b19a6",
+      "replacement": "        // a json document with its schema: the form by the schema (P/07 N1.6 schema)"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 2345,
+      "sourceLineSha256": "f64e241ab6a93dd0532ce51e58305d8df24959f1c96147d7186a59e293501192",
+      "replacement": "    // The way back after a login (P/07 N1.5 return): the console sends a page of a subsystem here with ?return=/<sub>/."
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 2355,
+      "sourceLineSha256": "742cfc0e13ac339e5aaf287d0873fc8db3f65fb47cde6daeb9c6f962c4f3778c",
+      "replacement": "      // /session that did not answer leaves the session unknown — closed for may (P/07 N1.5), not open"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 2359,
+      "sourceLineSha256": "9da6792e14ce43c452164a09289ceb2626722c3ec26cf5def4e37ca86a43a6dd",
+      "replacement": "      // P/07 N1.5 events: a known user at every read of /session; a page comparing it knows whose its secrets are"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 2443,
+      "sourceLineSha256": "f6cf9a7ea25d09c7ecd6a2ca470bdf89d2361b1c16cf2ca0dd140c8d764943c2",
+      "replacement": "    // The feed (P/07 N1.4 changes; P/06.1 N2 «Change feed»; ADR-0094 B2): the number is taken before the rows are read,"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 2493,
+      "sourceLineSha256": "249b039ade0c17df36efdd83e2c61c947fc3dd490d0fdbf6a61572ce96646004",
+      "replacement": "  // features: what this version 1 gives beyond its first calls — a page asks before it uses them (P/07 N1.5 features;"
+    },
+    {
+      "source": "Source/w2cplatform/console.js",
+      "line": 2494,
+      "sourceLineSha256": "e538f13df5d23f18a93c78581ecb78ff89ea269c500b16e695058bfa4beddd7e",
+      "replacement": "  // ADR-0091 addendum (25) item 1). No string — no such capability. \"api.if-match\" — api(…, {ifMatch}) (ADR-0091 addendum (28), (29))."
+    },
+    {
+      "source": "Source/w2cplatform/console.css",
+      "line": 1,
+      "sourceLineSha256": "ba6b91568a052173de89f87e13df0348c67c3c71ddc10a23652a07c07ecb04de",
+      "replacement": "/* The console's look — the product console's, one for every page built on the module (CONSOLE-MODULE.md, §9)."
+    },
+    {
+      "source": "Source/w2cplatform/console.css",
+      "line": 5,
+      "sourceLineSha256": "c334e1e458d9297705a577834e9386ae6632bf1df9f38b34f4d517a99cb4269a",
+      "replacement": "/* Domain keys: the family index above, values as JSON, long values collapsed. */"
+    },
+    {
+      "source": "Source/w2cplatform/console.css",
+      "line": 77,
+      "sourceLineSha256": "e129f08173782d15ba27dd31cf26b0f230039a0d02c8f762d2d39f1ed4bfd38c",
+      "replacement": "/* The section rail on the left: icon above caption, journal at the bottom. */"
+    },
+    {
+      "source": "Source/w2cplatform/console.css",
+      "line": 87,
+      "sourceLineSha256": "fee92aac6751c07d1fe711b5987dcb480669a9183a98865a6fe26b9ec91f1e80",
+      "replacement": "/* Panel header: list layout next to the filter field. */"
+    },
+    {
+      "source": "Source/w2cplatform/console.css",
+      "line": 106,
+      "sourceLineSha256": "1dd3ac68bd102eb876c46ffb525f2df3631640910f0ce39244738588d4ee11ad",
+      "replacement": "/* The star and the ellipsis in a tree row. */"
+    },
+    {
+      "source": "Source/w2cplatform/console.css",
+      "line": 113,
+      "sourceLineSha256": "06bd617343db99fc597cd18b6dba5ebb0807b0cc3e075a13f3e0af675f8a6932",
+      "replacement": "/* Favourites: a separate panel below the tree. */"
+    },
+    {
+      "source": "Source/w2cplatform/console.css",
+      "line": 128,
+      "sourceLineSha256": "9363bae132dffd963ac6cc70b1160559d1e8fb35a013152c957e385088c6d466",
+      "replacement": "/* The card header path: its last part is the object itself. */"
+    },
+    {
+      "source": "Source/w2cplatform/console.html",
+      "line": 4,
+      "sourceLineSha256": "d356161cb95bc482d3d65f1a69fdbcc020e03e36401a3a5d6595ae67da65cb79",
+      "replacement": "     (the course's CONSOLE-MODULE.md, §10): everything here comes from /manifest and the platform's doors."
+    },
+    {
+      "source": "Source/w2cplatform/console.html",
+      "line": 13,
+      "sourceLineSha256": "5108396d2f9ef3ffa7ae058925ee6a6a533bf4b873e580a7409e4c1e0ec51690",
+      "replacement": "  // the module's version is the page's before anything of it is used (P/07 N1.5 version, P/06.5 N1.1)"
+    }
+  ]
+}

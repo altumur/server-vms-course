@@ -285,7 +285,7 @@
    "pattern": "^(?:[a-z0-9-]{1,64})$"
   },
   "common.domain_member_entry": {
-   "description": "the member entry Entry (P/08.3 N1.1); by — only at admitted, Entry not larger than ENTRY_MAX 1240 bytes of JCS (P/08.10 N1.5) — checks of the lesson at the writer, not of the form",
+   "description": "the member entry Entry (P/08.3 N1.1); by — only at admitted, Entry not larger than ENTRY_MAX bytes of JCS (P/08.10 N1.5) — checks of the lesson at the writer, not of the form",
    "type": "object",
    "properties": {
     "how": {

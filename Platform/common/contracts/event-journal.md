@@ -14,7 +14,7 @@ the root of events or of objects. Moved from M10/8 N1.1 (the paragraph «File na
 `bucket`, `class`, `journal`, `writer`, the paragraph on the id) without a change of behaviour: the suppression of repeats (`suppress`) — chapter
 P/03.6 N1.2; `older_epochs` and the marks of the operator (`marks`) — chapter P/06.4 N1.2. The vectors — the section «Vectors» below.
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## The line and the bucket
 
@@ -215,12 +215,3 @@ N1.2, the journal `audit` — the process of the role); the refusals of the writ
 
 The package [`journal`](../vectors/journal/README.md): `bucket.tsv` (reading a bucket, a torn tail, unreadable lines), `names.tsv` (file names), `years.tsv` (the choice of a bucket), `append.tsv` (appending a line, the section «Writing a line» step 5; EJ-L03), `modes.tsv` (the modes of the events root, of the trees and of the buckets). (ADR-0083 addendum (32) item 2)
 
-## Correspondence to former lessons
-
-From M10/8 (stage B, review of stage A 3–5, № 9): N1.2 — the blocks `line`, `bucket`, `class`, `journal`, `writer`, the paragraph
-on the event id and the writer instance (except the sentences on the index line — P/05 N1.2); N1.1 — the paragraph «File names in shared
-trees». The parts of norms M10/8-01 (the encoding of names; P/05-01), M10/8-03 (the fields of the line; P/05-03) and M10/8-04 (the bucket, `fsync`,
-a torn line; P/05-04) — by `note` of [id-map](../id-map.tsv). Suppression (`suppress` and its paragraph) — chapter P/03.6 N1.2;
-`older_epochs`, `marks` — P/06.4 N1.2 (review of stage B 6–7, № 24). From P/05 N3 (review of stage B 3–5, V1): «write an event» — steps 1–5 and «Races»
-(here «Writing a line»; the references «N1.1», «the event journal contract `writer`» are written as «P/05 N1.1», «`writer` above»); the parts
-P/05-03, P/05-04 and P/03.6-01 (the worker — a writer of a line) by `note` of [id-map](../id-map.tsv).

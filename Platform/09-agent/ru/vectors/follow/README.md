@@ -46,7 +46,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 ## Журнал источника
 
 Строки `corrections.tsv` приёмки М11/10 о сц. 06 (пути и номера — прежние, их разрешает
-[`id-map.tsv`](../../../../common/id-map.tsv)):
+`id-map.tsv` (historical record)):
 
 | date | sample | fix |
 |---|---|---|

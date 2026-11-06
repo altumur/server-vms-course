@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Acceptance P/08.10: domain stand hold, m1, m2 — one domain process (domain/signer-turn, standby, SIGTERM release) and SERVERS_MAX ceiling. Moved from М11/12 (sc. 04, 05; stage B), scenario numbers/steps unchanged. Format: README.
+# Acceptance P/08.10: domain stand hold, m1, m2 — one domain process (domain/signer-turn, standby, SIGTERM release) and SERVERS_MAX ceiling. Moved from M11/12 (sc. 04, 05; stage B), scenario numbers/steps unchanged. Format: README.
 04-one-domain-process	1	@domain m1	ok
 04-one-domain-process	2	@start domain second	ok
 04-one-domain-process	3	@until 30 signer2 POST /api/login {"user": "root", "password": "w2c test root password"}	503 {"error": "standby"}

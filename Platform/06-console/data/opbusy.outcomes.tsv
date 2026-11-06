@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row <sub>/opbusy/<корень> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row <sub>/opbusy/<root> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	console	the whole row is unreadable: the root is taken as busy, the intake — 409 `root busy` with an empty `operation`; the reaper does not remove the row: there is no ground, the cause goes to the log	0	row	P/06.9 Н3 «accept», «reaper»
+	console	the whole row is unreadable: the root is taken as busy, the intake — 409 `root busy` with an empty `operation`; the reaper does not remove the row: there is no ground, the cause goes to the log	0	row	P/06.9 N3 «accept», «reaper»

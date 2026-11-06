@@ -15,7 +15,7 @@ Moved from P/06.4 N1.5 `holds` and `about` without a change of behaviour; added 
 declaration and unreadable rows — in them the rule «an unknown read is not equal to absence» applies (P/05 N1.3 `retention`
 `rule`): what is not read reliably is held.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 
@@ -88,7 +88,3 @@ addressee (ADR-0083 addendum (37) item 5). Reading the elements of a row by thei
 [`values-by-type`](../vectors/values-by-type/README.md). The table listing, the trees of the addressee and the hold «about» are checked
 by reading; the removal by term too: the stand does not wait out the term of buckets (P/06.4-08, P/05-06).
 
-## Correspondence to former lessons
-
-From P/06.4 N1.5 (`holds`, `about`): the declaration, `released`, the window, `longest`, the hold «about» (the norm P/06.4-08 — by `note` of
-[id-map](../id-map.tsv)). P/06.4 N1.5 and P/05 N3 `retain` refer here.

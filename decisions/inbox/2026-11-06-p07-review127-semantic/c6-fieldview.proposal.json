@@ -1,0 +1,12 @@
+{
+  "active": false,
+  "requires": "Architect exact related-form approval",
+  "path": "Platform/06-console/spec/06-console.api.openapi.yaml",
+  "pointer": "/components/schemas/FieldView/properties/hidden",
+  "proposed": {
+    "type": "boolean"
+  },
+  "required": false,
+  "other_properties_required_and_closed_shape": "unchanged",
+  "related_criteria": "Omit hidden fields from forms, including an explicit display.form; no published module byte edit."
+}

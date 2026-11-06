@@ -1,0 +1,126 @@
+{
+  "phase": "SOURCE follow-up only; no runtime/algorithm/SUT GREEN",
+  "parent": "caa70dbcb774487b428c10a37107d4c507874b1c",
+  "canonical_composition": "023399dea82d4ad904a9436deccea7c61b50a616",
+  "canonical_module_author": "32ff7ec969216b1ced7dcd48071ee5eac7123d91",
+  "scope_approval": "coord103 accepted acceptance-scope6cd06da81e827c44ae0299c9134940719911750d4717044647a4f3ccd03998a0",
+  "files": [
+    {
+      "path": "Platform/06-console/acceptance/5/scenarios.tsv",
+      "before_sha256": "dc10ad07c04f3566577752fdb74f1766c5784e5d85c7da9fa5b0b00c5fcc5a74",
+      "after_sha256": "c8dc6bb5102de80ec5dbabb85bbbbc8a5ff6a5c8c507c8fa58b145b41ab9a873",
+      "change": "only existing expect cells: canonical P07 @file targets; all other cells/physical lines byte exact"
+    },
+    {
+      "path": "Platform/10-domain-console/acceptance/scenarios.tsv",
+      "before_sha256": "5548c77051cc72f2c70e78f769f8dba8e02799dadc5481ecc3ac1997ed358eea",
+      "after_sha256": "7aea6a05b375021609c114a44e6de75f0d435884058822f9d7fd58f511e11995",
+      "change": "only existing expect cells: canonical P07 @file targets; all other cells/physical lines byte exact"
+    },
+    {
+      "path": "Platform/06-console/acceptance/5/README.md",
+      "before_sha256": "630100efe7c4948e2e3f3bb14a5188aa31e085ff078ffa9b742f707fd9714c7a",
+      "after_sha256": "2607228b18819f02fdf73ce0f0bc81913a0d0df2ff9c443c01dc45cbfe307fd7",
+      "change": "single acceptance explanation after existing sc01/sc05 paragraph, mirror paired; no fixture/output normalization"
+    },
+    {
+      "path": "Platform/06-console/ru/acceptance/5/README.md",
+      "before_sha256": "86675afe23847993e9f85e71544de1c8df3cbfabed9aabde3882fb7c7fc6d626",
+      "after_sha256": "09ee705f9c69929b8360088e980a9a035ad9a2ce613da9d741082b356d0fc75e",
+      "change": "single acceptance explanation after existing sc01/sc05 paragraph, mirror paired; no fixture/output normalization"
+    },
+    {
+      "path": "Platform/10-domain-console/acceptance/README.md",
+      "before_sha256": "d3f60f09ec8e57cf8758a5b6fa287f9d12e0c7c8f0979903335c2b503f37f8eb",
+      "after_sha256": "28b95466fb93b14c9d2b4844ceea3e74a9f575b69a5acfa93f0c5828d5e6ff60",
+      "change": "single acceptance explanation after existing sc01/sc05 paragraph, mirror paired; no fixture/output normalization"
+    },
+    {
+      "path": "Platform/10-domain-console/ru/acceptance/README.md",
+      "before_sha256": "5ad096cdf815cac8c0198f8f0bb2e45310d6bbee92adecb3a94b961373fcbc76",
+      "after_sha256": "67ee736aabb93abc3074516fb1badb02df6f9596a463f373f9110ef741f78fd4",
+      "change": "single acceptance explanation after existing sc01/sc05 paragraph, mirror paired; no fixture/output normalization"
+    },
+    {
+      "path": "decisions/adr-norms.tsv",
+      "before_sha256": "ed52cb9415de587e8f5b89ccb413077f2b4b0ab2fcbd28887ea0bdec7a5971de",
+      "after_sha256": "cdc8db48ad1ffce8a4bd1698ba2fc902de69a30061f2ff898b3f49d2a5681173",
+      "change": "append narrow assigned acceptance binding decision; previous ledger exact"
+    }
+  ],
+  "rows": [
+    {
+      "path": "Platform/06-console/acceptance/5/scenarios.tsv",
+      "physical_line": 9,
+      "case": "01-page-and-module",
+      "step": "7",
+      "column_1based": 4,
+      "column": "expect",
+      "before": "200 @file Source/w2cplatform/console.html",
+      "after": "200 @file Platform/07-console-module/module/console.html",
+      "raw_before_row_sha256": "4636d93f5e8bfe93b974b32beef1c52260435dc96fe71a6289dfa921f7b858de",
+      "raw_after_row_sha256": "bfad197a85bad2a306cd6dd437fb1c2f0042db46bd7b87cfef04c80856653954",
+      "actual_canonical_path": "Platform/07-console-module/module/console.html",
+      "canonical_sha256": "c3e33f59424b516e1778dc514712050692a1a9a07327267f6e37f6af4334fb76",
+      "expected_column_marked": false
+    },
+    {
+      "path": "Platform/06-console/acceptance/5/scenarios.tsv",
+      "physical_line": 10,
+      "case": "01-page-and-module",
+      "step": "8",
+      "column_1based": 4,
+      "column": "expect",
+      "before": "200 @file Source/w2cplatform/console.js",
+      "after": "200 @file Platform/07-console-module/module/console.js",
+      "raw_before_row_sha256": "06a954ad0793e69163d5b9f04339b6a6c01d313a85437ddca264c13926567930",
+      "raw_after_row_sha256": "536049cfe79c7a07782012a887b0586cc604082c394ebbde7c1639e90ba80686",
+      "actual_canonical_path": "Platform/07-console-module/module/console.js",
+      "canonical_sha256": "05d167f53a4d91214f30188d5331f0f4afbd99bfa7e4ac349b98f423f1bec89e",
+      "expected_column_marked": false
+    },
+    {
+      "path": "Platform/06-console/acceptance/5/scenarios.tsv",
+      "physical_line": 11,
+      "case": "01-page-and-module",
+      "step": "9",
+      "column_1based": 4,
+      "column": "expect",
+      "before": "200 @file Source/w2cplatform/console.css",
+      "after": "200 @file Platform/07-console-module/module/console.css",
+      "raw_before_row_sha256": "24434e66948181d1240441ed3d9c592dffcf6572193e453c24193258ef807767",
+      "raw_after_row_sha256": "c533d08982549183c81ed0f05d339a8b916f5580dc48d621a76d583eba4650b8",
+      "actual_canonical_path": "Platform/07-console-module/module/console.css",
+      "canonical_sha256": "44d4045693f60fcf719e7c216352e9e4b7873b69c372ae35e37d010050bb4de6",
+      "expected_column_marked": false
+    },
+    {
+      "path": "Platform/10-domain-console/acceptance/scenarios.tsv",
+      "physical_line": 16,
+      "case": "05-the-holders-page",
+      "step": "3",
+      "column_1based": 4,
+      "column": "expect",
+      "before": "200 @file Source/w2cplatform/console.js",
+      "after": "200 @file Platform/07-console-module/module/console.js",
+      "raw_before_row_sha256": "18c039285c45eefc6974ece9976eff96674fb019a7d84fc018e3188331d6f90a",
+      "raw_after_row_sha256": "878735b2b489640cba4d37ca0915de2518bbd978b6eb1ebbce9962b64c199fab",
+      "actual_canonical_path": "Platform/07-console-module/module/console.js",
+      "canonical_sha256": "05d167f53a4d91214f30188d5331f0f4afbd99bfa7e4ac349b98f423f1bec89e",
+      "expected_column_marked": false
+    }
+  ],
+  "preservation": {
+    "four_expect_cells_only": true,
+    "expect_columns_marked": false,
+    "all_other_TSV_bytes": true,
+    "Source_all_bytes": true,
+    "jsdom47_all_bytes": true,
+    "P06_14asset_inputs": true,
+    "two_false_positive_rows": true,
+    "IDs_ports_rosters": true,
+    "cell_json_1855_proof_files": true
+  },
+  "tests": "not edited or run; review103 owns independent probes in skills and immutable47 temporary copy, no Source witness edit",
+  "full_Gate": "coord103 exact joint, pending readers/judge"
+}

@@ -1,0 +1,205 @@
+{
+  "base": "53e043403ab7d1e3b87e32a6e9a48a28e52751ce",
+  "changes": [
+    {
+      "path": "Platform/08-domain/spec/08.0-domain.norms.md",
+      "before_sha256": "f770bcdf501b99390030c78cb40e8b6341f1388c7c8fbcc0c6dd0cdede6a23c5",
+      "after_sha256": "feed361088ed833473f478d79d9cfd9bfa0bc038af933fcf2d3e78e9dce25c10",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 1
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.0-domain.norms.md",
+      "before_sha256": "7ca040b16e8ccedc11643b76f0560a9976da770b7c2abf2250c8c8e6482bb4b3",
+      "after_sha256": "2a50aed381aeafa22e0bd53ca746c5045c6f7a778cceaf044625de4f64b43a14",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 1
+    },
+    {
+      "path": "Platform/08-domain/spec/08.1-domain.norms.md",
+      "before_sha256": "a98c7d6e4a97f2acc00ef596e91870f99ba1d220c3be4a1c14c10482de78cd54",
+      "after_sha256": "0d1aa15d0e6418b880f5ee4e299ba11f9063cab6818a3435a8a85ab55549be0a",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.1-domain.norms.md",
+      "before_sha256": "f19f65de731c6912f339655b4b703e8b0c6c80c77af3c14b016c1c785564c607",
+      "after_sha256": "a32ee33d5b611999993427865a258f17c049ddca5be6c7bfc4038aae305a7f35",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/spec/08.10-domain.norms.md",
+      "before_sha256": "05949a5969d380c16a830d70b07b337ccf940c6ff875366ab8ea260ad9db94ca",
+      "after_sha256": "36f6940eee06d9a0001d05237d29df4df349f5f4cfbaf7e2023fec383957cff5",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.10-domain.norms.md",
+      "before_sha256": "4f36f535be7dfef17a368c14fc7a3fda1480a92b88a8e0c14a86e26e56c7d824",
+      "after_sha256": "b72ce94df0d16d426647524a70469f462cee4b77cb3ef8faee94756c1457fa2e",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/spec/08.2-domain.norms.md",
+      "before_sha256": "e5b795f93c7d82d515f814f50a1782a0b314550162fcf63e40ac1d8d7f267e43",
+      "after_sha256": "43f5e0d43f7005630a1e7da7a2027405cf93e706777729ef1ce741d0a98b0f73",
+      "normative_body_byte_exact": false,
+      "kit_seams_preserved": 1,
+      "body_metadata_only": "N5 provenance column removed (P09), or former scenario number labels replaced by current coverage description (P08); coverage text retained"
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.2-domain.norms.md",
+      "before_sha256": "ec1fe5998e51194b8de0e65a26a037e8d359441317b102cd97b90b686624d170",
+      "after_sha256": "3b5e047a214c6ff6026558967f35ed3a072c460999a270d65b888c7b2e47d3f7",
+      "normative_body_byte_exact": false,
+      "kit_seams_preserved": 1,
+      "body_metadata_only": "N5 provenance column removed (P09), or former scenario number labels replaced by current coverage description (P08); coverage text retained"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.3-domain.norms.md",
+      "before_sha256": "676da91522f90a74cd883c630e0a963261b5614bdf66911b5d601aae0c38b4a2",
+      "after_sha256": "42e2346b978b79661e6d0ac73bc2654b023847452c5bf96d86ca6e57355cfe4b",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.3-domain.norms.md",
+      "before_sha256": "418703de898a1d849e859ef7bac9a72e39085d1cf072efd090b64bc7ef096bf5",
+      "after_sha256": "f26d3dbbaea1d41617a5e8dcbd3ccc206da6afb00e0f1f0b54528c4596354bee",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/spec/08.4-domain.norms.md",
+      "before_sha256": "55330574d6454c1902025ac806035fea5587baa7583d0f276a12ba8f80e72fd4",
+      "after_sha256": "9fe8f9f2223295903c9c1e8a5e5efead5343a596ac518dabb92aecf5efa8d578",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.4-domain.norms.md",
+      "before_sha256": "a32cac2e140f05be313cc81193822ff86c18506390b2762f6c4f5f4258f36806",
+      "after_sha256": "be5065c8bb08cdc17264ea3be3916c7d88ad60ff53dd561df08b0bd73a0196c8",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/spec/08.5-domain.norms.md",
+      "before_sha256": "c15d68d5bb936c9cbfb8665c50601ea0636dec5fe349946bb08f96d9dc357b76",
+      "after_sha256": "8c111e669ec04d59426af391c43095c66ae8d95c43d229a8ade0fb7789cc47c5",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.5-domain.norms.md",
+      "before_sha256": "b2ddb27cabeedf0fa76e1a0b2c9bc61b7bbb9495635c1cfea99cb238741b2d52",
+      "after_sha256": "778375b75f0e1baa5423689a92764f75dd052fb9010712fbeccbde07b89dc62c",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/spec/08.6-domain.norms.md",
+      "before_sha256": "458534bdec506700dbd7850f23042ca55597a955f6567eb978eaa08b54defb6c",
+      "after_sha256": "90b564d7e13e9248cbb1c8741cc19fc7515bb89f71ae1fbd14aa4659f1adae59",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.6-domain.norms.md",
+      "before_sha256": "1b32b55cbcae4f02b346aca53d2b40e374a917f0e2642ae953784fc269018250",
+      "after_sha256": "f6db6796d1a91e5a1a4d8491162496bc2cd4b06dc8a237503804302f0d85164b",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/spec/08.7-domain.norms.md",
+      "before_sha256": "d59802259ed9cefe093c828f4111d363f86f359e46c63250c02b48759f91950a",
+      "after_sha256": "2927e9789e1d01a611fe5011c13ebcaacb884b2e815153d2f0fcb975366304b7",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.7-domain.norms.md",
+      "before_sha256": "401253e19e0ba272d35f3641ce56353a1b5baf85bb00c8e8c5eb6dbeb8f8fece",
+      "after_sha256": "e73462a205d2c674c57ddcc28ce70de4875be5b96f39d969f8647c94bdd85e0a",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/spec/08.8-domain.norms.md",
+      "before_sha256": "13d99a07085690598d424a2e8c81fedfa32b8c6f92e167d2bffd10c1617c45b5",
+      "after_sha256": "f8088ca77fda8970dd8c70bf6da3b90c39037c2b05b1330816b535e4b0490142",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.8-domain.norms.md",
+      "before_sha256": "a45668aea7a6e2556d51cd06051c52fb599201e366351c8d0996c7516ced64d6",
+      "after_sha256": "b9a60120343399804061fe79b243efca5a606a0e47c7475ac736f41f208c9c83",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/spec/08.9-domain.norms.md",
+      "before_sha256": "39623917fefe4dfceb7edd69732e9345b14994692c0e2bbe5e161390889e0689",
+      "after_sha256": "993f7ffe187ef207c49503f7a307edb6be30747c225fdeec140bc41cbbabd52e",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.9-domain.norms.md",
+      "before_sha256": "0e17d194620280e6261847ec772e3f1a2322c919f157d4656e3f999a22a36f8b",
+      "after_sha256": "0e845255cd8f72e4278558eace85509847626981e7747d34af5701da8bc5de07",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/09-agent/spec/09.1-agent.norms.md",
+      "before_sha256": "e6d87115200f76d39e1e5017b334626b30fb77d5888cdecafe8fbaaf24eb5357",
+      "after_sha256": "423ae52009d036bcd0064e0a876bf595283e0a20adafb1c8eaaa3c05fa40dc89",
+      "normative_body_byte_exact": false,
+      "kit_seams_preserved": 0,
+      "body_metadata_only": "N5 provenance column removed (P09), or former scenario number labels replaced by current coverage description (P08); coverage text retained"
+    },
+    {
+      "path": "Platform/09-agent/ru/spec/09.1-agent.norms.md",
+      "before_sha256": "31118f0093afff7fb4eed4516136d36480817ec74498e661fb7fedf247062ceb",
+      "after_sha256": "1f38baf2596f993d2d28cb2e0024bc32189bd5935d9591195e67e6e875712973",
+      "normative_body_byte_exact": false,
+      "kit_seams_preserved": 0,
+      "body_metadata_only": "N5 provenance column removed (P09), or former scenario number labels replaced by current coverage description (P08); coverage text retained"
+    },
+    {
+      "path": "Platform/09-agent/spec/09.2-agent.norms.md",
+      "before_sha256": "267e0f97e488b9fd25b288081e91477064a74d4c018cba8786beafb2c7eedc9e",
+      "after_sha256": "f5d8c15f69f9a8e4b573f0c8f8defd7381e35e187ad5dcd9cd20e292918ab0ea",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/09-agent/ru/spec/09.2-agent.norms.md",
+      "before_sha256": "d17ad525eec009e1f7730b08e36afeeef69b0b2525b995dffa841b99156b2bba",
+      "after_sha256": "0b773a2c3151849d697cb677d0a6f7b8a2331eb67255f3a56d035e31c37dcabc",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+      "before_sha256": "4a4a67ef428f52a0847564033d78a9009bc763a5b94d11c8ea02dc71c62379cd",
+      "after_sha256": "5007a0d589b94df5d86c79cb25b5852c2e9af5ecadc537d1ef861e12da2176cd",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    },
+    {
+      "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+      "before_sha256": "8f5ec712c8ef09da79bc688b81135329f85196b9be864712061aa0c9250f3d0f",
+      "after_sha256": "04fba7c37e35be8e42e82c291006eadfc89b6b6d4e5a570a7fe047cf2b96d142",
+      "normative_body_byte_exact": true,
+      "kit_seams_preserved": 0
+    }
+  ]
+}
