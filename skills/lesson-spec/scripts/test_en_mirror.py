@@ -122,7 +122,18 @@ class Mirror(unittest.TestCase):
         self.mutated("# A store row. The store", "# Строка хранилища. The store")
 
     def test_code_block_value(self):                    # ADR-0120 доп. (5) п. 7: значение без смены размеров
-        self.mutated("    ceiling: 524288          # 512 KiB", "    ceiling: 524289          # 512 KiB")
+        # Owned historical syntax: current source uses the ROW_CEILING reference.
+        block = "\n```yaml\nrow:\n    ceiling: 524288          # 512 KiB\n```\n"
+        ru, en = OWNED_RU + block, OWNED_EN + block
+        self.assertEqual(self.compare(ru=ru, en=en), [])
+        before, after = "    ceiling: 524288          # 512 KiB", "    ceiling: 524289          # 512 KiB"
+        self.assertEqual(ru.count(before), 1)
+        self.assertEqual(en.count(before), 1)
+        changed = en.replace(before, after, 1)
+        self.assertNotEqual(changed, en)
+        self.assertEqual(len(changed), len(en))
+        self.assertEqual(changed.count(after), 1)
+        self.assertTrue(self.compare(ru=ru, en=changed))
         self.mutated("BATCH_WRITES: 64             # the limit", "BATCH_WRITES: 65             # the limit", owned=True)
 
     def test_code_block_untranslated_part(self):        # вне комментария — только перевод русской прозы
