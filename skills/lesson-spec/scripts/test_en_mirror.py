@@ -275,7 +275,94 @@ class Layouts(unittest.TestCase):
         self.assertEqual(en_mirror.as_english_labels("<неизвестная>", ROOT), "<неизвестная>")
 
 
+class VmsEnglishSlice(unittest.TestCase):
+    """Accepted English slice only; V11 and the old historical map stay explicit."""
+
+    def accepted_pairs(self):
+        return [(ru, en) for ru, en in en_mirror.pairs(ROOT)
+                if en.relative_to(ROOT).as_posix().startswith("VMS/")
+                and not en.relative_to(ROOT).as_posix().startswith("VMS/11-backend/")]
+
+    def test_actual_108_pairs_are_strict_and_clean(self):
+        pairs = self.accepted_pairs()
+        self.assertEqual(len(pairs), 108)
+        for ru, en in pairs:
+            with self.subTest(path=en.relative_to(ROOT)):
+                name = en.relative_to(ROOT).as_posix()
+                self.assertNotIn(name, en_mirror.STEPS_PENDING)
+                self.assertFalse(name.startswith(tuple(en_mirror.LABELS_PENDING)))
+                self.assertTrue(name.startswith(en_mirror.NUMBERS_DONE))
+                self.assertEqual(en_mirror.compare(ru.read_text(), en.read_text(), ru, en, ROOT), [])
+
+    def test_removed_six_step_deferrals_really_refuse_a_changed_step_count(self):
+        names = ("02-rec/spec/02.4-rec.norms.md", "05-detjob/spec/05.3-detjob.norms.md",
+                 "05-detjob/spec/05.4-detjob.norms.md", "06-detedge/spec/06.2-detedge.norms.md",
+                 "07-auto/spec/07.3-auto.norms.md", "12-psim/spec/12.3-psim.norms.md")
+        for name in names:
+            en = ROOT / "VMS" / name
+            ru = en.parents[1] / "ru" / "spec" / en.name
+            with self.subTest(path=name):
+                before = en_mirror.compare(ru.read_text(), en.read_text(), ru, en, ROOT)
+                self.assertEqual(before, [])
+                changed = en.read_text() + "\n1. Extra procedure step.\n"
+                errors = en_mirror.compare(ru.read_text(), changed, ru, en, ROOT)
+                self.assertTrue(any("numbered steps" in e for e in errors), errors)
+
+    def test_latin_labels_and_section_numbers_apply_to_the_actual_slice(self):
+        ru, en = self.accepted_pairs()[0]
+        r, e = ru.read_text(), en.read_text()
+        self.assertEqual(en_mirror.compare(r, e, ru, en, ROOT), [])
+        errors = en_mirror.compare(r + "\nSee 4a, G-29.\n", e + "\nSee 4а, Г-29.\n", ru, en, ROOT)
+        self.assertTrue(any("Cyrillic outside code" in x for x in errors), errors)
+        errors = en_mirror.compare(r + "\n## N99 Extra\n", e + "\n## Н99 Extra\n", ru, en, ROOT)
+        self.assertTrue(any("Cyrillic section number" in x for x in errors), errors)
+
+    def test_v11_flags_remain_excluded_not_passed(self):
+        name = "VMS/11-backend/spec/11.2-backend.norms.md"
+        self.assertIn(name, en_mirror.STEPS_PENDING)
+        self.assertTrue(name.startswith(tuple(en_mirror.LABELS_PENDING)))
+        self.assertFalse(name.startswith(en_mirror.NUMBERS_DONE))
+        self.assertFalse(name.startswith(en_mirror.FULL_ENGLISH_DONE))
+        self.assertNotIn("VMS/", en_mirror.NUMBERS_DONE)
+        self.assertNotIn("VMS/", en_mirror.FULL_ENGLISH_DONE)
+
+
 class FullEnglishSource(unittest.TestCase):
+
+    def test_vms_actual_completed_slice_is_clean(self):
+        self.assertEqual(en_mirror.full_english_errors(ROOT, en_mirror.VMS_ENGLISH_DONE), [])
+
+    def test_vms_new_hidden_sources_and_yaml_ui_are_checked_without_a_new_locale_exception(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in ("VMS/01-cam/.new/norms.md", "VMS/common/localization.tsv",
+                         "VMS/12-psim/data/schema.json", "VMS/02-rec/rec.subsystem.yaml"):
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("label: Ж\n")
+                self.assertIn(path, [p for p, _ in en_mirror.full_english_errors(root)])
+                path.unlink()
+            for name in ("VMS/01-cam/ru/README.md", "VMS/11-backend/spec/norms.md"):
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("Ж\n")
+            self.assertEqual(en_mirror.full_english_errors(root), [])
+
+    def test_deferred_vms_map_requires_exact_bytes_and_a_regular_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "VMS/common/id-map.tsv"
+            path.parent.mkdir(parents=True)
+            data = (ROOT / "VMS/common/id-map.tsv").read_bytes()
+            path.write_bytes(data)
+            self.assertEqual(en_mirror.full_english_errors(root), [])
+            path.write_bytes(data + b"\n")
+            self.assertTrue(any("deferred historical bytes differ" in e for _, e in en_mirror.full_english_errors(root)))
+            path.unlink()
+            outside = root / "outside.tsv"
+            outside.write_bytes(data)
+            path.symlink_to(outside)
+            self.assertTrue(any("without symlinks" in e for _, e in en_mirror.full_english_errors(root)))
     def test_moved_documents_use_only_platform_homes(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

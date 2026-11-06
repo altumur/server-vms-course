@@ -482,7 +482,7 @@ LEGACY_VERDICTS = Path("Platform/02-installer/acceptance/1/spec_verdicts")
 VMS_DIR = Path("VMS")
 VMS_LESSONS = Path("VMS/common/lessons.tsv")
 VMS_LESSONS_FIELDS = ["lesson", "dir", "title", "subsystem", "status"]
-VMS_STATUS = {"переведён", "не переведён"}
+VMS_STATUS = {"translated", "not translated"}
 VMS_CATALOG = Path("VMS/common/data/catalog.tsv")
 # The VMS catalog (решение «Архитектора» по запросу VMS «семьи в открытых местах», вариант А): the Platform columns and
 # `place` — a row is the value of an open place of a Platform family (v7.vms); owner V/NN[.K], the norm a VMS or
@@ -2709,9 +2709,13 @@ class Check:
             self.markdown(readme, text)
         home = acceptance.parent.parent if entry else acceptance.parent
         moved = (home / "ru").is_dir() and home.parent in (self.root / "Platform", self.root / VMS_DIR)
-        # ADR-0121 (9): Platform logs are history; VMS keeps the ADR-0124 layout until its relocation.
-        journal = self.root / "decisions/journal/platform" / home.name if home.parent == self.root / "Platform" \
-            else home / "journal"
+        # ADR-0083 (128): V11 is outside this relocation; no old-path fallback.
+        if home.parent == self.root / "Platform":
+            journal = self.root / "decisions/journal/platform" / home.name
+        elif home.parent == self.root / VMS_DIR and home.name != "11-backend":
+            journal = self.root / "decisions/journal/vms" / home.name
+        else:
+            journal = home / "journal"
         log = journal / (f"corrections-{entry.rstrip('/')}.tsv" if entry else "corrections.tsv") if moved \
             else acceptance / "corrections.tsv"
         if moved and (acceptance / "corrections.tsv").exists():

@@ -1379,11 +1379,12 @@ class CyrillicJudge(unittest.TestCase):
                 self.assertTrue(any(name in e and "new/increased" in e for e in self.judge()[0]))
                 path.unlink()
 
-    def test_export_vms_is_deferred_but_canonical_console_bytes_are_checked(self):
+    def test_export_only_v11_is_deferred_and_canonical_console_bytes_are_checked(self):
         self.markers()
-        self.put("VMS/01-camera/spec/norms.md", "Ж")
+        self.put("VMS/11-backend/spec/norms.md", "Ж")
         self.assertEqual(self.judge()[0], [])
-        for name in ("Platform/07-console-module/module/console.js", "Platform/07-console-module/module/console.css",
+        for name in ("VMS/01-cam/spec/norms.md", "VMS/new-house/.hidden/model.data", "VMS/11-backend-extra/source.txt",
+                     "Platform/07-console-module/module/console.js", "Platform/07-console-module/module/console.css",
                      "Platform/07-console-module/module/console.html", "Source/w2cplatform/console.js", "elsewhere/console.js"):
             with self.subTest(name=name):
                 path = self.put(name, "Ж")
@@ -1662,12 +1663,104 @@ class CyrillicJudge(unittest.TestCase):
 
     def test_git_export_keeps_only_declared_language_exceptions(self):
         self.export_git()
-        self.put("VMS/new/notes.md", "Ж")
+        self.put("VMS/11-backend/notes.md", "Ж")
         self.put("Platform/01-store/ru/new.md", "Ж")
         self.put(check_cyrillic.LOCALIZATION, "key\ten\tru\na\tEnglish\tЖ\n")
         self.assertEqual(self.judge()[0], [])
         self.put(check_cyrillic.LOCALIZATION, "key\ten\tru\na\tЖ\tЖ\n")
         self.assertTrue(any(check_cyrillic.LOCALIZATION in e for e in self.judge()[0]))
+
+    def test_vms_source_checks_new_hidden_homes_and_never_adds_a_locale_exception(self):
+        for name in ("VMS/01-cam/.hidden.txt", "VMS/12-psim/journal/corrections.tsv",
+                     "VMS/common/localization.tsv", "VMS/common/id-map.tsv.extra", "VMS/.new/input.bin"):
+            with self.subTest(name=name):
+                path = self.put(name, b"\xff" + "Ж".encode())
+                errors, stats = self.judge()
+                self.assertTrue(any(name in e and "new/increased" in e for e in errors), errors)
+                self.assertEqual(stats["cyrillic_non_utf8"], 1)
+                path.unlink()
+
+    def test_vms_human_mirrors_are_narrow(self):
+        for name in ("VMS/ru/README.md", "VMS/common/ru/README.md", "VMS/01-cam/ru/spec/norms.md"):
+            self.put(name, "Ж")
+        self.assertEqual(self.judge()[0], [])
+        for name in ("VMS/new/ru/notes.md", "VMS/01-cam/data/ru/value.tsv", "VMS/common/ru-extra/input.md"):
+            path = self.put(name, "Ж")
+            self.assertTrue(any(name in e for e in self.judge()[0]))
+            path.unlink()
+
+    def historical_idmap(self):
+        import hashlib
+        name = "VMS/common/id-map.tsv"
+        data = (Path(__file__).resolve().parents[3] / name).read_bytes()
+        self.assertEqual(hashlib.sha256(data).hexdigest(),
+                         "051e5dd75360a2645e0f1035a0c745d6e688175ca8436b0597683fcaa33048b0")
+        return self.put(name, data), data
+
+    def test_only_exact_deferred_idmap_bytes_are_allowed_without_new_debt(self):
+        path, data = self.historical_idmap()
+        for mode in (False, True):
+            if mode:
+                self.markers()
+            path.write_bytes(data)
+            self.assertEqual(self.judge(export=mode)[0], [])
+            for changed in (data + b"\n", data.replace(b"old", b"OLD", 1), b"English", data + "Ж".encode()):
+                with self.subTest(mode=mode, changed=changed[-12:]):
+                    self.assertNotEqual(changed, data)
+                    path.write_bytes(changed)
+                    before = self.debt.read_bytes()
+                    for shrink in (False, True):
+                        errors, _ = self.judge(export=mode, shrink=shrink)
+                        self.assertTrue(any("deferred historical bytes differ" in e for e in errors), errors)
+                        self.assertEqual(self.debt.read_bytes(), before)
+
+    def test_deferred_idmap_symlink_and_fifo_refuse_without_reading(self):
+        path, data = self.historical_idmap()
+        target = self.put("outside-map.tsv", data)
+        path.unlink()
+        path.symlink_to(target)
+        self.assertTrue(any("regular file without symlinks" in e for e in self.judge()[0]))
+        path.unlink()
+        os.mkfifo(path)
+        self.assertTrue(any("regular file without symlinks" in e for e in self.judge()[0]))
+
+    def test_deferred_map_is_not_a_registry_budget_or_global_ready_permission(self):
+        self.historical_idmap()
+        for row in ("debt\tVMS/common/id-map.tsv\t100000", "ready\tVMS/11-backend\t-"):
+            self.registry(row)
+            self.assertTrue(self.judge()[0])
+        self.debt.write_text(check_cyrillic.HEADER + "\n")
+        for unit in ("VMS", "VMS/common", "VMS/11-backend"):
+            before = self.debt.read_bytes()
+            self.assertTrue(self.judge(declare_ready=[unit])[0], unit)
+            self.assertEqual(self.debt.read_bytes(), before)
+        self.put("VMS/01-cam/README.md", "English")
+        self.assertEqual(self.judge(declare_ready=["VMS/01-cam"])[0], [])
+        self.assertEqual(check_cyrillic.load_debt(self.debt)[1], {"VMS/01-cam"})
+
+    def test_vms_git_source_staged_hidden_file_and_deleted_deferred_map(self):
+        self.historical_idmap()
+        self.export_git()
+        self.put("VMS/01-cam/.new/notes.txt", "Ж")
+        self.assertEqual(self.judge(export=False)[0], [])
+        subprocess.run(["git", "-C", str(self.root), "add", "VMS"], check=True, capture_output=True)
+        self.assertTrue(any("VMS/01-cam/.new/notes.txt" in e for e in self.judge(export=False)[0]))
+        (self.root / "VMS/01-cam/.new/notes.txt").unlink()
+        (self.root / "VMS/common/id-map.tsv").unlink()
+        self.assertTrue(any("cannot read deferred historical file" in e for e in self.judge(export=False)[0]))
+
+    def test_vms_git_and_git_free_export_cover_untracked_and_ignored_files(self):
+        self.export_git()
+        self.put("VMS/.hidden/new.bin", "Ж")
+        self.put("VMS/01-cam/__pycache__/model.data", "Ж")
+        with tempfile.TemporaryDirectory() as folder:
+            copy_root = Path(folder) / "export"
+            shutil.copytree(self.root, copy_root, ignore=shutil.ignore_patterns(".git"))
+            for mode in (None, True):
+                result = self.judge(export=mode)
+                self.assertEqual(result, check_cyrillic.check(copy_root, self.debt, export=mode))
+                self.assertTrue(any("VMS/.hidden/new.bin" in e for e in result[0]))
+                self.assertTrue(any("VMS/01-cam/__pycache__/model.data" in e for e in result[0]))
 
     def test_export_worktree_git_file_is_metadata_but_untracked_data_is_not(self):
         # A real worktree .git file contains Cyrillic in its local gitdir path.
