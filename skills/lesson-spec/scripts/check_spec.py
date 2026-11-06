@@ -469,7 +469,7 @@ PROCESS_ROLES = {
 MANIFEST_FORMS = {"unit.rows", "tables", "objects.rows", "domain.books.from", "domain.kept"}
 # id-map of the old norms (ADR-0083, module-design «Прослеживаемость»): the column `new` holds checklist ids P/NN[.K]-MM
 # (and scenario and vector addresses, which these checks do not read).
-IDMAP = Path("Platform/common/id-map.tsv")
+IDMAP = Path("decisions/history/platform/id-map.tsv")
 IDMAP_FIELDS = ["old", "new", "chapter", "subject", "note"]
 # The VMS module (ADR-0090 доп. (1) «Условия старта», доп. (2)): its lessons, data catalog and id-map are read from
 # VMS/common/; a lesson's manifest is VMS/NN-<имя>/<subsystem>.subsystem.yaml. The bytes of Source/vms/ are the frozen
@@ -1086,7 +1086,7 @@ class Check:
         self.stats["data_roles"] += 1
 
     def id_map_rows(self, table=IDMAP):
-        """Platform/common/id-map.tsv (or the VMS one) → [(line, {column: value})]; empty without the file. Read once."""
+        """Platform history (or the VMS map) → [(line, {column: value})]. The Platform map is required; cached."""
         if table != IDMAP:
             if table not in self.vms_idmap:
                 path = self.root / table
@@ -1095,8 +1095,14 @@ class Check:
             return self.vms_idmap[table]
         if self.idmap is None:
             path = self.root / IDMAP
-            rows = self.tsv(path, len(IDMAP_FIELDS), IDMAP_FIELDS) if path.exists() else []
-            self.idmap = [(line, dict(zip(IDMAP_FIELDS, cols))) for line, cols in rows]
+            rows = self.tsv(path, len(IDMAP_FIELDS))
+            self.idmap = []
+            if not rows or rows[0][1] != IDMAP_FIELDS:
+                self.error(path, f"expected header {' '.join(IDMAP_FIELDS)}")
+            else:
+                self.idmap = [(line, dict(zip(IDMAP_FIELDS, cols))) for line, cols in rows[1:]]
+                if not self.idmap:
+                    self.error(path, "expected at least one id-map row")
         return self.idmap
 
     # The checklist of a moved chapter against id-map (разбор ревью стадии B 3–5, №36): each id of the checklist is a
@@ -2608,8 +2614,10 @@ class Check:
             self.markdown(readme, text)
         home = acceptance.parent.parent if entry else acceptance.parent
         moved = (home / "ru").is_dir() and home.parent in (self.root / "Platform", self.root / VMS_DIR)
-        # ADR-0124 доп. (1) п. 8 (2): the log of a lesson in the new layout is journal/corrections-<глава>.tsv, not an input
-        log = home / "journal" / (f"corrections-{entry.rstrip('/')}.tsv" if entry else "corrections.tsv") if moved \
+        # ADR-0121 (9): Platform logs are history; VMS keeps the ADR-0124 layout until its relocation.
+        journal = self.root / "decisions/journal/platform" / home.name if home.parent == self.root / "Platform" \
+            else home / "journal"
+        log = journal / (f"corrections-{entry.rstrip('/')}.tsv" if entry else "corrections.tsv") if moved \
             else acceptance / "corrections.tsv"
         if moved and (acceptance / "corrections.tsv").exists():
             self.error(acceptance / "corrections.tsv", f"the log lives in {self.name(log)} (ADR-0124 доп. (1) п. 8 (2))")
