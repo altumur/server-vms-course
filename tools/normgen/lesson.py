@@ -15,6 +15,7 @@ DEFAULT = "01-store"
 ENV = "NORMGEN_LESSON"
 KEY = re.compile(r"(0[1-9]|[1-9][0-9])-[a-z][a-z0-9-]*")
 OUTPUT_ENV = "NORMGEN_OUT"
+OUTPUT_RECEIPT_ENV = "NORMGEN_OUT_MANIFEST_SHA256"
 PROFILES = ("p01-1", "p02", "p03", "p04", "p05", "p06", "p08", "p09", "p10")
 OUTPUT_MANIFEST = "normgen-output.manifest.json"
 _temporary_output = None
@@ -143,18 +144,25 @@ def _records(value):
     return sorted(value, key=lambda r: r["path"])
 
 
-def output_manifest(output_root=None):
-    """Read metadata only. This function never prepares or repairs a set."""
+def output_manifest(output_root=None, *, expected_manifest_sha256=None):
+    """Read metadata against the caller's held creation receipt; never reseal it."""
+    expected = (os.environ.get(OUTPUT_RECEIPT_ENV) if expected_manifest_sha256 is None
+                else expected_manifest_sha256)
+    if type(expected) is not str or re.fullmatch(r"[0-9a-f]{64}", expected) is None:
+        raise LessonError(f"missing/malformed creation receipt: supply {OUTPUT_RECEIPT_ENV} or expected_manifest_sha256")
     root = Path(output_root or globals()["output_root"]()).resolve()
     path = root / OUTPUT_MANIFEST
     if not path.is_file() or path.is_symlink():
         raise LessonError(f"prepared output manifest is missing: {path}; create a new set explicitly")
     if stat.S_IMODE(path.stat().st_mode) != 0o600:
         raise LessonError("prepared output manifest mode changed")
+    data = path.read_bytes()
+    if hashlib.sha256(data).hexdigest() != expected:
+        raise LessonError("prepared output manifest differs from the held creation receipt; no resealing performed")
     try:
         def nonfinite(value):
             raise LessonError(f"non-finite output metadata: {value}")
-        value = json.loads(path.read_bytes(), object_pairs_hook=_unique, parse_constant=nonfinite)
+        value = json.loads(data, object_pairs_hook=_unique, parse_constant=nonfinite)
     except (ValueError, UnicodeError) as exc:
         raise LessonError(f"invalid output manifest: {exc}") from None
     if type(value) is not dict or set(value) != {"version", "context", "profiles", "parts", "inputs", "files"}:
@@ -203,16 +211,22 @@ def record_outputs(output_root, *, source_root=ROOT, code_root=ROOT, profiles=PR
     payload = {"version": 1, "context": context, "profiles": list(_profiles(profiles)),
                "parts": parts, "inputs": inputs, "files": _scan(root, [""], manifest=True)}
     target = root / OUTPUT_MANIFEST
-    target.write_text(json.dumps(payload, sort_keys=True, ensure_ascii=True, indent=2) + "\n", encoding="utf-8")
+    data = (json.dumps(payload, sort_keys=True, ensure_ascii=True, indent=2) + "\n").encode("utf-8")
+    held_sha256 = hashlib.sha256(data).hexdigest()
+    target.write_bytes(data)
     target.chmod(0o600)
     try:
-        return ready_outputs(output_root=root, source_root=source_root, code_root=code_root, profiles=profiles)
+        ready = ready_outputs(output_root=root, source_root=source_root, code_root=code_root, profiles=profiles,
+                              expected_manifest_sha256=held_sha256)
     except Exception:
         target.unlink()
         raise
+    os.environ[OUTPUT_RECEIPT_ENV] = held_sha256
+    return ready
 
 
-def ready_outputs(output_root=None, source_root=ROOT, code_root=ROOT, profiles=PROFILES):
+def ready_outputs(output_root=None, source_root=ROOT, code_root=ROOT, profiles=PROFILES, *,
+                  expected_manifest_sha256=None):
     """Validate, then return slug→absolute Path. No writes, render or regeneration."""
     given = Path(output_root or globals()["output_root"]())
     if given.is_symlink() or not given.is_absolute():
@@ -221,7 +235,7 @@ def ready_outputs(output_root=None, source_root=ROOT, code_root=ROOT, profiles=P
     if root.is_relative_to(Path(code_root).resolve() / "tools/normgen"):
         raise LessonError("repository out cannot be consumed as a ready set")
     expected = _profiles(profiles)
-    value = output_manifest(root)
+    value = output_manifest(root, expected_manifest_sha256=expected_manifest_sha256)
     if set(value["profiles"]) != set(expected):
         raise LessonError("missing/extra prepared profiles for the requested context")
     if value["inputs"] != output_inputs(source_root, code_root, kind=value["context"]["kind"]):
