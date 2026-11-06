@@ -1,16 +1,16 @@
-# Outcomes of unreadable words of cam in an event row (the root of a row of the family events-unit; schema cam-events.schema.json, V/01.2 Н1.5); the path is from the row. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of unreadable words of cam in an event row (the root of a row of the family events-unit; schema cam-events.schema.json, V/01.2 N1.5); the path is from the row. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-	console	does not judge the row: serves it by the door /events as read, the subsystem's fields as they are (P/06.4 Н1.3; the event log contract line)	1	row	P/06.4 Н1.3
-	autoworker	the subsystem's words not in the writer's form: not read, rather than absent — the row matches no trigger whose match names such a field (the comparison is strict, without coercion); not a refusal — the row goes to the window and the cursor like any other	1	row	V/07.2 Н1.3, Н4
-/port	autoworker	port of io.input not in the writer's form: a trigger with match on «port» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 Н1.3; V/01.2 Н1.5
-/value	autoworker	value of io.input not in the writer's form: a trigger with match on «value» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 Н1.3; V/01.2 Н1.5
-/dropped	autoworker	dropped of source-stats not in the writer's form: a trigger with match on «dropped» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 Н1.3; V/01.2 Н1.5
-/depth	autoworker	depth of source-stats not in the writer's form: a trigger with match on «depth» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 Н1.3; V/01.2 Н1.5
-/lines	autoworker	lines of text not in the writer's form: a trigger with match on «lines» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 Н1.3; V/01.2 Н1.5; V/11.17 Н1.2
-/group	autoworker	group of text not in the writer's form: a trigger with match on «group» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 Н1.3; V/01.2 Н1.5
-/camera	autoworker	camera of text not in the writer's form: a trigger with match on «camera» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 Н1.3; V/01.2 Н1.5
-/word	autoworker	word of text not in the writer's form: a trigger with match on «word» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 Н1.3; V/01.2 Н1.5
-/unit	autoworker	unit not in the writer's form: a trigger with match on «unit» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 Н1.3; V/01.2 Н1.5
-/event	autoworker	event of unit not in the writer's form: a trigger with match on «event» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 Н1.3; V/01.2 Н1.5
-/phase	autoworker	phase of unit not in the writer's form: a trigger with match on «phase» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 Н1.3; V/01.2 Н1.5
-/det_kind	autoworker	det_kind of unit not in the writer's form: the row is not judged as det, the other fields of the row are compared	1	field	V/07.2 Н1.3; V/01.2 Н1.5
+	console	does not judge the row: serves it by the door /events as read, the subsystem's fields as they are (P/06.4 N1.3; the event log contract line)	1	row	P/06.4 N1.3
+	autoworker	the subsystem's words not in the writer's form: not read, rather than absent — the row matches no trigger whose match names such a field (the comparison is strict, without coercion); not a refusal — the row goes to the window and the cursor like any other	1	row	V/07.2 N1.3, N4
+/port	autoworker	port of io.input not in the writer's form: a trigger with match on «port» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 N1.3; V/01.2 N1.5
+/value	autoworker	value of io.input not in the writer's form: a trigger with match on «value» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 N1.3; V/01.2 N1.5
+/dropped	autoworker	dropped of source-stats not in the writer's form: a trigger with match on «dropped» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 N1.3; V/01.2 N1.5
+/depth	autoworker	depth of source-stats not in the writer's form: a trigger with match on «depth» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 N1.3; V/01.2 N1.5
+/lines	autoworker	lines of text not in the writer's form: a trigger with match on «lines» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 N1.3; V/01.2 N1.5; V/11.17 N1.2
+/group	autoworker	group of text not in the writer's form: a trigger with match on «group» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 N1.3; V/01.2 N1.5
+/camera	autoworker	camera of text not in the writer's form: a trigger with match on «camera» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 N1.3; V/01.2 N1.5
+/word	autoworker	word of text not in the writer's form: a trigger with match on «word» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 N1.3; V/01.2 N1.5
+/unit	autoworker	unit not in the writer's form: a trigger with match on «unit» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 N1.3; V/01.2 N1.5
+/event	autoworker	event of unit not in the writer's form: a trigger with match on «event» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 N1.3; V/01.2 N1.5
+/phase	autoworker	phase of unit not in the writer's form: a trigger with match on «phase» does not match ("1" ≠ 1), the other fields of the row are compared	1	field	V/07.2 N1.3; V/01.2 N1.5
+/det_kind	autoworker	det_kind of unit not in the writer's form: the row is not judged as det, the other fields of the row are compared	1	field	V/07.2 N1.3; V/01.2 N1.5

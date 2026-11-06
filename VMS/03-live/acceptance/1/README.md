@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`03.1-live.norms.md`](../../spec/03.1-live.norms.md) Н5. The stand and the vocabulary are in [the common VMS acceptance
+The norm of the chapter is [`03.1-live.norms.md`](../../spec/03.1-live.norms.md) N5. The stand and the vocabulary are in [the common VMS acceptance
 README](../../../common/acceptance/README.md) on top of the common platform README (export `7a875c75`).
 
 ## Preparation
@@ -12,10 +12,10 @@ the console — `CONSOLE_ROOT=live` (the door `/streams`), `cam` is mounted (`co
 the resource and the domain are not started. Requests — from loopback without a domain (one identity with full rights). A scenario runs on a clean
 instance.
 
-The scenario `02-two-viewers` runs on the VMS domain stand ([the common VMS acceptance README](../../../common/acceptance/README.md), «Стенд домена VMS»):
+The scenario `02-two-viewers` runs on the VMS domain stand ([the common VMS acceptance README](../../../common/acceptance/README.md), VMS domain stand):
 `@domain m1`, on `m1` — the same manifests, `member m1 console` — the root `live`, `member m1 console2` — `/cam`;
 people and grants — the doors `holder` and the directive `@person` of the common platform README. Ann sees only the camera `$a`, Bob — only
-`$b`. The stream choice at the gateway door (`?stream=`, `?width=&height=`, V/03.3 Н1.2) — [acceptance 3](../3/README.md): there is no gateway on this stand.
+`$b`. The stream choice at the gateway door (`?stream=`, `?width=&height=`, V/03.3 N1.2) — [acceptance 3](../3/README.md): there is no gateway on this stand.
 
 | Scenario | Norm | What it observes |
 |---|---|---|

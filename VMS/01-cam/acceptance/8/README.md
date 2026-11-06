@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/8/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`01.8-cam.norms.md`](../../spec/01.8-cam.norms.md) Н5. The stand and the vocabulary are as in [acceptance 1](../1/README.md): no workers, the manifest `cam`, the forms of the tables.
+The norm of the chapter is [`01.8-cam.norms.md`](../../spec/01.8-cam.norms.md) N5. The stand and the vocabulary are as in [acceptance 1](../1/README.md): no workers, the manifest `cam`, the forms of the tables.
 The run — after the first stage C generation that has passed the platform acceptance (ADR-0090 addenda (8), (9)).
 
 | Scenario | Norm | What it observes |

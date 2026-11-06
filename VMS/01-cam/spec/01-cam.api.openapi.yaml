@@ -3,20 +3,20 @@ info:
   title: V/01 — the door of the camera holder (the device archive)
   version: 1.0.0
   description: |
-    The HTTP contract of the door of the holder `camworker` — chapter V/01.5 of the lesson «Камера» of the VMS module. The canon is
+    The HTTP contract of the door of the holder `camworker` — chapter V/01.5 of the lesson Camera of the VMS module. The canon is
     [the norms of chapter 5](01.5-cam.norms.md); this file expresses them and adds no requirements: the order of refusals,
-    the limits, the spans and the budget — Н1.5, Н3; the client identity and the request parsing — Н2 (the role certificate, the class `mixed`
+    the limits, the spans and the budget — N1.5, N3; the client identity and the request parsing — N2 (the role certificate, the class `mixed`
     of the role certificate contract; without a kit — loopback only, the routes answer 401 `no_role`). Only `GET`, for `talk` — `POST`; another method on
-    a route — 405, another path — 404 `no such path`. The order: path → method → admission → query (Н2). A chain rejected by
+    a route — 405, another path — 404 `no such path`. The order: path → method → admission → query (N2). A chain rejected by
     TLS is a handshake refusal without an HTTP answer (not expressed in the contract).
 servers:
   - url: https://{server}:{port}
-    description: with the kit of the role camworker — the address SERVER_NAME (V/01.5 Н1.2; P/03.4 Н1.7 kit); the client certificate is mandatory
+    description: with the kit of the role camworker — the address SERVER_NAME (V/01.5 N1.2; P/03.4 N1.7 kit); the client certificate is mandatory
     variables:
       server: {default: "srv-a"}
       port: {default: "0"}
   - url: http://127.0.0.1:{port}
-    description: without a certificate kit — loopback only; the routes answer 401 no_role (V/01.5 Н1.2, Н2)
+    description: without a certificate kit — loopback only; the routes answer 401 no_role (V/01.5 N1.2, N2)
     variables:
       port: {default: "0"}
 security:
@@ -24,7 +24,7 @@ security:
 paths:
   /devices:
     get:
-      summary: The devices of the holder's group (V/01.5 Н1.4)
+      summary: The devices of the holder's group (V/01.5 N1.4)
       responses:
         "200":
           description: one element per device
@@ -39,7 +39,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /recordings/{id}:
     get:
-      summary: The list of spans of the device archive for a camera (V/01.5 Н1.3, Н3)
+      summary: The list of spans of the device archive for a camera (V/01.5 N1.3, N3)
       parameters:
         - $ref: "#/components/parameters/Id"
         - $ref: "#/components/parameters/From"
@@ -66,7 +66,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /playback/{id}:
     get:
-      summary: The bytes of the device archive for an interval (V/01.5 Н1.3, Н3)
+      summary: The bytes of the device archive for an interval (V/01.5 N1.3, N3)
       parameters:
         - $ref: "#/components/parameters/Id"
         - $ref: "#/components/parameters/From"
@@ -79,7 +79,7 @@ paths:
             a refusal, not a byte over the whole interval — 200 without bytes, with the last chunk
           headers:
             X-Coverage-From:
-              description: the lower edge of the coverage the answer is clipped by, seconds (V/01.5 Н1.3)
+              description: the lower edge of the coverage the answer is clipped by, seconds (V/01.5 N1.3)
               schema: {type: number}
           content:
             video/mp4:
@@ -92,7 +92,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /talk/{id}/{number}:
     post:
-      summary: The talk audio gateway → holder → speaker (V/01.5 Н1.3, Н3; V/01.4 Н1.4а); the role liveworker
+      summary: The talk audio gateway → holder → speaker (V/01.5 N1.3, N3; V/01.4 N1.4a); the role liveworker
       parameters:
         - $ref: "#/components/parameters/Id"
         - name: number
@@ -107,7 +107,7 @@ paths:
           schema: {type: string, minLength: 1}
       requestBody:
         required: true
-        description: SMPL audio records in a row, HTTP/1.1 chunked, while the talk goes on; `BODY` and `PACE_FLOOR` do not apply, no frame for `TALK_SILENT` — the end (V/01.5 Н1.5)
+        description: SMPL audio records in a row, HTTP/1.1 chunked, while the talk goes on; `BODY` and `PACE_FLOOR` do not apply, no frame for `TALK_SILENT` — the end (V/01.5 N1.5)
         content:
           application/octet-stream:
             schema: {type: string, format: binary}
@@ -127,13 +127,13 @@ components:
       type: mutualTLS
       description: |
         the role certificate of the client (the class `mixed` of the role certificate contract): admitted are recworker, detjobworker,
-        detedgeworker, for `talk` — liveworker; the trust set — ca.pem, ca.next.pem of its own cluster (V/01.5 Н2)
+        detedgeworker, for `talk` — liveworker; the trust set — ca.pem, ca.next.pem of its own cluster (V/01.5 N2)
   parameters:
     Id:
       name: id
       in: path
       required: true
-      description: the camera id (V/01.1 Н1.1); the segment as written, not from the assignment — 404 (V/01.5 Н2)
+      description: the camera id (V/01.1 N1.1); the segment as written, not from the assignment — 404 (V/01.5 N2)
       schema: {type: string}
     From:
       name: from
@@ -141,7 +141,7 @@ components:
       required: false
       description: |
         Unix seconds, inclusive, written as a JSON number, finite; without the parameter — from the start of the archive; a repeat, an empty
-        value, another notation, from > to (both given) — 400 bad range (V/01.5 Н2)
+        value, another notation, from > to (both given) — 400 bad range (V/01.5 N2)
       schema: {type: number}
     To:
       name: to
@@ -149,12 +149,12 @@ components:
       required: false
       description: |
         Unix seconds, exclusive, written as a JSON number, finite; without the parameter — to the end of the archive; a repeat, an empty
-        value, another notation, from > to (both given) — 400 bad range (V/01.5 Н2)
+        value, another notation, from > to (both given) — 400 bad range (V/01.5 N2)
       schema: {type: number}
   responses:
     Refusal:
-      description: a refusal (V/01.5 Н4); 503 of the connection limit — with the header Retry-After 1; for /playback of the role detedgeworker — also
-        the device session spare PLAYBACK_SPARE (Н1.5, Н3)
+      description: a refusal (V/01.5 N4); 503 of the connection limit — with the header Retry-After 1; for /playback of the role detedgeworker — also
+        the device session spare PLAYBACK_SPARE (N1.5, N3)
       headers:
         Retry-After:
           required: false
@@ -170,7 +170,7 @@ components:
               detail: {type: string}
     NoRole:
       description: |
-        no client certificate (with a kit) or no kit (loopback) — 401 no_role (V/01.5 Н2)
+        no client certificate (with a kit) or no kit (loopback) — 401 no_role (V/01.5 N2)
       content:
         application/json:
           schema:
@@ -183,7 +183,7 @@ components:
     RoleRefusal:
       description: |
         after the handshake: a role not among the admitted — wrong_role; not exactly one role in SAN — no_role; the signature of the leaf
-        or of the authority outside sig, the serial in revoked — bad_chain (the words of the class `role` of the role certificate contract; V/01.5 Н2)
+        or of the authority outside sig, the serial in revoked — bad_chain (the words of the class `role` of the role certificate contract; V/01.5 N2)
       content:
         application/json:
           schema:
@@ -222,7 +222,7 @@ components:
           type: array
           items: {type: string}
         can:
-          description: the device description without identity, channels and resolutions; rays and relays — the numbers of the live children of the host (V/01.4 Н1.4)
+          description: the device description without identity, channels and resolutions; rays and relays — the numbers of the live children of the host (V/01.4 N1.4)
           type: object
           additionalProperties: false
           properties:

@@ -1,4 +1,4 @@
-# Outcomes of an unreadable value of an element of the transmitter book: the copy at a member `domain/rec/upstream`, schema `upstream-entry.schema.json#copy` (V/02.9 Н1.8); the path is from value. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable value of an element of the transmitter book: the copy at a member `domain/rec/upstream`, schema `upstream-entry.schema.json#copy` (V/02.9 N1.8); the path is from value. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-	recworker	the element for its own cluster not in form: not read, rather than absent — the transmitter keeps the last read addresses and mode; none read — no transmitter, reason «upstream book entry unreadable»	1	element	V/02.9 Н1.8
-	domainagent	does not judge value: the elements of the copy — as received from the holder (P/09.1 Н1.4 member_row)	1	element	P/09.1 Н1.4
+	recworker	the element for its own cluster not in form: not read, rather than absent — the transmitter keeps the last read addresses and mode; none read — no transmitter, reason «upstream book entry unreadable»	1	element	V/02.9 N1.8
+	domainagent	does not judge value: the elements of the copy — as received from the holder (P/09.1 N1.4 member_row)	1	element	P/09.1 N1.4

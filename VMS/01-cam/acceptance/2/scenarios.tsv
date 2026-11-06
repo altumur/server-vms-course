@@ -21,9 +21,9 @@ scenario	step	request	expect
 01-hold	19	@until 120 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "idle", "live_url": "@absent", "live_shm": "@absent", "size": "@any"}]}
 01-hold	20	PUT /cameras/$c1 {"live": "on-demand"}	200 {"live": "on-demand"}
 01-hold	21	@until 30 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "held", "live_url": "@absent", "live_shm": "@absent"}]}
-02-settings	1	@manual живой драйвер, у стенда файл: строка с resolution и fps открывает поток, драйвер получил оба значения; пусто и 0 — настройка устройства не тронута	manual
-02-settings	2	@manual живой драйвер, адрес ipint:// с src.resolution и непустое поле resolution: device_state refused, reason «settings: in the address and in the field: resolution», устройство не открывалось; то же для src.fps и fps	manual
-04-events	1	@manual подставной драйвер с textEventSource (в Drivers/Virtual текста нет): строка eventsrc — фаза held, адресов раздачи нет, EventData — строка text с lines, group, camera, occurred	manual
-04-events	2	@manual слово из words в строке — поле word, msg первого совпавшего; без совпадения поля нет; words порчен — поля нет, warning	manual
-04-events	3	@manual две строки eventsrc со словом «слушает», один порт, одна метка server:*, один держатель: вторая device_state refused, reason «port: taken by <id>»; адрес 0.0.0.0 — reason «address: not a place»	manual
-04-events	4	@manual SignalLost источника текста: held, device_state lost; Started снимает слово; EventData без rawData — отброшено, events_refused	manual
+02-settings	1	@manual live driver (stand has a file): a row with resolution and fps opens the stream and the driver receives both values; empty and 0 leave device settings unchanged	manual
+02-settings	2	@manual live driver, ipint:// address with src.resolution and a nonempty resolution field: device_state refused, reason «settings: in the address and in the field: resolution»; device not opened; same for src.fps and fps	manual
+04-events	1	@manual stub driver with textEventSource (Drivers/Virtual has no text): eventsrc row held, no delivery addresses; EventData writes a text row with lines, group, camera, occurred	manual
+04-events	2	@manual a word from words appears in a line: field word contains msg of the first match; no match means no field; corrupt words means no field and warning	manual
+04-events	3	@manual two eventsrc rows with a listening driver, one port, one server:* label and one holder: second row device_state refused, reason «port: taken by <id>»; address 0.0.0.0 gives reason «address: not a place»	manual
+04-events	4	@manual text source SignalLost: held, device_state lost; Started clears the state; EventData without rawData is dropped, events_refused	manual

@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- The page at `/` of a console whose root is `cam` (V/11.15 Н1.1; ADR-0112 доп. (19)–(22)). The VMS's console is the
+<!-- The page at `/` of a console whose root is `cam` (V/11.15 N1.1; ADR-0112 addendum. (19)–(22)). The VMS's console is the
      consolem fork under /backend/; this page links to it and carries only the platform's console module (P/07) for
      what the platform alone does: servers, drain, unplaceable, break-glass, the policy, people's access, the journal.
      No unit of a VMS subsystem is shown or written here: their rows are written by `backend` only. The former page is
@@ -10,17 +10,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VMS</title>
 <link rel="stylesheet" href="/platform/console.css?v=1">
-<p class="vms-link"><a href="/backend/">Консоль VMS</a> — камеры, запись, просмотр, правила, права людей на камеры.</p>
+<p class="vms-link"><a href="/backend/">VMS console</a> — cameras, recording, viewing, rules and camera access rights.</p>
 <div id="app"></div>
 <script src="/platform/console.js?v=1"></script>
 <script>
 "use strict";
-// The subsystems of the VMS module and the plugins: their units are not the platform's to show here (ADR-0112 доп. (22)).
+// The subsystems of the VMS module and the plugins: their units are not the platform's to show here (ADR-0112 addendum. (22)).
 const VMS=new Set(["cam","rec","live","det","detjob","detedge","auto","assist","exp","backend"]);
 const isVMS=n=>VMS.has(n)||n.startsWith("psim-");
 const app=document.getElementById("app");
-// The module's API this page is written for (P/07 Н1.5 `version`): another version is not used — the page says so.
-if(PlatformConsole.version!==1){app.textContent="Страница написана для версии 1 модуля консоли, а загружена "+PlatformConsole.version+".";throw new Error("console module version")}
+// The module's API this page is written for (P/07 N1.5 `version`): another version is not used — the page says so.
+if(PlatformConsole.version!==1){app.textContent="This page targets console module version 1; loaded version: "+PlatformConsole.version+".";throw new Error("console module version")}
 // The other subsystems of this console (`/mounts`); unread — none: an empty list is «no subsystem» (P/07).
 fetch("/mounts").then(r=>r.ok?r.json():null).catch(()=>null).then(m=>{
   const mounts=m&&m.mounts&&typeof m.mounts==="object"?m.mounts:{};

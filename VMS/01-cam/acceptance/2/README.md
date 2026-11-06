@@ -2,20 +2,20 @@
 
 This English text is the source; the Russian translation `ru/acceptance/2/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`01.2-cam.norms.md`](../../spec/01.2-cam.norms.md) Н5. The dictionary of directives, doors and expectations is in the common
+The norm of the chapter is [`01.2-cam.norms.md`](../../spec/01.2-cam.norms.md) N5. The dictionary of directives, doors and expectations is in the common
 [platform acceptance README](../../../../Platform/common/acceptance/README.md#dictionary-of-directives-and-doors) (export `7a875c75`);
 the format of `scenarios.tsv` is the same. The run — after the first stage C generation that has passed the platform acceptance (ADR-0090 addenda (8),
 (9)); until then the scenarios are norm text.
 
 ## Preparation
 
-The stand per the section «Стенд» of the common README: the store, the cluster console (`CONSOLE_ROOT=cam`, the door `console` — `/cameras`),
+The stand per the section Stand of the common README: the store, the cluster console (`CONSOLE_ROOT=cam`, the door `console` — `/cameras`),
 the controller `cam`, the server resource `srv-a`; the manifests `VMS/01-cam/cam.subsystem.yaml` and `VMS/02-rec/rec.subsystem.yaml` are installed (`console2` — `/rec/…`: a recording row is a consumer of the stream, there is no recorder). The implementation
-of the subsystem `cam`: its holder is started by the directive `@start worker cam <имя> on srv-a` with the «Стенд» command of the implementation
-(the section «Решает реализация» of the lesson's instructions). The subsystem file `/etc/cam/cam.env` is set by the stand (the common VMS acceptance
-README, «Файл подсистемы на стенде»; the path is in `W2C_SUB_ENV`): `MEDIA_DIR={data}/subsystems/cam/media` is the stand directory with
+of the subsystem `cam`: its holder is started by the directive `@start worker cam <name> on srv-a` with the Stand command of the implementation
+(the section Implementation decides of the lesson's instructions). The subsystem file `/etc/cam/cam.env` is set by the stand (the common VMS acceptance
+README, «Subsystem file on the stand»; the path is in `W2C_SUB_ENV`): `MEDIA_DIR={data}/subsystems/cam/media` is the stand directory with
 `door.mp4` (H.264, ≥ 10 s; the source `driverpack://file/door.mp4`, chapter 3), `SHM_DIR` is the stand's frame share directory
-(`{shm}`, «Доля кадров на стенде»); `RTSP_PORT` is not set — RTSP on loopback, the port is chosen by the OS. One scenario
+(`{shm}`, «Frame share on the stand»); `RTSP_PORT` is not set — RTSP on loopback, the port is chosen by the OS. One scenario
 `01-hold` on one instance: it creates the camera `$c1`, edits it step by step and creates the row `$c2`. A repeated and a parallel run — their own instances.
 
 ## Scenarios
@@ -33,6 +33,6 @@ README, «Файл подсистемы на стенде»; the path is in `W2C
 | `02-settings` | V/01.2-10 | `@manual`, a live driver: passing `resolution`, `fps`, a refusal of one setting in the address and in the field |
 | `04-events` | V/01.2-11 | `@manual`: a text source, `text`, `word`, a busy port, `lost` |
 
-The rest of the chapter — by reading (Н5 of the norms): one connection for the subscribers and the loss of frames by a slow branch, 8 s of silence and
+The rest of the chapter — by reading (N5 of the norms): one connection for the subscribers and the loss of frames by a slow branch, 8 s of silence and
 `silent`, `busy` of a second spelling, the password outside the command line, the budget. Delivery from the subscriber's side is observed by the acceptances
 V/02 (the recorder) and V/03 (the gateway).

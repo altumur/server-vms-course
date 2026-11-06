@@ -1,3 +1,3 @@
-# Outcomes of an unreadable value of an element of the poll book: the row `domain/rec/polls/<member>` at the domain holder, schema `polls-entry.schema.json#member` (V/02.9 Н1.7); the path is from value. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable value of an element of the poll book: the row `domain/rec/polls/<member>` at the domain holder, schema `polls-entry.schema.json#member` (V/02.9 N1.7); the path is from value. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-	camworker	a poll element not in form: not read, rather than absent — the camera keeps polling by the last read urls; none read — no polling, the log	1	element	V/01.6 Н1.3
+	camworker	a poll element not in form: not read, rather than absent — the camera keeps polling by the last read urls; none read — no polling, the log	1	element	V/01.6 N1.3

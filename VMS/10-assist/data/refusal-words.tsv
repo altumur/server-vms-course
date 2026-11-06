@@ -1,11 +1,11 @@
-# The closed list of error words of the model door of lesson V/10: chapter 10.2 (Н1.6, Н4). Moved from Н4, it does not change the norms: on a mismatch the source is the norm in the column norm.
+# The closed list of error words of the model door of lesson V/10: chapter 10.2 (N1.6, N4). Moved from N4, it does not change the norms: on a mismatch the source is the norm in the column norm.
 # door — chat: the route /chat/<name>/… of the model holder. The words are constant: the details are in detail. field — «-»: there is no field.
 door	code	error	field	norm
-chat	400	bad step	-	10.2 Н1.6, Н4: body, wait, path
-chat	403	forbidden	-	10.2 Н4; the door token contract
-chat	404	no such step	-	10.2 Н1.6, Н4: no step, another user's, forgotten
-chat	410	gone	-	10.2 Н1.6, Н4: another holder or before a restart
-chat	429	too many steps	-	10.2 Н1.6, Н4: PER_USER
-chat	503	loading	-	10.2 Н1.6, Н4: the model is loading
-chat	503	model unavailable	-	10.2 Н1.6, Н4: failed, stopped
-chat	503	busy	-	10.2 Н1.6, Н4: the queue QUEUE; P/03.4 Н1.7 door_limits
+chat	400	bad step	-	10.2 N1.6, N4: body, wait, path
+chat	403	forbidden	-	10.2 N4; the door token contract
+chat	404	no such step	-	10.2 N1.6, N4: no step, another user's, forgotten
+chat	410	gone	-	10.2 N1.6, N4: another holder or before a restart
+chat	429	too many steps	-	10.2 N1.6, N4: PER_USER
+chat	503	loading	-	10.2 N1.6, N4: the model is loading
+chat	503	model unavailable	-	10.2 N1.6, N4: failed, stopped
+chat	503	busy	-	10.2 N1.6, N4: the queue QUEUE; P/03.4 N1.7 door_limits

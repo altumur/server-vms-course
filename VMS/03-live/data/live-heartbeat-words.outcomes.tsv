@@ -1,8 +1,8 @@
-# Outcomes of unreadable words of live in the heartbeat live/heartbeats/<name> (V/03.2 Н1.5) for the subsystem readers; a wholly unreadable heartbeat is the Platform family heartbeats. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of unreadable words of live in the heartbeat live/heartbeats/<name> (V/03.2 N1.5) for the subsystem readers; a wholly unreadable heartbeat is the Platform family heartbeats. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-/status	camworker	asked of a delivery element not in form: not read, rather than absent — a consumer is taken to exist: a running stream goes on, one not open is opened; the next heartbeat — again	1	element	V/01.2 Н1.2в
-/asked_solo	camworker	asked_solo not in form: the same	1	row	V/01.2 Н1.2в
-	camworker	the gateway's heartbeat is unreadable: which streams are asked for is not read: a consumer is taken to exist — a running stream goes on, one not open is opened; the other gateways go on	1	row	V/01.2 Н1.2в
-/status	expworker	a delivery element not in form: this gateway does not hold the camera's delivery — it is not called on this pass; another gateway with an element in form is called	1	element	V/08.7 Н1.2
-	expworker	the gateway's heartbeat is unreadable: it is not called on this pass; no other gateway — the part waits up to FRAME_WAIT, then offline	1	row	V/08.7 Н1.2
-/asked_solo	expworker	asked_solo not in form: exp does not read it — the heartbeat is fit, the gateway is called by status	1	row	V/08.7 Н1.2
+/status	camworker	asked of a delivery element not in form: not read, rather than absent — a consumer is taken to exist: a running stream goes on, one not open is opened; the next heartbeat — again	1	element	V/01.2 N1.2c
+/asked_solo	camworker	asked_solo not in form: the same	1	row	V/01.2 N1.2c
+	camworker	the gateway's heartbeat is unreadable: which streams are asked for is not read: a consumer is taken to exist — a running stream goes on, one not open is opened; the other gateways go on	1	row	V/01.2 N1.2c
+/status	expworker	a delivery element not in form: this gateway does not hold the camera's delivery — it is not called on this pass; another gateway with an element in form is called	1	element	V/08.7 N1.2
+	expworker	the gateway's heartbeat is unreadable: it is not called on this pass; no other gateway — the part waits up to FRAME_WAIT, then offline	1	row	V/08.7 N1.2
+/asked_solo	expworker	asked_solo not in form: exp does not read it — the heartbeat is fit, the gateway is called by status	1	row	V/08.7 N1.2

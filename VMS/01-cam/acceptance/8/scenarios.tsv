@@ -7,10 +7,10 @@ scenario	step	request	expect
 01-tables	5	POST /probes {"id": "0123456789abcdef0123456789abcdef", "ip": "10.0.0.7", "port": 80, "vendor": "acme", "until": 1760000010}	201 {"row": {"name": "0123456789abcdef0123456789abcdef", "vendor": "acme"}}
 01-tables	6	POST /probes {"id": "0123456789abcdef0123456789abcdef", "ip": "10.0.0.7", "port": 0, "vendor": "acme", "until": 1760000010}	400 {"error": "@any"}
 01-tables	7	POST /probe_replies {"probe": "0123456789abcdef0123456789abcdef", "server": "srv-a", "model": "m1"}	403 {"error": "denied", "detail": "~written by its worker"}
-02-live	1	@manual сеть с двумя камерами на подсетях двух серверов, живой драйвер: новая строка searches — находки обеих в cam/found, vendor, model, ip, port, mac от драйвера, логина и пароля нет	manual
-02-live	2	@manual камера, видимая двум серверам: строка одна; второй поиск заменяет search той же строки, h тот же	manual
-02-live	3	@manual support: модель в .rep — ok, модели нет, у бренда generic — manual, иначе bad	manual
-02-live	4	@manual stopped_at и until останавливают поиск: новых строк нет, найденное стоит	manual
-02-live	5	@manual вопрос о модели камеры без пароля: каждый сервер отвечает строкой, сервер её подсети — с model	manual
-02-live	6	@manual вопрос о модели камеры, которая требует вход: ответ без model	manual
-02-live	7	@manual две камеры с нулевым или одним MAC на разных адресах: две строки cam/found	manual
+02-live	1	@manual live driver, network with two cameras on subnets of two servers: a new searches row finds both in cam/found; vendor, model, ip, port, mac come from the driver, with no login or password	manual
+02-live	2	@manual camera visible to two servers: one row; a second search replaces search on the same row, with the same h	manual
+02-live	3	@manual support: model in .rep gives ok; model absent with generic on the brand gives manual, otherwise bad	manual
+02-live	4	@manual stopped_at and until stop discovery: no new rows, existing findings remain	manual
+02-live	5	@manual model query for a camera without a password: every server answers with a row; its subnet server includes model	manual
+02-live	6	@manual model query for a camera requiring login: answer without model	manual
+02-live	7	@manual two cameras with zero or equal MAC addresses at different addresses: two cam/found rows	manual

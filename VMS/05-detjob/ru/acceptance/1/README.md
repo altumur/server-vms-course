@@ -1,6 +1,6 @@
 # Приёмка V/05.1 — задача — единица
 
-Норма главы — [`05.1-detjob.norms.md`](../../spec/05.1-detjob.norms.md) Н5. Стенд и словарь — [общий README приёмки
+Норма главы — [`05.1-detjob.norms.md`](../../spec/05.1-detjob.norms.md) N5. Стенд и словарь — [общий README приёмки
 VMS](../../../../common/ru/acceptance/README.md) поверх общего README платформы (выгрузка `7a875c75`).
 
 Текст производный от `acceptance/1/README.md`, руками не правится: источник — английский [`acceptance/1/README.md`](../../../acceptance/1/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).

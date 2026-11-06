@@ -1,3 +1,3 @@
 # The model stub of scenario 04-owner: one answer.
 load 0
-0	200	{"choices": [{"message": {"role": "assistant", "content": "для ann"}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 9, "completion_tokens": 2}}
+0	200	{"choices": [{"message": {"role": "assistant", "content": "for ann"}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 9, "completion_tokens": 2}}

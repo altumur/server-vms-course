@@ -24,18 +24,18 @@ scenario	step	request	expect
 07-devices	2	POST /devices {"device": "10.0.0.7"}	403 {"error": "denied", "detail": "~written by its worker"}
 07-devices	3	DELETE /devices/10.0.0.7	404 {"error": "@any"}
 07-devices	4	PUT /devices/10.0.0.7 {"device": "10.0.0.7"}	405 {"error": "@any"}
-08-streams	1	POST /cameras {"source": "rtsp://10.0.0.20/ch/1", "name": "Вход"}	201 {"id": "$m", "profile": "main"}
-08-streams	2	POST /cameras {"source": "rtsp://10.0.0.20/ch/2", "main": "$m", "profile": "сетка"}	201 {"id": "$s", "main": "$m", "profile": "сетка"}
+08-streams	1	POST /cameras {"source": "rtsp://10.0.0.20/ch/1", "name": "Entrance"}	201 {"id": "$m", "profile": "main"}
+08-streams	2	POST /cameras {"source": "rtsp://10.0.0.20/ch/2", "main": "$m", "profile": "grid"}	201 {"id": "$s", "main": "$m", "profile": "grid"}
 08-streams	3	PUT /cameras/$s {"main": "999"}	400 {"error": "fixed", "field": "/main", "detail": "~main is fixed"}
-08-streams	4	PUT /cameras/$s {"profile": "детекция"}	200 {"profile": "детекция", "main": "$m"}
+08-streams	4	PUT /cameras/$s {"profile": "detection"}	200 {"profile": "detection", "main": "$m"}
 08-streams	5	PUT /cameras/$s {"resolution": "1280x720", "fps": 15}	200 {"resolution": "1280x720", "fps": 15}
 08-streams	6	PUT /cameras/$m {"nosuch": "$s"}	400 {"error": "unknown field", "field": "/nosuch"}
 08-streams	7	PUT /cameras/$s {"resolution": "1280"}	400 {"error": "type"}
 08-streams	8	PUT /cameras/$s {"fps": -1}	400 {"error": "type"}
-09-delete-camera	1	POST /cameras {"source": "rtsp://10.0.0.21/ch/1", "name": "Склад"}	201 {"id": "$m"}
-09-delete-camera	2	POST /cameras {"source": "rtsp://10.0.0.21/ch/2", "main": "$m", "profile": "сетка"}	201 {"id": "$s", "main": "$m"}
+09-delete-camera	1	POST /cameras {"source": "rtsp://10.0.0.21/ch/1", "name": "Warehouse"}	201 {"id": "$m"}
+09-delete-camera	2	POST /cameras {"source": "rtsp://10.0.0.21/ch/2", "main": "$m", "profile": "grid"}	201 {"id": "$s", "main": "$m"}
 09-delete-camera	3	DELETE /cameras/$m	200 {"deleted": "$m"}
-09-delete-camera	4	PUT /cameras/$s {"profile": "детекция"}	200 {"main": "$m", "profile": "детекция"}
+09-delete-camera	4	PUT /cameras/$s {"profile": "detection"}	200 {"main": "$m", "profile": "detection"}
 09-delete-camera	5	POST /cameras {"source": "rtsp://10.0.0.21/ch/3", "main": "$m"}	201 {"main": "$m"}
 09-delete-camera	6	DELETE /cameras/$s	200 {"deleted": "$s"}
 10-type	1	POST /cameras {"source": "rtsp://10.0.0.30/ch/1", "type": "thermal"}	400 {"error": "enum", "fault": "@absent"}
@@ -53,37 +53,37 @@ scenario	step	request	expect
 12-children	2	GET /children	200 {"children": []}
 12-children	3	POST /children {"camera": "$c", "type": "sensor", "number": 1, "device": "10.0.0.24"}	403 {"error": "denied", "detail": "~written by its worker"}
 12-children	4	PUT /children/$c-sensor-1 {"camera": "$c"}	405 {"error": "@any"}
-12-children	5	POST /child_settings {"camera": "$c", "type": "relay", "number": 2, "title": "Замок"}	201 {"row": {"name": "@any", "title": "Замок", "enabled": "@absent", "norm": "@absent"}}
-12-children	6	POST /child_settings {"camera": "$c", "type": "relay", "number": 2, "title": "Замок", "enabled": false}	201 {"row": {"name": "@any", "title": "Замок", "enabled": false}}
+12-children	5	POST /child_settings {"camera": "$c", "type": "relay", "number": 2, "title": "Lock"}	201 {"row": {"name": "@any", "title": "Lock", "enabled": "@absent", "norm": "@absent"}}
+12-children	6	POST /child_settings {"camera": "$c", "type": "relay", "number": 2, "title": "Lock", "enabled": false}	201 {"row": {"name": "@any", "title": "Lock", "enabled": false}}
 12-children	7	POST /child_settings {"camera": "$c", "number": 3}	400 {"error": "@any"}
 12-children	8	POST /child_settings {"camera": "$c", "type": "acfa_lock", "number": 3}	400 {"error": "@any"}
 12-children	9	POST /child_settings {"camera": "$c", "type": "relay", "number": 0}	400 {"error": "@any"}
 12-children	10	POST /child_settings {"camera": "$c", "kind": "relay", "type": "relay", "number": 3}	400 {"error": "unknown field", "field": "/kind"}
-12-children	11	GET /child_settings/$c-relay-2	200 {"title": "Замок", "enabled": false}
+12-children	11	GET /child_settings/$c-relay-2	200 {"title": "Lock", "enabled": false}
 12-children	12	DELETE /child_settings/$c-relay-2	200 {"deleted": "@any"}
 12-children	13	GET /child_settings/$c-relay-2	404 {"error": "@any"}
 12-children	14	POST /child_settings {"camera": "$c", "type": "mic", "number": 1, "enabled": false}	201 {"row": {"name": "@any", "enabled": false}}
-12-children	15	POST /child_settings {"camera": "$c", "type": "spk", "number": 1, "title": "Динамик"}	201 {"row": {"name": "@any", "title": "Динамик"}}
+12-children	15	POST /child_settings {"camera": "$c", "type": "spk", "number": 1, "title": "Speaker"}	201 {"row": {"name": "@any", "title": "Speaker"}}
 12-children	16	POST /child_settings {"camera": "$c", "type": "sensor", "number": 1, "norm": "ajar"}	400 {"error": "@any"}
 12-children	17	POST /child_settings {"camera": "$c", "type": "sensor", "number": 1, "norm": "closed"}	201 {"row": {"name": "@any", "norm": "closed", "enabled": "@absent"}}
 13-fields	1	POST /cameras {"source": "rtsp://10.0.0.34/ch/1", "lat": 55.75, "lon": 37.61, "azimuth": 0, "short": "3.3.1"}	201 {"id": "$c", "lat": 55.75, "lon": 37.61, "azimuth": 0, "short": "3.3.1"}
-13-fields	2	POST /cameras {"source": "rtsp://10.0.0.35/ch/1", "lat": "север"}	400 {"error": "type"}
+13-fields	2	POST /cameras {"source": "rtsp://10.0.0.35/ch/1", "lat": "north"}	400 {"error": "type"}
 13-fields	3	PUT /cameras/$c {"lat": null}	200 {"lat": "@absent", "lon": 37.61}
 13-fields	4	POST /cameras {"source": "rtsp://10.0.0.36/ch/1", "type": "ipsrv", "mac": "00:11:22:33:44:55"}	201 {"type": "ipsrv", "mac": "00:11:22:33:44:55"}
-14-eventsrc	1	POST /cameras {"source": "ipint://10.0.0.40:2555/PosXml/PosXml%20Device", "type": "eventsrc", "labels": ["server:srv-a"], "camera": "7", "words": [{"msg": "ВОЗВРАТ", "color": "#ffffff", "bg": "#cc0000"}], "overlay_delay_ms": 500, "overlay_duration_sec": 5}	201 {"id": "$e", "type": "eventsrc", "camera": "7", "overlay_delay_ms": 500, "overlay_duration_sec": 5}
-14-eventsrc	2	GET /cameras/$e	200 {"words": [{"msg": "ВОЗВРАТ", "color": "#ffffff", "bg": "#cc0000"}], "labels": ["server:srv-a"]}
+14-eventsrc	1	POST /cameras {"source": "ipint://10.0.0.40:2555/PosXml/PosXml%20Device", "type": "eventsrc", "labels": ["server:srv-a"], "camera": "7", "words": [{"msg": "RETURN", "color": "#ffffff", "bg": "#cc0000"}], "overlay_delay_ms": 500, "overlay_duration_sec": 5}	201 {"id": "$e", "type": "eventsrc", "camera": "7", "overlay_delay_ms": 500, "overlay_duration_sec": 5}
+14-eventsrc	2	GET /cameras/$e	200 {"words": [{"msg": "RETURN", "color": "#ffffff", "bg": "#cc0000"}], "labels": ["server:srv-a"]}
 14-eventsrc	3	PUT /cameras/$e {"words": [{"color": "#ffffff"}]}	400 {"error": "@any"}
 14-eventsrc	4	PUT /cameras/$e {"overlay_delay_ms": -1}	400 {"error": "@any"}
 14-eventsrc	5	PUT /cameras/$e {"overlay_duration_sec": 0}	200 {"overlay_duration_sec": 0}
 15-units	1	POST /cameras {"source": "ipint://10.0.0.41/Axis/A1001", "type": "acfa"}	201 {"id": "$a"}
 15-units	2	GET /device_units	200 {"device_units": []}
-15-units	3	POST /device_units {"camera": "$a", "n": 1, "type": "acfa_lock", "template": "axisDoor", "address": "door1", "title": "Дверь"}	201 {"row": {"name": "@any", "title": "Дверь", "enabled": true}}
+15-units	3	POST /device_units {"camera": "$a", "n": 1, "type": "acfa_lock", "template": "axisDoor", "address": "door1", "title": "Door"}	201 {"row": {"name": "@any", "title": "Door", "enabled": true}}
 15-units	4	POST /device_units {"camera": "$a", "n": 2, "type": "acfa_sensor", "template": "axisAccessPoint", "parent": 1}	201 {"row": {"parent": 1, "enabled": true}}
 15-units	5	POST /device_units {"camera": "$a", "n": 3, "type": "acfa_gate", "template": "axisDoor"}	400 {"error": "@any"}
 15-units	6	POST /device_units {"camera": "$a", "n": 0, "type": "acfa_lock", "template": "axisDoor"}	400 {"error": "@any"}
 15-units	7	POST /device_units {"camera": "$a", "n": 3, "type": "acfa_lock"}	400 {"error": "@any"}
 15-units	8	POST /device_units {"camera": "$a", "n": 3, "type": "relay", "template": "x", "parent": 0}	400 {"error": "@any"}
-15-units	9	GET /device_units/$a-1	200 {"title": "Дверь", "address": "door1"}
+15-units	9	GET /device_units/$a-1	200 {"title": "Door", "address": "door1"}
 15-units	10	POST /unit_next {"camera": "$a", "n": 2}	201 {"row": {"name": "$a", "n": 2}}
 15-units	11	DELETE /device_units/$a-2	200 {"deleted": "@any"}
 15-units	12	GET /device_units/$a-2	404 {"error": "@any"}

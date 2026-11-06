@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`06.1-detedge.norms.md`](../../spec/06.1-detedge.norms.md) Н5. The stand and the vocabulary are in [the common VMS acceptance
+The norm of the chapter is [`06.1-detedge.norms.md`](../../spec/06.1-detedge.norms.md) N5. The stand and the vocabulary are in [the common VMS acceptance
 README](../../../common/acceptance/README.md) over the common platform README (export `7a875c75`, the VMS pin).
 
 ## Preparation

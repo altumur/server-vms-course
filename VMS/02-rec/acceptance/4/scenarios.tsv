@@ -9,13 +9,13 @@ scenario	step	request	expect
 01-record	7	@until 30 resource GET /v1/objects/rec/heartbeats/r-srv-a-1	200 {"volume": "disk-a", "writer": {"state": "ok"}}
 01-record	8	PUT /recordings/door {"enabled": false}	200 {"enabled": false}
 01-record	9	@until 30 GET /recordings	200 {"rows": [{"id": "door", "phase": "pending"}]}
-02-audio	1	@manual подставной драйвер со звуком G.711: запись running, audio_codec PCMU, в томе поток <запись>/e<эпоха>/audio кадрами AAC; audio 2 — пишется mic 2	manual
-02-audio	2	@manual mic нет или выключен — видео идёт, audio_reason no mic; G.726 — AAC; L16, MPA — AAC; иной кодек — audio_reason codec not supported: <кодек>	manual
-02-audio	3	@manual держатель на другом сервере: запись из приёмника пишет звук, кадры вида audio; кадров звука нет — видео идёт, audio_reason no sound frames; обрыв точки — видео не прерывается, watchdog не срабатывает	manual
-02-audio	4	@manual have и written_through идут только по видео; поток звука молчит — have растёт, окна не встают	manual
-02-audio	5	@manual резерв when: offline: кольцо держит звук, выпуск со времени первого ключевого кадра, поток …/audio без дыры с видео	manual
-02-audio	6	@manual дозапись: выгрузка карты и копия из резервной садят …/backfill/audio только на времена взятых групп; звука у источника нет — не дыра	manual
-02-audio	7	@manual ретранслятор: толчок и забор несут кадры audio в центр, заявка центра выгружает звук из архива с mic = audio заявки; камера-кластер: кольцо, карта, выгрузка только номера заявки; audio 0 и номер первого — кадры идут один раз; кадр звука не по форме — отброшен, видео обращения идёт	manual
+02-audio	1	@manual stub driver with G.711 audio: recording running, audio_codec PCMU, volume stream <record>/e<epoch>/audio with AAC frames; audio 2 records mic 2	manual
+02-audio	2	@manual mic absent or disabled: video continues, audio_reason no mic; G.726 becomes AAC; L16, MPA become AAC; another codec: audio_reason codec not supported: <codec>	manual
+02-audio	3	@manual holder on another server: recording from the receiver writes audio frames of kind audio; no audio frames: video continues, audio_reason no sound frames; loss of the endpoint does not interrupt video or fire the watchdog	manual
+02-audio	4	@manual have and written_through advance only by video; silent audio stream: have grows and windows do not stall	manual
+02-audio	5	@manual backup when: offline: the ring keeps audio, publication begins at the first keyframe, stream …/audio has no gap against video	manual
+02-audio	6	@manual backfill: card export and copying from backup write …/backfill/audio only for the times of taken groups; a source without audio is not a gap	manual
+02-audio	7	@manual relay: push and pull carry audio frames to the centre; the centre request exports archive audio with mic equal to the request audio; camera-cluster: ring, card and export use only the requested number; audio 0 and the first microphone number deliver each frame once; a malformed audio frame is dropped while request video continues	manual
 03-backup-always	1	@start worker cam w-srv-a-1 on srv-a	ok
 03-backup-always	2	@start worker rec r-srv-a-1 on srv-a	ok
 03-backup-always	3	console2 POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
@@ -44,15 +44,15 @@ scenario	step	request	expect
 04-replica	18	POST /recordings {"name": "door-b", "cam": "$c1", "home": "bk-a", "when": "offline"}	201 {"when": "offline"}
 04-replica	19	PUT /recordings/door-x {"replica_from": "door-b"}	200 {"replica_from": "door-b"}
 04-replica	20	@until 60 GET /recordings	200 {"rows": [{"id": "door-x", "phase": "waiting", "reason": "replica source on a backup volume: door-b"}]}
-04-replica	21	@manual прогон дольше 900 с: минуты источника садятся в …/backfill тома disk-b, старшая дыра первой; replica_lag_s падает; to растёт; задача V/05 по replica из архива заказа не получает	manual
-04-replica	22	@manual кольцо тома disk-b меньше покрытия источника: over_quota: true, минуты, выгнанные кольцом, снова не качаются (to не падает, поток …/backfill не растёт по ним), кольцо источника обогнало копию — replica_lost_s растёт	manual
-04-replica	23	@manual смена replica_from: новая revision, to заново; источник снят — waiting, накопленное видно своим сроком; живая запись стала replica — конвейер снят, поток раздачи закрыт при отсутствии иных потребителей (V/01.2 Н1.2в)	manual
-04-replica	24	@manual метка на камере с одной replica: /spans дверь говорит copied_to; печать не ставится, пока ниже конца метки есть непривезённое	manual
-04-replica	25	@manual источник с разрывами: выше 64 отрезков «нет» старший снимается, replica_absent_dropped_s растёт; держатель умер посреди диапазона: to не обогнал садящееся, остаток докачан; источник моложе 900 с: replica_lost_s 0	manual
-05-replica-device	1	@manual живой драйвер с архивом устройства, у стенда файл: replica_from device, у камеры нет иных потребителей — держатель в фазе idle, поток не читает, архив идёт в том через /playback	manual
-05-replica-device	2	@manual device и непустой stream — reason «replica from device: stream is set»; cam ref:<ref> — «replica from device: other cluster»	manual
-05-replica-device	3	@manual скан: посаженная часть без держателя running — задача detjob, при running заказа нет; переезд записи минуты не перекачивает и не заказывает снова	manual
-05-replica-device	4	@manual замер отставания: регистратор на 16 камер, max_playbacks кончились — 503 device busy, источник на отсрочке, отставание по камерам в replica_lag_s	manual
+04-replica	21	@manual run longer than 900 s: source minutes land in …/backfill on volume disk-b, oldest gap first; replica_lag_s decreases, to grows; a V/05 job on replica does not receive an order from the device archive	manual
+04-replica	22	@manual disk-b ring is smaller than source coverage: over_quota: true; minutes evicted by the ring are not downloaded again (to does not decrease and …/backfill does not grow for them); the source ring overtakes the copy: replica_lost_s grows	manual
+04-replica	23	@manual replica_from changes: a new revision, to starts anew; source removed: waiting, accumulated data remains visible for its retention period; live recording becomes replica: pipeline removed, delivery stream closed unless other consumers remain (V/01.2 N1.2c)	manual
+04-replica	24	@manual hold on a camera with one replica: the /spans door reports copied_to; sealing waits until everything below the end of the hold is delivered	manual
+04-replica	25	@manual source with gaps: above 64 absent spans the oldest is removed, replica_absent_dropped_s grows; holder dies within a range: to has not advanced beyond landed data, the remainder is downloaded; source younger than 900 s: replica_lost_s 0	manual
+05-replica-device	1	@manual live driver with a device archive (the stand has a file): replica_from device, camera has no other consumers: holder idle, stream not read, archive reaches the volume through /playback	manual
+05-replica-device	2	@manual device and nonempty stream: reason «replica from device: stream is set»; cam ref:<ref>: «replica from device: other cluster»	manual
+05-replica-device	3	@manual scan: a landed part without a running holder creates a detjob job; while running there is no order; moving the recording neither downloads the minutes again nor orders them again	manual
+05-replica-device	4	@manual lag measurement: recorder with 16 cameras, max_playbacks exhausted: 503 device busy, source under grace; per-camera lag is in replica_lag_s	manual
 06-edge	1	@start worker cam w-srv-a-1 on srv-a	ok
 06-edge	2	console2 POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
 06-edge	3	console2 POST /cameras {"name": "yard", "source": "driverpack://file/door.mp4"}	201 {"id": "$c2"}
@@ -60,12 +60,12 @@ scenario	step	request	expect
 06-edge	5	@until 90 GET /recordings	200 {"configured": [{"id": "cam-$c1-card", "cam": "$c1", "home": "card", "when": "offline"}, {"id": "cam-$c2-card", "cam": "$c2", "home": "card", "when": "offline"}]}
 06-edge	6	DELETE /recordings/cam-$c2-card	2xx
 06-edge	7	@until 90 GET /recordings	200 {"configured": [{"id": "cam-$c2-card", "cam": "$c2", "home": "card"}]}
-06-edge	8	@manual две камеры на одной карте: одна строка тома, сегменты обеих рядом; квота — бюджет всей карты; по бюджету уходит старейшее из доставленного по всей карте, камера с большим битрейтом укорачивает соседку; открытый сегмент не уходит; недоставленное — последним	manual
-06-edge	9	@manual запись камеры, чей держатель на другом сервере: waiting, reason edge volume serves its own server; дверь строку приняла	manual
-06-edge	10	@manual when always у тома: запись на карте идёт без новой revision строки; offline — standby с кольцом, поток камеры открыт без других потребителей (V/01.2 Н1.2в)	manual
-06-edge	11	@manual камера снята: регистратор снимает строку, сегменты на карте остаются, вытесняются первыми из долга; новая строка этой камеры на этом томе видит их	manual
-06-edge	12	@manual камера ушла на другой сервер с томом edge: новый держатель сразу заказывает строку своей карты; прежняя waiting, долг копируется; через 7200 с без долга её снимает регистратор карты; единица не перезапускается: revision строки за час не растёт	manual
-06-edge	13	@manual кластер из одного, строка cam/cameras/1 с cfw://local, том без when, основной нет: запись на карте пишет как always; появилась основная — standby; строка камеры или книга не прочитаны — прежнее слово	manual
-06-edge	14	@manual прочая камера коробки: заявка диапазона приходит регистратору карты в ответе опроса, он читает сегменты и выгружает POST /ingest/upload: листом роли в свой приёмник, токеном stream в чужой; role записи в книге — backup при always и offline	manual
-07-segment-lost	1	@manual движок ответил SEQUENCE_LOST на кадр живой записи: в журнале событие segment.lost с of cam/<камера>, полями cam, recording, volume, occurred; samples_refused{SEQUENCE_LOST} растёт: стенд не умеет заставить движок потерять последовательность	manual
-07-segment-lost	2	@manual повторы в окне 60 с — одна строка, затем строка с repeats; QUEUE_FULL и кадры дозаписи событие не поднимают	manual
+06-edge	8	@manual two cameras on one card: one volume row with both sets of segments; quota is the budget of the whole card; budget eviction removes the oldest delivered data across the card, so a higher-bitrate camera shortens its neighbour; the open segment is retained; undelivered data is evicted last	manual
+06-edge	9	@manual recording of a camera whose holder is on another server: waiting, reason edge volume serves its own server; the rows door has accepted the row	manual
+06-edge	10	@manual volume when always: card recording runs without a new row revision; offline: standby with a ring, camera stream open without other consumers (V/01.2 N1.2c)	manual
+06-edge	11	@manual camera removed: recorder removes the row; card segments remain and are evicted first from the debt; a new row for this camera on this volume sees them	manual
+06-edge	12	@manual camera moves to another server with an edge volume: new holder immediately orders its card row; former row waiting, debt is copied; after 7200 s without debt the card recorder removes it; the unit does not restart: row revision does not grow for an hour	manual
+06-edge	13	@manual single-member cluster, cam/cameras/1 with cfw://local, volume without when and no primary recording: card recording writes as always; primary appears: standby; camera row or book unreadable: retain the former decision	manual
+06-edge	14	@manual another camera in the box: a range request reaches the card recorder in the poll answer; it reads segments and uploads POST /ingest/upload using its role leaf to its own receiver or a stream token to another; the recording role in the book is backup for both always and offline	manual
+07-segment-lost	1	@manual engine answers SEQUENCE_LOST on a live recording frame: segment.lost event in the log with of cam/<camera> and fields cam, recording, volume, occurred; samples_refused{SEQUENCE_LOST} grows; the stand cannot force the engine to lose the sequence	manual
+07-segment-lost	2	@manual repeats within 60 s: one row, then a row with repeats; QUEUE_FULL and backfill frames do not raise the event	manual

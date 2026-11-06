@@ -8,16 +8,16 @@ scenario	step	request	expect
 02-mask	1	PUT /units/7-linecross {"mask": "not-a-digest"}	400 {"error": "blob", "field": "/mask", "detail": "~takes a digest"}
 02-mask	2	PUT /units/7-linecross/mask @raw mask-bytes	200 {"mask": "~sha256-", "bytes": 10, "revision": 2}
 02-mask	3	GET /units	200 {"configured": [{"name": "7-linecross", "mask": "~sha256-", "revision": 2}]}
-03-stream	1	console2 POST /cameras {"name": "Вход", "source": "rtsp://10.0.0.40/ch/1"}	201 {"id": "$m"}
-03-stream	2	console2 POST /cameras {"source": "rtsp://10.0.0.40/ch/2", "main": "$m", "profile": "детекция"}	201 {"id": "$s"}
-03-stream	3	console2 POST /cameras {"name": "Двор", "source": "rtsp://10.0.0.41/ch/1"}	201 {"id": "$o"}
+03-stream	1	console2 POST /cameras {"name": "Entrance", "source": "rtsp://10.0.0.40/ch/1"}	201 {"id": "$m"}
+03-stream	2	console2 POST /cameras {"source": "rtsp://10.0.0.40/ch/2", "main": "$m", "profile": "detection"}	201 {"id": "$s"}
+03-stream	3	console2 POST /cameras {"name": "Yard", "source": "rtsp://10.0.0.41/ch/1"}	201 {"id": "$o"}
 03-stream	4	POST /units {"name": "s-tick", "cam": "$m", "kind": "tick", "stream": "$s"}	201 {"id": "s-tick", "cam": "$m", "stream": "$s"}
 03-stream	5	POST /units {"name": "o-tick", "cam": "$o", "kind": "tick", "stream": "$s"}	409 {"error": "conflict", "fault": "must_match"}
 03-stream	6	POST /units {"name": "m-tick", "cam": "$m", "kind": "tick", "stream": "$m"}	409 {"error": "conflict", "fault": "must_match"}
 03-stream	7	PUT /units/s-tick {"stream": ""}	200 {"cam": "$m", "stream": ""}
 03-stream	8	PUT /units/s-tick {"stream": "$s"}	200 {"stream": "$s"}
-04-mask-of	1	console2 POST /cameras {"name": "Склад", "source": "rtsp://10.0.0.42/ch/1"}	201 {"id": "$a"}
-04-mask-of	2	console2 POST /cameras {"name": "Ворота", "source": "rtsp://10.0.0.43/ch/1"}	201 {"id": "$b"}
+04-mask-of	1	console2 POST /cameras {"name": "Warehouse", "source": "rtsp://10.0.0.42/ch/1"}	201 {"id": "$a"}
+04-mask-of	2	console2 POST /cameras {"name": "Gate", "source": "rtsp://10.0.0.43/ch/1"}	201 {"id": "$b"}
 04-mask-of	3	POST /units {"name": "a-base", "cam": "$a", "kind": "tick"}	201 {"id": "a-base"}
 04-mask-of	4	POST /units {"name": "b-base", "cam": "$b", "kind": "tick"}	201 {"id": "b-base"}
 04-mask-of	5	POST /units {"name": "a-of", "cam": "$a", "kind": "tick", "mask_of": "a-base"}	201 {"id": "a-of", "mask_of": "a-base"}

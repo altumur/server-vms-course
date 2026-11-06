@@ -7,7 +7,7 @@ instructions do not add to them. The platform is the export `cammeta-specs` `7a8
 
 ## Inputs and their priority
 
-- The canon: the norms of the chapters `07.K-auto.norms.md` (Н1–Н5 of each chapter; the addresses `V/07.K Н…`).
+- The canon: the norms of the chapters `07.K-auto.norms.md` (N1–N5 of each chapter; the addresses `V/07.K N…`).
 - The canon of the manifest: [`auto.subsystem.yaml`](../auto.subsystem.yaml): the bytes as they are.
 - Acceptance: [chapter 1](../acceptance/1/README.md), [chapter 6](../acceptance/6/README.md); the vectors of the moment function — [`moment`](../vectors/moment/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../common/acceptance/README.md); acceptance introduces no new requirements.
 - The lecture (`ru/07-auto.md`, for people, not in the export) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
@@ -37,24 +37,24 @@ the VMS acceptance runs only on such a platform (ADR-0090 addenda (8), (9)).
 
 | Norm | Possible mistake | How to keep the behaviour |
 |---|---|---|
-| V/07.2 Н1.3 | comparing an event field loosely (`"1"` and `1`) | the comparison is strict, the field type is set by the writing lesson |
-| V/07.2 Н1.3 | judging a pair by the order in which the rows appeared, or by memory | the latest by `(t, id)` closes: one firing at any holder |
-| V/07.4 Н1.3 | widening or changing a scan job by a repeated order | one job per window, the fields are those of the first order, a repeat is `unchanged` |
-| V/07.6 Н1.3 | treating the tail of an interval as part of the next day only inside `valid` | the deadline judges by the day of the start: the tail of the last day comes, the tail of the day before the deadline does not |
-| V/07.6 Н1.4 | computing `sun` in the local zone or taking the language's sign of the remainder | the offset is `utc_offset_hours` of the row, `fmod` with the sign of the dividend, rounding `⌊x + 0.5⌋` |
-| V/07.6 Н1.1 | treating an unreadable table row as absent | not read is not absent: `unknown`, `cond.unread` |
-| V/07.5 Н1.4 | gluing requests between cameras without `firing` | the merge is by `(by, цель, действие, firing)`; the row at the holder is `rec.ask-<firing>-<i>` |
-| V/07.4 Н1.1 | giving a request a random name | the request name is `auto.<32 hex>-<i>` |
+| V/07.2 N1.3 | comparing an event field loosely (`"1"` and `1`) | the comparison is strict, the field type is set by the writing lesson |
+| V/07.2 N1.3 | judging a pair by the order in which the rows appeared, or by memory | the latest by `(t, id)` closes: one firing at any holder |
+| V/07.4 N1.3 | widening or changing a scan job by a repeated order | one job per window, the fields are those of the first order, a repeat is `unchanged` |
+| V/07.6 N1.3 | treating the tail of an interval as part of the next day only inside `valid` | the deadline judges by the day of the start: the tail of the last day comes, the tail of the day before the deadline does not |
+| V/07.6 N1.4 | computing `sun` in the local zone or taking the language's sign of the remainder | the offset is `utc_offset_hours` of the row, `fmod` with the sign of the dividend, rounding `⌊x + 0.5⌋` |
+| V/07.6 N1.1 | treating an unreadable table row as absent | not read is not absent: `unknown`, `cond.unread` |
+| V/07.5 N1.4 | gluing requests between cameras without `firing` | the merge is by `(by, target, action, firing)`; the row at the holder is `rec.ask-<firing>-<i>` |
+| V/07.4 N1.1 | giving a request a random name | the request name is `auto.<32 hex>-<i>` |
 
 ## Done when
 
 The manifest loads with the strict loader without edits; the acceptance of chapters 1, 6 and the vectors `moment` pass on a platform that has passed its own acceptance;
-the checklist items marked «by reading» are confirmed by the implementation description (the section «Решает реализация» of each chapter).
+the checklist items marked «by reading» are confirmed by the implementation description (the section Implementation decides of each chapter).
 The checks of the schema, of the loader and of the stand do not substitute for one another.
 
 ## On a divergence
 
 The order of the sources: the norms of the chapter → OpenAPI → acceptance and vectors → the lecture; the platform — the norms of the export of the VMS pin.
-If a norm is silent or contradicts itself — a question to «Спецификация VMS» with the place, a counterexample and a proposal; a platform
-norm — through «Архитектор». An acceptance defect (an expectation against a norm) — the same route; a closed decision
+If a norm is silent or contradicts itself — a question to VMS Specification with the place, a counterexample and a proposal; a platform
+norm — through Architect. An acceptance defect (an expectation against a norm) — the same route; a closed decision
 is entered into the canon and does not stay in these instructions.

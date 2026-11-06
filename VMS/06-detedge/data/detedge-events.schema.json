@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "the words of the subsystem detedge in an event row of a traversal bucket (the open place of the Platform family events-unit — the root of the row); the field type is set by the writing lesson — V/06.3 Н1.3 (detedge.overrun, detedge.rewound), Н1.4 (tick on the absolute grid); the fields of other models — the worker's registry, not judged by the family; read by the console (as is) and the auto scenarios (V/07.2 Н1.3 — strictly)",
+ "description": "the words of the subsystem detedge in an event row of a traversal bucket (the open place of the Platform family events-unit — the root of the row); the field type is set by the writing lesson — V/06.3 N1.3 (detedge.overrun, detedge.rewound), N1.4 (tick on the absolute grid); the fields of other models — the worker's registry, not judged by the family; read by the console (as is) and the auto scenarios (V/07.2 N1.3 — strictly)",
  "type": "object",
  "allOf": [
   {
