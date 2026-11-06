@@ -1,0 +1,8 @@
+{
+  "name": "course-console-locale-judge",
+  "private": true,
+  "dependencies": {
+    "acorn": "8.15.0",
+    "jsdom": "26.1.0"
+  }
+}
