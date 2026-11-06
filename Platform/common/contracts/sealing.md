@@ -115,8 +115,3 @@ unreadable: the value of a json field is not JSON or the row is out of form — 
 The package [`sealing`](../vectors/sealing/README.md): the envelope `enc:v2`, AAD, the ring file, resealing a value (`reseal.tsv`,
 C06-RESEAL-33-01). (ADR-0083 addendum (32) item 2)
 
-## Correspondence to former lessons
-
-From M10/7 N1.2 (stage B, review of stage B 1–2 item 4): the blocks `envelope` and `ring_file` (`line`, `mode`), the paragraphs about the AAD path
-and about the grammar of the ring file. Parts of the norms M10/7-03 (the envelope and AAD; chapter P/03.5) and M10/7-04 (the form of the ring file — here; the ring, `rotate` and
-resealing — chapter P/06.2) — by `note` of [id-map](../id-map.tsv) (analysis of the review of stage B 6–7, № 23).

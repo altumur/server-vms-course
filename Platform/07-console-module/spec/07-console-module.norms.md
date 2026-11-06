@@ -16,7 +16,7 @@ bytes of `console.js`, `console.html` and the description [`CONSOLE-MODULE.md`](
 to it by a change of behaviour after the commit of the lesson («Implementation decides» item 1, closed; the Architect's decision of 2026-10-21). The three parts of the console, the mounting
 `PlatformConsole.mount(root, opts)`, `opts`, `never` of the module and `may`/`may_not` of the shell — [P/06.5 N1.1](../../06-console/spec/06.5-console.norms.md)
 `module`, `shell`. A reference «lesson N» without a chapter is the module lesson P/NN (М10 and М11 were moved whole; review analysis of stage B 3–5, № 34); «P/06.K», «P/08.K» are the chapters of lessons 6 and 8;
-«P/10» is the lesson of the domain console. Norm ids are `P/07-MM`; the map to former ids is [`id-map.tsv`](../../common/id-map.tsv).
+«P/10» is the lesson of the domain console. Norm ids are `P/07-MM`; the map to former ids is `id-map.tsv` (historical record).
 
 ## N0 Vocabulary
 
@@ -322,21 +322,3 @@ findings and window records refer to (ADR-0080 addendum 6). The implementation h
 - [ ] **P/07-07** `opts.subsystems` and the unplaced units of all subsystems of the catalogue N1.4 (ADR-0112 addendum (23)) — the owner of the published common module bytes closes this debt with `module-unplaceable-all`, `module-subsystems-none` (N5). The unchanged witness does not execute the rule; for the generation line this remains a recorded dependency, neither PASS nor FAIL; the reason — TSV does not run the page
 - [ ] **P/07-08** forms without a write at a subsystem with `writes_via` N1.5 (ADR-0119 addendum (10)) — the owner of the published common module bytes closes this debt with `module-writes-via` (N5). The unchanged witness does not execute the rule; for the generation line this remains a recorded dependency, neither PASS nor FAIL; the reason — TSV does not run the page
 
-## Correspondence to former lessons
-
-The lesson is moved from М10/9 (stage B): N1.4, N1.5 (the numbers are the former ones), the row of N5 «Проверяются чтением и структурно: модуль — по контракту `CONSOLE-MODULE.md` (закрытый список вызовов, словарь, `may`, `api` с ключом, дерево, форма, серверы, домен)»
-(here N5 with the table of subjects), the checklist items М10/9-06, -07 (here P/07-01, -02). The late layer N1.6 — without ids of its own
-(plan, V5); moved by the move of lessons 8–10 (stage B, commit 10): М11/8 N1.8 `module` (here N1.6 `holder` and the last
-paragraph; the item М11/8-11 — P/10-04, the `note` of id-map «аргумент sections — P/07 N1.6»), М11/11 N1.6 `declared` in the part `schema`
-(here N1.6 `schema`; the door `GET /domain/shared` — P/10-14), the module description § 7 (the sections `domain`, `access`, the paragraph
-`GET /api/held`) and § 10a in the parts about the module (here N1.6 `domain`, `access`, `held`, `holder`, `schema`; the doors of the holder page
-— lesson P/10); the references of М11 N1.4 and N1.6 — to P/06.7-14…16 and P/10-06; `login_url`, the section `access` of the default
-`sections`, `refresh {access}` and «Data» — review analysis of stage B 6–7, № 30 (Claude M-5). The lesson takes no ids of its own from М11.
-The rest of М10/9 is lesson 6 (chapters 6.3, 6.5). From the
-«Соответствие» of М10/9: the module contract (sections 1–10) was normed as N1.1, N1.4, N1.5 — the parts N1.4, N1.5 here, N1.1 —
-P/06.5; section 10a — the late layer (N1.6); the discrepancies of the contract with the code are removed in favour of the lesson (the name of the shell
-`<sub>.shell.html`, the list of calls of the module supplemented with `/schema`, `/unplaceable`, `/policy`, `/servers/<s>/labels`). The contract
-`CONSOLE-MODULE.md` remains the description of the public surface (plan, V1): the row «Нормативно» — P/07, the dead
-`/servers/<s>/writes`, `display.actions` and the row `server_unsaid` are removed, § 2 — by a reference to N1.4 (analysis, № 26, № 30). М10/9
-normed what `М10A_Platform/16-HTML.md` told (the module, the words, the overlay, the form, `api`, the calls of the shell, CSP):
-the parts about the module and the shell — here, the page and CSP — P/06.5.

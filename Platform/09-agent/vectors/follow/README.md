@@ -46,7 +46,7 @@ a refusal; `held` not `{doc}` — its own record did not pass `record`; `answers
 ## Source log
 
 The rows of `corrections.tsv` of the acceptance of M11/10 about sc. 06 (the paths and numbers are the former ones, they are resolved by
-[`id-map.tsv`](../../../common/id-map.tsv)):
+`id-map.tsv` (historical record)):
 
 | date | sample | fix |
 |---|---|---|

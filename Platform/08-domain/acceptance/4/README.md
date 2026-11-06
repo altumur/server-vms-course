@@ -11,7 +11,7 @@ In total 33 scenarios / 498 steps (sc. 23 — versions and the replay memory, AD
 
 The function `may` without a stand is the vectors [`may`](../../../common/vectors/may/README.md) (106 rows; the owner is chapter 8.4).
 The scenario M11/09 07 (`07-may`, 24 steps) is the same cases, it is not moved (the Architect's decision 2026-10-20 on the plans
-8–10, item 1; the row of `journal/corrections-4.tsv`). The other scenarios of M11/09 are at the neighbours: 03 (`break-glass`) and 06 (`domain-keys`) —
+8–10, item 1; the row of `corrections-4.tsv` (historical correction record)). The other scenarios of M11/09 are at the neighbours: 03 (`break-glass`) and 06 (`domain-keys`) —
 [the acceptance of chapter 6.7](../../../06-console/acceptance/7/README.md) (14, 06); 05 (`names-index`) — [chapter 8.5](../5/README.md) (number 11).
 
 ## Stand
@@ -138,12 +138,6 @@ Sc. 21, 22 — the feed `GET /changes` of the member console under a narrow gran
 Sc. 23 — the versions and the replay memory of the doors of people ([chapter 8.0](../../spec/08.0-domain.norms.md) N1.9). The `revision` of the first administrator is 1: the row is written by `first-admin`. Step 11 repeats step 10 with the former `If-Match`: the answer from memory, `revision` 3 in the row did not move (step 13). Step 12 — another password under the same key: the fingerprint sees the password.
 Step 14: `<key>` — `sha256("root" ‖ 0x00 ‖ "PUT" ‖ 0x00 ‖ "/domain/users/ann" ‖ 0x00 ‖ "u-r1")`; neither the fingerprint nor the body carries the password. Steps 16, 19 — a repeat of a creation and of a deletion: without the memory these are 409 `exists` and 404. Step 20 goes with a new key: 404. For the grants `$g` is the `revision` of the row `m1` after the preparation `@start domain`.
 Step 25: there is no row `c9`, the condition — 412 with `revision: 0`. The break-glass account of `m1` is set here for the first time, therefore `revision` 1.
-
-## `journal/corrections-4.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The log of the acceptance of M11/09 is moved here
-as a whole, as it is (the paths of the old rows — `09/…` and the names of the scenarios of M11/09 — are resolved by [id-map](../../../common/id-map.tsv));
-the rows of 2026-10-20 are the move, the removed scenario 07 and the edit of the input `may-24` of the package `common/vectors/may`.
 
 ## Kit seams
 

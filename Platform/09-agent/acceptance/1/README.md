@@ -10,7 +10,7 @@ addendum (1): without a change of behaviour) from the acceptances of M11/05 (04 
 M11/12 (01, 03, 06); the numbers, names and steps are the former ones, except `13-slot-liveness` (in M11/05 — `04-slot-liveness`) and
 `14-pointer-checksum` (in M11/11 — `06-pointer-checksum`): the number 04 is taken by the scenario of M11/06, the number 06 — by the scenario of M11/12;
 the next numbers after the largest number of the sources of the chapter (M11/10 sc. 12) — in the order of the lesson M11, then of the scenario
-(the Architect's decision on the move plans 8–10, item 14; a row of `journal/corrections-1.tsv`). In total 22 scenarios / 252 steps: 5 from
+(the Architect's decision on the move plans 8–10, item 14; a row of `corrections-1.tsv` (historical correction record)). In total 22 scenarios / 252 steps: 5 from
 M11/05, 26 from M11/06, 20 from M11/10, 11 from M11/11, 40 from M11/12, 2 — sc. 06 steps 9–10 (`as_of` to the medium no more often than once an hour; VMS request № 19); 20 — sc. 15 `one-agent` (DOM-AGENT-TURN-01);
 35 — sc. 16–19 of the coverage audit of P/09 (audit-kimi aee4369fb, drafts J01–J04); 72 — sc. 20–25 of its second pass (Gemini,
 cc36de538, drafts G03, G04; below); 21 — sc. 27 `roles-copy` (ADR-0098 §4).
@@ -242,14 +242,6 @@ an answer from the relay memory and `as_of` of the grants copy (on the stand `as
 no more often than `AS_OF_STORE_EVERY`), the agent body limit; the HTTPS client and the first contact (the stand without TLS). The bytes of the agent signature
 — the package [`agent-sig`](../../../common/vectors/agent-sig/README.md), the function `peer` — the package
 [`peer`](../../../common/vectors/peer/README.md), the function `follow` — the package [`follow`](../../vectors/follow/README.md).
-
-## `journal/corrections-1.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows of the logs of the acceptances of M11/05, M11/06,
-M11/10, M11/11 and M11/12 from before the move — at the beginning of the log, with the former paths and numbers (they are resolved by
-[`id-map.tsv`](../../../common/id-map.tsv)): by `sample` — the rows about the scenarios of this chapter; the rows without a scenario (the whole
-`scenarios.tsv`, `inputs`, `@sleep`, the preparation, the move) — into all the successor chapters (review analysis of stage B 6–7, № 18).
-Then — the rows of the move of this chapter and of the history of the sources.
 
 ## Kit assistance seams
 

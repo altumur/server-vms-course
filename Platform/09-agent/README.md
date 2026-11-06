@@ -16,6 +16,5 @@ data/<family>.schema.json        data families the lesson owns (JSON Schema 2020
 vectors/follow/                  vectors of following the holder, the function follow (9.1)
 acceptance/1/                    acceptance of chapter 9.1, the agent of a member (README.md, scenarios.tsv, inputs/)
 acceptance/2/                    acceptance of chapter 9.2, the relay mode (README.md, scenarios.tsv)
-journal/corrections-<K>.tsv      the log of AI corrections of chapter K — history, not an input; not in the export
 ru/                              for people, not in the export — the lecture ru/09-agent.md, translations of the English text by the same path
 ```

@@ -661,10 +661,3 @@ PASS_TICKET_CHECK: 5          # s; the term within which an open stream notices 
 
 There are no vectors: the gate, `/session`, the rights by the body, the break-glass entry and the pass are checked by the scenarios of the acceptances of chapters 6.3, 6.5, 6.7, of lesson P/10 and of chapter 8.4, the pass of the second kind — by the stand [`acceptance/pass/`](../acceptance/pass/README.md); the check of the break-glass password — by the package [`password-hash`](../vectors/password-hash/README.md) of the password hash contract. (ADR-0083 addendum (32) item 2) The coverage of a grant `scope` against a unit row is the function `covers` of the package [`may`](../vectors/may/README.md) (`covers.tsv`; C06-EVENTS-QUERY-UNKNOWN-138-10).
 
-## Correspondence to former lessons
-
-From P/06.3 (analysis of review of stage A 8–10, № 14 / decision 3; formerly M10/9 N1.3): N1.3 — the block `gate`, `open_routes`, `session`
-in full (here «The gate»; in P/06.3 N1.3 — a pointer and a paragraph about request parsing). From P/06.5 N1.8 (formerly M10/11 N1.8):
-the block `manifest`, `rule`, `codes` (here «Pass of `door.pass`»; the definition of «a live worker with a door» stayed in P/06.5 N1.8). Parts of the norms
-P/06.3-02, P/06.3-03 and P/06.5-12 — by `note` of the [id-map](../id-map.tsv); the domain console — M11/8-10 (`door.pass` on the domain,
-P/10-03), M11/8-11 (the holder's page, P/10-04) and M11/9-06 (the gate with grants; the part of the domain console — P/10-13, of the cluster console — P/06.7-11).

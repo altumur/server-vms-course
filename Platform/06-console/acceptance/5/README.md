@@ -17,12 +17,6 @@ Doors: without a prefix — the console (scenarios 01–12, as in M10/09), `cons
 `store` with `@as`; the directives `@start`, `@sigkill`, `@sigterm`, `@spoil object`, `@put object`, `@sleep`, `@until`; the expectations
 `~text`, `!contains`, `@header`, `@file`, `@any`, `@absent`, `@not`.
 
-## `journal/corrections-5.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
-of the acceptances of M10/09, M10/10 and M10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
-resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (analysis of the review of stage B 6–7, № 18).
-
 ## Stand of sc. 01, 02, 04–12 (from M10/09), 18–33
 
 Before each automatic scenario stop the processes of the previous one, create separate empty row/object stores and clear the variables/replay memory. Load the unchanged testsub and testsub2 and the third manifest of this directory `probe-x.subsystem.yaml` (a name with «-»: `metrics.prefix` is `probe_x`, mutation check 7cecaf2 № 40) and the fourth `probe-w.subsystem.yaml` (the word `writes_via`, sc. 33); root is testsub, the second is available under /testsub2, the third under /probe-x, the fourth under /probe-w; there is no domain, requests come from the loopback. The background controller/resource/worker do not work before @start. The build is schema 1; the store is fresh and empty — there is no row platform/schema, the runner does not write it (reading of the commits «cammeta-acceptance» 2026-10-20). For each POST that creates a unit the runner issues a fresh Idempotency-Key, kept only for the replays of the same step. A table POST does not get a promise of replay memory from this.

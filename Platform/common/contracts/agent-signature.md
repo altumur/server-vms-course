@@ -72,8 +72,3 @@ The package [`agent-sig`](../vectors/agent-sig/README.md) (analysis of the revie
 a foreign key, the forms of `ms` and `sig`, a key of small order; the scenario and the inputs were removed by the move of lesson 8 — the table is the only
 source of these cases; row 20 — the order of the checks: a foreign key and outside the window → `out_of_window` (analysis of the review of stage B 8–10, № 3); rows 21–22 — AS-01/02; rows 23–25 — the header `X-Agent-For` (the input `for`, ADR-0111 item 16). Each checking side passes them with its own function, without a stand. There is also `batch-knock.tsv` — 6 rows of the signature of a batch knock ([the report acceptance contract](accept.md) «The batch knock»); performed by the process `domain`.
 
-## Correspondence to former lessons
-
-From M11/3 (analysis of the review of stage A 8–10, № 13 / decision 2): N1.4 whole (here «Signature», «Check and refusal words»; in M11/3 —
-a pointer). The norm M11/3-08 (the agent signature: bytes, windows; chapter 8.3 — the check at the holder) — by `note` of
-[id-map](../id-map.tsv); 9.1 signs, 8.3, 8.7, 9.2 and P/06.3 N1.3 `identity` step 2 check.

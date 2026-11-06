@@ -82,12 +82,6 @@ of the form into a copy (the vectors `record`, the rows C08-BACKUP-JSON-99).
 
 In total 13 scenarios / 122 steps. Sc. 18 — ADR-0098 §5, there is no dry run by an implementation.
 
-## `journal/corrections-8.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are the log
-`corrections.tsv` of the acceptance of M11/10 as a whole, with the former paths and numbers (they are resolved by `Platform/common/id-map.tsv`; the plan
-of the move of lesson 8, § 3 «Journals»: the log of the source goes into all directories that take its scenarios).
-
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
 Waiting for an event is `@until`: sc. 02 step 13, sc. 09 step 7, sc. 12 step 8 wait for the displaced process to have forgotten the keys

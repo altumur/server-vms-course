@@ -60,10 +60,6 @@ lines are not cases. Each `case` occurs once and has `refused` in `verdicts.tsv`
 For the other cases the verdict table checks acceptance/refusal and the source name; the implementation SHOULD give the path and the line
 per N4 of the norms — as a hint.
 
-## `journal/corrections-1.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample` (a sample of a generation error), `fix` (which line of the lesson was clarified), `languages`. Empty — no error has repeated so far.
-
 ## Additional check of string field names (R36-01)
 
 In a minimal correct manifest, separately for `unit.fields` and `tables.<t>.fields`, the keys 1, true, null and 1.5 (without quotes) give `refused:text` per N1.1 `refused`: a plain key that the table `scalars` reads not as a string is a refusal of the text layer everywhere, including in the value keys of `json` and `display.options` (`display_options_bool_plain_key`); the path and the line are a hint per N4. The same names in quotes are strings and pass. The pair 1/"1" is refused as a whole (`text`), it is not converted into one string with the loss of a field. These inputs are added as profile_unit_key_*/profile_table_key_* to verdicts.tsv and are checked by the same regular loader as the other cases; reading the types of the YAML nodes does not by itself prove its conformance.

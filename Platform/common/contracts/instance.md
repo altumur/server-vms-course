@@ -53,7 +53,3 @@ The package [`instance`](../vectors/instance/README.md): a given INSTANCE_ID —
 The computed form depends on the environment and the machine of the box — by reading and by acceptance scenarios of P/03.2 (two boxes — system
 acceptance).
 
-## Correspondence to former lessons
-
-From P/03.2 N1.4 (the comment of the field `holder`) and N3 «start()» step 2 (the first phrase — the computation); they, P/05, P/08.10 and
-P/02.4 refer here (layout audit A-06).

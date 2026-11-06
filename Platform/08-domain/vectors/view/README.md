@@ -90,7 +90,7 @@ the rule). On a divergence the norm is right, the vector is corrected by «Speci
 ## Log of the source
 
 The rows of `corrections.tsv` of the acceptance of M11/01 before the move (the directory is removed by the move of lesson 8; the paths and numbers are the former ones, they are resolved by
-[`id-map.tsv`](../../../common/id-map.tsv)):
+`id-map.tsv` (historical record)):
 
 | date | sample | fix |
 |---|---|---|

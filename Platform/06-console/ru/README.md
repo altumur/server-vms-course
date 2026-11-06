@@ -30,6 +30,5 @@ vectors/<алгоритм>/                  векторы: rid, requests-body,
                                      resolve, key-families (6.7); op-step (6.9); fault, values-by-type (6.1) и secret-in, log-mask (6.2) — в common/vectors
 acceptance/1/ … acceptance/9/        приёмка глав 6.1–6.9 (README.md, scenarios.tsv; 5/inputs/, 5/probe-w.subsystem.yaml,
                                      5/probe-x.subsystem.yaml, 6/inputs/)
-journal/corrections-<K>.tsv          журнал исправлений ИИ главы K (1–9) — история, не вход; в выгрузку не входит
 ru/                                  для человека, в выгрузку не входит — лекция ru/06-console.md, переводы английского текста тем же путём
 ```

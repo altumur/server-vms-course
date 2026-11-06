@@ -14,7 +14,7 @@ The rows were transferred from the steps of the acceptance of M11/07
 the decision of «Architect» 2026-10-20, ADR-0083 addendum (14)). `case` is the name of the input file, `note` is the scenario and the step of the acceptance of M11/07.
 The input is the JSON of the file in one line: only insignificant whitespace outside strings is removed; the order of keys, the lexemes of numbers and the values are as
 in the file. The expectation is a subset of the acceptance step as it is (after `ok `). The scenario M11/07 sc. 03 and its inputs were removed by the move
-of lesson 8 (the directory M11/07 is removed; the log is the acceptance of chapter P/08.7 (`journal/corrections-7.tsv`, a log, not in the export)): the table is the only
+of lesson 8 (the directory M11/07 is removed; the log is the acceptance of chapter P/08.7 (`corrections-7.tsv` (historical correction record), a log, not in the export)): the table is the only
 source of these cases.
 
 ## Run

@@ -15,6 +15,5 @@ lifecycle.md                        флаги, окружение, коды в�
 data/<семья>.schema.json            семьи данных, которыми урок владеет (JSON Schema 2020-12, ADR-0092; ADR-0088), с .layers.tsv, .outcomes.tsv
 vectors/relieve/                    векторы алгоритма, который урок вводит
 acceptance/                         приёмка урока (README.md, scenarios.tsv, inputs/)
-journal/corrections.tsv             журнал исправлений ИИ — история, не вход; в выгрузку не входит
 ru/                                 для человека, в выгрузку не входит — лекция ru/05-resource.md, переводы английского текста тем же путём
 ```

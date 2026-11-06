@@ -50,14 +50,6 @@ of the stranger whom the holder learned of from a knock that came in a relay pac
   of the relay. After `@mend relay` — again 200. The bytes of the request at the relay door and the 502 itself — by reading: the runner does not call the relay
   door.
 
-## `journal/corrections-2.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
-of the acceptance of M11/04 by `sample` (scenarios 02–04) and the rows without a scenario, at the beginning of the log, with the former paths and numbers (they are
-resolved by [`id-map.tsv`](../../../common/id-map.tsv)); the rows of the inputs `accept-*`, sc. 01 and 06 are the history of the acceptance of chapter 8.3
-(the plan of the move of lesson 8, § 3 «Journals»; review analysis of stage B 6–7, № 18). Implementations and their runners check their own
-result; this directory does not run them itself.
-
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
 | Sc./step | Sleep | Reason |

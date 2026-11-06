@@ -60,7 +60,7 @@ the norm is right, «Specification» corrects the vector.
 ## Source log
 
 The rows of `corrections.tsv` of the acceptance of M11/11 about sc. 04 and its inputs (the paths and numbers are the former ones, they are resolved by
-[`id-map.tsv`](../../../common/id-map.tsv)):
+`id-map.tsv` (historical record)):
 
 | date | sample | fix |
 |---|---|---|

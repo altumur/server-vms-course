@@ -33,12 +33,6 @@ of `secret-in`, the value is the declaration of the field in the form of P/02.1.
 
 The units door of `testsub2` (the rows `tallies`; the tables door `shelves` — sc. 10; the console root `CONSOLE_ROOT=testsub2`, the common acceptance README «Stand») and the store door; the format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) (`console`, `store`, `@key`, `@as`, a subset of fields). The implementation is started with a key ring (`SECRETS_KEY`), the manifests `testsub` and `testsub2`, an empty store; the resource `srv-a` is the first step of sc. 01, 05, 09 (the processes are restarted between scenarios; `@start resource`: `GET /tallies` reads the heartbeats through the objects door of the resource of its server; C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29); the store rows are read by a role with the right to read `testsub2/` (for example, `testsub2worker`), sc. 06 — by a role without the right (`testsubworker`). The field `of` of `tallies` is the name of a counter of `testsub`; before the scenarios the runner creates the counter `c1` in `testsub`.
 
-## `journal/corrections-2.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from
-`corrections.tsv` of the acceptance of M10/07 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
-resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (review analysis of stage B 6–7, № 18).
-
 ## Scenario boundaries
 
 Scenario boundaries: the processes are restarted between scenarios, the variables are reset, and **the store is kept** within the file — the scenarios run in order, and sc. 05 reads rows written earlier; the file begins with an empty store.

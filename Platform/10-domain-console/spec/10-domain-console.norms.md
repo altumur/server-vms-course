@@ -39,7 +39,7 @@ participant); the alarm history — [chapter 8.9](../../08-domain/spec/08.9-doma
 
 The numbers of the subsections are new (the place of the source is in the brackets of the heading). A reference «P/0N[.K]» is a lesson or a chapter of the module; «chapter
 8.K», «chapter 9.K» are the chapters of lessons P/08, P/09; «M11/N» is the lesson M11 (the history of the move). Norm ids are `P/10-MM`; the map to
-former ids is [`id-map.tsv`](../../common/id-map.tsv).
+former ids is `id-map.tsv` (historical record).
 
 <!-- req: P/10-R001 -->
 ## N0 Vocabulary
@@ -493,7 +493,7 @@ The words of `peer` are [the `peer` contract](../../common/contracts/peer.md) «
 
 The catalogue [`acceptance/`](../acceptance/README.md): the stand of several clusters of chapter 8.3 (`hold`, `m1`, `m2`, the catalogue
 `testsub`), scenarios 02 (from M11/11) and 05 (from M11/08) — the numbers and steps are the former ones; 06–09 — the coverage audit of P/10 (audit-kimi
-290ae7697); 10–16 — its second pass (audit-coverage-gemini 798e11a44); 17 — ADR-0094 B4; 18, 19 — the `kept` and relay doors (new scenarios of 2026-11-02, `journal/corrections.tsv`). The alarm list is the vector
+290ae7697); 10–16 — its second pass (audit-coverage-gemini 798e11a44); 17 — ADR-0094 B4; 18, 19 — the `kept` and relay doors (new scenarios of 2026-11-02, `corrections.tsv` (historical correction record)). The alarm list is the vector
 [`vectors/alarms`](../vectors/alarms/README.md) (35 rows: 15 — the former sc. 04 of the acceptance of M11/11; 16 — C10-REPORTED-OUTCOME-1D6; 17–27 — the second pass of the coverage audit; 28–35 — review C1).
 
 ```yaml
@@ -573,7 +573,7 @@ The machine-readable kit assistance is [stages.tsv](../forms/stages.tsv) and [th
 
 An implementation corresponds to the lesson when each norm is fulfilled; the norm id `P/10-MM` is what the deltas of decisions,
 findings and window records refer to (ADR-0080 addendum 6). The items of the lesson are M11/1-08, M11/3-12, M11/8-10, M11/8-11, M11/9-13, M11/11-08 and
-the parts «(part)» by `note` of [id-map](../../common/id-map.tsv) (the move of lesson 10).
+the parts «(part)» by `note` of id-map (historical record) (the move of lesson 10).
 
 - [ ] **P/10-01** the view doors `GET /domain` (with `age` by the wall clock of the console), `/domain/<sub>/<rows>[?cluster=]`, `/domain/<sub>/<rows>?part=` — sc. 10, `/domain/<sub>/tables/<table>?cluster=` (acceptance — step 11 of the analysis of ADR-0110), `/domain/shadow` and their refusals `no domain here`, `unavailable` (an unreadable view and shadow), `not in the directory`, `no such member` (N1.2a) — a neighbour on the stand of chapters 8.3 (sc. 05) and 8.1 (sc. 06, 09); `no domain here` — sc. 06, `unavailable` — sc. 07 (and at `/domain/members`, `/domain/shared`); `HEAD`, `?cluster=` empty or twice, there is no manifest, `rows` is not its own — sc. 10; `not in the directory` — by reading (the manifests of the stand have `domain.ref`); the content of the view — chapter 8.1
 - [ ] **P/10-02** passing the edits on to the process `domain` N1.3: the method, the path, the body, the headers as they came, `X-W2C-Client` is set by the console (the forwarding contract «Client address»), the deadline — «Wait» of the row, the answer as it came, 502 on a break and on silence — a neighbour on the stand of chapters 8.3 (sc. 01, 02), 8.6, 8.8, 8.9; 502 `did not answer` on a break — sc. 08, on silence — sc. 09 (`@freeze`); the deadline «Wait» and `answer broke off` — by reading; the reception — P/08.0-01

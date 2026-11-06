@@ -124,11 +124,6 @@ requests:                     # the append profile of ADR-0054: the key from the
 
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
 
-## `journal/corrections-6.tsv`
-
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are in `corrections.tsv`
-of the acceptance of M10/08 (their paths are resolved by `Platform/common/id-map.tsv`).
-
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
 | Sc./step | Sleep | Reason |

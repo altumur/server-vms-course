@@ -18,7 +18,7 @@
 дорогой) не перенесены: те же случаи без изменения байтов — векторы общих договоров
 [`agent-sig`](../../../../common/ru/vectors/agent-sig/README.md), [`domain-envelopes`](../../../../common/ru/vectors/domain-envelopes/README.md)
 (`m1-open.tsv`, `m1-round.tsv`) и [`accept`](../../../../common/ru/vectors/accept/README.md); их входы сняты вместе с шагами (строка
-`journal/corrections-3.tsv`). Остальные сценарии M11/03 — приёмка [главы 8.1](../1/README.md) (04, 06–09); M11/04 сц. 02–04 —
+`corrections-3.tsv` (historical correction record)). Остальные сценарии M11/03 — приёмка [главы 8.1](../1/README.md) (04, 06–09); M11/04 сц. 02–04 —
 [глава 9.2](../../../../09-agent/ru/acceptance/2/README.md), M11/08 — [глава 6.7](../../../../06-console/ru/acceptance/7/README.md) (01–03), [урок P/10](../../../../10-domain-console/ru/acceptance/README.md) (05), векторы `peer` (06), M11/12 — главы 8.10 и [9.1](../../../../09-agent/ru/acceptance/1/README.md).
 
 ## Стенд
@@ -160,12 +160,6 @@ doc строк `domain/member-rows/<part>` (`hold`, `m1`, `m2`), а не вид;
 Проверяются чтением (норма главы, N5): CAS приёма члена, сбой между записями поколения, `delta` и метки, `sign_failures`
 в метке и виде, несходящиеся сертификаты `tls_ca_certs`, объединение рукопожатия у двери роли (урок P/10 N1.4). Стук и проверки
 держателя на пакете ретранслятора — сц. 02, 03 [приёмки главы 9.2](../../../../09-agent/ru/acceptance/2/README.md).
-
-## `journal/corrections-3.tsv`
-
-Журнал исправлений ИИ (ADR-0080 доп. 1; ADR-0124: журнал, не вход, в выгрузку не входит): `date`, `sample`, `fix`, `languages`. Журналы приёмок M11/03, M11/04, M11/08 и
-M11/12 — целиком, в начале этого журнала, с прежними путями и номерами (их разрешает `Platform/common/id-map.tsv`); затем
-строки переноса, переименования и снятых сценариев-команд.
 
 ## Швы пакета
 
