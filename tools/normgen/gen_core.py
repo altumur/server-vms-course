@@ -490,18 +490,18 @@ a `coreadapter.Core`). Everything compiles and runs from the start: the stage te
 1. `core.go`: `Store` — your state (rows, the index, the `id` memory) under `mu`; `newStore(cfg)` opens it in `cfg.DataDir`
    (`@reopen` — `Close`, then `newStore` on the same directory sees what was written); take every time from `cfg.Now`.
 2. `get.go`, `list.go`, `write.go`, `queryrefused.go` — chapter 1.1. Above each method: the path in
-   `Platform/01-store/spec/01.1-store.norms.md` (Н3 «read», «list», «write», «delete», «write batch», «Admission time»,
-   «Replay by identifier»; Н2.1 query items) and every `req: P/01.1-RNNN` anchor it must meet, with its first line.
+   `Platform/01-store/spec/01.1-store.norms.md` (N3 «read», «list», «write», «delete», «write batch», «Admission time»,
+   «Replay by identifier»; N2.1 query items) and every `req: P/01.1-RNNN` anchor it must meet, with its first line.
    Write the body by those anchors, in that order. `Get` is a stub of the empty store (every key absent) so that stage
-   `launch` stays green; it is not the read of Н3.
+   `launch` stays green; it is not the read of N3.
 3. `write.go`: first `writecheck.Check(body, c.Call.Sock, lim, allowed)` (the form of the body — part writecheck), then
-   the command by Н3 on its parsed body. Answers: `apidoor.AnswerOf(op, code, value)`, refusals
-   `apidoor.Refuse(op, code, kind, msg, fields)` (codes and kinds — Н4 and `forms/refusals.tsv`).
+   the command by N3 on its parsed body. Answers: `apidoor.AnswerOf(op, code, value)`, refusals
+   `apidoor.Refuse(op, code, kind, msg, fields)` (codes and kinds — N4 and `forms/refusals.tsv`).
 4. **Context — the identity of the call: what to check.** `Context(call, header)` in `core.go` gives `c` to every
    method; it cannot refuse, so each method checks `c` first, before the body or the query is used (`QueryRefused` too).
-   Above `Context` — the places: P/01.2 Н1.1 `identity` (box: a role header on any socket — 403 with the role of the
-   socket), P/01.2 Н3 «check» steps 1–3 (a role header on a role socket — `403` before the body is parsed; a listing —
-   after the identity check), P/01.1 Н2.1 (a refusal before the body), P/01.1 Н3 «list», the order «frame → route →
+   Above `Context` — the places: P/01.2 N1.1 `identity` (box: a role header on any socket — 403 with the role of the
+   socket), P/01.2 N3 «check» steps 1–3 (a role header on a role socket — `403` before the body is parsed; a listing —
+   after the identity check), P/01.1 N2.1 (a refusal before the body), P/01.1 N3 «list», the order «frame → route →
    identity → body», the header name and the rows of `forms/refusals.tsv` (403 `forbidden`). The check itself is yours.
 5. `rights.go` (chapter 1.2), `status.go`, `join.go`, `leave.go`, `metrics.go` (chapter 1.3) answer 503 «not in this stage»: leave
    them until your stage needs them. Keep the signatures: `Store` must stay a `coreadapter.Core`.

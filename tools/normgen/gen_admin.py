@@ -403,7 +403,7 @@ KIT_MD = """
 | `{module}/internal/admin/<subcommand>.go` | **yours**: one subcommand per file — the body to write, the anchors above it |
 | `{module}/internal/admin/own.go` | **yours**: `Own` — the commands of your stand profile (`spoil-row` …) |
 
-**Subcommands.** `configstore <subcommand> [flags] [words]` (P/01.3 Н1.3 `admin_ops`): `launch.Main` parses the flags by
+**Subcommands.** `configstore <subcommand> [flags] [words]` (P/01.3 N1.3 `admin_ops`): `launch.Main` parses the flags by
 `forms/daemon-flags.tsv` first (a flag out of form, a flag of another command, a wrong positional word — code 2, your
 code is not called), then — when `App.Admin` is nil, as in the generated `main.go` — `admin.Run(f, env)` calls your
 function of `f.Cmd`. Until you write it, it answers `configstore <subcommand>: not in this stage` on stderr, exit 1.

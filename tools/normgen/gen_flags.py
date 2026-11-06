@@ -1061,7 +1061,7 @@ KIT_MD = """
 
 | Package | Import path | Origin |
 |---|---|---|
-| `flags` | `{module}/internal/flags` | generated from `Platform/01-store/forms/daemon-flags.tsv` (P/01.3 Н1.3 «Daemon flags») |
+| `flags` | `{module}/internal/flags` | generated from `Platform/01-store/forms/daemon-flags.tsv` (P/01.3 N1.3 «Daemon flags») |
 
 ```go
 func ParseArgs(args []string, getenv func(string) string) (*flags.Flags, *flags.Refusal) // os.Args[1:], os.Getenv
@@ -1082,7 +1082,7 @@ type Flags struct {
 }
 ```
 
-- On a `*Refusal`: log `r.Error()` (it names the flag) and exit with `r.Code` (2) — the start refusal of P/01.3 Н1.3
+- On a `*Refusal`: log `r.Error()` (it names the flag) and exit with `r.Code` (2) — the start refusal of P/01.3 N1.3
   for a flag outside the table, a flag of another command, a value outside its type, a missing required flag
   (`-dir`; `-id` with `-join`, `-door`, `-group-size 3|5`; `-voters` with `-door`; `--from` for restore and import;
   `-isolated`, `-peers` for recover), `-bootstrap` with `-join`, `-raft` or `-api` off the loopback without `-tls`.
@@ -1093,7 +1093,7 @@ type Flags struct {
   `--` ends the flags (the rest are positional); the daemon takes no positional words (a refusal). `--from` is spelled with two hyphens, as in the norm.
 - Types (the header of the form, P/01.3-R031): `bytes`, `int` — a decimal integer without a sign, a plus or leading
   zeros, `bytes` without a suffix (no `KiB`); `duration` — `<integer>(ms|s|m|h)`, > 0 (`5s`, `250ms`; not `1h30m`);
-  `addr` — `host:port`, a non-empty host (a name, IPv4 or `[IPv6]`), a port 1–65535; `id` — the member id of P/01.3 Н2.
+  `addr` — `host:port`, a non-empty host (a name, IPv4 or `[IPv6]`), a port 1–65535; `id` — the member id of P/01.3 N2.
 - No `-id` and an empty or absent `SERVER_NAME` (outside a group) — a refusal, code 2.
 - Not done here (content, not the form of the table): the rights file and the TLS kit contents, `-id` against the door
   certificate, the FORMAT mark, the inherited sockets, the positional words of the subcommands. Your own subcommands

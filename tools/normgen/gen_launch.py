@@ -174,20 +174,20 @@ KIT_MD = """
 | Package | Import path | Origin |
 |---|---|---|
 | `launch` | `{module}/internal/launch` | kit (closed): flags → refusal 2 → FORMAT → sockets → your frame → SIGTERM |
-| `frame` | `{module}/internal/frame` | **yours**: the HTTP frame of Н2.1 (put once, never overwritten) — **TEMPORARY, on net/http: replace it** |
+| `frame` | `{module}/internal/frame` | **yours**: the HTTP frame of N2.1 (put once, never overwritten) — **TEMPORARY, on net/http: replace it** |
 | `cmd/configstore` | `{module}/cmd/configstore` | **yours**: `main` (put once, never overwritten) |
 
 > **`internal/frame/frame.go` is a temporary frame on `net/http`; the raw HTTP acceptance requires the strict parse of
-> Н2.1 — replace it.** `net/http` is softer than Н2.1 (obs-fold, `#` in the target, a lone LF in a header, a request
+> N2.1 — replace it.** `net/http` is softer than N2.1 (obs-fold, `#` in the target, a lone LF in a header, a request
 > line or headers over `HEADER_BYTES` = 65536, its own 414/431/505, no early refusal with `Connection: close` and the
-> drain before the body). The HTTP frame and the limits of Н2.1 are your hand part (ADR-0125 addendum (1) item 2):
+> drain before the body). The HTTP frame and the limits of N2.1 are your hand part (ADR-0125 addendum (1) item 2):
 > write your own reader of the connection (`bufio` over `net.Conn`) by the anchors in the header of `frame.go`
 > (P/01.1-R049, R050, R052–R054; the drain — «Implementation decides» item 9), keep `New`, `Serve`, `Shutdown`.
 > `launch` and `apidoor` stay closed: your frame calls `coreadapter.Handle(c, cfg, Call{Sock: sock}, method, target,
 > header, body)` — the route, the query, the body limit 413 and the encoding of the answer are done there.
 
 ```go
-type Mark struct { Format string; Version int64; Impl string }      // the FORMAT mark (P/01.3 Н1.3 format)
+type Mark struct { Format string; Version int64; Impl string }      // the FORMAT mark (P/01.3 N1.3 format)
 type App struct {
     Mark  Mark
     Open  func(coreadapter.Config) (coreadapter.Core, error)        // your core: coreadapter.Open
@@ -232,13 +232,13 @@ func main() {
 
 - Build `go build -o bin/configstore ./cmd/configstore`; the profile `store`/`store1` command:
   `./bin/configstore -id store1 -dir {data} -sockets {rundir} -rights {rights} -max-body {body_limit} -max-value {row_ceiling}`
-  (`-id`: without it and without `SERVER_NAME` the start is refused, code 2 — P/01.3 Н4).
+  (`-id`: without it and without `SERVER_NAME` the start is refused, code 2 — P/01.3 N4).
 - Each socket is an identity: `Call.Sock` is `admin` or the role; your `Context(call, header)` gets the request headers.
 - `Open` gets `Config{BodyLimit: -max-body, RowCeiling: -max-value, Rights: <bytes of -rights>, Now: time.Now, DataDir: -dir}`.
   While `coreadapter.Open` is the kit's stub (it returns `coreadapter.ErrNotImplemented`), the frame serves its own
   empty core `launch.Empty` (every key absent, the rest 503): the stage `launch` closes with the kit as is. Write your
   `Open` (stage `store_core`) and the daemon serves your core — `main.go` does not change.
-- The HTTP frame is yours (`internal/frame`): the kit's temporary one is `net/http`, softer than Н2.1 (above). Connection
+- The HTTP frame is yours (`internal/frame`): the kit's temporary one is `net/http`, softer than N2.1 (above). Connection
   limits, `-api`/`-tls`, the group are not in `launch` either: add them by `Start` when a stage needs them.
 """
 
