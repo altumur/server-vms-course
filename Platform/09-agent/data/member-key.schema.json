@@ -11,7 +11,7 @@
   },
   "pub": {
    "$ref": "#/$defs/common.domain_member_key",
-   "description": "hex of the member's public key: the agent signs with it (N1.3), the holder seals to it (P/08.3 N1.5)",
+   "description": "hex of the member's public key: the agent signs with it (N1.3), the holder seals to it (P/08.3 N1.5) The derived public key must agree with the existing confirmed domain/member.pub before member signing; authorized replacement updates both rows together (P/09.1 N1.1, review C4). The initial create-once/admission path remains distinct.",
    "x-codec": [
     "string"
    ]

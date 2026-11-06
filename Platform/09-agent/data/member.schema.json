@@ -11,7 +11,7 @@
   },
   "pub": {
    "$ref": "#/$defs/common.domain_member_key",
-   "description": "hex of the member's public key — pub of the row domain/member-key",
+   "description": "hex of the member's public key — pub of the row domain/member-key The own-console verification key equals pub of domain/member-key. Authorized maintenance replaces the pair together and confirms it before member signing resumes (P/09.1 N1.1, review C4).",
    "x-codec": [
     "string"
    ]
