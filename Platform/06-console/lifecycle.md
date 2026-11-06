@@ -26,7 +26,7 @@ This English text is the source; the Russian translation `ru/lifecycle.md` (for 
 - **Launch** — through the runner `w2c-run.sh console` with `W2C_ROLE=console` ([P/02.4] N1.1, N1.9).
 - **Start order** — the check of the schema ([P/06.6] N3 «console start — schema check»), of the manifest from the rows, the shell
   `CONSOLE_ROOT`; the start does not check the static files of the subsystems: a file without bytes — 503 of its own door ([P/06.5] N2), the resealing of secrets ([P/06.2] N3 «reseal at start»), the reaper of requests and of table rows ([P/06.4] N3 «reaper»), the folder reaper ([P/06.8] N3 «folder reaper»), the reaper and the leader of operations ([P/06.9] N3)
-  and the marks of bodies ([P/06.1] N3 «уборка тел»); the deletion of bodies — only in the maintenance window, by the cleanup window command (below)
+  and the marks of bodies ([P/06.1] N3 «body sweep»); the deletion of bodies — only in the maintenance window, by the cleanup window command (below)
   ([P/02.4] N3 «server start», step 4).
 - **The console module** is shipped together with the console — the same bytes as in the specification; it is not read from the export catalogue
   while running ([P/06.5] N1.1 `module`).
@@ -101,9 +101,9 @@ item 9), not by the process `console`: the operator runs it in an exclusive wind
 
 | Code | When | Norm |
 |---|---|---|
-| 0 | the window is done, including when there is nothing to delete | [P/06.1] N2 «Sweep window command», N3 «уборка тел» |
+| 0 | the window is done, including when there is nothing to delete | [P/06.1] N2 «Sweep window command», N3 «body sweep» |
 | 2 | no `--writers-stopped`; a failure to read the references or the list; a CAS conflict of the list — nothing is deleted | [P/06.1] N2 «Sweep window command» |
-| 3 | a failure after the deletions began: a tombstone or a deletion outcome is not confirmed — do not open the writers and the copying | [P/06.1] N3 «уборка тел» («завершение») |
+| 3 | a failure after the deletions began: a tombstone or a deletion outcome is not confirmed — do not open the writers and the copying | [P/06.1] N3 «body sweep» («completion») |
 
 ## Signals and readiness
 
@@ -122,7 +122,7 @@ acceptance README](../common/acceptance/README.md) «Stand without root»; the p
 - The command of the «Stand» with the substitution `{port}`; `{data}` is `PLATFORM_DIR`: the stand sets `PLATFORM_DIR={data}`,
   `CONSOLE_PORT={port}`, `PLATFORM_STORE` — the role socket, `SECRETS_KEY={data}/etc/secrets/platform.key` — the ring, which the runner creates
   by the «Stand» command `ring {file}` before the first process, `BOX_ID`,
-  `SERVER_NAME` ([Stand] «Один каталог данных»); `CONSOLE_CALL_PORT={cport}` — on the stand with the kit of [the second kind of pass](../common/acceptance/pass/README.md).
+  `SERVER_NAME` ([Stand] «One data directory»); `CONSOLE_CALL_PORT={cport}` — on the stand with the kit of [the second kind of pass](../common/acceptance/pass/README.md).
 - `CONSOLE_ROOT` is named by the acceptance README of the chapter: chapter 6.2 — `testsub2`, the others — `testsub` ([Stand]).
 
 ## Open

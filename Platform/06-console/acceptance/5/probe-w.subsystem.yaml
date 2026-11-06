@@ -1,6 +1,6 @@
-# probe-w — четвёртый манифест стенда главы 6.5: слово writes_via (P/06.1 N1.1a; ADR-0119 доп. (10), (11)), сц. 33.
-# Строки единицы items и таблицы log пишет только probe-x по билету; сеанс получает 403 writes via. Таблица free — без слова,
-# дверь человека открыта как прежде. Воркера стенд не запускает: двери строк его не ждут.
+# probe-w — fourth manifest of the chapter 6.5 stand: writes_via (P/06.1 N1.1a; ADR-0119 addenda (10), (11)), sc. 33.
+# Only probe-x writes unit rows items and table log, under a ticket; the session receives 403 writes via. Table free has no writes_via word;
+# the human door remains open. The stand does not start a worker: row doors do not wait for it.
 name: probe-w
 unit:
   rows: items

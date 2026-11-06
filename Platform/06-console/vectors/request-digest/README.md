@@ -10,7 +10,7 @@ The bytes of the table are written by the Specification (ADR-0083, stage A). The
 (ADR-0080 addendum 16).
 
 The bytes of the table did not change in the move of lesson 6 (stage B, ADR-0083 addendum (1)), including
-the header comment (its «М10/8 N1.5», «lesson-owner М10/8» are the former address of the norm, now [the contract of the request and its mark](../../../common/contracts/request-mark.md) (review analysis of stage B 6–7, № 24); the product copy
+the header comment (its «M10/8 N1.5», «lesson-owner M10/8» are the former address of the norm, now [the contract of the request and its mark](../../../common/contracts/request-mark.md) (review analysis of stage B 6–7, № 24); the product copy
 is checked against these bytes).
 
 ## `digest.tsv`
@@ -34,7 +34,7 @@ server field that the client is entitled to send. `unit` stays.
 - `unit`;
 - `valid_until`;
 - the stamps `by`, `at`, `group` and the field `about` (for `testsub2` — `of`);
-- `filed` — not a body field: the filer's instance, a row field that the worker writes (the contract of the request and its mark «Request» `filed`); the «поля тела строки»
+- `filed` — not a body field: the filer's instance, a row field that the worker writes (the contract of the request and its mark «Request» `filed`); the «row body fields»
   of the norm do not include it (review of stage A: SA1-27, Gemini 4.4).
 
 **The two kinds of digest are not compared with each other.** A repeat is recognized by the digest of its own kind (the contract of the request and its mark «Request» `digest`).

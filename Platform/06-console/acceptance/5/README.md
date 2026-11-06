@@ -4,26 +4,26 @@ This English text is the source; the Russian translation `ru/acceptance/5/README
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`06.5-console.norms.md`](../../spec/06.5-console.norms.md) N5. The scenarios were moved from the acceptance of
-М10/09 (01, 02, 04–12; 03 — the session — into
-[the acceptance of chapter 6.3](../3/README.md)) and of М10/11
-(02 → 14, 09 → 16, 13, 15 step 1), and from М10/10 —
+M10/09 (01, 02, 04–12; 03 — the session — into
+[the acceptance of chapter 6.3](../3/README.md)) and of M10/11
+(02 → 14, 09 → 16, 13, 15 step 1), and from M10/10 —
 03 and 08 → 17 whole (the step `/metrics` of the console; analysis of the review of stage A 6–7, № 32) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers, the names of the scenarios and the steps are
-the former ones (sc. 08 and 19 — the first step `@start resource`: the console reads the heartbeats of the workers through the objects door of the resource of its own server, without the resource «не известно», [the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27), except `14-resource-silent` (in М10/11 — `02-resource-silent`) and `16-resource-unreadable-heartbeat` (in М10/11 —
-`09-resource-unreadable-heartbeat`) and `17-snapshot-garbled` (in М10/10 — `08-snapshot-garbled`): the numbers 02, 08 and 09 are taken
-by the scenarios of М10/09. In total 33 scenarios / 327 steps: 13 — sc. 33 (a write only by the ticket writes_via, ADR-0119 addendum (10)), 13 — sc. 32 (a pass of the second kind without a worker, ADR-0094 B1), 9 — sc. 31 (the feed series, ADR-0094 B2), 14 — sc. 30 (the counter door, ADR-0094 B4), 15 — sc. 29 (the counter of the batch door, ADR-0094 B9), 72 — sc. 26–28 (static files and the shell of a mounted subsystem, ADR-0094 B7), 23 — sc. 24–25 (the second pass of the coverage audit of P/06, Gemini), 30 — sc. 20–23 (the coverage audit of P/06), 8 — sc. 19 `19-place-held-no-row` (C06-WHERE-PLACE-SERVER-33-01), 5 — sc. 18 `18-id-default` (`{id}` in the default, VMS request № 1), 85 in the scenarios of М10/09 (the steps 04/8 and 12/12–13 were added — analysis of the review of stage B 6–7, № 19,
-№ 20), 23 from М10/11, 14 from М10/10.
+the former ones (sc. 08 and 19 — the first step `@start resource`: the console reads the heartbeats of the workers through the objects door of the resource of its own server, without the resource «unknown», [the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27), except `14-resource-silent` (in M10/11 — `02-resource-silent`) and `16-resource-unreadable-heartbeat` (in M10/11 —
+`09-resource-unreadable-heartbeat`) and `17-snapshot-garbled` (in M10/10 — `08-snapshot-garbled`): the numbers 02, 08 and 09 are taken
+by the scenarios of M10/09. In total 33 scenarios / 327 steps: 13 — sc. 33 (a write only by the ticket writes_via, ADR-0119 addendum (10)), 13 — sc. 32 (a pass of the second kind without a worker, ADR-0094 B1), 9 — sc. 31 (the feed series, ADR-0094 B2), 14 — sc. 30 (the counter door, ADR-0094 B4), 15 — sc. 29 (the counter of the batch door, ADR-0094 B9), 72 — sc. 26–28 (static files and the shell of a mounted subsystem, ADR-0094 B7), 23 — sc. 24–25 (the second pass of the coverage audit of P/06, Gemini), 30 — sc. 20–23 (the coverage audit of P/06), 8 — sc. 19 `19-place-held-no-row` (C06-WHERE-PLACE-SERVER-33-01), 5 — sc. 18 `18-id-default` (`{id}` in the default, VMS request № 1), 85 in the scenarios of M10/09 (the steps 04/8 and 12/12–13 were added — analysis of the review of stage B 6–7, № 19,
+№ 20), 23 from M10/11, 14 from M10/10.
 
-Doors: without a prefix — the console (scenarios 01–12, as in М10/09), `console` and `console2` (scenarios 13–16, as in М10/11; 03 and 17, as in М10/10), `resource` (03, 17),
+Doors: without a prefix — the console (scenarios 01–12, as in M10/09), `console` and `console2` (scenarios 13–16, as in M10/11; 03 and 17, as in M10/10), `resource` (03, 17),
 `store` with `@as`; the directives `@start`, `@sigkill`, `@sigterm`, `@spoil object`, `@put object`, `@sleep`, `@until`; the expectations
 `~text`, `!contains`, `@header`, `@file`, `@any`, `@absent`, `@not`.
 
 ## `journal/corrections-5.tsv`
 
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
-of the acceptances of М10/09, М10/10 and М10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
+of the acceptances of M10/09, M10/10 and M10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
 resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (analysis of the review of stage B 6–7, № 18).
 
-## Stand of sc. 01, 02, 04–12 (from М10/09), 18–33
+## Stand of sc. 01, 02, 04–12 (from M10/09), 18–33
 
 Before each automatic scenario stop the processes of the previous one, create separate empty row/object stores and clear the variables/replay memory. Load the unchanged testsub and testsub2 and the third manifest of this directory `probe-x.subsystem.yaml` (a name with «-»: `metrics.prefix` is `probe_x`, mutation check 7cecaf2 № 40) and the fourth `probe-w.subsystem.yaml` (the word `writes_via`, sc. 33); root is testsub, the second is available under /testsub2, the third under /probe-x, the fourth under /probe-w; there is no domain, requests come from the loopback. The background controller/resource/worker do not work before @start. The build is schema 1; the store is fresh and empty — there is no row platform/schema, the runner does not write it (reading of the commits «cammeta-acceptance» 2026-10-20). For each POST that creates a unit the runner issues a fresh Idempotency-Key, kept only for the replays of the same step. A table POST does not get a promise of replay memory from this.
 
@@ -65,7 +65,7 @@ Without workers there is no placement; the counter c4 is created only in 04. The
   type check (earlier than the weight, the row check contract P2); a refused PUT — the row and `revision` are the earlier ones. The numbers burnt
   by refused POSTs the TSV does not compare.
 - **Static files and the shell of `testsub2` (sc. 26–28; ADR-0094 B7).** The bytes lie in `inputs/testsub2/`: the files of the list
-  `console.files` of the manifest and `testsub2.shell.html`. The stand puts them next to the manifest before `manifest-put` (common README, «Манифесты»).
+  `console.files` of the manifest and `testsub2.shell.html`. The stand puts them next to the manifest before `manifest-put` (common README, «Manifests»).
   The files are acceptance data: the fonts are not real (magic and all byte values), `logo.svg` carries a script, `bundle.js` is 300045 bytes, two
   parts of `FILE_PART`, the second is shorter, a text with non-ASCII at the boundary is not aligned; `empty.css` is empty, it has no parts; `api.js` and
   `apis/app.css` are names that only begin with `api`, next to the prohibition of `api/`. The manifest `probe-x` does not carry the word `console.shell`: on
@@ -86,10 +86,10 @@ Without workers there is no placement; the counter c4 is created only in 04. The
 - **The slot and the contenders in `WorkerRow` (sc. 25; the second pass of the coverage audit of P/06, Gemini).** The heartbeat of `w-1` is the input
   `hb-w-1-labels.json` (as in sc. 12); the slot row `testsub/slots/w-1` is written by the role `testsubworker` bypassing the worker: `released:
   "taking"` — `released: false`, `slot_taking: true`, `slot_garbled: false`; then `gen: "x"` (not by the form of P/03.2 N1.4) —
-  `slot_garbled: true`, `slot_until: null`, there are no `released` and `slot_taking` (N2 «Выдачи»). The contender marks are objects
+  `slot_garbled: true`, `slot_until: null`, there are no `released` and `slot_taking` (N2 «Issuance»). The contender marks are objects
   `@put object`: under `w-1` with `name: "w-2"` (not equal to the key segment — unreadable, but fresh: a contender for `w-1`,
   `name_conflict_unreadable: true`) and the search mark `-` (not a contender); the series `testsub_name_conflicts` is 1 (N3 «/servers»
-  «Соперники»; the vectors `contender-projection` `name-mismatch`, `dash-not-contender`).
+  «Contenders»; the vectors `contender-projection` `name-mismatch`, `dash-not-contender`).
 - **Series.** The expectation `~<series>[ <value>]` on the body of `/metrics` of the console (with the door prefix and without) — a series with this name (and
   exactly this set of labels, if named) and the value, if named; several — through « ~» (sc. 05 step 6, sc. 10
   step 3); not a substring: `fake_counter_age` does not satisfy `~counter_age`, a repeat of a series or a line not by the series form —
@@ -123,7 +123,7 @@ Heartbeats of a given form are put by `@put object <key> inputs/<file>` bypassin
 Sc. 12 step 7: two unreadable heartbeats (`w-7`, `W-9`) — `testsub_heartbeats_garbled 2`. Step 8 writes the row
 `platform/servers/srv-a` by the role `console` (P/02.5 N1.4).
 
-## Stand of sc. 03 and 17 (from М10/10)
+## Stand of sc. 03 and 17 (from M10/10)
 
 The stand of sc. 13–16 with the controller `testsub` (`@start controller`) and the resource (`@start resource`); a catalogue of two manifests.
 The steps before `/metrics` of the console are preparation: the controller writes the snapshot shard `testsub/snapshot/unplaced`, the resource gives it out
@@ -133,9 +133,9 @@ through the objects door (`@until 20`, `@time` — the dictionary of the «Stand
 `metrics`; N0 P/01.1 «Stability of output»). The row `testsub/counters/s7` with `start: notint` sc. 17 writes bypassing the console by the role
 of the console (`@as console store`).
 
-## Stand of sc. 13–16 (from М10/11)
+## Stand of sc. 13–16 (from M10/11)
 
-The stand of the acceptances of P/03 (formerly М10/5; analysis of the review of stage B 3–5, № 34) with the resource (`@start resource`, `@sigkill resource`, `@sigterm resource`). The build with schema
+The stand of the acceptances of P/03 (formerly M10/5; analysis of the review of stage B 3–5, № 34) with the resource (`@start resource`, `@sigkill resource`, `@sigterm resource`). The build with schema
 1. Load the unchanged testsub and testsub2 (without `probe-x`); root is testsub, the second is available under /testsub2; there is no domain,
 requests come from the loopback. The background controller/resource/worker do not work before @start. Between scenarios the runner stops
 the processes, resets the store and the variables.
@@ -143,8 +143,8 @@ the processes, resets the store and the variables.
 - **Time in a row (sc. 13).** The rule of N0 P/01.1 «Time in a row» (the Architect's decision of 2026-10-18), the reader side:
   the same course as sc. 16, but the door row is written with `at` with 6 fraction digits (`901.123456`, `906.654321`) — a write of a form
   that the reader accepts and the writer does not write; the outcome is the same.
-- **Sc. 15 step 1** (the former step 9 of sc. 15 of М10/11; steps 1–8 — in [the acceptance of P/01.3](../../../01-store/acceptance/3/README.md)):
-  `door.pass` of `testsub2` (`pass: [entries]`) without a worker with a door — 503 `{"error": "denied"}` (N1.8; reconciliation of python and go М10/6–11, B26; the word — GP-L03, the Architect's decision of 2026-10-28); the door
+- **Sc. 15 step 1** (the former step 9 of sc. 15 of M10/11; steps 1–8 — in [the acceptance of P/01.3](../../../01-store/acceptance/3/README.md)):
+  `door.pass` of `testsub2` (`pass: [entries]`) without a worker with a door — 503 `{"error": "denied"}` (N1.8; reconciliation of python and go M10/6–11, B26; the word — GP-L03, the Architect's decision of 2026-10-28); the door
   `console2` is the same console with the prefix `/testsub2`.
 - **Sc. 16** (reconciliation of python and go 2026-10-18): the heartbeat of the resource is spoiled (`@spoil object`), while the door row is fresh — the state
   `unreachable` (`resource_state` of [the observation contract](../../../common/contracts/observation.md): the rules in order,

@@ -174,7 +174,7 @@ This is a suggested order, not a mandatory structure of the code.
 8. Fill all the items of the checklist of chapter P/06.1. For the parts outside the TSV attach the reading evidence by the table of subjects of N5
    (for each subject a scenario or an exercise of the owner lesson is named there) or the result of the corresponding stand
    [P/04](../../04-controller/spec/04-controller.norms.md), [P/05](../../05-resource/spec/05-resource.norms.md), chapters 6.2–6.6
-   and lessons М11. A reference to a future stand is not a check by itself.
+   and lessons M11. A reference to a future stand is not a check by itself.
 
 ### Chapter 6.2 — the write of secrets
 
@@ -224,7 +224,7 @@ This is a suggested order, not a mandatory structure of the code.
    `cluster_rows`, `unit_of`, `reach`, `names`); the action `reach.requests` — the field `action` of the request body
    ([chapter 6.4](06.4-console.norms.md) N1.5 `action`).
 4. Pass the acceptance of [chapter 6.3](../acceptance/3/README.md) — scenario 03, in isolation. Check separately the grants with the domain
-   stand (М11): the guard branches 401/403/503, the order of `identity`, Origin by the cookie are not executed in the acceptance TSV.
+   stand (M11): the guard branches 401/403/503, the order of `identity`, Origin by the cookie are not executed in the acceptance TSV.
 
 ### Chapter 6.4 — requests and events
 
@@ -383,7 +383,7 @@ For the subsystem paths the contract sets two standard servers: the console orig
 origin/{sub}. A path of paths is appended to the first or the second; origin has no
 trailing slash. localhost/testsub — substituted examples, not launch settings.
 The short path is chosen by CONSOLE_ROOT, the prefixed one — by the named loaded manifest.
-Reconcile both URLs, the methods, the codes and the bodies with N2 of chapters 6.1, 6.6 and [chapter 6.5](06.5-console.norms.md) («Полные формы и границы N2»:
+Reconcile both URLs, the methods, the codes and the bodies with N2 of chapters 6.1, 6.6 and [chapter 6.5](06.5-console.norms.md) («Complete forms and bounds N2»:
 origin without a trailing `/` or origin/{sub}; the common `404 NoRoute`, `405 {detail: method, error: method}`). The common doors (`/drain`, `/schema`, `/changes`, `/servers/{server}/…`) and the resource door (P/05) do not get a prefix from a neighbouring path item.
 Read the existing scenarios root and testsub2 as a control of routing; structural validity does not execute HTTP.
 

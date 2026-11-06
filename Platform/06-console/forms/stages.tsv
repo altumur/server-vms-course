@@ -1,14 +1,14 @@
 # Kit seams and build are assistance, not full runner acceptance. kit=- for every stage.
 # Vectors, real HTTP requests-body77/roundtrip21, domain neighbours08–10 and reading remain mandatory by their norms.
 n	stage	goal	norms	gate	weight	kit	parts	depends	when
-1	model	Environment, families, refusal schemas and literal runtime constants	P/06 Н0–Н4; forms/daemon-flags.tsv; forms/refusals.tsv; forms/runtime-constants.tsv	build	2	-	flags,refusals,families,core	-	true
-2	unit_rows	Real claim effects, counter history and maintenance acknowledgement	P/06.1 Н1–Н5	tests:6.1:*:seams	4	-	door,core,stagetests	1	true
-3	secrets	Ordinary secret edit/refusal with real ring outcomes	P/06.2 Н1–Н5	tests:6.2:*:seams	3	-	core,stagetests	2	true
-4	gate	Domain traces, identity and glass without broadening admission	P/06.3 Н1–Н5	tests:6.3:*:seams	3	-	door,core,stagetests	3	true
-5	requests_events	Unknown accounting and exact append reaper boundaries	P/06.4 Н1–Н5	tests:6.4:*:seams	4	-	door,core,stagetests	4	true
-6	observations	Unknown first read, remembered lapse, shell identity and pass deadline	P/06.5 Н1–Н5	tests:6.5:*:seams	4	-	door,core,stagetests	5	true
-7	control	Schema proof, decommission and label refusal without writes	P/06.6 Н1–Н5	tests:6.6:*:seams	3	-	door,core,stagetests	6	true
-8	late_domain	One hop, uncertain membership route and exact callback book path	P/06.7 Н1–Н5	tests:6.7:*:seams	4	-	door,core,stagetests	7	true
-9	folders	UTF-8 byte boundaries and atomic guards of tree/membership	P/06.8 Н1–Н5	tests:6.8:*:seams	4	-	door,families,core,stagetests	8	true
-10	operations	Unknown cancellation proof and turn/ticket guarded step effects	P/06.9 Н1–Н5	tests:6.9:*:seams	4	-	door,families,core,stagetests	9	true
-11	complete_console	All published process chapters, own/common vectors, additional probes and reading	P/06.1–P/06.9 Н5; common/vectors/consumers.tsv; acceptance/*/README.md	accept:6.1:*;accept:6.2:*;accept:6.3:*;accept:6.4:*;accept:6.5:*;accept:6.6:*;accept:6.7:*;accept:6.8:*;accept:6.9:*	5	-	-	10	true
+1	model	Environment, families, refusal schemas and literal runtime constants	P/06 N0–N4; forms/daemon-flags.tsv; forms/refusals.tsv; forms/runtime-constants.tsv	build	2	-	flags,refusals,families,core	-	true
+2	unit_rows	Real claim effects, counter history and maintenance acknowledgement	P/06.1 N1–N5	tests:6.1:*:seams	4	-	door,core,stagetests	1	true
+3	secrets	Ordinary secret edit/refusal with real ring outcomes	P/06.2 N1–N5	tests:6.2:*:seams	3	-	core,stagetests	2	true
+4	gate	Domain traces, identity and glass without broadening admission	P/06.3 N1–N5	tests:6.3:*:seams	3	-	door,core,stagetests	3	true
+5	requests_events	Unknown accounting and exact append reaper boundaries	P/06.4 N1–N5	tests:6.4:*:seams	4	-	door,core,stagetests	4	true
+6	observations	Unknown first read, remembered lapse, shell identity and pass deadline	P/06.5 N1–N5	tests:6.5:*:seams	4	-	door,core,stagetests	5	true
+7	control	Schema proof, decommission and label refusal without writes	P/06.6 N1–N5	tests:6.6:*:seams	3	-	door,core,stagetests	6	true
+8	late_domain	One hop, uncertain membership route and exact callback book path	P/06.7 N1–N5	tests:6.7:*:seams	4	-	door,core,stagetests	7	true
+9	folders	UTF-8 byte boundaries and atomic guards of tree/membership	P/06.8 N1–N5	tests:6.8:*:seams	4	-	door,families,core,stagetests	8	true
+10	operations	Unknown cancellation proof and turn/ticket guarded step effects	P/06.9 N1–N5	tests:6.9:*:seams	4	-	door,families,core,stagetests	9	true
+11	complete_console	All published process chapters, own/common vectors, additional probes and reading	P/06.1–P/06.9 N5; common/vectors/consumers.tsv; acceptance/*/README.md	accept:6.1:*;accept:6.2:*;accept:6.3:*;accept:6.4:*;accept:6.5:*;accept:6.6:*;accept:6.7:*;accept:6.8:*;accept:6.9:*	5	-	-	10	true

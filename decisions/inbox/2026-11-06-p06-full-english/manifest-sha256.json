@@ -1,0 +1,16 @@
+{
+  "whitespace.json": "60275af7c15adc95dd282d4c838ba7598e43b6f6635f375b578a201463efcf3c",
+  "source-check-final.log": "4181cf546c07a99a2f81160bcbcde7d79baa8989e18387f7c293f7a5b95b6164",
+  "audit.py": "e76bf5e58c4c6c8d7bc87232b4204a900396d2152b1e805d7cc99155932df4d9",
+  "seams8-four-cells.json": "ec1638e73a0dbecd3cbb7d834ca001d4295a34dd69d2184cf2496f5ee1c66df2",
+  "semantic-preview-inventory.tsv": "7db782ce833cf01d4e3eb87a1b11f36c1c756a3d80f2fc39bb80028f2b736c0b",
+  "preservation.json": "c13808ab2bf2e6fab9a33ea69f46fabbc94f823cd3f3006c54eda201f633cac1",
+  "source-tests.log": "46d96c4697aedf122eb9553bb588ecc76f12b77d5ddee90fe3172f01ffe4ccad",
+  "preview-after-encoding.log": "00342df6b5bafcacbfe3802418e6ba56726ad851b0af49012c646f26fb62bca0",
+  "cell-map.json": "babcf8d23548d0dcd17391f62347fa0b0e8f951d6c2dbe9b338920db8ceabb13",
+  "checks.json": "a358f73c7feda7822b25ca8b7e32c160041fedab5340b7cd44709b2ad042c77e",
+  "README.md": "60536a998d88b5cf3326ccca3bbfc57ccacaf6e2e22c392d88460a47ed3ed478",
+  "port-gate-map.json": "de245fa8d4d52cc7eb3ac5144c870a071b603f53c5c7e539f8ffbe22056c2fed",
+  "source-map.json": "1cdea727a19123d24ada760ec996e547eb98542e21ad1ec5641a9d593121760e",
+  "completion-proposed.patch": "1e1ee9fb1a163f60903138961b6925e69f8e4a55c096e79bd169bde6a1fead82"
+}

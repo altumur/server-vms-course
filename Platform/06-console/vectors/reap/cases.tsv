@@ -1,4 +1,4 @@
-# The reaper over a request of the append profile (requests.outcome: fetched) and over a resource row free-* without a live owner (C06-FREE-OWNER-33-01; the contract of the request and its mark «Состояния…», P/06.4 Н3 reaper gone, expired).
+# The reaper over a request of the append profile (requests.outcome: fetched) and over a resource row free-* without a live owner (C06-FREE-OWNER-33-01; the contract of the request and its mark «States…», P/06.4 N3 reaper gone, expired).
 # A row: case<TAB>input<TAB>expect<TAB>note. The form — the package's README.
 case	input	expect	note
 gone-create	{"profile":"fetched","settle":30,"ttl":3600,"row":{"unit":"t1","digest":"4f1c0e8a2b7d3c9e5a6f0b1d2c3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e"},"row_age":10,"fetched_age":null,"mark":null,"mark_age":null,"unit":"absent"}	{"write_mark":"gone","remove_row":false}	the unit is absent, no mark — put_new gone, do not remove the row

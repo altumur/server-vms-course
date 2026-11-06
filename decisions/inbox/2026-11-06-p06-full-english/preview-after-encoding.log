@@ -1,0 +1,1 @@
+gen_cmdtests: s01-folder-name-255-bytes step 1: request '"CALL console-folder-create {\\"name\\":\\"' — RUN, CALL, @file, @read, @parallel

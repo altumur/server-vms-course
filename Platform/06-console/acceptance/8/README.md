@@ -32,7 +32,7 @@ The format is [the dictionary of directives and doors](../../../common/acceptanc
 
 | Subject | Why not a scenario |
 |---|---|
-| the strict race «чтение — запись»: the guards of the unit and of the chain, the guard of the absence of the membership row, `412 parent moved` | the HTTP stand does not open the window between the read and the batch; the sequential orders — sc. 07, 08, 11 |
+| the strict race «read — write»: the guards of the unit and of the chain, the guard of the absence of the membership row, `412 parent moved` | the HTTP stand does not open the window between the read and the batch; the sequential orders — sc. 07, 08, 11 |
 | the rights of the table of N3 «folder rights», the rights of a folder row in a batch | a domain stand with grants is needed: the filter by the row `folder:` — the acceptance of chapter 8.4 sc. 33, the rights of the folder door — by reading |
 | `FOLDERS_MEMBERS_MAX`, `FOLDER_ROW_MAX`, the numbers of N1.3 | the boundary requires thousands of units; the numbers are computed |
 | an unconfirmed read: 503, the reaper removes nothing | a refusal of the store on the read of a particular key is needed |

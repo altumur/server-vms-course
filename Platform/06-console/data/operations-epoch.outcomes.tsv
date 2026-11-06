@@ -1,4 +1,4 @@
 # Outcomes of an unreadable row <sub>/operations-epoch (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	console	the whole row is unreadable: the new turn holder rewrites it with `cas` of the version read: the generation is the index of the row, the value is not judged	0	row	P/06.9 Н3 «leader»
+	console	the whole row is unreadable: the new turn holder rewrites it with `cas` of the version read: the generation is the index of the row, the value is not judged	0	row	P/06.9 N3 «leader»
