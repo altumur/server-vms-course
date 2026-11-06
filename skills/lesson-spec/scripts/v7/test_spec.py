@@ -1131,7 +1131,7 @@ class TestStack(unittest.TestCase):
         self.assertNotIn("requests", v)
         self.assertEqual(v["placement"]["weight"], {"default": 1})
         self.assertEqual(v["lease"], {"unconfirmed_max": "off"})
-        self.assertEqual(v["display"]["unit"], "единица")
+        self.assertEqual(v["display"]["unit"], "unit")
         self.assertNotIn("section", v["display"])
         self.assertNotIn("suppress", v["events"])
 
