@@ -1,0 +1,143 @@
+{
+  "status": "INACTIVE; proposed IDs160-162 not allocated/activated",
+  "base": "c81dd35d5ff850c687c94d251cdc84269e28730d",
+  "active_paths_proposed": [
+    "Platform/02-installer/spec/02.1-installer.norms.md",
+    "Platform/02-installer/ru/spec/02.1-installer.norms.md",
+    "Platform/02-installer/spec/02.1-installer.relations.json"
+  ],
+  "protected_manual": "A numeric unit has a declared fixed unit field, OR about with field != id. Numeric units cannot be targets of worker.creates (P02.3 catalogue rule); therefore admissible made rows cannot bypass this protection.",
+  "rules": [
+    {
+      "no": 160,
+      "path": "placement.retire_when.delete_after",
+      "condition": "unit.id == numeric AND NOT protected_manual",
+      "result": "refused:relations",
+      "relation": "when @unit.id = numeric & !protected_manual : absent placement.retire_when.delete_after",
+      "existing_class": "value",
+      "protected_manual_cel_on_form_valid_doc": "((\"fields\" in doc.unit && type(doc.unit.fields) == map && doc.unit.fields.exists(f, type(doc.unit.fields[f]) == map && \"fixed\" in doc.unit.fields[f] && doc.unit.fields[f].fixed == true)) || (\"about\" in doc && type(doc.about) == map && \"field\" in doc.about && doc.about.field != \"id\"))",
+      "numeric_cel_on_form_valid_doc": "doc.unit.id == \"numeric\"",
+      "refusal_pointer": "/placement/retire_when/delete_after"
+    },
+    {
+      "no": 161,
+      "path": "worker.deletes[]",
+      "condition": "unit.id == numeric AND worker.deletes is nonempty",
+      "result": "refused:relations",
+      "relation": "@unit.id != numeric",
+      "existing_class": "value",
+      "protected_manual_cel_on_form_valid_doc": "((\"fields\" in doc.unit && type(doc.unit.fields) == map && doc.unit.fields.exists(f, type(doc.unit.fields[f]) == map && \"fixed\" in doc.unit.fields[f] && doc.unit.fields[f].fixed == true)) || (\"about\" in doc && type(doc.about) == map && \"field\" in doc.about && doc.about.field != \"id\"))",
+      "numeric_cel_on_form_valid_doc": "doc.unit.id == \"numeric\"",
+      "refusal_pointer": "/worker/deletes/<number>"
+    },
+    {
+      "no": 162,
+      "path": "placement.ends",
+      "condition": "unit.id == numeric AND NOT protected_manual",
+      "result": "refused:relations",
+      "relation": "when @unit.id = numeric & !protected_manual : absent placement.ends",
+      "existing_class": "value",
+      "protected_manual_cel_on_form_valid_doc": "((\"fields\" in doc.unit && type(doc.unit.fields) == map && doc.unit.fields.exists(f, type(doc.unit.fields[f]) == map && \"fixed\" in doc.unit.fields[f] && doc.unit.fields[f].fixed == true)) || (\"about\" in doc && type(doc.about) == map && \"field\" in doc.about && doc.about.field != \"id\"))",
+      "numeric_cel_on_form_valid_doc": "doc.unit.id == \"numeric\"",
+      "refusal_pointer": "/placement/ends"
+    }
+  ],
+  "existing_rule49": "unchanged: numeric+unplaced.delete_after stays refused",
+  "proposed_schema_view_delta": [],
+  "schema_view_reason": "These are semantic cross-field relations, not new structure. Current schemas have no numeric condition. Add only the existing compiled relation records; canonical schema/view/property sets and values remain byte-identical.",
+  "schema_hashes": {
+    "Platform/02-installer/spec/02.1-installer.schema.json": "2f86d53f5c8d291f91ba4dd40796503db1d6d159a7d481b72cfe10a7ea127aaa",
+    "Platform/02-installer/spec/02.2-installer.view.schema.json": "1c95988449b87f49614eb5865af5119d7382cba7c89de377f2480f3cc0986e5f"
+  },
+  "corpus_plan": "Leave all947 current files/verdicts/classes and220 canonical files untouched. New witnesses stay in this inactive inbox until Architect assigns their executable scope. No new refusal class, role, rights, P03 or loader algorithm is activated here.",
+  "accepted_numeric_cases": [
+    "unit_id_numeric",
+    "r38_unit_minimal",
+    "c8_ref12_unit_schema_depth_32_ok",
+    "c8_ref25_table_field_schema_depth_32_ok",
+    "c8_ref26_table_schema_depth_32_ok",
+    "id_default_numeric_ok",
+    "t07_block_plain_ok",
+    "t23_quoted_true_string",
+    "f01_int_4dot0_ok",
+    "f02_int_1e1_ok",
+    "f05_int_at_min_ok",
+    "f06_int_at_max_ok",
+    "r06_text_bool_ok",
+    "t27_escape_tab_ok",
+    "t31_last_line_spaces_ok",
+    "t32_trailing_spaces_ok",
+    "t33_flow_trailing_comma_ok",
+    "t33b_flow_map_trailing_comma_ok",
+    "secrets_readers_exact_prefix_ok",
+    "worker_writes_declared_ok",
+    "worker_writes_declared_list_ok"
+  ],
+  "newly_incompatible_accepted_cases": [],
+  "proposed_witnesses": [
+    {
+      "case": "p06-c3-numeric-retire",
+      "id": "numeric",
+      "fixed": false,
+      "mechanism": "retire_when.delete_after",
+      "expect": "refused:relations"
+    },
+    {
+      "case": "p06-c3-numeric-ends",
+      "id": "numeric",
+      "fixed": false,
+      "mechanism": "ends",
+      "expect": "refused:relations"
+    },
+    {
+      "case": "p06-c3-numeric-delete",
+      "id": "numeric",
+      "fixed": false,
+      "mechanism": "worker.deletes",
+      "expect": "refused:relations"
+    },
+    {
+      "case": "p06-c3-fixed-ends",
+      "id": "numeric",
+      "fixed": true,
+      "mechanism": "ends",
+      "expect": "ok"
+    },
+    {
+      "case": "p06-c3-fixed-retire",
+      "id": "numeric",
+      "fixed": true,
+      "mechanism": "retire_when.delete_after",
+      "expect": "ok"
+    },
+    {
+      "case": "p06-c3-fixed-delete",
+      "id": "numeric",
+      "fixed": true,
+      "mechanism": "worker.deletes",
+      "expect": "refused:relations"
+    },
+    {
+      "case": "p06-c3-named-retire",
+      "id": "name",
+      "fixed": false,
+      "mechanism": "retire_when.delete_after",
+      "expect": "ok"
+    },
+    {
+      "case": "p06-c3-named-ends",
+      "id": "name",
+      "fixed": false,
+      "mechanism": "ends",
+      "expect": "ok"
+    },
+    {
+      "case": "p06-c3-named-delete",
+      "id": "name",
+      "fixed": false,
+      "mechanism": "worker.deletes",
+      "expect": "ok"
+    }
+  ],
+  "open_decision": "Approve exact protection predicate and conditional IDs; compiled CEL/own-path output must be produced from the approved normative relation source, not guessed here. Existing159 and rule49 unchanged."
+}

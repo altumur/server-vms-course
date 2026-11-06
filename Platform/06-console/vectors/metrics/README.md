@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/metrics/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/06.5 ([norms](../../spec/06.5-console.norms.md) N3 «Ряды манифеста metrics[]»; stage C guess
+The owner is chapter P/06.5 ([norms](../../spec/06.5-console.norms.md) N3 «Manifest rows metrics[]»; stage C guess
 C06-METRICS-DSL-33-01, the Architect's decision of 2026-10-25). The participant is the cluster console (`GET /metrics`). The bytes are written by
 the Specification; the expectations were obtained by the course witness over the same input (the behaviour was moved without a change), except
 `garbled-two-elements` — by the norm: the witness counted a numeric field common to two elements once (C06-METRICS-GARBLED-PER-ELEMENT-01).

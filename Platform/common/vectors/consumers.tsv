@@ -262,3 +262,4 @@ common/yaml-suite	expect.tsv	02-installer	P/02.1 N1.1; common/LAYERS.md; common/
 06-console/rid	template.tsv	03-worker	06-console/vectors/rid/README.md: Run; ACC-VECTORS-CONNECT-03
 06-console/request-digest	digest.tsv	03-worker	06-console/vectors/request-digest/README.md: Run; ACC-VECTORS-CONNECT-03
 06-console/requests-body	requests_body.tsv	03-worker	06-console/vectors/requests-body/README.md: Run; ACC-VECTORS-CONNECT-03
+common/turn	cases.tsv	06-console	common/vectors/turn/README.md: own operations turn; ADR-0127 P06 C4

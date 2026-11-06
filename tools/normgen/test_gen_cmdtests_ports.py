@@ -22,6 +22,10 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
+sys.path.insert(0, str(HERE))
+import tsv_input  # noqa: E402 — source cells before the seam steps are split
+
+SEAM_COLUMNS = ("scenario", "step", "request", "expect")
 LESSONS = {"03-worker": "p03", "04-controller": "p04", "05-resource": "p05", "06-console": "p06", "09-agent": "p09"}
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 
@@ -46,9 +50,11 @@ def seam_steps(lesson):
                 continue
             ch = m[1]
             path = les / "acceptance" / (ch.split(".")[1] if "." in ch else "") / "seams.tsv"
-            lines = [ln.split("\t") for ln in path.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("#")]
+            # the shared source reader (ADR-0121): positional columns, one cell-json decode with its byte proof
+            table = tsv_input.read(path, names=SEAM_COLUMNS, positional=True, root=ROOT)
             names = None if m[2] == "*" else m[2].split(",")
-            for sc, st, req, exp in lines:
+            for _, row in table.rows:
+                sc, st, req, exp = (row[c] for c in SEAM_COLUMNS)
                 if names is None or sc in names:
                     port, _, inp = req[5:].partition(" ")
                     out.append((f"{ch}/{sc}", int(st), port, inp, exp))

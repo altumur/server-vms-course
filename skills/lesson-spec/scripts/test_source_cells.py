@@ -1,6 +1,7 @@
 """Source-form conformance and complete byte preservation, ADR-0121 (6)."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -106,6 +107,132 @@ class SourceCells(unittest.TestCase):
                  (ROOT / 'Platform/common/data/cell-json-sha256.tsv').read_text().splitlines()
                  if line.startswith('Platform/')]
         self.assertEqual(source_cells.errors(ROOT, sorted(set(paths))), [])
+
+
+SEAMS = 'Platform/06-console/acceptance/8/seams.tsv'
+# decisions/inbox/2026-11-06-p06-review-proposals/source-binding-proposal.json (391efde0d): source, expected,
+# decoded request, decoded SHA-256
+SEAMS_FIXTURES = [
+    ('# cell-json: request\n# owned positional source fixture\nowned-first\t1\t"CALL console-folder-create {\\"name\\":\\"\\u0436\\"}"\t{"ok":true}\n', 'valid; first data physical3', 'CALL console-folder-create {"name":"ж"}', '6eddb902c055e34ac8117c0e012ac40daf230afc8c58d4f2eb64d9632e922e85'),
+    ('# cell-json: request\n# owned positional source fixture\nowned-first\t1\t"CALL console-folder-create {invalid-inner"\t{"ok":true}\n', 'valid outer; invalid inner remains opaque', 'CALL console-folder-create {invalid-inner', '29e6ed42e2f94991638951154eeb995c459b87b1094e5f9524268d2e7a1655e0'),
+    ('# cell-json: request\n# owned positional source fixture\nowned-first\t1\tnot-json\t{"ok":true}\n', 'form error', None, None),
+    ('# cell-json: request\n# owned positional source fixture\nowned-first\t1\tnull\t{"ok":true}\n', 'form error', None, None),
+    ('# cell-json: request\n# owned positional source fixture\nowned-first\t1\t"\\ud800"\t{"ok":true}\n', 'form error', None, None),
+    ('# cell-json: request,request\n# owned positional source fixture\nowned-first\t1\t"CALL console-folder-create {\\"name\\":\\"\\u0436\\"}"\t{"ok":true}\n', 'form error: duplicate declaration column', None, None),
+    ('# cell-json: request\n# owned positional source fixture\nowned-first\t"CALL console-folder-create {\\"name\\":\\"\\u0436\\"}"\t{"ok":true}\n', 'form error: wrong width', None, None),
+]
+
+
+class SeamsBinding(unittest.TestCase):               # Architect 2026-11-06: one exact positional path
+    def write(self, root, rel, text):
+        path = root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(text.encode())
+        return path
+
+    def test_exact_path_only(self):
+        with tempfile.TemporaryDirectory() as directory, tempfile.TemporaryDirectory() as elsewhere:
+            root = Path(directory)
+            self.write(root, 'Platform/06-console/acceptance/9/seams.tsv', 'x\n')
+            self.write(root, 'Platform/04-controller/acceptance/8/seams.tsv', 'x\n')
+            forms = source_cells.wire_headers(root)
+            self.assertEqual(forms[Path(SEAMS)], (['scenario', 'step', 'request', 'expect'], True))
+            self.assertEqual([p for p in forms if p.name == 'seams.tsv'], [Path(SEAMS)])
+            cwd = os.getcwd()
+            try:
+                os.chdir(elsewhere)                        # unrelated cwd: the same binding
+                self.assertEqual(source_cells.wire_headers(root), forms)
+            finally:
+                os.chdir(cwd)
+
+    def test_proposal_fixtures(self):
+        self.assertEqual(len(SEAMS_FIXTURES), 7)
+        for source, expected, request, sha in SEAMS_FIXTURES:
+            with self.subTest(expected=expected), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                path = self.write(root, SEAMS, source)
+                columns, positional = source_cells.wire_headers(root)[path.relative_to(root)]
+                names, rows, errors = source_cells.table(source, columns, positional)
+                manifest = root / 'Platform/common/data/cell-json-sha256.tsv'
+                manifest.parent.mkdir(parents=True)
+                header = 'table\tline\tcolumn\tbefore_sha256\tdecoded_sha256\n'
+                if request is None:                        # form error before build/dispatch
+                    self.assertTrue(errors)
+                    self.assertTrue(source_cells.errors(root, [path]))
+                    continue
+                self.assertEqual(errors, [])
+                self.assertEqual(names, ('request',))
+                raw = source.split('\n')[2].split('\t')
+                self.assertEqual(rows, [(3, dict(scenario='owned-first', step='1', request=request, expect=raw[3]))])
+                self.assertEqual(hashlib.sha256(request.encode()).hexdigest(), sha)
+                self.assertEqual(rows[0][1]['expect'].encode(), raw[3].encode())      # unmarked cell untouched
+                self.assertTrue(source_cells.errors(root, [path]))                    # no proof: refused
+                manifest.write_text(header + f'{SEAMS}\t3\trequest\t{sha}\t{sha}\n')
+                self.assertEqual(source_cells.errors(root, [path]), [])
+                manifest.write_text(header + f'{SEAMS}\t3\trequest\t{"0" * 64}\t{"0" * 64}\n')
+                self.assertTrue(source_cells.errors(root, [path]))
+                moved = Path('Platform/06-console/acceptance/9/seams.tsv')          # undeclared path: not positional
+                other = self.write(root, moved.as_posix(), source)
+                self.assertNotIn(moved, source_cells.wire_headers(root))
+                self.assertTrue(source_cells.errors(root, [other]))
+
+    # The frozen English P/06 slice activates cell-json in the real seams table (spec, origin/spec/0121-p06-review-source
+    # fb66713ba, parent 01c2ef539; decisions/inbox/2026-11-06-p06-full-english/seams8-four-cells.json). Exactly four
+    # cells are marked: the request of the four data lines. The declaration shifts the former physical lines 3–6 to 4–7.
+    # Per cell: physical line, scenario, SHA-256 of the raw (JSON-encoded) source cell, SHA-256 of the decoded request
+    # (= before_sha256 of the former raw cell = the proof row), SHA-256 of the unmarked expect cell.
+    SEAMS_CELLS = (
+        (4, 's01-folder-name-255-bytes', '191482b241484e40ff213486783ef4663d9395b41a09b49076fbb72597b44489',
+         'e8060e5363c50a8ae0f401f3da310bd8c8797b2c238177a46560e787683e4981',
+         'a41460504223dc6ff2280cfe85b7ffe1c8b8efea617ec73fb34dc30f26362f00'),
+        (5, 's02-folder-name-256-bytes', '7e959239dd759112b27457b2b28bba282e29ef9b5289a4369fb7ef4b777c2d43',
+         'd28e3d2e69eaa57c9a473a9230a53e0ef4e2b0a87a1d9518420c327190f8f93e',
+         'ac8e85b1b386072ad4caba57a0a49cf6ddecdf1fc73706c95ad0847004799b58'),
+        (6, 's03-parent-guard-race', '7394671a68964f3affe5cf22a293cc57e56335e59acd9c2b7088131e38ee8787',
+         '94b7936182baa5484f31cfaab2ca4f8e3a4b40d0857ec1d9159722a12063bc1e',
+         '5c87d7d2161608b789b4321222e56bf8769f1c3bc182921ac9a1ec3f7594cf84'),
+        (7, 's04-membership-key-too-long', '88c608ca6e07f4ad021227850043bec1375700414c6d725f03d024a2424f552b',
+         'b5c9a6cf771703e9d77dcaeb9305911009f7232d66435c3fee63fc1fcd24daa9',
+         'c0cadec3604415fb97e9abcec72585c52cdb111c3c82af4ab5508af33507ceb9'),
+    )
+
+    def test_real_seams_four_marked_cells(self):
+        def sha(text):
+            return hashlib.sha256(text.encode()).hexdigest()
+        text = (ROOT / SEAMS).read_bytes().decode('utf-8')
+        lines = text.split('\n')
+        columns, positional = source_cells.wire_headers(ROOT)[Path(SEAMS)]
+        self.assertEqual((columns, positional), (['scenario', 'step', 'request', 'expect'], True))
+        names, rows, errors = source_cells.table(text, columns, positional)
+        self.assertEqual((names, errors), (('request',), []))
+        # one declaration first, the two former comment lines after it, then exactly the four data lines
+        self.assertEqual(lines[0], '# cell-json: request')
+        self.assertEqual([n for n, line in enumerate(lines, 1) if line.startswith('#')], [1, 2, 3])
+        self.assertEqual([n for n, line in enumerate(lines, 1) if line and not line.startswith('#')],
+                         [cell[0] for cell in self.SEAMS_CELLS])
+        self.assertEqual(lines[-1], '')
+        self.assertEqual([line for line, _ in rows], [cell[0] for cell in self.SEAMS_CELLS])
+        # the proof rows of this table: exactly the four request cells, before = decoded
+        manifest = (ROOT / 'Platform/common/data/cell-json-sha256.tsv').read_bytes().decode('utf-8')
+        proof = {}
+        for line in manifest.split('\n'):
+            cells = line.split('\t')
+            if cells[0] == SEAMS:
+                self.assertNotIn((cells[1], cells[2]), proof)
+                proof[(cells[1], cells[2])] = tuple(cells[3:])
+        self.assertEqual(set(proof), {(str(cell[0]), 'request') for cell in self.SEAMS_CELLS})
+        for (number, scenario, source_sha, decoded_sha, expect_sha), (line, row) in zip(self.SEAMS_CELLS, rows):
+            with self.subTest(line=number):
+                raw = lines[number - 1].split('\t')
+                self.assertEqual(len(raw), 4)
+                self.assertEqual(sha(raw[2]), source_sha)                 # the marked source cell, byte-exact
+                self.assertEqual(json.loads(raw[2]), row['request'])      # decoded once, by the existing decoder
+                self.assertEqual(sha(row['request']), decoded_sha)        # = the former raw cell before marking
+                self.assertEqual(proof[(str(number), 'request')], (decoded_sha, decoded_sha))
+                with self.assertRaises(ValueError):                       # no second decoding: the value is not JSON
+                    source_cells.decode(row['request'])
+                self.assertEqual(row, dict(scenario=raw[0], step=raw[1], request=row['request'], expect=raw[3]))
+                self.assertEqual((raw[0], raw[1], sha(raw[3])), (scenario, '1', expect_sha))   # unmarked cells untouched
 
 
 if __name__ == '__main__':

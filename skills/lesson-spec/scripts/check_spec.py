@@ -1947,8 +1947,9 @@ class Check:
                      *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
         try:
             implied = {value for (lesson, kind, value) in self.registry if kind == "implied"}
+            extra = self.numeric_loader(base)
             errors, stats = manifest_check(self.root, norms, text, base, acceptance, verdicts, classes, manifests,
-                                           self.strict_coverage, implied)
+                                           self.strict_coverage, implied, extra)
         except ImportError as exc:
             self.error(norms, f"the standard files need the В7 stack, missing: {exc}; run: {V7_INSTALL}")
             return
@@ -1966,6 +1967,73 @@ class Check:
                 self.used.add((key, kind, value))
                 self.error(base, f"stale exception implied {key} {value}: no relation row {value} with x-implied-by")
         self.stats.update(stats)
+
+    # The numeric-loader witnesses of P/06 C3 (решение «Архитектора» 2026-11-06): a separate binding outside the corpus
+    # of P/02.1 — each row of numeric-loader.cases.tsv is loaded by the same loader as the corpus, refused exactly by
+    # its own relation row (which it then holds) or ok. Silent while P/02.1 declares none of the rows; once it declares
+    # any, the table, each of the nine named rows and each witness file must be there. → [(path, expect, no)].
+    NUMERIC_LOADER_BASE = "Platform/02-installer/spec/02.1-installer"
+    NUMERIC_LOADER_TABLE = "Platform/06-console/forms/numeric-loader.cases.tsv"
+    NUMERIC_LOADER_ROWS = (160, 161, 162)
+    NUMERIC_LOADER_CASES = ("p06-c3-numeric-retire", "p06-c3-numeric-ends", "p06-c3-numeric-delete",
+                            "p06-c3-fixed-ends", "p06-c3-fixed-retire", "p06-c3-fixed-delete",
+                            "p06-c3-named-retire", "p06-c3-named-ends", "p06-c3-named-delete")
+
+    def numeric_loader(self, base):
+        if Path(base).resolve() != (self.root / self.NUMERIC_LOADER_BASE).resolve():
+            return []
+        try:
+            rel = json.loads(Path(str(base) + ".relations.json").read_text(encoding="utf-8"))
+            declared = {r.get("no") for r in rel.get("rows", []) if isinstance(r, dict)} & set(self.NUMERIC_LOADER_ROWS)
+        except (OSError, ValueError, AttributeError):
+            return []                                    # manifest_check names the broken relations file
+        table = self.root / self.NUMERIC_LOADER_TABLE
+        if not declared and not table.exists():
+            return []
+        if not table.is_file():
+            self.error(table, f"numeric loader: P/02.1 declares relation rows {sorted(declared)}, their witness "
+                              "table is missing (решение «Архитектора» 2026-11-06)")
+            return []
+        header = ["case", "input", "expect", "relation", "norm"]
+        out, seen, refused = [], set(), set()
+        for line_no, (case, input_, expect, relation, _norm) in self.tsv(table, 5, header):
+            where = f"line {line_no}"
+            if case not in self.NUMERIC_LOADER_CASES:
+                self.error(table, f"{where}: case {case!r} is not one of the nine witnesses of P/06 C3")
+                continue
+            if case in seen:
+                self.error(table, f"{where}: case {case} repeated")
+                continue
+            seen.add(case)
+            if input_ != f"numeric-loader/{case}.subsystem.yaml":
+                self.error(table, f"{where}: input of {case} is numeric-loader/{case}.subsystem.yaml, got {input_!r}")
+                continue
+            if expect == "ok":
+                if relation != "-":
+                    self.error(table, f"{where}: an ok witness names no relation row, got {relation!r}")
+                    continue
+                no = None
+            elif expect == "refused:relations":
+                if relation not in {str(n) for n in self.NUMERIC_LOADER_ROWS}:
+                    self.error(table, f"{where}: a refused witness names one of rows {list(self.NUMERIC_LOADER_ROWS)}, "
+                                      f"got {relation!r}")
+                    continue
+                no = int(relation)
+                refused.add(no)
+            else:
+                self.error(table, f"{where}: expect is ok or refused:relations, got {expect!r}")
+                continue
+            path = table.parent / input_
+            if not path.is_file():
+                self.error(path, f"numeric loader: witness {case} of {table.name} is missing")
+                continue
+            out.append((path, expect, no))
+        for case in self.NUMERIC_LOADER_CASES:
+            if case not in seen:
+                self.error(table, f"numeric loader: the row of witness {case} is missing")
+        for no in sorted(declared - refused):
+            self.error(table, f"numeric loader: relation row {no} of P/02.1 has no refused witness")
+        return out
 
     # Completeness of the unreadable outcomes (решение владельца 2026-10-28, PLAN-TRANSITION п. 1.3): each family of
     # the catalog with a schema names the outcome «the whole row is unreadable» (empty path) for each of its readers —
@@ -2178,6 +2246,16 @@ class Check:
             self.stats.update(stats)
         for path in check_forms.versioned_door_forms(self.root):     # версии дверей P/08.0 Н1.9 (forms/README)
             errors, stats = check_forms.check_versioned_doors(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
+        for path in check_forms.finite_profile_forms(self.root):     # конечный профиль удаления P/06 C2 (P02.3 6a/3a)
+            errors, stats = check_forms.check_finite_profile(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
+        for path in check_forms.deletion_body_witness_forms(self.root):  # кодек-свидетели тела P/06.8 N1.3
+            errors, stats = check_forms.check_deletion_body_witnesses(path)
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)

@@ -1501,6 +1501,33 @@
    "norm": "ADR-0115 addendum (11); P/02.1 N1.4",
    "cel": "((type(doc) == map && \"display\" in doc) ? ((type(doc[\"display\"]) == map && \"tables\" in doc[\"display\"]) ? (type(doc[\"display\"][\"tables\"]) == map ? dyn(doc[\"display\"][\"tables\"]).map(k1, ((k1 != null && type(k1) != map && type(k1) != list && !(type(doc) == map && \"tables\" in doc && ((type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(t9, t9 == k1)) || (type(doc[\"tables\"]) == list && dyn(doc[\"tables\"]).exists(e9, (type(e9) == string && e9 == k1)))))) ? [{\"p\": [\"display\", \"tables\", k1]}] : [])) : []) : []) : [])",
    "own": []
+  },
+  {
+   "no": 160,
+   "path": "placement.retire_when.delete_after",
+   "relation": "when @unit.id = numeric & !protected_manual : absent placement.retire_when.delete_after",
+   "class": "value",
+   "norm": "ADR-0127 P/06 C3; P/02.1 N1.4",
+   "cel": "((\"unit\" in doc && type(doc.unit) == map && \"id\" in doc.unit && doc.unit.id == \"numeric\") && !(((\"fields\" in doc.unit && type(doc.unit.fields) == map && doc.unit.fields.exists(f, type(doc.unit.fields[f]) == map && \"fixed\" in doc.unit.fields[f] && doc.unit.fields[f].fixed == true)) || (\"about\" in doc && type(doc.about) == map && \"field\" in doc.about && doc.about.field != \"id\"))) && (\"placement\" in doc && type(doc.placement) == map && \"retire_when\" in doc.placement && type(doc.placement.retire_when) == map && \"delete_after\" in doc.placement.retire_when)) ? [{\"p\":[\"placement\",\"retire_when\",\"delete_after\"]}] : []",
+   "own": []
+  },
+  {
+   "no": 161,
+   "path": "worker.deletes[]",
+   "relation": "@unit.id != numeric",
+   "class": "value",
+   "norm": "ADR-0127 P/06 C3; P/02.1 N1.4",
+   "cel": "((\"unit\" in doc && type(doc.unit) == map && \"id\" in doc.unit && doc.unit.id == \"numeric\") && (\"worker\" in doc && type(doc.worker) == map && \"deletes\" in doc.worker && type(doc.worker.deletes) == list)) ? dyn(doc.worker.deletes).transformList(i, e, [{\"p\":[\"worker\",\"deletes\",i]}]) : []",
+   "own": []
+  },
+  {
+   "no": 162,
+   "path": "placement.ends",
+   "relation": "when @unit.id = numeric & !protected_manual : absent placement.ends",
+   "class": "value",
+   "norm": "ADR-0127 P/06 C3; P/02.1 N1.4",
+   "cel": "((\"unit\" in doc && type(doc.unit) == map && \"id\" in doc.unit && doc.unit.id == \"numeric\") && !(((\"fields\" in doc.unit && type(doc.unit.fields) == map && doc.unit.fields.exists(f, type(doc.unit.fields[f]) == map && \"fixed\" in doc.unit.fields[f] && doc.unit.fields[f].fixed == true)) || (\"about\" in doc && type(doc.about) == map && \"field\" in doc.about && doc.about.field != \"id\"))) && (\"placement\" in doc && type(doc.placement) == map && \"ends\" in doc.placement)) ? [{\"p\":[\"placement\",\"ends\"]}] : []",
+   "own": []
   }
  ],
  "untranslated": []

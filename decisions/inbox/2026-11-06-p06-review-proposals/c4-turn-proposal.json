@@ -1,0 +1,47 @@
+{
+  "status": "INACTIVE; no draft activation or runtime assignment",
+  "base": "c81dd35d5ff850c687c94d251cdc84269e28730d",
+  "old_turn_sha256": "ea768f504ed1f221b7b901ba2e7cef1002b2ad05116801475aeeca28f9156526",
+  "old_cases": 33,
+  "proposed_cases": 15,
+  "source_of_cases": "Generic placement term/CAS/unknown/guard cases with no manifest gate; explicit new operations form, NOT signer relabeling. Placement-specific plan barrier cases deliberately excluded.",
+  "consumer_row": [
+    "common/turn",
+    "cases.tsv",
+    "06-console",
+    "common/vectors/turn/README.md: own operations turn; ADR-0127 P06 C4"
+  ],
+  "wire_row": {
+    "package": "common/turn",
+    "table": "cases.tsv",
+    "surface": "vectors",
+    "header": "case,input,expect,note",
+    "inputs": "[{\"variant\":\"\",\"when\":\"(owner == \\\"04-controller\\\" && json(row[\\\"input\\\"])[\\\"kind\\\"] == \\\"placement\\\") || (owner in [\\\"08-domain\\\",\\\"09-agent\\\"] && json(row[\\\"input\\\"])[\\\"kind\\\"] == \\\"signer\\\") || (owner == \\\"06-console\\\" && json(row[\\\"input\\\"])[\\\"kind\\\"] == \\\"operations\\\")\",\"cells\":{\"input\":{\"column\":\"input\"}}}]",
+    "files": "{}",
+    "expect": "[{\"variant\":\"\",\"code\":0,\"value\":{\"column\":\"expect\",\"decode\":\"json\"}}]",
+    "compare": "turn",
+    "markers": "[]",
+    "native": "{\"type\":\"array\",\"frame\":\"json\"}",
+    "norm": "common/vectors/turn/README.md#run"
+  },
+  "required_form_decision": "Existing WIRE closed compares omit turn. Propose narrowly adding turn for common/turn only, with existing c_state_vectors.turn_errors mark freshness/current-attempt behavior and full structural equality for all other cells. Do not approximate with ignored holders, value or signer stable identity. No code/form activation until Architect approval.",
+  "semantics": [
+    "holder is a fresh unique attempt label, no manifest_rev and no stable process-instance holder",
+    "@new must not reuse any mark already emitted in this case; @same must equal current attempt",
+    "input read marks are placeholders substituted by the owned adapter before ordinary turn code; output must contain real labels, not literal placeholders",
+    "existing placement and signer rows/owners/expected bytes unchanged",
+    "held proves only turn capture; operations-epoch CAS barrier, step ticket/generation guards, two leaders and late writes remain separate P06.9 real-IO obligations"
+  ],
+  "active_paths_proposed": [
+    "Platform/common/vectors/turn/README.md",
+    "Platform/common/ru/vectors/turn/README.md",
+    "Platform/common/vectors/turn/cases.tsv",
+    "Platform/common/vectors/consumers.tsv",
+    "Platform/common/vectors/wire.tsv",
+    "Platform/common/vectors/WIRE.md",
+    "Platform/common/contracts/turn.md",
+    "Platform/common/ru/contracts/turn.md"
+  ],
+  "no_new_native_command": true,
+  "no_existing_roster_replacement": true
+}

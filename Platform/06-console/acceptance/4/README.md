@@ -4,9 +4,9 @@ This English text is the source; the Russian translation `ru/acceptance/4/README
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`06.4-console.norms.md`](../../spec/06.4-console.norms.md) N5. The scenarios were moved from the acceptance of
-М10/08 (stage B, ADR-0083 addendum (1): without a change of
-behaviour); the numbers of scenarios and steps are the former ones. Scenarios 05 (a request with a holder) and 07 (the append) of М10/08 are in
-[the acceptance of chapter 3.6](../../../03-worker/acceptance/6/README.md); 01, 02, 08 of М10/08 (the objects door, the events query, the paths
+M10/08 (stage B, ADR-0083 addendum (1): without a change of
+behaviour); the numbers of scenarios and steps are the former ones. Scenarios 05 (a request with a holder) and 07 (the append) of M10/08 are in
+[the acceptance of chapter 3.6](../../../03-worker/acceptance/6/README.md); 01, 02, 08 of M10/08 (the objects door, the events query, the paths
 of the resource) are in [the acceptance of P/05](../../../05-resource/acceptance/README.md). The preparation, the comparison and the evidence below are the parts
 of the former README needed by these scenarios; the forms of foreign doors belong to their owners ([P/05](../../../05-resource/spec/05-resource.norms.md) —
 the doors of the resource, [P/01.1](../../../01-store/spec/01.1-store.norms.md) — the store).
@@ -39,7 +39,7 @@ ticks of the holder and the reaper are expected, settle=60 by default.
 
 The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors): the doors `console`, `console2` (sc. 07, 08, 11, 12), `resource`, `store` (with `@as` — sc. 08, 09), `admin` (sc. 11, 12), the directives `@until`, `@sleep`, the request form `@header`. In total 9 scenarios / 120 steps (sc. 03 steps 16–20 — the segment note `to`, ADR-0117 addendum (3) item 2; sc. 04 steps 16–21 — a submitted deadline -1, 1e-12, 1000.1234: 202 and a write truncated downwards to ms, a negative one — 0, C06-DEADLINE-PRECISION-33-01; sc. 07 `07-request-gone` — 11 steps, ADR-0091 addendum (11) item 4: requests of `testsub2` with `per_person` 3, the deletion of the addressee unit — the outcome `gone` of the reaper, the row is removed, the reserve is released: the fourth request is 429 before and 202 after; sc. 11 `11-request-expired` — 15 steps, below); all HTTP (with @until and @key).
 
-Steps of the reconciliation of python and go М10/6–11 (2026-10-18):
+Steps of the reconciliation of python and go M10/6–11 (2026-10-18):
 - **03/9** — `user: operator` of the note (E60).
 - **04/8–15** — the journal `request.asked` at a manifest without `requests.journal` (`$b` — the path of its bucket); `GET /buckets/audit/console` —
   JSON Lines `application/x-ndjson`; `Range: bytes=-5` — 206, `bytes=5-2` — 416; `Idempotency-Key` `.` and `a,b` — 202;
@@ -78,14 +78,14 @@ Sc. 08–10 (`audit-coverage-gemini` 0a5ae79f9) — likewise, each on its own em
 
 ## Append without a holder (sc. 11)
 
-The VMS request «срок просьбы», the Architect's decision of 2026-10-29; after the pattern of sc. 04 and sc. 07 `07-request-gone`. There are no workers on the stand, the unit `t1`
+The VMS request «request term», the Architect's decision of 2026-10-29; after the pattern of sc. 04 and sc. 07 `07-request-gone`. There are no workers on the stand, the unit `t1`
 exists — nobody serves the request, `gone` does not come. `testsub2`: `per_person` 3, `settle` 30, `ttl` 3600, so
 the boundary is the age of 3660 s. The deadline is not waited for: the age of a row is counted from its `at` (the request contract, the key `ttl`), and step 9 through the door
 `admin` replaces by `cas` the row `$r1` with the same row with the old `at` `1700000000` (the same technique as in sc. 38 of [the acceptance of chapter
 3.6](../../../03-worker/acceptance/6/README.md)); the accounting of the person remains real, from steps 4–6. The row `$r2` remains young:
 it has no mark (step 12) and it stands (step 14) when `$r1` is already removed. Step 11 — the row stands right after the mark: `settle` runs from
 the first read of the mark. Step 15 repeats the refusal of step 7 while the reserve is not released: the moment when the rid leaves the accounting is from
-the confirmation of the mark to the removal of the row (the rule «Состояния…»: `settle` bounds the row, not the hold of `per_person`), so
+the confirmation of the mark to the removal of the row (the rule «States…»: `settle` bounds the row, not the hold of `per_person`), so
 the occupancy of the reserve between steps 10 and 13 is not judged. The boundary ε, `fetched`, the mark `gone` earlier, `ttl` 0 and a late `fetched` are
 the vectors [`reap`](../../vectors/reap/README.md): there is no holder on the stand, and the boundary cannot be observed through a door to within ε.
 
@@ -139,7 +139,7 @@ analysis of the review of stage A 6–7, № 1): a resource whose door row chang
 
 ## Additional check of the class of errors of run 36 (Kimi)
 
-By reading: POST marks checks the form of the reference, the presence of a live row is not required. The deadline of `kept` is by [the mark contract](../../../common/contracts/request-mark.md) «Метка»: from the moment when the holder saw
+By reading: POST marks checks the form of the reference, the presence of a live row is not required. The deadline of `kept` is by [the mark contract](../../../common/contracts/request-mark.md) «Mark»: from the moment when the holder saw
 that the request row is no longer there (its monotonic clock), not earlier than `valid_until` if there is one; `ended_at` of the mark does not
 start the deadline, without a confirmed final outcome the mark is not deleted. The points at the boundary with `kept` 60 (`testsub` has no key
 `ttl`; `ttl` 0 — also 60): the mark stands at the local moment 0, 59.999 after the holder has not seen the row, the deletion
@@ -157,15 +157,15 @@ The bounds of :int per P/02.1: binary64, the modulus is not more than 2^53−1; 
 
 ## Additional cases R38-03/04/05
 
-- The event instance: node,a is outside the profile and is refused before the start; node-a, box:pid:abcdef and admissible Unicode letters with a declared file profile give a representable `console/<instance>` in UnitRef/EventRow. Emptiness, a dot/two dots, slashes, |, a quote and Cc/Zl/Zp are rejected before publication. The start tasks in more detail are in the acceptance of М10/11 (history; its scenarios — by id-map).
+- The event instance: node,a is outside the profile and is refused before the start; node-a, box:pid:abcdef and admissible Unicode letters with a declared file profile give a representable `console/<instance>` in UnitRef/EventRow. Emptiness, a dot/two dots, slashes, |, a quote and Cc/Zl/Zp are rejected before publication. The start tasks in more detail are in the acceptance of M10/11 (history; its scenarios — by id-map).
 - Settle: with the first confirmed outcome at the local moment 0 the row stands at 0/2/59.999, CAS is admitted at 60; this is not a guarantee that the tick runs exactly at 60. A repeated observation and unknown→performed do not extend the count, after a restart it starts anew. Check clear and sweep, including expired without fetched and an answer found by a late filing: it returns answered and leaves the row to the reaper. An unreadable mark or another unit/digest give no ground to remove the row. A shift of ended_at of the writer does not change the age. The TSV checks only the eventual removal within 90 s, not the lower bound 60; the bound requires a controlled clock/reading of the implementation.
-- The append (P/03.6-04, P/06.4-07; formerly М10/8-19) and the form of the consumer of the append in `testsub2` — with scenario 07 in [the acceptance of chapter 3.6](../../../03-worker/acceptance/6/README.md).
+- The append (P/03.6-04, P/06.4-07; formerly M10/8-19) and the form of the consumer of the append in `testsub2` — with scenario 07 in [the acceptance of chapter 3.6](../../../03-worker/acceptance/6/README.md).
 
 ## `journal/corrections-4.tsv`
 
 The log of AI corrections (ADR-0124: a log, not an input, not in the export). Four columns: date, sample, fix, languages. The reason for changes and for errors
-of interpretation is kept, including the preparation and the filter of notes. The log does not replace a run. The rows from before the move are the log of the acceptance of М10/08
-in full (the directory М10/08 is removed by the move of lesson 6; the rows about scenarios 01, 02, 05, 07, 08 are history, their scenarios are now
+of interpretation is kept, including the preparation and the filter of notes. The log does not replace a run. The rows from before the move are the log of the acceptance of M10/08
+in full (the directory M10/08 is removed by the move of lesson 6; the rows about scenarios 01, 02, 05, 07, 08 are history, their scenarios are now
 in the acceptances of P/05 and of chapter 3.6).
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)

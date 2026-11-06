@@ -1,0 +1,54 @@
+{
+  "base": "01c2ef53920042ff4313807b3d2ef48ed05baf27",
+  "table": "Platform/06-console/acceptance/8/seams.tsv",
+  "cells": [
+    {
+      "table": "Platform/06-console/acceptance/8/seams.tsv",
+      "before_line": 3,
+      "line": 4,
+      "column": "request",
+      "before_sha256": "e8060e5363c50a8ae0f401f3da310bd8c8797b2c238177a46560e787683e4981",
+      "decoded_sha256": "e8060e5363c50a8ae0f401f3da310bd8c8797b2c238177a46560e787683e4981",
+      "bytes": 293,
+      "source_sha256": "191482b241484e40ff213486783ef4663d9395b41a09b49076fbb72597b44489",
+      "proof_path": "Platform/common/data/cell-json-sha256.tsv",
+      "proof_line": 1627
+    },
+    {
+      "table": "Platform/06-console/acceptance/8/seams.tsv",
+      "before_line": 4,
+      "line": 5,
+      "column": "request",
+      "before_sha256": "d28e3d2e69eaa57c9a473a9230a53e0ef4e2b0a87a1d9518420c327190f8f93e",
+      "decoded_sha256": "d28e3d2e69eaa57c9a473a9230a53e0ef4e2b0a87a1d9518420c327190f8f93e",
+      "bytes": 294,
+      "source_sha256": "7e959239dd759112b27457b2b28bba282e29ef9b5289a4369fb7ef4b777c2d43",
+      "proof_path": "Platform/common/data/cell-json-sha256.tsv",
+      "proof_line": 1628
+    },
+    {
+      "table": "Platform/06-console/acceptance/8/seams.tsv",
+      "before_line": 5,
+      "line": 6,
+      "column": "request",
+      "before_sha256": "94b7936182baa5484f31cfaab2ca4f8e3a4b40d0857ec1d9159722a12063bc1e",
+      "decoded_sha256": "94b7936182baa5484f31cfaab2ca4f8e3a4b40d0857ec1d9159722a12063bc1e",
+      "bytes": 113,
+      "source_sha256": "7394671a68964f3affe5cf22a293cc57e56335e59acd9c2b7088131e38ee8787",
+      "proof_path": "Platform/common/data/cell-json-sha256.tsv",
+      "proof_line": 1629
+    },
+    {
+      "table": "Platform/06-console/acceptance/8/seams.tsv",
+      "before_line": 6,
+      "line": 7,
+      "column": "request",
+      "before_sha256": "b5c9a6cf771703e9d77dcaeb9305911009f7232d66435c3fee63fc1fcd24daa9",
+      "decoded_sha256": "b5c9a6cf771703e9d77dcaeb9305911009f7232d66435c3fee63fc1fcd24daa9",
+      "bytes": 125,
+      "source_sha256": "88c608ca6e07f4ad021227850043bec1375700414c6d725f03d024a2424f552b",
+      "proof_path": "Platform/common/data/cell-json-sha256.tsv",
+      "proof_line": 1630
+    }
+  ]
+}

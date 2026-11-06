@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Acceptance P/06.4: testsub stand with resource srv-a; scenarios 03, 04, 06 moved from М10/08 (stage B). Format: README.
+# Acceptance P/06.4: testsub stand with resource srv-a; scenarios 03, 04, 06 moved from M10/08 (stage B). Format: README.
 03-operator-mark	1	console POST /counters {"name": "c3", "start": 1}	201
 03-operator-mark	2	console POST /marks {"unit": "testsub/c3", "note": "checked"}	2xx
 03-operator-mark	3	@until 15 console GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "epoch_is": "current", "subsystem": "console"}]}

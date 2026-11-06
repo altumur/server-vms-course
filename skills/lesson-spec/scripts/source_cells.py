@@ -84,6 +84,11 @@ def table(text, columns=None, positional=False):
     return tuple(names), rows, errors
 
 
+POSITIONAL_SOURCES = {
+    "Platform/06-console/acceptance/8/seams.tsv": (["scenario", "step", "request", "expect"], True),
+}
+
+
 def wire_headers(root):
     """Existing wire bindings and the scenario form name positional columns."""
     wire = Path(root) / "Platform/common/vectors/wire.tsv"
@@ -107,6 +112,10 @@ def wire_headers(root):
             first = next((line.split("\t") for line in path.read_bytes().decode("utf-8").split("\n")
                           if line and not line.startswith("#")), [])
             result[path.relative_to(root)] = (columns, first != columns)
+    # Exactly-named positional sources outside the wire and scenario forms
+    # (Architect 2026-11-06, P/06 source binding); no glob over other seams.
+    for path, value in POSITIONAL_SOURCES.items():
+        result[Path(path)] = value
     return result
 
 

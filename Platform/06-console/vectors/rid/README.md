@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/vectors/rid/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) N1.5 `rid`: the name of the row `<sub>/requests/<rid>` and of the mark
-`objects/<sub>/commands/<rid>`; N4 «просьба: неверный … rid»; ADR-0060). The participants are the console requests door
+`objects/<sub>/commands/<rid>`; N4 «request: invalid … rid»; ADR-0060). The participants are the console requests door
 (`POST /<sub>/requests`: the rid by the template `requests.key` or `r-<sha16(Idempotency-Key)>`; a refusal — 400 RequestError, N4) and
 the worker that writes a request itself ([chapter 3.6](../../../03-worker/spec/03.6-worker.norms.md) N1.5, `worker.requests`: a refusal —
 `RequestRefused`, the count `filings.refused`); the form of the element `rids` of the record `asked` ([the family `asked`](../../data/asked.schema.json)).
@@ -11,7 +11,7 @@ The bytes are written by the Specification (ADR-0083, stage B; the rule — the 
 `free-` — the Architect's decision of 2026-10-18); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
 The package was moved from `Source/tests/testdata/rid.tsv` (stage A) together with lesson 6 (stage B, ADR-0083 addendum (1)); the bytes
-of the table are the same, including the header comment (its «М10/8 N1.5» is the former address of the norm, now [the contract of the request and its mark](../../../common/contracts/request-mark.md) `rid` (review analysis of stage B 6–7, № 24); the product copy
+of the table are the same, including the header comment (its «M10/8 N1.5» is the former address of the norm, now [the contract of the request and its mark](../../../common/contracts/request-mark.md) `rid` (review analysis of stage B 6–7, № 24); the product copy
 is checked against these bytes).
 
 ## `rid.tsv`

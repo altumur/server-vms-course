@@ -6,7 +6,7 @@
 # /servers/{server}/labels, /servers/{server}/decommission, /unplaceable, /schema; 6.7 (late layer, introduced by lessons 8 and 10) —
 # /session/break-glass (door order), /domain/{sub}/books/{book}, forwarding of /domain and /domain/{route} (transitions 1–2 of the forwarding
 # contract), /heartbeats, /domain/at/{cluster}/{sub}/where/…, /domain/keys, /domain/shared/{sub}, /api/held, /api/backup, forwarding
-# to the signer of /api/prepare, /api/take, /domain/move; 6.8 — /folders, /folders/{id}; 6.9 — /{sub}/operations and the operation doors. The paths of chapter 6.7 are merged from the contracts М11/5, М11/8, М11/9, М11/10, М11/11
+# to the signer of /api/prepare, /api/take, /domain/move; 6.8 — /folders, /folders/{id}; 6.9 — /{sub}/operations and the operation doors. The paths of chapter 6.7 are merged from the contracts M11/5, M11/8, M11/9, M11/10, M11/11
 # (the cluster console side; move of lesson 10, stage B, without a change of behaviour): forwarding has only the codes of transitions 1–2
 # (the forwarding contract Platform/common/contracts/forwarding.md «Refusals by transition»; analysis of review of stage A 8–10, decision 3),
 # the answer of the domain console as it came — ForwardAnswer (like PassAnswer at door.pass); for forwarding to the signer the process answer is
@@ -15,11 +15,11 @@
 # of chapter 6.7, as at the others: 429 — at every forwarding door, 405 — at /domain/move, as at /api/held, /domain/keys (analysis of review
 # of stage B 8–10, № 12). The login of people POST /api/login is a forwarding door, transitions 1–2 (chapter 6.7 N1.2 process; analysis of review
 # of stage B 8–10, № 11).
-# Merged from the contracts М10/3, М10/4, М10/8 (the console half), М10/9 (without the module contract — P/07; the path
-# /platform/console.js stays with the console), М10/10 (without the resource door — P/05; /drain of М10/10 coincided with М10/4) — stage B,
+# Merged from the contracts M10/3, M10/4, M10/8 (the console half), M10/9 (without the module contract — P/07; the path
+# /platform/console.js stays with the console), M10/10 (without the resource door — P/05; /drain of M10/10 coincided with M10/4) — stage B,
 # without a change of behaviour, except the fixes of the analysis of review of stage A 6–7: № 16, № 24 — the copies of M2_*, M3_*, M4_* are reduced to
-# the originals (answers 400–429 — the originals of М10/9; ManifestView and FieldView at /{sub}/manifest and /mounts — the original GET /manifest;
-# Server — RFC 1123 per М10/4; at UnitId and WorkerName the phrase about the file profile is removed — norm 6.1 (was М10/3 N1.3):
+# the originals (answers 400–429 — the originals of M10/9; ManifestView and FieldView at /{sub}/manifest and /mounts — the original GET /manifest;
+# Server — RFC 1123 per M10/4; at UnitId and WorkerName the phrase about the file profile is removed — norm 6.1 (was M10/3 N1.3):
 # there is no narrower profile; at 503 of the observations /servers, /resources, /where, /metrics — the word error unavailable, the answer
 # Unavailable; Retry-After — as a string, as at the original); № 25 — the door.pass path with local refusals;
 # № 29 — an empty emergency login password is not cut off by the schema (401 per the norm). The answer schemas of /events shared with the resource,
@@ -124,7 +124,7 @@ paths:
       - name: deleted
         in: query
         required: false
-        description: Exactly 1, only together with about — the output of tombstones (N2 «Надгробия по about»; ADR-0094 addendum (5) item 1).
+        description: Exactly 1, only together with about — the output of tombstones (N2 «Tombstones by about»; ADR-0094 addendum (5) item 1).
         schema:
           const: '1'
       - name: about
@@ -174,14 +174,14 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; the open paths — in the same place
             (open_routes); HEAD carries no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '404':
           description: No row or a tombstone at PUT/DELETE — error no such unit. Unknown route — detail no such
             route, error no such path. An extra segment — detail a unit's path names one unit, error no such path (chapter 6.5
-            N2 «Общие коды»); HEAD carries no body
+            N2 «Common codes»); HEAD carries no body
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD carries
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
@@ -198,9 +198,9 @@ paths:
                 type: string
         '503':
           description: The store is unavailable — error with the text store unavailable; the answer under the key is not remembered. Also
-            the lane is busy — error busy and Retry-After 1 (chapter 6.5 N4 «полоса занята»), or there were keys, but there is nothing to check
-            trust with — error denied (the gate of chapter 6.3, shut; chapter 6.5 N4 «ключи были, проверить нечем»); the words busy and
-            denied were added by М10/9; HEAD carries no body
+            the lane is busy — error busy and Retry-After 1 (chapter 6.5 N4 «lane busy»), or there were keys, but there is nothing to check
+            trust with — error denied (the gate of chapter 6.3, shut; chapter 6.5 N4 «keys existed, no verifier available»); the words busy and
+            denied were added by M10/9; HEAD carries no body
           headers:
             Retry-After:
               description: Required with the value 1 at busy; not promised for the other reasons.
@@ -244,7 +244,7 @@ paths:
         schema:
           $ref: '#/components/schemas/IdempotencyKey'
         description: Optional. Without it the edit converges by cas and every repeat raises revision; with it — the repeat memory
-          (chapter 6.1 N3 «память повторов»), its order is before If-Match.
+          (chapter 6.1 N3 «replay memory»), its order is before If-Match.
       - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
@@ -568,7 +568,7 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; the open paths — in the same place
             (open_routes); HEAD carries no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '404':
           description: No path, unit, field or row; HEAD carries no body
@@ -723,7 +723,7 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; the open paths — in the same place
             (open_routes); HEAD carries no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '404':
           description: No path, unit, field or row; HEAD carries no body
@@ -1509,13 +1509,13 @@ paths:
             parameter repeated) or of transport — the body is chunked or shorter than declared (chapter 6.5 N4). A refusal of the form of its own door
             is named by its operation; HEAD carries no body'
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not the loader answer about an erroneous manifest; HEAD carries no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not the loader answer about an erroneous manifest; HEAD carries no
             body
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD carries
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
@@ -1543,7 +1543,7 @@ paths:
         '200':
           description: Full JSON body; HEAD carries no body
   /session/break-glass:
-    description: Chapter 6.7 N1.10 (late layer; from М11/9 N1.6) — the emergency login door at the cluster console by order,
+    description: Chapter 6.7 N1.10 (late layer; from M11/9 N1.6) — the emergency login door at the cluster console by order,
       GLASS_SESSION, GLASS_SESSIONS_MAX and the log; the limit and the accounting of attempts — P/08.4 N1.10 (an own count of the console door); the session, the cookie
       w2c_glass and the answer form — chapter 6.3 N1.3 session (analysis of review of stage A 8–10, № 40 / decision 8, № 41).
     post:
@@ -2214,12 +2214,12 @@ paths:
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 N4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
           description: Full JSON body; HEAD has no body
         '405':
-          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Общие коды»); HEAD has no
+          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Common codes»); HEAD has no
             body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -2297,12 +2297,12 @@ paths:
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 N4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
           description: Full JSON body; HEAD has no body
         '405':
-          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Общие коды»); HEAD has no
+          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Common codes»); HEAD has no
             body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -2383,12 +2383,12 @@ paths:
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 N4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
           description: Full JSON body; HEAD has no body
         '405':
-          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Общие коды»); HEAD has no
+          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Common codes»); HEAD has no
             body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -2469,12 +2469,12 @@ paths:
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 N4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
           description: Full JSON body; HEAD has no body
         '405':
-          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Общие коды»); HEAD has no
+          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Common codes»); HEAD has no
             body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -2542,13 +2542,13 @@ paths:
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 N4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not the loader answer about a faulty manifest; HEAD has no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not the loader answer about a faulty manifest; HEAD has no
             body
         '405':
-          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Общие коды»); HEAD has no
+          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Common codes»); HEAD has no
             body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -2617,13 +2617,13 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — in the same place
             (open_routes); HEAD has no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not the loader answer about a faulty manifest; HEAD has no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not the loader answer about a faulty manifest; HEAD has no
             body
         '405':
-          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Общие коды»); HEAD has no
+          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Common codes»); HEAD has no
             body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -2640,7 +2640,7 @@ paths:
                 type: string
         '503':
           description: General console refusal — busy with Retry-After 1 or denied on loss of trust (chapter 6.5 N4, rows
-            «полоса занята» and «ключи были, проверить нечем»); HEAD has no body
+            «lane busy» and «keys existed, no verifier available»); HEAD has no body
           headers:
             Retry-After:
               description: Required with the value 1 on busy; not promised for other causes.
@@ -2769,13 +2769,13 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — in the same place
             (open_routes); HEAD has no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not the loader answer about a faulty manifest; HEAD has no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not the loader answer about a faulty manifest; HEAD has no
             body
         '405':
-          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Общие коды»); HEAD has no
+          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Common codes»); HEAD has no
             body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -2842,13 +2842,13 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — in the same place
             (open_routes); HEAD has no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not the loader answer about a faulty manifest; HEAD has no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not the loader answer about a faulty manifest; HEAD has no
             body
         '405':
-          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Общие коды»); HEAD has no
+          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Common codes»); HEAD has no
             body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -2915,13 +2915,13 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — in the same place
             (open_routes); HEAD has no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not the loader answer about a faulty manifest; HEAD has no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not the loader answer about a faulty manifest; HEAD has no
             body
         '405':
-          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Общие коды»); HEAD has no
+          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Common codes»); HEAD has no
             body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -2989,13 +2989,13 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — in the same place
             (open_routes); HEAD has no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not the loader answer about a faulty manifest; HEAD has no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not the loader answer about a faulty manifest; HEAD has no
             body
         '405':
-          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Общие коды»); HEAD has no
+          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Common codes»); HEAD has no
             body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -3069,13 +3069,13 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — in the same place
             (open_routes); HEAD has no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not the loader answer about a faulty manifest; HEAD has no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not the loader answer about a faulty manifest; HEAD has no
             body
         '405':
-          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Общие коды»); HEAD has no
+          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Common codes»); HEAD has no
             body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -3159,13 +3159,13 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — in the same place
             (open_routes); HEAD has no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not the loader answer about a faulty manifest; HEAD has no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not the loader answer about a faulty manifest; HEAD has no
             body
         '405':
-          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Общие коды»); HEAD has no
+          description: A method not among those declared for this door, without an Allow header (chapter 6.5 N2 «Common codes»); HEAD has no
             body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -3194,7 +3194,7 @@ paths:
         '200':
           description: Full JSON body; HEAD has no body
   /where/{id}:
-    description: Chapter 6.5 — /where (P/06.5-05); the forms Where, NotPlaced, Door and the codes — the doors of N2 of former М10/4 (chapter 6.6,
+    description: Chapter 6.5 — /where (P/06.5-05); the forms Where, NotPlaced, Door and the codes — the doors of N2 of former M10/4 (chapter 6.6,
       P/06.6-03).
     servers:
     - url: '{origin}'
@@ -3268,12 +3268,12 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — there as well
             (open_routes); HEAD carries no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '404':
           description: No placement, or no such route; HEAD carries no body
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD carries
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
@@ -3377,7 +3377,7 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — there as well
             (open_routes); HEAD carries no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '404':
           description: Full JSON body; HEAD carries no body
@@ -3388,7 +3388,7 @@ paths:
                 minLength: 1
               description: 'Required for PlaceUnreachable: exactly the value of the unreachable field of the body.'
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD carries
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
@@ -3505,7 +3505,7 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — there as well
             (open_routes); HEAD carries no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '404':
           description: Full JSON body; HEAD carries no body
@@ -3516,7 +3516,7 @@ paths:
                 minLength: 1
               description: 'Required for PlaceUnreachable: exactly the value of the unreachable field of the body.'
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD carries
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
@@ -3585,13 +3585,13 @@ paths:
             parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 N4). The form refusal of its own door
             is named by its operation; HEAD carries no body'
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not the answer of the loader about a faulty manifest; HEAD carries no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not the answer of the loader about a faulty manifest; HEAD carries no
             body
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD carries
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
@@ -3659,13 +3659,13 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — there as well
             (open_routes); HEAD carries no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not the answer of the loader about a faulty manifest; HEAD carries no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not the answer of the loader about a faulty manifest; HEAD carries no
             body
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD carries
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
@@ -3729,7 +3729,7 @@ paths:
         '503':
           $ref: '#/components/responses/ConsoleUnavailable'
         '302':
-          description: 'Shell with console.shell, identity not proven: the console sign-in on the page /, the return — the parameter return (N2 «Вход на оболочке»); no body'
+          description: 'Shell with console.shell, identity not proven: the console sign-in on the page /, the return — the parameter return (N2 «Sign-in on the shell»); no body'
           headers:
             Location:
               schema:
@@ -3759,12 +3759,12 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — there as well
             (open_routes); HEAD carries no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '404':
           description: 'A known mounted subsystem without console.shell: MountedPage; an unknown sub: NoRoute; HEAD carries no body'
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD carries
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
@@ -3833,7 +3833,7 @@ paths:
         '503':
           $ref: '#/components/responses/ConsoleUnavailable'
         '302':
-          description: 'Shell with console.shell, identity not proven: the console sign-in on the page /, the return — the parameter return (N2 «Вход на оболочке»); no body'
+          description: 'Shell with console.shell, identity not proven: the console sign-in on the page /, the return — the parameter return (N2 «Sign-in on the shell»); no body'
           headers:
             Location:
               schema:
@@ -3863,12 +3863,12 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — there as well
             (open_routes); HEAD carries no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '404':
           description: 'A known mounted subsystem without console.shell: MountedPage; an unknown sub: NoRoute; HEAD carries no body'
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD carries
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
@@ -3908,7 +3908,7 @@ paths:
       schema:
         $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName
   /{sub}/{file}:
-    description: 'Chapter 6.5 (06.5-console.norms.md, N2 «Статические файлы») — a file of the list console.files of the manifest. A name from the list is resolved before the routes of the mounted subsystem; anything else — they, then NoRoute. The query string is not judged.'
+    description: 'Chapter 6.5 (06.5-console.norms.md, N2 «Static files») — a file of the list console.files of the manifest. A name from the list is resolved before the routes of the mounted subsystem; anything else — they, then NoRoute. The query string is not judged.'
     get:
       summary: Static file of a subsystem
       responses:
@@ -3935,7 +3935,7 @@ paths:
         '503':
           $ref: '#/components/responses/ConsoleUnavailable'
         '200':
-          description: The bytes of the file whole; the type — by the extension (N2 «Статические файлы»)
+          description: The bytes of the file whole; the type — by the extension (N2 «Static files»)
           content:
             text/javascript:
               schema:
@@ -3986,12 +3986,12 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — there as well
             (open_routes); HEAD carries no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '404':
           description: The name is not in the list and there is no route; an unknown sub; HEAD carries no body
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD carries
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
@@ -4042,14 +4042,14 @@ paths:
       schema:
         type: string
   /{pass}:
-    description: 'Chapter 6.5 (P/06.5-12) — door.pass (from М10/11 N1.8, N2; analysis of review of stage A 6–7, № 25): a route whose
+    description: 'Chapter 6.5 (P/06.5-12) — door.pass (from M10/11 N1.8, N2; analysis of review of stage A 6–7, № 25): a route whose
       first segment is in door.pass is passed to the live worker of the subsystem with a door (definition — 6.5) with the least name:
       method, path, query, a body of no more than 1 MiB, the headers Authorization, Content-Type, Idempotency-Key, X-Operator; the client
       to the worker — with the role certificate, if there is one. The gate of the console checks its own first, the worker checks the credentials
       again. Framing and the actual bytes of the request are checked before sending; an incomplete body is not passed; the response is buffered
       within 4 MiB before the headers to the client; the console does not follow a redirect; there is no automatic retry. Below — the local
       refusals of the console; the code of the worker response is passed as received (default). The norm — Platform/common/contracts/gate-and-pass.md
-      «Передача door.pass» (the participant — the domain console).'
+      «Forwarding door.pass» (the participant — the domain console).'
     servers:
     - url: '{origin}'
       description: The short path selects CONSOLE_ROOT (analysis of review of stage B 6–7, № 7).
@@ -4204,7 +4204,7 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — there as well
             (open_routes); HEAD carries no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
@@ -4238,7 +4238,7 @@ paths:
           description: 'The worker response as received: status, Content-Type and a body of no more than 4 MiB (chapter 6.5); the form is the business
             of the subsystem, this contract does not set it. The console does not follow a redirect; HEAD carries no body'
   /policy:
-    description: Chapter 6.6 — the doors of N2 of former М10/4.
+    description: Chapter 6.6 — the doors of N2 of former M10/4.
     servers:
     - url: '{origin}'
       description: The short path selects CONSOLE_ROOT.
@@ -4354,13 +4354,13 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — there as well
             (open_routes); HEAD carries no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not the answer of the loader about a faulty manifest; HEAD carries no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not the answer of the loader about a faulty manifest; HEAD carries no
             body
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD carries
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
@@ -4535,13 +4535,13 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — there as well
             (open_routes); HEAD carries no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD carries no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not the answer of the loader about a faulty manifest; HEAD carries no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not the answer of the loader about a faulty manifest; HEAD carries no
             body
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD carries
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
@@ -4758,12 +4758,12 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — in the same place
             (open_routes); HEAD has no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
           description: Unknown server, or no such route. N4; HEAD has no body
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD has
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD has
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -4900,7 +4900,7 @@ paths:
         '503':
           $ref: '#/components/responses/Unavailable'
   /unplaceable:
-    description: Chapter 6.6 (06.6-console.norms.md) — the N2 doors of former М10/4.
+    description: Chapter 6.6 (06.6-console.norms.md) — the N2 doors of former M10/4.
     servers:
     - url: '{origin}'
       description: The short path selects CONSOLE_ROOT.
@@ -4959,13 +4959,13 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — in the same place
             (open_routes); HEAD has no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not a loader answer about a faulty manifest; HEAD has no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not a loader answer about a faulty manifest; HEAD has no
             body
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD has
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD has
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -5089,13 +5089,13 @@ paths:
           description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — in the same place
             (open_routes); HEAD has no body
         '403':
-          description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
             on an acting request by cookie (csrf); error denied; HEAD has no body'
         '404':
-          description: No route (chapter 6.5 N2 «Общие коды»); this is not a loader answer about a faulty manifest; HEAD has no
+          description: No route (chapter 6.5 N2 «Common codes»); this is not a loader answer about a faulty manifest; HEAD has no
             body
         '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»); HEAD has
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD has
             no body
         '408':
           description: The body is read too slowly (chapter 6.5 N4); HEAD has no body
@@ -5126,7 +5126,7 @@ paths:
               $ref: '#/components/headers/ETag'
           description: Full JSON body; HEAD has no body
   /domain/{sub}/books/{book}:
-    description: 'Chapter 6.7 N1.1 (06.7-console.norms.md; from М11/5 N2) — the book door of this member at the cluster console (of the member and
+    description: 'Chapter 6.7 N1.1 (06.7-console.norms.md; from M11/5 N2) — the book door of this member at the cluster console (of the member and
       of the holder): the cluster holds the domain — row domain/<sub>/<book>/<CLUSTER>, otherwise the copy domain/<sub>/<book>; fields outside
       show and secrets are never in the answer; the book segment is compared with the book name of the manifest byte for byte. An own door of the console, not
       forwarded.'
@@ -5378,7 +5378,7 @@ paths:
         default:
           $ref: '#/components/responses/ForwardAnswer'
     patch:
-      summary: 'Forwarding: PATCH of a table row (method «любой» — rows door.pass)'
+      summary: 'Forwarding: PATCH of a table row (method «any» — rows door.pass)'
       responses:
         '400':
           $ref: '#/components/responses/ForwardBadRequest'
@@ -5738,7 +5738,7 @@ paths:
         '503':
           description: as for GET, without a body
   /domain/at/{cluster}/{sub}/where/{id}:
-    description: 'Chapter 6.7 N1.6, N3 «at a member» (from М11/8 N1.5) — where of a unit at the console of another member: forwarding to
+    description: 'Chapter 6.7 N1.6, N3 «at a member» (from M11/8 N1.5) — where of a unit at the console of another member: forwarding to
       CLUSTERS[cluster]/<sub>/where/<id> with X-W2C-Via, the answer of the member console as it came (the door was issued by the member console with its own
       key, the forwarding one does not re-sign it). Only GET and HEAD; another method or form — 404 not a route handed to a
       member.'
@@ -5795,7 +5795,7 @@ paths:
         '503':
           description: as for GET, without a body
   /domain/at/{cluster}/{sub}/where/{table}/{place}:
-    description: 'Chapter 6.7 N1.6, N3 «at a member» (from М11/8 N1.5) — where of a place at the console of another member; query (?unit=) — as it
+    description: 'Chapter 6.7 N1.6, N3 «at a member» (from M11/8 N1.5) — where of a place at the console of another member; query (?unit=) — as it
       came.'
     parameters:
     - name: cluster
@@ -5863,7 +5863,7 @@ paths:
         '503':
           description: as for GET, without a body
   /domain/keys:
-    description: 'Chapter 6.7 N1.11 (from М11/9 N1.8) — rows and key families of the domain in the store of this cluster; an own door
+    description: 'Chapter 6.7 N1.11 (from M11/9 N1.8) — rows and key families of the domain in the store of this cluster; an own door
       of the cluster console, not forwarded; view.'
     get:
       summary: Rows and key families of the domain of this cluster
@@ -5904,7 +5904,7 @@ paths:
         '503':
           description: as for GET, without a body
   /domain/shared/{sub}:
-    description: 'Chapter 6.7 N1.14, N3 resolve (from М11/11 N1.5) — values of the shared fields domain.shared of the manifest for this cluster
+    description: 'Chapter 6.7 N1.14, N3 resolve (from M11/11 N1.5) — values of the shared fields domain.shared of the manifest for this cluster
       and unit: unit → domain → inherit; the document of this cluster — at a member the object domain/shared (copy), at the holder —
       the object domain/shared-docs/rev-<rev> that the pointer names. An own door of the cluster console, not forwarded; view.'
     parameters:
@@ -5992,7 +5992,7 @@ paths:
         default:
           $ref: '#/components/responses/ForwardAnswer'
   /api/held:
-    description: 'Chapter 6.7 N1.12 (from М11/10 N1.4) — the term record, the key set and the backup pair of this cluster; an open door
+    description: 'Chapter 6.7 N1.12 (from M11/10 N1.4) — the term record, the key set and the backup pair of this cluster; an open door
       (open_routes of the gate contract): Authorization is not read, an invalid Bearer — also 200 (X13).'
     get:
       summary: Term record, key set and backup pair of this cluster
@@ -6069,7 +6069,7 @@ paths:
         '404': {description: 'No such part'}
         '503': {description: 'The part is not readable'}
   /api/backup:
-    description: 'Chapter 6.7 N1.13 (from М11/10 N1.9) — the backup of this cluster to a signed member: headers
+    description: 'Chapter 6.7 N1.13 (from M11/10 N1.9) — the backup of this cluster to a signed member: headers
       X-W2C-Member, X-W2C-Time, X-W2C-Signature (ask signature contract Platform/common/contracts/ask-sig.md, ask = backup);
       an open door of the gate (open_routes), it checks the signature itself.'
     get:
@@ -6154,7 +6154,7 @@ paths:
         '503':
           description: as for GET, without a body
   /api/prepare:
-    description: 'Chapter 6.7 N1.8 (from М11/8 N1.9) — forwarding to the signer: the cluster console passes the door to the domain process of its own
+    description: 'Chapter 6.7 N1.8 (from M11/8 N1.9) — forwarding to the signer: the cluster console passes the door to the domain process of its own
       box (SIGNER_URL); path, body, X-W2C-Member, X-W2C-Time, X-W2C-Signature and Idempotency-Key — as they came; it does not ask for
       identity (the signature — ask signature contract); deadline 10 s. Here — the codes of the forwarding cluster console (400 one hop, 413, 404 no signer here,
       502 did not answer); the answer of the process — as it came, operation handoverPrepare of the OpenAPI of lesson P/08.'
@@ -6205,7 +6205,7 @@ paths:
                 - $ref: '#/components/schemas/GuardUnavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
   /api/take:
-    description: 'Chapter 6.7 N1.8 (from М11/8 N1.9) — forwarding to the signer, as /api/prepare; deadline 90 s. The answer of the process — as it
+    description: 'Chapter 6.7 N1.8 (from M11/8 N1.9) — forwarding to the signer, as /api/prepare; deadline 90 s. The answer of the process — as it
       came, operation handoverTake of the OpenAPI of lesson P/08.'
     post:
       summary: 'Forwarding to the signer: the target takes the domain'
@@ -6315,9 +6315,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConsoleRefusal'
+                anyOf:
+                - $ref: '#/components/schemas/VerifyUnavailable'
+                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
   /domain/move:
-    description: 'Chapter 6.7 N1.8 (from М11/8 N1.9; P/06.7-17) — emergency move here: the cluster console of the target asks for
+    description: 'Chapter 6.7 N1.8 (from M11/8 N1.9; P/06.7-17) — emergency move here: the cluster console of the target asks for
       the identity and the admin grant of this cluster (the gate by the console mode; need of the gate contract: POST /domain/move →
       admin on *) and passes the door to the domain process of its own box (SIGNER_URL) with the proven name in the header X-W2C-User
       (P/08.8 N1.8 by; an X-W2C-User that came from the client is removed, C08-MOVED-BY-01); deadline 90 s. The answer of the process — as it came,
@@ -6412,7 +6415,7 @@ components:
       in: header
       required: false
       description: 'Optional at this door: absent — the pass is as before, a repeat is a new write; present — the replay memory (chapter
-        6.1 N3 «память повторов»; ADR-0094 B3).'
+        6.1 N3 «replay memory»; ADR-0094 B3).'
       schema:
         $ref: '#/components/schemas/IdempotencyKey'
     IfMatch:
@@ -6538,6 +6541,26 @@ components:
               type: boolean
             unreadable:
               type: boolean
+    VerifyUnavailable:
+      type: object
+      description: Own 503 of POST /domain/verify after credential verification. An unreadable supervision input requires supervision.unreadable true; an ordinary need unavailability may omit supervision. Common gate and forwarded domain refusals retain their own conditions and schemas.
+      required:
+      - detail
+      - error
+      additionalProperties: false
+      properties:
+        detail:
+          type: string
+        error:
+          const: unavailable
+        supervision:
+          type: object
+          required:
+          - unreadable
+          additionalProperties: false
+          properties:
+            unreadable:
+              const: true
     ManifestSource:
       type: object
       description: Chapter 6.5 N2 «GET /manifest/<sub>/source» (ADR-0116 addendum (6)).
@@ -7032,7 +7055,7 @@ components:
       description: 'A slot name by P/03.2 N1.4: prefix of 1–8 lowercase Latin letters and a non-empty suffix of lowercase Latin
         letters/digits with single hyphens between the parts. The match of prefix with slot.prefix of the chosen manifest is checked separately.'
     Server:
-      description: The server name — an RFC 1123 host name (chapter 6.6, former М10/4 N2.1; check of python and go 2026-10-18).
+      description: The server name — an RFC 1123 host name (chapter 6.6, former M10/4 N2.1; check of python and go 2026-10-18).
       type: string
       minLength: 1
       maxLength: 253
@@ -7055,7 +7078,7 @@ components:
       type: integer
       minimum: 0
       maximum: 9007199254740991
-      description: The revision of the settings row; 0 — there is no row or the field does not read (chapter 6.6 N2.1 «Версия строки»); the ceiling is that of the field revision of the row (chapter 6.6 N1).
+      description: The revision of the settings row; 0 — there is no row or the field does not read (chapter 6.6 N2.1 «Row revision»); the ceiling is that of the field revision of the row (chapter 6.6 N1).
     StoreIndex:
       type: string
       pattern: ^(?:0|[1-9][0-9]{0,19})$
@@ -7125,7 +7148,7 @@ components:
       type: object
       required: [deleted]
       additionalProperties: false
-      description: Unit tombstones by the value of the about field (chapter 6.1 N2 «Надгробия по about»).
+      description: Unit tombstones by the value of the about field (chapter 6.1 N2 «Tombstones by about»).
       properties:
         deleted:
           type: array
@@ -7452,7 +7475,7 @@ components:
         password:
           type: string
           description: An empty string passes the body parse and gets 401 at the password check, counted against the attempt limit (chapter
-            6.7 N1.10, steps 2 and 5; formerly М11/9 N1.6 door; review of stage A 6–7, item 29; review of stage A 8–10, item 41); who and why are non-empty.
+            6.7 N1.10, steps 2 and 5; formerly M11/9 N1.6 door; review of stage A 6–7, item 29; review of stage A 8–10, item 41); who and why are non-empty.
     LoggedIn:
       type: object
       required:
@@ -7546,13 +7569,13 @@ components:
         name_conflict:
           type: boolean
           description: true when under the worker name there is at least one fresh contender mark of any state (an unreadable one too, marked by name_conflict_unreadable)
-            (refused, nameless, waiting); the name is a key segment, marks «-» are not included (N3 «/servers» «Соперники»; the observation
-            contract «Свежесть метки соперника»; C06-CONTENDER-FRESH-33-01, C06-CONTENDER-PROJECTION-33-01).
+            (refused, nameless, waiting); the name is a key segment, marks «-» are not included (N3 «/servers» «Contenders»; the observation
+            contract «Freshness of a contender mark»; C06-CONTENDER-FRESH-33-01, C06-CONTENDER-PROJECTION-33-01).
         name_conflict_unreadable:
           type: boolean
           const: true
           description: Under the worker name there is a fresh contender mark that does not read (including name ≠ the key segment) —
-            the conflict is counted in name_conflict too; there is no field when there are no such marks (N3 «/servers» «Соперники»; V7 item 3, the Architect's decision of 2026-10-28, P1; line 22 of the list).
+            the conflict is counted in name_conflict too; there is no field when there are no such marks (N3 «/servers» «Contenders»; V7 item 3, the Architect's decision of 2026-10-28, P1; line 22 of the list).
         status:
           type: object
           additionalProperties:
@@ -8228,7 +8251,7 @@ components:
         - const: ..
         - pattern: "^(?:[\\s\\S]*/[\\s\\S]*)$"
       description: One non-empty segment, except '..', at most 200 UTF-8 bytes (N3). maxLength counts characters and does not replace
-        a separate byte check. The key of the claim row is a digest (chapter 6.1 N3 «память повторов»), the limit of the full
+        a separate byte check. The key of the claim row is a digest (chapter 6.1 N3 «replay memory»), the limit of the full
         key does not concern it.
     ClientFields:
       type: object
@@ -8248,9 +8271,9 @@ components:
       description: Only the unit.fields fields; extra names are needed here for an arbitrary manifest, but a field unknown to it
         is refused. Types, required, enum, url, blob, json and fixed/inherit are checked by N1 and in the order of N3, not by one
         validator of the common schema. null for a field with inherit — «not set», the value is inherited again; for other fields, except
-        json, null — 400 (N2). PUT contains the changeable fields; an empty or null secret keeps the previous one (chapter 6.2 N3 «создать/править»,
-        step 3; on a change of a field from bound_to — 400 «must be given anew»). The platform names worker, placement were added by М10/4;
-        phase, observed_revision — by М10/5.
+        json, null — 400 (N2). PUT contains the changeable fields; an empty or null secret keeps the previous one (chapter 6.2 N3 «create/edit»,
+        step 3; on a change of a field from bound_to — 400 «must be given anew»). The platform names worker, placement were added by M10/4;
+        phase, observed_revision — by M10/5.
     Unit:
       type: object
       required:
@@ -8280,7 +8303,7 @@ components:
           type: object
           readOnly: true
           additionalProperties: true
-          description: The active states of the unit by unit.state (P/06.1 N2 «Состояние в ответе»; ADR-0091 item 3); the value — by the schema unit.state.<name>.
+          description: The active states of the unit by unit.state (P/06.1 N2 «State in the response»; ADR-0091 item 3); the value — by the schema unit.state.<name>.
       patternProperties:
         "^(?:[\\s\\S]*_secret)$":
           type: string
@@ -8290,7 +8313,7 @@ components:
       additionalProperties: true
       description: 'A typed unit row. The other fields are set by unit.fields: int/float — JSON numbers, bool — a boolean,
         list — an array, json — a JSON value, string/url/blob — strings; a secret is empty or the mask "***" (chapter 6.2, mask, added
-        by М10/7). An absent inherit and json null are not added to the answer. An open set of names supports an arbitrary
+        by M10/7). An absent inherit and json null are not added to the answer. An open set of names supports an arbitrary
         manifest and does not permit foreign fields.'
     CreatedUnit:
       unevaluatedProperties: false
@@ -8434,7 +8457,7 @@ components:
           - revision
       description: An element of status of the heartbeat (P/03.4 N1.1; for phase sealed — {id, phase, why, revision}, for phase unreadable — {id, phase, why, revision?}, without epoch and observed_revision, W03-G02, W03-G05) plus worker, server, age, worker_state (chapter 6.1 N2; filtering
         by view — the gate of chapter 6.3, need). The words of the subsystem stay opaque. The meaning of freshness and of building the list
-        — chapter 6.1 N2 («`rows` в `GET /{rows}`»).
+        — chapter 6.1 N2 («`rows` in `GET /{rows}`»).
     Refusal:
       type: object
       required:
@@ -8530,7 +8553,7 @@ components:
       - properties:
           error:
             const: refused
-      description: A refusal without a word of its own reason (chapter 6.1 N2 «Отказ error и field») — a CAS conflict of the row, a schema door; the reason is in detail.
+      description: A refusal without a word of its own reason (chapter 6.1 N2 «Refusal error and field») — a CAS conflict of the row, a schema door; the reason is in detail.
     FormRefusal:
       unevaluatedProperties: false
       allOf:
@@ -8570,7 +8593,7 @@ components:
       - properties:
           error:
             const: in flight
-      description: A refusal of the replay memory of a door with an optional key (chapter 6.1 N3 «память повторов»; ADR-0094 B3).
+      description: A refusal of the replay memory of a door with an optional key (chapter 6.1 N3 «replay memory»; ADR-0094 B3).
     BatchInput:
       type: object
       required: [writes]
@@ -8932,7 +8955,7 @@ components:
           type: string
         error:
           const: leader moved
-      description: Chapter 6.9 N2 «Пакет шага»; the subsystem ends the call and does not write the outcome.
+      description: Chapter 6.9 N2 «Step batch»; the subsystem ends the call and does not write the outcome.
     KeyReused:
       unevaluatedProperties: false
       allOf:
@@ -9058,7 +9081,7 @@ components:
         withheld:
           description: Units whose labels are unknown (the unit row is unreadable or its read is not confirmed) and whose rows
             are therefore hidden from a grant by labels; only to the caller with a view grant by labels; without repeats, in ascending
-            byte order; none such — there is no field (P/06.4 N2 «Кто видит строку», the merge contract step 5a; C06-EVENTS-LABEL-SOURCE-138-07).
+            byte order; none such — there is no field (P/06.4 N2 «Who can see a row», the merge contract step 5a; C06-EVENTS-LABEL-SOURCE-138-07).
           type: array
           minItems: 1
           uniqueItems: true
@@ -9171,13 +9194,13 @@ components:
           type: string
           minLength: 1
           description: The value of the action field of the request body, not the name of the handler; a body without action has no field (the request contract
-            «Метка»; review of stage B 6–7, item 16).
+            «Mark»; review of stage B 6–7, item 16).
         error:
           type: string
           maxLength: 200
         reply:
           type: string
-          description: The JSON text of the perform answer (the request contract «Метка», C06-MARK-REPLY-01).
+          description: The JSON text of the perform answer (the request contract «Mark», C06-MARK-REPLY-01).
         late:
           const: 'true'
       allOf:
@@ -9600,8 +9623,8 @@ components:
             no signer here, no such book shown, …).
         detail:
           type: string
-      description: A refusal of the own doors of chapter 6.7 and of transitions 1–2 of the forwarding contract `{error, detail}` (chapter 6.7 N4; from М11/5, М11/8,
-        М11/9, М11/10, М11/11).
+      description: A refusal of the own doors of chapter 6.7 and of transitions 1–2 of the forwarding contract `{error, detail}` (chapter 6.7 N4; from M11/5, M11/8,
+        M11/9, M11/10, M11/11).
     DomainKeys:
       type: object
       description: The answer of GET /domain/keys (chapter 6.7 N1.11).
@@ -9690,7 +9713,7 @@ components:
           schema:
             $ref: '#/components/schemas/Denied'
     Denied:
-      description: 'Access refusal — the gate of chapter 6.3: «гранта нет» (need), «нет домена, не петля», a foreign Origin on an acting
+      description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin on an acting
         request by cookie (csrf); error denied.'
       content:
         application/json:
@@ -9706,13 +9729,13 @@ components:
             - $ref: '#/components/schemas/Denied'
             - $ref: '#/components/schemas/WritesVia'
     NoRoute:
-      description: No route (chapter 6.5 N2 «Общие коды»); this is not a loader answer about a faulty manifest.
+      description: No route (chapter 6.5 N2 «Common codes»); this is not a loader answer about a faulty manifest.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/NoRoute'
     Method:
-      description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Общие коды»).
+      description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»).
       content:
         application/json:
           schema:
@@ -9742,8 +9765,8 @@ components:
           schema:
             $ref: '#/components/schemas/ConsoleRefusal'
     GuardUnavailable:
-      description: The common console refusal — busy with Retry-After 1 or denied on a loss of trust (chapter 6.5 N4, lines «полоса занята»
-        and «ключи были, проверить нечем»).
+      description: The common console refusal — busy with Retry-After 1 or denied on a loss of trust (chapter 6.5 N4, lines «lane busy»
+        and «keys existed, no verifier available»).
       headers:
         Retry-After:
           description: Required with the value 1 on busy; not promised for the other reasons.
@@ -9784,7 +9807,7 @@ components:
             $ref: '#/components/schemas/TextRefusal'
     BadRequest:
       description: 'A form refusal by N4; the order of N3. Also the common refusal of reading the console body: a chunked or short body (lesson
-        9 N1.3 body, N4 «тело: chunked / больше / медленно / коротко»). Reasons without fault pass detail and error. A refusal
+        9 N1.3 body, N4 «body: chunked / larger / slow / short»). Reasons without fault pass detail and error. A refusal
         of the full store key — error badkey without fault; completion of POST by N3.'
       content:
         application/json:
@@ -9793,16 +9816,16 @@ components:
     NotFound:
       description: No row or a tombstone for PUT/DELETE — error no such unit. An unknown route — detail no such route,
         error no such path. An extra segment — detail a unit's path names one unit, error no such path (chapter 6.5 N2
-        «Общие коды»).
+        «Common codes»).
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/TextRefusal'
     UnitUnavailable:
       description: The store is unavailable — error with the text store unavailable; the answer under the key is not remembered. Also the lane
-        is busy — error busy and Retry-After 1 (chapter 6.5 N4 «полоса занята»), or there were keys, but nothing to check the trust with
-        — error denied (the gate of chapter 6.3, shut; chapter 6.5 N4 «ключи были, проверить нечем»); the words busy and denied were added by
-        М10/9.
+        is busy — error busy and Retry-After 1 (chapter 6.5 N4 «lane busy»), or there were keys, but nothing to check the trust with
+        — error denied (the gate of chapter 6.3, shut; chapter 6.5 N4 «keys existed, no verifier available»); the words busy and denied were added by
+        M10/9.
       headers:
         Retry-After:
           description: Required with the value 1 on busy; not promised for the other reasons.
@@ -9815,7 +9838,7 @@ components:
             $ref: '#/components/schemas/UnitUnavailable'
     WriteUnavailable:
       description: The common 503 by Unavailable or a set but unreadable secret ring by chapter 6.2 N4
-        («ключ задан и не читается, любой POST/PUT единицы»). A 5xx answer is not saved as done; the pending state — by chapter 6.1 N3.
+        («key configured but unreadable, any POST/PUT units»). A 5xx answer is not saved as done; the pending state — by chapter 6.1 N3.
       headers:
         Retry-After:
           description: Required with the value 1 on busy; not required for the ring error.
@@ -9895,7 +9918,7 @@ components:
           schema: {}
     BookNotShown:
       description: 'The book door (chapter 6.7 N1.1, N4): the manifest does not declare the book or the book is without show («carried and not shown»), the book
-        is not delivered yet («not delivered yet»); the common refusal «нет маршрута» — chapter 6.5 N2.'
+        is not delivered yet («not delivered yet»); the common refusal «no route» — chapter 6.5 N2.'
       content:
         application/json:
           schema:
@@ -9924,7 +9947,7 @@ components:
           schema:
             $ref: '#/components/schemas/DomainRefusal'
     ForwardFailed:
-      description: 'Transition 1 (chapter 6.7 N4): did not answer (no answer within FORWARD_WAIT — the column «Ожидание» of the row, network,
+      description: 'Transition 1 (chapter 6.7 N4): did not answer (no answer within FORWARD_WAIT — the column «Wait» of the row, network,
         refusal of peer; detail «<cluster>''s console did not answer[: <peer word>]»), answer too large (larger than FORWARD_MAX 1 MiB),
         answer broke off. An answer of the domain console with code 502 is passed on as it came.'
       content:
@@ -9991,7 +10014,7 @@ components:
     SharedNotFound:
       description: 'GET /domain/shared/<sub> (chapter 6.7 N1.14 refusals): a subsystem without domain.shared — no such shared settings;
         ?unit= — there is no such unit, including a unit of another manifest, or the id is not by the grammar of chapter 6.1 N1.3 — no such unit;
-        the common refusal «нет маршрута» — chapter 6.5 N2.'
+        the common refusal «no route» — chapter 6.5 N2.'
       content:
         application/json:
           schema:

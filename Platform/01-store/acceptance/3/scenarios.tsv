@@ -92,7 +92,7 @@ scenario	step	request	expect
 15-service-doors	6	admin POST /v1/join {"id": "x1", "raft": "", "api": ""}	400 {"kind": "badrequest"}
 15-service-doors	7	admin HEAD /v1/status	405
 15-service-doors	8	admin HEAD /v1/rights	404
-16-status-no-api	1	admin GET /v1/status	200 {"state": "Leader", "leader": "", "members": {}}
+16-status-no-api	1	admin GET /v1/status	200 {"state": "Leader", "leader": "", "members": {}, "max_value": 524288, "max_body": 1048576}
 17-group-members	1	@group-setup inputs/group.json	ok
 17-group-members	2	@store-start s1 -bootstrap -group-size 3	ok
 17-group-members	3	@store-start s2 -join {api@s1} -group-size 3 -force	ok

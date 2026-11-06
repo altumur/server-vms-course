@@ -4,8 +4,8 @@ This English text is the source; the Russian translation `ru/acceptance/3/README
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`06.3-console.norms.md`](../../spec/06.3-console.norms.md) N5. The scenario was moved from the acceptance of
-М10/09 (stage B, ADR-0083 addendum (1): without a change of
-behaviour); the numbers of the scenario and of the steps are the former ones. The other scenarios of М10/09 are the acceptance of [chapter 6.5](../5/README.md). The forms of foreign
+M10/09 (stage B, ADR-0083 addendum (1): without a change of
+behaviour); the numbers of the scenario and of the steps are the former ones. The other scenarios of M10/09 are the acceptance of [chapter 6.5](../5/README.md). The forms of foreign
 doors belong to their owners; the common codes and the parsing of a console request are [chapter 6.5](../../spec/06.5-console.norms.md) N2.
 
 ## Preparation
@@ -24,18 +24,18 @@ a door without a prefix is the console; a subset of fields, `@header` in the exp
 A subset expect does not replace the check of the full HTTP form of the OpenAPI of the lesson: check the mandatory fields, the types, Content-Type,
 the special headers. A successful open `/session` contains `login_url`, even when the TSV checks only `open`.
 
-Steps of the reconciliation of python and go М10/6–11 (2026-10-18):
+Steps of the reconciliation of python and go M10/6–11 (2026-10-18):
 - **03/3–5** — the answer of `DELETE /session` carries two `Set-Cookie` headers (it removes the cookies `w2c_token` and `w2c_glass`, C34).
   The expectation `@header` looks for a substring in each value of a repeated header.
 
-Step 03/1 — `login_url` without `LOGIN_URL` is `/api/login` (reconciliation 2 of the clean room of М10, faa988b0); `server_time` is `@time`,
+Step 03/1 — `login_url` without `LOGIN_URL` is `/api/login` (reconciliation 2 of the clean room of M10, faa988b0); `server_time` is `@time`,
 `timezone` is the default `UTC`: the stand does not set `TIMEZONE` (ADR-0094 B6).
 
 ## Evidence outside TSV
 
 The domain login, closed `grants`, `via` of a proven identity, the order of `identity`, `need` before the body, Origin by the cookie, the log
 `access.denied`, the emergency login and the debug identity are checked by a separate stand (the domain stand: the acceptance P/08.4, sc. 14 of chapter 6.7) and by a module test, not by this TSV
-(the norms of the chapter, N5, «Проверяются чтением»).
+(the norms of the chapter, N5, «Checked by reading»).
 
 Additional check of the class of errors of run 36 (Kimi), by reading: without a domain every path, including the open one and /session,
 is closed outside the loopback; after an identity the cookie checks Origin before the grant. Check the emergency login.
@@ -45,6 +45,6 @@ of the author are not a performed stand test.
 
 ## `journal/corrections-3.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows of the log of the acceptance of М10/09 about scenario 03
-were moved here as they are; the whole log of М10/09 is at the beginning of the log of the acceptance of chapter 6.5 (`journal/corrections-5.tsv`, a log, not in the export) (review analysis
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows of the log of the acceptance of M10/09 about scenario 03
+were moved here as they are; the whole log of M10/09 is at the beginning of the log of the acceptance of chapter 6.5 (`journal/corrections-5.tsv`, a log, not in the export) (review analysis
 of stage B 6–7, № 18).
