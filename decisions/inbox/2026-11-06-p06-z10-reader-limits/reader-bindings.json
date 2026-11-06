@@ -1,0 +1,41 @@
+{
+  "base": "3dd73fe5d7693acfc08943511e9cd88f37af8b90",
+  "bindings": [
+    {
+      "constant": "FOLDERS_MEMBERS_MAX",
+      "constant_path": "Platform/06-console/forms/runtime-constants.tsv",
+      "constant_row": {
+        "name": "FOLDERS_MEMBERS_MAX",
+        "value": "1000",
+        "unit": "count",
+        "norm": "P/06.8-R006",
+        "meaning": "members in a folder row; this row is the numeric source, data/folders.schema.json#/$defs/writer/properties/members/maxItems is its second carrier"
+      },
+      "schema": "Platform/06-console/data/folders.schema.json",
+      "schema_sha256": "8776e115cded3190960766d6c753308a429be5742d3a5bd661ce9f8fc4bad9b1",
+      "numeric_pointer": "/$defs/writer/properties/members/maxItems",
+      "numeric_value": 1000,
+      "reader_binding_pointer": "/allOf/0/$ref",
+      "reader_binding": "#/$defs/writer",
+      "writer_definition_and_embedded_common_bytes_unchanged": true
+    },
+    {
+      "constant": "FOLDERS_PER_UNIT_MAX",
+      "constant_path": "Platform/06-console/forms/runtime-constants.tsv",
+      "constant_row": {
+        "name": "FOLDERS_PER_UNIT_MAX",
+        "value": "8",
+        "unit": "count",
+        "norm": "P/06.8-R006",
+        "meaning": "FOLDERS_PER_UNIT_MAX × (FOLDERS_DEPTH_MAX − 1) + 8 ≤ BATCH_GUARDS: the folderIds step at full length fits into the door's batch; this row is the numeric source, data/memberof.schema.json#/$defs/writer/properties/folders/maxItems is its second carrier"
+      },
+      "schema": "Platform/06-console/data/memberof.schema.json",
+      "schema_sha256": "9eba6a013e74c5e91d81f1f068dedd0a56540a8c5b7200baabf0f336ca5d270e",
+      "numeric_pointer": "/$defs/writer/properties/folders/maxItems",
+      "numeric_value": 8,
+      "reader_binding_pointer": "/allOf/0/$ref",
+      "reader_binding": "#/$defs/writer",
+      "writer_definition_and_embedded_common_bytes_unchanged": true
+    }
+  ]
+}

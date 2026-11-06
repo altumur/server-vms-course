@@ -1,0 +1,205 @@
+{
+  "base": "3dd73fe5d7693acfc08943511e9cd88f37af8b90",
+  "source_only": true,
+  "schema_meta_checks": 2,
+  "reference_cases": [
+    {
+      "case": "06-rights-8033",
+      "mode": "writer",
+      "actual_source_reference": {
+        "verdict": "refused",
+        "paths": [
+          "/folders"
+        ],
+        "outcome": []
+      },
+      "input_text_sha256": "a146bce674ab979156af5213108677ecfd7a556c8805bb6e4e56ca05271857bb",
+      "implementation_executed": false
+    },
+    {
+      "case": "06-rights-8034",
+      "mode": "reader",
+      "actual_source_reference": {
+        "verdict": "refused",
+        "paths": [
+          "/folders"
+        ],
+        "outcome": {
+          "console": [
+            ""
+          ],
+          "domainagent": [
+            ""
+          ]
+        }
+      },
+      "input_text_sha256": "a146bce674ab979156af5213108677ecfd7a556c8805bb6e4e56ca05271857bb",
+      "implementation_executed": false
+    },
+    {
+      "case": "06-z10-folder-1000-writer",
+      "mode": "writer",
+      "actual_source_reference": {
+        "verdict": "ok",
+        "paths": [],
+        "outcome": []
+      },
+      "input_text_sha256": "e3e04a3988d22372160837edb9f3208d6715027923822ff3ab942425fec961d7",
+      "implementation_executed": false
+    },
+    {
+      "case": "06-z10-folder-1000-reader",
+      "mode": "reader",
+      "actual_source_reference": {
+        "verdict": "ok",
+        "paths": [],
+        "outcome": {
+          "console": [],
+          "domainagent": []
+        }
+      },
+      "input_text_sha256": "e3e04a3988d22372160837edb9f3208d6715027923822ff3ab942425fec961d7",
+      "implementation_executed": false
+    },
+    {
+      "case": "06-z10-folder-1001-writer",
+      "mode": "writer",
+      "actual_source_reference": {
+        "verdict": "refused",
+        "paths": [
+          "/members"
+        ],
+        "outcome": []
+      },
+      "input_text_sha256": "247494df9fc22f80f6b7312a6f02502e2fd008af90dac937eddcdcf2568ae5f8",
+      "implementation_executed": false
+    },
+    {
+      "case": "06-z10-folder-1001-reader",
+      "mode": "reader",
+      "actual_source_reference": {
+        "verdict": "refused",
+        "paths": [
+          "/members"
+        ],
+        "outcome": {
+          "console": [
+            ""
+          ],
+          "domainagent": [
+            ""
+          ]
+        }
+      },
+      "input_text_sha256": "247494df9fc22f80f6b7312a6f02502e2fd008af90dac937eddcdcf2568ae5f8",
+      "implementation_executed": false
+    },
+    {
+      "case": "06-z10-memberof-8-writer",
+      "mode": "writer",
+      "actual_source_reference": {
+        "verdict": "ok",
+        "paths": [],
+        "outcome": []
+      },
+      "input_text_sha256": "86b5d6e3688f53ffa492faf427e913b6efb5559786db6bb7c251d432d58e7790",
+      "implementation_executed": false
+    },
+    {
+      "case": "06-z10-memberof-8-reader",
+      "mode": "reader",
+      "actual_source_reference": {
+        "verdict": "ok",
+        "paths": [],
+        "outcome": {
+          "console": [],
+          "domainagent": []
+        }
+      },
+      "input_text_sha256": "86b5d6e3688f53ffa492faf427e913b6efb5559786db6bb7c251d432d58e7790",
+      "implementation_executed": false
+    }
+  ],
+  "new_case_count": 6,
+  "corrected_existing_case": "06-rights-8034",
+  "exact_changed_columns_1based": [
+    8,
+    9,
+    10,
+    11
+  ],
+  "first_seven_cells_and_writer8033_exact": true,
+  "every_other_old_table_line_byte_exact": true,
+  "old_table_data_rows": 1296,
+  "new_table_data_rows": 1302,
+  "mirrors": {
+    "spec/06.8-console.norms.md": [],
+    "acceptance/8/README.md": []
+  },
+  "procedure_blocks": [
+    {
+      "path": "Platform/06-console/spec/06.8-console.norms.md",
+      "fenced_procedure_blocks": 9,
+      "all_blocks_req_anchors_and_N4_bytes_preserved": true
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.8-console.norms.md",
+      "fenced_procedure_blocks": 9,
+      "all_blocks_req_anchors_and_N4_bytes_preserved": true
+    }
+  ],
+  "preserved": {
+    "Platform/06-console/acceptance/8/scenarios.tsv": {
+      "sha256": "b16984fa33da9ee62fbd24a39e345f55c2e5552286581957364edd3e5c8cdacd",
+      "byte_identical": true
+    },
+    "Platform/06-console/data/folders.outcomes.tsv": {
+      "sha256": "d8f408964ff140ad356944fbbf6fe785cfd5f90b933d456a24e677dc67a71aac",
+      "byte_identical": true
+    },
+    "Platform/06-console/data/memberof.outcomes.tsv": {
+      "sha256": "1d6a3fb702fd35ed59a7f39cf22d81276cfae047bafbe7cb4d4bdec769ac5c65",
+      "byte_identical": true
+    },
+    "Platform/06-console/data/folders.layers.tsv": {
+      "sha256": "66bfdf7337bf7b0c5202b7f563ad0a09ff3f78583c00453f77164ecae255335e",
+      "byte_identical": true
+    },
+    "Platform/06-console/data/memberof.layers.tsv": {
+      "sha256": "eebcdf1205cb8705a587ad4a7a72abf24b70d16484e9f4f5c4008f1644becf09",
+      "byte_identical": true
+    },
+    "Platform/06-console/forms/runtime-constants.tsv": {
+      "sha256": "b2e87b526ca395b4fe6b80353dbfb6132ecfad562dd9cab7ed1e57015d7837a4",
+      "byte_identical": true
+    },
+    "Platform/06-console/forms/refusals.tsv": {
+      "sha256": "cd60ace8abcb013b1c9dfc4966cdb0486183e08c250d90061ed865792862c091",
+      "byte_identical": true
+    },
+    "Platform/06-console/forms/stages.tsv": {
+      "sha256": "aef4d47fbd8ef7f5e24b6e3ea5ca993cfd234130fc3799bb1ddc80b72702fe01",
+      "byte_identical": true
+    },
+    "Platform/06-console/spec/06-console.api.openapi.yaml": {
+      "sha256": "79cb9d28884f0546f6c190246d516b7a615772e32ab4dcf1706ad957657bbf23",
+      "byte_identical": true
+    },
+    "Platform/common/vectors/wire.tsv": {
+      "sha256": "b123b2c06e8a965228000375b4d6bd8ce74e5b501713aac6a530617a08ac1615",
+      "byte_identical": true
+    },
+    "Platform/common/vectors/consumers.tsv": {
+      "sha256": "ba7987d2750f43805dd9d31d79e27f938745dd8e7bba666e1288d935925cb486",
+      "byte_identical": true
+    }
+  },
+  "pre_Z10_history_unchanged": {
+    "/home/pilot/spec103/p02-reader-profile-9ee/DERIVATION.md": "e45f0187c314130076c7086584a5c4d6f33305adc617c609582424fb20dbd4bf",
+    "/home/pilot/spec103/p02-profile-scope-9ee/SCOPE.md": "52a7e53a21f580f8d91362b20d0ef7d5ca885e26c3b88b5ef7e2aca6b1553aae"
+  },
+  "B1_closed": false,
+  "recovery_executed": false,
+  "model_generator_Go_runner_implementation_executed": false,
+  "known_downstream": "section renderer shared-heading plus reader-binding equalities owned by review103, not edited here"
+}

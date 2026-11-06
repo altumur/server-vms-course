@@ -1,0 +1,30 @@
+{
+  "path": "Platform/common/vectors/family-read/06.tsv",
+  "physical_line": 1127,
+  "before": {
+    "case": "06-rights-8034",
+    "family": "platform/memberof/<sub>/<manifest:unit.rows>/<id>",
+    "key": "platform/memberof/testsub/counters/c1",
+    "kind": "row",
+    "mode": "reader",
+    "who": "[\"console\", \"domainagent\"]",
+    "text": "{\"folders\":\"00000000000000000000000000000000,00000000000000000000000000000001,00000000000000000000000000000002,00000000000000000000000000000003,00000000000000000000000000000004,00000000000000000000000000000005,00000000000000000000000000000006,00000000000000000000000000000007,00000000000000000000000000000008\"}",
+    "verdict": "ok",
+    "paths": "[]",
+    "outcome": "{\"console\": [], \"domainagent\": []}",
+    "note": "/folders: over the writer's limit"
+  },
+  "after": {
+    "case": "06-rights-8034",
+    "family": "platform/memberof/<sub>/<manifest:unit.rows>/<id>",
+    "key": "platform/memberof/testsub/counters/c1",
+    "kind": "row",
+    "mode": "reader",
+    "who": "[\"console\", \"domainagent\"]",
+    "text": "{\"folders\":\"00000000000000000000000000000000,00000000000000000000000000000001,00000000000000000000000000000002,00000000000000000000000000000003,00000000000000000000000000000004,00000000000000000000000000000005,00000000000000000000000000000006,00000000000000000000000000000007,00000000000000000000000000000008\"}",
+    "verdict": "refused",
+    "paths": "[\"/folders\"]",
+    "outcome": "{\"console\": [\"\"], \"domainagent\": [\"\"]}",
+    "note": "/folders: beyond the shared reader/writer limit (Z-10)"
+  }
+}
