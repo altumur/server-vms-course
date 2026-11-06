@@ -131,7 +131,13 @@ def judge_one(row, cmd, cwd, timeout, work):
 def judge(package, cmd, cwd=".", cases=None, specs=None, timeout=20.0):
     """Return (package/passed/total/failed-case report, startup error or None)."""
     package = ALIASES.get(package, package)
-    cases_dir = Path(cases) if cases else CASES_ROOT / package
+    if cases is None:
+        try:
+            cases_dir = lesson.ready_outputs(profiles=lesson.PROFILES)[L.slug] / "vectors" / package
+        except (lesson.LessonError, OSError) as exc:
+            return None, str(exc)
+    else:
+        cases_dir = Path(cases)
     if not (cases_dir / "cases.tsv").is_file():
         return None, f"no cases.tsv in {cases_dir}"
     sources, rows = read_cases(cases_dir)

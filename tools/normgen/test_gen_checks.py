@@ -1,4 +1,5 @@
 """Check gen_checks.py against the independent check_tables.py CEL oracle. Run test_gen_checks.py with cel_expr_python and Go 1.22, without network. Require fresh generated modules. For every probe and MUTANTS mutation, compare Go/Python step chains and first refusal n/check/code/kind/fault with the oracle. Mutations cover missing fields, types, empty/long strings, numbers, null, extra fields, list order, lone surrogates and sockets. Unsupported expressions must refuse with a row number. Stream one input at a time through the oracle, Python module and one persistent Go process; compile oracle CEL once per table row. Bound mutant bodies by MAX_BODY and peak test RSS by1GB."""
+import lesson as output_lesson
 import copy
 import importlib.util
 import json
@@ -24,7 +25,7 @@ import gen_checks  # noqa: E402
 
 TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"                  # ADR-0124: forms live under forms/.
 PROBES = ROOT / "Platform/01-store/forms/write-checks.probes.tsv"
-OUT = HERE / "out/p01-1"
+OUT = output_lesson.output_root() / 'p01-1'
 MUTANTS = int(os.environ.get("NORMGEN_MUTANTS", "12000"))
 SEED = int(os.environ.get("NORMGEN_SEED", "20261104"))
 SEM_INPUTS = int(os.environ.get("NORMGEN_SEM_INPUTS", "4000"))
@@ -320,6 +321,7 @@ class Trio(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.tmp = tempfile.TemporaryDirectory(prefix="normgen-")
         cls.lims, allows, cls.probes = load_probes()
         cls.allows = [list(a) for a in allows]
@@ -376,6 +378,7 @@ def decode_all(inputs):
 class GenChecks(Trio):
     def test_out_up_to_date(self):
         """Require out/p01-1 to match current generator output exactly."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         def files(root):
             # Only gen_checks files: out/p01-1 also contains outputs from other generators such as gen_tests.
             mine = lambda rel: rel == Path("go/go.mod") or rel.parts[:2] == ("go", "checks") or rel.parts[0] == "python"

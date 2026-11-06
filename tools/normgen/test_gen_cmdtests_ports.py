@@ -1,4 +1,6 @@
 """Judge CALL-port stagetests (P/03, P/04; ADR-0125 addendum 5, ADR-0126 addendum 7). Run test_gen_cmdtests_ports.py with Go 1.22. Independently reread the CALL port table and stage-selected seams; require fresh output, exact ports and every step translated. Every scaffold test must fail without panic. A seam-derived fixture adapter must pass: @absent omits a field and $name is one scenario string. Mutants must fail for changed/missing fields, extra values in exact-empty containers, port panic/error and inconsistent bound names across steps. The fixture is not an implementation execution."""
+import lesson as output_lesson
+import tsv_input
 import json
 import os
 import re
@@ -35,7 +37,8 @@ def seam_steps(lesson):
                 continue
             ch = m[1]
             path = les / "acceptance" / (ch.split(".")[1] if "." in ch else "") / "seams.tsv"
-            lines = [ln.split("\t") for ln in path.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("#")]
+            table = tsv_input.read(path, names=("scenario", "step", "request", "expect"), positional=True, root=les.parent.parent)
+            lines = [[row[k] for k in table.columns] for _, row in table.rows]
             names = None if m[2] == "*" else m[2].split(",")
             for sc, st, req, exp in lines:
                 if names is None or sc in names:
@@ -149,10 +152,11 @@ class Ports(unittest.TestCase):
         return out
 
     def test_fresh_and_projection(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for lesson, slug in LESSONS.items():
             with self.subTest(lesson=lesson):
                 _, out = self.module(lesson, "fresh")
-                kept = HERE / "out" / slug / "go"
+                kept = output_lesson.output_root() / slug / "go"
                 for p in sorted((out / "go").rglob("*")):
                     if p.is_file() and p.name != "go.mod":
                         rel = p.relative_to(out / "go")
@@ -256,11 +260,12 @@ def seam_steps_for_gate(les, gate):
         ch = m[1]
         path = les / "acceptance" / (ch.split(".")[1] if "." in ch else "") / "seams.tsv"
         names = None if m[2] == "*" else m[2].split(",")
-        for ln in path.read_text(encoding="utf-8").split("\n"):
-            if ln and not ln.startswith("#"):
-                sc = ln.split("\t")[0]
-                if names is None or sc in names:
-                    out.append((f"{ch}/{sc}",))
+        table = tsv_input.read(path, names=("scenario", "step", "request", "expect"), positional=True,
+                               root=les.parent.parent)
+        for _, row in table.rows:
+            sc = row["scenario"]
+            if names is None or sc in names:
+                out.append((f"{ch}/{sc}",))
     return out
 
 

@@ -1,4 +1,5 @@
 """Judge lesson door bodies (part 3b, P/06): compare Go Validate with independent jsonschema. Require fresh output; verify combined bodies.go schemas against original OpenAPI with referencing for external P/05/P/08 refs. Judge candidates, mutants and random values must include valid and invalid examples for each combined schema. Check DecodeRequest/CheckResponse/EncodeResponse media, status, strict JSON and defaults. Synthetic schemas make otherwise-equivalent keywords observable; runtime mutants for unevaluatedProperties, oneOf, integer, byte-vs-character minLength and required must fail. Run test_gen_door_bodies.py with jsonschema, referencing and Go 1.22."""
+import lesson as output_lesson
 import copy
 import json
 import os
@@ -301,8 +302,9 @@ class DoorBodiesBase:
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def test_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for name in ("bodies.go", "schema_rt.go", "routes.go", "routes_rt.go"):
-            kept = HERE / "out" / self.SLUG / "go/apidoor" / name
+            kept = output_lesson.output_root() / self.SLUG / "go/apidoor" / name
             self.assertEqual(kept.read_bytes(), (self.fresh / "apidoor" / name).read_bytes(), f"{kept} is stale")
 
     def test_bundle_equals_source(self):

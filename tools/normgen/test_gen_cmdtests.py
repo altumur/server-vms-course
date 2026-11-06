@@ -1,4 +1,6 @@
 """Test non-HTTP gen_cmdtests output: freshness, all scaffold tests fail without panic, fixture adapter tests pass, adapter/seam mutants fail and puts remain explicitly excluded. Fixture Command models seam w2cctl semantics; Load uses seams/corpus oracle; LoadCatalogue/RolloutPoll return seam-declared answers."""
+import lesson as output_lesson
+import tsv_input
 import json
 import os
 import shutil
@@ -133,9 +135,10 @@ def answers():
     """Read LoadCatalogue/RolloutPoll fixture answers from seams, keyed by adapter-input JSON."""
     cats, polls = {}, {}
     for f in sorted((ROOT / "Platform/02-installer/acceptance").glob("*/seams.tsv")):
-        for line in f.read_text(encoding="utf-8").split("\n"):
-            cells = line.split("\t")
-            if line.startswith("#") or len(cells) != 4 or not cells[2].startswith("CALL "):
+        table = tsv_input.read(f, names=("scenario", "step", "request", "expect"), positional=True, root=ROOT)
+        for _, row in table.rows:
+            cells = [row[k] for k in table.columns]
+            if not cells[2].startswith("CALL "):
                 continue
             name, _, js = cells[2][5:].partition(" ")
             exp = cells[3]
@@ -205,6 +208,7 @@ def results(mod):
 class CmdTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.tmp = tempfile.TemporaryDirectory(prefix="cmdtests-")
         cls.out = Path(cls.tmp.name) / "out"
         gen(cls.out)
@@ -230,9 +234,10 @@ class CmdTests(unittest.TestCase):
         return t / "go"
 
     def test_out_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for rel in ("stagetests/engine_test.go", "stagetests/manifest_load_test.go", "stagetests/operator_files_test.go", "stagetests/inventory.tsv",
                     "lessonadapter/lessonadapter.go", "lessonadapter/command.go"):
-            self.assertEqual((self.mod / rel).read_bytes(), (HERE / "out/p02/go" / rel).read_bytes(),
+            self.assertEqual((self.mod / rel).read_bytes(), (output_lesson.output_root() / 'p02/go' / rel).read_bytes(),
                              f"{rel}: run gen_cmdtests.py --lesson 02-installer")
 
     def test_inventory(self):
@@ -303,6 +308,98 @@ class CmdTests(unittest.TestCase):
         res, _, _ = results(t / "go")
         self.assertEqual({n for n, a in res.items() if a != "pass"}, {"TestManifestLoad_S4LoadLayerOrder"})
 
+
+
+class SeamTransport(unittest.TestCase):
+    """Transport expectations come from owned bytes and actual source, never render."""
+    def setUp(self):
+        import gen_cmdtests
+        from unittest.mock import patch
+        self.gen = gen_cmdtests
+        selected = patch.object(self.gen, 'L', output_lesson.get('02-installer'))
+        selected.start()
+        self.addCleanup(selected.stop)
+        self.temp = tempfile.TemporaryDirectory(prefix='cmd-seam-transport-')
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.path = self.root / 'Platform/02-installer/acceptance/1/seams.tsv'
+        self.path.parent.mkdir(parents=True)
+
+    def marked(self):
+        import hashlib
+        # One escaped Unicode spelling and one nested quoted request: decode once.
+        self.expected = [(4, '1', 'CALL port {"text":"\\u0410"}', '{"accepted":true}'),
+                         (5, '2', '"RUN literal"', '"quoted result"')]
+        lines = ['# cell-json: request,expect', '# scenario\tstep\trequest\texpect', '']
+        proofs = ['table\tline\tcolumn\tbefore_sha256\tdecoded_sha256']
+        for line, step, request, expect in self.expected:
+            lines.append('first\t' + step + '\t' + json.dumps(request) + '\t' + json.dumps(expect))
+            for column, value in [('request', request), ('expect', expect)]:
+                digest = hashlib.sha256(value.encode()).hexdigest()
+                proofs.append(f'{self.path.relative_to(self.root).as_posix()}\t{line}\t{column}\t{digest}\t{digest}')
+        self.path.write_text('\n'.join(lines) + '\n')
+        proof = self.root / 'Platform/common/data/cell-json-sha256.tsv'
+        proof.parent.mkdir(parents=True, exist_ok=True)
+        proof.write_text('\n'.join(proofs) + '\n')
+        return proof
+
+    def test_marked_single_decode_physical_coordinates_and_first_data_row(self):
+        self.marked()
+        path, scenarios = self.gen.read_seams(self.root, '2.1')
+        self.assertEqual(path, self.path)
+        self.assertEqual(scenarios, {'first': self.expected})
+        self.assertIn('\\u0410', scenarios['first'][0][2])
+        self.assertEqual(scenarios['first'][1][2], '"RUN literal"')
+
+    def test_plain_headerless_and_comment_header_keep_the_first_row(self):
+        data = 'first\t1\tCALL port {}\t{}\n'
+        for prefix, line in [('', 1), ('# scenario\tstep\trequest\texpect\n', 2), ('# history\n\n', 3)]:
+            with self.subTest(prefix=prefix):
+                self.path.write_text(prefix + data)
+                self.assertEqual(self.gen.read_seams(self.root, '2.1')[1], {'first': [(line, '1', 'CALL port {}', '{}')]})
+
+    def test_missing_bad_extra_and_duplicate_proof_are_typed_refusals(self):
+        proof = self.marked()
+        original = proof.read_text()
+        lines = original.splitlines()
+        mutations = ['', '\n'.join(lines[:-1]) + '\n', original.replace(lines[1].split('\t')[-1], '0' * 64),
+                     original + lines[1] + '\n', original + lines[1].replace('\t4\t', '\t99\t') + '\n']
+        for changed in mutations:
+            with self.subTest(proof=changed[-40:]):
+                proof.write_text(changed)
+                with self.assertRaises(self.gen.GenError):
+                    self.gen.read_seams(self.root, '2.1')
+        proof.unlink()
+        with self.assertRaises(self.gen.GenError):
+            self.gen.read_seams(self.root, '2.1')
+
+    def test_malformed_outer_cells_and_nonconsecutive_step_refuse(self):
+        for cell in ('{}', 'true', '"unterminated', 'null'):
+            self.marked()
+            text = self.path.read_text()
+            lines = text.split('\n')
+            row = lines[3].split('\t')
+            row[2] = cell
+            lines[3] = '\t'.join(row)
+            self.path.write_text('\n'.join(lines))
+            with self.subTest(cell=cell), self.assertRaises(self.gen.GenError):
+                self.gen.read_seams(self.root, '2.1')
+        (self.root / 'Platform/common/data/cell-json-sha256.tsv').unlink()
+        self.path.write_text('first\t2\tCALL port {}\t{}\n')
+        with self.assertRaisesRegex(self.gen.GenError, 'seams.tsv:1: first step 2'):
+            self.gen.read_seams(self.root, '2.1')
+
+    def test_actual_p06_first_marked_row(self):
+        from unittest.mock import patch
+        with patch.object(self.gen, 'L', output_lesson.get('06-console')):
+            path, scenarios = self.gen.read_seams(ROOT, '6.8')
+        self.assertEqual(path, ROOT / 'Platform/06-console/acceptance/8/seams.tsv')
+        first = scenarios['s01-folder-name-255-bytes'][0]
+        self.assertEqual(first[:2], (4, '1'))
+        self.assertTrue(first[2].startswith('CALL console-folder-create {"name":"'))
+        request = json.loads(first[2].split(' ', 2)[2])
+        self.assertEqual(len(request['name'].encode()), 255)
+        self.assertEqual(json.loads(first[3])['status'], 201)
 
 if __name__ == "__main__":
     unittest.main()

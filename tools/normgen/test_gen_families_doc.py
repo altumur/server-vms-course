@@ -1,4 +1,5 @@
 """Test data-schema families mode (P/02, famrt2, ADR-0125 addendum 5): freshness and family_judge PASS on02.tsv plus independent V7 cases with nested document mutations. Require FAIL for invalid-name child traversal, missing uniqueItems/JCS/anyOf/x-max-names checks. P/01 flat mode stays in test_gen_families.py."""
+import lesson as output_lesson
 import os
 import shutil
 import subprocess
@@ -104,6 +105,7 @@ class Synthetic(unittest.TestCase):
 class DocMode(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.tmp = tempfile.TemporaryDirectory(prefix="famdoc-")
         cls.out = Path(cls.tmp.name) / "out"
         done = subprocess.run([sys.executable, str(HERE / "gen_families.py"), "02", str(cls.out)], capture_output=True,
@@ -117,9 +119,10 @@ class DocMode(unittest.TestCase):
         cls.tmp.cleanup()
 
     def test_out_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for name in ("families.go", "runtime.go"):
             self.assertEqual((self.mod / "families" / name).read_bytes(),
-                             (HERE / "out/p02/go/families" / name).read_bytes(), name)
+                             (output_lesson.output_root() / 'p02/go/families' / name).read_bytes(), name)
 
     def test_judge_pass(self):
         done = judge(self.mod)

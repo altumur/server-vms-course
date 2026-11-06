@@ -9,6 +9,7 @@ with contracts and that adapter replacing the stub. Every test for the function'
 is read from vectoradapter.<Function> calls in the tests. A contract mutant that weakens validation must fail
 in at least one lesson.
 """
+import lesson as output_lesson
 import os
 import re
 import shutil
@@ -23,7 +24,7 @@ sys.path.insert(0, str(HERE / "contracts"))
 import kitside  # noqa: E402
 CONTRACTS = HERE / "contracts/go"
 ADAPTERS = HERE / "contracts/adapters"
-OUT = HERE / "out"
+OUT = output_lesson.output_root()
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 
 
@@ -33,7 +34,13 @@ def adapter_fns():
 
 
 def lesson_mods():
-    return sorted(p for p in OUT.glob("p*/go") if (p / "vectortests").is_dir())
+    output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
+    ready = output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
+    modules = [ready[slug] / "go" for slug in lesson.PROFILES]
+    missing = [str(path) for path in modules if not (path / "vectortests").is_dir()]
+    if missing:
+        raise AssertionError(f"missing prepared vector profiles: {missing}")
+    return modules
 
 
 def tests_calling(mod, fn):
@@ -288,6 +295,7 @@ func TestMixed(t *testing.T) {
 
     def test_mutant(self):
         """The common vectors reject a reader that ignores whole-object outcomes."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         if not shutil.which("go"):
             self.skipTest("go is not in PATH")
         mod = OUT / "p04/go"
@@ -305,6 +313,7 @@ func TestMixed(t *testing.T) {
 
 class RecordEvents(unittest.TestCase):
     def test_mutants(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         if not shutil.which("go"):
             self.skipTest("go is not in PATH")
         mutations = [("Record", "p08", "record.go", "!ed25519.Verify(", "false && !ed25519.Verify("),

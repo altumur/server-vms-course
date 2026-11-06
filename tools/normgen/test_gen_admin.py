@@ -1,4 +1,5 @@
 """Test admin freshness, one YOURS file per declared command with norm anchors, closed dispatcher, default launch dispatch and Own before flag parsing. Require the shipped kit to pass admin_judge and mutants to fail (old not implemented, exit 2 instead of1, unwired Own). --seed must preserve model code."""
+import lesson as output_lesson
 import contextlib
 import io
 import json
@@ -20,7 +21,7 @@ import gen_admin  # noqa: E402
 
 MOD = admin_judge.MODULE
 PARTS = list(admin_judge.PARTS)
-OUT = HERE / "out/p01-1/go"
+OUT = output_lesson.output_root() / 'p01-1/go'
 
 
 def judge(kit):
@@ -90,6 +91,7 @@ class Admin(unittest.TestCase):
         cls.tmp.cleanup()
 
     def test_out_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         files, _ = gen_admin.render()
         for rel, text in files.items():
             self.assertEqual((OUT / rel).read_text(encoding="utf-8"), text, f"{rel}: run gen_admin.py")

@@ -8,6 +8,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+import lesson as output_lesson
 import lesson  # noqa: E402
 
 PY = sys.executable
@@ -68,12 +69,13 @@ class Select(unittest.TestCase):
 class Generators(unittest.TestCase):
     def test_p01_same_bytes(self):
         """Explicit --lesson 01-store and NORMGEN_LESSON=01-store produce the same bytes as the default course output."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for gen, rel in (("gen_core.py", "core/coreadapter/core.go"), ("gen_admin.py", "go/admin/import.go"),
                          ("gen_launch.py", "go/launch/launch.go")):
             with tempfile.TemporaryDirectory() as t:
                 done = run([gen, "--lesson", "01-store", t])
                 self.assertEqual(done.returncode, 0, done.stderr)
-                self.assertEqual((Path(t) / rel).read_bytes(), (HERE / "out/p01-1" / rel).read_bytes(), gen)
+                self.assertEqual((Path(t) / rel).read_bytes(), (output_lesson.output_root() / 'p01-1' / rel).read_bytes(), gen)
 
     def test_other_lesson_refused_by_name(self):
         for gen in DECLARED_P01:
@@ -86,6 +88,28 @@ class Generators(unittest.TestCase):
         done = run(["gen_flags.py", "--lesson", "11-nope"])
         self.assertEqual(done.returncode, 2)
         self.assertIn("not in Platform/lessons.tsv", done.stderr)
+
+    def test_p10_vector_dependencies_follow_actual_declared_families(self):
+        import csv
+        import json
+        root = HERE.parents[1]
+        catalog = list(csv.DictReader((line for line in (root / 'Platform/common/data/catalog.tsv').read_text().split('\n')
+                                       if line and not line.startswith('#')), delimiter='\t'))
+        self.assertFalse(any('P/10' in row.get('schema', '') for row in catalog))
+        consumers = (root / 'Platform/common/vectors/consumers.tsv').read_text()
+        family_lines = [line for line in consumers.split('\n') if 'family-read' in line and not line.startswith('#')]
+        self.assertFalse(any('10-domain-console' in line for line in family_lines))
+        command = ("import sys,json;sys.path.insert(0,'kit');import build_kit as k;"
+                   "print(json.dumps({'vectors':k.regen(('vectors',)), 'families':k.regen(('families',))}))")
+        done = run(['-B', '-c', command], env={lesson.ENV: '10-domain-console'})
+        self.assertEqual(done.returncode, 0, done.stderr)
+        actual = json.loads(done.stdout)
+        self.assertEqual(actual['vectors'], ['gen_vectors.py'])
+        self.assertEqual(actual['families'], ['gen_families.py'])
+        with tempfile.TemporaryDirectory(prefix='p10-no-families-') as tmp:
+            done = run(['gen_families.py', tmp], env={lesson.ENV: '10-domain-console'})
+            self.assertNotEqual(done.returncode, 0, 'undeclared families explicitly requested')
+            self.assertFalse(any(Path(tmp).rglob('families.go')))
 
     def test_build_kit_lesson_default_module(self):
         with tempfile.TemporaryDirectory() as t:

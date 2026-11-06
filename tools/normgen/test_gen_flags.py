@@ -1,4 +1,5 @@
 """Test gen_flags and flag_judge (ADR-0125 generator 3). With cel_expr_python and Go 1.22, require fresh output, the generated flags/stub to pass all judge probes and400 random argv, and generated-code mutants to fail. Reject malformed tables with GenError; build/vet the flags kit part without network."""
+import lesson as output_lesson
 import hashlib
 import json
 import shutil
@@ -16,7 +17,7 @@ sys.path.insert(0, str(HERE / "kit"))
 import gen_flags  # noqa: E402
 from gen_checks import GenError  # noqa: E402
 
-OUT = HERE / "out/p01-1/go"
+OUT = output_lesson.output_root() / 'p01-1/go'
 TABLE = gen_flags.DEFAULT_TABLE.read_text(encoding="utf-8")
 
 
@@ -54,16 +55,19 @@ class GenFlags(unittest.TestCase):
         cls.tmp.cleanup()
 
     def test_out_is_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for name, text in gen_flags.render().items():
             self.assertEqual((OUT / "flags" / name).read_text(encoding="utf-8"), text, f"{name}: run gen_flags.py")
 
     def test_judge_on_stub(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         exe = build_stub(OUT, self.tmp.name)
         code, out = judge(exe, "--fuzz", "400", "--seed", "7")
         self.assertEqual(code, 0, out[-3000:])
         self.assertRegex(out, r"flags: (\d+)/\1 PASS")
 
     def test_judge_catches_mutants(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         mutants = [
             ("flags.go", "fl.MaxConns = int64(64)", "fl.MaxConns = int64(65)"),            # Default.
             ("flags.go", "if fl.Given[name] {", "if false {"),                             # Repeated flag.

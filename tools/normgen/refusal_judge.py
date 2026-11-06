@@ -164,9 +164,15 @@ def plain(a):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--module-dir", default=str(L.out / "go"))
+    ap.add_argument("--module-dir", help="module to judge; default: the validated prepared lesson module")
     ap.add_argument("--json")
     a = ap.parse_args(argv)
+    if a.module_dir is None:
+        try:
+            a.module_dir = str(lesson.ready_outputs(profiles=lesson.PROFILES)[L.slug] / "go")
+        except (lesson.LessonError, OSError) as exc:
+            print(f"refusal_judge: {exc}", file=sys.stderr)
+            return 2
     if not shutil.which("go"):
         print("refusal_judge: go is not in PATH", file=sys.stderr)
         return 2

@@ -1,4 +1,5 @@
 """Test gen_families/family_judge freshness, vectors, detected runtime mutants, closed schema vocabulary, typed rows and keys."""
+import lesson as output_lesson
 import json
 import shutil
 import subprocess
@@ -12,7 +13,7 @@ import gen_families
 from gen_checks import GenError
 
 HERE = Path(__file__).resolve().parent
-OUT = HERE / "out/p01-1/go"
+OUT = output_lesson.output_root() / 'p01-1/go'
 
 
 class PlaceholderLabels(unittest.TestCase):
@@ -107,6 +108,7 @@ class PlaceholderLabels(unittest.TestCase):
 
 def module_copy(t):
     """Create an output module containing families only; other packages are not needed by the harness."""
+    output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
     dst = Path(t) / "mod"
     (dst / "families").mkdir(parents=True)
     (dst / "go.mod").write_text("module normgen/p01-1\n\ngo 1.22\n", encoding="utf-8")
@@ -163,6 +165,7 @@ class CanonicalInputs(unittest.TestCase):
 
 class Fresh(unittest.TestCase):
     def test_out_is_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for name, text in gen_families.render().items():
             self.assertEqual((OUT / "families" / name).read_text(encoding="utf-8"), text, name)
 
@@ -172,6 +175,7 @@ class Fresh(unittest.TestCase):
 
     def test_no_prose_of_outcomes(self):
         """Exclude outcome prose from generated code; retain only path, reader, priority and unit."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         text = (OUT / "families/families.go").read_text(encoding="utf-8")
         self.assertNotIn("fenced", text)
         self.assertNotIn("does not count as a visible door", text)
@@ -192,11 +196,13 @@ class Fresh(unittest.TestCase):
 class Vectors(unittest.TestCase):
     def test_v7_instances(self):
         """Independent judge cases use the course V7 stack as oracle, not the generator."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         res = family_judge.judge(OUT, "01", runs=1, v7=True)
         self.assertEqual(res["failures"], [])
         self.assertGreater(res["cases"], 400)
 
     def test_family_read_01(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         res = family_judge.judge(OUT, "01", runs=2)
         self.assertEqual(res["failures"], [])
         self.assertEqual(res["pass"], res["cases"])

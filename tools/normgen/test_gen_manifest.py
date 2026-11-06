@@ -1,4 +1,5 @@
 """Judge the P/02 loader and canonical view against lesson data. With Go 1.22 and cached pinned modules, no network, require fresh manifest files/module requirements/sums and vet. Check947 verdicts and text/form/relations classes, 220exact canonical bytes and402yaml-suite layer1 outcomes. Each runtime mutant must disagree with data. The corpus cannot distinguish extra empty-value refusal, layer2 normalization4.0->4 (JCS/text bytes coincide), or x-opaque projection with no nested defaults; preserve V7 rules despite those equivalent mutants."""
+import lesson as output_lesson
 import json
 import os
 import re
@@ -460,6 +461,7 @@ class Loader(unittest.TestCase):
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def copy(self, name):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         d = self.tmp / name
         shutil.rmtree(d, ignore_errors=True)
         d.mkdir(parents=True)
@@ -469,6 +471,7 @@ class Loader(unittest.TestCase):
         return d
 
     def test_fresh_and_vet(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for relp, data in self.files.items():
             self.assertEqual((OUT / relp).read_bytes(), data, f"{relp} is stale: run gen_manifest.py")
         mod, s = gen_manifest.go_mod(gen_manifest.DEFAULT_OUT)

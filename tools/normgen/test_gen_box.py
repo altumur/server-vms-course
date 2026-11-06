@@ -2,7 +2,11 @@
 
   /opt/check-env/lesson-spec/bin/python tools/normgen/test_gen_box.py [-v]
 Require Go 1.22. Check output freshness and vet. Independently derive Status, metrics, join/leave/admit/recover, no-raft startup, copy encoding/decoding, import, floor and backup rules from the named P/01.3 clauses, P/01.1 ceiling, state clarification and max_value rule. Compare valid inputs, each input-refusal corruption, UTF-8 key ordering, round trips, generation boundaries and backup symlink containment with Go harness results. Each one-edit package mutant must disagree with the model at least once."""
+import lesson as output_lesson
 import base64
+import csv
+import re
+from unittest.mock import patch
 import json
 import os
 import shutil
@@ -39,6 +43,7 @@ type cfg struct {
 	ID, API string
 	TLS     bool
 	Max     int64
+	MaxBody int64
 }
 
 type cs struct {
@@ -76,12 +81,15 @@ func main() {
 		if err := json.Unmarshal(in.Bytes(), &c); err != nil {
 			panic(err)
 		}
-		bc := box.Config{ID: c.Cfg.ID, API: c.Cfg.API, TLS: c.Cfg.TLS, MaxValue: c.Cfg.Max}
+		bc := box.Config{ID: c.Cfg.ID, API: c.Cfg.API, TLS: c.Cfg.TLS, MaxValue: c.Cfg.Max, MaxBody: c.Cfg.MaxBody}
 		ix := box.Indices{Last: c.Ix[0], Commit: c.Ix[1], Applied: c.Ix[2]}
 		var logs []string
 		logf := func(s string) { logs = append(logs, s) }
 		var r any
 		switch c.Op {
+		case "config":
+			v:=box.ConfigOf(&flags.Flags{ID:c.Cfg.ID,API:c.Cfg.API,MaxValue:c.Cfg.Max,MaxBody:c.Cfg.MaxBody})
+			r=map[string]any{"max_value":v.MaxValue,"max_body":v.MaxBody}
 		case "status":
 			r = answer(apidoor.OpStatus, box.Status(bc, ix, nil))
 		case "metrics":
@@ -136,13 +144,24 @@ func main() {
 # ---------------------------------------------------------------- normative model
 
 F = gen_box.facts()
-CEIL = 524288
+def source_flag_default(flag):
+    path = HERE.parents[1] / "Platform/01-store/forms/daemon-flags.tsv"
+    rows = list(csv.DictReader((line for line in path.read_text().split("\n")
+                               if line and not line.startswith("#")), delimiter="\t"))
+    found = [row for row in rows if row["flag"] == flag]
+    if len(found) != 1 or found[0]["type"] != "bytes:>0" or not re.fullmatch(r"[1-9][0-9]*", found[0]["default"]):
+        raise AssertionError(f"one literal positive bytes default required: {flag}")
+    return int(found[0]["default"])
+
+
+CEIL = source_flag_default("-max-value")
+BODY_LIMIT = source_flag_default("-max-body")
 
 
 def status(c, ix):
     return {"id": c["ID"], "state": "Leader", "leader": c["API"], "leader_id": c["ID"], "term": 1, "commit": ix[1],
             "applied": ix[2], "voters": [c["ID"]], "members": {c["ID"]: c["API"]} if c["API"] else {}, "tls": c["TLS"],
-            "max_value": c["Max"]}
+            "max_value": c["Max"], "max_body": c["MaxBody"]}
 
 
 def metrics(ix):
@@ -282,6 +301,7 @@ class Box(unittest.TestCase):
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def harness(self, mutate=None):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         mod = self.tmp / ("m" if mutate is None else f"m{abs(hash(mutate[0])) % 10 ** 8}")
         shutil.rmtree(mod, ignore_errors=True)
         shutil.copytree(OUT, mod)
@@ -305,10 +325,11 @@ class Box(unittest.TestCase):
         (d / "data").mkdir(parents=True)
         (d / "out").mkdir()
         os.symlink(d / "data", d / "link")
-        cfgs = [{"ID": "s1", "API": "127.0.0.1:9001", "TLS": True, "Max": 524288},
-                {"ID": "box-2", "API": "", "TLS": False, "Max": 1000}]
+        cfgs = [{"ID": "s1", "API": "127.0.0.1:9001", "TLS": True, "Max": CEIL, "MaxBody": BODY_LIMIT},
+                {"ID": "box-2", "API": "", "TLS": False, "Max": 1000, "MaxBody": 2000000}]
         cs = []
         for c in cfgs:
+            cs.append(({"Op": "config", "Cfg": c}, ("config", c)))
             for ix in ([0, 0, 0], [7, 7, 7], [2 ** 64 - 1, 5, 4]):
                 cs.append(({"Op": "status", "Cfg": c, "Ix": ix}, ("status", c, ix)))
             cs.append(({"Op": "metrics", "Ix": [3, 2, 1]}, ("metrics", [3, 2, 1])))
@@ -354,18 +375,20 @@ class Box(unittest.TestCase):
         p = subprocess.run([str(exe)], input="\n".join(json.dumps(c) for c, _ in cs) + "\n", capture_output=True,
                            text=True, timeout=120)
         if p.returncode:
-            return [f"harness exit {p.returncode}: {p.stderr[-400:]}"]
+            raise AssertionError(f"checking harness exit {p.returncode}, not a semantic kill: {p.stderr[-400:]}")
         got = [json.loads(x) for x in p.stdout.split("\n") if x]
+        if len(got) != len(cs):
+            raise AssertionError(f"incomplete checking report: {len(got)} answers for {len(cs)} cases")
         bad = []
         for (c, want), g in zip(cs, got):
             if not self.agree(want, g):
                 bad.append(f"{c['Op']}: want {str(want)[:120]} got {str(g)[:200]}")
-        if len(got) != len(cs):
-            bad.append(f"{len(got)} answers for {len(cs)} cases")
         return bad
 
     def agree(self, want, g):
         k = want[0]
+        if k == "config":
+            return g == {"max_value": want[1]["Max"], "max_body": want[1]["MaxBody"]}
         if k == "status":
             return g.get("code") == 200 and json.loads(g["body"]) == status(want[1], want[2])
         if k == "metrics":
@@ -405,6 +428,7 @@ class Box(unittest.TestCase):
         raise AssertionError(k)
 
     def test_fresh_and_vet(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         files, _ = gen_box.render()
         for rel, text in files.items():
             self.assertEqual((OUT / rel).read_text(encoding="utf-8"), text, f"{rel} is stale: run gen_box.py")
@@ -418,6 +442,8 @@ class Box(unittest.TestCase):
         mutants = [
             ("box.go", "State: \"Leader\"", "State: \"Follower\""),
             ("box.go", "Term: 1,", "Term: 2,"),
+            ("box.go", "MaxBody: c.MaxBody", "MaxBody: c.MaxValue"),
+            ("box.go", "MaxBody: f.MaxBody", "MaxBody: f.MaxValue"),
             ("box.go", "members[c.ID] = c.API", "members[c.ID] = c.ID"),
             ("box.go", "label(\"state\", \"leader\")", "label(\"state\", \"Leader\")"),
             ("box.go", "if j.Id == c.ID {", "if j.Id != \"\" {"),
@@ -438,6 +464,127 @@ class Box(unittest.TestCase):
                 alive.append(m)
         self.assertEqual(alive, [], "mutants not killed")
 
+
+
+class BoxBindings(unittest.TestCase):
+    """Current flags are the value oracle; the renderer is only the subject."""
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix='box-source-bindings-')
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.original_root = gen_box.ROOT
+        sources = {name: getattr(gen_box, name) for name in
+                   ('NORMS_11', 'NORMS_13', 'FLAGS', 'OPENAPI', 'REFUSALS', 'KEYS_README')}
+        changes = {'ROOT': self.root}
+        for name, source in sources.items():
+            target = self.root / source.relative_to(self.original_root)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(source.read_bytes())
+            changes[name] = target
+        change = patch.multiple(gen_box, **changes)
+        change.start()
+        self.addCleanup(change.stop)
+
+    def compiled_readback(self, files, name, body):
+        ready = output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
+        mod = self.root / name
+        shutil.copytree(ready['p01-1'] / 'go', mod)
+        for relative, text in files.items():
+            target = mod / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(text)
+        (mod / 'bindingprobe').mkdir()
+        (mod / 'bindingprobe/main.go').write_text('package main\nimport("encoding/json";"os";"reflect";"' +
+            MODULE + '/box";"' + MODULE + '/flags")\n' + body)
+        done = subprocess.run(['go', 'run', './bindingprobe'], cwd=mod, capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0, 'component checking build/run failed: ' + done.stderr)
+        return json.loads(done.stdout)
+
+    def test_unique_current_flag_binding_and_changed_default(self):
+        self.assertEqual(gen_box.facts()['ceiling'], source_flag_default('-max-value'))
+        self.assertTrue(gen_box.facts()['status_max_body'])
+        original = gen_box.FLAGS.read_text()
+        rows = original.split('\n')
+        index = next(i for i, line in enumerate(rows) if line.startswith('-max-value\t'))
+        cells = rows[index].split('\t')
+        cells[2], cells[3] = '777', '777'
+        rows[index] = '\t'.join(cells)
+        gen_box.FLAGS.write_text('\n'.join(rows))
+        self.assertEqual(gen_box.facts()['ceiling'], 777)
+        files, _ = gen_box.render()
+        self.assertRegex(files['box/copy.go'], r'\bRowCeiling\s*=\s*777\b')
+        # The default projection does not replace the instance value in Status.
+        self.assertIn('MaxValue: c.MaxValue', files['box/box.go'])
+        self.assertIn('MaxBody: c.MaxBody', files['box/box.go'])
+
+    def test_changed_default_and_instance_limits_compile_independently(self):
+        text = gen_box.FLAGS.read_text()
+        row = next(line for line in text.split('\n') if line.startswith('-max-value\t'))
+        cells = row.split('\t')
+        cells[2], cells[3] = '777', '777'
+        gen_box.FLAGS.write_text(text.replace(row, '\t'.join(cells), 1))
+        files, _ = gen_box.render()
+        got = self.compiled_readback(files, 'changed-default',
+            'func main(){c:=box.ConfigOf(&flags.Flags{MaxValue:123,MaxBody:999});' +
+            '_,has:=reflect.TypeOf(c).FieldByName("MaxBody");' +
+            'json.NewEncoder(os.Stdout).Encode(map[string]any{"default":box.RowCeiling,"value":c.MaxValue,"body":c.MaxBody,"has_body":has})}')
+        self.assertEqual(got, {'default': 777, 'value': 123, 'body': 999, 'has_body': True})
+
+    def test_missing_duplicate_malformed_flag_and_binding_refuse(self):
+        original = gen_box.FLAGS.read_text()
+        row = next(line for line in original.split('\n') if line.startswith('-max-value\t'))
+        for changed in (original.replace(row + '\n', ''), original + row + '\n',
+                        original.replace(row, row.replace('bytes:>0', 'bool', 1)),
+                        original.replace(row, row.replace('\t524288\t', '\t-\t', 1))):
+            self.assertNotEqual(changed, original)
+            gen_box.FLAGS.write_text(changed)
+            with self.assertRaises(gen_box.GenError):
+                gen_box.facts()
+        gen_box.FLAGS.write_text(original)
+        text = gen_box.NORMS_11.read_text()
+        self.assertEqual(text.count('ceiling: ROW_CEILING'), 1)
+        for changed in (text.replace('ceiling: ROW_CEILING', 'ceiling: UNKNOWN_VALUE'),
+                        text.replace('ceiling: ROW_CEILING', 'ceiling: ROW_CEILING_ALIAS'),
+                        text + '\nceiling: ROW_CEILING\n'):
+            gen_box.NORMS_11.write_text(changed)
+            with self.assertRaises(gen_box.GenError):
+                gen_box.facts()
+
+    def test_explicit_old_pin_keeps_config_abi_without_max_body(self):
+        import hashlib
+        pin = '7b96ff9f84e8090e11922131bc77799f0a0b54e1'
+        relative = 'Platform/01-store/spec/01-store.api.openapi.yaml'
+        command = ['bash', '-c', 'cd "$1" || exit 1\ngit rev-parse --show-toplevel >&2\nshift\ngit show "$1:$2"',
+                   'box-historical-input', str(self.original_root), pin, relative]
+        old = subprocess.check_output(command)
+        self.assertEqual(hashlib.sha256(old).hexdigest(),
+                         'e86407dc83b04cf6013eed6b469702926c9e31f60d7647770696a183e6769d8e')
+        gen_box.OPENAPI.write_bytes(old)
+        self.assertFalse(gen_box.facts()['status_max_body'])
+        files, _ = gen_box.render()
+        self.assertNotIn('MaxBody', files['box/box.go'])
+        self.assertIn('MaxValue: f.MaxValue', files['box/box.go'])
+        got = self.compiled_readback(files, 'historical-api-capability',
+            'func main(){c:=box.ConfigOf(&flags.Flags{MaxValue:123,MaxBody:999});' +
+            '_,has:=reflect.TypeOf(c).FieldByName("MaxBody");' +
+            'json.NewEncoder(os.Stdout).Encode(map[string]any{"value":c.MaxValue,"has_body":has})}')
+        self.assertEqual(got, {'value': 123, 'has_body': False})
+
+
+
+class BoxReportControls(unittest.TestCase):
+    def test_execution_and_partial_reports_never_count_as_mutant_disagreement(self):
+        subject = Box()
+        cases = [({'Op': 'fixture'}, ('fixture',))]
+        for code, output in ((1, ''), (0, ''), (0, '{}\n{}\n')):
+            done = subprocess.CompletedProcess([], code, output, 'environment failure' if code else '')
+            with self.subTest(code=code, output=output), patch.object(subject, 'cases', return_value=cases), \
+                    patch('subprocess.run', return_value=done), self.assertRaises(AssertionError):
+                subject.mismatches('/owned-fixture')
+        done = subprocess.CompletedProcess([], 0, '{}\n', '')
+        with patch.object(subject, 'cases', return_value=cases), patch.object(subject, 'agree', return_value=False), \
+                patch('subprocess.run', return_value=done):
+            self.assertEqual(len(subject.mismatches('/owned-fixture')), 1)
 
 if __name__ == "__main__":
     unittest.main()

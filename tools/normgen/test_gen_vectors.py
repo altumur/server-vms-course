@@ -1,4 +1,5 @@
 """Test P/02 gen_vectors freshness, scaffold failures without panic except kit-executed family-read, fixture answers from expanded wire, and table-specific code/value/raw/ring-word/layer1 mutants. journal/modes.tsv stays excluded."""
+import lesson as output_lesson
 import json
 import os
 import shutil
@@ -97,6 +98,7 @@ def results(mod):
 class Vectors(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.tmp = tempfile.TemporaryDirectory(prefix="vecp02-")
         cls.out = Path(cls.tmp.name) / "out"
         for gen in ("gen_families.py", "gen_vectors.py"):
@@ -121,9 +123,10 @@ class Vectors(unittest.TestCase):
         return t / "go"
 
     def test_out_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for rel in ("vectorcmd/vectorcmd.go", "vectortests/helpers_test.go", "vectortests/exec_cases_test.go",
                     "vectoradapter/vectoradapter.go", "vectortests/inventory.tsv"):
-            self.assertEqual((self.mod / rel).read_bytes(), (HERE / "out/p02/go" / rel).read_bytes(), rel)
+            self.assertEqual((self.mod / rel).read_bytes(), (output_lesson.output_root() / 'p02/go' / rel).read_bytes(), rel)
 
     def test_inventory(self):
         inv = (self.mod / "vectortests/inventory.tsv").read_text(encoding="utf-8")

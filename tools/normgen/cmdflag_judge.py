@@ -292,9 +292,15 @@ def judge(module_dir):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--module-dir", default=str(L.out / "go"))
+    ap.add_argument("--module-dir", help="module to judge; default: the validated prepared lesson module")
     ap.add_argument("--json")
     a = ap.parse_args(argv)
+    if a.module_dir is None:
+        try:
+            a.module_dir = str(lesson.ready_outputs(profiles=lesson.PROFILES)[L.slug] / "go")
+        except (lesson.LessonError, OSError) as exc:
+            print(f"cmdflag_judge: {exc}", file=sys.stderr)
+            return 2
     try:
         import cel_expr_python  # noqa: F401
     except ImportError:

@@ -1,4 +1,5 @@
 """Judge P/03 slot-capture and P/04 slot-fate/slot-release generators (ADR-0125 addendum 5). Require fresh output, vet and passing closed form tests. Independently reread #var/#const/rows, generate random/boundary inputs including settings, and evaluate conditions/arguments with cel_expr_python. Go Step must match the first state-row and typed arguments; argument integer overflow must error. Form mutants negate conditions, change next/string arguments or swap adjacent rows. Keep only mutants with an oracle-distinguishing input; their generated machine must fail original form tests. Run test_gen_machine.py with CEL and Go 1.22."""
+import lesson as output_lesson
 import json
 import math
 import os
@@ -328,11 +329,12 @@ class MachineTests(unittest.TestCase):
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def fresh_out(self, lesson):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         slug, _ = LESSONS[lesson]
         out = self.tmp / f"fresh-{slug}"
         done = gen(lesson, out)
         self.assertEqual(done.returncode, 0, done.stderr)
-        kept = HERE / "out" / slug / "go"
+        kept = output_lesson.output_root() / slug / "go"
         for p in sorted((out / "go").rglob("*")):
             if p.is_file() and p.name != "go.mod":
                 rel = p.relative_to(out / "go")
@@ -395,6 +397,7 @@ class MachineTests(unittest.TestCase):
                     self.assertEqual(move["args"][1][1]["gen"], ["int", str(value)])
 
     def test_mutants(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         rnd = random.Random(7)
         for lesson, (slug, parts) in LESSONS.items():
             for part in parts:
@@ -426,7 +429,7 @@ class MachineTests(unittest.TestCase):
                             killed += 1
                             continue
                         pkg = part.replace("-", "")
-                        shutil.copy(HERE / "out" / slug / "go" / pkg / "form_test.go", out / "go" / pkg / "form_test.go")
+                        shutil.copy(output_lesson.output_root() / slug / "go" / pkg / "form_test.go", out / "go" / pkg / "form_test.go")
                         done = go(["test", "-count=1", f"./{pkg}/"], out / "go")
                         if done.returncode == 0:
                             survived += 1
@@ -457,6 +460,7 @@ class MachineTests(unittest.TestCase):
 
     def test_refusals(self):
         """Reject forms with undeclared variables/types, shadowed rows or foreign states."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         lesson, part = "04-controller", "slot-release"
         text = form_path(ROOT, lesson, part).read_text(encoding="utf-8")
         bad = {

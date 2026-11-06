@@ -1,4 +1,5 @@
 """Judge of the copy-to-store port: real files, controlled failures, no implementation-line source."""
+import lesson as output_lesson
 import csv
 import json
 import os
@@ -10,7 +11,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-OUT = HERE / "out/p01-1/go"
+OUT = output_lesson.output_root() / 'p01-1/go'
 ENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 
 SCENARIO_TEST = r'''package box
@@ -707,7 +708,8 @@ class CopyStorage(unittest.TestCase):
             (mod / "box/copy_scenarios_test.go").write_text(SCENARIO_TEST, encoding="utf-8")
             (mod / "coreadapter/seams.go").write_text(SEAM_BRIDGE, encoding="utf-8")
             fixture = mod / "public-copy-steps.json"
-            manifests = {name: str(ROOT / "Source/tests/testdata" / f"{name}.subsystem.yaml") for name in ("testsub", "testsub2")}
+            manifests = {name: str(ROOT / "Platform/common/data/testsub" / f"{name}.subsystem.yaml")
+                         for name in ("testsub", "testsub2")}
             with (inputs / "seams.tsv").open() as stream:
                 seam = next(row.split("\t") for row in stream if row.startswith("s10-import-floor-resume\t"))
             fixture.write_text(json.dumps({"Steps": steps, "InputDir": str(inputs / "inputs"), "Manifests": manifests,

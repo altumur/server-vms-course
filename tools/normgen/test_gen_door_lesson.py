@@ -1,4 +1,5 @@
 """Judge lesson route generation (part 3a, P/06) against an independent OpenAPI model. Require fresh, one-to-one Op coverage and metadata for each method/path. Probe schema-valid parameter samples, short/prefixed variants, unknown segments/catalog names, foreign methods, malformed percent escapes and invalid values. Model literal>catalog-class>free-parameter precedence plus Catalog/schema checks; execute Go Route on a fixture Catalog. Mutants removing prefix variants, all405, parameter patterns or class rank must fail. Run test_gen_door_lesson.py with Go 1.22."""
+import lesson as output_lesson
 import json
 import os
 import random
@@ -301,8 +302,9 @@ class DoorLessonBase:
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def test_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for name in ("routes.go", "routes_rt.go"):
-            kept = HERE / "out" / self.SLUG / "go/apidoor" / name
+            kept = output_lesson.output_root() / self.SLUG / "go/apidoor" / name
             self.assertEqual(kept.read_bytes(), (self.fresh / "apidoor" / name).read_bytes(), f"{kept} is stale")
 
     def test_ops(self):

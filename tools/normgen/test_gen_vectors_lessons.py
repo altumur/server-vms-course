@@ -1,4 +1,5 @@
 """Test P/03/P/04 draft-wire vectors (ADR-0125 addendum 5, item 5). Require fresh output and consumers.tsv roster, with explicit exclusions for undeclared/selected-out rows. Scaffolds fail without panic except family-read. Judge-derived native fixture answers obey absent/new/same and secret-redaction rules. Each rule-specific mutant fails: without, masked secret, sealed values-by-type, whole-table fault, RID stand, subset, events, row, secret leak, turn label, extra writer key, fields, setarray duplicates, raw bytes and stand exit. Fields outside the declared fields list remain accepted so the judge is no broader than the README."""
+import lesson as output_lesson
 import copy
 import importlib
 import json
@@ -171,7 +172,7 @@ class VectorsLessons(unittest.TestCase):
     def module(self, lesson_key, name, fake=None):
         slug = LESSONS[lesson_key]
         mod = self.tmp / f"{slug}-{name}"
-        shutil.copytree(HERE / "out" / slug / "go", mod)
+        shutil.copytree(output_lesson.output_root() / slug / "go", mod)
         if fake is not None:
             text, fns = fake
             for fn in fns:
@@ -180,12 +181,13 @@ class VectorsLessons(unittest.TestCase):
         return mod
 
     def test_fresh_and_composition(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for lesson_key, slug in LESSONS.items():
             with self.subTest(lesson=lesson_key):
                 g = gv(lesson_key)
                 files, inv = g.build(ROOT)
                 for rel, data in files.items():
-                    kept = HERE / "out" / slug / rel
+                    kept = output_lesson.output_root() / slug / rel
                     self.assertTrue(kept.is_file(), f"{kept} is missing")
                     self.assertEqual(kept.read_bytes(), data, f"{kept} is stale: run gen_vectors.py --lesson {lesson_key}")
                 decls, known = g.plan(ROOT)

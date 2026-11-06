@@ -1,4 +1,5 @@
 """Independently judge OpenAPI generation (ADR-0125 generator 2, addendum 1, item 1). Run test_gen_door.py with PyYAML, jsonschema and Go 1.22, without network. Compare yamlsub with PyYAML and reject unsupported YAML; require fresh output, build/vet/gofmt and full paths/methods/query/body/status/schema/header coverage. Test routes, foreign targets and decoding/normalization/absolute forms; compare schema checks to Draft 2020-12 jsonschema with lexical integer rules. Every declared response must round-trip AnswerOf/Encode with schema and field ordering; undeclared code/schema/header must refuse. Check Refuse, query parsing via latin1 parse_qsl, acceptance1.1 response uniqueness and behavior-changing OpenAPI mutants. Peak test/child RSS stays within1GB."""
+import lesson as output_lesson
 import base64
 import copy
 import json
@@ -25,7 +26,7 @@ import yamlsub  # noqa: E402
 import tsv_input  # noqa: E402 — source cells before the existing HTTP/schema checks
 
 SPEC = gen_door.DEFAULT_SPEC
-OUT = HERE / "out/p01-1"
+OUT = output_lesson.output_root() / 'p01-1'
 SCEN = ROOT / "Platform/01-store/acceptance/1/scenarios.tsv"
 GOENV = dict(os.environ, GOPROXY="off", GOFLAGS="-mod=mod", GOWORK="off", GOTOOLCHAIN="local")
 SEED = int(os.environ.get("NORMGEN_SEED", "20261104"))
@@ -285,6 +286,7 @@ def pairs_hook(pairs):
 class DoorBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.text = SPEC.read_text(encoding="utf-8")
         cls.d = Doc(yaml.safe_load(cls.text))
         cls.tmp = tempfile.TemporaryDirectory(prefix="normgen-door-")
@@ -332,6 +334,7 @@ class Loader(unittest.TestCase):
 class Generated(DoorBase):
     def test_out_up_to_date(self):
         """Require exact fresh apidoor output with the current OpenAPI SHA header."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for name in ("door.go", "runtime.go"):
             self.assertEqual((self.out / "go/apidoor" / name).read_bytes(), (OUT / "go/apidoor" / name).read_bytes(),
                              f"{name} is stale: run tools/normgen/gen_door.py")
@@ -340,6 +343,7 @@ class Generated(DoorBase):
         self.assertIn(hashlib.sha256(self.text.encode()).hexdigest(), (OUT / "go/apidoor/door.go").read_text()[:400])
 
     def test_build_vet_fmt(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         go(["build", "./..."], OUT / "go")
         go(["vet", "./..."], OUT / "go")
         fmt = subprocess.run(["gofmt", "-l", "apidoor"], cwd=OUT / "go", capture_output=True, text=True).stdout
@@ -647,6 +651,7 @@ class Kit(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         sys.path.insert(0, str(HERE / "kit"))
         import build_kit
         import build_stub
@@ -750,6 +755,7 @@ class Mutations(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.tmp = tempfile.TemporaryDirectory(prefix="normgen-door-mut-")
         _, cls.doc = gen_door.load(SPEC)
         cls.base = (OUT / "go/apidoor/door.go").read_text(encoding="utf-8")

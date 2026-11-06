@@ -223,11 +223,17 @@ def judge(module_dir, lesson=L.nn, runs=3, v7=False):
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--module-dir", default=str(L.out / "go"))
+    ap.add_argument("--module-dir", help="module to judge; default: the validated prepared lesson module")
     ap.add_argument("--runs", type=int, default=3)
     ap.add_argument("--v7", action="store_true", help="also own instances judged by the V7 stack of the course")
     ap.add_argument("--json")
     a = ap.parse_args(argv)
+    if a.module_dir is None:
+        try:
+            a.module_dir = str(lesson.ready_outputs(profiles=lesson.PROFILES)[L.slug] / "go")
+        except (lesson.LessonError, OSError) as exc:
+            print(f"family_judge: {exc}", file=sys.stderr)
+            return 2
     try:
         res = judge(a.module_dir, L.nn, a.runs, a.v7)
     except SystemExit as exc:

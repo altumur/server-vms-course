@@ -1,4 +1,5 @@
 """Test rollout-poll freshness, all scaffold tests fail without panic, seam-derived fixture responses pass, and state/refusal-word/missing-result mutants fail. Internal assertions remain excluded; neither generator nor fixture judge implements the machine."""
+import lesson as output_lesson
 import json
 import os
 import shutil
@@ -93,6 +94,7 @@ def results(mod):
 class Rollout(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.tmp = tempfile.TemporaryDirectory(prefix="rollout-")
         cls.out = Path(cls.tmp.name) / "out"
         env = dict(os.environ, NORMGEN_LESSON="02-installer")
@@ -118,8 +120,9 @@ class Rollout(unittest.TestCase):
         return t / "go"
 
     def test_out_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for rel in ("rollouttests/traces_test.go", "rollouttests/engine_test.go", "rollouttests/inventory.tsv"):
-            self.assertEqual((self.mod / rel).read_bytes(), (HERE / "out/p02/go" / rel).read_bytes(), rel)
+            self.assertEqual((self.mod / rel).read_bytes(), (output_lesson.output_root() / 'p02/go' / rel).read_bytes(), rel)
 
     def test_inventory(self):
         inv = (self.mod / "rollouttests/inventory.tsv").read_text(encoding="utf-8")

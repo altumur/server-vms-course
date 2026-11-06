@@ -4,6 +4,7 @@ The approved machine checker is an oracle only in this judge. Production code
 does not import it. Trace mutants must fail the original closed tests; random
 valid event streams are compared with the independently implemented reference.
 """
+import lesson as output_lesson
 import copy
 import hashlib
 import importlib.util
@@ -85,10 +86,11 @@ class PolicyMachines(unittest.TestCase):
         return [json.loads(line) for line in done.stdout.split("\n") if line]
 
     def test_fresh_and_declared_traces(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for rel, text in gen.build().items():
-            self.assertEqual((HERE / "out/p03" / rel).read_text(), text, rel)
+            self.assertEqual((output_lesson.output_root() / 'p03' / rel).read_text(), text, rel)
         for name, data in gen.module_files("normgen/p03").items():
-            self.assertEqual((HERE / "out/p03/go" / name).read_bytes(), data)
+            self.assertEqual((output_lesson.output_root() / 'p03/go' / name).read_bytes(), data)
         done = subprocess.run(["go", "test", "-count=1", "-json", "./workerpolicy"], cwd=self.mod, env=GOENV,
                               capture_output=True, text=True)
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)

@@ -1,4 +1,5 @@
 """Independently judge gen_tests coverage and vector mutations (ADR-0125 generator 6). Require exact fresh outputs; one Test<Stage>_Line<N> and one input-only command case per JCS/rights row. Mutating a row changes only its test/case; inconsistent SHA, unknown role, conflicting duplicate and NaN refuse. Vet scaffold modules; vector-derived fixture adapters pass while mutated rows fail exactly their test. Identity/allow-all adapter mutants fail precisely incorrect rows. vector_judge must pass fixture vectorcmd, fail exactly the mutated case and reject malformed transport with outer exit 2. Peak test/child RSS stays within1GB; Go 1.22, stdlib, no network."""
+import lesson as output_lesson
 import hashlib
 import json
 import os
@@ -19,7 +20,7 @@ import gen_tests  # noqa: E402
 import vector_judge  # noqa: E402
 from gen_checks import go_str  # noqa: E402
 
-OUT = HERE / "out/p01-1"
+OUT = output_lesson.output_root() / 'p01-1'
 PARTS = ("go/vectoradapter", "go/vectortests", "go/vectorcmd", "go/cmd/vectors", "go/jsonstrict", "go/writecheck",
          "go/stagetests", "go/coreadapter", "vectors")
 GOENV = dict(os.environ, GOPROXY="off", GOFLAGS="-mod=mod", GOWORK="off", GOTOOLCHAIN="local")
@@ -125,6 +126,7 @@ def go_results(stdout):
 class GenTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.tmp = tempfile.TemporaryDirectory(prefix="normgen-tests-")
         cls.files = gen_tests.render(ROOT)
         cls.jcs, _ = gen_tests.read_jcs(ROOT)
@@ -150,6 +152,7 @@ class GenTests(unittest.TestCase):
 
     @staticmethod
     def write_parts(mod, files, only_tests=False):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for rel, data in files.items():
             if not rel.startswith("go/") or (only_tests and not rel.startswith("go/vectortests/")) or \
                     rel.startswith(("go/stagetests/", "go/coreadapter/")):     # Stage tests are covered by test_gen_stagetests.py.
@@ -158,7 +161,7 @@ class GenTests(unittest.TestCase):
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)
         if not only_tests and not (Path(mod) / "checks").exists():   # writecheck's vector transport imports checks.
-            shutil.copytree(HERE / "out/p01-1/go/checks", Path(mod) / "checks")
+            shutil.copytree(output_lesson.output_root() / 'p01-1/go/checks', Path(mod) / "checks")
 
     def run_tests(self, mod, mode=""):
         done = go(["test", "-count=1", "-json", "./vectortests"], mod, {"FAKE_MODE": mode})
@@ -168,6 +171,7 @@ class GenTests(unittest.TestCase):
 
     def test_out_up_to_date(self):
         """Require gen_tests-owned outputs to equal fresh generation exactly."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         kept = sorted(str(p.relative_to(OUT)) for part in PARTS for p in (OUT / part).rglob("*") if p.is_file())
         self.assertEqual(kept, sorted(self.files))
         for rel, data in self.files.items():
@@ -175,6 +179,7 @@ class GenTests(unittest.TestCase):
 
     def test_coverage(self):
         """Every vector row has exactly one test and command input, named by stages.tsv."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         self.assertEqual(gen_tests.counts(ROOT), {"jcs": len(self.jcs), "rights-evaluator": len(self.rights)})
         jcs = dict(go_funcs(self.files["go/vectortests/jcs_test.go"].decode()))
         rights = dict(go_funcs(self.files["go/vectortests/rights_eval_test.go"].decode()))
@@ -294,6 +299,7 @@ class GenTests(unittest.TestCase):
 
     def test_go_vet_on_stub(self):
         """Vet the scaffold module; tests compile and fail on not implemented."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         mod = Path(self.tmp.name) / "stub"
         (mod / "cmd/vec").mkdir(parents=True)
         (mod / "go.mod").write_text("module normgen/p01-1\n\ngo 1.22\n", encoding="utf-8")
@@ -359,6 +365,7 @@ class GenTests(unittest.TestCase):
 
     def test_vector_command_mutants(self):
         """A mutated case fails exactly once; an adapter mutant fails its affected rows."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for which, pkg in (("jcs", "01-store/jcs"), ("rights", "01-store/rights-evaluator")):
             with tempfile.TemporaryDirectory() as d:
                 root, _, case = self.mutated(d, which)
@@ -465,6 +472,7 @@ class GenTests(unittest.TestCase):
 
     def test_write_checks_binary(self):
         """vector_judge passes write-checks.probes.tsv through cmd/vectors and fails a transport mutant."""
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         mod = Path(self.tmp.name) / "wc"
         shutil.copytree(OUT / "go", mod)
         exe = Path(self.tmp.name) / "wc-vectors"

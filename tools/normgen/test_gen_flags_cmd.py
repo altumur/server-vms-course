@@ -1,4 +1,5 @@
 """Test command-based flags from operator-commands.tsv (P/02). Require cmdflag_judge PASS on output and FAIL for short-prefix, exponent-number, missing-required, unbounded-positionals and duplicate-option mutants. P/01 keeps its existing parser without a command form."""
+import lesson as output_lesson
 import contextlib
 import io
 import os
@@ -23,6 +24,7 @@ def run_judge(module_dir):
 class CommandFlags(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         cls.tmp = tempfile.TemporaryDirectory(prefix="cmdflags-")
         cls.out = Path(cls.tmp.name) / "out"
         env = dict(os.environ, NORMGEN_LESSON=P02)
@@ -36,7 +38,8 @@ class CommandFlags(unittest.TestCase):
         cls.tmp.cleanup()
 
     def test_out_fresh(self):
-        kept = HERE / "out/p02/go/flags/flags.go"
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
+        kept = output_lesson.output_root() / 'p02/go/flags/flags.go'
         self.assertEqual((self.mod / "flags/flags.go").read_bytes(), kept.read_bytes(), "run gen_flags.py --lesson 02-installer")
 
     def test_judge_pass(self):

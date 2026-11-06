@@ -1,4 +1,5 @@
 """Test stage-test generation (ADR-0125 addenda3/4, ADR-0126 addendum 7). Require fresh stagetests/coreadapter and complete selected-step inventory. Gate tests selections precede transitional declarations. Stand directives and later-stage refusals truncate prefixes; reject empty projections, missing scenarios, scenario/seam duplicate names and new bindings in each/rest. Check fixture-core engine binding, number kinds, extra fields, error, !contains, list ordering, ASSERT, unbound names, status classes and clock/reopen/parallel seams. scenario_judge compares runner execution on identical implementation code. Go 1.22 required."""
+import lesson as output_lesson
 import json
 import shutil
 import subprocess
@@ -13,7 +14,7 @@ sys.path.insert(0, str(HERE))
 import gen_stagetests  # noqa: E402
 import gen_tests  # noqa: E402
 
-OUT = HERE / "out/p01-1"
+OUT = output_lesson.output_root() / 'p01-1'
 STAGES = (ROOT / "Platform/01-store/forms/stages.tsv").read_text(encoding="utf-8")
 REFUSALS = (ROOT / "Platform/01-store/forms/refusals.tsv").read_text(encoding="utf-8")
 
@@ -281,6 +282,7 @@ class StageTests(unittest.TestCase):
         return Path(self.tmp.name) / name
 
     def test_out_is_fresh_and_inventory_whole(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         files, inventory = gen_stagetests.build(ROOT)
         for rel, text in files.items():
             want = gen_tests.gofmt(text) if rel.endswith(".go") else text
@@ -331,6 +333,7 @@ class StageTests(unittest.TestCase):
                 gen_stagetests.step_blocker("1.3", ("1", request, expect, 1), True, {}, 9)
 
     def test_call_engine_contract_and_default_stub_failure(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         mod = self.sub("callmod")
         shutil.copytree(OUT / "go", mod)
         (mod / "stagetests/fake_test.go").write_text(FAKE % "", encoding="utf-8")
@@ -403,6 +406,7 @@ class StageTests(unittest.TestCase):
             gen_stagetests.build(root, stages_text=with_gate("tests:1.1:a2"), transitional={})
 
     def test_engine_on_fake_core(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         root = synthetic_root(self.sub("g"), [c[:4] for c in SCEN], [c[:4] for c in SEAMS])
         names = ",".join(sorted({c[0] for c in SCEN}))
         seams = ",".join(sorted({c[0] for c in SEAMS}))

@@ -11,6 +11,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE / "kit"))
+import lesson as output_lesson
 import build_kit  # noqa: E402
 import gen_core  # noqa: E402
 
@@ -277,6 +278,7 @@ class Kit(unittest.TestCase):
                     build_kit.build(t, MOD, parts)
 
     def test_stale_out(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         with tempfile.TemporaryDirectory() as t:
             out = Path(t) / "out"
             gen_core.generate(out)
@@ -286,6 +288,7 @@ class Kit(unittest.TestCase):
                 gen_core.kit_files(MOD, out)
 
     def test_handler_table_closed(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         door = gen_core.DOOR.read_text(encoding="utf-8")
         names = [m[0] for m in gen_core.handler_methods(door)]
         self.assertEqual(set(names), set(gen_core.OPS))

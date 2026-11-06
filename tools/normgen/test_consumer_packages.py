@@ -1,4 +1,5 @@
 """Complete packages, owner union and form refusals through the full generation chain on spec103 pin7b96ff9f."""
+import lesson as output_lesson
 import copy
 import importlib
 import io
@@ -111,6 +112,21 @@ class NewPin(unittest.TestCase):
         cls.root.mkdir()
         data = subprocess.check_output(['git','archive',PIN,'Platform','Source/tests/testdata'], cwd=ROOT)
         with tarfile.open(fileobj=io.BytesIO(data)) as t: t.extractall(cls.root, filter='data')
+        # Explicit historical fixture adaptation, not a current producer fallback.
+        # The archived donor remains unchanged; these two exact bytes are copied
+        # to the canonical paths expected by the current reader.
+        import hashlib
+        donors = {"testsub": "7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a",
+                  "testsub2": "813a807f3472bdc64e279c94c12bfe3b00ebaaa8ebda0c996d2a50161043e6eb"}
+        for name, digest in donors.items():
+            donor = cls.root / "Source/tests/testdata" / f"{name}.subsystem.yaml"
+            original = donor.read_bytes()
+            assert hashlib.sha256(original).hexdigest() == digest, (PIN, donor)
+            target = cls.root / "Platform/common/data/testsub" / donor.name
+            assert not target.exists(), target
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(original)
+            assert target.read_bytes() == donor.read_bytes() == original
         fixture=json.loads((HERE/'testdata/consumer-owners-8af61893a.json').read_text())
         assert fixture['source_commit']=='8af61893a7458054d8c79701f78b3b284e8573a8'
         cls.base={(r['package'],r['table']):set(r['lessons']) for r in fixture['tables']}
@@ -167,13 +183,39 @@ class NewPin(unittest.TestCase):
         self.assertTrue(all(set(f['cells']) == {'raw'} and f['files'] == {} for f in frames))
         self.assertTrue(any(p.startswith('01-store/jcs ') and status=='translated' for p,status in inv))
 
+    def historical_families(self, slug):
+        # This named old source has its own creation/receipt. Never copy current
+        # output into a historical test and label it as a matching source.
+        from kit import build_kit
+        if not hasattr(self.__class__, '_family_sets'):
+            self.__class__._family_sets = {}
+        sets = self.__class__._family_sets
+        if slug not in sets:
+            output = Path(self.tmp.name) / ('historical-families-' + slug)
+            previous = os.environ.get(output_lesson.OUTPUT_RECEIPT_ENV)
+            try:
+                build_kit.prepare(('families',), profiles=(slug,), output_root=output,
+                                  source_root=self.root, code_root=ROOT,
+                                  context={'kind': 'historical', 'source_pin': PIN})
+                held = os.environ[output_lesson.OUTPUT_RECEIPT_ENV]
+            finally:
+                if previous is None:
+                    os.environ.pop(output_lesson.OUTPUT_RECEIPT_ENV, None)
+                else:
+                    os.environ[output_lesson.OUTPUT_RECEIPT_ENV] = previous
+            sets[slug] = (output, held)
+        output, held = sets[slug]
+        ready = output_lesson.ready_outputs(output_root=output, source_root=self.root, code_root=ROOT,
+                                            profiles=(slug,), expected_manifest_sha256=held)
+        return ready[slug] / 'go/families'
+
     def fake_foreign(self, g, files, mutated=None):
         mod = Path(self.tmp.name)/('mod-'+g.L.key+('-'+mutated if mutated else ''))
         mod.mkdir(exist_ok=True)
         for rel,data in files.items():
             if rel.startswith('go/'):
                 p=mod/rel[3:];p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
-        shutil.copytree(HERE/'out'/g.L.slug/'go/families', mod/'families', dirs_exist_ok=True)
+        shutil.copytree(self.historical_families(g.L.slug), mod/'families', dirs_exist_ok=True)
         (mod/'go.mod').write_text(f'module {g.GO_MODULE}\n\ngo 1.22\n')
         import consumer_vectors
         ds = consumer_vectors.declarations(self.root, g) if g.L.key!='02-installer' else []

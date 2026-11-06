@@ -120,8 +120,10 @@ class Mutants(unittest.TestCase):
         cls.cel = wire.Cel()
         cls.tmp = Path(tempfile.mkdtemp(prefix="judge-wire-"))
         shutil.copytree(cls.src / "Platform", cls.tmp / "Platform")
-        if (cls.src / "Source/tests/testdata").is_dir():
-            shutil.copytree(cls.src / "Source/tests/testdata", cls.tmp / "Source/tests/testdata")
+        # Current export inputs have one canonical home, never a Source fallback.
+        for name in ("testsub", "testsub2"):
+            if not (cls.tmp / "Platform/common/data/testsub" / f"{name}.subsystem.yaml").is_file():
+                raise AssertionError(f"missing canonical testsub fixture: {name}")
         cls.text = (cls.tmp / wire.FORM).read_text(encoding="utf-8")
 
     @classmethod
@@ -153,6 +155,22 @@ class Mutants(unittest.TestCase):
     def refused(self, owner="02-installer"):
         with self.assertRaises(wire.WireError):
             wire.expand(self.tmp, owner, self.cel)
+
+    def test_missing_current_canonical_fixture_never_falls_back_to_source(self):
+        for name in ('testsub', 'testsub2'):
+            canonical = self.tmp / 'Platform/common/data/testsub' / (name + '.subsystem.yaml')
+            original = canonical.read_bytes()
+            witness = self.tmp / 'Source/tests/testdata' / canonical.name
+            witness.parent.mkdir(parents=True, exist_ok=True)
+            witness.write_bytes(original)
+            wire.expand(self.tmp, '02-installer', self.cel)
+            try:
+                canonical.unlink()
+                with self.subTest(name=name), self.assertRaises(wire.WireError):
+                    wire.expand(self.tmp, '02-installer', self.cel)
+            finally:
+                canonical.write_bytes(original)
+                witness.unlink()
 
     def test_unchanged_is_accepted(self):
         wire.expand(self.tmp, "02-installer", self.cel)

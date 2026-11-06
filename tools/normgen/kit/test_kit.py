@@ -450,11 +450,16 @@ class Kit(unittest.TestCase):
 
 
 class Fresh(unittest.TestCase):
-    """Freshness for generators1/2 (Codex C2): build compares copied output with a fresh generation, not only its header."""
-
+    """Creation identity catches changed output, runtime and generator inputs without regeneration."""
     def setUp(self):
+        import lesson
         self.tmp = Path(tempfile.mkdtemp(prefix="normgen-fresh-"))
         self.patches = []
+        self.lesson = lesson
+        self.real_ready = lesson.ready_outputs
+        self.ready = self.real_ready(profiles=lesson.PROFILES)
+        self.receipt = os.environ[lesson.OUTPUT_RECEIPT_ENV]
+        self.original_output = lesson.output_root()
 
     def tearDown(self):
         for obj, name, old in reversed(self.patches):
@@ -465,10 +470,28 @@ class Fresh(unittest.TestCase):
         self.patches.append((obj, name, getattr(obj, name)))
         setattr(obj, name, new)
 
+    def consumes_copy(self, output=None, code=None):
+        from functools import partial
+        self.patch(self.lesson, "ready_outputs", partial(self.real_ready,
+                   output_root=output or self.original_output, source_root=ROOT, code_root=code or ROOT,
+                   expected_manifest_sha256=self.receipt))
+
+    def code_copy(self):
+        root = self.tmp / "code"
+        def excluded(directory, names):
+            return [name for name in names if name == '__pycache__' or name.endswith('.pyc')
+                    or (Path(directory) == NORMGEN and name == 'out')]
+        shutil.copytree(NORMGEN, root / 'tools/normgen', ignore=excluded)
+        # Prove the copied inputs match before applying any mutation.
+        self.real_ready(output_root=self.original_output, source_root=ROOT, code_root=root,
+                        profiles=self.lesson.PROFILES, expected_manifest_sha256=self.receipt)
+        return root
+
     def refuses(self, parts=("door",)):
         with self.assertRaises(build_kit.KitError) as ctx:
             build_kit.build(self.tmp / "dst", MODULE, list(parts))
-        self.assertIn("fresh run", str(ctx.exception))
+        self.assertRegex(str(ctx.exception), "prepared output|creation receipt")
+        self.assertFalse((self.tmp / 'dst').exists(), 'integrity must fail before destination copy')
 
     def test_green(self):
         m = build_kit.build(self.tmp / "dst", MODULE, ["door"])
@@ -478,45 +501,44 @@ class Fresh(unittest.TestCase):
             self.assertIsNone(prov["judged"])
 
     def test_out_edited_header_kept(self):
-        """Detect changed output despite an unchanged header, including disabled refusals."""
-        copy = self.tmp / "normgen"
-        shutil.copytree(NORMGEN / "out", copy / "out")
-        f = copy / "out/p01-1/go/checks/checks.go"
-        text = f.read_text(encoding="utf-8")
-        self.assertIn("hit == nil && isTrue(v)", text)
-        f.write_text(text.replace("hit == nil && isTrue(v)", "false"), encoding="utf-8")
-        self.patch(build_kit, "NORMGEN", copy)
+        """The supplied output is a copy; the unchanged original/receipt is retained."""
+        output = self.tmp / "output"
+        shutil.copytree(self.original_output, output)
+        f = output / "p01-1/go/checks/checks.go"
+        text = f.read_text()
+        self.assertEqual(text.count("hit == nil && isTrue(v)"), 1)
+        f.write_text(text.replace("hit == nil && isTrue(v)", "false", 1))
+        before = f.read_bytes()
+        self.consumes_copy(output=output)
         self.refuses(())
+        self.assertEqual(f.read_bytes(), before, 'consumer must not heal output')
+        self.real_ready(output_root=self.original_output, source_root=ROOT, code_root=ROOT,
+                        profiles=self.lesson.PROFILES, expected_manifest_sha256=self.receipt)
 
     def test_environment_only(self):
-        """Detect a changed handwritten checks runtime or doorrt with unchanged form/generator."""
-        import gen_checks
-        import gen_door
-        env = self.tmp / "env"
-        shutil.copytree(NORMGEN / "runtime", env / "runtime")
-        shutil.copytree(NORMGEN / "prims", env / "prims")
-        rt = env / "runtime/go/runtime.go"
-        rt.write_text(rt.read_text(encoding="utf-8") + "\nvar envChanged = 1\n", encoding="utf-8")
-        self.patch(gen_checks, "HERE", env)
-        self.refuses(())
-        setattr(gen_checks, "HERE", NORMGEN)
-        door_rt = env / "doorrt.go"
-        door_rt.write_text(gen_door.RUNTIME.read_text(encoding="utf-8") + "\nvar envChanged = 1\n", encoding="utf-8")
-        self.patch(gen_door, "RUNTIME", door_rt)
-        self.patch(gen_door, "HERE", env)
-        self.refuses()
+        """Physical runtime changes invalidate the recorded inputs; no renderer is called."""
+        root = self.code_copy()
+        self.consumes_copy(code=root)
+        for relative in ('runtime/go/runtime.go', 'doorrt/go/runtime.go'):
+            path = root / 'tools/normgen' / relative
+            original = path.read_bytes()
+            path.write_bytes(original + b'\nvar envChanged = 1\n')
+            self.refuses(())
+            self.assertEqual(path.read_bytes(), original + b'\nvar envChanged = 1\n')
+            path.write_bytes(original)
 
     def test_generator_only(self):
-        """Detect a generator-logic-only change."""
-        import gen_checks
-        import gen_door
-        old = gen_checks.go_module
-        self.patch(gen_checks, "go_module", lambda *a: old(*a) + "\nvar genChanged = 1\n")
-        self.refuses(())
-        setattr(gen_checks, "go_module", old)
-        old_door = gen_door.build_go
-        self.patch(gen_door, "build_go", lambda *a: (old_door(*a)[0] + "\nvar genChanged = 1\n", old_door(*a)[1]))
-        self.refuses()
+        """Changed generator implementations cannot authorize regeneration at consumption."""
+        root = self.code_copy()
+        self.consumes_copy(code=root)
+        for relative, function in (('gen_checks.py', 'go_module'), ('gen_door.py', 'build_go')):
+            path = root / 'tools/normgen' / relative
+            original = path.read_bytes()
+            mutation = ('\ndef ' + function + '(*args, **kwargs):\n    raise RuntimeError("owned generator mutant")\n').encode()
+            path.write_bytes(original + mutation)
+            self.refuses(())
+            self.assertEqual(path.read_bytes(), original + mutation)
+            path.write_bytes(original)
 
 
 if __name__ == "__main__":

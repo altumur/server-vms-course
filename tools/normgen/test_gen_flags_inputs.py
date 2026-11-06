@@ -1,4 +1,5 @@
 """Judge process-input flags (P/03/P/04 environment and positionals, ADR-0125 addendum 5) with an independent form model. Select process from commands; consume positionals in form order and refuse extra words. Environment presence includes empty values; string permits any value, dir/file require nonempty, number requires finite decimal. P/06 command flags accept --x/--x=v and bool true/false; foreign/repeated flags refuse by name. Evaluate required, then bad through cel_expr_python over supplied f/cmd, then literal defaults. Random environments vary sample values and equal/different aliases. Compare Go Parse refusal names or Given/field values with the model; bad/default/wrong-command mutants must fail. Require freshness; run with CEL and Go 1.22."""
+import lesson as output_lesson
 import json
 import os
 import random
@@ -252,9 +253,10 @@ class InputFlags(unittest.TestCase):
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def test_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for lesson, slug in LESSONS.items():
             for p in sorted((self.mods[lesson] / "flags").iterdir()):
-                kept = HERE / "out" / slug / "go/flags" / p.name
+                kept = output_lesson.output_root() / slug / "go/flags" / p.name
                 self.assertTrue(kept.is_file(), f"{kept} missing")
                 self.assertEqual(kept.read_bytes(), p.read_bytes(), f"{kept} is stale: run gen_flags.py --lesson {lesson}")
 

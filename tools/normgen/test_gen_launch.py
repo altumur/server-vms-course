@@ -1,4 +1,5 @@
 """Test the unmodified launch daemon, Empty core and KIT documentation (ADR-0083 addendum 95, items2/3). Build launch_judge.stand and run a process: check sockets/permissions, role-socket GET, 413, SIGTERM exit 0 and socket cleanup. Expect exit 2 for no-raft group startup, foreign FORMAT/unmarked directories without byte changes, invalid rights and unknown inherited sockets; inherited admin is accepted. Compile kit/examples and vet an all-part kit. Linux CT103, Go 1.22 only."""
+import lesson as output_lesson
 import http.client
 import json
 import os
@@ -87,6 +88,7 @@ class Launch(unittest.TestCase):
         self.fail("no sockets")
 
     def test_out_fresh(self):
+        output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for rel, text in gen_launch.render().items():
             self.assertEqual((gen_launch.DEFAULT_OUT / "go" / rel).read_text(encoding="utf-8"), text, rel)
 
