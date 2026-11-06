@@ -1,0 +1,33 @@
+{
+  "base": "e7784c98c",
+  "path": "Platform/common/data/catalog.tsv",
+  "before_sha256": "cdc38f0842c84e8b497e6893d5e1d308350e58f0be2d76b583abd513249169f7",
+  "after_sha256": "cd7531dcbd43dc5c50cbe501e73b35edd6a5991ba0f4ba58f4f852e578ba58bb",
+  "changes": [
+    {
+      "key": "domain/member-key",
+      "column": "ops",
+      "before": "create=domainagent(first start of the agent, secret \u2014 a ring envelope, guard domain/agent-turn \u2014 P/09.1 N1.13 guard); cas=admin(w2cctl secrets seal, by the read version)",
+      "after": "create=domainagent(first start of the agent, secret \u2014 a ring envelope, guard domain/agent-turn \u2014 P/09.1 N1.13 guard); cas=admin(w2cctl secrets seal, by the read version),admin(authorized member-key replacement in one conditional batch with domain/member by confirmed versions of both rows after stopping and joining all signers \u2014 unknown forbids signing until reread confirms the authorized pair, P/09.1 N1.1)"
+    },
+    {
+      "key": "domain/member",
+      "column": "ops",
+      "before": "create=domainagent(the function keys accepted the set and there is no row, also at the holder's cluster, guard domain/agent-turn \u2014 P/09.1 N1.13 guard)",
+      "after": "create=domainagent(the function keys accepted the set and there is no row, also at the holder's cluster, guard domain/agent-turn \u2014 P/09.1 N1.13 guard); cas=admin(authorized member-key replacement in one conditional batch with domain/member-key by confirmed versions of both rows after stopping and joining all signers \u2014 unknown forbids signing until reread confirms the authorized pair, P/09.1 N1.1)"
+    }
+  ],
+  "source": "937e465345284b12be67b48ea529995644fe4265",
+  "changed_physical_lines": [
+    88,
+    94
+  ],
+  "initial_and_secrets_seal_exact_prefixes": true,
+  "other_cells_and_roster_byte_exact": true,
+  "family_read_who_pending": {
+    "path": "Platform/common/vectors/family-read/09.tsv",
+    "cells": 29,
+    "scope": "only append admin to writer who of domain/member; all payload/expect unchanged",
+    "owner": "coord103 composition"
+  }
+}

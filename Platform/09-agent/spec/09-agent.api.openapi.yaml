@@ -11,10 +11,10 @@
 # decision 3): at the token door of the relay they are the operation holderToken of OpenAPI 08; at the local door the agent returns the code and body
 # of the holder as they came — their forms by a reference to OpenAPI 08. The relay door's own codes — P/09.2 N2, the body — the common Refusal
 # of OpenAPI 08 (without narrowing). The refusals of the local door — the contract «Refusals» and P/09.1 N4.
-# From the contract М11/7 (07-worker-tokens.api.openapi.yaml) the path /tokens/{sub}/{kind} is moved with the schemas LocalAsk, Given,
+# From the contract M11/7 (07-worker-tokens.api.openapi.yaml) the path /tokens/{sub}/{kind} is moved with the schemas LocalAsk, Given,
 # the answers Unavailable, InvalidReply — stage B, without a change of behaviour; Sub, Kind, RequestId — by a reference to OpenAPI 08
-# (the same form); the copy of Refusal of М11/7 (the reason list) is replaced by a reference to TokenRefusal, Deposed, StandbyBody of OpenAPI 08 and
-# by its own form AgentRefusal for the refusals of the agent itself. The contract М11/4 had no paths of the relay door (only the description
+# (the same form); the copy of Refusal of M11/7 (the reason list) is replaced by a reference to TokenRefusal, Deposed, StandbyBody of OpenAPI 08 and
+# by its own form AgentRefusal for the refusals of the agent itself. The contract M11/4 had no paths of the relay door (only the description
 # «the same forms as at the holder; codes — N2 of the lesson»): the paths of tag relay are written by P/09.2 N2.
 openapi: 3.1.0
 info:
@@ -33,7 +33,7 @@ tags:
       The door of the holder where the agent carries the request — /api/tokens/{member}/{sub}/{kind} of OpenAPI of lesson 8 (P/08.7).'
   - name: relay
     description: 'Chapter 9.2 (09.2-agent.norms.md) N1.1, N1.4, N1.6, N2, N4 — the relay door (RELAY=1). Class signed of the server
-      side of TLS (09.2 N1.6; the role certificate contract «Серверная сторона: класс signed»): a client certificate is not required and
+      side of TLS (09.2 N1.6; the role certificate contract «Server side: class signed»): a client certificate is not required and
       gives no rights, the identity — the member signature (the agent signature contract). The forms of the bodies — OpenAPI of the process domain (Publication,
       Carry, HolderAsk); the codes of the holder at the token door — as they came (the operation holderToken of OpenAPI 08), not listed here.'
 paths:
@@ -141,7 +141,7 @@ paths:
           description: 'carry of the holder for the member from the memory of the relay, rev — of the relay''s copy, with domain_age (P/09.2 N1.4, N2)'
           content:
             application/json:
-              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Carry'}
+              schema: {$ref: '#/components/schemas/RelayCarry'}
         '400':
           description: 'The body is not a publication, reason not_a_publication; the body is chunked (P/09.2 N2, N4; as at the holder''s door, P/08.3 N4)'
           content:
@@ -196,7 +196,7 @@ paths:
           description: 'carry from the memory of the relay with domain_age (P/09.2 N1.4, N2)'
           content:
             application/json:
-              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Carry'}
+              schema: {$ref: '#/components/schemas/RelayCarry'}
         '401':
           description: 'Signature, reason — a word of the agent signature contract (the key — from keys of the batch answer; P/09.2 N2 «as above»)'
           content:
@@ -242,7 +242,7 @@ paths:
                 $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/TokenSealed'
         '502':
           description: 'The holder did not answer — did not answer, as forwarding does (the forwarding contract «Forwarding is one function»
-            answer; the Architect''s decision on the М11 check, Y8; P/09.2 N2, N4)'
+            answer; the Architect''s decision on the M11 check, Y8; P/09.2 N2, N4)'
           content:
             application/json:
               schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
@@ -266,11 +266,10 @@ components:
         application/json:
           schema: {$ref: '#/components/schemas/RelayRefusal'}
     RelayNothingYet:
-      description: '«the relay has nothing from the domain for <member> yet» — before the first answer of the holder (the first batch, an empty one too); before the signature check,
-        to a stranger — too, without a knock (P/09.2 N2, N3, N4); Retry-After is not set'
+      description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global 503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or knock for the GET case (P/09.2 N1.4, N2; review M1).'
       content:
         application/json:
-          schema: {$ref: '#/components/schemas/RelayRefusal'}
+          schema: {$ref: '#/components/schemas/RelayNothingBody'}
     RelayMethod:
       description: 'A wrong method on a path of the relay door — 405 (P/09.2 N2)'
       content:
@@ -331,3 +330,15 @@ components:
       properties:
         error: {const: unavailable}
         detail: {type: string}
+    RelayCarry:
+      description: 'Carry from this particular member cache; domain_age is its monotonic age, not age of the latest unrelated batch. Empty/other-member batches cannot refresh it; restart clears the cache (P/09.2 N1.4; review C1).'
+      allOf:
+        - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Carry'
+      required: [domain_age]
+    RelayNothingBody:
+      type: object
+      required: [error, detail]
+      additionalProperties: false
+      properties:
+        error: {const: refused}
+        detail: {type: string, description: 'the relay has nothing from the domain for <member> yet; member is the requested member name (P/09.2 N2).'}

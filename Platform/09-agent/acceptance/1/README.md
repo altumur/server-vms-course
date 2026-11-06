@@ -3,31 +3,31 @@
 This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand, the dictionary of directives and doors — [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (the stand of several clusters; formerly — the М11 dictionary of the acceptance README
-of М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is [`09.1-agent.norms.md`](../../spec/09.1-agent.norms.md) N5;
+the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (the stand of several clusters; formerly — the M11 dictionary of the acceptance README
+of M11/01; the plan of the move of lesson 8, V5). The norm of the chapter is [`09.1-agent.norms.md`](../../spec/09.1-agent.norms.md) N5;
 [the contract](../../spec/09-agent.api.openapi.yaml), the lecture (`ru/09-agent.md`, for people, not in the export). The scenarios were moved (stage B, ADR-0083
-addendum (1): without a change of behaviour) from the acceptances of М11/05 (04 → 13), М11/06 (04, 07, 08), М11/10 (11), М11/11 (05, 06 → 14) and
-М11/12 (01, 03, 06); the numbers, names and steps are the former ones, except `13-slot-liveness` (in М11/05 — `04-slot-liveness`) and
-`14-pointer-checksum` (in М11/11 — `06-pointer-checksum`): the number 04 is taken by the scenario of М11/06, the number 06 — by the scenario of М11/12;
-the next numbers after the largest number of the sources of the chapter (М11/10 sc. 12) — in the order of the lesson М11, then of the scenario
+addendum (1): without a change of behaviour) from the acceptances of M11/05 (04 → 13), M11/06 (04, 07, 08), M11/10 (11), M11/11 (05, 06 → 14) and
+M11/12 (01, 03, 06); the numbers, names and steps are the former ones, except `13-slot-liveness` (in M11/05 — `04-slot-liveness`) and
+`14-pointer-checksum` (in M11/11 — `06-pointer-checksum`): the number 04 is taken by the scenario of M11/06, the number 06 — by the scenario of M11/12;
+the next numbers after the largest number of the sources of the chapter (M11/10 sc. 12) — in the order of the lesson M11, then of the scenario
 (the Architect's decision on the move plans 8–10, item 14; a row of `journal/corrections-1.tsv`). In total 22 scenarios / 252 steps: 5 from
-М11/05, 26 from М11/06, 20 from М11/10, 11 from М11/11, 40 from М11/12, 2 — sc. 06 steps 9–10 (`as_of` to the medium no more often than once an hour; VMS request № 19); 20 — sc. 15 `one-agent` (DOM-AGENT-TURN-01);
+M11/05, 26 from M11/06, 20 from M11/10, 11 from M11/11, 40 from M11/12, 2 — sc. 06 steps 9–10 (`as_of` to the medium no more often than once an hour; VMS request № 19); 20 — sc. 15 `one-agent` (DOM-AGENT-TURN-01);
 35 — sc. 16–19 of the coverage audit of P/09 (audit-kimi aee4369fb, drafts J01–J04); 72 — sc. 20–25 of its second pass (Gemini,
 cc36de538, drafts G03, G04; below); 21 — sc. 27 `roles-copy` (ADR-0098 §4).
 
-The other scenarios of the sources are at the chapters of their outcome (ADR-0083 addendum (13); the appendix of the plan of the move of lesson 8): М11/05
-sc. 01, 03, 05 — [chapter 8.5](../../../08-domain/acceptance/5/README.md), 02 — [the acceptance of chapter 6.7](../../../06-console/acceptance/7/README.md) (13); М11/06 sc. 01, 02,
+The other scenarios of the sources are at the chapters of their outcome (ADR-0083 addendum (13); the appendix of the plan of the move of lesson 8): M11/05
+sc. 01, 03, 05 — [chapter 8.5](../../../08-domain/acceptance/5/README.md), 02 — [the acceptance of chapter 6.7](../../../06-console/acceptance/7/README.md) (13); M11/06 sc. 01, 02,
 03, 05, 09 — [chapter 8.6](../../../08-domain/acceptance/6/README.md), 06 — [chapter 8.1](../../../08-domain/acceptance/1/README.md)
-(sc. 15); М11/10 sc. 01 — the acceptance of chapter 6.7 (15), 02–04, 08–10, 12 — [chapter 8.8](../../../08-domain/acceptance/8/README.md),
-06 — the vector package [`follow`](../../vectors/follow/README.md); М11/11 sc. 01 — [chapter 8.9](../../../08-domain/acceptance/9/README.md),
-02 — [the acceptance of lesson P/10](../../../10-domain-console/acceptance/README.md), 04 — the vector [`alarms`](../../../10-domain-console/vectors/alarms/README.md), 03 — the vectors [`resolve`](../../../06-console/vectors/resolve/README.md); М11/12 sc. 02 — [chapter 8.3](../../../08-domain/acceptance/3/README.md) (sc. 17), 04,
+(sc. 15); M11/10 sc. 01 — the acceptance of chapter 6.7 (15), 02–04, 08–10, 12 — [chapter 8.8](../../../08-domain/acceptance/8/README.md),
+06 — the vector package [`follow`](../../vectors/follow/README.md); M11/11 sc. 01 — [chapter 8.9](../../../08-domain/acceptance/9/README.md),
+02 — [the acceptance of lesson P/10](../../../10-domain-console/acceptance/README.md), 04 — the vector [`alarms`](../../../10-domain-console/vectors/alarms/README.md), 03 — the vectors [`resolve`](../../../06-console/vectors/resolve/README.md); M11/12 sc. 02 — [chapter 8.3](../../../08-domain/acceptance/3/README.md) (sc. 17), 04,
 05 — [chapter 8.10](../../../08-domain/acceptance/10/README.md). The agent side in the scenarios of other chapters — the list
-«Соседи на стенде» of the norm of the chapter, N5.
+«Neighbours on the stand» of the norm of the chapter, N5.
 
 ## Stand
 
 **Preparation of each scenario** — as the acceptance README of [chapter 8.3](../../../08-domain/acceptance/3/README.md)
-(«Preparation of each scenario»; from the acceptance README of М11/03): the runner brings up on one machine three clusters — `hold`, `m1`, `m2`; each has
+(«Preparation of each scenario»; from the acceptance README of M11/03): the runner brings up on one machine three clusters — `hold`, `m1`, `m2`; each has
 its own empty store, its own `{data}`, its own role sockets and ports of the console and the resource, its own ring (P/06.2 N1.2), the manifest catalogue
 — only `testsub`; the console, the controller and the worker `w-1` of `testsub`, the resource of its own server (`srv-hold`, `srv-m1`, `srv-m2`).
 There are no units. There is no domain: it is set up by the directive `@domain` of the first step of each scenario. The domain name is `acme`.
@@ -43,8 +43,8 @@ There are no units. There is no domain: it is set up by the directive `@domain` 
 
 The differences by scenario (from the READMEs of the source acceptances):
 
-- **Scenarios 01, 03, 06** (from the acceptance README of М11/12). The doors `holder`, `member`, `resource` and the directives `@domain`,
-  `@start`/`@stop agent` — the dictionary of the «Стенда домена».
+- **Scenarios 01, 03, 06** (from the acceptance README of M11/12). The doors `holder`, `member`, `resource` and the directives `@domain`,
+  `@start`/`@stop agent` — the dictionary of the «Domain stand».
   - **01.** The member `m1` without changes: after `@domain` and 10 s of silence its generation stands, and the mark freshens within 30 s (more than
     `MARK_REFRESH` and a pass). The indices of the rows `domain/member-list/<part>` and `domain/keys` at `m1` do not grow: the agent writes at home only
     on a difference. There is no row `domain/agent`: it is written only on a signature failure or a too large whole. The observation window
@@ -55,25 +55,25 @@ The differences by scenario (from the READMEs of the source acceptances):
   - **03.** The member key of `m1` is spoiled through `admin.sock` while the agent is stopped: the agent runs but does not sign — the row
     `domain/agent` with a count, the member is `silent` within `LOST_AFTER`. The key is returned — `m1` is `ok` again. Steps 12–14 spoil the key on
     the move, without `@stop agent`: the agent reads the key in every pass (N1.12 `key_read`) — the same count and `silent`; steps 15–19
-    return the key and restart the agent — the member is `ok`, there is no row of the past launch (N1.12 `at`; the reconciliation of М11, N1, N2).
+    return the key and restart the agent — the member is `ok`, there is no row of the past launch (N1.12 `at`; the reconciliation of M11, N1, N2).
   - **06.** An edit of the topology and the grants of `m1` by the holder (the doors `holder`: chapter 8.3, chapter 8.4) — then the home rows at `m1`
     are not rewritten for two agent passes, `as_of` of the grants copy is not freshened earlier than `FRESH_EVERY`.
-- **Scenarios 04, 07, 08** (from the acceptance README of М11/06). The catalogue `testsub` — `domain.edit: [start, labels]`, `domain.ref:
-  name`. The doors `holder`, `member` and the directives `@domain`, `@cut`, `@mend`, `@clock` — the dictionary of the «Стенда домена»; at the door
+- **Scenarios 04, 07, 08** (from the acceptance README of M11/06). The catalogue `testsub` — `domain.edit: [start, labels]`, `domain.ref:
+  name`. The doors `holder`, `member` and the directives `@domain`, `@cut`, `@mend`, `@clock` — the dictionary of the «Domain stand»; at the door
   `holder` the runner sets `Idempotency-Key` also for `PUT`/`DELETE`. `$id` is the id of the stored edit from the answer 202. The holder stores
   the edit (chapter 8.6), the agent of `m1` applies it (N1.5) after `@mend`; the condition `If-Match` of the units door — sc. 14 of the acceptance of
   [P/06.1](../../../06-console/acceptance/1/README.md). Sc. 08: `@clock m1 +90` — the agent clock outside the window of the units door
   `UNIT_WINDOW` 60 s ([the agent signature contract](../../../common/contracts/agent-signature.md)); step 10 returns the clock.
-- **Scenario 11** (from the acceptance README of М11/10; the Quint model of М11, scenario Q3). The stand with a signer also on `m1`: the doors
+- **Scenario 11** (from the acceptance README of M11/10; the Quint model of M11, scenario Q3). The stand with a signer also on `m1`: the doors
   `holder`, `member`, `signer` and the directives `@domain`, `@start domain on`, `@stop domain`, `@move` — the dictionary of the
-  «Стенда домена». A revocation after the last backup copy does not revive after a move: the agent of a member merges `domain/revoked` of the answer
+  «Domain stand». A revocation after the last backup copy does not revive after a move: the agent of a member merges `domain/revoked` of the answer
   with its own row (RV, N1.4 `from_carry`), step 20 — 401.
-- **Scenarios 05, 14** (from the acceptance README of М11/11). The catalogue `testsub` with a declaration of the shared document:
+- **Scenarios 05, 14** (from the acceptance README of M11/11). The catalogue `testsub` with a declaration of the shared document:
   - `domain.shared: [step, marks, {rounds}]`;
   - `step` — `int` with `inherit: 1`;
   - `marks` — `list` with `inherit: []`, `merge: union`.
 
-  The doors `holder`, `member` and the directives `@domain`, `@on`, `@put object` — the dictionary of the «Стенда домена». A document of the form of
+  The doors `holder`, `member` and the directives `@domain`, `@on`, `@put object` — the dictionary of the «Domain stand». A document of the form of
   [P/08.9 N1.2](../../../08-domain/spec/08.9-domain.norms.md) `document`, but signed by an unknown issuer
   (`inputs/shared-doc-unknown-issuer.json`: `kid` `0000000000000000` is not in `issuing` of the set, `sig` — 64 bytes), the runner
   puts as an object and a pointer bypassing the edit (C09-SHARED-ACCEPT-01; the Architect's decision 2026-10-29: the outcomes of the family `shared-docs` —
@@ -84,7 +84,7 @@ The differences by scenario (from the READMEs of the source acceptances):
   the holder console — 503 `unavailable`, the document is not sent to the member, there is no row `domain/shared` at the member. The refusal of the agent
   «does not match the pointer» (N3 «take the document» step 3) the stand does not reach — the holder does not send such a document, and
   the step has no separate function (a vector would require a new agent command): the sum check by the agent — by reading.
-- **Scenario 13** (from the acceptance README of М11/05). The catalogue of each cluster is `testsub` and `testsub2` (the order — the «Stand» of the common
+- **Scenario 13** (from the acceptance README of M11/05). The catalogue of each cluster is `testsub` and `testsub2` (the order — the «Stand» of the common
   acceptance README); on each cluster run the controllers of both, the worker `w-1` of the manifest `testsub`, the worker `t-1` of the manifest
   `testsub2` (with the training writer of contributions — [P/08.5](../../../08-domain/spec/08.5-domain.norms.md) N5) and the resource of its own
   server `srv-<cluster>`; before the steps the store of each cluster has the counter `testsub` `c1-<cluster>` (its own ref at
@@ -94,7 +94,7 @@ The differences by scenario (from the READMEs of the source acceptances):
   The book door (`GET /domain/testsub2/books/rolls`) — the cluster console (chapter P/06.7), the assembly — chapter 8.5: neighbours
   on the stand.
 - **Scenarios 16–19** (the coverage audit of P/09, audit-kimi aee4369fb). The doors `holder`, `member`, `store`, `token` and the directives
-  `@domain`, `@stop`/`@start agent`, `@on` (`@freeze`, `@thaw`, `@put object`) — the dictionary of the «Стенда домена» and the common dictionary
+  `@domain`, `@stop`/`@start agent`, `@on` (`@freeze`, `@thaw`, `@put object`) — the dictionary of the «Domain stand» and the common dictionary
   of directives; the freeze limit is 120 s.
   - **16** (J01). The holder is a member (N1.5 `holder_self`): the unit `h1` is created by the console of `hold`, the edit with `?cluster=hold`
     is stored in `domain/pending/hold` (202, `cluster: hold`), the agent of the holder applies it itself — the value at the unit of `hold`,
@@ -121,7 +121,7 @@ The differences by scenario (from the READMEs of the source acceptances):
 ### Coverage audit of P/09, the second pass (Gemini)
 
 Sc. 20–25 (`audit-coverage-gemini` cc36de538, drafts G03, G04) — the same stand; the doors `holder`, `member`, `store`,
-`token` and the directives `@domain`, `@join`, `@stop`/`@start agent`, `@on` (`@put object`) — the dictionary of the «Стенда домена». The rows
+`token` and the directives `@domain`, `@join`, `@stop`/`@start agent`, `@on` (`@put object`) — the dictionary of the «Domain stand». The rows
 bypassing the writer are put by the store door of the member through `admin.sock`, as in sc. 03 and 18.
 
 - **20** (G03). `join` at a member (N1.1 `same`, `another`): a repeated `@join m1` with the same `{pub, domain}` — `ok`, the row
@@ -170,12 +170,12 @@ bypassing the writer are put by the store door of the member through `admin.sock
 | `shared-doc-unknown-issuer.json` | 05, 14, 22 | a shared document of the form ([P/08.9 N1.2](../../../08-domain/spec/08.9-domain.norms.md) `document`) with an unknown issuer: `kid` `0000000000000000`, `issuer` — 32 bytes `0x11`, `sig` — 64 zero bytes base64url |
 | `backup-foreign-term.json` | 19 | a backup copy document of the form `backup.schema.json` (`common.domain_backup_doc`) of term and revision 99, `holder` `hold`, `members` `[hold, m1]`, empty `state` and `objects`, `issuer` — 32 bytes `0x33`, `kid` — the first 16 characters, `sig` — the bytes 0…63 base64url (does not verify: the agent reads its own copy by form); JCS without a line break, sha256 `eec6d36c2e9636846f2d335daf072c791c8022e1e714091f05fe56e4b2380434` — in the row `domain/backup-taken` of step 5 |
 
-`shared-doc-unknown-issuer.json` is copied byte for byte from `inputs/` of the acceptance of М11/11 (the plan of the move of lesson 9, § 3
-«Входы и форма»); `backup-foreign-term.json` — the coverage audit of P/09 (draft J04), the bytes of the draft.
+`shared-doc-unknown-issuer.json` is copied byte for byte from `inputs/` of the acceptance of M11/11 (the plan of the move of lesson 9, § 3
+«Inputs and form»); `backup-foreign-term.json` — the coverage audit of P/09 (draft J04), the bytes of the draft.
 
 ## scenarios.tsv
 
-The format is the dictionary of the «Стенда» of the common acceptance README and the section «Domain stand»; the expectation is a subset of the fields, `~` — a substring,
+The format is the dictionary of the «Stand» of the common acceptance README and the section «Domain stand»; the expectation is a subset of the fields, `~` — a substring,
 `@time` — a time in a string (P/01.1 N0), `@not(…)` — not equal. In total 22 scenarios / 252 steps. Sc. 27 — ADR-0098 §4, there is no dry run by an implementation; steps 14–15 give the emergency row so that `sealed` opens without the grant fields too; step 19 `@sleep 7` is a check of absence: the agent pass 5 s and a margin, the copies are not erased, the indices are the same; a break between two writes of the agent, an old agent and a rollback — by reading: the stand does not interrupt a write and does not substitute the agent version.
 
 Sc. 15 `one-agent` (DOM-AGENT-TURN-01, -02, the owner's consent 2026-10-26; P/09.1 N1.13, N3 «the agent turn»): two agents of the cluster `m1` (`@start agent m1 second` —
@@ -214,7 +214,7 @@ the member is `ok`.
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
 Waiting for an event — `@until`: sc. 01 step 9 waits for the next report of the same generation (`received_at` changed, `rev` the
-same). The remaining sleeps (from the READMEs of the acceptances of М11/12 and М11/10):
+same). The remaining sleeps (from the READMEs of the acceptances of M11/12 and M11/10):
 
 | Sc./step | Sleep | Reason |
 |---|---|---|
@@ -233,7 +233,7 @@ same). The remaining sleeps (from the READMEs of the acceptances of М11/12 and 
 
 ## Evidence outside the TSV
 
-Checked by reading (the norm of the chapter, N5 «Чтением»): the agent does not send a new generation by time, an unreadable edits row
+Checked by reading (the norm of the chapter, N5 «By reading»): the agent does not send a new generation by time, an unreadable edits row
 of the holder at itself, the alarm page and the urgent report (the stand does not raise alarms), the agent in the process (the stand has no process without
 a kit), the field `sign_failures` of the publication and the count `sign_failures_console` (an edit has no way to be delivered to an agent without a key: it does not ask
 for the holder's answer, and an edit received before the key was spoiled is a race of one pass), `no_seal` and `domain.reports`, key changes at a member without a connection, the book secrets at
@@ -245,8 +245,8 @@ no more often than `AS_OF_STORE_EVERY`), the agent body limit; the HTTPS client 
 
 ## `journal/corrections-1.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows of the logs of the acceptances of М11/05, М11/06,
-М11/10, М11/11 and М11/12 from before the move — at the beginning of the log, with the former paths and numbers (they are resolved by
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows of the logs of the acceptances of M11/05, M11/06,
+M11/10, M11/11 and M11/12 from before the move — at the beginning of the log, with the former paths and numbers (they are resolved by
 [`id-map.tsv`](../../../common/id-map.tsv)): by `sample` — the rows about the scenarios of this chapter; the rows without a scenario (the whole
 `scenarios.tsv`, `inputs`, `@sleep`, the preparation, the move) — into all the successor chapters (review analysis of stage B 6–7, № 18).
 Then — the rows of the move of this chapter and of the history of the sources.
