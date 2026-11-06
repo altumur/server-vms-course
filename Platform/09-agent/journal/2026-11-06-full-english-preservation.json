@@ -1,8 +1,8 @@
 {
-  "baseline": "68674e199e4e9a914f6e608e89e65f8c929d77b9",
+  "baseline": "5a355d41ba49239726e89997609b135db5268d73",
   "lesson": "09-agent",
   "common_source": "88f9879fd9b69ea6cbf2a1b7e342f2478484ac64",
-  "composition_base": "68674e199e4e9a914f6e608e89e65f8c929d77b9",
+  "composition_base": "5a355d41ba49239726e89997609b135db5268d73",
   "ready_g09_joint": "0c7c21b3bffa4ece5b699c891fb3439106eb406a",
   "counts": {
     "files": 117,
@@ -280,7 +280,13 @@
   "errors": [],
   "limits": "Author source audit only. READY G09 source is retained by the composition baseline. Owners generator/runner code slices and joint normgen/KIT remain pending; not a runtime, SUT, export or pin result.",
   "map_sha256": {
-    "2026-11-06-full-english-protocol-map.tsv": "0ab27cee28f83b8a0b3acf3d59921650d70dc906521cc6d966f88b1bbd3f3792",
-    "2026-11-06-full-english-source-map.tsv": "f83877c779ffd1833f4922ebd6645fbfc1ef9c6d090a8bb353285070c154b7ae"
+    "2026-11-06-full-english-protocol-map.tsv": "dbded902f5915f3f7422ed5b1ea605825970654a1cffd109e9c8d163ae80f895",
+    "2026-11-06-full-english-source-map.tsv": "fc5b4dd78e48c720e3709e5c50d8834511262dee6d08621b7c149de4fee48064"
+  },
+  "translation_snapshot": "222f4ba491a70b2d9bb3db2cd08adc23f407df38",
+  "baseline_subtree_equality": {
+    "previous": "68674e199e4e9a914f6e608e89e65f8c929d77b9",
+    "official_root": "5a355d41ba49239726e89997609b135db5268d73",
+    "all_bytes_equal": true
   }
 }

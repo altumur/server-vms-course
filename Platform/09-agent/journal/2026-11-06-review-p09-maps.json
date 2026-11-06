@@ -1,6 +1,6 @@
 {
-  "source_endpoint": "7a6284c4307524bcd754802a39b46070b56dfc10",
-  "translation_baseline": "68674e199e4e9a914f6e608e89e65f8c929d77b9",
+  "source_endpoint": "c19c0d3d2145b0f1bb631abfc7490ed15073aa0a",
+  "translation_baseline": "5a355d41ba49239726e89997609b135db5268d73",
   "translation_source": "222f4ba491a70b2d9bb3db2cd08adc23f407df38",
   "review_baseline": "222f4ba491a70b2d9bb3db2cd08adc23f407df38",
   "lesson": "P/09",
@@ -1003,7 +1003,7 @@
   "limits": "Author source evidence only; related checker/generator/runner composition and full normgen/KIT remain pending. No runtime/SUT/export/pin claim.",
   "related_common_map": {
     "path": "Platform/09-agent/journal/2026-11-06-review-p09-common-map.json",
-    "sha256": "80a7fa4207be1d490cb647cfed454d59a1c63383428d6193e1b27965a448e0b5",
-    "scope": "only2 ops cells, original cell prefix and role projections/complete family-read bytes preserved"
+    "sha256": "ad964a32ff76f33a9663312338f7f97ff7150257b89d15fa929f7f3c13b3a225",
+    "scope": "only2ops, originalprefix/role projections/complete family-read bytes preserved against appointed5a"
   }
 }

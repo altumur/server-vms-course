@@ -1,4 +1,4 @@
-# Baseline 68674e199e4e9a914f6e608e89e65f8c929d77b9; strings are ASCII JSON; all physical lines are split by LF only.
+# Baseline 5a355d41ba49239726e89997609b135db5268d73; strings are ASCII JSON; all physical lines are split by LF only.
 path	locator	category	before_json	after_json	change
 Platform/09-agent/data/agent-turn.outcomes.tsv	4:path	table path	""	""	identity
 Platform/09-agent/data/agent-turn.outcomes.tsv	4:reader	table reader	"domainagent"	"domainagent"	identity
