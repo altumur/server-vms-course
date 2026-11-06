@@ -1,6 +1,6 @@
-// Package writecheck — проверки тела POST /v1/write до Н3 (ADR-0083 доп. (86) п. 2, пакет Б): строгий разбор JSON
-// (jsonstrict, P/01.1 Н2.1), затем таблица проверок write-checks.tsv (checks, сгенерирован tools/normgen).
-// Написан руками; путь импорта "kitmodule/internal/" заменяет tools/normgen/kit/build_kit.py.
+// Package writecheck checks POST /v1/write before N3:strict jsonstrict parsing under P/01.1 N2.1, then
+// the generated write-checks.tsv checks table (ADR-0083 addendum 86, item 2).
+// Handwritten;build_kit.py rewrites kitmodule/internal imports.
 package writecheck
 
 import (
@@ -10,15 +10,15 @@ import (
 	"kitmodule/internal/jsonstrict"
 )
 
-// JSONDepth — JSON_DEPTH P/01.1 Н2.1: одно число для всех реализаций, не параметр.
+// JSONDepth is P/01.1 N2.1 JSON_DEPTH, a shared normative constant, not an input parameter.
 const JSONDepth = jsonstrict.Depth
 
-// Limits — имена #lim таблицы write-checks.tsv; lim вызывающего обязан нести каждое (сверяет test_kit.py).
+// Limits are the table's #lim names;the caller's lim must include every name, checked by test_kit.py.
 var Limits = []string{"BATCH_WRITES", "BATCH_GUARDS", "ROW_CEILING"}
 
-// Refusal — отказ: Code и Kind — статус и kind ответа, Fault — прочие поля тела отказа (nil — их нет; значения int64
-// и string). N — строка таблицы (0 — отказ разбора JSON), Check — её имя ("json" — разбор), Reason — причина разбора
-// или ошибка вычисления fault; N, Check, Reason — для журнала, вызывающему их не отдают.
+// Refusal contains HTTP Code/Kind and optional int64/string Fault fields. N is the table row, or0 for
+// JSON parsing;Check is its name ('json' for parsing);Reason is parsing/fault-evaluation detail.
+// N, Check, Reason are journal-only and must not be returned to callers.
 type Refusal struct {
 	Code   int
 	Kind   string
@@ -28,10 +28,10 @@ type Refusal struct {
 	Reason string
 }
 
-// Check — тело целиком (рамка HTTP и предел тела уже пройдены), роль сокета, значения #lim урока и права роли
-// (P/01.2 Н3 «проверить»: сокет, операция read | write | delete, ключ). Ответ: первый отказ и разобранное тело;
-// отказ nil — команда идёт к Н3 с этим телом. При отказе разбора тело nil. Нет имени из Limits в lim или allowed
-// nil — паника: это ошибка кода, а не входа.
+// Check receives a framed, body-size-checked body, socket role, #lim values, and the role's rights callback
+// (P/01.2 N3 check:socket, read/write/delete action, key). Return first refusal and parsed body.
+// A nil refusal permits N3 with that body;parse failure returns nil body. Missing Limits names or a nil
+// allowed callback panic because they are code defects, not invalid input.
 func Check(body []byte, sock string, lim map[string]int64, allowed func(sock, op, key string) bool) (*Refusal, any) {
 	for _, name := range Limits {
 		if _, ok := lim[name]; !ok {

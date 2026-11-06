@@ -1,16 +1,10 @@
-"""Генератор № 3 ADR-0125: разбор флагов демона хранилища из `Platform/01-store/forms/daemon-flags.tsv` — без модели.
+"""Generate daemon flag parsing from daemon-flags.tsv without a model (ADR-0125 generator 3).
 
-Читает таблицу (шапка `#var f`, `#var cmd`, `#fn`; колонки flag type default default_text required commands bad norm)
-и строит пакет Go 1.22 только на стандартной библиотеке `<out>/go/flags/`:
-- `flags.go` — построен по таблице: структура Flags (поле на флаг), Command, Parse, ParseArgs, Refusal;
-- `flagtypes.go` — копия ручного словаря типов `tools/normgen/flags/go/flagtypes.go` (закрытый словарь шапки);
-- `runtime.go`, `prims.go` — копии среды CEL и примитивов генератора № 1 (`required`, `bad` — CEL; `loopback` — примитив).
+Read #var f/#var cmd/#fn declarations and flag, type, default, default_text, required, commands, bad, norm columns. Emit standard-library Go 1.22 under go/flags: generated flags.go with Flags, Command, Parse, ParseArgs and Refusal; copied flagtypes.go with the closed header type vocabulary; and generator 1's runtime.go/prims.go for required/bad CEL and loopback.
 
-Генератор не читает прозу (ADR-0125 доп. (1) п. 4): позиционные слова подкоманд (`admit <id>`, `backup <file>`) — не
-форма, Parse отдаёт их в Args как есть. Семантика разбора — в KIT_MD ниже (раздел KIT.md части `flags`).
+Do not interpret prose (ADR-0125 addendum (1), item 4): positional subcommand words such as admit <id> and backup <file> pass through Args unchanged. KIT_MD below defines parsing semantics.
 
-Запуск: python tools/normgen/gen_flags.py [таблица.tsv [каталог_выхода]].
-"""
+  python tools/normgen/gen_flags.py [table.tsv [output-directory]]"""
 import hashlib
 import json
 import re
@@ -24,33 +18,32 @@ sys.path.insert(0, str(HERE))
 from gen_checks import (FN_TYPES, GenError, Module, Parser, compile_expr, go_fn_wrapper,  # noqa: E402
                         go_function, go_str, gofmt, prims_present, camel)
 
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
 L = lesson.CURRENT
 DEFAULT_TABLE = L.form("daemon-flags.tsv")
 DEFAULT_OUT = L.out
 COLUMNS = ["flag", "type", "default", "default_text", "required", "commands", "bad", "norm"]
 FLAG = re.compile(r"-[a-z][a-z0-9-]*|--[a-z][a-z0-9-]*")
-INPUT = re.compile(r"\$[A-Z][A-Z0-9_]*|<[a-z][a-z0-9_-]*>")    # входы процесса (P/03, P/04): $ОКРУЖЕНИЕ, <позиционный>
-INPUT_FLAG_TYPES = ("bool", "string", "number", "dir", "file")   # флаг команды рядом со входами процесса (P/06)
+INPUT = re.compile(r"\$[A-Z][A-Z0-9_]*|<[a-z][a-z0-9_-]*>")    # Process inputs (P/03, P/04): $ENVIRONMENT, <positional>.
+INPUT_FLAG_TYPES = ("bool", "string", "number", "dir", "file")   # Command flags alongside process inputs (P/06).
 TYPE = re.compile(r"path|dir|file|addr|id|bool|duration|bytes:>0|list:id@addr(?:/addr)?|string|number"
                   r"|enum:[A-Za-z0-9_.-]+(?:\|[A-Za-z0-9_.-]+)*|int:(-?[0-9]+)\.\.(-?[0-9]*)")
 INITIALISMS = {"id": "ID", "api": "API", "tls": "TLS"}
-DURATION = re.compile(r"[1-9][0-9]*(?:ms|s|m|h)")          # шапка формы (P/01.3-R031)
+DURATION = re.compile(r"[1-9][0-9]*(?:ms|s|m|h)")          # Form header (P/01.3-R031).
 DURATION_NS = {"ns": 1, "us": 1000, "µs": 1000, "ms": 10 ** 6, "s": 10 ** 9, "m": 60 * 10 ** 9, "h": 3600 * 10 ** 9}
 MEMBER_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}")
 INT64 = (-2 ** 63, 2 ** 63 - 1)
-NUMBER = re.compile(r"-?(0|[1-9][0-9]*)(\.[0-9]+)?")       # number: конечная десятичная запись (P/02 forms README)
-COMMANDS_FORM = "operator-commands.tsv"                      # команды урока с префиксом argv (P/02); нет — команды P/01
+NUMBER = re.compile(r"-?(0|[1-9][0-9]*)(\.[0-9]+)?")       # number: finite decimal notation (P/02 forms README).
+COMMANDS_FORM = "operator-commands.tsv"                      # Lesson argv-prefix commands (P/02), otherwise P/01 commands.
 COMMAND_COLUMNS = ["command", "process", "prefix", "positionals", "norm"]
 COMMAND_ID = re.compile(r"[a-z][a-z0-9-]*")
 WORD = re.compile(r"[a-z][a-z0-9-]*")
 
 
-# ---------------------------------------------------------------- таблица
+# ---------------------------------------------------------------- table
 
 class Commands:
-    """operator-commands.tsv: команда (id), процесс, префикс argv (JSON-массив слов), позиционные (JSON Schema массива
-    строк с minItems/maxItems — другой схемы генератор не исполняет), норма."""
+    """Read operator-commands.tsv: command ID, process, argv word-array prefix, positional string-array schema restricted to minItems/maxItems, and norm."""
 
     def __init__(self, text, name=COMMANDS_FORM):
         self.name = name
@@ -109,7 +102,7 @@ class Table:
                 self.fns[m[1]] = (args, m[3], m[4])
             elif re.match(r"#(var|lim|fn) ", line):
                 raise GenError(f"{name}: header line out of form: {line}")
-        if commands is not None and not self.vars:              # P/02: f и cmd названы в шапке прозой
+        if commands is not None and not self.vars:              # P/02 declares f and cmd in header prose.
             self.vars = {"f": "map<string,dyn>", "cmd": "string"}
         if set(self.vars) != {"f", "cmd"}:
             raise GenError(f"{name}: #var must declare f and cmd (got {sorted(self.vars)})")
@@ -150,7 +143,7 @@ class Table:
                                    f"admitted at every command of this one")
         self.command_table = commands
         kinds = {bool(INPUT.fullmatch(r["flag"])) for r in self.rows}
-        self.inputs = True in kinds          # входы процесса; P/06 — с флагами команды в той же форме (--writers-stopped)
+        self.inputs = True in kinds          # Process inputs; P/06 includes command flags in the same form (--writers-stopped).
         if self.inputs:
             for row in self.rows:
                 if not INPUT.fullmatch(row["flag"]) and row["type"] not in INPUT_FLAG_TYPES:
@@ -209,7 +202,7 @@ def check_int(text, lo, hi):
 
 
 def default_value(row, where):
-    """Умолчание как выражение Go для поля (None — нет умолчания или оно вычисляется при разборе: =флаг, $ПЕРЕМЕННАЯ)."""
+    """Return a field's Go default expression; None means absent or computed at parse time (=flag or $VARIABLE)."""
     d, t = row["default"], row["type"]
     if d == "-" or d.startswith("="):
         return None
@@ -277,10 +270,10 @@ def go_field_type(t):
     return "string"
 
 
-# ---------------------------------------------------------------- вывод: Go
+# ---------------------------------------------------------------- Go output
 
 def go_assign(row):
-    """Операторы case флага: raw — слово значения; поле и f[name]."""
+    """Generate a flag case: raw is the value word; assign both the field and f[name]."""
     t, fld = row["type"], f"fl.{row['field']}"
     if t in ("path", "dir", "file"):
         return [f"v, err := valNonEmpty(raw)", "if err != nil {", "\treturn nil, refuse(name, err.Error())", "}",
@@ -410,11 +403,11 @@ def go_parse(table):
     return "\n".join(out)
 
 
-GO_API = '''
-// RefuseCode — код выхода отказа запуска (P/01.3 Н1.3 refuse_start; Н4 «start_flags»).
+GO_API = r'''
+// RefuseCode is the startup-refusal exit code(P/01.3 N1.3 refuse_start, N4 start_flags).
 const RefuseCode = 2
 
-// Refusal — отказ разбора: флаг (или слово), причина. Код — всегда RefuseCode; лог называет флаг.
+// Refusal names an invalid flag/word and reason;Code is always RefuseCode and the log names the flag.
 type Refusal struct {
 	Code   int
 	Flag   string
@@ -425,7 +418,7 @@ func (r *Refusal) Error() string { return "flag " + r.Flag + ": " + r.Reason }
 
 func refuse(flag, reason string) *Refusal { return &Refusal{Code: RefuseCode, Flag: flag, Reason: reason} }
 
-// Commands — команды таблицы: daemon (запуск без подкоманды) и подкоманды по порядку появления в колонке commands.
+// Commands lists daemon(no subcommand) then subcommands in first-appearance order in commands.
 var Commands = []string{%s}
 
 func isCommand(cmd string) bool {
@@ -437,7 +430,7 @@ func isCommand(cmd string) bool {
 	return false
 }
 
-// Command — первое слово args, если это подкоманда таблицы (не daemon), и остаток; иначе daemon и args целиком.
+// Command splits a declared non-daemon first word from args;otherwise returns daemon with all args.
 func Command(args []string) (string, []string) {
 	if len(args) > 0 && args[0] != "daemon" && isCommand(args[0]) {
 		return args[0], args[1:]
@@ -445,8 +438,8 @@ func Command(args []string) (string, []string) {
 	return "daemon", args
 }
 
-// ParseArgs — Command и Parse; первое слово — не флаг и не подкоманда — отказ (свою подкоманду, например vectors,
-// реализация разбирает до вызова).
+// ParseArgs applies Command and Parse.An unknown non-flag first word refuses;implementation-owned
+// commands, such as vectors, must be handled before calling it.
 func ParseArgs(args []string, getenv func(string) string) (*Flags, *Refusal) {
 	cmd, rest := Command(args)
 	if cmd == "daemon" && len(args) > 0 && (len(args[0]) < 2 || args[0][0] != '-') {
@@ -455,11 +448,11 @@ func ParseArgs(args []string, getenv func(string) string) (*Flags, *Refusal) {
 	return Parse(cmd, rest, getenv)
 }
 
-// Flags — разобранная командная строка. Поле флага, которого команда не допускает, — нулевое.
+// Flags is parsed argv.Fields disallowed for the command remain zero.
 type Flags struct {
-	Cmd   string          // daemon или подкоманда
-	Given map[string]bool // флаги, данные в командной строке (ключи f таблицы)
-	Args  []string        // позиционные слова по порядку (admit <id>, backup <file>, leave [id]) — не форма таблицы
+	Cmd   string          // daemon or subcommand.
+	Given map[string]bool // Explicitly supplied flags, using table f keys.
+	Args  []string        // Ordered positional words(admit id, backup file, leave optional id), outside this table's form.
 %s}
 
 type env struct{ f, cmd any }
@@ -474,8 +467,9 @@ def go_module(table, rel, module, compiled):
                    f"\t{row['field']} {go_field_type(row['type'])}\n")
     imports = ['"os"', '"strings"'] + (['"time"'] if any(r["type"] == "duration" for r in table.rows) else [])
     parts = [f"// Code generated by tools/normgen/gen_flags.py from {rel}; DO NOT EDIT.\n"
-             f"// Таблица sha256 {table.sha256}.\n\n"
-             "// Package flags — разбор командной строки демона хранилища по таблице «Daemon flags» (ADR-0125 № 3).\n"
+             f'// Table sha256 {table.sha256}.\n\n'
+             r'''// Package flags parses store daemon argv from Daemon flags(ADR-0125 generator 3).
+'''
              "package flags\n\n"
              f"import ({chr(10).join(imports)})",
              GO_API.strip("\n") % (", ".join(go_str(c) for c in table.commands), fields)]
@@ -492,7 +486,7 @@ def go_module(table, rel, module, compiled):
     return "\n\n".join(parts) + "\n"
 
 
-# ---------------------------------------------------------------- режим команд (P/02: operator-commands.tsv)
+# ---------------------------------------------------------------- command mode (P/02 operator-commands.tsv)
 
 GO_API_CMD = """
 // Refusal — a refusal of the option form of a command: the option (or the word) and the reason. The forms set no exit
@@ -682,7 +676,7 @@ def go_module_cmd(table, rel, module, compiled):
                    f"Max: {-1 if r['max'] is None else r['max']}}}, // {r['norm']}\n" for r in cmds.rows)
     imports = ['"errors"', '"fmt"', '"math"', '"regexp"', '"strconv"', '"strings"']
     parts = [f"// Code generated by tools/normgen/gen_flags.py from {rel} and {cmds.name}; DO NOT EDIT.\n"
-             f"// Таблица sha256 {table.sha256}; команды sha256 {cmds.sha256}.\n\n"
+             f'// Table sha256 {table.sha256}; commands sha256 {cmds.sha256}.\n\n'
              "// Package flags — the command line of the operator commands of the lesson (ADR-0125 № 3, addendum (5)):\n"
              "// the commands of forms/operator-commands.tsv, their options of forms/daemon-flags.tsv.\n"
              "package flags\n\n"
@@ -702,7 +696,7 @@ def go_module_cmd(table, rel, module, compiled):
     return "\n\n".join(parts) + "\n"
 
 
-# ---------------------------------------------------------------- режим входов процесса (P/03, P/04: $ОКРУЖЕНИЕ, <arg>)
+# ---------------------------------------------------------------- process input mode (P/03, P/04: $ENVIRONMENT, <arg>)
 
 GO_API_INPUTS = """
 // Refusal — a refusal of a process input: the input ($NAME or <arg>) and the reason. The form sets no exit code for it:
@@ -857,7 +851,7 @@ def go_module_inputs(table, rel, module, compiled):
     if any(r["flag"].startswith("--") for r in table.rows):
         imports.append('"strings"')
     parts = [f"// Code generated by tools/normgen/gen_flags.py from {rel}; DO NOT EDIT.\n"
-             f"// Таблица sha256 {table.sha256}.\n\n"
+             f'// Table sha256 {table.sha256}.\n\n'
              "// Package flags — the process inputs of the lesson (ADR-0125 № 3, addendum (5)): environment values $NAME\n"
              + ("// and positional <arg> of forms/daemon-flags.tsv, and the flags --name of its commands.\n"
                 if any(r["flag"].startswith("--") for r in table.rows) else
@@ -880,7 +874,7 @@ def go_module_inputs(table, rel, module, compiled):
 
 
 def build(table, rel="daemon-flags.tsv"):
-    """→ исходник Go flags.go; GenError — таблица вне формы."""
+    """Return Go flags.go source; an unsupported table raises GenError."""
     _, go_prims = prims_present()
     for name in table.fns:
         if camel(name) not in go_prims:
@@ -903,13 +897,13 @@ COPIES = (("flagtypes.go", HERE / "flags/go/flagtypes.go"), ("runtime.go", HERE 
           ("prims.go", HERE / "prims/go/prims.go"))
 
 
-CONSTANTS_FORM = "runtime-constants.tsv"           # числовой источник констант урока (P/06): часть flags, не новая
+CONSTANTS_FORM = "runtime-constants.tsv"           # Numeric lesson constants (P/06) belong to flags, not a new part.
 CONSTANT_NAME = re.compile(r"[A-Z][A-Z0-9_]*")
 CONSTANT_UNITS = ("count", "s", "bytes")
 
 
 def constants_go(path, rel):
-    """runtime-constants.tsv (name value unit norm meaning) → constants.go пакета flags: const на строку и Constants."""
+    """Convert runtime-constants.tsv (name, value, unit, norm, meaning) into flags/constants.go with one const per row and Constants metadata."""
     lines = [ln for ln in path.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("#")]
     head = ["name", "value", "unit", "norm", "meaning"]
     if not lines or lines[0].split("\t") != head:
@@ -951,7 +945,7 @@ def constants_go(path, rel):
 
 
 def render(table_path=DEFAULT_TABLE):
-    """→ {имя файла в go/flags: текст}."""
+    """Return {go/flags filename: text}."""
     table_path = Path(table_path).resolve()
     try:
         rel = table_path.relative_to(ROOT).as_posix()
@@ -978,7 +972,7 @@ def generate(table_path=DEFAULT_TABLE, out=DEFAULT_OUT):
     gdir.mkdir(parents=True, exist_ok=True)
     for name, text in render(table_path).items():
         (gdir / name).write_text(text, encoding="utf-8")
-    mod = Path(out) / "go/go.mod"                     # модуль выхода урока (у P/01 его пишет gen_tests)
+    mod = Path(out) / "go/go.mod"                     # Lesson output module; gen_tests writes it for P/01.
     if not mod.exists():
         mod.write_text(f"module {L.go_module}\n\ngo 1.22\n", encoding="utf-8")
     return gdir
@@ -989,7 +983,7 @@ JUDGE = HERE / "flag_judge.py"
 
 
 def kit_files(out=DEFAULT_OUT):
-    """→ [(каталог в internal, имя, байты, происхождение, источник)]; GenError — out устарел."""
+    """Return [(internal directory, name, bytes, origin, source)]; stale output raises GenError."""
     fresh, files = render(), []
     for name in sorted(fresh):
         kept = Path(out) / "go/flags" / name
@@ -997,12 +991,12 @@ def kit_files(out=DEFAULT_OUT):
             raise GenError(f"{kept} is stale: run tools/normgen/gen_flags.py")
         origin = "generated" if name in ("flags.go", "constants.go") else "handwritten"
         source = kept if name in ("flags.go", "constants.go") else dict(COPIES)[name]
-        files.append(("flags", name, kept.read_bytes(), origin, str(Path(source).relative_to(ROOT))))
+        files.append(("flags", name, kept.read_bytes(), origin, L.output_source(kept, out) if source == kept else str(Path(source).relative_to(ROOT))))
     return files
 
 
 def provenance():
-    """Паспорт части (ADR-0125 доп. (1) п. 6 (а)): форма, генератор, судья — пути и sha256."""
+    """Part provenance (ADR-0125 addendum (1), item 6(a)): form, generator and judge with paths/SHA256."""
     import tsv_input
 
     def entry(path):
@@ -1011,10 +1005,10 @@ def provenance():
         return [entry(p) for p in dict.fromkeys(p for src in paths for p in tsv_input.source_files(src, root=ROOT))]
     generators = [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))]
     cmds = DEFAULT_TABLE.parent / COMMANDS_FORM
-    if cmds.is_file():                                 # команды урока (P/02): обе формы, судья cmdflag_judge
+    if cmds.is_file():                                 # Lesson commands (P/02): both forms, cmdflag_judge.
         return {"form": forms([DEFAULT_TABLE, cmds]), "generator": entry(Path(__file__).resolve()), "generators": generators,
                 "judge": entry(HERE / "cmdflag_judge.py")}
-    if inputs_form():                                  # входы процесса (P/03, P/04): судья test_gen_flags_inputs
+    if inputs_form():                                  # Process inputs (P/03, P/04): test_gen_flags_inputs judge.
         consts = DEFAULT_TABLE.parent / CONSTANTS_FORM
         return {"form": forms([DEFAULT_TABLE] + ([consts] if consts.is_file() else [])),
                 "generator": entry(Path(__file__).resolve()), "generators": generators,
@@ -1024,7 +1018,7 @@ def provenance():
 
 
 def inputs_form():
-    """Форма урока — входы процесса ($NAME, <arg>), а не флаги."""
+    """Detect process inputs ($NAME, <arg>) rather than flags."""
     if not DEFAULT_TABLE.is_file() or (DEFAULT_TABLE.parent / COMMANDS_FORM).is_file():
         return False
     return Table(DEFAULT_TABLE.read_text(encoding="utf-8"), DEFAULT_TABLE.name).inputs
@@ -1107,7 +1101,7 @@ type Flags struct {
 """
 
 
-KIT_MD = KIT_MD.replace("Platform/01-store/", L.rel + "/")      # пути урока; прочий текст — урока P/01
+KIT_MD = KIT_MD.replace("Platform/01-store/", L.rel + "/")      # Lesson paths; other text describes P/01.
 
 KIT_MD_CMD = """
 ## Part `flags`: the command line of the operator commands (generated from `forms/operator-commands.tsv` and `forms/daemon-flags.tsv`)
@@ -1136,7 +1130,7 @@ type Refusal struct { Flag, Reason string }                     // Error() names
 
 
 def kit_md():
-    """Справка части: команды урока (operator-commands.tsv) — KIT_MD_CMD; иначе флаги демона P/01."""
+    """Use KIT_MD_CMD for operator-commands.tsv lessons, otherwise the P/01 daemon flag documentation."""
     if (DEFAULT_TABLE.parent / COMMANDS_FORM).is_file():
         return KIT_MD_CMD
     if not inputs_form():

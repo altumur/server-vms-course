@@ -1,8 +1,8 @@
 package apidoor
 
-// Среда сгенерированной двери (tools/normgen/gen_door.py), написана руками один раз; генератор копирует файл в пакет.
-// Здесь только то, что не зависит от OpenAPI: значения JSON, сравнение чисел, разбор query по форме
-// application/x-www-form-urlencoded (style form OpenAPI для in: query), запись JSON.
+// Handwritten runtime for gen_door.py output, copied into the generated package.
+// Only OpenAPI-independent behavior lives here: JSON values, numeric comparison, form-urlencoded query
+// parsing (OpenAPI style=form, in=query), and JSON encoding.
 
 import (
 	"bytes"
@@ -15,9 +15,9 @@ import (
 	"unicode/utf8"
 )
 
-// Violation — нарушение схемы: At — JSON Pointer места (пустой — корень), Rule — слово JSON Schema (type, required,
-// pattern, minLength, const, enum, oneOf, not, additionalProperties, minimum, …; utf8 — строка не UTF-8, а у схемы
-// есть ограничение строки). Для журнала: вызывающему его не отдают (отказ не цитирует вход).
+// Violation reports a schema violation: At is its JSON Pointer (empty for root); Rule is the keyword
+// (type, required, pattern, minLength, const, enum, oneOf, not, additionalProperties, minimum, ...; utf8 means invalid
+// UTF-8 under a string constraint). Journal only: do not return input-quoting details to callers.
 type Violation struct {
 	At   string
 	Rule string
@@ -33,24 +33,24 @@ func child(at, name string) string {
 
 func index(at string, i int) string { return at + "/" + strconv.Itoa(i) }
 
-// Body — тело ответа сгенерированного типа. SchemaName — имя схемы OpenAPI (components/schemas или <Op><код> для
-// схемы, написанной в ответе на месте); appendJSON — байты тела (для text/plain — сам текст).
+// Body is a generated response type. SchemaName identifies components/schemas or an inline <Op><status>
+// schema; appendJSON emits body bytes, or plain text for text/plain.
 type Body interface {
 	SchemaName() string
 	appendJSON([]byte) []byte
 }
 
-// Response — ответ на провод: код, заголовки в порядке записи, байты тела. Рамка HTTP (ручная часть) пишет его как
-// есть; у HEAD тело не шлётся (RFC 9110 §9.3.2 — дело рамки).
+// Response is the wire status, ordered headers and body bytes, written unchanged by the handwritten frame.
+// HEAD omits the body per RFC 9110 section9.3.2; that is the frame's responsibility.
 type Response struct {
 	Code   int
 	Header [][2]string
 	Body   []byte
 }
 
-// Значения JSON на входе проверок: nil, bool, string, []any, map[string]any и число — int64, uint64, float64 или
-// json.Number. Так приходит и разбор jsonstrict пакета Б (int64 — число без . и e, иначе float64), и
-// encoding/json с UseNumber.
+// Checker inputs: nil, bool, string, []any, map[string]any and int64, uint64, float64 or json.Number.
+// Both kit jsonstrict (int64 for numbers without '.' or exponent, otherwise float64) and encoding/json
+// with UseNumber produce these representations.
 
 func isString(v any) bool { _, ok := v.(string); return ok }
 func isBoolean(v any) bool { _, ok := v.(bool); return ok }
@@ -58,8 +58,8 @@ func isNull(v any) bool   { return v == nil }
 func isObject(v any) bool { _, ok := v.(map[string]any); return ok }
 func isArray(v any) bool  { _, ok := v.([]any); return ok }
 
-// isInteger — целое JSON: запись числа без дробной части и порядка (int64, uint64, json.Number без . e E).
-// Сознательно уже JSON Schema 2020-12 (там 1.0 — тоже integer): форма разбора тела Н2.1 пакета Б отличает 1 от 1.0.
+// isInteger requires lexical integers: int64, uint64 or json.Number without '.', e, E.
+// This is narrower than Draft 2020-12, where1.0 is integer; the kit's N2.1 body form distinguishes1 from1.0.
 func isInteger(v any) bool {
 	switch x := v.(type) {
 	case int64, uint64:
@@ -78,7 +78,7 @@ func isNumber(v any) bool {
 	return false
 }
 
-// number — точное значение числа JSON; inf — +1/-1 для бесконечности binary64 (1e400 разборщика), иначе 0.
+// number returns the exact JSON numeric value; inf is +/-1 for binary64 overflow, otherwise0.
 func number(v any) (r *big.Rat, inf int, ok bool) {
 	switch x := v.(type) {
 	case int64:
@@ -113,7 +113,7 @@ func number(v any) (r *big.Rat, inf int, ok bool) {
 	return nil, 0, false
 }
 
-// cmpBound — знак (v − bound); bound — десятичная запись предела из схемы.
+// cmpBound returns the sign of v-bound; bound is the schema's decimal limit.
 func cmpBound(v any, bound string) (int, bool) {
 	r, inf, ok := number(v)
 	if !ok {
@@ -126,7 +126,7 @@ func cmpBound(v any, bound string) (int, bool) {
 	return r.Cmp(b), true
 }
 
-// equalJSON — равенство значений JSON для const и enum (числа — по значению).
+// equalJSON compares JSON const/enum values, using numeric value equality.
 func equalJSON(a, b any) bool {
 	if isNumber(a) && isNumber(b) {
 		if !isInteger(a) || !isInteger(b) {
@@ -189,7 +189,7 @@ func sortedKeys(m map[string]any) []string {
 
 func runeCount(s string) int { return utf8.RuneCountInString(s) }
 
-// Преобразования проверенных значений в поля типов (вызываются только после проверки схемы).
+// Convert validated values to typed fields, only after schema validation.
 
 func toInt64(v any) int64 {
 	switch x := v.(type) {
@@ -236,8 +236,8 @@ func toFloat64(v any) float64 {
 	return 0
 }
 
-// representable — тело b, собранное из значения v, при записи даёт то же значение: тип Go ничего не потерял (целое
-// без предела в схеме вне int64 и т. п.). json — тело JSON; иначе (text/plain) сравнивается текст.
+// representable checks that encoding body b preserves value v without Go type loss (for example, an
+// unconstrained integer beyond int64). json selects JSON value comparison; otherwise compare text.
 func representable(v any, b Body, json bool) bool {
 	raw := b.appendJSON(nil)
 	if !json {
@@ -248,7 +248,7 @@ func representable(v any, b Body, json bool) bool {
 	return err == nil && equalJSON(v, w)
 }
 
-// decodeJSON — байты JSON в значения проверок (encoding/json, числа — json.Number).
+// decodeJSON reads checker values with encoding/json and json.Number.
 func decodeJSON(b []byte) (any, error) {
 	d := json.NewDecoder(bytes.NewReader(b))
 	d.UseNumber()
@@ -268,8 +268,8 @@ func (e constError) Error() string { return string(e) }
 
 const errTrailing = constError("trailing data after JSON value")
 
-// Запись JSON. Строки — UTF-8 как есть, кроме ", \ и управляющих (\u00XX); байты не UTF-8 — U+FFFD.
-// Имена отображений — в порядке байтов UTF-8; поля объекта — в порядке properties схемы.
+// Encode strings as raw UTF-8 except quotes, backslashes and controls; replace invalid UTF-8 by U+FFFD.
+// Map names follow UTF-8 byte order; object fields follow schema properties order.
 
 func appendString(b []byte, s string) []byte {
 	b = append(b, '"')
@@ -307,7 +307,7 @@ func appendString(b []byte, s string) []byte {
 	return append(b, '"')
 }
 
-// appendFloat — число как у encoding/json (без NaN и бесконечностей: их нет в JSON, такое тело не пройдёт схему).
+// appendFloat follows encoding/json; NaN/infinities are invalid JSON and cannot pass the body schema.
 func appendFloat(b []byte, f float64) []byte {
 	if math.IsNaN(f) || math.IsInf(f, 0) {
 		return append(b, "null"...)
@@ -328,7 +328,7 @@ func appendFloat(b []byte, f float64) []byte {
 	return b
 }
 
-// field — запятая перед вторым и дальше полем объекта и имя поля.
+// field emits an object field name and its preceding comma after the first field.
 func field(b []byte, n *int, name string) []byte {
 	if *n > 0 {
 		b = append(b, ',')
@@ -375,9 +375,9 @@ func appendAny(b []byte, v any) []byte {
 	return append(b, "null"...)
 }
 
-// Разбор query: application/x-www-form-urlencoded (WHATWG URL, urlencoded parsing) — пары через &, пустые пропускаются,
-// имя и значение — по первому =, без = значение пустое, + — пробел, %XX — байт, % без двух шестнадцатеричных цифр —
-// как написан. Байты не декодируются в UTF-8: это делает проверка схемы параметра.
+// Form-urlencoded query parsing (WHATWG URL): split '&' pairs, skip empty pairs, split at the first '=',
+// default a missing value to empty, decode '+' as space and %XX as a byte; retain malformed '%' literally.
+// Keep bytes without UTF-8 decoding; the parameter's schema performs that validation.
 
 func parseForm(raw string) [][2]string {
 	var out [][2]string
@@ -438,22 +438,22 @@ func formValues(pairs [][2]string, name string) []string {
 	return out
 }
 
-// QueryReason — чем параметр query вне формы OpenAPI.
+// QueryReason identifies how a query parameter violates its OpenAPI form.
 type QueryReason int
 
 const (
-	QueryAbsent   QueryReason = 1 + iota // обязательный параметр не пришёл (required: true)
-	QueryRepeated                        // параметр-скаляр пришёл больше одного раза (схема — не array)
-	QueryValue                           // значение не по схеме параметра (Schema, Rule — какой и чем)
+	QueryAbsent   QueryReason = 1 + iota // A required parameter is missing.
+	QueryRepeated                        // A scalar parameter repeats (schema is not array).
+	QueryValue                           // Value violates its parameter schema; Schema/Rule identify the constraint.
 )
 
-// QueryError — параметр query вне формы. Какой отказ (код, kind) из объявленных у операции это даёт, OpenAPI формой
-// не говорит (только description) — решает ручная часть.
+// QueryError reports an invalid query parameter. OpenAPI's form does not choose its status/kind
+// (description prose does); handwritten code chooses the refusal.
 type QueryError struct {
 	Param  string
 	Reason QueryReason
-	Schema string // имя схемы components/schemas, если параметр ссылается на неё; иначе пусто
-	Rule   string // слово нарушения для QueryValue
+	Schema string // Referenced components/schemas name, or empty for an inline parameter.
+	Rule   string // Violated keyword for QueryValue.
 }
 
 func (e *QueryError) Error() string {

@@ -15,6 +15,7 @@ import tempfile
 from pathlib import Path
 
 import yaml
+import lesson
 
 from gen_checks import go_str, gofmt
 
@@ -459,7 +460,7 @@ def vendor(module):
 
 
 def generate(root=ROOT, out=None):
-    out = Path(out or HERE / "out/p03")
+    out = Path(out or lesson.output_root() / "p03")
     files = build(root)
     for rel, text in files.items():
         p = out / rel

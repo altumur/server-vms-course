@@ -1,12 +1,12 @@
-# Среда исполнения подмножества CEL для кода, построенного tools/normgen/gen_checks.py (ADR-0120 п. 2 (а)).
-# Генератор вставляет этот файл в каждый модуль Python целиком; код таблицы зовёт только эти функции.
-# Значения CEL — значения Python после json.loads: dict, list, str, int, float, bool, None; плюс CelType и CelError.
-# Ошибка CEL — значение CelError, а не исключение: так её можно поглотить в && и || (false && ошибка = false).
-# Семантика сверена с cel-expr-python оракула skills/lesson-spec/scripts/check_tables.py.
+# CEL subset runtime for gen_checks.py output (ADR-0120, item 2(a)).
+# The generator embeds this whole file into each Python module; table code calls only these functions.
+# CEL values are JSON-decoded Python dict, list, str, int, float, bool, None, plus CelType/CelError.
+# A CEL error is a CelError value, not an exception, allowing false&&error=false and true||error=true.
+# Semantics are checked against check_tables.py's cel-expr-python oracle.
 
 
 class CelError:
-    """Значение-ошибка CEL (status error оракула)."""
+    """CEL error value, corresponding to the oracle's error status."""
     __slots__ = ("msg",)
 
     def __init__(self, msg):
@@ -17,7 +17,7 @@ class CelError:
 
 
 class CelType:
-    """Значение типа: результат type() и имена типов (map, list, string, int, double, bool, null_type, type)."""
+    """CEL type value: type() result and map, list, string, int, double, bool, null_type, type names."""
     __slots__ = ("name",)
 
     def __init__(self, name):
@@ -63,7 +63,7 @@ def _is_num(v):
 
 
 def _numcmp(a, b):
-    """-1, 0, 1 или None (несравнимо, NaN). int с int — точно; int с double — через double, как cel-cpp."""
+    """Return -1, 0, 1 or None for incomparable/NaN. Compare ints exactly; mixed int/double via double, like cel-cpp."""
     if type(a) is int and type(b) is int:
         return (a > b) - (a < b)
     x, y = float(a), float(b)
@@ -77,7 +77,7 @@ def _numcmp(a, b):
 
 
 def _eqv(a, b):
-    """Равенство двух значений без ошибок (разнородное равенство CEL)."""
+    """Compare non-error values with CEL heterogeneous equality."""
     if _is_num(a) and _is_num(b):
         return _numcmp(a, b) == 0
     ka, kb = _kind(a), _kind(b)
@@ -147,7 +147,7 @@ def _in(x, c):
     if type(c) is list:
         return any(_eqv(x, el) for el in c)
     if type(c) is dict:
-        # Ключ отображения — string, bool, int, double (ключи JSON — строки, прочие не найдутся); иное — ошибка.
+        # Map keys may be string, bool, int, double; JSON keys are strings, so other types miss. Other key types error.
         if type(x) is str:
             return x in c
         if type(x) in (bool, int, float):
@@ -165,7 +165,7 @@ def _not(v):
 
 
 def _or(a, b):
-    """a || b, когда a уже не true: true поглощает ошибку с любой стороны."""
+    """Evaluate a||b when a is not true; true absorbs an error on either side."""
     if b is True:
         return True
     if a is False and b is False:
@@ -178,7 +178,7 @@ def _or(a, b):
 
 
 def _and(a, b):
-    """a && b, когда a уже не false: false поглощает ошибку с любой стороны."""
+    """Evaluate a&&b when a is not false; false absorbs an error on either side."""
     if b is False:
         return False
     if a is True and b is True:
@@ -315,7 +315,7 @@ def _range_err(r):
 
 
 def _pred_err(err, b):
-    """Ошибка шага exists: первая запомненная остаётся; не bool — тоже ошибка."""
+    """Remember the first exists error; a non-bool result is also an error."""
     if err is not None:
         return err
     return b if type(b) is CelError else _no("||", False, b)

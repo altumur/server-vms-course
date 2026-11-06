@@ -35,7 +35,7 @@ func ValidStoreKey(s string) bool {
 	return true
 }
 
-// faultCodes — the HTTP codes of each refusal kind (P/01.1 Н4); a kind under another code is not of the closed form.
+// faultCodes — the HTTP codes of each refusal kind (P/01.1 N4); a kind under another code is not of the closed form.
 var faultCodes = map[string][]int{
 	"badkey": {400}, "badrequest": {400, 404}, "forbidden": {403}, "conflict": {409}, "expired": {409},
 	"early": {409}, "refused": {409}, "guard": {412}, "toolarge": {413}, "unavailable": {503}, "ambiguous": {503},

@@ -183,7 +183,7 @@ func (f *Family) Readers() []string {
 }
 
 // OutcomesFor — the paths of the outcome rows that act at the reader for these refusal paths (DIALECT § 9, the V7
-// rule): for each path the rows whose path is its prefix; when the deepest of them has the unit поле or элемент, only
+// rule): for each path the rows whose path is its prefix; when the deepest of them has the unit field or element, only
 // the deepest act, else all; of the rows of all paths act those of the least priority, in the order of the file.
 func (f *Family) OutcomesFor(paths []string, reader string) []string {
 	var own []Outcome

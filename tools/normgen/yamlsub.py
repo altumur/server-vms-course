@@ -1,12 +1,4 @@
-"""Загрузчик подмножества YAML 1.2 для генераторов tools/normgen (только стандартная библиотека Python).
-
-Подмножество — то, чем пишутся OpenAPI уроков: блочные отображения и последовательности (в том числе последовательность
-на отступе ключа), потоковые `{…}` и `[…]` (в том числе пара `k: v` элементом потоковой последовательности и потоковый
-узел на нескольких строках), скаляры простые, в одинарных и двойных кавычках, блочные `|`, `>` с `-`/`+`, простой
-скаляр на нескольких строках, комментарии `#`. Простые скаляры — по схеме core YAML 1.2 (null, bool, int, float).
-Якоря, ссылки, теги, директивы, несколько документов, ключи-узлы, повтор ключа — отказ YamlError с номером строки.
-Сверка с PyYAML на файлах курса — tools/normgen/test_gen_door.py.
-"""
+"""Standard-library YAML1.2 subset loader for normgen. Support lesson OpenAPI block maps/sequences including indentless sequences, flow maps/lists including mapping-pair elements and multiline flow nodes, plain/single/double-quoted and literal/folded block scalars with chomping, continued plain scalars and comments. Resolve plain scalars using the YAML1.2 core null/bool/int/float schema. Unsupported anchors, aliases, tags, directives, multiple documents, node keys and duplicates raise line-numbered YamlError. test_gen_door.py compares course documents with PyYAML."""
 import re
 
 
@@ -22,7 +14,7 @@ _FLOW_END = ",[]{}"
 
 
 def plain_value(text):
-    """Простой скаляр → значение по схеме core YAML 1.2."""
+    """Resolve a plain scalar using the YAML1.2 core schema."""
     if text in ("null", "Null", "NULL", "~", ""):
         return None
     if text in ("true", "True", "TRUE"):
@@ -52,7 +44,7 @@ _ESC = {"0": "\0", "a": "\a", "b": "\b", "t": "\t", "\t": "\t", "n": "\n", "v": 
 
 
 def _double(s, i, where):
-    """s[i] == '"' → (строка, индекс после закрывающей кавычки)."""
+    """Given s[i] as a double quote, return (string, index after the closing quote)."""
     out, i = [], i + 1
     while i < len(s):
         c = s[i]
@@ -100,7 +92,7 @@ def _check_plain(text, where):
 
 
 class _Flow:
-    """Потоковый узел на одной логической строке."""
+    """Parse a flow node on one logical line."""
 
     def __init__(self, s, where):
         self.s, self.i, self.where = s, 0, where
@@ -180,7 +172,7 @@ class _Flow:
                 self.i += 1
                 return out
             item = self.node()
-            if self.colon():                     # [k: v] — пара одним отображением
+            if self.colon():                     # [k:v] is one mapping-pair element.
                 self.ws()
                 value = None if self.s[self.i:self.i + 1] in (",", "]") else self.node()
                 if isinstance(item, (dict, list)):
@@ -196,7 +188,7 @@ class _Flow:
 
 
 def _strip_comment(text):
-    """Комментарий ` #…` вне кавычек и потоковых узлов строки; → (текст без комментария, баланс скобок)."""
+    """Strip comments outside quotes/flow nodes; return (comment-free text, bracket balance)."""
     q, depth, i = None, 0, 0
     while i < len(text):
         c = text[i]
@@ -229,7 +221,7 @@ class _Line:
 
 
 def _key_split(text, where):
-    """'ключ: остаток' → (ключ, остаток) или None, если строка — не пара отображения."""
+    """Split 'key: remainder' into (key, remainder), or None if not a mapping pair."""
     if text[:1] in "\"'":
         v, j = (_double if text[0] == '"' else _single)(text, 0, where)
         rest = text[j:].lstrip(" ")
@@ -258,7 +250,7 @@ class _Block:
                 raise YamlError(f"{name}:{no}: tab in indentation")
             self.lines.append(_Line(no, len(raw) - len(raw.lstrip(" ")), raw.strip(" "), raw))
         self.i = 0
-        self.anchors = {}                     # якоря &имя значений отображений (P/10); алиас *имя — то же значение
+        self.anchors = {}                     # Mapping-value anchors &name (P/10); alias *name denotes the same value.
         for ln in self.lines:
             if ln.indent == 0 and (ln.text.startswith("---") or ln.text.startswith("...") or ln.text.startswith("%")):
                 raise YamlError(f"{name}:{ln.no}: directives and document markers are not in the subset")
@@ -311,7 +303,7 @@ class _Block:
                     out.append(self.block(nxt.indent))
                 continue
             col = ln.indent + (len(ln.text) - len(body))
-            # Содержимое после «- » — строка на отступе col: тот же разбор блока.
+            # Content after '- ' starts at column col and uses the same block parser.
             self.lines[self.i] = _Line(ln.no, col, body, ln.raw)
             if _key_split(_strip_comment(body)[0], self.where(ln)) is not None or body == "-" or \
                     body.startswith("- "):
@@ -336,7 +328,7 @@ class _Block:
                 raise YamlError(f"{self.where(ln)}: expected 'key: value'")
             key, rest = kv
             anchor = None
-            if rest.startswith("&"):                 # «ключ: &имя» (блок ниже) или «ключ: &имя скаляр»
+            if rest.startswith("&"):                 # key:&name followed by a block, or key:&name scalar.
                 m = re.fullmatch(r"&([A-Za-z0-9_-]+)(?: +(.*))?", _strip_comment(rest)[0])
                 if not m:
                     raise YamlError(f"{self.where(ln)}: anchor {rest[:20]!r} is not in the subset")
@@ -362,10 +354,10 @@ class _Block:
         return out
 
     def scalar_rest(self, rest, ln, indent):
-        """Значение после «ключ: » или «- » в строке ln (отступ родителя indent); съедает строки значения."""
+        """Read a value after 'key: ' or '- ' at line ln and parent indentation indent, consuming its continuation lines."""
         where = self.where(ln)
         text, depth = _strip_comment(rest)
-        if text[:1] == "*":                          # алиас — значение якоря целиком
+        if text[:1] == "*":                          # An alias denotes the complete anchor value.
             m = re.fullmatch(r"\*([A-Za-z0-9_-]+)", text)
             if not m or m[1] not in self.anchors:
                 raise YamlError(f"{where}: alias {text[:20]!r} — no such anchor before it")
@@ -393,7 +385,7 @@ class _Block:
             scan = _double if text[0] == '"' else _single
             parts = [rest.rstrip(" ")]
             self.i += 1
-            while True:                          # скаляр в кавычках на нескольких строках: свёртка строк YAML
+            while True:                          # Apply YAML line folding to multiline quoted scalars.
                 folded = parts[0]
                 for k in range(1, len(parts)):
                     if parts[k] == "":
@@ -417,7 +409,7 @@ class _Block:
         _check_plain(text, where)
         parts = [text]
         self.i += 1
-        while self.i < len(self.lines):          # простой скаляр на нескольких строках
+        while self.i < len(self.lines):          # Continued plain scalar.
             nxt = self.lines[self.i]
             if nxt.text == "" or nxt.indent <= indent or nxt.text.startswith("#"):
                 break
@@ -451,7 +443,7 @@ class _Block:
                 break
             body.append(nxt.raw[col:])
             self.i += 1
-        # пустые строки в конце принадлежат хвосту (chomping)
+        # Trailing empty lines belong to the chomping suffix.
         tail = 0
         while body and body[-1] == "":
             body.pop()
@@ -480,7 +472,7 @@ class _Block:
 
 
 def load(text, name="yaml"):
-    """Текст YAML подмножества → значение Python (dict, list, str, int, float, bool, None)."""
+    """Load subset YAML into Python dict, list, str, int, float, bool or None."""
     if text.startswith("﻿"):
         text = text[1:]
     return _Block(text, name).parse()

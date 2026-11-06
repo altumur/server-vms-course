@@ -1,27 +1,11 @@
-"""Генератор тестов этапов урока без своего HTTP (P/02; ADR-0125 доп. (5), часть stagetests; ADR-0126 доп. (7)).
+"""Generate stagetests for a lesson without its own HTTP seam engine (P/02; ADR-0125 addendum (5), ADR-0126 addendum (7)).
 
-Запуск: python3 tools/normgen/gen_cmdtests.py --lesson 02-installer [<out>]   (по умолчанию tools/normgen/out/pNN)
+  python3 tools/normgen/gen_cmdtests.py --lesson 02-installer [<out>]
+Default: tools/normgen/out/pNN. Read lesson forms, not prose: stages.tsv gates select tests:<chapter>:<scenarios|*>:seams and verdicts:<chapter>:<cases|*> from seams.tsv or verdicts.tsv/classes.tsv/cases/*.subsystem.yaml. puts gates require the P/01 store and runner; inventory marks them excluded with `needs the store of P/01 (runner corpus puts)`, rather than simulating store results.
 
-Источники — формы урока, проза не читается:
-- `forms/stages.tsv` — элементы gate: `tests:<глава>:<сценарии|*>:seams` (швы `acceptance/K/seams.tsv`),
-  `verdicts:<глава>:<случаи|*>` (корпус `acceptance/K/verdicts.tsv` с `cases/<case>.subsystem.yaml` и `classes.tsv`),
-  `puts:<глава>:…` — не тестами пакета: ожидание — строка хранилища P/01 после manifest put через admin.sock (решение
-  «Архитектора» 2026-11-05) — в описи excluded «needs the store of P/01 (runner corpus puts)»; гейт судит раннер;
-- грамматика швов не по HTTP и нормализация CALL — `forms/README.md` урока («Non-HTTP seams», «CALL normalization»):
-  `RUN <процесс> <слово>… [<<inputs/<файл> | <<$имя]` → `exit N[; stdout <JSON>][; stdout-text <JSON-строка>][; stderr ~<JSON-строка>]`,
-  `CALL command|load|load-catalogue|rollout-poll <JSON>` → JSON по подмножеству (`{}` — ровно пустой, `"@absent"` — поля нет,
-  `"$имя"` — связывание строки), `@file <путь стенда> inputs/<файл>|<JSON-строка>` → ok, `@read <путь стенда>` →
-  JSON | `text <JSON-строка>` | `@absent`, `@parallel K` → ok, следующий RUN/CALL K раз: `each <ож>` | `one <ож>; rest <ож>`.
-  Путь стенда — `$data/`, `$run/`, `$manifest/` (корни сценария, новые на каждый сценарий).
+forms/README.md declares Non-HTTP seams and CALL normalization. RUN takes process/words and optional <<inputs/file or <<$name; expect exit N with optional JSON stdout, JSON-string stdout-text and stderr substring. CALL command|load|load-catalogue|rollout-poll takes JSON and matches a JSON subset: {} is exactly empty, @absent means missing, $name binds a row. @file writes a stand path from an input fixture or JSON string; @read expects JSON, text or absence. @parallel K repeats the next RUN/CALL with each or one/rest expectations. $data/, $run/, $manifest/ roots are fresh per scenario.
 
-Выход в <out>/go:
-- `lessonadapter/lessonadapter.go` — закрыт: типы (Roots, Result, Source, Loaded, Catalogue, Event, Poll, PollResult);
-- `lessonadapter/command.go`, `load.go`, `catalogue.go`, `poll.go` — YOURS, пакет кладёт по файлу на функцию один раз:
-  Command, Load, LoadCatalogue, RolloutPoll — заглушки, тесты красные без паники, пока их нет;
-- `stagetests/engine_test.go` (движок), `stagetests/<этап>_test.go` (`Test<Этап>_<Сценарий>`; корпус verdicts —
-  `Test<Этап>_Verdicts` с подтестом на случай), `stagetests/testdata/verdicts.jsonl`, `stagetests/inventory.tsv`.
-Судья — test_gen_cmdtests.py (движок на подставном адаптере: зелёный, мутанты адаптера и шва — красные).
-"""
+Emit closed lessonadapter types Roots/Result/Source/Loaded/Catalogue/Event/Poll/PollResult; one YOURS command.go/load.go/catalogue.go/poll.go file per function, initially failing without panic; stagetests engine and stage tests, verdict subtests, verdicts.jsonl and inventory.tsv. test_gen_cmdtests.py checks a passing fixture adapter and failing adapter/seam mutants."""
 import base64
 import json
 import re
@@ -33,7 +17,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import gate  # noqa: E402
-import lesson  # noqa: E402 — урок (ADR-0125 доп. (5) п. 2)
+import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
 from gen_checks import go_str, gofmt  # noqa: E402
 
 L = lesson.CURRENT
@@ -55,7 +39,7 @@ PORT_ROW = re.compile(r"\| `([a-z][a-z0-9-]*)` \| (.+) \|")
 
 
 def read_ports(root=ROOT):
-    """{порт: описание} — таблица «CALL port» forms/README.md урока (P/03, P/04); нет таблицы — {} (P/02)."""
+    """Read {port: declaration} from the forms/README.md CALL port table (P/03, P/04); absent table gives {} (P/02)."""
     path = Path(root) / L.rel / "forms/README.md"
     if not path.is_file():
         return {}
@@ -95,7 +79,7 @@ def json_text(text, where):
 
 
 def words(text, where):
-    """Слова RUN: через один пробел; слово — без пробела и кавычки или JSON-строка."""
+    """Parse single-space-separated RUN words: an unquoted word or a JSON string."""
     out, i = [], 0
     while i < len(text):
         if text[i] == '"':
@@ -230,7 +214,7 @@ def parse_expect_call(text, where):
 
 
 def apply_parallel(steps, where):
-    """@parallel K: следующий RUN/CALL K раз; его ожидание each <ож> | one <ож>; rest <ож>."""
+    """Parse @parallel K: repeat the next RUN/CALL K times with each <expect> or one <expect>; rest <expect>."""
     out, k = [], None
     for st in steps:
         if st["kind"] == "parallel":
@@ -293,7 +277,7 @@ def stage_steps(root, chapter, name, rows):
 
 
 def parse_step_raw(root, chapter, scenario, step, request, expect):
-    """Шаг после @parallel: ожидание разбирает apply_parallel (each/one…rest)."""
+    """After @parallel, apply_parallel parses each or one/rest expectations."""
     if request.startswith("RUN ") or request.startswith("CALL "):
         probe = "exit 0" if request.startswith("RUN ") else "{}"
         st = parse_step(root, chapter, scenario, step, request, probe)
@@ -374,7 +358,7 @@ def go_step(st):
 
 
 def _build(root=ROOT):
-    """→ ({путь от go/: текст}, опись [(id шага, этап, тест, статус, причина)])."""
+    """Return ({go/-relative path: text}, [(step id, stage, test, status, reason)] inventory)."""
     stages_path = Path(root) / L.rel / "forms/stages.tsv"
     rows = [ln.split("\t") for ln in stages_path.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("#")]
     head = rows[0]
@@ -458,7 +442,7 @@ def go_ident(port):
 
 
 def build_ports(files, inventory, tests, ports):
-    """Швы урока по портам CALL (P/03, P/04): движок только CALL, по файлу адаптера на порт (YOURS)."""
+    """Generate CALL-port seams (P/03, P/04): CALL-only engine and one YOURS adapter file per port."""
     used, names = set(), set()
     for stage, items in tests.items():
         for _, _, test, _ in items:
@@ -1537,7 +1521,7 @@ JUDGE = HERE / "test_gen_cmdtests.py"
 
 
 def kit_files(module, out=DEFAULT_OUT):
-    """→ [(каталог в internal, имя, байты, происхождение, источник, своё у реализации)]; GenError — out устарел."""
+    """Return [(internal directory, name, bytes, origin, source, editable)]; stale output raises GenError."""
     files, _ = build(ROOT)
     res = []
     for rel, text in sorted(files.items()):
@@ -1547,7 +1531,7 @@ def kit_files(module, out=DEFAULT_OUT):
         data = kept.read_bytes().replace(f'"{GO_MODULE}/'.encode(), f'"{module}/internal/'.encode())
         sub, name = rel[3:].rsplit("/", 1)
         own = sub == "lessonadapter" and name != "lessonadapter.go"
-        res.append((sub, name, data, "generated", str(kept.relative_to(ROOT)), own))
+        res.append((sub, name, data, "generated", L.output_source(kept, out), own))
     return res
 
 
@@ -1559,7 +1543,7 @@ def provenance():
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()}
     forms = [L.form("stages.tsv"), L.form("README.md")]
     forms += sorted((L.path("acceptance")).glob("*/seams.tsv")) + sorted((L.path("acceptance")).glob("*/verdicts.tsv"))
-    forms += [L.path("acceptance/seams.tsv")]           # урок одной главой (P/04): швы без подкаталога
+    forms += [L.path("acceptance/seams.tsv")]           # A single-chapter lesson (P/04) has seams directly under acceptance/.
     for table in sorted(L.path("acceptance").glob("*/verdicts.tsv")):
         forms += [table.parent / "classes.tsv"] + sorted((table.parent / "cases").glob("*.subsystem.yaml"))
     handwritten = []

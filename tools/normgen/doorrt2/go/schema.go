@@ -1,11 +1,11 @@
-// Ручная среда тел двери урока (ADR-0125 № 2, P/06 часть 3б): проверка значения JSON по схеме из сборки bodies.go.
+// Handwritten lesson body runtime (ADR-0125 generator 2, P/06 part 3b): validate JSON against bodies.go.
 //
-// Подмножество JSON Schema 2020-12 — ровно слова схем OpenAPI урока: $ref (#/$defs/<имя>), type, enum, const, allOf,
+// Supported Draft 2020-12 keywords follow lesson OpenAPI:$ref under #/$defs, type, enum, const, allOf,
 // anyOf, oneOf, not, if/then/else, properties, patternProperties, additionalProperties, unevaluatedProperties,
 // propertyNames, required, dependentRequired, minProperties, maxProperties, items, minItems, maxItems, uniqueItems,
-// minLength, maxLength, pattern, minimum, maximum, exclusiveMinimum, exclusiveMaximum; аннотации (description,
-// format, default, readOnly, contentMediaType, title, examples) не судятся. Числа — по значению (big.Rat), integer —
-// математически целое (1.0 — integer, как в 2020-12); длина строки — в символах Unicode.
+// length/pattern and numeric bounds. Ignore annotations such as description, format, default, readOnly,
+// contentMediaType, title, examples. Compare numbers exactly with big.Rat; integer means mathematically
+// integral, including1.0 per2020-12. Measure strings in Unicode characters.
 package apidoor
 
 import (
@@ -23,7 +23,7 @@ import (
 	"unicode/utf8"
 )
 
-// Violation — первое нарушение схемы: путь значения (JSON Pointer) и правило.
+// Violation is the first failed keyword and value JSON Pointer.
 type Violation struct {
 	At   string
 	Rule string
@@ -59,7 +59,7 @@ func rx(p string) *regexp.Regexp {
 	return r
 }
 
-// Validate — значение v по схеме сборки name; nil — значение схемы.
+// Validate checks v against named combined schema; nil means valid.
 func Validate(name string, v any) *Violation {
 	s, ok := schemaDefs()[name]
 	if !ok {
@@ -73,7 +73,7 @@ func Validate(name string, v any) *Violation {
 	return nil
 }
 
-// StrictJSON — одно значение JSON без повторов имён и без хвоста; числа — json.Number.
+// StrictJSON reads one JSON value without duplicate names or trailing data, using json.Number.
 func StrictJSON(b []byte) (any, error) {
 	dec := json.NewDecoder(bytes.NewReader(b))
 	dec.UseNumber()
@@ -223,7 +223,7 @@ func bound(n any) *big.Rat {
 	return r
 }
 
-// validate — правила узла s над v; → множество свойств объекта v, оценённых этим узлом (для unevaluatedProperties).
+// validate applies node s to v and returns evaluated object properties for unevaluatedProperties.
 func validate(s any, v any, at string, errs *[]Violation) map[string]bool {
 	evaluated := map[string]bool{}
 	switch b := s.(type) {
@@ -452,7 +452,7 @@ func validate(s any, v any, at string, errs *[]Violation) map[string]bool {
 	return evaluated
 }
 
-// mediaType — тип без параметров, в нижнем регистре.
+// mediaType strips parameters and lowercases the type.
 func mediaType(m string) string {
 	if i := strings.IndexByte(m, ';'); i >= 0 {
 		m = m[:i]
@@ -464,8 +464,8 @@ func isJSONMedia(m string) bool {
 	return m == "application/json" || strings.HasSuffix(m, "+json")
 }
 
-// DecodeRequest — тело запроса операции op с типом media (Content-Type): объявленный тип, разбор (JSON — строго: одно
-// значение, без повторов имён) и проверка по схеме тела. Не-JSON тело — строка байт, по схеме, если она есть.
+// DecodeRequest checks declared media, parses one duplicate-free JSON value and validates the body's
+// schema. Non-JSON input is a byte string, validated if a schema is declared.
 func DecodeRequest(op Op, media string, body []byte) (any, *Violation) {
 	declared := requestSchemas[op]
 	if len(declared) == 0 {
@@ -521,7 +521,7 @@ func responseSchema(op Op, code int, media string) (string, string, *Violation) 
 	return m, name, nil
 }
 
-// CheckResponse — ответ code с телом v объявлен у op (код или default, тип) и v — значение его схемы.
+// CheckResponse requires op's declared status or default/media and a body satisfying its schema.
 func CheckResponse(op Op, code int, media string, v any) *Violation {
 	m, name, viol := responseSchema(op, code, media)
 	if viol != nil {
@@ -563,7 +563,7 @@ func CheckResponse(op Op, code int, media string, v any) *Violation {
 	return Validate(name, v)
 }
 
-// EncodeResponse — CheckResponse и байты тела: JSON без экранирования HTML; не-JSON — байты строки.
+// EncodeResponse validates then encodes JSON without HTML escaping, or raw non-JSON string bytes.
 func EncodeResponse(op Op, code int, media string, v any) ([]byte, *Violation) {
 	if viol := CheckResponse(op, code, media, v); viol != nil {
 		return nil, viol
@@ -601,22 +601,22 @@ func EncodeResponse(op Op, code int, media string, v any) ([]byte, *Violation) {
 type paramSpec struct {
 	name, in string
 	required bool
-	schema   string // имя схемы в сборке ("" — без схемы)
-	def      string // умолчание — текст JSON ("" — нет)
+	schema   string // Combined schema name; empty means no schema.
+	def      string // Default as JSON text; empty means none.
 	lexeme   *queryLexeme
 }
 
-// queryLexeme — x-query-lexeme параметра query (P/05-R022, R031): шаблон текста, затем удаление strip, затем разбор.
+// queryLexeme implements P/05-R022/R031 x-query-lexeme: pattern, strip, then parse.
 type queryLexeme struct {
 	pattern string
 	parse   string // number | integer | uint64
-	strip   string // "" | "_" (только number)
+	strip   string // Empty or underscore; underscore stripping applies only to number.
 }
 
 var maxUint64 = new(big.Int).SetUint64(^uint64(0))
 
-// lexemeValue — текст по x-query-lexeme: шаблон → strip → number (конечное binary64; исчезновение порядка — 0,
-// переполнение — отказ) | integer (точное целое) | uint64 (0…2^64−1, исходный текст); ok false — отказ параметра.
+// lexemeValue applies pattern->strip->number(finite binary64;underflow0, overflow refused), integer(exact),
+// or uint64(0..2^64-1, original text). ok=false denotes a parameter refusal.
 func lexemeValue(l *queryLexeme, raw string) (any, bool) {
 	if !rx(l.pattern).MatchString(raw) {
 		return nil, false
@@ -648,9 +648,9 @@ func lexemeValue(l *queryLexeme, raw string) (any, bool) {
 	return nil, false
 }
 
-// CheckParams — параметры query и header операции op по их схемам: обязательность, повтор (нарушение), умолчание
-// схемы (JSON), приведение текста к типу схемы (number/integer — десятичная запись JSON, boolean — true|false, иначе
-// строка). → значения по имени параметра; Violation.At — имя параметра.
+// CheckParams checks op's query/header schemas: requiredness, repetition, JSON defaults and text coercion.
+// number/integer use JSON decimal notation, boolean uses true/false, otherwise string. Return values by
+// parameter name; Violation.At names the parameter.
 func CheckParams(op Op, query map[string][]string, header map[string][]string) (map[string]any, *Violation) {
 	out := map[string]any{}
 	for _, p := range paramSchemas[op] {
@@ -675,8 +675,8 @@ func CheckParams(op Op, query map[string][]string, header map[string][]string) (
 	return out, nil
 }
 
-// CheckParam — один параметр query или header операции op по значениям vals (в порядке запроса): значение (с
-// умолчанием схемы, если параметра нет), есть ли оно, нарушение.
+// CheckParam checks request-ordered vals for one query/header parameter, returning its value (including
+// a schema default when absent), presence and violation.
 func CheckParam(op Op, in, name string, vals []string) (any, bool, *Violation) {
 	for _, p := range paramSchemas[op] {
 		if p.in == in && strings.EqualFold(p.name, name) {
@@ -734,7 +734,7 @@ func coerce(schema string, raw string) any {
 	return raw
 }
 
-// checkNDJSON — тело application/x-ndjson: v — список значений строк, каждая по x-line-schema.
+// checkNDJSON checks a list of application/x-ndjson line values against x-line-schema.
 func checkNDJSON(name string, v any) *Violation {
 	lines, ok := v.([]any)
 	if !ok {

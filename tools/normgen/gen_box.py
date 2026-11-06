@@ -1,21 +1,14 @@
-"""Генератор части `box` (слово владельца В-24, Архитектор 2026-11-05): то в P/01.3 box, что детерминировано нормой и
-формами, — закрытый пакет Go, модели остаётся дать индексы хранилища и читать/писать строки.
+"""Generate the closed box part from P/01.3 norms and forms (owner B-24; Architect, 2026-11-05). The implementation supplies store indices and row IO.
 
-Запуск: python3 tools/normgen/gen_box.py [<out>]   (по умолчанию tools/normgen/out/p01-1)
+  python3 tools/normgen/gen_box.py [<out>]
+Default: tools/normgen/out/p01-1. Only these source locations are read:
+- P/01.3-R006 YAML: box Status fields, member metrics, join/leave/admit/recover; metrics series; copy header, rows and input refusals; generation/floor; backup outside -dir.
+- P/01.1 N1 row.items: row-weight ceiling.
+- forms/refusals.tsv: named refusals.
+- OpenAPI: Status, Refused, Empty and Metrics200 response types from the door part.
+- common/data/README.md placeholder table: <sub>/<id> grammar for <sub>/epoch/<id>.
 
-Источники (только они; проза вне перечисленных мест не читается):
-- `spec/01.3-store.norms.md` Н1.3 (блок yaml P/01.3-R006): `box` — Status (state, term, leader, leader_id, voters,
-  members), значения /metrics одного участника, join/leave/admit/recover; `metrics` — закрытый список серий;
-  `copy` — формат копии (шапка, строка на ключ, отказы входа); `floor` — поколение и floor; `admin_ops` — backup вне -dir;
-- `spec/01.1-store.norms.md` Н1 `row.items` — потолок веса строки (ceiling);
-- `forms/refusals.tsv` — отказы по имени (пакет refusals части refusals);
-- `spec/01-store.api.openapi.yaml` — типы ответов (пакет apidoor части door: Status, Refused, Empty, Metrics200);
-- `common/data/README.md` (таблица плейсхолдеров) — грамматика `<sub>`, `<id>` ключа `<sub>/epoch/<id>`.
-
-Выход <out>/go/box (DO NOT EDIT): box.go — Config, Indices, Status, Metrics, Join, Leave, Admit, Recover, StartRefusal;
-copy.go — Row, EncodeCopy, DecodeCopy (все проверки входа copy), Upper, Floor, BackupTarget, ImportRepeated.
-Судья — test_gen_box.py (своя модель на Python по тем же местам нормы: обвес Go на случаях и мутанты).
-"""
+Output <out>/go/box is DO NOT EDIT. box.go defines Config, Indices, Status, Metrics, Join, Leave, Admit, Recover and StartRefusal. copy.go defines Row, EncodeCopy, DecodeCopy with all input checks, Upper, Floor, BackupTarget and ImportRepeated. test_gen_box.py uses an independent Python model from the same normative locations, Go cases and mutants."""
 import hashlib
 import json
 import re
@@ -34,6 +27,7 @@ GO_MODULE = L.go_module
 NORMS_13 = L.path("spec/01.3-store.norms.md")
 NORMS_11 = L.path("spec/01.1-store.norms.md")
 REFUSALS = L.form("refusals.tsv")
+FLAGS = L.form("daemon-flags.tsv")
 OPENAPI = L.openapi
 KEYS_README = ROOT / "Platform/common/data/README.md"
 JUDGE = HERE / "test_gen_box.py"
@@ -58,39 +52,78 @@ def sha(path):
 
 
 def block_line(text, word):
-    """Строки пункта `word:` блока yaml Н1.3 (до следующего пункта на том же отступе)."""
+    """Read a word: clause of the N1.3 YAML block up to the next clause at the same indentation."""
     m = re.search(r"^%s:\s+(.*?)(?=^[a-z_]+:\s)" % re.escape(word), text, re.M | re.S)
     if not m:
-        raise GenError(f"{NORMS_13.name}: no item {word}: in the yaml block of Н1.3")
+        raise GenError(f'{NORMS_13.name}: no item {word}: in the N1.3 YAML block')
     return " ".join(x.strip() for x in m[1].split("\n"))
 
 
+def row_ceiling(text):
+    """Read the declared default, not the effective ceiling of a store instance."""
+    if "ROW_CEILING" in text:
+        bindings = re.findall(r"(?m)^\s*ceiling:\s*([^\s#]+)", text)
+        if bindings != ["ROW_CEILING"]:
+            raise GenError("row.items requires one ceiling: ROW_CEILING binding")
+        import gen_flags
+        try:
+            table = gen_flags.Table(FLAGS.read_text(encoding="utf-8"), str(FLAGS.relative_to(ROOT)))
+        except (OSError, gen_flags.GenError) as exc:
+            raise GenError(f"ROW_CEILING flags binding: {exc}") from None
+        rows = [row for row in table.rows if row["flag"] == "-max-value"]
+        if len(rows) != 1 or rows[0]["type"] != "bytes:>0":
+            raise GenError("ROW_CEILING requires one -max-value bytes:>0 flag")
+        default = rows[0]["default_go"]
+        match = re.fullmatch(r"int64\(([1-9][0-9]*)\)", default or "")
+        if match is None:
+            raise GenError("ROW_CEILING requires a literal positive -max-value default")
+        return int(match[1]), True
+    # Only the explicitly recognized earlier numeric form is supported here.
+    matches = re.findall(r"ceiling: (\d+)\s+# 512 KiB", text)
+    if len(matches) != 1:
+        raise GenError(f"{NORMS_11.name}: row.items ceiling declaration is not found")
+    return int(matches[0]), False
+
+
 def facts():
-    """Числа и имена нормы, которые генератор вписывает в Go; каждое — регулярным выражением по месту нормы."""
+    """Extract the normative numbers and names embedded into Go, each by a location-specific regular expression."""
     t13 = NORMS_13.read_text(encoding="utf-8")
     t11 = NORMS_11.read_text(encoding="utf-8")
     metrics, box, copy_, floor = (block_line(t13, w) for w in ("metrics", "box", "copy", "floor"))
-    f = {}
+    import yamlsub
+    try:
+        api = yamlsub.load(OPENAPI.read_text(encoding="utf-8"), OPENAPI.name)
+        status = api["components"]["schemas"]["Status"]
+        properties = status.get("properties", {})
+        present = "max_body" in properties
+        body = properties.get("max_body")
+    except (yamlsub.YamlError, KeyError, TypeError, AttributeError) as exc:
+        raise GenError(f"Status schema: {exc}") from None
+    if present and (not isinstance(body, dict) or "max_body" not in status.get("required", []) or
+                    body.get("type") != "integer" or type(body.get("minimum")) not in (int, float) or
+                    body.get("minimum") != 1):
+        raise GenError("Status.max_body must be a required positive integer")
+    f = {"status_max_body": present}
     m = re.match(r"(configstore_raft_term), (.*?), (configstore_doors);", metrics)
     if not m:
-        raise GenError("Н1.3 metrics: the list «configstore_raft_term, …, configstore_doors;» is not found")
+        raise GenError('N1.3 metrics: the list configstore_raft_term,...,configstore_doors is not found')
     series = [m[1]] + ["configstore_raft" + s if s.startswith("_") else s for s in m[2].split(", ")] + [m[3]]
     f["series"] = []
     for s in series:
         sm = re.fullmatch(r"([a-z_]+)(?:\{(\w+)(?:=([\w|]+))?\})?", s)
         if not sm:
-            raise GenError(f"Н1.3 metrics: series {s!r}")
+            raise GenError(f'N1.3 metrics: series {s!r}')
         f["series"].append((sm[1], sm[2], sm[3].split("|") if sm[3] else None))
     vm = re.search(r"\(term (\d+), elections_total (\d+), last_contact (\d+), voters (\d+), voters_expected (\d+), "
                    r"doors (\d+)\)", box)
     if not vm:
-        raise GenError("Н1.3 box: the values of one member «(term …, doors …)» are not found")
+        raise GenError('N1.3 box: single-member values (term,...,doors) are not found')
     f["values"] = dict(zip(("term", "elections_total", "last_contact_seconds", "voters", "voters_expected", "doors"),
                            map(int, vm.groups())))
     sm = re.search(r"/v1/status — state (\w+), term (\d+), leader — its -api address \(empty without -api\), "
                    r"leader_id — its id, voters \[<id>\], members \{<id>: <api>\} \(without -api — \{\}", box)
     if not sm or sm[1] not in STATES or int(sm[2]) != f["values"]["term"]:
-        raise GenError("Н1.3 box: the form of /v1/status of a box is not found")
+        raise GenError('N1.3 box: the /v1/status form is not found')
     f["state"] = sm[1]
     for k, pat in (("join", r"join of its own id — 200 \{\}, of a foreign one — 409 refused even with -force"),
                    ("leave", r"leave — 409 refused \(«the last voter»\)"),
@@ -98,44 +131,42 @@ def facts():
                    ("recover", r"recover — a refusal, code 2 \(«this build has no raft»\)"),
                    ("noraft", r"-group-size 3 or 5, -join and -door — a start refusal with code 2")):
         if not re.search(pat, box):
-            raise GenError(f"Н1.3 box: {k} is not found by {pat!r}")
+            raise GenError(f'N1.3 box: {k} is not found by {pat!r}')
     hm = re.search(r'\{"format": "([\w-]+)", "version": (\d+), "index": <version>\}', copy_)
     if not hm:
-        raise GenError("Н1.3 copy: the header line is not found")
+        raise GenError('N1.3 copy: the header line is not found')
     f["copy_format"], f["copy_version"] = hm[1], int(hm[2])
     for pat in (r"then — a line per key: \{key, items, index\}", r"\{key, items: null, index, unreadable: true\}",
                 r"ascending order of UTF-8 bytes", r"a repeated key", r"an index of a row higher than the index of the header",
                 r"an unreadable row in the input — also a refusal"):
         if not re.search(pat, copy_):
-            raise GenError(f"Н1.3 copy: {pat!r} is not found")
+            raise GenError(f'N1.3 copy: {pat!r} is not found')
     import_ = block_line(t13, "import")
     copy_rules = ("Transfer excludes the input platform/epoch_floor: the first write is the new floor F1",
                   "a partial replay preserves the exact saved F1 row (items and index)")
     f["copy_storage"] = all(phrase in import_ for phrase in copy_rules)
     if any(phrase in import_ for phrase in copy_rules) and not f["copy_storage"]:
-        raise GenError("Н1.3 import: incomplete published F1/continuation rule")
+        raise GenError('N1.3 import: incomplete published F1/continuation rule')
     if not f["copy_storage"] and "platform/epoch_floor is an ordinary row" not in copy_:
-        raise GenError("Н1.3 copy: neither the known earlier form nor the complete F1 rule")
+        raise GenError('N1.3 copy: neither the known earlier form nor the complete F1 rule')
     if f["copy_storage"]:
         for pattern in (r"^(0|[1-9][0-9]*)(\.[0-9]+)?$", r"^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$"):
             if pattern not in t11:
-                raise GenError("Н0 time: the reader/writer notation used by the copy environment is absent")
+                raise GenError('N0 time: reader/writer notation required by the copy runtime is absent')
     gm = re.search(r"generation: max\(\(upper >> (\d+)\) \+ 1, whole hours of UTC since (\d{4})-(\d\d)-(\d\d)\); "
                    r"floor = generation << (\d+);", floor)
     bm = re.search(r"1 … 2\^53 − 2\^32", floor)
     lm = re.search(r"generation ≤ 2\^21 − 1", floor)
     if not gm or gm[1] != gm[5] or not bm or not lm:
-        raise GenError("Н1.3 floor: the formula of generation and floor is not found")
+        raise GenError('N1.3 floor: generation/floor formula is not found')
     f["shift"], f["since"] = int(gm[1]), (int(gm[2]), int(gm[3]), int(gm[4]))
     f["max_generation"] = 2 ** 21 - 1
-    cm = re.search(r"ceiling: (\d+)\s+# 512 KiB", t11)
-    if not cm or not re.search(r"weight \(sum of byte lengths of every key and every value\) at most the store's ceiling",
-                               t11):
+    if not re.search(r"weight \(sum of byte lengths of every key and every value\) at most the store's ceiling", t11):
         raise GenError(f"{NORMS_11.name}: row.items ceiling is not found")
-    f["ceiling"] = int(cm[1])
+    f["ceiling"], f["ceiling_from_flags"] = row_ceiling(t11)
     if not re.search(r"backup <file>: the file path \(after resolving links\) outside -dir of the daemon", block_line(
             t13, "admin_ops")):
-        raise GenError("Н1.3 admin_ops: backup outside -dir is not found")
+        raise GenError('N1.3 admin_ops: backup outside -dir is not found')
     keys = KEYS_README.read_text(encoding="utf-8")
     for ph in ("<sub>", "<id>"):
         km = re.search(r"^\| `%s` \| `(.+?)` \| " % re.escape(ph), keys, re.M)
@@ -157,9 +188,9 @@ def facts():
 BOX_GO = r'''// Code generated by tools/normgen/gen_box.py; DO NOT EDIT.
 // Source %(norms)s sha256 %(norms_sha)s, %(refusals)s sha256 %(refusals_sha)s.
 
-// Package box — то в P/01.3 box (Н1.3 `box`, `metrics`), что задано нормой целиком: ответ /v1/status, серии /metrics
-// одного участника, join/leave/admit/recover и отказ старта сборки без raft. Индексы хранилища (last, commit, applied)
-// даёт ваша реализация; остальное — здесь.
+// Package box implements fully normative P/01.3 box/metrics behavior:/v1/status, member metrics,
+// join/leave/admit/recover and no-raft startup refusal. Your implementation supplies last/commit/applied
+// store indices;this package supplies the rest.
 package box
 
 import (
@@ -172,43 +203,43 @@ import (
 	"%(module)s/refusals"
 )
 
-// Config — что box знает о себе: -id (или SERVER_NAME), -api, -tls и -max-value (max_value статуса — действующий
-// потолок веса строки в байтах; spec103 2026-11-05) из флагов демона.
-type Config struct {
+// Config contains -id (or SERVER_NAME), -api, -tls and -max-value from daemon flags. Status max_value is the
+// actual row-weight byte ceiling (spec103, 2026-11-05).
+%(max_body_comment)stype Config struct {
 	ID       string
-	API      string // пусто — демон без -api: leader "" и members {} (C01-STATUS-MEMBERS-NOAPI)
+	API      string // Empty when -api is absent:leader empty, members {} (C01-STATUS-MEMBERS-NOAPI).
 	TLS      bool
 	MaxValue int64
-}
+%(max_body_field)s}
 
-// ConfigOf — Config из разобранных флагов демона (ID уже с умолчанием SERVER_NAME у разбора launch).
+// ConfigOf maps parsed daemon flags, including ID already defaulted from SERVER_NAME by launch parsing.
 func ConfigOf(f *flags.Flags) Config {
-	return Config{ID: f.ID, API: f.API, TLS: f.TLS != "", MaxValue: f.MaxValue}
+	return Config{ID: f.ID, API: f.API, TLS: f.TLS != "", MaxValue: f.MaxValue%(max_body_flags)s}
 }
 
-// Indices — индексы хранилища: last — последний записанный, commit, applied (на box все три обычно равны).
+// Indices are last written, committed and applied store indices;on box they normally coincide.
 type Indices struct {
 	Last, Commit, Applied uint64
 }
 
-// Status — 200 Status box (Н1.3 `box`): state %(state)s, term %(term)d, leader — -api (пусто без -api), leader_id — id,
-// voters [id], members {id: api} или {} без -api; admissionAhead — поле admission_ahead (Н1.3 `admission`), nil — нет.
+// Status returns box's200Status:state %(state)s, term %(term)d, leader=-api(empty if absent), leader_id=id,
+// voters[id], members{id:api} or {};admissionAhead supplies admission_ahead(N1.3 admission), nil omits it.
 func Status(c Config, ix Indices, admissionAhead *float64) apidoor.Answer {
 	members := map[string]string{}
 	if c.API != "" {
 		members[c.ID] = c.API
 	}
 	st := apidoor.Status{Id: c.ID, State: %(state_go)s, Leader: c.API, LeaderId: c.ID, Term: %(term)d, Commit: ix.Commit,
-		Applied: ix.Applied, Voters: []string{c.ID}, Members: members, Tls: c.TLS, MaxValue: c.MaxValue,
+		Applied: ix.Applied, Voters: []string{c.ID}, Members: members, Tls: c.TLS, MaxValue: c.MaxValue,%(max_body_status)s
 		AdmissionAhead: admissionAhead}
 	return apidoor.Answer{Code: 200, Body: st}
 }
 
-// Series — закрытый список серий /metrics хранилища-голосующего (Н1.3 `metrics`), в порядке нормы.
+// Series is the closed voter-store /metrics series list in normative order(N1.3 metrics).
 var Series = []string{%(series_names)s}
 
-// MetricsText — текст /metrics box: серии нормы со значениями одного участника (Н1.3 `box`), индексы — ix; метка
-// state — состояние нижним регистром (sc. 17 шаги 6/7: state="leader"), одна строка текущего состояния; без # TYPE.
+// MetricsText emits normative single-member box metrics with ix indices;state is lowercase and only the
+// current state is emitted(sc17steps6/7:state=leader), without # TYPE.
 func MetricsText(ix Indices) string {
 	var b strings.Builder
 %(metrics_body)s	return b.String()
@@ -227,13 +258,13 @@ func line(b *strings.Builder, name, labels string, v uint64) {
 	fmt.Fprintf(b, " %%d\n", v)
 }
 
-// label — пара метки с экранированием значения по формату текста Prometheus (\\, ", перевод строки).
+// label escapes a Prometheus text label value's backslash, quote and newline.
 func label(k, v string) string {
 	r := strings.NewReplacer(`\`, `\\`, `"`, `\"`, "\n", `\n`)
 	return k + `="` + r.Replace(v) + `"`
 }
 
-// body — тело служебного POST (P/01.3-R017): один объект JSON строго; иначе 400 service_body_form.
+// body requires exactly one strict JSON object for service POST(P/01.3-R017);otherwise400service_body_form.
 func body(op apidoor.Op, raw []byte) (any, *apidoor.Answer) {
 	v, _, err := jsonstrict.Decode(raw, 64)
 	if err != nil {
@@ -251,8 +282,8 @@ func refuse(op apidoor.Op, s *refusals.Spec, msg string) apidoor.Answer {
 	return a
 }
 
-// Join — POST /v1/join на box (Н1.3 `box`; личность — до вызова, ваша): тело по схеме Join (иначе 400); свой id —
-// 200 {}; чужой — 409 refused (join_parity: группа больше объявленной), и с -force.
+// Join handles box POST /v1/join:the caller checks identity first.Require Join schema or400;own ID gives
+//200{};another ID gives409refused/join_parity(group larger than declared), even with -force.
 func Join(c Config, raw []byte) apidoor.Answer {
 	v, bad := body(apidoor.OpJoin, raw)
 	if bad != nil {
@@ -272,7 +303,7 @@ func Join(c Config, raw []byte) apidoor.Answer {
 	return refuse(apidoor.OpJoin, refusals.%(JoinParity)s, "a box has one voter: "+j.Id+" cannot join")
 }
 
-// Leave — POST /v1/leave на box: тело по схеме Leave (иначе 400); всегда 409 refused «the last voter» (box_last_voter).
+// Leave validates its schema or400, then always409refused/the last voter(box_last_voter) on box.
 func Leave(c Config, raw []byte) apidoor.Answer {
 	v, bad := body(apidoor.OpLeave, raw)
 	if bad != nil {
@@ -284,18 +315,18 @@ func Leave(c Config, raw []byte) apidoor.Answer {
 	return refuse(apidoor.OpLeave, refusals.%(BoxLastVoter)s, "the last voter")
 }
 
-// Admit — подкоманда admit на box: отказ box_admit «the last voter», код ≠ 0.
+// Admit on box refuses box_admit/the last voter with nonzero exit.
 func Admit(logf func(string), id string) int {
 	return refusals.%(BoxAdmit)s.Exit(logf, map[string]string{})
 }
 
-// Recover — подкоманда recover на box: отказ recover_box «this build has no raft», код 2.
+// Recover on box refuses recover_box/this build has no raft with exit 2.
 func Recover(logf func(string)) int {
 	return refusals.%(RecoverBox)s.Exit(logf, map[string]string{})
 }
 
-// StartRefusal — отказ старта сборки без raft (box_no_raft, код 2): -group-size 3 или 5, -join, -door; ok=false — старт
-// разрешён этим правилом (прочие отказы старта — ваши).
+// StartRefusal returns box_no_raft/exit 2 for group-size3/5, -join or -door;ok=false permits startup under
+// this rule only.Other startup refusals belong to the implementation.
 func StartRefusal(f *flags.Flags, logf func(string)) (code int, refused bool) {
 	if f.GroupSize == 3 || f.GroupSize == 5 || f.Join != "" || f.Door {
 		return refusals.%(BoxNoRaft)s.Exit(logf, map[string]string{}), true
@@ -306,6 +337,7 @@ func StartRefusal(f *flags.Flags, logf func(string)) (code int, refused bool) {
 
 COPY_GO = r'''// Code generated by tools/normgen/gen_box.py; DO NOT EDIT.
 // Source %(norms)s sha256 %(norms_sha)s.
+%(ceiling_sources)s
 
 package box
 
@@ -325,15 +357,15 @@ import (
 	"%(module)s/refusals"
 )
 
-// Формат копии (Н1.3 `copy`): JSON Lines, первая строка — шапка {"format": %(format_go)s, "version": %(version)d,
-// "index": "<версия>"}, затем строка на ключ {key, items, index} (Row главы 1.1); ключи по возрастанию байтов UTF-8.
+// Copy format(N1.3 copy):JSON Lines starts with format %(format_go)s, version %(version)d and index,
+// then one {key, items, index} row per key(chapter 1.1), sorted by UTF-8 key bytes.
 const (
 	CopyFormat  = %(format_go)s
 	CopyVersion = %(version)d
-	RowCeiling  = %(ceiling)d // P/01.1 Н1 row.items.ceiling по умолчанию; действующий — -max-value демона
+	RowCeiling  = %(ceiling)d // Default P/01.1 N1 row.items.ceiling;the actual ceiling is daemon -max-value.
 )
 
-// Row — строка копии: ключ, items и версия (Index); Unreadable — повреждённая строка «как прочитана» (items null).
+// Row is a copy key, items and Index;Unreadable represents an as-read corrupt row(items null).
 type Row struct {
 	Key        string
 	Items      map[string]string
@@ -341,7 +373,7 @@ type Row struct {
 	Unreadable bool
 }
 
-// CopyError — отказ входа copy (copy_input, код ≠ 0): строка входа (1 — шапка, 0 — весь вход) и причина.
+// CopyError refuses copy input with nonzero exit, line number(1header, 0whole input) and reason.
 type CopyError struct {
 	Line  int
 	Cause string
@@ -349,13 +381,13 @@ type CopyError struct {
 
 func (e *CopyError) Error() string { return "line " + strconv.Itoa(e.Line) + ": " + e.Cause }
 
-// Exit — лог отказа copy_input с причиной и код выхода.
+// Exit logs the copy_input reason and returns its exit code.
 func (e *CopyError) Exit(logf func(string)) int {
 	return refusals.%(CopyInput)s.Exit(logf, map[string]string{"cause": e.Error()})
 }
 
-// EncodeCopy — байты копии на версии index: шапка, строки по возрастанию ключа (байты UTF-8); версия строки выше
-// index — ошибка (копия берётся между пакетами, index не меньше версии любой строки).
+// EncodeCopy emits a header and UTF-8-key-sorted rows at index;any row version greater than index errors
+// because copies are taken between batches and cannot precede a contained row.
 func EncodeCopy(index uint64, rows []Row) ([]byte, error) {
 	rs := append([]Row(nil), rows...)
 	sort.Slice(rs, func(i, j int) bool { return rs[i].Key < rs[j].Key })
@@ -409,13 +441,13 @@ var (
 	decimal  = regexp.MustCompile(`^(?:0|[1-9][0-9]*)$`)
 )
 
-// FloorKey — строка floor (Н1.3 `floor`): обычная строка копии.
+// FloorKey names the N1.3 floor row, which is an ordinary copy row.
 const FloorKey = "platform/epoch_floor"
 
-// DecodeCopy — вход import/restore (Н1.3 `copy`, `import`): полная предварительная проверка до первой записи — шапка
-// (формат, версия, поля), каждая строка — объект JSON по Row с ключом по главе 1.1 Н1, без лишних и недостающих полей,
-// не unreadable, вес (сумма длин байтов ключей и значений items) не выше ceiling — действующего -max-value, ключ не повторён, версия не выше index шапки; строки эпох и floor — десятичные
-// числа (иначе upper не надёжен). Порядок строк не требуется. → (index шапки, строки) или отказ copy_input.
+// DecodeCopy fully prevalidates import/restore before any write:header format/version/fields, Row objects,
+// chapter 1.1 N1 keys, no extra/missing fields, no unreadable rows, item weight at most actual ceiling,
+// unique keys, row versions not above the header index, and decimal epoch/floor values so upper is valid.
+// Input row order is unrestricted.Return(header index, rows) or copy_input refusal.
 func DecodeCopy(data []byte, ceiling int64) (uint64, []Row, *CopyError) {
 	if len(data) == 0 {
 		return 0, nil, &CopyError{0, "the input is empty: no header"}
@@ -434,7 +466,7 @@ func DecodeCopy(data []byte, ceiling int64) (uint64, []Row, *CopyError) {
 	if f, ok := head["format"].(string); !ok || f != CopyFormat {
 		return 0, nil, &CopyError{1, "the header: format is not " + CopyFormat}
 	}
-	if v, ok := head["version"].(int64); !ok || v != CopyVersion { // jsonstrict: целое без '.', 'e' — int64
+	if v, ok := head["version"].(int64); !ok || v != CopyVersion { // jsonstrict represents lexical integers without '.'/exponent as int64.
 		return 0, nil, &CopyError{1, "the header: version is not " + strconv.Itoa(CopyVersion)}
 	}
 	index, ok := version(head["index"])
@@ -454,7 +486,7 @@ func DecodeCopy(data []byte, ceiling int64) (uint64, []Row, *CopyError) {
 			return 0, nil, &CopyError{no, "no key or the key is not a string"}
 		}
 		if e, ok := apidoor.CheckSchema("Key", key); !ok || e != nil {
-			return 0, nil, &CopyError{no, "the key " + strconv.Quote(key) + " is not by chapter 1.1 Н1"}
+			return 0, nil, &CopyError{no, "the key " + strconv.Quote(key) + " is not by chapter 1.1 \u041d1"}
 		}
 		if seen[key] {
 			return 0, nil, &CopyError{no, "a repeated key " + strconv.Quote(key)}
@@ -532,9 +564,9 @@ func decimalItem(items map[string]string, name string) bool {
 	return ok
 }
 
-// Upper — upper (Н1.3 `floor`): максимум floor строки platform/epoch_floor и epoch каждой строки <sub>/epoch/<id>
-// входа и сохранённого состояния (saved — строки демона; у свежего каталога нет); ни одной — 0. Строки — уже
-// проверенные DecodeCopy (десятичные).
+// Upper is the maximum platform/epoch_floor floor and every <sub>/epoch/<id> epoch across copy input and
+// saved daemon state;fresh directories have no saved state.Default0 when absent.Rows have already
+// passed DecodeCopy's decimal validation.
 func Upper(rows []Row, saved []Row) uint64 {
 	var up uint64
 	for _, rs := range [][]Row{rows, saved} {
@@ -556,14 +588,14 @@ func Upper(rows []Row, saved []Row) uint64 {
 	return up
 }
 
-// Since — начало счёта часов поколения (Н1.3 `floor`).
+// Since is the N1.3 floor generation clock epoch.
 var Since = time.Date(%(since_y)d, %(since_m)d, %(since_d)d, 0, 0, 0, 0, time.UTC)
 
-// MaxGeneration — наибольшее поколение: floor = generation << %(shift)d не выше 2^53 − 2^32.
+// MaxGeneration bounds generation so floor=generation<<%(shift)d stays at most2^53-2^32.
 const MaxGeneration = %(max_generation)d
 
-// Floor — новое поколение и floor по upper и часам now (Н1.3 `floor`): generation = max((upper >> %(shift)d) + 1, целые
-// часы UTC с Since), floor = generation << %(shift)d; поколение выше MaxGeneration — отказ (переполнение), ok=false.
+// Floor computes generation=max((upper>>%(shift)d)+1, whole UTC hours since Since), then
+// floor=generation<<%(shift)d.Refuse overflow beyond MaxGeneration with ok=false.
 func Floor(upper uint64, now time.Time) (generation, floor uint64, ok bool) {
 	generation = (upper >> %(shift)d) + 1
 	if h := now.UTC().Sub(Since); h > 0 {
@@ -577,8 +609,8 @@ func Floor(upper uint64, now time.Time) (generation, floor uint64, ok bool) {
 	return generation, generation << %(shift)d, true
 }
 
-// BackupTarget — путь файла backup вне -dir демона (Н1.3 `admin_ops`, B8): пути с разрешёнными ссылками (у файла,
-// которого ещё нет, — его каталога); внутри dir (или равен ему) — отказ backup_inside_dir до записи, иначе nil.
+// BackupTarget requires a backup outside daemon -dir(N1.3 admin_ops, B8).Resolve symlinks, using the parent
+// for a nonexistent file.Refuse inside/equal-dir paths before writing;otherwise return nil.
 func BackupTarget(file, dir string) error {
 	d, err := realPath(dir)
 	if err != nil {
@@ -597,12 +629,12 @@ func BackupTarget(file, dir string) error {
 	return nil
 }
 
-// InsideDir — отказ backup_inside_dir: путь копии внутри каталога данных.
+// InsideDir represents backup_inside_dir for a copy path within the data directory.
 type InsideDir struct{ File, Dir string }
 
 func (e *InsideDir) Error() string { return "backup " + e.File + " is inside the data directory " + e.Dir }
 
-// Exit — лог отказа backup_inside_dir (path, dir) и код выхода.
+// Exit logs backup_inside_dir(path, dir) and returns its exit code.
 func (e *InsideDir) Exit(logf func(string)) int {
 	return refusals.%(BackupInsideDir)s.Exit(logf, map[string]string{"path": e.File, "dir": e.Dir})
 }
@@ -624,8 +656,8 @@ func realPath(p string) (string, error) {
 	return filepath.Join(parent, filepath.Base(abs)), nil
 }
 
-// ImportRepeated — повтор import после завершённого (фаза «Done» Н3 — её отметку хранит ваша реализация): отказ
-// import_repeated, код ≠ 0, ничего не меняется.
+// ImportRepeated rejects import after Done, the N3 phase marker owned by your implementation, with
+// import_repeated, nonzero exit and no changes.
 func ImportRepeated(logf func(string)) int {
 	return refusals.%(ImportRepeated)s.Exit(logf, map[string]string{"phase": "Done"})
 }
@@ -642,14 +674,14 @@ def metrics_body(f):
             for k in vals:
                 field = {"last": "Last", "commit": "Commit", "applied": "Applied"}.get(k)
                 if field is None:
-                    raise GenError(f"Н1.3 metrics: {name}{{kind={k}}} has no index")
+                    raise GenError(f'N1.3 metrics: {name}{{kind={k}}} has no index')
                 out.append(f'\tline(&b, {go_str(name)}, label("kind", {go_str(k)}), ix.{field})\n')
         elif lab is None and short in v:
             out.append(f'\tline(&b, {go_str(name)}, "", {v[short]})\n')
         elif lab is None and name == "configstore_raft_term":
             out.append(f'\tline(&b, {go_str(name)}, "", {v["term"]})\n')
         else:
-            raise GenError(f"Н1.3 metrics: {name} has no value of one member in «box»")
+            raise GenError(f'N1.3 metrics: {name} has no value of one member in «box»')
     return "".join(out)
 
 
@@ -664,9 +696,17 @@ def render():
     f = facts()
     common = {"module": GO_MODULE, "norms": str(NORMS_13.relative_to(ROOT)), "norms_sha": sha(NORMS_13),
               "refusals": str(REFUSALS.relative_to(ROOT)), "refusals_sha": sha(REFUSALS), **f["refusals"]}
-    box = BOX_GO % dict(common, state=f["state"], state_go=go_str(f["state"]), term=f["values"]["term"],
+    body = {"max_body_comment": "// MaxBody is this instance's configured HTTP entity-body byte ceiling.\n",
+            "max_body_field": "\tMaxBody int64\n", "max_body_flags": ", MaxBody: f.MaxBody",
+            "max_body_status": " MaxBody: c.MaxBody,"}
+    if not f["status_max_body"]:
+        body = {name: "" for name in body}
+    box = BOX_GO % dict(common, **body, state=f["state"], state_go=go_str(f["state"]), term=f["values"]["term"],
                         series_names=", ".join(go_str(n) for n, _, _ in f["series"]), metrics_body=metrics_body(f))
-    cp = COPY_GO % dict(common, format_go=go_str(f["copy_format"]), version=f["copy_version"], ceiling=f["ceiling"],
+    ceiling_sources = (f"// ROW_CEILING default source {FLAGS.relative_to(ROOT)} sha256 {sha(FLAGS)}\n"
+                       if f["ceiling_from_flags"] else "")
+    cp = COPY_GO % dict(common, ceiling_sources=ceiling_sources,
+                        format_go=go_str(f["copy_format"]), version=f["copy_version"], ceiling=f["ceiling"],
                         sub=f["<sub>"][4:-2], id=f["<id>"][4:-2], since_y=f["since"][0], since_m=f["since"][1],
                         since_d=f["since"][2], shift=f["shift"], max_generation=f["max_generation"])
     files = {"box/box.go": gofmt(box), "box/copy.go": gofmt(cp)}
@@ -688,7 +728,7 @@ def generate(out=DEFAULT_OUT):
 
 
 def kit_files(module, out=DEFAULT_OUT):
-    """→ [(каталог в internal, имя, байты, происхождение, источник, своё у реализации)]; GenError — out устарел."""
+    """Return [(internal directory, name, bytes, origin, source, editable)]; stale output raises GenError."""
     files = []
     for rel, text in sorted(render()[0].items()):
         kept = Path(out) / "go" / rel
@@ -698,7 +738,7 @@ def kit_files(module, out=DEFAULT_OUT):
         sub, name = rel.rsplit("/", 1)
         origin = "handwritten" if rel in COPY_RUNTIME else "generated"
         source = COPY_RUNTIME.get(rel, kept)
-        files.append((sub, name, data, origin, str(source.relative_to(ROOT)), False))
+        files.append((sub, name, data, origin, L.output_source(kept, out) if source == kept else str(source.relative_to(ROOT)), False))
     return files
 
 
@@ -707,20 +747,23 @@ def provenance():
 
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": sha(path)}
-    storage = facts()["copy_storage"]
+    f = facts()
+    storage = f["copy_storage"]
     def entries(sources):
         return [entry(p) for p in dict.fromkeys(p for src in sources for p in
                 (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src]))]
-    return {"form": entries([NORMS_13, NORMS_11, REFUSALS, OPENAPI, KEYS_README]),
+    return {"form": entries([NORMS_13, NORMS_11, REFUSALS, OPENAPI, KEYS_README] +
+                            ([FLAGS] if f["ceiling_from_flags"] else [])),
             "generator": entry(Path(__file__).resolve()), "handwritten": [entry(p) for p in COPY_RUNTIME.values()] if storage else [],
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__)), entry(HERE / "yamlsub.py")] +
+                          ([entry(HERE / "gen_flags.py")] if f["ceiling_from_flags"] else []),
             "judge": entry(JUDGE), "judges": [entry(JUDGE), entry(COPY_JUDGE)] if storage else [entry(JUDGE)],
             "judge_inputs": entries([L.form("stages.tsv"),
                             *sorted(L.path("acceptance/3").glob("*.tsv")),
                             L.path("acceptance/3/README.md"),
                             *sorted(L.path("acceptance/3/inputs").glob("*.jsonl")),
-                            ROOT / "Source/tests/testdata/testsub.subsystem.yaml",
-                            ROOT / "Source/tests/testdata/testsub2.subsystem.yaml"]) if storage else []}
+                            ROOT / "Platform/common/data/testsub/testsub.subsystem.yaml",
+                            ROOT / "Platform/common/data/testsub/testsub2.subsystem.yaml"]) if storage else []}
 
 
 KIT_MD = """

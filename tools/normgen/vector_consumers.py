@@ -1,8 +1,4 @@
-"""Общий читатель consumers.tsv: полный путь пакета, явные потребители ∪ урок-владелец.
-
-Общий пакет не имеет неявного владельца. Свои таблицы урока сохраняются без явной строки consumers.
-Чтение/отбор не исполняют векторы: отсутствие wire/API должен отвергнуть соответствующий генератор.
-"""
+"""Read consumers.tsv by full package path and explicit consumers union lesson owner. Common packages have no implicit owner; local lesson tables remain without explicit consumers rows. Reading/selection does not execute vectors: generators must reject missing wire/API declarations."""
 import re
 from pathlib import Path
 
@@ -51,7 +47,7 @@ def table_path(root, package, table, known=None, where=FORM):
 
 
 def read(root):
-    """→ {(full package, table): set(lesson)}; все строки проверены до отбора урока, порядок формы сохранён."""
+    """Return {(full package, table):set(lesson)}; validate all rows before selecting a lesson and preserve form order."""
     root = Path(root)
     known = lessons(root)
     path = root / FORM

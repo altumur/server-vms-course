@@ -49,7 +49,7 @@ func parseChainElement(p string) (*x509.Certificate, bool) {
 	return c, err == nil
 }
 
-// Fingerprint — sha256 hex of the DER of a centre (P/08.3 Н1.6 fingerprint).
+// Fingerprint — sha256 hex of the DER of a centre (P/08.3 N1.6 fingerprint).
 func Fingerprint(c *x509.Certificate) string {
 	s := sha256.Sum256(c.Raw)
 	return hex.EncodeToString(s[:])
