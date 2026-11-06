@@ -33,6 +33,8 @@ def arguments():
     parser.add_argument("--root", type=Path, default=Path.cwd(), help="repository root, default cwd")
     parser.add_argument("--exceptions", type=Path, default=EXCEPTIONS,
                         help="registry of allowed deviations, default the skill's exceptions.tsv")
+    parser.add_argument("--cyrillic-debt", type=Path, default=SCRIPTS.parent / "cyrillic-debt.tsv",
+                        help="ADR-0121 (8) per-file debt for this source snapshot")
     parser.add_argument("--strict-coverage", action="store_true",
                         help="every references.tsv row of a form source must be the sole cause of a corpus case")
     return parser
@@ -2295,6 +2297,13 @@ class Check:
                 self.error(lesson, message)
             self.stats["req_anchors"] = self.stats.get("req_anchors", 0) + stats["req_anchors"]
 
+    def check_cyrillic(self, debt_path=None):
+        """All Platform and normgen bytes, independently of the selected lessons."""
+        import check_cyrillic
+        errors, stats = check_cyrillic.check(self.root, debt_path or check_cyrillic.DEBT)
+        self.errors.extend(errors)
+        self.stats.update(stats)
+
     def library_defects(self):
         if not self.v7:
             return
@@ -3123,6 +3132,7 @@ def main():
     check.check_tables()
     check.check_machines()
     check.check_forms()
+    check.check_cyrillic(args.cyrillic_debt)
     for error in check.errors:
         print("ERROR", error)
     for line in check.excepted:
