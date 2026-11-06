@@ -1,0 +1,519 @@
+{
+  "base": "d8cf12290f43693289b2149019232bc26c48705b",
+  "author_commit": "external final receipt supplies the author SHA",
+  "status": "source candidate; incomplete profile and compatibility gap explicitly open",
+  "paths": [
+    {
+      "path": "Platform/02-installer/acceptance/1/README.md",
+      "before_sha256": "6f08a7a0ddbea09007cf5c26d2567d9b65021f950bdd901a96b1e1543e47d34c",
+      "after_sha256": "4572a5554885982797bcc351359d26e12630be97a53e6e9bc1ea6e3fe1bbc8d7",
+      "before_bytes": 22235,
+      "after_bytes": 22944
+    },
+    {
+      "path": "Platform/02-installer/acceptance/1/seams.tsv",
+      "before_sha256": "09422bc880ffc255ce468672abf542a8f0fd16d3653df4a715de712ea9f88e45",
+      "after_sha256": "d4efad061af9c23ad846b29d409e5375728d366ec70788c189f0893508c40ecd",
+      "before_bytes": 3929,
+      "after_bytes": 6831
+    },
+    {
+      "path": "Platform/02-installer/acceptance/2/README.md",
+      "before_sha256": "b521d7cbe2992a31e9715bbe2f075f63b2e907431bce8bf9d31d078252fb832b",
+      "after_sha256": "48efbd9dfe994bf4bcb542b122db5bd6e804ee6b886575889700f03d1f6115da",
+      "before_bytes": 11057,
+      "after_bytes": 11579
+    },
+    {
+      "path": "Platform/02-installer/acceptance/3/README.md",
+      "before_sha256": "4733b9c56921184e2bdc4a440db55f9ab978fac09d00dc8685444db8301922df",
+      "after_sha256": "4355f1e4379d121ade780e4bdf34d6270a361e8604abdeff94bf7776a5ab8ef9",
+      "before_bytes": 12574,
+      "after_bytes": 13096
+    },
+    {
+      "path": "Platform/02-installer/forms/README.md",
+      "before_sha256": "32a1cf1f0888a7a1972b91d3ff661e958bc752c21c1512e3e31cc72c203a2646",
+      "after_sha256": "8a56d9d1668ae9b8efca310c3271f1963a7f01d00b0aee47c8fac59a9294a4d6",
+      "before_bytes": 12583,
+      "after_bytes": 13526
+    },
+    {
+      "path": "Platform/02-installer/forms/positive-profile/README.md",
+      "before_sha256": null,
+      "after_sha256": "30d671bbca5523e1eae3324555e604c187e408724b9b0dff1a4a717ec2799c31",
+      "before_bytes": null,
+      "after_bytes": 5494
+    },
+    {
+      "path": "Platform/02-installer/forms/positive-profile/metadata-batch.json",
+      "before_sha256": null,
+      "after_sha256": "649053f768d9dd9ea8487215540a7f16516a74d495bd8f31a46aca7de832e379",
+      "before_bytes": null,
+      "after_bytes": 18712
+    },
+    {
+      "path": "Platform/02-installer/forms/positive-profile/metadata-delete.json",
+      "before_sha256": null,
+      "after_sha256": "0b187caceef01b1c6ffe94ddabad8bd04eb3824e67e3ea1b567798401b148312",
+      "before_bytes": null,
+      "after_bytes": 12482
+    },
+    {
+      "path": "Platform/02-installer/forms/positive-profile/metadata-put.json",
+      "before_sha256": null,
+      "after_sha256": "181ef7fb5178e07e729150fb16d709f9c038e6a5a2ffeb513b00f7c15a7348b7",
+      "before_bytes": null,
+      "after_bytes": 12490
+    },
+    {
+      "path": "Platform/02-installer/forms/refusals.tsv",
+      "before_sha256": "cbe0067a186a855328b991d50e1ae9be383a522e00893ae4d38cd2d435542ba2",
+      "after_sha256": "7060a46b7d8d8dfad76c3278172add79b977479a4b5fc501cb4ba7819405405a",
+      "before_bytes": 20676,
+      "after_bytes": 20824
+    },
+    {
+      "path": "Platform/02-installer/forms/runtime-constants.tsv",
+      "before_sha256": null,
+      "after_sha256": "257f702adf960e67eb5abb4c7e3697c98c69b07c92ecd06a372c7f6cc1651138",
+      "before_bytes": null,
+      "after_bytes": 1060
+    },
+    {
+      "path": "Platform/02-installer/forms/stages.tsv",
+      "before_sha256": "4683ad3f8df5537dde8d7250ad44b0364fe1e78a3b03a4f469c7798f04f0a3ab",
+      "after_sha256": "0563c0467ac2b94411eb40d2a02bfdfd748e8411178dff4e49222f3f731988e6",
+      "before_bytes": 3087,
+      "after_bytes": 3113
+    },
+    {
+      "path": "Platform/02-installer/ru/acceptance/1/README.md",
+      "before_sha256": "944ab564ea1e7216953d61cd62e8a8c031dfa6c9b9b8604179a8d7db5b776205",
+      "after_sha256": "514e5f9c19578dd6551885f00212e2a57ad13aa0e86d4cc2af26b5945718b140",
+      "before_bytes": 30079,
+      "after_bytes": 31241
+    },
+    {
+      "path": "Platform/02-installer/ru/acceptance/2/README.md",
+      "before_sha256": "2bd584202004f838c95d7610bb75e8b7641c52a9e6c158f3e0b496025014520c",
+      "after_sha256": "8ae3b513af43cf6652b705accea608517cebf63f7b26f90d795922e3d31a91c9",
+      "before_bytes": 13840,
+      "after_bytes": 14798
+    },
+    {
+      "path": "Platform/02-installer/ru/acceptance/3/README.md",
+      "before_sha256": "c8c2485e5b49fc96c3069339b6c742fcd244fd3a1c87d90bae4dcfa59e9d3bb4",
+      "after_sha256": "3f08cb5f307d3cda2caf345ec04abb59d414b26fc7d1d760f3cb338531470f94",
+      "before_bytes": 16157,
+      "after_bytes": 17115
+    },
+    {
+      "path": "Platform/02-installer/ru/forms/README.md",
+      "before_sha256": "13cf7ca0b17301153a454325cab53ebdc3dd3c34e1c33656b8b6e81f475f1f98",
+      "after_sha256": "4b9cd3d6f16aded2b48ae3ba0573a3d7cb29b8a8cb6d181d46f23b6241d4e83b",
+      "before_bytes": 16214,
+      "after_bytes": 17776
+    },
+    {
+      "path": "Platform/02-installer/ru/forms/positive-profile/README.md",
+      "before_sha256": null,
+      "after_sha256": "4ce683aeb66b5a46b60ecdd5721188793b78f2fcebab7befd486f0a9950e9364",
+      "before_bytes": null,
+      "after_bytes": 9112
+    },
+    {
+      "path": "Platform/02-installer/ru/spec/02.1-installer.norms.md",
+      "before_sha256": "2a3cb1d2ab44a06d0e162c6fcd344d03cd0ad159e909e241eb8ed301d661d8f0",
+      "after_sha256": "6a22be2c88b62644a6412f566394b5e2655a58ed608c0d49c8efc943376998f4",
+      "before_bytes": 218236,
+      "after_bytes": 222677
+    },
+    {
+      "path": "Platform/02-installer/ru/spec/02.2-installer.norms.md",
+      "before_sha256": "64199d4761827026b9961e37333c2966f50d06d758924f9bb8b27ec48831ee16",
+      "after_sha256": "8969bb1fa6fcdb73da7ca952fd5eb324b80d4fbf8336100aab919dfa2a0173a9",
+      "before_bytes": 121864,
+      "after_bytes": 125750
+    },
+    {
+      "path": "Platform/02-installer/ru/spec/02.3-installer.norms.md",
+      "before_sha256": "9d56e02f5fe6816a3b99eedf75118149a952512ed9b2fb43966426cfd6ee6b1e",
+      "after_sha256": "f2e6b714e781276cfd3bc77a802d45ec6105d67ab171634bb9092b077486d379",
+      "before_bytes": 76431,
+      "after_bytes": 83842
+    },
+    {
+      "path": "Platform/02-installer/ru/spec/02.4-installer.norms.md",
+      "before_sha256": "f7722ad42f72b3d250b878e0edede09377274853cba3d86a06411761eaa85380",
+      "after_sha256": "1facb18384aebe6294bd4144e6f7a2dd1ff854fd31db0b9cafdca3bc5d7fabb1",
+      "before_bytes": 150273,
+      "after_bytes": 151178
+    },
+    {
+      "path": "Platform/02-installer/ru/spec/02.5-installer.norms.md",
+      "before_sha256": "e80483ffc7f62c90af1ee5e9558698a1059ab6d1e7711a7b8e4dee31fc9de396",
+      "after_sha256": "fd9d8a9f53fe594ab8de862ea59c0c6d95f4c55dd728397bf047be7415009283",
+      "before_bytes": 62996,
+      "after_bytes": 62915
+    },
+    {
+      "path": "Platform/02-installer/spec/02.1-installer.norms.md",
+      "before_sha256": "e0b1899ca67cbf44e1307a59bffa7b3016ac9b4150e8517377a1a30ea096b960",
+      "after_sha256": "e32a01ff906b11b4ca619fbc7fbfbf36ade8a9ef2526204d59e7fb3b26e0dd81",
+      "before_bytes": 177170,
+      "after_bytes": 180583
+    },
+    {
+      "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+      "before_sha256": "2f86d53f5c8d291f91ba4dd40796503db1d6d159a7d481b72cfe10a7ea127aaa",
+      "after_sha256": "654aaf549333a87f583ddc0cce6fd449df5a858f0d912ceb019b65dca922afd6",
+      "before_bytes": 113020,
+      "after_bytes": 114329,
+      "changed_json_pointers": [
+        {
+          "pointer": "/$defs/jsonSchemaLite/description",
+          "before": "JSON Schema 2020-12; the keywords are the list `names.key` of this definition (anything else is value), depth ≤ 32 (review of stage A 6–7, № 11)",
+          "after": "JSON Schema 2020-12; the keywords are the list `names.key` of this definition (anything else is value), depth bounded by JSON_SCHEMA_LITE_DEPTH in the P/02 runtime-constants form (review of stage A 6–7, № 11)"
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/allOf/minItems",
+          "added": 1
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/anyOf/minItems",
+          "added": 1
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/const",
+          "added": {}
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/enum",
+          "added": {
+            "type": "array"
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/exclusiveMaximum",
+          "added": {
+            "type": "number"
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/exclusiveMinimum",
+          "added": {
+            "type": "number"
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/maxItems",
+          "added": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/maxLength",
+          "added": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/maximum",
+          "added": {
+            "type": "number"
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/minItems",
+          "added": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/minLength",
+          "added": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/minimum",
+          "added": {
+            "type": "number"
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/oneOf/minItems",
+          "added": 1
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/pattern",
+          "added": {
+            "type": "string"
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/required",
+          "added": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/type",
+          "added": {
+            "anyOf": [
+              {
+                "enum": [
+                  "null",
+                  "boolean",
+                  "object",
+                  "array",
+                  "number",
+                  "string",
+                  "integer"
+                ]
+              },
+              {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "null",
+                    "boolean",
+                    "object",
+                    "array",
+                    "number",
+                    "string",
+                    "integer"
+                  ]
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              }
+            ]
+          }
+        },
+        {
+          "pointer": "/properties/heartbeat/properties/stale_after/description",
+          "before": "the stale threshold of the subsystem's heartbeats at the agent, s (P/09.1 N1.2 stale): not less than three heartbeat periods HEARTBEAT_EVERY 10 s (P/03.4 N1.1); no key — LOST_AFTER 45 s",
+          "after": "the stale threshold of the subsystem's heartbeats at the agent, s (P/09.1 N1.2 stale): not less than three heartbeat periods HEARTBEAT_EVERY (P/03.4 N1.1); no key — LOST_AFTER (P/09.1 N1.2)"
+        }
+      ]
+    },
+    {
+      "path": "Platform/02-installer/spec/02.2-installer.norms.md",
+      "before_sha256": "410fdaa84a1ecbae2835a0617fe1310fe4b38ac92645192b8d25deec180d0667",
+      "after_sha256": "fb3292dfa41bb9604ac5c0ab7d7ee6a172693a0a5c4f079885b13537490891a5",
+      "before_bytes": 99865,
+      "after_bytes": 102977
+    },
+    {
+      "path": "Platform/02-installer/spec/02.2-installer.view.schema.json",
+      "before_sha256": "1c95988449b87f49614eb5865af5119d7382cba7c89de377f2480f3cc0986e5f",
+      "after_sha256": "8d88d2b06b3cff74661bb03b443d791d7fd13b72b3231c59f2e039248bc62121",
+      "before_bytes": 80921,
+      "after_bytes": 82176,
+      "changed_json_pointers": [
+        {
+          "pointer": "/$defs/jsonSchemaLite/description",
+          "before": "JSON Schema 2020-12; the keywords are the list `names.key` of this definition (anything else is value), depth ≤ 32 (review of stage A 6–7, № 11)",
+          "after": "JSON Schema 2020-12; the keywords are the list `names.key` of this definition (anything else is value), depth bounded by JSON_SCHEMA_LITE_DEPTH in the P/02 runtime-constants form (review of stage A 6–7, № 11)"
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/allOf/minItems",
+          "added": 1
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/anyOf/minItems",
+          "added": 1
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/const",
+          "added": {}
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/enum",
+          "added": {
+            "type": "array"
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/exclusiveMaximum",
+          "added": {
+            "type": "number"
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/exclusiveMinimum",
+          "added": {
+            "type": "number"
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/maxItems",
+          "added": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/maxLength",
+          "added": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/maximum",
+          "added": {
+            "type": "number"
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/minItems",
+          "added": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/minLength",
+          "added": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/minimum",
+          "added": {
+            "type": "number"
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/oneOf/minItems",
+          "added": 1
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/pattern",
+          "added": {
+            "type": "string"
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/required",
+          "added": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        },
+        {
+          "pointer": "/$defs/jsonSchemaLite/properties/type",
+          "added": {
+            "anyOf": [
+              {
+                "enum": [
+                  "null",
+                  "boolean",
+                  "object",
+                  "array",
+                  "number",
+                  "string",
+                  "integer"
+                ]
+              },
+              {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "null",
+                    "boolean",
+                    "object",
+                    "array",
+                    "number",
+                    "string",
+                    "integer"
+                  ]
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              }
+            ]
+          }
+        },
+        {
+          "pointer": "/$defs/passTicket/properties/operations/properties/limits/default",
+          "removed": {}
+        },
+        {
+          "pointer": "/$defs/passTicket/properties/operations/properties/limits/x-default",
+          "added": true
+        },
+        {
+          "pointer": "/$defs/passTicket/properties/operations/properties/limits/x-default-text",
+          "removed": "the ceilings of P/06.9 N1.6"
+        },
+        {
+          "pointer": "/$defs/passTicket/properties/operations/properties/service/default",
+          "removed": false
+        },
+        {
+          "pointer": "/$defs/passTicket/properties/operations/properties/service/x-default",
+          "added": true
+        },
+        {
+          "pointer": "/$defs/passTicket/properties/operations/properties/service/x-default-text",
+          "removed": "`false`"
+        },
+        {
+          "pointer": "/$defs/passTicket/properties/operations/required",
+          "before": [
+            "step"
+          ],
+          "after": [
+            "step",
+            "limits",
+            "service"
+          ]
+        },
+        {
+          "pointer": "/properties/heartbeat/properties/stale_after/description",
+          "before": "the stale threshold of the subsystem's heartbeats at the agent, s (P/09.1 N1.2 stale): not less than three heartbeat periods HEARTBEAT_EVERY 10 s (P/03.4 N1.1); no key — LOST_AFTER 45 s",
+          "after": "the stale threshold of the subsystem's heartbeats at the agent, s (P/09.1 N1.2 stale): not less than three heartbeat periods HEARTBEAT_EVERY (P/03.4 N1.1); no key — LOST_AFTER (P/09.1 N1.2)"
+        }
+      ]
+    },
+    {
+      "path": "Platform/02-installer/spec/02.3-installer.norms.md",
+      "before_sha256": "6a4ac53ddd5ff03b2b55fbfc9ec88c5f009fa77089cef2da30f19b04f453390b",
+      "after_sha256": "70819fc0057a39a06f4307251f8e0cd233dab6c8a6cdf0ff6474b8dffc984ca5",
+      "before_bytes": 55719,
+      "after_bytes": 60303
+    },
+    {
+      "path": "Platform/02-installer/spec/02.4-installer.norms.md",
+      "before_sha256": "7aae92312ef8dcbc36ea59b83e20120ab1f97c7d34da40e6bf5ac073a27f5560",
+      "after_sha256": "ac5f4adc9fd24822565f973f80d9e0b83b2ba96c37294c1ba385d9d52a67205c",
+      "before_bytes": 115910,
+      "after_bytes": 116504
+    },
+    {
+      "path": "Platform/02-installer/spec/02.5-installer.norms.md",
+      "before_sha256": "7ac3c291b057a0adeb0f789280b2f7eadf1e17d42ad7759d50aec43655871003",
+      "after_sha256": "d588c556265be5a683334838cf23d97e3c368e8eaf95f5e58be4f17795d40d07",
+      "before_bytes": 49353,
+      "after_bytes": 49294
+    }
+  ],
+  "no_runtime_or_generator_changes": true,
+  "source_previews_not_SUT": true
+}
