@@ -14,7 +14,7 @@ the root of events or of objects. Moved from M10/8 N1.1 (the paragraph «File na
 `bucket`, `class`, `journal`, `writer`, the paragraph on the id) without a change of behaviour: the suppression of repeats (`suppress`) — chapter
 P/03.6 N1.2; `older_epochs` and the marks of the operator (`marks`) — chapter P/06.4 N1.2. The vectors — the section «Vectors» below.
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## The line and the bucket
 

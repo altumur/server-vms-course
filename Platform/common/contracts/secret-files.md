@@ -10,7 +10,7 @@ files on a box: the ring file ([the sealing contract](sealing.md) «Ring file» 
 ([the domain founding contract](domain-founding.md) «Root and recovery file» `place`, `mode`). Where each file is to
 be and what its mode is — in the contract of that file; here — how the reader and the writer check the placement.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ```yaml
 file:      a secret file is a regular file; the file itself is a symbolic link or a special file (a directory, a socket, a device,

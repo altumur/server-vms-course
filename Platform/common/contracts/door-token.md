@@ -18,7 +18,7 @@ of the answer), the signer `door/signer` and its envelope are in the owner's nor
 [`door-keys`](../../06-console/data/door-keys.schema.json) with the outcome table next to it. JCS is RFC 8785 (ADR-0072; the vectors
 [`jcs`](../../01-store/vectors/jcs/README.md) of lesson P/01).
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

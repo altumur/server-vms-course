@@ -23,7 +23,7 @@ report) — P/09.1 N1.2, «lesson 4» (the relay) — P/09.2, «lesson 5» (the 
 — P/08.5 N1.3 and P/02.1 N1.2b (analysis of the review of stage B 8–10, № 22; Kimi SB810-07); «lesson 2 N1.5» in the section `m1` is the section
 «Envelope `x25519:v1`» of this contract. The JSON Pointer path follows [the sealing contract](sealing.md) «AAD path».
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

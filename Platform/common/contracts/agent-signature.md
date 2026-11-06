@@ -21,7 +21,7 @@ N1.1 `pub`, the small order and «not a point of the curve» are defined right h
 `agent-sig` — the function of this contract, at `replay` (idempotency of the report) — [the report acceptance contract](accept.md) step 2;
 «lesson 4» — P/09.2; «lesson 6» — P/09.1 N1.5; «lesson 10» — [the ask signature contract](ask-sig.md) (P/08.8).
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

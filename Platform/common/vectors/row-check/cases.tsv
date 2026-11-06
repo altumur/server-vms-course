@@ -1,4 +1,4 @@
-# The common row check (the row check contract common/contracts/row-check.md; the guess of stage C W03-E07): the manifests testsub and testsub2 (Source/tests/testdata), the catalog from both. The form — README.
+# The common row check (the row check contract common/contracts/row-check.md; the guess of stage C W03-E07): the manifests testsub and testsub2 (Platform/common/data/testsub), the catalog from both. The form — README.
 case	unit	op	body	stored	rows	expect	word	field	step	row	note
 ok_minimal	testsub2/tallies	create	{"name": "t1", "of": "c1"}		{}	ok				{"mode": "plain", "step": "1", "weight": "1", "active": "true", "tags": "", "mask": "", "until": "0", "rule": "@absent", "keep_days": "@absent", "flags": "@absent"}	Preparation of fields: default, the empty form of the type, inherit — no item; float 1.0 → "1"
 platform_born	testsub2/tallies	create	{"name": "t1", "of": "c1", "born": "00000000000000000000000000000000"}		{}	refused	platform_field	born	P1		platform_fields: born is not set by the client

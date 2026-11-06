@@ -51,7 +51,7 @@
 ### Один файл описывает подсистему
 
 Сквозной пример модуля — учебная подсистема счётчиков `testsub`. Вот фрагмент её описания; полный файл —
-`Source/tests/testdata/testsub.subsystem.yaml`:
+`Platform/common/data/testsub/testsub.subsystem.yaml`:
 
 ```yaml
 name: testsub

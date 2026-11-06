@@ -31,7 +31,7 @@ of lesson M11/8 (N1.6 — P/06.7 N1.7 and the lines of this contract, N3 — P/0
 [the role certificate contract](role-certificate.md) `sig`. The form of the function is the input of a row of the package [`peer`](../vectors/peer/README.md) (formerly the command `peer` of the acceptance of M11/8 N5):
 `{chain: [<PEM>…], fingerprints: [<hex>…], role, host, now}` → `{result: ok}` | `{result: refused, reason}`.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Client and first contact
 

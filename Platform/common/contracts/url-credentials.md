@@ -12,7 +12,7 @@ and the customer library ([P/03.6](../../03-worker/spec/03.6-worker.norms.md) N1
 Moved from P/06.2 N1.1 (`url_field` without `bound_to`, `common_words`, `normalisation`), N1.1a and N3 «read_address» without
 a change of behaviour; the address rules A1–A15 are kept.
 
-Normative keywords follow the [course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow the [course canon](../NORMATIVE-TERMS.md).
 
 ## The field rule and the common vocabulary
 

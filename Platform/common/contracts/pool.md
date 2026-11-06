@@ -13,7 +13,7 @@ of the console, about which P/04 was silent, — four answers of the Architect o
 beyond the pool (`constraint`, `spread_by`, `affinity`, the group, the home, capacity and order) — still P/04 N3 «choose», the line
 «eligible» and below.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

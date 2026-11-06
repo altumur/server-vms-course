@@ -18,7 +18,7 @@
 [`door-keys`](../../../06-console/data/door-keys.schema.json) с таблицей исходов рядом. JCS — RFC 8785 (ADR-0072; векторы
 [`jcs`](../../../01-store/ru/vectors/jcs/README.md) урока P/01).
 
-Нормативные слова — по [канону курса](../../../../ru/NORMATIVE-TERMS.md).
+Нормативные слова — по [канону курса](../NORMATIVE-TERMS.md).
 
 ## Форма
 

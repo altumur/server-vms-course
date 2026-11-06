@@ -16,7 +16,7 @@ Moved from P/04 N1.5 (`TURN_TERM`, `TURN_RENEW`) and N3 «get and hold the place
 «Races») without a change of behaviour; P/04 and P/08.10 refer here. What is each participant's own — the row key, the mark
 `holder`, which writes go under the guard, when the turn is given up — is the participant's (P/04 N1.5, N3; P/08.10 N1.7).
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

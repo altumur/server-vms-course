@@ -17,7 +17,7 @@ without a change of behaviour. What a door answers to a refusal (401 at `/api/ba
 who the member is and whose key — are the norms of the doors (P/08.8 N1.7, N2; P/06.7 N1.13). The agent signature `X-Agent-Signature` is another contract
 ([the agent signature contract](agent-signature.md)). References in the moved text are of lesson M11/10 (N1.7, N1.8 — the same numbers of chapter P/08.8; N1.9 — P/06.7 N1.13).
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Form
 

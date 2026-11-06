@@ -10,7 +10,7 @@ sealing and resealing ([chapter P/06.2](../../06-console/spec/06.2-console.norms
 the domain processes (M11). Moved from M10/7 N1.2 without a change of behaviour: what to seal, who holds the key, rotation, the mode
 without a key and the idempotency fingerprint stay in the norms of the reading lessons.
 
-Normative keywords follow [the course canon](../../../NORMATIVE-TERMS.md).
+Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
 ## Envelope
 

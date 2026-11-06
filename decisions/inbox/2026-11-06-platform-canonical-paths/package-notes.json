@@ -1,0 +1,21 @@
+{
+  "new_files": [
+    {
+      "path": "Platform/common/data/testsub/README.md",
+      "sha256": "f4bab1c7b510b0db9a664722303b8d8fe2c33ff8db760d356b76daec80245a03"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/1/spec_verdicts/README.md",
+      "sha256": "d8d33b820dc11bce5b56610c02f3d17b4410331e4daf1e0f9723ef2ae6fc958f"
+    },
+    {
+      "path": "Platform/common/ru/data/testsub/README.md",
+      "sha256": "331555f118aed51469b0dc62b75c845519b722ec5aa65e4ed807acef6f6fa2e5"
+    },
+    {
+      "path": "Platform/02-installer/ru/acceptance/1/spec_verdicts/README.md",
+      "sha256": "190ce240184b101d261af09c644739763e9c43a8d1aa34212b3bd9ca3f5ff0cf"
+    }
+  ],
+  "copied_payload_files_unchanged": true
+}

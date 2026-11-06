@@ -1,0 +1,31 @@
+{
+  "base": "e07b32a5030c696d89c72444e760a86f6246c487",
+  "raw_copies": 141,
+  "all_copy_bytes_and_modes_equal": true,
+  "whole_Source_VMS_tools_skills_unchanged": true,
+  "history_snapshots_raw_equal": 2,
+  "legacy_verdicts": {
+    "rows": 138,
+    "files": 138,
+    "ok": 19,
+    "refused": 119
+  },
+  "machine_tables_other_cells_exact": true,
+  "deferred_links": {
+    "VMS_files": 150,
+    "reserved_B_files": 4
+  },
+  "judge_and_runtime_execution": 0,
+  "cyrillic_judge": "PASS after staging, --shrink --ready Platform; no new source debt",
+  "mirror_status": {
+    "pairs": 255,
+    "errors": 2,
+    "cause": "Only four reserved B source links remain unapplied; prepared exact patch."
+  },
+  "diff_check": {
+    "warnings": 1,
+    "path": "Platform/02-installer/acceptance/1/spec_verdicts/lease_absent.subsystem.yaml",
+    "reason": "Inherited final blank line: exact raw copy from Source, intentionally not normalized."
+  },
+  "deferred_patch_apply_check": "Both patch artifacts pass git apply --check --unidiff-zero; no target mutations"
+}
