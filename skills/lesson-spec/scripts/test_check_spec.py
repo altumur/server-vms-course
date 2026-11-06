@@ -918,6 +918,24 @@ properties:
 
 
 class CyrillicIntegrationTests(unittest.TestCase):
+    def test_export_root_checks_new_homes_in_the_check_spec_cli(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "COURSE_COMMIT").write_text("0123456789\n")
+            (root / "README.md").write_text("Ж")
+            source = root / "new-published-home/input.tsv"
+            source.parent.mkdir()
+            source.write_text("Ж")
+            debt = root / "debt.tsv"
+            debt.write_text("kind\tpath\tletters\n")
+            result = subprocess.run([sys.executable, "-B", str(Path(__file__).with_name("check_spec.py")),
+                                     "--root", str(root), "--cyrillic-debt", str(debt), "missing.md"],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertIn("README.md: Cyrillic letters 1, debt 0", result.stdout)
+            self.assertIn("new-published-home/input.tsv: Cyrillic letters 1, debt 0", result.stdout)
+            self.assertIn("cyrillic_export=1", result.stdout)
+
     def test_global_judge_in_check_spec_cli_even_with_explicit_lesson(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
