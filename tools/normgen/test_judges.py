@@ -1,8 +1,4 @@
-"""Регрессии судей (ревью Codex Б1): отсутствие исполнения — отрицательный исход, не совпадение.
-
-flag_judge (С1): запуск демона — готовность (живой процесс и слушающий admin.sock), падение — провал.
-scenario_judge: пустой, обрезанный, незавершившийся вывод go test; отсутствующий, пустой, обрезанный отчёт раннера;
-опись, отставшая от проекции формы. door_judge: пустой и отсутствующий отчёт, пропавший сценарий и шаг."""
+"""Judge regressions (Codex B1): non-execution is failure, not agreement. flag_judge requires a live daemon listening on admin.sock; crashes fail. scenario_judge rejects empty, truncated, unfinished Go output, missing/empty/truncated runner reports and stale inventory. door_judge rejects missing reports, scenarios and steps."""
 import io
 import json
 import tempfile
@@ -61,7 +57,7 @@ class ScenarioJudge(unittest.TestCase):
 
     def test_go_not_finished(self):
         ev, rep = self.green()
-        self.assertEqual(self.write(ev[:-1], rep), 1)          # нет события пакета: сборка упала, вывод обрезан
+        self.assertEqual(self.write(ev[:-1], rep), 1)          # No package event means build failure or truncated output.
 
     def test_go_cut(self):
         ev, rep = self.green()

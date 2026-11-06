@@ -1,16 +1,4 @@
-"""Судья части `loader` (gen_manifest.py): загрузчик манифеста P/02.1 и канонический вид P/02.2 против данных урока.
-
-Запуск: /opt/check-env/lesson-spec/bin/python tools/normgen/test_gen_manifest.py [-v]   (go 1.22 и кеш модулей
-закреплённых версий Platform/common/versions/go.mod — без сети)
-
-1. out свежий: out/p02/go/manifest и go.mod, go.sum равны свежему прогону генератора; go vet пакета чистый.
-2. Корпус: каждый случай Platform/02-installer/acceptance/1/verdicts.tsv (947) — вердикт ok/refused, у случаев
-   classes.tsv — класс отказа (text | form | relations); векторы canonical (220) — байты вида равны expect/<case>.json;
-   пакет yaml-suite (402) — исход слоя 1 равен колонке layer1.
-3. Мутанты ручной среды (по одной правке): каждый даёт хотя бы одно расхождение с данными. Данные урока не различают
-   (проверено мутантами, код держит правило стека В7): отказ пустого значения сверх схемы, слой 2 «4.0 → 4» (JCS и
-   text() дают те же байты), x-opaque в проекции (внутри непрозрачных мест нет умолчаний схемы).
-"""
+"""Judge the P/02 loader and canonical view against lesson data. With Go 1.22 and cached pinned modules, no network, require fresh manifest files/module requirements/sums and vet. Check947 verdicts and text/form/relations classes, 220exact canonical bytes and402yaml-suite layer1 outcomes. Each runtime mutant must disagree with data. The corpus cannot distinguish extra empty-value refusal, layer2 normalization4.0->4 (JCS/text bytes coincide), or x-opaque projection with no nested defaults; preserve V7 rules despite those equivalent mutants."""
 import json
 import os
 import re

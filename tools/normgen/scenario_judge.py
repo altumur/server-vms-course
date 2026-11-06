@@ -1,21 +1,9 @@
-"""Внешний судья тестов этапов (ADR-0125 доп. (3) п. 4, доп. (4) п. 6): шаги проекции против шагов раннера на том же коде.
+"""External stage-test judge (ADR-0125 addenda3/item 4 and4/item 6): compare projected Go steps with runner steps on identical implementation code.
 
-Запуск: python3 tools/normgen/scenario_judge.py --inventory <internal/stagetests/inventory.tsv>
-            --go-test <вывод go test -json ./internal/stagetests> --runner <out/report раннера> [--stage http] [--json итог]
+  python3 tools/normgen/scenario_judge.py --inventory <internal/stagetests/inventory.tsv> --go-test <go-test-json-output> --runner <runner-report> [--stage http] [--json <result>]
+Inventory IDs retain chapter/file/scenario/step; translated steps become Test<Stage>_<Scenario>/<step>. seams.tsv is not run by the runner and is excluded here. Compare pass/fail for each step with P-01.1-door.json. A mismatch indicates generator or adapter-frame bypass defects, judged separately. Witness adapters witnesscgo and witness16 replace only coreadapter/open.go.
 
-- опись — по id шага `<глава>/<файл>/<сценарий>/<шаг>` (шаги seams.tsv раннер не исполняет — не судятся): переведённые шаги — подтесты `Test<Этап>_<Сценарий>/<шаг>`;
-- раннер — отчёт цели P/01.1/door (`P-01.1-door.json`: сценарий → шаги ok);
-- шаг совпал, когда исход подтеста (pass | fail) равен исходу шага у раннера; расхождение — дефект генератора (или
-  адаптера, если он обходит рамку: такие шаги сверяются отдельно, доп. (4) п. 6); подтест, которого нет в выводе,
-  — красный (опись неизменна, доп. (4) п. 5).
-Адаптеры-свидетели (кладутся в копию реализации вместо internal/coreadapter/open.go пакета): stagetests/witnesscgo
-(свидетель c-go P/01, ADR-0125 доп. (4) п. 6), stagetests/witness16 (16-я попытка MiniMax).
-Ожидаемый набор шагов — не из поступивших отчётов, а из сценариев и проекции (gen_stagetests.build по форме дерева
---root): опись должна совпасть с ним строка в строку; раннер должен дать исход каждому шагу scenarios.tsv выбранных
-сценариев; прогон go test — завершиться событием пакета. Нет исхода у шага (missing), skip, незавершённый прогон,
-отсутствующий или обрезанный отчёт — отрицательный исход, никогда не совпадение (ревью Codex Б1).
-Итог: `stagetests <этап>: совпало N/M (зелёных у раннера R, у тестов T)`; код 0 — все совпали, 1 — нет.
-"""
+Expected rows come from gen_stagetests.build on --root, not submitted reports. Require inventory row-for-row equality, runner results for every selected scenarios.tsv step and a terminating Go package event. Missing, skip, incomplete, truncated or absent results always fail, never match. Summarize matchedN/M and runner/test passes; exit 0 only if all match."""
 import argparse
 import json
 import sys
@@ -30,7 +18,7 @@ OUTCOMES = ("pass", "fail")
 
 
 def read_go_test(path):
-    """→ ({подтест: pass|fail|skip}, ошибка прогона | None). Прогон годен, когда пакет закончился событием pass|fail."""
+    """Return ({subtest:pass|fail|skip}, run error or None); a valid run ends with a package pass/fail event."""
     tests, done, bad = {}, None, 0
     p = Path(path)
     if not p.is_file():
@@ -54,7 +42,7 @@ def read_go_test(path):
 
 
 def read_runner(report, wanted):
-    """→ ({шаг: pass|fail}, [ошибки]) по отчётам глав из wanted (главы, чьи шаги ждутся)."""
+    """Return ({step:pass|fail}, errors) from reports for wanted chapters."""
     runner, errs = {}, []
     for chapter in sorted(wanted):
         name = CHAPTER_REPORT.get(chapter)
@@ -113,7 +101,7 @@ def main(argv=None):
         chapter, _, sc, step = step_id.split("/")
         sub = f"{test}/{step}"
         got, want = tests.get(sub, "missing"), runner.get(f"{chapter}/{sc}/{step}", "missing")
-        ok = got == want and got in OUTCOMES      # missing/skip с обеих сторон — не совпадение
+        ok = got == want and got in OUTCOMES      # Missing or skipped on both sides is still not a match.
         s = by_stage.setdefault(stage, {"match": 0, "total": 0, "runner_green": 0, "tests_green": 0, "absent": 0})
         s["total"] += 1
         s["match"] += ok

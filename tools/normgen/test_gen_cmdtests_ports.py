@@ -1,15 +1,4 @@
-"""Судья части stagetests в режиме портов CALL (gen_cmdtests.py; P/03, P/04; ADR-0125 доп. (5), ADR-0126 доп. (7)).
-
-Запуск: python3 tools/normgen/test_gen_cmdtests_ports.py [-v]   (go 1.22)
-
-1. out свежий; порты пакета — ровно строки таблицы «CALL port» forms/README.md, прочитанной здесь заново; каждый шаг
-   швов этапов stages.tsv — тест (опись translated), ни один не потерян.
-2. Заглушки адаптера: каждый тест красный, без паники движка.
-3. Подставной адаптер (ответы выписаны судьёй из самих швов: «@absent» — поля нет, «$имя» — одна строка на имя;
-   генератор и судья реализацию не исполняют): всё зелёное.
-4. Мутанты подставного адаптера — красные: поле ответа другое, поле пропало, лишнее поле в «{}», паника порта,
-   ошибка порта, «$имя» — разные строки на шагах одного сценария.
-"""
+"""Judge CALL-port stagetests (P/03, P/04; ADR-0125 addendum 5, ADR-0126 addendum 7). Run test_gen_cmdtests_ports.py with Go 1.22. Independently reread the CALL port table and stage-selected seams; require fresh output, exact ports and every step translated. Every scaffold test must fail without panic. A seam-derived fixture adapter must pass: @absent omits a field and $name is one scenario string. Mutants must fail for changed/missing fields, extra values in exact-empty containers, port panic/error and inconsistent bound names across steps. The fixture is not an implementation execution."""
 import json
 import os
 import re
@@ -32,7 +21,7 @@ def ports(lesson):
 
 
 def seam_steps(lesson):
-    """[(сценарий, шаг, порт, вход, ожидание)] швов, выбранных этапами stages.tsv (своё чтение формы)."""
+    """Independently read stage-selected seam (scenario, step, port, input, expectation) rows."""
     les = ROOT / "Platform" / lesson
     rows = [ln.split("\t") for ln in (les / "forms/stages.tsv").read_text(encoding="utf-8").split("\n")
             if ln and not ln.startswith("#")]
@@ -56,7 +45,7 @@ def seam_steps(lesson):
 
 
 def concrete(exp, binds, sc):
-    """Ожидание → ответ: «@absent» — поля нет, «$имя» — строка сценария."""
+    """Build a fixture response from the expectation: @absent omits the field; $name uses a scenario string."""
     if isinstance(exp, dict):
         return {k: concrete(v, binds, sc) for k, v in exp.items() if v != "@absent"}
     if isinstance(exp, list):
@@ -67,7 +56,7 @@ def concrete(exp, binds, sc):
 
 
 def answers(lesson):
-    """{(порт, вход): ответ JSON} — выписка из швов; разные ответы на один вход — ошибка судьи (стоп)."""
+    """Read {(port, input):JSON response} from seams; inconsistent answers for one input stop the judge."""
     out, binds = {}, {}
     for sc, _, port, inp, exp in seam_steps(lesson):
         key = (port, json.dumps(json.loads(inp), sort_keys=True))
@@ -91,7 +80,7 @@ def fake_go(lesson, mutate=None):
     for (port, inp), out in ans.items():
         if mutate:
             out = mutate(port, inp, out)
-        # Go json.Marshal сортирует ключи отображений — тот же канон, что sort_keys без пробелов
+        # Go json.Marshal sorts map keys, matching compact sort_keys canonicalization.
         key = port + "\x00" + json.dumps(json.loads(inp), sort_keys=True, separators=(",", ":"), ensure_ascii=False)
         lines.append(f"\t{json.dumps(key, ensure_ascii=False)}: {json.dumps(out, ensure_ascii=False)},")
     lines += ["}", "", "func answer(port string, in json.RawMessage) (json.RawMessage, error) {",
@@ -213,7 +202,7 @@ func TestWideIntegerInputs(t *testing.T) {
         lesson = "03-worker"
         first = next(iter(answers(lesson)))
 
-        def change(port, inp, out):                      # поле ответа другое
+        def change(port, inp, out):                      # Changed response field.
             v = json.loads(out)
             k = sorted(v)[0]
             v[k] = "mutant"
@@ -224,7 +213,7 @@ func TestWideIntegerInputs(t *testing.T) {
             v.pop(sorted(v)[0])
             return json.dumps(v)
 
-        def extra(port, inp, out):                       # лишний элемент в «[]» или «{}» ответа (ровно пустые)
+        def extra(port, inp, out):                       # Extra element in an exactly empty [] or {} response.
             v = json.loads(out)
 
             def fill(x):

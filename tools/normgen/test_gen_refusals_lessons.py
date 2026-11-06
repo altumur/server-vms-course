@@ -1,6 +1,4 @@
-"""Тесты части refusals уроков P/03, P/04 (gen_refusals.py, режим урока без двери; ADR-0125 доп. (5)): out свежий;
-судья refusal_judge.py — PASS; мутанты выхода в новых проекциях (поля и заголовки ответа импортированной двери у peer, word — названные исходы и ячейка,
-глава урока одной главой) — FAIL судьи; форма вне грамматики (fields/headers не у peer) — отказ генератора."""
+"""Test P/03/P/04 refusal projections: freshness, judge PASS, and FAIL for imported peer body/header, word-token/cell and single-chapter metadata mutants. Reject fields/headers outside peer grammar."""
 import csv
 import os
 import shutil

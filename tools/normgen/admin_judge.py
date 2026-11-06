@@ -1,17 +1,10 @@
-"""Судья части `admin` (Архитектор 2026-11-05): демон пакета как есть, подкоманды admin_ops без реализации.
+"""Judge for the admin part (Architect, 2026-11-05): run the kit daemon as shipped, with admin_ops unimplemented.
 
-  python3 tools/normgen/admin_judge.py [--kit <каталог пакета>]   (без --kit — build_kit.build частей пакета во временный)
+  python3 tools/normgen/admin_judge.py [--kit <kit-directory>]
 
-Собирает cmd/configstore пакета и исполняет:
-- каждую подкоманду формы daemon-flags.tsv (кроме daemon) с флагами по форме (обязательные даны) — ожидание: код 1,
-  stderr ровно «configstore <подкоманда>: not in this stage» (admin.Run → NotInStage; не «not implemented» прежнего
-  launch, не 2);
-- каждую подкоманду с флагом вне формы (-no-such-flag) и с флагом чужой команды (-max-body — только daemon) — код 2
-  (отказ формы флагов до admin.Run);
-- свои команды own.go (spoil-row) — код 1, «not in this stage», до разбора флагов (их аргументы — не форма таблицы).
-Набор подкоманд — из формы (gen_admin.commands), не из этого файла: подкоманда без вызова в INVOKE — провал судьи.
-Отсутствие исполнения — отрицательный исход. Итог: `admin: N/N PASS|FAIL`; код 0 — PASS.
-"""
+Without --kit, build_kit.build creates the required parts in a temporary directory. Build cmd/configstore and execute every non-daemon subcommand declared by daemon-flags.tsv with its required flags. Expect exit 1 and exactly `configstore <command>: not in this stage` on stderr (admin.Run -> NotInStage, rather than the old launch's `not implemented` or exit 2). With -no-such-flag or a different command's -max-body, expect exit 2 before admin.Run. Own commands from own.go (spoil-row) return exit 1 before flag parsing, since their arguments are outside this form.
+
+The roster comes from gen_admin.commands, not this file. A declared subcommand missing from INVOKE fails the judge. Non-execution fails. Result: `admin: N/N PASS|FAIL`; exit 0 means PASS."""
 import argparse
 import os
 import shutil
@@ -28,7 +21,7 @@ import gen_admin  # noqa: E402
 
 MODULE = build_kit.L.module
 PARTS = ("door", "flags", "refusals", "stagetests", "launch", "core", "admin")
-# Подкоманда → слова командной строки по форме ({d} — каталог данных, {f} — файл): обязательные флаги даны.
+# Subcommand -> argv from the form ({d}: data directory, {f}: file), including required flags.
 INVOKE = {
     "recover": ["-id", "s1", "-dir", "{d}", "-isolated", "-peers", "s2@127.0.0.1:7001/127.0.0.1:7002"],
     "restore": ["-dir", "{d}", "--from", "{f}"],

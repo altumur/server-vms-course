@@ -1,15 +1,7 @@
-"""Судья части `box` (gen_box.py): сгенерированный пакет box против своей модели нормы на Python.
+"""Judge generated box against an independent Python normative model.
 
-Запуск: /opt/check-env/lesson-spec/bin/python tools/normgen/test_gen_box.py [-v]   (нужен go 1.22)
-
-1. out свежий: out/p01-1/go/box равен свежему прогону генератора; go vet пакета чистый.
-2. Модель: судья сам строит ожидания по местам нормы (P/01.3 Н1.3 `box`, `metrics`, `copy`, `import`, `floor`,
-   `admin_ops`; P/01.1 Н1 ceiling; ответ sc. 17 о метке state; spec103 о max_value) — Status, текст /metrics, join/leave
-   (свой id, чужой, -force, тело вне формы), admit/recover/старт без raft, вход копии (верная копия и её порча по
-   каждому правилу отказа), кодер (порядок ключей, круг «закодировать — прочитать»), floor по примерам нормы и границе
-   поколения, backup внутри -dir через ссылку; обвес Go гоняет те же случаи — исходы обязаны совпасть.
-3. Мутанты пакета (по одной правке исходника): каждый должен дать хотя бы одно расхождение с моделью.
-"""
+  /opt/check-env/lesson-spec/bin/python tools/normgen/test_gen_box.py [-v]
+Require Go 1.22. Check output freshness and vet. Independently derive Status, metrics, join/leave/admit/recover, no-raft startup, copy encoding/decoding, import, floor and backup rules from the named P/01.3 clauses, P/01.1 ceiling, state clarification and max_value rule. Compare valid inputs, each input-refusal corruption, UTF-8 key ordering, round trips, generation boundaries and backup symlink containment with Go harness results. Each one-edit package mutant must disagree with the model at least once."""
 import base64
 import json
 import os
@@ -141,7 +133,7 @@ func main() {
 '''
 
 
-# ---------------------------------------------------------------- модель нормы
+# ---------------------------------------------------------------- normative model
 
 F = gen_box.facts()
 CEIL = 524288
@@ -190,7 +182,7 @@ def strict(line):
 
 
 def model_decode(data, ceiling):
-    """→ None (отказ) или (index, {key: (items, index)})."""
+    """Return None on refusal, otherwise (index, {key:(items, index)})."""
     import re
     if not data or not data.endswith(b"\n"):
         return None
@@ -349,7 +341,7 @@ class Box(unittest.TestCase):
                                  ((2 ** 21 - 2) << 32, "2026-10-17T12:30:00Z", (2 ** 21 - 1, (2 ** 21 - 1) << 32)),
                                  ((2 ** 21 - 1) << 32, "2026-10-17T12:30:00Z", None)):
             m = model_floor(upper, datetime.fromisoformat(now.replace("Z", "+00:00")))
-            assert m == want, (upper, now, m, want)              # модель — по примерам нормы
+            assert m == want, (upper, now, m, want)              # Model from normative examples.
             cs.append(({"Op": "floor", "Upper": upper, "Now": now}, ("floor", want)))
         for f, dd, want in ((d / "data/c.jsonl", d / "data", True), (d / "link/c.jsonl", d / "data", True),
                             (d / "out/c.jsonl", d / "data", False), (d / "data", d / "data", True),

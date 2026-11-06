@@ -1,9 +1,9 @@
-// Обвязка tools/normgen/kit/test_kit.py: один долгоживущий процесс в собранном пакете (cmd/kitprobe рядом с internal);
-// читает входы построчно со stdin, на каждую строку сразу пишет строку ответа. Путь "kitmodule/internal/" заменяет тест.
+// Persistent kit/test_kit.py harness beside internal/:read stdin lines and immediately write responses.
+// The test rewrites kitmodule/internal imports.
 //
-// Вход строки: {"sock": s, "body": base64 сырых байт тела, "lim": {имя: int}, "allow": [[сокет, операция, префикс]]}.
-// Выход строки: {"refusal": отказ writecheck | null, "value": тело с метками | null, "lone": [указатели] | null};
-// метки чисел {"$int": "8"}, {"$double": "1.5"}, отображение {"$map": {...}} — чтобы int и double не смешались.
+// Input:sock, base64 raw body, lim{name:int}, allow[[socket, action, prefix]].
+// Output:writecheck refusal|null, tagged body|null, lone pointers|null;
+// $int, $double and $map tags preserve numeric kinds through JSON.
 package main
 
 import (

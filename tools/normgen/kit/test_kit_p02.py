@@ -1,6 +1,4 @@
-"""Тесты сборки пакета урока без двери (P/02; ADR-0125 доп. (5)): части flags, refusals, stagetests, rollout-poll без
-writecheck; модуль и каталог урока; YOURS — заготовки lessonadapter; пакет собирается (go vet), тесты красные без паники;
-rollout-poll без stagetests и часть без генератора урока — отказ."""
+"""Build non-HTTP P/02 flags, refusals, stagetests, rollout-poll without writecheck. Check module/directory, YOURS lessonadapter scaffolds, vet and failing tests without panic. Reject rollout-poll without stagetests or parts lacking a lesson producer."""
 import json
 import os
 import subprocess

@@ -1,14 +1,4 @@
-"""Тесты генератора № 3 ADR-0125 (tools/normgen/gen_flags.py) и его судьи tools/normgen/flag_judge.py.
-
-Запуск: /opt/check-env/lesson-spec/bin/python tools/normgen/test_gen_flags.py [-v]
-(нужны cel_expr_python для судьи и go 1.22 в PATH; сети не нужно).
-
-- выход out/p01-1/go/flags совпадает с тем, что генератор строит сейчас (не устарел);
-- заглушка tools/normgen/flags/stub на сгенерированном пакете проходит все пробы судьи и 400 случайных строк;
-- мутанты сгенерированного кода судья роняет (судья не слеп);
-- таблица вне формы — отказ генератора (GenError), а не код;
-- пакет Б с частью flags собирается и проходит go vet.
-"""
+"""Test gen_flags and flag_judge (ADR-0125 generator 3). With cel_expr_python and Go 1.22, require fresh output, the generated flags/stub to pass all judge probes and400 random argv, and generated-code mutants to fail. Reject malformed tables with GenError; build/vet the flags kit part without network."""
 import hashlib
 import json
 import shutil
@@ -75,12 +65,12 @@ class GenFlags(unittest.TestCase):
 
     def test_judge_catches_mutants(self):
         mutants = [
-            ("flags.go", "fl.MaxConns = int64(64)", "fl.MaxConns = int64(65)"),            # умолчание
-            ("flags.go", "if fl.Given[name] {", "if false {"),                             # повтор флага
-            ("flags.go", '!fl.Given["-voters"] &&', 'false &&'),                       # required через CEL
+            ("flags.go", "fl.MaxConns = int64(64)", "fl.MaxConns = int64(65)"),            # Default.
+            ("flags.go", "if fl.Given[name] {", "if false {"),                             # Repeated flag.
+            ("flags.go", '!fl.Given["-voters"] &&', 'false &&'),                       # required evaluated through CEL.
             ("flags.go", "fl.RaftBind = fl.Raft", "fl.RaftBind = \"\""),                   # =-raft
             ("prims.go", "return v4[0] == 127, nil", "return v4[0] == 127 && v4[1] == 0, nil"),  # loopback
-            ("flagtypes.go", "n > 65535", "n > 65536"),                                    # тип addr
+            ("flagtypes.go", "n > 65535", "n > 65536"),                                    # addr type.
         ]
         for k, (name, old, new) in enumerate(mutants):
             with self.subTest(mutant=new):
@@ -95,15 +85,15 @@ class GenFlags(unittest.TestCase):
 
     def test_table_out_of_form(self):
         cases = [
-            ("-dir\tpath\t", "-dir\tpathx\t"),                           # тип вне словаря
-            ("1048576\t1MiB", "1MiB\t1MiB"),                             # умолчание вне типа
-            ("enum:1|3|5\t1\t", "enum:1|3|5\t2\t"),                      # умолчание не из enum
+            ("-dir\tpath\t", "-dir\tpathx\t"),                           # Type outside the vocabulary.
+            ("1048576\t1MiB", "1MiB\t1MiB"),                             # Default outside the declared type.
+            ("enum:1|3|5\t1\t", "enum:1|3|5\t2\t"),                      # Default outside enum.
             ("\tdaemon,recover\t\tP/01.3 N1.3; P/01.3 N2", "\tdaemon,recover,recover\t\tP/01.3 N1.3; P/01.3 N2"),
-            ("-raft-bind\taddr\t=-raft", "-raft-bind\taddr\t=-api-conns"),  # =флаг другого типа
-            ("!loopback(f[\"-raft\"])", "!islocal(f[\"-raft\"])"),       # функция не объявлена #fn
-            ("\"-door\" in f\tdaemon", "f.size() > 1\tdaemon"),          # метод вне подмножества
-            ("#var cmd string", "#var command string"),                  # шапка
-            ("-upper\tint:0..", "-Upper\tint:0.."),                      # имя флага
+            ("-raft-bind\taddr\t=-raft", "-raft-bind\taddr\t=-api-conns"),  # =flag of a different type.
+            ("!loopback(f[\"-raft\"])", "!islocal(f[\"-raft\"])"),       # Function not declared by #fn.
+            ("\"-door\" in f\tdaemon", "f.size() > 1\tdaemon"),          # Unsupported method.
+            ("#var cmd string", "#var command string"),                  # Header.
+            ("-upper\tint:0..", "-Upper\tint:0.."),                      # Flag name.
         ]
         for old, new in cases:
             with self.subTest(new=new):
@@ -111,7 +101,7 @@ class GenFlags(unittest.TestCase):
                     gen_flags.build(gen_flags.Table(mutate(TABLE, old, new)))
                 if "daemon,recover,recover" in new:
                     self.assertIn("commands", str(raised.exception))
-        with self.assertRaises(GenError):                                  # повтор флага
+        with self.assertRaises(GenError):                                  # Repeated flag.
             gen_flags.Table(TABLE + TABLE.splitlines()[-1] + "\n")
 
     def test_kit_part_flags(self):
