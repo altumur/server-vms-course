@@ -1,5 +1,5 @@
 # spec_load_debt.txt — the key paths of the product's specs the course's loader refuses (test_spec_parity.py),
 # `<spec>:<key path>   # ADR-NNNN «owner»`. A line goes when the course reads the key or the product drops it;
 # one is added only where a decision brings a key to one side first: its ADR number and the owner of the other
-# side, who closes it (СЕССИИ.md §1.7).
-cam:placement.weight   # ADR-0078 «курс»: вес единиц положен продуктом первым, курс зеркалит задачей — команда курса
+# side, who closes it (session rules §1.7).
+cam:placement.weight   # ADR-0078 course: the product introduced unit weights first; a course task mirrors them — course team
