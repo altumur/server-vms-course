@@ -59,6 +59,7 @@ import gen_launch  # noqa: E402 — часть launch
 import gen_core  # noqa: E402 — часть core
 import gen_versioned_doors  # noqa: E402 — метаданные существующей части core у P/08
 import gen_families  # noqa: E402 — часть families
+import gen_row_writes  # noqa: E402 — P03-only pure constructor overlay in the families part
 sys.path.insert(0, str(HERE.parent / "contracts"))
 import kitside  # noqa: E402 — стороны урока у адаптеров части contracts
 sys.path.insert(0, str(HERE.parent / "contracts/gen"))
@@ -250,6 +251,12 @@ def provenance(parts, files, judged):
                    "families": gen_families, "admin": gen_admin, "box": gen_box, "loader": gen_manifest,
                    "rollout-poll": gen_rollout}[part]
             out[part] = {**mod.provenance(), "output": output(part)}
+            if part == "families" and gen_row_writes.enabled():
+                overlay = gen_row_writes.provenance()
+                for key in ("form", "generators", "handwritten"):
+                    entries = out[part].get(key, []) + overlay[key]
+                    out[part][key] = list({e["path"]: e for e in entries}.values())
+                out[part]["judges"] = [out[part]["judge"], overlay["judge"]]
         else:
             component, t = table[part]
             out[part] = {"form": [entry(f) for f in t["form"] if f.is_file()], "generator": entry(t["generator"]),
@@ -365,6 +372,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
         core_files = ((gen_versioned_doors if L.key == "08-domain" else gen_core).kit_files(module)
                       if "core" in parts else [])
         family_files = gen_families.kit_files() if "families" in parts else []
+        if family_files and L.key == "03-worker":
+            family_files += gen_row_writes.kit_files()
         admin_files = gen_admin.kit_files(module) if "admin" in parts else []
         box_files = gen_box.kit_files(module) if "box" in parts else []
         loader_files = gen_manifest.kit_files(module) if "loader" in parts else []
@@ -511,6 +520,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
            + (gen_door_lesson.kit_md() if door_lesson else "")
            + (gen_flags.kit_md() if flag_files else "") + (gen_refusals.kit_md() if refusal_files else "")
            + (gen_families.kit_md() if family_files else "") + (gen_admin.kit_md() if admin_files else "")
+           + (gen_row_writes.KIT_MD if family_files and gen_row_writes.enabled() else "")
            + (gen_box.kit_md() if box_files else "")
            + (gen_manifest.kit_md() if loader_files else "")
            + (gen_launch.KIT_MD if launch_files else "")
@@ -733,7 +743,8 @@ REGEN = ("gen_checks.py", "gen_door.py", "gen_flags.py", "gen_refusals.py", "gen
          "gen_core.py", "gen_admin.py", "gen_box.py", "gen_launch.py", "gen_families.py")
 # Урок без своей двери (P/02): перегон по частям пакета — генераторы, объявленные для P/01, на нём отказывают.
 PART_GENS = {"flags": ("gen_flags.py",), "refusals": ("gen_refusals.py",), "stagetests": ("gen_cmdtests.py",),
-             "rollout-poll": ("gen_rollout.py",), "families": ("gen_families.py",),
+             "rollout-poll": ("gen_rollout.py",),
+             "families": (("gen_families.py", "gen_row_writes.py") if L.key == "03-worker" else ("gen_families.py",)),
              "vectors": ("gen_families.py", "gen_vectors.py"), "loader": ("gen_manifest.py",),
              "contracts": ("contracts/gen/gen_heartbeat.py",),
              "core": ("gen_versioned_doors.py",),
