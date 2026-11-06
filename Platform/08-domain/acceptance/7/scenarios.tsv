@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Acceptance P/08.7: stand hold, m1, m2 with testsub/testsub2 and the agent's local door (token door). Moved from М11/07 (sc. 01, 02) (stage B). Format/directives: README.
+# Acceptance P/08.7: stand hold, m1, m2 with testsub/testsub2 and the agent's local door (token door). Moved from M11/07 (sc. 01, 02) (stage B). Format/directives: README.
 01-token-and-audience	1	@domain	ok
 01-token-and-audience	2	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "origin": "m2", "copies": []}	200
 01-token-and-audience	3	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r1", "ref": "c1"}	200 {"request_id": "r1", "token": "$tok", "exp": "@any"}

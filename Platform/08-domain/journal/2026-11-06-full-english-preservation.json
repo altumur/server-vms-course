@@ -1,0 +1,885 @@
+{
+  "baseline": "88f9879fd9b69ea6cbf2a1b7e342f2478484ac64",
+  "lesson": "08-domain",
+  "common_source": "88f9879fd9b69ea6cbf2a1b7e342f2478484ac64",
+  "counts": {
+    "files": 269,
+    "source_files": 239,
+    "changed_files": 185,
+    "changed_lines": 2060,
+    "unchanged_files": 84,
+    "tsv_data_rows": 3019,
+    "acceptance_vector_tables": 23,
+    "schemas_and_openapi": 60
+  },
+  "source_map_entries": 2140,
+  "protocol_map_entries": 4305,
+  "protocol_changed": [
+    [
+      "Platform/08-domain/data/refusal-words.tsv",
+      "65:field",
+      "table field",
+      "\"/<\\u043f\\u043e\\u043b\\u0435>\"",
+      "\"/<field>\"",
+      "mapped"
+    ],
+    [
+      "Platform/08-domain/data/refusal-words.tsv",
+      "69:field",
+      "table field",
+      "\"/<\\u043f\\u043e\\u043b\\u0435>\"",
+      "\"/<field>\"",
+      "mapped"
+    ],
+    [
+      "Platform/08-domain/data/refusal-words.tsv",
+      "70:field",
+      "table field",
+      "\"/<\\u043f\\u043e\\u043b\\u0435>\"",
+      "\"/<field>\"",
+      "mapped"
+    ],
+    [
+      "Platform/08-domain/data/refusal-words.tsv",
+      "87:field",
+      "table field",
+      "\"/base_rev /shared /shared/<sub> /shared/<sub>/<\\u0438\\u043c\\u044f>\"",
+      "\"/base_rev /shared /shared/<sub> /shared/<sub>/<name>\"",
+      "mapped"
+    ]
+  ],
+  "schema_annotation_changes": [
+    [
+      "Platform/08-domain/data/alarm-history.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/alarm-history.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/alarm-history.schema.json",
+      "/properties/cut_before/description"
+    ],
+    [
+      "Platform/08-domain/data/anywhere.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/anywhere.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/backups.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/backups.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/batches.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/batches.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/book-all.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/book-all.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/book-keys.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/book-keys.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/book-part.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/book-part.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/book-seal.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/book-seal.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/book.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/book.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/break-glass.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/break-glass.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/deleting.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/deleting.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/disabled.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/disabled.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/domain-folders.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/domain-folders.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/domain-memberof.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/domain-memberof.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/folder-counts.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/folder-counts.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/folder-log.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/folder-log.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/folder-rev.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/folder-rev.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/folder-units-head.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/folder-units-head.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/folder-units.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/folder-units.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/from-nothing.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/from-nothing.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/grants.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/grants.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/groups.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/groups.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/holder.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/holder.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/idem.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/idem.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/issued.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/issued.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/keepers.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/keepers.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/keys.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/keys.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/keys.schema.json",
+      "/properties/doc/properties/book_seal/description"
+    ],
+    [
+      "Platform/08-domain/data/knocks.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/knocks.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/member-ca-certs.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/member-ca-certs.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/member-count.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/member-count.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/member-report-delta.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/member-report-delta.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/member-report.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/member-report.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/member-reported.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/member-reported.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/member-tables.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/member-tables.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/members.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/members.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/move-ask.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/move-ask.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/names-index.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/names-index.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/outcomes.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/outcomes.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/partial.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/partial.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/pending.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/pending.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/placement-record.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/placement-record.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/placement.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/placement.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/ref-claims.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/ref-claims.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/relay-members.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/relay-members.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/revoked.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/revoked.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/roles.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/roles.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/root.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/root.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/shadow.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/shadow.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/shared-docs.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/shared-docs.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/shared.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/shared.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/shared.schema.json",
+      "/properties/doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/signer-pending.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/signer-pending.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/signer-turn.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/signer-turn.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/signer.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/signer.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/stranded.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/stranded.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/topology.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/topology.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/users.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/users.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/view-rows.schema.json",
+      "/$defs/knock/description"
+    ],
+    [
+      "Platform/08-domain/data/view-rows.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/view-rows.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/view-rows.schema.json",
+      "/$defs/fingerprint/description"
+    ],
+    [
+      "Platform/08-domain/data/view-rows.schema.json",
+      "/properties/outcomes/description"
+    ],
+    [
+      "Platform/08-domain/data/view-rows.schema.json",
+      "/properties/pending/description"
+    ],
+    [
+      "Platform/08-domain/data/view.schema.json",
+      "/$defs/knock/description"
+    ],
+    [
+      "Platform/08-domain/data/view.schema.json",
+      "/$defs/common.shared_doc/properties/domain/description"
+    ],
+    [
+      "Platform/08-domain/data/view.schema.json",
+      "/$defs/common.shared_doc/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/view.schema.json",
+      "/$defs/fingerprint/description"
+    ],
+    [
+      "Platform/08-domain/data/view.schema.json",
+      "/properties/outcomes/description"
+    ],
+    [
+      "Platform/08-domain/data/view.schema.json",
+      "/properties/term/description"
+    ],
+    [
+      "Platform/08-domain/data/view.schema.json",
+      "/properties/shared/description"
+    ],
+    [
+      "Platform/08-domain/data/view.schema.json",
+      "/properties/pending/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/paths/~1domain~1batch/post/requestBody/content/application~1json/schema/properties/writes/items/properties/fields/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/paths/~1domain~1batch/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/paths/~1domain~1move/post/responses/200/content/application~1json/schema/properties/sealed/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/paths/~1domain~1move/post/requestBody/content/application~1json/schema/properties/why/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/paths/~1api~1relay~1{relay}/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/paths/~1domain~1{sub}~1{rows}~1{ref}/delete/requestBody/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/paths/~1api~1member~1{member}/post/responses/413/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/paths/~1api~1member~1{member}/post/responses/409/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/paths/~1api~1tokens~1{member}~1{sub}~1{kind}/post/responses/409/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/paths/~1api~1tokens~1{member}~1{sub}~1{kind}/post/responses/200/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/responses/RefusedPlain/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/responses/Standby/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/responses/StandbyOrUnavailable/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/responses/DeposedAgent/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/responses/StandbyOrExhausted/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/responses/RefusedWord/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/Publication/properties/tls_ca_certs/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/Publication/properties/tls_ca/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/TopologyEdit/properties/centre/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/HolderRecord/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/RevokedRow/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/KeysRow/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/Deposed/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/TokenSealed/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/StrandedItem/properties/value/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/Batch/properties/relayed/additionalProperties/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/Batch/properties/relayed/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/ViewInput/properties/passes/items/properties/members/additionalProperties/properties/mark/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/Refusal/properties/holder/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/Carry/properties/members/description"
+    ],
+    [
+      "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "/components/schemas/Carry/properties/every/description"
+    ]
+  ],
+  "acceptance_vector_preservation": [
+    {
+      "path": "Platform/08-domain/acceptance/0/seams.tsv",
+      "rows": 3,
+      "before_sha256": "f71220df587122030e30f572f8e01b55889c33e31eb82b1741bd689bddcd1da0",
+      "after_sha256": "f71220df587122030e30f572f8e01b55889c33e31eb82b1741bd689bddcd1da0",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/1/scenarios.tsv",
+      "rows": 39,
+      "before_sha256": "c1fd09d4033b73310aaeb90705c7bf1d440c67ad04321a5b98fd1455f49d2eaf",
+      "after_sha256": "c1fd09d4033b73310aaeb90705c7bf1d440c67ad04321a5b98fd1455f49d2eaf",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/1/seams.tsv",
+      "rows": 3,
+      "before_sha256": "463efef755e3e00cc227b5c2f2a0ade8f1e36c4a8cfe0d09cfc89d7d42ce8efd",
+      "after_sha256": "463efef755e3e00cc227b5c2f2a0ade8f1e36c4a8cfe0d09cfc89d7d42ce8efd",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/10/scenarios.tsv",
+      "rows": 56,
+      "before_sha256": "e76f13a1e53e0a7901a75c2e9d9ca2dbf1999e1be5e727c7ce543824f310c3b3",
+      "after_sha256": "4f361343e406281bd2f1538127e609ebcbb1c6b7893e7b8b1d241bb106467d9c",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/10/seams.tsv",
+      "rows": 5,
+      "before_sha256": "7701564f1fcd88559af9d0f4d82308dee6e289de4eb8a3aab89ec9f0dfa0c518",
+      "after_sha256": "7701564f1fcd88559af9d0f4d82308dee6e289de4eb8a3aab89ec9f0dfa0c518",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/2/seams.tsv",
+      "rows": 3,
+      "before_sha256": "3a191ef265eee5987a48cb776126a965b41288f291e4331039aed266fc6f45b2",
+      "after_sha256": "3a191ef265eee5987a48cb776126a965b41288f291e4331039aed266fc6f45b2",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/3/scenarios.tsv",
+      "rows": 218,
+      "before_sha256": "921f278e0fea225f79f5d075e32109a37286d1fa1c7a4e1ac5bbb8e7d4bbe7c2",
+      "after_sha256": "a1e79d98bfca2defc69689eefb6ccdfc3bbd740d84147beae551a3f9350edb71",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/3/seams.tsv",
+      "rows": 3,
+      "before_sha256": "2b7aeaef9a27872b319142f20ffb52d87a004241ad1b4fae1e5e7bb297196aec",
+      "after_sha256": "2b7aeaef9a27872b319142f20ffb52d87a004241ad1b4fae1e5e7bb297196aec",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/4/scenarios.tsv",
+      "rows": 498,
+      "before_sha256": "1d9b342f5fa9b7ba11c64934ae429a712db619f176443cb7e055050f5b11063c",
+      "after_sha256": "b226b085e64206624c620ae36df1f77e803dd661a36a4873cbcf0f81db1f3fc5",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/4/seams.tsv",
+      "rows": 4,
+      "before_sha256": "7e37ef218b1e5d38a0eb7f70dcec0b070a6b3da87d23df9dbddbde52b014f509",
+      "after_sha256": "7e37ef218b1e5d38a0eb7f70dcec0b070a6b3da87d23df9dbddbde52b014f509",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/5/scenarios.tsv",
+      "rows": 72,
+      "before_sha256": "26a0de5a7d6975c382f16e72cc4720e37aaf7a538744a1431257e7fda727d25b",
+      "after_sha256": "2cb2ba27b13c7ca05db23aea412ae7469fcad140b4da5ff235cff153b3bd00fc",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/5/seams.tsv",
+      "rows": 2,
+      "before_sha256": "402821f09251128c57b0586486c007763936f5a686e1fe22f6353484b9baa603",
+      "after_sha256": "402821f09251128c57b0586486c007763936f5a686e1fe22f6353484b9baa603",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/6/scenarios.tsv",
+      "rows": 261,
+      "before_sha256": "4475963a800fb3af8561449696d17a9b9e43f910bec32885bd9960a579a53a7c",
+      "after_sha256": "66635c4f1b2644c0d7f6ed9930187a1059b9ff8d86599cee5e855045384ff4d0",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/6/seams.tsv",
+      "rows": 3,
+      "before_sha256": "a497275e2d65cd7e027205962f2087a219ac9b6cea3f41f2c7dce14d56f02253",
+      "after_sha256": "a497275e2d65cd7e027205962f2087a219ac9b6cea3f41f2c7dce14d56f02253",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/7/scenarios.tsv",
+      "rows": 55,
+      "before_sha256": "aa6ad905a0be56e424d30d905cc9235841d04122f89af8dbfb6004e8423b81bf",
+      "after_sha256": "13b2dbf7c66fa0f6599f1891c9da5bc3abeedf6bf4f8e2ad702bb3d25227bca4",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/7/seams.tsv",
+      "rows": 3,
+      "before_sha256": "f37ce693f5ee0f7ad53d41cb665126e198fb6064047029073d1d0dba4fd4739f",
+      "after_sha256": "f37ce693f5ee0f7ad53d41cb665126e198fb6064047029073d1d0dba4fd4739f",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/8/scenarios.tsv",
+      "rows": 122,
+      "before_sha256": "88b339bd9c40c55580dce795e3807c4de647e3354d09e1fa3c6552d3d12ec69c",
+      "after_sha256": "ed2b86a638f6083ea54ac07bfc29ba5b93adf1907d37047f14372971226bb3e0",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/8/seams.tsv",
+      "rows": 3,
+      "before_sha256": "4c0795cc186210821fb0d0972d1dfb84e0caea02c920ce2ed9a4d549946647f5",
+      "after_sha256": "4c0795cc186210821fb0d0972d1dfb84e0caea02c920ce2ed9a4d549946647f5",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/9/scenarios.tsv",
+      "rows": 46,
+      "before_sha256": "9d4a5be774c29ed7b2018c8031ff4a65be2a9661a20410fcadb12306cbe78108",
+      "after_sha256": "92931607cb7d234a3e2411ff1ba789ea6a79b44b9421cbc8da8c5716f84da0b7",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/acceptance/9/seams.tsv",
+      "rows": 3,
+      "before_sha256": "f1f711f7e18d51e83af1fd1dc6872fec42578c54eaa3b08b5a3d9361a1b8a959",
+      "after_sha256": "f1f711f7e18d51e83af1fd1dc6872fec42578c54eaa3b08b5a3d9361a1b8a959",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/vectors/assemble/cases.tsv",
+      "rows": 23,
+      "before_sha256": "1d2489c6d6dc4eb410e9d1a914e5a3d943b4f8d985b9ec30494a48de01dd03e7",
+      "after_sha256": "5760c937bc98b924bc0b93b2216faae2ae9465e7dfe5431346eb96033068bcd0",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/vectors/issue/cases.tsv",
+      "rows": 40,
+      "before_sha256": "0f21032e4a345366572d2ef76b82ae125bd1ae2d2dc80ea697e28952f207cce3",
+      "after_sha256": "8a90ab77eeda1b2e3fd514728447cff271424f6acf9e8963360f0c0fbfd8e8cf",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    },
+    {
+      "path": "Platform/08-domain/vectors/view/cases.tsv",
+      "rows": 51,
+      "before_sha256": "20913de61ced4c5f062499c34588d760d9cb2373524359eb1b50daab8975cd0b",
+      "after_sha256": "3b6f1260f2347632d8283a3a58e091361999f8dbde3cf14c316bdaf6b8718603",
+      "data_non_note_columns_equal": true,
+      "physical_lines_equal": true
+    }
+  ],
+  "errors": [],
+  "limits": "Author source audit only. Pending previously READY G09 source composition and owners generator/runner code slices plus joint normgen/KIT; not a runtime, SUT, export or pin result.",
+  "map_sha256": {
+    "2026-11-06-full-english-protocol-map.tsv": "f2955005aa6f7f2305473d52cd3187c9d803df9f7e34271ce182748df09f1bcb",
+    "2026-11-06-full-english-source-map.tsv": "4f12864035cda0af9f6510f6506a2d6b9d755e618c2b029ce3772746538c3f10"
+  }
+}
