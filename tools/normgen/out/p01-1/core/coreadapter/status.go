@@ -17,15 +17,18 @@ import "normgen/p01-1/apidoor"
 //	    instead of text.
 //	spec/01.3-store.norms.md «N2 Doors»:
 //	  req: P/01.3-R016 — GET `/v1/status`: `{id, state, leader, leader_id, term, commit, applied, voters, members, tls,
-//	    max_value}`; optional `base, again, role, last_snapshot, out, admission_ahead` (N1.3 `admission`; ADR-0091 item
-//	    1). Indices are exact uint64, state — Leader/Follower/Candidate/Shutdown/Door; voters/out — an array of ids,
-//	    members — a map id → `-api` address, without `-api` the member is not in `members` (the map can be `{}`; a value
-//	    is never empty — `minLength: 1` of OpenAPI; C01-STATUS-MEMBERS-NOAPI, the Architect's decision of 2026-10-26);
-//	    `leader` — the `-api` address of the leader (empty if the leader is unknown or was started without `-api`),
-//	    `leader_id` — the id of the leader (empty if the leader is unknown) (the store pilot, A7). Door requires
+//	    max_value, max_body}`; optional `base, again, role, last_snapshot, out, admission_ahead` (N1.3 `admission`;
+//	    ADR-0091 item 1). Indices are exact uint64, state — Leader/Follower/Candidate/Shutdown/Door; voters/out — an
+//	    array of ids, members — a map id → `-api` address, without `-api` the member is not in `members` (the map can be
+//	    `{}`; a value is never empty — `minLength: 1` of OpenAPI; C01-STATUS-MEMBERS-NOAPI, the Architect's decision of
+//	    2026-10-26); `leader` — the `-api` address of the leader (empty if the leader is unknown or was started without
+//	    `-api`), `leader_id` — the id of the leader (empty if the leader is unknown) (the store pilot, A7). Door requires
 //	    role=door and term/commit/applied=0. `max_value` is this instance’s effective row-weight ceiling in bytes, the
 //	    value of `-max-value` (N1.3; the row weight of chapter 1.1), separately from `-max-body`; on the acceptance stand
-//	    it is 524288. This is a local observation, not a confirmation by the majority
+//	    it is 524288. `max_body` is a required positive integer: this instance's actual configured `-max-body` in
+//	    entity-body bytes (including JSON whitespace and an actual LF, excluding HTTP framing); it is1048576 on the
+//	    default acceptance stand. It is not derived from max_value. The installer reads it for the static finite-profile
+//	    check before writes (ADR-0127 P/06 C2). This is a local observation, not a confirmation by the majority
 //	spec/01.3-store.norms.md «N2 Doors»:
 //	  req: P/01.3-R017 — The order of checks: the frame (framing, the body limit 1 MiB — 413) → route and method (404,
 //	    405) → identity (403) → body and membership (400, 409)
