@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Acceptance P/09.1: domain stand hold, m1, m2 — member agent side (home write on change, member key, edit application/outcomes, shared document at member, contribution freshness, revocation after move); scenarios from М11/05, М11/06, М11/10, М11/11, М11/12 (stage B); 13, 14 were М11/05 sc. 04 and М11/11 sc. 06. Format: README.
+# Acceptance P/09.1: domain stand hold, m1, m2 — member agent side (home write on change, member key, edit application/outcomes, shared document at member, contribution freshness, revocation after move); scenarios from M11/05, M11/06, M11/10, M11/11, M11/12 (stage B); 13, 14 were M11/05 sc. 04 and M11/11 sc. 06. Format: README.
 01-quiet-member	1	@domain m1	ok
 01-quiet-member	2	@sleep 35	ok
 01-quiet-member	3	store GET /v1/get?key=domain/keepers/m1	200 {"items": {"sha256": "$b1"}}

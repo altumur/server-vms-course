@@ -32,7 +32,7 @@ The setting channel is only the environment of [P/02.4 N1.2](../02-installer/spe
 |---|---|---|---|
 | `W2C_ROLE` | the role `domainagent` | the unit | P/02.4 N1.2 |
 | `PLATFORM_DIR`, `PLATFORM_STORE`, `OBJECTS`, `RESOURCE_ROOT` / `EVENTS` | the state, the store door, the roots of objects and events | P/02.4 N1.2 | P/02.4 N1.2 «The setting channel and the layout» |
-| `SECRETS_KEY` | the ring (credential): the member key, the books and the emergency rows — envelopes of the ring | — | P/02.4 N1.12; [P/09.1](spec/09.1-agent.norms.md) N1 «Данные» (what the agent seals with the ring: `seed_secret` of the member key — N1.1, the member books and the copy of the emergency row — N1.4); the bytes of the envelope — [the sealing contract](../common/contracts/sealing.md) |
+| `SECRETS_KEY` | the ring (credential): the member key, the books and the emergency rows — envelopes of the ring | — | P/02.4 N1.12; [P/09.1](spec/09.1-agent.norms.md) N1 «Data» (what the agent seals with the ring: `seed_secret` of the member key — N1.1, the member books and the copy of the emergency row — N1.4); the bytes of the envelope — [the sealing contract](../common/contracts/sealing.md) |
 | `CLUSTER` | the name of its own member | `local` | P/02.4 N1.2; [P/09.1 N1.1](spec/09.1-agent.norms.md) |
 | `CLUSTERS` | the consoles of the member clusters `<name>=<url>[,…]`: «follow» — `GET /api/held` of each | none or empty — an empty list | the form `<name>=<url>[,…]` — here, the row of the environment contract — [P/02.4](../02-installer/spec/02.4-installer.norms.md) N1.2 (the reference to the norm P/06.7 is removed: review analysis of stage B 8–10, № 22, Claude M-16, Kimi SB810-08); [P/09.1 N3](spec/09.1-agent.norms.md) «follow» step 1 (review analysis of stage A 8–10, № 32) |
 | `REACHES` | the networks of the member — words of `domain/reaches` separated by commas; empty — as if not set | not set — the networks of the interfaces | [P/09.1 N1.7](spec/09.1-agent.norms.md) `networks` (review analysis of stage A 8–10, № 32) |
@@ -43,7 +43,7 @@ The setting channel is only the environment of [P/02.4 N1.2](../02-installer/spe
 | `CONSOLE_HOST`, `CONSOLE_PORT` | the address of its own console — the edit (P/09.1 N1.5) and the alarms (N1.10): the URL — `own_url`, the server check — `own_client` of [the role certificate contract](../common/contracts/role-certificate.md) (ADR-0075 addendum 2026-10-26 (4) item 3, (5) items 1–2) | `127.0.0.1`, `8080` | `w2c.env`, [P/02.4](../02-installer/spec/02.4-installer.norms.md) N1.7 `w2c_env` |
 | `RELAY`, `RELAY_HOST`, `RELAY_PORT` | the relay mode: the door for the members behind it (`RELAY` — `1`, none or empty — without the door, anything else — code 2); the unit does not write `RELAY_HOST`, `RELAY_PORT` — the default of the process `0.0.0.0` is not an explicit address: without a kit — a start refusal, code 2 (P/02.4 N1.6 `process`; ADR-0075 addendum 2026-10-26 (5) item 4) | `RELAY` not set; `0.0.0.0`; `8446` | [P/09.2 N1.1](spec/09.2-agent.norms.md) `door`; [P/02.4](../02-installer/spec/02.4-installer.norms.md) N1.2 (the row `RELAY`), N1.12 |
 | `AGENT_TOKEN_DIR` | the directory of the sockets of the local token door `<role>.sock` | `/run/w2c/domainagent` | [the local token door contract](../common/contracts/local-token-door.md) «The role socket» (review analysis of stage A 8–10, № 1 / decision 1); [P/09.1 N1.6](spec/09.1-agent.norms.md); [the env file contract](../common/contracts/env-file.md) «Environment variables» (a table row) |
-| `W2C_WALL_OFFSET` | the stand only: the shift of the wall clock of the agent; when set — a loud journal line | not set | [P/09.1](spec/09.1-agent.norms.md) «Implementation decides» item 3; [the env file contract](../common/contracts/env-file.md) «Environment variables» (a table row, «только стенд», like `W2C_SHRINK_AFTER`) |
+| `W2C_WALL_OFFSET` | the stand only: the shift of the wall clock of the agent; when set — a loud journal line | not set | [P/09.1](spec/09.1-agent.norms.md) «Implementation decides» item 3; [the env file contract](../common/contracts/env-file.md) «Environment variables» (a table row, «stand only», like `W2C_SHRINK_AFTER`) |
 | `BOX_ID`, `SERVER_NAME` | the box and the server | P/02.4 N1.2 | P/02.4 N1.2 |
 
 TLS: the kit of the role `domainagent` by `W2C_ROLE`; the client of the doors of the holder and of the relay — [P/09.1 N1.7](spec/09.1-agent.norms.md)
@@ -91,7 +91,7 @@ None: the setting channel is the environment only (P/02.4 N1.2).
 
 - The pass — once every `every`, the default `REPORT_EVERY` 5 s; the answer of the holder can set `every` 1…3600
   ([P/08.3](../08-domain/spec/08.3-domain.norms.md) N1.3, N1.5; [P/09.1](spec/09.1-agent.norms.md) N3 «the agent pass»).
-- `503 standby` of the holder — «держатель недоступен» for this pass, not a reason to look for another term; a retry by the next
+- `503 standby` of the holder — «the holder is unavailable» for this pass, not a reason to look for another term; a retry by the next
   pass ([P/09.1 N1.12](spec/09.1-agent.norms.md) `agent`).
 - Following the holder — before the report in every pass ([P/09.1](spec/09.1-agent.norms.md) N3 «follow»).
 - In the relay mode the relay pass — in every pass of the agent, after its own report, and even if its own report did not

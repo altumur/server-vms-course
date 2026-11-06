@@ -11,7 +11,7 @@
   },
   "pub": {
    "$ref": "#/$defs/common.domain_member_key",
-   "description": "hex of the member's public key — pub of the row domain/member-key",
+   "description": "hex of the member's public key — pub of the row domain/member-key The own-console verification key equals pub of domain/member-key. Authorized maintenance replaces the pair together and confirms it before member signing resumes (P/09.1 N1.1, review C4).",
    "x-codec": [
     "string"
    ]
@@ -742,11 +742,11 @@
    "type": "object",
    "properties": {
     "domain": {
-     "description": "the domain name (chapter 8.2, from М11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
+     "description": "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
     },
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "the holder's term (chapter 8.8, from М11/10 N1.1); the order — (term, rev), term is senior"
+     "description": "the holder's term (chapter 8.8, from M11/10 N1.1); the order — (term, rev), term is senior"
     },
     "rev": {
      "$ref": "#/$defs/common.pos53",

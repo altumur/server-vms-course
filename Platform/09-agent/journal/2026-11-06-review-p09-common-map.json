@@ -1,0 +1,102 @@
+{
+  "source_endpoint": "c19c0d3d2145b0f1bb631abfc7490ed15073aa0a",
+  "baseline": "5a355d41ba49239726e89997609b135db5268d73",
+  "path": "Platform/common/data/catalog.tsv",
+  "before_sha256": "cdc38f0842c84e8b497e6893d5e1d308350e58f0be2d76b583abd513249169f7",
+  "after_sha256": "e618cd673710b540d960f851498a353bb21db6640fcbee7d8493870d921e8886",
+  "changes": [
+    {
+      "physical_line": 88,
+      "key": "domain/member-key",
+      "column": "ops",
+      "before": "create=domainagent(first start of the agent, secret \u2014 a ring envelope, guard domain/agent-turn \u2014 P/09.1 N1.13 guard); cas=admin(w2cctl secrets seal, by the read version)",
+      "after": "create=domainagent(first start of the agent, secret \u2014 a ring envelope, guard domain/agent-turn \u2014 P/09.1 N1.13 guard); cas=admin(w2cctl secrets seal, by the read version),domainagent(operator-authorized local member-key replacement in one conditional batch with domain/member by confirmed versions of both rows and guard domain/agent-turn after stopping and joining all normal signers \u2014 unknown forbids signing until reread confirms the authorized pair, P/09.1 N1.1)"
+    },
+    {
+      "physical_line": 94,
+      "key": "domain/member",
+      "column": "ops",
+      "before": "create=domainagent(the function keys accepted the set and there is no row, also at the holder's cluster, guard domain/agent-turn \u2014 P/09.1 N1.13 guard)",
+      "after": "create=domainagent(the function keys accepted the set and there is no row, also at the holder's cluster, guard domain/agent-turn \u2014 P/09.1 N1.13 guard); cas=domainagent(operator-authorized local member-key replacement in one conditional batch with domain/member-key by confirmed versions of both rows and guard domain/agent-turn after stopping and joining all normal signers \u2014 unknown forbids signing until reread confirms the authorized pair, P/09.1 N1.1)"
+    }
+  ],
+  "other_cells_headers_order_lines_byte_exact": true,
+  "old_cells_are_exact_prefixes": true,
+  "existing_secrets_seal_unchanged": true,
+  "operator_authorizes_existing_domainagent_writes_with_turn_guard": true,
+  "role_projections": [
+    {
+      "family": "domain/member-key",
+      "writer_roles": [
+        "admin",
+        "domainagent"
+      ],
+      "reader_cas_guard_roles": [
+        "admin",
+        "domain",
+        "domainagent"
+      ],
+      "preserved": true
+    },
+    {
+      "family": "domain/member",
+      "writer_roles": [
+        "domainagent"
+      ],
+      "reader_cas_guard_roles": [
+        "<s>worker",
+        "console",
+        "domainagent"
+      ],
+      "preserved": true
+    }
+  ],
+  "family_read_tables": [
+    {
+      "path": "Platform/common/vectors/family-read/01.tsv",
+      "sha256": "48da299798a930c8e328ae15fa0f4fd6b6b69e0fbe5f48ea9f52ac5d3c4023db",
+      "all_cells_byte_exact": true
+    },
+    {
+      "path": "Platform/common/vectors/family-read/02.tsv",
+      "sha256": "e7a32797669cd22f51cc547c2918f7119f0f086b691ab6f4391e10028e2649a3",
+      "all_cells_byte_exact": true
+    },
+    {
+      "path": "Platform/common/vectors/family-read/03.tsv",
+      "sha256": "019c809542cd3a5ef852e0cc649f6cbcf29e345ab48e304a294a97b5b31b7db9",
+      "all_cells_byte_exact": true
+    },
+    {
+      "path": "Platform/common/vectors/family-read/04.tsv",
+      "sha256": "0e632843ec74f00093f22930feca07d497634f531343df8347f7a6b8c23d0845",
+      "all_cells_byte_exact": true
+    },
+    {
+      "path": "Platform/common/vectors/family-read/05.tsv",
+      "sha256": "6799ab0f6780a39bc9dca121ecd87f63c70a9ae2533cab4cc4d775069e877938",
+      "all_cells_byte_exact": true
+    },
+    {
+      "path": "Platform/common/vectors/family-read/06.tsv",
+      "sha256": "67f75dadff3559f7ce0d702eadc30c6bf1965f0895bc28d61e83330ae8036f03",
+      "all_cells_byte_exact": true
+    },
+    {
+      "path": "Platform/common/vectors/family-read/08.tsv",
+      "sha256": "8cffbf850e57a97ec70da3d36862224f859cb92b4bbc4146113c3448e148b643",
+      "all_cells_byte_exact": true
+    },
+    {
+      "path": "Platform/common/vectors/family-read/09.tsv",
+      "sha256": "327acf6d0279675cd6f9756e3468220949c3fff68a550f7bc1d6bebb635c4b03",
+      "all_cells_byte_exact": true
+    }
+  ],
+  "family_generator_selection": {
+    "families": 27,
+    "all_selector_input_fields_except_ops_byte_exact": true,
+    "full_generator_regeneration": "pending appointed code/base and coordinator joint GATE"
+  },
+  "who29_proposal": "WITHDRAWN; no family-read cell or case/expect changed"
+}
