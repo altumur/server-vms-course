@@ -96,6 +96,10 @@ worker-holder-takeover запускает две эпохи процессов-�
 
 worker-token-cache теперь различает локальный now и verification.now получателя. Проверка keep-current ставит локальный now за exp, но получатель проверяет и принимает настоящий current в своё ещё допустимое время; receiver=accepted — этот фактический ответ. Считаются настоящие запросы нового токена и замены кеша, проверяется сохранение current. Проверка подписи сохранена; локальные часы не подменяют исход получателя.
 
+## Привязки записи строки
+
+[row-write-bindings.tsv](../../forms/row-write-bindings.tsv) и [грамматика](row-write-bindings.md) задают конструктор state из снимка старта P/03.6-R018/R029 по ADR-0127; IO/CAS/retry остаются процедуре.
+
 ## Автоматы политик воркера
 
 Действующий класс машин используют [`contender-writer.machine.yaml`](../../forms/contender-writer.machine.yaml) с

@@ -18,3 +18,11 @@ place	layer	word	value
 /$defs/common.pos53	3	x-integer	true
 /$defs/common.time	3	x-time	true
 /$defs/common.uint53	3	x-integer	true
+/properties/at	3	x-codec	["any"]
+/properties/at	3	x-encoding	"json"
+/properties/cluster	3	x-codec	["string"]
+/properties/copies	3	x-codec	["array"]
+/properties/copies	3	x-encoding	"jcs"
+/properties/origin	3	x-codec	["string"]
+/properties/reason	3	x-codec	["string"]
+/properties/rev	3	x-codec	["string"]

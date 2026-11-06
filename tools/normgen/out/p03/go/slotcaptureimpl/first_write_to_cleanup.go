@@ -9,7 +9,7 @@ import (
 	"normgen/p03/slotcapture"
 )
 
-// FirstWriteToCleanup — YOURS at P/03.2-R024: rows 14 (first_write → cleanup) of Platform/03-worker/forms/slot-capture.tsv.
+// FirstWriteToCleanup — YOURS at P/03.2-R024: rows 15 (first_write → cleanup) of Platform/03-worker/forms/slot-capture.tsv.
 // action=- — YOURS procedure at norm; it MUST run before accepting an event in next. Never treat it as noop.
 // Cleanup's YOURS procedure is N3 step 4: list, guarded delete(s), final CAS even if the list is empty. A guard/CAS refusal aborts, unconfirmed waits.
 // Machine scope is one candidate. Full-key admission/badkey and all external inputs are validated by N3 Full keys and store refusal.

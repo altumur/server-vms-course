@@ -696,5 +696,126 @@ class VersionedDoors(unittest.TestCase):                # P/08 versioned-doors.t
         self.assertTrue(self.errors(self.good))
 
 
+
+RWB_CATALOG = ("key\tkind\towner\tops\treaders\twhen\tversion\tschema\tnorm\n"
+               "<sub>/state/<имя>/<id>\trow\tP/03.6\tguard=<s>worker\t<s>worker\tunit.state\t1\t03-worker/data/state.schema.json\tP/03.6 Н1.7\n"
+               "<sub>/epoch/<id>\trow\tP/03.2\tcreate=<s>worker\t<s>worker\t-\t1\t03-worker/data/epoch.schema.json\tP/03.2 Н1.5\n"
+               "<sub>/<manifest:unit.rows>/<id>\trow\tP/06.1\tcas=console\tconsole\t-\t1\tmanifest\tP/06.1 Н1.2\n")
+RWB_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["born", "revision", "epoch", "value"],
+              "properties": {"born": {"type": "string"}, "revision": {"$ref": "#/$defs/common.pos53"},
+                             "epoch": {"$ref": "#/$defs/common.pos53"}, "value": {}},
+              "$defs": {"common.pos53": {"type": "integer", "minimum": 1}}}
+RWB_DECLS = ("#start /sub string\n#start /unit string\n#start /born string\n#start /revision integer\n"
+             "#start /epoch integer\n#start /epoch_index string\n#input /name string\n#input /value dyn\n")
+RWB_KEY = "{start:/sub}/state/{input:/name}/{start:/unit}"
+RWB_GUARD = "{start:/sub}/epoch/{start:/unit}\tstart:/epoch_index"
+RWB_NORM = "P/03.6-R018,P/03.6-R029"
+RWB_GOOD = ("\t".join(check_forms.RWB_COLUMNS) + "\n" + RWB_DECLS +
+            "".join(f"state\t{RWB_KEY}\t/{f}\t{s}\t/{f}\t{RWB_GUARD}\t{RWB_NORM}\n"
+                    for f, s in (("born", "start"), ("revision", "start"), ("epoch", "start"), ("value", "input"))))
+
+
+class RowWriteBindings(unittest.TestCase):              # P/03 row-write-bindings.tsv (P03-GEN-01): фикстура и мутации
+    def setUp(self):
+        import json
+        self.tmp = Path(tempfile.mkdtemp())
+        self.lesson = self.tmp / "Platform/03-worker"
+        for d in ("forms", "spec", "data"):
+            (self.lesson / d).mkdir(parents=True)
+        (self.tmp / "Platform/common/data").mkdir(parents=True)
+        (self.tmp / "Platform/common/data/catalog.tsv").write_text(RWB_CATALOG, encoding="utf-8")
+        (self.lesson / "data/state.schema.json").write_text(json.dumps(RWB_SCHEMA), encoding="utf-8")
+        (self.lesson / "spec/03.6-worker.norms.md").write_text(
+            "## Н1\n<!-- req: P/03.6-R018 -->\ntext\n<!-- req: P/03.6-R029 -->\ntext\n", encoding="utf-8")
+        self.path = self.lesson / "forms/row-write-bindings.tsv"
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def errors(self, text):
+        self.path.write_text(text, encoding="utf-8")
+        return check_forms.check_row_write_bindings(self.path)[0]
+
+    def row(self, field, text=RWB_GOOD):
+        return next(x for x in text.split("\n") if x.startswith("state\t") and x.split("\t")[2] == field)
+
+    def cell(self, field, column, value, text=RWB_GOOD):
+        line = self.row(field, text)
+        cells = line.split("\t")
+        cells[check_forms.RWB_COLUMNS.index(column)] = value
+        return text.replace(line + "\n", "\t".join(cells) + "\n")
+
+    def all_cells(self, column, value):
+        text = RWB_GOOD
+        for f in ("/born", "/revision", "/epoch", "/value"):
+            text = self.cell(f, column, value, text)
+        return text
+
+    def test_good(self):
+        self.path.write_text(RWB_GOOD, encoding="utf-8")
+        errors, stats = check_forms.check_row_write_bindings(self.path)
+        self.assertEqual(errors, [])
+        self.assertEqual(stats["row_write_bindings"], 4)
+        const = self.cell("/born", "source", "const")
+        self.assertEqual(self.errors(self.cell("/born", "value", '""', const)), [])   # const "" — синтаксис
+
+    def test_real_lessons(self):                        # настоящая форма урока, если она есть в main
+        for path in check_forms.row_write_binding_forms(ROOT):
+            self.assertEqual(check_forms.check_row_write_bindings(path)[0], [], path)
+
+    def test_mutations(self):
+        head = "\t".join(check_forms.RWB_COLUMNS)
+        bad = {
+            "header extra": RWB_GOOD.replace(head, head + "\tmeaning", 1),
+            "header order": RWB_GOOD.replace(head, head.replace("field\tsource", "source\tfield"), 1),
+            "header short": RWB_GOOD.replace(head, head.replace("\tnorm", ""), 1),
+            "write name": self.all_cells("write", "State"),
+            "write field repeats": RWB_GOOD + self.row("/born") + "\n",
+            "key differs": self.cell("/epoch", "key", "{start:/sub}/state/{input:/name}/x"),
+            "guard_key differs": self.cell("/epoch", "guard_key", "{start:/sub}/epoch/x"),
+            "guard_version differs": self.cell("/epoch", "guard_version", "input:/name"),
+            "field not pointer": self.cell("/born", "field", "born"),
+            "field nested": self.cell("/born", "field", "/born/x"),
+            "foreign property": self.cell("/born", "field", "/made"),
+            "required not bound": RWB_GOOD.replace(self.row("/epoch") + "\n", ""),
+            "source": self.cell("/born", "source", "snapshot"),
+            "value no slash": self.cell("/born", "value", "born"),
+            "value empty": self.cell("/born", "value", ""),
+            "value undeclared": self.cell("/born", "value", "/made"),
+            "value of other source": self.cell("/value", "source", "start"),
+            "value CEL": self.cell("/revision", "value", "/revision + 1"),
+            "const CEL": self.cell("/revision", "value", "start.revision + 1", self.cell("/revision", "source", "const")),
+            "const not strict JSON": self.cell("/revision", "value", "NaN", self.cell("/revision", "source", "const")),
+            "const type": self.cell("/revision", "value", '"1"', self.cell("/revision", "source", "const")),
+            "declaration type": RWB_GOOD.replace("#input /value dyn", "#input /value any"),
+            "declaration repeats": RWB_GOOD.replace("#input /value dyn", "#input /value dyn\n#input /value string"),
+            "declaration form": RWB_GOOD.replace("#input /value dyn", "#input value dyn"),
+            "type against schema": RWB_GOOD.replace("#start /revision integer", "#start /revision string"),
+            "key placeholder undeclared": self.all_cells("key", "{start:/sub}/state/{input:/nom}/{start:/unit}"),
+            "key placeholder not string": self.all_cells("key", "{start:/sub}/state/{input:/name}/{start:/epoch}"),
+            "key placeholder part of segment": self.all_cells("key", "{start:/sub}/state/x{input:/name}/{start:/unit}"),
+            "key placeholder name": self.all_cells("key", "{start:/sub}/state/{arg:/name}/{start:/unit}"),
+            "key CEL": self.all_cells("key", "start.sub + '/state'"),
+            "key foreign family": self.all_cells("key", "{start:/sub}/state"),
+            "key family without schema": self.all_cells("key", "{start:/sub}/{input:/name}/{start:/unit}"),
+            "guard_key template": self.all_cells("guard_key", "{start:/sub}/epoch/{now}"),
+            "guard_version form": self.all_cells("guard_version", "/epoch_index"),
+            "guard_version undeclared": self.all_cells("guard_version", "start:/version"),
+            "guard_version not string": self.all_cells("guard_version", "start:/epoch"),
+            "guard one filled (key)": self.all_cells("guard_version", "-"),
+            "guard one filled (version)": self.all_cells("guard_key", "-"),
+            "norm empty": self.cell("/born", "norm", ""),
+            "norm absent anchor": self.cell("/born", "norm", "P/03.6-R018,P/03.6-R999"),
+            "norm foreign lesson": self.cell("/born", "norm", "P/06.1-R030"),
+            "norm repeats": self.cell("/born", "norm", "P/03.6-R018,P/03.6-R018"),
+            "norm form": self.cell("/born", "norm", "P/03.6 Н1.7"),
+        }
+        self.assertEqual(self.errors(RWB_GOOD), [])
+        self.assertEqual(self.errors(self.all_cells("guard_key", "-").replace("\tstart:/epoch_index\t", "\t-\t")), [])
+        for what, text in bad.items():
+            self.assertNotEqual(text, RWB_GOOD, what)
+            self.assertTrue(self.errors(text), what)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -96,6 +96,10 @@ worker-holder-takeover runs two holder process epochs and a real blocked action 
 
 worker-token-cache now distinguishes local now from verification.now at the receiver. The keep-current probe sets local now beyond exp but verifies and accepts the real current token at the recipient's still-valid time; receiver=accepted is that actual reply. It counts actual new-token requests and cache replacements and checks that current remains. Signature verification is retained; a local clock is not substituted for the receiver's outcome.
 
+## Row-write bindings
+
+[row-write-bindings.tsv](row-write-bindings.tsv) and its [grammar](row-write-bindings.md) define the state constructor from the start snapshot at P/03.6-R018/R029 under ADR-0127; IO/CAS/retry remain with the procedure.
+
 ## Worker policy machines
 
 The existing machine class is used by [`contender-writer.machine.yaml`](contender-writer.machine.yaml) with
