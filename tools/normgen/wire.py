@@ -13,6 +13,7 @@ import re
 from dataclasses import dataclass, field
 from typing import NamedTuple, Optional
 from pathlib import Path
+import tsv_input
 
 import vector_consumers
 
@@ -274,20 +275,13 @@ def parse(root, keys=None, surfaces=None):
     path = root / FORM
     if not path.is_file():
         raise WireError(f"no {FORM}")
-    head, out, seen = None, [], set()
-    for no, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
-        if not line or line.startswith("#"):
-            continue
-        cells = line.split("\t")
-        if head is None:
-            if cells != COLUMNS:
-                raise WireError(f"{FORM}:{no}: header {cells}, expected {COLUMNS}")
-            head = cells
-            continue
+    try:
+        source = tsv_input.read(path, names=COLUMNS, root=root)
+    except tsv_input.TSVError as exc:
+        raise WireError(str(exc)) from None
+    out, seen = [], set()
+    for no, r in source.rows:
         w = f"{FORM}:{no}"
-        if len(cells) != len(COLUMNS):
-            raise WireError(f"{w}: {len(cells)} cells, expected {len(COLUMNS)}")
-        r = dict(zip(COLUMNS, cells))
         if not re.fullmatch(r"(common|\d\d-[a-z0-9-]+)/[a-z0-9-]+", r["package"]):
             raise WireError(f"{w}: package {r['package']!r}")
         if not re.fullmatch(r"vectors|layout|stand:[a-z0-9-]+", r["surface"]):
@@ -307,8 +301,6 @@ def parse(root, keys=None, surfaces=None):
                     js["expect"], js["compare"], js["markers"], js["native"], r["norm"])
         check_binding(root, b, w)
         out.append(b)
-    if head is None:
-        raise WireError(f"{FORM}: no header")
     return out
 
 
@@ -519,20 +511,10 @@ def read_rows(root, b):
         raise WireError(f"{FORM}:{b.line}: no {path.relative_to(root)}")
     positional = b.header[0] == "-"
     names = b.header[1:] if positional else b.header
-    head, rows = None, []
-    for no, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
-        if not line or line.startswith("#"):
-            continue
-        cells = line.split("\t")
-        if not positional and head is None:
-            head = cells
-            if head != names:
-                raise WireError(f"{FORM}:{b.line}: header {names}, the table has {head}")
-            continue
-        if len(cells) != len(names):
-            raise WireError(f"{path.relative_to(root)}:{no}: {len(cells)} cells, header {names}")
-        rows.append((no, dict(zip(names, cells))))
-    return rows
+    try:
+        return tsv_input.read(path, names=names, positional=positional, root=root).rows
+    except tsv_input.TSVError as exc:
+        raise WireError(str(exc)) from None
 
 
 def decode(cell, how, where):

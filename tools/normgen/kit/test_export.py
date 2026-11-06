@@ -6,6 +6,7 @@ EXPORT из ~/cammeta-specs (или CAMMETA_SPECS)."""
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -75,6 +76,29 @@ class Export(unittest.TestCase):
         stages = (self.specs / "Platform/01-store/forms/stages.tsv").read_bytes()
         doc = (self.dst / "01-store/internal/vectortests/doc.go").read_text(encoding="utf-8")
         self.assertIn(hashlib.sha256(stages).hexdigest(), doc)
+
+    def test_legacy_optional_registries(self):
+        import gen_tests
+        consumers = gen_tests.common_vectors.CONSUMERS
+        lessons = gen_tests.vector_consumers.LESSONS
+        self.assertFalse((self.specs / consumers).exists(), "4c101 predates the consumers registry")
+        paths = gen_tests.sources("vectors", root=self.specs)
+        self.assertNotIn(self.specs / consumers, paths)
+        self.assertNotIn(self.specs / lessons, paths)
+        with tempfile.TemporaryDirectory(prefix="export-no-registries-") as tmp:
+            root = Path(tmp)
+            shutil.copytree(self.specs / "Platform", root / "Platform")
+            (root / lessons).unlink(missing_ok=True)
+            paths = gen_tests.sources("vectors", root=root)
+            self.assertIn(root / gen_tests.STAGES, paths)
+            self.assertNotIn(root / consumers, paths)
+            self.assertNotIn(root / lessons, paths)
+            self.assertTrue(gen_tests.render(root), "legacy BEFORE_FORM still emits real vector tests")
+            # A present consumers form still requires the lesson registry.
+            (root / consumers).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / consumers, root / consumers)
+            with self.assertRaisesRegex(gen_tests.common_vectors.CommonError, "no Platform/lessons.tsv"):
+                gen_tests.sources("vectors", root=root)
 
     def test_kit_builds(self):
         store = self.dst / "01-store"

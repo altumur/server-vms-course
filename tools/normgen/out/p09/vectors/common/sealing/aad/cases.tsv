@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/sealing aad.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/sealing/aad.tsv sha256 f4cc7ad8010f47929fbd8e0ed2532e086a6b751458eede8884374fd619e604fc
+# source Platform/common/vectors/sealing/aad.tsv sha256 9fa50bd210ad6e8a9a850559e6202df2b8ba8dc73d1b3748179c9b898e6b140f
 case	input	exit	stdout
 line-4	line-4.json	0	{"pointer":"/feed_secret","aad_hex":"74657374737562322f74616c6c6965732f7431002f666565645f736563726574"}
 line-5	line-5.json	0	{"pointer":"/settings/a~1b/0/password_secret","aad_hex":"74657374737562322f74616c6c6965732f7431002f73657474696e67732f617e31622f302f70617373776f72645f736563726574"}

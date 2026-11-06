@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/secret-in cases.tsv (gen_vectors.py); compare secret-domain.
-# source Platform/common/vectors/secret-in/cases.tsv sha256 965873a55cddcf00998c63340e5118e57e49a397dbe40f25dc4f7c973b511ca3
+# source Platform/common/vectors/secret-in/cases.tsv sha256 888e0f8dd2393815908b355576cb7b720e0ae10ec8edbaf37e7fd05602d1a156
 case	input	exit	stdout
 line-26	line-26.json	0	{"fault":"cred_secret","hidden":["Hunter2"]}
 line-27	line-27.json	0	{"fault":"cred_secret","hidden":["Hunter2"]}

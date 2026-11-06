@@ -52,6 +52,32 @@ class DirectiveLabels(unittest.TestCase):
         with self.assertRaisesRegex(gen_admin.GenError, "no directive row"):
             self.render_with("invented")
 
+    def test_commands_receive_decoded_cells_and_validate_proof(self):
+        import hashlib
+        import tsv_input
+        expected = gen_admin.commands()
+        source = tsv_input.read(gen_admin.FLAGS, root=gen_admin.ROOT)
+        with tempfile.TemporaryDirectory(prefix="admin-transport-") as tmp:
+            root = Path(tmp)
+            path = root / "Platform/01-store/forms/daemon-flags.tsv"
+            path.parent.mkdir(parents=True)
+            lines = ["# cell-json: flag", "\t".join(source.columns)]
+            proofs = ["\t".join(tsv_input._PROOF_COLUMNS)]
+            for no, (_, row) in enumerate(source.rows, 3):
+                lines.append("\t".join(json.dumps(row[col], ensure_ascii=True) if col == "flag" else row[col]
+                                       for col in source.columns))
+                sha = hashlib.sha256(row["flag"].encode()).hexdigest()
+                proofs.append("\t".join((path.relative_to(root).as_posix(), str(no), "flag", sha, sha)))
+            path.write_text("\n".join(lines) + "\n")
+            proof = root / tsv_input._PROOF
+            proof.parent.mkdir(parents=True)
+            proof.write_text("\n".join(proofs) + "\n")
+            with patch.object(gen_admin, "ROOT", root), patch.object(gen_admin, "FLAGS", path):
+                self.assertEqual(gen_admin.commands(), expected)
+                proof.write_text("\n".join(proofs[:-1]) + "\n")
+                with self.assertRaisesRegex(gen_admin.GenError, "byte proof"):
+                    gen_admin.commands()
+
 
 class Admin(unittest.TestCase):
     @classmethod

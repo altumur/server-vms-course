@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/schema cases.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/schema/cases.tsv sha256 fba7614fd82d19ebec19d1f08aef4e51bf70dab41cbbba0d4462e7691add09ba
+# source Platform/common/vectors/schema/cases.tsv sha256 5e9bcabac08ff52fa628414ebbcd057cb4acdf95a9d31ab224bf673a0e0239c5
 case	input	exit	stdout
 line-3	line-3.json	0	{"start":true,"version":"1"}
 line-4	line-4.json	0	{"start":true,"version":"3"}

@@ -94,26 +94,18 @@ def read_table(root, decl):
     path = d / decl["table"]
     if not path.is_file():
         raise GenError(f"no {path.relative_to(root)}")
-    rows, header = [], decl.get("header", "file")
-    head = None if header is None else None
-    for no, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
-        if not line or line.startswith("#"):
-            continue
-        cells = line.split("\t")
-        if header is None:
-            rows.append((no, dict(zip(decl["fields"], cells))))
-            continue
-        if head is None:
-            head = cells
-            continue
-        if len(cells) != len(head):
-            raise GenError(f"{path.relative_to(root)}:{no}: {len(cells)} cells, header {head}")
-        rows.append((no, dict(zip(head, cells))))
+    import tsv_input
+    header = decl.get("header", "file")
+    try:
+        table = tsv_input.read(path, root=root, positional=header is None,
+                               names=decl["fields"] if header is None else None)
+    except tsv_input.TSVError as exc:
+        raise GenError(str(exc)) from None
     if header is not None:
         need = set(decl.get("inputs", [])) | ({decl["input"]} if isinstance(decl.get("input"), str) else set())
-        if head is None or need - set(head):
-            raise GenError(f"{path.relative_to(root)}: columns {sorted(need - set(head or []))} not in the header")
-    return d, path, rows
+        if need - set(table.columns):
+            raise GenError(f"{path.relative_to(root)}: columns {sorted(need - set(table.columns))} not in the header")
+    return d, path, table.rows
 
 
 def plan(root=ROOT):
@@ -1550,16 +1542,21 @@ def kit_files(module, out=DEFAULT_OUT):
 
 def provenance():
     import hashlib
+    import tsv_input
 
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()}
+    def entries(paths):
+        return [entry(p) for p in dict.fromkeys(p for src in paths for p in
+                (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src]))]
+    generators = [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))]
     decls, known = plan(ROOT)
     if L.key == "06-console":
         import wire
         runs, _ = wire.expand(ROOT, L.key)
         paths = {package_dir(ROOT, r.binding.package) / r.binding.table for r in runs}
         forms = sorted(paths | {ROOT / wire.FORM, ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS})
-        return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()),
+        return {"form": entries(forms), "generator": entry(Path(__file__).resolve()), "generators": generators,
                 "handwritten": [entry(HERE / p) for p in ("wire_api_p06.py", "wire.py", "wire_vectors.py",
                     "vector_consumers.py", "common_vectors.py", "wirert/full/go/check.go", "doorrt2/go/schema.go")],
                 "judge": entry(HERE / "test_wire_api_p06.py"),
@@ -1570,7 +1567,7 @@ def provenance():
         runs, _ = wire_vectors.wire.expand(ROOT, L.key)
         paths = {package_dir(ROOT, r.binding.package) / r.binding.table for r in runs}
         forms = sorted(paths | {ROOT / wire_vectors.wire.FORM, ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS})
-        return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()),
+        return {"form": entries(forms), "generator": entry(Path(__file__).resolve()), "generators": generators,
                 "handwritten": [entry(HERE / p) for p in ("wire.py", "wire_vectors.py", "vector_consumers.py", "wirert/go/check.go",
                                                           "doorrt2/go/schema.go")], "judge": entry(JUDGE),
                 "judges": [entry(HERE / p) for p in ("test_wire_vectors.py", "test_wire.py", "test_consumer_packages.py", "test_wire_full.py", "wire_fakes.py")]}
@@ -1580,7 +1577,7 @@ def provenance():
     hand = ["vector_consumers.py", "consumer_vectors.py"]
     if any(d.get("_form") for d in decls):
         hand += ["wire.py", "wire_vectors.py", "wirert/full/go/check.go", "doorrt2/go/schema.go"]
-    return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()),
+    return {"form": entries(forms), "generator": entry(Path(__file__).resolve()), "generators": generators,
             "handwritten": [entry(HERE / p) for p in hand], "judge": entry(JUDGE),
             "judges": [entry(HERE / p) for p in ("test_consumer_packages.py", "test_gen_vectors_lessons.py",
                                                 "test_wire_full.py", "wire_fakes.py")]}

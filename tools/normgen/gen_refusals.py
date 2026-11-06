@@ -304,8 +304,8 @@ class PlainTable:
             elif code == "exit !0":
                 r["any"] = True
             elif re.fullmatch(r"[1-5][0-9]{2}", code):
-                if r["surface"] not in body_at:
-                    raise GenError(f"{where}: an HTTP status only at the surface {'/'.join(body_at)}")
+                if r["surface"] not in body_at + ("call",):
+                    raise GenError(f"{where}: a numeric outcome code only at the surface {'/'.join(body_at)}/call")
                 r["status"] = int(code)
             else:
                 raise GenError(f"{where}: code {code!r} — exit N, exit !0, NNN (peer) or -")
@@ -350,7 +350,7 @@ type Spec struct {
 	Surface string   // call (a pure procedure), cli (an operator command), start, process (a running process), peer
 	Exit    int      // cli, start, process: the exit code fixed by the form; -1 — none fixed (see AnyNonZero)
 	AnyNonZero bool  // «exit !0»: any nonzero exit code (2 included) — the code is yours, never 0
-	Status  int      // peer: the HTTP status of the peer's door (its owner is another lesson); 0 — none
+	Status  int      // peer/http: the door status; call: a stored outcome code fixed by the form; 0 — none
 	Word    string   // a fixed refusal/diagnostic token; "" — none
 	Log     []string // the subjects the diagnostic must name; it fixes no stdout/stderr format
 	Words   []string // the fixed fragments «…» the diagnostic must carry
@@ -478,9 +478,15 @@ def kit_files(out=DEFAULT_OUT):
 
 def provenance():
     """Паспорт части (ADR-0125 доп. (1) п. 6 (а)): форма, генератор, судья — пути и sha256."""
+    import tsv_input
+
     def entry(path):
         return {"path": str(path.relative_to(ROOT)), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
-    return {"form": entry(DEFAULT_TABLE), "generator": entry(Path(__file__).resolve()), "judge": entry(JUDGE)}
+    paths = tsv_input.source_files(DEFAULT_TABLE, root=ROOT)
+    if tsv_input.read(DEFAULT_TABLE, root=ROOT).columns == tuple(RESPONSE_COLUMNS):
+        paths.append(L.openapi)
+    return {"form": [entry(p) for p in dict.fromkeys(paths)], "generator": entry(Path(__file__).resolve()),
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))], "judge": entry(JUDGE)}
 
 
 KIT_MD = """
@@ -488,7 +494,7 @@ KIT_MD = """
 
 | Package | Import path | Origin |
 |---|---|---|
-| `refusals` | `{module}/internal/refusals` | generated from `Platform/01-store/forms/refusals.tsv` (Н4 of chapters 1.1–1.3) |
+| `refusals` | `{module}/internal/refusals` | generated from `Platform/01-store/forms/refusals.tsv` (N4 of chapters 1.1–1.3) |
 
 One `*refusals.Spec` per row, named after the row (`refusals.KeyRules`, `refusals.ConnectionLimit`,
 `refusals.StartFlags`, …); `refusals.All`, `refusals.ByName(name)`.
@@ -510,14 +516,14 @@ func (s *Spec) LogLine(values map[string]string) (string, error) // start, cli: 
 func (s *Spec) Exit(logf func(string), values map[string]string) int // logs LogLine, returns Code
 ```
 
-- An http refusal: pick the row by its condition (the names are the conditions of Н4; the rows of the write command
+- An http refusal: pick the row by its condition (the names are the conditions of N4; the rows of the write command
   carry the names of `write-checks.tsv` checks), then with part `door`:
   `a, err := apidoor.Refuse(op, s.Code, s.Kind, msg, values)`; `a.RetryAfter = s.RetryAfter`. `Check(values)` first if
   you want the catalogue to judge the fields; the door judges the body against the OpenAPI `*Fault`.
 - A start refusal: `os.Exit(refusals.StartFlags.Exit(log.Print, map[string]string{"flag": r.Flag}))` (with part
   `flags`: `r` is the `*flags.Refusal`).
 - The catalogue says the code, the kind, the fields, the header and what the log names — not when a refusal happens:
-  the conditions in words are the prose of Н4, the write command order is `write-checks.tsv` (part `writecheck`).
+  the conditions in words are the prose of N4, the write command order is `write-checks.tsv` (part `writecheck`).
 """
 
 

@@ -15,6 +15,8 @@ DIGIT = %x30-39
 
 The declaration occupies the whole physical line. There is exactly one ASCII space after the colon, no spaces around commas, no indentation and no trailing spaces. Names are unique and name existing columns. Duplicate table header names are invalid. The ordinary first nonempty, noncomment line is the header. A headerless table gets its names from the existing `header` field in [wire.tsv](../vectors/wire.tsv): the leading `-` declares headerless input and is not a column. Its first data row is retained. No new header row is inserted.
 
+For acceptance `scenarios.tsv`, the existing source form supplies `scenario`, `step`, `request`, `expect` in that order. The traditional comment header is not a data row; the first scenario row is retained. The same form also accepts its ordinary header. These existing column names are supplied to the common reader before source decoding; the marker does not infer a form from an inner payload.
+
 ## Cells and decoding
 
 Every data cell of every declared column is an ASCII strict JSON string, including an empty value as `""`. A non-ASCII character uses a JSON Unicode escape; a character outside the basic multilingual plane uses a valid surrogate pair. Invalid JSON, a JSON value other than a string, an unpaired surrogate, a duplicate declaration or column, an unknown name, or a row with the wrong width is a form error. Encoding some cells of a declared column and leaving others raw is invalid. Undeclared columns are unchanged.

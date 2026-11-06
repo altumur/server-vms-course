@@ -63,6 +63,9 @@ def synth_mismatches(runtime):
     import json
     sys.path.insert(0, str(ROOT / "skills/lesson-spec/scripts"))
     from v7 import stack
+    sys.path.insert(0, str(HERE))
+    import gen_families
+    units = gen_families.unit_words()
     fam = stack.Family(SYNTH, "row")
     with tempfile.TemporaryDirectory(prefix="famsynth-") as t:
         mod = Path(t) / "go"
@@ -70,8 +73,10 @@ def synth_mismatches(runtime):
         (mod / "go.mod").write_text("module normgen/p02\n\ngo 1.22\n", encoding="utf-8")
         (mod / "families/runtime.go").write_text(Path(runtime).read_text(encoding="utf-8"), encoding="utf-8")
         (mod / "families/families.go").write_text(
-            "package families\n\nvar Synth = &Family{Key: \"test/x\", Kind: \"row\", Template: []Seg{{Lit: "
-            "\"test/x\"}}, Outcomes: []Outcome{{Path: \"\", Reader: \"r\", Unit: \"строка\"}}, Doc: "
+            "package families\n\nconst unitRow = " + json.dumps(units["row"]) + "\n"
+            "const unitField = " + json.dumps(units["field"]) + "\n\n"
+            "var Synth = &Family{Key: \"test/x\", Kind: \"row\", Template: []Seg{{Lit: "
+            "\"test/x\"}}, Outcomes: []Outcome{{Path: \"\", Reader: \"r\", Unit: unitRow}}, Doc: "
             + json.dumps(json.dumps(SYNTH)) + "}\n\nvar All = []*Family{Synth}\n\n"
             "func ByKey(key string) *Family {\n\tfor _, f := range All {\n\t\tif f.Key == key {\n\t\t\treturn f\n"
             "\t\t}\n\t}\n\treturn nil\n}\n", encoding="utf-8")
@@ -84,6 +89,8 @@ def synth_mismatches(runtime):
                 cases.append({"family": "test/x", "key": "test/x", "mode": mode, "who": ["r"], "text": text})
                 want.append(fam.judge(json.loads(text), mode))
         got = family_judge.harness(mod, cases)
+        if len(got) != len(cases):
+            raise AssertionError(f"synthetic harness executed {len(got)} of {len(cases)} cases")
         return [(c["mode"], c["text"], (g["verdict"], sorted(g["paths"])), (w["verdict"], sorted(w["paths"])))
                 for c, g, w in zip(cases, got, want)
                 if (g["verdict"], sorted(g["paths"])) != (w["verdict"], sorted(w["paths"]))]
@@ -133,6 +140,9 @@ class DocMode(unittest.TestCase):
         return judge(t / "go"), f
 
     def test_mutants_killed(self):
+        baseline = judge(self.mod)
+        self.assertEqual(baseline.returncode, 0, baseline.stdout[-2000:] + baseline.stderr[-2000:])
+        self.assertEqual(synth_mismatches(HERE / "famrt2/go/runtime.go"), [])
         for old, new, why in (
                 ("if len(p) > len(b) && samePrefix(p, b) {", "if false && len(p) > len(b) && samePrefix(p, b) {",
                  "children of a bad name"),
@@ -145,8 +155,13 @@ class DocMode(unittest.TestCase):
                 ('if mn, ok := word(chain, "x-max-names"); ok {', 'if mn, ok := word(chain, "x-max-names"); ok && false {',
                  "x-max-names")):
             done, runtime = self.mutant(old, new)
-            killed = done.returncode != 0 or synth_mismatches(runtime)
+            self.assertIn(done.returncode, (0, 1), "judge/build errors are not killed mutants: " + done.stderr[-1000:])
+            if done.returncode == 1:
+                self.assertIn("FAIL ", done.stdout, "the mutant must execute the judge cases")
+            mismatches = synth_mismatches(runtime)
+            killed = done.returncode == 1 or mismatches
             self.assertTrue(killed, f"mutant survived (corpus and synthetic): {why}\n{done.stdout[-500:]}")
+            print(f"\nfamrt2 mutant {why}: corpus exit {done.returncode}, synthetic mismatches {len(mismatches)}")
 
 
 if __name__ == "__main__":

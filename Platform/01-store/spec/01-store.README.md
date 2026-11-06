@@ -80,7 +80,7 @@ The one-box daemon work is split into `daemon_doors` (the service doors and stat
 
 ### Chapter 1.3 — the store daemon
 
-References «Н…» are norms of chapter 1.3; rights are chapter 1.2.
+References «N…» are norms of chapter 1.3; rights are chapter 1.2.
 
 1. Describe the stable/transitional membership of the group, sequential join/leave and the door without a vote. For status keep the exact uint64; `leader` is the `-api` address, `leader_id` is the id. Do not forward admin.sock; take the rights from chapter 1.2. The daemon flags are only the table «Daemon flags» of N1.3; the sockets are in one directory, without subdirectories (admin.sock and the role sockets side by side), inherited ones by `FileDescriptorName` (N1.3 `sockets`).
 

@@ -191,7 +191,7 @@ func (f *Family) OutcomesFor(paths []string, reader string) []string {
 		for _, i := range cov {
 			if len(unpointer(own[i].Path)) == deep {
 				top = append(top, i)
-				field = field || own[i].Unit != "строка"
+				field = field || own[i].Unit != unitRow
 			}
 		}
 		if !field {

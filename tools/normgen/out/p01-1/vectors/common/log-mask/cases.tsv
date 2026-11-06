@@ -1,7 +1,7 @@
 # Inputs of the vector command for common/log-mask cases.tsv (tools/normgen/gen_tests.py, ADR-0125 № 6).
 # Native outcome: code 0, the JSON string of the masked text, compared byte for byte; stdout is compared as one JSON value by value (tools/normgen/vector_judge.py).
-# source Platform/common/vectors/log-mask/cases.tsv sha256 6340d44897e0a5d006b6450efbd289d97e0f6c9b31fad94f25a061632b8a4bb7
-# source Platform/common/vectors/secret-in/fields.yaml sha256 10f5130600ba4ebb92806c150c12eab9ccdb940b834c3add9937f301c9285d10
+# source Platform/common/vectors/log-mask/cases.tsv sha256 795efff559e56f35750304355edd10e765c64615c1cf6f3b18438713d0dbe0ee
+# source Platform/common/vectors/secret-in/fields.yaml sha256 14eb6001cabee982085a91c8af31984745c67e0327c1699dd82eadc21ca2677c
 case	input	exit	stdout
 line-14	line-14.json	0	"DefaultEndpointsProtocol=https;AccountName=acc;AccountKey=***;EndpointSuffix=core.windows.net"
 line-15	line-15.json	0	"BlobEndpoint=https://acc.blob.core.windows.net/;SharedAccessSignature=***&ss=b&sig=***"

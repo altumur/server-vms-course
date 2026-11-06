@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/record shared.tsv (gen_vectors.py); compare subset.
-# source Platform/common/vectors/record/shared.tsv sha256 a63c08fe5dd1e88d58b063c85cfb4f79c32db2b3be6308d2f40cf30abbbd7c19
+# source Platform/common/vectors/record/shared.tsv sha256 d0f62fa73872e0c50014d200bca5c1127ca46d6aceee7a8a0fe0313a1e37aefc
 case	input	exit	stdout
 line-4	line-4.json	0	{"result":"ok","term":1}
 line-5	line-5.json	0	{"result":"refused","reason":"unknown_issuer"}

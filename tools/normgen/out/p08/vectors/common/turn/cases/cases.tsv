@@ -1,5 +1,5 @@
 # Inputs of the vector command for common/turn cases.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/turn/cases.tsv sha256 3b01fa9210443cc0dd3d21566e1eae79f22ba625128d4849450ba49d3b96a4be
+# source Platform/common/vectors/turn/cases.tsv sha256 ea768f504ed1f221b7b901ba2e7cef1002b2ad05116801475aeeca28f9156526
 case	input	exit	stdout
 line-19	line-19.json	0	[{"write":{"holder":"box-a:4242:a1b2c3"},"cas":""},"held"]
 line-20	line-20.json	0	[{"write":{"holder":"box-a:4242:a1b2c3"},"cas":5},"held"]

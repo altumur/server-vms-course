@@ -1,7 +1,7 @@
 # Inputs of the vector command for 01-store/write-checks write-checks.probes.tsv (tools/normgen/gen_tests.py, ADR-0125 № 6).
 # Native outcome: code 0, {"n": 0} | {"n", "code", "kind"} of the first violated row; stdout is compared as one JSON value by value (tools/normgen/vector_judge.py).
-# source Platform/01-store/forms/write-checks.probes.tsv sha256 c203ca46b1efd9645688a51fe11afe6f0701c06ac2f9101aae4b56c43d2ee516
-# source Platform/01-store/forms/write-checks.tsv sha256 ff8857eb04db915f7763a41d04ae99777f428575a40a27a2b7383fac8daa53c6
+# source Platform/01-store/forms/write-checks.probes.tsv sha256 eb28949ae665ea166fc8ff4f163190410cab068f6179878665ed04cff7cc02a3
+# source Platform/01-store/forms/write-checks.tsv sha256 74430e7db8abc9b07af565d6b5a2be80a273650d2cc3c9e4b4f7b3a2d10fbafb
 case	input	exit	stdout
 line-16	line-16.json	0	{"n":0}
 line-17	line-17.json	0	{"n":0}
