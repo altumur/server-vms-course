@@ -4,6 +4,7 @@
 - База (общий опубликованный замороженный источник и единственная база отчёта): `c47f9ce53e6c0893af5182cb48b536886fa827f0` (ветка `kimi103/review-p05-adr0129-c47f`, дерево `/home/pilot/review103-kimi`).
 - Критерии: ADR-0129 основной текст и доп. (1)–(15), Т1–Т5, З-10 (доп. (12) с разбором доп. (14) п. 1).
 - Отчёт — единственный файл ветки (report-only); источник, формы, генераторы и судьи не правились. Доказательства вне дерева: `/tmp/p05-evidence/` (check_spec-full.txt, schema-probe.py, schema-probe.txt).
+- Уточнение 2026-11-07 (второй коммит ветки, первый — 3cceced0e сохранён): по замечанию «Архитектора» исправлен описательный счёт схем данных — в `Platform/05-resource/data` ровно 12 файлов `*.schema.json` (не «13»); docstring пробы и заголовок её вывода уточнены, исходные копии доказательств сохранены у «Архитектора». Находки и счёт (источник Б0/С1/М4, судьи Б0/С0/М0) без изменений.
 - С review103 находками/черновиками/вердиктами до сдачи не обменивалась; прежние вердикты и счётчики, включая результаты З-9 в этом источнике, не наследовались — всё ниже из собственного чтения среза c47f9ce53.
 
 ## 0. Замечания к требованиям (первый раздел по п. 7 ADR-0129)
@@ -21,7 +22,7 @@
 - `spec/05-resource.api.openapi.yaml` — все 1095 строк (пути, x-route-priority/capture/decode/error, параметры x-query-lexeme, компоненты);
 - формы: `forms/README.md`, `daemon-flags.tsv`, `door-roles.tsv` (11 операций), `refusals.tsv` (27 исходных строк, 37 проекций), `stages.tsv`;
 - приёмка: `acceptance/README.md` целиком; `scenarios.tsv` — все 35 сценариев построчно; `seams.tsv` — все s01–s62 с проверкой арифметики retention-границ (86400/172800/94608000/94694500/180000/176400 — все сходятся с «equality deletes»); `inputs/gone-foo.json`, `inputs/ticket-t1.json`;
-- данные: 12 семейных схем структурным разбором (13 файлов; events-* делят форму строки), outcomes/layers — по местам ссылок; команда и вывод: `/tmp/p05-evidence/schema-probe.{py,txt}`;
+- данные: все 12 семейных схем — структурный разбор (ровно 12 файлов `*.schema.json`; семь файлов `events-*` делят форму строки журнала), outcomes/layers — по местам ссылок; команда и вывод: `/tmp/p05-evidence/schema-probe.{py,txt}`;
 - векторы: `vectors/relieve/README.md` + cases.tsv (9 строк) + short.tsv (6 строк — как заявлено);
 - связанные общие договоры: `event-journal.md`, `presence-lock.md`, `tombstone.md`, `object-client.md` — целиком; `observation.md`, `env-file.md`, `slot.md`, `schema.md` — точечно на срезе (LOST_AFTER 45, ALIVE_EVERY 15, FOR 300 без изменений);
 - журнал: `decisions/journal/platform/05-resource/corrections.tsv` (22 строки);
