@@ -46,3 +46,7 @@
 - **Исполнение.** Повторный приём камеры и партии с новым ключом остаётся долгом до настоящего запуска. Обычные сценарии и швы не исполнялись.
 - **Носители.** Механические копии чисел и слов перечислены в `carrier-map.json`. Связь с `check_constants` — отдельная доля, не эта поставка.
 - **Ошибки ms.** 4 ошибки составной базы остаются ошибками и не сняты.
+
+## P09A owner references on current source
+
+Source parent `05133c299b27ed76262cd074d1b09af3eb2aa26e`; exact SOURCE activation is recorded externally at `/home/pilot/coord103-src/p09-a-source-05133c29/SOURCE-ACTIVATION.json`, without an execution or READY claim. Six already normative forwarded GETs reference the owner P08 responses, body schemas and parameters, including required BackupPartRevision. No duplicate body form, old source transplant, new port, case or execution. Current four paths,39 refusals,s43 and B/V/G/D/E stay exact. The protected old relayToken502 enum mismatch is declared separately; new GETs use the existing forwarding owner form. Final author SHA and metadata hashes are sealed in the external source FREEZE; the immutable READONLY declaration remains the proposal history.

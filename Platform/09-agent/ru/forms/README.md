@@ -2,6 +2,23 @@
 
 Текст производный от `forms/README.md`, руками не правится: источник — английский [forms/README.md](../../forms/README.md); русский пересобирается переводом (ADR-0121), для людей, в выгрузку не входит. Формы выражают существующие нормы по ADR-0125 доп. (5).
 
+## Формы держателя для пересылки
+
+Шесть GET, уже перечисленных в P/09.2 N2, используют ответы и схемы тел [OpenAPI P/08](../../../08-domain/spec/08-domain.api.openapi.yaml). Ссылка сохраняет базу документа P/08, включая его относительные ссылки на JSON/data и вложенные схемы. Скопированная либо декодированная вторая форма тела не вводится.
+
+| Пересылаемый GET | Ответ P/08 | Схема тела P/08 |
+|---|---|---|
+| `GET /api/members/{member}/{part}` | `HolderMembersResponse` | `HolderMembersBody` |
+| `GET /api/anywhere/{member}` | `HolderAnywhereResponse` | `HolderAnywhereBody` |
+| `GET /api/topology/{member}` | `HolderTopologyResponse` | `HolderTopologyBody` |
+| `GET /api/backup-part/{member}/{part}` | `HolderBackupPartResponse` | `HolderBackupPartBody` |
+| `GET /api/book/{member}/{sub}/{book}` | `HolderBookHeadResponse` | `HolderBookHeadBody` |
+| `GET /api/book/{member}/{sub}/{book}/{part}` | `HolderBookPartResponse` | `HolderBookPartBody` |
+
+Параметры `Member`, `Part`, `BookSub`, `Book` и `AgentSignature` сохраняют уровень PathItem владельца. `BackupPartRevision` остаётся на GET `/api/backup-part/{member}/{part}`: обязательный query `rev`, integer, минимум 1. Агент не угадывает значение или умолчание. Схемы успеха достигаются через ответы владельца; второй локальной схемы нет.
+
+Origin ретранслятора — его существующий listener, а не пример сервера держателя. Свои отказы ретранслятора и пересылаемые ответы держателя сохраняют разные источники и заголовки. Пересылочный 502 использует существующий owner `DomainRefusal` в [OpenAPI P/06](../../../06-console/spec/06-console.api.openapi.yaml) и уже нормативное слово `did not answer`; нового слова отказа или транспорта нет. Четыре прежних блока операций и каталог отказов не меняются.
+
 ## Входы и константы
 
 [daemon-flags.tsv](../../forms/daemon-flags.tsv) проецирует 34 существующих входа окружения процесса общей шапкой. $NAME остаётся окружением, commands=domainagent обозначает процесс. Публичные флаги командной строки и argv join не вводятся: написание команды join выбирает реализация по P/09.1 «Решает реализация». Загрузчик сохраняет порядок файла окружения, правила роли, экземпляра/коробки/сервера, алиасов, путей и комплекта. Унаследованные LISTEN_PID/FDS/FDNAMES сохраняют полные предусловия активации и проверки дескрипторов/путей договора локальной двери токена. Объявление сырой строкой этих договоров не отменяет.

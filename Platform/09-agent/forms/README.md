@@ -2,6 +2,23 @@
 
 This English text is the source; ru/forms/README.md is its Russian translation for people, not in the export (ADR-0121). The forms express existing norms under ADR-0125 addendum (5).
 
+## Forwarded owner forms
+
+The six GETs already listed in P/09.2 N2 use the responses and body schemas of the [P/08 OpenAPI](../../08-domain/spec/08-domain.api.openapi.yaml). A reference retains the P/08 document base, including its relative JSON/data and nested schema references. No copied or decoded body form is introduced.
+
+| Forwarded GET | P/08 response | P/08 body schema |
+|---|---|---|
+| `GET /api/members/{member}/{part}` | `HolderMembersResponse` | `HolderMembersBody` |
+| `GET /api/anywhere/{member}` | `HolderAnywhereResponse` | `HolderAnywhereBody` |
+| `GET /api/topology/{member}` | `HolderTopologyResponse` | `HolderTopologyBody` |
+| `GET /api/backup-part/{member}/{part}` | `HolderBackupPartResponse` | `HolderBackupPartBody` |
+| `GET /api/book/{member}/{sub}/{book}` | `HolderBookHeadResponse` | `HolderBookHeadBody` |
+| `GET /api/book/{member}/{sub}/{book}/{part}` | `HolderBookPartResponse` | `HolderBookPartBody` |
+
+The parameters `Member`, `Part`, `BookSub`, `Book` and `AgentSignature` retain the owner PathItem level. `BackupPartRevision` remains on GET `/api/backup-part/{member}/{part}`: required query `rev`, integer, minimum 1. The agent does not guess a value or default. Success schemas remain reached through the owner responses; no second local schema is kept.
+
+The relay origin is its existing listener, not the holder's example server. Own relay refusals and forwarded holder answers keep their different sources and headers. The forwarding 502 uses the existing `DomainRefusal` owner in the [P/06 OpenAPI](../../06-console/spec/06-console.api.openapi.yaml) and the already normative word `did not answer`; no new refusal word or transport is introduced. Existing four operation blocks and the refusal catalogue are unchanged.
+
 ## Inputs and constants
 
 [daemon-flags.tsv](daemon-flags.tsv) projects 34 existing process environment inputs with the common header. $NAME remains environment, commands=domainagent denotes the process. No public command-line flags or join argv are introduced: the command join keeps its implementation-chosen spelling under P/09.1 Implementation decides. The launcher still applies environment-file precedence, role, instance/box/server, aliases, paths and kit rules. The inherited LISTEN_PID/FDS/FDNAMES values keep the complete activation preconditions and descriptor/path checks of the local-token-door contract. Raw string declarations never waive those contracts.

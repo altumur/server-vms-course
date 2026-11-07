@@ -97,4 +97,65 @@
    "Platform/09-agent/data/join.schema.json": true
   }
  }
+,
+  "P09A_owner_reference_followup_05133": {
+  "reading_base": "05133c299b27ed76262cd074d1b09af3eb2aa26e",
+  "status": "SOURCE_COMPONENT_ONLY_NOT_EXECUTION_OR_READY",
+  "owner_sha256": "fc4d7da24ef38b8740f43717085aaeeeae3d79142bf259ca4cc369271db22245",
+  "source_forecasts": [
+    {
+      "path": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+      "after_sha256": "e849f394e7e7fa02f8e8b416335e49f49a1dc1c3cf984c56e163c3f4887f8dd4",
+      "after_blob": "dc8ee66c9b1a81b76e8338b134d3c69287548a05",
+      "after_bytes": 50643
+    },
+    {
+      "path": "Platform/09-agent/forms/README.md",
+      "after_sha256": "ce4513fdcb10b38fcdcc9fc76f60a1b6ccc7eca8fb492e0d8266323d75721ffb",
+      "after_blob": "4ceb0283da22f80447c3567a327278acf7970796",
+      "after_bytes": 14454
+    },
+    {
+      "path": "Platform/09-agent/ru/forms/README.md",
+      "after_sha256": "aa32ade65b453e8a2a13b914c607113125604a47eaa739a8f02d6c6e8c05432d",
+      "after_blob": "2e86595a831168f950524cab13b3d27960fa95a5",
+      "after_bytes": 23951
+    },
+    {
+      "path": "Platform/09-agent/spec/09.2-agent.norms.md",
+      "after_sha256": "a4cdb5a4caeb89c1b8ff445e34df64b08d46f3ec9996ac7f7c9a233aabe80ced",
+      "after_blob": "95a0400fa4f55613226ad24a269804ef969fda3e",
+      "after_bytes": 28470
+    },
+    {
+      "path": "Platform/09-agent/ru/spec/09.2-agent.norms.md",
+      "after_sha256": "c480f4a13c5f97de12d9133c9ad4e8576d351828cf68190ca604848f8bd476f7",
+      "after_blob": "a77553a3b2e6ae1a57de4c7a8394e2d61ab7fe69",
+      "after_bytes": 38426
+    },
+    {
+      "path": "Platform/09-agent/spec/09.1-agent.norms.md",
+      "after_sha256": "796687c9b95ceae500f6479ae6ea88931734ab25407fbd3fb2f415697e0f4947",
+      "after_blob": "281fc693eafc3d0966ad2551f30916f65b749d99",
+      "after_bytes": 214833
+    },
+    {
+      "path": "Platform/09-agent/ru/spec/09.1-agent.norms.md",
+      "after_sha256": "ff138f20d8d9743c2ea18133ebda10bda6d8936dc6c3682daf8cc5134f255bf6",
+      "after_blob": "886f297d32c08d3774adac91c559141eba8c54cf",
+      "after_bytes": 268212
+    }
+  ],
+  "owner_refs": "6 success Response refs,6 transitive owner Schema refs,6 distinct Parameter refs; no second body form",
+  "BackupPartRevision": "existing required GET query rev integer/min1, no default",
+  "representation_note": "New GET502 reads existing P06 DomainRefusal + normative literal; protected old relayToken502 mismatch is declared separately, not repaired.",
+  "family09_current_preserved": {
+    "path": "Platform/common/vectors/family-read/09.tsv",
+    "blob": "59ff4308ec2447f5ef24129c3dcf15d7c3803979",
+    "sha256": "b5e702312e09964ec537a900c87e7302022c574a423c55d4d5ccbc195bb88b95",
+    "bytes": 865815
+  },
+  "refusal39_s43_B_V_G_D_E": "unchanged",
+  "source_checks_or_runtime_claim": "none inherited; independent checks remain separate"
+}
 }
