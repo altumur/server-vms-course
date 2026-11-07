@@ -292,3 +292,7 @@ scenario	step	request	expect
 31-group-batch	16	@sigkill store@s1	ok
 31-group-batch	17	@until 30 store@s2 GET /v1/get?key=testsub/counters/g1	200 {"items": {"n": "1"}, "index": "$i"}
 31-group-batch	18	store@s3 GET /v1/get?key=testsub/counters/g2	200 {"items": {"n": "1"}, "index": "$i"}
+12-copy-refused	33	@import store inputs/bad-floor-zero.jsonl	refused
+12-copy-refused	34	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
+12-copy-refused	35	@import store inputs/bad-floor-above-current.jsonl	refused
+12-copy-refused	36	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
