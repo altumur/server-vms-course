@@ -804,13 +804,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchRefused'
         '412':
-          description: A guard or the cas of a row diverged; nothing is written. leader moved — the generation guard of a step batch (chapter 6.9 N2).
+          description: "A row CAS, revision condition or generation guard diverged; nothing is written. BatchMoved, RevisionMoved and LeaderMoved retain their own conditions and fields."
           content:
             application/json:
               schema:
                 oneOf:
                 - $ref: '#/components/schemas/BatchMoved'
                 - $ref: '#/components/schemas/LeaderMoved'
+                - $ref: '#/components/schemas/RevisionMoved'
         '413':
           description: Over the batch limits, a row heavier than the ceiling, or the body larger than the console limit.
           content:
@@ -928,6 +929,40 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+    head:
+      summary: 'HEAD: Live cluster folders'
+      parameters:
+      - name: member
+        in: query
+        required: false
+        description: A reference to a unit <sub>/<rows>/<id>, percent-encoded; the answer — its folders and the index of the membership row (chapter 6.8 N2).
+        schema:
+          type: string
+          minLength: 1
+      responses:
+        '200':
+          description: Folders by id in UTF-8 bytes.
+        '400':
+          description: The member reference is not by the form.
+        '401':
+          description: The identity is not confirmed — the gate of chapter 6.3 (identity), error denied; the open paths — there too (open_routes). A callback with the header X-W2C-Pass-Ticket that did not pass the ticket order — detail «ticket refused» (chapter 6.3 N1.9; the gate and pass contract).
+        '403':
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin on an acting request by cookie (csrf); error denied.'
+        '429':
+          description: The common input limit of the console (chapter 6.5 N4), error too many attempts; the doors have no new quotas — neither on reading the manifest nor on creating units.
+          headers:
+            Retry-After:
+              description: The retry term by the rule of the input limit.
+              schema:
+                type: string
+        '503':
+          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review of stage A 6–7, item 24); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
+          headers:
+            Retry-After:
+              description: Required with the value 1 on busy; not promised for the other reasons.
+              schema:
+                type: string
+                const: '1'
   /folders/{id}:
     description: Chapter 6.8 N2 — one folder. A tombstone and a folder under a deleted branch do not exist from outside.
     parameters:
@@ -1015,7 +1050,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
+                anyOf:
                 - $ref: '#/components/schemas/FolderMoved'
                 - $ref: '#/components/schemas/FolderRefused'
         '413':
@@ -1074,7 +1109,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
+                anyOf:
                 - $ref: '#/components/schemas/FolderMoved'
                 - $ref: '#/components/schemas/FolderRefused'
         '413':
@@ -1093,6 +1128,35 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+    head:
+      summary: 'HEAD: Folder'
+      responses:
+        '200':
+          description: A live folder.
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '401':
+          description: The identity is not confirmed — the gate of chapter 6.3 (identity), error denied; the open paths — there too (open_routes). A callback with the header X-W2C-Pass-Ticket that did not pass the ticket order — detail «ticket refused» (chapter 6.3 N1.9; the gate and pass contract).
+        '403':
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin on an acting request by cookie (csrf); error denied.'
+        '404':
+          description: No folder, a tombstone, the folder is unreachable, the segment is not an id.
+        '429':
+          description: The common input limit of the console (chapter 6.5 N4), error too many attempts; the doors have no new quotas — neither on reading the manifest nor on creating units.
+          headers:
+            Retry-After:
+              description: The retry term by the rule of the input limit.
+              schema:
+                type: string
+        '503':
+          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review of stage A 6–7, item 24); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
+          headers:
+            Retry-After:
+              description: Required with the value 1 on busy; not promised for the other reasons.
+              schema:
+                type: string
+                const: '1'
   /{sub}/operations:
     description: Chapter 6.9 N2 — admission of a group operation (ADR-0095). There is no listing door.
     parameters:
@@ -1195,6 +1259,32 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+    head:
+      summary: 'HEAD: Operation'
+      responses:
+        '200':
+          description: The record, the counters and the steps.
+        '401':
+          description: The identity is not confirmed — the gate of chapter 6.3 (identity), error denied; the open paths — there too (open_routes). A callback with the header X-W2C-Pass-Ticket that did not pass the ticket order — detail «ticket refused» (chapter 6.3 N1.9; the gate and pass contract).
+        '403':
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin on an acting request by cookie (csrf); error denied.'
+        '404':
+          description: The manifest did not declare operations; no operation or no view.
+        '429':
+          description: The common input limit of the console (chapter 6.5 N4), error too many attempts; the doors have no new quotas — neither on reading the manifest nor on creating units.
+          headers:
+            Retry-After:
+              description: The retry term by the rule of the input limit.
+              schema:
+                type: string
+        '503':
+          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review of stage A 6–7, item 24); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
+          headers:
+            Retry-After:
+              description: Required with the value 1 on busy; not promised for the other reasons.
+              schema:
+                type: string
+                const: '1'
   /{sub}/operations/{id}/pause:
     description: Chapter 6.9 N3 «pause, resume, cancel».
     parameters:
@@ -1404,6 +1494,17 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+        '412':
+          description: The memory-row CAS diverged; row moved with key/index and field /memory/cas. The step expectedVersion check is independent. Nothing in the acceptance batch is written.
+          content:
+            application/json:
+              schema:
+                unevaluatedProperties: false
+                allOf:
+                - $ref: '#/components/schemas/BatchMoved'
+                - properties:
+                    field:
+                      const: /memory/cas
   /session:
     description: Chapter 6.3 (06.3-console.norms.md) — /session and grants.
     get:
@@ -1952,6 +2053,56 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+    head:
+      summary: 'HEAD: Which rows changed after the number'
+      parameters:
+      - name: after
+        in: query
+        required: false
+        description: The number from which to continue; none — the start of the subscription. A value that this instance did not issue is not a refusal but a reset.
+        schema:
+          type: string
+      - name: wait
+        in: query
+        required: false
+        description: 'How many seconds to hold the answer if there is nothing to say. Read only with after. An integer as an integer lexeme after URL decoding: ^-?(0|[1-9][0-9]*)$, then 0…25 (CHANGES_WAIT); otherwise 400, detail — wait (the gate-and-pass contract «Numeric query parameters»).'
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 25
+          default: 0
+      responses:
+        '200':
+          description: Messages after the number, the current number, or a reset.
+        '400':
+          description: 'The common refusal of parsing a console request (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of its own door is named by its operation: the words of the list data/refusal-words.tsv.'
+        '401':
+          description: The identity is not confirmed — the gate of chapter 6.3 (identity), error denied; the open paths — there too (open_routes). A callback with the header X-W2C-Pass-Ticket that did not pass the ticket order — detail «ticket refused» (chapter 6.3 N1.9; the gate and pass contract).
+        '403':
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin on an acting request by cookie (csrf); error denied.'
+        '404':
+          description: No route (chapter 6.5 N2 «Common codes»); this is not a loader answer about a faulty manifest.
+        '405':
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»).
+        '408':
+          description: The body is read too slowly (chapter 6.5 N4).
+        '413':
+          description: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not add its service fields limit/size here.
+        '429':
+          description: The common input limit of the console (chapter 6.5 N4), error too many attempts; the doors have no new quotas — neither on reading the manifest nor on creating units.
+          headers:
+            Retry-After:
+              description: The retry term by the rule of the input limit.
+              schema:
+                type: string
+        '503':
+          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review of stage A 6–7, item 24); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
+          headers:
+            Retry-After:
+              description: Required with the value 1 on busy; not promised for the other reasons.
+              schema:
+                type: string
+                const: '1'
   /{sub}/next_id:
     description: Chapter 6.1 N2 «Counter door» — reading the counter <sub>/next_id; the subsystem is always named in the path (ADR-0094 B4).
     parameters:
@@ -1987,6 +2138,40 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+    head:
+      summary: 'HEAD: Last issued number and index of the counter row'
+      responses:
+        '200':
+          description: n — the last issued number; no row — n per recover N1.3, index empty.
+        '400':
+          description: 'The common refusal of parsing a console request (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of its own door is named by its operation: the words of the list data/refusal-words.tsv.'
+        '401':
+          description: The identity is not confirmed — the gate of chapter 6.3 (identity), error denied; the open paths — there too (open_routes). A callback with the header X-W2C-Pass-Ticket that did not pass the ticket order — detail «ticket refused» (chapter 6.3 N1.9; the gate and pass contract).
+        '403':
+          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin on an acting request by cookie (csrf); error denied.'
+        '404':
+          description: No route (chapter 6.5 N2 «Common codes»); this is not a loader answer about a faulty manifest.
+        '405':
+          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»).
+        '408':
+          description: The body is read too slowly (chapter 6.5 N4).
+        '413':
+          description: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not add its service fields limit/size here.
+        '429':
+          description: The common input limit of the console (chapter 6.5 N4), error too many attempts; the doors have no new quotas — neither on reading the manifest nor on creating units.
+          headers:
+            Retry-After:
+              description: The retry term by the rule of the input limit.
+              schema:
+                type: string
+        '503':
+          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review of stage A 6–7, item 24); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
+          headers:
+            Retry-After:
+              description: Required with the value 1 on busy; not promised for the other reasons.
+              schema:
+                type: string
+                const: '1'
   /{sub}/requests:
     description: Chapter 6.4 — the requests door.
     parameters:
@@ -4337,7 +4522,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Policy'
+              $ref: '#/components/schemas/PolicyInput'
     head:
       summary: 'HEAD: Effective policy'
       responses:
@@ -6068,6 +6253,37 @@ paths:
         '403': {description: 'N1.13 order'}
         '404': {description: 'No such part'}
         '503': {description: 'The part is not readable'}
+    head:
+      summary: 'HEAD: Part of the backup of this cluster'
+      parameters:
+      - name: member
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: part
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$
+      - name: rev
+        in: query
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: The object domain/backups/part-<section>-<rev> as is
+        '401':
+          description: N1.13 order
+        '403':
+          description: N1.13 order
+        '404':
+          description: No such part
+        '503':
+          description: The part is not readable
   /api/backup:
     description: 'Chapter 6.7 N1.13 (from M11/10 N1.9) — the backup of this cluster to a signed member: headers
       X-W2C-Member, X-W2C-Time, X-W2C-Signature (ask signature contract Platform/common/contracts/ask-sig.md, ask = backup);
@@ -7417,10 +7633,14 @@ components:
           minLength: 1
         until:
           type: number
-          description: wall-clock seconds of the end of the session; 0 — without a term, for the debug identity (via debug; the gate and pass contract `session` `until`, GP-G02)
+          description: "wall-clock seconds of the end of the session; for via ticket, exp of that ticket; 0 without a term for via debug (the gate-and-pass contract session until)."
         via:
           type: string
-          enum: [break-glass, token, debug]
+          enum:
+          - break-glass
+          - token
+          - debug
+          - ticket
           description: the identity step of this session (P/06.3 N1.3 `session`)
         debug:
           type: boolean
@@ -7431,7 +7651,7 @@ components:
           description: step 4a of the right contract applies; a field of the answer, not a row; otherwise there is no field (the gate and pass contract `session` `admin`, ADR-0100 §1)
         grants:
           type: array
-          description: one element per (cap, sub, scope, source); the order — the gate and pass contract `session` `grants`
+          description: "one element per (cap, sub, scope, source); for via ticket these are the rows of its person; order is the gate-and-pass contract session grants."
           items:
             $ref: '#/components/schemas/Grant'
         server_time:
@@ -8808,7 +9028,7 @@ components:
           const: /index
         row:
           $ref: '#/components/schemas/Folder'
-      description: Chapter 6.8 N4; the 412 body carries the current row in row.
+      description: "Chapter 6.8 N4: the 412 body includes the current row only when it exists, is not a tombstone and the caller has view; otherwise row is absent."
     OperationInput:
       type: object
       required: [id, items]
@@ -9711,6 +9931,17 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/Resolved'
+    PolicyInput:
+      type: object
+      required:
+      - servers
+      additionalProperties: false
+      properties:
+        servers:
+          type: string
+          enum:
+          - shared
+          - distinct
   responses:
     BadBody:
       description: 'The common refusal of parsing a console request (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a readable

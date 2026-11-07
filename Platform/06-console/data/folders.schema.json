@@ -20,7 +20,7 @@
    "pattern": "^(?:([0-9a-f]{32})?)$"
   },
   "members": {
-   "description": "references to units `<sub>/<rows>/<id>` in order, without repeats; the writer writes at most FOLDERS_MEMBERS_MAX (N1.3); for a tombstone — empty",
+   "description": "references to units `<sub>/<rows>/<id>` in order, without repeats; reader and writer share FOLDERS_MEMBERS_MAX from $defs.writer (N1.3); for a tombstone — empty",
    "type": "array",
    "items": {
     "description": "a reference to a unit of a declared subsystem: the full key of its row (N1.1)",
@@ -46,6 +46,9 @@
   "name",
   "parent",
   "members"
+ ],
+ "allOf": [
+  {"$ref": "#/$defs/writer"}
  ],
  "$defs": {
   "common.book_missing": {

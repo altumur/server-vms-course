@@ -173,3 +173,6 @@ This is a subject of a manual check of the specification and of a future check o
 ## Accepted ADR-0127 review: source catalogue until restart
 
 For `GET /manifest/<sub>/source`, admit a changed stored manifest after console startup. Before restart the source door retains the launch catalogue's rev, served, sha256, manifest and secret_defaults; a newly installed subsystem absent from that catalogue stays404. A differing current store-row rev does not create an own503 or a per-request store read. Restart, then compare the new launch catalogue and served value. Keep independent ordinary busy/trust failures; they are not a revision-mismatch response. Inspect actual store calls if proving the no-read obligation. The frozen platform module and thirteen raw asset witnesses are unchanged.
+
+
+ADR-0129(17): inspect ordinary GET /metrics for all five w2c_changes_resets_total reason series at zero: foreign, evicted, rights, labels, folders. A real folder-composition change or folder deletion already produces reset5; observe that reset and the folders counter on the same ordinary HTTP path. Manifest metrics[] vectors do not accept this global-counter state and are not relabelled as this check. HEAD controls at the six prescribed existing paths compare GET admission/status/headers and an empty body; execution needs the actual ordinary setup, not a canned response.
