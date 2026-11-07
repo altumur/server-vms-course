@@ -1,0 +1,75 @@
+{
+  "kind": "BOUNDED_SYNTHETIC_INPUT_NOT_SOURCE_ADOPTION",
+  "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+  "source_path": "Platform/08-domain/data/deleting.schema.json",
+  "source_blob": "7acb0cf260146de75e014765c80644b3081786b4",
+  "root_and_two_common_defs_identical_JSON_values": true,
+  "profile_declaration_sha256": "c70b806fbb1ae266accc847b34eeb84779768cc74ced35100211dedef75f7d08",
+  "family_template": "domain/deleting/<name>",
+  "person_key": "domain/deleting/alice",
+  "role_key": "domain/deleting/role:editors",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "propertyNames": {
+      "type": "string"
+    },
+    "additionalProperties": {
+      "description": "fields of the mark: `at`, `done` (N1.1 domain/deleting); the reader does not refuse by them: at absent or unreadable — there is no term",
+      "x-codec": [
+        "any"
+      ]
+    },
+    "$defs": {
+      "common.time": {
+        "description": "time N0 P/01.1 «Time in a row»",
+        "type": [
+          "string",
+          "number"
+        ],
+        "x-time": true
+      },
+      "common.person_name": {
+        "description": "the person's name (P/08.4 N1.1 name): 1–64 characters without whitespace, control characters (U+0000–U+001F, U+007F) and : | ( ) \" /; not exactly break-glass; whitespace — the White_Space property of Unicode 15.0.0, written out as characters (the Architect's decision of 2026-10-20 on the questions of assembling lesson 8, item 3); «not a subject of the name index» — a check of the door (chapter 8.5 N1.7), not the form",
+        "type": "string",
+        "not": {
+          "enum": [
+            "break-glass"
+          ]
+        },
+        "pattern": "^(?:[^\u0000-    -     　:|()\"/]{1,64})$"
+      },
+      "writer": {
+        "x-max-names": 0
+      },
+      "person_writer": {
+        "type": "object",
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/common.time",
+            "x-codec": [
+              "time"
+            ]
+          },
+          "done": {
+            "type": "boolean",
+            "x-codec": [
+              "boolean"
+            ]
+          }
+        },
+        "required": [
+          "at"
+        ],
+        "additionalProperties": false
+      },
+      "role_writer": {
+        "type": "object",
+        "const": {}
+      }
+    }
+  },
+  "extra_defs_removed": "Unused original common definitions only; original common.time and common.person_name unchanged",
+  "expectation_authority": "505aa931f21c0fa2f457063c15718a4c859d7bfc plus existing common primitives, never producer output"
+}

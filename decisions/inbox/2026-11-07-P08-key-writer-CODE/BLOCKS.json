@@ -1,0 +1,346 @@
+{
+  "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+  "file_identities": [
+    {
+      "path": "skills/lesson-spec/scripts/v7/spec.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "7712c7dc3d5b80b2182fcbe5229654b0e4ec3729",
+      "sha256": "7f55d64339554f1616037ed4d679c814de64652edd012ea58555c594fe132c71",
+      "bytes": 51805
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/stack.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "149fd9d0cbdf8feca6d5e19e9c6800cc1c9330c8",
+      "sha256": "f68825b2e9ea156f9b3a5d997419c5b104f2a7979373ccb2d92675d510eb142e",
+      "bytes": 30442
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/section.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "d699c630e038f650fb4bcc10bd6de3da13eb6388",
+      "sha256": "a39e28e1cc9924b55f58502b9c1592da7485d66d0d76a15896a066df53aa0a3d",
+      "bytes": 39240
+    },
+    {
+      "path": "tools/normgen/gen_families.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "5abd78df719c3b15fe23954cebf5bf189d20b3e5",
+      "sha256": "b61bf4992a30dbff5f0acd1364af8e393868449ca80acb674102aeb3228d218b",
+      "bytes": 36157
+    },
+    {
+      "path": "tools/normgen/family_judge.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "4fb023a1ba6bd5a73e888997424c6f86c11a9332",
+      "sha256": "3b27e31209eb78588707d2fbee105abf0158d546930267b129354e96fd0867b1",
+      "bytes": 12236
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/transition.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "95c410f29af23924f61255a48adb8718a00cf012",
+      "sha256": "9f3b6684bedf03a312c3bcd653681e3c09e3c92c2be70ca0c4a64a104727c877",
+      "bytes": 39427
+    },
+    {
+      "path": "tools/normgen/famrt2/go/runtime.go",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "0ae532438c6d0e2b6317a4b388f0694fe3284d65",
+      "sha256": "9ccb1b33238752e9d9fe6d1e436c521976d16ca598f1f706f2913422a09a0c2b",
+      "bytes": 40649
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/test_v7.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "3b8a0ab9318a31e1ccbdaf25e0e0975b652eb623",
+      "sha256": "6248fe8a15f253103fad88f97b062fc9c4f381238df71ab59a1e7000de8a464a",
+      "bytes": 25483
+    },
+    {
+      "path": "tools/normgen/test_gen_families_doc.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "68f05ab488e632fa0a215e7d8baf85048d692b76",
+      "sha256": "80d7758ed54e89d498c1d0461952b6b1b5417ff3994db4b1acd59a746edd994c",
+      "bytes": 9439
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/family_corpus.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "fee624fb67daab3cd88b3c6ec08d8b18210d8ec6",
+      "sha256": "2be3a8627aeec3be023ab70ec54d1d7ec5138dca67125c606f2111d9c4a5ea2a",
+      "bytes": 27035
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/sut/sut.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "10a117a98c36ad9f69a2a2741fd0d1544fd8485c",
+      "sha256": "bbf86da21d2f6acca3f6fdb9a0c9db95d059a1034e3bdd4ecbb2c8de2817927c",
+      "bytes": 29930
+    },
+    {
+      "path": "tools/normgen/families/harness/main.go",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "f28fe19004fbc9c9995c9c3dcd088e66f8a107a1",
+      "sha256": "9d75b6964bb7ab54c2b76137cb20719ef9f97a27ffa366cf0398d81bf44db0f1",
+      "bytes": 1592
+    }
+  ],
+  "blocks": [
+    {
+      "path": "skills/lesson-spec/scripts/v7/spec.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "7712c7dc3d5b80b2182fcbe5229654b0e4ec3729",
+      "name": "judge_family",
+      "first": 636,
+      "last": 640,
+      "raw_sha256": "9a04d221e154f0cadd6efe3cc7a07814472066c20b6e7c3f347893c9d13faee3",
+      "purpose": "Keep existing outer template refusal before value evaluation; pass concrete key into Family.judge. Require catalog identity equals template.template, no invented discriminator.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/spec.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "7712c7dc3d5b80b2182fcbe5229654b0e4ec3729",
+      "name": "family_readers",
+      "first": 605,
+      "last": 611,
+      "raw_sha256": "73bccf3650df11c448fbeaff2564fec77ec77edd80f546e96c36d6b002dbbfd0",
+      "purpose": "Only constructor argument family_template=row[key] for immutable identity; reader/outcome selection unchanged.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/spec.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "7712c7dc3d5b80b2182fcbe5229654b0e4ec3729",
+      "name": "judge_row",
+      "first": 643,
+      "last": 657,
+      "raw_sha256": "faf002a39a1b1ec05d8d1967751ab978a50a2de0cd460078dd57b90ac0e97194",
+      "purpose": "Only cached Family construction includes row[key]; expected cases/outcomes remain unchanged.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/stack.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "149fd9d0cbdf8feca6d5e19e9c6800cc1c9330c8",
+      "name": "Family.__init__",
+      "first": 501,
+      "last": 504,
+      "raw_sha256": "a410bef4d2dcc253f84ec160ea607d76062c257905450583026a2cb1eebe4898",
+      "purpose": "Optional existing catalog-template identity, immutable reference to original document; no profile inferred by payload.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/stack.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "149fd9d0cbdf8feca6d5e19e9c6800cc1c9330c8",
+      "name": "Family.judge",
+      "first": 584,
+      "last": 621,
+      "raw_sha256": "ff49ef9453a352d713c18d689e4a94e34f76c8635af9865cdb2a8e15ce4a30c5",
+      "purpose": "Choose key-bound writer profile before any scalar item decode; reader and noncontext branches unchanged; no per-call mutation of shared doc/writer.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/stack.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "149fd9d0cbdf8feca6d5e19e9c6800cc1c9330c8",
+      "name": "Family.layer3",
+      "first": 627,
+      "last": 664,
+      "raw_sha256": "9201ebcbeedf5d5beb8430bd63d4ff102e819cb3ba7cb04b08e8e3812bea7f70",
+      "purpose": "Per-call effective traversal/known properties from selected writer profile; common writer x-max-names0 still enforced; limits implementation unchanged.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/section.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "d699c630e038f650fb4bcc10bd6de3da13eb6388",
+      "name": "SchemaSection.__init__",
+      "first": 122,
+      "last": 151,
+      "raw_sha256": "05371a4dbbe7705a4f6e9b89b37e4b4d17e7b239ccce950cbf6f50bc8f5f80aa",
+      "purpose": "Optional existing family-template identity; for deleting only handle two local profiles in conditional writer rendering, not as two unconditional roots.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/section.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "d699c630e038f650fb4bcc10bd6de3da13eb6388",
+      "name": "SchemaSection.writer_body",
+      "first": 491,
+      "last": 542,
+      "raw_sha256": "b930f69591088c0eca8a09dd642c816bb0d6d8da0c5da5470d7e4b4dd3338afa",
+      "purpose": "Render common writer limits and separate person/role key conditions, required at/optional done and empty-role const, with original refs; other families byte-exact.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "tools/normgen/gen_families.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "5abd78df719c3b15fe23954cebf5bf189d20b3e5",
+      "name": "load_family_doc",
+      "first": 380,
+      "last": 437,
+      "raw_sha256": "5a339a5202c7b5b721352011bb116d4331883517d9ed300d41ba2034b4f8edcb",
+      "purpose": "Validate declared deleting binding has both ordinary local profile defs and existing grammar targets before producing a paired new-source package; no new keyword/DSL/serialized selector.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "tools/normgen/family_judge.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "4fb023a1ba6bd5a73e888997424c6f86c11a9332",
+      "name": "v7_cases constructor only",
+      "first": 172,
+      "last": 172,
+      "raw_sha256": "cfcb7e2467e240b1397b2094eb0c9ed52cdf36c87b7cbb6e3cac22b19a4c52d8",
+      "purpose": "Pass row[key] to Family construction; harness/deep generation/runs/accounting unchanged.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/transition.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "95c410f29af23924f61255a48adb8718a00cf012",
+      "name": "existing Family constructor only",
+      "first": 539,
+      "last": 539,
+      "raw_sha256": "66fb1e3d8a18ce11f85c49f0f6be56f452791ea7e2f6be8696fe186a46c43bf3",
+      "purpose": "Pass existing fam catalog-template string to cached Family. No cases, assertions or expectations change.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/section.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "d699c630e038f650fb4bcc10bd6de3da13eb6388",
+      "name": "build_families_section constructor only",
+      "first": 640,
+      "last": 640,
+      "raw_sha256": "3035784edeea8efef2536d24c42137283144f4a7be2a88ae47f0ef49d42b19b0",
+      "purpose": "Pass row[key] to SchemaSection; general introduction/outcomes/all other emission unchanged.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "tools/normgen/gen_families.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "5abd78df719c3b15fe23954cebf5bf189d20b3e5",
+      "name": "KIT_MD_DOC writer use",
+      "first": 649,
+      "last": 658,
+      "raw_sha256": "4f818dd7a7bb82fd012d73082b7ea7cc8e30d88f9d530746e5d7416811811ca5",
+      "purpose": "Use existing keyed Judge(key,...,Writer) as before-write example; keyless method no person/role proof. P01 flat generator/typed Items untouched.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "tools/normgen/famrt2/go/runtime.go",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "0ae532438c6d0e2b6317a4b388f0694fe3284d65",
+      "name": "Family.Judge",
+      "first": 143,
+      "last": 149,
+      "raw_sha256": "82003ab390f33d82c4eb22916b995505bc5933a90d1c505b44df5aae00118ec5",
+      "purpose": "Preserve Matches/key refusal then retain concrete key through private per-call row evaluator.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "tools/normgen/famrt2/go/runtime.go",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "0ae532438c6d0e2b6317a4b388f0694fe3284d65",
+      "name": "Family.JudgeItems",
+      "first": 151,
+      "last": 158,
+      "raw_sha256": "38b27d5ad88f2f21c72da6eb7531e1ef97f592905a1dde3fb1d17467fa891566",
+      "purpose": "Keep same exported signature; context-bound Writer without concrete key is a checking/precondition error, never inferred role/person/union. Noncontext and reader behavior preserved.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "tools/normgen/famrt2/go/runtime.go",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "0ae532438c6d0e2b6317a4b388f0694fe3284d65",
+      "name": "schema.layer3",
+      "first": 1598,
+      "last": 1648,
+      "raw_sha256": "6d03398d5bd17b41d4f90b866bd3669f31e0a77013f2f41602661480ca1319c0",
+      "purpose": "Existing no-context wrapper remains for objects/files; private bound row path uses selected profile for traversal and x-max-names owner-properties, without mutating compiled schema.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "tools/normgen/famrt2/go/runtime.go",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "0ae532438c6d0e2b6317a4b388f0694fe3284d65",
+      "name": "schema.judgeRow",
+      "first": 1650,
+      "last": 1700,
+      "raw_sha256": "4409a91323910c896188b3c516fa3994b829d252e01cf88610e0552ea2635de3",
+      "purpose": "Pass per-call selected profile to initial codec, layer3 and schema records, preserving common/root checks and original refs.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/stack.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "149fd9d0cbdf8feca6d5e19e9c6800cc1c9330c8",
+      "name": "private writer binding helper",
+      "first": 501,
+      "last": 508,
+      "raw_sha256": "1f3745101076d4a9242f2c63f8fdd3fd02f739ed27de961e1b8fae88d696145f",
+      "purpose": "Insert helper using existing Family catalog identity + concrete key/mode; normal local defs only.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "tools/normgen/famrt2/go/runtime.go",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "0ae532438c6d0e2b6317a4b388f0694fe3284d65",
+      "name": "private keyed evaluation/binding helpers",
+      "first": 151,
+      "last": 163,
+      "raw_sha256": "268d396aaf683d0c1d3585227a25a8f8c6bd355ff179505b7b4164ee7db9d6cc",
+      "purpose": "Insert unexported helpers using existing node and *string key-presence; no new exported type/operation or Family field needed.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/section.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "d699c630e038f650fb4bcc10bd6de3da13eb6388",
+      "name": "private contextual writer-render helper",
+      "first": 489,
+      "last": 496,
+      "raw_sha256": "0594e30746b1dce4214a6921b843bbc01a9e680164076fa187b06537c5d5d323",
+      "purpose": "Optional helper for existing writer display, ordinary source pointers and fixed catalog binding.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/test_v7.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "3b8a0ab9318a31e1ccbdaf25e0e0975b652eb623",
+      "name": "existing TestDefects insertion",
+      "first": 254,
+      "last": 263,
+      "raw_sha256": "f55d10775584b9f0c6a03c695fbf13fb63539588b56f79950fe16acb7906ca46",
+      "purpose": "Proposed new selected Python methods only inside existing class; all old tests unchanged.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY",
+      "coordinate_note": "physical LF; insert before class TestRelations, preserve all previous methods"
+    },
+    {
+      "path": "tools/normgen/test_gen_families_doc.py",
+      "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+      "blob": "68f05ab488e632fa0a215e7d8baf85048d692b76",
+      "name": "existing Synthetic insertion",
+      "first": 97,
+      "last": 105,
+      "raw_sha256": "24b989dd3f8d981406ba491d831a23bb5e516548e44f5b918dc83483161db3bf",
+      "purpose": "Proposed selected Python-only methods/helper for explicit key-bound controls; old SYNTH/SYNTH_ITEMS/synth_mismatches and DocMode raw frozen.",
+      "status": "ARCHITECT_REVIEWED_BOUNDARY"
+    }
+  ],
+  "mutable_code_paths": [
+    "skills/lesson-spec/scripts/v7/section.py",
+    "skills/lesson-spec/scripts/v7/spec.py",
+    "skills/lesson-spec/scripts/v7/stack.py",
+    "skills/lesson-spec/scripts/v7/test_v7.py",
+    "skills/lesson-spec/scripts/v7/transition.py",
+    "tools/normgen/family_judge.py",
+    "tools/normgen/famrt2/go/runtime.go",
+    "tools/normgen/gen_families.py",
+    "tools/normgen/test_gen_families_doc.py"
+  ],
+  "physical_LF_override": true
+}

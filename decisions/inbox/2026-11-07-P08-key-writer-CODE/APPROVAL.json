@@ -1,0 +1,193 @@
+{
+  "utc": "2026-11-07T18:13:41.992190+00:00",
+  "status": "APPROVED_INITIAL_CODE_AND_NAMED_PYTHON_ONLY",
+  "authority": [
+    "505aa931f21c0fa2f457063c15718a4c859d7bfc",
+    "ADR0127(7) review103 judges assignment",
+    "ADR0129(19)/(23)",
+    "З-12"
+  ],
+  "proposal_sha256": "692a27747c096d13587e733be5b83baea35d48d614cf0910d60e29b6e5d7630c",
+  "request_sha256": "b5f94d4469a9c378c855c767da7436582a61c820f4e40cc102ef18afe417557e",
+  "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+  "boundary": "BLOCKS.json",
+  "fixture": "APPROVED-FIXTURE.json",
+  "mutable_code_paths": [
+    "skills/lesson-spec/scripts/v7/section.py",
+    "skills/lesson-spec/scripts/v7/spec.py",
+    "skills/lesson-spec/scripts/v7/stack.py",
+    "skills/lesson-spec/scripts/v7/transition.py",
+    "tools/normgen/family_judge.py",
+    "tools/normgen/famrt2/go/runtime.go",
+    "tools/normgen/gen_families.py"
+  ],
+  "new_test_insertion_paths": [
+    "skills/lesson-spec/scripts/v7/test_v7.py::TestDefects",
+    "tools/normgen/test_gen_families_doc.py::Synthetic"
+  ],
+  "author_assignments": {
+    "review103": [
+      "skills/lesson-spec/scripts/v7/section.py",
+      "skills/lesson-spec/scripts/v7/spec.py",
+      "skills/lesson-spec/scripts/v7/stack.py",
+      "skills/lesson-spec/scripts/v7/transition.py",
+      "skills/lesson-spec/scripts/v7/test_v7.py",
+      "tools/normgen/family_judge.py",
+      "tools/normgen/test_gen_families_doc.py"
+    ],
+    "generators": [
+      "tools/normgen/gen_families.py",
+      "tools/normgen/famrt2/go/runtime.go"
+    ]
+  },
+  "skills_owner": "Architect; explicit temporary exact-path/block delegation to review103 only, no transfer of skill ownership",
+  "allowed": [
+    "CODE within normalized 22 blocks/anchors",
+    "syntax/AST/raw preservation",
+    "exact named new Python methods below using bounded fixture, existing dependencies only"
+  ],
+  "named_python_controls": [
+    {
+      "id": "RK01",
+      "method": "v7.test_v7.TestDefects.test_role_binding_person_valid",
+      "scope": "at=1.25, optional done=true/false accepted; typed decoded fields checked",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK02",
+      "method": "v7.test_v7.TestDefects.test_role_binding_person_empty",
+      "scope": "person{} refused with missing at; no role fallback",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK03",
+      "method": "v7.test_v7.TestDefects.test_role_binding_role_empty",
+      "scope": "role{} accepted",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK04",
+      "method": "v7.test_v7.TestDefects.test_role_binding_role_nonempty",
+      "scope": "role at/done/unknown fields refused; no field erasure into success",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK05",
+      "method": "v7.test_v7.TestDefects.test_role_binding_person_bad_at",
+      "scope": "bad Time/precision/non-string field refused; missing at remains a refusal",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK06",
+      "method": "v7.test_v7.TestDefects.test_role_binding_person_bad_done",
+      "scope": "bad boolean/non-string done refused",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK07",
+      "method": "v7.test_v7.TestDefects.test_role_binding_person_extra",
+      "scope": "extra field refused with common/profile constraints",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK08",
+      "method": "v7.test_v7.TestDefects.test_role_binding_key_before_value",
+      "scope": "wrong outer path or invalid concrete person/role suffix refused before decoding a poisonous value",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK09",
+      "method": "v7.test_v7.TestDefects.test_role_binding_missing_context",
+      "scope": "keyless context writer and identity mismatch use checking exception, never semantic success/refusal",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK10",
+      "method": "v7.test_v7.TestDefects.test_role_binding_alternating_contexts",
+      "scope": "same Family both person-role orders with interleaved Reader, document/writer/cache unchanged",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK11",
+      "method": "v7.test_v7.TestDefects.test_role_binding_local_ref_base",
+      "scope": "common.time reference resolves from original document; typed codec and x-time both enforced",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK12",
+      "method": "v7.test_v7.TestDefects.test_role_binding_root_and_common",
+      "scope": "root property-name and common max-names checks still apply with selected profile known fields",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK13",
+      "method": "v7.test_v7.TestDefects.test_role_binding_reader_unchanged",
+      "scope": "garbled/missing at Reader retains prior result and presence behavior; no strict writer selection",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK14",
+      "method": "v7.test_v7.TestDefects.test_role_binding_incomplete_source",
+      "scope": "missing one/both profiles for fixed context identity, and declared profiles without identity, fail checking",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK15",
+      "method": "v7.test_v7.TestDefects.test_role_binding_existing_name_grammar",
+      "scope": "non-ASCII and max-length valid names accepted; whitespace, forbidden punctuation, break-glass and too-long suffix refused",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RK16",
+      "method": "v7.test_v7.TestDefects.test_role_binding_noncontext_unchanged",
+      "scope": "ordinary noncontext row/object/file constructors retain their previous API and results",
+      "expected": "manual source/decision expectation; no Go/SUT/generated-selector oracle"
+    },
+    {
+      "id": "RS01",
+      "method": "test_gen_families_doc.Synthetic.test_role_binding_public_surface",
+      "scope": "AST/source checks preserve exported Go signatures/fields and enforce only private keyed helper plumbing",
+      "expected": "static declared API/block map, not execution of Go strings"
+    },
+    {
+      "id": "RS02",
+      "method": "test_gen_families_doc.Synthetic.test_role_binding_constructors_and_frozen_blocks",
+      "scope": "static constructor propagation and raw preservation outside normalized blocks, old tests/helpers untouched",
+      "expected": "static declared API/block map, not execution of Go strings"
+    }
+  ],
+  "unexpected_external_process": "checking error; no Go/build/render/producer materialization invoked as part of Python test",
+  "checking_precondition": {
+    "python": "ValueError at Family; SpecError conversion in owned wrapper where appropriate",
+    "Go": "existing panic precondition mechanism, counted as checking error only in future execution",
+    "selection": "existing catalog identity + concrete key + mode before row scalar decode; no payload/profile selector",
+    "noncontext_and_reader": "unchanged",
+    "profiles": "fixed existing-family ordinary local defs; missing declared context/source is checking error, no legacy fallback"
+  },
+  "held": [
+    "D0 renderer execution",
+    "G0 Go execution/build/materialization/regeneration",
+    "A0 keyless corpus/SUT input contract and coverage",
+    "whole-file discovery/old Go tests/synth_mismatches/DocMode setup",
+    "Source/profile/corpus adoption or editing",
+    "main merge/fullcheck/GATE/SDK/HTTP/SUT/lines/models",
+    "ms/VMS/Claude pause changes",
+    "S08/J06 or J-P05-02 expansion"
+  ],
+  "frozen_neighbours": [
+    "original set-A/SUT/harness input shapes",
+    "all old tests and expectations",
+    "flat P01/typed Items",
+    "reader outcomes",
+    "S08 initial scope0f60/269a",
+    "Source54/4 and held5 profiles not adopted"
+  ],
+  "root_execution_at_approval": {
+    "repository_import": 0,
+    "new_test_or_schema_execution": 0,
+    "Go": 0,
+    "Source_adoption": false
+  },
+  "calendar_due": null,
+  "source_exact_grant": "SRC separately declares/authorizes its exact SOURCE4 paired profiles/layers/ENRU; family08/metadata16 and joint acceptance remain separate"
+}
