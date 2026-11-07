@@ -1,0 +1,287 @@
+{
+  "status": "CANDIDATE_FOR_NEW_CALLER_FREEZE_ONLY_NOT_EXECUTION_GRANT",
+  "source_proposal_sha256": "74dbbe0c1dc050c49cdba9b8cc76f0ee715e2cad82f299eabf28a52ffded3c07",
+  "cases": [
+    {
+      "id": "SP01",
+      "key": "domain/deleting/alice",
+      "mode": "writer",
+      "input": {
+        "at": "1.25"
+      },
+      "category": "semantic",
+      "expected_verdict": "ok",
+      "expected_full_paths": [],
+      "observations": 1,
+      "typed_value": {
+        "at": 1.25
+      }
+    },
+    {
+      "id": "SP02",
+      "key": "domain/deleting/alice",
+      "mode": "writer",
+      "input": {
+        "at": "1.25",
+        "done": "false"
+      },
+      "category": "semantic",
+      "expected_verdict": "ok",
+      "expected_full_paths": [],
+      "observations": 1,
+      "typed_value": {
+        "at": 1.25,
+        "done": false
+      }
+    },
+    {
+      "id": "SP03",
+      "key": "domain/deleting/role:editors",
+      "mode": "writer",
+      "input": {},
+      "category": "semantic",
+      "expected_verdict": "ok",
+      "expected_full_paths": [],
+      "observations": 1,
+      "typed_value": {}
+    },
+    {
+      "id": "SP04",
+      "key": "domain/deleting/alice",
+      "mode": "reader",
+      "input": {},
+      "category": "semantic",
+      "expected_verdict": "ok",
+      "expected_full_paths": [],
+      "observations": 1,
+      "typed_value": {},
+      "note": "Reader presence is distinct from whether a usable person hold exists"
+    },
+    {
+      "id": "SP05",
+      "key": "domain/deleting/alice",
+      "mode": "reader",
+      "input": {
+        "at": "bad",
+        "done": "maybe"
+      },
+      "category": "semantic",
+      "expected_verdict": "ok",
+      "expected_full_paths": [],
+      "observations": 1,
+      "typed_value": {
+        "at": "bad",
+        "done": "maybe"
+      }
+    },
+    {
+      "id": "SP06",
+      "key": "domain/deleting/role:editors",
+      "mode": "reader",
+      "input": {
+        "at": "bad"
+      },
+      "category": "semantic",
+      "expected_verdict": "ok",
+      "expected_full_paths": [],
+      "observations": 1,
+      "typed_value": {
+        "at": "bad"
+      }
+    },
+    {
+      "id": "SP07",
+      "key": "domain/deleting/alice",
+      "mode": "writer",
+      "input": {},
+      "category": "semantic",
+      "expected_verdict": "refused",
+      "expected_full_paths": [
+        "/at"
+      ],
+      "observations": 1
+    },
+    {
+      "id": "SP08",
+      "key": "domain/deleting/alice",
+      "mode": "writer",
+      "input": {
+        "at": "1.2345"
+      },
+      "category": "semantic",
+      "expected_verdict": "refused",
+      "expected_full_paths": [
+        "/at"
+      ],
+      "observations": 1
+    },
+    {
+      "id": "SP09",
+      "key": "domain/deleting/alice",
+      "mode": "writer",
+      "input": {
+        "at": "1",
+        "done": "maybe"
+      },
+      "category": "semantic",
+      "expected_verdict": "refused",
+      "expected_full_paths": [
+        "/done"
+      ],
+      "observations": 1
+    },
+    {
+      "id": "SP10",
+      "key": "domain/deleting/alice",
+      "mode": "writer",
+      "input": {
+        "at": 1
+      },
+      "category": "semantic",
+      "expected_verdict": "refused",
+      "expected_full_paths": [
+        "/at"
+      ],
+      "observations": 1,
+      "note": "Not a stored string; a test input-neighbour, not an admitted stored row"
+    },
+    {
+      "id": "SP11",
+      "key": "domain/deleting/role:editors",
+      "mode": "writer",
+      "input": {
+        "at": "1"
+      },
+      "category": "semantic",
+      "expected_verdict": "refused",
+      "expected_full_paths": [
+        ""
+      ],
+      "observations": 1
+    },
+    {
+      "id": "SP12",
+      "key": "domain/deleting/role:editors",
+      "mode": "writer",
+      "input": {
+        "done": "false"
+      },
+      "category": "semantic",
+      "expected_verdict": "refused",
+      "expected_full_paths": [
+        ""
+      ],
+      "observations": 1
+    },
+    {
+      "id": "SP13",
+      "key": "domain/deleting/alice",
+      "mode": "writer",
+      "input": {
+        "at": "1",
+        "x": "q"
+      },
+      "category": "semantic",
+      "expected_verdict": "refused",
+      "expected_full_paths": [
+        "",
+        "/x"
+      ],
+      "observations": 1,
+      "note": "Common writer max-names root refusal plus profile additional-property refusal; do not reduce comparison to verdict or path membership"
+    },
+    {
+      "id": "SP14",
+      "key": "other/alice",
+      "mode": "writer",
+      "input": "DECLARED_POISON_TEXT_NOT_TO_BE_PARSED",
+      "category": "semantic",
+      "expected_verdict": "refused",
+      "expected_full_paths": [
+        ""
+      ],
+      "observations": 1,
+      "api": "spec.judge_family",
+      "note": "Poison object/helper bytes still need a future grant and freeze; key check must precede family_value"
+    },
+    {
+      "id": "SP15",
+      "key": "domain/deleting/role:",
+      "mode": "writer",
+      "input": "DECLARED_POISON_TEXT_NOT_TO_BE_PARSED",
+      "category": "semantic",
+      "expected_verdict": "refused",
+      "expected_full_paths": [
+        ""
+      ],
+      "observations": 1,
+      "api": "spec.judge_family"
+    },
+    {
+      "id": "SP16",
+      "category": "semantic_sequence",
+      "observations": 6,
+      "same_Family_instance": true,
+      "input_order": [
+        "SP01",
+        "SP03",
+        "SP05",
+        "SP03",
+        "SP01",
+        "SP05"
+      ],
+      "expected_each": "same exact verdict/paths/value as referenced independent case",
+      "immutable": "entire input document, original writer/profile refs and input values before-after; compiled internal cache/race is not externally proven"
+    },
+    {
+      "id": "SP17",
+      "category": "expected_checking_precondition",
+      "observations": 1,
+      "api": "Family.judge",
+      "difference": "concrete writer key=None",
+      "expected_error": "ValueError",
+      "semantic_refusal_or_kill": false
+    },
+    {
+      "id": "SP18",
+      "category": "expected_checking_precondition",
+      "observations": 1,
+      "api": "Family.judge",
+      "difference": "family_template=other with exact deleting profiles present",
+      "expected_error": "ValueError",
+      "semantic_refusal_or_kill": false
+    },
+    {
+      "id": "SP19",
+      "category": "expected_checking_precondition",
+      "observations": 1,
+      "api": "Family.judge",
+      "difference": "declared test-source copy missing only person_writer; fixed deleting identity",
+      "expected_error": "ValueError",
+      "semantic_refusal_or_kill": false
+    },
+    {
+      "id": "SP20",
+      "category": "expected_checking_precondition",
+      "observations": 1,
+      "api": "spec.judge_family",
+      "difference": "concrete key=None with exact catalog template",
+      "expected_error": "SpecError",
+      "semantic_refusal_or_kill": false
+    }
+  ],
+  "counts": {
+    "named_groups": 20,
+    "subject_observations": 25,
+    "semantic_observations": 21,
+    "manual_semantic_ok": 12,
+    "manual_semantic_refused": 9,
+    "expected_checking_preconditions": 4,
+    "executed_now": 0
+  },
+  "held_neighbours": [
+    "Malformed-but-dictionary type/pattern/x-time source variants beyond SP19 require owner disposition and separate frozen IDs, not automatic semantic refusals",
+    "No new common Time Reader controls or repair are smuggled into this pair",
+    "Other ordinary families/noncontext compatibility has only literal preservation evidence until separately bounded neighbours are approved"
+  ]
+}

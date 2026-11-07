@@ -1,0 +1,68 @@
+{
+  "utc": "2026-11-07T20:08:33.407887+00:00",
+  "status": "APPROVED_P0_COMPOSITION_AND_EXTERNAL_CALLER_CODE_FREEZE_ONLY",
+  "authority": "Separate request79f5f664 under505aa/599/7f27; NOT_Z13_REMINDER",
+  "ready_sha256": "14ff3e5665ff79f3f75ee6d96e4c93c41305a7e52f05c5ab686dc1a0237b3bdf",
+  "manifest_sha256": "94819bf782f78a8b6b50cd3a89e8a2757d370bbeb704b87c37eaf6d5d7d8cad3",
+  "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+  "Ntools_parents": [
+    "99b9884ca1e10e48f5cd2462ba0070eb6253acdf",
+    "a917ca380f7eb609def94166d0f2031edd9c4043"
+  ],
+  "Ntools_constraint": "normal merge exact disjoint9 mode/blobs; every other object exactly437; no Source/main merge",
+  "primary_owner": "coord103-tools",
+  "external_caller_author": "review103 via tools, existing sessions only",
+  "source_read_inputs": [
+    {
+      "path": "Platform/08-domain/data/deleting.schema.json",
+      "pin": "285f713746e72cb7cfd659fb8cc8e2251134f604",
+      "bytes": 29057,
+      "sha256": "c70b806fbb1ae266accc847b34eeb84779768cc74ced35100211dedef75f7d08",
+      "blob": "3bad70824584f8a8246cfc4d6064f62e45fb0e89"
+    },
+    {
+      "path": "Platform/08-domain/data/deleting.layers.tsv",
+      "pin": "285f713746e72cb7cfd659fb8cc8e2251134f604",
+      "bytes": 938,
+      "sha256": "20b146f5d5ab3ab05e6f88ee28de69ad7ce0443725b6ab6d4dc81146ca327a70",
+      "blob": "a459121e3e1998cae32c8c250447cf96bdc7a1d5"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.4-domain.norms.md",
+      "pin": "285f713746e72cb7cfd659fb8cc8e2251134f604",
+      "bytes": 139406,
+      "sha256": "0fe38704f5e9546b41da9b84210f442d4b36dd4ff662fa5dbe9688038126c629",
+      "blob": "b19bfd1947780650854a0eb3d2fa76c8452e5192"
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.4-domain.norms.md",
+      "pin": "285f713746e72cb7cfd659fb8cc8e2251134f604",
+      "bytes": 174703,
+      "sha256": "4c09bea3879a445ac2eec50a349a1f6fa057b31a414680724feb8caf33622633",
+      "blob": "bc46d6e128c79018535086884aa2e8e85451faf7"
+    }
+  ],
+  "common_context": "437; not full Source285 Time/canonical/catalog adoption",
+  "allowed": [
+    "normal Ntools composition+own branch publication with exact9diff verification",
+    "external SP20/25 caller/helper/input/expected/audit CODE and freeze",
+    "stdlib-only syntax/AST and static metadata checks; no project import"
+  ],
+  "P1_roster": "P1-ROSTER.json",
+  "future_execution": "SEPARATE_GRANT_REQUIRED_AFTER_FROZEN_CALLER_REVIEW",
+  "tracked_code_or_skill_edits": false,
+  "held": [
+    "P1 Python import/schema/codec/test execution",
+    "P2 producer admission",
+    "D0 rendering",
+    "G0 Go parser/compiler/build/gofmt/materialization",
+    "any six-finding repair",
+    "Nsource/Njoint/full491/main composition or adoption",
+    "RK/RS reruns/old tests/fixtures replacement",
+    "keylessA/SUT/protocol/family08/metadata16",
+    "models/new sessions/SDK/HTTP/lines/GATE",
+    "ms/VMS/Claude/policies/timers/health thresholds/cleanup/resize/restart/Z14cutover"
+  ],
+  "calendar_due": null,
+  "no_scaled_author_estimate": "Prior90–150min author58 etc not an estimate for this selected20/25; request fresh own preparation effort without extra runs"
+}
