@@ -43,7 +43,7 @@
    ]
   },
   "reason": {
-   "description": "a non-empty reason — the duty of the writer (the controller); the reader accepts \"\" (C06-WHERE-EMPTY-168-04, as C06-WHERE-EMPTY-33-01); only when active",
+   "description": "A nonempty human reason when state is active, for reader and writer alike. The idle form does not require reason.",
    "type": "string",
    "x-codec": [
     "string"
@@ -89,7 +89,16 @@
      "target",
      "reason",
      "at"
-    ]
+    ],
+    "properties": {
+     "reason": {
+      "not": {
+       "enum": [
+        ""
+       ]
+      }
+     }
+    }
    }
   }
  ],

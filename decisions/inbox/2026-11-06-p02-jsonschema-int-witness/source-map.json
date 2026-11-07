@@ -1,0 +1,92 @@
+{
+  "parent": "dffe58fef31f365256a043449e9e846f8972560e",
+  "reason": "Correct an erroneous embedded JSON Schema type spelling under the existing JSON Schema2020-12 contract; not a new alias or norm. Native unit-field kind int is a different form and remains unchanged.",
+  "historical_source_commit": "82f0baba28ba6f39e10e4038a4faca179d9eb2f8",
+  "authorization": {
+    "document": "coord103 p02-jsonschema-int-witness DISPOSITION.md",
+    "sha256": "1b91e0be7a48552581eb269180034dfd0c94eedfac0f83c791c57d7e2191bcb1",
+    "root_correction_proof_sha256": "788721ed219caf3fb347952a98dbcf8e3eba494686a7d43499d40c70a21092fb",
+    "root_proposed_diff_sha256": "2b1b0d47924107a3020260b18e39221fd3969c5a3de80af34e170c8e5c5065fe"
+  },
+  "files": [
+    {
+      "path": "Platform/02-installer/vectors/canonical/inputs/p1-snapshot-state.subsystem.yaml",
+      "before_sha256": "9c34f355d666fa5a357f2aa08f273ae53f3453fee0fcd0bcdb472acc69378fbd",
+      "after_sha256": "6d94bad0bd7ca6549b97931fa9a05165999da1666e1fca096130d0d4584c6af5",
+      "before_bytes": 500,
+      "after_bytes": 508,
+      "final_lf_before": true,
+      "final_lf_after": true,
+      "changes": [
+        {
+          "pointer": "/unit/state/cursor/properties/at/type",
+          "before": "int",
+          "after": "integer"
+        },
+        {
+          "pointer": "/unit/state/progress/properties/done/type",
+          "before": "int",
+          "after": "integer"
+        }
+      ]
+    },
+    {
+      "path": "Platform/02-installer/vectors/canonical/expect/example-p1-snapshot-state.json",
+      "before_sha256": "2a2dd792b5f5757e01ade1e5ca668b76e3d0880afb46709acdd897b98c621a2d",
+      "after_sha256": "6e3c7fc871f17ff173ed0a1dbef3bdf306c54b5b2221869bda33fefff70e22c4",
+      "before_bytes": 1464,
+      "after_bytes": 1472,
+      "final_lf_before": false,
+      "final_lf_after": false,
+      "changes": [
+        {
+          "pointer": "/unit/state/cursor/properties/at/type",
+          "before": "int",
+          "after": "integer"
+        },
+        {
+          "pointer": "/unit/state/progress/properties/done/type",
+          "before": "int",
+          "after": "integer"
+        }
+      ]
+    }
+  ],
+  "corpus": {
+    "case_count": 220,
+    "case_ids_sha256": "aa35e0918b8b0100095309266d843bb47b4ba5e8a6162c3217af7183ee690be1",
+    "cases_tsv_sha256": "95e9c93c6ae0d8a8cb6d9fcdee8e92a333e3b88095d61f4f74a0aa022fe4eefb",
+    "cases_tsv_byte_identical": true,
+    "tracked_canonical_files": 235,
+    "changed_canonical_files": [
+      "Platform/02-installer/vectors/canonical/inputs/p1-snapshot-state.subsystem.yaml",
+      "Platform/02-installer/vectors/canonical/expect/example-p1-snapshot-state.json"
+    ],
+    "other_canonical_files_byte_identical_by_git_diff": 233,
+    "all_other_Platform_paths_unchanged": true
+  },
+  "strict_schema_unchanged": {
+    "Platform/02-installer/spec/02.1-installer.schema.json": "654aaf549333a87f583ddc0cce6fd449df5a858f0d912ceb019b65dca922afd6",
+    "Platform/02-installer/spec/02.1-installer.relations.json": "23d6a92181f1e6a96aa30a107e5590a4b02f36eef70a386f7009c4e067088385"
+  },
+  "native_int_unchanged": {
+    "input_start": {
+      "type": "int",
+      "default": 0
+    },
+    "canonical_start": {
+      "default": 0,
+      "fixed": false,
+      "name": "start",
+      "required": false,
+      "type": "int"
+    },
+    "all_unit_fields_unchanged": true,
+    "snapshot_unchanged": true
+  },
+  "open_obligations": [
+    "B1 complete positive profile/2GiB sufficiency",
+    "recovery executable binding; N5 witness unexecuted"
+  ],
+  "author_commit": "supplied by external exact author receipt, without self-referential file hashes"
+}

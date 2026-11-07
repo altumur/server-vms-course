@@ -28,7 +28,7 @@ line:                                        # одна строка JSON в ф�
   class:    alarm                                                  # только у тревоги; observation не пишется
   occurred: <секунды>                                              # когда произошло; необязателен
   # t и occurred — время common.time, как все времена (P/01.1 N0 «Время в строке»): писатель пишет строго (кодек
-  # Platform/common/data/codec.tsv time: число, до трёх знаков дроби), читатель читает терпимо (число или строка по
+  # Platform/common/data/codec.tsv time: число, до трёх знаков дроби), читатель соблюдает тот же предел дроби (число или строка по
   # кодеку читателя); форма строки — семьи events P/05 по дереву (Platform/05-resource/data/events-<дерево>.schema.json и .outcomes.tsv: events-unit,
   # events-unit-alarms, events-audit, events-audit-alarms, events-console, events-console-alarms, events-mirror); векторы чтения —
   # common/vectors/journal bucket.tsv t-* (догадка стадии C EJ-G07, решение «Архитектора» 2026-10-23)

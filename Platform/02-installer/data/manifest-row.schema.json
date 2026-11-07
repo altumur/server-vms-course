@@ -77,7 +77,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "extra fields: the reader does not read them and does not refuse because of them, the writer does not write them (P/02.3 N1.5 rules; ADR-0088 lines 66–67; the Architect's decision on 1bd77782b)",
+  "description": "Extra wrapper names exceed the existing x-max-names=0 bound at both writer and reader; the existing whole-wrapper unreadable outcome applies.",
   "x-codec": [
    "any"
   ]
@@ -892,5 +892,6 @@
   "writer": {
    "x-max-names": 0
   }
- }
+ },
+ "allOf": [{"$ref": "#/$defs/writer"}]
 }

@@ -32,7 +32,7 @@ the directives `@start` (including `@start controller <sub> shrink_after=<s>`, `
 `@start worker <name> on srv-b` sc. 33 and `@start worker <name> labels=<labels>` sc. 24), `@sigterm`, `@sigkill`, `@sleep`, `@until`,
 `@as` (including `@as console store …` sc. 08, 24, 34, 35; `@as testsubcontroller store …` — rows of the controller bypassing it,
 sc. 28–32, 41; `@as testsubworker store …` sc. 13, 21, 42), `@grow`, `@cut role testsubcontroller store` / `@mend role testsubcontroller store` (sc. 25), `@freeze w-1` /
-`@thaw w-1` (sc. 26, 27); the expectation — a subset of fields, `@any`, `@absent` (sc. 21), `@time` (sc. 03, 21, 23, 25), `@exit 2` at
+`@thaw w-1` (sc. 26, 27); the expectation — a subset of fields, `@any`, `@absent` (sc. 21), `@time` (sc. 03, 23, 25), `@oneof` (sc. 21), `@exit 2` at
 `@start controller` (sc. 23).
 
 The processes are started per the section «Stand» of the common acceptance README (the commands of roles, the environment of the worker); the read role of the store
@@ -98,7 +98,7 @@ a scenario. One scenario takes no longer than 3 minutes.
 - sc. 21 — the write `release` (N3 «fate», «write release»; the table R28 below, the last row): three workers without units
   are killed by `@sigkill`, the resource is alive; the slot `w-1` (readable) is released with the former `holder`, `until`, `gen`, `server`, the name `w-1` is in
   `names_given` (the fate `release`, not `move`: there are no assigned units); `w-2` — a row bypassing the writer with a torn `until` and
-  a readable `gen` 2: released wholly and nobody's (`holder` "", `until` — the time by the form of the writer, `gen` 2, `server` as read);
+  a readable `gen` 2: released wholly and nobody's (`holder` "", `until` — zero Time in the writer form, `gen` 2, `server` as read);
   `w-3` — a row with an unreadable `gen`: it does not change (the version `index` is the same), the name `w-3` is not in `names_given`; the released `w-1` is taken
   by a new process with `gen` 2 (the coverage audit of P/04, D04). The window of `names_given` is the pass of the release: the step of the report goes before the steps of the rows
   (as C04-FATES-WINDOW-01);
@@ -127,14 +127,14 @@ a scenario. One scenario takes no longer than 3 minutes.
   stops the whole process with all the threads — the loop and the stand-in (the slot is not renewed, the heartbeat is not written), the process is alive and
   holds the flock of the presence lock ([the presence lock contract](../../common/contracts/presence-lock.md)): the resource says
   `runs` (`running` of the heartbeat of the resource — both before and during the freeze). The last version of the slot was written no earlier than a lease
-  step ≈ 8.3 s before the freeze (P/03.2 N1.2), therefore the margin «the same version is observed for < SLOT_TERM + LOST_AFTER» (45 + 45 s)
+  step ≈ 8.3 s before the freeze (P/03.2 N1.2), therefore the margin «the same version is observed for < SLOT_TERM + LOST_AFTER» (SLOT_TERM + LOST_AFTER)
   holds `alive` no less than ≈ 81.7 s from the freeze: sc. 26 step 11 after 75 s sees `alive`, then — `hung` (the rule
-  «resource live ∧ process runs»), no later than ≈ 100 s (the first observation of the version — a pass of 5 s, one more pass for the report). With
-  `hung` the name is not released (`names_given` is empty; HUNG_MOVE_AFTER 900 s — [the environment file contract](../../common/contracts/env-file.md)),
+  «resource live ∧ process runs»), no later than ≈ 100 s (the first observation of the version — a PASS_EVERY pass, one more pass for the report). With
+  `hung` the name is not released (`names_given` is empty; the effective HUNG_MOVE_AFTER — [the environment file contract](../../common/contracts/env-file.md)),
   the slot is not released, the unit `c26` stays on `w-1` (`hung` is not in MOVED_FATES, N3 «leaving»). Sc. 27 — the same without units:
   `hung`, not `release` (the table «Release transitions»: the presence `runs` — write nothing). After `@thaw` the worker
   renews the slot — `alive` again. The freeze is no longer than the limit of the directive 120 s: sc. 26 — 75 + up to 35 s, sc. 27 — up to 110 s.
-  `hung_moved` (900 s) and the `why` of the word `hung` — by reading (beyond the ceiling of the scenario; the norm does not fix the word of the reason).
+  `hung_moved` (the effective HUNG_MOVE_AFTER) and the `why` of the word `hung` — by reading (beyond the ceiling of the scenario; the norm does not fix the word of the reason).
 
 ## Coverage audit of P/04, second pass (sc. 28–42)
 
@@ -155,10 +155,7 @@ The revision of the manifest of the stand is 1 (the first installation, P/02.3 N
 - Sc. 30 — an unreadable intent row (N1.5 «An intent row out of form is unreadable», N4): `state: broken` — the pass report
   `ok: false`, `c1` is not placed within two passes with a live `w-1`, the intent row is the same (the version); restored
   (idle by cas) — `c1` is placed. 503 of `/where` for such a row — sc. 07 of the acceptance of P/06.5.
-- Sc. 31 — `manifest_rev` (N3 «pass()» step 1, «manifest_rev — the rule guard»; N1.2 `manifest_behind`): the placement row
-  of `c1` without `manifest_rev` is stamped with revision 1 (the write — `rev` 2); the row of `c2` is decided by revision 2, there is no unit
-  `c2` — the removal of a deleted one is forbidden by the guard: the row is the same, `manifest_behind: 1` (the number of rows of the pass whose write is
-  postponed, a row — once per pass: C04-MANIFEST-BEHIND-COUNT-01), the assignment of `w-1` (`c1,c2`) is not rewritten.
+- Sc. 31 — manifest_rev (N3 pass step1, manifest_rev guard; N1.2 manifest_behind): c1 lacks its required revision, is intentionally unreadable and is not repaired; index/rev/items remain unchanged. c2 has revision 2 but no unit row: the guard forbids deletion, the row stays and manifest_behind: 1 counts it once per pass (C04-MANIFEST-BEHIND-COUNT-01). The w-1 assignment with c1,c2 is not rewritten.
 - Sc. 32 — a turn with a newer revision ([the turn contract](../../common/contracts/turn.md) step 1): the row
   `placement_turn` with `manifest_rev` 10 — the controller does not take it and does not rewrite it (the version is the same), `c2` is not
   placed within two passes; `c1` is placed before the write (the controller worked).
@@ -192,7 +189,7 @@ The revision of the manifest of the stand is 1 (the first installation, P/02.3 N
   does not rewrite the row. The witness reads such a row by `units` and keeps the worker in the pool — the norm is right.
 - Sc. 42 — the fate `wait` (N3 «fate»; the table «Release transitions»): an occupied slot `w-9` without a process, the resource is alive — the resource knows nothing about
   the worker (`unlisted`); before the margin SLOT_TERM + LOST_AFTER — `alive`, then `wait`: `names_given` is empty
-  (HUNG_MOVE_AFTER 900 s), the slot row is the same. `wait` beyond HUNG_MOVE_AFTER — by reading (beyond the ceiling of the scenario).
+  (the effective HUNG_MOVE_AFTER), the slot row is the same. `wait` beyond HUNG_MOVE_AFTER — by reading (beyond the ceiling of the scenario).
 
 ### Home at the place holder (sc. 43, 44; C04-HOME-PLACE-HOLDER-01)
 
@@ -291,9 +288,9 @@ P/05 (the resource) — all the scenarios (above, «Observation»).
 
 ## Snapshot outside TSV (from the README of the acceptance of M10/10)
 
-The publication of a shard: max_bytes=0, less than, equal to and greater than 64 MiB; the full size exactly L/+1; on a refusal the former
+The publication of a shard: max_bytes=0, less than, equal to and greater than the resource door limit L; the full size exactly L/+1; on a refusal the former
 object and time are kept. Scenario 03 does not prove these boundaries. Outside TSV reconcile the whole list of service families and the size of the full
-snapshot shard against the 64 MiB of the resource door (before the write); max_bytes of the store is held by the store itself on put — its `TooLarge`
+snapshot shard against the resource door limit L (before the write); max_bytes of the store is held by the store itself on put — its `TooLarge`
 gives the same outcome (C04-SNAPSHOT-CEILING-MAXBYTES-01). max_bytes=0 does not remove the ceiling of the door; a refusal keeps the former shard and its
 time. The `@until` of the snapshot reads the local resource; an error of publication does not become an empty snapshot.
 
@@ -349,3 +346,5 @@ This is a subject of a manual check of the specification and of a future check o
 of the author are not a performed stand test.
 
 [seams.tsv](seams.tsv) adds kit witnesses at controller function seams; [forms/README.md](../forms/README.md) defines their normalization. They do not change the process scenario/step counts above and do not close a witness they do not execute.
+
+ADR0129(15): 21/17 checks zero Time using four existing full @oneof 200 branches (0/0.0/0.00/0.000); all other fields remain. 31/5 binds the damaged row index and 31/10 checks no repair; requests and other neighbors stay. s51-s63 and their real fixture/observation contracts are declared in forms/README; none is a SUT execution claim.

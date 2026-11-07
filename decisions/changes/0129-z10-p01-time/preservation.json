@@ -1,0 +1,14 @@
+{
+  "change": "0129-z10-p01-time",
+  "rev": 1,
+  "base": "854681a2fcd1db12ff7db8127feee977f62be6b6",
+  "modified_req": [
+    "P/01.1-R008",
+    "P/01.1-R010"
+  ],
+  "unchanged_req": "all other P01 req units, including R007 and R012; A FORMAT/floor and its metadata untouched",
+  "shared_preservation": "decisions/inbox/2026-11-07-z10-current-source-b/preservation.json",
+  "state": "review",
+  "apply_tool": "not run or attested",
+  "runtime_Gate": "not assigned/not claimed"
+}

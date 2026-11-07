@@ -33,7 +33,7 @@ The unit row follows the catalogue manifest (`unit.fields`; the form of the mani
   born:      <32 lowercase hex digits>             # the life of the row (ADR-0091 item 3): set by the creator — the door (N3 «create» step 8)
                                                    # or the customer's library (P/03.6 N1.6) — with a new random value at
                                                    # each creation, over a tombstone too; an edit, a deletion mark and
-                                                   # resealing keep it; a row without born was created before this norm — its life is ""
+                                                   # resealing keep it; absent or empty born is unreadable, not a life value
   made:      <canonical JSON {by, at, keep, gone?}>  # only in a customer's row (P/03.6 N1.6; ADR-0091 item 1): by — the customer subsystem;
                                                    # at — the time of the event, keep — the time until which nobody deletes the row
                                                    # physically (time — Platform/common/data/codec.tsv row time, P/01.1 N0; JSON numbers) — set only by
