@@ -6,11 +6,13 @@ gen_door.py delegates here when the lesson is not 01-store. Read spec/<lesson>.a
 Emit go/apidoor/routes.go with Op in OpenAPI path/method order, Ops metadata (method, path, optional /{sub} prefix from {origin}/{sub}, parameters, requiredness, response status/media/headers and request media), router templates and path-schema checks (minLength, maxLength, pattern, enum, const, expanded refs), path/method dispatch, path methods and unanimous-405 metadata. Copy routes_rt.go from doorrt2/go/routes.go: Route(method, path, Catalog), Match and RouteError. The YOURS Catalog supplies loaded sub/rows/table/pass names. Part 3b body parsing/schema checks, Encode and refusal construction are outside this route generator. test_gen_door_lesson.py uses an independent OpenAPI route model, probes and mutants."""
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -24,12 +26,12 @@ METHODS = ("get", "put", "post", "delete", "patch", "head", "options", "trace")
 RUNTIME = HERE / "doorrt2/go/routes.go"
 SCHEMA_RT = HERE / "doorrt2/go/schema.go"
 PRIORITY_RT = HERE / "doorrt2/go/routes_priority.go"   # x-route-priority mode (P/05-R057).
-SCHEMA_WORDS = {"$ref", "type", "enum", "const", "allOf", "anyOf", "oneOf", "not", "if", "then", "else", "properties",
+SCHEMA_WORDS = {"$schema", "$defs", "$ref", "type", "enum", "const", "allOf", "anyOf", "oneOf", "not", "if", "then", "else", "properties",
                 "patternProperties", "additionalProperties", "unevaluatedProperties", "propertyNames", "required",
                 "dependentRequired", "minProperties", "maxProperties", "items", "minItems", "maxItems", "uniqueItems",
                 "minLength", "maxLength", "pattern", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum",
                 "description", "format", "default", "readOnly", "contentMediaType", "title", "examples", "$comment"}
-SUBSCHEMA_MAPS = ("properties", "patternProperties", "dependentRequired")
+SUBSCHEMA_MAPS = ("$defs", "properties", "patternProperties")
 SUBSCHEMA_ONE = ("not", "if", "then", "else", "additionalProperties", "unevaluatedProperties", "propertyNames", "items")
 SUBSCHEMA_LIST = ("allOf", "anyOf", "oneOf")
 PARAM_KEYS = {"type", "minLength", "maxLength", "pattern", "enum", "const", "$ref", "description", "title", "examples",
@@ -46,54 +48,333 @@ def go_str(s):
 
 
 class Docs:
-    """The lesson document and external ref documents."""
+    """Offline OpenAPI/JSON Schema resources, with declaration-local reference rights."""
+
+    _DIALECTS = {"https://spec.openapis.org/oas/3.1/dialect/base",
+                 "https://json-schema.org/draft/2020-12/schema"}
+    _SCHEMA_MAPS = ("$defs", "properties", "patternProperties", "dependentSchemas")
+    _SCHEMA_ONE = SUBSCHEMA_ONE + ("contains", "unevaluatedItems", "contentSchema", "x-line-schema")
+    _SCHEMA_LIST = SUBSCHEMA_LIST + ("prefixItems",)
 
     def __init__(self, path):
-        self.main = Path(path).resolve()
-        self.cache = {}
+        declared = Path(os.path.abspath(path))
+        self.platform = next((p for p in declared.parents if p.name == "Platform"), None)
+        if self.platform is None:
+            raise GenError("reference root must be inside Platform")
+        self.main = declared.resolve()
+        self.cache, self._meta, self.inputs = {}, {}, set()
+        self._inside(declared)
         self.doc = self.load(self.main)
+
+    def _inside(self, path):
+        try:
+            lexical = Path(os.path.abspath(path)).relative_to(self.platform).parts
+            physical = Path(path).resolve().relative_to(self.platform.resolve()).parts
+        except ValueError:
+            raise GenError(f"$ref outside Platform: {path}") from None
+        owner = lambda parts: (parts[0] if len(parts) >= 2 and
+                               (parts[0] == "common" or re.fullmatch(r"[0-9]{2}-[a-z][a-z-]*", parts[0])) else None)
+        if owner(lexical) is None or owner(lexical) != owner(physical):
+            raise GenError(f"$ref changed or invalid declared owner: {path}")
+        return lexical, physical
+
+    @staticmethod
+    def _json(text):
+        def pairs(items):
+            out = {}
+            for key, value in items:
+                if key in out:
+                    raise ValueError(f"duplicate JSON key {key!r}")
+                out[key] = value
+            return out
+        def constant(value):
+            raise ValueError(f"non-JSON number {value}")
+        value = json.loads(text, object_pairs_hook=pairs, parse_constant=constant)
+        # Reject non-scalar escaped strings and overflowed non-finite numbers too.
+        json.dumps(value, ensure_ascii=False, allow_nan=False).encode("utf-8")
+        return value
+
+    @staticmethod
+    def _token(value):
+        return str(value).replace("~", "~0").replace("/", "~1")
+
+    def _index(self, path, doc, standalone):
+        positions, schemas, objects = {}, set(), {}
+        def locate(node, at):
+            if isinstance(node, (dict, list)):
+                if id(node) in positions:
+                    raise GenError(f"{path}: ambiguous declaration origin")
+                positions[id(node)] = at
+                for key, child in (node.items() if isinstance(node, dict) else enumerate(node)):
+                    locate(child, at + "/" + self._token(key))
+        locate(doc, "")
+        dialect = (doc.get("$schema", "https://json-schema.org/draft/2020-12/schema") if standalone and isinstance(doc, dict)
+                   else "https://json-schema.org/draft/2020-12/schema" if standalone
+                   else doc.get("jsonSchemaDialect", "https://spec.openapis.org/oas/3.1/dialect/base"))
+        if not isinstance(dialect, str) or dialect not in self._DIALECTS:
+            raise GenError(f"{path}: unsupported schema dialect {dialect!r}")
+        def schema(node, at):
+            if not isinstance(node, (dict, bool)):
+                raise GenError(f"{path}#{at}: schema must be an object or boolean")
+            schemas.add(at)
+            if not isinstance(node, dict):
+                return
+            if "$schema" in node and (not isinstance(node["$schema"], str) or node["$schema"] not in self._DIALECTS):
+                raise GenError(f"{path}#{at}: unsupported schema dialect")
+            if any(k in node for k in ("$id", "$anchor", "$dynamicAnchor", "$dynamicRef")):
+                raise GenError(f"{path}#{at}: unsupported schema resource identifier or anchor")
+            for key, child in self._children(node, at):
+                schema(child, key)
+        def content(node, at):
+            for media, value in (node or {}).items():
+                if isinstance(value, dict) and "schema" in value:
+                    schema(value["schema"], at + "/" + self._token(media) + "/schema")
+        def obj(node, at, kind):
+            if not isinstance(node, dict):
+                return
+            objects[at] = kind
+            if kind in ("parameter", "header"):
+                if "schema" in node:
+                    schema(node["schema"], at + "/schema")
+                content(node.get("content"), at + "/content")
+            elif kind in ("response", "requestBody"):
+                content(node.get("content"), at + "/content")
+                for name, value in (node.get("headers") or {}).items():
+                    obj(value, at + "/headers/" + self._token(name), "header")
+            elif kind in ("pathItem", "operation"):
+                for i, value in enumerate(node.get("parameters", [])):
+                    obj(value, at + f"/parameters/{i}", "parameter")
+                if kind == "pathItem":
+                    for method in METHODS:
+                        if method in node:
+                            obj(node[method], at + "/" + method, "operation")
+                else:
+                    if "requestBody" in node:
+                        obj(node["requestBody"], at + "/requestBody", "requestBody")
+                    for code, value in (node.get("responses") or {}).items():
+                        obj(value, at + "/responses/" + self._token(code), "response")
+        if standalone:
+            schema(doc, "")
+        else:
+            for name, item in (doc.get("paths") or {}).items():
+                if not str(name).startswith("x-"):
+                    obj(item, "/paths/" + self._token(name), "pathItem")
+            components = doc.get("components") or {}
+            for name, value in (components.get("schemas") or {}).items():
+                schema(value, "/components/schemas/" + self._token(name))
+            for collection, kind in (("parameters", "parameter"), ("headers", "header"),
+                                     ("responses", "response"), ("requestBodies", "requestBody"),
+                                     ("pathItems", "pathItem")):
+                for name, value in (components.get(collection) or {}).items():
+                    obj(value, "/components/" + collection + "/" + self._token(name), kind)
+        return {"standalone": standalone, "dialect": dialect, "positions": positions,
+                "schemas": schemas, "objects": objects}
+
+    def _children(self, node, at):
+        for key, value in node.items():
+            child_at = at + "/" + self._token(key)
+            if key in self._SCHEMA_MAPS:
+                if not isinstance(value, dict):
+                    raise GenError(f"{child_at}: schema map must be an object")
+                for name, child in value.items():
+                    yield child_at + "/" + self._token(name), child
+            elif key in self._SCHEMA_ONE:
+                yield child_at, value
+            elif key in self._SCHEMA_LIST:
+                if not isinstance(value, list):
+                    raise GenError(f"{child_at}: schema list must be an array")
+                for i, child in enumerate(value):
+                    yield child_at + f"/{i}", child
 
     def load(self, path):
         path = Path(path).resolve()
+        self._inside(path)
         if path not in self.cache:
             if not path.is_file():
                 raise GenError(f"$ref: no file {path}")
             try:
-                self.cache[path] = yamlsub.load(path.read_text(encoding="utf-8"), path.name)
-            except yamlsub.YamlError as exc:
-                raise GenError(str(exc)) from None
+                text = path.read_bytes().decode("utf-8")
+                standalone = path.name.endswith(".schema.json")
+                doc = self._json(text) if standalone else yamlsub.load(text, path.name)
+                if standalone:
+                    if not isinstance(doc, (dict, bool)) or isinstance(doc, dict) and "openapi" in doc:
+                        raise GenError(f"{path}: expected a standalone JSON Schema, not OpenAPI")
+                elif not path.name.endswith(".openapi.yaml") or not isinstance(doc, dict) or not str(doc.get("openapi", "")).startswith("3.1."):
+                    raise GenError(f"{path}: expected an OpenAPI 3.1 contract")
+                meta = self._index(path, doc, standalone)
+                if standalone:
+                    # Existing normgen dependency; validate shape without resolving instance $refs or using the network.
+                    from jsonschema import Draft202012Validator
+                    from jsonschema.exceptions import SchemaError
+                    try:
+                        Draft202012Validator.check_schema(doc)
+                    except SchemaError as exc:
+                        raise GenError(f"{path}: invalid JSON Schema: {exc.message}") from None
+            except (OSError, UnicodeError, ValueError, TypeError, AttributeError, RecursionError, yamlsub.YamlError) as exc:
+                raise GenError(f"{path.name}: {exc}") from None
+            self.cache[path], self._meta[path] = doc, meta
+            self.inputs.add(path)
+        elif path not in self._meta:
+            # S08 keeps its already parsed catalogue document in the same cache.
+            self._meta[path] = self._index(path, self.cache[path], path.name.endswith(".schema.json"))
         return self.cache[path]
 
-    def resolve(self, ref, base):
-        """Return (node, node document)."""
-        file, _, pointer = ref.partition("#")
-        path = (Path(base).parent / file).resolve() if file else Path(base)
-        node = self.load(path)
-        for part in pointer.lstrip("/").split("/") if pointer else []:
-            part = part.replace("~1", "/").replace("~0", "~")
-            if not isinstance(node, dict) or part not in node:
-                raise GenError(f"$ref {ref}: no {part}")
-            node = node[part]
+    def origin(self, node, base):
+        base = Path(base).resolve()
+        self.load(base)
+        return self._meta[base]["positions"].get(id(node))
+
+    @staticmethod
+    def _uri(ref):
+        if not isinstance(ref, str) or not ref or re.search(r"[\x00-\x20\\]", ref) or re.search(r"%(?![0-9a-fA-F]{2})", ref):
+            raise GenError(f"invalid relative $ref {ref!r}")
+        try:
+            url = urlsplit(ref)
+            if url.scheme or url.netloc or url.query or "?" in ref.split("#", 1)[0]:
+                raise ValueError("only relative offline references")
+            file, pointer = unquote(url.path, errors="strict"), unquote(url.fragment, errors="strict")
+            (file + pointer).encode("utf-8")
+        except (ValueError, UnicodeError) as exc:
+            raise GenError(f"$ref {ref!r}: {exc}") from None
+        if file.startswith("/") or "\\" in file or "\x00" in file or (pointer and not pointer.startswith("/")):
+            raise GenError(f"$ref {ref!r}: expected relative path and JSON Pointer")
+        if re.search(r"~(?![01])", pointer):
+            raise GenError(f"$ref {ref!r}: malformed JSON Pointer escape")
+        return file, pointer
+
+    def _pointer(self, document, pointer):
+        node = document
+        for token in pointer.split("/")[1:] if pointer else ():
+            token = token.replace("~1", "/").replace("~0", "~")
+            if isinstance(node, list) and re.fullmatch(r"0|[1-9][0-9]*", token):
+                index = int(token)
+                if index < len(node):
+                    node = node[index]
+                    continue
+            elif isinstance(node, dict) and token in node:
+                node = node[token]
+                continue
+            raise GenError(f"$ref: no JSON Pointer {pointer}")
+        return node
+
+    def _late(self, base, origin, target_owner):
+        if self._meta[base]["standalone"] or origin is None:
+            return False
+        tokens = origin.split("/")
+        if len(tokens) < 4 or tokens[1] != "paths":
+            return False
+        door = self._pointer(self.cache[base], "/".join(tokens[:3]))
+        owner = self._inside(base)[1][0]
+        match = re.match(r"(?:Chapter|\u0413\u043b\u0430\u0432\u0430) ([0-9]+)\.([0-9]+)(?![0-9.])", str(door.get("description", "")))
+        if not match or int(match[1]) != int(owner[:2]):
+            return False
+        chapter = base.parent / f"{owner[:2]}.{int(match[2])}-{owner[3:]}.norms.md"
+        if not chapter.is_file():
+            return False
+        self._inside(chapter)
+        head = "\n".join(chapter.read_text(encoding="utf-8").splitlines()[:12])
+        self.inputs.add(chapter.resolve())
+        numbers = r"([0-9]+(?:(?:, | and )[0-9]+)*)"
+        late = (re.search(r"A chapter of the late layer: lessons? " + numbers + r" introduce(?:s)? it", head) or
+                re.search(r"A chapter of the late layer: introduced by lessons? " + numbers, head) or
+                re.search(r"\u0413\u043b\u0430\u0432\u0430 \u043f\u043e\u0437\u0434\u043d\u0435\u0433\u043e \u0441\u043b\u043e\u044f: \u0432\u0432\u043e\u0434(?:\u0438\u0442|\u044f\u0442) \u0443\u0440\u043e\u043a(?:\u0438)? ([0-9]+(?:(?:, | \u0438 )[0-9]+)*)", head))
+        return bool(late and int(target_owner[:2]) in {int(n) for n in re.findall(r"[0-9]+", late[1])})
+
+    def _target(self, ref, base, schema, origin):
+        base = Path(base).resolve()
+        self.load(base)
+        if origin is None:
+            raise GenError("$ref lacks an unambiguous declaration origin")
+        source = self._pointer(self.cache[base], origin)
+        if not isinstance(source, dict) or source.get("$ref") != ref:
+            raise GenError("$ref origin does not name its actual declaration")
+        if schema and origin not in self._meta[base]["schemas"]:
+            raise GenError("$ref declaration is not a Schema Object position")
+        if not schema and origin not in self._meta[base]["objects"]:
+            raise GenError("$ref declaration is not an OpenAPI object position")
+        file, pointer = self._uri(ref)
+        declared = Path(os.path.abspath(base.parent / file)) if file else base
+        lexical, physical = self._inside(declared)
+        path = declared.resolve()
+        standalone = declared.name.endswith(".schema.json")
+        if file:
+            if not (standalone or declared.name.endswith(".openapi.yaml")):
+                raise GenError("$ref must target an OpenAPI contract or standalone .schema.json")
+            if standalone and (len(lexical) != 3 or lexical[1] != "data" or len(physical) != 3 or physical[1] != "data"):
+                raise GenError("standalone JSON Schema stays in its declared owner data/")
+            if path == base:
+                raise GenError("$ref to its own file must use a local JSON Pointer")
+            source_owner, target_owner = self._inside(base)[1][0], physical[0]
+            if source_owner == "common" and target_owner != "common":
+                raise GenError("common references common only")
+            if source_owner != "common" and target_owner != "common":
+                same_schema_owner = standalone and source_owner == target_owner
+                if not same_schema_owner and int(target_owner[:2]) >= int(source_owner[:2]):
+                    if source_owner == target_owner or not self._late(base, origin, target_owner):
+                        raise GenError("$ref to a later owner lacks its declaration-local late chapter")
+        if standalone and not schema:
+            raise GenError("JSON Schema cannot replace an OpenAPI object")
+        if not standalone and not pointer:
+            raise GenError("whole OpenAPI document is not a reference target")
+        node = self._pointer(self.load(path), pointer)
+        if schema:
+            if pointer not in self._meta[path]["schemas"] or not isinstance(node, (dict, bool)):
+                raise GenError("$ref target is not a Schema Object position")
+        elif pointer not in self._meta[path]["objects"] or not isinstance(node, dict):
+            raise GenError("$ref target is not an OpenAPI object position")
+        elif self._meta[path]["objects"][pointer] != self._meta[base]["objects"][origin]:
+            raise GenError("$ref target has a different OpenAPI object kind")
+        return node, path, pointer
+
+    def _closure(self, node, base, pointer, active=(), files=(), done=None):
+        done = set() if done is None else done
+        key = (base, pointer)
+        if key in active:
+            if self._meta[base]["standalone"] or isinstance(node, dict) and set(node) == {"$ref"}:
+                raise GenError(f"$ref schema cycle {base}#{pointer}")
+            return  # Preserve existing local recursive OpenAPI schemas.
+        if key in done:
+            return
+        if isinstance(node, dict):
+            if "$ref" in node:
+                target, path, at = self._target(node["$ref"], base, True, pointer)
+                if path != base and path in files + (base,):
+                    raise GenError("cycle of cross-file schema references")
+                self._closure(target, path, at, active + (key,), files + (base,) if path != base else files, done)
+            for at, child in self._children(node, pointer):
+                self._closure(child, base, at, active + (key,), files, done)
+        done.add(key)
+
+    def resolve(self, ref, base, *, schema=False, origin=None):
+        """Return (node, node document); rights belong to this declaration, never the cache."""
+        node, path, pointer = self._target(ref, base, schema, origin)
+        if schema:
+            source = Path(base).resolve()
+            self._closure(node, path, pointer, files=(source,) if source != path else ())
         return node, path
 
     def deref_list(self, item, op, base):
         """Read path parameters and operation x-* keywords after expanding refs."""
         return [self.deref(p, base)[0] for p in item.get("parameters", []) + op_raw(item, op).get("parameters", [])]
 
-    def deref(self, node, base, seen=()):
+    def deref(self, node, base, seen=(), *, schema=False, origin=None):
         while isinstance(node, dict) and "$ref" in node and len(node) == 1:
-            if node["$ref"] in seen:
+            at = origin if origin is not None else self.origin(node, base)
+            key = (str(Path(base).resolve()), at, node["$ref"])
+            if key in seen:
                 raise GenError(f"$ref cycle {node['$ref']}")
-            seen = seen + (node["$ref"],)
-            node, base = self.resolve(node["$ref"], base)
+            seen = seen + (key,)
+            node, base = self.resolve(node["$ref"], base, schema=schema, origin=at)
+            origin = None
         return node, base
 
 
 class Bundle:
-    """Combine body schemas under $defs: lesson components retain names, external components use NN.<name>, inline schemas use their location."""
+    """Flatten actual schema resources; declaration rights are checked before memo lookup."""
 
     def __init__(self, docs):
         self.docs, self.defs, self.names = docs, {}, {}
+        self._origin = None
 
     def prefix(self, file):
         if Path(file) == self.docs.main:
@@ -101,21 +382,38 @@ class Bundle:
         m = re.match(r"(\d\d)-", Path(file).name)
         return (m[1] if m else Path(file).stem) + "."
 
+    def schema_ref(self, node, base):
+        previous = self._origin
+        self._origin = self.docs.origin(node, base)
+        try:
+            return self.ref(node["$ref"], base)
+        finally:
+            self._origin = previous
+
     def ref(self, ref, base):
-        file, _, pointer = ref.partition("#")
-        path = (Path(base).parent / file).resolve() if file else Path(base).resolve()
+        node, path = self.docs.resolve(ref, base, schema=True, origin=self._origin)
+        pointer = self.docs._uri(ref)[1]
         key = (str(path), pointer)
         if key not in self.names:
-            last = pointer.rstrip("/").split("/")[-1] if pointer else path.stem
-            name = self.prefix(path) + (last if pointer.startswith("/components/schemas/") else
-                                        pointer.strip("/").replace("/", "."))
-            name = re.sub(r"[/~]", "_", name.replace("~1", "_").replace("~0", "_"))   # Names exclude '/' and '~' (JSON Pointer).
+            if self.docs._meta[path]["standalone"]:
+                resource = path.relative_to(self.docs.platform.resolve()).as_posix()
+                # Root-independent ASCII names preserve the complete owner/resource/pointer identity.
+                name = "json." + hashlib.sha256((resource + "#" + pointer).encode("utf-8")).hexdigest()
+            else:
+                last = pointer.rstrip("/").split("/")[-1] if pointer else path.stem
+                name = self.prefix(path) + (last if pointer.startswith("/components/schemas/") else
+                                            pointer.strip("/").replace("/", "."))
+                name = re.sub(r"[/~]", "_", name.replace("~1", "_").replace("~0", "_"))
             if name in self.defs:
                 raise GenError(f"schema bundle: two schemas named {name}")
             self.names[key] = name
             self.defs[name] = None
-            node, nbase = self.docs.resolve(ref, base)
-            self.defs[name] = self.rewrite(node, nbase, name)
+            try:
+                self.defs[name] = self.rewrite(node, path, name)
+            except Exception:
+                del self.names[key]
+                del self.defs[name]
+                raise
         return "#/$defs/" + self.names[key]
 
     def inline(self, name, node, base):
@@ -137,12 +435,18 @@ class Bundle:
             if k.startswith("x-"):
                 continue
             if k == "$ref":
-                out[k] = self.ref(v, base)
+                out[k] = self.schema_ref(node, base)
+            elif k == "$schema":
+                if not isinstance(v, str) or v not in self.docs._DIALECTS:
+                    raise GenError(f"{where}: unsupported schema dialect")
+                # The validated declaration is metadata; flattened refs use the existing bundle dialect.
             elif k in SUBSCHEMA_ONE:
                 out[k] = self.rewrite(v, base, f"{where}/{k}")
             elif k in SUBSCHEMA_LIST:
                 out[k] = [self.rewrite(x, base, f"{where}/{k}/{i}") for i, x in enumerate(v)]
-            elif k in ("properties", "patternProperties"):
+            elif k in SUBSCHEMA_MAPS:
+                if not isinstance(v, dict):
+                    raise GenError(f"{where}/{k}: schema map must be an object")
                 out[k] = {n: self.rewrite(x, base, f"{where}/{k}/{n}") for n, x in v.items()}
             else:
                 out[k] = v
@@ -298,17 +602,17 @@ def op_raw(item, op):
     return item[op["method"].lower()]
 
 
-def param_check(docs, schema, base, where):
+def param_check(docs, schema, base, where, *, origin=None):
     """Convert a path-parameter schema to minLen, maxLen, pattern, enum; unsupported schemas raise GenError."""
     out = {"min": 0, "max": -1, "pattern": None, "enum": None, "not_enum": [], "not_pattern": []}
-    node, base = docs.deref(schema, base)
+    node, base = docs.deref(schema, base, schema=True, origin=origin)
     if not isinstance(node, dict):
         raise GenError(f"{where}: schema is not an object")
     extra = set(node) - PARAM_KEYS
     if extra:
         raise GenError(f"{where}: path parameter schema words {sorted(extra)} are out of the router subset")
     if "$ref" in node:
-        inner = param_check(docs, {"$ref": node["$ref"]}, base, where)
+        inner = param_check(docs, {"$ref": node["$ref"]}, base, where, origin=docs.origin(node, base))
         out.update({k: v for k, v in inner.items() if v not in (None, 0, -1, [])})
     if node.get("type", "string") != "string":
         raise GenError(f"{where}: a path parameter of type {node.get('type')!r} — only string")
@@ -438,7 +742,7 @@ def build(root=ROOT):
                 prm, pbase = docs.deref(prm, spec)
                 if prm["in"] in ("query", "header"):
                     sch = prm.get("schema") or {}
-                    sch_node = docs.deref(sch, pbase)[0] if isinstance(sch, dict) else {}
+                    sch_node = docs.deref(sch, pbase, schema=True)[0] if isinstance(sch, dict) else {}
                     lex = prm.get("x-query-lexeme")
                     if lex is not None:                # P/05-R022, R031: closed query extension.
                         stype = sch_node.get("type") if isinstance(sch_node, dict) else None
@@ -547,7 +851,7 @@ def _p06_object(docs, node, base):
             raise GenError(f"{base}: cyclic P06 reference {ref}")
         seen.add(key)
         _p06_reference(docs, ref, base)
-        node, base = docs.resolve(ref, base)
+        node, base = docs.resolve(ref, base, origin=docs.origin(node, base))
     if not isinstance(node, dict):
         raise GenError(f"{base}: expected a P06 object")
     return node, base
@@ -639,7 +943,7 @@ def _p06_build(root):
                     op_checks[p["name"]] = param_check(docs, p["schema"], p["base"], f"{path} {m} {p['name']}")
                 if p["in"] in {"query", "header"}:
                     schema, pbase = p["schema"], p["base"]
-                    resolved = docs.deref(schema, pbase)[0] if isinstance(schema, dict) else {}
+                    resolved = docs.deref(schema, pbase, schema=True)[0] if isinstance(schema, dict) else {}
                     lex = p["raw"].get("x-query-lexeme")
                     if lex is not None:
                         raise GenError(f"P06 {path}: unpublished query lexeme extension")
@@ -809,7 +1113,7 @@ def bodies_source(docs, rel, sha):
         if entry[0] == "param":
             _, op, place, pname, schema, base, required, default, lex = entry
             if isinstance(schema, dict) and set(schema) == {"$ref"}:
-                sname = b.ref(schema["$ref"], base)[len("#/$defs/"):]
+                sname = b.schema_ref(schema, base)[len("#/$defs/"):]
             elif schema:
                 sname = b.inline(f"{op}.param.{place}.{re.sub(r'[^A-Za-z0-9_-]', '_', pname)}", schema, base)
             else:
@@ -820,14 +1124,14 @@ def bodies_source(docs, rel, sha):
         kind, op, code, media, schema, base = entry
         if kind == "line":
             if isinstance(schema, dict) and set(schema) == {"$ref"}:
-                lines.setdefault(op, {})[code] = b.ref(schema["$ref"], base)[len("#/$defs/"):]
+                lines.setdefault(op, {})[code] = b.schema_ref(schema, base)[len("#/$defs/"):]
             else:
                 lines.setdefault(op, {})[code] = b.inline(f"{op}.line.{code}", schema, base)
             continue
         if schema is None:
             name = ""
         elif isinstance(schema, dict) and set(schema) == {"$ref"}:
-            name = b.ref(schema["$ref"], base)[len("#/$defs/"):]
+            name = b.schema_ref(schema, base)[len("#/$defs/"):]
         else:
             safe = media.replace("*", "any").replace("/", "_")     # Combined schema name excludes '/' for JSON Pointer refs.
             name = b.inline(f"{op}.{kind}.{code or 'body'}.{safe}", schema, base)
@@ -839,7 +1143,7 @@ def bodies_source(docs, rel, sha):
     for t in priority:                                 # Path-parameter schemas in x-route-priority mode.
         for name, (schema, base) in t["schemas"].items():
             if isinstance(schema, dict) and set(schema) == {"$ref"}:
-                path_schemas.setdefault(t["path"], {})[name] = b.ref(schema["$ref"], base)[len("#/$defs/"):]
+                path_schemas.setdefault(t["path"], {})[name] = b.schema_ref(schema, base)[len("#/$defs/"):]
             else:
                 safe = re.sub(r"[/{}~]", "_", t["path"])
                 path_schemas.setdefault(t["path"], {})[name] = b.inline(f"path{safe}.{name}", schema, base)
@@ -977,13 +1281,13 @@ def provenance():
     docs = build(ROOT)[-1]
     # Body schemas can load imported OpenAPI files after route parsing.
     bodies_source(docs, str(spec.relative_to(ROOT)), hashlib.sha256(spec.read_bytes()).hexdigest())
-    forms = sorted(docs.cache)
+    forms = sorted(set(docs.cache) | docs.inputs)
     roles = L.form("door-roles.tsv")
     if roles.is_file():
         forms += tsv_input.source_files(roles, root=ROOT)
-    generators = [Path(__file__).resolve(), Path(tsv_input.__file__)]
+    generators = [Path(__file__).resolve(), Path(tsv_input.__file__), Path(yamlsub.__file__)]
     if L.key == "06-console":
-        generators += [Path(yamlsub.__file__), Path(lesson.__file__)]
+        generators += [Path(lesson.__file__)]
         forms += [ROOT / p for p in (
             "Platform/02-installer/spec/02.1-installer.norms.md",
             "Platform/06-console/spec/06.3-console.norms.md",
