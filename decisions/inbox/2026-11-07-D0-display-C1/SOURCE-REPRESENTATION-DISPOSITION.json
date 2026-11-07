@@ -1,0 +1,106 @@
+{
+  "utc": "2026-11-07T21:48:42.579993+00:00",
+  "status": "REPRESENTATION_CHOSEN_QUEUED_READONLY_EXACT_SOURCE_DECLARATION_ONLY",
+  "owner": "coord103-src/spec103, after current P07 declaration task without interruption",
+  "decision": "Keep the existing key-context paragraph byte-exact; move existing common/profile explanatory prose outside the generated marker, remove only its self-reference; retain common writer table prefix and add explicitly labeled person/role tables, localizing RUroot. This represents existing505aa schema semantics, not a new key/profile/field/alias rule.",
+  "chosen_CODE_helper_after_sha256": "0c83a315e90b4aec70f208a9dbd246b887c441650ad6b8f45eb7906df8b4ffd5",
+  "source_owner_map_sha256": "5486669cc9f465e848e4d7f47d26e874460352ce7ce9e6513bdaefeba7d87f57",
+  "source_provenance_pin": "285f713746e72cb7cfd659fb8cc8e2251134f604",
+  "current_literal_identity_check": "The two P08norm files in published40f are byte-identical to285; this is not adoption or a future Sourceeditbase grant. SRC must explicitly bind exact current published parent/beforeSHA/intersections before Sourcewrites.",
+  "paths": [
+    {
+      "lang": "en",
+      "path": "Platform/08-domain/spec/08.4-domain.norms.md",
+      "owner": "SRC/spec103 after separate exact Source declaration and grant",
+      "provenance_pin": "285f713746e72cb7cfd659fb8cc8e2251134f604",
+      "edit_base": "UNKNOWN; SRC must select and publish current exact base before any Source edit",
+      "proposed_spans": [
+        {
+          "anchor": "S-en-key-context-before",
+          "first_physical_LF": 94,
+          "last_physical_LF": 95,
+          "before_raw_sha256": "b12fed18b08b654fe1f95cb46198521d7b5300dc9b5b566079c80f705230faee",
+          "after_artifact": "proposals/source-en-key-context.after.txt",
+          "action": "keep key-context paragraph byte-exact; relocate existing common/profile explanation below it, outside generated families marker",
+          "proposed_after_sha256": "82da6538c030323a47a1adf3818cb3536cf1cb8c13340c25f05db516e8b995dd",
+          "proposed_after_physical_LF": 4
+        },
+        {
+          "anchor": "S-en-writer-before",
+          "first_physical_LF": 512,
+          "last_physical_LF": 519,
+          "before_raw_sha256": "1a1d0d73e7e8d394dadff67048d2b271693b976fffb275a88506571a8b2e9894",
+          "after_artifact": "expected/writer-en.txt",
+          "action": "common writer prefix unchanged; replace old explanatory paragraph inside generated block with two explicit profile tables",
+          "proposed_after_sha256": "ec750a2738c65abba65cfe84afed397c1945044c4fd90090a4dccd2dd691c5f8",
+          "proposed_after_physical_LF": 20
+        }
+      ],
+      "protected_reader": "S-en-reader-protected",
+      "protected": "All other bytes in each normative file, schema/layers/outcomes/family08/metadata16 and current P07 Source are outside proposal."
+    },
+    {
+      "lang": "ru",
+      "path": "Platform/08-domain/ru/spec/08.4-domain.norms.md",
+      "owner": "SRC/spec103 after separate exact Source declaration and grant",
+      "provenance_pin": "285f713746e72cb7cfd659fb8cc8e2251134f604",
+      "edit_base": "UNKNOWN; SRC must select and publish current exact base before any Source edit",
+      "proposed_spans": [
+        {
+          "anchor": "S-ru-key-context-before",
+          "first_physical_LF": 88,
+          "last_physical_LF": 89,
+          "before_raw_sha256": "3acfcb7b0d9bb8904f932c60b9006fb3088d70108f6d5502de701f8d4667068e",
+          "after_artifact": "proposals/source-ru-key-context.after.txt",
+          "action": "keep key-context paragraph byte-exact; relocate existing common/profile explanation below it, outside generated families marker",
+          "proposed_after_sha256": "1185e0b3ebe94127f8f3a8afdf95a5c042cde6781b39ff9e4387d0a9d5f10c23",
+          "proposed_after_physical_LF": 4
+        },
+        {
+          "anchor": "S-ru-writer-before",
+          "first_physical_LF": 484,
+          "last_physical_LF": 491,
+          "before_raw_sha256": "4cd089abe77d2dd1288922ae30ab12bf76bc1f00b554218a91c9214eaac59034",
+          "after_artifact": "expected/writer-ru.txt",
+          "action": "common writer prefix unchanged; replace old explanatory paragraph inside generated block with two explicit profile tables",
+          "proposed_after_sha256": "6adb01494a2047da406e6e24c6e9b38732abe84b33b899e9c005966a513d26f5",
+          "proposed_after_physical_LF": 20
+        }
+      ],
+      "protected_reader": "S-ru-reader-protected",
+      "protected": "All other bytes in each normative file, schema/layers/outcomes/family08/metadata16 and current P07 Source are outside proposal."
+    }
+  ],
+  "approved_after_artifact_texts": {
+    "proposals/source-en-key-context.after.txt": "**Deletion writer key context.** The existing key `domain/deleting/role:<name>` selects empty writer items `{}` with no `at`, `done` or person-token hold. A person key selects `{at,done?}`, with required `at`; `{}` is not a positive person-writer form. The two local schema definitions `person_writer` and `role_writer` in the deleting schema require that key-aware selection before writer decoding and checking; an unkeyed union is not proof. Readers retain the existing presence/denial/recovery rule even for garbled mark content.\n\nThe common writer name limit is interpreted with the properties of the key-selected writer profile; it does not make the required person `at` universal. The existing unkeyed consumer binding is an explicit dependency, not a permissive fallback.\n\n",
+    "proposals/source-ru-key-context.after.txt": "**Ключевой контекст писателя метки.** Прежний ключ `domain/deleting/role:<имя>` выбирает пустые items писателя `{}`, без `at`, `done` и срока токена человека. Ключ человека выбирает `{at,done?}`, где `at` обязателен; `{}` не является положительной writer-формой метки человека. Два локальных определения `person_writer` и `role_writer` схемы deleting требуют выбора по ключу до раскодирования и проверки писателя; объединение без ключа не доказывает условия. У читателя прежние присутствие/запреты/восстановление сохраняются и при повреждённом содержимом метки.\n\nОбщий предел имён писателя считается с полями выбранного по ключу профиля: обязательный person `at` не становится универсальным. Нынешняя привязка потребителя без ключа — явная зависимость, не разрешительный fallback.\n\n",
+    "expected/writer-en.txt": "Only at the writer (`$defs.writer`):\n\n| Key | Also |\n|---|---|\n| `<root>` | at most 0 names (x-max-names) |\n\nOnly at the writer of a person mark with key `domain/deleting/<name>` (`#/$defs/person_writer`):\n\n| Key | Type and bounds | Required |\n|---|---|---|\n| `at` | time (P/01.1 N0 «Time in a row») | required |\n| `done` | bool | optional |\n| other names | refused | — |\n\nOnly at the writer of a role mark with key `domain/deleting/role:<name>` (`#/$defs/role_writer`):\n\n| Key | Type and bounds | Required |\n|---|---|---|\n| `<root>` | const `{}` | — |\n\n",
+    "expected/writer-ru.txt": "Только у писателя (`$defs.writer`):\n\n| Ключ | Ещё и |\n|---|---|\n| `<корень>` | не больше 0 имён (x-max-names) |\n\nТолько у писателя метки человека с ключом `domain/deleting/<name>` (`#/$defs/person_writer`):\n\n| Ключ | Тип и границы | Обязательность |\n|---|---|---|\n| `at` | время (P/01.1 N0 «Время в строке») | обязательно |\n| `done` | bool | необязательно |\n| прочие имена | не допускаются | — |\n\nТолько у писателя метки роли с ключом `domain/deleting/role:<name>` (`#/$defs/role_writer`):\n\n| Ключ | Тип и границы | Обязательность |\n|---|---|---|\n| `<корень>` | const `{}` | — |\n\n"
+  },
+  "forecast_on40f": [
+    {
+      "path": "Platform/08-domain/spec/08.4-domain.norms.md",
+      "provenance285_equals_published40f": true,
+      "before_sha256": "0fe38704f5e9546b41da9b84210f442d4b36dd4ff662fa5dbe9688038126c629",
+      "forecast_after_sha256_on40f": "20bfbbb3c168fd8c924bbb73bb39293c7a1856d71072b0da398c07f55bde9d2b",
+      "spans": 2,
+      "Source_writes": 0
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.4-domain.norms.md",
+      "provenance285_equals_published40f": true,
+      "before_sha256": "4c09bea3879a445ac2eec50a349a1f6fa057b31a414680724feb8caf33622633",
+      "forecast_after_sha256_on40f": "1a08600021424391aef461159ac8747fac7efff854b98953f85d432be6545c2d",
+      "spans": 2,
+      "Source_writes": 0
+    }
+  ],
+  "protected": "Reader/schema/layers/common/profile/requiredat-onlyperson/role{}/person{at,done?}/existingkeygrammar/outcomes/corpus/family08/metadata16/allP07Source unchanged. No wire/API/ports/numeric change.",
+  "SRC_assignment": "After the active P07MD6 declaration, only external READONLY exact2paths/4spans declaration on a named current Sourceparent, with complete rawbeforeafterSHA/mode/length/wholeafter/inverse/consumed metadata intersections. If before differs, provide bounded reanchor delta before Source edit. Do not interrupt P07 or import producer; tools private findings/oracles are not passed to Sourceauthor.",
+  "Source_writing_authorised_by_this_file": false,
+  "test_or_render_or_Go_authorised": false,
+  "future_Source_activation": "Ordinary SRC exact grant only after declaration reviewed in own stream; no full Sourcekit/metadata16/main/adoption implied.",
+  "future_D0_scope": "4groups/8records only plan; externalcaller/freeze/read/import/write/argv/env/receiver exact scope and execution approval separately.",
+  "new_estimate_or_due": null,
+  "guards_changed": false
+}

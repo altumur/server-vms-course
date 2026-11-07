@@ -1,0 +1,53 @@
+{
+  "utc": "2026-11-07T21:48:42.579993+00:00",
+  "status": "APPROVED_C1_EXACT_ONE_SKILLS_METHOD_CODE_ONLY_NO_D0_EXECUTION",
+  "basis": "Separate READONLYD0READY4d7197/PLANe68af56b under505aa/4a5ca563 and primary25payload/21anchor byte reading e8a54769. Not P1success auto-execution and not Z13 reminder.",
+  "coordinator": "coord103-tools",
+  "skills_owner": "Architect",
+  "exact_delegate": "existing review103, only the one path/method below; ownership does not transfer",
+  "base_and_sole_parent": "37785167abd44393208f2241a1e83ab36fcb9b52",
+  "common": "43750c8ef574ae4af747f481433fd7f4e0045793",
+  "source_read_provenance_only": "285f713746e72cb7cfd659fb8cc8e2251134f604",
+  "root_reading": {
+    "path": "/home/pilot/architect-reviews/role-key-d0-map-primary-read-4d7197/ROOT-MAP-READING.json",
+    "sha256": "e8a54769134a55ac8dc162bfa08d091d9ba8180da52f021f3763a6d64e07f1e6",
+    "manifest_sha256": "474c866c0629a1fdc04c1aed8940e1c8273a5be6c16d58e70f9607d4d75d600a",
+    "payloads": 25,
+    "literal_anchors": 21,
+    "project_imports_tests_render_Go": 0
+  },
+  "path": "skills/lesson-spec/scripts/v7/section.py",
+  "before_file_sha256": "92aed910eb0f8cf859eb300c5b881357e9eb4f0454872c5fa18e4750b426759b",
+  "before_method_physical_LF": [
+    502,
+    527
+  ],
+  "before_method_sha256": "aec46ec817f5de82e313f44e42b03b231147f1587e98e38795ff63077323701d",
+  "before_method_utf8": "    def _contextual_writer_body(self):\n        \"\"\"Display the fixed key conditions without turning local profiles into unconditional roots.\"\"\"\n        if self.family_template != \"domain/deleting/<name>\":\n            return []\n        defs = self.doc.get(\"$defs\", {})\n        if type(defs.get(\"writer\")) is not dict or any(type(defs.get(name)) is not dict\n                                                      for name in (\"person_writer\", \"role_writer\")):\n            raise ValueError(\"contextual writer source is incomplete\")\n        out = []\n        for label, name in ((\"domain/deleting/<name>\", \"person_writer\"),\n                            (\"domain/deleting/role:<name>\", \"role_writer\")):\n            profile = defs[name]\n            out += [self.t(\"Только у писателя с ключом `%s` (`#/$defs/%s`):\",\n                           \"Only at the writer with key `%s` (`#/$defs/%s`):\") % (label, name), \"\",\n                    self.t(\"| Ключ | Тип и границы | Обязательность |\", \"| Key | Type and bounds | Required |\"),\n                    \"|---|---|---|\"]\n            if \"const\" in profile:\n                out.append(\"| `<root>` | const `%s` | — |\" % code_cell(json.dumps(profile[\"const\"], ensure_ascii=False,\n                                                                                 separators=(\",\", \":\"))))\n            for field, node in profile.get(\"properties\", {}).items():\n                required = self.t(\"обязательно\", \"required\") if field in profile.get(\"required\", []) else self.t(\"необязательно\", \"optional\")\n                out.append(\"| `%s` | %s | %s |\" % (code_cell(field), cell(self.kind(node)), required))\n            if profile.get(\"additionalProperties\") is False:\n                out.append(self.t(\"| прочие имена | не допускаются | — |\", \"| other names | refused | — |\"))\n            out += [\"\"]\n        return out\n",
+  "after_method_sha256": "0c83a315e90b4aec70f208a9dbd246b887c441650ad6b8f45eb7906df8b4ffd5",
+  "after_method_utf8": "    def _contextual_writer_body(self):\n        \"\"\"Display the fixed key conditions without turning local profiles into unconditional roots.\"\"\"\n        if self.family_template != \"domain/deleting/<name>\":\n            return []\n        defs = self.doc.get(\"$defs\", {})\n        if type(defs.get(\"writer\")) is not dict or any(type(defs.get(name)) is not dict\n                                                      for name in (\"person_writer\", \"role_writer\")):\n            raise ValueError(\"contextual writer source is incomplete\")\n        out = []\n        for label, name in ((\"domain/deleting/<name>\", \"person_writer\"),\n                            (\"domain/deleting/role:<name>\", \"role_writer\")):\n            profile = defs[name]\n            writer_kind = (self.t(\"метки человека\", \"of a person mark\") if name == \"person_writer\"\n                           else self.t(\"метки роли\", \"of a role mark\"))\n            out += [self.t(\"Только у писателя %s с ключом `%s` (`#/$defs/%s`):\",\n                           \"Only at the writer %s with key `%s` (`#/$defs/%s`):\") % (writer_kind, label, name), \"\",\n                    self.t(\"| Ключ | Тип и границы | Обязательность |\", \"| Key | Type and bounds | Required |\"),\n                    \"|---|---|---|\"]\n            if \"const\" in profile:\n                out.append(\"| `%s` | const `%s` | — |\" % (self.t(\"<корень>\", \"<root>\"),\n                           code_cell(json.dumps(profile[\"const\"], ensure_ascii=False, separators=(\",\", \":\")))))\n            for field, node in profile.get(\"properties\", {}).items():\n                required = self.t(\"обязательно\", \"required\") if field in profile.get(\"required\", []) else self.t(\"необязательно\", \"optional\")\n                out.append(\"| `%s` | %s | %s |\" % (code_cell(field), cell(self.kind(node)), required))\n            if profile.get(\"additionalProperties\") is False:\n                out.append(self.t(\"| прочие имена | не допускаются | — |\", \"| other names | refused | — |\"))\n            out += [\"\"]\n        return out\n",
+  "after_file_sha256": "9063bb64f6046a4a63034f98fa61b2c86059d5f624588afd3d222f0c61fcd74f",
+  "after_file_bytes": 42175,
+  "protected_outside_concat_sha256": "58e9549953b4ab527b1866389257a381d01396e49cdd8763c0afc92270b08cad",
+  "allowed": "Replace exactly the complete approved method, normal child branch/worktree from N377; raw outside-method bytes identical, original mode100644. Localized explicit person/role display headings from fixed profile names and existing RUroot label only.",
+  "controls_allowed": [
+    "Stdlib in-memory AST/syntax of exact resulting file; no importing/executing the module or any method.",
+    "Raw before/after SHA/blob/size/mode, approved complete-method equality and outside concat identity; protected blocks unchanged.",
+    "Own narrow git diff check/exact one path/normal soleparent/commit/push/lsremote/clean. Disable invocation-only hooks if needed to avoid forbidden project effects; no persistent config changes."
+  ],
+  "protected": [
+    "Constructor/identity/profile selection",
+    "SchemaSection.kind/root_body/defs_body/writer_body",
+    "spec/stack/schema/codec/Time/propertyNames/key checks",
+    "gen_families.py/runtime.go/family_judge.py/current tracked tests and inputs",
+    "P0/P1 caller/receiver/freeze/history",
+    "All Source/Platform/VMS/common/metadata/family08 files"
+  ],
+  "forbidden": "Project imports/schema/codec/tests/render/build_families_section/whole generated markers/lesson/Go/compiler/gofmt/generation/materialization/HTTP/SUT/installs/oldprograms/P1rerun; no mainmerge/foreign composition or Sourceadoption.",
+  "delivery": "Freeze one owned normal child, exact before/after/mode/soleN377/outside identity, external evidence/map/report, remoteexact/clean. SyntaxAST only, display actual NOT_EXECUTED; no render equality claim.",
+  "Source_disposition": "Separate companion SOURCE-REPRESENTATION-DISPOSITION.json grants only queued READONLY source declaration through SRC, not Source edits.",
+  "future_D0": "Existing4groups/8records (6normal display+2expectedinputCheckingError) retained only PLAN. T0external caller preparation/freeze and D0render/execution need separate concrete scopes after C1published + source declaration review; no such grant here.",
+  "author_estimate_due_aggregate": null,
+  "P1": "ce5 consumed, no repeats",
+  "other_holds": "other4subject findings/shape/traversal/Time/P2/G0/keylessA/family08metadata16/Sourceadoption/B1N5/main/GATE/ms/VMSownerword/Claude/POLICYtimers19guards/diskcleanup/resize/restart/Z14 unchanged"
+}
