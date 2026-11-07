@@ -23,21 +23,21 @@
 
 ## Окружение
 
-| Переменная | Смысл | Умолчание | Норма |
+| Переменная | Смысл | Когда читается | Источник / канал настройки |
 |---|---|---|---|
-| `W2C_ROLE` | роль `<sub>controller`; не та роль команды раннера — код 2 | задаёт юнит | [P/02.4] N1.2 |
-| `PLATFORM_STORE` | дверь хранилища — сокет роли `configstore:///run/configstore/<sub>controller.sock` | `file://<PLATFORM_DIR>/config` (профиль коробки одной реализации) | [P/02.4] N1.2 |
-| `PLATFORM_DIR` | корень состояния | `/data/platform` | [P/02.4] N1.2 |
-| `OBJECTS` / `PLATFORM_OBJECTS` | корень объектов: отчёт прохода, шарды снимка | `<PLATFORM_DIR>/objects` | [P/02.4] N1.2 «Канал настройки» |
-| `RESOURCE_ROOT` / `EVENTS` | корень событий: свой журнал `audit/<sub>controller/e1/…` | `<PLATFORM_DIR>/events` | [P/02.4] N1.2 «Канал настройки», [договор журнала событий](../../common/ru/contracts/event-journal.md) `journal` |
-| `SERVER_NAME` | свой сервер; не по грамматике суффикса слота — код 2 | короткий hostname | [P/02.4] N1.2 |
-| `BOX_ID` | коробка | `/etc/machine-id`, иначе hostname | [P/02.4] N1.2 |
-| `HUNG_MOVE_AFTER`, `REACH_BUDGET` | сроки судьбы зависшего слота и бюджет достижимости | 900, 10 | [P/02.4] N1.2, [P/04] N1.4, «Решает реализация» п. 4 |
-| `W2C_SHRINK_AFTER` | только стенд: срок сокращения `SHRINK_AFTER`, с; при заданной — громкая строка журнала при старте; вне стенда не задаётся (разбор ревью стадии B 3–5, № 18) | не задан (`SHRINK_AFTER` 300) | [P/02.4] N1.2, [P/04] N1.4 `SHRINK_AFTER` |
-| `CLUSTER` | имя кластера в шарде снимка | `local` | [P/02.4] N1.2, [P/04] N1.3a |
-| `W2C_TLS_DIR` | корень комплектов; свой комплект — `<W2C_TLS_DIR>/<sub>controller` | `/etc/w2c/tls` | [P/02.4] N1.2, N1.6 |
-| `W2C_ENV`, `W2C_SUB_ENV` | файлы окружения: общий и подсистемы | `/etc/w2c/w2c.env`; без значения — нет | [P/02.4] N1.2 |
-| `NOTIFY_SOCKET` | сторож systemd | — | [P/02.4] N1.1 `notify` |
+| `W2C_ROLE` | роль `<sub>controller`; не та роль команды раннера — код 2 | старт процесса | [daemon-flags.tsv](../forms/daemon-flags.tsv); [P/02.4] N1.2 |
+| `PLATFORM_STORE` | дверь хранилища — сокет роли `configstore:///run/configstore/<sub>controller.sock` | старт процесса | [daemon-flags.tsv](../forms/daemon-flags.tsv); [P/02.4] N1.2 |
+| `PLATFORM_DIR` | корень состояния | старт процесса | [daemon-flags.tsv](../forms/daemon-flags.tsv); [P/02.4] N1.2 |
+| `OBJECTS` / `PLATFORM_OBJECTS` | корень объектов: отчёт прохода, шарды снимка | старт процесса | [daemon-flags.tsv](../forms/daemon-flags.tsv); [P/02.4] N1.2 «Канал настройки» |
+| `RESOURCE_ROOT` / `EVENTS` | корень событий: свой журнал `audit/<sub>controller/e1/…` | старт процесса | [daemon-flags.tsv](../forms/daemon-flags.tsv); [P/02.4] N1.2 «Канал настройки», [договор журнала событий](../../common/ru/contracts/event-journal.md) `journal` |
+| `SERVER_NAME` | свой сервер; не по грамматике суффикса слота — код 2 | старт процесса | [daemon-flags.tsv](../forms/daemon-flags.tsv); [P/02.4] N1.2 |
+| `BOX_ID` | коробка | старт процесса | [daemon-flags.tsv](../forms/daemon-flags.tsv); [P/02.4] N1.2 |
+| `HUNG_MOVE_AFTER`, `REACH_BUDGET` | сроки судьбы зависшего слота и бюджет достижимости | старт процесса | [daemon-flags.tsv](../forms/daemon-flags.tsv); [P/02.4] N1.2, [P/04] N1.4, «Решает реализация» п. 4 |
+| `W2C_SHRINK_AFTER` | только стенд: срок сокращения `SHRINK_AFTER`, с; при заданной — громкая строка журнала при старте; вне стенда не задаётся (разбор ревью стадии B 3–5, № 18) | старт процесса | [daemon-flags.tsv](../forms/daemon-flags.tsv); [P/02.4] N1.2, [P/04] N1.4 `SHRINK_AFTER` |
+| `CLUSTER` | имя кластера в шарде снимка | старт процесса | [daemon-flags.tsv](../forms/daemon-flags.tsv); [P/02.4] N1.2, [P/04] N1.3a |
+| `W2C_TLS_DIR` | корень комплектов; свой комплект — `<W2C_TLS_DIR>/<sub>controller` | старт процесса | [daemon-flags.tsv](../forms/daemon-flags.tsv); [P/02.4] N1.2, N1.6 |
+| `W2C_ENV`, `W2C_SUB_ENV` | файлы окружения: общий и подсистемы | старт процесса | [daemon-flags.tsv](../forms/daemon-flags.tsv); [P/02.4] N1.2 |
+| `NOTIFY_SOCKET` | сторож systemd | старт процесса | [daemon-flags.tsv](../forms/daemon-flags.tsv); [P/02.4] N1.1 `notify` |
 
 Файлы окружения читаются разбором, не `source` ([договор файла окружения](../../common/ru/contracts/env-file.md)); порядок — значения юнита, файл роли, `w2c.env`, файл подсистемы
 ([P/02.4] N1.2).
@@ -78,17 +78,17 @@
 | 2 | файл окружения не по грамматике; `SERVER_NAME` не по грамматике; `W2C_ROLE` не роль команды | [P/02.4] N1.2, N4 |
 | ≠ 0 | иной отказ старта — строка лога называет источник | [P/02.3] N3 «Старт процесса» |
 
-`RestartPreventExitStatus=2`: после кода 2 юнит не перезапускается до действия оператора ([P/02.4] N1.1).
+`RestartPreventExitStatus` по источнику unit P/02.4: после кода 2 юнит не перезапускается до действия оператора ([P/02.4] N1.1).
 
 ## Сигналы и готовность
 
 - **Готовность** — `Type=notify`: `READY=1` после проверки схемы и чтения манифеста, `WATCHDOG=1` каждым оборотом прохода;
-  `WatchdogSec=360` (СЛЕДУЕТ); без `NOTIFY_SOCKET` молчит ([P/02.4] N1.1 `notify`, `watchdog`).
-- **Первые 45 с** после старта никого не судит: впервые увиденное — «только что изменилось» ([P/04] N3 «проход()» шаг 0, N1.4a
+  `WatchdogSec` по источнику unit P/02.4 (СЛЕДУЕТ); без `NOTIFY_SOCKET` молчит ([P/02.4] N1.1 `notify`, `watchdog`).
+- **Первые LOST_AFTER** после старта никого не судит: впервые увиденное — «только что изменилось» ([P/04] N3 «проход()» шаг 0, N1.4a
   `fresh_controller`).
 - **SIGTERM** — упорядоченный выход; незавершённый intent доводит следующий держатель очереди
   ([P/04] N1.5, N3 «принять и довести решение»). **SIGKILL** — то же для соседа: состояние только в строках.
-- **Перезапуск** — `Restart=always`, `RestartSec=2`, кроме кода 2 ([P/02.4] N1.1).
+- **Перезапуск** — `Restart=always`, `RestartSec` по источнику unit P/02.4, кроме кода 2 ([P/02.4] N1.1).
 
 ## Стенд
 
