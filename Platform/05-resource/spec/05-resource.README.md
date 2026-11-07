@@ -76,10 +76,12 @@ Pass to the Specification the slice, the place and a counterexample; establish w
 Fix the source of the norm and its direct consumers, check the whole related class.
 Do not extend the lesson with a new mechanism for the sake of a case outside the declared profile.
 
-An additional check after run 33: GET of an object: 64 MiB/+1, without a successful truncation.
+An additional check after run 33: GET of an object: the published door byte limit/+1, without a successful truncation.
 
 Check the id for collisions of the composite names a-e1-j/node:1:aaaaaa and a/j-e1-node:1:aaaaaa, UTF-8, different trees/epochs/parallel numbers, a restart and the outcome of the suppression; copies keep the original id. For both lists buckets/mirrored: an absent, an empty known and an unreadable directory are distinguished; an error before the headers is 500 without a body, a break does not give a full answer. Additional probes outside the TSV.
 
 ## Forms and implementation stages
 
 The normalized process inputs, refusal catalogue, role admission and CALL ports are in [the forms README](../forms/README.md). [stages.tsv](../forms/stages.tsv) is a possible implementation order; the generated kit does not claim a complete stage. The kit [seams](../acceptance/seams.tsv) supplement the unchanged process scenarios and the common vector obligations, not the runner’s full acceptance or the reading methods above.
+
+The numeric source of independent scalars is [runtime-constants.tsv](../forms/runtime-constants.tsv); HTTP values stay in the current [OpenAPI form](05-resource.api.openapi.yaml), high/low in the P/02 space form. Scenario 41 observes early stability; synchronous s63 separately awaits the real end of relieve. Declared s63–s67 and family cells require actual execution, never an adapter answer from expect. The ms support is still a separate dependency, not PASS.

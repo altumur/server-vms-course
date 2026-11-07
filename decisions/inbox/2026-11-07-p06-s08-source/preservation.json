@@ -1,0 +1,338 @@
+{
+  "base": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+  "allowed_followup12": [
+    "Platform/06-console/forms/README.md",
+    "Platform/06-console/ru/forms/README.md",
+    "Platform/06-console/ru/spec/06.5-console.norms.md",
+    "Platform/06-console/spec/06-console.api.openapi.yaml",
+    "Platform/06-console/spec/06.5-console.norms.md",
+    "decisions/adr-norms.tsv",
+    "decisions/inbox/2026-11-07-p06-s08-source/REPORT.md",
+    "decisions/inbox/2026-11-07-p06-s08-source/author-check.json",
+    "decisions/inbox/2026-11-07-p06-s08-source/binding-map.json",
+    "decisions/inbox/2026-11-07-p06-s08-source/operation-map.json",
+    "decisions/inbox/2026-11-07-p06-s08-source/preservation.json",
+    "decisions/inbox/2026-11-07-p06-s08-source/source-map.json"
+  ],
+  "union_ordinary_and_followup71": [
+    "Platform/06-console/acceptance/1/README.md",
+    "Platform/06-console/acceptance/1/seams.tsv",
+    "Platform/06-console/acceptance/2/README.md",
+    "Platform/06-console/acceptance/3/README.md",
+    "Platform/06-console/acceptance/5/README.md",
+    "Platform/06-console/acceptance/6/README.md",
+    "Platform/06-console/acceptance/8/README.md",
+    "Platform/06-console/acceptance/8/seams.tsv",
+    "Platform/06-console/acceptance/9/README.md",
+    "Platform/06-console/data/folders.schema.json",
+    "Platform/06-console/data/memberof.schema.json",
+    "Platform/06-console/data/sweep.schema.json",
+    "Platform/06-console/forms/README.md",
+    "Platform/06-console/forms/refusals.tsv",
+    "Platform/06-console/forms/runtime-constants.tsv",
+    "Platform/06-console/ru/06-console.md",
+    "Platform/06-console/ru/acceptance/1/README.md",
+    "Platform/06-console/ru/acceptance/2/README.md",
+    "Platform/06-console/ru/acceptance/3/README.md",
+    "Platform/06-console/ru/acceptance/5/README.md",
+    "Platform/06-console/ru/acceptance/6/README.md",
+    "Platform/06-console/ru/acceptance/8/README.md",
+    "Platform/06-console/ru/acceptance/9/README.md",
+    "Platform/06-console/ru/forms/README.md",
+    "Platform/06-console/ru/spec/06-console.README.md",
+    "Platform/06-console/ru/spec/06.1-console.norms.md",
+    "Platform/06-console/ru/spec/06.2-console.norms.md",
+    "Platform/06-console/ru/spec/06.3-console.norms.md",
+    "Platform/06-console/ru/spec/06.4-console.norms.md",
+    "Platform/06-console/ru/spec/06.5-console.norms.md",
+    "Platform/06-console/ru/spec/06.6-console.norms.md",
+    "Platform/06-console/ru/spec/06.7-console.norms.md",
+    "Platform/06-console/ru/spec/06.8-console.norms.md",
+    "Platform/06-console/ru/spec/06.9-console.norms.md",
+    "Platform/06-console/spec/06-console.README.md",
+    "Platform/06-console/spec/06-console.api.openapi.yaml",
+    "Platform/06-console/spec/06.1-console.norms.md",
+    "Platform/06-console/spec/06.2-console.norms.md",
+    "Platform/06-console/spec/06.3-console.norms.md",
+    "Platform/06-console/spec/06.4-console.norms.md",
+    "Platform/06-console/spec/06.5-console.norms.md",
+    "Platform/06-console/spec/06.6-console.norms.md",
+    "Platform/06-console/spec/06.7-console.norms.md",
+    "Platform/06-console/spec/06.8-console.norms.md",
+    "Platform/06-console/spec/06.9-console.norms.md",
+    "Platform/common/contracts/door-token.md",
+    "Platform/common/data/cell-json-sha256.tsv",
+    "Platform/common/ru/contracts/door-token.md",
+    "Platform/common/vectors/family-read/06.tsv",
+    "decisions/adr-norms.tsv",
+    "decisions/inbox/2026-11-07-p06-adr0129-17-source/REPORT.md",
+    "decisions/inbox/2026-11-07-p06-adr0129-17-source/api-preservation.json",
+    "decisions/inbox/2026-11-07-p06-adr0129-17-source/case-map.tsv",
+    "decisions/inbox/2026-11-07-p06-adr0129-17-source/constant-bindings.tsv",
+    "decisions/inbox/2026-11-07-p06-adr0129-17-source/preservation.json",
+    "decisions/inbox/2026-11-07-p06-adr0129-17-source/source-map.tsv",
+    "decisions/inbox/2026-11-07-p06-s08-source/REPORT.md",
+    "decisions/inbox/2026-11-07-p06-s08-source/author-check.json",
+    "decisions/inbox/2026-11-07-p06-s08-source/binding-map.json",
+    "decisions/inbox/2026-11-07-p06-s08-source/operation-map.json",
+    "decisions/inbox/2026-11-07-p06-s08-source/preservation.json",
+    "decisions/inbox/2026-11-07-p06-s08-source/source-map.json",
+    "decisions/journal/platform/06-console/corrections-1.tsv",
+    "decisions/journal/platform/06-console/corrections-2.tsv",
+    "decisions/journal/platform/06-console/corrections-3.tsv",
+    "decisions/journal/platform/06-console/corrections-4.tsv",
+    "decisions/journal/platform/06-console/corrections-5.tsv",
+    "decisions/journal/platform/06-console/corrections-6.tsv",
+    "decisions/journal/platform/06-console/corrections-7.tsv",
+    "decisions/journal/platform/06-console/corrections-8.tsv",
+    "decisions/journal/platform/06-console/corrections-9.tsv"
+  ],
+  "outside_followup_tracked_entries": 7874,
+  "outside_tree_entries_sha256": "d1304fe6a447aea413c50172794012a660b95d115a6722ebb3bfe8e1d1289b8b",
+  "outside_diff": [],
+  "frozen_b8_metadata6": [
+    {
+      "path": "decisions/inbox/2026-11-07-p06-adr0129-17-source/REPORT.md",
+      "blob": "9951f5471130791f988747666cbe26c8baa0c603",
+      "sha256": "7f417d58173ca2a2e75f084fe018ed9196bf711d4a9bfb27938784833e36f2c8",
+      "bytes": 4837
+    },
+    {
+      "path": "decisions/inbox/2026-11-07-p06-adr0129-17-source/api-preservation.json",
+      "blob": "2965f6eb5588cdb55931be18db79de19c7719a57",
+      "sha256": "36e3936bd3cb33ff31e931d3c549eb05e84c76d3a5ed9c46e65f06518728c8be",
+      "bytes": 6124
+    },
+    {
+      "path": "decisions/inbox/2026-11-07-p06-adr0129-17-source/case-map.tsv",
+      "blob": "9973b81022f451766db883ca6a9d4dddfaedb39d",
+      "sha256": "85eda8f621f5d6e652e6ee345ec4a05aa41c21d87b2e600f017e584b075a145a",
+      "bytes": 6591
+    },
+    {
+      "path": "decisions/inbox/2026-11-07-p06-adr0129-17-source/constant-bindings.tsv",
+      "blob": "bf30cade2f7afe6fb280f77933c6c19d6227ff4d",
+      "sha256": "2d54bf64187d662ca490ec8e737ef8820aa2ef32c406bb4cbd8a9c1dfc5b22fe",
+      "bytes": 3848
+    },
+    {
+      "path": "decisions/inbox/2026-11-07-p06-adr0129-17-source/preservation.json",
+      "blob": "80f8ea7255f771187fa488e21d405bd8873519c5",
+      "sha256": "b8aafc543705546ce6dc1a977d717fc5dc1d463da764acdea1ec19c9b371ead7",
+      "bytes": 5348
+    },
+    {
+      "path": "decisions/inbox/2026-11-07-p06-adr0129-17-source/source-map.tsv",
+      "blob": "b2a71bde0bee4a62499ec22c332439bac3a98c56",
+      "sha256": "9dc8554db43b6957ff2dc8005397220aa7a288f1d78a91dfd685879f24db89fb",
+      "bytes": 25181
+    }
+  ],
+  "protected_shared_blocks": [
+    {
+      "path": "Platform/06-console/spec/06.5-console.norms.md",
+      "line": 568,
+      "text_sha256": "4dbaefd2b6e6d9faf16154c5e848f94f38dbbca9c97cc8f1c40376e0f28f3401",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/spec/06.5-console.norms.md",
+      "line": 640,
+      "text_sha256": "85fe06138e5b06f7184f39b066f307cfdb39b3bf2e7e28bf2b26112539cd12f7",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/spec/06.5-console.norms.md",
+      "line": 575,
+      "text_sha256": "cabce814b9638e5e0a3fe7277a66271b3568d43c706ab2135bbe8c3ae106099a",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/spec/06.5-console.norms.md",
+      "line": 584,
+      "text_sha256": "3c65837059b84eaccbd62301e1cc394f50495fb832e873732a77162f480619be",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/spec/06.5-console.norms.md",
+      "line": 640,
+      "text_sha256": "85fe06138e5b06f7184f39b066f307cfdb39b3bf2e7e28bf2b26112539cd12f7",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/spec/06.5-console.norms.md",
+      "line": 770,
+      "text_sha256": "d0d1c05d731ad609b17ca4ea2f6742cf6263bb03096f2870d896ddc8cf862e8e",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/spec/06.5-console.norms.md",
+      "line": 845,
+      "text_sha256": "c38d2cc98b3507f582532bd76c937a8004ad07700a4bf07fe2de3f64e50b4a13",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/spec/06.5-console.norms.md",
+      "line": 289,
+      "text_sha256": "5702aba3eb248a9bd91ff331f8fce1069cb7e56a747d3fa92caf7d250545f1ce",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
+      "line": 529,
+      "text_sha256": "14f171db37eb16c197699daab5a94020c81484e0b44e4854fe9019e49c6f88d3",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
+      "line": 601,
+      "text_sha256": "bfe3504f1bacbf46dc7a6e671329ac610bb819decdff05cc69cf1cc804a07532",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
+      "line": 536,
+      "text_sha256": "cabce814b9638e5e0a3fe7277a66271b3568d43c706ab2135bbe8c3ae106099a",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
+      "line": 545,
+      "text_sha256": "3bd623cf9d6ae10c9dfa62d2756801f5552dfe89c5c875072fd360ac604d07d0",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
+      "line": 601,
+      "text_sha256": "bfe3504f1bacbf46dc7a6e671329ac610bb819decdff05cc69cf1cc804a07532",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
+      "line": 727,
+      "text_sha256": "5ae1ca7bfea758c696553371319f8a0548f47b77246946967b297531587e9a83",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
+      "line": 802,
+      "text_sha256": "7331bb6d7cd97d1ebc886c688038f281a856ac69cd9adb3510b7d7cf81a8db85",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
+      "line": 269,
+      "text_sha256": "d13422191b1d59a6f89bf19d33421af3085ae99e9bcbcfb9339fc1e6a345adb3",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/acceptance/5/README.md",
+      "line": 106,
+      "text_sha256": "44c123cd414e11db5c75f0a401287f8b4167ce0651d102775147035984371947",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/acceptance/5/README.md",
+      "line": 107,
+      "text_sha256": "53947bbaf1be3ae342f9c02f28b33283de2b9c196fae0533a03d07722bd64a4a",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/acceptance/5/README.md",
+      "line": 108,
+      "text_sha256": "6a490954729c6ef1c65975dd036b0aeee11feb43c78b4e3efe8592844efd10ea",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/acceptance/5/README.md",
+      "line": 109,
+      "text_sha256": "ca42c457c0aab294f056614eb142c1e06a3af121f3be6c4406eea92ea3719b3f",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/ru/acceptance/5/README.md",
+      "line": 106,
+      "text_sha256": "1c5f8ff0d8360c942df8c89ac88ede25a209e71a62170155b7bfaa4c1be59107",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/ru/acceptance/5/README.md",
+      "line": 107,
+      "text_sha256": "1a4e1692c697ff9823407074b521a70203b6ac32d08b78da5038dc9d9978de58",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/ru/acceptance/5/README.md",
+      "line": 108,
+      "text_sha256": "9851b0edc01b0d48cd094db41a1b2dfb69b133cb1eb443018ed94bf09abf5d66",
+      "preserved": true
+    },
+    {
+      "path": "Platform/06-console/ru/acceptance/5/README.md",
+      "line": 109,
+      "text_sha256": "a8d8a53383c6b1350710344ce5efbf42931a1d0fa27a702d16e9a87beeaae8bf",
+      "preserved": true
+    }
+  ],
+  "all_corpus_process_stages_common15_Source_VMS_tools_skills_P03_P04_P05_P07_P08_P09_unchanged": true,
+  "all_other_API_bytes_exact_after_removing_six_relocated_nodes": true,
+  "inverse_restores_b8_API_structure": true,
+  "source_node_body_hashes": [
+    {
+      "before_pointer": "/paths/~1{rows}",
+      "after_pointer": "/components/pathItems/UnitsCollection",
+      "component": "UnitsCollection",
+      "semantic_sha256": "01ada0aae726508755c833d79a20c7194aab9b122752222a308312b464f3f23f",
+      "value_equal": true,
+      "raw_body_before_sha256": "0828130beb045b5e7e2723c2a3f5b56fddc8b6e33f9bae3e9f6952ce825b0830",
+      "raw_body_after_unindent_sha256": "0828130beb045b5e7e2723c2a3f5b56fddc8b6e33f9bae3e9f6952ce825b0830"
+    },
+    {
+      "before_pointer": "/paths/~1{rows}~1{id}",
+      "after_pointer": "/components/pathItems/UnitItem",
+      "component": "UnitItem",
+      "semantic_sha256": "71452f6c8d0abfb66253bf728230a433089248c56f7d77f67801dd03cba42211",
+      "value_equal": true,
+      "raw_body_before_sha256": "10b1d678460c0821fd3f6a1e7c0d36e8cbd0f4b588300c594458ee39727eccd1",
+      "raw_body_after_unindent_sha256": "10b1d678460c0821fd3f6a1e7c0d36e8cbd0f4b588300c594458ee39727eccd1"
+    },
+    {
+      "before_pointer": "/paths/~1{table}",
+      "after_pointer": "/components/pathItems/TableCollection",
+      "component": "TableCollection",
+      "semantic_sha256": "3787a88e683db4d8c507cd186b1730abd83564f6aa10eebc8d48c041a115e192",
+      "value_equal": true,
+      "raw_body_before_sha256": "385ce2353b5641d941c65f2682834d6bbaa1162e076c76e520aef76ebd89b150",
+      "raw_body_after_unindent_sha256": "385ce2353b5641d941c65f2682834d6bbaa1162e076c76e520aef76ebd89b150"
+    },
+    {
+      "before_pointer": "/paths/~1{table}~1{name}",
+      "after_pointer": "/components/pathItems/TableItem",
+      "component": "TableItem",
+      "semantic_sha256": "9785b6f0db16400e06b86fe364458259a1b69c11f28030a8b08b5967b046ffdd",
+      "value_equal": true,
+      "raw_body_before_sha256": "137d4f430a8915652ca18f461e094322ab4c80108502905ff70765e4065b4906",
+      "raw_body_after_unindent_sha256": "137d4f430a8915652ca18f461e094322ab4c80108502905ff70765e4065b4906"
+    },
+    {
+      "before_pointer": "/paths/~1{pass}",
+      "after_pointer": "/components/pathItems/PassRoot",
+      "component": "PassRoot",
+      "semantic_sha256": "cbbbbb6d6e73b8d4d013278e6337ca5e6cdd583f984978e0068df52fb5d5e5da",
+      "value_equal": true,
+      "raw_body_before_sha256": "f99d3f02d4aed3d8a451591d37d5e052b8fd944b063faf46259a9998ac472b9c",
+      "raw_body_after_unindent_sha256": "f99d3f02d4aed3d8a451591d37d5e052b8fd944b063faf46259a9998ac472b9c"
+    },
+    {
+      "before_pointer": "/paths/~1{sub}~1{file}",
+      "after_pointer": "/components/pathItems/ConsoleFile",
+      "component": "ConsoleFile",
+      "semantic_sha256": "1e5d52e79625c606853b1ce5015f1bb631bcc6ffe0f60bbd067acaae0721b16e",
+      "value_equal": true,
+      "raw_body_before_sha256": "6190ec5593587780fe8ba149459c1161556752be44f6b741d79b0caa89aa2661",
+      "raw_body_after_unindent_sha256": "6190ec5593587780fe8ba149459c1161556752be44f6b741d79b0caa89aa2661"
+    }
+  ],
+  "physical_numeric_literal_multiset_equal": true,
+  "no_new_values_or_optional_headers": true
+}

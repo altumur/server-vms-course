@@ -905,7 +905,7 @@
   "writer": {
    "x-max-names": 1,
    "minProperties": 4,
-   "description": "Exactly one manifest unit.rows array in addition to cluster, worker and ts, including an empty array. Reader compatibility is unchanged.",
+   "description": "The current reader and writer both require exactly one admissible manifest unit.rows array besides cluster, worker and ts, including an empty array. No wrapper without the array and no two arrays.",
    "propertyNames": {
     "anyOf": [
      {
@@ -981,5 +981,10 @@
     ]
    }
   }
- }
+ },
+ "allOf": [
+  {
+   "$ref": "#/$defs/writer"
+  }
+ ]
 }

@@ -12,7 +12,7 @@
 #var server_known bool — server from heartbeat, otherwise Slot.server; neither available is false.
 #var gen_readable bool — existing gen reads; never substitute zero to give a name or release.
 #var version string — the exact slot version used in this judgement, not a later re-read.
-#var HUNG_MOVE_AFTER double — effective controller setting, default 900 s; all hung/unsure/wait limits count age from the same first observation.
+#var HUNG_MOVE_AFTER double — effective controller setting from daemon-flags.tsv and the common env-file owner; all hung/unsure/wait limits count age from the same first observation.
 #const SLOT_TERM double = 45.0 — common/contracts/slot.md Terms.
 #const LOST_AFTER double = 45.0 — common/contracts/observation.md Freshness.
 #action result(string,string) — return fate and permission version; empty version means no names_given entry. The wrapper publishes no permission after a refused write.

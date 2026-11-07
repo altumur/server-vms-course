@@ -10,7 +10,7 @@
    ]
   },
   "digests": {
-   "description": "the marked digests by the list rule of N1.2 (comma-separated); an empty batch — \"\" (or no row); the writer marks at most SWEEP_LIMIT 64 per pass",
+   "description": "the marked digests by the list rule of N1.2 (comma-separated); an empty batch — \"\" (or no row); reader and writer share SWEEP_LIMIT from $defs.writer; the writer marks at most that many per pass",
    "type": "array",
    "items": {
     "description": "the digest of a body without references from rows (N1.5 object)",
@@ -25,6 +25,9 @@
  "additionalProperties": false,
  "required": [
   "digests"
+ ],
+ "allOf": [
+  {"$ref": "#/$defs/writer"}
  ],
  "$defs": {
   "common.book_missing": {

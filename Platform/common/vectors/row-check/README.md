@@ -69,13 +69,15 @@ the first line without `#` is the header `case<TAB>name<TAB>unit<TAB>state<TAB>e
 
 The expectations are the judge of the family `state` in the reader mode by the text of the row (`x-encoding: jcs` — JCS is checked only by the writer),
 then `value` by the schema `unit.state.<name>` of the manifest; `acts` — the unit row is live, the `born` are equal, the `revision` are equal (for `cursor`
-not reconciled: the contract `acts`, P/03.6 N1.7 `cursor`; C170-STATE-CURSOR-01), the epoch is not reconciled. 24 rows: 7 act, 10 are unreadable, 7 are readable and do not act.
+not reconciled: the contract `acts`, P/03.6 N1.7 `cursor`; C170-STATE-CURSOR-01), the epoch is not reconciled. 24 rows: 6 act, 12 are unreadable, 6 are readable and do not act.
 The input of the single command `vectors` is `cells` `name`, `unit`, `state`; `files` — `testsub2.subsystem.yaml` (the schemas of `unit.state`).
 The native outcome is code 0 and the object `expect` (the general rule «Vectors» of the common acceptance README).
 
 Who performs is everyone whose norm judges «the state is effective»: the holder of the unit (`03-worker`, P/03.6 N1.7 — writes anew
 a non-acting one), the controller (`04-controller`, P/04 N1.3 `retire_when`, N1.3a `state` and the count `snapshot_state_garbled`) and
 the console (`06-console`, P/06.1 N2 «State in the answer») — all rows (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+
+A current state born is required: 32 lowercase hex. born-empty-both and born-empty-state-only keep their input bytes and receive the existing unreadable/nonacting result, without an empty-life substitution.
 
 ## What the vector does not cover
 

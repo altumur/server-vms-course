@@ -18,7 +18,7 @@
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "the moment of the last mark, every 15 s; judged by a change of the row version, not by the value (resource_state of the observation contract)",
+   "description": "the moment of the last mark, every ALIVE_EVERY; judged by a change of the row version, not by the value (resource_state of the observation contract)",
    "x-codec": [
     "time"
    ]

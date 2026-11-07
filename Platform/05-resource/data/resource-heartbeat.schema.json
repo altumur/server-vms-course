@@ -13,7 +13,7 @@
   },
   "ts": {
    "$ref": "#/$defs/common.time",
-   "description": "wall-clock seconds of the heartbeat; written every 10 s"
+   "description": "wall-clock seconds of the heartbeat; written every HEARTBEAT_EVERY (forms/runtime-constants.tsv)"
   },
   "url": {
    "description": "the address of the resource door",
@@ -175,7 +175,22 @@
    "required": [
     "addr",
     "mode"
-   ]
+   ],
+   "if": {
+    "required": [
+     "mode"
+    ],
+    "properties": {
+     "mode": {
+      "const": "mtls"
+     }
+    }
+   },
+   "then": {
+    "required": [
+     "cert_until"
+    ]
+   }
   },
   "garbled_rows": {
    "description": "unreadable rows of the tables read by the resource (holds), per table",
@@ -276,7 +291,7 @@
    }
   },
   "mirror": {
-   "description": "mirror counters (N1.4 mirror; skipped — buckets larger than 64 MiB); in every heartbeat (E39)",
+   "description": "mirror counters (N1.4 mirror; skipped — buckets larger than the resource door limit (OpenAPI Content-Length.maximum, P/05-R014)); in every heartbeat (E39)",
    "type": "object",
    "properties": {
     "skipped": {
@@ -326,7 +341,11 @@
   "volumes",
   "units",
   "mirrors",
-  "short"
+  "short",
+  "door",
+  "waits",
+  "restore",
+  "mirror"
  ],
  "$defs": {
   "common.book_missing": {
@@ -1166,33 +1185,6 @@
     "description": "`<sub>/<slot name>`",
     "type": "string",
     "pattern": "^(?:[^/]+/[^/]+)$"
-   }
-  },
-  "writer": {
-   "required": [
-    "door",
-    "waits",
-    "restore",
-    "mirror"
-   ],
-   "properties": {
-    "door": {
-     "if": {
-      "required": [
-       "mode"
-      ],
-      "properties": {
-       "mode": {
-        "const": "mtls"
-       }
-      }
-     },
-     "then": {
-      "required": [
-       "cert_until"
-      ]
-     }
-    }
    }
   }
  }
