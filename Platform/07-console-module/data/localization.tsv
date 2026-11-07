@@ -518,3 +518,6 @@ n.nameless	without a name	без имени
 n.refused	refused	отказал
 n.min	min	мин
 n.s	s	с
+notIntegerField	not a safe integer, nothing sent	не безопасное целое, ничего не отправлено
+domainReadIncomplete	The domain view was not read completely: {error}	Вид домена прочитан не полностью: {error}
+domainViewIncomplete	The domain view is incomplete.	Вид домена неполон.
