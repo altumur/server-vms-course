@@ -1,0 +1,859 @@
+{
+  "utc": "2026-11-07T16:12:12.098899+00:00",
+  "status": "APPROVED_INITIAL_EXISTING_TWO_TEST_FILES_CODE_AND_NAMED_PYTHON18_ONLY",
+  "authority": "Architect, existing S08/J06 judge class and strict T4; request b3e9, no new Source/wire/runtime class",
+  "request_sha256": "b3e9a580329c316d8517f5964cf595b335641f713b9d928df460a8f00fc0809e",
+  "base": "43750c8ef574ae4af747f481433fd7f4e0045793",
+  "paths": [
+    "tools/normgen/test_gen_door_lesson.py",
+    "tools/normgen/test_gen_door_bodies.py"
+  ],
+  "canonical_changed_blocks": {
+    "status": "PROPOSED_ONLY_NOT_CODE",
+    "pin": "43750c8ef574ae4af747f481433fd7f4e0045793",
+    "paths": [
+      "tools/normgen/test_gen_door_lesson.py",
+      "tools/normgen/test_gen_door_bodies.py"
+    ],
+    "mutable_existing_count": 16,
+    "mutable_existing": [
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "Model.__init__",
+        "kind": "FunctionDef",
+        "first": 30,
+        "last": 55,
+        "raw_sha256": "03d887a970132a1162f594f80871a6e3f0c45985598304f70d52359b05188888",
+        "ast_sha256": "ae3d6c8b962b6fdddb51d400c44fe63edcb09cfa430dfba43464e9ef7b48e76f"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "Model.load",
+        "kind": "FunctionDef",
+        "first": 57,
+        "last": 61,
+        "raw_sha256": "84cb83bc144793b426def6ec8ca857241c54c724add0a9dd3732a240a2069894",
+        "ast_sha256": "fd8351872629679ffc6e8a737d5a5fc4ba9af9e37406c1ff2b0414eab475ce81"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "Model.deref",
+        "kind": "FunctionDef",
+        "first": 63,
+        "last": 70,
+        "raw_sha256": "3e0a8fe90ebda7fb2a5594a43100c85042f72698b5354be8906bbe5607ac2e13",
+        "ast_sha256": "55b969ad91857d7eb9a809f14ca2dd5c7e99496ef087f8bfc0b86558abd2d370"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "Model.schema",
+        "kind": "FunctionDef",
+        "first": 72,
+        "last": 75,
+        "raw_sha256": "0a17d328639806050d0b476d7adfbda370e3955ac9904230edbe2c5b92851c9b",
+        "ast_sha256": "a0e89438cb2bab22f86cc7ef5bce3164beb20de6fe3c80a90edf0dee52a61292"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "Model.templates",
+        "kind": "FunctionDef",
+        "first": 94,
+        "last": 98,
+        "raw_sha256": "73874cea37770e773f903f29a7952dc4bf19816ec0d83a114bb784f56405b63e",
+        "ast_sha256": "aa10b232ded64359ecdbf2fad520d3e49b1e5644fc61d23937043ef5affe5bbf"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "Model.rank",
+        "kind": "FunctionDef",
+        "first": 100,
+        "last": 105,
+        "raw_sha256": "64b47c61e51d8ab9f131828543324d83cb8cb8b517f6695a38647f2cfeb8f366",
+        "ast_sha256": "9ac191dfce8d287cd5da5ecf755bd93f0dcc0ee7092c0fd52d054c0c01fa6381"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "Model.route",
+        "kind": "FunctionDef",
+        "first": 107,
+        "last": 158,
+        "raw_sha256": "75ca2e24631985cb302dad2605da09e33bbe69050982ac23f4235874ed1edb32",
+        "ast_sha256": "c77a55ccdb2023a4e2a10e8f508f7d6691fcd7823949f91b7cf1b62af93c715e"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "Model.sample",
+        "kind": "FunctionDef",
+        "first": 160,
+        "last": 169,
+        "raw_sha256": "6a86ee41a0f0b0fdc0651b0208241723ce1cd4c941193de83915ad3987e3d0fc",
+        "ast_sha256": "0bbe8d867eca1ff1d9c53837da70ecf1047911aad92efe51485a8da171f468ac"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "DoorLessonBase.setUpClass",
+        "kind": "FunctionDef",
+        "first": 399,
+        "last": 413,
+        "raw_sha256": "69dab29887583afc0d6e4a8e25ef6dd75594f134e1b588ed6e8cd4f78dd805c1",
+        "ast_sha256": "ccbfb2123552e174738e946b10cdc07499d8525b79e245633f10bbf4e480d495"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "DoorLessonBase.test_probes",
+        "kind": "FunctionDef",
+        "first": 433,
+        "last": 448,
+        "raw_sha256": "9178e1587389b8caad3b99a2e81aff5ab73aec92986fdb4bbef194f319d1f3ad",
+        "ast_sha256": "cd845d702d392e4d7e30ee0956835fc5e4672e95f4ef7b6eee628e499d7437c4"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "DoorLessonBase.test_mutants",
+        "kind": "FunctionDef",
+        "first": 450,
+        "last": 494,
+        "raw_sha256": "ea4907714ff217943f701b4cb51444166594cd8157e9d94dd2f4ff34e50d44c4",
+        "ast_sha256": "59490ffcfd7fccd10b65b73cb3d19d0171ce47b412142750a92aadc69ad01456"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "RouteServiceControls.mutant_case",
+        "kind": "FunctionDef",
+        "first": 518,
+        "last": 531,
+        "raw_sha256": "17de7ca2cc0f35be2ad8f098d1ca721e022dfc7e501d7769227c3ed25dc0f0e5",
+        "ast_sha256": "752b11e3254fa0d0fab3fd869ef181e4387b658825a2a7662eb45639ae2f883d"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "RouteServiceControls.test_complete_before_oracle",
+        "kind": "FunctionDef",
+        "first": 659,
+        "last": 674,
+        "raw_sha256": "7cc5cf9aafeb5856fa0d43fa5df146a4f20dcdf6977d6b7936305a51879bbcc7",
+        "ast_sha256": "e2526e608c5e3b23f2a30ad24b603dd4463834d2720cdfc35b313f6f85e6a485"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_bodies.py",
+        "name": "SourceSchemaReader.output_bindings",
+        "kind": "FunctionDef",
+        "first": 950,
+        "last": 1001,
+        "raw_sha256": "d8178c39f26b04be8580af5f4796e86d7949f75e747bd2eb7bf9b06292528e07",
+        "ast_sha256": "9e6967b108924140fbc759f1765ba675d01049402b34bc0446d22785b613b2a7"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_bodies.py",
+        "name": "SourceSchemaReader.parameter",
+        "kind": "FunctionDef",
+        "first": 744,
+        "last": 762,
+        "raw_sha256": "26e713c338fd16c76d5eda0bbdcbf7cc5b1284f45acaadbb3048764c909232aa",
+        "ast_sha256": "1e13c47ab8204546f4f338e10f6744767ca183859d32a71b9b75ee3d2804d0cb"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_bodies.py",
+        "name": "DoorBodiesBase.test_params",
+        "kind": "FunctionDef",
+        "first": 1100,
+        "last": 1174,
+        "raw_sha256": "fed7e0e4554ec805407f9d0338b7144104daa68ffa070303b258e82942f5cf69",
+        "ast_sha256": "385e6443490180468cad5d2d8ac93a66d604b1ed14b86875dc3dd9aea1ddc553"
+      }
+    ],
+    "frozen_at_minimum": [
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "CATALOG",
+        "kind": "Assign",
+        "first": 20,
+        "last": 20,
+        "raw_sha256": "cfb964e78086e627b2e05b72e756ac59b9d0f890cf7d7bff46dfb0bae9c49ca1",
+        "ast_sha256": "5f92d8fd9dac85335c739bb326f27675f81f890e25b8f6d177ed0ae4fe49cda1"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "DRIVER",
+        "kind": "Assign",
+        "first": 172,
+        "last": 229,
+        "raw_sha256": "c667f606c538ce358b806e69237ff6d5974e6fa3a305fc8852d88de3ac08171a",
+        "ast_sha256": "efbe605815935d752bd4927724148e3f3e23f022f4acf6c16edb51eede7fd6be"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "CheckingError",
+        "kind": "ClassDef",
+        "first": 232,
+        "last": 233,
+        "raw_sha256": "728b4bab05207ce774de1677c0790c34542835dd04f7d2ac6d15ae8019b7a8c8",
+        "ast_sha256": "80c9f22d2a6f456448e27b810c3accde3e736dc7b8999cb200bbf8841f9bc6ac"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "disagree",
+        "kind": "FunctionDef",
+        "first": 236,
+        "last": 271,
+        "raw_sha256": "e332c31849a603cf3267e7f26766f78087508602934d6a78bd97e5912d43134a",
+        "ast_sha256": "c0d5b9a12eb384193ee181939fe6248c3632181f9f75a44a87d89f2ce59e968a"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "read_report",
+        "kind": "FunctionDef",
+        "first": 274,
+        "last": 314,
+        "raw_sha256": "cb491146085c53d1c54dbbbb205eb8739a50de31fa37d5a52a4cadab00f64653",
+        "ast_sha256": "18f6982d16fbbd66f0d638c61ca9ad28a0aa1372f4cd28bc835598361293a240"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "run",
+        "kind": "FunctionDef",
+        "first": 317,
+        "last": 336,
+        "raw_sha256": "765f0a9c0955d8fbd66d5fa678b5fc889dda8d1cbf862d78bb79423d962f3719",
+        "ast_sha256": "97aee198930cdce6c19e2be9c1d05969edfbc5078820b776f38dc3eb55002fa2"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "probes",
+        "kind": "FunctionDef",
+        "first": 339,
+        "last": 386,
+        "raw_sha256": "ba1cbe48467a83537190e53471f3083d9ad99c5ecb56ad04525706d599e054b4",
+        "ast_sha256": "435798bf9e4bebaa5227b264416426f493a584991f95b74d6386595c797a0efe"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "expected",
+        "kind": "FunctionDef",
+        "first": 389,
+        "last": 393,
+        "raw_sha256": "8a7c489e4c7f64ccd774eeafc8363b10a6709322c5b4c82b11c1e6726ba3f436",
+        "ast_sha256": "3a7c94b53601496f0fe16a286e48ebe9fa51c2cadfd0be88c2e314a4611a5c91"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "DoorLessonBase.test_ops",
+        "kind": "FunctionDef",
+        "first": 425,
+        "last": 431,
+        "raw_sha256": "7513d4f9b2c01407ab78e75b2fad4fcbe47dfb2e62377e027b403b7a88929f44",
+        "ast_sha256": "ce5d3580e130163f799b82e5040ff1c47cb60c2ac2e98c35e19bbd61683d29a4"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "DoorLessonBase.tearDownClass",
+        "kind": "FunctionDef",
+        "first": 415,
+        "last": 417,
+        "raw_sha256": "8d5eaa86110ac5b69b246e646fa16610d1cb4ff1e0e709b303fa64e2ea627c73",
+        "ast_sha256": "a0a15e8c7cb924079a51c0c363b2aab6e38d9c8b13f4c287627b7b268c7b47ed"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "DoorLessonBase.test_fresh",
+        "kind": "FunctionDef",
+        "first": 419,
+        "last": 423,
+        "raw_sha256": "0def318142f4126edad897de20f31b2e7be0ad5d53e9cbbb2e1085d8523fa9c3",
+        "ast_sha256": "50cb9c7bad70164aea9883dffe68a09e6a7b15ddd024b62288428e09d2cf3c0b"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_bodies.py",
+        "name": "DoorBodiesBase.setUpClass",
+        "kind": "FunctionDef",
+        "first": 1042,
+        "last": 1059,
+        "raw_sha256": "ed892c5250d188f88505bfbb9e9aa096fa6236d40d3125ad8ef67c6b8d6fe73b",
+        "ast_sha256": "2d7dc23a94a5c65a9639767d10500efe2744c7d152f3c217cb94d4add03bf7b8"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_bodies.py",
+        "name": "DoorBodiesBase.test_bundle_equals_source",
+        "kind": "FunctionDef",
+        "first": 1071,
+        "last": 1077,
+        "raw_sha256": "e29e57de500f40cd14e9e82f96d7e9e32f1406d199c6ecbac1fc67454b0cd978",
+        "ast_sha256": "614649f7f1585b244441a018d91a1fab1d27da9ff8cd5174efdaa538eb4415ac"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_bodies.py",
+        "name": "DoorBodiesBase.test_fresh",
+        "kind": "FunctionDef",
+        "first": 1065,
+        "last": 1069,
+        "raw_sha256": "6f3dc13378496cac3eac49ccef22b73cb557f84dbaa43aa0844f2647fc01eaa7",
+        "ast_sha256": "b326dcf1d2cd61bce57d0e6d628b34ee30332fc3b421186fe8458f9d677be0fd"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_bodies.py",
+        "name": "SourceSchemaReader.bundle_origins",
+        "kind": "FunctionDef",
+        "first": 817,
+        "last": 883,
+        "raw_sha256": "6bdc3284c97a231219ced7ea6b8d8bc168c94b78d62ce2a60007ef8966a40714",
+        "ast_sha256": "d752102fe3c2267482f582d0ac5aa2321dc2065160b6e7b5ddeeb746388f7b9b"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_bodies.py",
+        "name": "SourceSchemaReader.compare",
+        "kind": "FunctionDef",
+        "first": 885,
+        "last": 900,
+        "raw_sha256": "56383840167be9ecb03432206bc8a76e2c4204c1ee6e69a22e261bbeba8d08b7",
+        "ast_sha256": "3539ae2a01552133678aae4b92b94dd83622455ba9e7ab958c9ac0aef8672d7d"
+      },
+      {
+        "path": "tools/normgen/test_gen_door_bodies.py",
+        "name": "SourceSchemaReader.parameter_validator",
+        "kind": "FunctionDef",
+        "first": 785,
+        "last": 789,
+        "raw_sha256": "4681bde317733cea1e1024134f55adbb67691cac1fdb278297b62ffbd4622ace",
+        "ast_sha256": "4edeeab971ee116a5ce8d13c0b43836e2a2626f5feebf63b8c68f50179810791"
+      }
+    ],
+    "all_old_RouteServiceControls19": "18 test methods exact; test_complete_before_oracle fixture executor assignment only. mutant_case is a non-test fixture helper, executor assignment only; old assertions/expected frames unchanged.",
+    "all_old_BodyServiceControls6": "unchanged",
+    "frozen_body_params_3subspans": "inputs/coercion/report program remain exact; only source enumeration and explicit declaration coordinate call changes",
+    "new_anchors": [
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "instance-setup",
+        "first": 399,
+        "last": 418,
+        "raw_sha256": "8add2a341d84b424a179e0e4bb683ed7957332c08e951544c853b09aec519858",
+        "ast_sha256": null,
+        "placement": "Insert new DoorLessonBase.setUp between unchanged setupClass boundary and tearDownClass; owned context copy and native normal observer baseline before legacy semantic tests, after future execution approval only.",
+        "anchor_is_not_permission_to_edit_its_existing_text": true
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "additional-imports",
+        "first": 14,
+        "last": 24,
+        "raw_sha256": "9039e8f19b3ff666bd59c3e7d16d4b54ab354b3f47e328d50d433530da80c025",
+        "ast_sha256": null,
+        "placement": "Add only hashlib/stat and test-local standard-library needs; existing imports unchanged. Accepted accounting helper imported locally in new wrapper only.",
+        "anchor_is_not_permission_to_edit_its_existing_text": true
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "private-integration-helpers",
+        "first": 333,
+        "last": 339,
+        "raw_sha256": "894b17fd4097492a11408da757382a3b0d8859f179400777a4f1ff31057c314b",
+        "ast_sha256": null,
+        "placement": "After unchanged run, before probes. New context/copy/observer/report/mandatory/mutant delegation helpers and private Go template strings; no Go files materialized during this task.",
+        "anchor_is_not_permission_to_edit_its_existing_text": true
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "new-existing-service-controls",
+        "first": 724,
+        "last": 736,
+        "raw_sha256": "6df84567e494db376f9bff34deec08591d2cffb2244a3b52fdd0d1b5919fa8ae",
+        "ast_sha256": null,
+        "placement": "After unchanged Unicode method, inside RouteServiceControls before dedent to SchemaPositionControls. Existing checking assertions/meanings unchanged; exact fixture-only exceptions separately named in mutable list.",
+        "anchor_is_not_permission_to_edit_its_existing_text": true
+      },
+      {
+        "path": "tools/normgen/test_gen_door_lesson.py",
+        "name": "bind-one-test-to-existing-P06-class",
+        "first": 905,
+        "last": 911,
+        "raw_sha256": "76879dfd880688019d6a1d90ee7d94b818d5474c4e75eb63f0117b36120d5753",
+        "ast_sha256": null,
+        "placement": "After unchanged dynamic class loop, before __main__: bind only DoorLesson_p06.test_catalogue_observations to a new private test function. No new class or altered roster loop.",
+        "anchor_is_not_permission_to_edit_its_existing_text": true
+      },
+      {
+        "path": "tools/normgen/test_gen_door_bodies.py",
+        "name": "typed-source-operation-records",
+        "first": 944,
+        "last": 951,
+        "raw_sha256": "444ddee710eeb3639982d054b1333abd9c8cbcbc848c8607c60e8878df40256d",
+        "ast_sha256": null,
+        "placement": "Before output_bindings, inside SourceSchemaReader: new operation_declarations helper. No producer import or selector as expected.",
+        "anchor_is_not_permission_to_edit_its_existing_text": true
+      }
+    ],
+    "new_helpers_declared": {
+      "_given_contexts": "Read only exact named complete view bytes and explicit root descriptor; private immutable per-context data. No union/admission/loader/provider inference.",
+      "_owned_context_module": "Copy original generated B0 to private B1, verify originals, add only cmd/judgeroutes/context.go; cannot overwrite an existing file. Original DRIVER%module/run unchanged.",
+      "_source_identity_witness": "Read approved old140+6 identity witness only after API/witness SHA pin. Not a route admission or selector.",
+      "_mandatory_observation_inputs": "Derive all applicable positive/negative obligations from source/catalogue contract; retain own obligation IDs, map one-to-one to unchanged ID/Method/Path records. No missing mandatory sample or allowance.",
+      "_observer_module": "Create distinct Cobs copy from B0 per context/run; add only apidoor/review103_s08_observe_test.go, context literals and private report pathname/run nonce. No generated function patched.",
+      "_component_checked_run": "Delegate unchanged run; for real context-bound P06 require baseline receipt and exact companion/input bytes; context/precondition Code0 is CheckingError, no kill. No implicit fallback: setUp injects this executor for every real P06 case; other profiles and two explicit service fixtures inject unchanged run forwarding. Missing executor/context in real P06 is CheckingError before process.",
+      "_go_observer": "Execute future fixed go test command only after scope; process exceptions/nonzero are CheckingError before semantics. No current execution.",
+      "_complete_observer_go_test": "Wrap exact accepted complete_go_tests service accounting; enforce strict UTF8/LF, allowed lifecycle and singleton package/test, no failure/skip/parallel; never routing expected.",
+      "_read_observation_frames": "Check private regular O_EXCL report file, exact run/context/IDs/counts/types/strict JSON and end; all frames checked before comparisons.",
+      "_compare_observations": "Only after full normal reports and valid GIVEN premise, compare public/private actual fields to independent source/witness/catalogue. Context.Code0 not a semantic kill.",
+      "_run_required_original_mutants": "Execute unchanged original mutation dictionary/applicability/semantic loop through each context-bound executor; run-call sites are the only changed semantic-method plumbing. Source-applicable names require actual attempted complete execution; no skipped/failed/survivor kill. No expected fields borrowed from producer.",
+      "_test_catalogue_observations": "Bound only to existing P06 class; baseline/all mandatory observations/metadata before mutant delegation. Original test_ops/test_probes/test_mutants remain intact.",
+      "SourceSchemaReader.operation_declarations": "Typed ordinary+six component records with original document/item/op/parameter pointers and logical identity witness. No new DSL or table-as-admission."
+    },
+    "additional_existing_blocks_vs_old16": [
+      "DoorLessonBase.setUpClass",
+      "SourceSchemaReader.parameter",
+      "DoorLessonBase.test_mutants",
+      "RouteServiceControls.mutant_case",
+      "RouteServiceControls.test_complete_before_oracle"
+    ],
+    "previously_proposed_now_frozen": [
+      "CATALOG",
+      "DRIVER",
+      "probes",
+      "expected",
+      "DoorLessonBase.test_ops"
+    ],
+    "run_signature_and_old_frames": "No change. No CheckingError/read_report/disagree or old frame shape extension; two explicit service-fixture plumbing blocks named above. test_probes/test_mutants only their run-call context plumbing changes; original inputs/dictionary/applicability/loop remain guarded.",
+    "testbase": "43750c8ef574ae4af747f481433fd7f4e0045793"
+  },
+  "canonical16_plus6_authoritative": true,
+  "OB17_stale14": "new guard must cover all16 exact mutable blocks plus6anchors; old declaration preserved as history",
+  "frozen_service_exceptions": {
+    "RouteServiceControls.mutant_case": "fixture executor assignment only",
+    "RouteServiceControls.test_complete_before_oracle": "fixture executor assignment only",
+    "all_other_assertions_frames_and_18test_methods": "raw exact",
+    "BodyServiceControls6": "unchanged"
+  },
+  "legacy_semantic_methods": "test_probes/test_mutants only two declared run-call substitutions; dictionary, inputs, applicability, loop/comparison/error/survivor semantics raw frozen",
+  "protocol": {
+    "status": "PROPOSAL_ONLY_NO_OBSERVER_OR_CONTEXT_MATERIALIZED",
+    "old_channel": "Exact existing DRIVER%module (one substitution), Method/Path/ID inputs and result4fields|err NDJSON unchanged. run/read_report/disagree/CheckingError unchanged.",
+    "identifiers": {
+      "go_package_name": "apidoor",
+      "go_package_path": "normgen/p06/apidoor (exact own raw module go.mod module normgen/p06; different module requires explicit expected-package binding, never accept arbitrary Package)",
+      "go_test_name": "TestReview103S08Observation",
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-run",
+        "^TestReview103S08Observation$",
+        "./apidoor"
+      ],
+      "cwd": "owned Cobs/go module only",
+      "no_subtests_parallel": "No t.Run/t.Parallel, no wildcard packages, no custom CLI/env/runtime config."
+    },
+    "old_route_companion": {
+      "path": "B1/cmd/judgeroutes/context.go",
+      "package": "main",
+      "existing_method": "func (cat) CatalogSnapshot() (root string, views []map[string]any)",
+      "data": "Exactly the one chosen immutable complete view-body pair and explicit root=testsub; literal JSON bytes pinned, decoded with standard encoding/json without coercing fields or implementing manifest admission. Returned views are not a handpicked routing projection.",
+      "installation": "Before unchanged run writes main.go; its single DRIVER%module substitution remains untouched. New helper rejects absent/empty root or nonmember root before any preparation. No first-view/server-default root selection.",
+      "immutability": "Separate module per context/test/mutant; fresh borrowed views belong to this context only. Context bytes and companion recipe pinned before/after; never edit A/D."
+    },
+    "observer": {
+      "path": "Cobs/apidoor/review103_s08_observe_test.go",
+      "package": "apidoor",
+      "private_type": "review103Catalogue implements existing four bool methods and CatalogSnapshot; no export/new public interface",
+      "existing_access": [
+        "Route(method,path,cat)",
+        "Match.Op/Params/Sub/Prefixed",
+        "RouteError.Code/Reason",
+        "Ops map[Op]OpInfo (all entries, no expected-name filtering)",
+        "public named Op constants from fixed identity witness",
+        "p06Bindings() -> p06BindingSpec.operations/references/documents",
+        "p06Operation.op/path/component/source/base/servers/segments/checks/itemParameters/operationParameters/security"
+      ],
+      "actual_only": "Read raw private spec as actual data. Never call p06Bind/p06Candidates/p06Owner or producer selector to calculate expected branches. Route invokes its own algorithm only as subject.",
+      "report_file": "New external private file path embedded in the owned test, O_CREATE|O_EXCL mode0600; parent supplies unique 32-lowerhex run_id and chosen context_id as literals, not CLI/config. No t.Log/source payload in stdout. Encoder/flush/close/read error fails the Go test.",
+      "expectation_location": "All source/catalogue comparisons occur in Python only after successful complete Go lifecycle and complete private frames. The Go test never compares expected routes or passes a known expected value."
+    },
+    "stdout_contract": {
+      "strict_decode": "stdout and stderr strict UTF8; split only literal LF, accept one terminal LF, reject blank extra JSON records, duplicate keys, NaN/Infinity and non-JSON bytes. Unicode U0085/U2028/U2029 are data, not frame separators.",
+      "fields": "Allowed standard go1.22 event keys Time/Action/Package/Test/Elapsed/Output; Action/Package strings mandatory; Test nonempty string only for named event, Output string when present, Time string/Elapsed finite nonbool number if present.",
+      "actions": "Exactly one package start -> exactly one run for the one test -> exactly one pass for that test -> exactly one package pass; typed output events may interleave only inside valid scope. No fail/skip/pause/cont, duplicate/missing/early terminals, foreign package/test, unnamed extra test, or event after package terminal.",
+      "cardinality": "Exactly four required lifecycle events (start/run/test-pass/package-pass), plus any finite number of well-scoped typed output events. Private frames are not stdout. Do not pretend stdout has fixed N output events.",
+      "accounting_reuse": "ACCOUNTING-DEPENDENCY.json: complete_go_tests at test_gen_machine.py:53–110 exact pinned raw/AST/file SHA, service mechanics only. Wrapper first requires strict int returncode0, UTF8/LF/event rules; helper must return no failed tests. Convert its CheckingError to existing lesson CheckingError.",
+      "termination": "Start/compile/panic/signal/timeout/nonzero, test failure despite private end, build text or partial lifecycle => CheckingError. Never call a semantic comparator on these outcomes.",
+      "normal_stderr": "Strict UTF8 and empty for this owned observer; nonempty diagnostic output is CheckingError, never semantic kill. All actual data go to private file."
+    },
+    "private_frames": {
+      "cardinality": "N input requests is a strict positive int; validate every input Method/Path string and IDs1..N before any owned copy/output. Exactly N+2 private NDJSON frames, in order: meta0, route1..N, endN+1; no extra/missing/reordered/duplicate/out-of-context records.",
+      "shared": {
+        "kind": "literal meta|route|end",
+        "id": "strict integer, not bool; exact position0/1..N/N+1",
+        "run": "exact expected32lowerhex per-run nonce",
+        "context": "exact p06-5-manual-pair:43750c8e:root=testsub"
+      },
+      "meta_exact_keys": [
+        "kind",
+        "id",
+        "run",
+        "context",
+        "package",
+        "test",
+        "ops_count",
+        "ops",
+        "symbols_count",
+        "symbols",
+        "provenance"
+      ],
+      "meta_types": {
+        "package": "exact expected Go package path",
+        "test": "exact TestReview103S08Observation",
+        "ops_count": "nonnegative strict int, equals length ops",
+        "ops": "full sorted actual Ops map snapshot, one record per actual key; never filter to expected146",
+        "symbols_count": "strict int equals length symbols; exactly146 requested witness names, once each",
+        "symbols": "[{name:string,op:strict int}] actual values of named public constants, not expected numeric values",
+        "provenance": "exact keys operations_count,operations,references_count,references,documents_count,documents; counts strict ints equal actual list lengths"
+      },
+      "op_record_exact": {
+        "op": "strict int, not bool; 0/wrong numeric values remain observable data for comparison",
+        "method": "string",
+        "path": "string",
+        "prefixed": "bool",
+        "params": "list of Param",
+        "responses": "list of Response",
+        "request_media": "list of strings",
+        "request_required": "bool"
+      },
+      "Param": {
+        "name": "string",
+        "in": "string",
+        "required": "bool"
+      },
+      "Response": {
+        "code": "string",
+        "media": "list of strings",
+        "headers": "list of strings"
+      },
+      "private_operation_record_exact": {
+        "op": "strict int",
+        "path": "string",
+        "component": "string, ordinary empty string retained",
+        "source": "raw string",
+        "base": "raw string",
+        "servers": "list of {mounted:bool,subs:null|list[string]} (preserve nil vs empty)",
+        "segments": "list of {literal:string,parameter:string}",
+        "checks": "list of {name:string,min:strict int,max:strict int,pattern:null|string,enum:null|list[string],not_enum:null|list[string],not_patterns:list[string]}",
+        "item_parameters": "list of Param",
+        "operation_parameters": "list of Param",
+        "security": "raw JSON string, strict parse separately; complete valid changed security is semantic, malformed encoded data CheckingError"
+      },
+      "provenance_other_records": {
+        "references": "full actual list of raw ref-projection strings, not source declaration coordinates invented from them",
+        "documents": "list of {path:string,sha256:64lowerhex} from full actual documents map, no filtering"
+      },
+      "route_exact_keys": [
+        "kind",
+        "id",
+        "run",
+        "context",
+        "result",
+        "op",
+        "sub",
+        "reason"
+      ],
+      "route_success": "result exactly old {path:string,method:string,params:dict[string,string],prefixed:bool}; op strict int, sub string including empty, reason null.",
+      "route_error": "result exactly {err:strict int}; op null,sub null,reason actual RouteError.Reason string. Shape alone never makes Code0 a semantic kill.",
+      "end_exact_keys": [
+        "kind",
+        "id",
+        "run",
+        "context",
+        "meta",
+        "routes",
+        "boolean_calls",
+        "snapshot_unchanged"
+      ],
+      "end_types": "meta strict int1; routes strict intN; boolean_calls nonnegative strict int (expect0 for P06, no bool fallback); snapshot_unchanged bool (expecttrue). Report close succeeds before Go test returns; private end is not the Go terminal.",
+      "ordering_gate": "Normal exit+correct complete stdout first, then regular private file/run/context/shape+all IDs+all counters+end+EOF, then GIVEN/premise guard, then any expected semantic comparison. One terminal LF optional; no blank or trailing non-JSON data.",
+      "completeness_vs_semantics": "Missing/extra route/meta/end frame or list/count inconsistency is CheckingError. A full trusted observer snapshot of actual Ops genuinely containing145 or147 entries with matching actual count, normal complete transport and fixed observer bytes is a semantic missing/extra-operation observation, not transport truncation. A fabricated payload/count without trusted fixed helper/source/binary byte guards is not admissible proof."
+    },
+    "source_expected": {
+      "route": "Independent full source + chosen GIVEN catalogue/root; old Model result projection stays4fields. New helper derives expected Sub/op identity from source operation/ABI witness, never privateSpec selection.",
+      "Sub": "Existing Match public comment says prefix/parameter sub or empty: short root path expects empty; explicitly named root expects testsub; mount testsub2. Effective owner of short root remains testsub in the independent context. This follows existing ABI capture meaning, not observed private selector; any contrary source decision needs clarification before CODE, not an automatic new semantic.",
+      "old140": "Use byte-proved accepted operation-map.json original logical ordinal/name/source pointer as immutable identity witness, checked against exact current API/source. Never import _P06_OLD_OPS or derive expected IDs from current producer/generated Ops.",
+      "HEAD6_proposed_explicit": [
+        {
+          "name": "OpHeadFolders",
+          "expected_op": 141
+        },
+        {
+          "name": "OpHeadFoldersById",
+          "expected_op": 142
+        },
+        {
+          "name": "OpHeadBySubOperationsById",
+          "expected_op": 143
+        },
+        {
+          "name": "OpHeadChanges",
+          "expected_op": 144
+        },
+        {
+          "name": "OpHeadBySubNextId",
+          "expected_op": 145
+        },
+        {
+          "name": "OpHeadApiBackupPartByMemberByPart",
+          "expected_op": 146
+        }
+      ],
+      "HEAD_authority": "Explicit source-identity proposal from accepted source map appended six ordinary HEAD records and preserved old140. Scope decision must endorse these exact witness assignments before CODE; current producer numeric values are not evidence for expected numbers.",
+      "provenance": "Expected op source/component/item/operation pointers, typed references and document SHA are computed from full original source resources and source-coordinate witness. Actual private fields only compared. Raw references aggregate lacks declaring pointer/multiplicity: compare only justified URI/ref projections, not claim both carrier positions proved by one deduplicated entry. Separate source-bundle/param comparisons must cover per-coordinate carriers.",
+      "limits": "No actual P02 admission/startup, B1/N5/profile, forwarding IO/query/header/body execution or whole S08 proof. Router raw pathname/query selection only. Second-kind pass positive is absent from chosen manual pair and remains a separate context prerequisite, not a fabricated test or union."
+    }
+  },
+  "context": {
+    "context_id": "p06-5-manual-pair:43750c8e:root=testsub",
+    "declared_context": "p06-5-manual-stand",
+    "root": "testsub",
+    "root_source": "PROVENANCE-SUPPLEMENT known_source_contexts p06-5-manual-stand; explicit root testsub, named second /testsub2",
+    "views": [
+      {
+        "name": "testsub",
+        "path": "Platform/02-installer/vectors/canonical/expect/course-testsub.json",
+        "sha256": "357f87568ec750317624b872c69aa9826a0e196a94143f7de91a2a988b2a7447",
+        "bytes": 3046
+      },
+      {
+        "name": "testsub2",
+        "path": "Platform/02-installer/vectors/canonical/expect/course-testsub2.json",
+        "sha256": "a72a6d2b8786b7d3ddb27a6d83ea62c223e6a2018b606366d30bd6e7ea0078c6",
+        "bytes": 11774
+      }
+    ],
+    "given": "ALREADY ACCEPTED immutable COMPLETE canonical body views from exactly this one context and explicit nonempty member root. View bytes referenced, no provider/context/report/Go file materialized now.",
+    "not_auto": "Not the four-member automatic P06.5 context; no probe-x/probe-w omission from auto claims. No union with independent220 contexts.",
+    "excluded_root_variants": "Do not switch to P06.2 root testsub2, choose first view/server default, empty root, or invented root flag. Other declared contexts need separate exact input scope.",
+    "unknown": [
+      "current admission/schema acceptance",
+      "row/view/mark wrapper/rev/SHA/readability/confirmed listing",
+      "startup/profile/runtime/B1/N5/recovery",
+      "actual B,V/provider"
+    ],
+    "process_vs_route": "Startup root configuration refusal exit2 is not tested. Missing Route capability/context Code0 is internal and, if caused by violated GIVEN premise, CheckingError/precondition failure, never semantic kill."
+  },
+  "source_identity_witness": {
+    "path": "decisions/inbox/2026-11-07-p06-s08-source/operation-map.json",
+    "ref": "43750c8ef574ae4af747f481433fd7f4e0045793",
+    "sha256": "af5920d7fb4e73055b33229f9a65c330bc021d4e780e9cd7719b46531d547f19",
+    "API_path": "Platform/06-console/spec/06-console.api.openapi.yaml",
+    "API_sha256": "b4073b39c35094aba8bd6cecefd0f63f5cc2c37abc867e72a0b81eaa4c7b189e",
+    "old140": "expected op number equals immutable logical_ordinal_original140 1..140, name=record actual_adapter_Op and typed current Source pointer; root endorses this fixed witness, not actual producer allocation",
+    "HEAD_endorsed": [
+      {
+        "name": "OpHeadFolders",
+        "expected_op": 141
+      },
+      {
+        "name": "OpHeadFoldersById",
+        "expected_op": 142
+      },
+      {
+        "name": "OpHeadBySubOperationsById",
+        "expected_op": 143
+      },
+      {
+        "name": "OpHeadChanges",
+        "expected_op": 144
+      },
+      {
+        "name": "OpHeadBySubNextId",
+        "expected_op": 145
+      },
+      {
+        "name": "OpHeadApiBackupPartByMemberByPart",
+        "expected_op": 146
+      }
+    ],
+    "current_Source_contents": "read from pinned full Source and declaration coords; no old semantic/runtime/admission proof inherited from witness",
+    "on_missing_or_changed_input": "CheckingError/prerequisite, no auto-renumber or weaker fallback"
+  },
+  "Sub_ABI_endorsed": {
+    "short_root_path": "",
+    "explicit_named_root": "testsub",
+    "mount": "testsub2",
+    "effective_root": "separate given testsub, never substitute for capture Sub"
+  },
+  "accounting_dependency": {
+    "path": "tools/normgen/test_gen_machine.py",
+    "whole_file_sha256": "3f4b8adc7e231630fc3bdfa2f4466332deb150b9475d43b848d2c78b0962bd8b",
+    "name": "complete_go_tests",
+    "first": 53,
+    "last": 110,
+    "raw_sha256": "28266c5e7d8c3d712b02095ae3534e6cde32d53e7516661758dabfe04280d7e5",
+    "ast_sha256": "0a0e60840112c180a42ad7c591e12302923479fcc6da0aad57b801a3c574cd69",
+    "reuse": "Local import complete_go_tests and CheckingError as GoAccountingError; only service lifecycle parser invoked, no Form/Oracle/selector/gen helpers. Catch/rethrow current lesson CheckingError. No third tracked CODE file edited.",
+    "wrapper": "Pre-require strict int exit0; strict UTF8/LF/no blank records; allowed event fields/actions; exactly expected singleton package/test; require helper returns empty failure list. Strictly reject pause/cont/skip and all nonzero. No Go comparisons inside observer test."
+  },
+  "complete_transport_before_semantics": [
+    "strict integer exit0, no failures/skip/pause/cont/foreign package/test or partial/extra terminals",
+    "complete singleton go-json package/test lifecycle",
+    "fresh regular private0600 O_EXCL report, run/context/typed meta0/route1..N/endN+1 and EOF",
+    "all actual counters/lists consistent, complete actual Ops unfiltered",
+    "valid GIVEN and immutable source/context/helper guards before any comparator"
+  ],
+  "CheckingError_vs_semantics": [
+    "process/compile/panic/nonzero/partial/replayed/mistyped/context errors never kills",
+    "RouteError.Code0 caused by missing/broken/unresolved context or ambiguity is CheckingError; do not change legacy J06",
+    "valid strict integer Match.Op0 or other wrong op values remain observable actual data for semantic comparison after all gates",
+    "trusted complete145/147 actual Ops with consistent counters is a semantic missing/extra operation observation; fabricated or truncated counts are CheckingError",
+    "private references aggregate cannot prove declaring coordinate/multiplicity; parameter raw lists cannot prove unavailable effective bindings"
+  ],
+  "initial_execution": {
+    "allowed": [
+      "static syntax/raw/AST preservation checks",
+      "only named new Python controls OB01..OB18 per CONTROL-ANCHORS groups, no full class/module discovery",
+      "synthetic Python JSON/report/filesystem-guard fixtures and injected process outcomes, explicitly mocks"
+    ],
+    "controls18": [
+      {
+        "id": "OB01",
+        "proposed_method": "test_private_observer_ob01",
+        "purpose": "complete normal single package/test + meta/routes/end, expected comparison only last"
+      },
+      {
+        "id": "OB02",
+        "proposed_method": "test_private_observer_ob02",
+        "purpose": "foreign/mixed Package or Test, extra subtest IDs, wrong expected singleton"
+      },
+      {
+        "id": "OB03",
+        "proposed_method": "test_private_observer_ob03",
+        "purpose": "terminal-before-run, duplicate run, duplicate/absent test terminal, missing/early package terminal, output after terminal"
+      },
+      {
+        "id": "OB04",
+        "proposed_method": "test_private_observer_ob04",
+        "purpose": "fail/skip/pause/cont, nonzero including complete private mismatch data, start/OSError/timeout/panic/compile error"
+      },
+      {
+        "id": "OB05",
+        "proposed_method": "test_private_observer_ob05",
+        "purpose": "stdout invalid UTF8/JSON/duplicate keys/nonfinite/blank/mistyped standard fields"
+      },
+      {
+        "id": "OB06",
+        "proposed_method": "test_private_observer_ob06",
+        "purpose": "private missing/short/extra/reordered/meta/end/route frames; N=0/empty inputs before preparation"
+      },
+      {
+        "id": "OB07",
+        "proposed_method": "test_private_observer_ob07",
+        "purpose": "bool/float/missing/duplicate/out-of-order IDs; wrong run/context/package/test link"
+      },
+      {
+        "id": "OB08",
+        "proposed_method": "test_private_observer_ob08",
+        "purpose": "private invalidUTF8/JSON/duplicate keys/nonfinite/unknown or missing keys/wrong types"
+      },
+      {
+        "id": "OB09",
+        "proposed_method": "test_private_observer_ob09",
+        "purpose": "counter/list mismatch, bad document digest shape, malformed nested security encoding"
+      },
+      {
+        "id": "OB10",
+        "proposed_method": "test_private_observer_ob10",
+        "purpose": "private path symlink/FIFO/nonregular/preexisting replay/copy guard/encoder/close/read errors"
+      },
+      {
+        "id": "OB11",
+        "proposed_method": "test_private_observer_ob11",
+        "purpose": "one finalLF or none positive; Unicode U0085/U2028/U2029 and string containing panic: in private data remain data; extra physicalLF negative"
+      },
+      {
+        "id": "OB12",
+        "proposed_method": "test_private_observer_ob12",
+        "purpose": "full normal correct result survivor; full normal valid typed wrong Sub/op/source/hash/binding semantic mismatches; actual zero op is data, bool op invalid type"
+      },
+      {
+        "id": "OB13",
+        "proposed_method": "test_private_observer_ob13",
+        "purpose": "GIVEN missing/empty/nonmember root or incomplete view bytes rejected before process; Code0 due broken premise never kill; no startup exit2 inference"
+      },
+      {
+        "id": "OB14",
+        "proposed_method": "test_private_observer_ob14",
+        "purpose": "context snapshot mutation or unexpected bool fallback observed only after normal complete report; expected true/0 from accepted consumer precondition"
+      },
+      {
+        "id": "OB15",
+        "proposed_method": "test_private_observer_ob15",
+        "purpose": "mandatory source obligation IDs0miss; no silent None sample; old random10% allowance kept only optional"
+      },
+      {
+        "id": "OB16",
+        "proposed_method": "test_private_observer_ob16",
+        "purpose": "old applicable prefix-lost/all405/pattern/rank attempted under source-known applicability; unchanged run delegated; missing application/error/survivor remains gap"
+      },
+      {
+        "id": "OB17",
+        "proposed_method": "test_private_observer_ob17",
+        "purpose": "all16 mutable span identities + frozen run/DRIVER/old19 service methods/old3params spans protected; no third tracked code file"
+      },
+      {
+        "id": "OB18",
+        "proposed_method": "test_private_observer_ob18",
+        "purpose": "actual metadata count loss vs transport truncation distinguished with trusted fixed owned helper byte/snapshot proof; no forged count-only closure"
+      }
+    ],
+    "OB17_override": "16 not stale14; fixed frozen inventories guard all names and subspans",
+    "not_allowed": [
+      "actual context provider/companion/observer or B0->B1/Cobs/Cmut generated-module materialization",
+      "class setUpClass/new real P06 setUp/render/build/generate/gofmt/Go/native or any observer process",
+      "running old19/Body6/service suites, other whole-file suites, full9/KIT/fullstrict/GATE",
+      "Source051/P09A/followup adoption/repin/official export or main merge",
+      "Source/producer/runtime/core/third tracked CODE file/ABI/CLI/loader/selector/DSL changes",
+      "HTTP/SUT/models/install, ms resume or Claude calls"
+    ]
+  },
+  "execution_note": "Go template strings and helper definitions may be written; actual materialization/execution needs later exact composed-slice permission. Synthetic FS fixtures are not generated modules or admission proof. Any unexecuted subgroup remains explicit.",
+  "mutants": {
+    "path": "tools/normgen/test_gen_door_lesson.py",
+    "run_calls_only": [
+      {
+        "method": "test_probes",
+        "first": 436,
+        "last": 436,
+        "source": "run(self.fresh, pr)",
+        "raw_sha256": "fdbab93b0d9c8583ff31ec4e26ec581fcb4dbdc8c78b0cb610ce5643398fe704",
+        "proposed_only_delta": "self._route_executor(same_mod,same_probes), preserving inputs and report shape"
+      },
+      {
+        "method": "test_mutants",
+        "first": 492,
+        "last": 492,
+        "source": "run(mod, pr)",
+        "raw_sha256": "0e9aa98ba9698d7864473e1eebddf86595854b534e09dae12a5c9ed710324e9c",
+        "proposed_only_delta": "self._route_executor(same_mod,same_probes), preserving inputs and report shape"
+      }
+    ],
+    "dictionary": {
+      "first": 456,
+      "last": 463,
+      "raw_sha256": "b13258aae79c59de6433f531c42364d3c351ff4d2c31136ac5efb87b5a3ec377",
+      "ast_sha256": "cf53907c5c0f245dd9ebd24a31fe3d29c4a37ed8b80a086155aa76a16213bd4e",
+      "names": [
+        "prefix-lost",
+        "all405",
+        "pattern",
+        "rank"
+      ]
+    },
+    "preserve": "Original dictionaries, source inputs, applicability predicates, complete-run->disagree->survivor logic unchanged. Scope only executor plumbing; source-applicable coverage cannot disappear after Model traversal changes.",
+    "requirement": "Each required mutant needs explicit source-distinguishing input under valid chosen context. If such witness not supplied, applicability remains UNPROVEN/GAP, not silently inapplicable/PASS; complete correct survivor remains failure. Compile/start/partial/context errors never kills."
+  },
+  "coverage": "nonzero individually identified applicable source obligations, zero mandatory misses; optional/random10% distinct; original4 mutation applicability/application/error/survivor not hidden as new skip",
+  "unclosed": [
+    "second-kind pass positive absent in manual pair, separate declared context required before any positive closure",
+    "current P02 admission/root/row-view-mark/rev/listing/profile/B1/N5/B,V UNKNOWN",
+    "partial E01/E09/S01/S02/S03, generated bodies/params and all real integration stages not closed by CODE18"
+  ],
+  "delivery": "normal child437 exact2files; code and selected Python report only, full before/after preservation maps and explicit unexecuted groups. tools validates this exact package and relays author; no second Architect confirmation unless extra blocks/protocol/source inputs are proposed. Foreign parent not selfmerged to main.",
+  "P09_source_flow": "independent current Source/followup pins remain outside tools437/d034 read scope; no implicit adoption",
+  "ms": "HELD",
+  "Claude_POLICY_timers_pauses": "unchanged",
+  "embedded_proposal_status_note": "Embedded canonical/protocol snapshots retain original proposal statuses and wording for provenance. This approval and its explicit overrides alone grant the initial CODE/Python18 scope; they do not grant later execution."
+}
