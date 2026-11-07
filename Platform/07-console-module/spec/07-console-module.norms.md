@@ -234,6 +234,10 @@ go, an empty document — `null`; the domain checks the schema on `PUT` («Imple
 The holder page (`/`, CSP, `/manifest`, `/mounts`, `/session`) is served by lesson P/10 (P/10-04): implementations serve the bytes of the module
 as they are; what the module calls in the mode `domain` is a property of the published module, not of the implementations (M11/8 N1.8 `module`).
 
+Both domain loaders collect the existing optional reader field `unread` by [P/10 N1.2a](../../10-domain-console/spec/10-domain-console.norms.md) and its `ServedView.unread` type in the [P/08 owner OpenAPI](../../08-domain/spec/08-domain.api.openapi.yaml). All pages absent means absent; any supplied value keeps the field, including an empty result. Union the literal Part strings without duplicates in first-observation and in-page order; a later absent or empty value never erases earlier parts. No parsing, trimming, padding, sorting or normalization is performed. This does not change individual response constraints or infer completeness from absence.
+
+Keep the first head's globals, the six projections, complete contested lists, required empty subsystem keys, opaque continuation and visibility unchanged. A valid `200` with a normal incomplete `complete`/`unread` state remains an ordinary observation with its owner values, not a transport error. The module may show the observed normal incompleteness privately; it adds no public event/field or client completeness flag and promises no snapshot. A real failed continuation still uses the existing `domain: null` path and private last-known/error state; the root-confirmation rule of cluster refresh stays unchanged.
+
 ---
 
 ## N2 The library contract

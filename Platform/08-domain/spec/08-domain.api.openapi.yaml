@@ -2769,6 +2769,10 @@ components:
               type: string
               minLength: 1
               description: Opaque next-page continuation of GET /domain (P/10 N1.2a); may resume within a part and is absent at the end. The encoding is implementation-chosen, not a public (part,last_member) grammar.
+            unread:
+              type: array
+              items:
+                $ref: '#/components/parameters/Part/schema'
             age: {type: number, minimum: 0, description: 'field of the door of lesson P/10: seconds since as_of by the wall clock of the domain console, one digit after the point (P/10 N1.2a; review analysis of stage B 8–10, № 22: M-7)'}
             trust: {description: 'P/08.1 N1.2a: {rev, root, book_seal}; fingerprint — chapter 8.2 N1.1'}
             knocking_count: {type: integer, minimum: 0, description: 'P/08.1 N1.4b.'}
