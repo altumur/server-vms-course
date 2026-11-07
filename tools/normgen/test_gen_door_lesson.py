@@ -733,6 +733,175 @@ class RouteServiceControls(unittest.TestCase):
                          self.results)
 
 
+class SchemaPositionControls(unittest.TestCase):
+    """Typed source-position neighbours, separate from the frozen route Model and inputs."""
+
+    def setUp(self):
+        from test_gen_door_bodies import SourceSchemaReader, SourceSchemaReaderControls, CheckingError
+        self.Reader, self.Error = SourceSchemaReader, CheckingError
+        self.fixture = SourceSchemaReaderControls("runTest")
+        self.fixture.setUp()
+        self.addCleanup(self.fixture.doCleanups)
+
+    def test_00_schema_map_array_and_escaped_pointer_neighbours(self):
+        f = self.fixture
+        f.schema({"$defs": {"a/b": {"type": "string"}, "~": {"type": "integer"},
+                            "": {"type": "boolean"}, "01": {"type": "string"}},
+                  "allOf": [{"type": "string", "minLength": 1}]})
+        for pointer, good, bad in (("/$defs/a~1b", "x", 1), ("/$defs/~0", 1, "x"),
+                                   ("/$defs/", True, 1), ("/$defs/01", "x", 1),
+                                   ("/allOf/0", "x", "")):
+            with self.subTest(pointer=pointer):
+                reader = f.reader({"$ref": "../data/target.schema.json#" + pointer})
+                validator = reader.validator_at(reader.source, "/components/schemas/Root")
+                self.assertTrue(validator.is_valid(good))
+                self.assertFalse(validator.is_valid(bad))
+
+    def test_01_bad_array_indices_escapes_and_fragments_are_errors(self):
+        f = self.fixture
+        f.schema({"allOf": [{"type": "string"}]})
+        for pointer in ("/allOf/01", "/allOf/+0", "/allOf/-", "/allOf/١", "/allOf/9", "/allOf/~2",
+                        "/%ff", "/%zz", "anchor"):
+            with self.subTest(pointer=pointer), self.assertRaises(self.Error):
+                f.reader({"$ref": "../data/target.schema.json#" + pointer})
+
+    def test_02_literal_ref_values_are_data_even_when_the_uri_is_unsafe(self):
+        f = self.fixture
+        literal = {"$ref": "https://not-a-resource.invalid/missing"}
+        for field, value in (("default", literal), ("example", literal), ("examples", [literal]),
+                             ("const", literal), ("enum", [literal])):
+            with self.subTest(field=field):
+                reader = f.reader({field: value})
+                self.assertEqual(reader.edges, {})
+                self.assertTrue(reader.validator_at(reader.source, "/components/schemas/Root").is_valid(literal))
+        source = f.api(components={"examples": {"E": {"value": literal}}, "schemas": {"Root": True}},
+                       paths={"/a": {"get": {"responses": {"200": {"description": "ok", "content": {
+                           "application/json": {"schema": True, "example": literal, "examples": {
+                               "E": {"value": literal}}}}}}}}})
+        self.assertEqual(self.Reader(f.root, source).edges, {})
+
+    def test_03_schema_of_a_property_named_ref_is_still_traversed(self):
+        f = self.fixture
+        f.schema({"$defs": {"S": {"type": "string"}}, "type": "object", "properties": {
+            "$ref": {"$ref": "#/$defs/S"}}})
+        reader = f.reader({"$ref": "../data/target.schema.json"})
+        validator = reader.validator_at(reader.source, "/components/schemas/Root")
+        self.assertTrue(validator.is_valid({"$ref": "x"}))
+        self.assertFalse(validator.is_valid({"$ref": 1}))
+        self.assertTrue(any(pointer == "/properties/$ref" for _, pointer, _, _ in reader.edges))
+
+    def test_04_schema_ref_siblings_keep_their_own_constraints(self):
+        f = self.fixture
+        f.schema({"type": "string"})
+        reader = f.reader({"$ref": "../data/target.schema.json", "minLength": 2})
+        validator = reader.validator_at(reader.source, "/components/schemas/Root")
+        self.assertTrue(validator.is_valid("ab"))
+        self.assertFalse(validator.is_valid("a"))
+
+    def test_05_schema_shaped_literal_data_is_not_a_schema_target(self):
+        f = self.fixture
+        f.schema({"default": {"type": "integer"}, "enum": [{"type": "integer"}]})
+        for pointer in ("/default", "/enum/0"):
+            with self.subTest(pointer=pointer), self.assertRaises(self.Error):
+                f.reader({"$ref": "../data/target.schema.json#" + pointer})
+
+    def test_06_json_cannot_replace_parameter_response_or_pathitem(self):
+        f = self.fixture
+        f.schema({"type": "string"})
+        ref = {"$ref": "../data/target.schema.json"}
+        # Each case is written and read separately: no later overwrite may vacuously replace an input.
+        for position in ("parameter", "response", "path"):
+            if position == "parameter":
+                source = f.api(components={"parameters": {"P": ref}})
+            elif position == "response":
+                source = f.api(components={"responses": {"R": ref}})
+            else:
+                source = f.api(paths={"/a": ref})
+            with self.subTest(position=position), self.assertRaises(self.Error):
+                self.Reader(f.root, source)
+
+    def test_07_openapi_object_kind_and_whole_document_are_preserved(self):
+        f = self.fixture
+        earlier = f.api("05-resource", components={"responses": {"R": {"description": "ok"}},
+                                                   "schemas": {"S": {"type": "string"}}})
+        reader = f.reader({"$ref": "../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/S"})
+        self.assertTrue(reader.validator_at(reader.source, "/components/schemas/Root").is_valid("x"))
+        for ref in ("../../05-resource/spec/05-resource.api.openapi.yaml", "../../05-resource/spec/05-resource.api.openapi.yaml#",
+                    "../../05-resource/spec/05-resource.api.openapi.yaml#/components/responses/R",
+                    "08-domain.api.openapi.yaml#/components/schemas/Root"):
+            with self.subTest(ref=ref), self.assertRaises(self.Error):
+                f.reader({"$ref": ref})
+
+    def test_08_local_parameter_reference_and_json_schema_parameter(self):
+        f = self.fixture
+        f.schema({"type": "string", "minLength": 2})
+        source = f.api(components={"parameters": {"P": {"in": "query", "name": "q", "schema": {
+            "$ref": "../data/target.schema.json"}}}}, paths={"/a": {"get": {
+                "parameters": [{"$ref": "#/components/parameters/P"}], "responses": {}}}})
+        reader = self.Reader(f.root, source)
+        prm = reader.document(source)["paths"]["/a"]["get"]["parameters"][0]
+        prm, base = reader.parameter(prm, source, ("OpA", "/a", "get"))
+        self.assertEqual(reader.schema_type_node(prm["schema"], base)["type"], "string")
+        validator = reader.parameter_validator("OpA", "query", "q", prm["schema"], base)
+        self.assertTrue(validator.is_valid("ab"))
+        self.assertFalse(validator.is_valid("a"))
+
+    def test_09_parameter_aliases_keep_both_operation_declarations(self):
+        f = self.fixture
+        f.schema({"type": "string", "minLength": 2})
+        prm = {"in": "query", "name": "q", "schema": {"$ref": "../data/target.schema.json"}}
+        source = f.api(components={"parameters": {"Shared": prm}},
+                       paths={route: {"get": {"parameters": [prm], "responses": {}}} for route in ("/a", "/b")})
+        reader = self.Reader(f.root, source)
+        for route in ("/a", "/b"):
+            node = reader.document(source)["paths"][route]["get"]["parameters"][0]
+            value, base = reader.parameter(node, source, ("Op" + route[1:], route, "get"))
+            validator = reader.parameter_validator("Op" + route[1:], "query", "q", value["schema"], base)
+            self.assertTrue(validator.is_valid("ab"))
+            self.assertFalse(validator.is_valid("a"))
+        positions = {ptr for (file, ptr, ref, _), _ in reader.edges.items() if file == source}
+        self.assertIn("/paths/~1a/get/parameters/0/schema", positions)
+        self.assertIn("/paths/~1b/get/parameters/0/schema", positions)
+
+    def test_10_missing_parameter_context_cannot_guess_a_source(self):
+        f = self.fixture
+        reader = f.reader()
+        with self.assertRaises(self.Error):
+            reader.parameter({"name": "q", "in": "query"}, reader.source, ("OpX", "/missing", "get"))
+        with self.assertRaises(self.Error):
+            reader.parameter_validator("OpX", "query", "q", {"type": "string"}, reader.source)
+
+    def test_11_extensions_are_opaque_until_a_typed_reference_enters_them(self):
+        f = self.fixture
+        source = f.api(schemas={"Root": {"$ref": "#/x-schema"}})
+        import yamlsub
+        doc = yamlsub.load(source.read_text(), source.name)
+        doc["x-schema"] = {"type": "string", "minLength": 1}
+        doc["x-ignored"] = {"$ref": "https://not-a-resource.invalid/ignored"}
+        f.write(str(source.relative_to(f.root)), doc, yaml=True)
+        reader = self.Reader(f.root, source)
+        validator = reader.validator_at(source, "/components/schemas/Root")
+        self.assertTrue(validator.is_valid("a"))
+        self.assertFalse(validator.is_valid(""))
+        self.assertFalse(any(ptr.startswith("/x-ignored") for _, ptr, _, _ in reader.edges))
+
+    def test_12_equal_nonalias_values_do_not_share_late_permissions(self):
+        f = self.fixture
+        source, ref = f.late()
+        import yamlsub
+        doc = yamlsub.load(source.read_text(), source.name)
+        doc["components"] = {"schemas": {"Bad": dict(ref)}}
+        f.write(str(source.relative_to(f.root)), doc, yaml=True)
+        with self.assertRaises(self.Error):
+            self.Reader(f.root, source)
+
+    def test_13_independent_schema_errors_are_not_false_verdicts(self):
+        f = self.fixture
+        for value in (None, 3, "integer", [True], {"type": 3}, {"minLength": -1}, {"$ref": False}):
+            with self.subTest(value=value), self.assertRaises(self.Error):
+                f.reader(value)
+
+
 for _lesson, _slug in LESSONS.items():
     _name = "DoorLesson_" + _slug
     globals()[_name] = type(_name, (DoorLessonBase, unittest.TestCase), {"LESSON": _lesson, "SLUG": _slug})
