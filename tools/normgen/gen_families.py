@@ -393,6 +393,21 @@ def load_family_doc(row, grammar):
     root = schema.root()
     if kind == "row" and (not isinstance(root, dict) or root.get("type") != "object"):
         raise GenError(f"{rel(schema_path)}: the root of a row family is an object")
+    defs = schema.doc.get("$defs", {}) if isinstance(schema.doc, dict) else {}
+    profiles = ("person_writer", "role_writer")
+    declared = isinstance(defs, dict) and any(name in defs for name in profiles)
+    if key == "domain/deleting/<name>" or declared:
+        if key != "domain/deleting/<name>" or kind != "row":
+            raise GenError(f"{key}: contextual writer profiles require their catalog row identity")
+        if not isinstance(defs, dict) or any(not isinstance(defs.get(name), dict) or
+                                           defs[name].get("type") != "object" for name in profiles):
+            raise GenError(f"{rel(schema_path)}: both ordinary local person_writer and role_writer are required")
+        person_name = schema.at("/$defs/common.person_name")
+        common_time = schema.at("/$defs/common.time")
+        if (not isinstance(defs.get("writer"), dict) or not isinstance(person_name, dict) or
+                person_name.get("type") != "string" or not isinstance(person_name.get("pattern"), str) or
+                not isinstance(common_time, dict) or common_time.get("x-time") is not True):
+            raise GenError(f"{rel(schema_path)}: contextual writer needs common writer and original name/time targets")
     words = set()
 
     def walk(x):
@@ -650,7 +665,8 @@ KIT_MD_DOC = """
 f := families.ByKey("platform/manifest/<sub>")            // the family of a catalog key template; families.All
 r := f.Judge(key, families.ItemsOf(items), families.Reader) // r.Verdict "ok" | "refused", r.Paths — JSON Pointers
 outcome := f.OutcomesFor(r.Paths, "admin")                   // the rows of <family>.outcomes.tsv that act at this reader
-w := f.JudgeItems(families.ItemsOf(items), families.Writer)  // before a write: the writer's strict notation
+w := f.Judge(key, families.ItemsOf(items), families.Writer)   // before a write: retain the concrete key
+// Keyless JudgeItems cannot prove person/role context; a contextual writer requires Judge.
 ```
 
 The reading is that of the V7 stack of the course: the codec of the items (`x-encoding` json|jcs, `x-codec`), layer 3
