@@ -15,7 +15,7 @@ byte, nothing is expanded. Four fields: `case`, `input` and `expect` — JSON te
 `servers: distinct` — only by the fields `place_by` of the set and `placeless` of a server below):
 - `default` — `placement.capacity.default` of the manifest (an integer ≥ 0);
 - `workers` — the suitable live workers: `capacity` (an integer or `null` — the capacity is not named) and `free` (free);
-- `waiting` — Σ of the weights of the waiting ones, `groups` — the number of groups for which there is no place anywhere;
+- `waiting` — the exact nonnegative integer sum of the weights of the waiting ones, `groups` — the number of groups for which there is no place anywhere;
 - `servers` — `{<server>: {want, live, room, base?, numbers?, door?, placeless?, drained?, quiet?}}`: `want` — the order row, `live` — live(s)
   by the heartbeats (with the base and the victim), `room` — `room.<sub>`, `base` — the base `-1` is alive (no field — `true`), `drained` —
   a drain or a decommission, `quiet` — «failed to raise» in the window `RAISE_QUIET`. `numbers` — the numbers of the live processes of the role by the heartbeats
@@ -55,7 +55,7 @@ type (numbers — integers ≥ 0, `capacity` — an integer ≥ 0 or `null`, `ba
 alphabet](../../../common/contracts/labels.md)); `want` outside 1…99; `live` outside 0…99; `door` — not a list or `null`, a number in it outside 2…99 or a repeat;
 the name of a server not by the grammar of a server (P/02.4 N1.2); two sets with one canonical writing; `placeless` at a server without `place_by` of the set;
 `numbers` — not a list of integers 1…99, with a repeat or not `live` of them. An input by form with an inadmissible metric is not a refusal: the capacity of a heartbeat not as a number (P/04 N1.3) — the worker accepts
-no units and does not enter `workers`; an unreadable door row — `door: null`. An integer — by the exact decimal value of the notation, as `x-integer` (LAYERS §3): `1.0`, `1e0` — 1; `1.5`, a boolean, a string, a number outside binary64 — not an integer; the number `n` in the name of a worker is a lexeme of the string, without a leading zero (C04-VECTOR-INT-VALUE-01). The rest is outside the vector.
+no units and does not enter `workers`; an unreadable door row — `door: null`. For fields other than the aggregate waiting/sets[].waiting, an integer is by the exact decimal value of the notation, as `x-integer` (LAYERS §3): `1.0`, `1e0` — 1; `1.5`, a boolean, a string, a number outside binary64 — not an integer; the number `n` in the name of a worker is a lexeme of the string, without a leading zero (C04-VECTOR-INT-VALUE-01). The rest is outside the vector.
 
 ## Who executes
 
@@ -65,3 +65,5 @@ Who executes it is the controller (`04-controller`: the shortage, `in_flight`, `
 
 The withdrawal by the deadline (R27),
 a number above want (R28) and the shrinking — by time, the steps of [the acceptance of P/04](../../acceptance/README.md) (sc. 14–17; analysis of the review of stage B 3–5, № 17).
+
+The aggregate waiting/sets[].waiting keeps integer-by-value spellings, but has no common.uint53 ceiling or binary64/int64 conversion. Compute sums and ceil division exactly; individual weight/capacity and all other input domains remain unchanged. The separate adr15-waiting-max53/at53/odd53 inputs are 2^53-1, 2^53 and 2^53+1; with per=2^52 they need two, two and three processes. These are added rows, never a reinterpretation of old cases.

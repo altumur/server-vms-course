@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "folders": {
-   "description": "the ids of the folders whose membership includes the unit of the key, without repeats; the writer writes from one to FOLDERS_PER_UNIT_MAX; there is no empty list: the row is removed (N1.1)",
+   "description": "the ids of the folders whose membership includes the unit of the key, without repeats; reader and writer share the range from one to FOLDERS_PER_UNIT_MAX from $defs.writer; there is no empty list: the row is removed (N1.1)",
    "type": "array",
    "items": {
     "description": "the folder id (N1.1)",
@@ -20,6 +20,9 @@
  "additionalProperties": false,
  "required": [
   "folders"
+ ],
+ "allOf": [
+  {"$ref": "#/$defs/writer"}
  ],
  "$defs": {
   "common.book_missing": {

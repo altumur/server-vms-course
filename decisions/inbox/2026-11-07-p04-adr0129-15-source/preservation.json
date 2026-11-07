@@ -1,0 +1,1631 @@
+{
+  "base": "cc32f13a813f4cfc7dab3a0b6fa2abf918aa45f2",
+  "scope_paths": 132,
+  "allowed_paths": 46,
+  "payload_paths": [
+    "Platform/04-controller/acceptance/README.md",
+    "Platform/04-controller/acceptance/scenarios.tsv",
+    "Platform/04-controller/acceptance/seams.tsv",
+    "Platform/04-controller/data/controller-pass.layers.tsv",
+    "Platform/04-controller/data/controller-pass.schema.json",
+    "Platform/04-controller/data/placement-intent.schema.json",
+    "Platform/04-controller/data/placement.schema.json",
+    "Platform/04-controller/data/snapshot-unplaced.schema.json",
+    "Platform/04-controller/data/snapshot.schema.json",
+    "Platform/04-controller/data/want.schema.json",
+    "Platform/04-controller/forms/README.md",
+    "Platform/04-controller/forms/daemon-flags.tsv",
+    "Platform/04-controller/forms/refusals.tsv",
+    "Platform/04-controller/forms/runtime-constants.tsv",
+    "Platform/04-controller/forms/slot-fate.tsv",
+    "Platform/04-controller/forms/slot-release.tsv",
+    "Platform/04-controller/forms/stages.tsv",
+    "Platform/04-controller/lifecycle.md",
+    "Platform/04-controller/ru/04-controller.md",
+    "Platform/04-controller/ru/acceptance/README.md",
+    "Platform/04-controller/ru/forms/README.md",
+    "Platform/04-controller/ru/lifecycle.md",
+    "Platform/04-controller/ru/spec/04-controller.README.md",
+    "Platform/04-controller/ru/spec/04-controller.norms.md",
+    "Platform/04-controller/ru/vectors/order/README.md",
+    "Platform/04-controller/spec/04-controller.README.md",
+    "Platform/04-controller/spec/04-controller.norms.md",
+    "Platform/04-controller/vectors/order/README.md",
+    "Platform/04-controller/vectors/order/cases.tsv",
+    "Platform/06-console/ru/spec/06.5-console.norms.md",
+    "Platform/06-console/spec/06.5-console.norms.md",
+    "Platform/common/contracts/pool.md",
+    "Platform/common/contracts/turn.md",
+    "Platform/common/ru/contracts/pool.md",
+    "Platform/common/ru/vectors/pool/README.md",
+    "Platform/common/vectors/family-read/04.tsv",
+    "Platform/common/vectors/pool/README.md",
+    "Platform/common/vectors/pool/cases.tsv",
+    "decisions/adr-norms.tsv",
+    "decisions/journal/platform/04-controller/corrections.tsv",
+    "ХОД-Спецификация.md"
+  ],
+  "payload_files": 41,
+  "protected": [
+    {
+      "path": "Platform/04-controller/README.md",
+      "git_blob": "7fa3d6ee5e9a0d0521c730047441ac9a151869eb",
+      "sha256": "a8554d258ca6c086d242662bc8d247b9b9850c5cc309ad4a2901a9901be4d949"
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.outcomes.tsv",
+      "git_blob": "1053e342df17c5dea7ce06996c7a5499ffd37f45",
+      "sha256": "8a5c41cd7c1227f95f74d0b1586c12cf1423d3c8681c9ef3dfe2289d165e3b44"
+    },
+    {
+      "path": "Platform/04-controller/data/decommission-pending.layers.tsv",
+      "git_blob": "d939f9d4cd9dc78ac455187c8b20ae5c483d2ccf",
+      "sha256": "e269f48ff667ee4e9860a02b4b87c0217d4774fad4b1a1373cc522ef06ce2438"
+    },
+    {
+      "path": "Platform/04-controller/data/decommission-pending.outcomes.tsv",
+      "git_blob": "2e0ea95174d8932e81f2314180683c451ae76971",
+      "sha256": "67f3fdfc5cde82ba8902dea647b2679195789458e99edc22b76f68d5a9495fd6"
+    },
+    {
+      "path": "Platform/04-controller/data/decommission-pending.schema.json",
+      "git_blob": "5e4ef1c3363e9afdd66d24e7bf3fd19b125814a5",
+      "sha256": "3f892c03001d0babefec172292d5ad56bbde5988629d8f229e873df07ef19fb9"
+    },
+    {
+      "path": "Platform/04-controller/data/decommissioned.layers.tsv",
+      "git_blob": "f149bdcf8abae21ddfacd55467a3362cc8cbca1b",
+      "sha256": "c9e40b813555ba775a766608a1c40dc7aa80c6a2c735f3fd0cd194c519d2bf0b"
+    },
+    {
+      "path": "Platform/04-controller/data/decommissioned.outcomes.tsv",
+      "git_blob": "9d5e2493ce9551f07cc58a0e5df04e151f8cc7f5",
+      "sha256": "c5c15deda5329d93813b34783b47e75bfc5550be52688f94a325e2e9785423bc"
+    },
+    {
+      "path": "Platform/04-controller/data/decommissioned.schema.json",
+      "git_blob": "ed718e95ca8925236b910e5254cdc30ac7dfc6e0",
+      "sha256": "329636b11f279e7f88f63681c2fa5c88a5820587f491350d1ccad17f99768ff7"
+    },
+    {
+      "path": "Platform/04-controller/data/placement-intent.layers.tsv",
+      "git_blob": "726fd5e077e3cdb26c86dce280f3a84ee6635379",
+      "sha256": "cb51e1341ef0a88a2cd5cf3c4520e7140535c13b6d32f2f1d20b557907a2f3a2"
+    },
+    {
+      "path": "Platform/04-controller/data/placement-intent.outcomes.tsv",
+      "git_blob": "04d9080823afe6b3f5af48fdffb7ea5571ed2df0",
+      "sha256": "cbd829c5f3b1f6ef1fd593ae4d0fe680e186170aaac962b0248801b28e3537bd"
+    },
+    {
+      "path": "Platform/04-controller/data/placement-turn.layers.tsv",
+      "git_blob": "ebb845533bcbfc8a753de2663fdf0364c8df8d86",
+      "sha256": "09818ad146198555f19467509bd4e0b90f8a9cf02b9cd56507b772cceb3fcf7d"
+    },
+    {
+      "path": "Platform/04-controller/data/placement-turn.outcomes.tsv",
+      "git_blob": "9bf283bf6d960f13531de1dad388cd9f8dd9f0e7",
+      "sha256": "471182e9f7312f742e61d28f3f5af9b2af3975f73a9a55c0c087515c9fc38bd2"
+    },
+    {
+      "path": "Platform/04-controller/data/placement-turn.schema.json",
+      "git_blob": "49d00af55316d2b708e7d7cb1cf9ffc5109eb425",
+      "sha256": "d12a279b7b8f37f95d2a58ebf9cf4e566c5e64c49a4d059de16b243daf70315c"
+    },
+    {
+      "path": "Platform/04-controller/data/placement.layers.tsv",
+      "git_blob": "fa88440f9a847b1f21bc627048e126ca083004c9",
+      "sha256": "5f5e570dc3ca1b40d2852b1002372d40e2f959eb3ffa8c166763f357822bfff7"
+    },
+    {
+      "path": "Platform/04-controller/data/placement.outcomes.tsv",
+      "git_blob": "7e00ee53d258d6c3c851f4361ae4ed80f7a90b32",
+      "sha256": "db9f317564300b111cce9d29cb3b1248055a64ac6c0f284a8d03c7ebd32f1c40"
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot-tables.layers.tsv",
+      "git_blob": "8f161e37965d264bd4c1173b6e21c55f8f97eed2",
+      "sha256": "253bb81bc74c93194597a3caf7f724ce300b28f9b05ef68223ca1cb451e0d3d7"
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot-tables.outcomes.tsv",
+      "git_blob": "5c462add8552008997fc7cbbd4045f7db33dffc4",
+      "sha256": "c98887c3d2b30f356a2fe7d6fdfa71fdb5513acd9d7d9be26512b5eef34082c2"
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot-tables.schema.json",
+      "git_blob": "405d7fb390e314ff040a6cd0c445e332e73d6980",
+      "sha256": "fda03a7b292cd79367d07f4e738cd17dddc88c9b2eea677ce4187f1091f5a2e6"
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot-unplaced.layers.tsv",
+      "git_blob": "84d8e40cc63100919b215a0334da18c0f5cc2498",
+      "sha256": "8c9bf8f0f72d30f91868af95616a305a6333b2c94988155b39bc76ee0bffd4d3"
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot-unplaced.outcomes.tsv",
+      "git_blob": "6e278e4f75e6edb366511eccf2b1479d8ffeebd8",
+      "sha256": "c13bb3328e697c825cbfe48ede741bee3865d89feee6ced872ccf771ef753d21"
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot.layers.tsv",
+      "git_blob": "84d8e40cc63100919b215a0334da18c0f5cc2498",
+      "sha256": "8c9bf8f0f72d30f91868af95616a305a6333b2c94988155b39bc76ee0bffd4d3"
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot.outcomes.tsv",
+      "git_blob": "5631e3e017bc54ee76b74aae86b9e2d683932650",
+      "sha256": "4b0653f336b1fb0cbff5d4b1196557c029124cfdbdae8ae2b4880d265574dc34"
+    },
+    {
+      "path": "Platform/04-controller/data/want.layers.tsv",
+      "git_blob": "a6235a21402f77d52c8f0fd5920b1758db8c955c",
+      "sha256": "a81b0185dd79af9bf5845546bab9dba55d6c4fccd469ee39166c6c45c8b23fd1"
+    },
+    {
+      "path": "Platform/04-controller/data/want.outcomes.tsv",
+      "git_blob": "cc6105abde23a9efbbe4cbc4b8b6af9b70d0ab73",
+      "sha256": "edf482f71d6b5329590f83f8f47c9e508a6efaf8cc885f12d67f278a2f380bdf"
+    },
+    {
+      "path": "Platform/04-controller/data/workers.layers.tsv",
+      "git_blob": "6f208af8ddaafdc0e84a197958347773034fbfab",
+      "sha256": "903cd59667d2924b7130b12a6233b01d2c7c9d1bca2f66a928d682154c1c8159"
+    },
+    {
+      "path": "Platform/04-controller/data/workers.outcomes.tsv",
+      "git_blob": "f2267f79a7fa0e1a071d672d75a49dad3264db87",
+      "sha256": "ed9ebef0568e66b2bbb221a53d4836d1074b2b7ecd0a949c0f3c4f0e4f8aff09"
+    },
+    {
+      "path": "Platform/04-controller/data/workers.schema.json",
+      "git_blob": "d0c94c0ec44f9a5073b22592a05fd99ea697eff3",
+      "sha256": "80cc43a11a543b2a8dbcdd09c7ae430d491d627240f7ba44dfe162f59de2864d"
+    },
+    {
+      "path": "Platform/04-controller/ru/README.md",
+      "git_blob": "f22fc019334988dd2bffb71260cf54dfeed24ff3",
+      "sha256": "9f58f066b1331a52618ccc68ff1abd375e96295c6aaa6162ebabb4752abbfaa4"
+    },
+    {
+      "path": "Platform/04-controller/ru/vectors/near-of/README.md",
+      "git_blob": "c35b520b12d480594911cdb0cc727c3a2f9ab3e8",
+      "sha256": "cb69beeb258ddac720d05294f9a3491f995224a36ca63741991c76da80f3e8a3"
+    },
+    {
+      "path": "Platform/04-controller/ru/vectors/shrink-allowed/README.md",
+      "git_blob": "1eaee1f019d4df0fe82531d48c90f7641a580d42",
+      "sha256": "ce49360335ce5c70a9dec4add634bd9d2e82aaef5cf74d5e98fc82744024551b"
+    },
+    {
+      "path": "Platform/04-controller/ru/vectors/shrink-victim/README.md",
+      "git_blob": "e8cdc9bd3cddaf66bfd4a25fa2e2ddfd558df34f",
+      "sha256": "2804e27fd34d6ecd56b39efed406c28e1ef349fdba94a4f060e7fd5eda7591b0"
+    },
+    {
+      "path": "Platform/04-controller/vectors/near-of/README.md",
+      "git_blob": "84b895c52db3e3392ceb5a62a2c4308803cbe5a0",
+      "sha256": "3ea8245f9c072eb6f393578c6b57ed5a7869f371b23a60785637ba73d9d0c41b"
+    },
+    {
+      "path": "Platform/04-controller/vectors/near-of/cases.tsv",
+      "git_blob": "e1fbfa455f984e195714fa5257f2724292e78757",
+      "sha256": "290c58da000f108b845260ecf0702822efc7c48d775158e11c1929aaebee6e96"
+    },
+    {
+      "path": "Platform/04-controller/vectors/shrink-allowed/README.md",
+      "git_blob": "27caaa9a207a69fa010e7b8cde0cc1130ee41087",
+      "sha256": "b68e987c6f19a3ee05c48c71d52c37d28690b38de20772802439b84c48404c31"
+    },
+    {
+      "path": "Platform/04-controller/vectors/shrink-allowed/cases.tsv",
+      "git_blob": "4f2e876417492addbaca78d8b02e70002b336611",
+      "sha256": "1a0942a0e7f1e25de0b270f91894ff967b3d292b2df8dbe97eb8737a6a6a3748"
+    },
+    {
+      "path": "Platform/04-controller/vectors/shrink-victim/README.md",
+      "git_blob": "212ac705e3fbdf794754d0dd4e07aa0c55270d01",
+      "sha256": "3222455825fce3b934bc7b92224358e9d9117de19200bcb99dd8e7179a5fb3fa"
+    },
+    {
+      "path": "Platform/04-controller/vectors/shrink-victim/cases.tsv",
+      "git_blob": "6807ecaa4a5a1b51635af683fcdb146355b76d41",
+      "sha256": "77fa7dc3eeb71f95942e3dd76ac5feb1df7a85e34796150c8834a1aea87332d2"
+    },
+    {
+      "path": "Platform/common/contracts/env-file.md",
+      "git_blob": "fe3fe5358ac7837b40e5624ae179cc53a42ac6b5",
+      "sha256": "f4f2eb597bb94c6efeb1a4547fc14ba12af1740d1cd929cd555574b01bb49bfc"
+    },
+    {
+      "path": "Platform/common/contracts/observation.md",
+      "git_blob": "0108457b6f464a0b39c143704078fbbb83298647",
+      "sha256": "875c0b97b417f43b8eac44ff5ca7c64c798abf9d1874008effab0d00464c7ae5"
+    },
+    {
+      "path": "Platform/common/contracts/row-check.md",
+      "git_blob": "d30a9e17a12b42a0428f689e98567a8cc062b336",
+      "sha256": "ba7dc593f739445be2a93aa0a9be08b2bf4bec96d85302b27f25c99220737d47"
+    },
+    {
+      "path": "Platform/common/contracts/slot.md",
+      "git_blob": "2ff25e0b9e8e1f12be41f2d8aa123e6c32676f27",
+      "sha256": "cee4bedcb4035960f8da8728d21c8305a855cc2dae22b6488db099808bd05359"
+    },
+    {
+      "path": "Platform/common/ru/contracts/env-file.md",
+      "git_blob": "4286b3c25c4b8d70612bb70dba1935d12be1481c",
+      "sha256": "f711087f74d5c24302e2c11f13e118a88adc26f0a1b35052bd5c075ae4ca4d5c"
+    },
+    {
+      "path": "Platform/common/ru/contracts/observation.md",
+      "git_blob": "3d63cd414eb6410cfcd9243a131cb441a5bb0234",
+      "sha256": "b1dd95e5826e6c50ca8ef4e11af5ff3efd53240e56754e533f9e00f448d0b71b"
+    },
+    {
+      "path": "Platform/common/ru/contracts/row-check.md",
+      "git_blob": "24ced543a780f02baaf3c69a0a899c54ee1d5f3a",
+      "sha256": "c0d5424423cd7f87eb273bb865aa8ff6ac2326e369fb0066864f134a1f86bd45"
+    },
+    {
+      "path": "Platform/common/ru/contracts/slot.md",
+      "git_blob": "aafa6bc8bc1a4a11debf951964545da98b5c5a86",
+      "sha256": "315c40729b43f8336be808f661e08fb98c0f0ceb4f7f342866e9af5f2b3b83da"
+    },
+    {
+      "path": "Platform/common/ru/vectors/row-check/README.md",
+      "git_blob": "c38c0e641bd4af68a0d63172174bd6231a8f3c1a",
+      "sha256": "6cc55d26af732fae91714a34d487c2ea491b1c5180c60ab10237372af6408e50"
+    },
+    {
+      "path": "Platform/common/ru/vectors/slot/README.md",
+      "git_blob": "0b30adac67cbdd85a47cda3c1a05a6cecac3a896",
+      "sha256": "3cd4ecb2ea49844d7c0f7b5f0f2a99d234b5f7771229ee4dd8934d3b357e3cd6"
+    },
+    {
+      "path": "Platform/common/vectors/family-read/03.tsv",
+      "git_blob": "cb985d60cfcf44bf49a38e90f73e7d9c7f0cd9ca",
+      "sha256": "a05edb9bc21b7aed00e0a93919bd609c92cf78b7964b6376fc6be6090cf47c34"
+    },
+    {
+      "path": "Platform/common/vectors/row-check/README.md",
+      "git_blob": "f2c0d672178e5c5b6e7d93a21cd73d6a6fbe291e",
+      "sha256": "c8c78fc07fed45a9058e74f8502308f11a44e2dc84bb08d7336f7fd673584d4e"
+    },
+    {
+      "path": "Platform/common/vectors/row-check/state.tsv",
+      "git_blob": "1f5b197ecd250997388798f587a7ba9e2fe7714b",
+      "sha256": "c03f8e64f3b542189ec4cf13bd833624915a295797850988276a94b0cf77861d"
+    },
+    {
+      "path": "Platform/common/vectors/slot/README.md",
+      "git_blob": "e108537ff20462730237d28e225d3506dcbc426b",
+      "sha256": "31162f0871b81c5428e0bafbde50b4ae9b60d1b57127db81674a27e3178ef260"
+    },
+    {
+      "path": "Platform/common/vectors/slot/cases.tsv",
+      "git_blob": "9766959a15e88d1b961ac50315b40b401f70aab6",
+      "sha256": "0331ea7ac3ff1b56eb3e35f5dfd70ff8acdcd8fdb193498c9814669f27e26657"
+    },
+    {
+      "path": "Platform/common/ru/contracts/turn.md",
+      "git_blob": "83de5f27cc8f86168736904c2771302bc3b96024",
+      "sha256": "c4bd03c58dc0bc1037e7b604e68cb94a148588c720c272f56fa974cff9574169"
+    },
+    {
+      "path": "Platform/common/data/common.schema.json",
+      "git_blob": "4686f8f63039eed57bc5432e5716b04aee6acc97",
+      "sha256": "2dc6559d1bde3ec161243ad113ef447d0e709532c57ac75ad2447c3aa2c681af"
+    },
+    {
+      "path": "Platform/common/data/codec.tsv",
+      "git_blob": "15a311ea85309baee10de7538466ac16fb2c8751",
+      "sha256": "9b64b59cfb7e89ca21771d5dc1ea6ebd8bade7b7fe15df4e43e7cb8fcadda02e"
+    },
+    {
+      "path": "Platform/common/data/catalog.tsv",
+      "git_blob": "3fbcf46e30b38058115a076c3b8ea6ce74857cab",
+      "sha256": "f109b87bb5837eb8f8fac8cf0d4caca61779493d36731b76cf6276d3d48cdc4f"
+    },
+    {
+      "path": "Platform/common/vectors/consumers.tsv",
+      "git_blob": "7527e24530463fb6d7e8c3638f0143f57196e7eb",
+      "sha256": "ba7987d2750f43805dd9d31d79e27f938745dd8e7bba666e1288d935925cb486"
+    },
+    {
+      "path": "Platform/common/vectors/wire.tsv",
+      "git_blob": "63d9950c6bc211e3f32b2985389548be855ef591",
+      "sha256": "b123b2c06e8a965228000375b4d6bd8ce74e5b501713aac6a530617a08ac1615"
+    },
+    {
+      "path": "Platform/common/vectors/family-read/README.md",
+      "git_blob": "387ca9a530357255b417f4fe9eb5ad14a926b7d2",
+      "sha256": "ddf17f9b4a6f9292a2f0391d6e4020a90a5acab49e29bdcf10a5180ebfb99b33"
+    },
+    {
+      "path": "Platform/common/ru/vectors/family-read/README.md",
+      "git_blob": "34061d39041b72b388aa173ca6cf96773c69b603",
+      "sha256": "79f6265e27c962b7a20e75ca84554b9b6582f3f6b2d11de34174708d50d4bea4"
+    },
+    {
+      "path": "Platform/common/contracts/slot-name.md",
+      "git_blob": "e601129d314e4b025cd4836a6143ef8b9b7c367d",
+      "sha256": "a986f21638fdbe56c74249dae9495bff0fe695c3934536d1fe5a93e134a1293b"
+    },
+    {
+      "path": "Platform/common/contracts/object-client.md",
+      "git_blob": "366bf81b324f307ab0c3fec0bd18c6e419ea0e56",
+      "sha256": "45d0eab5f974fc68b0e3560e46f871f52e736eb61329c6068c2740dfbb0d9ac5"
+    },
+    {
+      "path": "Platform/common/acceptance/README.md",
+      "git_blob": "8279b14b17303245527d1b3dd2322c99ec3ba912",
+      "sha256": "e3e25b4ce35cff4539108762ad343664248e7634c6d33acac33610669bdc1646"
+    },
+    {
+      "path": "Platform/common/contracts/labels.md",
+      "git_blob": "eddb80a9430522ce54f6f2023419e9c808fa18aa",
+      "sha256": "de410b775dfe8268ba997c9b28246368e609c1f4194551c701872ee3af5f0cfd"
+    },
+    {
+      "path": "Platform/01-store/forms/runtime-constants.tsv",
+      "git_blob": "54a936e06939ef4e23fd14c6b134d4987d560e3a",
+      "sha256": "0bb59d5b17f30a6bbb4eb6267987712b5b20d7158d8f0fd718269329cb068ee4"
+    },
+    {
+      "path": "Platform/01-store/forms/daemon-flags.tsv",
+      "git_blob": "f478b56ef35a93685c1711444762922e6a432f26",
+      "sha256": "bca631d4f0e702d65da5e573c9908acee0519666d57c0db5cdb2f7cf94325932"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "git_blob": "2375adc37f4af9889d2d8538288ffca080526e11",
+      "sha256": "2b5ce1f73fdbf269581465430a2a9104c4247ac3912cddc8e4f3d75b9b74b9b3"
+    },
+    {
+      "path": "Platform/02-installer/spec/02.1-installer.norms.md",
+      "git_blob": "26034b2202aac9bdda684b1bff9dfa4a4f59c38d",
+      "sha256": "e0b1899ca67cbf44e1307a59bffa7b3016ac9b4150e8517377a1a30ea096b960"
+    },
+    {
+      "path": "Platform/02-installer/spec/02.4-installer.norms.md",
+      "git_blob": "76d52e338d435737c532571ebab20dc4bfb096a3",
+      "sha256": "7aae92312ef8dcbc36ea59b83e20120ab1f97c7d34da40e6bf5ac073a27f5560"
+    },
+    {
+      "path": "Platform/03-worker/forms/runtime-constants.tsv",
+      "git_blob": "c8c47deb1c16621b978680f91549514a26684f5e",
+      "sha256": "f1763195244e0e751579d8c4666f5c8b9fa8adf1f4dd5094356bad63eb118437"
+    },
+    {
+      "path": "Platform/03-worker/data/slots.schema.json",
+      "git_blob": "c79f908c6e97411d6832a2ae2889e2e858d42e54",
+      "sha256": "9c7bfe349be58577ae45248fb03b42242f3a5b105fdcc4a3684c81952d073525"
+    },
+    {
+      "path": "Platform/03-worker/data/holds.schema.json",
+      "git_blob": "0635e402f52c3c04e7b5e7d249e9b15997e6e42f",
+      "sha256": "e741ecc116af16744ee7da32065feb4a5245e212ed9cb6bfe9db8c2fa379c9f5"
+    },
+    {
+      "path": "Platform/05-resource/spec/05-resource.norms.md",
+      "git_blob": "715c5c397c4229bfbdeeea8136f4361e58068326",
+      "sha256": "1fdca0553dc1d3f518de22c3128af90ed192564f9e3d2b7cbf4dc6e9b160328a"
+    },
+    {
+      "path": "Platform/05-resource/forms/daemon-flags.tsv",
+      "git_blob": "58b2ebd1c4d655888f695f1e3ce8b117c786a0d8",
+      "sha256": "d34c2325c6294e1e8eef21bfbb0b46be88af0f5f240a4302d21560ccffbcf618"
+    },
+    {
+      "path": "Platform/06-console/spec/06-console.api.openapi.yaml",
+      "git_blob": "af4f10fdd8a9641f547925d33090c0ec918459cf",
+      "sha256": "79cb9d28884f0546f6c190246d516b7a615772e32ab4dcf1706ad957657bbf23"
+    },
+    {
+      "path": "Platform/06-console/spec/06.1-console.norms.md",
+      "git_blob": "770926e93068991160072e54f068ce6b2fc6c138",
+      "sha256": "3c21bb056c54e8189a129b31cdb30849d796af25396d9ddbe8e8f94c08eeaecb"
+    },
+    {
+      "path": "Platform/06-console/spec/06.6-console.norms.md",
+      "git_blob": "530e7f4d7797ef6f66b5072cb7039ea906c455f7",
+      "sha256": "8546d663f9e56d4bb6803d0a29cb52a6b44cded90d9e1487cb56c29474571c5f"
+    },
+    {
+      "path": "Platform/06-console/acceptance/5/README.md",
+      "git_blob": "8b331acaf6864bdaa73329b14090d04069a0bc4e",
+      "sha256": "2607228b18819f02fdf73ce0f0bc81913a0d0df2ff9c443c01dc45cbfe307fd7"
+    },
+    {
+      "path": "Platform/06-console/acceptance/5/scenarios.tsv",
+      "git_blob": "618d977e2620207e9c2696284e06a2bdfae90f8c",
+      "sha256": "c8dc6bb5102de80ec5dbabb85bbbbc8a5ff6a5c8c507c8fa58b145b41ab9a873"
+    },
+    {
+      "path": "Platform/08-domain/forms/runtime-constants.tsv",
+      "git_blob": "b52a0117a252abfa085e31de2d5a0c770e65bbe5",
+      "sha256": "cc1d063be8e9c0c9f0c9e02ce0660f2ec6b221902ad89e6430281869c90d7477"
+    },
+    {
+      "path": "Platform/09-agent/forms/runtime-constants.tsv",
+      "git_blob": "8aabb486d96a683bd5a3294736d8b0bc1ca6015b",
+      "sha256": "566b085dfb92c632b22cc329687d18e88fb9d620d20f83f7a9cc35c88698399d"
+    },
+    {
+      "path": "tools/normgen/test_gen_flags_inputs.py",
+      "git_blob": "ec9684569044a8a7a0bb5d9f5b2632f311c35791",
+      "sha256": "ae8599ce70120ade34bdc6eb0bde3035bd336ac8511678f1be6f0b3c8bba2bf9"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/check_constants.py",
+      "git_blob": "eb86e8ab53d2211081e7b54ba24f778c2d274c95",
+      "sha256": "85e07be713739917da9104d236cdb5d91690b7d35d4a49ac38436fcb95def2f0"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/spec.py",
+      "git_blob": "7712c7dc3d5b80b2182fcbe5229654b0e4ec3729",
+      "sha256": "7f55d64339554f1616037ed4d679c814de64652edd012ea58555c594fe132c71"
+    },
+    {
+      "path": "tools/normgen/gen_families.py",
+      "git_blob": "5abd78df719c3b15fe23954cebf5bf189d20b3e5",
+      "sha256": "b61bf4992a30dbff5f0acd1364af8e393868449ca80acb674102aeb3228d218b"
+    },
+    {
+      "path": "tools/normgen/family_judge.py",
+      "git_blob": "4fb023a1ba6bd5a73e888997424c6f86c11a9332",
+      "sha256": "3b27e31209eb78588707d2fbee105abf0158d546930267b129354e96fd0867b1"
+    }
+  ],
+  "protected_count": 86,
+  "common15_protected": true,
+  "schema_pointer_changes": [
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/$defs/writer",
+      "before": {
+        "required": [
+          "expired_kept",
+          "snapshot_state_garbled",
+          "state_swept_total"
+        ]
+      },
+      "after": {
+        "absent": true
+      }
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/at/description",
+      "before": "the moment of the end of the pass",
+      "after": "Wall time when this cycle control part ended; frozen before snapshot publication, not the final object put time."
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/expired_kept/description",
+      "before": "manual rows retained after ends removed them; required for the writer, zero when none",
+      "after": "Manual rows retained after ends removed them; required nonnegative count for current reader and writer, zero when none."
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/failures/description",
+      "before": {
+        "absent": true
+      },
+      "after": "Independent control-step failures of this cycle; snapshot publication outcomes do not increment this field."
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/last_success/description",
+      "before": "the moment of the end of the last successful pass",
+      "after": "Last successful control-part completion time, unchanged by a later snapshot publication failure."
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/ok/description",
+      "before": "true — the pass reached the end, all inputs were read and no write was refused; otherwise false",
+      "after": "The control part completed with its confirmed inputs/writes and no control-step failure; snapshot outcomes are recorded separately."
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/seconds/description",
+      "before": "the duration of the pass",
+      "after": "Duration of this cycle control part only, excluding snapshot and final-report publications."
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/short/items/additionalProperties",
+      "before": false,
+      "after": {
+        "$ref": "#/$defs/count",
+        "description": "An own counter of the short element; standard properties keep their declared forms."
+      }
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/short/items/properties/units/$ref",
+      "before": "#/$defs/count",
+      "after": {
+        "absent": true
+      }
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/short/items/properties/units/description",
+      "before": "waiting units of weight",
+      "after": "Exact nonnegative sum of waiting unit weights, in integer JSON notation, without an upper common.uint53 bound. Preserve the whole serialized-report limit; never round or saturate through binary64/int64 (P/04-R008)."
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/short/items/properties/units/minimum",
+      "before": {
+        "absent": true
+      },
+      "after": 0
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/short/items/properties/units/type",
+      "before": {
+        "absent": true
+      },
+      "after": "integer"
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/short/items/properties/units/x-integer",
+      "before": {
+        "absent": true
+      },
+      "after": true
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/short/items/properties/units/x-whole",
+      "before": {
+        "absent": true
+      },
+      "after": true
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/snapshot_rows_garbled/description",
+      "before": {
+        "absent": true
+      },
+      "after": "Unreadable snapshot fields omitted by unit/table publications of this same cycle; reset only for the next cycle after this final report."
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/snapshot_state_garbled/description",
+      "before": "unreadable state rows omitted from snapshot shards in this pass; required for the writer, zero when none",
+      "after": "Unreadable unit states omitted by the unit snapshot publications of this same cycle; reset only for the next cycle after this final report."
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/snapshot_tables_refused/description",
+      "before": {
+        "absent": true
+      },
+      "after": "Tables replaced by the too_large stub during this cycle at SNAPSHOT_TABLE_MAX; included in this same final report, outside control-step failures."
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/properties/state_swept_total/description",
+      "before": "cumulative state rows successfully deleted by this controller process; starts at zero; increments only on confirmed deletion; required for the writer",
+      "after": "Cumulative confirmed orphan-state deletions from this process start; not reset between cycles."
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "pointer": "/required",
+      "before": [
+        "at",
+        "ok",
+        "error",
+        "failures",
+        "last_success",
+        "seconds",
+        "manifest_rev",
+        "manifest_behind",
+        "names_given",
+        "hung_move_after",
+        "fates",
+        "diverged",
+        "unplaced",
+        "garbled",
+        "snapshot_tables_refused",
+        "snapshot_rows_garbled",
+        "reach_moves_total",
+        "slots_released_total",
+        "unplaced_deleted_total",
+        "servers_decommissioned_total",
+        "workers_hung",
+        "workers_hung_moved_total",
+        "workers_unsure_moved_total",
+        "name_conflicts",
+        "unplaceable",
+        "raise_failed"
+      ],
+      "after": [
+        "at",
+        "ok",
+        "error",
+        "failures",
+        "last_success",
+        "seconds",
+        "manifest_rev",
+        "manifest_behind",
+        "names_given",
+        "hung_move_after",
+        "fates",
+        "diverged",
+        "unplaced",
+        "garbled",
+        "snapshot_tables_refused",
+        "snapshot_rows_garbled",
+        "reach_moves_total",
+        "slots_released_total",
+        "unplaced_deleted_total",
+        "servers_decommissioned_total",
+        "workers_hung",
+        "workers_hung_moved_total",
+        "workers_unsure_moved_total",
+        "name_conflicts",
+        "unplaceable",
+        "raise_failed",
+        "expired_kept",
+        "snapshot_state_garbled",
+        "state_swept_total"
+      ]
+    },
+    {
+      "path": "Platform/04-controller/data/placement-intent.schema.json",
+      "pointer": "/allOf",
+      "before": [
+        {
+          "if": {
+            "allOf": [
+              {
+                "type": "object"
+              },
+              {
+                "required": [
+                  "state"
+                ],
+                "properties": {
+                  "state": {
+                    "enum": [
+                      "active"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "then": {
+            "required": [
+              "members",
+              "target",
+              "reason",
+              "at"
+            ]
+          }
+        }
+      ],
+      "after": [
+        {
+          "if": {
+            "allOf": [
+              {
+                "type": "object"
+              },
+              {
+                "required": [
+                  "state"
+                ],
+                "properties": {
+                  "state": {
+                    "enum": [
+                      "active"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "then": {
+            "required": [
+              "members",
+              "target",
+              "reason",
+              "at"
+            ],
+            "properties": {
+              "reason": {
+                "not": {
+                  "enum": [
+                    ""
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "Platform/04-controller/data/placement-intent.schema.json",
+      "pointer": "/properties/reason/description",
+      "before": "a non-empty reason — the duty of the writer (the controller); the reader accepts \"\" (C06-WHERE-EMPTY-168-04, as C06-WHERE-EMPTY-33-01); only when active",
+      "after": "A nonempty human reason when state is active, for reader and writer alike. The idle form does not require reason."
+    },
+    {
+      "path": "Platform/04-controller/data/placement.schema.json",
+      "pointer": "/allOf",
+      "before": {
+        "absent": true
+      },
+      "after": [
+        {
+          "$ref": "#/$defs/writer"
+        }
+      ]
+    },
+    {
+      "path": "Platform/04-controller/data/placement.schema.json",
+      "pointer": "/properties/manifest_rev/description",
+      "before": "the manifest revision (P/02.3 N1.5 rev) under which the decision was made; MUST for an implementation that keeps the manifest in the row; rows without it are stamped by the pass (N3 «pass()» step 1)",
+      "after": "Required manifest revision under which the current intent completion wrote this decision. A missing value is unreadable and is never stamped or repaired; newer-revision protection remains P/04 N3 manifest_rev."
+    },
+    {
+      "path": "Platform/04-controller/data/placement.schema.json",
+      "pointer": "/properties/reason/description",
+      "before": "a reason for a human; non-empty (N3 «Reason», P/04-18)",
+      "after": "The current nonempty human reason, required for readers and writers (P/04 N3 Reason)."
+    },
+    {
+      "path": "Platform/04-controller/data/placement.schema.json",
+      "pointer": "/required",
+      "before": [
+        "worker",
+        "reason",
+        "at",
+        "rev"
+      ],
+      "after": [
+        "worker",
+        "reason",
+        "at",
+        "rev",
+        "manifest_rev"
+      ]
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot-unplaced.schema.json",
+      "pointer": "/$defs/writer/description",
+      "before": "Exactly one manifest unit.rows array in addition to cluster, worker and ts, including an empty array. Reader compatibility is unchanged.",
+      "after": "The current reader and writer both require exactly one admissible manifest unit.rows array besides cluster, worker and ts, including an empty array. No wrapper without the array and no two arrays."
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot-unplaced.schema.json",
+      "pointer": "/allOf",
+      "before": {
+        "absent": true
+      },
+      "after": [
+        {
+          "$ref": "#/$defs/writer"
+        }
+      ]
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot.schema.json",
+      "pointer": "/$defs/writer/description",
+      "before": "Exactly one manifest unit.rows array in addition to cluster, worker and ts, including an empty array. Reader compatibility is unchanged.",
+      "after": "The current reader and writer both require exactly one admissible manifest unit.rows array besides cluster, worker and ts, including an empty array. No wrapper without the array and no two arrays."
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot.schema.json",
+      "pointer": "/allOf",
+      "before": {
+        "absent": true
+      },
+      "after": [
+        {
+          "$ref": "#/$defs/writer"
+        }
+      ]
+    },
+    {
+      "path": "Platform/04-controller/data/want.schema.json",
+      "pointer": "/properties/want/description",
+      "before": "the absolute target of the number of processes of the role on the server, the base `<prefix>-<server>-1` is included",
+      "after": "the absolute target of the number of processes of the role on the server, the base `<prefix>-<server>-1` is included; maximum WANT_NUM_MAX is defined by P/04 forms/runtime-constants.tsv; numeric minimum/maximum carriers stay unchanged."
+    }
+  ],
+  "count_definition_unchanged": true,
+  "individual_weights_capacities_Time_versions_bounds_unchanged": true,
+  "numeric_secondary_carriers_unchanged": true,
+  "form_rows": 10,
+  "form_sha256": "c76ba5df4bf830144d90aa2668f3de75d7de219c345f528ff8cd59acbe8cffff",
+  "counts": {
+    "Platform/common/vectors/family-read/04.tsv": {
+      "old": 1436,
+      "modified_old": 388,
+      "added": 78,
+      "current": 1514
+    },
+    "Platform/04-controller/vectors/order/cases.tsv": {
+      "old": 36,
+      "modified_old": 0,
+      "added": 3,
+      "current": 39
+    },
+    "Platform/common/vectors/pool/cases.tsv": {
+      "old": 22,
+      "modified_old": 0,
+      "added": 3,
+      "current": 25
+    },
+    "Platform/04-controller/acceptance/seams.tsv": {
+      "old": 50,
+      "modified_old": 0,
+      "added": 13,
+      "current": 63
+    },
+    "Platform/04-controller/acceptance/scenarios.tsv": {
+      "old_scenarios": 37,
+      "old_steps": 533,
+      "modified_expect_cells": 3,
+      "current_scenarios": 37,
+      "current_steps": 533
+    }
+  },
+  "old_family_first_six_cells_preserved": true,
+  "old_negative_verdicts_and_paths_preserved": true,
+  "old50seams_prefix_preserved": true,
+  "only_three_process_expect_cells_changed": true,
+  "req_and_checklist_ids_preserved": true,
+  "stage_parts_when_weights_dependencies_preserved": true,
+  "all_history_prefixes_preserved": true,
+  "P06_only_exact_weight_formatting_pair": [
+    "Platform/06-console/ru/spec/06.5-console.norms.md",
+    "Platform/06-console/spec/06.5-console.norms.md"
+  ],
+  "not_run": [
+    "SDK",
+    "SUT",
+    "Go",
+    "models",
+    "general regeneration",
+    "full normgen",
+    "KIT"
+  ],
+  "checks": {
+    "family-source-reference.json": {
+      "path": "/home/pilot/spec103/p04-adr0129-15-work/family-source-reference.json",
+      "sha256": "e4b2843bb564c5228fcd97a6dcaaad24bac4bdb7bb395fee1ff5fddafbb166ab",
+      "result": {
+        "kind": "own schema/source reference, not implementation/SDK/SUT",
+        "rows": 1514,
+        "families_loaded": 11,
+        "errors": [],
+        "table_sha256": "211db6d1bfcc1e60355748a0ecce20f1f22a073749e0056a07122f37cb8ed65d"
+      }
+    },
+    "stagetests-preview.json": {
+      "path": "/home/pilot/spec103/p04-adr0129-15-work/stagetests-preview.json",
+      "sha256": "2b4ced4efb8897a728f5e06aaba9c678741f5e8c259f6168e2e27065f9787ef1",
+      "result": {
+        "kind": "memory-only final-source stagetests projection; no out/build/execution",
+        "lesson": "04-controller",
+        "files_in_memory": 22,
+        "counts": {
+          "translated": 63
+        },
+        "inventory": [
+          [
+            "4/seams.tsv/s1-fate-before-term/1",
+            "slot_fates",
+            "TestSlotFates_S1FateBeforeTerm",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s2-fate-release-term/1",
+            "slot_fates",
+            "TestSlotFates_S2FateReleaseTerm",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s3-fate-gone-with-units/1",
+            "slot_fates",
+            "TestSlotFates_S3FateGoneWithUnits",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s4-fate-margin/1",
+            "slot_fates",
+            "TestSlotFates_S4FateMargin",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s5-fate-two-silences/1",
+            "slot_fates",
+            "TestSlotFates_S5FateTwoSilences",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s6-fate-gone-before-fresh-beat/1",
+            "slot_fates",
+            "TestSlotFates_S6FateGoneBeforeFreshBeat",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s7-fate-hung-young/1",
+            "slot_fates",
+            "TestSlotFates_S7FateHungYoung",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s8-fate-hung-boundary/1",
+            "slot_fates",
+            "TestSlotFates_S8FateHungBoundary",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s9-fate-wait-no-units/1",
+            "slot_fates",
+            "TestSlotFates_S9FateWaitNoUnits",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s10-fate-wait-boundary/1",
+            "slot_fates",
+            "TestSlotFates_S10FateWaitBoundary",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s11-fate-runs-no-units/1",
+            "slot_fates",
+            "TestSlotFates_S11FateRunsNoUnits",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s12-fate-presence-unknown/1",
+            "slot_fates",
+            "TestSlotFates_S12FatePresenceUnknown",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s13-fate-unreachable-boundary/1",
+            "slot_fates",
+            "TestSlotFates_S13FateUnreachableBoundary",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s14-fate-no-permission-bad-gen/1",
+            "slot_fates",
+            "TestSlotFates_S14FateNoPermissionBadGen",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s15-release-cas-race/1",
+            "slot_fates",
+            "TestSlotFates_S15ReleaseCasRace",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s16-release-unreadable-gen/1",
+            "slot_fates",
+            "TestSlotFates_S16ReleaseUnreadableGen",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s34-fate-resource-never-seen-assigned/1",
+            "slot_fates",
+            "TestSlotFates_S34FateResourceNeverSeenAssigned",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s35-fate-resource-never-seen-empty/1",
+            "slot_fates",
+            "TestSlotFates_S35FateResourceNeverSeenEmpty",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s17-admission-capacity/1",
+            "placement_admission",
+            "TestPlacementAdmission_S17AdmissionCapacity",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s18-intent-removals-before-add/1",
+            "placement_admission",
+            "TestPlacementAdmission_S18IntentRemovalsBeforeAdd",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s19-intent-unknown-barrier/1",
+            "placement_admission",
+            "TestPlacementAdmission_S19IntentUnknownBarrier",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s20-long-key-group-no-intent/1",
+            "placement_admission",
+            "TestPlacementAdmission_S20LongKeyGroupNoIntent",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s54-conflict-nine-then-success/1",
+            "placement_admission",
+            "TestPlacementAdmission_S54ConflictNineThenSuccess",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s55-conflict-ten-stops/1",
+            "placement_admission",
+            "TestPlacementAdmission_S55ConflictTenStops",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s21-preference-respects-filter/1",
+            "choice",
+            "TestChoice_S21PreferenceRespectsFilter",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s22-retire-counter-reset/1",
+            "cleanup",
+            "TestCleanup_S22RetireCounterReset",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s23-delete-cas-then-state/1",
+            "cleanup",
+            "TestCleanup_S23DeleteCasThenState",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s24-sweep-unit-guard/1",
+            "cleanup",
+            "TestCleanup_S24SweepUnitGuard",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s25-made-delete-early/1",
+            "cleanup",
+            "TestCleanup_S25MadeDeleteEarly",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s39-decommission-62-slots/1",
+            "cleanup",
+            "TestCleanup_S39Decommission62Slots",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s40-decommission-63-slots/1",
+            "cleanup",
+            "TestCleanup_S40Decommission63Slots",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s41-decommission-65-contributions/1",
+            "cleanup",
+            "TestCleanup_S41Decommission65Contributions",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s42-decommission-restart-before-cleanup/1",
+            "cleanup",
+            "TestCleanup_S42DecommissionRestartBeforeCleanup",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s43-decommission-new-holder/1",
+            "cleanup",
+            "TestCleanup_S43DecommissionNewHolder",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s44-decommission-final-refusal/1",
+            "cleanup",
+            "TestCleanup_S44DecommissionFinalRefusal",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s45-decommission-final-reply-lost/1",
+            "cleanup",
+            "TestCleanup_S45DecommissionFinalReplyLost",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s46-loader-reserved-pending-rows/1",
+            "cleanup",
+            "TestCleanup_S46LoaderReservedPendingRows",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s47-loader-reserved-pending-table/1",
+            "cleanup",
+            "TestCleanup_S47LoaderReservedPendingTable",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s48-decommission-bad-progress-duplicate-remaining-name/1",
+            "cleanup",
+            "TestCleanup_S48DecommissionBadProgressDuplicateRemainingName",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s49-decommission-bad-progress-cursor-past-chunk/1",
+            "cleanup",
+            "TestCleanup_S49DecommissionBadProgressCursorPastChunk",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s50-decommission-bad-progress-foreign-from-prefix/1",
+            "cleanup",
+            "TestCleanup_S50DecommissionBadProgressForeignFromPrefix",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s56-valid-final-no-cleanup/1",
+            "cleanup",
+            "TestCleanup_S56ValidFinalNoCleanup",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s26-snapshot-error-keeps-data/1",
+            "snapshots",
+            "TestSnapshots_S26SnapshotErrorKeepsData",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s27-snapshot-byte-boundary/1",
+            "snapshots",
+            "TestSnapshots_S27SnapshotByteBoundary",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s28-snapshot-over-boundary/1",
+            "snapshots",
+            "TestSnapshots_S28SnapshotOverBoundary",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s29-snapshot-store-ceiling/1",
+            "snapshots",
+            "TestSnapshots_S29SnapshotStoreCeiling",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s30-table-too-large-stub/1",
+            "snapshots",
+            "TestSnapshots_S30TableTooLargeStub",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s31-table-unchanged-no-rewrite/1",
+            "snapshots",
+            "TestSnapshots_S31TableUnchangedNoRewrite",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s32-want-grace-restarts/1",
+            "growth_shrink",
+            "TestGrowthShrink_S32WantGraceRestarts",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s36-shrink-wanted-top-prefix/1",
+            "growth_shrink",
+            "TestGrowthShrink_S36ShrinkWantedTopPrefix",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s37-shrink-wanted-other-server/1",
+            "growth_shrink",
+            "TestGrowthShrink_S37ShrinkWantedOtherServer",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s38-growth-ended-manual-row/1",
+            "growth_shrink",
+            "TestGrowthShrink_S38GrowthEndedManualRow",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s51-short-weight-max53/1",
+            "growth_shrink",
+            "TestGrowthShrink_S51ShortWeightMax53",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s52-short-weight-at53/1",
+            "growth_shrink",
+            "TestGrowthShrink_S52ShortWeightAt53",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s53-short-weight-odd53/1",
+            "growth_shrink",
+            "TestGrowthShrink_S53ShortWeightOdd53",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s33-pass-report-partial-failure/1",
+            "pass_report",
+            "TestPassReport_S33PassReportPartialFailure",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s57-snapshot-state-garbled-same-cycle/1",
+            "pass_report",
+            "TestPassReport_S57SnapshotStateGarbledSameCycle",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s58-snapshot-rows-garbled-same-cycle/1",
+            "pass_report",
+            "TestPassReport_S58SnapshotRowsGarbledSameCycle",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s59-snapshot-tables-refused-same-cycle/1",
+            "pass_report",
+            "TestPassReport_S59SnapshotTablesRefusedSameCycle",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s60-sweep-total-cumulative/1",
+            "pass_report",
+            "TestPassReport_S60SweepTotalCumulative",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s61-publication-read-failure/1",
+            "pass_report",
+            "TestPassReport_S61PublicationReadFailure",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s62-publication-store-too-large/1",
+            "pass_report",
+            "TestPassReport_S62PublicationStoreTooLarge",
+            "translated",
+            "-"
+          ],
+          [
+            "4/seams.tsv/s63-publication-reply-lost/1",
+            "pass_report",
+            "TestPassReport_S63PublicationReplyLost",
+            "translated",
+            "-"
+          ]
+        ]
+      }
+    },
+    "mirror-final.json": {
+      "path": "/home/pilot/spec103/p04-adr0129-15-work/mirror-final.json",
+      "sha256": "20c67da583681f7495d126bfe2af35d2a6da714ae566584e2f2edb5ebacee6d9",
+      "result": {
+        "pairs": 10,
+        "errors": []
+      }
+    },
+    "owner1915-doc-read.json": {
+      "path": "/home/pilot/spec103/p04-adr0129-15-work/owner1915-doc-read.json",
+      "sha256": "5570092f0d9129eb8599d6bb305a0aa1043c44f52b0ed91bcea8e4a67a06f293",
+      "result": {
+        "commit": "1915e2eeb5255989213a980e4e3bd8ca65d7aeb8",
+        "documents": [
+          {
+            "path": "decisions/0129-минимум-догадок-генератор-не-больше-кода.md",
+            "sha256": "974da1f9aa7a9d1b8ac73fa348a756f44b2fa1098329fbaa696aa9ed073032de"
+          },
+          {
+            "path": "decisions/inbox/2026-11-07-P06-исправления-после-двух-ревью.md",
+            "sha256": "5655365c7c1949b53453bb5ecc5fd12656c5602a3fb6145e788893e9df825fd7"
+          },
+          {
+            "path": "decisions/inbox/2026-11-07-ревью-P06-ADR0129-разбор.md",
+            "sha256": "89e229fa6f580ae03631f3a5bd2378a85e9f8cb8de52c16993e468a641bec333"
+          },
+          {
+            "path": "decisions/inbox/2026-11-07-ревью-P07-ADR0129-задание.md",
+            "sha256": "b1d43ee00a035f05399d75ce345f780d79ff7c48402ce802350b8f1068bef2cb"
+          }
+        ],
+        "source_imported": false,
+        "P06_activation": false,
+        "P07_reviews_independent": true
+      }
+    },
+    "ROOT-CORPUS-RECEIPT.json": {
+      "path": "/home/pilot/spec103/p04-adr0129-15-work/ROOT-CORPUS-RECEIPT.json",
+      "sha256": "99c6cb79b3967e44d113d5e3262eab5362a279f2147f0012df0799e74f4200db",
+      "kind": "declaration/intake, not own executed acceptance"
+    },
+    "ROOT-ID-RECEIPT.json": {
+      "path": "/home/pilot/spec103/p04-adr0129-15-work/ROOT-ID-RECEIPT.json",
+      "sha256": "0167b5daf251b612d4c8c9da2659d4afcab6f09dec71bad79cd594079a803c66",
+      "kind": "declaration/intake, not own executed acceptance"
+    },
+    "CASE-DECLARATION.json": {
+      "path": "/home/pilot/spec103/p04-adr0129-15-work/CASE-DECLARATION.json",
+      "sha256": "ea84869024c23c31cf98ea82165eb1eb5c43e1d17f7c41edac705f3ce9d4b6df",
+      "kind": "declaration/intake, not own executed acceptance"
+    },
+    "CASE-ID-DECLARATION.json": {
+      "path": "/home/pilot/spec103/p04-adr0129-15-work/CASE-ID-DECLARATION.json",
+      "sha256": "687f7fafae5e051a7b491bccfc7b628ae6893c9cde8a2be4c3ee7e8627ea9850",
+      "kind": "declaration/intake, not own executed acceptance"
+    },
+    "ROOT-SLOT-SERVER-SCOPE.json": {
+      "path": "/home/pilot/spec103/p04-adr0129-15-work/ROOT-SLOT-SERVER-SCOPE.json",
+      "sha256": "2a7b245c39f88ee27eddbc58b52ac5ad0b1986342a4f5f86fe0799c54b423a80",
+      "kind": "declaration/intake, not own executed acceptance"
+    },
+    "ROOT-SLOT-SERVER-DERIVED-SUPPLEMENT.json": {
+      "path": "/home/pilot/spec103/p04-adr0129-15-work/ROOT-SLOT-SERVER-DERIVED-SUPPLEMENT.json",
+      "sha256": "3e7006034b953a54eed401917991d9dd9fe41f992035fe005b1e20e3d8ced584",
+      "kind": "declaration/intake, not own executed acceptance"
+    },
+    "slot-server-applied-source-map.json": {
+      "path": "/home/pilot/spec103/p04-adr0129-15-work/slot-server-applied-source-map.json",
+      "sha256": "4288766f7bfbf8914f06b0fe4179ef7f2c6e761a3bd8f67b45a36a3dbe49efaa",
+      "kind": "declaration/intake, not own executed acceptance"
+    },
+    "strict-source-final": {
+      "path": "/home/pilot/spec103/p04-adr0129-15-work/strict-source-final.meta.json",
+      "meta_sha256": "52f883356a4cfa3c7e21c606b1835760277844d35e78ac035a2d4632d9edc46e",
+      "result": {
+        "command": [
+          "/home/pilot/venv-spec/bin/python",
+          "-B",
+          "skills/lesson-spec/scripts/check_spec.py",
+          "--strict-coverage"
+        ],
+        "root": "/home/pilot/wt-spec103-p04-adr0129-15",
+        "base": "cc32f13a813f4cfc7dab3a0b6fa2abf918aa45f2",
+        "started_at": "2026-11-07T04:01:03.115844+00:00",
+        "elapsed_seconds": 50.37404097698163,
+        "exit_code": 1,
+        "log_sha256": "1e9e1b412739e7f61625df1b3039224f40677f8c529f82cfa667edf9c3b0d7ac",
+        "kind": "own source static check; no SDK/SUT/normgen/KIT",
+        "errors": [
+          "ERROR Platform/03-worker/forms/runtime-constants.tsv: runtime-constants.tsv: WAKE_GAP_MS: unit 'ms' not in ['bytes', 'count', 's']",
+          "ERROR Platform/03-worker/forms/runtime-constants.tsv: runtime-constants.tsv: PERFORM_GRACE_MS: unit 'ms' not in ['bytes', 'count', 's']",
+          "ERROR Platform/03-worker/forms/runtime-constants.tsv: runtime-constants.tsv: REQUESTS_HOLD_MS: unit 'ms' not in ['bytes', 'count', 's']"
+        ],
+        "exceptions": 62,
+        "only_expected_ms_errors": true
+      }
+    },
+    "git_diff_check": {
+      "exit": 0
+    }
+  },
+  "slot_server_supplement": {
+    "root_scope": {
+      "status": "NARROW_SOURCE_SCOPE_APPROVED_WITHIN_ADR129_14_15",
+      "utc": "2026-11-07T03:55:34.143011+00:00",
+      "base": "cc32f13a813f4cfc7dab3a0b6fa2abf918aa45f2",
+      "decision": "Only when P04 fully rewrites a torn slot with readable gen, retain server if its field is readable under the frozen slots schema; otherwise omit server. Do not write an empty-string substitute.",
+      "basis": [
+        "ADR0129(14) P03 current server field admitted as a nonempty string; the frozen schema leaves it optional.",
+        "ADR0129(15) D/E preserves torn release with readable gen and zero Time. Its existing output must be representable by the admitted slot form.",
+        "ADR0083(118-120) narrow choices within existing ADR are resolved by coord103/spec103 and copied to Architect; this is not a new owner decision or a change of form class."
+      ],
+      "allowed_source_paths": [
+        "Platform/04-controller/forms/slot-release.tsv",
+        "Platform/04-controller/spec/04-controller.norms.md",
+        "Platform/04-controller/ru/spec/04-controller.norms.md"
+      ],
+      "allowed_blocks": [
+        "slot-release.tsv only action=- explanatory line for torn full rewrite",
+        "P04-R041 write release paragraph in EN/RU; matched N5 scenario21 wording only if needed to distinguish readable server preservation"
+      ],
+      "before": [
+        {
+          "path": "Platform/04-controller/forms/slot-release.tsv",
+          "base_blob": "08031ef55ca9fada3bfcc9eb65d246344adf60ac",
+          "current_before_sha256": "5ba7419554c401d85cae05c1346f06f801a4763d49c5a0b4a4ade09c707531c8",
+          "saved": "forms-en-slot-release.tsv.before"
+        },
+        {
+          "path": "Platform/04-controller/spec/04-controller.norms.md",
+          "base_blob": "4885bc1ccc1bf0eaebb133140358bbeba7b0ed05",
+          "current_before_sha256": "2459b7d9af94f80ae532b0d58c1cd5c0d2e6478719df970142f6e87b1217a9c0",
+          "saved": "spec-en-04-controller.norms.md.before"
+        },
+        {
+          "path": "Platform/04-controller/ru/spec/04-controller.norms.md",
+          "base_blob": "df1b75aaaa25f96ad09f4b8fd8f9981fc5887286",
+          "current_before_sha256": "0f9f68f3e37776d5e9e9e90b18e8065f4b329450484897bf0bd0cb5eac33940b",
+          "saved": "spec-ru-04-controller.norms.md.before"
+        }
+      ],
+      "server_readable": "Existing field schema only. Do not introduce liveness, registry membership, alphabet, default server, truncation or replacement. A nonempty string not in a registry is not rejected by this field schema.",
+      "preserve": [
+        "P03 slots.schema.json and all protected P03/common15 bytes.",
+        "All machine rows, conditions, actions, states, fate order, gen preservation and unreadable-gen no-write/no-permission.",
+        "Ordinary readable release, holder/until/gen/server preservation, zero Time notation, CAS version and confirmation, names_given.",
+        "All existing corpus inputs/expectations and the earlier declared P04 corpus map; no silent expansion.",
+        "No CODE, producer, runtime, port, refusal, new transition or full regeneration."
+      ],
+      "metadata": "Update only already allowed source map, report and append-only correction ledger, naming this supplement and actual before/after. Keep earlier declarations/maps as historical evidence.",
+      "evidence": {
+        "existing_family_calls": 8,
+        "schema_sha256": "9c7bfe349be58577ae45248fb03b42242f3a5b105fdcc4a3684c81952d073525",
+        "gap_sha256": "f76c1c5524cc5e739b474bd02154c1fa5b0a0432035e2ed0ed58647ef7a2944e",
+        "kind": "Source/schema checks only; not controller execution."
+      },
+      "readiness": "Source intake, joint validators and execution remain separate. P03 joint gate and P07 review not closed or interrupted."
+    },
+    "derived_scope": {
+      "status": "TWO_DERIVED_INSTRUCTION_LINES_APPROVED",
+      "utc": "2026-11-07T03:59:00.549145+00:00",
+      "parent_scope_sha256": "2a7b245c39f88ee27eddbc58b52ac5ad0b1986342a4f5f86fe0799c54b423a80",
+      "parent_scope_preserved": true,
+      "basis": "Exact propagation of the already approved torn-release server omission; no further value or semantic change. Both paths already belong to the original46 source scope.",
+      "paths": [
+        {
+          "path": "Platform/04-controller/spec/04-controller.README.md",
+          "before_sha256": "946cfe648cf5abf22831632cf32d51c33a4011e0857fbd175ac5375142d579e0",
+          "before_line": "   nobody's: released \"true\", holder \"\", until 0, gen as read, server — if it is readable, otherwise \"\"; gen is not readable —",
+          "after_line": "   nobody's: released \"true\", holder \"\", until 0, gen as read, server — keep it if readable by the field schema, otherwise omit it without a substitute; gen is not readable —",
+          "one_line_only": true
+        },
+        {
+          "path": "Platform/04-controller/ru/spec/04-controller.README.md",
+          "before_sha256": "50086add4238fef5a12c421af4ccec75e4a0e4ce053b33381333ac078dc82767",
+          "before_line": "   ничьей: released \"true\", holder \"\", until 0, gen прочитанный, server — если читается, иначе \"\"; gen не читается —",
+          "after_line": "   ничьей: released \"true\", holder \"\", until 0, gen прочитанный, server — сохранить если читается по схеме поля, иначе опустить без заменителя; gen не читается —",
+          "one_line_only": true
+        }
+      ],
+      "patch_sha256": "44bc947229d7d71c05c332cd63b54ce8c34aefdc2db76080735b70c2b4d7241c",
+      "patch_check": true,
+      "allowed": "Apply only the two declared lines and update already allowed maps/report/append-only journal.",
+      "N5_scenario21": "No change needed: readable srv-a remains preserved.",
+      "preserve": "All previous restrictions, P03 schema/common15, gen/fate/CAS/Time, machine rows, inputs/expectations, ports and CODE unchanged.",
+      "execution_readiness": "Not claimed."
+    },
+    "applied_three_source_records": {
+      "scope_sha256": "2a7b245c39f88ee27eddbc58b52ac5ad0b1986342a4f5f86fe0799c54b423a80",
+      "changes": [
+        {
+          "path": "Platform/04-controller/forms/slot-release.tsv",
+          "before": "server if readable else \"\"",
+          "after": "server preserved if readable by its frozen slots field schema, otherwise omitted with no empty substitute"
+        },
+        {
+          "path": "Platform/04-controller/spec/04-controller.norms.md",
+          "before": "wholly released and nobody's, keeping a readable gen and writing until as zero Time in the existing writer notation, never now;",
+          "after": "wholly released and nobody's, keeping a readable gen and writing until as zero Time in the existing writer notation, never now;\n                                                                                   keep server only if readable by the current slot field schema; otherwise omit the field, with no empty substitute. No liveness or registry check;"
+        },
+        {
+          "path": "Platform/04-controller/ru/spec/04-controller.norms.md",
+          "before": "целиком отданной и ничьей с сохранением читаемого gen и записывая until как нулевой Time в прежней записи писателя, не now;",
+          "after": "целиком отданной и ничьей с сохранением читаемого gen и записывая until как нулевой Time в прежней записи писателя, не now;\n                                                                           server сохранить только если читается по нынешней схеме поля слота; иначе поле опустить, без пустого заменителя. Никакой проверки живости или реестра;"
+        }
+      ],
+      "corpus_changed": false,
+      "machine_rows_changed": false
+    },
+    "own_source_counterexample": {
+      "base": "cc32f13a813f4cfc7dab3a0b6fa2abf918aa45f2",
+      "kind": "bounded source/schema counterexample, not controller/SDK/SUT execution",
+      "input_torn_slot": {
+        "until": "torn",
+        "gen": "1"
+      },
+      "source_path": "Platform/04-controller/forms/slot-release.tsv",
+      "source_current": "server if readable else empty string",
+      "related_schema_path": "Platform/03-worker/data/slots.schema.json",
+      "pointer": "/properties/server/minLength",
+      "value": 1,
+      "server_optional": true,
+      "results": [
+        {
+          "text": "{\"released\":\"true\",\"holder\":\"\",\"until\":\"0\",\"gen\":\"1\",\"server\":\"\"}",
+          "source_form_verdict": {
+            "verdict": "refused",
+            "paths": [
+              "/server"
+            ],
+            "value": {
+              "released": "true",
+              "holder": "",
+              "until": 0.0,
+              "gen": 1,
+              "server": ""
+            }
+          }
+        },
+        {
+          "text": "{\"released\":\"true\",\"holder\":\"\",\"until\":\"0\",\"gen\":\"1\"}",
+          "source_form_verdict": {
+            "verdict": "ok",
+            "paths": [],
+            "value": {
+              "released": "true",
+              "holder": "",
+              "until": 0.0,
+              "gen": 1
+            }
+          }
+        }
+      ],
+      "recommendation": "For this P04 torn full rewrite only, omit unreadable server instead of writing empty; keep readable server/normal release/gen/until0 unchanged. Needs explicit narrow scope/decision before edit; P03 protected."
+    },
+    "no_corpus_or_machine_row_changes": true,
+    "P03_schema_unchanged": true
+  },
+  "machine_noncomment_rows_byte_identical": true
+}

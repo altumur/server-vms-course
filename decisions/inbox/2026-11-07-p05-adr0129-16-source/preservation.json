@@ -1,0 +1,531 @@
+{
+  "base": "a2167ce475eed755d074d38647fe0ca76822481b",
+  "branch": "spec103/p05-adr0129-16",
+  "source_paths": 40,
+  "history_paths": 3,
+  "evidence_paths": 5,
+  "total_allowed_paths": 48,
+  "source_map_records": 43,
+  "protected": [
+    {
+      "path": "Platform/02-installer/data/space.layers.tsv",
+      "sha256": "5fd953df3becb4884bbf97d46fd3e6522f77ad1307253c30b3cb6e38beb1273c",
+      "bytes": 872
+    },
+    {
+      "path": "Platform/02-installer/data/space.outcomes.tsv",
+      "sha256": "6b81cae4e33fd8b6366e96298f1fdd5cf3e55b350bf9a640708d4849aa958c63",
+      "bytes": 605
+    },
+    {
+      "path": "Platform/02-installer/data/space.schema.json",
+      "sha256": "44a2224e7e11945318c5c897c6b5d80727f7e55fffa2f08bfb9ffcd2110b3e19",
+      "bytes": 28984
+    },
+    {
+      "path": "Platform/02-installer/ru/spec/02.4-installer.norms.md",
+      "sha256": "f7722ad42f72b3d250b878e0edede09377274853cba3d86a06411761eaa85380",
+      "bytes": 150273
+    },
+    {
+      "path": "Platform/02-installer/spec/02.4-installer.norms.md",
+      "sha256": "7aae92312ef8dcbc36ea59b83e20120ab1f97c7d34da40e6bf5ac073a27f5560",
+      "bytes": 115910
+    },
+    {
+      "path": "Platform/03-worker/forms/runtime-constants.tsv",
+      "sha256": "f1763195244e0e751579d8c4666f5c8b9fa8adf1f4dd5094356bad63eb118437",
+      "bytes": 2352
+    },
+    {
+      "path": "Platform/04-controller/forms/runtime-constants.tsv",
+      "sha256": "c76ba5df4bf830144d90aa2668f3de75d7de219c345f528ff8cd59acbe8cffff",
+      "bytes": 1198
+    },
+    {
+      "path": "Platform/04-controller/forms/slot-release.tsv",
+      "sha256": "a9a4f0a97f2ae69a3b2c119a9dfcd5f009df2046b21c9706d1551032e08917a5",
+      "bytes": 2415
+    },
+    {
+      "path": "Platform/04-controller/ru/spec/04-controller.norms.md",
+      "sha256": "f79b3c7754d3482975e81038ba677bc2d1de99bb9e9fe784bd72b82d435fa516",
+      "bytes": 246634
+    },
+    {
+      "path": "Platform/04-controller/spec/04-controller.norms.md",
+      "sha256": "1542646cd92c197a36920eaf495ded83af52ab88a0586272a95d91f7658ad98a",
+      "bytes": 188621
+    },
+    {
+      "path": "Platform/04-controller/vectors/order/cases.tsv",
+      "sha256": "e1b4595b7c65a52bac955e5ca75f8ff4c4199270e1b56e4d8964ae8d61260de4",
+      "bytes": 15812
+    },
+    {
+      "path": "Platform/06-console/forms/runtime-constants.tsv",
+      "sha256": "b2e87b526ca395b4fe6b80353dbfb6132ecfad562dd9cab7ed1e57015d7837a4",
+      "bytes": 3309
+    },
+    {
+      "path": "Platform/06-console/spec/06.4-console.norms.md",
+      "sha256": "c3ca35f8c29681593f0c0006afae881835eea3a81b33e2d44ac7125beba17ac6",
+      "bytes": 62112
+    },
+    {
+      "path": "Platform/common/LAYERS.md",
+      "sha256": "8b2b53ef2dbd60f9cec17058299015e466f6aa2c869689497abcc7cd05b5848e",
+      "bytes": 16582
+    },
+    {
+      "path": "Platform/common/contracts/event-journal.md",
+      "sha256": "76d29ab6b07066baff57b4685af41c6b2c326892a30d8221edd873d6360d9f11",
+      "bytes": 24461
+    },
+    {
+      "path": "Platform/common/contracts/holds.md",
+      "sha256": "ff191a9d3621f7e4c4975b238e537094926015ea8a08bbfd6477755f2c4787ec",
+      "bytes": 7343
+    },
+    {
+      "path": "Platform/common/contracts/pool.md",
+      "sha256": "87897eebbdfff5da4168fd56ef9a1a9c7f40eb9ed0765b91d4678da91ec35d61",
+      "bytes": 9432
+    },
+    {
+      "path": "Platform/common/contracts/presence-lock.md",
+      "sha256": "8c57dbafdf8db8594472e0c76a9de039ecc98f2e9443c3aa3bb6c3c85300439a",
+      "bytes": 13395
+    },
+    {
+      "path": "Platform/common/contracts/schema.md",
+      "sha256": "232deba23b2a4de360bb3ada493bd96db3d6c125987d2f106b3fe6c321348a2c",
+      "bytes": 6545
+    },
+    {
+      "path": "Platform/common/contracts/turn.md",
+      "sha256": "87dc7fedb45d0a6bb3405d157827b64374ff190ec7f195f36c5671cc5d78f61d",
+      "bytes": 10320
+    },
+    {
+      "path": "Platform/common/data/common.schema.json",
+      "sha256": "2dc6559d1bde3ec161243ad113ef447d0e709532c57ac75ad2447c3aa2c681af",
+      "bytes": 28392
+    },
+    {
+      "path": "Platform/common/ru/contracts/event-journal.md",
+      "sha256": "69e3ca25a72e4e8092fde931dfdaca4dfb188c606df6155479480c9c14307585",
+      "bytes": 32819
+    },
+    {
+      "path": "Platform/common/ru/contracts/pool.md",
+      "sha256": "ea7054e5a40e3361bd7646de05f59e3c345bfbc63a7f5107d8636b80bada5989",
+      "bytes": 12091
+    },
+    {
+      "path": "Platform/common/ru/contracts/turn.md",
+      "sha256": "c4bd03c58dc0bc1037e7b604e68cb94a148588c720c272f56fa974cff9574169",
+      "bytes": 14349
+    },
+    {
+      "path": "Platform/common/ru/vectors/pool/README.md",
+      "sha256": "798e64e32e06efe0771e192984696fa66cc746f4ea17bf69fdd6ee74cfa37f9b",
+      "bytes": 7340
+    },
+    {
+      "path": "Platform/common/ru/vectors/turn/README.md",
+      "sha256": "e6036456d25e42233b0fa8a2e42dc92a26de2bfad0cf01ce53f1482918b65f65",
+      "bytes": 11436
+    },
+    {
+      "path": "Platform/common/vectors/consumers.tsv",
+      "sha256": "ba7987d2750f43805dd9d31d79e27f938745dd8e7bba666e1288d935925cb486",
+      "bytes": 29374
+    },
+    {
+      "path": "Platform/common/vectors/family-read/04.tsv",
+      "sha256": "211db6d1bfcc1e60355748a0ecce20f1f22a073749e0056a07122f37cb8ed65d",
+      "bytes": 660678
+    },
+    {
+      "path": "Platform/common/vectors/pool/README.md",
+      "sha256": "207f5d574627efb86558934ea8e3f821769e9aecf9acd7a779023787b43b525d",
+      "bytes": 5501
+    },
+    {
+      "path": "Platform/common/vectors/pool/cases.tsv",
+      "sha256": "dbbd119bf047640f661e7d9fadaf8eb9cf1d8d08781308465ef522bf8018e420",
+      "bytes": 19313
+    },
+    {
+      "path": "Platform/common/vectors/turn/README.md",
+      "sha256": "2f71faa17ecfea540a803914326d7bf4a2ceeb35227dd68ec20d6eb0a9892b16",
+      "bytes": 8201
+    },
+    {
+      "path": "Platform/common/vectors/turn/cases.tsv",
+      "sha256": "8279ddfbdab7b48c82d6e4cd4aa2e78861f5c208a44f74705506c857601791e0",
+      "bytes": 18814
+    },
+    {
+      "path": "Platform/common/vectors/wire.md",
+      "sha256": "912a49112b4e4064c307bff35804d0042e4e4a256840c7f5a43dc44bcecc185a",
+      "bytes": 20627
+    },
+    {
+      "path": "Platform/common/vectors/wire.tsv",
+      "sha256": "b123b2c06e8a965228000375b4d6bd8ce74e5b501713aac6a530617a08ac1615",
+      "bytes": 154428
+    },
+    {
+      "path": "skills/lesson-spec/scripts/check_constants.py",
+      "sha256": "85e07be713739917da9104d236cdb5d91690b7d35d4a49ac38436fcb95def2f0",
+      "bytes": 20459
+    },
+    {
+      "path": "skills/lesson-spec/scripts/check_forms.py",
+      "sha256": "e9696b436c5eefe4514b59b7e3156f34fa2c8a4d2a22f243246bc7cc67025e18",
+      "bytes": 152306
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/sections.py",
+      "sha256": "7e95c59b0a9dc246eb5e38dd8bd9ca1aeb9fe1a0641277e3014897645cbca821",
+      "bytes": 6072
+    },
+    {
+      "path": "skills/lesson-spec/scripts/v7/spec.py",
+      "sha256": "7f55d64339554f1616037ed4d679c814de64652edd012ea58555c594fe132c71",
+      "bytes": 51805
+    },
+    {
+      "path": "tools/normgen/family_judge.py",
+      "sha256": "3b27e31209eb78588707d2fbee105abf0158d546930267b129354e96fd0867b1",
+      "bytes": 12236
+    },
+    {
+      "path": "tools/normgen/gen_cmdtests.py",
+      "sha256": "6f772dbd6f7531af91ba3e1d89a77806a0c349f342cb0be969c4cb808de82ad8",
+      "bytes": 58572
+    },
+    {
+      "path": "tools/normgen/gen_families.py",
+      "sha256": "b61bf4992a30dbff5f0acd1364af8e393868449ca80acb674102aeb3228d218b",
+      "bytes": 36157
+    },
+    {
+      "path": "tools/normgen/test_gen_door_bodies.py",
+      "sha256": "46534ca4a773d78362b8d5783d516dc0537e916ea8f145de934f3ef64dde2466",
+      "bytes": 36060
+    },
+    {
+      "path": "tools/normgen/test_gen_door_priority.py",
+      "sha256": "be2179862e9a9ecab421b4acd8ee3dac83dcca84432f14c821522d3600d6d288",
+      "bytes": 21224
+    },
+    {
+      "path": "Platform/05-resource/acceptance/inputs/gone-foo.json",
+      "sha256": "01a41bb8e17bcd522063c9c7d7f3b0055759ee4f9abebdca7ebd888697edace2",
+      "bytes": 52
+    },
+    {
+      "path": "Platform/05-resource/acceptance/inputs/ticket-t1.json",
+      "sha256": "b1a562f4837e8abcb75d120e7216e71a933cddef36b67d06f3820bd1a6821012",
+      "bytes": 28
+    },
+    {
+      "path": "Platform/05-resource/acceptance/scenarios.tsv",
+      "sha256": "3978fa74241969a4a93bdc9190557d76fb094543b72da917b8720856aad8b297",
+      "bytes": 40837
+    },
+    {
+      "path": "Platform/05-resource/data/doors.layers.tsv",
+      "sha256": "28f9efb03432b2d50855b403ab18f4d9c2b682e4d47b50fb0a4af4c2041c4753",
+      "bytes": 906
+    },
+    {
+      "path": "Platform/05-resource/data/doors.outcomes.tsv",
+      "sha256": "8b248b1fb8915eb36ef7c03626bc73a5de5dd11a45e5d6fba5ea6201fb24683e",
+      "bytes": 2011
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit-alarms.layers.tsv",
+      "sha256": "06910c7c594c5c7e2fe9e69158555a33bc4b56ab8e8f014ac5715ae2a9399c1a",
+      "bytes": 822
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit-alarms.schema.json",
+      "sha256": "ec75de9243d0c6d78ce7b837f295325ed69ca2d9c451949d2dcedbc8d4a16fe3",
+      "bytes": 29961
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit.layers.tsv",
+      "sha256": "06910c7c594c5c7e2fe9e69158555a33bc4b56ab8e8f014ac5715ae2a9399c1a",
+      "bytes": 822
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit.schema.json",
+      "sha256": "ec75de9243d0c6d78ce7b837f295325ed69ca2d9c451949d2dcedbc8d4a16fe3",
+      "bytes": 29961
+    },
+    {
+      "path": "Platform/05-resource/data/events-console-alarms.layers.tsv",
+      "sha256": "06910c7c594c5c7e2fe9e69158555a33bc4b56ab8e8f014ac5715ae2a9399c1a",
+      "bytes": 822
+    },
+    {
+      "path": "Platform/05-resource/data/events-console-alarms.schema.json",
+      "sha256": "ec75de9243d0c6d78ce7b837f295325ed69ca2d9c451949d2dcedbc8d4a16fe3",
+      "bytes": 29961
+    },
+    {
+      "path": "Platform/05-resource/data/events-console.layers.tsv",
+      "sha256": "06910c7c594c5c7e2fe9e69158555a33bc4b56ab8e8f014ac5715ae2a9399c1a",
+      "bytes": 822
+    },
+    {
+      "path": "Platform/05-resource/data/events-console.schema.json",
+      "sha256": "ec75de9243d0c6d78ce7b837f295325ed69ca2d9c451949d2dcedbc8d4a16fe3",
+      "bytes": 29961
+    },
+    {
+      "path": "Platform/05-resource/data/events-mirror.layers.tsv",
+      "sha256": "06910c7c594c5c7e2fe9e69158555a33bc4b56ab8e8f014ac5715ae2a9399c1a",
+      "bytes": 822
+    },
+    {
+      "path": "Platform/05-resource/data/events-mirror.schema.json",
+      "sha256": "ec75de9243d0c6d78ce7b837f295325ed69ca2d9c451949d2dcedbc8d4a16fe3",
+      "bytes": 29961
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit-alarms.layers.tsv",
+      "sha256": "06910c7c594c5c7e2fe9e69158555a33bc4b56ab8e8f014ac5715ae2a9399c1a",
+      "bytes": 822
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit-alarms.schema.json",
+      "sha256": "ec75de9243d0c6d78ce7b837f295325ed69ca2d9c451949d2dcedbc8d4a16fe3",
+      "bytes": 29961
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit.layers.tsv",
+      "sha256": "06910c7c594c5c7e2fe9e69158555a33bc4b56ab8e8f014ac5715ae2a9399c1a",
+      "bytes": 822
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit.schema.json",
+      "sha256": "ec75de9243d0c6d78ce7b837f295325ed69ca2d9c451949d2dcedbc8d4a16fe3",
+      "bytes": 29961
+    },
+    {
+      "path": "Platform/05-resource/data/free-ask.layers.tsv",
+      "sha256": "af521a7a3da63e54a4987df50384640eee9a603defb1c28af1a3fff11cf9290c",
+      "bytes": 907
+    },
+    {
+      "path": "Platform/05-resource/data/free-ask.outcomes.tsv",
+      "sha256": "9c1f7f1caba8a38f49d853b0ce4b79eac91cea30cef4c1b4ca9f59dc2382822c",
+      "bytes": 803
+    },
+    {
+      "path": "Platform/05-resource/data/free-ask.schema.json",
+      "sha256": "b6f0c6e1ed51e28a8792d9b4003866c883709f7ccccce879d931d062431dd74a",
+      "bytes": 29279
+    },
+    {
+      "path": "Platform/05-resource/data/gone.layers.tsv",
+      "sha256": "4b20d7ba91a0e212fea90f357b5dc7aca96b5a4ccbb043c1e4934f3b5140f7ed",
+      "bytes": 755
+    },
+    {
+      "path": "Platform/05-resource/data/gone.outcomes.tsv",
+      "sha256": "4bb8884244f3649b648673e03ab47e7d85355ebd6a77107e9f9d85a308da89c2",
+      "bytes": 721
+    },
+    {
+      "path": "Platform/05-resource/data/gone.schema.json",
+      "sha256": "104f678d57dee290f722ffeda75f020aef31f23c61c2dd0037b668af9173a202",
+      "bytes": 28964
+    },
+    {
+      "path": "Platform/05-resource/data/presence-lock.layers.tsv",
+      "sha256": "927ac98b0d67c622f347746083748f79a51bb90b269a04e31acd665010c8dafe",
+      "bytes": 822
+    },
+    {
+      "path": "Platform/05-resource/data/presence-lock.outcomes.tsv",
+      "sha256": "db04f620d32c05590ea01f26bae62f92b484ffc8b0181635c477ee9666168017",
+      "bytes": 1121
+    },
+    {
+      "path": "Platform/05-resource/data/presence-lock.schema.json",
+      "sha256": "569be3fb805b1740868b8cd8ed074d43566ee26290c40b60ce2b98d6a62ae1cd",
+      "bytes": 29679
+    },
+    {
+      "path": "Platform/05-resource/data/resource-heartbeat.layers.tsv",
+      "sha256": "918437aa3b2b5a5d7c16ee0bdde9dc8c1465b3c306c7c7c209d21e31f6ef40c9",
+      "bytes": 789
+    },
+    {
+      "path": "Platform/05-resource/data/resource-heartbeat.outcomes.tsv",
+      "sha256": "62ee1713e6967e059dc293deeeb238007d4f830af44da62183f60b5fb14b31f1",
+      "bytes": 2173
+    },
+    {
+      "path": "Platform/05-resource/forms/daemon-flags.tsv",
+      "sha256": "d34c2325c6294e1e8eef21bfbb0b46be88af0f5f240a4302d21560ccffbcf618",
+      "bytes": 3632
+    },
+    {
+      "path": "Platform/05-resource/forms/door-roles.tsv",
+      "sha256": "452a18e83bb9f975b6c91658ffd6624ce667b536c46c4db7b2b430d4fd9bea17",
+      "bytes": 2295
+    },
+    {
+      "path": "Platform/05-resource/ru/05-resource.md",
+      "sha256": "773825086407e74c1cee7f81d70b5473c973f557ca0e2549d567413263865c92",
+      "bytes": 16895
+    },
+    {
+      "path": "Platform/05-resource/ru/vectors/relieve/README.md",
+      "sha256": "f40d2482db053e316ae23b27c6ea091d423a57ff56823bd4b50cf24f6aee3d90",
+      "bytes": 3628
+    },
+    {
+      "path": "Platform/05-resource/spec/05-resource.api.openapi.yaml",
+      "sha256": "576c0e06170583752fed724e086989256195273a5f37896e7401560d69a3ea39",
+      "bytes": 35928
+    },
+    {
+      "path": "Platform/05-resource/vectors/relieve/README.md",
+      "sha256": "19d132c9e1a664a4f31b57a2addb9cad9125e99615f27f0cc8dc87a13d74899b",
+      "bytes": 2935
+    },
+    {
+      "path": "Platform/05-resource/vectors/relieve/cases.tsv",
+      "sha256": "c9f0e6976259980e92f4972c52b4a2cf7e14a83f922b1959598611bf1c13064b",
+      "bytes": 3012
+    },
+    {
+      "path": "Platform/05-resource/vectors/relieve/short.tsv",
+      "sha256": "6d25ab885b151b362813c4976e4240c3bb8e74b1ccf8ca851ed3d8bd75774547",
+      "bytes": 2048
+    },
+    {
+      "path": "Platform/common/contracts/env-file.md",
+      "sha256": "f4f2eb597bb94c6efeb1a4547fc14ba12af1740d1cd929cd555574b01bb49bfc",
+      "bytes": 21363
+    },
+    {
+      "path": "Platform/common/contracts/observation.md",
+      "sha256": "875c0b97b417f43b8eac44ff5ca7c64c798abf9d1874008effab0d00464c7ae5",
+      "bytes": 21904
+    },
+    {
+      "path": "Platform/common/contracts/row-check.md",
+      "sha256": "ba7dc593f739445be2a93aa0a9be08b2bf4bec96d85302b27f25c99220737d47",
+      "bytes": 30077
+    },
+    {
+      "path": "Platform/common/contracts/slot.md",
+      "sha256": "cee4bedcb4035960f8da8728d21c8305a855cc2dae22b6488db099808bd05359",
+      "bytes": 3923
+    },
+    {
+      "path": "Platform/common/ru/contracts/env-file.md",
+      "sha256": "f711087f74d5c24302e2c11f13e118a88adc26f0a1b35052bd5c075ae4ca4d5c",
+      "bytes": 28049
+    },
+    {
+      "path": "Platform/common/ru/contracts/observation.md",
+      "sha256": "b1dd95e5826e6c50ca8ef4e11af5ff3efd53240e56754e533f9e00f448d0b71b",
+      "bytes": 28890
+    },
+    {
+      "path": "Platform/common/ru/contracts/row-check.md",
+      "sha256": "c0d5424423cd7f87eb273bb865aa8ff6ac2326e369fb0066864f134a1f86bd45",
+      "bytes": 40733
+    },
+    {
+      "path": "Platform/common/ru/contracts/slot.md",
+      "sha256": "315c40729b43f8336be808f661e08fb98c0f0ceb4f7f342866e9af5f2b3b83da",
+      "bytes": 4984
+    },
+    {
+      "path": "Platform/common/ru/vectors/row-check/README.md",
+      "sha256": "6cc55d26af732fae91714a34d487c2ea491b1c5180c60ab10237372af6408e50",
+      "bytes": 13083
+    },
+    {
+      "path": "Platform/common/ru/vectors/slot/README.md",
+      "sha256": "3cd4ecb2ea49844d7c0f7b5f0f2a99d234b5f7771229ee4dd8934d3b357e3cd6",
+      "bytes": 3762
+    },
+    {
+      "path": "Platform/common/vectors/family-read/03.tsv",
+      "sha256": "a05edb9bc21b7aed00e0a93919bd609c92cf78b7964b6376fc6be6090cf47c34",
+      "bytes": 318947
+    },
+    {
+      "path": "Platform/common/vectors/row-check/README.md",
+      "sha256": "c8c78fc07fed45a9058e74f8502308f11a44e2dc84bb08d7336f7fd673584d4e",
+      "bytes": 9939
+    },
+    {
+      "path": "Platform/common/vectors/row-check/state.tsv",
+      "sha256": "c03f8e64f3b542189ec4cf13bd833624915a295797850988276a94b0cf77861d",
+      "bytes": 6755
+    },
+    {
+      "path": "Platform/common/vectors/slot/README.md",
+      "sha256": "31162f0871b81c5428e0bafbde50b4ae9b60d1b57127db81674a27e3178ef260",
+      "bytes": 2871
+    },
+    {
+      "path": "Platform/common/vectors/slot/cases.tsv",
+      "sha256": "0331ea7ac3ff1b56eb3e35f5dfd70ff8acdcd8fdb193498c9814669f27e26657",
+      "bytes": 2931
+    }
+  ],
+  "common15_preserved": 15,
+  "P04_related_preserved": 16,
+  "declared_family_old": 1131,
+  "declared_changed_old": 143,
+  "declared_added": 10,
+  "family_final": 1141,
+  "other842_raw_exact": true,
+  "old_first_six_exact": true,
+  "old_negative_verdict_paths_preserved": true,
+  "old_invalid_raw_payloads_preserved": true,
+  "old_seams_raw_prefix": 62,
+  "new_seams": 5,
+  "source_step_parser_and_emitter": 67,
+  "source_excluded": 0,
+  "old_process_scenarios": 35,
+  "old_process_steps": 292,
+  "old_relieve_cases": 9,
+  "old_relieve_short": 6,
+  "P05_HTTP_primary_file_exact": true,
+  "P06_API_only_ResourceRow": true,
+  "P06_common_DoorState_WorkerRow_other_schemas_routes_exact": true,
+  "P04_P06_exact_aggregates_preserved": true,
+  "fixtures_only_added_door": true,
+  "root_approval_sha256": "d5dbe5733e74b6548386633d7660da9a9de3e197cc0ee0a7a9f7742fa39f444e",
+  "declaration_manifest_sha256": "d1aa036795de773d932146d574aa267efdc63867371caf12d4656fe272d64cc5",
+  "root_corpus_receipt_sha256": "24966767b71b7c05be9c912eee9b818d642b5237694d190dce39cedbba82129a",
+  "own_checks": [
+    "1141 existing-V7 source reference calls / 12 families / errors0",
+    "10 EN/RU pairs / errors0",
+    "8 in-memory standard ResourceRow shape controls",
+    "Exact inverse schemas/P06 prose and96 read-only hashes",
+    "67 source steps parsed/emittable, without gofmt/Go/output files"
+  ],
+  "unsupported": [
+    "ms validator/reader support remains separate and stopped for direct P08",
+    "Actual native adapter/IO/completion/candidate trace execution not performed",
+    "Independent subject equalities/native reader/serializer implementation not accepted by this source",
+    "No full normgen/KIT/GATE/model/SUT/export/pin/line"
+  ],
+  "final_strict_log": "External FREEZE.json records exact final source log, exit/errors and hashes; no PASS is inferred from unsupported ms."
+}

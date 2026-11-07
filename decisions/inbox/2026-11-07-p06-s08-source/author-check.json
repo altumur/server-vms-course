@@ -1,0 +1,35 @@
+{
+  "kind": "OWN_BOUNDED_SOURCE_CHECKS_NOT_CODE_OR_SUT",
+  "API_inverse_structurally_exact": true,
+  "nonmoved_API_bytes_exact": true,
+  "six_values_and_raw_bodies_unchanged": true,
+  "logical_operations_original140_and_new6": 146,
+  "other121_and_HEAD6_current_nodes_equal": true,
+  "actual_Op_names_unique146": true,
+  "reference_occurrences_resolved": 1342,
+  "reference_nodes_resolved": 224,
+  "numeric_literals_preserved": 224,
+  "binding_evidence_records": 1171,
+  "all_six_components_referenced_by_actual_catalogue_entries_in_static_map": true,
+  "mirror_pairs": [
+    {
+      "en": "Platform/06-console/forms/README.md",
+      "ru": "Platform/06-console/ru/forms/README.md",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/spec/06.5-console.norms.md",
+      "ru": "Platform/06-console/ru/spec/06.5-console.norms.md",
+      "errors": []
+    }
+  ],
+  "English_errors": [],
+  "outside_followup_paths_changed": [],
+  "CODE_build_interface_Go_SDK_HTTP_SUT_models_generation_outputs": false,
+  "strict_check_receipt": "external strict-source.json/log and FREEZE.json; not relabelled as PASS",
+  "known_base_errors": [
+    "4 paused ms",
+    "2 reader-writer section-renderer"
+  ],
+  "base_exceptions": 62
+}

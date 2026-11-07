@@ -4,10 +4,10 @@
  "properties": {
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "the moment of the end of the pass"
+   "description": "Wall time when this cycle control part ended; frozen before snapshot publication, not the final object put time."
   },
   "ok": {
-   "description": "true — the pass reached the end, all inputs were read and no write was refused; otherwise false",
+   "description": "The control part completed with its confirmed inputs/writes and no control-step failure; snapshot outcomes are recorded separately.",
    "type": "boolean"
   },
   "error": {
@@ -15,14 +15,15 @@
    "type": "string"
   },
   "failures": {
-   "$ref": "#/$defs/count"
+   "$ref": "#/$defs/count",
+   "description": "Independent control-step failures of this cycle; snapshot publication outcomes do not increment this field."
   },
   "last_success": {
    "$ref": "#/$defs/common.time",
-   "description": "the moment of the end of the last successful pass"
+   "description": "Last successful control-part completion time, unchanged by a later snapshot publication failure."
   },
   "seconds": {
-   "description": "the duration of the pass",
+   "description": "Duration of this cycle control part only, excluding snapshot and final-report publications.",
    "type": "number",
    "minimum": 0
   },
@@ -120,10 +121,12 @@
    "$ref": "#/$defs/count"
   },
   "snapshot_tables_refused": {
-   "$ref": "#/$defs/count"
+   "$ref": "#/$defs/count",
+   "description": "Tables replaced by the too_large stub during this cycle at SNAPSHOT_TABLE_MAX; included in this same final report, outside control-step failures."
   },
   "snapshot_rows_garbled": {
-   "$ref": "#/$defs/count"
+   "$ref": "#/$defs/count",
+   "description": "Unreadable snapshot fields omitted by unit/table publications of this same cycle; reset only for the next cycle after this final report."
   },
   "reach_moves_total": {
    "$ref": "#/$defs/count"
@@ -174,8 +177,11 @@
       "$ref": "#/$defs/labels"
      },
      "units": {
-      "$ref": "#/$defs/count",
-      "description": "waiting units of weight"
+      "type": "integer",
+      "minimum": 0,
+      "x-integer": true,
+      "x-whole": true,
+      "description": "Exact nonnegative sum of waiting unit weights, in integer JSON notation, without an upper common.uint53 bound. Preserve the whole serialized-report limit; never round or saturate through binary64/int64 (P/04-R008)."
      },
      "workers": {
       "$ref": "#/$defs/count",
@@ -194,7 +200,10 @@
       "type": "string"
      }
     },
-    "additionalProperties": false,
+    "additionalProperties": {
+     "$ref": "#/$defs/count",
+     "description": "An own counter of the short element; standard properties keep their declared forms."
+    },
     "required": [
      "labels",
      "units",
@@ -289,15 +298,15 @@
   },
   "expired_kept": {
    "$ref": "#/$defs/count",
-   "description": "manual rows retained after ends removed them; required for the writer, zero when none"
+   "description": "Manual rows retained after ends removed them; required nonnegative count for current reader and writer, zero when none."
   },
   "snapshot_state_garbled": {
    "$ref": "#/$defs/count",
-   "description": "unreadable state rows omitted from snapshot shards in this pass; required for the writer, zero when none"
+   "description": "Unreadable unit states omitted by the unit snapshot publications of this same cycle; reset only for the next cycle after this final report."
   },
   "state_swept_total": {
    "$ref": "#/$defs/count",
-   "description": "cumulative state rows successfully deleted by this controller process; starts at zero; increments only on confirmed deletion; required for the writer"
+   "description": "Cumulative confirmed orphan-state deletions from this process start; not reset between cycles."
   }
  },
  "propertyNames": {
@@ -371,7 +380,10 @@
   "workers_unsure_moved_total",
   "name_conflicts",
   "unplaceable",
-  "raise_failed"
+  "raise_failed",
+  "expired_kept",
+  "snapshot_state_garbled",
+  "state_swept_total"
  ],
  "$defs": {
   "common.book_missing": {
@@ -1195,13 +1207,6 @@
    "description": "a slot name, P/03.2 N1.4",
    "type": "string",
    "pattern": "^(?:[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
-  },
-  "writer": {
-   "required": [
-    "expired_kept",
-    "snapshot_state_garbled",
-    "state_swept_total"
-   ]
   }
  }
 }
