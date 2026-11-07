@@ -71,12 +71,7 @@ of a unit. The other evidence is N5 of the norms of the chapter, including the f
 
 ## Checks outside TSV after run 25
 
-For unknown server keep the known BOX_ID/instance and the taken name, but do not set the server;
-in a separate manifest enable places.server_field and places.lease: strict. Read the heartbeat through the objects door or check
-the formation of the object by reading: server is present and equals "", server_unsaid contains the text of
-ADR-0029, all places are strict. A separate variant with a known server gives a non-empty server and does not
-contain server_unsaid. The substitution of BOX_ID instead of the server does not pass. The ordinary TSV sets srv-a
-and does not observe this branch.
+**Server admission outside TSV.** Keep the ordinary profile with SERVER_NAME=srv-a. Through the existing SDK/process startup path, check an empty value and one outside the grammar: the existing exit 2 precedes the presence lock, with no capture or heartbeat publication from that start. With the valid server, read the real heartbeat: server=srv-a, not BOX_ID/instance. The ordinary TSV continues to exercise the valid server; this reading obligation is not an executed extra process scenario.
 
 ## Additional check of the class of errors of run 36 (Kimi)
 
@@ -85,3 +80,5 @@ Sc. 03 does not read the heartbeat object and does not prove its period (N1.1 of
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
 
 SDK tests at the seams are in [seams.tsv](seams.tsv); their adapter contract is [forms/README.md](../../forms/README.md). They supplement the process scenarios and do not change the counts above or replace a reading witness they do not execute.
+
+SDK seams s8–s13 use the existing worker-stand-in at neighbours of STALL and FOR. At age <= STALL there are no stand-in effects; at STALL < age <= FOR they observe slot renewal before confirmation and repeated heartbeat, without watchdog or epoch issue. Beyond FOR this substitution stops and the existing done applies. s13 does not forbid ordinary completion cleanup writes: it observes no renewal-confirmation sequence, epoch issue or watchdog, without a new done port.

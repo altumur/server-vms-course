@@ -11,7 +11,7 @@
   },
   "until": {
    "$ref": "#/$defs/common.time",
-   "description": "as in the slot: the writer's clock + 45; display, not freshness — another's place is free after standing unchanged for 45 + HOLD_SKEW by the judge's clock",
+   "description": "as in the slot: the writer's clock + SLOT_TERM; display, not freshness — another's place is free after standing unchanged for 45 + HOLD_SKEW by the judge's clock",
    "x-codec": [
     "time"
    ]
@@ -24,14 +24,14 @@
    ]
   },
   "gen": {
-   "description": "as in the slot: the generation, does not decrease",
+   "description": "The stored generation is from 1 through 2^53-1, as issued by capture; only confirmed row absence has the initial operand 0. It never decreases.",
    "x-whole": true,
    "type": "integer",
    "x-integer": true,
-   "minimum": 0,
    "x-codec": [
     "integer"
-   ]
+   ],
+   "$ref": "#/$defs/common.pos53"
   },
   "by": {
    "description": "the name of the holder's slot — whose place it is (N1.3); by it the place «follows the name» (N3 «place»)",

@@ -137,9 +137,7 @@ For the slot distinguish three times: the display of until on the writer's clock
 and the deadline of one's own confirmed request. A shift of the first clock does not change held/lapsed or the fate.
 Check a new first look, one's own late answer and the window of the write after one's own renewal.
 
-An unknown server is expressed by server: "" with BOX_ID and instance kept. With places.server_field
-the heartbeat contains server_unsaid; with places.lease: strict all places are strict; an invented server does not replace not knowing.
-The checks outside the ordinary TSV and the exact rules of fixing the variables of @until — in the acceptance READMEs of the chapters.
+Current startup admits SERVER_NAME before the presence lock: empty or invalid is the existing startup refusal, exit 2; a valid start publishes a nonempty server. BOX_ID and instance do not replace the server. The acceptance chapter READMEs specify the checks outside TSV.
 
 ## Done when
 
