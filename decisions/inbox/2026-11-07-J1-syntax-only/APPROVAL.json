@@ -1,0 +1,102 @@
+{
+  "utc": "2026-11-07T23:18:05.449402+00:00",
+  "status": "APPROVED_J1_ONE_NODE_VERSION_AND_TWO_SYNTAX_CHECKS_ONLY_NO_TEST_RUNTIME",
+  "owner": "existing spec103 через coord103-src",
+  "basis": "Отдельное решение после frozen45c9 и Primary80e9a36e; прежний CODE-only57fe Node/parser не разрешал. Это не допуск из З13/уборки или D0.",
+  "request": {
+    "path": "/home/pilot/coord103-src/p07-J1-syntax-only-scope-45c9/ARCHITECT-SYNTAX-ONLY-SCOPE-REQUEST.json",
+    "sha256": "acc2004c2c514c87dcf5e69ec822edaad46e164a7e8dcbe844e630e468094a93"
+  },
+  "primary_byte_read": {
+    "path": "/home/pilot/architect-reviews/p07-J1-Code45c9-primary/ROOT-CODE-BYTE-ACCEPTANCE.json",
+    "sha256": "80e9a36e16e9197bbe7686b474b63693b094a6d728f8662cb8c3eda0195c8334",
+    "evidence_hash_size": 8,
+    "normal_onepath_soleparent_wholeSHA_and_approved_after_equal": true,
+    "Node_ELF_sha_checked_without_invocation": true,
+    "no_authorprogramme_inverse_or_tests_replayed": true
+  },
+  "Code_pin": "45c9a5e300492a64efb0f577a29ce1521ead6741",
+  "Source_base_pin": "0d241c80a4e236043e7368d53d399342c1c4f88f",
+  "cwd": "/home/pilot/wt-spec103-p07-j1-test-code-0d241c80",
+  "binary_required": {
+    "invocation_path": "/usr/local/bin/node",
+    "resolved_path": "/opt/node-v22.23.2/bin/node",
+    "sha256": "3517c2df0b2f8cd7f422b4b8450ef81c6889f08eb03e281d6de9079b15e6a327",
+    "bytes": 124836408,
+    "mode": "0o755",
+    "version": "NOT_INVOKED; directoryname is not independent version proof",
+    "readonly_filesystem_metadata_only": true
+  },
+  "files_readonly": [
+    {
+      "path": "Source/tests/console/holder-page.test.js",
+      "mode": "100644",
+      "blob": "d28b33673514836ce76631be6d9d666415a5db16",
+      "sha256": "5469b0ae31c9dad4dc07b0ae7dc8f6e4498e90be80aaaae3550b447c2616c7bc",
+      "bytes": 16126,
+      "spans": 5
+    },
+    {
+      "path": "Platform/07-console-module/module/console.js",
+      "mode": "100644",
+      "blob": "322cfe7b3ce32c6283246bc8486385f9583ec843",
+      "sha256": "155b0746b075db0ac339d40c46b34896c15511a4c25cd12d2271604f82976003",
+      "bytes": 326674
+    }
+  ],
+  "commands_in_order": [
+    [
+      "/usr/local/bin/node",
+      "--version"
+    ],
+    [
+      "/usr/local/bin/node",
+      "--check",
+      "Source/tests/console/holder-page.test.js"
+    ],
+    [
+      "/usr/local/bin/node",
+      "--check",
+      "Platform/07-console-module/module/console.js"
+    ]
+  ],
+  "max_invocations_each": 1,
+  "wall_timeout_seconds_each": 30,
+  "environment_per_invocation_null_remove": [
+    "NODE_OPTIONS",
+    "NODE_PATH",
+    "CONSOLE_FILE",
+    "NODE_COMPILE_CACHE",
+    "NODE_V8_COVERAGE",
+    "NODE_REDIRECT_WARNINGS",
+    "LD_PRELOAD",
+    "LD_LIBRARY_PATH"
+  ],
+  "environment_note": "Только child env. Убрать Node preloads/selectors/cache/coverage/redirection и dynamic-loader overrides; не менять system config, HOME, службы или постоянные env. Полное окружение/секреты не печатать.",
+  "capture_root": "/home/pilot/spec103/p07-j1-syntax-only-45c9a5e3-run01",
+  "capture_precondition": "Должен отсутствовать; создать один fresh nonsymlink owned evidence directory после проверки authority. Existing root не переиспользовать. До допуска он не создавался.",
+  "preconditions": [
+    "ExactWTCode45c9/HEADclean/soleparent0d; оба physicalfile modeblob/SHA5469+155b, Source/helper/fixture защищены. Не заменять pins текущим main/latest.",
+    "Проверить Node symlinkchain/ELF resolvedpath/sha3517/124836408B/mode755 до команд и после. Каталог node-v22.23.2 не доказательство actual version: единственный --version сохраняет фактический ответ.",
+    "Сохранить каждый из трёх exactargv/cwd, removedenvnames, start/end/monotonic time, rawstdout/rawstderr/exit/signal/timeout. Только stdlib parent capture/identity metadata, no project import/probe.",
+    "После команд проверить неизменность двух файлоносителей/Node identity и Git HEAD/clean. Записать внешний INDEX/FREEZE; никакой правки JS, теста, helper или Source."
+  ],
+  "allowed_effect": "Только один Node --version как metadata и по одному Node --check для двух файлов. --check разбирает синтаксис, тела test/module не исполнять; no require/import/boot/jsdom/eval/test/DOM.",
+  "stop_policy": "Любое несовпадение prerequisite/byte/identity, nonzero, signal или timeout — сохранить complete capture и STOP; дальнейшие команды NOT_EXECUTED. No retry/heal/install/refreeze/sourceedit/fallback/переход в JSruntime. Штатная parse-ошибка отмечается отдельно как syntax result, не domain/runtime FAIL или kill.",
+  "success_definition": "Все три exact commands exit0, версия записана фактически, оба --check с полным stdout/stderr и unchanged inputs. Это только syntax/Nodeidentity; не ready/fixture/schema/admission/DOM/42keys/testPASS. Bare parserexit0 не runtime evidence.",
+  "forbidden": [
+    "Запуск holder-page.test.js без --check, Node --help/selftest/mock/test/discovery",
+    "require/import/jsdom/boot/helper/JS eval/HTTP/SUT/42–45suite",
+    "новые зависимости/install/cache/coverage/output redirection",
+    "Code/Source/Platform/helpers/witness/norms/API/fixtures/locale/metadata/history edits",
+    "mainmerge/Sourceadoption/GATE/wholemarker/Go/render/gen/models/newsession",
+    "VMSreview без freshownerword/ms/обеCTClaude/19guards/timers/diskcleanup/resize/restart/З14phonecutover"
+  ],
+  "delivery": "Сдать actual3command results (или exactstopped/NOT_EXECUTED remainder), raw captures/Node identity/beforeafterSHA/HEADclean и externalFREEZE. Проверка primary evidence отдельно; допуск consumed по единственной попытке, без автоматической следующей стадии.",
+  "future_selected_runtime": "Остаётся закрыт. После syntaxfreeze нужны отдельные точные existingjsdom/deps/binary/env/pin/cwd/finite-timeout/full-result-capture prerequisites и новый допуск; 42keys=39bool+3errorarrays одного теста, не42suite.",
+  "D0": "Независимый выбранныйPython6display+2inputchecking принят Primaryd0f525c1; grant9a896 consumed/remaining0, приватныхoracles не передавать.",
+  "actual_Node_invocations_in_approval": 0,
+  "current_syntax_runtime": "NOT_EXECUTED_NOT_VERIFIED",
+  "new_own_estimate_due_aggregate": null,
+  "additional_ACK_or_confirmation_required": false
+}
