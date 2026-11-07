@@ -11,7 +11,7 @@
   },
   "until": {
    "$ref": "#/$defs/common.time",
-   "description": "as in the slot: the writer's clock + SLOT_TERM; display, not freshness — another's place is free after standing unchanged for 45 + HOLD_SKEW by the judge's clock",
+   "description": "as in the slot: the writer's clock + SLOT_TERM; display, not freshness — another's place is free after standing unchanged for LOST_AFTER + HOLD_SKEW by the judge's clock",
    "x-codec": [
     "time"
    ]
