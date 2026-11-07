@@ -741,13 +741,21 @@ class SourceSchemaReader:
                 return node, path, pointer
             path, pointer, chain = self._reference(path, pointer, node["$ref"], kind, chain)
 
-    def parameter(self, node, base, binding):
+    def parameter(self, node, base, binding, declaration=None):
         op, route, method = binding
-        prefix = "/paths/" + self.escape(route) + "/"
-        locations = [(p, ptr) for p, ptr in self._locations(node, base, "parameter")
-                     if ptr.startswith(prefix) and
-                     (ptr[len(prefix):].startswith("parameters/") or
-                      ptr[len(prefix):].startswith(method + "/parameters/"))]
+        if declaration is None:
+            prefix = "/paths/" + self.escape(route) + "/"
+            locations = [(p, ptr) for p, ptr in self._locations(node, base, "parameter")
+                         if ptr.startswith(prefix) and
+                         (ptr[len(prefix):].startswith("parameters/") or
+                          ptr[len(prefix):].startswith(method + "/parameters/"))]
+        else:
+            # The caller carries the original source slot, including a component/alias occurrence.
+            p, ptr = declaration
+            p = self.physical(p)
+            if (p, ptr) not in self._locations(node, base, "parameter"):
+                raise CheckingError("parameter is not the declared source occurrence")
+            locations = [(p, ptr)]
         if not locations:
             raise CheckingError("parameter has no declaration for the operation")
         resolved = [self.resolve_object(p, ptr, "parameter") for p, ptr in locations]
@@ -947,6 +955,76 @@ class SourceSchemaReader:
             pos = value
         return mapping()
 
+
+    def operation_declarations(self):
+        """Enumerate source slots, retaining coordinates independently of object/cache identity."""
+        import hashlib
+        doc = self.document(self.source)
+        slots = [(route, "/paths/" + self.escape(route), "") for route in doc.get("paths", {})]
+        witness = None
+        if self.owner(self.source) == 6:
+            api_sha = "b4073b39c35094aba8bd6cecefd0f63f5cc2c37abc867e72a0b81eaa4c7b189e"
+            mapfile = self.root / "decisions/inbox/2026-11-07-p06-s08-source/operation-map.json"
+            try:
+                raw = mapfile.read_bytes()
+                if (hashlib.sha256(raw).hexdigest() !=
+                        "af5920d7fb4e73055b33229f9a65c330bc021d4e780e9cd7719b46531d547f19" or
+                        hashlib.sha256(self.source.read_bytes()).hexdigest() != api_sha):
+                    raise CheckingError("source operation identity witness changed")
+                witness = json.loads(raw)
+            except (OSError, ValueError) as exc:
+                raise CheckingError("source operation identity witness unavailable") from exc
+            standard = {"UnitsCollection": "/{rows}", "UnitItem": "/{rows}/{id}",
+                        "TableCollection": "/{table}", "TableItem": "/{table}/{name}",
+                        "PassRoot": "/{pass}", "ConsoleFile": "/{sub}/{file}"}
+            items = doc.get("components", {}).get("pathItems", {})
+            if set(items) != set(standard):
+                raise CheckingError("missing/extra standard source PathItem")
+            slots += [(route, "/components/pathItems/" + name, name) for name, route in standard.items()]
+        identities = {}
+        if witness is not None:
+            for row in witness["records"]:
+                if row.get("member_of_original140"):
+                    pointer = row["after_pointer"]
+                    if pointer in identities:
+                        raise CheckingError("ambiguous source operation identity")
+                    identities[pointer] = (row["actual_adapter_Op"], row["logical_ordinal_original140"])
+            heads = [("/folders", "OpHeadFolders"), ("/folders/{id}", "OpHeadFoldersById"),
+                     ("/{sub}/operations/{id}", "OpHeadBySubOperationsById"),
+                     ("/changes", "OpHeadChanges"), ("/{sub}/next_id", "OpHeadBySubNextId"),
+                     ("/api/backup-part/{member}/{part}", "OpHeadApiBackupPartByMemberByPart")]
+            # The six appended identities are approved Source assignments, never generated metadata.
+            for ordinal, (route, symbol) in enumerate(heads, 141):
+                identities["/paths/" + self.escape(route) + "/head"] = (symbol, ordinal)
+            if len(identities) != 146:
+                raise CheckingError("incomplete source identity witness")
+        out, seen = [], set()
+        for route, declaration, component in slots:
+            item, file, pointer = self.resolve_object(self.source, declaration, "path")
+            for method in self.METHODS:
+                if method not in item:
+                    continue
+                operation_pointer = pointer + "/" + method
+                source_pointer = declaration + "/" + method
+                if (route, method) in seen:
+                    raise CheckingError("duplicate logical source operation")
+                seen.add((route, method))
+                if witness is not None and source_pointer not in identities:
+                    raise CheckingError("source operation has no immutable identity")
+                parameters = []
+                for owner, values in ((pointer, item.get("parameters", [])),
+                                      (operation_pointer, item[method].get("parameters", []))):
+                    for i, value in enumerate(values):
+                        parameters.append((value, file, owner + "/parameters/" + str(i)))
+                symbol, ordinal = identities.get(source_pointer, (None, None))
+                out.append(dict(route=route, method=method, component=component, file=file,
+                                item=item, operation=item[method], item_pointer=pointer,
+                                pointer=operation_pointer, declaration=source_pointer,
+                                parameters=parameters, symbol=symbol, ordinal=ordinal))
+        if witness is not None and {r["declaration"] for r in out} != set(identities):
+            raise CheckingError("uncovered source operation identity")
+        return out
+
     def output_bindings(self, module):
         """Pair source operation coordinates with actual route/body table identities."""
         try:
@@ -965,26 +1043,26 @@ class SourceSchemaReader:
         request = self.literal_table(bodies, "requestSchemas")
         response = self.literal_table(bodies, "responseSchemas")
         expected = {}
-        for route, item in self.document(self.source).get("paths", {}).items():
-            item, file, pointer = self.resolve_object(self.source, "/paths/" + self.escape(route), "path")
-            for method in self.METHODS:
-                if method not in item:
-                    continue
-                if (route, method) not in ops:
-                    raise CheckingError("source operation missing from actual metadata")
-                op = ops[route, method]
-                operation = item[method]
-                operation_pointer = pointer + "/" + method
-                if "requestBody" in operation:
-                    value, base, ptr = self.resolve_object(file, operation_pointer + "/requestBody", "request")
-                    for media, body in value.get("content", {}).items():
-                        if "schema" in body:
-                            expected["request", op, media] = (base, ptr + "/content/" + self.escape(media) + "/schema")
-                for status in operation.get("responses", {}):
-                    value, base, ptr = self.resolve_object(file, operation_pointer + "/responses/" + self.escape(status), "response")
-                    for media, body in value.get("content", {}).items():
-                        if "schema" in body:
-                            expected["response", op, str(status), media] = (base, ptr + "/content/" + self.escape(media) + "/schema")
+        declarations = self.operation_declarations()
+        if set(ops) != {(r["route"], r["method"]) for r in declarations}:
+            raise CheckingError("missing/extra actual route operation")
+        for record in declarations:
+            route, method = record["route"], record["method"]
+            op = ops[route, method]
+            if record["symbol"] is not None and op != record["symbol"]:
+                raise CheckingError("actual operation renamed its source identity")
+            file, operation_pointer = record["file"], record["pointer"]
+            operation = record["operation"]
+            if "requestBody" in operation:
+                value, base, ptr = self.resolve_object(file, operation_pointer + "/requestBody", "request")
+                for media, body in value.get("content", {}).items():
+                    if "schema" in body:
+                        expected["request", op, media] = (base, ptr + "/content/" + self.escape(media) + "/schema")
+            for status in operation.get("responses", {}):
+                value, base, ptr = self.resolve_object(file, operation_pointer + "/responses/" + self.escape(status), "response")
+                for media, body in value.get("content", {}).items():
+                    if "schema" in body:
+                        expected["response", op, str(status), media] = (base, ptr + "/content/" + self.escape(media) + "/schema")
         actual = {}
         try:
             for op, values in request.items():
@@ -1101,16 +1179,18 @@ class DoorBodiesBase:
         """Compare CheckParams with an independent model of OpenAPI query/header coercion and jsonschema."""
         spec = ROOT / "Platform" / self.LESSON / "spec" / f"{self.LESSON}.api.openapi.yaml"
         reader = SourceSchemaReader(ROOT, spec)
-        doc = reader.document(spec)
         routes = (self.fresh / "apidoor/routes.go").read_text()
         cases = []
-        for path, item in doc["paths"].items():
-            for m in ("get", "put", "post", "delete", "patch", "head"):
-                if m not in item:
-                    continue
-                op = re.search(r'"' + re.escape(path) + " " + m.upper() + r'":\s+(Op\w+),', routes)[1]
-                for prm in item.get("parameters", []) + item[m].get("parameters", []):
-                    prm, base = reader.parameter(prm, spec, (op, path, m))
+        for record in reader.operation_declarations():
+            path, m = record["route"], record["method"]
+            match = re.search(r'"' + re.escape(path) + " " + m.upper() + r'":\s+(Op\w+),', routes)
+            if match is None:
+                raise CheckingError("parameter operation absent from actual routes")
+            op = match[1]
+            if record["symbol"] is not None and op != record["symbol"]:
+                raise CheckingError("parameter operation changed source identity")
+            for prm, file, pointer in record["parameters"]:
+                    prm, base = reader.parameter(prm, file, (op, path, m), (file, pointer))
                     if prm["in"] not in ("query", "header"):
                         continue
                     sch = prm.get("schema", {})
