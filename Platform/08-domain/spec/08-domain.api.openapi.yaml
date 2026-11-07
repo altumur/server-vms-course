@@ -3902,8 +3902,8 @@ components:
           - ''
           additionalProperties: false
           properties:
-            ? ''
-            : type: string
+            '':
+              type: string
     HolderBookPartBody:
       type: object
       required:
@@ -3915,7 +3915,7 @@ components:
           required:
           - ''
           properties:
-            ? ''
-            : type: string
+            '':
+              type: string
           additionalProperties:
             type: string
