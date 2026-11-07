@@ -11,6 +11,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -171,6 +172,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"unicode/utf8"
 
 	"%s/apidoor"
 )
@@ -180,43 +182,122 @@ func main() {
 	sc.Buffer(make([]byte, 1<<22), 1<<22)
 	enc := json.NewEncoder(os.Stdout)
 	for sc.Scan() {
+		if !utf8.Valid(sc.Bytes()) {
+			fmt.Fprintln(os.Stderr, "invalid service UTF-8")
+			os.Exit(2)
+		}
 		var c struct {
+			ID    int
 			Name  string
 			Value json.RawMessage
 		}
 		if err := json.Unmarshal(sc.Bytes(), &c); err != nil {
-			panic(err)
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
+		}
+		if c.ID < 1 {
+			fmt.Fprintln(os.Stderr, "missing service identity")
+			os.Exit(2)
 		}
 		v, err := apidoor.StrictJSON(c.Value)
 		if err != nil {
-			panic(fmt.Sprint(err, string(c.Value)))
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
 		}
-		var res any
-		func() {
-			defer func() {
-				if r := recover(); r != nil {
-					res = fmt.Sprint("panic: ", r)
-				}
-			}()
-			res = apidoor.Validate(c.Name, v) == nil
-		}()
-		enc.Encode(res)
+		res := apidoor.Validate(c.Name, v) == nil
+		if err := enc.Encode(map[string]any{"id": c.ID, "result": res}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
+		}
+	}
+	if err := sc.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
 	}
 }
 '''
 
 
-def run_go(mod, cases):
-    d = Path(mod) / "cmd/judgebodies"
-    d.mkdir(parents=True, exist_ok=True)
-    module = (Path(mod) / "go.mod").read_text().split("\n")[0].split()[1]
-    (d / "main.go").write_text(DRIVER % module)
-    stdin = "".join(json.dumps({"Name": n, "Value": v}, ensure_ascii=False) + "\n" for n, v in cases)
-    done = subprocess.run(["go", "run", "./cmd/judgebodies"], cwd=mod, input=stdin, capture_output=True, text=True,
-                          env=GOENV)
+class CheckingError(RuntimeError):
+    """A service failure is not a semantic disagreement or a killed mutant."""
+
+
+def response_object(pairs):
+    obj = {}
+    for key, value in pairs:
+        if key in obj:
+            raise CheckingError(f"duplicate service JSON key: {key}")
+        obj[key] = value
+    return obj
+
+
+def response_constant(word):
+    raise CheckingError(f"non-JSON service constant: {word}")
+
+
+def checked_values(cases, values):
+    """Check the entire response before any call to the independent oracle."""
+    if not cases or type(values) is not list or len(values) != len(cases):
+        raise CheckingError("nonempty complete service report required")
+    for value in values:
+        if type(value) is not bool:
+            raise CheckingError("body/parameter response must be a boolean")
+        try:
+            json.dumps(value, ensure_ascii=False, allow_nan=False).encode("utf-8")
+        except (UnicodeError, ValueError, TypeError) as exc:
+            raise CheckingError("invalid service scalar") from exc
+    return values
+
+
+def read_report(cases, done):
     if done.returncode:
-        raise AssertionError(done.stderr[-2000:])
-    return [json.loads(x) for x in done.stdout.split("\n") if x]
+        raise CheckingError(f"Go service exited {done.returncode}: {done.stderr[-2000:]}")
+    try:
+        done.stdout.encode("utf-8")
+        lines = done.stdout.split("\n")
+        if lines and lines[-1] == "":
+            lines.pop()
+        if not cases or len(lines) != len(cases) or any(not line for line in lines):
+            raise CheckingError("nonempty complete service report required")
+        frames = [json.loads(line, object_pairs_hook=response_object, parse_constant=response_constant)
+                  for line in lines]
+    except (UnicodeError, ValueError, TypeError, RecursionError, AttributeError) as exc:
+        raise CheckingError("invalid UTF-8/JSON service report") from exc
+    values = []
+    for identity, frame in enumerate(frames, 1):
+        if (type(frame) is not dict or set(frame) != {"id", "result"}
+                or type(frame["id"]) is not int or frame["id"] != identity):
+            raise CheckingError(f"service identity/order: expected {identity}")
+        values.append(frame["result"])
+    return checked_values(cases, values)
+
+
+def go_process(mod, command, stdin=""):
+    try:
+        return subprocess.run(["go", "run", command], cwd=mod, input=stdin, capture_output=True,
+                              text=True, encoding="utf-8", env=GOENV, timeout=120)
+    except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
+        raise CheckingError(f"cannot execute Go service: {exc}") from exc
+
+
+def disagree(cases, got, expected):
+    values = checked_values(cases, got)
+    return [(case, expected(case), values[i]) for i, case in enumerate(cases) if expected(case) != values[i]]
+
+
+def run_go(mod, cases):
+    if not cases:
+        raise CheckingError("nonempty service input required")
+    try:
+        d = Path(mod) / "cmd/judgebodies"
+        d.mkdir(parents=True, exist_ok=True)
+        module = (Path(mod) / "go.mod").read_text(encoding="utf-8").split("\n")[0].split()[1]
+        (d / "main.go").write_text(DRIVER % module, encoding="utf-8")
+        stdin = "".join(json.dumps({"ID": i, "Name": n, "Value": v}, ensure_ascii=False, allow_nan=False) + "\n"
+                        for i, (n, v) in enumerate(cases, 1))
+    except (OSError, UnicodeError, ValueError, TypeError, IndexError) as exc:
+        raise CheckingError("cannot prepare body service") from exc
+    return read_report(cases, go_process(mod, "./cmd/judgebodies", stdin))
 
 
 def oracle(defs):
@@ -292,7 +373,7 @@ class DoorBodiesBase:
         done = subprocess.run([sys.executable, str(HERE / "gen_door_lesson.py"), "--lesson", cls.LESSON, str(out)],
                               capture_output=True, text=True)
         if done.returncode:
-            raise AssertionError(done.stderr)
+            raise CheckingError(done.stderr)
         cls.fresh = out / "go"
         cls.defs = bundle_of(cls.fresh)["$defs"]
         cls.cases = cases_for(cls.defs, random.Random(36))
@@ -382,7 +463,7 @@ class DoorBodiesBase:
         check = oracle(self.defs)
         got = run_go(self.fresh, self.cases)
         self.assertEqual(len(got), len(self.cases))
-        bad = [(n, v, g) for (n, v), g in zip(self.cases, got) if g != check(n, v)]
+        bad = disagree(self.cases, got, lambda c: check(*c))
         self.assertEqual(bad[:3], [], f"{len(bad)} of {len(self.cases)} disagree with jsonschema")
         valid = sum(1 for g in got if g is True)
         self.assertGreater(valid, len(got) // 10)
@@ -393,7 +474,7 @@ class DoorBodiesBase:
         mod = synth_module(self.fresh, self.tmp / "synth")
         check = oracle(SYNTH)
         got = run_go(mod, SYNTH_CASES)
-        bad = [(n, v, g) for (n, v), g in zip(SYNTH_CASES, got) if g != check(n, v)]
+        bad = disagree(SYNTH_CASES, got, lambda c: check(*c))
         self.assertEqual(bad[:3], [], f"{len(bad)} of {len(SYNTH_CASES)} disagree")
         for name in SYNTH:
             verdicts = {check(n, v) for n, v in SYNTH_CASES if n == name}
@@ -484,20 +565,23 @@ class DoorBodiesBase:
                                       {"$ref": (Path(base).parent / sch["$ref"].partition("#")[0]).resolve().as_uri() + "#"
                                        + sch["$ref"].partition("#")[2]}, registry=reg).is_valid(v)
             return ok
-        prog = ["package main", "", "import (", '\t"fmt"', "", f'\t"{(self.fresh / "go.mod").read_text().split()[1]}/apidoor"', ")", "",
-                "func main() {"]
-        for op, place, name, raw, *_ in cases:
+        prog = ["package main", "", "import (", '\t"encoding/json"', '\t"fmt"', '\t"os"',
+                f'\t"{(self.fresh / "go.mod").read_text().split()[1]}/apidoor"', ")", "", "func main() {",
+                "\tenc := json.NewEncoder(os.Stdout)"]
+        for identity, (op, place, name, raw, *_) in enumerate(cases, 1):
             nm = name.lower() if place == "header" else name      # Header names are case-insensitive.
             prog.append(f'\t{{ _, _, v := apidoor.CheckParam(apidoor.{op}, {json.dumps(place)}, {json.dumps(nm)}, '
-                        f'[]string{{{json.dumps(raw)}}}); fmt.Println(v == nil) }}')
+                        f'[]string{{{json.dumps(raw)}}}); if err := enc.Encode(map[string]any{{"id": {identity}, '
+                        '"result": v == nil}); err != nil { fmt.Fprintln(os.Stderr, err); os.Exit(2) } }')
         prog.append("}")
-        d = self.fresh / "cmd/judgeparams"
-        d.mkdir(parents=True, exist_ok=True)
-        (d / "main.go").write_text("\n".join(prog) + "\n")
-        done = subprocess.run(["go", "run", "./cmd/judgeparams"], cwd=self.fresh, capture_output=True, text=True, env=GOENV)
-        self.assertEqual(done.returncode, 0, done.stderr[-1500:])
-        got = [x == "true" for x in done.stdout.split()]
-        bad = [(c[:4], want(c), g) for c, g in zip(cases, got) if want(c) != g]
+        try:
+            d = self.fresh / "cmd/judgeparams"
+            d.mkdir(parents=True, exist_ok=True)
+            (d / "main.go").write_text("\n".join(prog) + "\n", encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise CheckingError("cannot prepare parameter service") from exc
+        got = read_report(cases, go_process(self.fresh, "./cmd/judgeparams"))
+        bad = disagree(cases, got, want)
         self.assertEqual(bad[:3], [], f"{len(bad)} of {len(cases)} parameter verdicts disagree")
 
     def test_api(self):
@@ -534,8 +618,8 @@ func main() {
         muts = {
             "unevaluated": rt.replace('if up, ok := n["unevaluatedProperties"]; ok {', 'if up, ok := n["zz"]; ok {', 1),
             "oneOf-as-anyOf": rt.replace("if hits != 1 {", "if hits < 1 {", 1),
-            "integer": rt.replace("return ok && r.IsInt()", "return ok", 1),
-            "minLength-bytes": rt.replace("l := utf8.RuneCountInString(x)", "l := len(x)", 1),
+            "integer": rt.replace("r, ok := num(v)\n\t\treturn ok && r.IsInt()", "_, ok := num(v)\n\t\treturn ok", 1),
+            "minLength-bytes": rt.replace("l := utf8.RuneCountInString(x)", "l := len(x)", 1).replace('\t"unicode/utf8"\n', "", 1),
             "required": rt.replace('fail("required " + r.(string))', '_ = r', 1),
         }
         scheck = oracle(SYNTH)
@@ -550,13 +634,106 @@ func main() {
                     else:
                         shutil.copytree(self.fresh, mod)
                     (mod / "apidoor/schema_rt.go").write_text(text)
-                    try:
-                        got = run_go(mod, cases)
-                    except AssertionError:
-                        bad.append("build")
-                        continue
-                    bad += [1 for (n, v), g in zip(cases, got) if g != chk(n, v)]
+                    got = run_go(mod, cases)
+                    bad += [(kind, mismatch) for mismatch in disagree(cases, got, lambda c: chk(*c))]
                 self.assertTrue(bad, f"{name} survives")
+
+
+class BodyServiceControls(unittest.TestCase):
+    """Independent controls of the checking service, without running Go."""
+
+    def setUp(self):
+        self.cases = [("X", {"text": "é\u2028x"}), ("X", {})]
+        self.value = True
+
+    def report(self, frames):
+        return subprocess.CompletedProcess(["go", "run"], 0,
+                                           "".join(json.dumps(f) + "\n" for f in frames), "")
+
+    def frames(self):
+        return [{"id": i, "result": self.value} for i in range(1, len(self.cases) + 1)]
+
+    def test_complete_equal_values_keep_distinct_input_identities(self):
+        self.assertEqual(read_report(self.cases, self.report(self.frames())), [self.value, self.value])
+        with tempfile.TemporaryDirectory() as td:
+            (Path(td) / "go.mod").write_text("module service.control\n")
+            with patch(__name__ + ".subprocess.run", return_value=self.report(self.frames())) as proc:
+                self.assertEqual(run_go(td, self.cases), [self.value, self.value])
+            sent = [json.loads(line) for line in proc.call_args.kwargs["input"].split("\n") if line]
+            self.assertEqual([c["ID"] for c in sent], [1, 2])
+
+    def test_reports_require_nonempty_complete_ordered_identity(self):
+        good = self.frames()
+        variants = [[], good[:1], good + [good[0]], [good[0], good[0]], good[::-1],
+                    [{"id": True, "result": self.value}, good[1]],
+                    [{"result": self.value}, good[1]],
+                    [dict(good[0], extra=1), good[1]], [[], good[1]],
+                    [{"id": 1, "result": "panic: control"}, good[1]]]
+        for frames in variants:
+            with self.subTest(frames=frames), self.assertRaises(CheckingError):
+                read_report(self.cases, self.report(frames))
+        for text in ('', '\n', '{bad}\n', '{"id":1,"id":1,"result":true}\n' + json.dumps(good[1]) + '\n',
+                     '{"id":1,"result":NaN}\n' + json.dumps(good[1]) + '\n',
+                     self.report(good).stdout + '\n', '\ud800'):
+            with self.subTest(text=repr(text)), self.assertRaises(CheckingError):
+                read_report(self.cases, subprocess.CompletedProcess([], 0, text, ''))
+
+    def test_process_and_preparation_errors_are_checking_errors(self):
+        with tempfile.TemporaryDirectory() as td:
+            (Path(td) / "go.mod").write_text("module service.control\n")
+            for failure in (OSError("start"), UnicodeError("UTF-8"), subprocess.TimeoutExpired(["go"], 120)):
+                with self.subTest(failure=failure), patch(__name__ + ".subprocess.run", side_effect=failure):
+                    with self.assertRaises(CheckingError):
+                        run_go(td, self.cases)
+            for stderr in ("compile failed", "panic: control", "scanner failed", "encoder failed"):
+                done = subprocess.CompletedProcess([], 1, self.report(self.frames()).stdout, stderr)
+                with self.subTest(stderr=stderr), patch(__name__ + ".subprocess.run", return_value=done):
+                    with self.assertRaises(CheckingError):
+                        run_go(td, self.cases)
+            with patch(__name__ + ".subprocess.run") as proc:
+                with self.assertRaises(CheckingError):
+                    run_go(td, [])
+                proc.assert_not_called()
+            (Path(td) / "go.mod").unlink()
+            with self.assertRaises(CheckingError):
+                run_go(td, self.cases)
+
+    def test_complete_report_is_checked_before_the_oracle(self):
+        expected = Mock(return_value=self.value)
+        for got in ([], [False], [False, "bad shape"]):
+            with self.subTest(got=got), self.assertRaises(CheckingError):
+                disagree(self.cases, got, expected)
+        expected.assert_not_called()
+        self.assertEqual(disagree(self.cases, [self.value, self.value], lambda c: self.value), [])
+        bad = disagree(self.cases, [False, self.value], lambda c: self.value)
+        self.assertEqual(len(bad), 1)
+        self.assertEqual(bad[0][0], self.cases[0])
+
+    def mutant_case(self, directory):
+        fresh = Path(directory) / "fresh"
+        (fresh / "apidoor").mkdir(parents=True)
+        (fresh / "apidoor/schema_rt.go").write_bytes((HERE / "doorrt2/go/schema.go").read_bytes())
+        (fresh / "apidoor/bodies.go").write_text("const bundle = " + json.dumps(json.dumps({"$defs": {"X": True}})) + "\n")
+        obj = DoorBodies_p05("test_mutants")
+        obj.defs = {"X": True}
+        obj.cases = self.cases
+        obj.fresh = fresh
+        obj.tmp = Path(directory)
+        return obj
+
+    def test_mutant_loop_does_not_absorb_checking_errors(self):
+        with tempfile.TemporaryDirectory() as td:
+            obj = self.mutant_case(td)
+            with patch(__name__ + ".run_go", side_effect=CheckingError("compile control")):
+                with self.assertRaises(CheckingError):
+                    obj.test_mutants()
+
+    def test_a_complete_correct_mutant_report_remains_a_survivor(self):
+        with tempfile.TemporaryDirectory() as td:
+            obj = self.mutant_case(td)
+            with patch(__name__ + ".run_go", side_effect=lambda mod, cases: [oracle(bundle_of(mod)["$defs"])(*c) for c in cases]):
+                with self.assertRaisesRegex(AssertionError, "survives"):
+                    obj.test_mutants()
 
 
 for _lesson, _slug in LESSONS.items():
