@@ -1,0 +1,605 @@
+{
+  "base": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+  "approval_sha256": "be50a4a2a1b145134eaead5107bd45ba81dad706aa1c9e188cbced122ac6e3df",
+  "declared_manifest_sha256": "60650628583a0e65727942ae6ecff4ecf7761978dc1ecb553afaa7404485feef",
+  "source_and_history24": [
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "role": "OWNER_SOURCE",
+      "before": {
+        "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "862b513d4df5d29b9a3de26df599609886cc99e0",
+        "sha256": "c9e41d69e5686587df9efa08276ff0d970243099fa5306bd1998e0d50544fdac",
+        "bytes": 173611
+      },
+      "after_sha256": "bafacd7342a8b5076a0304195751bbe0a1066889b55e5fa97297a5c640c4e503",
+      "after_bytes": 176720
+    },
+    {
+      "path": "Platform/08-domain/forms/README.md",
+      "role": "OWNER_SOURCE",
+      "before": {
+        "path": "Platform/08-domain/forms/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "b21e574efc6794f4f5bcad462755c330ba873852",
+        "sha256": "ce702d9e0111c73b500a0e697c78ec91ea419d4cc6efab63bd1696e095ca6a75",
+        "bytes": 17176
+      },
+      "after_sha256": "b03c5191097978d9023daf7163e237d43b243f122137230e357f358f8abd24b8",
+      "after_bytes": 19038
+    },
+    {
+      "path": "Platform/08-domain/ru/forms/README.md",
+      "role": "OWNER_SOURCE",
+      "before": {
+        "path": "Platform/08-domain/ru/forms/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "aee630c363f58a298ee1930fd3db556992190e37",
+        "sha256": "df41580774cb06e85a090f4db7d00e75f9d8990de04d1104731301354065c05f",
+        "bytes": 26711
+      },
+      "after_sha256": "1a225c139aa46a851c32a6b0d6a1b92e970815bb1e6052628ccbb3e16e2a497b",
+      "after_bytes": 29724
+    },
+    {
+      "path": "Platform/08-domain/spec/08.4-domain.norms.md",
+      "role": "OWNER_SOURCE",
+      "before": {
+        "path": "Platform/08-domain/spec/08.4-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "98d8b7f5e673724d9324c6f8795b80a407679eb4",
+        "sha256": "3f3c723c260a79373ff6f4e436a303a08ca10da0fd26f45eb8d2582d4b942e07",
+        "bytes": 137078
+      },
+      "after_sha256": "4522ce72357066990973c1d058dcf455494ebcec19f37064ad846044e1908bfe",
+      "after_bytes": 137287
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.4-domain.norms.md",
+      "role": "OWNER_SOURCE",
+      "before": {
+        "path": "Platform/08-domain/ru/spec/08.4-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "c536f6b794e479c5102881e2ed3ed729376a7a9b",
+        "sha256": "0d71e800867c4d31d6fa09e3ab3452db7d9cc5fb8ae163797cfedd4b9780aa8c",
+        "bytes": 169500
+      },
+      "after_sha256": "67688f7d511e2988e85f47b33576e6ae4d2099b7215de04c14cd5f0731639f87",
+      "after_bytes": 169803
+    },
+    {
+      "path": "Platform/08-domain/spec/08.5-domain.norms.md",
+      "role": "OWNER_SOURCE",
+      "before": {
+        "path": "Platform/08-domain/spec/08.5-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "7dfe0dd35e25f00359b680c211dc58e1a291dec2",
+        "sha256": "e43dcb41b2d0490c4cfed448527ba6144c0bd0ccd32b2cd70e27e72bf4569402",
+        "bytes": 77182
+      },
+      "after_sha256": "aadda2c0b512ba819e05009fcb6343b3c795ba6b2961ce548601a0a16e558235",
+      "after_bytes": 77385
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.5-domain.norms.md",
+      "role": "OWNER_SOURCE",
+      "before": {
+        "path": "Platform/08-domain/ru/spec/08.5-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "0307b1f31e8e64a664d5bbf6e0a934b1c0915076",
+        "sha256": "c1acac1ccd8be4f4f47b31f9c71075140c81bb528adeb228d9cf27cf9f89395e",
+        "bytes": 96895
+      },
+      "after_sha256": "6d6cd26079979fbe6e61d7f8e4decd6a75e7fc4423bd070785d413d79c71adad",
+      "after_bytes": 97197
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/README.md",
+      "role": "RELATED_RAW_HASH_CONSUMER",
+      "before": {
+        "path": "Platform/09-agent/acceptance/1/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "99d5ef323cd00b8afda22222b867544fd91a9b06",
+        "sha256": "37cd74ccff97540b681b1a30c6b4ea9dd10fe31b720ff7af16506c3672752cc2",
+        "bytes": 33933
+      },
+      "after_sha256": "d49b89bd0c274df054e0ec48db7eefa13d3a8afcbbf703877affe5c10b739f67",
+      "after_bytes": 34497
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+      "role": "RELATED_RAW_HASH_CONSUMER",
+      "before": {
+        "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "5ded44b188683b33073d97506e25aca29b0997c7",
+        "sha256": "7c0c1f74b4a3a5e8be4f9e4df59f198d3c2633cf81a81b73bc5f8beb5fedb1a0",
+        "bytes": 785
+      },
+      "after_sha256": "7baf9369fd4f4b93a6d2dd5b601bc64ccfe05062c035f2e525da69b30cfb2835",
+      "after_bytes": 817
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv",
+      "role": "RELATED_RAW_HASH_CONSUMER",
+      "before": {
+        "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "039091fe0116085a8cc3cf9386143d0381fcfbd5",
+        "sha256": "a7b06ac3c4bf541f60c376a465b0be84b3b693277861e54be13040f9782c3b03",
+        "bytes": 1511
+      },
+      "after_sha256": "aaed2ab263f143ee36ccd548bb7c0af452f10c8b0aaf1e4e93d5aa51e08ab9e6",
+      "after_bytes": 2124
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/doc-only.json",
+      "role": "RELATED_RAW_HASH_CONSUMER",
+      "before": {
+        "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/doc-only.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "29d2afca82961911a7009c684eefde289b71f79b",
+        "sha256": "69bd19a4aa6cbe6f569799413a1821445c3067f23aef35d87ec68e0e90204865",
+        "bytes": 518
+      },
+      "after_sha256": "e3814f85e6eb65edffc7ba55d5157c0cb20d1cf2302998d81de3595a43b0a014",
+      "after_bytes": 534
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/inner-text.json",
+      "role": "RELATED_RAW_HASH_CONSUMER",
+      "before": "ABSENT",
+      "after_sha256": "fe56381aed51b1b691c840618698cd66b74b5069d7ded2548b3c9fbed0c5063f",
+      "after_bytes": 818
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+      "role": "RELATED_RAW_HASH_CONSUMER",
+      "before": {
+        "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "58bcb72a1e98e3c6da3318f7317e36950918ac41",
+        "sha256": "2e69cb7b01c3644ca7af6cde5a0d335c201e7bf1a34c74ecbc8762c34ede2db6",
+        "bytes": 806
+      },
+      "after_sha256": "a1f31651417ef83c1bc394655a4cb6acf456154bd5106066dd939a0efc8ea48a",
+      "after_bytes": 827
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/mismatch.json",
+      "role": "RELATED_RAW_HASH_CONSUMER",
+      "before": {
+        "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/mismatch.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "ca383eb6ebf9f8a21d52273ad6f9140e47b29492",
+        "sha256": "14ca676d754a5abba69104d3791ca10dd5ad403518d035da4578954b93cf1fdb",
+        "bytes": 518
+      },
+      "after_sha256": "1bd6092755f526778ab41582de4f1a350e8be21a64044877785304b1c558fa00",
+      "after_bytes": 534
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/seams.tsv",
+      "role": "RELATED_RAW_HASH_CONSUMER",
+      "before": {
+        "path": "Platform/09-agent/acceptance/1/seams.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "71d8ea138ae2c38469a7d9b910ae6846ef03ee03",
+        "sha256": "52fccb8bb62123d1f1f8a81a3604577e0f444aabadb51b24562be6ca6c3ccab3",
+        "bytes": 11079
+      },
+      "after_sha256": "7c6cb2c3b68bb29a7deb89d367667c484264671d1c00a2310dd08c01f39d4e68",
+      "after_bytes": 12159
+    },
+    {
+      "path": "Platform/09-agent/forms/README.md",
+      "role": "RELATED_RAW_HASH_CONSUMER",
+      "before": {
+        "path": "Platform/09-agent/forms/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "188b9992a9b800853d916833ff2a83782c42b263",
+        "sha256": "040cd9a2dd177c2a24ac2a4e6c85fc624d0063696afc5da5065f1e4936318b0d",
+        "bytes": 12481
+      },
+      "after_sha256": "842efb7a99c6b087aae2ba43cb0435a2d3857a426a45bf040af59ecd23f23a6b",
+      "after_bytes": 12692
+    },
+    {
+      "path": "Platform/09-agent/forms/stages.tsv",
+      "role": "RELATED_RAW_HASH_CONSUMER",
+      "before": {
+        "path": "Platform/09-agent/forms/stages.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "0585da6038bd211bb8bfea93019e7e8e9f66070a",
+        "sha256": "626987e430b0cc4f22f5bd68f41e21876c708add32d7079662be40ead43f2a86",
+        "bytes": 2958
+      },
+      "after_sha256": "7e5e0b3557757dd20391a901ca8607c42a1fc7224796cc11840e9b9cc91b799e",
+      "after_bytes": 2987
+    },
+    {
+      "path": "Platform/09-agent/ru/acceptance/1/README.md",
+      "role": "RELATED_RAW_HASH_CONSUMER",
+      "before": {
+        "path": "Platform/09-agent/ru/acceptance/1/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "fe9bc0ea362e3512cb3aa2c74ac661e26065edfc",
+        "sha256": "a29cf45fb33c1163046c3b7db96f2106ea64ca2b00de5ea8409c9a76acaac732",
+        "bytes": 42973
+      },
+      "after_sha256": "3392db9c8f79c0c101b41cb37e7e520057c017cb876b369451090234e8a7996d",
+      "after_bytes": 43912
+    },
+    {
+      "path": "Platform/09-agent/ru/forms/README.md",
+      "role": "RELATED_RAW_HASH_CONSUMER",
+      "before": {
+        "path": "Platform/09-agent/ru/forms/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "4803ef82a678927b445000526904240db6ced7ec",
+        "sha256": "bf1965ffc777a06c97a4720e20d88aa564507fe38330144ee600461d7dff7ae8",
+        "bytes": 21134
+      },
+      "after_sha256": "750b6efd882b09294518250ac7b0fc49936f933d3cf261d1d6c04baa1e01d8e0",
+      "after_bytes": 21527
+    },
+    {
+      "path": "Platform/09-agent/ru/spec/09.1-agent.norms.md",
+      "role": "RELATED_RAW_HASH_CONSUMER",
+      "before": {
+        "path": "Platform/09-agent/ru/spec/09.1-agent.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "02738560431f86c03c9a8c919f14d635a0e8f274",
+        "sha256": "5df186154c57048e3d533af0c1282d9b13f5896525f3f76494333a0f2896db06",
+        "bytes": 267432
+      },
+      "after_sha256": "33335cbaf200914d31b6f870ff82c1252ccd659bdcd35d126b76bbffafb3715f",
+      "after_bytes": 267774
+    },
+    {
+      "path": "Platform/09-agent/spec/09.1-agent.norms.md",
+      "role": "RELATED_RAW_HASH_CONSUMER",
+      "before": {
+        "path": "Platform/09-agent/spec/09.1-agent.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "e0bcacdbdbe384e9eac2a5be8c2b3090684d2e86",
+        "sha256": "8277f4a125ea8e3fbd9bc3c61e6db4c6a27f98bc20d65f721d9422d1df957fd5",
+        "bytes": 214386
+      },
+      "after_sha256": "dfcce7758bfdbc022604eecbbb67bf073f09b2fa16f35b0760a77a779b76e6fe",
+      "after_bytes": 214600
+    },
+    {
+      "path": "decisions/adr-norms.tsv",
+      "role": "APPEND_ONLY_HISTORY",
+      "before": {
+        "path": "decisions/adr-norms.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "abf3a435e8b57d870f39fa66f2f4069cbd55602e",
+        "sha256": "da22c149949f6d4641eec7c61c1c4ecfce05158ade0045c46c74843ae4275bf6",
+        "bytes": 473702
+      },
+      "after_sha256": "7d3da6c8286dc2cd4e21ec56665d184f174223ea68e968ad905a7f2339e3c10d",
+      "after_bytes": 474416
+    },
+    {
+      "path": "decisions/journal/platform/08-domain/corrections-4.tsv",
+      "role": "APPEND_ONLY_HISTORY",
+      "before": {
+        "path": "decisions/journal/platform/08-domain/corrections-4.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "37b03bbb7c0eb856101de7c3f9de5a8001274232",
+        "sha256": "47d663d5b4cc492cefa6f4603c0e0e3c33ca3eec379f9efd78c331c893b84fdc",
+        "bytes": 12793
+      },
+      "after_sha256": "d36879c7b1383e47c9fac1e457b7a7b7307bb061f954f90b24c3ec32c348b6ef",
+      "after_bytes": 13264
+    },
+    {
+      "path": "decisions/journal/platform/09-agent/corrections-1.tsv",
+      "role": "APPEND_ONLY_HISTORY",
+      "before": {
+        "path": "decisions/journal/platform/09-agent/corrections-1.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "15845ba5c70d9c34e2bfd99002b28642811f459d",
+        "sha256": "385ead41c949012814ee425286a8f37f17a864dfb24a7e27b318b7b7caad4e57",
+        "bytes": 11473
+      },
+      "after_sha256": "7fb2b83df707ea76efc44c158fc5b928ab14aeb3dc80fca8617e6c1f02d44231",
+      "after_bytes": 12091
+    }
+  ],
+  "actual_text_blocks": [
+    {
+      "path": "Platform/08-domain/forms/README.md",
+      "before_source": {
+        "path": "Platform/08-domain/forms/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "b21e574efc6794f4f5bcad462755c330ba873852",
+        "sha256": "ce702d9e0111c73b500a0e697c78ec91ea419d4cc6efab63bd1696e095ca6a75",
+        "bytes": 17176
+      },
+      "before_block": "## Inputs and constants\n",
+      "after_block": "## Shared holder HTTP forms\n\nThe six holder GET replies use only the standard parameter, schema and response components in [the owner OpenAPI](../spec/08-domain.api.openapi.yaml). `Member` and `AgentSignature` are unchanged; `Part`, `BookSub` and `Book` extract the existing exact parameters, and `BackupPartRevision` imports the existing P/06 query form. Keep their original levels, requiredness, headers, decoding, rights, refusal order and holder statuses. A book subsystem string is not silently narrowed to another `Sub` form.\n\nThe success components `HolderMembersBody`, `HolderAnywhereBody`, `HolderTopologyBody`, `HolderBackupPartBody`, `HolderBookHeadBody` and `HolderBookPartBody` are the sole HTTP body forms for those operations, with `application/json`. Members uses the existing string `doc` row wrapper, not `MembersDoc` or `MembersAnswer`; topology retains the complete nested body already described by the member copy; the backup is the existing part object. Anywhere and book carry the selected raw KV strings: no decoded alternative or conversion of body `as_of` into a JSON number. Their internal logical values are still checked by their current family codec and procedures.\n\nFor anywhere, JCS and SHA-256 apply to the complete parsed outer JSON value with those strings, before parsing the internal `doc` text. Outer HTTP whitespace, key order and equivalent JSON escaping do not change it; different text inside a string can change it even when that text parses to the same inner JSON. The sealed advertisement retains its existing type and meaning. P/09 forwards or copies this same owner wire and later refers to these components; it does not define another set of holder body types. Reference resolution keeps the original owner document base. These source forms do not claim actual HTTP, cryptography, copy IO or generator execution.\n\n## Inputs and constants\n",
+      "before_block_sha256": "d18212b1f32f2d28fbcd8cc8074b1dd71fa10f2c1a75004161bdf05c995ed6ca",
+      "after_block_sha256": "a340a92aa0170de442394187e88e3dee5618dc0862ebf05e050281af9e00065b",
+      "reason": "accepted fc7 raw wire and standard owner forms; no second form in P09",
+      "actual_after_block": "## Shared holder HTTP forms\n\nThe six holder GET replies use only the standard parameter, schema and response components in [the owner OpenAPI](../spec/08-domain.api.openapi.yaml). `Member` and `AgentSignature` are unchanged; `Part`, `BookSub` and `Book` extract the existing exact parameters, and `BackupPartRevision` imports the existing P/06 query form. Keep their original levels, requiredness, headers, decoding, rights, refusal order and holder statuses. A book subsystem string is not silently narrowed to another `Sub` form.\n\nThe success components `HolderMembersBody`, `HolderAnywhereBody`, `HolderTopologyBody`, `HolderBackupPartBody`, `HolderBookHeadBody` and `HolderBookPartBody` are the sole HTTP body forms for those operations, with `application/json`. Members uses the existing string `doc` row wrapper, not `MembersDoc` or `MembersAnswer`; topology retains the complete nested body already described by the member copy; the backup is the existing part object. Anywhere and book carry the selected raw KV strings: no decoded alternative or conversion of body `as_of` into a JSON number. Their internal logical values are still checked by their current family codec and procedures.\n\nFor anywhere, JCS and SHA-256 apply to the complete parsed outer JSON value with those strings, before parsing the internal `doc` text. Outer HTTP whitespace, key order and equivalent JSON escaping do not change it; different text inside a string can change it even when that text parses to the same inner JSON. The sealed advertisement retains its existing type and meaning. P/09 forwards or copies this same owner wire and later refers to these components; it does not define another set of holder body types. Reference resolution keeps the original owner document base. These source forms do not claim actual HTTP, cryptography, copy IO or generator execution.\n\n## Inputs and constants\n",
+      "actual_after_block_sha256": "a340a92aa0170de442394187e88e3dee5618dc0862ebf05e050281af9e00065b",
+      "sentence_separator_added": false
+    },
+    {
+      "path": "Platform/08-domain/ru/forms/README.md",
+      "before_source": {
+        "path": "Platform/08-domain/ru/forms/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "aee630c363f58a298ee1930fd3db556992190e37",
+        "sha256": "df41580774cb06e85a090f4db7d00e75f9d8990de04d1104731301354065c05f",
+        "bytes": 26711
+      },
+      "before_block": "## Входы и константы\n",
+      "after_block": "## Общие HTTP-формы держателя\n\nШесть ответов GET держателя используют только стандартные компоненты параметров, схем и ответов в [OpenAPI владельца](../../spec/08-domain.api.openapi.yaml). `Member` и `AgentSignature` не меняются; `Part`, `BookSub` и `Book` выделяют точные прежние параметры, а `BackupPartRevision` импортирует прежнюю query-форму P/06. Сохраняются исходные уровни, обязательность, заголовки, декодирование, права, порядок отказов и статусы держателя. Строка подсистемы книги не сужается молча к другой форме `Sub`.\n\nКомпоненты успеха `HolderMembersBody`, `HolderAnywhereBody`, `HolderTopologyBody`, `HolderBackupPartBody`, `HolderBookHeadBody` и `HolderBookPartBody` — единственные формы HTTP-тел этих операций, с `application/json`. Members использует прежнюю строковую оболочку `doc`, не `MembersDoc` и не `MembersAnswer`; topology сохраняет полное вложенное тело, уже описанное копией члена; backup — прежний объект части. Anywhere и book несут выбранные сырые строки KV: без декодированной разновидности и без превращения `as_of` тела в JSON-число. Их внутренние логические значения по-прежнему проверяются нынешним кодеком семей и процедурами.\n\nУ anywhere JCS и SHA-256 применяются ко всему разобранному внешнему JSON-значению с этими строками до разбора внутреннего текста `doc`. Внешние пробелы HTTP, порядок ключей и равнозначное JSON-экранирование его не меняют; различный текст внутри строки может менять хеш, даже если этот текст разбирается в одинаковый внутренний JSON. Объявление в sealed сохраняет прежние тип и смысл. P/09 передаёт или копирует тот же провод владельца и затем ссылается на эти компоненты, не определяя второй набор типов тел держателя. Ссылки разрешаются относительно прежнего документа владельца. Эти исходные формы не объявляют фактическое исполнение HTTP, криптографии, IO копий или генератора.\n\n## Входы и константы\n",
+      "before_block_sha256": "51a2f501a01215614dd2b8d7616b734d428e91ceec7721d28c487658f64306d5",
+      "after_block_sha256": "f555bbb72d63418c2d3aba02a1e0f4989abadbfcdd58491cb169d5237895d660",
+      "reason": "accepted fc7 raw wire and standard owner forms; no second form in P09",
+      "actual_after_block": "## Общие HTTP-формы держателя\n\nШесть ответов GET держателя используют только стандартные компоненты параметров, схем и ответов в [OpenAPI владельца](../../spec/08-domain.api.openapi.yaml). `Member` и `AgentSignature` не меняются; `Part`, `BookSub` и `Book` выделяют точные прежние параметры, а `BackupPartRevision` импортирует прежнюю query-форму P/06. Сохраняются исходные уровни, обязательность, заголовки, декодирование, права, порядок отказов и статусы держателя. Строка подсистемы книги не сужается молча к другой форме `Sub`.\n\nКомпоненты успеха `HolderMembersBody`, `HolderAnywhereBody`, `HolderTopologyBody`, `HolderBackupPartBody`, `HolderBookHeadBody` и `HolderBookPartBody` — единственные формы HTTP-тел этих операций, с `application/json`. Members использует прежнюю строковую оболочку `doc`, не `MembersDoc` и не `MembersAnswer`; topology сохраняет полное вложенное тело, уже описанное копией члена; backup — прежний объект части. Anywhere и book несут выбранные сырые строки KV: без декодированной разновидности и без превращения `as_of` тела в JSON-число. Их внутренние логические значения по-прежнему проверяются нынешним кодеком семей и процедурами.\n\nУ anywhere JCS и SHA-256 применяются ко всему разобранному внешнему JSON-значению с этими строками до разбора внутреннего текста `doc`. Внешние пробелы HTTP, порядок ключей и равнозначное JSON-экранирование его не меняют; различный текст внутри строки может менять хеш, даже если этот текст разбирается в одинаковый внутренний JSON. Объявление в sealed сохраняет прежние тип и смысл. P/09 передаёт или копирует тот же провод владельца и затем ссылается на эти компоненты, не определяя второй набор типов тел держателя. Ссылки разрешаются относительно прежнего документа владельца. Эти исходные формы не объявляют фактическое исполнение HTTP, криптографии, IO копий или генератора.\n\n## Входы и константы\n",
+      "actual_after_block_sha256": "f555bbb72d63418c2d3aba02a1e0f4989abadbfcdd58491cb169d5237895d660",
+      "sentence_separator_added": false
+    },
+    {
+      "path": "Platform/08-domain/spec/08.4-domain.norms.md",
+      "before_source": {
+        "path": "Platform/08-domain/spec/08.4-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "98d8b7f5e673724d9324c6f8795b80a407679eb4",
+        "sha256": "3f3c723c260a79373ff6f4e436a303a08ca10da0fd26f45eb8d2582d4b942e07",
+        "bytes": 137078
+      },
+      "before_block": "               sha256 — lowercase hex SHA-256(UTF-8(JCS({doc, as_of}))) of the complete JSON value of the 200 body of GET /api/anywhere/<member>; as_of is included. The digest is not of doc alone or of the raw HTTP bytes (G09-ANYWHERE-HASH-01)",
+      "after_block": "               sha256 — lowercase hex SHA-256(UTF-8(JCS({doc, as_of}))) of the complete JSON value of the 200 body of GET /api/anywhere/<member>; as_of is included. The digest is not of doc alone or of the raw HTTP bytes (G09-ANYWHERE-HASH-01) The HTTP body is the raw-string form `HolderAnywhereBody` of the owner OpenAPI: hash before parsing the internal doc or converting its body time. The sealed advertisement keeps its existing type and meaning.",
+      "before_block_sha256": "5966a4508184aeeee915a0873f39e8ad789816b4b436c12637f60d766e2123c6",
+      "after_block_sha256": "695afcad5a23ba2d52fec8176c8467c2541aa74ad48ebed7def5d4228cee7dd2",
+      "reason": "exact whole-body raw-string hash clarification",
+      "actual_after_block": "               sha256 — lowercase hex SHA-256(UTF-8(JCS({doc, as_of}))) of the complete JSON value of the 200 body of GET /api/anywhere/<member>; as_of is included. The digest is not of doc alone or of the raw HTTP bytes (G09-ANYWHERE-HASH-01). The HTTP body is the raw-string form `HolderAnywhereBody` of the owner OpenAPI: hash before parsing the internal doc or converting its body time. The sealed advertisement keeps its existing type and meaning.",
+      "actual_after_block_sha256": "d3a5808283448eca7ff701dbe0eaf33e9a229230644111ec56e6f0eb252113d5",
+      "sentence_separator_added": true
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.4-domain.norms.md",
+      "before_source": {
+        "path": "Platform/08-domain/ru/spec/08.4-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "c536f6b794e479c5102881e2ed3ed729376a7a9b",
+        "sha256": "0d71e800867c4d31d6fa09e3ab3452db7d9cc5fb8ae163797cfedd4b9780aa8c",
+        "bytes": 169500
+      },
+      "before_block": "               sha256 — lowercase hex SHA-256(UTF-8(JCS({doc, as_of}))) всего JSON-значения тела 200 GET /api/anywhere/<член>; as_of входит. Хеш не от одного doc и не от сырых байтов HTTP (G09-ANYWHERE-HASH-01)",
+      "after_block": "               sha256 — lowercase hex SHA-256(UTF-8(JCS({doc, as_of}))) всего JSON-значения тела 200 GET /api/anywhere/<член>; as_of входит. Хеш не от одного doc и не от сырых байтов HTTP (G09-ANYWHERE-HASH-01) HTTP-тело — строковая форма `HolderAnywhereBody` OpenAPI владельца: хеш до разбора внутреннего doc и преобразования времени его тела. Объявление в sealed сохраняет прежние тип и смысл.",
+      "before_block_sha256": "8ae61d7b40b16eedbb0434ac10cbb5db2f14c743a0eb44d31e2ccf236ae67b6b",
+      "after_block_sha256": "de6528b6e98deb16945b37c664ca0429339967e3adc51fe827ba8a718eecf80f",
+      "reason": "exact mirror of raw-string whole-body hash clarification",
+      "actual_after_block": "               sha256 — lowercase hex SHA-256(UTF-8(JCS({doc, as_of}))) всего JSON-значения тела 200 GET /api/anywhere/<член>; as_of входит. Хеш не от одного doc и не от сырых байтов HTTP (G09-ANYWHERE-HASH-01). HTTP-тело — строковая форма `HolderAnywhereBody` OpenAPI владельца: хеш до разбора внутреннего doc и преобразования времени его тела. Объявление в sealed сохраняет прежние тип и смысл.",
+      "actual_after_block_sha256": "5f286e7d4879c3fca1058bfe01f59ed03660574889e9af4d533589da6b45a829",
+      "sentence_separator_added": true
+    },
+    {
+      "path": "Platform/08-domain/spec/08.5-domain.norms.md",
+      "before_source": {
+        "path": "Platform/08-domain/spec/08.5-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "7dfe0dd35e25f00359b680c211dc58e1a291dec2",
+        "sha256": "e43dcb41b2d0490c4cfed448527ba6144c0bd0ccd32b2cd70e27e72bf4569402",
+        "bytes": 77182
+      },
+      "before_block": "The agent takes it by the door `GET /api/book/<member>/<sub>/<book>[/<part>]` ([chapter 8.3](08.3-domain.norms.md) N2), without a part — the head; there are no secrets in them.",
+      "after_block": "The agent takes it by the door `GET /api/book/<member>/<sub>/<book>[/<part>]` ([chapter 8.3](08.3-domain.norms.md) N2), without a part — the head; there are no secrets in them. Its owner HTTP forms `HolderBookHeadBody` and `HolderBookPartBody` carry raw KV strings under items, without decoding or normalizing their internal JSON; the family key and content rules stay unchanged.",
+      "before_block_sha256": "1ca073b91507818f9fadc92b290b85d6dfaf918a1087fbafa80ca369ba0c380e",
+      "after_block_sha256": "a6fe1e8ed0846840859d4235d82676d115481d0d806d3fa16eec94ad8b2e80fc",
+      "reason": "book raw text delivery, no family or access change",
+      "actual_after_block": "The agent takes it by the door `GET /api/book/<member>/<sub>/<book>[/<part>]` ([chapter 8.3](08.3-domain.norms.md) N2), without a part — the head; there are no secrets in them. Its owner HTTP forms `HolderBookHeadBody` and `HolderBookPartBody` carry raw KV strings under items, without decoding or normalizing their internal JSON; the family key and content rules stay unchanged.",
+      "actual_after_block_sha256": "a6fe1e8ed0846840859d4235d82676d115481d0d806d3fa16eec94ad8b2e80fc",
+      "sentence_separator_added": false
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.5-domain.norms.md",
+      "before_source": {
+        "path": "Platform/08-domain/ru/spec/08.5-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "0307b1f31e8e64a664d5bbf6e0a934b1c0915076",
+        "sha256": "c1acac1ccd8be4f4f47b31f9c71075140c81bb528adeb228d9cf27cf9f89395e",
+        "bytes": 96895
+      },
+      "before_block": "Берёт агент дверью `GET /api/book/<член>/<sub>/<книга>[/<раздел>]` ([глава 8.3](08.3-domain.norms.md) N2), без раздела — голову; секретов в них нет.",
+      "after_block": "Берёт агент дверью `GET /api/book/<член>/<sub>/<книга>[/<раздел>]` ([глава 8.3](08.3-domain.norms.md) N2), без раздела — голову; секретов в них нет. HTTP-формы владельца `HolderBookHeadBody` и `HolderBookPartBody` несут под items сырые строки KV без разбора или нормализации внутреннего JSON; правила ключей и содержимого семей не меняются.",
+      "before_block_sha256": "8bf452d1e4b63f666e0f1d7b202eac99222139615968fd8afbc8048af460bacc",
+      "after_block_sha256": "2ce391feb5de8ace697b6ef7c525495710527510801925e0d7edfd635c96678d",
+      "reason": "mirror of book raw-text delivery only",
+      "actual_after_block": "Берёт агент дверью `GET /api/book/<член>/<sub>/<книга>[/<раздел>]` ([глава 8.3](08.3-domain.norms.md) N2), без раздела — голову; секретов в них нет. HTTP-формы владельца `HolderBookHeadBody` и `HolderBookPartBody` несут под items сырые строки KV без разбора или нормализации внутреннего JSON; правила ключей и содержимого семей не меняются.",
+      "actual_after_block_sha256": "2ce391feb5de8ace697b6ef7c525495710527510801925e0d7edfd635c96678d",
+      "sentence_separator_added": false
+    },
+    {
+      "path": "Platform/09-agent/spec/09.1-agent.norms.md",
+      "before_source": {
+        "path": "Platform/09-agent/spec/09.1-agent.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "e0bcacdbdbe384e9eac2a5be8c2b3090684d2e86",
+        "sha256": "8277f4a125ea8e3fbd9bc3c61e6db4c6a27f98bc20d65f721d9422d1df957fd5",
+        "bytes": 214386
+      },
+      "before_block": "               before a new copy, check the complete received body against carry.anywhere.sha256 by P/08.4 N1.3 carry (G09-ANYWHERE-HASH-01). A mismatch does not write a new copy, confirm its taken-sha256 marker or apply the writes belonging to this copy; the former copy and marker stay unchanged",
+      "after_block": "               before a new copy, check the complete received body against carry.anywhere.sha256 by P/08.4 N1.3 carry (G09-ANYWHERE-HASH-01). A mismatch does not write a new copy, confirm its taken-sha256 marker or apply the writes belonging to this copy; the former copy and marker stay unchanged The owner raw-string body is hashed before any internal doc parsing; copy its doc and as_of strings exactly after successful verification. Do not change the sealed advertisement type or normalize the stored text.",
+      "before_block_sha256": "1d842401bc71192bcfec4ad31f66d283c184e68da6b0b881150204c876ca77cd",
+      "after_block_sha256": "ba21252af2cfad147349ddaafd7996f89c084b281d51a1a640c1c371e50ae710",
+      "reason": "narrow anywhere wire-consumer clarification, guards/freshness/absence/held outcomes unchanged",
+      "actual_after_block": "               before a new copy, check the complete received body against carry.anywhere.sha256 by P/08.4 N1.3 carry (G09-ANYWHERE-HASH-01). A mismatch does not write a new copy, confirm its taken-sha256 marker or apply the writes belonging to this copy; the former copy and marker stay unchanged. The owner raw-string body is hashed before any internal doc parsing; copy its doc and as_of strings exactly after successful verification. Do not change the sealed advertisement type or normalize the stored text.",
+      "actual_after_block_sha256": "b758c5c75964c52ebc6f7b299ed1285cd8b05c5d3ceb5263b11bad33db97bfa2",
+      "sentence_separator_added": true
+    },
+    {
+      "path": "Platform/09-agent/ru/spec/09.1-agent.norms.md",
+      "before_source": {
+        "path": "Platform/09-agent/ru/spec/09.1-agent.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "02738560431f86c03c9a8c919f14d635a0e8f274",
+        "sha256": "5df186154c57048e3d533af0c1282d9b13f5896525f3f76494333a0f2896db06",
+        "bytes": 267432
+      },
+      "before_block": "               до новой копии проверить всё полученное тело по carry.anywhere.sha256 как в P/08.4 N1.3 carry (G09-ANYWHERE-HASH-01). Несовпадение не пишет новую копию, не подтверждает её метку взятого sha256 и не применяет относящиеся к этой копии правки; прежние копия и метка сохраняются",
+      "after_block": "               до новой копии проверить всё полученное тело по carry.anywhere.sha256 как в P/08.4 N1.3 carry (G09-ANYWHERE-HASH-01). Несовпадение не пишет новую копию, не подтверждает её метку взятого sha256 и не применяет относящиеся к этой копии правки; прежние копия и метка сохраняются Строковое тело владельца хешируется до разбора внутреннего doc; после успешной проверки копируются точные строки doc и as_of. Тип объявления в sealed и текст сохраняемой копии не преобразуются.",
+      "before_block_sha256": "63fd653752589a6b5ea0c4289f005bb6c2f8e57a8610a4c3fe605b48694fbc07",
+      "after_block_sha256": "aa286a745fa75c4dd3fc62a4d9edbfc8cfb535a10c89c2f2cdbdfa835ea114be",
+      "reason": "narrow anywhere wire-consumer clarification, guards/freshness/absence/held outcomes unchanged",
+      "actual_after_block": "               до новой копии проверить всё полученное тело по carry.anywhere.sha256 как в P/08.4 N1.3 carry (G09-ANYWHERE-HASH-01). Несовпадение не пишет новую копию, не подтверждает её метку взятого sha256 и не применяет относящиеся к этой копии правки; прежние копия и метка сохраняются. Строковое тело владельца хешируется до разбора внутреннего doc; после успешной проверки копируются точные строки doc и as_of. Тип объявления в sealed и текст сохраняемой копии не преобразуются.",
+      "actual_after_block_sha256": "1a578c3ab3225b19c52e09b3f9bb20107ca3e5d72b9ea56f6a235b7247ee5d91",
+      "sentence_separator_added": true
+    },
+    {
+      "path": "Platform/09-agent/forms/README.md",
+      "before_source": {
+        "path": "Platform/09-agent/forms/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "188b9992a9b800853d916833ff2a83782c42b263",
+        "sha256": "040cd9a2dd177c2a24ac2a4e6c85fc624d0063696afc5da5065f1e4936318b0d",
+        "bytes": 12481
+      },
+      "before_block": "| `agent-carry` | Use a real signed trusted or rejected set and actual m1. Home write failure is injected after holder confirmation. Count sealed-copy writes/deletes separately from keys and diagnostics. The relay-age fixture has prior as_of 100, receipt 200, domain_age 100 and unchanged content. The placed-at fixture puts `at_lexeme` as the exact bytes of `at` of one record of `carry.placement.records` in a real holder answer and runs the actual copier and CAS: `item_at_bytes` are the bytes of item `at` of the written `domain/placed/<sub>/<ref>`, `copy_writes` the writes of that copy, `marker_confirmed` whether the revision is confirmed by the `domain/placed` marker (G09-PLACEMENT-AT-COPY-01). The anywhere-hash fixture passes the JSON input of G09-ANYWHERE-HASH-01 to the same actual copier: `initial` is the exact stored copy (`items`, `index`, `taken_sha256`); each element of `attempts` starts independently from it, using its trusted `advertised` mark, real UTF-8 HTTP `body`, `received_at` and `domain_age`. Build the valid signed carry for server m1 and its active agent guard. Observe `computed_sha256` on the normal path that judges the body, actual `copy_writes` and `marker_confirmed`; for a refusal also observe `copy_items`, `copy_index`, `taken_sha256` and `related_edits`. Return arrays in attempt order. Expected observations are not adapter input. A hash-only fixture does not exercise the actual copy write or preservation on refusal. |",
+      "after_block": "| `agent-carry` | Use a real signed trusted or rejected set and actual m1. Home write failure is injected after holder confirmation. Count sealed-copy writes/deletes separately from keys and diagnostics. The relay-age fixture has prior as_of 100, receipt 200, domain_age 100 and unchanged content. The placed-at fixture puts `at_lexeme` as the exact bytes of `at` of one record of `carry.placement.records` in a real holder answer and runs the actual copier and CAS: `item_at_bytes` are the bytes of item `at` of the written `domain/placed/<sub>/<ref>`, `copy_writes` the writes of that copy, `marker_confirmed` whether the revision is confirmed by the `domain/placed` marker (G09-PLACEMENT-AT-COPY-01). The anywhere-hash fixture passes the JSON input of G09-ANYWHERE-HASH-01 to the same actual copier: `initial` is the exact stored copy (`items`, `index`, `taken_sha256`); each element of `attempts` starts independently from it, using its trusted `advertised` mark, real UTF-8 HTTP `body`, `received_at` and `domain_age`. Build the valid signed carry for server m1 and its active agent guard. Observe `computed_sha256` on the normal path that judges the body, actual `copy_writes` and `marker_confirmed`; for a refusal also observe `copy_items`, `copy_index`, `taken_sha256` and `related_edits`. Return arrays in attempt order. Expected observations are not adapter input. A hash-only fixture does not exercise the actual copy write or preservation on refusal. For the raw inner-text neighbor, observe the existing copy_items field after each successful write as well: its stored doc and as_of strings must match that attempt literally, not a decoded or normalized value. |",
+      "before_block_sha256": "4b81fdb67434658cc9605ef50a7a77548a3918c3d6c36bee269126bdd8ebcf66",
+      "after_block_sha256": "6dd5c1d2fae85118041c500292be07ef6430d1f75e1f6cb0d1a5d032ac268d90",
+      "reason": "reuse existing observation field for the new positive raw-string preservation control; no new port",
+      "actual_after_block": "| `agent-carry` | Use a real signed trusted or rejected set and actual m1. Home write failure is injected after holder confirmation. Count sealed-copy writes/deletes separately from keys and diagnostics. The relay-age fixture has prior as_of 100, receipt 200, domain_age 100 and unchanged content. The placed-at fixture puts `at_lexeme` as the exact bytes of `at` of one record of `carry.placement.records` in a real holder answer and runs the actual copier and CAS: `item_at_bytes` are the bytes of item `at` of the written `domain/placed/<sub>/<ref>`, `copy_writes` the writes of that copy, `marker_confirmed` whether the revision is confirmed by the `domain/placed` marker (G09-PLACEMENT-AT-COPY-01). The anywhere-hash fixture passes the JSON input of G09-ANYWHERE-HASH-01 to the same actual copier: `initial` is the exact stored copy (`items`, `index`, `taken_sha256`); each element of `attempts` starts independently from it, using its trusted `advertised` mark, real UTF-8 HTTP `body`, `received_at` and `domain_age`. Build the valid signed carry for server m1 and its active agent guard. Observe `computed_sha256` on the normal path that judges the body, actual `copy_writes` and `marker_confirmed`; for a refusal also observe `copy_items`, `copy_index`, `taken_sha256` and `related_edits`. Return arrays in attempt order. Expected observations are not adapter input. A hash-only fixture does not exercise the actual copy write or preservation on refusal. For the raw inner-text neighbor, observe the existing copy_items field after each successful write as well: its stored doc and as_of strings must match that attempt literally, not a decoded or normalized value. |",
+      "actual_after_block_sha256": "6dd5c1d2fae85118041c500292be07ef6430d1f75e1f6cb0d1a5d032ac268d90",
+      "sentence_separator_added": false
+    },
+    {
+      "path": "Platform/09-agent/ru/forms/README.md",
+      "before_source": {
+        "path": "Platform/09-agent/ru/forms/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "4803ef82a678927b445000526904240db6ced7ec",
+        "sha256": "bf1965ffc777a06c97a4720e20d88aa564507fe38330144ee600461d7dff7ae8",
+        "bytes": 21134
+      },
+      "before_block": "| `agent-carry` | Использовать настоящий подписанный доверенный либо отвергнутый набор и настоящий m1. Ошибка домашней записи вводится после подтверждения держателя. Записи/удаления sealed-копий считать отдельно от ключей и диагностики. У фикстуры возраста relay прежний as_of 100, приём 200, domain_age 100 и неизменное содержимое. Фикстура placed-at кладёт `at_lexeme` точными байтами `at` одной записи `carry.placement.records` в настоящий ответ держателя и запускает настоящий копировщик и CAS: `item_at_bytes` — байты item `at` записанной `domain/placed/<sub>/<ref>`, `copy_writes` — записи этой копии, `marker_confirmed` — подтверждена ли ревизия меткой `domain/placed` (G09-PLACEMENT-AT-COPY-01). Фикстура anywhere-hash передаёт JSON-вход G09-ANYWHERE-HASH-01 тому же настоящему копировщику: `initial` — точная сохранённая копия (`items`, `index`, `taken_sha256`); каждый элемент `attempts` независимо начинает с неё, используя свою доверенную метку `advertised`, настоящий HTTP `body` в UTF-8, `received_at` и `domain_age`. Подготовить допустимый подписанный carry для сервера m1 и его действующий страж агента. Наблюдать `computed_sha256` в обычном пути проверки тела, фактические `copy_writes` и `marker_confirmed`; при отказе также `copy_items`, `copy_index`, `taken_sha256` и `related_edits`. Вернуть массивы в порядке попыток. Ожидаемые наблюдения во вход адаптера не передаются. Фикстура одного хеша не выполняет настоящую запись копии и сохранение состояния при отказе. |",
+      "after_block": "| `agent-carry` | Использовать настоящий подписанный доверенный либо отвергнутый набор и настоящий m1. Ошибка домашней записи вводится после подтверждения держателя. Записи/удаления sealed-копий считать отдельно от ключей и диагностики. У фикстуры возраста relay прежний as_of 100, приём 200, domain_age 100 и неизменное содержимое. Фикстура placed-at кладёт `at_lexeme` точными байтами `at` одной записи `carry.placement.records` в настоящий ответ держателя и запускает настоящий копировщик и CAS: `item_at_bytes` — байты item `at` записанной `domain/placed/<sub>/<ref>`, `copy_writes` — записи этой копии, `marker_confirmed` — подтверждена ли ревизия меткой `domain/placed` (G09-PLACEMENT-AT-COPY-01). Фикстура anywhere-hash передаёт JSON-вход G09-ANYWHERE-HASH-01 тому же настоящему копировщику: `initial` — точная сохранённая копия (`items`, `index`, `taken_sha256`); каждый элемент `attempts` независимо начинает с неё, используя свою доверенную метку `advertised`, настоящий HTTP `body` в UTF-8, `received_at` и `domain_age`. Подготовить допустимый подписанный carry для сервера m1 и его действующий страж агента. Наблюдать `computed_sha256` в обычном пути проверки тела, фактические `copy_writes` и `marker_confirmed`; при отказе также `copy_items`, `copy_index`, `taken_sha256` и `related_edits`. Вернуть массивы в порядке попыток. Ожидаемые наблюдения во вход адаптера не передаются. Фикстура одного хеша не выполняет настоящую запись копии и сохранение состояния при отказе. У соседа с различным внутренним текстом поле наблюдения copy_items возвращается и после каждой успешной записи: сохранённые строки doc и as_of должны буквально совпасть с данной попыткой, без декодирования и нормализации. |",
+      "before_block_sha256": "8e806b833b4b68d88bd7f30de44cb54e61e3bca29f1702778b22d2c229b7c0b6",
+      "after_block_sha256": "03a868a5d60109cbf6502e045602959cedf376392c23e97d4f083cfed3fc28d1",
+      "reason": "reuse existing observation field for the new positive raw-string preservation control; no new port",
+      "actual_after_block": "| `agent-carry` | Использовать настоящий подписанный доверенный либо отвергнутый набор и настоящий m1. Ошибка домашней записи вводится после подтверждения держателя. Записи/удаления sealed-копий считать отдельно от ключей и диагностики. У фикстуры возраста relay прежний as_of 100, приём 200, domain_age 100 и неизменное содержимое. Фикстура placed-at кладёт `at_lexeme` точными байтами `at` одной записи `carry.placement.records` в настоящий ответ держателя и запускает настоящий копировщик и CAS: `item_at_bytes` — байты item `at` записанной `domain/placed/<sub>/<ref>`, `copy_writes` — записи этой копии, `marker_confirmed` — подтверждена ли ревизия меткой `domain/placed` (G09-PLACEMENT-AT-COPY-01). Фикстура anywhere-hash передаёт JSON-вход G09-ANYWHERE-HASH-01 тому же настоящему копировщику: `initial` — точная сохранённая копия (`items`, `index`, `taken_sha256`); каждый элемент `attempts` независимо начинает с неё, используя свою доверенную метку `advertised`, настоящий HTTP `body` в UTF-8, `received_at` и `domain_age`. Подготовить допустимый подписанный carry для сервера m1 и его действующий страж агента. Наблюдать `computed_sha256` в обычном пути проверки тела, фактические `copy_writes` и `marker_confirmed`; при отказе также `copy_items`, `copy_index`, `taken_sha256` и `related_edits`. Вернуть массивы в порядке попыток. Ожидаемые наблюдения во вход адаптера не передаются. Фикстура одного хеша не выполняет настоящую запись копии и сохранение состояния при отказе. У соседа с различным внутренним текстом поле наблюдения copy_items возвращается и после каждой успешной записи: сохранённые строки doc и as_of должны буквально совпасть с данной попыткой, без декодирования и нормализации. |",
+      "actual_after_block_sha256": "03a868a5d60109cbf6502e045602959cedf376392c23e97d4f083cfed3fc28d1",
+      "sentence_separator_added": false
+    },
+    {
+      "path": "Platform/09-agent/forms/README.md",
+      "before_source": {
+        "path": "Platform/09-agent/forms/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "188b9992a9b800853d916833ff2a83782c42b263",
+        "sha256": "040cd9a2dd177c2a24ac2a4e6c85fc624d0063696afc5da5065f1e4936318b0d",
+        "bytes": 12481
+      },
+      "before_block": "The 53 CALL steps (43 in chapter 9.1 and 10 in 9.2)",
+      "after_block": "The 54 CALL steps (44 in chapter 9.1 and 10 in 9.2)",
+      "before_block_sha256": "f67324182834d6cba0f3ba55564dc961acb25c5d048ff58f582d5da447cdcb5c",
+      "after_block_sha256": "9f02a34f292d287a971a7c17a1a972a7b5655a80e92a0b6cce589eed2b90c134",
+      "reason": "derived count for exactly one appended seam only",
+      "actual_after_block": "The 54 CALL steps (44 in chapter 9.1 and 10 in 9.2)",
+      "actual_after_block_sha256": "9f02a34f292d287a971a7c17a1a972a7b5655a80e92a0b6cce589eed2b90c134",
+      "sentence_separator_added": false
+    },
+    {
+      "path": "Platform/09-agent/ru/forms/README.md",
+      "before_source": {
+        "path": "Platform/09-agent/ru/forms/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "4803ef82a678927b445000526904240db6ced7ec",
+        "sha256": "bf1965ffc777a06c97a4720e20d88aa564507fe38330144ee600461d7dff7ae8",
+        "bytes": 21134
+      },
+      "before_block": "53 CALL-шага (43 в главе 9.1 и 10 в 9.2)",
+      "after_block": "54 CALL-шага (44 в главе 9.1 и 10 в 9.2)",
+      "before_block_sha256": "8d964283e0d4f2c8297ce60021f74734dfdf89e2d6e8a36e99cbcfac2ea73d17",
+      "after_block_sha256": "0c1ee925d02941785d09bbc27627d2bd586abf913d169b78c97af86647c869a6",
+      "reason": "derived count for exactly one appended seam only",
+      "actual_after_block": "54 CALL-шага (44 в главе 9.1 и 10 в 9.2)",
+      "actual_after_block_sha256": "0c1ee925d02941785d09bbc27627d2bd586abf913d169b78c97af86647c869a6",
+      "sentence_separator_added": false
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/README.md",
+      "before_source": {
+        "path": "Platform/09-agent/acceptance/1/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "99d5ef323cd00b8afda22222b867544fd91a9b06",
+        "sha256": "37cd74ccff97540b681b1a30c6b4ea9dd10fe31b720ff7af16506c3672752cc2",
+        "bytes": 33933
+      },
+      "before_block": "provides 43 CALL steps",
+      "after_block": "provides 44 CALL steps",
+      "before_block_sha256": "cd63c974f5018b8c4f9bf7bbc01bd64456519b9bf22097d0130aa3dbf4f92cc2",
+      "after_block_sha256": "7d05f0568e7c67dbd9559b8adf800b0f72fa9fc245d947100cdd2c108ac8e2f2",
+      "reason": "derived count of exactly one appended seam",
+      "actual_after_block": "provides 44 CALL steps",
+      "actual_after_block_sha256": "7d05f0568e7c67dbd9559b8adf800b0f72fa9fc245d947100cdd2c108ac8e2f2",
+      "sentence_separator_added": false
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/README.md",
+      "before_source": {
+        "path": "Platform/09-agent/acceptance/1/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "99d5ef323cd00b8afda22222b867544fd91a9b06",
+        "sha256": "37cd74ccff97540b681b1a30c6b4ea9dd10fe31b720ff7af16506c3672752cc2",
+        "bytes": 33933
+      },
+      "before_block": "## Anywhere copy hash (G09-ANYWHERE-HASH-01)\n\nThe four fixture vectors in [`inputs/anywhere-hash/cases.tsv`](inputs/anywhere-hash/cases.tsv) specify the complete-body\ndigest of P/08.4 N1.3 carry and the check before the copy of N1.4 member_anywhere. The input column names a JSON file\nnext to the table; expect is a JSON subset of the observations, not an input to the implementation.\n\nEach input has an initial stored copy with its exact index and last confirmed taken_sha256 marker, and a list of attempts.\nEvery attempt starts independently from that initial state: its trusted carry advertisement is advertised, its real\n200 body from `GET /api/anywhere/{member}` is the UTF-8 text body. The fixture calls the ordinary agent copy code with\nthe body and mark, and records the store operations and marker changes. received_at is the receipt time and domain_age is the answer age; each case prepares a valid trusted carry for server m1 and its active agent guard. It reports arrays in attempt order:\ncomputed_sha256, copy_writes, marker_confirmed; for a refusal also related_edits (the writes belonging to this copy),\ncopy_items, copy_index and taken_sha256. The digest observation comes from the normal code path that judges the body;\nit is not computed by the fixture instead of that path. The two positive vectors must reach the actual copy write.\n\nThe existing agent-carry IO seam can carry these inputs: these files do not declare a new native command. A fixture\nthat only calculates the expected digest does not check the negative cases: they require the former copy, exact index\nand marker to stay unchanged and zero copy writes and related edits. The four cases cover as_of in the digest, JCS\ninstead of wire formatting, a refused digest of doc alone and a refused mismatching whole-body digest.\n",
+      "after_block": "## Anywhere copy hash (G09-ANYWHERE-HASH-01)\n\nThe five fixture vectors in [`inputs/anywhere-hash/cases.tsv`](inputs/anywhere-hash/cases.tsv) specify the complete-body\ndigest of P/08.4 N1.3 carry and the check before the copy of N1.4 member_anywhere. The input column names a JSON file\nnext to the table; expect is a JSON subset of the observations, not an input to the implementation.\n\nEach input has an initial stored copy with its exact index and last confirmed taken_sha256 marker, and a list of attempts.\nEvery attempt starts independently from that initial state: its trusted carry advertisement is advertised, its real\n200 body from `GET /api/anywhere/{member}` is the UTF-8 text body. The fixture calls the ordinary agent copy code with\nthe body and mark, and records the store operations and marker changes. received_at is the receipt time and domain_age is the answer age; each case prepares a valid trusted carry for server m1 and its active agent guard. It reports arrays in attempt order:\ncomputed_sha256, copy_writes, marker_confirmed; for a refusal also related_edits (the writes belonging to this copy),\ncopy_items, copy_index and taken_sha256. The digest observation comes from the normal code path that judges the body;\nit is not computed by the fixture instead of that path. The three positive vectors must reach the actual copy write.\n\nThe existing agent-carry IO seam can carry these inputs: these files do not declare a new native command. A fixture\nthat only calculates the expected digest does not check the negative cases: they require the former copy, exact index\nand marker to stay unchanged and zero copy writes and related edits. The five cases cover as_of in the digest, JCS\ninstead of wire formatting, a refused digest of doc alone and a refused mismatching whole-body digest.\n\nThe owner wire body contains raw KV strings doc and as_of. Only the outer JSON is canonicalized for the digest; the internal doc text is not normalized first. The inner-text neighbor has equal decoded inner objects but different strings and digests, and observes the exact successful copy_items. The trusted advertised as_of, received_at and domain_age retain their existing numeric types. Existing refusal cases preserve the complete initial raw copy, index and the rebaselined current-wire marker. No case reports actual IO success before its adapter is run.\n",
+      "before_block_sha256": "d58c9fc84c3d9fb9cfaa557ee4537ee44c84e346df8435f3757651b2abe6bac0",
+      "after_block_sha256": "9941889c53d5ae0d4084d9a712a3123c8591d1ee18a2fe5f3cdef037da716606",
+      "reason": "same old four test purposes plus one raw-text preservation neighbor; corpus counters only",
+      "actual_after_block": "## Anywhere copy hash (G09-ANYWHERE-HASH-01)\n\nThe five fixture vectors in [`inputs/anywhere-hash/cases.tsv`](inputs/anywhere-hash/cases.tsv) specify the complete-body\ndigest of P/08.4 N1.3 carry and the check before the copy of N1.4 member_anywhere. The input column names a JSON file\nnext to the table; expect is a JSON subset of the observations, not an input to the implementation.\n\nEach input has an initial stored copy with its exact index and last confirmed taken_sha256 marker, and a list of attempts.\nEvery attempt starts independently from that initial state: its trusted carry advertisement is advertised, its real\n200 body from `GET /api/anywhere/{member}` is the UTF-8 text body. The fixture calls the ordinary agent copy code with\nthe body and mark, and records the store operations and marker changes. received_at is the receipt time and domain_age is the answer age; each case prepares a valid trusted carry for server m1 and its active agent guard. It reports arrays in attempt order:\ncomputed_sha256, copy_writes, marker_confirmed; for a refusal also related_edits (the writes belonging to this copy),\ncopy_items, copy_index and taken_sha256. The digest observation comes from the normal code path that judges the body;\nit is not computed by the fixture instead of that path. The three positive vectors must reach the actual copy write.\n\nThe existing agent-carry IO seam can carry these inputs: these files do not declare a new native command. A fixture\nthat only calculates the expected digest does not check the negative cases: they require the former copy, exact index\nand marker to stay unchanged and zero copy writes and related edits. The five cases cover as_of in the digest, JCS\ninstead of wire formatting, a refused digest of doc alone and a refused mismatching whole-body digest.\n\nThe owner wire body contains raw KV strings doc and as_of. Only the outer JSON is canonicalized for the digest; the internal doc text is not normalized first. The inner-text neighbor has equal decoded inner objects but different strings and digests, and observes the exact successful copy_items. The trusted advertised as_of, received_at and domain_age retain their existing numeric types. Existing refusal cases preserve the complete initial raw copy, index and the rebaselined current-wire marker. No case reports actual IO success before its adapter is run.\n",
+      "actual_after_block_sha256": "9941889c53d5ae0d4084d9a712a3123c8591d1ee18a2fe5f3cdef037da716606",
+      "sentence_separator_added": false
+    },
+    {
+      "path": "Platform/09-agent/ru/acceptance/1/README.md",
+      "before_source": {
+        "path": "Platform/09-agent/ru/acceptance/1/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "fe9bc0ea362e3512cb3aa2c74ac661e26065edfc",
+        "sha256": "a29cf45fb33c1163046c3b7db96f2106ea64ca2b00de5ea8409c9a76acaac732",
+        "bytes": 42973
+      },
+      "before_block": "задаёт 43 CALL-шага",
+      "after_block": "задаёт 44 CALL-шага",
+      "before_block_sha256": "834388a8007c0a1a6b3b9db67d4eb367a7ed1c27fe0c325680c83d8082283307",
+      "after_block_sha256": "d7a934e3a564e19b326ffde70ad017d2cca933f2b4e8983fc57fc1b45dee1059",
+      "reason": "mirror of derived count of exactly one appended seam",
+      "actual_after_block": "задаёт 44 CALL-шага",
+      "actual_after_block_sha256": "d7a934e3a564e19b326ffde70ad017d2cca933f2b4e8983fc57fc1b45dee1059",
+      "sentence_separator_added": false
+    },
+    {
+      "path": "Platform/09-agent/ru/acceptance/1/README.md",
+      "before_source": {
+        "path": "Platform/09-agent/ru/acceptance/1/README.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "fe9bc0ea362e3512cb3aa2c74ac661e26065edfc",
+        "sha256": "a29cf45fb33c1163046c3b7db96f2106ea64ca2b00de5ea8409c9a76acaac732",
+        "bytes": 42973
+      },
+      "before_block": "## Хеш копии anywhere (G09-ANYWHERE-HASH-01)\n\nЧетыре вектора фикстуры в [`inputs/anywhere-hash/cases.tsv`](../../../acceptance/1/inputs/anywhere-hash/cases.tsv) задают хеш всего тела\nпо P/08.4 N1.3 carry и проверку перед копией N1.4 member_anywhere. Колонка input называет JSON-файл\nрядом с таблицей; expect — JSON-подмножество наблюдений, не вход реализации.\n\nВ каждом входе исходная сохранённая копия с точным индексом и последней подтверждённой меткой taken_sha256 и список attempts.\nКаждая попытка независимо начинается с этого исходного состояния: доверенное объявление carry — advertised, настоящее\nтело 200 `GET /api/anywhere/{member}` — UTF-8 текст body. Фикстура вызывает обычный код копирования агента с\nтелом и меткой и наблюдает операции хранилища и изменения метки. received_at — время приёма, domain_age — возраст ответа; каждый случай готовит пригодный доверенный carry сервера m1 и действующий guard агента. Она возвращает массивы в порядке attempts:\ncomputed_sha256, copy_writes, marker_confirmed; при отказе также related_edits (правки, относящиеся к этой копии),\ncopy_items, copy_index и taken_sha256. Наблюдение хеша берётся из обычного пути, проверяющего тело;\nфикстура не вычисляет его вместо этого пути. Два положительных вектора должны дойти до настоящей записи копии.\n\nЭти входы может передать существующий шов IO agent-carry: файлы не объявляют новой нативной команды. Фикстура,\nкоторая только вычисляет ожидаемый хеш, не проверяет отрицательные случаи: они требуют сохранения прежних копии, точного индекса\nи метки и нуля записей копии и связанных правок. Четыре случая покрывают as_of в хеше, JCS\nвместо записи на проводе, отказ хеша одного doc и отказ несовпавшего хеша всего тела.\n",
+      "after_block": "## Хеш копии anywhere (G09-ANYWHERE-HASH-01)\n\nПять векторов фикстуры в [`inputs/anywhere-hash/cases.tsv`](../../../acceptance/1/inputs/anywhere-hash/cases.tsv) задают хеш всего тела\nпо P/08.4 N1.3 carry и проверку перед копией N1.4 member_anywhere. Колонка input называет JSON-файл\nрядом с таблицей; expect — JSON-подмножество наблюдений, не вход реализации.\n\nВ каждом входе исходная сохранённая копия с точным индексом и последней подтверждённой меткой taken_sha256 и список attempts.\nКаждая попытка независимо начинается с этого исходного состояния: доверенное объявление carry — advertised, настоящее\nтело 200 `GET /api/anywhere/{member}` — UTF-8 текст body. Фикстура вызывает обычный код копирования агента с\nтелом и меткой и наблюдает операции хранилища и изменения метки. received_at — время приёма, domain_age — возраст ответа; каждый случай готовит пригодный доверенный carry сервера m1 и действующий guard агента. Она возвращает массивы в порядке attempts:\ncomputed_sha256, copy_writes, marker_confirmed; при отказе также related_edits (правки, относящиеся к этой копии),\ncopy_items, copy_index и taken_sha256. Наблюдение хеша берётся из обычного пути, проверяющего тело;\nфикстура не вычисляет его вместо этого пути. Три положительных вектора должны дойти до настоящей записи копии.\n\nЭти входы может передать существующий шов IO agent-carry: файлы не объявляют новой нативной команды. Фикстура,\nкоторая только вычисляет ожидаемый хеш, не проверяет отрицательные случаи: они требуют сохранения прежних копии, точного индекса\nи метки и нуля записей копии и связанных правок. Пять случаев покрывают as_of в хеше, JCS\nвместо записи на проводе, отказ хеша одного doc и отказ несовпавшего хеша всего тела.\n\nТело провода владельца содержит сырые строки KV doc и as_of. Для хеша канонизируется только внешний JSON; внутренний текст doc предварительно не нормализуется. Сосед с внутренним текстом имеет равные разобранные внутренние объекты, но разные строки и хеши, и наблюдает точные успешные copy_items. Доверенные advertised as_of, received_at и domain_age сохраняют прежние числовые типы. Прежние отказы сохраняют полную исходную сырую копию, индекс и пересчитанную метку нынешнего провода. Исполнение IO не объявляется успешным до запуска адаптера.\n",
+      "before_block_sha256": "2d0267a9059dd1d505f80ca7ce2e1a4fd6ec72c4538125714aaac2c680517103",
+      "after_block_sha256": "46674fb97b427f38b89291ed90de25a95e596a7abaad36770d071f412b25d0d0",
+      "reason": "same old four test purposes plus one raw-text preservation neighbor; corpus counters only",
+      "actual_after_block": "## Хеш копии anywhere (G09-ANYWHERE-HASH-01)\n\nПять векторов фикстуры в [`inputs/anywhere-hash/cases.tsv`](../../../acceptance/1/inputs/anywhere-hash/cases.tsv) задают хеш всего тела\nпо P/08.4 N1.3 carry и проверку перед копией N1.4 member_anywhere. Колонка input называет JSON-файл\nрядом с таблицей; expect — JSON-подмножество наблюдений, не вход реализации.\n\nВ каждом входе исходная сохранённая копия с точным индексом и последней подтверждённой меткой taken_sha256 и список attempts.\nКаждая попытка независимо начинается с этого исходного состояния: доверенное объявление carry — advertised, настоящее\nтело 200 `GET /api/anywhere/{member}` — UTF-8 текст body. Фикстура вызывает обычный код копирования агента с\nтелом и меткой и наблюдает операции хранилища и изменения метки. received_at — время приёма, domain_age — возраст ответа; каждый случай готовит пригодный доверенный carry сервера m1 и действующий guard агента. Она возвращает массивы в порядке attempts:\ncomputed_sha256, copy_writes, marker_confirmed; при отказе также related_edits (правки, относящиеся к этой копии),\ncopy_items, copy_index и taken_sha256. Наблюдение хеша берётся из обычного пути, проверяющего тело;\nфикстура не вычисляет его вместо этого пути. Три положительных вектора должны дойти до настоящей записи копии.\n\nЭти входы может передать существующий шов IO agent-carry: файлы не объявляют новой нативной команды. Фикстура,\nкоторая только вычисляет ожидаемый хеш, не проверяет отрицательные случаи: они требуют сохранения прежних копии, точного индекса\nи метки и нуля записей копии и связанных правок. Пять случаев покрывают as_of в хеше, JCS\nвместо записи на проводе, отказ хеша одного doc и отказ несовпавшего хеша всего тела.\n\nТело провода владельца содержит сырые строки KV doc и as_of. Для хеша канонизируется только внешний JSON; внутренний текст doc предварительно не нормализуется. Сосед с внутренним текстом имеет равные разобранные внутренние объекты, но разные строки и хеши, и наблюдает точные успешные copy_items. Доверенные advertised as_of, received_at и domain_age сохраняют прежние числовые типы. Прежние отказы сохраняют полную исходную сырую копию, индекс и пересчитанную метку нынешнего провода. Исполнение IO не объявляется успешным до запуска адаптера.\n",
+      "actual_after_block_sha256": "46674fb97b427f38b89291ed90de25a95e596a7abaad36770d071f412b25d0d0",
+      "sentence_separator_added": false
+    }
+  ],
+  "metadata6_self_hashes": "external FREEZE after source publication; not a recursive source input",
+  "status": "SOURCE_ONLY"
+}
