@@ -1683,3 +1683,4 @@ adr	add	point	status	file	norm	note
 0129	21	весь текст	НЕ НОРМА	-	-	временное исключение обеих CT Claude; P10 разбирается двумя, маршруты З-12, нормы исполнения не меняются
 0129	22	пп. 1–4	РАСХОДИТСЯ	Platform/10-domain-console/spec/10-domain-console.norms.md; Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml; Platform/10-domain-console/vectors/alarms/cases.tsv	P10 нынешний native input; owner relay forms; alarm/refusal schema and numeric sources	два полных отчёта разобраны; source сначала точным планом через coord103-src, CODE отдельно tools; готовность не повышена
 0129	22	пп. 5–6	НЕ НОРМА	-	-	границы доказательств; полные ревью P01–P10 закончены, целевой повтор двух отдельно; обе CT Claude исключены до подтверждённого сброса
+0083	134	пп. 1–5	НЕ НОРМА	-	-	З-13: UTC-даты планов, явные зависимости и неизвестные сроки; раздельные входной/финальный Quint, один часовой пересмотр без активации исполнения
