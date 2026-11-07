@@ -2,7 +2,9 @@
 
 import tempfile
 import unittest
+import json
 from pathlib import Path
+from unittest.mock import patch
 
 import yaml
 
@@ -206,6 +208,210 @@ class CrossRefTests(unittest.TestCase):
         result = self.check()
         self.assertTrue(any(e.startswith("Platform/06-console/") and "'strin'" in e for e in result.errors),
                         result.errors)
+
+    def json_schema(self, name, doc):
+        path = self.platform / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+        return path
+
+    def use_json_schema(self, ref):
+        self.write("06-console/spec/06-console.api.openapi.yaml", contract({"$ref": ref}))
+
+    def test_standalone_owner_schema_root_and_pointer(self):
+        self.json_schema("06-console/data/answer.schema.json", {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$defs": {"Name": {"type": "string"}}, "type": "object", "additionalProperties": False,
+            "properties": {"name": {"$ref": "#/$defs/Name"}}})
+        for ref in ("../data/answer.schema.json", "../data/answer.schema.json#",
+                    "../data/answer.schema.json#/$defs/Name"):
+            with self.subTest(ref=ref):
+                self.use_json_schema(ref)
+                result = self.check()
+                self.assertEqual(result.errors, [])
+                self.assertEqual(result.stats["openapi"], 1)
+                self.assertEqual(len(result.schema_documents), 1)
+
+    def test_standalone_common_schema_root_and_boolean(self):
+        for value in ({"type": "string"}, {}, True, False):
+            with self.subTest(value=value):
+                self.json_schema("common/data/value.schema.json", value)
+                self.use_json_schema("../../common/data/value.schema.json")
+                self.assertEqual(self.check().errors, [])
+
+    def test_standalone_schema_transitive_relative_base(self):
+        self.json_schema("common/data/entry.schema.json", {"$ref": "value.schema.json#/$defs/Value"})
+        self.json_schema("common/data/value.schema.json", {"$defs": {"Value": {"type": "integer"}}})
+        self.use_json_schema("../../common/data/entry.schema.json")
+        result = self.check()
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.stats["openapi_cross_refs"], 2)
+
+    def test_contract_target_keeps_its_own_schema_base(self):
+        self.json_schema("05-resource/data/event.schema.json", {"type": "string"})
+        self.write("05-resource/spec/05-resource.api.openapi.yaml", contract(components={
+            "Event": {"$ref": "../data/event.schema.json"}}))
+        self.assertEqual(self.check().errors, [])
+
+    def test_standalone_local_recursive_schema(self):
+        self.json_schema("06-console/data/tree.schema.json", {
+            "$defs": {"Tree": {"type": "object", "additionalProperties": False,
+                                "properties": {"next": {"$ref": "#/$defs/Tree"}}}},
+            "$ref": "#/$defs/Tree"})
+        self.use_json_schema("../data/tree.schema.json")
+        self.assertEqual(self.check().errors, [])
+
+    def test_standalone_schema_cannot_replace_other_openapi_objects(self):
+        self.json_schema("06-console/data/value.schema.json", {"type": "string"})
+        ref = "../data/value.schema.json"
+        for kind in ("path", "parameter", "response"):
+            with self.subTest(kind=kind):
+                doc = contract({"type": "string"})
+                if kind == "path":
+                    doc["paths"]["/events"] = {"$ref": ref}
+                elif kind == "parameter":
+                    doc["paths"]["/events"]["parameters"] = [{"$ref": ref}]
+                else:
+                    doc["paths"]["/events"]["get"]["responses"]["200"] = {"$ref": ref}
+                self.write("06-console/spec/06-console.api.openapi.yaml", doc)
+                with patch("check_spec.validate") as validator:
+                    self.assert_error("standalone JSON Schema cannot replace")
+                    validator.assert_not_called()
+
+    def test_standalone_schema_missing_and_invalid_pointer(self):
+        self.json_schema("06-console/data/value.schema.json", {
+            "$defs": {"a/b": {"type": "string"}}, "type": "object", "additionalProperties": False,
+            "required": ["x"]})
+        for ref in ("../data/missing.schema.json", "../data/value.schema.json#/missing",
+                    "../data/value.schema.json#name", "../data/value.schema.json#/$defs/a~2b",
+                    "../data/value.schema.json#/%ZZ", "../data/value.schema.json#/required/01"):
+            with self.subTest(ref=ref):
+                self.use_json_schema(ref)
+                self.assert_error("unresolved/unsupported $ref")
+        self.use_json_schema("../data/value.schema.json#/$defs/a~1b")
+        self.assertEqual(self.check().errors, [])
+
+    def test_standalone_pointer_target_must_be_schema_kind(self):
+        self.json_schema("06-console/data/value.schema.json", {
+            "type": "object", "additionalProperties": False, "required": ["x"]})
+        for fragment in ("/type", "/required"):
+            with self.subTest(fragment=fragment):
+                self.use_json_schema("../data/value.schema.json#" + fragment)
+                self.assert_error("target is not a Schema object or boolean")
+
+    def test_standalone_wrong_root_or_openapi_document_is_rejected(self):
+        for value in ([], 1, "schema", contract({"type": "string"})):
+            with self.subTest(value=value):
+                self.json_schema("06-console/data/value.schema.json", value)
+                self.use_json_schema("../data/value.schema.json")
+                self.assert_error("expected a standalone JSON Schema object or boolean")
+
+    def test_standalone_strict_json_and_meta_schema(self):
+        path = self.json_schema("06-console/data/value.schema.json", {})
+        self.use_json_schema("../data/value.schema.json")
+        for text in ('{"type":"string","type":"integer"}', '{"const":NaN}', '{"const":Infinity}',
+                     '{"type":"strin"}', '{"properties":[]}'):
+            with self.subTest(text=text):
+                path.write_text(text)
+                self.assert_error("JSON Schema:")
+        path.write_bytes(b'\xff')
+        self.assertTrue(self.check().errors)
+
+    def test_standalone_schema_dialect_and_base_changes_are_explicit(self):
+        for schema in ({"$schema": "https://example.invalid/dialect"}, {"$id": "other.json"},
+                       {"$dynamicRef": "#node"}, {"$recursiveRef": "#"}):
+            with self.subTest(schema=schema):
+                self.json_schema("06-console/data/value.schema.json", schema)
+                self.use_json_schema("../data/value.schema.json")
+                self.assert_error("unsupported schema")
+
+    def test_standalone_schema_keeps_its_openness_and_contract_rule(self):
+        self.json_schema("06-console/data/value.schema.json", {
+            "$defs": {"Value": {"type": "object"}}})
+        self.use_json_schema("../data/value.schema.json#/$defs/Value")
+        self.assertEqual(self.check().errors, [])
+        self.write("06-console/spec/06-console.api.openapi.yaml", contract({"type": "object"}))
+        self.assert_error("does not say its openness")
+
+    def test_standalone_schema_owner_and_directory_boundaries(self):
+        for name, ref in (("06-console/spec/value.schema.json", "value.schema.json"),
+                          ("common/contracts/value.schema.json", "../../common/contracts/value.schema.json")):
+            with self.subTest(name=name):
+                self.json_schema(name, {"type": "string"})
+                self.use_json_schema(ref)
+                self.assert_error("declared owner data/ inside Platform/")
+
+    def test_standalone_earlier_owner_keeps_existing_reading_order(self):
+        self.json_schema("09-agent/data/alarms.schema.json", {
+            "type": "object", "additionalProperties": False, "properties": {"events": {
+                "type": "array", "items": {"type": "object", "additionalProperties": False,
+                "properties": {"t": {"type": "number"}, "kind": {"type": "string"},
+                               "class": {"type": "string"}}}}}})
+        for field in ("t", "kind", "class"):
+            with self.subTest(field=field):
+                path = self.write("10-domain-console/spec/10-domain-console.api.openapi.yaml", contract({
+                    "$ref": "../../09-agent/data/alarms.schema.json#/properties/events/items/properties/" + field}))
+                self.assertEqual(self.check(path).errors, [])
+
+    def test_standalone_later_owner_requires_existing_late_layer_guard(self):
+        self.json_schema("08-domain/data/value.schema.json", {"type": "string"})
+        self.use_json_schema("../../08-domain/data/value.schema.json")
+        self.assert_error("reference to a lesson read later")
+        self.late_door(7, "**Глава позднего слоя: вводит урок 8**",
+                       ref="../../08-domain/data/value.schema.json")
+        self.assertEqual(self.check().errors, [])
+
+    def test_standalone_common_cannot_read_lesson(self):
+        self.json_schema("06-console/data/value.schema.json", {"type": "string"})
+        self.json_schema("common/data/entry.schema.json", {"$ref": "../../06-console/data/value.schema.json"})
+        self.use_json_schema("../../common/data/entry.schema.json")
+        self.assert_error("common contracts refer to common ones")
+
+    def test_standalone_paths_and_network_stay_closed(self):
+        for ref in ("https://example.invalid/a.schema.json", "file:///a.schema.json",
+                    "//example.invalid/a.schema.json", "/abs/a.schema.json", "../data/a.schema.json?q=1",
+                    "../../../outside.schema.json", "../../../Platform/../outside.schema.json",
+                    "../data/value.json", "../data/value.schema.json#%FF"):
+            with self.subTest(ref=ref), patch("urllib.request.urlopen") as fetch:
+                self.use_json_schema(ref)
+                self.assertTrue(self.check().errors)
+                fetch.assert_not_called()
+
+    def test_standalone_symlink_escape_and_foreign_owner_are_rejected(self):
+        outside = self.root / "outside"
+        outside.mkdir()
+        (outside / "value.schema.json").write_text('{"type":"string"}')
+        data = self.platform / "06-console/data"
+        data.mkdir()
+        (data / "escape.schema.json").symlink_to(outside / "value.schema.json")
+        other = self.json_schema("08-domain/data/value.schema.json", {"type": "string"})
+        (data / "foreign.schema.json").symlink_to(other)
+        for ref in ("../data/escape.schema.json", "../data/foreign.schema.json"):
+            with self.subTest(ref=ref):
+                self.use_json_schema(ref)
+                self.assertTrue(self.check().errors)
+
+    def test_standalone_cross_file_cycle_and_self_path_rejected(self):
+        self.json_schema("common/data/a.schema.json", {"$ref": "b.schema.json"})
+        self.json_schema("common/data/b.schema.json", {"$ref": "a.schema.json"})
+        self.use_json_schema("../../common/data/a.schema.json")
+        self.assert_error("cycle of cross-file $ref")
+        self.json_schema("06-console/data/self.schema.json", {"$ref": "self.schema.json"})
+        self.use_json_schema("../data/self.schema.json")
+        self.assert_error("use a local #/")
+
+    def test_standalone_refs_in_data_do_not_become_schema_edges(self):
+        self.json_schema("common/data/value.schema.json", {"type": "string"})
+        data = {"$ref": "https://example.invalid/not-a-schema.json"}
+        for keyword in ("examples", "const", "enum", "default"):
+            with self.subTest(keyword=keyword), patch("urllib.request.urlopen") as fetch:
+                schema = {"$ref": "../../common/data/value.schema.json"}
+                schema[keyword] = [data] if keyword in ("examples", "enum") else data
+                self.write("06-console/spec/06-console.api.openapi.yaml", contract(schema))
+                result = self.check()
+                if keyword != "default":
+                    self.assertEqual(result.errors, [])
+                fetch.assert_not_called()
 
 
 if __name__ == "__main__":

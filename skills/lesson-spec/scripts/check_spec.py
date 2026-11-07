@@ -43,6 +43,7 @@ def arguments():
 
 try:
     import yaml
+    from jsonschema import Draft202012Validator
     from jsonschema_path import SchemaPath
     from markdown_it import MarkdownIt
     from openapi_spec_validator import OpenAPIV31SpecValidator
@@ -153,28 +154,29 @@ def pointer_token(key):
     return str(key).replace("~", "~0").replace("/", "~1")
 
 
-def references(document, external=None, place=lambda where: where):
+def references(document, external=None, place=lambda where: where, *, root_kind="document"):
     """Walk reference-bearing positions, including their targets, without interpreting payloads.
 
     A local `#…` resolves in the document that holds the $ref. Without `external` every other $ref is unsupported;
-    with it a cross-file $ref goes to `external(ref, position)`, which returns (document, fragment, place) of the
-    target file or raises ValueError. `place(pointer)` names a position in its file for the messages."""
+    with it a cross-file $ref goes to `external(ref, position, kind)`, which returns the target document,
+    fragment, position formatter and its own external resolver. The latter keeps nested relative refs based
+    on their referring resource. `root_kind="schema"` walks a standalone JSON Schema, not an OpenAPI document."""
     seen = set()
 
-    def walk(node, kind, doc, where, here):
+    def walk(node, kind, doc, where, here, resolve):
         if not isinstance(node, (dict, list)) or (id(node), kind) in seen:
             return
         seen.add((id(node), kind))
         if kind.startswith("[]"):
             if isinstance(node, list):
                 for index, value in enumerate(node):
-                    yield from walk(value, kind[2:], doc, f"{where}/{index}", here)
+                    yield from walk(value, kind[2:], doc, f"{where}/{index}", here, resolve)
             return
         if not isinstance(node, dict):
             return
         if kind.startswith("*"):
             for key, value in node.items():
-                yield from walk(value, kind[1:], doc, f"{where}/{pointer_token(key)}", here)
+                yield from walk(value, kind[1:], doc, f"{where}/{pointer_token(key)}", here, resolve)
             return
         if kind == "schema":
             # These alter reference resolution; never claim root-pointer validation for them.
@@ -191,25 +193,25 @@ def references(document, external=None, place=lambda where: where):
             at = here(f"{where}/$ref")
             # Resolve before yielding or calling the library, including targets in extensions.
             try:
-                if external is not None and isinstance(ref, str) and not ref.startswith("#"):
-                    target_doc, fragment, target_here = external(ref, at)
+                if resolve is not None and isinstance(ref, str) and not ref.startswith("#"):
+                    target_doc, fragment, target_here, target_resolve = resolve(ref, at, kind)
                 else:
-                    target_doc, fragment, target_here = doc, ref, here
+                    target_doc, fragment, target_here, target_resolve = doc, ref, here, resolve
                 target = pointer(target_doc, fragment)
             except (KeyError, IndexError, TypeError, ValueError) as exc:
                 raise ValueError(f"unresolved/unsupported $ref {ref!r} at {at}: {exc}") from exc
             yield ref
-            yield from walk(target, kind, target_doc, fragment, target_here)
+            yield from walk(target, kind, target_doc, fragment, target_here, target_resolve)
         if kind in {"paths", "responses", "callback"}:
             child = {"paths": "path", "responses": "response", "callback": "path"}[kind]
             for key, value in node.items():
                 if isinstance(key, str) and not key.startswith("x-") and key != "$ref":
-                    yield from walk(value, child, doc, f"{where}/{pointer_token(key)}", here)
+                    yield from walk(value, child, doc, f"{where}/{pointer_token(key)}", here, resolve)
         else:
             for key, child in OBJECT_EDGES.get(kind, {}).items():
-                yield from walk(node.get(key), child, doc, f"{where}/{pointer_token(key)}", here)
+                yield from walk(node.get(key), child, doc, f"{where}/{pointer_token(key)}", here, resolve)
 
-    yield from walk(document, "document", document, "#", place)
+    yield from walk(document, root_kind, document, "#", place, external)
 
 
 # Built sections between their markers: the form of ADR-0087, the data families of ADR-0088 and the form of the
@@ -254,7 +256,7 @@ def validate(document, path=None, loaded=None):
 
     def serve(uri):
         if unquote(uri) not in served:
-            raise ValueError(f"reference outside the checked contracts: {uri}")
+            raise ValueError(f"reference outside the checked documents: {uri}")
         return served[unquote(uri)]
 
     OpenAPIV31SpecValidator(SchemaPath.from_dict(document, base_uri=path.as_uri(), handlers={"file": serve})).validate()
@@ -727,7 +729,8 @@ class Check:
         self.vms_idmap = {}
         self.vms_rows = None                         # строки каталога VMS (v7.vms.read_catalog), судит vms_families()
         self.contracts = {}                          # OpenAPI file → (document or None, checked without errors)
-        self.loading = []                            # contracts being checked: a cross-file $ref back is a cycle
+        self.schema_documents = {}                   # standalone JSON Schema, separate from OpenAPI contracts
+        self.loading = []                            # documents being checked: a cross-file $ref back is a cycle
         self.cross_refs = set()                      # positions of cross-file $ref counted once per run
         self.v7 = (self.root / MANIFEST_SCHEMA_V7).is_file()
         self.star_readers = {}                       # ключ каталога → роли, чьи нормы его читают (readers `*`)
@@ -1361,10 +1364,11 @@ class Check:
                 raise ValueError("unsupported schema dialect; needs dialect-specific check")
             # Check actual reference positions, not similarly named fields in application data.
             crossed = []
-            refs = list(references(doc, lambda ref, at: self.cross_ref(path, ref, at, crossed),
+            refs = list(references(doc, lambda ref, at, kind: self.cross_ref(path, ref, at, crossed, kind),
                                    lambda where: f"{self.name(path)}:{where}"))
             self.stats["local_refs"] += sum(1 for ref in refs if ref.startswith("#"))
-            validate(doc, path, {p.as_uri(): d for p, (d, _) in self.contracts.items() if d is not None}
+            validate(doc, path, {p.as_uri(): d for p, (d, _) in
+                                (*self.contracts.items(), *self.schema_documents.items()) if d is not None}
                      if crossed else None)
             for pointer in unstated_openness(doc):
                 self.error(path, f"OpenAPI: object schema {pointer} does not say its openness "
@@ -1377,6 +1381,38 @@ class Check:
             self.loading.pop()
         clean = len(self.errors) == errors
         self.contracts[path] = (self.contracts[path][0], clean)
+        return clean
+
+    def schema_document(self, path):
+        """Check a standalone JSON Schema resource without treating it as an OpenAPI contract."""
+        if path in self.schema_documents:
+            return self.schema_documents[path][1]
+        self.schema_documents[path] = (None, False)
+        text = self.read(path)
+        if text is None:
+            return False
+        errors = len(self.errors)
+        self.loading.append(path)
+        try:
+            doc = strict_json(text)
+            if not isinstance(doc, (dict, bool)) or isinstance(doc, dict) and "openapi" in doc:
+                raise ValueError("expected a standalone JSON Schema object or boolean, not an OpenAPI document")
+            self.schema_documents[path] = (doc, False)
+            Draft202012Validator.check_schema(doc)
+            crossed = []
+            refs = list(references(doc, lambda ref, at, kind: self.cross_ref(path, ref, at, crossed, kind),
+                                   lambda where: f"{self.name(path)}:{where}", root_kind="schema"))
+            self.stats["local_refs"] += sum(1 for ref in refs if ref.startswith("#"))
+            # Keep the owner schema's declared JSON Schema semantics. The explicit-openness style rule
+            # applies to schemas written in an OpenAPI contract, not to standalone data-family resources.
+            if self.v7:
+                self.portable_patterns(path, doc)
+        except Exception as exc:
+            self.error(path, f"JSON Schema: {exc}")
+        finally:
+            self.loading.pop()
+        clean = len(self.errors) == errors
+        self.schema_documents[path] = (self.schema_documents[path][0], clean)
         return clean
 
     def portable_patterns(self, path, doc):
@@ -1394,15 +1430,18 @@ class Check:
     # A later lesson L only from a door of a late-layer chapter that L introduces (decision on commit 10, chapter 6.7):
     # the $ref sits under paths/<door> whose description starts «Глава N.K», and the header of N.K-….norms.md says
     # «Глава позднего слоя: вводит урок L» (or «вводят уроки L1 и L2»); such a chapter is read after 8–10 (step 15).
-    def cross_ref(self, source, ref, at, crossed):
+    def cross_ref(self, source, ref, at, crossed, kind="schema"):
         url = urlsplit(ref)
         if url.scheme or url.netloc or url.query or not url.path:
             raise ValueError("external reference; only a relative <path>.openapi.yaml#<JSON Pointer> "
                              "between Platform/ contracts is checked offline")
         relative = unquote(url.path, errors="strict")
-        if relative.startswith("/") or not relative.endswith(".openapi.yaml"):
-            raise ValueError("expected a relative <path>.openapi.yaml#<JSON Pointer>")
-        if "#" not in ref:
+        standalone = relative.endswith(".schema.json")
+        if relative.startswith("/") or not (standalone or relative.endswith(".openapi.yaml")):
+            raise ValueError("expected a relative OpenAPI contract or standalone .schema.json")
+        if standalone and kind != "schema":
+            raise ValueError(f"standalone JSON Schema cannot replace an OpenAPI {kind} object")
+        if not standalone and "#" not in ref:
             raise ValueError("expected a JSON Pointer after # (the whole document is not a schema)")
         platform = self.root / "Platform"
         target = Path(os.path.normpath(source.parent / relative))
@@ -1421,8 +1460,15 @@ class Check:
             raise ValueError("a reference to its own file; use a local #/…")
         if source_lesson == "common" and lesson != "common":
             raise ValueError(f"a common contract refers to lesson {lesson:02}; common contracts refer to common ones")
-        if source_lesson != "common" and lesson != "common" and lesson >= source_lesson:
-            chapter = self.door_chapter(source, source_lesson, at)
+        if standalone:
+            resolved = target.resolve().relative_to(platform.resolve()).parts
+            if (len(where) != 3 or where[1] != "data" or len(resolved) != 3 or resolved[1] != "data" or
+                    resolved[0] != where[0]):
+                raise ValueError("a standalone JSON Schema stays in its declared owner data/ inside Platform/")
+            target = target.resolve()
+        if (source_lesson != "common" and lesson != "common" and lesson >= source_lesson and
+                not (standalone and where[0] == source_where[0])):
+            chapter = self.door_chapter(source, source_lesson, at) if source in self.contracts else None
             if lesson == source_lesson or lesson not in self.late_chapters(source.parent).get(chapter, ()):
                 raise ValueError(f"reference to a lesson read later: P/{lesson:02} is not read before "
                                  f"P/{source_lesson:02} (allowed: a smaller lesson number, Platform/common/, or a "
@@ -1432,13 +1478,26 @@ class Check:
         if target in self.loading:
             chain = self.loading[self.loading.index(target):] + [target]
             raise ValueError("cycle of cross-file $ref: " + " → ".join(str(self.name(p)) for p in chain))
-        if not self.contract(target):
-            raise ValueError(f"the target contract {self.name(target)} has errors (reported for that file)")
+        if standalone:
+            if not self.schema_document(target):
+                raise ValueError(f"the target JSON Schema {self.name(target)} has errors (reported for that file)")
+            document = self.schema_documents[target][0]
+            fragment = "#" + url.fragment
+            value = pointer(document, fragment)
+            if not isinstance(value, (dict, bool)):
+                raise ValueError("the JSON Pointer target is not a Schema object or boolean")
+            Draft202012Validator.check_schema(value)
+        else:
+            if not self.contract(target):
+                raise ValueError(f"the target contract {self.name(target)} has errors (reported for that file)")
+            document = self.contracts[target][0]
+            fragment = "#" + url.fragment
         if at not in self.cross_refs:
             self.cross_refs.add(at)
             self.stats["openapi_cross_refs"] += 1
         crossed.append(target)
-        return self.contracts[target][0], "#" + url.fragment, lambda where: f"{self.name(target)}:{where}"
+        return (document, fragment, lambda where: f"{self.name(target)}:{where}",
+                lambda ref, at, kind: self.cross_ref(target, ref, at, crossed, kind))
 
     # The chapter K of the door that holds a $ref: paths/<door> whose description starts «Глава N.K»; else None.
     def door_chapter(self, source, lesson, at):
