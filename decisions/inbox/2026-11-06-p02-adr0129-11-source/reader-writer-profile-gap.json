@@ -1,0 +1,40 @@
+{
+  "base": "d8cf12290f43693289b2149019232bc26c48705b",
+  "cases": [
+    {
+      "family": "folders",
+      "count": 1001,
+      "reader_valid": true,
+      "writer_valid": false,
+      "items_weight": 25044,
+      "fits_store_V": true,
+      "decoded_sha256": "13c109f1cd7cb0452245f8d181afa8291b07d41f2ecd033fd8979f0a117f480f",
+      "positive_body_candidate": 2147483648,
+      "old_F_bound_term_if_membership_drives_one_folder_update_each": null
+    },
+    {
+      "family": "memberof",
+      "count": 9,
+      "reader_valid": true,
+      "writer_valid": false,
+      "items_weight": 323,
+      "fits_store_V": true,
+      "decoded_sha256": "47405a99ec63b0bfb7319fa6a8cd27982ef6edd6c06d12c7a0e1cc6b29df3e35",
+      "positive_body_candidate": 2147483648,
+      "old_F_bound_term_if_membership_drives_one_folder_update_each": 3539115
+    },
+    {
+      "family": "memberof",
+      "count": 14979,
+      "reader_valid": true,
+      "writer_valid": false,
+      "items_weight": 524273,
+      "fits_store_V": true,
+      "decoded_sha256": "b159d34a9abf3de4c2775d34503487c7521530d3d6f383e5947e8ab4d43f569d",
+      "positive_body_candidate": 2147483648,
+      "old_F_bound_term_if_membership_drives_one_folder_update_each": 5890267065
+    }
+  ],
+  "finding": "Writer-only1000/8 cannot be assumed for preexisting reader-valid rows. Candidate18-shape calculation requires revised reader bounds/category proof. No runtime/SUT or sourceP06 edits.",
+  "profile_completeness_claim": false
+}
