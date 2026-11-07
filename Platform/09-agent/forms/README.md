@@ -12,7 +12,7 @@ Neither DOMAIN_URL nor RELAY_URL set and nonempty is the existing configuration 
 
 ## Refusal catalogue
 
-[refusals.tsv](refusals.tsv) preserves all 22 original N4 rows as 24 projections, retaining cause/outcome/diagnostic/caller byte for byte. The two compound relay rows each have two code projections with the same source row number. Ten imported local-door/start conditions and two explicit relay-start conditions give 36 former projections; the two explicit review outcomes make 38 in total. The original chapter/row addresses remain.
+[refusals.tsv](refusals.tsv) preserves all 22 original N4 rows as 24 projections, retaining cause/outcome/diagnostic/caller byte for byte. The two compound relay rows each have two code projections with the same source row number. Ten imported local-door/start conditions and two explicit relay-start conditions give 36 former projections; the two explicit review outcomes and the early chunked 400 of the relay door (ADR-0129 (20)) make 39 in total. The original chapter/row addresses remain.
 
 HTTP response_schema names an existing OpenAPI component. Fields name direct properties, including all directly required ones; the complete source cells and OpenAPI retain contextual requirements and exact error/reason words. The local door passes holder refusals as received except its explicitly normed mappings. A peer reply, a stored edit outcome, a journal or alarm is not a new HTTP failure of the agent. A code not fixed by its source is -, including the implementation-chosen join refusal and socket-start refusal; no new exit value is inferred. Relay refusals retain the N2 order and absence of Retry-After.
 

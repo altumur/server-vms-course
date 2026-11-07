@@ -1,0 +1,447 @@
+{
+ "D_s43": {
+  "request_replacements": 19,
+  "expect_replacements": 24,
+  "all_new_match_part_grammar": true,
+  "old_p_tokens_match": false,
+  "file_sha256": "52fccb8bb62123d1f1f8a81a3604577e0f444aabadb51b24562be6ca6c3ccab3",
+  "equals_approved_bytes": true
+ },
+ "V_family_read": {
+  "path": "Platform/common/vectors/family-read/09.tsv",
+  "file_before_sha256": "327acf6d0279675cd6f9756e3468220949c3fff68a550f7bc1d6bebb635c4b03",
+  "file_before_data_rows": 1658,
+  "file_after_sha256": "eb69cf6fec8fa939734b82e9ee41a180cba4a13a9303569a6a02cb25fa08b613",
+  "file_after_data_rows": 1668,
+  "changed": [
+   {
+    "case": "09-1328",
+    "physical_line": 1329,
+    "row_before_sha256": "07566d3493d4dffd3b4d184249fc1d2653a15fc00ea951f6a8aadc1717dc7a38",
+    "row_after_sha256": "e701924912ddcfc6230d28674f940f0fd09e537424d5cb1a17cf82a22be38ac5",
+    "cells_changed": {
+     "verdict": [
+      "ok",
+      "refused"
+     ],
+     "paths": [
+      "[]",
+      "[\"/events\"]"
+     ],
+     "outcome": [
+      "{\"domainagent\": []}",
+      "{\"domainagent\": [\"\"]}"
+     ],
+     "note": [
+      "events: max_items",
+      "events: max_items; Z-10: the reader shares ALARM_PAGE from $defs.writer"
+     ]
+    },
+    "cells_unchanged": [
+     "case",
+     "family",
+     "key",
+     "kind",
+     "mode",
+     "who",
+     "text"
+    ],
+    "text_sha256": "7d4e0e4222656db5c807cf032a02b7561fd1013688cdcec1434b0c2784a133f8"
+   }
+  ],
+  "appended_after_line": 1659,
+  "appended": [
+   {
+    "case": "09-z10-alarms-99-writer",
+    "row_sha256": "9fbe9141f0d3e552395df3f0758b04519f6f5dd53e2f385c722ffa6005244012",
+    "text_bytes": 5494,
+    "verdict": "ok",
+    "paths": "[]",
+    "outcome": "[]",
+    "note": "Z-10: 99 events, ALARM_PAGE bound"
+   },
+   {
+    "case": "09-z10-alarms-99-reader",
+    "row_sha256": "db26eb0d8d164cf98a7c0a6129816dd62a9c20e4eac8a046b06a43f42cd91d99",
+    "text_bytes": 5494,
+    "verdict": "ok",
+    "paths": "[]",
+    "outcome": "{\"domainagent\": []}",
+    "note": "Z-10: 99 events, ALARM_PAGE bound"
+   },
+   {
+    "case": "09-z10-alarms-100-writer",
+    "row_sha256": "e7cc506fbbf39ebd9b315061cee060c5d3d04b7c0d95d4d15c9e591d0cf822b5",
+    "text_bytes": 5549,
+    "verdict": "ok",
+    "paths": "[]",
+    "outcome": "[]",
+    "note": "Z-10: 100 events, ALARM_PAGE bound"
+   },
+   {
+    "case": "09-z10-alarms-100-reader",
+    "row_sha256": "f1288a9fbd1ba267534bcd224cfbda004be3899c480fbb32c5029de71457b875",
+    "text_bytes": 5549,
+    "verdict": "ok",
+    "paths": "[]",
+    "outcome": "{\"domainagent\": []}",
+    "note": "Z-10: 100 events, ALARM_PAGE bound"
+   },
+   {
+    "case": "09-z10-outcomes-499-writer",
+    "row_sha256": "d4f6bb667fd61b240e24afb6ddcfc929db184cf1e027cebf0c9fa020a839931b",
+    "text_bytes": 65370,
+    "verdict": "ok",
+    "paths": "[]",
+    "outcome": "[]",
+    "note": "Z-10: 499 outcomes, OUTCOMES_KEEP bound"
+   },
+   {
+    "case": "09-z10-outcomes-499-reader",
+    "row_sha256": "a8a4e58092e1f47d64e9257941656a07172d7854bbdabf7c712810f590790700",
+    "text_bytes": 65370,
+    "verdict": "ok",
+    "paths": "[]",
+    "outcome": "{\"domainagent\": []}",
+    "note": "Z-10: 499 outcomes, OUTCOMES_KEEP bound"
+   },
+   {
+    "case": "09-z10-outcomes-500-writer",
+    "row_sha256": "d010dd4cd6b55c74524b3e65cb2b7e59cdb9567ff0bbc8225baff3d05f0553f7",
+    "text_bytes": 65501,
+    "verdict": "ok",
+    "paths": "[]",
+    "outcome": "[]",
+    "note": "Z-10: 500 outcomes, OUTCOMES_KEEP bound"
+   },
+   {
+    "case": "09-z10-outcomes-500-reader",
+    "row_sha256": "28cccfd93c10058641ddeadb64a139d4453883d1f706c5d91b2a321955f685f8",
+    "text_bytes": 65501,
+    "verdict": "ok",
+    "paths": "[]",
+    "outcome": "{\"domainagent\": []}",
+    "note": "Z-10: 500 outcomes, OUTCOMES_KEEP bound"
+   },
+   {
+    "case": "09-z10-outcomes-501-writer",
+    "row_sha256": "d4b503507e5f715b4056c1dd18b2a800095f139012fcf7cccb9556c3e7f8fb7d",
+    "text_bytes": 65632,
+    "verdict": "refused",
+    "paths": "[\"\"]",
+    "outcome": "[]",
+    "note": "Z-10: 501 outcomes over OUTCOMES_KEEP"
+   },
+   {
+    "case": "09-z10-outcomes-501-reader",
+    "row_sha256": "d08f2627495f2479473510544bfd574f03a0f8c5c299e793bd74777c3fef9e99",
+    "text_bytes": 65632,
+    "verdict": "refused",
+    "paths": "[\"\"]",
+    "outcome": "{\"domainagent\": [\"\"]}",
+    "note": "Z-10: 501 outcomes over OUTCOMES_KEEP; existing unreadable outcome"
+   }
+  ],
+  "protected_rows": 1657,
+  "neighbours": {
+   "09-1327": "writer 101 events refused /events — unchanged",
+   "09-0603/0604": "empty outcomes ok — unchanged"
+  }
+ },
+ "B_refusals": {
+  "path": "Platform/09-agent/forms/refusals.tsv",
+  "file_before_sha256": "386a81b3fe747d2f1b766dd6c62acc1d1f588c3a8632e582296aed3f0e108b64",
+  "physical_lines_before": 41,
+  "data_rows_before": 38,
+  "file_after_sha256": "dceb213e03d9aec17bd0170a2ec15bec65ea9c68175376f0cef7c3eda209782c",
+  "data_rows_after": 39,
+  "prefix_preserved": "all 41 physical lines byte for byte; the new row appended after the last line",
+  "new_row_sha256": "d692c427b367f7ee8ef55ffb6661d3cb7b062be7c857d3c6aaa25e05289f6b9b",
+  "cells": {
+   "chapter": "9.2",
+   "row": "14",
+   "name": "relay_14_400",
+   "surface": "http",
+   "code": "400",
+   "kind": "-",
+   "fields": "error,detail",
+   "headers": "-",
+   "log": "-",
+   "norm": "P/09.2-R009",
+   "word": "refused",
+   "response_schema": "RelayRefusal",
+   "cause": "at the relay door: the body read fails before accept (a chunked body)",
+   "outcome": "400 before accept, without reason",
+   "diagnostic": "the member's agent",
+   "caller": "as at the holder's door ([P/08.3](../../08-domain/spec/08.3-domain.norms.md) N4)"
+  },
+  "notes": [
+   "word refused = the error word of the owned RelayRefusal, not a new word (coord103)",
+   "response_schema RelayRefusal — the common closed form, as in every other 9.2 row; the status branch is RelayRefusalPlain in OpenAPI",
+   "caller reuses the wording of relay_01_413/400 (as at the holder's door); no new caller action"
+  ]
+ },
+ "B_openapi_probe": {
+  "cases": 31,
+  "mismatches": [],
+  "results": [
+   {
+    "case": "400 early chunked, no reason",
+    "expected_valid": true,
+    "valid": true
+   },
+   {
+    "case": "400 not_a_publication",
+    "expected_valid": true,
+    "valid": true
+   },
+   {
+    "case": "400 foreign word",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "400 without detail",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "401 bad_signature",
+    "expected_valid": true,
+    "valid": true
+   },
+   {
+    "case": "401 without reason",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "401 foreign word",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "403 no reason",
+    "expected_valid": true,
+    "valid": true
+   },
+   {
+    "case": "403 send_row",
+    "expected_valid": true,
+    "valid": true
+   },
+   {
+    "case": "403 with reason",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "403 without detail",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "405 no reason",
+    "expected_valid": true,
+    "valid": true
+   },
+   {
+    "case": "405 with reason",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "409 rebase",
+    "expected_valid": true,
+    "valid": true
+   },
+   {
+    "case": "409 same_sent_at",
+    "expected_valid": true,
+    "valid": true
+   },
+   {
+    "case": "409 not_ready",
+    "expected_valid": true,
+    "valid": true
+   },
+   {
+    "case": "409 without reason (review C2)",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "409 foreign word",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "409 bool reason",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "413 early, no reason",
+    "expected_valid": true,
+    "valid": true
+   },
+   {
+    "case": "413 whole_too_large",
+    "expected_valid": true,
+    "valid": true
+   },
+   {
+    "case": "413 foreign word",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "503 nothing yet",
+    "expected_valid": true,
+    "valid": true
+   },
+   {
+    "case": "503 rev_exhausted",
+    "expected_valid": true,
+    "valid": true
+   },
+   {
+    "case": "503 without detail (review C2)",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "503 foreign word",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "409 extra field",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "409 without error",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "carry 401 out_of_window",
+    "expected_valid": true,
+    "valid": true
+   },
+   {
+    "case": "carry 401 without reason",
+    "expected_valid": false,
+    "valid": false
+   },
+   {
+    "case": "carry 503 without detail",
+    "expected_valid": false,
+    "valid": false
+   }
+  ]
+ },
+ "B_openapi_probe_on_base_mismatches": [
+  "400 foreign word",
+  "400 without detail",
+  "401 without reason",
+  "401 foreign word",
+  "403 with reason",
+  "403 without detail",
+  "405 with reason",
+  "409 without reason (review C2)",
+  "409 foreign word",
+  "413 foreign word",
+  "503 without detail (review C2)",
+  "503 foreign word",
+  "carry 401 without reason"
+ ],
+ "G_neighbours": {
+  "limits": "source-consistency model and V7 form reads only; no agent, admit, signature of knock or re-admission executed; a join row with batch is not form-probed: its seed_secret needs a real ring envelope (three tried encodings refused at /batch, see probe_G-batch-attempt.txt)",
+  "forms": {
+   "member-list copy with m1 admitted K1": [
+    "ok",
+    []
+   ],
+   "member-list copy garbled": [
+    "refused",
+    [
+     "/doc",
+     "/fetched_at"
+    ]
+   ],
+   "join camera": [
+    "ok",
+    []
+   ],
+   "join garbled": [
+    "refused",
+    [
+     "/class"
+    ]
+   ],
+   "member m1 K2": [
+    "ok",
+    []
+   ]
+  },
+  "condition": [
+   {
+    "case": "first admission",
+    "got": "class go",
+    "expected": "class go",
+    "ok": true
+   },
+   {
+    "case": "admitted, K1 unchanged",
+    "got": "fields do not go",
+    "expected": "fields do not go",
+    "ok": true
+   },
+   {
+    "case": "camera K1 in copy, confirmed pair K2",
+    "got": "class go",
+    "expected": "class go",
+    "ok": true
+   },
+   {
+    "case": "batch K1 in copy, confirmed pair K2",
+    "got": "class+batch go",
+    "expected": "class+batch go",
+    "ok": true
+   },
+   {
+    "case": "join absent",
+    "got": "no class field (server by default) go",
+    "expected": "no class field (server by default) go",
+    "ok": true
+   },
+   {
+    "case": "join unreadable",
+    "got": "fields do not go (join outcome)",
+    "expected": "fields do not go (join outcome)",
+    "ok": true
+   },
+   {
+    "case": "own copy unreadable",
+    "got": "class go",
+    "expected": "class go",
+    "ok": true
+   },
+   {
+    "case": "holder entry",
+    "got": "fields do not go (holder procedure)",
+    "expected": "fields do not go (holder procedure)",
+    "ok": true
+   },
+   {
+    "case": "pair unconfirmed or unknown write",
+    "got": "no publication (key_read)",
+    "expected": "no publication (key_read)",
+    "ok": true
+   }
+  ],
+  "all_ok": true
+ }
+}
