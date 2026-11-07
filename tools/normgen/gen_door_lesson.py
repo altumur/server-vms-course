@@ -149,6 +149,151 @@ class Bundle:
         return out
 
 
+# Adapter identities predate S08; catalogue expansion never allocates an Op.
+_P06_OLD_OPS = (
+    ('GET', '/{rows}', 'OpGetByRows'),
+    ('POST', '/{rows}', 'OpPostByRows'),
+    ('HEAD', '/{rows}', 'OpHeadByRows'),
+    ('PUT', '/{rows}/{id}', 'OpPutByRowsById'),
+    ('DELETE', '/{rows}/{id}', 'OpDeleteByRowsById'),
+    ('PUT', '/{rows}/{id}/{blob_field}', 'OpPutByRowsByIdByBlobField'),
+    ('GET', '/{table}', 'OpGetByTable'),
+    ('POST', '/{table}', 'OpPostByTable'),
+    ('HEAD', '/{table}', 'OpHeadByTable'),
+    ('GET', '/{table}/{name}', 'OpGetByTableByName'),
+    ('DELETE', '/{table}/{name}', 'OpDeleteByTableByName'),
+    ('HEAD', '/{table}/{name}', 'OpHeadByTableByName'),
+    ('POST', '/console/batch', 'OpPostConsoleBatch'),
+    ('GET', '/folders', 'OpGetFolders'),
+    ('POST', '/folders', 'OpPostFolders'),
+    ('GET', '/folders/{id}', 'OpGetFoldersById'),
+    ('PUT', '/folders/{id}', 'OpPutFoldersById'),
+    ('DELETE', '/folders/{id}', 'OpDeleteFoldersById'),
+    ('POST', '/{sub}/operations', 'OpPostBySubOperations'),
+    ('GET', '/{sub}/operations/{id}', 'OpGetBySubOperationsById'),
+    ('POST', '/{sub}/operations/{id}/pause', 'OpPostBySubOperationsByIdPause'),
+    ('POST', '/{sub}/operations/{id}/resume', 'OpPostBySubOperationsByIdResume'),
+    ('POST', '/{sub}/operations/{id}/cancel', 'OpPostBySubOperationsByIdCancel'),
+    ('POST', '/{sub}/operations/{id}/retry-failed', 'OpPostBySubOperationsByIdRetryFailed'),
+    ('GET', '/session', 'OpGetSession'),
+    ('POST', '/session', 'OpPostSession'),
+    ('DELETE', '/session', 'OpDeleteSession'),
+    ('HEAD', '/session', 'OpHeadSession'),
+    ('POST', '/session/break-glass', 'OpPostSessionBreakGlass'),
+    ('GET', '/events', 'OpGetEvents'),
+    ('HEAD', '/events', 'OpHeadEvents'),
+    ('POST', '/marks', 'OpPostMarks'),
+    ('GET', '/changes', 'OpGetChanges'),
+    ('GET', '/{sub}/next_id', 'OpGetBySubNextId'),
+    ('POST', '/{sub}/requests', 'OpPostBySubRequests'),
+    ('DELETE', '/{sub}/asked/{sha16}', 'OpDeleteBySubAskedBySha16'),
+    ('GET', '/', 'OpGetRoot'),
+    ('HEAD', '/', 'OpHeadRoot'),
+    ('GET', '/index.html', 'OpGetIndexHtml'),
+    ('HEAD', '/index.html', 'OpHeadIndexHtml'),
+    ('GET', '/platform/console.js', 'OpGetPlatformConsoleJs'),
+    ('HEAD', '/platform/console.js', 'OpHeadPlatformConsoleJs'),
+    ('GET', '/platform/console.css', 'OpGetPlatformConsoleCss'),
+    ('HEAD', '/platform/console.css', 'OpHeadPlatformConsoleCss'),
+    ('GET', '/healthz', 'OpGetHealthz'),
+    ('HEAD', '/healthz', 'OpHeadHealthz'),
+    ('GET', '/manifest', 'OpGetManifest'),
+    ('HEAD', '/manifest', 'OpHeadManifest'),
+    ('GET', '/manifest/{sub}/source', 'OpGetManifestBySubSource'),
+    ('HEAD', '/manifest/{sub}/source', 'OpHeadManifestBySubSource'),
+    ('GET', '/{sub}/manifest', 'OpGetBySubManifest'),
+    ('HEAD', '/{sub}/manifest', 'OpHeadBySubManifest'),
+    ('GET', '/mounts', 'OpGetMounts'),
+    ('HEAD', '/mounts', 'OpHeadMounts'),
+    ('GET', '/servers', 'OpGetServers'),
+    ('HEAD', '/servers', 'OpHeadServers'),
+    ('GET', '/{sub}/servers', 'OpGetBySubServers'),
+    ('HEAD', '/{sub}/servers', 'OpHeadBySubServers'),
+    ('GET', '/resources', 'OpGetResources'),
+    ('HEAD', '/resources', 'OpHeadResources'),
+    ('GET', '/heartbeats', 'OpGetHeartbeats'),
+    ('HEAD', '/heartbeats', 'OpHeadHeartbeats'),
+    ('GET', '/where/{id}', 'OpGetWhereById'),
+    ('HEAD', '/where/{id}', 'OpHeadWhereById'),
+    ('GET', '/where/{table}/{place}', 'OpGetWhereByTableByPlace'),
+    ('HEAD', '/where/{table}/{place}', 'OpHeadWhereByTableByPlace'),
+    ('GET', '/{sub}/where/{table}/{place}', 'OpGetBySubWhereByTableByPlace'),
+    ('HEAD', '/{sub}/where/{table}/{place}', 'OpHeadBySubWhereByTableByPlace'),
+    ('GET', '/metrics', 'OpGetMetrics'),
+    ('HEAD', '/metrics', 'OpHeadMetrics'),
+    ('GET', '/{sub}/metrics', 'OpGetBySubMetrics'),
+    ('HEAD', '/{sub}/metrics', 'OpHeadBySubMetrics'),
+    ('GET', '/{sub}/', 'OpGetBySub'),
+    ('HEAD', '/{sub}/', 'OpHeadBySub'),
+    ('GET', '/{sub}/index.html', 'OpGetBySubIndexHtml'),
+    ('HEAD', '/{sub}/index.html', 'OpHeadBySubIndexHtml'),
+    ('GET', '/{sub}/{file}', 'OpGetBySubByFile'),
+    ('HEAD', '/{sub}/{file}', 'OpHeadBySubByFile'),
+    ('GET', '/{pass}', 'OpGetByPass'),
+    ('PUT', '/{pass}', 'OpPutByPass'),
+    ('POST', '/{pass}', 'OpPostByPass'),
+    ('DELETE', '/{pass}', 'OpDeleteByPass'),
+    ('PATCH', '/{pass}', 'OpPatchByPass'),
+    ('HEAD', '/{pass}', 'OpHeadByPass'),
+    ('GET', '/policy', 'OpGetPolicy'),
+    ('PUT', '/policy', 'OpPutPolicy'),
+    ('HEAD', '/policy', 'OpHeadPolicy'),
+    ('GET', '/drain', 'OpGetDrain'),
+    ('POST', '/drain', 'OpPostDrain'),
+    ('DELETE', '/drain', 'OpDeleteDrain'),
+    ('HEAD', '/drain', 'OpHeadDrain'),
+    ('GET', '/servers/{server}/labels', 'OpGetServersByServerLabels'),
+    ('PUT', '/servers/{server}/labels', 'OpPutServersByServerLabels'),
+    ('DELETE', '/servers/{server}/labels', 'OpDeleteServersByServerLabels'),
+    ('HEAD', '/servers/{server}/labels', 'OpHeadServersByServerLabels'),
+    ('POST', '/servers/{server}/decommission', 'OpPostServersByServerDecommission'),
+    ('DELETE', '/servers/{server}/decommission', 'OpDeleteServersByServerDecommission'),
+    ('GET', '/unplaceable', 'OpGetUnplaceable'),
+    ('HEAD', '/unplaceable', 'OpHeadUnplaceable'),
+    ('GET', '/schema', 'OpGetSchema'),
+    ('PUT', '/schema', 'OpPutSchema'),
+    ('HEAD', '/schema', 'OpHeadSchema'),
+    ('GET', '/domain/{sub}/books/{book}', 'OpGetDomainBySubBooksByBook'),
+    ('HEAD', '/domain/{sub}/books/{book}', 'OpHeadDomainBySubBooksByBook'),
+    ('GET', '/domain', 'OpGetDomain'),
+    ('HEAD', '/domain', 'OpHeadDomain'),
+    ('GET', '/domain/{route}', 'OpGetDomainByRoute'),
+    ('PUT', '/domain/{route}', 'OpPutDomainByRoute'),
+    ('POST', '/domain/{route}', 'OpPostDomainByRoute'),
+    ('DELETE', '/domain/{route}', 'OpDeleteDomainByRoute'),
+    ('PATCH', '/domain/{route}', 'OpPatchDomainByRoute'),
+    ('HEAD', '/domain/{route}', 'OpHeadDomainByRoute'),
+    ('GET', '/domain/at/{cluster}/events', 'OpGetDomainAtByClusterEvents'),
+    ('HEAD', '/domain/at/{cluster}/events', 'OpHeadDomainAtByClusterEvents'),
+    ('GET', '/domain/at/{cluster}/{sub}/heartbeats', 'OpGetDomainAtByClusterBySubHeartbeats'),
+    ('HEAD', '/domain/at/{cluster}/{sub}/heartbeats', 'OpHeadDomainAtByClusterBySubHeartbeats'),
+    ('GET', '/domain/at/{cluster}/{sub}/{rows}', 'OpGetDomainAtByClusterBySubByRows'),
+    ('HEAD', '/domain/at/{cluster}/{sub}/{rows}', 'OpHeadDomainAtByClusterBySubByRows'),
+    ('GET', '/domain/at/{cluster}/{sub}/{rows}/{id}', 'OpGetDomainAtByClusterBySubByRowsById'),
+    ('HEAD', '/domain/at/{cluster}/{sub}/{rows}/{id}', 'OpHeadDomainAtByClusterBySubByRowsById'),
+    ('GET', '/domain/at/{cluster}/{sub}/{rows}/{id}/{tail}', 'OpGetDomainAtByClusterBySubByRowsByIdByTail'),
+    ('HEAD', '/domain/at/{cluster}/{sub}/{rows}/{id}/{tail}', 'OpHeadDomainAtByClusterBySubByRowsByIdByTail'),
+    ('GET', '/domain/at/{cluster}/{sub}/where/{id}', 'OpGetDomainAtByClusterBySubWhereById'),
+    ('HEAD', '/domain/at/{cluster}/{sub}/where/{id}', 'OpHeadDomainAtByClusterBySubWhereById'),
+    ('GET', '/domain/at/{cluster}/{sub}/where/{table}/{place}', 'OpGetDomainAtByClusterBySubWhereByTableByPlace'),
+    ('HEAD', '/domain/at/{cluster}/{sub}/where/{table}/{place}', 'OpHeadDomainAtByClusterBySubWhereByTableByPlace'),
+    ('GET', '/domain/keys', 'OpGetDomainKeys'),
+    ('HEAD', '/domain/keys', 'OpHeadDomainKeys'),
+    ('GET', '/domain/shared/{sub}', 'OpGetDomainSharedBySub'),
+    ('HEAD', '/domain/shared/{sub}', 'OpHeadDomainSharedBySub'),
+    ('POST', '/api/login', 'OpPostApiLogin'),
+    ('GET', '/api/held', 'OpGetApiHeld'),
+    ('HEAD', '/api/held', 'OpHeadApiHeld'),
+    ('GET', '/api/backup-part/{member}/{part}', 'OpGetApiBackupPartByMemberByPart'),
+    ('GET', '/api/backup', 'OpGetApiBackup'),
+    ('HEAD', '/api/backup', 'OpHeadApiBackup'),
+    ('POST', '/api/prepare', 'OpPostApiPrepare'),
+    ('POST', '/api/take', 'OpPostApiTake'),
+    ('POST', '/domain/verify', 'OpPostDomainVerify'),
+    ('POST', '/domain/move', 'OpPostDomainMove'),
+)
+
+
 def op_raw(item, op):
     return item[op["method"].lower()]
 
@@ -234,6 +379,8 @@ priority = []        # build collects templates for x-route-priority mode.
 
 
 def build(root=ROOT):
+    if L.key == "06-console":
+        return _p06_build(root)
     spec = Path(root) / L.rel / "spec" / f"{L.key}.api.openapi.yaml"
     docs = Docs(spec)
     doc = docs.doc
@@ -354,6 +501,218 @@ def build(root=ROOT):
     return ops, templates, checks, by_pm, methods_of, all405, docs
 
 
+_P06_COMPONENTS = {
+    "UnitsCollection": "/{rows}", "UnitItem": "/{rows}/{id}",
+    "TableCollection": "/{table}", "TableItem": "/{table}/{name}",
+    "PassRoot": "/{pass}", "ConsoleFile": "/{sub}/{file}",
+}
+_P06_HEADS = (
+    ("HEAD", "/folders", "OpHeadFolders"),
+    ("HEAD", "/folders/{id}", "OpHeadFoldersById"),
+    ("HEAD", "/{sub}/operations/{id}", "OpHeadBySubOperationsById"),
+    ("HEAD", "/changes", "OpHeadChanges"),
+    ("HEAD", "/{sub}/next_id", "OpHeadBySubNextId"),
+    ("HEAD", "/api/backup-part/{member}/{part}", "OpHeadApiBackupPartByMemberByPart"),
+)
+
+
+def _p06_reference(docs, ref, base):
+    file, _, pointer = ref.partition("#")
+    target = (Path(base).parent / file).resolve() if file else Path(base).resolve()
+    try:
+        source = str(Path(base).relative_to(docs.p06_root))
+        target = str(target.relative_to(docs.p06_root))
+    except ValueError:
+        raise GenError(f"P06 reference escapes source root: {ref}") from None
+    docs.p06_references.add(source + " " + ref + " -> " + target + "#" + pointer)
+
+
+class _P06Bundle(Bundle):
+    def ref(self, ref, base):
+        _p06_reference(self.docs, ref, base)
+        return super().ref(ref, base)
+
+
+def _p06_object(docs, node, base):
+    """Resolve a located Reference/PathItem without changing legacy dereferencing."""
+    seen = set()
+    while isinstance(node, dict) and "$ref" in node:
+        if set(node) != {"$ref"}:
+            raise GenError(f"{base}: ambiguous Reference/PathItem siblings")
+        ref = node["$ref"]
+        file, _, pointer = ref.partition("#")
+        target = (Path(base).parent / file).resolve() if file else Path(base).resolve()
+        key = (target, pointer)
+        if key in seen:
+            raise GenError(f"{base}: cyclic P06 reference {ref}")
+        seen.add(key)
+        _p06_reference(docs, ref, base)
+        node, base = docs.resolve(ref, base)
+    if not isinstance(node, dict):
+        raise GenError(f"{base}: expected a P06 object")
+    return node, base
+
+
+def _p06_parameters(docs, item, item_base, op, op_base):
+    levels, effective = [], {}
+    for container, base in ((item, item_base), (op, op_base)):
+        level = {}
+        for raw in container.get("parameters", []):
+            p, pbase = _p06_object(docs, raw, base)
+            key = (p.get("in"), p.get("name"))
+            if key[0] not in {"path", "header", "query", "cookie"} or not isinstance(key[1], str) or not key[1]:
+                raise GenError(f"{base}: invalid parameter identity {key}")
+            if key in level:
+                raise GenError(f"{base}: duplicate parameter {key}")
+            level[key] = {"name": p["name"], "in": p["in"], "required": bool(p.get("required")),
+                          "schema": p.get("schema", {}), "base": pbase, "raw": p}
+        levels.append(list(level.values()))
+        effective.update(level)
+    return list(effective.values()), levels
+
+
+def _p06_servers(docs, item, op):
+    servers = op.get("servers", item.get("servers", docs.doc.get("servers", [])))
+    variants = []
+    for server in servers or [{"url": "{origin}"}]:
+        url = server.get("url", "")
+        if url not in {"{origin}", "{origin}/{sub}"} and (not url or "{" in url or "}" in url):
+            raise GenError(f"P06 servers: unsupported variable URL {url!r}")
+        mounted = url == "{origin}/{sub}"
+        enum = ((server.get("variables") or {}).get("sub") or {}).get("enum") if mounted else None
+        if enum is not None and (not isinstance(enum, list) or not enum or any(not isinstance(x, str) for x in enum)):
+            raise GenError("P06 server sub enum is not a nonempty string list")
+        variant = (mounted, tuple(enum) if enum is not None else None)
+        if variant not in variants:
+            variants.append(variant)
+    return variants, servers
+
+
+def _p06_build(root):
+    root = Path(root).resolve()
+    spec = Path(root) / L.rel / "spec" / f"{L.key}.api.openapi.yaml"
+    docs = Docs(spec)
+    docs.p06_root, docs.p06_references = root, set()
+    components = (docs.doc.get("components") or {}).get("pathItems") or {}
+    if set(components) != set(_P06_COMPONENTS):
+        raise GenError("P06 requires exactly the six published S08 components.pathItems; no legacy fallback")
+    view_path = root / "Platform/02-installer/spec/02.2-installer.view.schema.json"
+    try:
+        view = json.loads(view_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise GenError(f"P06 catalogue view: {exc}") from None
+    docs.cache[view_path] = view
+    if not {"name", "unit", "tables", "door", "console"} <= set(view.get("properties", {})):
+        raise GenError("P06 catalogue view is missing its existing routing owners")
+    bodies.clear()
+    priority.clear()
+    entries = [(path, raw, "", "#/paths/" + path.replace("~", "~0").replace("/", "~1"))
+               for path, raw in docs.doc.get("paths", {}).items()]
+    entries += [(path, components[name], name, "#/components/pathItems/" + name)
+                for name, path in _P06_COMPONENTS.items()]
+    identities = {(m, path): (ordinal, name) for ordinal, (m, path, name)
+                  in enumerate(_P06_OLD_OPS + _P06_HEADS, 1)}
+    ops, templates, checks, by_pm, methods_of, all405, observed = [], [], {}, {}, {}, {}, set()
+    for path, raw, component, pointer in entries:
+        item, item_base = _p06_object(docs, raw, spec)
+        segs = segments(path)
+        path_ops, variants = [], []
+        for m in METHODS:
+            if m not in item:
+                continue
+            key = (m.upper(), path)
+            if key not in identities or key in observed:
+                raise GenError(f"P06 duplicate/unknown logical operation {key}")
+            observed.add(key)
+            ordinal, name = identities[key]
+            op, op_base = _p06_object(docs, item[m], item_base)
+            params, levels = _p06_parameters(docs, item, item_base, op, op_base)
+            if {p["name"] for p in params if p["in"] == "path"} != {p for _, p in segs if p}:
+                raise GenError(f"P06 {path} {m}: path parameters differ from source template")
+            servers, server_nodes = _p06_servers(docs, item, op)
+            for variant in servers:
+                if variant not in variants:
+                    variants.append(variant)
+            op_checks = {}
+            for p in params:
+                if p["in"] == "path":
+                    op_checks[p["name"]] = param_check(docs, p["schema"], p["base"], f"{path} {m} {p['name']}")
+                if p["in"] in {"query", "header"}:
+                    schema, pbase = p["schema"], p["base"]
+                    resolved = docs.deref(schema, pbase)[0] if isinstance(schema, dict) else {}
+                    lex = p["raw"].get("x-query-lexeme")
+                    if lex is not None:
+                        raise GenError(f"P06 {path}: unpublished query lexeme extension")
+                    bodies.append(("param", name, p["in"], p["name"], schema, pbase, p["required"],
+                                   resolved.get("default") if isinstance(resolved, dict) else None, None))
+            responses = []
+            for code, r_raw in op.get("responses", {}).items():
+                response, r_base = _p06_object(docs, r_raw, op_base)
+                responses.append({"code": str(code), "media": list((response.get("content") or {}).keys()),
+                                  "headers": list((response.get("headers") or {}).keys())})
+                for media, mo in (response.get("content") or {}).items():
+                    schema = mo.get("schema")
+                    bodies.append(("resp", name, str(code), media, schema, r_base))
+                    if isinstance(schema, dict) and "x-line-schema" in schema:
+                        bodies.append(("line", name, str(code), media, schema["x-line-schema"], r_base))
+            if not responses:
+                raise GenError(f"P06 {path} {m}: no responses")
+            rb, rb_base = _p06_object(docs, op["requestBody"], op_base) if "requestBody" in op else ({}, op_base)
+            content = rb.get("content") or {}
+            for media, mo in content.items():
+                bodies.append(("req", name, "", media, mo.get("schema"), rb_base))
+            operation = {"name": name, "method": m.upper(), "path": path, "prefixed": any(v[0] for v in servers),
+                         "params": params, "responses": responses, "req": list(content), "req_required": bool(rb.get("required")),
+                         "ordinal": ordinal, "component": component, "servers": servers, "checks": op_checks,
+                         "source": str(spec.relative_to(root)) + pointer + "/" + m,
+                         "base": str(Path(op_base).relative_to(root)), "levels": levels,
+                         "security": op.get("security", docs.doc.get("security", [])), "server_nodes": server_nodes,
+                         "p06_refs": docs.p06_references, "p06_documents": docs.cache, "p06_root": root}
+            ops.append(operation)
+            path_ops.append(operation)
+            by_pm[f"{path} {m.upper()}"] = name
+            checks.setdefault(path, {}).update(op_checks)
+        if not path_ops:
+            continue
+        methods_of[path] = [o["method"] for o in path_ops]
+        all405[path] = all(any(r["code"] == "405" for r in o["responses"]) for o in path_ops)
+        for mounted, enum in variants:
+            if mounted and any(p == "sub" for _, p in segs):
+                raise GenError(f"P06 {path}: sub occurs in both server and path")
+            templates.append((path, ([("", "sub")] if mounted else []) + segs, mounted))
+            if mounted:
+                checks[path]["sub"] = {"min": 1, "max": -1, "pattern": None, "enum": enum,
+                                       "not_enum": [], "not_pattern": []}
+    if observed != set(identities):
+        raise GenError(f"P06 incomplete source operations: {sorted(set(identities) - observed)}")
+    ops.sort(key=lambda o: o["ordinal"])
+    return ops, templates, checks, by_pm, methods_of, all405, docs
+
+
+def _p06_go_spec(ops):
+    if L.key != "06-console":
+        return ["const p06CatalogueBinding = false", "", "func p06Bindings() *p06BindingSpec { return nil }", ""]
+    out = ["const p06CatalogueBinding = true", "", "func p06Bindings() *p06BindingSpec {", "\treturn &p06BindingSpec{operations: []p06Operation{"]
+    for o in ops:
+        variants = ", ".join("{mounted: " + str(m).lower() + ", subs: " +
+                             ("nil" if e is None else "[]string{" + ", ".join(go_str(x) for x in e) + "}") + "}" for m, e in o["servers"])
+        ss = ", ".join("{literal: " + go_str(lit) + "}" if not p else "{parameter: " + go_str(p) + "}" for lit, p in segments(o["path"]))
+        cs = ", ".join(go_str(n) + ": " + go_check(c) for n, c in o["checks"].items())
+        levels = []
+        for level in o["levels"]:
+            levels.append("[]Param{" + ", ".join("{" + go_str(p["name"]) + ", " + go_str(p["in"]) + ", " + str(p["required"]).lower() + "}" for p in level) + "}")
+        out.append("\t\t{op: " + o["name"] + ", path: " + go_str(o["path"]) + ", component: " + go_str(o["component"]) +
+                   ", source: " + go_str(o["source"]) + ", base: " + go_str(o["base"]) +
+                   ", servers: []p06Server{" + variants + "}, segments: []p06Segment{" + ss + "}, checks: map[string]paramCheck{" + cs +
+                   "}, itemParameters: " + levels[0] + ", operationParameters: " + levels[1] +
+                   ", security: " + go_str(json.dumps(o["security"], ensure_ascii=True, separators=(",", ":"))) + "},")
+    root = ops[0]["p06_root"]
+    references = ", ".join(go_str(x) for x in sorted(ops[0]["p06_refs"]))
+    documents = ", ".join(go_str(str(p.relative_to(root))) + ": " + go_str(hashlib.sha256(p.read_bytes()).hexdigest())
+                          for p in sorted(ops[0]["p06_documents"]))
+    return out + ["\t}, references: []string{" + references + "}, documents: map[string]string{" + documents + "}}", "}", ""]
+
+
 def server_sub_check(docs, item, spec, path):
     """Read sub from server {origin}/{sub}: enum if declared, otherwise unconstrained; Catalog judges names."""
     for s in item.get("servers") or []:
@@ -378,7 +737,8 @@ def go_source(ops, templates, checks, by_pm, methods_of, all405, rel, sha, roles
            f"// Package apidoor — the door of {L.code} by its OpenAPI, part 3a: the operations, the router tables and the",
            "// declared responses and media types. The bodies (decode, check, encode) are part 3b.",
            "package apidoor", "", ('import "regexp"' if not priority else ""), "",
-           "// Op — an operation of the OpenAPI (path, method) in the order of the document.", "type Op int", "",
+           ("// Op — the stable P/06 adapter identity: old140, then six published HEAD operations." if L.key == "06-console" else
+            "// Op — an operation of the OpenAPI (path, method) in the order of the document."), "type Op int", "",
            "const ("]
     for k, o in enumerate(ops):
         out.append(f"\t{o['name']}{' Op = iota + 1' if k == 0 else ''} // {o['method']} {o['path']}")
@@ -438,11 +798,12 @@ def go_source(ops, templates, checks, by_pm, methods_of, all405, rel, sha, roles
     out += ["}", "", "var all405 = map[string]bool{"]
     out += [f"\t{go_str(k)}: {str(v).lower()}," for k, v in all405.items()]
     out += ["}", ""]
+    out += _p06_go_spec(ops)
     return "\n".join(out)
 
 
 def bodies_source(docs, rel, sha):
-    b = Bundle(docs)
+    b = _P06Bundle(docs) if L.key == "06-console" else Bundle(docs)
     req, resp, lines, params = {}, {}, {}, {}
     for entry in bodies:
         if entry[0] == "param":
@@ -620,8 +981,17 @@ def provenance():
     roles = L.form("door-roles.tsv")
     if roles.is_file():
         forms += tsv_input.source_files(roles, root=ROOT)
+    generators = [Path(__file__).resolve(), Path(tsv_input.__file__)]
+    if L.key == "06-console":
+        generators += [Path(yamlsub.__file__), Path(lesson.__file__)]
+        forms += [ROOT / p for p in (
+            "Platform/02-installer/spec/02.1-installer.norms.md",
+            "Platform/06-console/spec/06.3-console.norms.md",
+            "Platform/06-console/spec/06.5-console.norms.md",
+            "Platform/06-console/spec/06.7-console.norms.md",
+            "Platform/common/contracts/gate-and-pass.md")]
     return {"form": [entry(p) for p in dict.fromkeys(forms)], "generator": entry(Path(__file__).resolve()),
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
+            "generators": [entry(p) for p in generators],
             "handwritten": [entry(RUNTIME), entry(SCHEMA_RT)],
             "judge": entry(JUDGE)}
 
@@ -631,6 +1001,8 @@ def kit_md():
     ops, templates, checks, by_pm, methods_of, all405, docs = build(ROOT)
     if priority:
         return KIT_MD_PRIORITY + KIT_MD_TAIL
+    if L.key == "06-console":
+        return KIT_MD_P06 + KIT_MD_TAIL
     groups = {}
     for path, segs, pre in templates:
         shape = tuple("{}" if prm else lit for lit, prm in segs)
@@ -640,6 +1012,42 @@ def kit_md():
         if len(paths) > 1:
             lines.append("- `/" + "/".join(shape) + "`: " + ", ".join(f"`{p}`" for p in paths))
     return KIT_MD_HEAD + "\n".join(lines) + "\n" + KIT_MD_TAIL
+
+
+KIT_MD_P06 = """
+## Part `door` (3a): P/06 standard PathItems and the accepted catalogue
+
+`apidoor` is `{module}/internal/apidoor`. The four existing files remain: generated `routes.go` and `bodies.go`,
+and closed runtime copies `routes_rt.go` and `schema_rt.go`. No catalogue loader or forwarding implementation is supplied.
+
+```go
+func Route(method, path string, cat Catalog) (Match, *RouteError)
+type Catalog interface { Sub(name string) bool; Rows(sub, name string) bool; Table(sub, name string) bool; Pass(sub, name string) bool }
+// Your existing object additionally supplies this method (no new named public interface):
+// CatalogSnapshot() (root string, views []map[string]any)
+```
+
+Give the immutable complete canonical views of the catalogue already accepted at console startup and the selected
+CONSOLE_ROOT. Route requests this snapshot once; it never reads the store, loads/adopts manifests, changes a view,
+or treats the old boolean answers or a Server variable default as admission. Missing capability/context is internal
+RouteError.Code 0, with no boolean-only fallback. Other lesson profiles keep their existing boolean Catalog behaviour.
+
+The six standard components bind unit.rows, tables, first/second door.pass and exact full console.files names to
+the accepted catalogue. The source component and operation own schemas, required headers/body, responses and rights.
+Each binding removes only already-bound in:path parameters at both levels; their values still appear in Match.Params.
+Match.Op/Params/Sub/Prefixed are unchanged. The old 140 operation names and numbers are fixed; six published HEAD
+operations follow as 141 through 146. Concrete paths and iteration order do not allocate adapter identities.
+
+Pass the raw pathname, optionally with its original query, without the origin. Route separates the first literal ?
+only for selection. Keep the original request target for your normal forwarding; never rebuild its remainder or query
+from decoded Params. File names match their complete raw bytes before mounted routes; wrong method on the chosen
+file gives 405 without fallback. Both pass forms and both domain-at forms retain zero/one/many raw tail segments.
+The selected path/ambiguity precedes method and parameter refusal; no weaker family is tried after a refusal.
+The catalogue origin of a substituted segment does not become a higher-ranked source literal.
+
+The generated private spec records source components, original URI bases/ref edges and exact consumed-document
+hashes. Proof maps, fixture catalogues and their counts are review evidence, never routing inputs.
+"""
 
 
 KIT_MD_HEAD = """
