@@ -1,0 +1,140 @@
+{
+  "base": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+  "source_existing6": [
+    {
+      "path": "Platform/06-console/spec/06-console.api.openapi.yaml",
+      "before": {
+        "blob": "a1214572c80ead38ae39ef1d1ba62c094ffeac3a",
+        "sha256": "c25460d143c641fb700264da2dc305a017e88bdb3de47fd6a248d520162cf8a2",
+        "bytes": 401636
+      },
+      "after": {
+        "path": "Platform/06-console/spec/06-console.api.openapi.yaml",
+        "blob": "9d00b1e00adbfba903f072c70d56235a7a8dcb43",
+        "sha256": "b4073b39c35094aba8bd6cecefd0f63f5cc2c37abc867e72a0b81eaa4c7b189e",
+        "bytes": 403567
+      },
+      "mode": "EXACT_SIX_NODE_RELOCATION",
+      "blocks": "six exact remove/add nodes only"
+    },
+    {
+      "path": "Platform/06-console/forms/README.md",
+      "before": {
+        "blob": "56378cdbae12ba9cd8b26cdde22dfc32a55f3747",
+        "sha256": "9d1193afca1e2e6f830461b6526506ae52e3fbcfc75c9e198f62a00b25a26154",
+        "bytes": 16797
+      },
+      "after": {
+        "path": "Platform/06-console/forms/README.md",
+        "blob": "b1c1ca0f651695837b0779639f8252fa58dc9853",
+        "sha256": "1361dcd33daf5128482f5b314533dece5fc68ebd84df0b089021fe357800dc43",
+        "bytes": 19374
+      },
+      "mode": "INSERT_ONLY_REPRESENTATION_NOTE",
+      "blocks": "Existing ordinary HTTP source: six standard components, existing accepted catalogue specialization and original operation provenance. No new grammar, interface, file/config, rights or expected status."
+    },
+    {
+      "path": "Platform/06-console/ru/forms/README.md",
+      "before": {
+        "blob": "6763391d1c3fcc4d27543edac03229e982289b88",
+        "sha256": "7c2678752bfe59b499f9a5618f0475060a6a215b2d41251d5bf13e1e2ec34d6f",
+        "bytes": 26745
+      },
+      "after": {
+        "path": "Platform/06-console/ru/forms/README.md",
+        "blob": "27542de34b9b025fc2550a7e47c8a47c22965e4b",
+        "sha256": "d6bfd6009e267db143cef3073b3ba4252c801fdde3373da8c67439a8b23ec5c8",
+        "bytes": 31112
+      },
+      "mode": "INSERT_ONLY_REPRESENTATION_NOTE",
+      "blocks": "Exact EN mirror of same block."
+    },
+    {
+      "path": "Platform/06-console/spec/06.5-console.norms.md",
+      "before": {
+        "blob": "f1ba90945c065b7bf6a54baa7d453c174fc99a02",
+        "sha256": "6ef5ffd4260b5a8c8fd5ff8d603e6f852747e44495c7f7d38e7e5dfa602dfac0",
+        "bytes": 116838
+      },
+      "after": {
+        "path": "Platform/06-console/spec/06.5-console.norms.md",
+        "blob": "49ab44f9936fe309590db1c47afa2b32f154d658",
+        "sha256": "d6c01132756039f324eaecdc3fd40eec0d8abcff12fe46a63451cc92169d8964",
+        "bytes": 117412
+      },
+      "mode": "INSERT_ONLY_REPRESENTATION_NOTE",
+      "blocks": "N2 representation reference only: finite console.files and existing first/second pass and unbounded tail contracts remain. No operation, URI, fallback, status, wait/stream/calls or permission change."
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
+      "before": {
+        "blob": "215a7e4c94f7edba6125082b64dc5cff95f84b22",
+        "sha256": "0d9d3dfa599ae3bf7d1acf980727006dd0e36e281096d998bc602a1a3a1004b4",
+        "bytes": 149659
+      },
+      "after": {
+        "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
+        "blob": "73cfee4c4b811bba2f5005ed6a9ba6640b64bb71",
+        "sha256": "bf3fea376377807b47170d76b3931d91ee63ddc1becc4b5d3f54bd5080396883",
+        "bytes": 150534
+      },
+      "mode": "INSERT_ONLY_REPRESENTATION_NOTE",
+      "blocks": "Exact EN mirror of same block."
+    },
+    {
+      "path": "decisions/adr-norms.tsv",
+      "before": {
+        "blob": "2426c557e1395277b7cf7f70949679d964e9bed0",
+        "sha256": "6925a7d1ad5c87a308261deb75c79a7b7bfc7fb8c969bbfcbdb944b5f9d28422",
+        "bytes": 468325
+      },
+      "after": {
+        "path": "decisions/adr-norms.tsv",
+        "blob": "e9c491415b26e54dbe18f8856479dfb108dcd67c",
+        "sha256": "ec4572c8846a9ae6d2cad81f7eb27902d6627d886754c046966114a783280502",
+        "bytes": 469233
+      },
+      "mode": "APPEND_ONLY_LEDGER",
+      "blocks": "Append note of already published S08 decision192b and source limit only. Old prefix and all counters/stages preserved."
+    }
+  ],
+  "new_incremental_metadata6": [
+    {
+      "path": "decisions/inbox/2026-11-07-p06-s08-source/REPORT.md",
+      "before": "ABSENT",
+      "hash_receipt": "exact after blob/size/SHA supplied by external FREEZE.json; no recursive selfhash"
+    },
+    {
+      "path": "decisions/inbox/2026-11-07-p06-s08-source/source-map.json",
+      "before": "ABSENT",
+      "hash_receipt": "exact after blob/size/SHA supplied by external FREEZE.json; no recursive selfhash"
+    },
+    {
+      "path": "decisions/inbox/2026-11-07-p06-s08-source/operation-map.json",
+      "before": "ABSENT",
+      "hash_receipt": "exact after blob/size/SHA supplied by external FREEZE.json; no recursive selfhash"
+    },
+    {
+      "path": "decisions/inbox/2026-11-07-p06-s08-source/binding-map.json",
+      "before": "ABSENT",
+      "hash_receipt": "exact after blob/size/SHA supplied by external FREEZE.json; no recursive selfhash"
+    },
+    {
+      "path": "decisions/inbox/2026-11-07-p06-s08-source/preservation.json",
+      "before": "ABSENT",
+      "hash_receipt": "exact after blob/size/SHA supplied by external FREEZE.json; no recursive selfhash"
+    },
+    {
+      "path": "decisions/inbox/2026-11-07-p06-s08-source/author-check.json",
+      "before": "ABSENT",
+      "hash_receipt": "exact after blob/size/SHA supplied by external FREEZE.json; no recursive selfhash"
+    }
+  ],
+  "frozen_b8_six_maps_unchanged": true,
+  "approved_union_paths": 71,
+  "source_path_upper": 12,
+  "external_approval": {
+    "path": "/home/pilot/spec103/p06-s08-source-b8e3-work/ROOT-SOURCE-APPROVAL.json",
+    "sha256": "d4c5866093e87f8a3da318725bc84860a3dc43ca44ce4460bbdd650b73966e56"
+  }
+}

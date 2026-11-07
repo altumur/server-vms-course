@@ -37,312 +37,6 @@ info:
     tables — /{table}, door.pass — /{pass}; the non-overlap of names and reserved words — the loader P/02.1. The internal API
     is not normed; the contract does not claim that any implementation has been checked against it.'
 paths:
-  /{rows}:
-    description: 'Chapter 6.1 (06.1-console.norms.md) — the units door: create, list. The form of the list and of the rows — 6.1; the console
-      module calls /<rows> and /<sub>/<rows> (P/07).'
-    servers:
-    - url: '{origin}'
-      description: The short path selects CONSOLE_ROOT.
-      variables:
-        origin:
-          default: http://localhost
-          description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
-    - url: '{origin}/{sub}'
-      description: The name explicitly selects a loaded subsystem, including CONSOLE_ROOT.
-      variables:
-        origin:
-          default: http://localhost
-          description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
-        sub:
-          default: testsub
-          description: The name of a loaded manifest per P/02.1; the example is replaced by a chosen name from /mounts.
-    parameters:
-    - $ref: '#/components/parameters/Rows'
-    post:
-      summary: create a unit; a repeat by key returns the earlier answer
-      parameters:
-      - $ref: '#/components/parameters/IfMatch'
-      - name: Idempotency-Key
-        in: header
-        required: true
-        schema:
-          $ref: '#/components/schemas/IdempotencyKey'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ClientFields'
-      responses:
-        '201':
-          headers:
-            ETag:
-              $ref: '#/components/headers/ETag'
-          description: Created, or the earlier answer of a completed claim. Fields by the manifest types, secrets as a mask; worker is always
-            null, including a repeat.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreatedUnit'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/WriteDenied'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/Method'
-        '408':
-          $ref: '#/components/responses/SlowBody'
-        '409':
-          description: The name is taken, a reference is broken, or a claim of another console is still in progress.
-          content:
-            application/json:
-              schema:
-                oneOf:
-                - $ref: '#/components/schemas/CreateBusy'
-                - $ref: '#/components/schemas/ReferenceConflict'
-        '412':
-          $ref: '#/components/responses/RevisionMoved'
-        '413':
-          $ref: '#/components/responses/LargeBody'
-        '422':
-          description: The same key with another request fingerprint; the claim does not change.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/KeyReused'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '503':
-          $ref: '#/components/responses/WriteUnavailable'
-    get:
-      summary: all units and the configuration available by view (the gate of chapter 6.3, need)
-      parameters:
-      - name: deleted
-        in: query
-        required: false
-        description: Exactly 1, only together with about — the output of tombstones (N2 «Tombstones by about»; ADR-0094 addendum (5) item 1).
-        schema:
-          const: '1'
-      - name: about
-        in: query
-        required: false
-        description: The value of the about.field of tombstones; non-empty, only together with deleted.
-        schema:
-          type: string
-          minLength: 1
-      responses:
-        '200':
-          description: rows — units from heartbeats with the worker data; configured — configuration rows with secrets masked.
-          content:
-            application/json:
-              schema:
-                oneOf:
-                - $ref: '#/components/schemas/UnitList'
-                - $ref: '#/components/schemas/DeletedList'
-        '400':
-          $ref: '#/components/responses/BadRead'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Denied'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/Method'
-        '408':
-          $ref: '#/components/responses/SlowBody'
-        '413':
-          $ref: '#/components/responses/LargeBody'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '503':
-          $ref: '#/components/responses/UnitUnavailable'
-    head:
-      summary: 'HEAD: all units and the configuration available by view (the gate of chapter 6.3, need)'
-      responses:
-        '200':
-          description: rows — units from heartbeats with the worker data; configured — configuration rows with secrets masked;
-            HEAD carries no body
-        '400':
-          description: A common refusal of transport or path, including badkey of the full store key; detail and error, without fault;
-            HEAD carries no body
-        '401':
-          description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; the open paths — in the same place
-            (open_routes); HEAD carries no body
-        '403':
-          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
-            on an acting request by cookie (csrf); error denied; HEAD carries no body'
-        '404':
-          description: No row or a tombstone at PUT/DELETE — error no such unit. Unknown route — detail no such
-            route, error no such path. An extra segment — detail a unit's path names one unit, error no such path (chapter 6.5
-            N2 «Common codes»); HEAD carries no body
-        '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
-            no body
-        '408':
-          description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
-        '413':
-          description: The body is larger than the console limit (chapter 6.5 N4); the service fields limit/size of P/01.1 are not added here;
-            HEAD carries no body
-        '429':
-          description: The common console entry limit (chapter 6.5 N4); the doors have no new quotas — neither on reading the manifest, nor on creating
-            units; HEAD carries no body
-          headers:
-            Retry-After:
-              description: The retry deadline by the rule of the entry limit.
-              schema:
-                type: string
-        '503':
-          description: The store is unavailable — error with the text store unavailable; the answer under the key is not remembered. Also
-            the lane is busy — error busy and Retry-After 1 (chapter 6.5 N4 «lane busy»), or there were keys, but there is nothing to check
-            trust with — error denied (the gate of chapter 6.3, shut; chapter 6.5 N4 «keys existed, no verifier available»); the words busy and
-            denied were added by M10/9; HEAD carries no body
-          headers:
-            Retry-After:
-              description: Required with the value 1 at busy; not promised for the other reasons.
-              schema:
-                type: string
-                const: '1'
-  /{rows}/{id}:
-    description: Chapter 6.1 — edit and delete a unit; there is no separate GET of one unit (405).
-    servers:
-    - url: '{origin}'
-      description: The short path selects CONSOLE_ROOT.
-      variables:
-        origin:
-          default: http://localhost
-          description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
-    - url: '{origin}/{sub}'
-      description: The name explicitly selects a loaded subsystem, including CONSOLE_ROOT.
-      variables:
-        origin:
-          default: http://localhost
-          description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
-        sub:
-          default: testsub
-          description: The name of a loaded manifest per P/02.1; the example is replaced by a chosen name from /mounts.
-    parameters:
-    - $ref: '#/components/parameters/Rows'
-    - name: id
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/UnitId'
-      description: Exactly one id; the grammar depends on unit.id (N1.3). The segment is percent-decoded after the route is chosen;
-        not UTF-8 or not by the grammar — 400 error badkey (N2; C06-UNIT-ID-BADKEY-01, decision of the Architect 2026-10-28). A path longer than one id — 404, except the bytes door /{rows}/{id}/{blob_field}
-        of chapter 6.1 (another method on it — 405); a wrong named id — 400.
-    put:
-      summary: edit fields; revision grows at every successful edit
-      parameters:
-      - name: Idempotency-Key
-        in: header
-        required: false
-        schema:
-          $ref: '#/components/schemas/IdempotencyKey'
-        description: Optional. Without it the edit converges by cas and every repeat raises revision; with it — the repeat memory
-          (chapter 6.1 N3 «replay memory»), its order is before If-Match.
-      - $ref: '#/components/parameters/IfMatch'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ClientFields'
-      responses:
-        '200':
-          headers:
-            ETag:
-              $ref: '#/components/headers/ETag'
-          description: The row after the edit; values by the manifest types, secrets as a mask, revision increased.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Unit'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/WriteDenied'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/Method'
-        '408':
-          $ref: '#/components/responses/SlowBody'
-        '409':
-          description: References by live rows; a cas conflict is reread inside the pass.
-          content:
-            application/json:
-              schema:
-                oneOf:
-                - $ref: '#/components/schemas/ReferenceConflict'
-                - $ref: '#/components/schemas/RepeatRefused'
-        '412':
-          $ref: '#/components/responses/RevisionMoved'
-        '413':
-          $ref: '#/components/responses/LargeBody'
-        '422':
-          description: The same key with another request fingerprint; the claim does not change.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/KeyReused'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '503':
-          $ref: '#/components/responses/WriteUnavailable'
-    delete:
-      summary: mark as deleted without a change of revision
-      parameters:
-      - $ref: '#/components/parameters/RepeatKey'
-      - $ref: '#/components/parameters/IfMatch'
-      responses:
-        '200':
-          headers:
-            ETag:
-              $ref: '#/components/headers/ETag'
-          description: The identifier of the marked unit; a repeated deletion — 404.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeletedUnit'
-        '400':
-          $ref: '#/components/responses/BadRead'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/WriteDenied'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/Method'
-        '408':
-          $ref: '#/components/responses/SlowBody'
-        '412':
-          $ref: '#/components/responses/RevisionMoved'
-        '409':
-          description: A claim of another console is still in progress — in flight.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RepeatRefused'
-        '413':
-          $ref: '#/components/responses/LargeBody'
-        '422':
-          description: The same key with another request fingerprint; the claim does not change.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/KeyReused'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '503':
-          $ref: '#/components/responses/UnitUnavailable'
   /{rows}/{id}/{blob_field}:
     description: Chapter 6.1 — the door of the body bytes (digest, then the row reference); the copy of the body at the resource — P/05 (05-resource.api.openapi.yaml).
     servers:
@@ -436,327 +130,6 @@ paths:
           type: integer
           minimum: 0
           maximum: 33554432
-  /{table}:
-    description: Chapter 6.1 — the doors of the manifest tables.
-    servers:
-    - url: '{origin}'
-      description: The short path selects CONSOLE_ROOT.
-      variables:
-        origin:
-          default: http://localhost
-          description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
-    - url: '{origin}/{sub}'
-      description: The name explicitly selects a loaded subsystem, including CONSOLE_ROOT.
-      variables:
-        origin:
-          default: http://localhost
-          description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
-        sub:
-          default: testsub
-          description: The name of a loaded manifest per P/02.1; the example is replaced by a chosen name from /mounts.
-    parameters:
-    - name: table
-      in: path
-      required: true
-      schema:
-        $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName
-    get:
-      summary: List of table rows without secrets
-      responses:
-        '400':
-          $ref: '#/components/responses/BadBody'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Denied'
-        '404':
-          description: No path, unit, field or row
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConsoleRefusal'
-        '405':
-          $ref: '#/components/responses/TableMethod'
-        '408':
-          $ref: '#/components/responses/SlowBody'
-        '413':
-          $ref: '#/components/responses/LargeBody'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '503':
-          $ref: '#/components/responses/ConsoleUnavailable'
-        '200':
-          description: Full JSON body
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TableList'
-    post:
-      summary: Write a full table row
-      parameters:
-      - $ref: '#/components/parameters/RepeatKey'
-      - $ref: '#/components/parameters/IfMatch'
-      responses:
-        '400':
-          description: Full JSON body
-          content:
-            application/json:
-              schema:
-                anyOf:
-                - $ref: '#/components/schemas/TextRefusal'
-                - $ref: '#/components/schemas/FormRefusal'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/WriteDenied'
-        '404':
-          description: No path, unit, field or row
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConsoleRefusal'
-        '405':
-          $ref: '#/components/responses/TableMethod'
-        '408':
-          $ref: '#/components/responses/SlowBody'
-        '412':
-          $ref: '#/components/responses/RevisionMoved'
-        '413':
-          $ref: '#/components/responses/LargeBody'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '503':
-          $ref: '#/components/responses/ConsoleUnavailable'
-        '201':
-          headers:
-            ETag:
-              $ref: '#/components/headers/ETag'
-          description: Full JSON body
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TableWritten'
-        '409':
-          description: Full JSON body
-          content:
-            application/json:
-              schema:
-                anyOf:
-                - $ref: '#/components/schemas/ReferenceConflict'
-                - $ref: '#/components/schemas/CasRefused'
-                - $ref: '#/components/schemas/RepeatRefused'
-        '422':
-          description: The same key with another request fingerprint; the claim does not change.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/KeyReused'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TableInput'
-    head:
-      summary: 'HEAD: List of table rows without secrets'
-      responses:
-        '400':
-          description: 'A common refusal of the console request parsing (chapter 6.5 N2 «Console request parsing»: query, JSON of the body, a read
-            parameter repeated) or of transport — the body is chunked or shorter than declared (chapter 6.5 N4). A refusal of the form of its own door
-            is named by its operation; HEAD carries no body'
-        '401':
-          description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; the open paths — in the same place
-            (open_routes); HEAD carries no body
-        '403':
-          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
-            on an acting request by cookie (csrf); error denied; HEAD carries no body'
-        '404':
-          description: No path, unit, field or row; HEAD carries no body
-        '405':
-          description: A table method not among GET, POST and DELETE of one row (N2); HEAD carries no body
-        '408':
-          description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
-        '413':
-          description: The body is larger than the console limit (chapter 6.5 N4); the service fields limit/size of P/01.1 are not added here;
-            HEAD carries no body
-        '429':
-          description: The common console entry limit (chapter 6.5 N4); the doors have no new quotas — neither on reading the manifest, nor on creating
-            units; HEAD carries no body
-          headers:
-            Retry-After:
-              description: The retry deadline by the rule of the entry limit.
-              schema:
-                type: string
-        '503':
-          description: 'Common 503 of the door: the lane is busy — busy with Retry-After 1; trust cannot be checked — denied (the gate
-            of chapter 6.3, shut; chapter 6.5 N4); other reasons — a mandatory read and the shell with the on…= attribute at pages — unavailable, sealing
-            — by the word of its own norm (chapter 6.5 N4); HEAD carries no body'
-          headers:
-            Retry-After:
-              description: Required with the value 1 at busy; not promised for the other reasons.
-              schema:
-                type: string
-                const: '1'
-        '200':
-          description: Full JSON body; HEAD carries no body
-  /{table}/{name}:
-    description: Chapter 6.1 — a row of a manifest table.
-    servers:
-    - url: '{origin}'
-      description: The short path selects CONSOLE_ROOT.
-      variables:
-        origin:
-          default: http://localhost
-          description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
-    - url: '{origin}/{sub}'
-      description: The name explicitly selects a loaded subsystem, including CONSOLE_ROOT.
-      variables:
-        origin:
-          default: http://localhost
-          description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
-        sub:
-          default: testsub
-          description: The name of a loaded manifest per P/02.1; the example is replaced by a chosen name from /mounts.
-    parameters:
-    - name: table
-      in: path
-      required: true
-      schema:
-        $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName
-    - name: name
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/TableRowName'
-    get:
-      summary: Read one table row
-      responses:
-        '400':
-          $ref: '#/components/responses/BadBody'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Denied'
-        '404':
-          description: No path, unit, field or row
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConsoleRefusal'
-        '405':
-          $ref: '#/components/responses/TableMethod'
-        '408':
-          $ref: '#/components/responses/SlowBody'
-        '413':
-          $ref: '#/components/responses/LargeBody'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '503':
-          $ref: '#/components/responses/ConsoleUnavailable'
-        '200':
-          headers:
-            ETag:
-              $ref: '#/components/headers/ETag'
-          description: Full JSON body
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TableRow'
-    delete:
-      summary: Delete a table row
-      parameters:
-      - $ref: '#/components/parameters/RepeatKey'
-      - $ref: '#/components/parameters/IfMatch'
-      responses:
-        '400':
-          $ref: '#/components/responses/BadBody'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/WriteDenied'
-        '404':
-          description: No path, unit, field or row
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConsoleRefusal'
-        '405':
-          $ref: '#/components/responses/TableMethod'
-        '408':
-          $ref: '#/components/responses/SlowBody'
-        '412':
-          $ref: '#/components/responses/RevisionMoved'
-        '413':
-          $ref: '#/components/responses/LargeBody'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '503':
-          $ref: '#/components/responses/ConsoleUnavailable'
-        '200':
-          description: Full JSON body
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TableDeleted'
-        '409':
-          description: CAS repeats exhausted; references to the row do not hinder the deletion (chapter 6.1, ADR-0057)
-          content:
-            application/json:
-              schema:
-                oneOf:
-                - $ref: '#/components/schemas/CasRefused'
-                - $ref: '#/components/schemas/RepeatRefused'
-        '422':
-          description: The same key with another request fingerprint; the claim does not change.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/KeyReused'
-    head:
-      summary: 'HEAD: Read one table row'
-      responses:
-        '400':
-          description: 'A common refusal of the console request parsing (chapter 6.5 N2 «Console request parsing»: query, JSON of the body, a read
-            parameter repeated) or of transport — the body is chunked or shorter than declared (chapter 6.5 N4). A refusal of the form of its own door
-            is named by its operation; HEAD carries no body'
-        '401':
-          description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; the open paths — in the same place
-            (open_routes); HEAD carries no body
-        '403':
-          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
-            on an acting request by cookie (csrf); error denied; HEAD carries no body'
-        '404':
-          description: No path, unit, field or row; HEAD carries no body
-        '405':
-          description: A table method not among GET, POST and DELETE of one row (N2); HEAD carries no body
-        '408':
-          description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
-        '413':
-          description: The body is larger than the console limit (chapter 6.5 N4); the service fields limit/size of P/01.1 are not added here;
-            HEAD carries no body
-        '429':
-          description: The common console entry limit (chapter 6.5 N4); the doors have no new quotas — neither on reading the manifest, nor on creating
-            units; HEAD carries no body
-          headers:
-            Retry-After:
-              description: The retry deadline by the rule of the entry limit.
-              schema:
-                type: string
-        '503':
-          description: 'Common 503 of the door: the lane is busy — busy with Retry-After 1; trust cannot be checked — denied (the gate
-            of chapter 6.3, shut; chapter 6.5 N4); other reasons — a mandatory read and the shell with the on…= attribute at pages — unavailable, sealing
-            — by the word of its own norm (chapter 6.5 N4); HEAD carries no body'
-          headers:
-            Retry-After:
-              description: Required with the value 1 at busy; not promised for the other reasons.
-              schema:
-                type: string
-                const: '1'
-        '200':
-          headers:
-            ETag:
-              $ref: '#/components/headers/ETag'
-          description: Full JSON body; HEAD carries no body
   /console/batch:
     description: Chapter 6.1 N2 «Batch door», N3 «batch» — writing the rows of a unit and of its parts by one store operation, all or nothing (ADR-0094 B9).
       The door is common, gets no subsystem prefix; the rows are named by full keys.
@@ -4092,336 +3465,6 @@ paths:
       required: true
       schema:
         $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName
-  /{sub}/{file}:
-    description: 'Chapter 6.5 (06.5-console.norms.md, N2 «Static files») — a file of the list console.files of the manifest. A name from the list is resolved before the routes of the mounted subsystem; anything else — they, then NoRoute. The query string is not judged.'
-    get:
-      summary: Static file of a subsystem
-      responses:
-        '400':
-          $ref: '#/components/responses/BadBody'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Denied'
-        '404':
-          description: The name is not in the list and there is no route; an unknown sub
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NoRoute'
-        '405':
-          $ref: '#/components/responses/Method'
-        '408':
-          $ref: '#/components/responses/SlowBody'
-        '413':
-          $ref: '#/components/responses/LargeBody'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '503':
-          $ref: '#/components/responses/ConsoleUnavailable'
-        '200':
-          description: The bytes of the file whole; the type — by the extension (N2 «Static files»)
-          content:
-            text/javascript:
-              schema:
-                type: string
-            text/css:
-              schema:
-                type: string
-            application/json:
-              schema: {}
-            font/woff2:
-              schema:
-                type: string
-                contentMediaType: font/woff2
-            font/woff:
-              schema:
-                type: string
-                contentMediaType: font/woff
-            font/ttf:
-              schema:
-                type: string
-                contentMediaType: font/ttf
-            image/png:
-              schema:
-                type: string
-                contentMediaType: image/png
-            image/svg+xml:
-              schema:
-                type: string
-          headers:
-            X-Content-Type-Options:
-              schema:
-                type: string
-                const: nosniff
-              description: Required for every type.
-            Content-Security-Policy:
-              schema:
-                type: string
-                minLength: 1
-              description: Required for svg, the value sandbox.
-    head:
-      summary: 'HEAD: Static file of a subsystem'
-      responses:
-        '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a read
-            parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 N4). The form refusal of its own door
-            is named by its operation; HEAD carries no body'
-        '401':
-          description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — there as well
-            (open_routes); HEAD carries no body
-        '403':
-          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
-            on an acting request by cookie (csrf); error denied; HEAD carries no body'
-        '404':
-          description: The name is not in the list and there is no route; an unknown sub; HEAD carries no body
-        '405':
-          description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
-            no body
-        '408':
-          description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
-        '413':
-          description: The body is larger than the console limit (chapter 6.5 N4); the service fields limit/size of P/01.1 are not added here;
-            HEAD carries no body
-        '429':
-          description: The common entry limit of the console (chapter 6.5 N4); the doors have no new quotas — neither on reading the manifest nor on creating
-            units; HEAD carries no body
-          headers:
-            Retry-After:
-              description: The retry time by the rule of the entry limit.
-              schema:
-                type: string
-        '503':
-          description: 'The common 503 of the door: the lane is taken — busy with Retry-After 1; trust cannot be checked — denied (the gate of
-            chapter 6.3, shut; chapter 6.5 N4); the other causes — the mandatory read and a shell with an attribute on…= in pages — unavailable, sealing
-            — by the word of its own norm (chapter 6.5 N4); HEAD carries no body'
-          headers:
-            Retry-After:
-              description: Required with the value 1 on busy; not promised for the other causes.
-              schema:
-                type: string
-                const: '1'
-        '200':
-          description: 'As GET: the same headers by the extension; HEAD carries no body'
-          headers:
-            X-Content-Type-Options:
-              schema:
-                type: string
-                const: nosniff
-              description: Required for every type.
-            Content-Security-Policy:
-              schema:
-                type: string
-                minLength: 1
-              description: Required for svg, the value sandbox.
-    parameters:
-    - name: sub
-      in: path
-      required: true
-      schema:
-        $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName
-    - name: file
-      in: path
-      required: true
-      description: A name from the list console.files; may contain /, is compared with the request path byte for byte (P/02.1 N1.2a).
-      schema:
-        type: string
-  /{pass}:
-    description: 'Chapter 6.5 (P/06.5-12) — door.pass (from M10/11 N1.8, N2; analysis of review of stage A 6–7, № 25): a route whose
-      first segment is in door.pass is passed to the live worker of the subsystem with a door (definition — 6.5) with the least name:
-      method, path, query, a body of no more than 1 MiB, the headers Authorization, Content-Type, Idempotency-Key, X-Operator; the client
-      to the worker — with the role certificate, if there is one. The gate of the console checks its own first, the worker checks the credentials
-      again. Framing and the actual bytes of the request are checked before sending; an incomplete body is not passed; the response is buffered
-      within 4 MiB before the headers to the client; the console does not follow a redirect; there is no automatic retry. Below — the local
-      refusals of the console; the code of the worker response is passed as received (default). The norm — Platform/common/contracts/gate-and-pass.md
-      «Forwarding door.pass» (the participant — the domain console).'
-    servers:
-    - url: '{origin}'
-      description: The short path selects CONSOLE_ROOT (analysis of review of stage B 6–7, № 7).
-      variables:
-        origin:
-          default: http://localhost
-          description: Origin of the actual console without a trailing /; this is an example address, not a server setting.
-    - url: '{origin}/{sub}'
-      description: The name explicitly selects a loaded subsystem, CONSOLE_ROOT included; door.pass — of its manifest (analysis of review of stage
-        B 6–7, № 7).
-      variables:
-        origin:
-          default: http://localhost
-          description: Origin of the actual console without a trailing /; this is an example address, not a server setting.
-        sub:
-          default: testsub2
-          description: The name of a loaded manifest per P/02.1; the example is replaced by a name chosen from /mounts.
-    parameters:
-    - name: pass
-      in: path
-      required: true
-      description: A segment from door.pass of the loaded manifest of the subsystem (the key door.pass — P/02.1 «Form»; does not repeat door.routes,
-        unit.rows and where — P/02.1 N1.4, rule 81). A path longer than one segment with the same first segment is passed
-        the same way; OpenAPI sets no template of several segments. For door.pass of the second kind the route is a path of several segments (P/02.1 N1.4), and the refusals
-        of the console 401, 403, 404, 413, 502, 503, 504 whose status is named in refusals of the manifest go in the form ProblemRefusal (the gate and pass contract, refusals).
-      schema:
-        type: string
-        minLength: 1
-    get:
-      summary: 'door.pass: GET to the worker door'
-      responses:
-        '400':
-          $ref: '#/components/responses/BadBody'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Denied'
-        '408':
-          $ref: '#/components/responses/SlowBody'
-        '413':
-          $ref: '#/components/responses/LargeBody'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '502':
-          $ref: '#/components/responses/PassFailed'
-        '503':
-          $ref: '#/components/responses/PassUnavailable'
-        '504':
-          $ref: '#/components/responses/PassTimedOut'
-        default:
-          $ref: '#/components/responses/PassAnswer'
-    post:
-      summary: 'door.pass: POST to the worker door'
-      responses:
-        '400':
-          $ref: '#/components/responses/BadBody'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Denied'
-        '408':
-          $ref: '#/components/responses/SlowBody'
-        '413':
-          $ref: '#/components/responses/LargeBody'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '502':
-          $ref: '#/components/responses/PassFailed'
-        '503':
-          $ref: '#/components/responses/PassUnavailable'
-        '504':
-          $ref: '#/components/responses/PassTimedOut'
-        default:
-          $ref: '#/components/responses/PassAnswer'
-    put:
-      summary: 'door.pass: PUT to the worker door'
-      responses:
-        '400':
-          $ref: '#/components/responses/BadBody'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Denied'
-        '408':
-          $ref: '#/components/responses/SlowBody'
-        '413':
-          $ref: '#/components/responses/LargeBody'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '502':
-          $ref: '#/components/responses/PassFailed'
-        '503':
-          $ref: '#/components/responses/PassUnavailable'
-        '504':
-          $ref: '#/components/responses/PassTimedOut'
-        default:
-          $ref: '#/components/responses/PassAnswer'
-    patch:
-      summary: 'door.pass: PATCH to the worker door'
-      responses:
-        '400':
-          $ref: '#/components/responses/BadBody'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Denied'
-        '408':
-          $ref: '#/components/responses/SlowBody'
-        '413':
-          $ref: '#/components/responses/LargeBody'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '502':
-          $ref: '#/components/responses/PassFailed'
-        '503':
-          $ref: '#/components/responses/PassUnavailable'
-        '504':
-          $ref: '#/components/responses/PassTimedOut'
-        default:
-          $ref: '#/components/responses/PassAnswer'
-    delete:
-      summary: 'door.pass: DELETE to the worker door'
-      responses:
-        '400':
-          $ref: '#/components/responses/BadBody'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Denied'
-        '408':
-          $ref: '#/components/responses/SlowBody'
-        '413':
-          $ref: '#/components/responses/LargeBody'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '502':
-          $ref: '#/components/responses/PassFailed'
-        '503':
-          $ref: '#/components/responses/PassUnavailable'
-        '504':
-          $ref: '#/components/responses/PassTimedOut'
-        default:
-          $ref: '#/components/responses/PassAnswer'
-    head:
-      summary: 'door.pass: HEAD to the worker door'
-      responses:
-        '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a read
-            parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 N4). The form refusal of its own door
-            is named by its operation; HEAD carries no body'
-        '401':
-          description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — there as well
-            (open_routes); HEAD carries no body
-        '403':
-          description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
-            on an acting request by cookie (csrf); error denied; HEAD carries no body'
-        '408':
-          description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
-        '413':
-          description: The body is larger than the console limit (chapter 6.5 N4); the service fields limit/size of P/01.1 are not added here;
-            HEAD carries no body
-        '429':
-          description: The common entry limit of the console (chapter 6.5 N4); the doors have no new quotas — neither on reading the manifest nor on creating
-            units; HEAD carries no body
-          headers:
-            Retry-After:
-              description: The retry time by the rule of the entry limit.
-              schema:
-                type: string
-        '502':
-          description: 'door.pass: the worker did not answer, the response is larger than 4 MiB, cut off, or the response timeout expired — before successful
-            headers (error denied, detail «<worker> did not answer»; chapter 6.5, P/06.5-12). The retry is not automatic: find out the outcome
-            from the holder. A worker response with code 502 is passed as received; HEAD carries no body'
-        '503':
-          description: 'door.pass: the console has no client to workers — error denied, detail «this console passes no route on to a
-            worker»; no live worker of the subsystem with a door (definition — chapter 6.5, P/06.5-12) — error denied, detail «no
-            worker of <sub> with a door is heard»; the common busy and denied — chapter 6.5 N4. A worker response with code 503 is passed as received; HEAD carries no
-            body'
-          headers:
-            Retry-After:
-              description: Required with the value 1 on busy; not promised for the other causes.
-              schema:
-                type: string
-                const: '1'
-        default:
-          description: 'The worker response as received: status, Content-Type and a body of no more than 4 MiB (chapter 6.5); the form is the business
-            of the subsystem, this contract does not set it. The console does not follow a redirect; HEAD carries no body'
   /policy:
     description: Chapter 6.6 — the doors of N2 of former M10/4.
     servers:
@@ -6612,6 +5655,964 @@ paths:
                 - $ref: '#/components/schemas/GuardUnavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
 components:
+  pathItems:
+    UnitsCollection:
+      description: 'Chapter 6.1 (06.1-console.norms.md) — the units door: create, list. The form of the list and of the rows — 6.1; the console
+        module calls /<rows> and /<sub>/<rows> (P/07).'
+      servers:
+      - url: '{origin}'
+        description: The short path selects CONSOLE_ROOT.
+        variables:
+          origin:
+            default: http://localhost
+            description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
+      - url: '{origin}/{sub}'
+        description: The name explicitly selects a loaded subsystem, including CONSOLE_ROOT.
+        variables:
+          origin:
+            default: http://localhost
+            description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
+          sub:
+            default: testsub
+            description: The name of a loaded manifest per P/02.1; the example is replaced by a chosen name from /mounts.
+      parameters:
+      - $ref: '#/components/parameters/Rows'
+      post:
+        summary: create a unit; a repeat by key returns the earlier answer
+        parameters:
+        - $ref: '#/components/parameters/IfMatch'
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdempotencyKey'
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientFields'
+        responses:
+          '201':
+            headers:
+              ETag:
+                $ref: '#/components/headers/ETag'
+            description: Created, or the earlier answer of a completed claim. Fields by the manifest types, secrets as a mask; worker is always
+              null, including a repeat.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/CreatedUnit'
+          '400':
+            $ref: '#/components/responses/BadRequest'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403':
+            $ref: '#/components/responses/WriteDenied'
+          '404':
+            $ref: '#/components/responses/NotFound'
+          '405':
+            $ref: '#/components/responses/Method'
+          '408':
+            $ref: '#/components/responses/SlowBody'
+          '409':
+            description: The name is taken, a reference is broken, or a claim of another console is still in progress.
+            content:
+              application/json:
+                schema:
+                  oneOf:
+                  - $ref: '#/components/schemas/CreateBusy'
+                  - $ref: '#/components/schemas/ReferenceConflict'
+          '412':
+            $ref: '#/components/responses/RevisionMoved'
+          '413':
+            $ref: '#/components/responses/LargeBody'
+          '422':
+            description: The same key with another request fingerprint; the claim does not change.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/KeyReused'
+          '429':
+            $ref: '#/components/responses/RateLimited'
+          '503':
+            $ref: '#/components/responses/WriteUnavailable'
+      get:
+        summary: all units and the configuration available by view (the gate of chapter 6.3, need)
+        parameters:
+        - name: deleted
+          in: query
+          required: false
+          description: Exactly 1, only together with about — the output of tombstones (N2 «Tombstones by about»; ADR-0094 addendum (5) item 1).
+          schema:
+            const: '1'
+        - name: about
+          in: query
+          required: false
+          description: The value of the about.field of tombstones; non-empty, only together with deleted.
+          schema:
+            type: string
+            minLength: 1
+        responses:
+          '200':
+            description: rows — units from heartbeats with the worker data; configured — configuration rows with secrets masked.
+            content:
+              application/json:
+                schema:
+                  oneOf:
+                  - $ref: '#/components/schemas/UnitList'
+                  - $ref: '#/components/schemas/DeletedList'
+          '400':
+            $ref: '#/components/responses/BadRead'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403':
+            $ref: '#/components/responses/Denied'
+          '404':
+            $ref: '#/components/responses/NotFound'
+          '405':
+            $ref: '#/components/responses/Method'
+          '408':
+            $ref: '#/components/responses/SlowBody'
+          '413':
+            $ref: '#/components/responses/LargeBody'
+          '429':
+            $ref: '#/components/responses/RateLimited'
+          '503':
+            $ref: '#/components/responses/UnitUnavailable'
+      head:
+        summary: 'HEAD: all units and the configuration available by view (the gate of chapter 6.3, need)'
+        responses:
+          '200':
+            description: rows — units from heartbeats with the worker data; configured — configuration rows with secrets masked;
+              HEAD carries no body
+          '400':
+            description: A common refusal of transport or path, including badkey of the full store key; detail and error, without fault;
+              HEAD carries no body
+          '401':
+            description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; the open paths — in the same place
+              (open_routes); HEAD carries no body
+          '403':
+            description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
+              on an acting request by cookie (csrf); error denied; HEAD carries no body'
+          '404':
+            description: No row or a tombstone at PUT/DELETE — error no such unit. Unknown route — detail no such
+              route, error no such path. An extra segment — detail a unit's path names one unit, error no such path (chapter 6.5
+              N2 «Common codes»); HEAD carries no body
+          '405':
+            description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
+              no body
+          '408':
+            description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
+          '413':
+            description: The body is larger than the console limit (chapter 6.5 N4); the service fields limit/size of P/01.1 are not added here;
+              HEAD carries no body
+          '429':
+            description: The common console entry limit (chapter 6.5 N4); the doors have no new quotas — neither on reading the manifest, nor on creating
+              units; HEAD carries no body
+            headers:
+              Retry-After:
+                description: The retry deadline by the rule of the entry limit.
+                schema:
+                  type: string
+          '503':
+            description: The store is unavailable — error with the text store unavailable; the answer under the key is not remembered. Also
+              the lane is busy — error busy and Retry-After 1 (chapter 6.5 N4 «lane busy»), or there were keys, but there is nothing to check
+              trust with — error denied (the gate of chapter 6.3, shut; chapter 6.5 N4 «keys existed, no verifier available»); the words busy and
+              denied were added by M10/9; HEAD carries no body
+            headers:
+              Retry-After:
+                description: Required with the value 1 at busy; not promised for the other reasons.
+                schema:
+                  type: string
+                  const: '1'
+    UnitItem:
+      description: Chapter 6.1 — edit and delete a unit; there is no separate GET of one unit (405).
+      servers:
+      - url: '{origin}'
+        description: The short path selects CONSOLE_ROOT.
+        variables:
+          origin:
+            default: http://localhost
+            description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
+      - url: '{origin}/{sub}'
+        description: The name explicitly selects a loaded subsystem, including CONSOLE_ROOT.
+        variables:
+          origin:
+            default: http://localhost
+            description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
+          sub:
+            default: testsub
+            description: The name of a loaded manifest per P/02.1; the example is replaced by a chosen name from /mounts.
+      parameters:
+      - $ref: '#/components/parameters/Rows'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UnitId'
+        description: Exactly one id; the grammar depends on unit.id (N1.3). The segment is percent-decoded after the route is chosen;
+          not UTF-8 or not by the grammar — 400 error badkey (N2; C06-UNIT-ID-BADKEY-01, decision of the Architect 2026-10-28). A path longer than one id — 404, except the bytes door /{rows}/{id}/{blob_field}
+          of chapter 6.1 (another method on it — 405); a wrong named id — 400.
+      put:
+        summary: edit fields; revision grows at every successful edit
+        parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            $ref: '#/components/schemas/IdempotencyKey'
+          description: Optional. Without it the edit converges by cas and every repeat raises revision; with it — the repeat memory
+            (chapter 6.1 N3 «replay memory»), its order is before If-Match.
+        - $ref: '#/components/parameters/IfMatch'
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientFields'
+        responses:
+          '200':
+            headers:
+              ETag:
+                $ref: '#/components/headers/ETag'
+            description: The row after the edit; values by the manifest types, secrets as a mask, revision increased.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Unit'
+          '400':
+            $ref: '#/components/responses/BadRequest'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403':
+            $ref: '#/components/responses/WriteDenied'
+          '404':
+            $ref: '#/components/responses/NotFound'
+          '405':
+            $ref: '#/components/responses/Method'
+          '408':
+            $ref: '#/components/responses/SlowBody'
+          '409':
+            description: References by live rows; a cas conflict is reread inside the pass.
+            content:
+              application/json:
+                schema:
+                  oneOf:
+                  - $ref: '#/components/schemas/ReferenceConflict'
+                  - $ref: '#/components/schemas/RepeatRefused'
+          '412':
+            $ref: '#/components/responses/RevisionMoved'
+          '413':
+            $ref: '#/components/responses/LargeBody'
+          '422':
+            description: The same key with another request fingerprint; the claim does not change.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/KeyReused'
+          '429':
+            $ref: '#/components/responses/RateLimited'
+          '503':
+            $ref: '#/components/responses/WriteUnavailable'
+      delete:
+        summary: mark as deleted without a change of revision
+        parameters:
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
+        responses:
+          '200':
+            headers:
+              ETag:
+                $ref: '#/components/headers/ETag'
+            description: The identifier of the marked unit; a repeated deletion — 404.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/DeletedUnit'
+          '400':
+            $ref: '#/components/responses/BadRead'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403':
+            $ref: '#/components/responses/WriteDenied'
+          '404':
+            $ref: '#/components/responses/NotFound'
+          '405':
+            $ref: '#/components/responses/Method'
+          '408':
+            $ref: '#/components/responses/SlowBody'
+          '412':
+            $ref: '#/components/responses/RevisionMoved'
+          '409':
+            description: A claim of another console is still in progress — in flight.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/RepeatRefused'
+          '413':
+            $ref: '#/components/responses/LargeBody'
+          '422':
+            description: The same key with another request fingerprint; the claim does not change.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/KeyReused'
+          '429':
+            $ref: '#/components/responses/RateLimited'
+          '503':
+            $ref: '#/components/responses/UnitUnavailable'
+    TableCollection:
+      description: Chapter 6.1 — the doors of the manifest tables.
+      servers:
+      - url: '{origin}'
+        description: The short path selects CONSOLE_ROOT.
+        variables:
+          origin:
+            default: http://localhost
+            description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
+      - url: '{origin}/{sub}'
+        description: The name explicitly selects a loaded subsystem, including CONSOLE_ROOT.
+        variables:
+          origin:
+            default: http://localhost
+            description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
+          sub:
+            default: testsub
+            description: The name of a loaded manifest per P/02.1; the example is replaced by a chosen name from /mounts.
+      parameters:
+      - name: table
+        in: path
+        required: true
+        schema:
+          $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName
+      get:
+        summary: List of table rows without secrets
+        responses:
+          '400':
+            $ref: '#/components/responses/BadBody'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403':
+            $ref: '#/components/responses/Denied'
+          '404':
+            description: No path, unit, field or row
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ConsoleRefusal'
+          '405':
+            $ref: '#/components/responses/TableMethod'
+          '408':
+            $ref: '#/components/responses/SlowBody'
+          '413':
+            $ref: '#/components/responses/LargeBody'
+          '429':
+            $ref: '#/components/responses/RateLimited'
+          '503':
+            $ref: '#/components/responses/ConsoleUnavailable'
+          '200':
+            description: Full JSON body
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/TableList'
+      post:
+        summary: Write a full table row
+        parameters:
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
+        responses:
+          '400':
+            description: Full JSON body
+            content:
+              application/json:
+                schema:
+                  anyOf:
+                  - $ref: '#/components/schemas/TextRefusal'
+                  - $ref: '#/components/schemas/FormRefusal'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403':
+            $ref: '#/components/responses/WriteDenied'
+          '404':
+            description: No path, unit, field or row
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ConsoleRefusal'
+          '405':
+            $ref: '#/components/responses/TableMethod'
+          '408':
+            $ref: '#/components/responses/SlowBody'
+          '412':
+            $ref: '#/components/responses/RevisionMoved'
+          '413':
+            $ref: '#/components/responses/LargeBody'
+          '429':
+            $ref: '#/components/responses/RateLimited'
+          '503':
+            $ref: '#/components/responses/ConsoleUnavailable'
+          '201':
+            headers:
+              ETag:
+                $ref: '#/components/headers/ETag'
+            description: Full JSON body
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/TableWritten'
+          '409':
+            description: Full JSON body
+            content:
+              application/json:
+                schema:
+                  anyOf:
+                  - $ref: '#/components/schemas/ReferenceConflict'
+                  - $ref: '#/components/schemas/CasRefused'
+                  - $ref: '#/components/schemas/RepeatRefused'
+          '422':
+            description: The same key with another request fingerprint; the claim does not change.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/KeyReused'
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableInput'
+      head:
+        summary: 'HEAD: List of table rows without secrets'
+        responses:
+          '400':
+            description: 'A common refusal of the console request parsing (chapter 6.5 N2 «Console request parsing»: query, JSON of the body, a read
+              parameter repeated) or of transport — the body is chunked or shorter than declared (chapter 6.5 N4). A refusal of the form of its own door
+              is named by its operation; HEAD carries no body'
+          '401':
+            description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; the open paths — in the same place
+              (open_routes); HEAD carries no body
+          '403':
+            description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
+              on an acting request by cookie (csrf); error denied; HEAD carries no body'
+          '404':
+            description: No path, unit, field or row; HEAD carries no body
+          '405':
+            description: A table method not among GET, POST and DELETE of one row (N2); HEAD carries no body
+          '408':
+            description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
+          '413':
+            description: The body is larger than the console limit (chapter 6.5 N4); the service fields limit/size of P/01.1 are not added here;
+              HEAD carries no body
+          '429':
+            description: The common console entry limit (chapter 6.5 N4); the doors have no new quotas — neither on reading the manifest, nor on creating
+              units; HEAD carries no body
+            headers:
+              Retry-After:
+                description: The retry deadline by the rule of the entry limit.
+                schema:
+                  type: string
+          '503':
+            description: 'Common 503 of the door: the lane is busy — busy with Retry-After 1; trust cannot be checked — denied (the gate
+              of chapter 6.3, shut; chapter 6.5 N4); other reasons — a mandatory read and the shell with the on…= attribute at pages — unavailable, sealing
+              — by the word of its own norm (chapter 6.5 N4); HEAD carries no body'
+            headers:
+              Retry-After:
+                description: Required with the value 1 at busy; not promised for the other reasons.
+                schema:
+                  type: string
+                  const: '1'
+          '200':
+            description: Full JSON body; HEAD carries no body
+    TableItem:
+      description: Chapter 6.1 — a row of a manifest table.
+      servers:
+      - url: '{origin}'
+        description: The short path selects CONSOLE_ROOT.
+        variables:
+          origin:
+            default: http://localhost
+            description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
+      - url: '{origin}/{sub}'
+        description: The name explicitly selects a loaded subsystem, including CONSOLE_ROOT.
+        variables:
+          origin:
+            default: http://localhost
+            description: Origin of the actual console without the trailing /; this is an example address, not a server setting.
+          sub:
+            default: testsub
+            description: The name of a loaded manifest per P/02.1; the example is replaced by a chosen name from /mounts.
+      parameters:
+      - name: table
+        in: path
+        required: true
+        schema:
+          $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName
+      - name: name
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/TableRowName'
+      get:
+        summary: Read one table row
+        responses:
+          '400':
+            $ref: '#/components/responses/BadBody'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403':
+            $ref: '#/components/responses/Denied'
+          '404':
+            description: No path, unit, field or row
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ConsoleRefusal'
+          '405':
+            $ref: '#/components/responses/TableMethod'
+          '408':
+            $ref: '#/components/responses/SlowBody'
+          '413':
+            $ref: '#/components/responses/LargeBody'
+          '429':
+            $ref: '#/components/responses/RateLimited'
+          '503':
+            $ref: '#/components/responses/ConsoleUnavailable'
+          '200':
+            headers:
+              ETag:
+                $ref: '#/components/headers/ETag'
+            description: Full JSON body
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/TableRow'
+      delete:
+        summary: Delete a table row
+        parameters:
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
+        responses:
+          '400':
+            $ref: '#/components/responses/BadBody'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403':
+            $ref: '#/components/responses/WriteDenied'
+          '404':
+            description: No path, unit, field or row
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ConsoleRefusal'
+          '405':
+            $ref: '#/components/responses/TableMethod'
+          '408':
+            $ref: '#/components/responses/SlowBody'
+          '412':
+            $ref: '#/components/responses/RevisionMoved'
+          '413':
+            $ref: '#/components/responses/LargeBody'
+          '429':
+            $ref: '#/components/responses/RateLimited'
+          '503':
+            $ref: '#/components/responses/ConsoleUnavailable'
+          '200':
+            description: Full JSON body
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/TableDeleted'
+          '409':
+            description: CAS repeats exhausted; references to the row do not hinder the deletion (chapter 6.1, ADR-0057)
+            content:
+              application/json:
+                schema:
+                  oneOf:
+                  - $ref: '#/components/schemas/CasRefused'
+                  - $ref: '#/components/schemas/RepeatRefused'
+          '422':
+            description: The same key with another request fingerprint; the claim does not change.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/KeyReused'
+      head:
+        summary: 'HEAD: Read one table row'
+        responses:
+          '400':
+            description: 'A common refusal of the console request parsing (chapter 6.5 N2 «Console request parsing»: query, JSON of the body, a read
+              parameter repeated) or of transport — the body is chunked or shorter than declared (chapter 6.5 N4). A refusal of the form of its own door
+              is named by its operation; HEAD carries no body'
+          '401':
+            description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; the open paths — in the same place
+              (open_routes); HEAD carries no body
+          '403':
+            description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
+              on an acting request by cookie (csrf); error denied; HEAD carries no body'
+          '404':
+            description: No path, unit, field or row; HEAD carries no body
+          '405':
+            description: A table method not among GET, POST and DELETE of one row (N2); HEAD carries no body
+          '408':
+            description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
+          '413':
+            description: The body is larger than the console limit (chapter 6.5 N4); the service fields limit/size of P/01.1 are not added here;
+              HEAD carries no body
+          '429':
+            description: The common console entry limit (chapter 6.5 N4); the doors have no new quotas — neither on reading the manifest, nor on creating
+              units; HEAD carries no body
+            headers:
+              Retry-After:
+                description: The retry deadline by the rule of the entry limit.
+                schema:
+                  type: string
+          '503':
+            description: 'Common 503 of the door: the lane is busy — busy with Retry-After 1; trust cannot be checked — denied (the gate
+              of chapter 6.3, shut; chapter 6.5 N4); other reasons — a mandatory read and the shell with the on…= attribute at pages — unavailable, sealing
+              — by the word of its own norm (chapter 6.5 N4); HEAD carries no body'
+            headers:
+              Retry-After:
+                description: Required with the value 1 at busy; not promised for the other reasons.
+                schema:
+                  type: string
+                  const: '1'
+          '200':
+            headers:
+              ETag:
+                $ref: '#/components/headers/ETag'
+            description: Full JSON body; HEAD carries no body
+    PassRoot:
+      description: 'Chapter 6.5 (P/06.5-12) — door.pass (from M10/11 N1.8, N2; analysis of review of stage A 6–7, № 25): a route whose
+        first segment is in door.pass is passed to the live worker of the subsystem with a door (definition — 6.5) with the least name:
+        method, path, query, a body of no more than 1 MiB, the headers Authorization, Content-Type, Idempotency-Key, X-Operator; the client
+        to the worker — with the role certificate, if there is one. The gate of the console checks its own first, the worker checks the credentials
+        again. Framing and the actual bytes of the request are checked before sending; an incomplete body is not passed; the response is buffered
+        within 4 MiB before the headers to the client; the console does not follow a redirect; there is no automatic retry. Below — the local
+        refusals of the console; the code of the worker response is passed as received (default). The norm — Platform/common/contracts/gate-and-pass.md
+        «Forwarding door.pass» (the participant — the domain console).'
+      servers:
+      - url: '{origin}'
+        description: The short path selects CONSOLE_ROOT (analysis of review of stage B 6–7, № 7).
+        variables:
+          origin:
+            default: http://localhost
+            description: Origin of the actual console without a trailing /; this is an example address, not a server setting.
+      - url: '{origin}/{sub}'
+        description: The name explicitly selects a loaded subsystem, CONSOLE_ROOT included; door.pass — of its manifest (analysis of review of stage
+          B 6–7, № 7).
+        variables:
+          origin:
+            default: http://localhost
+            description: Origin of the actual console without a trailing /; this is an example address, not a server setting.
+          sub:
+            default: testsub2
+            description: The name of a loaded manifest per P/02.1; the example is replaced by a name chosen from /mounts.
+      parameters:
+      - name: pass
+        in: path
+        required: true
+        description: A segment from door.pass of the loaded manifest of the subsystem (the key door.pass — P/02.1 «Form»; does not repeat door.routes,
+          unit.rows and where — P/02.1 N1.4, rule 81). A path longer than one segment with the same first segment is passed
+          the same way; OpenAPI sets no template of several segments. For door.pass of the second kind the route is a path of several segments (P/02.1 N1.4), and the refusals
+          of the console 401, 403, 404, 413, 502, 503, 504 whose status is named in refusals of the manifest go in the form ProblemRefusal (the gate and pass contract, refusals).
+        schema:
+          type: string
+          minLength: 1
+      get:
+        summary: 'door.pass: GET to the worker door'
+        responses:
+          '400':
+            $ref: '#/components/responses/BadBody'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403':
+            $ref: '#/components/responses/Denied'
+          '408':
+            $ref: '#/components/responses/SlowBody'
+          '413':
+            $ref: '#/components/responses/LargeBody'
+          '429':
+            $ref: '#/components/responses/RateLimited'
+          '502':
+            $ref: '#/components/responses/PassFailed'
+          '503':
+            $ref: '#/components/responses/PassUnavailable'
+          '504':
+            $ref: '#/components/responses/PassTimedOut'
+          default:
+            $ref: '#/components/responses/PassAnswer'
+      post:
+        summary: 'door.pass: POST to the worker door'
+        responses:
+          '400':
+            $ref: '#/components/responses/BadBody'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403':
+            $ref: '#/components/responses/Denied'
+          '408':
+            $ref: '#/components/responses/SlowBody'
+          '413':
+            $ref: '#/components/responses/LargeBody'
+          '429':
+            $ref: '#/components/responses/RateLimited'
+          '502':
+            $ref: '#/components/responses/PassFailed'
+          '503':
+            $ref: '#/components/responses/PassUnavailable'
+          '504':
+            $ref: '#/components/responses/PassTimedOut'
+          default:
+            $ref: '#/components/responses/PassAnswer'
+      put:
+        summary: 'door.pass: PUT to the worker door'
+        responses:
+          '400':
+            $ref: '#/components/responses/BadBody'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403':
+            $ref: '#/components/responses/Denied'
+          '408':
+            $ref: '#/components/responses/SlowBody'
+          '413':
+            $ref: '#/components/responses/LargeBody'
+          '429':
+            $ref: '#/components/responses/RateLimited'
+          '502':
+            $ref: '#/components/responses/PassFailed'
+          '503':
+            $ref: '#/components/responses/PassUnavailable'
+          '504':
+            $ref: '#/components/responses/PassTimedOut'
+          default:
+            $ref: '#/components/responses/PassAnswer'
+      patch:
+        summary: 'door.pass: PATCH to the worker door'
+        responses:
+          '400':
+            $ref: '#/components/responses/BadBody'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403':
+            $ref: '#/components/responses/Denied'
+          '408':
+            $ref: '#/components/responses/SlowBody'
+          '413':
+            $ref: '#/components/responses/LargeBody'
+          '429':
+            $ref: '#/components/responses/RateLimited'
+          '502':
+            $ref: '#/components/responses/PassFailed'
+          '503':
+            $ref: '#/components/responses/PassUnavailable'
+          '504':
+            $ref: '#/components/responses/PassTimedOut'
+          default:
+            $ref: '#/components/responses/PassAnswer'
+      delete:
+        summary: 'door.pass: DELETE to the worker door'
+        responses:
+          '400':
+            $ref: '#/components/responses/BadBody'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403':
+            $ref: '#/components/responses/Denied'
+          '408':
+            $ref: '#/components/responses/SlowBody'
+          '413':
+            $ref: '#/components/responses/LargeBody'
+          '429':
+            $ref: '#/components/responses/RateLimited'
+          '502':
+            $ref: '#/components/responses/PassFailed'
+          '503':
+            $ref: '#/components/responses/PassUnavailable'
+          '504':
+            $ref: '#/components/responses/PassTimedOut'
+          default:
+            $ref: '#/components/responses/PassAnswer'
+      head:
+        summary: 'door.pass: HEAD to the worker door'
+        responses:
+          '400':
+            description: 'The common refusal of console request parsing (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a read
+              parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 N4). The form refusal of its own door
+              is named by its operation; HEAD carries no body'
+          '401':
+            description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — there as well
+              (open_routes); HEAD carries no body
+          '403':
+            description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
+              on an acting request by cookie (csrf); error denied; HEAD carries no body'
+          '408':
+            description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
+          '413':
+            description: The body is larger than the console limit (chapter 6.5 N4); the service fields limit/size of P/01.1 are not added here;
+              HEAD carries no body
+          '429':
+            description: The common entry limit of the console (chapter 6.5 N4); the doors have no new quotas — neither on reading the manifest nor on creating
+              units; HEAD carries no body
+            headers:
+              Retry-After:
+                description: The retry time by the rule of the entry limit.
+                schema:
+                  type: string
+          '502':
+            description: 'door.pass: the worker did not answer, the response is larger than 4 MiB, cut off, or the response timeout expired — before successful
+              headers (error denied, detail «<worker> did not answer»; chapter 6.5, P/06.5-12). The retry is not automatic: find out the outcome
+              from the holder. A worker response with code 502 is passed as received; HEAD carries no body'
+          '503':
+            description: 'door.pass: the console has no client to workers — error denied, detail «this console passes no route on to a
+              worker»; no live worker of the subsystem with a door (definition — chapter 6.5, P/06.5-12) — error denied, detail «no
+              worker of <sub> with a door is heard»; the common busy and denied — chapter 6.5 N4. A worker response with code 503 is passed as received; HEAD carries no
+              body'
+            headers:
+              Retry-After:
+                description: Required with the value 1 on busy; not promised for the other causes.
+                schema:
+                  type: string
+                  const: '1'
+          default:
+            description: 'The worker response as received: status, Content-Type and a body of no more than 4 MiB (chapter 6.5); the form is the business
+              of the subsystem, this contract does not set it. The console does not follow a redirect; HEAD carries no body'
+    ConsoleFile:
+      description: 'Chapter 6.5 (06.5-console.norms.md, N2 «Static files») — a file of the list console.files of the manifest. A name from the list is resolved before the routes of the mounted subsystem; anything else — they, then NoRoute. The query string is not judged.'
+      get:
+        summary: Static file of a subsystem
+        responses:
+          '400':
+            $ref: '#/components/responses/BadBody'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403':
+            $ref: '#/components/responses/Denied'
+          '404':
+            description: The name is not in the list and there is no route; an unknown sub
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/NoRoute'
+          '405':
+            $ref: '#/components/responses/Method'
+          '408':
+            $ref: '#/components/responses/SlowBody'
+          '413':
+            $ref: '#/components/responses/LargeBody'
+          '429':
+            $ref: '#/components/responses/RateLimited'
+          '503':
+            $ref: '#/components/responses/ConsoleUnavailable'
+          '200':
+            description: The bytes of the file whole; the type — by the extension (N2 «Static files»)
+            content:
+              text/javascript:
+                schema:
+                  type: string
+              text/css:
+                schema:
+                  type: string
+              application/json:
+                schema: {}
+              font/woff2:
+                schema:
+                  type: string
+                  contentMediaType: font/woff2
+              font/woff:
+                schema:
+                  type: string
+                  contentMediaType: font/woff
+              font/ttf:
+                schema:
+                  type: string
+                  contentMediaType: font/ttf
+              image/png:
+                schema:
+                  type: string
+                  contentMediaType: image/png
+              image/svg+xml:
+                schema:
+                  type: string
+            headers:
+              X-Content-Type-Options:
+                schema:
+                  type: string
+                  const: nosniff
+                description: Required for every type.
+              Content-Security-Policy:
+                schema:
+                  type: string
+                  minLength: 1
+                description: Required for svg, the value sandbox.
+      head:
+        summary: 'HEAD: Static file of a subsystem'
+        responses:
+          '400':
+            description: 'The common refusal of console request parsing (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a read
+              parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 N4). The form refusal of its own door
+              is named by its operation; HEAD carries no body'
+          '401':
+            description: Identity not confirmed — the gate of chapter 6.3 (identity), error denied; open paths — there as well
+              (open_routes); HEAD carries no body
+          '403':
+            description: 'Access refusal — the gate of chapter 6.3: «no grant» (need), «no domain, not loopback», a foreign Origin
+              on an acting request by cookie (csrf); error denied; HEAD carries no body'
+          '404':
+            description: The name is not in the list and there is no route; an unknown sub; HEAD carries no body
+          '405':
+            description: A method not among those declared for this door, without the Allow header (chapter 6.5 N2 «Common codes»); HEAD carries
+              no body
+          '408':
+            description: The body is read too slowly (chapter 6.5 N4); HEAD carries no body
+          '413':
+            description: The body is larger than the console limit (chapter 6.5 N4); the service fields limit/size of P/01.1 are not added here;
+              HEAD carries no body
+          '429':
+            description: The common entry limit of the console (chapter 6.5 N4); the doors have no new quotas — neither on reading the manifest nor on creating
+              units; HEAD carries no body
+            headers:
+              Retry-After:
+                description: The retry time by the rule of the entry limit.
+                schema:
+                  type: string
+          '503':
+            description: 'The common 503 of the door: the lane is taken — busy with Retry-After 1; trust cannot be checked — denied (the gate of
+              chapter 6.3, shut; chapter 6.5 N4); the other causes — the mandatory read and a shell with an attribute on…= in pages — unavailable, sealing
+              — by the word of its own norm (chapter 6.5 N4); HEAD carries no body'
+            headers:
+              Retry-After:
+                description: Required with the value 1 on busy; not promised for the other causes.
+                schema:
+                  type: string
+                  const: '1'
+          '200':
+            description: 'As GET: the same headers by the extension; HEAD carries no body'
+            headers:
+              X-Content-Type-Options:
+                schema:
+                  type: string
+                  const: nosniff
+                description: Required for every type.
+              Content-Security-Policy:
+                schema:
+                  type: string
+                  minLength: 1
+                description: Required for svg, the value sandbox.
+      parameters:
+      - name: sub
+        in: path
+        required: true
+        schema:
+          $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName
+      - name: file
+        in: path
+        required: true
+        description: A name from the list console.files; may contain /, is compared with the request path byte for byte (P/02.1 N1.2a).
+        schema:
+          type: string
   headers:
     ETag:
       description: The store index of the row in double quotes, a strong RFC 9110 tag; for DELETE of a unit — the index of the tombstone (chapter 6.1 N2 «Versions»). The value is fit for If-Match.
