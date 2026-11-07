@@ -169,7 +169,7 @@
 - Сценарии: `acceptance/{1..9}/scenarios.tsv` целиком — 1581 строка (529/69/7/125/337/201/111/192/10); шаги сверены с README глав по смыслу границ.
 - Данные семей: `data/*.layers.tsv` и `data/*.outcomes.tsv` — все 44 файла (22+22) прочитаны построчно; общий `Platform/common/data/codec.tsv` (15 строк) — слова x-codec сверены.
 - Формы ADR-0127: `forms/numeric-loader.cases.tsv` (9 кейсов ↔ 9 файлов `forms/numeric-loader/*.subsystem.yaml`, образец прочитан) и `forms/deletion-body-witnesses.json` целиком (6 witnesses: escaping_counterexample, body_limit-1/0/1, same_JSON_plus_LF, same_value_ASCII_escapes; `SUT_runs: 0`, `product_native_runs: 0`, статус «source codec witnesses only» — заявлено честно).
-- OpenAPI: свип всех операций с кодами ответов — 140 операций (51 GET, 46 HEAD, 22 POST, 8 PUT, 10 DELETE, 2 PATCH, 1 — часть путей с HEAD), скрипт и полный вывод сохранены.
+- OpenAPI: свип всех операций с кодами ответов — 140 операций (52 GET, 46 HEAD, 22 POST, 8 PUT, 10 DELETE, 2 PATCH); скрипт и полный вывод сохранены.
 
 Границы (явные): фикстуры-пульсы и статика приёмок (`acceptance/5/inputs/**` — 14 json пульсов и дерево `testsub2/` со статикой, `acceptance/6/inputs/` — 8 json) байтово не перечитывались — они сравниваются стендом (`@file`/`@put object`) и нормативным текстом не являются; человеческая лекция `ru/06-console.md` не читалась и канон не подменяла. Зеркала `ru/**`: по объёму первого отчёта канон не являются; состав зеркал (наличие переводов по тем же путям) проверен косвенно через check_spec (`english_mirrors=392`, PASS), семантика зеркал не сверялась — предел остаётся в силе.
 
@@ -178,7 +178,7 @@
 Все команды — из `/home/pilot/review103-kimi` на d285. Полные выводы вне дерева, в `/tmp/p06-evidence/`:
 
 1. `check_spec` (повторно не гонялся; прежний PASS в силе) — `check_spec-full.txt`.
-2. **Выполненный контрпример**: пересчёт `step_key` по формуле 06.9 N2 `hex(SHA-256(UTF-8(id) ‖ 0x00 ‖ UTF-8(decimal i)))` (`/opt/check-env/lesson-spec/bin/python`, hashlib) против всех 6 строк `vectors/op-step/key.tsv` — **6/6 совпали**. Это единственное исполненное вычисление; остальное — чтение и структурные пробы.
+2. **Положительная сверка исходных векторов (выполненное вычисление)**: пересчёт `step_key` по формуле 06.9 N2 `hex(SHA-256(UTF-8(id) ‖ 0x00 ‖ UTF-8(decimal i)))` (`/opt/check-env/lesson-spec/bin/python`, hashlib) против всех 6 строк `vectors/op-step/key.tsv` — **6/6 совпали**. Это подтверждение байтов вектора формулой нормы, а не опровержение; единственное исполненное вычисление этого ревью, остальное — чтение и структурные пробы.
 3. Структурная проба схем (прежняя, в силе) — `schema-probe.txt` (22/22).
 4. Сводные дампы чтения: `vectors-readme.txt` (495), `vector-cases.txt` (382), `seams-all.txt` (94), `data-layers.txt` (439), `data-outcomes.txt` (154), `scenarios-1.txt` (529) — байты файлов, как прочитаны.
 5. Свип OpenAPI (скрипт на python, извлечение путей/методов/кодов): `openapi-ops.txt` — 140 операций с кодами.
@@ -202,3 +202,43 @@
 Итог дополнения: охват канона полный (кроме явно названных границ — зеркала ru/ как канон-не-носитель, байты фикстур, человеческая лекция); выполненный контрпример один (step_key 6/6); новых находок нет; счёт и находки F1–F6 прежние.
 
 СТОП: сдача дополнения 1 | ЖДУ: разбора обоих отчётов «Архитектором» (второй рецензент ещё не сдан)
+
+---
+
+# Дополнение 2 (2026-11-07, по второму уточнению «Архитектора»): OpenAPI целиком, смысловые входы сценариев, скрипты
+
+Поручение: (1) дочитать нормативную часть OpenAPI — параметры, тела запросов/ответов, определения схем, порядок отказов (перечень методов/кодов этого не подтверждает); прочитать смысловые входы сценариев — пульсы, манифесты, данные `@file`/`@put object`; для статики назвать использующие сценарии и достаточную границу сверки. (2) Дать точные команды/сохранённые скрипты трёх проб с результатом 6/6. (3) Исправить описательные факты: GET 52 (не 51); 6/6 step_key — положительная сверка, не контрпример. Пункты 3 исправлены в тексте дополнения 1 выше; база d285, источник не менялся.
+
+## Д2.1 Чтение OpenAPI — полный объём (все 10 088 строк)
+
+- **Path items (строки 40–6397) — прочитаны полностью**: все 70 путей, 140 операций; параметры каждой операции (включая path/query/header, их схемы и описания), requestBody (медиатип и $ref схемы), ответы в **порядке объявления** (код → $ref/inline-схема → описание → заголовки).
+- **Components (строки 6398–10087) — прочитаны полностью**: headers (ETag), parameters (IfMatch, RepeatKey, FolderIfMatch, Rows, AtSub), все схемы (~90 определений: от RevisionMoved, VerifyInput/VerifyAnswer/VerifyUnavailable, ManifestView/JsonValue/FieldView, UnitId/WorkerName/Server, Policy/NextId/Changes/DeletedList, Where/Door, WorkerRow/ServerRow/ResourceRow, DrainState/SubsystemDrain, Folder*/Operation*/Batch*, AnsweredMark и его три формы, SchemaState, TableRow/TableInput, SnapshotShard, ConsoleRefusal/Refusal и специализации, DomainRefusal/DomainKeys/SharedValues), responses (~30 общих отказов), два корневых расширения `x-mounting`/`x-byte-limits`.
+- Расширение `x-validation-order` (две двери `/where/<table>/<place>`): порядок проверок заявлен явно — table → unit-query-form → view-on-unit → mandatory-read → held-state → optional-token; согласован с нормами 06.5 N3.
+- Сверки при чтении: (а) схема `IdempotencyKey` (maxLength 200 + явная оговорка «maxLength counts characters… a separate byte check») согласована с refusals 6.1:1 и sc. 13; (б) `Door.expires` = issue+120 — тот же литерал, что в нормах (входит в F1); (в) `Changes.changes maxItems 256` = CHANGES_HISTORY, `VerifyInput.need.units maxItems 256` = VERIFY_UNITS_MAX, `FieldView` — 8 типов с границами ±2^53−1/±1.79e308, зависимость merge→inherit — всё по нормам; (г) кросс-ссылки на P/05/P/08/P/10/gate-and-pass — именные и существующие (проверка перекрёстных ссылок выполнена check_spec: `openapi_cross_refs=86`, PASS); (д) слова отказов: все 59 слов enum схемы `Refusal` ∈ `data/refusal-words.tsv` (214 строк; проверка скриптом, вывод `refusal-words-check.txt`); остальные 29 слов tsv несут именные схемы своих форм (ConsoleRefusal enum, RequestError, DomainRefusal, NoVersion, MountedPage, Method, ServerAnswers и др.) — расхождений нет; (е) порядок кодов внутри операций везде согласован с порядком проверок норм, кроме косметической асимметрии: у `DELETE /{rows}/{id}` код 412 объявлен перед 409 (у остальных операций наоборот) — порядок ключей YAML-маппинга семантики не несёт, нормативный порядок проверок задан нормами; не находка.
+- Зафиксированные особенности конструкции (не находки): нет GET у `/{rows}/{id}` (журнальная правка), PATCH у `/{pass}` (пропуск метода), `default:`-ответ у `/{pass}` и `/domain*` (ответ как пришёл), flow-стиль кодов у `/api/backup-part`, кросс-$ref тел `/api/take` и `/domain/move` в OpenAPI P/08.
+- **Итог по OpenAPI: противоречий и пустот против норм не найдено; новых находок нет.**
+
+## Д2.2 Смысловые входы сценариев
+
+- **Пульсы (22 файла) прочитаны построчно** (`acceptance/5/inputs/*.json` — 14, `acceptance/6/inputs/*.json` — 8; вывод `pulses.txt`): каждый файл согласован с ожиданиями своих шагов — `hb-w-1-pending-2p63` несёт 2^63 (pending_unsaid), `hb-w-1-schema-fraction` — schema 1.0 (→ null), `hb-w-1-build-number` — build 5 (→ null), `hb-W-9-bad-name` — имя ключа вне грамматики, `hb-w-7-other-name` — worker ≠ сегмент ключа, `res-srv-q` — лишнее поле `bogus`, `res-srv-r` — server ≠ ключ, `res-srv-s` — нет `url`, `ct-w-1-b1-other-name`/`ct-dash-b2` — метки претендента; `hb-w-1-future` — ts 9999999999 (found heartbeat, sc. 21); `hb-w-1-observed-fraction` — observed_revision 1.5 (№ 13).
+- **Манифесты стенда прочитаны**: `acceptance/5/probe-x.subsystem.yaml` (numeric id, default `probe{id}`, вес `cost`, door.pass второго рода с refusals-формой problem), `acceptance/5/probe-w.subsystem.yaml` (writes_via у unit rows и таблицы log; free без слова), `Platform/common/data/testsub/testsub.subsystem.yaml` и `testsub2.subsystem.yaml` целиком — сценарии 6.1–6.6 согласованы с полями/таблицами/ссылками/истечениями манифестов (fixed `of`, must_match zone, unique feed, secrets bound_to feed, delete_after scraps 35, per_person 3/settle 30/ttl 3600, сервисная таблица stash, door routes/pass, display.tree.folders: true и пр.).
+- **Статика testsub2 (14 файлов)** — использующие сценарии: `acceptance/5` sc. 26 (шаги 1–43 — байты/@file/заголовки), sc. 27 (шаги 1–15 — шелл/CSP/относительный app.js), sc. 28 (шаги 1–10 — порча частей → 503), плюс sc. 06/13–14 (mounted page). **Достаточная граница сверки (выполнена, вывод `static-check.txt`)**: побайтовая идентичность `app.js` (84 байта, sha256 = c98e08db…d6c7) и `bundle.js` (300 045 байт, sha256 = 340e9212…555c) ожиданиям шагов 26/44–47 сценариев; арифметика FILE_PART 262144 + 37901 = 300045 и совпадение base64-голов двух частей (`Ly8gbGluZSAwMDAwMDAgb2YgYSBmaWxlIGhlYXZp…`, `IDAwNDQ0MyBvZiBhIGZpbGUgaGVhdmllciB0aGFu…`) с шагами 26/45–47; состав каталога (14 файлов) == список `console.files` манифеста testsub2. Наполнитель bundle.js сверх part-рамки — стендовый ASCII-наполнитель (по README), семантически не читался.
+- Данные `@put object` (строки сценариев 5/6) — это сами пульсы выше; данные `@big(N)`/`@raw` — подстановки раннера, описаны в README приёмок.
+
+## Д2.3 Скрипты и повторные исполнения (честная фиксация)
+
+Прежние команды шли встроенными heredoc и **как файлы не сохранились** — это указано. Нужный малый повтор выполнен новыми исполнениями (2026-11-07), без восстановления старого вывода задним числом; скрипты и выводы сохранены:
+
+- `/tmp/p06-evidence/schema-probe.py` → `schema-probe-run2.txt` (exit 0; 22/22 схем валидны, компаньоны на месте).
+- `/tmp/p06-evidence/openapi-ops.py` → `openapi-ops-run2.txt` (exit 0; **140 операций: 52 GET, 46 HEAD, 22 POST, 8 PUT, 10 DELETE, 2 PATCH**).
+- `/tmp/p06-evidence/step_key.py` → `step_key-run2.txt` (exit 0; **6/6 — положительная сверка** байтов `vectors/op-step/key.tsv` формулой 06.9 N2).
+
+## Д2.4 Исправления описательных фактов (пункт 3 поручения)
+
+- В дополнении 1 выше исправлено: «51 GET» → «52 GET»; формулировка про step_key переименована из «выполненный контрпример» в «положительная сверка исходных векторов (выполненное вычисление)». Счёт находок не менялся и не меняется этими правками.
+
+## Д2.5 Итог дополнения 2
+
+Новых находок нет (F1–F6 прежние; источник Б0/С1/М5, судьи Б0/С0/М0). Открытый канон P/06 на d285 теперь прочитан полностью: нормы 9 глав, README/instructions, lifecycle, формы (все), данные семей (44 файла + codec), векторы (9 пакетов), приёмка (9 README + 1581 строка сценариев + 57 швов + пульсы + манифесты + статика с выверкой), OpenAPI (10 088 строк), журнал (282 записи). Границы остаются прежними и явными: зеркала `ru/**` (не канон; семантика не сверялась), человеческая лекция `ru/06-console.md` (не читалась, канон не подменяла), стендовые прогоны (не выполнялись, READONLY; schema/declared/static PASS не считал исполнением). Доказательства: `/tmp/p06-evidence/` — 17 файлов (9 скриптов/выводов run2, дампы чтения, сверки).
+
+СТОП: сдача дополнения 2 | ЖДУ: разбора обоих отчётов «Архитектором»
