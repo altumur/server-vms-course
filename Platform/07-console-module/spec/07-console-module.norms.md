@@ -75,6 +75,12 @@ An unreadable, refused or unavailable profile remains unknown, without an empty-
 
 ### N1.5 The contract of the module with the shell
 
+For the accepted path and editor corrections of ADR-0129(18), classify only the path before the query, using the root and mounted subsystem routes already declared by P/06.5 N2. Keep the original request address, CAS revision, logical-action key and replay rules. A query does not make a service door a table or permit `ifMatch` there.
+
+An `int` control never truncates the input. It sends the same safely representable integer as an ordinary JSON integer, or refuses locally with the text retained and no substituted number sent. A list remains a typed list across display, editing another element and submission: commas inside a string, empty strings, order and duplicates are not lost by splitting, trimming or deduplication. Ordinary lists acquire no placement-label restriction.
+
+An added section with an `off` reason stays visible with that reason, but neither mouse nor keyboard activation enters it or invokes its `render`. An enabled neighbouring section still works. This is UI behaviour, not a server permission.
+
 ```yaml
 module:    one module object — PlatformConsole {version, features, mount}; mount(root, opts) returns the page object
            (pc — the name of the page variable in the examples, not a second object) (ADR-0091 addendum (27) item 3)
@@ -184,6 +190,10 @@ The module's UI timestamp/date renderings use an explicit locale of `ru-RU` for 
 
 ### N1.6 The domain section — the late layer: introduced by lessons 8 and 10 (without ids of its own)
 
+The current `pending` view is a member-keyed count (`integer >= 0`) or `null` for an unreadable member row; it is not a list of edit descriptions. Counts and the separate `outcomes` arrays are displayed independently, including zero and unknown counts.
+
+Both domain loaders follow the opaque cursor of `GET /domain` under P/10-R004. The assembled view preserves all six per-member projections, required empty subsystem keys, complete contested claimant lists and global fields. Repeated conflict context is one conflict fact, not another member or another copy of the fact. Ordinary paginated reads promise no snapshot across changes; a failed continuation is not a complete successful read.
+
 The parts of N1.4 and N1.5 that the domain introduces are parts of P/07-01 and P/07-02 without ids of their own (the move plan of lesson 7, V5; as P/02.1
 N1.2b). The text was moved by the move of lessons 8–10 (stage B, commit 10; the move plan of lesson 8, § 5, row P/07 N1.6): the parts
 about the module from M11/8 N1.8 `module`, M11/11 N1.6 `declared` and the module description
@@ -275,6 +285,8 @@ N1.5 `forms`.
 ---
 
 ## N5 Acceptance
+
+The ADR-0129(18) checks read the current canonical P/07 module files. Declare fixture origins separately: a frozen wrapper is not the canonical module; an instrumented navigation return and a substituted shell-short module are not unchanged-module executions. Check path/query neighbours, safe-integer edges, lossless list edits, scoped worker identities, current pending counts, both paginated loaders and disabled-section input. J-P07-01 is a separate holder-fixture scope on the same corrected candidate. No old positive array, error, incomplete output, or aggregate test count closes the existing C6/A1/N5/P/07-07/08 debts.
 
 The lesson has no acceptance catalogue (the exception `P/07 no-acceptance`; the move plan of lesson 7, V2): the module is a library in the browser,
 the HTTP-TSV stand does not run it. The publication of the module byte for byte with the published files and the version `?v=1` (`?v=2` — 404) —
