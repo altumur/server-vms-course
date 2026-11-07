@@ -1,3 +1,5 @@
 date	sample	fix	languages
 2026-10-31	глава 6.9 новая	сценарии составлены чтением норм ADR-0095, сухого прогона реализацией нет; шаги операции — план README до ADR-0094 B1	all
 2026-11-05	forms P/06; acceptance/9/seams.tsv; req anchors	ADR-0125доп5: форма входов/отказов/констант,11этапов,36CALLшвовв9главах. Исходные203Н4строки+14gate сохранены278проекциями,3ячейки6.7/4прочих; единственнаяAPIправка — точноеименованиесуществующейRevisionMovedschema. Всеобычныесценарии/семьи/векторыпрежние,kitwholeнеобъявлен,SUT0	all
+2026-11-07	ADR-0129(17) ordinary P06 source; S08 separate	Memory CAS at retry is existing412 row moved key/index field /memory/cas, separate from step expectedVersion; same BatchMoved constrained at new response context. OPS_CONTROL_RETRIES counts5retries after original pass; process/old4seams exact; real retry HTTP/IO binding open.	all
+2026-11-07	ADR0129(23) SOURCE B / B29	Same-token operations iat/exp use own number codec; TableRow present stored stamp outside row Time uses existing garbled/index. No new case or executed raw-store probe.	all

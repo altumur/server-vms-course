@@ -26,14 +26,15 @@ the Architect's decision of 2026-10-25).
 
 ## The resource query and answer
 
+The numeric HTTP source is [P/05 OpenAPI](../../05-resource/spec/05-resource.api.openapi.yaml): the existing GET /events parameter schema fields, without a second default/limit registry.
+
 Moved from P/05 N1.3 (`query`, `cut`, `answer` and the paragraphs about `by`, copies, `truncated`, `partial`) without a change of behaviour: the resource
 executes them at itself, the merger — over the answers (EM-READ-33-01). The grammar of the query parameters and their refusals — the resource door,
 P/05 N1.3 (below this block) and N2; at the console door `from`, `to`, `limit` — the reader grammar of
 [the gate-and-pass contract](gate-and-pass.md) «Numeric query parameters» (C06-EVENTS-QUERY-LEXEME-162-01, the Architect's decision of 2026-10-27).
 
 ```yaml
-query:       from, to (seconds; default 0..1e12; the window from ≤ t < to, C05-QUERY-TO-OPEN-01), kind, subsystem, unit (<sub>/<id>; a bare id — a refusal), limit (1000; ceiling
-             10000), keep (newest | oldest; default newest), class (none — both classes), by (t | occurred; default t), late (only with by=occurred; an integer ≥ 0; default 3600);
+query:       from, to (seconds; defaults of P/05 OpenAPI GET /events; the window from ≤ t < to, C05-QUERY-TO-OPEN-01), kind, subsystem, unit (<sub>/<id>; a bare id — a refusal), limit (default and ceiling of that HTTP form), keep (newest | oldest; default newest), class (none — both classes), by (t | occurred; default t), late (only with by=occurred; an integer ≥ 0; default of that HTTP form);
              limit bounds both each resource and the merger's result; the merger asks the resources with the same
              query
 by:          by=occurred — a row without occurred uses t both in the filter and in the sort; buckets are read by t up to to + late: t is the writer's clock, a row about the past lies in the bucket of its write, late — how far the write could lag behind occurred; a row written later than to + late is not visible to the query (C05-QUERY-LATE-01, the Architect's decision of 2026-11-01, analysis of the VMS pass, question 8)
@@ -80,7 +81,7 @@ of its mirror neighbours ([P/05](../../05-resource/spec/05-resource.norms.md) N1
 
 ```
 1. ask the live resources in parallel (8 lanes, 3 s) with the same query (`query` above); at the console with a visibility filter (the grant
-   of the caller is narrower than view on *, step 5a) — with limit = the ceiling 10000, the common limit — after the filter (C06-EVENTS-VIEW-33-01)
+   of the caller is narrower than view on *, step 5a) — with limit = limit.maximum of the resource HTTP form, the common limit — after the filter (C06-EVENTS-VIEW-33-01)
 2. did not answer → incomplete[<server>] = did not answer; said not live → said <state>; a stale door row → silent;
    for each of them state gets «; <s> unreachable»; bucket copies of a silent resource in the answers of other resources
    are given out, and then state also gets «; <s> from mirror» (reconciliation of python and go M10/6–11, E23)

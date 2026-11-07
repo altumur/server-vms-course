@@ -1,0 +1,24 @@
+diff --git a/Platform/02-installer/vectors/canonical/expect/example-p1-snapshot-state.json b/Platform/02-installer/vectors/canonical/expect/example-p1-snapshot-state.json
+index 3c1a63869..498dece68 100644
+--- a/Platform/02-installer/vectors/canonical/expect/example-p1-snapshot-state.json
++++ b/Platform/02-installer/vectors/canonical/expect/example-p1-snapshot-state.json
+@@ -1 +1 @@
+-{"display":{"events":true,"form":[{"fields":["name","start","pass_secret","picture","server"]}],"unit":"unit","units":"unit","units_count":"unit"},"door":{"pass":[],"routes":[]},"events":{"older_epochs":"fenced"},"heartbeat":{"strings":[]},"lease":{"unconfirmed_max":"off"},"name":"probe","placement":{"capacity":{"base_mb":0,"default":4,"from":"capacity"},"constraint":"none","grows":false,"headroom":{"from":"headroom"},"place_by":"server","rebalance":{"dead_band":0.1},"requires":"none","servers":"shared","tie_break":"most-free-capacity","weight":{"default":1}},"rights":{"cluster_rows":false,"routes":{}},"secrets":{"readers":{}},"slot":{"prefix":"w"},"snapshot":["name","start","state.result","state.progress"],"tables":{},"unit":{"fields":[{"default":null,"fixed":false,"name":"name","required":true,"type":"string"},{"default":0,"fixed":false,"name":"start","required":false,"type":"int"},{"default":null,"fixed":false,"name":"pass_secret","required":false,"type":"string"},{"default":null,"fixed":false,"name":"picture","required":false,"type":"blob"},{"default":null,"fixed":false,"name":"server","required":false,"type":"string"}],"id":"name","rows":"counters","state":{"cursor":{"properties":{"at":{"type":"int"}},"type":"object"},"progress":{"properties":{"done":{"type":"int"}},"type":"object"},"result":{"properties":{"state":{"type":"string"}},"type":"object"}}},"worker":{"deletes":[],"exec":"/usr/lib/probe/worker","stop_timeout":20,"writes":[]}}
+\ No newline at end of file
++{"display":{"events":true,"form":[{"fields":["name","start","pass_secret","picture","server"]}],"unit":"unit","units":"unit","units_count":"unit"},"door":{"pass":[],"routes":[]},"events":{"older_epochs":"fenced"},"heartbeat":{"strings":[]},"lease":{"unconfirmed_max":"off"},"name":"probe","placement":{"capacity":{"base_mb":0,"default":4,"from":"capacity"},"constraint":"none","grows":false,"headroom":{"from":"headroom"},"place_by":"server","rebalance":{"dead_band":0.1},"requires":"none","servers":"shared","tie_break":"most-free-capacity","weight":{"default":1}},"rights":{"cluster_rows":false,"routes":{}},"secrets":{"readers":{}},"slot":{"prefix":"w"},"snapshot":["name","start","state.result","state.progress"],"tables":{},"unit":{"fields":[{"default":null,"fixed":false,"name":"name","required":true,"type":"string"},{"default":0,"fixed":false,"name":"start","required":false,"type":"int"},{"default":null,"fixed":false,"name":"pass_secret","required":false,"type":"string"},{"default":null,"fixed":false,"name":"picture","required":false,"type":"blob"},{"default":null,"fixed":false,"name":"server","required":false,"type":"string"}],"id":"name","rows":"counters","state":{"cursor":{"properties":{"at":{"type":"integer"}},"type":"object"},"progress":{"properties":{"done":{"type":"integer"}},"type":"object"},"result":{"properties":{"state":{"type":"string"}},"type":"object"}}},"worker":{"deletes":[],"exec":"/usr/lib/probe/worker","stop_timeout":20,"writes":[]}}
+\ No newline at end of file
+diff --git a/Platform/02-installer/vectors/canonical/inputs/p1-snapshot-state.subsystem.yaml b/Platform/02-installer/vectors/canonical/inputs/p1-snapshot-state.subsystem.yaml
+index 952006c08..da494237d 100644
+--- a/Platform/02-installer/vectors/canonical/inputs/p1-snapshot-state.subsystem.yaml
++++ b/Platform/02-installer/vectors/canonical/inputs/p1-snapshot-state.subsystem.yaml
+@@ -10,8 +10,8 @@ unit:
+     server: {type: string}
+   state:
+     result: {type: object, properties: {state: {type: string}}}
+-    cursor: {type: object, properties: {at: {type: int}}}
+-    progress: {type: object, properties: {done: {type: int}}}
++    cursor: {type: object, properties: {at: {type: integer}}}
++    progress: {type: object, properties: {done: {type: integer}}}
+ placement:
+   capacity: {from: capacity, default: 4}
+ worker: {exec: /usr/lib/probe/worker}

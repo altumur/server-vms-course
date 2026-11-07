@@ -3,7 +3,7 @@
 # of the member's agent; the canon of the door — the contract Platform/common/contracts/local-token-door.md (the role socket, identity, body,
 # TOKEN_BODY, TOKEN_WAIT, refusals «at the agent»), here — only the HTTP form: path, bodies, codes. Tag relay — chapter 9.2
 # (09.2-agent.norms.md): the relay door (RELAY=1) — POST /api/member/{member}, GET /api/carry/{member},
-# POST /api/tokens/{member}/{sub}/{kind}. The process's own doors — 4 operations, each has an operationId.
+# POST /api/tokens/{member}/{sub}/{kind}, plus the six forwarded GETs of chapter 9.2 N2 below. Ten operations are listed; the four existing operationIds remain unchanged.
 # The bodies that the relay carries, and the bodies of the holder that the agent returns «as they came», — by a relative $ref to the OpenAPI
 # of the process domain (../../08-domain/spec/08-domain.api.openapi.yaml; plan 9 V3: one form per wire, no copies):
 # Publication, Carry, HolderAsk, Refusal, TokenRefusal, Deposed, StandbyBody, RequestId, the parameters Member, Sub, Kind,
@@ -143,16 +143,20 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/RelayCarry'}
         '400':
-          description: 'The body is not a publication, reason not_a_publication; the body is chunked (P/09.2 N2, N4; as at the holder''s door, P/08.3 N4)'
+          description: 'Two branches (P/09.2 N2, N4): the body read fails before accept (a chunked body) — without reason; the body was read and is not
+            a publication — reason not_a_publication (as at the holder''s door, P/08.3 N4)'
           content:
             application/json:
-              schema: {$ref: '#/components/schemas/RelayRefusal'}
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RelayRefusalPlain'
+                  - $ref: '#/components/schemas/RelayRefusalPublication'
         '401':
           description: 'Signature, reason — a word of the agent signature contract (the key — from keys of the batch answer); a stranger with a wrong
             signature by its own key (P/09.2 N2, N3)'
           content:
             application/json:
-              schema: {$ref: '#/components/schemas/RelayRefusal'}
+              schema: {$ref: '#/components/schemas/RelayRefusalSignature'}
         '403':
           $ref: '#/components/responses/RelayForbidden'
         '405':
@@ -162,19 +166,25 @@ paths:
             not_ready (the report intake contract; P/09.2 N2, N4)'
           content:
             application/json:
-              schema: {$ref: '#/components/schemas/RelayRefusal'}
+              schema: {$ref: '#/components/schemas/RelayRefusalAccept'}
         '413':
-          description: 'Content-Length larger than BODY_LIMIT (16 MiB) — before reading the body, without reason, the connection is closed; or the outcome
+          description: 'Content-Length larger than BODY_LIMIT — before reading the body, without reason, the connection is closed; or the outcome
             of «accept» — reason whole_too_large (P/09.2 N2, N4)'
           content:
             application/json:
-              schema: {$ref: '#/components/schemas/RelayRefusal'}
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RelayRefusalPlain'
+                  - $ref: '#/components/schemas/RelayRefusalWhole'
         '503':
           description: '«the relay has nothing from the domain for <member> yet» — before the first batch of the holder, before the signature check, without a knock, and to a stranger; or
             the outcome of «accept» — reason rev_exhausted (P/09.2 N2, N4). Retry-After is not set.'
           content:
             application/json:
-              schema: {$ref: '#/components/schemas/RelayRefusal'}
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RelayNothingBody'
+                  - $ref: '#/components/schemas/RelayRefusalExhausted'
   /api/carry/{member}:
     servers:
       - url: '{origin}'
@@ -201,7 +211,7 @@ paths:
           description: 'Signature, reason — a word of the agent signature contract (the key — from keys of the batch answer; P/09.2 N2 «as above»)'
           content:
             application/json:
-              schema: {$ref: '#/components/schemas/RelayRefusal'}
+              schema: {$ref: '#/components/schemas/RelayRefusalSignature'}
         '403':
           $ref: '#/components/responses/RelayForbidden'
         '405':
@@ -246,6 +256,434 @@ paths:
           content:
             application/json:
               schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+  /api/members/{member}/{part}:
+    servers:
+      - url: '{origin}'
+        description: 'The relay door — an agent with RELAY=1 (RELAY_HOST, default 0.0.0.0; RELAY_PORT, default 8446; P/09.2
+          N1.1 door); https:// of class signed (P/09.2 N1.6).'
+        variables:
+          origin: {default: 'https://localhost:8446', description: 'Origin without a trailing /; an example address, not a setting.'}
+    parameters:
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Member
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Part
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/AgentSignature
+    get:
+      tags:
+      - relay
+      operationId: relayMemberRow
+      summary: 'Forward to the holder: Row of a part at the request of a member (the report intake contract; ADR-0113)'
+      description: 'P/09.2 N2: keep the member signature and upstream answer as received. The holder success form belongs to P/08.
+        The members row may also come from the existing signed-row memory under N1.4; no other reply is synthesized.'
+      responses:
+        '200':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/HolderMembersResponse
+        '401':
+          description: Own relay signature refusal uses RelayRefusalSignature; a holder refusal is passed through unchanged under
+            the owner operation.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayRefusalSignature'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        '403':
+          description: '«<member> does not reach the domain through this relay: the domain''s topology says so, not the relay»
+            — a stranger with a valid signature by its own key is remembered by a knock (P/09.2 N3); there is no key — accepted
+            before the keys (P/09.2 N2, N4) A holder refusal is passed through unchanged under the owner operation.'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayRefusalPlain'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        '405':
+          $ref: '#/components/responses/RelayMethod'
+        '429':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Busy
+        '503':
+          description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
+            503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
+            admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or
+            knock for the GET case (P/09.2 N1.4, N2; review M1). That own branch has no Retry-After. A holder 503 is passed through
+            with its original headers and body; it is not rewritten as RelayNothingBody. Under N1.4 rows, if the holder does not
+            answer and no signed row exists in memory, return the same 503; a cached signed row follows the existing 200 branch.'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayNothingBody'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        default:
+          description: Other answers of the corresponding holder operation, including their status, Content-Type, ETag, X-Unreachable
+            and body, are passed as received without parsing or wrapping (P/09.2 N2; forwarding answer). This adds no holder status
+            or body form; the owner operation remains authoritative.
+  /api/anywhere/{member}:
+    servers:
+      - url: '{origin}'
+        description: 'The relay door — an agent with RELAY=1 (RELAY_HOST, default 0.0.0.0; RELAY_PORT, default 8446; P/09.2
+          N1.1 door); https:// of class signed (P/09.2 N1.6).'
+        variables:
+          origin: {default: 'https://localhost:8446', description: 'Origin without a trailing /; an example address, not a setting.'}
+    parameters:
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Member
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/AgentSignature
+    get:
+      tags:
+      - relay
+      operationId: relayAnywhereBody
+      summary: 'Forward to the holder: Body of the anywhere summary (chapter 8.4 N1.3)'
+      description: 'P/09.2 N2: keep the member signature and upstream answer as received. The holder success form belongs to P/08.
+        The members row may also come from the existing signed-row memory under N1.4; no other reply is synthesized.'
+      responses:
+        '200':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/HolderAnywhereResponse
+        '401':
+          description: Own relay signature refusal uses RelayRefusalSignature; a holder refusal is passed through unchanged under
+            the owner operation.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayRefusalSignature'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        '403':
+          description: '«<member> does not reach the domain through this relay: the domain''s topology says so, not the relay»
+            — a stranger with a valid signature by its own key is remembered by a knock (P/09.2 N3); there is no key — accepted
+            before the keys (P/09.2 N2, N4) A holder refusal is passed through unchanged under the owner operation.'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayRefusalPlain'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        '405':
+          $ref: '#/components/responses/RelayMethod'
+        '429':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Busy
+        '502':
+          description: 'The holder did not answer: did not answer, by P/09.2 N2 and the existing forwarding contract answer. This
+            is the forwarding outcome, not a holder or local relay refusal.'
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/DomainRefusal
+                - properties:
+                    error:
+                      const: did not answer
+        '503':
+          description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
+            503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
+            admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or
+            knock for the GET case (P/09.2 N1.4, N2; review M1). That own branch has no Retry-After. A holder 503 is passed through
+            with its original headers and body; it is not rewritten as RelayNothingBody.'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayNothingBody'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        default:
+          description: Other answers of the corresponding holder operation, including their status, Content-Type, ETag, X-Unreachable
+            and body, are passed as received without parsing or wrapping (P/09.2 N2; forwarding answer). This adds no holder status
+            or body form; the owner operation remains authoritative.
+  /api/topology/{member}:
+    servers:
+      - url: '{origin}'
+        description: 'The relay door — an agent with RELAY=1 (RELAY_HOST, default 0.0.0.0; RELAY_PORT, default 8446; P/09.2
+          N1.1 door); https:// of class signed (P/09.2 N1.6).'
+        variables:
+          origin: {default: 'https://localhost:8446', description: 'Origin without a trailing /; an example address, not a setting.'}
+    parameters:
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Member
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/AgentSignature
+    get:
+      tags:
+      - relay
+      operationId: relayTopologyBody
+      summary: 'Forward to the holder: Body of the member topology {doc, via} at a new sha256 of the topology field of the answer
+        (chapter 8.3 N1.2 carry; ADR-0113 addendum (47) item 3)'
+      description: 'P/09.2 N2: keep the member signature and upstream answer as received. The holder success form belongs to P/08.
+        The members row may also come from the existing signed-row memory under N1.4; no other reply is synthesized.'
+      responses:
+        '200':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/HolderTopologyResponse
+        '401':
+          description: Own relay signature refusal uses RelayRefusalSignature; a holder refusal is passed through unchanged under
+            the owner operation.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayRefusalSignature'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        '403':
+          description: '«<member> does not reach the domain through this relay: the domain''s topology says so, not the relay»
+            — a stranger with a valid signature by its own key is remembered by a knock (P/09.2 N3); there is no key — accepted
+            before the keys (P/09.2 N2, N4) A holder refusal is passed through unchanged under the owner operation.'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayRefusalPlain'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        '405':
+          $ref: '#/components/responses/RelayMethod'
+        '429':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Busy
+        '502':
+          description: 'The holder did not answer: did not answer, by P/09.2 N2 and the existing forwarding contract answer. This
+            is the forwarding outcome, not a holder or local relay refusal.'
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/DomainRefusal
+                - properties:
+                    error:
+                      const: did not answer
+        '503':
+          description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
+            503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
+            admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or
+            knock for the GET case (P/09.2 N1.4, N2; review M1). That own branch has no Retry-After. A holder 503 is passed through
+            with its original headers and body; it is not rewritten as RelayNothingBody.'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayNothingBody'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        default:
+          description: Other answers of the corresponding holder operation, including their status, Content-Type, ETag, X-Unreachable
+            and body, are passed as received without parsing or wrapping (P/09.2 N2; forwarding answer). This adds no holder status
+            or body form; the owner operation remains authoritative.
+  /api/backup-part/{member}/{part}:
+    servers:
+      - url: '{origin}'
+        description: 'The relay door — an agent with RELAY=1 (RELAY_HOST, default 0.0.0.0; RELAY_PORT, default 8446; P/09.2
+          N1.1 door); https:// of class signed (P/09.2 N1.6).'
+        variables:
+          origin: {default: 'https://localhost:8446', description: 'Origin without a trailing /; an example address, not a setting.'}
+    parameters:
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Member
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Part
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/AgentSignature
+    get:
+      tags:
+      - relay
+      operationId: relayBackupPart
+      summary: 'Forward to the holder: Part of the backup for a keeper (chapter 8.8 N1.5a)'
+      description: 'P/09.2 N2: keep the member signature and upstream answer as received. The holder success form belongs to P/08.
+        The members row may also come from the existing signed-row memory under N1.4; no other reply is synthesized.'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/BackupPartRevision
+      responses:
+        '200':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/HolderBackupPartResponse
+        '401':
+          description: Own relay signature refusal uses RelayRefusalSignature; a holder refusal is passed through unchanged under
+            the owner operation.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayRefusalSignature'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        '403':
+          description: '«<member> does not reach the domain through this relay: the domain''s topology says so, not the relay»
+            — a stranger with a valid signature by its own key is remembered by a knock (P/09.2 N3); there is no key — accepted
+            before the keys (P/09.2 N2, N4) A holder refusal is passed through unchanged under the owner operation.'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayRefusalPlain'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        '405':
+          $ref: '#/components/responses/RelayMethod'
+        '429':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Busy
+        '502':
+          description: 'The holder did not answer: did not answer, by P/09.2 N2 and the existing forwarding contract answer. This
+            is the forwarding outcome, not a holder or local relay refusal.'
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/DomainRefusal
+                - properties:
+                    error:
+                      const: did not answer
+        '503':
+          description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
+            503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
+            admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or
+            knock for the GET case (P/09.2 N1.4, N2; review M1). That own branch has no Retry-After. A holder 503 is passed through
+            with its original headers and body; it is not rewritten as RelayNothingBody.'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayNothingBody'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        default:
+          description: Other answers of the corresponding holder operation, including their status, Content-Type, ETag, X-Unreachable
+            and body, are passed as received without parsing or wrapping (P/09.2 N2; forwarding answer). This adds no holder status
+            or body form; the owner operation remains authoritative.
+  /api/book/{member}/{sub}/{book}:
+    servers:
+      - url: '{origin}'
+        description: 'The relay door — an agent with RELAY=1 (RELAY_HOST, default 0.0.0.0; RELAY_PORT, default 8446; P/09.2
+          N1.1 door); https:// of class signed (P/09.2 N1.6).'
+        variables:
+          origin: {default: 'https://localhost:8446', description: 'Origin without a trailing /; an example address, not a setting.'}
+    parameters:
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Member
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/BookSub
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Book
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/AgentSignature
+    get:
+      tags:
+      - relay
+      operationId: relayBookAll
+      summary: 'Forward to the holder: Head of the book to "*" (chapter 8.5 N1.4)'
+      description: 'P/09.2 N2: keep the member signature and upstream answer as received. The holder success form belongs to P/08.
+        The members row may also come from the existing signed-row memory under N1.4; no other reply is synthesized.'
+      responses:
+        '200':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/HolderBookHeadResponse
+        '401':
+          description: Own relay signature refusal uses RelayRefusalSignature; a holder refusal is passed through unchanged under
+            the owner operation.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayRefusalSignature'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        '403':
+          description: '«<member> does not reach the domain through this relay: the domain''s topology says so, not the relay»
+            — a stranger with a valid signature by its own key is remembered by a knock (P/09.2 N3); there is no key — accepted
+            before the keys (P/09.2 N2, N4) A holder refusal is passed through unchanged under the owner operation.'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayRefusalPlain'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        '405':
+          $ref: '#/components/responses/RelayMethod'
+        '429':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Busy
+        '502':
+          description: 'The holder did not answer: did not answer, by P/09.2 N2 and the existing forwarding contract answer. This
+            is the forwarding outcome, not a holder or local relay refusal.'
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/DomainRefusal
+                - properties:
+                    error:
+                      const: did not answer
+        '503':
+          description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
+            503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
+            admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or
+            knock for the GET case (P/09.2 N1.4, N2; review M1). That own branch has no Retry-After. A holder 503 is passed through
+            with its original headers and body; it is not rewritten as RelayNothingBody.'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayNothingBody'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        default:
+          description: Other answers of the corresponding holder operation, including their status, Content-Type, ETag, X-Unreachable
+            and body, are passed as received without parsing or wrapping (P/09.2 N2; forwarding answer). This adds no holder status
+            or body form; the owner operation remains authoritative.
+  /api/book/{member}/{sub}/{book}/{part}:
+    servers:
+      - url: '{origin}'
+        description: 'The relay door — an agent with RELAY=1 (RELAY_HOST, default 0.0.0.0; RELAY_PORT, default 8446; P/09.2
+          N1.1 door); https:// of class signed (P/09.2 N1.6).'
+        variables:
+          origin: {default: 'https://localhost:8446', description: 'Origin without a trailing /; an example address, not a setting.'}
+    parameters:
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Member
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/BookSub
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Book
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Part
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/AgentSignature
+    get:
+      tags:
+      - relay
+      operationId: relayBookAllPart
+      summary: 'Forward to the holder: Part of the book to "*" (chapter 8.5 N1.4)'
+      description: 'P/09.2 N2: keep the member signature and upstream answer as received. The holder success form belongs to P/08.
+        The members row may also come from the existing signed-row memory under N1.4; no other reply is synthesized.'
+      responses:
+        '200':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/HolderBookPartResponse
+        '401':
+          description: Own relay signature refusal uses RelayRefusalSignature; a holder refusal is passed through unchanged under
+            the owner operation.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayRefusalSignature'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        '403':
+          description: '«<member> does not reach the domain through this relay: the domain''s topology says so, not the relay»
+            — a stranger with a valid signature by its own key is remembered by a knock (P/09.2 N3); there is no key — accepted
+            before the keys (P/09.2 N2, N4) A holder refusal is passed through unchanged under the owner operation.'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayRefusalPlain'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        '405':
+          $ref: '#/components/responses/RelayMethod'
+        '429':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Busy
+        '502':
+          description: 'The holder did not answer: did not answer, by P/09.2 N2 and the existing forwarding contract answer. This
+            is the forwarding outcome, not a holder or local relay refusal.'
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/DomainRefusal
+                - properties:
+                    error:
+                      const: did not answer
+        '503':
+          description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
+            503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
+            admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or
+            knock for the GET case (P/09.2 N1.4, N2; review M1). That own branch has no Retry-After. A holder 503 is passed through
+            with its original headers and body; it is not rewritten as RelayNothingBody.'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RelayNothingBody'
+                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
+        default:
+          description: Other answers of the corresponding holder operation, including their status, Content-Type, ETag, X-Unreachable
+            and body, are passed as received without parsing or wrapping (P/09.2 N2; forwarding answer). This adds no holder status
+            or body form; the owner operation remains authoritative.
+        '404':
+          description: 'reason: empty_part — there is no row of the part, the head of the current term is written, the copy is
+            removed; the head is not written — 503 unavailable, the copy is kept (ADR-0113 addendum (47) item 1); not_a_book —
+            the book is not to "*"; without reason — not a member (P/08.3 N2).'
+          content:
+            application/json:
+              schema:
+                $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
 components:
   responses:
     InvalidReply:
@@ -264,7 +702,7 @@ components:
         a stranger with a valid signature by its own key is remembered by a knock (P/09.2 N3); there is no key — accepted before the keys (P/09.2 N2, N4)'
       content:
         application/json:
-          schema: {$ref: '#/components/schemas/RelayRefusal'}
+          schema: {$ref: '#/components/schemas/RelayRefusalPlain'}
     RelayNothingYet:
       description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global 503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or knock for the GET case (P/09.2 N1.4, N2; review M1).'
       content:
@@ -274,20 +712,68 @@ components:
       description: 'A wrong method on a path of the relay door — 405 (P/09.2 N2)'
       content:
         application/json:
-          schema: {$ref: '#/components/schemas/RelayRefusal'}
+          schema: {$ref: '#/components/schemas/RelayRefusalPlain'}
   schemas:
     RelayRefusal:
       type: object
-      required: [error]
+      required: [error, detail]
       additionalProperties: false
-      description: 'A refusal of the relay door (P/09.2 N2): the status and reason are normative; detail — the words of the implementation, except the texts
-        of 403 and 503, which the norm names. reason — a word of the report intake contract (not_a_publication, same_sent_at, rebase,
-        not_ready, whole_too_large, rev_exhausted) or of the agent signature contract at 401; at 413 of the body, 405 and both 403 there is none.'
+      description: 'A refusal of the relay door (P/09.2 N2): the common closed form; each status names its branch below. The status and reason are
+        normative; detail is required — the words of the implementation, except the texts of 403 and 503, which the norm names. reason — a word of
+        the report intake contract (not_a_publication, same_sent_at, rebase, not_ready, whole_too_large, rev_exhausted) or of the agent signature
+        contract at 401; at the early 400 of a chunked body, the early 413 of the body, 405 and both 403 there is none.'
       properties:
         error: {const: refused}
         detail: {type: string}
         reason: {type: string}
         send_row: {const: true, description: 'A collection «from nothing» is under way: send your row of the section in the field row (P/08.8 N1.8a).'}
+    RelayRefusalPlain:
+      description: 'A refusal of the relay door without reason (P/09.2 N2): the early 400 of a chunked body and the early 413 of Content-Length, both
+        before accept; 405; both 403.'
+      unevaluatedProperties: false
+      allOf:
+        - $ref: '#/components/schemas/RelayRefusal'
+        - not: {required: [reason]}
+    RelayRefusalPublication:
+      description: 'The read body is not a publication (P/09.2 N2; the report intake contract): 400 with reason not_a_publication.'
+      unevaluatedProperties: false
+      allOf:
+        - $ref: '#/components/schemas/RelayRefusal'
+        - required: [reason]
+          properties:
+            reason: {const: not_a_publication}
+    RelayRefusalSignature:
+      description: 'The signature check (P/09.2 N2): 401, reason — a word of the agent signature contract «Check and refusal words».'
+      unevaluatedProperties: false
+      allOf:
+        - $ref: '#/components/schemas/RelayRefusal'
+        - required: [reason]
+          properties:
+            reason: {enum: [no_signature, not_a_signature, out_of_window, bad_signature]}
+    RelayRefusalAccept:
+      description: 'The outcome of «accept» over the memory of the relay (P/09.2 N2; the report intake contract): 409 with one of three reasons.'
+      unevaluatedProperties: false
+      allOf:
+        - $ref: '#/components/schemas/RelayRefusal'
+        - required: [reason]
+          properties:
+            reason: {enum: [same_sent_at, rebase, not_ready]}
+    RelayRefusalWhole:
+      description: 'The outcome of «accept»: the whole generation of the copy is larger than BODY_LIMIT (P/09.2 N2): 413 with reason whole_too_large.'
+      unevaluatedProperties: false
+      allOf:
+        - $ref: '#/components/schemas/RelayRefusal'
+        - required: [reason]
+          properties:
+            reason: {const: whole_too_large}
+    RelayRefusalExhausted:
+      description: 'The outcome of «accept»: the generation number of the copy is exhausted (P/09.2 N2): 503 with reason rev_exhausted.'
+      unevaluatedProperties: false
+      allOf:
+        - $ref: '#/components/schemas/RelayRefusal'
+        - required: [reason]
+          properties:
+            reason: {const: rev_exhausted}
     LocalAsk:
       type: object
       required: [request_id, ref]

@@ -3,9 +3,9 @@
  "type": "object",
  "properties": {
   "form": {
-   "description": "number of the view form; currently 1",
+   "description": "The one current view form: exact row text 1; its key is canonical/1.",
    "type": "string",
-   "pattern": "^(?:[1-9][0-9]*)$",
+   "pattern": "^(?:1)$",
    "x-codec": [
     "string"
    ]
@@ -49,7 +49,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "extra fields: the reader does not read them and does not refuse because of them, the writer does not write them (a tolerant reader, like the manifest row P/02.3 N1.5)",
+  "description": "Extra wrapper names exceed the existing x-max-names=0 bound at both writer and reader; the existing whole-wrapper unreadable outcome applies.",
   "x-codec": [
    "any"
   ]
@@ -865,5 +865,6 @@
   "writer": {
    "x-max-names": 0
   }
- }
+ },
+ "allOf": [{"$ref": "#/$defs/writer"}]
 }

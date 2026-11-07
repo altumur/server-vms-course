@@ -13,3 +13,5 @@ place	layer	word	value
 /$defs/common.time	3	x-time	true
 /$defs/common.uint53	3	x-integer	true
 /$defs/writer	3	x-max-names	0
+/properties/at	3	x-codec	["time"]
+/properties/since	3	x-codec	["time"]

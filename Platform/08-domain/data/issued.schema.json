@@ -17,10 +17,10 @@
    ]
   },
   "exp": {
-   "$ref": "#/$defs/common.time",
-   "description": "exp of the token",
+   "type": "number",
+   "description": "exp of the token Copied from the same token as a finite number under P/01.1 R012; not a common row-Time precision field.",
    "x-codec": [
-    "time"
+    "number"
    ]
   },
   "member": {

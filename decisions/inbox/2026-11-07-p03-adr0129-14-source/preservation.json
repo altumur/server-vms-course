@@ -1,0 +1,1143 @@
+{
+  "base": "c47f9ce53e6c0893af5182cb48b536886fa827f0",
+  "old_base": "fd35c184e547f1294c58d3cb82f0b230ab3f02e6",
+  "source_branch": "spec103/p03-adr0129-14",
+  "scope": "approved73 paths + constants23 supplement (same paths)",
+  "payload_file_count": 68,
+  "payload_paths": [
+    "Platform/03-worker/acceptance/2/README.md",
+    "Platform/03-worker/acceptance/2/seams.tsv",
+    "Platform/03-worker/acceptance/4/README.md",
+    "Platform/03-worker/acceptance/4/seams.tsv",
+    "Platform/03-worker/acceptance/5/README.md",
+    "Platform/03-worker/acceptance/5/seams.tsv",
+    "Platform/03-worker/acceptance/6/README.md",
+    "Platform/03-worker/data/contenders.layers.tsv",
+    "Platform/03-worker/data/contenders.schema.json",
+    "Platform/03-worker/data/epoch.schema.json",
+    "Platform/03-worker/data/heartbeats.outcomes.tsv",
+    "Platform/03-worker/data/heartbeats.schema.json",
+    "Platform/03-worker/data/holds.schema.json",
+    "Platform/03-worker/data/slots.schema.json",
+    "Platform/03-worker/data/state.schema.json",
+    "Platform/03-worker/forms/README.md",
+    "Platform/03-worker/forms/contender-writer.machine.yaml",
+    "Platform/03-worker/forms/refusals.tsv",
+    "Platform/03-worker/forms/row-write-bindings.md",
+    "Platform/03-worker/forms/runtime-constants.tsv",
+    "Platform/03-worker/forms/slot-capture.tsv",
+    "Platform/03-worker/forms/stages.tsv",
+    "Platform/03-worker/lifecycle.md",
+    "Platform/03-worker/ru/03-worker.md",
+    "Platform/03-worker/ru/acceptance/2/README.md",
+    "Platform/03-worker/ru/acceptance/4/README.md",
+    "Platform/03-worker/ru/acceptance/5/README.md",
+    "Platform/03-worker/ru/acceptance/6/README.md",
+    "Platform/03-worker/ru/forms/README.md",
+    "Platform/03-worker/ru/forms/row-write-bindings.md",
+    "Platform/03-worker/ru/lifecycle.md",
+    "Platform/03-worker/ru/spec/03-worker.README.md",
+    "Platform/03-worker/ru/spec/03.1-worker.norms.md",
+    "Platform/03-worker/ru/spec/03.2-worker.norms.md",
+    "Platform/03-worker/ru/spec/03.3-worker.norms.md",
+    "Platform/03-worker/ru/spec/03.4-worker.norms.md",
+    "Platform/03-worker/ru/spec/03.5-worker.norms.md",
+    "Platform/03-worker/ru/spec/03.6-worker.norms.md",
+    "Platform/03-worker/ru/spec/03.7-worker.norms.md",
+    "Platform/03-worker/spec/03-worker.README.md",
+    "Platform/03-worker/spec/03.1-worker.norms.md",
+    "Platform/03-worker/spec/03.2-worker.norms.md",
+    "Platform/03-worker/spec/03.3-worker.norms.md",
+    "Platform/03-worker/spec/03.4-worker.norms.md",
+    "Platform/03-worker/spec/03.5-worker.norms.md",
+    "Platform/03-worker/spec/03.6-worker.norms.md",
+    "Platform/03-worker/spec/03.7-worker.norms.md",
+    "Platform/common/contracts/env-file.md",
+    "Platform/common/contracts/observation.md",
+    "Platform/common/contracts/row-check.md",
+    "Platform/common/contracts/slot.md",
+    "Platform/common/ru/contracts/env-file.md",
+    "Platform/common/ru/contracts/observation.md",
+    "Platform/common/ru/contracts/row-check.md",
+    "Platform/common/ru/contracts/slot.md",
+    "Platform/common/ru/vectors/row-check/README.md",
+    "Platform/common/ru/vectors/slot/README.md",
+    "Platform/common/vectors/family-read/03.tsv",
+    "Platform/common/vectors/row-check/README.md",
+    "Platform/common/vectors/row-check/state.tsv",
+    "Platform/common/vectors/slot/README.md",
+    "Platform/common/vectors/slot/cases.tsv",
+    "decisions/adr-norms.tsv",
+    "decisions/journal/platform/03-worker/corrections-2.tsv",
+    "decisions/journal/platform/03-worker/corrections-4.tsv",
+    "decisions/journal/platform/03-worker/corrections-5.tsv",
+    "decisions/journal/platform/03-worker/corrections-6.tsv",
+    "ХОД-Спецификация.md"
+  ],
+  "protected_files": [
+    {
+      "path": "skills/lesson-spec/scripts/check_constants.py",
+      "git_blob": "eb86e8ab53d2211081e7b54ba24f778c2d274c95",
+      "sha256": "85e07be713739917da9104d236cdb5d91690b7d35d4a49ac38436fcb95def2f0"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/check_forms.py",
+      "git_blob": "7ebbf22fa214779af4205b9df0d282647e0dc4a8",
+      "sha256": "e9696b436c5eefe4514b59b7e3156f34fa2c8a4d2a22f243246bc7cc67025e18"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/test_check_constants.py",
+      "git_blob": "9f387ee58f73e6ab6b7de36fa07cf2539ba4258f",
+      "sha256": "ebd13d0a68c34b621b43f68c81ad018979787b392459e9cf272d112f7dd5a37f"
+    },
+    {
+      "path": "skills/lesson-spec/scripts/test_check_forms.py",
+      "git_blob": "ae8c92d232dd61d89384e4b0dca14f36dfac6edf",
+      "sha256": "d6f479e41e503ddd78cd001c2186503f586abf44fdc0b9e8e3d7c95d6adb8d0c"
+    },
+    {
+      "path": "tools/normgen/gen_flags.py",
+      "git_blob": "47e88d51281ac7588b713adb60cd82b77b6a7a9a",
+      "sha256": "d44d27bbc7c2c054433209b563538d6628a4e9af26b9cb64d32dcf09ce271f6a"
+    },
+    {
+      "path": "tools/normgen/test_gen_flags_inputs.py",
+      "git_blob": "605bed54564ac3f41efe1eafc8bd0664760bc6a6",
+      "sha256": "b6647138e5d99d2ea07e7a21b6127f3d4a4f913a105b5764f97a5a49b8648d21"
+    },
+    {
+      "path": "Platform/03-worker/README.md",
+      "git_blob": "3d1a95f9c9880371dfa0473e391634bf7e282c22",
+      "sha256": "66eaf5521c10000401beea1fb9540e5c756733d78c70bfcaf1675ce650824cf8"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/2/scenarios.tsv",
+      "git_blob": "e9aa5abf81fd82354aee466b68b2f795bd08e94b",
+      "sha256": "4251a1be4a8a1c5ba3febd3c37fbc469beb17d7de07d43f738ffb91f7e186d73"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/3/scenarios.tsv",
+      "git_blob": "94deb42b79370a28fa018adec12825dff909ea6a",
+      "sha256": "998544947d5eab9841100bea402914b43fc7f751077c5dc735a0f94c793acb63"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/4/scenarios.tsv",
+      "git_blob": "728e1a2356e849ac7d347354e7a7b5e9f4087115",
+      "sha256": "4586c2428cfa384b7aaf10b1951918e031b0f6df5df52842357de2ea93316b70"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/6/scenarios.tsv",
+      "git_blob": "d60345b2fe4580f44f086b1e0d56120fe1bf25a7",
+      "sha256": "65a3a6bbabe1529908b164baecdd71f2367888b84ae08f7e8ea46ae9c3fe2471"
+    },
+    {
+      "path": "Platform/03-worker/acceptance/6/seams.tsv",
+      "git_blob": "08a3055c2f6164bf67d8730cc003457cf5721732",
+      "sha256": "8962b7da77bb5cbe3e460bc8026046694bde0d900d6774c8df6277d2a81f7bfe"
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.outcomes.tsv",
+      "git_blob": "7397d50c39a2ccbdd6e21b4d798d7c2b884e86a8",
+      "sha256": "c3fb8bb35bec1aa6bd2e9f6fb9a49e40806c317d573b07a759813965164a2ebf"
+    },
+    {
+      "path": "Platform/03-worker/data/epoch.layers.tsv",
+      "git_blob": "bec2127fbb17f7d351ec87611b5de11d46e6947f",
+      "sha256": "e0069bfc568b74dac723006f5b93513c138585c1b972413eaa8a3283f0763810"
+    },
+    {
+      "path": "Platform/03-worker/data/epoch.outcomes.tsv",
+      "git_blob": "40a3b36b3ff84c5598f9cce40a41f076f2ae588b",
+      "sha256": "4e0cc3675d86c33e6b7107d27ce40fed3b48b2e5e8e8b3aab1aff81489689f49"
+    },
+    {
+      "path": "Platform/03-worker/data/heartbeats.layers.tsv",
+      "git_blob": "b3f50efed3de042bd5038c77446e2182b0f4fbe5",
+      "sha256": "0912cbdf0d7e15c86d9ce2584734ab0e08cd1058e29af664870a3dd1ab002b10"
+    },
+    {
+      "path": "Platform/03-worker/data/holds.layers.tsv",
+      "git_blob": "15ce74f8b3f0516a42906fb2348dc2098415eb7d",
+      "sha256": "414980ecee234ca8e10bc2253dfc454a85d1b068c66797c8869eceb1c0b516c1"
+    },
+    {
+      "path": "Platform/03-worker/data/holds.outcomes.tsv",
+      "git_blob": "6d38c24e9fdf15b365045cdca643f2ce7a9ca13b",
+      "sha256": "2c3e875368696b39ba895929f587f348f684779a0e9b964ac63c1479c77b2442"
+    },
+    {
+      "path": "Platform/03-worker/data/slots.layers.tsv",
+      "git_blob": "57caa0128fc7b288e94e339fda453d57ef048849",
+      "sha256": "ba88093c917c33390b47b633d70612c886b9e059967bc85902c88bc37ed6b24d"
+    },
+    {
+      "path": "Platform/03-worker/data/slots.outcomes.tsv",
+      "git_blob": "253e742a89335c664c24a92fcc0fde9bbe2df396",
+      "sha256": "fa42c3d306cd8a5f0503655c4dc76e0221f47480cd2fddb339b90e290920fb66"
+    },
+    {
+      "path": "Platform/03-worker/data/state.layers.tsv",
+      "git_blob": "26320be7b1ff49a162bf29f531b8f31895c617e2",
+      "sha256": "a9cbd55f87c9275d8e81c39f6eeb0187572311eefb826a60161b06368510b53f"
+    },
+    {
+      "path": "Platform/03-worker/data/state.outcomes.tsv",
+      "git_blob": "f0f9877fa1f24c63a154fda6e5711ea64e2a5283",
+      "sha256": "79e3cf7137e299305c719fa2b5c865d5b0c3e27f7a1c933279fbb78486189b0b"
+    },
+    {
+      "path": "Platform/03-worker/forms/contender-writer.traces.tsv",
+      "git_blob": "b8d7b4aabfdd5bcefadd7b823705c53d9804a6db",
+      "sha256": "ebd049d8fbe70cb530f75521c16479075c15d87f72c84db9dfc206e20eac7aa8"
+    },
+    {
+      "path": "Platform/03-worker/forms/daemon-flags.tsv",
+      "git_blob": "7d5a426c66ee23e63e340f24b4cb5af4124755aa",
+      "sha256": "59ffb82822b002061ab0beffd079b65a4a623cf85cd742f740f3c07d4488db68"
+    },
+    {
+      "path": "Platform/03-worker/forms/row-write-bindings.tsv",
+      "git_blob": "07191ff3efe48ad2930feb6a413476c8ae0b18c2",
+      "sha256": "d7d63acc0efc2420c83d4704638e4f6e380f0cd2cec073219ee2cf79830b7afc"
+    },
+    {
+      "path": "Platform/03-worker/forms/token-cache.machine.yaml",
+      "git_blob": "aa94e00f24aeedb59273e265c4bed54624646fad",
+      "sha256": "426cb57b63844c4e61a8e5cfbfe028af2b47617152cecbb6cfacf6bf0a1cccbc"
+    },
+    {
+      "path": "Platform/03-worker/forms/token-cache.traces.tsv",
+      "git_blob": "aa8ba7fae983cb5ca5e4dcb3202fdea2e69de22d",
+      "sha256": "2ee43d96c1811e01b28305d0a00196f1e39f6b71510a98ba5cbb3236319ea11c"
+    },
+    {
+      "path": "Platform/common/contracts/request-mark.md",
+      "git_blob": "f00e8fe202fe4fc6f5a6367c7a6cac816bb32ea7",
+      "sha256": "3872c50d54d01555536b3e44be3c69d362e14b9615e590766962d673de0a3b70"
+    },
+    {
+      "path": "Platform/common/contracts/sealing.md",
+      "git_blob": "0e3050f30ea86cb40195f41b53a730ecff672001",
+      "sha256": "6c0d89ff789140e9751244a009117988dfd78c691124c73ba19ca68085420141"
+    },
+    {
+      "path": "Platform/common/data/catalog.tsv",
+      "git_blob": "3fbcf46e30b38058115a076c3b8ea6ce74857cab",
+      "sha256": "f109b87bb5837eb8f8fac8cf0d4caca61779493d36731b76cf6276d3d48cdc4f"
+    },
+    {
+      "path": "Platform/common/data/codec.tsv",
+      "git_blob": "15a311ea85309baee10de7538466ac16fb2c8751",
+      "sha256": "9b64b59cfb7e89ca21771d5dc1ea6ebd8bade7b7fe15df4e43e7cb8fcadda02e"
+    },
+    {
+      "path": "Platform/common/data/common.schema.json",
+      "git_blob": "4686f8f63039eed57bc5432e5716b04aee6acc97",
+      "sha256": "2dc6559d1bde3ec161243ad113ef447d0e709532c57ac75ad2447c3aa2c681af"
+    },
+    {
+      "path": "Platform/common/ru/contracts/sealing.md",
+      "git_blob": "27e8ffc215df66f898a5d0758f3241584186b71e",
+      "sha256": "8c49131ddb2b827fabbdf3686be0969e3134f5606104aac25d80b5010c73460c"
+    },
+    {
+      "path": "Platform/common/vectors/consumers.tsv",
+      "git_blob": "7527e24530463fb6d7e8c3638f0143f57196e7eb",
+      "sha256": "ba7987d2750f43805dd9d31d79e27f938745dd8e7bba666e1288d935925cb486"
+    },
+    {
+      "path": "Platform/common/vectors/wire.tsv",
+      "git_blob": "63d9950c6bc211e3f32b2985389548be855ef591",
+      "sha256": "b123b2c06e8a965228000375b4d6bd8ce74e5b501713aac6a530617a08ac1615"
+    }
+  ],
+  "protected_trees": {
+    "Platform/01-store": "6e04f8c04150561ab00c0ec3a2949b0d889e2a71",
+    "Platform/02-installer": "5ae190bfca2d230c0c3d49632a8822d566cc2d2b",
+    "Platform/04-controller": "70ba2153c669492d138a8e7ea14f09c112101e9d",
+    "Platform/05-resource": "37a3279cf0a6698490b3daee46e2aeea288cccc3",
+    "Platform/06-console": "1b030bd453f1a53eefc2f6b1e69270822b5eaf3e",
+    "Platform/07-console-module": "4f2a30bd78d321f17c3bfe743e6524338cfb4622",
+    "Platform/08-domain": "1ae44a56f66ced0f07ea3bb1215486a2ea287140",
+    "Platform/09-agent": "08226f88e87f1587e3d24d3bc4b20936861b6504",
+    "Platform/10-domain-console": "17dd7a7b098713ab1182c6a7b47cbc323b0d2b0c",
+    "VMS": "ac43b2715c541d2f89f513ecd67dbdd1bcc0f2d0",
+    "Source": "8d1d2a64759b64387b50db4ccc9834ad2d8343b8",
+    "tools": "bbd4bb59296aa30d9dbe690b40a684a2518e9afb",
+    "skills": "6534d04504346006249c3aa08e6003e927badf1a"
+  },
+  "schema_changed_pointers": [
+    {
+      "path": "Platform/03-worker/data/slots.schema.json",
+      "pointer": "/properties/gen/$ref",
+      "was": {
+        "absent": true
+      },
+      "became": "#/$defs/common.pos53"
+    },
+    {
+      "path": "Platform/03-worker/data/slots.schema.json",
+      "pointer": "/properties/gen/description",
+      "was": "the generation: for an absent row the initial one is 0, +1 for each capture, never decreases; for an existing row, absence or invalidity is not replaced by zero",
+      "became": "The stored generation is from 1 through 2^53-1, as issued by capture; only confirmed row absence has the initial operand 0. It never decreases."
+    },
+    {
+      "path": "Platform/03-worker/data/slots.schema.json",
+      "pointer": "/properties/gen/minimum",
+      "was": 0,
+      "became": {
+        "absent": true
+      }
+    },
+    {
+      "path": "Platform/03-worker/data/slots.schema.json",
+      "pointer": "/properties/server/description",
+      "was": "the holder's server, written at each capture and renewal; \"\" — the server is unknown (chapter 3.4 N1.1, ADR-0029); \"\" — a reader's tolerance: a worker with SERVER_NAME by P/02.4 N1.2 does not write it (W03-G01)",
+      "became": "The current holder server, written on capture and renewal after nonempty SERVER_NAME has passed startup admission."
+    },
+    {
+      "path": "Platform/03-worker/data/slots.schema.json",
+      "pointer": "/properties/server/minLength",
+      "was": {
+        "absent": true
+      },
+      "became": 1
+    },
+    {
+      "path": "Platform/03-worker/data/slots.schema.json",
+      "pointer": "/properties/until/description",
+      "was": "the writer's clock + 45; display and divergence, not freshness: held and lapsed — by the age of the observed version at the judge; a finite until in the past or in the future does not make the row torn",
+      "became": "the writer's clock + SLOT_TERM; display and divergence, not freshness: held and lapsed — by the age of the observed version at the judge; a finite until in the past or in the future does not make the row torn"
+    },
+    {
+      "path": "Platform/03-worker/data/holds.schema.json",
+      "pointer": "/properties/gen/$ref",
+      "was": {
+        "absent": true
+      },
+      "became": "#/$defs/common.pos53"
+    },
+    {
+      "path": "Platform/03-worker/data/holds.schema.json",
+      "pointer": "/properties/gen/description",
+      "was": "as in the slot: the generation, does not decrease",
+      "became": "The stored generation is from 1 through 2^53-1, as issued by capture; only confirmed row absence has the initial operand 0. It never decreases."
+    },
+    {
+      "path": "Platform/03-worker/data/holds.schema.json",
+      "pointer": "/properties/gen/minimum",
+      "was": 0,
+      "became": {
+        "absent": true
+      }
+    },
+    {
+      "path": "Platform/03-worker/data/holds.schema.json",
+      "pointer": "/properties/until/description",
+      "was": "as in the slot: the writer's clock + 45; display, not freshness — another's place is free after standing unchanged for 45 + HOLD_SKEW by the judge's clock",
+      "became": "as in the slot: the writer's clock + SLOT_TERM; display, not freshness — another's place is free after standing unchanged for 45 + HOLD_SKEW by the judge's clock"
+    },
+    {
+      "path": "Platform/03-worker/data/epoch.schema.json",
+      "pointer": "/allOf",
+      "was": {
+        "absent": true
+      },
+      "became": [
+        {
+          "$ref": "#/$defs/writer"
+        }
+      ]
+    },
+    {
+      "path": "Platform/03-worker/data/state.schema.json",
+      "pointer": "/properties/born/description",
+      "was": "born of the unit row at the start of the holder (the row check contract, born); an empty string — a unit row without born",
+      "became": "The 32 lowercase hex born of the current unit row accepted at the start of the holder (row-check contract, born); absent or empty born is unreadable."
+    },
+    {
+      "path": "Platform/03-worker/data/state.schema.json",
+      "pointer": "/properties/born/pattern",
+      "was": "^(?:([0-9a-f]{32})?)$",
+      "became": "^(?:[0-9a-f]{32})$"
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "pointer": "/$defs/writer/properties",
+      "was": {
+        "name": {
+          "pattern": "^(?:-|[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
+        },
+        "state": {
+          "enum": [
+            "refused",
+            "nameless",
+            "waiting"
+          ]
+        }
+      },
+      "became": {
+        "absent": true
+      }
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "pointer": "/additionalProperties",
+      "was": {
+        "description": "fields beyond N1.4a: the norm does not name them; the writer writes exactly the fields of N1.4a"
+      },
+      "became": false
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "pointer": "/properties/at/$ref",
+      "was": {
+        "absent": true
+      },
+      "became": "#/$defs/common.time"
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "pointer": "/properties/at/description",
+      "was": "the moment the mark was written (rewritten every CONTEND_EVERY); for the reader — display, freshness by version (the observation contract «Freshness of a contender mark»); the form of the time is not named by the norm «Time»",
+      "became": "Time of this write at CONTEND_EVERY; display only. Reader freshness is by the observed version, never by this wall-clock field."
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "pointer": "/properties/at/x-codec",
+      "was": {
+        "absent": true
+      },
+      "became": [
+        "time"
+      ]
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "pointer": "/properties/name/pattern",
+      "was": {
+        "absent": true
+      },
+      "became": "^(?:-|[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "pointer": "/properties/server/minLength",
+      "was": {
+        "absent": true
+      },
+      "became": 1
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "pointer": "/properties/since/$ref",
+      "was": {
+        "absent": true
+      },
+      "became": "#/$defs/common.time"
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "pointer": "/properties/since/description",
+      "was": "the moment of entering the state; kept within one state; the form of the time is not named by the norm «Time»",
+      "became": "Time when this state was entered; retained within the same state only from the current readable policy object or valid local policy state."
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "pointer": "/properties/since/x-codec",
+      "was": {
+        "absent": true
+      },
+      "became": [
+        "time"
+      ]
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "pointer": "/properties/state/enum",
+      "was": {
+        "absent": true
+      },
+      "became": [
+        "refused",
+        "nameless",
+        "waiting"
+      ]
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "pointer": "/required",
+      "was": {
+        "absent": true
+      },
+      "became": [
+        "name",
+        "state",
+        "box",
+        "hostname",
+        "server",
+        "instance",
+        "holder",
+        "holder_box",
+        "since",
+        "at"
+      ]
+    },
+    {
+      "path": "Platform/03-worker/data/heartbeats.schema.json",
+      "pointer": "/$defs/histogram/properties/behind/description",
+      "was": {
+        "absent": true
+      },
+      "became": "A filing timestamp earlier than the listing that did not see it is counted behind only when the difference is strictly greater than COMMAND_BEHIND_TOLERANCE (P/03.4-R006, forms/runtime-constants.tsv). The counter remains common.uint53."
+    },
+    {
+      "path": "Platform/03-worker/data/heartbeats.schema.json",
+      "pointer": "/properties/conflicts/description",
+      "was": "Σ of lease conflicts + carried-over ones; metric `<sub>_epoch_conflicts`",
+      "became": "Lease conflicts of the current units plus the process total already carried from forgotten units. Rejoin carries each forgotten unit once and never resets or double-counts the accumulated total; metric <sub>_epoch_conflicts."
+    },
+    {
+      "path": "Platform/03-worker/data/heartbeats.schema.json",
+      "pointer": "/properties/freeing/description",
+      "was": "the answer to the resource's request to free space (P/05 N1.4 free_ask): resource volume → bytes that the worker is freeing and that are not yet in used; 0 — nothing; a platform field; what to free — the subsystem (VMS request freeing)",
+      "became": "the answer to the resource's request to free space (P/05 N1.4 free_ask): resource volume → bytes that the worker is freeing and that are not yet reflected in used; 0 — nothing; a platform field; what to free — the subsystem (VMS request freeing)"
+    },
+    {
+      "path": "Platform/03-worker/data/heartbeats.schema.json",
+      "pointer": "/properties/server/description",
+      "was": "server; MUST; \"\" exactly when the server is unknown (ADR-0029); \"\" — a reader's tolerance: a worker with SERVER_NAME by P/02.4 N1.2 does not write it (W03-G01)",
+      "became": "The current nonempty worker server. SERVER_NAME is admitted before the presence lock; no unknown-server platform heartbeat is produced."
+    },
+    {
+      "path": "Platform/03-worker/data/heartbeats.schema.json",
+      "pointer": "/properties/server/minLength",
+      "was": {
+        "absent": true
+      },
+      "became": 1
+    },
+    {
+      "path": "Platform/03-worker/data/heartbeats.schema.json",
+      "pointer": "/properties/server_unsaid",
+      "was": {
+        "description": "exactly this string (ADR-0029); only when the server is not named and the manifest requires places.server_field",
+        "type": "string",
+        "enum": [
+          "this worker names no server of its own: every place it holds is let go when its hold goes unconfirmed"
+        ]
+      },
+      "became": {
+        "absent": true
+      }
+    }
+  ],
+  "counts": {
+    "Platform/common/vectors/family-read/03.tsv": {
+      "old": 1145,
+      "modified_old": 177,
+      "added": 46,
+      "current": 1191
+    },
+    "Platform/common/vectors/row-check/state.tsv": {
+      "old": 24,
+      "modified_old": 2,
+      "added": 0,
+      "current": 24
+    },
+    "Platform/common/vectors/slot/cases.tsv": {
+      "old": 11,
+      "modified_old": 1,
+      "added": 0,
+      "current": 11
+    },
+    "Platform/03-worker/acceptance/2/seams.tsv": {
+      "old": 30,
+      "modified_old": 2,
+      "added": 0,
+      "current": 30
+    },
+    "Platform/03-worker/acceptance/4/seams.tsv": {
+      "old": 7,
+      "modified_old": 0,
+      "added": 6,
+      "current": 13
+    },
+    "Platform/03-worker/acceptance/5/seams.tsv": {
+      "old": 2,
+      "modified_old": 1,
+      "added": 0,
+      "current": 2
+    }
+  },
+  "constant_rows": 23,
+  "constant_form_sha256": "f1763195244e0e751579d8c4666f5c8b9fa8adf1f4dd5094356bad63eb118437",
+  "physical_duration_equivalence": {
+    "WAKE_GAP_MS": {
+      "value": 250,
+      "unit": "ms",
+      "old_seconds_lexeme": "0.25",
+      "exact_seconds": "1/4"
+    },
+    "PERFORM_GRACE_MS": {
+      "value": 200,
+      "unit": "ms",
+      "old_seconds_lexeme": "0.2",
+      "exact_seconds": "1/5"
+    },
+    "REQUESTS_HOLD_MS": {
+      "value": 500,
+      "unit": "ms",
+      "old_seconds_lexeme": "0.5",
+      "exact_seconds": "1/2"
+    }
+  },
+  "invariants": {
+    "common_definitions_unchanged": true,
+    "released_by_unchanged": true,
+    "heartbeat_extra_fields_open_unchanged": true,
+    "behind_counter_ref_unchanged": true,
+    "made_rows_schema_unchanged": true,
+    "histogram_bucket_counts_unchanged": true,
+    "old_negative_paths_retained": true,
+    "old_family_first_six_cells_unchanged": true,
+    "all_current_req_and_checklist_ids_unchanged": true,
+    "stages_gates_parts_when_unchanged": true,
+    "only_existing_name_reference_changed_in_stages": true,
+    "policy_machine_only_env_changed_traces_same": true,
+    "s1_envelope_unchanged": true,
+    "s5_opaque_guard_unchanged": true,
+    "floor_and_maximum_seams_unchanged": true,
+    "all_historical_records_prefix_preserved": true
+  },
+  "execution_claims": {
+    "SDK": false,
+    "SUT": false,
+    "Go": false,
+    "models": false,
+    "full_normgen": false,
+    "KIT": false
+  },
+  "checks": {
+    "mirror-final.json": {
+      "sha256": "31ee40c18246a29dc8441c045cfc15ee52e90cfc4a4d46cf03f2e6d6a657f23a",
+      "path": "/home/pilot/spec103/p03-adr0129-14-work/mirror-final.json",
+      "result": {
+        "pairs": 21,
+        "errors": []
+      }
+    },
+    "family-source-reference-draft2.json": {
+      "sha256": "b001eebe50b0df3a7d500986665f07006dbe6fc0635661e0018a93b2b3f2337f",
+      "path": "/home/pilot/spec103/p03-adr0129-14-work/family-source-reference-draft2.json",
+      "result": {
+        "kind": "source-reference, not SUT",
+        "rows": 1191,
+        "errors": []
+      }
+    },
+    "stagetests-preview.json": {
+      "sha256": "507fc9c31ce5d418a0c9f70de7ac4795062c0845890e5d12b9d95d5281891233",
+      "path": "/home/pilot/spec103/p03-adr0129-14-work/stagetests-preview.json",
+      "result": {
+        "kind": "memory-only existing stagetests translation preview, no output generation/build",
+        "lesson": "03-worker",
+        "files_in_memory": 29,
+        "counts": {
+          "translated": 61
+        },
+        "inventory": [
+          [
+            "3.2/seams.tsv/s1-capture-unknown/1",
+            "slot_capture",
+            "TestSlotCapture_S1CaptureUnknown",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s2-capture-gen-unreadable/1",
+            "slot_capture",
+            "TestSlotCapture_S2CaptureGenUnreadable",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s3-capture-lapsed-foreign/1",
+            "slot_capture",
+            "TestSlotCapture_S3CaptureLapsedForeign",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s4-capture-permission-stale/1",
+            "slot_capture",
+            "TestSlotCapture_S4CapturePermissionStale",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s5-capture-taking/1",
+            "slot_capture",
+            "TestSlotCapture_S5CaptureTaking",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s6-capture-first-own-box/1",
+            "slot_capture",
+            "TestSlotCapture_S6CaptureFirstOwnBox",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s7-capture-rejoin-no-exception/1",
+            "slot_capture",
+            "TestSlotCapture_S7CaptureRejoinNoException",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s8-capture-torn-boundary/1",
+            "slot_capture",
+            "TestSlotCapture_S8CaptureTornBoundary",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s9-capture-torn-young/1",
+            "slot_capture",
+            "TestSlotCapture_S9CaptureTornYoung",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s10-cleanup-guard-refusal/1",
+            "slot_capture",
+            "TestSlotCapture_S10CleanupGuardRefusal",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s11-capture-replay/1",
+            "slot_capture",
+            "TestSlotCapture_S11CaptureReplay",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s19-capture-gen-below-max/1",
+            "slot_capture",
+            "TestSlotCapture_S19CaptureGenBelowMax",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s20-capture-gen-max/1",
+            "slot_capture",
+            "TestSlotCapture_S20CaptureGenMax",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s21-capture-gen-above-max/1",
+            "slot_capture",
+            "TestSlotCapture_S21CaptureGenAboveMax",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s22-capture-gen-beyond-int64/1",
+            "slot_capture",
+            "TestSlotCapture_S22CaptureGenBeyondInt64",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s12-epoch-initial-late/1",
+            "epochs_leases",
+            "TestEpochsLeases_S12EpochInitialLate",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s13-epoch-post-grant-floor/1",
+            "epochs_leases",
+            "TestEpochsLeases_S13EpochPostGrantFloor",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s14-epoch-same-tick/1",
+            "epochs_leases",
+            "TestEpochsLeases_S14EpochSameTick",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s15-gate-cancelled-late-start/1",
+            "epochs_leases",
+            "TestEpochsLeases_S15GateCancelledLateStart",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s16-confirm-overslept/1",
+            "epochs_leases",
+            "TestEpochsLeases_S16ConfirmOverslept",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s17-confirm-last-monotonic/1",
+            "epochs_leases",
+            "TestEpochsLeases_S17ConfirmLastMonotonic",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s18-guard-own-renewal/1",
+            "epochs_leases",
+            "TestEpochsLeases_S18GuardOwnRenewal",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s23-issue-epoch-below-max/1",
+            "epochs_leases",
+            "TestEpochsLeases_S23IssueEpochBelowMax",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s24-issue-epoch-max/1",
+            "epochs_leases",
+            "TestEpochsLeases_S24IssueEpochMax",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s25-issue-epoch-above-max/1",
+            "epochs_leases",
+            "TestEpochsLeases_S25IssueEpochAboveMax",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s26-issue-epoch-beyond-int64/1",
+            "epochs_leases",
+            "TestEpochsLeases_S26IssueEpochBeyondInt64",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s27-issue-floor-below-max/1",
+            "epochs_leases",
+            "TestEpochsLeases_S27IssueFloorBelowMax",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s28-issue-floor-max/1",
+            "epochs_leases",
+            "TestEpochsLeases_S28IssueFloorMax",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s29-issue-floor-above-max/1",
+            "epochs_leases",
+            "TestEpochsLeases_S29IssueFloorAboveMax",
+            "translated",
+            "-"
+          ],
+          [
+            "3.2/seams.tsv/s30-issue-floor-beyond-int64/1",
+            "epochs_leases",
+            "TestEpochsLeases_S30IssueFloorBeyondInt64",
+            "translated",
+            "-"
+          ],
+          [
+            "3.1/seams.tsv/s1-stop-order/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S1StopOrder",
+            "translated",
+            "-"
+          ],
+          [
+            "3.1/seams.tsv/s2-crash-no-hooks/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S2CrashNoHooks",
+            "translated",
+            "-"
+          ],
+          [
+            "3.4/seams.tsv/s1-stand-in-no-watchdog/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S1StandInNoWatchdog",
+            "translated",
+            "-"
+          ],
+          [
+            "3.4/seams.tsv/s2-stand-in-no-revival/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S2StandInNoRevival",
+            "translated",
+            "-"
+          ],
+          [
+            "3.4/seams.tsv/s3-budget-domain-no-role/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S3BudgetDomainNoRole",
+            "translated",
+            "-"
+          ],
+          [
+            "3.4/seams.tsv/s4-budget-over/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S4BudgetOver",
+            "translated",
+            "-"
+          ],
+          [
+            "3.4/seams.tsv/s5-heartbeat-base-default/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S5HeartbeatBaseDefault",
+            "translated",
+            "-"
+          ],
+          [
+            "3.4/seams.tsv/s6-heartbeat-base-build/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S6HeartbeatBaseBuild",
+            "translated",
+            "-"
+          ],
+          [
+            "3.4/seams.tsv/s7-stand-in-strict-place/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S7StandInStrictPlace",
+            "translated",
+            "-"
+          ],
+          [
+            "3.4/seams.tsv/s8-stand-in-before-stall/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S8StandInBeforeStall",
+            "translated",
+            "-"
+          ],
+          [
+            "3.4/seams.tsv/s9-stand-in-at-stall/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S9StandInAtStall",
+            "translated",
+            "-"
+          ],
+          [
+            "3.4/seams.tsv/s10-stand-in-after-stall/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S10StandInAfterStall",
+            "translated",
+            "-"
+          ],
+          [
+            "3.4/seams.tsv/s11-stand-in-before-for/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S11StandInBeforeFor",
+            "translated",
+            "-"
+          ],
+          [
+            "3.4/seams.tsv/s12-stand-in-at-for/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S12StandInAtFor",
+            "translated",
+            "-"
+          ],
+          [
+            "3.4/seams.tsv/s13-stand-in-after-for/1",
+            "lifecycle_heartbeat",
+            "TestLifecycleHeartbeat_S13StandInAfterFor",
+            "translated",
+            "-"
+          ],
+          [
+            "3.3/seams.tsv/s1-revision-same-epoch/1",
+            "reconciliation",
+            "TestReconciliation_S1RevisionSameEpoch",
+            "translated",
+            "-"
+          ],
+          [
+            "3.3/seams.tsv/s2-born-new-epoch/1",
+            "reconciliation",
+            "TestReconciliation_S2BornNewEpoch",
+            "translated",
+            "-"
+          ],
+          [
+            "3.3/seams.tsv/s3-silent-revision-waits/1",
+            "reconciliation",
+            "TestReconciliation_S3SilentRevisionWaits",
+            "translated",
+            "-"
+          ],
+          [
+            "3.3/seams.tsv/s4-backoff-confirmed-absence/1",
+            "reconciliation",
+            "TestReconciliation_S4BackoffConfirmedAbsence",
+            "translated",
+            "-"
+          ],
+          [
+            "3.5/seams.tsv/s1-sealed-unit-no-epoch/1",
+            "opening",
+            "TestOpening_S1SealedUnitNoEpoch",
+            "translated",
+            "-"
+          ],
+          [
+            "3.5/seams.tsv/s2-plain-unit/1",
+            "opening",
+            "TestOpening_S2PlainUnit",
+            "translated",
+            "-"
+          ],
+          [
+            "3.6/seams.tsv/s1-begun-unknown-no-call/1",
+            "requests_state_orders",
+            "TestRequestsStateOrders_S1BegunUnknownNoCall",
+            "translated",
+            "-"
+          ],
+          [
+            "3.6/seams.tsv/s2-own-begun-no-repeat/1",
+            "requests_state_orders",
+            "TestRequestsStateOrders_S2OwnBegunNoRepeat",
+            "translated",
+            "-"
+          ],
+          [
+            "3.6/seams.tsv/s3-foreign-begun-before-expiry/1",
+            "requests_state_orders",
+            "TestRequestsStateOrders_S3ForeignBegunBeforeExpiry",
+            "translated",
+            "-"
+          ],
+          [
+            "3.6/seams.tsv/s4-group-busy-after-timeout/1",
+            "requests_state_orders",
+            "TestRequestsStateOrders_S4GroupBusyAfterTimeout",
+            "translated",
+            "-"
+          ],
+          [
+            "3.6/seams.tsv/s5-state-start-born/1",
+            "requests_state_orders",
+            "TestRequestsStateOrders_S5StateStartBorn",
+            "translated",
+            "-"
+          ],
+          [
+            "3.6/seams.tsv/s6-two-holders-late-return/1",
+            "requests_state_orders",
+            "TestRequestsStateOrders_S6TwoHoldersLateReturn",
+            "translated",
+            "-"
+          ],
+          [
+            "3.7/seams.tsv/s1-token-memory-only/1",
+            "domain_worker",
+            "TestDomainWorker_S1TokenMemoryOnly",
+            "translated",
+            "-"
+          ],
+          [
+            "3.7/seams.tsv/s2-revoked-same-jti-waits/1",
+            "domain_worker",
+            "TestDomainWorker_S2RevokedSameJtiWaits",
+            "translated",
+            "-"
+          ],
+          [
+            "3.7/seams.tsv/s3-cleanup-own-manifest-only/1",
+            "domain_worker",
+            "TestDomainWorker_S3CleanupOwnManifestOnly",
+            "translated",
+            "-"
+          ],
+          [
+            "3.7/seams.tsv/s4-keep-current-local-exp/1",
+            "domain_worker",
+            "TestDomainWorker_S4KeepCurrentLocalExp",
+            "translated",
+            "-"
+          ]
+        ]
+      }
+    },
+    "base-reconciliation.json": {
+      "sha256": "3adc694db3b09848742c596ffb4e85393236dedc98a9134d67e3d8b986164f67",
+      "path": "/home/pilot/spec103/p03-adr0129-14-work/base-reconciliation.json",
+      "result": {
+        "old_base": "fd35c184e547f1294c58d3cb82f0b230ab3f02e6",
+        "base": "c47f9ce53e6c0893af5182cb48b536886fa827f0",
+        "transition": "git merge --ff-only",
+        "new_base_clean": true,
+        "old_maps_preserved": true,
+        "position_count": 108,
+        "row_cell_count": 200,
+        "changed_positions": [
+          {
+            "path": "tools/normgen/gen_flags.py",
+            "role": "CODE_SEPARATE",
+            "fd35_sha256": "4b65d9156ac9a17625ca099614c8bab685544e180f0a796f005bee0a899529c4",
+            "c47_sha256": "d44d27bbc7c2c054433209b563538d6628a4e9af26b9cb64d32dcf09ce271f6a"
+          },
+          {
+            "path": "tools/normgen/test_gen_flags_inputs.py",
+            "role": "CODE_SEPARATE",
+            "fd35_sha256": "167abf97dc8e90a105c940824049ad12a24d9a65f64a1795361a2799fbcb5482",
+            "c47_sha256": "b6647138e5d99d2ea07e7a21b6127f3d4a4f913a105b5764f97a5a49b8648d21"
+          }
+        ],
+        "scope_approval": "/home/pilot/coord103/approval-p03-source-scope-adr14/APPROVAL.md",
+        "approval_sha256": "16005c0509af600841c79bc6be53e77b7fc450948e7991f34c741ebde9b5e16b",
+        "at_utc": "2026-11-07T01:02:07.452833+00:00"
+      }
+    },
+    "strict-source-final": {
+      "meta_path": "/home/pilot/spec103/p03-adr0129-14-work/strict-source-final.meta.json",
+      "meta_sha256": "c204de19792cc19ae36dab4355457f05fd0bd07212a94f138eb6d74f57e66928",
+      "result": {
+        "command": [
+          "/home/pilot/venv-spec/bin/python",
+          "-B",
+          "skills/lesson-spec/scripts/check_spec.py",
+          "--strict-coverage"
+        ],
+        "root": "/home/pilot/wt-spec103-p03-adr0129-14",
+        "base": "c47f9ce53e6c0893af5182cb48b536886fa827f0",
+        "started_at": "2026-11-07T02:30:33.807714+00:00",
+        "elapsed_seconds": 50.23050198296551,
+        "exit_code": 1,
+        "log_sha256": "4eb89f66f3aa7d949cbb6c1a812711a4b9ebbed0439526634887efeb730eb5b0",
+        "kind": "own source static check; no SDK/SUT/normgen/KIT",
+        "errors": [
+          "ERROR Platform/03-worker/forms/runtime-constants.tsv: runtime-constants.tsv: WAKE_GAP_MS: unit 'ms' not in ['bytes', 'count', 's']",
+          "ERROR Platform/03-worker/forms/runtime-constants.tsv: runtime-constants.tsv: PERFORM_GRACE_MS: unit 'ms' not in ['bytes', 'count', 's']",
+          "ERROR Platform/03-worker/forms/runtime-constants.tsv: runtime-constants.tsv: REQUESTS_HOLD_MS: unit 'ms' not in ['bytes', 'count', 's']"
+        ],
+        "exception_count": 62,
+        "counts_line": "COUNTS anchored_files=47 canonical=present canonical_mutants=67 canonical_mutants_killed=67 canonical_puts=12 canonical_section=present canonical_vectors=220 canonical_views=205 catalog_rows=172 check_probes=86 check_rows=34 checklist_inventories=1 count_phrases=570 cyrillic_debt_files=0 cyrillic_debt_letters=0 cyrillic_deferred_files=1 cyrillic_export=0 cyrillic_non_utf8=8 cyrillic_ready=12 cyrillic_scanned_files=3381 daemon_flags=202 data_paragraphs=39 data_roles=10 deletion_body_witnesses=6 diagnostics=51 door_roles=11 english_mirrors=392 families_with_section=149 families_without_section=0 family_outcomes=405 family_read=present family_read_rows=10760 family_read_tables=8 family_schemas=149 finite_profile_cases=13 finite_profile_skeletons=8 form_cases=947 form_diagnostics_differ=1 form_manifests=12 form_rows=159 form_rows_held=158 form_rows_implied=1 id_map_ids=532 layer_words=19 legacy_spec_verdicts=138 lessons=10 library_defect_vectors=57 library_defects=24 local_links=9961 local_refs=2744 machine_traces=64 module_file_bindings=4 norm_ids=532 numeric_loader_cases=9 openapi=6 openapi_cross_refs=760 openapi_patterns=170 operator_commands=30 outcome_readers=313 p01_constant_equalities=3 p06_folder_equalities=2 p08_closed_contracts=4 p08_form_equalities=5 p08_password_vectors=13 p08_schema_equalities=141 path_param_routes=17 process_names=9 puts_cases=87 refusal_cause_names=59 refusal_chapters=38 refusal_rows=756 req_anchors=931 route_priorities=10 row_write_bindings=4 runtime_constants=134 scenarios=496 schema_needed=152 seam_steps=749 stage_rows=91 steps=5469 stub_scanned_files=231 verdicts=947 versioned_doors=24 vms_catalog_rows=24 vms_families=24 vms_family_read_rows=832 vms_family_read_tables=7 vms_frozen=56 vms_lessons=12 vms_lessons_checked=12 vms_manifests=10 vms_table_rows=570 wire_bindings=91 wire_calls=12330 wire_excluded=750",
+        "only_expected_ms_errors": true
+      }
+    },
+    "git_diff_check": {
+      "exit_code": 0,
+      "kind": "own author check, no executable acceptance"
+    }
+  },
+  "known_integration_blocker": "three ms constants unsupported in current immutable CODE; separate delivery, no debt/exception bypass"
+}
