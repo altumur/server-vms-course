@@ -31,7 +31,7 @@
 2. `check_spec.py Platform/07-console-module/ru/07-console-module.md` → **exit 0, PASS** с 5 исключениями; `lessons=1`, `norm_ids=8` (P/07-01…08) (`check_spec-p07.txt`).
 3. Сверка WORDS↔localization: на собственной инструментированной копии js (экспорт WORDS) node-скрипт — **519/519 строк TSV присутствуют и совпадают в обоих языках; лишних ключей нет**; `n.*` и `kinds.*` биндинги по правилу норм (:167) (`words-node.js`, `words-check.txt`, `console-words-export.js` — всё вне дерева).
 4. Скан словаря запрещённых слов §2 CONSOLE-MODULE.md по console.js: все 17 вхождений `live` — допустимые токены (`resource === "live"`, `state === "live"`, «live workers», локальная переменная); `live_url/LIVE_*/livecontroller//live/` отсутствуют; остальные словарные слова — 0 вхождений.
-5. Штатный jsdom-набор `Source/tests/console` — два изолированных прогона в собственных копиях (источник не тронут): (а) штатная конфигурация — модуль из свидетеля `Source/w2cplatform/console.js` (sha `9e0356451fcc3c143aacdc643da3881d57936dc91b3315eb6125c35f5a404c71`, 261 122 байт); (б) перенацеленная копия — нынешние байты `Platform/07-console-module/module/console.js` (sha `05d167f5…`, 312 543 байта). Окружение: node v22.23.2, jsdom из `/home/pilot/coord103/p07-module-node-env/node_modules` (симлинк в моих копиях). Результаты идентичны: **44 ok, 1 FAILED** — `shell-short` (backendLink, otherVersionSaid), причина — устаревший тест против нынешней короткой оболочки VMS: `VMS/01-cam/cam.shell.html` несёт `<a href="/backend/">VMS console</a>`, тест ждёт «Консоль VMS»; оба прогона падают одинаково, различий свидетель/нынешние байты по итогам нет; все 36 модульных/платформенных тестов (включая весь список N5) — **ok на нынешних байтах**. Выводы: `jsdom-witness-bytes.txt`, `jsdom-current-bytes.txt`.
+5. Штатный jsdom-набор `Source/tests/console` — два изолированных прогона в собственных копиях (источник не тронут): (а) штатная конфигурация — модуль из свидетеля `Source/w2cplatform/console.js` (sha `9e0356451fcc3c143aacdc643da3881d57936dc91b3315eb6125c35f5a404c71`, 261 122 байт); (б) перенацеленная копия — нынешние байты `Platform/07-console-module/module/console.js` (sha `05d167f5…`, 312 543 байта). Окружение: node v22.23.2, jsdom из `/home/pilot/coord103/p07-module-node-env/node_modules` (симлинк в моих копиях). Результаты идентичны: **44 ok, 1 FAILED** — `shell-short` (backendLink, otherVersionSaid), причина — устаревший тест против нынешней короткой оболочки VMS: `VMS/01-cam/cam.shell.html` несёт `<a href="/backend/">VMS console</a>`, тест ждёт «Консоль VMS»; оба прогона падают одинаково, различий свидетель/нынешние байты по итогам нет; набор — 45 тестовых файлов: 39 `module-*` + `platform-page` = **40 прошли** (все 17 поимённо названных в N5 существующих тестов и остальные модульные), плюс `holder-page` и 3 shell-теста; все они ok на нынешних байтах. Отсутствующие проверки — `module-folders` (в N5: not written yet) и названные P/07-07/08 `module-unplaceable-all`/`module-subsystems-none`/`module-writes-via` — **не исполнялись и не закрыты** прогоном. Выводы: `jsdom-witness-bytes.txt`, `jsdom-current-bytes.txt`.
 
 Пределы (явные): зеркала `Platform/07-console-module/ru/**` — не канон (по ADR-0121/0124; семантика зеркал не сверялась, состав — через check_spec, PASS); человеческая лекция `ru/07-console-module.md` не читалась и канон не подменяла; установок зависимостей не делал (jsdom — готовое окружение coord103, только симлинки в моих копиях); прогон тестов не исполняет реализацию стендом P/06 — это jsdom-проверки опубликованной библиотеки.
 
@@ -76,6 +76,45 @@
 
 - Источник P/07 (10f2): **Б0 / С0 / М2** — М1 (висячая `id-map.tsv`, norms:19), М2 (атрибуция воркеров корню, console.js:1360 против N1.5 `objects`).
 - Судьи: **Б0 / С0 / М0** — check_spec PASS; jsdom-набор исполнен на нынешних байтах (44 ok + устаревший shell-short вне N5); граница «свидетель по умолчанию» записана и преодолена перенацеленным прогоном.
-- Замороженный источник, судьи, генераторы — без правок; новых моделей/Go/реализации/HTTP-стенда/SDK/SUT/линии нет; отчёт — единственный файл ветки; доказательства вне дерева (`/tmp/p07-evidence/`, 12 файлов: хеши, check_spec, words-check, оба прогона jsdom, две копии набора, скрипты).
+- Замороженный источник, судьи, генераторы — без правок; новых моделей/Go/реализации/HTTP-стенда/SDK/SUT/линии нет; отчёт — единственный файл ветки; доказательства вне дерева: локально `/tmp/p07-evidence/` — 8 обычных файлов на верхнем уровне (`module-sha.txt`, `check_spec-p07.txt`, `words-check.txt`, `words-check.py`, `words-node.js`, `console-words-export.js`, `jsdom-current-bytes.txt`, `jsdom-witness-bytes.txt`), два каталога с полными копиями набора (`src/`, `witness-run/`) и две внешние связи (`VMS`, `Platform`); суммарно по дереву 108 обычных файлов и 10 внешних связей (эту точную копию сохранил у себя coord103).
 
 СТОП: сдача P/07 | ЖДУ: разбора «Архитектором» (второй отчёт review103) и дальнейших назначений (P/08 — по слову «Архитектора» после обоих и разбора)
+
+---
+
+# Дополнение 1 (2026-11-07, по уточнению «Архитектора»): дочитанные тесты N5 и воспроизводимость
+
+## Д1. Чтение тестов N5 с логикой (закрыто)
+
+Прочитаны целиком, с телом, фикстурами и условиями, все существующие тесты, на которые ссылается N5 (17 поимённо названных + служебный `boot.js` ранее): `module-calls` (закрытый список `allowed()` в тесте против `reads`/`writes`, `never` по токенам путей, порядок `ORDER` при монтировании и на опросе, `/events?unit=` каждые 5 с, режим держателя), `module-changes` (номер до строк, `after&wait=15`, ≤1/с, своё/чужое/сброс/пусто, 404, держатель без ленты), `module-session` (создание, logout, break-glass, «Retry» с тем же ключом), `module-retry` (ключ на действие, 5xx/сеть/таймаут/`in flight` у POST строк, Retry-After против 2-3-5 с, сдача после третьего с `status/body/retry`, 11 дверей без автоповтора с чтением первым, 401), `module-may` (ранги/области, about-unit, labels about-vs-own, open/closed/unknown/glass), `module-contract` (включая проверку словаря §2 с `platform-words.debt`, `where`, `manifest`, декор, XSS-строка текстом), `platform-page` (только модуль+mount, версия до использования, слова подсистем отсутствуют), `module-refresh-event`, `module-tree-nodes` (пять видов узлов, все поля, after/replaces), `module-page-adds` (addIcons/addNote/fullScreen/isFav/toggleFav, addSection/addTab×4/busy/addBlock×2/addAction/dialog/confirm), `module-words` (равенство ключей en/ru, использованные слова, kinds, исходы команды, kindWord/display/eventNote), `module-card-markup`, `module-page-calls` (features/ready/select/card.closed/ifMatch-отказы до запроса/412), `module-return` (14 случаев `return`), `module-form-if-match`, `module-refusal-field` (включая `~1`), `module-shared-schema`.
+
+Точно непрочитанные (вне N5; читались заголовок/фикстуры/список `out` только): `module-access`, `module-children`, `module-command-words`, `module-debug`, `module-drain`, `module-form`, `module-form-json`, `module-groups`, `module-journal-late`, `module-keys`, `module-labels-unread`, `module-local-groups`, `module-nested`, `module-poll`, `module-servers`, `module-shared-groups`, `module-show`, `module-steady-tabs`, `module-tree`, `module-unplaced`, `module-view`, `module-worker-table`, `shell-page`, `shell-volumes`, `shell-xss-sweep`; `module-domain` и `holder-page` — общая ссылка N1.6/N5 «jsdom test of the mode domain / holder page» (тела не читал, из списка `out` — покрытие режима `domain`/страницы держателя). `shell-short` прочитан целиком (субъект — оболочка VMS со stub-модулем). Входящие отсутствующие проверки: `module-folders`, `module-unplaceable-all`, `module-subsystems-none`, `module-writes-via` — файлов нет, прогоном не исполнялись и не закрыты.
+
+## Д2. Воспроизводимость прогонов (точные команды)
+
+Каталог доказательств: верхний уровень — 8 обычных файлов, каталоги `src/` и `witness-run/` (полные копии набора), связи `VMS` и `Platform`; суммарно 108 обычных файлов и 10 внешних связей (копию сохранил coord103). Новых прогонов для этого дополнения не делал (счётчики — из сохранённых выводов).
+
+Прогон на нынешних байтах (выполнен 2026-11-07, cwd — моя копия):
+
+```
+cd /home/pilot/review103-kimi || exit 1
+mkdir -p /tmp/p07-evidence/src/tests
+cp -r Source/tests/console /tmp/p07-evidence/src/tests/console
+R=/home/pilot/review103-kimi
+ln -sfn $R/Source/vms /tmp/p07-evidence/src/vms
+ln -sfn $R/Source/w2cplatform /tmp/p07-evidence/src/w2cplatform
+ln -sfn $R/VMS /tmp/p07-evidence/VMS
+ln -sfn $R/Platform /tmp/p07-evidence/Platform
+cd /tmp/p07-evidence/src/tests/console
+sed -i "s|path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.js\")|\"$R/Platform/07-console-module/module/console.js\"|g; s|path.join(__dirname,\"..\",\"..\",\"w2cplatform\",\"console.html\")|\"$R/Platform/07-console-module/module/console.html\"|g" *.test.js boot.js
+ln -sfn /home/pilot/coord103/p07-module-node-env/node_modules node_modules
+sh run.sh > /tmp/p07-evidence/jsdom-current-bytes.txt 2>&1
+```
+
+Условие переназначения: заменяются только два `path.join(__dirname,"..","..","w2cplatform",…)` (`console.js`, `console.html`) на абсолютные пути нынешних опубликованных байт; все прочие относительные пути (`vms/`, `w2cplatform/domain/page.html`, `VMS/01-cam/…`, `Platform/08-domain/…`, `platform-words.debt`) восстанавливаются симлинками/копией один в один; `node_modules` — симлинк на готовое окружение (установок не было).
+
+Контрольный прогон штатной конфигурации (свидетель): то же без `sed`, каталоги `/tmp/p07-evidence/witness-run/{vms,w2cplatform,VMS,Platform}`, вывод — `jsdom-witness-bytes.txt`.
+
+Предел: пофайловые результаты (`ok`/`FAILED`/стек) сохранены в выводах обоих прогонов; код возврата оболочки `run.sh` (=1 из-за shell-short) зафиксирован в журнале сессии, но не записан в файлы вывода — при воспроизведении получается из самого вывода (наличие строки `FAILED`); старые события задним числом не восстанавливал.
+
+СТОП: сдача дополнения 1 к P/07 | ЖДУ: разбора «Архитектором» и назначения P/08
