@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -121,6 +122,7 @@ DRIVER = r'''package main
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"os"
 	"reflect"
 	"sort"
@@ -134,16 +136,25 @@ func main() {
 	enc := json.NewEncoder(os.Stdout)
 	for sc.Scan() {
 		var c struct {
+			ID   int
 			Cmd  string
 			Args []string
 			Env  map[string]string
 		}
 		if err := json.Unmarshal(sc.Bytes(), &c); err != nil {
-			panic(err)
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
+		}
+		if c.ID < 1 {
+			fmt.Fprintln(os.Stderr, "missing service request identity")
+			os.Exit(2)
 		}
 		in, ref := flags.Parse(c.Cmd, c.Args, func(k string) (string, bool) { v, ok := c.Env[k]; return v, ok })
 		if ref != nil {
-			enc.Encode(map[string]any{"refused": ref.Flag})
+			if err := enc.Encode(map[string]any{"id": c.ID, "refused": ref.Flag}); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(2)
+			}
 			continue
 		}
 		given := []string{}
@@ -160,7 +171,14 @@ func main() {
 			}
 			values[name] = v.Field(i).Interface()
 		}
-		enc.Encode(map[string]any{"refused": nil, "given": given, "values": values})
+		if err := enc.Encode(map[string]any{"id": c.ID, "refused": nil, "given": given, "values": values}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
+		}
+	}
+	if err := sc.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
 	}
 }
 '''
@@ -202,20 +220,80 @@ def probes(form, rnd, n):
     return out
 
 
+class CheckingError(RuntimeError):
+    """A failed check is never evidence that a semantic mutant was killed."""
+
+
+def response_object(pairs):
+    out = {}
+    for key, value in pairs:
+        if key in out:
+            raise CheckingError(f"duplicate service JSON key: {key}")
+        out[key] = value
+    return out
+
+
+def response_constant(word):
+    raise CheckingError(f"non-JSON service constant: {word}")
+
+
+def checked_answers(cases, got):
+    """Validate the entire internal report before consulting the semantic oracle."""
+    if not cases or type(got) is not list or len(got) != len(cases):
+        raise CheckingError("nonempty, complete service response required")
+    for identity, answer in enumerate(got, 1):
+        if type(answer) is not dict or type(answer.get("id")) is not int or answer["id"] != identity:
+            raise CheckingError(f"service response identity/order: expected {identity}")
+        if "refused" not in answer or not (answer["refused"] is None or type(answer["refused"]) is str):
+            raise CheckingError(f"service response {identity}: invalid refused field")
+        keys = {"id", "refused"} if answer["refused"] is not None else {"id", "refused", "given", "values"}
+        if set(answer) != keys:
+            raise CheckingError(f"service response {identity}: incomplete or extra fields")
+        if answer["refused"] is None:
+            given, values = answer["given"], answer["values"]
+            if (type(given) is not list or any(type(k) is not str for k in given)
+                    or given != sorted(set(given)) or type(values) is not dict
+                    or any(type(k) is not str or type(v) not in (str, bool, int, float)
+                           for k, v in values.items())):
+                raise CheckingError(f"service response {identity}: invalid given/values shape")
+        try:
+            json.dumps(answer, ensure_ascii=False, allow_nan=False).encode("utf-8")
+        except (UnicodeError, ValueError, TypeError) as exc:
+            raise CheckingError(f"service response {identity}: invalid JSON scalar") from exc
+    return got
+
+
 def run_driver(mod, cases):
-    d = Path(mod) / "cmd/judgeinputs"
-    d.mkdir(parents=True, exist_ok=True)
-    module = (Path(mod) / "go.mod").read_text().split("\n")[0].split()[1]
-    (d / "main.go").write_text(DRIVER % module)
-    stdin = "".join(json.dumps({"Cmd": c, "Args": a, "Env": e}) + "\n" for c, a, e in cases)
-    done = subprocess.run(["go", "run", "./cmd/judgeinputs"], cwd=mod, input=stdin, capture_output=True, text=True,
-                          env=GOENV)
+    if not cases:
+        raise CheckingError("nonempty service input required")
+    try:
+        d = Path(mod) / "cmd/judgeinputs"
+        d.mkdir(parents=True, exist_ok=True)
+        module = (Path(mod) / "go.mod").read_text(encoding="utf-8").split("\n")[0].split()[1]
+        (d / "main.go").write_text(DRIVER % module, encoding="utf-8")
+        stdin = "".join(json.dumps({"ID": i, "Cmd": c, "Args": a, "Env": e}, allow_nan=False) + "\n"
+                        for i, (c, a, e) in enumerate(cases, 1))
+        done = subprocess.run(["go", "run", "./cmd/judgeinputs"], cwd=mod, input=stdin, capture_output=True,
+                              text=True, encoding="utf-8", env=GOENV, timeout=120)
+    except (OSError, UnicodeError, ValueError, IndexError, subprocess.TimeoutExpired) as exc:
+        raise CheckingError(f"service preparation/start/read: {exc}") from exc
     if done.returncode:
-        raise AssertionError(done.stderr[-2000:])
-    return [json.loads(x) for x in done.stdout.split("\n") if x]
+        raise CheckingError(f"service Go/exit {done.returncode}: {done.stderr[-2000:]}")
+    try:
+        if type(done.stdout) is not str or not done.stdout.endswith("\n"):
+            raise CheckingError("service response must end with LF")
+        lines = done.stdout[:-1].split("\n")
+        if any(not line for line in lines):
+            raise CheckingError("empty service response record")
+        got = [json.loads(line, object_pairs_hook=response_object, parse_constant=response_constant)
+               for line in lines]
+    except (ValueError, UnicodeError, RecursionError) as exc:
+        raise CheckingError(f"service response JSON: {exc}") from exc
+    return checked_answers(cases, got)
 
 
 def disagree(model, cases, got):
+    checked_answers(cases, got)
     bad = []
     for (cmd, args, env), g in zip(cases, got):
         want = model.run(cmd, args, env)
@@ -223,7 +301,9 @@ def disagree(model, cases, got):
             if want["refused"] != g.get("refused"):
                 bad.append((cmd, args, env, want, g))
             continue
-        if want["given"] != g["given"] or {k: v for k, v in want["values"].items() if v not in ("", 0.0)} != g["values"]:
+        values = {k: v for k, v in want["values"].items() if v not in ("", 0.0)}
+        if (want["given"] != g["given"] or values != g["values"]
+                or any((type(v) is bool) != (type(g["values"].get(k)) is bool) for k, v in values.items())):
             bad.append((cmd, args, env, want, g))
     return bad
 
@@ -245,7 +325,7 @@ class InputFlags(unittest.TestCase):
                                    str(ROOT / "Platform" / lesson / "forms/daemon-flags.tsv"), str(out)],
                                   capture_output=True, text=True)
             if done.returncode:
-                raise AssertionError(done.stderr)
+                raise CheckingError(done.stderr)
             cls.mods[lesson] = out / "go"
 
     @classmethod
@@ -325,10 +405,7 @@ class InputFlags(unittest.TestCase):
                 mod = self.tmp / f"mut-{name}"
                 shutil.copytree(self.mods[lesson], mod)
                 (mod / "flags/flags.go").write_text(text)
-                try:
-                    got = run_driver(mod, cases)
-                except AssertionError:
-                    continue                                # Compilation failure kills the mutant.
+                got = run_driver(mod, cases)
                 self.assertTrue(disagree(model, cases, got), f"{name} survives")
 
     def test_mutants_command_flags(self):
@@ -351,11 +428,58 @@ class InputFlags(unittest.TestCase):
                 mod = self.tmp / f"mut06-{name}"
                 shutil.copytree(self.mods[lesson], mod)
                 (mod / "flags/flags.go").write_text(text)
-                try:
-                    got = run_driver(mod, cases)
-                except AssertionError:
-                    continue
+                got = run_driver(mod, cases)
                 self.assertTrue(disagree(model, cases, got), f"{name} survives")
+
+    def test_driver_unicode_and_refusal(self):
+        """Actual driver preserves scalar strings and distinct identities, including an empty refused command."""
+        value = "a\u2028b\u2029c\u044f\U0001f642\nend"
+        got = run_driver(self.mods["05-resource"], [("resource", [], {"BUILD": value}), ("", [], {})])
+        self.assertEqual([r["id"] for r in got], [1, 2])
+        self.assertEqual(got[0]["values"]["Build"], value)
+        self.assertEqual(got[1], {"id": 2, "refused": ""})
+
+    def test_driver_scanner_error_is_not_partial_success(self):
+        """Scanner failure after a valid prefix is an execution error, not one successful response."""
+        mod = self.mods["05-resource"]
+        self.assertEqual(len(run_driver(mod, [("resource", [], {"BUILD": "x" * (1 << 17)})])), 1)
+        with self.assertRaisesRegex(CheckingError, "service Go/exit"):
+            run_driver(mod, [("resource", [], {}), ("resource", [], {"BUILD": "x" * (1 << 20)})])
+
+    def test_driver_encoder_error(self):
+        """Compile the actual driver with a closed stdout fixture; ignored Encode errors would exit zero."""
+        mod = self.tmp / "encoder-control"
+        shutil.copytree(self.mods["05-resource"], mod)
+        d = mod / "cmd/judgeinputs"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "closed_stdout.go").write_text('''package main
+import "os"
+func init() {
+    f, err := os.CreateTemp("", "judge-closed-stdout-")
+    if err != nil { panic(err) }
+    name := f.Name()
+    f.Close()
+    os.Remove(name)
+    os.Stdout = f
+}
+''', encoding="utf-8")
+        with self.assertRaisesRegex(CheckingError, "service Go/exit"):
+            run_driver(mod, [("resource", [], {})])
+
+    def test_mutant_callers_do_not_swallow_errors(self):
+        """Both original mutation loops must propagate checking failures, including a legacy assertion."""
+        for method in ("test_mutants", "test_mutants_command_flags"):
+            for error in (CheckingError("injected checking error"), AssertionError("injected legacy failure")):
+                with self.subTest(method=method, error=type(error).__name__):
+                    subject = InputFlags(method)
+                    subject.mods = self.mods
+                    subject.tmp = self.tmp / f"caller-{method}-{type(error).__name__}"
+                    subject.tmp.mkdir()
+                    with mock.patch(__name__ + ".run_driver", side_effect=error), \
+                            mock.patch(__name__ + ".disagree") as compare:
+                        with self.assertRaises(type(error)):
+                            getattr(subject, method)()
+                        compare.assert_not_called()
 
     def test_constants(self):
         """Independently read runtime-constants.tsv and compare every flags const/Constants name, value, unit, norm with its row. Verify norm anchors and reject corrupted forms."""
@@ -401,6 +525,156 @@ class InputFlags(unittest.TestCase):
                                           capture_output=True, text=True)
                     self.assertNotEqual(done.returncode, 0, f"{name}: accepted")
                     self.assertIn("runtime-constants.tsv", done.stderr, name)
+
+
+class ServiceReports(unittest.TestCase):
+    """Independent internal transport controls; these do not simulate a course implementation."""
+
+    def setUp(self):
+        self.work = tempfile.TemporaryDirectory(prefix="flags-service-")
+        self.addCleanup(self.work.cleanup)
+        self.mod = Path(self.work.name)
+        (self.mod / "go.mod").write_text("module judge/service\n\ngo 1.22\n", encoding="utf-8")
+        # Equal inputs still require distinct ordinal identities.
+        self.cases = [("resource", [], {}), ("resource", [], {})]
+
+    @staticmethod
+    def answer(identity, **changes):
+        return dict({"id": identity, "refused": None, "given": [], "values": {}}, **changes)
+
+    def responses(self):
+        return [self.answer(1), self.answer(2)]
+
+    def invoke(self, text):
+        done = subprocess.CompletedProcess([], 0, text, "")
+        with mock.patch.object(subprocess, "run", return_value=done):
+            return run_driver(self.mod, self.cases)
+
+    def refuse_before_oracle(self, got):
+        model = mock.Mock()
+        with self.assertRaises(CheckingError):
+            disagree(model, self.cases, got)
+        model.run.assert_not_called()
+
+    def test_complete_and_unicode_neighbours(self):
+        word = "a\u2028b\u2029c\u044f\U0001f642"
+        got = [self.answer(1, given=["$BUILD"], values={"Build": word}), {"id": 2, "refused": ""}]
+        for escaped in (False, True):
+            with self.subTest(escaped=escaped):
+                text = "".join(json.dumps(r, ensure_ascii=escaped) + "\n" for r in got)
+                self.assertEqual(self.invoke(text), got)
+        model = mock.Mock()
+        model.run.return_value = {"refused": None, "given": [], "values": {}}
+        self.assertEqual(disagree(model, self.cases, self.responses()), [])
+        self.assertEqual(model.run.call_count, 2)
+
+    def test_cardinality_before_oracle(self):
+        for got in ([], self.responses()[:1], self.responses() + [self.answer(3)]):
+            with self.subTest(count=len(got)):
+                self.refuse_before_oracle(got)
+        for got in (None, {}, tuple(self.responses())):
+            with self.subTest(outer=type(got).__name__):
+                self.refuse_before_oracle(got)
+        with self.assertRaises(CheckingError):
+            checked_answers([], [])
+        with mock.patch.object(subprocess, "run") as process:
+            with self.assertRaises(CheckingError):
+                run_driver(self.mod, [])
+            process.assert_not_called()
+
+    def test_identity_order_duplicates_and_types(self):
+        for identity in (None, True, 1.0, "1", 0, 3):
+            with self.subTest(identity=identity):
+                self.refuse_before_oracle([self.answer(identity), self.answer(2)])
+        missing = self.answer(1)
+        del missing["id"]
+        for got in ([missing, self.answer(2)], [self.answer(1), self.answer(1)],
+                    [self.answer(2), self.answer(1)]):
+            self.refuse_before_oracle(got)
+
+    def test_report_shapes(self):
+        bad = [None, [], {"id": 1}, self.answer(1, extra=0), self.answer(1, refused=True),
+               {"id": 1, "refused": None, "given": []},
+               self.answer(1, given="x"), self.answer(1, given=[False]),
+               self.answer(1, given=["a", "a"]), self.answer(1, given=["b", "a"]),
+               self.answer(1, values=[]), self.answer(1, values={"X": None}),
+               self.answer(1, values={"X": []}), self.answer(1, values={"X": {}}),
+               self.answer(1, values={"X": float("inf")}), self.answer(1, values={"X": "\ud800"})]
+        for n, first in enumerate(bad):
+            with self.subTest(shape=n):
+                self.refuse_before_oracle([first, self.answer(2)])
+
+    def test_json_and_lf_errors(self):
+        good = json.dumps(self.answer(1)) + "\n"
+        tail = json.dumps(self.answer(2)) + "\n"
+        bad = ["", good + tail.rstrip("\n"), good.rstrip("\n") + tail.rstrip("\n"),
+               good + "\n" + tail, good + "{bad\n",
+               '{"id":1,"id":1,"refused":null,"given":[],"values":{}}\n' + tail,
+               good + '"not an object"\n', good + '{} trailing\n']
+        for number in ("NaN", "Infinity", "1e400"):
+            bad.append('{"id":1,"refused":null,"given":[],"values":{"X":' + number + '}}\n' + tail)
+        for n, text in enumerate(bad):
+            with self.subTest(frame=n), self.assertRaises(CheckingError):
+                self.invoke(text)
+
+    def test_process_failures(self):
+        failures = [OSError("cannot start Go"), subprocess.TimeoutExpired(["go"], 120),
+                    UnicodeDecodeError("utf-8", b"\xff", 0, 1, "invalid transport UTF-8")]
+        for error in failures:
+            with self.subTest(error=type(error).__name__), \
+                    mock.patch.object(subprocess, "run", side_effect=error), self.assertRaises(CheckingError):
+                run_driver(self.mod, self.cases)
+        for code in (1, 2, -15):
+            done = subprocess.CompletedProcess([], code, json.dumps(self.answer(1)) + "\n", "compiler/runtime error")
+            with self.subTest(code=code), mock.patch.object(subprocess, "run", return_value=done), \
+                    self.assertRaisesRegex(CheckingError, "service Go/exit"):
+                run_driver(self.mod, self.cases)
+
+    def test_preparation_errors(self):
+        for text in ("", "module", "\ud800"):
+            with self.subTest(module=text):
+                if text == "\ud800":
+                    (self.mod / "go.mod").write_bytes(b"\xff")
+                else:
+                    (self.mod / "go.mod").write_text(text, encoding="utf-8")
+                with self.assertRaises(CheckingError):
+                    run_driver(self.mod, self.cases)
+        (self.mod / "go.mod").unlink()
+        with self.assertRaises(CheckingError):
+            run_driver(self.mod, self.cases)
+
+    def test_generation_failure_type(self):
+        class Subject(InputFlags):
+            pass
+        done = subprocess.CompletedProcess([], 1, "", "generation error")
+        with mock.patch.object(shutil, "which", return_value="/test/go"), \
+                mock.patch.dict(sys.modules, {"cel_expr_python": object()}), \
+                mock.patch.object(tempfile, "mkdtemp", return_value=str(self.mod)), \
+                mock.patch.object(subprocess, "run", return_value=done) as process:
+            with self.assertRaisesRegex(CheckingError, "generation error"):
+                Subject.setUpClass()
+            self.assertEqual(process.call_args.args[0][:4],
+                             [sys.executable, str(HERE / "gen_flags.py"), "--lesson", "03-worker"])
+
+    def test_complete_semantic_mismatch_and_bool_neighbour(self):
+        model = mock.Mock()
+        model.run.return_value = {"refused": None, "given": [], "values": {"X": 1.0}}
+        cases = self.cases[:1]
+        self.assertEqual(disagree(model, cases, [self.answer(1, values={"X": 1})]), [])
+        for got in (self.answer(1, values={"X": True}), self.answer(1, values={}), {"id": 1, "refused": "wrong"}):
+            with self.subTest(answer=got):
+                bad = disagree(model, cases, [got])
+                self.assertEqual(len(bad), 1)
+                self.assertEqual(bad[0][-1]["id"], 1)
+
+    def test_request_identities_and_unchanged_input(self):
+        done = subprocess.CompletedProcess([], 0, "".join(json.dumps(r) + "\n" for r in self.responses()), "")
+        with mock.patch.object(subprocess, "run", return_value=done) as process:
+            run_driver(self.mod, self.cases)
+        inputs = [json.loads(line) for line in process.call_args.kwargs["input"].split("\n") if line]
+        self.assertEqual([r.pop("ID") for r in inputs], [1, 2])
+        self.assertEqual(inputs, [{"Cmd": c, "Args": a, "Env": e} for c, a, e in self.cases])
+        self.assertEqual(process.call_args.args[0], ["go", "run", "./cmd/judgeinputs"])
 
 
 if __name__ == "__main__":
