@@ -338,23 +338,34 @@ class Docs:
             raise GenError("$ref target has a different OpenAPI object kind")
         return node, path, pointer
 
-    def _closure(self, node, base, pointer, active=(), files=(), done=None):
+    def _closure(self, node, base, pointer, active=(), files=(), done=None, steps=()):
         done = set() if done is None else done
         key = (base, pointer)
+        standalone = self._meta[base]["standalone"]
         if key in active:
-            if self._meta[base]["standalone"] or isinstance(node, dict) and set(node) == {"$ref"}:
+            if standalone:
+                # A local schema may recur on a child instance, not endlessly on the same value.
+                if not any(steps[active.index(key):]):
+                    raise GenError(f"$ref schema cycle without instance descent {base}#{pointer}")
+            elif isinstance(node, dict) and set(node) == {"$ref"}:
                 raise GenError(f"$ref schema cycle {base}#{pointer}")
-            return  # Preserve existing local recursive OpenAPI schemas.
-        if key in done:
+            return  # Preserve existing local recursive OpenAPI schemas too.
+        # A guarded visit must not memoise away an unguarded route to the same JSON node.
+        if key in done and not standalone:
             return
         if isinstance(node, dict):
             if "$ref" in node:
                 target, path, at = self._target(node["$ref"], base, True, pointer)
                 if path != base and path in files + (base,):
                     raise GenError("cycle of cross-file schema references")
-                self._closure(target, path, at, active + (key,), files + (base,) if path != base else files, done)
+                self._closure(target, path, at, active + (key,), files + (base,) if path != base else files,
+                              done, steps + (False,))
             for at, child in self._children(node, pointer):
-                self._closure(child, base, at, active + (key,), files, done)
+                keyword = at[len(pointer) + 1:].split("/", 1)[0]
+                descends = keyword in {"properties", "patternProperties", "additionalProperties",
+                                       "unevaluatedProperties", "propertyNames", "items", "prefixItems",
+                                       "contains", "unevaluatedItems"}
+                self._closure(child, base, at, active + (key,), files, done, steps + (descends,))
         done.add(key)
 
     def resolve(self, ref, base, *, schema=False, origin=None):
