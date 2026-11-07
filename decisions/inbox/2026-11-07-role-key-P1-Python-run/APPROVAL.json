@@ -1,0 +1,125 @@
+{
+  "utc": "2026-11-07T21:09:27.237979+00:00",
+  "status": "APPROVED_ONE_EXACT_P1_PYTHON_PROCESS_AND_ACTUAL_CAPTURE_RECEIVER_ONLY",
+  "authority": "Separate P0 delivery4344/manifest e1ad under a1c293947/755d7af1 and primary Architect frozen-byte reading64c84081. NOT hourly Z13 reminder.",
+  "owner": "coord103-tools; execution through existing review103, no new session/model",
+  "Ntools": "37785167abd44393208f2241a1e83ab36fcb9b52",
+  "common": "43750c8ef574ae4af747f481433fd7f4e0045793",
+  "Source_read_future_only": "285f713746e72cb7cfd659fb8cc8e2251134f604",
+  "P0_READY_sha256": "4344fbd510af77d35dd03602581f8f04296e21323943feb6ee45233a03a03a12",
+  "P0_manifest_sha256": "e1ad2bd450d595946fb059e5ba249b551e25df4d3d0f68d733f34796d2713923",
+  "primary_reading": {
+    "path": "/home/pilot/architect-reviews/role-key-p0-final-6a99-byte-read/ROOT-BYTE-READING.json",
+    "sha256": "64c8408114dd2515e8d2a855f8a37a74fd51396f0a8208d34ad3a93d8b732edc",
+    "P0_records_verified": 163,
+    "bytes": 7691542,
+    "original_payloads_verified": 20,
+    "full_Python_code_read": 3,
+    "project_subject_helper_receiver_execution": 0
+  },
+  "original_author_root": "/home/pilot/review103/role-key-p0-sp20-37785167/followup1",
+  "FREEZE_sha256": "6a99dfee1ab4a2ee361725bbd49f8a88bc13f8ac7735a32b023fbb25942c6080",
+  "INDEX_sha256": "1155a4b9ecaf140221c1c95e1b5a1024c009cd85fe411911f1f7b33cb1d93566",
+  "READ_CLOSURE_sha256": "213a40a39c7f09194619bf3341bee1f44103f2c99dd223808dd673556cdd4ec9",
+  "EXECUTION_sha256": "3fb2d19820e35fa91aaccb869c9faa271783a4c950543952c82fb2fe853528fa",
+  "ENVIRONMENT_sha256": "4b2c5eea0be385d2b79e40118a7542f148d1d22846797e97fe30ea6410d6ed1c",
+  "EXPECTATIONS_sha256": "5686a176f84c5851b74d0b5f43d2a9e9de78464fa1e7242294292f107c7141e8",
+  "roster_sha256": "d786b8d2e8442a67e3620c3c7b2bf874268d4a55f2d8c067f33068bdd60b54e9",
+  "code": {
+    "sp20_caller.py": {
+      "mode": 292,
+      "bytes": 17706,
+      "sha256": "fee62fe90cf6e966291ed72d1ecc405cfcef128841653cb2a11e5a20cb9f867b"
+    },
+    "sp20_support.py": {
+      "mode": 292,
+      "bytes": 16741,
+      "sha256": "f16c2c4e5ae0ff5ce62411ddb00c2bf3128cee2dc88cbcb1b42c938d0c82fb17"
+    },
+    "sp20_audit.py": {
+      "mode": 292,
+      "bytes": 8095,
+      "sha256": "739b027a1610d1b68f5be58d360a4d16c3c4470f9894fc30828c77446802e742"
+    }
+  },
+  "argv": [
+    "/opt/check-env/lesson-spec/bin/python",
+    "-I",
+    "-S",
+    "-B",
+    "/home/pilot/review103/role-key-p0-sp20-37785167/followup1/sp20_caller.py"
+  ],
+  "cwd": "/home/pilot/review103/role-key-p0-sp20-37785167/followup1",
+  "caller_invocations": 1,
+  "wall_timeout_seconds": 300,
+  "run_root": "/home/pilot/review103/role-key-p1-sp20-37785167-run01",
+  "capture_root": "/home/pilot/review103/role-key-p1-sp20-37785167-run01-capture",
+  "parent_capture_files": [
+    "PRECONDITIONS.json",
+    "EXECUTOR.json",
+    "stdout.bin",
+    "stderr.bin",
+    "RECEIVER.json",
+    "AFTER.json",
+    "INDEX.json"
+  ],
+  "caller_evidence_files": [
+    "events.jsonl",
+    "frames.jsonl",
+    "comparison.jsonl",
+    "imports.jsonl",
+    "after-hashes.jsonl",
+    "audit.jsonl",
+    "fatal.jsonl"
+  ],
+  "preconditions": [
+    "Verify held FREEZE and all20 original author payload identities; no relocation to coordinator archives, edit, refreeze or dependency installation.",
+    "Check Ntools HEAD and clean payload and exact interpreter/environment from ENVIRONMENT; ordinary read-only metadata controls, no project probes or --help.",
+    "Confirm run_root and capture_root absent/nonsymlink; after authority create exactly these fresh empty evidence directories. Never reuse a previous run root.",
+    "Pass held6a99 digest as REVIEW103_SP20_RUN_FREEZE_SHA256; set checked environment entries to declared values and remove only entries declared null in the child environment. No system/environment service changes.",
+    "Close no active sessions, change no Source/Platform/worktree/runtime files. A changed prerequisite is CheckingError, no healing or automatic next attempt."
+  ],
+  "parent_plumbing": "Minimal stdlib launcher/capture/identity metadata only, no new expected cases or alternative oracle. Invoke the exact frozen argv once, timeout300s; retain raw stdout/stderr/exit/signal/time outside caller. Parent writes only listed capture files exclusively; caller opens only its seven frozen evidence files. No network or unrelated process.",
+  "permitted_project_effect": "Only the frozen caller importing its declared v7/dependency closure and running the25 fixed observations. Caller audit is active before project import, -I/-S/-B/no cache; no test discovery, lesson import, generators, Go or native compilation.",
+  "receiver": "After actual process completion, execute frozen sp20_support.validate_transport once on captured stdout/stderr/actual integer exit, exact EXPECTATIONS expanded plan and independently held6a99 digest. Frozen sp20_audit definitions may supply CheckingError; no AuditGate instance/project import in receiver. This is the same actual report, not another subject run or mock.",
+  "receiver_on_failure": "If exit not0/1, signal/timeout/launcher failure: record CheckingError with raw capture, do not manufacture frames or invoke subject again. No partial semantic credit. Preserve any already attempted comparison as invalidated if later output failure occurs.",
+  "completeness": "For normal exit0/1 require exact27NDJSON frames: start,25 unique ordered observations,one summary; strictUTF8/JSON/types; summary groups20,entered/completed25,semantic_compared21,expected_checking4,unexpected0/skip0/notexecuted0/auditviolations0. All terminal structural guards before independent comparison.",
+  "semantics": "21 exact comparisons (manual expected12ok/9refused) and4 exact expected checking preconditions. Exit0 complete match; exit1 complete named semantic mismatches, not CheckingError/Go kills. Exit2/unexplained nonzero/partial/wrong exception/effect is CheckingError and stops this scope. Bare exit0 is insufficient.",
+  "counts_are_plan_until_run": {
+    "groups": 20,
+    "observations": 25,
+    "semantic": 21,
+    "expected_ok": 12,
+    "expected_refused": 9,
+    "expected_checking": 4
+  },
+  "immutability_and_poison": "SP16 six calls one Family; full ordered paths, typed JSON equality, original fullSource document/ref identities/input snapshots. SP14/15 no own serialization/logging/patch of poison. SP19 sole missing-person_writer input delta; no extra shape/propertyNames/Time neighbours.",
+  "failure_policy": "No retry, fallback, PYTHONPATH/cache bypass, dependency repair, caller/subject patch, narrowed roster, fabricated expected success or posthoc output repair. Report exact existing boundary to Architect. A subsequent attempt requires a new exact decision.",
+  "required_delivery": "Freeze stdout/stderr/process metadata+seven caller evidence+receiver outcome/audit/import/after identities. Report actual normal comparisons separately from expected checking and semantic mismatch, preserve old472/6a99/P0/RK16/RS history; no combined historical PASS count.",
+  "limits": [
+    "Python audit is not an OS/native loader sandbox; conservative1095/696 envelope is not observed import trace until this run.",
+    "Poison covers declared Python protocols, not every possible C-level bypass.",
+    "No whole Source/workingprofile/catalogue/admission/B1/N5/SUT/lesson READY claim."
+  ],
+  "held": [
+    "six subject repairs",
+    "P2",
+    "D0 renderer",
+    "G0 Go/parser/compiler/build/gofmt/native generation",
+    "Source/Platform/skills edits",
+    "Source adoption/main merge/fullGATE",
+    "keylessA/new protocol",
+    "family08/metadata16",
+    "S08/oldJ suites/RKRS reruns",
+    "new model/session",
+    "VMS owner-word hold",
+    "ms",
+    "both CT Claude",
+    "19guards/timers",
+    "disk cleanup/resize/restart",
+    "Z14 phone/cutover"
+  ],
+  "additional_permission_or_ACK_required": false,
+  "actual_execution_in_approval": 0,
+  "new_estimate_or_calendar_due": null
+}
