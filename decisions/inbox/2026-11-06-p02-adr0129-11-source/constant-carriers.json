@@ -1,0 +1,424 @@
+{
+  "base": "d8cf12290f43693289b2149019232bc26c48705b",
+  "author_commit": "supplied separately by the final external source receipt; source bytes are pinned below",
+  "status": "actual source/carrier roster for review103; not an implemented equality checker",
+  "constant_source": "Platform/02-installer/forms/runtime-constants.tsv",
+  "FILE_MAX": {
+    "name": "FILE_MAX",
+    "value": 8388608,
+    "carrier": {
+      "path": "Platform/02-installer/data/manifest-row.schema.json",
+      "pointer": "/properties/files/additionalProperties/properties/size/maximum",
+      "actual": 8388608
+    },
+    "distinct_from": "common.uint53 bound on the same size value"
+  },
+  "integer_places": [
+    {
+      "input": {
+        "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+        "pointer": "/$defs/display/properties/tree/properties/columns/items/properties/width",
+        "actual": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "x-integer-place": true
+        }
+      },
+      "layer2_row": "/$defs/display/properties/tree/properties/columns/items/properties/width\t2\tx-integer-place\ttrue",
+      "canonical": {
+        "path": "Platform/02-installer/spec/02.2-installer.view.schema.json",
+        "pointer": "/$defs/display/properties/tree/properties/columns/items/properties/width",
+        "actual": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "rule": "preserve each actual input type/domain and canonical representation; do not substitute one universal MAX or invent a missing canonical keyword"
+    },
+    {
+      "input": {
+        "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+        "pointer": "/$defs/placement/properties/capacity/properties/default",
+        "actual": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "x-integer-place": true
+        }
+      },
+      "layer2_row": "/$defs/placement/properties/capacity/properties/default\t2\tx-integer-place\ttrue",
+      "canonical": {
+        "path": "Platform/02-installer/spec/02.2-installer.view.schema.json",
+        "pointer": "/$defs/placement/properties/capacity/properties/default",
+        "actual": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "rule": "preserve each actual input type/domain and canonical representation; do not substitute one universal MAX or invent a missing canonical keyword"
+    },
+    {
+      "input": {
+        "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+        "pointer": "/$defs/placement/properties/retire_when/properties/delete_after",
+        "actual": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "x-integer-place": true
+        }
+      },
+      "layer2_row": "/$defs/placement/properties/retire_when/properties/delete_after\t2\tx-integer-place\ttrue",
+      "canonical": {
+        "path": "Platform/02-installer/spec/02.2-installer.view.schema.json",
+        "pointer": "/$defs/placement/properties/retire_when/properties/delete_after",
+        "actual": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "rule": "preserve each actual input type/domain and canonical representation; do not substitute one universal MAX or invent a missing canonical keyword"
+    },
+    {
+      "input": {
+        "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+        "pointer": "/$defs/placement/properties/unplaced/properties/delete_after",
+        "actual": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "x-integer-place": true
+        }
+      },
+      "layer2_row": "/$defs/placement/properties/unplaced/properties/delete_after\t2\tx-integer-place\ttrue",
+      "canonical": {
+        "path": "Platform/02-installer/spec/02.2-installer.view.schema.json",
+        "pointer": "/$defs/placement/properties/unplaced/properties/delete_after",
+        "actual": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "rule": "preserve each actual input type/domain and canonical representation; do not substitute one universal MAX or invent a missing canonical keyword"
+    },
+    {
+      "input": {
+        "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+        "pointer": "/$defs/placement/properties/weight/properties/default",
+        "actual": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "x-integer-place": true
+        }
+      },
+      "layer2_row": "/$defs/placement/properties/weight/properties/default\t2\tx-integer-place\ttrue",
+      "canonical": {
+        "path": "Platform/02-installer/spec/02.2-installer.view.schema.json",
+        "pointer": "/$defs/placement/properties/weight/properties/default",
+        "actual": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "rule": "preserve each actual input type/domain and canonical representation; do not substitute one universal MAX or invent a missing canonical keyword"
+    },
+    {
+      "input": {
+        "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+        "pointer": "/$defs/requests/properties/per_person",
+        "actual": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "x-integer-place": true
+        }
+      },
+      "layer2_row": "/$defs/requests/properties/per_person\t2\tx-integer-place\ttrue",
+      "canonical": {
+        "path": "Platform/02-installer/spec/02.2-installer.view.schema.json",
+        "pointer": "/$defs/requests/properties/per_person",
+        "actual": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "rule": "preserve each actual input type/domain and canonical representation; do not substitute one universal MAX or invent a missing canonical keyword"
+    },
+    {
+      "input": {
+        "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+        "pointer": "/$defs/table/properties/delete_after",
+        "actual": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "x-integer-place": true
+        }
+      },
+      "layer2_row": "/$defs/table/properties/delete_after\t2\tx-integer-place\ttrue",
+      "canonical": {
+        "path": "Platform/02-installer/spec/02.2-installer.view.schema.json",
+        "pointer": "/$defs/table/properties/delete_after",
+        "actual": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "rule": "preserve each actual input type/domain and canonical representation; do not substitute one universal MAX or invent a missing canonical keyword"
+    },
+    {
+      "input": {
+        "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+        "pointer": "/$defs/tableField/allOf/3/then/properties/default",
+        "actual": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991,
+          "x-integer-place": true
+        }
+      },
+      "layer2_row": "/$defs/tableField/allOf/3/then/properties/default\t2\tx-integer-place\ttrue",
+      "canonical": {
+        "path": "Platform/02-installer/spec/02.2-installer.view.schema.json",
+        "pointer": "/$defs/table/properties/fields/items/properties/default",
+        "actual": {}
+      },
+      "rule": "preserve each actual input type/domain and canonical representation; do not substitute one universal MAX or invent a missing canonical keyword"
+    },
+    {
+      "input": {
+        "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+        "pointer": "/$defs/unitField/allOf/7/then/properties/default",
+        "actual": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991,
+          "x-integer-place": true
+        }
+      },
+      "layer2_row": "/$defs/unitField/allOf/7/then/properties/default\t2\tx-integer-place\ttrue",
+      "canonical": {
+        "path": "Platform/02-installer/spec/02.2-installer.view.schema.json",
+        "pointer": "/$defs/unitFields/items/properties/default",
+        "actual": {}
+      },
+      "rule": "preserve each actual input type/domain and canonical representation; do not substitute one universal MAX or invent a missing canonical keyword"
+    },
+    {
+      "input": {
+        "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+        "pointer": "/$defs/unitField/allOf/16/then/properties/inherit",
+        "actual": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991,
+          "x-integer-place": true
+        }
+      },
+      "layer2_row": "/$defs/unitField/allOf/16/then/properties/inherit\t2\tx-integer-place\ttrue",
+      "canonical": {
+        "path": "Platform/02-installer/spec/02.2-installer.view.schema.json",
+        "pointer": "/$defs/unitFields/items/properties/inherit",
+        "actual": {}
+      },
+      "rule": "preserve each actual input type/domain and canonical representation; do not substitute one universal MAX or invent a missing canonical keyword"
+    },
+    {
+      "input": {
+        "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+        "pointer": "/properties/lease/properties/unconfirmed_max/allOf/1/then",
+        "actual": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "x-integer-place": true
+        }
+      },
+      "layer2_row": "/properties/lease/properties/unconfirmed_max/allOf/1/then\t2\tx-integer-place\ttrue",
+      "canonical": {
+        "path": "Platform/02-installer/spec/02.2-installer.view.schema.json",
+        "pointer": "/properties/lease/properties/unconfirmed_max/allOf/1/then",
+        "actual": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "rule": "preserve each actual input type/domain and canonical representation; do not substitute one universal MAX or invent a missing canonical keyword"
+    },
+    {
+      "input": {
+        "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+        "pointer": "/properties/parts/additionalProperties/properties/stop_timeout",
+        "actual": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "x-integer-place": true
+        }
+      },
+      "layer2_row": "/properties/parts/additionalProperties/properties/stop_timeout\t2\tx-integer-place\ttrue",
+      "canonical": {
+        "path": "Platform/02-installer/spec/02.2-installer.view.schema.json",
+        "pointer": "/properties/parts/additionalProperties/properties/stop_timeout",
+        "actual": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "rule": "preserve each actual input type/domain and canonical representation; do not substitute one universal MAX or invent a missing canonical keyword"
+    },
+    {
+      "input": {
+        "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+        "pointer": "/properties/worker/properties/stop_timeout",
+        "actual": {
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 50,
+          "x-integer-place": true
+        }
+      },
+      "layer2_row": "/properties/worker/properties/stop_timeout\t2\tx-integer-place\ttrue",
+      "canonical": {
+        "path": "Platform/02-installer/spec/02.2-installer.view.schema.json",
+        "pointer": "/properties/worker/properties/stop_timeout",
+        "actual": {
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 50
+        }
+      },
+      "rule": "preserve each actual input type/domain and canonical representation; do not substitute one universal MAX or invent a missing canonical keyword"
+    }
+  ],
+  "integer_place_count": 13,
+  "row_codec_domains": [
+    {
+      "path": "Platform/02-installer/data/manifest-row.schema.json",
+      "pointer": "/properties/rev",
+      "ref": "#/$defs/common.pos53",
+      "domain_pointer": "/$defs/common.pos53",
+      "actual_domain": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9007199254740991
+      }
+    },
+    {
+      "path": "Platform/02-installer/data/manifest-row.schema.json",
+      "pointer": "/properties/files/additionalProperties/properties/size",
+      "ref": "#/$defs/common.uint53",
+      "domain_pointer": "/$defs/common.uint53",
+      "actual_domain": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      }
+    },
+    {
+      "path": "Platform/02-installer/data/manifest-rev.schema.json",
+      "pointer": "/properties/rev",
+      "ref": "#/$defs/common.pos53",
+      "domain_pointer": "/$defs/common.pos53",
+      "actual_domain": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9007199254740991
+      }
+    },
+    {
+      "path": "Platform/02-installer/data/canonical-row.schema.json",
+      "pointer": "/properties/rev",
+      "ref": "#/$defs/common.pos53",
+      "domain_pointer": "/$defs/common.pos53",
+      "actual_domain": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9007199254740991
+      }
+    }
+  ],
+  "JSON_SCHEMA_LITE_DEPTH": [
+    {
+      "path": "Platform/02-installer/spec/02.1-installer.relations.json",
+      "pointer": "/rows/8",
+      "no": 12,
+      "relation": "depth . <= 32",
+      "cel_sha256": "4c7e95e7bef9aae8a74c89976f195b6ae1e79db0409f8e59e71ad9fdcdb3a16b",
+      "source_name": "JSON_SCHEMA_LITE_DEPTH",
+      "value": 32
+    },
+    {
+      "path": "Platform/02-installer/spec/02.1-installer.relations.json",
+      "pointer": "/rows/21",
+      "no": 25,
+      "relation": "depth . <= 32",
+      "cel_sha256": "61faaca01e50aabbcdf763298b56cc6560f163c86bf0a367c8e03591775bd29e",
+      "source_name": "JSON_SCHEMA_LITE_DEPTH",
+      "value": 32
+    },
+    {
+      "path": "Platform/02-installer/spec/02.1-installer.relations.json",
+      "pointer": "/rows/22",
+      "no": 26,
+      "relation": "depth . <= 32",
+      "cel_sha256": "dce5f9784c4b3b54d4e16d1999b1c6f27c233e837faf3409e834eef16e8c7e20",
+      "source_name": "JSON_SCHEMA_LITE_DEPTH",
+      "value": 32
+    },
+    {
+      "path": "Platform/02-installer/spec/02.1-installer.relations.json",
+      "pointer": "/rows/75",
+      "no": 79,
+      "relation": "depth . <= 32",
+      "cel_sha256": "97ad5385a4f167c16af7f2808afad13816c9c0d7a535c051372f158f7346b6cb",
+      "source_name": "JSON_SCHEMA_LITE_DEPTH",
+      "value": 32
+    },
+    {
+      "path": "Platform/02-installer/spec/02.1-installer.relations.json",
+      "pointer": "/rows/89",
+      "no": 93,
+      "relation": "depth . <= 32",
+      "cel_sha256": "656df3fddeff934e180317a726209dd8ef427ff737b50cf9e89c730df1be14dd",
+      "source_name": "JSON_SCHEMA_LITE_DEPTH",
+      "value": 32
+    },
+    {
+      "path": "Platform/02-installer/spec/02.1-installer.relations.json",
+      "pointer": "/rows/115",
+      "no": 119,
+      "relation": "depth . <= 32",
+      "cel_sha256": "38ed261dbaaa4e07d2b1912638f1460c44b8f983c07f02092e49c650a5ae3555",
+      "source_name": "JSON_SCHEMA_LITE_DEPTH",
+      "value": 32
+    }
+  ],
+  "unchanged_semantics": [
+    "rules49/160/161/162",
+    "worker.stop_timeout20..50 is distinct from positive/unsigned/signed2^53 domains",
+    "nullable default/inherit are distinct from required positive integer places"
+  ],
+  "files": {
+    "Platform/02-installer/spec/02.1-installer.schema.json": "654aaf549333a87f583ddc0cce6fd449df5a858f0d912ceb019b65dca922afd6",
+    "Platform/02-installer/spec/02.2-installer.view.schema.json": "8d88d2b06b3cff74661bb03b443d791d7fd13b72b3231c59f2e039248bc62121",
+    "Platform/02-installer/spec/02.1-installer.relations.json": "23d6a92181f1e6a96aa30a107e5590a4b02f36eef70a386f7009c4e067088385",
+    "Platform/02-installer/spec/02.1-installer.layers.tsv": "8ada701a04c8a68b65c0fb29be96b441cec71b16e00f12e2e1c736b68c33f3fb",
+    "Platform/02-installer/forms/runtime-constants.tsv": "257f702adf960e67eb5abb4c7e3697c98c69b07c92ecd06a372c7f6cc1651138",
+    "Platform/02-installer/data/manifest-row.schema.json": "de142eade8de6b255693fab0bb5db9292ec6acb218a1ad987807f61703b8ec89",
+    "Platform/02-installer/data/manifest-rev.schema.json": "3756ba78a243ad52a892be16345482d6888177a1f0d72e390506a1cb698cbb0b",
+    "Platform/02-installer/data/canonical-row.schema.json": "ecd1a78a7e77f00af7f78a32f7dcdda76a62f3f6ef26657059502ca0a63a9b31"
+  }
+}

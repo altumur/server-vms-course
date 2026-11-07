@@ -43,3 +43,6 @@ is closed outside the loopback; after an identity the cookie checks Origin befor
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models
 of the author are not a performed stand test.
 
+
+
+ADR-0129(17): a current GET /session response with via=ticket has until equal to the proven ticket exp and grants of its person by gate-and-pass. It does not add a POST /session admission or rights. A source/schema control is separate from executing a real ticket/session exchange.

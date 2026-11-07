@@ -99,8 +99,7 @@ with equal values (byte for byte) — the same; both are set with different ones
 other wrong environment values (a silent choice would hide a layout error); neither is set — the table default
 (C10-ENV-PAIR-01, the decision of the Specification).
 
-`SLOT_INDEX` is removed: the worker unit does not set it (P/02.4 N1.1), the slot name is the argument `%i` or the variable `slot.name_env`
-([P/03.2](../../03-worker/spec/03.2-worker.norms.md) N3 «start()» step 3) (analysis of the review of stage B 3–5, № 7).
+The slot name is the argument `%i` or the variable `slot.name_env` ([P/03.2](../../03-worker/spec/03.2-worker.norms.md) N3 «start()» step 3).
 
 ### `CLUSTERS`
 

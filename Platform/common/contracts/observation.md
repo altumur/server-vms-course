@@ -92,19 +92,19 @@ of stage B 6–7, № 20: a vector instead of an acceptance step at the bound, w
 
 Moved from P/03.2 N1.4 `places` (`HOLD_SKEW`) and P/03.7 (`domain_worker`) — they have references here; the judgement for a reader of a place
 (the console, `/where/<table>/<place>` P/06.5 N3) is the same relation to the bound as for the one who takes the place (P/03.2 N3 «take_place»:
-«stood unchanged for 45 + HOLD_SKEW») (the stage C guess C06-WHERE-PLACE-HOLD-33-01, the Architect's decision of 2026-10-25).
+«stood unchanged for LOST_AFTER + HOLD_SKEW») (the stage C guess C06-WHERE-PLACE-HOLD-33-01, the Architect's decision of 2026-10-25).
 
 ```yaml
 HOLD_SKEW: 5          # s; the margin to LOST_AFTER of a place hold and of the slot of a worker on the domain (P/03.7)
 active:    an effective hold of a place — the row <sub>/holds/<place> by the form (holds.schema.json, section «Form»), released ≠ true, holder non-empty,
-           the age of its observed version on the monotonic clock of the observer < LOST_AFTER + HOLD_SKEW (at 50 — already free),
+           the age of its observed version on the monotonic clock of the observer < LOST_AFTER + HOLD_SKEW (at LOST_AFTER + HOLD_SKEW — already free),
            and the heartbeat of the worker by is fresh (≤ LOST_AFTER, section «Freshness») and names the instance holder (the field instance); the first
            observation — age 0 (section «Observation of a version» first); otherwise the hold is not effective
 unknown:   the hold row exists but does not read (an outcome of the family holds), or the heartbeat of the worker by does not read — the hold is not known:
            it is counted neither effective nor released; the console — /where/<table>/<place> 503 unavailable, held_by null, the series unheld
            does not count the place free (V7 item 3, the decision of the Architect of 2026-10-28, P1; row 27; the class of row 23 of the list);
            the heartbeat decides only when the row itself is effective: the row is readable and already not active by itself (released, holder empty,
-           age ≥ 50 s) — the hold is not effective, the heartbeat is not read and its unreadability does not make the hold unknown
+           age ≥ LOST_AFTER + HOLD_SKEW) — the hold is not effective, the heartbeat is not read and its unreadability does not make the hold unknown
            (C06-UNHELD-PULSE-UNREAD-01)
 ```
 

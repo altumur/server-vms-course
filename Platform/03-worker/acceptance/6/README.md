@@ -198,3 +198,5 @@ the Architect's decision of 2026-10-30, P/03 item 2); a refusal of an order by a
 only by the fields `until`, `made.at`, `made.keep` — `of` from F is not written, the outcome would be `extended`, not `refused`).
 
 SDK tests at the seams are in [seams.tsv](seams.tsv); their adapter contract is [forms/README.md](../../forms/README.md). They supplement the process scenarios and do not change the counts above or replace a reading witness they do not execute.
+
+s5-state-start-born retains the current born from the accepted start and exact opaque epoch_index="9007199254740993" after another life is reread. That index is not gen/epoch and is not narrowed. The seam input and expectation remain unchanged.

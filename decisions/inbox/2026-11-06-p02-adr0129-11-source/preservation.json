@@ -1,0 +1,33 @@
+{
+  "base": "d8cf12290f43693289b2149019232bc26c48705b",
+  "protected": {
+    "other_lessons_common_tools_skills_Source_VMS": {
+      "files": 13315,
+      "changed": []
+    },
+    "old_corpora_synthetic_profiles_skeletons_codecs": {
+      "files": 1508,
+      "changed": []
+    }
+  },
+  "old_seams": {
+    "path": "Platform/02-installer/acceptance/1/seams.tsv",
+    "sha256": "09422bc880ffc255ce468672abf542a8f0fd16d3653df4a715de712ea9f88e45",
+    "prefix_bytes": 3929,
+    "prefix_unchanged": true,
+    "new_lines": 8,
+    "all_new_case": "s5-embedded-schema-values"
+  },
+  "stages": {
+    "only_changed_rows": 1,
+    "before": "1\tmanifest-load\tStrict regular loading by text, form and relations; pure core isolation\tP/02.1 N1; P/02.1 N3\tverdicts:2.1:*;vectors:exec;tests:2.1:s1-load-isolation,s2-catalogue-isolation,s3-load-parallel,s4-load-layer-order:seams\t4\t-\tfamilies,vectors,stagetests\t-\t",
+    "after": "1\tmanifest-load\tStrict regular loading by text, form and relations; pure core isolation\tP/02.1 N1; P/02.1 N3\tverdicts:2.1:*;vectors:exec;tests:2.1:s1-load-isolation,s2-catalogue-isolation,s3-load-parallel,s4-load-layer-order,s5-embedded-schema-values:seams\t4\t-\tfamilies,vectors,stagetests\t-\t",
+    "meaning": "one selector append; all other cells/parts/when preserved"
+  },
+  "execution": "none; source/byte preservation only",
+  "scope_gaps": [
+    "full positive profile/2GiB sufficiency",
+    "recovery executable binding",
+    "legacy accepted embedded type:int versus strict JSONSchema type enumeration"
+  ]
+}
