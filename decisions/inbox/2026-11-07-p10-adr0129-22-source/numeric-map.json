@@ -1,0 +1,671 @@
+{
+  "base": "1d0f1ddffdd713e4dad4435e655e29d28f1ea630",
+  "plan_source_map": {
+    "base": "4a656cd459d6492fe656e168988dbb71284a6224",
+    "candidates": [
+      {
+        "path": "Platform/10-domain-console/acceptance/README.md",
+        "line": 12,
+        "before": "of the acceptance of M11/11 (the command `alarms`) — the vector [`vectors/alarms`](../vectors/alarms/README.md) (27 rows). The other scenarios",
+        "line_sha256": "9bee8caabd886af720e89a2ed79817a2c054d2d7ef00ebaa33b67faad4a252ad",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/acceptance/README.md",
+        "line": 49,
+        "before": "  of the row `PUT /domain/topology` — 5 s, the freeze limit 120 s) — 502 `did not answer` (no answer within `FORWARD_WAIT`). The edit under",
+        "line_sha256": "2e557a3c0747c9c453d994575cecbd7fbaaa23b34a6a66f52b7ee91c4b09e022",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/acceptance/README.md",
+        "line": 82,
+        "before": "  `domain/topology` — sc. 15 step 2 of the acceptance of [chapter 8.3](../../08-domain/acceptance/3/README.md) (C10-TOPOLOGY-ABSENT-01);",
+        "line_sha256": "c22e5f514c978016204f90692eb5d426f764de2565ebffa43c0968890df7d260",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/forms/README.md",
+        "line": 11,
+        "before": "[runtime-constants.tsv](runtime-constants.tsv) has the common header name,value,unit,norm,meaning and projects four existing positive integer limits. DOMAIN_PAGE_MEMBERS is the existing 1000-member bound of the aggregate view and member-list pages; RELAY_MEMBERS_MAX is the 5000-name relay bound. LOST_AFTER is the imported 45-second silence threshold; ALARMS_WINDOW is the existing one-day default window, in seconds. They are not environment settings. Cursor contents, projections, complete/contested data, report clocks and witness calculations remain their source contracts.",
+        "line_sha256": "6d85c4b0a159251e578ea1a9884864f74aa3e7d43e324a6e6aa2a759f8bc8ef6",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/lifecycle.md",
+        "line": 29,
+        "before": "| `DOMAIN_CONSOLE_HOST`, `DOMAIN_CONSOLE_PORT` | the door of the domain operator; the consoles of the members forward here; TLS — by the kit of the role (P/02.4 N1.6, [the role certificate contract](../common/contracts/role-certificate.md) `kit`; ADR-0075 addendum 2026-10-26 (2) item 4) | `0.0.0.0:8444` — the default of the process (the unit does not write it), not an explicit address: only with the kit, without the kit — a start refusal, code 2 (P/02.4 N1.6 `process`; ADR-0075 addendum 2026-10-26 (3) item 5, (4) item 4; review of the norms of ADR-0075, Claude fd85ea8cc, S-3) | [P/02.4 N1.12](../02-installer/spec/02.4-installer.norms.md) |",
+        "line_sha256": "ee658132185c6427b40159ca9a2c0a2b894fdb93d6623d4c6f401d6786237372",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/lifecycle.md",
+        "line": 30,
+        "before": "| `SIGNER_URL` | the door of the process `domain` of its own box — the passing of edits; the server check — [the role certificate contract](../common/contracts/role-certificate.md) «The client of a door of its own cluster» (the host is a loopback literal — the name `SERVER_NAME`; `localhost` — a name) | `http://localhost:8445` (the stand of one machine, as [the lifecycle of P/08](../08-domain/lifecycle.md); review analysis of stage A 8–10, № 33) | [P/10 N1.3](spec/10-domain-console.norms.md) (the passing; the reception — P/08.0 N1.8); [P/08.2 N1.3](../08-domain/spec/08.2-domain.norms.md) |",
+        "line_sha256": "72d7de314282bd0eda5b92b484a3a26c44cedac7468f3f26e94c4a0b370275a9",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/10-domain-console.md",
+        "line": 109,
+        "before": "- Вектор [`alarms`](vectors/alarms/README.md) — 27 строк: все состояния члена; строки 15, 17–23 — вход не по форме (код 2);",
+        "line_sha256": "385210d4f7b0aaa767fbd186535b039fc368876da2471564811527a3f6aec763",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/acceptance/README.md",
+        "line": 12,
+        "before": "приёмки M11/11 (команда `alarms`) — вектор [`vectors/alarms`](../vectors/alarms/README.md) (27 строк). Остальные сценарии",
+        "line_sha256": "d001ff7005d03b845c61fe16e9f97e971bc9b5b3d56ca422aafd1488ca638473",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/forms/README.md",
+        "line": 11,
+        "before": "[runtime-constants.tsv](../../forms/runtime-constants.tsv) имеет общую шапку name,value,unit,norm,meaning и разворачивает четыре существующих положительных целочисленных предела. DOMAIN_PAGE_MEMBERS — действующий предел 1000 членов страницы сводного вида и списка членов; RELAY_MEMBERS_MAX — предел 5000 имён ретранслятора. LOST_AFTER — перенесённый порог молчания 45 секунд; ALARMS_WINDOW — действующее окно по умолчанию в одни сутки, в секундах. Это не настройки окружения. Содержимое cursor, проекции, полные данные complete/contested, часы отчёта и вычисления свидетелей остаются в исходных контрактах.",
+        "line_sha256": "fcffa1a76f4efa90a2edc14b63450d0c5a0d2863890d63c14020f3d07c4d1a9b",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/lifecycle.md",
+        "line": 29,
+        "before": "| `DOMAIN_CONSOLE_HOST`, `DOMAIN_CONSOLE_PORT` | дверь оператора домена; консоли членов пересылают сюда; TLS — по комплекту роли (P/02.4 N1.6, [договор сертификата роли](../../common/ru/contracts/role-certificate.md) `kit`; ADR-0075 доп. 2026-10-26 (2) п. 4) | `0.0.0.0:8444` — умолчание процесса (юнит не пишет), не явный адрес: только с комплектом, без комплекта — отказ старта, код 2 (P/02.4 N1.6 `process`; ADR-0075 доп. 2026-10-26 (3) п. 5, (4) п. 4; ревью норм ADR-0075, Claude fd85ea8cc, S-3) | [P/02.4 N1.12](../../02-installer/ru/spec/02.4-installer.norms.md) |",
+        "line_sha256": "b4e1d47e46c0828c31fe293cff7da1ac64a7faee5070e68d0c6a646081a2da78",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/lifecycle.md",
+        "line": 30,
+        "before": "| `SIGNER_URL` | дверь процесса `domain` своей коробки — передача правок; проверка сервера — [договор сертификата роли](../../common/ru/contracts/role-certificate.md) «Клиент двери своего кластера» (хост — литерал петли — имя `SERVER_NAME`; `localhost` — имя) | `http://localhost:8445` (стенд одной машины, как [жизненный цикл P/08](../../08-domain/ru/lifecycle.md); разбор ревью стадии A 8–10, № 33) | [P/10 N1.3](spec/10-domain-console.norms.md) (передача; приём — P/08.0 N1.8); [P/08.2 N1.3](../../08-domain/ru/spec/08.2-domain.norms.md) |",
+        "line_sha256": "f455fe75046ec5ad1c31a0b170af3476260e03b6c266236ec2e9fd12bc97118f",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/spec/10-domain-console.README.md",
+        "line": 86,
+        "before": "- Сценарии 02, 05–19 приёмки урока проходят; вектор `alarms` — 27 строк, строки 15, 17–23 — код 2.",
+        "line_sha256": "ee4e89e89f71a4b8d8d2afca674bfba603365d5038f31196412ecbbeb6f2adf6",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+        "line": 64,
+        "before": "`w2c-domainconsole.service`, роль `domainconsole`, порт `DOMAIN_CONSOLE_HOST/PORT` 0.0.0.0:8444 — только с комплектом роли, TLS — по комплекту (ADR-0075 доп. 2026-10-26 (2) п. 4; [P/02.4 N1.12](../../../02-installer/ru/spec/02.4-installer.norms.md)).",
+        "line_sha256": "0505a2fc5b7d07b929ae093520478b9ffd52ea17d8550dd5eda7547557126e9d",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+        "line": 86,
+        "before": "| GET `/domain[?cursor=]` | ответ — голова `domain/view` и непустые разделы подряд до 1000 членов, поля `members`, `units`, `contested`, `reports`, `pending`, `outcomes` — слияние строк, `cursor` — следующая страница, `unread` — непрочитанные разделы; малый домен — одна страница (P/08.1 N1.4b); у незрителя домена (договор права `wide`) — только `as_of`, `holder`, `complete`, `members` (`servers` и `url` — только у кластеров, где у него есть строка), `units` по записи, `outcomes` — исходы, где `by` — он сам, `contested` — ref, чей кластер он видит, `age`, `url`, `withheld: <число>`; иначе 200 — объект `domain/view` ([P/08.1](../../../08-domain/ru/spec/08.1-domain.norms.md) N1.4) как есть плюс `age` — секунды с `as_of` по стенным часам консоли, `max(0, now − as_of)` (часы назад — 0; C10-AGE-NONNEG-01), один знак после точки; поле `url` вида, которое не читается (не строка), — `null` в ответе (V7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 53 списка) | 404 `{error: \"no domain here\", detail}` — объекта нет; объект есть, но не читается — 503 `{error: \"unavailable\"}`, не 404 (V7 п. 3, решение «Архитектора» 2026-10-28, P1; строка 54 списка); 401/403 — N1.5 |",
+        "line_sha256": "e7e1ea9f94a0c9693d3369ad91000a4b906281778e2dc793b6820867bb8ab7ec",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+        "line": 89,
+        "before": "| GET `/domain/relays/<ретранслятор>` | 200 `{relay, rev, members}` строки `domain/relay-members/<relay>` (P/08.3 N1.2): `members` — имена по возрастанию, до 5000, ключи членов не идут; строки нет — `rev` 0, `members: []`; консоль домена отвечает сама; право — `view` домена (`wide`), судится первым | 401, 403 — раньше всего; 404 такого члена нет; 503 `{error: \"unavailable\"}` — не читается |",
+        "line_sha256": "e231c55f6ea19523d5cf07b91020edf81776a8c27ce4629c7577378bc6e6e348",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+        "line": 93,
+        "before": "**Страницы `GET /domain` (G10-PAGE-CURSOR-01).** Предел жёсткий: не более 1000 элементов `members` на странице. Раздел — единица хранения/работы писателя, не неделимая страница HTTP; читаемый раздел с более чем 1000 членами делится по границе члена. Непустые разделы обходятся по возрастанию четырёхзначного имени (0000…4095), члены внутри раздела — по имени в порядке байтов UTF-8. Выбирается остаток бюджета страницы, при необходимости следующий запрос продолжается внутри того же раздела. Массив `members` каждой выданной страницы сам упорядочен по имени; последний отображённый элемент не обязан обозначать последний посещённый раздел.",
+        "line_sha256": "844c0d584a2abbc7556594cb61eb3bf8e5ebd18178d4b6f87bec91c2ea7a068c",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+        "line": 99,
+        "before": "Примеры на неизменных данных: один раздел с 1001 членом даёт страницы 1000 и 1; соседние разделы с 999 и 2 — страницы 1000 и 1 с продолжением внутри второго раздела. Спор между членами по разные стороны границы сохраняет оба имени участников везде, где включён этот спор. Нового предела размера раздела для P/08.1 N1.4b нет.",
+        "line_sha256": "f9706df980c13198fa57f1e30e1f43a9a0ece303b4400fe407a7639e6906e1f2",
+        "classification": [
+          "PRESERVE_FIXED_EXAMPLE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+        "line": 107,
+        "before": "| GET `/domain/members[?cursor=]` | консоль домена (`domainconsole`) | 200 `{members, parts, knocking, count, cursor?}`: непустые разделы подряд, до 1000 членов, малый домен — одна страница; `parts` — `{<раздел>: {rev, term, index}}`; `index` — точная непустая строка Row.index прочитанной строки хранилища, никогда не JSON-число или преобразование binary64 ([P/01.1](../../../01-store/ru/spec/01.1-store.norms.md) N1 Version); `members` — слияние doc строк, прочитанных дверью; `count` — `domain/member-count`, нет — поля нет; `knocking` — на первой странице `view.knocking`, на каждой — `domain/knocks/<part>` разделов страницы (стук памяти есть только в виде, [глава 8.1](../../../08-domain/ru/spec/08.1-domain.norms.md) N1.7), поля в читаемом виде нет — `[]` (поле необязательно, стучащихся нет; как вид без `shared`, C10-MEMBERS-KNOCKING-ABSENT-01); `member_list` вида не подставляется (C10-MEMBERS-SOURCE-01) | 404 `no domain here` (вида нет; строки `domain/member-rows/<part>` нет при читаемом виде — список есть с первого старта держателя, [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) N3 «держатель в списке», C10-MEMBERS-SOURCE-01); строка `domain/member-rows/<part>` или вид есть, но не читается — 503 `{error: \"unavailable\"}` (V7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 36 списка); 401/403 — N1.5 |",
+        "line_sha256": "c1eaf1568defb5c06d9ca497624679d2334f78c8398f4707a880ed83bf61ca4d",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+        "line": 289,
+        "before": "**Все hop пересылки.** [Политика передачи доменному воркеру](../../../common/ru/contracts/forwarding.md#политика-hop-передачи-доменному-воркеру) обязательна на каждой консоли пути, включая держателя и члена: digest подтверждённой политики, конечные сроки с исполнением нижних hop, буфер 4 MiB и потоки без обычного предела 5 секунд/1 MiB. Несовпадение — 503 без вызова воркера. После клиентских заголовков обрыв передаёт байты и закрытие, без нового тела `502`. Обычные платформенные пути сохраняют прежние пределы.",
+        "line_sha256": "242786099aea20eca054dab514bb9a180d378d0ec3c668d0709c2b75e7fdb97e",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+        "line": 327,
+        "before": "  silent:      последний отчёт старше silent_after этого члена (договор наблюдения «Свежесть»): server — LOST_AFTER (45 с),",
+        "line_sha256": "a6621a443f6d973d5f6df4a81701529f84a27171a29fa447b790384e3296ee76",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+        "line": 403,
+        "before": "         \"garbled\" | null, history: <P/08.9 N1.9> | null, silent_after?} | {reported: \"garbled\", page?, history?, silent_after?}}, witnesses: [{sub, name, ts, cluster, units}]}",
+        "line_sha256": "077403271e04c30b843f2caa42347c2e6434f305a7207e8d0cee7b00feda2cd7",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+        "line": 404,
+        "before": "silent_after?: конечное положительное JSON-число в обеих формах члена; если поля нет, берётся переданный положительный lost_after.",
+        "line_sha256": "69dc70c1e0e1be68a5877b0973253625f376a549084276be4cc088f7a17b6ca0",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/vectors/alarms/README.md",
+        "line": 29,
+        "before": "- `now` = 1760000000, окно — сутки (`since` = `now` − 86400, `until` = `now`; кроме строк 08, 27), `lost_after` 45 (кроме строки 15);",
+        "line_sha256": "cdc531dd1986d9a6d7f87b4f70a8428efae7f35e034a73313ddecb2c09eeab33",
+        "classification": [
+          "PRESERVE_ACTUAL_VECTOR_FIXTURE_NUMBERS"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/ru/vectors/alarms/README.md",
+        "line": 80,
+        "before": "`silent_after?` каждого члена — конечное положительное число; без него действует переданный `lost_after`. Сборщик всегда передаёт предел server/camera из N1.8, функция не выводит класс. Строки 28–30 проверяют камеру рядом с сервером и точную границу; 31–35 отвергают ноль, отрицательное, boolean, строку и null, также у garbled. `ts` свидетеля во входе уже переведён на часы домена по исходному отчёту, а не метке наблюдаемого члена. Обе стороны сдвига настоящего сборщика проверяются CALL-швами.",
+        "line_sha256": "e7a4610b9af84de17f885abf1051ca95673ec13e38c7ff84b626e5c36c2d476d",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.README.md",
+        "line": 86,
+        "before": "- Scenarios 02, 05–19 of the acceptance of the lesson pass; the vector `alarms` — 27 rows, rows 15, 17–23 — code 2.",
+        "line_sha256": "4a18f3cd417c13c145d3c1d41d82835a8a8e10c6e993573bc5291f6dd26e99b4",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 67,
+        "before": "`w2c-domainconsole.service`, the role `domainconsole`, the port `DOMAIN_CONSOLE_HOST/PORT` 0.0.0.0:8444 — only with a role kit, TLS — by the kit (ADR-0075 addendum of 2026-10-26 (2) item 4; [P/02.4 N1.12](../../02-installer/spec/02.4-installer.norms.md)).",
+        "line_sha256": "8b74d520ce614ec3e35ea6d7930561bb477f41f7f9d5951134fb27da6348b2d1",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 90,
+        "before": "| GET `/domain[?cursor=]` | the answer is the head of `domain/view` and the non-empty parts in a row up to 1000 members, the fields `members`, `units`, `contested`, `reports`, `pending`, `outcomes` — a merge of the rows, `cursor` — the next page, `unread` — the unread parts; a small domain — one page (P/08.1 N1.4b); for a non-viewer of the domain (the right contract `wide`) — only `as_of`, `holder`, `complete`, `members` (`servers` and `url` — only for the clusters where it has a row), `units` by record, `outcomes` — the outcomes where `by` is itself, `contested` — the refs whose cluster it sees, `age`, `url`, `withheld: <count>`; otherwise 200 — the object `domain/view` ([P/08.1](../../08-domain/spec/08.1-domain.norms.md) N1.4) as is plus `age` — seconds since `as_of` by the wall clock of the console, `max(0, now − as_of)` (a clock gone back — 0; C10-AGE-NONNEG-01), one digit after the point; the field `url` of the view that does not read (not a string) is `null` in the answer (V7 item 3, the Architect's decision of 2026-10-28, on the proposal; line 53 of the list) | 404 `{error: \"no domain here\", detail}` — there is no object; the object exists but does not read — 503 `{error: \"unavailable\"}`, not 404 (V7 item 3, the Architect's decision of 2026-10-28, P1; line 54 of the list); 401/403 — N1.5 |",
+        "line_sha256": "32cc5eca58572eddcb935286df5f46e74595677df76a6eb2841d4b72ccb0e3be",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 93,
+        "before": "| GET `/domain/relays/<relay>` | 200 `{relay, rev, members}` of the row `domain/relay-members/<relay>` (P/08.3 N1.2): `members` — names in ascending order, up to 5000, the member keys do not go; there is no row — `rev` 0, `members: []`; the domain console answers itself; the right is `view` of the domain (`wide`), judged first | 401, 403 — before everything; 404 there is no such member; 503 `{error: \"unavailable\"}` — does not read |",
+        "line_sha256": "f501b815b66f81545264e4fc223d5cac8826127f0b75e320244a70f017d43d21",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 97,
+        "before": "**Pagination of `GET /domain` (G10-PAGE-CURSOR-01).** The limit is hard: at most 1000 elements of `members` per page. A part is the writer's storage/work unit, not an indivisible HTTP page; a readable part with more than 1000 members is split at a member boundary. Visit the non-empty parts in ascending order of their four-digit names (0000…4095), and the members inside each part by name in UTF-8 byte order. Select up to the remaining page budget, then continue inside this part on the next request if needed. Each returned page's `members` is itself ordered by name; its last displayed element need not identify the last visited part.",
+        "line_sha256": "cc43098ad4c79ac9adb872409b2a5e505b84e73b60346ded828289f611e72a50",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 103,
+        "before": "Examples on fixed data: one part with 1001 members gives pages of 1000 and 1; consecutive parts with 999 and 2 give pages of 1000 and 1, continuing inside the second part. A conflict between members on opposite sides of that boundary keeps both claimant names wherever that conflict is included. No part-size bound is added to P/08.1 N1.4b.",
+        "line_sha256": "e6fef73a3ba12773e176258e46fbbc402f38f66d0eb94d3e7d4836d0c7feb6cb",
+        "classification": [
+          "PRESERVE_1001_1000_PLUS1_EXAMPLE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 111,
+        "before": "| GET `/domain/members[?cursor=]` | the domain console (`domainconsole`) | 200 `{members, parts, knocking, count, cursor?}`: the non-empty parts in a row, up to 1000 members, a small domain — one page; `parts` — `{<part>: {rev, term, index}}`; `index` is the exact nonempty string Row.index of the store row read, never a JSON number or a binary64 conversion ([P/01.1](../../01-store/spec/01.1-store.norms.md) N1 Version); `members` — a merge of the doc of the rows read by the door; `count` — `domain/member-count`, absent — no field; `knocking` — on the first page `view.knocking`, on each — `domain/knocks/<part>` of the parts of the page (the memory knock exists only in the view, [chapter 8.1](../../08-domain/spec/08.1-domain.norms.md) N1.7), the field is absent in a readable view — `[]` (the field is optional, nobody is knocking; like a view without `shared`, C10-MEMBERS-KNOCKING-ABSENT-01); `member_list` of the view is not substituted (C10-MEMBERS-SOURCE-01) | 404 `no domain here` (there is no view; there is no row `domain/member-rows/<part>` with a readable view — the list exists from the first start of the holder, [P/08.3](../../08-domain/spec/08.3-domain.norms.md) N3 «the holder in the list», C10-MEMBERS-SOURCE-01); the row `domain/member-rows/<part>` or the view exists but does not read — 503 `{error: \"unavailable\"}` (V7 item 3, the Architect's decision of 2026-10-28, on the proposal; line 36 of the list); 401/403 — N1.5 |",
+        "line_sha256": "fe98b8e0cf9b61e65283446a359892bd86907f0f0c5a17cc8b49510f3e9b4431",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 298,
+        "before": "**All forwarding hops.** The [domain worker pass hop policy](../../common/contracts/forwarding.md#domain-worker-pass-hop-policy) is mandatory at every console on this path, including the holder and member consoles: confirmed-policy digest, finite waits including downstream execution, 4 MiB finite buffering, and streams without the ordinary 5-second/1 MiB limit. A mismatch returns 503 without calling the worker. After exposing client headers a break propagates bytes and closure, never a new `502` body. Ordinary platform routes retain their normal limits.",
+        "line_sha256": "b4febde7f7dd064e9a051051fe6586982639d359646de438a20df4a6064a7233",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 338,
+        "before": "  silent:      the last report is older than this member's silent_after (the observation contract «Freshness»): server — LOST_AFTER (45 s),",
+        "line_sha256": "b5e56efc2b70f7cda7b536592c7df7aac486cab4bb281e3bad4874628e15135a",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 417,
+        "before": "         \"garbled\" | null, history: <P/08.9 N1.9> | null, silent_after?} | {reported: \"garbled\", page?, history?, silent_after?}}, witnesses: [{sub, name, ts, cluster, units}]}",
+        "line_sha256": "077403271e04c30b843f2caa42347c2e6434f305a7207e8d0cee7b00feda2cd7",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 418,
+        "before": "silent_after?: a finite positive JSON number in either member form; when absent, use the supplied positive lost_after. This",
+        "line_sha256": "478435ccb4d1d8fdc53bbda1795b4cc8b541bd25d2338bc68144e1f8a1d1b3f8",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 419,
+        "before": "   compatibility input does not infer camera class. The real collector always supplies its member-specific value. Validate the complete",
+        "line_sha256": "cad41cd5f2dd3e072a5bb69638cbcfcb69446b359606d6eb029351cc54e02f6b",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 428,
+        "before": "   now − last_report > (silent_after if present, else lost_after) → silent; a witness with ts − units[member] > last_report — not_reporting",
+        "line_sha256": "4f34ee8646499689095ec993370747582d8a56483ec56f13094b094517a12fc1",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 482,
+        "before": "           Not by the form at alarms: a member name not by the member grammar, lost_after not > 0, a present silent_after not a finite positive number (boolean and null are not numbers), a history or a witness not by the form of P/08.9 N1.9",
+        "line_sha256": "17e295d08a3fc8a6cc40dff2c6d91f9ec88091d9fdb1bd71cb5628baac53c09b",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 518,
+        "before": "| P/10-08 | sc. 15 step 2 of the acceptance of chapter 8.3 (M11/04 sc. 01) |",
+        "line_sha256": "540f246cfdedea32df2b310bad3e7dd6baa3b9c241de5cb59ab384325af11939",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 563,
+        "before": "- [ ] **P/10-08** `GET /domain/topology` — from the row, not from the view: right after a PUT — the new `rev` (N1.2c; T1) — a neighbour on the stand of chapter 8.3 (sc. 15 step 2); the row does not read — 503 — sc. 11",
+        "line_sha256": "cbc62a60d1287ff6be7f3c221cfe391a7afa75ace5bf3d545be9fa1b0a3c3f85",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/vectors/alarms/README.md",
+        "line": 29,
+        "before": "- `now` = 1760000000, the window — a day (`since` = `now` − 86400, `until` = `now`; except rows 08, 27), `lost_after` 45 (except row 15);",
+        "line_sha256": "c17d9c214a7a5f6544064149aea3c16396915da3fa9e4ddaf5b4941de98214dc",
+        "classification": [
+          "PRESERVE_ACTUAL_VECTOR_FIXTURE_NUMBERS"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/vectors/alarms/README.md",
+        "line": 33,
+        "before": "- `silent_after?` in each member — a finite positive number, overriding the supplied `lost_after`; without it the old native input retains `lost_after`. The collector always supplies the server/camera value from N1.8; no class is inferred by the function. Rows 28–30 exercise a camera alongside a server and both sides of the exact boundary. Rows 31–35 reject zero, negative, boolean, string and null overrides.",
+        "line_sha256": "a06a26a5179e030590b7380d645d756ee0d2f8293489321668a09e8a292f3d7c",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/vectors/alarms/README.md",
+        "line": 72,
+        "before": "| 2026-10-20 | the move | sc. 04 (15 steps) from M11/11 — the rows of this table (stage B; the plan of the move of lesson 10, § 3) |",
+        "line_sha256": "6a73c9110dd10545f3a6d7fb214ca667e9fb888be329d3d5621a114b19af1c65",
+        "classification": [
+          "REVIEW_NUMERIC_PROSE_TO_OWNED_NAME_OR_OWNER_REFERENCE"
+        ]
+      },
+      {
+        "path": "Platform/10-domain-console/vectors/alarms/README.md",
+        "line": 81,
+        "before": "Each member's `silent_after?` is a finite positive number; without it the supplied `lost_after` applies. The collector always supplies the server/camera threshold of N1.8; the function infers no class. Rows 28–30 check a camera alongside a server and the exact boundary; 31–35 reject zero, negative, boolean, string and null, including garbled. A witness input `ts` is already normalized to domain time using its originating report, never the target member's mark. Both offset directions of the actual collector are checked by CALL seams.",
+        "line_sha256": "1697bc4e19102edeeb04ce07ae7fc0693ffabde16c38d049c3c8db809db12b49",
+        "classification": [
+          "EDITORIAL_OR_NATIVE_FORM_TARGET"
+        ]
+      }
+    ],
+    "current_constants": "# P/10 existing positive integer limits; literal TAB. Not environment settings.\nname\tvalue\tunit\tnorm\tmeaning\nDOMAIN_PAGE_MEMBERS\t1000\tcount\tP/10-R004\tMaximum members served on one aggregate domain or member-list page; the exact cursor policy remains the source\nRELAY_MEMBERS_MAX\t5000\tcount\tP/10-R004\tMaximum member names returned by the existing relay-members door; keys never leave\nLOST_AFTER\t45\ts\tP/10-R011\tImported observation silence threshold; silent_since is the last report plus this threshold\nALARMS_WINDOW\t86400\ts\tP/10-R011\tThe default one-day window preceding now; explicit bounds keep the strict reader-time query grammar\n",
+    "runtime_rows_action": "PRESERVE all four existing rows byte-exact; no redefinition",
+    "numeric_API_carriers": [
+      {
+        "pointer": "/paths/~1domain~1relays~1{relay}/get/responses/200/content/application~1json/schema/properties/rev/minimum",
+        "value": 0,
+        "name": null,
+        "action": "KEEP structural grammar/zero/nonempty; not a separate configurable maximum"
+      },
+      {
+        "pointer": "/paths/~1domain~1relays~1{relay}/get/responses/200/content/application~1json/schema/properties/members/maxItems",
+        "value": 5000,
+        "name": "RELAY_MEMBERS_MAX",
+        "action": "Keep scalar; equality with existing P10 runtime row"
+      },
+      {
+        "pointer": "/paths/~1domain~1{sub}~1tables~1{table}/get/parameters/2/schema/minLength",
+        "value": 1,
+        "name": null,
+        "action": "KEEP structural grammar/zero/nonempty; not a separate configurable maximum"
+      },
+      {
+        "pointer": "/paths/~1domain~1{sub}~1{rows}/get/parameters/1/schema/minLength",
+        "value": 1,
+        "name": null,
+        "action": "KEEP structural grammar/zero/nonempty; not a separate configurable maximum"
+      },
+      {
+        "pointer": "/paths/~1domain~1{sub}~1{rows}/head/parameters/1/schema/minLength",
+        "value": 1,
+        "name": null,
+        "action": "KEEP structural grammar/zero/nonempty; not a separate configurable maximum"
+      },
+      {
+        "pointer": "/paths/~1domain~1folders~1{id}~1units/get/parameters/2/schema/minimum",
+        "value": 1,
+        "name": null,
+        "action": "KEEP structural grammar/zero/nonempty; not a separate configurable maximum"
+      },
+      {
+        "pointer": "/paths/~1domain~1folders~1{id}~1units/get/parameters/2/schema/maximum",
+        "value": 1000,
+        "name": null,
+        "action": "Keep scalar; bind exact owner P08 folder-units parameter; do not equate to DOMAIN_PAGE_MEMBERS just because both equal 1000"
+      },
+      {
+        "pointer": "/paths/~1domain~1batches/post/requestBody/content/application~1json/schema/properties/n/minimum",
+        "value": 1,
+        "name": null,
+        "action": "Inline weak request removed in favour of exact owner requestBody; owner value unchanged"
+      },
+      {
+        "pointer": "/paths/~1domain~1{sub}~1{pass}/parameters/1/schema/minLength",
+        "value": 1,
+        "name": null,
+        "action": "KEEP structural grammar/zero/nonempty; not a separate configurable maximum"
+      },
+      {
+        "pointer": "/paths/~1domain~1edits/post/parameters/0/schema/minLength",
+        "value": 1,
+        "name": null,
+        "action": "Keep scalar; exact P08 /domain/edits Idempotency-Key parameter carrier"
+      },
+      {
+        "pointer": "/paths/~1domain~1edits/post/parameters/0/schema/maxLength",
+        "value": 200,
+        "name": null,
+        "action": "Keep scalar; exact P08 /domain/edits Idempotency-Key parameter carrier"
+      },
+      {
+        "pointer": "/components/schemas/PlacementList/properties/rev/minimum",
+        "value": 0,
+        "name": null,
+        "action": "KEEP structural grammar/zero/nonempty; not a separate configurable maximum"
+      },
+      {
+        "pointer": "/components/schemas/GrantsView/properties/versions/additionalProperties/properties/revision/minimum",
+        "value": 0,
+        "name": null,
+        "action": "KEEP structural grammar/zero/nonempty; not a separate configurable maximum"
+      },
+      {
+        "pointer": "/components/schemas/GrantsView/properties/versions/additionalProperties/properties/index/minLength",
+        "value": 1,
+        "name": null,
+        "action": "KEEP structural grammar/zero/nonempty; not a separate configurable maximum"
+      }
+    ],
+    "proof_boundaries": "No equality from equal numeric value alone; structural grammar and examples remain values",
+    "standalone_number_owner_rules": {
+      "1000 aggregate/member HTTP pages": "DOMAIN_PAGE_MEMBERS in current P10 form; fixed pagination examples remain literal",
+      "5000 relay names": "RELAY_MEMBERS_MAX in current P10 form",
+      "45-second server silence": "existing imported LOST_AFTER; form row unchanged, no second definition",
+      "one-day default alarm query window": "ALARMS_WINDOW in current P10 form",
+      "DOMAIN_CONSOLE_HOST/PORT and SIGNER_URL defaults": "current daemon-flags.tsv rows, not duplicate defaults in prose/lifecycle",
+      "ordinary5second and1MiB or finite4MiB imports": "exact common forwarding/pass contracts; P06 FORWARD_WAIT20 is only the special member-read route, not this default",
+      "part grammar0000-4095, nonempty minLength1, zero revision": "structural protocol/owner grammar; preserve rather than invent a new runtime constant",
+      "constant table": "all current four rows byte-exact; no additions",
+      "API max1000 folder-units": "exact P08 folder-units owner carrier; never equality to unrelated DOMAIN_PAGE_MEMBERS merely by value",
+      "fixed examples and scenario freeze120": "actual fixtures remain values; not extra configured maxima"
+    }
+  },
+  "current_form": {
+    "path": "Platform/10-domain-console/forms/runtime-constants.tsv",
+    "sha256": "10312965f39be845cd85cbbe23911a0ab9ead7fb2daf43ad3f86e3a2ee0692d6",
+    "rows_byte_exact": 4
+  },
+  "API_before_numeric_nodes": {
+    "/paths/~1domain~1relays~1{relay}/get/responses/200/content/application~1json/schema/properties/rev/minimum": 0,
+    "/paths/~1domain~1relays~1{relay}/get/responses/200/content/application~1json/schema/properties/members/maxItems": 5000,
+    "/paths/~1domain~1{sub}~1tables~1{table}/get/parameters/2/schema/minLength": 1,
+    "/paths/~1domain~1{sub}~1{rows}/get/parameters/1/schema/minLength": 1,
+    "/paths/~1domain~1{sub}~1{rows}/head/parameters/1/schema/minLength": 1,
+    "/paths/~1domain~1folders~1{id}~1units/get/parameters/2/schema/minimum": 1,
+    "/paths/~1domain~1folders~1{id}~1units/get/parameters/2/schema/maximum": 1000,
+    "/paths/~1domain~1batches/post/requestBody/content/application~1json/schema/properties/n/minimum": 1,
+    "/paths/~1domain~1{sub}~1{pass}/parameters/1/schema/minLength": 1,
+    "/paths/~1domain~1edits/post/parameters/0/schema/minLength": 1,
+    "/paths/~1domain~1edits/post/parameters/0/schema/maxLength": 200,
+    "/components/schemas/PlacementList/properties/rev/minimum": 0,
+    "/components/schemas/GrantsView/properties/versions/additionalProperties/properties/revision/minimum": 0,
+    "/components/schemas/GrantsView/properties/versions/additionalProperties/properties/index/minLength": 1
+  },
+  "API_after_numeric_nodes": {
+    "/paths/~1domain~1relays~1{relay}/get/responses/200/content/application~1json/schema/properties/rev/minimum": 0,
+    "/paths/~1domain~1relays~1{relay}/get/responses/200/content/application~1json/schema/properties/members/maxItems": 5000,
+    "/paths/~1domain~1{sub}~1tables~1{table}/get/parameters/2/schema/minLength": 1,
+    "/paths/~1domain~1{sub}~1{rows}/get/parameters/1/schema/minLength": 1,
+    "/paths/~1domain~1{sub}~1{rows}/head/parameters/1/schema/minLength": 1,
+    "/paths/~1domain~1folders~1{id}~1units/get/parameters/2/schema/minimum": 1,
+    "/paths/~1domain~1folders~1{id}~1units/get/parameters/2/schema/maximum": 1000,
+    "/paths/~1domain~1{sub}~1{pass}/parameters/1/schema/minLength": 1,
+    "/paths/~1domain~1edits/post/parameters/0/schema/minLength": 1,
+    "/paths/~1domain~1edits/post/parameters/0/schema/maxLength": 200,
+    "/components/schemas/PlacementList/properties/rev/minimum": 0,
+    "/components/schemas/GrantsView/properties/versions/additionalProperties/properties/revision/minimum": 0,
+    "/components/schemas/GrantsView/properties/versions/additionalProperties/properties/index/minLength": 1
+  },
+  "removed_weak_local_batch_inline_node": [
+    "/paths/~1domain~1batches/post/requestBody/content/application~1json/schema/properties/n/minimum"
+  ],
+  "remaining13_values_exact": true,
+  "no_new_HEAD_numeric_copies": "HEAD Parameter refs target same GET objects",
+  "name_only5": {
+    "utc": "2026-11-07T11:49:40.692300+00:00",
+    "status": "ACTIVE_EXACT5_NUMERIC_DESCRIPTIONS_WITHIN_EXISTING23",
+    "owner": "spec103",
+    "base": "1d0f1ddffdd713e4dad4435e655e29d28f1ea630",
+    "basis": "ADR0129(22) Z; existing owned numeric source names, no new value or behavior",
+    "parent_activation": "/home/pilot/coord103-src/p10-scope-review/P10-SOURCE-ACTIVATION.json",
+    "parent_activation_sha256": "4fad5a07d630b5963dc34169480bd26f804f02a85b640ade7d91490b1ebf8386",
+    "proposal": "/home/pilot/spec103/p10-adr0129-22-1d0f1ddf-work/FINAL-NUMERIC-DESCRIPTION-GAP.json",
+    "proposal_sha256": "10b4721dfaed40816e78742d583f8df09176f5dd9d3432b11875e64e9dff942c",
+    "blocks": [
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+        "pointer": "/paths/~1domain/parameters/0/description",
+        "before": "Opaque continuation returned by GET /domain, including a boundary within one part. Without it, start the traversal; at most 1000 MemberState elements per page (P/10 N1.2a, G10-PAGE-CURSOR-01). Encoding is chosen by the implementation.",
+        "after": "Opaque continuation returned by GET /domain, including a boundary within one part. Without it, start the traversal; at most DOMAIN_PAGE_MEMBERS MemberState elements per page (P/10 N1.2a, G10-PAGE-CURSOR-01). Encoding is chosen by the implementation.",
+        "before_sha256": "3e407c3adbdc03964d57968a7d8b661bbd1658db0db91e2fed04d3b5e4d30d40",
+        "after_sha256": "8769802eba7745ff8f202222495bbd22c210a888cb094c1932c5592720fd7b42",
+        "reason": "descriptive copy -> existing name only; no executable scalar/query/clock change"
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+        "pointer": "/paths/~1domain~1alarms/get/parameters/0/description",
+        "before": "Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default — now − one day (N1.8 door).",
+        "after": "Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default — now − ALARMS_WINDOW (N1.8 door).",
+        "before_sha256": "5f8f99eb3795ce5184236fea3b94e6c761b0c98e6bdc5d076535b8ebe505bf1b",
+        "after_sha256": "4e3b91b7b994302beaec5a3633a8dcf32a537a6494a0e16969ac0f939e76cfe0",
+        "reason": "descriptive copy -> existing name only; no executable scalar/query/clock change"
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+        "pointer": "/paths/~1domain~1alarms/head/parameters/0/description",
+        "before": "Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default — now − one day (N1.8 door).",
+        "after": "Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default — now − ALARMS_WINDOW (N1.8 door).",
+        "before_sha256": "5f8f99eb3795ce5184236fea3b94e6c761b0c98e6bdc5d076535b8ebe505bf1b",
+        "after_sha256": "4e3b91b7b994302beaec5a3633a8dcf32a537a6494a0e16969ac0f939e76cfe0",
+        "reason": "descriptive copy -> existing name only; no executable scalar/query/clock change"
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "line": 329,
+        "before": "door:          GET /domain/alarms?since=&until= at the domain console (view); the default is the day before now; not finite numbers or\n",
+        "after": "door:          GET /domain/alarms?since=&until= at the domain console (view); the default is ALARMS_WINDOW before now; not finite numbers or\n",
+        "before_sha256": "5a58d598947d5978b4e9ebd00a34ec38885554f8c293ef0930a0e11cdf940fdc",
+        "after_sha256": "8c278b6785fd75b84f8b44c0e8c5a917410daacf6599b070470e2fe6c5c3021f",
+        "reason": "same existing default window named from current form; bounds/refusals unchanged"
+      },
+      {
+        "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+        "line": 318,
+        "before": "door:          GET /domain/alarms?since=&until= у консоли домена (view); умолчание — сутки до now; не конечные числа или\n",
+        "after": "door:          GET /domain/alarms?since=&until= у консоли домена (view); умолчание — ALARMS_WINDOW до now; не конечные числа или\n",
+        "before_sha256": "43fad8758ddbdb3ffb4b26880a158a966e4199faaaf5538e90313938325e69cf",
+        "after_sha256": "02ca34f5703224b65ba14a4d9bf66e8e44a0a875389d456f0baf71dd59b95063",
+        "reason": "same existing default window named from current form; bounds/refusals unchanged"
+      }
+    ],
+    "before_selectors_and_before_after_hashes_verified": true,
+    "source_identities": [
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+        "blob": "090a64a77f0aa7e4d747e046edbf902a707264e7",
+        "sha256": "4c7923209b1851f79a08ed7dbd777bf9833d3cc90718c3182a78f870c379e375",
+        "selector": "/paths/~1domain/parameters/0/description"
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+        "blob": "090a64a77f0aa7e4d747e046edbf902a707264e7",
+        "sha256": "4c7923209b1851f79a08ed7dbd777bf9833d3cc90718c3182a78f870c379e375",
+        "selector": "/paths/~1domain~1alarms/get/parameters/0/description"
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+        "blob": "090a64a77f0aa7e4d747e046edbf902a707264e7",
+        "sha256": "4c7923209b1851f79a08ed7dbd777bf9833d3cc90718c3182a78f870c379e375",
+        "selector": "/paths/~1domain~1alarms/head/parameters/0/description"
+      },
+      {
+        "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+        "blob": "8a31aeb0bdd3c5c3873ee082b829229e43d7655c",
+        "sha256": "69e28af27e9c1a543a7a29f2c3fb993bbf486ab76b044f5e42f0f8bc1b263ac1",
+        "selector": 329
+      },
+      {
+        "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+        "blob": "5ac406bb85c340b9661569c8eb12012ff2ebb0f2",
+        "sha256": "be0edcb676bade96e86625bbc000229fc018d36841083b2ed0d4df6b4d15ab53",
+        "selector": 318
+      }
+    ],
+    "constants_owner": {
+      "path": "Platform/10-domain-console/forms/runtime-constants.tsv",
+      "sha256": "10312965f39be845cd85cbbe23911a0ab9ead7fb2daf43ad3f86e3a2ee0692d6",
+      "DOMAIN_PAGE_MEMBERS": {
+        "value": 1000,
+        "unit": "count"
+      },
+      "ALARMS_WINDOW": {
+        "value": 86400,
+        "unit": "s"
+      },
+      "all_four_rows_preserved": true
+    },
+    "path_count_remains": 23,
+    "distinct_existing_paths_in_supplement": 3,
+    "new_paths": 0,
+    "scope": "only three OpenAPI description values and two exact EN/RU N1.8 door lines; existing runtime scalar/type/default/query/time/cursor semantics unchanged",
+    "protected": [
+      "all four constant rows",
+      "remaining13 executable API numeric carriers; only already activated weak local batch-inline removal explains14->13",
+      "1001 ->1000+1 examples and all fixtures/structural numeric lexemes",
+      "corpus37/22/15, old expectations/IDs/notes, CALL82/scenarios44/process16/163",
+      "all accepted P03/P09/S08/common15 and other owners"
+    ],
+    "delivery": "Add5 exact before/after blocks and this activation SHA to existing source-map/FREEZE; previous plan and activation receipts remain immutable",
+    "author_reported_controls_only": "36bindings/35nodes;5bodylessHEAD incl304/503;12schema neighbours;992literal refs offline;6mirror differences0, not root reruns or fullGate acceptance",
+    "SOURCE_READY_or_Gate_or_new_CODE": false,
+    "tests_archive_programs_strict_gen_Go_HTTP_SUT_replayed_or_assigned": 0,
+    "estimates_changed": false,
+    "Z10_SOURCE_active": false,
+    "intake_selection_note": "Protected table list contains P08 and P10 owners; these names are verified only against exact P10 runtime-constants, with no equal-value substitution from P08."
+  },
+  "contextual_FORWARD_WAIT": "Common forwarding row, not P06 special member-read20; frozen120s fixture unchanged",
+  "same_value_never_infers_owner_equality": true,
+  "fixed1001_1000plus1_examples_and_all_input_number_lexemes": "PRESERVED"
+}

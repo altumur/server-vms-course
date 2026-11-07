@@ -16,6 +16,10 @@ and string `cmd`. Alias checks run over supplied values before defaults. Empty `
 instance/box, labels, addresses, role, capacity and the dynamic name remain the checks of the linked norms. In particular no path or member-id
 type substitutes for the instance grammar. The launcher reads environment files; this is not a request that the SDK parse them again.
 
+## Owned scalar settings
+
+[runtime-constants.tsv](runtime-constants.tsv): name/value/unit/norm/meaning, positive JSON integer through int64; units count/s/ms/bytes. WAKE_GAP_MS, PERFORM_GRACE_MS and REQUESTS_HOLD_MS convert to seconds by exact /1000. Foreign values link to their owners, derived timings are formulas, ROAD_BUCKETS remains the typed list in chapter 3.4 N1.1, and independent boundary witnesses keep their own test numbers.
+
 ## Refusals
 
 [`refusals.tsv`](refusals.tsv) columns are `chapter row name surface code kind fields headers log norm word cause outcome diagnostic caller`.
@@ -55,6 +59,8 @@ kind, not malformed JSON fed as an unintended second failure. `self` denotes thi
 other normalized numeric epoch/generation fields are decoded values. Versions are opaque strings. Event lists are delivered in order; no event
 name adds a new process operation. All counters are observations since the fresh start.
 
+Background completion is only for SDK CALL fixtures: a positive ordinary unit/tally fixture contains id and the current 32-hex born. Partial logical row/mark arguments overlay it; this is not substitution for missing born in a raw row. Explicit slot wire rows {index,items} are complete: a missing items field remains missing. family-read text is also the complete raw input and is never completed or repaired.
+
 | CALL port | Input and observation |
 |---|---|
 | `worker-stop` | signal, units, place, optional erroring stop hooks. Observe stop effects and exit. `order` is the declared list of happens-before edges, each included only if it held in the recorded trace; it does not order units against one another. `stopped` is a sorted set for comparison, not a required stop order. SIGKILL observes no orderly hooks/writes. |
@@ -84,9 +90,9 @@ place writer, or OS presence-lock race that they do not execute. The stage plan 
 
 The Architect's accepted P/03 review under ADR-0127 supplements the same ports and [seams](../acceptance/2/seams.tsv); no process command or HTTP API is introduced. All original seams and process scenarios remain required.
 
-The capture adapter derives gen_readable from the unchanged family reader, and gen_incrementable by exact comparison before any int conversion. The latter is true for confirmed absence or a readable generation in [0,9007199254740991). Only then is gen the exact machine operand; otherwise gen=0 is an unused placeholder and the exact original remains available. A high generation is not an unreadable one. Range refusal applies only to an otherwise eligible existing-row capture, retaining the prior NameOnAnotherBox and torn-young precedence. New capture probes observe final_gen or the exact slot_gen_after, gen_readable, refusal and absence of writes.
+The capture adapter obtains gen_readable from the current generation field codec/range independently of the other slot fields, before narrowing. row_readable separately checks the whole slot. Confirmed absence is separate, with operand 0. An existing gen in 1..9007199254740991 is readable; gen_incrementable holds only below the maximum. Outside that range is the existing unreadable gen, retaining its original bytes. When false, machine gen=0 is an unused placeholder. generation_exhausted remains for a readable maximum at an otherwise eligible candidate; NameOnAnotherBox/torn-young admission is not bypassed. s21/s22 observe gen_readable=false, no writes and exact slot_gen_after; they introduce no programmatic unreadable word where the refusal catalogue specifies none.
 
-worker-grant likewise compares epoch and floor exactly, including values beyond int64. New issue probes report actual issue_writes and launch_calls; >=MAX refuses before a write and without retrying the known invalid issue. These are independent from capture generation.
+worker-grant first validates an existing epoch in the current positive range, using the existing EpochUnreadable for damage. In the existing CALL fixture, epoch=0 denotes confirmed absence only; stored zero is independently negative in family-read. Floor follows P/01.3 and is compared exactly, including beyond int64, without narrowing its range to epoch. An impossible next issue retains issue_writes=0/launch_calls=0 before any write, without retrying a known invalid number.
 
 worker-base-heartbeat invokes the ordinary base heartbeat builder with no subsystem overrides. It reports decoded schema/build/pending_writes, using SCHEMA and BUILD, with pending_writes zero. worker-stand-in with strict_place=true installs one real held permitted strict-place fixture and observes its actual CAS under the slot guard. It counts contribution/state writes separately; no such publication becomes allowed.
 

@@ -5,18 +5,7 @@
 Канон урока. Лекция (`ru/04-controller.md`, для человека, в выгрузку не входит), [инструкция](04-controller.README.md), [жизненный цикл](../lifecycle.md),
 [приёмка](../acceptance/README.md), векторы [`order`](../vectors/order/README.md),
 [`shrink-victim`](../vectors/shrink-victim/README.md) и [`shrink-allowed`](../vectors/shrink-allowed/README.md). Своего HTTP-контракта у урока нет (`P/04 no-openapi`): двери, через
-которые оператор говорит с контроллером, — двери консоли ([P/06.6](../../../06-console/ru/spec/06.6-console.norms.md) N2; `/where` — [глава 6.5](../../../06-console/ru/spec/06.5-console.norms.md)). Урок перенесён из
-M10/4 (стадия B, ADR-0083 доп. (1): без изменения поведения): N1.1–N1.5, N3 контроллера, строки N4 и N5
-контроллера; из M10/10 — снимок (N1.3 без `age` и `metrics`, здесь N1.3a; N3 «снимок — после прохода») и сторона
-контроллера N3 «controller, worker, resource or console start — schema check» (здесь N3 «старт контроллера — проверка
-схемы»); из M10/11 — сторона контроллера отказа сервера (N1.4 `moves`, `fresh_controller`, здесь N1.4a); из
-приёмки M10/05 — сценарии 07, 11–16. Номера подразделов — прежние номера M10/4; подразделы M10/10 и
-M10/11 с номерами, которые уже есть в M10/4, — с буквой «a» (N1.3a, N1.4a). Двери консоли (M10/4 N2), их проходы и
-отказы, нормы M10/4-14, -15, -20 и приёмка M10/04 перенесены в P/06 (главы 6.5, 6.6; перенос урока 6); `resource_state`,
-свежесть и правило читателя решения — [договор наблюдения](../../../common/ru/contracts/observation.md); сторона консоли
-«decommission_server» — P/06.6 (разбор ревью стадии A 6–7, № 2). «P/0N» — урок модуля, «P/0N.K» — его глава; «M10/N» без
-адреса — прежний урок (история переноса). Id норм —
-`P/04-MM`; соответствие прежним id — `id-map.tsv` (historical record).
+которые оператор говорит с контроллером, — двери консоли ([P/06.6](../../../06-console/ru/spec/06.6-console.norms.md) N2; `/where` — [глава 6.5](../../../06-console/ru/spec/06.5-console.norms.md)). Действующие зависимости — [договор наблюдения](../../../common/ru/contracts/observation.md), нынешние семейства данных ниже и связанные двери консоли. Идентификаторы требований и чеклиста сохранены; полный состав завершения задают файлы приёмки.
 
 ## N0 Словарь слов
 
@@ -49,7 +38,7 @@ M10/11 с номерами, которые уже есть в M10/4, — с бу
   reason:    <строка для человека>        # непустая; грамматика — N3 «причина»
   at:        <стенные секунды контроллера>
   rev:       <десятичное целое ≥ 1>       # +1 на каждую запись
-  manifest_rev:  <ревизия манифеста, под которой принято решение>   # ДОЛЖЕН у реализации с хранением манифеста в строке (P/02.3)
+  manifest_rev:  <ревизия манифеста, под которой принято решение>   # обязательно для нынешнего решения; отсутствие нечитаемо и не дописывается (P/02.3)
 <sub>/workers/<имя>:                      # назначение; производное от строк размещения
   units:     <список id по правилу списка P/06.1 N1.2 (через запятую, иначе массив JSON)>   # отсортирован
   rev:       <десятичное целое ≥ 1>       # +1 только при изменении списка
@@ -83,7 +72,7 @@ platform/decommission/<сервер>:           # писатель — конс�
   slot_cursor, from_cursor: <count>    # next current slot and its next from prefix
   units, holds: <lists>                # fixed final-mark metadata, same form as decommissioned
 <sub>/want/<сервер>:                      # писатель — контроллер, cas со стражем placement_turn (N1.5); ADR-0084 и доп. (1)
-  want:      <десятичное 1…99>            # абсолютная цель числа процессов роли на сервере, базовый <prefix>-<сервер>-1 входит
+  want:      <десятичное 1…WANT_NUM_MAX>            # абсолютная цель числа процессов роли на сервере, базовый <prefix>-<сервер>-1 входит
   at:        <момент записи>              # диагностика; сроки — по наблюдению версии строки (N1.4 сроки)
   by:        <экземпляр контроллера>      # диагностика; полномочие — cas и страж placement_turn
   why:       <непустая причина>           # грамматика N3 «shortage(), order()…»
@@ -98,11 +87,11 @@ platform/decommission/<сервер>:           # писатель — конс�
 
 ```yaml
 pass:
-  at:                   <момент конца прохода>
+  at:                   <момент конца управляющей части, до публикации снимков>
   ok:                   bool;  error: <текст последней ошибки или "">;  failures: <число>;  last_success: <момент>
-                        #   ok: true — проход дошёл до конца, все входы читались и ни одна запись не отказана; иначе false
+                        #   ok: true — управляющая часть дошла до конца, все её входы читались и ни одна управляющая запись не отказана; иначе false
                         #   (C04-PASS-OK-01)
-  seconds:              <длительность прохода>
+  seconds:              <длительность управляющей части, без последующей публикации снимков и отчёта>
   manifest_rev:             <ревизия манифеста контроллера>;  manifest_behind: <строк этого прохода, запись которых
                         отложена из-за отставшего манифеста; строка — один раз за проход> (C04-MANIFEST-BEHIND-COUNT-01)
   names_given:          {<имя слота>: <версия строки слота, при которой имя отдано>}
@@ -115,11 +104,11 @@ pass:
   garbled:              <строк единиц, которые не читаются>
   expired_kept:         <ручных строк с прошедшим сроком, которые срок снял, но не удалил: адресат с fixed-полями
                         или about не по id (N3 «проход()» шаг 8; ADR-0091 п. 1)>
-  snapshot_state_garbled: <состояний единиц, не вошедших в шард снимка последнего прохода: строка состояния не читается
+  snapshot_state_garbled: <состояний единиц, не вошедших в шард снимка нынешнего цикла: строка состояния не читается
                         своим типом (N1.3a; P/03.6 N1.7 unreadable; ADR-0091 п. 3)>
   state_swept_total:    <строк состояния, снятых уборкой осиротевшего и после удаления строки единицы (N3 шаг 8a)>
-  snapshot_tables_refused: <таблиц N1.3b, которые последний проход заменил заглушкой: объект больше SNAPSHOT_TABLE_MAX>
-  snapshot_rows_garbled: <строк единиц, не вошедших в шард снимка последнего прохода: поле snapshot: не читается
+  snapshot_tables_refused: <таблиц N1.3b, которые нынешний цикл заменил заглушкой: объект больше SNAPSHOT_TABLE_MAX>
+  snapshot_rows_garbled: <строк единиц, не вошедших в шард снимка нынешнего цикла: поле snapshot: не читается
                         своим типом (N1.3a garbled)>   # P/01.1 N0 «Stability of output»; решение «Архитектора»,
                         #   сверка python и go M10/6–11, T7
   reach_moves_total, slots_released_total, unplaced_deleted_total, servers_decommissioned_total,
@@ -127,10 +116,10 @@ pass:
   unplaceable:          {<id>: <why>}   # единицы без места этого прохода и непустая причина; из него консоль берёт why
                         #   /unplaceable и reason 404 /where/<id> у неразмещённой (N2.2)
   short:                # только при placement.grows: true; элемент на каждый набор меток с ждущими
-    - {labels: [<метки>], units: <ждущих единиц веса>, workers: <нужно процессов сверх живых и ёмкости в пути>,
+    - {labels: [<метки>], units: <точная неотрицательная целая сумма весов ждущих единиц>, workers: <нужно процессов сверх живых и ёмкости в пути>,
        groups: <ждущих групп>, ordered: <заказано этим проходом>, withheld?: <слова, почему не заказано>}
                         #   labels — каноническая запись: уникальные метки по возрастанию, повтор схлопывается (R21);
-                        #   groups — всегда, 0 тоже (обязателен в форме — разбор ревью стадии B 3–5, № 13); свои счётчики элемента МОЖНО, приёмка сравнивает названные поля;
+                        #   groups — всегда, 0 тоже (обязателен в форме — разбор ревью стадии B 3–5, № 13); свои счётчики элемента МОЖНО по прежней форме count; стандартные поля сохраняют формы; приёмка сравнивает названные поля;
                         #   пустой набор в словах why — any labels; набор без вычислимого per — тот же элемент: workers 0,
                         #   ordered 0, withheld «no positive capacity estimate» (R20); ряд <sub>_workers_withheld{labels}
                         #   (P/06.5 /metrics) — у каждого набора отчёта прохода, ноль тоже (ADR-0084 доп. (2) R23)
@@ -142,7 +131,11 @@ pass:
                         #   сродство ждёт её установки (N1.3 near; ADR-0091 доп. (27) п. 6); иначе поля нет
 ```
 
-Писатель отчёта всегда выдаёт expired_kept, snapshot_state_garbled и state_swept_total как неотрицательные целые; первые два — за проход, state_swept_total накапливает подтверждённые снятия с нуля этого процесса. Читатель совместим с прежним отчётом без этих полей; присутствующее поле обязано иметь свой тип. Писатель снимка выдаёт ровно один допустимый массив unit.rows, включая пустой; читатель сохраняет прежнюю совместимость. Это не разрешает писателю опускать новые обязательные поля (ревью ADR-0127 P/04 С4).
+Нынешние reader и writer одинаково требуют expired_kept, snapshot_state_garbled и state_swept_total как неотрицательные count. Отсутствие или неправильное поле — прежний unreadable. Первые два принадлежат нынешнему циклу; state_swept_total накапливает подтверждённые снятия с нуля процесса. Нынешние reader и writer снимка одинаково требуют ровно один допустимый массив unit.rows, включая пустой; отсутствие массива или несколько массивов нечитаемы. Отсутствие объекта до первой публикации — другой случай.
+
+Весовые агрегаты short[].units, waiting и load — точные неотрицательные целые без потолка common.uint53; их JSON-выход имеет целочисленную запись, без округления или насыщения через binary64/int64. Отдельные веса/ёмкости и прочие count сохраняют формы. Собственные счётчики short остаются count; расширение агрегата не меняет предела записи полного сериализованного объекта.
+
+Цикл завершает управляющую часть и отдаёт placement turn, затем пытается опубликовать unit snapshots и table snapshots и только потом пишет один отчёт с их счётчиками этого же цикла. At, seconds, last_success, ok и failures описывают только управляющую часть. Ошибки снимков сохраняют нынешние исходы/журнал/счётчики и не становятся failures управления. Три снимочных счётчика начинают с нуля каждый цикл; следующий не сбрасывает и не забирает незаконченный предыдущий. После возврата подтверждённых, отказных, ошибочных или неподтверждённых исходов попыток публикации окончательный отчёт пишется один раз, без позднего дописывания. state_swept_total не сбрасывается.
 
 ### N1.3 Ключи размещения и их смысл
 
@@ -167,7 +160,7 @@ pass:
 | `grows` | `true` — роль растёт по требованию: контроллер считает нехватку и заказывает процессы роли по серверам строкой `<sub>/want/<host>` (N3 «shortage(), order()…»; ADR-0084) | `false` |
 | `retire_when: {state?, field, in, delete_after?}` | единица со значением поля из `in` не размещается и снимается с причиной — значением. Без `state` поле — строки единицы; со `state` — поле значения действующего состояния `unit.state.<state>` (договор проверки строки «Состояние единицы» acts; нет действующего — не законченная). `delete_after` — через N с после снятия по `retire_when` по часам контроллера строку удалить (N3 шаг 8): отсчёт — от первого прохода, на котором контроллер увидел единицу снятой по `retire_when`; проход, на котором она уже не снята (правка оператора сняла значение или действующее состояние), отсчёт снимает, новое снятие считает заново (C04-RETIRE-TIMER-CLEAR-01); после перезапуска контроллера отсчёт заново, как у `unplaced.delete_after` (ADR-0091 п. 1, 3; заменяет `forget_finished` подсистем) | — |
 | `ends: {field, never}` | срок единицы: поле строки `field` (секунды Unix) ≠ `never` и не позже часов контроллера — единица не размещается, снимается с причиной `ends`, строка удаляется (N3 шаг 8); `never` — без срока (ADR-0091 п. 2) | без ключа — срока нет; `never: 0` |
-| `rebalance: {dead_band}` | перебалансировка по запросу: пока разброс нагрузки меньше — не двигать | `0.10` |
+| `rebalance: {dead_band}` | вне этого урока: ручной rebalance не исполняется, dead_band контроллером не потребляется; принятая форма манифеста остаётся P/02.1 | по форме манифеста |
 | `unplaced: {delete_after}` | строку единицы, которую никто не держит дольше N с по часам контроллера, контроллер удаляет (ADR-0067); снятая по `retire_when` — тоже: её никто не держит. У таблицы с `fixed`-полями (кроме поля-источника id) или с `about` не по id физически удаляются только строки с `made` (имя держит шаблон `key` заказчика, P/03.6 N1.6) — так же по `retire_when.delete_after` и `ends`; ручные строки такой таблицы срок не удаляет: `ends` снимает и не размещает, `delete_after` не удаляет, счёт `expired_kept` отчёта прохода (поправка ADR-0067 доп. 2026-10-10, ADR-0091 п. 1); удаляет их оператор дверью. Свои строки единиц МОЖЕТ удалять и воркер подсистемы по ключу `worker.deletes` — удаление с `cas` без права записи (ADR-0067 доп. 2026-10-17; учебного потребителя пока нет — долг в ХОД-Спецификация) | без ключа — никогда |
 
 ### N1.3a Снимок
@@ -187,13 +180,13 @@ state:    при объявленном unit.state — объект {<имя>: <
           все состояния, кроме cursor; [] — ни одного; нет действующего — имени нет, ни одного — state нет. Строка
           состояния не читается своим типом — единица в шарде без этого состояния, счёт snapshot_state_garbled отчёта
           прохода (N1.2) (ADR-0091 п. 3)
-publish:  после каждого прохода контроллера (N3 «проход()»), вне шагов его отчёта; шарды ушедших воркеров — пустые; без единиц — пустой unplaced
+publish:  после отдачи turn управляющей частью и до одного окончательного отчёта этого цикла (N3 «проход()»); шарды ушедших воркеров — пустые; без единиц — пустой unplaced
           пустой шард — одна форма для всех: {cluster, worker: null, ts, <rows>: []} — поле <rows> есть, список пуст
           (как свидетель; C04-SNAPSHOT-GONE-WORKER-01)
 garbled:  строка единицы, чьё поле snapshot не читается своим типом по values_by_type P/06.1 N1.2, в шард не входит;
           шард публикуется с остальными единицами, строка лога раз на серию и счёт `snapshot_rows_garbled` отчёта прохода
           N1.2 (P/01.1 N0 «Stability of output») (сверка python и go M10/6–11, T7)
-ceiling:  до записи контроллер судит L = 64 МиБ двери ресурса; max_bytes хранилища держит само хранилище при put
+ceiling:  до записи контроллер судит предела L двери ресурса, владелец P/05; max_bytes хранилища держит само хранилище при put
           ([P/05](../../05-resource/spec/05-resource.norms.md) «object store» — `TooLarge`), контроллер его сам не считает;
           TooLarge хранилища даёт тот же исход N4 — шард не записан, прежний сохранён (C04-SNAPSHOT-CEILING-MAXBYTES-01, решение «Архитектора» 2026-10-28).
           Размер — число байтов полного сериализованного объекта, включая оболочку и пустые шарды, с фактической
@@ -225,9 +218,9 @@ worker, server: только у строк единиц — из назначе�
 phase, status:  только у строк единиц — phase и поля domain.view_status манифеста из элемента status[] пульса этой единицы (P/08.1 N1.4 status);
           элемента нет — полей нет
 garbled:  строка, чьё поле из списка не читается своим типом, в rows не входит; счёт snapshot_rows_garbled, как N1.3a garbled
-ceiling:  SNAPSHOT_TABLE_MAX = 1 МиБ (1048576 байт) полного сериализованного объекта; больше — вместо объекта заглушка {cluster, ts, refused:
+ceiling:  SNAPSHOT_TABLE_MAX из forms/runtime-constants.tsv полного сериализованного объекта; больше — вместо объекта заглушка {cluster, ts, refused:
           "too_large", rows: []} и snapshot_tables_refused отчёта прохода (N1.2). Заглушка, а не прежний объект: старый снимок выглядел бы живым.
-          Сумму всех объектов отчёта держит агент (P/09.1 N1.2 tables_budget); сумму объектов члена — TABLES_MEMBER_MAX: server 8 МиБ, camera 64 КиБ (ADR-0113); на домен своего числа нет, он сумма этих: при 500 серверах и 250 000 камер до ≈ 19 ГиБ, предел, значение по замеру; сверх — заглушка too_large на таблицы по убыванию размера
+           Бюджеты таблиц члена и общего состава — у агента (P/09.1 N1.2 tables_budget и связанные пределы приёма P/08); контроллер не задаёт вторые числа серверов, камер или измеренный общий потолок байтов домена.
 scope:    объект есть у манифеста с domain.view_tables; domain.ref для него не нужен; ключ убран из манифеста — объект
           не снимается, агент его больше не несёт (договор приёма отчёта member_objects)
 reader:   только агент домена (P/09.1 N1.2); консоль кластера свои таблицы читает строками
@@ -242,14 +235,15 @@ constants:
   HUNG_MOVE_AFTER:  договор файла окружения «Константы и юниты» (значение там; аудит раскладки, решение «Архитектора» 2026-10-25, A-17)   # с; возраст наблюдаемой версии слота до предела hung/unsure/wait; из окружения контроллера, публикуется в отчёте
   ALIVE_EVERY:      договор наблюдения «Состояние ресурса» (значение там; аудит раскладки, решение «Архитектора» 2026-10-25, A-10)   # ресурс переписывает at своей двери
   REACH_BUDGET:     договор файла окружения «Константы и юниты» (значение там; A-17)   # единиц за проход на переезды по достижимости; из окружения
-  HOME_BUDGET:      1     # единица за проход на переезды домой
-  WANT_GRACE:       90    # с; заказ, не поднятый сервером, снимается (N3 «снять по сроку»)
-  RAISE_QUIET:      600   # с; сервер «failed to raise» не получает заказов
-  RAISE_FAILS_LOUD: 3     # отказов подряд — тревога workers.raise_failed повышенной важности
+  WRITE_CONFLICT_LIMIT: forms/runtime-constants.tsv  # последовательные conflict одного изменения; после предела прежний отказ шага, без лишней попытки; барьеры сохраняются
+  HOME_BUDGET:      forms/runtime-constants.tsv     # единица за проход на переезды домой
+  WANT_GRACE:      forms/runtime-constants.tsv    # с; заказ, не поднятый сервером, снимается (N3 «снять по сроку»)
+  RAISE_QUIET:      forms/runtime-constants.tsv   # с; сервер «failed to raise» не получает заказов
+  RAISE_FAILS_LOUD:      forms/runtime-constants.tsv     # отказов подряд — тревога workers.raise_failed повышенной важности
   SHRINK_AFTER:     договор файла окружения «Константы и юниты» (значение там; A-17)   # с; без нехватки — сокращение (N3 «shrink»); только у стенда — W2C_SHRINK_AFTER=<с>
                           # окружения контроллера (как W2C_WALL_OFFSET M11/3): при заданной переменной контроллер пишет
                           # громкую строку журнала при старте; вне стенда переменная не задаётся (ADR-0084)
-  SHRINK_BUDGET:    1     # единица за проход на перенос с сокращаемого воркера (как HOME_BUDGET)
+  SHRINK_BUDGET:      forms/runtime-constants.tsv     # единица за проход на перенос с сокращаемого воркера (как HOME_BUDGET)
   # сроки заказа и сокращения — стартовые значения политики; отсчёт — местные монотонные часы контроллера от первого
   # наблюдения версии строки заказа (у SHRINK_AFTER — от первого прохода без нехватки), новый контроллер начинает с 0,
   # повторная запись той же цели срок не продлевает, at — диагностика (ADR-0049; ADR-0084 доп. (1) R5);
@@ -278,19 +272,19 @@ MOVED_FATES:        [move, hung_moved, unsure_moved]
 
 ```yaml
 power_pull:
-  moves:    единицы — по двум молчаниям (пульс воркера и слово ресурса), по допускам N3; 90 с + проход —
+  moves:    единицы — по двум молчаниям (пульс воркера и слово ресурса), по допускам N3; (SLOT_TERM + LOST_AFTER) + проход —
             ориентир исправного стенда с заранее известными пульсами, доступным хранилищем и ёмкостью, не общий deadline; новый держатель берёт
             следующую эпоху; при shared и distinct одинаково; назад само не едет, кроме объявленного `home` (N3 «проход()», шаг 7, HOME_BUDGET)
   stays:    архив на томе сервера — под старой эпохой, недоступен до возврата, не перестраивается, не теряется;
             единицы зависшего живого воркера — у него (один писатель)
   lost:     открытый бакет и закрытые бакеты без подтверждённой зеркальной копии; один голос группы.
             RPO в длину бакета допустим лишь при подтверждённом зеркале всех закрытых; иначе потеря больше
-  store:    1 из 3 — выборы за секунды; 2 из 3 — 503 unavailable через 5 с, воркеры живут на последнем назначении по аренде
+  store:    1 из 3 — выборы за секунды; 2 из 3 — 503 unavailable через действующий P/01 -leader-wait, воркеры живут на последнем назначении по аренде
             и unconfirmed_max; восстановление — recover рукой (P/01.3 N3 «восстановить хранилище»)
   restore:  P/05 N1.4 «Bucket restore»
   return:   ресурс тянет бакеты; воркеры берут свободные имена; имя с истёкшим слотом — только по слову контроллера (P/03.2)
   presence: договор замка присутствия (common/contracts/presence-lock.md)
-fresh_controller: впервые увиденное — только что изменилось; ничего не двигает первые 45 с (N3 «проход()», шаг 0)
+fresh_controller: впервые увиденное — только что изменилось; ничего не двигает первые LOST_AFTER (N3 «проход()», шаг 0)
 ```
 
 `stays`, `lost`, `store`, `return` и проход «вырвать питание» (N3) — остаток M10/11 N1.4, N3, перенесённый сюда с уроком 6
@@ -364,10 +358,10 @@ Active intent — принятое общее решение для members, п�
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
 | `worker` | строка; целиком `([a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)?` | обязателен |  | the worker name — a slot name, P/03.2 N1.4 (`<prefix>-<suffix>`; prefix of its own manifest — a check of the lesson, not of the form); "" — not placed |
-| `reason` | строка | обязателен |  | a reason for a human; non-empty (N3 «Reason», P/04-18) |
+| `reason` | строка | обязателен |  | The current nonempty human reason, required for readers and writers (P/04 N3 Reason). |
 | `at` | время (P/01.1 N0 «Время в строке») | обязателен |  | the controller's wall-clock seconds at the moment of the decision |
 | `rev` | строка; целиком `[1-9][0-9]*` | обязателен |  | a decimal integer ≥ 1; +1 for each write of the row |
-| `manifest_rev` | строка; целиком `[1-9][0-9]*` | необязателен |  | the manifest revision (P/02.3 N1.5 rev) under which the decision was made; MUST for an implementation that keeps the manifest in the row; rows without it are stamped by the pass (N3 «pass()» step 1) |
+| `manifest_rev` | строка; целиком `[1-9][0-9]*` | обязателен |  | Required manifest revision under which the current intent completion wrote this decision. A missing value is unreadable and is never stamped or repaired; newer-revision protection remains P/04 N3 manifest_rev. |
 
 Только у писателя (`$defs.writer`):
 
@@ -406,7 +400,7 @@ Active intent — принятое общее решение для members, п�
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `want` | целое; ≥ 1; ≤ 99 | обязателен |  | the absolute target of the number of processes of the role on the server, the base `<prefix>-<server>-1` is included |
+| `want` | целое; ≥ 1; ≤ 99 | обязателен |  | the absolute target of the number of processes of the role on the server, the base `<prefix>-<server>-1` is included; maximum WANT_NUM_MAX is defined by P/04 forms/runtime-constants.tsv; numeric minimum/maximum carriers stay unchanged. |
 | `at` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment of the write; diagnostics — the terms go by the observation of the row version (N1.4 terms) |
 | `by` | строка | обязателен |  | the controller instance; diagnostics — the authority is given by cas and the guard placement_turn |
 | `why` | строка | обязателен |  | a non-empty reason; the grammar of N3 «shortage(), order()…» |
@@ -518,12 +512,12 @@ Active intent — принятое общее решение для members, п�
 | `members` | список, без повторов, элемент — строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+`; в `items` — текст JSON (x-encoding: json) | необязателен |  | a JSON array of all ids of the decision; unique, sorted (the order is a rule of the lesson, not of the form); only when active |
 | `members[]` | строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` | необязателен |  | the id of a unit of the decision (P/06.1 N1.3) |
 | `target` | строка; целиком `([a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)?` | необязателен |  | one target of the whole group — a worker name (slot, P/03.2 N1.4); "" — remove the placement; only when active |
-| `reason` | строка | необязателен |  | a non-empty reason — the duty of the writer (the controller); the reader accepts "" (C06-WHERE-EMPTY-168-04, as C06-WHERE-EMPTY-33-01); only when active |
+| `reason` | строка | необязателен |  | A nonempty human reason when state is active, for reader and writer alike. The idle form does not require reason. |
 | `at` | время (P/01.1 N0 «Время в строке») | необязателен |  | wall-clock seconds of making the decision; only when active |
 
 Правила:
 
-- `<корень>`: если `state` — `active`: обязательны `members`, `target`, `reason`, `at` (путь — недостающий ключ).
+- `<корень>`: если `state` — `active`: обязательны `members`, `target`, `reason`, `at` (путь — недостающий ключ); `reason` — ещё и любое значение; не из: `""`.
 
 Только у писателя (`$defs.writer`):
 
@@ -544,12 +538,12 @@ Active intent — принятое общее решение для members, п�
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `at` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment of the end of the pass |
-| `ok` | bool | обязателен |  | true — the pass reached the end, all inputs were read and no write was refused; otherwise false |
+| `at` | время (P/01.1 N0 «Время в строке») | обязателен |  | Wall time when this cycle control part ended; frozen before snapshot publication, not the final object put time. |
+| `ok` | bool | обязателен |  | The control part completed with its confirmed inputs/writes and no control-step failure; snapshot outcomes are recorded separately. |
 | `error` | строка | обязателен |  | the text of the last error or an empty string |
-| `failures` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `last_success` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment of the end of the last successful pass |
-| `seconds` | число; ≥ 0 | обязателен |  | the duration of the pass |
+| `failures` | по определению `count` | обязателен |  | Independent control-step failures of this cycle; snapshot publication outcomes do not increment this field. |
+| `last_success` | время (P/01.1 N0 «Время в строке») | обязателен |  | Last successful control-part completion time, unchanged by a later snapshot publication failure. |
+| `seconds` | число; ≥ 0 | обязателен |  | Duration of this cycle control part only, excluding snapshot and final-report publications. |
 | `manifest_rev` | строка или целое | обязателен |  | the manifest revision of the controller |
 | `manifest_behind` | по определению `count` | обязателен |  | rows of this pass whose write was postponed because of a lagging manifest; a row — once per pass |
 | `names_given` | отображение имена автора: имя — по определению `slot_name`, значение — строка; не из: `""` | обязателен |  | names given away by the fate; the worker reads them at capture (P/03.2 N3 «capture») |
@@ -565,8 +559,8 @@ Active intent — принятое общее решение для members, п�
 | `diverged` | по определению `count` | обязателен |  | a counter ≥ 0 |
 | `unplaced` | по определению `count` | обязателен |  | a counter ≥ 0 |
 | `garbled` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `snapshot_tables_refused` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `snapshot_rows_garbled` | по определению `count` | обязателен |  | a counter ≥ 0 |
+| `snapshot_tables_refused` | по определению `count` | обязателен |  | Tables replaced by the too_large stub during this cycle at SNAPSHOT_TABLE_MAX; included in this same final report, outside control-step failures. |
+| `snapshot_rows_garbled` | по определению `count` | обязателен |  | Unreadable snapshot fields omitted by unit/table publications of this same cycle; reset only for the next cycle after this final report. |
 | `reach_moves_total` | по определению `count` | обязателен |  | a counter ≥ 0 |
 | `slots_released_total` | по определению `count` | обязателен |  | a counter ≥ 0 |
 | `unplaced_deleted_total` | по определению `count` | обязателен |  | a counter ≥ 0 |
@@ -577,15 +571,16 @@ Active intent — принятое общее решение для members, п�
 | `name_conflicts` | по определению `count` | обязателен |  | a counter ≥ 0 |
 | `unplaceable` | отображение имена автора: имя — строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+`, значение — строка; не из: `""` | обязателен |  |  |
 | `unplaceable.<имя>` | строка; не из: `""` | необязателен |  | a non-empty reason — why of /unplaceable and reason of 404 `/where/<id>` |
-| `short` | список, элемент — отображение `{labels, units, workers, groups, ordered, withheld?}` | необязателен |  | only when placement.grows true |
-| `short[]` | отображение `{labels, units, workers, groups, ordered, withheld?}` | необязателен |  |  |
+| `short` | список, элемент — отображение `{labels, units, workers, groups, ordered, withheld?}` и прочие имена автора: имя — строка, значение — по определению `count` | необязателен |  | only when placement.grows true |
+| `short[]` | отображение `{labels, units, workers, groups, ordered, withheld?}` и прочие имена автора: имя — строка, значение — по определению `count` | необязателен |  |  |
 | `short[].labels` | список, элемент — строка | обязателен |  | the label set — the canonical notation in ascending order (N3 «set order») |
 | `short[].labels[]` | строка | необязателен |  |  |
-| `short[].units` | по определению `count` | обязателен |  | waiting units of weight |
+| `short[].units` | целое; ≥ 0; целый знак и у читателя (x-whole) | обязателен |  | Exact nonnegative sum of waiting unit weights, in integer JSON notation, without an upper common.uint53 bound. Preserve the whole serialized-report limit; never round or saturate through binary64/int64 (P/04-R008). |
 | `short[].workers` | по определению `count` | обязателен |  | processes needed beyond the live ones and the capacity in flight |
 | `short[].groups` | по определению `count` | обязателен |  | waiting groups; always, 0 too (analysis of review of stage B 3–5, № 13) |
 | `short[].ordered` | по определению `count` | обязателен |  | ordered by this pass |
 | `short[].withheld` | строка | необязателен |  | words for why it was not ordered |
+| `short[].<имя>` | по определению `count` | необязателен |  | An own counter of the short element; standard properties keep their declared forms. |
 | `wants` | отображение имена автора: имя — по определению `server_name`, значение — отображение `{want, live, pending, retiring?, why, state}` | необязателен |  | only when placement.grows true |
 | `wants.<имя>` | отображение `{want, live, pending, retiring?, why, state}` | необязателен |  |  |
 | `wants.<имя>.want` | целое; ≥ 1; ≤ 99 | обязателен |  |  |
@@ -600,16 +595,10 @@ Active intent — принятое общее решение для members, п�
 | `raise_failed.<имя>.times` | по определению `count` | обязателен |  | refusals in a row |
 | `near_waiting` | список, не короче 1, без повторов, элемент — строка; целиком `[a-z][a-z0-9_-]{0,31}` | необязателен |  | the subsystems of placement.near.sub that are not in the manifest catalog of this pass: the affinity waits for their installation (N1.3 near; ADR-0091 addendum (27) item 6); otherwise there is no field |
 | `near_waiting[]` | строка; целиком `[a-z][a-z0-9_-]{0,31}` | необязателен |  |  |
-| `expired_kept` | по определению `count` | необязателен |  | manual rows retained after ends removed them; required for the writer, zero when none |
-| `snapshot_state_garbled` | по определению `count` | необязателен |  | unreadable state rows omitted from snapshot shards in this pass; required for the writer, zero when none |
-| `state_swept_total` | по определению `count` | необязателен |  | cumulative state rows successfully deleted by this controller process; starts at zero; increments only on confirmed deletion; required for the writer |
+| `expired_kept` | по определению `count` | обязателен |  | Manual rows retained after ends removed them; required nonnegative count for current reader and writer, zero when none. |
+| `snapshot_state_garbled` | по определению `count` | обязателен |  | Unreadable unit states omitted by the unit snapshot publications of this same cycle; reset only for the next cycle after this final report. |
+| `state_swept_total` | по определению `count` | обязателен |  | Cumulative confirmed orphan-state deletions from this process start; not reset between cycles. |
 | `.<имя>` | любое значение | необязателен |  | the implementation's own counters (N1.2 — MAY add) |
-
-Только у писателя (`$defs.writer`):
-
-| Ключ | Ещё и |
-|---|---|
-| `<корень>` |  |
 
 **`count`** — a counter ≥ 0
 
@@ -804,17 +793,17 @@ placement/*, workers/* и placement_intent, а также удаление ст�
 назначения members. Это гарантия строк/назначений, а остановку действий старых процессов
 обеспечивают их сверка и аренды (P/03.3, P/03.2), а не одно изменение карты размещения.
 
-### проход() — каждые 5 с
+### проход() — каждые PASS_EVERY
 
 ```
 0. наблюдение: обновить память увиденных пульсов, слотов и ресурсов на своих часах; объекты кластера (пульсы воркеров
    и ресурсов, отчёты) читаются через ресурс своего сервера (дверь объектов P/05, `scope`; ADR-0084 доп. (2) R17); без
    ресурса на своём сервере при `cluster://` — «unknown», не «нет» ([договор клиента хранилища объектов](../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; решение «Архитектора» 2026-10-27);
    впервые увиденное = только что изменилось; получить очередь размещения по N3 выше;
-   занята → без изменяющего прохода, повтор через 5 с; моя → сначала довести active intent;
+   busy → нет меняющего прохода, повтор через TURN_BUSY_RETRY; моя → сначала довести active intent;
    затем свежий взгляд: единицы, размещения, назначения и свойства кандидатов;
    перед каждым новым решением взгляд обновляется, результаты предыдущего решения учитываются
-1. ревизия: прочесть ревизию манифеста; строки размещения без manifest_rev — проштамповать своей (один раз);
+1. ревизия: прочитать ревизию манифеста; placement без обязательного manifest_rev нечитаема; не дописывать и не исправлять её;
    прочесть каталог манифестов (platform/manifest/*) — каждым проходом: манифест near.sub появился — сродство (N1.3 near)
    действует с этого прохода; нет его — сродства нет, near_waiting (ADR-0091 доп. (27) п. 5)
 2. вывод серверов: возобновить pending или принять план неслышимого сервера по N3 «decommission_server»; отдача/уборка кусками,
@@ -843,7 +832,7 @@ placement/*, workers/* и placement_intent, а также удаление ст�
    about не по id удаляется только строка с made; ручная строка не удаляется — expired_kept + 1 (N1.3 unplaced).
    Строка с made удаляется по договор проверки строки «Customer row: made» `delete` (строго позже made.keep, not_before = max(0, made.keep − 60);
    аудит раскладки A-11): 409 early — не удалено, без барьера и журнала, следующим проходом;
-   keep лишь избавляет от заведомо ранних попыток, порядок с поздней записью заказа держит время приёма хранилища.
+   keep предотвращает только заведомо раннюю попытку удаления; поздно пришедшее удаление по-прежнему удерживает not_before при приёме хранилищем. Это не разрешает удалять до keep.
    Строка удаляется физически, без надгробия (P/01.1 удалить): строка первой, с cas прочитанной версии и guard своей
    версии placement_turn; правка или продление между чтением и удалением — conflict: удаление отменено, состояние не
    трогается; только после подтверждённого удаления строки — её состояния (шаг 8a); журнал unit.unplaced_deleted
@@ -855,7 +844,8 @@ placement/*, workers/* и placement_intent, а также удаление ст�
    прочее неосиротевшее (born совпал, revision другой) не трогать; state_swept_total + 1 за каждую снятую
 9. нехватка и заказ (grows: true): строки заказа, ёмкость в пути, short, заказать, снять по сроку
 9a. сократить (grows: true): жертва, retiring, перенос не больше SHRINK_BUDGET, конец или отмена; дренаж — N3 ниже
-10. отчёт <sub>/controller/pass; освободить очередь
+10. завершить управляющую часть и её ok/failures/at/seconds/last_success; отдать очередь;
+    затем пытаться опубликовать unit snapshots и table snapshots вне очереди и записать один окончательный <sub>/controller/pass этого цикла
 каждый шаг — в своей попытке: ошибка шага — failures + 1, остальные шаги идут
 ```
 
@@ -870,7 +860,7 @@ active intent, новое решение не принимается: дейст
 единицы не заменяет общего допуска. Обрыв очереди/хранилища прекращает весь изменяющий проход,
 а не только одну единицу; ошибки остальных независимых шагов учитываются обычным failures.
 Следующий держатель сначала чинит незавершённое решение, затем принимает свои.
-Штамп manifest_rev без изменения цели — отдельная запись с cas и guard turn, intent ей не нужен.
+Отсутствующий manifest_rev — нечитаемая нынешняя строка, не право дописать её; прежние барьеры очереди/intent сохраняются.
 
 ### выбрать(единица) → воркер | нет
 
@@ -934,7 +924,8 @@ retire_when (по действующему состоянию при retire_when
 ```
 запись release: записать слот released (cas),
                                                                            holder/until/gen/server сохранить; порванную —
-                                                                           целиком отданной и ничьей с сохранением читаемого gen;
+                                                                           целиком отданной и ничьей с сохранением читаемого gen и записывая until как нулевой Time в прежней записи писателя, не now;
+                                                                           server сохранить только если читается по нынешней схеме поля слота; иначе поле опустить, без пустого заменителя. Никакой проверки живости или реестра;
                                                                            если gen не читается — строку не менять, разрешение
                                                                            на захват не выдавать (P/03.2 N1.4)
 брошенный захват: released = "taking", версия неизменна ≥ SLOT_TERM на часах контроллера (захватчик умер между записями
@@ -957,7 +948,7 @@ names_given[имя] = версия строки слота, на которой 
 не присутствие); правила с более высоким приоритетом по-прежнему выполняются первыми. Две замыкающие строки достижимы, когда server/slot известны,
 версия слота наблюдается неизменной не меньше SLOT_TERM + LOST_AFTER, свежесть воркера не подтверждена, resource_state — unknown:
 при назначениях выбирается move, без назначений — процедура release. Это прежняя политика замыкающих строк, а не ожидание
-недостижимого ресурса 900 секунд; unknown не доказывает ни молчания, ни недостижимости (ревью P/04 М1).
+недостижимого ресурса действующего HUNG_MOVE_AFTER; unknown не доказывает ни молчания, ни недостижимости (ревью P/04 М1).
 
 Выбор перехода — [forms/slot-release.tsv](../../forms/slot-release.tsv). Вход — выбранная выше судьба; действие CAS — YOURS, после него машине подаётся подтверждённый ответ или конфликт. Сохранены пять прежних свидетельств: gone без единиц, конкурирующее продление, gone с единицами, unlisted без единиц и runs без единиц. Конкурирующее продление отказывает release, следующий проход судит изменившуюся версию как `alive`.
 
@@ -969,7 +960,7 @@ names_given[имя] = версия строки слота, на которой 
 
 Первое из: слот отдан (released = true — сразу); брошенный захват (released = taking, версия неизменна SLOT_TERM на
 часах контроллера — захватчик умер между записями; раньше — не уходит, захват довершится; добавлено пилотом Quint, F2);
-ресурс сервера silent — только при `requires: resource` и живом воркере (договор пула): он работает, а единицам нужен ресурс, которого нет; не держит место (`distinct`); место не принимает; сервер дренируется; сервер выведен; исход из MOVED_FATES — его `why`. Единицы уходящего — переезд (шаг 6) по правилам выбора; группа целиком или остаётся с тревогой `units.left_on_leaving`; строка размещения не очищается, пока не найдено новое место, — кроме отданного слота и брошенного захвата: их единицы, которым некому достаться, снимаются записью `worker: ""`, причина `slot <w> released; nothing live can take it` (`slot <w> capture did not finish; nothing live can take it`) (воркер ушёл навсегда, строка с его именем говорила бы «размещена»; приёмка P/03.4, сц. 03). Молчание хранилища не двигает ничего. Без `requires: resource` молчание ресурса уходом не считается, и воркер, молчащий вместе с ресурсом, уходит только по судьбе: единицы ведёт её исход `move`, около 90 с наблюдения неизменной версии слота (N3 «судьба», [P/03.2-08](../../../03-worker/ru/spec/03.2-worker.norms.md); решение «Архитектора» 2026-10-31, этап 2 плана сценариев группы).
+ресурс сервера silent — только при `requires: resource` и живом воркере (договор пула): он работает, а единицам нужен ресурс, которого нет; не держит место (`distinct`); место не принимает; сервер дренируется; сервер выведен; исход из MOVED_FATES — его `why`. Единицы уходящего — переезд (шаг 6) по правилам выбора; группа целиком или остаётся с тревогой `units.left_on_leaving`; строка размещения не очищается, пока не найдено новое место, — кроме отданного слота и брошенного захвата: их единицы, которым некому достаться, снимаются записью `worker: ""`, причина `slot <w> released; nothing live can take it` (`slot <w> capture did not finish; nothing live can take it`) (воркер ушёл навсегда, строка с его именем говорила бы «размещена»; приёмка P/03.4, сц. 03). Молчание хранилища не двигает ничего. Без `requires: resource` молчание ресурса уходом не считается, и воркер, молчащий вместе с ресурсом, уходит только по судьбе: единицы ведёт её исход `move`, SLOT_TERM + LOST_AFTER наблюдения неизменной версии слота (N3 «судьба», [P/03.2-08](../../../03-worker/ru/spec/03.2-worker.norms.md); решение «Архитектора» 2026-10-31, этап 2 плана сценариев группы).
 
 **Гонки.** Уход и оживший воркер: решение — по снимку прохода; воркер, вернувшийся после переезда, читает назначение без единицы и останавливает её (P/03.3 N3 «loop()», шаг 2: ведомой нет в назначении → `stop_unit`); переезд не откатывается.
 
@@ -1042,15 +1033,15 @@ no_base:         базовый <prefix>-<s>-1 мёртв — wants.<s>.state no
                  незавершённой пробы; нет кандидата или прирост исчерпан — остаток нужно withheld с причиной «no free
                  <place_by>» (N4); проба на одном сервере не останавливает рост на другом (ADR-0084 доп. (5) R16‴)
 кандидат s:      строка заказа есть; базовый <prefix>-<s>-1 жив (иначе no_base выше: сервер не кандидат, R6);
-                 свободно(s) > 0 (R14′); want(s) < 99 (иначе причина «<s> has no instance numbers left»,
+                 свободно(s) > 0 (R14′); want(s) < WANT_NUM_MAX (иначе причина «<s> has no instance numbers left»,
                  тревога workers.no_server); метки сервера подходят набору (constraint), requires: resource — ресурс
                  не silent; не дренируется, не decommission-pending и не выведен; не «failed to raise» (RAISE_QUIET); servers: distinct — по месту
                  place_by: при place_by: server сервер с живым воркером роли не кандидат, при поле пульса место нового
                  процесса до старта неизвестно — выбор сервера не ограничивает (R8)
 порядок:         меньше живые(s) + в пути(s) — по пульсам (R13′; не по двери), затем имя сервера в байтах UTF-8 (разбор
                  ревью стадии B 3–5, № 16)
-заказать:        нужно набора раздать по кандидатам по порядку, каждому — не больше min(свободно(s), 99 − want(s));
-                 у манифеста с непустым door.pass.calls потолок want(s) — 1, а не 99: билет привязан к листу сервера, лист один на роль и сервер
+заказать:        нужно набора раздать по кандидатам по порядку, каждому — не больше min(свободно(s), WANT_NUM_MAX − want(s));
+                 у манифеста с непустым door.pass.calls потолок want(s) — 1, а не WANT_NUM_MAX: билет привязан к листу сервера, лист один на роль и сервер
                  (договор сторожевой и передачи «Передача второго вида»); остаток нужно — withheld, как при нехватке кандидатов;
                  после доли свободно(s) −= доля (R14′); want(s) := want(s) + доля — запись строки заказа с cas по прочитанной версии и guard
                  своей версии placement_turn, why — причина «<n> more for <метки> on <s>: <ждущих> waiting» (<метки> — каноническая
@@ -1127,10 +1118,7 @@ no_base:         базовый <prefix>-<s>-1 мёртв — wants.<s>.state no
 
 ```
 console: запрос, 409 server answers, platform/decommission/<host>, снятие двери и отзыв — по-прежнему P/06.6 N3.
-Есть окончательная отметка и запрос стоит: отметку и слоты не переписывать. Допускается только прежний остаток вкладов:
-  свежим чтением подтвердить server = s и released = "true", снимать собственные from-строки под этой точной версией слота.
-  Нет/нечитаемо поле server — пропуск; 409/412 сбрасывает снятия этого слота без нового чтения/повтора по нему.
-  Совместимость не разрешает новой реализации публиковать окончательную отметку раньше времени.
+есть действительная окончательная отметка и стоящий запрос: не переписывать отметку, её слоты или оставшиеся вклады; новая очистка не разрешена.
 0. Читаемый pending возобновить до нового плана. Его request_index должен совпадать с нынешней версией запроса.
    До изменений проверить инварианты: имена remaining различны и не входят в released/skipped; released и skipped не
    пересекаются; current — упорядоченное подмножество released. В cleaning slot_cursor < len(current), from_cursor <= len(from);
@@ -1191,7 +1179,8 @@ console: запрос, 409 server answers, platform/decommission/<host>, сня�
 ### manifest_rev — страж правила
 
 ```
-перед каждой записью строки размещения (разместить, переехать, снять): row.manifest_rev > моя ревизия
+перед каждой записью placement (разместить, перенести, снять): отсутствие manifest_rev нечитаемо и не дописывается;
+row.manifest_rev > моя ревизия
                                                                        → не трогать; строка — в manifest_behind
 manifest_behind (N1.2): число строк этого прохода, запись которых отложена из-за отставшего манифеста; каждая строка —
                         один раз за проход, сколько бы попыток записи её ни коснулось (C04-MANIFEST-BEHIND-COUNT-01)
@@ -1205,14 +1194,13 @@ manifest_behind (N1.2): число строк этого прохода, зап�
 
 Окружение и аргумент запускателя перечислены в [forms/daemon-flags.tsv](../../forms/daemon-flags.tsv). Вычисляемые умолчания и проверки общих договоров остаются их правилами; CLI-флагов не добавляется.
 
-Сторона контроллера общего блока [P/06.6](../../../06-console/ru/spec/06.6-console.norms.md) N3 «старт консоли — проверка схемы» (часть M10/10-01
-по `note` id-map; строка `platform/schema`, `SCHEMA` и подъём — P/06.6 N1.1a, N3 «поднять_схему»).
+Нынешняя проверка старта контроллера — общий блок [P/06.6](../../../06-console/ru/spec/06.6-console.norms.md) N3 «старт консоли — проверка схемы». Строка platform/schema, SCHEMA и подъём остаются P/06.6 N1.1a, N3 «поднять_схему».
 
 ```
 старт: договор схемы «Проверка при старте» ([договор схемы](../../common/contracts/schema.md); перенесено туда без изменения; аудит раскладки A-02, решение «Архитектора» 2026-10-25)
 ```
 
-### снимок таблиц — после снимка единиц
+### снимок таблиц — после снимка единиц, до окончательного отчёта
 
 ```
 по каждой таблице из domain.view_tables манифеста: строки таблицы → rows по N1.3b, порядок — key;
@@ -1222,7 +1210,7 @@ rows совпали с теми, что этот процесс уже запи�
 ошибка чтения таблицы — объект не писать, строка лога раз на серию: пустой объект вместо непрочитанного не публикуется
 ```
 
-### снимок — после прохода
+### снимок — после управляющей части, до окончательного отчёта
 
 ```
 по воркеру: строки единиц его назначения → [{id, revision, поля snapshot (маска адресов), worker, server}];
@@ -1245,7 +1233,7 @@ TooLarge до записи сохраняет прежний шард и его 
 ```
 t = 0      сервер выключен; его демон — минус голос; его пульсы и дверь перестают меняться
 около 45 с контроллеры с уже известными пульсами: слоты истекают; ресурс молчит; допуски N3
-около 90 с при всех допусках N3 и свободной ёмкости → move; новая эпоха. При unknown/недоступности/нехватке
+SLOT_TERM + LOST_AFTER при всех допусках N3 и свободной ёмкости → move; новая эпоха. При unknown/недоступности/нехватке
            места общего срока нет; архив остаётся на томе. У соседей лишь подтверждённые зеркальные копии
 возврат    демон рестартует с сохранённым member.json (не повторяет join); ресурс тянет бакеты (restore); воркеры берут свободные имена; имена с истёкшими
            слотами — по слову контроллера; ничего не едет назад, кроме объявленного `home` (N3 «проход()», шаг 7, HOME_BUDGET)
@@ -1284,7 +1272,7 @@ t = 0      сервер выключен; его демон — минус го�
 | 12 | с ресурсом P/05 (после P/05, как сц. 10 приёмки P/03.2): `c12` на `w-1`, живой `w-2`; `@sigkill w-1` — ресурс видит замок присутствия свободным (`running` — только `w-2`), судьба `w-1` — `move` (присутствие `gone`), `c12` переезжает на `w-2` за 60 с, после — слот `w-1` отдан (`release`, из `fates` уходит, N1.2): `move` виден один проход (5 с), поэтому шаг `fates` ждёт его раньше переезда (C04-FATES-WINDOW-01); размещение уходящего до новой цели не снимается (N3) (второй пилот, N-1; журнал cammeta-go, урок 5 № 8) | P/03.2 N3 «start()» шаг 2b; [договор замка присутствия](../../../common/ru/contracts/presence-lock.md); N3 «судьба», `fates` |
 | 13 | брошенный захват: после `@sigkill w-1` строка слота `released: "taking"` (первая запись захвата) мимо писателя — `c13` остаётся на `w-1` до SLOT_TERM неизменной версии, затем уходит на `w-2` с причиной `slot w-1 capture did not finish`; эпоха 2 (добавлено пилотом Quint, F2) | P/03.2 N1.4 `taking`, N3 «уходит» |
 | 14 | заказ (ADR-0084): нехватка `testsub2` при одном базовом `t-srv-a-1` — строка `testsub2/want/srv-a` 1 → 2 с причиной, ряд `testsub2_workers_wanted{server="srv-a"} 2`; `@grow` поднимает `t-srv-a-2`, единица на нём; SIGTERM при непустом назначении — слот отдан, после нового подъёма эпоха 2 | N3 «нехватка», «заказать»; P/03.4 N3 «stop»; ADR-0084 п. 1, 3, 7 |
-| 15 | сервер не поднял (ADR-0084): заказ на `srv-a` без `@grow` — через `WANT_GRACE` 90 с `want/srv-a` назад в 1, отчёт прохода `raise_failed.srv-a`, заказ на `srv-b`; `@grow srv-b` — единица на `t-srv-b-2` (после P/05: два ресурса) | N3 «снять заказ по сроку»; ADR-0084 п. 5, доп. (1) R5, R6 |
+| 15 | сервер не поднял (ADR-0084): заказ на `srv-a` без `@grow` — через `WANT_GRACE` `want/srv-a` назад в 1, отчёт прохода `raise_failed.srv-a`, заказ на `srv-b`; `@grow srv-b` — единица на `t-srv-b-2` (после P/05: два ресурса) | N3 «снять заказ по сроку»; ADR-0084 п. 5, доп. (1) R5, R6 |
 | 16 | сокращение (ADR-0084): контроллер с `shrink_after=20` (`W2C_SHRINK_AFTER`, только стенд); после заказа `t-srv-a-2` нагрузка снята — через выдержку `want/srv-a` = 1 без `retiring`, `@grow` останавливает `t-srv-a-2` (слот отдан), базовый `t-srv-a-1` жив; перенос единиц жертвы при гистерезисе `per` на стенде не наблюдается — чтением | N3 «shrink»; ADR-0084 п. 6, доп. (1) R3, R4 |
 | 18 | срок и уборка (ADR-0091 пп. 1–3; с ресурсом P/05): `ends` в прошлом — строка заказа `testsub-c2` (её `made.keep` в прошлом) удалена физически, без надгробия, её состояние — после; осиротевшее состояние `ghost` снято; ручная `m1` (`fixed` `of`) снята и не удалена — `expired_kept` 1; нечитаемое состояние `m3` — `snapshot_state_garbled` 1; шаги 15–19: строка заказа `testsub-c3` с `made.keep` в будущем — снята, не удалена, её состояние не снято (аудит покрытия P/04, D06) | N1.3 `ends`, `unplaced`, N3 шаги 8, 8a, N1.2, N1.3a; договор проверки строки «Строка заказчика: `made`» `delete` |
 | 19 | снимок со состоянием (ADR-0091 п. 3; с ресурсом P/05): действующее `result` — в шарде `unplaced` (`state.result` в `snapshot` манифеста), `cursor` — нет | N1.3a `state` |
@@ -1300,7 +1288,7 @@ t = 0      сервер выключен; его демон — минус го�
 | 28 | восстановление intent: active `{c1} → w-2` до старта контроллера, назначение `w-1` несёт `c1` — первый держатель снимает `c1` из `w-1`, пишет строку размещения целью, причиной и `manifest_rev` intent, добавляет в `w-2`, intent — idle (аудит покрытия P/04, второй проход, G01) | N1.5; N3 «принять и довести решение» шаги 3–6 |
 | 29 | `sync`: назначение без размещённой единицы — следующий проход возвращает её (`rev` + 1), отчёт `diverged: 1` (аудит покрытия P/04, второй проход, G01) | N3 «проход()» шаг 4, «Materialization and sync»; N1.2 `diverged` |
 | 30 | строка intent не по форме — отказ изменения размещения (`ok: false`: вход не читается, C04-PASS-OK-01), единица при живом воркере не размещена, строка не переписана; восстановлена — размещена (аудит покрытия P/04, второй проход, G01) | N1.5, N4 «строка intent не по форме» |
-| 31 | штамп `manifest_rev` строки без него; строка более новой ревизии не снимается и не переписывается, `manifest_behind: 1` — строка раз за проход (аудит покрытия P/04, второй проход, G02; C04-MANIFEST-BEHIND-COUNT-01) | N3 «проход()» шаг 1, «manifest_rev — страж правила»; N1.2 `manifest_behind` |
+| 31 | placement без manifest_rev нечитаема и остаётся побайтно прежней; более новая ревизия не снимается и не переписывается, manifest_behind: 1, строка один раз за проход | N3 проход шаг1, страж manifest_rev; N1.2 |
 | 32 | строка очереди с `manifest_rev` выше ревизии контроллера — очередь не берётся, новая единица не размещена (аудит покрытия P/04, второй проход, G02) | N1.5; [договор очереди](../../../common/ru/contracts/turn.md) шаг 1 |
 | 33 | дренаж с живыми воркерами (два ресурса): единица уходит на воркер другого сервера с причиной `server srv-a draining`, `GET /drain` — `safe` (аудит покрытия P/04, второй проход, G03) | N3 «уходит»; P/06.6 N2 `/drain` |
 | 34 | `retire_when` по действующему состоянию `result` `done` — снятие с причиной `done`, назначение пусто, `unplaced` 0; строка и состояние на месте (аудит покрытия P/04, второй проход, G04) | N1.3 `retire_when`; N1.2 `unplaced`; договор проверки строки «Состояние единицы» |
@@ -1333,7 +1321,7 @@ P/05](../../../05-resource/ru/acceptance/README.md) (из M10/11 сц. 01) и с
 
 **Обязательства ревью ADR-0127.** 50 швов CALL сохраняют прежние 33 и добавляют 17 свидетелей ревью. M1 s34/s35 проверяют известный сервер при unknown ресурса и несвежем воркере: с назначениями move, без назначений release. C1 s36/s37 соединяют выбор верхнего номера, защиту wanted-места и план остановки скрипта P/02; C3 s38 сохраняет ручную просроченную строку, исключая её из ожидания/веса/роста и таймера сокращения. C2 s39-s45 наблюдают ограниченные пакеты полного вывода, перезапуск, guards нового держателя и отказ/неизвестность финальной отметки; s46/s47 независимо отвергают зарезервированные unit.rows/имя таблицы обычным загрузчиком, без изменения корпуса P02 947 и канона 220; s48-s50 отвергают семантически повреждённый progress до изменений. Порты controller-pass/fate прежние, настоящие IO-наблюдения заданы в forms README; новых команд или частей пакета нет.
 
-C4 разделяет обязанности writer и совместимость прежнего reader в схемах данных и family-read: все три счётчика прохода обязательны у писателя и неотрицательны; snapshot writer имеет ровно один допустимый массив rows, включая []. Новая семья pending имеет отрицательные случаи формы writer/reader и типизированного ключа; это смысловая дельта ревью, не утверждение о неизменности прежнего реестра. Чистые селекторы и проверки source/form не доказывают OS-остановку, восстановление процесса или runtime-приёмку. Реализация генераторов/раннера, пересборка связанного загрузчика/прав P02 и совместные normgen+kit проверки — у coord103.
+Источник нынешних reader/writer — формы семейств, включая три счётчика отчёта, один массив снимка, обязательный manifest_rev решения и непустую причину active. Pending recovery, точные непрозрачные guards и нынешние именованные свидетели сохраняются. Проекции source/schema не доказывают OS-остановку, восстановление процесса или runtime-приёмку; проверки генераторов/раннера и совместный GATE остаются отдельно.
 
 ### Свидетельства вне TSV
 
@@ -1358,11 +1346,11 @@ C4 разделяет обязанности writer и совместимост�
 
 Реализация обязана назвать в своём описании:
 
-1. **предел повторов при `conflict`** (10); период прохода — 5 с, норма (ADR-0030 доп. 2026-10-07 п. 5), не выбор;
+1. **как кэш и повторы исполняют фиксированные источники** — PASS_EVERY, TURN_BUSY_RETRY и WRITE_CONFLICT_LIMIT заданы forms/runtime-constants.tsv, не выбор реализации;
 2. **кэш между проходами** — что держится по версии строки, и как это не меняет решений (решают строки, не кэш);
 3. **как ресурс сервера сообщает присутствие процесса** (форма поля `workers` пульса ресурса — P/05 N1.4) и замок присутствия ([договор замка присутствия](../../../common/ru/contracts/presence-lock.md));
-4. **откуда `HUNG_MOVE_AFTER`, `REACH_BUDGET`** (окружение) и их умолчания;
-5. **как запрашивается перебалансировка** и кто её зовёт; бюджет;
+4. **как читаются действующие входы** — канал и умолчания у именованных владельцев lifecycle/forms/common, не второй местный выбор;
+5. **границу этого урока** — ручной процедуры и триггера rebalance нет, dead_band не потребляется;
 6. **дополнительные поля отчёта** сверх N1.2 и как из него делаются метрики (ряды `<sub>_reconcile_*`, `<sub>_units_unplaced`, `<sub>_units_diverged` — P/06.5 N3 «/metrics — текст»);
 7. **точные тексты** причин и отказов сверх грамматики N3/N4;
 8. **что делает манифест без `grows`** с нехваткой (ничего не считает) и где живёт скрипт сервера (`w2c-workers.sh`, P/02.4 N1.5 `script`);
@@ -1389,13 +1377,13 @@ C4 разделяет обязанности writer и совместимост�
 - [ ] **P/04-08** группа целиком: место на всех или ждать все (ADR-0011) — сц. 22; значения `group_by` нет, оно пусто, не читается
   или без хоста — не группа; `spread_by` без значения не разводит — сц. 11 (стенд двух манифестов, `testsub2`)
 - [ ] **P/04-09** `distinct`: один хранитель на место, наибольшая нагрузка, при равенстве слотовый порядок P/03.2 N1.4 для всех допустимых имён; политика строкой, чтение мягкое, запись строгая — сц. 03 приёмки P/06.6; хранитель — чтением по [README приёмки](../acceptance/README.md) («Checks by reading from M10/04 acceptance»)
-- [ ] **P/04-10** судьба слота N3: исходы, порядок правил, присутствие только из live пульса ресурса, сроки 45/45/900, контроллер не пишет слот кроме `release`; нечитаемое gen не сбрасывает и не разрешает его захват — release слота без единиц (не move), запись release читаемого слота, порванного `until` и нечитаемого gen — сц. 21 [приёмки урока](../acceptance/README.md); запас 45 + 45 и `hung` при присутствии `runs` (имя не отдано, слот не отдан, единица не уходит; без единиц — не release) — сц. 26, 27; `wait` при `unlisted` (имя не отдано, слот не отдан) — сц. 42; прочее проверяется чтением (учение 05 [системной приёмки](../../../common/ru/acceptance/system/README.md) «pull the power», сроки 45/90 N1.4a)
+- [ ] **P/04-10** судьба слота N3: исходы, порядок правил, присутствие только из live пульса ресурса, сроки SLOT_TERM/LOST_AFTER/HUNG_MOVE_AFTER, контроллер не пишет слот кроме `release`; нечитаемое gen не сбрасывает и не разрешает его захват — release слота без единиц (не move), запись release читаемого слота, порванного `until` и нечитаемого gen — сц. 21 [приёмки урока](../acceptance/README.md); запас SLOT_TERM + LOST_AFTER и `hung` при присутствии `runs` (имя не отдано, слот не отдан, единица не уходит; без единиц — не release) — сц. 26, 27; `wait` при `unlisted` (имя не отдано, слот не отдан) — сц. 42; прочее проверяется чтением (учение 05 [системной приёмки](../../../common/ru/acceptance/system/README.md) «pull the power», сроки SLOT_TERM/(SLOT_TERM + LOST_AFTER) N1.4a)
 - [ ] **P/04-11** `names_given` привязан к версии строки слота; только NAME_FATES и `wait` за пределом; строка с нечитаемым gen не входит до восстановления поколения — имя отданного слота в `names_given`, нечитаемое gen вне его — сц. 21; `wait` до предела имени не отдаёт — сц. 42; привязка к версии — проверяется чтением
 - [ ] **P/04-12** переезд/первичное добавление/sync — один intent: снять всех members из всех назначений, довести placement, добавить на одну цель и лишь затем idle; каждое изменение с cas и guard turn, 412 прекращает попытку; `Moved` при уже иной исходной цели — доведение active intent (снятие, строка, добавление, idle) — сц. 28, `sync` — сц. 29 [приёмки урока](../acceptance/README.md); прочее проверяется чтением
-- [ ] **P/04-13** уход: причины по порядку, без бюджета, группа целиком или остаётся; `silent` — только при `requires: resource` и живом воркере, иначе судьба около 90 с — проверяется чтением: пульс воркера читается через ресурс его сервера, и стенд живого воркера при молчащем ресурсе не держит; срок судьбы — учение `05-power-pull`; отданный слот — единицы без места снимаются (`worker: ""`); захват в работе (`taking`) уводит только после SLOT_TERM неизменной версии — сц. 13; дренаж — сц. 33, место не принимает (`admits: false`) — сц. 39; достижимость — с бюджетом — проверяется чтением (приёмка P/03.4, сц. 03)
-- [ ] **P/04-14** заказ (ADR-0084): per — положительная наблюдаемая ёмкость, иначе положительный capacity.default, иначе withheld без деления; нехватка по наборам меток и весу за вычетом ёмкости в пути; строка заказа всегда, `want` 1…99 абсолютной целью, cas и guard turn; кандидаты (базовый жив, room, номера, distinct по place_by, дренаж, вывод); снятие по сроку `WANT_GRACE`, «failed to raise» `RAISE_QUIET`; сокращение — `SHRINK_AFTER`, гистерезис, кандидат только живой верхний n=want(s)>1 сервера; защищённый верхний пропускает весь сервер (номер выше want — не жертва; разбор ревью стадии B 6–7, № 42), `retiring`, `SHRINK_BUDGET`, отмена; тревоги `workers.no_server`, `workers.raise_failed`; в пути — номера 2…want без живого процесса по пульсам, кандидат и доля — по двери (`live.<sub>` номерами, свободно один раз за проход), номер выше want вне пула и останавливается скриптом (R28), снятие по сроку — номерами (R27), `distinct` с местом из пульса — сервер без живого подходящего без места, без пробы в пути (в пути(s) = 0; разбор ревью стадии B 3–5, № 40), не больше одного пробного за проход, и `no free <place_by>` (R16‴), ёмкость — наименьшая положительная, формы `short[]` (ADR-0084 доп. (2)–(4) R13′–R28) — сц. 14–17 после P/05 (`@grow`), векторы `order`, `shrink-victim`, `shrink-allowed` (условие сокращения и порядок причин отказа, в том числе живые без места при ждущих, R16′; решение «Архитектора» 2026-10-20, № 12 разбора ревью стадии B 3–5); прочее чтением
+- [ ] **P/04-13** уход: причины по порядку, без бюджета, группа целиком или остаётся; `silent` — только при `requires: resource` и живом воркере, иначе судьба SLOT_TERM + LOST_AFTER — проверяется чтением: пульс воркера читается через ресурс его сервера, и стенд живого воркера при молчащем ресурсе не держит; срок судьбы — учение `05-power-pull`; отданный слот — единицы без места снимаются (`worker: ""`); захват в работе (`taking`) уводит только после SLOT_TERM неизменной версии — сц. 13; дренаж — сц. 33, место не принимает (`admits: false`) — сц. 39; достижимость — с бюджетом — проверяется чтением (приёмка P/03.4, сц. 03)
+- [ ] **P/04-14** заказ (ADR-0084): per — положительная наблюдаемая ёмкость, иначе положительный capacity.default, иначе withheld без деления; нехватка по наборам меток и весу за вычетом ёмкости в пути; строка заказа всегда, `want` 1…WANT_NUM_MAX абсолютной целью, cas и guard turn; кандидаты (базовый жив, room, номера, distinct по place_by, дренаж, вывод); снятие по сроку `WANT_GRACE`, «failed to raise» `RAISE_QUIET`; сокращение — `SHRINK_AFTER`, гистерезис, кандидат только живой верхний n=want(s)>1 сервера; защищённый верхний пропускает весь сервер (номер выше want — не жертва; разбор ревью стадии B 6–7, № 42), `retiring`, `SHRINK_BUDGET`, отмена; тревоги `workers.no_server`, `workers.raise_failed`; в пути — номера 2…want без живого процесса по пульсам, кандидат и доля — по двери (`live.<sub>` номерами, свободно один раз за проход), номер выше want вне пула и останавливается скриптом (R28), снятие по сроку — номерами (R27), `distinct` с местом из пульса — сервер без живого подходящего без места, без пробы в пути (в пути(s) = 0; разбор ревью стадии B 3–5, № 40), не больше одного пробного за проход, и `no free <place_by>` (R16‴), ёмкость — наименьшая положительная, формы `short[]` (ADR-0084 доп. (2)–(4) R13′–R28) — сц. 14–17 после P/05 (`@grow`), векторы `order`, `shrink-victim`, `shrink-allowed` (условие сокращения и порядок причин отказа, в том числе живые без места при ждущих, R16′; решение «Архитектора» 2026-10-20, № 12 разбора ревью стадии B 3–5); прочее чтением
 - [ ] **P/04-15** `delete_after` по часам контроллера от первого взгляда, свежая проверка эффективного размещения, `cas` единицы и guard своего turn, журнал (ADR-0067) — проверяется чтением
-- [ ] **P/04-16** `manifest_rev` на строке, страж правила, `manifest_behind`, штамп старых строк (ADR-0068) — штамп строки без `manifest_rev`, страж и `manifest_behind` у строки более новой ревизии — сц. 31, очередь более новой ревизии не берётся — сц. 32 [приёмки урока](../acceptance/README.md); смена манифеста и остановка кодом 0 — проверяется чтением
+- [ ] **P/04-16** нынешний manifest_rev обязателен, отсутствующая ревизия не дописывается; страж и manifest_behind более новой строки — сц.31; очередь более новой ревизии не берётся — сц.32 [приёмки урока](../acceptance/README.md); смена манифеста/код0 по-прежнему проверяются чтением
 - [ ] **P/04-17** отчёт прохода N1.2 с обязательными полями; `fates` — только занятые неотданные слоты, `since` — вход в
   fate; `short[]` и `wants` при `grows`, ждущие без снятых и нечитаемых — поля `diverged` (сц. 29), `manifest_behind` (сц. 31),
   `unplaced` без снятых по `retire_when` (сц. 34), `state_swept_total` (сц. 35), `garbled` без назначений (сц. 41)
@@ -1406,10 +1394,10 @@ C4 разделяет обязанности writer и совместимост�
 - [ ] **P/04-20** до записи intent полный ключ `<sub>/placement/<id>` каждого из members представим в пределе ключа хранилища; иначе решения нет, members — в `unplaceable` с `why`, размещение остальных единиц подсистемы не останавливается — проверяется чтением N5 («Свидетельства вне TSV»): на стенде приёмки P/06.6 (сц. 01–07) воркеров нет
 - [ ] **P/04-21** снимок: шарды по воркеру, содержимое N1.3a, пустые шарды, `unplaced`, маска, после прохода — сц. 03 [приёмки урока](../acceptance/README.md) (из M10/10, шаги 1–4); шард воркера, пустой `unplaced` и пустой шард ушедшего воркера — сц. 40; нечитаемая строка единицы вне шарда, шард опубликован — сц. 08 (шаги 1–6); возраст и испорченный шард в `/metrics` консоли — [глава 6.5](../../../06-console/ru/spec/06.5-console.norms.md); чтением
 - [ ] **P/04-22** отказ сервера N1.4a (`stays`, `lost`): переезд по допускам двух молчаний без общего deadline, архив остаётся, неперезеркалированные бакеты потеряны, ничего назад, кроме `home` (N3 «проход()», шаг 7) — учение `05-power-pull` [системной приёмки](../../../common/ru/acceptance/system/README.md); сц. 01 — `09-resource-door` приёмки [P/05](../../../05-resource/ru/acceptance/README.md), сц. 02 — `14-resource-silent` приёмки [главы 6.5](../../../06-console/ru/acceptance/5/README.md)
+- [ ] **P/04-23** проверка схемы при старте контроллера (строка схемы и подъём — [P/06.6](../../../06-console/ru/spec/06.6-console.norms.md) N1.1a): N3 «старт контроллера — проверка схемы» — нет строки — своя SCHEMA, не число или выше SCHEMA — не стартовать, код 2 до чтения манифеста, ошибка чтения — ждать — не число и выше SCHEMA, код 2 — сц. 23 [приёмки урока](../acceptance/README.md); ошибка чтения — ждать — сц. 25; «before reading the manifest» — проверяется чтением
 - [ ] **P/04-24** срок `ends`, `retire_when.state` и `retire_when.delete_after`, удаление строки первой без надгробия и состояния после, уборка осиротевшего (шаг 8a), ручные строки — `expired_kept` (ADR-0091 пп. 1–3): `ends`, уборка, `expired_kept` — сц. 18; `retire_when` по действующему состоянию (снятие с причиной-значением, вне `unplaced`) — сц. 34; отсчёт снимается, когда снятие отменено (C04-RETIRE-TIMER-CLEAR-01) — чтением; уборка состояния с чужим `born` и `state_swept_total` — сц. 35; отсчёт `delete_after` от снятия (600 с у `testsub2`, после перезапуска заново), отменённое удаление и уборка, отменённая строкой после чтения, — проверяется чтением: стенд не выдерживает срок и не вклинивается между чтением и удалением
 - [ ] **P/04-25** защита повтора при удалении (ADR-0091 п. 1): строка с `made` — строго позже `made.keep`, с `not_before`; `409 early` — без барьера и журнала — удаление в сц. 18 (`keep` в 2001); `keep` в будущем — строка не удалена, сц. 18 шаги 15–19; граница равенства и ответ `409 early` хранилища — чтением (стенд не двигает часы)
 - [ ] **P/04-26** снимок таблиц N1.3b — чтением до шага 11 разбора ADR-0110; снимок со `state` (N1.3a; ADR-0091 п. 3) — сц. 19; `snapshot_state_garbled` — сц. 18
 - [ ] **P/04-27** `near`: `by`/`of`, `prefer` (И, ИЛИ, путь), порядок по id соседа (N1.3; ADR-0091 п. 10) — векторы [`near-of`](../vectors/near-of/README.md); предпочтение воркера держателя — чтением; манифеста `near.sub` нет в каталоге — сродства нет, `near_waiting` в отчёте прохода, включение с прохода, на котором он появился (ADR-0091 доп. (26) п. 2, доп. (27) пп. 5–6), — чтением: стенд ставит каталог `testsub` + `testsub2` до старта, директивы установки манифеста посреди сценария в словаре «Стенда» нет
 - [ ] **P/04-28** исключительное место (N1.3 `affinity.exclusive`): держатель принимает только связанные единицы, его ёмкость вне счёта нехватки прочих; заказ под место — сервер места, пустой `server_field` — без заказа, `Sealed` по `place_error` живых воркеров — `withheld`, живых нет — один обычный заказ — стенд не готовит исключительного места и строки места с неоткрывающимся секретом — чтением; сценарии P/04 и P/03.2 — когда учебная подсистема получит такое место (долг) (ADR-0091 доп. (9)–(10))
-- [ ] **P/04-23** проверка схемы при старте контроллера (часть P/04 строки M10/10-01 по `note` id-map; строка схемы и подъём — [P/06.6](../../../06-console/ru/spec/06.6-console.norms.md) N1.1a): N3 «старт контроллера — проверка схемы» — нет строки — своя SCHEMA, не число или выше SCHEMA — не стартовать, код 2 до чтения манифеста, ошибка чтения — ждать — не число и выше SCHEMA, код 2 — сц. 23 [приёмки урока](../acceptance/README.md); ошибка чтения — ждать — сц. 25; «before reading the manifest» — проверяется чтением
 

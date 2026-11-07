@@ -1,0 +1,614 @@
+{
+ "base": "9d7febf4725354b892919338a05c1b9e1ca7a9ed",
+ "shares_by_file": {
+  "Д": [
+   "acceptance/1/seams.tsv"
+  ],
+  "Е": [
+   "runtime-constants.tsv",
+   "lifecycle.md",
+   "acceptance/1/README.md",
+   "acceptance/2/README.md",
+   "forms/README.md"
+  ],
+  "В": [
+   "outcomes.schema.json",
+   "alarms.schema.json",
+   "family-read/09.tsv"
+  ],
+  "Б": [
+   "09-agent.api.openapi.yaml",
+   "refusals.tsv"
+  ],
+  "Г+Е+В+Б": [
+   "09.1-agent.norms.md",
+   "09.2-agent.norms.md"
+  ]
+ },
+ "files": {
+  "Platform/09-agent/acceptance/1/README.md": {
+   "sha256_before": "656b1f7647ff3c097e012cc982c8a134df182532c7a14c6d49d4e175499be4fc",
+   "sha256_after": "37cd74ccff97540b681b1a30c6b4ea9dd10fe31b720ff7af16506c3672752cc2",
+   "hunks": [
+    {
+     "at": "@@ -40 +40 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -224 +224 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -248 +248 @@",
+     "minus": 1,
+     "plus": 1
+    }
+   ]
+  },
+  "Platform/09-agent/acceptance/1/seams.tsv": {
+   "sha256_before": "3bd8f2545d55c6959bcdb9104c98eee94ea25a9480695fbdbc287c7a409efe3c",
+   "sha256_after": "52fccb8bb62123d1f1f8a81a3604577e0f444aabadb51b24562be6ca6c3ccab3",
+   "hunks": [
+    {
+     "at": "@@ -45 +45 @@",
+     "minus": 1,
+     "plus": 1
+    }
+   ]
+  },
+  "Platform/09-agent/acceptance/2/README.md": {
+   "sha256_before": "430252e51e469816d810f52565768d13b84bd02626a566ac596960d20b9a2488",
+   "sha256_after": "70a2f30bd0953365b07411cbd6c60e91605e09da89628c9aaea488f2734a1acb",
+   "hunks": [
+    {
+     "at": "@@ -57 +57 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -61 +61 @@",
+     "minus": 1,
+     "plus": 1
+    }
+   ]
+  },
+  "Platform/09-agent/data/alarms.schema.json": {
+   "sha256_before": "a22174560a6d7efa505a949ed982554aeb967afe6a07039bdbc2f0e1c80ace27",
+   "sha256_after": "f1a873963d54519b87a0342a127889dde0daef09bf3032786f4a3a600959e21f",
+   "hunks": [
+    {
+     "at": "@@ -14 +14 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -93,0 +94,3 @@",
+     "minus": 0,
+     "plus": 3
+    }
+   ]
+  },
+  "Platform/09-agent/data/outcomes.schema.json": {
+   "sha256_before": "ac49209d14d0bcdf1dd244dc6cf3cda4dbdf6e5746b0d9b02a84a29f702cc25a",
+   "sha256_after": "98d782b71116b095bd6dca5d9fbf6c0294610c9fb10b7e884ae7fc855626abc5",
+   "hunks": [
+    {
+     "at": "@@ -15,0 +16,3 @@",
+     "minus": 0,
+     "plus": 3
+    },
+    {
+     "at": "@@ -816,0 +820,3 @@",
+     "minus": 0,
+     "plus": 3
+    }
+   ]
+  },
+  "Platform/09-agent/forms/README.md": {
+   "sha256_before": "e087532a7c34762fcbaf2f2ee76c13c2f6e8e929443a95fcf132c9e0edec2b96",
+   "sha256_after": "040cd9a2dd177c2a24ac2a4e6c85fc624d0063696afc5da5065f1e4936318b0d",
+   "hunks": [
+    {
+     "at": "@@ -11 +11 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -15 +15 @@",
+     "minus": 1,
+     "plus": 1
+    }
+   ]
+  },
+  "Platform/09-agent/forms/refusals.tsv": {
+   "sha256_before": "386a81b3fe747d2f1b766dd6c62acc1d1f588c3a8632e582296aed3f0e108b64",
+   "sha256_after": "dceb213e03d9aec17bd0170a2ec15bec65ea9c68175376f0cef7c3eda209782c",
+   "hunks": [
+    {
+     "at": "@@ -41,0 +42 @@",
+     "minus": 0,
+     "plus": 1
+    }
+   ]
+  },
+  "Platform/09-agent/forms/runtime-constants.tsv": {
+   "sha256_before": "566b085dfb92c632b22cc329687d18e88fb9d620d20f83f7a9cc35c88698399d",
+   "sha256_after": "8a142de4fb54a1ff5ba83476424fc50b4ddf37ec256abd6c611775c15cd00685",
+   "hunks": [
+    {
+     "at": "@@ -15,0 +16 @@",
+     "minus": 0,
+     "plus": 1
+    }
+   ]
+  },
+  "Platform/09-agent/lifecycle.md": {
+   "sha256_before": "7fa539ef79a43bafe984dd1a35764f08c1970ae6e47600f81c151c5bef2e1e6a",
+   "sha256_after": "345abaf46fcc3814005613e8dd08fc9b5b48b18721c1c6670b148711b59922d6",
+   "hunks": [
+    {
+     "at": "@@ -92 +92 @@",
+     "minus": 1,
+     "plus": 1
+    }
+   ]
+  },
+  "Platform/09-agent/ru/acceptance/1/README.md": {
+   "sha256_before": "f681ce6c5bb53bd1117b920245c093e68867089963977e0591ffb456bace7a46",
+   "sha256_after": "a29cf45fb33c1163046c3b7db96f2106ea64ca2b00de5ea8409c9a76acaac732",
+   "hunks": [
+    {
+     "at": "@@ -40 +40 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -224 +224 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -248 +248 @@",
+     "minus": 1,
+     "plus": 1
+    }
+   ]
+  },
+  "Platform/09-agent/ru/acceptance/2/README.md": {
+   "sha256_before": "920342b66cdd165ae757abd71936d75403a99986fcd3a5d29623758df8d94b98",
+   "sha256_after": "14d56bbbc96e7c2c371dba0b57d11540b3530460ba62e08db3cfe9ad7022db76",
+   "hunks": [
+    {
+     "at": "@@ -57 +57 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -61 +61 @@",
+     "minus": 1,
+     "plus": 1
+    }
+   ]
+  },
+  "Platform/09-agent/ru/forms/README.md": {
+   "sha256_before": "4322f0321b8087f537e32db62e78997592668b67f9b0c7019e890d6be7a8a562",
+   "sha256_after": "bf1965ffc777a06c97a4720e20d88aa564507fe38330144ee600461d7dff7ae8",
+   "hunks": [
+    {
+     "at": "@@ -11 +11 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -15 +15 @@",
+     "minus": 1,
+     "plus": 1
+    }
+   ]
+  },
+  "Platform/09-agent/ru/lifecycle.md": {
+   "sha256_before": "487d5c4a265e8e6ad52534985488528a15fa0457ce8eb2131633d0c374ec0847",
+   "sha256_after": "06ef03985e30fccd565967f64368dbdcc5391f5a152eb01d4082664dd4942607",
+   "hunks": [
+    {
+     "at": "@@ -92 +92 @@",
+     "minus": 1,
+     "plus": 1
+    }
+   ]
+  },
+  "Platform/09-agent/ru/spec/09.1-agent.norms.md": {
+   "sha256_before": "04be7ed588a88c49230193b80ada51a617933fc359729b62cdbb485d08ab6e84",
+   "sha256_after": "5df186154c57048e3d533af0c1282d9b13f5896525f3f76494333a0f2896db06",
+   "hunks": [
+    {
+     "at": "@@ -116 +116,7 @@",
+     "minus": 1,
+     "plus": 7
+    },
+    {
+     "at": "@@ -127 +133 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -175 +181 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -244 +250 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -247 +253 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -319,2 +325,2 @@",
+     "minus": 2,
+     "plus": 2
+    },
+    {
+     "at": "@@ -347,2 +353,2 @@",
+     "minus": 2,
+     "plus": 2
+    },
+    {
+     "at": "@@ -443,2 +449,2 @@",
+     "minus": 2,
+     "plus": 2
+    },
+    {
+     "at": "@@ -456 +462 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -610,2 +616,2 @@",
+     "minus": 2,
+     "plus": 2
+    },
+    {
+     "at": "@@ -626 +632 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -1032,0 +1039,6 @@",
+     "minus": 0,
+     "plus": 6
+    },
+    {
+     "at": "@@ -1236 +1248 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -1419 +1431 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -1551 +1563 @@",
+     "minus": 1,
+     "plus": 1
+    }
+   ]
+  },
+  "Platform/09-agent/ru/spec/09.2-agent.norms.md": {
+   "sha256_before": "7fa84cace933df073f980e1e20829ffa3d9fdaf1a6246de5371a26d6cbe9adb1",
+   "sha256_after": "245dc0b70585513ae06829e2b67106b1c957390fddf68b07bd369c9808c15524",
+   "hunks": [
+    {
+     "at": "@@ -124 +124 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -129,2 +129,2 @@",
+     "minus": 2,
+     "plus": 2
+    },
+    {
+     "at": "@@ -133 +133,2 @@",
+     "minus": 1,
+     "plus": 2
+    }
+   ]
+  },
+  "Platform/09-agent/spec/09-agent.api.openapi.yaml": {
+   "sha256_before": "f831dcf02672a87201083d40d16c035bfc95089a5b2872f45cefbb619e2ee990",
+   "sha256_after": "c87647e3f0d3d4f677854cfdf9e9870d44990c67a7925fcd4927d9cad2eed529",
+   "hunks": [
+    {
+     "at": "@@ -146 +146,2 @@",
+     "minus": 1,
+     "plus": 2
+    },
+    {
+     "at": "@@ -149 +150,4 @@",
+     "minus": 1,
+     "plus": 4
+    },
+    {
+     "at": "@@ -155 +159 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -165 +169 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -167 +171 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -171 +175,4 @@",
+     "minus": 1,
+     "plus": 4
+    },
+    {
+     "at": "@@ -177 +184,4 @@",
+     "minus": 1,
+     "plus": 4
+    },
+    {
+     "at": "@@ -204 +214 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -267 +277 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -277 +287 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -281 +291 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -283,3 +293,4 @@",
+     "minus": 3,
+     "plus": 4
+    },
+    {
+     "at": "@@ -290,0 +302,47 @@",
+     "minus": 0,
+     "plus": 47
+    }
+   ]
+  },
+  "Platform/09-agent/spec/09.1-agent.norms.md": {
+   "sha256_before": "86645af13b760dec330395ebf182f6663c2db657716827f5f70c8a87f37df5c8",
+   "sha256_after": "8277f4a125ea8e3fbd9bc3c61e6db4c6a27f98bc20d65f721d9422d1df957fd5",
+   "hunks": [
+    {
+     "at": "@@ -120 +120,7 @@",
+     "minus": 1,
+     "plus": 7
+    },
+    {
+     "at": "@@ -131 +137 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -180 +186 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -249 +255 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -252 +258 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -327,2 +333,2 @@",
+     "minus": 2,
+     "plus": 2
+    },
+    {
+     "at": "@@ -355,2 +361,2 @@",
+     "minus": 2,
+     "plus": 2
+    },
+    {
+     "at": "@@ -452,2 +458,2 @@",
+     "minus": 2,
+     "plus": 2
+    },
+    {
+     "at": "@@ -465 +471 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -627,2 +633,2 @@",
+     "minus": 2,
+     "plus": 2
+    },
+    {
+     "at": "@@ -643 +649 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -1052,0 +1059,6 @@",
+     "minus": 0,
+     "plus": 6
+    },
+    {
+     "at": "@@ -1256 +1268 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -1442 +1454 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -1579 +1591 @@",
+     "minus": 1,
+     "plus": 1
+    }
+   ]
+  },
+  "Platform/09-agent/spec/09.2-agent.norms.md": {
+   "sha256_before": "b8ce045f3a0c927e9e61d598cad2af0a025949f1804151e8f82683b23bc0b1f4",
+   "sha256_after": "3014172bbf36e36dd5c440e0a282c2400d7db9786fbdf8374788e038091c0e0c",
+   "hunks": [
+    {
+     "at": "@@ -131 +131 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -136,2 +136,2 @@",
+     "minus": 2,
+     "plus": 2
+    },
+    {
+     "at": "@@ -140 +140,2 @@",
+     "minus": 1,
+     "plus": 2
+    }
+   ]
+  },
+  "Platform/common/vectors/family-read/09.tsv": {
+   "sha256_before": "327acf6d0279675cd6f9756e3468220949c3fff68a550f7bc1d6bebb635c4b03",
+   "sha256_after": "eb69cf6fec8fa939734b82e9ee41a180cba4a13a9303569a6a02cb25fa08b613",
+   "hunks": [
+    {
+     "at": "@@ -1329 +1329 @@",
+     "minus": 1,
+     "plus": 1
+    },
+    {
+     "at": "@@ -1659,0 +1660,10 @@",
+     "minus": 0,
+     "plus": 10
+    }
+   ]
+  }
+ }
+,
+  "P09A_owner_reference_followup_05133": {
+  "reading_base": "05133c299b27ed76262cd074d1b09af3eb2aa26e",
+  "status": "SOURCE_COMPONENT_ONLY_NOT_EXECUTION_OR_READY",
+  "owner_sha256": "fc4d7da24ef38b8740f43717085aaeeeae3d79142bf259ca4cc369271db22245",
+  "source_forecasts": [
+    {
+      "path": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+      "after_sha256": "e849f394e7e7fa02f8e8b416335e49f49a1dc1c3cf984c56e163c3f4887f8dd4",
+      "after_blob": "dc8ee66c9b1a81b76e8338b134d3c69287548a05",
+      "after_bytes": 50643
+    },
+    {
+      "path": "Platform/09-agent/forms/README.md",
+      "after_sha256": "ce4513fdcb10b38fcdcc9fc76f60a1b6ccc7eca8fb492e0d8266323d75721ffb",
+      "after_blob": "4ceb0283da22f80447c3567a327278acf7970796",
+      "after_bytes": 14454
+    },
+    {
+      "path": "Platform/09-agent/ru/forms/README.md",
+      "after_sha256": "aa32ade65b453e8a2a13b914c607113125604a47eaa739a8f02d6c6e8c05432d",
+      "after_blob": "2e86595a831168f950524cab13b3d27960fa95a5",
+      "after_bytes": 23951
+    },
+    {
+      "path": "Platform/09-agent/spec/09.2-agent.norms.md",
+      "after_sha256": "a4cdb5a4caeb89c1b8ff445e34df64b08d46f3ec9996ac7f7c9a233aabe80ced",
+      "after_blob": "95a0400fa4f55613226ad24a269804ef969fda3e",
+      "after_bytes": 28470
+    },
+    {
+      "path": "Platform/09-agent/ru/spec/09.2-agent.norms.md",
+      "after_sha256": "c480f4a13c5f97de12d9133c9ad4e8576d351828cf68190ca604848f8bd476f7",
+      "after_blob": "a77553a3b2e6ae1a57de4c7a8394e2d61ab7fe69",
+      "after_bytes": 38426
+    },
+    {
+      "path": "Platform/09-agent/spec/09.1-agent.norms.md",
+      "after_sha256": "796687c9b95ceae500f6479ae6ea88931734ab25407fbd3fb2f415697e0f4947",
+      "after_blob": "281fc693eafc3d0966ad2551f30916f65b749d99",
+      "after_bytes": 214833
+    },
+    {
+      "path": "Platform/09-agent/ru/spec/09.1-agent.norms.md",
+      "after_sha256": "ff138f20d8d9743c2ea18133ebda10bda6d8936dc6c3682daf8cc5134f255bf6",
+      "after_blob": "886f297d32c08d3774adac91c559141eba8c54cf",
+      "after_bytes": 268212
+    }
+  ],
+  "owner_refs": "6 success Response refs,6 transitive owner Schema refs,6 distinct Parameter refs; no second body form",
+  "BackupPartRevision": "existing required GET query rev integer/min1, no default",
+  "representation_note": "New GET502 reads existing P06 DomainRefusal + normative literal; protected old relayToken502 mismatch is declared separately, not repaired.",
+  "family09_current_preserved": {
+    "path": "Platform/common/vectors/family-read/09.tsv",
+    "blob": "59ff4308ec2447f5ef24129c3dcf15d7c3803979",
+    "sha256": "b5e702312e09964ec537a900c87e7302022c574a423c55d4d5ccbc195bb88b95",
+    "bytes": 865815
+  },
+  "refusal39_s43_B_V_G_D_E": "unchanged",
+  "source_checks_or_runtime_claim": "none inherited; independent checks remain separate"
+}
+,
+  "token_POST502_owner_followup_d09cfc91": {
+  "source_parent": "d09cfc91870eeafcc0c47d33bacb3b068072b7a2",
+  "authority_commit": "e05abb812d372b639aad178bbc34225083730293",
+  "authority_path": "decisions/inbox/2026-11-07-P09-token502-ссылка-владельца.md",
+  "status": "SOURCE_COMPONENT_ONLY_NOT_RUNTIME_OR_READY",
+  "source_path": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+  "schema_pointer": "/paths/~1api~1tokens~1{member}~1{sub}~1{kind}/post/responses/502/content/application~1json/schema",
+  "before_blob": "dc8ee66c9b1a81b76e8338b134d3c69287548a05",
+  "before_sha256": "e849f394e7e7fa02f8e8b416335e49f49a1dc1c3cf984c56e163c3f4887f8dd4",
+  "after_blob": "fb56ee99c96eb2f5024edad5b6b86bcdea47092d",
+  "after_sha256": "b7b63c93aeb90373bfdca830774626d86c1fd86de947dc20ef922e8ad5b47207",
+  "only_schema_node_changed": true,
+  "before_schema": {
+    "$ref": "../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal"
+  },
+  "after_schema": {
+    "allOf": [
+      {
+        "$ref": "../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/DomainRefusal"
+      },
+      {
+        "properties": {
+          "error": {
+            "const": "did not answer"
+          }
+        }
+      }
+    ]
+  },
+  "source15_component": "8d404139f6733dbb201e4f51667532be4fb007cf",
+  "source15_freeze_sha256": "bdf1908b9ad4b9d0e7f8c45bf5e7e2e517986ab5d6f7310fe679669e7d27899f",
+  "source15_history_old_forecasts_preserved": true,
+  "case_corpus_refusal39_s43_family09_common15_changed": false,
+  "P06_P08_owner_nodes_changed": false,
+  "new5GET502_and_members_cache200_no_row503_unchanged": true,
+  "final_author_commit_and_self_hashes": "external source FREEZE, no recursive source-map claim",
+  "tools437_d034_repin_or_CODE_or_validator_runtime_GATE": false
+}
+}

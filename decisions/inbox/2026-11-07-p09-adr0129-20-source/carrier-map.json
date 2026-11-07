@@ -1,0 +1,180 @@
+{
+ "note": "Machine carriers that must keep a number or word equal to its single owner; a separate existing check_constants share binds them (not this delivery).",
+ "carriers": [
+  {
+   "file": "Platform/09-agent/data/alarms.schema.json",
+   "pointer": "/$defs/writer/properties/events/maxItems",
+   "value": 100,
+   "owner": "Platform/09-agent/forms/runtime-constants.tsv ALARM_PAGE",
+   "reader": "root allOf -> #/$defs/writer"
+  },
+  {
+   "file": "Platform/09-agent/data/outcomes.schema.json",
+   "pointer": "/$defs/writer/maxProperties",
+   "value": 500,
+   "owner": "Platform/09-agent/forms/runtime-constants.tsv OUTCOMES_KEEP",
+   "reader": "root allOf -> #/$defs/writer"
+  },
+  {
+   "file": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+   "pointer": "/components/schemas/RelayRefusalSignature/allOf/1/properties/reason/enum",
+   "value": [
+    "no_signature",
+    "not_a_signature",
+    "out_of_window",
+    "bad_signature"
+   ],
+   "owner": "Platform/common/contracts/agent-signature.md «Check and refusal words»"
+  },
+  {
+   "file": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+   "pointer": "/components/schemas/RelayRefusalAccept/allOf/1/properties/reason/enum",
+   "value": [
+    "same_sent_at",
+    "rebase",
+    "not_ready"
+   ],
+   "owner": "Platform/common/contracts/accept.md (P/08.3)"
+  },
+  {
+   "file": "Platform/09-agent/spec/09.1-agent.norms.md and ru/",
+   "pointer": "families block of domain/outcomes and domain/alarms («Only at the writer»)",
+   "value": "500 / 100",
+   "owner": "built by v7/sections.py from $defs.writer",
+   "note": "built projection, not an independent copy"
+  },
+  {
+   "file": "Platform/09-agent/forms/runtime-constants.tsv",
+   "pointer": "row BODY_LIMIT",
+   "value": 16777216,
+   "owner": "Platform/common/contracts/accept.md (import)",
+   "note": "import kept; prose copies 16 MiB replaced by the name"
+  },
+  {
+   "file": "Platform/09-agent/forms/runtime-constants.tsv",
+   "pointer": "row GONE_CHECK_EVERY (new)",
+   "value": 600,
+   "owner": "P/09.1-R008 itself",
+   "note": "not merged with TABLES_RETRY or SAY_EVERY by equal value"
+  }
+ ],
+ "prose_copies_removed": [
+  "09.1 TABLES_RETRY",
+  "SAY_EVERY",
+  "BOOK_PARTS_PASS",
+  "MEMBER_WANT_PASS",
+  "FRESH_EVERY",
+  "AS_OF_STORE_EVERY",
+  "OUTCOME_HOLD",
+  "OUTCOMES_KEEP",
+  "ALARM_WINDOW",
+  "ALARM_PAGE (fence and families table)",
+  "URGENT_GAP",
+  "memberof-gone 600 s",
+  "lifecycle REPORT_EVERY",
+  "acceptance/1 REPORT_EVERY, FRESH_EVERY",
+  "acceptance/2 FRESH_EVERY",
+  "BODY_LIMIT (16 MiB) x3",
+  "alarms schema description ALARM_PAGE = 100"
+ ]
+,
+  "P09A_owner_reference_followup_05133": {
+  "reading_base": "05133c299b27ed76262cd074d1b09af3eb2aa26e",
+  "status": "SOURCE_COMPONENT_ONLY_NOT_EXECUTION_OR_READY",
+  "owner_sha256": "fc4d7da24ef38b8740f43717085aaeeeae3d79142bf259ca4cc369271db22245",
+  "source_forecasts": [
+    {
+      "path": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+      "after_sha256": "e849f394e7e7fa02f8e8b416335e49f49a1dc1c3cf984c56e163c3f4887f8dd4",
+      "after_blob": "dc8ee66c9b1a81b76e8338b134d3c69287548a05",
+      "after_bytes": 50643
+    },
+    {
+      "path": "Platform/09-agent/forms/README.md",
+      "after_sha256": "ce4513fdcb10b38fcdcc9fc76f60a1b6ccc7eca8fb492e0d8266323d75721ffb",
+      "after_blob": "4ceb0283da22f80447c3567a327278acf7970796",
+      "after_bytes": 14454
+    },
+    {
+      "path": "Platform/09-agent/ru/forms/README.md",
+      "after_sha256": "aa32ade65b453e8a2a13b914c607113125604a47eaa739a8f02d6c6e8c05432d",
+      "after_blob": "2e86595a831168f950524cab13b3d27960fa95a5",
+      "after_bytes": 23951
+    },
+    {
+      "path": "Platform/09-agent/spec/09.2-agent.norms.md",
+      "after_sha256": "a4cdb5a4caeb89c1b8ff445e34df64b08d46f3ec9996ac7f7c9a233aabe80ced",
+      "after_blob": "95a0400fa4f55613226ad24a269804ef969fda3e",
+      "after_bytes": 28470
+    },
+    {
+      "path": "Platform/09-agent/ru/spec/09.2-agent.norms.md",
+      "after_sha256": "c480f4a13c5f97de12d9133c9ad4e8576d351828cf68190ca604848f8bd476f7",
+      "after_blob": "a77553a3b2e6ae1a57de4c7a8394e2d61ab7fe69",
+      "after_bytes": 38426
+    },
+    {
+      "path": "Platform/09-agent/spec/09.1-agent.norms.md",
+      "after_sha256": "796687c9b95ceae500f6479ae6ea88931734ab25407fbd3fb2f415697e0f4947",
+      "after_blob": "281fc693eafc3d0966ad2551f30916f65b749d99",
+      "after_bytes": 214833
+    },
+    {
+      "path": "Platform/09-agent/ru/spec/09.1-agent.norms.md",
+      "after_sha256": "ff138f20d8d9743c2ea18133ebda10bda6d8936dc6c3682daf8cc5134f255bf6",
+      "after_blob": "886f297d32c08d3774adac91c559141eba8c54cf",
+      "after_bytes": 268212
+    }
+  ],
+  "owner_refs": "6 success Response refs,6 transitive owner Schema refs,6 distinct Parameter refs; no second body form",
+  "BackupPartRevision": "existing required GET query rev integer/min1, no default",
+  "representation_note": "New GET502 reads existing P06 DomainRefusal + normative literal; protected old relayToken502 mismatch is declared separately, not repaired.",
+  "family09_current_preserved": {
+    "path": "Platform/common/vectors/family-read/09.tsv",
+    "blob": "59ff4308ec2447f5ef24129c3dcf15d7c3803979",
+    "sha256": "b5e702312e09964ec537a900c87e7302022c574a423c55d4d5ccbc195bb88b95",
+    "bytes": 865815
+  },
+  "refusal39_s43_B_V_G_D_E": "unchanged",
+  "source_checks_or_runtime_claim": "none inherited; independent checks remain separate"
+}
+,
+  "token_POST502_owner_followup_d09cfc91": {
+  "source_parent": "d09cfc91870eeafcc0c47d33bacb3b068072b7a2",
+  "authority_commit": "e05abb812d372b639aad178bbc34225083730293",
+  "authority_path": "decisions/inbox/2026-11-07-P09-token502-ссылка-владельца.md",
+  "status": "SOURCE_COMPONENT_ONLY_NOT_RUNTIME_OR_READY",
+  "source_path": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+  "schema_pointer": "/paths/~1api~1tokens~1{member}~1{sub}~1{kind}/post/responses/502/content/application~1json/schema",
+  "before_blob": "dc8ee66c9b1a81b76e8338b134d3c69287548a05",
+  "before_sha256": "e849f394e7e7fa02f8e8b416335e49f49a1dc1c3cf984c56e163c3f4887f8dd4",
+  "after_blob": "fb56ee99c96eb2f5024edad5b6b86bcdea47092d",
+  "after_sha256": "b7b63c93aeb90373bfdca830774626d86c1fd86de947dc20ef922e8ad5b47207",
+  "only_schema_node_changed": true,
+  "before_schema": {
+    "$ref": "../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal"
+  },
+  "after_schema": {
+    "allOf": [
+      {
+        "$ref": "../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/DomainRefusal"
+      },
+      {
+        "properties": {
+          "error": {
+            "const": "did not answer"
+          }
+        }
+      }
+    ]
+  },
+  "source15_component": "8d404139f6733dbb201e4f51667532be4fb007cf",
+  "source15_freeze_sha256": "bdf1908b9ad4b9d0e7f8c45bf5e7e2e517986ab5d6f7310fe679669e7d27899f",
+  "source15_history_old_forecasts_preserved": true,
+  "case_corpus_refusal39_s43_family09_common15_changed": false,
+  "P06_P08_owner_nodes_changed": false,
+  "new5GET502_and_members_cache200_no_row503_unchanged": true,
+  "final_author_commit_and_self_hashes": "external source FREEZE, no recursive source-map claim",
+  "tools437_d034_repin_or_CODE_or_validator_runtime_GATE": false
+}
+}

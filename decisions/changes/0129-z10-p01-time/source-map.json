@@ -1,0 +1,171 @@
+{
+  "change": "0129-z10-p01-time",
+  "rev": 1,
+  "state": "review",
+  "base": "854681a2fcd1db12ff7db8127feee977f62be6b6",
+  "activation": {
+    "source_B": "8f21b9c9415f489a255df1de6ce5273368366c484eba3818177ea2b4ba26dcf6",
+    "mirror_exact4": "d267c9507b34699f0853fb81951219cbedd7baf1430b8fb39bdebfda5dc03813",
+    "nonoverlapping_source": "d0b02a340d699e52cfd85645bcb58d372492fb35f9fedefaaab17898be03ca82"
+  },
+  "modified_req_units": [
+    {
+      "id": "P/01.1-R008",
+      "before": {
+        "text": "<!-- req: P/01.1-R008 -->\n- The **reader** MUST accept any notation of this form, with a fraction of any length: `^(0|[1-9][0-9]*)(\\.[0-9]+)?$`\n  (ADR-0083 item 3: a strict writer, a tolerant reader).\n\n",
+        "sha256": "4bc26543258acf73d2d1e1dffa4d66503388ebabf4ff76ddc7b68f1adee0cbcd",
+        "start_utf8": 3705,
+        "end_utf8": 3907,
+        "heading_level": 3
+      },
+      "after": {
+        "text": "<!-- req: P/01.1-R008 -->\n- The **reader** MUST accept the same form with at most three fractional digits as the current writer: `^(0|[1-9][0-9]*)(\\.[0-9]{1,3})?$`. Excess precision has the existing field/row unreadable outcome of that field, without rounding or truncation.\n\n\n",
+        "sha256": "3b07ccb8c6dd55235fa1a2b8fcc2f47eb3f89b38585f228a792f58213677fe1a",
+        "start_utf8": 3705,
+        "end_utf8": 3982,
+        "heading_level": 3
+      }
+    },
+    {
+      "id": "P/01.1-R010",
+      "before": {
+        "text": "<!-- req: P/01.1-R010 -->\n- A notation not of this form is a field out of form; what the reader then does is said by the rule of the field. The\n  value of the notation is finite in binary64: a notation of this form whose value does not fit binary64 (overflow) is also\n  out of form; the length of the fraction is still any (MAY-UNTIL-D8-01, the Architect's decision of 2026-10-25).\n\n",
+        "sha256": "2e82860d82d97e2a8bd20dfcf3c91f2ae1356b3461524372453bfad283ffe5a7",
+        "start_utf8": 4198,
+        "end_utf8": 4581,
+        "heading_level": 3
+      },
+      "after": {
+        "text": "<!-- req: P/01.1-R010 -->\n- A notation outside this form is a field out of form; the field rule determines the reader outcome. Its value is finite in binary64: overflow is also out of form. The reader has the writer's fraction bound. The R007 exception and own forms of R012 are not narrowed by this rule.\n\n\n",
+        "sha256": "94350e2ff46de09389877a5bca8d61928464a2547c0845036276a0091c1b741c",
+        "start_utf8": 4273,
+        "end_utf8": 4581,
+        "heading_level": 3
+      }
+    }
+  ],
+  "unit_boundary": "ADR0122 heading-aware, next req or same/older heading",
+  "files": [
+    {
+      "path": "Platform/01-store/ru/spec/01.1-store.norms.md",
+      "before_blob": "d2ee84e0e24ec21c64824e9862702fdbe78d31fb",
+      "before_sha256": "8fe156c0a1dce55a70796c0e36777d011c014ff5a2cf1d891c087e42f6a5f990",
+      "after_expected_sha256": "c623063baeb0b27446692cd00ebfa5a61878d7cec31d1c6ad975c229b88c5643",
+      "after_expected_bytes": 109461,
+      "after_blob": "2470c4eaa0e48d87ad43214552db46432be5613c",
+      "literal_edits": [
+        {
+          "start_utf8": 4548,
+          "end_utf8": 4807,
+          "coordinate_convention": "UTF-8 bytes",
+          "before": "- **Читатель** принимает любую запись этой формы, с дробной частью любой длины: `^(0|[1-9][0-9]*)(\\.[0-9]+)?$`\n  (ADR-0083 п. 3: строгий писатель, терпимый читатель).",
+          "after": "- **Читатель** MUST принимать ту же форму с дробью не длиннее трёх цифр, что и нынешний писатель: `^(0|[1-9][0-9]*)(\\.[0-9]{1,3})?$`. Превышение — прежний исход нечитаемого поля или строки по правилу поля, без округления и усечения.",
+          "authority": "NORMATIVE-EXACT-BLOCK-PROPOSALS.json:6"
+        },
+        {
+          "start_utf8": 5173,
+          "end_utf8": 5700,
+          "coordinate_convention": "UTF-8 bytes",
+          "before": "- Запись не этой формы — поле не по форме; что тогда делает читатель, говорит правило поля. Значение записи конечно в\n  binary64: запись этой формы, чьё значение в binary64 не помещается (переполнение), — тоже не по форме; длина дробной\n  части по-прежнему любая (MAY-UNTIL-D8-01, решение «Архитектора» 2026-10-25).",
+          "after": "- Запись не по этой форме — поле не по форме; действие читателя задаёт правило поля. Значение записи конечно в binary64: переполнение также не по форме. Предел дроби читателя тот же, что у писателя. Исключения R007 и собственные формы R012 этим правилом не сужаются.",
+          "authority": "NORMATIVE-EXACT-BLOCK-PROPOSALS.json:7"
+        }
+      ],
+      "appended_rows": [],
+      "initial_expected_sha256": "c623063baeb0b27446692cd00ebfa5a61878d7cec31d1c6ad975c229b88c5643",
+      "final_sha256": "c623063baeb0b27446692cd00ebfa5a61878d7cec31d1c6ad975c229b88c5643",
+      "final_bytes": 109461,
+      "final_blob": "2470c4eaa0e48d87ad43214552db46432be5613c"
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "before_blob": "2375adc37f4af9889d2d8538288ffca080526e11",
+      "before_sha256": "2b5ce1f73fdbf269581465430a2a9104c4247ac3912cddc8e4f3d75b9b74b9b3",
+      "after_expected_sha256": "a0d3e41795f9e8fb2502b043499381cd8d05919806de06e11765000801ebd883",
+      "after_expected_bytes": 80443,
+      "after_blob": "9f03d625f2e76f0afd771cc17d79f167ac545afc",
+      "literal_edits": [
+        {
+          "start_utf8": 3731,
+          "end_utf8": 3906,
+          "coordinate_convention": "UTF-8 bytes",
+          "before": "- The **reader** MUST accept any notation of this form, with a fraction of any length: `^(0|[1-9][0-9]*)(\\.[0-9]+)?$`\n  (ADR-0083 item 3: a strict writer, a tolerant reader).\n",
+          "after": "- The **reader** MUST accept the same form with at most three fractional digits as the current writer: `^(0|[1-9][0-9]*)(\\.[0-9]{1,3})?$`. Excess precision has the existing field/row unreadable outcome of that field, without rounding or truncation.\n\n",
+          "authority": "NORMATIVE-EXACT-BLOCK-PROPOSALS.json:0"
+        },
+        {
+          "start_utf8": 4224,
+          "end_utf8": 4580,
+          "coordinate_convention": "UTF-8 bytes",
+          "before": "- A notation not of this form is a field out of form; what the reader then does is said by the rule of the field. The\n  value of the notation is finite in binary64: a notation of this form whose value does not fit binary64 (overflow) is also\n  out of form; the length of the fraction is still any (MAY-UNTIL-D8-01, the Architect's decision of 2026-10-25).\n",
+          "after": "- A notation outside this form is a field out of form; the field rule determines the reader outcome. Its value is finite in binary64: overflow is also out of form. The reader has the writer's fraction bound. The R007 exception and own forms of R012 are not narrowed by this rule.\n\n",
+          "authority": "NORMATIVE-EXACT-BLOCK-PROPOSALS.json:1"
+        }
+      ],
+      "appended_rows": [],
+      "initial_expected_sha256": "a0d3e41795f9e8fb2502b043499381cd8d05919806de06e11765000801ebd883",
+      "final_sha256": "a0d3e41795f9e8fb2502b043499381cd8d05919806de06e11765000801ebd883",
+      "final_bytes": 80443,
+      "final_blob": "9f03d625f2e76f0afd771cc17d79f167ac545afc"
+    },
+    {
+      "path": "Platform/common/data/codec.tsv",
+      "before_blob": "15a311ea85309baee10de7538466ac16fb2c8751",
+      "before_sha256": "9b64b59cfb7e89ca21771d5dc1ea6ebd8bade7b7fe15df4e43e7cb8fcadda02e",
+      "after_expected_sha256": "fc8f59027628a14ed0b18495989ea5c45a45a558f6fc6d8fe8f61fc9fd2808dd",
+      "after_expected_bytes": 2758,
+      "after_blob": "d5ab25b2e48f73655a55d2057cc48a2fdc75a19f",
+      "literal_edits": [
+        {
+          "start_utf8": 1736,
+          "end_utf8": 2079,
+          "coordinate_convention": "UTF-8 bytes",
+          "before": "time\t^(0|[1-9][0-9]*)(\\.[0-9]{1,3})?$\t^(0|[1-9][0-9]*)(\\.[0-9]+)?$; the value is finite in binary64, an overflow — not by the form (MAY-UNTIL-D8-01)\tJSON number in the writer's notation (a string — if the form of the field names a string)\ta number or a string in the reader's notation\tP/01.1 N0 «Time in a row»; ADR-0088 addendum (2) S1\n",
+          "after": "time\t^(0|[1-9][0-9]*)(\\.[0-9]{1,3})?$\t^(0|[1-9][0-9]*)(\\.[0-9]{1,3})?$; the value is finite in binary64, an overflow — not by the form (MAY-UNTIL-D8-01)\tJSON number in the writer's notation (a string — if the form of the field names a string)\ta number or a string in the reader's notation\tP/01.1 N0 «Time in a row»; ADR-0088 addendum (2) S1\n",
+          "authority": "NORMATIVE-EXACT-BLOCK-PROPOSALS.json:12"
+        }
+      ],
+      "appended_rows": [],
+      "initial_expected_sha256": "fc8f59027628a14ed0b18495989ea5c45a45a558f6fc6d8fe8f61fc9fd2808dd",
+      "final_sha256": "fc8f59027628a14ed0b18495989ea5c45a45a558f6fc6d8fe8f61fc9fd2808dd",
+      "final_bytes": 2758,
+      "final_blob": "d5ab25b2e48f73655a55d2057cc48a2fdc75a19f"
+    },
+    {
+      "path": "Platform/common/vectors/family-read/01.tsv",
+      "before_blob": "fb868b012d74c8e2b31990fb62b8ee6183b03f13",
+      "before_sha256": "584f6187bd9620b801b84a1433f8df695338b6682986c68b6cef2e2e27fefe9e",
+      "after_expected_sha256": "0e72f6dedc275346be61a811265cf68facaf1006bedf300f6483a512a4011c4e",
+      "after_expected_bytes": 21135,
+      "after_blob": "593c0d8f17dcba1e70ad241495aaeee3d836d791",
+      "literal_edits": [
+        {
+          "start_utf8": 5912,
+          "end_utf8": 6077,
+          "coordinate_convention": "UTF-8 bytes",
+          "before": "01-0036\tplatform/epoch_floor\tplatform/epoch_floor\trow\treader\t[\"<s>worker\"]\t{\"floor\":\"1\",\"generation_at\":\"1.0001\"}\tok\t[]\t{\"<s>worker\": []}\tgeneration_at: time 1.0001\n",
+          "after": "01-0036\tplatform/epoch_floor\tplatform/epoch_floor\trow\treader\t[\"<s>worker\"]\t{\"floor\":\"1\",\"generation_at\":\"1.0001\"}\trefused\t[\"/generation_at\"]\t{\"<s>worker\": [\"/generation_at\"]}\tgeneration_at: time 1.0001\n",
+          "authority": "CORPUS-RAW-DECLARATIONS existing row"
+        },
+        {
+          "start_utf8": 15063,
+          "end_utf8": 15238,
+          "coordinate_convention": "UTF-8 bytes",
+          "before": "01-0088\tplatform/configstore-doors/<id>\tplatform/configstore-doors/t1\trow\treader\t[\"configstore-door\"]\t{\"seen_at\":\"1.0001\"}\tok\t[]\t{\"configstore-door\": []}\tseen_at: time 1.0001\n",
+          "after": "01-0088\tplatform/configstore-doors/<id>\tplatform/configstore-doors/t1\trow\treader\t[\"configstore-door\"]\t{\"seen_at\":\"1.0001\"}\trefused\t[\"/seen_at\"]\t{\"configstore-door\": [\"\"]}\tseen_at: time 1.0001\n",
+          "authority": "CORPUS-RAW-DECLARATIONS existing row"
+        }
+      ],
+      "appended_rows": [
+        "01-z10-time-three-digits\tplatform/configstore-doors/<id>\tplatform/configstore-doors/t1\trow\treader\t[\"configstore-door\"]\t{\"seen_at\":\"1.123\"}\tok\t[]\t{\"configstore-door\": []}\tZ10 current reader Time boundary: exactly three fraction digits; existing readable outcome.\n"
+      ],
+      "initial_expected_sha256": "0e72f6dedc275346be61a811265cf68facaf1006bedf300f6483a512a4011c4e",
+      "final_sha256": "0e72f6dedc275346be61a811265cf68facaf1006bedf300f6483a512a4011c4e",
+      "final_bytes": 21135,
+      "final_blob": "593c0d8f17dcba1e70ad241495aaeee3d836d791"
+    }
+  ],
+  "complete_shared_manifest": "decisions/inbox/2026-11-07-z10-current-source-b/source-map.json",
+  "P01_related_A": "immutable; separate source/metadata lineage",
+  "source_component_status": "not accepted/applied/apply/READY"
+}

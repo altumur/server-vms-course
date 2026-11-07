@@ -106,3 +106,7 @@ Properties 13 and 14 of the report the coverage audit Gemini P02 (for people) (b
 The refusal code on an unreadable mark is `2`: N1.5 of chapter 2.3 says «code ≠ 0», the table `expect` knows `0` and `2`, the refusals of
 `manifest put` of N4 of chapter 2.3 are code 2. An unreadable row `platform/manifest/<name>` (the outcomes of `manifest-row.outcomes.tsv`) —
 still by reading: there is no directive for spoiling the row.
+
+## Recovery obligation outside the current executable bindings
+
+The exact initial row/view/mark state, comment-only/shell-only/files-only candidates, public P/01 preparations and readback expectations are in [P/02.3 N5](../../spec/02.3-installer.norms.md#recovery-with-a-readable-stale-view-unbound-execution-obligation). The command remains `manifest-put {socket} {file}`. No new directive or initialized-store seam is declared here. The old puts rows do not execute that recovery obligation; it remains open, not PASS.

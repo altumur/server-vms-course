@@ -27,7 +27,6 @@ the template.
 | Placeholder | Grammar | Example | Norm |
 |---|---|---|---|
 | `<sub>` | `^(?:[a-z][a-z0-9_-]{0,31})$` | `testsub` | the subsystem name P/02.1 N1.2 (reserved words and `free-…` are not judged by the key) |
-| `<form>` | `^(?:[1-9][0-9]*)$` | `1` | P/02.2 N1.2 |
 | `<id>` | `^(?:[^/.][^/]*\|\.[^/.][^/]*\|\.\.[^/]+)$` | `t1` | the unit id P/06.1 N1.3 (numeric and named) and the participant id P/01.3 N1.3: a non-empty component, not `.` and not `..` |
 | `<name>` | `^(?:[^/.][^/]*\|\.[^/.][^/]*\|\.\.[^/]+)$` | `w-1` | by families — the table below; the key — the union: a non-empty component, not `.` and not `..` |
 | `<worker>` | `^(?:[a-z]{1,8}-[a-z0-9]+(?:-[a-z0-9]+)*)$` | `w-1` | the slot name P/03.2 N1.4; P/04 N1.3a |
@@ -82,7 +81,6 @@ The values of the placeholders by families and the grammar of the norm of the wr
 | Placeholder | Where (templates) | What | Grammar of the norm | Components | Norm |
 |---|---|---|---|---|---|
 | `<sub>` | `platform/manifest/<sub>…`, `<sub>/…`, `objects/<sub>/…`, `domain/<sub>/…`, `domain/{placement,placed,names}/<sub>/…`, `<events root>/<sub>…`, `.workers/<sub>/…` | the subsystem name — the `name` of the manifest | `[a-z][a-z0-9_-]{0,31}`, not one of the 23 reserved words, not `free-[\s\S]*` (`common.sub_name`) | 1 | P/02.1 N1.2 |
-| `<form>` | `platform/manifest/<sub>/canonical/<form>` | the form number of the canonical view | `[1-9][0-9]*` | 1 | P/02.2 N1.2 |
 | `<sha256>`, `<n>` | `platform/manifest/<sub>/files/<sha256>/<n>` | the digest of the file bytes; the part number from 0 | 64 lowercase hex; a decimal integer without leading zeros | 1 each | P/02.3 N1.5 |
 | `<id>` | `<sub>/placement/<id>`, `<sub>/<manifest:unit.rows>/<id>`, `<sub>/state/<name>/<id>`, `<sub>/epoch/<id>` | the unit id | by the `unit.id` of the manifest: numeric — `[1-9][0-9]*`; named — the id grammar of N1.3 (`common.named_id`); without a manifest — the union of both | 1 | P/06.1 N1.3 |
 | `<id>` | `platform/configstore-doors/<id>` | the id of a participant of the store group (`-id`, outside a group — `SERVER_NAME`) | a non-empty component | 1 | P/01.3 N1.3 |

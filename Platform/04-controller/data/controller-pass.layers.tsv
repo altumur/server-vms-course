@@ -14,4 +14,6 @@ place	layer	word	value
 /$defs/common.uint53	3	x-integer	true
 /properties/fates/additionalProperties/properties/rev	3	x-integer	true
 /properties/manifest_rev	3	x-integer	true
+/properties/short/items/properties/units	3	x-integer	true
+/properties/short/items/properties/units	3	x-whole	true
 /properties/wants/additionalProperties/properties/want	3	x-integer	true

@@ -1,0 +1,746 @@
+{
+  "base": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+  "source_scope": {
+    "owner": 7,
+    "related": 14,
+    "append_only_history": 3,
+    "metadata": 6,
+    "total": 30
+  },
+  "API_inverse_exact": true,
+  "text_block_changes": 16,
+  "approved_sentence_separators": 4,
+  "new_schema_nodes": 6,
+  "new_standard_responses": 6,
+  "new_parameters": 4,
+  "original_Member_AgentSignature_unchanged": true,
+  "old_statuses_headers_rights_methods_paths_and_OTHER_parameters_unchanged": true,
+  "protected_other_declared25": [
+    {
+      "path": "Platform/06-console/spec/06-console.api.openapi.yaml",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "9d00b1e00adbfba903f072c70d56235a7a8dcb43",
+      "sha256": "b4073b39c35094aba8bd6cecefd0f63f5cc2c37abc867e72a0b81eaa4c7b189e",
+      "bytes": 403567
+    },
+    {
+      "path": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "f28523fbde16f4279441cb5b01ced018af2a0131",
+      "sha256": "c87647e3f0d3d4f677854cfdf9e9870d44990c67a7925fcd4927d9cad2eed529",
+      "bytes": 24399
+    },
+    {
+      "path": "Platform/09-agent/data/member-topology.schema.json",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "f5ab40fa53a96c1b612cded423cc54b1b16862c5",
+      "sha256": "5d0b27868605653ad39561c16d2ffaa60d7ccfaeef953e935ebbb8dfb38df0e7",
+      "bytes": 29325
+    },
+    {
+      "path": "Platform/09-agent/spec/09.2-agent.norms.md",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "46157d3afea999ae0dd6aafcbf0f2b6b8efe88b4",
+      "sha256": "3014172bbf36e36dd5c440e0a282c2400d7db9786fbdf8374788e038091c0e0c",
+      "bytes": 28167
+    },
+    {
+      "path": "Platform/common/contracts/domain-envelopes.md",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "f8d0c76df8dce392b4af9f99f5f951a8e30a9b4b",
+      "sha256": "7f53a5255ffba4a3114f291d2c57d7ef640b2a6aa5448c58d881b8fead12c70f",
+      "bytes": 13129
+    },
+    {
+      "path": "Platform/common/ru/contracts/domain-envelopes.md",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "f37bc7c4e289945ca8b2743d59beb061328f2e06",
+      "sha256": "dfde3d6060401e2d546edba2d401dc55cb5f383673cf1acce1301d3656e2e2c8",
+      "bytes": 16119
+    },
+    {
+      "path": "Platform/common/data/codec.tsv",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "15a311ea85309baee10de7538466ac16fb2c8751",
+      "sha256": "9b64b59cfb7e89ca21771d5dc1ea6ebd8bade7b7fe15df4e43e7cb8fcadda02e",
+      "bytes": 2754
+    },
+    {
+      "path": "Platform/common/data/cell-json-sha256.tsv",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "58a94d879238bf5230b2379307c1ced56c29e493",
+      "sha256": "6a97f2ac619a0cca4dbc4f8cfc55d1475be9ec2cfb07b2ba5c95694fe3c3c984",
+      "bytes": 349778
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/scenarios.tsv",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "81adebb80b6b6d98ef6706a741b01eb1b0e13e6a",
+      "sha256": "3799cb737b94c219bd22209453d12dd6876e08d3baa3ddcbc64bb3e26d8eccc9",
+      "bytes": 25717
+    },
+    {
+      "path": "Platform/09-agent/acceptance/2/seams.tsv",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "8039b5ed0a9a901a1321c7097c0f38fe413d6782",
+      "sha256": "faa8cb162747efb30529e3ceee00f775df688497aa5a83e7f92563cb2807ab31",
+      "bytes": 2061
+    },
+    {
+      "path": "Platform/common/vectors/family-read/09.tsv",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "8a02ef2c17893de8670b780eeb208e1add032a44",
+      "sha256": "eb69cf6fec8fa939734b82e9ee41a180cba4a13a9303569a6a02cb25fa08b613",
+      "bytes": 865679
+    },
+    {
+      "path": "Platform/09-agent/forms/refusals.tsv",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "d6e048513923c4410286ca5423fb57da02fbac6a",
+      "sha256": "dceb213e03d9aec17bd0170a2ec15bec65ea9c68175376f0cef7c3eda209782c",
+      "bytes": 10273
+    },
+    {
+      "path": "tools/normgen/gen_cmdtests.py",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "06dcd8730d3da3212dd96232fca173d8d82b340f",
+      "sha256": "6f772dbd6f7531af91ba3e1d89a77806a0c349f342cb0be969c4cb808de82ad8",
+      "bytes": 58572
+    },
+    {
+      "path": "tools/normgen/gen_door_lesson.py",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "2bad326b1b477770684261217ac44f5619569db3",
+      "sha256": "7b90e6564cde1840eed2217aacb00c6d03e4995a9285e0fc9807030b2ad4d801",
+      "bytes": 41055
+    },
+    {
+      "path": "Platform/08-domain/spec/08.3-domain.norms.md",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "b9b935232d7e29c04f37045540c804fe9cf5d702",
+      "sha256": "344b91d410e5dd86c5985fccb564de270e31ae37ffed6fd119256cf6253b3cf0",
+      "bytes": 107696
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.3-domain.norms.md",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "1ea136c17de481514f80086e0e77bd48ad188c92",
+      "sha256": "a15206e447b0b058b33ea5fdbf80fb74d55450e69a40c9bafac2644c2d159a9b",
+      "bytes": 133432
+    },
+    {
+      "path": "Platform/08-domain/spec/08.8-domain.norms.md",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "6ba9cd84f93715b66f7dc3711182393fbc7d7f5b",
+      "sha256": "3d102b96b5f44029feaefe1b9a5331517fae91cb7db8780c49de290f29021f9b",
+      "bytes": 123300
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.8-domain.norms.md",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "364949aeae05a8fe1fd5d0e2301cd6942e3bac42",
+      "sha256": "ddda931ccfd47fb50cd214f1c61b75ecd4e22de90395e59240441b448a4b8c31",
+      "bytes": 157160
+    },
+    {
+      "path": "Platform/08-domain/data/anywhere.schema.json",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "555b9953ec29d8a3b9175450ffd135734d07122d",
+      "sha256": "f4719bd3e7bb9ef445afc8ff6cff5fddff43c8cc2cfdcb85f49a9858f4704d39",
+      "bytes": 28760
+    },
+    {
+      "path": "Platform/08-domain/data/book-all.schema.json",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "ffa282d83dcea078e9b2f106a6190dcea8128a21",
+      "sha256": "c44fcaeb2e4ca87556b018587bf1705a88d3238e60a18990486e7a8e3214a302",
+      "bytes": 28494
+    },
+    {
+      "path": "Platform/08-domain/data/book-part.schema.json",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "b35ee1ab6cde6dadce21a0b37a6403ff40fc9498",
+      "sha256": "64068e2779de7cc46ee7e26436d7f1a3d9c171baad7c8c1be011bfce4d4a4f1a",
+      "bytes": 28528
+    },
+    {
+      "path": "Platform/08-domain/data/members.schema.json",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "54de81d53fe4bbccaa6ec579250bfc6568347046",
+      "sha256": "57741f7c90ab1685ed51977298ae4a498ae2107d3ed1212f5b79fb1590f17141",
+      "bytes": 29173
+    },
+    {
+      "path": "Platform/08-domain/data/topology.schema.json",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "28854de55342bdd9f1ac8ef4eb7ac2607c15bec8",
+      "sha256": "9b22dd27bfc06461b2210d66774f32388c6990126ddf44d0469eb41c6fe3b36e",
+      "bytes": 28574
+    },
+    {
+      "path": "Platform/08-domain/data/backup-parts.schema.json",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "17568f529533e2c9afe1e1c46d0f4cf6f91f80b6",
+      "sha256": "25f842aa561591dc5858e81b15598743b423f1902f69238fc939f4ed8cd9a07f",
+      "bytes": 532
+    },
+    {
+      "path": "Platform/common/contracts/accept.md",
+      "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+      "blob": "af9c16e98b2ef3f0278392f532daf648cb8626f4",
+      "sha256": "0e7a93fb5f8c9d164fd58b8651602b2e144ccb7f216c1fc401bda085ab95ef48",
+      "bytes": 42466
+    }
+  ],
+  "protected_old_chapter1_seams": 39,
+  "s43_unchanged": true,
+  "chapter2_process_family_refusals_common15_S08_unchanged": true,
+  "history_prefixes_exact": true,
+  "narrow_source_controls": {
+    "base": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+    "API_new_schemas_checked": 6,
+    "API_changed_refs_resolved": 18,
+    "refs": [
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "#/components/schemas/Carry/properties/members",
+        "target": "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "#/components/schemas/HolderMembersBody",
+        "target": "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "#/components/responses/HolderMembersResponse",
+        "target": "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "#/components/schemas/HolderAnywhereBody",
+        "target": "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "#/components/responses/HolderAnywhereResponse",
+        "target": "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "../../common/data/common.schema.json#/$defs/common.domain_topology_doc",
+        "target": "Platform/common/data/common.schema.json"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "../../common/data/common.schema.json#/$defs/common.domain_member",
+        "target": "Platform/common/data/common.schema.json"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "../../common/data/common.schema.json#/$defs/common.domain_member",
+        "target": "Platform/common/data/common.schema.json"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "#/components/schemas/HolderTopologyBody",
+        "target": "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "#/components/responses/HolderTopologyResponse",
+        "target": "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "../data/backup-parts.schema.json",
+        "target": "Platform/08-domain/data/backup-parts.schema.json"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "#/components/schemas/HolderBackupPartBody",
+        "target": "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "#/components/responses/HolderBackupPartResponse",
+        "target": "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "#/components/schemas/HolderBookHeadBody",
+        "target": "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "#/components/responses/HolderBookHeadResponse",
+        "target": "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "#/components/schemas/HolderBookPartBody",
+        "target": "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "#/components/responses/HolderBookPartResponse",
+        "target": "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "#/components/schemas/MemberName",
+        "target": "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+      }
+    ],
+    "backup_rev_existing_P06_exact": true,
+    "body_shape_controls": [
+      {
+        "schema": "HolderMembersBody",
+        "positive": 1,
+        "negative": 2,
+        "source_shape_only": true
+      },
+      {
+        "schema": "HolderAnywhereBody",
+        "positive": 1,
+        "negative": 4,
+        "source_shape_only": true
+      },
+      {
+        "schema": "HolderBookHeadBody",
+        "positive": 1,
+        "negative": 2,
+        "source_shape_only": true
+      },
+      {
+        "schema": "HolderBookPartBody",
+        "positive": 1,
+        "negative": 2,
+        "source_shape_only": true
+      }
+    ],
+    "mirrors": [
+      {
+        "en": "Platform/08-domain/forms/README.md",
+        "ru": "Platform/08-domain/ru/forms/README.md",
+        "errors": []
+      },
+      {
+        "en": "Platform/08-domain/spec/08.4-domain.norms.md",
+        "ru": "Platform/08-domain/ru/spec/08.4-domain.norms.md",
+        "errors": []
+      },
+      {
+        "en": "Platform/08-domain/spec/08.5-domain.norms.md",
+        "ru": "Platform/08-domain/ru/spec/08.5-domain.norms.md",
+        "errors": []
+      },
+      {
+        "en": "Platform/09-agent/acceptance/1/README.md",
+        "ru": "Platform/09-agent/ru/acceptance/1/README.md",
+        "errors": []
+      },
+      {
+        "en": "Platform/09-agent/forms/README.md",
+        "ru": "Platform/09-agent/ru/forms/README.md",
+        "errors": []
+      },
+      {
+        "en": "Platform/09-agent/spec/09.1-agent.norms.md",
+        "ru": "Platform/09-agent/ru/spec/09.1-agent.norms.md",
+        "errors": []
+      }
+    ],
+    "actual_sentence_separators": 4,
+    "digest_attempts": [
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+        "attempt": 0,
+        "body_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "outer_JCS_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "advertised": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "matches": true,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      },
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+        "attempt": 1,
+        "body_sha256": "d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569",
+        "outer_JCS_sha256": "d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569",
+        "advertised": "d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569",
+        "matches": true,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      },
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+        "attempt": 0,
+        "body_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "outer_JCS_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "advertised": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "matches": true,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      },
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+        "attempt": 1,
+        "body_sha256": "3b1878653957007638e545a133d993e5fca2572bacc2425ec31398164fdc68e9",
+        "outer_JCS_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "advertised": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "matches": true,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      },
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/doc-only.json",
+        "attempt": 0,
+        "body_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "outer_JCS_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "advertised": "597df22e613a0e83a73eaf06538b89e56871979aaeb53fd5356503c479c0cb19",
+        "matches": false,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      },
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/mismatch.json",
+        "attempt": 0,
+        "body_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "outer_JCS_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "advertised": "d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569",
+        "matches": false,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      },
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/inner-text.json",
+        "attempt": 0,
+        "body_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "outer_JCS_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "advertised": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "matches": true,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      },
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/inner-text.json",
+        "attempt": 1,
+        "body_sha256": "fb4fb4170f2eddd0b17eaf9b46cf9ae832a53f1651f0aa19a49f8f6f69d56a7c",
+        "outer_JCS_sha256": "fb4fb4170f2eddd0b17eaf9b46cf9ae832a53f1651f0aa19a49f8f6f69d56a7c",
+        "advertised": "fb4fb4170f2eddd0b17eaf9b46cf9ae832a53f1651f0aa19a49f8f6f69d56a7c",
+        "matches": true,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      }
+    ],
+    "initial_marker": "fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558",
+    "old_protected_seams_exact": 39,
+    "protected_declared_identities": [
+      {
+        "path": "Platform/06-console/spec/06-console.api.openapi.yaml",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "9d00b1e00adbfba903f072c70d56235a7a8dcb43",
+        "sha256": "b4073b39c35094aba8bd6cecefd0f63f5cc2c37abc867e72a0b81eaa4c7b189e",
+        "bytes": 403567
+      },
+      {
+        "path": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "f28523fbde16f4279441cb5b01ced018af2a0131",
+        "sha256": "c87647e3f0d3d4f677854cfdf9e9870d44990c67a7925fcd4927d9cad2eed529",
+        "bytes": 24399
+      },
+      {
+        "path": "Platform/09-agent/data/member-topology.schema.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "f5ab40fa53a96c1b612cded423cc54b1b16862c5",
+        "sha256": "5d0b27868605653ad39561c16d2ffaa60d7ccfaeef953e935ebbb8dfb38df0e7",
+        "bytes": 29325
+      },
+      {
+        "path": "Platform/09-agent/spec/09.2-agent.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "46157d3afea999ae0dd6aafcbf0f2b6b8efe88b4",
+        "sha256": "3014172bbf36e36dd5c440e0a282c2400d7db9786fbdf8374788e038091c0e0c",
+        "bytes": 28167
+      },
+      {
+        "path": "Platform/common/contracts/domain-envelopes.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "f8d0c76df8dce392b4af9f99f5f951a8e30a9b4b",
+        "sha256": "7f53a5255ffba4a3114f291d2c57d7ef640b2a6aa5448c58d881b8fead12c70f",
+        "bytes": 13129
+      },
+      {
+        "path": "Platform/common/ru/contracts/domain-envelopes.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "f37bc7c4e289945ca8b2743d59beb061328f2e06",
+        "sha256": "dfde3d6060401e2d546edba2d401dc55cb5f383673cf1acce1301d3656e2e2c8",
+        "bytes": 16119
+      },
+      {
+        "path": "Platform/common/data/codec.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "15a311ea85309baee10de7538466ac16fb2c8751",
+        "sha256": "9b64b59cfb7e89ca21771d5dc1ea6ebd8bade7b7fe15df4e43e7cb8fcadda02e",
+        "bytes": 2754
+      },
+      {
+        "path": "Platform/common/data/cell-json-sha256.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "58a94d879238bf5230b2379307c1ced56c29e493",
+        "sha256": "6a97f2ac619a0cca4dbc4f8cfc55d1475be9ec2cfb07b2ba5c95694fe3c3c984",
+        "bytes": 349778
+      },
+      {
+        "path": "Platform/09-agent/acceptance/1/scenarios.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "81adebb80b6b6d98ef6706a741b01eb1b0e13e6a",
+        "sha256": "3799cb737b94c219bd22209453d12dd6876e08d3baa3ddcbc64bb3e26d8eccc9",
+        "bytes": 25717
+      },
+      {
+        "path": "Platform/09-agent/acceptance/2/seams.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "8039b5ed0a9a901a1321c7097c0f38fe413d6782",
+        "sha256": "faa8cb162747efb30529e3ceee00f775df688497aa5a83e7f92563cb2807ab31",
+        "bytes": 2061
+      },
+      {
+        "path": "Platform/common/vectors/family-read/09.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "8a02ef2c17893de8670b780eeb208e1add032a44",
+        "sha256": "eb69cf6fec8fa939734b82e9ee41a180cba4a13a9303569a6a02cb25fa08b613",
+        "bytes": 865679
+      },
+      {
+        "path": "Platform/09-agent/forms/refusals.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "d6e048513923c4410286ca5423fb57da02fbac6a",
+        "sha256": "dceb213e03d9aec17bd0170a2ec15bec65ea9c68175376f0cef7c3eda209782c",
+        "bytes": 10273
+      },
+      {
+        "path": "tools/normgen/gen_cmdtests.py",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "06dcd8730d3da3212dd96232fca173d8d82b340f",
+        "sha256": "6f772dbd6f7531af91ba3e1d89a77806a0c349f342cb0be969c4cb808de82ad8",
+        "bytes": 58572
+      },
+      {
+        "path": "tools/normgen/gen_door_lesson.py",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "2bad326b1b477770684261217ac44f5619569db3",
+        "sha256": "7b90e6564cde1840eed2217aacb00c6d03e4995a9285e0fc9807030b2ad4d801",
+        "bytes": 41055
+      },
+      {
+        "path": "Platform/08-domain/spec/08.3-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "b9b935232d7e29c04f37045540c804fe9cf5d702",
+        "sha256": "344b91d410e5dd86c5985fccb564de270e31ae37ffed6fd119256cf6253b3cf0",
+        "bytes": 107696
+      },
+      {
+        "path": "Platform/08-domain/ru/spec/08.3-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "1ea136c17de481514f80086e0e77bd48ad188c92",
+        "sha256": "a15206e447b0b058b33ea5fdbf80fb74d55450e69a40c9bafac2644c2d159a9b",
+        "bytes": 133432
+      },
+      {
+        "path": "Platform/08-domain/spec/08.8-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "6ba9cd84f93715b66f7dc3711182393fbc7d7f5b",
+        "sha256": "3d102b96b5f44029feaefe1b9a5331517fae91cb7db8780c49de290f29021f9b",
+        "bytes": 123300
+      },
+      {
+        "path": "Platform/08-domain/ru/spec/08.8-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "364949aeae05a8fe1fd5d0e2301cd6942e3bac42",
+        "sha256": "ddda931ccfd47fb50cd214f1c61b75ecd4e22de90395e59240441b448a4b8c31",
+        "bytes": 157160
+      },
+      {
+        "path": "Platform/08-domain/data/anywhere.schema.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "555b9953ec29d8a3b9175450ffd135734d07122d",
+        "sha256": "f4719bd3e7bb9ef445afc8ff6cff5fddff43c8cc2cfdcb85f49a9858f4704d39",
+        "bytes": 28760
+      },
+      {
+        "path": "Platform/08-domain/data/book-all.schema.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "ffa282d83dcea078e9b2f106a6190dcea8128a21",
+        "sha256": "c44fcaeb2e4ca87556b018587bf1705a88d3238e60a18990486e7a8e3214a302",
+        "bytes": 28494
+      },
+      {
+        "path": "Platform/08-domain/data/book-part.schema.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "b35ee1ab6cde6dadce21a0b37a6403ff40fc9498",
+        "sha256": "64068e2779de7cc46ee7e26436d7f1a3d9c171baad7c8c1be011bfce4d4a4f1a",
+        "bytes": 28528
+      },
+      {
+        "path": "Platform/08-domain/data/members.schema.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "54de81d53fe4bbccaa6ec579250bfc6568347046",
+        "sha256": "57741f7c90ab1685ed51977298ae4a498ae2107d3ed1212f5b79fb1590f17141",
+        "bytes": 29173
+      },
+      {
+        "path": "Platform/08-domain/data/topology.schema.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "28854de55342bdd9f1ac8ef4eb7ac2607c15bec8",
+        "sha256": "9b22dd27bfc06461b2210d66774f32388c6990126ddf44d0469eb41c6fe3b36e",
+        "bytes": 28574
+      },
+      {
+        "path": "Platform/08-domain/data/backup-parts.schema.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "17568f529533e2c9afe1e1c46d0f4cf6f91f80b6",
+        "sha256": "25f842aa561591dc5858e81b15598743b423f1902f69238fc939f4ed8cd9a07f",
+        "bytes": 532
+      },
+      {
+        "path": "Platform/common/contracts/accept.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "af9c16e98b2ef3f0278392f532daf648cb8626f4",
+        "sha256": "0e7a93fb5f8c9d164fd58b8651602b2e144ccb7f216c1fc401bda085ab95ef48",
+        "bytes": 42466
+      }
+    ],
+    "append_only_history_prefixes_exact": true,
+    "diff_check_exit": 0,
+    "HTTP_cryptographic_signature_decryption_copy_IO_SUT": "NOT_RUN",
+    "general_generation_GATE": "NOT_RUN",
+    "new_port_command_model_or_judge": false,
+    "actual_checks": "source parsing, JSON Schema shape controls, exact byte comparisons and digest arithmetic only"
+  },
+  "known_inherited_structure": {
+    "exit": 1,
+    "ERROR_count": 10,
+    "exceptions": 62,
+    "inherited": {
+      "ms": 4,
+      "P06_families_builder": 2
+    },
+    "new_declared_JSON_Schema_ref_checker_gap": 1,
+    "dependent_API_cascades": 3,
+    "log_sha256": "fcc0f5ee08757f7655c1e8453d09b15453ffb8da32e9fe0d63f480efe8b671a7",
+    "not_PASS": true
+  },
+  "HTTP_IO_crypto_SUT": "NOT_RUN",
+  "general_generation_and_joint_GATE": "NOT_RUN",
+  "P09_A": "HELD",
+  "cyrillic_source_control": {
+    "exit": 0,
+    "course_debt_unchanged": true,
+    "external_copy_unchanged": true,
+    "before_sha256": "bdb6c41808c1457b3c4e7753308feffaa796498225c8e93c24b10959431f870c",
+    "after_external_sha256": "bdb6c41808c1457b3c4e7753308feffaa796498225c8e93c24b10959431f870c",
+    "log_sha256": "3ea9812a7d45b7f303928ab114b153de0cc6a7b76064929504e4514845582f44",
+    "ready_added": false
+  },
+  "ref_gap": {
+    "base": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+    "owner_api": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+    "current_sha256": "bafacd7342a8b5076a0304195751bbe0a1066889b55e5fa97297a5c640c4e503",
+    "declared_source_nodes": [
+      "/components/schemas/HolderBackupPartBody",
+      "/components/schemas/HolderTopologyBody"
+    ],
+    "schema_json_refs": [
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "../../common/data/common.schema.json#/$defs/common.domain_topology_doc",
+        "target": "Platform/common/data/common.schema.json"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "../../common/data/common.schema.json#/$defs/common.domain_member",
+        "target": "Platform/common/data/common.schema.json"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "../../common/data/common.schema.json#/$defs/common.domain_member",
+        "target": "Platform/common/data/common.schema.json"
+      },
+      {
+        "owner": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "ref": "../data/backup-parts.schema.json",
+        "target": "Platform/08-domain/data/backup-parts.schema.json"
+      }
+    ],
+    "checker": "skills/lesson-spec/scripts/check_spec.py:1404",
+    "current_constraint": "relative <path>.openapi.yaml#<JSON Pointer>",
+    "strict_source": {
+      "command": [
+        "/home/pilot/venv-spec/bin/python",
+        "-B",
+        "skills/lesson-spec/scripts/check_spec.py",
+        "--root",
+        "/home/pilot/wt-spec103-p08-shared-wire-899cb143",
+        "--strict-coverage"
+      ],
+      "exit": 1,
+      "log_sha256": "fcc0f5ee08757f7655c1e8453d09b15453ffb8da32e9fe0d63f480efe8b671a7",
+      "errors": [
+        "ERROR Platform/08-domain/spec/08-domain.api.openapi.yaml: OpenAPI: unresolved/unsupported $ref '../data/backup-parts.schema.json' at Platform/08-domain/spec/08-domain.api.openapi.yaml:#/components/schemas/HolderBackupPartBody/$ref: expected a relative <path>.openapi.yaml#<JSON Pointer>",
+        "ERROR Platform/06-console/spec/06-console.api.openapi.yaml: OpenAPI: unresolved/unsupported $ref '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName' at Platform/06-console/spec/06-console.api.openapi.yaml:#/paths/~1domain~1{sub}~1books~1{book}/get/responses/200/content/application~1json/schema/properties//properties/missing/items/properties/member/$ref: the target contract Platform/08-domain/spec/08-domain.api.openapi.yaml has errors (reported for that file)",
+        "ERROR Platform/06-console/ru/spec/06.1-console.norms.md: families: the section differs from the built one at its line 29 (rebuild: python skills/lesson-spec/scripts/v7/sections.py Platform/06-console/ru/spec/06.1-console.norms.md)",
+        "ERROR Platform/06-console/ru/spec/06.8-console.norms.md: families: the section differs from the built one at its line 17 (rebuild: python skills/lesson-spec/scripts/v7/sections.py Platform/06-console/ru/spec/06.8-console.norms.md)",
+        "ERROR Platform/09-agent/spec/09-agent.api.openapi.yaml: OpenAPI: unresolved/unsupported $ref '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/RequestId' at Platform/09-agent/spec/09-agent.api.openapi.yaml:#/components/schemas/LocalAsk/properties/request_id/$ref: the target contract Platform/08-domain/spec/08-domain.api.openapi.yaml has errors (reported for that file)",
+        "ERROR Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml: OpenAPI: unresolved/unsupported $ref '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/ServedView' at Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml:#/paths/~1domain/get/responses/200/content/application~1json/schema/$ref: the target contract Platform/08-domain/spec/08-domain.api.openapi.yaml has errors (reported for that file)",
+        "ERROR Platform/03-worker/forms/runtime-constants.tsv: runtime-constants.tsv: WAKE_GAP_MS: unit 'ms' not in ['bytes', 'count', 's']",
+        "ERROR Platform/03-worker/forms/runtime-constants.tsv: runtime-constants.tsv: PERFORM_GRACE_MS: unit 'ms' not in ['bytes', 'count', 's']",
+        "ERROR Platform/03-worker/forms/runtime-constants.tsv: runtime-constants.tsv: REQUESTS_HOLD_MS: unit 'ms' not in ['bytes', 'count', 's']",
+        "ERROR Platform/05-resource/forms/runtime-constants.tsv: runtime-constants.tsv: WAIT_OBSERVE_MS: unit 'ms' not in ['bytes', 'count', 's']",
+        "FAIL structural checks only; semantic review and implementation acceptance remain separate"
+      ],
+      "tail": [
+        "EXCEPTION V/05 no-openapi -: своей HTTP-двери у задачи скана нет: архив читает дверью rec, итог — unit.state строки (запрос VMS «реестр V05»)",
+        "EXCEPTION V/06 no-openapi -: своей HTTP-двери у detedge нет: архив устройства читает дверью cam, итог — unit.state строки (запрос VMS «реестр V06»)",
+        "EXCEPTION V/07 no-openapi -: своей HTTP-двери у auto нет: события читает дверью консоли, действия — просьбами и строками других подсистем (запрос VMS «реестр V07»)",
+        "EXCEPTION V/09 no-openapi -: своей двери и манифеста у развёртывания нет (запрос VMS «реестр V09»)",
+        "EXCEPTION V/09 no-acceptance -: ни одна глава приёмки не имеет: проверка — чтением и установкой на стенде реализации (запрос VMS «реестр V09»)",
+        "EXCEPTION V/11 no-openapi -: дверь — контракт consolem продукта на закреплённом коммите (VMS/11-backend/consolem.openapi.json, копия с SHA-256), не правится: своего OpenAPI у урока нет (ADR-0094 A1)",
+        "COUNTS anchored_files=47 canonical=present canonical_mutants=67 canonical_mutants_killed=67 canonical_puts=12 canonical_section=present canonical_vectors=220 canonical_views=205 catalog_rows=172 check_probes=86 check_rows=34 checklist_inventories=1 count_phrases=570 cyrillic_debt_files=0 cyrillic_debt_letters=0 cyrillic_deferred_files=1 cyrillic_export=0 cyrillic_non_utf8=8 cyrillic_ready=12 cyrillic_scanned_files=3384 daemon_flags=202 data_paragraphs=39 data_roles=10 deletion_body_witnesses=6 diagnostics=51 door_roles=11 english_mirrors=392 families_with_section=144 families_without_section=0 family_outcomes=405 family_read=present family_read_rows=10868 family_read_tables=8 family_schemas=149 finite_profile_cases=13 finite_profile_skeletons=8 form_cases=947 form_diagnostics_differ=1 form_manifests=12 form_rows=159 form_rows_held=158 form_rows_implied=1 id_map_ids=532 layer_words=19 legacy_spec_verdicts=138 lessons=10 library_defect_vectors=57 library_defects=24 local_links=10028 local_refs=188 machine_traces=64 module_file_bindings=4 norm_ids=532 numeric_loader_cases=9 openapi=2 openapi_cross_refs=45 openapi_patterns=36 operator_commands=30 outcome_readers=313 p01_constant_equalities=3 p06_folder_equalities=2 p08_closed_contracts=4 p08_form_equalities=5 p08_password_vectors=13 p08_schema_equalities=141 path_param_routes=17 process_names=9 puts_cases=87 refusal_cause_names=59 refusal_chapters=38 refusal_rows=757 req_anchors=931 route_priorities=10 row_write_bindings=4 runtime_constants=166 scenarios=496 schema_needed=152 seam_steps=775 stage_rows=91 steps=5469 stub_scanned_files=231 verdicts=947 versioned_doors=24 vms_catalog_rows=24 vms_families=24 vms_family_read_rows=832 vms_family_read_tables=7 vms_frozen=56 vms_lessons=12 vms_lessons_checked=12 vms_manifests=10 vms_table_rows=570 wire_bindings=91 wire_calls=12424 wire_excluded=750",
+        "FAIL structural checks only; semantic review and implementation acceptance remain separate"
+      ],
+      "source_structure_only": true,
+      "joint_GATE": false
+    },
+    "narrow_local_ref_and_schema_checks": "6schemas/18refs/14shape-neighbours/6mirror-pairs/8digest-calculations OK",
+    "no_CODE_edit": true,
+    "no_wire_redecision": true,
+    "request": "SRC/tools decide treatment of already-declared JSON Schema references; no permission inferred to change checker or substitute weaker owner schemas."
+  }
+}

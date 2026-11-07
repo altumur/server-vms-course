@@ -1,0 +1,42 @@
+kind	name	path	coordinate	value	unit	norm	relation
+PRIMARY	LEASE_TTL	Platform/03-worker/forms/runtime-constants.tsv	physical4/LEASE_TTL	30	s	P/03.2-R005	Lease duration; action window subtracts LEASE_MARGIN.
+PRIMARY	LEASE_MARGIN	Platform/03-worker/forms/runtime-constants.tsv	physical5/LEASE_MARGIN	5	s	P/03.2-R005	Lease safety margin, independent of the observation HOLD_SKEW.
+PRIMARY	CONTEND_EVERY	Platform/03-worker/forms/runtime-constants.tsv	physical6/CONTEND_EVERY	10	s	P/03.2-R005	Cadence for rewriting the current contender object.
+PRIMARY	HEARTBEAT_EVERY	Platform/03-worker/forms/runtime-constants.tsv	physical7/HEARTBEAT_EVERY	10	s	P/03.3-R005	Ordinary loop heartbeat cadence.
+PRIMARY	WAKE_GAP_MS	Platform/03-worker/forms/runtime-constants.tsv	physical8/WAKE_GAP_MS	250	ms	P/03.3-R005	Minimum event-triggered pass gap; exact seconds are WAKE_GAP_MS / 1000.
+PRIMARY	PASS_SHARE	Platform/03-worker/forms/runtime-constants.tsv	physical9/PASS_SHARE	2	count	P/03.3-R005	Minimum pass spacing in multiples of the previous pass duration.
+PRIMARY	RETRY_MIN	Platform/03-worker/forms/runtime-constants.tsv	physical10/RETRY_MIN	1	s	P/03.3-R005	Initial failed-start retry backoff.
+PRIMARY	RETRY_MAX	Platform/03-worker/forms/runtime-constants.tsv	physical11/RETRY_MAX	60	s	P/03.3-R005	Maximum retry backoff and continuous-stability reset interval.
+PRIMARY	BEAT_EVERY	Platform/03-worker/forms/runtime-constants.tsv	physical12/BEAT_EVERY	10	s	P/03.4-R010	Stand-in heartbeat repeat cadence.
+PRIMARY	DOOR_CONNECTIONS	Platform/03-worker/forms/runtime-constants.tsv	physical13/DOOR_CONNECTIONS	32	count	P/03.4-R014	Maximum concurrent process-door connections.
+PRIMARY	DOOR_PER_ADDRESS	Platform/03-worker/forms/runtime-constants.tsv	physical14/DOOR_PER_ADDRESS	8	count	P/03.4-R014	Maximum concurrent process-door connections from one address.
+PRIMARY	DOOR_HEAD_WITHIN	Platform/03-worker/forms/runtime-constants.tsv	physical15/DOOR_HEAD_WITHIN	5	s	P/03.4-R014	Deadline for a complete process-door request line and headers.
+PRIMARY	DOOR_PACE_FLOOR_BYTES	Platform/03-worker/forms/runtime-constants.tsv	physical16/DOOR_PACE_FLOOR_BYTES	65536	bytes	P/03.4-R014	Minimum average transfer byte count per one second after DOOR_PACE_AFTER.
+PRIMARY	DOOR_PACE_AFTER	Platform/03-worker/forms/runtime-constants.tsv	physical17/DOOR_PACE_AFTER	30	s	P/03.4-R014	Delay before measuring the connection transfer pace.
+PRIMARY	DOOR_BODY_BYTES	Platform/03-worker/forms/runtime-constants.tsv	physical18/DOOR_BODY_BYTES	1048576	bytes	P/03.4-R014	Maximum process-door request body.
+PRIMARY	DOOR_BUSY_RETRY_AFTER	Platform/03-worker/forms/runtime-constants.tsv	physical19/DOOR_BUSY_RETRY_AFTER	1	s	P/03.4-R027	Retry-After duration on the existing process_busy response.
+PRIMARY	PERFORM_TIMEOUT	Platform/03-worker/forms/runtime-constants.tsv	physical20/PERFORM_TIMEOUT	10	s	P/03.6-R012	Request handler call timeout within one holder.
+PRIMARY	PERFORM_GRACE_MS	Platform/03-worker/forms/runtime-constants.tsv	physical21/PERFORM_GRACE_MS	200	ms	P/03.6-R012	Post-timeout grace; exact seconds are PERFORM_GRACE_MS / 1000.
+PRIMARY	REQUESTS_HOLD_MS	Platform/03-worker/forms/runtime-constants.tsv	physical22/REQUESTS_HOLD_MS	500	ms	P/03.6-R012	Request look hold; exact seconds are REQUESTS_HOLD_MS / 1000.
+PRIMARY	COMMANDS_PER_LOOK	Platform/03-worker/forms/runtime-constants.tsv	physical23/COMMANDS_PER_LOOK	200	count	P/03.6-R012	Maximum commands processed in one holder look.
+PRIMARY	STATE_EVERY	Platform/03-worker/forms/runtime-constants.tsv	physical24/STATE_EVERY	10	s	P/03.6-R018	Cadence for writing ordinary unit state.
+PRIMARY	MADE_ROWS_MIN_INTERVAL	Platform/03-worker/forms/runtime-constants.tsv	physical25/MADE_ROWS_MIN_INTERVAL	60	s	P/03.4-R006	Minimum interval between made_rows listings; no upper listing deadline and no obligation to list exactly at this interval.
+PRIMARY	COMMAND_BEHIND_TOLERANCE	Platform/03-worker/forms/runtime-constants.tsv	physical26/COMMAND_BEHIND_TOLERANCE	1	s	P/03.4-R006	Strict threshold for a filing timestamp earlier than the prior listing that did not see it; behind only when the difference is greater.
+FOREIGN_OWNER	SLOT_TERM	Platform/common/contracts/slot.md	Terms/SLOT_TERM	45	s	P/03.2-R007	single existing typed slot-contract source; no local scalar duplicate
+FOREIGN_OWNER	TORN_MARGIN	Platform/common/contracts/slot.md	Terms/TORN_MARGIN	5	s	P/03.2-R007	single existing typed slot-contract source; no local scalar duplicate
+SECONDARY_NUMBER	SLOT_TERM	Platform/03-worker/forms/slot-capture.tsv	#const SLOT_TERM	45.0	s	P/03.2-R024	same as slot source
+SECONDARY_NUMBER	TORN_STILL	Platform/03-worker/forms/slot-capture.tsv	#const TORN_STILL	50.0	s	P/03.2-R024	SLOT_TERM + TORN_MARGIN
+SECONDARY_USE	SLOT_TERM	Platform/03-worker/forms/slot-capture.tsv	n=5/action	wall + SLOT_TERM	s	P/03.2-R024	same action/CEL order; literal45 moved to named imported #const
+SECONDARY_USE	SLOT_TERM	Platform/03-worker/forms/slot-capture.tsv	n=8/action	wall + SLOT_TERM	s	P/03.2-R024	same action/CEL order; literal45 moved to named imported #const
+SECONDARY_USE	SLOT_TERM	Platform/03-worker/forms/slot-capture.tsv	n=9/action	wall + SLOT_TERM	s	P/03.2-R024	same action/CEL order; literal45 moved to named imported #const
+SECONDARY_USE	SLOT_TERM	Platform/03-worker/forms/slot-capture.tsv	n=10/action	wall + SLOT_TERM	s	P/03.2-R024	same action/CEL order; literal45 moved to named imported #const
+SECONDARY_USE	SLOT_TERM	Platform/03-worker/forms/slot-capture.tsv	n=11/action	wall + SLOT_TERM	s	P/03.2-R024	same action/CEL order; literal45 moved to named imported #const
+PRIMARY_LIST	ROAD_BUCKETS	Platform/03-worker/spec/03.4-worker.norms.md	P/03.4-R006 histogram.ROAD_BUCKETS	[0.1,0.25,0.5,1,2,5,10,30,60,300]	s boundaries	P/03.4-R006	same typed list; not a scalar runtime constant
+SECONDARY_NUMBER	ROAD_BUCKETS length	Platform/03-worker/data/heartbeats.schema.json	/$defs/histogram/properties/buckets/minItems	10	count	P/03.4-R006	len(ROAD_BUCKETS); numeric carrier unchanged
+SECONDARY_NUMBER	ROAD_BUCKETS length	Platform/03-worker/data/heartbeats.schema.json	/$defs/histogram/properties/buckets/maxItems	10	count	P/03.4-R006	len(ROAD_BUCKETS); numeric carrier unchanged
+SECONDARY_WIRE	DOOR_BUSY_RETRY_AFTER	Platform/03-worker/forms/refusals.tsv	3.4/5/process_busy/headers	Retry-After: 1	s	P/03.4-R027	exact header expansion of the owned positive integer; peer503 unchanged
+DESCRIPTIVE_REF	COMMAND_BEHIND_TOLERANCE	Platform/03-worker/data/heartbeats.schema.json	/$defs/histogram/properties/behind/description	COMMAND_BEHIND_TOLERANCE	s	P/03.4-R006	strict difference>; actual counter schema remains common.uint53, no new numeric count bound
+DESCRIPTIVE_REF	MADE_ROWS_MIN_INTERVAL	Platform/03-worker/spec/03.4-worker.norms.md	P/03.4-R006 made_rows + checklistP/03.4-09	MADE_ROWS_MIN_INTERVAL	s	P/03.4-R006	listing interval>=value, no upper deadline; no schema made_rows edit
+DERIVED	LEASE_EVERY	Platform/03-worker/spec/03.2-worker.norms.md	P/03.2-R005	(LEASE_TTL - LEASE_MARGIN) / 3	s	P/03.2-R005	exact, no8.3 rounding
+DERIVED	STALL / WAKE	Platform/03-worker/spec/03.4-worker.norms.md	P/03.4-R010	STALL=(LEASE_TTL-LEASE_MARGIN)/2; WAKE<=(LEASE_TTL-LEASE_MARGIN)/4	s	P/03.4-R010	exact formulas; WAKE is only an upper bound
+DERIVED	WRITE_WINDOW / CLOSE_BY	Platform/03-worker/spec/03.2-worker.norms.md	P/03.2-R005	SLOT_TERM-HOLD_SKEW; SLOT_TERM+HOLD_SKEW	s	P/03.2-R005	own strict-place writer role; observed hold liveness separately uses LOST_AFTER+HOLD_SKEW
