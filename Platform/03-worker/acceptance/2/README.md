@@ -133,7 +133,7 @@ write `op: floor` of the door `admin` (the dictionary of the common acceptance R
   the norms of chapter 3.6 N5); the contribution of a foreign slot
   `testsub2/notes/t-2` is of the same version (N3 «capture» step 4; [chapter 3.7](../../spec/03.7-worker.norms.md) N1.2 `claim`);
 - sc. 34 — a foreign place `sh1` with a torn hold row (`gen` not a number, `by: t-9`): the worker does not take it either at once or
-  after `45 + HOLD_SKEW` (the row is of the same version after 62 s); a free shelf `sh2` appeared — it takes it (N3 «place»
+  after `LOST_AFTER + HOLD_SKEW` (the row is of the same version after 62 s); a free shelf `sh2` appeared — it takes it (N3 «place»
   `take_slot`: the torn ones — skip; `holds.outcomes.tsv` `<s>worker`).
 
 Not taken from the second pass (the analysis is in the commit): the check of `W2C_MANIFEST_REV` at the start (the stand starts the worker not
@@ -144,7 +144,7 @@ P/02.3 N3 step 4 — the system acceptance, sc. 08 `@manual`).
 2026-10-30, the questions of norms of the Gemini audit, P/03 item 1; C03-PLACE-PULSE-LIVE-ROW-01):
 - sc. 44 — the worker `t-2` (`testsub2`) took the shelf `sh1` of the server `srv-a` and is killed by `@sigkill`: the hold row stands at the same
   version (`holder` — the instance of `t-2`, not `released`), its heartbeat is spoiled by `@spoil object` (the writer is stopped). The worker
-  `t-1` of the same server is the taker: the place of another name is not taken at once, it waits `45 + HOLD_SKEW` without changes of the row by
+  `t-1` of the same server is the taker: the place of another name is not taken at once, it waits `LOST_AFTER + HOLD_SKEW` without changes of the row by
   its own clock from the first look. 30 s after the capture of the slot by `t-1` the row is still in effect — the heartbeat of the holder is read,
   it is unreadable: the place is not taken, the row is of the same version (an unreadable heartbeat is not «the heartbeat is not fresh», N3 «place» `take_slot`;
   `heartbeats.outcomes.tsv` `<s>worker`). The row has stood for 50 s — it is no longer in effect by itself: the place is free by the row,
@@ -337,7 +337,7 @@ Waiting for an event is `@until`: sc. 01 step 4 waits for the first renewal afte
 | 24/9 | 10 s | time of silence: longer than the lease step LEASE_EVERY ≈ 8.3 s (the renewal goes into silence) and shorter than the lease window of 25 s minus the step (25 − 8.3 ≈ 16.7 s): the lease does not expire before the mend |
 | 27/9, 31/6, 32/4 | 12 s | absence: there is no epoch row — the worker sees the assignment within LEASE_EVERY ≈ 8.3 s and the pass POLL ~2 s (as 18/10); there is no slot — the capture at the start and the repeat of the search (CONTEND_EVERY 10 s) would have passed (as 21/4) |
 | 34/5 | 12 s | absence: the worker would have taken a free place at the first lease step after the capture of the slot (≈ 8.3 s; N3 «lease_step()» step 6) |
-| 34/7 | 50 s | absence: the foreign place is free, having stood without changes 45 + HOLD_SKEW = 50 s by the clock of the taker; together with 34/5 — 62 s: and the torn one is not taken after this deadline either |
+| 34/7 | 50 s | absence: the foreign place is free, having stood without changes LOST_AFTER + HOLD_SKEW = 50 s by the clock of the taker; together with 34/5 — 62 s: and the torn one is not taken after this deadline either |
 
 SDK tests at the seams are in [seams.tsv](seams.tsv); their adapter contract is [forms/README.md](../../forms/README.md). They supplement the process scenarios and do not change the counts above or replace a reading witness they do not execute.
 
