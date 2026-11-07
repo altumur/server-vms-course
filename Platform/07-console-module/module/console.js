@@ -3293,7 +3293,8 @@
     async function loadManifests() {
       const subs = [];
       const rootManifest = await getJSON("/manifest");
-      if (!rootManifest || !rootManifest.rows || !rootManifest.name) throw new Error(W.refused);
+      const rootlessHolder = domainOnly && rootManifest && rootManifest.name === "" && rootManifest.rows === null;
+      if (!rootManifest || (!rootlessHolder && (!rootManifest.rows || !rootManifest.name))) throw new Error(W.refused);
       if (rootManifest && rootManifest.rows) subs.push({ name: rootManifest.name, base: "", manifest: rootManifest });
       st.root = rootManifest && rootManifest.rows ? rootManifest.name : null;
       let complete = false;
