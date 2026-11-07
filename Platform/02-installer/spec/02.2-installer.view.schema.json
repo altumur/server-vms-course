@@ -357,7 +357,8 @@
        },
        "then": {
         "type": "integer",
-        "minimum": 1
+        "minimum": 1,
+        "maximum": 9007199254740991
        }
       }
      ]
@@ -526,7 +527,8 @@
       "description": "stop seconds of the part's service unit — `TimeoutStopSec` (macOS — `ExitTimeOut`; ADR-0091 addendum (2) item 1, addendum (3) item 4)",
       "x-default": true,
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "maximum": 9007199254740991
      }
     },
     "additionalProperties": false,
@@ -945,7 +947,8 @@
          },
          "width": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 1,
+          "maximum": 9007199254740991
          }
         },
         "additionalProperties": false,
@@ -1952,7 +1955,8 @@
       },
       "default": {
        "type": "integer",
-       "minimum": 0
+       "minimum": 0,
+       "maximum": 9007199254740991
       },
       "unit_mb": {
        "x-owner": "P/03.4 N1.2",
@@ -2001,7 +2005,8 @@
       "default": {
        "x-default": true,
        "type": "integer",
-       "minimum": 1
+       "minimum": 1,
+       "maximum": 9007199254740991
       }
      },
      "additionalProperties": false,
@@ -2179,7 +2184,8 @@
       "delete_after": {
        "description": "seconds from retirement to physical deletion of the row (ADR-0091 item 1)",
        "type": "integer",
-       "minimum": 1
+       "minimum": 1,
+       "maximum": 9007199254740991
       }
      },
      "additionalProperties": false,
@@ -2229,7 +2235,8 @@
       "delete_after": {
        "description": "only with a named id (`numeric` — a refusal); `fixed` fields and `about` by any field are allowed since ADR-0091 item 1: for a table with `fixed` fields the controller physically deletes only the rows with `made`, the manual ones it takes off without deleting (P/04 N1.3)",
        "type": "integer",
-       "minimum": 1
+       "minimum": 1,
+       "maximum": 9007199254740991
       }
      },
      "additionalProperties": false,
@@ -2274,7 +2281,8 @@
     },
     "per_person": {
      "type": "integer",
-     "minimum": 1
+     "minimum": 1,
+     "maximum": 9007199254740991
     },
     "settle": {
      "description": "seconds",
@@ -2928,7 +2936,8 @@
        "type",
        "required",
        "default"
-      ]
+      ],
+      "allOf": [{"if": {"properties": {"type": {"const": "int"}}, "required": ["type"]}, "then": {"properties": {"default": {"type": ["integer", "null"], "minimum": -9007199254740991, "maximum": 9007199254740991}}}}]
      },
      "x-unique-by": "name"
     },
@@ -3434,7 +3443,8 @@
      "required",
      "fixed",
      "default"
-    ]
+    ],
+    "allOf": [{"if": {"properties": {"type": {"const": "int"}}, "required": ["type"]}, "then": {"properties": {"default": {"type": ["integer", "null"], "minimum": -9007199254740991, "maximum": 9007199254740991}, "inherit": {"type": ["integer", "null"], "minimum": -9007199254740991, "maximum": 9007199254740991}}}}]
    },
    "x-unique-by": "name"
   }

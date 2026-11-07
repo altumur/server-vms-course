@@ -1,2 +1,3 @@
 date	sample	fix	languages
 2026-11-05	ADR-0125 доп. (5): формы P03	Якоря требований; формы входов процесса, отказов с сохранением исходных ячеек Н4, машины захвата слота и плана; швы SDK дополняют чтение и сценарии процесса, без изменения их счётов	all
+2026-11-07	ADR0129(23) SOURCE B / B29	Derived until reader text and canonical/1 references aligned; five declared family Time outcomes plus one three-digit heartbeat neighbour. No machine/IO/schema algorithm change.	all

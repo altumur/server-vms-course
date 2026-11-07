@@ -28,7 +28,7 @@ line:                                        # one JSON line in the bucket file
   class:    alarm                                                  # only in an alarm; observation is not written
   occurred: <seconds>                                              # when it happened; optional
   # t and occurred are time of common.time, as all times (P/01.1 N0 «Time in a row»): the writer writes strictly (the codec
-  # Platform/common/data/codec.tsv time: a number, up to three fraction digits), the reader reads tolerantly (a number or a string by
+  # Platform/common/data/codec.tsv time: a number, up to three fraction digits), the reader uses the same fraction bound (a number or a string by
   # the codec of the reader); the form of the line — the families events of P/05 by tree (Platform/05-resource/data/events-<tree>.schema.json and .outcomes.tsv: events-unit,
   # events-unit-alarms, events-audit, events-audit-alarms, events-console, events-console-alarms, events-mirror); the vectors of reading —
   # common/vectors/journal bucket.tsv t-* (the stage C guess EJ-G07, the Architect's decision of 2026-10-23)

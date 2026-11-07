@@ -36,8 +36,8 @@ line:      exactly {subject, cap, sub?, scope, until, by} — a trusted input (a
            the <id> of a folder is 32 lowercase hex digits (P/06.8 N1.1); <sub> is a manifest name [a-z][a-z0-9_-]{0,31} (P/02.1),
            <id> is by the row check contract «Identifier and field constraints» named (`unit:testsub/a,b` — 2),
            a label is by the labels alphabet contract
-  until:   a time — 0 or a non-negative JSON number; read tolerantly, as a time in a row (P/01.1 N0 «Time in a row»),
-           without rounding by the reader (rounding to thousandths is the row writer's, P/08.4 N1.3 until); the value is finite in
+  until:   a time — 0 or a non-negative JSON number by the current P/01.1 N0 Time reader, with the writer's same three-digit fraction bound;
+           without rounding or truncation by the reader; its value is finite in
            binary64, as now and as_of: it does not fit — an input not of the form, code 2, before parsing glass (MAY-UNTIL-D8-01, the Architect's decision of 2026-10-25)
   by:      a string
 as_of:     null | a finite JSON number
@@ -106,7 +106,7 @@ of the acceptance.
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](cases.tsv), 126 rows: 52 `allow`, 44 `deny`, 7 `unavailable`, 23 `@exit 2` (may-26 — `until` does not fit in binary64, MAY-UNTIL-D8-01; may-27…may-106 — ADR-0097–ADR-0100, there is no dry run by an implementation) | `input` is the input of the command `may` as JSON text → `expect`: `{"result":"allow"}` (a break-glass session without grants, a copy of exactly one day of age, a holder line without `as_of`, `view` without a unit — any line, `*`, `unit:` its own and through `about`, `labels:` all labels, the labels of `about`, a higher rank, the term of the line ahead) or `{"result":"deny","reason":<word>}`: `disabled` (disabled at a grant), `stale` (a copy older than one day), `no_grant` (no line, `edit` without a unit not by `*`, a foreign unit, one label missing, the labels of the unit itself at `about`, a lower rank, an expired line, `"*"` not by `*`, a line of another subject, a unit without labels); `@exit 2` — a scope `unit:` with an id not by the grammar of [P/06.1](../../../06-console/spec/06.1-console.norms.md) N1.3; `subject` "" of a grant line (`may-25`, MAY-G03) |
+| [`cases.tsv`](cases.tsv), 127 rows: 52 `allow`, 44 `deny`, 7 `unavailable`, 24 `@exit 2` (may-26 — `until` does not fit in binary64, MAY-UNTIL-D8-01; may-27…may-106 — ADR-0097–ADR-0100, there is no dry run by an implementation) | `input` is the input of the command `may` as JSON text → `expect`: `{"result":"allow"}` (a break-glass session without grants, a copy of exactly one day of age, a holder line without `as_of`, `view` without a unit — any line, `*`, `unit:` its own and through `about`, `labels:` all labels, the labels of `about`, a higher rank, the term of the line ahead) or `{"result":"deny","reason":<word>}`: `disabled` (disabled at a grant), `stale` (a copy older than one day), `no_grant` (no line, `edit` without a unit not by `*`, a foreign unit, one label missing, the labels of the unit itself at `about`, a lower rank, an expired line, `"*"` not by `*`, a line of another subject, a unit without labels); `@exit 2` — a scope `unit:` with an id not by the grammar of [P/06.1](../../../06-console/spec/06.1-console.norms.md) N1.3; `subject` "" of a grant line (`may-25`, MAY-G03) |
 
 The vectors were checked by an oracle against the text of the contract (steps 1–8) and the form of the input of [P/08.4](../../../08-domain/spec/08.4-domain.norms.md) N1.3, N5 `exit`, not against the code of implementations; on a
 divergence the contract is right, the vector is corrected by «Specification».

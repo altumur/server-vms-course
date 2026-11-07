@@ -280,7 +280,7 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 09-0279	domain/reached	domain/reached	object	writer	["domainagent"]	{"ts":"-1"}	refused	["/ts"]	[]	ts: time -1
 09-0280	domain/reached	domain/reached	object	reader	["domainagent"]	{"ts":"-1"}	refused	["/ts"]	{"domainagent": [""]}	ts: time -1
 09-0281	domain/reached	domain/reached	object	writer	["domainagent"]	{"ts":"1.0001"}	refused	["/ts"]	[]	ts: time 1.0001
-09-0282	domain/reached	domain/reached	object	reader	["domainagent"]	{"ts":"1.0001"}	ok	[]	{"domainagent": []}	ts: time 1.0001
+09-0282	domain/reached	domain/reached	object	reader	["domainagent"]	{"ts":"1.0001"}	refused	["/ts"]	{"domainagent": [""]}	ts: time 1.0001
 09-0283	domain/reached	domain/reached	object	writer	["domainagent"]	{"ts":1e0}	refused	["/ts"]	[]	ts: time number 1e0
 09-0284	domain/reached	domain/reached	object	reader	["domainagent"]	{"ts":1e0}	refused	["/ts"]	{"domainagent": [""]}	ts: time number 1e0
 09-0285	domain/reached	domain/reached	object	writer	["domainagent"]	{"ts":1.5}	ok	[]	[]	ts: time number 1.5
@@ -696,7 +696,7 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 09-0695	domain/grants	domain/grants	row	writer	["domainagent"]	{"doc":"{\"lines\":[{\"by\":\"a\",\"cap\":\"view\",\"scope\":\"*\",\"subject\":\"a\",\"until\":\"-1\"}]}","as_of":"1"}	refused	["/doc/lines/0/until"]	[]	doc/lines/0/until: time -1
 09-0696	domain/grants	domain/grants	row	reader	["console", "domainagent"]	{"doc":"{\"lines\":[{\"by\":\"a\",\"cap\":\"view\",\"scope\":\"*\",\"subject\":\"a\",\"until\":\"-1\"}]}","as_of":"1"}	refused	["/doc/lines/0/until"]	{"console": ["/doc/lines/*"], "domainagent": ["/doc/lines/*"]}	doc/lines/0/until: time -1
 09-0697	domain/grants	domain/grants	row	writer	["domainagent"]	{"doc":"{\"lines\":[{\"by\":\"a\",\"cap\":\"view\",\"scope\":\"*\",\"subject\":\"a\",\"until\":\"1.0001\"}]}","as_of":"1"}	refused	["/doc/lines/0/until"]	[]	doc/lines/0/until: time 1.0001
-09-0698	domain/grants	domain/grants	row	reader	["console", "domainagent"]	{"doc":"{\"lines\":[{\"by\":\"a\",\"cap\":\"view\",\"scope\":\"*\",\"subject\":\"a\",\"until\":\"1.0001\"}]}","as_of":"1"}	ok	[]	{"console": [], "domainagent": []}	doc/lines/0/until: time 1.0001
+09-0698	domain/grants	domain/grants	row	reader	["console", "domainagent"]	{"doc":"{\"lines\":[{\"by\":\"a\",\"cap\":\"view\",\"scope\":\"*\",\"subject\":\"a\",\"until\":\"1.0001\"}]}","as_of":"1"}	refused	["/doc/lines/0/until"]	{"console": ["/doc/lines/*"], "domainagent": ["/doc/lines/*"]}	doc/lines/0/until: time 1.0001
 09-0699	domain/grants	domain/grants	row	writer	["domainagent"]	{"doc":"{\"lines\":[{\"by\":[],\"cap\":\"view\",\"scope\":\"*\",\"subject\":\"a\",\"until\":\"1\"}]}","as_of":"1"}	refused	["/doc/lines/0/by"]	[]	doc/lines/0/by: wrong type
 09-0700	domain/grants	domain/grants	row	reader	["console", "domainagent"]	{"doc":"{\"lines\":[{\"by\":[],\"cap\":\"view\",\"scope\":\"*\",\"subject\":\"a\",\"until\":\"1\"}]}","as_of":"1"}	refused	["/doc/lines/0/by"]	{"console": ["/doc/lines/*"], "domainagent": ["/doc/lines/*"]}	doc/lines/0/by: wrong type
 09-0701	domain/grants	domain/grants	row	writer	["domainagent"]	{"doc":"{\"lines\":[{\"by\":\"a\\n\",\"cap\":\"view\",\"scope\":\"*\",\"subject\":\"a\",\"until\":\"1\"}]}","as_of":"1"}	ok	[]	[]	doc/lines/0/by: trailing \n
@@ -710,7 +710,7 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 09-0709	domain/grants	domain/grants	row	writer	["domainagent"]	{"doc":"{\"lines\":[{\"by\":\"a\",\"cap\":\"view\",\"scope\":\"*\",\"subject\":\"a\",\"until\":\"1\"}]}","as_of":"-1"}	refused	["/as_of"]	[]	as_of: time -1
 09-0710	domain/grants	domain/grants	row	reader	["console", "domainagent"]	{"doc":"{\"lines\":[{\"by\":\"a\",\"cap\":\"view\",\"scope\":\"*\",\"subject\":\"a\",\"until\":\"1\"}]}","as_of":"-1"}	refused	["/as_of"]	{"console": [""], "domainagent": [""]}	as_of: time -1
 09-0711	domain/grants	domain/grants	row	writer	["domainagent"]	{"doc":"{\"lines\":[{\"by\":\"a\",\"cap\":\"view\",\"scope\":\"*\",\"subject\":\"a\",\"until\":\"1\"}]}","as_of":"1.0001"}	refused	["/as_of"]	[]	as_of: time 1.0001
-09-0712	domain/grants	domain/grants	row	reader	["console", "domainagent"]	{"doc":"{\"lines\":[{\"by\":\"a\",\"cap\":\"view\",\"scope\":\"*\",\"subject\":\"a\",\"until\":\"1\"}]}","as_of":"1.0001"}	ok	[]	{"console": [], "domainagent": []}	as_of: time 1.0001
+09-0712	domain/grants	domain/grants	row	reader	["console", "domainagent"]	{"doc":"{\"lines\":[{\"by\":\"a\",\"cap\":\"view\",\"scope\":\"*\",\"subject\":\"a\",\"until\":\"1\"}]}","as_of":"1.0001"}	refused	["/as_of"]	{"console": [""], "domainagent": [""]}	as_of: time 1.0001
 09-0713	domain/grants	domain/grants	row	writer	["domainagent"]	{"doc":"1.0","as_of":"1"}	refused	["/doc"]	[]	item doc: record '1.0'
 09-0714	domain/grants	domain/grants	row	reader	["console", "domainagent"]	{"doc":"1.0","as_of":"1"}	refused	["/doc"]	{"console": [""], "domainagent": [""]}	item doc: record '1.0'
 09-0715	domain/grants	domain/grants	row	writer	["domainagent"]	{"doc":"x","as_of":"1"}	refused	["/doc"]	[]	item doc: record 'x'
@@ -1258,7 +1258,7 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 09-1257	domain/shared-refused	domain/shared-refused	row	writer	["domainagent"]	{"doc":"{\"at\":\"-1\",\"reason\":\"a\",\"rev\":1,\"term\":1}"}	refused	["/doc/at"]	[]	doc/at: time -1
 09-1258	domain/shared-refused	domain/shared-refused	row	reader	["domainagent"]	{"doc":"{\"at\":\"-1\",\"reason\":\"a\",\"rev\":1,\"term\":1}"}	refused	["/doc/at"]	{"domainagent": [""]}	doc/at: time -1
 09-1259	domain/shared-refused	domain/shared-refused	row	writer	["domainagent"]	{"doc":"{\"at\":\"1.0001\",\"reason\":\"a\",\"rev\":1,\"term\":1}"}	refused	["/doc/at"]	[]	doc/at: time 1.0001
-09-1260	domain/shared-refused	domain/shared-refused	row	reader	["domainagent"]	{"doc":"{\"at\":\"1.0001\",\"reason\":\"a\",\"rev\":1,\"term\":1}"}	ok	[]	{"domainagent": []}	doc/at: time 1.0001
+09-1260	domain/shared-refused	domain/shared-refused	row	reader	["domainagent"]	{"doc":"{\"at\":\"1.0001\",\"reason\":\"a\",\"rev\":1,\"term\":1}"}	refused	["/doc/at"]	{"domainagent": [""]}	doc/at: time 1.0001
 09-1261	domain/shared-refused	domain/shared-refused	row	writer	["domainagent"]	{"doc":"1.0"}	refused	["/doc"]	[]	item doc: record '1.0'
 09-1262	domain/shared-refused	domain/shared-refused	row	reader	["domainagent"]	{"doc":"1.0"}	refused	["/doc"]	{"domainagent": [""]}	item doc: record '1.0'
 09-1263	domain/shared-refused	domain/shared-refused	row	writer	["domainagent"]	{"doc":"x"}	refused	["/doc"]	[]	item doc: record 'x'
@@ -1300,7 +1300,7 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 09-1299	domain/alarms	domain/alarms	object	writer	["domainagent"]	{"from":"-1","to":"1","events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	refused	["/from"]	[]	from: time -1
 09-1300	domain/alarms	domain/alarms	object	reader	["domainagent"]	{"from":"-1","to":"1","events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	refused	["/from"]	{"domainagent": [""]}	from: time -1
 09-1301	domain/alarms	domain/alarms	object	writer	["domainagent"]	{"from":"1.0001","to":"1","events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	refused	["/from"]	[]	from: time 1.0001
-09-1302	domain/alarms	domain/alarms	object	reader	["domainagent"]	{"from":"1.0001","to":"1","events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	ok	[]	{"domainagent": []}	from: time 1.0001
+09-1302	domain/alarms	domain/alarms	object	reader	["domainagent"]	{"from":"1.0001","to":"1","events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	refused	["/from"]	{"domainagent": [""]}	from: time 1.0001
 09-1303	domain/alarms	domain/alarms	object	writer	["domainagent"]	{"from":1e0,"to":"1","events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	refused	["/from"]	[]	from: time number 1e0
 09-1304	domain/alarms	domain/alarms	object	reader	["domainagent"]	{"from":1e0,"to":"1","events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	refused	["/from"]	{"domainagent": [""]}	from: time number 1e0
 09-1305	domain/alarms	domain/alarms	object	writer	["domainagent"]	{"from":1.5,"to":"1","events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	ok	[]	[]	from: time number 1.5
@@ -1314,7 +1314,7 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 09-1313	domain/alarms	domain/alarms	object	writer	["domainagent"]	{"from":"1","to":"-1","events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	refused	["/to"]	[]	to: time -1
 09-1314	domain/alarms	domain/alarms	object	reader	["domainagent"]	{"from":"1","to":"-1","events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	refused	["/to"]	{"domainagent": [""]}	to: time -1
 09-1315	domain/alarms	domain/alarms	object	writer	["domainagent"]	{"from":"1","to":"1.0001","events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	refused	["/to"]	[]	to: time 1.0001
-09-1316	domain/alarms	domain/alarms	object	reader	["domainagent"]	{"from":"1","to":"1.0001","events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	ok	[]	{"domainagent": []}	to: time 1.0001
+09-1316	domain/alarms	domain/alarms	object	reader	["domainagent"]	{"from":"1","to":"1.0001","events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	refused	["/to"]	{"domainagent": [""]}	to: time 1.0001
 09-1317	domain/alarms	domain/alarms	object	writer	["domainagent"]	{"from":"1","to":1e0,"events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	refused	["/to"]	[]	to: time number 1e0
 09-1318	domain/alarms	domain/alarms	object	reader	["domainagent"]	{"from":"1","to":1e0,"events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	refused	["/to"]	{"domainagent": [""]}	to: time number 1e0
 09-1319	domain/alarms	domain/alarms	object	writer	["domainagent"]	{"from":"1","to":1.5,"events":[{"id":"a","class":"alarm","kind":"a","unit":"a","t":1}],"truncated":true}	ok	[]	[]	to: time number 1.5
@@ -1398,7 +1398,7 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 09-1397	domain/agent	domain/agent	row	writer	["domainagent"]	{"at":"-1"}	refused	["/at"]	[]	at: time -1
 09-1398	domain/agent	domain/agent	row	reader	["domainagent"]	{"at":"-1"}	refused	["/at"]	{"domainagent": [""]}	at: time -1
 09-1399	domain/agent	domain/agent	row	writer	["domainagent"]	{"at":"1.0001"}	refused	["/at"]	[]	at: time 1.0001
-09-1400	domain/agent	domain/agent	row	reader	["domainagent"]	{"at":"1.0001"}	ok	[]	{"domainagent": []}	at: time 1.0001
+09-1400	domain/agent	domain/agent	row	reader	["domainagent"]	{"at":"1.0001"}	refused	["/at"]	{"domainagent": [""]}	at: time 1.0001
 09-1401	domain/agent	domain/agent	row	writer	["domainagent"]	{"at":"1","sign_failures_domain":"1.0"}	refused	["/sign_failures_domain"]	[]	item sign_failures_domain: record '1.0'
 09-1402	domain/agent	domain/agent	row	reader	["domainagent"]	{"at":"1","sign_failures_domain":"1.0"}	ok	[]	{"domainagent": []}	item sign_failures_domain: record '1.0'
 09-1403	domain/agent	domain/agent	row	writer	["domainagent"]	{"at":"1","sign_failures_domain":"x"}	refused	["/sign_failures_domain"]	[]	item sign_failures_domain: record 'x'

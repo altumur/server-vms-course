@@ -1,0 +1,87 @@
+{
+  "change": "0129-z10-p01-time",
+  "rev": 1,
+  "base": "854681a2fcd1db12ff7db8127feee977f62be6b6",
+  "tables": [
+    {
+      "path": "Platform/common/vectors/family-read/01.tsv",
+      "old_rows": 117,
+      "new_rows": 118,
+      "before_sha256": "584f6187bd9620b801b84a1433f8df695338b6682986c68b6cef2e2e27fefe9e",
+      "after_sha256": "0e72f6dedc275346be61a811265cf68facaf1006bedf300f6483a512a4011c4e",
+      "changes": [
+        {
+          "id": "01-0036",
+          "before_line": 37,
+          "after_line": 37,
+          "before_raw": "01-0036\tplatform/epoch_floor\tplatform/epoch_floor\trow\treader\t[\"<s>worker\"]\t{\"floor\":\"1\",\"generation_at\":\"1.0001\"}\tok\t[]\t{\"<s>worker\": []}\tgeneration_at: time 1.0001",
+          "after_raw": "01-0036\tplatform/epoch_floor\tplatform/epoch_floor\trow\treader\t[\"<s>worker\"]\t{\"floor\":\"1\",\"generation_at\":\"1.0001\"}\trefused\t[\"/generation_at\"]\t{\"<s>worker\": [\"/generation_at\"]}\tgeneration_at: time 1.0001",
+          "cells": [
+            {
+              "column_index": 7,
+              "before": "ok",
+              "after": "refused",
+              "before_sha256": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+              "after_sha256": "83c874d33e8bff73caaa762c79cd1ed101d727c7f20fe4972c67e67978292f23"
+            },
+            {
+              "column_index": 8,
+              "before": "[]",
+              "after": "[\"/generation_at\"]",
+              "before_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "after_sha256": "e6b3921b004a3c9e17aeafbf1252a44d2a2b64cfebc6a08a2b452f04437f2c80"
+            },
+            {
+              "column_index": 9,
+              "before": "{\"<s>worker\": []}",
+              "after": "{\"<s>worker\": [\"/generation_at\"]}",
+              "before_sha256": "247011f322e3b85336573b662445953c4eeab8be2023fa1c5f891e83eb7a47c0",
+              "after_sha256": "739670b57baf8e0ba760512e3c3080a50e701a1a8a7d49f29a2390c73440214c"
+            }
+          ]
+        },
+        {
+          "id": "01-0088",
+          "before_line": 89,
+          "after_line": 89,
+          "before_raw": "01-0088\tplatform/configstore-doors/<id>\tplatform/configstore-doors/t1\trow\treader\t[\"configstore-door\"]\t{\"seen_at\":\"1.0001\"}\tok\t[]\t{\"configstore-door\": []}\tseen_at: time 1.0001",
+          "after_raw": "01-0088\tplatform/configstore-doors/<id>\tplatform/configstore-doors/t1\trow\treader\t[\"configstore-door\"]\t{\"seen_at\":\"1.0001\"}\trefused\t[\"/seen_at\"]\t{\"configstore-door\": [\"\"]}\tseen_at: time 1.0001",
+          "cells": [
+            {
+              "column_index": 7,
+              "before": "ok",
+              "after": "refused",
+              "before_sha256": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+              "after_sha256": "83c874d33e8bff73caaa762c79cd1ed101d727c7f20fe4972c67e67978292f23"
+            },
+            {
+              "column_index": 8,
+              "before": "[]",
+              "after": "[\"/seen_at\"]",
+              "before_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "after_sha256": "91c777273df4a31a996dadf1f699025c9188090bbd6bd83a43d2f5013bd8a042"
+            },
+            {
+              "column_index": 9,
+              "before": "{\"configstore-door\": []}",
+              "after": "{\"configstore-door\": [\"\"]}",
+              "before_sha256": "3c10f55036089c687ab4b75e47f771fe3021c6652b409be3633aa0d188296328",
+              "after_sha256": "ae702020553356e397236b893cdcfd87afa30ac2156b8b0409dec9bfc6e432c3"
+            }
+          ]
+        }
+      ],
+      "additions": [
+        {
+          "id": "01-z10-time-three-digits",
+          "line": 118,
+          "raw": "01-z10-time-three-digits\tplatform/configstore-doors/<id>\tplatform/configstore-doors/t1\trow\treader\t[\"configstore-door\"]\t{\"seen_at\":\"1.123\"}\tok\t[]\t{\"configstore-door\": []}\tZ10 current reader Time boundary: exactly three fraction digits; existing readable outcome."
+        }
+      ],
+      "old_ids_preserved": true
+    }
+  ],
+  "shared_complete_corpus": "decisions/inbox/2026-11-07-z10-current-source-b/corpus-map.json",
+  "A_floor8_untouched": true,
+  "TableRow_no_case": true
+}

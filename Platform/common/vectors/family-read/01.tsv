@@ -34,7 +34,7 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 01-0033	platform/epoch_floor	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"-1"}	refused	["/generation_at"]	[]	generation_at: time -1
 01-0034	platform/epoch_floor	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"-1"}	refused	["/generation_at"]	{"<s>worker": ["/generation_at"]}	generation_at: time -1
 01-0035	platform/epoch_floor	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"1.0001"}	refused	["/generation_at"]	[]	generation_at: time 1.0001
-01-0036	platform/epoch_floor	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"1.0001"}	ok	[]	{"<s>worker": []}	generation_at: time 1.0001
+01-0036	platform/epoch_floor	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1","generation_at":"1.0001"}	refused	["/generation_at"]	{"<s>worker": ["/generation_at"]}	generation_at: time 1.0001
 01-0037	platform/epoch_floor	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"1.0","generation_at":"1"}	refused	["/floor"]	[]	item floor: record '1.0'
 01-0038	platform/epoch_floor	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"1.0","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	item floor: record '1.0'
 01-0039	platform/epoch_floor	platform/epoch_floor	row	writer	["proc:01-store"]	{"floor":"x","generation_at":"1"}	refused	["/floor"]	[]	item floor: record 'x'
@@ -86,7 +86,7 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 01-0085	platform/configstore-doors/<id>	platform/configstore-doors/t1	row	writer	["configstore-door"]	{"seen_at":"-1"}	refused	["/seen_at"]	[]	seen_at: time -1
 01-0086	platform/configstore-doors/<id>	platform/configstore-doors/t1	row	reader	["configstore-door"]	{"seen_at":"-1"}	refused	["/seen_at"]	{"configstore-door": [""]}	seen_at: time -1
 01-0087	platform/configstore-doors/<id>	platform/configstore-doors/t1	row	writer	["configstore-door"]	{"seen_at":"1.0001"}	refused	["/seen_at"]	[]	seen_at: time 1.0001
-01-0088	platform/configstore-doors/<id>	platform/configstore-doors/t1	row	reader	["configstore-door"]	{"seen_at":"1.0001"}	ok	[]	{"configstore-door": []}	seen_at: time 1.0001
+01-0088	platform/configstore-doors/<id>	platform/configstore-doors/t1	row	reader	["configstore-door"]	{"seen_at":"1.0001"}	refused	["/seen_at"]	{"configstore-door": [""]}	seen_at: time 1.0001
 01-0089	platform/configstore-doors/<id>	platform/configstore-doors/t1	row	writer	["configstore-door"]	{"seen_at":"1.0"}	ok	[]	[]	item seen_at: record '1.0'
 01-0090	platform/configstore-doors/<id>	platform/configstore-doors/t1	row	reader	["configstore-door"]	{"seen_at":"1.0"}	ok	[]	{"configstore-door": []}	item seen_at: record '1.0'
 01-0091	platform/configstore-doors/<id>	platform/configstore-doors/t1	row	writer	["configstore-door"]	{"seen_at":"x"}	refused	["/seen_at"]	[]	item seen_at: record 'x'
@@ -115,3 +115,4 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 01-z10-floor-maximum-reader	platform/epoch_floor	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"9007194959773696","generation_at":"1"}	ok	[]	{"<s>worker": []}	Z10 present floor maximum; missing row virtual zero is a different case; no multipleOf
 01-z10-floor-above-reader	platform/epoch_floor	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"9007194959773697","generation_at":"1"}	refused	["/floor"]	{"<s>worker": ["/floor"]}	Z10 present floor above; missing row virtual zero is a different case; no multipleOf
 01-z10-floor-not-multiple-reader	platform/epoch_floor	platform/epoch_floor	row	reader	["<s>worker"]	{"floor":"3","generation_at":"1"}	ok	[]	{"<s>worker": []}	Z10 present floor not-multiple; missing row virtual zero is a different case; no multipleOf
+01-z10-time-three-digits	platform/configstore-doors/<id>	platform/configstore-doors/t1	row	reader	["configstore-door"]	{"seen_at":"1.123"}	ok	[]	{"configstore-door": []}	Z10 current reader Time boundary: exactly three fraction digits; existing readable outcome.
