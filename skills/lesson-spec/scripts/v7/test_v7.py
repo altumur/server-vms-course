@@ -260,6 +260,232 @@ class TestDefects(unittest.TestCase):
         self.assertFalse(sut.p1_states(new, new.replace(b'"name"]', b'"name","x"]')))
 
 
+    @staticmethod
+    def _role_binding_document():
+        """Approved bounded fixture only; not adoption of a later Source/profile revision."""
+        return json.loads(r'''{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{},"propertyNames":{"type":"string"},"additionalProperties":{"description":"fields of the mark: `at`, `done` (N1.1 domain/deleting); the reader does not refuse by them: at absent or unreadable \u2014 there is no term","x-codec":["any"]},"$defs":{"common.time":{"description":"time N0 P/01.1 \u00abTime in a row\u00bb","type":["string","number"],"x-time":true},"common.person_name":{"description":"the person's name (P/08.4 N1.1 name): 1\u201364 characters without whitespace, control characters (U+0000\u2013U+001F, U+007F) and : | ( ) \" /; not exactly break-glass; whitespace \u2014 the White_Space property of Unicode 15.0.0, written out as characters (the Architect's decision of 2026-10-20 on the questions of assembling lesson 8, item 3); \u00abnot a subject of the name index\u00bb \u2014 a check of the door (chapter 8.5 N1.7), not the form","type":"string","not":{"enum":["break-glass"]},"pattern":"^(?:[^\u0000- \u007f\u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000:|()\"/]{1,64})$"},"writer":{"x-max-names":0},"person_writer":{"type":"object","properties":{"at":{"$ref":"#/$defs/common.time","x-codec":["time"]},"done":{"type":"boolean","x-codec":["boolean"]}},"required":["at"],"additionalProperties":false},"role_writer":{"type":"object","const":{}}}}''')
+
+    def _role_binding_family(self, doc=None, identity="domain/deleting/<name>"):
+        return stack.Family(self._role_binding_document() if doc is None else doc, "row", family_template=identity)
+
+    def _role_binding_template(self):
+        from v7 import spec
+        table, errors = spec.placeholder_table(ROOT)
+        self.assertEqual(errors, [])
+        return spec.KeyTemplate("domain/deleting/<name>", table)
+
+    def test_role_binding_person_valid(self):
+        fam = self._role_binding_family()
+        for done in (None, "true", "false"):
+            items = {"at": "1.25"}
+            if done is not None:
+                items["done"] = done
+            with self.subTest(done=done):
+                got = fam.judge(items, "writer", key="domain/deleting/alice")
+                self.assertEqual((got["verdict"], got["paths"]), ("ok", []))
+                self.assertIs(type(got["value"]["at"]), float)
+                self.assertEqual(got["value"]["at"], 1.25)
+                if done is not None:
+                    self.assertIs(got["value"]["done"], done == "true")
+
+    def test_role_binding_person_empty(self):
+        got = self._role_binding_family().judge({}, "writer", key="domain/deleting/alice")
+        self.assertEqual((got["verdict"], got["paths"], got["value"]), ("refused", ["/at"], {}))
+
+    def test_role_binding_role_empty(self):
+        got = self._role_binding_family().judge({}, "writer", key="domain/deleting/role:editors")
+        self.assertEqual((got["verdict"], got["paths"], got["value"]), ("ok", [], {}))
+
+    def test_role_binding_role_nonempty(self):
+        fam = self._role_binding_family()
+        for items in ({"at": "1.25"}, {"done": "true"}, {"at": "bad"}, {"extra": "x"},
+                      {"at": 1.25}, {"done": False}, {"extra": {}}, {"at": "1.25", "done": "false"}):
+            with self.subTest(items=items):
+                got = fam.judge(items, "writer", key="domain/deleting/role:editors")
+                self.assertEqual(got["verdict"], "refused")
+                self.assertTrue(got["paths"], "no decoding/field erasure may accept a nonempty role mark")
+
+    def test_role_binding_person_bad_at(self):
+        fam = self._role_binding_family()
+        for value in ("bad", "1.2345", "-1", "1e0", "NaN", "Infinity", "", 1.25, True, None, []):
+            with self.subTest(value=value):
+                got = fam.judge({"at": value}, "writer", key="domain/deleting/alice")
+                self.assertEqual(got["verdict"], "refused")
+                self.assertIn("/at", got["paths"])
+        self.assertEqual(fam.judge({}, "writer", key="domain/deleting/alice")["paths"], ["/at"])
+
+    def test_role_binding_person_bad_done(self):
+        fam = self._role_binding_family()
+        for value in ("True", "1", "", "null", "falsex", True, 1, None, {}):
+            with self.subTest(value=value):
+                got = fam.judge({"at": "1.25", "done": value}, "writer", key="domain/deleting/alice")
+                self.assertEqual(got["verdict"], "refused")
+                self.assertIn("/done", got["paths"])
+
+    def test_role_binding_person_extra(self):
+        fam = self._role_binding_family()
+        for value in ("x", True, 1, {}):
+            got = fam.judge({"at": "1.25", "extra": value}, "writer", key="domain/deleting/alice")
+            self.assertEqual(got["verdict"], "refused")
+            self.assertIn("/extra", got["paths"])
+
+    def test_role_binding_key_before_value(self):
+        from unittest.mock import patch
+        from v7 import spec
+        fam, template = self._role_binding_family(), self._role_binding_template()
+        class Poison:
+            def __deepcopy__(self, memo):
+                raise AssertionError("key must be checked before examining/copying value")
+        for key in ("elsewhere/alice", "domain/deleting/", "domain/deleting/role:",
+                    "domain/deleting/a b", "domain/deleting/role:a:b", "domain/deleting/a/b",
+                    "domain/deleting/.", "domain/deleting/.."):
+            with self.subTest(key=key):
+                got = fam.judge(Poison(), "writer", key=key)
+                self.assertEqual((got["verdict"], got["paths"]), ("refused", [""]))
+                with patch.object(spec, "family_value", side_effect=AssertionError("premature value parser")) as parse:
+                    got = spec.judge_family(fam, template, key, "row", Poison(), "writer")
+                    self.assertEqual((got["verdict"], got["paths"]), ("refused", [""]))
+                    parse.assert_not_called()
+
+    def test_role_binding_missing_context(self):
+        from unittest.mock import patch
+        from v7 import spec
+        doc = self._role_binding_document()
+        for identity in (None, "other/<name>"):
+            fam = self._role_binding_family(doc, identity)
+            with self.subTest(identity=identity), self.assertRaises(ValueError):
+                fam.judge({}, "writer", key="domain/deleting/role:editors")
+        fam, template = self._role_binding_family(), self._role_binding_template()
+        for key in (None, True, 1):
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                fam.judge({}, "writer", key=key)
+            with self.subTest(wrapper=key), self.assertRaises(spec.SpecError):
+                spec.judge_family(fam, template, key, "row", "{}", "writer")
+        with self.assertRaises(ValueError):
+            fam.judge({}, "writer")
+        wrong = self._role_binding_family(doc, "other/<name>")
+        with patch.object(spec, "family_value", side_effect=AssertionError("identity must precede value")), \
+                self.assertRaises(spec.SpecError):
+            spec.judge_family(wrong, template, "domain/deleting/alice", "row", "{}", "writer")
+
+    def test_role_binding_alternating_contexts(self):
+        doc = self._role_binding_document()
+        before = json.dumps(doc, ensure_ascii=True, sort_keys=True)
+        fam = self._role_binding_family(doc)
+        writer, schema, validator = fam.writer, fam.sch, fam.sch.v
+        attributes = set(fam.__dict__)
+        for order in (("person", "role"), ("role", "person")):
+            for chosen in order:
+                items = {"at": "1.25", "done": "true"} if chosen == "person" else {}
+                key = "domain/deleting/alice" if chosen == "person" else "domain/deleting/role:editors"
+                input_before = json.dumps(items, sort_keys=True)
+                self.assertEqual(fam.judge(items, "writer", key=key)["verdict"], "ok")
+                self.assertEqual(json.dumps(items, sort_keys=True), input_before)
+                self.assertEqual(fam.judge({"at": "garbled"}, "reader", key=key)["value"], {"at": "garbled"})
+                self.assertEqual(fam.judge({}, "reader")["verdict"], "ok")
+                self.assertEqual(json.dumps(doc, ensure_ascii=True, sort_keys=True), before)
+                self.assertIs(fam.writer, writer)
+                self.assertIs(fam.sch, schema)
+                self.assertIs(fam.sch.v, validator)
+                self.assertIs(fam.sch.doc, doc)
+                self.assertEqual(set(fam.__dict__), attributes)
+
+    def test_role_binding_local_ref_base(self):
+        doc = self._role_binding_document()
+        doc["$defs"]["common.time"]["maximum"] = 2
+        fam = self._role_binding_family(doc)
+        self.assertEqual(fam.judge({"at": "1.25"}, "writer", key="domain/deleting/alice")["verdict"], "ok")
+        got = fam.judge({"at": "3"}, "writer", key="domain/deleting/alice")
+        self.assertEqual(got["verdict"], "refused")
+        self.assertIn("/at", got["paths"], "local ref must resolve from original complete document")
+        # Isolate x-time from the initial time codec: the original referenced annotation still applies.
+        doc = self._role_binding_document()
+        doc["$defs"]["person_writer"]["properties"]["at"]["x-codec"] = ["any"]
+        fam = self._role_binding_family(doc)
+        got = fam.judge({"at": "1.2345"}, "writer", key="domain/deleting/alice")
+        self.assertEqual(got["verdict"], "refused")
+        self.assertIn("/at", got["paths"])
+
+    def test_role_binding_root_and_common(self):
+        doc = self._role_binding_document()
+        doc["$defs"]["person_writer"]["additionalProperties"] = True
+        fam = self._role_binding_family(doc)
+        self.assertEqual(fam.judge({"at": "1.25", "done": "false"}, "writer", key="domain/deleting/alice")["verdict"], "ok")
+        got = fam.judge({"at": "1.25", "extra": "x"}, "writer", key="domain/deleting/alice")
+        self.assertEqual(got["verdict"], "refused")
+        self.assertIn("", got["paths"], "common x-max-names0 survives profile selection")
+        doc = self._role_binding_document()
+        doc["propertyNames"] = {"pattern": "^(?:at)$"}
+        got = self._role_binding_family(doc).judge({"at": "1.25", "done": "true"}, "writer", key="domain/deleting/alice")
+        self.assertEqual(got["verdict"], "refused")
+        self.assertIn("/done", got["paths"])
+
+    def test_role_binding_reader_unchanged(self):
+        doc = self._role_binding_document()
+        ordinary, contextual = stack.Family(doc, "row"), self._role_binding_family(doc)
+        for items in ({}, {"at": "garbled"}, {"done": "not-bool"}, {"at": 1}, {"extra": "x"}):
+            for key in (None, "domain/deleting/alice", "domain/deleting/role:editors"):
+                with self.subTest(items=items, key=key):
+                    self.assertEqual(contextual.judge(items, "reader", key=key), ordinary.judge(items, "reader"))
+        manual = [({}, "ok", [], {}), ({"at": "garbled"}, "ok", [], {"at": "garbled"}),
+                  ({"done": "not-bool"}, "ok", [], {"done": "not-bool"}),
+                  ({"at": 1}, "refused", ["/at"], {}), ({"extra": "x"}, "ok", [], {"extra": "x"})]
+        for items, verdict, paths_, value in manual:
+            got = contextual.judge(items, "reader")
+            self.assertEqual((got["verdict"], got["paths"], got["value"]), (verdict, paths_, value))
+
+    def test_role_binding_incomplete_source(self):
+        from unittest.mock import patch
+        for removed in (("person_writer",), ("role_writer",), ("person_writer", "role_writer"),
+                        ("writer",), ("common.time",), ("common.person_name",)):
+            doc = self._role_binding_document()
+            for name in removed:
+                del doc["$defs"][name]
+            fam = self._role_binding_family(doc)
+            with self.subTest(removed=removed), patch.object(fam, "decode", side_effect=AssertionError("no codec before source")), \
+                    self.assertRaises(ValueError):
+                fam.judge({"at": "1.25"}, "writer", key="domain/deleting/alice")
+        for name in ("person_writer", "role_writer"):
+            for wrong in (None, True, "profile", []):
+                doc = self._role_binding_document()
+                doc["$defs"][name] = wrong
+                with self.subTest(name=name, wrong=wrong), self.assertRaises(ValueError):
+                    self._role_binding_family(doc).judge({}, "writer", key="domain/deleting/role:editors")
+        with self.assertRaises(ValueError):
+            stack.Family(self._role_binding_document(), "row").judge({}, "writer", key="domain/deleting/role:editors")
+
+    def test_role_binding_existing_name_grammar(self):
+        fam = self._role_binding_family()
+        for name in ("alice", "\u00e9", "\u0438\u043c\u044f", "a" * 64):
+            self.assertEqual(fam.judge({"at": "1.25"}, "writer", key="domain/deleting/" + name)["verdict"], "ok")
+            self.assertEqual(fam.judge({}, "writer", key="domain/deleting/role:" + name)["verdict"], "ok")
+        class Poison:
+            def __deepcopy__(self, memo):
+                raise AssertionError("invalid source name must precede value")
+        for name in ("", "a" * 65, "break-glass", "a b", "a:b", "a|b", "a(b", "a)b", 'a"b', "a/b", "a\x00b",
+                     "a\x7fb", "a\u0085b", "a\u2028b", "a\u3000b"):
+            for prefix in ("domain/deleting/", "domain/deleting/role:"):
+                with self.subTest(name=name, prefix=prefix):
+                    got = fam.judge(Poison(), "writer", key=prefix + name)
+                    self.assertEqual((got["verdict"], got["paths"]), ("refused", [""]))
+
+    def test_role_binding_noncontext_unchanged(self):
+        row = {"type": "object", "properties": {"n": {"type": "integer", "x-codec": ["integer"]}},
+               "additionalProperties": False, "$defs": {"writer": {"x-max-names": 0}}}
+        for identity in (None, "ordinary/<name>"):
+            fam = stack.Family(row, "row", family_template=identity)
+            got = fam.judge({"n": "2"}, "writer")
+            self.assertEqual((got["verdict"], got["value"]), ("ok", {"n": 2}))
+            self.assertEqual(fam.judge({"n": "2"}, "writer", key="ordinary/a"), got)
+            self.assertEqual(fam.judge({"n": "2.5"}, "writer")["verdict"], "refused")
+        obj = stack.Family({"type": "object", "required": ["n"]}, "object")
+        self.assertEqual(obj.judge('{"n":1}', "writer")["value"], {"n": 1})
+        self.assertEqual(obj.judge('{}', "writer")["paths"], ["/n"])
+        file = stack.Family({"type": "string", "minLength": 1}, "file")
+        self.assertEqual(file.judge(b"ok", "writer")["value"], "ok")
+        self.assertEqual(file.judge(b"", "writer")["verdict"], "refused")
+
+
 class TestRelations(unittest.TestCase):
     """Слой связей: равенство диалекта — числа по значению (`1 = 1.0`, свод Ф9), bool не число (DIALECT § 6); формой
     манифеста недостижимо (ADR-0087 доп. (6)) — проверено на среде CEL связей обоих языков (решение по набору Б, r10)."""

@@ -536,7 +536,7 @@ def add_rows(root, base, text, note):
             return []
         from v7 import stack
         _, _, doc, _, outcomes = spec.load_family(root, cat[(fam, kind)])
-        family = stack.Family(doc, kind)
+        family = stack.Family(doc, kind, family_template=fam)
         made = []
         for mode in ("writer", "reader"):
             like = next((r for r in rows if r[1] == fam and r[3] == kind and r[4] == mode), None)

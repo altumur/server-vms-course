@@ -498,10 +498,56 @@ def exact_integer(v):
 class Family:
     """Чтение семьи В7: Family(schema_doc, kind).judge(текст или значение, mode) → {verdict, paths}."""
 
-    def __init__(self, schema_doc, kind):
+    def __init__(self, schema_doc, kind, family_template=None):
+        if family_template is not None and type(family_template) is not str:
+            raise ValueError("family_template must be the catalog template string")
         self.sch = Schema(schema_doc)
         self.kind = kind
         self.writer = schema_doc.get("$defs", {}).get("writer")
+        self.family_template = family_template
+
+    def _writer_binding(self, mode, key):
+        """Select only the fixed catalog context before reading any row scalar."""
+        if mode != "writer":
+            return None
+        defs = self.sch.doc.get("$defs", {})
+        names = ("person_writer", "role_writer")
+        contextual = self.family_template == "domain/deleting/<name>"
+        if not contextual and not any(name in defs for name in names):
+            return None
+        if not contextual or self.kind != "row":
+            raise ValueError("writer profiles lack their domain/deleting catalog identity")
+        if any(type(defs.get(name)) is not dict for name in names) or type(self.writer) is not dict:
+            raise ValueError("domain/deleting requires common, person and role writer profiles")
+        if type(defs.get("common.person_name")) is not dict or type(defs.get("common.time")) is not dict:
+            raise ValueError("domain/deleting requires its original name and time definitions")
+        if type(key) is not str:
+            raise ValueError("context-bound writer requires a concrete key")
+        prefix = "domain/deleting/"
+        if not key.startswith(prefix):
+            raise Bad("key is outside the catalog family")
+        suffix = key[len(prefix):]
+        if suffix in (".", ".."):  # Existing outer catalog component grammar, before the person/role suffix grammar.
+            raise Bad("key component is not admitted by the catalog template")
+        role = suffix.startswith("role:")
+        name = suffix[len("role:"):] if role else suffix
+        if not self.sch.valid(defs["common.person_name"], name):
+            raise Bad("concrete person/role suffix is not a source name")
+        return defs["role_writer" if role else "person_writer"]
+
+    def _writer_root(self, profile):
+        """Per-call traversal overlay, keeping original ref base, root names and reader extras."""
+        if profile is None:
+            return self.sch.doc
+        root = dict(self.sch.doc)
+        properties = dict(root.get("properties", {}))
+        chain = self.sch.resolve(self.sch.doc)
+        for name, node in profile.get("properties", {}).items():
+            if all("propertyNames" not in source or self.sch.valid(source["propertyNames"], name)
+                   for source in chain):
+                properties[name] = node
+        root["properties"] = properties
+        return root
 
     # ---- кодек строки (codec.tsv)
     def decode(self, chain, text_, mode):
@@ -581,7 +627,11 @@ class Family:
         return isinstance(v, str) and TIME[mode].fullmatch(v) is not None
 
     # ---- проход
-    def judge(self, value, mode="reader"):
+    def judge(self, value, mode="reader", *, key=None):
+        try:
+            profile = self._writer_binding(mode, key)
+        except Bad:
+            return self.result([[]])
         fails, decoded = [], set()
         if not isinstance(value, (str, bytes)):
             value = copy.deepcopy(value)
@@ -604,6 +654,8 @@ class Family:
                 c = self.sch.child(root, value, k)
                 if c is None:
                     continue
+                if profile is not None and k in profile.get("properties", {}):
+                    c = profile["properties"][k]
                 if not isinstance(t, str):
                     fails.append([k])
                     del value[k]
@@ -614,22 +666,29 @@ class Family:
                 except Bad:
                     fails.append([k])
                     del value[k]                 # не прочитано — как у эталона: ключа нет в разобранной строке
-        value = self.layer3(value, mode, decoded, fails)
+        value = self.layer3(value, mode, decoded, fails, profile=profile)
         recs = py_records(self.sch.v, value)
         if mode == "writer" and self.writer is not None:
             recs += py_records(self.sch.v, value, self.writer)
+        if profile is not None:
+            recs += py_records(self.sch.v, value, profile)
         return self.result(fails + norm(recs, value), value)
 
     def result(self, paths, value=None):
         ps = canonical(paths)
         return {"verdict": "refused" if ps else "ok", "paths": [pointer(p) for p in ps], "value": value}
 
-    def layer3(self, value, mode, decoded, fails):
+    def layer3(self, value, mode, decoded, fails, profile=None):
         """Кодек мест (`x-encoding`), время, целое по записи, `max_bytes`, имена сверх `max_items` (писатель — и по
         `$defs.writer`)."""
         sch, wmap = self.sch, {}
         if mode == "writer" and self.writer is not None:
             self.writer_places(self.writer, value, [], wmap)
+        writer_maps = [wmap]
+        if profile is not None:
+            selected_places = {}
+            self.writer_places(profile, value, [], selected_places)
+            writer_maps.append(selected_places)
 
         def visit(chain, v, path):
             enc = sch.word(chain, "x-encoding")
@@ -653,14 +712,15 @@ class Family:
             mains[tuple(path)] = chain
             return v
         mains = {}
-        value = walk(sch, sch.doc, value, [], visit)
+        value = walk(sch, self._writer_root(profile), value, [], visit)
         value = self.finite(value, [], fails)
-        for path, chain in wmap.items():
-            try:
-                v = at(value, list(path))
-            except (KeyError, IndexError, TypeError):
-                continue
-            self.limits(chain, v, list(path), fails, mains.get(path, []))
+        for places in writer_maps:
+            for path, chain in places.items():
+                try:
+                    v = at(value, list(path))
+                except (KeyError, IndexError, TypeError):
+                    continue
+                self.limits(chain, v, list(path), fails, mains.get(path, []))
         return value
 
     def finite(self, v, path, fails):
