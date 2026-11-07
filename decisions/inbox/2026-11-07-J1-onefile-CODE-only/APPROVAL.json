@@ -1,0 +1,129 @@
+{
+  "utc": "2026-11-07T23:00:25.975560+00:00",
+  "status": "APPROVED_J1_ONE_EXISTING_TEST_EXACT5SPANS_CODE_ONLY_NO_PARSER_OR_RUN",
+  "authority": "Отдельный CODE допуск после READONLY812bfd/b265, rootless Source1 freeze0d и первичного чтения child01f8. Из сдачи READONLY права на запись не следовали.",
+  "owner": "existing spec103 через coord103-src; Source/tests/console проверки у Spec по ADR0080(22)/(23)",
+  "request": {
+    "path": "/home/pilot/coord103-src/p07-J1-child01f8-review-Code-request/ARCHITECT-J1-CODE-ONLY-SCOPE-REQUEST.json",
+    "sha256": "a8a0db112dc5399a6b55d89d819a77e869f6cd57eda10fe36af4f8e520f5c47e"
+  },
+  "primary_reading": {
+    "path": "/home/pilot/architect-reviews/p07-J1-child01f8-primary/ROOT-J1-CHILD-BYTE-READING.json",
+    "sha256": "0164802fe7e7a929b7b12d0022912e48d83a517892ca686c97517ea173515e95",
+    "child_artifacts_hash_size": 11,
+    "spans_reconstructed": 5,
+    "parent_delta": "exactly one proposed expectedMODSHA c7e->155b; all other bytes preserved",
+    "Node_parser_project_execution": 0
+  },
+  "base_and_sole_parent": "0d241c80a4e236043e7368d53d399342c1c4f88f",
+  "branch": "spec103/p07-j1-test-code-0d241c80",
+  "worktree": "/home/pilot/wt-spec103-p07-j1-test-code-0d241c80",
+  "write_paths": [
+    "Source/tests/console/holder-page.test.js"
+  ],
+  "before": {
+    "path": "Source/tests/console/holder-page.test.js",
+    "ref": "0d241c80a4e236043e7368d53d399342c1c4f88f",
+    "blob": "ecffecc447723eb771fac65a1ea530acc69d0099",
+    "mode": "100644",
+    "sha256": "e9578fdf6e0a114fcea2a117bd49b202c0111fe96005b7a1524c96586e4f152a",
+    "bytes": 12916
+  },
+  "exact_declaration": {
+    "path": "/home/pilot/coord103-src/p07-J1-child01f8-review-Code-request/author-child/J1-REANCHORED-DECLARATION.json",
+    "sha256": "42c5605b2230135e5bb93d4c4b3086e91754f5724d80c9784000f4916297d6bf"
+  },
+  "manifest": {
+    "path": "/home/pilot/spec103/p07-J1-readonly-reanchor-0d241c80/MANIFEST.json",
+    "sha256": "01f8b67b79587acf5139712be5447cee737c37fa3fefbaccb4880d1f0439d5db"
+  },
+  "exact_spans": [
+    {
+      "id": "J1_CANONICAL_LOADER_DEPENDENCY",
+      "before_LF": [
+        9,
+        9
+      ],
+      "old_SHA": "047b2235f1cba10f53925c7d7a70f6bf04067142dc35c0db105c3e35d3e19440",
+      "new_SHA": "ecb0ef26a33cbd0835d964307799b33bbe682914db045bbc6554786a96a1b847"
+    },
+    {
+      "id": "J1_REMOVE_OLD_ARRAY_POSITIVE_REPRESENTATION",
+      "before_LF": [
+        32,
+        32
+      ],
+      "old_SHA": "edc6d1434d6437fbd678d4fa03a46cca1fe5b419f55f1caa902b1f5bbde12d05",
+      "new_SHA": "58571970d735220220d2b65fdd7ec683acbd06f28ef31a463d702b3d436a76e1"
+    },
+    {
+      "id": "J1_CURRENT_COUNT_ASSERTION_REPLACES_WAITING_DESCRIPTION",
+      "before_LF": [
+        71,
+        71
+      ],
+      "old_SHA": "7487db79da71f3fb59b209e3e7833debd55e168aa30739a0de3966a13c3e8fa6",
+      "new_SHA": "01c02d3ff8111daf9da2afc299e24cc43537ce06d63f5b9e3b20984733aecee8"
+    },
+    {
+      "id": "J1_OWNER_POSITIVE_RUN_IN_EXISTING_TEST",
+      "before_LF": [
+        116,
+        116
+      ],
+      "old_SHA": "b16408c3b214b4d963b158ff19027c1de0c0eece12e20ab791695444d34d52e4",
+      "new_SHA": "d6e62780eaf4ea67969a09ba369fb4480665b2a340e562ad7f491f4df2548821"
+    },
+    {
+      "id": "J1_INCLUDE_POSITIVE_RESULTS_WITH_EXISTING_FAILURE_ACCOUNTING",
+      "before_LF": [
+        118,
+        118
+      ],
+      "old_SHA": "99b4136424f875aec968cdb20982d025daa6c2906f0ffa1a4d502293d49fc289",
+      "new_SHA": "cc631b851172b176f7410ec635173e1892b995ad59a9de09b3ea2287d897de5e"
+    }
+  ],
+  "after": {
+    "path": "Source/tests/console/holder-page.test.js",
+    "sha256": "5469b0ae31c9dad4dc07b0ae7dc8f6e4498e90be80aaaae3550b447c2616c7bc",
+    "blob": "d28b33673514836ce76631be6d9d666415a5db16",
+    "bytes": 16126,
+    "mode": "100644",
+    "exact_after_file": "/home/pilot/coord103-src/p07-J1-child01f8-review-Code-request/author-child/PROPOSED-holder-page.test.txt"
+  },
+  "selected_Source_module_readonly": {
+    "path": "Platform/07-console-module/module/console.js",
+    "ref": "0d241c80a4e236043e7368d53d399342c1c4f88f",
+    "mode": "100644",
+    "blob": "322cfe7b3ce32c6283246bc8486385f9583ec843",
+    "sha256": "155b0746b075db0ac339d40c46b34896c15511a4c25cd12d2271604f82976003",
+    "bytes": 326674
+  },
+  "positive_fixture_proof": "Parent752fc manual owner format/required fields: View6+age/MemberState3/pending0/1/null/Outcome6+409refused. Не schema/admission/runtime proof. Fixture в child byteequal, исходные adversarial fixtures не объявлены positives.",
+  "protected": "Всё вне пяти точных spans: old adversarial assertions/data/report/error accounting, loader helpers/boot/wrapper/witness/PlatformcanonicalJS/norm/API/locale/metadata/history/family08/metadata16/skills. Ни нового skip/allowedfailure, ни selector/helper/API/class/port. Не менять rootless Source1guard и owner contracts.",
+  "allowed_controls": [
+    "Свой worktree на exact0d, до записи проверить toplevel/HEAD/onepath modeblob/beforeSHA.",
+    "Применить только пять уже объявленных literal replacements, получить wholeafter5469b0ae/blobd28b3367/16126B/mode100644. Не додумывать побочные исправления.",
+    "Raw old/new/координаты/5spans/inverse/outside и узкий Git diff --check; никаких JS parse/Node.",
+    "Normal commit с sole parent0d, explicit git add одного файла, normal branch push/ls-remote/clean. Без amend/rebase/stash/-A/force.",
+    "Если hooks запускают запрещённые эффекты, отключить только для этой invocation, без постоянного config change.",
+    "Внешний FREEZE/actualafter/normalparent/remote/clean/hashsize evidence отдельно, без tracked metadata/history additions."
+  ],
+  "failure_policy": "При несовпадении текущих байтов/зависимости/нужде шестого span остановиться и прислать точную границу. Никаких fallback/ослабления assertions/подмены expected/Source aftertext в runtime.",
+  "forbidden": [
+    "Node/--check/parser/jsdom/JS eval/import/runtime/test/--help/selftest/mock",
+    "42–45 suite/loader suite/Go/render/gen/HTTP/SUT/models",
+    "helper/boot/wrapper/frozen Sourcewitness/Platform canonicalJS/schema/API/locale/metadata/history writes",
+    "mainmerge/Sourceadoption/wholeSource/workingprofile/GATE/урокREADY",
+    "приватные D0/P1 cases/findings/oracles Source-автору",
+    "VMS/ms/обе CTClaude/19guards/timers/diskcleanup/resize/restart/З14cutover"
+  ],
+  "required_delivery": "Frozen normal child exact1path/5spans; actualafter/before/mode/blob/soleparent/remote/clean и внешний FREEZE. Синтаксис/runtime/observedready остаются NOT_VERIFIED/NOT_EXECUTED. После сдачи — отдельный byte-read и execution decision; этот допуск не даёт автоматического parser/RUN.",
+  "capture_future_contract": "42 exactkeys=39bool+3errorarrays в одном holdertest, не42 отдельных теста/PASS; test exit0 недостаточен. Binary/env/jsdom/cwd/timeout/stdoutstderr/capture до будущего отдельного запуска.",
+  "D0": "Независимый9a249/9a896 допускает ровно один tools/review103 D0 caller+actualreceiver; не расширяет этот J1 scope и не перепинивает Source039 provenance.",
+  "existing_READONLY_old_artifacts": "old0c7f/f96/c7e/62ae immutable; child01f8/5469/read0d не выдавать за прежний after.",
+  "additional_confirmation_or_ACK_required": false,
+  "new_own_estimate_due_aggregate": null,
+  "execution_in_approval": 0
+}
