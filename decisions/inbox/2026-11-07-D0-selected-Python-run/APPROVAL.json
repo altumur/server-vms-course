@@ -1,0 +1,147 @@
+{
+  "utc": "2026-11-07T22:57:45.488196+00:00",
+  "status": "APPROVED_ONE_EXACT_D0_PYTHON_PROCESS_AND_ACTUAL_CAPTURE_RECEIVER_ONLY",
+  "authority": "Отдельное решение после сдачи T0fb1c/6392 и первичного полного чтения frozen7f298. Не часовой З13, не исторический P1 и не одна только известная SHA.",
+  "owner": "coord103-tools; выполнение через существующую review103, без новой сессии/модели",
+  "T0_authority_commit": "5d6c5a54a630db043f7755d67679f76345b0aa0c",
+  "T0_APPROVAL_sha256": "1d965a09180167eb7b6b6746a609eb9b2e20bcd3cb5c19dda398c628cb6781ae",
+  "T0_READY_sha256": "fb1c1a21adcd3ad9dc569dbd1534915cae3a2c6186f92dc59c4ec02a231d51a1",
+  "T0_manifest_sha256": "207a5388f80b9813575d5f0d19fb5d566000eeddd614fcce4d5882fa9e0f9476",
+  "primary_reading": {
+    "path": "/home/pilot/architect-reviews/d0-T0-primary-byte-read-7f29874c/ROOT-T0-BYTE-READING.json",
+    "sha256": "cadde0bfc3eeed1f0bcff720cfe24096e92261843e75fa09e76ed0498e9c5e70",
+    "package_payloads_verified": 51,
+    "original_runtime_payloads_verified": 37,
+    "full_external_Python_files_read": 3,
+    "execution_before_grant": 0
+  },
+  "subject_pin": "4803c5a94e193c449ffada8e6c611f35a3d8a66b",
+  "subject_import_root": "/home/pilot/wt-review103-d0-c1-n377/skills/lesson-spec/scripts",
+  "subject_section_sha256": "9063bb64f6046a4a63034f98fa61b2c86059d5f624588afd3d222f0c61fcd74f",
+  "Source_schema_layers_read_pin": "285f713746e72cb7cfd659fb8cc8e2251134f604",
+  "selected_Source_text_provenance_pin": "039a6e7939823547e9d5c06945d08f434097e618",
+  "Source_adoption": false,
+  "original_author_root": "/home/pilot/review103/role-key-d0-t0-4803",
+  "FREEZE_sha256": "7f29874c1326d5718a5e966f8fcbf263e1b857afa057a942af245ddb43f48e06",
+  "INDEX_sha256": "305b0160837a015829d3cd09bf1ff87689d204d45a284127d4afa46bf68b2f69",
+  "READ_CLOSURE_sha256": "c7b6c96b1d581230669acb539502efddc7271b338b207fdc5ec685ae0aeb880c",
+  "EXECUTION_sha256": "496e143d392a12a52ceab6add772699fe754e0d7b40e3bae624e3cd4d0c6e563",
+  "ENVIRONMENT_sha256": "330c48bba075c725e0b14dd3a68dc3be1d32057364b040d8941ca8a05f9edd88",
+  "CASES_sha256": "05956f74955861570ffb5262ecad644f18eed7b1904a15f6e2c4bf5c0572bc36",
+  "D0_roster_sha256": "702ee48749d8ec22ae5296281557e02e062034731d74b6eb2222026901652123",
+  "MANUAL_EXPECTED_sha256": "b294b6b725ae914ca128ce321db5d49c39f7fe3cefacd9772099c3683da7f631",
+  "external_CODE": {
+    "deleting_display.py": {
+      "mode": 292,
+      "bytes": 15869,
+      "sha256": "49964b833cfe8d60e5b61a5804878912e0125e0480f94e21c423d32df80b113a"
+    },
+    "d0_support.py": {
+      "mode": 292,
+      "bytes": 16437,
+      "sha256": "9407b2ef08f92398f0053740d408371533831ca5ac8efd0bef5f4223145ea4c0"
+    },
+    "d0_audit.py": {
+      "mode": 292,
+      "bytes": 8094,
+      "sha256": "7bd2d35717b256333e3412e797950931673c0ce4de6a95fbbd6b564c36c6d688"
+    }
+  },
+  "argv": [
+    "/opt/check-env/lesson-spec/bin/python",
+    "-I",
+    "-S",
+    "-B",
+    "/home/pilot/review103/role-key-d0-t0-4803/deleting_display.py"
+  ],
+  "cwd": "/home/pilot/review103/role-key-d0-t0-4803",
+  "caller_invocations": 1,
+  "wall_timeout_seconds": 300,
+  "run_root": "/home/pilot/review103/role-key-d0-run01",
+  "capture_root": "/home/pilot/review103/role-key-d0-run01-capture",
+  "parent_capture_files": [
+    "PRECONDITIONS.json",
+    "EXECUTOR.json",
+    "stdout.bin",
+    "stderr.bin",
+    "RECEIVER.json",
+    "AFTER.json",
+    "INDEX.json"
+  ],
+  "caller_evidence_files": [
+    "events.jsonl",
+    "frames.jsonl",
+    "comparison.jsonl",
+    "imports.jsonl",
+    "after-hashes.jsonl",
+    "audit.jsonl",
+    "fatal.jsonl"
+  ],
+  "preconditions": [
+    "Проверить независимо удерживаемый FREEZE7f298 и все37 original runtime payloads/входы/ручные ожидания; только исходные абсолютные пути, coordinator .frozen.txt не runtime relocation.",
+    "Проверить HEAD4803/clean и обе физические subject files, interpreter chain/окружение по ENVIRONMENT. Только readonly metadata, без project probe/--help/selftest.",
+    "Оба точных run-каталога и NO-RUNTIME-CACHE должны отсутствовать. После допуска создать только два fresh nonsymlink empty evidence directories. Старые каталоги не использовать.",
+    "Передать ровно удерживаемый7f298 digest через REVIEW103_D0_RUN_FREEZE_SHA256. В дочернем env выставить declared values, удалить только declared null entries; весь env/секреты не печатать, системное окружение/службы не менять.",
+    "Если любая предпосылка изменилась — CheckingError, без исправления, re-freeze, установки зависимости, fallback, сужения плана или автоматической следующей попытки."
+  ],
+  "parent_plumbing": "Только минимальный stdlib launcher/capture/identity metadata. Один точный caller argv/cwd с timeout300; actual start/end/monotonic elapsed/rawstdout/rawstderr/exit/signal/timeout записать вне caller в семи exact capture names. Новые capture files исключительно exclusive creation. Новых cases/expected/helpers/subject-code нет.",
+  "permitted_project_effect": "В frozen caller gate до project import; только v7 и v7.section в -I/-S/-B, current exact SchemaSection на объявленных full raw inputs. Разрешены только перечисленные constructor/writer_body/root_body вызовы и snapshots; без test discovery, lesson/spec/stack/jsonschema/codec/generator imports, third-party или cache.",
+  "approved_calls": {
+    "constructors": 6,
+    "writer_body": 4,
+    "root_body_head_None": 2,
+    "reuse": "D01/D03 один и тот же отдельный contextual instance на язык; D02 existingSYNTH/noncontext; D04 два exactValueError/message"
+  },
+  "record_ids": [
+    "D01.en",
+    "D01.ru",
+    "D02.en",
+    "D02.ru",
+    "D03.en",
+    "D03.ru",
+    "D04.identity-missing",
+    "D04.person-profile-missing-SP19"
+  ],
+  "receiver": "После actual process completion с exit0/1 ровно один вызов frozen d0_support.validate_transport(stdout_raw,stderr_raw,actual_exit,CASES.records,held_manual_expected_bytes,held_FREEZE7f298,subject4803). Frozen d0_audit definitions разрешены только для CheckingError в receiver, без AuditGate/project import. Это actual report этого запуска; mocks/probes/receiver selftests и второй subject invocation запрещены.",
+  "receiver_on_failure": "При exit не0/1, signal/timeout/launcher error — сохранить raw capture и CheckingError; receiver normalcomparison не запускать, frames не выдумывать, partial credit не давать. При позднем capture/integrity сбое сравнение пометить invalidated. Повторное выполнение только по новому точному решению.",
+  "completeness": "Строго10NDJSON objects+LF/EOF: start,8 уникальных ordered records,terminal; strictUTF8/JSON/types. Терминал: entered/completed8,groups4,display_compared6,expected_input_checking2,unexpected/skipped/notexecuted/auditviolations0. Все8 terminal structural/type/count guards до независимого сравнения; после только tally/exit agreement. Bare exit0 недостаточен.",
+  "comparison": "Шесть normal display/metadata comparisons: полные LFjoin+oneLF text bytes без strip/normalization/filter/rowmembership и D03 literal JSON typed metadata. Два exact constructor input checking отдельно; это не display matches/domain refusals/Go kills. Manual expected bytes и CASES/roster immutable, expected не брать из renderer.",
+  "exit_contract": {
+    "0": "Полные6 совпадений +2 точных constructor checking и intact10frames/audit/after identities.",
+    "1": "Полный ответ с именованными DISPLAY_MISMATCH fulltext/typedmetadata/originalinputrefs; не CheckingError/kill.",
+    "2_or_other": "CheckingError/partial/wrongexception/interface/import/effect/preparation/signal/timeout; без partial credit."
+  },
+  "after_and_delivery": "Сохранить семь caller evidence и семь outer captures, actual receiver result, observed imports/audit/after identities, raw output и frozen originals. Caller verify_all сохраняет точные853declared/594absences и два noncircular seal; это не count actualimports. Родитель не переигрывает исторические817/P0/P1 audits ради отчёта. Прислать actual6normal/2checking/mismatch counts раздельно, предыдущие RK16/RS2/P1 не суммировать.",
+  "limits": [
+    "Python audit не OS/native/kernel attestation; conservative853/594 не observed import trace до этого запуска.",
+    "Только selected methods/raw Source read pair; не whole marker/chapter/workingprofile/catalogue admission/B1/N5/SUT/урокREADY.",
+    "Source039 text provenance не перепинивается на P07 guard0d; J1 отдельно, приватные cases/oracles Source-автору не передавать."
+  ],
+  "held": [
+    "P2/G0/Go/compiler/parser/build/gofmt/native generation",
+    "остальные shape/propertyNames/Time ремонты",
+    "Source/Platform/skills/producer/test edits",
+    "main merge/full GATE/Source adoption",
+    "whole marker/chapter generation/materialization",
+    "P07/J1 CODE/parser/Node/runtime/42suite",
+    "keylessA/newprotocol/family08/metadata16",
+    "S08/oldJ/RKRS/P1 repeat",
+    "новая модель/сессия",
+    "VMS HELD_OWNER_WORD",
+    "ms",
+    "обе CT Claude",
+    "19guards/timers",
+    "disk cleanup/resize/restart",
+    "З14 phone/cutover"
+  ],
+  "additional_confirmation_or_ACK_required": false,
+  "actual_execution_in_approval": 0,
+  "counts_are_plan_until_actual_capture": {
+    "groups": 4,
+    "records": 8,
+    "normal_display_metadata": 6,
+    "expected_input_checking": 2,
+    "outcomes": "NOT_EXECUTED"
+  },
+  "new_author_estimate_due_or_aggregate": null
+}
