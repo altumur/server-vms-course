@@ -16,7 +16,7 @@ bytes of `console.js`, `console.html` and the description [`CONSOLE-MODULE.md`](
 to it by a change of behaviour after the commit of the lesson («Implementation decides» item 1, closed; the Architect's decision of 2026-10-21). The three parts of the console, the mounting
 `PlatformConsole.mount(root, opts)`, `opts`, `never` of the module and `may`/`may_not` of the shell — [P/06.5 N1.1](../../06-console/spec/06.5-console.norms.md)
 `module`, `shell`. A reference «lesson N» without a chapter is the module lesson P/NN (M10 and M11 were moved whole; review analysis of stage B 3–5, № 34); «P/06.K», «P/08.K» are the chapters of lessons 6 and 8;
-«P/10» is the lesson of the domain console. Norm ids are `P/07-MM`; the map to former ids is `id-map.tsv` (historical record).
+«P/10» is the lesson of the domain console. Norm ids are `P/07-MM`.
 
 ## N0 Vocabulary
 
