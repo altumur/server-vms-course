@@ -3,79 +3,80 @@
  "type": "object",
  "properties": {
   "events": {
-   "description": "lines of the page, as accepted; not more than HISTORY_LINES lines, the newest (the alarm history contract history)",
-   "type": "array",
-   "items": {
-    "description": "a line of the member's alarm page, as accepted (the alarm history contract events); the other fields of the index row P/05 N1.3 — the author's names",
-    "type": "object",
-    "properties": {
-     "id": {
-      "description": "id of the index row — a non-empty string (P/09.1 N1.10 event)",
-      "type": "string",
-      "not": {
-       "enum": [
-        ""
-       ]
-      }
-     },
-     "class": {
-      "description": "class of the index row — alarm (P/09.1 N1.10 event)",
-      "type": "string",
-      "enum": [
-       "alarm"
-      ]
-     },
-     "kind": {
-      "description": "a non-empty string (P/09.1 N1.10 event)",
-      "type": "string",
-      "not": {
-       "enum": [
-        ""
-       ]
-      }
-     },
-     "unit": {
-      "description": "unit of the index row (P/09.1 N1.10 event)",
-      "type": "string"
-     },
-     "t": {
-      "$ref": "#/$defs/common.time",
-      "description": "time of the line on the domain clock (the alarm history contract «Domain clock»: t + (received_at − sent_at) of the last accepted report that carries this page)"
-     },
-     "t_src": {
-      "description": "t of the line, as it arrived — by the member's clock; same_line compares by it (the alarm history contract same_line)",
-      "type": "number"
-     }
-    },
-    "propertyNames": {
-     "anyOf": [
-      {
-       "enum": [
+    "description": "lines of the page, as accepted; not more than HISTORY_LINES lines, the newest (the alarm history contract history)",
+    "type": "array",
+    "items": {
+      "description": "a line of the member's alarm page, as accepted (the alarm history contract events); the other fields of the index row P/05 N1.3 — the author's names",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "id of the index row — a non-empty string (P/09.1 N1.10 event)",
+          "type": "string",
+          "not": {
+            "enum": [
+              ""
+            ]
+          }
+        },
+        "class": {
+          "description": "class of the index row — alarm (P/09.1 N1.10 event)",
+          "type": "string",
+          "enum": [
+            "alarm"
+          ]
+        },
+        "kind": {
+          "description": "a non-empty string (P/09.1 N1.10 event)",
+          "type": "string",
+          "not": {
+            "enum": [
+              ""
+            ]
+          }
+        },
+        "unit": {
+          "description": "unit of the index row (P/09.1 N1.10 event)",
+          "type": "string"
+        },
+        "t": {
+          "$ref": "#/$defs/common.time",
+          "description": "time of the line on the domain clock (the alarm history contract «Domain clock»: t + (received_at − sent_at) of the last accepted report that carries this page)"
+        },
+        "t_src": {
+          "description": "t of the line, as it arrived — by the member's clock; same_line compares by it (the alarm history contract same_line)",
+          "type": "number"
+        }
+      },
+      "propertyNames": {
+        "anyOf": [
+          {
+            "enum": [
+              "id",
+              "class",
+              "kind",
+              "unit",
+              "t",
+              "t_src"
+            ]
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "additionalProperties": {
+        "description": "other fields of the index row P/05 N1.3 ({subsystem, of, …}) — as they arrived"
+      },
+      "required": [
         "id",
         "class",
         "kind",
         "unit",
         "t",
         "t_src"
-       ]
-      },
-      {
-       "type": "string"
-      }
-     ]
+      ]
     },
-    "additionalProperties": {
-     "description": "other fields of the index row P/05 N1.3 ({subsystem, of, …}) — as they arrived"
-    },
-    "required": [
-     "id",
-     "class",
-     "kind",
-     "unit",
-     "t",
-     "t_src"
-    ]
-   }
+    "maxItems": 2000
   },
   "cut_before": {
    "$ref": "#/$defs/common.time",

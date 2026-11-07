@@ -83,7 +83,7 @@ at `m1` is with it (the row came once), then the answer is again without `member
 | `other-root.json` | 02 | the recovery file of a foreign root (`root 2` of the vectors [`keys`](../../../common/vectors/keys/README.md); formerly — lesson M11/2 N5) for `@join m2 inputs/other-root.json` |
 | `kit-m1-one/ca.pem` | 04 | the centre A (`w2c test ca north`), EC P-256 |
 | `kit-m1-two/ca.pem`, `kit-m1-two/ca.next.pem` | 04 | the centres A and B (`w2c test ca south`) |
-| `view-member-list-ghost.json` | 19 | the object `domain/view` (the form [`view`](../../data/view.schema.json)): `member_list` — `hold` and `ghost`, without `knocking` |
+| `view-member-list-ghost.json` | 19 | the object `domain/view` (the form [`view`](../../data/view.schema.json)): `members` — only `hold`, without `knocking`; a substituted (ghost) view |
 | `member-reported-rev-2pow53.json` | 22 | the mark object `domain/members/m1/reported` (the form [`member-reported`](../../data/member-reported.schema.json)), JCS; all fields by the form, except `rev` = 9007199254740992 (2^53, the limit of `pos53` — 2^53 − 1) |
 
 The inputs were moved byte for byte from `inputs/` of the acceptances of M11/03 and M11/08, `view-member-list-ghost.json` is added for sc. 19
@@ -163,4 +163,4 @@ of the holder on a relay packet — sc. 02, 03 of [the acceptance of chapter 9.2
 
 ## Kit seams
 
-[3 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+[CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

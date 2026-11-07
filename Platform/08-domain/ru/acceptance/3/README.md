@@ -83,7 +83,7 @@ doc строк `domain/member-rows/<part>` (`hold`, `m1`, `m2`), а не вид;
 | `other-root.json` | 02 | файл восстановления чужого корня (`root 2` векторов [`keys`](../../../../common/ru/vectors/keys/README.md); прежде — урок M11/2 N5) для `@join m2 inputs/other-root.json` |
 | `kit-m1-one/ca.pem` | 04 | центр A (`w2c test ca north`), EC P-256 |
 | `kit-m1-two/ca.pem`, `kit-m1-two/ca.next.pem` | 04 | центры A и B (`w2c test ca south`) |
-| `view-member-list-ghost.json` | 19 | объект `domain/view` (форма [`view`](../../../data/view.schema.json)): `member_list` — `hold` и `ghost`, без `knocking` |
+| `view-member-list-ghost.json` | 19 | объект `domain/view` (форма [`view`](../../../data/view.schema.json)): `members` — только `hold`, без `knocking`; подменённый (ghost) вид |
 | `member-reported-rev-2pow53.json` | 22 | объект-метка `domain/members/m1/reported` (форма [`member-reported`](../../../data/member-reported.schema.json)), JCS; все поля по форме, кроме `rev` = 9007199254740992 (2^53, предел `pos53` — 2^53 − 1) |
 
 Входы перенесены байт в байт из `inputs/` приёмок M11/03 и M11/08, `view-member-list-ghost.json` добавлен для сц. 19
@@ -163,4 +163,4 @@ doc строк `domain/member-rows/<part>` (`hold`, `m1`, `m2`), а не вид;
 
 ## Швы пакета
 
-[3 CALL-шва](../../../acceptance/3/seams.tsv) исполняют обычный код с управляемыми входами и I/O по [протоколу форм](../../forms/README.md#швы-и-этапы). Они не заменяют обычные сценарии, назначенные векторы, процессный стенд или чтение главы.
+[CALL-швы](../../../acceptance/3/seams.tsv) исполняют обычный код с управляемыми входами и I/O по [протоколу форм](../../forms/README.md#швы-и-этапы). Они не заменяют обычные сценарии, назначенные векторы, процессный стенд или чтение главы.

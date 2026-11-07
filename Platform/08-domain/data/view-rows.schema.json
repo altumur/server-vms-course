@@ -1045,55 +1045,67 @@
    "pattern": "^(?:[0-9a-f]{16})$"
   },
   "knock": {
-   "description": "the knocker (chapter 8.3, M11/3 N1.1 knock)",
-   "type": "object",
-   "properties": {
-    "name": {
-     "$ref": "#/$defs/common.domain_member"
+    "description": "the knocker (chapter 8.3, M11/3 N1.1 knock)",
+    "type": "object",
+    "properties": {
+      "name": {
+        "$ref": "#/$defs/common.domain_member"
+      },
+      "last": {
+        "$ref": "#/$defs/common.time",
+        "description": "the holder's wall-clock seconds of the last knock"
+      },
+      "times": {
+        "$ref": "#/$defs/common.pos53",
+        "description": "number of knocks with this key"
+      },
+      "key": {
+        "$ref": "#/$defs/common.domain_member_key"
+      },
+      "fingerprint": {
+        "$ref": "#/$defs/fingerprint"
+      },
+      "pinned": {
+        "type": "string",
+        "enum": [
+          "this",
+          "another",
+          "none"
+        ]
+      },
+      "keys_rev": {
+        "description": "rev of the set that the member holds, or null",
+        "type": [
+          "integer",
+          "null"
+        ],
+        "x-integer": true,
+        "minimum": 1,
+        "maximum": 9007199254740991
+      },
+      "class": {
+        "type": "string",
+        "enum": [
+          "server",
+          "camera"
+        ]
+      },
+      "batch": {
+        "type": "string",
+        "description": "Name of the verified admission batch, only when accepted by the report-reception batch-knock steps."
+      }
     },
-    "last": {
-     "$ref": "#/$defs/common.time",
-     "description": "the holder's wall-clock seconds of the last knock"
-    },
-    "times": {
-     "$ref": "#/$defs/common.pos53",
-     "description": "number of knocks with this key"
-    },
-    "key": {
-     "$ref": "#/$defs/common.domain_member_key"
-    },
-    "fingerprint": {
-     "$ref": "#/$defs/fingerprint"
-    },
-    "pinned": {
-     "type": "string",
-     "enum": [
-      "this",
-      "another",
-      "none"
-     ]
-    },
-    "keys_rev": {
-     "description": "rev of the set that the member holds, or null",
-     "type": [
-      "integer",
-      "null"
-     ],
-     "x-integer": true,
-     "minimum": 1,
-     "maximum": 9007199254740991
-    }
-   },
-   "additionalProperties": false,
-   "required": [
-    "name",
-    "last",
-    "times",
-    "key",
-    "fingerprint",
-    "pinned",
-    "keys_rev"
-   ]
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "last",
+      "times",
+      "key",
+      "fingerprint",
+      "pinned",
+      "keys_rev",
+      "class"
+    ]
   },
   "unit": {
    "type": "object",
