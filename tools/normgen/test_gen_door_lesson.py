@@ -10,6 +10,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -173,6 +174,7 @@ DRIVER = r'''package main
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"%s/apidoor"
@@ -198,30 +200,140 @@ func main() {
 	sc := bufio.NewScanner(os.Stdin)
 	enc := json.NewEncoder(os.Stdout)
 	for sc.Scan() {
-		var c struct{ Method, Path string }
-		_ = json.Unmarshal(sc.Bytes(), &c)
-		m, err := apidoor.Route(c.Method, c.Path, cat{})
-		if err != nil {
-			enc.Encode(map[string]any{"err": err.Code})
-			continue
+		var c struct {
+			ID int
+			Method, Path string
 		}
-		info := apidoor.Ops[m.Op]
-		enc.Encode(map[string]any{"path": info.Path, "method": info.Method, "params": m.Params, "prefixed": m.Prefixed})
+		if err := json.Unmarshal(sc.Bytes(), &c); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		m, err := apidoor.Route(c.Method, c.Path, cat{})
+		var result map[string]any
+		if err != nil {
+			result = map[string]any{"err": err.Code}
+		} else {
+			info := apidoor.Ops[m.Op]
+			result = map[string]any{"path": info.Path, "method": info.Method, "params": m.Params, "prefixed": m.Prefixed}
+		}
+		if err := enc.Encode(map[string]any{"id": c.ID, "result": result}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	}
+	if err := sc.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
 '''
 
 
+class CheckingError(RuntimeError):
+    """The checking service failed; this is never a semantic mutant detection."""
+
+
+def disagree(probes, got, oracle=None):
+    """Validate every result before invoking the unchanged semantic oracle."""
+    if not isinstance(probes, (list, tuple)) or not probes or any(
+            not isinstance(p, (list, tuple)) or len(p) != 2 or
+            any(type(v) is not str for v in p) for p in probes):
+        raise CheckingError("probes must be a nonempty sequence of Method/Path string pairs")
+    if type(got) is not list or len(got) != len(probes):
+        raise CheckingError(f"expected {len(probes)} complete results, got {got!r}")
+    for i, result in enumerate(got, 1):
+        if type(result) is not dict:
+            raise CheckingError(f"input {i}: result is not an object: {result!r}")
+        if set(result) == {"err"}:
+            valid = type(result["err"]) is int
+        elif set(result) == {"path", "method", "params", "prefixed"}:
+            valid = (type(result["path"]) is str and type(result["method"]) is str and
+                     type(result["prefixed"]) is bool and type(result["params"]) is dict and
+                     all(type(k) is str and type(v) is str for k, v in result["params"].items()))
+        else:
+            valid = False
+        if not valid:
+            raise CheckingError(f"input {i}: incomplete or mistyped result: {result!r}")
+    try:
+        json.dumps([probes, got], ensure_ascii=False, allow_nan=False).encode("utf-8")
+    except (UnicodeError, ValueError, TypeError, RecursionError) as exc:
+        raise CheckingError(f"invalid result/input text: {exc}") from exc
+    if oracle is None:
+        return []
+    bad = []
+    for probe, result in zip(probes, got):
+        try:
+            want = oracle(probe)
+        except Exception as exc:
+            raise CheckingError(f"oracle failed for {probe!r}: {exc}") from exc
+        if want != result:
+            bad.append((probe, want, result))
+    return bad
+
+
+def read_report(probes, done):
+    """Require normal termination and all ordered private-ID frames, then unwrap."""
+    if not isinstance(probes, (list, tuple)) or not probes:
+        raise CheckingError("a report requires nonempty probes")
+    if type(getattr(done, "returncode", None)) is not int or done.returncode != 0:
+        raise CheckingError(f"process failed: {done!r}")
+    text = done.stdout
+    try:
+        if isinstance(text, bytes):
+            text = text.decode("utf-8")
+        if type(text) is not str:
+            raise ValueError("stdout is not text")
+        text.encode("utf-8")
+
+        def pairs(items):
+            result = {}
+            for k, v in items:
+                if k in result:
+                    raise ValueError(f"duplicate JSON name: {k}")
+                result[k] = v
+            return result
+
+        def constant(value):
+            raise ValueError(f"nonfinite JSON constant: {value}")
+
+        frames = text.split("\n")
+        if frames[-1] == "":
+            frames.pop()                       # One terminal LF is framing, not another result.
+        if len(frames) != len(probes):
+            raise ValueError(f"expected {len(probes)} frames, got {len(frames)}")
+        results = []
+        for i, line in enumerate(frames, 1):
+            frame = json.loads(line, object_pairs_hook=pairs, parse_constant=constant)
+            if (type(frame) is not dict or set(frame) != {"id", "result"} or
+                    type(frame["id"]) is not int or frame["id"] != i):
+                raise ValueError(f"input {i}: missing, extra or unordered frame identity: {frame!r}")
+            results.append(frame["result"])
+        disagree(probes, results)               # Validate the complete list before any semantic call.
+        return results
+    except (UnicodeError, ValueError, TypeError, RecursionError) as exc:
+        raise CheckingError(f"invalid process report: {exc}; stdout={done.stdout!r}; stderr={done.stderr!r}") from exc
+
+
 def run(mod, probes):
-    d = Path(mod) / "cmd/judgeroutes"
-    d.mkdir(parents=True, exist_ok=True)
-    module = (Path(mod) / "go.mod").read_text().split("\n")[0].split()[1]
-    (d / "main.go").write_text(DRIVER % module)
-    done = subprocess.run(["go", "run", "./cmd/judgeroutes"], cwd=mod, capture_output=True, text=True, env=GOENV,
-                          input="".join(json.dumps({"Method": m, "Path": p}) + "\n" for m, p in probes))
-    if done.returncode:
-        raise AssertionError(done.stderr[-2000:])
-    return [json.loads(x) for x in done.stdout.split("\n") if x]
+    if not isinstance(probes, (list, tuple)) or not probes or any(
+            not isinstance(p, (list, tuple)) or len(p) != 2 or
+            any(type(v) is not str for v in p) for p in probes):
+        raise CheckingError("probes must be a nonempty sequence of Method/Path string pairs")
+    try:
+        for probe in probes:
+            for value in probe:
+                value.encode("utf-8")
+        wire = "".join(json.dumps({"ID": i, "Method": m, "Path": p}) + "\n"
+                       for i, (m, p) in enumerate(probes, 1))
+        d = Path(mod) / "cmd/judgeroutes"
+        d.mkdir(parents=True, exist_ok=True)
+        module = (Path(mod) / "go.mod").read_text().split("\n")[0].split()[1]
+        (d / "main.go").write_text(DRIVER % module)
+        done = subprocess.run(["go", "run", "./cmd/judgeroutes"], cwd=mod, capture_output=True, text=True, env=GOENV,
+                              input=wire)
+    except (OSError, UnicodeError, ValueError, TypeError, IndexError, subprocess.SubprocessError) as exc:
+        raise CheckingError(f"route checking preparation/process failed in {mod}: {exc}") from exc
+    return read_report(probes, done)
 
 
 def probes(model, rnd):
@@ -288,12 +400,15 @@ class DoorLessonBase:
     def setUpClass(cls):
         if not shutil.which("go"):
             raise unittest.SkipTest("go is not in PATH")
-        cls.tmp = Path(tempfile.mkdtemp(prefix="door-lesson-"))
-        out = cls.tmp / "fresh"
-        done = subprocess.run([sys.executable, str(HERE / "gen_door_lesson.py"), "--lesson", cls.LESSON, str(out)],
-                              capture_output=True, text=True)
-        if done.returncode:
-            raise AssertionError(done.stderr)
+        try:
+            cls.tmp = Path(tempfile.mkdtemp(prefix="door-lesson-"))
+            out = cls.tmp / "fresh"
+            done = subprocess.run([sys.executable, str(HERE / "gen_door_lesson.py"), "--lesson", cls.LESSON, str(out)],
+                                  capture_output=True, text=True)
+        except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
+            raise CheckingError(f"route generation preparation/process failed: {exc}") from exc
+        if type(getattr(done, "returncode", None)) is not int or done.returncode != 0:
+            raise CheckingError(f"route generation failed: {done!r}")
         cls.fresh = out / "go"
         cls.model = Model(cls.LESSON)
 
@@ -319,7 +434,7 @@ class DoorLessonBase:
         rnd = random.Random(6)
         pr = probes(self.model, rnd)
         got = run(self.fresh, pr)
-        bad = [(p, expected(self.model, p), g) for p, g in zip(pr, got) if expected(self.model, p) != g]
+        bad = disagree(pr, got, lambda p: expected(self.model, p))
         self.assertEqual(bad[:3], [], f"{len(bad)} of {len(pr)} probes disagree")
         hit_ops = {(g["path"], g["method"], g["prefixed"]) for g in got if "path" in g}
         want = {(p["path"], m, pre) for p in self.model.paths for m in p["ops"]
@@ -366,16 +481,256 @@ class DoorLessonBase:
             if name == "pattern" and text == base:
                 continue                                   # No free parameter with minLength1 and no pattern exists in this lesson.
             with self.subTest(mutant=name):
-                self.assertNotEqual(text, base, f"{name}: the mutant does not apply")
+                if text == base:
+                    raise CheckingError(f"{name}: the applicable mutant does not change its target")
                 mod = self.tmp / f"mut-{name}"
-                shutil.copytree(self.fresh, mod)
-                (mod / "apidoor" / f).write_text(text)
                 try:
-                    got = run(mod, pr)
-                except AssertionError:
-                    continue
-                bad = [p for p, g in zip(pr, got) if expected(self.model, p) != g]
+                    shutil.copytree(self.fresh, mod)
+                    (mod / "apidoor" / f).write_text(text)
+                except (OSError, UnicodeError) as exc:
+                    raise CheckingError(f"{name}: mutant preparation failed: {exc}") from exc
+                got = run(mod, pr)
+                bad = disagree(pr, got, lambda p: expected(self.model, p))
                 self.assertTrue(bad, f"{name} survives")
+
+
+class RouteServiceControls(unittest.TestCase):
+    """Independent checking-service controls; subprocess responses here are injected."""
+
+    def setUp(self):
+        self.inputs = [("GET", "/a"), ("GET", "/b")]
+        self.results = [{"err": 404}, {"err": 404}]
+
+    def frames(self, results=None):
+        return [{"id": i, "result": v} for i, v in enumerate(self.results if results is None else results, 1)]
+
+    def report(self, frames=None, code=0):
+        return subprocess.CompletedProcess(["go", "run"], code,
+                                           "".join(json.dumps(f, ensure_ascii=False) + "\n"
+                                                   for f in (self.frames() if frames is None else frames)), "")
+
+    def module(self, directory):
+        mod = Path(directory) / "go"
+        mod.mkdir()
+        (mod / "go.mod").write_text("module checking.control\n")
+        return mod
+
+    def mutant_case(self, directory):
+        fresh = Path(directory) / "fresh"
+        (fresh / "apidoor").mkdir(parents=True)
+        # Text-only applicability fixture, never compiled or used as a route oracle.
+        (fresh / "apidoor/routes.go").write_text(
+            'var all405 = map[string]bool{\n\t"/{sub}/": true,\n}\n'
+            '{path: "/{sub}/", segs: []segment{{param: "sub"}}, prefixed: true},\n'
+            '\t"free": paramCheck{minLen: 1, maxLen: -1, rx: nil},\n')
+        (fresh / "apidoor/routes_rt.go").write_text('case s.param == "sub" || s.param == "rows":\n')
+        obj = DoorLesson_p06("test_mutants")
+        obj.tmp, obj.fresh = Path(directory), fresh
+        obj.model = Mock(paths=[{"prefixed": True}])
+        obj.model.templates.return_value = [({}, ["{rows}"], False), ({}, ["{free}"], False)]
+        return obj
+
+    def test_complete_positive(self):
+        success = {"path": "/{name}", "method": "GET", "params": {"name": "a"}, "prefixed": False}
+        for value in ({"err": 0}, {"err": 404}, {"err": 405}, success):
+            with self.subTest(value=value):
+                self.assertEqual(read_report(self.inputs, self.report(self.frames([value, value]))), [value, value])
+        with tempfile.TemporaryDirectory() as td:
+            mod = self.module(td)
+            with patch(__name__ + ".subprocess.run", return_value=self.report()) as proc:
+                self.assertEqual(run(mod, self.inputs), self.results)
+            sent = [json.loads(line) for line in proc.call_args.kwargs["input"].split("\n") if line]
+            self.assertEqual(sent, [{"ID": i, "Method": m, "Path": p}
+                                    for i, (m, p) in enumerate(self.inputs, 1)])
+            self.assertNotIn("timeout", proc.call_args.kwargs)
+
+    def test_zero_input_before_preparation(self):
+        with tempfile.TemporaryDirectory() as td, patch(__name__ + ".subprocess.run") as proc:
+            for bad in ([], (), None, [("GET",)], [(True, "/a")]):
+                with self.subTest(probes=bad), self.assertRaises(CheckingError):
+                    run(Path(td) / "never-created", bad)
+            proc.assert_not_called()
+            self.assertEqual(list(Path(td).iterdir()), [])
+        with self.assertRaises(CheckingError):
+            read_report([], self.report([]))
+
+    def test_zero_short_extra_reports(self):
+        good = self.frames()
+        for frames in ([], good[:1], good + [good[0]]):
+            with self.subTest(frames=frames), self.assertRaises(CheckingError):
+                read_report(self.inputs, self.report(frames))
+
+    def test_frame_identities(self):
+        good = self.frames()
+        cases = [good[::-1], [good[0], good[0]], [{"result": self.results[0]}, good[1]]]
+        cases += [[dict(good[0], id=v), good[1]] for v in (0, 3, True, 1.0, "1", None)]
+        for frames in cases:
+            with self.subTest(frames=frames), self.assertRaises(CheckingError):
+                read_report(self.inputs, self.report(frames))
+
+    def test_frame_shapes(self):
+        for frame in ({"id": 1}, {"id": 1, "result": {"err": 404}, "extra": 1}, [], None):
+            with self.subTest(frame=frame), self.assertRaises(CheckingError):
+                read_report(self.inputs, self.report([frame, self.frames()[1]]))
+        for result in ({}, {"err": 404, "path": "/a"}, {"path": "/a"}, "panic: control"):
+            with self.subTest(result=result), self.assertRaises(CheckingError):
+                read_report(self.inputs, self.report(self.frames([result, self.results[1]])))
+
+    def test_typed_shapes(self):
+        good = {"path": "/a", "method": "GET", "params": {}, "prefixed": False}
+        bad = [{"err": True}, {"err": 404.0}, {"err": "404"}]
+        bad += [dict(good, **{key: value}) for key, value in
+                (("path", None), ("method", 1), ("params", None), ("params", {"x": 1}),
+                 ("params", {1: "x"}), ("prefixed", 0))]
+        for result in bad:
+            with self.subTest(result=result), self.assertRaises(CheckingError):
+                disagree(self.inputs, [result, self.results[1]], lambda p: self.results[0])
+
+    def test_valid_wrong_values_are_semantic(self):
+        want = {"path": "/a", "method": "GET", "params": {"x": "a"}, "prefixed": False}
+        for got in (dict(want, path="/other"), dict(want, method="POST"),
+                    dict(want, params={"x": "other"}), dict(want, prefixed=True), {"err": 500}):
+            with self.subTest(got=got):
+                values = read_report(self.inputs, self.report(self.frames([got, want])))
+                self.assertEqual(disagree(self.inputs, values, lambda p: want), [(self.inputs[0], want, got)])
+
+    def test_strict_json(self):
+        tail = json.dumps(self.frames()[1]) + "\n"
+        texts = ["", "\n\n", "{bad}\n" + tail, '\ufeff' + self.report().stdout,
+                 '{"id":1,"id":1,"result":{"err":404}}\n' + tail,
+                 '{"id":1,"result":{"err":404,"err":405}}\n' + tail,
+                 '{"id":1,"result":{"err":NaN}}\n' + tail,
+                 '{"id":1,"result":{"err":Infinity}}\n' + tail,
+                 self.report().stdout + "\n", self.report().stdout + "garbage", "\ud800", b"\xff"]
+        for text in texts:
+            with self.subTest(text=repr(text)), self.assertRaises(CheckingError):
+                read_report(self.inputs, subprocess.CompletedProcess([], 0, text, ""))
+
+    def test_preparation_errors(self):
+        with tempfile.TemporaryDirectory() as td:
+            mod = self.module(td)
+            for content in (b"", b"\xff"):
+                (mod / "go.mod").write_bytes(content)
+                with self.subTest(content=content), self.assertRaises(CheckingError):
+                    run(mod, self.inputs)
+            (mod / "go.mod").write_text("module checking.control\n")
+            with patch.object(Path, "write_text", side_effect=OSError("driver write control")):
+                with self.assertRaises(CheckingError):
+                    run(mod, self.inputs)
+            (mod / "go.mod").unlink()
+            with self.assertRaises(CheckingError):
+                run(mod, self.inputs)
+
+    def test_start_errors(self):
+        with tempfile.TemporaryDirectory() as td:
+            mod = self.module(td)
+            for failure in (OSError("start control"), UnicodeError("decode control"),
+                            subprocess.TimeoutExpired(["go"], 1)):
+                with self.subTest(failure=failure), patch(__name__ + ".subprocess.run", side_effect=failure):
+                    with self.assertRaises(CheckingError):
+                        run(mod, self.inputs)
+
+    def test_compile_nonzero_even_with_complete_output(self):
+        for frames in ([], self.frames()[:1], self.frames()):
+            done = self.report(frames, code=1)
+            done.stderr = "compile control"
+            with self.subTest(frames=frames), self.assertRaises(CheckingError):
+                read_report(self.inputs, done)
+        self.assertFalse(issubclass(CheckingError, AssertionError))
+
+    def test_terminal_errors_are_not_semantic(self):
+        with tempfile.TemporaryDirectory() as td:
+            mod = self.module(td)
+            for error in ("panic: control", "scanner failed", "encoder failed"):
+                done = self.report(code=1)
+                done.stderr = error
+                with self.subTest(error=error), patch(__name__ + ".subprocess.run", return_value=done):
+                    with self.assertRaises(CheckingError):
+                        run(mod, self.inputs)
+
+    def test_generation_errors(self):
+        for failure in (subprocess.CompletedProcess([], 1, "partial", "generation control"), OSError("start control")):
+            with tempfile.TemporaryDirectory() as td, patch(__name__ + ".shutil.which", return_value="go"), \
+                    patch(__name__ + ".tempfile.mkdtemp", return_value=td):
+                kwargs = {"side_effect": failure} if isinstance(failure, Exception) else {"return_value": failure}
+                with patch(__name__ + ".subprocess.run", **kwargs), self.assertRaises(CheckingError):
+                    DoorLesson_p06.setUpClass()
+
+    def test_complete_before_oracle(self):
+        oracle = Mock(return_value={"err": 404})
+        for got in ([], [{"err": 405}], [{"err": 405}, {}], self.results + [{"err": 404}]):
+            with self.subTest(got=got), self.assertRaises(CheckingError):
+                disagree(self.inputs, got, oracle)
+        oracle.assert_not_called()
+        with patch(__name__ + ".probes", return_value=self.inputs), \
+                patch(__name__ + ".run", return_value=[{"err": 405}]), \
+                patch(__name__ + ".expected") as expected_call:
+            obj = DoorLesson_p06("test_probes")
+            obj.model, obj.fresh = Mock(), Path("unused")
+            with self.assertRaises(CheckingError):
+                obj.test_probes()
+            expected_call.assert_not_called()
+        with self.assertRaises(CheckingError):
+            disagree(self.inputs, self.results, Mock(side_effect=AssertionError("oracle control")))
+
+    def test_mutant_errors_propagate(self):
+        for target in ("prefix-lost", "all405", "pattern", "rank"):
+            with self.subTest(target=target), tempfile.TemporaryDirectory() as td:
+                obj = self.mutant_case(td)
+
+                def result(mod, inputs):
+                    if mod.name == "mut-" + target:
+                        raise CheckingError("process control")
+                    return [{"err": 405}, {"err": 404}]
+
+                with patch(__name__ + ".probes", return_value=self.inputs), \
+                        patch(__name__ + ".expected", return_value={"err": 404}), \
+                        patch(__name__ + ".run", side_effect=result), self.assertRaises(CheckingError):
+                    obj.test_mutants()
+
+    def test_correct_mutant_survives(self):
+        for target in ("prefix-lost", "all405", "pattern", "rank"):
+            with self.subTest(target=target), tempfile.TemporaryDirectory() as td:
+                obj = self.mutant_case(td)
+
+                def result(mod, inputs):
+                    return self.results if mod.name == "mut-" + target else [{"err": 405}, {"err": 404}]
+
+                with patch(__name__ + ".probes", return_value=self.inputs), \
+                        patch(__name__ + ".expected", return_value={"err": 404}), \
+                        patch(__name__ + ".run", side_effect=result), self.assertRaisesRegex(AssertionError, target + " survives"):
+                    obj.test_mutants()
+
+    def test_named_semantic_mismatch(self):
+        self.assertEqual(disagree(self.inputs, [{"err": 405}, {"err": 404}], lambda p: {"err": 404}),
+                         [(self.inputs[0], {"err": 404}, {"err": 405})])
+
+    def test_mutation_applicability(self):
+        with tempfile.TemporaryDirectory() as td:
+            obj = self.mutant_case(td)
+            with patch(__name__ + ".probes", return_value=self.inputs), \
+                    patch(__name__ + ".expected", return_value={"err": 404}), \
+                    patch(__name__ + ".run", return_value=[{"err": 405}, {"err": 404}]) as proc:
+                obj.test_mutants()
+                self.assertEqual([c.args[0].name for c in proc.call_args_list],
+                                 ["mut-prefix-lost", "mut-all405", "mut-pattern", "mut-rank"])
+            src = obj.fresh / "apidoor/routes.go"
+            src.write_text(src.read_text().replace("prefixed: true", "prefixed: false"))
+            with patch(__name__ + ".probes", return_value=self.inputs), \
+                    patch(__name__ + ".run") as proc, self.assertRaises(CheckingError):
+                obj.test_mutants()
+            proc.assert_not_called()
+
+    def test_unicode_and_terminal_lf_neighbours(self):
+        for char in ("\u0085", "\u2028", "\u2029"):
+            value = {"path": "/" + char, "method": "GET", "params": {"name": "a" + char + "b"}, "prefixed": False}
+            text = self.report(self.frames([value, value])).stdout
+            self.assertIn(char, text)
+            for ending in (text, text[:-1]):
+                with self.subTest(char=repr(char), final_lf=ending.endswith("\n")):
+                    self.assertEqual(read_report(self.inputs, subprocess.CompletedProcess([], 0, ending, "")), [value, value])
+        self.assertEqual(read_report(self.inputs, subprocess.CompletedProcess([], 0, self.report().stdout.encode(), "")),
+                         self.results)
 
 
 for _lesson, _slug in LESSONS.items():
