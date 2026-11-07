@@ -103,10 +103,10 @@ M10/09 (01, 02, 04–12; 03 — сессия — в
 
 | Файл | Ключ | Что в нём |
 |---|---|---|
-| `res-srv-p-stalled.json` | `platform/resources/srv-p/heartbeat` | полный пульс ресурса P/05 N1.4 с `pass_stalled: 12.5` (C12) |
-| `res-srv-q-extra-field.json` | `platform/resources/srv-q/heartbeat` | тот же пульс и поле `bogus` вне `ResourceRow` (C11) |
-| `res-srv-r-wrong-server.json` | `platform/resources/srv-r/heartbeat` | `server: "srv-x"` ≠ серверу ключа (C11) |
-| `res-srv-s-no-url.json` | `platform/resources/srv-s/heartbeat` | нет обязательного `url` (C11) |
+| `res-srv-p-stalled.json` | `platform/resources/srv-p/heartbeat` | полный пульс ресурса P/05 N1.4 с `pass_stalled: 12.5` (C12); только нейтральный действительный loopback `door` дополнен по нынешней форме P/05-R026 |
+| `res-srv-q-extra-field.json` | `platform/resources/srv-q/heartbeat` | тот же пульс и поле `bogus` вне `ResourceRow` (C11); только нейтральный действительный loopback `door` дополнен по нынешней форме P/05-R026 |
+| `res-srv-r-wrong-server.json` | `platform/resources/srv-r/heartbeat` | `server: "srv-x"` ≠ серверу ключа (C11); только нейтральный действительный loopback `door` дополнен по нынешней форме P/05-R026 |
+| `res-srv-s-no-url.json` | `platform/resources/srv-s/heartbeat` | нет обязательного `url` (C11); только нейтральный действительный loopback `door` дополнен по нынешней форме P/05-R026 |
 | `hb-w-1-labels.json` | `testsub/heartbeats/w-1` | пульс воркера на `srv-a` с метками узла `a,b` (C16) |
 | `hb-w-7-other-name.json` | `testsub/heartbeats/w-7` | `worker: "w-8"` ≠ имени ключа (C15) |
 | `hb-W-9-bad-name.json` | `testsub/heartbeats/W-9` | имя ключа не по грамматике имени слота (C15) |

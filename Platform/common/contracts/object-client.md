@@ -91,7 +91,7 @@ listing:   the closed form ObjectListing; only the keys of the door families und
 | the key is not by the grammar (not UTF-8, Cc, Zl, Zp, `.`/`..`, an empty segment); `prefix` not UTF-8; `scope` another | 400 `ResourceError` | nothing: a code error |
 | the key or the prefix outside the door families; the role is not admitted | 403 `ResourceError` / `ResourceDenied` | nothing: a code or deployment error |
 | the object is absent among those that answered | 404 `ResourceError` | without `X-Missing` — there is no object; with `X-Missing` — unknown, not «absent» |
-| the object is larger than 64 MiB | 413 `ResourceError` | nothing: the door limit |
+| the object exceeds Content-Length.maximum of the [P/05 HTTP form](../../05-resource/spec/05-resource.api.openapi.yaml) | 413 `ResourceError` | nothing: the door limit |
 | the lane is busy; the door is unavailable | 503 `ResourceError`, `Retry-After: 1` | repeat at the next step |
 | the write into the directory did not come through (`put_at`, `put_new`, `delete_at` — another index) | conflict | re-read and decide anew |
 | the resource door did not answer (a break, no answer, a connection refusal) | — | the reading is unknown, not «absent» (like `no_reply` of the store client contract; C10-OBJECT-ADDRESS-32, the Architect's answer of 2026-10-25) |

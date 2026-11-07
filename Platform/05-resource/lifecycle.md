@@ -28,21 +28,21 @@ retell them (stage B: the references to M10/8, M10/10, M10/11 are retargeted to 
 The environment is assembled by the runner `w2c-run.sh` in the order of P/02.4 N1.2: the unit values → `roles/<W2C_ROLE>.env` → `w2c.env` →
 the subsystem file, what is read earlier wins; the files — by parsing, not by `source` ([the environment file contract](../common/contracts/env-file.md); [02-installer/lifecycle.md](../02-installer/lifecycle.md)).
 
-| Variable | Meaning | Default | Norm |
+| Variable | Meaning and phase | Input source | Norm |
 |---|---|---|---|
-| `W2C_ROLE` | the role `resource`; not the role of the runner command — code 2 | set by the unit | [P/02.4] N1.2 |
-| `PLATFORM_STORE` | the store door — the role socket `configstore:///run/configstore/resource.sock` | `file://<PLATFORM_DIR>/config` (the profile of a box of one implementation) | [P/02.4] N1.2 |
-| `PLATFORM_DIR` | the state root | `/data/platform` | [P/02.4] N1.2 |
-| `RESOURCE_ROOT` / `EVENTS` | the root of the event trees; the presence locks `.workers/` are in it too | `<PLATFORM_DIR>/events` | [P/02.4] N1.2 «The setting channel», [event journal], [presence lock] |
-| `OBJECTS` / `PLATFORM_OBJECTS` | the root of the objects of the objects door and of the body copies | `<PLATFORM_DIR>/objects` | [P/02.4] N1.2, [P/05] N1.1 |
-| `RESOURCE_HOST`, `RESOURCE_PORT` | the address of the resource door; the unit does not write it — the process default; set in `w2c.env` — the bind address (off the loopback — only with a kit, ADR-0075 addendum of 2026-10-26 (6) item 2); with `mtls` the chain — the leaf, then its center ([the role certificate contract](../common/contracts/role-certificate.md) `server`; review of the norms of ADR-0075, Claude fd85ea8cc, S-2, S-3) | `127.0.0.1`, `8090` | [P/02.4] N1.1, N1.2, N1.6 |
-| `RESOURCE_URL` | the door address that the resource writes into the door row; an IP literal off the loopback (the loopback threshold of [the role certificate contract](../common/contracts/role-certificate.md) `loopback`: `ip`) — the resource writes a journal line at start; with `https://` the clients refuse `ip_address`, with `http://` — a configuration error visible as a connection refusal (ADR-0075 addendum of 2026-10-26 (4) item 6) | — | [P/02.4] N1.2, [P/05] N1.4 `door_row` |
-| `RESOURCE_TLS` | the door over TLS | — | [P/02.4] N1.2, N1.6 |
-| `SERVER_NAME` | its own server: the key of the heartbeat and of the door row; not by the grammar — code 2 | the short hostname | [P/02.4] N1.2 |
-| `BOX_ID` | the box | `/etc/machine-id`, otherwise the hostname | [P/02.4] N1.2 |
-| `BUILD` | the build word in the heartbeat | `dev` | [P/02.4] N1.2 |
-| `W2C_TLS_DIR` | the root of the kits; its own — `<W2C_TLS_DIR>/resource` | `/etc/w2c/tls` | [P/02.4] N1.2, N1.6 |
-| `W2C_ENV` | the file of the common settings | `/etc/w2c/w2c.env` | [P/02.4] N1.2 |
+| `W2C_ROLE` | the role `resource`; not the role of the runner command — code 2 | [daemon-flags.tsv](forms/daemon-flags.tsv), `W2C_ROLE` | [P/02.4] N1.2 |
+| `PLATFORM_STORE` | the store door — the role socket `configstore:///run/configstore/resource.sock` | [daemon-flags.tsv](forms/daemon-flags.tsv), `PLATFORM_STORE` | [P/02.4] N1.2 |
+| `PLATFORM_DIR` | the state root | [daemon-flags.tsv](forms/daemon-flags.tsv), `PLATFORM_DIR` | [P/02.4] N1.2 |
+| `RESOURCE_ROOT` / `EVENTS` | the root of the event trees; the presence locks `.workers/` are in it too | [daemon-flags.tsv](forms/daemon-flags.tsv), `RESOURCE_ROOT` / `EVENTS` | [P/02.4] N1.2 «The setting channel», [event journal], [presence lock] |
+| `OBJECTS` / `PLATFORM_OBJECTS` | the root of the objects of the objects door and of the body copies | [daemon-flags.tsv](forms/daemon-flags.tsv), `OBJECTS` / `PLATFORM_OBJECTS` | [P/02.4] N1.2, [P/05] N1.1 |
+| `RESOURCE_HOST`, `RESOURCE_PORT` | the address of the resource door; the unit does not write it — the process default; set in `w2c.env` — the bind address (off the loopback — only with a kit, ADR-0075 addendum of 2026-10-26 (6) item 2); with `mtls` the chain — the leaf, then its center ([the role certificate contract](../common/contracts/role-certificate.md) `server`; review of the norms of ADR-0075, Claude fd85ea8cc, S-2, S-3) | [daemon-flags.tsv](forms/daemon-flags.tsv), `RESOURCE_HOST`, `RESOURCE_PORT` | [P/02.4] N1.1, N1.2, N1.6 |
+| `RESOURCE_URL` | the door address that the resource writes into the door row; an IP literal off the loopback (the loopback threshold of [the role certificate contract](../common/contracts/role-certificate.md) `loopback`: `ip`) — the resource writes a journal line at start; with `https://` the clients refuse `ip_address`, with `http://` — a configuration error visible as a connection refusal (ADR-0075 addendum of 2026-10-26 (4) item 6) | [daemon-flags.tsv](forms/daemon-flags.tsv), `RESOURCE_URL` | [P/02.4] N1.2, [P/05] N1.4 `door_row` |
+| `RESOURCE_TLS` | the door over TLS | [daemon-flags.tsv](forms/daemon-flags.tsv), `RESOURCE_TLS` | [P/02.4] N1.2, N1.6 |
+| `SERVER_NAME` | its own server: the key of the heartbeat and of the door row; not by the grammar — code 2 | [daemon-flags.tsv](forms/daemon-flags.tsv), `SERVER_NAME` | [P/02.4] N1.2 |
+| `BOX_ID` | the box | [daemon-flags.tsv](forms/daemon-flags.tsv), `BOX_ID` | [P/02.4] N1.2 |
+| `BUILD` | the build word in the heartbeat | [daemon-flags.tsv](forms/daemon-flags.tsv), `BUILD` | [P/02.4] N1.2 |
+| `W2C_TLS_DIR` | the root of the kits; its own — `<W2C_TLS_DIR>/resource` | [daemon-flags.tsv](forms/daemon-flags.tsv), `W2C_TLS_DIR` | [P/02.4] N1.2, N1.6 |
+| `W2C_ENV` | the file of the common settings | [daemon-flags.tsv](forms/daemon-flags.tsv), `W2C_ENV` | [P/02.4] N1.2 |
 
 ## Flags
 
@@ -83,7 +83,7 @@ start refusal, code 2 ([P/02.4] N1.6 `process`; ADR-0075 addendum of 2026-10-26 
 
 - **Readiness** — the port `RESOURCE_PORT` and the row `platform/doors/<host>`; the stand runner waits for both ([Stand], [P/05]
   N1.4).
-- **Heartbeat** — every 10 s; the door row — every 15 s; the pass — every 600 s, a step longer than `PULSE_LIMIT` gives
+- **Heartbeat** — every HEARTBEAT_EVERY; the door row — every ALIVE_EVERY of the observation contract; the pass — every PASS_EVERY, a step longer than `PULSE_LIMIT` gives
   `pass_stalled` ([P/05] N1.4, «Implementation decides» item 7 — the value of `PULSE_LIMIT`).
 - **SIGTERM/SIGKILL** — the state is in the rows and files; after the server returns, the resource pulls its closed buckets from the neighbours
   (`restore`, [P/05] N1.4 «Bucket restore»).
@@ -104,3 +104,5 @@ acceptance README](../common/acceptance/README.md) «Stand without root»; the p
 - The events root at a stand of several servers on one `{data}` — no stand is arranged so: each server has its own
   `{data}`.
 - The value of `PULSE_LIMIT` — the implementation decides ([P/05] «Implementation decides» item 7).
+
+The numeric source of owned scalars is [runtime-constants.tsv](forms/runtime-constants.tsv). Input types and defaults belong only to the named daemon-flags rows, without a second registry.

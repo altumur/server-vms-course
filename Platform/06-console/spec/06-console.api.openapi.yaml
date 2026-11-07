@@ -7890,6 +7890,10 @@ components:
       - mirrors
       - short
       - state
+      - door
+      - waits
+      - restore
+      - mirror
       additionalProperties: false
       properties:
         server:
@@ -7977,6 +7981,15 @@ components:
             type: number
         door:
           $ref: '#/components/schemas/DoorState'
+          if:
+            required:
+            - mode
+            properties:
+              mode:
+                const: mtls
+          then:
+            required:
+            - cert_until
         garbled_rows:
           type: object
           additionalProperties:

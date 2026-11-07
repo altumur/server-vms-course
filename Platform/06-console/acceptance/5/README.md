@@ -103,10 +103,10 @@ Heartbeats of a given form are put by `@put object <key> inputs/<file>` bypassin
 
 | File | Key | What is in it |
 |---|---|---|
-| `res-srv-p-stalled.json` | `platform/resources/srv-p/heartbeat` | a full heartbeat of the resource of P/05 N1.4 with `pass_stalled: 12.5` (C12) |
-| `res-srv-q-extra-field.json` | `platform/resources/srv-q/heartbeat` | the same heartbeat and the field `bogus` outside `ResourceRow` (C11) |
-| `res-srv-r-wrong-server.json` | `platform/resources/srv-r/heartbeat` | `server: "srv-x"` ≠ the server of the key (C11) |
-| `res-srv-s-no-url.json` | `platform/resources/srv-s/heartbeat` | there is no mandatory `url` (C11) |
+| `res-srv-p-stalled.json` | `platform/resources/srv-p/heartbeat` | a full heartbeat of the resource of P/05 N1.4 with `pass_stalled: 12.5` (C12); only a neutral valid loopback `door` is added for current P/05-R026 |
+| `res-srv-q-extra-field.json` | `platform/resources/srv-q/heartbeat` | the same heartbeat and the field `bogus` outside `ResourceRow` (C11); only a neutral valid loopback `door` is added for current P/05-R026 |
+| `res-srv-r-wrong-server.json` | `platform/resources/srv-r/heartbeat` | `server: "srv-x"` ≠ the server of the key (C11); only a neutral valid loopback `door` is added for current P/05-R026 |
+| `res-srv-s-no-url.json` | `platform/resources/srv-s/heartbeat` | there is no mandatory `url` (C11); only a neutral valid loopback `door` is added for current P/05-R026 |
 | `hb-w-1-labels.json` | `testsub/heartbeats/w-1` | a heartbeat of the worker on `srv-a` with the node labels `a,b` (C16) |
 | `hb-w-7-other-name.json` | `testsub/heartbeats/w-7` | `worker: "w-8"` ≠ the name of the key (C15) |
 | `hb-W-9-bad-name.json` | `testsub/heartbeats/W-9` | the name of the key is not by the grammar of a slot name (C15) |
