@@ -59,6 +59,8 @@ nothing is transferred: there is no row (`items: null`, `index: ""`).
 | `bad-unreadable.jsonl` | a row `unreadable` |
 | `bad-epoch.jsonl` | the epoch row `testsub/epoch/u1` with a non-decimal `epoch` — upper is not reliable (sc. 12 steps 23–24) |
 | `bad-floor.jsonl` | the floor row with a non-decimal `floor` `12.5` (sc. 12 steps 25–26) |
+| `bad-floor-zero.jsonl` | a present floor row stores zero; the missing-row virtual zero is a separate case |
+| `bad-floor-above-current.jsonl` | the floor exceeds its current operation range |
 | `bad-row-key.jsonl` | the row key `testsub/../bad` — a segment `..`, not a key of chapter 1.1 N1 (sc. 12 steps 27–28) |
 | `bad-floor-gen-at.jsonl` | the floor row with `generation_at` `not-a-time` — not a time, the floor row is unreadable (sc. 12 steps 29–30) |
 | `copy-future-floor.jsonl` | a correct copy, the floor has `generation_at` `4102444800` (2100) — the stand clock is earlier, a refusal without `-force` (sc. 12 steps 31–32; with `-force` — sc. 29) |

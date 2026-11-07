@@ -1,0 +1,114 @@
+{
+  "change": "0129-z10-p01-format-floor",
+  "revision": 1,
+  "base": "d034aa09e6dcad450cd4e0942457f430dda43ece",
+  "status": "SOURCE_EXPECTATIONS_ONLY_NOT_EXECUTED",
+  "authorities": {
+    "source_A_sha256": "f935cd4ba9af3dc4be90527013a6760a89f5a692b3c4c3eeb9fc7c7602f87817",
+    "mirror_adjustment_sha256": "de4ba859f34da6e34063ecf69ea0de2c084196528cc978cc96abf4426ba3fb9a"
+  },
+  "family": {
+    "path": "Platform/common/vectors/family-read/01.tsv",
+    "old_prefix_sha256": "48da299798a930c8e328ae15fa0f4fd6b6b69e0fbe5f48ea9f52ac5d3c4023db",
+    "old_prefix_bytes": 18815,
+    "old_rows_unchanged": true,
+    "append_rows": [
+      {
+        "path": "Platform/common/vectors/family-read/01.tsv",
+        "case": "01-z10-floor-zero-writer",
+        "source_base_case": "01-0001",
+        "raw": "01-z10-floor-zero-writer\tplatform/epoch_floor\tplatform/epoch_floor\trow\twriter\t[\"proc:01-store\"]\t{\"floor\":\"0\",\"generation_at\":\"1\"}\trefused\t[\"/floor\"]\t[]\tZ10 present floor zero; missing row virtual zero is a different case; no multipleOf\n",
+        "grammar": "existing family-read eleven columns; proposed append, not executed"
+      },
+      {
+        "path": "Platform/common/vectors/family-read/01.tsv",
+        "case": "01-z10-floor-maximum-writer",
+        "source_base_case": "01-0001",
+        "raw": "01-z10-floor-maximum-writer\tplatform/epoch_floor\tplatform/epoch_floor\trow\twriter\t[\"proc:01-store\"]\t{\"floor\":\"9007194959773696\",\"generation_at\":\"1\"}\tok\t[]\t[]\tZ10 present floor maximum; missing row virtual zero is a different case; no multipleOf\n",
+        "grammar": "existing family-read eleven columns; proposed append, not executed"
+      },
+      {
+        "path": "Platform/common/vectors/family-read/01.tsv",
+        "case": "01-z10-floor-above-writer",
+        "source_base_case": "01-0001",
+        "raw": "01-z10-floor-above-writer\tplatform/epoch_floor\tplatform/epoch_floor\trow\twriter\t[\"proc:01-store\"]\t{\"floor\":\"9007194959773697\",\"generation_at\":\"1\"}\trefused\t[\"/floor\"]\t[]\tZ10 present floor above; missing row virtual zero is a different case; no multipleOf\n",
+        "grammar": "existing family-read eleven columns; proposed append, not executed"
+      },
+      {
+        "path": "Platform/common/vectors/family-read/01.tsv",
+        "case": "01-z10-floor-not-multiple-writer",
+        "source_base_case": "01-0001",
+        "raw": "01-z10-floor-not-multiple-writer\tplatform/epoch_floor\tplatform/epoch_floor\trow\twriter\t[\"proc:01-store\"]\t{\"floor\":\"3\",\"generation_at\":\"1\"}\tok\t[]\t[]\tZ10 present floor not-multiple; missing row virtual zero is a different case; no multipleOf\n",
+        "grammar": "existing family-read eleven columns; proposed append, not executed"
+      },
+      {
+        "path": "Platform/common/vectors/family-read/01.tsv",
+        "case": "01-z10-floor-zero-reader",
+        "source_base_case": "01-0002",
+        "raw": "01-z10-floor-zero-reader\tplatform/epoch_floor\tplatform/epoch_floor\trow\treader\t[\"<s>worker\"]\t{\"floor\":\"0\",\"generation_at\":\"1\"}\trefused\t[\"/floor\"]\t{\"<s>worker\": [\"/floor\"]}\tZ10 present floor zero; missing row virtual zero is a different case; no multipleOf\n",
+        "grammar": "existing family-read eleven columns; proposed append, not executed"
+      },
+      {
+        "path": "Platform/common/vectors/family-read/01.tsv",
+        "case": "01-z10-floor-maximum-reader",
+        "source_base_case": "01-0002",
+        "raw": "01-z10-floor-maximum-reader\tplatform/epoch_floor\tplatform/epoch_floor\trow\treader\t[\"<s>worker\"]\t{\"floor\":\"9007194959773696\",\"generation_at\":\"1\"}\tok\t[]\t{\"<s>worker\": []}\tZ10 present floor maximum; missing row virtual zero is a different case; no multipleOf\n",
+        "grammar": "existing family-read eleven columns; proposed append, not executed"
+      },
+      {
+        "path": "Platform/common/vectors/family-read/01.tsv",
+        "case": "01-z10-floor-above-reader",
+        "source_base_case": "01-0002",
+        "raw": "01-z10-floor-above-reader\tplatform/epoch_floor\tplatform/epoch_floor\trow\treader\t[\"<s>worker\"]\t{\"floor\":\"9007194959773697\",\"generation_at\":\"1\"}\trefused\t[\"/floor\"]\t{\"<s>worker\": [\"/floor\"]}\tZ10 present floor above; missing row virtual zero is a different case; no multipleOf\n",
+        "grammar": "existing family-read eleven columns; proposed append, not executed"
+      },
+      {
+        "path": "Platform/common/vectors/family-read/01.tsv",
+        "case": "01-z10-floor-not-multiple-reader",
+        "source_base_case": "01-0002",
+        "raw": "01-z10-floor-not-multiple-reader\tplatform/epoch_floor\tplatform/epoch_floor\trow\treader\t[\"<s>worker\"]\t{\"floor\":\"3\",\"generation_at\":\"1\"}\tok\t[]\t{\"<s>worker\": []}\tZ10 present floor not-multiple; missing row virtual zero is a different case; no multipleOf\n",
+        "grammar": "existing family-read eleven columns; proposed append, not executed"
+      }
+    ],
+    "count_added": 8,
+    "semantic_boundary": "present floor0 invalid;1 base and3/nonmultiple valid; upper bound valid; upper+1 invalid; same current existing floor paths/outcomes. No multipleOf and no import success promised by family readability."
+  },
+  "copy_inputs": [
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-floor-zero.jsonl",
+      "raw": "{\"format\":\"w2c-configstore-copy\",\"version\":1,\"index\":\"7\"}\n{\"key\":\"testsub/next_id\",\"items\":{\"n\":\"2\"},\"index\":\"3\"}\n{\"key\":\"platform/epoch_floor\",\"items\":{\"floor\":\"0\",\"generation_at\":\"1760745600.5\"},\"index\":\"4\"}\n",
+      "sha256": "6278ab0a39fe2592d127ff0aff696a54c7adbcc8ae4cd20a9c646f175a519ab5",
+      "basis": "Platform/01-store/acceptance/3/inputs/bad-floor.jsonl",
+      "protected": "header version1, index7, other rows/versions and generation_at unchanged"
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-floor-above-current.jsonl",
+      "raw": "{\"format\":\"w2c-configstore-copy\",\"version\":1,\"index\":\"7\"}\n{\"key\":\"testsub/next_id\",\"items\":{\"n\":\"2\"},\"index\":\"3\"}\n{\"key\":\"platform/epoch_floor\",\"items\":{\"floor\":\"9007194959773697\",\"generation_at\":\"1760745600.5\"},\"index\":\"4\"}\n",
+      "sha256": "6efc9d4bd7a83b422c4d104b6bd96ea6a1201cd7bf93ea6a6040d252d2ccc599",
+      "basis": "Platform/01-store/acceptance/3/inputs/bad-floor.jsonl",
+      "protected": "header version1, index7, other rows/versions and generation_at unchanged"
+    }
+  ],
+  "scenario": {
+    "path": "Platform/01-store/acceptance/3/scenarios.tsv",
+    "old_prefix_sha256": "43ff33618fa58178ae20ed9322a1082733ef64606fc7a685244d76cce18cdf9d",
+    "old_prefix_bytes": 27273,
+    "append_raw": "12-copy-refused\t33\t@import store inputs/bad-floor-zero.jsonl\trefused\n12-copy-refused\t34\trestored GET /v1/get?key=testsub/next_id\t200 {\"items\": null, \"index\": \"\"}\n12-copy-refused\t35\t@import store inputs/bad-floor-above-current.jsonl\trefused\n12-copy-refused\t36\trestored GET /v1/get?key=testsub/next_id\t200 {\"items\": null, \"index\": \"\"}\n",
+    "existing_case": "12-copy-refused",
+    "steps": [
+      33,
+      34,
+      35,
+      36
+    ],
+    "directive_grammar": "existing @import/refused plus existing public restored GET; no new case id, port or @crash",
+    "execution": "not performed; expected whole-input refusal and no row transfer are source obligations, not observed execution"
+  },
+  "protected": [
+    "all old TSV rows/inputs/verdicts/paths/outcomes/notes",
+    "all old copy fixtures/current version1 format",
+    "Time and generation_at lexemes",
+    "mode/who and existing readers",
+    "P03 epoch and global uint53/index/versions"
+  ]
+}

@@ -8,7 +8,9 @@
    "x-whole": true,
    "x-codec": [
     "integer"
-   ]
+   ],
+   "minimum": 1,
+   "maximum": 9007194959773696
   },
   "generation_at": {
    "$ref": "#/$defs/common.time",

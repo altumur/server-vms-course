@@ -3,12 +3,12 @@
 #var fate string — release|move|wait|hung from slot-fate. Other fates need no release transition and are returned by that machine.
 #var gen_readable bool — from the existing row, no replacement with zero.
 #var age double — same-version age of this judge.
-#var HUNG_MOVE_AFTER double — effective setting, default 900 s.
+#var HUNG_MOVE_AFTER double — effective setting from daemon-flags.tsv and the common env-file owner.
 #var version string — version of the judgement, used as CAS, never refreshed silently.
 #var release_version string — version from the confirmed CAS reply, never the old judgement version.
 #var reply string — pending|ok|conflict|badkey|error|blocked|unconfirmed; a non-answer is never ok/conflict.
 #action result(string,string) — return fate/outcome and names_given version or empty string.
-# action=- — YOURS at norm: reject unreadable gen with no write/no permission; for a readable row keep holder/until/gen/server; for a torn row write released:true,holder:"",until:0,gen as read,server if readable else ""; CAS by version.
+# action=- — YOURS at norm: reject unreadable gen with no write/no permission; for a readable row keep holder/until/gen/server; for a torn row write released:true,holder:"",until:0,gen as read,server preserved if readable by its frozen slots field schema, otherwise omitted with no empty substitute; CAS by version.
 # On unreadable gen the YOURS action feeds blocked without a write or permission. On definite error/badkey record the step failure; unconfirmed waits by store-client rules, no permission before confirmation.
 # A CAS refusal caused by renewal leaves the slot untouched; the next pass observes the changed version and judges alive. No blind repeat by a newer CAS.
 n	state	condition	action	next	norm

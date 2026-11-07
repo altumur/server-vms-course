@@ -103,10 +103,10 @@ Heartbeats of a given form are put by `@put object <key> inputs/<file>` bypassin
 
 | File | Key | What is in it |
 |---|---|---|
-| `res-srv-p-stalled.json` | `platform/resources/srv-p/heartbeat` | a full heartbeat of the resource of P/05 N1.4 with `pass_stalled: 12.5` (C12) |
-| `res-srv-q-extra-field.json` | `platform/resources/srv-q/heartbeat` | the same heartbeat and the field `bogus` outside `ResourceRow` (C11) |
-| `res-srv-r-wrong-server.json` | `platform/resources/srv-r/heartbeat` | `server: "srv-x"` ≠ the server of the key (C11) |
-| `res-srv-s-no-url.json` | `platform/resources/srv-s/heartbeat` | there is no mandatory `url` (C11) |
+| `res-srv-p-stalled.json` | `platform/resources/srv-p/heartbeat` | a full heartbeat of the resource of P/05 N1.4 with `pass_stalled: 12.5` (C12); only a neutral valid loopback `door` is added for current P/05-R026 |
+| `res-srv-q-extra-field.json` | `platform/resources/srv-q/heartbeat` | the same heartbeat and the field `bogus` outside `ResourceRow` (C11); only a neutral valid loopback `door` is added for current P/05-R026 |
+| `res-srv-r-wrong-server.json` | `platform/resources/srv-r/heartbeat` | `server: "srv-x"` ≠ the server of the key (C11); only a neutral valid loopback `door` is added for current P/05-R026 |
+| `res-srv-s-no-url.json` | `platform/resources/srv-s/heartbeat` | there is no mandatory `url` (C11); only a neutral valid loopback `door` is added for current P/05-R026 |
 | `hb-w-1-labels.json` | `testsub/heartbeats/w-1` | a heartbeat of the worker on `srv-a` with the node labels `a,b` (C16) |
 | `hb-w-7-other-name.json` | `testsub/heartbeats/w-7` | `worker: "w-8"` ≠ the name of the key (C15) |
 | `hb-W-9-bad-name.json` | `testsub/heartbeats/W-9` | the name of the key is not by the grammar of a slot name (C15) |
@@ -173,3 +173,6 @@ This is a subject of a manual check of the specification and of a future check o
 ## Accepted ADR-0127 review: source catalogue until restart
 
 For `GET /manifest/<sub>/source`, admit a changed stored manifest after console startup. Before restart the source door retains the launch catalogue's rev, served, sha256, manifest and secret_defaults; a newly installed subsystem absent from that catalogue stays404. A differing current store-row rev does not create an own503 or a per-request store read. Restart, then compare the new launch catalogue and served value. Keep independent ordinary busy/trust failures; they are not a revision-mismatch response. Inspect actual store calls if proving the no-read obligation. The frozen platform module and thirteen raw asset witnesses are unchanged.
+
+
+ADR-0129(17): inspect ordinary GET /metrics for all five w2c_changes_resets_total reason series at zero: foreign, evicted, rights, labels, folders. A real folder-composition change or folder deletion already produces reset5; observe that reset and the folders counter on the same ordinary HTTP path. Manifest metrics[] vectors do not accept this global-counter state and are not relabelled as this check. HEAD controls at the six prescribed existing paths compare GET admission/status/headers and an empty body; execution needs the actual ordinary setup, not a canned response.

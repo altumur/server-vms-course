@@ -10,8 +10,8 @@ unit:
     server: {type: string}
   state:
     result: {type: object, properties: {state: {type: string}}}
-    cursor: {type: object, properties: {at: {type: int}}}
-    progress: {type: object, properties: {done: {type: int}}}
+    cursor: {type: object, properties: {at: {type: integer}}}
+    progress: {type: object, properties: {done: {type: integer}}}
 placement:
   capacity: {from: capacity, default: 4}
 worker: {exec: /usr/lib/probe/worker}

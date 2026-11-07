@@ -1,0 +1,362 @@
+{
+  "base": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+  "modified_related_paths": [
+    "Platform/09-agent/acceptance/1/README.md",
+    "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+    "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv",
+    "Platform/09-agent/acceptance/1/inputs/anywhere-hash/doc-only.json",
+    "Platform/09-agent/acceptance/1/inputs/anywhere-hash/inner-text.json",
+    "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+    "Platform/09-agent/acceptance/1/inputs/anywhere-hash/mismatch.json",
+    "Platform/09-agent/acceptance/1/seams.tsv",
+    "Platform/09-agent/forms/README.md",
+    "Platform/09-agent/forms/stages.tsv",
+    "Platform/09-agent/ru/acceptance/1/README.md",
+    "Platform/09-agent/ru/forms/README.md",
+    "Platform/09-agent/ru/spec/09.1-agent.norms.md",
+    "Platform/09-agent/spec/09.1-agent.norms.md"
+  ],
+  "unchanged_related": [
+    {
+      "source": {
+        "path": "Platform/09-agent/spec/09.2-agent.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "46157d3afea999ae0dd6aafcbf0f2b6b8efe88b4",
+        "sha256": "3014172bbf36e36dd5c440e0a282c2400d7db9786fbdf8374788e038091c0e0c",
+        "bytes": 28167
+      },
+      "blocks": [
+        "N2 six forwarded holder GET, own503/403/401/502"
+      ],
+      "action": "READONLY; P09 A future refs only, no own holder body type"
+    },
+    {
+      "source": {
+        "path": "Platform/common/contracts/domain-envelopes.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "f8d0c76df8dce392b4af9f99f5f951a8e30a9b4b",
+        "sha256": "7f53a5255ffba4a3114f291d2c57d7ef640b2a6aa5448c58d881b8fead12c70f",
+        "bytes": 13129
+      },
+      "blocks": [
+        "Content of sealed anywhere as_of+sha256"
+      ],
+      "action": "READONLY types; only the digest value changes for its actual raw body"
+    },
+    {
+      "source": {
+        "path": "Platform/common/ru/contracts/domain-envelopes.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "f37bc7c4e289945ca8b2743d59beb061328f2e06",
+        "sha256": "dfde3d6060401e2d546edba2d401dc55cb5f383673cf1acce1301d3656e2e2c8",
+        "bytes": 16119
+      },
+      "blocks": [
+        "same sealed anywhere fields"
+      ],
+      "action": "READONLY"
+    },
+    {
+      "source": {
+        "path": "Platform/common/data/codec.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "15a311ea85309baee10de7538466ac16fb2c8751",
+        "sha256": "9b64b59cfb7e89ca21771d5dc1ea6ebd8bade7b7fe15df4e43e7cb8fcadda02e",
+        "bytes": 2754
+      },
+      "blocks": [
+        "row strings/encoding json/jcs/time"
+      ],
+      "action": "READONLY no new codec"
+    },
+    {
+      "source": {
+        "path": "Platform/common/data/cell-json-sha256.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "58a94d879238bf5230b2379307c1ced56c29e493",
+        "sha256": "6a97f2ac619a0cca4dbc4f8cfc55d1475be9ec2cfb07b2ba5c95694fe3c3c984",
+        "bytes": 349778
+      },
+      "blocks": [
+        "old proofs1859prefix and other tables"
+      ],
+      "action": "READONLY; changed P09 seam cells unmarked, no new proof rows needed"
+    },
+    {
+      "source": {
+        "path": "Platform/09-agent/acceptance/1/scenarios.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "81adebb80b6b6d98ef6706a741b01eb1b0e13e6a",
+        "sha256": "3799cb737b94c219bd22209453d12dd6876e08d3baa3ddcbc64bb3e26d8eccc9",
+        "bytes": 25717
+      },
+      "blocks": [
+        "whole ordinary process"
+      ],
+      "action": "READONLY"
+    },
+    {
+      "source": {
+        "path": "Platform/09-agent/acceptance/2/seams.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "8039b5ed0a9a901a1321c7097c0f38fe413d6782",
+        "sha256": "faa8cb162747efb30529e3ceee00f775df688497aa5a83e7f92563cb2807ab31",
+        "bytes": 2061
+      },
+      "blocks": [
+        "all10 CALL rows"
+      ],
+      "action": "READONLY"
+    },
+    {
+      "source": {
+        "path": "Platform/common/vectors/family-read/09.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "8a02ef2c17893de8670b780eeb208e1add032a44",
+        "sha256": "eb69cf6fec8fa939734b82e9ee41a180cba4a13a9303569a6a02cb25fa08b613",
+        "bytes": 865679
+      },
+      "blocks": [
+        "all accepted af8c cases"
+      ],
+      "action": "READONLY"
+    },
+    {
+      "source": {
+        "path": "Platform/09-agent/forms/refusals.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "d6e048513923c4410286ca5423fb57da02fbac6a",
+        "sha256": "dceb213e03d9aec17bd0170a2ec15bec65ea9c68175376f0cef7c3eda209782c",
+        "bytes": 10273
+      },
+      "blocks": [
+        "all accepted39projections+earlychunked branch"
+      ],
+      "action": "READONLY"
+    },
+    {
+      "source": {
+        "path": "tools/normgen/gen_cmdtests.py",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "06dcd8730d3da3212dd96232fca173d8d82b340f",
+        "sha256": "6f772dbd6f7531af91ba3e1d89a77806a0c349f342cb0be969c4cb808de82ad8",
+        "bytes": 58572
+      },
+      "blocks": [
+        "CALL decoding/source provenance/JSON expected subset"
+      ],
+      "action": "TOOLS owns; no source-author CODE"
+    },
+    {
+      "source": {
+        "path": "tools/normgen/gen_door_lesson.py",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "2bad326b1b477770684261217ac44f5619569db3",
+        "sha256": "7b90e6564cde1840eed2217aacb00c6d03e4995a9285e0fc9807030b2ad4d801",
+        "bytes": 41055
+      },
+      "blocks": [
+        "standard owner component refs and source bases"
+      ],
+      "action": "TOOLS owns; no source-author CODE"
+    },
+    {
+      "source": {
+        "path": "Platform/08-domain/spec/08.3-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "b9b935232d7e29c04f37045540c804fe9cf5d702",
+        "sha256": "344b91d410e5dd86c5985fccb564de270e31ae37ffed6fd119256cf6253b3cf0",
+        "bytes": 107696
+      },
+      "blocks": [
+        "N2 holder GET table; member/topology sources"
+      ],
+      "action": "READONLY: existing owner API link is sufficient; no body type duplicated in prose"
+    },
+    {
+      "source": {
+        "path": "Platform/08-domain/ru/spec/08.3-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "1ea136c17de481514f80086e0e77bd48ad188c92",
+        "sha256": "a15206e447b0b058b33ea5fdbf80fb74d55450e69a40c9bafac2644c2d159a9b",
+        "bytes": 133432
+      },
+      "blocks": [
+        "mirror N2"
+      ],
+      "action": "READONLY"
+    },
+    {
+      "source": {
+        "path": "Platform/08-domain/spec/08.8-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "6ba9cd84f93715b66f7dc3711182393fbc7d7f5b",
+        "sha256": "3d102b96b5f44029feaefe1b9a5331517fae91cb7db8780c49de290f29021f9b",
+        "bytes": 123300
+      },
+      "blocks": [
+        "N1.5a ?rev= and part object"
+      ],
+      "action": "READONLY: only the exact existing parameter carrier is formalized in API"
+    },
+    {
+      "source": {
+        "path": "Platform/08-domain/ru/spec/08.8-domain.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "364949aeae05a8fe1fd5d0e2301cd6942e3bac42",
+        "sha256": "ddda931ccfd47fb50cd214f1c61b75ecd4e22de90395e59240441b448a4b8c31",
+        "bytes": 157160
+      },
+      "blocks": [
+        "mirror N1.5a"
+      ],
+      "action": "READONLY"
+    },
+    {
+      "source": {
+        "path": "Platform/08-domain/data/anywhere.schema.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "555b9953ec29d8a3b9175450ffd135734d07122d",
+        "sha256": "f4719bd3e7bb9ef445afc8ff6cff5fddff43c8cc2cfdcb85f49a9858f4704d39",
+        "bytes": 28760
+      },
+      "blocks": [
+        "whole decoded stored family"
+      ],
+      "action": "READONLY; its decoded doc/time are not a second HTTP form"
+    },
+    {
+      "source": {
+        "path": "Platform/08-domain/data/book-all.schema.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "ffa282d83dcea078e9b2f106a6190dcea8128a21",
+        "sha256": "c44fcaeb2e4ca87556b018587bf1705a88d3238e60a18990486e7a8e3214a302",
+        "bytes": 28494
+      },
+      "blocks": [
+        "whole stored head family"
+      ],
+      "action": "READONLY raw-string values keep current logical codec"
+    },
+    {
+      "source": {
+        "path": "Platform/08-domain/data/book-part.schema.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "b35ee1ab6cde6dadce21a0b37a6403ff40fc9498",
+        "sha256": "64068e2779de7cc46ee7e26436d7f1a3d9c171baad7c8c1be011bfce4d4a4f1a",
+        "bytes": 28528
+      },
+      "blocks": [
+        "whole stored part family"
+      ],
+      "action": "READONLY"
+    },
+    {
+      "source": {
+        "path": "Platform/08-domain/data/members.schema.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "54de81d53fe4bbccaa6ec579250bfc6568347046",
+        "sha256": "57741f7c90ab1685ed51977298ae4a498ae2107d3ed1212f5b79fb1590f17141",
+        "bytes": 29173
+      },
+      "blocks": [
+        "whole signed row family"
+      ],
+      "action": "READONLY"
+    },
+    {
+      "source": {
+        "path": "Platform/08-domain/data/topology.schema.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "28854de55342bdd9f1ac8ef4eb7ac2607c15bec8",
+        "sha256": "9b22dd27bfc06461b2210d66774f32388c6990126ddf44d0469eb41c6fe3b36e",
+        "bytes": 28574
+      },
+      "blocks": [
+        "holder topology row"
+      ],
+      "action": "READONLY; not the complete topology HTTP wrapper"
+    },
+    {
+      "source": {
+        "path": "Platform/08-domain/data/backup-parts.schema.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "17568f529533e2c9afe1e1c46d0f4cf6f91f80b6",
+        "sha256": "25f842aa561591dc5858e81b15598743b423f1902f69238fc939f4ed8cd9a07f",
+        "bytes": 532
+      },
+      "blocks": [
+        "whole backup object"
+      ],
+      "action": "READONLY canonical schema reused by ref"
+    },
+    {
+      "source": {
+        "path": "Platform/common/contracts/accept.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "af9c16e98b2ef3f0278392f532daf648cb8626f4",
+        "sha256": "0e7a93fb5f8c9d164fd58b8651602b2e144ccb7f216c1fc401bda085ab95ef48",
+        "bytes": 42466
+      },
+      "blocks": [
+        "current carry and fields"
+      ],
+      "action": "READONLY; sealed field types and on_accept behavior unchanged"
+    },
+    {
+      "source": {
+        "path": "Platform/09-agent/spec/09.1-agent.norms.md",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "e0bcacdbdbe384e9eac2a5be8c2b3090684d2e86",
+        "sha256": "8277f4a125ea8e3fbd9bc3c61e6db4c6a27f98bc20d65f721d9422d1df957fd5",
+        "bytes": 214386
+      },
+      "blocks": [
+        "member_list_take/book_want/backup + all other accepted B/V/G/D/E blocks"
+      ],
+      "action": "READONLY except the declared member_anywhere raw/hash clarification"
+    },
+    {
+      "source": {
+        "path": "Platform/09-agent/data/member-topology.schema.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "f5ab40fa53a96c1b612cded423cc54b1b16862c5",
+        "sha256": "5d0b27868605653ad39561c16d2ffaa60d7ccfaeef953e935ebbb8dfb38df0e7",
+        "bytes": 29325
+      },
+      "blocks": [
+        "existing complete-body copy field"
+      ],
+      "action": "READONLY provenance; no schema refactoring in this scope"
+    },
+    {
+      "source": {
+        "path": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "f28523fbde16f4279441cb5b01ced018af2a0131",
+        "sha256": "c87647e3f0d3d4f677854cfdf9e9870d44990c67a7925fcd4927d9cad2eed529",
+        "bytes": 24399
+      },
+      "blocks": [
+        "all current four paths and own refusal components"
+      ],
+      "action": "READONLY until separately activated A refs; no new holder body copy"
+    }
+  ],
+  "current_P08_fields_not_changed": [
+    "Entry",
+    "MembersDoc",
+    "MembersAnswer",
+    "Carry.anywhere/other sealed types",
+    "existing signature requiredness",
+    "all statuses except formalizing200 component ref"
+  ],
+  "P08_other_ADR19_findings_not_in_scope": [
+    "emergency rev, deleting, writer member ceiling, pending/outcomes/history bounds, ghost/held, legacy revision/outcome repairs, Assemble-13"
+  ],
+  "new_value_projections_are_explicit_in_HASH_PROJECTIONS": true,
+  "book_digest_note": "No new book digest algorithm is introduced: this source transports raw existing items and preserves book version/part procedures; anywhere is the existing complete-body SHA fixture set being corrected.",
+  "source_related14_applied": true,
+  "P09_A_API_and_topology_KV_schema": "HELD_UNCHANGED",
+  "no_consumer_producer_or_adapter_CODE": true
+}

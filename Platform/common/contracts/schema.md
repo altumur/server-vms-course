@@ -34,8 +34,7 @@ platform/schema:  {version: <integer ≥ 1>, at: <moment>, revision?: <integer �
 version:  an exact integer ≥ 1 without an upper bound and without machine overflow (as a slot number, the slot name contract): greater than
           SCHEMA of the build — «schema is newer» (too new: a start refusal, code 2, the exact N in the journal); out of form — only not an integer, < 1
           (C06-SCHEMA-WIDE-32-01, the Architect's decision of 2026-10-25)
-SCHEMA:   the number the build understands; adding a field — without a new number; changing the meaning of a field — a new number; for the current
-          specification SCHEMA = 1 and schema of the heartbeat = 1; raising SCHEMA — only by a decision with a transition (the stage C guess W03-E02, the Architect's decision of 2026-10-23)
+SCHEMA:   the one current build/layout for positive operation is 1; current heartbeat schema is 1. No former-layout reader or generation transition window is required. This contract assigns no future schema; its number is not an operator-selectable admission setting.
 BUILD:    the build word for a human (env BUILD, default dev); the machine reads SCHEMA
 heartbeat: every heartbeat of the worker and the resource carries schema and build (P/03.4 N1.1, P/05 N1.4); schema — a JSON integer without a fraction
           part and exponent (the form int of [the row check contract](../row-check.md) «Preparation of fields»: «An `int` value at the input of the door»), ≥ 1; `1.0`, `1e0`, `-1`, a string, null — the schema of the process is unknown (null

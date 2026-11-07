@@ -899,7 +899,7 @@ COPIES = (("flagtypes.go", HERE / "flags/go/flagtypes.go"), ("runtime.go", HERE 
 
 CONSTANTS_FORM = "runtime-constants.tsv"           # Numeric lesson constants (P/06) belong to flags, not a new part.
 CONSTANT_NAME = re.compile(r"[A-Z][A-Z0-9_]*")
-CONSTANT_UNITS = ("count", "s", "bytes")
+CONSTANT_UNITS = ("count", "s", "ms", "bytes")
 
 
 def constants_go(path, rel):
@@ -936,7 +936,7 @@ def constants_go(path, rel):
     for r in rows:
         out += [f"\t// {input_field('$' + r['name'])} — {r['meaning']} (unit {r['unit']}; {r['norm']})",
                 f"\t{input_field('$' + r['name'])} = {r['value']}"]
-    out += [")", "", "// Constant — a row of the form: the value, its unit (count, s, bytes) and the anchor of its norm.",
+    out += [")", "", "// Constant — a row of the form: the value, its unit (count, s, ms, bytes) and the anchor of its norm.",
             "type Constant struct {", "\tValue int64", "\tUnit  string", "\tNorm  string", "}", "",
             "// Constants — the constants by their name in the form.", "var Constants = map[string]Constant{"]
     out += [f"\t{go_str(r['name'])}: {{{r['value']}, {go_str(r['unit'])}, {go_str(r['norm'])}}}," for r in rows]
@@ -1051,7 +1051,7 @@ another command, a repeat or an unknown `--…` is a `Refusal` with that name; t
 
 KIT_MD_CONSTANTS = """
 `forms/runtime-constants.tsv` — `flags/constants.go`: a `const` per row (`CHANGES_TICK` → `flags.ChangesTick`) and
-`flags.Constants` by the name of the form (value, unit `count` | `s` | `bytes`, the anchor of its norm). They are the
+`flags.Constants` by the name of the form (value, unit `count` | `s` | `ms` | `bytes`, the anchor of its norm). They are the
 defaults and limits of the norms — not inputs and not environment knobs; read them in your code instead of literals.
 """
 

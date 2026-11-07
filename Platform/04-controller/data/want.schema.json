@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "want": {
-   "description": "the absolute target of the number of processes of the role on the server, the base `<prefix>-<server>-1` is included",
+   "description": "the absolute target of the number of processes of the role on the server, the base `<prefix>-<server>-1` is included; maximum WANT_NUM_MAX is defined by P/04 forms/runtime-constants.tsv; numeric minimum/maximum carriers stay unchanged.",
    "type": "integer",
    "x-integer": true,
    "minimum": 1,
