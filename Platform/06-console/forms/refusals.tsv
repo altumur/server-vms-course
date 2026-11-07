@@ -85,8 +85,8 @@ chapter	row	name	surface	code	kind	fields	headers	log	norm	word	response_schema	
 6.1	58	c61_058_409_1	http	409	-	-	-	-	P/06.1-R031	-	BatchRefused	a refusal of the row check: the same words and `fault` as at the door of this row (N4 above, the row check contract)	400, 409	`field` — `/writes/<number>/fields/<field>`	a client error
 6.1	59	c61_059_403_1	http	403	-	-	-	-	P/06.1-R031	-	BatchRefused	the rights of one row	403	`error: denied` of the whole batch; no claim, nothing written	—
 6.1	60	c61_060_404_1	http	404	-	-	-	-	P/06.1-R031	-	BatchRefused	`delete` of an absent row or of a tombstone	404	`error: no such unit`, for a table `no such row`	re-read
-6.1	61	c61_061_409_1	http	409	-	-	-	-	P/06.1-R031	-	BatchRefused	the claim: a foreign pending younger than 30 s; the same key, another body (ADR-0094 addendum (14))	409 / 422	`error: in flight` / `key reused`	wait; a new key
-6.1	61	c61_061_422_1	http	422	-	-	-	-	P/06.1-R031	-	BatchRefused	the claim: a foreign pending younger than 30 s; the same key, another body (ADR-0094 addendum (14))	409 / 422	`error: in flight` / `key reused`	wait; a new key
+6.1	61	c61_061_409_1	http	409	-	-	-	-	P/06.1-R031	-	BatchRefused	the claim: a foreign pending younger than CLAIM_TAKEOVER_AFTER; the same key, another body (ADR-0094 addendum (14))	409 / 422	`error: in flight` / `key reused`	wait; a new key
+6.1	61	c61_061_422_1	http	422	-	-	-	-	P/06.1-R031	-	BatchRefused	the claim: a foreign pending younger than CLAIM_TAKEOVER_AFTER; the same key, another body (ADR-0094 addendum (14))	409 / 422	`error: in flight` / `key reused`	wait; a new key
 6.1	62	c61_062_412_1	http	412	-	detail,error,field,key,index	-	-	P/06.1-R031	-	BatchMoved	a guard or `cas` diverged	412	`error: row moved`, `field`, `key`, `index` — the index of this row now, `""` — no row; a guard without `view` — `""`; nothing written	re-read the snapshot, assemble the batch anew, with a new key
 6.1	63	c61_063_413_1	http	413	-	-	-	-	P/06.1-R031	-	BatchRefused	writes or guards over the limit; the whole command larger than the body limit of the store	413	`error: batch too large`	split by meaning or reduce
 6.1	64	c61_064_413_1	http	413	-	-	-	-	P/06.1-R031	-	BatchRefused	a row heavier than the store ceiling	413	`error: row too large`	change the form
@@ -260,8 +260,8 @@ chapter	row	name	surface	code	kind	fields	headers	log	norm	word	response_schema	
 6.8	11	c68_011_404_1	http	404	-	-	-	-	P/06.8-R019	-	FolderRefused	no parent	404	`error: no such parent`	re-read the tree
 6.8	12	c68_012_409_1	http	409	-	-	-	-	P/06.8-R019	-	FolderRefused	the parent or an ancestor has a tombstone	409	`error: parent gone`, `field: /parent`	re-read the tree
 6.8	13	c68_013_409_1	http	409	-	-	-	-	P/06.8-R019	-	FolderRefused	batch: a write over a folder tombstone	409	`error: folder gone`, `field`	re-read the tree
-6.8	14	c68_014_409_1	http	409	-	-	-	-	P/06.8-R019	-	FolderRefused	claim: another's pending younger than 30 s; the same key, another body	409 / 422	`error: in flight` / `key reused`	wait; a new key
-6.8	14	c68_014_422_1	http	422	-	-	-	-	P/06.8-R019	-	FolderRefused	claim: another's pending younger than 30 s; the same key, another body	409 / 422	`error: in flight` / `key reused`	wait; a new key
+6.8	14	c68_014_409_1	http	409	-	-	-	-	P/06.8-R019	-	FolderRefused	claim: another's pending younger than CLAIM_TAKEOVER_AFTER; the same key, another body	409 / 422	`error: in flight` / `key reused`	wait; a new key
+6.8	14	c68_014_422_1	http	422	-	-	-	-	P/06.8-R019	-	FolderRefused	claim: another's pending younger than CLAIM_TAKEOVER_AFTER; the same key, another body	409 / 422	`error: in flight` / `key reused`	wait; a new key
 6.8	15	c68_015_412_1	http	412	-	detail,error,field	-	-	P/06.8-R019	-	FolderMoved	`If-Match` has diverged	412	`error: folder moved`, `field: /index`, `row` — the current row; nothing is written	re-read, decide anew
 6.8	16	c68_016_412_1	http	412	-	-	-	-	P/06.8-R019	-	FolderRefused	chain guard: an ancestor was changed or deleted after the read	412	`error: parent moved`; nothing is written	re-read the tree
 6.8	17	c68_017_413_1	http	413	-	-	-	-	P/06.8-R019	-	FolderRefused	a folder row heavier than `FOLDER_ROW_MAX` or than the store ceiling; a batch heavier than the store body	413	`error: row too large` / `batch too large`	reduce the member list

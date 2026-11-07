@@ -19,9 +19,9 @@ change»), [P/06.6](../06-console/spec/06.6-console.norms.md) (N1.1a the schema 
 
 | What | How | Norm |
 |---|---|---|
-| worker | the unit `<dep>-<sub>worker@.service`: the instance `%i` is the slot name `<prefix>-<SERVER_NAME>-<n>` (1 — the base one, 2…99 — on the controller's order, ADR-0084), as the command argument; a server in `%i` ≠ `SERVER_NAME` — code 2; `W2C_ROLE=<sub>worker`; `Type=notify`, `NotifyAccess=main`, `WatchdogSec=360` | P/02.4 N1.1 |
+| worker | Unit template and slot-name argument, role, notify/watchdog and server check follow their owner; admission precedes the presence lock | P/02.4 N1.1; P/03.2 N3 start |
 | slot name | the command argument; none — the variable `slot.name_env`, if the manifest declared it; otherwise without a name | P/03.2 N3 «start()» step 3 |
-| worker on demand | the same unit, the instance `<prefix>-<SERVER_NAME>-<n>`, n 2…99; started and stopped by the workers script by the series `<sub>_workers_wanted{server}`; the slot capture is the usual one | P/02.4 N1.1, N1.5 |
+| worker on demand | The workers script starts/stops by `<sub>_workers_wanted{server}`; name and ordinal range follow the owner, capture is ordinary | P/02.4 N1.1, N1.5 |
 | start by steps | schema → manifest → memory budget → instance → presence lock → name → capture | P/03.2 N3 «start()» steps 0–3 (step 1 — P/03.4 N3 «start() — the budget step»), P/03.2 N3 «schema check by the worker» |
 
 ## Environment
@@ -31,27 +31,35 @@ the same as for the platform processes; the runner executes `worker.exec` of the
 (ADR-0091 addendum (4)–(6)): the unit's values → `roles/<W2C_ROLE>.env` → `w2c.env` →
 the subsystem file, what was read earlier wins ([02-installer/lifecycle.md](../02-installer/lifecycle.md)).
 
-| Variable | Meaning | Default | Norm |
-|---|---|---|---|
-| the manifest variable `slot.name_env` | the slot name, only if the manifest declared it (`testsub2` — `TALLY_NAME`) | — | P/02.4 N1.2 |
-| `BOX_ID` | the box | `/etc/machine-id`, otherwise the hostname | P/02.4 N1.2, P/03.2 N3 «start()» step 2 |
-| `SERVER_NAME` | the server by the grammar of the slot suffix | the short hostname | P/02.4 N1.2 |
-| `LABELS` | the node labels | — | P/02.4 N1.2 |
-| `INSTANCE_ID` | the instance instead of `<box>:<pid>:<6hex>`; not by the grammar — a start refusal, code 2 (analysis of the review of stage B 3–5, № 7) | — | P/02.4 N1.2, P/03.2 N3 «start()» step 2, N4 |
-| `PLATFORM_DIR` | the state root | `/data/platform` | P/02.4 N1.2 «The setting channel and the layout» |
-| `PLATFORM_STORE` | the store door `configstore:///run/configstore/<sub>worker.sock` | `file://<PLATFORM_DIR>/config` (a box of one implementation) | P/02.4 N1.2 |
-| `OBJECTS` / `PLATFORM_OBJECTS` | the object store | `file://`; `cluster://` with configstore | P/02.4 N1.2 |
-| `RESOURCE_ROOT` / `EVENTS` | the event root: the buckets and the presence lock | `<PLATFORM_DIR>/events` | P/02.4 N1.2, P/05 N1.4, the presence lock contract |
-| `SECRETS_KEY` | the ring — at the secret holders | — | P/03.5 N1.2 |
-| `W2C_ROLE`, `W2C_TLS_DIR` | the role and the kit; `W2C_ROLE` ≠ the role of the runner command (`worker <sub>` — `<sub>worker`, `domainworker <sub>` — `<sub>domain`) — a launch refusal, code 2 (ADR-0091 addendum (5) item 1) | `<sub>worker`; `/etc/w2c/tls` | P/02.4 N1.1, N1.2, N1.6 |
-| `AGENT_TOKEN_DIR` | the socket directory of the agent's local token door: the worker requests a token at `<AGENT_TOKEN_DIR>/<W2C_ROLE>.sock` (chapter 3.7 N1.5) | `/run/w2c/domainagent` | [local token door contract](../common/contracts/local-token-door.md) «The role socket» (analysis of the review of stage A 8–10, № 1 / decision 1) |
-| `CAPACITY`, `WORKER_MEMORY_MB` | the capacity and the memory budget | — | P/02.4 N1.2, N1.5 `memory` |
-| `BUILD` | the build word in the heartbeat (chapter 6.6) | `dev` | P/02.4 N1.2, P/06.6 N1.1a |
-| `W2C_ENV`, `W2C_SUB_ENV` | environment files | `/etc/w2c/w2c.env`; the unit's path | P/02.4 N1.2 |
-| `NOTIFY_SOCKET` | the systemd watchdog | — | P/02.4 N1.2 |
+The complete static input catalogue, types, requiredness and defaults are [daemon-flags.tsv](forms/daemon-flags.tsv). This table records only meaning and read phase; each row points to that form flag. A dynamic slot.name_env is consulted when the name argument is absent, by P/03.2 N3 start. Ring rereads and token connections follow their imported contracts.
 
-`SLOT_INDEX` is removed: the worker unit does not set it (P/02.4 N1.1), the slot name is the argument `%i` or the variable `slot.name_env`
-(P/03.2 N3 «start()» step 3) (analysis of the review of stage B 3–5, № 7).
+| Input | Meaning and phase | Source |
+|---|---|---|
+| `<name>` | Preferred ordinary worker name; selected after manifest/instance admission. | `daemon-flags.tsv`, flag=`<name>` |
+| `$BOX_ID` | Box identity, resolved before instance and presence-lock creation. | `daemon-flags.tsv`, flag=`$BOX_ID` |
+| `$SERVER_NAME` | Nonempty current server, admitted before the presence lock. | `daemon-flags.tsv`, flag=`$SERVER_NAME` |
+| `$LABELS` | Node labels for startup name/place admission. | `daemon-flags.tsv`, flag=`$LABELS` |
+| `$INSTANCE_ID` | Current process identity, resolved and checked before the presence lock. | `daemon-flags.tsv`, flag=`$INSTANCE_ID` |
+| `$PLATFORM_DIR` | Initial platform state root. | `daemon-flags.tsv`, flag=`$PLATFORM_DIR` |
+| `$PLATFORM_STORE` | Store endpoint resolved at SDK initialization. | `daemon-flags.tsv`, flag=`$PLATFORM_STORE` |
+| `$OBJECTS` | Object-store setting, resolved with its existing paired name at initialization. | `daemon-flags.tsv`, flag=`$OBJECTS` |
+| `$PLATFORM_OBJECTS` | Paired object-store setting, same initialization step. | `daemon-flags.tsv`, flag=`$PLATFORM_OBJECTS` |
+| `$RESOURCE_ROOT` | Event/presence root resolved with its paired name at initialization. | `daemon-flags.tsv`, flag=`$RESOURCE_ROOT` |
+| `$EVENTS` | Paired event/presence-root setting, same initialization step. | `daemon-flags.tsv`, flag=`$EVENTS` |
+| `$SECRETS_KEY` | Initial ring-file reference; ring reading/reloads follow the sealing contract. | `daemon-flags.tsv`, flag=`$SECRETS_KEY` |
+| `$W2C_ROLE` | Launcher route identity; checked before role-file use; direct SDK rules stay those of the input form. | `daemon-flags.tsv`, flag=`$W2C_ROLE` |
+| `$W2C_TLS_DIR` | TLS-kit directory selected at initialization. | `daemon-flags.tsv`, flag=`$W2C_TLS_DIR` |
+| `$AGENT_TOKEN_DIR` | Local token-door directory; connections follow the local-token-door contract. | `daemon-flags.tsv`, flag=`$AGENT_TOKEN_DIR` |
+| `$CAPACITY` | Initial worker capacity used by the memory-budget step. | `daemon-flags.tsv`, flag=`$CAPACITY` |
+| `$WORKER_MEMORY_MB` | Initial budget for the memory check before the presence lock. | `daemon-flags.tsv`, flag=`$WORKER_MEMORY_MB` |
+| `$BUILD` | Build word used by the initial and later base heartbeat. | `daemon-flags.tsv`, flag=`$BUILD` |
+| `$W2C_MANIFEST_REV` | Launch-time published manifest reference, checked before the name capture. | `daemon-flags.tsv`, flag=`$W2C_MANIFEST_REV` |
+| `$W2C_ENV` | Runner environment-file input; read in launcher order, not recursively by SDK. | `daemon-flags.tsv`, flag=`$W2C_ENV` |
+| `$W2C_SUB_ENV` | Runner subsystem-file input in that same order. | `daemon-flags.tsv`, flag=`$W2C_SUB_ENV` |
+| `$W2C_BOX` | Initial box-layout root. | `daemon-flags.tsv`, flag=`$W2C_BOX` |
+| `$CONSOLE_ORIGINS` | Initial CORS origin setting for the subsystem process door. | `daemon-flags.tsv`, flag=`$CONSOLE_ORIGINS` |
+| `$TIMEZONE` | Initial display-timezone setting; protocol Time is unchanged. | `daemon-flags.tsv`, flag=`$TIMEZONE` |
+| `$NOTIFY_SOCKET` | Systemd notification endpoint; notify from the ordinary loop, not stand-in. | `daemon-flags.tsv`, flag=`$NOTIFY_SOCKET` |
 
 ## Flags
 
@@ -64,7 +72,7 @@ None: the setting channel is only the environment and the name argument (P/02.4 
 | `<events root>/.workers/<sub>/<instance>.lock` | the presence lock: the content anew at start, an exclusive `flock` for the whole lifetime | [catalogue](../common/data/catalog.tsv), the presence lock contract, P/03.2 N3 «start()» step 2b |
 | `<events root>/<sub>/<unit>/e<epoch>/…`, `<sub>.alarms/…`, `audit/<sub>worker/e1/…` | event buckets, the `append` participant | [catalogue](../common/data/catalog.tsv), the event journal contract, P/03.6 N1.2 |
 | the objects `<sub>/heartbeats/<name>`, `<sub>/contenders/<name>/<box>` | the heartbeat and the contender mark | [catalogue](../common/data/catalog.tsv), P/03.4 N1.1, P/03.2 N1.4a |
-| `/etc/w2c/secrets/platform.key` (`SECRETS_KEY`) | the ring — read only | [catalogue](../common/data/catalog.tsv), [sealing contract](../common/contracts/sealing.md) |
+| `SECRETS_KEY` | the ring — read only | [catalogue](../common/data/catalog.tsv), [sealing contract](../common/contracts/sealing.md) |
 | component names in the trees | one encoding `%XX`, `%h<sha256>`; the `%h` threshold — by the full file name (the component, the norm's suffix, the reserve of the temporary name; analysis of the review of stage B 3–5, № 20) | the event journal contract «File names in shared trees» |
 
 ## Exit codes
@@ -81,10 +89,10 @@ None: the setting channel is only the environment and the name argument (P/02.4 
 
 | What | How | Norm |
 |---|---|---|
-| SIGTERM | the stand-in and the polling — stop; `before_stop_all`, the units, the place writers; the last heartbeat; let the place go, then release the slot (analysis of the review of stage B 3–5, № 4); `after_stop`; `TimeoutStopSec` = `worker.stop_timeout` of the manifest (20…50, default 20) | P/03.4 N3 «stop by SIGTERM», P/02.4 N1.1 |
+| SIGTERM | the stand-in and the polling — stop; `before_stop_all`, the units, the place writers; the last heartbeat; let the place go, then release the slot (analysis of the review of stage B 3–5, № 4); `after_stop`; `TimeoutStopSec` = `worker.stop_timeout` of the manifest (bounds/default by the owner form) | P/03.4 N3 «stop by SIGTERM», P/02.4 N1.1 |
 | SIGKILL | writes nothing: the controller judges by the silence and the presence lock | P/03.4 N3 «stop by SIGTERM», P/05 N1.4 |
 | readiness | `READY=1` after capturing the name; `WATCHDOG=1` on every turn of the loop, not from the stand-in | P/02.4 N1.1 `notify`, `watchdog` |
-| restart | `Restart=always`, `RestartSec=2`, `RestartPreventExitStatus=2` | P/02.4 N1.1 `common` |
+| restart | Supervisor policy follows the unit owner, without a second copy of its timings/defaults | P/02.4 N1.1 `common` |
 | a sealed unit | is not launched, takes no epochs, in `status` — `why` | P/03.5 N3 «open», P/03.4 N1.1 |
 
 ## Stand

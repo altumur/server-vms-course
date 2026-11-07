@@ -4,11 +4,17 @@
  "properties": {
   "name": {
    "description": "the name sought; in a search without a given name — \"-\"",
-   "type": "string"
+   "type": "string",
+   "pattern": "^(?:-|[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
   },
   "state": {
    "description": "refused — NameOnAnotherBox by the capture table of N3 «capture», including an occupied, not released lapsed row of another box; nameless — its own former capture is no longer there; waiting — there has been no own capture yet and there is no candidate without NameOnAnotherBox; refused has priority over the other two",
-   "type": "string"
+   "type": "string",
+   "enum": [
+    "refused",
+    "nameless",
+    "waiting"
+   ]
   },
   "box": {
    "description": "the worker's box (N3 «start()» step 2)",
@@ -20,7 +26,8 @@
   },
   "server": {
    "description": "the worker's server",
-   "type": "string"
+   "type": "string",
+   "minLength": 1
   },
   "instance": {
    "description": "the worker instance `<box>:<pid>:<6 hex>`",
@@ -35,10 +42,18 @@
    "type": "string"
   },
   "since": {
-   "description": "the moment of entering the state; kept within one state; the form of the time is not named by the norm «Time»"
+   "description": "Time when this state was entered; retained within the same state only from the current readable policy object or valid local policy state.",
+   "$ref": "#/$defs/common.time",
+   "x-codec": [
+    "time"
+   ]
   },
   "at": {
-   "description": "the moment the mark was written (rewritten every CONTEND_EVERY); for the reader — display, freshness by version (the observation contract «Freshness of a contender mark»); the form of the time is not named by the norm «Time»"
+   "description": "Time of this write at CONTEND_EVERY; display only. Reader freshness is by the observed version, never by this wall-clock field.",
+   "$ref": "#/$defs/common.time",
+   "x-codec": [
+    "time"
+   ]
   }
  },
  "propertyNames": {
@@ -62,9 +77,7 @@
    }
   ]
  },
- "additionalProperties": {
-  "description": "fields beyond N1.4a: the norm does not name them; the writer writes exactly the fields of N1.4a"
- },
+ "additionalProperties": false,
  "$defs": {
   "common.book_missing": {
    "description": "who is missing in the book — [{member, why}] class server first, within by member in UTF-8 bytes, one per book (P/08.5 N1.3 missing); the order and «one per member» — a rule of the lesson, not the form",
@@ -868,19 +881,19 @@
    "maximum": 9007199254740991
   },
   "writer": {
-   "x-max-names": 0,
-   "properties": {
-    "name": {
-     "pattern": "^(?:-|[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
-    },
-    "state": {
-     "enum": [
-      "refused",
-      "nameless",
-      "waiting"
-     ]
-    }
-   }
+   "x-max-names": 0
   }
- }
+ },
+ "required": [
+  "name",
+  "state",
+  "box",
+  "hostname",
+  "server",
+  "instance",
+  "holder",
+  "holder_box",
+  "since",
+  "at"
+ ]
 }

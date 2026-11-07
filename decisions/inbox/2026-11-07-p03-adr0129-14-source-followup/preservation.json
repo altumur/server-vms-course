@@ -1,0 +1,164 @@
+{
+  "base": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+  "branch": "spec103/p03-adr0129-14-followup",
+  "source_paths": [
+    "Platform/03-worker/data/holds.schema.json",
+    "Platform/03-worker/spec/03.2-worker.norms.md",
+    "Platform/03-worker/ru/spec/03.2-worker.norms.md",
+    "Platform/03-worker/acceptance/2/README.md",
+    "Platform/03-worker/ru/acceptance/2/README.md"
+  ],
+  "source_changes": [
+    {
+      "path": "Platform/03-worker/data/holds.schema.json",
+      "coordinate": "/properties/until/description",
+      "before_git_blob": "2969b7c92c81dea225e7e58e2b9fe8aed422293e",
+      "before_sha256": "b5cc015bd1d386772bca57e3e2eae3d47ee665d6f69f938f4087c7ed5d965053",
+      "after_sha256": "e741ecc116af16744ee7da32065feb4a5245e212ed9cb6bfe9db8c2fa379c9f5",
+      "before": "45 + HOLD_SKEW",
+      "after": "LOST_AFTER + HOLD_SKEW",
+      "replacement_count": 1
+    },
+    {
+      "path": "Platform/03-worker/spec/03.2-worker.norms.md",
+      "coordinate": "existing observed-hold references",
+      "before_git_blob": "89b91aadb262f1b415859bb514275a8ac212fd2c",
+      "before_sha256": "b00b01ec1e21d771a954afb4b1c89b30d6245771c84541f68b2b0f45ab567029",
+      "after_sha256": "b0419c25671b61dc348d63fff937d37df96d8d09d7660a5ce835c4e69661935d",
+      "before": "45 + HOLD_SKEW",
+      "after": "LOST_AFTER + HOLD_SKEW",
+      "replacement_count": 1
+    },
+    {
+      "path": "Platform/03-worker/ru/spec/03.2-worker.norms.md",
+      "coordinate": "existing observed-hold references",
+      "before_git_blob": "c1b7f01747ed5afc8d1e617c6d9092a58ddae99e",
+      "before_sha256": "e652617266b67582b32b52d8941490e910fc144741921247b349dbc3723e89d0",
+      "after_sha256": "abcb0fa5fdd002873c2f573352054174444370101ba5025693def60e41aaf08b",
+      "before": "45 + HOLD_SKEW",
+      "after": "LOST_AFTER + HOLD_SKEW",
+      "replacement_count": 1
+    },
+    {
+      "path": "Platform/03-worker/acceptance/2/README.md",
+      "coordinate": "existing observed-hold references",
+      "before_git_blob": "ade390d051f219d2cb6a018c7203b08b0f34a183",
+      "before_sha256": "9448205a128916695c263b03922b096daae249676faf573c135c41c7909f6eac",
+      "after_sha256": "d2dd37a5b9844438cd6b29a9d07859259425945d3aed274a4b84b3992e19cb01",
+      "before": "45 + HOLD_SKEW",
+      "after": "LOST_AFTER + HOLD_SKEW",
+      "replacement_count": 3
+    },
+    {
+      "path": "Platform/03-worker/ru/acceptance/2/README.md",
+      "coordinate": "existing observed-hold references",
+      "before_git_blob": "63ece39e5c5053309d0b6826cce97aaecea16d51",
+      "before_sha256": "b9c3e5c9c2b639d467ed30d4d222bb137f903ca84ec71f9c43656e04ec5ac783",
+      "after_sha256": "dde7504a318c30cd3d6dc92cad51c41df8552a34a27db29616e4cd41d4cc79be",
+      "before": "45 + HOLD_SKEW",
+      "after": "LOST_AFTER + HOLD_SKEW",
+      "replacement_count": 3
+    }
+  ],
+  "map_correction": [
+    {
+      "kind": "map_basis",
+      "path": "decisions/inbox/2026-11-07-p03-adr0129-14-source/source-map.tsv",
+      "coordinate": "Platform/03-worker/forms/runtime-constants.tsv / NEW_CLASS_INSTANCE basis",
+      "before": "absent at BASE; existing name/value/unit/norm/meaning grammar; 21 owned positive-int64 rows, 3 with ms",
+      "after": "absent at BASE; existing name/value/unit/norm/meaning grammar; 23 owned positive-int64 rows, 3 with ms; historical 21-row proposal retained unchanged; two additions approved in SUPPLEMENT-CONSTANTS-23.md"
+    }
+  ],
+  "refreshed_map_before_base": "c47f9ce53e6c0893af5182cb48b536886fa827f0",
+  "old_evidence_unchanged": true,
+  "protected_sha256": {
+    "skills/lesson-spec/scripts/check_constants.py": "85e07be713739917da9104d236cdb5d91690b7d35d4a49ac38436fcb95def2f0",
+    "skills/lesson-spec/scripts/check_forms.py": "e9696b436c5eefe4514b59b7e3156f34fa2c8a4d2a22f243246bc7cc67025e18",
+    "skills/lesson-spec/scripts/test_check_constants.py": "ebd13d0a68c34b621b43f68c81ad018979787b392459e9cf272d112f7dd5a37f",
+    "skills/lesson-spec/scripts/test_check_forms.py": "d6f479e41e503ddd78cd001c2186503f586abf44fdc0b9e8e3d7c95d6adb8d0c",
+    "tools/normgen/gen_flags.py": "d44d27bbc7c2c054433209b563538d6628a4e9af26b9cb64d32dcf09ce271f6a",
+    "tools/normgen/test_gen_flags_inputs.py": "b6647138e5d99d2ea07e7a21b6127f3d4a4f913a105b5764f97a5a49b8648d21",
+    "Platform/03-worker/README.md": "66eaf5521c10000401beea1fb9540e5c756733d78c70bfcaf1675ce650824cf8",
+    "Platform/03-worker/acceptance/2/scenarios.tsv": "4251a1be4a8a1c5ba3febd3c37fbc469beb17d7de07d43f738ffb91f7e186d73",
+    "Platform/03-worker/acceptance/3/scenarios.tsv": "998544947d5eab9841100bea402914b43fc7f751077c5dc735a0f94c793acb63",
+    "Platform/03-worker/acceptance/4/scenarios.tsv": "4586c2428cfa384b7aaf10b1951918e031b0f6df5df52842357de2ea93316b70",
+    "Platform/03-worker/acceptance/6/scenarios.tsv": "65a3a6bbabe1529908b164baecdd71f2367888b84ae08f7e8ea46ae9c3fe2471",
+    "Platform/03-worker/acceptance/6/seams.tsv": "8962b7da77bb5cbe3e460bc8026046694bde0d900d6774c8df6277d2a81f7bfe",
+    "Platform/03-worker/data/contenders.outcomes.tsv": "c3fb8bb35bec1aa6bd2e9f6fb9a49e40806c317d573b07a759813965164a2ebf",
+    "Platform/03-worker/data/epoch.layers.tsv": "e0069bfc568b74dac723006f5b93513c138585c1b972413eaa8a3283f0763810",
+    "Platform/03-worker/data/epoch.outcomes.tsv": "4e0cc3675d86c33e6b7107d27ce40fed3b48b2e5e8e8b3aab1aff81489689f49",
+    "Platform/03-worker/data/heartbeats.layers.tsv": "0912cbdf0d7e15c86d9ce2584734ab0e08cd1058e29af664870a3dd1ab002b10",
+    "Platform/03-worker/data/holds.layers.tsv": "414980ecee234ca8e10bc2253dfc454a85d1b068c66797c8869eceb1c0b516c1",
+    "Platform/03-worker/data/holds.outcomes.tsv": "2c3e875368696b39ba895929f587f348f684779a0e9b964ac63c1479c77b2442",
+    "Platform/03-worker/data/slots.layers.tsv": "ba88093c917c33390b47b633d70612c886b9e059967bc85902c88bc37ed6b24d",
+    "Platform/03-worker/data/slots.outcomes.tsv": "fa42c3d306cd8a5f0503655c4dc76e0221f47480cd2fddb339b90e290920fb66",
+    "Platform/03-worker/data/state.layers.tsv": "a9cbd55f87c9275d8e81c39f6eeb0187572311eefb826a60161b06368510b53f",
+    "Platform/03-worker/data/state.outcomes.tsv": "79e3cf7137e299305c719fa2b5c865d5b0c3e27f7a1c933279fbb78486189b0b",
+    "Platform/03-worker/forms/contender-writer.traces.tsv": "ebd049d8fbe70cb530f75521c16479075c15d87f72c84db9dfc206e20eac7aa8",
+    "Platform/03-worker/forms/daemon-flags.tsv": "59ffb82822b002061ab0beffd079b65a4a623cf85cd742f740f3c07d4488db68",
+    "Platform/03-worker/forms/row-write-bindings.tsv": "d7d63acc0efc2420c83d4704638e4f6e380f0cd2cec073219ee2cf79830b7afc",
+    "Platform/03-worker/forms/token-cache.machine.yaml": "426cb57b63844c4e61a8e5cfbfe028af2b47617152cecbb6cfacf6bf0a1cccbc",
+    "Platform/03-worker/forms/token-cache.traces.tsv": "2ee43d96c1811e01b28305d0a00196f1e39f6b71510a98ba5cbb3236319ea11c",
+    "Platform/common/contracts/request-mark.md": "3872c50d54d01555536b3e44be3c69d362e14b9615e590766962d673de0a3b70",
+    "Platform/common/contracts/sealing.md": "6c0d89ff789140e9751244a009117988dfd78c691124c73ba19ca68085420141",
+    "Platform/common/data/catalog.tsv": "f109b87bb5837eb8f8fac8cf0d4caca61779493d36731b76cf6276d3d48cdc4f",
+    "Platform/common/data/codec.tsv": "9b64b59cfb7e89ca21771d5dc1ea6ebd8bade7b7fe15df4e43e7cb8fcadda02e",
+    "Platform/common/data/common.schema.json": "2dc6559d1bde3ec161243ad113ef447d0e709532c57ac75ad2447c3aa2c681af",
+    "Platform/common/ru/contracts/sealing.md": "8c49131ddb2b827fabbdf3686be0969e3134f5606104aac25d80b5010c73460c",
+    "Platform/common/vectors/consumers.tsv": "ba7987d2750f43805dd9d31d79e27f938745dd8e7bba666e1288d935925cb486",
+    "Platform/common/vectors/wire.tsv": "b123b2c06e8a965228000375b4d6bd8ce74e5b501713aac6a530617a08ac1615",
+    "decisions/inbox/2026-11-07-p03-adr0129-14-source/preservation.json": "a76496e15ec41313bccb59c49d88fedd8cb604f6f7c7d0b70eb4904348bee7d4",
+    "decisions/inbox/2026-11-07-p03-adr0129-14-source/case-map.tsv": "27059063d8bb8cd5495516cb381306d99894a41c257cac5f02b787accd250fec",
+    "decisions/inbox/2026-11-07-p03-adr0129-14-source/source-map.tsv": "1971218aba2168bcdae0b2f85f0951ecb1848f43feb2f32be87cd6eb4e62c5ef",
+    "decisions/inbox/2026-11-07-p03-adr0129-14-source/REPORT.md": "4fd3bd65eed52a1cd03fabdaf4fe5a6a140df7e1f5ec4f30082cb1cb85227b63",
+    "decisions/inbox/2026-11-07-p03-adr0129-14-source/constant-bindings.tsv": "d379715ccb394d826f750d8e0c9534a8c606b6e489c2b3d40f10331eacfcfbab",
+    "Platform/common/vectors/family-read/03.tsv": "a05edb9bc21b7aed00e0a93919bd609c92cf78b7964b6376fc6be6090cf47c34",
+    "Platform/common/vectors/row-check/state.tsv": "c03f8e64f3b542189ec4cf13bd833624915a295797850988276a94b0cf77861d",
+    "Platform/common/vectors/slot/cases.tsv": "0331ea7ac3ff1b56eb3e35f5dfd70ff8acdcd8fdb193498c9814669f27e26657",
+    "Platform/03-worker/acceptance/2/seams.tsv": "c9d49cd743494cadeb2f2e57473696b9bb83d0b56c4a37d5f72304ca4cf51c98",
+    "Platform/03-worker/acceptance/4/seams.tsv": "3f08c3f8af88f8951faed7c108e1d8eb5566ecc61912ab6fb6b7d6e9e4a4c493",
+    "Platform/03-worker/acceptance/5/seams.tsv": "fff4d778df841170f14363a048e2b07dfe309e951788949c431b200ea7c2b443",
+    "Platform/03-worker/forms/runtime-constants.tsv": "f1763195244e0e751579d8c4666f5c8b9fa8adf1f4dd5094356bad63eb118437"
+  },
+  "schema_change": "only /properties/until/description; validation tree unchanged",
+  "writer_clock": "SLOT_TERM unchanged",
+  "observed_values": {
+    "LOST_AFTER": 45,
+    "HOLD_SKEW": 5
+  },
+  "observed_sum_seconds_before_and_after": 50,
+  "constant_rows": 23,
+  "constant_form_sha256": "f1763195244e0e751579d8c4666f5c8b9fa8adf1f4dd5094356bad63eb118437",
+  "all_expected_case_bytes_unchanged": true,
+  "all_code_unchanged": true,
+  "SDK_SUT_models_normgen_KIT_run": false,
+  "checks": {
+    "mirror": {
+      "pairs": 2,
+      "errors": []
+    },
+    "strict_source": {
+      "command": [
+        "/home/pilot/venv-spec/bin/python",
+        "-B",
+        "skills/lesson-spec/scripts/check_spec.py",
+        "--strict-coverage"
+      ],
+      "root": "/home/pilot/wt-spec103-p03-adr0129-14-followup",
+      "base": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "started_at": "2026-11-07T02:43:04.786828+00:00",
+      "elapsed_seconds": 50.391245649021585,
+      "exit_code": 1,
+      "log_sha256": "b76f2fe77934dcfbf57992ad318653729d9db04dd533b2c9539ab387e18a9e24",
+      "kind": "own source static check; no SDK/SUT/normgen/KIT",
+      "errors": [
+        "ERROR Platform/03-worker/forms/runtime-constants.tsv: runtime-constants.tsv: WAKE_GAP_MS: unit 'ms' not in ['bytes', 'count', 's']",
+        "ERROR Platform/03-worker/forms/runtime-constants.tsv: runtime-constants.tsv: PERFORM_GRACE_MS: unit 'ms' not in ['bytes', 'count', 's']",
+        "ERROR Platform/03-worker/forms/runtime-constants.tsv: runtime-constants.tsv: REQUESTS_HOLD_MS: unit 'ms' not in ['bytes', 'count', 's']"
+      ],
+      "exception_count": 62,
+      "only_expected_ms_errors": true
+    },
+    "diff_check_exit_code": 0
+  }
+}

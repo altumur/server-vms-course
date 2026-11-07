@@ -12,7 +12,7 @@ and the row `door/keys`) and P/03.4 N3 «the door token at the holder» (the row
 a change of behaviour; after the move the check was changed — the changes of behaviour: the Architect's decisions of 2026-10-20 (ADR-0083
 addendum (12): strict base64url, a closed composition and types of the claims, the segment `routes` by `name`, the whole sign of `expires`, a single
 refusal `forbidden`) and the analysis of the review of stage B 6–7 (№ 10 — a whole `expires`, № 12 — a strict Ed25519 check); the implementations
-are reconciled by the vectors `door-token` (analysis of the review of stage B 6–7, № 11). When and to whom the console issues a token (by `view` on a unit, TTL 120 s, the journal `door.issued`, the field `door`
+are reconciled by the vectors `door-token` (analysis of the review of stage B 6–7, № 11). When and to whom the console issues a token (by `view` on a unit, TTL [DOOR_TOKEN_TTL](../../06-console/forms/runtime-constants.tsv), the journal `door.issued`, the field `door`
 of the answer), the signer `door/signer` and its envelope are in the owner's norms (P/06.5 N3, the family
 [`door-signer`](../../06-console/data/door-signer.schema.json)); the form of the keys row is the owner's family
 [`door-keys`](../../06-console/data/door-keys.schema.json) with the outcome table next to it. JCS is RFC 8785 (ADR-0072; the vectors
@@ -44,7 +44,7 @@ token:      door1.<kid>.<claims>.<sig> — exactly four parts separated by «.»
             ([the gate-and-pass contract](gate-and-pass.md) «The gate» identity), unit — "<sub>/<id>", holder — the holder's instance from its heartbeat (instance, P/03.4 N1.1), routes — an array
             of the routes door.routes of the manifest with the admission token (name elements and {name} without role and domain; routes with role or
             domain do not enter the token — their admission is the role certificate, the class mixed of the role certificate contract, or the domain token,
-            P/03.4 N1.7; ADR-0091 addendum (8) item 3, addendum (14) item 1) and with a rank allowed to the person on the unit (P/06.5 N3 «/where/<id>»; ADR-0115 addendum (19) item 1), expires — the whole wall seconds of the issue + 120 (analysis of the review of stage B 6–7, № 10): floor(now) + 120, now — the wall clock
+            P/03.4 N1.7; ADR-0091 addendum (8) item 3, addendum (14) item 1) and with a rank allowed to the person on the unit (P/06.5 N3 «/where/<id>»; ADR-0115 addendum (19) item 1), expires — the whole wall seconds of the issue + DOOR_TOKEN_TTL (analysis of the review of stage B 6–7, № 10): floor(now) + DOOR_TOKEN_TTL, now — the wall clock
             of the issuer in seconds, the fraction is dropped, not rounded (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7)
   sig:      base64url without «=» of the 64 bytes of an Ed25519 signature (RFC 8032) over the ASCII bytes «door1.<kid>.<claims>»; the check is strictly
             by RFC 8032 §5.1.7: S outside 0 ≤ S < L, R or the public key not decoded — a refusal (analysis of the review of stage B 6–7,
