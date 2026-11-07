@@ -110,3 +110,7 @@ The report the coverage audit Gemini P02 (for people) (branch gemini/audit-cover
 
 Bringing up to date a removed mark `/rev` in the branch «unchanged» and the refusal on a mark not by the form — the acceptance of chapter 2.2 (`rev_deleted`,
 `rev_spoiled`; the directives `@rev-delete`, `@rev-spoil` — the Architect's decision, only with the four columns of chapter 2.2).
+
+## Recovery obligation outside the current executable bindings
+
+The exact initial row/view/mark state, comment-only/shell-only/files-only candidates, public P/01 preparations and readback expectations are in [P/02.3 N5](../../spec/02.3-installer.norms.md#recovery-with-a-readable-stale-view-unbound-execution-obligation). The command remains `manifest-put {socket} {file}`. No new directive or initialized-store seam is declared here. The old puts rows do not execute that recovery obligation; it remains open, not PASS.

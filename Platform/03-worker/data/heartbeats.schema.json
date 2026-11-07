@@ -214,8 +214,9 @@
    }
   },
   "server": {
-   "description": "server; MUST; \"\" exactly when the server is unknown (ADR-0029); \"\" — a reader's tolerance: a worker with SERVER_NAME by P/02.4 N1.2 does not write it (W03-G01)",
-   "type": "string"
+   "description": "The current nonempty worker server. SERVER_NAME is admitted before the presence lock; no unknown-server platform heartbeat is produced.",
+   "type": "string",
+   "minLength": 1
   },
   "instance": {
    "description": "instance; MUST",
@@ -239,7 +240,7 @@
   },
   "conflicts": {
    "$ref": "#/$defs/common.uint53",
-   "description": "Σ of lease conflicts + carried-over ones; metric `<sub>_epoch_conflicts`"
+   "description": "Lease conflicts of the current units plus the process total already carried from forgotten units. Rejoin carries each forgotten unit once and never resets or double-counts the accumulated total; metric <sub>_epoch_conflicts."
   },
   "started": {
    "$ref": "#/$defs/common.time",
@@ -295,7 +296,7 @@
    }
   },
   "freeing": {
-   "description": "the answer to the resource's request to free space (P/05 N1.4 free_ask): resource volume → bytes that the worker is freeing and that are not yet in used; 0 — nothing; a platform field; what to free — the subsystem (VMS request freeing)",
+   "description": "the answer to the resource's request to free space (P/05 N1.4 free_ask): resource volume → bytes that the worker is freeing and that are not yet reflected in used; 0 — nothing; a platform field; what to free — the subsystem (VMS request freeing)",
    "type": "object",
    "propertyNames": {
     "type": "string",
@@ -325,13 +326,6 @@
    "$ref": "#/$defs/common.uint53",
    "description": "P/06.6 N1.2 pending_writes: a JSON integer without a fraction or exponent, 0 ≤ x ≤ 2^53 − 1; the base worker writes 0 itself if the subsystem has not said its own; no field — the drain is not safe",
    "x-whole": true
-  },
-  "server_unsaid": {
-   "description": "exactly this string (ADR-0029); only when the server is not named and the manifest requires places.server_field",
-   "type": "string",
-   "enum": [
-    "this worker names no server of its own: every place it holds is let go when its hold goes unconfirmed"
-   ]
   },
   "stood_in": {
    "description": "only in a stand-in heartbeat (N3); ts of the heartbeat — the time of this repeat (log of cammeta-go, lesson 5 № 2)",
@@ -1348,7 +1342,8 @@
      "$ref": "#/$defs/common.uint53"
     },
     "behind": {
-     "$ref": "#/$defs/common.uint53"
+     "$ref": "#/$defs/common.uint53",
+     "description": "A filing timestamp earlier than the listing that did not see it is counted behind only when the difference is strictly greater than COMMAND_BEHIND_TOLERANCE (P/03.4-R006, forms/runtime-constants.tsv). The counter remains common.uint53."
     }
    },
    "additionalProperties": false,

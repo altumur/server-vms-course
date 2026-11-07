@@ -4,7 +4,7 @@
 #var name_valid bool — slot-name grammar AND own manifest slot.prefix, N1.4. The adapter validates it, not an HTTP schema.
 #var read_confirmed bool — the last re-read confirmed row or absence, not a store non-answer or badkey.
 #var exists bool — true only for confirmed existence; a confirmed absence has initial gen zero.
-#var gen_readable bool — existing gen readable by the slot family; an unreadable existing gen is never zero.
+#var gen_readable bool — an existing gen is exactly an integer in 1..9007199254740991, checked independently of other fields and without narrowing; an unreadable existing gen is never zero. Confirmed absence is separate.
 #var row_readable bool — the slot row reads by its family, N1.4; torn is exists && !row_readable with readable gen.
 #var row_free bool — readable row: released true/taking/absent OR holder empty/absent. A lapsed occupied row is not free.
 #var permission_matches bool — names_given contains exactly the re-read version for this candidate, N3 step 1.
@@ -13,14 +13,15 @@
 #var same_box bool — former holder box equals this box, by the instance contract; only consulted for a readable occupied row.
 #var age double — seconds the same torn row VERSION has been observed on the monotonic clock. Version change resets age; never derive age from until.
 #var version string — version of the confirmed re-read, empty only for confirmed absence.
-#var gen_incrementable bool — verified on the exact readable generation BEFORE int conversion: true for absence, or 0 <= gen < 9007199254740991. Wide readable integers remain gen_readable=true but this is false. Never infer from a narrowed or rounded value.
+#var gen_incrementable bool — verified on the exact readable generation BEFORE int conversion: true for confirmed absence, or 1 <= gen < 9007199254740991. The valid maximum remains readable but is not incrementable; an out-of-range existing integer is unreadable. Never infer from a narrowed or rounded value.
 #var gen int — exact readable generation only when gen_incrementable; 0 for confirmed absence or an unused placeholder when false. The adapter retains the exact original separately; no gen arithmetic is reached on an exhausted eligible candidate.
 #var me string — this instance by common/contracts/instance.md.
-#var server string — this server; unknown is the reader tolerance, not permission for an invalid SERVER_NAME.
+#var server string — this nonempty server, admitted at startup before the presence lock.
 #var wall double — wall seconds at the sending of a NEW write, written by P/01.1 N0 time codec.
 #var reply string — pending|ok|conflict|guard|badkey|unconfirmed; a definite refusal is never unconfirmed. This is the current operation's reply.
 #var cleanup_complete bool — all predecessor contributions listed AFTER first write and deleted under its guard; final released:false CAS confirmed.
-#const TORN_STILL double = 50.0 — common/contracts/slot.md: Terms.
+#const SLOT_TERM double = 45.0 — common/contracts/slot.md: Terms, SLOT_TERM.
+#const TORN_STILL double = 50.0 — common/contracts/slot.md: Terms, SLOT_TERM + TORN_MARGIN.
 #action noop() — no store effect.
 #action reject(string) — reject this candidate; bad_name with given at start exits 2; NameOnAnotherBox is the refused contender, not an exit.
 #action write(string,map<string,dyn>) — CAS the slot by version, released:taking, then await its definite result. Store-item/time encoding and a logical write id are adapter duties.
@@ -34,13 +35,13 @@ n	state	condition	action	next	norm
 2	admit	true	noop()	search	P/03.2-R022
 3	search	!read_confirmed	reject("unconfirmed_read")	rejected	P/03.2-R022
 4	search	exists && !gen_readable	reject("unreadable_gen")	rejected	P/03.2-R022
-5	search	!exists	write(version, {"holder": me, "until": wall + 45.0, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
+5	search	!exists	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
 6	search	!row_readable && age < TORN_STILL	reject("torn_young")	rejected	P/03.2-R022
 7	search	exists && gen_readable && !gen_incrementable && ((!row_readable && age >= TORN_STILL) || (row_readable && (row_free || permission_matches || (given && first_start_right && same_box))))	reject("generation_exhausted")	rejected	P/03.2-R011
-8	search	!row_readable && age >= TORN_STILL	write(version, {"holder": me, "until": wall + 45.0, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
-9	search	row_readable && row_free	write(version, {"holder": me, "until": wall + 45.0, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
-10	search	row_readable && permission_matches	write(version, {"holder": me, "until": wall + 45.0, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
-11	search	row_readable && given && first_start_right && same_box	write(version, {"holder": me, "until": wall + 45.0, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
+8	search	!row_readable && age >= TORN_STILL	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
+9	search	row_readable && row_free	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
+10	search	row_readable && permission_matches	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
+11	search	row_readable && given && first_start_right && same_box	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
 12	search	true	reject(given && !same_box ? "NameOnAnotherBox" : "occupied")	rejected	P/03.2-R022
 13	first_write	reply == "conflict" || reply == "guard" || reply == "badkey"	reject(reply)	rejected	P/03.2-R024
 14	first_write	reply == "unconfirmed"	wait()	first_write	P/03.2-R022

@@ -140,3 +140,7 @@ The author's check of the class A39-01: `fields_derived_items_unknown` is assign
 ## Supplementary core seams for the kit
 
 [`seams.tsv`](seams.tsv) contains 14 steps in 4 scenarios over pure loading: isolation after a refusal, a whole catalogue after a refusal, parallel loading, and layer order. The source is P/02.1 N3, including its race/purity rules. CALL normalization and projection are defined by [`forms/README.md`](../../forms/README.md). These are generated adapter tests, not additional rows of `verdicts.tsv` and not an executed acceptance of the implementation. The shared regular loading path (P/02.1-12) remains checked by reading; these tests do not prove which path another process calls.
+
+## Embedded schema values at load (ADR-0129 (11))
+
+The added seam `s5-embedded-schema-values` has eight CALLs of the unchanged `load` binding: four malformed values (`type`, `required`, `minItems`, `pattern`) and a valid neighbour of each. The schemas belong to an optional unused field: a load must reject malformed schemas as `refused:form` before relations/defaults or any field use. Existing depth predicates keep their relations-layer class. The old947 corpus,220 canonical vectors and numeric-loader supplement are unchanged. Source examples and generated stage projections are not executed implementation acceptance. Independent schema-negative neighbours remain the review103 judge's responsibility.

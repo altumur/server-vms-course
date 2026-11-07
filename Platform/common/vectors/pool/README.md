@@ -31,7 +31,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 a readable assignment (unreadable — no entry); the keepers at `distinct`; `idle_by_policy` at each read heartbeat;
 `placeable` at the servers of the heartbeats and the resources; with `manifest.capacity` — also `capacity: {<worker>: <count> | null}` (`null` — the field is not a number: it does not accept new units) and `fates: {<worker>: {why}}` (C04-POOL-CAPACITY-0E-01). The comparison is JSON by value.
 
-22 rows: the capacity — no field (the default), a fraction, not a number (a boolean, a string; C04-POOL-CAPACITY-0E-01); `grows: false`, without an order row, with an unreadable one, retiring from a readable one; the load at an absent, an unreadable
+Cases: the capacity — no field (the default), a fraction, not a number (a boolean, a string; C04-POOL-CAPACITY-0E-01); `grows: false`, without an order row, with an unreadable one, retiring from a readable one; the load at an absent, an unreadable
 unit row, a weight field not a number, without `placement.weight`; the former ones — liveness by the slot, the drain and the decommission, `requires: resource` (silent, unknown) and `requires: none`, `retiring` and a number above
 `want`, `distinct` — the keeper by weights and the slot order, an unreadable assignment, a new worker without an assignment, the intent reserve,
 the place `""`, a worker that is not live.
@@ -45,3 +45,5 @@ Who performs is the controller (`04-controller`, P/04 N3 «choose»: a live work
 ## Vector wire
 
 The wire of `cases.tsv` is set by the `common/pool` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.
+
+Exact weight witnesses adr15-load-max53/at53/odd53 sum individually valid weights to 2^53-1, 2^53 and 2^53+1. The odd neighbor changes the keeper relative to an exactly 2^53 peer; load is exact while count stays two. No native/consumer/transport change.

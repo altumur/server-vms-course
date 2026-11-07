@@ -1,0 +1,151 @@
+{
+  "base": "d8cf12290f43693289b2149019232bc26c48705b",
+  "kind": "source-only author checks; not full GATE",
+  "existing_check_spec": {
+    "log_sha256": "291f5375865bc78354604ba9491201ee4765e5bbb6804c281f1110337c045c98",
+    "exit_code": 1,
+    "errors": [
+      "ERROR Platform/02-installer/vectors/canonical/cases.tsv: line 12: the loader of 2.1 refuses the input Platform/02-installer/vectors/canonical/inputs/p1-snapshot-state.subsystem.yaml: a vector needs an accepted manifest"
+    ]
+  },
+  "mirror10": {
+    "spec/02.1-installer.norms.md": [],
+    "spec/02.2-installer.norms.md": [],
+    "spec/02.3-installer.norms.md": [],
+    "spec/02.4-installer.norms.md": [],
+    "spec/02.5-installer.norms.md": [],
+    "forms/README.md": [],
+    "forms/positive-profile/README.md": [],
+    "acceptance/1/README.md": [],
+    "acceptance/2/README.md": [],
+    "acceptance/3/README.md": []
+  },
+  "new8": {
+    "kind": "existing parser and V7 source-only preview; no generator build/emit, native or SUT",
+    "selected": 8,
+    "parsed": 8,
+    "excluded": 0,
+    "cases": [
+      {
+        "line": 19,
+        "step": "1",
+        "expected": {
+          "verdict": "refused",
+          "class": "form"
+        },
+        "schema_preview": {
+          "verdict": "refused",
+          "class": "form"
+        },
+        "matches": true
+      },
+      {
+        "line": 20,
+        "step": "2",
+        "expected": {
+          "verdict": "ok",
+          "name": "litetypeok"
+        },
+        "schema_preview": {
+          "verdict": "ok",
+          "name": "litetypeok"
+        },
+        "matches": true
+      },
+      {
+        "line": 21,
+        "step": "3",
+        "expected": {
+          "verdict": "refused",
+          "class": "form"
+        },
+        "schema_preview": {
+          "verdict": "refused",
+          "class": "form"
+        },
+        "matches": true
+      },
+      {
+        "line": 22,
+        "step": "4",
+        "expected": {
+          "verdict": "ok",
+          "name": "literequiredok"
+        },
+        "schema_preview": {
+          "verdict": "ok",
+          "name": "literequiredok"
+        },
+        "matches": true
+      },
+      {
+        "line": 23,
+        "step": "5",
+        "expected": {
+          "verdict": "refused",
+          "class": "form"
+        },
+        "schema_preview": {
+          "verdict": "refused",
+          "class": "form"
+        },
+        "matches": true
+      },
+      {
+        "line": 24,
+        "step": "6",
+        "expected": {
+          "verdict": "ok",
+          "name": "liteminitemsok"
+        },
+        "schema_preview": {
+          "verdict": "ok",
+          "name": "liteminitemsok"
+        },
+        "matches": true
+      },
+      {
+        "line": 25,
+        "step": "7",
+        "expected": {
+          "verdict": "refused",
+          "class": "form"
+        },
+        "schema_preview": {
+          "verdict": "refused",
+          "class": "form"
+        },
+        "matches": true
+      },
+      {
+        "line": 26,
+        "step": "8",
+        "expected": {
+          "verdict": "ok",
+          "name": "litepatternok"
+        },
+        "schema_preview": {
+          "verdict": "ok",
+          "name": "litepatternok"
+        },
+        "matches": true
+      }
+    ]
+  },
+  "old947": {
+    "source_base": "d8cf12290f43693289b2149019232bc26c48705b",
+    "input": "own dirty P02 schema; old947/relations/layers/scalars unchanged",
+    "cases": 947,
+    "mismatches": [],
+    "seconds": 7.1156750050140545,
+    "scope": "source-form preview only; not independent judge or SUT"
+  },
+  "shrink": "COUNTS cyrillic_debt_files=280 cyrillic_debt_letters=139852 cyrillic_export=0 cyrillic_non_utf8=8 cyrillic_ready=12 cyrillic_scanned_files=12822\nPASS Cyrillic letters only; translation semantics remain separate\n",
+  "not_executed": [
+    "Go",
+    "normgen/KIT",
+    "installer/native/SUT",
+    "full positive profile",
+    "recovery interrupted-state scenario"
+  ]
+}

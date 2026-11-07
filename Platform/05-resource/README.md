@@ -12,6 +12,7 @@ spec/05-resource.norms.md           norms (one chapter)
 spec/05-resource.api.openapi.yaml   doors
 spec/05-resource.README.md          implementation instructions
 lifecycle.md                        flags, environment, exit codes, units
+forms/runtime-constants.tsv          independent scalars; HTTP values remain in OpenAPI
 data/<family>.schema.json           data families the lesson owns (JSON Schema 2020-12, ADR-0092; ADR-0088), with .layers.tsv, .outcomes.tsv
 vectors/relieve/                    vectors of the algorithm the lesson introduces
 acceptance/                         acceptance of the lesson (README.md, scenarios.tsv, inputs/)

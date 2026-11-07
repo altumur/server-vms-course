@@ -454,7 +454,7 @@
      "x-owner": "P/06.7 N1.6"
     },
     "stale_after": {
-     "description": "the stale threshold of the subsystem's heartbeats at the agent, s (P/09.1 N1.2 stale): not less than three heartbeat periods HEARTBEAT_EVERY 10 s (P/03.4 N1.1); no key — LOST_AFTER 45 s",
+     "description": "the stale threshold of the subsystem's heartbeats at the agent, s (P/09.1 N1.2 stale): not less than three heartbeat periods HEARTBEAT_EVERY (P/03.4 N1.1); no key — LOST_AFTER (P/09.1 N1.2)",
      "type": "integer",
      "x-integer": true,
      "minimum": 30,
@@ -1495,7 +1495,7 @@
    }
   },
   "jsonSchemaLite": {
-   "description": "JSON Schema 2020-12; the keywords are the list `names.key` of this definition (anything else is value), depth ≤ 32 (review of stage A 6–7, № 11)",
+   "description": "JSON Schema 2020-12; the keywords are the list `names.key` of this definition (anything else is value), depth bounded by JSON_SCHEMA_LITE_DEPTH in the P/02 runtime-constants form (review of stage A 6–7, № 11)",
    "x-owner": "P/02.1 N1.2",
    "type": "object",
    "properties": {
@@ -1530,19 +1530,95 @@
      "type": "array",
      "items": {
       "$ref": "#/$defs/subSchemaLite"
-     }
+     },
+     "minItems": 1
     },
     "anyOf": {
      "type": "array",
      "items": {
       "$ref": "#/$defs/subSchemaLite"
-     }
+     },
+     "minItems": 1
     },
     "oneOf": {
      "type": "array",
      "items": {
       "$ref": "#/$defs/subSchemaLite"
-     }
+     },
+     "minItems": 1
+    },
+    "type": {
+     "anyOf": [
+      {
+       "enum": [
+        "null",
+        "boolean",
+        "object",
+        "array",
+        "number",
+        "string",
+        "integer"
+       ]
+      },
+      {
+       "type": "array",
+       "items": {
+        "enum": [
+         "null",
+         "boolean",
+         "object",
+         "array",
+         "number",
+         "string",
+         "integer"
+        ]
+       },
+       "minItems": 1,
+       "uniqueItems": true
+      }
+     ]
+    },
+    "enum": {
+     "type": "array"
+    },
+    "const": {},
+    "required": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "uniqueItems": true
+    },
+    "minItems": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "maxItems": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "minLength": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "maxLength": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "minimum": {
+     "type": "number"
+    },
+    "maximum": {
+     "type": "number"
+    },
+    "exclusiveMinimum": {
+     "type": "number"
+    },
+    "exclusiveMaximum": {
+     "type": "number"
+    },
+    "pattern": {
+     "type": "string"
     }
    },
    "propertyNames": {
