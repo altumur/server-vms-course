@@ -6,7 +6,9 @@
 // всех полях, нажимаем всё.
 const fs=require("fs"),path=require("path");
 const PAGE=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","domain","page.html"),"utf8");
-const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
+const MOD_PATH=path.join(__dirname,"..","..","..","Platform","07-console-module","module","console.js");
+const MOD=fs.readFileSync(MOD_PATH,"utf8");
+const MOD_SHA=require("crypto").createHash("sha256").update(MOD,"utf8").digest("hex");
 const TMP=path.join(require("os").tmpdir(),"holder-page-"+process.pid+".html");
 fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,()=>`<script>${MOD}</script>`)
   .replace('{ sections: ["domain"], lang: "ru" }','{ sections: ["domain"], lang: "ru", poll_s: 0 }'));
@@ -29,7 +31,7 @@ function fixtures(P,deposed){
       members:{[p("m")]:{admitted_key:P+"a",presented_key:P+"b",keys_rev:5},quiet:{admitted_key:"aa",presented_key:"aa",keys_rev:4},ok:{admitted_key:"cc",presented_key:"cc",keys_rev:5}}},
     units:{testsub:[{sub:"testsub",id:"1",ref:p("ref"),cluster:p("m"),worker:P,server:P,phase:P,age:1,state:"live",view:{start:true}},
                     {sub:"testsub",id:"2",ref:"cold",cluster:"quiet",phase:"",age:50,state:"silent",view:{start:false}}],[p("sub")]:[{ref:P,cluster:P,state:P,view:{[P]:P}}]},
-    pending:{[p("m")]:[{what:P,at:1}]},outcomes:{[p("m")]:[{what:P,id:P,status:409,at:1,error:P}],quiet:[{what:"ok",status:200,at:2}]},
+    pending:{[p("m")]:1},outcomes:{[p("m")]:[{what:P,id:P,status:409,at:1,error:P}],quiet:[{what:"ok",status:200,at:2}]},
     topology:{rev:1,centre:"hold",star:[],via:{}},knocking:[],member_list:{rev:1,members:{}}};
   b.FIX["/domain/alarms"]={events:[{kind:"session.debug_open",member:"hold",unit:"console",t:9,person:"stand-admin",id:"x1"},{kind:"session.debug_open",member:"quiet",unit:"console",t:8,person:"stand-admin",id:"x2"},
     {kind:"session.debug_open",member:"hold",unit:"domain",t:3,person:"stand-admin",id:"x3"},{kind:P,member:p("m"),of:"testsub/1",t:1,subsystem:P,unit:P},
@@ -68,7 +70,7 @@ async function run(tag,P,deposed){
     out[T("relayedKindInAnyManifestsWords")]=/штука потеряна/.test(rows[3]?rows[3].textContent:"");
     out[T("holderHeaderNoWorkersNoFooter")]=d.querySelector(".pc-hworkers").parentElement.style.display==="none"&&d.querySelector("footer").style.display==="none"&&d.querySelector(".pc-hunits-l").textContent==="Кластеры";
     const ed=cardOf(/Правки для кластеров/);
-    out[T("editsPendingAndOutcomes")]=!!ed&&/ждёт публикации/.test(ed.textContent)&&/отказ 409/.test(ed.textContent)&&/применена/.test(ed.textContent);
+    out[T("editsPendingAndOutcomes")]=!!ed&&[...ed.querySelectorAll(".it")].some(r=>{const c=r.querySelector(".bd.wait");return !!c&&c.textContent==="1"&&r.textContent.includes(P+"m")})&&/отказ 409/.test(ed.textContent)&&/применена/.test(ed.textContent);
     // «вкл/выкл» по domain.edit: PUT /domain/testsub/things/<ref> {start: false}
     let n=w.__calls.length;const off=[...un.querySelectorAll("button")].find(x=>/Выключить/.test(x.textContent));if(off)off.click();await b.ready(80);
     const c=w.__calls.slice(n).find(x=>x.method==="PUT");
@@ -113,9 +115,94 @@ async function run(tag,P,deposed){
   w.close();
   return out;
 }
+// J-P07-01 positive /domain response: owner fields, not adversarial form values or renderer output.
+async function runCurrentPending(){
+  fixtures("",false);
+  b.FIX["/domain"]={
+  "as_of": 10,
+  "holder": "hold",
+  "complete": false,
+  "age": 0,
+  "members": [
+    {
+      "name": "hold",
+      "state": "ok",
+      "age": 0
+    },
+    {
+      "name": "m1",
+      "state": "ok",
+      "age": 0
+    },
+    {
+      "name": "m2",
+      "state": "never",
+      "age": null
+    }
+  ],
+  "units": {
+    "testsub": []
+  },
+  "contested": {
+    "testsub": {}
+  },
+  "pending": {
+    "hold": 0,
+    "m1": 1,
+    "m2": null
+  },
+  "outcomes": {
+    "hold": [
+      {
+        "id": "e-000000000001",
+        "status": 200,
+        "result": "performed",
+        "at": 3,
+        "what": "set",
+        "kept_at": 1
+      }
+    ],
+    "m1": [],
+    "m2": [
+      {
+        "id": "e-000000000002",
+        "status": 409,
+        "result": "refused",
+        "error": "exists",
+        "at": 2,
+        "what": "create",
+        "kept_at": 1
+      }
+    ]
+  }
+};
+  const w=b.boot(),errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
+  w.confirm=()=>true;w.prompt=()=>null;w.alert=()=>{};
+  await b.ready(500);await w.platformConsole.ready;await b.ready(50);
+  const d=w.document,out={},T=s=>"J-P07-01: "+s;
+  const ed=[...d.querySelectorAll(".pc-main .card")].find(c=>{const t=c.querySelector(".ch");return !!t&&t.textContent.includes("Правки для кластеров")});
+  const rows=ed?[...ed.querySelectorAll(".it")]:[],waiting=rows.filter(r=>r.querySelector(".bd.wait"));
+  const name=r=>r.children[1]&&r.children[1].firstChild?r.children[1].firstChild.textContent:null;
+  const counts=new Map(waiting.map(r=>[name(r),r.querySelector(".bd.wait").textContent]));
+  const outcomes=rows.filter(r=>!r.querySelector(".bd.wait"));
+  const outcome=(member,what)=>outcomes.find(r=>name(r)===member+" · "+what);
+  const performed=outcome("hold","set"),refused=outcome("m2","create");
+  out[T("canonicalModuleBytes")]=MOD_SHA==="155b0746b075db0ac339d40c46b34896c15511a4c25cd12d2271604f82976003";
+  out[T("oneCurrentCountPerMember")]=waiting.length===3&&counts.size===3;
+  out[T("zeroIsVisible")]=counts.has("hold")&&counts.get("hold")==="0";
+  out[T("oneIsVisible")]=counts.has("m1")&&counts.get("m1")==="1";
+  out[T("unreadIsUnknown")]=counts.has("m2")&&counts.get("m2")==="неизвестно";
+  out[T("performedOutcomeAtZeroPending")]=!!performed&&performed.querySelector(".bd").textContent==="применена";
+  out[T("refusedOutcomeAtUnknownPending")]=!!refused&&refused.querySelector(".bd").textContent==="отказ 409"&&refused.textContent.includes("exists");
+  out[T("outcomesIndependentOfPending")]=outcomes.length===2&&!outcomes.some(r=>String(name(r)).startsWith("m1 · "));
+  out[T("errors")]=errs.filter(e=>!/Not implemented/.test(e)).slice(0,3);
+  out[T("noErrors")]=out[T("errors")].length===0;
+  w.close();return out;
+}
+
 (async()=>{
   const P=`x"'><img src=x onerror=window.__pwned=1>');window.__pwned=2;//`;
-  const all={...await run("держатель",P,false),...await run("заменён",P,true)};
+  const all={...await run("держатель",P,false),...await run("заменён",P,true),...await runCurrentPending()};
   b.report(all,Object.keys(all).filter(k=>/errors$/.test(k)));
   try{fs.unlinkSync(TMP)}catch(e){}
   process.exit(0);
