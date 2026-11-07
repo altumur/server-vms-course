@@ -1,0 +1,97 @@
+{
+  "utc": "2026-11-07T22:17:58.905490+00:00",
+  "status": "APPROVED_T0_EXTERNAL_CODE_INPUT_EXPECTED_AUDIT_FREEZE_ONLY_NO_D0_RUN",
+  "basis": "Separate frozen C14803 static acceptance08be and frozen SourceREP039 acceptance9fc1 under990/4e203/4a5c. Not Z13 reminder, not P1success automatic run.",
+  "coordinator": "coord103-tools",
+  "external_author": "existing review103 through tools; no new session/model",
+  "subject_code_pin": "4803c5a94e193c449ffada8e6c611f35a3d8a66b",
+  "subject_worktree": "/home/pilot/wt-review103-d0-c1-n377",
+  "subject_import_root": "/home/pilot/wt-review103-d0-c1-n377/skills/lesson-spec/scripts",
+  "subject_file": "skills/lesson-spec/scripts/v7/section.py",
+  "subject_file_sha256": "9063bb64f6046a4a63034f98fa61b2c86059d5f624588afd3d222f0c61fcd74f",
+  "package_init_pin_same_subject": true,
+  "common_context": "43750c8ef574ae4af747f481433fd7f4e0045793, no full common adoption",
+  "schema_layers_provenance_pin": "285f713746e72cb7cfd659fb8cc8e2251134f604",
+  "selected_Source_text_pin": "039a6e7939823547e9d5c06945d08f434097e618",
+  "schema_layers039_equal285": "Primary verified exact two Git blob identities; immutable raw read, not Sourceadoption/catalogue admission.",
+  "primary_C1_receipt": {
+    "path": "/home/pilot/architect-reviews/d0-c1-primary-acceptance-4803/ROOT-C1-COMPONENT-ACCEPTANCE.json",
+    "sha256": "08be7df87553541796247bd8ec73cdca3d3013bf9765aee58cde46b38b12c7f8"
+  },
+  "primary_Source_receipt": {
+    "path": "/home/pilot/architect-reviews/d0-REP039-primary-read-and-T0-boundary/ROOT-REP-SOURCE-ACCEPTANCE.json",
+    "sha256": "9fc1e62575c10d26d1fe50069b140944671d318dabec7260a651ca3acffcc4e4"
+  },
+  "author_root": "/home/pilot/review103/role-key-d0-t0-4803",
+  "external_CODE_files": [
+    "deleting_display.py",
+    "d0_support.py",
+    "d0_audit.py"
+  ],
+  "tracked_CODE_Source_test_edits": 0,
+  "allowed_preparation": [
+    "Write only new external caller/support/audit, input/expected/environment/closure/argv/protocol metadata and freeze/index/report under named author_root. No source worktree/repo mutations.",
+    "Read exact frozen subject package init/section and existing test SYNTH literal as data; create raw read-only copies/mapped SHA identities. Normal read-only Git identity/status probes; no7939tree/1095/P0/P1 replay.",
+    "Extract only existing SYNTH by stdlib AST literal evaluation from tools/normgen/test_gen_families_doc.py at subject4803, not importing test module. FullSource285 schema/layers and existing SP19 raw copy44e775 frozen separately; no new malformed source variants.",
+    "Copy exact manual six text files from MANUAL-EXPECTED and unchanged D0-ROSTER case metadata; preserve strict typed metadata expectations. Source039 EN/RU selected owner blocks as raw normative provenance, no whole Source/marker evaluation.",
+    "Stdlib-only interpreter/environment metadata and raw/SHA/mode/absence/import-closure preparation; in-memory syntax/AST of new external files only. No executing caller or helpers including --help/selftest/mock/probe/receiver."
+  ],
+  "planned_cases": {
+    "groups": 4,
+    "records": 8,
+    "normal_display_and_metadata": 6,
+    "expected_input_checking": 2,
+    "roster_sha256": "702ee48749d8ec22ae5296281557e02e062034731d74b6eb2222026901652123",
+    "manual_expected_sha256": "b294b6b725ae914ca128ce321db5d49c39f7fe3cefacd9772099c3683da7f631",
+    "status": "NOT_EXECUTED"
+  },
+  "future_subject_calls": "D01 writer_body per language, D02 existingSYNTH writer_body per language, D03 root_body(head=None)+declared provenance metadata per language. Reuse contextual per-language instance across D01/D03; other calls only named D04 constructor errors. Preserve original full doc/ref base/profiles/inputs. No build_families_section/defs_body/whole marker/Gen/codec/schema validation call. Internal class operations required for those methods are not a separate test suite.",
+  "input_paths_reuse": {
+    "schema": "/home/pilot/coord103/role-key-p0-a1c29394/inputs/source285/deleting.schema.json",
+    "layers": "/home/pilot/coord103/role-key-p0-a1c29394/inputs/source285/deleting.layers.tsv",
+    "SP19": "/home/pilot/coord103/role-key-p0-a1c29394/inputs/delta-SP19/deleting-no-person_writer.json"
+  },
+  "future_import_allowlist_project": [
+    "v7",
+    "v7.section"
+  ],
+  "future_imports_blocked": [
+    "v7.spec",
+    "v7.stack",
+    "jsonschema/other third-party",
+    "lesson",
+    "test_gen_families_doc",
+    "gen_families",
+    "test discovery/setUpClass"
+  ],
+  "future_argv_template": [
+    "/opt/check-env/lesson-spec/bin/python",
+    "-I",
+    "-S",
+    "-B",
+    "/home/pilot/review103/role-key-d0-t0-4803/deleting_display.py"
+  ],
+  "future_cwd": "/home/pilot/review103/role-key-d0-t0-4803",
+  "future_run_root": "/home/pilot/review103/role-key-d0-run01",
+  "future_capture_root": "/home/pilot/review103/role-key-d0-run01-capture",
+  "run_roots_created_in_T0": false,
+  "freeze_requirements": [
+    "Exact rawbytes/mode/SHA for subject module/packageinit, six expected texts/roster, Source schema/layers/SP19/SYNTH/provenance copies, all external CODE and independent environment/argv/cwd/read/import/absent-cache/evidence boundaries. Full original schema is ref base; no extracted profile substitute.",
+    "Pre-import audit installed before first project import; isolated no-site no-bytecode process, explicit absent cache prefix and no old project pyc. No process/network/nativeforeignlibrary/unlisted file writes/imports; named fresh evidence only. Preserve limits: Python audit is not OS/native-loader attestation.",
+    "Conservative interpreter/stdlib read closure may be frozen as declaration without importing subject, not a runtime trace or archive-wide audit replay. New protocol receiver/caller must also remain unexecuted in T0.",
+    "Actual futureargv/cwd/env and named output contract including outer stdout/stderr/exit/time plus strict receiver frozen before any RUN request. Trusted FREEZE digest supplied independently by parent; received report/hash is not its own authority.",
+    "Freeze all8fixed unique IDs/order/category, output payload shapes and counter types. Six display/metadata normal records plus two exact constructor ValueErrors/messages. Original input/ref and method-state snapshots recorded, no source mutation/patch/equality by selector.",
+    "Strict future normal response: start+8ordered records+one terminal=10NDJSON frames, strictUTF8/LF/EOF. Check all fixed terminal structure/types/counts/identity/completion before independent expected comparison in receiver; only comparison tally/exit agreement afterward.",
+    "Expected normal output differences (text length/spacing/rows/metadata typed values) remain named DISPLAY_MISMATCH when interface shape is valid; do not turn a complete mismatch into generic CheckingError or call it a kill. Interface violation/partial/wrong exception/audit/import/effect failure is CheckingError.",
+    "Future exit0 complete6display matches+2exact input checks; exit1 complete named display mismatch+2checks; exit2 CheckingError with no partial credit. Counters entered/completed8,groups4,display_compared6,expected_input_checking2,unexpected/skip/notexecuted/auditviolations0 before normal credit.",
+    "No actual baseline437 rendering; noncontext before is a fixed literal witness. No case additions, Time/propertyNames/shape tests, RKRS/P1 replay or subject repair."
+  ],
+  "preparation_helper_reuse": "P1audit/framing may be read as reference only and copied/adapted into the new external3files. Do not modify old source/history or run old helpers. Bootstrap allowlists must bind only new names/paths and the minimal D0 import boundary.",
+  "delivery": "T0 CODE+freeze only, raw/size/mode/hash/complete source+strict protocol reading evidence, actual preparation timing and fresh own estimate if available. All8outcomes/render/receiver actual NOT_EXECUTED. Deliver to tools then Architect for full frozen-byte reading before separate execution grant.",
+  "D0_RUN_allowed": false,
+  "all_semantic_renderer_method_calls_in_T0": 0,
+  "other_holds": "P2/G0/Go/native/compiler/gofmt/build/generation/materialization/HTTP/SUT/Sourceadoption/workingprofile/B1N5/wholemarker/main/GATE/keylessA/family08metadata16/other4findings/ms/VMSownerword/Claude/POLICYtimers19guards/diskcleanup/resize/restart/Z14 unchanged",
+  "P1grant": "ce5 consumed; no transfer or replay",
+  "Source_writer_private_cases_oracle_assignment": false,
+  "estimate_due_aggregate": null
+}

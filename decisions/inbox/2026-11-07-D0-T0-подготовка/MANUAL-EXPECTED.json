@@ -1,0 +1,38 @@
+{
+  "status": "MANUAL_TEXT_AND_METADATA_FOR_T0_FREEZE_ONLY_NOT_ACTUAL_OUTPUT",
+  "text_files": {
+    "writer-en.txt": {
+      "sha256": "ec750a2738c65abba65cfe84afed397c1945044c4fd90090a4dccd2dd691c5f8",
+      "bytes": 560,
+      "text_utf8": "Only at the writer (`$defs.writer`):\n\n| Key | Also |\n|---|---|\n| `<root>` | at most 0 names (x-max-names) |\n\nOnly at the writer of a person mark with key `domain/deleting/<name>` (`#/$defs/person_writer`):\n\n| Key | Type and bounds | Required |\n|---|---|---|\n| `at` | time (P/01.1 N0 «Time in a row») | required |\n| `done` | bool | optional |\n| other names | refused | — |\n\nOnly at the writer of a role mark with key `domain/deleting/role:<name>` (`#/$defs/role_writer`):\n\n| Key | Type and bounds | Required |\n|---|---|---|\n| `<root>` | const `{}` | — |\n\n"
+    },
+    "writer-ru.txt": {
+      "sha256": "6adb01494a2047da406e6e24c6e9b38732abe84b33b899e9c005966a513d26f5",
+      "bytes": 822,
+      "text_utf8": "Только у писателя (`$defs.writer`):\n\n| Ключ | Ещё и |\n|---|---|\n| `<корень>` | не больше 0 имён (x-max-names) |\n\nТолько у писателя метки человека с ключом `domain/deleting/<name>` (`#/$defs/person_writer`):\n\n| Ключ | Тип и границы | Обязательность |\n|---|---|---|\n| `at` | время (P/01.1 N0 «Время в строке») | обязательно |\n| `done` | bool | необязательно |\n| прочие имена | не допускаются | — |\n\nТолько у писателя метки роли с ключом `domain/deleting/role:<name>` (`#/$defs/role_writer`):\n\n| Ключ | Тип и границы | Обязательность |\n|---|---|---|\n| `<корень>` | const `{}` | — |\n\n"
+    },
+    "noncontext-writer-en.txt": {
+      "sha256": "69cdd6e3bcb89b924ac7f3b3b22bcbc9cfef55db2de853868e15a8bf23e94e2b",
+      "bytes": 109,
+      "text_utf8": "Only at the writer (`$defs.writer`):\n\n| Key | Also |\n|---|---|\n| `<root>` | at most 0 names (x-max-names) |\n\n"
+    },
+    "noncontext-writer-ru.txt": {
+      "sha256": "f1dcffc55ebc17d436fc609363f12f650e7c2d47a195273a60a0a65ba91e06d4",
+      "bytes": 154,
+      "text_utf8": "Только у писателя (`$defs.writer`):\n\n| Ключ | Ещё и |\n|---|---|\n| `<корень>` | не больше 0 имён (x-max-names) |\n\n"
+    },
+    "reader-en.txt": {
+      "sha256": "982d1d7c460e960652f67546d21eb1f938d32c4b439662ce1632c1227f87a8a2",
+      "bytes": 262,
+      "text_utf8": "| Key | Type and bounds | Requirement | Lesson | Meaning |\n|---|---|---|---|---|\n| `.<name>` | any value | optional |  | fields of the mark: `at`, `done` (N1.1 domain/deleting); the reader does not refuse by them: at absent or unreadable — there is no term |\n\n"
+    },
+    "reader-ru.txt": {
+      "sha256": "c8a8bb78c6b1262e729b9c56b86fba65a456cecaaced0fbb62b515abb4c55d4e",
+      "bytes": 334,
+      "text_utf8": "| Ключ | Тип и границы | Обязательность | Урок | Смысл |\n|---|---|---|---|---|\n| `.<имя>` | любое значение | необязателен |  | fields of the mark: `at`, `done` (N1.1 domain/deleting); the reader does not refuse by them: at absent or unreadable — there is no term |\n\n"
+    }
+  },
+  "origin": "Selected Source039 canonical writer cells and protected source285/noncontext literal witnesses; primary e8a map reading and REP9fc1 text provenance. Not harvested from renderer.",
+  "metadata_expected": "D0-ROSTER.json D03 expected_metadata verbatim, strict JSON typed equality. Input CheckingError controls D04 exact ValueError/message, not display matches.",
+  "serializer": "Require method return plain list of plain str. Record text as LF join plus one LF (\"\\n\".join(lines)+\"\\n\"), preserving every returned line and trailing blank line. No strip/normalization/filtering. Compare full text bytes, never path/row membership; well-formed wrong text is DISPLAY_MISMATCH."
+}

@@ -1,0 +1,131 @@
+{
+  "status": "PROPOSED_NOT_ACTIVE_NOT_EXECUTED",
+  "basis": "Existing 7f27 D0 four groups/eight records only; bounded refinements made explicit, not extra cases. No transfer of earlier own45-90minute estimate.",
+  "groups": [
+    {
+      "id": "D01_conditional_EN_RU",
+      "prior_7f27_group": "D01_conditional_EN_RU",
+      "records": [
+        {
+          "id": "D01.en",
+          "lang": "en",
+          "expected": {
+            "path": "expected/writer-en.txt",
+            "sha256": "ec750a2738c65abba65cfe84afed397c1945044c4fd90090a4dccd2dd691c5f8",
+            "bytes": 560
+          }
+        },
+        {
+          "id": "D01.ru",
+          "lang": "ru",
+          "expected": {
+            "path": "expected/writer-ru.txt",
+            "sha256": "6adb01494a2047da406e6e24c6e9b38732abe84b33b899e9c005966a513d26f5",
+            "bytes": 822
+          }
+        }
+      ],
+      "subject": "future exact C1 normal child of N377, section.SchemaSection(raw full Source285 deleting schema, family=True, lang=record.lang, family_template=\"domain/deleting/<name>\").writer_body()",
+      "input": "Full unchanged Source285 deleting.schema.json, original full ref base/defs; do not replace it with embedded RK fixture or live Platform files",
+      "oracle": "Manual expected 20-LF strings: existing common6 prefix, person required at/optional done/refused other names, role const{}; labels and root localized independently of generated actual output",
+      "record_count": 2,
+      "classification": "display string equality only, no value admission/domain verdict/semantic kill"
+    },
+    {
+      "id": "D02_noncontext_before_after",
+      "prior_7f27_group": "D02_noncontext_before_after",
+      "records": [
+        {
+          "id": "D02.en",
+          "lang": "en",
+          "expected": {
+            "path": "expected/noncontext-writer-en.txt",
+            "sha256": "69cdd6e3bcb89b924ac7f3b3b22bcbc9cfef55db2de853868e15a8bf23e94e2b",
+            "bytes": 109
+          }
+        },
+        {
+          "id": "D02.ru",
+          "lang": "ru",
+          "expected": {
+            "path": "expected/noncontext-writer-ru.txt",
+            "sha256": "f1dcffc55ebc17d436fc609363f12f650e7c2d47a195273a60a0a65ba91e06d4",
+            "bytes": 154
+          }
+        }
+      ],
+      "subject": "future C1 subject.SchemaSection(existing SYNTH literal, family=True, lang=record.lang, family_template=None).writer_body()",
+      "input": "Exact existing test_gen_families_doc.py SYNTH literal physical LF21..38; stdlib AST literal extraction only, never import that test module; no new family/value fixture",
+      "oracle": "Protected common6-LF prefix only, no person/role labels or constraints; before is a saved literal witness, not inherited before-run PASS. Minimal proposal executes no baseline437 renderer import.",
+      "record_count": 2,
+      "classification": "noncontext presentation guard; no codec/schema/gen execution"
+    },
+    {
+      "id": "D03_profile_roots_and_refs",
+      "prior_7f27_group": "D03_profile_roots_and_refs",
+      "records": [
+        {
+          "id": "D03.en",
+          "lang": "en",
+          "expected_reader": {
+            "path": "expected/reader-en.txt",
+            "sha256": "982d1d7c460e960652f67546d21eb1f938d32c4b439662ce1632c1227f87a8a2",
+            "bytes": 262
+          }
+        },
+        {
+          "id": "D03.ru",
+          "lang": "ru",
+          "expected_reader": {
+            "path": "expected/reader-ru.txt",
+            "sha256": "c8a8bb78c6b1262e729b9c56b86fba65a456cecaaced0fbb62b515abb4c55d4e",
+            "bytes": 334
+          }
+        }
+      ],
+      "subject": "same exact Source285 SchemaSection per locale; root_body(head=None) plus immutable metadata observations",
+      "expected_metadata": {
+        "family_template": "domain/deleting/<name>",
+        "person_writer_in_section_defs": false,
+        "role_writer_in_section_defs": false,
+        "person_writer_in_original_doc_defs": true,
+        "role_writer_in_original_doc_defs": true,
+        "at_ref_original": "#/$defs/common.time",
+        "source_doc_typed_values_before_after_equal": true
+      },
+      "oracle": "Four reader LF per locale copied from Source EN508..511/RU480..483; no new profile root or conditional constraints may enter reader output. The existing at-ref and writer name-limit remain tied to their original owner nodes; full input remains unchanged. No whole defs_body/families/chapter rendering.",
+      "record_count": 2,
+      "classification": "Reader display/ref provenance/immutability only"
+    },
+    {
+      "id": "D04_missing_context_source_controls",
+      "prior_7f27_group": "D04_missing_context_source_controls",
+      "records": [
+        {
+          "id": "D04.identity-missing",
+          "lang": "en",
+          "input": "same full Source285 doc, family=True; family_template omitted/None",
+          "expected_exception": "ValueError",
+          "expected_message": "contextual writer definitions require their exact catalog identity and both profiles"
+        },
+        {
+          "id": "D04.person-profile-missing-SP19",
+          "lang": "en",
+          "input": "existing immutable SP19 full doc with sole person_writer deletion (9th approved P0 read copy), family=True and exact domain/deleting/<name> identity",
+          "expected_exception": "ValueError",
+          "expected_message": "contextual writer definitions require their exact catalog identity and both profiles"
+        }
+      ],
+      "input_reuse": "No new case; the two existing missing-context/profile controls from 7f27/P0; no live doc mutation/subject patch/poison injection. Exact immutable SP19 SHA44e775f2c883fe47b65e2d114ca6178ad67b6b0f21820c9977064733068b0b62 must be independently frozen under any future grant.",
+      "record_count": 2,
+      "classification": "expected input CheckingErrors from unchanged constructor, never semantic failure or kill"
+    }
+  ],
+  "records_total": 8,
+  "normal_display_records": 6,
+  "expected_input_checking_records": 2,
+  "executed": 0,
+  "P1_grant_consumed": true,
+  "test_module_use": "Read-only raw/AST input witness; do not import/discover tools/normgen/test_gen_families_doc.py (lesson import2/DocMode180-188 side effects).",
+  "expected_relation": "Expected writer strings are manually assembled from existing Source profile rows and fixed proposed localized headings; they are never harvested from the subject or generated output. Source edit proposal references these expected blocks independently."
+}
