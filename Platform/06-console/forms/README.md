@@ -2,13 +2,30 @@
 
 This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export (ADR-0121). Forms express the existing norms under ADR-0125 addendum (5).
 
+## Catalogue-bound HTTP contract
+
+The [OpenAPI](../spec/06-console.api.openapi.yaml) declares the catalogue-dependent PathItems as the standard `components.pathItems` below. Their bindings use only the loaded catalogue already accepted by the [P/02 loader](../../02-installer/spec/02.1-installer.norms.md) and served at [process start](../../02-installer/spec/02.3-installer.norms.md). Component names, proof maps and example values of `servers` do not admit a route or a subsystem.
+
+| Standard PathItem | Existing catalogue source |
+|---|---|
+| `UnitsCollection`, `UnitItem` | `unit.rows` of the chosen subsystem |
+| `TableCollection`, `TableItem` | each declared entry of `tables` of that subsystem, with its existing field and service rules |
+| `PassRoot` | the existing `door.pass` list or its `routes`; retain its kind and the declared `wait`, `stream`, `calls` and `refusals` |
+| `ConsoleFile` | each complete literal name in `console.files`, including every path segment |
+
+Specialize each applicable component for those actual catalogue entries: short routes only for the selected `CONSOLE_ROOT`, and explicitly named subsystem routes for the root and mounted subsystems. A file has only its existing explicitly named subsystem route. A component alone is not a reachable door. Use the existing catalogue, not an additional binding file, proof map or new input grammar.
+
+A specialization removes only `in: path` parameters already replaced with catalogue literals, at both PathItem and operation levels. Keep every remaining parameter and its decoding, headers, query, body, requiredness, response, security condition and reference base. A literal subsystem is present in the path once: use the existing origin context without adding the same subsystem again through `servers`. Neither a server-variable example nor a parameter name chooses a catalogue class. The logical operation keeps its source provenance and adapter identity; a changed traversal order does not rename it.
+
+`ConsoleFile` matches the whole declared finite filename. `PassRoot` keeps the existing admitted prefix and unbounded raw remainder and query, for both kinds of pass; this remainder is not a one-segment OpenAPI parameter. The existing `door.routes` route/id remainder and the domain-at operations remain owned by their current procedures, even when a parameter is called `rows`. Path priority, method selection, ambiguity, no fallback, refusal order, rights and all existing limits remain unchanged. This representation does not add an operation, URI, alias, permission or runtime option.
+
 ## Inputs and constants
 
 [daemon-flags.tsv](daemon-flags.tsv) is the P/01 header `flag type default default_text required commands bad norm`. `$NAME` is environment, not a CLI flag. The process is console. `cleanup-window` is only the logical invocation name of the implementation-chosen sweep command; its actual executable/name remains P/06.1 Implementation decides. The sole CLI flag here is its existing `--writers-stopped`. Parsed fields do not waive catalogue, kit, role, server/box, alias, ring-placement, timezone or active-listener checks from the cited contracts. Inactive callback configuration and an unreadable configured ring are judged at their normative activation/operation, not relabelled as new startup failures. Malformed CLUSTERS is operation-unreadable, not an empty list or a new startup refusal.
 
 `$INSTANCE_ID` is the existing common instance override: absent or empty selects the ordinary box/pid/random resolver; a supplied nonempty value is accepted or refused by the instance contract and preserved byte for byte. It is environment, with no new CLI flag or new configuration rule.
 
-[runtime-constants.tsv](runtime-constants.tsv) is the numeric source of its 27 declared constants. Header is `name value unit norm meaning`, literal TAB. Name is unique `[A-Z][A-Z0-9_]*`; value is a positive JSON integer, no quotes; unit is `count|s|bytes`; norm is an existing req anchor of its owning chapter; meaning is text. No expression language or new environment knob is introduced. The cited procedure owns dependent formulas and conditional use: in particular OPS_KEEP cannot undercut the subsystem acceptance-memory term. These literals may be emitted with core; they do not declare a wholly generated stage.
+[runtime-constants.tsv](runtime-constants.tsv) is the numeric source of its 34 declared constants. Header is `name value unit norm meaning`, literal TAB. Name is unique `[A-Z][A-Z0-9_]*`; value is a positive JSON integer, no quotes; unit is `count|s|bytes`; norm is an existing req anchor of its owning chapter; meaning is text. No expression language or new environment knob is introduced. The cited procedure owns dependent formulas and conditional use: in particular OPS_KEEP cannot undercut the subsystem acceptance-memory term. These literals may be emitted with core; they do not declare a wholly generated stage.
 
 The numeric source of each folder bound is its row of `runtime-constants.tsv`. JSON Schema is a second machine carrier with the same value, not an independent default. The equality is a `check_spec` obligation (ADR-0129 addendum (5) item 1); prose and dependent formulas refer to the row name.
 
@@ -19,6 +36,10 @@ The numeric source of each folder bound is its row of `runtime-constants.tsv`. J
 
 `AT_ROUTE_WAIT` and the local `FORWARD_WAIT` apply only to P/06.7 N1.6. Other forwarding waits and `FORWARD_MAX` remain declared by the [forwarding contract](../../common/contracts/forwarding.md); `PASS_WAIT`, `GLASS_SESSION` and `GLASS_SESSIONS_MAX` remain declared by the [gate-and-pass contract](../../common/contracts/gate-and-pass.md). These references do not copy foreign constants into this form.
 
+
+The same existing subject check must compare FOLDER_NAME_MAX with `data/folders.schema.json#/properties/name/x-max-bytes` as UTF-8 bytes, CHANGES_HISTORY with `spec/06-console.api.openapi.yaml#/components/schemas/Changes/properties/changes/maxItems`, CHANGES_WAIT with the GET and HEAD `/changes` wait maximum, VERIFY_UNITS_MAX with `VerifyInput.need.units.maxItems`, and SWEEP_LIMIT with `data/sweep.schema.json#/$defs/writer/properties/digests/maxItems` and the effective root reader reference. Folder/memberof root reader references retain the two existing equalities above. Exact physical pointers and independent negative controls are supplied to review103 after source freeze; adding this obligation does not claim that the separate checker code ran.
+
+CLAIM_TAKEOVER_AFTER, DONE_ANSWER_KEEP, SWEEP_GRACE, SWEEP_MARK_EVERY, DOOR_TOKEN_TTL and OPS_CONTROL_RETRIES have distinct meanings even when another clock/size has the same value. OPS_CONTROL_RETRIES counts retries after the original pass. The four defining TTL/formula lines of the common door-token contract cite the same DOOR_TOKEN_TTL; token bytes and fixtures are unchanged.
 
 ## Numeric loader supplement
 
@@ -64,7 +85,11 @@ Each scenario has a new temporary root and valid catalogue, rows, identity, perm
 | `console-op-step` | Feed the real leader a malformed next-step row under a current turn. Its predecessor is confirmed ok; backend_calls counts actual attempts to call the subsystem. |
 | `console-op-step-batch` | Use a complete valid step batch and ticket. Change the turn after preparation before atomic commit, or expire only the ticket. Read all target, outcome and counter rows after the actual refusal. |
 
-[stages.tsv](stages.tsv) has 11 stages, all kit `-`, with 54 CALL scenarios/steps across nine chapters. The gates are aids, not full acceptance. Every own/common vector assignment and additional probe/reading remains required. The 77 requests-body HTTP rows and 21 accepted-json round trips require the real store+console judge; native worker 52 does not replace console 77. The newly released runner target P/06/vectors-requests-body is this HTTP obligation; no pure native console command or kit function PASS is invented. Late domain process tests need the actual neighbours 08–10 and cannot be closed by unit fixtures.
+[stages.tsv](stages.tsv) has 11 stages, all kit `-`, with 64 CALL scenario rows across nine chapters. The gates are aids, not full acceptance. Every own/common vector assignment and additional probe/reading remains required. The 77 requests-body HTTP rows and 21 accepted-json round trips require the real store+console judge; native worker 52 does not replace console 77. The newly released runner target P/06/vectors-requests-body is this HTTP obligation; no pure native console command or kit function PASS is invented. Late domain process tests need the actual neighbours 08–10 and cannot be closed by unit fixtures.
+
+The ADR-0129(17) additions use only these same ports. For chapter 1 s09, construct a real named pending claim of the same fingerprint without a saved target intent, and a confirmed foreign live target at revision 1; for s10 save a real numeric reservation in that pending claim but no intended revision/born and arrange a foreign live row at that number. For s11 save a genuine intended pair, but make only the target revision match: the valid target born is foreign. Observe the unchanged pending for the declared eligibility interval and take it by the normal CAS path. Existing s06–s08 remain positive controls for actual saved intent/committed target and confirmed planning reread; no input bypasses the normal claim codec, gate or ownership.
+
+For chapter 8 s05–s08, run a real unit-delete batch with a readable valid one-folder membership and valid current rights/CAS/guards. `writes[0]` deletes U, `writes[1]` is the explicit folder when supplied, and `writes[2]` is the explicit membership when supplied. The folder either retains U or removes it; restoring membership is a valid nonempty put of the old link. The consistent cases delete it explicitly or let the ordinary deletion supply that consequence. Counters observe actual target unit/folder/memberof mutations after setup, excluding setup/claim/journal from those named counters only. unique_target_keys inspects the real emitted target batch. Current auxiliary/gone effects, admission, full size accounting and atomicity still apply. The adapter is never passed expected results.
 
 ## Accepted ADR-0127 review: computed TLS default
 

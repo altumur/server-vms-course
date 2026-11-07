@@ -59,6 +59,8 @@ P/03.2 N1.5), `testsub/counters/1` `{n: "1"}`, `testsub/next_id` `{n: "2"}` по
 | `bad-unreadable.jsonl` | строка `unreadable` |
 | `bad-epoch.jsonl` | строка эпохи `testsub/epoch/u1` с недесятичным `epoch` — upper не достоверен (сц. 12 шаги 23–24) |
 | `bad-floor.jsonl` | строка пола с недесятичным `floor` `12.5` (сц. 12 шаги 25–26) |
+| `bad-floor-zero.jsonl` | присутствующая строка floor хранит ноль; виртуальный ноль отсутствующей строки — отдельный случай |
+| `bad-floor-above-current.jsonl` | floor превышает нынешний диапазон операции |
 | `bad-row-key.jsonl` | ключ строки `testsub/../bad` — сегмент `..`, не ключ главы 1.1 N1 (сц. 12 шаги 27–28) |
 | `bad-floor-gen-at.jsonl` | строка пола с `generation_at` `not-a-time` — не время, строка пола нечитаема (сц. 12 шаги 29–30) |
 | `copy-future-floor.jsonl` | верная копия, у пола `generation_at` `4102444800` (2100) — часы стенда раньше, отказ без `-force` (сц. 12 шаги 31–32; с `-force` — сц. 29) |

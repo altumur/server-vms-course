@@ -1,0 +1,200 @@
+{
+  "change": "0129-z10-p01-format-floor",
+  "base": "d034aa09e6dcad450cd4e0942457f430dda43ece",
+  "allowed_paths": [
+    "Platform/01-store/spec/01.3-store.norms.md",
+    "Platform/01-store/ru/spec/01.3-store.norms.md",
+    "Platform/01-store/acceptance/3/README.md",
+    "Platform/01-store/ru/acceptance/3/README.md",
+    "Platform/01-store/data/epoch_floor.schema.json",
+    "Platform/common/vectors/family-read/01.tsv",
+    "Platform/01-store/acceptance/3/scenarios.tsv",
+    "Platform/01-store/acceptance/3/inputs/bad-floor-zero.jsonl",
+    "Platform/01-store/acceptance/3/inputs/bad-floor-above-current.jsonl",
+    "decisions/changes/registry.tsv",
+    "decisions/journal/platform/01-store/corrections-3.tsv",
+    "decisions/adr-norms.tsv",
+    "decisions/changes/0129-z10-p01-format-floor/delta.md",
+    "decisions/changes/0129-z10-p01-format-floor/change.md",
+    "decisions/changes/0129-z10-p01-format-floor/source-map.json",
+    "decisions/changes/0129-z10-p01-format-floor/corpus-map.json",
+    "decisions/changes/0129-z10-p01-format-floor/preservation.json",
+    "decisions/changes/0129-z10-p01-format-floor/history.md"
+  ],
+  "owned_source_paths": 9,
+  "total_paths": 18,
+  "source_final_forecasts": [
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "operation": "modify",
+      "before": {
+        "blob": "b47a2f025ef46fd272e26100ea2a31099e27338e",
+        "sha256": "1af25acb3155a5c87914fe2022ca1c64ee3292eb0d83673bfc58b7cd3f280390",
+        "bytes": 64579
+      },
+      "after": {
+        "blob": "68cf68ab06d00980ad68a7cc6f8187245c8c36c1",
+        "sha256": "5f96fe44603861555d5c3e0b752559bcfecf536d37abe6d0099f40ffa9137686",
+        "bytes": 64844
+      },
+      "initial_authorized_after_sha256": "05d518826a590bf31a87b84bd94790bdeb31a6e014e73a3b147f45fc3b2b07c2",
+      "final_mirror_adjustment": true
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "operation": "modify",
+      "before": {
+        "blob": "9d0bb6e6872a382933f242e6365c840d1f60cdad",
+        "sha256": "d308d074d5d7a6298c4257cdea248ab5801f4c25542ef3573d50f9df3bddd41d",
+        "bytes": 85201
+      },
+      "after": {
+        "blob": "39791bd39f38b512db8ee472b0395453d6671ace",
+        "sha256": "b63319c74d1518056030e8b26c583719864c9edc49cb3f588f97a6cc918f6395",
+        "bytes": 85864
+      },
+      "initial_authorized_after_sha256": "0cc17a807f27e43413325391e889ad0d02a50991baf818f6393719d3e16da492",
+      "final_mirror_adjustment": true
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.md",
+      "operation": "modify",
+      "before": {
+        "blob": "4605aecb805445f952c80ba156793e42332caa9f",
+        "sha256": "a50bc1e64e04631b4092a4f9f7f26304a113dac13f550f2febf1e9b9dc4f2085",
+        "bytes": 26514
+      },
+      "after": {
+        "blob": "74dd8399f3b9aeec59f3ef58e70839cbd4f1e8f9",
+        "sha256": "425ba33c2d47c9fdb3461571faac988468d78ee4c751adc8278fd2fefeea0fdf",
+        "bytes": 26708
+      },
+      "initial_authorized_after_sha256": "425ba33c2d47c9fdb3461571faac988468d78ee4c751adc8278fd2fefeea0fdf",
+      "final_mirror_adjustment": false
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/3/README.md",
+      "operation": "modify",
+      "before": {
+        "blob": "850299e7653a8877484eab6cb247ffa17d6056cd",
+        "sha256": "029590950406b2265a0502f4985ca5c529503f8a4e9ddb91cfbb1c8b5adbf181",
+        "bytes": 35339
+      },
+      "after": {
+        "blob": "965429267004457cee82140ab6d66b371b11136a",
+        "sha256": "dccce2a6ef25836595d0855a0866922b94e9bf730918b52a8f8beafd4476f9f7",
+        "bytes": 35661
+      },
+      "initial_authorized_after_sha256": "dccce2a6ef25836595d0855a0866922b94e9bf730918b52a8f8beafd4476f9f7",
+      "final_mirror_adjustment": false
+    },
+    {
+      "path": "Platform/01-store/data/epoch_floor.schema.json",
+      "operation": "modify",
+      "before": {
+        "blob": "c6e351ba474a436ad111af832c23340201a9ad35",
+        "sha256": "537add27ae2016c0efa0dcf8959dbeac7827eab535c59ecaacccb3e14b1df839",
+        "bytes": 28913
+      },
+      "after": {
+        "blob": "cf1e40b29590da93bc15cd16cededf202848b4d2",
+        "sha256": "f0d41e1730fcdfae52aae811330d50d3c6b5f6a94f5082636e4634ad58d785c9",
+        "bytes": 28962
+      },
+      "initial_authorized_after_sha256": "f0d41e1730fcdfae52aae811330d50d3c6b5f6a94f5082636e4634ad58d785c9",
+      "final_mirror_adjustment": false
+    },
+    {
+      "path": "Platform/common/vectors/family-read/01.tsv",
+      "operation": "modify",
+      "before": {
+        "blob": "ceacd8755fd36985d2c0730a8508859e937fe39b",
+        "sha256": "48da299798a930c8e328ae15fa0f4fd6b6b69e0fbe5f48ea9f52ac5d3c4023db",
+        "bytes": 18815
+      },
+      "after": {
+        "blob": "fb868b012d74c8e2b31990fb62b8ee6183b03f13",
+        "sha256": "584f6187bd9620b801b84a1433f8df695338b6682986c68b6cef2e2e27fefe9e",
+        "bytes": 20819
+      },
+      "initial_authorized_after_sha256": "584f6187bd9620b801b84a1433f8df695338b6682986c68b6cef2e2e27fefe9e",
+      "final_mirror_adjustment": false
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/scenarios.tsv",
+      "operation": "modify",
+      "before": {
+        "blob": "019a5e23838480e2ab8a4c1a2a77b2da49ca278c",
+        "sha256": "43ff33618fa58178ae20ed9322a1082733ef64606fc7a685244d76cce18cdf9d",
+        "bytes": 27273
+      },
+      "after": {
+        "blob": "3a19c03a614fc8e6517bc69697ddd3ec7981f955",
+        "sha256": "d244877c0df3fbe4ca88b89d500916e5ec20567b503652ab481b4c8fac31a3a2",
+        "bytes": 27606
+      },
+      "initial_authorized_after_sha256": "d244877c0df3fbe4ca88b89d500916e5ec20567b503652ab481b4c8fac31a3a2",
+      "final_mirror_adjustment": false
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-floor-zero.jsonl",
+      "operation": "add",
+      "before": null,
+      "after": {
+        "blob": "2e041329c14d570316c06dbd3004a9108e98266b",
+        "sha256": "6278ab0a39fe2592d127ff0aff696a54c7adbcc8ae4cd20a9c646f175a519ab5",
+        "bytes": 210
+      },
+      "initial_authorized_after_sha256": "6278ab0a39fe2592d127ff0aff696a54c7adbcc8ae4cd20a9c646f175a519ab5",
+      "final_mirror_adjustment": false
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-floor-above-current.jsonl",
+      "operation": "add",
+      "before": null,
+      "after": {
+        "blob": "dee71e42df3bdd63b41dfb03836dd40476564ca8",
+        "sha256": "6efc9d4bd7a83b422c4d104b6bd96ea6a1201cd7bf93ea6a6040d252d2ccc599",
+        "bytes": 225
+      },
+      "initial_authorized_after_sha256": "6efc9d4bd7a83b422c4d104b6bd96ea6a1201cd7bf93ea6a6040d252d2ccc599",
+      "final_mirror_adjustment": false
+    }
+  ],
+  "auxiliary_append_only": [
+    "decisions/changes/registry.tsv",
+    "decisions/journal/platform/01-store/corrections-3.tsv",
+    "decisions/adr-norms.tsv"
+  ],
+  "protected_base_entries_count": 7936,
+  "protected_base_identity_list_sha256": "6f7d835b898b327797dd1e598d75249bac057cecbb7bc3b5a685960da8f37b10",
+  "external_complete_entry_list": "/home/pilot/spec103/z10-source-a-format-floor-d034aa09-work/PROTECTED-BASE-ENTRIES.json",
+  "invariant": "all non-allowlisted mode/blob entries must remain identical in the final author tree; final actual comparison recorded externally after commit",
+  "schema_delta_only": {
+    "path": "Platform/01-store/data/epoch_floor.schema.json",
+    "added": {
+      "/properties/floor/minimum": 1,
+      "/properties/floor/maximum": 9007194959773696
+    },
+    "$defs_exact": true,
+    "generation_at_exact": true,
+    "all_other_keywords_exact": true,
+    "multipleOf_added": false
+  },
+  "preserved_prefixes": [
+    "family-read01 entire old raw prefix",
+    "acceptance3 scenarios entire old raw prefix",
+    "all three auxiliary registries/journals entire old raw prefix"
+  ],
+  "two_new_copy_inputs": "basis bad-floor.jsonl; only the floor string12.5 is replaced; all other bytes exact",
+  "source_not_changed": [
+    "common codec/time and R007/R012",
+    "P01.1/P01.2/OpenAPI/write-checks/flags/runtime constants/stages/outcomes",
+    "P02/P03/P04/P05/P06/S08/P07/P08/P09/P10",
+    "common15 including family03",
+    "Source/VMS/tools/skills/module",
+    "pins/runner/SUT/model/generated output"
+  ],
+  "control_scope": "new own source-only checks; no custom family library/importer/controller/HTTP/IO/SUT execution; no strict/render/general regen/full GATE",
+  "historical_failure": "initial actual norm mirror baseline0 ->2 preserved externally; final exact3 mirror repair separately authorized and final actual mirror0, not retroactive rewriting"
+}

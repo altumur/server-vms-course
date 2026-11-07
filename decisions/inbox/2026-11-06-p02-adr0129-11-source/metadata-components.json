@@ -1,0 +1,93 @@
+{
+  "base": "d8cf12290f43693289b2149019232bc26c48705b",
+  "scope": "closed metadata constructor specimens only; not a full profile or implementation proof",
+  "components": [
+    {
+      "file": "metadata-batch.json",
+      "raw_bytes": 18712,
+      "sha256": "649053f768d9dd9ea8487215540a7f16516a74d495bd8f31a46aca7de832e379",
+      "write_metadata_components": [
+        {
+          "bytes_with_comma": 6190,
+          "fields": [
+            "op",
+            "key",
+            "cas"
+          ]
+        },
+        {
+          "bytes_with_comma": 6193,
+          "fields": [
+            "op",
+            "key",
+            "cas"
+          ]
+        }
+      ],
+      "guard_components": [
+        {
+          "bytes_with_comma": 6181,
+          "fields": [
+            "key",
+            "index"
+          ]
+        }
+      ],
+      "frame_bytes": 139,
+      "frame_with_313_byte_deadline_allowances": 763
+    },
+    {
+      "file": "metadata-delete.json",
+      "raw_bytes": 12482,
+      "sha256": "0b187caceef01b1c6ffe94ddabad8bd04eb3824e67e3ea1b567798401b148312",
+      "write_metadata_components": [
+        {
+          "bytes_with_comma": 6193,
+          "fields": [
+            "op",
+            "key",
+            "cas"
+          ]
+        }
+      ],
+      "guard_components": [
+        {
+          "bytes_with_comma": 6181,
+          "fields": [
+            "key",
+            "index"
+          ]
+        }
+      ],
+      "frame_bytes": 127,
+      "frame_with_313_byte_deadline_allowances": 751
+    },
+    {
+      "file": "metadata-put.json",
+      "raw_bytes": 12490,
+      "sha256": "181ef7fb5178e07e729150fb16d709f9c038e6a5a2ffeb513b00f7c15a7348b7",
+      "write_metadata_components": [
+        {
+          "bytes_with_comma": 6190,
+          "fields": [
+            "op",
+            "key",
+            "cas"
+          ]
+        }
+      ],
+      "guard_components": [
+        {
+          "bytes_with_comma": 6181,
+          "fields": [
+            "key",
+            "index"
+          ]
+        }
+      ],
+      "frame_bytes": 124,
+      "frame_with_313_byte_deadline_allowances": 748
+    }
+  ],
+  "actual_emitters_executed": false
+}

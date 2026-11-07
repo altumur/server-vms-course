@@ -3,9 +3,9 @@
  "type": "object",
  "properties": {
   "born": {
-   "description": "born of the unit row at the start of the holder (the row check contract, born); an empty string — a unit row without born",
+   "description": "The 32 lowercase hex born of the current unit row accepted at the start of the holder (row-check contract, born); absent or empty born is unreadable.",
    "type": "string",
-   "pattern": "^(?:([0-9a-f]{32})?)$",
+   "pattern": "^(?:[0-9a-f]{32})$",
    "x-codec": [
     "string"
    ]

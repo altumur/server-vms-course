@@ -1,0 +1,477 @@
+{
+  "change": "0129-z10-p01-format-floor",
+  "revision": 1,
+  "state": "review",
+  "base": "d034aa09e6dcad450cd4e0942457f430dda43ece",
+  "delta_base": "725653954",
+  "author": "spec103",
+  "authority": [
+    {
+      "path": "/home/pilot/coord103-src/z10-source-a-format-floor/SOURCE-A-ACTIVATION.json",
+      "sha256": "f935cd4ba9af3dc4be90527013a6760a89f5a692b3c4c3eeb9fc7c7602f87817"
+    },
+    {
+      "path": "/home/pilot/coord103-src/z10-source-a-format-floor/SOURCE-A-MIRROR-ADJUSTMENT.json",
+      "sha256": "de4ba859f34da6e34063ecf69ea0de2c084196528cc978cc96abf4426ba3fb9a"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "operation": "modify",
+      "before": {
+        "blob": "b47a2f025ef46fd272e26100ea2a31099e27338e",
+        "sha256": "1af25acb3155a5c87914fe2022ca1c64ee3292eb0d83673bfc58b7cd3f280390",
+        "bytes": 64579
+      },
+      "after": {
+        "blob": "68cf68ab06d00980ad68a7cc6f8187245c8c36c1",
+        "sha256": "5f96fe44603861555d5c3e0b752559bcfecf536d37abe6d0099f40ffa9137686",
+        "bytes": 64844
+      },
+      "initial_authorized_after_sha256": "05d518826a590bf31a87b84bd94790bdeb31a6e014e73a3b147f45fc3b2b07c2",
+      "final_mirror_adjustment": true
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "operation": "modify",
+      "before": {
+        "blob": "9d0bb6e6872a382933f242e6365c840d1f60cdad",
+        "sha256": "d308d074d5d7a6298c4257cdea248ab5801f4c25542ef3573d50f9df3bddd41d",
+        "bytes": 85201
+      },
+      "after": {
+        "blob": "39791bd39f38b512db8ee472b0395453d6671ace",
+        "sha256": "b63319c74d1518056030e8b26c583719864c9edc49cb3f588f97a6cc918f6395",
+        "bytes": 85864
+      },
+      "initial_authorized_after_sha256": "0cc17a807f27e43413325391e889ad0d02a50991baf818f6393719d3e16da492",
+      "final_mirror_adjustment": true
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.md",
+      "operation": "modify",
+      "before": {
+        "blob": "4605aecb805445f952c80ba156793e42332caa9f",
+        "sha256": "a50bc1e64e04631b4092a4f9f7f26304a113dac13f550f2febf1e9b9dc4f2085",
+        "bytes": 26514
+      },
+      "after": {
+        "blob": "74dd8399f3b9aeec59f3ef58e70839cbd4f1e8f9",
+        "sha256": "425ba33c2d47c9fdb3461571faac988468d78ee4c751adc8278fd2fefeea0fdf",
+        "bytes": 26708
+      },
+      "initial_authorized_after_sha256": "425ba33c2d47c9fdb3461571faac988468d78ee4c751adc8278fd2fefeea0fdf",
+      "final_mirror_adjustment": false
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/3/README.md",
+      "operation": "modify",
+      "before": {
+        "blob": "850299e7653a8877484eab6cb247ffa17d6056cd",
+        "sha256": "029590950406b2265a0502f4985ca5c529503f8a4e9ddb91cfbb1c8b5adbf181",
+        "bytes": 35339
+      },
+      "after": {
+        "blob": "965429267004457cee82140ab6d66b371b11136a",
+        "sha256": "dccce2a6ef25836595d0855a0866922b94e9bf730918b52a8f8beafd4476f9f7",
+        "bytes": 35661
+      },
+      "initial_authorized_after_sha256": "dccce2a6ef25836595d0855a0866922b94e9bf730918b52a8f8beafd4476f9f7",
+      "final_mirror_adjustment": false
+    },
+    {
+      "path": "Platform/01-store/data/epoch_floor.schema.json",
+      "operation": "modify",
+      "before": {
+        "blob": "c6e351ba474a436ad111af832c23340201a9ad35",
+        "sha256": "537add27ae2016c0efa0dcf8959dbeac7827eab535c59ecaacccb3e14b1df839",
+        "bytes": 28913
+      },
+      "after": {
+        "blob": "cf1e40b29590da93bc15cd16cededf202848b4d2",
+        "sha256": "f0d41e1730fcdfae52aae811330d50d3c6b5f6a94f5082636e4634ad58d785c9",
+        "bytes": 28962
+      },
+      "initial_authorized_after_sha256": "f0d41e1730fcdfae52aae811330d50d3c6b5f6a94f5082636e4634ad58d785c9",
+      "final_mirror_adjustment": false
+    },
+    {
+      "path": "Platform/common/vectors/family-read/01.tsv",
+      "operation": "modify",
+      "before": {
+        "blob": "ceacd8755fd36985d2c0730a8508859e937fe39b",
+        "sha256": "48da299798a930c8e328ae15fa0f4fd6b6b69e0fbe5f48ea9f52ac5d3c4023db",
+        "bytes": 18815
+      },
+      "after": {
+        "blob": "fb868b012d74c8e2b31990fb62b8ee6183b03f13",
+        "sha256": "584f6187bd9620b801b84a1433f8df695338b6682986c68b6cef2e2e27fefe9e",
+        "bytes": 20819
+      },
+      "initial_authorized_after_sha256": "584f6187bd9620b801b84a1433f8df695338b6682986c68b6cef2e2e27fefe9e",
+      "final_mirror_adjustment": false
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/scenarios.tsv",
+      "operation": "modify",
+      "before": {
+        "blob": "019a5e23838480e2ab8a4c1a2a77b2da49ca278c",
+        "sha256": "43ff33618fa58178ae20ed9322a1082733ef64606fc7a685244d76cce18cdf9d",
+        "bytes": 27273
+      },
+      "after": {
+        "blob": "3a19c03a614fc8e6517bc69697ddd3ec7981f955",
+        "sha256": "d244877c0df3fbe4ca88b89d500916e5ec20567b503652ab481b4c8fac31a3a2",
+        "bytes": 27606
+      },
+      "initial_authorized_after_sha256": "d244877c0df3fbe4ca88b89d500916e5ec20567b503652ab481b4c8fac31a3a2",
+      "final_mirror_adjustment": false
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-floor-zero.jsonl",
+      "operation": "add",
+      "before": null,
+      "after": {
+        "blob": "2e041329c14d570316c06dbd3004a9108e98266b",
+        "sha256": "6278ab0a39fe2592d127ff0aff696a54c7adbcc8ae4cd20a9c646f175a519ab5",
+        "bytes": 210
+      },
+      "initial_authorized_after_sha256": "6278ab0a39fe2592d127ff0aff696a54c7adbcc8ae4cd20a9c646f175a519ab5",
+      "final_mirror_adjustment": false
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-floor-above-current.jsonl",
+      "operation": "add",
+      "before": null,
+      "after": {
+        "blob": "dee71e42df3bdd63b41dfb03836dd40476564ca8",
+        "sha256": "6efc9d4bd7a83b422c4d104b6bd96ea6a1201cd7bf93ea6a6040d252d2ccc599",
+        "bytes": 225
+      },
+      "initial_authorized_after_sha256": "6efc9d4bd7a83b422c4d104b6bd96ea6a1201cd7bf93ea6a6040d252d2ccc599",
+      "final_mirror_adjustment": false
+    },
+    {
+      "path": "decisions/changes/registry.tsv",
+      "operation": "append",
+      "before": {
+        "blob": "81f139a2f453e95ba6c109ab68fa7fc6617601db",
+        "sha256": "b8c080f5f78b919045509d4eefc245db358877841f70b5dc46d9cc9356b1b7b2",
+        "bytes": 971
+      },
+      "after": {
+        "blob": "7ff8126f8557c59d79727c011940b4133a8bc4cf",
+        "sha256": "ef17acac9e33e467c2a8316b669af7e2394f33c90bdc216b5ec4768f95198703",
+        "bytes": 1042
+      }
+    },
+    {
+      "path": "decisions/journal/platform/01-store/corrections-3.tsv",
+      "operation": "append",
+      "before": {
+        "blob": "7882c113735ba38e2bee7bc156c7c47bb628acc1",
+        "sha256": "52469de46fb17b2b40298a3b2ac6ad25fbbd0b9c05a2f6221da17089311c1c99",
+        "bytes": 6961
+      },
+      "after": {
+        "blob": "ebb5fd9c41d711149693692f0b51be13dd5fbf4e",
+        "sha256": "19caaf83c06e65438a230baed908c880cf096fdf67584d1bf412134d75cc8249",
+        "bytes": 7474
+      }
+    },
+    {
+      "path": "decisions/adr-norms.tsv",
+      "operation": "append",
+      "before": {
+        "blob": "fd962e436d802de6b56bd94492f00fbb3166ee8b",
+        "sha256": "efd3056a6eacab23992f2cf15b6258e8aac0e4c578dc4ad31f3daa71e313b78d",
+        "bytes": 480295
+      },
+      "after": {
+        "blob": "1431361e8bbfb9a3a2b3d7aec8f7e4f9b8951528",
+        "sha256": "8192698612d009d9db86f79e0f59984bb368a8013a6f541f5910661228fa3920",
+        "bytes": 481455
+      }
+    }
+  ],
+  "initial_MD_blocks": [
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "identity": {
+        "path": "Platform/01-store/spec/01.3-store.norms.md",
+        "blob": "b47a2f025ef46fd272e26100ea2a31099e27338e",
+        "sha256": "1af25acb3155a5c87914fe2022ca1c64ee3292eb0d83673bfc58b7cd3f280390",
+        "bytes": 64579
+      },
+      "seam": "FORMAT",
+      "line": 71,
+      "start_utf8": 7345,
+      "end_utf8": 8172,
+      "before": "format:    in -dir — the file FORMAT, a JSON object {format, version, impl} (string, integer, string): format and version — the on-disk format\n           of this implementation, impl — the name of the implementation, only for the log; the daemon writes it first into an empty directory\n           (tmp + rename), before any other write; start: the directory is empty → write FORMAT; format and version are those that\n           this build reads → start; otherwise (the directory is not empty but there is no FORMAT; foreign format or version; FORMAT out of\n           form) → start refusal, code 2, the log names the directory and the mark found; nothing is written to or\n           removed from the directory. A change of implementation — only by a copy (copy below) into a fresh directory (the store pilot, A1)\n",
+      "after": "format:    in -dir — the file FORMAT, a JSON object {format, version, impl} (string, integer, string): the implementation\n           chooses the name and one current version of its internal format. This build writes and reads only that version;\n           impl names the implementation and is used only in the log. In an empty directory write the mark atomically (tmp + rename) first, before\n           any other write. At start the name and version equal this build's current pair — start; a non-empty unmarked\n           directory, foreign or former version, or malformed mark — the existing start refusal, code 2, without writing\n           or removing data. No converter or former internal version reader is required. The current portable copy/version1\n           below is unchanged.\n\n           The refusal log names the directory and found mark. A change between current implementations uses the current portable copy into a fresh directory; preserve the original directory.\n",
+      "before_sha256": "c5de90f9dc2792baa0b2befedb980bd5cef87c3c7f13ce404e49c5014d86768b",
+      "after_sha256": "2826aba7269405638d6b81796512880e8b7358a3137e6523a5029e0f9abd6b79",
+      "reason": "one build-owned current pair; do not impose internal version=1",
+      "status": "READONLY exact proposed block, NOT applied"
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "identity": {
+        "path": "Platform/01-store/spec/01.3-store.norms.md",
+        "blob": "b47a2f025ef46fd272e26100ea2a31099e27338e",
+        "sha256": "1af25acb3155a5c87914fe2022ca1c64ee3292eb0d83673bfc58b7cd3f280390",
+        "bytes": 64579
+      },
+      "seam": "FORMAT",
+      "line": 367,
+      "start_utf8": 44591,
+      "end_utf8": 44849,
+      "before": "- `start_format`: the data directory is not empty but there is no mark `FORMAT`; foreign `format` or `version`; `FORMAT` out of form (N1.3 `format`). Caller action: take a copy with the former implementation (`backup`) and restore it into a fresh directory.\n",
+      "after": "- `start_format`: the data directory is not empty but there is no mark `FORMAT`; foreign `format` or `version`; `FORMAT` out of form (N1.3 `format`). Caller action: preserve the original directory; use a fresh directory and an available current portable copy/version1. Running a former implementation or reading its internal format is not required.\n",
+      "before_sha256": "58e8162b19c115f006a7439aad7a2d125860c205bc1cb35d6e8920fb269e5f86",
+      "after_sha256": "b2a07a242f534b4816f13b5ae7240075c093de0b2d225011337259db719ff9e9",
+      "reason": "remove old implementation backup obligation, retain useful backup and original directory",
+      "status": "READONLY exact proposed block, NOT applied"
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "identity": {
+        "path": "Platform/01-store/spec/01.3-store.norms.md",
+        "blob": "b47a2f025ef46fd272e26100ea2a31099e27338e",
+        "sha256": "1af25acb3155a5c87914fe2022ca1c64ee3292eb0d83673bfc58b7cd3f280390",
+        "bytes": 64579
+      },
+      "seam": "FORMAT",
+      "line": 442,
+      "start_utf8": 56469,
+      "end_utf8": 56824,
+      "before": "5. **the format mark and the profile `file://`**: the values `format` and `version` of its mark `FORMAT` and which versions of its format the build reads (N1.3 `format`); the on-disk format of the profile `file://`; the command by which a copy of N1.3 `copy` is taken from a store `file://` (the form of the copy is a norm) (the store pilot, A1, A2, A9).\n",
+      "after": "5. **the format mark and the profile `file://`**: the values `format` and `version` of its mark `FORMAT` — the one current version that this build writes and reads (N1.3 `format`); the on-disk format of the profile `file://`; the command by which a copy of N1.3 `copy` is taken from a store `file://` (the form of the copy is a norm) (the store pilot, A1, A2, A9).\n",
+      "before_sha256": "6be3db87dcf097b7d0aed2a3887ed6532463d9193dfac14af25bbb23365be84f",
+      "after_sha256": "3fccc2c6957288f0749a3890f5f69a144db46bcad13321c52da89b7ecb3d9564",
+      "reason": "Implementation decides retains name/device choice, not a set of supported former versions",
+      "status": "READONLY exact proposed block, NOT applied"
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "identity": {
+        "path": "Platform/01-store/spec/01.3-store.norms.md",
+        "blob": "b47a2f025ef46fd272e26100ea2a31099e27338e",
+        "sha256": "1af25acb3155a5c87914fe2022ca1c64ee3292eb0d83673bfc58b7cd3f280390",
+        "bytes": 64579
+      },
+      "seam": "floor",
+      "line": 253,
+      "start_utf8": 30564,
+      "end_utf8": 30735,
+      "before": "| `floor` | integer; ≥ 0; ≤ 9007199254740991; the whole sign for the reader too (x-whole) | required |  | the lower bound of issue after a restore; generation << 32 |\n",
+      "after": "| `floor` | integer; ≥ 1; ≤ 9007194959773696; the whole sign for the reader too (x-whole) | required |  | the lower bound of issue after a restore; generation << 32 |\n",
+      "before_sha256": "2ae841a823cd1987154a507618ce342e4a4251f4db8288b05c493c3452329d73",
+      "after_sha256": "e15503cd23dcd7af81e2e3a9bc42403f1d49e5250a59fe6065ae1defafa4915a",
+      "reason": "present row min1/max2^53-2^32; no multipleOf; missing row virtual0 remains in procedure",
+      "status": "READONLY exact proposed block, NOT applied"
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "identity": {
+        "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+        "blob": "9d0bb6e6872a382933f242e6365c840d1f60cdad",
+        "sha256": "d308d074d5d7a6298c4257cdea248ab5801f4c25542ef3573d50f9df3bddd41d",
+        "bytes": 85201
+      },
+      "seam": "FORMAT",
+      "line": 63,
+      "start_utf8": 9182,
+      "end_utf8": 10253,
+      "before": "format:    в -dir — файл FORMAT, JSON-объект {format, version, impl} (строка, целое, строка): format и version — формат\n           на диске этой реализации, impl — имя реализации, только для лога; демон пишет его первым в пустой каталог\n           (tmp + rename), до любой другой записи; старт: каталог пуст → записать FORMAT; format и version — те, что\n           читает эта сборка → старт; иначе (каталог не пуст, а FORMAT нет; чужие format или version; FORMAT не по\n           форме) → отказ старта, код 2, лог называет каталог и найденную метку; в каталоге ничего не пишется и не\n           удаляется. Смена реализации — только копией (copy ниже) в свежий каталог (пилот хранилища, A1)\n",
+      "after": "format:    в -dir — файл FORMAT, JSON-объект {format, version, impl} (строка, целое, строка): имя и одна нынешняя версия\n           внутреннего формата выбраны реализацией. Сборка пишет и читает только эту версию; impl — имя реализации, только для журнала.\n           В пустом каталоге метка пишется атомарно (tmp + rename) первой, до другой записи. При старте имя и версия\n           равны нынешней паре этой сборки — старт; непустой каталог без метки, чужая или прежняя версия либо метка\n           не по форме — существующий отказ старта, код 2, без записи и удаления данных. Конвертер и чтение прежней\n           внутренней версии не требуются. Нынешняя переносимая копия version=1 ниже сохраняется.\n\n           Журнал отказа называет каталог и найденную метку. Смена нынешней реализации — только через нынешнюю переносимую копию в свежий каталог; исходный каталог сохраняется.\n",
+      "before_sha256": "8e80a788e9950ca771bf558d06d26fd13387ff139a226d140d769717725554b1",
+      "after_sha256": "d76a7d0b0b0de1a27248f0d9bc4186dcfa7e5f770e9b962bf5ce8f694a42ef01",
+      "reason": "one build-owned current pair; do not impose internal version=1",
+      "status": "READONLY exact proposed block, NOT applied"
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "identity": {
+        "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+        "blob": "9d0bb6e6872a382933f242e6365c840d1f60cdad",
+        "sha256": "d308d074d5d7a6298c4257cdea248ab5801f4c25542ef3573d50f9df3bddd41d",
+        "bytes": 85201
+      },
+      "seam": "FORMAT",
+      "line": 332,
+      "start_utf8": 58664,
+      "end_utf8": 59013,
+      "before": "- `start_format`: каталог данных не пуст, а метки `FORMAT` нет; чужие `format` или `version`; `FORMAT` не по форме (N1.3 `format`). Действие вызывающего: снять копию прежней реализацией (`backup`) и восстановить в свежий каталог.\n",
+      "after": "- `start_format`: каталог данных не пуст, а метки `FORMAT` нет; чужие `format` или `version`; `FORMAT` не по форме (N1.3 `format`). Действие вызывающего: сохранить исходный каталог; использовать свежий каталог и доступную нынешнюю переносимую копию version=1. Обязанность запускать прежнюю реализацию или читать её внутренний формат не вводится.\n",
+      "before_sha256": "08ca039a0caf1331dbf1d211dfa47fbd7660744d53139879d86677d545288bea",
+      "after_sha256": "c5c47996e21bd5a61298d7365be7f11ade03ccf1a71991f0df7e916bef5c80bf",
+      "reason": "remove old implementation backup obligation, retain useful backup and original directory",
+      "status": "READONLY exact proposed block, NOT applied"
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "identity": {
+        "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+        "blob": "9d0bb6e6872a382933f242e6365c840d1f60cdad",
+        "sha256": "d308d074d5d7a6298c4257cdea248ab5801f4c25542ef3573d50f9df3bddd41d",
+        "bytes": 85201
+      },
+      "seam": "FORMAT",
+      "line": 406,
+      "start_utf8": 74634,
+      "end_utf8": 75108,
+      "before": "5. **метку формата и профиль `file://`**: значения `format` и `version` своей метки `FORMAT` и какие версии своего формата читает сборка (N1.3 `format`); формат на диске профиля `file://`; команду, которой с хранилища `file://` снимается копия N1.3 `copy` (форма копии — норма) (пилот хранилища, A1, A2, A9).\n",
+      "after": "5. **метку формата и профиль `file://`**: значения `format` и `version` своей метки `FORMAT` — одна нынешняя версия, которую сборка пишет и читает (N1.3 `format`); формат на диске профиля `file://`; команду, которой с хранилища `file://` снимается копия N1.3 `copy` (форма копии — норма) (пилот хранилища, A1, A2, A9).\n",
+      "before_sha256": "ffa634563b5658b1503a0e56061791b882a4e91ced0ae503d92771cddbed35d4",
+      "after_sha256": "8ac3b284973cb5f14cc1969a0287658bc91edfdf52d880acc7a0e7e9cbc4697c",
+      "reason": "Implementation decides retains name/device choice, not a set of supported former versions",
+      "status": "READONLY exact proposed block, NOT applied"
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "identity": {
+        "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+        "blob": "9d0bb6e6872a382933f242e6365c840d1f60cdad",
+        "sha256": "d308d074d5d7a6298c4257cdea248ab5801f4c25542ef3573d50f9df3bddd41d",
+        "bytes": 85201
+      },
+      "seam": "floor",
+      "line": 238,
+      "start_utf8": 39950,
+      "end_utf8": 40145,
+      "before": "| `floor` | целое; ≥ 0; ≤ 9007199254740991; целый знак и у читателя (x-whole) | обязателен |  | the lower bound of issue after a restore; generation << 32 |\n",
+      "after": "| `floor` | целое; ≥ 1; ≤ 9007194959773696; целый знак и у читателя (x-whole) | обязателен |  | the lower bound of issue after a restore; generation << 32 |\n",
+      "before_sha256": "d33b9e553c74e3a0270d5460807e07572cf0adf9a510444e582677de217d5bef",
+      "after_sha256": "bfe444209e0b883e4133d5dde620c50bec734c68d4a530e1da4d279efd4c409f",
+      "reason": "present row min1/max2^53-2^32; no multipleOf; missing row virtual0 remains in procedure",
+      "status": "READONLY exact proposed block, NOT applied"
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.md",
+      "seam": "floor fixture catalogue derived",
+      "before": "| `bad-floor.jsonl` | the floor row with a non-decimal `floor` `12.5` (sc. 12 steps 25–26) |\n",
+      "after": "| `bad-floor.jsonl` | the floor row with a non-decimal `floor` `12.5` (sc. 12 steps 25–26) |\n| `bad-floor-zero.jsonl` | a present floor row stores zero; the missing-row virtual zero is a separate case |\n| `bad-floor-above-current.jsonl` | the floor exceeds its current operation range |\n",
+      "start_utf8": 5062,
+      "end_utf8": 5157,
+      "before_sha256": "f747147adaea08d60452866c97393b6aa26668fe71ede02f498301f1821a4daa",
+      "after_sha256": "19951b128e654042f2a1ab48026e8eea76dfa4c8fa926a3a51246feac235e7d1"
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/3/README.md",
+      "seam": "floor fixture catalogue derived",
+      "before": "| `bad-floor.jsonl` | строка пола с недесятичным `floor` `12.5` (сц. 12 шаги 25–26) |\n",
+      "after": "| `bad-floor.jsonl` | строка пола с недесятичным `floor` `12.5` (сц. 12 шаги 25–26) |\n| `bad-floor-zero.jsonl` | присутствующая строка floor хранит ноль; виртуальный ноль отсутствующей строки — отдельный случай |\n| `bad-floor-above-current.jsonl` | floor превышает нынешний диапазон операции |\n",
+      "start_utf8": 6506,
+      "end_utf8": 6623,
+      "before_sha256": "d2c0933f6fd803aacc065c8c70c452287cc03a0cb1fe0a83f793ddf5952f333a",
+      "after_sha256": "7e42417280b2859ee2de68121efda1dbe5928f3e3aa49ebb87ca4f5f09d14933"
+    }
+  ],
+  "final_mirror_adjustment": [
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "before_sha256": "05d518826a590bf31a87b84bd94790bdeb31a6e014e73a3b147f45fc3b2b07c2",
+      "proposed_after_sha256": "5f96fe44603861555d5c3e0b752559bcfecf536d37abe6d0099f40ffa9137686",
+      "proposed_after_bytes": 64844,
+      "edits": [
+        {
+          "start_utf8": 8094,
+          "end_utf8": 8107,
+          "before": "copy/version1",
+          "after": "copy/version=1"
+        },
+        {
+          "start_utf8": 45005,
+          "end_utf8": 45018,
+          "before": "copy/version1",
+          "after": "copy/version=1"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "before_sha256": "0cc17a807f27e43413325391e889ad0d02a50991baf818f6393719d3e16da492",
+      "proposed_after_sha256": "b63319c74d1518056030e8b26c583719864c9edc49cb3f588f97a6cc918f6395",
+      "proposed_after_bytes": 85864,
+      "edits": [
+        {
+          "start_utf8": 10185,
+          "end_utf8": 10349,
+          "before": "           внутренней версии не требуются. Нынешняя переносимая копия version=1 ниже сохраняется.\n",
+          "after": "           внутренней версии не требуются. Нынешняя переносимая копия version=1\n           ниже сохраняется.\n"
+        }
+      ]
+    }
+  ],
+  "exact_JSON_edits": {
+    "path": "Platform/01-store/data/epoch_floor.schema.json",
+    "identity": {
+      "path": "Platform/01-store/data/epoch_floor.schema.json",
+      "blob": "c6e351ba474a436ad111af832c23340201a9ad35",
+      "sha256": "537add27ae2016c0efa0dcf8959dbeac7827eab535c59ecaacccb3e14b1df839",
+      "bytes": 28913
+    },
+    "edits": [
+      {
+        "start": 281,
+        "end": 281,
+        "before": "",
+        "after": ",\n   \"minimum\": 1,\n   \"maximum\": 9007194959773696",
+        "pointer": "/properties/floor",
+        "kind": "append exact existing-class properties",
+        "start_utf8": 281,
+        "end_utf8": 281,
+        "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "after_sha256": "f46785fa6fa87067befbdba8c79d2fcf2a21963452352b3c7d8f8ef0c5892756"
+      }
+    ],
+    "forecast_after_sha256": "f0d41e1730fcdfae52aae811330d50d3c6b5f6a94f5082636e4634ad58d785c9",
+    "source_NOT_written": true
+  },
+  "modified_req_units": [
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "req": "P/01.3-R006",
+      "normalization": "LF; strip trailing spaces; one final LF",
+      "old_normalized_sha256": "b5b149af08939eaa00968d5985e5295ba4573a63d74e7096114d9339f6866a4c",
+      "new_normalized_sha256": "8815be6dfd50589971e81cf1a1010d8ca0f4b2e5a73ff1792f8a8575e68e1f07",
+      "old_bytes": 19253,
+      "new_bytes": 19414,
+      "new_complete_unit": true
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "req": "P/01.3-R011",
+      "normalization": "LF; strip trailing spaces; one final LF",
+      "old_normalized_sha256": "f7c3c52c4e0840b2a88f6f58b83947df1b51a8c7c3bb505d1029c8ae95d162c2",
+      "new_normalized_sha256": "32897a745b4fd73c93e7e344b57311fdf784a4ac764449b9e5e2c22a96f028af",
+      "old_bytes": 4349,
+      "new_bytes": 4349,
+      "new_complete_unit": true
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "req": "P/01.3-R029",
+      "normalization": "LF; strip trailing spaces; one final LF",
+      "old_normalized_sha256": "44f5aa1885e09f5ace2bd397c149de37f906fda6c8a9e44b5677fccebc2cdbbd",
+      "new_normalized_sha256": "b777b9338c285f356932d4733a1b326876a4c1af628074a8c999e0032efeb299",
+      "old_bytes": 4761,
+      "new_bytes": 4853,
+      "new_complete_unit": true
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "req": "P/01.3-R030",
+      "normalization": "LF; strip trailing spaces; one final LF",
+      "old_normalized_sha256": "49e81dd556ba18c094143ab7fcd25af1afe9e3cdb2e1f1ae1a6994af22da1b3e",
+      "new_normalized_sha256": "deeaf594ec0387eb1ef021261c74da4c10ca4ae9a8afacf2f62e6734e8b7b711",
+      "old_bytes": 16721,
+      "new_bytes": 16733,
+      "new_complete_unit": true
+    }
+  ],
+  "history": "history.md preserves original active policy bytes and original sources/hashes; no earlier archives/receipts are rewritten",
+  "scope_and_limits": "exact18 normal child to d034; full bundle review only; no main/accepted/applied/source lesson readiness. Only new own narrow checks. Complete metadata self hashes/author commit and protected-tree proof live in external FREEZE."
+}

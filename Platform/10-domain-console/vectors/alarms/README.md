@@ -20,7 +20,7 @@ the only source of these cases.
 
 Without a stand: the function of an implementation (the command `alarms`, the norms «Implementation decides» item 1) gets the input (the column `input`) and
 gives the output; `expect` is a subset of the fields of the output (`@absent` — no such field) or `@exit 2` (the input is out of form: the norms N5
-`exit`). The `@exit 2` rows are `alarms-15-lost-after-negative` (`lost_after` not > 0) and `alarms-17`…`alarms-23` (the other cases of
+`exit`). The `@exit 2` rows are `alarms-15-lost-after-negative` (`lost_after` not > 0), `alarms-17`…`alarms-23` and `alarms-31`…`alarms-37` (the other cases of
 code 2 of N5 `exit`). A page out of the form of P/09.1 N1.10 — the outcome 0 `unreadable`, not code 2 (rows 06, 12, 24–26).
 Who performs it — the domain console (`10-domain-console`, P/10 N3 `alarms`, N1.8, N5 `alarms`). The process `domain` (`08-domain`) does not perform it: it writes the history that the function reads (P/08.9 N1.9 `writer`; its writing without repeats — the package `alarm-history`); the agent (`09-agent`) writes the alarm page of a member (P/09.1 N1.10) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
 
@@ -30,7 +30,7 @@ Who performs it — the domain console (`10-domain-console`, P/10 N3 `alarms`, N
 - the members: `last_report` and `received_at` — the domain clock, `sent_at` — the member clock of the same report (at the vectors — `page.to`; with
   `page` not an object — a number, as `received_at`: `null` at a member with a report — code 2, H14, row 19), `page` — the page of P/09.1 N1.10 (`"garbled"` — does not read; `null` — none), `history` —
   the history object of P/08.9 N1.9; `reported: "garbled"` instead of `last_report`, `received_at`, `sent_at` — the mark is read, out of form (C10-REPORTED-OUTCOME-1D6);
-- `silent_after?` in each member — a finite positive number, overriding the supplied `lost_after`; without it the old native input retains `lost_after`. The collector always supplies the server/camera value from N1.8; no class is inferred by the function. Rows 28–30 exercise a camera alongside a server and both sides of the exact boundary. Rows 31–35 reject zero, negative, boolean, string and null overrides.
+- `silent_after` is required in each member form and is a finite positive number. The collector supplies the server/camera value from N1.8; the function infers no class and uses no `lost_after` fallback. Rows 28–30 exercise a camera alongside a server and the exact boundary; rows 31–35 reject zero, negative, boolean, string and null, while rows 36–37 reject absence in the normal and garbled forms.
 - `witnesses` — the witness objects `{sub, name, ts, cluster, units}` (the norms N1.8 `witness`). Here `ts` is already normalized to the domain clock by the originating report, not the clock of the target member. The real collector's two offset directions are checked by CALL seams, not simulated by changing these native inputs.
 
 The names of the subsystems and the units in the input (`testsub`, `testsub/c1`) are data of the input: the vector does not depend on the bytes of the manifests of the catalogue.
@@ -42,7 +42,7 @@ of the acceptance of M11, at the rows 16–27 — the checked case and its norm 
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](cases.tsv), 35 rows: 22 computed, 13 `@exit 2` | `input` — the input of the command `alarms` as JSON text → `expect`: `{events, members, complete, sentence}` or a part of it |
+| [`cases.tsv`](cases.tsv), 37 rows: 22 computed, 15 `@exit 2` | `input` — the input of the command `alarms` as JSON text → `expect`: `{events, members, complete, sentence}` or a part of it |
 
 | Rows | What they check |
 |---|---|
@@ -78,4 +78,4 @@ at them), the code 2 of row 22 at them is «extra field», by the norm — `repo
 
 ## P/10 review neighbours
 
-Each member's `silent_after?` is a finite positive number; without it the supplied `lost_after` applies. The collector always supplies the server/camera threshold of N1.8; the function infers no class. Rows 28–30 check a camera alongside a server and the exact boundary; 31–35 reject zero, negative, boolean, string and null, including garbled. A witness input `ts` is already normalized to domain time using its originating report, never the target member's mark. Both offset directions of the actual collector are checked by CALL seams.
+Each member form requires `silent_after`, a finite positive number; there is no `lost_after` fallback. The collector always supplies the server/camera threshold of N1.8; the function infers no class. Rows 28–30 check a camera alongside a server and the exact boundary; 31–35 reject zero, negative, boolean, string and null, including garbled; 36–37 reject a missing threshold in the normal and garbled forms. A witness input `ts` is already normalized to domain time using its originating report, never the target member's mark. Both offset directions of the actual collector are checked by CALL seams.

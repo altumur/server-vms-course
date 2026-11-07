@@ -103,10 +103,10 @@ M10/09 (01, 02, 04–12; 03 — сессия — в
 
 | Файл | Ключ | Что в нём |
 |---|---|---|
-| `res-srv-p-stalled.json` | `platform/resources/srv-p/heartbeat` | полный пульс ресурса P/05 N1.4 с `pass_stalled: 12.5` (C12) |
-| `res-srv-q-extra-field.json` | `platform/resources/srv-q/heartbeat` | тот же пульс и поле `bogus` вне `ResourceRow` (C11) |
-| `res-srv-r-wrong-server.json` | `platform/resources/srv-r/heartbeat` | `server: "srv-x"` ≠ серверу ключа (C11) |
-| `res-srv-s-no-url.json` | `platform/resources/srv-s/heartbeat` | нет обязательного `url` (C11) |
+| `res-srv-p-stalled.json` | `platform/resources/srv-p/heartbeat` | полный пульс ресурса P/05 N1.4 с `pass_stalled: 12.5` (C12); только нейтральный действительный loopback `door` дополнен по нынешней форме P/05-R026 |
+| `res-srv-q-extra-field.json` | `platform/resources/srv-q/heartbeat` | тот же пульс и поле `bogus` вне `ResourceRow` (C11); только нейтральный действительный loopback `door` дополнен по нынешней форме P/05-R026 |
+| `res-srv-r-wrong-server.json` | `platform/resources/srv-r/heartbeat` | `server: "srv-x"` ≠ серверу ключа (C11); только нейтральный действительный loopback `door` дополнен по нынешней форме P/05-R026 |
+| `res-srv-s-no-url.json` | `platform/resources/srv-s/heartbeat` | нет обязательного `url` (C11); только нейтральный действительный loopback `door` дополнен по нынешней форме P/05-R026 |
 | `hb-w-1-labels.json` | `testsub/heartbeats/w-1` | пульс воркера на `srv-a` с метками узла `a,b` (C16) |
 | `hb-w-7-other-name.json` | `testsub/heartbeats/w-7` | `worker: "w-8"` ≠ имени ключа (C15) |
 | `hb-W-9-bad-name.json` | `testsub/heartbeats/W-9` | имя ключа не по грамматике имени слота (C15) |
@@ -173,3 +173,6 @@ R37 (Codex): проверить каталоги root/mount: имя where не �
 ## Принятое ревью ADR-0127: каталог source до перезапуска
 
 Для `GET /manifest/<sub>/source` принять изменённый манифест store после старта консоли. До перезапуска дверь source сохраняет rev, served, sha256, manifest и secret_defaults каталога запуска; новая установленная подсистема вне этого каталога остаётся404. Иная rev текущей строки store не создаёт своего503 и чтения store при каждом запросе. Перезапустить и сверить новый каталог запуска и served. Независимые обычные отказы busy/trust сохраняются; это не ответ по несовпадению ревизий. Для доказательства отсутствия чтения записать настоящие вызовы store. Замороженный модуль платформы и тринадцать исходных байтовых фикстур не меняются.
+
+
+ADR-0129(17): обычный GET /metrics должен выдавать все пять рядов w2c_changes_resets_total при нуле: foreign, evicted, rights, labels, folders. Настоящая смена состава папки или её удаление уже даёт reset5; наблюдать этот reset и счётчик folders через тот же обычный HTTP-путь. Вход векторов manifest metrics[] не содержит состояния этих глобальных счётчиков и не объявляется такой проверкой. HEAD на шести предписанных существующих путях сравнивает допуск/статус/заголовки GET и пустое тело; исполнение требует обычной настоящей подготовки, не готового ответа.

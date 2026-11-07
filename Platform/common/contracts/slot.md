@@ -35,7 +35,7 @@ states:
              of an unchanged version (P/04 N3 «leaving»); every «released» below without a value means released ≠ false;
              a readable row without the field released — as released ≠ false (not held; for the capture — as released), without
              the field holder — as holder = "" (analysis of the review of stage B 3–5, № 6)
-  torn:      the row does not read: until is not a number or not finite, gen is not a decimal integer ≥ 0;
+  torn:      the row does not read: until is not a number or not finite, gen is not an exact decimal integer in 1..9007199254740991;
              a finite until in the past/future relative to the judge does not make the row torn
 ```
 
@@ -43,7 +43,8 @@ states:
 
 ```yaml
 SLOT_TERM: 45          # the slot term, s
-TORN_STILL: 45 + 5     # how long a torn row with a readable gen stands unchanged before being rewritten
+TORN_MARGIN: 5         # s; independent extra observation margin for a torn row, not HOLD_SKEW
+TORN_STILL: SLOT_TERM + TORN_MARGIN  # unchanged observation required before rewriting a torn row with readable gen
 ```
 
 ## Vectors

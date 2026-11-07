@@ -1,0 +1,80 @@
+{
+ "note": "Machine carriers that must keep a number or word equal to its single owner; a separate existing check_constants share binds them (not this delivery).",
+ "carriers": [
+  {
+   "file": "Platform/09-agent/data/alarms.schema.json",
+   "pointer": "/$defs/writer/properties/events/maxItems",
+   "value": 100,
+   "owner": "Platform/09-agent/forms/runtime-constants.tsv ALARM_PAGE",
+   "reader": "root allOf -> #/$defs/writer"
+  },
+  {
+   "file": "Platform/09-agent/data/outcomes.schema.json",
+   "pointer": "/$defs/writer/maxProperties",
+   "value": 500,
+   "owner": "Platform/09-agent/forms/runtime-constants.tsv OUTCOMES_KEEP",
+   "reader": "root allOf -> #/$defs/writer"
+  },
+  {
+   "file": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+   "pointer": "/components/schemas/RelayRefusalSignature/allOf/1/properties/reason/enum",
+   "value": [
+    "no_signature",
+    "not_a_signature",
+    "out_of_window",
+    "bad_signature"
+   ],
+   "owner": "Platform/common/contracts/agent-signature.md «Check and refusal words»"
+  },
+  {
+   "file": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+   "pointer": "/components/schemas/RelayRefusalAccept/allOf/1/properties/reason/enum",
+   "value": [
+    "same_sent_at",
+    "rebase",
+    "not_ready"
+   ],
+   "owner": "Platform/common/contracts/accept.md (P/08.3)"
+  },
+  {
+   "file": "Platform/09-agent/spec/09.1-agent.norms.md and ru/",
+   "pointer": "families block of domain/outcomes and domain/alarms («Only at the writer»)",
+   "value": "500 / 100",
+   "owner": "built by v7/sections.py from $defs.writer",
+   "note": "built projection, not an independent copy"
+  },
+  {
+   "file": "Platform/09-agent/forms/runtime-constants.tsv",
+   "pointer": "row BODY_LIMIT",
+   "value": 16777216,
+   "owner": "Platform/common/contracts/accept.md (import)",
+   "note": "import kept; prose copies 16 MiB replaced by the name"
+  },
+  {
+   "file": "Platform/09-agent/forms/runtime-constants.tsv",
+   "pointer": "row GONE_CHECK_EVERY (new)",
+   "value": 600,
+   "owner": "P/09.1-R008 itself",
+   "note": "not merged with TABLES_RETRY or SAY_EVERY by equal value"
+  }
+ ],
+ "prose_copies_removed": [
+  "09.1 TABLES_RETRY",
+  "SAY_EVERY",
+  "BOOK_PARTS_PASS",
+  "MEMBER_WANT_PASS",
+  "FRESH_EVERY",
+  "AS_OF_STORE_EVERY",
+  "OUTCOME_HOLD",
+  "OUTCOMES_KEEP",
+  "ALARM_WINDOW",
+  "ALARM_PAGE (fence and families table)",
+  "URGENT_GAP",
+  "memberof-gone 600 s",
+  "lifecycle REPORT_EVERY",
+  "acceptance/1 REPORT_EVERY, FRESH_EVERY",
+  "acceptance/2 FRESH_EVERY",
+  "BODY_LIMIT (16 MiB) x3",
+  "alarms schema description ALARM_PAGE = 100"
+ ]
+}

@@ -1,0 +1,250 @@
+{
+  "base_api_sha256": "0e7bdf06d30e54467451f4eb8d5d5a78103e37af8393e9178542e08c37706725",
+  "current_api_sha256": "c25460d143c641fb700264da2dc305a017e88bdb3de47fd6a248d520162cf8a2",
+  "full_inverse_exact": true,
+  "old_paths70_unchanged": true,
+  "operations140_plus6": 146,
+  "heads": [
+    {
+      "path": "/folders",
+      "GET_status_headers_parameters_exact": true,
+      "no_body": true
+    },
+    {
+      "path": "/folders/{id}",
+      "GET_status_headers_parameters_exact": true,
+      "no_body": true
+    },
+    {
+      "path": "/{sub}/operations/{id}",
+      "GET_status_headers_parameters_exact": true,
+      "no_body": true
+    },
+    {
+      "path": "/changes",
+      "GET_status_headers_parameters_exact": true,
+      "no_body": true
+    },
+    {
+      "path": "/{sub}/next_id",
+      "GET_status_headers_parameters_exact": true,
+      "no_body": true
+    },
+    {
+      "path": "/api/backup-part/{member}/{part}",
+      "GET_status_headers_parameters_exact": true,
+      "no_body": true
+    }
+  ],
+  "S08_raw6": [
+    {
+      "path": "/{rows}",
+      "raw_sha256": "4976bf2b77cc19bfa6f75467622f78fd9bc022a5703e1244313eb298978c2a27",
+      "byte_exact": true
+    },
+    {
+      "path": "/{rows}/{id}",
+      "raw_sha256": "18e0f561533e4220aee5ecee4fa92888274e8614bb34b33e41fd74f6141049d6",
+      "byte_exact": true
+    },
+    {
+      "path": "/{table}",
+      "raw_sha256": "128fd30f028a7365de829075ea532af6be9ce4a09970b8c7665113f062b01a83",
+      "byte_exact": true
+    },
+    {
+      "path": "/{table}/{name}",
+      "raw_sha256": "99303e101ee28023aab4cf231d731fcaa05c80c2672c043fdedfa740ad851504",
+      "byte_exact": true
+    },
+    {
+      "path": "/{pass}",
+      "raw_sha256": "4cdf1419ea855ebb57871bf2c457a21087bbab7669f1372d78842e6fbd3f7ec3",
+      "byte_exact": true
+    },
+    {
+      "path": "/{sub}/{file}",
+      "raw_sha256": "c5aa1da98f37816a6abc2c70318d78cbdd868b6a9c84139888b985f60187c4c4",
+      "byte_exact": true
+    }
+  ],
+  "protectedResourceRow_DoorState_WorkerRow": true,
+  "limits": "in-memory source structure only,not a producer or IO execution",
+  "ordinary_api_blob": "a1214572c80ead38ae39ef1d1ba62c094ffeac3a",
+  "ordinary_api_sha256": "c25460d143c641fb700264da2dc305a017e88bdb3de47fd6a248d520162cf8a2",
+  "S08_frame_decision": "192b80beb0edd13452249c3faabd0ea428394e56",
+  "S08_SOURCE_and_CODE": "NOT_ACTIVATED;map must use this ordinary published point",
+  "actual_IO": "NOT_RUN",
+  "shape_controls": 19,
+  "HEAD_GET_media_owner": [
+    {
+      "path": "/folders",
+      "GET_media_by_status": {
+        "200": [
+          "application/json"
+        ],
+        "400": [
+          "application/json"
+        ],
+        "401": [
+          "application/json"
+        ],
+        "403": [
+          "application/json"
+        ],
+        "429": [
+          "application/json"
+        ],
+        "503": [
+          "application/json"
+        ]
+      },
+      "all_GET_headers_normative_including_media": true,
+      "response_content_absent": true,
+      "runtime_serializer_proof": "OPEN"
+    },
+    {
+      "path": "/folders/{id}",
+      "GET_media_by_status": {
+        "200": [
+          "application/json"
+        ],
+        "401": [
+          "application/json"
+        ],
+        "403": [
+          "application/json"
+        ],
+        "404": [
+          "application/json"
+        ],
+        "429": [
+          "application/json"
+        ],
+        "503": [
+          "application/json"
+        ]
+      },
+      "all_GET_headers_normative_including_media": true,
+      "response_content_absent": true,
+      "runtime_serializer_proof": "OPEN"
+    },
+    {
+      "path": "/{sub}/operations/{id}",
+      "GET_media_by_status": {
+        "200": [
+          "application/json"
+        ],
+        "401": [
+          "application/json"
+        ],
+        "403": [
+          "application/json"
+        ],
+        "404": [
+          "application/json"
+        ],
+        "429": [
+          "application/json"
+        ],
+        "503": [
+          "application/json"
+        ]
+      },
+      "all_GET_headers_normative_including_media": true,
+      "response_content_absent": true,
+      "runtime_serializer_proof": "OPEN"
+    },
+    {
+      "path": "/changes",
+      "GET_media_by_status": {
+        "200": [
+          "application/json"
+        ],
+        "400": [
+          "application/json"
+        ],
+        "401": [
+          "application/json"
+        ],
+        "403": [
+          "application/json"
+        ],
+        "404": [
+          "application/json"
+        ],
+        "405": [
+          "application/json"
+        ],
+        "408": [
+          "application/json"
+        ],
+        "413": [
+          "application/json"
+        ],
+        "429": [
+          "application/json"
+        ],
+        "503": [
+          "application/json"
+        ]
+      },
+      "all_GET_headers_normative_including_media": true,
+      "response_content_absent": true,
+      "runtime_serializer_proof": "OPEN"
+    },
+    {
+      "path": "/{sub}/next_id",
+      "GET_media_by_status": {
+        "200": [
+          "application/json"
+        ],
+        "400": [
+          "application/json"
+        ],
+        "401": [
+          "application/json"
+        ],
+        "403": [
+          "application/json"
+        ],
+        "404": [
+          "application/json"
+        ],
+        "405": [
+          "application/json"
+        ],
+        "408": [
+          "application/json"
+        ],
+        "413": [
+          "application/json"
+        ],
+        "429": [
+          "application/json"
+        ],
+        "503": [
+          "application/json"
+        ]
+      },
+      "all_GET_headers_normative_including_media": true,
+      "response_content_absent": true,
+      "runtime_serializer_proof": "OPEN"
+    },
+    {
+      "path": "/api/backup-part/{member}/{part}",
+      "GET_media_by_status": {
+        "200": [
+          "application/json"
+        ],
+        "401": [],
+        "403": [],
+        "404": [],
+        "503": []
+      },
+      "all_GET_headers_normative_including_media": true,
+      "response_content_absent": true,
+      "runtime_serializer_proof": "OPEN"
+    }
+  ]
+}

@@ -11,7 +11,7 @@
    ]
   },
   "reason": {
-   "description": "a reason for a human; non-empty (N3 «Reason», P/04-18)",
+   "description": "The current nonempty human reason, required for readers and writers (P/04 N3 Reason).",
    "type": "string",
    "x-codec": [
     "string"
@@ -33,7 +33,7 @@
    ]
   },
   "manifest_rev": {
-   "description": "the manifest revision (P/02.3 N1.5 rev) under which the decision was made; MUST for an implementation that keeps the manifest in the row; rows without it are stamped by the pass (N3 «pass()» step 1)",
+   "description": "Required manifest revision under which the current intent completion wrote this decision. A missing value is unreadable and is never stamped or repaired; newer-revision protection remains P/04 N3 manifest_rev.",
    "type": "string",
    "pattern": "^(?:[1-9][0-9]*)$",
    "x-codec": [
@@ -46,7 +46,8 @@
   "worker",
   "reason",
   "at",
-  "rev"
+  "rev",
+  "manifest_rev"
  ],
  "$defs": {
   "common.book_missing": {
@@ -861,5 +862,10 @@
     }
    }
   }
- }
+ },
+ "allOf": [
+  {
+   "$ref": "#/$defs/writer"
+  }
+ ]
 }

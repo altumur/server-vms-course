@@ -1,0 +1,13 @@
+# P/02 owned numeric sources (ADR-0129 (11)); machine/foreign constants remain links.
+name	value	unit	norm	meaning
+FILE_PART	262144	bytes	P/02.3-R001	file-part payload bytes
+FILE_MAX	8388608	bytes	P/02.3-R001	single static file bytes, including the boundary
+FILES_TOTAL_MAX	33554432	bytes	P/02.3-R001	sum of static file sizes, including the boundary
+READ_RETRY_PAUSE	1	s	P/02.3-R002	pause between unconfirmed manifest/view reads
+MARK_POLL_INTERVAL	30	s	P/02.3-R003	maximum interval between confirmed manifest-mark checks
+SPACE_TIMER_BOOT_MIN	60	s	P/02.4-R001	lower bound of the implementation-selected boot timer delay
+SPACE_TIMER_BOOT_MAX	120	s	P/02.4-R001	upper bound of the implementation-selected boot timer delay
+SPACE_TIMER_EVERY	60	s	P/02.4-R001	period of the recurring space timer
+CA_CERT_VALID	315360000	s	P/02.4-R002	CA certificate duration in seconds; not calendar years
+ROLE_CERT_VALID	71280000	s	P/02.4-R002	role certificate duration in seconds
+JSON_SCHEMA_LITE_DEPTH	32	count	P/02.1-R001	maximum nesting depth of an embedded jsonSchemaLite value

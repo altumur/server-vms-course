@@ -31,7 +31,7 @@ paths:
         in: query
         required: false
         schema: {type: string}
-        description: Opaque continuation returned by GET /domain, including a boundary within one part. Without it, start the traversal; at most 1000 MemberState elements per page (P/10 N1.2a, G10-PAGE-CURSOR-01). Encoding is chosen by the implementation.
+        description: "Opaque continuation returned by GET /domain, including a boundary within one part. Without it, start the traversal; at most DOMAIN_PAGE_MEMBERS MemberState elements per page (P/10 N1.2a, G10-PAGE-CURSOR-01). Encoding is chosen by the implementation."
     get:
       summary: Domain view (N1.2a)
       description: 'Answered by the domain console itself (P/10-01); the field url of the view that is not readable (not a string) — null in the answer (V7
@@ -94,6 +94,22 @@ paths:
         '403': {description: No right view of the domain}
         '404': {description: No such member}
         '503': {description: The row is not readable}
+    head:
+      summary: Who is behind the relay (N1.2a)
+      description: Answered by the domain console itself; row domain/relay-members, names only, the right view of the domain.
+      parameters:
+      - $ref: '#/paths/~1domain~1relays~1{relay}/get/parameters/0'
+      responses:
+        '200':
+          description: Names ascending; no row — rev 0, empty
+        '401':
+          description: No identity
+        '403':
+          description: No right view of the domain
+        '404':
+          description: No such member
+        '503':
+          description: The row is not readable
   '/domain/{sub}/kept/{name}':
     get:
       summary: Declared row domain.kept (N1.2a)
@@ -117,6 +133,23 @@ paths:
         '403': {description: No right view of the domain}
         '404': {description: Name not declared or no row}
         '503': {description: The row is not readable}
+    head:
+      summary: Declared row domain.kept (N1.2a)
+      description: Answered by the domain console itself; the name — an element of domain.kept_read of the manifest, read only, the right view of the domain.
+      parameters:
+      - $ref: '#/paths/~1domain~1{sub}~1kept~1{name}/get/parameters/0'
+      - $ref: '#/paths/~1domain~1{sub}~1kept~1{name}/get/parameters/1'
+      responses:
+        '200':
+          description: Row, secrets masked
+        '401':
+          description: No identity
+        '403':
+          description: No right view of the domain
+        '404':
+          description: Name not declared or no row
+        '503':
+          description: The row is not readable
   '/domain/{sub}/tables/{table}':
     get:
       summary: Snapshot of a member table (N1.2a; P/08.1 N1.4a)
@@ -156,6 +189,29 @@ paths:
           $ref: '#/components/responses/ViewNotFound'
         '503':
           $ref: '#/components/responses/ReadUnavailable'
+    head:
+      summary: Snapshot of a member table (N1.2a; P/08.1 N1.4a)
+      description: Answered by the domain console itself (P/10-01); one member per request.
+      parameters:
+      - $ref: '#/paths/~1domain~1{sub}~1tables~1{table}/get/parameters/0'
+      - $ref: '#/paths/~1domain~1{sub}~1tables~1{table}/get/parameters/1'
+      - $ref: '#/paths/~1domain~1{sub}~1tables~1{table}/get/parameters/2'
+      - $ref: '#/paths/~1domain~1{sub}~1tables~1{table}/get/parameters/3'
+      responses:
+        '304':
+          description: The body is the same as by the ETag
+        '200':
+          description: Object as is
+        '400':
+          description: 'The common refusal of parsing a console request (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of its own door is named by its operation: the words of the list data/refusal-words.tsv.'
+        '401':
+          description: no identity — the gate of the domain console (N1.5, error denied) or the TLS role door without a client certificate (N1.4 server.role, error no_role)
+        '403':
+          description: 'access refusal — the gate of the domain console (N1.5, error denied) or the TLS role door: no_role, wrong_role, bad_chain (N1.4 server.role)'
+        '404':
+          description: 'In the order of N1.2a: there is no such manifest; not in the directory — the manifest has no domain.ref; rows are not its own; no domain here; no such member — the member is not in the list; a path with . or .. — not a domain route'
+        '503':
+          description: 'A read door of the domain console: the row it answers with (the view, the shadow, domain/member-rows/<part>, domain/topology, domain/placement, the assignment record, the pointer domain/shared and its document), exists but is not readable — 503 {error: "unavailable"}, not 404 and not «there is no row» (V7 item 3, the decision of the Architect of 2026-10-28, P1; rows 42, 43, 50, 54 of the list); the gate shut — the gate and pass contract shut'
   '/domain/{sub}/{rows}':
     get:
       summary: Units of the subsystem in the domain view (N1.2a)
@@ -383,6 +439,9 @@ paths:
           application/json:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1members/post/requestBody/content/application~1json/schema'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -495,24 +554,58 @@ paths:
         '403': {description: No right}
         '404': {description: No folder}
         '503': {description: The row is not readable}
+    head:
+      summary: Units of a folder page by page (chapter 8.5 N1.8)
+      parameters:
+      - $ref: '#/paths/~1domain~1folders~1{id}~1units/get/parameters/0'
+      - $ref: '#/paths/~1domain~1folders~1{id}~1units/get/parameters/1'
+      - $ref: '#/paths/~1domain~1folders~1{id}~1units/get/parameters/2'
+      responses:
+        '200':
+          description: Page, server order, the cost is constant
+        '400':
+          description: Bad cursor
+        '401':
+          description: No identity
+        '403':
+          description: No right
+        '404':
+          description: No folder
+        '503':
+          description: The row is not readable
   /domain/batches:
     get:
       summary: Admission batches without the token (chapter 8.3 N1.1b)
       responses:
-        '200': {description: 'Pass to the process', content: {application/json: {schema: {type: object, additionalProperties: true}}}}
+        '200': {$ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1batches/get/responses/200}
         '401': {description: No identity}
         '403': {description: No right view}
+        '503':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1batches/get/responses/503
     post:
       summary: New admission batch, the token is shown once (chapter 8.3 N1.1b; the right admin of the domain)
       requestBody:
-        required: true
-        content: {application/json: {schema: {type: object, required: [name, n], additionalProperties: false, properties: {name: {type: string}, via: {type: string}, n: {type: integer, minimum: 1}}}}}
+        $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1batches/post/requestBody
       responses:
-        '200': {description: 'Pass to the process', content: {application/json: {schema: {type: object, additionalProperties: true}}}}
-        '400': {description: Not in the form}
+        '400': {$ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1batches/post/responses/400}
         '401': {description: No identity}
         '403': {description: No right admin}
-        '409': {description: Such a batch exists}
+        '409': {$ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1batches/post/responses/409}
+        '201':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1batches/post/responses/201
+        '503':
+          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1batches/post/responses/503
+    head:
+      summary: Admission batches without the token (chapter 8.3 N1.1b)
+      responses:
+        '200':
+          description: 'Rows domain/batches/* as they are, by name; there is no private key in the row (it holds the public pub); an unreadable row — {unreadable: true} under its own name'
+        '401':
+          description: No identity
+        '403':
+          description: No right view
+        '503':
+          description: Refusal of the door (N4 of the chapter of the door)
   /domain/batches/{name}:
     delete:
       summary: Revocation of a batch (chapter 8.3 N1.1b; the right admin of the domain)
@@ -584,6 +677,9 @@ paths:
           application/json:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/TopologyEdit'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -727,6 +823,9 @@ paths:
           application/json:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/PlacementEdit'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -806,6 +905,9 @@ paths:
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation placementDelete of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
         «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -955,6 +1057,9 @@ paths:
           application/json:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/SharedEdit'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -1048,8 +1153,7 @@ paths:
         required: false
         schema:
           type: number
-        description: Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default
-          — now − one day (N1.8 door).
+        description: "Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default — now − ALARMS_WINDOW (N1.8 door)."
       - name: until
         in: query
         required: false
@@ -1280,6 +1384,9 @@ paths:
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation membersRemove of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
         «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -1367,6 +1474,9 @@ paths:
           application/json:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1members~1{member}~1ca/post/requestBody/content/application~1json/schema'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -1447,6 +1557,7 @@ paths:
       required: false
       schema:
         $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName'
+    - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1{sub}~1{rows}~1{ref}/parameters/3
     put:
       operationId: passEditUpdate
       summary: 'Passing to the process domain: Edit the domain.edit fields of a unit of a member (the edit is stored) (OpenAPI P/08, operationId
@@ -1725,6 +1836,8 @@ paths:
           application/json:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1users/post/requestBody/content/application~1json/schema'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
       responses:
         '422':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/KeyReused'
@@ -1815,6 +1928,9 @@ paths:
           application/json:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1users~1{name}/put/requestBody/content/application~1json/schema'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -1900,6 +2016,9 @@ paths:
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation userDelete of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
         «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -2070,6 +2189,8 @@ paths:
           application/json:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1groups/post/requestBody/content/application~1json/schema'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
       responses:
         '422':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/KeyReused'
@@ -2160,6 +2281,9 @@ paths:
           application/json:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1groups~1{name}/put/requestBody/content/application~1json/schema'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -2245,6 +2369,9 @@ paths:
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation groupDelete of the OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
         «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -2415,6 +2542,8 @@ paths:
           application/json:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1roles/post/requestBody/content/application~1json/schema'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
       responses:
         '422':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/KeyReused'
@@ -2505,6 +2634,9 @@ paths:
           application/json:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1roles~1{name}/put/requestBody/content/application~1json/schema'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -2590,6 +2722,9 @@ paths:
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation roleDelete of the OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
         «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -2667,6 +2802,8 @@ paths:
           application/json:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1batch/post/requestBody/content/application~1json/schema'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1batch/post/responses/412'
@@ -2761,6 +2898,9 @@ paths:
           application/json:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1grants~1{cluster}/put/requestBody/content/application~1json/schema'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -2948,6 +3088,9 @@ paths:
           application/json:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1break-glass~1{cluster}/put/requestBody/content/application~1json/schema'
+      parameters:
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
+      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '412':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
@@ -3427,11 +3570,7 @@ paths:
         $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1edits/post/requestBody
       responses:
         '400':
-          description: 'Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request
-            parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport
-            — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of
-            its own door is named by its operation: the words of the list data/refusal-words.tsv.. Transition 3: response
-            400 of P/08 keptEdits, as received.'
+          description: "Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of its own door is named by its operation: the words of the list data/refusal-words.tsv. Transition 3: response 400 of P/08 keptEdits, as received."
           content:
             application/json:
               schema:
@@ -3459,8 +3598,7 @@ paths:
         '408':
           $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody
         '413':
-          description: 'Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not
-            add its service fields limit/size here.. Transition 3: response 413 of P/08 keptEdits, as received.'
+          description: "Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not add its service fields limit/size here. Transition 3: response 413 of P/08 keptEdits, as received."
           content:
             application/json:
               schema:
@@ -3468,8 +3606,7 @@ paths:
         '502':
           $ref: '#/components/responses/PassBroke'
         '503':
-          description: 'Transition 2: Transition 2: gate shut or confirmed access data unavailable.. Transition 3:
-            response 503 of P/08 keptEdits, as received.'
+          description: "Transition 2: gate shut or confirmed access data unavailable. Transition 3: response 503 of P/08 keptEdits, as received."
           content:
             application/json:
               schema:
@@ -3492,11 +3629,7 @@ paths:
         forwarding contract. The writer independently checks its credentials and current state.
       responses:
         '400':
-          description: 'Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request
-            parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport
-            — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of
-            its own door is named by its operation: the words of the list data/refusal-words.tsv.. Transition 3: response
-            400 of P/08 keptEditsStranded, as received.'
+          description: "Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of its own door is named by its operation: the words of the list data/refusal-words.tsv. Transition 3: response 400 of P/08 keptEditsStranded, as received."
           content:
             application/json:
               schema:
@@ -3573,11 +3706,7 @@ paths:
         $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1folders/post/requestBody
       responses:
         '400':
-          description: 'Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request
-            parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport
-            — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of
-            its own door is named by its operation: the words of the list data/refusal-words.tsv.. Transition 3: response
-            400 of P/08 folderCreate, as received.'
+          description: "Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of its own door is named by its operation: the words of the list data/refusal-words.tsv. Transition 3: response 400 of P/08 folderCreate, as received."
           content:
             application/json:
               schema:
@@ -3615,8 +3744,7 @@ paths:
                 - $ref: '#/components/schemas/NotADomainRoute'
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/DomainFolderError
         '408':
-          description: 'Transition 2: The body is read too slowly (chapter 6.5 N4).. Transition 3: response 408 of
-            P/08 folderCreate, as received.'
+          description: "Transition 2: The body is read too slowly (chapter 6.5 N4). Transition 3: response 408 of P/08 folderCreate, as received."
           content:
             application/json:
               schema:
@@ -3624,8 +3752,7 @@ paths:
                 - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
         '413':
-          description: 'Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not
-            add its service fields limit/size here.. Transition 3: response 413 of P/08 folderCreate, as received.'
+          description: "Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not add its service fields limit/size here. Transition 3: response 413 of P/08 folderCreate, as received."
           content:
             application/json:
               schema:
@@ -3635,8 +3762,7 @@ paths:
         '502':
           $ref: '#/components/responses/PassBroke'
         '503':
-          description: 'Transition 2: Transition 2: gate shut or confirmed access data unavailable.. Transition 3:
-            response 503 of P/08 folderCreate, as received.'
+          description: "Transition 2: gate shut or confirmed access data unavailable. Transition 3: response 503 of P/08 folderCreate, as received."
           content:
             application/json:
               schema:
@@ -3678,11 +3804,7 @@ paths:
         $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1folders~1{folder}/put/requestBody
       responses:
         '400':
-          description: 'Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request
-            parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport
-            — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of
-            its own door is named by its operation: the words of the list data/refusal-words.tsv.. Transition 3: response
-            400 of P/08 folderRename, as received.'
+          description: "Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of its own door is named by its operation: the words of the list data/refusal-words.tsv. Transition 3: response 400 of P/08 folderRename, as received."
           content:
             application/json:
               schema:
@@ -3720,8 +3842,7 @@ paths:
                 - $ref: '#/components/schemas/NotADomainRoute'
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/DomainFolderError
         '408':
-          description: 'Transition 2: The body is read too slowly (chapter 6.5 N4).. Transition 3: response 408 of
-            P/08 folderRename, as received.'
+          description: "Transition 2: The body is read too slowly (chapter 6.5 N4). Transition 3: response 408 of P/08 folderRename, as received."
           content:
             application/json:
               schema:
@@ -3729,8 +3850,7 @@ paths:
                 - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
         '413':
-          description: 'Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not
-            add its service fields limit/size here.. Transition 3: response 413 of P/08 folderRename, as received.'
+          description: "Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not add its service fields limit/size here. Transition 3: response 413 of P/08 folderRename, as received."
           content:
             application/json:
               schema:
@@ -3740,8 +3860,7 @@ paths:
         '502':
           $ref: '#/components/responses/PassBroke'
         '503':
-          description: 'Transition 2: Transition 2: gate shut or confirmed access data unavailable.. Transition 3:
-            response 503 of P/08 folderRename, as received.'
+          description: "Transition 2: gate shut or confirmed access data unavailable. Transition 3: response 503 of P/08 folderRename, as received."
           content:
             application/json:
               schema:
@@ -3773,11 +3892,7 @@ paths:
       - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
       responses:
         '400':
-          description: 'Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request
-            parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport
-            — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of
-            its own door is named by its operation: the words of the list data/refusal-words.tsv.. Transition 3: response
-            400 of P/08 folderDelete, as received.'
+          description: "Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of its own door is named by its operation: the words of the list data/refusal-words.tsv. Transition 3: response 400 of P/08 folderDelete, as received."
           content:
             application/json:
               schema:
@@ -3815,8 +3930,7 @@ paths:
                 - $ref: '#/components/schemas/NotADomainRoute'
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/DomainFolderError
         '408':
-          description: 'Transition 2: The body is read too slowly (chapter 6.5 N4).. Transition 3: response 408 of
-            P/08 folderDelete, as received.'
+          description: "Transition 2: The body is read too slowly (chapter 6.5 N4). Transition 3: response 408 of P/08 folderDelete, as received."
           content:
             application/json:
               schema:
@@ -3824,8 +3938,7 @@ paths:
                 - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
         '413':
-          description: 'Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not
-            add its service fields limit/size here.. Transition 3: response 413 of P/08 folderDelete, as received.'
+          description: "Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not add its service fields limit/size here. Transition 3: response 413 of P/08 folderDelete, as received."
           content:
             application/json:
               schema:
@@ -3835,8 +3948,7 @@ paths:
         '502':
           $ref: '#/components/responses/PassBroke'
         '503':
-          description: 'Transition 2: Transition 2: gate shut or confirmed access data unavailable.. Transition 3:
-            response 503 of P/08 folderDelete, as received.'
+          description: "Transition 2: gate shut or confirmed access data unavailable. Transition 3: response 503 of P/08 folderDelete, as received."
           content:
             application/json:
               schema:
@@ -3915,11 +4027,7 @@ paths:
         $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1memberof~1{member}~1{sub}~1{rows}~1{id}/put/requestBody
       responses:
         '400':
-          description: 'Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request
-            parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport
-            — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of
-            its own door is named by its operation: the words of the list data/refusal-words.tsv.. Transition 3: response
-            400 of P/08 memberofWrite, as received.'
+          description: "Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of its own door is named by its operation: the words of the list data/refusal-words.tsv. Transition 3: response 400 of P/08 memberofWrite, as received."
           content:
             application/json:
               schema:
@@ -3957,8 +4065,7 @@ paths:
                 - $ref: '#/components/schemas/NotADomainRoute'
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/DomainFolderError
         '408':
-          description: 'Transition 2: The body is read too slowly (chapter 6.5 N4).. Transition 3: response 408 of
-            P/08 memberofWrite, as received.'
+          description: "Transition 2: The body is read too slowly (chapter 6.5 N4). Transition 3: response 408 of P/08 memberofWrite, as received."
           content:
             application/json:
               schema:
@@ -3966,8 +4073,7 @@ paths:
                 - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
         '413':
-          description: 'Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not
-            add its service fields limit/size here.. Transition 3: response 413 of P/08 memberofWrite, as received.'
+          description: "Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not add its service fields limit/size here. Transition 3: response 413 of P/08 memberofWrite, as received."
           content:
             application/json:
               schema:
@@ -3977,8 +4083,7 @@ paths:
         '502':
           $ref: '#/components/responses/PassBroke'
         '503':
-          description: 'Transition 2: Transition 2: gate shut or confirmed access data unavailable.. Transition 3:
-            response 503 of P/08 memberofWrite, as received.'
+          description: "Transition 2: gate shut or confirmed access data unavailable. Transition 3: response 503 of P/08 memberofWrite, as received."
           content:
             application/json:
               schema:
@@ -4019,11 +4124,7 @@ paths:
         $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1roles~1{role}~1lines/put/requestBody
       responses:
         '400':
-          description: 'Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request
-            parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport
-            — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of
-            its own door is named by its operation: the words of the list data/refusal-words.tsv.. Transition 3: response
-            400 of P/08 roleLines, as received.'
+          description: "Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of its own door is named by its operation: the words of the list data/refusal-words.tsv. Transition 3: response 400 of P/08 roleLines, as received."
           content:
             application/json:
               schema:
@@ -4061,8 +4162,7 @@ paths:
                 - $ref: '#/components/schemas/NotADomainRoute'
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
         '408':
-          description: 'Transition 2: The body is read too slowly (chapter 6.5 N4).. Transition 3: response 408 of
-            P/08 roleLines, as received.'
+          description: "Transition 2: The body is read too slowly (chapter 6.5 N4). Transition 3: response 408 of P/08 roleLines, as received."
           content:
             application/json:
               schema:
@@ -4070,8 +4170,7 @@ paths:
                 - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
         '413':
-          description: 'Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not
-            add its service fields limit/size here.. Transition 3: response 413 of P/08 roleLines, as received.'
+          description: "Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not add its service fields limit/size here. Transition 3: response 413 of P/08 roleLines, as received."
           content:
             application/json:
               schema:
@@ -4081,8 +4180,7 @@ paths:
         '502':
           $ref: '#/components/responses/PassBroke'
         '503':
-          description: 'Transition 2: Transition 2: gate shut or confirmed access data unavailable.. Transition 3:
-            response 503 of P/08 roleLines, as received.'
+          description: "Transition 2: gate shut or confirmed access data unavailable. Transition 3: response 503 of P/08 roleLines, as received."
           content:
             application/json:
               schema:
@@ -4168,8 +4266,7 @@ paths:
         '502':
           $ref: '#/components/responses/PassBroke'
         '503':
-          description: 'Transition 2: Transition 2: gate shut or confirmed access data unavailable.. Transition 3:
-            response 503 of P/08 bookAllPartPerson, as received.'
+          description: "Transition 2: gate shut or confirmed access data unavailable. Transition 3: response 503 of P/08 bookAllPartPerson, as received."
           content:
             application/json:
               schema:
@@ -4218,11 +4315,7 @@ paths:
         $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1api~1verify/post/requestBody
       responses:
         '400':
-          description: 'Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request
-            parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport
-            — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of
-            its own door is named by its operation: the words of the list data/refusal-words.tsv.. Transition 3: response
-            400 of P/08 verify, as received.'
+          description: "Transition 2: The common refusal of parsing a console request (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a readable parameter repeated) — error refused — or of transport — the body is chunked or shorter than declared, error denied (chapter 6.5 N4). A refusal of the form of its own door is named by its operation: the words of the list data/refusal-words.tsv. Transition 3: response 400 of P/08 verify, as received."
           content:
             application/json:
               schema:
@@ -4252,8 +4345,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotADomainRoute'
         '408':
-          description: 'Transition 2: The body is read too slowly (chapter 6.5 N4).. Transition 3: response 408 of
-            P/08 verify, as received.'
+          description: "Transition 2: The body is read too slowly (chapter 6.5 N4). Transition 3: response 408 of P/08 verify, as received."
           content:
             application/json:
               schema:
@@ -4261,8 +4353,7 @@ paths:
                 - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal
                 - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal
         '413':
-          description: 'Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not
-            add its service fields limit/size here.. Transition 3: response 413 of P/08 verify, as received.'
+          description: "Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not add its service fields limit/size here. Transition 3: response 413 of P/08 verify, as received."
           content:
             application/json:
               schema:
@@ -4272,8 +4363,7 @@ paths:
         '502':
           $ref: '#/components/responses/PassBroke'
         '503':
-          description: 'Transition 2: Transition 2: gate shut or confirmed access data unavailable.. Transition 3:
-            response 503 of P/08 verify, as received.'
+          description: "Transition 2: gate shut or confirmed access data unavailable. Transition 3: response 503 of P/08 verify, as received."
           content:
             application/json:
               schema:
@@ -4339,7 +4429,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Refusal'
+            $ref: "#/components/schemas/ForwardingRefusal"
     NoDomain:
       description: 'There is no view (not built) — no domain here (N1.2a, N1.2b, N1.2c); at GET /domain/members — also when the row
         domain/member-rows/<part> does not exist (N1.2b); the view exists but is not readable — 503 unavailable (ReadUnavailable; V7 item 3, P1)'
@@ -4401,9 +4491,7 @@ components:
           - refused
           - unavailable
           - denied
-          - did not answer
-          - answer too large
-          - answer broke off
+          - not reported yet
         detail:
           type: string
     RoleRefusal:
@@ -4467,6 +4555,8 @@ components:
             const: refused
           detail:
             const: since and until are times, in seconds
+        required:
+        - detail
     PlacementList:
       type: object
       required:
@@ -4573,6 +4663,15 @@ components:
             additionalProperties: true
             description: A row of the index P/05 N1.3 of the class alarm plus member, t_src, from_history; a silence row — N1.8 silence_line.
               The fields of an event row are set by the subsystems.
+            properties:
+              t:
+                $ref: ../../09-agent/data/alarms.schema.json#/properties/events/items/properties/t
+              kind:
+                $ref: ../../09-agent/data/alarms.schema.json#/properties/events/items/properties/kind
+              class:
+                $ref: ../../09-agent/data/alarms.schema.json#/properties/events/items/properties/class
+              member:
+                $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName
         members:
           type: object
           additionalProperties:
@@ -4641,3 +4740,5 @@ components:
       - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal'
       - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
       - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ProblemRefusal'
+    ForwardingRefusal:
+      $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/DomainRefusal

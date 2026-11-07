@@ -1,0 +1,13 @@
+# P/04 owned positive scalar constants; borrowed settings retain their own source.
+# Numeric secondary carriers remain literal, with explicit owner/equality bindings.
+name	value	unit	norm	meaning
+PASS_EVERY	5	s	P/04-R030	controller pass cadence; no discretion on this value
+TURN_BUSY_RETRY	5	s	P/04-R030	retry delay after busy admission; independent current source sentence, not TURN_RENEW by equal value
+HOME_BUDGET	1	count	P/04-R014	home move budget per pass
+WANT_GRACE	90	s	P/04-R014	order withdrawal when requested processes have not risen
+RAISE_QUIET	600	s	P/04-R014	quiet interval for a server that failed to raise
+RAISE_FAILS_LOUD	3	count	P/04-R014	consecutive raise failures before increased alarm severity
+SHRINK_BUDGET	1	count	P/04-R014	shrink move budget, independent of HOME_BUDGET
+SNAPSHOT_TABLE_MAX	1048576	bytes	P/04-R013	own table snapshot serialized-byte ceiling; independent of resource door L
+WRITE_CONFLICT_LIMIT	10	count	P/04-R014	normative consecutive conflicts on one logical write; moved out of implementation choice under accepted sectionE
+WANT_NUM_MAX	99	count	P/04-R006	maximum requested role-process target; equality with existing role-number carriers must be preserved

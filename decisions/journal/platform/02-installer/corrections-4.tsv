@@ -1,2 +1,3 @@
 date	sample	fix	languages
 2026-11-05	форма пакета P/02: свойства файлов и чистого опроса только чтением	ADR-0125 доп. (5): acceptance/4/seams.tsv, 11 сценариев/19 шагов; RUN/CALL не доказывают установку ОС или весь rollout	all
+2026-11-06	ADR0129(11): numeric sources, TLS and process scope	Own installation constants have one existing-class form with six source anchors. Machine/foreign constants referenced, WatchdogSec retains common SHOULD, GOMEMLIMIT remains Go-only budget mechanism. Fixed source-form bounds/defaults not copied in prose; TLS noHTTP handshake remains distinct from the existing403 HTTP refusal; canonical links repaired. No units/runtime/operator ABI change.	all

@@ -47,6 +47,12 @@ Examples (TABs in the actual TSV): `2.1 / 1 / load_text / call / - / word refuse
 
 The independent context explicitly fixes `metadata.encoder=compact-json-utf8` and `metadata.trailing_lf=1`. `owned-context:metadata-proofs` resolves to `owned_context["metadata-proofs"]`, one byte proof per packet. Each proof names a real UTF-8 file in `finite-profile-skeletons/`, its exact SHA and length; descriptors retain the same file/SHA references. These files are compact metadata skeletons **without** final LF: `{}` occupies every put items slot, deadlines are dummy0, full1024-byte keys are unique and occupy6146 JSON bytes. Rebuild/count these bytes before the existing items removal/deadline upper-bound adjustment, then count the emitted LF separately. The eight files total6089646 bytes. They are conservative metadata fixtures, not store target requests or production packet completeness.
 
+## Named constants and source carriers
+
+[`runtime-constants.tsv`](runtime-constants.tsv) uses the existing `name`, `value`, `unit`, `norm`, `meaning` class. Own installation values have one named numeric source there. Unchanged schema/relations keywords that must carry literal numbers remain separately identified in the source equality roster; matching them to that form requires the subject checker, not prose interpretation. FILE_MAX is the file-size carrier, not a universal bound for the distinct integer-place/codec domains. START_WAIT belongs to the common schema contract; rollout constants stay in the existing machine; heartbeat/folder values belong to their owner lessons.
+
+[`positive-profile/README.md`](positive-profile/README.md) records the current completeness gap and exact metadata specimens. It does not claim a sufficient positive body ceiling or an executed installer profile. Existing synthetic proofs remain separate.
+
 ## Stage gates
 
 [`stages.tsv`](stages.tsv) is a plan, not a behavior norm (ADR-0126). `verdicts:2.1:*` selects the first column of `verdicts.tsv`;

@@ -48,3 +48,4 @@ date	sample	fix	languages
 2026-10-31	17-settings-versions	ADR-0094 B4: новый сценарий: revision, ETag, If-Match и 412 снимков настроек	all
 2026-11-05	forms P/06; acceptance/6/seams.tsv; req anchors	ADR-0125доп5: форма входов/отказов/констант,11этапов,36CALLшвовв9главах. Исходные203Н4строки+14gate сохранены278проекциями,3ячейки6.7/4прочих; единственнаяAPIправка — точноеименованиесуществующейRevisionMovedschema. Всеобычныесценарии/семьи/векторыпрежние,kitwholeнеобъявлен,SUT0	all
 2026-11-06	ADR-0127 C7: assignment/status union, symmetric and duplicate neighbors	Accepted source correction and explicit ordinary-code/HTTP probes; no runtime execution claimed	all
+2026-11-07	ADR-0129(17) ordinary P06 source; S08 separate	PolicyInput is closed servers-only, Policy response revision remains; TTL references owner. Drain spacing only; process17scenarios/195steps unchanged and old4seams exact.	all
