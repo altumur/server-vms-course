@@ -38,7 +38,7 @@ def complete_reports(text, count):
         def nonfinite(value):
             raise CheckingError(f"non-JSON number in driver report: {value}")
         rows = [json.loads(line, object_pairs_hook=unique, parse_constant=nonfinite)
-                for line in text.splitlines() if line]
+                for line in text.split("\n") if line]
     except (ValueError, TypeError) as exc:
         raise CheckingError(f"malformed driver report: {exc}") from exc
     if type(count) is not int or count <= 0 or len(rows) != count:
@@ -50,27 +50,60 @@ def complete_reports(text, count):
     return rows
 
 
-def complete_go_tests(done, expected):
+def complete_go_tests(done, expected, expected_package):
     """Require a normal terminal record for every original named Go test."""
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise CheckingError(f"duplicate Go report key: {key}")
+            result[key] = value
+        return result
+
+    def nonfinite(value):
+        raise CheckingError(f"non-JSON number in Go report: {value}")
+
     try:
-        events = [json.loads(line) for line in done.stdout.splitlines() if line]
+        events = [json.loads(line, object_pairs_hook=unique, parse_constant=nonfinite)
+                  for line in done.stdout.split("\n") if line]
     except (ValueError, TypeError) as exc:
         raise CheckingError(f"malformed Go test report: {exc}") from exc
-    if not events or any(type(e) is not dict or type(e.get("Action")) is not str or
-                         type(e.get("Package")) is not str or not e["Package"] or
-                         (e.get("Test") is not None and type(e["Test"]) is not str) for e in events):
-        raise CheckingError("empty or malformed Go test report")
-    run = [e["Test"] for e in events if e.get("Action") == "run" and e.get("Test")]
-    terminal = [e for e in events if e.get("Action") in ("pass", "fail", "skip") and e.get("Test")]
-    names = [e["Test"] for e in terminal]
-    if (not expected or set(run) != set(expected) or set(names) != set(expected) or
-            len(run) != len(set(run)) or len(names) != len(set(names)) or
-            any(e["Action"] == "skip" for e in terminal)):
-        raise CheckingError("incomplete, extra, duplicate or skipped named Go test")
-    package = [e for e in events if not e.get("Test") and e.get("Action") in ("pass", "fail")]
-    failed = [e["Test"] for e in terminal if e["Action"] == "fail"]
+    if (not expected or any(type(name) is not str or not name for name in expected) or
+            len(expected) != len(set(expected)) or type(expected_package) is not str or not expected_package):
+        raise CheckingError("missing or malformed expected Go test roster/package")
+    states, failed, package = {}, [], None
+    for event in events:
+        if (type(event) is not dict or type(event.get("Action")) is not str or
+                event.get("Package") != expected_package or
+                ("Test" in event and (type(event["Test"]) is not str or not event["Test"])) or
+                ("Output" in event and type(event["Output"]) is not str)):
+            raise CheckingError("malformed or foreign-package Go test report")
+        if package is not None:
+            raise CheckingError("Go test event after package completion")
+        action, name = event["Action"], event.get("Test")
+        if name is not None:
+            if name not in expected:
+                raise CheckingError("unexpected named Go test")
+            if action == "run":
+                if name in states:
+                    raise CheckingError("duplicate named Go test run")
+                states[name] = "run"
+            elif action in ("pass", "fail"):
+                if states.get(name) != "run":
+                    raise CheckingError("Go test terminal without one preceding run")
+                states[name] = action
+                if action == "fail":
+                    failed.append(name)
+            elif action not in ("output", "pause", "cont") or states.get(name) != "run":
+                raise CheckingError("skipped or unordered named Go test event")
+        elif action in ("pass", "fail"):
+            if set(states) != set(expected) or any(value == "run" for value in states.values()):
+                raise CheckingError("package completed before all expected named Go tests")
+            package = action
+        elif action not in ("start", "output"):
+            raise CheckingError("unexpected Go package event")
     combined = done.stdout + done.stderr
-    if (len(package) != 1 or package[0]["Action"] != ("fail" if failed else "pass") or
+    if (package != ("fail" if failed else "pass") or
             done.returncode != (1 if failed else 0) or
             any(s in combined for s in ("[build failed]", "panic:", "fatal error:", "signal:", "test timed out"))):
         raise CheckingError("Go compilation/start/runtime error or missing package completion")
@@ -518,7 +551,8 @@ class MachineTests(unittest.TestCase):
                             path.write_text(changed)
                         shutil.copy(output_lesson.output_root() / slug / "go" / pkg / "form_test.go", out / "go" / pkg / "form_test.go")
                         done = go(["test", "-json", "-count=1", f"./{pkg}/"], out / "go")
-                        failed = complete_go_tests(done, {"TestForm", "TestStates", "TestApply"})
+                        failed = complete_go_tests(done, {"TestForm", "TestStates", "TestApply"},
+                                                   "normgen/" + slug + "/" + pkg)
                         if not failed:
                             survived += 1
                         self.assertTrue(failed, f"{part} mutant {name} survives the original form tests")
@@ -613,14 +647,49 @@ class CheckingControls(unittest.TestCase):
         run = {"Action": "run", "Test": "TestOriginal"}
         passed = [run, {"Action": "pass", "Test": "TestOriginal"}, {"Action": "pass"}]
         failed = [run, {"Action": "fail", "Test": "TestOriginal"}, {"Action": "fail"}]
-        self.assertEqual(complete_go_tests(done(0, passed), {"TestOriginal"}), [])
-        self.assertEqual(complete_go_tests(done(1, failed), {"TestOriginal"}), ["TestOriginal"])
+        self.assertEqual(complete_go_tests(done(0, passed), {"TestOriginal"}, "fixture"), [])
+        self.assertEqual(complete_go_tests(done(1, failed), {"TestOriginal"}, "fixture"), ["TestOriginal"])
         for report in [done(0, []), done(1, [{"Action": "fail"}]), done(1, failed[:-1]),
                        done(1, [run, run] + failed[1:]), done(1, failed, "panic: not semantic"),
                        done(0, failed), done(1, passed),
                        done(1, failed + [{"Action": "fail", "Test": "extra"}])]:
             with self.subTest(report=report.stdout), self.assertRaises(CheckingError):
-                complete_go_tests(report, {"TestOriginal"})
+                complete_go_tests(report, {"TestOriginal"}, "fixture")
+
+    def test_lf_reports_preserve_unicode_string_separators(self):
+        for separator in ("\u0085", "\u2028", "\u2029", "\n"):
+            value = "left" + separator + "right"
+            with self.subTest(separator=repr(separator)):
+                text = json.dumps({"case": 0, "value": value}, ensure_ascii=False) + "\n"
+                self.assertEqual(complete_reports(text, 1), [{"value": value}])
+                events = [{"Action": "run", "Test": "TestOriginal"},
+                          {"Action": "output", "Test": "TestOriginal", "Output": value},
+                          {"Action": "fail", "Test": "TestOriginal"}, {"Action": "fail"}]
+                stdout = "".join(json.dumps(dict(Package="fixture", **e), ensure_ascii=False) + "\n"
+                                 for e in events)
+                done = subprocess.CompletedProcess([], 1, stdout, "")
+                self.assertEqual(complete_go_tests(done, {"TestOriginal"}, "fixture"), ["TestOriginal"])
+
+    def test_go_package_identity_order_and_duplicate_keys_are_checking_errors(self):
+        run = {"Package": "fixture", "Action": "run", "Test": "TestOriginal"}
+        fail = dict(run, Action="fail")
+        package = {"Package": "fixture", "Action": "fail"}
+        samples = [
+            [dict(run, Package="other"), fail, package],
+            [run, dict(fail, Package="other"), package],
+            [run, fail, dict(package, Package="other")],
+            [dict(e, Package="other") for e in (run, fail, package)],
+            [fail, run, package], [run, package, fail], [package, run, fail],
+            [run, fail, fail, package], [run, fail, package, package],
+            [run, fail, package, {"Package": "fixture", "Action": "output", "Output": "late"}],
+        ]
+        texts = ["".join(json.dumps(e) + "\n" for e in events) for events in samples]
+        clean = "".join(json.dumps(e) + "\n" for e in (run, fail, package))
+        texts.extend([clean.replace('"Action": "fail"', '"Action": "pass", "Action": "fail"', 1),
+                      clean.replace('"Package": "fixture"', '"Package": "other", "Package": "fixture"', 1)])
+        for text in texts:
+            with self.subTest(report=text), self.assertRaises(CheckingError):
+                complete_go_tests(subprocess.CompletedProcess([], 1, text, ""), {"TestOriginal"}, "fixture")
 
     def test_real_compile_and_missing_source_errors_are_not_kills(self):
         if not shutil.which("go"):
@@ -632,7 +701,7 @@ class CheckingControls(unittest.TestCase):
             done = go(["test", "-json", "./..."], root)
             self.assertNotEqual(done.returncode, 0)
             with self.assertRaises(CheckingError):
-                complete_go_tests(done, {"TestOriginal"})
+                complete_go_tests(done, {"TestOriginal"}, "brokenfixture")
             done = gen("03-worker", root / "out", root, ["slot-capture"])
             self.assertNotEqual(done.returncode, 0)
             with self.assertRaises(CheckingError):

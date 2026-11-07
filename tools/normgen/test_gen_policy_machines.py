@@ -97,6 +97,16 @@ class PolicyMachines(unittest.TestCase):
             with self.subTest(code=code, text=text), patch.object(subprocess, "run", return_value=done), self.assertRaises(CheckingError):
                 self.run_driver(queries)
 
+    def test_driver_lf_reports_preserve_unicode_separators(self):
+        from unittest.mock import patch
+        for separator in ("\u0085", "\u2028", "\u2029"):
+            value = "left" + separator + "right"
+            stdout = json.dumps({"case": 0, "observations": [value], "error": ""}, ensure_ascii=False) + "\n"
+            done = subprocess.CompletedProcess([], 0, stdout, "")
+            with self.subTest(separator=repr(separator)), patch.object(subprocess, "run", return_value=done):
+                self.assertEqual(self.run_driver([{"name": "token-cache"}]),
+                                 [{"observations": [value], "error": ""}])
+
     def test_fresh_and_declared_traces(self):
         output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
         for rel, text in gen.build().items():
@@ -177,7 +187,8 @@ class PolicyMachines(unittest.TestCase):
                     (self.mod / "workerpolicy/programs.go").write_text(patched)
                     done = subprocess.run(["go", "test", "-json", "-count=1", "-run", "TestDeclaredTraces/" + part,
                                            "./workerpolicy"], cwd=self.mod, env=GOENV, capture_output=True, text=True)
-                    failed = complete_go_tests(done, {"TestDeclaredTraces", "TestDeclaredTraces/" + part})
+                    failed = complete_go_tests(done, {"TestDeclaredTraces", "TestDeclaredTraces/" + part},
+                                               "normgen/p03/workerpolicy")
                     self.assertTrue(failed, "policy mutant survives the original declared traces")
         finally:
             (self.mod / "workerpolicy/programs.go").write_text(original)
