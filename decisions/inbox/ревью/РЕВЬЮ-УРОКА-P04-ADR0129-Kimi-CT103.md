@@ -4,6 +4,7 @@
 - База (замороженный опубликованный источник и единственная база отчёта): `9fe683896c497b75e00735260ab1b66cf3c4532e` (ветка `kimi103/review-p04-adr0129-9fe6`, дерево `/home/pilot/review103-kimi`).
 - Критерии: ADR-0129 основной текст и доп. (1)–(14), Т1–Т5, З-10 (доп. (12) с разбором доп. (14) п. 1).
 - Отчёт — единственный файл ветки (report-only); источник, формы, генераторы и судьи не правились. Доказательства отдельно: `/tmp/p04-evidence/`, копия в `.evidence-p04/` дерева.
+- Уточнение 2026-11-07 (второй коммит ветки, первый — 178107444 сохранён): по замечанию «Архитектора» исправлена формулировка охвата приёмки (37 сценариев, номера 03/07/08/11–44, — не «44»); для структурных проб 11 схем сохранены команда и вывод (`.evidence-p04/schema-probe.py`, `schema-probe.txt`). Находки и счёт Б0/С3/М7 без изменений.
 - С review103 находками/черновиками не обменивалась; прежние вердикты и счётчики не наследовались — всё ниже из собственного чтения среза 9fe683896.
 
 ## 0. Замечания к самим требованиям (первый раздел по п. 7 ADR-0129)
@@ -19,8 +20,8 @@
 - `Platform/04-controller/README.md`, `spec/04-controller.README.md`, `lifecycle.md`;
 - `spec/04-controller.norms.md` — все 1549 строк;
 - формы: `forms/README.md`, `daemon-flags.tsv`, `refusals.tsv` (17 строк), `slot-fate.tsv`, `slot-release.tsv`, `stages.tsv`;
-- приёмка: `acceptance/README.md` (все 44 сценария разобраны), `scenarios.tsv` (все 562 строки; сумма шагов по README = 533), `seams.tsv` (все 54 строки, s1–s50; четыре сценария s36–s50 читались со встроенными манифестами ~10 КБ каждый);
-- данные: все 11 семей — структурный разбор схем (свойства, обязательность, `$defs.writer`, границы), `*.outcomes.tsv` и `*.layers.tsv` просмотрены по местам ссылок;
+- приёмка: `acceptance/README.md` (все 37 сценариев разобраны — номера 03, 07, 08, 11–44), `scenarios.tsv` (все строки файла; сумма шагов по таблице Count README = 533), `seams.tsv` (все 54 строки, s1–s50; сценарии s36–s50 читались со встроенными манифестами ~10 КБ каждый);
+- данные: все 11 семей — структурный разбор схем (обязательность, границы, `$defs.writer`); команда и полный вывод пробы сохранены: `.evidence-p04/schema-probe.py` и `.evidence-p04/schema-probe.txt`; `*.outcomes.tsv` и `*.layers.tsv` просмотрены по местам ссылок;
 - векторы: README всех четырёх пакетов (`near-of` 15 строк, `order` 36, `shrink-allowed` 53 = заявленным 53, `shrink-victim` 20);
 - связанные общие договоры: `pool.md`, `turn.md` целиком; `observation.md`, `env-file.md`, `slot.md` — проверены нужные строки на этом срезе (LOST_AFTER 45, HOLD_SKEW 5, FOR 300, watchdog 360, HUNG_MOVE_AFTER 900, REACH_BUDGET 10, TORN_STILL — без изменений относительно прочитанного при P/03); `row-check.md` «Customer row: made», `schema.md`, `group-of.md`, `presence-lock.md`, `object-client.md`, `event-journal.md` — по ссылкам норм;
 - журнал правок: `decisions/journal/platform/04-controller/corrections.tsv` (39 строк);
@@ -62,7 +63,7 @@
 ## 4. Проверки (существующие, изолированно)
 
 - `check_spec` (pinned python `/opt/check-env/lesson-spec/bin/python`): `/opt/check-env/lesson-spec/bin/python skills/lesson-spec/scripts/check_spec.py Platform/04-controller/ru/04-controller.md` на срезе 9fe683896 — **PASS with 5 exceptions** (полный вывод сохранён). Состав: 2 исключения P/04 (`no-openapi` — своей HTTP-двери нет; `scenarios-format own` — двери/директивы сценариев «проверяется по README приёмки») + 3 соседних `no-schema` общего реестра (P/06.1 idem/blobs, P/10 witness). Счётчики подтверждают прозу: `scenarios=37`, `steps=533` (точная сумма таблицы Count в README = 533), `norm_ids=28` (P/04-01…28), `families_with_section=11`, `machine_traces=64`, `id_map_ids=28`.
-- Структурные пробы Python над 11 схемами: границы и обязательность совпадают с семейными таблицами норм; писательские ограничения (`reason` непуст, `want` 1…99, writer-required счётчики C4, `x-max-names`/minProperties для шардов, reserved-имена швов s46/s47) — согласованы.
+- Структурные пробы Python над 11 схемами (команда и вывод сохранены: `.evidence-p04/schema-probe.py`, `.evidence-p04/schema-probe.txt`; повторный запуск на неизменённом дереве дал тот же результат): границы и обязательность совпадают с семейными таблицами норм; писательские ограничения (`reason` непуст, `want` 1…99, writer-required счётчики C4, `x-max-names`/minProperties для шардов, reserved-имена швов s46/s47) — согласованы.
 
 ## 5. Счёт находок: Б 0 / С 3 / М 7
 
