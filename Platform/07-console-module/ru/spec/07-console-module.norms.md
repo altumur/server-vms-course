@@ -41,12 +41,12 @@ P/08](../../../08-domain/spec/08-domain.api.openapi.yaml)), которые ко�
 
 ```yaml
 reads:   /session, /manifest, /<sub>/manifest, /mounts, /changes, /<rows>, /<sub>/<rows>, /<sub>/<table> (только из servers.show; добавлено M10/10),
-         /where/<id>, /<sub>/where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (добавлено M10/10),
+         /where/<id>, /<sub>/where/<id>, /servers, /<sub>/servers (только профили загруженных подсистем), /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (добавлено M10/10),
          /events, /metrics (только running_gauge и workers_gauge), /domain/* (договор пересылки «Двери домена»), /api/held (P/06.7-14), /domain/shared/<sub> (P/06.7-15), /folders (только при display.tree.folders)
 writes:  POST/PUT/DELETE /<rows>[/<id>] и /<sub>/<rows>[/<id>], POST /folders, PUT/DELETE /folders/<id> (только при display.tree.folders), POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
          POST/DELETE /servers/<s>/decommission, /domain/* (договор пересылки «Двери домена»), POST/DELETE /session, /session/break-glass, login_url
 never:   /{sub}/requests, /api/backup (P/06.7-16), /resources, /{sub}/{table} вне show, двери держателей (door из where — только оболочке)
-order:   /session → /manifest → /mounts → /changes (только при монтировании) → по подсистеме /<rows> → /folders (если хоть одна подсистема объявила display.tree.folders) → /servers → /unplaceable → /domain/shared/<sub> (P/06.7-15) → /drain → /schema
+order:   /session → /manifest → /mounts → /changes (только при монтировании) → по подсистеме /<rows> → /folders (если хоть одна подсистема объявила display.tree.folders) → /servers → /<sub>/servers (остальные профили каталога по порядку) → /unplaceable → /domain/shared/<sub> (P/06.7-15) → /drain → /schema
          → /domain (+ /domain/alarms; P/10-06) → /api/held (P/06.7-14) → /metrics; опрос каждые poll_s; /events?unit= выбранной — каждые 5 с
 subsystems: opts.subsystems — имена подсистем каталога (корень и /mounts), чьи единицы модуль грузит, показывает деревом и пишет
          (/<rows>, /<sub>/<rows>, карточка, формы); нет ключа — все; список — только названные; [] — ни одной (ADR-0112 доп. (23) п. 2)
@@ -66,6 +66,12 @@ changes: лента GET /changes (P/06.1 N2 «Лента изменений»; A
 Слова `servers.show`, `console.running` (`running_gauge`, `workers_gauge`) и `poll_s` — [P/06.5](../../../06-console/ru/spec/06.5-console.norms.md)
 N1.1, N1.2. Части списка, которые вводит домен (`/domain/*`, `/api/held`, `/domain/shared/<sub>`, `/domain/alarms`,
 `login_url`), — поздний слой N1.6.
+
+Наблюдения воркеров используют существующий контекст запроса P/06.5 N2. В фазе servers корневой `/servers` читается один раз, затем остальные загруженные профили каталога через `/<sub>/servers` в порядке каталога. Явный префикс корня — тот же профиль, а не ещё одно наблюдение. `opts.subsystems` ограничивает загрузку единиц, но не эти наблюдения; `[]` не делает каталог профилей пустым. Неподтверждённый каталог неизвестен, а не пуст и не является подтверждённым рабочим профилем.
+
+Документы и их policy/ServerRow-наблюдения сохраняются раздельно по профилям. Частная идентичность воркера — точная пара `(sub, worker)` из подтверждённого контекста запроса; существующая ссылка — `worker:<sub>/<w>`. Выбор и callback используют исходный WorkerRow этого профиля без синтетического `sub`. Подстановка корня, соединение по короткому имени и чтение внутреннего хранилища запрещены.
+
+Нечитаемый, отказавший или недоступный профиль остаётся неизвестным, без факта пустого списка воркеров и без строки другого профиля как запасного пути. Последнее известное наблюдение не является успешным нынешним чтением. Публичный `refresh.servers` остаётся ровно картой `d.servers` корневого ответа, а не целым документом Servers, его policy или объединёнными профилями; частное состояние ошибки/последнего значения не добавляет публичного поля или события. P/06 API и WorkerRow прежние.
 
 ### N1.5 Контракт модуля с оболочкой
 

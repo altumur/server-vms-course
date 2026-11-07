@@ -41,12 +41,12 @@ of lessons 8 and 10; the owners of the rows — the chapters of lessons 6, 8 and
 
 ```yaml
 reads:   /session, /manifest, /<sub>/manifest, /mounts, /changes, /<rows>, /<sub>/<rows>, /<sub>/<table> (only from servers.show; added by M10/10),
-         /where/<id>, /<sub>/where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (added by M10/10),
+         /where/<id>, /<sub>/where/<id>, /servers, /<sub>/servers (only loaded subsystem profiles), /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (added by M10/10),
          /events, /metrics (only running_gauge and workers_gauge), /domain/* (forwarding contract «Domain doors»), /api/held (P/06.7-14), /domain/shared/<sub> (P/06.7-15), /folders (only with display.tree.folders)
 writes:  POST/PUT/DELETE /<rows>[/<id>] and /<sub>/<rows>[/<id>], POST /folders, PUT/DELETE /folders/<id> (only with display.tree.folders), POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
          POST/DELETE /servers/<s>/decommission, /domain/* (forwarding contract «Domain doors»), POST/DELETE /session, /session/break-glass, login_url
 never:   /{sub}/requests, /api/backup (P/06.7-16), /resources, /{sub}/{table} outside show, the doors of the holders (door from where — only to the shell)
-order:   /session → /manifest → /mounts → /changes (only on mounting) → per subsystem /<rows> → /folders (if at least one subsystem declared display.tree.folders) → /servers → /unplaceable → /domain/shared/<sub> (P/06.7-15) → /drain → /schema
+order:   /session → /manifest → /mounts → /changes (only on mounting) → per subsystem /<rows> → /folders (if at least one subsystem declared display.tree.folders) → /servers → /<sub>/servers (other catalogue profiles, in order) → /unplaceable → /domain/shared/<sub> (P/06.7-15) → /drain → /schema
          → /domain (+ /domain/alarms; P/10-06) → /api/held (P/06.7-14) → /metrics; polling every poll_s; /events?unit= of the selected one — every 5 s
 subsystems: opts.subsystems — the names of the subsystems of the catalogue (the root and /mounts) whose units the module loads, shows as a tree and writes
          (/<rows>, /<sub>/<rows>, the card, the forms); no key — all; a list — only the named ones; [] — none (ADR-0112 addendum (23) item 2)
@@ -66,6 +66,12 @@ The list is about the module's own calls: `never` forbids them to the module, no
 The words `servers.show`, `console.running` (`running_gauge`, `workers_gauge`) and `poll_s` — [P/06.5](../../06-console/spec/06.5-console.norms.md)
 N1.1, N1.2. The parts of the list that the domain introduces (`/domain/*`, `/api/held`, `/domain/shared/<sub>`, `/domain/alarms`,
 `login_url`) are the late layer N1.6.
+
+Worker observations use the existing request context of P/06.5 N2. In the servers phase, read root `/servers` once, then the other loaded catalogue profiles through `/<sub>/servers` in catalogue order. The explicit root prefix is the same profile, not another observation. `opts.subsystems` limits unit loading, not these observations; `[]` does not make the profile catalogue empty. An unconfirmed catalogue is unknown, not an empty or confirmed working profile.
+
+Keep documents and their policy/ServerRow observations separate by profile. The private worker identity is the exact `(sub, worker)` from the confirmed request context; the existing reference is `worker:<sub>/<w>`. Selection and callbacks use the original WorkerRow of that profile without adding a synthetic `sub`. Do not substitute root, join on a short name or read internal storage.
+
+An unreadable, refused or unavailable profile remains unknown, without an empty-worker fact or another profile's row as fallback. A last-known observation is not a successful current read. The public `refresh.servers` remains exactly the root response's `d.servers` map, not the entire Servers document, its policy or merged profiles; private error/last-known state adds no public field or event. P/06 API and WorkerRow are unchanged.
 
 ### N1.5 The contract of the module with the shell
 
