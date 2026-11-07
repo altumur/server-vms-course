@@ -255,7 +255,12 @@ paths:
             answer; the Architect''s decision on the M11 check, Y8; P/09.2 N2, N4)'
           content:
             application/json:
-              schema: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'}
+              schema:
+                allOf:
+                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/DomainRefusal
+                - properties:
+                    error:
+                      const: did not answer
   /api/members/{member}/{part}:
     servers:
       - url: '{origin}'

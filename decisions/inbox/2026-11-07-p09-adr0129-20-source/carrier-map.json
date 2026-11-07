@@ -138,4 +138,43 @@
   "refusal39_s43_B_V_G_D_E": "unchanged",
   "source_checks_or_runtime_claim": "none inherited; independent checks remain separate"
 }
+,
+  "token_POST502_owner_followup_d09cfc91": {
+  "source_parent": "d09cfc91870eeafcc0c47d33bacb3b068072b7a2",
+  "authority_commit": "e05abb812d372b639aad178bbc34225083730293",
+  "authority_path": "decisions/inbox/2026-11-07-P09-token502-ссылка-владельца.md",
+  "status": "SOURCE_COMPONENT_ONLY_NOT_RUNTIME_OR_READY",
+  "source_path": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+  "schema_pointer": "/paths/~1api~1tokens~1{member}~1{sub}~1{kind}/post/responses/502/content/application~1json/schema",
+  "before_blob": "dc8ee66c9b1a81b76e8338b134d3c69287548a05",
+  "before_sha256": "e849f394e7e7fa02f8e8b416335e49f49a1dc1c3cf984c56e163c3f4887f8dd4",
+  "after_blob": "fb56ee99c96eb2f5024edad5b6b86bcdea47092d",
+  "after_sha256": "b7b63c93aeb90373bfdca830774626d86c1fd86de947dc20ef922e8ad5b47207",
+  "only_schema_node_changed": true,
+  "before_schema": {
+    "$ref": "../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal"
+  },
+  "after_schema": {
+    "allOf": [
+      {
+        "$ref": "../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/DomainRefusal"
+      },
+      {
+        "properties": {
+          "error": {
+            "const": "did not answer"
+          }
+        }
+      }
+    ]
+  },
+  "source15_component": "8d404139f6733dbb201e4f51667532be4fb007cf",
+  "source15_freeze_sha256": "bdf1908b9ad4b9d0e7f8c45bf5e7e2e517986ab5d6f7310fe679669e7d27899f",
+  "source15_history_old_forecasts_preserved": true,
+  "case_corpus_refusal39_s43_family09_common15_changed": false,
+  "P06_P08_owner_nodes_changed": false,
+  "new5GET502_and_members_cache200_no_row503_unchanged": true,
+  "final_author_commit_and_self_hashes": "external source FREEZE, no recursive source-map claim",
+  "tools437_d034_repin_or_CODE_or_validator_runtime_GATE": false
+}
 }

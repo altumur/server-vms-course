@@ -50,3 +50,9 @@
 ## P09A owner references on current source
 
 Source parent `05133c299b27ed76262cd074d1b09af3eb2aa26e`; exact SOURCE activation is recorded externally at `/home/pilot/coord103-src/p09-a-source-05133c29/SOURCE-ACTIVATION.json`, without an execution or READY claim. Six already normative forwarded GETs reference the owner P08 responses, body schemas and parameters, including required BackupPartRevision. No duplicate body form, old source transplant, new port, case or execution. Current four paths,39 refusals,s43 and B/V/G/D/E stay exact. The protected old relayToken502 enum mismatch is declared separately; new GETs use the existing forwarding owner form. Final author SHA and metadata hashes are sealed in the external source FREEZE; the immutable READONLY declaration remains the proposal history.
+
+## Token POST502 existing forwarding owner
+
+Separate normal child of `d09cfc91870eeafcc0c47d33bacb3b068072b7a2` after frozen SOURCE15 `8d404139f6733dbb201e4f51667532be4fb007cf`, by [owner decision e05abb81](../2026-11-07-P09-token502-ссылка-владельца.md). Only schema `/paths/~1api~1tokens~1{member}~1{sub}~1{kind}/post/responses/502/content/application~1json/schema` changes to the existing P06 DomainRefusal with error.const did not answer. The rest of the response and all other operations, headers, statuses, success bodies and holder answers remain exact. P06/P08 owner schemas and enum are read-only; members N1.4 cache200/no-row503 and the five already accepted GET502 are unchanged.
+
+API before SHA256 `e849f394e7e7fa02f8e8b416335e49f49a1dc1c3cf984c56e163c3f4887f8dd4`; result SHA256 `b7b63c93aeb90373bfdca830774626d86c1fd86de947dc20ef922e8ad5b47207`. Prior SOURCE15 forecasts, declaration56d9 and FREEZEbdf1908 remain immutable history; this followup changes no corpus or review count and claims no runtime/validator/CODE/admission/GATE/lesson READY. Full final author commit and metadata hashes are sealed externally.
