@@ -91,3 +91,9 @@ Former source UTF8 span 6506..6623; sha256 `d2c0933f6fd803aacc065c8c70c452287cc0
 ````text
 | `bad-floor.jsonl` | строка пола с недесятичным `floor` `12.5` (сц. 12 шаги 25–26) |
 ````
+
+## Metadata revision2 — actual req membership
+
+Immutable source component `2f413bd265f73343a5fe2395e3c4e647e0e7eeab` and FREEZE21a5 (`21a5fb7fd56701dae2f7a9fc84aa003e788403107e01e1b8a0dcf1756b72c9fc`) are preserved. The prior delta blob `ff16d0919f506957aaa24f65e21d37c1c26c7399` and source-map blob `85f1582f20eba8fff5999ace1f10a9ed986c255c` retain the erroneous four marker partitions as history.
+
+Active MODIFIED operations are only R006/R029. R011/R030 are strictly unchanged and have no req operation. Four EN/RU derived floor-table/operator summaries are separately manifested by exact raw coordinates and original/result blobs. Source9, cases, journal3 and all other entries are unchanged. Registry stays review at revision2; accepted/applied/apply are not assigned. No old source/mirror/schema/Go/HTTP/IO/SUT/model/GATE programme was rerun.

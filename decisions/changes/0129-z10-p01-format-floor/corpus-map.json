@@ -1,6 +1,6 @@
 {
   "change": "0129-z10-p01-format-floor",
-  "revision": 1,
+  "revision": 2,
   "base": "d034aa09e6dcad450cd4e0942457f430dda43ece",
   "status": "SOURCE_EXPECTATIONS_ONLY_NOT_EXECUTED",
   "authorities": {
@@ -110,5 +110,11 @@
     "Time and generation_at lexemes",
     "mode/who and existing readers",
     "P03 epoch and global uint53/index/versions"
-  ]
+  ],
+  "metadata_lineage": {
+    "parent": "2f413bd265f73343a5fe2395e3c4e647e0e7eeab",
+    "source9_and_cases_unchanged": true,
+    "prior_corpus_map_blob": "49fbc80d9accb4741e727e0f8be90690f09be742",
+    "source_programmes_rerun": false
+  }
 }

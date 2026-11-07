@@ -196,5 +196,44 @@
     "pins/runner/SUT/model/generated output"
   ],
   "control_scope": "new own source-only checks; no custom family library/importer/controller/HTTP/IO/SUT execution; no strict/render/general regen/full GATE",
-  "historical_failure": "initial actual norm mirror baseline0 ->2 preserved externally; final exact3 mirror repair separately authorized and final actual mirror0, not retroactive rewriting"
+  "historical_failure": "initial actual norm mirror baseline0 ->2 preserved externally; final exact3 mirror repair separately authorized and final actual mirror0, not retroactive rewriting",
+  "revision": 2,
+  "historical_source_A_allowlist": [
+    "Platform/01-store/spec/01.3-store.norms.md",
+    "Platform/01-store/ru/spec/01.3-store.norms.md",
+    "Platform/01-store/acceptance/3/README.md",
+    "Platform/01-store/ru/acceptance/3/README.md",
+    "Platform/01-store/data/epoch_floor.schema.json",
+    "Platform/common/vectors/family-read/01.tsv",
+    "Platform/01-store/acceptance/3/scenarios.tsv",
+    "Platform/01-store/acceptance/3/inputs/bad-floor-zero.jsonl",
+    "Platform/01-store/acceptance/3/inputs/bad-floor-above-current.jsonl",
+    "decisions/changes/registry.tsv",
+    "decisions/journal/platform/01-store/corrections-3.tsv",
+    "decisions/adr-norms.tsv",
+    "decisions/changes/0129-z10-p01-format-floor/delta.md",
+    "decisions/changes/0129-z10-p01-format-floor/change.md",
+    "decisions/changes/0129-z10-p01-format-floor/source-map.json",
+    "decisions/changes/0129-z10-p01-format-floor/corpus-map.json",
+    "decisions/changes/0129-z10-p01-format-floor/preservation.json",
+    "decisions/changes/0129-z10-p01-format-floor/history.md"
+  ],
+  "metadata_child": {
+    "parent": "2f413bd265f73343a5fe2395e3c4e647e0e7eeab",
+    "allowed_paths": [
+      "decisions/changes/0129-z10-p01-format-floor/delta.md",
+      "decisions/changes/0129-z10-p01-format-floor/change.md",
+      "decisions/changes/0129-z10-p01-format-floor/source-map.json",
+      "decisions/changes/0129-z10-p01-format-floor/corpus-map.json",
+      "decisions/changes/0129-z10-p01-format-floor/preservation.json",
+      "decisions/changes/0129-z10-p01-format-floor/history.md",
+      "decisions/changes/registry.tsv",
+      "decisions/adr-norms.tsv"
+    ],
+    "source9_unchanged": true,
+    "aux_updates": "only own registry revision and own adr-norms req-list cells",
+    "other_tree_entries": "exact mode/blob proof in external final FREEZE",
+    "strict_unit_boundary": "actual Markdown heading-aware; historical marker partition is not asserted ADR compliance",
+    "checks": "static metadata/link/hash controls only; no source/schema/mirror/runtime/GATE rerun"
+  }
 }
