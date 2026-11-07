@@ -1,0 +1,1224 @@
+{
+  "base": "1d0f1ddffdd713e4dad4435e655e29d28f1ea630",
+  "declared_before_after": {
+    "base": "4a656cd459d6492fe656e168988dbb71284a6224",
+    "path": "Platform/10-domain-console/vectors/alarms/cases.tsv",
+    "raw_sha256": "e63524704b38c736648fec95d208e62f3b794e022dbbc83c39ea3eb33af5ffde",
+    "header": [
+      {
+        "line": 1,
+        "raw": "# The function alarms (P/10 N3 alarms, N1.8, N5 alarms): alarms(input) → {events, members, complete, sentence}.\n",
+        "sha256": "2ebaf5d118e0b02418eb1c62c71777d4aa7e16d5e46529a54959e738773598c1",
+        "proposed": "# The function alarms (P/10 N3 alarms, N1.8, N5 alarms): alarms(input) → {events, members, complete, sentence}.\n",
+        "changed": false
+      },
+      {
+        "line": 2,
+        "raw": "# input — the input of the command alarms as JSON text: {now, since, until, lost_after, members: {<member>: {last_report, received_at, sent_at, page, history}}, witnesses: [{sub, name, ts, cluster, units}]}.\n",
+        "sha256": "07378e1a81615842cc5e1518b1fe48310d9fb2c704007f523deef5fbf270c41b",
+        "proposed": "# input — trusted input alarms as JSON text: {now, since, until, lost_after, members: {<member>: {last_report, received_at, sent_at, page, history, silent_after} | {reported: \"garbled\", page?, history?, silent_after}}, witnesses: [{sub, name, ts, cluster, units}]}.\n",
+        "changed": true
+      },
+      {
+        "line": 3,
+        "raw": "# expect — a subset of the output or «@exit 2» (the input is out of form, P/10 N5 exit).\n",
+        "sha256": "d013ebda8ecac8b6fac8ec4a680fc246f62ea0f59ac3ff5c07d970ff651371ef",
+        "proposed": "# expect — a subset of the output or «@exit 2» (the input is out of form, P/10 N5 exit).\n",
+        "changed": false
+      },
+      {
+        "line": 4,
+        "raw": "# The rows 01–15 — the acceptance inputs of M11/11 inputs/alarms-*.json, sc. 04 (removed by the move of lesson 10); the row 16 — the norm case C10-REPORTED-OUTCOME-1D6 (P/10 N3 alarms): the mark reported is read, out of form.\n",
+        "sha256": "c192c0f0519639ee7973d04bac35ee5e49e96762bff6a62d70a58650c7a50f4b",
+        "proposed": "# The rows 01–15 — the acceptance inputs of M11/11 inputs/alarms-*.json, sc. 04 (removed by the move of lesson 10); the row 16 — the norm case C10-REPORTED-OUTCOME-1D6 (P/10 N3 alarms): the mark reported is read, out of form.\n",
+        "changed": false
+      },
+      {
+        "line": 5,
+        "raw": "# The rows 17–27 — the coverage audit of P/10, the second pass (audit-coverage-gemini 798e11a44, G01); the expectations are reconciled by the command alarms of the witnesses cammeta-python and cammeta-go.\n",
+        "sha256": "2e68992731563cd52736584602487365a8ff18e38338ee943959e9c56d3d6a77",
+        "proposed": "# The rows 17–27 — the coverage audit of P/10, the second pass (audit-coverage-gemini 798e11a44, G01); the expectations are reconciled by the command alarms of the witnesses cammeta-python and cammeta-go.\n",
+        "changed": false
+      },
+      {
+        "line": 6,
+        "raw": "# A row: case<TAB>input<TAB>expect<TAB>note.\n",
+        "sha256": "5236f28350ad20d60af9a25410c71fc4d8eee93e410ebf171f39026009bd7396",
+        "proposed": "# A row: case<TAB>input<TAB>expect<TAB>note.\n",
+        "changed": false
+      },
+      {
+        "line": 7,
+        "raw": "case\tinput\texpect\tnote\n",
+        "sha256": "1efce999a87437ac4e284b2d5a03ff93c23f23b95b6f16adc753c00706c26cb0",
+        "proposed": "case\tinput\texpect\tnote\n",
+        "changed": false
+      }
+    ],
+    "existing_rows": [
+      {
+        "case": "alarms-01-all-answered",
+        "physical_line": 8,
+        "raw_line_sha256": "043bde0843381d87fb9a9c24206c8dd50617339cbb3a8be4ec5579eedfa40c0a",
+        "before_cells": [
+          "alarms-01-all-answered",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999993.0,\"page\":{\"from\":1759913593.0,\"to\":1759999993.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999900.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null},\"m2\":{\"last_report\":1759999997.0,\"received_at\":1759999997.0,\"sent_at\":1759999997.0,\"page\":{\"from\":1759913597.0,\"to\":1759999997.0,\"events\":[],\"truncated\":false},\"history\":null}}}",
+          "{\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999902.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999900.0,\"member\":\"m1\"}],\"members\":{\"m1\":{\"state\":\"ok\"},\"m2\":{\"state\":\"ok\"}},\"complete\":true,\"sentence\":\"every member answered\"}",
+          "M11/11 sc. 04-alarms step 1"
+        ],
+        "before_input_sha256": "82349f4859869a86e3cd6ac8cc80a11be900535396d4cc0418ac6959aa541474",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999993.0,\"page\":{\"from\":1759913593.0,\"to\":1759999993.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999900.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null,\"silent_after\":45},\"m2\":{\"last_report\":1759999997.0,\"received_at\":1759999997.0,\"sent_at\":1759999997.0,\"page\":{\"from\":1759913597.0,\"to\":1759999997.0,\"events\":[],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "bf7c5f9a61bbc471625610b5867e8d890c2d671960461f88bb1cec2dfd1136a2",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          },
+          {
+            "pointer": "/members/m2/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999902.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999900.0,\"member\":\"m1\"}],\"members\":{\"m1\":{\"state\":\"ok\"},\"m2\":{\"state\":\"ok\"}},\"complete\":true,\"sentence\":\"every member answered\"}",
+        "old_expectation_sha256": "db5fe4c76b3b3ab1af7ae99705257f7f37098eb96772b502ebbed15f9b3faa6a"
+      },
+      {
+        "case": "alarms-02-storm-truncated",
+        "physical_line": 9,
+        "raw_line_sha256": "deb0dca0087bdfbfe5ab45df07a6c6bb03831613475f4ba26699f863eab1aad1",
+        "before_cells": [
+          "alarms-02-storm-truncated",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":{\"from\":1759913595.0,\"to\":1759999995.0,\"events\":[{\"id\":\"e1-0\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999990.0,\"kind\":\"contact.bounce\",\"class\":\"alarm\"},{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999989.0,\"kind\":\"contact.bounce\",\"class\":\"alarm\"},{\"id\":\"e1-2\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999988.0,\"kind\":\"contact.bounce\",\"class\":\"alarm\"}],\"truncated\":true},\"history\":null},\"m2\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":{\"from\":1759913595.0,\"to\":1759999995.0,\"events\":[{\"id\":\"e1-9\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c2\",\"of\":\"testsub/c2\",\"t\":1759999400.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null}}}",
+          "{\"events\":[{\"id\":\"e1-0\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999990.0,\"kind\":\"contact.bounce\",\"class\":\"alarm\",\"t_src\":1759999990.0,\"member\":\"m1\"},{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999989.0,\"kind\":\"contact.bounce\",\"class\":\"alarm\",\"t_src\":1759999989.0,\"member\":\"m1\"},{\"id\":\"e1-2\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999988.0,\"kind\":\"contact.bounce\",\"class\":\"alarm\",\"t_src\":1759999988.0,\"member\":\"m1\"},{\"id\":\"e1-9\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c2\",\"of\":\"testsub/c2\",\"t\":1759999400.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999400.0,\"member\":\"m2\"}],\"members\":{\"m1\":{\"state\":\"ok\",\"truncated\":true},\"m2\":{\"state\":\"ok\"}},\"complete\":true,\"sentence\":\"m1 had more alarms than one page holds; showing its newest\"}",
+          "M11/11 sc. 04-alarms step 2"
+        ],
+        "before_input_sha256": "ffe5f03dfc7dc327f9a18d8bf239ef08084b8f494eb45e11d9d023ad787be2df",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":{\"from\":1759913595.0,\"to\":1759999995.0,\"events\":[{\"id\":\"e1-0\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999990.0,\"kind\":\"contact.bounce\",\"class\":\"alarm\"},{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999989.0,\"kind\":\"contact.bounce\",\"class\":\"alarm\"},{\"id\":\"e1-2\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999988.0,\"kind\":\"contact.bounce\",\"class\":\"alarm\"}],\"truncated\":true},\"history\":null,\"silent_after\":45},\"m2\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":{\"from\":1759913595.0,\"to\":1759999995.0,\"events\":[{\"id\":\"e1-9\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c2\",\"of\":\"testsub/c2\",\"t\":1759999400.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "ce4fbc26c8eeb2e781e2f6a09da4bd6b53da616935ea1c94e607626896eb4548",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          },
+          {
+            "pointer": "/members/m2/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[{\"id\":\"e1-0\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999990.0,\"kind\":\"contact.bounce\",\"class\":\"alarm\",\"t_src\":1759999990.0,\"member\":\"m1\"},{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999989.0,\"kind\":\"contact.bounce\",\"class\":\"alarm\",\"t_src\":1759999989.0,\"member\":\"m1\"},{\"id\":\"e1-2\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999988.0,\"kind\":\"contact.bounce\",\"class\":\"alarm\",\"t_src\":1759999988.0,\"member\":\"m1\"},{\"id\":\"e1-9\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c2\",\"of\":\"testsub/c2\",\"t\":1759999400.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999400.0,\"member\":\"m2\"}],\"members\":{\"m1\":{\"state\":\"ok\",\"truncated\":true},\"m2\":{\"state\":\"ok\"}},\"complete\":true,\"sentence\":\"m1 had more alarms than one page holds; showing its newest\"}",
+        "old_expectation_sha256": "ac8a62012176538532fbe30660e56c2d7cb9ff00e55dde1b8e6373b848d8a7d3"
+      },
+      {
+        "case": "alarms-03-silent-last-report",
+        "physical_line": 10,
+        "raw_line_sha256": "325cdaf10bfc35c8bee65cce36a3e15e5a07d9c647464b80ba434c479c115b5a",
+        "before_cells": [
+          "alarms-03-silent-last-report",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999700.0,\"received_at\":1759999700.0,\"sent_at\":1759999700.0,\"page\":{\"from\":1759913300.0,\"to\":1759999700.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759998500.0,\"kind\":\"door.forced\",\"class\":\"alarm\"},{\"id\":\"e1-2\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999610.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null}}}",
+          "{\"events\":[{\"t\":1759999745.0,\"kind\":\"silent\",\"class\":\"alarm\",\"member\":\"m1\",\"subsystem\":\"domain\",\"last_report\":1759999700.0,\"ongoing\":true},{\"id\":\"e1-2\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999610.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999610.0,\"member\":\"m1\"},{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759998500.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759998500.0,\"member\":\"m1\"}],\"members\":{\"m1\":{\"state\":\"silent\",\"known_until\":1759999700.0,\"silent_since\":1759999745.0}},\"complete\":false,\"sentence\":\"m1 silent since 08:49 — its alarms from its last report, known up to 08:48 UTC; none known since\"}",
+          "M11/11 sc. 04-alarms step 3"
+        ],
+        "before_input_sha256": "467aeb73162b75414d978dec28d8d61bd9b31c2095eb14d4ffd196b4184b8ad5",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999700.0,\"received_at\":1759999700.0,\"sent_at\":1759999700.0,\"page\":{\"from\":1759913300.0,\"to\":1759999700.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759998500.0,\"kind\":\"door.forced\",\"class\":\"alarm\"},{\"id\":\"e1-2\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999610.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "771ff04b7f3e26e1a3dddd439082518ffe2f65887165e74775a735b2875d04d5",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[{\"t\":1759999745.0,\"kind\":\"silent\",\"class\":\"alarm\",\"member\":\"m1\",\"subsystem\":\"domain\",\"last_report\":1759999700.0,\"ongoing\":true},{\"id\":\"e1-2\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999610.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999610.0,\"member\":\"m1\"},{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759998500.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759998500.0,\"member\":\"m1\"}],\"members\":{\"m1\":{\"state\":\"silent\",\"known_until\":1759999700.0,\"silent_since\":1759999745.0}},\"complete\":false,\"sentence\":\"m1 silent since 08:49 — its alarms from its last report, known up to 08:48 UTC; none known since\"}",
+        "old_expectation_sha256": "9ce332f1743f798d2c74b6d97fb2cd13e23078adf47f933bbcfcd458c59ba53b"
+      },
+      {
+        "case": "alarms-04-not-reporting-witness",
+        "physical_line": 11,
+        "raw_line_sha256": "5d0c552778077e0e82909c8a8d1754b9c7cf68ac7f4c7d88f3808bc10c4e4151",
+        "before_cells": [
+          "alarms-04-not-reporting-witness",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[{\"sub\":\"testsub2\",\"name\":\"w-1\",\"ts\":1759999990.0,\"cluster\":\"m2\",\"units\":{\"m1\":50}}],\"members\":{\"m1\":{\"last_report\":1759999700.0,\"received_at\":1759999700.0,\"sent_at\":1759999700.0,\"page\":{\"from\":1759913300.0,\"to\":1759999700.0,\"events\":[],\"truncated\":false},\"history\":null}}}",
+          "{\"events\":[{\"t\":1759999745.0,\"kind\":\"not_reporting\",\"class\":\"alarm\",\"member\":\"m1\",\"subsystem\":\"domain\",\"last_report\":1759999700.0,\"ongoing\":true,\"alive_at\":1759999940.0,\"alive_via\":\"m2/w-1\"}],\"members\":{\"m1\":{\"state\":\"not_reporting\",\"known_until\":1759999700.0,\"silent_since\":1759999745.0,\"alive_at\":1759999940.0,\"alive_via\":\"m2/w-1\"}},\"complete\":false,\"sentence\":\"m1 silent since 08:49 — its alarms from its last report, known up to 08:48 UTC; none known since — but m2/w-1 heard of it at 08:52: alive, and not reporting to the domain\"}",
+          "M11/11 sc. 04-alarms step 4"
+        ],
+        "before_input_sha256": "92a378bc9e1b8c263ae6eea17319ddab7d23ab86aebe953cd946c73251d3d8ab",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[{\"sub\":\"testsub2\",\"name\":\"w-1\",\"ts\":1759999990.0,\"cluster\":\"m2\",\"units\":{\"m1\":50}}],\"members\":{\"m1\":{\"last_report\":1759999700.0,\"received_at\":1759999700.0,\"sent_at\":1759999700.0,\"page\":{\"from\":1759913300.0,\"to\":1759999700.0,\"events\":[],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "1f0917f8b4cec903e966e036b86e5b6ee664c3b7e0f356c8b447458ceb0876f6",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[{\"t\":1759999745.0,\"kind\":\"not_reporting\",\"class\":\"alarm\",\"member\":\"m1\",\"subsystem\":\"domain\",\"last_report\":1759999700.0,\"ongoing\":true,\"alive_at\":1759999940.0,\"alive_via\":\"m2/w-1\"}],\"members\":{\"m1\":{\"state\":\"not_reporting\",\"known_until\":1759999700.0,\"silent_since\":1759999745.0,\"alive_at\":1759999940.0,\"alive_via\":\"m2/w-1\"}},\"complete\":false,\"sentence\":\"m1 silent since 08:49 — its alarms from its last report, known up to 08:48 UTC; none known since — but m2/w-1 heard of it at 08:52: alive, and not reporting to the domain\"}",
+        "old_expectation_sha256": "1630188351e20f2eeeb902965c53e6027ce1879c3d02589df641323fd84e967b"
+      },
+      {
+        "case": "alarms-05-witness-older-than-report",
+        "physical_line": 12,
+        "raw_line_sha256": "ccbe57b6dd172ca008e917db44b4c5069a2a0b608a58146003ce454977fa6413",
+        "before_cells": [
+          "alarms-05-witness-older-than-report",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[{\"sub\":\"testsub2\",\"name\":\"w-1\",\"ts\":1759999990.0,\"cluster\":\"m2\",\"units\":{\"m1\":400}}],\"members\":{\"m1\":{\"last_report\":1759999700.0,\"received_at\":1759999700.0,\"sent_at\":1759999700.0,\"page\":{\"from\":1759913300.0,\"to\":1759999700.0,\"events\":[],\"truncated\":false},\"history\":null}}}",
+          "{\"events\":[{\"t\":1759999745.0,\"kind\":\"silent\",\"class\":\"alarm\",\"member\":\"m1\",\"subsystem\":\"domain\",\"last_report\":1759999700.0,\"ongoing\":true}],\"members\":{\"m1\":{\"state\":\"silent\",\"known_until\":1759999700.0,\"silent_since\":1759999745.0}},\"complete\":false,\"sentence\":\"m1 silent since 08:49 — its alarms from its last report, known up to 08:48 UTC; none known since\"}",
+          "M11/11 sc. 04-alarms step 5"
+        ],
+        "before_input_sha256": "87c0ecf8331ee124eeb28e32acbfa2e12195fc60617db9967e5fece0cab20224",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[{\"sub\":\"testsub2\",\"name\":\"w-1\",\"ts\":1759999990.0,\"cluster\":\"m2\",\"units\":{\"m1\":400}}],\"members\":{\"m1\":{\"last_report\":1759999700.0,\"received_at\":1759999700.0,\"sent_at\":1759999700.0,\"page\":{\"from\":1759913300.0,\"to\":1759999700.0,\"events\":[],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "9c77f40e7f45cd25099eb2309294ce4dd3a07b2f21b9e49118b62a2a6468117e",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[{\"t\":1759999745.0,\"kind\":\"silent\",\"class\":\"alarm\",\"member\":\"m1\",\"subsystem\":\"domain\",\"last_report\":1759999700.0,\"ongoing\":true}],\"members\":{\"m1\":{\"state\":\"silent\",\"known_until\":1759999700.0,\"silent_since\":1759999745.0}},\"complete\":false,\"sentence\":\"m1 silent since 08:49 — its alarms from its last report, known up to 08:48 UTC; none known since\"}",
+        "old_expectation_sha256": "7ba11018ee8563a02d00057e0b35d54658633dafd76c07b0383eb53a867a5699"
+      },
+      {
+        "case": "alarms-06-never-and-unreadable",
+        "physical_line": 13,
+        "raw_line_sha256": "0bf0b658694795ac6b8c6792de95b0a9733fe0fbe955e8a596fd60174b1cd227",
+        "before_cells": [
+          "alarms-06-never-and-unreadable",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":null,\"received_at\":null,\"sent_at\":null,\"page\":null,\"history\":null},\"m2\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":\"garbled\",\"history\":null}}}",
+          "{\"events\":[],\"members\":{\"m1\":{\"state\":\"never\"},\"m2\":{\"state\":\"unreadable\"}},\"complete\":false,\"sentence\":\"m1 has never reported to the domain; m2's page of alarms does not read\"}",
+          "M11/11 sc. 04-alarms step 6"
+        ],
+        "before_input_sha256": "b8227e1c9e1aba6e77109d939e2f19f6b79e52da67d56ac91667d143f7b46a6e",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":null,\"received_at\":null,\"sent_at\":null,\"page\":null,\"history\":null,\"silent_after\":45},\"m2\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":\"garbled\",\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "2da2dfe882ef69e48a25f3d1860943b71bcc8ecec16a3c83f7d6efaff3a9440b",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          },
+          {
+            "pointer": "/members/m2/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[],\"members\":{\"m1\":{\"state\":\"never\"},\"m2\":{\"state\":\"unreadable\"}},\"complete\":false,\"sentence\":\"m1 has never reported to the domain; m2's page of alarms does not read\"}",
+        "old_expectation_sha256": "318676b1b7c60774c9dd869f807766a6cae99fef04e65498805e8c19be3adeed"
+      },
+      {
+        "case": "alarms-07-history-dedup-and-cut",
+        "physical_line": 14,
+        "raw_line_sha256": "ae7c406d6d14c173f5ac6f4d95b99adde876c926b448ab782d89e39eeacbf68b",
+        "before_cells": [
+          "alarms-07-history-dedup-and-cut",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":{\"from\":1759913585.0,\"to\":1759999985.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999960.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":{\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999969.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999960.0},{\"id\":\"e1-5\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759993000.0,\"kind\":\"tamper\",\"class\":\"alarm\",\"t_src\":1759992990.0}],\"cut_before\":1759992000.0}}}}",
+          "{\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999970.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999960.0,\"member\":\"m1\"},{\"id\":\"e1-5\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759993000.0,\"kind\":\"tamper\",\"class\":\"alarm\",\"t_src\":1759992990.0,\"member\":\"m1\",\"from_history\":true}],\"members\":{\"m1\":{\"state\":\"ok\",\"history_cut_before\":1759992000.0}},\"complete\":true,\"sentence\":\"m1 had an alarm storm: the domain keeps only its newest alarms, and what came before 06:40 UTC is not known in full\"}",
+          "M11/11 sc. 04-alarms step 7"
+        ],
+        "before_input_sha256": "9ceae0cc48b44b7251d0fe257ccc93ea054768c087f70b109befcc549d0f96c4",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":{\"from\":1759913585.0,\"to\":1759999985.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999960.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":{\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999969.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999960.0},{\"id\":\"e1-5\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759993000.0,\"kind\":\"tamper\",\"class\":\"alarm\",\"t_src\":1759992990.0}],\"cut_before\":1759992000.0},\"silent_after\":45}}}",
+        "proposed_input_sha256": "6ce0de48df85b5eedd55d760aeb19c9d10c56016d9a75987f32119b30f476216",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999970.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999960.0,\"member\":\"m1\"},{\"id\":\"e1-5\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759993000.0,\"kind\":\"tamper\",\"class\":\"alarm\",\"t_src\":1759992990.0,\"member\":\"m1\",\"from_history\":true}],\"members\":{\"m1\":{\"state\":\"ok\",\"history_cut_before\":1759992000.0}},\"complete\":true,\"sentence\":\"m1 had an alarm storm: the domain keeps only its newest alarms, and what came before 06:40 UTC is not known in full\"}",
+        "old_expectation_sha256": "046b9d92cadb61e230dea4840cfb97358caa6ebac953e1fe3ae24ff1f1ce8b8e"
+      },
+      {
+        "case": "alarms-08-window",
+        "physical_line": 15,
+        "raw_line_sha256": "04ae68671373c9bb06b4dc44500995a8850b40cb103820492c0a7c6cbd08330e",
+        "before_cells": [
+          "alarms-08-window",
+          "{\"now\":1760000000.0,\"since\":1759996400.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":{\"from\":1759913595.0,\"to\":1759999995.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999900.0,\"kind\":\"door.forced\",\"class\":\"alarm\"},{\"id\":\"e1-2\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759995000.0,\"kind\":\"tamper\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null}}}",
+          "{\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999900.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999900.0,\"member\":\"m1\"}],\"members\":{\"m1\":{\"state\":\"ok\"}},\"complete\":true,\"sentence\":\"every member answered\"}",
+          "M11/11 sc. 04-alarms step 8"
+        ],
+        "before_input_sha256": "79615eec6e0615d4a089b9cadd1e41526ee53246a994542b78346da1b7cbd89e",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759996400.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":{\"from\":1759913595.0,\"to\":1759999995.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999900.0,\"kind\":\"door.forced\",\"class\":\"alarm\"},{\"id\":\"e1-2\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759995000.0,\"kind\":\"tamper\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "2b73495e02161d07dc48d776b54eba31a224915834f08cbb84ae6d584ce10be2",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999900.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999900.0,\"member\":\"m1\"}],\"members\":{\"m1\":{\"state\":\"ok\"}},\"complete\":true,\"sentence\":\"every member answered\"}",
+        "old_expectation_sha256": "cb40fa28af30c4c127569d6208301f1cb987e61a7324d9f07fe9f719f0e646de"
+      },
+      {
+        "case": "alarms-09-clock-offset",
+        "physical_line": 16,
+        "raw_line_sha256": "3e75db75af33499f5f720b312ad7bbf60304bf65697998f029a4c84836aa9d60",
+        "before_cells": [
+          "alarms-09-clock-offset",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999875.0,\"page\":{\"from\":1759913475.0,\"to\":1759999875.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999780.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null}}}",
+          "{\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999900.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999780.0,\"member\":\"m1\"}],\"members\":{\"m1\":{\"state\":\"ok\"}},\"complete\":true,\"sentence\":\"every member answered\"}",
+          "M11/11 sc. 04-alarms step 9"
+        ],
+        "before_input_sha256": "aed8c971c5dd0bae42f53ce33faa2c94edaa1ade605a858659253c7db2a9b83d",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999875.0,\"page\":{\"from\":1759913475.0,\"to\":1759999875.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999780.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "510615e0d8afd3001ffa7862dafd122526d1ff965ead795d43eb34a52c8aff55",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999900.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999780.0,\"member\":\"m1\"}],\"members\":{\"m1\":{\"state\":\"ok\"}},\"complete\":true,\"sentence\":\"every member answered\"}",
+        "old_expectation_sha256": "5b5a0e390dba4b8852ae3521d530d45797a4acff8b38204cec31433d800c84a9"
+      },
+      {
+        "case": "alarms-10-two-witnesses",
+        "physical_line": 17,
+        "raw_line_sha256": "50ccb4a94d5529f070e713a0cd3dcd2723e5c5afd94530b24abc56e36f9e2a9c",
+        "before_cells": [
+          "alarms-10-two-witnesses",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[{\"sub\":\"testsub2\",\"name\":\"w-1\",\"ts\":1759999990.0,\"cluster\":\"m2\",\"units\":{\"m1\":50}},{\"sub\":\"testsub2\",\"name\":\"w-2\",\"ts\":1759999995.0,\"cluster\":\"m2\",\"units\":{\"m1\":30}}],\"members\":{\"m1\":{\"last_report\":1759999700.0,\"received_at\":1759999700.0,\"sent_at\":1759999700.0,\"page\":{\"from\":1759913300.0,\"to\":1759999700.0,\"events\":[],\"truncated\":false},\"history\":null}}}",
+          "{\"members\":{\"m1\":{\"state\":\"not_reporting\",\"alive_at\":1759999965.0,\"alive_via\":\"m2/w-2\"}}}",
+          "M11/11 sc. 04-alarms step 10"
+        ],
+        "before_input_sha256": "c697a238f48d5e306bb3cbd077f5382519cc6274aa4fcecc83ad35c12d418050",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[{\"sub\":\"testsub2\",\"name\":\"w-1\",\"ts\":1759999990.0,\"cluster\":\"m2\",\"units\":{\"m1\":50}},{\"sub\":\"testsub2\",\"name\":\"w-2\",\"ts\":1759999995.0,\"cluster\":\"m2\",\"units\":{\"m1\":30}}],\"members\":{\"m1\":{\"last_report\":1759999700.0,\"received_at\":1759999700.0,\"sent_at\":1759999700.0,\"page\":{\"from\":1759913300.0,\"to\":1759999700.0,\"events\":[],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "62fdc665013e5afd49af0e569392e4c607627b2486b5677c851e79f9c571d324",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"members\":{\"m1\":{\"state\":\"not_reporting\",\"alive_at\":1759999965.0,\"alive_via\":\"m2/w-2\"}}}",
+        "old_expectation_sha256": "6f5c083cda88e5ea647378fbffa919e9f2f8cc0625728b854ebdc19adbc9061f"
+      },
+      {
+        "case": "alarms-11-cut-before-zero",
+        "physical_line": 18,
+        "raw_line_sha256": "41429aa40d19da83d2b0d5be792b3459993affa2866721aa8cf4beb7b02b1fb2",
+        "before_cells": [
+          "alarms-11-cut-before-zero",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":{\"from\":1759913585.0,\"to\":1759999985.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999960.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":{\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999969.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999960.0},{\"id\":\"e1-5\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759993000.0,\"kind\":\"tamper\",\"class\":\"alarm\",\"t_src\":1759992990.0}],\"cut_before\":0}}}}",
+          "{\"members\":{\"m1\":{\"state\":\"ok\",\"history_cut_before\":\"@absent\"}},\"complete\":true,\"sentence\":\"every member answered\"}",
+          "M11/11 sc. 04-alarms step 11"
+        ],
+        "before_input_sha256": "124fb34bbcbeefe174992cc95932398145b6677e100c949a6765cc89cf1a9df0",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":{\"from\":1759913585.0,\"to\":1759999985.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999960.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":{\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999969.0,\"kind\":\"door.forced\",\"class\":\"alarm\",\"t_src\":1759999960.0},{\"id\":\"e1-5\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759993000.0,\"kind\":\"tamper\",\"class\":\"alarm\",\"t_src\":1759992990.0}],\"cut_before\":0},\"silent_after\":45}}}",
+        "proposed_input_sha256": "d548d0b659f1477d66b9428b3ed202df0e2a698a1e06ee7b3ccf3d72be43b1d8",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"members\":{\"m1\":{\"state\":\"ok\",\"history_cut_before\":\"@absent\"}},\"complete\":true,\"sentence\":\"every member answered\"}",
+        "old_expectation_sha256": "8a729accbf447d2fcf3f369ff60e4c5b3bd3a635261ede234208df8cfee78b8e"
+      },
+      {
+        "case": "alarms-12-page-line-not-alarm",
+        "physical_line": 19,
+        "raw_line_sha256": "8982912e6dd67dfbd391d3f59f92152db138ce965ea26bde0483809e51c5421b",
+        "before_cells": [
+          "alarms-12-page-line-not-alarm",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":{\"from\":1759913585.0,\"to\":1759999985.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999960.0,\"kind\":\"door.forced\",\"class\":\"observation\"}],\"truncated\":false},\"history\":null}}}",
+          "{\"events\":[],\"members\":{\"m1\":{\"state\":\"unreadable\"}},\"complete\":false,\"sentence\":\"m1's page of alarms does not read\"}",
+          "M11/11 sc. 04-alarms step 12"
+        ],
+        "before_input_sha256": "6fb29a4021f49a270692001eed20867b9a45c5fc923f080741c1b6ef765360c4",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":{\"from\":1759913585.0,\"to\":1759999985.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999960.0,\"kind\":\"door.forced\",\"class\":\"observation\"}],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "ca1d8d8299be22c64702cd4c97d4a630ec0c159cfdfad9928db8c22a521587ce",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[],\"members\":{\"m1\":{\"state\":\"unreadable\"}},\"complete\":false,\"sentence\":\"m1's page of alarms does not read\"}",
+        "old_expectation_sha256": "28f9b9c8330e7741b7885a2f2c5629471195a6fb348a5316db1613f894c7d3b7"
+      },
+      {
+        "case": "alarms-13-same-line-in-page",
+        "physical_line": 20,
+        "raw_line_sha256": "260a456098cb96f7481ab16483a70335765ab0ac76ddffeefcebfe325050d297",
+        "before_cells": [
+          "alarms-13-same-line-in-page",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":{\"from\":1759913585.0,\"to\":1759999985.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999960.0,\"kind\":\"door.forced\",\"class\":\"alarm\"},{\"id\":\"e1-2\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999960.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null}}}",
+          "{\"events\":[{\"id\":\"e1-1\",\"kind\":\"door.forced\",\"member\":\"m1\"}],\"members\":{\"m1\":{\"state\":\"ok\"}},\"complete\":true}",
+          "M11/11 sc. 04-alarms step 13"
+        ],
+        "before_input_sha256": "0ecb57e1dd2bfd8d17352c3ae4cfeab1d25c6f8058a2c749a303c9444586438a",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":{\"from\":1759913585.0,\"to\":1759999985.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999960.0,\"kind\":\"door.forced\",\"class\":\"alarm\"},{\"id\":\"e1-2\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999960.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "cd359942082c0b01e4565de9d37c2b1283eafbd316ab5818d76747faaee75b86",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[{\"id\":\"e1-1\",\"kind\":\"door.forced\",\"member\":\"m1\"}],\"members\":{\"m1\":{\"state\":\"ok\"}},\"complete\":true}",
+        "old_expectation_sha256": "3ae960100984a022d6160f0d2e4cff255eb9f7faa4ff9b613a2580918d81ec0b"
+      },
+      {
+        "case": "alarms-14-witness-tie",
+        "physical_line": 21,
+        "raw_line_sha256": "4bbaa191415c33f168818f0eb3004f63323734130875ff689a3add0ecd88d418",
+        "before_cells": [
+          "alarms-14-witness-tie",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[{\"sub\":\"testsub2\",\"name\":\"w-2\",\"ts\":1759999990.0,\"cluster\":\"m2\",\"units\":{\"m1\":30}},{\"sub\":\"testsub2\",\"name\":\"w-1\",\"ts\":1759999980.0,\"cluster\":\"m2\",\"units\":{\"m1\":20}}],\"members\":{\"m1\":{\"last_report\":1759999700.0,\"received_at\":1759999700.0,\"sent_at\":1759999700.0,\"page\":{\"from\":1759913300.0,\"to\":1759999700.0,\"events\":[],\"truncated\":false},\"history\":null}}}",
+          "{\"members\":{\"m1\":{\"state\":\"not_reporting\",\"alive_at\":1759999960.0,\"alive_via\":\"m2/w-1\"}}}",
+          "M11/11 sc. 04-alarms step 14"
+        ],
+        "before_input_sha256": "32016eb423c6f87f29a6a6af59ee5ff688e7098f0ab953e8ef711236ccd880e7",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[{\"sub\":\"testsub2\",\"name\":\"w-2\",\"ts\":1759999990.0,\"cluster\":\"m2\",\"units\":{\"m1\":30}},{\"sub\":\"testsub2\",\"name\":\"w-1\",\"ts\":1759999980.0,\"cluster\":\"m2\",\"units\":{\"m1\":20}}],\"members\":{\"m1\":{\"last_report\":1759999700.0,\"received_at\":1759999700.0,\"sent_at\":1759999700.0,\"page\":{\"from\":1759913300.0,\"to\":1759999700.0,\"events\":[],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "f5a5131aeada712e511ec66bff66cb801889de006fa7f12fe754edac8057f1f9",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"members\":{\"m1\":{\"state\":\"not_reporting\",\"alive_at\":1759999960.0,\"alive_via\":\"m2/w-1\"}}}",
+        "old_expectation_sha256": "dda0dfedb4fed0a2d0069628d9be364d67ef389d2fd6740eae9415a27f4083f1"
+      },
+      {
+        "case": "alarms-15-lost-after-negative",
+        "physical_line": 22,
+        "raw_line_sha256": "976d113edd3fd90f76dba6325e528cc25289d4987db3edc28636c62308527ba1",
+        "before_cells": [
+          "alarms-15-lost-after-negative",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":-1,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999993.0,\"page\":{\"from\":1759913593.0,\"to\":1759999993.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999900.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null},\"m2\":{\"last_report\":1759999997.0,\"received_at\":1759999997.0,\"sent_at\":1759999997.0,\"page\":{\"from\":1759913597.0,\"to\":1759999997.0,\"events\":[],\"truncated\":false},\"history\":null}}}",
+          "@exit 2",
+          "M11/11 sc. 04-alarms step 15"
+        ],
+        "before_input_sha256": "4d55a89b3b99ae5c034b1555ef948492b58fe6d7f7cbb2a28969b77e5e49cf88",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":-1,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999993.0,\"page\":{\"from\":1759913593.0,\"to\":1759999993.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999900.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null,\"silent_after\":45},\"m2\":{\"last_report\":1759999997.0,\"received_at\":1759999997.0,\"sent_at\":1759999997.0,\"page\":{\"from\":1759913597.0,\"to\":1759999997.0,\"events\":[],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "d22c5688b3ebbc97665f9f6d49ce834c95789dd61e25c62130783debcdc9a59a",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          },
+          {
+            "pointer": "/members/m2/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "@exit 2",
+        "old_expectation_sha256": "36d74d320a003075a33b677d6a9402b41811eb55f28b2faa5e1879bf0893df08"
+      },
+      {
+        "case": "alarms-16-reported-garbled",
+        "physical_line": 23,
+        "raw_line_sha256": "e2e76546db5051508798f26730221cb62b8e76c324ffeaebb8ccbbaee2d92938",
+        "before_cells": [
+          "alarms-16-reported-garbled",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"reported\":\"garbled\",\"page\":null,\"history\":null},\"m2\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":null,\"history\":null}}}",
+          "{\"events\":[],\"members\":{\"m1\":{\"state\":\"unreadable\",\"known_until\":\"@absent\",\"silent_since\":\"@absent\"},\"m2\":{\"state\":\"ok\"}},\"complete\":false}",
+          "the mark reported is read, out of form — the member is unreadable, there is no silence row, the others as usual (C10-REPORTED-OUTCOME-1D6)"
+        ],
+        "before_input_sha256": "e6442d30fbf7d0ae3d3b758a60ffcd98861b6a9df7aca64318ff039e2464e652",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"reported\":\"garbled\",\"page\":null,\"history\":null,\"silent_after\":45},\"m2\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":null,\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "a10e6ed20f63235e208a8b93a531a2e8b9c9cf0028f79a5e6b10979e6d1f7ee3",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          },
+          {
+            "pointer": "/members/m2/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[],\"members\":{\"m1\":{\"state\":\"unreadable\",\"known_until\":\"@absent\",\"silent_since\":\"@absent\"},\"m2\":{\"state\":\"ok\"}},\"complete\":false}",
+        "old_expectation_sha256": "22d94a7ce1a1d1f942b7ded16cbe04056570f75327874e58733fffd8884886ef"
+      },
+      {
+        "case": "alarms-17-exit2-bad-member-name",
+        "physical_line": 24,
+        "raw_line_sha256": "20ef6366096fe680b810019ccaaf92e37882ff16958cd3d58581f120f13f2b03",
+        "before_cells": [
+          "alarms-17-exit2-bad-member-name",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"BAD_NAME!\":{\"last_report\":null,\"received_at\":null,\"sent_at\":null,\"page\":null,\"history\":null}}}",
+          "@exit 2",
+          "P/10 N5 exit: the member name is not by the member grammar — code 2 (the coverage audit of P/10, the second pass, G01)"
+        ],
+        "before_input_sha256": "2391d999d985a94d70d4c416d663a44b5febe828768c16a0e2fc6bbac0d3e588",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"BAD_NAME!\":{\"last_report\":null,\"received_at\":null,\"sent_at\":null,\"page\":null,\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "6894d8e4365f94eb5781fb72b8c28e8a192b3806696ee54c423626481f03e84a",
+        "member_patches": [
+          {
+            "pointer": "/members/BAD_NAME!/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "@exit 2",
+        "old_expectation_sha256": "36d74d320a003075a33b677d6a9402b41811eb55f28b2faa5e1879bf0893df08"
+      },
+      {
+        "case": "alarms-18-exit2-page-without-report",
+        "physical_line": 25,
+        "raw_line_sha256": "284f8e01dc5c4d57cb8c506f85d26c6b5ecf732de9383710c143e0e57896227e",
+        "before_cells": [
+          "alarms-18-exit2-page-without-report",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":null,\"received_at\":null,\"sent_at\":null,\"page\":{\"from\":1759913593.0,\"to\":1759999993.0,\"events\":[],\"truncated\":false},\"history\":null}}}",
+          "@exit 2",
+          "P/10 N3 alarms step 1, N5 exit: there is no last_report, but there is page — code 2 (G01)"
+        ],
+        "before_input_sha256": "6524ec4870cc015569bffd309c637192ce49e376088f5819e72424d9bb3dd772",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":null,\"received_at\":null,\"sent_at\":null,\"page\":{\"from\":1759913593.0,\"to\":1759999993.0,\"events\":[],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "ce5bae53b03525b733e982d473ddc9d7d38129aee177430a357d3ef6ee6d99ee",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "@exit 2",
+        "old_expectation_sha256": "36d74d320a003075a33b677d6a9402b41811eb55f28b2faa5e1879bf0893df08"
+      },
+      {
+        "case": "alarms-19-exit2-sent-at-null-with-report",
+        "physical_line": 26,
+        "raw_line_sha256": "b9f53d71d08ed1a88bf96b40bd3ecef40ef75eea7e880a7705cbed9380cb699e",
+        "before_cells": [
+          "alarms-19-exit2-sent-at-null-with-report",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":null,\"page\":null,\"history\":null}}}",
+          "@exit 2",
+          "P/10 N5 exit (H14): sent_at null at a member with a report — code 2 (G01)"
+        ],
+        "before_input_sha256": "d5fb1d529a29b36162cd64c7d2bddc915d434c46466b770754b2c9a313e075be",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":null,\"page\":null,\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "d4b9aaf42bbc9860878b68e91b7d5bfc9b64a79b34daa82db97ceb54af7b93b5",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "@exit 2",
+        "old_expectation_sha256": "36d74d320a003075a33b677d6a9402b41811eb55f28b2faa5e1879bf0893df08"
+      },
+      {
+        "case": "alarms-20-exit2-history-cut-before-null",
+        "physical_line": 27,
+        "raw_line_sha256": "fdbb4238009a564346687f44fa846716ef34a75d23a9191484492a5caf00284c",
+        "before_cells": [
+          "alarms-20-exit2-history-cut-before-null",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":null,\"history\":{\"events\":[],\"cut_before\":null}}}}",
+          "@exit 2",
+          "P/10 N5 exit (A13): history with cut_before null — code 2 (G01)"
+        ],
+        "before_input_sha256": "233ae04d39ef3a36978f8a5540e7d503959e6a94bd3ba8d8d4f00ba1e79214aa",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":null,\"history\":{\"events\":[],\"cut_before\":null},\"silent_after\":45}}}",
+        "proposed_input_sha256": "e7d5794694d93a708cfe3b04f2a144c7acd3ebee74d5226aa60234c6cac8cb7f",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "@exit 2",
+        "old_expectation_sha256": "36d74d320a003075a33b677d6a9402b41811eb55f28b2faa5e1879bf0893df08"
+      },
+      {
+        "case": "alarms-21-exit2-witness-without-ts",
+        "physical_line": 28,
+        "raw_line_sha256": "96a40e2216a3dae1501b3fdde901e480c9815d77bc7f582bd5c5ff937b7abe4a",
+        "before_cells": [
+          "alarms-21-exit2-witness-without-ts",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[{\"sub\":\"testsub2\",\"name\":\"w-1\",\"cluster\":\"m2\",\"units\":{\"m1\":10}}],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":null,\"history\":null}}}",
+          "@exit 2",
+          "P/10 N3 «Filter — at the door», N5 exit (H14): a witness without ts in the input of the function — code 2 (G01)"
+        ],
+        "before_input_sha256": "4f0d38e215087e338b2e49f2d41d71f350282152f36f1f2a62aa3c4b7b3ef4b9",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[{\"sub\":\"testsub2\",\"name\":\"w-1\",\"cluster\":\"m2\",\"units\":{\"m1\":10}}],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":null,\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "5af44c3a816569c2406fd1eaa4635bb3a8d64151ab23594472dcfb54d6dc9f2b",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "@exit 2",
+        "old_expectation_sha256": "36d74d320a003075a33b677d6a9402b41811eb55f28b2faa5e1879bf0893df08"
+      },
+      {
+        "case": "alarms-22-exit2-reported-with-last-report",
+        "physical_line": 29,
+        "raw_line_sha256": "d95a58b5cf4d18069e0f7423135fc40f772413aac3bb53619eb0052bfd7c104b",
+        "before_cells": [
+          "alarms-22-exit2-reported-with-last-report",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"reported\":\"garbled\",\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":null,\"history\":null}}}",
+          "@exit 2",
+          "P/10 N5 exit (C10-REPORTED-OUTCOME-1D6): reported together with last_report — code 2 (G01)"
+        ],
+        "before_input_sha256": "8ed5f233607d3e51d8b4355ec90305760b8363340a943b5a870805731b737f06",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"reported\":\"garbled\",\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":null,\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "6d00142d196dad65b72eae6cdb10e5d7a2c4171bdc6f6b4dca389dbcb4558cd6",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "@exit 2",
+        "old_expectation_sha256": "36d74d320a003075a33b677d6a9402b41811eb55f28b2faa5e1879bf0893df08"
+      },
+      {
+        "case": "alarms-23-exit2-extra-field",
+        "physical_line": 30,
+        "raw_line_sha256": "1244faeb016ed7914c48805b8488416b37eb091d5067f036f264266290a8f374",
+        "before_cells": [
+          "alarms-23-exit2-extra-field",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{},\"extra\":true}",
+          "@exit 2",
+          "P/10 N5 exit: an extra field of the input — code 2 (G01)"
+        ],
+        "before_input_sha256": "dd37b84284eadbda545b8a8606a379999f6c64f6030da0b7d468adf99c86d291",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{},\"extra\":true}",
+        "proposed_input_sha256": "dd37b84284eadbda545b8a8606a379999f6c64f6030da0b7d468adf99c86d291",
+        "member_patches": [],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "@exit 2",
+        "old_expectation_sha256": "36d74d320a003075a33b677d6a9402b41811eb55f28b2faa5e1879bf0893df08"
+      },
+      {
+        "case": "alarms-24-page-not-object",
+        "physical_line": 31,
+        "raw_line_sha256": "ea60aec2db3ac5cdf32129b34166b34c4d9aaf067b58d8b98457e838d8c08295",
+        "before_cells": [
+          "alarms-24-page-not-object",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":[],\"history\":null}}}",
+          "{\"events\":[],\"members\":{\"m1\":{\"state\":\"unreadable\"}},\"complete\":false,\"sentence\":\"m1's page of alarms does not read\"}",
+          "P/10 N5 exit: the page is not an object ([]) — 0 unreadable, not code 2 (G01)"
+        ],
+        "before_input_sha256": "e5085effcd78d20472632a40a323fe7e50c187906833b495431c0456386978e5",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999995.0,\"page\":[],\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "8a7cb4cec65d263cdee701c6518484134c9dc0e0038823f25dfb8497e9ebb348",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[],\"members\":{\"m1\":{\"state\":\"unreadable\"}},\"complete\":false,\"sentence\":\"m1's page of alarms does not read\"}",
+        "old_expectation_sha256": "28f9b9c8330e7741b7885a2f2c5629471195a6fb348a5316db1613f894c7d3b7"
+      },
+      {
+        "case": "alarms-25-page-from-after-to",
+        "physical_line": 32,
+        "raw_line_sha256": "565067d529c4fd2338415488373e15f5b8175c04f03a3f3919c0e8952c2a1b3f",
+        "before_cells": [
+          "alarms-25-page-from-after-to",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":{\"from\":1759999995.0,\"to\":1759999985.0,\"events\":[],\"truncated\":false},\"history\":null}}}",
+          "{\"events\":[],\"members\":{\"m1\":{\"state\":\"unreadable\"}},\"complete\":false,\"sentence\":\"m1's page of alarms does not read\"}",
+          "P/10 N3 alarms step 1 (A15): from > to — the page is out of form, unreadable, not code 2 (G01)"
+        ],
+        "before_input_sha256": "98fdfac238e0723912027123646e2a987166660e7cc4fe901dfbd9f1be0f45db",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":{\"from\":1759999995.0,\"to\":1759999985.0,\"events\":[],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "2ecb86de7cf36b969c68f9c673694f27927de2f045c9fec8f1b850b6daebcbd0",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[],\"members\":{\"m1\":{\"state\":\"unreadable\"}},\"complete\":false,\"sentence\":\"m1's page of alarms does not read\"}",
+        "old_expectation_sha256": "28f9b9c8330e7741b7885a2f2c5629471195a6fb348a5316db1613f894c7d3b7"
+      },
+      {
+        "case": "alarms-26-page-line-without-id",
+        "physical_line": 33,
+        "raw_line_sha256": "bcd6be993faccc0ca8419aab3edebb16915937cea2f0efc1ba6e690bca5ed95d",
+        "before_cells": [
+          "alarms-26-page-line-without-id",
+          "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":{\"from\":1759913585.0,\"to\":1759999985.0,\"events\":[{\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999960.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null}}}",
+          "{\"events\":[],\"members\":{\"m1\":{\"state\":\"unreadable\"}},\"complete\":false,\"sentence\":\"m1's page of alarms does not read\"}",
+          "P/10 N3 alarms step 1 (A15): a page line without id — the page is unreadable, not code 2 (G01)"
+        ],
+        "before_input_sha256": "8c617ef00d490f5d1bfd968fdca6f42b75f79c18fa513600a976288a370c9c4a",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":{\"from\":1759913585.0,\"to\":1759999985.0,\"events\":[{\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999960.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "15228898c5549d86c1d27d412cd5c0fc1373cb80d3113440a1f9e0f5f6b03c8a",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[],\"members\":{\"m1\":{\"state\":\"unreadable\"}},\"complete\":false,\"sentence\":\"m1's page of alarms does not read\"}",
+        "old_expectation_sha256": "28f9b9c8330e7741b7885a2f2c5629471195a6fb348a5316db1613f894c7d3b7"
+      },
+      {
+        "case": "alarms-27-silence-line-before-window",
+        "physical_line": 34,
+        "raw_line_sha256": "e2cffb4e16db626b094f30b71b97d0d4761233a3d6fb85593a376d4ead354a05",
+        "before_cells": [
+          "alarms-27-silence-line-before-window",
+          "{\"now\":1760000000.0,\"since\":1759999800.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999700.0,\"received_at\":1759999700.0,\"sent_at\":1759999700.0,\"page\":{\"from\":1759913300.0,\"to\":1759999700.0,\"events\":[],\"truncated\":false},\"history\":null}}}",
+          "{\"events\":[],\"members\":{\"m1\":{\"state\":\"silent\",\"known_until\":1759999700.0,\"silent_since\":1759999745.0}},\"complete\":false,\"sentence\":\"m1 silent since 08:49 — its alarms from its last report, known up to 08:48 UTC; none known since\"}",
+          "P/10 N3 alarms step 2: the window [since, until] also for the silence row — silent_since earlier than since, there is no row; the member is silent, sentence is as before (G01)"
+        ],
+        "before_input_sha256": "112f7b5d34036bdbfd4ee418cf937852321ae1377db7429d787177aed5469089",
+        "proposed_input": "{\"now\":1760000000.0,\"since\":1759999800.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999700.0,\"received_at\":1759999700.0,\"sent_at\":1759999700.0,\"page\":{\"from\":1759913300.0,\"to\":1759999700.0,\"events\":[],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "proposed_input_sha256": "6b50acac1befc148fc0ef19417d52e070b21c42783d94255cec9e27d00e3131e",
+        "member_patches": [
+          {
+            "pointer": "/members/m1/silent_after",
+            "before": "ABSENT",
+            "after": 45,
+            "source": "current LOST_AFTER/server fixture, not inferred from absence; old lost_after invalid case retains its independent -1"
+          }
+        ],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"events\":[],\"members\":{\"m1\":{\"state\":\"silent\",\"known_until\":1759999700.0,\"silent_since\":1759999745.0}},\"complete\":false,\"sentence\":\"m1 silent since 08:49 — its alarms from its last report, known up to 08:48 UTC; none known since\"}",
+        "old_expectation_sha256": "29c686fc59d95324f415d9926ad03c8c2a557a987061c5dbbeb98a5e2c02803f"
+      },
+      {
+        "case": "alarms-28-mixed-camera-server",
+        "physical_line": 35,
+        "raw_line_sha256": "9b3a81ae73932d961f30109cc9a897d0ccff7337f8ec0daf205ec768d81f134b",
+        "before_cells": [
+          "alarms-28-mixed-camera-server",
+          "{\"now\":100,\"since\":0,\"until\":100,\"lost_after\":45,\"members\":{\"camera\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":1800},\"server\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":45}},\"witnesses\":[]}",
+          "{\"members\":{\"camera\":{\"state\":\"ok\"},\"server\":{\"state\":\"silent\",\"silent_since\":45}},\"complete\":false}",
+          "P/10 review C1: member-specific threshold; strict greater-than; server 45, camera 3 * every 600"
+        ],
+        "before_input_sha256": "62726d3129e241f8863c2987a5710d0e1fcd4f757812335f54143066b6d6c298",
+        "proposed_input": "{\"now\":100,\"since\":0,\"until\":100,\"lost_after\":45,\"members\":{\"camera\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":1800},\"server\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":45}},\"witnesses\":[]}",
+        "proposed_input_sha256": "62726d3129e241f8863c2987a5710d0e1fcd4f757812335f54143066b6d6c298",
+        "member_patches": [],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"members\":{\"camera\":{\"state\":\"ok\"},\"server\":{\"state\":\"silent\",\"silent_since\":45}},\"complete\":false}",
+        "old_expectation_sha256": "a3681fbd4e68702476a5a6aa88cf82139c109d96298796bf88910ed96aa5488d"
+      },
+      {
+        "case": "alarms-29-camera-at-threshold",
+        "physical_line": 36,
+        "raw_line_sha256": "a9ded267ba46a588d2476b24eb2fc4bd0ddf4a57dab35d53b36aa233b72c7b2f",
+        "before_cells": [
+          "alarms-29-camera-at-threshold",
+          "{\"now\":1800,\"since\":0,\"until\":1800,\"lost_after\":45,\"members\":{\"camera\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":1800},\"server\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":45}},\"witnesses\":[]}",
+          "{\"members\":{\"camera\":{\"state\":\"ok\"},\"server\":{\"state\":\"silent\",\"silent_since\":45}},\"complete\":false}",
+          "P/10 review C1: member-specific threshold; strict greater-than; server 45, camera 3 * every 600"
+        ],
+        "before_input_sha256": "9ba5f2fd8f99ee2d92d8909551304311c560b9862487342e1ac07921391b9e01",
+        "proposed_input": "{\"now\":1800,\"since\":0,\"until\":1800,\"lost_after\":45,\"members\":{\"camera\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":1800},\"server\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":45}},\"witnesses\":[]}",
+        "proposed_input_sha256": "9ba5f2fd8f99ee2d92d8909551304311c560b9862487342e1ac07921391b9e01",
+        "member_patches": [],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"members\":{\"camera\":{\"state\":\"ok\"},\"server\":{\"state\":\"silent\",\"silent_since\":45}},\"complete\":false}",
+        "old_expectation_sha256": "a3681fbd4e68702476a5a6aa88cf82139c109d96298796bf88910ed96aa5488d"
+      },
+      {
+        "case": "alarms-30-camera-after-threshold",
+        "physical_line": 37,
+        "raw_line_sha256": "f2bb3ae1fafa7b9eac195d4ccebfb06a62f115090ba3b42e1fa54355af9ae4f1",
+        "before_cells": [
+          "alarms-30-camera-after-threshold",
+          "{\"now\":1800.001,\"since\":0,\"until\":1800.001,\"lost_after\":45,\"members\":{\"camera\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":1800},\"server\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":45}},\"witnesses\":[]}",
+          "{\"members\":{\"camera\":{\"state\":\"silent\",\"silent_since\":1800},\"server\":{\"state\":\"silent\",\"silent_since\":45}},\"complete\":false}",
+          "P/10 review C1: member-specific threshold; strict greater-than; server 45, camera 3 * every 600"
+        ],
+        "before_input_sha256": "b5de60b54603786f583c4ec1ce6f7a70373155b6079bd298b8a88425c6c74701",
+        "proposed_input": "{\"now\":1800.001,\"since\":0,\"until\":1800.001,\"lost_after\":45,\"members\":{\"camera\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":1800},\"server\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":45}},\"witnesses\":[]}",
+        "proposed_input_sha256": "b5de60b54603786f583c4ec1ce6f7a70373155b6079bd298b8a88425c6c74701",
+        "member_patches": [],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "{\"members\":{\"camera\":{\"state\":\"silent\",\"silent_since\":1800},\"server\":{\"state\":\"silent\",\"silent_since\":45}},\"complete\":false}",
+        "old_expectation_sha256": "129038b7f34edea7bb3d57259ca603f10fada9e11aa8950d247b88716c271148"
+      },
+      {
+        "case": "alarms-31-bad-silent-after",
+        "physical_line": 38,
+        "raw_line_sha256": "2a56707f788544319c8251294a0de3bbf8d2953ce50f180d7a938d20d9c86b02",
+        "before_cells": [
+          "alarms-31-bad-silent-after",
+          "{\"now\":100,\"since\":0,\"until\":100,\"lost_after\":45,\"members\":{\"m1\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":0}},\"witnesses\":[]}",
+          "@exit 2",
+          "P/10 review C1: complete known input rejects non-positive/non-number silent_after, also on a garbled report"
+        ],
+        "before_input_sha256": "ce1666685e73f00d05d801b15300f35c4525cd8496bedd584cd6f0fc480a870c",
+        "proposed_input": "{\"now\":100,\"since\":0,\"until\":100,\"lost_after\":45,\"members\":{\"m1\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":0}},\"witnesses\":[]}",
+        "proposed_input_sha256": "ce1666685e73f00d05d801b15300f35c4525cd8496bedd584cd6f0fc480a870c",
+        "member_patches": [],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "@exit 2",
+        "old_expectation_sha256": "36d74d320a003075a33b677d6a9402b41811eb55f28b2faa5e1879bf0893df08"
+      },
+      {
+        "case": "alarms-32-bad-silent-after",
+        "physical_line": 39,
+        "raw_line_sha256": "035c36a6e9d4220385ee7e51705ec70b0d9f3d0746989ee3a83e989e55b211ff",
+        "before_cells": [
+          "alarms-32-bad-silent-after",
+          "{\"now\":100,\"since\":0,\"until\":100,\"lost_after\":45,\"members\":{\"m1\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":-1}},\"witnesses\":[]}",
+          "@exit 2",
+          "P/10 review C1: complete known input rejects non-positive/non-number silent_after, also on a garbled report"
+        ],
+        "before_input_sha256": "ed4b85c2e9878554a08b6fcf4aeff3ff13515ee4eea3693ffb8d5411c59c781a",
+        "proposed_input": "{\"now\":100,\"since\":0,\"until\":100,\"lost_after\":45,\"members\":{\"m1\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":-1}},\"witnesses\":[]}",
+        "proposed_input_sha256": "ed4b85c2e9878554a08b6fcf4aeff3ff13515ee4eea3693ffb8d5411c59c781a",
+        "member_patches": [],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "@exit 2",
+        "old_expectation_sha256": "36d74d320a003075a33b677d6a9402b41811eb55f28b2faa5e1879bf0893df08"
+      },
+      {
+        "case": "alarms-33-bad-silent-after",
+        "physical_line": 40,
+        "raw_line_sha256": "929e558be470fa47adf2f96959f2e74b39f6ad5c418f74ff4026a91746f03d4c",
+        "before_cells": [
+          "alarms-33-bad-silent-after",
+          "{\"now\":100,\"since\":0,\"until\":100,\"lost_after\":45,\"members\":{\"m1\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":true}},\"witnesses\":[]}",
+          "@exit 2",
+          "P/10 review C1: complete known input rejects non-positive/non-number silent_after, also on a garbled report"
+        ],
+        "before_input_sha256": "e7d11fae830c3233d2ac84ee0fe9f60fb0ef15ff1c10253e38d404b56fed37dd",
+        "proposed_input": "{\"now\":100,\"since\":0,\"until\":100,\"lost_after\":45,\"members\":{\"m1\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":true}},\"witnesses\":[]}",
+        "proposed_input_sha256": "e7d11fae830c3233d2ac84ee0fe9f60fb0ef15ff1c10253e38d404b56fed37dd",
+        "member_patches": [],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "@exit 2",
+        "old_expectation_sha256": "36d74d320a003075a33b677d6a9402b41811eb55f28b2faa5e1879bf0893df08"
+      },
+      {
+        "case": "alarms-34-bad-silent-after",
+        "physical_line": 41,
+        "raw_line_sha256": "5e6b3e7887e812ea8fe5dc700cc0a05631b0571710e535dda6e68a889976a8d9",
+        "before_cells": [
+          "alarms-34-bad-silent-after",
+          "{\"now\":100,\"since\":0,\"until\":100,\"lost_after\":45,\"members\":{\"m1\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":\"15\"}},\"witnesses\":[]}",
+          "@exit 2",
+          "P/10 review C1: complete known input rejects non-positive/non-number silent_after, also on a garbled report"
+        ],
+        "before_input_sha256": "89805e74408a6d7c59e233d735c712aace3e5dee15d06ee9850b667e56919057",
+        "proposed_input": "{\"now\":100,\"since\":0,\"until\":100,\"lost_after\":45,\"members\":{\"m1\":{\"last_report\":0,\"received_at\":0,\"sent_at\":0,\"page\":null,\"history\":null,\"silent_after\":\"15\"}},\"witnesses\":[]}",
+        "proposed_input_sha256": "89805e74408a6d7c59e233d735c712aace3e5dee15d06ee9850b667e56919057",
+        "member_patches": [],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "@exit 2",
+        "old_expectation_sha256": "36d74d320a003075a33b677d6a9402b41811eb55f28b2faa5e1879bf0893df08"
+      },
+      {
+        "case": "alarms-35-bad-silent-after",
+        "physical_line": 42,
+        "raw_line_sha256": "2ba4c957f20f72d84532a29a7e97268485f3a9e6abbcf2f1c1ee25a970724eec",
+        "before_cells": [
+          "alarms-35-bad-silent-after",
+          "{\"now\":100,\"since\":0,\"until\":100,\"lost_after\":45,\"members\":{\"m1\":{\"reported\":\"garbled\",\"silent_after\":null}},\"witnesses\":[]}",
+          "@exit 2",
+          "P/10 review C1: complete known input rejects non-positive/non-number silent_after, also on a garbled report"
+        ],
+        "before_input_sha256": "f656a8d78cc9532955220dc399cc6ec0a700ca4737acf54ef626c6dd4f5ef78b",
+        "proposed_input": "{\"now\":100,\"since\":0,\"until\":100,\"lost_after\":45,\"members\":{\"m1\":{\"reported\":\"garbled\",\"silent_after\":null}},\"witnesses\":[]}",
+        "proposed_input_sha256": "f656a8d78cc9532955220dc399cc6ec0a700ca4737acf54ef626c6dd4f5ef78b",
+        "member_patches": [],
+        "all_old_other_cells_exact": true,
+        "old_expectation": "@exit 2",
+        "old_expectation_sha256": "36d74d320a003075a33b677d6a9402b41811eb55f28b2faa5e1879bf0893df08"
+      }
+    ],
+    "changed_old_input_cells": 26,
+    "added_member_fields": 31,
+    "preserved_old_expectations": 35,
+    "old_exit2_cases": [
+      "alarms-15-lost-after-negative",
+      "alarms-17-exit2-bad-member-name",
+      "alarms-18-exit2-page-without-report",
+      "alarms-19-exit2-sent-at-null-with-report",
+      "alarms-20-exit2-history-cut-before-null",
+      "alarms-21-exit2-witness-without-ts",
+      "alarms-22-exit2-reported-with-last-report",
+      "alarms-23-exit2-extra-field",
+      "alarms-31-bad-silent-after",
+      "alarms-32-bad-silent-after",
+      "alarms-33-bad-silent-after",
+      "alarms-34-bad-silent-after",
+      "alarms-35-bad-silent-after"
+    ],
+    "new_rows": [
+      {
+        "case": "alarms-36-missing-silent-after",
+        "input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999993.0,\"page\":{\"from\":1759913593.0,\"to\":1759999993.0,\"events\":[{\"id\":\"e1-1\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"of\":\"testsub/c1\",\"t\":1759999900.0,\"kind\":\"door.forced\",\"class\":\"alarm\"}],\"truncated\":false},\"history\":null},\"m2\":{\"last_report\":1759999997.0,\"received_at\":1759999997.0,\"sent_at\":1759999997.0,\"page\":{\"from\":1759913597.0,\"to\":1759999997.0,\"events\":[],\"truncated\":false},\"history\":null,\"silent_after\":45}}}",
+        "expect": "@exit 2",
+        "note": "P/10 ADR0129(22) A: missing required silent_after in the normal member form; complete trusted input is code 2",
+        "derived_from": "alarms-01-all-answered",
+        "removed_pointer": "/members/m1/silent_after"
+      },
+      {
+        "case": "alarms-37-garbled-missing-silent-after",
+        "input": "{\"now\":1760000000.0,\"since\":1759913600.0,\"until\":1760000000.0,\"lost_after\":45,\"witnesses\":[],\"members\":{\"m1\":{\"reported\":\"garbled\",\"page\":null,\"history\":null},\"m2\":{\"last_report\":1759999995.0,\"received_at\":1759999995.0,\"sent_at\":1759999985.0,\"page\":null,\"history\":null,\"silent_after\":45}}}",
+        "expect": "@exit 2",
+        "note": "P/10 ADR0129(22) A: missing required silent_after also with reported garbled; code 2 precedes member unreadable",
+        "derived_from": "alarms-16-reported-garbled",
+        "removed_pointer": "/members/m1/silent_after"
+      }
+    ],
+    "before_rows": 35,
+    "after_rows": 37,
+    "before_computed": 22,
+    "after_computed": 22,
+    "before_exit2": 13,
+    "after_exit2": 15,
+    "all_root_fields_and_foreign_timestamps_preserved": true,
+    "all_old_case_ids_notes_expects_preserved": true,
+    "native_command_unchanged": "alarms {input}",
+    "changed_header_comments": 1,
+    "header_columns_and_all_other_comments_exact": true,
+    "schema_or_SUT_execution": "NOT_RUN"
+  },
+  "transport_preservation": {
+    "base": "4a656cd459d6492fe656e168988dbb71284a6224",
+    "vector_path": "Platform/10-domain-console/vectors/alarms/cases.tsv",
+    "before_table_sha256": "e63524704b38c736648fec95d208e62f3b794e022dbbc83c39ea3eb33af5ffde",
+    "proposed_after_table_sha256": "29506c5585b0ddc222d0888f27c2687144fb67b1968bfd4380c8ea6b39cbdc7b",
+    "before_header_prefix_sha256": "1d8c4ab1dc51616eb7d6539df9cf984a512de335044832ded874ec16f7023b6a",
+    "proposed_header_prefix_sha256": "1b8a4a0f8784a286985167bb56afcd1d717837e4618d907c687ddf57816553df",
+    "changed_header_comment_lines": [
+      2
+    ],
+    "physical_column_header_exact": true,
+    "all_other_comment_lines_exact": true,
+    "cell_json_marker": false,
+    "codec_decoder_alias_changes": false,
+    "old_rows": [
+      {
+        "case": "alarms-01-all-answered",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 2
+      },
+      {
+        "case": "alarms-02-storm-truncated",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 2
+      },
+      {
+        "case": "alarms-03-silent-last-report",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-04-not-reporting-witness",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-05-witness-older-than-report",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-06-never-and-unreadable",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 2
+      },
+      {
+        "case": "alarms-07-history-dedup-and-cut",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-08-window",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-09-clock-offset",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-10-two-witnesses",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-11-cut-before-zero",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-12-page-line-not-alarm",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-13-same-line-in-page",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-14-witness-tie",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-15-lost-after-negative",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 2
+      },
+      {
+        "case": "alarms-16-reported-garbled",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 2
+      },
+      {
+        "case": "alarms-17-exit2-bad-member-name",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-18-exit2-page-without-report",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-19-exit2-sent-at-null-with-report",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-20-exit2-history-cut-before-null",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-21-exit2-witness-without-ts",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-22-exit2-reported-with-last-report",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-23-exit2-extra-field",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 0
+      },
+      {
+        "case": "alarms-24-page-not-object",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-25-page-from-after-to",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-26-page-line-without-id",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-27-silence-line-before-window",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 1
+      },
+      {
+        "case": "alarms-28-mixed-camera-server",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 0
+      },
+      {
+        "case": "alarms-29-camera-at-threshold",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 0
+      },
+      {
+        "case": "alarms-30-camera-after-threshold",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 0
+      },
+      {
+        "case": "alarms-31-bad-silent-after",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 0
+      },
+      {
+        "case": "alarms-32-bad-silent-after",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 0
+      },
+      {
+        "case": "alarms-33-bad-silent-after",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 0
+      },
+      {
+        "case": "alarms-34-bad-silent-after",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 0
+      },
+      {
+        "case": "alarms-35-bad-silent-after",
+        "old_input_recovered_exact": true,
+        "old_other_cells_exact": true,
+        "insertions": 0
+      }
+    ],
+    "native_command": "UNCHANGED",
+    "old_expectations_exact": 35,
+    "root_times_and_other_raw_lexemes_exact": true,
+    "process_protected": {
+      "path": "Platform/10-domain-console/acceptance/scenarios.tsv",
+      "sha256": "7aea6a05b375021609c114a44e6de75f0d435884058822f9d7fd58f511e11995",
+      "rows": 163,
+      "scenarios": 16,
+      "action": "PRESERVE_ALL_BYTES"
+    },
+    "P03_P09_S08_common15": "READ_ONLY_NO_WRITES",
+    "schema_neighbours_algorithm_or_SUT": "NOT_EXECUTED"
+  },
+  "actual_corpus": {
+    "path": "Platform/10-domain-console/vectors/alarms/cases.tsv",
+    "before_sha256": "e63524704b38c736648fec95d208e62f3b794e022dbbc83c39ea3eb33af5ffde",
+    "after_sha256": "29506c5585b0ddc222d0888f27c2687144fb67b1968bfd4380c8ea6b39cbdc7b",
+    "frozen_PROPOSED_bytes_exact": true,
+    "rows": 37,
+    "computed": 22,
+    "exit2": 15,
+    "old_expectations_IDs_notes_preserved": 35,
+    "old_input_cells_changed": 26,
+    "member_fields_added": 31,
+    "new_negative_rows": 2,
+    "header_comments_changed": 1
+  },
+  "actual_refusal_cell": {
+    "path": "Platform/10-domain-console/forms/refusals.tsv",
+    "before_sha256": "a471ad79b307f4a9e9af61e8d497fa2eb358ba4bd213e60fb794243abcb5d565",
+    "after_sha256": "d19a98cef7c974963df03ce1e326ef8026ea693ac67b17ad540f1e7f58f414e5",
+    "changed_cells": [
+      {
+        "physical_line": 14,
+        "name": "c10_007_502",
+        "column": "response_schema",
+        "before": "Refusal",
+        "after": "ForwardingRefusal",
+        "other_cells_exact": true
+      }
+    ],
+    "other_cells_exact": true
+  },
+  "actual_current_table_SHA": "29506c5585b0ddc222d0888f27c2687144fb67b1968bfd4380c8ea6b39cbdc7b",
+  "new_implementation_input_from_expect": false,
+  "old_negative_causes": "original malformed fields/notes and all35 expectations retained; no execution inferred",
+  "algorithm_SUT_executed": false
+}

@@ -83,7 +83,7 @@ of the identity at the process are lesson P/08; the forwarding of the cluster co
 
 ## Done when
 
-- Scenarios 02, 05–19 of the acceptance of the lesson pass; the vector `alarms` — 27 rows, rows 15, 17–23 — code 2.
+- Scenarios 02, 05–19 of the acceptance of the lesson pass; the vector `alarms` — 37 rows, rows 15, 17–23, 31–37 — code 2.
 - The description of the implementation names the command `alarms`.
 - The normative checklist P/10-01…17 is closed; the items «checked by reading» (P/10-03, -10, -11, -15, -16 and parts of the others by N5)
   are named separately.
