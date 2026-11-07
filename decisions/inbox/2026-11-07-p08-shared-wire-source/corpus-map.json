@@ -1,0 +1,584 @@
+{
+  "base": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+  "hash_json_leaf_changes": [
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+      "pointer": "/initial/taken_sha256",
+      "before": "1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c",
+      "after": "fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558",
+      "before_value_sha256": "986df1921de75e643a8d6b05c1656f7f8f02e21f882c4db00da09412fbfaeeb3",
+      "after_value_sha256": "74636c1d29e1a6cbca9f62583498ed7d3d6e7500fd634cacc03474dbe99eb272"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+      "pointer": "/attempts/0/body",
+      "before": "{\"as_of\":100,\"doc\":{\"ann\":0,\"élise\":120}}",
+      "after": "{\"as_of\":\"100\",\"doc\":\"{\\\"ann\\\":0,\\\"élise\\\":120}\"}",
+      "before_value_sha256": "7008e2b0c84574ad34924642edc94a8c150bd45e7f76cc5c20bf8e158e22861c",
+      "after_value_sha256": "227532840f61b5d2f3ca741b3e4d1f128cb33dd99a0898f50a59890cf9ed27fe"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+      "pointer": "/attempts/0/advertised/sha256",
+      "before": "f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c",
+      "after": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+      "before_value_sha256": "b906ca51804acba30d26b4e553cd5077df2baeae2c184d0f718ddbd7a4f3cf97",
+      "after_value_sha256": "be6fbe83f7b7ab092de2dcd76b137240204e53267ddadea26671b78ce9bb72ba"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+      "pointer": "/attempts/1/body",
+      "before": "{\"as_of\":101,\"doc\":{\"ann\":0,\"élise\":120}}",
+      "after": "{\"as_of\":\"101\",\"doc\":\"{\\\"ann\\\":0,\\\"élise\\\":120}\"}",
+      "before_value_sha256": "dcd14ee908a5d3635a2119a45b039a02c42996833e90867e836be72aa2d70346",
+      "after_value_sha256": "f9e0b1517656b3ef80853d77d4f02d0fd04b0ab39da009968295271a9a924712"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+      "pointer": "/attempts/1/advertised/sha256",
+      "before": "a5f22518241c045551a3bab1b0c768ec5c8707e00c773d53c9866a4f0177767b",
+      "after": "d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569",
+      "before_value_sha256": "d155c16aa6feffad673371e9552720a8d47392b5788c550657d678ddb217bf4a",
+      "after_value_sha256": "c0adf4541e3cdf5870421c0bd5df1188512db1ab2db388013d5b1e622252a35e"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+      "pointer": "/initial/taken_sha256",
+      "before": "1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c",
+      "after": "fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558",
+      "before_value_sha256": "986df1921de75e643a8d6b05c1656f7f8f02e21f882c4db00da09412fbfaeeb3",
+      "after_value_sha256": "74636c1d29e1a6cbca9f62583498ed7d3d6e7500fd634cacc03474dbe99eb272"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+      "pointer": "/attempts/0/body",
+      "before": "{\"as_of\":100,\"doc\":{\"ann\":0,\"élise\":120}}",
+      "after": "{\"as_of\":\"100\",\"doc\":\"{\\\"ann\\\":0,\\\"élise\\\":120}\"}",
+      "before_value_sha256": "7008e2b0c84574ad34924642edc94a8c150bd45e7f76cc5c20bf8e158e22861c",
+      "after_value_sha256": "227532840f61b5d2f3ca741b3e4d1f128cb33dd99a0898f50a59890cf9ed27fe"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+      "pointer": "/attempts/0/advertised/sha256",
+      "before": "f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c",
+      "after": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+      "before_value_sha256": "b906ca51804acba30d26b4e553cd5077df2baeae2c184d0f718ddbd7a4f3cf97",
+      "after_value_sha256": "be6fbe83f7b7ab092de2dcd76b137240204e53267ddadea26671b78ce9bb72ba"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+      "pointer": "/attempts/1/body",
+      "before": "{ \"doc\" : { \"\\u00e9lise\" : 120, \"ann\" : 0 }, \"as_of\" : 100 }\n",
+      "after": "{\"doc\": \"{\\\"ann\\\":0,\\\"\\u00e9lise\\\":120}\", \"as_of\": \"100\"}\n",
+      "before_value_sha256": "77e4bbf892b1c744ef24b78a8ce4872666a6752b1c296559724a46307028709f",
+      "after_value_sha256": "068299757a65162d70c0e0c369dd15cf6bf3aec41ca567e51278e2677e917ffc"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+      "pointer": "/attempts/1/advertised/sha256",
+      "before": "f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c",
+      "after": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+      "before_value_sha256": "b906ca51804acba30d26b4e553cd5077df2baeae2c184d0f718ddbd7a4f3cf97",
+      "after_value_sha256": "be6fbe83f7b7ab092de2dcd76b137240204e53267ddadea26671b78ce9bb72ba"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/doc-only.json",
+      "pointer": "/initial/taken_sha256",
+      "before": "1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c",
+      "after": "fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558",
+      "before_value_sha256": "986df1921de75e643a8d6b05c1656f7f8f02e21f882c4db00da09412fbfaeeb3",
+      "after_value_sha256": "74636c1d29e1a6cbca9f62583498ed7d3d6e7500fd634cacc03474dbe99eb272"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/doc-only.json",
+      "pointer": "/attempts/0/body",
+      "before": "{\"as_of\":100,\"doc\":{\"ann\":0,\"élise\":120}}",
+      "after": "{\"as_of\":\"100\",\"doc\":\"{\\\"ann\\\":0,\\\"élise\\\":120}\"}",
+      "before_value_sha256": "7008e2b0c84574ad34924642edc94a8c150bd45e7f76cc5c20bf8e158e22861c",
+      "after_value_sha256": "227532840f61b5d2f3ca741b3e4d1f128cb33dd99a0898f50a59890cf9ed27fe"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/mismatch.json",
+      "pointer": "/initial/taken_sha256",
+      "before": "1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c",
+      "after": "fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558",
+      "before_value_sha256": "986df1921de75e643a8d6b05c1656f7f8f02e21f882c4db00da09412fbfaeeb3",
+      "after_value_sha256": "74636c1d29e1a6cbca9f62583498ed7d3d6e7500fd634cacc03474dbe99eb272"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/mismatch.json",
+      "pointer": "/attempts/0/body",
+      "before": "{\"as_of\":100,\"doc\":{\"ann\":0,\"élise\":120}}",
+      "after": "{\"as_of\":\"100\",\"doc\":\"{\\\"ann\\\":0,\\\"élise\\\":120}\"}",
+      "before_value_sha256": "7008e2b0c84574ad34924642edc94a8c150bd45e7f76cc5c20bf8e158e22861c",
+      "after_value_sha256": "227532840f61b5d2f3ca741b3e4d1f128cb33dd99a0898f50a59890cf9ed27fe"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/mismatch.json",
+      "pointer": "/attempts/0/advertised/sha256",
+      "before": "a5f22518241c045551a3bab1b0c768ec5c8707e00c773d53c9866a4f0177767b",
+      "after": "d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569",
+      "before_value_sha256": "d155c16aa6feffad673371e9552720a8d47392b5788c550657d678ddb217bf4a",
+      "after_value_sha256": "c0adf4541e3cdf5870421c0bd5df1188512db1ab2db388013d5b1e622252a35e"
+    }
+  ],
+  "changed_cells": [
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv",
+      "case": "g09-anywhere-hash-as-of",
+      "column": "expect",
+      "before": "{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\",\"a5f22518241c045551a3bab1b0c768ec5c8707e00c773d53c9866a4f0177767b\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}",
+      "after": "{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\",\"d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}",
+      "before_cell_sha256": "531631f5f114f289156bf67ddc1ea4f4a49baed365f09b1df141fed32da9135f",
+      "after_cell_sha256": "966b8a38f9f2415efb06f4c1a3a4a8d1a650c02a4cc1d73b619b002be413461d"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv",
+      "case": "g09-anywhere-hash-jcs",
+      "column": "expect",
+      "before": "{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\",\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}",
+      "after": "{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\",\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}",
+      "before_cell_sha256": "74781560d3c19b837c4ea010f92751683a7991486d415f3c50c03278385b5ec0",
+      "after_cell_sha256": "f7321836b201bce025eaa082c8c0e7c5673b2c4736e5be1fde0482c0232387fd"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv",
+      "case": "g09-anywhere-hash-jcs",
+      "column": "note",
+      "before": "Different whitespace and object-key order of the same JSON value keep the same digest.",
+      "after": "Only outer JSON whitespace, key order and Unicode escaping differ; the doc string value stays byte-exact and the whole-body digest is equal.",
+      "before_cell_sha256": "23b3ef92a68047e21e97a60bf2e45af66cffaf8ad809fe1a84bae5897b1e3a1b",
+      "after_cell_sha256": "be6cc368ce817e14130d0ef66794ad5b6a0101701b9d9c869edaa45069cb1134"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv",
+      "case": "g09-anywhere-hash-doc-only",
+      "column": "expect",
+      "before": "{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"]}",
+      "after": "{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"]}",
+      "before_cell_sha256": "5cf484c69727cc9aae977da9f2cf5cb0b3687aa2964f9aa449bdf9ad6778ceb8",
+      "after_cell_sha256": "dcfa13fb92f64d66d3e834a1c13bc85c9acadc08464546e3180d2b0b29b8251d"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv",
+      "case": "g09-anywhere-hash-doc-only",
+      "column": "note",
+      "before": "A digest of doc alone does not confirm the anywhere copy.",
+      "after": "A digest of the internal doc text bytes alone does not confirm the complete raw-string anywhere body.",
+      "before_cell_sha256": "e93cfd44bddd2d785423bef3a6f6a4d1d8ca40bc3048e394bc7ced5e5a5e9905",
+      "after_cell_sha256": "341da91ff03d3af176d1fb8f4493982743c07082992693fb7d1fe49f0db3aaee"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv",
+      "case": "g09-anywhere-hash-mismatch",
+      "column": "expect",
+      "before": "{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"]}",
+      "after": "{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"]}",
+      "before_cell_sha256": "5cf484c69727cc9aae977da9f2cf5cb0b3687aa2964f9aa449bdf9ad6778ceb8",
+      "after_cell_sha256": "dcfa13fb92f64d66d3e834a1c13bc85c9acadc08464546e3180d2b0b29b8251d"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/seams.tsv",
+      "physical_line": 37,
+      "case": "s35-anywhere-hash-as-of",
+      "column": "request",
+      "before": "CALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":100,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\"advertised\":{\"as_of\":100,\"sha256\":\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"},\"received_at\":100,\"domain_age\":0},{\"body\":\"{\\\"as_of\\\":101,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\"advertised\":{\"as_of\":101,\"sha256\":\"a5f22518241c045551a3bab1b0c768ec5c8707e00c773d53c9866a4f0177767b\"},\"received_at\":101,\"domain_age\":0}]}",
+      "after": "CALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\"advertised\":{\"as_of\":100,\"sha256\":\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"},\"received_at\":100,\"domain_age\":0},{\"body\":\"{\\\"as_of\\\":\\\"101\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\"advertised\":{\"as_of\":101,\"sha256\":\"d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569\"},\"received_at\":101,\"domain_age\":0}]}",
+      "before_cell_sha256": "cd362b488369e036654fa652c206c298e8a8186801a43f807f5f15ebed4dcd67",
+      "after_cell_sha256": "b402742a030624fd5aa170a6f6f809db79821a98261be4ceae5d5d262c21a978"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/seams.tsv",
+      "physical_line": 37,
+      "case": "s35-anywhere-hash-as-of",
+      "column": "expect",
+      "before": "{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\",\"a5f22518241c045551a3bab1b0c768ec5c8707e00c773d53c9866a4f0177767b\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}",
+      "after": "{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\",\"d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}",
+      "before_cell_sha256": "531631f5f114f289156bf67ddc1ea4f4a49baed365f09b1df141fed32da9135f",
+      "after_cell_sha256": "966b8a38f9f2415efb06f4c1a3a4a8d1a650c02a4cc1d73b619b002be413461d"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/seams.tsv",
+      "physical_line": 38,
+      "case": "s36-anywhere-hash-jcs",
+      "column": "request",
+      "before": "CALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":100,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\"advertised\":{\"as_of\":100,\"sha256\":\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"},\"received_at\":100,\"domain_age\":0},{\"body\":\"{ \\\"doc\\\" : { \\\"\\\\u00e9lise\\\" : 120, \\\"ann\\\" : 0 }, \\\"as_of\\\" : 100 }\\n\",\"advertised\":{\"as_of\":100,\"sha256\":\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"},\"received_at\":100,\"domain_age\":0}]}",
+      "after": "CALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\"advertised\":{\"as_of\":100,\"sha256\":\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"},\"received_at\":100,\"domain_age\":0},{\"body\":\"{\\\"doc\\\": \\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"\\\\u00e9lise\\\\\\\":120}\\\", \\\"as_of\\\": \\\"100\\\"}\\n\",\"advertised\":{\"as_of\":100,\"sha256\":\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"},\"received_at\":100,\"domain_age\":0}]}",
+      "before_cell_sha256": "7b1a9ce3af7b8bc942d0b2de451d6253021862c9149278d260d0bbe0135051c0",
+      "after_cell_sha256": "ef729cf99e31cc30d6ed516073ab2a7d5beb775dd9a5ddd538598279e5fc845a"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/seams.tsv",
+      "physical_line": 38,
+      "case": "s36-anywhere-hash-jcs",
+      "column": "expect",
+      "before": "{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\",\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}",
+      "after": "{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\",\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}",
+      "before_cell_sha256": "74781560d3c19b837c4ea010f92751683a7991486d415f3c50c03278385b5ec0",
+      "after_cell_sha256": "f7321836b201bce025eaa082c8c0e7c5673b2c4736e5be1fde0482c0232387fd"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/seams.tsv",
+      "physical_line": 39,
+      "case": "s37-anywhere-hash-doc-only",
+      "column": "request",
+      "before": "CALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":100,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\"advertised\":{\"as_of\":100,\"sha256\":\"597df22e613a0e83a73eaf06538b89e56871979aaeb53fd5356503c479c0cb19\"},\"received_at\":100,\"domain_age\":0}]}",
+      "after": "CALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\"advertised\":{\"as_of\":100,\"sha256\":\"597df22e613a0e83a73eaf06538b89e56871979aaeb53fd5356503c479c0cb19\"},\"received_at\":100,\"domain_age\":0}]}",
+      "before_cell_sha256": "c3669046804e6894a194edabed3adeededcc2eace641da5a15bea7fc81b33212",
+      "after_cell_sha256": "c9a1e75057b99a6cc49ed1e2f46359edc2987aec674e519e8befeb5c45ea4d4f"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/seams.tsv",
+      "physical_line": 39,
+      "case": "s37-anywhere-hash-doc-only",
+      "column": "expect",
+      "before": "{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"]}",
+      "after": "{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"]}",
+      "before_cell_sha256": "5cf484c69727cc9aae977da9f2cf5cb0b3687aa2964f9aa449bdf9ad6778ceb8",
+      "after_cell_sha256": "dcfa13fb92f64d66d3e834a1c13bc85c9acadc08464546e3180d2b0b29b8251d"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/seams.tsv",
+      "physical_line": 40,
+      "case": "s38-anywhere-hash-mismatch",
+      "column": "request",
+      "before": "CALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":100,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\"advertised\":{\"as_of\":100,\"sha256\":\"a5f22518241c045551a3bab1b0c768ec5c8707e00c773d53c9866a4f0177767b\"},\"received_at\":100,\"domain_age\":0}]}",
+      "after": "CALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\"advertised\":{\"as_of\":100,\"sha256\":\"d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569\"},\"received_at\":100,\"domain_age\":0}]}",
+      "before_cell_sha256": "ca007c48525eaf933c0915e7222c5281119b8bb3c8705c8d84634bce33419f51",
+      "after_cell_sha256": "82968423c8e97118586e8b6a7c36ecbc569c59742b2be67c900e52b66229c41a"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/seams.tsv",
+      "physical_line": 40,
+      "case": "s38-anywhere-hash-mismatch",
+      "column": "expect",
+      "before": "{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"]}",
+      "after": "{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"]}",
+      "before_cell_sha256": "5cf484c69727cc9aae977da9f2cf5cb0b3687aa2964f9aa449bdf9ad6778ceb8",
+      "after_cell_sha256": "dcfa13fb92f64d66d3e834a1c13bc85c9acadc08464546e3180d2b0b29b8251d"
+    },
+    {
+      "path": "Platform/09-agent/forms/stages.tsv",
+      "physical_line": 7,
+      "stage": "carry",
+      "column": "gate",
+      "before": "tests:9.1:s15-trusted-home-failure,s16-rejected-carry,s17-m1-unopened,s18-relay-age,s30-placed-at-exponent,s31-placed-at-digits,s32-placed-at-upper-exponent,s33-placed-at-trailing-zero,s34-placed-at-nonnumeric,s35-anywhere-hash-as-of,s36-anywhere-hash-jcs,s37-anywhere-hash-doc-only,s38-anywhere-hash-mismatch,s43-member-want-process-fairness:seams",
+      "after": "tests:9.1:s15-trusted-home-failure,s16-rejected-carry,s17-m1-unopened,s18-relay-age,s30-placed-at-exponent,s31-placed-at-digits,s32-placed-at-upper-exponent,s33-placed-at-trailing-zero,s34-placed-at-nonnumeric,s35-anywhere-hash-as-of,s36-anywhere-hash-jcs,s37-anywhere-hash-doc-only,s38-anywhere-hash-mismatch,s43-member-want-process-fairness,s44-anywhere-hash-inner-text:seams",
+      "before_cell_sha256": "eeabda7a414fe0653f70bc5852e7dc7430f2ef2ff20948a399efb2ea69c0d55b",
+      "after_cell_sha256": "363430891275da8653a1193287220e414bd59b66935751a749093e9a751c9492"
+    }
+  ],
+  "additions": {
+    "case_tsv_row": [
+      "g09-anywhere-hash-inner-text",
+      "inner-text.json",
+      "{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\",\"fb4fb4170f2eddd0b17eaf9b46cf9ae832a53f1651f0aa19a49f8f6f69d56a7c\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true],\"copy_items\":[{\"doc\":\"{\\\"ann\\\":0,\\\"élise\\\":120}\",\"as_of\":\"100\"},{\"doc\":\"{\\\"élise\\\":120, \\\"ann\\\":0}\",\"as_of\":\"100\"}]}",
+      "Equal decoded inner documents with different raw doc text have different whole-body digests; each successful stored string is preserved exactly."
+    ],
+    "new_input": {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/inner-text.json",
+      "value": {
+        "fixture": "anywhere_hash",
+        "initial": {
+          "items": {
+            "doc": "{\"older\":0}",
+            "as_of": "50"
+          },
+          "index": "73",
+          "taken_sha256": "fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558"
+        },
+        "attempts": [
+          {
+            "body": "{\"as_of\":\"100\",\"doc\":\"{\\\"ann\\\":0,\\\"élise\\\":120}\"}",
+            "advertised": {
+              "as_of": 100,
+              "sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396"
+            },
+            "received_at": 100,
+            "domain_age": 0
+          },
+          {
+            "body": "{\"as_of\":\"100\",\"doc\":\"{\\\"élise\\\":120, \\\"ann\\\":0}\"}",
+            "advertised": {
+              "as_of": 100,
+              "sha256": "fb4fb4170f2eddd0b17eaf9b46cf9ae832a53f1651f0aa19a49f8f6f69d56a7c"
+            },
+            "received_at": 100,
+            "domain_age": 0
+          }
+        ]
+      }
+    },
+    "seam_row": [
+      "s44-anywhere-hash-inner-text",
+      "1",
+      "CALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\"advertised\":{\"as_of\":100,\"sha256\":\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"},\"received_at\":100,\"domain_age\":0},{\"body\":\"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"élise\\\\\\\":120, \\\\\\\"ann\\\\\\\":0}\\\"}\",\"advertised\":{\"as_of\":100,\"sha256\":\"fb4fb4170f2eddd0b17eaf9b46cf9ae832a53f1651f0aa19a49f8f6f69d56a7c\"},\"received_at\":100,\"domain_age\":0}]}",
+      "{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\",\"fb4fb4170f2eddd0b17eaf9b46cf9ae832a53f1651f0aa19a49f8f6f69d56a7c\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true],\"copy_items\":[{\"doc\":\"{\\\"ann\\\":0,\\\"élise\\\":120}\",\"as_of\":\"100\"},{\"doc\":\"{\\\"élise\\\":120, \\\"ann\\\":0}\",\"as_of\":\"100\"}]}"
+    ]
+  },
+  "file_proposals": [
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+      "kind": "EXISTING_JSON_LEAF_CHANGES_ONLY",
+      "before": {
+        "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "5ded44b188683b33073d97506e25aca29b0997c7",
+        "sha256": "7c0c1f74b4a3a5e8be4f9e4df59f198d3c2633cf81a81b73bc5f8beb5fedb1a0",
+        "bytes": 785
+      },
+      "after_raw_sha256": "7baf9369fd4f4b93a6d2dd5b601bc64ccfe05062c035f2e525da69b30cfb2835",
+      "after_bytes": 817,
+      "before_raw": "{\n  \"fixture\": \"anywhere_hash\",\n  \"initial\": {\n    \"items\": {\n      \"doc\": \"{\\\"older\\\":0}\",\n      \"as_of\": \"50\"\n    },\n    \"index\": \"73\",\n    \"taken_sha256\": \"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"\n  },\n  \"attempts\": [\n    {\n      \"body\": \"{\\\"as_of\\\":100,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\n      \"advertised\": {\n        \"as_of\": 100,\n        \"sha256\": \"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"\n      },\n      \"received_at\": 100,\n      \"domain_age\": 0\n    },\n    {\n      \"body\": \"{\\\"as_of\\\":101,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\n      \"advertised\": {\n        \"as_of\": 101,\n        \"sha256\": \"a5f22518241c045551a3bab1b0c768ec5c8707e00c773d53c9866a4f0177767b\"\n      },\n      \"received_at\": 101,\n      \"domain_age\": 0\n    }\n  ]\n}\n",
+      "after_raw": "{\n  \"fixture\": \"anywhere_hash\",\n  \"initial\": {\n    \"items\": {\n      \"doc\": \"{\\\"older\\\":0}\",\n      \"as_of\": \"50\"\n    },\n    \"index\": \"73\",\n    \"taken_sha256\": \"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"\n  },\n  \"attempts\": [\n    {\n      \"body\": \"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\n      \"advertised\": {\n        \"as_of\": 100,\n        \"sha256\": \"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"\n      },\n      \"received_at\": 100,\n      \"domain_age\": 0\n    },\n    {\n      \"body\": \"{\\\"as_of\\\":\\\"101\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\n      \"advertised\": {\n        \"as_of\": 101,\n        \"sha256\": \"d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569\"\n      },\n      \"received_at\": 101,\n      \"domain_age\": 0\n    }\n  ]\n}\n"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+      "kind": "EXISTING_JSON_LEAF_CHANGES_ONLY",
+      "before": {
+        "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "58bcb72a1e98e3c6da3318f7317e36950918ac41",
+        "sha256": "2e69cb7b01c3644ca7af6cde5a0d335c201e7bf1a34c74ecbc8762c34ede2db6",
+        "bytes": 806
+      },
+      "after_raw_sha256": "a1f31651417ef83c1bc394655a4cb6acf456154bd5106066dd939a0efc8ea48a",
+      "after_bytes": 827,
+      "before_raw": "{\n  \"fixture\": \"anywhere_hash\",\n  \"initial\": {\n    \"items\": {\n      \"doc\": \"{\\\"older\\\":0}\",\n      \"as_of\": \"50\"\n    },\n    \"index\": \"73\",\n    \"taken_sha256\": \"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"\n  },\n  \"attempts\": [\n    {\n      \"body\": \"{\\\"as_of\\\":100,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\n      \"advertised\": {\n        \"as_of\": 100,\n        \"sha256\": \"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"\n      },\n      \"received_at\": 100,\n      \"domain_age\": 0\n    },\n    {\n      \"body\": \"{ \\\"doc\\\" : { \\\"\\\\u00e9lise\\\" : 120, \\\"ann\\\" : 0 }, \\\"as_of\\\" : 100 }\\n\",\n      \"advertised\": {\n        \"as_of\": 100,\n        \"sha256\": \"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"\n      },\n      \"received_at\": 100,\n      \"domain_age\": 0\n    }\n  ]\n}\n",
+      "after_raw": "{\n  \"fixture\": \"anywhere_hash\",\n  \"initial\": {\n    \"items\": {\n      \"doc\": \"{\\\"older\\\":0}\",\n      \"as_of\": \"50\"\n    },\n    \"index\": \"73\",\n    \"taken_sha256\": \"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"\n  },\n  \"attempts\": [\n    {\n      \"body\": \"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\n      \"advertised\": {\n        \"as_of\": 100,\n        \"sha256\": \"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"\n      },\n      \"received_at\": 100,\n      \"domain_age\": 0\n    },\n    {\n      \"body\": \"{\\\"doc\\\": \\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"\\\\u00e9lise\\\\\\\":120}\\\", \\\"as_of\\\": \\\"100\\\"}\\n\",\n      \"advertised\": {\n        \"as_of\": 100,\n        \"sha256\": \"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"\n      },\n      \"received_at\": 100,\n      \"domain_age\": 0\n    }\n  ]\n}\n"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/doc-only.json",
+      "kind": "EXISTING_JSON_LEAF_CHANGES_ONLY",
+      "before": {
+        "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/doc-only.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "29d2afca82961911a7009c684eefde289b71f79b",
+        "sha256": "69bd19a4aa6cbe6f569799413a1821445c3067f23aef35d87ec68e0e90204865",
+        "bytes": 518
+      },
+      "after_raw_sha256": "e3814f85e6eb65edffc7ba55d5157c0cb20d1cf2302998d81de3595a43b0a014",
+      "after_bytes": 534,
+      "before_raw": "{\n  \"fixture\": \"anywhere_hash\",\n  \"initial\": {\n    \"items\": {\n      \"doc\": \"{\\\"older\\\":0}\",\n      \"as_of\": \"50\"\n    },\n    \"index\": \"73\",\n    \"taken_sha256\": \"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"\n  },\n  \"attempts\": [\n    {\n      \"body\": \"{\\\"as_of\\\":100,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\n      \"advertised\": {\n        \"as_of\": 100,\n        \"sha256\": \"597df22e613a0e83a73eaf06538b89e56871979aaeb53fd5356503c479c0cb19\"\n      },\n      \"received_at\": 100,\n      \"domain_age\": 0\n    }\n  ]\n}\n",
+      "after_raw": "{\n  \"fixture\": \"anywhere_hash\",\n  \"initial\": {\n    \"items\": {\n      \"doc\": \"{\\\"older\\\":0}\",\n      \"as_of\": \"50\"\n    },\n    \"index\": \"73\",\n    \"taken_sha256\": \"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"\n  },\n  \"attempts\": [\n    {\n      \"body\": \"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\n      \"advertised\": {\n        \"as_of\": 100,\n        \"sha256\": \"597df22e613a0e83a73eaf06538b89e56871979aaeb53fd5356503c479c0cb19\"\n      },\n      \"received_at\": 100,\n      \"domain_age\": 0\n    }\n  ]\n}\n"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/mismatch.json",
+      "kind": "EXISTING_JSON_LEAF_CHANGES_ONLY",
+      "before": {
+        "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/mismatch.json",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "ca383eb6ebf9f8a21d52273ad6f9140e47b29492",
+        "sha256": "14ca676d754a5abba69104d3791ca10dd5ad403518d035da4578954b93cf1fdb",
+        "bytes": 518
+      },
+      "after_raw_sha256": "1bd6092755f526778ab41582de4f1a350e8be21a64044877785304b1c558fa00",
+      "after_bytes": 534,
+      "before_raw": "{\n  \"fixture\": \"anywhere_hash\",\n  \"initial\": {\n    \"items\": {\n      \"doc\": \"{\\\"older\\\":0}\",\n      \"as_of\": \"50\"\n    },\n    \"index\": \"73\",\n    \"taken_sha256\": \"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"\n  },\n  \"attempts\": [\n    {\n      \"body\": \"{\\\"as_of\\\":100,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\n      \"advertised\": {\n        \"as_of\": 100,\n        \"sha256\": \"a5f22518241c045551a3bab1b0c768ec5c8707e00c773d53c9866a4f0177767b\"\n      },\n      \"received_at\": 100,\n      \"domain_age\": 0\n    }\n  ]\n}\n",
+      "after_raw": "{\n  \"fixture\": \"anywhere_hash\",\n  \"initial\": {\n    \"items\": {\n      \"doc\": \"{\\\"older\\\":0}\",\n      \"as_of\": \"50\"\n    },\n    \"index\": \"73\",\n    \"taken_sha256\": \"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"\n  },\n  \"attempts\": [\n    {\n      \"body\": \"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\n      \"advertised\": {\n        \"as_of\": 100,\n        \"sha256\": \"d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569\"\n      },\n      \"received_at\": 100,\n      \"domain_age\": 0\n    }\n  ]\n}\n"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/inner-text.json",
+      "kind": "ADD_EXISTING_FIXTURE_SHAPE_NO_NEW_PORT",
+      "before": "ABSENT",
+      "after_raw_sha256": "fe56381aed51b1b691c840618698cd66b74b5069d7ded2548b3c9fbed0c5063f",
+      "after_bytes": 818,
+      "before_raw": null,
+      "after_raw": "{\n  \"fixture\": \"anywhere_hash\",\n  \"initial\": {\n    \"items\": {\n      \"doc\": \"{\\\"older\\\":0}\",\n      \"as_of\": \"50\"\n    },\n    \"index\": \"73\",\n    \"taken_sha256\": \"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"\n  },\n  \"attempts\": [\n    {\n      \"body\": \"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\n      \"advertised\": {\n        \"as_of\": 100,\n        \"sha256\": \"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"\n      },\n      \"received_at\": 100,\n      \"domain_age\": 0\n    },\n    {\n      \"body\": \"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"élise\\\\\\\":120, \\\\\\\"ann\\\\\\\":0}\\\"}\",\n      \"advertised\": {\n        \"as_of\": 100,\n        \"sha256\": \"fb4fb4170f2eddd0b17eaf9b46cf9ae832a53f1651f0aa19a49f8f6f69d56a7c\"\n      },\n      \"received_at\": 100,\n      \"domain_age\": 0\n    }\n  ]\n}\n"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv",
+      "kind": "FOUR_EXPECT_CELLS_TWO_NOTE_CELLS_AND_ONE_APPEND",
+      "before": {
+        "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "039091fe0116085a8cc3cf9386143d0381fcfbd5",
+        "sha256": "a7b06ac3c4bf541f60c376a465b0be84b3b693277861e54be13040f9782c3b03",
+        "bytes": 1511
+      },
+      "after_raw_sha256": "aaed2ab263f143ee36ccd548bb7c0af452f10c8b0aaf1e4e93d5aa51e08ab9e6",
+      "after_bytes": 2124,
+      "before_raw": "case\tinput\texpect\tnote\ng09-anywhere-hash-as-of\tas-of.json\t{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\",\"a5f22518241c045551a3bab1b0c768ec5c8707e00c773d53c9866a4f0177767b\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}\tThe same doc with a different as_of has a different whole-body digest.\ng09-anywhere-hash-jcs\tjcs.json\t{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\",\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}\tDifferent whitespace and object-key order of the same JSON value keep the same digest.\ng09-anywhere-hash-doc-only\tdoc-only.json\t{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"]}\tA digest of doc alone does not confirm the anywhere copy.\ng09-anywhere-hash-mismatch\tmismatch.json\t{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"]}\tThe advertised digest names another body: copy, marker and related writes stay unchanged.\n",
+      "after_raw": "case\tinput\texpect\tnote\ng09-anywhere-hash-as-of\tas-of.json\t{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\",\"d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}\tThe same doc with a different as_of has a different whole-body digest.\ng09-anywhere-hash-jcs\tjcs.json\t{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\",\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}\tOnly outer JSON whitespace, key order and Unicode escaping differ; the doc string value stays byte-exact and the whole-body digest is equal.\ng09-anywhere-hash-doc-only\tdoc-only.json\t{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"]}\tA digest of the internal doc text bytes alone does not confirm the complete raw-string anywhere body.\ng09-anywhere-hash-mismatch\tmismatch.json\t{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"]}\tThe advertised digest names another body: copy, marker and related writes stay unchanged.\ng09-anywhere-hash-inner-text\tinner-text.json\t{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\",\"fb4fb4170f2eddd0b17eaf9b46cf9ae832a53f1651f0aa19a49f8f6f69d56a7c\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true],\"copy_items\":[{\"doc\":\"{\\\"ann\\\":0,\\\"élise\\\":120}\",\"as_of\":\"100\"},{\"doc\":\"{\\\"élise\\\":120, \\\"ann\\\":0}\",\"as_of\":\"100\"}]}\tEqual decoded inner documents with different raw doc text have different whole-body digests; each successful stored string is preserved exactly.\n"
+    },
+    {
+      "path": "Platform/09-agent/acceptance/1/seams.tsv",
+      "kind": "FOUR_REQUEST_EXPECT_PAIRS_AND_ONE_APPEND",
+      "before": {
+        "path": "Platform/09-agent/acceptance/1/seams.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "71d8ea138ae2c38469a7d9b910ae6846ef03ee03",
+        "sha256": "52fccb8bb62123d1f1f8a81a3604577e0f444aabadb51b24562be6ca6c3ccab3",
+        "bytes": 11079
+      },
+      "after_raw_sha256": "7c6cb2c3b68bb29a7deb89d367667c484264671d1c00a2310dd08c01f39d4e68",
+      "after_bytes": 12159,
+      "before_raw": "# P/09 ordinary implementation seams; CALL adapters observe actual crypto/I/O, not prepared expected results.\n# scenario\tstep\trequest\texpect\ns1-no-road\t1\tCALL agent-startup {\"fixture\":\"no_report_road\"}\t{\"exit\":2,\"turn_writes\":0,\"member_key_creates\":0}\ns2-https-relay-member\t1\tCALL agent-startup {\"fixture\":\"https_relay_without_member\"}\t{\"exit\":2,\"turn_writes\":0,\"member_key_creates\":0}\ns3-join-same-another\t1\tCALL agent-join {\"fixture\":\"same_then_another_root\"}\t{\"same_succeeded\":true,\"same_index_preserved\":true,\"another_refused\":true,\"original_root_preserved\":true}\ns4-key-pair\t1\tCALL agent-key-read {\"fixture\":\"seed_public_key_mismatch\"}\t{\"signed_requests\":0,\"key_creates\":0,\"sign_failures_domain\":1}\ns5-standby-token\t1\tCALL agent-turn {\"fixture\":\"foreign_turn_and_local_token\"}\t{\"reports\":0,\"home_writes\":0,\"object_writes\":0,\"local_token_status\":200}\ns6-unknown-guard\t1\tCALL agent-turn {\"fixture\":\"guarded_write_unknown\"}\t{\"barrier_entered\":true,\"unexamined_write_repeats\":0}\ns7-object-race\t1\tCALL agent-turn {\"fixture\":\"owner_changes_after_confirmation\"}\t{\"events\":[\"get_at\",\"turn_confirm\",\"put_at\",\"turn_read\"],\"stale_write_published\":false,\"new_owner_preserved\":true}\ns8-release-race\t1\tCALL agent-turn {\"fixture\":\"new_owner_before_sigterm_release\"}\t{\"new_owner_preserved\":true,\"unconditional_clears\":0}\ns9-prior-confirmed\t1\tCALL agent-publication {\"fixture\":\"nonjson_with_confirmed_prior\"}\t{\"prior_value_retained\":true,\"key_in_deleted\":false}\ns10-prior-deleted\t1\tCALL agent-publication {\"fixture\":\"nonjson_after_confirmed_deletion\"}\t{\"key_in_objects\":false,\"resurrected_prior\":false}\ns11-slot-race\t1\tCALL agent-book {\"fixture\":\"slot_changes_between_reads\"}\t{\"contribution_selected\":false,\"source_row_changed\":false}\ns12-seal-reuse-rotation\t1\tCALL agent-book {\"fixture\":\"same_value_then_new_book_seal\"}\t{\"unchanged_ciphertext_reused\":true,\"rotation_ciphertext_changed\":true,\"new_envelope_opens\":true}\ns13-no-book-seal\t1\tCALL agent-book {\"fixture\":\"secret_without_book_seal\"}\t{\"affected_row_in_report\":false,\"other_row_in_report\":true}\ns14-ring-unopened\t1\tCALL agent-book {\"fixture\":\"ring_envelope_does_not_open\"}\t{\"original_ring_value_carried\":true,\"new_x25519_envelopes\":0}\ns15-trusted-home-failure\t1\tCALL agent-carry {\"fixture\":\"trusted_200_home_write_fails\",\"former_rev\":3,\"accepted_rev\":7,\"accepted_every\":10}\t{\"confirmed_rev\":7,\"every\":10,\"home_caught_up\":false}\ns16-rejected-carry\t1\tCALL agent-carry {\"fixture\":\"rejected_set_200\",\"former_rev\":3,\"former_every\":5}\t{\"confirmed_rev\":3,\"every\":5,\"answer_applied\":false}\ns17-m1-unopened\t1\tCALL agent-carry {\"fixture\":\"trusted_set_invalid_m1\"}\t{\"sealed_copy_writes\":0,\"sealed_copy_deletes\":0,\"sealed_freshness_advanced\":false}\ns18-relay-age\t1\tCALL agent-carry {\"fixture\":\"unchanged_old_relay_answer\",\"prior_as_of\":100,\"received_at\":200,\"domain_age\":100}\t{\"memory_as_of\":100,\"stored_as_of\":100,\"freshness_writes\":0}\ns19-outcomes-unreadable\t1\tCALL agent-edits {\"fixture\":\"outcomes_row_unreadable\"}\t{\"console_edit_calls\":0,\"outcome_row_writes\":0}\ns20-same-path\t1\tCALL agent-edits {\"fixture\":\"first_in_flight_second_same_path_third_independent\"}\t{\"called_edits\":[\"first\",\"independent\"],\"second_waits\":true}\ns21-token-request-id\t1\tCALL agent-local-token {\"fixture\":\"real_m1_wrong_request_id\"}\t{\"status\":502,\"error\":\"invalid token reply\",\"token_state_writes\":0}\ns22-token-relay-no-answer\t1\tCALL agent-local-token {\"fixture\":\"relay_502_did_not_answer\"}\t{\"status\":503,\"error\":\"unavailable\",\"token_state_writes\":0}\ns23-own-term-boundary\t1\tCALL agent-follow {\"fixture\":\"newer_set_lower_term\",\"own_term\":10,\"candidate_term\":9}\t{\"own_term_boundary\":10,\"set_guard_rejected\":true,\"key_writes\":0,\"holder_writes\":0}\ns24-road-fallback\t1\tCALL agent-follow {\"fixture\":\"configured_dead_valid_record\",\"passes\":2}\t{\"first_pass_requests\":[\"configured\",\"record\"],\"next_pass_first_request\":\"configured\"}\ns25-backup-checksum\t1\tCALL agent-backup {\"fixture\":\"pointer_checksum_differs\"}\t{\"backup_object_writes\":0,\"taken_row_writes\":0,\"refusal_row_writes\":1}\ns26-shared-cleanup\t1\tCALL agent-shared {\"fixture\":\"current_pointer_not_older_than_refusal\",\"new_document\":false}\t{\"refusal_deletes\":1,\"object_preserved\":true,\"pointer_preserved\":true}\ns27-shared-unknown\t1\tCALL agent-shared {\"fixture\":\"own_pointer_unconfirmed\",\"new_document\":false}\t{\"refusal_deletes\":0,\"object_preserved\":true,\"pointer_preserved\":true}\ns28-alarm-retain\t1\tCALL agent-alarms {\"fixture\":\"window_503_with_prior_page\",\"base\":7}\t{\"prior_page_carried\":true,\"alarm_in_deleted\":false,\"urgent_reports\":0}\ns29-alarm-no-prior\t1\tCALL agent-alarms {\"fixture\":\"window_503_without_prior_page\",\"base\":0}\t{\"whole_withheld\":false,\"alarm_in_objects\":false,\"urgent_reports\":0}\ns30-placed-at-exponent\t1\tCALL agent-carry {\"fixture\":\"placed_at_lexeme\",\"at_lexeme\":\"1e-8\"}\t{\"item_at_bytes\":\"1e-8\",\"copy_writes\":1,\"marker_confirmed\":true}\ns31-placed-at-digits\t1\tCALL agent-carry {\"fixture\":\"placed_at_lexeme\",\"at_lexeme\":\"1.2345\"}\t{\"item_at_bytes\":\"1.2345\",\"copy_writes\":1,\"marker_confirmed\":true}\ns32-placed-at-upper-exponent\t1\tCALL agent-carry {\"fixture\":\"placed_at_lexeme\",\"at_lexeme\":\"12E+3\"}\t{\"item_at_bytes\":\"12E+3\",\"copy_writes\":1,\"marker_confirmed\":true}\ns33-placed-at-trailing-zero\t1\tCALL agent-carry {\"fixture\":\"placed_at_lexeme\",\"at_lexeme\":\"1.2340\"}\t{\"item_at_bytes\":\"1.2340\",\"copy_writes\":1,\"marker_confirmed\":true}\ns34-placed-at-nonnumeric\t1\tCALL agent-carry {\"fixture\":\"placed_at_lexeme\",\"at_lexeme\":\"\\\"soon\\\"\"}\t{\"copy_writes\":0,\"marker_confirmed\":false}\ns35-anywhere-hash-as-of\t1\tCALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":100,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\"advertised\":{\"as_of\":100,\"sha256\":\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"},\"received_at\":100,\"domain_age\":0},{\"body\":\"{\\\"as_of\\\":101,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\"advertised\":{\"as_of\":101,\"sha256\":\"a5f22518241c045551a3bab1b0c768ec5c8707e00c773d53c9866a4f0177767b\"},\"received_at\":101,\"domain_age\":0}]}\t{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\",\"a5f22518241c045551a3bab1b0c768ec5c8707e00c773d53c9866a4f0177767b\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}\ns36-anywhere-hash-jcs\t1\tCALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":100,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\"advertised\":{\"as_of\":100,\"sha256\":\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"},\"received_at\":100,\"domain_age\":0},{\"body\":\"{ \\\"doc\\\" : { \\\"\\\\u00e9lise\\\" : 120, \\\"ann\\\" : 0 }, \\\"as_of\\\" : 100 }\\n\",\"advertised\":{\"as_of\":100,\"sha256\":\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"},\"received_at\":100,\"domain_age\":0}]}\t{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\",\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}\ns37-anywhere-hash-doc-only\t1\tCALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":100,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\"advertised\":{\"as_of\":100,\"sha256\":\"597df22e613a0e83a73eaf06538b89e56871979aaeb53fd5356503c479c0cb19\"},\"received_at\":100,\"domain_age\":0}]}\t{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"]}\ns38-anywhere-hash-mismatch\t1\tCALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":100,\\\"doc\\\":{\\\"ann\\\":0,\\\"élise\\\":120}}\",\"advertised\":{\"as_of\":100,\"sha256\":\"a5f22518241c045551a3bab1b0c768ec5c8707e00c773d53c9866a4f0177767b\"},\"received_at\":100,\"domain_age\":0}]}\t{\"computed_sha256\":[\"f148007d88cfc1684725a555013b3b254e2777815e9627b22038049937fad19c\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c\"]}\ns39-retry-before-not-ready-camera-busy\t1\tCALL agent-publication {\"fixture\":\"retry_before_not_ready\",\"pause_source\":\"camera_busy\",\"retry_in\":3,\"not_ready_pass_at\":2,\"due_pass_at\":3}\t{\"holder_relay_calls_before_due\":0,\"local_reads_continue\":true,\"turn_renewal_continues\":true,\"held_console_reads_allowed\":true,\"carry_gets_when_due\":1}\ns40-retry-before-not-ready-knock-404\t1\tCALL agent-publication {\"fixture\":\"retry_before_not_ready\",\"pause_source\":\"knock_404\",\"retry_in\":5,\"not_ready_pass_at\":4,\"due_pass_at\":5}\t{\"holder_relay_calls_before_due\":0,\"local_reads_continue\":true,\"turn_renewal_continues\":true,\"held_console_reads_allowed\":true,\"carry_gets_when_due\":1}\ns41-backup-pair-order\t1\tCALL agent-backup {\"fixture\":\"keeper_pair_order\",\"own\":{\"term\":5,\"rev\":9},\"incoming\":[{\"term\":5,\"rev\":8},{\"term\":6,\"rev\":1},{\"term\":4,\"rev\":1,\"own_record\":\"revoked_issuer\"}]}\t{\"attempts\":[{\"accepted\":false,\"why\":\"older than the copy kept here\",\"backup_object_preserved\":true,\"taken_row_preserved\":true},{\"accepted\":true,\"taken\":{\"term\":6,\"rev\":1}},{\"accepted\":true,\"taken\":{\"term\":4,\"rev\":1}}]}\ns42-member-key-authorized-replacement\t1\tCALL agent-key-read {\"fixture\":\"authorized_member_key_replacement\",\"interruption\":\"store_commit_reply_lost\",\"inconsistent_binding_probe\":true,\"normal_readmission\":true}\t{\"unknown_outcome_signed_requests\":0,\"inconsistent_binding_signed_requests\":0,\"operator_pair_confirmed\":true,\"new_pub_equals_seed\":true,\"console_pub_matches\":true,\"new_key_knock_accepted\":true,\"new_key_console_status\":200,\"old_key_console_status\":401,\"automatic_key_rebirths\":0,\"pair_writer_role\":\"domainagent\",\"current_agent_turn_guard_used\":true}\ns43-member-want-process-fairness\t1\tCALL agent-carry {\"fixture\":\"member_want_process_fairness\",\"asks\":[{\"part\":\"0001\",\"at\":1},{\"part\":\"0002\",\"at\":2},{\"part\":\"0003\",\"at\":3},{\"part\":\"0004\",\"at\":4},{\"part\":\"0005\",\"at\":5},{\"part\":\"0006\",\"at\":6},{\"part\":\"0007\",\"at\":7},{\"part\":\"0008\",\"at\":8},{\"part\":\"0009\",\"at\":9}],\"always_503\":[\"0001\",\"0002\",\"0003\",\"0004\",\"0005\",\"0006\",\"0007\",\"0008\"],\"successful_part\":\"0009\",\"restart_from_after_first_pass\":true,\"withdrawn_after_second_pass\":\"0008\"}\t{\"requests_by_pass\":[[\"0001\",\"0002\",\"0003\",\"0004\",\"0005\",\"0006\",\"0007\",\"0008\"],[\"0009\",\"0001\",\"0002\",\"0003\",\"0004\",\"0005\",\"0006\",\"0007\"]],\"requests_after_restart\":[\"0001\",\"0002\",\"0003\",\"0004\",\"0005\",\"0006\",\"0007\",\"0008\"],\"stored_at_unchanged\":true,\"completed_request_removed\":true,\"withdrawn_request_cursor_removed\":true}\n",
+      "after_raw": "# P/09 ordinary implementation seams; CALL adapters observe actual crypto/I/O, not prepared expected results.\n# scenario\tstep\trequest\texpect\ns1-no-road\t1\tCALL agent-startup {\"fixture\":\"no_report_road\"}\t{\"exit\":2,\"turn_writes\":0,\"member_key_creates\":0}\ns2-https-relay-member\t1\tCALL agent-startup {\"fixture\":\"https_relay_without_member\"}\t{\"exit\":2,\"turn_writes\":0,\"member_key_creates\":0}\ns3-join-same-another\t1\tCALL agent-join {\"fixture\":\"same_then_another_root\"}\t{\"same_succeeded\":true,\"same_index_preserved\":true,\"another_refused\":true,\"original_root_preserved\":true}\ns4-key-pair\t1\tCALL agent-key-read {\"fixture\":\"seed_public_key_mismatch\"}\t{\"signed_requests\":0,\"key_creates\":0,\"sign_failures_domain\":1}\ns5-standby-token\t1\tCALL agent-turn {\"fixture\":\"foreign_turn_and_local_token\"}\t{\"reports\":0,\"home_writes\":0,\"object_writes\":0,\"local_token_status\":200}\ns6-unknown-guard\t1\tCALL agent-turn {\"fixture\":\"guarded_write_unknown\"}\t{\"barrier_entered\":true,\"unexamined_write_repeats\":0}\ns7-object-race\t1\tCALL agent-turn {\"fixture\":\"owner_changes_after_confirmation\"}\t{\"events\":[\"get_at\",\"turn_confirm\",\"put_at\",\"turn_read\"],\"stale_write_published\":false,\"new_owner_preserved\":true}\ns8-release-race\t1\tCALL agent-turn {\"fixture\":\"new_owner_before_sigterm_release\"}\t{\"new_owner_preserved\":true,\"unconditional_clears\":0}\ns9-prior-confirmed\t1\tCALL agent-publication {\"fixture\":\"nonjson_with_confirmed_prior\"}\t{\"prior_value_retained\":true,\"key_in_deleted\":false}\ns10-prior-deleted\t1\tCALL agent-publication {\"fixture\":\"nonjson_after_confirmed_deletion\"}\t{\"key_in_objects\":false,\"resurrected_prior\":false}\ns11-slot-race\t1\tCALL agent-book {\"fixture\":\"slot_changes_between_reads\"}\t{\"contribution_selected\":false,\"source_row_changed\":false}\ns12-seal-reuse-rotation\t1\tCALL agent-book {\"fixture\":\"same_value_then_new_book_seal\"}\t{\"unchanged_ciphertext_reused\":true,\"rotation_ciphertext_changed\":true,\"new_envelope_opens\":true}\ns13-no-book-seal\t1\tCALL agent-book {\"fixture\":\"secret_without_book_seal\"}\t{\"affected_row_in_report\":false,\"other_row_in_report\":true}\ns14-ring-unopened\t1\tCALL agent-book {\"fixture\":\"ring_envelope_does_not_open\"}\t{\"original_ring_value_carried\":true,\"new_x25519_envelopes\":0}\ns15-trusted-home-failure\t1\tCALL agent-carry {\"fixture\":\"trusted_200_home_write_fails\",\"former_rev\":3,\"accepted_rev\":7,\"accepted_every\":10}\t{\"confirmed_rev\":7,\"every\":10,\"home_caught_up\":false}\ns16-rejected-carry\t1\tCALL agent-carry {\"fixture\":\"rejected_set_200\",\"former_rev\":3,\"former_every\":5}\t{\"confirmed_rev\":3,\"every\":5,\"answer_applied\":false}\ns17-m1-unopened\t1\tCALL agent-carry {\"fixture\":\"trusted_set_invalid_m1\"}\t{\"sealed_copy_writes\":0,\"sealed_copy_deletes\":0,\"sealed_freshness_advanced\":false}\ns18-relay-age\t1\tCALL agent-carry {\"fixture\":\"unchanged_old_relay_answer\",\"prior_as_of\":100,\"received_at\":200,\"domain_age\":100}\t{\"memory_as_of\":100,\"stored_as_of\":100,\"freshness_writes\":0}\ns19-outcomes-unreadable\t1\tCALL agent-edits {\"fixture\":\"outcomes_row_unreadable\"}\t{\"console_edit_calls\":0,\"outcome_row_writes\":0}\ns20-same-path\t1\tCALL agent-edits {\"fixture\":\"first_in_flight_second_same_path_third_independent\"}\t{\"called_edits\":[\"first\",\"independent\"],\"second_waits\":true}\ns21-token-request-id\t1\tCALL agent-local-token {\"fixture\":\"real_m1_wrong_request_id\"}\t{\"status\":502,\"error\":\"invalid token reply\",\"token_state_writes\":0}\ns22-token-relay-no-answer\t1\tCALL agent-local-token {\"fixture\":\"relay_502_did_not_answer\"}\t{\"status\":503,\"error\":\"unavailable\",\"token_state_writes\":0}\ns23-own-term-boundary\t1\tCALL agent-follow {\"fixture\":\"newer_set_lower_term\",\"own_term\":10,\"candidate_term\":9}\t{\"own_term_boundary\":10,\"set_guard_rejected\":true,\"key_writes\":0,\"holder_writes\":0}\ns24-road-fallback\t1\tCALL agent-follow {\"fixture\":\"configured_dead_valid_record\",\"passes\":2}\t{\"first_pass_requests\":[\"configured\",\"record\"],\"next_pass_first_request\":\"configured\"}\ns25-backup-checksum\t1\tCALL agent-backup {\"fixture\":\"pointer_checksum_differs\"}\t{\"backup_object_writes\":0,\"taken_row_writes\":0,\"refusal_row_writes\":1}\ns26-shared-cleanup\t1\tCALL agent-shared {\"fixture\":\"current_pointer_not_older_than_refusal\",\"new_document\":false}\t{\"refusal_deletes\":1,\"object_preserved\":true,\"pointer_preserved\":true}\ns27-shared-unknown\t1\tCALL agent-shared {\"fixture\":\"own_pointer_unconfirmed\",\"new_document\":false}\t{\"refusal_deletes\":0,\"object_preserved\":true,\"pointer_preserved\":true}\ns28-alarm-retain\t1\tCALL agent-alarms {\"fixture\":\"window_503_with_prior_page\",\"base\":7}\t{\"prior_page_carried\":true,\"alarm_in_deleted\":false,\"urgent_reports\":0}\ns29-alarm-no-prior\t1\tCALL agent-alarms {\"fixture\":\"window_503_without_prior_page\",\"base\":0}\t{\"whole_withheld\":false,\"alarm_in_objects\":false,\"urgent_reports\":0}\ns30-placed-at-exponent\t1\tCALL agent-carry {\"fixture\":\"placed_at_lexeme\",\"at_lexeme\":\"1e-8\"}\t{\"item_at_bytes\":\"1e-8\",\"copy_writes\":1,\"marker_confirmed\":true}\ns31-placed-at-digits\t1\tCALL agent-carry {\"fixture\":\"placed_at_lexeme\",\"at_lexeme\":\"1.2345\"}\t{\"item_at_bytes\":\"1.2345\",\"copy_writes\":1,\"marker_confirmed\":true}\ns32-placed-at-upper-exponent\t1\tCALL agent-carry {\"fixture\":\"placed_at_lexeme\",\"at_lexeme\":\"12E+3\"}\t{\"item_at_bytes\":\"12E+3\",\"copy_writes\":1,\"marker_confirmed\":true}\ns33-placed-at-trailing-zero\t1\tCALL agent-carry {\"fixture\":\"placed_at_lexeme\",\"at_lexeme\":\"1.2340\"}\t{\"item_at_bytes\":\"1.2340\",\"copy_writes\":1,\"marker_confirmed\":true}\ns34-placed-at-nonnumeric\t1\tCALL agent-carry {\"fixture\":\"placed_at_lexeme\",\"at_lexeme\":\"\\\"soon\\\"\"}\t{\"copy_writes\":0,\"marker_confirmed\":false}\ns35-anywhere-hash-as-of\t1\tCALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\"advertised\":{\"as_of\":100,\"sha256\":\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"},\"received_at\":100,\"domain_age\":0},{\"body\":\"{\\\"as_of\\\":\\\"101\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\"advertised\":{\"as_of\":101,\"sha256\":\"d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569\"},\"received_at\":101,\"domain_age\":0}]}\t{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\",\"d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}\ns36-anywhere-hash-jcs\t1\tCALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\"advertised\":{\"as_of\":100,\"sha256\":\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"},\"received_at\":100,\"domain_age\":0},{\"body\":\"{\\\"doc\\\": \\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"\\\\u00e9lise\\\\\\\":120}\\\", \\\"as_of\\\": \\\"100\\\"}\\n\",\"advertised\":{\"as_of\":100,\"sha256\":\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"},\"received_at\":100,\"domain_age\":0}]}\t{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\",\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true]}\ns37-anywhere-hash-doc-only\t1\tCALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\"advertised\":{\"as_of\":100,\"sha256\":\"597df22e613a0e83a73eaf06538b89e56871979aaeb53fd5356503c479c0cb19\"},\"received_at\":100,\"domain_age\":0}]}\t{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"]}\ns38-anywhere-hash-mismatch\t1\tCALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\"advertised\":{\"as_of\":100,\"sha256\":\"d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569\"},\"received_at\":100,\"domain_age\":0}]}\t{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"],\"copy_index\":[\"73\"],\"copy_items\":[{\"as_of\":\"50\",\"doc\":\"{\\\"older\\\":0}\"}],\"copy_writes\":[0],\"marker_confirmed\":[false],\"related_edits\":[0],\"taken_sha256\":[\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"]}\ns39-retry-before-not-ready-camera-busy\t1\tCALL agent-publication {\"fixture\":\"retry_before_not_ready\",\"pause_source\":\"camera_busy\",\"retry_in\":3,\"not_ready_pass_at\":2,\"due_pass_at\":3}\t{\"holder_relay_calls_before_due\":0,\"local_reads_continue\":true,\"turn_renewal_continues\":true,\"held_console_reads_allowed\":true,\"carry_gets_when_due\":1}\ns40-retry-before-not-ready-knock-404\t1\tCALL agent-publication {\"fixture\":\"retry_before_not_ready\",\"pause_source\":\"knock_404\",\"retry_in\":5,\"not_ready_pass_at\":4,\"due_pass_at\":5}\t{\"holder_relay_calls_before_due\":0,\"local_reads_continue\":true,\"turn_renewal_continues\":true,\"held_console_reads_allowed\":true,\"carry_gets_when_due\":1}\ns41-backup-pair-order\t1\tCALL agent-backup {\"fixture\":\"keeper_pair_order\",\"own\":{\"term\":5,\"rev\":9},\"incoming\":[{\"term\":5,\"rev\":8},{\"term\":6,\"rev\":1},{\"term\":4,\"rev\":1,\"own_record\":\"revoked_issuer\"}]}\t{\"attempts\":[{\"accepted\":false,\"why\":\"older than the copy kept here\",\"backup_object_preserved\":true,\"taken_row_preserved\":true},{\"accepted\":true,\"taken\":{\"term\":6,\"rev\":1}},{\"accepted\":true,\"taken\":{\"term\":4,\"rev\":1}}]}\ns42-member-key-authorized-replacement\t1\tCALL agent-key-read {\"fixture\":\"authorized_member_key_replacement\",\"interruption\":\"store_commit_reply_lost\",\"inconsistent_binding_probe\":true,\"normal_readmission\":true}\t{\"unknown_outcome_signed_requests\":0,\"inconsistent_binding_signed_requests\":0,\"operator_pair_confirmed\":true,\"new_pub_equals_seed\":true,\"console_pub_matches\":true,\"new_key_knock_accepted\":true,\"new_key_console_status\":200,\"old_key_console_status\":401,\"automatic_key_rebirths\":0,\"pair_writer_role\":\"domainagent\",\"current_agent_turn_guard_used\":true}\ns43-member-want-process-fairness\t1\tCALL agent-carry {\"fixture\":\"member_want_process_fairness\",\"asks\":[{\"part\":\"0001\",\"at\":1},{\"part\":\"0002\",\"at\":2},{\"part\":\"0003\",\"at\":3},{\"part\":\"0004\",\"at\":4},{\"part\":\"0005\",\"at\":5},{\"part\":\"0006\",\"at\":6},{\"part\":\"0007\",\"at\":7},{\"part\":\"0008\",\"at\":8},{\"part\":\"0009\",\"at\":9}],\"always_503\":[\"0001\",\"0002\",\"0003\",\"0004\",\"0005\",\"0006\",\"0007\",\"0008\"],\"successful_part\":\"0009\",\"restart_from_after_first_pass\":true,\"withdrawn_after_second_pass\":\"0008\"}\t{\"requests_by_pass\":[[\"0001\",\"0002\",\"0003\",\"0004\",\"0005\",\"0006\",\"0007\",\"0008\"],[\"0009\",\"0001\",\"0002\",\"0003\",\"0004\",\"0005\",\"0006\",\"0007\"]],\"requests_after_restart\":[\"0001\",\"0002\",\"0003\",\"0004\",\"0005\",\"0006\",\"0007\",\"0008\"],\"stored_at_unchanged\":true,\"completed_request_removed\":true,\"withdrawn_request_cursor_removed\":true}\ns44-anywhere-hash-inner-text\t1\tCALL agent-carry {\"fixture\":\"anywhere_hash\",\"initial\":{\"items\":{\"doc\":\"{\\\"older\\\":0}\",\"as_of\":\"50\"},\"index\":\"73\",\"taken_sha256\":\"fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558\"},\"attempts\":[{\"body\":\"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"ann\\\\\\\":0,\\\\\\\"élise\\\\\\\":120}\\\"}\",\"advertised\":{\"as_of\":100,\"sha256\":\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\"},\"received_at\":100,\"domain_age\":0},{\"body\":\"{\\\"as_of\\\":\\\"100\\\",\\\"doc\\\":\\\"{\\\\\\\"élise\\\\\\\":120, \\\\\\\"ann\\\\\\\":0}\\\"}\",\"advertised\":{\"as_of\":100,\"sha256\":\"fb4fb4170f2eddd0b17eaf9b46cf9ae832a53f1651f0aa19a49f8f6f69d56a7c\"},\"received_at\":100,\"domain_age\":0}]}\t{\"computed_sha256\":[\"8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396\",\"fb4fb4170f2eddd0b17eaf9b46cf9ae832a53f1651f0aa19a49f8f6f69d56a7c\"],\"copy_writes\":[1,1],\"marker_confirmed\":[true,true],\"copy_items\":[{\"doc\":\"{\\\"ann\\\":0,\\\"élise\\\":120}\",\"as_of\":\"100\"},{\"doc\":\"{\\\"élise\\\":120, \\\"ann\\\":0}\",\"as_of\":\"100\"}]}\n"
+    },
+    {
+      "path": "Platform/09-agent/forms/stages.tsv",
+      "kind": "APPEND_SINGLE_EXISTING_GRAMMAR_GATE_SELECTOR",
+      "before": {
+        "path": "Platform/09-agent/forms/stages.tsv",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "0585da6038bd211bb8bfea93019e7e8e9f66070a",
+        "sha256": "626987e430b0cc4f22f5bd68f41e21876c708add32d7079662be40ead43f2a86",
+        "bytes": 2958
+      },
+      "after_raw_sha256": "7e5e0b3557757dd20391a901ca8607c42a1fc7224796cc11840e9b9cc91b799e",
+      "after_bytes": 2987,
+      "before_raw": "# P/09 kit assistance is not full process/domainstand acceptance; every stage is kit=-.\nn\tstage\tgoal\tnorms\tgate\tweight\tkit\tparts\tdepends\twhen\n1\tfoundation\tProcess inputs, catalogue families, refusal catalogue and constants\tP/09.1-R002; forms/daemon-flags.tsv; forms/refusals.tsv; forms/runtime-constants.tsv\tbuild\t2\t-\tflags,refusals,families\t-\ttrue\n2\tjoin_keys\tActual admission, root pinning and member-key reads\tP/09.1-R003; P/09.1-R010; P/09.1-R015\ttests:9.1:s1-no-road,s2-https-relay-member,s3-join-same-another,s4-key-pair,s42-member-key-authorized-replacement:seams\t4\t-\tstagetests\t1\ttrue\n3\tturn\tStandby, token service, guarded writes and mutable-object/release races\tP/09.1-R016; P/09.1-R018\ttests:9.1:s5-standby-token,s6-unknown-guard,s7-object-race,s8-release-race:seams\t5\t-\tstagetests\t2\ttrue\n4\tpublication\tConfirmed base, contribution liveness and real envelope reuse\tP/09.1-R004; P/09.1-R019\ttests:9.1:s9-prior-confirmed,s10-prior-deleted,s11-slot-race,s12-seal-reuse-rotation,s13-no-book-seal,s14-ring-unopened,s39-retry-before-not-ready-camera-busy,s40-retry-before-not-ready-knock-404:seams\t5\t-\tvectors,stagetests\t3\ttrue\n5\tcarry\tTrust precedes confirmation; actual home failure, m1 and freshness\tP/09.1-R007; P/09.1-R019\ttests:9.1:s15-trusted-home-failure,s16-rejected-carry,s17-m1-unopened,s18-relay-age,s30-placed-at-exponent,s31-placed-at-digits,s32-placed-at-upper-exponent,s33-placed-at-trailing-zero,s34-placed-at-nonnumeric,s35-anywhere-hash-as-of,s36-anywhere-hash-jcs,s37-anywhere-hash-doc-only,s38-anywhere-hash-mismatch,s43-member-want-process-fairness:seams\t5\t-\tfamilies,stagetests\t4\ttrue\n6\tedits\tUnconfirmed outcomes and common-path serialization\tP/09.1-R008\ttests:9.1:s19-outcomes-unreadable,s20-same-path:seams\t4\t-\tstagetests\t5\ttrue\n7\tlocal_token\tReal local token reply validation and no-queue relay mapping\tP/09.1-R009; P/09.1-R014\ttests:9.1:s21-token-request-id,s22-token-relay-no-answer:seams\t4\t-\tdoor,stagetests\t6\ttrue\n8\tfollowing\tFixed own-term evidence and actual road fallback\tP/09.1-R011; P/09.1-R021\ttests:9.1:s23-own-term-boundary,s24-road-fallback:seams\t5\t-\tvectors,stagetests\t7\ttrue\n9\tcopies\tReal checksum refusal, deferred cleanup and alarm assembly failure\tP/09.1-R012; P/09.1-R013; P/09.1-R024; P/09.1-R025\ttests:9.1:s25-backup-checksum,s26-shared-cleanup,s27-shared-unknown,s28-alarm-retain,s29-alarm-no-prior,s41-backup-pair-order:seams\t5\t-\tfamilies,stagetests\t8\ttrue\n10\trelay\tReal first batch, shared reception, late-answer memory and token bytes\tP/09.2-R002; P/09.2-R007; P/09.2-R008\ttests:9.2:s1-body-before-signature,s2-first-answer,s3-empty-first-batch,s4-heard-body-hash,s5-late-batch,s6-busy-base,s7-token-bytes,s8-memory-restart,s9-carry-age-per-member,s10-admitted-without-cached-carry:seams\t6\t-\tdoor,stagetests\t9\ttrue\n11\tcomplete_agent\tAll ordinary process scenarios, assigned vectors, neighbours and reading\tP/09.1-R027; P/09.2-R010; common/vectors/consumers.tsv\taccept:9.1:*;accept:9.2:*\t6\t-\t-\t10\ttrue\n",
+      "after_raw": "# P/09 kit assistance is not full process/domainstand acceptance; every stage is kit=-.\nn\tstage\tgoal\tnorms\tgate\tweight\tkit\tparts\tdepends\twhen\n1\tfoundation\tProcess inputs, catalogue families, refusal catalogue and constants\tP/09.1-R002; forms/daemon-flags.tsv; forms/refusals.tsv; forms/runtime-constants.tsv\tbuild\t2\t-\tflags,refusals,families\t-\ttrue\n2\tjoin_keys\tActual admission, root pinning and member-key reads\tP/09.1-R003; P/09.1-R010; P/09.1-R015\ttests:9.1:s1-no-road,s2-https-relay-member,s3-join-same-another,s4-key-pair,s42-member-key-authorized-replacement:seams\t4\t-\tstagetests\t1\ttrue\n3\tturn\tStandby, token service, guarded writes and mutable-object/release races\tP/09.1-R016; P/09.1-R018\ttests:9.1:s5-standby-token,s6-unknown-guard,s7-object-race,s8-release-race:seams\t5\t-\tstagetests\t2\ttrue\n4\tpublication\tConfirmed base, contribution liveness and real envelope reuse\tP/09.1-R004; P/09.1-R019\ttests:9.1:s9-prior-confirmed,s10-prior-deleted,s11-slot-race,s12-seal-reuse-rotation,s13-no-book-seal,s14-ring-unopened,s39-retry-before-not-ready-camera-busy,s40-retry-before-not-ready-knock-404:seams\t5\t-\tvectors,stagetests\t3\ttrue\n5\tcarry\tTrust precedes confirmation; actual home failure, m1 and freshness\tP/09.1-R007; P/09.1-R019\ttests:9.1:s15-trusted-home-failure,s16-rejected-carry,s17-m1-unopened,s18-relay-age,s30-placed-at-exponent,s31-placed-at-digits,s32-placed-at-upper-exponent,s33-placed-at-trailing-zero,s34-placed-at-nonnumeric,s35-anywhere-hash-as-of,s36-anywhere-hash-jcs,s37-anywhere-hash-doc-only,s38-anywhere-hash-mismatch,s43-member-want-process-fairness,s44-anywhere-hash-inner-text:seams\t5\t-\tfamilies,stagetests\t4\ttrue\n6\tedits\tUnconfirmed outcomes and common-path serialization\tP/09.1-R008\ttests:9.1:s19-outcomes-unreadable,s20-same-path:seams\t4\t-\tstagetests\t5\ttrue\n7\tlocal_token\tReal local token reply validation and no-queue relay mapping\tP/09.1-R009; P/09.1-R014\ttests:9.1:s21-token-request-id,s22-token-relay-no-answer:seams\t4\t-\tdoor,stagetests\t6\ttrue\n8\tfollowing\tFixed own-term evidence and actual road fallback\tP/09.1-R011; P/09.1-R021\ttests:9.1:s23-own-term-boundary,s24-road-fallback:seams\t5\t-\tvectors,stagetests\t7\ttrue\n9\tcopies\tReal checksum refusal, deferred cleanup and alarm assembly failure\tP/09.1-R012; P/09.1-R013; P/09.1-R024; P/09.1-R025\ttests:9.1:s25-backup-checksum,s26-shared-cleanup,s27-shared-unknown,s28-alarm-retain,s29-alarm-no-prior,s41-backup-pair-order:seams\t5\t-\tfamilies,stagetests\t8\ttrue\n10\trelay\tReal first batch, shared reception, late-answer memory and token bytes\tP/09.2-R002; P/09.2-R007; P/09.2-R008\ttests:9.2:s1-body-before-signature,s2-first-answer,s3-empty-first-batch,s4-heard-body-hash,s5-late-batch,s6-busy-base,s7-token-bytes,s8-memory-restart,s9-carry-age-per-member,s10-admitted-without-cached-carry:seams\t6\t-\tdoor,stagetests\t9\ttrue\n11\tcomplete_agent\tAll ordinary process scenarios, assigned vectors, neighbours and reading\tP/09.1-R027; P/09.2-R010; common/vectors/consumers.tsv\taccept:9.1:*;accept:9.2:*\t6\t-\t-\t10\ttrue\n"
+    }
+  ],
+  "counts_before_after": {
+    "hash_cases": [
+      4,
+      5
+    ],
+    "hash_attempts": [
+      6,
+      8
+    ],
+    "chapter1_seam_rows": [
+      43,
+      44
+    ],
+    "all_P09_CALL_rows": [
+      53,
+      54
+    ],
+    "ordinary_process_scenarios_steps": [
+      27,
+      314
+    ],
+    "unchanged_old_seam_rows": 39,
+    "existing_CHANGED_ids": [
+      "s35-anywhere-hash-as-of",
+      "s36-anywhere-hash-jcs",
+      "s37-anywhere-hash-doc-only",
+      "s38-anywhere-hash-mismatch"
+    ],
+    "new_seam_id": "s44-anywhere-hash-inner-text"
+  },
+  "preserve": [
+    "case IDs and first scenario/step cells of all existing rows",
+    "input initial.items and index73, all six numeric advertised.as_of/received_at/domain_age fields",
+    "copy_writes/marker_confirmed and all refusal copy_items/copy_index/related_edits outcomes",
+    "all s01-s34/s39-s43 byte-exact, whole chapter2/process and family09/refusals byte-exact",
+    "all current fixture/port names; expected observations never supplied as input"
+  ],
+  "new_positive_observation": "Use existing copy_items field for both successful attempts of s44, to observe literal raw doc strings; its extra observation scope is explicitly declared, not a new port, command, alias or precomputed result.",
+  "source_edits_performed": true,
+  "actual_fixture_digest_arithmetic": {
+    "attempts": [
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+        "attempt": 0,
+        "body_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "outer_JCS_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "advertised": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "matches": true,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      },
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+        "attempt": 1,
+        "body_sha256": "d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569",
+        "outer_JCS_sha256": "d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569",
+        "advertised": "d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569",
+        "matches": true,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      },
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+        "attempt": 0,
+        "body_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "outer_JCS_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "advertised": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "matches": true,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      },
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+        "attempt": 1,
+        "body_sha256": "3b1878653957007638e545a133d993e5fca2572bacc2425ec31398164fdc68e9",
+        "outer_JCS_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "advertised": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "matches": true,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      },
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/doc-only.json",
+        "attempt": 0,
+        "body_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "outer_JCS_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "advertised": "597df22e613a0e83a73eaf06538b89e56871979aaeb53fd5356503c479c0cb19",
+        "matches": false,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      },
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/mismatch.json",
+        "attempt": 0,
+        "body_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "outer_JCS_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "advertised": "d2931926be94cce92ca9bcf1106220e11838a3fa53c393d1af18d1e4dbaec569",
+        "matches": false,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      },
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/inner-text.json",
+        "attempt": 0,
+        "body_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "outer_JCS_sha256": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "advertised": "8abb1d7e3615c0d3003449b6ce723325fe8044eb8960ff34dff10af95b18f396",
+        "matches": true,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      },
+      {
+        "file": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/inner-text.json",
+        "attempt": 1,
+        "body_sha256": "fb4fb4170f2eddd0b17eaf9b46cf9ae832a53f1651f0aa19a49f8f6f69d56a7c",
+        "outer_JCS_sha256": "fb4fb4170f2eddd0b17eaf9b46cf9ae832a53f1651f0aa19a49f8f6f69d56a7c",
+        "advertised": "fb4fb4170f2eddd0b17eaf9b46cf9ae832a53f1651f0aa19a49f8f6f69d56a7c",
+        "matches": true,
+        "body_doc_as_of_types": [
+          "string",
+          "string"
+        ],
+        "advertised_time_type": "number"
+      }
+    ],
+    "initial_marker": "fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558",
+    "IO_execution": false
+  }
+}

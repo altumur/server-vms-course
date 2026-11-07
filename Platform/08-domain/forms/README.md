@@ -2,6 +2,14 @@
 
 This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export (ADR-0121). Forms express the existing norms under ADR-0125 addendum (5).
 
+## Shared holder HTTP forms
+
+The six holder GET replies use only the standard parameter, schema and response components in [the owner OpenAPI](../spec/08-domain.api.openapi.yaml). `Member` and `AgentSignature` are unchanged; `Part`, `BookSub` and `Book` extract the existing exact parameters, and `BackupPartRevision` imports the existing P/06 query form. Keep their original levels, requiredness, headers, decoding, rights, refusal order and holder statuses. A book subsystem string is not silently narrowed to another `Sub` form.
+
+The success components `HolderMembersBody`, `HolderAnywhereBody`, `HolderTopologyBody`, `HolderBackupPartBody`, `HolderBookHeadBody` and `HolderBookPartBody` are the sole HTTP body forms for those operations, with `application/json`. Members uses the existing string `doc` row wrapper, not `MembersDoc` or `MembersAnswer`; topology retains the complete nested body already described by the member copy; the backup is the existing part object. Anywhere and book carry the selected raw KV strings: no decoded alternative or conversion of body `as_of` into a JSON number. Their internal logical values are still checked by their current family codec and procedures.
+
+For anywhere, JCS and SHA-256 apply to the complete parsed outer JSON value with those strings, before parsing the internal `doc` text. Outer HTTP whitespace, key order and equivalent JSON escaping do not change it; different text inside a string can change it even when that text parses to the same inner JSON. The sealed advertisement retains its existing type and meaning. P/09 forwards or copies this same owner wire and later refers to these components; it does not define another set of holder body types. Reference resolution keeps the original owner document base. These source forms do not claim actual HTTP, cryptography, copy IO or generator execution.
+
 ## Inputs and constants
 
 [daemon-flags.tsv](daemon-flags.tsv) declares 20 environment inputs and the existing first-admin positional name with the common header. `$NAME` stays environment; commands=domain is the process role. The complete launcher, aliases, catalogue, instance, ring, TLS and address contracts still apply. Operation-time unknown inputs keep their own outcomes. A missing signer row makes the process wait; this form does not turn waiting into a start failure. The logical first-admin invocation denotes the implementation-chosen operator command, with its required person name; it fixes no executable spelling. Its password still comes from stdin under P/08.4 N1.9 (whole UTF-8, remove at most one final LF/CRLF), never from a new flag or environment value.

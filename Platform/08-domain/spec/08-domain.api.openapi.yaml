@@ -765,28 +765,25 @@ paths:
   /api/members/{member}/{part}:
     parameters:
       - {$ref: '#/components/parameters/Member'}
-      - name: part
-        in: path
-        required: true
-        schema: {type: string, pattern: '^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$'}
+      - $ref: '#/components/parameters/Part'
       - {$ref: '#/components/parameters/AgentSignature'}
     get:
       operationId: memberRow
       summary: Row of a part at the request of a member (the report intake contract; ADR-0113)
       responses:
-        '200': {description: '{doc}'}
+        '200': {$ref: '#/components/responses/HolderMembersResponse'}
         '429': {$ref: '#/components/responses/Busy'}
   /api/book/{member}/{sub}/{book}:
     parameters:
       - {$ref: '#/components/parameters/Member'}
-      - {name: sub, in: path, required: true, schema: {type: string}}
-      - {name: book, in: path, required: true, schema: {type: string}}
+      - {$ref: '#/components/parameters/BookSub'}
+      - {$ref: '#/components/parameters/Book'}
       - {$ref: '#/components/parameters/AgentSignature'}
     get:
       operationId: bookAll
       summary: Head of the book to "*" (chapter 8.5 N1.4)
       responses:
-        '200': {description: '{items}'}
+        '200': {$ref: '#/components/responses/HolderBookHeadResponse'}
         '429': {$ref: '#/components/responses/Busy'}
   /domain/{sub}/books/{book}/*/{part}:
     parameters:
@@ -805,15 +802,15 @@ paths:
   /api/book/{member}/{sub}/{book}/{part}:
     parameters:
       - {$ref: '#/components/parameters/Member'}
-      - {name: sub, in: path, required: true, schema: {type: string}}
-      - {name: book, in: path, required: true, schema: {type: string}}
-      - {name: part, in: path, required: true, schema: {type: string, pattern: '^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$'}}
+      - {$ref: '#/components/parameters/BookSub'}
+      - {$ref: '#/components/parameters/Book'}
+      - {$ref: '#/components/parameters/Part'}
       - {$ref: '#/components/parameters/AgentSignature'}
     get:
       operationId: bookAllPart
       summary: Part of the book to "*" (chapter 8.5 N1.4)
       responses:
-        '200': {description: '{items}'}
+        '200': {$ref: '#/components/responses/HolderBookPartResponse'}
         '404':
           description: 'reason: empty_part — there is no row of the part, the head of the current term is written, the copy is removed; the head is not written — 503 unavailable, the copy is kept (ADR-0113 addendum (47) item 1); not_a_book — the book is not to "*"; without reason — not a member (P/08.3 N2).'
           content:
@@ -824,16 +821,15 @@ paths:
   /api/backup-part/{member}/{part}:
     parameters:
       - {$ref: '#/components/parameters/Member'}
-      - name: part
-        in: path
-        required: true
-        schema: {type: string, pattern: '^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$'}
+      - $ref: '#/components/parameters/Part'
       - {$ref: '#/components/parameters/AgentSignature'}
     get:
       operationId: backupPart
       summary: Part of the backup for a keeper (chapter 8.8 N1.5a)
+      parameters:
+      - $ref: '#/components/parameters/BackupPartRevision'
       responses:
-        '200': {description: Part object}
+        '200': {$ref: '#/components/responses/HolderBackupPartResponse'}
         '429': {$ref: '#/components/responses/Busy'}
   /api/anywhere/{member}:
     parameters:
@@ -843,7 +839,7 @@ paths:
       operationId: anywhereBody
       summary: Body of the anywhere summary (chapter 8.4 N1.3)
       responses:
-        '200': {description: '{doc, as_of}'}
+        '200': {$ref: '#/components/responses/HolderAnywhereResponse'}
         '429': {$ref: '#/components/responses/Busy'}
   /api/topology/{member}:
     parameters:
@@ -853,7 +849,7 @@ paths:
       operationId: topologyBody
       summary: Body of the member topology {doc, via} at a new sha256 of the topology field of the answer (chapter 8.3 N1.2 carry; ADR-0113 addendum (47) item 3)
       responses:
-        '200': {description: '{doc, via}'}
+        '200': {$ref: '#/components/responses/HolderTopologyResponse'}
         '429': {$ref: '#/components/responses/Busy'}
   /domain/partial/close:
     post:
@@ -2173,6 +2169,32 @@ components:
       required: false
       description: 'Optional quoted store index only (P/08.0 N1.9); "" means confirmed absent membership. No bare revision number. Replay precedes judging the condition.'
       schema: {type: string, pattern: '^(?:"(?:0|[1-9][0-9]{0,19})?")$'}
+    Part:
+      name: part
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$
+    BookSub:
+      name: sub
+      in: path
+      required: true
+      schema:
+        type: string
+    Book:
+      name: book
+      in: path
+      required: true
+      schema:
+        type: string
+    BackupPartRevision:
+      name: rev
+      in: query
+      required: true
+      schema:
+        type: integer
+        minimum: 1
   headers:
     ETag:
       description: Index of the store row in double quotes, a strong tag of RFC 9110 (P/08.0 N1.9 «Versions»). The value is fit for If-Match.
@@ -2383,6 +2405,42 @@ components:
               - {$ref: '#/components/schemas/StandbyBody'}
               - {$ref: '#/components/schemas/RestoreBusyBody'}
               - {$ref: '#/components/schemas/Refusal'}
+    HolderMembersResponse:
+      description: '{doc}'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HolderMembersBody'
+    HolderAnywhereResponse:
+      description: '{doc, as_of}'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HolderAnywhereBody'
+    HolderTopologyResponse:
+      description: '{doc, via}'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HolderTopologyBody'
+    HolderBackupPartResponse:
+      description: Part object
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HolderBackupPartBody'
+    HolderBookHeadResponse:
+      description: '{items}'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HolderBookHeadBody'
+    HolderBookPartResponse:
+      description: '{items}'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HolderBookPartBody'
   schemas:
     TokenSealed:
       type: object
@@ -3800,3 +3858,64 @@ components:
           - must_match
           - unique
           - garbled
+    HolderMembersBody:
+      $ref: '#/components/schemas/Carry/properties/members'
+    HolderAnywhereBody:
+      type: object
+      required:
+      - doc
+      - as_of
+      additionalProperties: false
+      properties:
+        doc:
+          type: string
+        as_of:
+          type: string
+    HolderTopologyBody:
+      type: object
+      properties:
+        doc:
+          $ref: ../../common/data/common.schema.json#/$defs/common.domain_topology_doc
+          description: The topology document of the holder, nested exactly as in the HTTP body
+        via:
+          description: 'The HTTP body map for this member: its relay when present, otherwise an empty map'
+          type: object
+          propertyNames:
+            $ref: ../../common/data/common.schema.json#/$defs/common.domain_member
+          additionalProperties:
+            $ref: ../../common/data/common.schema.json#/$defs/common.domain_member
+      required:
+      - doc
+      - via
+      additionalProperties: false
+    HolderBackupPartBody:
+      $ref: ../data/backup-parts.schema.json
+    HolderBookHeadBody:
+      type: object
+      required:
+      - items
+      additionalProperties: false
+      properties:
+        items:
+          type: object
+          required:
+          - ''
+          additionalProperties: false
+          properties:
+            ? ''
+            : type: string
+    HolderBookPartBody:
+      type: object
+      required:
+      - items
+      additionalProperties: false
+      properties:
+        items:
+          type: object
+          required:
+          - ''
+          properties:
+            ? ''
+            : type: string
+          additionalProperties:
+            type: string

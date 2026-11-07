@@ -1,0 +1,616 @@
+{
+  "base": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+  "owner_source": {
+    "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+    "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+    "blob": "862b513d4df5d29b9a3de26df599609886cc99e0",
+    "sha256": "c9e41d69e5686587df9efa08276ff0d970243099fa5306bd1998e0d50544fdac",
+    "bytes": 173611
+  },
+  "successes": [
+    {
+      "path": "/api/members/{member}/{part}",
+      "method": "GET",
+      "operationId": "memberRow",
+      "before_response_pointer": "/paths/~1api~1members~1{member}~1{part}/get/responses/200",
+      "before_response": {
+        "description": "{doc}"
+      },
+      "after_response_reference": {
+        "$ref": "#/components/responses/HolderMembersResponse"
+      },
+      "new_schema_pointer": "/components/schemas/HolderMembersBody",
+      "new_schema": {
+        "$ref": "#/components/schemas/Carry/properties/members"
+      },
+      "new_standard_response_pointer": "/components/responses/HolderMembersResponse",
+      "new_standard_response": {
+        "description": "{doc}",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/HolderMembersBody"
+            }
+          }
+        }
+      },
+      "status": "APPLIED_SOURCE_ONLY_NOT_EXECUTION",
+      "existing_other_statuses_headers_rights_and_parameters_unchanged": true
+    },
+    {
+      "path": "/api/anywhere/{member}",
+      "method": "GET",
+      "operationId": "anywhereBody",
+      "before_response_pointer": "/paths/~1api~1anywhere~1{member}/get/responses/200",
+      "before_response": {
+        "description": "{doc, as_of}"
+      },
+      "after_response_reference": {
+        "$ref": "#/components/responses/HolderAnywhereResponse"
+      },
+      "new_schema_pointer": "/components/schemas/HolderAnywhereBody",
+      "new_schema": {
+        "type": "object",
+        "required": [
+          "doc",
+          "as_of"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "doc": {
+            "type": "string"
+          },
+          "as_of": {
+            "type": "string"
+          }
+        }
+      },
+      "new_standard_response_pointer": "/components/responses/HolderAnywhereResponse",
+      "new_standard_response": {
+        "description": "{doc, as_of}",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/HolderAnywhereBody"
+            }
+          }
+        }
+      },
+      "status": "APPLIED_SOURCE_ONLY_NOT_EXECUTION",
+      "existing_other_statuses_headers_rights_and_parameters_unchanged": true
+    },
+    {
+      "path": "/api/topology/{member}",
+      "method": "GET",
+      "operationId": "topologyBody",
+      "before_response_pointer": "/paths/~1api~1topology~1{member}/get/responses/200",
+      "before_response": {
+        "description": "{doc, via}"
+      },
+      "after_response_reference": {
+        "$ref": "#/components/responses/HolderTopologyResponse"
+      },
+      "new_schema_pointer": "/components/schemas/HolderTopologyBody",
+      "new_schema": {
+        "type": "object",
+        "properties": {
+          "doc": {
+            "$ref": "../../common/data/common.schema.json#/$defs/common.domain_topology_doc",
+            "description": "The topology document of the holder, nested exactly as in the HTTP body"
+          },
+          "via": {
+            "description": "The HTTP body map for this member: its relay when present, otherwise an empty map",
+            "type": "object",
+            "propertyNames": {
+              "$ref": "../../common/data/common.schema.json#/$defs/common.domain_member"
+            },
+            "additionalProperties": {
+              "$ref": "../../common/data/common.schema.json#/$defs/common.domain_member"
+            }
+          }
+        },
+        "required": [
+          "doc",
+          "via"
+        ],
+        "additionalProperties": false
+      },
+      "new_standard_response_pointer": "/components/responses/HolderTopologyResponse",
+      "new_standard_response": {
+        "description": "{doc, via}",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/HolderTopologyBody"
+            }
+          }
+        }
+      },
+      "status": "APPLIED_SOURCE_ONLY_NOT_EXECUTION",
+      "existing_other_statuses_headers_rights_and_parameters_unchanged": true
+    },
+    {
+      "path": "/api/backup-part/{member}/{part}",
+      "method": "GET",
+      "operationId": "backupPart",
+      "before_response_pointer": "/paths/~1api~1backup-part~1{member}~1{part}/get/responses/200",
+      "before_response": {
+        "description": "Part object"
+      },
+      "after_response_reference": {
+        "$ref": "#/components/responses/HolderBackupPartResponse"
+      },
+      "new_schema_pointer": "/components/schemas/HolderBackupPartBody",
+      "new_schema": {
+        "$ref": "../data/backup-parts.schema.json"
+      },
+      "new_standard_response_pointer": "/components/responses/HolderBackupPartResponse",
+      "new_standard_response": {
+        "description": "Part object",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/HolderBackupPartBody"
+            }
+          }
+        }
+      },
+      "status": "APPLIED_SOURCE_ONLY_NOT_EXECUTION",
+      "existing_other_statuses_headers_rights_and_parameters_unchanged": true
+    },
+    {
+      "path": "/api/book/{member}/{sub}/{book}",
+      "method": "GET",
+      "operationId": "bookAll",
+      "before_response_pointer": "/paths/~1api~1book~1{member}~1{sub}~1{book}/get/responses/200",
+      "before_response": {
+        "description": "{items}"
+      },
+      "after_response_reference": {
+        "$ref": "#/components/responses/HolderBookHeadResponse"
+      },
+      "new_schema_pointer": "/components/schemas/HolderBookHeadBody",
+      "new_schema": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "object",
+            "required": [
+              ""
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "new_standard_response_pointer": "/components/responses/HolderBookHeadResponse",
+      "new_standard_response": {
+        "description": "{items}",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/HolderBookHeadBody"
+            }
+          }
+        }
+      },
+      "status": "APPLIED_SOURCE_ONLY_NOT_EXECUTION",
+      "existing_other_statuses_headers_rights_and_parameters_unchanged": true
+    },
+    {
+      "path": "/api/book/{member}/{sub}/{book}/{part}",
+      "method": "GET",
+      "operationId": "bookAllPart",
+      "before_response_pointer": "/paths/~1api~1book~1{member}~1{sub}~1{book}~1{part}/get/responses/200",
+      "before_response": {
+        "description": "{items}"
+      },
+      "after_response_reference": {
+        "$ref": "#/components/responses/HolderBookPartResponse"
+      },
+      "new_schema_pointer": "/components/schemas/HolderBookPartBody",
+      "new_schema": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "object",
+            "required": [
+              ""
+            ],
+            "properties": {
+              "": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "new_standard_response_pointer": "/components/responses/HolderBookPartResponse",
+      "new_standard_response": {
+        "description": "{items}",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/HolderBookPartBody"
+            }
+          }
+        }
+      },
+      "status": "APPLIED_SOURCE_ONLY_NOT_EXECUTION",
+      "existing_other_statuses_headers_rights_and_parameters_unchanged": true
+    }
+  ],
+  "parameters": [
+    {
+      "target": "/components/parameters/Member",
+      "node": {
+        "name": "member",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/MemberName"
+        }
+      },
+      "before_source": {
+        "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "862b513d4df5d29b9a3de26df599609886cc99e0",
+        "sha256": "c9e41d69e5686587df9efa08276ff0d970243099fa5306bd1998e0d50544fdac",
+        "bytes": 173611
+      },
+      "before_pointer": "/components/parameters/Member",
+      "action": "REUSE_UNCHANGED"
+    },
+    {
+      "target": "/components/parameters/AgentSignature",
+      "node": {
+        "name": "X-Agent-Signature",
+        "in": "header",
+        "required": true,
+        "description": "<ms>.<base64url of 64 bytes Ed25519> over «METHOD\\npath\\nms\\nsha256hex(body)»; window 300 s both ways — Platform/common/contracts/agent-signature.md.",
+        "schema": {
+          "type": "string",
+          "pattern": "^(?:(0|[1-9][0-9]{0,15})\\.[A-Za-z0-9_-]{86})$"
+        }
+      },
+      "before_source": {
+        "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "862b513d4df5d29b9a3de26df599609886cc99e0",
+        "sha256": "c9e41d69e5686587df9efa08276ff0d970243099fa5306bd1998e0d50544fdac",
+        "bytes": 173611
+      },
+      "before_pointer": "/components/parameters/AgentSignature",
+      "action": "REUSE_UNCHANGED"
+    },
+    {
+      "target": "/components/parameters/Part",
+      "node": {
+        "name": "part",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$"
+        }
+      },
+      "before_source": {
+        "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "862b513d4df5d29b9a3de26df599609886cc99e0",
+        "sha256": "c9e41d69e5686587df9efa08276ff0d970243099fa5306bd1998e0d50544fdac",
+        "bytes": 173611
+      },
+      "before_pointer": "/paths/~1api~1members~1{member}~1{part}/parameters/1",
+      "action": "PROPOSED_EXACT_STANDARD_EXTRACTION"
+    },
+    {
+      "target": "/components/parameters/BookSub",
+      "node": {
+        "name": "sub",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "before_source": {
+        "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "862b513d4df5d29b9a3de26df599609886cc99e0",
+        "sha256": "c9e41d69e5686587df9efa08276ff0d970243099fa5306bd1998e0d50544fdac",
+        "bytes": 173611
+      },
+      "before_pointer": "/paths/~1api~1book~1{member}~1{sub}~1{book}/parameters/1",
+      "action": "PROPOSED_EXACT_STANDARD_EXTRACTION"
+    },
+    {
+      "target": "/components/parameters/Book",
+      "node": {
+        "name": "book",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "before_source": {
+        "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "862b513d4df5d29b9a3de26df599609886cc99e0",
+        "sha256": "c9e41d69e5686587df9efa08276ff0d970243099fa5306bd1998e0d50544fdac",
+        "bytes": 173611
+      },
+      "before_pointer": "/paths/~1api~1book~1{member}~1{sub}~1{book}/parameters/2",
+      "action": "PROPOSED_EXACT_STANDARD_EXTRACTION"
+    },
+    {
+      "target": "/components/parameters/BackupPartRevision",
+      "node": {
+        "name": "rev",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "before_source": {
+        "path": "Platform/06-console/spec/06-console.api.openapi.yaml",
+        "revision": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+        "blob": "9d00b1e00adbfba903f072c70d56235a7a8dcb43",
+        "sha256": "b4073b39c35094aba8bd6cecefd0f63f5cc2c37abc867e72a0b81eaa4c7b189e",
+        "bytes": 403567
+      },
+      "before_pointer": "/paths/~1api~1backup-part~1{member}~1{part}/get/parameters/2",
+      "action": "PROPOSED_EXACT_STANDARD_EXTRACTION"
+    }
+  ],
+  "inline_parameter_extractions": {
+    "Part": [
+      "/paths/~1api~1members~1{member}~1{part}/parameters/1",
+      "/paths/~1api~1backup-part~1{member}~1{part}/parameters/1",
+      "/paths/~1api~1book~1{member}~1{sub}~1{book}~1{part}/parameters/3"
+    ],
+    "BookSub": [
+      "/paths/~1api~1book~1{member}~1{sub}~1{book}/parameters/1",
+      "/paths/~1api~1book~1{member}~1{sub}~1{book}~1{part}/parameters/1"
+    ],
+    "Book": [
+      "/paths/~1api~1book~1{member}~1{sub}~1{book}/parameters/2",
+      "/paths/~1api~1book~1{member}~1{sub}~1{book}~1{part}/parameters/2"
+    ]
+  },
+  "new_backup_rev_ref": {
+    "pointer": "/paths/~1api~1backup-part~1{member}~1{part}/get/parameters",
+    "before": "ABSENT",
+    "after": [
+      {
+        "$ref": "#/components/parameters/BackupPartRevision"
+      }
+    ],
+    "reason": "same existing P06 operation-level query carrier; all existing P08 path-level parameters remain at that level"
+  },
+  "no_requestBody_or_other_method_added": true,
+  "CODE_and_P09_A_not_active": true,
+  "no_data_family_rewrite": true,
+  "actual_after_sha256": "bafacd7342a8b5076a0304195751bbe0a1066889b55e5fa97297a5c640c4e503",
+  "raw_patch_proof": {
+    "base": "899cb143bb5c1276d7ff4c4f656e2b9df243c231",
+    "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+    "before_sha256": "c9e41d69e5686587df9efa08276ff0d970243099fa5306bd1998e0d50544fdac",
+    "after_sha256": "bafacd7342a8b5076a0304195751bbe0a1066889b55e5fa97297a5c640c4e503",
+    "edits": [
+      {
+        "start": 776,
+        "end": 776,
+        "start_index": 37214,
+        "end_index": 37236,
+        "before": "{description: '{doc}'}",
+        "after": "{$ref: '#/components/responses/HolderMembersResponse'}",
+        "pointer": "/paths/~1api~1members~1{member}~1{part}/get/responses/200",
+        "kind": "replace inline"
+      },
+      {
+        "start": 845,
+        "end": 845,
+        "start_index": 40519,
+        "end_index": 40548,
+        "before": "{description: '{doc, as_of}'}",
+        "after": "{$ref: '#/components/responses/HolderAnywhereResponse'}",
+        "pointer": "/paths/~1api~1anywhere~1{member}/get/responses/200",
+        "kind": "replace inline"
+      },
+      {
+        "start": 855,
+        "end": 855,
+        "start_index": 40985,
+        "end_index": 41012,
+        "before": "{description: '{doc, via}'}",
+        "after": "{$ref: '#/components/responses/HolderTopologyResponse'}",
+        "pointer": "/paths/~1api~1topology~1{member}/get/responses/200",
+        "kind": "replace inline"
+      },
+      {
+        "start": 835,
+        "end": 835,
+        "start_index": 40155,
+        "end_index": 40181,
+        "before": "{description: Part object}",
+        "after": "{$ref: '#/components/responses/HolderBackupPartResponse'}",
+        "pointer": "/paths/~1api~1backup-part~1{member}~1{part}/get/responses/200",
+        "kind": "replace inline"
+      },
+      {
+        "start": 788,
+        "end": 788,
+        "start_index": 37714,
+        "end_index": 37738,
+        "before": "{description: '{items}'}",
+        "after": "{$ref: '#/components/responses/HolderBookHeadResponse'}",
+        "pointer": "/paths/~1api~1book~1{member}~1{sub}~1{book}/get/responses/200",
+        "kind": "replace inline"
+      },
+      {
+        "start": 815,
+        "end": 815,
+        "start_index": 39123,
+        "end_index": 39147,
+        "before": "{description: '{items}'}",
+        "after": "{$ref: '#/components/responses/HolderBookPartResponse'}",
+        "pointer": "/paths/~1api~1book~1{member}~1{sub}~1{book}~1{part}/get/responses/200",
+        "kind": "replace inline"
+      },
+      {
+        "start": 767,
+        "end": 771,
+        "before": "      - name: part\n        in: path\n        required: true\n        schema: {type: string, pattern: '^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$'}\n",
+        "after": "      - $ref: '#/components/parameters/Part'\n",
+        "pointer": "/paths/~1api~1members~1{member}~1{part}/parameters/1",
+        "kind": "replace",
+        "start_index": 36838,
+        "end_index": 36992
+      },
+      {
+        "start": 826,
+        "end": 830,
+        "before": "      - name: part\n        in: path\n        required: true\n        schema: {type: string, pattern: '^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$'}\n",
+        "after": "      - $ref: '#/components/parameters/Part'\n",
+        "pointer": "/paths/~1api~1backup-part~1{member}~1{part}/parameters/1",
+        "kind": "replace",
+        "start_index": 39806,
+        "end_index": 39960
+      },
+      {
+        "start": 809,
+        "end": 809,
+        "start_index": 38809,
+        "end_index": 38935,
+        "before": "{name: part, in: path, required: true, schema: {type: string, pattern: '^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$'}}",
+        "after": "{$ref: '#/components/parameters/Part'}",
+        "pointer": "/paths/~1api~1book~1{member}~1{sub}~1{book}~1{part}/parameters/3",
+        "kind": "replace inline"
+      },
+      {
+        "start": 781,
+        "end": 781,
+        "start_index": 37398,
+        "end_index": 37459,
+        "before": "{name: sub, in: path, required: true, schema: {type: string}}",
+        "after": "{$ref: '#/components/parameters/BookSub'}",
+        "pointer": "/paths/~1api~1book~1{member}~1{sub}~1{book}/parameters/1",
+        "kind": "replace inline"
+      },
+      {
+        "start": 807,
+        "end": 807,
+        "start_index": 38668,
+        "end_index": 38729,
+        "before": "{name: sub, in: path, required: true, schema: {type: string}}",
+        "after": "{$ref: '#/components/parameters/BookSub'}",
+        "pointer": "/paths/~1api~1book~1{member}~1{sub}~1{book}~1{part}/parameters/1",
+        "kind": "replace inline"
+      },
+      {
+        "start": 782,
+        "end": 782,
+        "start_index": 37468,
+        "end_index": 37530,
+        "before": "{name: book, in: path, required: true, schema: {type: string}}",
+        "after": "{$ref: '#/components/parameters/Book'}",
+        "pointer": "/paths/~1api~1book~1{member}~1{sub}~1{book}/parameters/2",
+        "kind": "replace inline"
+      },
+      {
+        "start": 808,
+        "end": 808,
+        "start_index": 38738,
+        "end_index": 38800,
+        "before": "{name: book, in: path, required: true, schema: {type: string}}",
+        "after": "{$ref: '#/components/parameters/Book'}",
+        "pointer": "/paths/~1api~1book~1{member}~1{sub}~1{book}~1{part}/parameters/2",
+        "kind": "replace inline"
+      },
+      {
+        "start": 834,
+        "end": 834,
+        "before": "",
+        "after": "      parameters:\n      - $ref: '#/components/parameters/BackupPartRevision'\n",
+        "pointer": "/paths/~1api~1backup-part~1{member}~1{part}/get/parameters",
+        "kind": "insert",
+        "start_index": 40123,
+        "end_index": 40123
+      },
+      {
+        "start": 3804,
+        "end": 3804,
+        "before": "",
+        "after": "    HolderMembersBody:\n      $ref: '#/components/schemas/Carry/properties/members'\n    HolderAnywhereBody:\n      type: object\n      required:\n      - doc\n      - as_of\n      additionalProperties: false\n      properties:\n        doc:\n          type: string\n        as_of:\n          type: string\n    HolderTopologyBody:\n      type: object\n      properties:\n        doc:\n          $ref: ../../common/data/common.schema.json#/$defs/common.domain_topology_doc\n          description: The topology document of the holder, nested exactly as in the HTTP body\n        via:\n          description: 'The HTTP body map for this member: its relay when present, otherwise an empty map'\n          type: object\n          propertyNames:\n            $ref: ../../common/data/common.schema.json#/$defs/common.domain_member\n          additionalProperties:\n            $ref: ../../common/data/common.schema.json#/$defs/common.domain_member\n      required:\n      - doc\n      - via\n      additionalProperties: false\n    HolderBackupPartBody:\n      $ref: ../data/backup-parts.schema.json\n    HolderBookHeadBody:\n      type: object\n      required:\n      - items\n      additionalProperties: false\n      properties:\n        items:\n          type: object\n          required:\n          - ''\n          additionalProperties: false\n          properties:\n            ? ''\n            : type: string\n    HolderBookPartBody:\n      type: object\n      required:\n      - items\n      additionalProperties: false\n      properties:\n        items:\n          type: object\n          required:\n          - ''\n          properties:\n            ? ''\n            : type: string\n          additionalProperties:\n            type: string\n",
+        "pointer": "/components/schemas",
+        "kind": "append named components",
+        "new_names": [
+          "HolderMembersBody",
+          "HolderAnywhereBody",
+          "HolderTopologyBody",
+          "HolderBackupPartBody",
+          "HolderBookHeadBody",
+          "HolderBookPartBody"
+        ],
+        "start_index": 172748,
+        "end_index": 172748
+      },
+      {
+        "start": 2387,
+        "end": 2387,
+        "before": "",
+        "after": "    HolderMembersResponse:\n      description: '{doc}'\n      content:\n        application/json:\n          schema:\n            $ref: '#/components/schemas/HolderMembersBody'\n    HolderAnywhereResponse:\n      description: '{doc, as_of}'\n      content:\n        application/json:\n          schema:\n            $ref: '#/components/schemas/HolderAnywhereBody'\n    HolderTopologyResponse:\n      description: '{doc, via}'\n      content:\n        application/json:\n          schema:\n            $ref: '#/components/schemas/HolderTopologyBody'\n    HolderBackupPartResponse:\n      description: Part object\n      content:\n        application/json:\n          schema:\n            $ref: '#/components/schemas/HolderBackupPartBody'\n    HolderBookHeadResponse:\n      description: '{items}'\n      content:\n        application/json:\n          schema:\n            $ref: '#/components/schemas/HolderBookHeadBody'\n    HolderBookPartResponse:\n      description: '{items}'\n      content:\n        application/json:\n          schema:\n            $ref: '#/components/schemas/HolderBookPartBody'\n",
+        "pointer": "/components/responses",
+        "kind": "append named components",
+        "new_names": [
+          "HolderMembersResponse",
+          "HolderAnywhereResponse",
+          "HolderTopologyResponse",
+          "HolderBackupPartResponse",
+          "HolderBookHeadResponse",
+          "HolderBookPartResponse"
+        ],
+        "start_index": 108213,
+        "end_index": 108213
+      },
+      {
+        "start": 2177,
+        "end": 2177,
+        "before": "",
+        "after": "    Part:\n      name: part\n      in: path\n      required: true\n      schema:\n        type: string\n        pattern: ^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$\n    BookSub:\n      name: sub\n      in: path\n      required: true\n      schema:\n        type: string\n    Book:\n      name: book\n      in: path\n      required: true\n      schema:\n        type: string\n    BackupPartRevision:\n      name: rev\n      in: query\n      required: true\n      schema:\n        type: integer\n        minimum: 1\n",
+        "pointer": "/components/parameters",
+        "kind": "append named components",
+        "new_names": [
+          "Part",
+          "BookSub",
+          "Book",
+          "BackupPartRevision"
+        ],
+        "start_index": 97150,
+        "end_index": 97150
+      }
+    ],
+    "inverse_AST_exact": true
+  },
+  "source_applied": true,
+  "actual_API_inverse_exact": true
+}

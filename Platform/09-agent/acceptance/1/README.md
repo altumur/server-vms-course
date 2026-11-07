@@ -245,11 +245,11 @@ no more often than `AS_OF_STORE_EVERY`), the agent body limit; the HTTPS client 
 
 ## Kit assistance seams
 
-[seams.tsv](seams.tsv) provides 43 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
+[seams.tsv](seams.tsv) provides 44 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
 
 ## Anywhere copy hash (G09-ANYWHERE-HASH-01)
 
-The four fixture vectors in [`inputs/anywhere-hash/cases.tsv`](inputs/anywhere-hash/cases.tsv) specify the complete-body
+The five fixture vectors in [`inputs/anywhere-hash/cases.tsv`](inputs/anywhere-hash/cases.tsv) specify the complete-body
 digest of P/08.4 N1.3 carry and the check before the copy of N1.4 member_anywhere. The input column names a JSON file
 next to the table; expect is a JSON subset of the observations, not an input to the implementation.
 
@@ -259,9 +259,11 @@ Every attempt starts independently from that initial state: its trusted carry ad
 the body and mark, and records the store operations and marker changes. received_at is the receipt time and domain_age is the answer age; each case prepares a valid trusted carry for server m1 and its active agent guard. It reports arrays in attempt order:
 computed_sha256, copy_writes, marker_confirmed; for a refusal also related_edits (the writes belonging to this copy),
 copy_items, copy_index and taken_sha256. The digest observation comes from the normal code path that judges the body;
-it is not computed by the fixture instead of that path. The two positive vectors must reach the actual copy write.
+it is not computed by the fixture instead of that path. The three positive vectors must reach the actual copy write.
 
 The existing agent-carry IO seam can carry these inputs: these files do not declare a new native command. A fixture
 that only calculates the expected digest does not check the negative cases: they require the former copy, exact index
-and marker to stay unchanged and zero copy writes and related edits. The four cases cover as_of in the digest, JCS
+and marker to stay unchanged and zero copy writes and related edits. The five cases cover as_of in the digest, JCS
 instead of wire formatting, a refused digest of doc alone and a refused mismatching whole-body digest.
+
+The owner wire body contains raw KV strings doc and as_of. Only the outer JSON is canonicalized for the digest; the internal doc text is not normalized first. The inner-text neighbor has equal decoded inner objects but different strings and digests, and observes the exact successful copy_items. The trusted advertised as_of, received_at and domain_age retain their existing numeric types. Existing refusal cases preserve the complete initial raw copy, index and the rebaselined current-wire marker. No case reports actual IO success before its adapter is run.
