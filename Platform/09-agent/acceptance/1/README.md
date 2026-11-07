@@ -37,7 +37,7 @@ There are no units. There is no domain: it is set up by the directive `@domain` 
   `domain/backup-taken`, `domain/shared`, `domain/shared-refused`, `domain/root`, `domain/placed`, `domain/outcomes`,
   `domain/agent-turn`); `store` without `member` is the store of `hold`.
 - `resource` without a prefix is the resource door of `hold`: through it the holder's objects `domain/members/<member>/…` are read.
-- Do not speed up the clocks: `LOST_AFTER` 45 s, `REPORT_EVERY` 5 s, `MARK_REFRESH` 22.5 s, `VIEW_EVERY` 3 s; the `@until` terms are taken with
+- Do not speed up the clocks: `LOST_AFTER` 45 s, `REPORT_EVERY`, `MARK_REFRESH` 22.5 s, `VIEW_EVERY` 3 s; the `@until` terms are taken with
   a margin.
 - The runner goes as the human `root` (the first administrator — chapter 8.4).
 
@@ -221,7 +221,7 @@ same). The remaining sleeps (from the READMEs of the acceptances of M11/12 and M
 | 01/2 | 35 s | time before an action: the first backup copy and its keepers after `@domain` — `BACKUP_EVERY` 30 s and the agent pass 5 s |
 | 01/5 | 10 s | time before an action: the member went quiet after the write of `domain/backup-taken` — two agent passes |
 | 06/6 | 10 s | absence: fresh copies with the same content are not rewritten — a rewrite would be in the nearest agent pass (5 s), two passes; `as_of` is freshened no more often than `FRESH_EVERY` 60 s |
-| 06/9 | 65 s | absence: longer than `FRESH_EVERY` 60 s — the freshening of `as_of` in memory has already happened, but it is not in the row: to the medium no more often than `AS_OF_STORE_EVERY` 3600 s (VMS request № 19; the whole hour — by reading) |
+| 06/9 | 65 s | absence: longer than `FRESH_EVERY` — the freshening of `as_of` in memory has already happened, but it is not in the row: to the medium no more often than `AS_OF_STORE_EVERY` 3600 s (VMS request № 19; the whole hour — by reading) |
 | 11/6 | 65 s | time before an action: two windows of `BACKUP_EVERY` after the revocation — the copy with `bob` (step 9) is made at once, not after a window |
 | 11/10 | 6 s | time before an action: the copy with `bob` — in the nearest pass of the holder (3 s) with a margin |
 | 15/4 | 25 s | absence: for two `TURN_RENEW` (10 s) the waiting one does not take a fresh queue — the holder is the former one (step 5) |
@@ -245,7 +245,7 @@ no more often than `AS_OF_STORE_EVERY`), the agent body limit; the HTTPS client 
 
 ## Kit assistance seams
 
-[seams.tsv](seams.tsv) provides 38 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
+[seams.tsv](seams.tsv) provides 43 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
 
 ## Anywhere copy hash (G09-ANYWHERE-HASH-01)
 
