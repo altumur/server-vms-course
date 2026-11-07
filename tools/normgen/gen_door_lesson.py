@@ -98,6 +98,18 @@ class Docs:
     def _token(value):
         return str(value).replace("~", "~0").replace("/", "~1")
 
+    @staticmethod
+    def _tree(node, active=()):
+        """YAML aliases denote values; give each occurrence its own declaration position."""
+        if not isinstance(node, (dict, list)):
+            return node
+        if id(node) in active:
+            raise GenError("cyclic YAML value")
+        active = active + (id(node),)
+        if isinstance(node, dict):
+            return {key: Docs._tree(value, active) for key, value in node.items()}
+        return [Docs._tree(value, active) for value in node]
+
     def _index(self, path, doc, standalone):
         positions, schemas, objects = {}, set(), {}
         def locate(node, at):
@@ -195,7 +207,7 @@ class Docs:
             try:
                 text = path.read_bytes().decode("utf-8")
                 standalone = path.name.endswith(".schema.json")
-                doc = self._json(text) if standalone else yamlsub.load(text, path.name)
+                doc = self._json(text) if standalone else self._tree(yamlsub.load(text, path.name))
                 if standalone:
                     if not isinstance(doc, (dict, bool)) or isinstance(doc, dict) and "openapi" in doc:
                         raise GenError(f"{path}: expected a standalone JSON Schema, not OpenAPI")
