@@ -511,13 +511,15 @@ class SchemaSection:
         for label, name in (("domain/deleting/<name>", "person_writer"),
                             ("domain/deleting/role:<name>", "role_writer")):
             profile = defs[name]
-            out += [self.t("Только у писателя с ключом `%s` (`#/$defs/%s`):",
-                           "Only at the writer with key `%s` (`#/$defs/%s`):") % (label, name), "",
+            writer_kind = (self.t("метки человека", "of a person mark") if name == "person_writer"
+                           else self.t("метки роли", "of a role mark"))
+            out += [self.t("Только у писателя %s с ключом `%s` (`#/$defs/%s`):",
+                           "Only at the writer %s with key `%s` (`#/$defs/%s`):") % (writer_kind, label, name), "",
                     self.t("| Ключ | Тип и границы | Обязательность |", "| Key | Type and bounds | Required |"),
                     "|---|---|---|"]
             if "const" in profile:
-                out.append("| `<root>` | const `%s` | — |" % code_cell(json.dumps(profile["const"], ensure_ascii=False,
-                                                                                 separators=(",", ":"))))
+                out.append("| `%s` | const `%s` | — |" % (self.t("<корень>", "<root>"),
+                           code_cell(json.dumps(profile["const"], ensure_ascii=False, separators=(",", ":")))))
             for field, node in profile.get("properties", {}).items():
                 required = self.t("обязательно", "required") if field in profile.get("required", []) else self.t("необязательно", "optional")
                 out.append("| `%s` | %s | %s |" % (code_cell(field), cell(self.kind(node)), required))
